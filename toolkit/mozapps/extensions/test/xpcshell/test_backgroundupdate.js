@@ -108,11 +108,11 @@ function run_test_2() {
   }, "addons-background-update-complete", false);
 
   AddonManager.addInstallListener({
-    onNewInstall(aInstall) {
+    onNewInstall: function(aInstall) {
       installCount++;
     },
 
-    onDownloadFailed(aInstall) {
+    onDownloadFailed: function(aInstall) {
       completeCount++;
       if (completeCount == 3) {
         do_check_true(sawCompleteNotification);

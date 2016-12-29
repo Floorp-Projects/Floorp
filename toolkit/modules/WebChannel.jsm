@@ -33,7 +33,7 @@ var WebChannelBroker = Object.create({
    *
    * @param channel {WebChannel}
    */
-  registerChannel(channel) {
+  registerChannel: function(channel) {
     if (!this._channelMap.has(channel)) {
       this._channelMap.set(channel);
     } else {
@@ -55,7 +55,7 @@ var WebChannelBroker = Object.create({
    *
    * Removes the specified channel from the channel map
    */
-  unregisterChannel(channelToRemove) {
+  unregisterChannel: function(channelToRemove) {
     if (!this._channelMap.delete(channelToRemove)) {
       Cu.reportError("Failed to unregister the channel. Channel not found.");
     }
@@ -66,7 +66,7 @@ var WebChannelBroker = Object.create({
    *        Message Manager event
    * @private
    */
-  _listener(event) {
+  _listener: function(event) {
     let data = event.data;
     let sendingContext = {
       browser: event.target,
@@ -129,19 +129,19 @@ var WebChannelBroker = Object.create({
    *        Error message
    * @private
    */
-  _sendErrorEventToContent(id, sendingContext, errorNo, errorMsg) {
+  _sendErrorEventToContent: function(id, sendingContext, errorNo, errorMsg) {
     let { browser: targetBrowser, eventTarget, principal: targetPrincipal } = sendingContext;
 
     errorMsg = errorMsg || "Web Channel Broker error";
 
     if (targetBrowser && targetBrowser.messageManager) {
       targetBrowser.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
-        id,
+        id: id,
         message: {
           errno: errorNo,
           error: errorMsg,
         },
-      }, { eventTarget }, targetPrincipal);
+      }, { eventTarget: eventTarget }, targetPrincipal);
     } else {
       Cu.reportError("Failed to send a WebChannel error. Target invalid.");
     }
@@ -249,7 +249,7 @@ this.WebChannel.prototype = {
    *                      The <Principal> of the EventTarget where the
    *                      message was sent.
    */
-  listen(callback) {
+  listen: function(callback) {
     if (this._deliverCallback) {
       throw new Error("Failed to listen. Listener already attached.");
     } else if (!callback) {
@@ -264,7 +264,7 @@ this.WebChannel.prototype = {
    * Resets the callback for messages on this channel
    * Removes the channel from the WebChannelBroker
    */
-  stopListening() {
+  stopListening: function() {
     this._broker.unregisterChannel(this);
     this._deliverCallback = null;
   },
@@ -287,13 +287,13 @@ this.WebChannel.prototype = {
    *               Optional eventTarget within the browser, use to send to a
    *               specific element, e.g., an iframe.
    */
-  send(message, target) {
+  send: function(message, target) {
     let { browser, principal, eventTarget } = target;
 
     if (message && browser && browser.messageManager && principal) {
       browser.messageManager.sendAsyncMessage("WebChannelMessageToContent", {
         id: this.id,
-        message
+        message: message
       }, { eventTarget }, principal);
     } else if (!message) {
       Cu.reportError("Failed to send a WebChannel message. Message not set.");
@@ -318,7 +318,7 @@ this.WebChannel.prototype = {
    *               The <Principal> of the EventTarget where the message was sent.
    *
    */
-  deliver(data, sendingContext) {
+  deliver: function(data, sendingContext) {
     if (this._deliverCallback) {
       try {
         this._deliverCallback(data.id, data.message, sendingContext);

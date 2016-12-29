@@ -92,14 +92,14 @@ this.Social = {
     return deferred.promise;
   },
 
-  _updateEnabledState(enable) {
+  _updateEnabledState: function(enable) {
     for (let p of Social.providers) {
       p.enabled = enable;
     }
   },
 
   // Called to update our cache of providers and set the current provider
-  _updateProviderCache(providers) {
+  _updateProviderCache: function(providers) {
     this.providers = providers;
     Services.obs.notifyObservers(null, "social:providers-changed", null);
   },
@@ -108,7 +108,7 @@ this.Social = {
     return !this._disabledForSafeMode && this.providers.length > 0;
   },
 
-  _getProviderFromOrigin(origin) {
+  _getProviderFromOrigin: function(origin) {
     for (let p of this.providers) {
       if (p.origin == origin) {
         return p;
@@ -117,20 +117,20 @@ this.Social = {
     return null;
   },
 
-  getManifestByOrigin(origin) {
+  getManifestByOrigin: function(origin) {
     return SocialService.getManifestByOrigin(origin);
   },
 
-  installProvider(data, installCallback, options = {}) {
+  installProvider: function(data, installCallback, options = {}) {
     SocialService.installProvider(data, installCallback, options);
   },
 
-  uninstallProvider(origin, aCallback) {
+  uninstallProvider: function(origin, aCallback) {
     SocialService.uninstallProvider(origin, aCallback);
   },
 
   // Activation functionality
-  activateFromOrigin(origin, callback) {
+  activateFromOrigin: function(origin, callback) {
     // It's OK if the provider has already been activated - we still get called
     // back with it.
     SocialService.enableProvider(origin, callback);
@@ -225,7 +225,7 @@ DynamicResizeWatcher.prototype = {
 
 
 this.OpenGraphBuilder = {
-  generateEndpointURL(URLTemplate, pageData) {
+  generateEndpointURL: function(URLTemplate, pageData) {
     // support for existing oexchange style endpoints by supporting their
     // querystring arguments. parse the query string template and do
     // replacements where necessary the query names may be different than ours,

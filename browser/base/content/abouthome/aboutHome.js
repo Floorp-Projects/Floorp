@@ -186,18 +186,18 @@ function ensureSnippetsMapThen(aCallback)
       // The cache has been filled up, create the snippets map.
       gSnippetsMap = Object.freeze({
         get: (aKey) => cache.get(aKey),
-        set(aKey, aValue) {
+        set: function(aKey, aValue) {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).put(aValue, aKey);
           return cache.set(aKey, aValue);
         },
         has: (aKey) => cache.has(aKey),
-        delete(aKey) {
+        delete: function(aKey) {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).delete(aKey);
           return cache.delete(aKey);
         },
-        clear() {
+        clear: function() {
           db.transaction(SNIPPETS_OBJECTSTORE_NAME, "readwrite")
             .objectStore(SNIPPETS_OBJECTSTORE_NAME).clear();
           return cache.clear();

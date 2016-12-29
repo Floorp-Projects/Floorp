@@ -145,13 +145,13 @@ function providerName(aProvider) {
  * parent 'addons' level logger accordingly.
  */
 var PrefObserver = {
-    init() {
+    init: function() {
       Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
       Services.obs.addObserver(this, "xpcom-shutdown", false);
       this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
     },
 
-    observe(aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData) {
       if (aTopic == "xpcom-shutdown") {
         Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
         Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -393,7 +393,7 @@ BrowserListener.prototype = {
   installCount: null,
   registered: false,
 
-  unregister() {
+  unregister: function() {
     if (!this.registered)
       return;
     this.registered = false;
@@ -408,7 +408,7 @@ BrowserListener.prototype = {
     this.installs = null;
   },
 
-  cancelInstalls() {
+  cancelInstalls: function() {
     for (let install of this.installs) {
       try {
         install.cancel();
@@ -419,7 +419,7 @@ BrowserListener.prototype = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (subject != this.browser.messageManager)
       return;
 
@@ -428,7 +428,7 @@ BrowserListener.prototype = {
     this.cancelInstalls();
   },
 
-  onLocationChange(webProgress, request, location) {
+  onLocationChange: function(webProgress, request, location) {
     if (this.browser.contentPrincipal && this.principal.subsumes(this.browser.contentPrincipal))
       return;
 
@@ -436,7 +436,7 @@ BrowserListener.prototype = {
     this.cancelInstalls();
   },
 
-  onDownloadCancelled(install) {
+  onDownloadCancelled: function(install) {
     // Don't need to hear more events from this install
     install.removeListener(this);
 
@@ -445,15 +445,15 @@ BrowserListener.prototype = {
       this.unregister();
   },
 
-  onDownloadFailed(install) {
+  onDownloadFailed: function(install) {
     this.onDownloadCancelled(install);
   },
 
-  onInstallFailed(install) {
+  onInstallFailed: function(install) {
     this.onDownloadCancelled(install);
   },
 
-  onInstallEnded(install) {
+  onInstallEnded: function(install) {
     this.onDownloadCancelled(install);
   },
 
@@ -480,7 +480,7 @@ AddonAuthor.prototype = {
   url: null,
 
   // Returns the author's name, defaulting to the empty string
-  toString() {
+  toString: function() {
     return this.name || "";
   }
 }
@@ -524,7 +524,7 @@ AddonScreenshot.prototype = {
   caption: null,
 
   // Returns the screenshot URL, defaulting to the empty string
-  toString() {
+  toString: function() {
     return this.url || "";
   }
 }
@@ -673,11 +673,11 @@ var AddonManagerInternal = {
   telemetryDetails: {},
   upgradeListeners: new Map(),
 
-  recordTimestamp(name, value) {
+  recordTimestamp: function(name, value) {
     this.TelemetryTimestamps.add(name, value);
   },
 
-  validateBlocklist() {
+  validateBlocklist: function() {
     let appBlocklist = FileUtils.getFile(KEY_APPDIR, [FILE_BLOCKLIST]);
 
     // If there is no application shipped blocklist then there is nothing to do
@@ -812,7 +812,7 @@ var AddonManagerInternal = {
    * Initializes the AddonManager, loading any known providers and initializing
    * them.
    */
-  startup() {
+  startup: function() {
     try {
       if (gStarted)
         return;
@@ -990,7 +990,7 @@ var AddonManagerInternal = {
    * @param  aTypes
    *         An optional array of add-on types
    */
-  registerProvider(aProvider, aTypes) {
+  registerProvider: function(aProvider, aTypes) {
     if (!aProvider || typeof aProvider != "object")
       throw Components.Exception("aProvider must be specified",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -1010,7 +1010,7 @@ var AddonManagerInternal = {
           }
 
           this.types[type.id] = {
-            type,
+            type: type,
             providers: [aProvider]
           };
 
@@ -1039,7 +1039,7 @@ var AddonManagerInternal = {
    *         For providers that have async shutdown methods returning Promises,
    *         the caller should wait for that Promise to resolve.
    */
-  unregisterProvider(aProvider) {
+  unregisterProvider: function(aProvider) {
     if (!aProvider || typeof aProvider != "object")
       throw Components.Exception("aProvider must be specified",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -1091,7 +1091,7 @@ var AddonManagerInternal = {
    *
    * @param aProvider Provider object to mark safe
    */
-  markProviderSafe(aProvider) {
+  markProviderSafe: function(aProvider) {
     if (!gStarted) {
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1121,7 +1121,7 @@ var AddonManagerInternal = {
    *         The method name to call
    * @see    callProvider
    */
-  callProviders(aMethod, ...aArgs) {
+  callProviders: function(aMethod, ...aArgs) {
     if (!aMethod || typeof aMethod != "string")
       throw Components.Exception("aMethod must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -1220,7 +1220,7 @@ var AddonManagerInternal = {
     }
   }),
 
-  requestPlugins({ target: port }) {
+  requestPlugins: function({ target: port }) {
     // Lists all the properties that plugins.html needs
     const NEEDED_PROPS = ["name", "pluginLibraries", "pluginFullpath", "version",
                           "isActive", "blocklistState", "description",
@@ -1243,7 +1243,7 @@ var AddonManagerInternal = {
    *
    * @see nsIObserver
    */
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aData) {
       case PREF_EM_CHECK_COMPATIBILITY: {
         let oldValue = gCheckCompatibility;
@@ -1337,7 +1337,7 @@ var AddonManagerInternal = {
    *         The optional application version to use for %APP_VERSION%
    * @return The appropriately escaped URI.
    */
-  escapeAddonURI(aAddon, aUri, aAppVersion)
+  escapeAddonURI: function(aAddon, aUri, aAppVersion)
   {
     if (!aAddon || typeof aAddon != "object")
       throw Components.Exception("aAddon must be an Addon object",
@@ -1408,7 +1408,7 @@ var AddonManagerInternal = {
    * @return Promise{null} Resolves when the background update check is complete
    *                       (the resulting addon installations may still be in progress).
    */
-  backgroundUpdateCheck() {
+  backgroundUpdateCheck: function() {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1447,7 +1447,7 @@ var AddonManagerInternal = {
           // be applied
           updates.push(new Promise((resolve, reject) => {
             addon.findUpdates({
-              onUpdateAvailable(aAddon, aInstall) {
+              onUpdateAvailable: function(aAddon, aInstall) {
                 // Start installing updates when the add-on can be updated and
                 // background updates should be applied.
                 logger.debug("Found update for add-on ${id}", aAddon);
@@ -1512,7 +1512,7 @@ var AddonManagerInternal = {
                 null, null, update.version);
 
             aInstall.addListener({
-              onDownloadEnded(aInstall) {
+              onDownloadEnded: function(aInstall) {
                 if (aInstall.addon.id != hotfixID) {
                   logger.warn("The downloaded hotfix add-on did not have the " +
                               "expected ID and so will not be installed.");
@@ -1545,13 +1545,13 @@ var AddonManagerInternal = {
                 }
               },
 
-              onInstallEnded(aInstall) {
+              onInstallEnded: function(aInstall) {
                 // Remember the last successfully installed version.
                 Services.prefs.setCharPref(PREF_EM_HOTFIX_LASTVERSION,
                                            aInstall.version);
               },
 
-              onInstallCancelled(aInstall) {
+              onInstallCancelled: function(aInstall) {
                 // Revert to the previous version if the installation was
                 // cancelled.
                 Services.prefs.setCharPref(PREF_EM_HOTFIX_LASTVERSION,
@@ -1595,7 +1595,7 @@ var AddonManagerInternal = {
    * @param  aID
    *         The ID of the add-on
    */
-  addStartupChange(aType, aID) {
+  addStartupChange: function(aType, aID) {
     if (!aType || typeof aType != "string")
       throw Components.Exception("aType must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -1625,7 +1625,7 @@ var AddonManagerInternal = {
    * @param  aID
    *         The ID of the add-on
    */
-  removeStartupChange(aType, aID) {
+  removeStartupChange: function(aType, aID) {
     if (!aType || typeof aType != "string")
       throw Components.Exception("aType must be a non-empty string",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -1650,7 +1650,7 @@ var AddonManagerInternal = {
    * @param  aMethod
    *         The method on the listeners to call
    */
-  callManagerListeners(aMethod, ...aArgs) {
+  callManagerListeners: function(aMethod, ...aArgs) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1681,7 +1681,7 @@ var AddonManagerInternal = {
    *         An optional array of extra InstallListeners to also call
    * @return false if any of the listeners returned false, true otherwise
    */
-  callInstallListeners(aMethod,
+  callInstallListeners: function(aMethod,
                                  aExtraListeners, ...aArgs) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
@@ -1723,7 +1723,7 @@ var AddonManagerInternal = {
    * @param  aMethod
    *         The method on the listeners to call
    */
-  callAddonListeners(aMethod, ...aArgs) {
+  callAddonListeners: function(aMethod, ...aArgs) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1757,7 +1757,7 @@ var AddonManagerInternal = {
    *         A boolean indicating if the change will only take place the next
    *         time the application is restarted
    */
-  notifyAddonChanged(aID, aType, aPendingRestart) {
+  notifyAddonChanged: function(aID, aType, aPendingRestart) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1794,7 +1794,7 @@ var AddonManagerInternal = {
    * their add-ons in response to an application change such as a blocklist
    * update.
    */
-  updateAddonAppDisabledStates() {
+  updateAddonAppDisabledStates: function() {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1806,7 +1806,7 @@ var AddonManagerInternal = {
    * Notifies all providers that the repository has updated its data for
    * installed add-ons.
    */
-  updateAddonRepositoryData() {
+  updateAddonRepositoryData: function() {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1840,7 +1840,7 @@ var AddonManagerInternal = {
    *         An optional <browser> element for download permissions prompts.
    * @throws if the aUrl, aCallback or aMimetype arguments are not specified
    */
-  getInstallForURL(aUrl, aMimetype, aHash, aName,
+  getInstallForURL: function(aUrl, aMimetype, aHash, aName,
                              aIcons, aVersion, aBrowser) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
@@ -1900,7 +1900,7 @@ var AddonManagerInternal = {
    *         An optional mimetype hint for the add-on
    * @throws if the aFile or aCallback arguments are not specified
    */
-  getInstallForFile(aFile, aMimetype) {
+  getInstallForFile: function(aFile, aMimetype) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1934,7 +1934,7 @@ var AddonManagerInternal = {
    *         An optional array of types to retrieve. Each type is a string name
    * @throws If the aCallback argument is not specified
    */
-  getInstallsByTypes(aTypes) {
+  getInstallsByTypes: function(aTypes) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1961,7 +1961,7 @@ var AddonManagerInternal = {
   /**
    * Asynchronously gets all current AddonInstalls.
    */
-  getAllInstalls() {
+  getAllInstalls: function() {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -1981,7 +1981,7 @@ var AddonManagerInternal = {
    * @return string containing the Addon ID or null
    * @see    amIAddonManager.mapURIToAddonID
    */
-  mapURIToAddonID(aURI) {
+  mapURIToAddonID: function(aURI) {
     if (!(aURI instanceof Ci.nsIURI)) {
       throw Components.Exception("aURI is not a nsIURI",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2006,7 +2006,7 @@ var AddonManagerInternal = {
    *         The mimetype to check
    * @return true if installation is enabled for the mimetype
    */
-  isInstallEnabled(aMimetype) {
+  isInstallEnabled: function(aMimetype) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2034,7 +2034,7 @@ var AddonManagerInternal = {
    *         The nsIPrincipal that initiated the install
    * @return true if the source is allowed to install this mimetype
    */
-  isInstallAllowed(aMimetype, aInstallingPrincipal) {
+  isInstallAllowed: function(aMimetype, aInstallingPrincipal) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2069,7 +2069,7 @@ var AddonManagerInternal = {
    * @param  aInstalls
    *         The array of AddonInstalls to be installed
    */
-  installAddonsFromWebpage(aMimetype, aBrowser,
+  installAddonsFromWebpage: function(aMimetype, aBrowser,
                                      aInstallingPrincipal, aInstalls) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
@@ -2168,7 +2168,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The InstallListener to add
    */
-  addInstallListener(aListener) {
+  addInstallListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be a InstallListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2184,7 +2184,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The InstallListener to remove
    */
-  removeInstallListener(aListener) {
+  removeInstallListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be a InstallListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2206,7 +2206,7 @@ var AddonManagerInternal = {
    *         The callback to invoke when updates are available for this addon.
    * @throws if there is no addon matching the instanceID
    */
-  addUpgradeListener(aInstanceID, aCallback) {
+  addUpgradeListener: function(aInstanceID, aCallback) {
    if (!aInstanceID || typeof aInstanceID != "symbol")
      throw Components.Exception("aInstanceID must be a symbol",
                                 Cr.NS_ERROR_INVALID_ARG);
@@ -2231,7 +2231,7 @@ var AddonManagerInternal = {
    * @param  aInstanceID
    *         The instance ID of the addon to remove
    */
-  removeUpgradeListener(aInstanceID) {
+  removeUpgradeListener: function(aInstanceID) {
     if (!aInstanceID || typeof aInstanceID != "symbol")
       throw Components.Exception("aInstanceID must be a symbol",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2256,7 +2256,7 @@ var AddonManagerInternal = {
    * @return a Promise that rejects if the add-on is not a valid restartless
    *         add-on or if the same ID is already temporarily installed.
    */
-  installTemporaryAddon(aFile) {
+  installTemporaryAddon: function(aFile) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2269,7 +2269,7 @@ var AddonManagerInternal = {
                                .installTemporaryAddon(aFile);
   },
 
-  installAddonFromSources(aFile) {
+  installAddonFromSources: function(aFile) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2292,7 +2292,7 @@ var AddonManagerInternal = {
    * @throws if the aInstanceID argument is not specified
    *         or the AddonManager is not initialized
    */
-   getAddonByInstanceID(aInstanceID) {
+   getAddonByInstanceID: function(aInstanceID) {
      if (!gStarted)
        throw Components.Exception("AddonManager is not initialized",
                                   Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2325,7 +2325,7 @@ var AddonManagerInternal = {
    *         Optional window object for determining the correct scale.
    * @return {String} The absolute URL of the icon or null if the addon doesn't have icons
    */
-  getPreferredIconURL(aAddon, aSize, aWindow = undefined) {
+  getPreferredIconURL: function(aAddon, aSize, aWindow = undefined) {
     if (aWindow && aWindow.devicePixelRatio) {
       aSize *= aWindow.devicePixelRatio;
     }
@@ -2389,7 +2389,7 @@ var AddonManagerInternal = {
    * @rejects  Never
    * @throws if the aID argument is not specified
    */
-  getAddonByID(aID) {
+  getAddonByID: function(aID) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2412,7 +2412,7 @@ var AddonManagerInternal = {
    *         String GUID of add-on to retrieve
    * @throws if the aGUID argument is not specified
    */
-  getAddonBySyncGUID(aGUID) {
+  getAddonBySyncGUID: function(aGUID) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2444,7 +2444,7 @@ var AddonManagerInternal = {
    * @rejects  Never
    * @throws if the aIDs argument is not specified
    */
-  getAddonsByIDs(aIDs) {
+  getAddonsByIDs: function(aIDs) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2463,7 +2463,7 @@ var AddonManagerInternal = {
    * @param  aTypes
    *         An optional array of types to retrieve. Each type is a string name
    */
-  getAddonsByTypes(aTypes) {
+  getAddonsByTypes: function(aTypes) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2490,7 +2490,7 @@ var AddonManagerInternal = {
   /**
    * Asynchronously gets all installed add-ons.
    */
-  getAllAddons() {
+  getAllAddons: function() {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2505,7 +2505,7 @@ var AddonManagerInternal = {
    * @param  aTypes
    *         An optional array of types to retrieve. Each type is a string name
    */
-  getAddonsWithOperationsByTypes(aTypes) {
+  getAddonsWithOperationsByTypes: function(aTypes) {
     if (!gStarted)
       throw Components.Exception("AddonManager is not initialized",
                                  Cr.NS_ERROR_NOT_INITIALIZED);
@@ -2535,7 +2535,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The listener to add
    */
-  addManagerListener(aListener) {
+  addManagerListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be an AddonManagerListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2550,7 +2550,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The listener to remove
    */
-  removeManagerListener(aListener) {
+  removeManagerListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be an AddonManagerListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2570,7 +2570,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The AddonListener to add
    */
-  addAddonListener(aListener) {
+  addAddonListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be an AddonListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2585,7 +2585,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The AddonListener to remove
    */
-  removeAddonListener(aListener) {
+  removeAddonListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be an AddonListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2605,7 +2605,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The TypeListener to add
    */
-  addTypeListener(aListener) {
+  addTypeListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be a TypeListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2620,7 +2620,7 @@ var AddonManagerInternal = {
    * @param  aListener
    *         The TypeListener to remove
    */
-  removeTypeListener(aListener) {
+  removeTypeListener: function(aListener) {
     if (!aListener || typeof aListener != "object")
       throw Components.Exception("aListener must be a TypeListener object",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -2919,23 +2919,23 @@ var AddonManagerInternal = {
  * subject to change at any time.
  */
 this.AddonManagerPrivate = {
-  startup() {
+  startup: function() {
     AddonManagerInternal.startup();
   },
 
-  registerProvider(aProvider, aTypes) {
+  registerProvider: function(aProvider, aTypes) {
     AddonManagerInternal.registerProvider(aProvider, aTypes);
   },
 
-  unregisterProvider(aProvider) {
+  unregisterProvider: function(aProvider) {
     AddonManagerInternal.unregisterProvider(aProvider);
   },
 
-  markProviderSafe(aProvider) {
+  markProviderSafe: function(aProvider) {
     AddonManagerInternal.markProviderSafe(aProvider);
   },
 
-  backgroundUpdateCheck() {
+  backgroundUpdateCheck: function() {
     return AddonManagerInternal.backgroundUpdateCheck();
   },
 
@@ -2953,55 +2953,55 @@ this.AddonManagerPrivate = {
     AddonManagerInternal.backgroundUpdateCheck();
   },
 
-  addStartupChange(aType, aID) {
+  addStartupChange: function(aType, aID) {
     AddonManagerInternal.addStartupChange(aType, aID);
   },
 
-  removeStartupChange(aType, aID) {
+  removeStartupChange: function(aType, aID) {
     AddonManagerInternal.removeStartupChange(aType, aID);
   },
 
-  notifyAddonChanged(aID, aType, aPendingRestart) {
+  notifyAddonChanged: function(aID, aType, aPendingRestart) {
     AddonManagerInternal.notifyAddonChanged(aID, aType, aPendingRestart);
   },
 
-  updateAddonAppDisabledStates() {
+  updateAddonAppDisabledStates: function() {
     AddonManagerInternal.updateAddonAppDisabledStates();
   },
 
-  updateAddonRepositoryData(aCallback) {
+  updateAddonRepositoryData: function(aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.updateAddonRepositoryData(),
       aCallback);
   },
 
-  callInstallListeners(...aArgs) {
+  callInstallListeners: function(...aArgs) {
     return AddonManagerInternal.callInstallListeners.apply(AddonManagerInternal,
                                                            aArgs);
   },
 
-  callAddonListeners(...aArgs) {
+  callAddonListeners: function(...aArgs) {
     AddonManagerInternal.callAddonListeners.apply(AddonManagerInternal, aArgs);
   },
 
-  AddonAuthor,
+  AddonAuthor: AddonAuthor,
 
-  AddonScreenshot,
+  AddonScreenshot: AddonScreenshot,
 
-  AddonCompatibilityOverride,
+  AddonCompatibilityOverride: AddonCompatibilityOverride,
 
-  AddonType,
+  AddonType: AddonType,
 
-  recordTimestamp(name, value) {
+  recordTimestamp: function(name, value) {
     AddonManagerInternal.recordTimestamp(name, value);
   },
 
   _simpleMeasures: {},
-  recordSimpleMeasure(name, value) {
+  recordSimpleMeasure: function(name, value) {
     this._simpleMeasures[name] = value;
   },
 
-  recordException(aModule, aContext, aException) {
+  recordException: function(aModule, aContext, aException) {
     let report = {
       module: aModule,
       context: aContext
@@ -3021,21 +3021,21 @@ this.AddonManagerPrivate = {
     this._simpleMeasures.exception = report;
   },
 
-  getSimpleMeasures() {
+  getSimpleMeasures: function() {
     return this._simpleMeasures;
   },
 
-  getTelemetryDetails() {
+  getTelemetryDetails: function() {
     return AddonManagerInternal.telemetryDetails;
   },
 
-  setTelemetryDetails(aProvider, aDetails) {
+  setTelemetryDetails: function(aProvider, aDetails) {
     AddonManagerInternal.telemetryDetails[aProvider] = aDetails;
   },
 
   // Start a timer, record a simple measure of the time interval when
   // timer.done() is called
-  simpleTimer(aName) {
+  simpleTimer: function(aName) {
     let startTime = Cu.now();
     return {
       done: () => this.recordSimpleMeasure(aName, Math.round(Cu.now() - startTime))
@@ -3048,7 +3048,7 @@ this.AddonManagerPrivate = {
    * This can be used as an implementation for Addon.findUpdates() when
    * no update mechanism is available.
    */
-  callNoUpdateListeners(addon, listener, reason, appVersion, platformVersion) {
+  callNoUpdateListeners: function(addon, listener, reason, appVersion, platformVersion) {
     if ("onNoCompatibilityUpdateAvailable" in listener) {
       safeCall(listener.onNoCompatibilityUpdateAvailable.bind(listener), addon);
     }
@@ -3064,11 +3064,11 @@ this.AddonManagerPrivate = {
     return gWebExtensionsMinPlatformVersion;
   },
 
-  hasUpgradeListener(aId) {
+  hasUpgradeListener: function(aId) {
     return AddonManagerInternal.upgradeListeners.has(aId);
   },
 
-  getUpgradeListener(aId) {
+  getUpgradeListener: function(aId) {
     return AddonManagerInternal.upgradeListeners.get(aId);
   },
 
@@ -3076,7 +3076,7 @@ this.AddonManagerPrivate = {
    * Predicate that returns true if we think the given extension ID
    * might have been generated by XPIProvider.
    */
-  isTemporaryInstallID(extensionId) {
+  isTemporaryInstallID: function(extensionId) {
      if (!gStarted)
        throw Components.Exception("AddonManager is not initialized",
                                   Cr.NS_ERROR_NOT_INITIALIZED);
@@ -3347,7 +3347,7 @@ this.AddonManager = {
     return err ? this._errorToString.get(err) : null;
   },
 
-  getInstallForURL(aUrl, aCallback, aMimetype,
+  getInstallForURL: function(aUrl, aCallback, aMimetype,
                                                  aHash, aName, aIcons,
                                                  aVersion, aBrowser) {
     return promiseOrCallback(
@@ -3356,7 +3356,7 @@ this.AddonManager = {
       aCallback);
   },
 
-  getInstallForFile(aFile, aCallback, aMimetype) {
+  getInstallForFile: function(aFile, aCallback, aMimetype) {
     return promiseOrCallback(
       AddonManagerInternal.getInstallForFile(aFile, aMimetype),
       aCallback);
@@ -3369,132 +3369,132 @@ this.AddonManager = {
    *         The type of startup change to get
    * @return An array of add-on IDs
    */
-  getStartupChanges(aType) {
+  getStartupChanges: function(aType) {
     if (!(aType in AddonManagerInternal.startupChanges))
       return [];
     return AddonManagerInternal.startupChanges[aType].slice(0);
   },
 
-  getAddonByID(aID, aCallback) {
+  getAddonByID: function(aID, aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAddonByID(aID),
       aCallback);
   },
 
-  getAddonBySyncGUID(aGUID, aCallback) {
+  getAddonBySyncGUID: function(aGUID, aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAddonBySyncGUID(aGUID),
       aCallback);
   },
 
-  getAddonsByIDs(aIDs, aCallback) {
+  getAddonsByIDs: function(aIDs, aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAddonsByIDs(aIDs),
       aCallback);
   },
 
-  getAddonsWithOperationsByTypes(aTypes, aCallback) {
+  getAddonsWithOperationsByTypes: function(aTypes, aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAddonsWithOperationsByTypes(aTypes),
       aCallback);
   },
 
-  getAddonsByTypes(aTypes, aCallback) {
+  getAddonsByTypes: function(aTypes, aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAddonsByTypes(aTypes),
       aCallback);
   },
 
-  getAllAddons(aCallback) {
+  getAllAddons: function(aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAllAddons(),
       aCallback);
   },
 
-  getInstallsByTypes(aTypes, aCallback) {
+  getInstallsByTypes: function(aTypes, aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getInstallsByTypes(aTypes),
       aCallback);
   },
 
-  getAllInstalls(aCallback) {
+  getAllInstalls: function(aCallback) {
     return promiseOrCallback(
       AddonManagerInternal.getAllInstalls(),
       aCallback);
   },
 
-  mapURIToAddonID(aURI) {
+  mapURIToAddonID: function(aURI) {
     return AddonManagerInternal.mapURIToAddonID(aURI);
   },
 
-  isInstallEnabled(aType) {
+  isInstallEnabled: function(aType) {
     return AddonManagerInternal.isInstallEnabled(aType);
   },
 
-  isInstallAllowed(aType, aInstallingPrincipal) {
+  isInstallAllowed: function(aType, aInstallingPrincipal) {
     return AddonManagerInternal.isInstallAllowed(aType, aInstallingPrincipal);
   },
 
-  installAddonsFromWebpage(aType, aBrowser, aInstallingPrincipal,
+  installAddonsFromWebpage: function(aType, aBrowser, aInstallingPrincipal,
                                      aInstalls) {
     AddonManagerInternal.installAddonsFromWebpage(aType, aBrowser,
                                                   aInstallingPrincipal,
                                                   aInstalls);
   },
 
-  installTemporaryAddon(aDirectory) {
+  installTemporaryAddon: function(aDirectory) {
     return AddonManagerInternal.installTemporaryAddon(aDirectory);
   },
 
-  installAddonFromSources(aDirectory) {
+  installAddonFromSources: function(aDirectory) {
     return AddonManagerInternal.installAddonFromSources(aDirectory);
   },
 
-  getAddonByInstanceID(aInstanceID) {
+  getAddonByInstanceID: function(aInstanceID) {
     return AddonManagerInternal.getAddonByInstanceID(aInstanceID);
   },
 
-  addManagerListener(aListener) {
+  addManagerListener: function(aListener) {
     AddonManagerInternal.addManagerListener(aListener);
   },
 
-  removeManagerListener(aListener) {
+  removeManagerListener: function(aListener) {
     AddonManagerInternal.removeManagerListener(aListener);
   },
 
-  addInstallListener(aListener) {
+  addInstallListener: function(aListener) {
     AddonManagerInternal.addInstallListener(aListener);
   },
 
-  removeInstallListener(aListener) {
+  removeInstallListener: function(aListener) {
     AddonManagerInternal.removeInstallListener(aListener);
   },
 
-  getUpgradeListener(aId) {
+  getUpgradeListener: function(aId) {
     return AddonManagerInternal.upgradeListeners.get(aId);
   },
 
-  addUpgradeListener(aInstanceID, aCallback) {
+  addUpgradeListener: function(aInstanceID, aCallback) {
     AddonManagerInternal.addUpgradeListener(aInstanceID, aCallback);
   },
 
-  removeUpgradeListener(aInstanceID) {
+  removeUpgradeListener: function(aInstanceID) {
     AddonManagerInternal.removeUpgradeListener(aInstanceID);
   },
 
-  addAddonListener(aListener) {
+  addAddonListener: function(aListener) {
     AddonManagerInternal.addAddonListener(aListener);
   },
 
-  removeAddonListener(aListener) {
+  removeAddonListener: function(aListener) {
     AddonManagerInternal.removeAddonListener(aListener);
   },
 
-  addTypeListener(aListener) {
+  addTypeListener: function(aListener) {
     AddonManagerInternal.addTypeListener(aListener);
   },
 
-  removeTypeListener(aListener) {
+  removeTypeListener: function(aListener) {
     AddonManagerInternal.removeTypeListener(aListener);
   },
 
@@ -3509,7 +3509,7 @@ this.AddonManager = {
    *         The Addon representing the add-on
    * @return true if the addon should auto-update, false otherwise.
    */
-  shouldAutoUpdate(aAddon) {
+  shouldAutoUpdate: function(aAddon) {
     if (!aAddon || typeof aAddon != "object")
       throw Components.Exception("aAddon must be specified",
                                  Cr.NS_ERROR_INVALID_ARG);
@@ -3571,11 +3571,11 @@ this.AddonManager = {
     return AddonManagerInternal.hotfixID;
   },
 
-  escapeAddonURI(aAddon, aUri, aAppVersion) {
+  escapeAddonURI: function(aAddon, aUri, aAppVersion) {
     return AddonManagerInternal.escapeAddonURI(aAddon, aUri, aAppVersion);
   },
 
-  getPreferredIconURL(aAddon, aSize, aWindow = undefined) {
+  getPreferredIconURL: function(aAddon, aSize, aWindow = undefined) {
     return AddonManagerInternal.getPreferredIconURL(aAddon, aSize, aWindow);
   },
 

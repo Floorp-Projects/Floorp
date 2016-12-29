@@ -93,7 +93,7 @@ var CrashMonitorInternal = {
    *
    * @return {Promise} A promise that resolves/rejects once loading is complete
    */
-  loadPreviousCheckpoints() {
+  loadPreviousCheckpoints: function() {
     this.previousCheckpoints = Task.spawn(function*() {
       let data;
       try {
@@ -155,7 +155,7 @@ this.CrashMonitor = {
    *
    * @return {Promise}
    */
-  init() {
+  init: function() {
     if (CrashMonitorInternal.initialized) {
       throw new Error("CrashMonitor.init() must only be called once!");
     }
@@ -185,7 +185,7 @@ this.CrashMonitor = {
    *
    * Update checkpoint file for every new notification received.
    */
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (!(aTopic in CrashMonitorInternal.checkpoints)) {
       // If this is the first time this notification is received,
       // remember it and write it to file

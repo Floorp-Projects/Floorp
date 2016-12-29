@@ -191,7 +191,7 @@ this.BadCertHandler =
 BadCertHandler.prototype = {
 
   // nsIChannelEventSink
-  asyncOnChannelRedirect(oldChannel, newChannel, flags, callback) {
+  asyncOnChannelRedirect: function(oldChannel, newChannel, flags, callback) {
     if (this.allowNonBuiltInCerts) {
       callback.onRedirectVerifyCallback(Components.results.NS_OK);
       return;
@@ -207,12 +207,12 @@ BadCertHandler.prototype = {
   },
 
   // nsIInterfaceRequestor
-  getInterface(iid) {
+  getInterface: function(iid) {
     return this.QueryInterface(iid);
   },
 
   // nsISupports
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (!iid.equals(Ci.nsIChannelEventSink) &&
         !iid.equals(Ci.nsIInterfaceRequestor) &&
         !iid.equals(Ci.nsISupports))

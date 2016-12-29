@@ -427,7 +427,7 @@ IdentityProviderService.prototype = {
   /**
    * Called by the UI to set the ID and caller for the authentication flow after it gets its ID
    */
-  setAuthenticationFlow(aAuthId, aProvId) {
+  setAuthenticationFlow: function(aAuthId, aProvId) {
     // this is the transition point between the two flows,
     // provision and authenticate.  We tell the auth flow which
     // provisioning flow it is started from.

@@ -144,7 +144,7 @@ var gTests = [
 
   {
     desc: "Drag a folder on toolbar",
-    run() {
+    run: function() {
       // Create a test folder to be dragged.
       var folderId = PlacesUtils.bookmarks
                                 .createFolder(PlacesUtils.toolbarFolderId,
@@ -185,7 +185,7 @@ var gTests = [
 
   {
     desc: "Drag a bookmark on toolbar",
-    run() {
+    run: function() {
       // Create a test bookmark to be dragged.
       var itemId = PlacesUtils.bookmarks
                               .insertBookmark(PlacesUtils.toolbarFolderId,

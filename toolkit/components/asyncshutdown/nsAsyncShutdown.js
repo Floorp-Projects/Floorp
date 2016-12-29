@@ -27,7 +27,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  */
 var PropertyBagConverter = {
   // From nsIPropertyBag to JS
-  toObject(bag) {
+  toObject: function(bag) {
     if (!(bag instanceof Ci.nsIPropertyBag)) {
       throw new TypeError("Not a property bag");
     }
@@ -40,7 +40,7 @@ var PropertyBagConverter = {
     }
     return result;
   },
-  toValue(property) {
+  toValue: function(property) {
     if (typeof property != "object") {
       return property;
     }
@@ -54,7 +54,7 @@ var PropertyBagConverter = {
   },
 
   // From JS to nsIPropertyBag
-  fromObject(obj) {
+  fromObject: function(obj) {
     if (obj == null || typeof obj != "object") {
       throw new TypeError("Invalid object: " + obj);
     }
@@ -66,7 +66,7 @@ var PropertyBagConverter = {
     }
     return bag;
   },
-  fromValue(value) {
+  fromValue: function(value) {
     if (typeof value == "function") {
       return null; // Emulating the behavior of JSON.stringify with functions
     }
@@ -100,7 +100,7 @@ function nsAsyncShutdownClient(moduleClient) {
   this._byName = new Map();
 }
 nsAsyncShutdownClient.prototype = {
-  _getPromisified(xpcomBlocker) {
+  _getPromisified: function(xpcomBlocker) {
     let candidate = this._byName.get(xpcomBlocker.name);
     if (!candidate) {
       return null;
@@ -110,7 +110,7 @@ nsAsyncShutdownClient.prototype = {
     }
     return null;
   },
-  _setPromisified(xpcomBlocker, moduleBlocker) {
+  _setPromisified: function(xpcomBlocker, moduleBlocker) {
     let candidate = this._byName.get(xpcomBlocker.name);
     if (!candidate) {
       this._byName.set(xpcomBlocker.name, {xpcom: xpcomBlocker,
@@ -122,7 +122,7 @@ nsAsyncShutdownClient.prototype = {
     }
     throw new Error("We have already registered a distinct blocker with the same name: " + xpcomBlocker.name);
   },
-  _deletePromisified(xpcomBlocker) {
+  _deletePromisified: function(xpcomBlocker) {
     let candidate = this._byName.get(xpcomBlocker.name);
     if (!candidate || candidate.xpcom !== xpcomBlocker) {
       return false;
@@ -136,7 +136,7 @@ nsAsyncShutdownClient.prototype = {
   get name() {
     return this._moduleClient.name;
   },
-  addBlocker(/* nsIAsyncShutdownBlocker*/ xpcomBlocker,
+  addBlocker: function(/* nsIAsyncShutdownBlocker*/ xpcomBlocker,
       fileName, lineNumber, stack) {
     // We need a Promise-based function with the same behavior as
     // `xpcomBlocker`. Furthermore, to support `removeBlocker`, we
@@ -171,12 +171,12 @@ nsAsyncShutdownClient.prototype = {
           return null;
         },
         filename: fileName,
-        lineNumber,
-        stack,
+        lineNumber: lineNumber,
+        stack: stack,
       });
   },
 
-  removeBlocker(xpcomBlocker) {
+  removeBlocker: function(xpcomBlocker) {
     let moduleBlocker = this._getPromisified(xpcomBlocker);
     if (!moduleBlocker) {
       return false;
@@ -210,7 +210,7 @@ nsAsyncShutdownBarrier.prototype = {
   get client() {
     return this._client;
   },
-  wait(onReady) {
+  wait: function(onReady) {
     this._moduleBarrier.wait().then(() => {
       onReady.done();
     });
@@ -242,7 +242,7 @@ function nsAsyncShutdownService() {
     let k = _k;
     Object.defineProperty(this, k, {
       configurable: true,
-      get() {
+      get: function() {
         delete this[k];
         let wrapped = AsyncShutdown[k]; // May be undefined, if we're on the wrong process.
         let result = wrapped ? new nsAsyncShutdownClient(wrapped) : undefined;
@@ -260,7 +260,7 @@ function nsAsyncShutdownService() {
   };
 }
 nsAsyncShutdownService.prototype = {
-  makeBarrier(name) {
+  makeBarrier: function(name) {
     return new nsAsyncShutdownBarrier(new AsyncShutdown.Barrier(name));
   },
 

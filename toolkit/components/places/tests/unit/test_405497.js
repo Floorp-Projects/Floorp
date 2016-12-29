@@ -27,7 +27,7 @@ function callback(aService)
 callback.prototype = {
   // nsINavHistoryBatchCallback
 
-  runBatched(aUserData)
+  runBatched: function(aUserData)
   {
     this.callCount++;
 

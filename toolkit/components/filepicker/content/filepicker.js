@@ -368,11 +368,11 @@ var gFilesEnumerator = {
   mFiles: null,
   mIndex: 0,
 
-  hasMoreElements()
+  hasMoreElements: function()
   {
     return (this.mIndex < this.mFiles.length);
   },
-  getNext()
+  getNext: function()
   {
     if (this.mIndex >= this.mFiles.length)
       throw Components.results.NS_ERROR_FAILURE;

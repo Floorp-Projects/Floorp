@@ -10,13 +10,13 @@ var anno = PlacesUtils.annotations;
 
 
 var bookmarksObserver = {
-  onBeginUpdateBatch() {
+  onBeginUpdateBatch: function() {
     this._beginUpdateBatch = true;
   },
-  onEndUpdateBatch() {
+  onEndUpdateBatch: function() {
     this._endUpdateBatch = true;
   },
-  onItemAdded(id, folder, index, itemType, uri, title, dateAdded,
+  onItemAdded: function(id, folder, index, itemType, uri, title, dateAdded,
                         guid) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
@@ -37,12 +37,12 @@ var bookmarksObserver = {
     do_check_eq(stmt.row.guid, guid);
     stmt.finalize();
   },
-  onItemRemoved(id, folder, index, itemType) {
+  onItemRemoved: function(id, folder, index, itemType) {
     this._itemRemovedId = id;
     this._itemRemovedFolder = folder;
     this._itemRemovedIndex = index;
   },
-  onItemChanged(id, property, isAnnotationProperty, value,
+  onItemChanged: function(id, property, isAnnotationProperty, value,
                           lastModified, itemType, parentId, guid, parentGuid,
                           oldValue) {
     this._itemChangedId = id;
@@ -51,12 +51,12 @@ var bookmarksObserver = {
     this._itemChangedValue = value;
     this._itemChangedOldValue = oldValue;
   },
-  onItemVisited(id, visitID, time) {
+  onItemVisited: function(id, visitID, time) {
     this._itemVisitedId = id;
     this._itemVisitedVistId = visitID;
     this._itemVisitedTime = time;
   },
-  onItemMoved(id, oldParent, oldIndex, newParent, newIndex,
+  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex,
                         itemType) {
     this._itemMovedId = id
     this._itemMovedOldParent = oldParent;

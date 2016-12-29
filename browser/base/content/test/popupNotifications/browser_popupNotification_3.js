@@ -14,25 +14,25 @@ function test() {
 var tests = [
   // Test notification is removed when dismissed if removeOnDismissal is true
   { id: "Test#1",
-    run() {
+    run: function() {
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.addOptions({
         removeOnDismissal: true
       });
       this.notification = showNotification(this.notifyObj);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden: function(popup) {
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback wasn't triggered");
       ok(this.notifyObj.removedCallbackTriggered, "removed callback triggered");
     }
   },
   // Test multiple notification icons are shown
   { id: "Test#2",
-    run() {
+    run: function() {
       this.notifyObj1 = new BasicNotification(this.id);
       this.notifyObj1.id += "_1";
       this.notifyObj1.anchorID = "default-notification-icon";
@@ -43,7 +43,7 @@ var tests = [
       this.notifyObj2.anchorID = "geo-notification-icon";
       this.notification2 = showNotification(this.notifyObj2);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj2);
 
       // check notifyObj1 anchor icon is showing
@@ -55,7 +55,7 @@ var tests = [
 
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden: function(popup) {
       this.notification1.remove();
       ok(this.notifyObj1.removedCallbackTriggered, "removed callback triggered");
 
@@ -65,7 +65,7 @@ var tests = [
   },
   // Test that multiple notification icons are removed when switching tabs
   { id: "Test#3",
-    *run() {
+    run: function* () {
       // show the notification on old tab.
       this.notifyObjOld = new BasicNotification(this.id);
       this.notifyObjOld.anchorID = "default-notification-icon";
@@ -80,7 +80,7 @@ var tests = [
       this.notifyObjNew.anchorID = "geo-notification-icon";
       this.notificationNew = showNotification(this.notifyObjNew);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObjNew);
 
       // check notifyObjOld anchor icon is removed
@@ -92,7 +92,7 @@ var tests = [
 
       dismissNotification(popup);
     },
-    onHidden(popup) {
+    onHidden: function(popup) {
       this.notificationNew.remove();
       gBrowser.removeTab(gBrowser.selectedTab);
 
@@ -102,14 +102,14 @@ var tests = [
   },
   // test security delay - too early
   { id: "Test#4",
-    run() {
+    run: function() {
       // Set the security delay to 100s
       PopupNotifications.buttonDelay = 100000;
 
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
       triggerMainCommand(popup);
 
@@ -119,21 +119,21 @@ var tests = [
       });
 
     },
-    onHidden(popup) {
+    onHidden: function(popup) {
       ok(!this.notifyObj.mainActionClicked, "mainAction was not clicked because it was too soon");
       ok(this.notifyObj.dismissalCallbackTriggered, "dismissal callback was triggered");
     }
   },
   // test security delay - after delay
   { id: "Test#5",
-    run() {
+    run: function() {
       // Set the security delay to 10ms
       PopupNotifications.buttonDelay = 10;
 
       this.notifyObj = new BasicNotification(this.id);
       showNotification(this.notifyObj);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       checkPopup(popup, this.notifyObj);
 
       // Wait until after the delay to trigger the main action
@@ -142,7 +142,7 @@ var tests = [
       }, 500);
 
     },
-    onHidden(popup) {
+    onHidden: function(popup) {
       ok(this.notifyObj.mainActionClicked, "mainAction was clicked after the delay");
       ok(!this.notifyObj.dismissalCallbackTriggered, "dismissal callback was not triggered");
       PopupNotifications.buttonDelay = PREF_SECURITY_DELAY_INITIAL;
@@ -150,7 +150,7 @@ var tests = [
   },
   // reload removes notification
   { id: "Test#6",
-    *run() {
+    run: function* () {
       yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let notifyObj = new BasicNotification(this.id);
       notifyObj.options.eventCallback = function(eventName) {
@@ -167,7 +167,7 @@ var tests = [
   },
   // location change in background tab removes notification
   { id: "Test#7",
-    *run() {
+    run: function* () {
       let oldSelectedTab = gBrowser.selectedTab;
       let newTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
       gBrowser.selectedTab = oldSelectedTab;
@@ -192,7 +192,7 @@ var tests = [
   },
   // Popup notification anchor shouldn't disappear when a notification with the same ID is re-added in a background tab
   { id: "Test#8",
-    *run() {
+    run: function* () {
       yield promiseTabLoadEvent(gBrowser.selectedTab, "http://example.com/");
       let originalTab = gBrowser.selectedTab;
       let bgTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "http://example.com/");
@@ -227,7 +227,7 @@ var tests = [
   },
   // location change in an embedded frame should not remove a notification
   { id: "Test#9",
-    *run() {
+    run: function* () {
       yield promiseTabLoadEvent(gBrowser.selectedTab, "data:text/html;charset=utf8,<iframe%20id='iframe'%20src='http://example.com/'>");
       this.notifyObj = new BasicNotification(this.id);
       this.notifyObj.options.eventCallback = function(eventName) {
@@ -237,7 +237,7 @@ var tests = [
       };
       showNotification(this.notifyObj);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       let self = this;
       let progressListener = {
         onLocationChange: function onLocationChange() {
@@ -259,11 +259,11 @@ var tests = [
       content.document.getElementById("iframe")
                       .setAttribute("src", "http://example.org/");
     },
-    onHidden() {}
+    onHidden: function() {}
   },
   // Popup Notifications should catch exceptions from callbacks
   { id: "Test#10",
-    run() {
+    run: function() {
       this.testNotif1 = new BasicNotification(this.id);
       this.testNotif1.message += " 1";
       this.notification1 = showNotification(this.testNotif1);
@@ -285,11 +285,11 @@ var tests = [
       };
       this.notification2 = showNotification(this.testNotif2);
     },
-    onShown(popup) {
+    onShown: function(popup) {
       is(popup.childNodes.length, 2, "two notifications are shown");
       dismissNotification(popup);
     },
-    onHidden() {
+    onHidden: function() {
       this.notification1.remove();
       this.notification2.remove();
     }

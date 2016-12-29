@@ -73,7 +73,7 @@ add_task(function* maintenance_foreign_count_test() {
                                                 AND url = :t_url `);
   stmt.params.t_url = T_URI.spec;
   stmt.executeAsync({
-    handleCompletion() {
+    handleCompletion: function() {
       deferred.resolve();
     }
   });

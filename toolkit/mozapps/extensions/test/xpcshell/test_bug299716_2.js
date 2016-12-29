@@ -39,7 +39,7 @@ function run_test() {
       do_check_false(item.isCompatible);
 
       item.findUpdates({
-        onUpdateFinished(addon) {
+        onUpdateFinished: function(addon) {
           do_check_false(item.isCompatible);
 
           testserver.stop(do_test_finished);

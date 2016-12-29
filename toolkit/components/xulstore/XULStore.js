@@ -60,7 +60,7 @@ XULStore.prototype = {
   _saveAllowed: true,
   _writeTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
 
-  load() {
+  load: function() {
     Services.obs.addObserver(this, "profile-before-change", true);
 
     this._storeFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
@@ -73,7 +73,7 @@ XULStore.prototype = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     this.writeFile();
     if (topic == "profile-before-change") {
       this._saveAllowed = false;
@@ -83,14 +83,14 @@ XULStore.prototype = {
   /*
    * Internal function for logging debug messages to the Error Console window
    */
-  log(message) {
+  log: function(message) {
     if (!debugMode)
       return;
     dump("XULStore: " + message + "\n");
     Services.console.logStringMessage("XULStore: " + message);
   },
 
-  import() {
+  import: function() {
     let localStoreFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
 
     localStoreFile.append("localstore.rdf");
@@ -142,7 +142,7 @@ XULStore.prototype = {
     }
   },
 
-  readFile() {
+  readFile: function() {
     const MODE_RDONLY = 0x01;
     const FILE_PERMS  = 0o600;
 
@@ -181,7 +181,7 @@ XULStore.prototype = {
     }
   }),
 
-  markAsChanged() {
+  markAsChanged: function() {
     if (this._needsSaving || !this._storeFile)
       return;
 
@@ -192,7 +192,7 @@ XULStore.prototype = {
 
   /* ---------- interface implementation ---------- */
 
-  setValue(docURI, id, attr, value) {
+  setValue: function(docURI, id, attr, value) {
     this.log("Saving " + attr + "=" + value + " for id=" + id + ", doc=" + docURI);
 
     if (!this._saveAllowed) {
@@ -229,7 +229,7 @@ XULStore.prototype = {
     this.markAsChanged();
   },
 
-  hasValue(docURI, id, attr) {
+  hasValue: function(docURI, id, attr) {
     this.log("has store value for id=" + id + ", attr=" + attr + ", doc=" + docURI);
 
     let ids = this._data[docURI];
@@ -243,7 +243,7 @@ XULStore.prototype = {
     return false;
   },
 
-  getValue(docURI, id, attr) {
+  getValue: function(docURI, id, attr) {
     this.log("get store value for id=" + id + ", attr=" + attr + ", doc=" + docURI);
 
     let ids = this._data[docURI];
@@ -257,7 +257,7 @@ XULStore.prototype = {
     return "";
   },
 
-  removeValue(docURI, id, attr) {
+  removeValue: function(docURI, id, attr) {
     this.log("remove store value for id=" + id + ", attr=" + attr + ", doc=" + docURI);
 
     if (!this._saveAllowed) {
@@ -284,7 +284,7 @@ XULStore.prototype = {
     }
   },
 
-  getIDsEnumerator(docURI) {
+  getIDsEnumerator: function(docURI) {
     this.log("Getting ID enumerator for doc=" + docURI);
 
     if (!(docURI in this._data))
@@ -301,7 +301,7 @@ XULStore.prototype = {
     return new nsStringEnumerator(result);
   },
 
-  getAttributeEnumerator(docURI, id) {
+  getAttributeEnumerator: function(docURI, id) {
     this.log("Getting attribute enumerator for id=" + id + ", doc=" + docURI);
 
     if (!(docURI in this._data) || !(id in this._data[docURI]))
@@ -323,10 +323,10 @@ function nsStringEnumerator(items) {
 nsStringEnumerator.prototype = {
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIStringEnumerator]),
   _nextIndex : 0,
-  hasMore() {
+  hasMore: function() {
     return this._nextIndex < this._items.length;
   },
-  getNext() {
+  getNext : function() {
     if (!this.hasMore())
       throw Cr.NS_ERROR_NOT_AVAILABLE;
     return this._items[this._nextIndex++];

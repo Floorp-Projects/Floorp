@@ -118,7 +118,7 @@ var PendingErrors = {
   /**
    * Initialize PendingErrors
    */
-  init() {
+  init: function() {
     Services.obs.addObserver(function observe(aSubject, aTopic, aValue) {
       PendingErrors.report(aValue);
     }, "promise-finalization-witness", false);
@@ -129,7 +129,7 @@ var PendingErrors = {
    *
    * @return The unique identifier of the error.
    */
-  register(error) {
+  register: function(error) {
     let id = "pending-error-" + (this._counter++);
     //
     // At this stage, ideally, we would like to store the error itself
@@ -222,7 +222,7 @@ var PendingErrors = {
    * @param id The identifier of the pending error, as returned by
    * |register|.
    */
-  report(id) {
+  report: function(id) {
     let value = this._map.get(id);
     if (!value) {
       return; // The error has already been reported
@@ -236,7 +236,7 @@ var PendingErrors = {
   /**
    * Mark all pending errors are uncaught, notify the observers.
    */
-  flush() {
+  flush: function() {
     // Since we are going to modify the map while walking it,
     // let's copying the keys first.
     for (let key of Array.from(this._map.keys())) {
@@ -248,7 +248,7 @@ var PendingErrors = {
    * Stop tracking an error, as this error has been caught,
    * eventually.
    */
-  unregister(id) {
+  unregister: function(id) {
     this._map.delete(id);
   },
 
@@ -260,21 +260,21 @@ var PendingErrors = {
    *   {message, date, fileName, stack, lineNumber}
    * All arguments are optional.
    */
-  addObserver(observer) {
+  addObserver: function(observer) {
     this._observers.add(observer);
   },
 
   /**
    * Remove an observer added with addObserver
    */
-  removeObserver(observer) {
+  removeObserver: function(observer) {
     this._observers.delete(observer);
   },
 
   /**
    * Remove all the observers added with addObserver
    */
-  removeAllObservers() {
+  removeAllObservers: function() {
     this._observers.clear();
   }
 };
@@ -620,7 +620,7 @@ Promise.Debugging = {
    *   {message, date, fileName, stack, lineNumber}
    * All arguments are optional.
    */
-  addUncaughtErrorObserver(observer) {
+  addUncaughtErrorObserver: function(observer) {
     PendingErrors.addObserver(observer);
   },
 
@@ -630,14 +630,14 @@ Promise.Debugging = {
    * @param {function} An observer registered with
    * addUncaughtErrorObserver.
    */
-  removeUncaughtErrorObserver(observer) {
+  removeUncaughtErrorObserver: function(observer) {
     PendingErrors.removeObserver(observer);
   },
 
   /**
    * Remove all the observers added with addUncaughtErrorObserver
    */
-  clearUncaughtErrorObservers() {
+  clearUncaughtErrorObservers: function() {
     PendingErrors.removeAllObservers();
   },
 
@@ -645,7 +645,7 @@ Promise.Debugging = {
    * Force all pending errors to be reported immediately as uncaught.
    * Note that this may cause some false positives.
    */
-  flushUncaughtErrors() {
+  flushUncaughtErrors: function() {
     PendingErrors.flush();
   },
 };
@@ -688,7 +688,7 @@ this.PromiseWalker = {
    * @param aValue
    *        Associated resolution value or rejection reason.
    */
-  completePromise(aPromise, aStatus, aValue)
+  completePromise: function(aPromise, aStatus, aValue)
   {
     // Do nothing if the promise is already resolved or rejected.
     if (aPromise[N_INTERNALS].status != STATUS_PENDING) {
@@ -722,7 +722,7 @@ this.PromiseWalker = {
   /**
    * Sets up the PromiseWalker loop to start on the next tick of the event loop
    */
-  scheduleWalkerLoop()
+  scheduleWalkerLoop: function()
   {
     this.walkerLoopScheduled = true;
 
@@ -763,7 +763,7 @@ this.PromiseWalker = {
    *        Resolved or rejected promise whose handlers should be processed.  It
    *        is expected that this promise has at least one handler to process.
    */
-  schedulePromise(aPromise)
+  schedulePromise: function(aPromise)
   {
     // Migrate the handlers from the provided promise to the global list.
     for (let handler of aPromise[N_INTERNALS].handlers) {
@@ -790,7 +790,7 @@ this.PromiseWalker = {
    *
    * This function is called with "this" bound to the PromiseWalker object.
    */
-  walkerLoop()
+  walkerLoop: function()
   {
     // If there is more than one handler waiting, reschedule the walker loop
     // immediately.  Otherwise, use walkerLoopScheduled to tell schedulePromise()
@@ -917,7 +917,7 @@ Handler.prototype = {
    * Called after thisPromise is resolved or rejected, invokes the appropriate
    * callback and propagates the result to nextPromise.
    */
-  process()
+  process: function()
   {
     // The state of this promise is propagated unless a handler is defined.
     let nextStatus = this.thisPromise[N_INTERNALS].status;

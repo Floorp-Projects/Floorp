@@ -25,7 +25,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
   Cu.import("resource://test/AsyncRunner.jsm", s);
   asyncRunner = new s.AsyncRunner({
     done: do_test_finished,
-    error(err) {
+    error: function(err) {
       // xpcshell test functions like equal throw NS_ERROR_ABORT on
       // failure.  Ignore those and catch only uncaught exceptions.
       if (err !== Cr.NS_ERROR_ABORT) {
@@ -36,7 +36,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
         do_throw(err);
       }
     },
-    consoleError(scriptErr) {
+    consoleError: function(scriptErr) {
       // Previously, this code checked for console errors related to the test,
       // and treated them as failures. This was problematic, because our current
       // very-broken exception reporting machinery in XPCWrappedJSClass reports
@@ -138,10 +138,10 @@ function setWithDate(group, name, val, timestamp, context) {
     stmt.params.group = group;
 
     stmt.executeAsync({
-      handleCompletion(reason) {
+      handleCompletion: function(reason) {
         next();
       },
-      handleError(err) {
+      handleError: function(err) {
         do_throw(err);
       }
     });
@@ -164,14 +164,14 @@ function getDate(group, name, context) {
 
   let res;
   stmt.executeAsync({
-    handleResult(results) {
+    handleResult: function(results) {
       let row = results.getNextRow();
       res = row.getResultByName("timestamp");
     },
-    handleCompletion(reason) {
+    handleCompletion: function(reason) {
       next(res * 1000);
     },
-    handleError(err) {
+    handleError: function(err) {
       do_throw(err);
     }
   });
@@ -336,17 +336,17 @@ function dbOK(expectedRows) {
   let cols = ["grp", "name", "value"];
 
   db.executeAsync([stmt], 1, {
-    handleCompletion(reason) {
+    handleCompletion: function(reason) {
       arraysOfArraysOK(actualRows, expectedRows);
       next();
     },
-    handleResult(results) {
+    handleResult: function(results) {
       let row = null;
       while (row = results.getNextRow()) {
         actualRows.push(cols.map(c => row.getResultByName(c)));
       }
     },
-    handleError(err) {
+    handleError: function(err) {
       do_throw(err);
     }
   });
@@ -355,7 +355,7 @@ function dbOK(expectedRows) {
 
 function on(event, names, dontRemove) {
   let args = {
-    reset() {
+    reset: function() {
       for (let prop in this) {
         if (Array.isArray(this[prop]))
           this[prop].splice(0, this[prop].length);

@@ -246,7 +246,7 @@ function GetBookmarksResource(aProfileFolder) {
   return {
     type: MigrationUtils.resourceTypes.BOOKMARKS,
 
-    migrate(aCallback) {
+    migrate: function(aCallback) {
       return Task.spawn(function* () {
         let gotErrors = false;
         let errorGatherer = function() { gotErrors = true };
@@ -341,12 +341,12 @@ function GetHistoryResource(aProfileFolder) {
           yield new Promise((resolve, reject) => {
             MigrationUtils.insertVisitsWrapper(places, {
               _success: false,
-              handleResult() {
+              handleResult: function() {
                 // Importing any entry is considered a successful import.
                 this._success = true;
               },
-              handleError() {},
-              handleCompletion() {
+              handleError: function() {},
+              handleCompletion: function() {
                 if (this._success) {
                   resolve();
                 } else {

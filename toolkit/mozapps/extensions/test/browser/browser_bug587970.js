@@ -132,11 +132,11 @@ add_test(function() {
 
   var installCount = 0;
   var listener = {
-    onDownloadStarted(aInstall) {
+    onDownloadStarted: function(aInstall) {
       isnot(aInstall.existingAddon.id, "addon1@tests.mozilla.org", "Should not have seen a download start for addon1");
     },
 
-    onInstallEnded(aInstall) {
+    onInstallEnded: function(aInstall) {
       if (++installCount < 2)
         return;
 

@@ -27,7 +27,7 @@ function run_test()
       let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                      .getService(Ci.nsIProperties);
       let provider = {
-        getFile(prop, persistent) {
+        getFile: function(prop, persistent) {
           persistent.value = true;
               if (prop == "ProfD" || prop == "ProfLD" || prop == "ProfDS" ||
               prop == "ProfLDS" || prop == "TmpD") {
@@ -35,7 +35,7 @@ function run_test()
           }
           throw Components.results.NS_ERROR_FAILURE;
         },
-        QueryInterface(iid) {
+        QueryInterface: function(iid) {
           if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
               iid.equals(Ci.nsISupports)) {
             return this;

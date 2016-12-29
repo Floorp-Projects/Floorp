@@ -78,7 +78,7 @@ function allRegistered() {
 function promiseAllRegistered() {
   return new Promise(function(resolve) {
     let listener = {
-      onRegister() {
+      onRegister: function() {
         if (allRegistered()) {
           swm.removeListener(listener);
           resolve();
@@ -92,11 +92,11 @@ function promiseAllRegistered() {
 function promiseUnregister(info) {
   return new Promise(function(resolve) {
     swm.unregister(info.principal, {
-      unregisterSucceeded(aState) {
+      unregisterSucceeded: function(aState) {
         ok(aState, "ServiceWorkerRegistration exists");
         resolve();
       },
-      unregisterFailed(aState) {
+      unregisterFailed: function(aState) {
         ok(false, "unregister should succeed");
       }
     }, info.scope);

@@ -26,7 +26,7 @@ this.AddonManagerTesting = {
    * @return {Promise<Object>} A promise that resolves returning the found addon or null
    *         if it is not found.
    */
-  getAddonById(id) {
+  getAddonById: function(id) {
     return new Promise(resolve => AddonManager.getAddonByID(id, addon => resolve(addon)));
   },
 
@@ -38,7 +38,7 @@ this.AddonManagerTesting = {
    *
    * @return Promise<restartRequired>
    */
-  uninstallAddonByID(id) {
+  uninstallAddonByID: function(id) {
     let deferred = Promise.defer();
 
     AddonManager.getAddonByID(id, (addon) => {
@@ -48,7 +48,7 @@ this.AddonManagerTesting = {
       }
 
       let listener = {
-        onUninstalling(addon, needsRestart) {
+        onUninstalling: function(addon, needsRestart) {
           if (addon.id != id) {
             return;
           }
@@ -59,7 +59,7 @@ this.AddonManagerTesting = {
           }
         },
 
-        onUninstalled(addon) {
+        onUninstalled: function(addon) {
           if (addon.id != id) {
             return;
           }
@@ -68,7 +68,7 @@ this.AddonManagerTesting = {
           deferred.resolve(false);
         },
 
-        onOperationCancelled(addon) {
+        onOperationCancelled: function(addon) {
           if (addon.id != id) {
             return;
           }
@@ -90,7 +90,7 @@ this.AddonManagerTesting = {
    *
    * @return Promise<addon>
    */
-  installXPIFromURL(url, hash, name, iconURL, version) {
+  installXPIFromURL: function(url, hash, name, iconURL, version) {
     let deferred = Promise.defer();
 
     AddonManager.getInstallForURL(url, (install) => {
@@ -101,7 +101,7 @@ this.AddonManagerTesting = {
         onDownloadFailed: fail,
         onInstallCancelled: fail,
         onInstallFailed: fail,
-        onInstallEnded(install, addon) {
+        onInstallEnded: function(install, addon) {
           deferred.resolve(addon);
         },
       };

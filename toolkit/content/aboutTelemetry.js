@@ -223,7 +223,7 @@ var Settings = {
     },
   ],
 
-  attachObservers() {
+  attachObservers: function() {
     for (let s of this.SETTINGS) {
       let setting = s;
       Preferences.observe(setting.pref, this.render, this);
@@ -247,7 +247,7 @@ var Settings = {
     }
   },
 
-  detachObservers() {
+  detachObservers: function() {
     for (let setting of this.SETTINGS) {
       Preferences.ignore(setting.pref, this.render, this);
     }
@@ -256,7 +256,7 @@ var Settings = {
   /**
    * Updates the button & text at the top of the page to reflect Telemetry state.
    */
-  render() {
+  render: function() {
     for (let setting of this.SETTINGS) {
       let enabledElement = document.getElementById(setting.descriptionEnabledId);
       let disabledElement = document.getElementById(setting.descriptionDisabledId);
@@ -277,7 +277,7 @@ var PingPicker = {
   viewStructuredPingData: null,
   _archivedPings: null,
 
-  attachObservers() {
+  attachObservers: function() {
     let elements = document.getElementsByName("choose-ping-source");
     for (let el of elements) {
       el.addEventListener("change", () => this.onPingSourceChanged(), false);
@@ -312,11 +312,11 @@ var PingPicker = {
             .addEventListener("change", () => displayPingData(gPingData), false);
   },
 
-  onPingSourceChanged() {
+  onPingSourceChanged: function() {
     this.update();
   },
 
-  onPingDisplayChanged() {
+  onPingDisplayChanged: function() {
     this.update();
   },
 
@@ -355,7 +355,7 @@ var PingPicker = {
     }
   }),
 
-  _updateCurrentPingData() {
+  _updateCurrentPingData: function() {
     const subsession = document.getElementById("show-subsession-data").checked;
     const ping = TelemetryController.getCurrentPingData(subsession);
     if (!ping) {
@@ -364,7 +364,7 @@ var PingPicker = {
     displayPingData(ping, true);
   },
 
-  _updateArchivedPingData() {
+  _updateArchivedPingData: function() {
     let id = this._getSelectedPingId();
     return TelemetryArchive.promiseArchivedPingById(id)
                            .then((ping) => displayPingData(ping, true));
@@ -410,7 +410,7 @@ var PingPicker = {
     yield this._updateArchivedPingData();
   }),
 
-  _renderWeeks() {
+  _renderWeeks: function() {
     let weekSelector = document.getElementById("choose-ping-week");
     removeAllChildNodes(weekSelector);
 
@@ -425,12 +425,12 @@ var PingPicker = {
     }
   },
 
-  _getSelectedWeek() {
+  _getSelectedWeek: function() {
     let weekSelector = document.getElementById("choose-ping-week");
     return this._weeks[weekSelector.selectedIndex];
   },
 
-  _renderPingList(id = null) {
+  _renderPingList: function(id = null) {
     let pingSelector = document.getElementById("choose-ping-id");
     removeAllChildNodes(pingSelector);
 
@@ -456,13 +456,13 @@ var PingPicker = {
     }
   },
 
-  _getSelectedPingId() {
+  _getSelectedPingId: function() {
     let pingSelector = document.getElementById("choose-ping-id");
     let selected = pingSelector.selectedOptions.item(0);
     return selected.getAttribute("value");
   },
 
-  _movePingIndex(offset) {
+  _movePingIndex: function(offset) {
     const id = this._getSelectedPingId();
     const index = this._archivedPings.findIndex((p) => p.id == id);
     const newIndex = Math.min(Math.max(index + offset, 0), this._archivedPings.length - 1);
@@ -478,12 +478,12 @@ var PingPicker = {
     this._updateArchivedPingData();
   },
 
-  _showRawPingData() {
+  _showRawPingData: function() {
     document.getElementById("raw-ping-data-section").classList.remove("hidden");
     document.getElementById("structured-ping-data-section").classList.add("hidden");
   },
 
-  _showStructuredPingData() {
+  _showStructuredPingData: function() {
     document.getElementById("raw-ping-data-section").classList.add("hidden");
     document.getElementById("structured-ping-data-section").classList.remove("hidden");
   },
@@ -493,7 +493,7 @@ var GeneralData = {
   /**
    * Renders the general data
    */
-  render(aPing) {
+  render: function(aPing) {
     setHasData("general-data-section", true);
     let table = document.createElement("table");
 
@@ -530,7 +530,7 @@ var GeneralData = {
    * @param aColType Column's tag name
    * @param aColText Column contents
    */
-  appendColumn(aRowElement, aColType, aColText) {
+  appendColumn: function(aRowElement, aColType, aColText) {
     let colElement = document.createElement(aColType);
     let colTextElement = document.createTextNode(aColText);
     colElement.appendChild(colTextElement);
@@ -542,7 +542,7 @@ var EnvironmentData = {
   /**
    * Renders the environment data
    */
-  render(ping) {
+  render: function(ping) {
     let dataDiv = document.getElementById("environment-data");
     removeAllChildNodes(dataDiv);
     const hasData = !!ping.environment;
@@ -577,7 +577,7 @@ var EnvironmentData = {
     this.createAddonSection(dataDiv, ping);
   },
 
-  createSubsection(title, hasSubdata, subSectionData, dataDiv) {
+  createSubsection: function(title, hasSubdata, subSectionData, dataDiv) {
     let dataSection = document.createElement("section");
     dataSection.classList.add("data-subsection");
 
@@ -618,7 +618,7 @@ var EnvironmentData = {
     dataDiv.appendChild(dataSection);
   },
 
-  renderPersona(addonObj, addonSection, sectionTitle) {
+  renderPersona: function(addonObj, addonSection, sectionTitle) {
     let table = document.createElement("table");
     table.setAttribute("id", sectionTitle);
     this.appendAddonSubsectionTitle(sectionTitle, table);
@@ -626,7 +626,7 @@ var EnvironmentData = {
     addonSection.appendChild(table);
   },
 
-  renderActivePlugins(addonObj, addonSection, sectionTitle) {
+  renderActivePlugins: function(addonObj, addonSection, sectionTitle) {
     let table = document.createElement("table");
     table.setAttribute("id", sectionTitle);
     this.appendAddonSubsectionTitle(sectionTitle, table);
@@ -643,7 +643,7 @@ var EnvironmentData = {
     addonSection.appendChild(table);
   },
 
-  renderAddonsObject(addonObj, addonSection, sectionTitle) {
+  renderAddonsObject: function(addonObj, addonSection, sectionTitle) {
     let table = document.createElement("table");
     table.setAttribute("id", sectionTitle);
     this.appendAddonSubsectionTitle(sectionTitle, table);
@@ -662,7 +662,7 @@ var EnvironmentData = {
     addonSection.appendChild(table);
   },
 
-  renderKeyValueObject(addonObj, addonSection, sectionTitle) {
+  renderKeyValueObject: function(addonObj, addonSection, sectionTitle) {
     let data = explodeObject(addonObj);
     let table = document.createElement("table");
     table.setAttribute("class", sectionTitle);
@@ -676,32 +676,32 @@ var EnvironmentData = {
     addonSection.appendChild(table);
   },
 
-  appendAddonID(table, addonID) {
+  appendAddonID: function(table, addonID) {
     this.appendRow(table, "id", addonID);
   },
 
-  appendHeading(table) {
+  appendHeading: function(table) {
     let headings = document.createElement("tr");
     this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingName"));
     this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingValue"));
     table.appendChild(headings);
   },
 
-  appendHeadingName(table, name) {
+  appendHeadingName: function(table, name) {
     let headings = document.createElement("tr");
     this.appendColumn(headings, "th", name);
     headings.cells[0].colSpan = 2;
     table.appendChild(headings);
   },
 
-  appendAddonSubsectionTitle(section, table) {
+  appendAddonSubsectionTitle: function(section, table) {
     let caption = document.createElement("caption");
     caption.setAttribute("class", "addon-caption");
     caption.appendChild(document.createTextNode(section));
     table.appendChild(caption);
   },
 
-  createAddonSection(dataDiv, ping) {
+  createAddonSection: function(dataDiv, ping) {
     let addonSection = document.createElement("div");
     let addons = ping.environment.addons;
     this.renderAddonsObject(addons.activeAddons, addonSection, "activeAddons");
@@ -715,7 +715,7 @@ var EnvironmentData = {
     this.createSubsection("addons", hasAddonData, addonSection, dataDiv);
   },
 
-  appendRow(table, id, value) {
+  appendRow: function(table, id, value) {
     let row = document.createElement("tr");
     this.appendColumn(row, "td", id);
     this.appendColumn(row, "td", value);
@@ -728,7 +728,7 @@ var EnvironmentData = {
    * @param aColType Column's tag name
    * @param aColText Column contents
    */
-  appendColumn(aRowElement, aColType, aColText) {
+  appendColumn: function(aRowElement, aColType, aColText) {
     let colElement = document.createElement(aColType);
     let colTextElement = document.createTextNode(aColText);
     colElement.appendChild(colTextElement);
@@ -740,7 +740,7 @@ var TelLog = {
   /**
    * Renders the telemetry log
    */
-  render(aPing) {
+  render: function(aPing) {
     let entries = aPing.payload.log;
     const hasData = entries && entries.length > 0;
     setHasData("telemetry-log-section", hasData);
@@ -781,7 +781,7 @@ var TelLog = {
    * @param aColType Column's tag name
    * @param aColText Column contents
    */
-  appendColumn(aRowElement, aColType, aColText) {
+  appendColumn: function(aRowElement, aColType, aColText) {
     let colElement = document.createElement(aColType);
     let colTextElement = document.createTextNode(aColText);
     colElement.appendChild(colTextElement);
@@ -1002,7 +1002,7 @@ var RawPayload = {
   /**
    * Renders the raw payload
    */
-  render(aPing) {
+  render: function(aPing) {
     setHasData("raw-payload-section", true);
     let pre = document.getElementById("raw-payload-data-pre");
     pre.textContent = JSON.stringify(aPing.payload, null, 2);
@@ -1133,7 +1133,7 @@ var ThreadHangStats = {
   /**
    * Renders raw thread hang stats data
    */
-  render(aPayload) {
+  render: function(aPayload) {
     let div = document.getElementById("thread-hang-stats");
     removeAllChildNodes(div);
 
@@ -1151,7 +1151,7 @@ var ThreadHangStats = {
   /**
    * Creates and fills data corresponding to a thread
    */
-  renderThread(aThread) {
+  renderThread: function(aThread) {
     let div = document.createElement("div");
 
     let title = document.createElement("h2");
@@ -1243,7 +1243,7 @@ var Histogram = {
     return outerDiv;
   },
 
-  processHistogram(aHgram, aName, aIsBHR) {
+  processHistogram: function(aHgram, aName, aIsBHR) {
     const values = Object.keys(aHgram.values).map(k => aHgram.values[k]);
     if (!values.length) {
       // If we have no values collected for this histogram, just return
@@ -1290,7 +1290,7 @@ var Histogram = {
       values: labelledValues,
       pretty_average: average,
       max: max_value,
-      sample_count,
+      sample_count: sample_count,
       sum: aHgram.sum
     };
 
@@ -1303,7 +1303,7 @@ var Histogram = {
    *
    * @param aNumber Non-negative number
    */
-  getLogValue(aNumber) {
+  getLogValue: function(aNumber) {
     return Math.max(0, Math.log10(aNumber) + 1);
   },
 
@@ -1530,7 +1530,7 @@ var GenericTable = {
    *             for one row.
    * @param headings The column header strings.
    */
-  render(rows, headings) {
+  render: function(rows, headings) {
     let table = document.createElement("table");
     this.renderHeader(table, headings);
     this.renderBody(table, rows);
@@ -1544,7 +1544,7 @@ var GenericTable = {
    * @param table Table element
    * @param headings Array of column header strings.
    */
-  renderHeader(table, headings) {
+  renderHeader: function(table, headings) {
     let headerRow = document.createElement("tr");
     table.appendChild(headerRow);
 
@@ -1564,7 +1564,7 @@ var GenericTable = {
    * @param rows An array of arrays, each containing data to render
    *             for one row.
    */
-  renderBody(table, rows) {
+  renderBody: function(table, rows) {
     for (let row of rows) {
       row = row.map(value => {
         // use .valueOf() to unbox Number, String, etc. objects
@@ -1590,7 +1590,7 @@ var GenericTable = {
 };
 
 var KeyedHistogram = {
-  render(parent, id, keyedHistogram) {
+  render: function(parent, id, keyedHistogram) {
     let outerDiv = document.createElement("div");
     outerDiv.className = "keyed-histogram";
     outerDiv.id = id;
@@ -1644,7 +1644,7 @@ var Scalars = {
    * Render the scalar data - if present - from the payload in a simple key-value table.
    * @param aPayload A payload object to render the data from.
    */
-  render(aPayload) {
+  render: function(aPayload) {
     let scalarsSection = document.getElementById("scalars");
     removeAllChildNodes(scalarsSection);
 
@@ -1671,7 +1671,7 @@ var KeyedScalars = {
    * Render the keyed scalar data - if present - from the payload in a simple key-value table.
    * @param aPayload A payload object to render the data from.
    */
-  render(aPayload) {
+  render: function(aPayload) {
     let scalarsSection = document.getElementById("keyed-scalars");
     removeAllChildNodes(scalarsSection);
 
@@ -1705,7 +1705,7 @@ var Events = {
    * Render the event data - if present - from the payload in a simple table.
    * @param aPayload A payload object to render the data from.
    */
-  render(aPayload) {
+  render: function(aPayload) {
     let eventsSection = document.getElementById("events");
     removeAllChildNodes(eventsSection);
 

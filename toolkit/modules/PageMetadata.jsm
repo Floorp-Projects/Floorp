@@ -174,7 +174,7 @@ this.PageMetadata = {
    * @param {Document} document - Document to extract data from.
    * @param {Object}  result - Existing result object to add properties to.
    */
-  _getLinkData(document, result) {
+  _getLinkData: function(document, result) {
     let elements = document.querySelectorAll("head > link[rel], head > link[id]");
 
     for (let element of elements) {

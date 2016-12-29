@@ -807,7 +807,7 @@ function getExpectedInstall(aAddon) {
 }
 
 const AddonListener = {
-  onPropertyChanged(aAddon, aProperties) {
+  onPropertyChanged: function(aAddon, aProperties) {
     do_print(`Got onPropertyChanged event for ${aAddon.id}`);
     let [event, properties] = getExpectedEvent(aAddon.id);
     do_check_eq("onPropertyChanged", event);
@@ -821,7 +821,7 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onEnabling(aAddon, aRequiresRestart) {
+  onEnabling: function(aAddon, aRequiresRestart) {
     do_print(`Got onEnabling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onEnabling", event);
@@ -832,7 +832,7 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onEnabled(aAddon) {
+  onEnabled: function(aAddon) {
     do_print(`Got onEnabled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     do_check_eq("onEnabled", event);
@@ -840,7 +840,7 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onDisabling(aAddon, aRequiresRestart) {
+  onDisabling: function(aAddon, aRequiresRestart) {
     do_print(`Got onDisabling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onDisabling", event);
@@ -851,7 +851,7 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onDisabled(aAddon) {
+  onDisabled: function(aAddon) {
     do_print(`Got onDisabled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     do_check_eq("onDisabled", event);
@@ -859,7 +859,7 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onInstalling(aAddon, aRequiresRestart) {
+  onInstalling: function(aAddon, aRequiresRestart) {
     do_print(`Got onInstalling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onInstalling", event);
@@ -869,14 +869,14 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onInstalled(aAddon) {
+  onInstalled: function(aAddon) {
     do_print(`Got onInstalled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     do_check_eq("onInstalled", event);
     return check_test_completed(arguments);
   },
 
-  onUninstalling(aAddon, aRequiresRestart) {
+  onUninstalling: function(aAddon, aRequiresRestart) {
     do_print(`Got onUninstalling event for ${aAddon.id}`);
     let [event, expectedRestart] = getExpectedEvent(aAddon.id);
     do_check_eq("onUninstalling", event);
@@ -886,14 +886,14 @@ const AddonListener = {
     return check_test_completed(arguments);
   },
 
-  onUninstalled(aAddon) {
+  onUninstalled: function(aAddon) {
     do_print(`Got onUninstalled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     do_check_eq("onUninstalled", event);
     return check_test_completed(arguments);
   },
 
-  onOperationCancelled(aAddon) {
+  onOperationCancelled: function(aAddon) {
     do_print(`Got onOperationCancelled event for ${aAddon.id}`);
     let [event] = getExpectedEvent(aAddon.id);
     do_check_eq("onOperationCancelled", event);
@@ -902,7 +902,7 @@ const AddonListener = {
 };
 
 const InstallListener = {
-  onNewInstall(install) {
+  onNewInstall: function(install) {
     if (install.state != AddonManager.STATE_DOWNLOADED &&
         install.state != AddonManager.STATE_DOWNLOAD_FAILED &&
         install.state != AddonManager.STATE_AVAILABLE)
@@ -915,54 +915,54 @@ const InstallListener = {
     return check_test_completed(arguments);
   },
 
-  onDownloadStarted(install) {
+  onDownloadStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADING);
     do_check_eq(install.error, 0);
     do_check_eq("onDownloadStarted", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
-  onDownloadEnded(install) {
+  onDownloadEnded: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOADED);
     do_check_eq(install.error, 0);
     do_check_eq("onDownloadEnded", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
-  onDownloadFailed(install) {
+  onDownloadFailed: function(install) {
     do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
     do_check_eq("onDownloadFailed", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
-  onDownloadCancelled(install) {
+  onDownloadCancelled: function(install) {
     do_check_eq(install.state, AddonManager.STATE_CANCELLED);
     do_check_eq(install.error, 0);
     do_check_eq("onDownloadCancelled", getExpectedInstall());
     return check_test_completed(arguments);
   },
 
-  onInstallStarted(install) {
+  onInstallStarted: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLING);
     do_check_eq(install.error, 0);
     do_check_eq("onInstallStarted", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
-  onInstallEnded(install, newAddon) {
+  onInstallEnded: function(install, newAddon) {
     do_check_eq(install.state, AddonManager.STATE_INSTALLED);
     do_check_eq(install.error, 0);
     do_check_eq("onInstallEnded", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
-  onInstallFailed(install) {
+  onInstallFailed: function(install) {
     do_check_eq(install.state, AddonManager.STATE_INSTALL_FAILED);
     do_check_eq("onInstallFailed", getExpectedInstall(install.addon));
     return check_test_completed(arguments);
   },
 
-  onInstallCancelled(install) {
+  onInstallCancelled: function(install) {
     // If the install was cancelled by a listener returning false from
     // onInstallStarted, then the state will revert to STATE_DOWNLOADED.
     let possibleStates = [AddonManager.STATE_CANCELLED,
@@ -973,7 +973,7 @@ const InstallListener = {
     return check_test_completed(arguments);
   },
 
-  onExternalInstall(aAddon, existingAddon, aRequiresRestart) {
+  onExternalInstall: function(aAddon, existingAddon, aRequiresRestart) {
     do_check_eq("onExternalInstall", getExpectedInstall(aAddon));
     do_check_false(aRequiresRestart);
     return check_test_completed(arguments);

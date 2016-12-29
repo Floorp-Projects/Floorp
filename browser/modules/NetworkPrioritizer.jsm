@@ -87,7 +87,7 @@ var BrowserHelper = {
     windowEntry.lastSelectedBrowser = aBrowser;
   },
 
-  onRemotenessChange(aBrowser) {
+  onRemotenessChange: function(aBrowser) {
     aBrowser.setPriority(_priorityBackup.get(aBrowser.permanentKey));
   },
 

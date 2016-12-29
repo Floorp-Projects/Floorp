@@ -23,7 +23,7 @@ function streamListener(aExpectedContentType)
 }
 streamListener.prototype =
 {
-  onStartRequest(aRequest, aContext)
+  onStartRequest: function(aRequest, aContext)
   {
     // We have other tests that make sure the data is what we expect.  We just
     // need to check the content type here.
@@ -35,12 +35,12 @@ streamListener.prototype =
     // we do this for extra sanity.
     this._checked = true;
   },
-  onStopRequest()
+  onStopRequest: function()
   {
     do_check_true(this._checked);
     do_test_finished();
   },
-  onDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount)
+  onDataAvailable: function(aRequest, aContext, aInputStream, aOffset, aCount)
   {
     aRequest.cancel(Cr.NS_ERROR_ABORT);
   }

@@ -161,7 +161,7 @@ this.DeferredTask.prototype = {
   /**
    * Actually starts the timer with the delay specified on construction.
    */
-  _startTimer()
+  _startTimer: function()
   {
     this._timer = new Timer(this._timerCallback.bind(this), this._delayMs,
                             Ci.nsITimer.TYPE_ONE_SHOT);
@@ -185,7 +185,7 @@ this.DeferredTask.prototype = {
    *       try/catch/finally clause in the task.  The "finalize" method can be
    *       used in the common case of waiting for completion on shutdown.
    */
-  arm()
+  arm: function()
   {
     if (this._finalized) {
       throw new Error("Unable to arm timer, the object has been finalized.");
@@ -208,7 +208,7 @@ this.DeferredTask.prototype = {
    * This method stops any currently running timer, thus the delay will restart
    * from its original value in case the "arm" method is called again.
    */
-  disarm() {
+  disarm: function() {
     this._armed = false;
     if (this._timer) {
       // Calling the "cancel" method and discarding the timer reference makes
@@ -238,7 +238,7 @@ this.DeferredTask.prototype = {
    * @resolves After the last execution of the task is finished.
    * @rejects Never.
    */
-  finalize() {
+  finalize: function() {
     if (this._finalized) {
       throw new Error("The object has been already finalized.");
     }
@@ -262,7 +262,7 @@ this.DeferredTask.prototype = {
   /**
    * Timer callback used to run the delayed task.
    */
-  _timerCallback()
+  _timerCallback: function()
   {
     let runningDeferred = Promise.defer();
 

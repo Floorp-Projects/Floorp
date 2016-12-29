@@ -22,7 +22,7 @@ this.BrowserUtils = {
   /**
    * Prints arguments separated by a space and appends a new line.
    */
-  dumpLn(...args) {
+  dumpLn: function(...args) {
     for (let a of args)
       dump(a + " ");
     dump("\n");
@@ -32,7 +32,7 @@ this.BrowserUtils = {
    * restartApplication: Restarts the application, keeping it in
    * safe mode if it is already in safe mode.
    */
-  restartApplication() {
+  restartApplication: function() {
     let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
                        .getService(Ci.nsIAppStartup);
     let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"]
@@ -65,7 +65,7 @@ this.BrowserUtils = {
    *        Flags to be passed to checkLoadURIStr. If undefined,
    *        nsIScriptSecurityManager.STANDARD will be passed.
    */
-  urlSecurityCheck(aURL, aPrincipal, aFlags) {
+  urlSecurityCheck: function(aURL, aPrincipal, aFlags) {
     var secMan = Services.scriptSecurityManager;
     if (aFlags === undefined) {
       aFlags = secMan.STANDARD;
@@ -130,15 +130,15 @@ this.BrowserUtils = {
    * @param aBaseURI Base URI to resolve aURL, or null.
    * @return an nsIURI object based on aURL.
    */
-  makeURI(aURL, aOriginCharset, aBaseURI) {
+  makeURI: function(aURL, aOriginCharset, aBaseURI) {
     return Services.io.newURI(aURL, aOriginCharset, aBaseURI);
   },
 
-  makeFileURI(aFile) {
+  makeFileURI: function(aFile) {
     return Services.io.newFileURI(aFile);
   },
 
-  makeURIFromCPOW(aCPOWURI) {
+  makeURIFromCPOW: function(aCPOWURI) {
     return Services.io.newURI(aCPOWURI.spec, aCPOWURI.originCharset, null);
   },
 
@@ -148,7 +148,7 @@ this.BrowserUtils = {
    * be relative to the left/top of the tab. In the chrome process,
    * the coordinates are relative to the user's screen.
    */
-  getElementBoundingScreenRect(aElement) {
+  getElementBoundingScreenRect: function(aElement) {
     return this.getElementBoundingRect(aElement, true);
   },
 
@@ -158,7 +158,7 @@ this.BrowserUtils = {
    * the left/top of the topmost content area. If aInScreenCoords is true,
    * screen coordinates will be returned instead.
    */
-  getElementBoundingRect(aElement, aInScreenCoords) {
+  getElementBoundingRect: function(aElement, aInScreenCoords) {
     let rect = aElement.getBoundingClientRect();
     let win = aElement.ownerDocument.defaultView;
 
@@ -194,7 +194,7 @@ this.BrowserUtils = {
     return rect;
   },
 
-  onBeforeLinkTraversal(originalTarget, linkURI, linkNode, isAppTab) {
+  onBeforeLinkTraversal: function(originalTarget, linkURI, linkNode, isAppTab) {
     // Don't modify non-default targets or targets that aren't in top-level app
     // tab docshells (isAppTab will be false for app tab subframes).
     if (originalTarget != "" || !isAppTab)
@@ -231,7 +231,7 @@ this.BrowserUtils = {
    * @param aName The full-length name string of the plugin.
    * @return the simplified name string.
    */
-  makeNicePluginName(aName) {
+  makeNicePluginName: function(aName) {
     if (aName == "Shockwave Flash")
       return "Adobe Flash";
     // Regex checks if aName begins with "Java" + non-letter char
@@ -256,7 +256,7 @@ this.BrowserUtils = {
    * @param linkNode The <a> element, or null.
    * @return a boolean indicating if linkNode has a rel="noreferrer" attribute.
    */
-  linkHasNoReferrer(linkNode) {
+  linkHasNoReferrer: function(linkNode) {
     // A null linkNode typically means that we're checking a link that wasn't
     // provided via an <a> link, like a text-selected URL.  Don't leak
     // referrer information in this case.
@@ -279,7 +279,7 @@ this.BrowserUtils = {
    * @param mimeType
    *        The MIME type to check.
    */
-  mimeTypeIsTextBased(mimeType) {
+  mimeTypeIsTextBased: function(mimeType) {
     return mimeType.startsWith("text/") ||
            mimeType.endsWith("+xml") ||
            mimeType == "application/x-javascript" ||
@@ -298,7 +298,7 @@ this.BrowserUtils = {
    *        The window that is focused
    *
    */
-  shouldFastFind(elt, win) {
+  shouldFastFind: function(elt, win) {
     if (elt) {
       if (elt instanceof win.HTMLInputElement && elt.mozIsTextField(false))
         return false;
@@ -323,7 +323,7 @@ this.BrowserUtils = {
    *        The top level window that is focused
    *
    */
-  canFastFind(win) {
+  canFastFind: function(win) {
     if (!win)
       return false;
 
@@ -400,7 +400,7 @@ this.BrowserUtils = {
       .getInterface(Ci.nsIDOMWindow);
   },
 
-  getSelectionDetails(topWindow, aCharLen) {
+  getSelectionDetails: function(topWindow, aCharLen) {
     // selections of more than 150 characters aren't useful
     const kMaxSelectionLen = 150;
     const charLen = Math.min(aCharLen || kMaxSelectionLen, kMaxSelectionLen);

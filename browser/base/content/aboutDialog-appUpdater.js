@@ -168,7 +168,7 @@ appUpdater.prototype =
    * @param  aChildID
    *         The id of the deck's child to select, e.g. "apply".
    */
-  selectPanel(aChildID) {
+  selectPanel: function(aChildID) {
     let panel = document.getElementById(aChildID);
 
     let button = panel.querySelector("button");
@@ -191,7 +191,7 @@ appUpdater.prototype =
   /**
    * Check for updates
    */
-  checkForUpdates() {
+  checkForUpdates: function() {
     // Clear prefs that could prevent a user from discovering available updates.
     if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CANCELATIONS_OSX)) {
       Services.prefs.clearUserPref(PREF_APP_UPDATE_CANCELATIONS_OSX);
@@ -209,7 +209,7 @@ appUpdater.prototype =
    * Handles oncommand for the "Restart to Update" button
    * which is presented after the download has been downloaded.
    */
-  buttonRestartAfterDownload() {
+  buttonRestartAfterDownload: function() {
     if (!this.isPending && !this.isApplied) {
       return;
     }
@@ -249,7 +249,7 @@ appUpdater.prototype =
     /**
      * See nsIUpdateService.idl
      */
-    onCheckComplete(aRequest, aUpdates, aUpdateCount) {
+    onCheckComplete: function(aRequest, aUpdates, aUpdateCount) {
       gAppUpdater.isChecking = false;
       gAppUpdater.update = gAppUpdater.aus.
                            selectUpdate(aUpdates, aUpdates.length);
@@ -281,7 +281,7 @@ appUpdater.prototype =
     /**
      * See nsIUpdateService.idl
      */
-    onError(aRequest, aUpdate) {
+    onError: function(aRequest, aUpdate) {
       // Errors in the update check are treated as no updates found. If the
       // update check fails repeatedly without a success the user will be
       // notified with the normal app update user interface so this is safe.
@@ -292,7 +292,7 @@ appUpdater.prototype =
     /**
      * See nsISupports.idl
      */
-    QueryInterface(aIID) {
+    QueryInterface: function(aIID) {
       if (!aIID.equals(Components.interfaces.nsIUpdateCheckListener) &&
           !aIID.equals(Components.interfaces.nsISupports))
         throw Components.results.NS_ERROR_NO_INTERFACE;
@@ -303,7 +303,7 @@ appUpdater.prototype =
   /**
    * Starts the download of an update mar.
    */
-  startDownload() {
+  startDownload: function() {
     if (!this.update)
       this.update = this.um.activeUpdate;
     this.update.QueryInterface(Components.interfaces.nsIWritablePropertyBag);
@@ -322,7 +322,7 @@ appUpdater.prototype =
   /**
    * Switches to the UI responsible for tracking the download.
    */
-  setupDownloadingUI() {
+  setupDownloadingUI: function() {
     this.downloadStatus = document.getElementById("downloadStatus");
     this.downloadStatus.value =
       DownloadUtils.getTransferTotal(0, this.update.selectedPatch.size);
@@ -330,7 +330,7 @@ appUpdater.prototype =
     this.aus.addDownloadListener(this);
   },
 
-  removeDownloadListener() {
+  removeDownloadListener: function() {
     if (this.aus) {
       this.aus.removeDownloadListener(this);
     }
@@ -339,13 +339,13 @@ appUpdater.prototype =
   /**
    * See nsIRequestObserver.idl
    */
-  onStartRequest(aRequest, aContext) {
+  onStartRequest: function(aRequest, aContext) {
   },
 
   /**
    * See nsIRequestObserver.idl
    */
-  onStopRequest(aRequest, aContext, aStatusCode) {
+  onStopRequest: function(aRequest, aContext, aStatusCode) {
     switch (aStatusCode) {
     case Components.results.NS_ERROR_UNEXPECTED:
       if (this.update.selectedPatch.state == "download-failed" &&
@@ -404,13 +404,13 @@ appUpdater.prototype =
   /**
    * See nsIProgressEventSink.idl
    */
-  onStatus(aRequest, aContext, aStatus, aStatusArg) {
+  onStatus: function(aRequest, aContext, aStatus, aStatusArg) {
   },
 
   /**
    * See nsIProgressEventSink.idl
    */
-  onProgress(aRequest, aContext, aProgress, aProgressMax) {
+  onProgress: function(aRequest, aContext, aProgress, aProgressMax) {
     this.downloadStatus.value =
       DownloadUtils.getTransferTotal(aProgress, aProgressMax);
   },
@@ -418,7 +418,7 @@ appUpdater.prototype =
   /**
    * See nsISupports.idl
    */
-  QueryInterface(aIID) {
+  QueryInterface: function(aIID) {
     if (!aIID.equals(Components.interfaces.nsIProgressEventSink) &&
         !aIID.equals(Components.interfaces.nsIRequestObserver) &&
         !aIID.equals(Components.interfaces.nsISupports))

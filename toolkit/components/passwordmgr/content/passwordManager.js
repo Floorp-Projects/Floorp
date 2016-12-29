@@ -35,7 +35,7 @@ let removeAllButton;
 let signonsTree;
 
 let signonReloadDisplay = {
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "passwordmgr-storage-changed") {
       switch (data) {
         case "addLogin":

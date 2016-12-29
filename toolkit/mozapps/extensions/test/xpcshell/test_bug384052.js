@@ -16,14 +16,14 @@ var gCategoryManager = AM_Cc["@mozilla.org/categorymanager;1"].getService(AM_Ci.
 
 // Factory for our parameter handler
 var paramHandlerFactory = {
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(AM_Ci.nsIFactory) || iid.equals(AM_Ci.nsISupports))
       return this;
 
     throw Components.results.NS_ERROR_NO_INTERFACE;
   },
 
-  createInstance(outer, iid) {
+  createInstance: function(outer, iid) {
     var bag = AM_Cc["@mozilla.org/hash-property-bag;1"].
               createInstance(AM_Ci.nsIWritablePropertyBag);
     bag.setProperty("CUSTOM1", "custom_parameter_1");
@@ -85,15 +85,15 @@ function run_test()
   AddonManager.getAddonByID("test@mozilla.org", function(item) {
     // Initiate update
     item.findUpdates({
-      onCompatibilityUpdateAvailable(addon) {
+      onCompatibilityUpdateAvailable: function(addon) {
         do_throw("Should not have seen a compatibility update");
       },
 
-      onUpdateAvailable(addon, install) {
+      onUpdateAvailable: function(addon, install) {
         do_throw("Should not have seen an available update");
       },
 
-      onUpdateFinished(addon, error) {
+      onUpdateFinished: function(addon, error) {
         do_check_eq(error, AddonManager.UPDATE_STATUS_DOWNLOAD_ERROR);
         do_check_true(gSeenExpectedURL);
         do_execute_soon(shutdownTest);

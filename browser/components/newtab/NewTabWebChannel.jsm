@@ -188,7 +188,7 @@ NewTabWebChannelImpl.prototype = {
 
     try {
       let msg = JSON.parse(message);
-      this.emit(msg.type, {data: msg.data, target});
+      this.emit(msg.type, {data: msg.data, target: target});
     } catch (err) {
       Cu.reportError(err);
     }

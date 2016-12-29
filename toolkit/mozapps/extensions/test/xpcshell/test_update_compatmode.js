@@ -90,19 +90,19 @@ function run_test_1() {
   AddonManager.getAddonByID("compatmode-normal@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     addon.findUpdates({
-      onCompatibilityUpdateAvailable() {
+      onCompatibilityUpdateAvailable: function() {
         do_throw("Should have not have seen compatibility information");
       },
 
-      onNoUpdateAvailable() {
+      onNoUpdateAvailable: function() {
         do_throw("Should have seen an available update");
       },
 
-      onUpdateAvailable(unused, install) {
+      onUpdateAvailable: function(unused, install) {
         do_check_eq(install.version, "2.0")
       },
 
-      onUpdateFinished() {
+      onUpdateFinished: function() {
         run_test_2();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -116,19 +116,19 @@ function run_test_2() {
   AddonManager.getAddonByID("compatmode-strict@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     addon.findUpdates({
-      onCompatibilityUpdateAvailable() {
+      onCompatibilityUpdateAvailable: function() {
         do_throw("Should have not have seen compatibility information");
       },
 
-      onNoUpdateAvailable() {
+      onNoUpdateAvailable: function() {
         do_throw("Should have seen an available update");
       },
 
-      onUpdateAvailable(unused, install) {
+      onUpdateAvailable: function(unused, install) {
         do_check_eq(install.version, "2.0")
       },
 
-      onUpdateFinished() {
+      onUpdateFinished: function() {
         run_test_3();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -142,15 +142,15 @@ function run_test_3() {
   AddonManager.getAddonByID("compatmode-strict-optin@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     addon.findUpdates({
-      onCompatibilityUpdateAvailable() {
+      onCompatibilityUpdateAvailable: function() {
         do_throw("Should have not have seen compatibility information");
       },
 
-      onUpdateAvailable() {
+      onUpdateAvailable: function() {
         do_throw("Should not have seen an available update");
       },
 
-      onUpdateFinished() {
+      onUpdateFinished: function() {
         run_test_4();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -164,19 +164,19 @@ function run_test_4() {
   AddonManager.getAddonByID("compatmode-ignore@tests.mozilla.org", function(addon) {
     do_check_neq(addon, null);
     addon.findUpdates({
-      onCompatibilityUpdateAvailable() {
+      onCompatibilityUpdateAvailable: function() {
         do_throw("Should have not have seen compatibility information");
       },
 
-      onNoUpdateAvailable() {
+      onNoUpdateAvailable: function() {
         do_throw("Should have seen an available update");
       },
 
-      onUpdateAvailable(unused, install) {
+      onUpdateAvailable: function(unused, install) {
         do_check_eq(install.version, "2.0")
       },
 
-      onUpdateFinished() {
+      onUpdateFinished: function() {
         end_test();
       }
     }, AddonManager.UPDATE_WHEN_USER_REQUESTED);

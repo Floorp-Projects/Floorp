@@ -171,12 +171,12 @@ function checkAutocompleteResults(aExpected, aCallback)
     searchParam: "enable-actions",
     popupOpen: false,
     minResultsForPopup: 0,
-    invalidate() {},
+    invalidate: function() {},
     disableAutoComplete: false,
     completeDefaultIndex: false,
     get popup() { return this; },
-    onSearchBegin() {},
-    onSearchComplete()
+    onSearchBegin: function() {},
+    onSearchComplete:  function()
     {
       info("Found " + gController.matchCount + " matches.");
       // Check to see the expected uris and titles match up (in any order)
@@ -202,9 +202,9 @@ function checkAutocompleteResults(aExpected, aCallback)
 
       executeSoon(aCallback);
     },
-    setSelectedIndex() {},
+    setSelectedIndex: function() {},
     get searchCount() { return this.searches.length; },
-    getSearchAt(aIndex) { return this.searches[aIndex]; },
+    getSearchAt: function(aIndex) { return this.searches[aIndex]; },
     QueryInterface: XPCOMUtils.generateQI([
       Ci.nsIAutoCompleteInput,
       Ci.nsIAutoCompletePopup,

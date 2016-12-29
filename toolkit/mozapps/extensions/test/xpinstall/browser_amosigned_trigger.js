@@ -15,7 +15,7 @@ function test() {
     "Unsigned XPI": {
       URL: TESTROOT + "amosigned.xpi",
       IconURL: TESTROOT + "icon.png",
-      toString() { return this.URL; }
+      toString: function() { return this.URL; }
     }
   }));
   gBrowser.selectedTab = gBrowser.addTab();

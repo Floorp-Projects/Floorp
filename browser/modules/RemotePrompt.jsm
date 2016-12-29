@@ -17,12 +17,12 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
 
 var RemotePrompt = {
-  init() {
+  init: function() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("Prompt:Open", this);
   },
 
-  receiveMessage(message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       case "Prompt:Open":
         if (message.data.uri) {
@@ -34,7 +34,7 @@ var RemotePrompt = {
     }
   },
 
-  openTabPrompt(args, browser) {
+  openTabPrompt: function(args, browser) {
     let window = browser.ownerGlobal;
     let tabPrompt = window.gBrowser.getTabModalPromptBox(browser)
     let newPrompt;
@@ -92,7 +92,7 @@ var RemotePrompt = {
     }
   },
 
-  openModalWindow(args, browser) {
+  openModalWindow: function(args, browser) {
     let window = browser.ownerGlobal;
     try {
       PromptUtils.fireDialogEvent(window, "DOMWillOpenModalDialog", browser);

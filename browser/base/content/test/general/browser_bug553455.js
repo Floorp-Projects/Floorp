@@ -152,13 +152,13 @@ function waitForInstallDialog() {
 
     let window = yield new Promise(resolve => {
       Services.wm.addListener({
-        onOpenWindow(aXULWindow) {
+        onOpenWindow: function(aXULWindow) {
           Services.wm.removeListener(this);
           resolve(aXULWindow);
         },
-        onCloseWindow(aXULWindow) {
+        onCloseWindow: function(aXULWindow) {
         },
-        onWindowTitleChange(aXULWindow, aNewTitle) {
+        onWindowTitleChange: function(aXULWindow, aNewTitle) {
         }
       });
     });
@@ -1055,7 +1055,7 @@ function test_cancel() {
     let install = notification.notification.options.installs[0];
     let cancelledPromise = new Promise(resolve => {
       install.addListener({
-        onDownloadCancelled() {
+        onDownloadCancelled: function() {
           install.removeListener(this);
           resolve();
         }
@@ -1124,7 +1124,7 @@ function test_failedSecurity() {
 var gTestStart = null;
 
 var XPInstallObserver = {
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
     info("Observed " + aTopic + " for " + installInfo.installs.length + " installs");
     installInfo.installs.forEach(function(aInstall) {

@@ -91,15 +91,15 @@ add_task(function* test_pref_maxpages() {
     let historyObserver = {
       onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
       onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
-      onClearHistory() {},
-      onVisit() {},
-      onTitleChanged() {},
-      onDeleteURI(aURI) {
+      onClearHistory: function() {},
+      onVisit: function() {},
+      onTitleChanged: function() {},
+      onDeleteURI: function(aURI) {
         print("onDeleteURI " + aURI.spec);
         currentTest.receivedNotifications++;
       },
-      onPageChanged() {},
-      onDeleteVisits(aURI, aTime) {
+      onPageChanged: function() {},
+      onDeleteVisits: function(aURI, aTime) {
         print("onDeleteVisits " + aURI.spec + " " + aTime);
       },
     };

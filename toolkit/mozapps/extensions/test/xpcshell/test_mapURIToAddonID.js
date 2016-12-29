@@ -27,9 +27,9 @@ function TestProvider(result) {
 TestProvider.prototype = {
   uri: Services.io.newURI("hellow://world", null, null),
   id: "valid@id",
-  startup() {},
-  shutdown() {},
-  mapURIToAddonID(aURI) {
+  startup: function() {},
+  shutdown: function() {},
+  mapURIToAddonID: function(aURI) {
     if (aURI.spec === this.uri.spec) {
       return this.id;
     }
@@ -39,8 +39,8 @@ TestProvider.prototype = {
 
 function TestProviderNoMap() {}
 TestProviderNoMap.prototype = {
-  startup() {},
-  shutdown() {}
+  startup: function() {},
+  shutdown: function() {}
 };
 
 function check_mapping(uri, id) {

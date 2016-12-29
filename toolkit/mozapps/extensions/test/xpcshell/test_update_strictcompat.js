@@ -120,11 +120,11 @@ for (let test of testParams) {
       ]);
 
       a1.findUpdates({
-        onNoCompatibilityUpdateAvailable(addon) {
+        onNoCompatibilityUpdateAvailable: function(addon) {
           ok(false, "Should not have seen onNoCompatibilityUpdateAvailable notification");
         },
 
-        onUpdateAvailable(addon, install) {
+        onUpdateAvailable: function(addon, install) {
           ensure_test_completed();
 
           AddonManager.getAllInstalls(function(aInstalls) {
@@ -140,11 +140,11 @@ for (let test of testParams) {
 
             // Verify that another update check returns the same AddonInstall
             a1.findUpdates({
-              onNoCompatibilityUpdateAvailable() {
+              onNoCompatibilityUpdateAvailable: function() {
                 ok(false, "Should not have seen onNoCompatibilityUpdateAvailable notification");
               },
 
-              onUpdateAvailable(newAddon, newInstall) {
+              onUpdateAvailable: function(newAddon, newInstall) {
                 AddonManager.getAllInstalls(function(aInstalls2) {
                   do_check_eq(aInstalls2.length, 1);
                   do_check_eq(aInstalls2[0], install);
@@ -159,14 +159,14 @@ for (let test of testParams) {
                 });
               },
 
-              onNoUpdateAvailable() {
+              onNoUpdateAvailable: function() {
                 ok(false, "Should not have seen onNoUpdateAvailable notification");
               }
             }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
           });
         },
 
-        onNoUpdateAvailable(addon) {
+        onNoUpdateAvailable: function(addon) {
           ok(false, "Should not have seen onNoUpdateAvailable notification");
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);
@@ -186,15 +186,15 @@ for (let test of testParams) {
   run_test_2 = (install) => {
     // Verify that another update check returns no new update
     install.existingAddon.findUpdates({
-      onNoCompatibilityUpdateAvailable(addon) {
+      onNoCompatibilityUpdateAvailable: function(addon) {
         ok(false, "Should not have seen onNoCompatibilityUpdateAvailable notification");
       },
 
-      onUpdateAvailable() {
+      onUpdateAvailable: function() {
         ok(false, "Should find no available update when one is already downloading");
       },
 
-      onNoUpdateAvailable(addon) {
+      onNoUpdateAvailable: function(addon) {
         AddonManager.getAllInstalls(function(aInstalls) {
           do_check_eq(aInstalls.length, 1);
           do_check_eq(aInstalls[0], install);
@@ -254,17 +254,17 @@ for (let test of testParams) {
       do_check_true(a2.isCompatibleWith("0", "0"));
 
       a2.findUpdates({
-        onCompatibilityUpdateAvailable(addon) {
+        onCompatibilityUpdateAvailable: function(addon) {
           do_check_true(a2.isCompatible);
           do_check_false(a2.appDisabled);
           do_check_false(a2.isActive);
         },
 
-        onUpdateAvailable(addon, install) {
+        onUpdateAvailable: function(addon, install) {
           ok(false, "Should not have seen an available update");
         },
 
-        onNoUpdateAvailable(addon) {
+        onNoUpdateAvailable: function(addon) {
           do_check_eq(addon, a2);
           do_execute_soon(check_test_3);
         }
@@ -297,19 +297,19 @@ for (let test of testParams) {
 
       a3.findUpdates({
         sawUpdate: false,
-        onCompatibilityUpdateAvailable(addon) {
+        onCompatibilityUpdateAvailable: function(addon) {
           ok(false, "Should not have seen compatibility information");
         },
 
-        onNoCompatibilityUpdateAvailable(addon) {
+        onNoCompatibilityUpdateAvailable: function(addon) {
           this.sawUpdate = true;
         },
 
-        onUpdateAvailable(addon, install) {
+        onUpdateAvailable: function(addon, install) {
           ok(false, "Should not have seen an available update");
         },
 
-        onNoUpdateAvailable(addon) {
+        onNoUpdateAvailable: function(addon) {
           do_check_true(this.sawUpdate);
           run_next_test();
         }
@@ -331,22 +331,22 @@ for (let test of testParams) {
 
       a3.findUpdates({
         sawUpdate: false,
-        onCompatibilityUpdateAvailable(addon) {
+        onCompatibilityUpdateAvailable: function(addon) {
           do_check_false(a3.isCompatible);
           do_check_true(a3.appDisabled);
           do_check_false(a3.isActive);
           this.sawUpdate = true;
         },
 
-        onNoCompatibilityUpdateAvailable(addon) {
+        onNoCompatibilityUpdateAvailable: function(addon) {
           ok(false, "Should have seen some compatibility information");
         },
 
-        onUpdateAvailable(addon, install) {
+        onUpdateAvailable: function(addon, install) {
           ok(false, "Should not have seen an available update");
         },
 
-        onNoUpdateAvailable(addon) {
+        onNoUpdateAvailable: function(addon) {
           do_check_true(this.sawUpdate);
           do_execute_soon(check_test_5);
         }
@@ -596,18 +596,18 @@ for (let test of testParams) {
         }
 
         let compatListener = {
-          onUpdateFinished(addon, error) {
+          onUpdateFinished: function(addon, error) {
             if (--count == 0)
               do_execute_soon(next_test);
           }
         };
 
         let updateListener = {
-          onUpdateAvailable(addon, update) {
+          onUpdateAvailable: function(addon, update) {
             // Dummy so the update checker knows we care about new versions
           },
 
-          onUpdateFinished(addon, error) {
+          onUpdateFinished: function(addon, error) {
             if (--count == 0)
               do_execute_soon(next_test);
           }
@@ -653,7 +653,7 @@ for (let test of testParams) {
   add_test(function run_test_10() {
     AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
       a4.findUpdates({
-        onUpdateFinished(addon) {
+        onUpdateFinished: function(addon) {
           do_check_true(addon.isCompatible, "addon4 is compatible");
 
           run_next_test();
@@ -667,7 +667,7 @@ for (let test of testParams) {
   add_test(function run_test_11() {
     AddonManager.getAddonByID("addon4@tests.mozilla.org", function(a4) {
       a4.findUpdates({
-        onUpdateFinished(addon) {
+        onUpdateFinished: function(addon) {
           do_check_false(addon.isCompatible, "addon4 is compatible");
 
           run_next_test();
@@ -719,15 +719,15 @@ for (let test of testParams) {
 
       a7.findUpdates({
         sawUpdate: false,
-        onCompatibilityUpdateAvailable(addon) {
+        onCompatibilityUpdateAvailable: function(addon) {
           ok(false, "Should not have seen compatibility information");
         },
 
-        onUpdateAvailable(addon, install) {
+        onUpdateAvailable: function(addon, install) {
           ok(false, "Should not have seen an available update");
         },
 
-        onUpdateFinished(addon) {
+        onUpdateFinished: function(addon) {
           do_check_true(addon.isCompatible);
           do_execute_soon(check_test_13);
         }
@@ -786,44 +786,44 @@ for (let test of testParams) {
       // The background update check will find updates for both add-ons but only
       // proceed to install one of them.
       AddonManager.addInstallListener({
-        onNewInstall(aInstall) {
+        onNewInstall: function(aInstall) {
           let id = aInstall.existingAddon.id;
           ok((id == "addon1@tests.mozilla.org" || id == "addon8@tests.mozilla.org"),
              "Saw unexpected onNewInstall for " + id);
         },
 
-        onDownloadStarted(aInstall) {
+        onDownloadStarted: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
-        onDownloadEnded(aInstall) {
+        onDownloadEnded: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
-        onDownloadFailed(aInstall) {
+        onDownloadFailed: function(aInstall) {
           ok(false, "Should not have seen onDownloadFailed event");
         },
 
-        onDownloadCancelled(aInstall) {
+        onDownloadCancelled: function(aInstall) {
           ok(false, "Should not have seen onDownloadCancelled event");
         },
 
-        onInstallStarted(aInstall) {
+        onInstallStarted: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
-        onInstallEnded(aInstall) {
+        onInstallEnded: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
           do_check_eq(aInstall.existingAddon.pendingUpgrade.install, aInstall);
 
           do_execute_soon(check_test_14);
         },
 
-        onInstallFailed(aInstall) {
+        onInstallFailed: function(aInstall) {
           ok(false, "Should not have seen onInstallFailed event");
         },
 
-        onInstallCancelled(aInstall) {
+        onInstallCancelled: function(aInstall) {
           ok(false, "Should not have seen onInstallCancelled event");
         },
       });
@@ -887,42 +887,42 @@ for (let test of testParams) {
       // The background update check will find updates for both add-ons but only
       // proceed to install one of them.
       AddonManager.addInstallListener({
-        onNewInstall(aInstall) {
+        onNewInstall: function(aInstall) {
           let id = aInstall.existingAddon.id;
           ok((id == "addon1@tests.mozilla.org" || id == "addon8@tests.mozilla.org"),
              "Saw unexpected onNewInstall for " + id);
         },
 
-        onDownloadStarted(aInstall) {
+        onDownloadStarted: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
-        onDownloadEnded(aInstall) {
+        onDownloadEnded: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
-        onDownloadFailed(aInstall) {
+        onDownloadFailed: function(aInstall) {
           ok(false, "Should not have seen onDownloadFailed event");
         },
 
-        onDownloadCancelled(aInstall) {
+        onDownloadCancelled: function(aInstall) {
           ok(false, "Should not have seen onDownloadCancelled event");
         },
 
-        onInstallStarted(aInstall) {
+        onInstallStarted: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
         },
 
-        onInstallEnded(aInstall) {
+        onInstallEnded: function(aInstall) {
           do_check_eq(aInstall.existingAddon.id, "addon1@tests.mozilla.org");
           do_execute_soon(check_test_15);
         },
 
-        onInstallFailed(aInstall) {
+        onInstallFailed: function(aInstall) {
           ok(false, "Should not have seen onInstallFailed event");
         },
 
-        onInstallCancelled(aInstall) {
+        onInstallCancelled: function(aInstall) {
           ok(false, "Should not have seen onInstallCancelled event");
         },
       });
@@ -964,12 +964,12 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.addInstallListener({
-      onNewInstall(aInstall) {
+      onNewInstall: function(aInstall) {
         equal(aInstall.existingAddon.id, "addon9@tests.mozilla.org",
               "Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
         do_check_eq(aInstall.version, "2.0");
       },
-      onDownloadFailed(aInstall) {
+      onDownloadFailed: function(aInstall) {
         AddonManager.getAddonByID("addon9@tests.mozilla.org", function(a9) {
           a9.uninstall();
           run_next_test();
@@ -1007,15 +1007,15 @@ for (let test of testParams) {
       do_check_neq(a11, null);
 
       a11.findUpdates({
-        onCompatibilityUpdateAvailable() {
+        onCompatibilityUpdateAvailable: function() {
           ok(false, "Should have not have seen compatibility information");
         },
 
-        onUpdateAvailable() {
+        onUpdateAvailable: function() {
           ok(false, "Should not have seen an available update");
         },
 
-        onUpdateFinished() {
+        onUpdateFinished: function() {
           run_next_test();
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);

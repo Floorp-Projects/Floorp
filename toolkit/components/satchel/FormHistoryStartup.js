@@ -22,7 +22,7 @@ FormHistoryStartup.prototype = {
     Ci.nsIFrameMessageListener
   ]),
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "nsPref:changed":
         FormHistory.updatePrefs();
@@ -44,7 +44,7 @@ FormHistoryStartup.prototype = {
   inited: false,
   pendingQuery: null,
 
-  init()
+  init: function()
   {
     if (this.inited)
       return;
@@ -70,7 +70,7 @@ FormHistoryStartup.prototype = {
     }
   },
 
-  receiveMessage(message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       case "FormHistory:FormSubmitEntries": {
         let entries = message.data;

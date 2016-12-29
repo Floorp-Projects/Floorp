@@ -15,28 +15,28 @@ const PREF_UNIFIED = "toolkit.telemetry.unified";
 const PREF_REPORTING_URL = "datareporting.healthreport.about.reportUrl";
 
 var healthReportWrapper = {
-  init() {
+  init: function() {
     let iframe = document.getElementById("remote-report");
     iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
     iframe.src = this._getReportURI().spec;
     prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
   },
 
-  uninit() {
+  uninit: function() {
     prefs.ignore("uploadEnabled", this.updatePrefState, healthReportWrapper);
   },
 
-  _getReportURI() {
+  _getReportURI: function() {
     let url = Services.urlFormatter.formatURLPref(PREF_REPORTING_URL);
     return Services.io.newURI(url, null, null);
   },
 
-  setDataSubmission(enabled) {
+  setDataSubmission: function(enabled) {
     MozSelfSupport.healthReportDataSubmissionEnabled = enabled;
     this.updatePrefState();
   },
 
-  updatePrefState() {
+  updatePrefState: function() {
     try {
       let prefsObj = {
         enabled: MozSelfSupport.healthReportDataSubmissionEnabled,
@@ -48,7 +48,7 @@ var healthReportWrapper = {
     }
   },
 
-  sendTelemetryPingList() {
+  sendTelemetryPingList: function() {
     console.log("AboutHealthReport: Collecting Telemetry ping list.");
     MozSelfSupport.getTelemetryPingList().then((list) => {
       console.log("AboutHealthReport: Sending Telemetry ping list.");
@@ -58,7 +58,7 @@ var healthReportWrapper = {
     });
   },
 
-  sendTelemetryPingData(pingId) {
+  sendTelemetryPingData: function(pingId) {
     console.log("AboutHealthReport: Collecting Telemetry ping data.");
     MozSelfSupport.getTelemetryPing(pingId).then((ping) => {
       console.log("AboutHealthReport: Sending Telemetry ping data.");
@@ -75,7 +75,7 @@ var healthReportWrapper = {
     });
   },
 
-  sendCurrentEnvironment() {
+  sendCurrentEnvironment: function() {
     console.log("AboutHealthReport: Sending Telemetry environment data.");
     MozSelfSupport.getCurrentTelemetryEnvironment().then((environment) => {
       this.injectData("telemetry-current-environment-data", environment);
@@ -84,7 +84,7 @@ var healthReportWrapper = {
     });
   },
 
-  sendCurrentPingData() {
+  sendCurrentPingData: function() {
     console.log("AboutHealthReport: Sending current Telemetry ping data.");
     MozSelfSupport.getCurrentTelemetrySubsessionPing().then((ping) => {
       this.injectData("telemetry-current-ping-data", ping);
@@ -93,7 +93,7 @@ var healthReportWrapper = {
     });
   },
 
-  injectData(type, content) {
+  injectData: function(type, content) {
     let report = this._getReportURI();
 
     // file URIs can't be used for targetOrigin, so we use "*" for this special case
@@ -101,15 +101,15 @@ var healthReportWrapper = {
     let reportUrl = report.scheme == "file" ? "*" : report.spec;
 
     let data = {
-      type,
-      content
+      type: type,
+      content: content
     }
 
     let iframe = document.getElementById("remote-report");
     iframe.contentWindow.postMessage(data, reportUrl);
   },
 
-  handleRemoteCommand(evt) {
+  handleRemoteCommand: function(evt) {
     // Do an origin check to harden against the frame content being loaded from unexpected locations.
     let allowedPrincipal = Services.scriptSecurityManager.getCodebasePrincipal(this._getReportURI());
     let targetPrincipal = evt.target.nodePrincipal;
@@ -147,7 +147,7 @@ var healthReportWrapper = {
     }
   },
 
-  initRemotePage() {
+  initRemotePage: function() {
     let iframe = document.getElementById("remote-report").contentDocument;
     iframe.addEventListener("RemoteHealthReportCommand",
                             function onCommand(e) { healthReportWrapper.handleRemoteCommand(e); },
@@ -160,18 +160,18 @@ var healthReportWrapper = {
   ERROR_PAYLOAD_FAILED: 2,
   ERROR_PREFS_FAILED:   3,
 
-  reportFailure(error) {
+  reportFailure: function(error) {
     let details = {
       errorType: error,
     }
     healthReportWrapper.injectData("error", details);
   },
 
-  handleInitFailure() {
+  handleInitFailure: function() {
     healthReportWrapper.reportFailure(healthReportWrapper.ERROR_INIT_FAILED);
   },
 
-  handlePayloadFailure() {
+  handlePayloadFailure: function() {
     healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PAYLOAD_FAILED);
   },
 }

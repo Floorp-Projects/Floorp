@@ -105,8 +105,8 @@ this.Panel.prototype = {
       let url = controller.getValueAt(idx);
       let action = this.urlbar._parseActionUrl(url);
       this._emit("result", {
-        url,
-        action,
+        url: url,
+        action: action,
         image: controller.getImageAt(idx),
         title: controller.getCommentAt(idx),
         type: controller.getStyleAt(idx),

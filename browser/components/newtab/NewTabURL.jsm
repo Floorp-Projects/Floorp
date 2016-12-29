@@ -18,7 +18,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 
 this.NewTabURL = {
 
-  get() {
+  get: function() {
     return aboutNewTabService.newTabURL;
   },
 
@@ -26,11 +26,11 @@ this.NewTabURL = {
     return aboutNewTabService.overridden;
   },
 
-  override(newURL) {
+  override: function(newURL) {
     aboutNewTabService.newTabURL = newURL;
   },
 
-  reset() {
+  reset: function() {
     aboutNewTabService.resetNewTabURL();
   }
 };

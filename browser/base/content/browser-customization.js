@@ -9,7 +9,7 @@
  * events.
  */
 var CustomizationHandler = {
-  handleEvent(aEvent) {
+  handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "customizationstarting":
         this._customizationStarting();
@@ -23,11 +23,11 @@ var CustomizationHandler = {
     }
   },
 
-  isCustomizing() {
+  isCustomizing: function() {
     return document.documentElement.hasAttribute("customizing");
   },
 
-  _customizationStarting() {
+  _customizationStarting: function() {
     // Disable the toolbar context menu items
     let menubar = document.getElementById("main-menubar");
     for (let childNode of menubar.childNodes)
@@ -51,11 +51,11 @@ var CustomizationHandler = {
     }
   },
 
-  _customizationChange() {
+  _customizationChange: function() {
     PlacesToolbarHelper.customizeChange();
   },
 
-  _customizationEnding(aDetails) {
+  _customizationEnding: function(aDetails) {
     // Update global UI elements that may have been added or removed
     if (aDetails.changed) {
       gURLBar = document.getElementById("urlbar");

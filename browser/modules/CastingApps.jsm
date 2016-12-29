@@ -12,17 +12,17 @@ Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
 
 
 var CastingApps = {
-  _sendEventToVideo(element, data) {
+  _sendEventToVideo: function(element, data) {
     let event = element.ownerDocument.createEvent("CustomEvent");
     event.initCustomEvent("media-videoCasting", false, true, JSON.stringify(data));
     element.dispatchEvent(event);
   },
 
-  makeURI(url, charset, baseURI) {
+  makeURI: function(url, charset, baseURI) {
     return Services.io.newURI(url, charset, baseURI);
   },
 
-  getVideo(element) {
+  getVideo: function(element) {
     if (!element) {
       return null;
     }
@@ -45,7 +45,7 @@ var CastingApps = {
       // Use the file extension to guess the mime type
       let sourceURI = this.makeURI(sourceURL, null, this.makeURI(element.baseURI));
       if (this.allowableExtension(sourceURI, extensions)) {
-        return { element, source: sourceURI.spec, poster: posterURL, sourceURI};
+        return { element: element, source: sourceURI.spec, poster: posterURL, sourceURI: sourceURI};
       }
     }
 
@@ -58,14 +58,14 @@ var CastingApps = {
       // Using the type attribute is our ideal way to guess the mime type. Otherwise,
       // fallback to using the file extension to guess the mime type
       if (this.allowableMimeType(sourceNode.type, types) || this.allowableExtension(sourceURI, extensions)) {
-        return { element, source: sourceURI.spec, poster: posterURL, sourceURI, type: sourceNode.type };
+        return { element: element, source: sourceURI.spec, poster: posterURL, sourceURI: sourceURI, type: sourceNode.type };
       }
     }
 
     return null;
   },
 
-  sendVideoToService(videoElement, service) {
+  sendVideoToService: function(videoElement, service) {
     if (!service)
       return;
 
@@ -101,9 +101,9 @@ var CastingApps = {
           }
 
           this.session = {
-            service,
-            app,
-            remoteMedia,
+            service: service,
+            app: app,
+            remoteMedia: remoteMedia,
             data: {
               title: video.title,
               source: video.source,
@@ -116,7 +116,7 @@ var CastingApps = {
     });
   },
 
-  getServicesForVideo(videoElement) {
+  getServicesForVideo: function(videoElement) {
     let video = this.getVideo(videoElement);
     if (!video) {
       return {};
@@ -130,12 +130,12 @@ var CastingApps = {
     return filteredServices;
   },
 
-  getServicesForMirroring() {
+  getServicesForMirroring: function() {
     return SimpleServiceDiscovery.services.filter(service => service.mirror);
   },
 
   // RemoteMedia callback API methods
-  onRemoteMediaStart(remoteMedia) {
+  onRemoteMediaStart: function(remoteMedia) {
     if (!this.session) {
       return;
     }
@@ -148,17 +148,17 @@ var CastingApps = {
     }
   },
 
-  onRemoteMediaStop(remoteMedia) {
+  onRemoteMediaStop: function(remoteMedia) {
   },
 
-  onRemoteMediaStatus(remoteMedia) {
+  onRemoteMediaStatus: function(remoteMedia) {
   },
 
-  allowableExtension(uri, extensions) {
+  allowableExtension: function(uri, extensions) {
     return (uri instanceof Ci.nsIURL) && extensions.indexOf(uri.fileExtension) != -1;
   },
 
-  allowableMimeType(type, types) {
+  allowableMimeType: function(type, types) {
     return types.indexOf(type) != -1;
   }
 };

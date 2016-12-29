@@ -68,7 +68,7 @@ var gTests = [
     Preferences.set("datareporting.healthreport.about.reportUrl",
                     HTTPS_BASE + "healthreport_testRemoteCommands.html");
   }),
-  run(iframe)
+  run: function(iframe)
   {
     let deferred = Promise.defer();
     let results = 0;

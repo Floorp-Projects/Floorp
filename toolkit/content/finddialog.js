@@ -142,7 +142,7 @@ function updateFormHistory()
       fieldname: "find-dialog",
       value: dialog.findKey.value
     }, {
-      handleError(aError) {
+      handleError: function(aError) {
         Components.utils.reportError("Saving find to form history failed: " +
                                      aError.message);
       }

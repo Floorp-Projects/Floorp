@@ -1792,7 +1792,7 @@ Update.prototype = {
 
 const UpdateServiceFactory = {
   _instance: null,
-  createInstance(outer, iid) {
+  createInstance: function(outer, iid) {
     if (outer != null)
       throw Cr.NS_ERROR_NO_AGGREGATION;
     return this._instance == null ? this._instance = new UpdateService() :
@@ -4405,7 +4405,7 @@ UpdatePrompt.prototype = {
       updatePrompt: this,
       service: null,
       timer: null,
-      notify() {
+      notify: function() {
         // the user hasn't restarted yet => prompt when idle
         this.service.removeObserver(this, "quit-application");
         // If the update window is already open skip showing the UI
@@ -4413,7 +4413,7 @@ UpdatePrompt.prototype = {
           return;
         this.updatePrompt._showUIWhenIdle(parent, uri, features, name, page, update);
       },
-      observe(aSubject, aTopic, aData) {
+      observe: function(aSubject, aTopic, aData) {
         switch (aTopic) {
           case "quit-application":
             if (this.timer)
@@ -4481,7 +4481,7 @@ UpdatePrompt.prototype = {
     } else {
       var observer = {
         updatePrompt: this,
-        observe(aSubject, aTopic, aData) {
+        observe: function(aSubject, aTopic, aData) {
           switch (aTopic) {
             case "idle":
               // If the update window is already open skip showing the UI

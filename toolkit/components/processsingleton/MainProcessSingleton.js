@@ -18,14 +18,14 @@ MainProcessSingleton.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  logConsoleMessage(message) {
+  logConsoleMessage: function(message) {
     let logMsg = message.data;
     logMsg.wrappedJSObject = logMsg;
     Services.obs.notifyObservers(logMsg, "console-api-log-event", null);
   },
 
   // Called when a webpage calls window.external.AddSearchProvider
-  addSearchEngine({ target: browser, data: { pageURL, engineURL } }) {
+  addSearchEngine: function({ target: browser, data: { pageURL, engineURL } }) {
     pageURL = NetUtil.newURI(pageURL);
     engineURL = NetUtil.newURI(engineURL, null, pageURL);
 
@@ -65,7 +65,7 @@ MainProcessSingleton.prototype = {
     })
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
     case "app-startup": {
       Services.obs.addObserver(this, "xpcom-shutdown", false);

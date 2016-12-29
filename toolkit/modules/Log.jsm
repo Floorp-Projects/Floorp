@@ -73,24 +73,24 @@ this.Log = {
     Log.repository = value;
   },
 
-  LogMessage,
-  Logger,
-  LoggerRepository,
+  LogMessage: LogMessage,
+  Logger: Logger,
+  LoggerRepository: LoggerRepository,
 
-  Formatter,
-  BasicFormatter,
-  MessageOnlyFormatter,
-  StructuredFormatter,
+  Formatter: Formatter,
+  BasicFormatter: BasicFormatter,
+  MessageOnlyFormatter: MessageOnlyFormatter,
+  StructuredFormatter: StructuredFormatter,
 
-  Appender,
-  DumpAppender,
-  ConsoleAppender,
-  StorageStreamAppender,
+  Appender: Appender,
+  DumpAppender: DumpAppender,
+  ConsoleAppender: ConsoleAppender,
+  StorageStreamAppender: StorageStreamAppender,
 
-  FileAppender,
-  BoundedFileAppender,
+  FileAppender: FileAppender,
+  BoundedFileAppender: BoundedFileAppender,
 
-  ParameterFormatter,
+  ParameterFormatter: ParameterFormatter,
   // Logging helper:
   // let logger = Log.repository.getLogger("foo");
   // logger.info(Log.enumerateInterfaces(someObject).join(","));
@@ -111,7 +111,7 @@ this.Log = {
   // Logging helper:
   // let logger = Log.repository.getLogger("foo");
   // logger.info(Log.enumerateProperties(someObject).join(","));
-  enumerateProperties(aObject, aExcludeComplexTypes) {
+  enumerateProperties: function(aObject, aExcludeComplexTypes) {
     let properties = [];
 
     for (p in aObject) {
@@ -345,7 +345,7 @@ Logger.prototype = {
    *          at the indicated level. If _message is included as a key, the
    *          value is used as the descriptive text for the message.
    */
-  logStructured(action, params) {
+  logStructured: function(action, params) {
     if (!action) {
       throw "An action is required when logging a structured message.";
     }
@@ -371,7 +371,7 @@ Logger.prototype = {
     this.log(level, params._message, params);
   },
 
-  log(level, string, params) {
+  log: function(level, string, params) {
     if (this.level > level)
       return;
 
@@ -390,25 +390,25 @@ Logger.prototype = {
     }
   },
 
-  fatal(string, params) {
+  fatal: function(string, params) {
     this.log(Log.Level.Fatal, string, params);
   },
-  error(string, params) {
+  error: function(string, params) {
     this.log(Log.Level.Error, string, params);
   },
-  warn(string, params) {
+  warn: function(string, params) {
     this.log(Log.Level.Warn, string, params);
   },
-  info(string, params) {
+  info: function(string, params) {
     this.log(Log.Level.Info, string, params);
   },
-  config(string, params) {
+  config: function(string, params) {
     this.log(Log.Level.Config, string, params);
   },
-  debug(string, params) {
+  debug: function(string, params) {
     this.log(Log.Level.Debug, string, params);
   },
-  trace(string, params) {
+  trace: function(string, params) {
     this.log(Log.Level.Trace, string, params);
   }
 };
@@ -472,7 +472,7 @@ LoggerRepository.prototype = {
    *
    * @return Logger
    */
-  getLogger(name) {
+  getLogger: function(name) {
     if (name in this._loggers)
       return this._loggers[name];
     this._loggers[name] = new Logger(name, this);
@@ -497,7 +497,7 @@ LoggerRepository.prototype = {
    * @param prefix
    *        (string) The string to prefix each logged message with.
    */
-  getLoggerWithMessagePrefix(name, prefix) {
+  getLoggerWithMessagePrefix: function(name, prefix) {
     let log = this.getLogger(name);
 
     let proxy = Object.create(log);
@@ -536,7 +536,7 @@ BasicFormatter.prototype = {
    * into the text, format the entire object and append that
    * to the message.
    */
-  formatText(message) {
+  formatText: function(message) {
     let params = message.params;
     if (typeof(params) == "undefined") {
       return message.message || "";
@@ -595,7 +595,7 @@ function MessageOnlyFormatter() {
 MessageOnlyFormatter.prototype = Object.freeze({
   __proto__: Formatter.prototype,
 
-  format(message) {
+  format: function(message) {
     return message.message;
   },
 });
@@ -607,7 +607,7 @@ function StructuredFormatter() { }
 StructuredFormatter.prototype = {
   __proto__: Formatter.prototype,
 
-  format(logMessage) {
+  format: function(logMessage) {
     let output = {
       _time: logMessage.time,
       _namespace: logMessage.loggerName,
@@ -648,7 +648,7 @@ function ParameterFormatter() {
   this._name = "ParameterFormatter"
 }
 ParameterFormatter.prototype = {
-  format(ob) {
+  format: function(ob) {
     try {
       if (ob === undefined) {
         return "undefined";
@@ -828,7 +828,7 @@ StorageStreamAppender.prototype = {
     this._ss = null;
   },
 
-  doAppend(formatted) {
+  doAppend: function(formatted) {
     if (!formatted) {
       return;
     }
@@ -868,7 +868,7 @@ function FileAppender(path, formatter) {
 FileAppender.prototype = {
   __proto__: Appender.prototype,
 
-  _openFile() {
+  _openFile: function() {
     return Task.spawn(function* _openFile() {
       try {
         this._file = yield OS.File.open(this._path,
@@ -883,7 +883,7 @@ FileAppender.prototype = {
     }.bind(this));
   },
 
-  _getFile() {
+  _getFile: function() {
     if (!this._fileReadyPromise) {
       this._fileReadyPromise = this._openFile();
     }
@@ -891,7 +891,7 @@ FileAppender.prototype = {
     return this._fileReadyPromise;
   },
 
-  doAppend(formatted) {
+  doAppend: function(formatted) {
     let array = this._encoder.encode(formatted + "\n");
     if (this._file) {
       this._lastWritePromise = this._file.write(array);
@@ -906,7 +906,7 @@ FileAppender.prototype = {
     }
   },
 
-  reset() {
+  reset: function() {
     let fileClosePromise = this._file.close();
     return fileClosePromise.then(_ => {
       this._file = null;
@@ -933,7 +933,7 @@ function BoundedFileAppender(path, formatter, maxSize = 2 * ONE_MEGABYTE) {
 BoundedFileAppender.prototype = {
   __proto__: FileAppender.prototype,
 
-  doAppend(formatted) {
+  doAppend: function(formatted) {
     if (!this._removeFilePromise) {
       if (this._size < this._maxSize) {
         this._size += formatted.length;
@@ -948,7 +948,7 @@ BoundedFileAppender.prototype = {
     return undefined;
   },
 
-  reset() {
+  reset: function() {
     let fileClosePromise;
     if (this._fileReadyPromise) {
       // An attempt to open the file may still be in progress.

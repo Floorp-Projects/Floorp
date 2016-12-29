@@ -351,7 +351,7 @@ var gGestureSupport = {
    * @param aEvent
    *        The continual motion update event to handle
    */
-  _doUpdate(aEvent) {},
+  _doUpdate: function(aEvent) {},
 
   /**
    * Handle gesture end events.  This function will be set by _setupSwipe.
@@ -359,7 +359,7 @@ var gGestureSupport = {
    * @param aEvent
    *        The gesture end event to handle
    */
-  _doEnd(aEvent) {},
+  _doEnd: function(aEvent) {},
 
   /**
    * Convert the swipe gesture into a browser action based on the direction.
@@ -444,7 +444,7 @@ var gGestureSupport = {
    * @param aEvent
    *        The MozRotateGestureUpdate event triggering this call
    */
-  rotate(aEvent) {
+  rotate: function(aEvent) {
     if (!(content.document instanceof ImageDocument))
       return;
 
@@ -463,7 +463,7 @@ var gGestureSupport = {
   /**
    * Perform a rotation end for ImageDocuments
    */
-  rotateEnd() {
+  rotateEnd: function() {
     if (!(content.document instanceof ImageDocument))
       return;
 
@@ -531,7 +531,7 @@ var gGestureSupport = {
    * When the location/tab changes, need to reload the current rotation for the
    * image
    */
-  restoreRotationState() {
+  restoreRotationState: function() {
     // Bug 863514 - Make gesture support work in electrolysis
     if (gMultiProcessBrowser)
       return;
@@ -560,7 +560,7 @@ var gGestureSupport = {
   /**
    * Removes the transition rule by removing the completeRotation class
    */
-  _clearCompleteRotation() {
+  _clearCompleteRotation: function() {
     let contentElement = content.document &&
                          content.document instanceof ImageDocument &&
                          content.document.body &&
@@ -731,7 +731,7 @@ var gHistorySwipeAnimation = {
     }
   },
 
-  _getCurrentHistoryIndex() {
+  _getCurrentHistoryIndex: function() {
     return SessionStore.getSessionHistory(gBrowser.selectedTab).index;
   },
 

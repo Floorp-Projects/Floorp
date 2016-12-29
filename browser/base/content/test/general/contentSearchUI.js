@@ -15,7 +15,7 @@ addMessageListener(TEST_MSG, msg => {
 
 var messageHandlers = {
 
-  init() {
+  init: function() {
     Services.search.currentEngine = Services.search.getEngineByName(ENGINE_NAME);
     let input = content.document.querySelector("input");
     gController =
@@ -29,19 +29,19 @@ var messageHandlers = {
     });
   },
 
-  key(arg) {
+  key: function(arg) {
     let keyName = typeof(arg) == "string" ? arg : arg.key;
     content.synthesizeKey(keyName, arg.modifiers || {});
     let wait = arg.waitForSuggestions ? waitForSuggestions : cb => cb();
     wait(ack.bind(null, "key"));
   },
 
-  startComposition(arg) {
+  startComposition: function(arg) {
     content.synthesizeComposition({ type: "compositionstart", data: "" });
     ack("startComposition");
   },
 
-  changeComposition(arg) {
+  changeComposition: function(arg) {
     let data = typeof(arg) == "string" ? arg : arg.data;
     content.synthesizeCompositionChange({
       composition: {
@@ -56,31 +56,31 @@ var messageHandlers = {
     wait(ack.bind(null, "changeComposition"));
   },
 
-  commitComposition() {
+  commitComposition: function() {
     content.synthesizeComposition({ type: "compositioncommitasis" });
     ack("commitComposition");
   },
 
-  focus() {
+  focus: function() {
     gController.input.focus();
     ack("focus");
   },
 
-  blur() {
+  blur: function() {
     gController.input.blur();
     ack("blur");
   },
 
-  waitForSearch() {
+  waitForSearch: function() {
     waitForContentSearchEvent("Search", aData => ack("waitForSearch", aData));
   },
 
-  waitForSearchSettings() {
+  waitForSearchSettings: function() {
     waitForContentSearchEvent("ManageEngines",
                               aData => ack("waitForSearchSettings", aData));
   },
 
-  mousemove(itemIndex) {
+  mousemove: function(itemIndex) {
     let row;
     if (itemIndex == -1) {
       row = gController._table.firstChild;
@@ -102,7 +102,7 @@ var messageHandlers = {
     content.synthesizeMouseAtCenter(row, event);
   },
 
-  click(arg) {
+  click: function(arg) {
     let eltIdx = typeof(arg) == "object" ? arg.eltIdx : arg;
     let row;
     if (eltIdx == -1) {
@@ -121,12 +121,12 @@ var messageHandlers = {
     ack("click");
   },
 
-  addInputValueToFormHistory() {
+  addInputValueToFormHistory: function() {
     gController.addInputValueToFormHistory();
     ack("addInputValueToFormHistory");
   },
 
-  addDuplicateOneOff() {
+  addDuplicateOneOff: function() {
     let btn = gController._oneOffButtons[gController._oneOffButtons.length - 1];
     let newBtn = btn.cloneNode(true);
     btn.parentNode.appendChild(newBtn);
@@ -134,12 +134,12 @@ var messageHandlers = {
     ack("addDuplicateOneOff");
   },
 
-  removeLastOneOff() {
+  removeLastOneOff: function() {
     gController._oneOffButtons.pop().remove();
     ack("removeLastOneOff");
   },
 
-  reset() {
+  reset: function() {
     // Reset both the input and suggestions by select all + delete. If there was
     // no text entered, this won't have any effect, so also escape to ensure the
     // suggestions table is closed.

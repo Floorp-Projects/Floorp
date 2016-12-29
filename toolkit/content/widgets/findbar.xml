@@ -316,7 +316,7 @@
       <field name="_observer"><![CDATA[({
         _self: this,
 
-        QueryInterface(aIID) {
+        QueryInterface: function(aIID) {
           if (aIID.equals(Components.interfaces.nsIObserver) ||
               aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
               aIID.equals(Components.interfaces.nsISupports))
@@ -325,7 +325,7 @@
           throw Components.results.NS_ERROR_NO_INTERFACE;
         },
 
-        observe(aSubject, aTopic, aPrefName) {
+        observe: function(aSubject, aTopic, aPrefName) {
           if (aTopic != "nsPref:changed")
             return;
 

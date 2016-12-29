@@ -16,7 +16,7 @@ add_task(function* testOneWindow() {
 add_task(function* testOpenCloseWindow() {
   let newWindow = null;
   let openListener = {
-    onWindowOpened(window) {
+    onWindowOpened: function(window) {
       newWindow = window;
     }
   }
@@ -39,7 +39,7 @@ add_task(function* testOpenCloseWindow() {
 
   let closedWindow = null;
   let closeListener = {
-    onWindowClosed(window) {
+    onWindowClosed: function(window) {
       closedWindow = window;
     }
   }

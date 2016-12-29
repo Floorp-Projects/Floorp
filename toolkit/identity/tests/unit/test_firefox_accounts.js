@@ -18,17 +18,17 @@ function MockFXAManager() {
   this.signedInUser = true;
 }
 MockFXAManager.prototype = {
-  getAssertion(audience) {
+  getAssertion: function(audience) {
     let result = this.signedInUser ? TEST_ASSERTION : null;
     return Promise.resolve(result);
   },
 
-  signOut() {
+  signOut: function() {
     this.signedInUser = false;
     return Promise.resolve(null);
   },
 
-  signIn(user) {
+  signIn: function(user) {
     this.signedInUser = user;
     return Promise.resolve(user);
   },

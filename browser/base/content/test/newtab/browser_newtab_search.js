@@ -211,12 +211,12 @@ function promiseNewSearchEngine({name: basename, numLogos}) {
   let addEnginePromise = new Promise((resolve, reject) => {
     let url = getRootDirectory(gTestPath) + basename;
     Services.search.addEngine(url, null, "", false, {
-      onSuccess(engine) {
+      onSuccess: function(engine) {
         info("Search engine added: " + basename);
         gNewEngines.push(engine);
         resolve(engine);
       },
-      onError(errCode) {
+      onError: function(errCode) {
         ok(false, "addEngine failed with error code " + errCode);
         reject();
       },

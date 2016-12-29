@@ -82,11 +82,11 @@ function isValidCCNumber(value) {
  * and restore form data for a document and its subframes.
  */
 this.FormData = Object.freeze({
-  collect(frame) {
+  collect: function(frame) {
     return FormDataInternal.collect(frame);
   },
 
-  restoreTree(root, data) {
+  restoreTree: function(root, data) {
     FormDataInternal.restoreTree(root, data);
   }
 });
@@ -118,7 +118,7 @@ var FormDataInternal = {
    * @return object
    *         Form data encoded in an object.
    */
-  collect({document: doc}) {
+  collect: function({document: doc}) {
     let formNodes = doc.evaluate(
       XPathGenerator.restorableFormNodes,
       doc,
@@ -232,7 +232,7 @@ var FormDataInternal = {
    * @param data (object)
    *        An object holding form data.
    */
-  restore({document: doc}, data) {
+  restore: function({document: doc}, data) {
     // Don't restore any data for the given frame if the URL
     // stored in the form data doesn't match its current URL.
     if (!data.url || data.url != getDocumentURI(doc)) {
@@ -275,7 +275,7 @@ var FormDataInternal = {
    *        The function used to retrieve the input field belonging to a key
    *        in the given |data| object.
    */
-  restoreManyInputValues(data, retrieve) {
+  restoreManyInputValues: function(data, retrieve) {
     for (let key of Object.keys(data)) {
       let input = retrieve(key);
       if (input) {
@@ -293,7 +293,7 @@ var FormDataInternal = {
    * @param  aValue
    *         Value to set form element to.
    */
-  restoreSingleInputValue(aNode, aValue) {
+  restoreSingleInputValue: function(aNode, aValue) {
     let eventType;
 
     if (typeof aValue == "string" && aNode.type != "file") {
@@ -359,7 +359,7 @@ var FormDataInternal = {
    * @param node (DOMNode)
    * @param type (string)
    */
-  fireEvent(node, type) {
+  fireEvent: function(node, type) {
     let doc = node.ownerDocument;
     let event = doc.createEvent("UIEvents");
     event.initUIEvent(type, true, true, doc.defaultView, 0);
@@ -387,7 +387,7 @@ var FormDataInternal = {
    *          ]
    *        }
    */
-  restoreTree(root, data) {
+  restoreTree: function(root, data) {
     // Don't restore any data for the root frame and its subframes if there
     // is a URL stored in the form data and it doesn't match its current URL.
     if (data.url && data.url != getDocumentURI(root.document)) {

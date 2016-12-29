@@ -29,7 +29,7 @@ this.webrtcUI = {
   peerConnectionBlockers: new Set(),
   emitter: new EventEmitter(),
 
-  init() {
+  init: function() {
     Services.obs.addObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished", false);
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
@@ -47,7 +47,7 @@ this.webrtcUI = {
     mm.addMessageListener("webrtc:UpdateBrowserIndicators", this);
   },
 
-  uninit() {
+  uninit: function() {
     Services.obs.removeObserver(maybeAddMenuIndicator, "browser-delayed-startup-finished");
 
     let ppmm = Cc["@mozilla.org/parentprocessmessagemanager;1"]
@@ -113,7 +113,7 @@ this.webrtcUI = {
 
   _streams: [],
   // The boolean parameters indicate which streams should be included in the result.
-  getActiveStreams(aCamera, aMicrophone, aScreen) {
+  getActiveStreams: function(aCamera, aMicrophone, aScreen) {
     return webrtcUI._streams.filter(aStream => {
       let state = aStream.state;
       return aCamera && state.camera ||
@@ -127,22 +127,22 @@ this.webrtcUI = {
       let browserWindow = browser.ownerGlobal;
       let tab = browserWindow.gBrowser &&
                 browserWindow.gBrowser.getTabForBrowser(browser);
-      return {uri: state.documentURI, tab, browser, types};
+      return {uri: state.documentURI, tab: tab, browser: browser, types: types};
     });
   },
 
-  swapBrowserForNotification(aOldBrowser, aNewBrowser) {
+  swapBrowserForNotification: function(aOldBrowser, aNewBrowser) {
     for (let stream of this._streams) {
       if (stream.browser == aOldBrowser)
         stream.browser = aNewBrowser;
     }
   },
 
-  forgetStreamsFromBrowser(aBrowser) {
+  forgetStreamsFromBrowser: function(aBrowser) {
     this._streams = this._streams.filter(stream => stream.browser != aBrowser);
   },
 
-  showSharingDoorhanger(aActiveStream) {
+  showSharingDoorhanger: function(aActiveStream) {
     let browserWindow = aActiveStream.browser.ownerGlobal;
     if (aActiveStream.tab) {
       browserWindow.gBrowser.selectedTab = aActiveStream.tab;
@@ -165,7 +165,7 @@ this.webrtcUI = {
     identityBox.click();
   },
 
-  updateWarningLabel(aMenuList) {
+  updateWarningLabel: function(aMenuList) {
     let type = aMenuList.selectedItem.getAttribute("devicetype");
     let document = aMenuList.ownerDocument;
     document.getElementById("webRTC-all-windows-shared").hidden = type != "Screen";
@@ -195,23 +195,23 @@ this.webrtcUI = {
   //                       is canceled.  (This would typically be used in
   //                       conjunction with a blocking handler to cancel
   //                       a user prompt or other work done by the handler)
-  addPeerConnectionBlocker(aCallback) {
+  addPeerConnectionBlocker: function(aCallback) {
     this.peerConnectionBlockers.add(aCallback);
   },
 
-  removePeerConnectionBlocker(aCallback) {
+  removePeerConnectionBlocker: function(aCallback) {
     this.peerConnectionBlockers.delete(aCallback);
   },
 
-  on(...args) {
+  on: function(...args) {
     return this.emitter.on(...args);
   },
 
-  off(...args) {
+  off: function(...args) {
     return this.emitter.off(...args);
   },
 
-  receiveMessage(aMessage) {
+  receiveMessage: function(aMessage) {
     switch (aMessage.name) {
 
       case "rtcpeer:Request": {
@@ -348,14 +348,14 @@ function prompt(aBrowser, aRequest) {
     // The real callback will be set during the "showing" event. The
     // empty function here is so that PopupNotifications.show doesn't
     // reject the action.
-    callback() {}
+    callback: function() {}
   };
 
   let secondaryActions = [
     {
       label: stringBundle.getString("getUserMedia.dontAllow.label"),
       accessKey: stringBundle.getString("getUserMedia.dontAllow.accesskey"),
-      callback(aState) {
+      callback: function(aState) {
         denyRequest(notification.browser, aRequest);
         if (aState && aState.checkboxChecked) {
           let perms = Services.perms;
@@ -393,7 +393,7 @@ function prompt(aBrowser, aRequest) {
                                                       [productName])
       } : undefined,
     },
-    eventCallback(aTopic, aNewBrowser) {
+    eventCallback: function(aTopic, aNewBrowser) {
       if (aTopic == "swapping")
         return true;
 
@@ -746,11 +746,11 @@ function getGlobalIndicator() {
     _statusBar: Cc["@mozilla.org/widget/macsystemstatusbar;1"]
                   .getService(Ci.nsISystemStatusBar),
 
-    _command(aEvent) {
+    _command: function(aEvent) {
       webrtcUI.showSharingDoorhanger(aEvent.target.stream);
     },
 
-    _popupShowing(aEvent) {
+    _popupShowing: function(aEvent) {
       let type = this.getAttribute("type");
       let activeStreams;
       if (type == "Camera") {
@@ -809,12 +809,12 @@ function getGlobalIndicator() {
       return true;
     },
 
-    _popupHiding(aEvent) {
+    _popupHiding: function(aEvent) {
       while (this.firstChild)
         this.firstChild.remove();
     },
 
-    _setIndicatorState(aName, aState) {
+    _setIndicatorState: function(aName, aState) {
       let field = "_" + aName.toLowerCase();
       if (aState && !this[field]) {
         let menu = this._hiddenDoc.createElement("menu");
@@ -840,12 +840,12 @@ function getGlobalIndicator() {
         this[field] = null
       }
     },
-    updateIndicatorState() {
+    updateIndicatorState: function() {
       this._setIndicatorState("Camera", webrtcUI.showCameraIndicator);
       this._setIndicatorState("Microphone", webrtcUI.showMicrophoneIndicator);
       this._setIndicatorState("Screen", webrtcUI.showScreenSharingIndicator);
     },
-    close() {
+    close: function() {
       this._setIndicatorState("Camera", false);
       this._setIndicatorState("Microphone", false);
       this._setIndicatorState("Screen", false);

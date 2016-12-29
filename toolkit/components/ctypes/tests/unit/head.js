@@ -44,7 +44,7 @@ function ResourceTester(start, stop) {
   this._stop  = stop;
 }
 ResourceTester.prototype = {
-  launch(size, test, args) {
+  launch: function(size, test, args) {
     trigger_gc();
     let cleaner = new ResourceCleaner();
     this._start(size);

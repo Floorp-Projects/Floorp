@@ -232,7 +232,7 @@ GMPWrapper.prototype = {
     return false;
   },
 
-  isCompatibleWith(aAppVersion, aPlatformVersion) {
+  isCompatibleWith: function(aAppVersion, aPlatformVersion) {
     return true;
   },
 
@@ -255,7 +255,7 @@ GMPWrapper.prototype = {
     }
   },
 
-  findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
+  findUpdates: function(aListener, aReason, aAppVersion, aPlatformVersion) {
     this._log.trace("findUpdates() - " + this._plugin.id + " - reason=" +
                     aReason);
 
@@ -337,7 +337,7 @@ GMPWrapper.prototype = {
     return this.version && this.version.length > 0;
   },
 
-  _handleEnabledChanged() {
+  _handleEnabledChanged: function() {
     this._log.info("_handleEnabledChanged() id=" +
       this._plugin.id + " isActive=" + this.isActive);
 
@@ -360,7 +360,7 @@ GMPWrapper.prototype = {
                                            this);
   },
 
-  onPrefEMEGlobalEnabledChanged() {
+  onPrefEMEGlobalEnabledChanged: function() {
     this._log.info("onPrefEMEGlobalEnabledChanged() id=" + this._plugin.id +
       " appDisabled=" + this.appDisabled + " isActive=" + this.isActive +
       " hidden=" + GMPUtils.isPluginHidden(this._plugin));
@@ -383,7 +383,7 @@ GMPWrapper.prototype = {
     }
   },
 
-  checkForUpdates(delay) {
+  checkForUpdates: function(delay) {
     if (this._isUpdateCheckPending) {
       return;
     }
@@ -402,7 +402,7 @@ GMPWrapper.prototype = {
     }, delay);
   },
 
-  receiveMessage({target: browser, data: data}) {
+  receiveMessage: function({target: browser, data: data}) {
     this._log.trace("receiveMessage() data=" + data);
     let parsedData;
     try {
@@ -417,13 +417,13 @@ GMPWrapper.prototype = {
     }
   },
 
-  onPrefEnabledChanged() {
+  onPrefEnabledChanged: function() {
     if (!this._plugin.isEME || !this.appDisabled) {
       this._handleEnabledChanged();
     }
   },
 
-  onPrefVersionChanged() {
+  onPrefVersionChanged: function() {
     AddonManagerPrivate.callAddonListeners("onUninstalling", this, false);
     if (this._gmpPath) {
       this._log.info("onPrefVersionChanged() - unregistering gmp directory " +
@@ -450,7 +450,7 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners("onInstalled", this);
   },
 
-  uninstallPlugin() {
+  uninstallPlugin: function() {
     AddonManagerPrivate.callAddonListeners("onUninstalling", this, false);
     if (this.gmpPath) {
       this._log.info("uninstallPlugin() - unregistering gmp directory " +
@@ -463,7 +463,7 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners("onUninstalled", this);
   },
 
-  shutdown() {
+  shutdown: function() {
     Preferences.ignore(GMPPrefs.getPrefKey(GMPPrefs.KEY_PLUGIN_ENABLED,
                                            this._plugin.id),
                        this.onPrefEnabledChanged, this);
@@ -478,7 +478,7 @@ GMPWrapper.prototype = {
     return this._updateTask;
   },
 
-  _arePluginFilesOnDisk() {
+  _arePluginFilesOnDisk: function() {
     let fileExists = function(aGmpPath, aFileName) {
       let f = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       let path = OS.Path.join(aGmpPath, aFileName);
@@ -500,7 +500,7 @@ GMPWrapper.prototype = {
            (this._plugin.id != EME_ADOBE_ID || fileExists(this.gmpPath, id + ".voucher"));
   },
 
-  validate() {
+  validate: function() {
     if (!this.isInstalled) {
       // Not installed -> Valid.
       return {
@@ -534,7 +534,7 @@ var GMPProvider = {
 
   _plugins: null,
 
-  startup() {
+  startup: function() {
     configureLogging();
     this._log = Log.repository.getLoggerWithMessagePrefix("Toolkit.GMP",
                                                           "GMPProvider.");
@@ -590,7 +590,7 @@ var GMPProvider = {
     }
   },
 
-  shutdown() {
+  shutdown: function() {
     this._log.trace("shutdown");
     Preferences.ignore(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
@@ -616,7 +616,7 @@ var GMPProvider = {
     return shutdownTask;
   },
 
-  getAddonByID(aId, aCallback) {
+  getAddonByID: function(aId, aCallback) {
     if (!this.isEnabled) {
       aCallback(null);
       return;
@@ -630,7 +630,7 @@ var GMPProvider = {
     }
   },
 
-  getAddonsByTypes(aTypes, aCallback) {
+  getAddonsByTypes: function(aTypes, aCallback) {
     if (!this.isEnabled ||
         (aTypes && aTypes.indexOf("plugin") < 0)) {
       aCallback([]);
@@ -648,7 +648,7 @@ var GMPProvider = {
     return GMPPrefs.get(GMPPrefs.KEY_PROVIDER_ENABLED, false);
   },
 
-  generateFullDescription(aPlugin) {
+  generateFullDescription: function(aPlugin) {
     let rv = [];
     for (let [urlProp, labelId] of [["learnMoreURL", GMP_LEARN_MORE],
                                     ["licenseURL", aPlugin.id == WIDEVINE_ID ?
@@ -661,7 +661,7 @@ var GMPProvider = {
     return rv.length ? rv.join("<xhtml:br /><xhtml:br />") : undefined;
   },
 
-  buildPluginList() {
+  buildPluginList: function() {
     this._plugins = new Map();
     for (let aPlugin of GMP_PLUGINS) {
       let plugin = {
@@ -679,7 +679,7 @@ var GMPProvider = {
     }
   },
 
-  ensureProperCDMInstallState() {
+  ensureProperCDMInstallState: function() {
     if (!GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true)) {
       for (let plugin of this._plugins.values()) {
         if (plugin.isEME && plugin.wrapper.isInstalled) {

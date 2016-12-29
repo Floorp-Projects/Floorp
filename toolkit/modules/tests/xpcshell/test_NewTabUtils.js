@@ -326,16 +326,16 @@ function TestProvider(getLinksFn) {
 }
 
 TestProvider.prototype = {
-  addObserver(observer) {
+  addObserver: function(observer) {
     this._observers.add(observer);
   },
-  notifyLinkChanged(link, index = -1, deleted = false) {
+  notifyLinkChanged: function(link, index = -1, deleted = false) {
     this._notifyObservers("onLinkChanged", link, index, deleted);
   },
-  notifyManyLinksChanged() {
+  notifyManyLinksChanged: function() {
     this._notifyObservers("onManyLinksChanged");
   },
-  _notifyObservers() {
+  _notifyObservers: function() {
     let observerMethodName = arguments[0];
     let args = Array.prototype.slice.call(arguments, 1);
     args.unshift(this);
@@ -372,7 +372,7 @@ function makeLink(frecency) {
   return {
     url: "http://example" + frecency + ".com/",
     title: "My frecency is " + frecency,
-    frecency,
+    frecency: frecency,
     lastVisitDate: 0,
   };
 }

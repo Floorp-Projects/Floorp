@@ -14,7 +14,7 @@ add_task(function*() {
   let widgetSpec = {
     id: kButton,
     type: 'button',
-    onClick() {
+    onClick: function() {
       gBrowser.selectedTab = gBrowser.addTab("about:addons");
     }
   };

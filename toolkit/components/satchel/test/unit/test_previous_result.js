@@ -3,14 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var aaaListener = {
-  onSearchResult(search, result) {
+  onSearchResult: function(search, result) {
     do_check_eq(result.searchString, "aaa");
     do_test_finished();
   }
 };
 
 var aaListener = {
-  onSearchResult(search, result) {
+  onSearchResult: function(search, result) {
     do_check_eq(result.searchString, "aa");
     search.startSearch("aaa", "", result, aaaListener);
   }

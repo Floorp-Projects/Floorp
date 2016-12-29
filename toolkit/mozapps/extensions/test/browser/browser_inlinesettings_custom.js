@@ -11,7 +11,7 @@ function installAddon(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_inlinesettings1_custom.xpi",
                                 function(aInstall) {
     aInstall.addListener({
-      onInstallEnded() {
+      onInstallEnded: function() {
         executeSoon(aCallback);
       }
     });

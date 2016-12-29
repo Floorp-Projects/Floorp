@@ -268,7 +268,7 @@ var DirectoryLinksProvider = {
     }
   },
 
-  _cacheSuggestedLinks(link) {
+  _cacheSuggestedLinks: function(link) {
     // Don't cache links that don't have the expected 'frecent_sites'
     if (!link.frecent_sites) {
       return;
@@ -729,7 +729,7 @@ var DirectoryLinksProvider = {
     }.bind(this));
   },
 
-  _handleManyLinksChanged() {
+  _handleManyLinksChanged: function() {
     this._topSitesWithSuggestedLinks.clear();
     this._suggestedLinks.forEach((suggestedLinks, site) => {
       if (NewTabUtils.isTopPlacesSite(site)) {
@@ -744,7 +744,7 @@ var DirectoryLinksProvider = {
    *
    * @return true if _topSitesWithSuggestedLinks was modified, false otherwise.
    */
-  _handleLinkChanged(aLink) {
+  _handleLinkChanged: function(aLink) {
     let changedLinkSite = NewTabUtils.extractSite(aLink.url);
     let linkStored = this._topSitesWithSuggestedLinks.has(changedLinkSite);
 
@@ -768,13 +768,13 @@ var DirectoryLinksProvider = {
     return false;
   },
 
-  _populatePlacesLinks() {
+  _populatePlacesLinks: function() {
     NewTabUtils.links.populateProviderCache(NewTabUtils.placesProvider, () => {
       this._handleManyLinksChanged();
     });
   },
 
-  onDeleteURI(aProvider, aLink) {
+  onDeleteURI: function(aProvider, aLink) {
     let {url} = aLink;
     // remove clicked flag for that url and
     // call observer upon disk write completion
@@ -783,14 +783,14 @@ var DirectoryLinksProvider = {
     });
   },
 
-  onClearHistory() {
+  onClearHistory: function() {
     // remove all clicked flags and call observers upon file write
     this._removeAllTileClicks().then(() => {
       this._callObservers("onClearHistory");
     });
   },
 
-  onLinkChanged(aProvider, aLink) {
+  onLinkChanged: function(aProvider, aLink) {
     // Make sure NewTabUtils.links handles the notification first.
     setTimeout(() => {
       if (this._handleLinkChanged(aLink) || this._shouldUpdateSuggestedTile()) {
@@ -799,14 +799,14 @@ var DirectoryLinksProvider = {
     }, 0);
   },
 
-  onManyLinksChanged() {
+  onManyLinksChanged: function() {
     // Make sure NewTabUtils.links handles the notification first.
     setTimeout(() => {
       this._handleManyLinksChanged();
     }, 0);
   },
 
-  _getCurrentTopSiteCount() {
+  _getCurrentTopSiteCount: function() {
     let visibleTopSiteCount = 0;
     let newTabLinks = NewTabUtils.links.getLinks();
     for (let link of newTabLinks.slice(0, MIN_VISIBLE_HISTORY_TILES)) {
@@ -822,7 +822,7 @@ var DirectoryLinksProvider = {
     return visibleTopSiteCount;
   },
 
-  _shouldUpdateSuggestedTile() {
+  _shouldUpdateSuggestedTile: function() {
     let sortedLinks = NewTabUtils.getProviderLinks(this);
 
     let mostFrecentLink = {};
@@ -850,7 +850,7 @@ var DirectoryLinksProvider = {
    *
    * @return the chosen suggested tile, or undefined if there isn't one
    */
-  _updateSuggestedTile() {
+  _updateSuggestedTile: function() {
     let sortedLinks = NewTabUtils.getProviderLinks(this);
 
     if (!sortedLinks) {
@@ -1249,7 +1249,7 @@ var DirectoryLinksProvider = {
     }
   },
 
-  _removeObservers() {
+  _removeObservers: function() {
     this._observers.clear();
   }
 };

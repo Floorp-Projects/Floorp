@@ -31,7 +31,7 @@ var ShortcutUtils = {
     * @return string
     *         A prettified and properly separated modifier keys string.
     */
-  prettifyShortcut(aElemKey, aNoCloverLeaf) {
+  prettifyShortcut: function(aElemKey, aNoCloverLeaf) {
     let elemString = "";
     let elemMod = aElemKey.getAttribute("modifiers");
     let haveCloverLeaf = false;
@@ -102,7 +102,7 @@ var ShortcutUtils = {
     return elemString + key;
   },
 
-  findShortcut(aElemCommand) {
+  findShortcut: function(aElemCommand) {
     let document = aElemCommand.ownerDocument;
     return document.querySelector("key[command=\"" + aElemCommand.getAttribute("id") + "\"]");
   }

@@ -7,10 +7,10 @@ add_task(function* () {
 
   // add a test provider that waits for load
   let afterLoadProvider = {
-    getLinks(callback) {
+    getLinks: function(callback) {
       this.callback = callback;
     },
-    addObserver() {},
+    addObserver: function() {},
   };
   NewTabUtils.links.addProvider(afterLoadProvider);
 

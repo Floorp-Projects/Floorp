@@ -500,7 +500,7 @@ Task.Debugging = {
    * @param {string} topStack The stack provided by the error.
    * @param {string=} prefix Optionally, a prefix for each line.
    */
-  generateReadableStack(topStack, prefix = "") {
+  generateReadableStack: function(topStack, prefix = "") {
     if (!gCurrentTask) {
       return topStack;
     }

@@ -130,13 +130,13 @@ CustomizeMode.prototype = {
     return this.window.CustomizationHandler;
   },
 
-  uninit() {
+  uninit: function() {
     if (AppConstants.CAN_DRAW_IN_TITLEBAR) {
       Services.prefs.removeObserver(kDrawInTitlebarPref, this);
     }
   },
 
-  toggle() {
+  toggle: function() {
     if (this._handler.isEnteringCustomizeMode || this._handler.isExitingCustomizeMode) {
       this._wantToBeInCustomizeMode = !this._wantToBeInCustomizeMode;
       return;
@@ -148,7 +148,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateLWThemeButtonIcon() {
+  _updateLWThemeButtonIcon: function() {
     let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
     let lwthemeIcon = this.document.getAnonymousElementByAttribute(lwthemeButton,
                         "class", "button-icon");
@@ -156,7 +156,7 @@ CustomizeMode.prototype = {
       "url(" + LightweightThemeManager.currentTheme.iconURL + ")" : "";
   },
 
-  setTab(aTab) {
+  setTab: function(aTab) {
     if (gTab == aTab) {
       return;
     }
@@ -186,7 +186,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  enter() {
+  enter: function() {
     this._wantToBeInCustomizeMode = true;
 
     if (this._customizing || this._handler.isEnteringCustomizeMode) {
@@ -380,7 +380,7 @@ CustomizeMode.prototype = {
     }.bind(this));
   },
 
-  exit() {
+  exit: function() {
     this._wantToBeInCustomizeMode = false;
 
     if (!this._customizing || this._handler.isExitingCustomizeMode) {
@@ -557,7 +557,7 @@ CustomizeMode.prototype = {
    * phases, there is a "customizing" attribute set on the main-window to simplify
    * excluding certain styles while in any phase of customize mode.
    */
-  _doTransition(aEntering) {
+  _doTransition: function(aEntering) {
     let deck = this.document.getElementById("content-deck");
     let customizeTransitionEndPromise = new Promise(resolve => {
       let customizeTransitionEnd = (aEvent) => {
@@ -603,7 +603,7 @@ CustomizeMode.prototype = {
     return customizeTransitionEndPromise;
   },
 
-  updateLWTStyling(aData) {
+  updateLWTStyling: function(aData) {
     let docElement = this.document.documentElement;
     if (!aData) {
       let lwt = docElement._lightweightTheme;
@@ -654,7 +654,7 @@ CustomizeMode.prototype = {
     docElement.style.removeProperty("background-color");
   },
 
-  removeLWTStyling() {
+  removeLWTStyling: function() {
     let affectedNodes = AppConstants.platform == "macosx" ?
                           ["tab-view-deck", "titlebar"] :
                           ["tab-view-deck"];
@@ -671,11 +671,11 @@ CustomizeMode.prototype = {
     }
   },
 
-  _getHeaderImageRef(aData) {
+  _getHeaderImageRef: function(aData) {
     return "url(\"" + aData.headerURL.replace(/"/g, '\\"') + "\")";
   },
 
-  maybeShowTip(aAnchor) {
+  maybeShowTip: function(aAnchor) {
     let shown = false;
     const kShownPref = "browser.customizemode.tip0.shown";
     try {
@@ -711,11 +711,11 @@ CustomizeMode.prototype = {
     Services.prefs.setBoolPref(kShownPref, true);
   },
 
-  hideTip() {
+  hideTip: function() {
     this.tipPanel.hidePopup();
   },
 
-  _getCustomizableChildForNode(aNode) {
+  _getCustomizableChildForNode: function(aNode) {
     // NB: adjusted from _getCustomizableParent to keep that method fast
     // (it's used during drags), and avoid multiple DOM loops
     let areas = CustomizableUI.areas;
@@ -746,7 +746,7 @@ CustomizeMode.prototype = {
     return null;
   },
 
-  addToToolbar(aNode) {
+  addToToolbar: function(aNode) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
@@ -757,7 +757,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  addToPanel(aNode) {
+  addToPanel: function(aNode) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
@@ -768,7 +768,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  removeFromArea(aNode) {
+  removeFromArea: function(aNode) {
     aNode = this._getCustomizableChildForNode(aNode);
     if (aNode.localName == "toolbarpaletteitem" && aNode.firstChild) {
       aNode = aNode.firstChild;
@@ -779,7 +779,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  populatePalette() {
+  populatePalette: function() {
     let fragment = this.document.createDocumentFragment();
     let toolboxPalette = this.window.gNavToolbox.palette;
 
@@ -805,7 +805,7 @@ CustomizeMode.prototype = {
   //       Would ensure no weird interactions/event handling from original node,
   //       and makes it possible to put this in a lazy-loaded iframe/real tab
   //       while still getting rid of the need for overlays.
-  makePaletteItem(aWidget, aPlace) {
+  makePaletteItem: function(aWidget, aPlace) {
     let widgetNode = aWidget.forWindow(this.window).node;
     if (!widgetNode) {
       log.error("Widget with id " + aWidget.id + " does not return a valid node");
@@ -821,7 +821,7 @@ CustomizeMode.prototype = {
     return wrapper;
   },
 
-  depopulatePalette() {
+  depopulatePalette: function() {
     return Task.spawn(function*() {
       this.visiblePalette.hidden = true;
       let paletteChild = this.visiblePalette.firstChild;
@@ -851,7 +851,7 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, log.error);
   },
 
-  isCustomizableItem(aNode) {
+  isCustomizableItem: function(aNode) {
     return aNode.localName == "toolbarbutton" ||
            aNode.localName == "toolbaritem" ||
            aNode.localName == "toolbarseparator" ||
@@ -859,11 +859,11 @@ CustomizeMode.prototype = {
            aNode.localName == "toolbarspacer";
   },
 
-  isWrappedToolbarItem(aNode) {
+  isWrappedToolbarItem: function(aNode) {
     return aNode.localName == "toolbarpaletteitem";
   },
 
-  deferredWrapToolbarItem(aNode, aPlace) {
+  deferredWrapToolbarItem: function(aNode, aPlace) {
     return new Promise(resolve => {
       dispatchFunction(() => {
         let wrapper = this.wrapToolbarItem(aNode, aPlace);
@@ -872,7 +872,7 @@ CustomizeMode.prototype = {
     });
   },
 
-  wrapToolbarItem(aNode, aPlace) {
+  wrapToolbarItem: function(aNode, aPlace) {
     if (!this.isCustomizableItem(aNode)) {
       return aNode;
     }
@@ -890,7 +890,7 @@ CustomizeMode.prototype = {
     return wrapper;
   },
 
-  createOrUpdateWrapper(aNode, aPlace, aIsUpdate) {
+  createOrUpdateWrapper: function(aNode, aPlace, aIsUpdate) {
     let wrapper;
     if (aIsUpdate && aNode.parentNode && aNode.parentNode.localName == "toolbarpaletteitem") {
       wrapper = aNode.parentNode;
@@ -980,7 +980,7 @@ CustomizeMode.prototype = {
     return wrapper;
   },
 
-  deferredUnwrapToolbarItem(aWrapper) {
+  deferredUnwrapToolbarItem: function(aWrapper) {
     return new Promise(resolve => {
       dispatchFunction(() => {
         let item = null;
@@ -994,7 +994,7 @@ CustomizeMode.prototype = {
     });
   },
 
-  unwrapToolbarItem(aWrapper) {
+  unwrapToolbarItem: function(aWrapper) {
     if (aWrapper.nodeName != "toolbarpaletteitem") {
       return aWrapper;
     }
@@ -1045,7 +1045,7 @@ CustomizeMode.prototype = {
     return toolbarItem;
   },
 
-  *_wrapToolbarItem(aArea) {
+  _wrapToolbarItem: function*(aArea) {
     let target = CustomizableUI.getCustomizeTargetForArea(aArea, this.window);
     if (!target || this.areas.has(target)) {
       return null;
@@ -1061,7 +1061,7 @@ CustomizeMode.prototype = {
     return target;
   },
 
-  _wrapToolbarItemSync(aArea) {
+  _wrapToolbarItemSync: function(aArea) {
     let target = CustomizableUI.getCustomizeTargetForArea(aArea, this.window);
     if (!target || this.areas.has(target)) {
       return null;
@@ -1082,13 +1082,13 @@ CustomizeMode.prototype = {
     return target;
   },
 
-  *_wrapToolbarItems() {
+  _wrapToolbarItems: function*() {
     for (let area of CustomizableUI.areas) {
       yield this._wrapToolbarItem(area);
     }
   },
 
-  _addDragHandlers(aTarget) {
+  _addDragHandlers: function(aTarget) {
     aTarget.addEventListener("dragstart", this, true);
     aTarget.addEventListener("dragover", this, true);
     aTarget.addEventListener("dragexit", this, true);
@@ -1096,7 +1096,7 @@ CustomizeMode.prototype = {
     aTarget.addEventListener("dragend", this, true);
   },
 
-  _wrapItemsInArea(target) {
+  _wrapItemsInArea: function(target) {
     for (let child of target.children) {
       if (this.isCustomizableItem(child)) {
         this.wrapToolbarItem(child, CustomizableUI.getPlaceForItem(child));
@@ -1104,7 +1104,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _removeDragHandlers(aTarget) {
+  _removeDragHandlers: function(aTarget) {
     aTarget.removeEventListener("dragstart", this, true);
     aTarget.removeEventListener("dragover", this, true);
     aTarget.removeEventListener("dragexit", this, true);
@@ -1112,7 +1112,7 @@ CustomizeMode.prototype = {
     aTarget.removeEventListener("dragend", this, true);
   },
 
-  _unwrapItemsInArea(target) {
+  _unwrapItemsInArea: function(target) {
     for (let toolbarItem of target.children) {
       if (this.isWrappedToolbarItem(toolbarItem)) {
         this.unwrapToolbarItem(toolbarItem);
@@ -1120,7 +1120,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _unwrapToolbarItems() {
+  _unwrapToolbarItems: function() {
     return Task.spawn(function*() {
       for (let target of this.areas) {
         for (let toolbarItem of target.children) {
@@ -1134,7 +1134,7 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, log.error);
   },
 
-  _removeExtraToolbarsIfEmpty() {
+  _removeExtraToolbarsIfEmpty: function() {
     let toolbox = this.window.gNavToolbox;
     for (let child of toolbox.children) {
       if (child.hasAttribute("customindex")) {
@@ -1146,7 +1146,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  persistCurrentSets(aSetBeforePersisting)  {
+  persistCurrentSets: function(aSetBeforePersisting)  {
     let document = this.document;
     let toolbars = document.querySelectorAll("toolbar[customizable='true'][currentset]");
     for (let toolbar of toolbars) {
@@ -1159,7 +1159,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  reset() {
+  reset: function() {
     this.resetting = true;
     // Disable the reset button temporarily while resetting:
     let btn = this.document.getElementById("customization-reset-button");
@@ -1190,7 +1190,7 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, log.error);
   },
 
-  undoReset() {
+  undoReset: function() {
     this.resetting = true;
 
     return Task.spawn(function*() {
@@ -1214,7 +1214,7 @@ CustomizeMode.prototype = {
     }.bind(this)).then(null, log.error);
   },
 
-  _onToolbarVisibilityChange(aEvent) {
+  _onToolbarVisibilityChange: function(aEvent) {
     let toolbar = aEvent.target;
     if (aEvent.detail.visible && toolbar.getAttribute("customizable") == "true") {
       toolbar.setAttribute("customizing", "true");
@@ -1225,19 +1225,19 @@ CustomizeMode.prototype = {
     this.updateLWTStyling();
   },
 
-  onWidgetMoved(aWidgetId, aArea, aOldPosition, aNewPosition) {
+  onWidgetMoved: function(aWidgetId, aArea, aOldPosition, aNewPosition) {
     this._onUIChange();
   },
 
-  onWidgetAdded(aWidgetId, aArea, aPosition) {
+  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
     this._onUIChange();
   },
 
-  onWidgetRemoved(aWidgetId, aArea) {
+  onWidgetRemoved: function(aWidgetId, aArea) {
     this._onUIChange();
   },
 
-  onWidgetBeforeDOMChange(aNodeToChange, aSecondaryNode, aContainer) {
+  onWidgetBeforeDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
     if (aContainer.ownerGlobal != this.window || this.resetting) {
       return;
     }
@@ -1254,7 +1254,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  onWidgetAfterDOMChange(aNodeToChange, aSecondaryNode, aContainer) {
+  onWidgetAfterDOMChange: function(aNodeToChange, aSecondaryNode, aContainer) {
     if (aContainer.ownerGlobal != this.window || this.resetting) {
       return;
     }
@@ -1284,7 +1284,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  onWidgetDestroyed(aWidgetId) {
+  onWidgetDestroyed: function(aWidgetId) {
     let wrapper = this.document.getElementById("wrapper-" + aWidgetId);
     if (wrapper) {
       let wasInPanel = wrapper.parentNode == this.panelUIContents;
@@ -1295,7 +1295,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  onWidgetAfterCreation(aWidgetId, aArea) {
+  onWidgetAfterCreation: function(aWidgetId, aArea) {
     // If the node was added to an area, we would have gotten an onWidgetAdded notification,
     // plus associated DOM change notifications, so only do stuff for the palette:
     if (!aArea) {
@@ -1309,7 +1309,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  onAreaNodeRegistered(aArea, aContainer) {
+  onAreaNodeRegistered: function(aArea, aContainer) {
     if (aContainer.ownerDocument == this.document) {
       this._wrapItemsInArea(aContainer);
       this._addDragHandlers(aContainer);
@@ -1318,7 +1318,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  onAreaNodeUnregistered(aArea, aContainer, aReason) {
+  onAreaNodeUnregistered: function(aArea, aContainer, aReason) {
     if (aContainer.ownerDocument == this.document && aReason == CustomizableUI.REASON_AREA_UNREGISTERED) {
       this._unwrapItemsInArea(aContainer);
       this._removeDragHandlers(aContainer);
@@ -1327,18 +1327,18 @@ CustomizeMode.prototype = {
     }
   },
 
-  openAddonsManagerThemes(aEvent) {
+  openAddonsManagerThemes: function(aEvent) {
     aEvent.target.parentNode.parentNode.hidePopup();
     this.window.BrowserOpenAddonsMgr('addons://list/theme');
   },
 
-  getMoreThemes(aEvent) {
+  getMoreThemes: function(aEvent) {
     aEvent.target.parentNode.parentNode.hidePopup();
     let getMoreURL = Services.urlFormatter.formatURLPref("lightweightThemes.getMoreURL");
     this.window.openUILinkIn(getMoreURL, "tab");
   },
 
-  onLWThemesMenuShowing(aEvent) {
+  onLWThemesMenuShowing: function(aEvent) {
     const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
     const RECENT_LWT_COUNT = 5;
 
@@ -1443,7 +1443,7 @@ CustomizeMode.prototype = {
     }.bind(this));
   },
 
-  _clearLWThemesMenu(panel) {
+  _clearLWThemesMenu: function(panel) {
     let footer = this.document.getElementById("customization-lwtheme-menu-footer");
     let recommendedLabel = this.document.getElementById("customization-lwtheme-menu-recommended");
     for (let element of [footer, recommendedLabel]) {
@@ -1457,7 +1457,7 @@ CustomizeMode.prototype = {
     panel.removeAttribute("height");
   },
 
-  _onUIChange() {
+  _onUIChange: function() {
     this._changed = true;
     if (!this.resetting) {
       this._updateResetButton();
@@ -1467,22 +1467,22 @@ CustomizeMode.prototype = {
     CustomizableUI.dispatchToolboxEvent("customizationchange");
   },
 
-  _updateEmptyPaletteNotice() {
+  _updateEmptyPaletteNotice: function() {
     let paletteItems = this.visiblePalette.getElementsByTagName("toolbarpaletteitem");
     this.paletteEmptyNotice.hidden = !!paletteItems.length;
   },
 
-  _updateResetButton() {
+  _updateResetButton: function() {
     let btn = this.document.getElementById("customization-reset-button");
     btn.disabled = CustomizableUI.inDefaultState;
   },
 
-  _updateUndoResetButton() {
+  _updateUndoResetButton: function() {
     let undoResetButton =  this.document.getElementById("customization-undo-reset-button");
     undoResetButton.hidden = !CustomizableUI.canUndoReset;
   },
 
-  handleEvent(aEvent) {
+  handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "toolbarvisibilitychange":
         this._onToolbarVisibilityChange(aEvent);
@@ -1525,7 +1525,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         this._updateResetButton();
@@ -1547,7 +1547,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _updateTitlebarButton() {
+  _updateTitlebarButton: function() {
     if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
       return;
     }
@@ -1564,7 +1564,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  toggleTitlebar(aShouldShowTitlebar) {
+  toggleTitlebar: function(aShouldShowTitlebar) {
     if (!AppConstants.CAN_DRAW_IN_TITLEBAR) {
       return;
     }
@@ -1572,7 +1572,7 @@ CustomizeMode.prototype = {
     Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
   },
 
-  _onDragStart(aEvent) {
+  _onDragStart: function(aEvent) {
     __dumpDragData(aEvent);
     let item = aEvent.target;
     while (item && item.localName != "toolbarpaletteitem") {
@@ -1629,7 +1629,7 @@ CustomizeMode.prototype = {
     this._dragInitializeTimeout = this.window.setTimeout(this._initializeDragAfterMove, 0);
   },
 
-  _onDragOver(aEvent) {
+  _onDragOver: function(aEvent) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -1726,7 +1726,7 @@ CustomizeMode.prototype = {
     aEvent.stopPropagation();
   },
 
-  _onDragDrop(aEvent) {
+  _onDragDrop: function(aEvent) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -1779,7 +1779,7 @@ CustomizeMode.prototype = {
     this._showPanelCustomizationPlaceholders();
   },
 
-  _applyDrop(aEvent, aTargetArea, aOriginArea, aDraggedItemId, aTargetNode) {
+  _applyDrop: function(aEvent, aTargetArea, aOriginArea, aDraggedItemId, aTargetNode) {
     let document = aEvent.target.ownerDocument;
     let draggedItem = document.getElementById(aDraggedItemId);
     draggedItem.hidden = false;
@@ -1908,7 +1908,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _onDragExit(aEvent) {
+  _onDragExit: function(aEvent) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -1929,7 +1929,7 @@ CustomizeMode.prototype = {
   /**
    * To workaround bug 460801 we manually forward the drop event here when dragend wouldn't be fired.
    */
-  _onDragEnd(aEvent) {
+  _onDragEnd: function(aEvent) {
     if (this._isUnwantedDragDrop(aEvent)) {
       return;
     }
@@ -1966,7 +1966,7 @@ CustomizeMode.prototype = {
     DragPositionManager.stop();
   },
 
-  _isUnwantedDragDrop(aEvent) {
+  _isUnwantedDragDrop: function(aEvent) {
     // The simulated events generated by synthesizeDragStart/synthesizeDrop in
     // mochitests are used only for testing whether the right data is being put
     // into the dataTransfer. Neither cause a real drop to occur, so they don't
@@ -1985,7 +1985,7 @@ CustomizeMode.prototype = {
            mozSourceNode.ownerGlobal != this.window;
   },
 
-  _setDragActive(aItem, aValue, aDraggedItemId, aInToolbar) {
+  _setDragActive: function(aItem, aValue, aDraggedItemId, aInToolbar) {
     if (!aItem) {
       return;
     }
@@ -2033,7 +2033,7 @@ CustomizeMode.prototype = {
       }
     }
   },
-  _cancelDragActive(aItem, aNextItem, aNoTransition) {
+  _cancelDragActive: function(aItem, aNextItem, aNoTransition) {
     this._updateToolbarCustomizationOutline(aItem.ownerGlobal);
     let currentArea = this._getCustomizableParent(aItem);
     if (!currentArea) {
@@ -2069,7 +2069,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _setGridDragActive(aDragOverNode, aDraggedItem, aValue) {
+  _setGridDragActive: function(aDragOverNode, aDraggedItem, aValue) {
     let targetArea = this._getCustomizableParent(aDragOverNode);
     let draggedWrapper = this.document.getElementById("wrapper-" + aDraggedItem.id);
     let originArea = this._getCustomizableParent(draggedWrapper);
@@ -2080,7 +2080,7 @@ CustomizeMode.prototype = {
                                       originArea == targetArea);
   },
 
-  _getDragItemSize(aDragOverNode, aDraggedItem) {
+  _getDragItemSize: function(aDragOverNode, aDraggedItem) {
     // Cache it good, cache it real good.
     if (!this._dragSizeMap)
       this._dragSizeMap = new WeakMap();
@@ -2140,7 +2140,7 @@ CustomizeMode.prototype = {
     return size;
   },
 
-  _getCustomizableParent(aElement) {
+  _getCustomizableParent: function(aElement) {
     let areas = CustomizableUI.areas;
     areas.push(kPaletteId);
     while (aElement) {
@@ -2152,7 +2152,7 @@ CustomizeMode.prototype = {
     return null;
   },
 
-  _getDragOverNode(aEvent, aAreaElement, aInToolbar, aDraggedItemId) {
+  _getDragOverNode: function(aEvent, aAreaElement, aInToolbar, aDraggedItemId) {
     let expectedParent = aAreaElement.customizationTarget || aAreaElement;
     // Our tests are stupid. Cope:
     if (!aEvent.clientX  && !aEvent.clientY) {
@@ -2200,7 +2200,7 @@ CustomizeMode.prototype = {
     return targetNode || aEvent.target;
   },
 
-  _onMouseDown(aEvent) {
+  _onMouseDown: function(aEvent) {
     log.debug("_onMouseDown");
     if (aEvent.button != 0) {
       return;
@@ -2214,7 +2214,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _onMouseUp(aEvent) {
+  _onMouseUp: function(aEvent) {
     log.debug("_onMouseUp");
     if (aEvent.button != 0) {
       return;
@@ -2227,7 +2227,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _getWrapper(aElement) {
+  _getWrapper: function(aElement) {
     while (aElement && aElement.localName != "toolbarpaletteitem") {
       if (aElement.localName == "toolbar")
         return null;
@@ -2236,7 +2236,7 @@ CustomizeMode.prototype = {
     return aElement;
   },
 
-  _showPanelCustomizationPlaceholders() {
+  _showPanelCustomizationPlaceholders: function() {
     let doc = this.document;
     let contents = this.panelUIContents;
     let narrowItemsAfterWideItem = 0;
@@ -2271,7 +2271,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _removePanelCustomizationPlaceholders() {
+  _removePanelCustomizationPlaceholders: function() {
     let contents = this.panelUIContents;
     let oldPlaceholders = contents.getElementsByClassName(kPlaceholderClass);
     while (oldPlaceholders.length) {
@@ -2288,7 +2288,7 @@ CustomizeMode.prototype = {
    *                                      outline to. If aToolbarArea is falsy, the outline will be
    *                                      removed from all toolbar areas.
    */
-  _updateToolbarCustomizationOutline(aWindow, aToolbarArea = null) {
+  _updateToolbarCustomizationOutline: function(aWindow, aToolbarArea = null) {
     // Remove the attribute from existing customization targets
     for (let area of CustomizableUI.areas) {
       if (CustomizableUI.getAreaType(area) != CustomizableUI.TYPE_TOOLBAR) {
@@ -2307,7 +2307,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  _findVisiblePreviousSiblingNode(aReferenceNode) {
+  _findVisiblePreviousSiblingNode: function(aReferenceNode) {
     while (aReferenceNode &&
            aReferenceNode.localName == "toolbarpaletteitem" &&
            aReferenceNode.firstChild.hidden) {

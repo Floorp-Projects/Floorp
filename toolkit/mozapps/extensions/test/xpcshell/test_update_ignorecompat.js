@@ -52,12 +52,12 @@ for (let test of testParams) {
     restartManager();
 
     AddonManager.addInstallListener({
-      onNewInstall(aInstall) {
+      onNewInstall: function(aInstall) {
         if (aInstall.existingAddon.id != "addon9@tests.mozilla.org")
           do_throw("Saw unexpected onNewInstall for " + aInstall.existingAddon.id);
         do_check_eq(aInstall.version, "4.0");
       },
-      onDownloadFailed(aInstall) {
+      onDownloadFailed: function(aInstall) {
         run_next_test();
       }
     });
@@ -90,15 +90,15 @@ for (let test of testParams) {
       do_check_neq(a11, null);
 
       a11.findUpdates({
-        onCompatibilityUpdateAvailable() {
+        onCompatibilityUpdateAvailable: function() {
           do_throw("Should not have seen compatibility information");
         },
 
-        onUpdateAvailable() {
+        onUpdateAvailable: function() {
           do_throw("Should not have seen an available update");
         },
 
-        onUpdateFinished() {
+        onUpdateFinished: function() {
           run_next_test();
         }
       }, AddonManager.UPDATE_WHEN_USER_REQUESTED);

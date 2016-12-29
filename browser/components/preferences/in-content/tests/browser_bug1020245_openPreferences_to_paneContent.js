@@ -35,7 +35,7 @@ function openPreferencesViaHash(aPane) {
       let win = gBrowser.contentWindow;
       let selectedPane = win.history.state;
       gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane});
+      deferred.resolve({selectedPane: selectedPane});
     });
   }, true);
 

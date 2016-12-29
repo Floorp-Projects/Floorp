@@ -283,7 +283,7 @@ function testAboutModuleRegistration()
   }
 
   TestChannel.prototype = {
-    asyncOpen(listener, context) {
+    asyncOpen: function(listener, context) {
       let stream = this.open();
       let runnable = {
         run: () => {
@@ -301,13 +301,13 @@ function testAboutModuleRegistration()
       Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
     },
 
-    asyncOpen2(listener) {
+    asyncOpen2: function(listener) {
       // throws an error if security checks fail
       var outListener = contentSecManager.performSecurityCheck(this, listener);
       return this.asyncOpen(outListener, null);
     },
 
-    open() {
+    open: function() {
       function getWindow(channel) {
         try
         {
@@ -334,22 +334,22 @@ function testAboutModuleRegistration()
       return stream;
     },
 
-    open2() {
+    open2: function() {
       // throws an error if security checks fail
       contentSecManager.performSecurityCheck(this, null);
       return this.open();
     },
 
-    isPending() {
+    isPending: function() {
       return false;
     },
-    cancel() {
+    cancel: function() {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    suspend() {
+    suspend: function() {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    resume() {
+    resume: function() {
       throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
 
@@ -391,7 +391,7 @@ function testAboutModuleRegistration()
     };
 
     let factory = {
-      createInstance(outer, iid) {
+      createInstance: function(outer, iid) {
         if (outer) {
           throw Cr.NS_ERROR_NO_AGGREGATION;
         }
@@ -519,7 +519,7 @@ function testProgressListener()
   let sawTabsLocChange = false;
 
   let globalListener = {
-    onLocationChange(webProgress, request, uri) {
+    onLocationChange: function(webProgress, request, uri) {
       if (uri.spec == url) {
         sawGlobalLocChange = true;
         ok(request instanceof Ci.nsIHttpChannel, "Global listener channel is an HTTP channel");
@@ -528,7 +528,7 @@ function testProgressListener()
   };
 
   let tabsListener = {
-    onLocationChange(browser, webProgress, request, uri) {
+    onLocationChange: function(browser, webProgress, request, uri) {
       if (uri.spec == url) {
         sawTabsLocChange = true;
         ok(request instanceof Ci.nsIHttpChannel, "Tab listener channel is an HTTP channel");

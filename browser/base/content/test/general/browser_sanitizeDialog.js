@@ -572,7 +572,7 @@ add_task(function* test_offline_cache() {
     // Check if the cache has been deleted
     var size = -1;
     var visitor = {
-      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory)
+      onCacheStorageInfo: function(aEntryCount, aConsumption, aCapacity, aDiskDirectory)
       {
         size = aConsumption;
       }
@@ -583,8 +583,8 @@ add_task(function* test_offline_cache() {
   };
 
   var cacheListener = {
-    onCacheEntryCheck() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
-    onCacheEntryAvailable(entry, isnew, unused, status) {
+    onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
+    onCacheEntryAvailable: function(entry, isnew, unused, status) {
       is(status, Cr.NS_OK);
       var stream = entry.openOutputStream(0);
       var content = "content";
@@ -648,7 +648,7 @@ WindowHelper.prototype = {
   /**
    * "Presses" the dialog's OK button.
    */
-  acceptDialog() {
+  acceptDialog: function() {
     is(this.win.document.documentElement.getButton("accept").disabled, false,
        "Dialog's OK button should not be disabled");
     this.win.document.documentElement.acceptDialog();
@@ -657,7 +657,7 @@ WindowHelper.prototype = {
   /**
    * "Presses" the dialog's Cancel button.
    */
-  cancelDialog() {
+  cancelDialog: function() {
     this.win.document.documentElement.cancelDialog();
   },
 
@@ -669,7 +669,7 @@ WindowHelper.prototype = {
    * @param aShouldBeShown
    *        True if you expect the details to be shown and false if hidden
    */
-  checkDetails(aShouldBeShown) {
+  checkDetails: function(aShouldBeShown) {
     let button = this.getDetailsButton();
     let list = this.getItemList();
     let hidden = list.hidden || list.collapsed;
@@ -700,7 +700,7 @@ WindowHelper.prototype = {
    * @param aCheckState
    *        True if the checkbox should be checked, false otherwise
    */
-  checkPrefCheckbox(aPrefName, aCheckState) {
+  checkPrefCheckbox: function(aPrefName, aCheckState) {
     var pref = "privacy.cpd." + aPrefName;
     var cb = this.win.document.querySelectorAll(
                "#itemList > [preference='" + pref + "']");
@@ -712,7 +712,7 @@ WindowHelper.prototype = {
   /**
    * Makes sure all the checkboxes are checked.
    */
-  _checkAllCheckboxesCustom(check) {
+  _checkAllCheckboxesCustom: function(check) {
     var cb = this.win.document.querySelectorAll("#itemList > [preference]");
     ok(cb.length > 1, "found checkboxes for preferences");
     for (var i = 0; i < cb.length; ++i) {
@@ -722,39 +722,39 @@ WindowHelper.prototype = {
     }
   },
 
-  checkAllCheckboxes() {
+  checkAllCheckboxes: function() {
     this._checkAllCheckboxesCustom(true);
   },
 
-  uncheckAllCheckboxes() {
+  uncheckAllCheckboxes: function() {
     this._checkAllCheckboxesCustom(false);
   },
 
   /**
    * @return The details progressive disclosure button
    */
-  getDetailsButton() {
+  getDetailsButton: function() {
     return this.win.document.getElementById("detailsExpander");
   },
 
   /**
    * @return The dialog's duration dropdown
    */
-  getDurationDropdown() {
+  getDurationDropdown: function() {
     return this.win.document.getElementById("sanitizeDurationChoice");
   },
 
   /**
    * @return The item list hidden by the details progressive disclosure button
    */
-  getItemList() {
+  getItemList: function() {
     return this.win.document.getElementById("itemList");
   },
 
   /**
    * @return The clear-everything warning box
    */
-  getWarningPanel() {
+  getWarningPanel: function() {
     return this.win.document.getElementById("sanitizeEverythingWarningBox");
   },
 
@@ -762,7 +762,7 @@ WindowHelper.prototype = {
    * @return True if the "Everything" warning panel is visible (as opposed to
    *         the tree)
    */
-  isWarningPanelVisible() {
+  isWarningPanelVisible: function() {
     return !this.getWarningPanel().hidden;
   },
 
@@ -774,7 +774,7 @@ WindowHelper.prototype = {
    * caller is expected to call waitForAsyncUpdates at some point; if false is
    * returned, waitForAsyncUpdates is called automatically.
    */
-  open() {
+  open: function() {
     let wh = this;
 
     function windowObserver(aSubject, aTopic, aData) {
@@ -835,7 +835,7 @@ WindowHelper.prototype = {
    * @param aDurVal
    *        One of the Sanitizer.TIMESPAN_* values
    */
-  selectDuration(aDurVal) {
+  selectDuration: function(aDurVal) {
     this.getDurationDropdown().value = aDurVal;
     if (aDurVal === Sanitizer.TIMESPAN_EVERYTHING) {
       is(this.isWarningPanelVisible(), true,
@@ -850,7 +850,7 @@ WindowHelper.prototype = {
   /**
    * Toggles the details progressive disclosure button.
    */
-  toggleDetails() {
+  toggleDetails: function() {
     this.getDetailsButton().click();
   }
 };
@@ -898,11 +898,11 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
 
   return new Promise((resolve, reject) =>
     FormHistory.update({ op: "add", fieldname: name, value: "dummy", firstUsed: timestamp },
-                       { handleError(error) {
+                       { handleError: function(error) {
                            reject();
                            throw new Error("Error occurred updating form history: " + error);
                          },
-                         handleCompletion(reason) {
+                         handleCompletion: function(reason) {
                            resolve(name);
                          }
                        })
@@ -918,11 +918,11 @@ function formNameExists(name)
     let count = 0;
     FormHistory.count({ fieldname: name },
                       { handleResult: result => count = result,
-                        handleError(error) {
+                        handleError: function(error) {
                           reject(error);
                           throw new Error("Error occurred searching form history: " + error);
                         },
-                        handleCompletion(reason) {
+                        handleCompletion: function(reason) {
                           if (!reason) {
                             resolve(count);
                           }

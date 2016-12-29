@@ -5,7 +5,7 @@
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 const WindowWatcher = {
-  openWindow(aParent, aUrl, aName, aFeatures, aArgs) {
+  openWindow: function(aParent, aUrl, aName, aFeatures, aArgs) {
     check_showUpdateAvailable();
   },
 
@@ -13,7 +13,7 @@ const WindowWatcher = {
 };
 
 const WindowMediator = {
-  getMostRecentWindow(aWindowType) {
+  getMostRecentWindow: function(aWindowType) {
     return null;
   },
 

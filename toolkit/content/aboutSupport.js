@@ -756,7 +756,7 @@ function Serializer() {
 
 Serializer.prototype = {
 
-  serialize(rootElem) {
+  serialize: function(rootElem) {
     this._lines = [];
     this._startNewLine();
     this._serializeElement(rootElem);
@@ -775,7 +775,7 @@ Serializer.prototype = {
     return this._lines[this._lines.length - 1] = val;
   },
 
-  _serializeElement(elem) {
+  _serializeElement: function(elem) {
     if (this._ignoreElement(elem))
       return;
 
@@ -817,7 +817,7 @@ Serializer.prototype = {
     }
   },
 
-  _startNewLine(lines) {
+  _startNewLine: function(lines) {
     let currLine = this._currentLine;
     if (currLine) {
       // The current line is not empty.  Trim it.
@@ -829,15 +829,15 @@ Serializer.prototype = {
     this._lines.push("");
   },
 
-  _appendText(text, lines) {
+  _appendText: function(text, lines) {
     this._currentLine += text;
   },
 
-  _isHiddenSubHeading(th) {
+  _isHiddenSubHeading: function(th) {
     return th.parentNode.parentNode.style.display == "none";
   },
 
-  _serializeTable(table) {
+  _serializeTable: function(table) {
     // Collect the table's column headings if in fact there are any.  First
     // check thead.  If there's no thead, check the first tr.
     let colHeadings = {};
@@ -917,11 +917,11 @@ Serializer.prototype = {
     this._startNewLine();
   },
 
-  _ignoreElement(elem) {
+  _ignoreElement: function(elem) {
     return elem.classList.contains("no-copy");
   },
 
-  _nodeText(node) {
+  _nodeText: function(node) {
     return node.textContent.replace(/\s+/g, " ");
   },
 };

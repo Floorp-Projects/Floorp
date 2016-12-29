@@ -150,7 +150,7 @@ this.TestRunner = {
 
   // helpers
 
-  *_performCombo(combo) {
+  _performCombo: function*(combo) {
     let paddedComboIndex = padLeft(this.currentComboIndex + 1, String(this.combos.length).length);
     log.info("Combination " + paddedComboIndex + "/" + this.combos.length + ": " +
              this._comboName(combo).substring(1));

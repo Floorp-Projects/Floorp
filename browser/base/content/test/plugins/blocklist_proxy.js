@@ -19,7 +19,7 @@ var BlocklistProxy = {
                                          Ci.nsIBlocklistService,
                                          Ci.nsITimerCallback]),
 
-  init() {
+  init: function() {
     if (!this._uuid) {
       this._uuid =
         Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
@@ -30,7 +30,7 @@ var BlocklistProxy = {
     }
   },
 
-  uninit() {
+  uninit: function() {
     if (this._uuid) {
       Cm.nsIComponentRegistrar.unregisterFactory(this._uuid, this);
       Cm.nsIComponentRegistrar.registerFactory(Components.ID(kBlocklistServiceUUID),
@@ -41,33 +41,33 @@ var BlocklistProxy = {
     }
   },
 
-  notify(aTimer) {
+  notify: function(aTimer) {
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
   },
 
-  isAddonBlocklisted(aAddon, aAppVersion, aToolkitVersion) {
+  isAddonBlocklisted: function(aAddon, aAppVersion, aToolkitVersion) {
     return false;
   },
 
-  getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
+  getAddonBlocklistState: function(aAddon, aAppVersion, aToolkitVersion) {
     return 0; // STATE_NOT_BLOCKED
   },
 
-  getPluginBlocklistState(aPluginTag, aAppVersion, aToolkitVersion) {
+  getPluginBlocklistState: function(aPluginTag, aAppVersion, aToolkitVersion) {
     return 0; // STATE_NOT_BLOCKED
   },
 
-  getAddonBlocklistURL(aAddon, aAppVersion, aToolkitVersion) {
+  getAddonBlocklistURL: function(aAddon, aAppVersion, aToolkitVersion) {
     return "";
   },
 
-  getPluginBlocklistURL(aPluginTag) {
+  getPluginBlocklistURL: function(aPluginTag) {
     return "";
   },
 
-  getPluginInfoURL(aPluginTag) {
+  getPluginInfoURL: function(aPluginTag) {
     return "";
   },
 }

@@ -18,7 +18,7 @@ var gAdvancedPane = {
   /**
    * Brings the appropriate tab to the front and initializes various bits of UI.
    */
-  init()
+  init: function()
   {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -120,7 +120,7 @@ var gAdvancedPane = {
    * Stores the identity of the current tab in preferences so that the selected
    * tab can be persisted between openings of the preferences window.
    */
-  tabSelectionChanged()
+  tabSelectionChanged: function()
   {
     if (!this._inited)
       return;
@@ -182,7 +182,7 @@ var gAdvancedPane = {
    * the current value to enable proper pref restoration if the checkbox is
    * never changed.
    */
-  readCheckSpelling()
+  readCheckSpelling: function()
   {
     var pref = document.getElementById("layout.spellcheckDefault");
     this._storedSpellCheck = pref.value;
@@ -195,7 +195,7 @@ var gAdvancedPane = {
    * preserving the preference's "hidden" value if the preference is
    * unchanged and represents a value not strictly allowed in UI.
    */
-  writeCheckSpelling()
+  writeCheckSpelling: function()
   {
     var checkbox = document.getElementById("checkSpelling");
     if (checkbox.checked) {
@@ -211,7 +211,7 @@ var gAdvancedPane = {
    * security.OCSP.enabled is an integer value for legacy reasons.
    * A value of 1 means OCSP is enabled. Any other value means it is disabled.
    */
-  readEnableOCSP()
+  readEnableOCSP: function()
   {
     var preference = document.getElementById("security.OCSP.enabled");
     // This is the case if the preference is the default value.
@@ -224,7 +224,7 @@ var gAdvancedPane = {
   /**
    * See documentation for readEnableOCSP.
    */
-  writeEnableOCSP()
+  writeEnableOCSP: function()
   {
     var checkbox = document.getElementById("enableOCSP");
     return checkbox.checked ? 1 : 0;
@@ -234,7 +234,7 @@ var gAdvancedPane = {
    * When the user toggles the layers.acceleration.disabled pref,
    * sync its new value to the gfx.direct2d.disabled pref too.
    */
-  updateHardwareAcceleration()
+  updateHardwareAcceleration: function()
   {
     if (AppConstants.platform = "win") {
       var fromPref = document.getElementById("layers.acceleration.disabled");
@@ -248,7 +248,7 @@ var gAdvancedPane = {
   /**
    * Set up or hide the Learn More links for various data collection options
    */
-  _setupLearnMoreLink(pref, element) {
+  _setupLearnMoreLink: function(pref, element) {
     // set up the Learn More link with the correct URL
     let url = Services.prefs.getCharPref(pref);
     let el = document.getElementById(element);
@@ -263,7 +263,7 @@ var gAdvancedPane = {
   /**
    *
    */
-  initSubmitCrashes()
+  initSubmitCrashes: function()
   {
     this._setupLearnMoreLink("toolkit.crashreporter.infoURL",
                              "crashReporterLearnMore");
@@ -274,7 +274,7 @@ var gAdvancedPane = {
    *
    * In all cases, set up the Learn More link sanely.
    */
-  initTelemetry()
+  initTelemetry: function()
   {
     if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       this._setupLearnMoreLink("toolkit.telemetry.infoURL", "telemetryLearnMore");
@@ -285,7 +285,7 @@ var gAdvancedPane = {
    * Set the status of the telemetry controls based on the input argument.
    * @param {Boolean} aEnabled False disables the controls, true enables them.
    */
-  setTelemetrySectionEnabled(aEnabled)
+  setTelemetrySectionEnabled: function(aEnabled)
   {
     if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       // If FHR is disabled, additional data sharing should be disabled as well.
@@ -302,7 +302,7 @@ var gAdvancedPane = {
   /**
    * Initialize the health report service reference and checkbox.
    */
-  initSubmitHealthReport() {
+  initSubmitHealthReport: function() {
     if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       this._setupLearnMoreLink("datareporting.healthreport.infoURL", "FHRLearnMore");
 
@@ -321,7 +321,7 @@ var gAdvancedPane = {
   /**
    * Update the health report preference with state from checkbox.
    */
-  updateSubmitHealthReport() {
+  updateSubmitHealthReport: function() {
     if (AppConstants.MOZ_TELEMETRY_REPORTING) {
       let checkbox = document.getElementById("submitHealthReportBox");
       Services.prefs.setBoolPref(PREF_UPLOAD_ENABLED, checkbox.checked);
@@ -351,16 +351,16 @@ var gAdvancedPane = {
   /**
    * Displays a dialog in which proxy settings may be changed.
    */
-  showConnections()
+  showConnections: function()
   {
     gSubDialog.open("chrome://browser/content/preferences/connection.xul");
   },
 
-  showSiteDataSettings() {
+  showSiteDataSettings: function() {
     gSubDialog.open("chrome://browser/content/preferences/siteDataSettings.xul");
   },
 
-  updateTotalSiteDataSize() {
+  updateTotalSiteDataSize: function() {
     SiteDataManager.getTotalUsage()
       .then(usage => {
         let size = DownloadUtils.convertByteUnits(usage);
@@ -373,14 +373,14 @@ var gAdvancedPane = {
   },
 
   // Retrieves the amount of space currently used by disk cache
-  updateActualCacheSize()
+  updateActualCacheSize: function()
   {
     var actualSizeLabel = document.getElementById("actualDiskCacheSize");
     var prefStrBundle = document.getElementById("bundlePreferences");
 
     // Needs to root the observer since cache service keeps only a weak reference.
     this.observer = {
-      onNetworkCacheDiskConsumption(consumption) {
+      onNetworkCacheDiskConsumption: function(consumption) {
         var size = DownloadUtils.convertByteUnits(consumption);
         // The XBL binding for the string bundle may have been destroyed if
         // the page was closed before this callback was executed.
@@ -407,10 +407,10 @@ var gAdvancedPane = {
   },
 
   // Retrieves the amount of space currently used by offline cache
-  updateActualAppCacheSize()
+  updateActualAppCacheSize: function()
   {
     var visitor = {
-      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory)
+      onCacheStorageInfo: function(aEntryCount, aConsumption, aCapacity, aDiskDirectory)
       {
         var actualSizeLabel = document.getElementById("actualAppCacheSize");
         var sizeStrings = DownloadUtils.convertByteUnits(aConsumption);
@@ -434,14 +434,14 @@ var gAdvancedPane = {
     } catch (e) {}
   },
 
-  updateCacheSizeUI(smartSizeEnabled)
+  updateCacheSizeUI: function(smartSizeEnabled)
   {
     document.getElementById("useCacheBefore").disabled = smartSizeEnabled;
     document.getElementById("cacheSize").disabled = smartSizeEnabled;
     document.getElementById("useCacheAfter").disabled = smartSizeEnabled;
   },
 
-  readSmartSizeEnabled()
+  readSmartSizeEnabled: function()
   {
     // The smart_size.enabled preference element is inverted="true", so its
     // value is the opposite of the actual pref value
@@ -480,7 +480,7 @@ var gAdvancedPane = {
   /**
    * Clears the cache.
    */
-  clearCache()
+  clearCache: function()
   {
     try {
       var cache = Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
@@ -493,7 +493,7 @@ var gAdvancedPane = {
   /**
    * Clears the application cache.
    */
-  clearOfflineAppCache()
+  clearOfflineAppCache: function()
   {
     Components.utils.import("resource:///modules/offlineAppCache.jsm");
     OfflineAppCacheHelper.clear();
@@ -502,7 +502,7 @@ var gAdvancedPane = {
     this.updateOfflineApps();
   },
 
-  clearSiteData() {
+  clearSiteData: function() {
     let flags =
       Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
       Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1 +
@@ -519,7 +519,7 @@ var gAdvancedPane = {
     }
   },
 
-  readOfflineNotify()
+  readOfflineNotify: function()
   {
     var pref = document.getElementById("browser.offline-apps.notify");
     var button = document.getElementById("offlineNotifyExceptions");
@@ -527,7 +527,7 @@ var gAdvancedPane = {
     return pref.value;
   },
 
-  showOfflineExceptions()
+  showOfflineExceptions: function()
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible     : false,
@@ -569,7 +569,7 @@ var gAdvancedPane = {
   /**
    * Updates the list of offline applications
    */
-  updateOfflineApps()
+  updateOfflineApps: function()
   {
     var pm = Components.classes["@mozilla.org/permissionmanager;1"]
                        .getService(Components.interfaces.nsIPermissionManager);
@@ -610,7 +610,7 @@ var gAdvancedPane = {
     }
   },
 
-  offlineAppSelected()
+  offlineAppSelected: function()
   {
     var removeButton = document.getElementById("offlineAppsListRemove");
     var list = document.getElementById("offlineAppsList");
@@ -621,7 +621,7 @@ var gAdvancedPane = {
     }
   },
 
-  removeOfflineApp()
+  removeOfflineApp: function()
   {
     var list = document.getElementById("offlineAppsList");
     var item = list.selectedItem;
@@ -702,7 +702,7 @@ var gAdvancedPane = {
    *                   ii    t/f    f       false
    *                   ii    t/f    *t*     *true*
    */
-  updateReadPrefs()
+  updateReadPrefs: function()
   {
     if (AppConstants.MOZ_UPDATER) {
       var enabledPref = document.getElementById("app.update.enabled");
@@ -748,7 +748,7 @@ var gAdvancedPane = {
   /**
    * Sets the pref values based on the selected item of the radiogroup.
    */
-  updateWritePrefs()
+  updateWritePrefs: function()
   {
     if (AppConstants.MOZ_UPDATER) {
       var enabledPref = document.getElementById("app.update.enabled");
@@ -773,7 +773,7 @@ var gAdvancedPane = {
   /**
    * Displays the history of installed updates.
    */
-  showUpdates()
+  showUpdates: function()
   {
     gSubDialog.open("chrome://mozapps/content/update/history.xul");
   },
@@ -795,7 +795,7 @@ var gAdvancedPane = {
   /**
    * Displays the user's certificates and associated options.
    */
-  showCertificates()
+  showCertificates: function()
   {
     gSubDialog.open("chrome://pippki/content/certManager.xul");
   },
@@ -803,12 +803,12 @@ var gAdvancedPane = {
   /**
    * Displays a dialog from which the user can manage his security devices.
    */
-  showSecurityDevices()
+  showSecurityDevices: function()
   {
     gSubDialog.open("chrome://pippki/content/device_manager.xul");
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (AppConstants.MOZ_UPDATER) {
       switch (aTopic) {
         case "nsPref:changed":

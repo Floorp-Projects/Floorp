@@ -12,7 +12,7 @@ var gEMEHandler = {
     }
     return emeUIEnabled;
   },
-  ensureEMEEnabled(browser, keySystem) {
+  ensureEMEEnabled: function(browser, keySystem) {
     Services.prefs.setBoolPref("media.eme.enabled", true);
     if (keySystem) {
       if (keySystem.startsWith("com.adobe") &&
@@ -27,7 +27,7 @@ var gEMEHandler = {
     }
     browser.reload();
   },
-  isKeySystemVisible(keySystem) {
+  isKeySystemVisible: function(keySystem) {
     if (!keySystem) {
       return false;
     }
@@ -41,13 +41,13 @@ var gEMEHandler = {
     }
     return true;
   },
-  getLearnMoreLink(msgId) {
+  getLearnMoreLink: function(msgId) {
     let text = gNavigatorBundle.getString("emeNotifications." + msgId + ".learnMoreLabel");
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
     return "<label class='text-link' href='" + baseURL + "drm-content'>" +
            text + "</label>";
   },
-  receiveMessage({target: browser, data: data}) {
+  receiveMessage: function({target: browser, data: data}) {
     let parsedData;
     try {
       parsedData = JSON.parse(data);
@@ -102,7 +102,7 @@ var gEMEHandler = {
 
     this.showNotificationBar(browser, notificationId, keySystem, params, buttonCallback);
   },
-  showNotificationBar(browser, notificationId, keySystem, labelParams, callback) {
+  showNotificationBar: function(browser, notificationId, keySystem, labelParams, callback) {
     let box = gBrowser.getNotificationBox(browser);
     if (box.getNotificationWithValue(notificationId)) {
       return;
@@ -122,7 +122,7 @@ var gEMEHandler = {
       buttons.push({
         label: gNavigatorBundle.getString(btnLabelId),
         accessKey: gNavigatorBundle.getString(btnAccessKeyId),
-        callback
+        callback: callback
       });
     }
 
@@ -139,7 +139,7 @@ var gEMEHandler = {
     box.appendNotification(fragment, notificationId, iconURL, box.PRIORITY_WARNING_MEDIUM,
                            buttons);
   },
-  showPopupNotificationForSuccess(browser, keySystem) {
+  showPopupNotificationForSuccess: function(browser, keySystem) {
     // We're playing EME content! Remove any "we can't play because..." messages.
     var box = gBrowser.getNotificationBox(browser);
     ["drmContentDisabled",
@@ -174,7 +174,7 @@ var gEMEHandler = {
     let mainAction = {
       label: gNavigatorBundle.getString(btnLabelId),
       accessKey: gNavigatorBundle.getString(btnAccessKeyId),
-      callback() { openPreferences("paneContent"); },
+      callback: function() { openPreferences("paneContent"); },
       dismiss: true
     };
     let options = {

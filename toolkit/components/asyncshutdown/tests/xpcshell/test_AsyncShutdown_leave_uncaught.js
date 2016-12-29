@@ -27,7 +27,7 @@ add_task(function* test_phase_simple_async() {
                                throw new Error("State BOOM"); }],
                              [function() {
                                return {
-                                 toJSON() {
+                                 toJSON: function() {
                                    throw new Error("State.toJSON BOOM");
                                  }
                                };

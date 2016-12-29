@@ -192,7 +192,7 @@ add_task(function* testModalResults() {
       rectCount: 2,
       insertCalls: [5, 6],
       removeCalls: [4, 5],
-      extraTest(maskNode, outlineNode, rects) {
+      extraTest: function(maskNode, outlineNode, rects) {
         Assert.equal(outlineNode.getElementsByTagName("div").length, 2,
           "There should be multiple rects drawn");
       }

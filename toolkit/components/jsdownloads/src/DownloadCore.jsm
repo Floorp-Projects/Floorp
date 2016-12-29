@@ -622,7 +622,7 @@ this.Download.prototype = {
    * @resolves When the Download has been unblocked and succeeded.
    * @rejects  JavaScript exception if any of the operations failed.
    */
-  unblock() {
+  unblock: function() {
     if (this._promiseUnblock) {
       return this._promiseUnblock;
     }
@@ -666,7 +666,7 @@ this.Download.prototype = {
    * @resolves When the Download's data has been removed.
    * @rejects  JavaScript exception if any of the operations failed.
    */
-  confirmBlock() {
+  confirmBlock: function() {
     if (this._promiseConfirmBlock) {
       return this._promiseConfirmBlock;
     }
@@ -711,7 +711,7 @@ this.Download.prototype = {
    * @rejects  JavaScript exception if there was an error trying to launch
    *           the file.
    */
-  launch() {
+  launch: function() {
     if (!this.succeeded) {
       return Promise.reject(
         new Error("launch can only be called if the download succeeded")
@@ -845,7 +845,7 @@ this.Download.prototype = {
    * @resolves When the partial data has been successfully removed.
    * @rejects JavaScript exception if the operation could not be completed.
    */
-  removePartialData()
+  removePartialData: function()
   {
     if (!this.canceled && !this.error) {
       return Promise.resolve();
@@ -920,7 +920,7 @@ this.Download.prototype = {
    * @resolves When the operation has completed.
    * @rejects Never.
    */
-  refresh()
+  refresh: function()
   {
     return Task.spawn(function* () {
       if (!this.stopped || this._finalized) {
@@ -999,7 +999,7 @@ this.Download.prototype = {
    * @rejects JavaScript exception if an error occurred while removing the
    *          partially downloaded data.
    */
-  finalize(aRemovePartialData)
+  finalize: function(aRemovePartialData)
   {
     // Prevents the download from starting again after having been stopped.
     this._finalized = true;
@@ -1096,7 +1096,7 @@ this.Download.prototype = {
    *
    * @return A JavaScript object that can be serialized to JSON.
    */
-  toSerializable()
+  toSerializable: function()
   {
     let serializable = {
       source: this.source.toSerializable(),
@@ -1148,7 +1148,7 @@ this.Download.prototype = {
    *
    * @return String representing the relevant download state.
    */
-  getSerializationHash()
+  getSerializationHash: function()
   {
     // The "succeeded", "canceled", "error", and startTime properties are not
     // taken into account because they all change before the "stopped" property
@@ -1296,7 +1296,7 @@ this.DownloadSource.prototype = {
    *
    * @return A JavaScript object that can be serialized to JSON.
    */
-  toSerializable()
+  toSerializable: function()
   {
     if (this.adjustChannel) {
       // If the callback was used, we can't reproduce this across sessions.
@@ -1452,7 +1452,7 @@ this.DownloadTarget.prototype = {
    *
    * @return A JavaScript object that can be serialized to JSON.
    */
-  toSerializable()
+  toSerializable: function()
   {
     // Simplify the representation if we don't have other details.
     if (!this.partFilePath && !this._unknownProperties) {
@@ -1654,7 +1654,7 @@ this.DownloadError.prototype = {
    *
    * @return A JavaScript object that can be serialized to JSON.
    */
-  toSerializable()
+  toSerializable: function()
   {
     let serializable = {
       result: this.result,
@@ -1769,7 +1769,7 @@ this.DownloadSaver.prototype = {
    * started, to add it to the browsing history.  This method has no effect if
    * the download is private.
    */
-  addToHistory()
+  addToHistory: function()
   {
     if (this.download.source.isPrivate) {
       return;
@@ -1806,7 +1806,7 @@ this.DownloadSaver.prototype = {
    *
    * @return A JavaScript object that can be serialized to JSON.
    */
-  toSerializable()
+  toSerializable: function()
   {
     throw new Error("Not implemented.");
   },
@@ -1814,12 +1814,12 @@ this.DownloadSaver.prototype = {
   /**
    * Returns the SHA-256 hash of the downloaded file, if it exists.
    */
-  getSha256Hash()
+  getSha256Hash: function()
   {
     throw new Error("Not implemented.");
   },
 
-  getSignatureInfo()
+  getSignatureInfo: function()
   {
     throw new Error("Not implemented.");
   },
@@ -1968,7 +1968,7 @@ this.DownloadCopySaver.prototype = {
           // When the operation completes, reflect the status in the promise
           // returned by this download execution function.
           backgroundFileSaver.observer = {
-            onTargetChange() { },
+            onTargetChange: function() { },
             onSaveComplete: (aSaver, aStatus) => {
               // Send notifications now that we can restart if needed.
               if (Components.isSuccessCode(aStatus)) {
@@ -2033,7 +2033,7 @@ this.DownloadCopySaver.prototype = {
               aSetProgressBytesFn(currentBytes, totalBytes, aProgress > 0 &&
                                   partFilePath && keepPartialData);
             },
-            onStatus() { },
+            onStatus: function() { },
           };
 
           // If the callback was set, handle it now before opening the channel.
@@ -2257,7 +2257,7 @@ this.DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.removePartialData".
    */
-  removePartialData()
+  removePartialData: function()
   {
     return Task.spawn(function* task_DCS_removePartialData() {
       if (this.download.target.partFilePath) {
@@ -2275,7 +2275,7 @@ this.DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.toSerializable".
    */
-  toSerializable()
+  toSerializable: function()
   {
     // Simplify the representation if we don't have other details.
     if (!this.entityID && !this._unknownProperties) {
@@ -2291,7 +2291,7 @@ this.DownloadCopySaver.prototype = {
   /**
    * Implements "DownloadSaver.getSha256Hash"
    */
-  getSha256Hash()
+  getSha256Hash: function()
   {
     return this._sha256Hash;
   },
@@ -2299,7 +2299,7 @@ this.DownloadCopySaver.prototype = {
   /*
    * Implements DownloadSaver.getSignatureInfo.
    */
-  getSignatureInfo()
+  getSignatureInfo: function()
   {
     return this._signatureInfo;
   },
@@ -2307,7 +2307,7 @@ this.DownloadCopySaver.prototype = {
   /*
    * Implements DownloadSaver.getRedirects.
    */
-  getRedirects()
+  getRedirects: function()
   {
     return this._redirects;
   }
@@ -2440,7 +2440,7 @@ this.DownloadLegacySaver.prototype = {
    *        download is added to the browsing history here.  Private downloads
    *        are never added to history even if this parameter is false.
    */
-  onTransferStarted(aRequest, aAlreadyAddedToHistory)
+  onTransferStarted: function(aRequest, aAlreadyAddedToHistory)
   {
     // Store the entity ID to use for resuming if required.
     if (this.download.tryToKeepPartialData &&
@@ -2603,7 +2603,7 @@ this.DownloadLegacySaver.prototype = {
     }.bind(this));
   },
 
-  _checkReputationAndMove() {
+  _checkReputationAndMove: function() {
     return DownloadCopySaver.prototype._checkReputationAndMove
                                       .apply(this, arguments);
   },
@@ -2629,7 +2629,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.removePartialData".
    */
-  removePartialData()
+  removePartialData: function()
   {
     // DownloadCopySaver and DownloadLeagcySaver use the same logic for removing
     // partially downloaded data, though this implementation isn't shared by
@@ -2640,7 +2640,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.toSerializable".
    */
-  toSerializable()
+  toSerializable: function()
   {
     // This object depends on legacy components that are created externally,
     // thus it cannot be rebuilt during deserialization.  To support resuming
@@ -2652,7 +2652,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.getSha256Hash".
    */
-  getSha256Hash()
+  getSha256Hash: function()
   {
     if (this.copySaver) {
       return this.copySaver.getSha256Hash();
@@ -2663,7 +2663,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Called by the nsITransfer implementation when the hash is available.
    */
-  setSha256Hash(hash)
+  setSha256Hash: function(hash)
   {
     this._sha256Hash = hash;
   },
@@ -2671,7 +2671,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.getSignatureInfo".
    */
-  getSignatureInfo()
+  getSignatureInfo: function()
   {
     if (this.copySaver) {
       return this.copySaver.getSignatureInfo();
@@ -2682,7 +2682,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Called by the nsITransfer implementation when the hash is available.
    */
-  setSignatureInfo(signatureInfo)
+  setSignatureInfo: function(signatureInfo)
   {
     this._signatureInfo = signatureInfo;
   },
@@ -2690,7 +2690,7 @@ this.DownloadLegacySaver.prototype = {
   /**
    * Implements "DownloadSaver.getRedirects".
    */
-  getRedirects()
+  getRedirects: function()
   {
     if (this.copySaver) {
       return this.copySaver.getRedirects();
@@ -2702,7 +2702,7 @@ this.DownloadLegacySaver.prototype = {
    * Called by the nsITransfer implementation when the redirect chain is
    * available.
    */
-  setRedirects(redirects)
+  setRedirects: function(redirects)
   {
     this._redirects = redirects;
   },
@@ -2746,7 +2746,7 @@ this.DownloadPDFSaver.prototype = {
   /**
    * Implements "DownloadSaver.execute".
    */
-  execute(aSetProgressBytesFn, aSetPropertiesFn)
+  execute: function(aSetProgressBytesFn, aSetPropertiesFn)
   {
     return Task.spawn(function* task_DCS_execute() {
       if (!this.download.source.windowRef) {
@@ -2801,7 +2801,7 @@ this.DownloadPDFSaver.prototype = {
       try {
         yield new Promise((resolve, reject) => {
           this._webBrowserPrint.print(printSettings, {
-            onStateChange(webProgress, request, stateFlags, status) {
+            onStateChange: function(webProgress, request, stateFlags, status) {
               if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
                 if (!Components.isSuccessCode(status)) {
                   reject(new DownloadError({ result: status,
@@ -2811,14 +2811,14 @@ this.DownloadPDFSaver.prototype = {
                 }
               }
             },
-            onProgressChange(webProgress, request, curSelfProgress,
+            onProgressChange: function(webProgress, request, curSelfProgress,
                                        maxSelfProgress, curTotalProgress,
                                        maxTotalProgress) {
               aSetProgressBytesFn(curTotalProgress, maxTotalProgress, false);
             },
-            onLocationChange() {},
-            onStatusChange() {},
-            onSecurityChange() {},
+            onLocationChange: function() {},
+            onStatusChange: function() {},
+            onSecurityChange: function() {},
           });
         });
       } finally {
@@ -2845,7 +2845,7 @@ this.DownloadPDFSaver.prototype = {
   /**
    * Implements "DownloadSaver.toSerializable".
    */
-  toSerializable()
+  toSerializable: function()
   {
     if (this.download.succeeded) {
       return DownloadCopySaver.prototype.toSerializable.call(this);

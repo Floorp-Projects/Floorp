@@ -120,7 +120,7 @@ function run_test() {
   let obs = AM_Cc["@mozilla.org/observer-service;1"].
     getService(AM_Ci.nsIObserverService);
   obs.addObserver({
-    observe(aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData) {
       gCachePurged = true;
     }
   }, "startupcache-invalidate", false);

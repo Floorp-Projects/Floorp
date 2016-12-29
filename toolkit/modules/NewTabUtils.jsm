@@ -522,7 +522,7 @@ var BlockedLinks = {
   /**
    * Registers an object that will be notified when the blocked links change.
    */
-  addObserver(aObserver) {
+  addObserver: function(aObserver) {
     this._observers.push(aObserver);
   },
 
@@ -648,7 +648,7 @@ var PlacesProvider = {
     let links = [];
 
     let callback = {
-      handleResult(aResultSet) {
+      handleResult: function(aResultSet) {
         let row;
 
         while ((row = aResultSet.getNextRow())) {
@@ -658,22 +658,22 @@ var PlacesProvider = {
             let frecency = row.getResultByIndex(12);
             let lastVisitDate = row.getResultByIndex(5);
             links.push({
-              url,
-              title,
-              frecency,
-              lastVisitDate,
+              url: url,
+              title: title,
+              frecency: frecency,
+              lastVisitDate: lastVisitDate,
               type: "history",
             });
           }
         }
       },
 
-      handleError(aError) {
+      handleError: function(aError) {
         // Should we somehow handle this error?
         aCallback([]);
       },
 
-      handleCompletion(aReason) {
+      handleCompletion: function(aReason) {
         // The Places query breaks ties in frecency by place ID descending, but
         // that's different from how Links.compareLinks breaks ties, because
         // compareLinks doesn't have access to place IDs.  It's very important
@@ -728,11 +728,11 @@ var PlacesProvider = {
   /**
    * Called by the history service.
    */
-  onBeginUpdateBatch() {
+  onBeginUpdateBatch: function() {
     this._batchProcessingDepth += 1;
   },
 
-  onEndUpdateBatch() {
+  onEndUpdateBatch: function() {
     this._batchProcessingDepth -= 1;
     if (this._batchProcessingDepth == 0 && this._batchCalledFrecencyChanged) {
       this.onManyFrecenciesChanged();
@@ -747,7 +747,7 @@ var PlacesProvider = {
     });
   },
 
-  onClearHistory() {
+  onClearHistory: function() {
     this._callObservers("onClearHistory")
   },
 
@@ -857,7 +857,7 @@ var Links = {
   /**
    * Registers an object that will be notified when links updates.
    */
-  addObserver(aObserver) {
+  addObserver: function(aObserver) {
     this._observers.push(aObserver);
   },
 
@@ -989,7 +989,7 @@ var Links = {
            aLink1.url.localeCompare(aLink2.url);
   },
 
-  _incrementSiteMap(map, link) {
+  _incrementSiteMap: function(map, link) {
     if (NewTabUtils.blockedLinks.isBlocked(link)) {
       // Don't count blocked URLs.
       return;
@@ -998,7 +998,7 @@ var Links = {
     map.set(site, (map.get(site) || 0) + 1);
   },
 
-  _decrementSiteMap(map, link) {
+  _decrementSiteMap: function(map, link) {
     if (NewTabUtils.blockedLinks.isBlocked(link)) {
       // Blocked URLs are not included in map.
       return;
@@ -1021,7 +1021,7 @@ var Links = {
     * @param aLink The link that will affect siteMap
     * @param increment A boolean for whether to increment or decrement siteMap
     */
-  _adjustSiteMapAndNotify(aLink, increment = true) {
+  _adjustSiteMapAndNotify: function(aLink, increment = true) {
     for (let [/* provider */, cache] of this._providers) {
       // We only update siteMap if aLink is already stored in linkMap.
       if (cache.linkMap.get(aLink.url)) {
@@ -1035,15 +1035,15 @@ var Links = {
     this._callObservers("onLinkChanged", aLink);
   },
 
-  onLinkBlocked(aLink) {
+  onLinkBlocked: function(aLink) {
     this._adjustSiteMapAndNotify(aLink, false);
   },
 
-  onLinkUnblocked(aLink) {
+  onLinkUnblocked: function(aLink) {
     this._adjustSiteMapAndNotify(aLink);
   },
 
-  populateProviderCache(provider, callback) {
+  populateProviderCache: function(provider, callback) {
     if (!this._providers.has(provider)) {
       throw new Error("Can only populate provider cache for existing provider.");
     }
@@ -1058,7 +1058,7 @@ var Links = {
    * @param aForce When true, populates the provider's cache even when it's
    *               already filled.
    */
-  _populateProviderCache(aProvider, aCallback, aForce) {
+  _populateProviderCache: function(aProvider, aCallback, aForce) {
     let cache = this._providers.get(aProvider);
     let createCache = !cache;
     if (createCache) {
@@ -1433,7 +1433,7 @@ this.NewTabUtils = {
     return false;
   },
 
-  getProviderLinks(aProvider) {
+  getProviderLinks: function(aProvider) {
     let cache = Links._providers.get(aProvider);
     if (cache && cache.sortedLinks) {
       return cache.sortedLinks;
@@ -1441,7 +1441,7 @@ this.NewTabUtils = {
     return [];
   },
 
-  isTopSiteGivenProvider(aSite, aProvider) {
+  isTopSiteGivenProvider: function(aSite, aProvider) {
     let cache = Links._providers.get(aProvider);
     if (cache && cache.siteMap) {
       return cache.siteMap.has(aSite);
@@ -1449,7 +1449,7 @@ this.NewTabUtils = {
     return false;
   },
 
-  isTopPlacesSite(aSite) {
+  isTopPlacesSite: function(aSite) {
     return this.isTopSiteGivenProvider(aSite, PlacesProvider);
   },
 

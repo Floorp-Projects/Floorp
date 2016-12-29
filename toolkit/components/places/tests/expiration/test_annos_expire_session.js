@@ -63,16 +63,16 @@ add_task(function* test_annos_expire_session() {
     );
     stmt.params.expiration = as.EXPIRE_SESSION;
     stmt.executeAsync({
-      handleResult(aResultSet) {
+      handleResult: function(aResultSet) {
         dump_table("moz_annos");
         dump_table("moz_items_annos");
         do_throw("Should not find any leftover session annotations");
       },
-      handleError(aError) {
+      handleError: function(aError) {
         do_throw("Error code " + aError.result + " with message '" +
                  aError.message + "' returned.");
       },
-      handleCompletion(aReason) {
+      handleCompletion: function(aReason) {
         do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
         deferred.resolve();
       }

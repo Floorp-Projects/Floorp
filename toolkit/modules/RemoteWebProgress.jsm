@@ -64,11 +64,11 @@ RemoteWebProgress.prototype = {
   get isTopLevel() { return this._isTopLevel },
   get loadType() { return this._loadType; },
 
-  addProgressListener(aListener) {
+  addProgressListener: function(aListener) {
     this._manager.addProgressListener(aListener);
   },
 
-  removeProgressListener(aListener) {
+  removeProgressListener: function(aListener) {
     this._manager.removeProgressListener(aListener);
   }
 };
@@ -110,7 +110,7 @@ RemoteWebProgressManager.argumentsForAddonListener = function(kind, args) {
 };
 
 RemoteWebProgressManager.prototype = {
-  swapBrowser(aBrowser) {
+  swapBrowser: function(aBrowser) {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Content:StateChange", this);
       this._messageManager.removeMessageListener("Content:LocationChange", this);
@@ -134,17 +134,17 @@ RemoteWebProgressManager.prototype = {
     return this._topLevelWebProgress;
   },
 
-  addProgressListener(aListener) {
+  addProgressListener: function(aListener) {
     let listener = aListener.QueryInterface(Ci.nsIWebProgressListener);
     this._progressListeners.push(listener);
   },
 
-  removeProgressListener(aListener) {
+  removeProgressListener: function(aListener) {
     this._progressListeners =
       this._progressListeners.filter(l => l != aListener);
   },
 
-  _fixSSLStatusAndState(aStatus, aState) {
+  _fixSSLStatusAndState: function(aStatus, aState) {
     let deserialized = null;
     if (aStatus) {
       let helper = Cc["@mozilla.org/network/serialization-helper;1"]
@@ -157,7 +157,7 @@ RemoteWebProgressManager.prototype = {
     return [deserialized, aState];
   },
 
-  setCurrentURI(aURI) {
+  setCurrentURI: function(aURI) {
     // This function is simpler than nsDocShell::SetCurrentURI since
     // it doesn't have to deal with child docshells.
     let remoteWebNav = this._browser._remoteWebNavigationImpl;
@@ -169,7 +169,7 @@ RemoteWebProgressManager.prototype = {
     }
   },
 
-  _callProgressListeners(methodName, ...args) {
+  _callProgressListeners: function(methodName, ...args) {
     for (let p of this._progressListeners) {
       if (p[methodName]) {
         try {
@@ -181,7 +181,7 @@ RemoteWebProgressManager.prototype = {
     }
   },
 
-  receiveMessage(aMessage) {
+  receiveMessage: function(aMessage) {
     let json = aMessage.json;
     let objects = aMessage.objects;
     // This message is a custom one we send as a result of a loadURI call.

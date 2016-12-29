@@ -79,7 +79,7 @@ var MockAsyncShutdown = {
   hook: null,
   status: null,
   profileBeforeChange: {
-    addBlocker(name, blocker, options) {
+    addBlocker: function(name, blocker, options) {
       MockAsyncShutdown.hook = blocker;
       MockAsyncShutdown.status = options.fetchState;
     }
@@ -1100,7 +1100,7 @@ var AddonTestUtils = {
     return new Promise((resolve, reject) => {
       let result = {};
       addon.findUpdates({
-        onNoCompatibilityUpdateAvailable(addon2) {
+        onNoCompatibilityUpdateAvailable: function(addon2) {
           if ("compatibilityUpdate" in result) {
             throw new Error("Saw multiple compatibility update events");
           }
@@ -1108,7 +1108,7 @@ var AddonTestUtils = {
           result.compatibilityUpdate = false;
         },
 
-        onCompatibilityUpdateAvailable(addon2) {
+        onCompatibilityUpdateAvailable: function(addon2) {
           if ("compatibilityUpdate" in result) {
             throw new Error("Saw multiple compatibility update events");
           }
@@ -1116,7 +1116,7 @@ var AddonTestUtils = {
           result.compatibilityUpdate = true;
         },
 
-        onNoUpdateAvailable(addon2) {
+        onNoUpdateAvailable: function(addon2) {
           if ("updateAvailable" in result) {
             throw new Error("Saw multiple update available events");
           }
@@ -1124,7 +1124,7 @@ var AddonTestUtils = {
           result.updateAvailable = false;
         },
 
-        onUpdateAvailable(addon2, install) {
+        onUpdateAvailable: function(addon2, install) {
           if ("updateAvailable" in result) {
             throw new Error("Saw multiple update available events");
           }
@@ -1132,7 +1132,7 @@ var AddonTestUtils = {
           result.updateAvailable = install;
         },
 
-        onUpdateFinished(addon2, error) {
+        onUpdateFinished: function(addon2, error) {
           equal(addon, addon2, "onUpdateFinished");
           if (error == AddonManager.UPDATE_STATUS_NO_ERROR) {
             resolve(result);

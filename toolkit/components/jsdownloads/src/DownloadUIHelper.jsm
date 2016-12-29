@@ -63,7 +63,7 @@ this.DownloadUIHelper = {
    *
    * @return A DownloadPrompter object.
    */
-  getPrompter(aParent)
+  getPrompter: function(aParent)
   {
     return new DownloadPrompter(aParent || null);
   },
@@ -139,7 +139,7 @@ this.DownloadPrompter.prototype = {
    * @resolves Boolean indicating whether the launch operation can continue.
    * @rejects JavaScript exception.
    */
-  confirmLaunchExecutable(aPath)
+  confirmLaunchExecutable: function(aPath)
   {
     const kPrefAlertOnEXEOpen = "browser.download.manager.alertOnEXEOpen";
 

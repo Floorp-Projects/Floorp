@@ -83,12 +83,12 @@ var PLUGINS = [{
 
 // A fake plugin host to return the plugins defined above
 var PluginHost = {
-  getPluginTags(countRef) {
+  getPluginTags: function(countRef) {
     countRef.value = PLUGINS.length;
     return PLUGINS;
   },
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsIPluginHost)
      || iid.equals(Components.interfaces.nsISupports))
       return this;

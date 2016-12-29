@@ -38,21 +38,21 @@ AutoCompleteInput.prototype = {
     return this.searches.length;
   },
 
-  getSearchAt(aIndex) {
+  getSearchAt: function(aIndex) {
     return this.searches[aIndex];
   },
 
-  onSearchBegin() {},
-  onSearchComplete() {},
+  onSearchBegin: function() {},
+  onSearchComplete: function() {},
 
   popupOpen: false,
 
   popup: {
-    setSelectedIndex(aIndex) {},
-    invalidate() {},
+    setSelectedIndex: function(aIndex) {},
+    invalidate: function() {},
 
     // nsISupports implementation
-    QueryInterface(iid) {
+    QueryInterface: function(iid) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIAutoCompletePopup))
         return this;
@@ -62,7 +62,7 @@ AutoCompleteInput.prototype = {
   },
 
   // nsISupports implementation
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIAutoCompleteInput))
       return this;

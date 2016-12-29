@@ -14,7 +14,7 @@ var gMoveBookmarksDialog = {
     return this._foldersTree;
   },
 
-  init() {
+  init: function() {
     this._nodes = window.arguments[0];
 
     this.foldersTree.place =

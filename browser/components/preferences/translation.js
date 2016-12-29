@@ -33,7 +33,7 @@ Tree.prototype = {
   get hasSelection() {
     return this.selection.count > 0;
   },
-  getSelectedItems() {
+  getSelectedItems: function() {
     let result = [];
 
     let rc = this.selection.getRangeCount();
@@ -51,30 +51,30 @@ Tree.prototype = {
   get rowCount() {
     return this._data.length;
   },
-  getCellText(aRow, aColumn) {
+  getCellText: function(aRow, aColumn) {
     return this._data[aRow];
   },
-  isSeparator(aIndex) {
+  isSeparator: function(aIndex) {
     return false;
   },
-  isSorted() {
+  isSorted: function() {
     return false;
   },
-  isContainer(aIndex) {
+  isContainer: function(aIndex) {
     return false;
   },
-  setTree(aTree) {},
-  getImageSrc(aRow, aColumn) {},
-  getProgressMode(aRow, aColumn) {},
-  getCellValue(aRow, aColumn) {},
-  cycleHeader(column) {},
-  getRowProperties(row) {
+  setTree: function(aTree) {},
+  getImageSrc: function(aRow, aColumn) {},
+  getProgressMode: function(aRow, aColumn) {},
+  getCellValue: function(aRow, aColumn) {},
+  cycleHeader: function(column) {},
+  getRowProperties: function(row) {
     return "";
   },
-  getColumnProperties(column) {
+  getColumnProperties: function(column) {
     return "";
   },
-  getCellProperties(row, column) {
+  getCellProperties: function(row, column) {
     return "";
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITreeView])
@@ -87,13 +87,13 @@ function Lang(aCode)
 }
 
 Lang.prototype = {
-  toString() {
+  toString: function() {
     return this._label;
   }
 }
 
 var gTranslationExceptions = {
-  onLoad() {
+  onLoad: function() {
     if (this._siteTree) {
       // Re-using an open dialog, clear the old observers.
       this.uninit();
@@ -123,7 +123,7 @@ var gTranslationExceptions = {
   },
 
   // Get the list of languages we don't translate as an array.
-  getLanguageExceptions() {
+  getLanguageExceptions: function() {
     let langs = Services.prefs.getCharPref(kLanguagesPref);
     if (!langs)
       return [];
@@ -134,7 +134,7 @@ var gTranslationExceptions = {
     return result;
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic == "perm-changed") {
       if (aData == "cleared") {
         if (!this._sites.length)
@@ -180,22 +180,22 @@ var gTranslationExceptions = {
     }
   },
 
-  _handleButtonDisabling(aTree, aIdPart) {
+  _handleButtonDisabling: function(aTree, aIdPart) {
     let empty = aTree.isEmpty;
     document.getElementById("removeAll" + aIdPart + "s").disabled = empty;
     document.getElementById("remove" + aIdPart).disabled =
       empty || !aTree.hasSelection;
   },
 
-  onLanguageSelected() {
+  onLanguageSelected: function() {
     this._handleButtonDisabling(this._langTree, "Language");
   },
 
-  onSiteSelected() {
+  onSiteSelected: function() {
     this._handleButtonDisabling(this._siteTree, "Site");
   },
 
-  onLanguageDeleted() {
+  onLanguageDeleted: function() {
     let langs = Services.prefs.getCharPref(kLanguagesPref);
     if (!langs)
       return;
@@ -206,11 +206,11 @@ var gTranslationExceptions = {
     Services.prefs.setCharPref(kLanguagesPref, langs.join(","));
   },
 
-  onAllLanguagesDeleted() {
+  onAllLanguagesDeleted: function() {
     Services.prefs.setCharPref(kLanguagesPref, "");
   },
 
-  onSiteDeleted() {
+  onSiteDeleted: function() {
     let removedSites = this._siteTree.getSelectedItems();
     for (let origin of removedSites) {
       let principal = Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(origin);
@@ -218,7 +218,7 @@ var gTranslationExceptions = {
     }
   },
 
-  onAllSitesDeleted() {
+  onAllSitesDeleted: function() {
     if (this._siteTree.isEmpty)
       return;
 
@@ -233,22 +233,22 @@ var gTranslationExceptions = {
     this.onSiteSelected();
   },
 
-  onSiteKeyPress(aEvent) {
+  onSiteKeyPress: function(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE)
       this.onSiteDeleted();
   },
 
-  onLanguageKeyPress(aEvent) {
+  onLanguageKeyPress: function(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE)
       this.onLanguageDeleted();
   },
 
-  onWindowKeyPress(aEvent) {
+  onWindowKeyPress: function(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
       window.close();
   },
 
-  uninit() {
+  uninit: function() {
     Services.obs.removeObserver(this, "perm-changed");
     Services.prefs.removeObserver(kLanguagesPref, this);
   }

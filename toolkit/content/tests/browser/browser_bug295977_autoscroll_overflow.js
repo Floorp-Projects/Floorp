@@ -163,8 +163,8 @@ body > div > div {width: 1000px;height: 1000px;}\
     let scrollHori = test.expected & expectScrollHori;
 
     yield ContentTask.spawn(gBrowser.selectedBrowser,
-                            { scrollVert,
-                              scrollHori,
+                            { scrollVert : scrollVert,
+                              scrollHori: scrollHori,
                               elemid : test.elem,
                               checkWindow: test.testwindow },
       function* (args) {

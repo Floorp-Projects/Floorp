@@ -14,11 +14,11 @@ var crash = function() { // this will crash when called.
 
 
 var TestHelper = {
-  init() {
+  init: function() {
     addMessageListener("social-test:crash", this);
   },
 
-  receiveMessage(msg) {
+  receiveMessage: function(msg) {
     switch (msg.name) {
       case "social-test:crash":
         privateNoteIntentionalCrash();

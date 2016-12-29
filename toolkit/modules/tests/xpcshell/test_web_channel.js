@@ -16,12 +16,12 @@ const TEST_PERMISSION_NAME = "test-webchannel-permissions";
 
 var MockWebChannelBroker = {
   _channelMap: new Map(),
-  registerChannel(channel) {
+  registerChannel: function(channel) {
     if (!this._channelMap.has(channel)) {
       this._channelMap.set(channel);
     }
   },
-  unregisterChannel(channelToRemove) {
+  unregisterChannel: function(channelToRemove) {
     this._channelMap.delete(channelToRemove)
   }
 };

@@ -80,7 +80,7 @@ var ADDONS = [
 
 // This is a replacement for the blocklist service
 var BlocklistService = {
-  getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) {
+  getAddonBlocklistState: function(aAddon, aAppVersion, aToolkitVersion) {
     if (aAddon.id == "bug335238_3@tests.mozilla.org")
       return Ci.nsIBlocklistService.STATE_SOFTBLOCKED;
     if (aAddon.id == "bug335238_4@tests.mozilla.org")
@@ -88,16 +88,16 @@ var BlocklistService = {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
-  getPluginBlocklistState(aPlugin, aVersion, aAppVersion, aToolkitVersion) {
+  getPluginBlocklistState: function(aPlugin, aVersion, aAppVersion, aToolkitVersion) {
     return Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
   },
 
-  isAddonBlocklisted(aAddon, aAppVersion, aToolkitVersion) {
+  isAddonBlocklisted: function(aAddon, aAppVersion, aToolkitVersion) {
     return this.getAddonBlocklistState(aAddon, aAppVersion, aToolkitVersion) ==
            Ci.nsIBlocklistService.STATE_BLOCKED;
   },
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIBlocklistService)
      || iid.equals(Ci.nsISupports))
       return this;
@@ -113,18 +113,18 @@ var server;
 var updateListener = {
   pendingCount: 0,
 
-  onUpdateAvailable(aAddon) {
+  onUpdateAvailable: function(aAddon) {
     do_throw("Should not have seen an update for " + aAddon.id);
   },
 
-  onUpdateFinished() {
+  onUpdateFinished: function() {
     if (--this.pendingCount == 0)
       server.stop(do_test_finished);
   }
 }
 
 var requestHandler = {
-  handle(metadata, response)
+  handle: function(metadata, response)
   {
     var expected = EXPECTED[metadata.path.substring(1)];
     var params = metadata.queryString.split("&");
