@@ -545,11 +545,12 @@ ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
 // it ensures that the callback is traced, and that if something is holding onto
 // the callback when we're done with it HoldJSObjects is called.
 template<typename T>
-class RootedCallback : public JS::Rooted<T>
+class MOZ_RAII RootedCallback : public JS::Rooted<T>
 {
 public:
   explicit RootedCallback(JSContext* cx)
     : JS::Rooted<T>(cx)
+    , mCx(cx)
   {}
 
   // We need a way to make assignment from pointers (how we're normally used)
@@ -599,6 +600,8 @@ private:
   {
     return aOwningNonNull.isInitialized();
   }
+
+  JSContext* mCx;
 };
 
 } // namespace dom
