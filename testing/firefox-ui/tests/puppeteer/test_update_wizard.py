@@ -60,3 +60,7 @@ class TestUpdateWizard(PuppeteerMixin, MarionetteTestCase):
         # elements of the downloading panel
         self.assertEqual(self.wizard.downloading.progress.get_property('localName'),
                          'progressmeter')
+
+        # check wizard attributes
+        self.assertIsInstance(self.wizard.selected_index, int)
+        self.assertEqual(self.wizard.selected_panel, self.wizard.checking)
