@@ -32,6 +32,7 @@
 #if defined(MOZ_CRASHREPORTER)
 #include "nsExceptionHandler.h"
 #endif
+#include "GeckoProfiler.h"
 
 #if defined(XP_WIN)
 #include <windows.h>
@@ -124,6 +125,7 @@ struct Options {
 void
 RunWatchdog(void* arg)
 {
+  AutoProfilerRegister registerThread("Shutdown Hang Terminator");
   PR_SetCurrentThreadName("Shutdown Hang Terminator");
 
   // Let's copy and deallocate options, that's one less leak to worry
@@ -214,6 +216,7 @@ PRMonitor* gWriteReady = nullptr;
 
 void RunWriter(void* arg)
 {
+  AutoProfilerRegister registerThread("Shutdown Statistics Writer");
   PR_SetCurrentThreadName("Shutdown Statistics Writer");
 
   MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(arg);
