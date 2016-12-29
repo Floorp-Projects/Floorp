@@ -836,7 +836,10 @@ ModuleGenerator::startFuncDefs()
     MOZ_ASSERT(threads.threadCount > 1);
 
     uint32_t numTasks;
-    if (CanUseExtraThreads() && threads.wasmCompilationInProgress.compareExchange(false, true)) {
+    if (CanUseExtraThreads() &&
+        threads.cpuCount > 1 &&
+        threads.wasmCompilationInProgress.compareExchange(false, true))
+    {
 #ifdef DEBUG
         {
             AutoLockHelperThreadState lock;
