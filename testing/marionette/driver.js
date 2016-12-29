@@ -22,6 +22,7 @@ Cu.import("chrome://marionette/content/addon.js");
 Cu.import("chrome://marionette/content/assert.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/browser.js");
+Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cert.js");
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/error.js");
@@ -1842,7 +1843,8 @@ GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-      resp.body.value = atom.getElementAttribute(el, name, this.getCurrentWindow());
+
+      resp.body.value = el.getAttribute(name);
       break;
 
     case Context.CONTENT:
@@ -2393,6 +2395,9 @@ GeckoDriver.prototype.clearImportedScripts = function*(cmd, resp) {
  *     Reference to a web element.
  * @param {string} highlights
  *     List of web elements to highlight.
+ * @param {boolean} full
+ *     True to take a screenshot of the entire document element. Is not
+ *     considered if {@code id} is not defined. Defaults to true.
  * @param {boolean} hash
  *     True if the user requests a hash of the image data.
  *
@@ -2407,44 +2412,41 @@ GeckoDriver.prototype.takeScreenshot = function (cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      let win = this.getCurrentWindow();
-      let canvas = win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-      let doc;
-      if (this.appName == "B2G") {
-        doc = win.document.body;
-      } else {
-        doc = win.document.documentElement;
-      }
-      let docRect = doc.getBoundingClientRect();
-      let width = docRect.width;
-      let height = docRect.height;
+      let canvas;
+      let highlightEls = [];
 
-      // Convert width and height from CSS pixels (potentially fractional)
-      // to device pixels (integer).
-      let scale = win.devicePixelRatio;
-      canvas.setAttribute("width", Math.round(width * scale));
-      canvas.setAttribute("height", Math.round(height * scale));
+      let container = {frame: this.getCurrentWindow().document.defaultView};
 
-      let context = canvas.getContext("2d");
-      let flags;
-      if (this.appName == "B2G") {
-        flags =
-          context.DRAWWINDOW_DRAW_CARET |
-          context.DRAWWINDOW_DRAW_VIEW |
-          context.DRAWWINDOW_USE_WIDGET_LAYERS;
-      } else {
-        // Bug 1075168: CanvasRenderingContext2D image is distorted
-        // when using certain flags in chrome context.
-        flags =
-          context.DRAWWINDOW_DRAW_VIEW |
-          context.DRAWWINDOW_USE_WIDGET_LAYERS;
+      if (!container.frame) {
+        throw new NoSuchWindowError('Unable to locate window');
       }
-      context.scale(scale, scale);
-      context.drawWindow(win, 0, 0, width, height, "rgb(255,255,255)", flags);
-      let dataUrl = canvas.toDataURL("image/png", "");
-      let data = dataUrl.substring(dataUrl.indexOf(",") + 1);
-      resp.body.value = data;
-      break;
+
+      for (let h of highlights) {
+        let el = this.curBrowser.seenEls.get(h, container);
+        highlightEls.push(el);
+      }
+
+      // viewport
+      if (!id && !full) {
+        canvas = capture.viewport(container.frame, highlightEls);
+
+      // element or full document element
+      } else {
+        let node;
+        if (id) {
+          node = this.curBrowser.seenEls.get(id, container);
+        } else {
+          node = container.frame.document.documentElement;
+        }
+
+        canvas = capture.element(node, highlightEls);
+      }
+
+      if (hash) {
+        return capture.toHash(canvas);
+      } else {
+        return capture.toBase64(canvas);
+      }
 
     case Context.CONTENT:
       if (hash) {
