@@ -120,7 +120,7 @@ WebGLContext::WebGLContext()
     , mMaxFetchedInstances(0)
     , mLayerIsMirror(false)
     , mBypassShaderValidation(false)
-    , mBuffersForUB_Dirty(true)
+    , mEmptyTFO(0)
     , mContextLossHandler(this)
     , mNeedsFakeNoAlpha(false)
     , mNeedsFakeNoDepth(false)
@@ -250,7 +250,6 @@ WebGLContext::DestroyResourcesAndContext()
     mQuerySlot_TimeElapsed = nullptr;
 
     mIndexedUniformBufferBindings.clear();
-    OnUBIndexedBindingsChanged();
 
     //////
 
@@ -265,6 +264,13 @@ WebGLContext::DestroyResourcesAndContext()
     ClearLinkedList(mTextures);
     ClearLinkedList(mTransformFeedbacks);
     ClearLinkedList(mVertexArrays);
+
+    //////
+
+    if (mEmptyTFO) {
+        gl->fDeleteTransformFeedbacks(1, &mEmptyTFO);
+        mEmptyTFO = 0;
+    }
 
     //////
 
@@ -2382,42 +2388,6 @@ WebGLContext::ValidateArrayBufferView(const char* funcName,
 
     *out_bytes = bytes + (elemOffset * elemSize);
     *out_byteLen = elemCount * elemSize;
-    return true;
-}
-
-////
-
-const decltype(WebGLContext::mBuffersForUB)&
-WebGLContext::BuffersForUB() const
-{
-    if (mBuffersForUB_Dirty) {
-        mBuffersForUB.clear();
-        for (const auto& cur : mIndexedUniformBufferBindings) {
-            if (cur.mBufferBinding) {
-                mBuffersForUB.insert(cur.mBufferBinding.get());
-            }
-        }
-        mBuffersForUB_Dirty = false;
-    }
-    return mBuffersForUB;
-}
-
-////
-
-bool
-WebGLContext::ValidateForNonTransformFeedback(const char* funcName, WebGLBuffer* buffer)
-{
-    if (!mBoundTransformFeedback)
-        return true;
-
-    const auto& buffersForTF = mBoundTransformFeedback->BuffersForTF();
-    if (buffersForTF.count(buffer)) {
-        ErrorInvalidOperation("%s: Specified WebGLBuffer is currently bound for transform"
-                              " feedback.",
-                              funcName);
-        return false;
-    }
-
     return true;
 }
 
