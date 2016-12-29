@@ -114,7 +114,7 @@ class Deck(UIBaseLib):
 
         :return: Index of the selected panel.
         """
-        return int(self.element.get_property('selectedIndex'))
+        return int(self.element.get_attribute('selectedIndex'))
 
     @property
     def selected_panel(self):
