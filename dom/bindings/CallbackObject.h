@@ -233,10 +233,9 @@ protected:
   // HoldJSObjects; see FinishSlowJSInitIfMoreThanOneOwner).  If you use this,
   // you MUST ensure that the object is traced until the HoldJSObjects happens!
   CallbackObject(JS::Handle<JSObject*> aCallback,
-                 nsIGlobalObject* aIncumbentGlobal,
                  const FastCallbackConstructor&)
   {
-    InitNoHold(aCallback, nullptr, aIncumbentGlobal);
+    InitNoHold(aCallback, nullptr, nullptr);
   }
 
   // mCallback is not unwrapped, so it can be a cross-compartment-wrapper.

@@ -45,10 +45,8 @@ protected:
 
   // See CallbackObject for an explanation of the arguments.
   CallbackInterface(JS::Handle<JSObject*> aCallable,
-                    nsIGlobalObject* aIncumbentGlobal,
                     const FastCallbackConstructor&)
-    : CallbackObject(aCallable, aIncumbentGlobal,
-                     FastCallbackConstructor())
+    : CallbackObject(aCallable, FastCallbackConstructor())
   {
   }
 };
