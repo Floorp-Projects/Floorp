@@ -56,14 +56,14 @@ this.Battery = {};
 for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
   let prop = k;
   Object.defineProperty(this.Battery, prop, {
-    get: function() {
+    get() {
       // Return fake value if spoofing is enabled, otherwise fetch the real value from the BatteryManager API
       if (Debugging.fake) {
         return gFakeBattery[prop];
       }
       return Services.appShell.hiddenDOMWindow.navigator.battery[prop];
     },
-    set: function(fakeSetting) {
+    set(fakeSetting) {
       if (!Debugging.fake) {
         throw new Error("Tried to set fake battery value when battery spoofing was disabled");
       }

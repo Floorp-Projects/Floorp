@@ -37,7 +37,7 @@ this.TelemetryArchive = {
    *                      timestampCreated: <number>,
    *                      type: <string> }
    */
-  promiseArchivedPingList: function() {
+  promiseArchivedPingList() {
     return TelemetryArchiveImpl.promiseArchivedPingList();
   },
 
@@ -47,7 +47,7 @@ this.TelemetryArchive = {
    * @param id {String} The pings UUID.
    * @return {Promise<PingData>} A promise resolved with the pings data on success.
    */
-  promiseArchivedPingById: function(id) {
+  promiseArchivedPingById(id) {
     return TelemetryArchiveImpl.promiseArchivedPingById(id);
   },
 
@@ -57,7 +57,7 @@ this.TelemetryArchive = {
    * @param {object} ping The ping data to archive.
    * @return {promise} Promise that is resolved when the ping is successfully archived.
    */
-  promiseArchivePing: function(ping) {
+  promiseArchivePing(ping) {
     return TelemetryArchiveImpl.promiseArchivePing(ping);
   },
 };
@@ -82,7 +82,7 @@ var TelemetryArchiveImpl = {
     return this._logger;
   },
 
-  promiseArchivePing: function(ping) {
+  promiseArchivePing(ping) {
     if (!shouldArchivePings()) {
       this._log.trace("promiseArchivePing - archiving is disabled");
       return Promise.resolve();
@@ -98,7 +98,7 @@ var TelemetryArchiveImpl = {
     return TelemetryStorage.saveArchivedPing(ping);
   },
 
-  _buildArchivedPingList: function(archivedPingsMap) {
+  _buildArchivedPingList(archivedPingsMap) {
     let list = Array.from(archivedPingsMap, p => ({
       id: p[0],
       timestampCreated: p[1].timestampCreated,
@@ -110,7 +110,7 @@ var TelemetryArchiveImpl = {
     return list;
   },
 
-  promiseArchivedPingList: function() {
+  promiseArchivedPingList() {
     this._log.trace("promiseArchivedPingList");
 
     return TelemetryStorage.loadArchivedPingList().then(loadedInfo => {
@@ -118,7 +118,7 @@ var TelemetryArchiveImpl = {
     });
   },
 
-  promiseArchivedPingById: function(id) {
+  promiseArchivedPingById(id) {
     this._log.trace("promiseArchivedPingById - id: " + id);
     return TelemetryStorage.loadArchivedPing(id);
   },

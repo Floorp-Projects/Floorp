@@ -95,20 +95,20 @@ ChildManager.prototype = {
    * Add a listener, which will be notified whenever a child process
    * reports a slow performance alert for this addon/window.
    */
-  addListener: function(listener) {
+  addListener(listener) {
     this._listeners.add(listener);
   },
   /**
    * Remove a listener.
    */
-  removeListener: function(listener) {
+  removeListener(listener) {
     let deleted = this._listeners.delete(listener);
     if (!deleted) {
       throw new Error("Unknown listener");
     }
   },
 
-  listeners: function() {
+  listeners() {
     return this._listeners.values();
   }
 };
@@ -216,7 +216,7 @@ function Observable(target) {
   }
 }
 Observable.prototype = {
-  addJankObserver: function(listener) {
+  addJankObserver(listener) {
     if (this._observers.has(listener)) {
       throw new TypeError(`Listener already registered for target ${this._key}`);
     }
@@ -230,7 +230,7 @@ Observable.prototype = {
 
     this._process.addJankObserver(observer);
   },
-  removeJankObserver: function(listener) {
+  removeJankObserver(listener) {
     let observer = this._observers.get(listener);
     if (!observer) {
       throw new TypeError(`No listener for target ${this._key}`);
@@ -284,10 +284,10 @@ function Observer(listener) {
   this._listener = listener;
 }
 Observer.prototype = {
-  observe: function(...args) {
+  observe(...args) {
     this._listener(...args);
   },
-  dispose: function() {
+  dispose() {
     this._monitor.dispose();
     this.observe = function poison() {
       throw new Error("Internal error: I should have stopped receiving notifications");
@@ -350,14 +350,14 @@ this.PerformanceWatcher = {
    *    If the listener listens to all add-ons/all webpages, it is triggered with
    *    an array of {source, details}, as described above.
    */
-  addPerformanceListener: function(target, listener) {
+  addPerformanceListener(target, listener) {
     if (typeof listener != "function") {
       throw new TypeError();
     }
     let observable = Observable.get(target);
     observable.addJankObserver(listener);
   },
-  removePerformanceListener: function(target, listener) {
+  removePerformanceListener(target, listener) {
     if (typeof listener != "function") {
       throw new TypeError();
     }

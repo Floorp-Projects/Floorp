@@ -49,7 +49,7 @@ this.CrashReports = {
         let id = leaf.slice(0, -4);
         if (leaf.endsWith(".dmp") && uuidRegex.test(id)) {
           let entry = {
-            id: id,
+            id,
             date: file.lastModifiedTime,
             pending: true
           };

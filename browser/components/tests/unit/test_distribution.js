@@ -46,7 +46,7 @@ function installDistributionEngine() {
   do_get_file("data/engine-de-DE.xml").copyTo(localeDir, "engine-de-DE.xml");
 
   Services.dirsvc.registerProvider({
-    getFile: function(aProp, aPersistent) {
+    getFile(aProp, aPersistent) {
       aPersistent.value = true;
       if (aProp == XRE_APP_DISTRIBUTION_DIR)
         return distDir.clone();

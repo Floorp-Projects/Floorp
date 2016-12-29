@@ -10,7 +10,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 this.OfflineAppCacheHelper = {
-  clear: function() {
+  clear() {
     var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
     var appCacheStorage = cacheService.appCacheStorage(LoadContextInfo.default, null);
     try {

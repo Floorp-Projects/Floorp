@@ -30,7 +30,7 @@ addMessageListener(TEST_MSG, msg => {
     waitForLoadAndStopIt(msg.data.expectedURL, url => {
       sendAsyncMessage(TEST_MSG, {
         type: "loadStopped",
-        url: url,
+        url,
       });
     });
   }
@@ -41,7 +41,7 @@ function waitForLoadAndStopIt(expectedURL, callback) {
   let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebProgress);
   let listener = {
-    onStateChange: function(webProg, req, flags, status) {
+    onStateChange(webProg, req, flags, status) {
       if (req instanceof Ci.nsIChannel) {
         let url = req.originalURI.spec;
         dump("waitForLoadAndStopIt: onStateChange " + url + "\n");

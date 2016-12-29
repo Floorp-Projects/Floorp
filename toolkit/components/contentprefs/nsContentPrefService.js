@@ -580,7 +580,7 @@ ContentPrefService.prototype = {
     return this.__stmtSelectPref;
   },
 
-  _scheduleCallback: function(func) {
+  _scheduleCallback(func) {
     let tm = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
     tm.mainThread.dispatch(func, Ci.nsIThread.DISPATCH_NORMAL);
   },
@@ -602,7 +602,7 @@ ContentPrefService.prototype = {
 
       if (aCallback) {
         let cache = this._cache;
-        new AsyncStatement(this._stmtSelectPref).execute({onResult: function(aResult) {
+        new AsyncStatement(this._stmtSelectPref).execute({onResult(aResult) {
           cache.set(aGroup, aSetting, aResult);
           aCallback.onResult(aResult);
         }});
@@ -651,7 +651,7 @@ ContentPrefService.prototype = {
 
       if (aCallback) {
         let cache = this._cache;
-        new AsyncStatement(this._stmtSelectGlobalPref).execute({onResult: function(aResult) {
+        new AsyncStatement(this._stmtSelectGlobalPref).execute({onResult(aResult) {
           cache.set(null, aName, aResult);
           aCallback.onResult(aResult);
         }});
@@ -1309,19 +1309,19 @@ AsyncStatement.prototype = {
     stmt.executeAsync({
       _callback: aCallback,
       _hadResult: false,
-      handleResult: function(aResult) {
+      handleResult(aResult) {
         this._hadResult = true;
         if (this._callback) {
           let row = aResult.getNextRow();
           this._callback.onResult(row.getResultByName("value"));
         }
       },
-      handleCompletion: function(aReason) {
+      handleCompletion(aReason) {
         if (!this._hadResult && this._callback &&
             aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED)
           this._callback.onResult(undefined);
       },
-      handleError: function(aError) {}
+      handleError(aError) {}
     });
   }
 };

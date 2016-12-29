@@ -91,15 +91,13 @@ function paperListElement(aPaperListElement)
 
 paperListElement.prototype =
   {
-    clearPaperList:
-      function()
+    clearPaperList()
         {
           // remove the menupopup node child of the menulist.
           this.paperListElement.removeChild(this.paperListElement.firstChild);
         },
 
-    appendPaperNames:
-      function(aDataObject)
+    appendPaperNames(aDataObject)
         {
           var popupNode = document.createElement("menupopup");
           for (var i = 0;i < aDataObject.length;i++)  {

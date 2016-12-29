@@ -22,7 +22,7 @@
 this.EXPORTED_SYMBOLS = ["SpatialNavigation"];
 
 var SpatialNavigation = {
-  init: function(browser, callback) {
+  init(browser, callback) {
           browser.addEventListener("keydown", function(event) {
             _onInputKeyPress(event, callback);
           }, true);
@@ -487,7 +487,7 @@ function _spatialDistanceOfCorner(from, to, key) {
 
 // Snav preference observer
 var PrefObserver = {
-  register: function() {
+  register() {
     this.prefService = Cc["@mozilla.org/preferences-service;1"]
                           .getService(Ci.nsIPrefService);
 
@@ -506,7 +506,7 @@ var PrefObserver = {
     this.observe(null, "nsPref:changed", "keyCode.return");
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic != "nsPref:changed") {
       return;
     }

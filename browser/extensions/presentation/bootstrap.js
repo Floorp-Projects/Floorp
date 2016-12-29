@@ -33,7 +33,7 @@ function shutdown(aData, aReason) {
 // Register/unregister a constructor as a factory.
 function Factory() {}
 Factory.prototype = {
-  register: function(targetConstructor) {
+  register(targetConstructor) {
     let proto = targetConstructor.prototype;
     this._classID = proto.classID;
 
@@ -45,7 +45,7 @@ Factory.prototype = {
                               proto.contractID, factory);
   },
 
-  unregister: function() {
+  unregister() {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(this._classID, this._factory);
     this._factory = null;
@@ -55,14 +55,14 @@ Factory.prototype = {
 
 var Presentation = {
   // PUBLIC APIs
-  init: function() {
+  init() {
     log("init");
     // Register PresentationDevicePrompt into a XPCOM component.
     Cu.import(PRESENTATION_DEVICE_PROMPT_PATH);
     this._register();
   },
 
-  uninit: function() {
+  uninit() {
     log("uninit");
     // Unregister PresentationDevicePrompt XPCOM component.
     this._unregister();
@@ -70,13 +70,13 @@ var Presentation = {
   },
 
   // PRIVATE APIs
-  _register: function() {
+  _register() {
     log("_register");
     this._devicePromptFactory = new Factory();
     this._devicePromptFactory.register(PresentationDevicePrompt);
   },
 
-  _unregister: function() {
+  _unregister() {
     log("_unregister");
     this._devicePromptFactory.unregister();
     delete this._devicePromptFactory;

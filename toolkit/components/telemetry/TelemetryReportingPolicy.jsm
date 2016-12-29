@@ -98,7 +98,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
   /**
    * Called when the user is notified of the policy.
    */
-  onUserNotifyComplete: function() {
+  onUserNotifyComplete() {
     return TelemetryReportingPolicyImpl._userNotified();
    },
 
@@ -108,7 +108,7 @@ NotifyPolicyRequest.prototype = Object.freeze({
    * @param error
    *        (Error) Explains what went wrong.
    */
-  onUserNotifyFailed: function(error) {
+  onUserNotifyFailed(error) {
     this._log.error("onUserNotifyFailed - " + error);
   },
 });
@@ -122,14 +122,14 @@ this.TelemetryReportingPolicy = {
   /**
    * Setup the policy.
    */
-  setup: function() {
+  setup() {
     return TelemetryReportingPolicyImpl.setup();
   },
 
   /**
    * Shutdown and clear the policy.
    */
-  shutdown: function() {
+  shutdown() {
     return TelemetryReportingPolicyImpl.shutdown();
   },
 
@@ -141,28 +141,28 @@ this.TelemetryReportingPolicy = {
    *
    * @return {Boolean} True if we are allowed to upload data, false otherwise.
    */
-  canUpload: function() {
+  canUpload() {
     return TelemetryReportingPolicyImpl.canUpload();
   },
 
   /**
    * Test only method, restarts the policy.
    */
-  reset: function() {
+  reset() {
     return TelemetryReportingPolicyImpl.reset();
   },
 
   /**
    * Test only method, used to check if user is notified of the policy in tests.
    */
-  testIsUserNotified: function() {
+  testIsUserNotified() {
     return TelemetryReportingPolicyImpl.isUserNotifiedOfCurrentPolicy;
   },
 
   /**
    * Test only method, used to simulate the infobar being shown in xpcshell tests.
    */
-  testInfobarShown: function() {
+  testInfobarShown() {
     return TelemetryReportingPolicyImpl._userNotified();
   },
 };
@@ -295,7 +295,7 @@ var TelemetryReportingPolicyImpl = {
   /**
    * Test only method, restarts the policy.
    */
-  reset: function() {
+  reset() {
     this.shutdown();
     return this.setup();
   },
@@ -303,7 +303,7 @@ var TelemetryReportingPolicyImpl = {
   /**
    * Setup the policy.
    */
-  setup: function() {
+  setup() {
     this._log.trace("setup");
 
     // Migrate the data choices infobar, if needed.
@@ -316,7 +316,7 @@ var TelemetryReportingPolicyImpl = {
   /**
    * Clean up the reporting policy.
    */
-  shutdown: function() {
+  shutdown() {
     this._log.trace("shutdown");
 
     this._detachObservers();
@@ -327,7 +327,7 @@ var TelemetryReportingPolicyImpl = {
   /**
    * Detach the observers that were attached during setup.
    */
-  _detachObservers: function() {
+  _detachObservers() {
     Services.obs.removeObserver(this, "sessionstore-windows-restored");
   },
 
@@ -339,7 +339,7 @@ var TelemetryReportingPolicyImpl = {
    *
    * @return {Boolean} True if we are allowed to upload data, false otherwise.
    */
-  canUpload: function() {
+  canUpload() {
     // If data submission is disabled, there's no point in showing the infobar. Just
     // forbid to upload.
     if (!this.dataSubmissionEnabled) {
@@ -355,7 +355,7 @@ var TelemetryReportingPolicyImpl = {
   /**
    * Migrate the data policy preferences, if needed.
    */
-  _migratePreferences: function() {
+  _migratePreferences() {
     // Current prefs are mostly the same than the old ones, except for some deprecated ones.
     for (let pref of DEPRECATED_FHR_PREFS) {
       Preferences.reset(pref);
@@ -366,7 +366,7 @@ var TelemetryReportingPolicyImpl = {
    * Show the data choices infobar if the user wasn't already notified and data submission
    * is enabled.
    */
-  _showInfobar: function() {
+  _showInfobar() {
     if (!this.dataSubmissionEnabled) {
       this._log.trace("_showInfobar - Data submission disabled by the policy.");
       return;
@@ -401,7 +401,7 @@ var TelemetryReportingPolicyImpl = {
   /**
    * Record date and the version of the accepted policy.
    */
-  _recordNotificationData: function() {
+  _recordNotificationData() {
     this._log.trace("_recordNotificationData");
     this.dataSubmissionPolicyNotifiedDate = Policy.now();
     this.dataSubmissionPolicyAcceptedVersion = this.currentPolicyVersion;
@@ -464,7 +464,7 @@ var TelemetryReportingPolicyImpl = {
     return true;
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic != "sessionstore-windows-restored") {
       return;
     }

@@ -67,7 +67,7 @@ function refreshUI() {
   let iter = ProfileService.profiles;
   while (iter.hasMoreElements()) {
     let profile = iter.getNext().QueryInterface(Ci.nsIToolkitProfile);
-    display({ profile: profile,
+    display({ profile,
               isDefault: profile == defaultProfile,
               isCurrentProfile: profile == currentProfile });
   }

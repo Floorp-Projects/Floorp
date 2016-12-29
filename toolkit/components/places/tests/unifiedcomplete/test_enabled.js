@@ -2,12 +2,12 @@ add_task(function* test_enabled() {
   // Test for bug 471903 to make sure searching in autocomplete can be turned on
   // and off. Also test bug 463535 for pref changing search.
   let uri = NetUtil.newURI("http://url/0");
-  yield PlacesTestUtils.addVisits([ { uri: uri, title: "title" } ]);
+  yield PlacesTestUtils.addVisits([ { uri, title: "title" } ]);
 
   do_print("plain search");
   yield check_autocomplete({
     search: "url",
-    matches: [ { uri: uri, title: "title" } ]
+    matches: [ { uri, title: "title" } ]
   });
 
   do_print("search disabled");
@@ -21,7 +21,7 @@ add_task(function* test_enabled() {
   Services.prefs.setBoolPref("browser.urlbar.autocomplete.enabled", true);
   yield check_autocomplete({
     search: "url",
-    matches: [ { uri: uri, title: "title" } ]
+    matches: [ { uri, title: "title" } ]
   });
 
   yield cleanup();

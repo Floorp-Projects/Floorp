@@ -285,7 +285,7 @@ IDService.prototype = {
 
         let callbackObj = {
           domain: aDomain,
-          idpParams: idpParams,
+          idpParams,
         };
         log("_fetchWellKnownFile result: ", callbackObj);
         // Yay.  Valid IdP configuration for the domain.

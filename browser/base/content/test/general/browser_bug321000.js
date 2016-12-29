@@ -49,7 +49,7 @@ function test_paste(aCurrentTest) {
   // Register input listener.
   var inputListener = {
     test: aCurrentTest,
-    handleEvent: function(event) {
+    handleEvent(event) {
       element.removeEventListener(event.type, this, false);
 
       is(element.value, this.test.expected, this.test.desc);

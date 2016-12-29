@@ -76,7 +76,7 @@ this.YandexTranslator.prototype = {
    * @returns {Promise}          A promise that will resolve when the translation
    *                             task is finished.
    */
-  translate: function() {
+  translate() {
     return Task.spawn(function *() {
       let currentIndex = 0;
       this._onFinishedDeferred = Promise.defer();
@@ -120,7 +120,7 @@ this.YandexTranslator.prototype = {
    *
    * @param   request   The YandexRequest sent to the server
    */
-  _chunkCompleted: function(yandexRequest) {
+  _chunkCompleted(yandexRequest) {
     if (this._parseChunkResult(yandexRequest)) {
       this._partialSuccess = true;
       // Count the number of characters successfully translated.
@@ -140,7 +140,7 @@ this.YandexTranslator.prototype = {
    *
    * @param   aError   [optional] The XHR object of the request that failed.
    */
-  _chunkFailed: function(aError) {
+  _chunkFailed(aError) {
     if (aError instanceof Ci.nsIXMLHttpRequest) {
       let body = aError.responseText;
       let json = { code: 0 };
@@ -160,7 +160,7 @@ this.YandexTranslator.prototype = {
    * This function handles resolving the promise
    * returned by the public `translate()` method when all chunks are completed.
    */
-  _checkIfFinished: function() {
+  _checkIfFinished() {
     // Check if all pending requests have been
     // completed and then resolves the promise.
     // If at least one chunk was successful, the
@@ -188,7 +188,7 @@ this.YandexTranslator.prototype = {
    * @param   request      The request sent to the server.
    * @returns boolean      True if parsing of this chunk was successful.
    */
-  _parseChunkResult: function(yandexRequest) {
+  _parseChunkResult(yandexRequest) {
     let results;
     try {
       let result = JSON.parse(yandexRequest.networkRequest.responseText);
@@ -228,7 +228,7 @@ this.YandexTranslator.prototype = {
    * @param startIndex What is the index, in the roots list, that the
    *                   chunk should start.
    */
-  _generateNextTranslationRequest: function(startIndex) {
+  _generateNextTranslationRequest(startIndex) {
     let currentDataSize = 0;
     let currentChunks = 0;
     let output = [];
@@ -292,7 +292,7 @@ YandexRequest.prototype = {
   /**
    * Initiates the request
    */
-  fireRequest: function() {
+  fireRequest() {
     return Task.spawn(function *() {
       // Prepare URL.
       let url = getUrlParam("https://translate.yandex.net/api/v1.5/tr.json/translate",
@@ -317,7 +317,7 @@ YandexRequest.prototype = {
         onLoad: (function(responseText, xhr) {
           deferred.resolve(this);
         }).bind(this),
-        onError: function(e, responseText, xhr) {
+        onError(e, responseText, xhr) {
           deferred.reject(xhr);
         },
         postData: params

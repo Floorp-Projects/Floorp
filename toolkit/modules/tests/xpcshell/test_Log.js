@@ -448,7 +448,7 @@ add_task(function* log_message_with_params() {
 
   // We use object.valueOf() internally; make sure a broken valueOf() method
   // doesn't cause the logger to fail.
-  let vOf = {a: 1, valueOf: function() {throw "oh noes valueOf"}};
+  let vOf = {a: 1, valueOf() {throw "oh noes valueOf"}};
   do_check_eq(formatMessage("Broken valueOf ${}", vOf),
               'Broken valueOf ({a:1, valueOf:(function () {throw "oh noes valueOf"})})');
 
