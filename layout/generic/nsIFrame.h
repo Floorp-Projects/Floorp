@@ -2004,17 +2004,10 @@ public:
   };
 
   struct InlinePrefISizeData : public InlineIntrinsicISizeData {
-    InlinePrefISizeData()
-      : mLineIsEmpty(true)
-    {}
-
     void ForceBreak();
 
     // The default implementation for nsIFrame::AddInlinePrefISize.
     void DefaultAddInlinePrefISize(nscoord aISize);
-
-    // True if the current line contains nothing other than placeholders.
-    bool mLineIsEmpty;
   };
 
   /**
