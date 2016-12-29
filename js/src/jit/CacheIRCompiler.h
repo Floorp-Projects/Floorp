@@ -28,6 +28,7 @@ namespace jit {
     _(GuardAndLoadUnboxedExpando)         \
     _(GuardNoDetachedTypedObjects)        \
     _(GuardNoDenseElements)               \
+    _(GuardAndGetIndexFromString)         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
     _(LoadDOMExpandoValue)                \
