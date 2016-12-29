@@ -345,6 +345,9 @@ ResponsiveUI.prototype = {
 
     // Get the protocol ready to speak with emulation actor
     yield this.connectToServer();
+
+    // Non-blocking message to tool UI to start any delayed init activities
+    message.post(this.toolWindow, "post-init");
   }),
 
   /**
