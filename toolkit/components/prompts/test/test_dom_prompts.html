@@ -13,6 +13,7 @@
 </pre>
 
 <script class="testbody" type="text/javascript">
+/* import-globals-from prompt_common.js */
 var rv;
 var state, action;
 
@@ -36,7 +37,7 @@ add_task(function* test_alert_ok() {
         buttonClick: "ok",
     };
 
-    promptDone = handlePrompt(state, action);
+    let promptDone = handlePrompt(state, action);
 
     alert("This is the alert text.");
 
@@ -64,7 +65,7 @@ add_task(function* test_alert_noargs() {
         buttonClick: "ok",
     };
 
-    promptDone = handlePrompt(state, action);
+    let promptDone = handlePrompt(state, action);
 
     try {
         alert();
@@ -97,7 +98,7 @@ add_task(function* test_confirm_ok() {
         buttonClick: "ok",
     };
 
-    promptDone = handlePrompt(state, action);
+    let promptDone = handlePrompt(state, action);
 
     rv = confirm("This is the confirm text.");
     is(rv, true, "check prompt return value");
@@ -126,7 +127,7 @@ add_task(function* test_confirm_noargs() {
         buttonClick: "ok",
     };
 
-    promptDone = handlePrompt(state, action);
+    let promptDone = handlePrompt(state, action);
 
     try {
         rv = confirm();
@@ -160,7 +161,7 @@ add_task(function* test_prompt_ok() {
         buttonClick: "ok",
     };
 
-    promptDone = handlePrompt(state, action);
+    let promptDone = handlePrompt(state, action);
 
     rv = prompt("This is the Prompt text.");
     is(rv, "", "check prompt return value");
@@ -189,7 +190,7 @@ add_task(function* test_prompt_noargs() {
         buttonClick: "ok",
     };
 
-    promptDone = handlePrompt(state, action);
+    let promptDone = handlePrompt(state, action);
 
     try {
         rv = prompt();

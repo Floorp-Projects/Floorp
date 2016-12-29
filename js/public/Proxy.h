@@ -593,6 +593,15 @@ class JS_FRIEND_API(AutoEnterPolicy)
     inline void recordLeave() {}
 #endif
 
+  private:
+    // This operator needs to be deleted explicitly, otherwise Visual C++ will
+    // create it automatically when it is part of the export JS API. In that
+    // case, compile would fail because HandleId is not allowed to be assigned
+    // and consequently instantiation of assign operator of mozilla::Maybe
+    // would fail. See bug 1325351 comment 16. Copy constructor is removed at
+    // the same time for consistency.
+    AutoEnterPolicy(const AutoEnterPolicy&) = delete;
+    AutoEnterPolicy& operator=(const AutoEnterPolicy&) = delete;
 };
 
 #ifdef JS_DEBUG

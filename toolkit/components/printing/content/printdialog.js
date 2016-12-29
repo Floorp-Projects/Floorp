@@ -128,7 +128,7 @@ listElement.prototype =
             // build popup menu from printer names
             var list = document.getElementById("printerList");
             do {
-              printerNameStr = aDataObject.getNext();
+              let printerNameStr = aDataObject.getNext();
               list.appendItem(printerNameStr, printerNameStr, getPrinterDescription(printerNameStr));
             } while (aDataObject.hasMore());
             this.listElement.removeAttribute("disabled");
@@ -422,4 +422,3 @@ function chooseFile()
 
   return false;
 }
-

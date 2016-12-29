@@ -8,6 +8,8 @@ module.exports = {
   emitNewMessage: () => {},
   hudProxyClient: {},
   onViewSourceInDebugger: () => {},
+  onViewSourceInStyleEditor: () => {},
+  onViewSourceInScratchpad: () => {},
   openNetworkPanel: () => {},
   sourceMapService: {
     subscribe: () => {},

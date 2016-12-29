@@ -208,5 +208,6 @@ module.exports = {
     "dump": true,
     "openDialog": false,
     "sizeToContent": false,
+    "ChromeWorker": false,
   }
 };

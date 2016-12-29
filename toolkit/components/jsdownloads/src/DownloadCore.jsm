@@ -88,6 +88,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gPrintSettingsService",
            "@mozilla.org/gfx/printsettings-service;1",
            Ci.nsIPrintSettingsService);
 
+/* global DownloadIntegration */
 Integration.downloads.defineModuleGetter(this, "DownloadIntegration",
             "resource://gre/modules/DownloadIntegration.jsm");
 

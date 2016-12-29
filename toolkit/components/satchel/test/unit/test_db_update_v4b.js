@@ -35,7 +35,7 @@ function* next_test()
 
   destFile = profileDir.clone();
   destFile.append("formhistory.sqlite");
-  dbConnection = Services.storage.openUnsharedDatabase(destFile);
+  let dbConnection = Services.storage.openUnsharedDatabase(destFile);
 
   // check for upgraded schema.
   do_check_eq(CURRENT_SCHEMA, FormHistory.schemaVersion);

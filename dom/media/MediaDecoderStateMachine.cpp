@@ -194,7 +194,8 @@ public:
   virtual void HandleCDMProxyReady() {}
   virtual void HandleAudioDecoded(MediaData* aAudio) {}
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
-  virtual void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError);
+  virtual void HandleAudioNotDecoded(const MediaResult& aError);
+  virtual void HandleVideoNotDecoded(const MediaResult& aError);
   virtual void HandleAudioWaited(MediaData::Type aType);
   virtual void HandleVideoWaited(MediaData::Type aType);
   virtual void HandleNotWaited(const WaitForDataRejectValue& aRejection);
@@ -236,8 +237,8 @@ protected:
     // We are expecting more data if either the resource states so, or if we
     // have a waiting promise pending (such as with non-MSE EME).
     return Resource()->IsExpectingMoreData() ||
-           (Reader()->IsWaitForDataSupported() &&
-            (mMaster->IsWaitingAudioData() || mMaster->IsWaitingVideoData()));
+           mMaster->IsWaitingAudioData() ||
+           mMaster->IsWaitingVideoData();
   }
   MediaQueue<MediaData>& AudioQueue() const { return mMaster->mAudioQueue; }
   MediaQueue<MediaData>& VideoQueue() const { return mMaster->mVideoQueue; }
@@ -496,9 +497,17 @@ public:
     MaybeFinishDecodeFirstFrame();
   }
 
-  void HandleEndOfStream() override
+  void HandleAudioNotDecoded(const MediaResult& aError) override;
+  void HandleVideoNotDecoded(const MediaResult& aError) override;
+
+  void HandleAudioWaited(MediaData::Type aType) override
   {
-    MaybeFinishDecodeFirstFrame();
+    mMaster->RequestAudioData();
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override
+  {
+    mMaster->RequestVideoData(false, media::TimeUnit());
   }
 
   void HandleVideoSuspendTimeout() override
@@ -800,15 +809,11 @@ public:
   }
 
   void HandleAudioDecoded(MediaData* aAudio) override = 0;
-
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override = 0;
-
-  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override = 0;
-
+  void HandleAudioNotDecoded(const MediaResult& aError) override = 0;
+  void HandleVideoNotDecoded(const MediaResult& aError) override = 0;
   void HandleAudioWaited(MediaData::Type aType) override = 0;
-
   void HandleVideoWaited(MediaData::Type aType) override = 0;
-
   void HandleNotWaited(const WaitForDataRejectValue& aRejection) override = 0;
 
   void HandleVideoSuspendTimeout() override
@@ -920,51 +925,8 @@ public:
     MaybeFinishSeek();
   }
 
-  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
-  {
-    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
-
-    // Ignore pending requests from video-only seek.
-    if (aType == MediaData::AUDIO_DATA && mSeekJob.mTarget->IsVideoOnly()) {
-      return;
-    }
-
-    // If the decoder is waiting for data, we tell it to call us back when the
-    // data arrives.
-    if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-      mMaster->WaitForData(aType);
-      return;
-    }
-
-    if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
-      if (aType == MediaData::AUDIO_DATA) {
-        RequestAudioData();
-      } else {
-        RequestVideoData();
-      }
-      return;
-    }
-
-    if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-      if (aType == MediaData::AUDIO_DATA) {
-        AudioQueue().Finish();
-        mDoneAudioSeeking = true;
-      } else {
-        if (mFirstVideoFrameAfterSeek) {
-          // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
-          // mSeekedVideoData so we have something to display after seeking.
-          mMaster->PushVideo(mFirstVideoFrameAfterSeek);
-        }
-        VideoQueue().Finish();
-        mDoneVideoSeeking = true;
-      }
-      MaybeFinishSeek();
-      return;
-    }
-
-    // This is a decode error, delegate to the generic error path.
-    mMaster->DecodeError(aError);
-  }
+  void HandleAudioNotDecoded(const MediaResult& aError) override;
+  void HandleVideoNotDecoded(const MediaResult& aError) override;
 
   void HandleAudioWaited(MediaData::Type aType) override
   {
@@ -1099,16 +1061,12 @@ private:
   void RequestAudioData()
   {
     MOZ_ASSERT(!mDoneAudioSeeking);
-    MOZ_ASSERT(!mMaster->IsRequestingAudioData());
-    MOZ_ASSERT(!mMaster->IsWaitingAudioData());
     mMaster->RequestAudioData();
   }
 
   void RequestVideoData()
   {
     MOZ_ASSERT(!mDoneVideoSeeking);
-    MOZ_ASSERT(!mMaster->IsRequestingVideoData());
-    MOZ_ASSERT(!mMaster->IsWaitingVideoData());
     mMaster->RequestVideoData(false, media::TimeUnit());
   }
 
@@ -1380,48 +1338,8 @@ private:
     }
   }
 
-  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
-  {
-    MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-    MOZ_ASSERT(NeedMoreVideo());
-
-    switch (aType) {
-    case MediaData::AUDIO_DATA:
-    {
-      // We don't care about audio decode errors in this state which will be
-      // handled by other states after seeking.
-      break;
-    }
-    case MediaData::VIDEO_DATA:
-    {
-      if (aError == NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-        VideoQueue().Finish();
-        FinishSeek();
-        break;
-      }
-
-      // Video seek not finished.
-      switch (aError.Code()) {
-        case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-          mMaster->WaitForData(MediaData::VIDEO_DATA);
-          break;
-        case NS_ERROR_DOM_MEDIA_CANCELED:
-          RequestVideoData();
-          break;
-        case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-          MOZ_ASSERT(false, "Shouldn't want more data for ended video.");
-          break;
-        default:
-          // Raise an error since we can't finish video seek anyway.
-          mMaster->DecodeError(aError);
-          break;
-      }
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("We cannot handle RAW_DATA or NULL_DATA here.");
-    }
-  }
+  void HandleAudioNotDecoded(const MediaResult& aError) override;
+  void HandleVideoNotDecoded(const MediaResult& aError) override;
 
   void HandleAudioWaited(MediaData::Type aType) override
   {
@@ -1712,10 +1630,8 @@ public:
     return DECODER_STATE_SHUTDOWN;
   }
 
-  void HandleNotDecoded(MediaData::Type aType, const MediaResult& aError) override
-  {
-    return;
-  }
+  void HandleAudioNotDecoded(const MediaResult& aError) override {}
+  void HandleVideoNotDecoded(const MediaResult& aError) override {}
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
   {
@@ -1742,49 +1658,6 @@ public:
 
 void
 MediaDecoderStateMachine::
-StateObject::HandleNotDecoded(MediaData::Type aType, const MediaResult& aError)
-{
-  bool isAudio = aType == MediaData::AUDIO_DATA;
-  MOZ_ASSERT_IF(!isAudio, aType == MediaData::VIDEO_DATA);
-
-  // If the decoder is waiting for data, we tell it to call us back when the
-  // data arrives.
-  if (aError == NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA) {
-    MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
-    mMaster->WaitForData(aType);
-    HandleWaitingForData();
-    return;
-  }
-
-  if (aError == NS_ERROR_DOM_MEDIA_CANCELED) {
-    if (isAudio) {
-      mMaster->EnsureAudioDecodeTaskQueued();
-    } else {
-      mMaster->EnsureVideoDecodeTaskQueued();
-    }
-    return;
-  }
-
-  // If this is a decode error, delegate to the generic error path.
-  if (aError != NS_ERROR_DOM_MEDIA_END_OF_STREAM) {
-    mMaster->DecodeError(aError);
-    return;
-  }
-
-  // This is an EOS. Finish off the queue, and then handle things based on our
-  // state.
-  if (isAudio) {
-    AudioQueue().Finish();
-  } else {
-    VideoQueue().Finish();
-  }
-
-  HandleEndOfStream();
-}
-
-void
-MediaDecoderStateMachine::
 StateObject::HandleAudioWaited(MediaData::Type aType)
 {
   mMaster->EnsureAudioDecodeTaskQueued();
@@ -1802,6 +1675,48 @@ MediaDecoderStateMachine::
 StateObject::HandleNotWaited(const WaitForDataRejectValue& aRejection)
 {
 
+}
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleAudioNotDecoded(const MediaResult& aError)
+{
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::AUDIO_DATA);
+      HandleWaitingForData();
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      mMaster->EnsureAudioDecodeTaskQueued();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      AudioQueue().Finish();
+      HandleEndOfStream();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
+}
+
+void
+MediaDecoderStateMachine::
+StateObject::HandleVideoNotDecoded(const MediaResult& aError)
+{
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::VIDEO_DATA);
+      HandleWaitingForData();
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      mMaster->EnsureVideoDecodeTaskQueued();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      VideoQueue().Finish();
+      HandleEndOfStream();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
 }
 
 RefPtr<MediaDecoder::SeekPromise>
@@ -1992,7 +1907,52 @@ DecodingFirstFrameState::Enter()
   MOZ_ASSERT(!mMaster->mVideoDecodeSuspended);
 
   // Dispatch tasks to decode first frames.
-  mMaster->DispatchDecodeTasksIfNeeded();
+  if (mMaster->HasAudio()) {
+    mMaster->RequestAudioData();
+  }
+  if (mMaster->HasVideo()) {
+    mMaster->RequestVideoData(false, media::TimeUnit());
+  }
+}
+
+void
+MediaDecoderStateMachine::
+DecodingFirstFrameState::HandleAudioNotDecoded(const MediaResult& aError)
+{
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::AUDIO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      mMaster->RequestAudioData();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      AudioQueue().Finish();
+      MaybeFinishDecodeFirstFrame();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
+}
+
+void
+MediaDecoderStateMachine::
+DecodingFirstFrameState::HandleVideoNotDecoded(const MediaResult& aError)
+{
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::VIDEO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      mMaster->RequestVideoData(false, media::TimeUnit());
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      VideoQueue().Finish();
+      MaybeFinishDecodeFirstFrame();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
 }
 
 void
@@ -2081,7 +2041,6 @@ DecodingState::MaybeStartBuffering()
                    mMaster->HasLowDecodedData() &&
                    mMaster->HasLowBufferedData();
   } else {
-    MOZ_ASSERT(Reader()->IsWaitForDataSupported());
     shouldBuffer =
       (mMaster->OutOfDecodedAudio() && mMaster->IsWaitingAudioData()) ||
       (mMaster->OutOfDecodedVideo() && mMaster->IsWaitingVideoData());
@@ -2147,6 +2106,92 @@ SeekingState::SeekCompleted()
 
 void
 MediaDecoderStateMachine::
+AccurateSeekingState::HandleAudioNotDecoded(const MediaResult& aError)
+{
+  if (mSeekJob.mTarget->IsVideoOnly()) {
+    return;
+  }
+  MOZ_ASSERT(!mDoneAudioSeeking);
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::AUDIO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      RequestAudioData();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      AudioQueue().Finish();
+      mDoneAudioSeeking = true;
+      MaybeFinishSeek();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
+}
+
+void
+MediaDecoderStateMachine::
+AccurateSeekingState::HandleVideoNotDecoded(const MediaResult& aError)
+{
+  MOZ_ASSERT(!mDoneVideoSeeking);
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::VIDEO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      RequestVideoData();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      if (mFirstVideoFrameAfterSeek) {
+        // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
+        // mSeekedVideoData so we have something to display after seeking.
+        mMaster->PushVideo(mFirstVideoFrameAfterSeek);
+      }
+      VideoQueue().Finish();
+      mDoneVideoSeeking = true;
+      MaybeFinishSeek();
+      break;
+    default:
+      mMaster->DecodeError(aError);
+  }
+}
+
+void
+MediaDecoderStateMachine::
+NextFrameSeekingState::HandleAudioNotDecoded(const MediaResult& aError)
+{
+  MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
+  MOZ_ASSERT(NeedMoreVideo());
+  // We don't care about audio decode errors in this state which will be
+  // handled by other states after seeking.
+}
+
+void
+MediaDecoderStateMachine::
+NextFrameSeekingState::HandleVideoNotDecoded(const MediaResult& aError)
+{
+  MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
+  MOZ_ASSERT(NeedMoreVideo());
+  // Video seek not finished.
+  switch (aError.Code()) {
+    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+      mMaster->WaitForData(MediaData::VIDEO_DATA);
+      break;
+    case NS_ERROR_DOM_MEDIA_CANCELED:
+      RequestVideoData();
+      break;
+    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+      VideoQueue().Finish();
+      FinishSeek();
+      break;
+    default:
+      // Raise an error since we can't finish video seek anyway.
+      mMaster->DecodeError(aError);
+  }
+}
+
+void
+MediaDecoderStateMachine::
 BufferingState::Step()
 {
   TimeStamp now = TimeStamp::Now();
@@ -2169,8 +2214,6 @@ BufferingState::Step()
       return;
     }
   } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
-    MOZ_ASSERT(Reader()->IsWaitForDataSupported(),
-               "Don't yet have a strategy for non-heuristic + non-WaitForData");
     mMaster->DispatchDecodeTasksIfNeeded();
     MOZ_ASSERT(mMaster->mMinimizePreroll ||
                !mMaster->OutOfDecodedAudio() ||
@@ -2974,12 +3017,12 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
+  MOZ_ASSERT(mState != DECODER_STATE_DECODING_FIRSTFRAME);
 
   SAMPLE_LOG("EnsureAudioDecodeTaskQueued isDecoding=%d status=%s",
               IsAudioDecoding(), AudioRequestStatus());
 
   if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_DECODING_FIRSTFRAME &&
       mState != DECODER_STATE_BUFFERING) {
     return;
   }
@@ -2997,6 +3040,9 @@ void
 MediaDecoderStateMachine::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(IsAudioDecoding());
+  MOZ_ASSERT(!IsRequestingAudioData());
+  MOZ_ASSERT(!IsWaitingAudioData());
   SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
              AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
@@ -3014,7 +3060,7 @@ MediaDecoderStateMachine::RequestAudioData()
       [this] (const MediaResult& aError) {
         SAMPLE_LOG("OnAudioNotDecoded aError=%u", aError.Code());
         mAudioDataRequest.Complete();
-        mStateObj->HandleNotDecoded(MediaData::AUDIO_DATA, aError);
+        mStateObj->HandleAudioNotDecoded(aError);
       })
   );
 }
@@ -3033,12 +3079,12 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
+  MOZ_ASSERT(mState != DECODER_STATE_DECODING_FIRSTFRAME);
 
   SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
              IsVideoDecoding(), VideoRequestStatus());
 
   if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_DECODING_FIRSTFRAME &&
       mState != DECODER_STATE_BUFFERING) {
     return;
   }
@@ -3058,6 +3104,9 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
                                            const media::TimeUnit& aCurrentTime)
 {
   MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(IsVideoDecoding());
+  MOZ_ASSERT(!IsRequestingVideoData());
+  MOZ_ASSERT(!IsWaitingVideoData());
   SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
              VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames(), aSkipToNextKeyframe,
              aCurrentTime.ToMicroseconds());
@@ -3077,7 +3126,7 @@ MediaDecoderStateMachine::RequestVideoData(bool aSkipToNextKeyframe,
       [this] (const MediaResult& aError) {
         SAMPLE_LOG("OnVideoNotDecoded aError=%u", aError.Code());
         mVideoDataRequest.Complete();
-        mStateObj->HandleNotDecoded(MediaData::VIDEO_DATA, aError);
+        mStateObj->HandleVideoNotDecoded(aError);
       })
   );
 }

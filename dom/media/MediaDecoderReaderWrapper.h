@@ -52,7 +52,6 @@ public:
   void ResetDecode(TrackSet aTracks);
 
   nsresult Init() { return mReader->Init(); }
-  bool IsWaitForDataSupported() const { return mReader->IsWaitForDataSupported(); }
   bool IsAsync() const { return mReader->IsAsync(); }
   bool UseBufferingHeuristics() const { return mReader->UseBufferingHeuristics(); }
 
