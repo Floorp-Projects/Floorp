@@ -70,7 +70,7 @@ this.ReaderMode = {
     return this.isOnLowMemoryPlatform = memory.isLowMemoryPlatform();
   },
 
-  _getStateForParseOnLoad() {
+  _getStateForParseOnLoad: function() {
     let isEnabled = Services.prefs.getBoolPref("reader.parse-on-load.enabled");
     let isForceEnabled = Services.prefs.getBoolPref("reader.parse-on-load.force-enabled");
     // For low-memory devices, don't allow reader mode since it takes up a lot of memory.
@@ -78,7 +78,7 @@ this.ReaderMode = {
     return isForceEnabled || (isEnabled && !this.isOnLowMemoryPlatform);
   },
 
-  observe(aMessage, aTopic, aData) {
+  observe: function(aMessage, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         if (aData.startsWith("reader.parse-on-load.")) {
@@ -94,7 +94,7 @@ this.ReaderMode = {
    * Enter the reader mode by going forward one step in history if applicable,
    * if not, append the about:reader page in the history instead.
    */
-  enterReaderMode(docShell, win) {
+  enterReaderMode: function(docShell, win) {
     let url = win.document.location.href;
     let readerURL = "about:reader?url=" + encodeURIComponent(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -115,7 +115,7 @@ this.ReaderMode = {
    * Exit the reader mode by going back one step in history if applicable,
    * if not, append the original page in the history instead.
    */
-  leaveReaderMode(docShell, win) {
+  leaveReaderMode: function(docShell, win) {
     let url = win.document.location.href;
     let originalURL = this.getOriginalUrl(url);
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
@@ -139,7 +139,7 @@ this.ReaderMode = {
    * @return The original URL for the article, or null if we did not find
    *         a properly formatted about:reader URL.
    */
-  getOriginalUrl(url) {
+  getOriginalUrl: function(url) {
     if (!url.startsWith("about:reader?")) {
       return null;
     }
@@ -172,7 +172,7 @@ this.ReaderMode = {
    * @param doc A document to parse.
    * @return boolean Whether or not we should show the reader mode button.
    */
-  isProbablyReaderable(doc) {
+  isProbablyReaderable: function(doc) {
     // Only care about 'real' HTML documents:
     if (doc.mozSyntheticDocument || !(doc instanceof doc.defaultView.HTMLDocument)) {
       return false;
@@ -190,12 +190,12 @@ this.ReaderMode = {
     return new Readability(uri, doc).isProbablyReaderable(this.isNodeVisible.bind(this, utils));
   },
 
-  isNodeVisible(utils, node) {
+  isNodeVisible: function(utils, node) {
     let bounds = utils.getBoundsWithoutFlushing(node);
     return bounds.height > 0 && bounds.width > 0;
   },
 
-  getUtilsForWin(win) {
+  getUtilsForWin: function(win) {
     return win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
   },
 
@@ -236,7 +236,7 @@ this.ReaderMode = {
     return yield this._readerParse(uri, doc);
   }),
 
-  _downloadDocument(url) {
+  _downloadDocument: function(url) {
     let histogram = Services.telemetry.getHistogramById("READER_MODE_DOWNLOAD_RESULT");
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();
@@ -352,7 +352,7 @@ this.ReaderMode = {
             type: "Reader:AddedToCache",
             url: article.url,
             size: info.size,
-            path,
+            path: path,
           });
         });
       });
@@ -371,7 +371,7 @@ this.ReaderMode = {
     yield OS.File.remove(path);
   }),
 
-  log(msg) {
+  log: function(msg) {
     if (this.DEBUG)
       dump("Reader: " + msg);
   },
@@ -385,7 +385,7 @@ this.ReaderMode = {
     "youtube.com",
   ],
 
-  _shouldCheckUri(uri, isBaseUri = false) {
+  _shouldCheckUri: function(uri, isBaseUri = false) {
     if (!(uri.schemeIs("http") || uri.schemeIs("https"))) {
       this.log("Not parsing URI scheme: " + uri.scheme);
       return false;
@@ -494,7 +494,7 @@ this.ReaderMode = {
    * @param url The article URL. This should have referrers removed.
    * @return The file path to the cached article.
    */
-  _toHashedPath(url) {
+  _toHashedPath: function(url) {
     let value = this._unicodeConverter.convertToByteArray(url);
     this._cryptoHash.init(this._cryptoHash.MD5);
     this._cryptoHash.update(value, value.length);
@@ -511,7 +511,7 @@ this.ReaderMode = {
    * @resolves When the cache directory exists.
    * @rejects OS.File.Error
    */
-  _ensureCacheDir() {
+  _ensureCacheDir: function() {
     let dir = OS.Path.join(OS.Constants.Path.profileDir, "readercache");
     return OS.File.exists(dir).then(exists => {
       if (!exists) {

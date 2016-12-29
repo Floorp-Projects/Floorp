@@ -58,7 +58,7 @@ function test() {
 }
 
 var gWebProgressListener = {
-  QueryInterface(aIID) {
+  QueryInterface: function(aIID) {
     if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
         aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
         aIID.equals(Components.interfaces.nsISupports))
@@ -75,7 +75,7 @@ var gWebProgressListener = {
   // onSecurityChange: function() {},
   // ----------------------------------------------------------------------------
 
-  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
+  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
     if (!aRequest) {
       // This is bug 673752, or maybe initial "about:blank".
       return;

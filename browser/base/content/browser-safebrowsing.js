@@ -4,7 +4,7 @@
 
 var gSafeBrowsing = {
 
-  setReportPhishingMenu() {
+  setReportPhishingMenu: function() {
     // In order to detect whether or not we're at the phishing warning
     // page, we have to check the documentURI instead of the currentURI.
     // This is because when the DocShell loads an error page, the
@@ -42,7 +42,7 @@ var gSafeBrowsing = {
    * @param name String One of "Phish", "Error", "Malware" or "MalwareError"
    * @return String the report phishing URL.
    */
-  getReportURL(name) {
+  getReportURL: function(name) {
     return SafeBrowsing.getReportURL(name, gBrowser.currentURI);
   }
 }

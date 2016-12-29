@@ -169,14 +169,14 @@ function promiseEntityID(aUrl) {
   });
 
   channel.asyncOpen2({
-    onStartRequest(aRequest) {
+    onStartRequest: function(aRequest) {
       if (aRequest instanceof Ci.nsIResumableChannel) {
         entityID = aRequest.entityID;
       }
       aRequest.cancel(Cr.NS_BINDING_ABORTED);
     },
 
-    onStopRequest(aRequest, aContext, aStatusCode) {
+    onStopRequest: function(aRequest, aContext, aStatusCode) {
       if (aStatusCode == Cr.NS_BINDING_ABORTED) {
         deferred.resolve(entityID);
       } else {
@@ -184,7 +184,7 @@ function promiseEntityID(aUrl) {
       }
     },
 
-    onDataAvailable() {}
+    onDataAvailable: function() {}
   });
 
   return deferred.promise;

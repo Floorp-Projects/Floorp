@@ -107,7 +107,7 @@ EdgeTypedURLMigrator.prototype = {
     return this._typedURLs.size > 0;
   },
 
-  migrate(aCallback) {
+  migrate: function(aCallback) {
     let typedURLs = this._typedURLs;
     let places = [];
     for (let [urlString, time] of typedURLs) {
@@ -140,12 +140,12 @@ EdgeTypedURLMigrator.prototype = {
 
     MigrationUtils.insertVisitsWrapper(places, {
       _success: false,
-      handleResult() {
+      handleResult: function() {
         // Importing any entry is considered a successful import.
         this._success = true;
       },
-      handleError() {},
-      handleCompletion() {
+      handleError: function() {},
+      handleCompletion: function() {
         aCallback(this._success);
       }
     });

@@ -21,14 +21,14 @@ var satchelFormListener = {
     enabled        : true,
     saveHttpsForms : true,
 
-    init() {
+    init : function() {
         Services.obs.addObserver(this, "earlyformsubmit", false);
         Services.prefs.addObserver("browser.formfill.", this, false);
         this.updatePrefs();
         addEventListener("unload", this, false);
     },
 
-    updatePrefs() {
+    updatePrefs : function() {
         this.debug          = Services.prefs.getBoolPref("browser.formfill.debug");
         this.enabled        = Services.prefs.getBoolPref("browser.formfill.enable");
         this.saveHttpsForms = Services.prefs.getBoolPref("browser.formfill.saveHttpsForms");
@@ -36,7 +36,7 @@ var satchelFormListener = {
 
     // Implements the Luhn checksum algorithm as described at
     // http://wikipedia.org/wiki/Luhn_algorithm
-    isValidCCNumber(ccNumber) {
+    isValidCCNumber : function(ccNumber) {
         // Remove dashes and whitespace
         ccNumber = ccNumber.replace(/[\-\s]/g, '');
 
@@ -61,7 +61,7 @@ var satchelFormListener = {
         return total % 10 == 0;
     },
 
-    log(message) {
+    log : function(message) {
         if (!this.debug)
             return;
         dump("satchelFormListener: " + message + "\n");
@@ -70,7 +70,7 @@ var satchelFormListener = {
 
     /* ---- dom event handler ---- */
 
-    handleEvent(e) {
+    handleEvent: function(e) {
         switch (e.type) {
             case "unload":
                 Services.obs.removeObserver(this, "earlyformsubmit");
@@ -85,7 +85,7 @@ var satchelFormListener = {
 
     /* ---- nsIObserver interface ---- */
 
-    observe(subject, topic, data) {
+    observe : function(subject, topic, data) {
         if (topic == "nsPref:changed")
             this.updatePrefs();
         else
@@ -94,7 +94,7 @@ var satchelFormListener = {
 
     /* ---- nsIFormSubmitObserver interfaces ---- */
 
-    notify(form, domWin, actionURI, cancelSubmit) {
+    notify : function(form, domWin, actionURI, cancelSubmit) {
         try {
             // Even though the global context is for a specific browser, we
             // can receive observer events from other tabs! Ensure this event
@@ -171,7 +171,7 @@ var satchelFormListener = {
                     break;
                 }
 
-                entries.push({ name, value });
+                entries.push({ name: name, value: value });
             }
 
             if (entries.length) {

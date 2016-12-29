@@ -34,7 +34,7 @@ var uris = [
 function* addBookmarks() {
   for (let url of uris) {
     yield PlacesUtils.bookmarks.insert({
-      url, parentGuid: PlacesUtils.bookmarks.menuGuid
+      url: url, parentGuid: PlacesUtils.bookmarks.menuGuid
     })
   }
   checkBookmarksExist();

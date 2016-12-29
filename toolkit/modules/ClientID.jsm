@@ -55,7 +55,7 @@ this.ClientID = Object.freeze({
    *
    * @return {Promise<string>} The stable client ID.
    */
-  getClientID() {
+  getClientID: function() {
     return ClientIDImpl.getClientID();
   },
 
@@ -66,7 +66,7 @@ this.ClientID = Object.freeze({
    *  - the client id that we cached into preferences (if any)
    *  - null otherwise
    */
-  getCachedClientID() {
+  getCachedClientID: function() {
     return ClientIDImpl.getCachedClientID();
   },
 
@@ -74,7 +74,7 @@ this.ClientID = Object.freeze({
    * Only used for testing. Invalidates the client ID so that it gets read
    * again from file.
    */
-  _reset() {
+  _reset: function() {
     return ClientIDImpl._reset();
   },
 });
@@ -85,7 +85,7 @@ var ClientIDImpl = {
   _saveClientIdTask: null,
   _logger: null,
 
-  _loadClientID() {
+  _loadClientID: function() {
     if (this._loadClientIdTask) {
       return this._loadClientIdTask;
     }
@@ -156,7 +156,7 @@ var ClientIDImpl = {
    *
    * @return {Promise<string>} The stable client ID.
    */
-  getClientID() {
+  getClientID: function() {
     if (!this._clientID) {
       return this._loadClientID();
     }
@@ -171,7 +171,7 @@ var ClientIDImpl = {
    *  - the client id that we cached into preferences (if any)
    *  - null otherwise
    */
-  getCachedClientID() {
+  getCachedClientID: function() {
     if (this._clientID) {
       // Already loaded the client id from disk.
       return this._clientID;
@@ -207,7 +207,7 @@ var ClientIDImpl = {
    * @return {Boolean} True when the client ID has valid format, or False
    * otherwise.
    */
-  updateClientID(id) {
+  updateClientID: function(id) {
     if (!isValidClientID(id)) {
       this._log.error("updateClientID - invalid client ID", id);
       return false;

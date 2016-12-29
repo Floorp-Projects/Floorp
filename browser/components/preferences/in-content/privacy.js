@@ -26,7 +26,7 @@ var gPrivacyPane = {
    * Show the Tracking Protection UI depending on the
    * privacy.trackingprotection.ui.enabled pref, and linkify its Learn More link
    */
-  _initTrackingProtection() {
+  _initTrackingProtection: function() {
     if (!Services.prefs.getBoolPref("privacy.trackingprotection.ui.enabled")) {
       return;
     }
@@ -45,7 +45,7 @@ var gPrivacyPane = {
    * Linkify the Learn More link of the Private Browsing Mode Tracking
    * Protection UI.
    */
-  _initTrackingProtectionPBM() {
+  _initTrackingProtectionPBM: function() {
     let link = document.getElementById("trackingProtectionPBMLearnMore");
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection-pbm";
     link.setAttribute("href", url);
@@ -54,7 +54,7 @@ var gPrivacyPane = {
   /**
    * Initialize autocomplete to ensure prefs are in sync.
    */
-  _initAutocomplete() {
+  _initAutocomplete: function() {
     Components.classes["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"]
               .getService(Components.interfaces.mozIPlacesAutoComplete);
   },
@@ -62,7 +62,7 @@ var gPrivacyPane = {
   /**
    * Show the Containers UI depending on the privacy.userContext.ui.enabled pref.
    */
-  _initBrowserContainers() {
+  _initBrowserContainers: function() {
     if (!Services.prefs.getBoolPref("privacy.userContext.ui.enabled")) {
       return;
     }
@@ -76,7 +76,7 @@ var gPrivacyPane = {
       Services.prefs.getBoolPref("privacy.userContext.enabled");
   },
 
-  _checkBrowserContainers(event) {
+  _checkBrowserContainers: function(event) {
     let checkbox = document.getElementById("browserContainersCheckbox");
     if (checkbox.checked) {
       Services.prefs.setBoolPref("privacy.userContext.enabled", true);
@@ -116,7 +116,7 @@ var gPrivacyPane = {
    * Sets up the UI for the number of days of history to keep, and updates the
    * label of the "Clear Now..." button.
    */
-  init()
+  init: function()
   {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -271,7 +271,7 @@ var gPrivacyPane = {
    * @returns boolean true if all of the prefs are set to keep history,
    *                  false otherwise
    */
-  _checkHistoryValues(aPrefs) {
+  _checkHistoryValues: function(aPrefs) {
     for (let pref of Object.keys(aPrefs)) {
       if (document.getElementById(pref).value != aPrefs[pref])
         return false;
@@ -282,7 +282,7 @@ var gPrivacyPane = {
   /**
    * Initialize the history mode menulist based on the privacy preferences
    */
-  initializeHistoryMode()
+  initializeHistoryMode: function PPP_initializeHistoryMode()
   {
     let mode;
     let getVal = aPref => document.getElementById(aPref).value;
@@ -304,7 +304,7 @@ var gPrivacyPane = {
   /**
    * Update the selected pane based on the history mode menulist
    */
-  updateHistoryModePane()
+  updateHistoryModePane: function PPP_updateHistoryModePane()
   {
     let selectedIndex = -1;
     switch (document.getElementById("historyMode").value) {
@@ -326,7 +326,7 @@ var gPrivacyPane = {
    * Update the private browsing auto-start pref and the history mode
    * micro-management prefs based on the history mode menulist
    */
-  updateHistoryModePrefs()
+  updateHistoryModePrefs: function PPP_updateHistoryModePrefs()
   {
     let pref = document.getElementById("browser.privatebrowsing.autostart");
     switch (document.getElementById("historyMode").value) {
@@ -361,7 +361,7 @@ var gPrivacyPane = {
    * Update the privacy micro-management controls based on the
    * value of the private browsing auto-start checkbox.
    */
-  updatePrivacyMicroControls()
+  updatePrivacyMicroControls: function PPP_updatePrivacyMicroControls()
   {
     if (document.getElementById("historyMode").value == "custom") {
       let disabled = this._autoStartPrivateBrowsing =
@@ -413,7 +413,7 @@ var gPrivacyPane = {
   /**
    * Initialize the starting state for the auto-start private browsing mode pref reverter.
    */
-  initAutoStartPrivateBrowsingReverter()
+  initAutoStartPrivateBrowsingReverter: function PPP_initAutoStartPrivateBrowsingReverter()
   {
     let mode = document.getElementById("historyMode");
     let autoStart = document.getElementById("privateBrowsingAutoStart");
@@ -423,7 +423,7 @@ var gPrivacyPane = {
 
   _lastMode: null,
   _lastCheckState: null,
-  updateAutostart() {
+  updateAutostart: function PPP_updateAutostart() {
       let mode = document.getElementById("historyMode");
       let autoStart = document.getElementById("privateBrowsingAutoStart");
       let pref = document.getElementById("browser.privatebrowsing.autostart");
@@ -490,7 +490,7 @@ var gPrivacyPane = {
   /**
    * Displays the available block lists for tracking protection.
    */
-  showBlockLists()
+  showBlockLists: function()
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
     let brandName = document.getElementById("bundleBrand")
@@ -545,7 +545,7 @@ var gPrivacyPane = {
    * enables/disables the rest of the cookie UI accordingly, returning true
    * if cookies are enabled.
    */
-  readAcceptCookies()
+  readAcceptCookies: function()
   {
     var pref = document.getElementById("network.cookie.cookieBehavior");
     var acceptThirdPartyLabel = document.getElementById("acceptThirdPartyLabel");
@@ -566,7 +566,7 @@ var gPrivacyPane = {
    * Enables/disables the "keep until" label and menulist in response to the
    * "accept cookies" checkbox being checked or unchecked.
    */
-  writeAcceptCookies()
+  writeAcceptCookies: function()
   {
     var accept = document.getElementById("acceptCookies");
     var acceptThirdPartyMenu = document.getElementById("acceptThirdPartyMenu");
@@ -581,7 +581,7 @@ var gPrivacyPane = {
   /**
    * Converts between network.cookie.cookieBehavior and the third-party cookie UI
    */
-  readAcceptThirdPartyCookies()
+  readAcceptThirdPartyCookies: function()
   {
     var pref = document.getElementById("network.cookie.cookieBehavior");
     switch (pref.value)
@@ -599,7 +599,7 @@ var gPrivacyPane = {
     }
   },
 
-  writeAcceptThirdPartyCookies()
+  writeAcceptThirdPartyCookies: function()
   {
     var accept = document.getElementById("acceptThirdPartyMenu").selectedItem;
     switch (accept.value)
@@ -618,7 +618,7 @@ var gPrivacyPane = {
   /**
    * Displays fine-grained, per-site preferences for cookies.
    */
-  showCookieExceptions()
+  showCookieExceptions: function()
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible   : true,
@@ -635,7 +635,7 @@ var gPrivacyPane = {
   /**
    * Displays all the user's cookies in a dialog.
    */
-  showCookies(aCategory)
+  showCookies: function(aCategory)
   {
     gSubDialog.open("chrome://browser/content/preferences/cookies.xul");
   },
@@ -653,7 +653,7 @@ var gPrivacyPane = {
   /**
    * Displays the Clear Private Data settings dialog.
    */
-  showClearPrivateDataSettings()
+  showClearPrivateDataSettings: function()
   {
     gSubDialog.open("chrome://browser/content/preferences/sanitize.xul", "resizable=no");
   },
@@ -663,7 +663,7 @@ var gPrivacyPane = {
    * Displays a dialog from which individual parts of private data may be
    * cleared.
    */
-  clearPrivateDataNow(aClearEverything) {
+  clearPrivateDataNow: function(aClearEverything) {
     var ts = document.getElementById("privacy.sanitize.timeSpan");
     var timeSpanOrig = ts.value;
 
@@ -685,7 +685,7 @@ var gPrivacyPane = {
    * Enables or disables the "Settings..." button depending
    * on the privacy.sanitize.sanitizeOnShutdown preference value
    */
-  _updateSanitizeSettingsButton() {
+  _updateSanitizeSettingsButton: function() {
     var settingsButton = document.getElementById("clearDataSettings");
     var sanitizeOnShutdownPref = document.getElementById("privacy.sanitize.sanitizeOnShutdown");
 
@@ -704,7 +704,7 @@ var gPrivacyPane = {
    /**
     * Enables/disables the Settings button used to configure containers
     */
-   readBrowserContainersCheckbox()
+   readBrowserContainersCheckbox: function()
    {
      var pref = document.getElementById("privacy.userContext.enabled");
      var settings = document.getElementById("browserContainersSettings");

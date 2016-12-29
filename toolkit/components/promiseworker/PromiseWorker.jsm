@@ -55,42 +55,42 @@ Queue.prototype = {
  * worker.
  */
 const EXCEPTION_CONSTRUCTORS = {
-  EvalError(error) {
+  EvalError: function(error) {
     let result = new EvalError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  InternalError(error) {
+  InternalError: function(error) {
     let result = new InternalError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  RangeError(error) {
+  RangeError: function(error) {
     let result = new RangeError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  ReferenceError(error) {
+  ReferenceError: function(error) {
     let result = new ReferenceError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  SyntaxError(error) {
+  SyntaxError: function(error) {
     let result = new SyntaxError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  TypeError(error) {
+  TypeError: function(error) {
     let result = new TypeError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  URIError(error) {
+  URIError: function(error) {
     let result = new URIError(error.message, error.fileName, error.lineNumber);
     result.stack = error.stack;
     return result;
   },
-  StopIteration() {
+  StopIteration: function() {
     return StopIteration;
   }
 };
@@ -161,7 +161,7 @@ this.BasePromiseWorker = function(url) {
   this.workerTimeStamps = null;
 };
 this.BasePromiseWorker.prototype = {
-  log() {
+  log: function() {
     // By Default, ignore all logs.
   },
 
@@ -259,7 +259,7 @@ this.BasePromiseWorker.prototype = {
    *
    * @return {promise}
    */
-  post(fun, args, closure, transfers) {
+  post: function(fun, args, closure, transfers) {
     return Task.spawn(function* postMessage() {
       // Normalize in case any of the arguments is a promise
       if (args) {
@@ -285,7 +285,7 @@ this.BasePromiseWorker.prototype = {
       }
 
       let id = ++this._id;
-      let message = {fun, args, id};
+      let message = {fun: fun, args: args, id: id};
       this.log("Posting message", message);
       try {
         this._worker.postMessage(message, ...[transfers]);
@@ -301,7 +301,7 @@ this.BasePromiseWorker.prototype = {
       }
 
       let deferred = Promise.defer();
-      this._queue.push({deferred, closure, id});
+      this._queue.push({deferred:deferred, closure: closure, id: id});
       this.log("Message posted");
 
       let reply;

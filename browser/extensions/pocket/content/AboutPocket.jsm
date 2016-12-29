@@ -31,11 +31,11 @@ function AboutPage(chromeURL, aboutHost, classID, description, uriFlags) {
 
 AboutPage.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
-  getURIFlags(aURI) { // eslint-disable-line no-unused-vars
+  getURIFlags: function(aURI) { // eslint-disable-line no-unused-vars
     return this.uriFlags;
   },
 
-  newChannel(aURI, aLoadInfo) {
+  newChannel: function(aURI, aLoadInfo) {
     let newURI = Services.io.newURI(this.chromeURL, null, null);
     let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
                                                             aLoadInfo);
@@ -48,20 +48,20 @@ AboutPage.prototype = {
     return channel;
   },
 
-  createInstance(outer, iid) {
+  createInstance: function(outer, iid) {
     if (outer !== null) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(iid);
   },
 
-  register() {
+  register: function() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
       this.classID, this.description,
       "@mozilla.org/network/protocol/about;1?what=" + this.aboutHost, this);
   },
 
-  unregister() {
+  unregister: function() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
       this.classID, this);
   }

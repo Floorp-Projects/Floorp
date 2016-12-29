@@ -30,7 +30,7 @@ CommonDialog.prototype = {
     soundID       : undefined,
     focusTimer    : null,
 
-    onLoad(xulDialog) {
+    onLoad : function(xulDialog) {
         switch (this.args.promptType) {
           case "alert":
           case "alertCheck":
@@ -191,7 +191,7 @@ CommonDialog.prototype = {
         Services.obs.notifyObservers(this.ui.prompt, topic, null);
     },
 
-    setLabelForNode(aNode, aLabel) {
+    setLabelForNode: function(aNode, aLabel) {
         // This is for labels which may contain embedded access keys.
         // If we end in (&X) where X represents the access key, optionally preceded
         // by spaces and/or followed by the ':' character, store the access key and
@@ -221,20 +221,20 @@ CommonDialog.prototype = {
     },
 
 
-    initTextbox(aName, aValue) {
+    initTextbox : function(aName, aValue) {
         this.ui[aName + "Container"].hidden = false;
         this.ui[aName + "Textbox"].setAttribute("value",
                                                 aValue !== null ? aValue : "");
     },
 
-    setButtonsEnabledState(enabled) {
+    setButtonsEnabledState : function(enabled) {
         this.ui.button0.disabled = !enabled;
         // button1 (cancel) remains enabled.
         this.ui.button2.disabled = !enabled;
         this.ui.button3.disabled = !enabled;
     },
 
-    setDefaultFocus(isInitialLoad) {
+    setDefaultFocus : function(isInitialLoad) {
         let b = (this.args.defaultButtonNum || 0);
         let button = this.ui["button" + b];
 
@@ -258,11 +258,11 @@ CommonDialog.prototype = {
         }
     },
 
-    onCheckbox() {
+    onCheckbox : function() {
         this.args.checked = this.ui.checkbox.checked;
     },
 
-    onButton0() {
+    onButton0 : function() {
         this.args.promptActive = false;
         this.args.ok = true;
         this.args.buttonNumClicked = 0;
@@ -285,22 +285,22 @@ CommonDialog.prototype = {
         }
     },
 
-    onButton1() {
+    onButton1 : function() {
         this.args.promptActive = false;
         this.args.buttonNumClicked = 1;
     },
 
-    onButton2() {
+    onButton2 : function() {
         this.args.promptActive = false;
         this.args.buttonNumClicked = 2;
     },
 
-    onButton3() {
+    onButton3 : function() {
         this.args.promptActive = false;
         this.args.buttonNumClicked = 3;
     },
 
-    abortPrompt() {
+    abortPrompt : function() {
         this.args.promptActive = false;
         this.args.promptAborted = true;
     },

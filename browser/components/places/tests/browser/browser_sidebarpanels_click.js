@@ -27,7 +27,7 @@ function test() {
 
   tests.push({
     _itemID: null,
-    init(aCallback) {
+    init: function(aCallback) {
       // Add a bookmark to the Unfiled Bookmarks folder.
       this._itemID = PlacesUtils.bookmarks.insertBookmark(
         PlacesUtils.unfiledBookmarksFolderId, PlacesUtils._uri(TEST_URL),
@@ -35,12 +35,12 @@ function test() {
       );
       aCallback();
     },
-    prepare() {
+    prepare: function() {
     },
-    selectNode(tree) {
+    selectNode: function(tree) {
       tree.selectItems([this._itemID]);
     },
-    cleanup(aCallback) {
+    cleanup: function(aCallback) {
       PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
       executeSoon(aCallback);
     },
@@ -50,23 +50,23 @@ function test() {
   });
 
   tests.push({
-    init(aCallback) {
+    init: function(aCallback) {
       // Add a history entry.
       let uri = PlacesUtils._uri(TEST_URL);
       PlacesTestUtils.addVisits({
-        uri, visitDate: Date.now() * 1000,
+        uri: uri, visitDate: Date.now() * 1000,
         transition: PlacesUtils.history.TRANSITION_TYPED
       }).then(aCallback);
     },
-    prepare() {
+    prepare: function() {
       sidebar.contentDocument.getElementById("byvisited").doCommand();
     },
-    selectNode(tree) {
+    selectNode: function(tree) {
       tree.selectNode(tree.view.nodeForTreeIndex(0));
       is(tree.selectedNode.uri, TEST_URL, "The correct visit has been selected");
       is(tree.selectedNode.itemId, -1, "The selected node is not bookmarked");
     },
-    cleanup(aCallback) {
+    cleanup: function(aCallback) {
       PlacesTestUtils.clearHistory().then(aCallback);
     },
     sidebarName: HISTORY_SIDEBAR_ID,

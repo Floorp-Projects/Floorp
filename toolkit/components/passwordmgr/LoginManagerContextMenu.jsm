@@ -164,10 +164,10 @@ var LoginManagerContextMenu = {
    */
   _fillTargetField(login, inputElement, browser, documentURI) {
     LoginManagerParent.fillForm({
-      browser,
+      browser: browser,
       loginFormOrigin: documentURI.prePath,
-      login,
-      inputElement,
+      login: login,
+      inputElement: inputElement,
     }).catch(Cu.reportError);
   },
 

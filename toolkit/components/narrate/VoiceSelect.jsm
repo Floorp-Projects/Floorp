@@ -37,7 +37,7 @@ function VoiceSelect(win, label) {
 }
 
 VoiceSelect.prototype = {
-  add(label, value) {
+  add: function(label, value) {
     let option = this._doc.createElement("button");
     option.dataset.value = value;
     option.classList.add("option");
@@ -48,7 +48,7 @@ VoiceSelect.prototype = {
     return option;
   },
 
-  addOptions(options) {
+  addOptions: function(options) {
     let selected = null;
     for (let option of options) {
       if (option.selected) {
@@ -61,11 +61,11 @@ VoiceSelect.prototype = {
     this._select(selected || this.options[0], true);
   },
 
-  clear() {
+  clear: function() {
     this.listbox.innerHTML = "";
   },
 
-  toggleList(force, focus = true) {
+  toggleList: function(force, focus = true) {
     if (this.element.classList.toggle("open", force)) {
       if (focus) {
         (this.selected || this.options[0]).focus();
@@ -84,7 +84,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  handleEvent(evt) {
+  handleEvent: function(evt) {
     let target = evt.target;
 
     switch (evt.type) {
@@ -131,7 +131,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _getPagedOption(option, up) {
+  _getPagedOption: function(option, up) {
     let height = elem => elem.getBoundingClientRect().height;
     let listboxHeight = height(this.listbox);
 
@@ -148,7 +148,7 @@ VoiceSelect.prototype = {
     return next;
   },
 
-  _keyPressedButton(evt) {
+  _keyPressedButton: function(evt) {
     if (evt.altKey && (evt.key === "ArrowUp" || evt.key === "ArrowUp")) {
       this.toggleList(true);
       return;
@@ -178,7 +178,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _keyPressedInBox(evt) {
+  _keyPressedInBox: function(evt) {
     let toFocus;
     let cur = this._doc.activeElement;
 
@@ -212,7 +212,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _select(option, suppressEvent = false) {
+  _select: function(option, suppressEvent = false) {
     let oldSelected = this.selected;
     if (oldSelected) {
       oldSelected.removeAttribute("aria-selected");
@@ -233,7 +233,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _updateDropdownHeight(now) {
+  _updateDropdownHeight: function(now) {
     let updateInner = () => {
       let winHeight = this._win.innerHeight;
       let listbox = this.listbox;
@@ -252,7 +252,7 @@ VoiceSelect.prototype = {
     }
   },
 
-  _getOptionFromValue(value) {
+  _getOptionFromValue: function(value) {
     return Array.from(this.options).find(o => o.dataset.value === value);
   },
 

@@ -144,7 +144,7 @@ function* check_installed(conditions) {
 const TEST_CONDITIONS = {
   // Runs tests with no updated or default system add-ons initially installed
   blank: {
-    *setup() {
+    setup: function*() {
       clearUpdatesDir();
       distroDir.leafName = "empty";
     },
@@ -158,7 +158,7 @@ const TEST_CONDITIONS = {
   },
   // Runs tests with default system add-ons installed
   withAppSet: {
-    *setup() {
+    setup: function*() {
       clearUpdatesDir();
       distroDir.leafName = "prefilled";
     },
@@ -173,7 +173,7 @@ const TEST_CONDITIONS = {
 
   // Runs tests with updated system add-ons installed
   withProfileSet: {
-    *setup() {
+    setup: function*() {
       buildPrefilledUpdatesDir();
       distroDir.leafName = "empty";
     },
@@ -188,7 +188,7 @@ const TEST_CONDITIONS = {
 
   // Runs tests with both default and updated system add-ons installed
   withBothSets: {
-    *setup() {
+    setup: function*() {
       buildPrefilledUpdatesDir();
       distroDir.leafName = "hidden";
     },

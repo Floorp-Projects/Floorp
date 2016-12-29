@@ -43,7 +43,7 @@ var promptShown = false;
 
 var oldPrompt = Services.prompt;
 Services.prompt = {
-  confirm() {
+  confirm: function() {
     promptShown = true;
     return true;
   },

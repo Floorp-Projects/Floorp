@@ -24,7 +24,7 @@ profileDir.append("extensions");
 // when expected
 var gLWThemeChanged = false;
 var LightweightThemeObserver = {
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 

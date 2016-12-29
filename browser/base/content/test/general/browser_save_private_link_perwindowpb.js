@@ -15,17 +15,17 @@ function createTemporarySaveDirectory() {
 function promiseNoCacheEntry(filename) {
   return new Promise((resolve, reject) => {
     Visitor.prototype = {
-      onCacheStorageInfo(num, consumption)
+      onCacheStorageInfo: function(num, consumption)
       {
         info("disk storage contains " + num + " entries");
       },
-      onCacheEntryInfo(uri)
+      onCacheEntryInfo: function(uri)
       {
         let urispec = uri.asciiSpec;
         info(urispec);
         is(urispec.includes(filename), false, "web content present in disk cache");
       },
-      onCacheEntryVisitCompleted()
+      onCacheEntryVisitCompleted: function()
       {
         resolve();
       }

@@ -21,7 +21,7 @@ function frame_script() {
 }
 
 var gAddonAndWindowListener = {
-  onOpenWindow(win) {
+  onOpenWindow: function(win) {
     var window = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
     info("Window opened");
 
@@ -37,8 +37,8 @@ var gAddonAndWindowListener = {
       window.document.documentElement.acceptDialog();
     }, window);
   },
-  onCloseWindow(win) { },
-  onInstallEnded(install) {
+  onCloseWindow: function(win) { },
+  onInstallEnded: function(install) {
     install.cancel();
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediatorListener])

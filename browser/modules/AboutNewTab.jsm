@@ -22,17 +22,17 @@ var AboutNewTab = {
 
   pageListener: null,
 
-  init() {
+  init: function() {
     this.pageListener = new RemotePages("about:newtab");
     this.pageListener.addMessageListener("NewTab:Customize", this.customize.bind(this));
   },
 
-  customize(message) {
+  customize: function(message) {
     NewTabUtils.allPages.enabled = message.data.enabled;
     NewTabUtils.allPages.enhanced = message.data.enhanced;
   },
 
-  uninit() {
+  uninit: function() {
     this.pageListener.destroy();
     this.pageListener = null;
   },

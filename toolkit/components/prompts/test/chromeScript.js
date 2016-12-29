@@ -58,7 +58,7 @@ function handlePrompt(action, isTabModal, isSelect) {
     promptState = getPromptState(ui);
     dismissPrompt(ui, action);
   }
-  sendAsyncMessage("promptHandled", { promptState });
+  sendAsyncMessage("promptHandled", { promptState: promptState });
   return true;
 }
 

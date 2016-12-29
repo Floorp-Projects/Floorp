@@ -6,7 +6,7 @@
 
 var gManagerEventsListener = {
   seenEvents: [],
-  init() {
+  init: function() {
     let events = ["onCompatibilityModeChanged", "onCheckUpdateSecurityChanged",
                   "onUpdateModeChanged"];
     events.forEach(function(aEvent) {
@@ -19,13 +19,13 @@ var gManagerEventsListener = {
     // Try to add twice, to test that the second time silently fails.
     AddonManager.addManagerListener(this);
   },
-  shutdown() {
+  shutdown: function() {
     AddonManager.removeManagerListener(this);
   },
-  expect(aEvents) {
+  expect: function(aEvents) {
     this.expectedEvents = aEvents;
   },
-  checkExpected() {
+  checkExpected: function() {
     do_print("Checking expected events...");
     while (this.expectedEvents.length > 0) {
       let event = this.expectedEvents.pop();

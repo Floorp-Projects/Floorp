@@ -498,7 +498,7 @@ function dumpGCLogAndCCLog(aVerbose)
 
   dumper.dumpGCAndCCLogsToFile("", aVerbose, /* dumpChildProcesses = */ true,
                                { onDump: displayInfo,
-                                 onFinish() {
+                                 onFinish: function() {
                                    inProgress.remove();
                                  }
                                });
@@ -657,12 +657,12 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn)
     let converter = new nsGzipConverter();
     converter.asyncConvertData("gzip", "uncompressed", {
       data: [],
-      onStartRequest(aR, aC) {},
-      onDataAvailable(aR, aC, aStream, aO, aCount) {
+      onStartRequest: function(aR, aC) {},
+      onDataAvailable: function(aR, aC, aStream, aO, aCount) {
         let bi = new nsBinaryStream(aStream);
         this.data.push(bi.readBytes(aCount));
       },
-      onStopRequest(aR, aC, aStatusCode) {
+      onStopRequest: function(aR, aC, aStatusCode) {
         try {
           if (!Components.isSuccessCode(aStatusCode)) {
             throw new Components.Exception("Error while reading gzip file", aStatusCode);
@@ -746,7 +746,7 @@ function DReport(aKind, aUnits, aAmount, aDescription, aNMerged, aPresence)
 }
 
 DReport.prototype = {
-  assertCompatible(aKind, aUnits)
+  assertCompatible: function(aKind, aUnits)
   {
     assert(this._kind  == aKind,  "Mismatched kinds");
     assert(this._units == aUnits, "Mismatched units");
@@ -767,13 +767,13 @@ DReport.prototype = {
     // the descriptions to differ seems reasonable.)
   },
 
-  merge(aJr) {
+  merge: function(aJr) {
     this.assertCompatible(aJr.kind, aJr.units);
     this._amount += aJr.amount;
     this._nMerged++;
   },
 
-  toJSON(aProcess, aPath, aAmount) {
+  toJSON: function(aProcess, aPath, aAmount) {
     return {
       process:     aProcess,
       path:        aPath,
@@ -1126,7 +1126,7 @@ function TreeNode(aUnsafeName, aUnits, aIsDegenerate)
 }
 
 TreeNode.prototype = {
-  findKid(aUnsafeName) {
+  findKid: function(aUnsafeName) {
     if (this._kids) {
       for (let i = 0; i < this._kids.length; i++) {
         if (this._kids[i]._unsafeName === aUnsafeName) {
@@ -1143,7 +1143,7 @@ TreeNode.prototype = {
   // things. So for a non-leaf node, instead of just looking at _amount, we
   // instead look at the maximum absolute value of the node and all of its
   // descendants.
-  maxAbsDescendant() {
+  maxAbsDescendant: function() {
     if (!this._kids) {
       // No kids? Just return the absolute value of the amount.
       return Math.abs(this._amount);
@@ -1163,7 +1163,7 @@ TreeNode.prototype = {
     return max;
   },
 
-  toString() {
+  toString: function() {
     switch (this._units) {
       case UNITS_BYTES:            return formatBytes(this._amount);
       case UNITS_COUNT:

@@ -24,11 +24,11 @@ worker.log = function(...args) {
 self.addEventListener("message", msg => worker.handleMessage(msg));
 
 var Agent = {
-  bounce(...args) {
+  bounce: function(...args) {
     return args;
   },
 
-  throwError(msg, ...args) {
+  throwError: function(msg, ...args) {
      throw new Error(msg);
   },
 };

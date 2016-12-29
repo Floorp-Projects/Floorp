@@ -68,7 +68,7 @@ function nsFilePicker()
 nsFilePicker.prototype = {
   classID: Components.ID("{54ae32f8-1dd2-11b2-a209-df7c505370f8}"),
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(nsIFilePicker) ||
         iid.equals(nsISupports))
       return this;
@@ -113,11 +113,11 @@ nsFilePicker.prototype = {
         mFiles: [],
         mIndex: 0,
 
-        hasMoreElements() {
+        hasMoreElements: function() {
           return (this.mIndex < this.mFiles.length);
         },
 
-        getNext() {
+        getNext: function() {
           if (this.mIndex >= this.mFiles.length) {
             throw Components.results.NS_ERROR_FAILURE;
           }
@@ -176,13 +176,13 @@ nsFilePicker.prototype = {
   mParentWindow: null,
 
   /* methods */
-  init(parent, title, mode) {
+  init: function(parent, title, mode) {
     this.mParentWindow = parent;
     this.mTitle = title;
     this.mMode = mode;
   },
 
-  appendFilters(filterMask) {
+  appendFilters: function(filterMask) {
     if (filterMask & nsIFilePicker.filterHTML) {
       this.appendFilter(titleBundle.GetStringFromName("htmlTitle"),
                         filterBundle.GetStringFromName("htmlFilter"));
@@ -223,12 +223,12 @@ nsFilePicker.prototype = {
     }
   },
 
-  appendFilter(title, extensions) {
+  appendFilter: function(title, extensions) {
     this.mFilterTitles.push(title);
     this.mFilters.push(extensions);
   },
 
-  open(aFilePickerShownCallback) {
+  open: function(aFilePickerShownCallback) {
     var tm = Components.classes["@mozilla.org/thread-manager;1"]
                        .getService(Components.interfaces.nsIThreadManager);
     tm.mainThread.dispatch(function() {
@@ -243,7 +243,7 @@ nsFilePicker.prototype = {
     }.bind(this), Components.interfaces.nsIThread.DISPATCH_NORMAL);
   },
 
-  show() {
+  show: function() {
     var o = {};
     o.title = this.mTitle;
     o.mode = this.mMode;

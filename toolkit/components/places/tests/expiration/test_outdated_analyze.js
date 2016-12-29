@@ -55,14 +55,14 @@ function run_test() {
       +         "WHERE idx = 'moz_places_url_hashindex')"
     );
     stmt.executeAsync({
-      handleResult(aResultSet) {
+      handleResult: function(aResultSet) {
         let row = aResultSet.getNextRow();
         this._difference = row.getResultByIndex(0);
       },
-      handleError(aError) {
+      handleError: function(aError) {
         do_throw("Unexpected error (" + aError.result + "): " + aError.message);
       },
-      handleCompletion(aReason) {
+      handleCompletion: function(aReason) {
         do_check_true(this._difference === 0);
         do_test_finished();
       }

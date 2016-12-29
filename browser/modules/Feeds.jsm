@@ -72,7 +72,7 @@ this.Feeds = {
    *         Whether this is already a known feed or not, if true only a security
    *         check will be performed.
    */
-  isValidFeed(aLink, aPrincipal, aIsFeed) {
+  isValidFeed: function(aLink, aPrincipal, aIsFeed) {
     if (!aLink || !aPrincipal)
       return false;
 

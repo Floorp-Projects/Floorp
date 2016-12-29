@@ -45,7 +45,7 @@ function setDefault(dict, key, default_)
 // In the child, clients can watch for changes to all paths that start
 // with a given component.
 var NotificationTracker = {
-  init() {
+  init: function() {
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
     cpmm.addMessageListener("Addons:ChangeNotification", this);
@@ -54,7 +54,7 @@ var NotificationTracker = {
     this._watchers = {};
   },
 
-  receiveMessage(msg) {
+  receiveMessage: function(msg) {
     let path = msg.data.path;
     let count = msg.data.count;
 
@@ -72,7 +72,7 @@ var NotificationTracker = {
     }
   },
 
-  runCallback(watcher, path, count) {
+  runCallback: function(watcher, path, count) {
     let pathString = path.join("/");
     let registeredSet = this._registered.get(watcher);
     let registered = registeredSet.has(pathString);
@@ -85,7 +85,7 @@ var NotificationTracker = {
     }
   },
 
-  findPaths(prefix) {
+  findPaths: function(prefix) {
     if (!this._paths) {
       return [];
     }
@@ -117,12 +117,12 @@ var NotificationTracker = {
     return result;
   },
 
-  findSuffixes(prefix) {
+  findSuffixes: function(prefix) {
     let paths = this.findPaths(prefix);
     return paths.map(([path, count]) => path[path.length - 1]);
   },
 
-  watch(component1, watcher) {
+  watch: function(component1, watcher) {
     setDefault(this._watchers, component1, []).push(watcher);
     this._registered.set(watcher, new Set());
 
@@ -132,7 +132,7 @@ var NotificationTracker = {
     }
   },
 
-  unwatch(component1, watcher) {
+  unwatch: function(component1, watcher) {
     let watchers = this._watchers[component1];
     let index = watchers.lastIndexOf(watcher);
     if (index > -1) {
@@ -156,7 +156,7 @@ var ContentPolicyChild = {
   _classID: Components.ID("6e869130-635c-11e2-bcfd-0800200c9a66"),
   _contractID: "@mozilla.org/addon-child/policy;1",
 
-  init() {
+  init: function() {
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.registerFactory(this._classID, this._classDescription, this._contractID, this);
 
@@ -167,7 +167,7 @@ var ContentPolicyChild = {
                                          Ci.nsIChannelEventSink, Ci.nsIFactory,
                                          Ci.nsISupportsWeakReference]),
 
-  track(path, register) {
+  track: function(path, register) {
     let catMan = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
     if (register) {
       catMan.addCategoryEntry("content-policy", this._contractID, this._contractID, false, true);
@@ -176,7 +176,7 @@ var ContentPolicyChild = {
     }
   },
 
-  shouldLoad(contentType, contentLocation, requestOrigin,
+  shouldLoad: function(contentType, contentLocation, requestOrigin,
                        node, mimeTypeGuess, extra, requestPrincipal) {
     let addons = NotificationTracker.findSuffixes(["content-policy"]);
     let [prefetched, cpows] = Prefetcher.prefetch("ContentPolicy.shouldLoad",
@@ -186,12 +186,12 @@ var ContentPolicyChild = {
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
     let rval = cpmm.sendRpcMessage("Addons:ContentPolicy:Run", {
-      contentType,
+      contentType: contentType,
       contentLocation: contentLocation.spec,
       requestOrigin: requestOrigin ? requestOrigin.spec : null,
-      mimeTypeGuess,
-      requestPrincipal,
-      prefetched,
+      mimeTypeGuess: mimeTypeGuess,
+      requestPrincipal: requestPrincipal,
+      prefetched: prefetched,
     }, cpows);
     if (rval.length != 1) {
       return Ci.nsIContentPolicy.ACCEPT;
@@ -200,11 +200,11 @@ var ContentPolicyChild = {
     return rval[0];
   },
 
-  shouldProcess(contentType, contentLocation, requestOrigin, insecNode, mimeType, extra) {
+  shouldProcess: function(contentType, contentLocation, requestOrigin, insecNode, mimeType, extra) {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-  createInstance(outer, iid) {
+  createInstance: function(outer, iid) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
@@ -235,7 +235,7 @@ AboutProtocolChannel.prototype = {
   name: null,
   status: Cr.NS_OK,
 
-  asyncOpen(listener, context) {
+  asyncOpen: function(listener, context) {
     // Ask the parent to synchronously read all the data from the channel.
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
@@ -277,33 +277,33 @@ AboutProtocolChannel.prototype = {
     Services.tm.currentThread.dispatch(runnable, Ci.nsIEventTarget.DISPATCH_NORMAL);
   },
 
-  asyncOpen2(listener) {
+  asyncOpen2: function(listener) {
     // throws an error if security checks fail
     var outListener = contentSecManager.performSecurityCheck(this, listener);
     this.asyncOpen(outListener, null);
   },
 
-  open() {
+  open: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  open2() {
+  open2: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  isPending() {
+  isPending: function() {
     return false;
   },
 
-  cancel() {
+  cancel: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  suspend() {
+  suspend: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  resume() {
+  resume: function() {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
@@ -318,7 +318,7 @@ function AboutProtocolInstance(contractID)
 }
 
 AboutProtocolInstance.prototype = {
-  createInstance(outer, iid) {
+  createInstance: function(outer, iid) {
     if (outer != null) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
@@ -326,7 +326,7 @@ AboutProtocolInstance.prototype = {
     return this.QueryInterface(iid);
   },
 
-  getURIFlags(uri) {
+  getURIFlags: function(uri) {
     // Cache the result to avoid the extra IPC.
     if (this._uriFlags !== undefined) {
       return this._uriFlags;
@@ -354,7 +354,7 @@ AboutProtocolInstance.prototype = {
   // available to CPOWs. Consequently, we return a shim channel that,
   // when opened, asks the parent to open the channel and read out all
   // the data.
-  newChannel(uri, loadInfo) {
+  newChannel: function(uri, loadInfo) {
     return new AboutProtocolChannel(uri, this._contractID, loadInfo);
   },
 
@@ -364,7 +364,7 @@ AboutProtocolInstance.prototype = {
 var AboutProtocolChild = {
   _classDescription: "Addon shim about: protocol handler",
 
-  init() {
+  init: function() {
     // Maps contractIDs to instances
     this._instances = new Map();
     // Maps contractIDs to classIDs
@@ -372,7 +372,7 @@ var AboutProtocolChild = {
     NotificationTracker.watch("about-protocol", this);
   },
 
-  track(path, register) {
+  track: function(path, register) {
     let contractID = path[1];
     let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
     if (register) {
@@ -397,11 +397,11 @@ var AboutProtocolChild = {
 // This code registers observers in the child whenever an add-on in
 // the parent asks for notifications on the given topic.
 var ObserverChild = {
-  init() {
+  init: function() {
     NotificationTracker.watch("observer", this);
   },
 
-  track(path, register) {
+  track: function(path, register) {
     let topic = path[1];
     if (register) {
       Services.obs.addObserver(this, topic, false);
@@ -410,13 +410,13 @@ var ObserverChild = {
     }
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     let cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                .getService(Ci.nsISyncMessageSender);
     cpmm.sendRpcMessage("Addons:Observer:Run", {}, {
-      topic,
-      subject,
-      data
+      topic: topic,
+      subject: subject,
+      data: data
     });
   }
 };
@@ -433,11 +433,11 @@ function EventTargetChild(childGlobal)
 }
 
 EventTargetChild.prototype = {
-  uninit() {
+  uninit: function() {
     NotificationTracker.unwatch("event", this);
   },
 
-  track(path, register) {
+  track: function(path, register) {
     let eventType = path[1];
     let useCapture = path[2];
     let listener = useCapture ? this.capturingHandler : this.nonCapturingHandler;
@@ -448,7 +448,7 @@ EventTargetChild.prototype = {
     }
   },
 
-  handleEvent(capturing, event) {
+  handleEvent: function(capturing, event) {
     let addons = NotificationTracker.findSuffixes(["event", event.type, capturing]);
     let [prefetched, cpows] = Prefetcher.prefetch("EventTarget.handleEvent",
                                                   addons,
@@ -459,9 +459,9 @@ EventTargetChild.prototype = {
 
     this._childGlobal.sendRpcMessage("Addons:Event:Run",
                                      {type: event.type,
-                                      capturing,
+                                      capturing: capturing,
                                       isTrusted: event.isTrusted,
-                                      prefetched},
+                                      prefetched: prefetched},
                                      cpows);
   }
 };
@@ -481,34 +481,34 @@ function SandboxChild(chromeGlobal)
 }
 
 SandboxChild.prototype = {
-  uninit() {
+  uninit: function() {
     this.clearSandboxes();
   },
 
-  addListener() {
+  addListener: function() {
     let webProgress = this.chromeGlobal.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
   },
 
-  removeListener() {
+  removeListener: function() {
     let webProgress = this.chromeGlobal.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this);
   },
 
-  onLocationChange(webProgress, request, location, flags) {
+  onLocationChange: function(webProgress, request, location, flags) {
     this.clearSandboxes();
   },
 
-  addSandbox(sandbox) {
+  addSandbox: function(sandbox) {
     if (this.sandboxes.length == 0) {
       this.addListener();
     }
     this.sandboxes.push(sandbox);
   },
 
-  clearSandboxes() {
+  clearSandboxes: function() {
     if (this.sandboxes.length) {
       this.removeListener();
     }
@@ -522,7 +522,7 @@ SandboxChild.prototype = {
 var RemoteAddonsChild = {
   _ready: false,
 
-  makeReady() {
+  makeReady: function() {
     let shims = [
       Prefetcher,
       NotificationTracker,
@@ -540,7 +540,7 @@ var RemoteAddonsChild = {
     }
   },
 
-  init(global) {
+  init: function(global) {
 
     if (!this._ready) {
       if (!Services.cpmm.initialProcessData.remoteAddonsParentInitted) {
@@ -551,7 +551,7 @@ var RemoteAddonsChild = {
       this._ready = true;
     }
 
-    global.sendAsyncMessage("Addons:RegisterGlobal", {}, {global});
+    global.sendAsyncMessage("Addons:RegisterGlobal", {}, {global: global});
 
     let sandboxChild = new SandboxChild(global);
     global.addSandbox = sandboxChild.addSandbox.bind(sandboxChild);
@@ -560,7 +560,7 @@ var RemoteAddonsChild = {
     return [new EventTargetChild(global), sandboxChild];
   },
 
-  uninit(perTabShims) {
+  uninit: function(perTabShims) {
     for (let shim of perTabShims) {
       try {
         shim.uninit();

@@ -14,7 +14,7 @@ add_task(function*() {
   let privateWindow = null;
 
   let observerWindowOpened = {
-    observe(aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
         privateWindow = aSubject.QueryInterface(Components.interfaces.nsIDOMWindow);
         privateWindow.addEventListener("load", function newWindowHandler() {

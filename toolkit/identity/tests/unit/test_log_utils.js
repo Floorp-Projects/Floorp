@@ -23,7 +23,7 @@ function toggle_debug() {
       }
     },
 
-    init() {
+    init: function() {
       Services.prefs.addObserver('toolkit.identity.debug', this, false);
     }
   };

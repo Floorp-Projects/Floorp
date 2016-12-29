@@ -37,14 +37,14 @@ LoginManagerCrypto_SDR.prototype = {
     return this.__utfConverter;
   },
 
-  _utfConverterReset() {
+  _utfConverterReset : function() {
     this.__utfConverter = null;
   },
 
   _uiBusy : false,
 
 
-  init() {
+  init : function() {
     // Check to see if the internal PKCS#11 token has been initialized.
     // If not, set a blank password.
     let tokenDB = Cc["@mozilla.org/security/pk11tokendb;1"].
@@ -66,7 +66,7 @@ LoginManagerCrypto_SDR.prototype = {
    * Returns the encrypted string, or throws an exception if there was a
    * problem.
    */
-  encrypt(plainText) {
+  encrypt : function(plainText) {
     let cipherText = null;
 
     let wasLoggedIn = this.isLoggedIn;
@@ -107,7 +107,7 @@ LoginManagerCrypto_SDR.prototype = {
    * Returns the decrypted string, or throws an exception if there was a
    * problem.
    */
-  decrypt(cipherText) {
+  decrypt : function(cipherText) {
     let plainText = null;
 
     let wasLoggedIn = this.isLoggedIn;
@@ -178,7 +178,7 @@ LoginManagerCrypto_SDR.prototype = {
   /*
    * _notifyObservers
    */
-  _notifyObservers(topic) {
+  _notifyObservers : function(topic) {
     this.log("Prompted for a master password, notifying for " + topic);
     Services.obs.notifyObservers(null, topic, null);
   },

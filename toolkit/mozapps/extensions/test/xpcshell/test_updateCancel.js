@@ -37,11 +37,11 @@ function run_test() {
 function makeCancelListener() {
   let updated = Promise.defer();
   return {
-    onUpdateAvailable(addon, install) {
+    onUpdateAvailable: function(addon, install) {
       updated.reject("Should not have seen onUpdateAvailable notification");
     },
 
-    onUpdateFinished(aAddon, aError) {
+    onUpdateFinished: function(aAddon, aError) {
       do_print("onUpdateCheckFinished: " + aAddon.id + " " + aError);
       updated.resolve(aError);
     },

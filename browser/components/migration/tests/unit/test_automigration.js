@@ -215,7 +215,7 @@ add_task(function* checkUndoRemoval() {
   let frecencyUpdatePromise = new Promise(resolve => {
     let expectedChanges = 2;
     let observer = {
-      onFrecencyChanged() {
+      onFrecencyChanged: function() {
         if (!--expectedChanges) {
           PlacesUtils.history.removeObserver(observer);
           resolve();
@@ -561,31 +561,31 @@ add_task(function* checkUndoVisitsState() {
   ]);
   let wrongMethodDeferred = PromiseUtils.defer();
   let observer = {
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onVisit(uri) {
+    onBeginUpdateBatch: function() {},
+    onEndUpdateBatch: function() {},
+    onVisit: function(uri) {
       wrongMethodDeferred.reject(new Error("Unexpected call to onVisit " + uri.spec));
     },
-    onTitleChanged(uri) {
+    onTitleChanged: function(uri) {
       wrongMethodDeferred.reject(new Error("Unexpected call to onTitleChanged " + uri.spec));
     },
-    onClearHistory() {
+    onClearHistory: function() {
       wrongMethodDeferred.reject("Unexpected call to onClearHistory");
     },
-    onPageChanged(uri) {
+    onPageChanged: function(uri) {
       wrongMethodDeferred.reject(new Error("Unexpected call to onPageChanged " + uri.spec));
     },
-    onFrecencyChanged(aURI) {
+    onFrecencyChanged: function(aURI) {
       do_print("frecency change");
       Assert.ok(frecencyChangesExpected.has(aURI.spec),
                 "Should be expecting frecency change for " + aURI.spec);
       frecencyChangesExpected.get(aURI.spec).resolve();
     },
-    onManyFrecenciesChanged() {
+    onManyFrecenciesChanged: function() {
       do_print("Many frecencies changed");
       wrongMethodDeferred.reject(new Error("This test can't deal with onManyFrecenciesChanged to be called"));
     },
-    onDeleteURI(aURI) {
+    onDeleteURI: function(aURI) {
       do_print("delete uri");
       Assert.ok(uriDeletedExpected.has(aURI.spec),
                 "Should be expecting uri deletion for " + aURI.spec);

@@ -295,6 +295,7 @@ this.MigratorPrototype = {
       }
       notify("Migration:Started");
       for (let [migrationType, itemResources] of resourcesGroupedByItems) {
+
         notify("Migration:ItemBeforeMigrate", migrationType);
 
         let itemSuccess = false;

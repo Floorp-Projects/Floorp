@@ -13,7 +13,7 @@ var Components = {
     caller: null
   },
   utils: {
-    import() { }
+    import: function() { }
   }
 };
 
@@ -72,7 +72,7 @@ FileFaker.prototype = {
     this._path = this._path.substring(0, lastSlash);
     return this;
   },
-  append(leaf) {
+  append: function(leaf) {
     this._path = this._path + "/" + leaf;
   }
 };

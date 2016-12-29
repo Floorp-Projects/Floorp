@@ -27,14 +27,14 @@ add_task(function*() {
   // Simulate a dumb font backend.
   win.FontBuilder._enumerator = {
     _list: ["MockedFont1", "MockedFont2", "MockedFont3"],
-    EnumerateFonts(lang, type, list) {
+    EnumerateFonts: function(lang, type, list) {
       return this._list;
     },
-    EnumerateAllFonts() {
+    EnumerateAllFonts: function() {
       return this._list;
     },
-    getDefaultFont() { return null; },
-    getStandardFamilyName(name) { return name; },
+    getDefaultFont: function() { return null; },
+    getStandardFamilyName: function(name) { return name; },
   };
   win.FontBuilder._allFonts = null;
   win.FontBuilder._langGroupSupported = false;

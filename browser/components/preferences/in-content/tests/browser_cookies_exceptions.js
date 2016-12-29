@@ -14,7 +14,7 @@ var testRunner = {
   tests:
     [
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "test.com";
           params.btnAllow.doCommand();
           is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
@@ -28,7 +28,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "test.com";
           params.btnBlock.doCommand();
           is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
@@ -41,7 +41,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.DENY_ACTION  }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "test.com";
           params.btnAllow.doCommand();
           is(params.tree.view.getCellText(0, params.nameCol), "http://test.com",
@@ -54,7 +54,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "test.com";
           params.btnRemove.doCommand();
           is(params.tree.view.rowCount, 0, "exception should be removed");
@@ -64,7 +64,7 @@ var testRunner = {
       },
       {
         expectPermObservancesDuringTestFunction: true,
-        test(params) {
+        test: function(params) {
           let uri = params.ioService.newURI("http://test.com", null, null);
           params.pm.add(uri, "popup", Ci.nsIPermissionManager.DENY_ACTION);
           is(params.tree.view.rowCount, 0, "adding unrelated permission should not change display");
@@ -72,13 +72,13 @@ var testRunner = {
         },
         observances: [{ type: "popup", origin: "http://test.com", data: "added",
                         capability: Ci.nsIPermissionManager.DENY_ACTION }],
-        cleanUp(params) {
+        cleanUp: function(params) {
           let uri = params.ioService.newURI("http://test.com", null, null);
           params.pm.remove(uri, "popup");
         },
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "https://test.com:12345";
           params.btnAllow.doCommand();
           is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
@@ -92,7 +92,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "https://test.com:12345";
           params.btnBlock.doCommand();
           is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
@@ -105,7 +105,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.DENY_ACTION  }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "https://test.com:12345";
           params.btnAllow.doCommand();
           is(params.tree.view.getCellText(0, params.nameCol), "https://test.com:12345",
@@ -118,7 +118,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "https://test.com:12345";
           params.btnRemove.doCommand();
           is(params.tree.view.rowCount, 0, "exception should be removed");
@@ -127,7 +127,7 @@ var testRunner = {
         observances: [{ type: "cookie", origin: "https://test.com:12345", data: "deleted" }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "localhost:12345";
           params.btnAllow.doCommand();
           is(params.tree.view.rowCount, 1, "added exception shows up in treeview");
@@ -141,7 +141,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "localhost:12345";
           params.btnBlock.doCommand();
           is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
@@ -154,7 +154,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.DENY_ACTION  }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "localhost:12345";
           params.btnAllow.doCommand();
           is(params.tree.view.getCellText(0, params.nameCol), "http://localhost:12345",
@@ -167,7 +167,7 @@ var testRunner = {
                         capability: Ci.nsIPermissionManager.ALLOW_ACTION }],
       },
       {
-        test(params) {
+        test: function(params) {
           params.url.value = "localhost:12345";
           params.btnRemove.doCommand();
           is(params.tree.view.rowCount, 0, "exception should be removed");
@@ -220,7 +220,7 @@ var testRunner = {
 
   _currentTest: -1,
 
-  runTests() {
+  runTests: function() {
     this._currentTest++;
 
     info("Running test #" + (this._currentTest + 1) + "\n");
@@ -236,11 +236,11 @@ var testRunner = {
     });
   },
 
-  runCurrentTest(testNumber) {
+  runCurrentTest: function(testNumber) {
     return new Promise(function(resolve, reject) {
 
       let helperFunctions = {
-        windowLoad(win) {
+        windowLoad: function(win) {
           let doc = win.document;
           let params = {
             doc,
@@ -265,7 +265,7 @@ var testRunner = {
           };
 
           let permObserver = {
-            observe(aSubject, aTopic, aData) {
+            observe: function(aSubject, aTopic, aData) {
               if (aTopic != "perm-changed")
                 return;
 

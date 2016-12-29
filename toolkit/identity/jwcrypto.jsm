@@ -101,16 +101,16 @@ jwcryptoClass.prototype = {
    *        Current date in milliseconds.  Useful for mocking clock
    *        skew in testing.
    */
-  getExpiration(duration = DURATION_MS, localtimeOffsetMsec = 0, now = Date.now()) {
+  getExpiration: function(duration = DURATION_MS, localtimeOffsetMsec = 0, now = Date.now()) {
     return now + localtimeOffsetMsec + duration;
   },
 
-  isCertValid(aCert, aCallback) {
+  isCertValid: function(aCert, aCallback) {
     // XXX check expiration, bug 769850
     aCallback(true);
   },
 
-  generateKeyPair(aAlgorithmName, aCallback) {
+  generateKeyPair: function(aAlgorithmName, aCallback) {
     log("generating");
     generateKeyPair(aAlgorithmName, aCallback);
   },
@@ -144,7 +144,7 @@ jwcryptoClass.prototype = {
    *        Function to invoke with resulting assertion.  Assertion
    *        will be string or null on failure.
    */
-  generateAssertion(aCert, aKeyPair, aAudience, aOptions, aCallback) {
+  generateAssertion: function(aCert, aKeyPair, aAudience, aOptions, aCallback) {
     if (typeof aOptions == "function") {
       aCallback = aOptions;
       aOptions = { };

@@ -57,26 +57,26 @@ function installListener(next, aManifest) {
   });
 
   return {
-    onInstalling(addon) {
+    onInstalling: function(addon) {
       is(expectEvent, "onInstalling", "install started");
       is(addon.manifest.origin, aManifest.origin, "provider about to be installed");
       ok(!Services.prefs.prefHasUserValue(prefname), "manifest is not in user-prefs");
       expectEvent = "onInstalled";
     },
-    onInstalled(addon) {
+    onInstalled: function(addon) {
       is(addon.manifest.origin, aManifest.origin, "provider installed");
       ok(addon.installDate.getTime() > 0, "addon has installDate");
       ok(addon.updateDate.getTime() > 0, "addon has updateDate");
       ok(Services.prefs.prefHasUserValue(prefname), "manifest is in user-prefs");
       expectEvent = "onUninstalling";
     },
-    onUninstalling(addon) {
+    onUninstalling: function(addon) {
       is(expectEvent, "onUninstalling", "uninstall started");
       is(addon.manifest.origin, aManifest.origin, "provider about to be uninstalled");
       ok(Services.prefs.prefHasUserValue(prefname), "manifest is in user-prefs");
       expectEvent = "onUninstalled";
     },
-    onUninstalled(addon) {
+    onUninstalled: function(addon) {
       is(expectEvent, "onUninstalled", "provider has been uninstalled");
       is(addon.manifest.origin, aManifest.origin, "provider uninstalled");
       ok(!Services.prefs.prefHasUserValue(prefname), "manifest is not in user-prefs");
@@ -86,25 +86,25 @@ function installListener(next, aManifest) {
 }
 
 var tests = {
-  testHTTPInstallFailure(next) {
+  testHTTPInstallFailure: function(next) {
     let installFrom = "http://example.com";
     is(SocialService.getOriginActivationType(installFrom), "foreign", "testing foriegn install");
     let data = {
       origin: installFrom,
       url: installFrom + "/activate",
-      manifest,
-      window
+      manifest: manifest,
+      window: window
     }
     Social.installProvider(data, function(addonManifest) {
       ok(!addonManifest, "unable to install provider over http");
       next();
     });
   },
-  testAddonEnableToggle(next) {
+  testAddonEnableToggle: function(next) {
     let expectEvent;
     let prefname = getManifestPrefname(manifest);
     let listener = {
-      onEnabled(addon) {
+      onEnabled: function(addon) {
         is(expectEvent, "onEnabled", "provider onEnabled");
         ok(!addon.userDisabled, "provider enabled");
         executeSoon(function() {
@@ -112,11 +112,11 @@ var tests = {
           addon.userDisabled = true;
         });
       },
-      onEnabling(addon) {
+      onEnabling: function(addon) {
         is(expectEvent, "onEnabling", "provider onEnabling");
         expectEvent = "onEnabled";
       },
-      onDisabled(addon) {
+      onDisabled: function(addon) {
         is(expectEvent, "onDisabled", "provider onDisabled");
         ok(addon.userDisabled, "provider disabled");
         AddonManager.removeAddonListener(listener);
@@ -124,7 +124,7 @@ var tests = {
         Services.prefs.clearUserPref(prefname);
         executeSoon(next);
       },
-      onDisabling(addon) {
+      onDisabling: function(addon) {
         is(expectEvent, "onDisabling", "provider onDisabling");
         expectEvent = "onDisabled";
       }
@@ -148,7 +148,7 @@ var tests = {
       next();
     });
   },
-  testProviderEnableToggle(next) {
+  testProviderEnableToggle: function(next) {
     // enable and disabel a provider from the SocialService interface, check
     // that the addon manager is updated
 
@@ -156,22 +156,22 @@ var tests = {
     let prefname = getManifestPrefname(manifest);
 
     let listener = {
-      onEnabled(addon) {
+      onEnabled: function(addon) {
         is(expectEvent, "onEnabled", "provider onEnabled");
         is(addon.manifest.origin, manifest.origin, "provider enabled");
         ok(!addon.userDisabled, "provider !userDisabled");
       },
-      onEnabling(addon) {
+      onEnabling: function(addon) {
         is(expectEvent, "onEnabling", "provider onEnabling");
         is(addon.manifest.origin, manifest.origin, "provider about to be enabled");
         expectEvent = "onEnabled";
       },
-      onDisabled(addon) {
+      onDisabled: function(addon) {
         is(expectEvent, "onDisabled", "provider onDisabled");
         is(addon.manifest.origin, manifest.origin, "provider disabled");
         ok(addon.userDisabled, "provider userDisabled");
       },
-      onDisabling(addon) {
+      onDisabling: function(addon) {
         is(expectEvent, "onDisabling", "provider onDisabling");
         is(addon.manifest.origin, manifest.origin, "provider about to be disabled");
         expectEvent = "onDisabled";
@@ -190,7 +190,7 @@ var tests = {
       });
     });
   },
-  testDirectoryInstall(next) {
+  testDirectoryInstall: function(next) {
     AddonManager.addAddonListener(installListener(next, manifest2));
 
     BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown").then(() => {
@@ -205,7 +205,7 @@ var tests = {
       origin: manifest2.origin,
       url: manifest2.origin + "/directory",
       manifest: manifest2,
-      window
+      window: window
     }
     Social.installProvider(data, function(addonManifest) {
       Services.prefs.clearUserPref("social.directories");

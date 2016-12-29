@@ -31,7 +31,7 @@ function makeInputStream(aString) {
 }
 
 var WebProgressListener = {
-  init() {
+  init: function() {
     this._filter = Cc["@mozilla.org/appshell/component/browser-status-filter;1"]
                      .createInstance(Ci.nsIWebProgress);
     this._filter.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_ALL);
@@ -50,7 +50,7 @@ var WebProgressListener = {
     this._filter = null;
   },
 
-  _requestSpec(aRequest, aPropertyName) {
+  _requestSpec: function(aRequest, aPropertyName) {
     if (!aRequest || !(aRequest instanceof Ci.nsIChannel))
       return null;
     return aRequest.QueryInterface(Ci.nsIChannel)[aPropertyName].spec;
@@ -234,7 +234,7 @@ addEventListener("unload", () => {
 });
 
 var WebNavigation =  {
-  init() {
+  init: function() {
     addMessageListener("WebNavigation:GoBack", this);
     addMessageListener("WebNavigation:GoForward", this);
     addMessageListener("WebNavigation:GotoIndex", this);
@@ -254,7 +254,7 @@ var WebNavigation =  {
     return this._inLoadURI;
   },
 
-  receiveMessage(message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       case "WebNavigation:GoBack":
         this.goBack();
@@ -293,23 +293,23 @@ var WebNavigation =  {
     }
   },
 
-  goBack() {
+  goBack: function() {
     if (this.webNavigation.canGoBack) {
       this._wrapURIChangeCall(() => this.webNavigation.goBack());
     }
   },
 
-  goForward() {
+  goForward: function() {
     if (this.webNavigation.canGoForward) {
       this._wrapURIChangeCall(() => this.webNavigation.goForward());
     }
   },
 
-  gotoIndex(index) {
+  gotoIndex: function(index) {
     this._wrapURIChangeCall(() => this.webNavigation.gotoIndex(index));
   },
 
-  loadURI(uri, flags, referrer, referrerPolicy, postData, headers, baseURI) {
+  loadURI: function(uri, flags, referrer, referrerPolicy, postData, headers, baseURI) {
     if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
       let annotation = uri;
       try {
@@ -335,17 +335,17 @@ var WebNavigation =  {
     });
   },
 
-  setOriginAttributes(originAttributes) {
+  setOriginAttributes: function(originAttributes) {
     if (originAttributes) {
       this.webNavigation.setOriginAttributesBeforeLoading(originAttributes);
     }
   },
 
-  reload(flags) {
+  reload: function(flags) {
     this.webNavigation.reload(flags);
   },
 
-  stop(flags) {
+  stop: function(flags) {
     this.webNavigation.stop(flags);
   }
 };
@@ -353,7 +353,7 @@ var WebNavigation =  {
 WebNavigation.init();
 
 var SecurityUI = {
-  getSSLStatusAsString() {
+  getSSLStatusAsString: function() {
     let status = docShell.securityUI.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
 
     if (status) {
@@ -369,12 +369,12 @@ var SecurityUI = {
 };
 
 var ControllerCommands = {
-  init() {
+  init: function() {
     addMessageListener("ControllerCommands:Do", this);
     addMessageListener("ControllerCommands:DoWithParams", this);
   },
 
-  receiveMessage(message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       case "ControllerCommands:Do":
         if (docShell.isCommandEnabled(message.data))
@@ -450,11 +450,11 @@ const ZoomManager = {
     this._markupViewer.textZoom = value;
   },
 
-  refreshFullZoom() {
+  refreshFullZoom: function() {
     return this._refreshZoomValue('fullZoom');
   },
 
-  refreshTextZoom() {
+  refreshTextZoom: function() {
     return this._refreshZoomValue('textZoom');
   },
 
@@ -465,7 +465,7 @@ const ZoomManager = {
    * @returns Returns true if cached value was actually refreshed.
    * @private
    */
-  _refreshZoomValue(valueName) {
+  _refreshZoomValue: function(valueName) {
     let actualZoomValue = this._markupViewer[valueName];
     // Round to remove any floating-point error.
     actualZoomValue = Number(actualZoomValue.toFixed(2));
@@ -546,7 +546,7 @@ addMessageListener("Browser:Thumbnail:Request", function(aMessage) {
 addMessageListener("Browser:Thumbnail:CheckState", function(aMessage) {
   let result = PageThumbUtils.shouldStoreContentThumbnail(content, docShell);
   sendAsyncMessage("Browser:Thumbnail:CheckState:Response", {
-    result
+    result: result
   });
 });
 
@@ -561,8 +561,8 @@ addMessageListener("Browser:Thumbnail:GetOriginalURL", function(aMessage) {
     originalURL = channel.originalURI.spec;
   } catch (ex) {}
   sendAsyncMessage("Browser:Thumbnail:GetOriginalURL:Response", {
-    channelError,
-    originalURL,
+    channelError: channelError,
+    originalURL: originalURL,
   });
 });
 
@@ -622,4 +622,4 @@ addMessageListener("PermitUnload", msg => {
 var outerWindowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils)
                            .outerWindowID;
-sendAsyncMessage("Browser:Init", {outerWindowID});
+sendAsyncMessage("Browser:Init", {outerWindowID: outerWindowID});

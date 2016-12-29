@@ -110,8 +110,8 @@ Constants.SQLITE_ROW = 100;
 Constants.SQLITE_DONE = 101;
 
 var Sqlite3 = {
-  Constants,
-  Type
+  Constants: Constants,
+  Type: Type
 };
 
 declareLazyFFI(Sqlite3, "open", lib, "sqlite3_open", null,

@@ -15,9 +15,9 @@ do_get_profile(); // fxa needs a profile directory for storage.
 let window = {
     document: {},
     location: {},
-    setTimeout,
-    setInterval,
-    clearTimeout,
+    setTimeout: setTimeout,
+    setInterval: setInterval,
+    clearTimeout: clearTimeout,
     clearinterval: clearInterval
 };
 let self = window;

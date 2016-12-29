@@ -145,7 +145,7 @@ function makeObserver(aObserveTopic, aObserveFunc) {
     // nsIObserver is to be an observer
     QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
-    observe(aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData) {
       if (aTopic == aObserveTopic) {
         aObserveFunc(aSubject, aTopic, aData);
         Services.obs.removeObserver(observer, aObserveTopic);
@@ -206,15 +206,15 @@ function setup_provisioning(identity, afterSetupCallback, doneProvisioningCallba
 
   let provId = uuid();
   IDService.IDP._provisionFlows[provId] = {
-    identity,
+    identity : identity,
     idpParams: TEST_IDPPARAMS,
-    callback(err) {
+    callback: function(err) {
       if (doneProvisioningCallback)
         doneProvisioningCallback(err);
     },
     sandbox: {
       // Emulate the free() method on the iframe sandbox
-      free() {}
+      free: function() {}
     }
   };
 

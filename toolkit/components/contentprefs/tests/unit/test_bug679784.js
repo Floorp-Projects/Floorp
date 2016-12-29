@@ -5,11 +5,11 @@
 
 var prefObserver = {
     setCalledNum: 0,
-    onContentPrefSet(aGroup, aName, aValue) {
+    onContentPrefSet: function(aGroup, aName, aValue) {
         this.setCalledNum++;
     },
     removedCalledNum: 0,
-    onContentPrefRemoved(aGroup, aName) {
+    onContentPrefRemoved: function(aGroup, aName) {
         this.removedCalledNum++;
     }
 };

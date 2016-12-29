@@ -34,7 +34,7 @@ RemoteWebNavigation.prototype = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebNavigation, Ci.nsISupports]),
 
-  swapBrowser(aBrowser) {
+  swapBrowser: function(aBrowser) {
     this._browser = aBrowser;
   },
 
@@ -61,21 +61,21 @@ RemoteWebNavigation.prototype = {
 
   canGoBack: false,
   canGoForward: false,
-  goBack() {
+  goBack: function() {
     this._sendMessage("WebNavigation:GoBack", {});
   },
-  goForward() {
+  goForward: function() {
     this._sendMessage("WebNavigation:GoForward", {});
   },
-  gotoIndex(aIndex) {
+  gotoIndex: function(aIndex) {
     this._sendMessage("WebNavigation:GotoIndex", {index: aIndex});
   },
-  loadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
+  loadURI: function(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
     this.loadURIWithOptions(aURI, aLoadFlags, aReferrer,
                             Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
                             aPostData, aHeaders, null);
   },
-  loadURIWithOptions(aURI, aLoadFlags, aReferrer, aReferrerPolicy,
+  loadURIWithOptions: function(aURI, aLoadFlags, aReferrer, aReferrerPolicy,
                                aPostData, aHeaders, aBaseURI) {
     this._sendMessage("WebNavigation:LoadURI", {
       uri: aURI,
@@ -87,15 +87,15 @@ RemoteWebNavigation.prototype = {
       baseURI: aBaseURI ? aBaseURI.spec : null,
     });
   },
-  setOriginAttributesBeforeLoading(aOriginAttributes) {
+  setOriginAttributesBeforeLoading: function(aOriginAttributes) {
     this._sendMessage("WebNavigation:SetOriginAttributes", {
       originAttributes: aOriginAttributes,
     });
   },
-  reload(aReloadFlags) {
+  reload: function(aReloadFlags) {
     this._sendMessage("WebNavigation:Reload", {flags: aReloadFlags});
   },
-  stop(aStopFlags) {
+  stop: function(aStopFlags) {
     this._sendMessage("WebNavigation:Stop", {flags: aStopFlags});
   },
 
@@ -126,7 +126,7 @@ RemoteWebNavigation.prototype = {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  _sendMessage(aMessage, aData) {
+  _sendMessage: function(aMessage, aData) {
     try {
       this._browser.messageManager.sendAsyncMessage(aMessage, aData);
     }

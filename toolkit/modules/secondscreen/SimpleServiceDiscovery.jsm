@@ -59,7 +59,7 @@ var SimpleServiceDiscovery = {
   _searchRepeat: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   _discoveryMethods: [],
 
-  _forceTrailingSlash(aURL) {
+  _forceTrailingSlash: function(aURL) {
     // Cleanup the URL to make it consistent across devices
     try {
       aURL = Services.io.newURI(aURL, null, null).spec;
@@ -68,7 +68,7 @@ var SimpleServiceDiscovery = {
   },
 
   // nsIUDPSocketListener implementation
-  onPacketReceived(aSocket, aMessage) {
+  onPacketReceived: function(aSocket, aMessage) {
     // Listen for responses from specific devices. There could be more than one
     // available.
     let response = aMessage.data.split("\n");
@@ -93,7 +93,7 @@ var SimpleServiceDiscovery = {
     }
   },
 
-  onStopListening(aSocket, aStatus) {
+  onStopListening: function(aSocket, aStatus) {
     // This is fired when the socket is closed expectedly or unexpectedly.
     // nsITimer.cancel() is a no-op if the timer is not active.
     this._searchTimeout.cancel();
@@ -118,7 +118,7 @@ var SimpleServiceDiscovery = {
     this._searchRepeat.cancel();
   },
 
-  _usingLAN() {
+  _usingLAN: function() {
     let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
     return (network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI ||
             network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
@@ -234,7 +234,7 @@ var SimpleServiceDiscovery = {
     this._stopExternalDiscovery();
   },
 
-  getSupportedExtensions() {
+  getSupportedExtensions: function() {
     let extensions = [];
     this.services.forEach(function(service) {
         extensions = extensions.concat(service.extensions);
@@ -244,7 +244,7 @@ var SimpleServiceDiscovery = {
     });
   },
 
-  getSupportedMimeTypes() {
+  getSupportedMimeTypes: function() {
     let types = [];
     this.services.forEach(function(service) {
         types = types.concat(service.types);
@@ -376,7 +376,7 @@ var SimpleServiceDiscovery = {
 
   // Add a service to the WeakMap, even if one already exists with this id.
   // Returns true if this succeeded or false if it failed
-  _addService(service) {
+  _addService: function(service) {
     // Filter out services that do not match the device filter
     if (!this._filterService(service)) {
       return false;
@@ -390,7 +390,7 @@ var SimpleServiceDiscovery = {
     return true;
   },
 
-  addService(service) {
+  addService: function(service) {
     // Only add and notify if we don't already know about this service
     if (!this._services.has(service.uuid)) {
       if (!this._addService(service)) {
@@ -403,12 +403,12 @@ var SimpleServiceDiscovery = {
     this._services.get(service.uuid).lastPing = this._searchTimestamp;
   },
 
-  removeService(uuid) {
+  removeService: function(uuid) {
     Services.obs.notifyObservers(null, EVENT_SERVICE_LOST, uuid);
     this._services.delete(uuid);
   },
 
-  updateService(service) {
+  updateService: function(service) {
     if (!this._addService(service)) {
       return;
     }
@@ -417,17 +417,17 @@ var SimpleServiceDiscovery = {
     this._services.get(service.uuid).lastPing = this._searchTimestamp;
   },
 
-  addExternalDiscovery(discovery) {
+  addExternalDiscovery: function(discovery) {
     this._discoveryMethods.push(discovery);
   },
 
-  _startExternalDiscovery() {
+  _startExternalDiscovery: function() {
     for (let discovery of this._discoveryMethods) {
       discovery.startDiscovery();
     }
   },
 
-  _stopExternalDiscovery() {
+  _stopExternalDiscovery: function() {
     for (let discovery of this._discoveryMethods) {
       discovery.stopDiscovery();
     }

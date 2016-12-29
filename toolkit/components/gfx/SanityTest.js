@@ -153,7 +153,7 @@ var listener = {
     "gfxSanity:ContentLoaded",
   ],
 
-  scheduleTest(win) {
+  scheduleTest: function(win) {
     this.win = win;
     this.win.onload = this.onWindowLoaded.bind(this);
     this.utils = this.win.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -166,7 +166,7 @@ var listener = {
     });
   },
 
-  runSanityTest() {
+  runSanityTest: function() {
     this.canvas = this.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     this.canvas.setAttribute("width", PAGE_WIDTH);
     this.canvas.setAttribute("height", PAGE_HEIGHT);
@@ -187,7 +187,7 @@ var listener = {
     }
   },
 
-  onWindowLoaded() {
+  onWindowLoaded: function() {
     let browser = this.win.document.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
 
@@ -208,7 +208,7 @@ var listener = {
     this.mm.loadFrameScript(FRAME_SCRIPT_URL, false);
   },
 
-  endTest() {
+  endTest: function() {
     if (!this.win) {
       return;
     }
@@ -240,7 +240,7 @@ SanityTest.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  shouldRunTest() {
+  shouldRunTest: function() {
     // Only test gfx features if firefox has updated, or if the user has a new
     // gpu or drivers.
     var buildId = Services.appinfo.platformBuildID;
@@ -286,7 +286,7 @@ SanityTest.prototype = {
     return true;
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic != "profile-after-change") return;
 
     // profile-after-change fires only at startup, so we won't need

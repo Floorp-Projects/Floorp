@@ -24,7 +24,7 @@ userDir.append("extensions2");
 userDir.append(gAppInfo.ID);
 
 var dirProvider = {
-  getFile(aProp, aPersistent) {
+  getFile: function(aProp, aPersistent) {
     aPersistent.value = false;
     if (aProp == "XREUSysExt")
       return userDir.parent;
@@ -81,7 +81,7 @@ function run_test_1() {
     do_check_eq(Services.prefs.getIntPref("bootstraptest.active_version"), 1);
 
     a1.findUpdates({
-      onUpdateFinished() {
+      onUpdateFinished: function() {
         restartManager();
 
         AddonManager.getAddonByID("addon1@tests.mozilla.org", callback_soon(function(a1_2) {
