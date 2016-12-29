@@ -36,7 +36,7 @@ public:
 private:
   Callback* callback_;
 
-  DISALLOW_COPY_AND_ASSIGN(AppCapturerNull);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AppCapturerNull);
 };
 
 AppCapturerNull::AppCapturerNull()

@@ -16,11 +16,13 @@
 #ifndef WEBRTC_RESAMPLER_RESAMPLER_H_
 #define WEBRTC_RESAMPLER_RESAMPLER_H_
 
+#include <stddef.h>
+
 #include "webrtc/typedefs.h"
 #include <speex/speex_resampler.h>
 
 namespace webrtc {
-
+ 
 #define FIXED_RATE_RESAMPLER 0x10
 
 // All methods return 0 on success and -1 on failure.
@@ -29,18 +31,18 @@ class Resampler
 
 public:
     Resampler();
-    Resampler(int inFreq, int outFreq, int num_channels);
+    Resampler(int inFreq, int outFreq, size_t num_channels);
     ~Resampler();
 
     // Reset all states
-    int Reset(int inFreq, int outFreq, int num_channels);
+    int Reset(int inFreq, int outFreq, size_t num_channels);
 
     // Reset all states if any parameter has changed
-    int ResetIfNeeded(int inFreq, int outFreq, int num_channels);
+    int ResetIfNeeded(int inFreq, int outFreq, size_t num_channels);
 
     // Resample samplesIn to samplesOut.
-    int Push(const int16_t* samplesIn, int lengthIn, int16_t* samplesOut,
-             int maxLen, int &outLen);
+    int Push(const int16_t* samplesIn, size_t lengthIn, int16_t* samplesOut,
+             size_t maxLen, size_t &outLen);
 
 private:
     SpeexResamplerState* state_;

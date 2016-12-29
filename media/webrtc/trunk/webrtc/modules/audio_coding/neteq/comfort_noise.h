@@ -66,7 +66,7 @@ class ComfortNoise {
   DecoderDatabase* decoder_database_;
   SyncBuffer* sync_buffer_;
   int internal_error_code_;
-  DISALLOW_COPY_AND_ASSIGN(ComfortNoise);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ComfortNoise);
 };
 
 }  // namespace webrtc

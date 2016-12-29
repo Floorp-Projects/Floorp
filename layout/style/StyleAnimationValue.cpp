@@ -4730,8 +4730,12 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
         StyleDataAtOffset<nscolor>(styleStruct, ssOffset));
       return true;
     case eStyleAnimType_ComplexColor: {
-      aComputedValue.SetComplexColorValue(
-        StyleDataAtOffset<StyleComplexColor>(styleStruct, ssOffset));
+      auto& color = StyleDataAtOffset<StyleComplexColor>(styleStruct, ssOffset);
+      if (color.mIsAuto) {
+        aComputedValue.SetAutoValue();
+      } else {
+        aComputedValue.SetComplexColorValue(color);
+      }
       return true;
     }
     case eStyleAnimType_PaintServer: {
@@ -5048,7 +5052,9 @@ StyleAnimationValue::SetCurrentColorValue()
 void
 StyleAnimationValue::SetComplexColorValue(const StyleComplexColor& aColor)
 {
-  if (aColor.IsCurrentColor()) {
+  if (aColor.mIsAuto) {
+    SetAutoValue();
+  } else if (aColor.IsCurrentColor()) {
     SetCurrentColorValue();
   } else if (aColor.IsNumericColor()) {
     SetColorValue(aColor.mColor);

@@ -20,13 +20,13 @@
 #include <algorithm>
 
 #include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/x11/shared_x_display.h"
 #include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
 #include "webrtc/modules/desktop_capture/x11/x_server_pixel_buffer.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/modules/desktop_capture/x11/shared_x_util.h"
 
 namespace webrtc {
@@ -71,7 +71,7 @@ class WindowCapturerLinux : public WindowCapturer,
 
   Callback* callback_;
 
-  scoped_refptr<SharedXDisplay> x_display_;
+  rtc::scoped_refptr<SharedXDisplay> x_display_;
 
   Atom wm_state_atom_;
   Atom window_type_atom_;
@@ -81,7 +81,7 @@ class WindowCapturerLinux : public WindowCapturer,
   ::Window selected_window_;
   XServerPixelBuffer x_server_pixel_buffer_;
 
-  DISALLOW_COPY_AND_ASSIGN(WindowCapturerLinux);
+  RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerLinux);
 };
 
 WindowCapturerLinux::WindowCapturerLinux(const DesktopCaptureOptions& options)

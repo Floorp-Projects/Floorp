@@ -15,7 +15,7 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/shared_desktop_frame.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {

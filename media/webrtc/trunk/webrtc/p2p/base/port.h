@@ -50,17 +50,25 @@ extern const char TCPTYPE_ACTIVE_STR[];
 extern const char TCPTYPE_PASSIVE_STR[];
 extern const char TCPTYPE_SIMOPEN_STR[];
 
-// The length of time we wait before timing out readability on a connection.
-const uint32 CONNECTION_READ_TIMEOUT = 30 * 1000;   // 30 seconds
+// The minimum time we will wait before destroying a connection after creating
+// it.
+const uint32_t MIN_CONNECTION_LIFETIME = 10 * 1000;  // 10 seconds.
+
+// A connection will be declared dead if it has not received anything for this
+// long.
+const uint32_t DEAD_CONNECTION_RECEIVE_TIMEOUT = 30 * 1000;  // 30 seconds.
+
+// The timeout duration when a connection does not receive anything.
+const uint32_t WEAK_CONNECTION_RECEIVE_TIMEOUT = 2500;  // 2.5 seconds
 
 // The length of time we wait before timing out writability on a connection.
-const uint32 CONNECTION_WRITE_TIMEOUT = 15 * 1000;  // 15 seconds
+const uint32_t CONNECTION_WRITE_TIMEOUT = 15 * 1000;  // 15 seconds
 
 // The length of time we wait before we become unwritable.
-const uint32 CONNECTION_WRITE_CONNECT_TIMEOUT = 5 * 1000;  // 5 seconds
+const uint32_t CONNECTION_WRITE_CONNECT_TIMEOUT = 5 * 1000;  // 5 seconds
 
 // The number of pings that must fail to respond before we become unwritable.
-const uint32 CONNECTION_WRITE_CONNECT_FAILURES = 5;
+const uint32_t CONNECTION_WRITE_CONNECT_FAILURES = 5;
 
 // This is the length of time that we wait for a ping response to come back.
 const int CONNECTION_RESPONSE_TIMEOUT = 5 * 1000;   // 5 seconds
@@ -118,8 +126,8 @@ class Port : public PortInterface, public rtc::MessageHandler,
        rtc::PacketSocketFactory* factory,
        rtc::Network* network,
        const rtc::IPAddress& ip,
-       uint16 min_port,
-       uint16 max_port,
+       uint16_t min_port,
+       uint16_t max_port,
        const std::string& username_fragment,
        const std::string& password);
   virtual ~Port();
@@ -127,22 +135,12 @@ class Port : public PortInterface, public rtc::MessageHandler,
   virtual const std::string& Type() const { return type_; }
   virtual rtc::Network* Network() const { return network_; }
 
-  // This method will set the flag which enables standard ICE/STUN procedures
-  // in STUN connectivity checks. Currently this method does
-  // 1. Add / Verify MI attribute in STUN binding requests.
-  // 2. Username attribute in STUN binding request will be RFRAF:LFRAG,
-  // as opposed to RFRAGLFRAG.
-  virtual void SetIceProtocolType(IceProtocolType protocol) {
-    ice_protocol_ = protocol;
-  }
-  virtual IceProtocolType IceProtocol() const { return ice_protocol_; }
-
   // Methods to set/get ICE role and tiebreaker values.
   IceRole GetIceRole() const { return ice_role_; }
   void SetIceRole(IceRole role) { ice_role_ = role; }
 
-  void SetIceTiebreaker(uint64 tiebreaker) { tiebreaker_ = tiebreaker; }
-  uint64 IceTiebreaker() const { return tiebreaker_; }
+  void SetIceTiebreaker(uint64_t tiebreaker) { tiebreaker_ = tiebreaker; }
+  uint64_t IceTiebreaker() const { return tiebreaker_; }
 
   virtual bool SharedSocket() const { return shared_socket_; }
   void ResetSharedSocket() { shared_socket_ = false; }
@@ -173,8 +171,8 @@ class Port : public PortInterface, public rtc::MessageHandler,
   }
 
   // Identifies the generation that this port was created in.
-  uint32 generation() { return generation_; }
-  void set_generation(uint32 generation) { generation_ = generation; }
+  uint32_t generation() { return generation_; }
+  void set_generation(uint32_t generation) { generation_ = generation; }
 
   // ICE requires a single username/password per content/media line. So the
   // |ice_username_fragment_| of the ports that belongs to the same content will
@@ -263,8 +261,8 @@ class Port : public PortInterface, public rtc::MessageHandler,
   // Debugging description of this port
   virtual std::string ToString() const;
   const rtc::IPAddress& ip() const { return ip_; }
-  uint16 min_port() { return min_port_; }
-  uint16 max_port() { return max_port_; }
+  uint16_t min_port() { return min_port_; }
+  uint16_t max_port() { return max_port_; }
 
   // Timeout shortening function to speed up unit tests.
   void set_timeout_delay(int delay) { timeout_delay_ = delay; }
@@ -273,14 +271,20 @@ class Port : public PortInterface, public rtc::MessageHandler,
   // stun username attribute if present.
   bool ParseStunUsername(const StunMessage* stun_msg,
                          std::string* local_username,
-                         std::string* remote_username,
-                         IceProtocolType* remote_protocol_type) const;
+                         std::string* remote_username) const;
   void CreateStunUsername(const std::string& remote_username,
                           std::string* stun_username_attr_str) const;
 
   bool MaybeIceRoleConflict(const rtc::SocketAddress& addr,
                             IceMessage* stun_msg,
                             const std::string& remote_ufrag);
+
+  // Called when a packet has been sent to the socket.
+  // This is made pure virtual to notify subclasses of Port that they MUST
+  // listen to AsyncPacketSocket::SignalSentPacket and then call
+  // PortInterface::OnSentPacket.
+  virtual void OnSentPacket(rtc::AsyncPacketSocket* socket,
+                            const rtc::SentPacket& sent_packet) = 0;
 
   // Called when the socket is currently able to send.
   void OnReadyToSend();
@@ -289,22 +293,13 @@ class Port : public PortInterface, public rtc::MessageHandler,
   // Returns the index of the new local candidate.
   size_t AddPrflxCandidate(const Candidate& local);
 
-  // Returns if RFC 5245 ICE protocol is used.
-  bool IsStandardIce() const;
-
-  // Returns if Google ICE protocol is used.
-  bool IsGoogleIce() const;
-
-  // Returns if Hybrid ICE protocol is used.
-  bool IsHybridIce() const;
-
-  void set_candidate_filter(uint32 candidate_filter) {
+  void set_candidate_filter(uint32_t candidate_filter) {
     candidate_filter_ = candidate_filter;
   }
 
  protected:
   enum {
-    MSG_CHECKTIMEOUT = 0,
+    MSG_DEAD = 0,
     MSG_FIRST_AVAILABLE
   };
 
@@ -313,9 +308,13 @@ class Port : public PortInterface, public rtc::MessageHandler,
   void AddAddress(const rtc::SocketAddress& address,
                   const rtc::SocketAddress& base_address,
                   const rtc::SocketAddress& related_address,
-                  const std::string& protocol, const std::string& tcptype,
-                  const std::string& type, uint32 type_preference,
-                  uint32 relay_preference, bool final);
+                  const std::string& protocol,
+                  const std::string& relay_protocol,
+                  const std::string& tcptype,
+                  const std::string& type,
+                  uint32_t type_preference,
+                  uint32_t relay_preference,
+                  bool final);
 
   // Adds the given connection to the list.  (Deleting removes them.)
   void AddConnection(Connection* conn);
@@ -345,15 +344,18 @@ class Port : public PortInterface, public rtc::MessageHandler,
     return rtc::DSCP_NO_CHANGE;
   }
 
-  uint32 candidate_filter() { return candidate_filter_; }
+  uint32_t candidate_filter() { return candidate_filter_; }
 
  private:
   void Construct();
   // Called when one of our connections deletes itself.
   void OnConnectionDestroyed(Connection* conn);
 
-  // Checks if this port is useless, and hence, should be destroyed.
-  void CheckTimeout();
+  // Whether this port is dead, and hence, should be destroyed on the controlled
+  // side.
+  bool dead() const {
+    return ice_role_ == ICEROLE_CONTROLLED && connections_.empty();
+  }
 
   rtc::Thread* thread_;
   rtc::PacketSocketFactory* factory_;
@@ -361,11 +363,11 @@ class Port : public PortInterface, public rtc::MessageHandler,
   bool send_retransmit_count_attribute_;
   rtc::Network* network_;
   rtc::IPAddress ip_;
-  uint16 min_port_;
-  uint16 max_port_;
+  uint16_t min_port_;
+  uint16_t max_port_;
   std::string content_name_;
   int component_;
-  uint32 generation_;
+  uint32_t generation_;
   // In order to establish a connection to this Port (so that real data can be
   // sent through), the other side must send us a STUN binding request that is
   // authenticated with this username_fragment and password.
@@ -380,9 +382,8 @@ class Port : public PortInterface, public rtc::MessageHandler,
   AddressMap connections_;
   int timeout_delay_;
   bool enable_port_packets_;
-  IceProtocolType ice_protocol_;
   IceRole ice_role_;
-  uint64 tiebreaker_;
+  uint64_t tiebreaker_;
   bool shared_socket_;
   // Information to use when going through a proxy.
   std::string user_agent_;
@@ -392,7 +393,7 @@ class Port : public PortInterface, public rtc::MessageHandler,
   // make its own decision on how to create candidates. For example,
   // when IceTransportsType is set to relay, both RelayPort and
   // TurnPort will hide raddr to avoid local address leakage.
-  uint32 candidate_filter_;
+  uint32_t candidate_filter_;
 
   friend class Connection;
 };
@@ -402,6 +403,14 @@ class Port : public PortInterface, public rtc::MessageHandler,
 class Connection : public rtc::MessageHandler,
     public sigslot::has_slots<> {
  public:
+  struct SentPing {
+    SentPing(const std::string id, uint32_t sent_time)
+        : id(id), sent_time(sent_time) {}
+
+    std::string id;
+    uint32_t sent_time;
+  };
+
   // States are from RFC 5245. http://tools.ietf.org/html/rfc5245#section-5.7.4
   enum State {
     STATE_WAITING = 0,  // Check has not been performed, Waiting pair on CL.
@@ -423,16 +432,7 @@ class Connection : public rtc::MessageHandler,
   const Candidate& remote_candidate() const { return remote_candidate_; }
 
   // Returns the pair priority.
-  uint64 priority() const;
-
-  enum ReadState {
-    STATE_READ_INIT    = 0,  // we have yet to receive a ping
-    STATE_READABLE     = 1,  // we have received pings recently
-    STATE_READ_TIMEOUT = 2,  // we haven't received pings in a while
-  };
-
-  ReadState read_state() const { return read_state_; }
-  bool readable() const { return read_state_ == STATE_READABLE; }
+  uint64_t priority() const;
 
   enum WriteState {
     STATE_WRITABLE          = 0,  // we have received ping responses recently
@@ -443,13 +443,20 @@ class Connection : public rtc::MessageHandler,
 
   WriteState write_state() const { return write_state_; }
   bool writable() const { return write_state_ == STATE_WRITABLE; }
+  bool receiving() const { return receiving_; }
 
   // Determines whether the connection has finished connecting.  This can only
   // be false for TCP connections.
   bool connected() const { return connected_; }
+  bool weak() const { return !(writable() && receiving() && connected()); }
+  bool active() const {
+    return write_state_ != STATE_WRITE_TIMEOUT;
+  }
+  // A connection is dead if it can be safely deleted.
+  bool dead(uint32_t now) const;
 
   // Estimate of the round-trip time over this connection.
-  uint32 rtt() const { return rtt_; }
+  uint32_t rtt() const { return rtt_; }
 
   size_t sent_total_bytes();
   size_t sent_bytes_second();
@@ -474,8 +481,8 @@ class Connection : public rtc::MessageHandler,
   // Error if Send() returns < 0
   virtual int GetError() = 0;
 
-  sigslot::signal4<Connection*, const char*, size_t,
-                   const rtc::PacketTime&> SignalReadPacket;
+  sigslot::signal4<Connection*, const char*, size_t, const rtc::PacketTime&>
+      SignalReadPacket;
 
   sigslot::signal1<Connection*> SignalReadyToSend;
 
@@ -496,38 +503,56 @@ class Connection : public rtc::MessageHandler,
   bool use_candidate_attr() const { return use_candidate_attr_; }
   void set_use_candidate_attr(bool enable);
 
+  bool nominated() const { return nominated_; }
+  void set_nominated(bool nominated) { nominated_ = nominated; }
+
   void set_remote_ice_mode(IceMode mode) {
     remote_ice_mode_ = mode;
+  }
+
+  void set_receiving_timeout(uint32_t receiving_timeout_ms) {
+    receiving_timeout_ = receiving_timeout_ms;
   }
 
   // Makes the connection go away.
   void Destroy();
 
+  // Makes the connection go away, in a failed state.
+  void FailAndDestroy();
+
   // Checks that the state of this connection is up-to-date.  The argument is
   // the current time, which is compared against various timeouts.
-  void UpdateState(uint32 now);
+  void UpdateState(uint32_t now);
 
   // Called when this connection should try checking writability again.
-  uint32 last_ping_sent() const { return last_ping_sent_; }
-  void Ping(uint32 now);
+  uint32_t last_ping_sent() const { return last_ping_sent_; }
+  void Ping(uint32_t now);
+  void ReceivedPingResponse();
+  uint32_t last_ping_response_received() const {
+    return last_ping_response_received_;
+  }
 
   // Called whenever a valid ping is received on this connection.  This is
   // public because the connection intercepts the first ping for us.
-  uint32 last_ping_received() const { return last_ping_received_; }
+  uint32_t last_ping_received() const { return last_ping_received_; }
   void ReceivedPing();
+  // Handles the binding request; sends a response if this is a valid request.
+  void HandleBindingRequest(IceMessage* msg);
 
   // Debugging description of this connection
   std::string ToDebugId() const;
   std::string ToString() const;
   std::string ToSensitiveString() const;
+  // Prints pings_since_last_response_ into a string.
+  void PrintPingsSinceLastResponse(std::string* pings, size_t max);
 
   bool reported() const { return reported_; }
   void set_reported(bool reported) { reported_ = reported;}
 
-  // This flag will be set if this connection is the chosen one for media
-  // transmission. This connection will send STUN ping with USE-CANDIDATE
-  // attribute.
-  sigslot::signal1<Connection*> SignalUseCandidate;
+  // This signal will be fired if this connection is nominated by the
+  // controlling side.
+  sigslot::signal1<Connection*> SignalNominated;
+
   // Invoked when Connection receives STUN error response with 487 code.
   void HandleRoleConflictFromPeer();
 
@@ -545,7 +570,13 @@ class Connection : public rtc::MessageHandler,
   // |new_candidate|.
   void MaybeUpdatePeerReflexiveCandidate(const Candidate& new_candidate);
 
+  // Returns the last received time of any data, stun request, or stun
+  // response in milliseconds
+  uint32_t last_received() const;
+
  protected:
+  enum { MSG_DELETE = 0, MSG_FIRST_AVAILABLE };
+
   // Constructs a new connection to the given remote port.
   Connection(Port* port, size_t index, const Candidate& candidate);
 
@@ -553,49 +584,50 @@ class Connection : public rtc::MessageHandler,
   void OnSendStunPacket(const void* data, size_t size, StunRequest* req);
 
   // Callbacks from ConnectionRequest
-  void OnConnectionRequestResponse(ConnectionRequest* req,
-                                   StunMessage* response);
+  virtual void OnConnectionRequestResponse(ConnectionRequest* req,
+                                           StunMessage* response);
   void OnConnectionRequestErrorResponse(ConnectionRequest* req,
                                         StunMessage* response);
   void OnConnectionRequestTimeout(ConnectionRequest* req);
+  void OnConnectionRequestSent(ConnectionRequest* req);
 
   // Changes the state and signals if necessary.
-  void set_read_state(ReadState value);
   void set_write_state(WriteState value);
+  void set_receiving(bool value);
   void set_state(State state);
   void set_connected(bool value);
-
-  // Checks if this connection is useless, and hence, should be destroyed.
-  void CheckTimeout();
 
   void OnMessage(rtc::Message *pmsg);
 
   Port* port_;
   size_t local_candidate_index_;
   Candidate remote_candidate_;
-  ReadState read_state_;
   WriteState write_state_;
+  bool receiving_;
   bool connected_;
   bool pruned_;
   // By default |use_candidate_attr_| flag will be true,
-  // as we will be using agrressive nomination.
+  // as we will be using aggressive nomination.
   // But when peer is ice-lite, this flag "must" be initialized to false and
   // turn on when connection becomes "best connection".
   bool use_candidate_attr_;
+  // Whether this connection has been nominated by the controlling side via
+  // the use_candidate attribute.
+  bool nominated_;
   IceMode remote_ice_mode_;
   StunRequestManager requests_;
-  uint32 rtt_;
-  uint32 last_ping_sent_;      // last time we sent a ping to the other side
-  uint32 last_ping_received_;  // last time we received a ping from the other
-                               // side
-  uint32 last_data_received_;
-  uint32 last_ping_response_received_;
-  std::vector<uint32> pings_since_last_response_;
+  uint32_t rtt_;
+  uint32_t last_ping_sent_;      // last time we sent a ping to the other side
+  uint32_t last_ping_received_;  // last time we received a ping from the other
+                                 // side
+  uint32_t last_data_received_;
+  uint32_t last_ping_response_received_;
+  std::vector<SentPing> pings_since_last_response_;
 
   rtc::RateTracker recv_rate_tracker_;
   rtc::RateTracker send_rate_tracker_;
-  uint32 sent_packets_discarded_;
-  uint32 sent_packets_total_;
+  uint32_t sent_packets_discarded_;
+  uint32_t sent_packets_total_;
 
  private:
   void MaybeAddPrflxCandidate(ConnectionRequest* request,
@@ -603,22 +635,26 @@ class Connection : public rtc::MessageHandler,
 
   bool reported_;
   State state_;
+  // Time duration to switch from receiving to not receiving.
+  uint32_t receiving_timeout_;
+  uint32_t time_created_ms_;
 
   friend class Port;
   friend class ConnectionRequest;
 };
 
-// ProxyConnection defers all the interesting work to the port
+// ProxyConnection defers all the interesting work to the port.
 class ProxyConnection : public Connection {
  public:
-  ProxyConnection(Port* port, size_t index, const Candidate& candidate);
+  ProxyConnection(Port* port, size_t index, const Candidate& remote_candidate);
 
-  virtual int Send(const void* data, size_t size,
-                   const rtc::PacketOptions& options);
-  virtual int GetError() { return error_; }
+  int Send(const void* data,
+           size_t size,
+           const rtc::PacketOptions& options) override;
+  int GetError() override { return error_; }
 
  private:
-  int error_;
+  int error_ = 0;
 };
 
 }  // namespace cricket

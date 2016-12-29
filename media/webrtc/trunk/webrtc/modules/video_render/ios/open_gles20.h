@@ -13,10 +13,10 @@
 
 #include <OpenGLES/ES2/glext.h>
 
-#include "webrtc/modules/video_render/include/video_render_defines.h"
+#include "webrtc/modules/video_render/video_render_defines.h"
 
 /*
- * This OpenGles20 is the class of renderer for I420VideoFrame into a GLES 2.0
+ * This OpenGles20 is the class of renderer for VideoFrame into a GLES 2.0
  * windows used in the VideoRenderIosView class.
  */
 namespace webrtc {
@@ -26,7 +26,7 @@ class OpenGles20 {
   ~OpenGles20();
 
   bool Setup(int32_t width, int32_t height);
-  bool Render(const I420VideoFrame& frame);
+  bool Render(const VideoFrame& frame);
 
   // SetCoordinates
   // Sets the coordinates where the stream shall be rendered.
@@ -45,10 +45,10 @@ class OpenGles20 {
   GLuint CreateProgram(const char* vertex_source, const char* fragment_source);
 
   // Initialize the textures by the frame width and height
-  void SetupTextures(const I420VideoFrame& frame);
+  void SetupTextures(const VideoFrame& frame);
 
   // Update the textures by the YUV data from the frame
-  void UpdateTextures(const I420VideoFrame& frame);
+  void UpdateTextures(const VideoFrame& frame);
 
   GLuint texture_ids_[3];  // Texture id of Y,U and V texture.
   GLuint program_;

@@ -8,12 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
+#include "webrtc/system_wrappers/include/condition_variable_wrapper.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
 
@@ -21,6 +23,7 @@ namespace {
 
 const int kLongWaitMs = 100 * 1000; // A long time in testing terms
 const int kShortWaitMs = 2 * 1000; // Long enough for process switches to happen
+const int kVeryShortWaitMs = 20; // Used when we want a timeout
 
 // A Baton is one possible control structure one can build using
 // conditional variables.
@@ -141,12 +144,10 @@ bool WaitingRunFunction(void* obj) {
 
 class CondVarTest : public ::testing::Test {
  public:
-  CondVarTest() {}
+  CondVarTest() : thread_(&WaitingRunFunction, &baton_, "CondVarTest") {}
 
   virtual void SetUp() {
-    thread_ = ThreadWrapper::CreateThread(&WaitingRunFunction,
-                                          &baton_, "CondVarTest");
-    ASSERT_TRUE(thread_->Start());
+    thread_.Start();
   }
 
   virtual void TearDown() {
@@ -157,14 +158,14 @@ class CondVarTest : public ::testing::Test {
     // and Pass).
     ASSERT_TRUE(baton_.Pass(kShortWaitMs));
     ASSERT_TRUE(baton_.Grab(kShortWaitMs));
-    ASSERT_TRUE(thread_->Stop());
+    thread_.Stop();
   }
 
  protected:
   Baton baton_;
 
  private:
-  rtc::scoped_ptr<ThreadWrapper> thread_;
+  rtc::PlatformThread thread_;
 };
 
 // The SetUp and TearDown functions use condition variables.
@@ -182,6 +183,19 @@ TEST_F(CondVarTest, DISABLED_PassBatonMultipleTimes) {
     ASSERT_TRUE(baton_.Grab(kShortWaitMs));
   }
   EXPECT_EQ(2 * kNumberOfRounds, baton_.PassCount());
+}
+
+TEST(CondVarWaitTest, WaitingWaits) {
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect(
+      CriticalSectionWrapper::CreateCriticalSection());
+  rtc::scoped_ptr<ConditionVariableWrapper> cond_var(
+      ConditionVariableWrapper::CreateConditionVariable());
+  CriticalSectionScoped cs(crit_sect.get());
+  int64_t start_ms = TickTime::MillisecondTimestamp();
+  EXPECT_FALSE(cond_var->SleepCS(*(crit_sect), kVeryShortWaitMs));
+  int64_t end_ms = TickTime::MillisecondTimestamp();
+  EXPECT_LE(start_ms + kVeryShortWaitMs, end_ms)
+      << "actual elapsed:" << end_ms - start_ms;
 }
 
 }  // anonymous namespace

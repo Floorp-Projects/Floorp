@@ -35,16 +35,6 @@ enum SecurePolicy {
   SEC_REQUIRED
 };
 
-// The transport protocol we've elected to use.
-enum TransportProtocol {
-  ICEPROTO_GOOGLE,  // Google version of ICE protocol.
-  ICEPROTO_HYBRID,  // ICE, but can fall back to the Google version.
-  ICEPROTO_RFC5245  // Standard RFC 5245 version of ICE.
-};
-// The old name for TransportProtocol.
-// TODO(juberti): remove this.
-typedef TransportProtocol IceProtocolType;
-
 // Whether our side of the call is driving the negotiation, or the other side.
 enum IceRole {
   ICEROLE_CONTROLLING = 0,
@@ -86,33 +76,28 @@ struct TransportDescription {
       : ice_mode(ICEMODE_FULL),
         connection_role(CONNECTIONROLE_NONE) {}
 
-  TransportDescription(const std::string& transport_type,
-                       const std::vector<std::string>& transport_options,
+  TransportDescription(const std::vector<std::string>& transport_options,
                        const std::string& ice_ufrag,
                        const std::string& ice_pwd,
                        IceMode ice_mode,
                        ConnectionRole role,
                        const rtc::SSLFingerprint* identity_fingerprint,
                        const Candidates& candidates)
-      : transport_type(transport_type),
-        transport_options(transport_options),
+      : transport_options(transport_options),
         ice_ufrag(ice_ufrag),
         ice_pwd(ice_pwd),
         ice_mode(ice_mode),
         connection_role(role),
         identity_fingerprint(CopyFingerprint(identity_fingerprint)),
         candidates(candidates) {}
-  TransportDescription(const std::string& transport_type,
-                       const std::string& ice_ufrag,
+  TransportDescription(const std::string& ice_ufrag,
                        const std::string& ice_pwd)
-      : transport_type(transport_type),
-        ice_ufrag(ice_ufrag),
+      : ice_ufrag(ice_ufrag),
         ice_pwd(ice_pwd),
         ice_mode(ICEMODE_FULL),
         connection_role(CONNECTIONROLE_NONE) {}
   TransportDescription(const TransportDescription& from)
-      : transport_type(from.transport_type),
-        transport_options(from.transport_options),
+      : transport_options(from.transport_options),
         ice_ufrag(from.ice_ufrag),
         ice_pwd(from.ice_pwd),
         ice_mode(from.ice_mode),
@@ -125,7 +110,6 @@ struct TransportDescription {
     if (this == &from)
       return *this;
 
-    transport_type = from.transport_type;
     transport_options = from.transport_options;
     ice_ufrag = from.ice_ufrag;
     ice_pwd = from.ice_pwd;
@@ -155,7 +139,6 @@ struct TransportDescription {
     return new rtc::SSLFingerprint(*from);
   }
 
-  std::string transport_type;  // xmlns of <transport>
   std::vector<std::string> transport_options;
   std::string ice_ufrag;
   std::string ice_pwd;

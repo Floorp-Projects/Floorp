@@ -34,7 +34,7 @@
 #include "mtransport_test_utils.h"
 #include "runnable_utils.h"
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 #include "FakeIPC.h"
 #include "FakeIPC.cpp"

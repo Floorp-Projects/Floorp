@@ -38,41 +38,42 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
 
   SocketServer* socketserver() { return server_; }
 
+  // The default route indicates which local address to use when a socket is
+  // bound to the 'any' address, e.g. 0.0.0.0.
+  IPAddress GetDefaultRoute(int family);
+  void SetDefaultRoute(const IPAddress& from_addr);
+
   // Limits the network bandwidth (maximum bytes per second).  Zero means that
   // all sends occur instantly.  Defaults to 0.
-  uint32 bandwidth() const { return bandwidth_; }
-  void set_bandwidth(uint32 bandwidth) { bandwidth_ = bandwidth; }
+  uint32_t bandwidth() const { return bandwidth_; }
+  void set_bandwidth(uint32_t bandwidth) { bandwidth_ = bandwidth; }
 
   // Limits the amount of data which can be in flight on the network without
   // packet loss (on a per sender basis).  Defaults to 64 KB.
-  uint32 network_capacity() const { return network_capacity_; }
-  void set_network_capacity(uint32 capacity) {
-    network_capacity_ = capacity;
-  }
+  uint32_t network_capacity() const { return network_capacity_; }
+  void set_network_capacity(uint32_t capacity) { network_capacity_ = capacity; }
 
   // The amount of data which can be buffered by tcp on the sender's side
-  uint32 send_buffer_capacity() const { return send_buffer_capacity_; }
-  void set_send_buffer_capacity(uint32 capacity) {
+  uint32_t send_buffer_capacity() const { return send_buffer_capacity_; }
+  void set_send_buffer_capacity(uint32_t capacity) {
     send_buffer_capacity_ = capacity;
   }
 
   // The amount of data which can be buffered by tcp on the receiver's side
-  uint32 recv_buffer_capacity() const { return recv_buffer_capacity_; }
-  void set_recv_buffer_capacity(uint32 capacity) {
+  uint32_t recv_buffer_capacity() const { return recv_buffer_capacity_; }
+  void set_recv_buffer_capacity(uint32_t capacity) {
     recv_buffer_capacity_ = capacity;
   }
 
   // Controls the (transit) delay for packets sent in the network.  This does
   // not inclue the time required to sit in the send queue.  Both of these
   // values are measured in milliseconds.  Defaults to no delay.
-  uint32 delay_mean() const { return delay_mean_; }
-  uint32 delay_stddev() const { return delay_stddev_; }
-  uint32 delay_samples() const { return delay_samples_; }
-  void set_delay_mean(uint32 delay_mean) { delay_mean_ = delay_mean; }
-  void set_delay_stddev(uint32 delay_stddev) {
-    delay_stddev_ = delay_stddev;
-  }
-  void set_delay_samples(uint32 delay_samples) {
+  uint32_t delay_mean() const { return delay_mean_; }
+  uint32_t delay_stddev() const { return delay_stddev_; }
+  uint32_t delay_samples() const { return delay_samples_; }
+  void set_delay_mean(uint32_t delay_mean) { delay_mean_ = delay_mean; }
+  void set_delay_stddev(uint32_t delay_stddev) { delay_stddev_ = delay_stddev; }
+  void set_delay_samples(uint32_t delay_samples) {
     delay_samples_ = delay_samples;
   }
 
@@ -103,8 +104,9 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
   typedef std::pair<double, double> Point;
   typedef std::vector<Point> Function;
 
-  static Function* CreateDistribution(uint32 mean, uint32 stddev,
-                                      uint32 samples);
+  static Function* CreateDistribution(uint32_t mean,
+                                      uint32_t stddev,
+                                      uint32_t samples);
 
   // Similar to Thread::ProcessMessages, but it only processes messages until
   // there are no immediate messages or pending network traffic.  Returns false
@@ -112,12 +114,17 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
   bool ProcessMessagesUntilIdle();
 
   // Sets the next port number to use for testing.
-  void SetNextPortForTesting(uint16 port);
+  void SetNextPortForTesting(uint16_t port);
+
+  // Close a pair of Tcp connections by addresses. Both connections will have
+  // its own OnClose invoked.
+  bool CloseTcpConnections(const SocketAddress& addr_local,
+                           const SocketAddress& addr_remote);
 
  protected:
   // Returns a new IP not used before in this network.
   IPAddress GetNextIP(int family);
-  uint16 GetNextPort();
+  uint16_t GetNextPort();
 
   VirtualSocket* CreateSocketInternal(int family, int type);
 
@@ -159,24 +166,31 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
   void SendTcp(VirtualSocket* socket);
 
   // Places a packet on the network.
-  void AddPacketToNetwork(VirtualSocket* socket, VirtualSocket* recipient,
-                          uint32 cur_time, const char* data, size_t data_size,
-                          size_t header_size, bool ordered);
+  void AddPacketToNetwork(VirtualSocket* socket,
+                          VirtualSocket* recipient,
+                          uint32_t cur_time,
+                          const char* data,
+                          size_t data_size,
+                          size_t header_size,
+                          bool ordered);
 
   // Removes stale packets from the network
-  void PurgeNetworkPackets(VirtualSocket* socket, uint32 cur_time);
+  void PurgeNetworkPackets(VirtualSocket* socket, uint32_t cur_time);
 
   // Computes the number of milliseconds required to send a packet of this size.
-  uint32 SendDelay(uint32 size);
+  uint32_t SendDelay(uint32_t size);
 
   // Returns a random transit delay chosen from the appropriate distribution.
-  uint32 GetRandomTransitDelay();
+  uint32_t GetRandomTransitDelay();
 
   // Basic operations on functions.  Those that return a function also take
   // ownership of the function given (and hence, may modify or delete it).
   static Function* Accumulate(Function* f);
   static Function* Invert(Function* f);
-  static Function* Resample(Function* f, double x1, double x2, uint32 samples);
+  static Function* Resample(Function* f,
+                            double x1,
+                            double x2,
+                            uint32_t samples);
   static double Evaluate(Function* f, double x);
 
   // NULL out our message queue if it goes away. Necessary in the case where
@@ -212,25 +226,28 @@ class VirtualSocketServer : public SocketServer, public sigslot::has_slots<> {
   bool server_owned_;
   MessageQueue* msg_queue_;
   bool stop_on_idle_;
-  uint32 network_delay_;
+  uint32_t network_delay_;
   in_addr next_ipv4_;
   in6_addr next_ipv6_;
-  uint16 next_port_;
+  uint16_t next_port_;
   AddressMap* bindings_;
   ConnectionMap* connections_;
 
-  uint32 bandwidth_;
-  uint32 network_capacity_;
-  uint32 send_buffer_capacity_;
-  uint32 recv_buffer_capacity_;
-  uint32 delay_mean_;
-  uint32 delay_stddev_;
-  uint32 delay_samples_;
+  IPAddress default_route_v4_;
+  IPAddress default_route_v6_;
+
+  uint32_t bandwidth_;
+  uint32_t network_capacity_;
+  uint32_t send_buffer_capacity_;
+  uint32_t recv_buffer_capacity_;
+  uint32_t delay_mean_;
+  uint32_t delay_stddev_;
+  uint32_t delay_samples_;
   Function* delay_dist_;
   CriticalSection delay_crit_;
 
   double drop_prob_;
-  DISALLOW_EVIL_CONSTRUCTORS(VirtualSocketServer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(VirtualSocketServer);
 };
 
 // Implements the socket interface using the virtual network.  Packets are
@@ -242,9 +259,6 @@ class VirtualSocket : public AsyncSocket, public MessageHandler {
 
   SocketAddress GetLocalAddress() const override;
   SocketAddress GetRemoteAddress() const override;
-
-  // Used by server sockets to set the local address without binding.
-  void SetLocalAddress(const SocketAddress& addr);
 
   // Used by TurnPortTest to mimic a case where proxy returns local host address
   // instead of the original one TurnPort was bound against. Please see WebRTC
@@ -266,7 +280,7 @@ class VirtualSocket : public AsyncSocket, public MessageHandler {
   ConnState GetState() const override;
   int GetOption(Option opt, int* value) override;
   int SetOption(Option opt, int value) override;
-  int EstimateMTU(uint16* mtu) override;
+  int EstimateMTU(uint16_t* mtu) override;
   void OnMessage(Message* pmsg) override;
 
   bool was_any() { return was_any_; }
@@ -278,7 +292,7 @@ class VirtualSocket : public AsyncSocket, public MessageHandler {
  private:
   struct NetworkEntry {
     size_t size;
-    uint32 done_time;
+    uint32_t done_time;
   };
 
   typedef std::deque<SocketAddress> ListenQueue;
@@ -292,8 +306,10 @@ class VirtualSocket : public AsyncSocket, public MessageHandler {
   int SendUdp(const void* pv, size_t cb, const SocketAddress& addr);
   int SendTcp(const void* pv, size_t cb);
 
+  // Used by server sockets to set the local address without binding.
+  void SetLocalAddress(const SocketAddress& addr);
+
   VirtualSocketServer* server_;
-  int family_;
   int type_;
   bool async_;
   ConnState state_;

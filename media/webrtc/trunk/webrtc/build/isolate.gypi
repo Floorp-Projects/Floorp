@@ -8,14 +8,14 @@
 
 # Copied from Chromium's src/build/isolate.gypi
 #
-# It was necessary to copy this file to WebRTC, because the path to
-# build/common.gypi is different for the standalone and Chromium builds. Gyp
-# doesn't permit conditional inclusion or variable expansion in include paths.
+# It was necessary to copy this file because the path to build/common.gypi is
+# different for the standalone and Chromium builds. Gyp doesn't permit
+# conditional inclusion or variable expansion in include paths.
 # http://code.google.com/p/gyp/wiki/InputFormatReference#Including_Other_Files
 #
 # Local modifications:
 # * Removed include of '../chrome/version.gypi'.
-# * Removal passing of version_full variable created in version.gypi:
+# * Removed passing of version_full variable created in version.gypi:
 #   '--extra-variable', 'version_full=<(version_full)',
 
 # This file is meant to be included into a target to provide a rule
@@ -60,52 +60,82 @@
       'extension': 'isolate',
       'inputs': [
         # Files that are known to be involved in this step.
+        '<(DEPTH)/tools/isolate_driver.py',
         '<(DEPTH)/tools/swarming_client/isolate.py',
         '<(DEPTH)/tools/swarming_client/run_isolated.py',
       ],
-      'outputs': [
-        '<(PRODUCT_DIR)/<(RULE_INPUT_ROOT).isolated',
-      ],
+      'outputs': [],
       'action': [
         'python',
-        '<(DEPTH)/tools/swarming_client/isolate.py',
+        '<(DEPTH)/tools/isolate_driver.py',
         '<(test_isolation_mode)',
-        '--result', '<@(_outputs)',
+        '--isolated', '<(PRODUCT_DIR)/<(RULE_INPUT_ROOT).isolated',
         '--isolate', '<(RULE_INPUT_PATH)',
 
         # Variables should use the -V FOO=<(FOO) form so frequent values,
         # like '0' or '1', aren't stripped out by GYP. Run 'isolate.py help' for
         # more details.
-        #
-        # This list needs to be kept in sync with the cmd line options
-        # in src/build/android/pylib/gtest/setup.py.
 
         # Path variables are used to replace file paths when loading a .isolate
         # file
         '--path-variable', 'DEPTH', '<(DEPTH)',
         '--path-variable', 'PRODUCT_DIR', '<(PRODUCT_DIR) ',
 
+        # Note: This list must match DefaultConfigVariables()
+        # in build/android/pylib/utils/isolator.py
+        '--config-variable', 'CONFIGURATION_NAME=<(CONFIGURATION_NAME)',
         '--config-variable', 'OS=<(OS)',
+        '--config-variable', 'asan=<(asan)',
+        '--config-variable', 'branding=<(branding)',
         '--config-variable', 'chromeos=<(chromeos)',
         '--config-variable', 'component=<(component)',
+        '--config-variable', 'disable_nacl=<(disable_nacl)',
+        '--config-variable', 'enable_pepper_cdms=<(enable_pepper_cdms)',
+        '--config-variable', 'enable_plugins=<(enable_plugins)',
+        '--config-variable', 'fastbuild=<(fastbuild)',
+        '--config-variable', 'icu_use_data_file_flag=<(icu_use_data_file_flag)',
         # TODO(kbr): move this to chrome_tests.gypi:gles2_conform_tests_run
         # once support for user-defined config variables is added.
         '--config-variable',
           'internal_gles2_conform_tests=<(internal_gles2_conform_tests)',
-        '--config-variable', 'icu_use_data_file_flag=<(icu_use_data_file_flag)',
+        '--config-variable', 'kasko=<(kasko)',
+        '--config-variable', 'lsan=<(lsan)',
+        '--config-variable', 'msan=<(msan)',
+        '--config-variable', 'target_arch=<(target_arch)',
+        '--config-variable', 'tsan=<(tsan)',
+        '--config-variable', 'use_custom_libcxx=<(use_custom_libcxx)',
+        '--config-variable', 'use_instrumented_libraries=<(use_instrumented_libraries)',
+        '--config-variable',
+        'use_prebuilt_instrumented_libraries=<(use_prebuilt_instrumented_libraries)',
         '--config-variable', 'use_openssl=<(use_openssl)',
+        '--config-variable', 'use_ozone=<(use_ozone)',
+        '--config-variable', 'use_x11=<(use_x11)',
+        '--config-variable', 'v8_use_external_startup_data=<(v8_use_external_startup_data)',
       ],
       'conditions': [
         # Note: When gyp merges lists, it appends them to the old value.
         ['OS=="mac"', {
-          # <(mac_product_name) can contain a space, so don't use FOO=<(FOO)
-          # form.
           'action': [
-            '--extra-variable', 'mac_product_name', '<(mac_product_name)',
+            '--extra-variable', 'mac_product_name=<(mac_product_name)',
           ],
         }],
-        ["test_isolation_outdir!=''", {
-          'action': [ '--isolate-server', '<(test_isolation_outdir)' ],
+        ["test_isolation_mode == 'prepare'", {
+          'outputs': [
+            '<(PRODUCT_DIR)/<(RULE_INPUT_ROOT).isolated.gen.json',
+          ],
+        }, {
+          'outputs': [
+            '<(PRODUCT_DIR)/<(RULE_INPUT_ROOT).isolated',
+          ],
+        }],
+        ['OS=="win"', {
+          'action': [
+            '--config-variable', 'msvs_version=<(MSVS_VERSION)',
+          ],
+        }, {
+          'action': [
+            '--config-variable', 'msvs_version=0',
+          ],
         }],
       ],
     },

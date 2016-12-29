@@ -109,9 +109,6 @@ void FatalMessage::Init(const char* file, int line) {
           << file << ", line " << line << std::endl << "# ";
 }
 
-// Refer to comments in checks.h.
-#ifndef WEBRTC_CHROMIUM_BUILD
-
 // MSVC doesn't like complex extern templates and DLLs.
 #if !defined(COMPILER_MSVC)
 // Explicit instantiations for commonly used comparisons.
@@ -126,7 +123,5 @@ template std::string* MakeCheckOpString<unsigned int, unsigned long>(
 template std::string* MakeCheckOpString<std::string, std::string>(
     const std::string&, const std::string&, const char* name);
 #endif
-
-#endif  // WEBRTC_CHROMIUM_BUILD
 
 }  // namespace rtc

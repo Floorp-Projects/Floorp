@@ -7,10 +7,13 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
-  'includes': [ 'webrtc/build/common.gypi', ],
+  'includes': [
+    'webrtc/build/common.gypi',
+    'webrtc/video/webrtc_video.gypi',
+  ],
   'variables': {
     'peerconnection_sample': 'third_party/libjingle/source/talk/examples/peerconnection',
-  },  
+  },
 
   # for mozilla, we want to force stuff to build but we don't want peerconnection_client or server
   # for unknown reasons, 'targets' must be outside of conditions.  And don't try to build a dummy
@@ -22,19 +25,21 @@
         'target_name': 'dummy',
         'type': 'none',
         'dependencies': [
+	  'webrtc/webrtc.gyp:webrtc_lib',
           'webrtc/modules/modules.gyp:audio_device',
           'webrtc/modules/modules.gyp:video_capture_module',
-	  'webrtc/modules/modules.gyp:video_capture_module_internal_impl',
+          'webrtc/modules/modules.gyp:video_capture_module_internal_impl',
           'webrtc/modules/modules.gyp:video_render',
 #          'webrtc/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-#	  'webrtc/system_wrappers/source/system_wrappers.gyp:metrics_default',
-          'webrtc/video_engine/video_engine.gyp:video_engine_core',
-          'webrtc/voice_engine/voice_engine.gyp:voice_engine',
+#      'webrtc/system_wrappers/source/system_wrappers.gyp:metrics_default',
+#         'webrtc/video_engine/video_engine.gyp:video_engine_core',
+         'webrtc/voice_engine/voice_engine.gyp:voice_engine',
+#          '<@(webrtc_video_dependencies)',
         ],
         'conditions': [
           ['OS!="android" and OS!="ios"', {
             'dependencies': [
-              'webrtc/modules/modules.gyp:desktop_capture',
+               'webrtc/modules/modules.gyp:desktop_capture',
             ],
           },
          ]],
@@ -86,8 +91,8 @@
             },
           },
           'dependencies': [
-            'third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
-            'third_party/libjingle/libjingle.gyp:libjingle_peerconnection',
+            #'third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
+            #'third_party/libjingle/libjingle.gyp:libjingle_peerconnection',
           ],
           'include_dirs': [
             'src',
@@ -114,8 +119,8 @@
             '<(peerconnection_sample)/client/peer_connection_client.h',
           ],
           'dependencies': [
-            'third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
-            'third_party/libjingle/libjingle.gyp:libjingle_peerconnection',
+            #'third_party/jsoncpp/jsoncpp.gyp:jsoncpp',
+            #'third_party/libjingle/libjingle.gyp:libjingle_peerconnection',
             # TODO(tommi): Switch to this and remove specific gtk dependency
             # sections below for cflags and link_settings.
             # '<(DEPTH)/build/linux/system.gyp:gtk',

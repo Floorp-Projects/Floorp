@@ -16,12 +16,10 @@
 
 namespace cricket {
 
+// Everything in this class should be called on the worker thread.
 class P2PTransport : public Transport {
  public:
-  P2PTransport(rtc::Thread* signaling_thread,
-               rtc::Thread* worker_thread,
-               const std::string& content_name,
-               PortAllocator* allocator);
+  P2PTransport(const std::string& name, PortAllocator* allocator);
   virtual ~P2PTransport();
 
  protected:
@@ -31,7 +29,7 @@ class P2PTransport : public Transport {
 
   friend class P2PTransportChannel;
 
-  DISALLOW_EVIL_CONSTRUCTORS(P2PTransport);
+  RTC_DISALLOW_COPY_AND_ASSIGN(P2PTransport);
 };
 
 }  // namespace cricket

@@ -11,6 +11,7 @@
 #include "webrtc/common_audio/blocker.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/arraysize.h"
 
 namespace {
 
@@ -18,12 +19,12 @@ namespace {
 class PlusThreeBlockerCallback : public webrtc::BlockerCallback {
  public:
   void ProcessBlock(const float* const* input,
-                    int num_frames,
-                    int num_input_channels,
-                    int num_output_channels,
+                    size_t num_frames,
+                    size_t num_input_channels,
+                    size_t num_output_channels,
                     float* const* output) override {
-    for (int i = 0; i < num_output_channels; ++i) {
-      for (int j = 0; j < num_frames; ++j) {
+    for (size_t i = 0; i < num_output_channels; ++i) {
+      for (size_t j = 0; j < num_frames; ++j) {
         output[i][j] = input[i][j] + 3;
       }
     }
@@ -34,12 +35,12 @@ class PlusThreeBlockerCallback : public webrtc::BlockerCallback {
 class CopyBlockerCallback : public webrtc::BlockerCallback {
  public:
   void ProcessBlock(const float* const* input,
-                    int num_frames,
-                    int num_input_channels,
-                    int num_output_channels,
+                    size_t num_frames,
+                    size_t num_input_channels,
+                    size_t num_output_channels,
                     float* const* output) override {
-    for (int i = 0; i < num_output_channels; ++i) {
-      for (int j = 0; j < num_frames; ++j) {
+    for (size_t i = 0; i < num_output_channels; ++i) {
+      for (size_t j = 0; j < num_frames; ++j) {
         output[i][j] = input[i][j];
       }
     }
@@ -56,16 +57,16 @@ namespace webrtc {
 class BlockerTest : public ::testing::Test {
  protected:
   void RunTest(Blocker* blocker,
-               int chunk_size,
-               int num_frames,
+               size_t chunk_size,
+               size_t num_frames,
                const float* const* input,
                float* const* input_chunk,
                float* const* output,
                float* const* output_chunk,
-               int num_input_channels,
-               int num_output_channels) {
-    int start = 0;
-    int end = chunk_size - 1;
+               size_t num_input_channels,
+               size_t num_output_channels) {
+    size_t start = 0;
+    size_t end = chunk_size - 1;
     while (end < num_frames) {
       CopyTo(input_chunk, 0, start, num_input_channels, chunk_size, input);
       blocker->ProcessChunk(input_chunk,
@@ -75,28 +76,28 @@ class BlockerTest : public ::testing::Test {
                             output_chunk);
       CopyTo(output, start, 0, num_output_channels, chunk_size, output_chunk);
 
-      start = start + chunk_size;
-      end = end + chunk_size;
+      start += chunk_size;
+      end += chunk_size;
     }
   }
 
   void ValidateSignalEquality(const float* const* expected,
                               const float* const* actual,
-                              int num_channels,
-                              int num_frames) {
-    for (int i = 0; i < num_channels; ++i) {
-      for (int j = 0; j < num_frames; ++j) {
+                              size_t num_channels,
+                              size_t num_frames) {
+    for (size_t i = 0; i < num_channels; ++i) {
+      for (size_t j = 0; j < num_frames; ++j) {
         EXPECT_FLOAT_EQ(expected[i][j], actual[i][j]);
       }
     }
   }
 
   void ValidateInitialDelay(const float* const* output,
-                            int num_channels,
-                            int num_frames,
-                            int initial_delay) {
-    for (int i = 0; i < num_channels; ++i) {
-      for (int j = 0; j < num_frames; ++j) {
+                            size_t num_channels,
+                            size_t num_frames,
+                            size_t initial_delay) {
+    for (size_t i = 0; i < num_channels; ++i) {
+      for (size_t j = 0; j < num_frames; ++j) {
         if (j < initial_delay) {
           EXPECT_FLOAT_EQ(output[i][j], 0.f);
         } else {
@@ -107,12 +108,12 @@ class BlockerTest : public ::testing::Test {
   }
 
   static void CopyTo(float* const* dst,
-                     int start_index_dst,
-                     int start_index_src,
-                     int num_channels,
-                     int num_frames,
+                     size_t start_index_dst,
+                     size_t start_index_src,
+                     size_t num_channels,
+                     size_t num_frames,
                      const float* const* src) {
-    for (int i = 0; i < num_channels; ++i) {
+    for (size_t i = 0; i < num_channels; ++i) {
       memcpy(&dst[i][start_index_dst],
              &src[i][start_index_src],
              num_frames * sizeof(float));
@@ -121,12 +122,12 @@ class BlockerTest : public ::testing::Test {
 };
 
 TEST_F(BlockerTest, TestBlockerMutuallyPrimeChunkandBlockSize) {
-  const int kNumInputChannels = 3;
-  const int kNumOutputChannels = 2;
-  const int kNumFrames = 10;
-  const int kBlockSize = 4;
-  const int kChunkSize = 5;
-  const int kShiftAmount = 2;
+  const size_t kNumInputChannels = 3;
+  const size_t kNumOutputChannels = 2;
+  const size_t kNumFrames = 10;
+  const size_t kBlockSize = 4;
+  const size_t kChunkSize = 5;
+  const size_t kShiftAmount = 2;
 
   const float kInput[kNumInputChannels][kNumFrames] = {
       {1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -174,12 +175,12 @@ TEST_F(BlockerTest, TestBlockerMutuallyPrimeChunkandBlockSize) {
 }
 
 TEST_F(BlockerTest, TestBlockerMutuallyPrimeShiftAndBlockSize) {
-  const int kNumInputChannels = 3;
-  const int kNumOutputChannels = 2;
-  const int kNumFrames = 12;
-  const int kBlockSize = 4;
-  const int kChunkSize = 6;
-  const int kShiftAmount = 3;
+  const size_t kNumInputChannels = 3;
+  const size_t kNumOutputChannels = 2;
+  const size_t kNumFrames = 12;
+  const size_t kBlockSize = 4;
+  const size_t kChunkSize = 6;
+  const size_t kShiftAmount = 3;
 
   const float kInput[kNumInputChannels][kNumFrames] = {
       {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -227,12 +228,12 @@ TEST_F(BlockerTest, TestBlockerMutuallyPrimeShiftAndBlockSize) {
 }
 
 TEST_F(BlockerTest, TestBlockerNoOverlap) {
-  const int kNumInputChannels = 3;
-  const int kNumOutputChannels = 2;
-  const int kNumFrames = 12;
-  const int kBlockSize = 4;
-  const int kChunkSize = 4;
-  const int kShiftAmount = 4;
+  const size_t kNumInputChannels = 3;
+  const size_t kNumOutputChannels = 2;
+  const size_t kNumFrames = 12;
+  const size_t kBlockSize = 4;
+  const size_t kChunkSize = 4;
+  const size_t kShiftAmount = 4;
 
   const float kInput[kNumInputChannels][kNumFrames] = {
       {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -280,21 +281,21 @@ TEST_F(BlockerTest, TestBlockerNoOverlap) {
 }
 
 TEST_F(BlockerTest, InitialDelaysAreMinimum) {
-  const int kNumInputChannels = 3;
-  const int kNumOutputChannels = 2;
-  const int kNumFrames = 1280;
-  const int kChunkSize[] =
+  const size_t kNumInputChannels = 3;
+  const size_t kNumOutputChannels = 2;
+  const size_t kNumFrames = 1280;
+  const size_t kChunkSize[] =
       {80, 80, 80, 80, 80, 80, 160, 160, 160, 160, 160, 160};
-  const int kBlockSize[] =
+  const size_t kBlockSize[] =
       {64, 64, 64, 128, 128, 128, 128, 128, 128, 256, 256, 256};
-  const int kShiftAmount[] =
+  const size_t kShiftAmount[] =
       {16, 32, 64, 32, 64, 128, 32, 64, 128, 64, 128, 256};
-  const int kInitialDelay[] =
+  const size_t kInitialDelay[] =
       {48, 48, 48, 112, 112, 112, 96, 96, 96, 224, 224, 224};
 
   float input[kNumInputChannels][kNumFrames];
-  for (int i = 0; i < kNumInputChannels; ++i) {
-    for (int j = 0; j < kNumFrames; ++j) {
+  for (size_t i = 0; i < kNumInputChannels; ++i) {
+    for (size_t j = 0; j < kNumFrames; ++j) {
       input[i][j] = i + 1;
     }
   }
@@ -305,9 +306,9 @@ TEST_F(BlockerTest, InitialDelaysAreMinimum) {
 
   CopyBlockerCallback callback;
 
-  for (size_t i = 0; i < (sizeof(kChunkSize) / sizeof(*kChunkSize)); ++i) {
+  for (size_t i = 0; i < arraysize(kChunkSize); ++i) {
     rtc::scoped_ptr<float[]> window(new float[kBlockSize[i]]);
-    for (int j = 0; j < kBlockSize[i]; ++j) {
+    for (size_t j = 0; j < kBlockSize[i]; ++j) {
       window[j] = 1.f;
     }
 

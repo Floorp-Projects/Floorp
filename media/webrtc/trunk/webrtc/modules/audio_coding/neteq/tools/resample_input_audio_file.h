@@ -25,14 +25,25 @@ namespace test {
 class ResampleInputAudioFile : public InputAudioFile {
  public:
   ResampleInputAudioFile(const std::string file_name, int file_rate_hz)
-      : InputAudioFile(file_name), file_rate_hz_(file_rate_hz) {}
+      : InputAudioFile(file_name),
+        file_rate_hz_(file_rate_hz),
+        output_rate_hz_(-1) {}
+  ResampleInputAudioFile(const std::string file_name,
+                         int file_rate_hz,
+                         int output_rate_hz)
+      : InputAudioFile(file_name),
+        file_rate_hz_(file_rate_hz),
+        output_rate_hz_(output_rate_hz) {}
 
   bool Read(size_t samples, int output_rate_hz, int16_t* destination);
+  bool Read(size_t samples, int16_t* destination) override;
+  void set_output_rate_hz(int rate_hz);
 
  private:
   const int file_rate_hz_;
+  int output_rate_hz_;
   Resampler resampler_;
-  DISALLOW_COPY_AND_ASSIGN(ResampleInputAudioFile);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ResampleInputAudioFile);
 };
 
 }  // namespace test

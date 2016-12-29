@@ -14,7 +14,7 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
-#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
 
 namespace webrtc {
 
@@ -80,7 +80,7 @@ class ScreenCapturerHelper {
   // If the value is <= 0, then the invalid region is not expanded to a grid.
   int log_grid_size_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScreenCapturerHelper);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCapturerHelper);
 };
 
 }  // namespace webrtc

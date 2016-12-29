@@ -486,13 +486,13 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    mMaster->Push(aAudio);
+    mMaster->PushAudio(aAudio);
     MaybeFinishDecodeFirstFrame();
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
-    mMaster->Push(aVideo);
+    mMaster->PushVideo(aVideo);
     MaybeFinishDecodeFirstFrame();
   }
 
@@ -579,13 +579,15 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    mMaster->Push(aAudio);
+    mMaster->PushAudio(aAudio);
+    mMaster->DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
-    mMaster->Push(aVideo);
+    mMaster->PushVideo(aVideo);
+    mMaster->DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
     CheckSlowDecoding(aDecodeStart);
   }
@@ -867,7 +869,7 @@ public:
     // requests when AccurateSeekTask::Seek() begins. We will just store the data
     // without checking |mDiscontinuity| or calling DropAudioUpToSeekTarget().
     if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->Push(aAudio);
+      mMaster->PushAudio(aAudio);
       return;
     }
 
@@ -875,7 +877,7 @@ public:
 
     if (mSeekJob.mTarget->IsFast()) {
       // Non-precise seek; we can stop the seek at the first sample.
-      mMaster->Push(aAudio);
+      mMaster->PushAudio(aAudio);
       mDoneAudioSeeking = true;
     } else {
       nsresult rv = DropAudioUpToSeekTarget(aAudio->As<AudioData>());
@@ -901,7 +903,7 @@ public:
 
     if (mSeekJob.mTarget->IsFast()) {
       // Non-precise seek. We can stop the seek at the first sample.
-      mMaster->Push(aVideo);
+      mMaster->PushVideo(aVideo);
       mDoneVideoSeeking = true;
     } else {
       nsresult rv = DropVideoUpToSeekTarget(aVideo);
@@ -948,13 +950,13 @@ public:
         AudioQueue().Finish();
         mDoneAudioSeeking = true;
       } else {
-        VideoQueue().Finish();
-        mDoneVideoSeeking = true;
         if (mFirstVideoFrameAfterSeek) {
           // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
           // mSeekedVideoData so we have something to display after seeking.
-          mMaster->Push(mFirstVideoFrameAfterSeek);
+          mMaster->PushVideo(mFirstVideoFrameAfterSeek);
         }
+        VideoQueue().Finish();
+        mDoneVideoSeeking = true;
       }
       MaybeFinishSeek();
       return;
@@ -1149,7 +1151,7 @@ private:
       // silence to cover the gap. Typically this happens in poorly muxed
       // files.
       SWARN("Audio not synced after seek, maybe a poorly muxed file?");
-      mMaster->Push(aAudio);
+      mMaster->PushAudio(aAudio);
       mDoneAudioSeeking = true;
       return NS_OK;
     }
@@ -1195,7 +1197,7 @@ private:
                                          channels,
                                          aAudio->mRate));
     MOZ_ASSERT(AudioQueue().GetSize() == 0, "Should be the 1st sample after seeking");
-    mMaster->Push(data);
+    mMaster->PushAudio(data);
     mDoneAudioSeeking = true;
 
     return NS_OK;
@@ -1227,7 +1229,7 @@ private:
                   video->mTime, video->GetEndTime(), target);
 
       MOZ_ASSERT(VideoQueue().GetSize() == 0, "Should be the 1st sample after seeking");
-      mMaster->Push(video);
+      mMaster->PushVideo(video);
       mDoneVideoSeeking = true;
     }
 
@@ -1361,7 +1363,7 @@ private:
 
   void HandleAudioDecoded(MediaData* aAudio) override
   {
-    mMaster->Push(aAudio);
+    mMaster->PushAudio(aAudio);
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
@@ -1371,7 +1373,7 @@ private:
     MOZ_ASSERT(NeedMoreVideo());
 
     if (aVideo->mTime > mCurrentTime) {
-      mMaster->Push(aVideo);
+      mMaster->PushVideo(aVideo);
       FinishSeek();
     } else {
       RequestVideoData();
@@ -1550,7 +1552,7 @@ public:
   {
     // This might be the sample we need to exit buffering.
     // Schedule Step() to check it.
-    mMaster->Push(aAudio);
+    mMaster->PushAudio(aAudio);
     mMaster->ScheduleStateMachine();
   }
 
@@ -1558,7 +1560,7 @@ public:
   {
     // This might be the sample we need to exit buffering.
     // Schedule Step() to check it.
-    mMaster->Push(aVideo);
+    mMaster->PushVideo(aVideo);
     mMaster->ScheduleStateMachine();
   }
 
@@ -2163,6 +2165,7 @@ BufferingState::Step()
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
       mMaster->ScheduleStateMachineIn(USECS_PER_S);
+      mMaster->DispatchDecodeTasksIfNeeded();
       return;
     }
   } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
@@ -2549,25 +2552,20 @@ MediaDecoderStateMachine::NeedToDecodeAudio()
 }
 
 void
-MediaDecoderStateMachine::Push(MediaData* aSample)
+MediaDecoderStateMachine::PushAudio(MediaData* aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aSample);
+  AudioQueue().Push(aSample);
+}
 
-  if (aSample->mType == MediaData::AUDIO_DATA) {
-    // TODO: Send aSample to MSG and recalculate readystate before pushing,
-    // otherwise AdvanceFrame may pop the sample before we have a chance
-    // to reach playing.
-    AudioQueue().Push(aSample);
-  } else if (aSample->mType == MediaData::VIDEO_DATA) {
-    // TODO: Send aSample to MSG and recalculate readystate before pushing,
-    // otherwise AdvanceFrame may pop the sample before we have a chance
-    // to reach playing.
-    aSample->As<VideoData>()->mFrameID = ++mCurrentFrameID;
-    VideoQueue().Push(aSample);
-  }
-
-  DispatchDecodeTasksIfNeeded();
+void
+MediaDecoderStateMachine::PushVideo(MediaData* aSample)
+{
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(aSample);
+  aSample->As<VideoData>()->mFrameID = ++mCurrentFrameID;
+  VideoQueue().Push(aSample);
 }
 
 void

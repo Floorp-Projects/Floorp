@@ -7,37 +7,71 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'conditions': [
+    ['enable_protobuf==1', {
+      'targets': [
+        {
+          'target_name': 'rtc_event_log_source',
+          'type': 'static_library',
+          'dependencies': [
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log',
+            '<(webrtc_root)/webrtc.gyp:rtc_event_log_proto',
+          ],
+          'sources': [
+            'tools/rtc_event_log_source.h',
+            'tools/rtc_event_log_source.cc',
+          ],
+        },
+        {
+          'target_name': 'neteq_rtpplay',
+          'type': 'executable',
+          'dependencies': [
+            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+            '<(webrtc_root)/test/test.gyp:test_support_main',
+            'rtc_event_log_source',
+            'neteq',
+            'neteq_unittest_tools',
+            'pcm16b',
+          ],
+          'sources': [
+            'tools/neteq_rtpplay.cc',
+          ],
+          'defines': [
+          ],
+        }, # neteq_rtpplay
+        {
+          'target_name': 'neteq_unittest_proto',
+          'type': 'static_library',
+          'sources': [
+            'neteq_unittest.proto',
+          ],
+          'variables': {
+            'proto_in_dir': '.',
+            # Workaround to protect against gyp's pathname relativization when
+            # this file is included by modules.gyp.
+            'proto_out_protected': 'webrtc/audio_coding/neteq',
+            'proto_out_dir': '<(proto_out_protected)',
+          },
+          'includes': ['../../../build/protoc.gypi',],
+        },
+      ],
+    }],
+  ],
   'targets': [
-    {
-      'target_name': 'neteq_rtpplay',
-      'type': 'executable',
-      'dependencies': [
-        'neteq',
-        'neteq_unittest_tools',
-        'PCM16B',
-        '<(webrtc_root)/test/test.gyp:test_support_main',
-        '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-      ],
-      'sources': [
-        'tools/neteq_rtpplay.cc',
-      ],
-      'defines': [
-      ],
-    }, # neteq_rtpplay
-
     {
       'target_name': 'RTPencode',
       'type': 'executable',
       'dependencies': [
         # TODO(hlundin): Make RTPencode use ACM to encode files.
-        'neteq_test_tools',# Test helpers
-        'G711',
-        'G722',
-        'PCM16B',
-        'iLBC',
-        'iSAC',
-        'CNG',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
+        'cng',
+        'g711',
+        'g722',
+        'ilbc',
+        'isac',
+        'neteq_test_tools',  # Test helpers
+        'pcm16b',
+        'webrtc_opus',
       ],
       'defines': [
         'CODEC_ILBC',
@@ -54,9 +88,10 @@
         'CODEC_CNGCODEC32',
         'CODEC_ATEVENT_DECODE',
         'CODEC_RED',
+        'CODEC_OPUS',
       ],
       'include_dirs': [
-        'interface',
+        'include',
         'test',
         '<(webrtc_root)',
       ],
@@ -84,10 +119,10 @@
       'target_name': 'rtp_analyze',
       'type': 'executable',
       'dependencies': [
-        'neteq_unittest_tools',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
+        'neteq_unittest_tools',
       ],
       'sources': [
         'tools/rtp_analyze.cc',
@@ -98,8 +133,8 @@
       'target_name': 'RTPchange',
       'type': 'executable',
       'dependencies': [
-        'neteq_test_tools',
         '<(DEPTH)/testing/gtest.gyp:gtest',
+        'neteq_test_tools',
       ],
       'sources': [
        'test/RTPchange.cc',
@@ -110,8 +145,8 @@
       'target_name': 'RTPtimeshift',
       'type': 'executable',
       'dependencies': [
-       'neteq_test_tools',
         '<(DEPTH)/testing/gtest.gyp:gtest',
+        'neteq_test_tools',
       ],
       'sources': [
         'test/RTPtimeshift.cc',
@@ -134,8 +169,8 @@
       'target_name': 'rtp_to_text',
       'type': 'executable',
       'dependencies': [
-        'neteq_test_tools',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+        'neteq_test_tools',
       ],
       'sources': [
         'test/rtp_to_text.cc',
@@ -158,11 +193,11 @@
       'target_name': 'neteq_test_support',
       'type': 'static_library',
       'dependencies': [
-        'neteq',
-        'PCM16B',
-        'neteq_unittest_tools',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+        'neteq',
+        'neteq_unittest_tools',
+        'pcm16b',
       ],
       'sources': [
         'tools/neteq_external_decoder_test.cc',
@@ -178,10 +213,10 @@
       'target_name': 'neteq_speed_test',
       'type': 'executable',
       'dependencies': [
-        'neteq',
-        'neteq_test_support',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/test/test.gyp:test_support_main',
+        'neteq',
+        'neteq_test_support',
       ],
       'sources': [
         'test/neteq_speed_test.cc',
@@ -192,12 +227,12 @@
       'target_name': 'neteq_opus_quality_test',
       'type': 'executable',
       'dependencies': [
-        'neteq',
-        'neteq_test_support',
-        'webrtc_opus',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/test/test.gyp:test_support_main',
+        'neteq',
+        'neteq_test_support',
+        'webrtc_opus',
       ],
       'sources': [
         'test/neteq_opus_quality_test.cc',
@@ -208,15 +243,47 @@
       'target_name': 'neteq_isac_quality_test',
       'type': 'executable',
       'dependencies': [
-        'neteq',
-        'neteq_test_support',
-        'iSACFix',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
         '<(webrtc_root)/test/test.gyp:test_support_main',
+        'isac_fix',
+        'neteq',
+        'neteq_test_support',
       ],
       'sources': [
         'test/neteq_isac_quality_test.cc',
+      ],
+    },
+
+    {
+      'target_name': 'neteq_pcmu_quality_test',
+      'type': 'executable',
+      'dependencies': [
+        '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+        '<(webrtc_root)/test/test.gyp:test_support_main',
+        'g711',
+        'neteq',
+        'neteq_test_support',
+      ],
+      'sources': [
+        'test/neteq_pcmu_quality_test.cc',
+      ],
+    },
+
+    {
+      'target_name': 'neteq_ilbc_quality_test',
+      'type': 'executable',
+      'dependencies': [
+        '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+        '<(webrtc_root)/test/test.gyp:test_support_main',
+        'neteq',
+        'neteq_test_support',
+        'ilbc',
+      ],
+      'sources': [
+        'test/neteq_ilbc_quality_test.cc',
       ],
     },
 
@@ -229,18 +296,18 @@
         'neteq_dummy_rtp%': 0,
       },
       'dependencies': [
-        'G711',
-        'G722',
-        'PCM16B',
-        'iLBC',
-        'iSAC',
-        'CNG',
-        '<(webrtc_root)/common.gyp:webrtc_common',
         '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        'cng',
+        'g711',
+        'g722',
+        'ilbc',
+        'isac',
+        'pcm16b',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
-          'interface',
+          'include',
           'test',
           '<(webrtc_root)',
         ],
@@ -248,7 +315,7 @@
       'defines': [
       ],
       'include_dirs': [
-        'interface',
+        'include',
         'test',
         '<(webrtc_root)',
       ],

@@ -17,7 +17,6 @@
       'type': 'static_library',
       'dependencies': [
         'webrtc_utility',
-        '<(webrtc_root)/common.gyp:webrtc_common',
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
@@ -27,11 +26,11 @@
       'sources': [
         'device_info_impl.cc',
         'device_info_impl.h',
-        'include/video_capture.h',
-        'include/video_capture_defines.h',
-        'include/video_capture_factory.h',
+        'video_capture.h',
         'video_capture_config.h',
+        'video_capture_defines.h',
         'video_capture_delay.h',
+        'video_capture_factory.h',
         'video_capture_factory.cc',
         'video_capture_impl.cc',
         'video_capture_impl.h',
@@ -63,19 +62,21 @@
           'dependencies': [
             'video_capture_module',
             '<(webrtc_root)/common.gyp:webrtc_common',
-          ],
-	  'cflags_mozilla': [
-	    '$(NSPR_CFLAGS)',
+           ],
+          'cflags_mozilla': [
+            '$(NSPR_CFLAGS)',
           ],
           'conditions': [
-           ['include_v4l2_video_capture==1', {
+            ['OS!="android"', {
+            }],
+            ['include_v4l2_video_capture==1', {
               'sources': [
                 'linux/device_info_linux.cc',
                 'linux/device_info_linux.h',
                 'linux/video_capture_linux.cc',
                 'linux/video_capture_linux.h',
               ],
-            }],  # linux
+            }],
             ['OS=="mac"', {
               'sources': [
                 'mac/avfoundation/video_capture_avfoundation.h',
@@ -131,6 +132,23 @@
                 ],
               },
             }],  # win
+            ['OS=="win" and clang==1', {
+              'msvs_settings': {
+                'VCCLCompilerTool': {
+                  'AdditionalOptions': [
+                    # Disable warnings failing when compiling with Clang on Windows.
+                    # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
+                    '-Wno-comment',
+                    '-Wno-ignored-attributes',
+                    '-Wno-microsoft-extra-qualification',
+                    '-Wno-missing-braces',
+                    '-Wno-overloaded-virtual',
+                    '-Wno-reorder',
+                    '-Wno-writable-strings',
+                  ],
+                },
+              },
+            }],
             ['OS=="android"', {
               'sources': [
                 'android/device_info_android.cc',
@@ -171,7 +189,7 @@
         },
       ],
     }], # build_with_chromium==0
-    ['include_tests==1', {
+    ['include_tests==1 and OS!="android"', {
       'targets': [
         {
           'target_name': 'video_capture_tests',
@@ -184,8 +202,6 @@
             '<(DEPTH)/testing/gtest.gyp:gtest',
           ],
           'sources': [
-            'ensure_initialized.cc',
-            'ensure_initialized.h',
             'test/video_capture_unittest.cc',
             'test/video_capture_main_mac.mm',
           ],
@@ -209,18 +225,6 @@
                 '-lrt',
               ],
             }],
-            ['OS=="android"', {
-              'dependencies': [
-                '<(DEPTH)/testing/android/native_test.gyp:native_test_native_code',
-              ],
-              # Need to disable error due to the line in
-              # base/android/jni_android.h triggering it:
-              # const BASE_EXPORT jobject GetApplicationContext()
-              # error: type qualifiers ignored on function return type
-              'cflags': [
-                '-Wno-ignored-qualifiers',
-              ],
-            }],
             ['OS=="mac"', {
               'dependencies': [
                 # Link with a special main for mac so we can use the webcam.
@@ -242,36 +246,6 @@
           ] # conditions
         },
       ], # targets
-      'conditions': [
-        ['OS=="android"', {
-          'targets': [
-            {
-              'target_name': 'video_capture_tests_apk_target',
-              'type': 'none',
-              'dependencies': [
-                '<(apk_tests_path):video_capture_tests_apk',
-              ],
-            },
-          ],
-        }],
-        ['test_isolation_mode != "noop"', {
-          'targets': [
-            {
-              'target_name': 'video_capture_tests_run',
-              'type': 'none',
-              'dependencies': [
-                'video_capture_tests',
-              ],
-              'includes': [
-                '../../build/isolate.gypi',
-              ],
-              'sources': [
-                'video_capture_tests.isolate',
-              ],
-            },
-          ],
-        }],
-      ],
     }],
   ],
 }

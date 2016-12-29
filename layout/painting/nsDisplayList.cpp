@@ -4180,7 +4180,7 @@ nsDisplayBorder::GetLayerState(nsDisplayListBuilder* aBuilder,
   }
 
   mRect = ViewAs<LayerPixel>(br->mOuterRect);
-  return LAYER_INACTIVE;
+  return LAYER_ACTIVE;
 }
 
 already_AddRefed<Layer>
@@ -4577,10 +4577,9 @@ RequiredLayerStateForChildren(nsDisplayListBuilder* aBuilder,
                               LayerManager* aManager,
                               const ContainerLayerParameters& aParameters,
                               const nsDisplayList& aList,
-                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren,
-                              LayerState aDefaultState = LAYER_INACTIVE)
+                              AnimatedGeometryRoot* aExpectedAnimatedGeometryRootForChildren)
 {
-  LayerState result = aDefaultState;
+  LayerState result = LAYER_INACTIVE;
   for (nsDisplayItem* i = aList.GetBottom(); i; i = i->GetAbove()) {
     if (result == LAYER_INACTIVE &&
         i->GetAnimatedGeometryRoot() != aExpectedAnimatedGeometryRootForChildren) {
@@ -7338,8 +7337,7 @@ nsDisplayMask::GetLayerState(nsDisplayListBuilder* aBuilder,
 {
   if (ShouldPaintOnMaskLayer(aManager)) {
     return RequiredLayerStateForChildren(aBuilder, aManager, aParameters,
-                                         mList, GetAnimatedGeometryRoot(),
-                                         LAYER_SVG_EFFECTS);
+                                         mList, GetAnimatedGeometryRoot());
   }
 
   return LAYER_SVG_EFFECTS;
@@ -7356,7 +7354,9 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
 
   // XXX Bug 1323912. nsSVGIntegrationUtils::PaintMask can not handle opacity
   // correctly. Turn it off before bug fixed.
-  if (maskUsage.opacity != 1.0) {
+  // XXX Temporary disable paint clip-path onto mask before figure out
+  // performance regression(bug 1325550).
+  if (maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath) {
     return false;
   }
 

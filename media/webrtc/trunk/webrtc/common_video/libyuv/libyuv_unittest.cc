@@ -13,10 +13,10 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc {
 
@@ -37,8 +37,7 @@ int PrintBuffer(const uint8_t* buffer, int width, int height, int stride) {
   return 0;
 }
 
-
-int PrintFrame(const I420VideoFrame* frame, const char* str) {
+int PrintFrame(const VideoFrame* frame, const char* str) {
   if (frame == NULL)
      return -1;
   printf("%s %dx%d \n", str, frame->width(), frame->height());
@@ -57,7 +56,7 @@ int PrintFrame(const I420VideoFrame* frame, const char* str) {
 
 // Create an image from on a YUV frame. Every plane value starts with a start
 // value, and will be set to increasing values.
-void CreateImage(I420VideoFrame* frame, int plane_offset[kNumOfPlanes]) {
+void CreateImage(VideoFrame* frame, int plane_offset[kNumOfPlanes]) {
   if (frame == NULL)
     return;
   for (int plane_num = 0; plane_num < kNumOfPlanes; ++plane_num) {
@@ -83,7 +82,7 @@ class TestLibYuv : public ::testing::Test {
   virtual void TearDown();
 
   FILE* source_file_;
-  I420VideoFrame orig_frame_;
+  VideoFrame orig_frame_;
   rtc::scoped_ptr<uint8_t[]> orig_buffer_;
   const int width_;
   const int height_;
@@ -98,7 +97,7 @@ TestLibYuv::TestLibYuv()
       width_(352),
       height_(288),
       size_y_(width_ * height_),
-      size_uv_(((width_ + 1 ) / 2) * ((height_ + 1) / 2)),
+      size_uv_(((width_ + 1) / 2) * ((height_ + 1) / 2)),
       frame_length_(CalcBufferSize(kI420, 352, 288)) {
   orig_buffer_.reset(new uint8_t[frame_length_]);
 }
@@ -142,10 +141,10 @@ TEST_F(TestLibYuv, ConvertTest) {
 
   double psnr = 0.0;
 
-  I420VideoFrame res_i420_frame;
-  EXPECT_EQ(0,res_i420_frame.CreateEmptyFrame(width_, height_, width_,
-                                              (width_ + 1) / 2,
-                                              (width_ + 1) / 2));
+  VideoFrame res_i420_frame;
+  EXPECT_EQ(0, res_i420_frame.CreateEmptyFrame(width_, height_, width_,
+                                               (width_ + 1) / 2,
+                                               (width_ + 1) / 2));
   printf("\nConvert #%d I420 <-> I420 \n", j);
   rtc::scoped_ptr<uint8_t[]> out_i420_buffer(new uint8_t[frame_length_]);
   EXPECT_EQ(0, ConvertFromI420(orig_frame_, kI420, 0,
@@ -153,7 +152,7 @@ TEST_F(TestLibYuv, ConvertTest) {
   EXPECT_EQ(0, ConvertToI420(kI420, out_i420_buffer.get(), 0, 0, width_,
                              height_, 0, kVideoRotation_0, &res_i420_frame));
 
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
   psnr = I420PSNR(&orig_frame_, &res_i420_frame);
@@ -173,7 +172,7 @@ TEST_F(TestLibYuv, ConvertTest) {
   EXPECT_EQ(0, ConvertToI420(kRGB24, res_rgb_buffer2.get(), 0, 0, width_,
                              height_, 0, kVideoRotation_0, &res_i420_frame));
 
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
   psnr = I420PSNR(&orig_frame_, &res_i420_frame);
@@ -189,7 +188,7 @@ TEST_F(TestLibYuv, ConvertTest) {
                              height_, 0, kVideoRotation_0, &res_i420_frame));
   psnr = I420PSNR(&orig_frame_, &res_i420_frame);
   EXPECT_EQ(48.0, psnr);
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
   j++;
@@ -197,7 +196,7 @@ TEST_F(TestLibYuv, ConvertTest) {
   printf("\nConvert #%d I420 <-> YV12\n", j);
   rtc::scoped_ptr<uint8_t[]> outYV120Buffer(new uint8_t[frame_length_]);
   rtc::scoped_ptr<uint8_t[]> res_i420_buffer(new uint8_t[frame_length_]);
-  I420VideoFrame yv12_frame;
+  VideoFrame yv12_frame;
   EXPECT_EQ(0, ConvertFromI420(orig_frame_, kYV12, 0, outYV120Buffer.get()));
   yv12_frame.CreateFrame(outYV120Buffer.get(),
                          outYV120Buffer.get() + size_y_,
@@ -223,7 +222,7 @@ TEST_F(TestLibYuv, ConvertTest) {
   EXPECT_EQ(0, ConvertToI420(kYUY2, out_yuy2_buffer.get(), 0, 0, width_,
                              height_, 0, kVideoRotation_0, &res_i420_frame));
 
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
 
@@ -238,7 +237,7 @@ TEST_F(TestLibYuv, ConvertTest) {
   EXPECT_EQ(0, ConvertToI420(kRGB565, out_rgb565_buffer.get(), 0, 0, width_,
                              height_, 0, kVideoRotation_0, &res_i420_frame));
 
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
   j++;
@@ -258,7 +257,7 @@ TEST_F(TestLibYuv, ConvertTest) {
   EXPECT_EQ(0, ConvertToI420(kARGB, out_argb8888_buffer.get(), 0, 0, width_,
                              height_, 0, kVideoRotation_0, &res_i420_frame));
 
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
 
@@ -278,19 +277,19 @@ TEST_F(TestLibYuv, ConvertAlignedFrame) {
 
   double psnr = 0.0;
 
-  I420VideoFrame res_i420_frame;
+  VideoFrame res_i420_frame;
   int stride_y = 0;
   int stride_uv = 0;
   Calc16ByteAlignedStride(width_, &stride_y, &stride_uv);
-  EXPECT_EQ(0,res_i420_frame.CreateEmptyFrame(width_, height_,
-                                              stride_y, stride_uv, stride_uv));
+  EXPECT_EQ(0, res_i420_frame.CreateEmptyFrame(width_, height_,
+                                               stride_y, stride_uv, stride_uv));
   rtc::scoped_ptr<uint8_t[]> out_i420_buffer(new uint8_t[frame_length_]);
   EXPECT_EQ(0, ConvertFromI420(orig_frame_, kI420, 0,
                                out_i420_buffer.get()));
   EXPECT_EQ(0, ConvertToI420(kI420, out_i420_buffer.get(), 0, 0, width_,
                              height_, 0, kVideoRotation_0, &res_i420_frame));
 
-  if (PrintI420VideoFrame(res_i420_frame, output_file) < 0) {
+  if (PrintVideoFrame(res_i420_frame, output_file) < 0) {
     return;
   }
   psnr = I420PSNR(&orig_frame_, &res_i420_frame);
@@ -301,30 +300,30 @@ TEST_F(TestLibYuv, ConvertAlignedFrame) {
 TEST_F(TestLibYuv, RotateTest) {
   // Use ConvertToI420 for multiple roatations - see that nothing breaks, all
   // memory is properly allocated and end result is equal to the starting point.
-  I420VideoFrame rotated_res_i420_frame;
+  VideoFrame rotated_res_i420_frame;
   int rotated_width = height_;
   int rotated_height = width_;
-  int stride_y ;
+  int stride_y;
   int stride_uv;
   Calc16ByteAlignedStride(rotated_width, &stride_y, &stride_uv);
-  EXPECT_EQ(0,rotated_res_i420_frame.CreateEmptyFrame(rotated_width,
-                                                      rotated_height,
-                                                      stride_y,
-                                                      stride_uv,
-                                                      stride_uv));
+  EXPECT_EQ(0, rotated_res_i420_frame.CreateEmptyFrame(rotated_width,
+                                                       rotated_height,
+                                                       stride_y,
+                                                       stride_uv,
+                                                       stride_uv));
   EXPECT_EQ(0, ConvertToI420(kI420, orig_buffer_.get(), 0, 0, width_, height_,
                              0, kVideoRotation_90, &rotated_res_i420_frame));
   EXPECT_EQ(0, ConvertToI420(kI420, orig_buffer_.get(), 0, 0, width_, height_,
                              0, kVideoRotation_270, &rotated_res_i420_frame));
-  EXPECT_EQ(0,rotated_res_i420_frame.CreateEmptyFrame(width_, height_,
-                                                      width_, (width_ + 1) / 2,
-                                                      (width_ + 1) / 2));
+  EXPECT_EQ(0, rotated_res_i420_frame.CreateEmptyFrame(width_, height_,
+                                                       width_, (width_ + 1) / 2,
+                                                       (width_ + 1) / 2));
   EXPECT_EQ(0, ConvertToI420(kI420, orig_buffer_.get(), 0, 0, width_, height_,
                              0, kVideoRotation_180, &rotated_res_i420_frame));
 }
 
 TEST_F(TestLibYuv, alignment) {
-  int value = 0x3FF; // 1023
+  int value = 0x3FF;  // 1023
   EXPECT_EQ(0x400, AlignInt(value, 128));  // Low 7 bits are zero.
   EXPECT_EQ(0x400, AlignInt(value, 64));  // Low 6 bits are zero.
   EXPECT_EQ(0x400, AlignInt(value, 32));  // Low 5 bits are zero.
@@ -347,4 +346,4 @@ TEST_F(TestLibYuv, StrideAlignment) {
   EXPECT_EQ(64, stride_uv);
 }
 
-}  // namespace
+}  // namespace webrtc

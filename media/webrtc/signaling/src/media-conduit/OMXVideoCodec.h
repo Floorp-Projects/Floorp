@@ -18,13 +18,13 @@ class OMXVideoCodec {
    * Create encoder object for codec type |aCodecType|. Return |nullptr| when
    * failed.
    */
-  static VideoEncoder* CreateEncoder(CodecType aCodecType);
+  static WebrtcVideoEncoder* CreateEncoder(CodecType aCodecType);
 
   /**
    * Create decoder object for codec type |aCodecType|. Return |nullptr| when
    * failed.
    */
-  static VideoDecoder* CreateDecoder(CodecType aCodecType);
+  static WebrtcVideoDecoder* CreateDecoder(CodecType aCodecType);
 };
 
 }

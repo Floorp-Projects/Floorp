@@ -109,8 +109,15 @@ ServoStyleSet::GetContext(nsIContent* aContent,
 {
   MOZ_ASSERT(aContent->IsElement());
   Element* element = aContent->AsElement();
-  RefPtr<ServoComputedValues> computedValues =
-    Servo_ResolveStyle(element, mRawSet.get(), aConsume, aMayCompute).Consume();
+
+  RefPtr<ServoComputedValues> computedValues;
+  if (aMayCompute == LazyComputeBehavior::Allow) {
+    computedValues =
+      Servo_ResolveStyleLazily(element, nullptr, aConsume, mRawSet.get()).Consume();
+  } else {
+    computedValues = Servo_ResolveStyle(element, aConsume).Consume();
+  }
+
   MOZ_ASSERT(computedValues);
   return GetContext(computedValues.forget(), aParentContext, aPseudoTag, aPseudoType);
 }
@@ -203,6 +210,21 @@ ServoStyleSet::ResolvePseudoElementStyle(Element* aOriginatingElement,
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext, pseudoTag, aType);
+}
+
+already_AddRefed<nsStyleContext>
+ServoStyleSet::ResolveTransientStyle(Element* aElement, CSSPseudoElementType aType)
+{
+  nsIAtom* pseudoTag = nullptr;
+  if (aType != CSSPseudoElementType::NotPseudo) {
+    pseudoTag = nsCSSPseudoElements::GetPseudoAtom(aType);
+  }
+
+  RefPtr<ServoComputedValues> computedValues =
+    Servo_ResolveStyleLazily(aElement, pseudoTag, ConsumeStyleBehavior::DontConsume,
+                             mRawSet.get()).Consume();
+
+  return GetContext(computedValues.forget(), nullptr, pseudoTag, aType);
 }
 
 // aFlags is an nsStyleSet flags bitfield
@@ -490,7 +512,8 @@ ServoStyleSet::NoteStyleSheetsChanged()
 void
 ServoStyleSet::AssertTreeIsClean()
 {
-  if (Element* root = mPresContext->Document()->GetRootElement()) {
+  DocumentStyleRootIterator iter(mPresContext->Document());
+  while (Element* root = iter.GetNextStyleRoot()) {
     Servo_AssertTreeIsClean(root);
   }
 }

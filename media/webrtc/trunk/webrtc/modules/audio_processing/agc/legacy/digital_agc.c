@@ -283,7 +283,7 @@ int32_t WebRtcAgc_InitDigital(DigitalAgc* stt, int16_t agcMode) {
 
 int32_t WebRtcAgc_AddFarendToDigital(DigitalAgc* stt,
                                      const int16_t* in_far,
-                                     int16_t nrSamples) {
+                                     size_t nrSamples) {
     assert(stt != NULL);
     // VAD for far end
     WebRtcAgc_ProcessVad(&stt->vadFarend, in_far, nrSamples);
@@ -293,7 +293,7 @@ int32_t WebRtcAgc_AddFarendToDigital(DigitalAgc* stt,
 
 int32_t WebRtcAgc_ProcessDigital(DigitalAgc* stt,
                                  const int16_t* const* in_near,
-                                 int16_t num_bands,
+                                 size_t num_bands,
                                  int16_t* const* out,
                                  uint32_t FS,
                                  int16_t lowlevelSignal) {
@@ -310,8 +310,9 @@ int32_t WebRtcAgc_ProcessDigital(DigitalAgc* stt,
     int16_t zeros = 0, zeros_fast, frac = 0;
     int16_t decay;
     int16_t gate, gain_adj;
-    int16_t k, n, i;
-    int16_t L, L2; // samples/subframe
+    int16_t k;
+    size_t n, i, L;
+    int16_t L2; // samples/subframe
 
     // determine number of samples per ms
     if (FS == 8000)
@@ -632,7 +633,7 @@ void WebRtcAgc_InitVad(AgcVad* state) {
 
 int16_t WebRtcAgc_ProcessVad(AgcVad* state,      // (i) VAD state
                              const int16_t* in,  // (i) Speech signal
-                             int16_t nrSamples)  // (i) number of samples
+                             size_t nrSamples)  // (i) number of samples
 {
     int32_t out, nrg, tmp32, tmp32b;
     uint16_t tmpU16;

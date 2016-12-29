@@ -116,8 +116,10 @@ public:
                              size_t length,
                              uint16_t rtcpPort) override;
     // Transport functions
-    int SendPacket(int channel, const void* data, size_t length) override;
-    int SendRTCPPacket(int channel, const void* data, size_t length) override;
+    bool SendRtp(const uint8_t* data,
+                 size_t length,
+                 const PacketOptions& packet_options) override;
+    bool SendRtcp(const uint8_t* data, size_t length) override;
 
     // UdpTransport functions continue.
     int32_t SetSendIP(const char* ipaddr) override;

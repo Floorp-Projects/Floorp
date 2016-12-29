@@ -88,14 +88,6 @@ TEST(ConfigParser, ParseConfig) {
   EXPECT_EQ(true, parser.Parse(&key_val_pairs));
 }
 
-#if !defined(WEBRTC_CHROMIUM_BUILD)
-TEST(ReadLinuxLsbRelease, ReturnsSomething) {
-  std::string str = ReadLinuxLsbRelease();
-  // ChromeOS don't have lsb_release
-  // EXPECT_FALSE(str.empty());
-}
-#endif
-
 TEST(ReadLinuxUname, ReturnsSomething) {
   std::string str = ReadLinuxUname();
   EXPECT_FALSE(str.empty());

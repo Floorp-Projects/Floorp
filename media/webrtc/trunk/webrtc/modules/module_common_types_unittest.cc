@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -38,6 +38,11 @@ TEST(IsNewerSequenceNumber, BackwardWrap) {
   EXPECT_FALSE(IsNewerSequenceNumber(0xFF00, 0x00FF));
 }
 
+TEST(IsNewerSequenceNumber, HalfWayApart) {
+  EXPECT_TRUE(IsNewerSequenceNumber(0x8000, 0x0000));
+  EXPECT_FALSE(IsNewerSequenceNumber(0x0000, 0x8000));
+}
+
 TEST(IsNewerTimestamp, Equal) {
   EXPECT_FALSE(IsNewerTimestamp(0x00000001, 0x000000001));
 }
@@ -60,6 +65,11 @@ TEST(IsNewerTimestamp, BackwardWrap) {
   EXPECT_FALSE(IsNewerTimestamp(0xFFFF0000, 0x00000000));
   EXPECT_FALSE(IsNewerTimestamp(0xFFFFFFFF, 0x0000FFFF));
   EXPECT_FALSE(IsNewerTimestamp(0xFFFF0000, 0x0000FFFF));
+}
+
+TEST(IsNewerTimestamp, HalfWayApart) {
+  EXPECT_TRUE(IsNewerTimestamp(0x80000000, 0x00000000));
+  EXPECT_FALSE(IsNewerTimestamp(0x00000000, 0x80000000));
 }
 
 TEST(LatestSequenceNumber, NoWrap) {
@@ -101,4 +111,74 @@ TEST(LatestTimestamp, Wrap) {
   EXPECT_EQ(0x0000FFFFu, LatestTimestamp(0xFFFFFFFF, 0x0000FFFF));
   EXPECT_EQ(0x0000FFFFu, LatestTimestamp(0xFFFF0000, 0x0000FFFF));
 }
+
+TEST(ClampToInt16, TestCases) {
+  EXPECT_EQ(0x0000, ClampToInt16(0x00000000));
+  EXPECT_EQ(0x0001, ClampToInt16(0x00000001));
+  EXPECT_EQ(0x7FFF, ClampToInt16(0x00007FFF));
+  EXPECT_EQ(0x7FFF, ClampToInt16(0x7FFFFFFF));
+  EXPECT_EQ(-0x0001, ClampToInt16(-0x00000001));
+  EXPECT_EQ(-0x8000, ClampToInt16(-0x8000));
+  EXPECT_EQ(-0x8000, ClampToInt16(-0x7FFFFFFF));
+}
+
+TEST(SequenceNumberUnwrapper, Limits) {
+  SequenceNumberUnwrapper unwrapper;
+
+  EXPECT_EQ(0, unwrapper.Unwrap(0));
+  EXPECT_EQ(0x8000, unwrapper.Unwrap(0x8000));
+  // Delta is exactly 0x8000 but current is lower than input, wrap backwards.
+  EXPECT_EQ(0x0, unwrapper.Unwrap(0x0000));
+
+  EXPECT_EQ(0x8000, unwrapper.Unwrap(0x8000));
+  EXPECT_EQ(0xFFFF, unwrapper.Unwrap(0xFFFF));
+  EXPECT_EQ(0x10000, unwrapper.Unwrap(0x0000));
+  EXPECT_EQ(0xFFFF, unwrapper.Unwrap(0xFFFF));
+  EXPECT_EQ(0x8000, unwrapper.Unwrap(0x8000));
+  EXPECT_EQ(0, unwrapper.Unwrap(0));
+
+  // Don't allow negative values.
+  EXPECT_EQ(0xFFFF, unwrapper.Unwrap(0xFFFF));
+}
+
+TEST(SequenceNumberUnwrapper, ForwardWraps) {
+  int64_t seq = 0;
+  SequenceNumberUnwrapper unwrapper;
+
+  const int kMaxIncrease = 0x8000 - 1;
+  const int kNumWraps = 4;
+  for (int i = 0; i < kNumWraps * 2; ++i) {
+    int64_t unwrapped = unwrapper.Unwrap(static_cast<uint16_t>(seq & 0xFFFF));
+    EXPECT_EQ(seq, unwrapped);
+    seq += kMaxIncrease;
+  }
+
+  unwrapper.UpdateLast(0);
+  for (int seq = 0; seq < kNumWraps * 0xFFFF; ++seq) {
+    int64_t unwrapped = unwrapper.Unwrap(static_cast<uint16_t>(seq & 0xFFFF));
+    EXPECT_EQ(seq, unwrapped);
+  }
+}
+
+TEST(SequenceNumberUnwrapper, BackwardWraps) {
+  SequenceNumberUnwrapper unwrapper;
+
+  const int kMaxDecrease = 0x8000 - 1;
+  const int kNumWraps = 4;
+  int64_t seq = kNumWraps * 2 * kMaxDecrease;
+  unwrapper.UpdateLast(seq);
+  for (int i = kNumWraps * 2; i >= 0; --i) {
+    int64_t unwrapped = unwrapper.Unwrap(static_cast<uint16_t>(seq & 0xFFFF));
+    EXPECT_EQ(seq, unwrapped);
+    seq -= kMaxDecrease;
+  }
+
+  seq = kNumWraps * 0xFFFF;
+  unwrapper.UpdateLast(seq);
+  for (; seq >= 0; --seq) {
+    int64_t unwrapped = unwrapper.Unwrap(static_cast<uint16_t>(seq & 0xFFFF));
+    EXPECT_EQ(seq, unwrapped);
+  }
+}
+
 }  // namespace webrtc
