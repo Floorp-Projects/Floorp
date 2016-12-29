@@ -329,11 +329,31 @@ private:
   HMODULE mModule;
 };
 
+HWND sHWnd = nullptr;
+
+static void
+DirectInputMessageLoopOnceCallback(nsITimer *aTimer, void* aClosure)
+{
+  MOZ_ASSERT(NS_GetCurrentThread() == gMonitorThread);
+  MSG msg;
+  while (PeekMessageW(&msg, sHWnd, 0, 0, PM_REMOVE) > 0) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+  aTimer->Cancel();
+  if (!sIsShutdown) {
+    aTimer->InitWithFuncCallback(DirectInputMessageLoopOnceCallback,
+                                 nullptr, kWindowsGamepadPollInterval,
+                                 nsITimer::TYPE_ONE_SHOT);
+  }
+}
+
 class WindowsGamepadService
 {
  public:
   WindowsGamepadService()
   {
+    mDirectInputTimer = do_CreateInstance("@mozilla.org/timer;1");
     mXInputTimer = do_CreateInstance("@mozilla.org/timer;1");
     mDeviceChangeTimer = do_CreateInstance("@mozilla.org/timer;1");
   }
@@ -343,6 +363,15 @@ class WindowsGamepadService
   }
 
   void DevicesChanged(bool aIsStablizing);
+
+  void StartMessageLoop()
+  {
+    MOZ_ASSERT(mDirectInputTimer);
+    mDirectInputTimer->InitWithFuncCallback(DirectInputMessageLoopOnceCallback,
+                                            nullptr, kWindowsGamepadPollInterval,
+                                            nsITimer::TYPE_ONE_SHOT);
+  }
+
   void Startup();
   void Shutdown();
   // Parse gamepad input from a WM_INPUT message.
@@ -373,6 +402,7 @@ class WindowsGamepadService
   HIDLoader mHID;
   XInputLoader mXInput;
 
+  nsCOMPtr<nsITimer> mDirectInputTimer;
   nsCOMPtr<nsITimer> mXInputTimer;
   nsCOMPtr<nsITimer> mDeviceChangeTimer;
 };
@@ -892,6 +922,9 @@ void
 WindowsGamepadService::Cleanup()
 {
   mIsXInputMonitoring = false;
+  if (mDirectInputTimer) {
+    mDirectInputTimer->Cancel();
+  }
   if (mXInputTimer) {
     mXInputTimer->Cancel();
   }
@@ -913,8 +946,6 @@ WindowsGamepadService::DevicesChanged(bool aIsStablizing)
     ScanForDevices();
   }
 }
-
-HWND sHWnd = nullptr;
 
 bool
 RegisterRawInput(HWND hwnd, bool enable)
@@ -964,29 +995,6 @@ GamepadWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-class WindowGamepadMessageLoopOnceRunnable final : public Runnable
-{
-public:
-  WindowGamepadMessageLoopOnceRunnable() {}
-  NS_IMETHOD Run() override
-  {
-    MOZ_ASSERT(NS_GetCurrentThread() == gMonitorThread);
-    MSG msg;
-    while (PeekMessageW(&msg, sHWnd, 0, 0, PM_REMOVE) > 0) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    }
-    if (!sIsShutdown) {
-      nsCOMPtr<nsIRunnable> runnable = new WindowGamepadMessageLoopOnceRunnable();
-      NS_DelayedDispatchToCurrentThread(runnable.forget(),
-                                        kWindowsGamepadPollInterval);
-    }
-    return NS_OK;
-  }
-private:
-  ~WindowGamepadMessageLoopOnceRunnable() {}
-};
-
 class StartWindowsGamepadServiceRunnable final : public Runnable
 {
 public:
@@ -1017,7 +1025,7 @@ public:
     }
 
     // Explicitly start the message loop
-    NS_DispatchToCurrentThread(new WindowGamepadMessageLoopOnceRunnable());
+    gService->StartMessageLoop();
 
     return NS_OK;
   }
