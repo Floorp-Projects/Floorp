@@ -1257,12 +1257,10 @@ nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(const nsMappedAttribut
       if (value) {
         if (value->Equals(nsGkAtoms::_empty, eCaseMatters) ||
             value->Equals(nsGkAtoms::_true, eIgnoreCase)) {
-          userModify->SetIntValue(StyleUserModify::ReadWrite,
-                                  eCSSUnit_Enumerated);
+          userModify->SetEnumValue(StyleUserModify::ReadWrite);
         }
         else if (value->Equals(nsGkAtoms::_false, eIgnoreCase)) {
-            userModify->SetIntValue(StyleUserModify::ReadOnly,
-                                    eCSSUnit_Enumerated);
+            userModify->SetEnumValue(StyleUserModify::ReadOnly);
         }
       }
     }
@@ -1281,7 +1279,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
     nsCSSValue* display = aData->ValueForDisplay();
     if (display->GetUnit() == eCSSUnit_Null) {
       if (aAttributes->IndexOfAttr(nsGkAtoms::hidden) >= 0) {
-        display->SetIntValue(StyleDisplay::None, eCSSUnit_Enumerated);
+        display->SetEnumValue(StyleDisplay::None);
       }
     }
   }
@@ -1346,9 +1344,9 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttr
       nsCSSValue* cssFloat = aRuleData->ValueForFloat();
       if (cssFloat->GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT) {
-          cssFloat->SetIntValue(StyleFloat::Left, eCSSUnit_Enumerated);
+          cssFloat->SetEnumValue(StyleFloat::Left);
         } else if (align == NS_STYLE_TEXT_ALIGN_RIGHT) {
-          cssFloat->SetIntValue(StyleFloat::Right, eCSSUnit_Enumerated);
+          cssFloat->SetEnumValue(StyleFloat::Right);
         }
       }
       nsCSSValue* verticalAlign = aRuleData->ValueForVerticalAlign();
