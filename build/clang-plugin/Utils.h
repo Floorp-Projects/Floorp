@@ -352,7 +352,7 @@ inline const FieldDecl *getBaseRefCntMember(QualType T) {
   return Clazz ? getBaseRefCntMember(Clazz) : 0;
 }
 
-inline bool hasCustomAnnotation(const Decl *D, const char *Spelling) {
+inline bool hasCustomAnnotation(const Decl *D, StringRef Spelling) {
   iterator_range<specific_attr_iterator<AnnotateAttr>> Attrs =
       D->specific_attrs<AnnotateAttr>();
 
