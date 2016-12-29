@@ -4,8 +4,10 @@
 /*
  * Initialization specific to Form Autofill xpcshell tests.
  *
- * This file is loaded by "loader.js".
+ * This file is loaded alongside loader.js.
  */
+
+/* import-globals-from loader.js */
 
 "use strict";
 

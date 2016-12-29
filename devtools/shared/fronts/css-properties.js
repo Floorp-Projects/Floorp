@@ -234,15 +234,7 @@ const initCssProperties = Task.async(function* (toolbox) {
   // Get the list dynamically if the cssProperties actor exists.
   if (toolbox.target.hasActor("cssProperties")) {
     front = CssPropertiesFront(client, toolbox.target.form);
-    const serverDB = yield front.getCSSDatabase();
-
-    // Ensure the database was returned in a format that is understood.
-    // Older versions of the protocol could return a blank database.
-    if (!serverDB.properties && !serverDB.margin) {
-      db = CSS_PROPERTIES_DB;
-    } else {
-      db = serverDB;
-    }
+    db = yield front.getCSSDatabase();
   } else {
     // The target does not support this actor, so require a static list of supported
     // properties.
@@ -294,9 +286,6 @@ function normalizeCssData(db) {
       db = { properties: db };
     }
 
-    // Fill in any missing DB information from the static database.
-    db = Object.assign({}, CSS_PROPERTIES_DB, db);
-
     let missingSupports = !db.properties.color.supports;
     let missingValues = !db.properties.color.values;
     let missingSubproperties = !db.properties.background.subproperties;
@@ -319,6 +308,10 @@ function normalizeCssData(db) {
       if (missingSubproperties) {
         db.properties[name].subproperties =
           CSS_PROPERTIES_DB.properties[name].subproperties;
+      }
+      // Add "isInherited" information to the css properties if it's missing.
+      if (db.properties.font.isInherited) {
+        db.properties[name].isInherited = CSS_PROPERTIES_DB.properties[name].isInherited;
       }
     }
   }

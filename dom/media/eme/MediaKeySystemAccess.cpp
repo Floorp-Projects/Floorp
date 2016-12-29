@@ -170,8 +170,8 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
         nsCString keySystem = NS_ConvertUTF16toUTF8(aKeySystem);
         bool supported = mozilla::java::MediaDrmProxy::IsSchemeSupported(keySystem);
         if (!supported) {
-          aOutMessage = NS_LITERAL_CSTRING("Widevine CDM is not available");
-          return MediaKeySystemStatus::Cdm_not_installed;
+          aOutMessage = NS_LITERAL_CSTRING("KeySystem or Minimum API level not met for Widevine EME");
+          return MediaKeySystemStatus::Cdm_not_supported;
         }
         return MediaKeySystemStatus::Available;
 #endif

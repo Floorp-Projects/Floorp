@@ -318,6 +318,10 @@ pref("browser.urlbar.oneOffSearches", true);
 pref("browser.urlbar.oneOffSearches", false);
 #endif
 
+// If changed to true, copying the entire URL from the location bar will put the
+// human readable (percent-decoded) URL on the clipboard.
+pref("browser.urlbar.decodeURLsOnCopy", false);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.

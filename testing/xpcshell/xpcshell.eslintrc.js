@@ -8,10 +8,12 @@ module.exports = {
 
   // All globals made available in the test environment.
   "globals": {
+    "_TEST_FILE": false,
     "add_task": false,
     "add_test": false,
     "Assert": false,
     "deepEqual": false,
+    "do_await_remote_message": false,
     "do_check_eq": false,
     "do_check_false": false,
     "do_check_matches": false,
@@ -30,6 +32,7 @@ module.exports = {
     "do_print": false,
     "do_register_cleanup": false,
     "do_report_unexpected_exception": false,
+    "do_send_remote_message": false,
     "do_test_finished": false,
     "do_test_pending": false,
     "do_throw": false,
@@ -45,6 +48,7 @@ module.exports = {
     "notEqual": false,
     "notStrictEqual": false,
     "ok": false,
+    "runningInParent": false,
     "run_next_test": false,
     "run_test": false,
     "run_test_in_child": false,
@@ -53,5 +57,8 @@ module.exports = {
     "todo": false,
     "todo_check_false": false,
     "todo_check_true": false,
+    // Firefox specific function.
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
+    "uneval": false,
   }
 };

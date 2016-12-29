@@ -347,7 +347,7 @@ var PrintUtils = {
 
     // PERR_FAILURE is the catch-all error message if we've gotten one that
     // we don't recognize.
-    msgName = "PERR_FAILURE";
+    let msgName = "PERR_FAILURE";
 
     for (let code of MSG_CODES) {
       let nsErrorResult = "NS_ERROR_" + code;

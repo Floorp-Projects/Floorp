@@ -834,7 +834,7 @@ tests.push({
     // Add a place to ensure place_id = 1 is valid
     this._placeId = addPlace();
     // Add a valid visit and an invalid one
-    stmt = mDBConn.createStatement("INSERT INTO moz_historyvisits(place_id) VALUES (:place_id)");
+    let stmt = mDBConn.createStatement("INSERT INTO moz_historyvisits(place_id) VALUES (:place_id)");
     stmt.params["place_id"] = this._placeId;
     stmt.execute();
     stmt.reset();
@@ -960,7 +960,7 @@ tests.push({
     // Insert a bookmark
     this._bookmarkId = addBookmark(this._placeId);
     // Add a used attribute.
-    stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
+    let stmt = mDBConn.createStatement("INSERT INTO moz_anno_attributes (name) VALUES (:anno)");
     stmt.params['anno'] = this._usedItemAttribute;
     stmt.execute();
     stmt.finalize();

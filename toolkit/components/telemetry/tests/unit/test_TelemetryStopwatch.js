@@ -11,7 +11,7 @@ const KEYED_HIST = { id: "TELEMETRY_INVALID_PING_TYPE_SUBMITTED", key: "TEST" };
 
 var refObj = {}, refObj2 = {};
 
-var originalCount1, originalCount2;
+var originalCount1, originalCount2, originalCount3;
 
 function run_test() {
   let histogram = Telemetry.getHistogramById(HIST_NAME);

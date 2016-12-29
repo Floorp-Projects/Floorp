@@ -22,8 +22,9 @@
 const DOMUtils = Components.classes["@mozilla.org/inspector/dom-utils;1"]
                            .getService(Components.interfaces.inIDOMUtils);
 
-const {PSEUDO_ELEMENTS, CSS_PROPERTIES} = require("devtools/shared/css/generated/properties-db");
+const {PSEUDO_ELEMENTS, CSS_PROPERTIES, PREFERENCES} = require("devtools/shared/css/generated/properties-db");
 const {generateCssProperties} = require("devtools/server/actors/css-properties");
+const {Preferences} = require("resource://gre/modules/Preferences.jsm");
 
 function run_test() {
   const propertiesErrorMessage = "If this assertion fails, then the client side CSS " +
@@ -38,7 +39,9 @@ function run_test() {
 
   /**
    * Check that the platform and client match for the details on their CSS properties.
-   * Enumerate each property to aid in debugging.
+   * Enumerate each property to aid in debugging. Sometimes these properties don't
+   * completely agree due to differences in preferences. Check the currently set
+   * preference for that property to see if it's enabled.
    */
   const platformProperties = generateCssProperties();
 
@@ -47,17 +50,18 @@ function run_test() {
     const clientProperty = CSS_PROPERTIES[propertyName];
     const deepEqual = isJsonDeepEqual(platformProperty, clientProperty);
 
+    // The "all" property can contain information that can be turned on and off by
+    // preferences. These values can be different between OSes, so ignore the equality
+    // check for this property, since this is likely to fail.
+    if (propertyName === "all") {
+      continue;
+    }
+
     if (deepEqual) {
       ok(true, `The static database and platform match for "${propertyName}".`);
     } else {
-      const prefMessage = `The static database and platform do not match ` +
-                          `for "${propertyName}".`;
-      if (getPreference(propertyName) === false) {
-        ok(true, `${prefMessage} However, there is a preference for disabling this ` +
-                 `property on the current build.`);
-      } else {
-        ok(false, `${prefMessage} ${propertiesErrorMessage}`);
-      }
+      ok(false, `The static database and platform do not match for ` + `
+        "${propertyName}". ${propertiesErrorMessage}`);
     }
   }
 
@@ -75,8 +79,14 @@ function run_test() {
   }
 
   mismatches.forEach(propertyName => {
-    ok(false, `The static database and platform do not agree on the property ` +
-              `"${propertyName}" ${propertiesErrorMessage}`);
+    if (getPreference(propertyName) === false) {
+      ok(true, `The static database and platform do not agree on the property ` +
+               `"${propertyName}" This is ok because it is currently disabled through ` +
+               `a preference.`);
+    } else {
+      ok(false, `The static database and platform do not agree on the property ` +
+                `"${propertyName}" ${propertiesErrorMessage}`);
+    }
   });
 }
 
@@ -133,4 +143,22 @@ function getKeyMismatches(a, b) {
   });
 
   return aMismatches.concat(bMismatches);
+}
+
+/**
+ * Get the preference value of whether this property is enabled. Returns an empty string
+ * if no preference exists.
+ *
+ * @param {String} propertyName
+ * @return {Boolean|undefined}
+ */
+function getPreference(propertyName) {
+  const preference = PREFERENCES.find(([prefPropertyName, preferenceKey]) => {
+    return prefPropertyName === propertyName && !!preferenceKey;
+  });
+
+  if (preference) {
+    return Preferences.get(preference[1]);
+  }
+  return undefined;
 }

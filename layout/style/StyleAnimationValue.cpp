@@ -336,8 +336,7 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
     arr->Item(4).SetColorValue(aShadow->mColor);
   }
   if (aShadow->mInset) {
-    arr->Item(5).SetIntValue(uint8_t(StyleBoxShadowType::Inset),
-                             eCSSUnit_Enumerated);
+    arr->Item(5).SetEnumValue(StyleBoxShadowType::Inset);
   }
 
   nsCSSValueList *resultItem = new nsCSSValueList;
@@ -4179,8 +4178,7 @@ StyleClipBasicShapeToCSSArray(const StyleClipPath& aClipPath,
       functionArray =
         aResult->Item(0).InitFunction(functionName,
                                       ShapeArgumentCount(functionName));
-      functionArray->Item(1).SetIntValue(shape->GetFillRule(),
-                                         eCSSUnit_Enumerated);
+      functionArray->Item(1).SetEnumValue(shape->GetFillRule());
       nsCSSValuePairList* list = functionArray->Item(2).SetPairListValue();
       const nsTArray<nsStyleCoord>& coords = shape->Coordinates();
       MOZ_ASSERT((coords.Length() % 2) == 0);
@@ -4228,8 +4226,7 @@ StyleClipBasicShapeToCSSArray(const StyleClipPath& aClipPath,
       MOZ_ASSERT_UNREACHABLE("Unknown shape type");
       return false;
   }
-  aResult->Item(1).SetIntValue(aClipPath.GetReferenceBox(),
-                               eCSSUnit_Enumerated);
+  aResult->Item(1).SetEnumValue(aClipPath.GetReferenceBox());
   return true;
 }
 
@@ -4525,8 +4522,7 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
             result->SetURLValue(clipPath.GetURL());
             aComputedValue.SetAndAdoptCSSValueValue(result.release(), eUnit_URL);
           } else if (type == StyleShapeSourceType::Box) {
-            aComputedValue.SetIntValue(clipPath.GetReferenceBox(),
-                                       eUnit_Enumerated);
+            aComputedValue.SetEnumValue(clipPath.GetReferenceBox());
           } else if (type == StyleShapeSourceType::Shape) {
             RefPtr<nsCSSValue::Array> result = nsCSSValue::Array::Create(2);
             if (!StyleClipBasicShapeToCSSArray(clipPath, result)) {

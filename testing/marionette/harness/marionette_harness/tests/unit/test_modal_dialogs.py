@@ -157,7 +157,7 @@ class TestTabModals(MarionetteTestCase):
         alert.accept()
         self.wait_for_condition(lambda mn: mn.get_url() == "about:blank")
 
-    @skip_if_e10s
+    @skip_if_e10s("Bug 1325044")
     def test_unrelated_command_when_alert_present(self):
         click_handler = self.marionette.find_element(By.ID, 'click-handler')
         text = self.marionette.find_element(By.ID, 'click-result').text

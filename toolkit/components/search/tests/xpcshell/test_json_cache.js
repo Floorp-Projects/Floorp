@@ -15,7 +15,7 @@
 var _dirSvc = null;
 function getDir(aKey, aIFace) {
   if (!aKey) {
-    FAIL("getDir requires a directory key!");
+    do_throw("getDir requires a directory key!");
   }
 
   if (!_dirSvc) {

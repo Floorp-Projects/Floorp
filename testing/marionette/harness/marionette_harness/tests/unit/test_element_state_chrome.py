@@ -4,7 +4,7 @@
 
 from marionette_driver.by import By
 
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, skip
 
 
 class TestIsElementEnabledChrome(MarionetteTestCase):
@@ -36,9 +36,7 @@ class TestIsElementEnabledChrome(MarionetteTestCase):
         self.assertTrue(rect['y'] > 0)
 
 
-# Switched off in bug 896043,
-# and to be turned on in bug 896046
-"""
+@skip("Switched off in bug 896043, and to be turned on in bug 896046")
 class TestIsElementDisplayed(MarionetteTestCase):
     def test_isDisplayed(self):
         l = self.marionette.find_element(By.ID, "textInput")
@@ -46,7 +44,6 @@ class TestIsElementDisplayed(MarionetteTestCase):
         self.marionette.execute_script("arguments[0].hidden = true;", [l])
         self.assertFalse(l.is_displayed())
         self.marionette.execute_script("arguments[0].hidden = false;", [l])
-"""
 
 
 class TestGetElementAttributeChrome(MarionetteTestCase):

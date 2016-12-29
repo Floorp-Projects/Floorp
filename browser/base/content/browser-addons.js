@@ -425,6 +425,8 @@ const gXPInstallObserver = {
         return i.addon.pendingOperations != AddonManager.PENDING_NONE;
       });
 
+      let secondaryActions = null;
+
       if (needsRestart) {
         notificationID = "addon-install-restart";
         messageString = gNavigatorBundle.getString("addonsInstalledNeedsRestart");
@@ -435,6 +437,11 @@ const gXPInstallObserver = {
             BrowserUtils.restartApplication();
           }
         };
+        secondaryActions = [{
+          label: gNavigatorBundle.getString("addonInstallRestartIgnoreButton"),
+          accessKey: gNavigatorBundle.getString("addonInstallRestartIgnoreButton.accesskey"),
+          callback: () => {},
+        }];
       }
       else {
         messageString = gNavigatorBundle.getString("addonsInstalled");
@@ -446,14 +453,14 @@ const gXPInstallObserver = {
       messageString = messageString.replace("#2", installInfo.installs.length);
       messageString = messageString.replace("#3", brandShortName);
 
-      // Remove notificaion on dismissal, since it's possible to cancel the
+      // Remove notification on dismissal, since it's possible to cancel the
       // install through the addons manager UI, making the "restart" prompt
       // irrelevant.
       options.removeOnDismissal = true;
       options.persistent = false;
 
       PopupNotifications.show(browser, notificationID, messageString, anchorID,
-                              action, null, options);
+                              action, secondaryActions, options);
       break; }
     }
   },

@@ -92,7 +92,7 @@ function onload()
       // use childnodes here, the text can wrap
       for (var i = 1; i < messageParagraphs.length; i++) {
         var descriptionNode = document.createElement("description");
-        text = document.createTextNode(messageParagraphs[i]);
+        let text = document.createTextNode(messageParagraphs[i]);
         descriptionNode.appendChild(text);
         messageParent.appendChild(descriptionNode);
       }
