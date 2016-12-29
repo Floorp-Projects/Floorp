@@ -61,6 +61,13 @@ CallbackObject::FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx)
   MOZ_ASSERT(mRefCnt.get() > 0);
   if (mRefCnt.get() > 1) {
     mozilla::HoldJSObjects(this);
+    if (JS::ContextOptionsRef(aCx).asyncStack()) {
+      JS::RootedObject stack(aCx);
+      if (!JS::CaptureCurrentStack(aCx, &stack)) {
+        JS_ClearPendingException(aCx);
+      }
+      mCreationStack = stack;
+    }
   } else {
     // We can just forget all our stuff.
     ClearJSReferences();
