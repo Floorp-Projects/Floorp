@@ -759,12 +759,12 @@ nsNativeTheme::IsDarkBackground(nsIFrame* aFrame)
   }
   nsStyleContext* bgSC = nullptr;
   if (!nsCSSRendering::FindBackground(frame, &bgSC) ||
-      bgSC->StyleBackground()->IsTransparent()) {
+      bgSC->StyleBackground()->IsTransparent(bgSC)) {
     nsIFrame* backgroundFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(frame, true);
     nsCSSRendering::FindBackground(backgroundFrame, &bgSC);
   }
   if (bgSC) {
-    nscolor bgColor = bgSC->StyleBackground()->mBackgroundColor;
+    nscolor bgColor = bgSC->StyleBackground()->BackgroundColor(bgSC);
     // Consider the background color dark if the sum of the r, g and b values is
     // less than 384 in a semi-transparent document.  This heuristic matches what
     // WebKit does, and we can improve it later if needed.

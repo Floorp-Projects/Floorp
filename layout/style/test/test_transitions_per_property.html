@@ -83,7 +83,7 @@ var supported_properties = {
     "-moz-outline-radius-topleft": [ test_radius_transition ],
     "-moz-outline-radius-topright": [ test_radius_transition ],
     "background-color": [ test_color_transition,
-                          test_currentcolor_transition ],
+                          test_true_currentcolor_transition ],
     "background-position": [ test_background_position_transition,
                              // FIXME: We don't currently test clamping,
                              // since background-position uses calc() as
