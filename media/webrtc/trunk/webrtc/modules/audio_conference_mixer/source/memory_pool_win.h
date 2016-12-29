@@ -14,8 +14,8 @@
 #include <assert.h>
 #include <windows.h>
 
-#include "webrtc/system_wrappers/interface/aligned_malloc.h"
-#include "webrtc/system_wrappers/interface/atomic32.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {

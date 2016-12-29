@@ -66,7 +66,7 @@ class ScreenCaptureFrameQueue {
   static const int kQueueLength = 2;
   rtc::scoped_ptr<SharedDesktopFrame> frames_[kQueueLength];
 
-  DISALLOW_COPY_AND_ASSIGN(ScreenCaptureFrameQueue);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScreenCaptureFrameQueue);
 };
 
 }  // namespace webrtc

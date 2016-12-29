@@ -17,6 +17,22 @@
 
 namespace webrtc {
 
+// Functor to use when supplying a verifier function for the queue item
+// verifcation.
+template <typename T>
+class RenderQueueItemVerifier {
+ public:
+  explicit RenderQueueItemVerifier(size_t minimum_capacity)
+      : minimum_capacity_(minimum_capacity) {}
+
+  bool operator()(const std::vector<T>& v) const {
+    return v.capacity() >= minimum_capacity_;
+  }
+
+ private:
+  size_t minimum_capacity_;
+};
+
 class ProcessingComponent {
  public:
   ProcessingComponent();
@@ -31,21 +47,21 @@ class ProcessingComponent {
  protected:
   virtual int Configure();
   int EnableComponent(bool enable);
-  void* handle(int index) const;
-  int num_handles() const;
+  void* handle(size_t index) const;
+  size_t num_handles() const;
 
  private:
   virtual void* CreateHandle() const = 0;
   virtual int InitializeHandle(void* handle) const = 0;
   virtual int ConfigureHandle(void* handle) const = 0;
   virtual void DestroyHandle(void* handle) const = 0;
-  virtual int num_handles_required() const = 0;
+  virtual size_t num_handles_required() const = 0;
   virtual int GetHandleError(void* handle) const = 0;
 
   std::vector<void*> handles_;
   bool initialized_;
   bool enabled_;
-  int num_handles_;
+  size_t num_handles_;
 };
 
 }  // namespace webrtc

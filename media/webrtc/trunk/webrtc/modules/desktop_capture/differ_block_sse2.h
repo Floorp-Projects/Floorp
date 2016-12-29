@@ -19,14 +19,14 @@
 namespace webrtc {
 
 // Find block difference of dimension 16x16.
-extern int BlockDifference_SSE2_W16(const uint8_t* image1,
-                                    const uint8_t* image2,
-                                    int stride);
+extern bool BlockDifference_SSE2_W16(const uint8_t* image1,
+                                     const uint8_t* image2,
+                                     int stride);
 
 // Find block difference of dimension 32x32.
-extern int BlockDifference_SSE2_W32(const uint8_t* image1,
-                                    const uint8_t* image2,
-                                    int stride);
+extern bool BlockDifference_SSE2_W32(const uint8_t* image1,
+                                     const uint8_t* image2,
+                                     int stride);
 
 }  // namespace webrtc
 

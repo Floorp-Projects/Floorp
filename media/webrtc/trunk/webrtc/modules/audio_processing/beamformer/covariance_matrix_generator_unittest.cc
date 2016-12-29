@@ -165,14 +165,14 @@ TEST(CovarianceMatrixGeneratorTest, TestAngledCovarianceMatrix2Mics) {
 
   complex<float>* const* actual_els = actual_covariance_matrix.elements();
 
-  EXPECT_NEAR(actual_els[0][0].real(), 1.f, kTolerance);
-  EXPECT_NEAR(actual_els[0][1].real(), 0.9952f, kTolerance);
-  EXPECT_NEAR(actual_els[1][0].real(), 0.9952f, kTolerance);
-  EXPECT_NEAR(actual_els[1][1].real(), 1.f, kTolerance);
+  EXPECT_NEAR(actual_els[0][0].real(), 0.5f, kTolerance);
+  EXPECT_NEAR(actual_els[0][1].real(), 0.4976f, kTolerance);
+  EXPECT_NEAR(actual_els[1][0].real(), 0.4976f, kTolerance);
+  EXPECT_NEAR(actual_els[1][1].real(), 0.5f, kTolerance);
 
   EXPECT_NEAR(actual_els[0][0].imag(), 0.f, kTolerance);
-  EXPECT_NEAR(actual_els[0][1].imag(), 0.0978f, kTolerance);
-  EXPECT_NEAR(actual_els[1][0].imag(), -0.0978f, kTolerance);
+  EXPECT_NEAR(actual_els[0][1].imag(), 0.0489f, kTolerance);
+  EXPECT_NEAR(actual_els[1][0].imag(), -0.0489f, kTolerance);
   EXPECT_NEAR(actual_els[1][1].imag(), 0.f, kTolerance);
 }
 
@@ -203,24 +203,24 @@ TEST(CovarianceMatrixGeneratorTest, TestAngledCovarianceMatrix3Mics) {
 
   complex<float>* const* actual_els = actual_covariance_matrix.elements();
 
-  EXPECT_NEAR(actual_els[0][0].real(), 1.f, kTolerance);
-  EXPECT_NEAR(actual_els[0][1].real(), 0.8859f, kTolerance);
-  EXPECT_NEAR(actual_els[0][2].real(), 0.5696f, kTolerance);
-  EXPECT_NEAR(actual_els[1][0].real(), 0.8859f, kTolerance);
-  EXPECT_NEAR(actual_els[1][1].real(), 1.f, kTolerance);
-  EXPECT_NEAR(actual_els[1][2].real(), 0.8859f, kTolerance);
-  EXPECT_NEAR(actual_els[2][0].real(), 0.5696f, kTolerance);
-  EXPECT_NEAR(actual_els[2][1].real(), 0.8859f, kTolerance);
-  EXPECT_NEAR(actual_els[2][2].real(), 1.f, kTolerance);
+  EXPECT_NEAR(actual_els[0][0].real(), 0.3333f, kTolerance);
+  EXPECT_NEAR(actual_els[0][1].real(), 0.2953f, kTolerance);
+  EXPECT_NEAR(actual_els[0][2].real(), 0.1899f, kTolerance);
+  EXPECT_NEAR(actual_els[1][0].real(), 0.2953f, kTolerance);
+  EXPECT_NEAR(actual_els[1][1].real(), 0.3333f, kTolerance);
+  EXPECT_NEAR(actual_els[1][2].real(), 0.2953f, kTolerance);
+  EXPECT_NEAR(actual_els[2][0].real(), 0.1899f, kTolerance);
+  EXPECT_NEAR(actual_els[2][1].real(), 0.2953f, kTolerance);
+  EXPECT_NEAR(actual_els[2][2].real(), 0.3333f, kTolerance);
 
   EXPECT_NEAR(actual_els[0][0].imag(), 0.f, kTolerance);
-  EXPECT_NEAR(actual_els[0][1].imag(), 0.4639f, kTolerance);
-  EXPECT_NEAR(actual_els[0][2].imag(), 0.8219f, kTolerance);
-  EXPECT_NEAR(actual_els[1][0].imag(), -0.4639f, kTolerance);
+  EXPECT_NEAR(actual_els[0][1].imag(), 0.1546f, kTolerance);
+  EXPECT_NEAR(actual_els[0][2].imag(), 0.274f, kTolerance);
+  EXPECT_NEAR(actual_els[1][0].imag(), -0.1546f, kTolerance);
   EXPECT_NEAR(actual_els[1][1].imag(), 0.f, kTolerance);
-  EXPECT_NEAR(actual_els[1][2].imag(), 0.4639f, kTolerance);
-  EXPECT_NEAR(actual_els[2][0].imag(), -0.8219f, kTolerance);
-  EXPECT_NEAR(actual_els[2][1].imag(), -0.4639f, kTolerance);
+  EXPECT_NEAR(actual_els[1][2].imag(), 0.1546f, kTolerance);
+  EXPECT_NEAR(actual_els[2][0].imag(), -0.274f, kTolerance);
+  EXPECT_NEAR(actual_els[2][1].imag(), -0.1546f, kTolerance);
   EXPECT_NEAR(actual_els[2][2].imag(), 0.f, kTolerance);
 }
 

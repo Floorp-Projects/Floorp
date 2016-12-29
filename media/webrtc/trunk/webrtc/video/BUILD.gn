@@ -10,19 +10,42 @@ import("../build/webrtc.gni")
 
 source_set("video") {
   sources = [
-    "call.cc",
+    "call_stats.cc",
+    "call_stats.h",
     "encoded_frame_callback_adapter.cc",
     "encoded_frame_callback_adapter.h",
+    "encoder_state_feedback.cc",
+    "encoder_state_feedback.h",
+    "overuse_frame_detector.cc",
+    "overuse_frame_detector.h",
+    "payload_router.cc",
+    "payload_router.h",
     "receive_statistics_proxy.cc",
     "receive_statistics_proxy.h",
+    "report_block_stats.cc",
+    "report_block_stats.h",
     "send_statistics_proxy.cc",
     "send_statistics_proxy.h",
-    "transport_adapter.cc",
-    "transport_adapter.h",
+    "stream_synchronization.cc",
+    "stream_synchronization.h",
+    "video_capture_input.cc",
+    "video_capture_input.h",
+    "video_decoder.cc",
+    "video_encoder.cc",
     "video_receive_stream.cc",
     "video_receive_stream.h",
     "video_send_stream.cc",
     "video_send_stream.h",
+    "vie_channel.cc",
+    "vie_channel.h",
+    "vie_encoder.cc",
+    "vie_encoder.h",
+    "vie_receiver.cc",
+    "vie_receiver.h",
+    "vie_remb.cc",
+    "vie_remb.h",
+    "vie_sync_module.cc",
+    "vie_sync_module.h",
   ]
 
   configs += [ "..:common_config" ]
@@ -35,8 +58,18 @@ source_set("video") {
   }
 
   deps = [
+    "..:rtc_event_log",
     "..:webrtc_common",
-    "../video_engine:video_engine_core",
+    "../common_video",
+    "../modules/bitrate_controller",
+    "../modules/pacing",
+    "../modules/rtp_rtcp",
+    "../modules/utility",
+    "../modules/video_capture:video_capture_module",
+    "../modules/video_coding",
+    "../modules/video_processing",
+    "../modules/video_render:video_render_module",
+    "../system_wrappers",
+    "../voice_engine",
   ]
 }
-

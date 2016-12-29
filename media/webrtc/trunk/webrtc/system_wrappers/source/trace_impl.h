@@ -13,11 +13,11 @@
 
 #include "webrtc/base/criticalsection.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
-#include "webrtc/system_wrappers/interface/static_instance.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
+#include "webrtc/system_wrappers/include/static_instance.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 namespace webrtc {
 
@@ -36,7 +36,6 @@ class TraceImpl : public Trace {
  public:
   virtual ~TraceImpl();
 
-  static TraceImpl* CreateInstance();
   static TraceImpl* GetTrace(const TraceLevel level = kTraceAll);
 
   int32_t SetTraceFileImpl(const char* file_name, const bool add_file_counter);

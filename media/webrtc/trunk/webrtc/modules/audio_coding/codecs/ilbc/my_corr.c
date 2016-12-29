@@ -23,13 +23,15 @@
  *---------------------------------------------------------------*/
 
 void WebRtcIlbcfix_MyCorr(
-    int32_t *corr,  /* (o) correlation of seq1 and seq2 */
-    int16_t *seq1,  /* (i) first sequence */
-    int16_t dim1,  /* (i) dimension first seq1 */
-    const int16_t *seq2, /* (i) second sequence */
-    int16_t dim2   /* (i) dimension seq2 */
+    int32_t* corr,  /* (o) correlation of seq1 and seq2 */
+    const int16_t* seq1,  /* (i) first sequence */
+    size_t dim1,  /* (i) dimension first seq1 */
+    const int16_t* seq2, /* (i) second sequence */
+    size_t dim2   /* (i) dimension seq2 */
                           ){
-  int16_t max, scale, loops;
+  int16_t max;
+  size_t loops;
+  int scale;
 
   /* Calculate correlation between the two sequences. Scale the
      result of the multiplcication to maximum 26 bits in order
@@ -37,7 +39,7 @@ void WebRtcIlbcfix_MyCorr(
   max=WebRtcSpl_MaxAbsValueW16(seq1, dim1);
   scale=WebRtcSpl_GetSizeInBits(max);
 
-  scale = (int16_t)(2 * scale - 26);
+  scale = 2 * scale - 26;
   if (scale<0) {
     scale=0;
   }
@@ -45,7 +47,7 @@ void WebRtcIlbcfix_MyCorr(
   loops=dim1-dim2+1;
 
   /* Calculate the cross correlations */
-  WebRtcSpl_CrossCorrelation(corr, (int16_t*)seq2, seq1, dim2, loops, scale, 1);
+  WebRtcSpl_CrossCorrelation(corr, seq2, seq1, dim2, loops, scale, 1);
 
   return;
 }

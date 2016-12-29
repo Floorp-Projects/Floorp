@@ -90,29 +90,29 @@ TEST(FilesystemTest, TestGetDiskFreeSpace) {
   Pathname path;
   ASSERT_TRUE(Filesystem::GetAppDataFolder(&path, true));
 
-  int64 free1 = 0;
+  int64_t free1 = 0;
   EXPECT_TRUE(Filesystem::IsFolder(path));
   EXPECT_FALSE(Filesystem::IsFile(path));
   EXPECT_TRUE(Filesystem::GetDiskFreeSpace(path, &free1));
   EXPECT_GT(free1, 0);
 
-  int64 free2 = 0;
+  int64_t free2 = 0;
   path.AppendFolder("this_folder_doesnt_exist");
   EXPECT_FALSE(Filesystem::IsFolder(path));
   EXPECT_TRUE(Filesystem::IsAbsent(path));
   EXPECT_TRUE(Filesystem::GetDiskFreeSpace(path, &free2));
   // These should be the same disk, and disk free space should not have changed
   // by more than 1% between the two calls.
-  EXPECT_LT(static_cast<int64>(free1 * .9), free2);
-  EXPECT_LT(free2, static_cast<int64>(free1 * 1.1));
+  EXPECT_LT(static_cast<int64_t>(free1 * .9), free2);
+  EXPECT_LT(free2, static_cast<int64_t>(free1 * 1.1));
 
-  int64 free3 = 0;
+  int64_t free3 = 0;
   path.clear();
   EXPECT_TRUE(path.empty());
   EXPECT_TRUE(Filesystem::GetDiskFreeSpace(path, &free3));
   // Current working directory may not be where exe is.
-  // EXPECT_LT(static_cast<int64>(free1 * .9), free3);
-  // EXPECT_LT(free3, static_cast<int64>(free1 * 1.1));
+  // EXPECT_LT(static_cast<int64_t>(free1 * .9), free3);
+  // EXPECT_LT(free3, static_cast<int64_t>(free1 * 1.1));
   EXPECT_GT(free3, 0);
 }
 

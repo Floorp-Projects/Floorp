@@ -16,8 +16,8 @@ class FakeAudioDeviceModule : public AudioDeviceModule {
  public:
   FakeAudioDeviceModule() {}
   virtual ~FakeAudioDeviceModule() {}
-  virtual int32_t AddRef() { return 0; }
-  virtual int32_t Release() { return 0; }
+  virtual int32_t AddRef() const { return 0; }
+  virtual int32_t Release() const { return 0; }
   virtual int32_t RegisterEventObserver(AudioDeviceObserver* eventCallback) {
     return 0;
   }
@@ -147,6 +147,10 @@ class FakeAudioDeviceModule : public AudioDeviceModule {
   virtual bool BuiltInAECIsAvailable() const { return false; }
   virtual int32_t EnableBuiltInAEC(bool enable) { return -1; }
   virtual bool BuiltInAECIsEnabled() const { return false; }
+  virtual bool BuiltInAGCIsAvailable() const { return false; }
+  virtual int32_t EnableBuiltInAGC(bool enable) { return -1; }
+  virtual bool BuiltInNSIsAvailable() const { return false; }
+  virtual int32_t EnableBuiltInNS(bool enable) { return -1; }
 };
 
 }  // namespace webrtc

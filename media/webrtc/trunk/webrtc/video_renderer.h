@@ -8,26 +8,31 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef WEBRTC_VIDEO_ENGINE_NEW_INCLUDE_VIDEO_RENDERER_H_
-#define WEBRTC_VIDEO_ENGINE_NEW_INCLUDE_VIDEO_RENDERER_H_
+#ifndef WEBRTC_VIDEO_RENDERER_H_
+#define WEBRTC_VIDEO_RENDERER_H_
 
 namespace webrtc {
 
-class I420VideoFrame;
+class VideoFrame;
 
 class VideoRenderer {
  public:
   // This function should return as soon as possible and not block until it's
   // time to render the frame.
-  // TODO(mflodman) Remove time_to_render_ms when I420VideoFrame contains NTP.
-  virtual void RenderFrame(const I420VideoFrame& video_frame,
+  // TODO(mflodman) Remove time_to_render_ms when VideoFrame contains NTP.
+  virtual void RenderFrame(const VideoFrame& video_frame,
                            int time_to_render_ms) = 0;
 
   virtual bool IsTextureSupported() const = 0;
+
+  // This function returns true if WebRTC should not delay frames for
+  // smoothness. In general, this case means the renderer can schedule frames to
+  // optimize smoothness.
+  virtual bool SmoothsRenderedFrames() const { return false; }
 
  protected:
   virtual ~VideoRenderer() {}
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_VIDEO_ENGINE_NEW_INCLUDE_VIDEO_RENDERER_H_
+#endif  // WEBRTC_VIDEO_RENDERER_H_

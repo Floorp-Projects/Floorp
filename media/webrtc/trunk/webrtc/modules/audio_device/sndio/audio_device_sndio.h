@@ -14,8 +14,8 @@
 #include <sndio.h>
 
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/base/platform_thread.h"
 
 namespace webrtc
 {
@@ -169,8 +169,8 @@ private:
 
     CriticalSectionWrapper& _critSect;
 
-    rtc::scoped_ptr<ThreadWrapper> _ptrThreadRec;
-    rtc::scoped_ptr<ThreadWrapper> _ptrThreadPlay;
+    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadRec;
+    rtc::scoped_ptr<rtc::PlatformThread> _ptrThreadPlay;
 
     int32_t _id;
 

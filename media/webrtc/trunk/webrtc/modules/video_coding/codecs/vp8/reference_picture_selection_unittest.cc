@@ -22,25 +22,19 @@ static const uint32_t kMinUpdateInterval = 10;
 // Should match the values set in reference_picture_selection.h
 static const int kRtt = 10;
 
-static const int kNoPropagationGolden    = VP8_EFLAG_NO_REF_ARF |
-                                           VP8_EFLAG_NO_UPD_GF |
-                                           VP8_EFLAG_NO_UPD_ARF;
-static const int kNoPropagationAltRef    = VP8_EFLAG_NO_REF_GF |
-                                           VP8_EFLAG_NO_UPD_GF |
-                                           VP8_EFLAG_NO_UPD_ARF;
-static const int kPropagateGolden        = VP8_EFLAG_FORCE_GF |
-                                           VP8_EFLAG_NO_UPD_ARF |
-                                           VP8_EFLAG_NO_REF_GF |
-                                           VP8_EFLAG_NO_REF_LAST;
-static const int kPropagateAltRef        = VP8_EFLAG_FORCE_ARF |
-                                           VP8_EFLAG_NO_UPD_GF |
-                                           VP8_EFLAG_NO_REF_ARF |
-                                           VP8_EFLAG_NO_REF_LAST;
-static const int kRefreshFromGolden      = VP8_EFLAG_NO_REF_LAST |
-                                           VP8_EFLAG_NO_REF_ARF;
-static const int kRefreshFromAltRef      = VP8_EFLAG_NO_REF_LAST |
-                                           VP8_EFLAG_NO_REF_GF;
-
+static const int kNoPropagationGolden =
+    VP8_EFLAG_NO_REF_ARF | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF;
+static const int kNoPropagationAltRef =
+    VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_UPD_GF | VP8_EFLAG_NO_UPD_ARF;
+static const int kPropagateGolden = VP8_EFLAG_FORCE_GF | VP8_EFLAG_NO_UPD_ARF |
+                                    VP8_EFLAG_NO_REF_GF | VP8_EFLAG_NO_REF_LAST;
+static const int kPropagateAltRef = VP8_EFLAG_FORCE_ARF | VP8_EFLAG_NO_UPD_GF |
+                                    VP8_EFLAG_NO_REF_ARF |
+                                    VP8_EFLAG_NO_REF_LAST;
+static const int kRefreshFromGolden =
+    VP8_EFLAG_NO_REF_LAST | VP8_EFLAG_NO_REF_ARF;
+static const int kRefreshFromAltRef =
+    VP8_EFLAG_NO_REF_LAST | VP8_EFLAG_NO_REF_GF;
 
 class TestRPS : public ::testing::Test {
  protected:
@@ -84,15 +78,15 @@ TEST_F(TestRPS, TestDecoderRefresh) {
   EXPECT_EQ(rps_.ReceivedSLI(90 * time), true);
   // Enough time have elapsed since the previous reference propagation, we will
   // therefore get both a refresh from golden and a propagation of alt-ref.
-  EXPECT_EQ(rps_.EncodeFlags(5, true, 90 * time), kRefreshFromGolden |
-            kPropagateAltRef);
+  EXPECT_EQ(rps_.EncodeFlags(5, true, 90 * time),
+            kRefreshFromGolden | kPropagateAltRef);
   rps_.ReceivedRPSI(5);
   time += kRtt + 1;
   // Enough time for a new refresh, but not enough time for a reference
   // propagation.
   EXPECT_EQ(rps_.ReceivedSLI(90 * time), true);
-  EXPECT_EQ(rps_.EncodeFlags(6, true, 90 * time), kRefreshFromAltRef |
-            kNoPropagationAltRef);
+  EXPECT_EQ(rps_.EncodeFlags(6, true, 90 * time),
+            kRefreshFromAltRef | kNoPropagationAltRef);
 }
 
 TEST_F(TestRPS, TestWrap) {

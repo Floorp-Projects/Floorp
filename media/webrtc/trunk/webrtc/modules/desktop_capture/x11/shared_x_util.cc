@@ -12,7 +12,7 @@
 
 namespace webrtc {
 
-WindowUtilX11::WindowUtilX11(scoped_refptr<SharedXDisplay> x_display) {
+WindowUtilX11::WindowUtilX11(rtc::scoped_refptr<SharedXDisplay> x_display) {
   x_display_ = x_display;
   wm_state_atom_ = XInternAtom(display(), "WM_STATE", True);
   window_type_atom_ = XInternAtom(display(), "_NET_WM_WINDOW_TYPE", True);

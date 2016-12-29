@@ -14,9 +14,9 @@
 #include <list>
 #include <vector>
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -92,7 +92,7 @@ class ForwardErrorCorrection {
                     // packets, but not required for media packets.
     bool is_fec;    // Set to true if this is an FEC packet and false
                     // otherwise.
-    scoped_refptr<Packet> pkt;  // Pointer to the packet storage.
+    rtc::scoped_refptr<Packet> pkt;  // Pointer to the packet storage.
   };
 
   // The recovered list parameter of #DecodeFEC() will reference structs of
@@ -110,7 +110,7 @@ class ForwardErrorCorrection {
                     // caller through the callback.
     uint8_t length_recovery[2];  // Two bytes used for recovering the packet
                                  // length with XOR operations.
-    scoped_refptr<Packet> pkt;   // Pointer to the packet storage.
+    rtc::scoped_refptr<Packet> pkt;  // Pointer to the packet storage.
   };
 
   typedef std::list<Packet*> PacketList;
@@ -279,7 +279,7 @@ class ForwardErrorCorrection {
   void AttemptRecover(RecoveredPacketList* recovered_packet_list);
 
   // Initializes the packet recovery using the FEC packet.
-  static void InitRecovery(const FecPacket* fec_packet,
+  static bool InitRecovery(const FecPacket* fec_packet,
                            RecoveredPacket* recovered);
 
   // Performs XOR between |src_packet| and |dst_packet| and stores the result
@@ -287,10 +287,10 @@ class ForwardErrorCorrection {
   static void XorPackets(const Packet* src_packet, RecoveredPacket* dst_packet);
 
   // Finish up the recovery of a packet.
-  static void FinishRecovery(RecoveredPacket* recovered);
+  static bool FinishRecovery(RecoveredPacket* recovered);
 
   // Recover a missing packet.
-  void RecoverPacket(const FecPacket* fec_packet,
+  bool RecoverPacket(const FecPacket* fec_packet,
                      RecoveredPacket* rec_packet_to_insert);
 
   // Get the number of missing media packets which are covered by this

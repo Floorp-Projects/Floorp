@@ -45,13 +45,13 @@ bool Converter::ConvertRGBAToI420Video(std::string frames_dir,
   }
 
   int input_frame_size = InputFrameSize();
-  uint8* rgba_buffer = new uint8[input_frame_size];
+  uint8_t* rgba_buffer = new uint8_t[input_frame_size];
   int y_plane_size = YPlaneSize();
-  uint8* dst_y = new uint8[y_plane_size];
+  uint8_t* dst_y = new uint8_t[y_plane_size];
   int u_plane_size = UPlaneSize();
-  uint8* dst_u = new uint8[u_plane_size];
+  uint8_t* dst_u = new uint8_t[u_plane_size];
   int v_plane_size = VPlaneSize();
-  uint8* dst_v = new uint8[v_plane_size];
+  uint8_t* dst_v = new uint8_t[v_plane_size];
 
   int counter = 0;  // Counter to form frame names.
   bool success = false;  // Is conversion successful.
@@ -106,9 +106,12 @@ bool Converter::ConvertRGBAToI420Video(std::string frames_dir,
   return success;
 }
 
-bool Converter::AddYUVToFile(uint8* y_plane, int y_plane_size,
-                             uint8* u_plane, int u_plane_size,
-                             uint8* v_plane, int v_plane_size,
+bool Converter::AddYUVToFile(uint8_t* y_plane,
+                             int y_plane_size,
+                             uint8_t* u_plane,
+                             int u_plane_size,
+                             uint8_t* v_plane,
+                             int v_plane_size,
                              FILE* output_file) {
   bool success = AddYUVPlaneToFile(y_plane, y_plane_size, output_file) &&
                  AddYUVPlaneToFile(u_plane, u_plane_size, output_file) &&
@@ -116,7 +119,8 @@ bool Converter::AddYUVToFile(uint8* y_plane, int y_plane_size,
   return success;
 }
 
-bool Converter::AddYUVPlaneToFile(uint8* yuv_plane, int yuv_plane_size,
+bool Converter::AddYUVPlaneToFile(uint8_t* yuv_plane,
+                                  int yuv_plane_size,
                                   FILE* file) {
   size_t bytes_written = fwrite(yuv_plane, 1, yuv_plane_size, file);
 

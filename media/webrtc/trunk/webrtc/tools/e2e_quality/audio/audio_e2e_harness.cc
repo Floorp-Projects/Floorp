@@ -16,7 +16,7 @@
 #include "testing/gtest/include/gtest/gtest.h"
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/test/channel_transport/include/channel_transport.h"
+#include "webrtc/test/channel_transport/channel_transport.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_codec.h"

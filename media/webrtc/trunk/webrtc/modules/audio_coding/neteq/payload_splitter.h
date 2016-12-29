@@ -83,7 +83,7 @@ class PayloadSplitter {
                             uint32_t timestamps_per_frame,
                             PacketList* new_packets);
 
-  DISALLOW_COPY_AND_ASSIGN(PayloadSplitter);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PayloadSplitter);
 };
 
 }  // namespace webrtc

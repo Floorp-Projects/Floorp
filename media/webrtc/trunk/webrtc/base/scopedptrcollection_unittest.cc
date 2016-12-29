@@ -28,7 +28,7 @@ class InstanceCounter {
  private:
   int* num_instances_;
 
-  DISALLOW_COPY_AND_ASSIGN(InstanceCounter);
+  RTC_DISALLOW_COPY_AND_ASSIGN(InstanceCounter);
 };
 
 }  // namespace

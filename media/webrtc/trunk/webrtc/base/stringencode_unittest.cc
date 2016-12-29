@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/stringencode.h"
@@ -48,7 +49,7 @@ TEST(Utf8EncodeTest, EncodeDecode) {
     }
 
     char buffer[5];
-    memset(buffer, 0x01, ARRAY_SIZE(buffer));
+    memset(buffer, 0x01, arraysize(buffer));
     ASSERT_EQ(kTests[i].enclen, utf8_encode(buffer,
                                             kTests[i].encsize,
                                             kTests[i].decoded));
@@ -56,7 +57,7 @@ TEST(Utf8EncodeTest, EncodeDecode) {
     // Make sure remainder of buffer is unchanged
     ASSERT_TRUE(memory_check(buffer + kTests[i].enclen,
                              0x1,
-                             ARRAY_SIZE(buffer) - kTests[i].enclen));
+                             arraysize(buffer) - kTests[i].enclen));
   }
 }
 
@@ -298,6 +299,68 @@ TEST(TokenizeTest, TokenizeWithMarks) {
   ASSERT_STREQ("E F", fields.at(3).c_str());
 }
 
+TEST(TokenizeTest, TokenizeWithEmptyTokens) {
+  std::vector<std::string> fields;
+  EXPECT_EQ(3ul, tokenize_with_empty_tokens("a.b.c", '.', &fields));
+  EXPECT_EQ("a", fields[0]);
+  EXPECT_EQ("b", fields[1]);
+  EXPECT_EQ("c", fields[2]);
+
+  EXPECT_EQ(3ul, tokenize_with_empty_tokens("..c", '.', &fields));
+  EXPECT_TRUE(fields[0].empty());
+  EXPECT_TRUE(fields[1].empty());
+  EXPECT_EQ("c", fields[2]);
+
+  EXPECT_EQ(1ul, tokenize_with_empty_tokens("", '.', &fields));
+  EXPECT_TRUE(fields[0].empty());
+}
+
+TEST(TokenizeFirstTest, NoLeadingSpaces) {
+  std::string token;
+  std::string rest;
+
+  ASSERT_TRUE(tokenize_first("A &*${}", ' ', &token, &rest));
+  ASSERT_STREQ("A", token.c_str());
+  ASSERT_STREQ("&*${}", rest.c_str());
+
+  ASSERT_TRUE(tokenize_first("A B& *${}", ' ', &token, &rest));
+  ASSERT_STREQ("A", token.c_str());
+  ASSERT_STREQ("B& *${}", rest.c_str());
+
+  ASSERT_TRUE(tokenize_first("A    B& *${}    ", ' ', &token, &rest));
+  ASSERT_STREQ("A", token.c_str());
+  ASSERT_STREQ("B& *${}    ", rest.c_str());
+}
+
+TEST(TokenizeFirstTest, LeadingSpaces) {
+  std::string token;
+  std::string rest;
+
+  ASSERT_TRUE(tokenize_first("     A B C", ' ', &token, &rest));
+  ASSERT_STREQ("", token.c_str());
+  ASSERT_STREQ("A B C", rest.c_str());
+
+  ASSERT_TRUE(tokenize_first("     A    B   C    ", ' ', &token, &rest));
+  ASSERT_STREQ("", token.c_str());
+  ASSERT_STREQ("A    B   C    ", rest.c_str());
+}
+
+TEST(TokenizeFirstTest, SingleToken) {
+  std::string token;
+  std::string rest;
+
+  // In the case where we cannot find delimiter the whole string is a token.
+  ASSERT_FALSE(tokenize_first("ABC", ' ', &token, &rest));
+
+  ASSERT_TRUE(tokenize_first("ABC    ", ' ', &token, &rest));
+  ASSERT_STREQ("ABC", token.c_str());
+  ASSERT_STREQ("", rest.c_str());
+
+  ASSERT_TRUE(tokenize_first("    ABC    ", ' ', &token, &rest));
+  ASSERT_STREQ("", token.c_str());
+  ASSERT_STREQ("ABC    ", rest.c_str());
+}
+
 // Tests counting substrings.
 TEST(SplitTest, CountSubstrings) {
   std::vector<std::string> fields;
@@ -382,4 +445,5 @@ TEST(BoolTest, RoundTrip) {
   EXPECT_TRUE(FromString(ToString(false), &value));
   EXPECT_FALSE(value);
 }
+
 }  // namespace rtc

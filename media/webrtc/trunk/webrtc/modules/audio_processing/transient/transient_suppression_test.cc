@@ -19,7 +19,7 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/modules/audio_processing/agc/agc.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
 
@@ -150,13 +150,13 @@ void void_main() {
 
   // Prepare the detection file.
   FILE* detection_file = NULL;
-  if (FLAGS_detection_file_name != "") {
+  if (!FLAGS_detection_file_name.empty()) {
     detection_file = fopen(FLAGS_detection_file_name.c_str(), "rb");
   }
 
   // Prepare the reference file.
   FILE* reference_file = NULL;
-  if (FLAGS_reference_file_name != "") {
+  if (!FLAGS_reference_file_name.empty()) {
     reference_file = fopen(FLAGS_reference_file_name.c_str(), "rb");
   }
 

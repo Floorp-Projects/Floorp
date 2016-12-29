@@ -15,66 +15,67 @@
 
 #include "webrtc/voice_engine/shared_data.h"
 
-namespace webrtc
-{
+namespace webrtc {
 
-class VoEHardwareImpl: public VoEHardware
-{
-public:
-    virtual int GetNumOfRecordingDevices(int& devices);
+class VoEHardwareImpl : public VoEHardware {
+ public:
+  int GetNumOfRecordingDevices(int& devices) override;
 
-    virtual int GetNumOfPlayoutDevices(int& devices);
+  int GetNumOfPlayoutDevices(int& devices) override;
 
-    virtual int GetRecordingDeviceName(int index,
-                                       char strNameUTF8[128],
-                                       char strGuidUTF8[128]);
+  int GetRecordingDeviceName(int index,
+                             char strNameUTF8[128],
+                             char strGuidUTF8[128]) override;
  
-    virtual int GetRecordingDeviceStatus(bool& isAvailable);
+  int GetRecordingDeviceStatus(bool& isAvailable) override;
 
-    virtual int GetPlayoutDeviceStatus(bool& isAvailable);
+  int GetPlayoutDeviceStatus(bool& isAvailable) override;
 
-    virtual int GetPlayoutDeviceName(int index,
-                                     char strNameUTF8[128],
-                                     char strGuidUTF8[128]);
+  int GetPlayoutDeviceName(int index,
+                           char strNameUTF8[128],
+                           char strGuidUTF8[128]) override;
 
-    virtual int SetRecordingDevice(
-        int index,
-        StereoChannel recordingChannel = kStereoBoth);
+  int SetRecordingDevice(int index,
+                         StereoChannel recordingChannel = kStereoBoth) override;
 
-    virtual int SetPlayoutDevice(int index);
+  int SetPlayoutDevice(int index) override;
 
-    virtual int SetAudioDeviceLayer(AudioLayers audioLayer);
+  int SetAudioDeviceLayer(AudioLayers audioLayer) override;
  
-    virtual int GetCPULoad(int& loadPercent);
+  int GetCPULoad(int& loadPercent) override;
 
-    virtual int ResetAudioDevice();
+  int ResetAudioDevice() override;
 
-    virtual int AudioDeviceControl(unsigned int par1,
-                                   unsigned int par2,
-                                   unsigned int par3);
+  int AudioDeviceControl(unsigned int par1,
+                         unsigned int par2,
+                         unsigned int par3) override;
 
-    virtual int SetLoudspeakerStatus(bool enable);
+  int SetLoudspeakerStatus(bool enable) override;
 
-    virtual int GetLoudspeakerStatus(bool& enabled);
+  int GetLoudspeakerStatus(bool& enabled) override;
 
-    virtual int EnableBuiltInAEC(bool enable);
-    virtual bool BuiltInAECIsEnabled() const;
+  bool BuiltInAECIsEnabled() const override;
 
-    virtual int GetAudioDeviceLayer(AudioLayers& audioLayer);
+  int GetAudioDeviceLayer(AudioLayers& audioLayer) override;
 
-    virtual int SetRecordingSampleRate(unsigned int samples_per_sec);
-    virtual int RecordingSampleRate(unsigned int* samples_per_sec) const;
-    virtual int SetPlayoutSampleRate(unsigned int samples_per_sec);
-    virtual int PlayoutSampleRate(unsigned int* samples_per_sec) const;
+  int SetRecordingSampleRate(unsigned int samples_per_sec) override;
+  int RecordingSampleRate(unsigned int* samples_per_sec) const override;
+  int SetPlayoutSampleRate(unsigned int samples_per_sec) override;
+  int PlayoutSampleRate(unsigned int* samples_per_sec) const override;
 
-    virtual bool BuiltInAECIsAvailable() const;
+  bool BuiltInAECIsAvailable() const override;
+  int EnableBuiltInAEC(bool enable) override;
+  bool BuiltInAGCIsAvailable() const override;
+  int EnableBuiltInAGC(bool enable) override;
+  bool BuiltInNSIsAvailable() const override;
+  int EnableBuiltInNS(bool enable) override;
 
-protected:
-    VoEHardwareImpl(voe::SharedData* shared);
-    virtual ~VoEHardwareImpl();
+ protected:
+  VoEHardwareImpl(voe::SharedData* shared);
+  ~VoEHardwareImpl() override;
 
-private:
-    voe::SharedData* _shared;
+ private:
+  voe::SharedData* _shared;
 };
 
 }  // namespace webrtc

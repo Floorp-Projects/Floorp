@@ -81,10 +81,18 @@ int BufferedReadAdapter::Recv(void *pv, size_t cb) {
   // FIX: If cb == 0, we won't generate another read event
 
   int res = AsyncSocketAdapter::Recv(pv, cb);
-  if (res < 0)
-    return res;
+  if (res >= 0) {
+    // Read from socket and possibly buffer; return combined length
+    return res + static_cast<int>(read);
+  }
 
-  return res + static_cast<int>(read);
+  if (read > 0) {
+    // Failed to read from socket, but still read something from buffer
+    return static_cast<int>(read);
+  }
+
+  // Didn't read anything; return error from socket
+  return res;
 }
 
 void BufferedReadAdapter::BufferInput(bool on) {
@@ -129,41 +137,41 @@ AsyncProxyServerSocket::~AsyncProxyServerSocket() = default;
 // This is a SSL v2 CLIENT_HELLO message.
 // TODO: Should this have a session id? The response doesn't have a
 // certificate, so the hello should have a session id.
-static const uint8 kSslClientHello[] = {
-  0x80, 0x46,                                            // msg len
-  0x01,                                                  // CLIENT_HELLO
-  0x03, 0x01,                                            // SSL 3.1
-  0x00, 0x2d,                                            // ciphersuite len
-  0x00, 0x00,                                            // session id len
-  0x00, 0x10,                                            // challenge len
-  0x01, 0x00, 0x80, 0x03, 0x00, 0x80, 0x07, 0x00, 0xc0,  // ciphersuites
-  0x06, 0x00, 0x40, 0x02, 0x00, 0x80, 0x04, 0x00, 0x80,  //
-  0x00, 0x00, 0x04, 0x00, 0xfe, 0xff, 0x00, 0x00, 0x0a,  //
-  0x00, 0xfe, 0xfe, 0x00, 0x00, 0x09, 0x00, 0x00, 0x64,  //
-  0x00, 0x00, 0x62, 0x00, 0x00, 0x03, 0x00, 0x00, 0x06,  //
-  0x1f, 0x17, 0x0c, 0xa6, 0x2f, 0x00, 0x78, 0xfc,        // challenge
-  0x46, 0x55, 0x2e, 0xb1, 0x83, 0x39, 0xf1, 0xea         //
+static const uint8_t kSslClientHello[] = {
+    0x80, 0x46,                                            // msg len
+    0x01,                                                  // CLIENT_HELLO
+    0x03, 0x01,                                            // SSL 3.1
+    0x00, 0x2d,                                            // ciphersuite len
+    0x00, 0x00,                                            // session id len
+    0x00, 0x10,                                            // challenge len
+    0x01, 0x00, 0x80, 0x03, 0x00, 0x80, 0x07, 0x00, 0xc0,  // ciphersuites
+    0x06, 0x00, 0x40, 0x02, 0x00, 0x80, 0x04, 0x00, 0x80,  //
+    0x00, 0x00, 0x04, 0x00, 0xfe, 0xff, 0x00, 0x00, 0x0a,  //
+    0x00, 0xfe, 0xfe, 0x00, 0x00, 0x09, 0x00, 0x00, 0x64,  //
+    0x00, 0x00, 0x62, 0x00, 0x00, 0x03, 0x00, 0x00, 0x06,  //
+    0x1f, 0x17, 0x0c, 0xa6, 0x2f, 0x00, 0x78, 0xfc,        // challenge
+    0x46, 0x55, 0x2e, 0xb1, 0x83, 0x39, 0xf1, 0xea         //
 };
 
 // This is a TLSv1 SERVER_HELLO message.
-static const uint8 kSslServerHello[] = {
-  0x16,                                            // handshake message
-  0x03, 0x01,                                      // SSL 3.1
-  0x00, 0x4a,                                      // message len
-  0x02,                                            // SERVER_HELLO
-  0x00, 0x00, 0x46,                                // handshake len
-  0x03, 0x01,                                      // SSL 3.1
-  0x42, 0x85, 0x45, 0xa7, 0x27, 0xa9, 0x5d, 0xa0,  // server random
-  0xb3, 0xc5, 0xe7, 0x53, 0xda, 0x48, 0x2b, 0x3f,  //
-  0xc6, 0x5a, 0xca, 0x89, 0xc1, 0x58, 0x52, 0xa1,  //
-  0x78, 0x3c, 0x5b, 0x17, 0x46, 0x00, 0x85, 0x3f,  //
-  0x20,                                            // session id len
-  0x0e, 0xd3, 0x06, 0x72, 0x5b, 0x5b, 0x1b, 0x5f,  // session id
-  0x15, 0xac, 0x13, 0xf9, 0x88, 0x53, 0x9d, 0x9b,  //
-  0xe8, 0x3d, 0x7b, 0x0c, 0x30, 0x32, 0x6e, 0x38,  //
-  0x4d, 0xa2, 0x75, 0x57, 0x41, 0x6c, 0x34, 0x5c,  //
-  0x00, 0x04,                                      // RSA/RC4-128/MD5
-  0x00                                             // null compression
+static const uint8_t kSslServerHello[] = {
+    0x16,                                            // handshake message
+    0x03, 0x01,                                      // SSL 3.1
+    0x00, 0x4a,                                      // message len
+    0x02,                                            // SERVER_HELLO
+    0x00, 0x00, 0x46,                                // handshake len
+    0x03, 0x01,                                      // SSL 3.1
+    0x42, 0x85, 0x45, 0xa7, 0x27, 0xa9, 0x5d, 0xa0,  // server random
+    0xb3, 0xc5, 0xe7, 0x53, 0xda, 0x48, 0x2b, 0x3f,  //
+    0xc6, 0x5a, 0xca, 0x89, 0xc1, 0x58, 0x52, 0xa1,  //
+    0x78, 0x3c, 0x5b, 0x17, 0x46, 0x00, 0x85, 0x3f,  //
+    0x20,                                            // session id len
+    0x0e, 0xd3, 0x06, 0x72, 0x5b, 0x5b, 0x1b, 0x5f,  // session id
+    0x15, 0xac, 0x13, 0xf9, 0x88, 0x53, 0x9d, 0x9b,  //
+    0xe8, 0x3d, 0x7b, 0x0c, 0x30, 0x32, 0x6e, 0x38,  //
+    0x4d, 0xa2, 0x75, 0x57, 0x41, 0x6c, 0x34, 0x5c,  //
+    0x00, 0x04,                                      // RSA/RC4-128/MD5
+    0x00                                             // null compression
 };
 
 AsyncSSLSocket::AsyncSSLSocket(AsyncSocket* socket)
@@ -556,7 +564,7 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
   ByteBuffer response(data, *len);
 
   if (state_ == SS_HELLO) {
-    uint8 ver, method;
+    uint8_t ver, method;
     if (!response.ReadUInt8(&ver) ||
         !response.ReadUInt8(&method))
       return;
@@ -575,7 +583,7 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
       return;
     }
   } else if (state_ == SS_AUTH) {
-    uint8 ver, status;
+    uint8_t ver, status;
     if (!response.ReadUInt8(&ver) ||
         !response.ReadUInt8(&status))
       return;
@@ -587,7 +595,7 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
 
     SendConnect();
   } else if (state_ == SS_CONNECT) {
-    uint8 ver, rep, rsv, atyp;
+    uint8_t ver, rep, rsv, atyp;
     if (!response.ReadUInt8(&ver) ||
         !response.ReadUInt8(&rep) ||
         !response.ReadUInt8(&rsv) ||
@@ -599,15 +607,15 @@ void AsyncSocksProxySocket::ProcessInput(char* data, size_t* len) {
       return;
     }
 
-    uint16 port;
+    uint16_t port;
     if (atyp == 1) {
-      uint32 addr;
+      uint32_t addr;
       if (!response.ReadUInt32(&addr) ||
           !response.ReadUInt16(&port))
         return;
       LOG(LS_VERBOSE) << "Bound on " << addr << ":" << port;
     } else if (atyp == 3) {
-      uint8 len;
+      uint8_t len;
       std::string addr;
       if (!response.ReadUInt8(&len) ||
           !response.ReadString(&addr, len) ||
@@ -662,9 +670,9 @@ void AsyncSocksProxySocket::SendHello() {
 void AsyncSocksProxySocket::SendAuth() {
   ByteBuffer request;
   request.WriteUInt8(1);           // Negotiation Version
-  request.WriteUInt8(static_cast<uint8>(user_.size()));
+  request.WriteUInt8(static_cast<uint8_t>(user_.size()));
   request.WriteString(user_);      // Username
-  request.WriteUInt8(static_cast<uint8>(pass_.GetLength()));
+  request.WriteUInt8(static_cast<uint8_t>(pass_.GetLength()));
   size_t len = pass_.GetLength() + 1;
   char * sensitive = new char[len];
   pass_.CopyTo(sensitive, true);
@@ -680,10 +688,10 @@ void AsyncSocksProxySocket::SendConnect() {
   request.WriteUInt8(5);              // Socks Version
   request.WriteUInt8(1);              // CONNECT
   request.WriteUInt8(0);              // Reserved
-  if (dest_.IsUnresolved()) {
+  if (dest_.IsUnresolvedIP()) {
     std::string hostname = dest_.hostname();
     request.WriteUInt8(3);            // DOMAINNAME
-    request.WriteUInt8(static_cast<uint8>(hostname.size()));
+    request.WriteUInt8(static_cast<uint8_t>(hostname.size()));
     request.WriteString(hostname);    // Destination Hostname
   } else {
     request.WriteUInt8(1);            // IPV4
@@ -730,7 +738,7 @@ void AsyncSocksProxyServerSocket::DirectSend(const ByteBuffer& buf) {
 }
 
 void AsyncSocksProxyServerSocket::HandleHello(ByteBuffer* request) {
-  uint8 ver, num_methods;
+  uint8_t ver, num_methods;
   if (!request->ReadUInt8(&ver) ||
       !request->ReadUInt8(&num_methods)) {
     Error(0);
@@ -743,7 +751,7 @@ void AsyncSocksProxyServerSocket::HandleHello(ByteBuffer* request) {
   }
 
   // Handle either no-auth (0) or user/pass auth (2)
-  uint8 method = 0xFF;
+  uint8_t method = 0xFF;
   if (num_methods > 0 && !request->ReadUInt8(&method)) {
     Error(0);
     return;
@@ -760,7 +768,7 @@ void AsyncSocksProxyServerSocket::HandleHello(ByteBuffer* request) {
   }
 }
 
-void AsyncSocksProxyServerSocket::SendHelloReply(uint8 method) {
+void AsyncSocksProxyServerSocket::SendHelloReply(uint8_t method) {
   ByteBuffer response;
   response.WriteUInt8(5);  // Socks Version
   response.WriteUInt8(method);  // Auth method
@@ -768,7 +776,7 @@ void AsyncSocksProxyServerSocket::SendHelloReply(uint8 method) {
 }
 
 void AsyncSocksProxyServerSocket::HandleAuth(ByteBuffer* request) {
-  uint8 ver, user_len, pass_len;
+  uint8_t ver, user_len, pass_len;
   std::string user, pass;
   if (!request->ReadUInt8(&ver) ||
       !request->ReadUInt8(&user_len) ||
@@ -784,7 +792,7 @@ void AsyncSocksProxyServerSocket::HandleAuth(ByteBuffer* request) {
   state_ = SS_CONNECT;
 }
 
-void AsyncSocksProxyServerSocket::SendAuthReply(uint8 result) {
+void AsyncSocksProxyServerSocket::SendAuthReply(uint8_t result) {
   ByteBuffer response;
   response.WriteUInt8(1);  // Negotiation Version
   response.WriteUInt8(result);
@@ -792,9 +800,9 @@ void AsyncSocksProxyServerSocket::SendAuthReply(uint8 result) {
 }
 
 void AsyncSocksProxyServerSocket::HandleConnect(ByteBuffer* request) {
-  uint8 ver, command, reserved, addr_type;
-  uint32 ip;
-  uint16 port;
+  uint8_t ver, command, reserved, addr_type;
+  uint32_t ip;
+  uint16_t port;
   if (!request->ReadUInt8(&ver) ||
       !request->ReadUInt8(&command) ||
       !request->ReadUInt8(&reserved) ||

@@ -9,8 +9,10 @@
  *
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_IMPL_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_IMPL_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_VP9_IMPL_H_
+#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_VP9_IMPL_H_
+
+#include <vector>
 
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #include "webrtc/modules/video_coding/codecs/vp9/vp9_frame_buffer_pool.h"
@@ -37,15 +39,19 @@ class VP9EncoderImpl : public VP9Encoder {
                  int number_of_cores,
                  size_t max_payload_size) override;
 
-  int Encode(const I420VideoFrame& input_image,
+  int Encode(const VideoFrame& input_image,
              const CodecSpecificInfo* codec_specific_info,
-             const std::vector<VideoFrameType>* frame_types) override;
+             const std::vector<FrameType>* frame_types) override;
 
   int RegisterEncodeCompleteCallback(EncodedImageCallback* callback) override;
 
   int SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
   int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate) override;
+
+  void OnDroppedFrame() override {}
+
+  const char* ImplementationName() const override;
 
   struct LayerFrameRefSettings {
     int8_t upd_buf = -1;   // -1 - no update,    0..7 - update buffer 0..7
@@ -69,7 +75,7 @@ class VP9EncoderImpl : public VP9Encoder {
   int InitAndSetControlSettings(const VideoCodec* inst);
 
   // Update frame size for codec.
-  int UpdateCodecFrameSize(const I420VideoFrame& input_image);
+  int UpdateCodecFrameSize(const VideoFrame& input_image);
 
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
@@ -88,7 +94,7 @@ class VP9EncoderImpl : public VP9Encoder {
   vpx_svc_ref_frame_config GenerateRefsAndFlags(
       const SuperFrameRefSettings& settings);
 #endif
-  
+
   virtual int GetEncodedLayerFrame(const vpx_codec_cx_pkt* pkt);
 
   // Callback function for outputting packets per spatial layer.
@@ -117,7 +123,7 @@ class VP9EncoderImpl : public VP9Encoder {
 #ifdef LIBVPX_SVC
   SvcInternal_t svc_internal_;
 #endif
-  const I420VideoFrame* input_image_;
+  const VideoFrame* input_image_;
   GofInfoVP9 gof_;       // Contains each frame's temporal information for
                          // non-flexible mode.
   uint8_t tl0_pic_idx_;  // Only used in non-flexible mode.
@@ -134,7 +140,6 @@ class VP9EncoderImpl : public VP9Encoder {
   uint8_t p_diff_[kMaxVp9NumberOfSpatialLayers][kMaxVp9RefPics];
   rtc::scoped_ptr<ScreenshareLayersVP9> spatial_layer_;
 };
-
 
 class VP9DecoderImpl : public VP9Decoder {
  public:
@@ -156,14 +161,11 @@ class VP9DecoderImpl : public VP9Decoder {
 
   int Reset() override;
 
+  const char* ImplementationName() const override;
+
  private:
   int ReturnFrame(const vpx_image_t* img, uint32_t timeStamp);
 
-#ifndef USE_WRAPPED_I420_BUFFER
-  // Temporarily keep VideoFrame in a separate buffer
-  // Once we debug WrappedI420VideoFrame usage, we can get rid of this
-  I420VideoFrame decoded_image_;
-#endif
   // Memory pool used to share buffers between libvpx and webrtc.
   Vp9FrameBufferPool frame_buffer_pool_;
   DecodedImageCallback* decode_complete_callback_;
@@ -174,4 +176,4 @@ class VP9DecoderImpl : public VP9Decoder {
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_IMPL_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP9_VP9_IMPL_H_

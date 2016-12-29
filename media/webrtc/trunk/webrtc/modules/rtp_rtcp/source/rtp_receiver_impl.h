@@ -12,10 +12,10 @@
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_receiver.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -25,8 +25,7 @@ class RtpReceiverImpl : public RtpReceiver {
   // Callbacks passed in here may not be NULL (use Null Object callbacks if you
   // want callbacks to do nothing). This class takes ownership of the media
   // receiver but nothing else.
-  RtpReceiverImpl(int32_t id,
-                  Clock* clock,
+  RtpReceiverImpl(Clock* clock,
                   RtpAudioFeedback* incoming_audio_messages_callback,
                   RtpFeedback* incoming_messages_callback,
                   RTPPayloadRegistry* rtp_payload_registry,
@@ -37,7 +36,7 @@ class RtpReceiverImpl : public RtpReceiver {
   int32_t RegisterReceivePayload(const char payload_name[RTP_PAYLOAD_NAME_SIZE],
                                  const int8_t payload_type,
                                  const uint32_t frequency,
-                                 const uint8_t channels,
+                                 const size_t channels,
                                  const uint32_t rate) override;
 
   int32_t DeRegisterReceivePayload(const int8_t payload_type) override;
@@ -74,15 +73,12 @@ class RtpReceiverImpl : public RtpReceiver {
   void CheckCSRC(const WebRtcRTPHeader& rtp_header);
   int32_t CheckPayloadChanged(const RTPHeader& rtp_header,
                               const int8_t first_payload_byte,
-                              bool& is_red,
-                              PayloadUnion* payload,
-                              bool* should_reset_statistics);
+                              bool* is_red,
+                              PayloadUnion* payload);
 
   Clock* clock_;
   RTPPayloadRegistry* rtp_payload_registry_;
   rtc::scoped_ptr<RTPReceiverStrategy> rtp_media_receiver_;
-
-  int32_t id_;
 
   RtpFeedback* cb_rtp_feedback_;
 

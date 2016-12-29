@@ -26,8 +26,8 @@
 #include <linux/videodev2.h>
 #endif
 
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #ifdef WEBRTC_LINUX
 #define EVENT_SIZE  ( sizeof (struct inotify_event) )
@@ -166,17 +166,17 @@ bool DeviceInfoLinux::InotifyProcess()
 DeviceInfoLinux::DeviceInfoLinux(const int32_t id)
     : DeviceInfoImpl(id)
 #ifdef WEBRTC_LINUX
+    , _inotifyEventThread(new rtc::PlatformThread(
+                            InotifyEventThread, this, "InotifyEventThread"))
     , _isShutdown(0)
 #endif
 {
 #ifdef WEBRTC_LINUX
-    _inotifyEventThread = ThreadWrapper::CreateThread(
-        InotifyEventThread, this, "InotifyEventThread");
 
     if (_inotifyEventThread)
     {
         _inotifyEventThread->Start();
-        _inotifyEventThread->SetPriority(kHighPriority);
+        _inotifyEventThread->SetPriority(rtc::kHighPriority);
     }
 #endif
 }
@@ -228,7 +228,7 @@ int32_t DeviceInfoLinux::GetDeviceName(
                                          uint32_t deviceUniqueIdUTF8Length,
                                          char* /*productUniqueIdUTF8*/,
                                          uint32_t /*productUniqueIdUTF8Length*/,
-                                         pid_t* pid)
+                                         pid_t* /*pid*/)
 {
     WEBRTC_TRACE(webrtc::kTraceApiCall, webrtc::kTraceVideoCapture, _id, "%s", __FUNCTION__);
 

@@ -18,15 +18,15 @@ namespace {
 
 // Adds |a| and |b| frame by frame into |result| (basically matrix addition).
 void AddFrames(const float* const* a,
-               int a_start_index,
+               size_t a_start_index,
                const float* const* b,
                int b_start_index,
-               int num_frames,
-               int num_channels,
+               size_t num_frames,
+               size_t num_channels,
                float* const* result,
-               int result_start_index) {
-  for (int i = 0; i < num_channels; ++i) {
-    for (int j = 0; j < num_frames; ++j) {
+               size_t result_start_index) {
+  for (size_t i = 0; i < num_channels; ++i) {
+    for (size_t j = 0; j < num_frames; ++j) {
       result[i][j + result_start_index] =
           a[i][j + a_start_index] + b[i][j + b_start_index];
     }
@@ -35,12 +35,12 @@ void AddFrames(const float* const* a,
 
 // Copies |src| into |dst| channel by channel.
 void CopyFrames(const float* const* src,
-                int src_start_index,
-                int num_frames,
-                int num_channels,
+                size_t src_start_index,
+                size_t num_frames,
+                size_t num_channels,
                 float* const* dst,
-                int dst_start_index) {
-  for (int i = 0; i < num_channels; ++i) {
+                size_t dst_start_index) {
+  for (size_t i = 0; i < num_channels; ++i) {
     memcpy(&dst[i][dst_start_index],
            &src[i][src_start_index],
            num_frames * sizeof(dst[i][dst_start_index]));
@@ -49,12 +49,12 @@ void CopyFrames(const float* const* src,
 
 // Moves |src| into |dst| channel by channel.
 void MoveFrames(const float* const* src,
-                int src_start_index,
-                int num_frames,
-                int num_channels,
+                size_t src_start_index,
+                size_t num_frames,
+                size_t num_channels,
                 float* const* dst,
-                int dst_start_index) {
-  for (int i = 0; i < num_channels; ++i) {
+                size_t dst_start_index) {
+  for (size_t i = 0; i < num_channels; ++i) {
     memmove(&dst[i][dst_start_index],
             &src[i][src_start_index],
             num_frames * sizeof(dst[i][dst_start_index]));
@@ -62,10 +62,10 @@ void MoveFrames(const float* const* src,
 }
 
 void ZeroOut(float* const* buffer,
-             int starting_idx,
-             int num_frames,
-             int num_channels) {
-  for (int i = 0; i < num_channels; ++i) {
+             size_t starting_idx,
+             size_t num_frames,
+             size_t num_channels) {
+  for (size_t i = 0; i < num_channels; ++i) {
     memset(&buffer[i][starting_idx], 0,
            num_frames * sizeof(buffer[i][starting_idx]));
   }
@@ -74,18 +74,18 @@ void ZeroOut(float* const* buffer,
 // Pointwise multiplies each channel of |frames| with |window|. Results are
 // stored in |frames|.
 void ApplyWindow(const float* window,
-                 int num_frames,
-                 int num_channels,
+                 size_t num_frames,
+                 size_t num_channels,
                  float* const* frames) {
-  for (int i = 0; i < num_channels; ++i) {
-    for (int j = 0; j < num_frames; ++j) {
+  for (size_t i = 0; i < num_channels; ++i) {
+    for (size_t j = 0; j < num_frames; ++j) {
       frames[i][j] = frames[i][j] * window[j];
     }
   }
 }
 
-int gcd(int a, int b) {
-  int tmp;
+size_t gcd(size_t a, size_t b) {
+  size_t tmp;
   while (b) {
      tmp = a;
      a = b;
@@ -98,12 +98,12 @@ int gcd(int a, int b) {
 
 namespace webrtc {
 
-Blocker::Blocker(int chunk_size,
-                 int block_size,
-                 int num_input_channels,
-                 int num_output_channels,
+Blocker::Blocker(size_t chunk_size,
+                 size_t block_size,
+                 size_t num_input_channels,
+                 size_t num_output_channels,
                  const float* window,
-                 int shift_amount,
+                 size_t shift_amount,
                  BlockerCallback* callback)
     : chunk_size_(chunk_size),
       block_size_(block_size),
@@ -118,11 +118,11 @@ Blocker::Blocker(int chunk_size,
       window_(new float[block_size_]),
       shift_amount_(shift_amount),
       callback_(callback) {
-  CHECK_LE(num_output_channels_, num_input_channels_);
-  CHECK(window);
+  RTC_CHECK_LE(num_output_channels_, num_input_channels_);
+  RTC_CHECK_LE(shift_amount_, block_size_);
 
   memcpy(window_.get(), window, block_size_ * sizeof(*window_.get()));
-  input_buffer_.MoveReadPosition(-initial_delay_);
+  input_buffer_.MoveReadPositionBackward(initial_delay_);
 }
 
 // When block_size < chunk_size the input and output buffers look like this:
@@ -165,22 +165,22 @@ Blocker::Blocker(int chunk_size,
 //
 // TODO(claguna): Look at using ring buffers to eliminate some copies.
 void Blocker::ProcessChunk(const float* const* input,
-                           int chunk_size,
-                           int num_input_channels,
-                           int num_output_channels,
+                           size_t chunk_size,
+                           size_t num_input_channels,
+                           size_t num_output_channels,
                            float* const* output) {
-  CHECK_EQ(chunk_size, chunk_size_);
-  CHECK_EQ(num_input_channels, num_input_channels_);
-  CHECK_EQ(num_output_channels, num_output_channels_);
+  RTC_CHECK_EQ(chunk_size, chunk_size_);
+  RTC_CHECK_EQ(num_input_channels, num_input_channels_);
+  RTC_CHECK_EQ(num_output_channels, num_output_channels_);
 
   input_buffer_.Write(input, num_input_channels, chunk_size_);
-  int first_frame_in_block = frame_offset_;
+  size_t first_frame_in_block = frame_offset_;
 
   // Loop through blocks.
   while (first_frame_in_block < chunk_size_) {
     input_buffer_.Read(input_block_.channels(), num_input_channels,
                        block_size_);
-    input_buffer_.MoveReadPosition(-block_size_ + shift_amount_);
+    input_buffer_.MoveReadPositionBackward(block_size_ - shift_amount_);
 
     ApplyWindow(window_.get(),
                 block_size_,

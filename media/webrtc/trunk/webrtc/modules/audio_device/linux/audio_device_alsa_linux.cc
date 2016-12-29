@@ -11,19 +11,19 @@
 #include <assert.h>
 
 #include "webrtc/modules/audio_device/audio_device_config.h"
-#include "webrtc/modules/audio_device/audio_device_utility.h"
 #include "webrtc/modules/audio_device/linux/audio_device_alsa_linux.h"
 
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/trace.h"
+ 
 #include "Latency.h"
 
 #define LOG_FIRST_CAPTURE(x) LogTime(AsyncLatencyLogger::AudioCaptureBase, \
                                      reinterpret_cast<uint64_t>(x), 0)
 #define LOG_CAPTURE_FRAMES(x, frames) LogLatency(AsyncLatencyLogger::AudioCapture, \
                                                  reinterpret_cast<uint64_t>(x), frames)
+
 
 webrtc_adm_linux_alsa::AlsaSymbolTable AlsaSymbolTable;
 
@@ -216,7 +216,7 @@ int32_t AudioDeviceLinuxALSA::Terminate()
     // RECORDING
     if (_ptrThreadRec)
     {
-        ThreadWrapper* tmpThread = _ptrThreadRec.release();
+        rtc::PlatformThread* tmpThread = _ptrThreadRec.release();
         _critSect.Leave();
 
         tmpThread->Stop();
@@ -228,7 +228,7 @@ int32_t AudioDeviceLinuxALSA::Terminate()
     // PLAYOUT
     if (_ptrThreadPlay)
     {
-        ThreadWrapper* tmpThread = _ptrThreadPlay.release();
+        rtc::PlatformThread* tmpThread = _ptrThreadPlay.release();
         _critSect.Leave();
 
         tmpThread->Stop();
@@ -1373,22 +1373,12 @@ int32_t AudioDeviceLinuxALSA::StartRecording()
         return -1;
     }
     // RECORDING
-    const char* threadName = "webrtc_audio_module_capture_thread";
     _firstRecord = true;
-    _ptrThreadRec = ThreadWrapper::CreateThread(
-        RecThreadFunc, this, threadName);
+    _ptrThreadRec.reset(new rtc::PlatformThread(
+        RecThreadFunc, this, "webrtc_audio_module_capture_thread"));
 
-    if (!_ptrThreadRec->Start())
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "  failed to start the rec audio thread");
-        _recording = false;
-        _ptrThreadRec.reset();
-        delete [] _recordingBuffer;
-        _recordingBuffer = NULL;
-        return -1;
-    }
-    _ptrThreadRec->SetPriority(kRealtimePriority);
+    _ptrThreadRec->Start();
+    _ptrThreadRec->SetPriority(rtc::kRealtimePriority);
 
     errVal = LATE(snd_pcm_prepare)(_handleRecord);
     if (errVal < 0)
@@ -1528,9 +1518,9 @@ int32_t AudioDeviceLinuxALSA::StartPlayout()
     }
 
     // PLAYOUT
-    const char* threadName = "webrtc_audio_module_play_thread";
-    _ptrThreadPlay =  ThreadWrapper::CreateThread(PlayThreadFunc, this,
-                                                  threadName);
+    _ptrThreadPlay.reset(new rtc::PlatformThread(
+        PlayThreadFunc, this, "webrtc_audio_module_play_thread"));
+
     int errVal = LATE(snd_pcm_prepare)(_handlePlayout);
     if (errVal < 0)
     {
@@ -1541,17 +1531,8 @@ int32_t AudioDeviceLinuxALSA::StartPlayout()
         // if snd_pcm_open fails will return -1
     }
 
-    if (!_ptrThreadPlay->Start())
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "  failed to start the play audio thread");
-        _playing = false;
-        _ptrThreadPlay.reset();
-        delete [] _playoutBuffer;
-        _playoutBuffer = NULL;
-        return -1;
-    }
-    _ptrThreadPlay->SetPriority(kRealtimePriority);
+    _ptrThreadPlay->Start();
+    _ptrThreadPlay->SetPriority(rtc::kRealtimePriority);
 
     return 0;
 }

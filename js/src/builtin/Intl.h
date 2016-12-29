@@ -366,16 +366,6 @@ intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 /******************** PluralRules ********************/
 
 /**
- * Returns a new PluralRules instance.
- * Self-hosted code cannot cache this constructor (as it does for others in
- * Utilities.js) because it is initialized after self-hosted code is compiled.
- *
- * Usage: pluralRules = intl_PluralRules(locales, options)
- */
-extern MOZ_MUST_USE bool
-intl_PluralRules(JSContext* cx, unsigned argc, Value* vp);
-
-/**
  * Returns an object indicating the supported locales for plural rules
  * by having a true-valued property for each such locale with the
  * canonicalized language tag as the property name. The object has no

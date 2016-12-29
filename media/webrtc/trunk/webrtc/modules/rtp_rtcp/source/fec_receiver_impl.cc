@@ -12,11 +12,11 @@
 
 #include <assert.h>
 
+#include "webrtc/base/logging.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_video.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 // RFC 5109
 namespace webrtc {
@@ -81,11 +81,16 @@ int32_t FecReceiverImpl::AddReceivedRedPacket(
   uint8_t REDHeaderLength = 1;
   size_t payload_data_length = packet_length - header.headerLength;
 
+  if (payload_data_length == 0) {
+    LOG(LS_WARNING) << "Corrupt/truncated FEC packet.";
+    return -1;
+  }
+
   // Add to list without RED header, aka a virtual RTP packet
   // we remove the RED header
 
-  ForwardErrorCorrection::ReceivedPacket* received_packet =
-      new ForwardErrorCorrection::ReceivedPacket;
+  rtc::scoped_ptr<ForwardErrorCorrection::ReceivedPacket> received_packet(
+      new ForwardErrorCorrection::ReceivedPacket);
   received_packet->pkt = new ForwardErrorCorrection::Packet;
 
   // get payload type from RED header
@@ -99,16 +104,18 @@ int32_t FecReceiverImpl::AddReceivedRedPacket(
   if (incoming_rtp_packet[header.headerLength] & 0x80) {
     // f bit set in RED header
     REDHeaderLength = 4;
+    if (payload_data_length < REDHeaderLength + 1u) {
+      LOG(LS_WARNING) << "Corrupt/truncated FEC packet.";
+      return -1;
+    }
+
     uint16_t timestamp_offset =
         (incoming_rtp_packet[header.headerLength + 1]) << 8;
     timestamp_offset +=
         incoming_rtp_packet[header.headerLength + 2];
     timestamp_offset = timestamp_offset >> 2;
     if (timestamp_offset != 0) {
-      // |timestampOffset| should be 0. However, it's possible this is the first
-      // location a corrupt payload can be caught, so don't assert.
       LOG(LS_WARNING) << "Corrupt payload found.";
-      delete received_packet;
       return -1;
     }
 
@@ -118,21 +125,20 @@ int32_t FecReceiverImpl::AddReceivedRedPacket(
 
     // check next RED header
     if (incoming_rtp_packet[header.headerLength + 4] & 0x80) {
-      // more than 2 blocks in packet not supported
-      delete received_packet;
-      assert(false);
+      LOG(LS_WARNING) << "More than 2 blocks in packet not supported.";
       return -1;
     }
-    if (blockLength > payload_data_length - REDHeaderLength) {
-      // block length longer than packet
-      delete received_packet;
-      assert(false);
+    // Check that the packet is long enough to contain data in the following
+    // block.
+    if (blockLength > payload_data_length - (REDHeaderLength + 1)) {
+      LOG(LS_WARNING) << "Block length longer than packet.";
       return -1;
     }
   }
   ++packet_counter_.num_packets;
 
-  ForwardErrorCorrection::ReceivedPacket* second_received_packet = NULL;
+  rtc::scoped_ptr<ForwardErrorCorrection::ReceivedPacket>
+      second_received_packet;
   if (blockLength > 0) {
     // handle block length, split into 2 packets
     REDHeaderLength = 5;
@@ -154,7 +160,7 @@ int32_t FecReceiverImpl::AddReceivedRedPacket(
 
     received_packet->pkt->length = blockLength;
 
-    second_received_packet = new ForwardErrorCorrection::ReceivedPacket;
+    second_received_packet.reset(new ForwardErrorCorrection::ReceivedPacket);
     second_received_packet->pkt = new ForwardErrorCorrection::Packet;
 
     second_received_packet->is_fec = true;
@@ -202,14 +208,12 @@ int32_t FecReceiverImpl::AddReceivedRedPacket(
   }
 
   if (received_packet->pkt->length == 0) {
-    delete second_received_packet;
-    delete received_packet;
     return 0;
   }
 
-  received_packet_list_.push_back(received_packet);
+  received_packet_list_.push_back(received_packet.release());
   if (second_received_packet) {
-    received_packet_list_.push_back(second_received_packet);
+    received_packet_list_.push_back(second_received_packet.release());
   }
   return 0;
 }

@@ -17,7 +17,7 @@ namespace rtc {
 // Test that Win32SocketServer::Wait works as expected.
 TEST(Win32SocketServerTest, TestWait) {
   Win32SocketServer server(NULL);
-  uint32 start = Time();
+  uint32_t start = Time();
   server.Wait(1000, true);
   EXPECT_GE(TimeSince(start), 1000);
 }

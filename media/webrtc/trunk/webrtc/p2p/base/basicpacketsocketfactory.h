@@ -27,11 +27,11 @@ class BasicPacketSocketFactory : public PacketSocketFactory {
   ~BasicPacketSocketFactory() override;
 
   AsyncPacketSocket* CreateUdpSocket(const SocketAddress& local_address,
-                                     uint16 min_port,
-                                     uint16 max_port) override;
+                                     uint16_t min_port,
+                                     uint16_t max_port) override;
   AsyncPacketSocket* CreateServerTcpSocket(const SocketAddress& local_address,
-                                           uint16 min_port,
-                                           uint16 max_port,
+                                           uint16_t min_port,
+                                           uint16_t max_port,
                                            int opts) override;
   AsyncPacketSocket* CreateClientTcpSocket(const SocketAddress& local_address,
                                            const SocketAddress& remote_address,
@@ -44,8 +44,8 @@ class BasicPacketSocketFactory : public PacketSocketFactory {
  private:
   int BindSocket(AsyncSocket* socket,
                  const SocketAddress& local_address,
-                 uint16 min_port,
-                 uint16 max_port);
+                 uint16_t min_port,
+                 uint16_t max_port);
 
   SocketFactory* socket_factory();
 

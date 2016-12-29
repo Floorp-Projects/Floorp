@@ -9,18 +9,18 @@ include('/build/gyp.mozbuild')
 webrtc_non_unified_sources = [
     'trunk/webrtc/common_audio/vad/vad_core.c',                                  # Because of name clash in the kInitCheck variable
     'trunk/webrtc/common_audio/vad/webrtc_vad.c',                                # Because of name clash in the kInitCheck variable
+    'trunk/webrtc/modules/audio_coding/acm2/codec_manager.cc',                   # Because of duplicate IsCodecRED/etc
     'trunk/webrtc/modules/audio_coding/codecs/g722/g722_decode.c',               # Because of name clash in the saturate function
     'trunk/webrtc/modules/audio_coding/codecs/g722/g722_encode.c',               # Because of name clash in the saturate function
     'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c',   # Because of name clash in the kDampFilter variable
     'trunk/webrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter_c.c', # Because of name clash in the kDampFilter variable
-    'trunk/webrtc/modules/audio_coding/main/acm2/codec_manager.cc',              # Because of duplicate IsCodecRED/etc
     'trunk/webrtc/modules/audio_coding/neteq/audio_vector.cc',                   # Because of explicit template specializations
+    'trunk/webrtc/modules/audio_device/android/audio_manager.cc',                # Because of TAG redefinition
     'trunk/webrtc/modules/audio_device/android/audio_record_jni.cc',             # Becuse of commonly named module static vars
-    'trunk/webrtc/modules/audio_device/android/audio_track_jni.cc',             # Becuse of commonly named module static vars
+    'trunk/webrtc/modules/audio_device/android/audio_track_jni.cc',              # Becuse of commonly named module static vars
+    'trunk/webrtc/modules/audio_device/android/opensles_player.cc',              # Because of TAG redefinition
     'trunk/webrtc/modules/audio_device/linux/audio_device_pulse_linux.cc',       # Because of LATE()
     'trunk/webrtc/modules/audio_device/linux/audio_mixer_manager_pulse_linux.cc',# Because of LATE()
-    'trunk/webrtc/modules/audio_device/opensl/opensles_input.cc',                # Because of name clash in the kOption variable
-    'trunk/webrtc/modules/audio_device/opensl/opensles_output.cc',               # Because of name clash in the kOption variable
     'trunk/webrtc/modules/audio_device/opensl/single_rw_fifo.cc',                # Because of name clash with #define FF
     'trunk/webrtc/modules/audio_device/win/audio_device_core_win.cc',            # Because of ordering assumptions in strsafe.h
     'trunk/webrtc/modules/audio_processing/aec/aec_core.c',                      # Because of name clash in the ComfortNoise function
@@ -35,12 +35,15 @@ webrtc_non_unified_sources = [
     'trunk/webrtc/modules/audio_processing/gain_control_impl.cc',                # Because of name clash in the Handle typedef
     'trunk/webrtc/modules/audio_processing/high_pass_filter_impl.cc',            # Because of name clash in the Handle typedef
     'trunk/webrtc/modules/audio_processing/noise_suppression_impl.cc',           # Because of name clash in the Handle typedef
-    'trunk/webrtc/modules/remote_bitrate_estimator/mimd_rate_control.cc',        # Because of duplicate definitions of static consts against aimd_rate_control.cc
     'trunk/webrtc/modules/remote_bitrate_estimator/remote_bitrate_estimator_single_stream.cc', # Because of duplicate definitions of static consts against remote_bitrate_estimator_abs_send_time.cc
+    'trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbn.cc',                  # Because of identically named functions and vars between tmmbr.cc and tmmbn.cc in an anonymous namespaces
+    'trunk/webrtc/modules/rtp_rtcp/source/rtcp_packet/tmmbr.cc',                  # Because of identically named functions and vars between tmmbr.cc and tmmbn.cc in an anonymous namespaces
+    'trunk/webrtc/modules/video_capture/android/device_info_android.cc',         # Because of duplicate module static variable names
+    'trunk/webrtc/modules/video_capture/android/video_capture_android.cc',       # Because of duplicate module static variable names
     'trunk/webrtc/modules/video_capture/windows/device_info_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable
     'trunk/webrtc/modules/video_capture/windows/help_functions_ds.cc',           # Because of initguid.h
     'trunk/webrtc/modules/video_capture/windows/sink_filter_ds.cc',              # Because of the MEDIASUBTYPE_HDYC variable and initguid.h
-    'trunk/webrtc/video_engine/overuse_frame_detector.cc',                       # Because of name clash with call_stats.cc on kWeightFactor
+    'trunk/webrtc/video/overuse_frame_detector.cc',                              # Because of name clash with call_stats.cc on kWeightFactor
 ]
 
 GYP_DIRS += ['trunk']
@@ -66,7 +69,6 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/common/browser_logging/CSFLog.cpp',
         'signaling/src/jsep/JsepSessionImpl.cpp',
         'signaling/src/media-conduit/AudioConduit.cpp',
-        'signaling/src/media-conduit/CodecStatistics.cpp',
         'signaling/src/media-conduit/MediaCodecVideoCodec.cpp',
         'signaling/src/media-conduit/VideoConduit.cpp',
         'signaling/src/media-conduit/WebrtcMediaCodecVP8VideoCodec.cpp',

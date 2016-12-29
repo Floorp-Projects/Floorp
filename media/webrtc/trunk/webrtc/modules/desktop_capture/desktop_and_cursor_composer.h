@@ -56,7 +56,7 @@ class DesktopAndCursorComposer : public DesktopCapturer,
   MouseCursorMonitor::CursorState cursor_state_;
   DesktopVector cursor_position_;
 
-  DISALLOW_COPY_AND_ASSIGN(DesktopAndCursorComposer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopAndCursorComposer);
 };
 
 }  // namespace webrtc

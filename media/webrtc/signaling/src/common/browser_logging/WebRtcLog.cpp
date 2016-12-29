@@ -6,7 +6,7 @@
 
 #include "mozilla/Logging.h"
 #include "prenv.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include "nscore.h"
 #ifdef MOZILLA_INTERNAL_API

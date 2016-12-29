@@ -22,7 +22,7 @@ namespace webrtc {
 Operations DecisionLogicFax::GetDecisionSpecialized(
     const SyncBuffer& sync_buffer,
     const Expand& expand,
-    int decoder_frame_length,
+    size_t decoder_frame_length,
     const RTPHeader* packet_header,
     Modes prev_mode,
     bool play_dtmf,

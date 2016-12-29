@@ -14,10 +14,10 @@
 #include <winsock2.h>
 #include <list>
 
-#include "webrtc/system_wrappers/interface/atomic32.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/test/channel_transport/udp_socket2_win.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/test/channel_transport/udp_transport.h"
@@ -47,7 +47,7 @@ struct PerIoContext {
     int fromLen;
     // Should be set to true if the I/O context was passed to the system by
     // a thread not controlled by the socket implementation.
-    bool ioInitiatedByThreadWrapper;
+    bool ioInitiatedByPlatformThread;
     // TODO (hellner): Not used. Delete it.
     PerIoContext* pNextFree;
 };
@@ -105,7 +105,7 @@ protected:
     bool Process();
 private:
     HANDLE _ioCompletionHandle;
-    rtc::scoped_ptr<ThreadWrapper> _pThread;
+    rtc::PlatformThread _pThread;
     static int32_t _numOfWorkers;
     int32_t _workerNumber;
     volatile bool _stop;

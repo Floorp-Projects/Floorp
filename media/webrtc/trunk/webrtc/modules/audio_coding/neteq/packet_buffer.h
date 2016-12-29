@@ -43,7 +43,7 @@ class PacketBuffer {
   virtual void Flush();
 
   // Returns true for an empty buffer.
-  virtual bool Empty() const { return buffer_.empty(); }
+  virtual bool Empty() const;
 
   // Inserts |packet| into the buffer. The buffer will take over ownership of
   // the packet object.
@@ -88,7 +88,7 @@ class PacketBuffer {
   // Subsequent packets with the same timestamp as the one extracted will be
   // discarded and properly deleted. The number of discarded packets will be
   // written to the output variable |discard_count|.
-  virtual Packet* GetNextPacket(int* discard_count);
+  virtual Packet* GetNextPacket(size_t* discard_count);
 
   // Discards the first packet in the buffer. The packet is deleted.
   // Returns PacketBuffer::kBufferEmpty if the buffer is empty,
@@ -105,20 +105,16 @@ class PacketBuffer {
                                 uint32_t horizon_samples);
 
   // Discards all packets that are (strictly) older than timestamp_limit.
-  virtual int DiscardAllOldPackets(uint32_t timestamp_limit) {
-    return DiscardOldPackets(timestamp_limit, 0);
-  }
+  virtual int DiscardAllOldPackets(uint32_t timestamp_limit);
 
   // Returns the number of packets in the buffer, including duplicates and
   // redundant packets.
-  virtual int NumPacketsInBuffer() const {
-    return static_cast<int>(buffer_.size());
-  }
+  virtual size_t NumPacketsInBuffer() const;
 
   // Returns the number of samples in the buffer, including samples carried in
   // duplicate and redundant packets.
-  virtual int NumSamplesInBuffer(DecoderDatabase* decoder_database,
-                                 int last_decoded_length) const;
+  virtual size_t NumSamplesInBuffer(DecoderDatabase* decoder_database,
+                                    size_t last_decoded_length) const;
 
   // Increase the waiting time counter for every packet in the buffer by |inc|.
   // The default value for |inc| is 1.
@@ -152,7 +148,7 @@ class PacketBuffer {
  private:
   size_t max_number_of_packets_;
   PacketList buffer_;
-  DISALLOW_COPY_AND_ASSIGN(PacketBuffer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PacketBuffer);
 };
 
 }  // namespace webrtc

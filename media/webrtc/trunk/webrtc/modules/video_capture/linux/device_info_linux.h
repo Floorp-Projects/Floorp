@@ -14,8 +14,8 @@
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
 #ifdef WEBRTC_LINUX
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/atomic32.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
 #include <sys/inotify.h>
 #endif
 
@@ -59,7 +59,7 @@ private:
     int EventCheck();
     int HandleEvents();
     int ProcessInotifyEvents();
-    rtc::scoped_ptr<ThreadWrapper> _inotifyEventThread;
+    rtc::scoped_ptr<rtc::PlatformThread> _inotifyEventThread;
     static bool InotifyEventThread(void*);
     bool InotifyProcess();
     int _fd, _wd_v4l, _wd_snd; /* accessed on InotifyEventThread thread */

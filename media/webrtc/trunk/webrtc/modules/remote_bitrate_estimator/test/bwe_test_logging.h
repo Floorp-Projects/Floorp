@@ -28,7 +28,7 @@
 //      BWE_TEST_LOGGING_CONTEXT(i);
 //      BWE_TEST_LOGGING_LOG1("weight", "%f tonnes", weights_[i]);
 //      for (float j=0.0f; j<1.0; j+=0.4f) {
-//        BWE_TEST_LOGGING_PLOT("bps", -1, j);
+//        BWE_TEST_LOGGING_PLOT(0, "bps", -1, j);
 //      }
 //    }
 //  }
@@ -86,11 +86,36 @@
 #define BWE_TEST_LOGGING_LOG5(name, format, _1, _2, _3, _4, _5)
 
 // Print to stdout in tab-separated format suitable for plotting, e.g.:
-//   PLOT  Context1_Context2_Name  time  value
+//   PLOT figure Context1_Context2_Name  time  value
+// |figure| is a figure id. Different figures are plotted in different windows.
 // |name| is a char*, std::string or uint32_t to name the plotted value.
 // |time| is an int64_t time in ms, or -1 to inherit time from previous context.
 // |value| is a double precision float to be plotted.
-#define BWE_TEST_LOGGING_PLOT(name, time, value)
+// |alg_name| is an optional argument, a string
+#define BWE_TEST_LOGGING_PLOT(figure, name, time, value)
+#define BWE_TEST_LOGGING_PLOT_WITH_NAME(figure, name, time, value, alg_name)
+
+// Print to stdout in tab-separated format suitable for plotting, e.g.:
+//   BAR figure Context1_Context2_Name  x_left  width  value
+// |figure| is a figure id. Different figures are plotted in different windows.
+// |name| is a char*, std::string or uint32_t to name the plotted value.
+// |value| is a double precision float to be plotted.
+// |ylow| and |yhigh| are double precision float for the error line.
+// |title| is a string and refers to the error label.
+// |ymax| is a double precision float for the limit horizontal line.
+// |limit_title| is a string and refers to the limit label.
+#define BWE_TEST_LOGGING_BAR(figure, name, value, flow_id)
+#define BWE_TEST_LOGGING_ERRORBAR(figure, name, value, ylow, yhigh, \
+                                  error_title, flow_id)
+#define BWE_TEST_LOGGING_LIMITERRORBAR( \
+    figure, name, value, ylow, yhigh, error_title, ymax, limit_title, flow_id)
+
+#define BWE_TEST_LOGGING_BASELINEBAR(figure, name, value, flow_id)
+
+// |num_flows| is an integer refering to the number of RMCAT flows in the
+// scenario.
+// Define |x_label| and |y_label| for plots.
+#define BWE_TEST_LOGGING_LABEL(figure, x_label, y_label, num_flows)
 
 #else  // BWE_TEST_LOGGING_COMPILE_TIME_ENABLE
 
@@ -105,12 +130,12 @@
 #define BWE_TEST_LOGGING_GLOBAL_CONTEXT(name) \
     do { \
       webrtc::testing::bwe::Logging::GetInstance()->SetGlobalContext(name); \
-    } while (0);
+    } while (0)
 
 #define BWE_TEST_LOGGING_GLOBAL_ENABLE(enabled) \
     do { \
       webrtc::testing::bwe::Logging::GetInstance()->SetGlobalEnable(enabled); \
-    } while (0);
+    } while (0)
 
 #define __BWE_TEST_LOGGING_CONTEXT_NAME(ctx, line) ctx ## line
 #define __BWE_TEST_LOGGING_CONTEXT_DECLARE(ctx, line, name, time, enabled) \
@@ -130,36 +155,82 @@
     do { \
       BWE_TEST_LOGGING_CONTEXT(name); \
       webrtc::testing::bwe::Logging::GetInstance()->Log(format, _1); \
-    } while (0);
+    } while (0)
 #define BWE_TEST_LOGGING_LOG2(name, format, _1, _2) \
     do { \
       BWE_TEST_LOGGING_CONTEXT(name); \
       webrtc::testing::bwe::Logging::GetInstance()->Log(format, _1, _2); \
-    } while (0);
+    } while (0)
 #define BWE_TEST_LOGGING_LOG3(name, format, _1, _2, _3) \
     do { \
       BWE_TEST_LOGGING_CONTEXT(name); \
       webrtc::testing::bwe::Logging::GetInstance()->Log(format, _1, _2, _3); \
-    } while (0);
+    } while (0)
 #define BWE_TEST_LOGGING_LOG4(name, format, _1, _2, _3, _4) \
     do { \
       BWE_TEST_LOGGING_CONTEXT(name); \
       webrtc::testing::bwe::Logging::GetInstance()->Log(format, _1, _2, _3, \
                                                         _4); \
-    } while (0);
+    } while (0)
 #define BWE_TEST_LOGGING_LOG5(name, format, _1, _2, _3, _4, _5) \
     do {\
       BWE_TEST_LOGGING_CONTEXT(name); \
       webrtc::testing::bwe::Logging::GetInstance()->Log(format, _1, _2, _3, \
                                                         _4, _5); \
-    } while (0);
+    } while (0)
 
-#define BWE_TEST_LOGGING_PLOT(name, time, value)\
-    do { \
-      __BWE_TEST_LOGGING_CONTEXT_DECLARE(__bwe_log_, __LINE__, name, \
-                                         static_cast<int64_t>(time), true); \
-      webrtc::testing::bwe::Logging::GetInstance()->Plot(value); \
-    } while (0);
+#define BWE_TEST_LOGGING_PLOT(figure, name, time, value)                  \
+  do {                                                                    \
+    __BWE_TEST_LOGGING_CONTEXT_DECLARE(__bwe_log_, __PLOT__, name,        \
+                                       static_cast<int64_t>(time), true); \
+    webrtc::testing::bwe::Logging::GetInstance()->Plot(figure, value);    \
+  } while (0)
+
+#define BWE_TEST_LOGGING_PLOT_WITH_NAME(figure, name, time, value, alg_name) \
+  do {                                                                       \
+    __BWE_TEST_LOGGING_CONTEXT_DECLARE(__bwe_log_, __PLOT__, name,           \
+                                       static_cast<int64_t>(time), true);    \
+    webrtc::testing::bwe::Logging::GetInstance()->Plot(figure, value,        \
+                                                       alg_name);            \
+  } while (0)
+
+#define BWE_TEST_LOGGING_BAR(figure, name, value, flow_id)                     \
+  do {                                                                         \
+    BWE_TEST_LOGGING_CONTEXT(name);                                            \
+    webrtc::testing::bwe::Logging::GetInstance()->PlotBar(figure, name, value, \
+                                                          flow_id);            \
+  } while (0)
+
+#define BWE_TEST_LOGGING_BASELINEBAR(figure, name, value, flow_id) \
+  do {                                                             \
+    BWE_TEST_LOGGING_CONTEXT(name);                                \
+    webrtc::testing::bwe::Logging::GetInstance()->PlotBaselineBar( \
+        figure, name, value, flow_id);                             \
+  } while (0)
+
+#define BWE_TEST_LOGGING_ERRORBAR(figure, name, value, ylow, yhigh, title, \
+                                  flow_id)                                 \
+  do {                                                                     \
+    BWE_TEST_LOGGING_CONTEXT(name);                                        \
+    webrtc::testing::bwe::Logging::GetInstance()->PlotErrorBar(            \
+        figure, name, value, ylow, yhigh, title, flow_id);                 \
+  } while (0)
+
+#define BWE_TEST_LOGGING_LIMITERRORBAR(                                        \
+    figure, name, value, ylow, yhigh, error_title, ymax, limit_title, flow_id) \
+  do {                                                                         \
+    BWE_TEST_LOGGING_CONTEXT(name);                                            \
+    webrtc::testing::bwe::Logging::GetInstance()->PlotLimitErrorBar(           \
+        figure, name, value, ylow, yhigh, error_title, ymax, limit_title,      \
+        flow_id);                                                              \
+  } while (0)
+
+#define BWE_TEST_LOGGING_LABEL(figure, title, y_label, num_flows) \
+  do {                                                            \
+    BWE_TEST_LOGGING_CONTEXT(title);                              \
+    webrtc::testing::bwe::Logging::GetInstance()->PlotLabel(      \
+        figure, title, y_label, num_flows);                       \
+  } while (0)
 
 namespace webrtc {
 
@@ -177,7 +248,7 @@ class Logging {
     Context(const char* name, int64_t timestamp_ms, bool enabled);
     ~Context();
    private:
-    DISALLOW_IMPLICIT_CONSTRUCTORS(Context);
+    RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(Context);
   };
 
   static Logging* GetInstance();
@@ -188,7 +259,34 @@ class Logging {
   void SetGlobalEnable(bool enabled);
 
   void Log(const char format[], ...);
-  void Plot(double value);
+  void Plot(int figure, double value);
+  void Plot(int figure, double value, const std::string& alg_name);
+  void PlotBar(int figure, const std::string& name, double value, int flow_id);
+  void PlotBaselineBar(int figure,
+                       const std::string& name,
+                       double value,
+                       int flow_id);
+  void PlotErrorBar(int figure,
+                    const std::string& name,
+                    double value,
+                    double ylow,
+                    double yhigh,
+                    const std::string& error_title,
+                    int flow_id);
+
+  void PlotLimitErrorBar(int figure,
+                         const std::string& name,
+                         double value,
+                         double ylow,
+                         double yhigh,
+                         const std::string& error_title,
+                         double ymax,
+                         const std::string& limit_title,
+                         int flow_id);
+  void PlotLabel(int figure,
+                 const std::string& title,
+                 const std::string& y_label,
+                 int num_flows);
 
  private:
   struct State {
@@ -215,7 +313,7 @@ class Logging {
   rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
   ThreadMap thread_map_;
 
-  DISALLOW_COPY_AND_ASSIGN(Logging);
+  RTC_DISALLOW_COPY_AND_ASSIGN(Logging);
 };
 }  // namespace bwe
 }  // namespace testing

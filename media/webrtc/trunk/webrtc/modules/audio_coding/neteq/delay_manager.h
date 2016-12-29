@@ -32,7 +32,7 @@ class DelayManager {
   // buffer can hold no more than |max_packets_in_buffer| packets (i.e., this
   // is the number of packet slots in the buffer). Supply a PeakDetector
   // object to the DelayManager.
-  DelayManager(int max_packets_in_buffer, DelayPeakDetector* peak_detector);
+  DelayManager(size_t max_packets_in_buffer, DelayPeakDetector* peak_detector);
 
   virtual ~DelayManager();
 
@@ -132,7 +132,7 @@ class DelayManager {
   void LimitTargetLevel();
 
   bool first_packet_received_;
-  const int max_packets_in_buffer_;  // Capacity of the packet buffer.
+  const size_t max_packets_in_buffer_;  // Capacity of the packet buffer.
   IATVector iat_vector_;  // Histogram of inter-arrival times.
   int iat_factor_;  // Forgetting factor for updating the IAT histogram (Q15).
   int packet_iat_count_ms_;  // Milliseconds elapsed since last packet.
@@ -157,7 +157,7 @@ class DelayManager {
   DelayPeakDetector& peak_detector_;
   int last_pack_cng_or_dtmf_;
 
-  DISALLOW_COPY_AND_ASSIGN(DelayManager);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DelayManager);
 };
 
 }  // namespace webrtc

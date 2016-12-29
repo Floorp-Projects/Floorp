@@ -160,10 +160,15 @@ class SessionDescription {
   // Remove the first group with the same semantics specified by |name|.
   void RemoveGroupByName(const std::string& name);
 
+  // Global attributes.
+  void set_msid_supported(bool supported) { msid_supported_ = supported; }
+  bool msid_supported() const { return msid_supported_; }
+
  private:
   ContentInfos contents_;
   TransportInfos transport_infos_;
   ContentGroups content_groups_;
+  bool msid_supported_ = true;
 };
 
 // Indicates whether a ContentDescription was an offer or an answer, as

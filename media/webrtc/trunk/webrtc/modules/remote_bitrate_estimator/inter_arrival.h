@@ -78,7 +78,7 @@ class InterArrival {
   double timestamp_to_ms_coeff_;
   bool burst_grouping_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(InterArrival);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(InterArrival);
 };
 }  // namespace webrtc
 

@@ -7,8 +7,10 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#ifndef WEBRTC_MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
+#define WEBRTC_MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_
 
-namespace {
+namespace webrtc {
 
 // Maximum number of media packets allowed in this test. The burst mask types
 // are currently defined up to (kMaxMediaPacketsTest, kMaxMediaPacketsTest).
@@ -185,4 +187,5 @@ const float kMaxResidualLossBurstyMask[kNumberCodes] = {
   0.009657f
 };
 
-}  // namespace
+}  // namespace webrtc
+#endif  // WEBRTC_MODULES_RTP_RTCP_TEST_TESTFEC_AVERAGE_RESIDUAL_LOSS_XOR_CODES_H_

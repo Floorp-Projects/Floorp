@@ -17,7 +17,7 @@
 #import "webrtc/modules/video_capture/ios/device_info_ios_objc.h"
 #import "webrtc/modules/video_capture/ios/rtc_video_capture_ios_objc.h"
 
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 using namespace webrtc;
 using namespace webrtc::videocapturemodule;
@@ -31,6 +31,7 @@ using namespace webrtc::videocapturemodule;
   webrtc::VideoCaptureCapability _capability;
   AVCaptureSession* _captureSession;
   int _captureId;
+  BOOL _orientationHasChanged;
   AVCaptureConnection* _connection;
   BOOL _captureChanging;  // Guarded by _captureChangingCondition.
   NSCondition* _captureChangingCondition;
@@ -80,14 +81,16 @@ using namespace webrtc::videocapturemodule;
                    __LINE__);
     }
 
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+
     NSNotificationCenter* notify = [NSNotificationCenter defaultCenter];
     [notify addObserver:self
                selector:@selector(onVideoError:)
                    name:AVCaptureSessionRuntimeErrorNotification
                  object:_captureSession];
     [notify addObserver:self
-               selector:@selector(statusBarOrientationDidChange:)
-                   name:@"StatusBarOrientationDidChange"
+               selector:@selector(deviceOrientationDidChange:)
+                   name:UIDeviceOrientationDidChangeNotification
                  object:nil];
   }
 
@@ -105,7 +108,8 @@ using namespace webrtc::videocapturemodule;
   [[self currentOutput] setSampleBufferDelegate:nil queue:NULL];
 }
 
-- (void)statusBarOrientationDidChange:(NSNotification*)notification {
+- (void)deviceOrientationDidChange:(NSNotification*)notification {
+  _orientationHasChanged = YES;
   [self setRelativeVideoOrientation];
 }
 
@@ -171,6 +175,7 @@ using namespace webrtc::videocapturemodule;
 
   [self directOutputToSelf];
 
+  _orientationHasChanged = NO;
   _captureChanging = YES;
   dispatch_async(
       dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
@@ -238,24 +243,34 @@ using namespace webrtc::videocapturemodule;
 }
 
 - (void)setRelativeVideoOrientation {
-  if (!_connection.supportsVideoOrientation)
+  if (!_connection.supportsVideoOrientation) {
     return;
-  switch ([UIApplication sharedApplication].statusBarOrientation) {
-    case UIInterfaceOrientationPortrait:
-#if defined(__IPHONE_8_0) && __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0
-    case UIInterfaceOrientationUnknown:
-#endif
-      _connection.videoOrientation = AVCaptureVideoOrientationPortrait;
+  }
+
+  switch ([UIDevice currentDevice].orientation) {
+    case UIDeviceOrientationPortrait:
+      _connection.videoOrientation =
+          AVCaptureVideoOrientationPortrait;
       break;
-    case UIInterfaceOrientationPortraitUpsideDown:
+    case UIDeviceOrientationPortraitUpsideDown:
       _connection.videoOrientation =
           AVCaptureVideoOrientationPortraitUpsideDown;
       break;
-    case UIInterfaceOrientationLandscapeLeft:
-      _connection.videoOrientation = AVCaptureVideoOrientationLandscapeLeft;
+    case UIDeviceOrientationLandscapeLeft:
+      _connection.videoOrientation =
+          AVCaptureVideoOrientationLandscapeRight;
       break;
-    case UIInterfaceOrientationLandscapeRight:
-      _connection.videoOrientation = AVCaptureVideoOrientationLandscapeRight;
+    case UIDeviceOrientationLandscapeRight:
+      _connection.videoOrientation =
+          AVCaptureVideoOrientationLandscapeLeft;
+      break;
+    case UIDeviceOrientationFaceUp:
+    case UIDeviceOrientationFaceDown:
+    case UIDeviceOrientationUnknown:
+      if (!_orientationHasChanged) {
+        _connection.videoOrientation =
+            AVCaptureVideoOrientationPortrait;
+      }
       break;
   }
 }
@@ -273,6 +288,8 @@ using namespace webrtc::videocapturemodule;
 }
 
 - (BOOL)stopCapture {
+  [[UIDevice currentDevice] endGeneratingDeviceOrientationNotifications];
+  _orientationHasChanged = NO;
   [self waitForCaptureChangeToFinish];
   [self directOutputToNil];
 

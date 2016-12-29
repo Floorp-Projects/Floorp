@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
 
 namespace webrtc {
 

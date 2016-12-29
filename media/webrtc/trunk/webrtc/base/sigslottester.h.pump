@@ -76,7 +76,7 @@ class SigslotTester$i : public sigslot::has_slots<> {
   C$j* capture$j[[]]_;]]
 
 
-  DISALLOW_COPY_AND_ASSIGN(SigslotTester$i);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SigslotTester$i);
 };
 
 ]]

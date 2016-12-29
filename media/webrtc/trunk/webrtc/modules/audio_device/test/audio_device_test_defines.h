@@ -13,8 +13,8 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
-#include "webrtc/modules/utility/interface/process_thread.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/modules/utility/include/process_thread.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #ifdef _WIN32
 #define MACRO_DEFAULT_DEVICE AudioDeviceModule::kDefaultDevice

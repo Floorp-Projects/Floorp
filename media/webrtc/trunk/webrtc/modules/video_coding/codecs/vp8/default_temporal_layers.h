@@ -24,20 +24,22 @@ class DefaultTemporalLayers : public TemporalLayers {
 
   // Returns the recommended VP8 encode flags needed. May refresh the decoder
   // and/or update the reference buffers.
-  virtual int EncodeFlags(uint32_t timestamp);
+  int EncodeFlags(uint32_t timestamp) override;
 
-  virtual bool ConfigureBitrates(int bitrate_kbit,
-                                 int max_bitrate_kbit,
-                                 int framerate,
-                                 vpx_codec_enc_cfg_t* cfg);
+  bool ConfigureBitrates(int bitrate_kbit,
+                         int max_bitrate_kbit,
+                         int framerate,
+                         vpx_codec_enc_cfg_t* cfg) override;
 
-  virtual void PopulateCodecSpecific(bool base_layer_sync,
-                                     CodecSpecificInfoVP8* vp8_info,
-                                     uint32_t timestamp);
+  void PopulateCodecSpecific(bool base_layer_sync,
+                             CodecSpecificInfoVP8* vp8_info,
+                             uint32_t timestamp) override;
 
-  virtual void FrameEncoded(unsigned int size, uint32_t timestamp) {}
+  void FrameEncoded(unsigned int size, uint32_t timestamp, int qp) override {}
 
-  virtual int CurrentLayerId() const;
+  bool UpdateConfiguration(vpx_codec_enc_cfg_t* cfg) override { return false; }
+
+  int CurrentLayerId() const override;
 
  private:
   enum TemporalReferences {

@@ -16,7 +16,7 @@
 
 using webrtc::kNumChannels;
 
-namespace webrtc_opensl {
+namespace webrtc {
 
 SLDataFormat_PCM CreatePcmConfiguration(int sample_rate) {
   SLDataFormat_PCM configuration;

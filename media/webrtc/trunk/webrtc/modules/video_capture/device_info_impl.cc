@@ -13,7 +13,7 @@
 
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 #ifndef abs
 #define abs(a) (a>=0?a:-a)
@@ -107,7 +107,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
     // Make sure the number is valid
     if (deviceCapabilityNumber >= (unsigned int) _captureCapabilities.size())
     {
-        LOG(LS_ERROR) << "Invalid deviceCapabilityNumber "
+        LOG(LS_ERROR) << deviceUniqueIdUTF8 << " Invalid deviceCapabilityNumber "
                       << deviceCapabilityNumber << ">= number of capabilities ("
                       << _captureCapabilities.size() << ").";
         return -1;

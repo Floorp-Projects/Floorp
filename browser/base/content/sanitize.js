@@ -157,9 +157,7 @@ Sanitizer.prototype = {
     // `name` is the item's name and `promise` may be a promise, if the
     // sanitization is asynchronous, or the function return value, otherwise.
     let handles = [];
-    for (let itemName of itemsToClear) {
-      // Workaround for bug 449811.
-      let name = itemName;
+    for (let name of itemsToClear) {
       let item = this.items[name];
       try {
         // Catch errors here, so later we can just loop through these.

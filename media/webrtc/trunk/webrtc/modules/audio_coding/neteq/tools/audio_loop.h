@@ -13,6 +13,7 @@
 
 #include <string>
 
+#include "webrtc/base/array_view.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
@@ -40,10 +41,9 @@ class AudioLoop {
   bool Init(const std::string file_name, size_t max_loop_length_samples,
             size_t block_length_samples);
 
-  // Returns a pointer to the next block of audio. The number given as
-  // |block_length_samples| to the Init() function determines how many samples
-  // that can be safely read from the pointer.
-  const int16_t* GetNextBlock();
+  // Returns a (pointer,size) pair for the next block of audio. The size is
+  // equal to the |block_length_samples| Init() argument.
+  rtc::ArrayView<const int16_t> GetNextBlock();
 
  private:
   size_t next_index_;
@@ -51,7 +51,7 @@ class AudioLoop {
   size_t block_length_samples_;
   rtc::scoped_ptr<int16_t[]> audio_array_;
 
-  DISALLOW_COPY_AND_ASSIGN(AudioLoop);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioLoop);
 };
 
 }  // namespace test

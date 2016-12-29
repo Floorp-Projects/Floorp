@@ -32,7 +32,7 @@ const ALIGN8_BEG int16_t WebRtcAecm_kSqrtHanning[] ALIGN8_END = {
 };
 
 static inline void AddLanes(uint32_t* ptr, uint32x4_t v) {
-#if defined(__aarch64__)
+#if defined(WEBRTC_ARCH_ARM64)
   *(ptr) = vaddvq_u32(v);
 #else
   uint32x2_t tmp_v;

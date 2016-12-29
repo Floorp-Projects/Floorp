@@ -7,8 +7,11 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_WINDOW_CAPTURE_UTILS_H_
+#define WEBRTC_MODULES_DESKTOP_CAPTURE_WIN_WINDOW_CAPTURE_UTILS_H_
 
 #include <windows.h>
+#include <dwmapi.h>
 
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 
@@ -22,4 +25,22 @@ bool GetCroppedWindowRect(HWND window,
                           DesktopRect* cropped_rect,
                           DesktopRect* original_rect);
 
+ typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL*);
+
+class AeroChecker {
+ public:
+  AeroChecker();
+  ~AeroChecker();
+
+  bool IsAeroEnabled();
+
+ private:
+  HMODULE dwmapi_library_;
+  DwmIsCompositionEnabledFunc func_;
+
+  RTC_DISALLOW_COPY_AND_ASSIGN(AeroChecker);
+};
+
 }  // namespace webrtc
+
+#endif

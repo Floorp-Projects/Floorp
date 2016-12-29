@@ -34,9 +34,9 @@ typedef struct NoiseSuppressionFixedC_ {
   int16_t                 noiseEstCounter[SIMULT];
   int16_t                 noiseEstQuantile[HALF_ANAL_BLOCKL];
 
-  int                     anaLen;
-  int                     anaLen2;
-  int                     magnLen;
+  size_t                  anaLen;
+  size_t                  anaLen2;
+  size_t                  magnLen;
   int                     aggrMode;
   int                     stages;
   int                     initFlag;
@@ -98,7 +98,7 @@ typedef struct NoiseSuppressionFixedC_ {
   int                     qNoise;
   int                     prevQNoise;
   int                     prevQMagn;
-  int                     blockLen10ms;
+  size_t                  blockLen10ms;
 
   int16_t                 real[ANAL_BLOCKL_MAX];
   int16_t                 imag[ANAL_BLOCKL_MAX];
@@ -215,8 +215,7 @@ void WebRtcNsx_SpeechNoiseProb(NoiseSuppressionFixedC* inst,
                                uint32_t* priorLocSnr,
                                uint32_t* postLocSnr);
 
-#if (defined WEBRTC_DETECT_ARM_NEON || defined WEBRTC_ARCH_ARM_NEON || \
-     defined WEBRTC_ARCH_ARM64_NEON)
+#if (defined WEBRTC_DETECT_NEON || defined WEBRTC_HAS_NEON)
 // For the above function pointers, functions for generic platforms are declared
 // and defined as static in file nsx_core.c, while those for ARM Neon platforms
 // are declared below and defined in file nsx_core_neon.c.

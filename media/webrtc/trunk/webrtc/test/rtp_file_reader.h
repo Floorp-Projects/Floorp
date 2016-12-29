@@ -10,6 +10,7 @@
 #ifndef WEBRTC_TEST_RTP_FILE_READER_H_
 #define WEBRTC_TEST_RTP_FILE_READER_H_
 
+#include <set>
 #include <string>
 
 #include "webrtc/common_types.h"
@@ -37,6 +38,9 @@ class RtpFileReader {
   virtual ~RtpFileReader() {}
   static RtpFileReader* Create(FileFormat format,
                                const std::string& filename);
+  static RtpFileReader* Create(FileFormat format,
+                               const std::string& filename,
+                               const std::set<uint32_t>& ssrc_filter);
 
   virtual bool NextPacket(RtpPacket* packet) = 0;
 };

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2014 The WebRTC project authors. All Rights Reserved.
+ *  Copyright (c) 2015 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -12,23 +12,36 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_INCLUDE_H264_H_
 #define WEBRTC_MODULES_VIDEO_CODING_CODECS_H264_INCLUDE_H264_H_
 
-#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
+#if defined(WEBRTC_IOS) || defined(WEBRTC_MAC)
+
+#include <Availability.h>
+#if (defined(__IPHONE_8_0) &&                            \
+     __IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_8_0) || \
+    (defined(__MAC_10_8) && __MAC_OS_X_VERSION_MAX_ALLOWED >= __MAC_10_8)
+#define WEBRTC_VIDEO_TOOLBOX_SUPPORTED 1
+#endif
+
+#endif  // defined(WEBRTC_IOS) || defined(WEBRTC_MAC)
+
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
 namespace webrtc {
 
 class H264Encoder : public VideoEncoder {
  public:
   static H264Encoder* Create();
+  static bool IsSupported();
 
-  virtual ~H264Encoder() {}
-};  // H264Encoder
+  ~H264Encoder() override {}
+};
 
 class H264Decoder : public VideoDecoder {
  public:
   static H264Decoder* Create();
+  static bool IsSupported();
 
-  virtual ~H264Decoder() {}
-};  // H264Decoder
+  ~H264Decoder() override {}
+};
 
 }  // namespace webrtc
 

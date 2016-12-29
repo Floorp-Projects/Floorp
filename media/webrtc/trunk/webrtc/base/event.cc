@@ -31,7 +31,7 @@ Event::Event(bool manual_reset, bool initially_signaled) {
                                 manual_reset,
                                 initially_signaled,
                                 NULL);                // Name.
-  CHECK(event_handle_);
+  RTC_CHECK(event_handle_);
 }
 
 Event::~Event() {
@@ -56,8 +56,8 @@ bool Event::Wait(int milliseconds) {
 Event::Event(bool manual_reset, bool initially_signaled)
     : is_manual_reset_(manual_reset),
       event_status_(initially_signaled) {
-  CHECK(pthread_mutex_init(&event_mutex_, NULL) == 0);
-  CHECK(pthread_cond_init(&event_cond_, NULL) == 0);
+  RTC_CHECK(pthread_mutex_init(&event_mutex_, NULL) == 0);
+  RTC_CHECK(pthread_cond_init(&event_cond_, NULL) == 0);
 }
 
 Event::~Event() {

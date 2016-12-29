@@ -183,6 +183,10 @@ void AudioMultiVector::CrossFade(const AudioMultiVector& append_this,
   }
 }
 
+size_t AudioMultiVector::Channels() const {
+  return num_channels_;
+}
+
 size_t AudioMultiVector::Size() const {
   assert(channels_[0]);
   return channels_[0]->Size();

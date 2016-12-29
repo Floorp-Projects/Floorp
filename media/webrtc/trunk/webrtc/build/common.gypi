@@ -21,12 +21,10 @@
 
         'conditions': [
           ['build_with_chromium==1', {
-            'build_with_libjingle': 1,
             'webrtc_root%': '<(DEPTH)/third_party/webrtc',
             'apk_tests_path%': '<(DEPTH)/third_party/webrtc/build/apk_tests_noop.gyp',
             'modules_java_gyp_path%': '<(DEPTH)/third_party/webrtc/modules/modules_java_chromium.gyp',
           }, {
-            'build_with_libjingle%': 0,
             'webrtc_root%': '<(DEPTH)/webrtc',
             'apk_tests_path%': '<(DEPTH)/webrtc/build/apk_tests.gyp',
             'modules_java_gyp_path%': '<(DEPTH)/webrtc/modules/modules_java.gyp',
@@ -34,7 +32,6 @@
         ],
       },
       'build_with_chromium%': '<(build_with_chromium)',
-      'build_with_libjingle%': '<(build_with_libjingle)',
       'webrtc_root%': '<(webrtc_root)',
       'apk_tests_path%': '<(apk_tests_path)',
       'modules_java_gyp_path%': '<(modules_java_gyp_path)',
@@ -48,9 +45,12 @@
       'include_isac%': 1,
       'include_pcm16b%': 1,
       'opus_dir%': '<(DEPTH)/third_party/opus',
+
+      # Enable to use the Mozilla internal settings.
+      'build_with_mozilla%': 0,
     },
     'build_with_chromium%': '<(build_with_chromium)',
-    'build_with_libjingle%': '<(build_with_libjingle)',
+    'build_with_mozilla%': '<(build_with_mozilla)',
     'webrtc_root%': '<(webrtc_root)',
     'apk_tests_path%': '<(apk_tests_path)',
     'modules_java_gyp_path%': '<(modules_java_gyp_path)',
@@ -98,23 +98,21 @@
     'enable_protobuf%': 1,
 
     # Disable these to not build components which can be externally provided.
+    'build_expat%': 1,
     'build_json%': 1,
     'build_libjpeg%': 1,
-    'build_libyuv%': 1,
     'build_libvpx%': 1,
-    'build_vp9%': 1,
-    'build_ssl%': 1,
+    'build_libyuv%': 1,
     'build_openmax_dl%': 1,
     'build_opus%': 1,
+    'build_protobuf%': 1,
+    'build_ssl%': 1,
 
     # Disable by default
     'have_dbus_glib%': 0,
 
-    # Enable to use the Mozilla internal settings.
-    'build_with_mozilla%': 0,
-
     # Make it possible to provide custom locations for some libraries.
-    'libvpx_dir%': '<(DEPTH)/third_party/libvpx',
+    'libvpx_dir%': '<(DEPTH)/third_party/libvpx_new',
     'libyuv_dir%': '<(DEPTH)/third_party/libyuv',
     'opus_dir%': '<(opus_dir)',
 
@@ -133,6 +131,24 @@
     # enable schannel on windows.
     'use_legacy_ssl_defaults%': 0,
 
+    # Determines whether NEON code will be built.
+    'build_with_neon%': 0,
+
+    # Enable this to use HW H.264 encoder/decoder on iOS/Mac PeerConnections.
+    # Enabling this may break interop with Android clients that support H264.
+    'use_objc_h264%': 0,
+
+    # Enable this to build H.264 encoder/decoder using third party libraries.
+    # Encoding uses OpenH264 and decoding uses FFmpeg. Because of this, OpenH264
+    # and FFmpeg have to be correctly enabled separately.
+    # - use_openh264=1 is required for OpenH264 targets to be defined.
+    # - ffmpeg_branding=Chrome is one way to support H.264 decoding in FFmpeg.
+    #   FFmpeg can be built with/without H.264 support, see 'ffmpeg_branding'.
+    #   Without it, it compiles but H264DecoderImpl fails to initialize.
+    # CHECK THE OPENH264, FFMPEG AND H.264 LICENSES/PATENTS BEFORE BUILDING.
+    # http://www.openh264.org, https://www.ffmpeg.org/
+    'use_third_party_h264%': 0,  # TODO(hbos): To be used in follow-up CL(s).
+
     'conditions': [
       ['build_with_chromium==1', {
         # Exclude pulse audio on Chromium since its prerequisites don't require
@@ -143,6 +159,10 @@
         'include_internal_audio_device%': 0,
 
         'include_ndk_cpu_features%': 0,
+
+        # Remove tests for Chromium to avoid slowing down GYP generation.
+        'include_tests%': 0,
+        'restrict_webrtc_logging%': 1,
       }, {  # Settings for the standalone (not-in-Chromium) build.
         # TODO(andrew): For now, disable the Chrome plugins, which causes a
         # flood of chromium-style warnings. Investigate enabling them:
@@ -152,13 +172,23 @@
         'include_pulse_audio%': 1,
         'include_internal_audio_device%': 1,
         'include_ndk_cpu_features%': 0,
-      }],
-      ['build_with_libjingle==1', {
-        'include_tests%': 0,
-        'restrict_webrtc_logging%': 1,
-      }, {
-        'include_tests%': 1,
-        'restrict_webrtc_logging%': 0,
+        'conditions': [
+          ['build_with_mozilla==1', {
+            'include_tests%': 0,
+            'conditions': [
+	      # silly gyp won't let me do 'a': !'b'
+	      # suppress TRACE logging in non-debug builds
+              ['debug==1', {
+                'restrict_webrtc_logging%': 0,
+              }, {
+                'restrict_webrtc_logging%': 1,
+              }],
+	    ],
+          }, {
+            'include_tests%': 1,
+            'restrict_webrtc_logging%': 0,
+	  }],
+	],
       }],
       ['OS=="linux"', {
         'include_alsa_audio%': 1,
@@ -182,10 +212,12 @@
       }],
       ['OS=="ios"', {
         'build_libjpeg%': 0,
-        'enable_protobuf%': 0,
       }],
       ['target_arch=="arm" or target_arch=="arm64"', {
         'prefer_fixed_point%': 1,
+      }],
+      ['(target_arch=="arm" and (arm_neon==1 or arm_neon_optional==1)) or target_arch=="arm64"', {
+        'build_with_neon%': 1,
       }],
       ['OS!="ios" and (target_arch!="arm" or arm_version>=7) and target_arch!="mips64el" and build_with_mozilla==0', {
         'rtc_use_openmax_dl%': 1,
@@ -253,7 +285,7 @@
           '<(DEPTH)',
           # The overrides must be included before the WebRTC root as that's the
           # mechanism for selecting the override headers in Chromium.
-          '../overrides',
+          '../../webrtc_overrides',
           # The WebRTC root is needed to allow includes in the WebRTC code base
           # to be prefixed with webrtc/.
           '../..',
@@ -299,13 +331,8 @@
       }],
       ['target_arch=="arm64"', {
         'defines': [
-          'WEBRTC_ARCH_ARM',
-          # TODO(zhongwei) Defining an unique WEBRTC_NEON and
-          # distinguishing ARMv7 NEON and ARM64 NEON by
-          # WEBRTC_ARCH_ARM_V7 and WEBRTC_ARCH_ARM64 should be better.
-
-          # This macro is used to distinguish ARMv7 NEON and ARM64 NEON
-          'WEBRTC_ARCH_ARM64_NEON',
+          'WEBRTC_ARCH_ARM64',
+          'WEBRTC_HAS_NEON',
         ],
       }],
       ['target_arch=="arm"', {
@@ -318,10 +345,10 @@
                         'WEBRTC_BUILD_NEON_LIBS'],
             'conditions': [
               ['arm_neon==1', {
-                'defines': ['WEBRTC_ARCH_ARM_NEON',],
+                'defines': ['WEBRTC_HAS_NEON',],
               }],
-              ['arm_neon==0 and arm_neon_optional==1', {
-                'defines': ['WEBRTC_DETECT_ARM_NEON',],
+              ['arm_neon==0 and (OS=="android" or moz_widget_toolkit_gonk==1)', {
+                'defines': ['WEBRTC_DETECT_NEON',],
               }],
             ],
           }],
@@ -333,13 +360,19 @@
           'WEBRTC_THREAD_RR',
         ],
       }],
+      ['OS=="dragonfly" or OS=="netbsd"', {
+        'defines': [
+          # doesn't support pthread_condattr_setclock
+          'WEBRTC_CLOCK_TYPE_REALTIME',
+        ],
+      }],
       ['OS=="openbsd"', {
         'defines' : [
           'WEBRTC_AUDIO_SNDIO',
         ],
       }],
       # Mozilla: if we support Mozilla on MIPS, we'll need to mod the cflags entries here
-      ['target_arch=="mipsel" and mips_arch_variant!="r6" and android_webview_build==0', {
+      ['target_arch=="mipsel" and mips_arch_variant!="r6"', {
         'defines': [
           'MIPS32_LE',
         ],
@@ -385,14 +418,12 @@
           'WEBRTC_IOS',
         ],
       }],
+      ['OS=="ios" and use_objc_h264==1', {
+        'defines': [
+          'WEBRTC_OBJC_H264',
+        ],
+      }],
       ['OS=="linux"', {
-#        'conditions': [
-#          ['have_clock_monotonic==1', {
-#            'defines': [
-#              'WEBRTC_CLOCK_TYPE_REALTIME',
-#            ],
-#          }],
-#        ],
         'defines': [
           'WEBRTC_LINUX',
         ],
@@ -433,7 +464,7 @@
           'WEBRTC_ANDROID',
          ],
          'conditions': [
-           ['clang!=1', {
+           ['clang==0', {
              # The Android NDK doesn't provide optimized versions of these
              # functions. Ensure they are disabled for all compilers.
              'cflags': [
@@ -444,6 +475,11 @@
              ],
            }],
          ],
+      }],
+      ['include_internal_audio_device==1', {
+        'defines': [
+          'WEBRTC_INCLUDE_INTERNAL_AUDIO_DEVICE',
+        ],
       }],
     ], # conditions
     'direct_dependent_settings': {
@@ -460,9 +496,9 @@
             'WEBRTC_CHROMIUM_BUILD',
           ],
           'include_dirs': [
-            # overrides must be included first as that is the mechanism for
+            # The overrides must be included first as that is the mechanism for
             # selecting the override headers in Chromium.
-            '../overrides',
+            '../../webrtc_overrides',
             '../..',
           ],
         }, {
@@ -495,13 +531,6 @@
           'defines': [
             'WEBRTC_LINUX',
             'WEBRTC_ANDROID',
-           ],
-           'conditions': [
-             ['enable_android_opensl==1', {
-               'defines': [
-                 'WEBRTC_ANDROID_OPENSLES',
-               ],
-             }]
            ],
         }],
         ['os_posix==1', {

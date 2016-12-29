@@ -10,7 +10,7 @@
 
 #include "webrtc/voice_engine/test/auto_test/fixtures/before_initialization_fixture.h"
 
-#include "webrtc/system_wrappers/interface/sleep.h"
+#include "webrtc/system_wrappers/include/sleep.h"
 
 BeforeInitializationFixture::BeforeInitializationFixture()
     : voice_engine_(webrtc::VoiceEngine::Create()) {

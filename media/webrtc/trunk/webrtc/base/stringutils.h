@@ -292,7 +292,7 @@ struct Traits<char> {
 template<>
 struct Traits<wchar_t> {
   typedef std::wstring string;
-  inline static const wchar_t* Traits<wchar_t>::empty_str() { return L""; }
+  inline static const wchar_t* empty_str() { return L""; }
 };
 
 #endif  // WEBRTC_WIN 

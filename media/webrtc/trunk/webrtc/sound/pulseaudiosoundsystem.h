@@ -167,7 +167,7 @@ class PulseAudioSoundSystem : public SoundSystemInterface {
   pa_context *context_;
   PulseAudioSymbolTable symbol_table_;
 
-  DISALLOW_COPY_AND_ASSIGN(PulseAudioSoundSystem);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PulseAudioSoundSystem);
 };
 
 }  // namespace rtc

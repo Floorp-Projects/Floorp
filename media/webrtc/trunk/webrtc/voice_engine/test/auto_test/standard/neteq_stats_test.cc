@@ -55,5 +55,5 @@ TEST_F(NetEQStatsTest, ManualPrintStatisticsAfterRunningAWhile) {
       network_statistics.maxWaitingTimeMs);
 
   // This is only set to a non-zero value in off-mode.
-  EXPECT_EQ(0, network_statistics.addedSamples);
+  EXPECT_EQ(0U, network_statistics.addedSamples);
 }

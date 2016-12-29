@@ -15,7 +15,7 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
 
@@ -58,7 +58,12 @@ class TransientFileUtilsTest: public ::testing::Test {
   const std::string kTestFileNamef;
 };
 
-TEST_F(TransientFileUtilsTest, ConvertByteArrayToFloat) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ConvertByteArrayToFloat DISABLED_ConvertByteArrayToFloat
+#else
+#define MAYBE_ConvertByteArrayToFloat ConvertByteArrayToFloat
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ConvertByteArrayToFloat) {
   float value = 0.0;
 
   EXPECT_EQ(0, ConvertByteArrayToFloat(kPiBytesf, &value));
@@ -71,7 +76,12 @@ TEST_F(TransientFileUtilsTest, ConvertByteArrayToFloat) {
   EXPECT_FLOAT_EQ(kAvogadro, value);
 }
 
-TEST_F(TransientFileUtilsTest, ConvertByteArrayToDouble) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ConvertByteArrayToDouble DISABLED_ConvertByteArrayToDouble
+#else
+#define MAYBE_ConvertByteArrayToDouble ConvertByteArrayToDouble
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ConvertByteArrayToDouble) {
   double value = 0.0;
 
   EXPECT_EQ(0, ConvertByteArrayToDouble(kPiBytes, &value));
@@ -84,7 +94,12 @@ TEST_F(TransientFileUtilsTest, ConvertByteArrayToDouble) {
   EXPECT_DOUBLE_EQ(kAvogadro, value);
 }
 
-TEST_F(TransientFileUtilsTest, ConvertFloatToByteArray) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ConvertFloatToByteArray DISABLED_ConvertFloatToByteArray
+#else
+#define MAYBE_ConvertFloatToByteArray ConvertFloatToByteArray
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ConvertFloatToByteArray) {
   rtc::scoped_ptr<uint8_t[]> bytes(new uint8_t[4]);
 
   EXPECT_EQ(0, ConvertFloatToByteArray(kPi, bytes.get()));
@@ -97,7 +112,12 @@ TEST_F(TransientFileUtilsTest, ConvertFloatToByteArray) {
   EXPECT_EQ(0, memcmp(bytes.get(), kAvogadroBytesf, 4));
 }
 
-TEST_F(TransientFileUtilsTest, ConvertDoubleToByteArray) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ConvertDoubleToByteArray DISABLED_ConvertDoubleToByteArray
+#else
+#define MAYBE_ConvertDoubleToByteArray ConvertDoubleToByteArray
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ConvertDoubleToByteArray) {
   rtc::scoped_ptr<uint8_t[]> bytes(new uint8_t[8]);
 
   EXPECT_EQ(0, ConvertDoubleToByteArray(kPi, bytes.get()));
@@ -110,7 +130,12 @@ TEST_F(TransientFileUtilsTest, ConvertDoubleToByteArray) {
   EXPECT_EQ(0, memcmp(bytes.get(), kAvogadroBytes, 8));
 }
 
-TEST_F(TransientFileUtilsTest, ReadInt16BufferFromFile) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ReadInt16BufferFromFile DISABLED_ReadInt16BufferFromFile
+#else
+#define MAYBE_ReadInt16BufferFromFile ReadInt16BufferFromFile
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ReadInt16BufferFromFile) {
   std::string test_filename = kTestFileName;
 
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
@@ -148,7 +173,13 @@ TEST_F(TransientFileUtilsTest, ReadInt16BufferFromFile) {
   EXPECT_EQ(17631, buffer[kBufferLength - 1]);
 }
 
-TEST_F(TransientFileUtilsTest, ReadInt16FromFileToFloatBuffer) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ReadInt16FromFileToFloatBuffer \
+  DISABLED_ReadInt16FromFileToFloatBuffer
+#else
+#define MAYBE_ReadInt16FromFileToFloatBuffer ReadInt16FromFileToFloatBuffer
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ReadInt16FromFileToFloatBuffer) {
   std::string test_filename = kTestFileName;
 
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
@@ -189,7 +220,13 @@ TEST_F(TransientFileUtilsTest, ReadInt16FromFileToFloatBuffer) {
   EXPECT_DOUBLE_EQ(17631, buffer[kBufferLength - 1]);
 }
 
-TEST_F(TransientFileUtilsTest, ReadInt16FromFileToDoubleBuffer) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ReadInt16FromFileToDoubleBuffer \
+  DISABLED_ReadInt16FromFileToDoubleBuffer
+#else
+#define MAYBE_ReadInt16FromFileToDoubleBuffer ReadInt16FromFileToDoubleBuffer
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ReadInt16FromFileToDoubleBuffer) {
   std::string test_filename = kTestFileName;
 
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
@@ -229,7 +266,12 @@ TEST_F(TransientFileUtilsTest, ReadInt16FromFileToDoubleBuffer) {
   EXPECT_DOUBLE_EQ(17631, buffer[kBufferLength - 1]);
 }
 
-TEST_F(TransientFileUtilsTest, ReadFloatBufferFromFile) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ReadFloatBufferFromFile DISABLED_ReadFloatBufferFromFile
+#else
+#define MAYBE_ReadFloatBufferFromFile ReadFloatBufferFromFile
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ReadFloatBufferFromFile) {
   std::string test_filename = kTestFileNamef;
 
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
@@ -266,7 +308,12 @@ TEST_F(TransientFileUtilsTest, ReadFloatBufferFromFile) {
   EXPECT_FLOAT_EQ(kAvogadro, buffer[2]);
 }
 
-TEST_F(TransientFileUtilsTest, ReadDoubleBufferFromFile) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ReadDoubleBufferFromFile DISABLED_ReadDoubleBufferFromFile
+#else
+#define MAYBE_ReadDoubleBufferFromFile ReadDoubleBufferFromFile
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ReadDoubleBufferFromFile) {
   std::string test_filename = kTestFileName;
 
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
@@ -303,7 +350,12 @@ TEST_F(TransientFileUtilsTest, ReadDoubleBufferFromFile) {
   EXPECT_DOUBLE_EQ(kAvogadro, buffer[2]);
 }
 
-TEST_F(TransientFileUtilsTest, WriteInt16BufferToFile) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_WriteInt16BufferToFile DISABLED_WriteInt16BufferToFile
+#else
+#define MAYBE_WriteInt16BufferToFile WriteInt16BufferToFile
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_WriteInt16BufferToFile) {
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
 
   std::string kOutFileName = test::TempFilename(test::OutputPath(),
@@ -345,7 +397,12 @@ TEST_F(TransientFileUtilsTest, WriteInt16BufferToFile) {
                       kBufferLength * sizeof(written_buffer[0])));
 }
 
-TEST_F(TransientFileUtilsTest, WriteFloatBufferToFile) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_WriteFloatBufferToFile DISABLED_WriteFloatBufferToFile
+#else
+#define MAYBE_WriteFloatBufferToFile WriteFloatBufferToFile
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_WriteFloatBufferToFile) {
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
 
   std::string kOutFileName = test::TempFilename(test::OutputPath(),
@@ -387,7 +444,12 @@ TEST_F(TransientFileUtilsTest, WriteFloatBufferToFile) {
                       kBufferLength * sizeof(written_buffer[0])));
 }
 
-TEST_F(TransientFileUtilsTest, WriteDoubleBufferToFile) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_WriteDoubleBufferToFile DISABLED_WriteDoubleBufferToFile
+#else
+#define MAYBE_WriteDoubleBufferToFile WriteDoubleBufferToFile
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_WriteDoubleBufferToFile) {
   rtc::scoped_ptr<FileWrapper> file(FileWrapper::Create());
 
   std::string kOutFileName = test::TempFilename(test::OutputPath(),
@@ -429,7 +491,12 @@ TEST_F(TransientFileUtilsTest, WriteDoubleBufferToFile) {
                       kBufferLength * sizeof(written_buffer[0])));
 }
 
-TEST_F(TransientFileUtilsTest, ExpectedErrorReturnValues) {
+#if defined(WEBRTC_IOS)
+#define MAYBE_ExpectedErrorReturnValues DISABLED_ExpectedErrorReturnValues
+#else
+#define MAYBE_ExpectedErrorReturnValues ExpectedErrorReturnValues
+#endif
+TEST_F(TransientFileUtilsTest, MAYBE_ExpectedErrorReturnValues) {
   std::string test_filename = kTestFileName;
 
   double value;

@@ -87,7 +87,7 @@ wasm::HasSupport(ExclusiveContext* cx)
 
 template<typename T>
 JSObject*
-js::wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
+wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
 {
     MOZ_ASSERT(IsNaN(*addr));
 
@@ -109,11 +109,11 @@ js::wasm::CreateCustomNaNObject(JSContext* cx, T* addr)
     return obj;
 }
 
-template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
-template JSObject* js::wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
+template JSObject* wasm::CreateCustomNaNObject(JSContext* cx, float* addr);
+template JSObject* wasm::CreateCustomNaNObject(JSContext* cx, double* addr);
 
 bool
-js::wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
+wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret)
 {
     RootedObject obj(cx, &v.toObject());
     RootedValue val(cx);
@@ -129,7 +129,7 @@ js::wasm::ReadCustomFloat32NaNObject(JSContext* cx, HandleValue v, uint32_t* ret
 }
 
 bool
-js::wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
+wasm::ReadCustomDoubleNaNObject(JSContext* cx, HandleValue v, uint64_t* ret)
 {
     RootedObject obj(cx, &v.toObject());
     RootedValue val(cx);
@@ -203,9 +203,9 @@ ThrowBadImportArg(JSContext* cx)
 }
 
 static bool
-ThrowBadImportField(JSContext* cx, const char* field, const char* str)
+ThrowBadImportType(JSContext* cx, const char* field, const char* str)
 {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD, field, str);
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_TYPE, field, str);
     return false;
 }
 
@@ -242,8 +242,11 @@ GetImports(JSContext* cx,
         if (!GetProperty(cx, importObj, import.module.get(), &v))
             return false;
 
-        if (!v.isObject())
-            return ThrowBadImportField(cx, import.module.get(), "an Object");
+        if (!v.isObject()) {
+            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_FIELD,
+                                      import.module.get());
+            return false;
+        }
 
         RootedObject obj(cx, &v.toObject());
         if (!GetProperty(cx, obj, import.field.get(), &v))
@@ -252,7 +255,7 @@ GetImports(JSContext* cx,
         switch (import.kind) {
           case DefinitionKind::Function:
             if (!IsFunctionObject(v))
-                return ThrowBadImportField(cx, import.field.get(), "a Function");
+                return ThrowBadImportType(cx, import.field.get(), "Function");
 
             if (!funcImports.append(&v.toObject().as<JSFunction>()))
                 return false;
@@ -260,14 +263,14 @@ GetImports(JSContext* cx,
             break;
           case DefinitionKind::Table:
             if (!v.isObject() || !v.toObject().is<WasmTableObject>())
-                return ThrowBadImportField(cx, import.field.get(), "a Table");
+                return ThrowBadImportType(cx, import.field.get(), "Table");
 
             MOZ_ASSERT(!tableImport);
             tableImport.set(&v.toObject().as<WasmTableObject>());
             break;
           case DefinitionKind::Memory:
             if (!v.isObject() || !v.toObject().is<WasmMemoryObject>())
-                return ThrowBadImportField(cx, import.field.get(), "a Memory");
+                return ThrowBadImportType(cx, import.field.get(), "Memory");
 
             MOZ_ASSERT(!memoryImport);
             memoryImport.set(&v.toObject().as<WasmMemoryObject>());
@@ -281,7 +284,7 @@ GetImports(JSContext* cx,
             switch (global.type()) {
               case ValType::I32: {
                 if (!v.isNumber())
-                    return ThrowBadImportField(cx, import.field.get(), "a number");
+                    return ThrowBadImportType(cx, import.field.get(), "Number");
                 int32_t i32;
                 if (!ToInt32(cx, v, &i32))
                     return false;
@@ -305,7 +308,7 @@ GetImports(JSContext* cx,
                     break;
                 }
                 if (!v.isNumber())
-                    return ThrowBadImportField(cx, import.field.get(), "a number");
+                    return ThrowBadImportType(cx, import.field.get(), "Number");
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
@@ -321,7 +324,7 @@ GetImports(JSContext* cx,
                     break;
                 }
                 if (!v.isNumber())
-                    return ThrowBadImportField(cx, import.field.get(), "a number");
+                    return ThrowBadImportType(cx, import.field.get(), "Number");
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
@@ -958,6 +961,17 @@ WasmInstanceObject::create(JSContext* cx,
 }
 
 static bool
+GetImportArg(JSContext* cx, CallArgs callArgs, MutableHandleObject importObj)
+{
+    if (!callArgs.get(1).isUndefined()) {
+        if (!callArgs[1].isObject())
+            return ThrowBadImportArg(cx);
+        importObj.set(&callArgs[1].toObject());
+    }
+    return true;
+}
+
+static bool
 Instantiate(JSContext* cx, const Module& module, HandleObject importObj,
             MutableHandleWasmInstanceObject instanceObj)
 {
@@ -991,11 +1005,8 @@ WasmInstanceObject::construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RootedObject importObj(cx);
-    if (!args.get(1).isUndefined()) {
-        if (!args[1].isObject())
-            return ThrowBadImportArg(cx);
-        importObj = &args[1].toObject();
-    }
+    if (!GetImportArg(cx, args, &importObj))
+        return false;
 
     RootedWasmInstanceObject instanceObj(cx);
     if (!Instantiate(cx, *module, importObj, &instanceObj))
@@ -1898,13 +1909,7 @@ GetInstantiateArgs(JSContext* cx, CallArgs callArgs, MutableHandleObject firstAr
 
     firstArg.set(&callArgs[0].toObject());
 
-    if (!callArgs.get(1).isUndefined()) {
-        if (!callArgs[1].isObject())
-            return ThrowBadImportArg(cx);
-        importObj.set(&callArgs[1].toObject());
-    }
-
-    return true;
+    return GetImportArg(cx, callArgs, importObj);
 }
 
 static bool
@@ -2075,6 +2080,8 @@ js::InitWebAssemblyClass(JSContext* cx, HandleObject obj)
     if (!InitConstructor<WasmTableObject>(cx, wasm, "Table", &tableProto))
         return nullptr;
     if (!InitErrorClass(cx, wasm, "CompileError", JSEXN_WASMCOMPILEERROR))
+        return nullptr;
+    if (!InitErrorClass(cx, wasm, "LinkError", JSEXN_WASMLINKERROR))
         return nullptr;
     if (!InitErrorClass(cx, wasm, "RuntimeError", JSEXN_WASMRUNTIMEERROR))
         return nullptr;

@@ -23,7 +23,7 @@
 
 #include <math.h>
 
-#include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
+#include "webrtc/system_wrappers/include/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
 // These tables used to be computed at run-time. For example, refer to:
@@ -579,9 +579,9 @@ void aec_rdft_init(void) {
 #if defined(MIPS_FPU_LE)
   aec_rdft_init_mips();
 #endif
-#if defined(WEBRTC_ARCH_ARM_NEON)
+#if defined(WEBRTC_HAS_NEON)
   aec_rdft_init_neon();
-#elif defined(WEBRTC_DETECT_ARM_NEON)
+#elif defined(WEBRTC_DETECT_NEON)
   if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
     aec_rdft_init_neon();
   }

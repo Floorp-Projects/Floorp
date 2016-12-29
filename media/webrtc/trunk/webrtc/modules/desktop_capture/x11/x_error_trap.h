@@ -44,7 +44,7 @@ class XErrorTrap {
   int last_xserver_error_code_;
   bool enabled_;
 
-  DISALLOW_COPY_AND_ASSIGN(XErrorTrap);
+  RTC_DISALLOW_COPY_AND_ASSIGN(XErrorTrap);
 };
 
 }  // namespace webrtc

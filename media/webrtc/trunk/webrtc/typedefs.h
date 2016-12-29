@@ -24,6 +24,7 @@
 #define WEBRTC_ARCH_64_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
 #elif defined(__aarch64__)
+#define WEBRTC_ARCH_ARM_FAMILY
 #define WEBRTC_ARCH_64_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
 #elif defined(_M_IX86) || defined(__i386__)
@@ -32,13 +33,7 @@
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
 #elif defined(__ARMEL__)
-// TODO(ajm): We'd prefer to control platform defines here, but this is
-// currently provided by the Android makefiles. Commented to avoid duplicate
-// definition warnings.
-//#define WEBRTC_ARCH_ARM
-// TODO(ajm): Chromium uses the following two defines. Should we switch?
-//#define WEBRTC_ARCH_ARM_FAMILY
-//#define WEBRTC_ARCH_ARMEL
+#define WEBRTC_ARCH_ARM_FAMILY
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
 #elif defined(__powerpc64__)
@@ -136,33 +131,25 @@
 #error Define either WEBRTC_ARCH_LITTLE_ENDIAN or WEBRTC_ARCH_BIG_ENDIAN
 #endif
 
-#if (defined(WEBRTC_ARCH_X86_FAMILY) && !defined(__SSE2__)) ||  \
-    (defined(WEBRTC_ARCH_ARM_V7) && !defined(WEBRTC_ARCH_ARM_NEON))
+// TODO(zhongwei.yao): WEBRTC_CPU_DETECTION is only used in one place; we should
+// probably just remove it.
+#if (defined(WEBRTC_ARCH_X86_FAMILY) && !defined(__SSE2__)) || \
+    defined(WEBRTC_DETECT_NEON)
 #define WEBRTC_CPU_DETECTION
 #endif
 
-#if !defined(_MSC_VER)
+// TODO(pbos): Use webrtc/base/basictypes.h instead to include fixed-size ints.
 #include <stdint.h>
-#else
-// Define C99 equivalent types, since pre-2010 MSVC doesn't provide stdint.h.
-typedef signed char         int8_t;
-typedef signed short        int16_t;
-typedef signed int          int32_t;
-typedef __int64             int64_t;
-typedef unsigned char       uint8_t;
-typedef unsigned short      uint16_t;
-typedef unsigned int        uint32_t;
-typedef unsigned __int64    uint64_t;
-#endif
 
 // Annotate a function indicating the caller must examine the return value.
 // Use like:
 //   int foo() WARN_UNUSED_RESULT;
+// To explicitly ignore a result, see |ignore_result()| in <base/macros.h>.
 // TODO(ajm): Hack to avoid multiple definitions until the base/ of webrtc and
 // libjingle are merged.
 #if !defined(WARN_UNUSED_RESULT)
-#if defined(__GNUC__)
-#define WARN_UNUSED_RESULT __attribute__((warn_unused_result))
+#if defined(__GNUC__) || defined(__clang__)
+#define WARN_UNUSED_RESULT __attribute__ ((__warn_unused_result__))
 #else
 #define WARN_UNUSED_RESULT
 #endif
@@ -173,7 +160,7 @@ typedef unsigned __int64    uint64_t;
 //   assert(result == 17);
 #ifndef ATTRIBUTE_UNUSED
 #if defined(__GNUC__) || defined(__clang__)
-#define ATTRIBUTE_UNUSED __attribute__((unused))
+#define ATTRIBUTE_UNUSED __attribute__ ((__unused__))
 #else
 #define ATTRIBUTE_UNUSED
 #endif
@@ -193,7 +180,7 @@ typedef unsigned __int64    uint64_t;
 #if defined(_MSC_VER)
 #define NO_RETURN __declspec(noreturn)
 #elif defined(__GNUC__)
-#define NO_RETURN __attribute__((noreturn))
+#define NO_RETURN __attribute__ ((__noreturn__))
 #else
 #define NO_RETURN
 #endif

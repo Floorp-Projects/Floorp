@@ -37,9 +37,8 @@ PartitionTreeNode::PartitionTreeNode(PartitionTreeNode* parent,
 
 PartitionTreeNode* PartitionTreeNode::CreateRootNode(const size_t* size_vector,
                                                      size_t num_partitions) {
-  PartitionTreeNode* root_node =
-      new PartitionTreeNode(NULL, &size_vector[1], num_partitions - 1,
-                            size_vector[0]);
+  PartitionTreeNode* root_node = new PartitionTreeNode(
+      NULL, &size_vector[1], num_partitions - 1, size_vector[0]);
   root_node->set_packet_start(true);
   return root_node;
 }
@@ -54,7 +53,7 @@ int PartitionTreeNode::Cost(size_t penalty) {
   if (num_partitions_ == 0) {
     // This is a solution node.
     cost = std::max(max_parent_size_, this_size_int()) -
-        std::min(min_parent_size_, this_size_int());
+           std::min(min_parent_size_, this_size_int());
   } else {
     cost = std::max(max_parent_size_, this_size_int()) - min_parent_size_;
   }
@@ -68,9 +67,7 @@ bool PartitionTreeNode::CreateChildren(size_t max_size) {
     if (this_size_ + size_vector_[0] <= max_size) {
       assert(!children_[kLeftChild]);
       children_[kLeftChild] =
-          new PartitionTreeNode(this,
-                                &size_vector_[1],
-                                num_partitions_ - 1,
+          new PartitionTreeNode(this, &size_vector_[1], num_partitions_ - 1,
                                 this_size_ + size_vector_[0]);
       children_[kLeftChild]->set_max_parent_size(max_parent_size_);
       children_[kLeftChild]->set_min_parent_size(min_parent_size_);
@@ -80,10 +77,8 @@ bool PartitionTreeNode::CreateChildren(size_t max_size) {
     }
     if (this_size_ > 0) {
       assert(!children_[kRightChild]);
-      children_[kRightChild] = new PartitionTreeNode(this,
-                                                     &size_vector_[1],
-                                                     num_partitions_ - 1,
-                                                     size_vector_[0]);
+      children_[kRightChild] = new PartitionTreeNode(
+          this, &size_vector_[1], num_partitions_ - 1, size_vector_[0]);
       children_[kRightChild]->set_max_parent_size(
           std::max(max_parent_size_, this_size_int()));
       children_[kRightChild]->set_min_parent_size(
@@ -148,7 +143,8 @@ PartitionTreeNode* PartitionTreeNode::GetOptimalNode(size_t max_size,
 
 Vp8PartitionAggregator::Vp8PartitionAggregator(
     const RTPFragmentationHeader& fragmentation,
-    size_t first_partition_idx, size_t last_partition_idx)
+    size_t first_partition_idx,
+    size_t last_partition_idx)
     : root_(NULL),
       num_partitions_(last_partition_idx - first_partition_idx + 1),
       size_vector_(new size_t[num_partitions_]),
@@ -158,14 +154,14 @@ Vp8PartitionAggregator::Vp8PartitionAggregator(
   for (size_t i = 0; i < num_partitions_; ++i) {
     size_vector_[i] =
         fragmentation.fragmentationLength[i + first_partition_idx];
-    largest_partition_size_ = std::max(largest_partition_size_,
-                                       size_vector_[i]);
+    largest_partition_size_ =
+        std::max(largest_partition_size_, size_vector_[i]);
   }
   root_ = PartitionTreeNode::CreateRootNode(size_vector_, num_partitions_);
 }
 
 Vp8PartitionAggregator::~Vp8PartitionAggregator() {
-  delete [] size_vector_;
+  delete[] size_vector_;
   delete root_;
 }
 
@@ -190,14 +186,16 @@ Vp8PartitionAggregator::FindOptimalConfiguration(size_t max_size,
     assert(packet_index > 0);
     assert(temp_node != NULL);
     config_vector[i - 1] = packet_index - 1;
-    if (temp_node->packet_start()) --packet_index;
+    if (temp_node->packet_start())
+      --packet_index;
     temp_node = temp_node->parent();
   }
   return config_vector;
 }
 
 void Vp8PartitionAggregator::CalcMinMax(const ConfigVec& config,
-                                        int* min_size, int* max_size) const {
+                                        int* min_size,
+                                        int* max_size) const {
   if (*min_size < 0) {
     *min_size = std::numeric_limits<int>::max();
   }
@@ -263,8 +261,8 @@ size_t Vp8PartitionAggregator::CalcNumberOfFragments(
   }
   assert(num_fragments > 0);
   // TODO(mflodman) Assert disabled since it's falsely triggered, see issue 293.
-  //assert(large_partition_size / num_fragments + 1 <= max_payload_size);
+  // assert(large_partition_size / num_fragments + 1 <= max_payload_size);
   return num_fragments;
 }
 
-}  // namespace
+}  // namespace webrtc

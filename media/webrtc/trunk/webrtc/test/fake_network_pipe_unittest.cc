@@ -13,7 +13,7 @@
 
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/call.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/clock.h"
 #include "webrtc/test/fake_network_pipe.h"
 
 using ::testing::_;
@@ -29,19 +29,23 @@ class MockReceiver : public PacketReceiver {
   virtual ~MockReceiver() {}
 
   void IncomingPacket(const uint8_t* data, size_t length) {
-    DeliverPacket(data, length);
+    DeliverPacket(MediaType::ANY, data, length, PacketTime());
     delete [] data;
   }
 
-  MOCK_METHOD2(DeliverPacket, DeliveryStatus(const uint8_t*, size_t));
+  MOCK_METHOD4(
+      DeliverPacket,
+      DeliveryStatus(MediaType, const uint8_t*, size_t, const PacketTime&));
 };
 
 class FakeNetworkPipeTest : public ::testing::Test {
+ public:
+  FakeNetworkPipeTest() : fake_clock_(12345) {}
+
  protected:
   virtual void SetUp() {
-    TickTime::UseFakeClock(12345);
     receiver_.reset(new MockReceiver());
-    ON_CALL(*receiver_, DeliverPacket(_, _))
+    ON_CALL(*receiver_, DeliverPacket(_, _, _, _))
         .WillByDefault(Return(PacketReceiver::DELIVERY_OK));
   }
 
@@ -59,6 +63,7 @@ class FakeNetworkPipeTest : public ::testing::Test {
     return 8 * kPacketSize / capacity_kbps;
   }
 
+  SimulatedClock fake_clock_;
   rtc::scoped_ptr<MockReceiver> receiver_;
 };
 
@@ -69,7 +74,8 @@ TEST_F(FakeNetworkPipeTest, CapacityTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 20;
   config.link_capacity_kbps = 80;
-  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(
+      new FakeNetworkPipe(&fake_clock_, config));
   pipe->SetReceiver(receiver_.get());
 
   // Add 10 packets of 1000 bytes, = 80 kb, and verify it takes one second to
@@ -83,26 +89,22 @@ TEST_F(FakeNetworkPipeTest, CapacityTest) {
                                          kPacketSize);
 
   // Time haven't increased yet, so we souldn't get any packets.
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(0);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 
   // Advance enough time to release one packet.
-  TickTime::AdvanceFakeClock(kPacketTimeMs);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(1);
+  fake_clock_.AdvanceTimeMilliseconds(kPacketTimeMs);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
   pipe->Process();
 
   // Release all but one packet
-  TickTime::AdvanceFakeClock(9 * kPacketTimeMs - 1);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(8);
+  fake_clock_.AdvanceTimeMilliseconds(9 * kPacketTimeMs - 1);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(8);
   pipe->Process();
 
   // And the last one.
-  TickTime::AdvanceFakeClock(1);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(1);
+  fake_clock_.AdvanceTimeMilliseconds(1);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
   pipe->Process();
 }
 
@@ -112,7 +114,8 @@ TEST_F(FakeNetworkPipeTest, ExtraDelayTest) {
   config.queue_length_packets = 20;
   config.queue_delay_ms = 100;
   config.link_capacity_kbps = 80;
-  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(
+      new FakeNetworkPipe(&fake_clock_, config));
   pipe->SetReceiver(receiver_.get());
 
   const int kNumPackets = 2;
@@ -124,21 +127,18 @@ TEST_F(FakeNetworkPipeTest, ExtraDelayTest) {
                                          kPacketSize);
 
   // Increase more than kPacketTimeMs, but not more than the extra delay.
-  TickTime::AdvanceFakeClock(kPacketTimeMs);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(0);
+  fake_clock_.AdvanceTimeMilliseconds(kPacketTimeMs);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 
   // Advance the network delay to get the first packet.
-  TickTime::AdvanceFakeClock(config.queue_delay_ms);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(1);
+  fake_clock_.AdvanceTimeMilliseconds(config.queue_delay_ms);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
   pipe->Process();
 
   // Advance one more kPacketTimeMs to get the last packet.
-  TickTime::AdvanceFakeClock(kPacketTimeMs);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(1);
+  fake_clock_.AdvanceTimeMilliseconds(kPacketTimeMs);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
   pipe->Process();
 }
 
@@ -148,7 +148,8 @@ TEST_F(FakeNetworkPipeTest, QueueLengthTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 2;
   config.link_capacity_kbps = 80;
-  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(
+      new FakeNetworkPipe(&fake_clock_, config));
   pipe->SetReceiver(receiver_.get());
 
   const int kPacketSize = 1000;
@@ -160,9 +161,8 @@ TEST_F(FakeNetworkPipeTest, QueueLengthTest) {
 
   // Increase time enough to deliver all three packets, verify only two are
   // delivered.
-  TickTime::AdvanceFakeClock(3 * kPacketTimeMs);
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(2);
+  fake_clock_.AdvanceTimeMilliseconds(3 * kPacketTimeMs);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(2);
   pipe->Process();
 }
 
@@ -172,7 +172,8 @@ TEST_F(FakeNetworkPipeTest, StatisticsTest) {
   config.queue_length_packets = 2;
   config.queue_delay_ms = 20;
   config.link_capacity_kbps = 80;
-  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(
+      new FakeNetworkPipe(&fake_clock_, config));
   pipe->SetReceiver(receiver_.get());
 
   const int kPacketSize = 1000;
@@ -181,10 +182,10 @@ TEST_F(FakeNetworkPipeTest, StatisticsTest) {
 
   // Send three packets and verify only 2 are delivered.
   SendPackets(pipe.get(), 3, kPacketSize);
-  TickTime::AdvanceFakeClock(3 * kPacketTimeMs + config.queue_delay_ms);
+  fake_clock_.AdvanceTimeMilliseconds(3 * kPacketTimeMs +
+                                      config.queue_delay_ms);
 
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _))
-      .Times(2);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(2);
   pipe->Process();
 
   // Packet 1: kPacketTimeMs + config.queue_delay_ms,
@@ -201,7 +202,8 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithEmptyPipeTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 20;
   config.link_capacity_kbps = 80;
-  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(
+      new FakeNetworkPipe(&fake_clock_, config));
   pipe->SetReceiver(receiver_.get());
 
   // Add 10 packets of 1000 bytes, = 80 kb, and verify it takes one second to
@@ -214,13 +216,13 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithEmptyPipeTest) {
   int packet_time_ms = PacketTimeMs(config.link_capacity_kbps, kPacketSize);
 
   // Time hasn't increased yet, so we souldn't get any packets.
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(0);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 
   // Advance time in steps to release one packet at a time.
   for (int i = 0; i < kNumPackets; ++i) {
-    TickTime::AdvanceFakeClock(packet_time_ms);
-    EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(1);
+    fake_clock_.AdvanceTimeMilliseconds(packet_time_ms);
+    EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
     pipe->Process();
   }
 
@@ -236,20 +238,20 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithEmptyPipeTest) {
   packet_time_ms = PacketTimeMs(config.link_capacity_kbps, kPacketSize);
 
   // Time hasn't increased yet, so we souldn't get any packets.
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(0);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 
   // Advance time in steps to release one packet at a time.
   for (int i = 0; i < kNumPackets; ++i) {
-    TickTime::AdvanceFakeClock(packet_time_ms);
-    EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(1);
+    fake_clock_.AdvanceTimeMilliseconds(packet_time_ms);
+    EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
     pipe->Process();
   }
 
   // Check that all the packets were sent.
   EXPECT_EQ(static_cast<size_t>(2 * kNumPackets), pipe->sent_packets());
-  TickTime::AdvanceFakeClock(pipe->TimeUntilNextProcess());
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(0);
+  fake_clock_.AdvanceTimeMilliseconds(pipe->TimeUntilNextProcess());
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 }
 
@@ -259,7 +261,8 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithPacketsInPipeTest) {
   FakeNetworkPipe::Config config;
   config.queue_length_packets = 20;
   config.link_capacity_kbps = 80;
-  rtc::scoped_ptr<FakeNetworkPipe> pipe(new FakeNetworkPipe(config));
+  rtc::scoped_ptr<FakeNetworkPipe> pipe(
+      new FakeNetworkPipe(&fake_clock_, config));
   pipe->SetReceiver(receiver_.get());
 
   // Add 10 packets of 1000 bytes, = 80 kb.
@@ -282,27 +285,27 @@ TEST_F(FakeNetworkPipeTest, ChangingCapacityWithPacketsInPipeTest) {
   int packet_time_2_ms = PacketTimeMs(config.link_capacity_kbps, kPacketSize);
 
   // Time hasn't increased yet, so we souldn't get any packets.
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(0);
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 
   // Advance time in steps to release one packet at a time.
   for (int i = 0; i < kNumPackets; ++i) {
-    TickTime::AdvanceFakeClock(packet_time_1_ms);
-    EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(1);
+    fake_clock_.AdvanceTimeMilliseconds(packet_time_1_ms);
+    EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
     pipe->Process();
   }
 
   // Advance time in steps to release one packet at a time.
   for (int i = 0; i < kNumPackets; ++i) {
-    TickTime::AdvanceFakeClock(packet_time_2_ms);
-    EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(1);
+    fake_clock_.AdvanceTimeMilliseconds(packet_time_2_ms);
+    EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(1);
     pipe->Process();
   }
 
   // Check that all the packets were sent.
   EXPECT_EQ(static_cast<size_t>(2 * kNumPackets), pipe->sent_packets());
-  TickTime::AdvanceFakeClock(pipe->TimeUntilNextProcess());
-  EXPECT_CALL(*receiver_, DeliverPacket(_, _)).Times(0);
+  fake_clock_.AdvanceTimeMilliseconds(pipe->TimeUntilNextProcess());
+  EXPECT_CALL(*receiver_, DeliverPacket(_, _, _, _)).Times(0);
   pipe->Process();
 }
 }  // namespace webrtc

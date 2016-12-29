@@ -25,9 +25,9 @@ class BlockerCallback {
   virtual ~BlockerCallback() {}
 
   virtual void ProcessBlock(const float* const* input,
-                            int num_frames,
-                            int num_input_channels,
-                            int num_output_channels,
+                            size_t num_frames,
+                            size_t num_input_channels,
+                            size_t num_output_channels,
                             float* const* output) = 0;
 };
 
@@ -63,34 +63,34 @@ class BlockerCallback {
 // copy of window and does not attempt to delete it.
 class Blocker {
  public:
-  Blocker(int chunk_size,
-          int block_size,
-          int num_input_channels,
-          int num_output_channels,
+  Blocker(size_t chunk_size,
+          size_t block_size,
+          size_t num_input_channels,
+          size_t num_output_channels,
           const float* window,
-          int shift_amount,
+          size_t shift_amount,
           BlockerCallback* callback);
 
   void ProcessChunk(const float* const* input,
-                    int num_frames,
-                    int num_input_channels,
-                    int num_output_channels,
+                    size_t chunk_size,
+                    size_t num_input_channels,
+                    size_t num_output_channels,
                     float* const* output);
 
  private:
-  const int chunk_size_;
-  const int block_size_;
-  const int num_input_channels_;
-  const int num_output_channels_;
+  const size_t chunk_size_;
+  const size_t block_size_;
+  const size_t num_input_channels_;
+  const size_t num_output_channels_;
 
   // The number of frames of delay to add at the beginning of the first chunk.
-  const int initial_delay_;
+  const size_t initial_delay_;
 
   // The frame index into the input buffer where the first block should be read
   // from. This is necessary because shift_amount_ is not necessarily a
   // multiple of chunk_size_, so blocks won't line up at the start of the
   // buffer.
-  int frame_offset_;
+  size_t frame_offset_;
 
   // Since blocks nearly always overlap, there are certain blocks that require
   // frames from the end of one chunk and the beginning of the next chunk. The
@@ -113,7 +113,7 @@ class Blocker {
 
   // The amount of frames between the start of contiguous blocks. For example,
   // |shift_amount_| = |block_size_| / 2 for a Hann window.
-  int shift_amount_;
+  size_t shift_amount_;
 
   BlockerCallback* callback_;
 };

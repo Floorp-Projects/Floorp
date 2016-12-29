@@ -22,7 +22,7 @@
       ],
       'sources': [
         'channel_transport/channel_transport.cc',
-        'channel_transport/include/channel_transport.h',
+        'channel_transport/channel_transport.h',
         'channel_transport/traffic_control_win.cc',
         'channel_transport/traffic_control_win.h',
         'channel_transport/udp_socket_manager_posix.cc',
@@ -41,11 +41,29 @@
         'channel_transport/udp_transport_impl.cc',
         'channel_transport/udp_transport_impl.h',
       ],
+      'conditions': [
+        ['OS=="win" and clang==1', {
+          'msvs_settings': {
+            'VCCLCompilerTool': {
+              'AdditionalOptions': [
+                # Disable warnings failing when compiling with Clang on Windows.
+                # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
+                '-Wno-parentheses-equality',
+                '-Wno-reorder',
+                '-Wno-tautological-constant-out-of-range-compare',
+                '-Wno-unused-private-field',
+              ],
+            },
+          },
+        }],
+      ],  # conditions.
     },
     {
-      'target_name': 'frame_generator',
+      'target_name': 'fake_video_frames',
       'type': 'static_library',
       'sources': [
+        'fake_texture_frame.cc',
+        'fake_texture_frame.h',
         'frame_generator.cc',
         'frame_generator.h',
       ],
@@ -79,6 +97,7 @@
       ],
       'dependencies': [
         '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:field_trial_default',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
     },
@@ -103,6 +122,7 @@
       'dependencies': [
         'field_trial',
         'histogram',
+        'test_support',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
       ],
@@ -123,7 +143,7 @@
         'testsupport/frame_reader.h',
         'testsupport/frame_writer.cc',
         'testsupport/frame_writer.h',
-        'testsupport/gtest_disable.h',
+        'testsupport/iosfileutils.mm',
         'testsupport/mock/mock_frame_reader.h',
         'testsupport/mock/mock_frame_writer.h',
         'testsupport/packet_reader.cc',
@@ -132,6 +152,18 @@
         'testsupport/perf_test.h',
         'testsupport/trace_to_stderr.cc',
         'testsupport/trace_to_stderr.h',
+      ],
+      'conditions': [
+        ['OS=="ios"', {
+          'xcode_settings': {
+            'CLANG_ENABLE_OBJC_ARC': 'YES',
+          },
+        }],
+        ['use_x11==1', {
+          'dependencies': [
+            '<(DEPTH)/tools/xdisplaycheck/xdisplaycheck.gyp:xdisplaycheck',
+          ],
+        }],
       ],
     },
     {

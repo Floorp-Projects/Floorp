@@ -69,7 +69,8 @@ bool ReadUint16(uint16_t* out, FILE* file) {
 
 class RtpFileReaderImpl : public RtpFileReader {
  public:
-  virtual bool Init(const std::string& filename) = 0;
+  virtual bool Init(const std::string& filename,
+                    const std::set<uint32_t>& ssrc_filter) = 0;
 };
 
 class InterleavedRtpFileReader : public RtpFileReaderImpl {
@@ -81,7 +82,8 @@ class InterleavedRtpFileReader : public RtpFileReaderImpl {
     }
   }
 
-  virtual bool Init(const std::string& filename) {
+  virtual bool Init(const std::string& filename,
+                    const std::set<uint32_t>& ssrc_filter) {
     file_ = fopen(filename.c_str(), "rb");
     if (file_ == NULL) {
       printf("ERROR: Can't open file: %s\n", filename.c_str());
@@ -127,7 +129,8 @@ class RtpDumpReader : public RtpFileReaderImpl {
     }
   }
 
-  bool Init(const std::string& filename) {
+  bool Init(const std::string& filename,
+            const std::set<uint32_t>& ssrc_filter) {
     file_ = fopen(filename.c_str(), "rb");
     if (file_ == NULL) {
       printf("ERROR: Can't open file: %s\n", filename.c_str());
@@ -200,7 +203,7 @@ class RtpDumpReader : public RtpFileReaderImpl {
  private:
   FILE* file_;
 
-  DISALLOW_COPY_AND_ASSIGN(RtpDumpReader);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpDumpReader);
 };
 
 enum {
@@ -265,11 +268,13 @@ class PcapReader : public RtpFileReaderImpl {
     }
   }
 
-  bool Init(const std::string& filename) override {
-    return Initialize(filename) == kResultSuccess;
+  bool Init(const std::string& filename,
+            const std::set<uint32_t>& ssrc_filter) override {
+    return Initialize(filename, ssrc_filter) == kResultSuccess;
   }
 
-  int Initialize(const std::string& filename) {
+  int Initialize(const std::string& filename,
+                 const std::set<uint32_t>& ssrc_filter) {
     file_ = fopen(filename.c_str(), "rb");
     if (file_ == NULL) {
       printf("ERROR: Can't open file: %s\n", filename.c_str());
@@ -286,7 +291,7 @@ class PcapReader : public RtpFileReaderImpl {
     for (;;) {
       TRY_PCAP(fseek(file_, next_packet_pos, SEEK_SET));
       int result = ReadPacket(&next_packet_pos, stream_start_ms,
-                              ++total_packet_count);
+                              ++total_packet_count, ssrc_filter);
       if (result == kResultFail) {
         break;
       } else if (result == kResultSuccess && packets_.size() == 1) {
@@ -308,10 +313,10 @@ class PcapReader : public RtpFileReaderImpl {
     for (SsrcMapIterator mit = packets_by_ssrc_.begin();
         mit != packets_by_ssrc_.end(); ++mit) {
       uint32_t ssrc = mit->first;
-      const std::vector<uint32_t>& packet_numbers = mit->second;
-      uint8_t pt = packets_[packet_numbers[0]].rtp_header.payloadType;
+      const std::vector<uint32_t>& packet_indices = mit->second;
+      uint8_t pt = packets_[packet_indices[0]].rtp_header.payloadType;
       printf("SSRC: %08x, %" PRIuS " packets, pt=%d\n", ssrc,
-             packet_numbers.size(), pt);
+             packet_indices.size(), pt);
     }
 
     // TODO(solenberg): Better validation of identified SSRC streams.
@@ -419,8 +424,10 @@ class PcapReader : public RtpFileReaderImpl {
     return kResultSuccess;
   }
 
-  int ReadPacket(int32_t* next_packet_pos, uint32_t stream_start_ms,
-                 uint32_t number) {
+  int ReadPacket(int32_t* next_packet_pos,
+                 uint32_t stream_start_ms,
+                 uint32_t number,
+                 const std::set<uint32_t>& ssrc_filter) {
     assert(next_packet_pos);
 
     uint32_t ts_sec;    // Timestamp seconds.
@@ -451,14 +458,19 @@ class PcapReader : public RtpFileReaderImpl {
       rtp_parser.ParseRtcp(&marker.rtp_header);
       packets_.push_back(marker);
     } else {
-      if (!rtp_parser.Parse(marker.rtp_header, NULL)) {
+      if (!rtp_parser.Parse(&marker.rtp_header, nullptr)) {
         DEBUG_LOG("Not recognized as RTP/RTCP");
         return kResultSkip;
       }
 
       uint32_t ssrc = marker.rtp_header.ssrc;
-      packets_by_ssrc_[ssrc].push_back(marker.packet_number);
-      packets_.push_back(marker);
+      if (ssrc_filter.empty() || ssrc_filter.find(ssrc) != ssrc_filter.end()) {
+        packets_by_ssrc_[ssrc].push_back(
+            static_cast<uint32_t>(packets_.size()));
+        packets_.push_back(marker);
+      } else {
+        return kResultSkip;
+      }
     }
 
     return kResultSuccess;
@@ -628,11 +640,12 @@ class PcapReader : public RtpFileReaderImpl {
   std::vector<RtpPacketMarker> packets_;
   PacketIterator next_packet_it_;
 
-  DISALLOW_COPY_AND_ASSIGN(PcapReader);
+  RTC_DISALLOW_COPY_AND_ASSIGN(PcapReader);
 };
 
 RtpFileReader* RtpFileReader::Create(FileFormat format,
-                                     const std::string& filename) {
+                                     const std::string& filename,
+                                     const std::set<uint32_t>& ssrc_filter) {
   RtpFileReaderImpl* reader = NULL;
   switch (format) {
     case kPcap:
@@ -645,11 +658,16 @@ RtpFileReader* RtpFileReader::Create(FileFormat format,
       reader = new InterleavedRtpFileReader();
       break;
   }
-  if (!reader->Init(filename)) {
+  if (!reader->Init(filename, ssrc_filter)) {
     delete reader;
     return NULL;
   }
   return reader;
+}
+
+RtpFileReader* RtpFileReader::Create(FileFormat format,
+                                     const std::string& filename) {
+  return RtpFileReader::Create(format, filename, std::set<uint32_t>());
 }
 
 }  // namespace test

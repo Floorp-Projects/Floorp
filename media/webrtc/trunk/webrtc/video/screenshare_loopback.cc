@@ -10,29 +10,25 @@
 
 #include <stdio.h>
 
-#include <map>
-
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 #include "webrtc/test/field_trial.h"
-#include "webrtc/test/frame_generator.h"
-#include "webrtc/test/frame_generator_capturer.h"
 #include "webrtc/test/run_test.h"
-#include "webrtc/test/testsupport/fileutils.h"
-#include "webrtc/typedefs.h"
-#include "webrtc/video/loopback.h"
-#include "webrtc/video/video_send_stream.h"
+#include "webrtc/video/video_quality_test.h"
 
 namespace webrtc {
 namespace flags {
 
-// Fixed for prerecorded screenshare content.
+// Flags common with video loopback, with different default values.
+DEFINE_int32(width, 1850, "Video width (crops source).");
 size_t Width() {
-  return 1850;
+  return static_cast<size_t>(FLAGS_width);
 }
+
+DEFINE_int32(height, 1110, "Video height (crops source).");
 size_t Height() {
-  return 1110;
+  return static_cast<size_t>(FLAGS_height);
 }
 
 DEFINE_int32(fps, 5, "Frames per second.");
@@ -40,29 +36,62 @@ int Fps() {
   return static_cast<int>(FLAGS_fps);
 }
 
-DEFINE_int32(min_bitrate, 50, "Minimum video bitrate.");
-size_t MinBitrate() {
-  return static_cast<size_t>(FLAGS_min_bitrate);
+DEFINE_int32(min_bitrate, 50, "Call and stream min bitrate in kbps.");
+int MinBitrateKbps() {
+  return static_cast<int>(FLAGS_min_bitrate);
 }
 
-DEFINE_int32(tl0_bitrate, 100, "Temporal layer 0 target bitrate.");
-size_t StartBitrate() {
-  return static_cast<size_t>(FLAGS_tl0_bitrate);
+DEFINE_int32(start_bitrate, 200, "Call start bitrate in kbps.");
+int StartBitrateKbps() {
+  return static_cast<int>(FLAGS_start_bitrate);
 }
 
-DEFINE_int32(tl1_bitrate, 1000, "Temporal layer 1 target bitrate.");
-size_t MaxBitrate() {
-  return static_cast<size_t>(FLAGS_tl1_bitrate);
+DEFINE_int32(target_bitrate, 2000, "Stream target bitrate in kbps.");
+int TargetBitrateKbps() {
+  return static_cast<int>(FLAGS_target_bitrate);
 }
 
-DEFINE_int32(min_transmit_bitrate, 400, "Min transmit bitrate incl. padding.");
-int MinTransmitBitrate() {
-  return FLAGS_min_transmit_bitrate;
+DEFINE_int32(max_bitrate, 2000, "Call and stream max bitrate in kbps.");
+int MaxBitrateKbps() {
+  return static_cast<int>(FLAGS_max_bitrate);
 }
 
+DEFINE_int32(num_temporal_layers, 2, "Number of temporal layers to use.");
+int NumTemporalLayers() {
+  return static_cast<int>(FLAGS_num_temporal_layers);
+}
+
+// Flags common with video loopback, with equal default values.
 DEFINE_string(codec, "VP8", "Video codec to use.");
 std::string Codec() {
   return static_cast<std::string>(FLAGS_codec);
+}
+
+DEFINE_int32(selected_tl,
+             -1,
+             "Temporal layer to show or analyze. -1 to disable filtering.");
+int SelectedTL() {
+  return static_cast<int>(FLAGS_selected_tl);
+}
+
+DEFINE_int32(
+    duration,
+    0,
+    "Duration of the test in seconds. If 0, rendered will be shown instead.");
+int DurationSecs() {
+  return static_cast<int>(FLAGS_duration);
+}
+
+DEFINE_string(output_filename, "", "Target graph data filename.");
+std::string OutputFilename() {
+  return static_cast<std::string>(FLAGS_output_filename);
+}
+
+DEFINE_string(graph_title,
+              "",
+              "If empty, title will be generated automatically.");
+std::string GraphTitle() {
+  return static_cast<std::string>(FLAGS_graph_title);
 }
 
 DEFINE_int32(loss_percent, 0, "Percentage of packets randomly lost.");
@@ -73,7 +102,7 @@ int LossPercent() {
 DEFINE_int32(link_capacity,
              0,
              "Capacity (kbps) of the fake link. 0 means infinite.");
-int LinkCapacity() {
+int LinkCapacityKbps() {
   return static_cast<int>(FLAGS_link_capacity);
 }
 
@@ -96,7 +125,54 @@ int StdPropagationDelayMs() {
   return static_cast<int>(FLAGS_std_propagation_delay_ms);
 }
 
+DEFINE_int32(selected_stream, 0, "ID of the stream to show or analyze.");
+int SelectedStream() {
+  return static_cast<int>(FLAGS_selected_stream);
+}
+
+DEFINE_int32(num_spatial_layers, 1, "Number of spatial layers to use.");
+int NumSpatialLayers() {
+  return static_cast<int>(FLAGS_num_spatial_layers);
+}
+
+DEFINE_int32(selected_sl,
+             -1,
+             "Spatial layer to show or analyze. -1 to disable filtering.");
+int SelectedSL() {
+  return static_cast<int>(FLAGS_selected_sl);
+}
+
+DEFINE_string(stream0,
+              "",
+              "Comma separated values describing VideoStream for stream #0.");
+std::string Stream0() {
+  return static_cast<std::string>(FLAGS_stream0);
+}
+
+DEFINE_string(stream1,
+              "",
+              "Comma separated values describing VideoStream for stream #1.");
+std::string Stream1() {
+  return static_cast<std::string>(FLAGS_stream1);
+}
+
+DEFINE_string(sl0,
+              "",
+              "Comma separated values describing SpatialLayer for layer #0.");
+std::string SL0() {
+  return static_cast<std::string>(FLAGS_sl0);
+}
+
+DEFINE_string(sl1,
+              "",
+              "Comma separated values describing SpatialLayer for layer #1.");
+std::string SL1() {
+  return static_cast<std::string>(FLAGS_sl1);
+}
+
 DEFINE_bool(logs, false, "print logs to stderr");
+
+DEFINE_bool(send_side_bwe, true, "Use send-side bandwidth estimation");
 
 DEFINE_string(
     force_fieldtrials,
@@ -105,65 +181,73 @@ DEFINE_string(
     "E.g. running with --force_fieldtrials=WebRTC-FooFeature/Enable/"
     " will assign the group Enable to field trial WebRTC-FooFeature. Multiple "
     "trials are separated by \"/\"");
+
+// Screenshare-specific flags.
+DEFINE_int32(min_transmit_bitrate, 400, "Min transmit bitrate incl. padding.");
+int MinTransmitBitrateKbps() {
+  return FLAGS_min_transmit_bitrate;
+}
+
+DEFINE_int32(slide_change_interval,
+             10,
+             "Interval (in seconds) between simulated slide changes.");
+int SlideChangeInterval() {
+  return static_cast<int>(FLAGS_slide_change_interval);
+}
+
+DEFINE_int32(
+    scroll_duration,
+    0,
+    "Duration (in seconds) during which a slide will be scrolled into place.");
+int ScrollDuration() {
+  return static_cast<int>(FLAGS_scroll_duration);
+}
+
 }  // namespace flags
 
-class ScreenshareLoopback : public test::Loopback {
- public:
-  explicit ScreenshareLoopback(const Config& config) : Loopback(config) {}
-  virtual ~ScreenshareLoopback() {}
-
- protected:
-  VideoEncoderConfig CreateEncoderConfig() override {
-    VideoEncoderConfig encoder_config(test::Loopback::CreateEncoderConfig());
-    VideoStream* stream = &encoder_config.streams[0];
-    encoder_config.content_type = VideoEncoderConfig::kScreenshare;
-    encoder_config.min_transmit_bitrate_bps = flags::MinTransmitBitrate();
-    VideoCodecVP8 vp8_settings = VideoEncoder::GetDefaultVp8Settings();
-    vp8_settings.denoisingOn = false;
-    vp8_settings.frameDroppingOn = false;
-    vp8_settings.numberOfTemporalLayers = 2;
-    encoder_config.encoder_specific_settings = &vp8_settings;
-    stream->temporal_layer_thresholds_bps.clear();
-    stream->target_bitrate_bps =
-        static_cast<int>(config_.start_bitrate_kbps) * 1000;
-    stream->temporal_layer_thresholds_bps.push_back(stream->target_bitrate_bps);
-    return encoder_config;
-  }
-
-  test::VideoCapturer* CreateCapturer(VideoSendStream* send_stream) override {
-    std::vector<std::string> slides;
-    slides.push_back(test::ResourcePath("web_screenshot_1850_1110", "yuv"));
-    slides.push_back(test::ResourcePath("presentation_1850_1110", "yuv"));
-    slides.push_back(test::ResourcePath("photo_1850_1110", "yuv"));
-    slides.push_back(test::ResourcePath("difficult_photo_1850_1110", "yuv"));
-
-    test::FrameGenerator* frame_generator =
-        test::FrameGenerator::CreateFromYuvFile(
-            slides, flags::Width(), flags::Height(), 10 * flags::Fps());
-    test::FrameGeneratorCapturer* capturer(new test::FrameGeneratorCapturer(
-        clock_, send_stream->Input(), frame_generator, flags::Fps()));
-    EXPECT_TRUE(capturer->Init());
-    return capturer;
-  }
-};
-
 void Loopback() {
-  test::Loopback::Config config{flags::Width(),
-                                flags::Height(),
-                                flags::Fps(),
-                                flags::MinBitrate(),
-                                flags::StartBitrate(),
-                                flags::MaxBitrate(),
-                                flags::MinTransmitBitrate(),
-                                flags::Codec(),
-                                flags::LossPercent(),
-                                flags::LinkCapacity(),
-                                flags::QueueSize(),
-                                flags::AvgPropagationDelayMs(),
-                                flags::StdPropagationDelayMs(),
-                                flags::FLAGS_logs};
-  ScreenshareLoopback loopback(config);
-  loopback.Run();
+  FakeNetworkPipe::Config pipe_config;
+  pipe_config.loss_percent = flags::LossPercent();
+  pipe_config.link_capacity_kbps = flags::LinkCapacityKbps();
+  pipe_config.queue_length_packets = flags::QueueSize();
+  pipe_config.queue_delay_ms = flags::AvgPropagationDelayMs();
+  pipe_config.delay_standard_deviation_ms = flags::StdPropagationDelayMs();
+
+  Call::Config::BitrateConfig call_bitrate_config;
+  call_bitrate_config.min_bitrate_bps = flags::MinBitrateKbps() * 1000;
+  call_bitrate_config.start_bitrate_bps = flags::StartBitrateKbps() * 1000;
+  call_bitrate_config.max_bitrate_bps = flags::MaxBitrateKbps() * 1000;
+
+  VideoQualityTest::Params params{
+      {flags::Width(), flags::Height(), flags::Fps(),
+       flags::MinBitrateKbps() * 1000, flags::TargetBitrateKbps() * 1000,
+       flags::MaxBitrateKbps() * 1000, flags::Codec(),
+       flags::NumTemporalLayers(), flags::SelectedTL(),
+       flags::MinTransmitBitrateKbps() * 1000, call_bitrate_config,
+       flags::FLAGS_send_side_bwe},
+      {},  // Video specific.
+      {true, flags::SlideChangeInterval(), flags::ScrollDuration()},
+      {"screenshare", 0.0, 0.0, flags::DurationSecs(), flags::OutputFilename(),
+       flags::GraphTitle()},
+      pipe_config,
+      flags::FLAGS_logs};
+
+  std::vector<std::string> stream_descriptors;
+  stream_descriptors.push_back(flags::Stream0());
+  stream_descriptors.push_back(flags::Stream1());
+  std::vector<std::string> SL_descriptors;
+  SL_descriptors.push_back(flags::SL0());
+  SL_descriptors.push_back(flags::SL1());
+  VideoQualityTest::FillScalabilitySettings(
+      &params, stream_descriptors, flags::SelectedStream(),
+      flags::NumSpatialLayers(), flags::SelectedSL(), SL_descriptors);
+
+  VideoQualityTest test;
+  if (flags::DurationSecs()) {
+    test.RunWithAnalyzer(params);
+  } else {
+    test.RunWithVideoRenderer(params);
+  }
 }
 }  // namespace webrtc
 

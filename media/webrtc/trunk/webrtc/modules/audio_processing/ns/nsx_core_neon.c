@@ -141,7 +141,7 @@ void WebRtcNsx_NoiseEstimationNeon(NoiseSuppressionFixedC* inst,
   const int16_t log2_const = 22713;
   const int16_t width_factor = 21845;
 
-  int i, s, offset;
+  size_t i, s, offset;
 
   tabind = inst->stages - inst->normData;
   assert(tabind < 9);
@@ -208,7 +208,7 @@ void WebRtcNsx_NoiseEstimationNeon(NoiseSuppressionFixedC* inst,
     uint16x8_t tmp16x8_4;
     int32x4_t tmp32x4;
 
-    for (i = 0; i < inst->magnLen - 7; i += 8) {
+    for (i = 0; i + 7 < inst->magnLen; i += 8) {
       // Compute delta.
       // Smaller step size during startup. This prevents from using
       // unrealistic values causing overflow.
@@ -541,9 +541,8 @@ void WebRtcNsx_AnalysisUpdateNeon(NoiseSuppressionFixedC* inst,
   assert(inst->anaLen % 16 == 0);
 
   // For lower band update analysis buffer.
-  // WEBRTC_SPL_MEMCPY_W16(inst->analysisBuffer,
-  //                      inst->analysisBuffer + inst->blockLen10ms,
-  //                      inst->anaLen - inst->blockLen10ms);
+  // memcpy(inst->analysisBuffer, inst->analysisBuffer + inst->blockLen10ms,
+  //     (inst->anaLen - inst->blockLen10ms) * sizeof(*inst->analysisBuffer));
   int16_t* p_start_src = inst->analysisBuffer + inst->blockLen10ms;
   int16_t* p_end_src = inst->analysisBuffer + inst->anaLen;
   int16_t* p_start_dst = inst->analysisBuffer;
@@ -555,8 +554,8 @@ void WebRtcNsx_AnalysisUpdateNeon(NoiseSuppressionFixedC* inst,
     p_start_dst += 8;
   }
 
-  // WEBRTC_SPL_MEMCPY_W16(inst->analysisBuffer
-  //    + inst->anaLen - inst->blockLen10ms, new_speech, inst->blockLen10ms);
+  // memcpy(inst->analysisBuffer + inst->anaLen - inst->blockLen10ms,
+  //     new_speech, inst->blockLen10ms * sizeof(*inst->analysisBuffer));
   p_start_src = new_speech;
   p_end_src = new_speech + inst->blockLen10ms;
   p_start_dst = inst->analysisBuffer + inst->anaLen - inst->blockLen10ms;

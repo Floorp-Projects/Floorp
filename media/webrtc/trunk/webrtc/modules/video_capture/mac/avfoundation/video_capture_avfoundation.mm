@@ -12,8 +12,8 @@
 #import "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info_objc.h"
 #import "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_objc.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 class nsAutoreleasePool {
 public:

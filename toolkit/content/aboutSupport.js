@@ -507,14 +507,11 @@ var snapshotFormatters = {
     if (crashGuards.length) {
       for (let guard of crashGuards) {
         let resetButton = $.new("button");
-        let onClickReset = (function(guard) {
-          // Note - need this wrapper until bug 449811 fixes |guard| scoping.
-          return function() {
-            Services.prefs.setIntPref(guard.prefName, 0);
-            resetButton.removeEventListener("click", onClickReset);
-            resetButton.disabled = true;
-          };
-        })(guard);
+        onClickReset = function() {
+          Services.prefs.setIntPref(guard.prefName, 0);
+          resetButton.removeEventListener("click", onClickReset);
+          resetButton.disabled = true;
+        };
 
         resetButton.textContent = strings.GetStringFromName("resetOnNextRestart");
         resetButton.addEventListener("click", onClickReset);

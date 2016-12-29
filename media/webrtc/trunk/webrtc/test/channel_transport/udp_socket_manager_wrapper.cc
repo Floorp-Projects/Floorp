@@ -13,7 +13,7 @@
 #include <assert.h>
 
 #ifdef _WIN32
-#include "webrtc/system_wrappers/interface/fix_interlocked_exchange_pointer_win.h"
+#include "webrtc/system_wrappers/include/fix_interlocked_exchange_pointer_win.h"
 #include "webrtc/test/channel_transport/udp_socket2_manager_win.h"
 #else
 #include "webrtc/test/channel_transport/udp_socket_manager_posix.h"
