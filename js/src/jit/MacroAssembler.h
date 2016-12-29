@@ -779,6 +779,13 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     inline void addFloat32(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
 
+    // Compute dest=src+imm where `src` and `dest` are pointer registers; `src`
+    // may be SP, and `src` may equal `dest`.  `dest` should not normally be SP,
+    // as stack probes are required for large negative immediates.  The offset
+    // returned from add32ToPtrWithPatch() must be passed to patchAdd32ToPtr().
+    inline CodeOffset add32ToPtrWithPatch(Register src, Register dest) PER_ARCH;
+    inline void patchAdd32ToPtr(CodeOffset offset, Imm32 imm) PER_ARCH;
+
     inline void addDouble(FloatRegister src, FloatRegister dest) PER_SHARED_ARCH;
     inline void addConstantDouble(double d, FloatRegister dest) DEFINED_ON(x86);
 
