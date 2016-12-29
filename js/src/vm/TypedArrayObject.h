@@ -164,12 +164,8 @@ class TypedArrayObject : public NativeObject
 
     bool hasInlineElements() const;
     void setInlineElements();
-
-    /* returns nullptr if length is zero or if this is a template object. */
     uint8_t* elements() const {
-        uint8_t* output = *(uint8_t **)((((char *)this) + this->dataOffset()));
-        MOZ_ASSERT_IF(length() == 0 && !hasBuffer(), output == nullptr);
-        return output;
+        return *(uint8_t **)((((char *)this) + this->dataOffset()));
     }
 
     Value getElement(uint32_t index);
