@@ -44,6 +44,8 @@ public:
     return TextEncoderBinding::Wrap(aCx, this, aGivenProto, aReflector);
   }
 
+  static void Foo(const GlobalObject& aGlobal);
+
 protected:
 
   void Init();
