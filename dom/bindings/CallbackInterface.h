@@ -44,10 +44,10 @@ protected:
                            JS::MutableHandle<JS::Value> aCallable);
 
   // See CallbackObject for an explanation of the arguments.
-  CallbackInterface(JSContext* aCx, JS::Handle<JSObject*> aCallable,
+  CallbackInterface(JS::Handle<JSObject*> aCallable,
                     nsIGlobalObject* aIncumbentGlobal,
                     const FastCallbackConstructor&)
-    : CallbackObject(aCx, aCallable, aIncumbentGlobal,
+    : CallbackObject(aCallable, aIncumbentGlobal,
                      FastCallbackConstructor())
   {
   }
