@@ -498,9 +498,6 @@ elif CONFIG['JS_CODEGEN_ARM']:
         UNIFIED_SOURCES += [
             'jit/arm/Simulator-arm.cpp'
         ]
-        # Configuration used only for testing.
-        if CONFIG['OS_ARCH'] == 'Linux' or CONFIG['OS_ARCH'] == 'Darwin':
-            CXXFLAGS += [ '-msse2', '-mfpmath=sse' ]
     elif CONFIG['OS_ARCH'] == 'Darwin':
         SOURCES += [
             'jit/arm/llvm-compiler-rt/arm/aeabi_idivmod.S',
