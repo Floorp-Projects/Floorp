@@ -41,6 +41,7 @@
 #include "PlatformMacros.h"
 #include "nsTArray.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/ProfileGatherer.h"
 #endif
 
@@ -359,6 +360,9 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
 
 #ifndef SPS_STANDALONE
   aWriter.IntProperty("gcpoison", JS::IsGCPoisoning() ? 1 : 0);
+
+  bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
+  aWriter.IntProperty("asyncstack", asyncStacks);
 
   mozilla::TimeDuration delta = mozilla::TimeStamp::Now() - sStartTime;
   aWriter.DoubleProperty("startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
