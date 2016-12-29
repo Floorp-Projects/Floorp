@@ -35,11 +35,6 @@ CFLAGS="$CFLAGS -Wno-attributes"
 CPPFLAGS="$CPPFLAGS -Wno-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes"
 
-# Override rust toolchain paths. In this build they're in $TOOLTOOL_DIR
-# instead of $topsrcdir as referenced by mozconfig.common.
-RUSTC=$TOOLTOOL_DIR/rustc/bin/rustc
-CARGO=$TOOLTOOL_DIR/rustc/bin/cargo
-
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 . $topsrcdir/build/unix/mozconfig.gtk
 

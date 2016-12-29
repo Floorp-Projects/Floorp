@@ -38,7 +38,8 @@ namespace webgl {
 struct AttribInfo final
 {
     const RefPtr<WebGLActiveInfo> mActiveInfo;
-    uint32_t mLoc;
+    const GLint mLoc; // -1 for active built-ins
+    const GLenum mBaseType;
 };
 
 struct UniformInfo final
@@ -59,16 +60,16 @@ public:
 
 struct UniformBlockInfo final
 {
-    const nsCString mBaseUserName;
-    const nsCString mBaseMappedName;
+    const nsCString mUserName;
+    const nsCString mMappedName;
     const uint32_t mDataSize;
 
     const IndexedBufferBinding* mBinding;
 
-    UniformBlockInfo(WebGLContext* webgl, const nsACString& baseUserName,
-                     const nsACString& baseMappedName, uint32_t dataSize)
-        : mBaseUserName(baseUserName)
-        , mBaseMappedName(baseMappedName)
+    UniformBlockInfo(WebGLContext* webgl, const nsACString& userName,
+                     const nsACString& mappedName, uint32_t dataSize)
+        : mUserName(userName)
+        , mMappedName(mappedName)
         , mDataSize(dataSize)
         , mBinding(&webgl->mIndexedUniformBufferBindings[0])
     { }
@@ -108,8 +109,6 @@ struct LinkedProgramInfo final
     bool FindAttrib(const nsCString& userName, const AttribInfo** const out_info) const;
     bool FindUniform(const nsCString& userName, nsCString* const out_mappedName,
                      size_t* const out_arrayIndex, UniformInfo** const out_info) const;
-    bool MapUniformBlockName(const nsCString& userName,
-                             nsCString* const out_mappedName) const;
     bool MapFragDataName(const nsCString& userName,
                          nsCString* const out_mappedName) const;
 };
@@ -122,6 +121,7 @@ class WebGLProgram final
     , public LinkedListElement<WebGLProgram>
 {
     friend class WebGLTransformFeedback;
+    friend struct webgl::LinkedProgramInfo;
 
 public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLProgram)
@@ -159,16 +159,15 @@ public:
     ////////////////
 
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
-                                        nsDependentCString* const out_userName) const;
+                                        nsCString* const out_userName) const;
     bool FindVaryingByMappedName(const nsACString& mappedName,
                                  nsCString* const out_userName,
                                  bool* const out_isArray) const;
     bool FindUniformByMappedName(const nsACString& mappedName,
                                  nsCString* const out_userName,
                                  bool* const out_isArray) const;
-    bool FindUniformBlockByMappedName(const nsACString& mappedName,
-                                      nsCString* const out_userName,
-                                      bool* const out_isArray) const;
+    bool UnmapUniformBlockName(const nsCString& mappedName,
+                               nsCString* const out_userName) const;
 
     void TransformFeedbackVaryings(const dom::Sequence<nsString>& varyings,
                                    GLenum bufferMode);

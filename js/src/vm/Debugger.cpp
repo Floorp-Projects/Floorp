@@ -110,7 +110,7 @@ enum {
     JSSLOT_DEBUGARGUMENTS_COUNT
 };
 
-static const Class DebuggerArguments_class = {
+const Class DebuggerArguments::class_ = {
     "Arguments",
     JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGARGUMENTS_COUNT)
 };
@@ -7578,6 +7578,34 @@ DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame, OnStep
     return true;
 }
 
+/* static */ bool
+DebuggerFrame::getArguments(JSContext *cx, HandleDebuggerFrame frame,
+                            MutableHandleDebuggerArguments result)
+{
+    Value argumentsv = frame->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
+    if (!argumentsv.isUndefined()) {
+        result.set(argumentsv.isObject() ? &argumentsv.toObject().as<DebuggerArguments>() : nullptr);
+        return true;
+    }
+
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+
+    RootedDebuggerArguments arguments(cx);
+    if (referent.hasArgs()) {
+        Rooted<GlobalObject*> global(cx, &frame->global());
+        RootedObject proto(cx, GlobalObject::getOrCreateArrayPrototype(cx, global));
+        if (!proto)
+            return false;
+        arguments = DebuggerArguments::create(cx, proto, frame);
+    } else {
+        arguments = nullptr;
+    }
+
+    result.set(arguments);
+    frame->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, ObjectOrNullValue(result));
+    return true;
+}
+
 /*
  * Evaluate |chars[0..length-1]| in the environment |env|, treating that
  * source as appearing starting at |lineno| in |filename|. Store the return
@@ -8104,7 +8132,7 @@ DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp)
     RootedObject argsobj(cx, NonNullObject(cx, args.thisv()));
     if (!argsobj)
         return false;
-    if (argsobj->getClass() != &DebuggerArguments_class) {
+    if (argsobj->getClass() != &DebuggerArguments::class_) {
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                                   "Arguments", "getArgument", argsobj->getClass()->name);
         return false;
@@ -8158,60 +8186,57 @@ DebuggerArguments_getArg(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerFrame_getArguments(JSContext* cx, unsigned argc, Value* vp)
+/* static */ DebuggerArguments*
+DebuggerArguments::create(JSContext* cx, HandleObject proto, HandleDebuggerFrame frame)
 {
-    THIS_FRAME(cx, argc, vp, "get arguments", args, thisobj, frame);
-    Value argumentsv = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
-    if (!argumentsv.isUndefined()) {
-        MOZ_ASSERT(argumentsv.isObjectOrNull());
-        args.rval().set(argumentsv);
-        return true;
+    AbstractFramePtr referent = DebuggerFrame::getReferent(frame);
+
+    RootedNativeObject obj(cx, NewNativeObjectWithGivenProto(cx, &DebuggerArguments::class_, proto));
+    if (!obj)
+        return nullptr;
+
+    SetReservedSlot(obj, FRAME_SLOT, ObjectValue(*frame));
+
+    MOZ_ASSERT(referent.numActualArgs() <= 0x7fffffff);
+    unsigned fargc = referent.numActualArgs();
+    RootedValue fargcVal(cx, Int32Value(fargc));
+    if (!NativeDefineProperty(cx, obj, cx->names().length, fargcVal, nullptr, nullptr,
+                              JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return nullptr;
     }
 
-    RootedNativeObject argsobj(cx);
-    if (frame.hasArgs()) {
-        /* Create an arguments object. */
-        Rooted<GlobalObject*> global(cx, &args.callee().global());
-        RootedObject proto(cx, GlobalObject::getOrCreateArrayPrototype(cx, global));
-        if (!proto)
-            return false;
-        argsobj = NewNativeObjectWithGivenProto(cx, &DebuggerArguments_class, proto);
-        if (!argsobj)
-            return false;
-        SetReservedSlot(argsobj, JSSLOT_DEBUGARGUMENTS_FRAME, ObjectValue(*thisobj));
-
-        MOZ_ASSERT(frame.numActualArgs() <= 0x7fffffff);
-        unsigned fargc = frame.numActualArgs();
-        RootedValue fargcVal(cx, Int32Value(fargc));
-        if (!NativeDefineProperty(cx, argsobj, cx->names().length, fargcVal, nullptr, nullptr,
-                                  JSPROP_PERMANENT | JSPROP_READONLY))
+    Rooted<jsid> id(cx);
+    for (unsigned i = 0; i < fargc; i++) {
+        RootedFunction getobj(cx);
+        getobj = NewNativeFunction(cx, DebuggerArguments_getArg, 0, nullptr,
+                                   gc::AllocKind::FUNCTION_EXTENDED);
+        if (!getobj)
+            return nullptr;
+        id = INT_TO_JSID(i);
+        if (!getobj ||
+            !NativeDefineProperty(cx, obj, id, UndefinedHandleValue,
+                                  JS_DATA_TO_FUNC_PTR(GetterOp, getobj.get()), nullptr,
+                                  JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
         {
-            return false;
+            return nullptr;
         }
-
-        Rooted<jsid> id(cx);
-        for (unsigned i = 0; i < fargc; i++) {
-            RootedFunction getobj(cx);
-            getobj = NewNativeFunction(cx, DebuggerArguments_getArg, 0, nullptr,
-                                       gc::AllocKind::FUNCTION_EXTENDED);
-            if (!getobj)
-                return false;
-            id = INT_TO_JSID(i);
-            if (!getobj ||
-                !NativeDefineProperty(cx, argsobj, id, UndefinedHandleValue,
-                                      JS_DATA_TO_FUNC_PTR(GetterOp, getobj.get()), nullptr,
-                                      JSPROP_ENUMERATE | JSPROP_SHARED | JSPROP_GETTER))
-            {
-                return false;
-            }
-            getobj->setExtendedSlot(0, Int32Value(i));
-        }
-    } else {
-        argsobj = nullptr;
+        getobj->setExtendedSlot(0, Int32Value(i));
     }
-    args.rval().setObjectOrNull(argsobj);
-    thisobj->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, args.rval());
+
+    return &obj->as<DebuggerArguments>();
+}
+
+/* static */ bool
+DebuggerFrame::argumentsGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGGER_FRAME(cx, argc, vp, "get arguments", args, frame);
+
+    RootedDebuggerArguments result(cx);
+    if (!DebuggerFrame::getArguments(cx, frame, &result))
+        return false;
+
+    args.rval().setObjectOrNull(result);
     return true;
 }
 
@@ -8414,7 +8439,7 @@ DebuggerFrame::construct(JSContext* cx, unsigned argc, Value* vp)
 }
 
 const JSPropertySpec DebuggerFrame::properties_[] = {
-    JS_PSG("arguments", DebuggerFrame_getArguments, 0),
+    JS_PSG("arguments", DebuggerFrame::argumentsGetter, 0),
     JS_PSG("callee", DebuggerFrame::calleeGetter, 0),
     JS_PSG("constructing", DebuggerFrame::constructingGetter, 0),
     JS_PSG("environment", DebuggerFrame::environmentGetter, 0),

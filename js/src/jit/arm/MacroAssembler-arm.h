@@ -130,6 +130,8 @@ class MacroAssemblerARM : public Assembler
     static void ma_mov_patch(ImmPtr imm, Register dest, Assembler::Condition c,
                              RelocStyle rs, Instruction* i);
 
+    Instruction* offsetToInstruction(CodeOffset offs);
+
     // ALU based ops
     // mov
     void ma_mov(Register src, Register dest, SBit s = LeaveCC, Condition c = Always);

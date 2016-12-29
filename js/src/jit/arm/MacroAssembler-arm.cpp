@@ -375,6 +375,12 @@ MacroAssemblerARM::ma_mov_patch(ImmPtr imm, Register dest, Assembler::Condition 
     ma_mov_patch(Imm32(int32_t(imm.value)), dest, c, rs, i);
 }
 
+Instruction*
+MacroAssemblerARM::offsetToInstruction(CodeOffset offs)
+{
+    return editSrc(BufferOffset(offs.offset()));
+}
+
 void
 MacroAssemblerARM::ma_mov(Register src, Register dest, SBit s, Assembler::Condition c)
 {
