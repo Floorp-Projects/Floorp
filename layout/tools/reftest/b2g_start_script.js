@@ -41,10 +41,6 @@ Cu.import("chrome://reftest/content/reftest.jsm", reftest);
 
 // Prevent display off during testing.
 navigator.mozPower.screenEnabled = true;
-var settingLock = navigator.mozSettings.createLock();
-var settingResult = settingLock.set({
-  'screen.timeout': 0
-});
 settingResult.onsuccess = function () {
   dump("Set screen.time to 0\n");
   // Start the reftests

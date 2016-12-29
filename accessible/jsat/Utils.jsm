@@ -4,7 +4,7 @@
 
 /* global Components, XPCOMUtils, Services, PluralForm, Logger, Rect, Utils,
           States, Relations, Roles, dump, Events, PivotContext, PrefCache */
-/* exported Utils, Logger, PivotContext, PrefCache, SettingCache */
+/* exported Utils, Logger, PivotContext, PrefCache */
 
 'use strict';
 
@@ -26,8 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, 'States', // jshint ignore:line
 XPCOMUtils.defineLazyModuleGetter(this, 'PluralForm', // jshint ignore:line
   'resource://gre/modules/PluralForm.jsm');
 
-this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache',  // jshint ignore:line
-                         'SettingCache'];
+this.EXPORTED_SYMBOLS = ['Utils', 'Logger', 'PivotContext', 'PrefCache']; // jshint ignore:line
 
 this.Utils = { // jshint ignore:line
   _buildAppMap: {
@@ -1073,42 +1072,4 @@ PrefCache.prototype = {
 
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference])
-};
-
-this.SettingCache = function SettingCache(aName, aCallback, aOptions = {}) { // jshint ignore:line
-  this.value = aOptions.defaultValue;
-  let runCallback = () => {
-    if (aCallback) {
-      aCallback(aName, this.value);
-      if (aOptions.callbackOnce) {
-        runCallback = () => {};
-      }
-    }
-  };
-
-  let settings = Utils.win.navigator.mozSettings;
-  if (!settings) {
-    if (aOptions.callbackNow) {
-      runCallback();
-    }
-    return;
-  }
-
-
-  let lock = settings.createLock();
-  let req = lock.get(aName);
-
-  req.addEventListener('success', () => {
-    this.value = req.result[aName] === undefined ?
-      aOptions.defaultValue : req.result[aName];
-    if (aOptions.callbackNow) {
-      runCallback();
-    }
-  });
-
-  settings.addObserver(aName,
-                       (evt) => {
-                         this.value = evt.settingValue;
-                         runCallback();
-                       });
 };
