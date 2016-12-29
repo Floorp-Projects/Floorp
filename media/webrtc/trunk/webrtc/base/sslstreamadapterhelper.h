@@ -23,7 +23,7 @@ namespace rtc {
 
 // SSLStreamAdapterHelper : A stream adapter which implements much
 // of the logic that is common between the known implementations
-// (NSS and OpenSSL)
+// (OpenSSL and previously NSS)
 class SSLStreamAdapterHelper : public SSLStreamAdapter {
  public:
   explicit SSLStreamAdapterHelper(StreamInterface* stream);
@@ -33,6 +33,7 @@ class SSLStreamAdapterHelper : public SSLStreamAdapter {
   void SetIdentity(SSLIdentity* identity) override;
   void SetServerRole(SSLRole role = SSL_SERVER) override;
   void SetMode(SSLMode mode) override;
+  void SetMaxProtocolVersion(SSLProtocolVersion version) override;
 
   int StartSSLWithServer(const char* server_name) override;
   int StartSSLWithPeer() override;
@@ -100,6 +101,9 @@ class SSLStreamAdapterHelper : public SSLStreamAdapter {
 
   // Do DTLS or not
   SSLMode ssl_mode_;
+
+  // Maximum allowed protocol version.
+  SSLProtocolVersion ssl_max_version_;
 
  private:
   // Go from state SSL_NONE to either SSL_CONNECTING or SSL_WAIT,

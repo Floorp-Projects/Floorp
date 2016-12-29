@@ -261,9 +261,6 @@ JsepTrack::CreateEncodings(
     const std::vector<JsepCodecDescription*>& negotiatedCodecs,
     JsepTrackNegotiatedDetails* negotiatedDetails)
 {
-  negotiatedDetails->mTias = remote.GetBandwidth("TIAS");
-  // TODO add support for b=AS if TIAS is not set (bug 976521)
-
   std::vector<SdpRidAttributeList::Rid> rids;
   GetRids(remote, sdp::kRecv, &rids); // Get rids we will send
   NegotiateRids(rids, &mJsEncodeConstraints);
@@ -297,6 +294,8 @@ JsepTrack::CreateEncodings(
         encoding->mConstraints = jsConstraints.constraints;
       }
     }
+
+    encoding->UpdateMaxBitrate(remote);
   }
 }
 

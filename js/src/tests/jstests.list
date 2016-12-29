@@ -46,6 +46,16 @@ skip script test262/ch09/9.3/9.3.1/S9.3.1_A2.js
 skip script test262/ch09/9.3/9.3.1/S9.3.1_A3_T2.js
 skip script test262/ch09/9.3/9.3.1/S9.3.1_A3_T1.js
 
+# ES2017 removed the strict arguments poison pill for the "caller" property
+# (bug 1324208).
+skip script test262/ch13/13.2/S13.2.3_A1.js
+skip script test262/ch10/10.6/10.6-14-1-s.js
+skip script test262/ch10/10.6/10.6-13-b-3-s.js
+skip script test262/ch10/10.6/10.6-14-b-1-s.js
+skip script test262/ch10/10.6/10.6-14-b-4-s.js
+skip script test262/ch10/10.6/10.6-13-b-1-s.js
+skip script test262/ch10/10.6/10.6-13-b-2-s.js
+
 #######################################################################
 # Tests disabled due to jstest limitations wrt imported test262 tests #
 #######################################################################

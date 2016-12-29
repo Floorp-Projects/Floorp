@@ -74,6 +74,7 @@ int main(int argc, char** argv) {
   parser.ProcessFlags();
   if (parser.GetFlag("help") == "true") {
     parser.PrintUsageMessage();
+    exit(EXIT_SUCCESS);
   }
   parser.PrintEnteredFlags();
 

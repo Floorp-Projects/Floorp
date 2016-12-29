@@ -102,7 +102,7 @@ void AutoDetectProxy::OnMessage(Message *msg) {
 
     IPAddress address_ip = proxy().address.ipaddr();
 
-    uint16 address_port = proxy().address.port();
+    uint16_t address_port = proxy().address.port();
 
     char autoconfig_url[kSavedStringLimit];
     SaveStringToStack(autoconfig_url,

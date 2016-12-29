@@ -13,25 +13,26 @@
 
 #include <string>
 
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/ratetracker.h"
 #include "webrtc/base/thread_annotations.h"
 #include "webrtc/common_types.h"
 #include "webrtc/frame_callback.h"
 #include "webrtc/modules/remote_bitrate_estimator/rate_statistics.h"
-#include "webrtc/modules/video_coding/main/interface/video_coding_defines.h"
-#include "webrtc/video_engine/include/vie_codec.h"
-#include "webrtc/video_engine/include/vie_rtp_rtcp.h"
+#include "webrtc/modules/video_coding/include/video_coding_defines.h"
+#include "webrtc/video/report_block_stats.h"
+#include "webrtc/video/vie_channel.h"
 #include "webrtc/video_receive_stream.h"
 #include "webrtc/video_renderer.h"
 
 namespace webrtc {
 
 class Clock;
-class CriticalSectionWrapper;
 class ViECodec;
 class ViEDecoderObserver;
+struct CodecSpecificInfo;
 
-class ReceiveStatisticsProxy : public ViEDecoderObserver,
-                               public VCMReceiveStatisticsCallback,
+class ReceiveStatisticsProxy : public VCMReceiveStatisticsCallback,
                                public RtcpStatisticsCallback,
                                public RtcpPacketTypeCounterObserver,
                                public StreamDataCountersCallback {
@@ -42,35 +43,34 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
   VideoReceiveStream::Stats GetStats() const;
 
   void OnDecodedFrame();
-  void OnRenderedFrame();
+  void OnRenderedFrame(int width, int height);
+  void OnIncomingPayloadType(int payload_type);
+  void OnDecoderImplementationName(const char* implementation_name);
+  void OnIncomingRate(unsigned int framerate, unsigned int bitrate_bps);
+  void OnDecoderTiming(int decode_ms,
+                       int max_decode_ms,
+                       int current_delay_ms,
+                       int target_delay_ms,
+                       int jitter_buffer_ms,
+                       int min_playout_delay_ms,
+                       int render_delay_ms,
+                       int64_t rtt_ms);
+  void ReceiveStateChange(VideoReceiveState state);
 
-  // Overrides VCMReceiveStatisticsCallback
+  void OnPreDecode(const EncodedImage& encoded_image,
+                   const CodecSpecificInfo* codec_specific_info);
+
+  // Overrides VCMReceiveStatisticsCallback.
   void OnReceiveRatesUpdated(uint32_t bitRate, uint32_t frameRate) override;
   void OnFrameCountsUpdated(const FrameCounts& frame_counts) override;
   void OnDiscardedPacketsUpdated(int discarded_packets) override;
-
-  // Overrides ViEDecoderObserver.
-  void IncomingCodecChanged(const int video_channel,
-                            const VideoCodec& video_codec) override {}
-  void IncomingRate(const int video_channel,
-                    const unsigned int framerate,
-                    const unsigned int bitrate_bps) override;
-  void DecoderTiming(int decode_ms,
-                     int max_decode_ms,
-                     int current_delay_ms,
-                     int target_delay_ms,
-                     int jitter_buffer_ms,
-                     int min_playout_delay_ms,
-                     int render_delay_ms) override;
-  void RequestNewKeyFrame(const int video_channel) override {}
-  virtual void ReceiveStateChange(const int video_channel, VideoReceiveState state) override;
 
   // Overrides RtcpStatisticsCallback.
   void StatisticsUpdated(const webrtc::RtcpStatistics& statistics,
                          uint32_t ssrc) override;
   void CNameChanged(const char* cname, uint32_t ssrc) override;
 
-  // Overrides RtcpPacketTypeCounterObserver
+  // Overrides RtcpPacketTypeCounterObserver.
   void RtcpPacketTypesCounterUpdated(
       uint32_t ssrc,
       const RtcpPacketTypeCounter& packet_counter) override;
@@ -79,12 +79,35 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
                            uint32_t ssrc) override;
 
  private:
+  struct SampleCounter {
+    SampleCounter() : sum(0), num_samples(0) {}
+    void Add(int sample);
+    int Avg(int min_required_samples) const;
+
+   private:
+    int sum;
+    int num_samples;
+  };
+  struct QpCounters {
+    SampleCounter vp8;
+  };
+
+  void UpdateHistograms() EXCLUSIVE_LOCKS_REQUIRED(crit_);
+
   Clock* const clock_;
 
-  rtc::scoped_ptr<CriticalSectionWrapper> crit_;
+  mutable rtc::CriticalSection crit_;
   VideoReceiveStream::Stats stats_ GUARDED_BY(crit_);
   RateStatistics decode_fps_estimator_ GUARDED_BY(crit_);
   RateStatistics renders_fps_estimator_ GUARDED_BY(crit_);
+  rtc::RateTracker render_fps_tracker_ GUARDED_BY(crit_);
+  rtc::RateTracker render_pixel_tracker_ GUARDED_BY(crit_);
+  SampleCounter render_width_counter_ GUARDED_BY(crit_);
+  SampleCounter render_height_counter_ GUARDED_BY(crit_);
+  SampleCounter decode_time_counter_ GUARDED_BY(crit_);
+  SampleCounter delay_counter_ GUARDED_BY(crit_);
+  ReportBlockStats report_block_stats_ GUARDED_BY(crit_);
+  QpCounters qp_counters_;  // Only accessed on the decoding thread.
   VideoReceiveState receive_state_ GUARDED_BY(crit_);
 };
 

@@ -38,6 +38,13 @@ def GetSupplementalFiles():
 if __name__ == '__main__':
   args = sys.argv[1:]
 
+  use_analyzer = len(args) and args[0] == '--analyzer'
+  if use_analyzer:
+    args.pop(0)
+    os.environ['GYP_GENERATORS'] = 'analyzer'
+    args.append('-Gconfig_path=' + args.pop(0))
+    args.append('-Ganalyzer_output_path=' + args.pop(0))
+
   if int(os.environ.get('GYP_CHROMIUM_NO_ACTION', 0)):
     print 'Skipping gyp_webrtc due to GYP_CHROMIUM_NO_ACTION env var.'
     sys.exit(0)
@@ -70,6 +77,13 @@ if __name__ == '__main__':
   if not os.environ.get('GYP_GENERATORS'):
     os.environ['GYP_GENERATORS'] = 'ninja'
 
+  # Enable check for missing sources in GYP files on Windows.
+  if sys.platform.startswith('win'):
+    gyp_generator_flags = os.getenv('GYP_GENERATOR_FLAGS', '')
+    if not 'msvs_error_on_missing_sources' in gyp_generator_flags:
+      os.environ['GYP_GENERATOR_FLAGS'] = (
+          gyp_generator_flags + ' msvs_error_on_missing_sources=1')
+
   vs2013_runtime_dll_dirs = None
   if int(os.environ.get('DEPOT_TOOLS_WIN_TOOLCHAIN', '1')):
     vs2013_runtime_dll_dirs = vs_toolchain.SetEnvironmentAndGetRuntimeDllDirs()
@@ -78,11 +92,11 @@ if __name__ == '__main__':
   args.append('--check')
 
   supplemental_includes = GetSupplementalFiles()
-  gn_vars_dict = gyp_chromium.GetGypVars(supplemental_includes)
+  gyp_vars = gyp_chromium.GetGypVars(supplemental_includes)
 
   # Automatically turn on crosscompile support for platforms that need it.
   if all(('ninja' in os.environ.get('GYP_GENERATORS', ''),
-          gn_vars_dict.get('OS') in ['android', 'ios'],
+          gyp_vars.get('OS') in ['android', 'ios'],
           'GYP_CROSSCOMPILE' not in os.environ)):
     os.environ['GYP_CROSSCOMPILE'] = '1'
 
@@ -93,13 +107,14 @@ if __name__ == '__main__':
   # Set the gyp depth variable to the root of the checkout.
   args.append('--depth=' + os.path.relpath(checkout_root))
 
-  print 'Updating projects from gyp files...'
-  sys.stdout.flush()
+  if not use_analyzer:
+    print 'Updating projects from gyp files...'
+    sys.stdout.flush()
 
   # Off we go...
   gyp_rc = gyp.main(args)
 
-  if vs2013_runtime_dll_dirs:
+  if vs2013_runtime_dll_dirs and not use_analyzer:
     x64_runtime, x86_runtime = vs2013_runtime_dll_dirs
     vs_toolchain.CopyVsRuntimeDlls(
         os.path.join(checkout_root, gyp_chromium.GetOutputDirectory()),

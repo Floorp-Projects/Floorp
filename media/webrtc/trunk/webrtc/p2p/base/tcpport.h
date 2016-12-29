@@ -32,8 +32,8 @@ class TCPPort : public Port {
                          rtc::PacketSocketFactory* factory,
                          rtc::Network* network,
                          const rtc::IPAddress& ip,
-                         uint16 min_port,
-                         uint16 max_port,
+                         uint16_t min_port,
+                         uint16_t max_port,
                          const std::string& username,
                          const std::string& password,
                          bool allow_listen) {
@@ -45,34 +45,38 @@ class TCPPort : public Port {
     }
     return port;
   }
-  virtual ~TCPPort();
+  ~TCPPort() override;
 
-  virtual Connection* CreateConnection(const Candidate& address,
-                                       CandidateOrigin origin);
+  Connection* CreateConnection(const Candidate& address,
+                               CandidateOrigin origin) override;
 
-  virtual void PrepareAddress();
+  void PrepareAddress() override;
 
-  virtual int GetOption(rtc::Socket::Option opt, int* value);
-  virtual int SetOption(rtc::Socket::Option opt, int value);
-  virtual int GetError();
+  int GetOption(rtc::Socket::Option opt, int* value) override;
+  int SetOption(rtc::Socket::Option opt, int value) override;
+  int GetError() override;
+  bool SupportsProtocol(const std::string& protocol) const override {
+    return protocol == TCP_PROTOCOL_NAME || protocol == SSLTCP_PROTOCOL_NAME;
+  }
 
  protected:
   TCPPort(rtc::Thread* thread,
           rtc::PacketSocketFactory* factory,
           rtc::Network* network,
           const rtc::IPAddress& ip,
-          uint16 min_port,
-          uint16 max_port,
+          uint16_t min_port,
+          uint16_t max_port,
           const std::string& username,
           const std::string& password,
           bool allow_listen);
   bool Init();
 
   // Handles sending using the local TCP socket.
-  virtual int SendTo(const void* data, size_t size,
-                     const rtc::SocketAddress& addr,
-                     const rtc::PacketOptions& options,
-                     bool payload);
+  int SendTo(const void* data,
+             size_t size,
+             const rtc::SocketAddress& addr,
+             const rtc::PacketOptions& options,
+             bool payload) override;
 
   // Accepts incoming TCP connection.
   void OnNewConnection(rtc::AsyncPacketSocket* socket,
@@ -92,6 +96,9 @@ class TCPPort : public Port {
                     const char* data, size_t size,
                     const rtc::SocketAddress& remote_addr,
                     const rtc::PacketTime& packet_time);
+
+  void OnSentPacket(rtc::AsyncPacketSocket* socket,
+                    const rtc::SentPacket& sent_packet) override;
 
   void OnReadyToSend(rtc::AsyncPacketSocket* socket);
 
@@ -113,15 +120,42 @@ class TCPConnection : public Connection {
   // Connection is outgoing unless socket is specified
   TCPConnection(TCPPort* port, const Candidate& candidate,
                 rtc::AsyncPacketSocket* socket = 0);
-  virtual ~TCPConnection();
+  ~TCPConnection() override;
 
-  virtual int Send(const void* data, size_t size,
-                   const rtc::PacketOptions& options);
-  virtual int GetError();
+  int Send(const void* data,
+           size_t size,
+           const rtc::PacketOptions& options) override;
+  int GetError() override;
 
-  rtc::AsyncPacketSocket* socket() { return socket_; }
+  rtc::AsyncPacketSocket* socket() { return socket_.get(); }
+
+  void OnMessage(rtc::Message* pmsg) override;
+
+  // Allow test cases to overwrite the default timeout period.
+  int reconnection_timeout() const { return reconnection_timeout_; }
+  void set_reconnection_timeout(int timeout_in_ms) {
+    reconnection_timeout_ = timeout_in_ms;
+  }
+
+ protected:
+  enum {
+    MSG_TCPCONNECTION_DELAYED_ONCLOSE = Connection::MSG_FIRST_AVAILABLE,
+  };
+
+  // Set waiting_for_stun_binding_complete_ to false to allow data packets in
+  // addition to what Port::OnConnectionRequestResponse does.
+  void OnConnectionRequestResponse(ConnectionRequest* req,
+                                   StunMessage* response) override;
 
  private:
+  // Helper function to handle the case when Ping or Send fails with error
+  // related to socket close.
+  void MaybeReconnect();
+
+  void CreateOutgoingTcpSocket();
+
+  void ConnectSocketSignals(rtc::AsyncPacketSocket* socket);
+
   void OnConnect(rtc::AsyncPacketSocket* socket);
   void OnClose(rtc::AsyncPacketSocket* socket, int error);
   void OnReadPacket(rtc::AsyncPacketSocket* socket,
@@ -130,8 +164,23 @@ class TCPConnection : public Connection {
                     const rtc::PacketTime& packet_time);
   void OnReadyToSend(rtc::AsyncPacketSocket* socket);
 
-  rtc::AsyncPacketSocket* socket_;
+  rtc::scoped_ptr<rtc::AsyncPacketSocket> socket_;
   int error_;
+  bool outgoing_;
+
+  // Guard against multiple outgoing tcp connection during a reconnect.
+  bool connection_pending_;
+
+  // Guard against data packets sent when we reconnect a TCP connection. During
+  // reconnecting, when a new tcp connection has being made, we can't send data
+  // packets out until the STUN binding is completed (i.e. the write state is
+  // set to WRITABLE again by Connection::OnConnectionRequestResponse). IPC
+  // socket, when receiving data packets before that, will trigger OnError which
+  // will terminate the newly created connection.
+  bool pretending_to_be_writable_;
+
+  // Allow test case to overwrite the default timeout period.
+  int reconnection_timeout_;
 
   friend class TCPPort;
 };

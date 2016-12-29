@@ -121,7 +121,8 @@ public:
                                    int32_t aClickCount,
                                    int32_t aModifiers,
                                    bool aIgnoreRootScrollFrame,
-                                   unsigned short aInputSourceArg);
+                                   unsigned short aInputSourceArg,
+                                   uint32_t aPointerId);
 
     /* Fire a single-tap event at the given point. The event is dispatched
      * via the given widget. */

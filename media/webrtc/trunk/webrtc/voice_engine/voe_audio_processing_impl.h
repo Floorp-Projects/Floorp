@@ -19,90 +19,90 @@ namespace webrtc {
 
 class VoEAudioProcessingImpl : public VoEAudioProcessing {
  public:
-  virtual int SetNsStatus(bool enable, NsModes mode = kNsUnchanged);
+  int SetNsStatus(bool enable, NsModes mode = kNsUnchanged) override;
 
-  virtual int GetNsStatus(bool& enabled, NsModes& mode);
+  int GetNsStatus(bool& enabled, NsModes& mode) override;
 
-  virtual int SetAgcStatus(bool enable, AgcModes mode = kAgcUnchanged);
+  int SetAgcStatus(bool enable, AgcModes mode = kAgcUnchanged) override;
 
-  virtual int GetAgcStatus(bool& enabled, AgcModes& mode);
+  int GetAgcStatus(bool& enabled, AgcModes& mode) override;
 
-  virtual int SetAgcConfig(AgcConfig config);
+  int SetAgcConfig(AgcConfig config) override;
 
-  virtual int GetAgcConfig(AgcConfig& config);
+  int GetAgcConfig(AgcConfig& config) override;
 
-  virtual int SetRxNsStatus(int channel,
-                            bool enable,
-                            NsModes mode = kNsUnchanged);
+  int SetRxNsStatus(int channel,
+                    bool enable,
+                    NsModes mode = kNsUnchanged) override;
 
-  virtual int GetRxNsStatus(int channel, bool& enabled, NsModes& mode);
+  int GetRxNsStatus(int channel, bool& enabled, NsModes& mode) override;
 
-  virtual int SetRxAgcStatus(int channel,
-                             bool enable,
-                             AgcModes mode = kAgcUnchanged);
+  int SetRxAgcStatus(int channel,
+                     bool enable,
+                     AgcModes mode = kAgcUnchanged) override;
 
-  virtual int GetRxAgcStatus(int channel, bool& enabled, AgcModes& mode);
+  int GetRxAgcStatus(int channel, bool& enabled, AgcModes& mode) override;
 
-  virtual int SetRxAgcConfig(int channel, AgcConfig config);
+  int SetRxAgcConfig(int channel, AgcConfig config) override;
 
-  virtual int GetRxAgcConfig(int channel, AgcConfig& config);
+  int GetRxAgcConfig(int channel, AgcConfig& config) override;
 
-  virtual int SetEcStatus(bool enable, EcModes mode = kEcUnchanged);
-  virtual int GetEcStatus(bool& enabled, EcModes& mode);
-  virtual int EnableDriftCompensation(bool enable);
-  virtual bool DriftCompensationEnabled();
+  int SetEcStatus(bool enable, EcModes mode = kEcUnchanged) override;
+  int GetEcStatus(bool& enabled, EcModes& mode) override;
+  int EnableDriftCompensation(bool enable) override;
+  bool DriftCompensationEnabled() override;
 
-  virtual void SetDelayOffsetMs(int offset);
-  virtual int DelayOffsetMs();
+  void SetDelayOffsetMs(int offset) override;
+  int DelayOffsetMs() override;
 
-  virtual int SetAecmMode(AecmModes mode = kAecmSpeakerphone,
-                          bool enableCNG = true);
+  int SetAecmMode(AecmModes mode = kAecmSpeakerphone,
+                  bool enableCNG = true) override;
 
-  virtual int GetAecmMode(AecmModes& mode, bool& enabledCNG);
+  int GetAecmMode(AecmModes& mode, bool& enabledCNG) override;
 
-  virtual int EnableHighPassFilter(bool enable);
-  virtual bool IsHighPassFilterEnabled();
+  int EnableHighPassFilter(bool enable) override;
+  bool IsHighPassFilterEnabled() override;
 
-  virtual int RegisterRxVadObserver(int channel,
-                                    VoERxVadCallback& observer);
+  int RegisterRxVadObserver(int channel, VoERxVadCallback& observer) override;
 
-  virtual int DeRegisterRxVadObserver(int channel);
+  int DeRegisterRxVadObserver(int channel) override;
 
-  virtual int VoiceActivityIndicator(int channel);
+  int VoiceActivityIndicator(int channel) override;
 
-  virtual int SetEcMetricsStatus(bool enable);
+  int SetEcMetricsStatus(bool enable) override;
 
-  virtual int GetEcMetricsStatus(bool& enabled);
+  int GetEcMetricsStatus(bool& enabled) override;
 
-  virtual int GetEchoMetrics(int& ERL, int& ERLE, int& RERL, int& A_NLP);
+  int GetEchoMetrics(int& ERL, int& ERLE, int& RERL, int& A_NLP) override;
 
-  virtual int GetEcDelayMetrics(int& delay_median, int& delay_std,
-                                float& fraction_poor_delays);
+  int GetEcDelayMetrics(int& delay_median,
+                        int& delay_std,
+                        float& fraction_poor_delays) override;
 
-  virtual int StartDebugRecording(const char* fileNameUTF8);
-  virtual int StartDebugRecording(FILE* file_handle);
+  int StartDebugRecording(const char* fileNameUTF8) override;
+  int StartDebugRecording(FILE* file_handle) override;
 
-  virtual int StopDebugRecording();
+  int StopDebugRecording() override;
 
-  virtual int SetTypingDetectionStatus(bool enable);
+  int SetTypingDetectionStatus(bool enable) override;
 
-  virtual int GetTypingDetectionStatus(bool& enabled);
+  int GetTypingDetectionStatus(bool& enabled) override;
 
-  virtual int TimeSinceLastTyping(int &seconds);
+  int TimeSinceLastTyping(int& seconds) override;
 
   // TODO(niklase) Remove default argument as soon as libJingle is updated!
-  virtual int SetTypingDetectionParameters(int timeWindow,
-                                           int costPerTyping,
-                                           int reportingThreshold,
-                                           int penaltyDecay,
-                                           int typeEventDelay = 0);
+  int SetTypingDetectionParameters(int timeWindow,
+                                   int costPerTyping,
+                                   int reportingThreshold,
+                                   int penaltyDecay,
+                                   int typeEventDelay = 0) override;
 
-  virtual void EnableStereoChannelSwapping(bool enable);
-  virtual bool IsStereoChannelSwappingEnabled();
+  void EnableStereoChannelSwapping(bool enable) override;
+  bool IsStereoChannelSwappingEnabled() override;
 
  protected:
   VoEAudioProcessingImpl(voe::SharedData* shared);
-  virtual ~VoEAudioProcessingImpl();
+  ~VoEAudioProcessingImpl() override;
 
  private:
   bool _isAecMode;

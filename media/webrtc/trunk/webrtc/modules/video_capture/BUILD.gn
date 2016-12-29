@@ -16,11 +16,11 @@ source_set("video_capture_module") {
   sources = [
     "device_info_impl.cc",
     "device_info_impl.h",
-    "include/video_capture.h",
-    "include/video_capture_defines.h",
-    "include/video_capture_factory.h",
+    "video_capture.h",
     "video_capture_config.h",
+    "video_capture_defines.h",
     "video_capture_delay.h",
+    "video_capture_factory.h",
     "video_capture_factory.cc",
     "video_capture_impl.cc",
     "video_capture_impl.h",
@@ -127,20 +127,7 @@ if (!build_with_chromium) {
 
       libs = [ "Strmiids.lib" ]
 
-      deps += [ "//third_party/winsdk_samples"]
-    }
-    if (is_android) {
-      sources = [
-        "android/device_info_android.cc",
-        "android/device_info_android.h",
-        "android/video_capture_android.cc",
-        "android/video_capture_android.h",
-      ]
-
-      deps += [
-        "//third_party/icu:icuuc",
-        "//third_party/jsoncpp",
-      ]
+      deps += [ "//third_party/winsdk_samples" ]
     }
     if (is_ios) {
       sources = [
@@ -156,6 +143,7 @@ if (!build_with_chromium) {
 
       cflags = [
         "-fobjc-arc",  # CLANG_ENABLE_OBJC_ARC = YES.
+
         # To avoid warnings for deprecated videoMinFrameDuration and
         # videoMaxFrameDuration properties in iOS 7.0.
         # See webrtc:3705 for more details.

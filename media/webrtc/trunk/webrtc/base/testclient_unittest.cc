@@ -14,7 +14,6 @@
 #include "webrtc/base/testclient.h"
 #include "webrtc/base/testechoserver.h"
 #include "webrtc/base/thread.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 using namespace rtc;
 
@@ -56,7 +55,12 @@ TEST(TestClientTest, TestUdpIPv4) {
   TestUdpInternal(SocketAddress("127.0.0.1", 0));
 }
 
-TEST(TestClientTest, TestUdpIPv6) {
+#if defined(WEBRTC_LINUX)
+#define MAYBE_TestUdpIPv6 DISABLED_TestUdpIPv6
+#else
+#define MAYBE_TestUdpIPv6 TestUdpIPv6
+#endif
+TEST(TestClientTest, MAYBE_TestUdpIPv6) {
   if (HasIPv6Enabled()) {
     TestUdpInternal(SocketAddress("::1", 0));
   } else {
@@ -69,7 +73,12 @@ TEST(TestClientTest, TestTcpIPv4) {
   TestTcpInternal(SocketAddress("127.0.0.1", 0));
 }
 
-TEST(TestClientTest, TestTcpIPv6) {
+#if defined(WEBRTC_LINUX)
+#define MAYBE_TestTcpIPv6 DISABLED_TestTcpIPv6
+#else
+#define MAYBE_TestTcpIPv6 TestTcpIPv6
+#endif
+TEST(TestClientTest, MAYBE_TestTcpIPv6) {
   if (HasIPv6Enabled()) {
     TestTcpInternal(SocketAddress("::1", 0));
   } else {

@@ -9,8 +9,10 @@
  */
 
 #include "webrtc/sound/automaticallychosensoundsystem.h"
-#include "webrtc/sound/nullsoundsystem.h"
+
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/gunit.h"
+#include "webrtc/sound/nullsoundsystem.h"
 
 namespace rtc {
 
@@ -112,7 +114,7 @@ extern const SoundSystemCreator kSingleSystemFailingCreators[] = {
 TEST(AutomaticallyChosenSoundSystem, SingleSystemFailing) {
   AutomaticallyChosenSoundSystem<
       kSingleSystemFailingCreators,
-      ARRAY_SIZE(kSingleSystemFailingCreators)> sound_system;
+      arraysize(kSingleSystemFailingCreators)> sound_system;
   EXPECT_FALSE(sound_system.Init());
 }
 
@@ -123,7 +125,7 @@ extern const SoundSystemCreator kSingleSystemSucceedingCreators[] = {
 TEST(AutomaticallyChosenSoundSystem, SingleSystemSucceeding) {
   AutomaticallyChosenSoundSystem<
       kSingleSystemSucceedingCreators,
-      ARRAY_SIZE(kSingleSystemSucceedingCreators)> sound_system;
+      arraysize(kSingleSystemSucceedingCreators)> sound_system;
   EXPECT_TRUE(sound_system.Init());
 }
 
@@ -136,7 +138,7 @@ extern const SoundSystemCreator
 TEST(AutomaticallyChosenSoundSystem, FailedFirstSystemResultsInUsingSecond) {
   AutomaticallyChosenSoundSystem<
       kFailedFirstSystemResultsInUsingSecondCreators,
-      ARRAY_SIZE(kFailedFirstSystemResultsInUsingSecondCreators)> sound_system;
+      arraysize(kFailedFirstSystemResultsInUsingSecondCreators)> sound_system;
   EXPECT_TRUE(sound_system.Init());
 }
 
@@ -148,7 +150,7 @@ extern const SoundSystemCreator kEarlierEntriesHavePriorityCreators[] = {
 TEST(AutomaticallyChosenSoundSystem, EarlierEntriesHavePriority) {
   AutomaticallyChosenSoundSystem<
       kEarlierEntriesHavePriorityCreators,
-      ARRAY_SIZE(kEarlierEntriesHavePriorityCreators)> sound_system;
+      arraysize(kEarlierEntriesHavePriorityCreators)> sound_system;
   InitCheckingSoundSystem1::created_ = false;
   InitCheckingSoundSystem2::created_ = false;
   EXPECT_TRUE(sound_system.Init());
@@ -169,7 +171,7 @@ extern const SoundSystemCreator kManySoundSystemsCreators[] = {
 TEST(AutomaticallyChosenSoundSystem, ManySoundSystems) {
   AutomaticallyChosenSoundSystem<
       kManySoundSystemsCreators,
-      ARRAY_SIZE(kManySoundSystemsCreators)> sound_system;
+      arraysize(kManySoundSystemsCreators)> sound_system;
   EXPECT_TRUE(sound_system.Init());
 }
 
@@ -182,7 +184,7 @@ extern const SoundSystemCreator kDeletesAllCreatedSoundSystemsCreators[] = {
 TEST(AutomaticallyChosenSoundSystem, DeletesAllCreatedSoundSystems) {
   typedef AutomaticallyChosenSoundSystem<
       kDeletesAllCreatedSoundSystemsCreators,
-      ARRAY_SIZE(kDeletesAllCreatedSoundSystemsCreators)> TestSoundSystem;
+      arraysize(kDeletesAllCreatedSoundSystemsCreators)> TestSoundSystem;
   TestSoundSystem *sound_system = new TestSoundSystem();
   DeletionCheckingSoundSystem1::deleted_ = false;
   DeletionCheckingSoundSystem2::deleted_ = false;

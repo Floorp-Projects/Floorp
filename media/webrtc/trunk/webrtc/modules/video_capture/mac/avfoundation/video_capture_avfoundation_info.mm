@@ -9,9 +9,9 @@
  */
 
 #import "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info_objc.h"
-#include "webrtc/modules/video_capture/include/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #include "nsDebug.h"
 
 namespace webrtc

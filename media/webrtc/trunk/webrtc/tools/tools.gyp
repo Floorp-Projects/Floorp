@@ -102,19 +102,6 @@
     ['include_tests==1', {
       'targets' : [
         {
-          'target_name': 'agc_manager',
-          'type': 'static_library',
-          'dependencies': [
-            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-            '<(webrtc_root)/modules/modules.gyp:audio_processing',
-            '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine',
-          ],
-          'sources': [
-            'agc/agc_manager.cc',
-            'agc/agc_manager.h',
-          ],
-        },
-        {
           'target_name': 'agc_test_utils',
           'type': 'static_library',
           'sources': [
@@ -131,35 +118,19 @@
             '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
             '<(webrtc_root)/test/test.gyp:channel_transport',
             '<(webrtc_root)/test/test.gyp:test_support',
-            'agc_manager',
+            '<(webrtc_root)/voice_engine/voice_engine.gyp:voice_engine',
           ],
           'sources': [
             'agc/agc_harness.cc',
           ],
         },  # agc_harness
         {
-          'target_name': 'agc_proc',
-          'type': 'executable',
-          'dependencies': [
-            '<(DEPTH)/testing/gmock.gyp:gmock',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-            '<(webrtc_root)/test/test.gyp:test_support',
-            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
-            'agc_manager',
-            'agc_test_utils',
-          ],
-          'sources': [
-            'agc/agc_test.cc',
-          ],
-        },  # agc_proc
-        {
           'target_name': 'activity_metric',
           'type': 'executable',
           'dependencies': [
             '<(DEPTH)/testing/gtest.gyp:gtest',
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-            'agc_manager',
+            '<(webrtc_root)/modules/modules.gyp:audio_processing',
           ],
           'sources': [
             'agc/activity_metric.cc',

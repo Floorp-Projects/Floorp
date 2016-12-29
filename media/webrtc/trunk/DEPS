@@ -6,7 +6,7 @@
 vars = {
   'extra_gyp_flag': '-Dextra_gyp_flag=0',
   'chromium_git': 'https://chromium.googlesource.com',
-  'chromium_revision': '719b83983be9613eb80e99a0bc645776d59b76b3',
+  'chromium_revision': '099be58b08dadb64b1dc9f359ae097e978df5416',
 }
 
 # NOTE: Prefer revision numbers to tags for svn deps. Use http rather than
@@ -17,14 +17,14 @@ deps = {
   'src/third_party/gflags/src':
     Var('chromium_git') + '/external/gflags/src@e7390f9185c75f8d902c05ed7d20bb94eb914d0c', # from svn revision 82
 
-  'src/third_party/junit':
+  'src/third_party/junit-jar':
     Var('chromium_git') + '/external/webrtc/deps/third_party/junit@f35596b476aa6e62fd3b3857b9942ddcd13ce35e', # from svn revision 3367
 }
 
 deps_os = {
   'win': {
     'src/third_party/winsdk_samples/src':
-      Var('chromium_git') + '/external/webrtc/deps/third_party/winsdk_samples_v71@c0cbedd854cb610a53226d9817416c4ab9a7d1e9', # from svn revision 7951
+      Var('chromium_git') + '/external/webrtc/deps/third_party/winsdk_samples_v71@e71b549167a665d7424d6f1dadfbff4b4aad1589',
   },
 }
 
@@ -34,18 +34,16 @@ include_rules = [
   # WebRTC production code.
   '-base',
   '-chromium',
+  '+external/webrtc/webrtc',  # Android platform build.
   '+gflags',
   '+libyuv',
   '+net',
   '+talk',
   '+testing',
   '+third_party',
+  '+unicode',
   '+webrtc',
-]
-
-# checkdeps.py shouldn't check include paths for files in these dirs:
-skip_child_includes = [
-  'webrtc/overrides',
+  '+vpx',
 ]
 
 hooks = [
@@ -73,6 +71,21 @@ hooks = [
     'action': ['python', 'src/setup_links.py'],
   },
   {
+    # This clobbers when necessary (based on get_landmines.py). It should be
+    # an early hook but it will need to be run after syncing Chromium and
+    # setting up the links, so the script actually exists.
+    'name': 'landmines',
+    'pattern': '.',
+    'action': [
+        'python',
+        'src/build/landmines.py',
+        '--landmine-scripts',
+        'src/webrtc/build/get_landmines.py',
+        '--src-dir',
+        'src',
+    ],
+  },
+  {
      # Pull sanitizer-instrumented third-party libraries if requested via
      # GYP_DEFINES. This could be done as part of sync_chromium.py above
      # but then we would need to run all the Chromium hooks each time,
@@ -89,6 +102,7 @@ hooks = [
                '--recursive',
                '--num_threads=10',
                '--no_auth',
+               '--quiet',
                '--bucket', 'chromium-webrtc-resources',
                'src/resources'],
   },

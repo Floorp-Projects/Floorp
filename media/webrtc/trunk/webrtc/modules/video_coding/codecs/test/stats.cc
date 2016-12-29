@@ -32,26 +32,26 @@ FrameStatistic::FrameStatistic()
       total_packets(0),
       bit_rate_in_kbps(0),
       encoded_frame_length_in_bytes(0),
-      frame_type(kDeltaFrame) {}
+      frame_type(kVideoFrameDelta) {}
 
 Stats::Stats() {}
 
 Stats::~Stats() {}
 
 bool LessForEncodeTime(const FrameStatistic& s1, const FrameStatistic& s2) {
-    return s1.encode_time_in_us < s2.encode_time_in_us;
+  return s1.encode_time_in_us < s2.encode_time_in_us;
 }
 
 bool LessForDecodeTime(const FrameStatistic& s1, const FrameStatistic& s2) {
-    return s1.decode_time_in_us < s2.decode_time_in_us;
+  return s1.decode_time_in_us < s2.decode_time_in_us;
 }
 
 bool LessForEncodedSize(const FrameStatistic& s1, const FrameStatistic& s2) {
-    return s1.encoded_frame_length_in_bytes < s2.encoded_frame_length_in_bytes;
+  return s1.encoded_frame_length_in_bytes < s2.encoded_frame_length_in_bytes;
 }
 
 bool LessForBitRate(const FrameStatistic& s1, const FrameStatistic& s2) {
-    return s1.bit_rate_in_kbps < s2.bit_rate_in_kbps;
+  return s1.bit_rate_in_kbps < s2.bit_rate_in_kbps;
 }
 
 FrameStatistic& Stats::NewFrame(int frame_number) {
@@ -78,12 +78,11 @@ void Stats::PrintSummary() {
   size_t nbr_keyframes = 0;
   size_t nbr_nonkeyframes = 0;
 
-  for (FrameStatisticsIterator it = stats_.begin();
-      it != stats_.end(); ++it) {
+  for (FrameStatisticsIterator it = stats_.begin(); it != stats_.end(); ++it) {
     total_encoding_time_in_us += it->encode_time_in_us;
     total_decoding_time_in_us += it->decode_time_in_us;
     total_encoded_frames_lengths += it->encoded_frame_length_in_bytes;
-    if (it->frame_type == webrtc::kKeyFrame) {
+    if (it->frame_type == webrtc::kVideoFrameKey) {
       total_encoded_key_frames_lengths += it->encoded_frame_length_in_bytes;
       nbr_keyframes++;
     } else {
@@ -96,15 +95,13 @@ void Stats::PrintSummary() {
 
   // ENCODING
   printf("Encoding time:\n");
-  frame = std::min_element(stats_.begin(),
-                      stats_.end(), LessForEncodeTime);
-  printf("  Min     : %7d us (frame %d)\n",
-         frame->encode_time_in_us, frame->frame_number);
+  frame = std::min_element(stats_.begin(), stats_.end(), LessForEncodeTime);
+  printf("  Min     : %7d us (frame %d)\n", frame->encode_time_in_us,
+         frame->frame_number);
 
-  frame = std::max_element(stats_.begin(),
-                      stats_.end(), LessForEncodeTime);
-  printf("  Max     : %7d us (frame %d)\n",
-         frame->encode_time_in_us, frame->frame_number);
+  frame = std::max_element(stats_.begin(), stats_.end(), LessForEncodeTime);
+  printf("  Max     : %7d us (frame %d)\n", frame->encode_time_in_us,
+         frame->frame_number);
 
   printf("  Average : %7d us\n",
          static_cast<int>(total_encoding_time_in_us / stats_.size()));
@@ -115,7 +112,7 @@ void Stats::PrintSummary() {
   // failures)
   std::vector<FrameStatistic> decoded_frames;
   for (std::vector<FrameStatistic>::iterator it = stats_.begin();
-      it != stats_.end(); ++it) {
+       it != stats_.end(); ++it) {
     if (it->decoding_successful) {
       decoded_frames.push_back(*it);
     }
@@ -123,15 +120,15 @@ void Stats::PrintSummary() {
   if (decoded_frames.size() == 0) {
     printf("No successfully decoded frames exist in this statistics.\n");
   } else {
-    frame = std::min_element(decoded_frames.begin(),
-                        decoded_frames.end(), LessForDecodeTime);
-    printf("  Min     : %7d us (frame %d)\n",
-           frame->decode_time_in_us, frame->frame_number);
+    frame = std::min_element(decoded_frames.begin(), decoded_frames.end(),
+                             LessForDecodeTime);
+    printf("  Min     : %7d us (frame %d)\n", frame->decode_time_in_us,
+           frame->frame_number);
 
-    frame = std::max_element(decoded_frames.begin(),
-                        decoded_frames.end(), LessForDecodeTime);
-    printf("  Max     : %7d us (frame %d)\n",
-           frame->decode_time_in_us, frame->frame_number);
+    frame = std::max_element(decoded_frames.begin(), decoded_frames.end(),
+                             LessForDecodeTime);
+    printf("  Max     : %7d us (frame %d)\n", frame->decode_time_in_us,
+           frame->frame_number);
 
     printf("  Average : %7d us\n",
            static_cast<int>(total_decoding_time_in_us / decoded_frames.size()));
@@ -141,13 +138,11 @@ void Stats::PrintSummary() {
 
   // SIZE
   printf("Frame sizes:\n");
-  frame = std::min_element(stats_.begin(),
-                      stats_.end(), LessForEncodedSize);
+  frame = std::min_element(stats_.begin(), stats_.end(), LessForEncodedSize);
   printf("  Min     : %7" PRIuS " bytes (frame %d)\n",
          frame->encoded_frame_length_in_bytes, frame->frame_number);
 
-  frame = std::max_element(stats_.begin(),
-                      stats_.end(), LessForEncodedSize);
+  frame = std::max_element(stats_.begin(), stats_.end(), LessForEncodedSize);
   printf("  Max     : %7" PRIuS " bytes (frame %d)\n",
          frame->encoded_frame_length_in_bytes, frame->frame_number);
 
@@ -167,21 +162,17 @@ void Stats::PrintSummary() {
 
   // BIT RATE
   printf("Bit rates:\n");
-  frame = std::min_element(stats_.begin(),
-                      stats_.end(), LessForBitRate);
-  printf("  Min bit rate: %7d kbps (frame %d)\n",
-         frame->bit_rate_in_kbps, frame->frame_number);
+  frame = std::min_element(stats_.begin(), stats_.end(), LessForBitRate);
+  printf("  Min bit rate: %7d kbps (frame %d)\n", frame->bit_rate_in_kbps,
+         frame->frame_number);
 
-  frame = std::max_element(stats_.begin(),
-                      stats_.end(), LessForBitRate);
-  printf("  Max bit rate: %7d kbps (frame %d)\n",
-         frame->bit_rate_in_kbps, frame->frame_number);
+  frame = std::max_element(stats_.begin(), stats_.end(), LessForBitRate);
+  printf("  Max bit rate: %7d kbps (frame %d)\n", frame->bit_rate_in_kbps,
+         frame->frame_number);
 
   printf("\n");
-  printf("Total encoding time  : %7d ms.\n",
-         total_encoding_time_in_us / 1000);
-  printf("Total decoding time  : %7d ms.\n",
-         total_decoding_time_in_us / 1000);
+  printf("Total encoding time  : %7d ms.\n", total_encoding_time_in_us / 1000);
+  printf("Total decoding time  : %7d ms.\n", total_decoding_time_in_us / 1000);
   printf("Total processing time: %7d ms.\n",
          (total_encoding_time_in_us + total_decoding_time_in_us) / 1000);
 }

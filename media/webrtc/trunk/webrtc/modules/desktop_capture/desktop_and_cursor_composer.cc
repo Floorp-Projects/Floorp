@@ -67,7 +67,7 @@ class DesktopFrameWithCursor : public DesktopFrame {
   DesktopVector restore_position_;
   rtc::scoped_ptr<DesktopFrame> restore_frame_;
 
-  DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
 };
 
 DesktopFrameWithCursor::DesktopFrameWithCursor(DesktopFrame* frame,

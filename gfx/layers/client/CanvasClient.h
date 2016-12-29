@@ -28,7 +28,7 @@ namespace mozilla {
 namespace layers {
 
 class AsyncCanvasRenderer;
-class ClientCanvasLayer;
+class ShareableCanvasLayer;
 class CompositableForwarder;
 class ShadowableLayer;
 class SharedSurfaceTextureClient;
@@ -39,7 +39,7 @@ class SharedSurfaceTextureClient;
 class CanvasClient : public CompositableClient
 {
 public:
-  typedef MaybeOneOf<ClientCanvasLayer*, AsyncCanvasRenderer*> Renderer;
+  typedef MaybeOneOf<ShareableCanvasLayer*, AsyncCanvasRenderer*> Renderer;
 
   /**
    * Creates, configures, and returns a new canvas client. If necessary, a
@@ -67,7 +67,7 @@ public:
 
   virtual void Clear() {};
 
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) = 0;
+  virtual void Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer) = 0;
 
   virtual bool AddTextureClient(TextureClient* aTexture) override
   {
@@ -105,7 +105,7 @@ public:
     mBackBuffer = mFrontBuffer = mBufferProviderTexture = nullptr;
   }
 
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) override;
+  virtual void Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer) override;
 
   virtual void UpdateFromTexture(TextureClient* aBuffer) override;
 
@@ -124,7 +124,7 @@ private:
     CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
                                  gfx::IntSize aSize,
                                  TextureFlags aFlags,
-                                 ClientCanvasLayer* aLayer);
+                                 ShareableCanvasLayer* aLayer);
 
   RefPtr<TextureClient> mBackBuffer;
   RefPtr<TextureClient> mFrontBuffer;
@@ -163,7 +163,7 @@ public:
   }
 
   virtual void Update(gfx::IntSize aSize,
-                      ClientCanvasLayer* aLayer) override;
+                      ShareableCanvasLayer* aLayer) override;
   void UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer);
 
   virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
@@ -194,7 +194,7 @@ public:
     return TextureInfo(CompositableType::IMAGE);
   }
 
-  virtual void Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer) override
+  virtual void Update(gfx::IntSize aSize, ShareableCanvasLayer* aLayer) override
   {
   }
 

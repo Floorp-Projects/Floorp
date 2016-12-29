@@ -21,7 +21,6 @@ EXPORTS += [
     'composite/CompositableHost.h',
     'composite/ImageHost.h',
     'CompositorTypes.h',
-    'CopyableCanvasLayer.h',
     'D3D9SurfaceImage.h',
     'FrameMetrics.h',
     'GLImages.h',
@@ -372,6 +371,7 @@ UNIFIED_SOURCES += [
     'ReadbackProcessor.cpp',
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
+    'ShareableCanvasLayer.cpp',
     'TextureWrapperImage.cpp',
 ]
 

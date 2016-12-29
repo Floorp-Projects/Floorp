@@ -18,23 +18,21 @@
 
 namespace webrtc {
 
-class VoENetEqStatsImpl : public VoENetEqStats
-{
-public:
-    virtual int GetNetworkStatistics(int channel,
-                                     NetworkStatistics& stats);
+class VoENetEqStatsImpl : public VoENetEqStats {
+ public:
+  int GetNetworkStatistics(int channel, NetworkStatistics& stats) override;
 
-    virtual int GetDecodingCallStatistics(
-        int channel, AudioDecodingCallStats* stats) const;
+  int GetDecodingCallStatistics(int channel,
+                                AudioDecodingCallStats* stats) const override;
 
-protected:
-    VoENetEqStatsImpl(voe::SharedData* shared);
-    virtual ~VoENetEqStatsImpl();
+ protected:
+  VoENetEqStatsImpl(voe::SharedData* shared);
+  ~VoENetEqStatsImpl() override;
 
-private:
-    voe::SharedData* _shared;
+ private:
+  voe::SharedData* _shared;
 };
 
 }  // namespace webrtc
 
-#endif    // WEBRTC_VOICE_ENGINE_VOE_NETEQ_STATS_IMPL_H
+#endif  // WEBRTC_VOICE_ENGINE_VOE_NETEQ_STATS_IMPL_H

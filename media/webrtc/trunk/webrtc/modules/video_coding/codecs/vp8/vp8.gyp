@@ -26,7 +26,7 @@
       'conditions': [
         ['build_libvpx==1', {
           'dependencies': [
-            '<(libvpx_dir)/libvpx.gyp:libvpx',
+            '<(libvpx_dir)/libvpx.gyp:libvpx_new',
           ],
         },{
           'link_settings': {

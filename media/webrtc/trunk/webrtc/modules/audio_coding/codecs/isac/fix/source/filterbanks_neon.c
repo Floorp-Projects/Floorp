@@ -29,12 +29,13 @@ void WebRtcIsacfix_AllpassFilter2FixDec16Neon(
   int16x4_t factorv;
   int16x4_t datav;
   int32x4_t statev;
-  int32x2_t tmp;
 
   // Load factor_ch1 and factor_ch2.
-  tmp = vld1_dup_s32((int32_t*)factor_ch1);
-  tmp = vld1_lane_s32((int32_t*)factor_ch2, tmp, 1);
-  factorv = vreinterpret_s16_s32(tmp);
+  factorv = vld1_dup_s16(factor_ch1);
+  factorv = vld1_lane_s16(factor_ch1 + 1, factorv, 1);
+  factorv = vld1_lane_s16(factor_ch2, factorv, 2);
+  factorv = vld1_lane_s16(factor_ch2 + 1, factorv, 3);
+
   // Load filter_state_ch1[0] and filter_state_ch2[0].
   statev = vld1q_dup_s32(filter_state_ch1);
   statev = vld1q_lane_s32(filter_state_ch2, statev, 2);

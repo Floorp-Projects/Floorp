@@ -24,7 +24,7 @@ namespace rtc {
 
 static const size_t kMaxPacketSize = 64 * 1024;
 
-typedef uint16 PacketLength;
+typedef uint16_t PacketLength;
 static const size_t kPacketLenSize = sizeof(PacketLength);
 
 static const size_t kBufSize = kMaxPacketSize + kPacketLenSize;
@@ -127,10 +127,11 @@ void AsyncTCPSocketBase::SetError(int error) {
 int AsyncTCPSocketBase::SendTo(const void *pv, size_t cb,
                                const SocketAddress& addr,
                                const rtc::PacketOptions& options) {
-  if (addr == GetRemoteAddress())
+  const SocketAddress& remote_address = GetRemoteAddress();
+  if (addr == remote_address)
     return Send(pv, cb, options);
-
-  ASSERT(false);
+  // Remote address may be empty if there is a sudden network change.
+  ASSERT(remote_address.IsNil());
   socket_->SetError(ENOTCONN);
   return -1;
 }
@@ -266,6 +267,9 @@ int AsyncTCPSocket::Send(const void *pv, size_t cb,
     ClearOutBuffer();
     return res;
   }
+
+  rtc::SentPacket sent_packet(options.packet_id, rtc::Time());
+  SignalSentPacket(this, sent_packet);
 
   // We claim to have sent the whole thing, even if we only sent partial
   return static_cast<int>(cb);

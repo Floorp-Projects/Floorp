@@ -701,7 +701,7 @@ class TraceID {
 
   explicit TraceID(const void* id, unsigned char* flags)
       : data_(static_cast<unsigned long long>(
-              reinterpret_cast<unsigned long>(id))) {
+              reinterpret_cast<uintptr_t>(id))) {
     *flags |= TRACE_EVENT_FLAG_MANGLE_ID;
   }
   explicit TraceID(ForceMangle id, unsigned char* flags) : data_(id.data()) {

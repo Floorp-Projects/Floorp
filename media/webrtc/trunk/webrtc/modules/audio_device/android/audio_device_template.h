@@ -11,36 +11,41 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_DEVICE_TEMPLATE_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_DEVICE_TEMPLATE_H_
 
+#include <android/log.h>
+
 #include "webrtc/base/checks.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
+
+#define TAG "AudioDeviceTemplate"
+#define ALOGW(...) __android_log_print(ANDROID_LOG_WARN, TAG, __VA_ARGS__)
 
 namespace webrtc {
 
 // InputType/OutputType can be any class that implements the capturing/rendering
 // part of the AudioDeviceGeneric API.
+// Construction and destruction must be done on one and the same thread. Each
+// internal implementation of InputType and OutputType will RTC_DCHECK if that
+// is not the case. All implemented methods must also be called on the same
+// thread. See comments in each InputType/OutputType class for more info.
+// It is possible to call the two static methods (SetAndroidAudioDeviceObjects
+// and ClearAndroidAudioDeviceObjects) from a different thread but both will
+// RTC_CHECK that the calling thread is attached to a Java VM.
+
 template <class InputType, class OutputType>
 class AudioDeviceTemplate : public AudioDeviceGeneric {
  public:
-  static void SetAndroidAudioDeviceObjects(void* javaVM,
-                                           void* context) {
-    AudioManager::SetAndroidAudioDeviceObjects(javaVM, context);
-    OutputType::SetAndroidAudioDeviceObjects(javaVM, context);
-    InputType::SetAndroidAudioDeviceObjects(javaVM, context);
-  }
-
-  static void ClearAndroidAudioDeviceObjects() {
-    OutputType::ClearAndroidAudioDeviceObjects();
-    InputType::ClearAndroidAudioDeviceObjects();
-    AudioManager::ClearAndroidAudioDeviceObjects();
-  }
-
-  // TODO(henrika): remove id.
-  explicit AudioDeviceTemplate(const int32_t id)
-      : audio_manager_(),
-        output_(&audio_manager_),
-        input_(&output_, &audio_manager_) {
+  AudioDeviceTemplate(AudioDeviceModule::AudioLayer audio_layer,
+                      AudioManager* audio_manager)
+      : audio_layer_(audio_layer),
+        audio_manager_(audio_manager),
+        output_(audio_manager_),
+        input_(audio_manager_),
+        initialized_(false) {
+    RTC_CHECK(audio_manager);
+    audio_manager_->SetActiveAudioLayer(audio_layer);
   }
 
   virtual ~AudioDeviceTemplate() {
@@ -48,20 +53,41 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
 
   int32_t ActiveAudioLayer(
       AudioDeviceModule::AudioLayer& audioLayer) const override {
-    audioLayer = AudioDeviceModule::kPlatformDefaultAudio;
+    audioLayer = audio_layer_;
     return 0;
-  };
+  }
 
   int32_t Init() override {
-    return audio_manager_.Init() | output_.Init() | input_.Init();
+    RTC_DCHECK(thread_checker_.CalledOnValidThread());
+    RTC_DCHECK(!initialized_);
+    if (!audio_manager_->Init())
+      return -1;
+    if (output_.Init() != 0) {
+      audio_manager_->Close();
+      return -1;
+    }
+    if (input_.Init() != 0) {
+      output_.Terminate();
+      audio_manager_->Close();
+      return -1;
+    }
+    initialized_ = true;
+    return 0;
   }
 
   int32_t Terminate() override {
-    return output_.Terminate() | input_.Terminate() | audio_manager_.Close();
+    RTC_DCHECK(thread_checker_.CalledOnValidThread());
+    int32_t err = input_.Terminate();
+    err |= output_.Terminate();
+    err |= !audio_manager_->Close();
+    initialized_ = false;
+    RTC_DCHECK_EQ(err, 0);
+    return err;
   }
 
   bool Initialized() const override {
-    return true;
+    RTC_DCHECK(thread_checker_.CalledOnValidThread());
+    return initialized_;
   }
 
   int16_t PlayoutDevices() override {
@@ -138,11 +164,18 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   }
 
   int32_t StartPlayout() override {
+    if (!audio_manager_->IsCommunicationModeEnabled()) {
+      ALOGW("The application should use MODE_IN_COMMUNICATION audio mode!");
+    }
     return output_.StartPlayout();
   }
 
   int32_t StopPlayout() override {
-    return output_.StopPlayout();
+    // Avoid using audio manger (JNI/Java cost) if playout was inactive.
+    if (!Playing())
+      return 0;
+    int32_t err = output_.StopPlayout();
+    return err;
   }
 
   bool Playing() const override {
@@ -150,11 +183,18 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
   }
 
   int32_t StartRecording() override {
+    if (!audio_manager_->IsCommunicationModeEnabled()) {
+      ALOGW("The application should use MODE_IN_COMMUNICATION audio mode!");
+    }
     return input_.StartRecording();
   }
 
   int32_t StopRecording() override {
-    return input_.StopRecording();
+    // Avoid using audio manger (JNI/Java cost) if recording was inactive.
+    if (!Recording())
+      return 0;
+    int32_t err = input_.StopRecording();
+    return err;
   }
 
   bool Recording() const override {
@@ -344,12 +384,18 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
     return -1;
   }
 
-  int32_t PlayoutDelay(uint16_t& delayMS) const override {
-    return output_.PlayoutDelay(delayMS);
+  int32_t PlayoutDelay(uint16_t& delay_ms) const override {
+    // Best guess we can do is to use half of the estimated total delay.
+    delay_ms = audio_manager_->GetDelayEstimateInMilliseconds() / 2;
+    RTC_DCHECK_GT(delay_ms, 0);
+    return 0;
   }
 
-  int32_t RecordingDelay(uint16_t& delayMS) const override {
-    return input_.RecordingDelay(delayMS);
+  int32_t RecordingDelay(uint16_t& delay_ms) const override {
+    // Best guess we can do is to use half of the estimated total delay.
+    delay_ms = audio_manager_->GetDelayEstimateInMilliseconds() / 2;
+    RTC_DCHECK_GT(delay_ms, 0);
+    return 0;
   }
 
   int32_t CPULoad(uint16_t& load) const override {
@@ -402,18 +448,57 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
     return -1;
   }
 
+  // Returns true if the device both supports built in AEC and the device
+  // is not blacklisted.
   bool BuiltInAECIsAvailable() const override {
-    return input_.BuiltInAECIsAvailable();
+    return audio_manager_->IsAcousticEchoCancelerSupported();
   }
 
   int32_t EnableBuiltInAEC(bool enable) override {
+    RTC_CHECK(BuiltInAECIsAvailable()) << "HW AEC is not available";
     return input_.EnableBuiltInAEC(enable);
   }
 
+  // Returns true if the device both supports built in AGC and the device
+  // is not blacklisted.
+  bool BuiltInAGCIsAvailable() const override {
+    return audio_manager_->IsAutomaticGainControlSupported();
+  }
+
+  int32_t EnableBuiltInAGC(bool enable) override {
+    RTC_CHECK(BuiltInAGCIsAvailable()) << "HW AGC is not available";
+    return input_.EnableBuiltInAGC(enable);
+  }
+
+  // Returns true if the device both supports built in NS and the device
+  // is not blacklisted.
+  bool BuiltInNSIsAvailable() const override {
+    return audio_manager_->IsNoiseSuppressorSupported();
+  }
+
+  int32_t EnableBuiltInNS(bool enable) override {
+    RTC_CHECK(BuiltInNSIsAvailable()) << "HW NS is not available";
+    return input_.EnableBuiltInNS(enable);
+  }
+
  private:
-  AudioManager audio_manager_;
+  rtc::ThreadChecker thread_checker_;
+
+  // Local copy of the audio layer set during construction of the
+  // AudioDeviceModuleImpl instance. Read only value.
+  const AudioDeviceModule::AudioLayer audio_layer_;
+
+  // Non-owning raw pointer to AudioManager instance given to use at
+  // construction. The real object is owned by AudioDeviceModuleImpl and the
+  // life time is the same as that of the AudioDeviceModuleImpl, hence there
+  // is no risk of reading a NULL pointer at any time in this class.
+  AudioManager* const audio_manager_;
+
   OutputType output_;
+
   InputType input_;
+
+  bool initialized_;
 };
 
 }  // namespace webrtc

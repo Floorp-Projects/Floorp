@@ -21,7 +21,7 @@ namespace rtc {
 // DisableBufferMonitoring() are the same as for rtc::Worker.
 class SoundOutputStreamInterface {
  public:
-  virtual ~SoundOutputStreamInterface() {}
+  virtual ~SoundOutputStreamInterface();
 
   // Enables monitoring the available buffer space on the current thread.
   virtual bool EnableBufferMonitoring() = 0;
@@ -61,10 +61,10 @@ class SoundOutputStreamInterface {
   sigslot::signal2<size_t, SoundOutputStreamInterface *> SignalBufferSpace;
 
  protected:
-  SoundOutputStreamInterface() {}
+  SoundOutputStreamInterface();
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(SoundOutputStreamInterface);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SoundOutputStreamInterface);
 };
 
 }  // namespace rtc

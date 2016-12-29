@@ -15,8 +15,8 @@
 
 #include <vector>
 
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/rtp_rtcp/source/vp8_partition_aggregator.h"
-#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 namespace {
@@ -234,16 +234,16 @@ ProtectionType RtpPacketizerVp8::GetProtectionType() {
 }
 
 StorageType RtpPacketizerVp8::GetStorageType(uint32_t retransmission_settings) {
-  StorageType storage = kAllowRetransmission;
   if (hdr_info_.temporalIdx == 0 &&
       !(retransmission_settings & kRetransmitBaseLayer)) {
-    storage = kDontRetransmit;
-  } else if (hdr_info_.temporalIdx != kNoTemporalIdx &&
+    return kDontRetransmit;
+  }
+  if (hdr_info_.temporalIdx != kNoTemporalIdx &&
              hdr_info_.temporalIdx > 0 &&
              !(retransmission_settings & kRetransmitHigherLayers)) {
-    storage = kDontRetransmit;
+    return kDontRetransmit;
   }
-  return storage;
+  return kAllowRetransmission;
 }
 
 std::string RtpPacketizerVp8::ToString() {
@@ -668,6 +668,10 @@ bool RtpDepacketizerVp8::Parse(ParsedPayload* parsed_payload,
                                const uint8_t* payload_data,
                                size_t payload_data_length) {
   assert(parsed_payload != NULL);
+  if (payload_data_length == 0) {
+    LOG(LS_ERROR) << "Empty payload.";
+    return false;
+  }
 
   // Parse mandatory first byte of payload descriptor.
   bool extension = (*payload_data & 0x80) ? true : false;               // X bit

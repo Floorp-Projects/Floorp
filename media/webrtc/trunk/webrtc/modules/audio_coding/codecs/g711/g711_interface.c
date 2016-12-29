@@ -12,51 +12,44 @@
 #include "g711_interface.h"
 #include "webrtc/typedefs.h"
 
-int16_t WebRtcG711_EncodeA(const int16_t* speechIn,
-                           int16_t len,
-                           uint8_t* encoded) {
-  int n;
+size_t WebRtcG711_EncodeA(const int16_t* speechIn,
+                          size_t len,
+                          uint8_t* encoded) {
+  size_t n;
   for (n = 0; n < len; n++)
     encoded[n] = linear_to_alaw(speechIn[n]);
   return len;
 }
 
-int16_t WebRtcG711_EncodeU(const int16_t* speechIn,
-                           int16_t len,
-                           uint8_t* encoded) {
-  int n;
+size_t WebRtcG711_EncodeU(const int16_t* speechIn,
+                          size_t len,
+                          uint8_t* encoded) {
+  size_t n;
   for (n = 0; n < len; n++)
     encoded[n] = linear_to_ulaw(speechIn[n]);
   return len;
 }
 
-int16_t WebRtcG711_DecodeA(const uint8_t* encoded,
-                           int16_t len,
-                           int16_t* decoded,
-                           int16_t* speechType) {
-  int n;
+size_t WebRtcG711_DecodeA(const uint8_t* encoded,
+                          size_t len,
+                          int16_t* decoded,
+                          int16_t* speechType) {
+  size_t n;
   for (n = 0; n < len; n++)
     decoded[n] = alaw_to_linear(encoded[n]);
   *speechType = 1;
   return len;
 }
 
-int16_t WebRtcG711_DecodeU(const uint8_t* encoded,
-                           int16_t len,
-                           int16_t* decoded,
-                           int16_t* speechType) {
-  int n;
+size_t WebRtcG711_DecodeU(const uint8_t* encoded,
+                          size_t len,
+                          int16_t* decoded,
+                          int16_t* speechType) {
+  size_t n;
   for (n = 0; n < len; n++)
     decoded[n] = ulaw_to_linear(encoded[n]);
   *speechType = 1;
   return len;
-}
-
-int WebRtcG711_DurationEst(const uint8_t* payload,
-                           int payload_length_bytes) {
-  (void) payload;
-  /* G.711 is one byte per sample, so we can just return the number of bytes. */
-  return payload_length_bytes;
 }
 
 int16_t WebRtcG711_Version(char* version, int16_t lenBytes) {

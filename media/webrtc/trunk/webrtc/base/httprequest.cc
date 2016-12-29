@@ -48,11 +48,13 @@ void HttpMonitor::OnHttpClientComplete(HttpClient * http, HttpErrorType error) {
 
 const int kDefaultHTTPTimeout = 30 * 1000; // 30 sec
 
-HttpRequest::HttpRequest(const std::string &user_agent)
-    : firewall_(0), port_(80), secure_(false),
-      timeout_(kDefaultHTTPTimeout), fail_redirect_(false),
-      client_(user_agent.c_str(), NULL), error_(HE_NONE) {
-}
+HttpRequest::HttpRequest(const std::string& user_agent)
+    : firewall_(0),
+      port_(80),
+      secure_(false),
+      timeout_(kDefaultHTTPTimeout),
+      client_(user_agent.c_str(), NULL),
+      error_(HE_NONE) {}
 
 HttpRequest::~HttpRequest() = default;
 
@@ -82,7 +84,7 @@ void HttpRequest::Send() {
   if (transparent_proxy) {
     client_.set_proxy(proxy_);
   }
-  client_.set_fail_redirect(fail_redirect_);
+  client_.set_redirect_action(HttpClient::REDIRECT_ALWAYS);
 
   SocketAddress server(host_, port_);
   client_.set_server(server);

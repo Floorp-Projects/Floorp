@@ -16,7 +16,7 @@
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/aligned_malloc.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
 #include "webrtc/test/testsupport/gtest_prod_util.h"
 #include "webrtc/typedefs.h"
 
@@ -28,28 +28,27 @@ namespace webrtc {
 class SincResamplerCallback {
  public:
   virtual ~SincResamplerCallback() {}
-  virtual void Run(int frames, float* destination) = 0;
+  virtual void Run(size_t frames, float* destination) = 0;
 };
 
 // SincResampler is a high-quality single-channel sample-rate converter.
 class SincResampler {
  public:
-  enum {
-    // The kernel size can be adjusted for quality (higher is better) at the
-    // expense of performance.  Must be a multiple of 32.
-    // TODO(dalecurtis): Test performance to see if we can jack this up to 64+.
-    kKernelSize = 32,
+  // The kernel size can be adjusted for quality (higher is better) at the
+  // expense of performance.  Must be a multiple of 32.
+  // TODO(dalecurtis): Test performance to see if we can jack this up to 64+.
+  static const size_t kKernelSize = 32;
 
-    // Default request size.  Affects how often and for how much SincResampler
-    // calls back for input.  Must be greater than kKernelSize.
-    kDefaultRequestSize = 512,
+  // Default request size.  Affects how often and for how much SincResampler
+  // calls back for input.  Must be greater than kKernelSize.
+  static const size_t kDefaultRequestSize = 512;
 
-    // The kernel offset count is used for interpolation and is the number of
-    // sub-sample kernel shifts.  Can be adjusted for quality (higher is better)
-    // at the expense of allocating more memory.
-    kKernelOffsetCount = 32,
-    kKernelStorageSize = kKernelSize * (kKernelOffsetCount + 1),
-  };
+  // The kernel offset count is used for interpolation and is the number of
+  // sub-sample kernel shifts.  Can be adjusted for quality (higher is better)
+  // at the expense of allocating more memory.
+  static const size_t kKernelOffsetCount = 32;
+  static const size_t kKernelStorageSize =
+      kKernelSize * (kKernelOffsetCount + 1);
 
   // Constructs a SincResampler with the specified |read_cb|, which is used to
   // acquire audio data for resampling.  |io_sample_rate_ratio| is the ratio
@@ -58,18 +57,18 @@ class SincResampler {
   // greater than kKernelSize.  Specify kDefaultRequestSize if there are no
   // request size constraints.
   SincResampler(double io_sample_rate_ratio,
-                int request_frames,
+                size_t request_frames,
                 SincResamplerCallback* read_cb);
   virtual ~SincResampler();
 
   // Resample |frames| of data from |read_cb_| into |destination|.
-  void Resample(int frames, float* destination);
+  void Resample(size_t frames, float* destination);
 
   // The maximum size in frames that guarantees Resample() will only make a
   // single call to |read_cb_| for more data.
-  int ChunkSize() const;
+  size_t ChunkSize() const;
 
-  int request_frames() const { return request_frames_; }
+  size_t request_frames() const { return request_frames_; }
 
   // Flush all buffered data and reset internal indices.  Not thread safe, do
   // not call while Resample() is in progress.
@@ -107,7 +106,7 @@ class SincResampler {
   static float Convolve_SSE(const float* input_ptr, const float* k1,
                             const float* k2,
                             double kernel_interpolation_factor);
-#elif defined(WEBRTC_ARCH_ARM_V7) || defined(WEBRTC_ARCH_ARM64_NEON)
+#elif defined(WEBRTC_DETECT_NEON) || defined(WEBRTC_HAS_NEON)
   static float Convolve_NEON(const float* input_ptr, const float* k1,
                              const float* k2,
                              double kernel_interpolation_factor);
@@ -127,13 +126,13 @@ class SincResampler {
   SincResamplerCallback* read_cb_;
 
   // The size (in samples) to request from each |read_cb_| execution.
-  const int request_frames_;
+  const size_t request_frames_;
 
   // The number of source frames processed per pass.
-  int block_size_;
+  size_t block_size_;
 
   // The size (in samples) of the internal buffer used by the resampler.
-  const int input_buffer_size_;
+  const size_t input_buffer_size_;
 
   // Contains kKernelOffsetCount kernels back-to-back, each of size kKernelSize.
   // The kernel offsets are sub-sample shifts of a windowed sinc shifted from
@@ -163,7 +162,7 @@ class SincResampler {
   float* r3_;
   float* r4_;
 
-  DISALLOW_COPY_AND_ASSIGN(SincResampler);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SincResampler);
 };
 
 }  // namespace webrtc

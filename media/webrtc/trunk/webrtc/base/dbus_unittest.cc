@@ -18,7 +18,7 @@ namespace rtc {
 
 #define SIG_NAME "NameAcquired"
 
-static const uint32 kTimeoutMs = 5000U;
+static const uint32_t kTimeoutMs = 5000U;
 
 class DBusSigFilterTest : public DBusSigFilter {
  public:

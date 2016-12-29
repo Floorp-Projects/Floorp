@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
@@ -35,7 +35,7 @@ DesktopFrameWin* DesktopFrameWin::Create(DesktopSize size,
   int bytes_per_row = size.width() * kBytesPerPixel;
 
   // Describe a device independent bitmap (DIB) that is the size of the desktop.
-  BITMAPINFO bmi = {0};
+  BITMAPINFO bmi = {};
   bmi.bmiHeader.biHeight = -size.height();
   bmi.bmiHeader.biWidth = size.width();
   bmi.bmiHeader.biPlanes = 1;

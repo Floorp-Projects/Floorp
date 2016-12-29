@@ -24,7 +24,7 @@ def verify_docs(filename, identifiers, appearing_as):
             ]
         elif appearing_as == "heading":
             expression_list = [
-                identifier + "\n(?:(?:(?:-+\n)+)|(?:(?:.+\n)+))"
+                '\n' + identifier + "\n(?:(?:(?:-+\n)+)|(?:(?:.+\n)+))"
                 for identifier in identifiers
                 if not identifier.startswith("_")
             ]

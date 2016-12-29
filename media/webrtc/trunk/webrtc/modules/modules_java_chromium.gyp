@@ -17,17 +17,6 @@
       'includes': [ '../../../build/java.gypi' ],
     }, # audio_device_module_java
     {
-      'target_name': 'video_capture_module_java',
-      'type': 'none',
-      'dependencies': [
-        'video_render_module_java',
-      ],
-      'variables': {
-        'java_in_dir': 'video_capture/android/java',
-      },
-      'includes': [ '../../../build/java.gypi' ],
-    }, # video_capture_module_java
-    {
       'target_name': 'video_render_module_java',
       'type': 'none',
       'variables': {

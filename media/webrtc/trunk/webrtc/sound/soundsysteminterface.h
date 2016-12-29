@@ -66,7 +66,7 @@ class SoundSystemInterface {
   // a slightly higher one in the event that the true minimum requires an
   // undesirable trade-off.
   static const int kLowLatency = 0;
- 
+
   // Max value for the volume parameters for Sound(Input|Output)StreamInterface.
   static const int kMaxVolume = 255;
   // Min value for the volume parameters for Sound(Input|Output)StreamInterface.
@@ -104,7 +104,7 @@ class SoundSystemInterface {
   SoundSystemInterface() {}
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(SoundSystemInterface);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SoundSystemInterface);
 };
 
 }  // namespace rtc

@@ -225,12 +225,13 @@ bool Pathname::SetFilename(const std::string& filename) {
 }
 
 #if defined(WEBRTC_WIN)
-bool Pathname::GetDrive(char *drive, uint32 bytes) const {
+bool Pathname::GetDrive(char* drive, uint32_t bytes) const {
   return GetDrive(drive, bytes, folder_);
 }
 
 // static
-bool Pathname::GetDrive(char *drive, uint32 bytes,
+bool Pathname::GetDrive(char* drive,
+                        uint32_t bytes,
                         const std::string& pathname) {
   // need at lease 4 bytes to save c:
   if (bytes < 4 || pathname.size() < 3) {

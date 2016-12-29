@@ -46,7 +46,7 @@ class SoundDeviceLocator {
   std::string device_name_;
 
  private:
-  DISALLOW_ASSIGN(SoundDeviceLocator);
+  RTC_DISALLOW_ASSIGN(SoundDeviceLocator);
 };
 
 }  // namespace rtc

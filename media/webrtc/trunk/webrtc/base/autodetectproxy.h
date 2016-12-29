@@ -81,7 +81,7 @@ class AutoDetectProxy : public SignalThread {
   AsyncSocket* socket_;
   int next_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(AutoDetectProxy);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(AutoDetectProxy);
 };
 
 }  // namespace rtc

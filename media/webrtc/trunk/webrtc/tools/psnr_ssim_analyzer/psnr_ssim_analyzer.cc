@@ -25,7 +25,7 @@ void CompareFiles(const char* reference_file_name, const char* test_file_name,
                   const char* results_file_name, int width, int height) {
   // Check if the reference_file_name ends with "y4m".
   bool y4m_mode = false;
-  if (std::string(reference_file_name).find("y4m") != std::string::npos){
+  if (std::string(reference_file_name).find("y4m") != std::string::npos) {
     y4m_mode = true;
   }
 
@@ -34,12 +34,12 @@ void CompareFiles(const char* reference_file_name, const char* test_file_name,
   int size = webrtc::test::GetI420FrameSize(width, height);
 
   // Allocate buffers for test and reference frames.
-  uint8* test_frame = new uint8[size];
-  uint8* ref_frame = new uint8[size];
+  uint8_t* test_frame = new uint8_t[size];
+  uint8_t* ref_frame = new uint8_t[size];
 
   bool read_result = true;
-  for(int frame_counter = 0; frame_counter < MAX_NUM_FRAMES_PER_FILE;
-      ++frame_counter){
+  for (int frame_counter = 0; frame_counter < MAX_NUM_FRAMES_PER_FILE;
+      ++frame_counter) {
     read_result &= (y4m_mode) ? webrtc::test::ExtractFrameFromY4mFile(
         reference_file_name, width, height, frame_counter, ref_frame):
         webrtc::test::ExtractFrameFromYuvFile(reference_file_name, width,
@@ -115,6 +115,7 @@ int main(int argc, char** argv) {
   parser.ProcessFlags();
   if (parser.GetFlag("help") == "true") {
     parser.PrintUsageMessage();
+    exit(EXIT_SUCCESS);
   }
   parser.PrintEnteredFlags();
 

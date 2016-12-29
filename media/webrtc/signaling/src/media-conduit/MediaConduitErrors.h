@@ -39,10 +39,10 @@ kMediaConduitKeyFrameRequestError,     // Can't set KeyFrameRequest mode
 kMediaConduitNACKStatusError,          // Can't set NACK mode
 kMediaConduitTMMBRStatusError,         // Can't set TMMBR mode
 kMediaConduitFECStatusError,           // Can't set FEC mode
-kMediaConduitHybridNACKFECStatusError  // Can't set Hybrid NACK / FEC mode
+kMediaConduitHybridNACKFECStatusError, // Can't set Hybrid NACK / FEC mode
+kMediaConduitVideoSendStreamError      // WebRTC video send stream failure
 };
 
 }
 
 #endif
-

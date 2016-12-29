@@ -91,6 +91,16 @@
  *   84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1
  * A million repetitions of "a"
  *   34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
+ *
+ * -----------------
+ * Modified 05/2015
+ * By Sergey Ulanov <sergeyu@chromium.org>
+ * Removed static buffer to make computation thread-safe.
+ *
+ * -----------------
+ * Modified 10/2015
+ * By Peter Boström <pbos@webrtc.org>
+ * Change uint32(8) back to uint32(8)_t (undoes (03/2012) change).
  */
 
 // Enabling SHA1HANDSOFF preserves the caller's data buffer.
@@ -104,14 +114,14 @@
 
 namespace rtc {
 
-void SHA1Transform(uint32 state[5], const uint8 buffer[64]);
+namespace {
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
 // blk0() and blk() perform the initial expand.
 // I got the idea of expanding during the round function from SSLeay
 // FIXME: can we do this in an endian-proof way?
-#ifdef ARCH_CPU_BIG_ENDIAN
+#ifdef RTC_ARCH_CPU_BIG_ENDIAN
 #define blk0(i) block->l[i]
 #else
 #define blk0(i) (block->l[i] = (rol(block->l[i], 24) & 0xFF00FF00) | \
@@ -151,13 +161,13 @@ void SHAPrintContext(SHA1_CTX *context, char *msg) {
 #endif /* VERBOSE */
 
 // Hash a single 512-bit block. This is the core of the algorithm.
-void SHA1Transform(uint32 state[5], const uint8 buffer[64]) {
+void SHA1Transform(uint32_t state[5], const uint8_t buffer[64]) {
   union CHAR64LONG16 {
-    uint8 c[64];
-    uint32 l[16];
+    uint8_t c[64];
+    uint32_t l[16];
   };
 #ifdef SHA1HANDSOFF
-  static uint8 workspace[64];
+  uint8_t workspace[64];
   memcpy(workspace, buffer, 64);
   CHAR64LONG16* block = reinterpret_cast<CHAR64LONG16*>(workspace);
 #else
@@ -167,11 +177,11 @@ void SHA1Transform(uint32 state[5], const uint8 buffer[64]) {
 #endif
 
   // Copy context->state[] to working vars.
-  uint32 a = state[0];
-  uint32 b = state[1];
-  uint32 c = state[2];
-  uint32 d = state[3];
-  uint32 e = state[4];
+  uint32_t a = state[0];
+  uint32_t b = state[1];
+  uint32_t c = state[2];
+  uint32_t d = state[3];
+  uint32_t e = state[4];
 
   // 4 rounds of 20 operations each. Loop unrolled.
   // Note(fbarchard): The following has lint warnings for multiple ; on
@@ -206,6 +216,8 @@ void SHA1Transform(uint32 state[5], const uint8 buffer[64]) {
   state[4] += e;
 }
 
+}  // namespace
+
 // SHA1Init - Initialize new context.
 void SHA1Init(SHA1_CTX* context) {
   // SHA1 initialization constants.
@@ -218,7 +230,7 @@ void SHA1Init(SHA1_CTX* context) {
 }
 
 // Run your data through this.
-void SHA1Update(SHA1_CTX* context, const uint8* data, size_t input_len) {
+void SHA1Update(SHA1_CTX* context, const uint8_t* data, size_t input_len) {
   size_t i = 0;
 
 #ifdef VERBOSE
@@ -229,15 +241,15 @@ void SHA1Update(SHA1_CTX* context, const uint8* data, size_t input_len) {
   size_t index = (context->count[0] >> 3) & 63;
 
   // Update number of bits.
-  // TODO: Use uint64 instead of 2 uint32 for count.
+  // TODO: Use uint64_t instead of 2 uint32_t for count.
   // count[0] has low 29 bits for byte count + 3 pad 0's making 32 bits for
   // bit count.
-  // Add bit count to low uint32
-  context->count[0] += static_cast<uint32>(input_len << 3);
-  if (context->count[0] < static_cast<uint32>(input_len << 3)) {
+  // Add bit count to low uint32_t
+  context->count[0] += static_cast<uint32_t>(input_len << 3);
+  if (context->count[0] < static_cast<uint32_t>(input_len << 3)) {
     ++context->count[1];  // if overlow (carry), add one to high word
   }
-  context->count[1] += static_cast<uint32>(input_len >> 29);
+  context->count[1] += static_cast<uint32_t>(input_len >> 29);
   if ((index + input_len) > 63) {
     i = 64 - index;
     memcpy(&context->buffer[index], data, i);
@@ -255,21 +267,21 @@ void SHA1Update(SHA1_CTX* context, const uint8* data, size_t input_len) {
 }
 
 // Add padding and return the message digest.
-void SHA1Final(SHA1_CTX* context, uint8 digest[SHA1_DIGEST_SIZE]) {
-  uint8 finalcount[8];
+void SHA1Final(SHA1_CTX* context, uint8_t digest[SHA1_DIGEST_SIZE]) {
+  uint8_t finalcount[8];
   for (int i = 0; i < 8; ++i) {
     // Endian independent
-    finalcount[i] = static_cast<uint8>(
-        (context->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8) ) & 255);
+    finalcount[i] = static_cast<uint8_t>(
+        (context->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) & 255);
   }
-  SHA1Update(context, reinterpret_cast<const uint8*>("\200"), 1);
+  SHA1Update(context, reinterpret_cast<const uint8_t*>("\200"), 1);
   while ((context->count[0] & 504) != 448) {
-    SHA1Update(context, reinterpret_cast<const uint8*>("\0"), 1);
+    SHA1Update(context, reinterpret_cast<const uint8_t*>("\0"), 1);
   }
   SHA1Update(context, finalcount, 8);  // Should cause a SHA1Transform().
   for (int i = 0; i < SHA1_DIGEST_SIZE; ++i) {
-    digest[i] = static_cast<uint8>(
-        (context->state[i >> 2] >> ((3 - (i & 3)) * 8) ) & 255);
+    digest[i] = static_cast<uint8_t>(
+        (context->state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
   }
 
   // Wipe variables.

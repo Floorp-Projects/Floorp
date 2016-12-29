@@ -49,16 +49,16 @@ int32_t WebRtcSpl_SqrtLocal(int32_t in)
     A >>= 16;
     A = A * A * 2; // A = (x/2)^4
     t16 = (int16_t)(A >> 16);
-    B = B + WEBRTC_SPL_MUL_16_16(-20480, t16) * 2; // B = B - 0.625*A
+    B += -20480 * t16 * 2;  // B = B - 0.625*A
     // After this, B = 1 + x/2 - 0.5*(x/2)^2 - 0.625*(x/2)^4
 
-    A = WEBRTC_SPL_MUL_16_16(x_half, t16) * 2; // A = (x/2)^5
+    A = x_half * t16 * 2;  // A = (x/2)^5
     t16 = (int16_t)(A >> 16);
-    B = B + WEBRTC_SPL_MUL_16_16(28672, t16) * 2; // B = B + 0.875*A
+    B += 28672 * t16 * 2;  // B = B + 0.875*A
     // After this, B = 1 + x/2 - 0.5*(x/2)^2 - 0.625*(x/2)^4 + 0.875*(x/2)^5
 
     t16 = (int16_t)(x2 >> 16);
-    A = WEBRTC_SPL_MUL_16_16(x_half, t16) * 2; // A = x/2^3
+    A = x_half * t16 * 2;  // A = x/2^3
 
     B = B + (A >> 1); // B = B + 0.5*A
     // After this, B = 1 + x/2 - 0.5*(x/2)^2 + 0.5*(x/2)^3 - 0.625*(x/2)^4 + 0.875*(x/2)^5
@@ -166,7 +166,7 @@ int32_t WebRtcSpl_Sqrt(int32_t value)
 
         t16 = (int16_t)(A >> 16);  // t16 = AH
 
-        A = WEBRTC_SPL_MUL_16_16(k_sqrt_2, t16) * 2; // A = 1/sqrt(2)*t16
+        A = k_sqrt_2 * t16 * 2;  // A = 1/sqrt(2)*t16
         A = A + ((int32_t)32768); // Round off
         A = A & ((int32_t)0x7fff0000); // Round off
 

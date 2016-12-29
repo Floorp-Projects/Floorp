@@ -32,7 +32,7 @@ class TaskParent {
 
   bool AllChildrenDone();
   bool AnyChildError();
-#ifdef _DEBUG
+#if !defined(NDEBUG)
   bool IsChildTask(Task *task);
 #endif
 
@@ -53,7 +53,7 @@ class TaskParent {
   bool child_error_;
   typedef std::set<Task *> ChildSet;
   scoped_ptr<ChildSet> children_;
-  DISALLOW_EVIL_CONSTRUCTORS(TaskParent);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TaskParent);
 };
 
 

@@ -47,8 +47,7 @@ int Scaler::Set(int src_width, int src_height,
   return 0;
 }
 
-int Scaler::Scale(const I420VideoFrame& src_frame,
-                  I420VideoFrame* dst_frame) {
+int Scaler::Scale(const VideoFrame& src_frame, VideoFrame* dst_frame) {
   assert(dst_frame);
   if (src_frame.IsZeroSize())
     return -1;

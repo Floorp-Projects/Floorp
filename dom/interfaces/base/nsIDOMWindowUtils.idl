@@ -322,6 +322,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *                               defaults to true
    * @param aIsWidgetEventSynthesized controls WidgetMouseEvent.mReason value
    *                                  defaults to false (WidgetMouseEvent::eReal)
+   * @param aIdentifier A unique identifier for the pointer causing the event,
+   *                    defaulting to nsIDOMWindowUtils::DEFAULT_MOUSE_POINTER_ID.
    *
    * returns true if the page called prevent default on this event
    */
@@ -337,7 +339,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          [optional] in unsigned short aInputSourceArg,
                          [optional] in boolean aIsDOMEventSynthesized,
                          [optional] in boolean aIsWidgetEventSynthesized,
-                         [optional] in long aButtons);
+                         [optional] in long aButtons,
+                         [optional] in unsigned long aIdentifier);
 
 
   /** Synthesize a pointer event. The event types supported are:
@@ -372,7 +375,8 @@ interface nsIDOMWindowUtils : nsISupports {
    * @param aPressure touch input pressure: 0.0 -> 1.0
    * @param aInputSourceArg input source, see nsIDOMMouseEvent for values,
    *        defaults to mouse input.
-   * @param aPointerId A unique identifier for the pointer causing the event. default is 0
+   * @param aPointerId A unique identifier for the pointer causing the event,
+   *                   defaulting to nsIDOMWindowUtils::DEFAULT_MOUSE_POINTER_ID.
    * @param aWidth The width (magnitude on the X axis), default is 0
    * @param aHeight The height (magnitude on the Y axis), default is 0
    * @param aTilt The plane angle between the Y-Z plane
@@ -458,7 +462,8 @@ interface nsIDOMWindowUtils : nsISupports {
                               [optional] in unsigned short aInputSourceArg,
                               [optional] in boolean aIsDOMEventSynthesized,
                               [optional] in boolean aIsWidgetEventSynthesized,
-                              [optional] in long aButtons);
+                              [optional] in long aButtons,
+                              [optional] in unsigned long aIdentifier);
 
   /** The same as sendPointerEvent but ensures that the event
    *  is dispatched to this DOM window or one of its children.
@@ -1978,6 +1983,11 @@ interface nsIDOMWindowUtils : nsISupports {
    * timeouts.
    */
   boolean isTimeoutTracking(in unsigned long timeoutId);
+
+  // These consts are only for testing purposes.
+  const long DEFAULT_MOUSE_POINTER_ID = 0;
+  const long DEFAULT_PEN_POINTER_ID   = 1;
+  const long DEFAULT_TOUCH_POINTER_ID = 2;
 
   // Match WidgetMouseEventBase::buttonType.
   const long MOUSE_BUTTON_LEFT_BUTTON   = 0;

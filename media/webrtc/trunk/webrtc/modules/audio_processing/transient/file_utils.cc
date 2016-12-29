@@ -11,7 +11,7 @@
 #include "webrtc/modules/audio_processing/transient/file_utils.h"
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {

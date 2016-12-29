@@ -11,10 +11,9 @@
 #ifndef WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_UTIL_H_
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_UTIL_H_
 
-#include "webrtc/system_wrappers/interface/atomic32.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/system_wrappers/include/atomic32.h"
 #include "webrtc/modules/desktop_capture/x11/shared_x_display.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 #include <unistd.h>
 #include <string.h>
 
@@ -88,12 +87,12 @@ private:
   unsigned long size_;  // NOLINT: type required by XGetWindowProperty
   unsigned char* data_;
 
-  DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
+  RTC_DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
 };
 
 class WindowUtilX11 {
 public:
-  WindowUtilX11(scoped_refptr<SharedXDisplay> x_display);
+  WindowUtilX11(rtc::scoped_refptr<SharedXDisplay> x_display);
   ~WindowUtilX11();
   // Iterates through |window| hierarchy to find first visible window, i.e. one
   // that has WM_STATE property set to NormalState.
@@ -112,7 +111,7 @@ public:
 protected:
   Display* display() { return x_display_->display(); }
 
-  scoped_refptr<SharedXDisplay> x_display_;
+  rtc::scoped_refptr<SharedXDisplay> x_display_;
   Atom wm_state_atom_;
   Atom window_type_atom_;
   Atom normal_window_type_atom_;

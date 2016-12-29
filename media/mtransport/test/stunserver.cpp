@@ -82,6 +82,11 @@ nrappkit copyright:
 #include "mozilla/Unused.h"
 #include "databuffer.h"
 
+// mozilla/utils.h defines this as well
+#ifdef UNIMPLEMENTED
+#undef UNIMPLEMENTED
+#endif
+
 extern "C" {
 #include "nr_api.h"
 #include "async_wait.h"

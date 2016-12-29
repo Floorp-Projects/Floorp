@@ -9,35 +9,27 @@
 {
   'variables': {
     'codecs': [
-      'G711',
-      'PCM16B',
-      'CNG',
+      'cng',
+      'g711',
+      'pcm16b',
     ],
     'neteq_defines': [],
     'conditions': [
+      ['include_opus==1', {
+        'codecs': ['webrtc_opus',],
+        'neteq_defines': ['WEBRTC_CODEC_OPUS',],
+      }],
       ['include_g722==1', {
-        'neteq_dependencies': ['G722'],
+        'codecs': ['g722',],
         'neteq_defines': ['WEBRTC_CODEC_G722',],
       }],
       ['include_ilbc==1', {
-        'neteq_dependencies': ['iLBC'],
+        'codecs': ['ilbc',],
         'neteq_defines': ['WEBRTC_CODEC_ILBC',],
       }],
       ['include_isac==1', {
-        'neteq_dependencies': ['iSAC', 'iSACFix',],
+        'codecs': ['isac', 'isac_fix',],
         'neteq_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFIX',],
-      }],
-      ['include_opus==1', {
-        'codecs': ['webrtc_opus'],
-        'neteq_dependencies': ['webrtc_opus'],
-        'neteq_defines': ['WEBRTC_CODEC_OPUS',],
-        'conditions': [
-          ['build_with_mozilla==0', {
-            'neteq_dependencies': [
-              '<(DEPTH)/third_party/opus/opus.gyp:opus',
-	    ],
-	  }],
- 	],
       }],
     ],
     'neteq_dependencies': [
@@ -101,7 +93,7 @@
         }],
       ],
       'sources': [
-        'interface/neteq.h',
+        'include/neteq.h',
         'accelerate.cc',
         'accelerate.h',
         'audio_classifier.cc',
@@ -141,6 +133,8 @@
         'expand.h',
         'merge.cc',
         'merge.h',
+        'nack.h',
+        'nack.cc',
         'neteq_impl.cc',
         'neteq_impl.h',
         'neteq.cc',
@@ -178,20 +172,17 @@
           'type': '<(gtest_target_type)',
           'dependencies': [
             '<@(codecs)',
+            'g722',
+            'ilbc',
+            'isac',
+            'isac_fix',
             'audio_decoder_interface',
             'neteq_unittest_tools',
             '<(DEPTH)/testing/gtest.gyp:gtest',
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
-# FIX for include_isac/etc
           'defines': [
-            'AUDIO_DECODER_UNITTEST',
-            'WEBRTC_CODEC_G722',
-            'WEBRTC_CODEC_ILBC',
-            'WEBRTC_CODEC_ISACFX',
-            'WEBRTC_CODEC_ISAC',
-            'WEBRTC_CODEC_PCM16',
             '<@(neteq_defines)',
           ],
           'sources': [
@@ -255,23 +246,6 @@
               'type': 'none',
               'dependencies': [
                 '<(apk_tests_path):audio_decoder_unittests_apk',
-              ],
-            },
-          ],
-        }],
-        ['test_isolation_mode != "noop"', {
-          'targets': [
-            {
-              'target_name': 'audio_decoder_unittests_run',
-              'type': 'none',
-              'dependencies': [
-                'audio_decoder_unittests',
-              ],
-              'includes': [
-                '../../../build/isolate.gypi',
-              ],
-              'sources': [
-                'audio_decoder_unittests.isolate',
               ],
             },
           ],

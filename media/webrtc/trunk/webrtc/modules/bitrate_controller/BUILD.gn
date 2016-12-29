@@ -10,21 +10,18 @@ import("../../build/webrtc.gni")
 
 source_set("bitrate_controller") {
   sources = [
-    "bitrate_allocator.cc",
     "bitrate_controller_impl.cc",
     "bitrate_controller_impl.h",
     "include/bitrate_allocator.h",
     "include/bitrate_controller.h",
     "send_side_bandwidth_estimation.cc",
     "send_side_bandwidth_estimation.h",
-    "send_time_history.cc",
-    "send_time_history.h",
   ]
 
   if (is_win) {
     cflags = [
       # TODO(jschuh): Bug 1348: fix this warning.
-      "/wd4267"  # size_t to int truncations
+      "/wd4267",  # size_t to int truncations
     ]
   }
 
@@ -37,5 +34,7 @@ source_set("bitrate_controller") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  deps = [ "../../system_wrappers" ]
+  deps = [
+    "../../system_wrappers",
+  ]
 }

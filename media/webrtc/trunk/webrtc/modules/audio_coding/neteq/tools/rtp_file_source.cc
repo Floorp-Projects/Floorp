@@ -20,7 +20,7 @@
 
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 #include "webrtc/test/rtp_file_reader.h"
 
 namespace webrtc {
@@ -28,8 +28,20 @@ namespace test {
 
 RtpFileSource* RtpFileSource::Create(const std::string& file_name) {
   RtpFileSource* source = new RtpFileSource();
-  CHECK(source->OpenFile(file_name));
+  RTC_CHECK(source->OpenFile(file_name));
   return source;
+}
+
+bool RtpFileSource::ValidRtpDump(const std::string& file_name) {
+  rtc::scoped_ptr<RtpFileReader> temp_file(
+      RtpFileReader::Create(RtpFileReader::kRtpDump, file_name));
+  return !!temp_file;
+}
+
+bool RtpFileSource::ValidPcap(const std::string& file_name) {
+  rtc::scoped_ptr<RtpFileReader> temp_file(
+      RtpFileReader::Create(RtpFileReader::kPcap, file_name));
+  return !!temp_file;
 }
 
 RtpFileSource::~RtpFileSource() {
@@ -47,7 +59,7 @@ Packet* RtpFileSource::NextPacket() {
     if (!rtp_reader_->NextPacket(&temp_packet)) {
       return NULL;
     }
-    if (temp_packet.length == 0) {
+    if (temp_packet.original_length == 0) {
       // May be an RTCP packet.
       // Read the next one.
       continue;

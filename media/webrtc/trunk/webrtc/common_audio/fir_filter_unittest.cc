@@ -16,6 +16,7 @@
 #include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
+namespace {
 
 static const float kCoefficients[] = {0.2f, 0.3f, 0.5f, 0.7f, 0.11f};
 static const size_t kCoefficientsLength = sizeof(kCoefficients) /
@@ -33,6 +34,8 @@ void VerifyOutput(const float* expected_output,
                       output,
                       length * sizeof(expected_output[0])));
 }
+
+}  // namespace
 
 TEST(FIRFilterTest, FilterAsIdentity) {
   const float kCoefficients[] = {1.f, 0.f, 0.f, 0.f, 0.f};

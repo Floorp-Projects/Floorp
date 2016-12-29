@@ -59,7 +59,7 @@ class SharedMemory {
   const int id_;
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(SharedMemory);
+  RTC_DISALLOW_COPY_AND_ASSIGN(SharedMemory);
 };
 
 }  // namespace webrtc

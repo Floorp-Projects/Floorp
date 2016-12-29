@@ -181,13 +181,14 @@ class RelayServerConnection {
 // or in other words, that are "bound" together.
 class RelayServerBinding : public rtc::MessageHandler {
  public:
-  RelayServerBinding(
-      RelayServer* server, const std::string& username,
-      const std::string& password, uint32 lifetime);
+  RelayServerBinding(RelayServer* server,
+                     const std::string& username,
+                     const std::string& password,
+                     uint32_t lifetime);
   virtual ~RelayServerBinding();
 
   RelayServer* server() { return server_; }
-  uint32 lifetime() { return lifetime_; }
+  uint32_t lifetime() { return lifetime_; }
   const std::string& username() { return username_; }
   const std::string& password() { return password_; }
   const std::string& magic_cookie() { return magic_cookie_; }
@@ -225,8 +226,8 @@ class RelayServerBinding : public rtc::MessageHandler {
   std::vector<RelayServerConnection*> internal_connections_;
   std::vector<RelayServerConnection*> external_connections_;
 
-  uint32 lifetime_;
-  uint32 last_used_;
+  uint32_t lifetime_;
+  uint32_t last_used_;
   // TODO: bandwidth
 };
 

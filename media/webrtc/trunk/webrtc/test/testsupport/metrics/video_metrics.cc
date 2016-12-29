@@ -15,8 +15,8 @@
 
 #include <algorithm>  // min_element, max_element
 
-#include "webrtc/common_video/interface/i420_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/video_frame.h"
 
 namespace webrtc {
 namespace test {
@@ -34,8 +34,8 @@ enum VideoMetricsType { kPSNR, kSSIM, kBoth };
 
 // Calculates metrics for a frame and adds statistics to the result for it.
 void CalculateFrame(VideoMetricsType video_metrics_type,
-                    const I420VideoFrame* ref,
-                    const I420VideoFrame* test,
+                    const VideoFrame* ref,
+                    const VideoFrame* test,
                     int frame_number,
                     QualityMetricsResult* result) {
   FrameResult frame_result = {0, 0};
@@ -109,8 +109,8 @@ int CalculateMetrics(VideoMetricsType video_metrics_type,
 
   // Read reference and test frames.
   const size_t frame_length = 3 * width * height >> 1;
-  I420VideoFrame ref_frame;
-  I420VideoFrame test_frame;
+  VideoFrame ref_frame;
+  VideoFrame test_frame;
   rtc::scoped_ptr<uint8_t[]> ref_buffer(new uint8_t[frame_length]);
   rtc::scoped_ptr<uint8_t[]> test_buffer(new uint8_t[frame_length]);
 

@@ -8,9 +8,10 @@
 
 # TODO(kjellander): Rebase this to webrtc/build/common.gypi changes after r6330.
 
-import("//build/config/crypto.gni")
 import("//build/config/linux/pkg_config.gni")
+import("//build/config/sanitizers/sanitizers.gni")
 import("build/webrtc.gni")
+import("//third_party/protobuf/proto_library.gni")
 
 # Contains the defines and includes in common.gypi that are duplicated both as
 # target_defaults and direct_dependent_settings.
@@ -20,13 +21,12 @@ config("common_inherited_config") {
     defines += [ "WEBRTC_MOZILLA_BUILD" ]
   }
   if (build_with_chromium) {
-    defines = [
-      "WEBRTC_CHROMIUM_BUILD",
-    ]
+    defines = [ "WEBRTC_CHROMIUM_BUILD" ]
     include_dirs = [
-      # overrides must be included first as that is the mechanism for
+      # The overrides must be included first as that is the mechanism for
       # selecting the override headers in Chromium.
-      "overrides",
+      "../webrtc_overrides",
+
       # Allow includes to be prefixed with webrtc/ in case it is not an
       # immediate subdirectory of the top-level.
       "..",
@@ -40,6 +40,9 @@ config("common_inherited_config") {
       "WEBRTC_MAC",
       "WEBRTC_IOS",
     ]
+  }
+  if (is_ios && rtc_use_objc_h264) {
+    defines += [ "WEBRTC_OBJC_H264" ]
   }
   if (is_linux) {
     defines += [ "WEBRTC_LINUX" ]
@@ -55,9 +58,6 @@ config("common_inherited_config") {
       "WEBRTC_LINUX",
       "WEBRTC_ANDROID",
     ]
-    if (rtc_enable_android_opensl) {
-      defines += [ "WEBRTC_ANDROID_OPENSLES" ]
-    }
   }
 }
 
@@ -76,6 +76,7 @@ config("common_config") {
 
   if (rtc_have_dbus_glib) {
     defines += [ "HAVE_DBUS_GLIB" ]
+
     # TODO(kjellander): Investigate this, it seems like include <dbus/dbus.h>
     # is still not found even if the execution of
     # build/config/linux/pkg-config.py dbus-glib-1 returns correct include
@@ -96,6 +97,7 @@ config("common_config") {
       if (current_cpu != "arm64" || !is_android) {
         cflags = [
           "-Wextra",
+
           # We need to repeat some flags from Chromium"s common.gypi
           # here that get overridden by -Wextra.
           "-Wno-unused-parameter",
@@ -104,6 +106,7 @@ config("common_config") {
         ]
         cflags_cc = [
           "-Wnon-virtual-dtor",
+
           # This is enabled for clang; enable for gcc as well.
           "-Woverloaded-virtual",
         ]
@@ -116,13 +119,8 @@ config("common_config") {
   }
 
   if (current_cpu == "arm64") {
-    defines += [ "WEBRTC_ARCH_ARM" ]
-    # TODO(zhongwei) Defining an unique WEBRTC_NEON and
-    # distinguishing ARMv7 NEON and ARM64 NEON by
-    # WEBRTC_ARCH_ARM_V7 and WEBRTC_ARCH_ARM64 should be better.
-
-    # This macro is used to distinguish ARMv7 NEON and ARM64 NEON
-    defines += [ "WEBRTC_ARCH_ARM64_NEON" ]
+    defines += [ "WEBRTC_ARCH_ARM64" ]
+    defines += [ "WEBRTC_HAS_NEON" ]
   }
 
   if (current_cpu == "arm") {
@@ -130,9 +128,9 @@ config("common_config") {
     if (arm_version >= 7) {
       defines += [ "WEBRTC_ARCH_ARM_V7" ]
       if (arm_use_neon) {
-        defines += [ "WEBRTC_ARCH_ARM_NEON" ]
-      } else if (is_android) {
-        defines += [ "WEBRTC_DETECT_ARM_NEON" ]
+        defines += [ "WEBRTC_HAS_NEON" ]
+      } else if (arm_optionally_use_neon) {
+        defines += [ "WEBRTC_DETECT_NEON" ]
       }
     }
   }
@@ -155,10 +153,7 @@ config("common_config") {
     }
   }
 
-  # TODO(kjellander): Handle warnings on Windows where WebRTC differ from the
-  # default warnings set in build/config/compiler/BUILD.gn.
-
-  if (is_android && is_clang) {
+  if (is_android && !is_clang) {
     # The Android NDK doesn"t provide optimized versions of these
     # functions. Ensure they are disabled for all compilers.
     cflags += [
@@ -174,17 +169,19 @@ source_set("webrtc") {
   sources = [
     "call.h",
     "config.h",
-    "experiments.h",
     "frame_callback.h",
     "transport.h",
   ]
 
+  defines = []
   configs += [ ":common_config" ]
-  public_configs = [ ":common_inherited_config"]
+  public_configs = [ ":common_inherited_config" ]
 
   deps = [
     ":webrtc_common",
+    "audio",
     "base:rtc_base",
+    "call",
     "common_audio",
     "common_video",
     "modules/audio_coding",
@@ -201,15 +198,19 @@ source_set("webrtc") {
     "system_wrappers",
     "tools",
     "video",
-    "video_engine",
     "voice_engine",
   ]
 
   if (build_with_chromium) {
     deps += [
-    "modules/video_capture",
-    "modules/video_render",
+      "modules/video_capture",
+      "modules/video_render",
     ]
+  }
+
+  if (rtc_enable_protobuf) {
+    defines += [ "ENABLE_RTC_EVENT_LOG" ]
+    deps += [ ":rtc_event_log_proto" ]
   }
 }
 
@@ -218,8 +219,8 @@ if (!build_with_chromium) {
     testonly = true
     deps = [
       ":webrtc",
-      "modules/video_render:video_render_internal_impl",
       "modules/video_capture:video_capture_internal_impl",
+      "modules/video_render:video_render_internal_impl",
       "test",
     ]
   }
@@ -229,18 +230,69 @@ source_set("webrtc_common") {
   sources = [
     "common_types.cc",
     "common_types.h",
-    "config.h",
     "config.cc",
+    "config.h",
     "engine_configurations.h",
     "typedefs.h",
   ]
 
   configs += [ ":common_config" ]
   public_configs = [ ":common_inherited_config" ]
+
+  if (is_clang && !is_nacl) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
 }
 
 source_set("gtest_prod") {
   sources = [
     "test/testsupport/gtest_prod_util.h",
   ]
+}
+
+if (rtc_enable_protobuf) {
+  proto_library("rtc_event_log_proto") {
+    sources = [
+      "call/rtc_event_log.proto",
+    ]
+    proto_out_dir = "webrtc/call"
+  }
+}
+
+source_set("rtc_event_log") {
+  sources = [
+    "call/rtc_event_log.cc",
+    "call/rtc_event_log.h",
+  ]
+
+  defines = []
+  configs += [ ":common_config" ]
+  public_configs = [ ":common_inherited_config" ]
+
+  deps = [
+    ":webrtc_common",
+  ]
+
+  if (rtc_enable_protobuf) {
+    defines += [ "ENABLE_RTC_EVENT_LOG" ]
+    deps += [ ":rtc_event_log_proto" ]
+  }
+  if (is_clang && !is_nacl) {
+    # Suppress warnings from Chrome's Clang plugins.
+    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+    configs -= [ "//build/config/clang:find_bad_constructs" ]
+  }
+}
+
+if (use_libfuzzer || use_drfuzz) {
+  # This target is only here for gn to discover fuzzer build targets under
+  # webrtc/test/fuzzers/.
+  group("webrtc_fuzzers_dummy") {
+    testonly = true
+    deps = [
+      "test/fuzzers:webrtc_fuzzer_main",
+    ]
+  }
 }

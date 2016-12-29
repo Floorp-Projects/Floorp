@@ -20,10 +20,10 @@
 // conflicts with #include of scoped_ptr.h
 #undef FF
 #include "webrtc/common.h"
-// Video Engine
-#include "webrtc/video_engine/include/vie_base.h"
-#include "webrtc/video_engine/include/vie_capture.h"
-#include "webrtc/video_engine/include/vie_render.h"
+#include "webrtc/video_renderer.h"
+#include "webrtc/modules/video_capture/video_capture_defines.h"
+
+
 
 namespace mozilla {
 
@@ -33,10 +33,17 @@ class BackgroundChildImpl;
 
 namespace camera {
 
+class FrameRelay {
+public:
+  virtual int DeliverFrame(uint8_t* buffer,
+    const mozilla::camera::VideoFrameProperties& props) = 0;
+  virtual void FrameSizeChange(unsigned int w, unsigned int h) = 0;
+};
+
 struct CapturerElement {
   CaptureEngine engine;
   int id;
-  webrtc::ExternalRenderer* callback;
+  FrameRelay* callback;
 };
 
 // Forward declaration so we can work with pointers to it.
@@ -149,9 +156,9 @@ public:
 
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
-  virtual mozilla::ipc::IPCResult RecvDeliverFrame(const CaptureEngine&, const int&, mozilla::ipc::Shmem&&,
-                                                   const size_t&, const uint32_t&, const int64_t&,
-                                                   const int64_t&) override;
+  virtual mozilla::ipc::IPCResult RecvDeliverFrame(const CaptureEngine&, const int&,
+                                                   mozilla::ipc::Shmem&&,
+                                                   const VideoFrameProperties & prop) override;
   virtual mozilla::ipc::IPCResult RecvFrameSizeChange(const CaptureEngine&, const int&,
                                                       const int& w, const int& h) override;
 
@@ -163,7 +170,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvReplyNumberOfCaptureDevices(const int&) override;
   virtual mozilla::ipc::IPCResult RecvReplyNumberOfCapabilities(const int&) override;
   virtual mozilla::ipc::IPCResult RecvReplyAllocateCaptureDevice(const int&) override;
-  virtual mozilla::ipc::IPCResult RecvReplyGetCaptureCapability(const CaptureCapability& capability) override;
+  virtual mozilla::ipc::IPCResult RecvReplyGetCaptureCapability(const VideoCaptureCapability& capability) override;
   virtual mozilla::ipc::IPCResult RecvReplyGetCaptureDevice(const nsCString& device_name,
                                                             const nsCString& device_id,
                                                             const bool& scary) override;
@@ -180,8 +187,8 @@ public:
   int ReleaseCaptureDevice(CaptureEngine aCapEngine,
                            const int capture_id);
   int StartCapture(CaptureEngine aCapEngine,
-                   const int capture_id, webrtc::CaptureCapability& capability,
-                   webrtc::ExternalRenderer* func);
+                   const int capture_id, webrtc::VideoCaptureCapability& capability,
+                   FrameRelay* func);
   int StopCapture(CaptureEngine aCapEngine, const int capture_id);
   int AllocateCaptureDevice(CaptureEngine aCapEngine,
                             const char* unique_idUTF8,
@@ -191,7 +198,7 @@ public:
   int GetCaptureCapability(CaptureEngine aCapEngine,
                            const char* unique_idUTF8,
                            const unsigned int capability_number,
-                           webrtc::CaptureCapability& capability);
+                           webrtc::VideoCaptureCapability& capability);
   int GetCaptureDevice(CaptureEngine aCapEngine,
                        unsigned int list_number, char* device_nameUTF8,
                        const unsigned int device_nameUTF8Length,
@@ -201,7 +208,7 @@ public:
   void ShutdownAll();
   int EnsureInitialized(CaptureEngine aCapEngine);
 
-  webrtc::ExternalRenderer* Callback(CaptureEngine aCapEngine, int capture_id);
+  FrameRelay* Callback(CaptureEngine aCapEngine, int capture_id);
 
 private:
   CamerasChild();
@@ -211,7 +218,7 @@ private:
   bool DispatchToParent(nsIRunnable* aRunnable,
                         MonitorAutoLock& aMonitor);
   void AddCallback(const CaptureEngine aCapEngine, const int capture_id,
-                   webrtc::ExternalRenderer* render);
+                   FrameRelay* render);
   void RemoveCallback(const CaptureEngine aCapEngine, const int capture_id);
   void ShutdownParent();
   void ShutdownChild();
@@ -238,7 +245,7 @@ private:
   // Async responses data contents;
   bool mReplySuccess;
   int mReplyInteger;
-  webrtc::CaptureCapability mReplyCapability;
+  webrtc::VideoCaptureCapability mReplyCapability;
   nsCString mReplyDeviceName;
   nsCString mReplyDeviceID;
   bool mReplyScary;

@@ -11,47 +11,42 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_NOISE_SUPPRESSION_IMPL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_NOISE_SUPPRESSION_IMPL_H_
 
+#include "webrtc/base/constructormagic.h"
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/modules/audio_processing/processing_component.h"
 
 namespace webrtc {
 
 class AudioBuffer;
-class CriticalSectionWrapper;
 
-class NoiseSuppressionImpl : public NoiseSuppression,
-                             public ProcessingComponent {
+class NoiseSuppressionImpl : public NoiseSuppression {
  public:
-  NoiseSuppressionImpl(const AudioProcessing* apm,
-                       CriticalSectionWrapper* crit);
-  virtual ~NoiseSuppressionImpl();
+  explicit NoiseSuppressionImpl(rtc::CriticalSection* crit);
+  ~NoiseSuppressionImpl() override;
 
-  int AnalyzeCaptureAudio(AudioBuffer* audio);
-  int ProcessCaptureAudio(AudioBuffer* audio);
+  // TODO(peah): Fold into ctor, once public API is removed.
+  void Initialize(size_t channels, int sample_rate_hz);
+  void AnalyzeCaptureAudio(AudioBuffer* audio);
+  void ProcessCaptureAudio(AudioBuffer* audio);
 
   // NoiseSuppression implementation.
+  int Enable(bool enable) override;
   bool is_enabled() const override;
+  int set_level(Level level) override;
+  Level level() const override;
   float speech_probability() const override;
 
  private:
-  // NoiseSuppression implementation.
-  int Enable(bool enable) override;
-  int set_level(Level level) override;
-  Level level() const override;
-
-  // ProcessingComponent implementation.
-  void* CreateHandle() const override;
-  int InitializeHandle(void* handle) const override;
-  int ConfigureHandle(void* handle) const override;
-  void DestroyHandle(void* handle) const override;
-  int num_handles_required() const override;
-  int GetHandleError(void* handle) const override;
-
-  const AudioProcessing* apm_;
-  CriticalSectionWrapper* crit_;
-  Level level_;
+  class Suppressor;
+  rtc::CriticalSection* const crit_;
+  bool enabled_ GUARDED_BY(crit_) = false;
+  Level level_ GUARDED_BY(crit_) = kModerate;
+  size_t channels_ GUARDED_BY(crit_) = 0;
+  int sample_rate_hz_ GUARDED_BY(crit_) = 0;
+  std::vector<rtc::scoped_ptr<Suppressor>> suppressors_ GUARDED_BY(crit_);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(NoiseSuppressionImpl);
 };
-
 }  // namespace webrtc
 
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_NOISE_SUPPRESSION_IMPL_H_

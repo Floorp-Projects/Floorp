@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
+
 import android.util.Log;
 
 import org.mozilla.gecko.annotation.WebRTCJNITarget;
@@ -31,15 +32,12 @@ public class ViEAndroidGLES20 extends GLSurfaceView
         implements GLSurfaceView.Renderer {
     static final String TAG = "WEBRTC-JR";
     private static final boolean DEBUG = false;
-
     // True if onSurfaceCreated has been called.
     private boolean surfaceCreated;
     private boolean openGLCreated;
-
     // True if NativeFunctionsRegistered has been called.
     private boolean nativeFunctionsRegisted;
     private ReentrantLock nativeFunctionLock = new ReentrantLock();
-
     // Address of Native object that will do the drawing.
     private long nativeObject;
     private int viewWidth;

@@ -171,8 +171,6 @@ TEST(DtmfToneGenerator, TestErrors) {
   // Initialize with valid parameters.
   ASSERT_EQ(0, tone_gen.Init(fs, event, attenuation));
   EXPECT_TRUE(tone_gen.initialized());
-  // Negative number of samples.
-  EXPECT_EQ(DtmfToneGenerator::kParameterError, tone_gen.Generate(-1, &signal));
   // NULL pointer to destination.
   EXPECT_EQ(DtmfToneGenerator::kParameterError,
             tone_gen.Generate(kNumSamples, NULL));

@@ -1,0 +1,181 @@
+# Each key in this file specifies a set of tests to run.  Different test sets
+# may, for example, be bound to different test platforms.
+#
+# Note that set does not depend on the tree; tree-dependent job selection
+# should be performed in the target task selection phase of task-graph
+# generation.
+#
+# A test set has a name, and a list of tests that it contains.
+#
+# Test names given here reference tests.yml.
+
+##
+# Universal tests
+#
+# Tests that run just about everywhere; common-tests is the shared core, with
+# a few add-on test sets that are included or omitted on some platforms.
+
+common-tests:
+    - cppunit
+    - crashtest
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
+    - gtest
+    - jittest
+    - jsreftest
+    - marionette
+    - mochitest
+    - mochitest-a11y
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-devtools-chrome
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - reftest-no-accel
+    - xpcshell
+
+web-platform-tests:
+    - web-platform-tests
+    - web-platform-tests-reftests
+    - web-platform-tests-wdspec
+
+external-media-tests:
+    - external-media-tests
+
+opt-only-tests:
+    - mochitest-valgrind
+
+talos:
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g2
+    - talos-g3
+    - talos-g4
+    - talos-other
+    - talos-svgr
+    - talos-tp5o
+
+##
+# Limited test sets for specific platforms
+
+stylo-tests:
+    - cppunit
+    - crashtest
+    - reftest-stylo
+    - mochitest-stylo
+
+ccov-code-coverage-tests:
+    - mochitest
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+    - xpcshell
+
+jsdcov-code-coverage-tests:
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+
+##
+# Test sets still being greened up in various ways
+
+windows-vm-tests:
+    - cppunit
+    #- crashtest
+    - external-media-tests
+    #- gtest
+    #- jittest
+    - jsreftest
+    #- marionette
+    #- mochitest
+    #- mochitest-browser-chrome
+    - mochitest-devtools-chrome
+    - mochitest-jetpack
+    #- mochitest-media
+    #- web-platform-tests
+    - web-platform-tests-reftests
+    #- xpcshell
+
+# windows-gpu-tests:
+#    - reftest
+#    - reftest-no-accel
+#    - mochitest-webgl
+
+# these tests currently run on hardware, but may migrate above when validated
+# note: on win, mochitest-a11y and mochitest-chrome come under mochitest-other
+# windows-hw-tests:
+#    - mochitest-clipboard
+#    - mochitest-gpu
+#    - mochitest-other
+
+ccov-code-coverage-tests:
+    - mochitest
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+    - xpcshell
+
+jsdcov-code-coverage-tests:
+    - mochitest-browser-chrome
+    - mochitest-devtools-chrome
+
+macosx64-tests-debug:
+    - cppunit
+    - crashtest
+    # - gtest
+    - jsreftest
+    # - marionette
+    # - mochitest
+    # - mochitest-browser-chrome
+    # - mochitest-clipboard
+    # - mochitest-devtools-chrome
+    # - mochitest-gpu
+    # - mochitest-jetpack
+    # - mochitest-media
+    # - mochitest-other
+    - mochitest-webgl
+    # - reftest
+    # - web-platform-tests
+    # - web-platform-tests-reftests
+    # - xpcshell
+
+macosx64-tests-talos:
+    - talos-chrome
+    - talos-dromaeojs
+    - talos-g1
+    - talos-g2
+    - talos-g3
+    - talos-g4
+    - talos-other
+    - talos-svgr
+    - talos-tp5o
+
+android-common-tests:
+    - cppunit
+    - crashtest
+    - jsreftest
+    - mochitest
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-gpu
+    - mochitest-media
+    - mochitest-webgl
+    - reftest
+    - xpcshell
+
+android-debug-tests:
+    # Marionette only available on Fennec debug builds as a security precaution
+    - marionette
+
+android-opt-tests:
+    - robocop
+
+android-gradle-tests:
+    - mochitest-chrome
+    - robocop
+
+android-x86-tests:
+    - mochitest-chrome
+    - xpcshell

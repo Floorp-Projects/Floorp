@@ -18,10 +18,10 @@
 // with this define will get the same level of thread checking as
 // debug bots.
 //
-// Note that this does not perfectly match situations where DCHECK is
+// Note that this does not perfectly match situations where RTC_DCHECK is
 // enabled.  For example a non-official release build may have
 // DCHECK_ALWAYS_ON undefined (and therefore ThreadChecker would be
-// disabled) but have DCHECKs enabled at runtime.
+// disabled) but have RTC_DCHECKs enabled at runtime.
 #if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
 #define ENABLE_THREAD_CHECKER 1
 #else
@@ -67,7 +67,7 @@ class ThreadCheckerDoNothing {
 // class MyClass {
 //  public:
 //   void Foo() {
-//     DCHECK(thread_checker_.CalledOnValidThread());
+//     RTC_DCHECK(thread_checker_.CalledOnValidThread());
 //     ... (do stuff) ...
 //   }
 //

@@ -16,19 +16,11 @@
 
 #include "webrtc/base/sslconfig.h"
 
-#if SSL_USE_SCHANNEL
-
-#include "schanneladapter.h"
-
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#if SSL_USE_OPENSSL
 
 #include "openssladapter.h"
 
-#elif SSL_USE_NSS     // && !SSL_USE_CHANNEL && !SSL_USE_OPENSSL
-
-#include "nssstreamadapter.h"
-
-#endif  // SSL_USE_OPENSSL && !SSL_USE_SCHANNEL && !SSL_USE_NSS
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -36,14 +28,12 @@ namespace rtc {
 
 SSLAdapter*
 SSLAdapter::Create(AsyncSocket* socket) {
-#if SSL_USE_SCHANNEL
-  return new SChannelAdapter(socket);
-#elif SSL_USE_OPENSSL  // && !SSL_USE_SCHANNEL
+#if SSL_USE_OPENSSL
   return new OpenSSLAdapter(socket);
-#else  // !SSL_USE_OPENSSL && !SSL_USE_SCHANNEL
+#else  // !SSL_USE_OPENSSL
   delete socket;
   return NULL;
-#endif  // !SSL_USE_OPENSSL && !SSL_USE_SCHANNEL
+#endif  // SSL_USE_OPENSSL
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,21 +52,7 @@ bool CleanupSSL() {
   return OpenSSLAdapter::CleanupSSL();
 }
 
-#elif SSL_USE_NSS  // !SSL_USE_OPENSSL
-
-bool InitializeSSL(VerificationCallback callback) {
-  return NSSContext::InitializeSSL(callback);
-}
-
-bool InitializeSSLThread() {
-  return NSSContext::InitializeSSLThread();
-}
-
-bool CleanupSSL() {
-  return NSSContext::CleanupSSL();
-}
-
-#else  // !SSL_USE_OPENSSL && !SSL_USE_NSS
+#else  // !SSL_USE_OPENSSL
 
 bool InitializeSSL(VerificationCallback callback) {
   return true;
@@ -90,7 +66,7 @@ bool CleanupSSL() {
   return true;
 }
 
-#endif  // !SSL_USE_OPENSSL && !SSL_USE_NSS
+#endif  // SSL_USE_OPENSSL
 
 ///////////////////////////////////////////////////////////////////////////////
 

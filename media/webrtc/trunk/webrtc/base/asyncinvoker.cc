@@ -10,6 +10,7 @@
 
 #include "webrtc/base/asyncinvoker.h"
 
+#include "webrtc/base/checks.h"
 #include "webrtc/base/logging.h"
 
 namespace rtc {
@@ -35,7 +36,7 @@ void AsyncInvoker::OnMessage(Message* msg) {
   closure->Execute();
 }
 
-void AsyncInvoker::Flush(Thread* thread, uint32 id /*= MQID_ANY*/) {
+void AsyncInvoker::Flush(Thread* thread, uint32_t id /*= MQID_ANY*/) {
   if (destroying_) return;
 
   // Run this on |thread| to reduce the number of context switches.
@@ -56,12 +57,47 @@ void AsyncInvoker::Flush(Thread* thread, uint32 id /*= MQID_ANY*/) {
 
 void AsyncInvoker::DoInvoke(Thread* thread,
                             const scoped_refptr<AsyncClosure>& closure,
-                            uint32 id) {
+                            uint32_t id) {
   if (destroying_) {
     LOG(LS_WARNING) << "Tried to invoke while destroying the invoker.";
     return;
   }
   thread->Post(this, id, new ScopedRefMessageData<AsyncClosure>(closure));
+}
+
+void AsyncInvoker::DoInvokeDelayed(Thread* thread,
+                                   const scoped_refptr<AsyncClosure>& closure,
+                                   uint32_t delay_ms,
+                                   uint32_t id) {
+  if (destroying_) {
+    LOG(LS_WARNING) << "Tried to invoke while destroying the invoker.";
+    return;
+  }
+  thread->PostDelayed(delay_ms, this, id,
+                      new ScopedRefMessageData<AsyncClosure>(closure));
+}
+
+GuardedAsyncInvoker::GuardedAsyncInvoker() : thread_(Thread::Current()) {
+  thread_->SignalQueueDestroyed.connect(this,
+                                        &GuardedAsyncInvoker::ThreadDestroyed);
+}
+
+GuardedAsyncInvoker::~GuardedAsyncInvoker() {
+}
+
+bool GuardedAsyncInvoker::Flush(uint32_t id) {
+  rtc::CritScope cs(&crit_);
+  if (thread_ == nullptr)
+    return false;
+  invoker_.Flush(thread_, id);
+  return true;
+}
+
+void GuardedAsyncInvoker::ThreadDestroyed() {
+  rtc::CritScope cs(&crit_);
+  // We should never get more than one notification about the thread dying.
+  RTC_DCHECK(thread_ != nullptr);
+  thread_ = nullptr;
 }
 
 NotifyingAsyncClosureBase::NotifyingAsyncClosureBase(AsyncInvoker* invoker,

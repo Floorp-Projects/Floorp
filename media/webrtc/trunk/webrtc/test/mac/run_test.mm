@@ -65,7 +65,7 @@ void RunTest(void(*test)()) {
   NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
   while ([testRunner running] &&
          [runLoop runMode:NSDefaultRunLoopMode
-               beforeDate:[NSDate distantFuture]]);
+               beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]]);
 
   [testRunner release];
   [pool release];

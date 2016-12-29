@@ -24,8 +24,8 @@
 #include <endpointvolume.h>
 #include <mediaobj.h>        // IMediaObject
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
+#include "webrtc/base/scoped_ref_ptr.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
 
 // Use Multimedia Class Scheduler Service (MMCSS) to boost the thread priority
 #pragma comment( lib, "avrt.lib" )
@@ -235,7 +235,6 @@ private:    // thread functions
     static DWORD WINAPI SetCaptureVolumeThread(LPVOID context);
     DWORD DoSetCaptureVolumeThread();
 
-    void _SetThreadName(DWORD dwThreadID, LPCSTR szThreadName);
     void _Lock() { _critSect.Enter(); };
     void _UnLock() { _critSect.Leave(); };
 
@@ -297,8 +296,8 @@ private:  // WASAPI
     ISimpleAudioVolume*                     _ptrRenderSimpleVolume;
 
     // DirectX Media Object (DMO) for the built-in AEC.
-    scoped_refptr<IMediaObject>             _dmo;
-    scoped_refptr<IMediaBuffer>             _mediaBuffer;
+    rtc::scoped_refptr<IMediaObject> _dmo;
+    rtc::scoped_refptr<IMediaBuffer> _mediaBuffer;
     bool                                    _builtInAecEnabled;
 
     HANDLE                                  _hRenderSamplesReadyEvent;

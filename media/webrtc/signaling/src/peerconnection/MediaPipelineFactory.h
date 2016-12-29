@@ -52,10 +52,6 @@ private:
                                    const JsepTrack& aTrack,
                                    RefPtr<MediaSessionConduit>* aConduitp);
 
-  MediaConduitErrorCode EnsureExternalCodec(VideoSessionConduit& aConduit,
-                                            VideoCodecConfig* aConfig,
-                                            bool aIsSend);
-
   nsresult CreateOrGetTransportFlow(size_t aLevel, bool aIsRtcp,
                                     const JsepTransport& transport,
                                     RefPtr<TransportFlow>* out);

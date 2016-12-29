@@ -17,7 +17,7 @@
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -50,7 +50,6 @@ const uint32_t kPixelRgbaWhite = RGBA(0xff, 0xff, 0xff, 0xff);
 const uint32_t kPixelRgbaTransparent = RGBA(0, 0, 0, 0);
 
 const uint32_t kPixelRgbWhite = RGB(0xff, 0xff, 0xff);
-const uint32_t kPixelRgbBlack = RGB(0, 0, 0);
 
 // Expands the cursor shape to add a white outline for visibility against
 // dark backgrounds.

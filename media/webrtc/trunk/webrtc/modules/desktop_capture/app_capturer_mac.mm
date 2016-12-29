@@ -19,7 +19,8 @@
 #include "webrtc/modules/desktop_capture/app_capturer.h"
 
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/base/constructormagic.h"
 
 namespace webrtc {
 
@@ -44,7 +45,7 @@ class AppCapturerMac : public AppCapturer {
   Callback* callback_;
   ProcessId process_id_;
 
-  DISALLOW_COPY_AND_ASSIGN(AppCapturerMac);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AppCapturerMac);
 };
 
 AppCapturerMac::AppCapturerMac()

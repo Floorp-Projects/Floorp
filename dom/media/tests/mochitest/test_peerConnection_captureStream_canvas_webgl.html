@@ -52,7 +52,7 @@ runNetworkTest(() => {
 
       if (!program) {
         ok(false, "Program should link");
-        return Promise.reject();
+        return Promise.reject("Program should link");
       }
       gl.useProgram(program);
 
@@ -100,6 +100,16 @@ runNetworkTest(() => {
     },
     function DRAW_LOCAL_RED() {
       h.drawColor(canvas, h.red);
+      return setInterval(function() {
+        try {
+          info("draw");
+          h.drawColor(canvas, h.red);
+          test.pcLocal.canvasStream.requestFrame();
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     },
     function WAIT_FOR_REMOTE_RED() {
       return h.waitForPixelColor(vremote, h.red, 128,

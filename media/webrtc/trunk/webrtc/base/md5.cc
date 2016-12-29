@@ -23,14 +23,14 @@
 // TODO: Avoid memcmpy - hash directly from memory.
 #include <string.h>  // for memcpy().
 
-#include "webrtc/base/byteorder.h"  // for ARCH_CPU_LITTLE_ENDIAN.
+#include "webrtc/base/byteorder.h"  // for RTC_ARCH_CPU_LITTLE_ENDIAN.
 
 namespace rtc {
 
-#ifdef ARCH_CPU_LITTLE_ENDIAN
+#ifdef RTC_ARCH_CPU_LITTLE_ENDIAN
 #define ByteReverse(buf, len)  // Nothing.
-#else  // ARCH_CPU_BIG_ENDIAN
-static void ByteReverse(uint32* buf, int len) {
+#else  // RTC_ARCH_CPU_BIG_ENDIAN
+static void ByteReverse(uint32_t* buf, int len) {
   for (int i = 0; i < len; ++i) {
     buf[i] = rtc::GetLE32(&buf[i]);
   }
@@ -49,18 +49,18 @@ void MD5Init(MD5Context* ctx) {
 }
 
 // Update context to reflect the concatenation of another buffer full of bytes.
-void MD5Update(MD5Context* ctx, const uint8* buf, size_t len) {
+void MD5Update(MD5Context* ctx, const uint8_t* buf, size_t len) {
   // Update bitcount.
-  uint32 t = ctx->bits[0];
-  if ((ctx->bits[0] = t + (static_cast<uint32>(len) << 3)) < t) {
+  uint32_t t = ctx->bits[0];
+  if ((ctx->bits[0] = t + (static_cast<uint32_t>(len) << 3)) < t) {
     ctx->bits[1]++;  // Carry from low to high.
   }
-  ctx->bits[1] += static_cast<uint32>(len >> 29);
+  ctx->bits[1] += static_cast<uint32_t>(len >> 29);
   t = (t >> 3) & 0x3f;  // Bytes already in shsInfo->data.
 
   // Handle any leading odd-sized chunks.
   if (t) {
-    uint8* p = reinterpret_cast<uint8*>(ctx->in) + t;
+    uint8_t* p = reinterpret_cast<uint8_t*>(ctx->in) + t;
 
     t = 64-t;
     if (len < t) {
@@ -89,13 +89,13 @@ void MD5Update(MD5Context* ctx, const uint8* buf, size_t len) {
 
 // Final wrapup - pad to 64-byte boundary with the bit pattern.
 // 1 0* (64-bit count of bits processed, MSB-first)
-void MD5Final(MD5Context* ctx, uint8 digest[16]) {
+void MD5Final(MD5Context* ctx, uint8_t digest[16]) {
   // Compute number of bytes mod 64.
-  uint32 count = (ctx->bits[0] >> 3) & 0x3F;
+  uint32_t count = (ctx->bits[0] >> 3) & 0x3F;
 
   // Set the first char of padding to 0x80.  This is safe since there is
   // always at least one byte free.
-  uint8* p = reinterpret_cast<uint8*>(ctx->in) + count;
+  uint8_t* p = reinterpret_cast<uint8_t*>(ctx->in) + count;
   *p++ = 0x80;
 
   // Bytes of padding needed to make 64 bytes.
@@ -140,11 +140,11 @@ void MD5Final(MD5Context* ctx, uint8 digest[16]) {
 // The core of the MD5 algorithm, this alters an existing MD5 hash to
 // reflect the addition of 16 longwords of new data.  MD5Update blocks
 // the data and converts bytes into longwords for this routine.
-void MD5Transform(uint32 buf[4], const uint32 in[16]) {
-  uint32 a = buf[0];
-  uint32 b = buf[1];
-  uint32 c = buf[2];
-  uint32 d = buf[3];
+void MD5Transform(uint32_t buf[4], const uint32_t in[16]) {
+  uint32_t a = buf[0];
+  uint32_t b = buf[1];
+  uint32_t c = buf[2];
+  uint32_t d = buf[3];
 
   MD5STEP(F1, a, b, c, d, in[ 0] + 0xd76aa478, 7);
   MD5STEP(F1, d, a, b, c, in[ 1] + 0xe8c7b756, 12);

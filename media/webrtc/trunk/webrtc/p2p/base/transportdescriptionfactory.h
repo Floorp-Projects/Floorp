@@ -11,6 +11,7 @@
 #ifndef WEBRTC_P2P_BASE_TRANSPORTDESCRIPTIONFACTORY_H_
 #define WEBRTC_P2P_BASE_TRANSPORTDESCRIPTIONFACTORY_H_
 
+#include "webrtc/base/rtccertificate.h"
 #include "webrtc/p2p/base/transportdescription.h"
 
 namespace rtc {
@@ -33,15 +34,18 @@ class TransportDescriptionFactory {
   // Default ctor; use methods below to set configuration.
   TransportDescriptionFactory();
   SecurePolicy secure() const { return secure_; }
-  // The identity to use when setting up DTLS.
-  rtc::SSLIdentity* identity() const { return identity_; }
+  // The certificate to use when setting up DTLS.
+  const rtc::scoped_refptr<rtc::RTCCertificate>& certificate() const {
+    return certificate_;
+  }
 
-  // Specifies the transport protocol to be use.
-  void set_protocol(TransportProtocol protocol) { protocol_ = protocol; }
   // Specifies the transport security policy to use.
   void set_secure(SecurePolicy s) { secure_ = s; }
-  // Specifies the identity to use (only used when secure is not SEC_DISABLED).
-  void set_identity(rtc::SSLIdentity* identity) { identity_ = identity; }
+  // Specifies the certificate to use (only used when secure != SEC_DISABLED).
+  void set_certificate(
+      const rtc::scoped_refptr<rtc::RTCCertificate>& certificate) {
+    certificate_ = certificate;
+  }
 
   // Creates a transport description suitable for use in an offer.
   TransportDescription* CreateOffer(const TransportOptions& options,
@@ -56,9 +60,8 @@ class TransportDescriptionFactory {
   bool SetSecurityInfo(TransportDescription* description,
                        ConnectionRole role) const;
 
-  TransportProtocol protocol_;
   SecurePolicy secure_;
-  rtc::SSLIdentity* identity_;
+  rtc::scoped_refptr<rtc::RTCCertificate> certificate_;
 };
 
 }  // namespace cricket

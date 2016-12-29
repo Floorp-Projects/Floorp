@@ -7,32 +7,36 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'includes': [
+    '../../../../build/common.gypi',
+  ],
   'targets': [
     {
-      'target_name': 'iSACFix',
+      'target_name': 'isac_fix',
       'type': 'static_library',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+        'isac_common',
       ],
       'include_dirs': [
-        'fix/interface',
+        'fix/include',
         '<(webrtc_root)'
       ],
       'direct_dependent_settings': {
         'include_dirs': [
-          'fix/interface',
+          'fix/include',
           '<(webrtc_root)',
         ],
       },
       'sources': [
-        'audio_encoder_isac_t.h',
-        'audio_encoder_isac_t_impl.h',
-        'fix/interface/audio_encoder_isacfix.h',
-        'fix/interface/isacfix.h',
+        'fix/include/audio_decoder_isacfix.h',
+        'fix/include/audio_encoder_isacfix.h',
+        'fix/include/isacfix.h',
         'fix/source/arith_routines.c',
         'fix/source/arith_routines_hist.c',
         'fix/source/arith_routines_logist.c',
+        'fix/source/audio_decoder_isacfix.cc',
         'fix/source/audio_encoder_isacfix.cc',
         'fix/source/bandwidth_estimator.c',
         'fix/source/decode.c',
@@ -45,6 +49,7 @@
         'fix/source/filterbanks.c',
         'fix/source/filters.c',
         'fix/source/initialize.c',
+        'fix/source/isac_fix_type.h',
         'fix/source/isacfix.c',
         'fix/source/lattice.c',
         'fix/source/lattice_c.c',
@@ -75,11 +80,6 @@
         'fix/source/structs.h',
       ],
       'conditions': [
-        ['OS!="win"', {
-          'defines': [
-            'WEBRTC_LINUX',
-          ],
-        }],
         ['target_arch=="arm" and arm_version>=7', {
           'sources': [
             'fix/source/lattice_armv7.S',
@@ -89,13 +89,11 @@
             'fix/source/lattice_c.c',
             'fix/source/pitch_filter_c.c',
           ],
-          'conditions': [
-            ['arm_neon==1 or arm_neon_optional==1', {
-              'dependencies': [ 'isac_neon' ],
-            }],
-          ],
         }],
-        ['target_arch=="mipsel" and mips_arch_variant!="r6" and android_webview_build==0', {
+        ['build_with_neon==1', {
+          'dependencies': ['isac_neon', ],
+        }],
+        ['target_arch=="mipsel" and mips_arch_variant!="r6"', {
           'sources': [
             'fix/source/entropy_coding_mips.c',
             'fix/source/filters_mips.c',
@@ -128,7 +126,7 @@
     },
   ],
   'conditions': [
-    ['target_arch=="arm" and arm_version>=7', {
+    ['build_with_neon==1', {
       'targets': [
         {
           'target_name': 'isac_neon',
@@ -137,25 +135,12 @@
           'dependencies': [
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
           ],
-          'include_dirs': [
-            '<(webrtc_root)',
-          ],
           'sources': [
             'fix/source/entropy_coding_neon.c',
-            'fix/source/filterbanks_neon.S',
-            'fix/source/filters_neon.S',
-            'fix/source/lattice_neon.S',
-            'fix/source/lpc_masking_model_neon.S',
-            'fix/source/transform_neon.S',
-          ],
-          'conditions': [
-            # Disable LTO in isac_neon target due to compiler bug
-            ['use_lto==1', {
-              'cflags!': [
-                '-flto',
-                '-ffat-lto-objects',
-              ],
-            }],
+            'fix/source/filterbanks_neon.c',
+            'fix/source/filters_neon.c',
+            'fix/source/lattice_neon.c',
+            'fix/source/transform_neon.c',
           ],
         },
       ],

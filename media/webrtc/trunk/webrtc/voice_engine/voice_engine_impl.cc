@@ -14,18 +14,17 @@
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
 #endif
-#if !defined(WEBRTC_CHROMIUM_BUILD)
-#include "webrtc/modules/audio_device/android/opensles_input.h"
-#include "webrtc/modules/audio_device/android/opensles_output.h"
-#endif
+#include "webrtc/modules/utility/include/jvm_android.h"
 #endif
 
-#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_coding/include/audio_coding_module.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/voice_engine/channel_proxy.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
 
-namespace webrtc
-{
+namespace webrtc {
 
 // Counter to be ensure that we can add a correct ID in all static trace
 // methods. It is not the nicest solution, especially not since we already
@@ -33,32 +32,13 @@ namespace webrtc
 // improvement here.
 static int32_t gVoiceEngineInstanceCounter = 0;
 
-VoiceEngine* GetVoiceEngine(const Config* config, bool owns_config)
-{
-#if (defined _WIN32)
-  HMODULE hmod = LoadLibrary(TEXT("VoiceEngineTestingDynamic.dll"));
-
-  if (hmod) {
-    typedef VoiceEngine* (*PfnGetVoiceEngine)(void);
-    PfnGetVoiceEngine pfn = (PfnGetVoiceEngine)GetProcAddress(
-        hmod,"GetVoiceEngine");
-    if (pfn) {
-      VoiceEngine* self = pfn();
-      if (owns_config) {
-        delete config;
-      }
-      return (self);
-    }
+VoiceEngine* GetVoiceEngine(const Config* config, bool owns_config) {
+  VoiceEngineImpl* self = new VoiceEngineImpl(config, owns_config);
+  if (self != NULL) {
+    self->AddRef();  // First reference.  Released in VoiceEngine::Delete.
+    gVoiceEngineInstanceCounter++;
   }
-#endif
-
-    VoiceEngineImpl* self = new VoiceEngineImpl(config, owns_config);
-    if (self != NULL)
-    {
-        self->AddRef();  // First reference.  Released in VoiceEngine::Delete.
-        gVoiceEngineInstanceCounter++;
-    }
-    return self;
+  return self;
 }
 
 int VoiceEngineImpl::AddRef() {
@@ -71,8 +51,7 @@ int VoiceEngineImpl::Release() {
   assert(new_ref >= 0);
   if (new_ref == 0) {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, -1,
-                 "VoiceEngineImpl self deleting (voiceEngine=0x%p)",
-                 this);
+                 "VoiceEngineImpl self deleting (voiceEngine=0x%p)", this);
 
     // Clear any pointers before starting destruction. Otherwise worker-
     // threads will still have pointers to a partially destructed object.
@@ -86,6 +65,15 @@ int VoiceEngineImpl::Release() {
   return new_ref;
 }
 
+rtc::scoped_ptr<voe::ChannelProxy> VoiceEngineImpl::GetChannelProxy(
+    int channel_id) {
+  RTC_DCHECK(channel_id >= 0);
+  CriticalSectionScoped cs(crit_sec());
+  RTC_DCHECK(statistics().Initialized());
+  return rtc::scoped_ptr<voe::ChannelProxy>(
+      new voe::ChannelProxy(channel_manager().GetChannel(channel_id)));
+}
+
 VoiceEngine* VoiceEngine::Create() {
   Config* config = new Config();
   return GetVoiceEngine(config, true);
@@ -95,96 +83,79 @@ VoiceEngine* VoiceEngine::Create(const Config& config) {
   return GetVoiceEngine(&config, false);
 }
 
-int VoiceEngine::SetTraceFilter(unsigned int filter)
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice,
-                 VoEId(gVoiceEngineInstanceCounter, -1),
-                 "SetTraceFilter(filter=0x%x)", filter);
+int VoiceEngine::SetTraceFilter(unsigned int filter) {
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice,
+               VoEId(gVoiceEngineInstanceCounter, -1),
+               "SetTraceFilter(filter=0x%x)", filter);
 
-    // Remember old filter
-    uint32_t oldFilter = Trace::level_filter();
-    Trace::set_level_filter(filter);
+  // Remember old filter
+  uint32_t oldFilter = Trace::level_filter();
+  Trace::set_level_filter(filter);
 
-    // If previous log was ignored, log again after changing filter
-    if (kTraceNone == oldFilter)
-    {
-        WEBRTC_TRACE(kTraceApiCall, kTraceVoice, -1,
-                     "SetTraceFilter(filter=0x%x)", filter);
-    }
+  // If previous log was ignored, log again after changing filter
+  if (kTraceNone == oldFilter) {
+    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, -1, "SetTraceFilter(filter=0x%x)",
+                 filter);
+  }
 
-    return 0;
+  return 0;
 }
 
-int VoiceEngine::SetTraceFile(const char* fileNameUTF8,
-                              bool addFileCounter)
-{
-    int ret = Trace::SetTraceFile(fileNameUTF8, addFileCounter);
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice,
-                 VoEId(gVoiceEngineInstanceCounter, -1),
-                 "SetTraceFile(fileNameUTF8=%s, addFileCounter=%d)",
-                 fileNameUTF8, addFileCounter);
-    return (ret);
+int VoiceEngine::SetTraceFile(const char* fileNameUTF8, bool addFileCounter) {
+  int ret = Trace::SetTraceFile(fileNameUTF8, addFileCounter);
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice,
+               VoEId(gVoiceEngineInstanceCounter, -1),
+               "SetTraceFile(fileNameUTF8=%s, addFileCounter=%d)", fileNameUTF8,
+               addFileCounter);
+  return (ret);
 }
 
-int VoiceEngine::SetTraceCallback(TraceCallback* callback)
-{
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice,
-                 VoEId(gVoiceEngineInstanceCounter, -1),
-                 "SetTraceCallback(callback=0x%x)", callback);
-    return (Trace::SetTraceCallback(callback));
+int VoiceEngine::SetTraceCallback(TraceCallback* callback) {
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice,
+               VoEId(gVoiceEngineInstanceCounter, -1),
+               "SetTraceCallback(callback=0x%x)", callback);
+  return (Trace::SetTraceCallback(callback));
 }
 
-bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
-{
-    if (voiceEngine == NULL)
-        return false;
+bool VoiceEngine::Delete(VoiceEngine*& voiceEngine) {
+  if (voiceEngine == NULL)
+    return false;
 
-    VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
-    // Release the reference that was added in GetVoiceEngine.
-    int ref = s->Release();
-    voiceEngine = NULL;
+  VoiceEngineImpl* s = static_cast<VoiceEngineImpl*>(voiceEngine);
+  // Release the reference that was added in GetVoiceEngine.
+  int ref = s->Release();
+  voiceEngine = NULL;
 
-    if (ref != 0) {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice, -1,
-            "VoiceEngine::Delete did not release the very last reference.  "
-            "%d references remain.", ref);
-    }
+  if (ref != 0) {
+    WEBRTC_TRACE(
+        kTraceWarning, kTraceVoice, -1,
+        "VoiceEngine::Delete did not release the very last reference.  "
+        "%d references remain.",
+        ref);
+  }
 
-    return true;
+  return true;
 }
 
 #if !defined(WEBRTC_CHROMIUM_BUILD)
-int VoiceEngine::SetAndroidObjects(void* javaVM, void* context)
-{
+// TODO(henrika): change types to JavaVM* and jobject instead of void*.
+int VoiceEngine::SetAndroidObjects(void* javaVM, void* context) {
 #ifdef WEBRTC_ANDROID
-#ifdef WEBRTC_ANDROID_OPENSLES
-  typedef AudioDeviceTemplate<OpenSlesInput, OpenSlesOutput>
-      AudioDeviceInstance;
-#endif
-#if !defined(WEBRTC_GONK) && defined(ANDROID)
-  typedef AudioDeviceTemplate<AudioRecordJni, AudioTrackJni>
-      AudioDeviceInstanceJni;
-#endif
-  if (javaVM && context) {
-#if !defined(WEBRTC_GONK) && defined(ANDROID)
-    AudioDeviceInstanceJni::SetAndroidAudioDeviceObjects(javaVM, context);
-#endif
-#ifdef WEBRTC_ANDROID_OPENSLES
-    AudioDeviceInstance::SetAndroidAudioDeviceObjects(javaVM, context);
-#endif
-  } else {
-#if !defined(WEBRTC_GONK) && defined(ANDROID)
-    AudioDeviceInstanceJni::ClearAndroidAudioDeviceObjects();
-#endif
-#ifdef WEBRTC_ANDROID_OPENSLES
-    AudioDeviceInstance::ClearAndroidAudioDeviceObjects();
-#endif
-  }
+  webrtc::JVM::Initialize(reinterpret_cast<JavaVM*>(javaVM),
+                          reinterpret_cast<jobject>(context));
   return 0;
 #else
   return -1;
 #endif
 }
 #endif
+
+std::string VoiceEngine::GetVersionString() {
+  std::string version = "VoiceEngine 4.1.0";
+#ifdef WEBRTC_EXTERNAL_TRANSPORT
+  version += " (External transport build)";
+#endif
+  return version;
+}
 
 }  // namespace webrtc

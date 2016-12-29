@@ -11,7 +11,7 @@
 #include "webrtc/modules/desktop_capture/cropping_window_capturer.h"
 
 #include "webrtc/modules/desktop_capture/cropped_desktop_frame.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 

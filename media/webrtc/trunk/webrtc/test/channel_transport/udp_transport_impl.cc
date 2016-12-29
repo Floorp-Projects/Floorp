@@ -24,32 +24,30 @@
 #include <fcntl.h>
 #include <net/if.h>
 #include <netdb.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
 #ifndef WEBRTC_IOS
 #include <net/if_arp.h>
 #endif
-#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 
 #if defined(WEBRTC_MAC)
+#include <ifaddrs.h>
 #include <machine/types.h>
 #endif
-#if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
-#include <ifaddrs.h>
-#endif
-#if defined(WEBRTC_LINUX)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #endif
 
 #include "webrtc/common_types.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/typedefs.h"
 
@@ -1001,7 +999,7 @@ int32_t UdpTransportImpl::SetPCP(int32_t PCP)
         return -1;
     }
 
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     if (!rtpSock->SetSockopt(SOL_SOCKET, SO_PRIORITY, (int8_t*) &PCP,
                              sizeof(PCP)))
     {
@@ -1933,21 +1931,20 @@ int32_t UdpTransportImpl::SendRTCPPacketTo(const int8_t* data,
     return -1;
 }
 
-int UdpTransportImpl::SendPacket(int /*channel*/,
-                                 const void* data,
-                                 size_t length)
-{
+bool UdpTransportImpl::SendRtp(const uint8_t* data,
+                               size_t length,
+                               const PacketOptions& packet_options) {
     WEBRTC_TRACE(kTraceStream, kTraceTransport, _id, "%s", __FUNCTION__);
 
     CriticalSectionScoped cs(_crit);
 
     if(_destIP[0] == 0)
     {
-        return -1;
+        return false;
     }
     if(_destPort == 0)
     {
-        return -1;
+        return false;
     }
 
     // Create socket if it hasn't been set up already.
@@ -1985,35 +1982,32 @@ int UdpTransportImpl::SendPacket(int /*channel*/,
                          "SendPacket() failed to bind RTP socket");
             _lastError = retVal;
             CloseReceiveSockets();
-            return -1;
+            return false;
         }
     }
 
     if(_ptrSendRtpSocket)
     {
         return _ptrSendRtpSocket->SendTo((const int8_t*)data, length,
-                                         _remoteRTPAddr);
+                                         _remoteRTPAddr) >= 0;
 
     } else if(_ptrRtpSocket)
     {
         return _ptrRtpSocket->SendTo((const int8_t*)data, length,
-                                     _remoteRTPAddr);
+                                     _remoteRTPAddr) >= 0;
     }
-    return -1;
+    return false;
 }
 
-int UdpTransportImpl::SendRTCPPacket(int /*channel*/, const void* data,
-                                     size_t length)
-{
-
+bool UdpTransportImpl::SendRtcp(const uint8_t* data, size_t length) {
     CriticalSectionScoped cs(_crit);
     if(_destIP[0] == 0)
     {
-        return -1;
+        return false;
     }
     if(_destPortRTCP == 0)
     {
-        return -1;
+        return false;
     }
 
     // Create socket if it hasn't been set up already.
@@ -2049,22 +2043,22 @@ int UdpTransportImpl::SendRTCPPacket(int /*channel*/, const void* data,
         {
             _lastError = retVal;
             WEBRTC_TRACE(kTraceError, kTraceTransport, _id,
-                         "SendRTCPPacket() failed to bind RTCP socket");
+                         "SendRtcp() failed to bind RTCP socket");
             CloseReceiveSockets();
-            return -1;
+            return false;
         }
     }
 
     if(_ptrSendRtcpSocket)
     {
         return _ptrSendRtcpSocket->SendTo((const int8_t*)data, length,
-                                          _remoteRTCPAddr);
+                                          _remoteRTCPAddr) >= 0;
     } else if(_ptrRtcpSocket)
     {
         return _ptrRtcpSocket->SendTo((const int8_t*)data, length,
-                                      _remoteRTCPAddr);
+                                      _remoteRTCPAddr) >= 0;
     }
-    return -1;
+    return false;
 }
 
 int32_t UdpTransportImpl::SetSendIP(const char* ipaddr)
@@ -2485,7 +2479,7 @@ int32_t UdpTransport::LocalHostAddressIPV6(char n_localIP[16])
     return -1;
 #elif defined(WEBRTC_ANDROID)
     return -1;
-#else // WEBRTC_LINUX
+#else // WEBRTC_LINUX || WEBRTC_BSD
     struct
     {
         struct nlmsghdr n;
@@ -2671,7 +2665,7 @@ int32_t UdpTransport::LocalHostAddress(uint32_t& localIP)
     }
     WEBRTC_TRACE(kTraceWarning, kTraceTransport, -1, "gethostname failed");
     return -1;
-#else // WEBRTC_LINUX
+#else // WEBRTC_LINUX || WEBRTC_BSD
     int sockfd, size  = 1;
     struct ifreq* ifr;
     struct ifconf ifc;

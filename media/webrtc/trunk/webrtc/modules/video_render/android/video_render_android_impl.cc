@@ -11,9 +11,9 @@
 #include "webrtc/modules/video_render/android/video_render_android_impl.h"
 
 #include "webrtc/modules/video_render/video_render_internal.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 #ifdef ANDROID
 #include <android/log.h>
@@ -22,7 +22,7 @@
 #undef WEBRTC_TRACE
 #define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTCN*", __VA_ARGS__)
 #else
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #endif
 
 namespace webrtc {
@@ -141,18 +141,13 @@ int32_t VideoRenderAndroid::StartRender() {
     return 0;
   }
 
-  _javaRenderThread = ThreadWrapper::CreateThread(JavaRenderThreadFun, this,
-                                                  "AndroidRenderThread");
+  _javaRenderThread.reset(new rtc::PlatformThread(JavaRenderThreadFun, this,
+                                                  "AndroidRenderThread"));
 
-  if (_javaRenderThread->Start())
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id,
-                 "%s: thread started", __FUNCTION__);
-  else {
-    WEBRTC_TRACE(kTraceError, kTraceVideoRenderer, _id,
-                 "%s: Could not start send thread", __FUNCTION__);
-    return -1;
-  }
-  _javaRenderThread->SetPriority(kRealtimePriority);
+  _javaRenderThread->Start();
+  WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s: thread started",
+               __FUNCTION__);
+  _javaRenderThread->SetPriority(rtc::kRealtimePriority);
   return 0;
 }
 

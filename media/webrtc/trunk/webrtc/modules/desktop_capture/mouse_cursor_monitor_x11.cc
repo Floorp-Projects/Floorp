@@ -19,7 +19,7 @@
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/modules/desktop_capture/x11/x_error_trap.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace {
 
@@ -77,7 +77,7 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
   // Captures current cursor shape and stores it in |cursor_shape_|.
   void CaptureCursor();
 
-  scoped_refptr<SharedXDisplay> x_display_;
+  rtc::scoped_refptr<SharedXDisplay> x_display_;
   Callback* callback_;
   Mode mode_;
   Window window_;
@@ -90,7 +90,6 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
   rtc::scoped_ptr<MouseCursor> cursor_shape_;
 };
 
-// For screens, we pass the same windowid for window and inner_window
 MouseCursorMonitorX11::MouseCursorMonitorX11(
     const DesktopCaptureOptions& options,
     Window window, Window inner_window)

@@ -15,20 +15,21 @@
 
 #include "webrtc/common_video/libyuv/include/scaler.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
-#include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/system_wrappers/interface/trace.h"
-#include "webrtc/system_wrappers/interface/trace_event.h"
+#include "webrtc/system_wrappers/include/clock.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/system_wrappers/include/trace.h"
+#include "webrtc/base/trace_event.h"
 #include "webrtc/video_engine/desktop_capture_impl.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/app_capturer.h"
 #include "webrtc/modules/desktop_capture/window_capturer.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
+#include "webrtc/modules/video_capture/video_capture.h"
 
 namespace webrtc {
 
@@ -244,6 +245,28 @@ int32_t WindowDeviceInfoImpl::Init() {
   return 0;
 }
 
+int32_t DesktopCaptureImpl::AddRef() const {
+  return ++mRefCount;
+}
+int32_t DesktopCaptureImpl::Release() const {
+  assert(mRefCount > 0);
+  auto count = --mRefCount;
+  if (!count) {
+    WEBRTC_TRACE(webrtc::kTraceStream, webrtc::kTraceVideoCapture, -1,
+                 "DesktopCapture self deleting (desktopCapture=0x%p)", this);
+
+    // Clear any pointers before starting destruction. Otherwise worker-
+    // threads will still have pointers to a partially destructed object.
+    // Example: AudioDeviceBuffer::RequestPlayoutData() can access a
+    // partially deconstructed |_ptrCbAudioTransport| during destruction
+    // if we don't call Terminate here.
+    //-> NG TODO Terminate();
+    delete this;
+    return count;
+  }
+  return mRefCount;
+}
+
 int32_t WindowDeviceInfoImpl::Refresh() {
   desktop_device_info_->Refresh();
   return 0;
@@ -335,21 +358,21 @@ int32_t WindowDeviceInfoImpl::GetOrientation(const char* deviceUniqueIdUTF8,
 
 VideoCaptureModule::DeviceInfo* DesktopCaptureImpl::CreateDeviceInfo(const int32_t id,
                                                                      const CaptureDeviceType type) {
-  if (type == Application) {
+  if (type == CaptureDeviceType::Application) {
     AppDeviceInfoImpl * pAppDeviceInfoImpl = new AppDeviceInfoImpl(id);
     if (!pAppDeviceInfoImpl || pAppDeviceInfoImpl->Init()) {
       delete pAppDeviceInfoImpl;
       pAppDeviceInfoImpl = NULL;
     }
     return pAppDeviceInfoImpl;
-  } else if (type == Screen) {
+  } else if (type == CaptureDeviceType::Screen) {
     ScreenDeviceInfoImpl * pScreenDeviceInfoImpl = new ScreenDeviceInfoImpl(id);
     if (!pScreenDeviceInfoImpl || pScreenDeviceInfoImpl->Init()) {
       delete pScreenDeviceInfoImpl;
       pScreenDeviceInfoImpl = NULL;
     }
     return pScreenDeviceInfoImpl;
-  } else if (type == Window) {
+  } else if (type == CaptureDeviceType::Window) {
     WindowDeviceInfoImpl * pWindowDeviceInfoImpl = new WindowDeviceInfoImpl(id);
     if (!pWindowDeviceInfoImpl || pWindowDeviceInfoImpl->Init()) {
       delete pWindowDeviceInfoImpl;
@@ -370,7 +393,7 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
   // Leave desktop effects enabled during WebRTC captures.
   options.set_disable_effects(false);
 
-  if (type == Application) {
+  if (type == CaptureDeviceType::Application) {
     AppCapturer *pAppCapturer = AppCapturer::Create(options);
     if (!pAppCapturer) {
       return -1;
@@ -381,7 +404,7 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
 
     MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(options, webrtc::kFullDesktopScreenId);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pAppCapturer, pMouseCursorMonitor));
-  } else if (type == Screen) {
+  } else if (type == CaptureDeviceType::Screen) {
     ScreenCapturer *pScreenCapturer = ScreenCapturer::Create(options);
     if (!pScreenCapturer) {
       return -1;
@@ -393,7 +416,7 @@ int32_t DesktopCaptureImpl::Init(const char* uniqueId,
 
     MouseCursorMonitor *pMouseCursorMonitor = MouseCursorMonitor::CreateForScreen(options, screenid);
     desktop_capturer_cursor_composer_.reset(new DesktopAndCursorComposer(pScreenCapturer, pMouseCursorMonitor));
-  } else if (type == Window) {
+  } else if (type == CaptureDeviceType::Window) {
     WindowCapturer *pWindowCapturer = WindowCapturer::Create();
     if (!pWindowCapturer) {
       return -1;
@@ -480,13 +503,15 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id)
                          Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
                          TickTime::MillisecondTimestamp()),
   time_event_(EventWrapper::Create()),
+  mRefCount(0),
 #if defined(_WIN32)
-  capturer_thread_(ThreadWrapper::CreateUIThread(Run, this, "ScreenCaptureThread")),
+  capturer_thread_(new rtc::PlatformUIThread(Run, this, "ScreenCaptureThread")),
 #else
-  capturer_thread_(ThreadWrapper::CreateThread(Run, this, "ScreenCaptureThread")),
+  capturer_thread_(new rtc::PlatformThread(Run, this, "ScreenCaptureThread")),
 #endif
   started_(false) {
-  capturer_thread_->SetPriority(kHighPriority);
+  //-> TODO @@NG why is this crashing (seen on Linux)
+  //-> capturer_thread_->SetPriority(rtc::kHighPriority);
   _requestedCapability.width = kDefaultWidth;
   _requestedCapability.height = kDefaultHeight;
   _requestedCapability.maxFPS = 30;
@@ -548,7 +573,7 @@ int32_t DesktopCaptureImpl::CaptureDelay()
   return _setCaptureDelay;
 }
 
-int32_t DesktopCaptureImpl::DeliverCapturedFrame(I420VideoFrame& captureFrame,
+int32_t DesktopCaptureImpl::DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
                                                  int64_t capture_time) {
   UpdateFrameCount();  // frame count used for local frame rate callback.
 
@@ -679,7 +704,7 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
       DeliverCapturedFrame(_captureFrame, captureTime);
     } else {
 
-      I420VideoFrame scaledFrame;
+      webrtc::VideoFrame scaledFrame;
       ret = scaledFrame.CreateEmptyFrame(dst_width,
                                          dst_height,
                                          stride_y,
@@ -858,4 +883,3 @@ void DesktopCaptureImpl::process() {
 }
 
 }  // namespace webrtc
-
