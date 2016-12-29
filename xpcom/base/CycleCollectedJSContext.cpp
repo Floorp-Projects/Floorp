@@ -74,6 +74,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsprf.h"
 #include "js/Debug.h"
+#include "js/GCAPI.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionNoteRootCallback.h"
 #include "nsCycleCollectionParticipant.h"
@@ -923,6 +924,9 @@ CycleCollectedJSContext::LargeAllocationFailureCallback(void* aData)
 CycleCollectedJSContext::SizeofExternalStringCallback(JSString* aStr,
                                                       MallocSizeOf aMallocSizeOf)
 {
+  // We promised the JS engine we would not GC.  Enforce that:
+  JS::AutoCheckCannotGC autoCannotGC;
+  
   if (!XPCStringConvert::IsDOMString(aStr)) {
     // Might be a literal or something we don't understand.  Just claim 0.
     return 0;
