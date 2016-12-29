@@ -132,11 +132,26 @@ WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
     const ScopedLazyBind readBind(gl, target, buffer);
 
     if (byteLen) {
-        const auto mappedBytes = gl->fMapBufferRange(target, srcByteOffset, glByteLen,
+        const bool isTF = (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER);
+        GLenum mapTarget = target;
+        if (isTF) {
+            gl->fBindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, mEmptyTFO);
+            gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, buffer->mGLName);
+            mapTarget = LOCAL_GL_ARRAY_BUFFER;
+        }
+
+        const auto mappedBytes = gl->fMapBufferRange(mapTarget, srcByteOffset, glByteLen,
                                                      LOCAL_GL_MAP_READ_BIT);
-        // Warning: Possibly shared memory.  See bug 1225033.
         memcpy(bytes, mappedBytes, byteLen);
-        gl->fUnmapBuffer(target);
+        gl->fUnmapBuffer(mapTarget);
+
+        if (isTF) {
+            const GLuint vbo = (mBoundArrayBuffer ? mBoundArrayBuffer->mGLName : 0);
+            gl->fBindBuffer(LOCAL_GL_ARRAY_BUFFER, vbo);
+            const GLuint tfo = (mBoundTransformFeedback ? mBoundTransformFeedback->mGLName
+                                                        : 0);
+            gl->fBindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, tfo);
+        }
     }
 }
 
