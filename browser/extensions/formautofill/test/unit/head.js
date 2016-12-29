@@ -82,13 +82,13 @@ function getTempFile(leafName) {
 }
 
 add_task(function* test_common_initialize() {
-  Services.prefs.setBoolPref("browser.formautofill.enabled", true);
+  Services.prefs.setBoolPref("browser.formautofill.experimental", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);
   loadFormAutofillContent();
 
   // Clean up after every test.
   do_register_cleanup(() => {
-    Services.prefs.clearUserPref("browser.formautofill.enabled");
+    Services.prefs.clearUserPref("browser.formautofill.experimental");
     Services.prefs.clearUserPref("dom.forms.autocomplete.experimental");
   });
 });
