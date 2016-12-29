@@ -592,12 +592,19 @@ WebGLContext::GetAttribLocation(const WebGLProgram& prog, const nsAString& name)
 JS::Value
 WebGLContext::GetBufferParameter(GLenum target, GLenum pname)
 {
+    const char funcName[] = "getBufferParameter";
     if (IsContextLost())
         return JS::NullValue();
 
-    const auto& buffer = ValidateBufferSelection("getBufferParameter", target);
-    if (!buffer)
+    const auto& slot = ValidateBufferSlot(funcName, target);
+    if (!slot)
         return JS::NullValue();
+    const auto& buffer = *slot;
+
+    if (!buffer) {
+        ErrorInvalidOperation("%s: Buffer for `target` is null.", funcName);
+        return JS::NullValue();
+    }
 
     switch (pname) {
     case LOCAL_GL_BUFFER_SIZE:
