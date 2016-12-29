@@ -1032,7 +1032,7 @@ Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut aCSSValue, int32_t aIndex)
 void
 Gecko_LoadStyleSheet(css::Loader* aLoader,
                      ServoStyleSheet* aParent,
-                     RawServoImportRuleStrong aImportRule,
+                     RawServoImportRuleBorrowed aImportRule,
                      const uint8_t* aURLString,
                      uint32_t aURLStringLength,
                      const uint8_t* aMediaString,
@@ -1060,8 +1060,7 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
   nsCOMPtr<nsIURI> uri;
   MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), urlSpec));
 
-  RefPtr<RawServoImportRule> import = aImportRule.Consume();
-  aLoader->LoadChildSheet(aParent, uri, media, nullptr, import, nullptr);
+  aLoader->LoadChildSheet(aParent, uri, media, nullptr, aImportRule, nullptr);
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
