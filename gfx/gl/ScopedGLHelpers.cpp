@@ -495,12 +495,6 @@ ScopedGLDrawState::~ScopedGLDrawState()
 ////////////////////////////////////////////////////////////////////////
 // ScopedPackState
 
-static bool
-HasPBOState(const GLContext* gl)
-{
-    return (!gl->IsGLES() || gl->Version() >= 300);
-}
-
 ScopedPackState::ScopedPackState(GLContext* gl)
     : ScopedGLWrapper<ScopedPackState>(gl)
 {
@@ -508,7 +502,7 @@ ScopedPackState::ScopedPackState(GLContext* gl)
 
     if (mAlignment != 4) mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
 
-    if (!HasPBOState(mGL))
+    if (!mGL->HasPBOState())
         return;
 
     mGL->fGetIntegerv(LOCAL_GL_PIXEL_PACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
@@ -527,13 +521,55 @@ ScopedPackState::UnwrapImpl()
 {
     mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mAlignment);
 
-    if (!HasPBOState(mGL))
+    if (!mGL->HasPBOState())
         return;
 
     mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, mPixelBuffer);
     mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mRowLength);
     mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mSkipPixels);
     mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mSkipRows);
+}
+
+////////////////////////////////////////////////////////////////////////
+// ScopedBindPBO
+
+static GLuint
+GetPBOBinding(GLContext* gl, GLenum target)
+{
+    if (!gl->HasPBOState())
+        return 0;
+
+    GLenum targetBinding;
+    switch (target) {
+    case LOCAL_GL_PIXEL_PACK_BUFFER:
+        targetBinding = LOCAL_GL_PIXEL_PACK_BUFFER_BINDING;
+        break;
+
+    case LOCAL_GL_PIXEL_UNPACK_BUFFER:
+        targetBinding = LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING;
+        break;
+
+    default:
+        MOZ_CRASH();
+    }
+
+    return gl->GetIntAs<GLuint>(targetBinding);
+
+}
+
+ScopedBindPBO::ScopedBindPBO(GLContext* gl, GLenum target)
+    : ScopedGLWrapper<ScopedPackState>(gl)
+    , mTarget(target)
+    , mPBO(GetPBOBinding(mGL, mTarget))
+{ }
+
+void
+ScopedBindPBO::UnwrapImpl()
+{
+    if (!mGL->HasPBOState())
+        return;
+
+    mGL->fBindBuffer(mTarget, mPBO);
 }
 
 } /* namespace gl */

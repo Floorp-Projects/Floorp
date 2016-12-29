@@ -331,6 +331,10 @@ public:
         return mContextLost;
     }
 
+    bool HasPBOState() const {
+        return (!IsGLES() || Version() >= 300);
+    }
+
     /**
      * If this context is double-buffered, returns TRUE.
      */
@@ -3670,6 +3674,15 @@ public:
     static bool ShouldSpew();
     static bool ShouldDumpExts();
     void Readback(SharedSurface* src, gfx::DataSourceSurface* dest);
+
+    ////
+
+    void TexParams_SetClampNoMips(GLenum target = LOCAL_GL_TEXTURE_2D) {
+        fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_S, LOCAL_GL_CLAMP_TO_EDGE);
+        fTexParameteri(target, LOCAL_GL_TEXTURE_WRAP_T, LOCAL_GL_CLAMP_TO_EDGE);
+        fTexParameteri(target, LOCAL_GL_TEXTURE_MAG_FILTER, LOCAL_GL_NEAREST);
+        fTexParameteri(target, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
+    }
 };
 
 bool DoesStringMatch(const char* aString, const char* aWantedString);
