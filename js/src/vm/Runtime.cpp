@@ -179,6 +179,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     destroyZoneCallback(nullptr),
     sweepZoneCallback(nullptr),
     compartmentNameCallback(nullptr),
+    externalStringSizeofCallback(nullptr),
     activityCallback(nullptr),
     activityCallbackArg(nullptr),
     requestDepth(0),
