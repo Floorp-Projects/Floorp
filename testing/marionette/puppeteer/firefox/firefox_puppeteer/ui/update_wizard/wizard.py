@@ -207,7 +207,7 @@ class Wizard(UIBaseLib):
 
         :return: Index of the selected panel.
         """
-        return int(self.element.get_attribute('pageIndex'))
+        return int(self.element.get_property('pageIndex'))
 
     @property
     def selected_panel(self):
