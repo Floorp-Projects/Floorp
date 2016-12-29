@@ -2253,11 +2253,11 @@ var NativeWindow = {
         options: aOptions || {},
         category: aCategory
       };
-      Messaging.sendRequest(json);
+      WindowEventDispatcher.sendRequest(json);
     },
 
     hide: function(aValue, aTabID) {
-      Messaging.sendRequest({
+      WindowEventDispatcher.sendRequest({
         type: "Doorhanger:Remove",
         value: aValue,
         tabID: aTabID

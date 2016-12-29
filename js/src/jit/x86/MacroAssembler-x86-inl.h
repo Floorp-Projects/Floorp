@@ -191,6 +191,21 @@ MacroAssembler::addConstantDouble(double d, FloatRegister dest)
     propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
 }
 
+CodeOffset
+MacroAssembler::add32ToPtrWithPatch(Register src, Register dest)
+{
+    if (src != dest)
+        movePtr(src, dest);
+    addlWithPatch(Imm32(0), dest);
+    return CodeOffset(currentOffset());
+}
+
+void
+MacroAssembler::patchAdd32ToPtr(CodeOffset offset, Imm32 imm)
+{
+    patchAddl(offset, imm.value);
+}
+
 void
 MacroAssembler::subPtr(Register src, Register dest)
 {

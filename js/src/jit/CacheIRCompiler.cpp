@@ -1259,6 +1259,35 @@ CacheIRCompiler::emitGuardNoDenseElements()
 }
 
 bool
+CacheIRCompiler::emitGuardAndGetIndexFromString()
+{
+    Register str = allocator.useRegister(masm, reader.stringOperandId());
+    Register output = allocator.defineRegister(masm, reader.int32OperandId());
+
+    FailurePath* failure;
+    if (!addFailurePath(&failure))
+        return false;
+
+    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    LiveRegisterSet save(regs.asLiveSet());
+    masm.PushRegsInMask(save);
+    regs.takeUnchecked(str);
+
+    masm.setupUnalignedABICall(output);
+    masm.passABIArg(str);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
+    masm.mov(ReturnReg, output);
+
+    LiveRegisterSet ignore;
+    ignore.add(output);
+    masm.PopRegsInMaskIgnore(save, ignore);
+
+    // GetIndexFromString returns a negative value on failure.
+    masm.branchTest32(Assembler::Signed, output, output, failure->label());
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadProto()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());

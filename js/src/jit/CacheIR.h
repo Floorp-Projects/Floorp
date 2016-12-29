@@ -157,6 +157,7 @@ enum class CacheKind : uint8_t
     _(GuardNoDenseElements)               \
     _(GuardNoUnboxedExpando)              \
     _(GuardAndLoadUnboxedExpando)         \
+    _(GuardAndGetIndexFromString)         \
     _(LoadObject)                         \
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
@@ -465,6 +466,14 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
     void guardFrameHasNoArgumentsObject() {
         writeOp(CacheOp::GuardFrameHasNoArgumentsObject);
     }
+
+    Int32OperandId guardAndGetIndexFromString(StringOperandId str) {
+        Int32OperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::GuardAndGetIndexFromString, str);
+        writeOperandId(res);
+        return res;
+    }
+
     void loadFrameCalleeResult() {
         writeOp(CacheOp::LoadFrameCalleeResult);
     }
@@ -701,6 +710,9 @@ class MOZ_RAII IRGenerator
     IRGenerator(const IRGenerator&) = delete;
     IRGenerator& operator=(const IRGenerator&) = delete;
 
+    bool maybeGuardInt32Index(const Value& index, ValOperandId indexId,
+                              uint32_t* int32Index, Int32OperandId* int32IndexId);
+
   public:
     explicit IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind);
 
@@ -738,12 +750,17 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     bool tryAttachMagicArgumentsName(ValOperandId valId, HandleId id);
 
     bool tryAttachMagicArgument(ValOperandId valId, ValOperandId indexId);
-    bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
+    bool tryAttachArgumentsObjectArg(HandleObject obj, ObjOperandId objId,
+                                     uint32_t index, Int32OperandId indexId);
 
-    bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
-    bool tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
-    bool tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
-    bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId, ValOperandId indexId);
+    bool tryAttachDenseElement(HandleObject obj, ObjOperandId objId,
+                               uint32_t index, Int32OperandId indexId);
+    bool tryAttachDenseElementHole(HandleObject obj, ObjOperandId objId,
+                                   uint32_t index, Int32OperandId indexId);
+    bool tryAttachUnboxedArrayElement(HandleObject obj, ObjOperandId objId,
+                                      uint32_t index, Int32OperandId indexId);
+    bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
+                               uint32_t index, Int32OperandId indexId);
 
     ValOperandId getElemKeyValueId() const {
         MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);

@@ -32,10 +32,27 @@ WebGLContext::Clear(GLbitfield mask)
         GenerateWarning("Calling gl.clear() with RASTERIZER_DISCARD enabled has no effects.");
     }
 
-    if (mBoundDrawFramebuffer &&
-        !mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
-    {
-        return;
+    if (mBoundDrawFramebuffer) {
+        if (!mBoundDrawFramebuffer->ValidateAndInitAttachments(funcName))
+            return;
+
+        if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
+            const auto& resolvedData = mBoundDrawFramebuffer->ResolvedCompleteData();
+            for (const auto& cur : resolvedData->colorDrawBuffers) {
+                switch (cur->Format()->format->componentType) {
+                case webgl::ComponentType::Float:
+                case webgl::ComponentType::NormInt:
+                case webgl::ComponentType::NormUInt:
+                    break;
+
+                default:
+                    ErrorInvalidOperation("%s: Color draw buffers must be floating-point"
+                                          " or fixed-point. (normalized (u)ints)",
+                                          funcName);
+                    return;
+                }
+            }
+        }
     }
 
     ScopedDrawCallWrapper wrapper(*this);

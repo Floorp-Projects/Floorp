@@ -10,6 +10,7 @@
 
 #include "libANGLE/renderer/d3d/ImageD3D.h"
 
+#include "libANGLE/formatutils.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/renderer/d3d/FramebufferD3D.h"
@@ -27,6 +28,15 @@ ImageD3D::ImageD3D()
       mTarget(GL_NONE),
       mDirty(false)
 {
+}
+
+GLenum
+ImageD3D::getSizedInputFormat(GLenum inputType) const
+{
+    const auto &internalFormat = gl::GetInternalFormatInfo(mInternalFormat);
+    const auto &unsizedInternalFormat = internalFormat.format;
+    const auto &sizedInputFormat = gl::GetSizedInternalFormat(unsizedInternalFormat, inputType);
+    return sizedInputFormat;
 }
 
 }  // namespace rx

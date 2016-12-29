@@ -885,10 +885,8 @@ moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* rect,
     gtk_style_context_get_padding(style_frame, state_flags, &padding);
     ReleaseStyleContext(style_frame);
 
-    // There is a separate "text" window, which provides the background behind
-    // the text.
     GtkStyleContext* style =
-        ClaimStyleContext(MOZ_GTK_TEXT_VIEW_TEXT, direction, state_flags);
+        ClaimStyleContext(MOZ_GTK_TEXT_VIEW, direction, state_flags);
 
     gint xthickness = border.left + padding.left;
     gint ythickness = border.top + padding.top;
@@ -1327,9 +1325,17 @@ moz_gtk_resizer_paint(cairo_t *cr, GdkRectangle* rect,
                       GtkWidgetState* state,
                       GtkTextDirection direction)
 {
-    GtkStyleContext* style =
-        ClaimStyleContext(MOZ_GTK_RESIZER, GTK_TEXT_DIR_LTR,
-                          GetStateFlagsFromGtkWidgetState(state));
+    GtkStyleContext* style;
+
+    // gtk_render_handle() draws a background, so use GtkTextView and its
+    // GTK_STYLE_CLASS_VIEW to match the background with textarea elements.
+    // The resizer is drawn with shaded variants of the background color, and
+    // so a transparent background would lead to a transparent resizer.
+    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW, GTK_TEXT_DIR_LTR,
+                              GetStateFlagsFromGtkWidgetState(state));
+    // TODO - we need to save/restore style when gtk 3.20 CSS node path
+    // is used
+    gtk_style_context_add_class(style, GTK_STYLE_CLASS_GRIP);
 
     // Workaround unico not respecting the text direction for resizers.
     // See bug 1174248.

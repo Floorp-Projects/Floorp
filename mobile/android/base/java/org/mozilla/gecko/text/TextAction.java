@@ -10,6 +10,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import org.mozilla.gecko.util.GeckoBundle;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,25 +28,20 @@ public class TextAction {
 
     private TextAction() {}
 
-    public static List<TextAction> fromEventMessage(JSONObject message) {
+    public static List<TextAction> fromEventMessage(final GeckoBundle message) {
         final List<TextAction> actions = new ArrayList<>();
+        final GeckoBundle[] array = message.getBundleArray("actions");
 
-        try {
-            final JSONArray array = message.getJSONArray("actions");
+        for (int i = 0; i < array.length; i++) {
+            final GeckoBundle object = array[i];
+            final TextAction action = new TextAction();
 
-            for (int i = 0; i < array.length(); i++) {
-                final JSONObject object = array.getJSONObject(i);
+            action.id = object.getString("id");
+            action.label = object.getString("label");
+            action.order = object.getInt("order");
+            action.floatingOrder = object.getInt("floatingOrder", i);
 
-                final TextAction action = new TextAction();
-                action.id = object.getString("id");
-                action.label = object.getString("label");
-                action.order = object.getInt("order");
-                action.floatingOrder = object.optInt("floatingOrder", i);
-
-                actions.add(action);
-            }
-        } catch (JSONException e) {
-            Log.w(LOGTAG, "Could not parse text actions", e);
+            actions.add(action);
         }
 
         return actions;
