@@ -78,6 +78,7 @@
         <item>android_import.data.history</item>
     </string-array>
     <string-array name="pref_private_data_entries">
+        <item>@string/pref_private_data_openTabs</item>
         <item>@string/pref_private_data_history2</item>
         <item>@string/pref_private_data_searchHistory</item>
         <item>@string/pref_private_data_downloadFiles2</item>
@@ -99,9 +100,11 @@
         <item>true</item>
         <item>true</item>
         <item>true</item>
+        <item>true</item>
         <item>false</item>
     </string-array>
     <string-array name="pref_private_data_values">
+        <item>private.data.openTabs</item>
         <item>private.data.history</item>
         <item>private.data.searchHistory</item>
         <item>private.data.downloadFiles</item>
@@ -114,6 +117,7 @@
         <item>private.data.passwords</item>
     </string-array>
     <string-array name="pref_private_data_keys">
+        <item>private.data.openTabs</item>
         <item>private.data.history</item>
         <item>private.data.searchHistory</item>
         <item>private.data.downloadFiles</item>
@@ -126,6 +130,7 @@
         <item>private.data.passwords</item>
     </string-array>
     <string-array name="pref_clear_on_exit_defaults">
+        <item>false</item>
         <item>false</item>
         <item>false</item>
         <item>false</item>
