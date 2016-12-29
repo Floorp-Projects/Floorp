@@ -204,7 +204,7 @@ this.DownloadList.prototype = {
    * @param aDownload
    *        The Download object that changed.
    */
-  _notifyAllViews(aMethodName, aDownload) {
+  _notifyAllViews: function(aMethodName, aDownload) {
     for (let view of this._views) {
       try {
         if (aMethodName in view) {
@@ -305,7 +305,7 @@ this.DownloadCombinedList.prototype = {
    * @resolves When the download has been added.
    * @rejects JavaScript exception.
    */
-  add(aDownload)
+  add: function(aDownload)
   {
     if (aDownload.source.isPrivate) {
       return this._privateList.add(aDownload);
@@ -329,7 +329,7 @@ this.DownloadCombinedList.prototype = {
    * @resolves When the download has been removed.
    * @rejects JavaScript exception.
    */
-  remove(aDownload)
+  remove: function(aDownload)
   {
     if (aDownload.source.isPrivate) {
       return this._privateList.remove(aDownload);
@@ -339,18 +339,18 @@ this.DownloadCombinedList.prototype = {
 
   // DownloadList view
 
-  onDownloadAdded(aDownload)
+  onDownloadAdded: function(aDownload)
   {
     this._downloads.push(aDownload);
     this._notifyAllViews("onDownloadAdded", aDownload);
   },
 
-  onDownloadChanged(aDownload)
+  onDownloadChanged: function(aDownload)
   {
     this._notifyAllViews("onDownloadChanged", aDownload);
   },
 
-  onDownloadRemoved(aDownload)
+  onDownloadRemoved: function(aDownload)
   {
     let index = this._downloads.indexOf(aDownload);
     if (index != -1) {
@@ -396,7 +396,7 @@ this.DownloadSummary.prototype = {
    * @resolves When the view on the underlying list has been registered.
    * @rejects JavaScript exception.
    */
-  bindToList(aList)
+  bindToList: function(aList)
   {
     if (this._list) {
       throw new Error("bindToList may be called only once.");
@@ -432,7 +432,7 @@ this.DownloadSummary.prototype = {
    *           notification has been sent.
    * @rejects JavaScript exception.
    */
-  addView(aView)
+  addView: function(aView)
   {
     this._views.add(aView);
 
@@ -458,7 +458,7 @@ this.DownloadSummary.prototype = {
    *           will not receive any more notifications.
    * @rejects JavaScript exception.
    */
-  removeView(aView)
+  removeView: function(aView)
   {
     this._views.delete(aView);
 
@@ -494,7 +494,7 @@ this.DownloadSummary.prototype = {
    * and will recalculate the summary and notify the views in case the
    * aggregated properties are different.
    */
-  _onListChanged() {
+  _onListChanged: function() {
     let allHaveStopped = true;
     let progressTotalBytes = 0;
     let progressCurrentBytes = 0;
@@ -535,7 +535,7 @@ this.DownloadSummary.prototype = {
 
   // DownloadList view
 
-  onDownloadAdded(aDownload)
+  onDownloadAdded: function(aDownload)
   {
     this._downloads.push(aDownload);
     if (this._list) {
@@ -543,12 +543,12 @@ this.DownloadSummary.prototype = {
     }
   },
 
-  onDownloadChanged(aDownload)
+  onDownloadChanged: function(aDownload)
   {
     this._onListChanged();
   },
 
-  onDownloadRemoved(aDownload)
+  onDownloadRemoved: function(aDownload)
   {
     let index = this._downloads.indexOf(aDownload);
     if (index != -1) {

@@ -64,7 +64,7 @@ function test() {
 
 function addWindowListener(aURL, aCallback) {
   Services.wm.addListener({
-    onOpenWindow(aXULWindow) {
+    onOpenWindow: function(aXULWindow) {
       info("window opened, waiting for focus");
       Services.wm.removeListener(this);
 
@@ -75,8 +75,8 @@ function addWindowListener(aURL, aCallback) {
         aCallback(domwindow);
       }, domwindow);
     },
-    onCloseWindow(aXULWindow) { },
-    onWindowTitleChange(aXULWindow, aNewTitle) { }
+    onCloseWindow: function(aXULWindow) { },
+    onWindowTitleChange: function(aXULWindow, aNewTitle) { }
   });
 }
 
@@ -98,7 +98,7 @@ TabOpenListener.prototype = {
   tab: null,
   browser: null,
 
-  handleEvent(event) {
+  handleEvent: function(event) {
     if (event.type == "TabOpen") {
       gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
       this.tab = event.originalTarget;

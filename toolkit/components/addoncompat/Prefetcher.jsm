@@ -314,7 +314,7 @@ function Database(trigger, addons)
 
 Database.prototype = {
   // Add an object to a table.
-  add(table, obj) {
+  add: function(table, obj) {
     if (!this.tables.has(table)) {
       this.tables.set(table, new Set());
     }
@@ -327,13 +327,13 @@ Database.prototype = {
     this.todo.push([table, obj]);
   },
 
-  cache(...args) {
+  cache: function(...args) {
     this.cached.push(args);
   },
 
   // Run a fixed-point iteration that adds objects to table based on
   // this.rules until there are no more objects to add.
-  process() {
+  process: function() {
     while (this.todo.length) {
       let [table, obj] = this.todo.pop();
       let rules = this.rules.get(table);
@@ -348,7 +348,7 @@ Database.prototype = {
 };
 
 var Prefetcher = {
-  init() {
+  init: function() {
     // Give an index to each rule and store it in this.ruleMap based
     // on the index. The index is used to serialize and deserialize
     // data from content to chrome.
@@ -368,7 +368,7 @@ var Prefetcher = {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "xpcom-shutdown") {
       Services.prefs.removeObserver(PREF_PREFETCHING_ENABLED, this);
       Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -381,7 +381,7 @@ var Prefetcher = {
   // described by the trigger string. |addons| is a list of addons
   // that have listeners installed for the event. |args| is
   // event-specific data (such as the event object).
-  prefetch(trigger, addons, args) {
+  prefetch: function(trigger, addons, args) {
     if (!this.prefetchingEnabled) {
       return [[], []];
     }
@@ -425,7 +425,7 @@ var Prefetcher = {
 
   // Generate a two-level mapping based on cached data received from
   // the content process.
-  generateCache(prefetched, cpows) {
+  generateCache: function(prefetched, cpows) {
     let cache = new Map();
     for (let item of prefetched) {
       // Replace anything of the form {cpow: <index>} with the actual
@@ -446,7 +446,7 @@ var Prefetcher = {
 
   // Run |func|, using the prefetched data in |prefetched| and |cpows|
   // as a cache.
-  withPrefetching(prefetched, cpows, func) {
+  withPrefetching: function(prefetched, cpows, func) {
     if (!this.prefetchingEnabled) {
       return func();
     }
@@ -466,7 +466,7 @@ var Prefetcher = {
 
   // Called by shim code in the chrome process to check if target.prop
   // is cached.
-  lookupInCache(addon, target, prop) {
+  lookupInCache: function(addon, target, prop) {
     if (!this.cache || !Cu.isCrossProcessWrapper(target)) {
       return null;
     }

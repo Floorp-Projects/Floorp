@@ -477,7 +477,7 @@ function restart_manager(aManagerWindow, aView, aCallback, aLoadCallback) {
 
 function wait_for_window_open(aCallback) {
   Services.wm.addListener({
-    onOpenWindow(aWindow) {
+    onOpenWindow: function(aWindow) {
       Services.wm.removeListener(this);
 
       let domwindow = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -490,10 +490,10 @@ function wait_for_window_open(aCallback) {
       }, false);
     },
 
-    onCloseWindow(aWindow) {
+    onCloseWindow: function(aWindow) {
     },
 
-    onWindowTitleChange(aWindow, aTitle) {
+    onWindowTitleChange: function(aWindow, aTitle) {
     }
   });
 }
@@ -588,7 +588,7 @@ CategoryUtilities.prototype = {
     return (view.type == "list") ? view.param : view.type;
   },
 
-  get(aCategoryType, aAllowMissing) {
+  get: function(aCategoryType, aAllowMissing) {
     isnot(this.window, null, "Should not get category when manager window is not loaded");
     var categories = this.window.document.getElementById("categories");
 
@@ -607,12 +607,12 @@ CategoryUtilities.prototype = {
     return null;
   },
 
-  getViewId(aCategoryType) {
+  getViewId: function(aCategoryType) {
     isnot(this.window, null, "Should not get view id when manager window is not loaded");
     return this.get(aCategoryType).value;
   },
 
-  isVisible(aCategory) {
+  isVisible: function(aCategory) {
     isnot(this.window, null, "Should not check visible state when manager window is not loaded");
     if (aCategory.hasAttribute("disabled") &&
         aCategory.getAttribute("disabled") == "true")
@@ -621,11 +621,11 @@ CategoryUtilities.prototype = {
     return !is_hidden(aCategory);
   },
 
-  isTypeVisible(aCategoryType) {
+  isTypeVisible: function(aCategoryType) {
     return this.isVisible(this.get(aCategoryType));
   },
 
-  open(aCategory, aCallback) {
+  open: function(aCategory, aCallback) {
 
     isnot(this.window, null, "Should not open category when manager window is not loaded");
     ok(this.isVisible(aCategory), "Category should be visible if attempting to open it");
@@ -636,7 +636,7 @@ CategoryUtilities.prototype = {
     return log_callback(p, aCallback);
   },
 
-  openType(aCategoryType, aCallback) {
+  openType: function(aCategoryType, aCallback) {
     return this.open(this.get(aCategoryType), aCallback);
   }
 }
@@ -650,11 +650,11 @@ CertOverrideListener.prototype = {
   host: null,
   bits: null,
 
-  getInterface(aIID) {
+  getInterface: function(aIID) {
     return this.QueryInterface(aIID);
   },
 
-  QueryInterface(aIID) {
+  QueryInterface: function(aIID) {
     if (aIID.equals(Ci.nsIBadCertListener2) ||
         aIID.equals(Ci.nsIInterfaceRequestor) ||
         aIID.equals(Ci.nsISupports))
@@ -663,7 +663,7 @@ CertOverrideListener.prototype = {
     throw Components.Exception("No interface", Components.results.NS_ERROR_NO_INTERFACE);
   },
 
-  notifyCertProblem(socketInfo, sslStatus, targetHost) {
+  notifyCertProblem: function(socketInfo, sslStatus, targetHost) {
     var cert = sslStatus.QueryInterface(Components.interfaces.nsISSLStatus)
                         .serverCert;
     var cos = Cc["@mozilla.org/security/certoverride;1"].
@@ -1223,15 +1223,15 @@ MockAddon.prototype = {
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this, ["applyBackgroundUpdates"]);
   },
 
-  isCompatibleWith(aAppVersion, aPlatformVersion) {
+  isCompatibleWith: function(aAppVersion, aPlatformVersion) {
     return true;
   },
 
-  findUpdates(aListener, aReason, aAppVersion, aPlatformVersion) {
+  findUpdates: function(aListener, aReason, aAppVersion, aPlatformVersion) {
     // Tests can implement this if they need to
   },
 
-  uninstall(aAlwaysAllowUndo = false) {
+  uninstall: function(aAlwaysAllowUndo = false) {
     if ((this.operationsRequiringRestart & AddonManager.OP_NEED_RESTART_UNINSTALL)
         && this.pendingOperations & AddonManager.PENDING_UNINSTALL)
       throw Components.Exception("Add-on is already pending uninstall");
@@ -1247,7 +1247,7 @@ MockAddon.prototype = {
     }
   },
 
-  cancelUninstall() {
+  cancelUninstall: function() {
     if (!(this.pendingOperations & AddonManager.PENDING_UNINSTALL))
       throw Components.Exception("Add-on is not pending uninstall");
 
@@ -1256,11 +1256,11 @@ MockAddon.prototype = {
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
   },
 
-  markAsSeen() {
+  markAsSeen: function() {
     this.seen = true;
   },
 
-  _updateActiveState(currentActive, newActive) {
+  _updateActiveState: function(currentActive, newActive) {
     if (currentActive == newActive)
       return;
 
@@ -1320,7 +1320,7 @@ function MockInstall(aName, aType, aAddonToInstall) {
 }
 
 MockInstall.prototype = {
-  install() {
+  install: function() {
     switch (this.state) {
       case AddonManager.STATE_AVAILABLE:
         this.state = AddonManager.STATE_DOWNLOADING;
@@ -1378,7 +1378,7 @@ MockInstall.prototype = {
     }
   },
 
-  cancel() {
+  cancel: function() {
     switch (this.state) {
       case AddonManager.STATE_AVAILABLE:
         this.state = AddonManager.STATE_CANCELLED;
@@ -1395,25 +1395,25 @@ MockInstall.prototype = {
   },
 
 
-  addListener(aListener) {
+  addListener: function(aListener) {
     if (!this.listeners.some(i => i == aListener))
       this.listeners.push(aListener);
   },
 
-  removeListener(aListener) {
+  removeListener: function(aListener) {
     this.listeners = this.listeners.filter(i => i != aListener);
   },
 
-  addTestListener(aListener) {
+  addTestListener: function(aListener) {
     if (!this.testListeners.some(i => i == aListener))
       this.testListeners.push(aListener);
   },
 
-  removeTestListener(aListener) {
+  removeTestListener: function(aListener) {
     this.testListeners = this.testListeners.filter(i => i != aListener);
   },
 
-  callListeners(aMethod) {
+  callListeners: function(aMethod) {
     var result = AddonManagerPrivate.callInstallListeners(aMethod, this.listeners,
                                                           this, this.addon);
 

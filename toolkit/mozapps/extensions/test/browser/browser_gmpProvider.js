@@ -49,7 +49,7 @@ MockGMPInstallManager.prototype = {
 
 var gOptionsObserver = {
   lastDisplayed: null,
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic == AddonManager.OPTIONS_NOTIFICATION_DISPLAYED) {
       this.lastDisplayed = aData;
     }

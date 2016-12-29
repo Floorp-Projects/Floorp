@@ -10,7 +10,7 @@ add_task(function * ()
 
     let waitForNewTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
 
-    yield BrowserTestUtils.synthesizeMouseAtCenter("#" + link, { button },
+    yield BrowserTestUtils.synthesizeMouseAtCenter("#" + link, { button: button },
                                                    gBrowser.selectedBrowser);
 
     let newtab = yield waitForNewTabPromise;

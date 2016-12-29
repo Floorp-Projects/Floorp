@@ -4,7 +4,7 @@
 function waitForBookmarkNotification(aNotification, aCallback, aProperty)
 {
   PlacesUtils.bookmarks.addObserver({
-    validate(aMethodName, aData)
+    validate: function(aMethodName, aData)
     {
       if (aMethodName == aNotification &&
           (!aProperty || aProperty == aData.property)) {

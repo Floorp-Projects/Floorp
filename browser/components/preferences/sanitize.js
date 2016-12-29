@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var gSanitizeDialog = Object.freeze({
-  init() {
+  init: function() {
     let customWidthElements = document.getElementsByAttribute("dialogWidth", "*");
     let isInSubdialog = document.documentElement.hasAttribute("subdialog");
     for (let element of customWidthElements) {
@@ -13,7 +13,7 @@ var gSanitizeDialog = Object.freeze({
     this.onClearHistoryChanged();
   },
 
-  onClearHistoryChanged() {
+  onClearHistoryChanged: function() {
     let downloadsPref = document.getElementById("privacy.clearOnShutdown.downloads");
     let historyPref = document.getElementById("privacy.clearOnShutdown.history");
     downloadsPref.value = historyPref.value;

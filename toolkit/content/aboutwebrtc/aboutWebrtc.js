@@ -61,14 +61,14 @@ function onLoad() {
   };
 
   Promise.all([reportsRetrieved, logRetrieved])
-    .then(([stats, log]) => contentInit({reports: stats.reports, log}))
-    .catch(error => contentInit({error}));
+    .then(([stats, log]) => contentInit({reports: stats.reports, log: log}))
+    .catch(error => contentInit({error: error}));
 }
 
 function onClearLog() {
   WebrtcGlobalInformation.clearLogging();
   getLog()
-    .then(log => AboutWebRTC.refresh({log}))
+    .then(log => AboutWebRTC.refresh({log: log}))
     .catch(error => AboutWebRTC.refresh({logError: error}));
 }
 
@@ -80,7 +80,7 @@ function onClearStats() {
 }
 
 var ControlSet = {
-  render() {
+  render: function() {
     let controls = document.createElement("div");
     let control = document.createElement("div");
     let message = document.createElement("div");
@@ -96,7 +96,7 @@ var ControlSet = {
     return controls;
   },
 
-  add(controlObj) {
+  add: function(controlObj) {
     let [controlElem, messageElem] = controlObj.render();
     this.controlSection.appendChild(controlElem);
     this.messageSection.appendChild(messageElem);
@@ -110,7 +110,7 @@ function Control() {
 }
 
 Control.prototype = {
-  render() {
+  render: function() {
     let controlElem = document.createElement("button");
     let messageElem = document.createElement("p");
 
@@ -138,7 +138,7 @@ Control.prototype = {
     return this._messageVal;
   },
 
-  update() {
+  update: function() {
     this.ctrl.textContent = this._label;
 
     if (this._message) {
@@ -149,7 +149,7 @@ Control.prototype = {
     }
   },
 
-  onClick(event) {
+  onClick: function(event) {
     return true;
   }
 };
@@ -293,12 +293,12 @@ var AboutWebRTC = {
   _reports: [],
   _log: [],
 
-  init(onClearStats, onClearLog) {
+  init: function(onClearStats, onClearLog) {
     this._onClearStats = onClearStats;
     this._onClearLog = onClearLog;
   },
 
-  render(parent, data) {
+  render: function(parent, data) {
     this._content = parent;
     this._setData(data);
 
@@ -318,7 +318,7 @@ var AboutWebRTC = {
     this._content.appendChild(this._connectionLog);
   },
 
-  _setData(data) {
+  _setData: function(data) {
     if (data.reports) {
       this._reports = data.reports;
     }
@@ -328,7 +328,7 @@ var AboutWebRTC = {
     }
   },
 
-  refresh(data) {
+  refresh: function(data) {
     this._setData(data);
     let pc = this._peerConnections;
     this._peerConnections = this.renderPeerConnections();
@@ -338,7 +338,7 @@ var AboutWebRTC = {
     this._content.replaceChild(this._connectionLog, log);
   },
 
-  renderPeerConnections() {
+  renderPeerConnections: function() {
     let connections = document.createElement("div");
     connections.className = "stats";
 
@@ -369,7 +369,7 @@ var AboutWebRTC = {
     return connections;
   },
 
-  renderConnectionLog() {
+  renderConnectionLog: function() {
     let content = document.createElement("div");
     content.className = "log";
 
@@ -415,7 +415,7 @@ function PeerConnection(report) {
 }
 
 PeerConnection.prototype = {
-  render() {
+  render: function() {
     let pc = document.createElement("div");
     pc.className = "peer-connection";
     pc.appendChild(this.renderHeading());
@@ -436,7 +436,7 @@ PeerConnection.prototype = {
     return pc;
   },
 
-  renderHeading() {
+  renderHeading: function() {
     let pcInfo = this.getPCInfo(this._report);
     let heading = document.createElement("h3");
     let now = new Date(this._report.timestamp).toTimeString();
@@ -445,7 +445,7 @@ PeerConnection.prototype = {
     return heading;
   },
 
-  renderDesc() {
+  renderDesc: function() {
     let info = document.createElement("div");
     let label = document.createElement("span");
     let body = document.createElement("span");
@@ -461,7 +461,7 @@ PeerConnection.prototype = {
     return info;
   },
 
-  getPCInfo(report) {
+  getPCInfo: function(report) {
     return {
       id: report.pcid.match(/id=(\S+)/)[1],
       url: report.pcid.match(/url=([^)]+)/)[1],
@@ -475,7 +475,7 @@ function SDPStats(report) {
 }
 
 SDPStats.prototype = {
-  render() {
+  render: function() {
     let div = document.createElement("div");
     let elem = document.createElement("h4");
 
@@ -508,7 +508,7 @@ function RTPStats(report) {
 }
 
 RTPStats.prototype = {
-  render() {
+  render: function() {
     let div = document.createElement("div");
     let heading = document.createElement("h4");
 
@@ -524,7 +524,7 @@ RTPStats.prototype = {
     return div;
   },
 
-  generateRTPStats() {
+  generateRTPStats: function() {
     let remoteRtpStats = {};
     let rtpStats = [].concat((this._report.inboundRTPStreamStats  || []),
                              (this._report.outboundRTPStreamStats || []));
@@ -549,7 +549,7 @@ RTPStats.prototype = {
     this._stats = rtpStats;
   },
 
-  renderAvStats(stats) {
+  renderAvStats: function(stats) {
     let statsString = "";
 
     if (stats.mozAvSyncDelay) {
@@ -564,7 +564,7 @@ RTPStats.prototype = {
     return line;
   },
 
-  renderCoderStats(stats) {
+  renderCoderStats: function(stats) {
     let statsString = "";
     let label;
 
@@ -599,7 +599,7 @@ RTPStats.prototype = {
     return line;
   },
 
-  renderTransportStats(stats, typeLabel) {
+  renderTransportStats: function(stats, typeLabel) {
     let time  = new Date(stats.timestamp).toTimeString();
     let statsString = `${typeLabel}: ${time} ${stats.type} SSRC: ${stats.ssrc}`;
 
@@ -627,7 +627,7 @@ RTPStats.prototype = {
     return line;
   },
 
-  renderRTPStatSet(stats) {
+  renderRTPStatSet: function(stats) {
     let div = document.createElement("div");
     let heading = document.createElement("h5");
 
@@ -654,7 +654,7 @@ function ICEStats(report) {
 }
 
 ICEStats.prototype = {
-  render() {
+  render: function() {
     let tbody = [];
     for (let stat of this.generateICEStats()) {
       tbody.push([
@@ -687,7 +687,7 @@ ICEStats.prototype = {
     return div;
   },
 
-  renderIceMetric(labelName, value) {
+  renderIceMetric: function(labelName, value) {
     let info = document.createElement("div");
     let label = document.createElement("span");
     let body = document.createElement("span");
@@ -702,7 +702,7 @@ ICEStats.prototype = {
     return info;
   },
 
-  generateICEStats() {
+  generateICEStats: function() {
     // Create an index based on candidate ID for each element in the
     // iceCandidateStats array.
     let candidates = new Map();
@@ -751,7 +751,7 @@ ICEStats.prototype = {
     return stats.sort((a, b) => (b.priority || 0) - (a.priority || 0));
   },
 
-  candidateToString(c) {
+  candidateToString: function(c) {
     if (!c) {
       return "*";
     }
@@ -772,7 +772,7 @@ function SimpleTable(heading, data) {
 }
 
 SimpleTable.prototype = {
-  renderRow(list) {
+  renderRow: function(list) {
     let row = document.createElement("tr");
 
     for (let elem of list) {
@@ -784,7 +784,7 @@ SimpleTable.prototype = {
     return row;
   },
 
-  render() {
+  render: function() {
     let table = document.createElement("table");
 
     if (this._heading) {
@@ -810,7 +810,7 @@ function FoldEffect(targetElem, options = {}) {
 }
 
 FoldEffect.prototype = {
-  render() {
+  render: function() {
     this._target.classList.add("fold-target");
 
     let ctrl = document.createElement("div");
@@ -823,7 +823,7 @@ FoldEffect.prototype = {
     return ctrl;
   },
 
-  onClick() {
+  onClick: function() {
     if (this._target.classList.contains("fold-closed")) {
       this.open();
     } else {
@@ -832,13 +832,13 @@ FoldEffect.prototype = {
     return true;
   },
 
-  open() {
+  open: function() {
     this._target.classList.remove("fold-closed");
     this._trigger.setAttribute("title", this._hideHint);
     this._trigger.textContent = this._hideMsg;
   },
 
-  close() {
+  close: function() {
     this._target.classList.add("fold-closed");
     this._trigger.setAttribute("title", this._showHint);
     this._trigger.textContent = this._showMsg;

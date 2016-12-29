@@ -8,13 +8,13 @@ installLocation.append("baddir");
 installLocation.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o664);
 
 var dirProvider2 = {
-  getFile(prop, persistent) {
+  getFile: function(prop, persistent) {
     persistent.value = true;
     if (prop == "XREUSysExt")
       return installLocation.clone();
     return null;
   },
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Components.interfaces.nsIDirectoryServiceProvider) ||
         iid.equals(Components.interfaces.nsISupports)) {
       return this;

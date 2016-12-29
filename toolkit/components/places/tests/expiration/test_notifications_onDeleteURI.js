@@ -80,18 +80,18 @@ add_task(function* test_notifications_onDeleteURI() {
     let historyObserver = {
       onBeginUpdateBatch: function PEX_onBeginUpdateBatch() {},
       onEndUpdateBatch: function PEX_onEndUpdateBatch() {},
-      onClearHistory() {},
-      onVisit() {},
-      onTitleChanged() {},
-      onDeleteURI(aURI, aGUID, aReason) {
+      onClearHistory: function() {},
+      onVisit: function() {},
+      onTitleChanged: function() {},
+      onDeleteURI: function(aURI, aGUID, aReason) {
         currentTest.receivedNotifications++;
         // Check this uri was not bookmarked.
         do_check_eq(currentTest.bookmarks.indexOf(aURI.spec), -1);
         do_check_valid_places_guid(aGUID);
         do_check_eq(aReason, Ci.nsINavHistoryObserver.REASON_EXPIRED);
       },
-      onPageChanged() {},
-      onDeleteVisits(aURI, aTime) { },
+      onPageChanged: function() {},
+      onDeleteVisits: function(aURI, aTime) { },
     };
     hs.addObserver(historyObserver, false);
 

@@ -21,7 +21,7 @@ var DevEdition = {
     return theme && theme.id == "firefox-devedition@mozilla.org";
   },
 
-  init() {
+  init: function() {
     this.initialized = true;
     Services.prefs.addObserver(this._devtoolsThemePrefName, this, false);
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
@@ -33,7 +33,7 @@ var DevEdition = {
     }
   },
 
-  createStyleSheet() {
+  createStyleSheet: function() {
     let styleSheetAttr = `href="${this.styleSheetLocation}" type="text/css"`;
     this.styleSheet = document.createProcessingInstruction(
       "xml-stylesheet", styleSheetAttr);
@@ -42,7 +42,7 @@ var DevEdition = {
     this.styleSheet.sheet.disabled = true;
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
       let newTheme = JSON.parse(data);
       if (newTheme && newTheme.id == "firefox-devedition@mozilla.org") {
@@ -59,7 +59,7 @@ var DevEdition = {
     }
   },
 
-  _inferBrightness() {
+  _inferBrightness: function() {
     ToolbarIconColor.inferFromText();
     // Get an inverted full screen button if the dark theme is applied.
     if (this.isStyleSheetEnabled &&
@@ -78,7 +78,7 @@ var DevEdition = {
     }
   },
 
-  _updateDevtoolsThemeAttribute() {
+  _updateDevtoolsThemeAttribute: function() {
     // Set an attribute on root element to make it possible
     // to change colors based on the selected devtools theme.
     let devtoolsTheme = Services.prefs.getCharPref(this._devtoolsThemePrefName);
@@ -90,14 +90,14 @@ var DevEdition = {
     this._inferBrightness();
   },
 
-  handleEvent(e) {
+  handleEvent: function(e) {
     if (e.type === "load") {
       this.styleSheet.removeEventListener("load", this);
       this.refreshBrowserDisplay();
     }
   },
 
-  refreshBrowserDisplay() {
+  refreshBrowserDisplay: function() {
     // Don't touch things on the browser if gBrowserInit.onLoad hasn't
     // yet fired.
     if (this.initialized) {
@@ -106,7 +106,7 @@ var DevEdition = {
     }
   },
 
-  _toggleStyleSheet(deveditionThemeEnabled) {
+  _toggleStyleSheet: function(deveditionThemeEnabled) {
     let wasEnabled = this.isStyleSheetEnabled;
     if (deveditionThemeEnabled && !wasEnabled) {
       // The stylesheet may not have been created yet if it wasn't
@@ -122,7 +122,7 @@ var DevEdition = {
     }
   },
 
-  uninit() {
+  uninit: function() {
     Services.prefs.removeObserver(this._devtoolsThemePrefName, this);
     Services.obs.removeObserver(this, "lightweight-theme-styling-update", false);
     Services.obs.removeObserver(this, "lightweight-theme-window-updated", false);

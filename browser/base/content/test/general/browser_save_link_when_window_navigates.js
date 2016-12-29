@@ -90,13 +90,13 @@ function triggerSave(aWindow, aCallback) {
 
 
 var windowObserver = {
-  setCallback(aCallback) {
+  setCallback: function(aCallback) {
     if (this._callback) {
       ok(false, "Should only be dealing with one callback at a time.");
     }
     this._callback = aCallback;
   },
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic != "domwindowopened") {
       return;
     }

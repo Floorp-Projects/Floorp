@@ -46,12 +46,12 @@ const tests = [
 
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
-  onStartRequest(request, context) {
+  onStartRequest: function(request, context) {
     do_print("Sniffing " + tests[testRan].path);
     do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType, tests[testRan].expected);
   },
 
-  onDataAvailable(request, context, stream, offset, count) {
+  onDataAvailable: function(request, context, stream, offset, count) {
     try {
       var bis = Components.classes["@mozilla.org/binaryinputstream;1"]
                           .createInstance(Components.interfaces.nsIBinaryInputStream);
@@ -62,7 +62,7 @@ var listener = {
     }
   },
 
-  onStopRequest(request, context, status) {
+  onStopRequest: function(request, context, status) {
     testRan++;
     runNext();
   }

@@ -59,14 +59,14 @@ function wsBorder(t, l, b, r) {
 
 wsBorder.prototype = {
 
-  setBorder(t, l, b, r) {
+  setBorder: function(t, l, b, r) {
     this.top = t;
     this.left = l;
     this.bottom = b;
     this.right = r;
   },
 
-  toString() {
+  toString: function() {
     return "[l:" + this.left + ",t:" + this.top + ",r:" + this.right + ",b:" + this.bottom + "]";
   }
 };
@@ -102,7 +102,7 @@ wsRect.prototype = {
   set width(v) { this.right = this.left + v; },
   set height(v) { this.bottom = this.top + v; },
 
-  setRect(x, y, w, h) {
+  setRect: function(x, y, w, h) {
     this.left = x;
     this.top = y;
     this.right = x + w;
@@ -111,7 +111,7 @@ wsRect.prototype = {
     return this;
   },
 
-  setBounds(t, l, b, r) {
+  setBounds: function(t, l, b, r) {
     this.top = t;
     this.left = l;
     this.bottom = b;
@@ -141,7 +141,7 @@ wsRect.prototype = {
     return this.center().map(Math.round);
   },
 
-  copyFrom(r) {
+  copyFrom: function(r) {
     this.top = r.top;
     this.left = r.left;
     this.bottom = r.bottom;
@@ -150,7 +150,7 @@ wsRect.prototype = {
     return this;
   },
 
-  copyFromTLBR(r) {
+  copyFromTLBR: function(r) {
     this.left = r.left;
     this.top = r.top;
     this.right = r.right;
@@ -159,7 +159,7 @@ wsRect.prototype = {
     return this;
   },
 
-  translate(x, y) {
+  translate: function(x, y) {
     this.left += x;
     this.right += x;
     this.top += y;
@@ -169,7 +169,7 @@ wsRect.prototype = {
   },
 
   // return a new wsRect that is the union of that one and this one
-  union(rect) {
+  union: function(rect) {
     let l = Math.min(this.left, rect.left);
     let r = Math.max(this.right, rect.right);
     let t = Math.min(this.top, rect.top);
@@ -178,11 +178,11 @@ wsRect.prototype = {
     return new wsRect(l, t, r - l, b - t);
   },
 
-  toString() {
+  toString: function() {
     return "[" + this.x + "," + this.y + "," + this.width + "," + this.height + "]";
   },
 
-  expandBy(b) {
+  expandBy: function(b) {
     this.left += b.left;
     this.right += b.right;
     this.top += b.top;
@@ -190,14 +190,14 @@ wsRect.prototype = {
     return this;
   },
 
-  contains(other) {
+  contains: function(other) {
     return !!(other.left >= this.left &&
               other.right <= this.right &&
               other.top >= this.top &&
               other.bottom <= this.bottom);
   },
 
-  intersect(r2) {
+  intersect: function(r2) {
     let xmost1 = this.right;
     let xmost2 = r2.right;
 
@@ -222,7 +222,7 @@ wsRect.prototype = {
     return new wsRect(x, y, width, height);
   },
 
-  intersects(other) {
+  intersects: function(other) {
     let xok = (other.left > this.left && other.left < this.right) ||
       (other.right > this.left && other.right < this.right) ||
       (other.left <= this.left && other.right >= this.right);
@@ -380,7 +380,7 @@ WidgetStack.prototype = {
   // init:
   //   el: the <stack> element whose children are to be managed
   //
-  init(el, ew, eh) {
+  init: function(el, ew, eh) {
     this._el = el;
     this._widgetState = {};
     this._barriers = [];
@@ -422,7 +422,7 @@ WidgetStack.prototype = {
   // not be used on vp-relative or otherwise frozen widgets (using it
   // on the x coordinate for x-ignore widgets and similarily for y is
   // ok, as long as the other coordinate remains 0.)
-  moveWidgetBy(wid, x, y) {
+  moveWidgetBy: function(wid, x, y) {
     let state = this._getState(wid);
 
     state.rect.x += x;
@@ -472,13 +472,13 @@ WidgetStack.prototype = {
   // in the stack -- its x,y position will still be tracked in the
   // state, but the left/top attributes won't be overwritten.  Call unfreeze
   // to move the widget back to where the ws thinks it should be.
-  freeze(wid) {
+  freeze: function(wid) {
     let state = this._getState(wid);
 
     state.frozen = true;
   },
 
-  unfreeze(wid) {
+  unfreeze: function(wid) {
     let state = this._getState(wid);
     if (!state.frozen)
       return;
@@ -489,7 +489,7 @@ WidgetStack.prototype = {
 
   // moveFrozenTo: move a frozen widget with id wid to x, y in the stack.
   // can only be used on frozen widgets
-  moveFrozenTo(wid, x, y) {
+  moveFrozenTo: function(wid, x, y) {
     let state = this._getState(wid);
     if (!state.frozen)
       throw "moveFrozenTo on non-frozen widget " + wid;
@@ -502,7 +502,7 @@ WidgetStack.prototype = {
   // the stack. should only be used on unfrozen widgets when a dynamic change
   // in position needs to be made. we basically remove, adjust and re-add
   // the widget
-  moveUnfrozenTo(wid, x, y) {
+  moveUnfrozenTo: function(wid, x, y) {
     delete this._widgetState[wid];
     let widget = document.getElementById(wid);
     if (x) widget.setAttribute("left", x);
@@ -525,7 +525,7 @@ WidgetStack.prototype = {
 
   // isWidgetVisible: return true if any portion of widget with id wid is
   // visible; otherwise return false.
-  isWidgetVisible(wid) {
+  isWidgetVisible: function(wid) {
     let state = this._getState(wid);
     let visibleStackRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
 
@@ -533,7 +533,7 @@ WidgetStack.prototype = {
   },
 
   // getWidgetVisibility: returns the percentage that the widget is visible
-  getWidgetVisibility(wid) {
+  getWidgetVisibility: function(wid) {
     let state = this._getState(wid);
     let visibleStackRect = new wsRect(0, 0, this._viewingRect.width, this._viewingRect.height);
 
@@ -545,7 +545,7 @@ WidgetStack.prototype = {
   },
 
   // offsetAll: add an offset to all widgets
-  offsetAll(x, y) {
+  offsetAll: function(x, y) {
     this.globalOffsetX += x;
     this.globalOffsetY += y;
 
@@ -658,7 +658,7 @@ WidgetStack.prototype = {
   // bounds change, passing in the new rect that's to be displayed in the
   // viewport.
   //
-  setViewportHandler(uh) {
+  setViewportHandler: function(uh) {
     this._viewportUpdateHandler = uh;
   },
 
@@ -667,7 +667,7 @@ WidgetStack.prototype = {
   //
   // The given functin object is called whenever elements pan; it provides
   // the new area of the pannable bounds that's visible in the stack.
-  setPanHandler(uh) {
+  setPanHandler: function(uh) {
     this._panHandler = uh;
   },
 
@@ -809,7 +809,7 @@ WidgetStack.prototype = {
   // Internal code
   //
 
-  _updateWidgetRect(state) {
+  _updateWidgetRect: function(state) {
     // don't need to support updating the viewport rect at the moment
     // (we'd need to duplicate the vptarget* code from _addNewWidget if we did)
     if (state == this._viewport)
@@ -828,7 +828,7 @@ WidgetStack.prototype = {
     }
   },
 
-  _dumpRects() {
+  _dumpRects: function() {
     dump("WidgetStack:\n");
     dump("\tthis._viewportBounds: " + this._viewportBounds + "\n");
     dump("\tthis._viewingRect: " + this._viewingRect + "\n");
@@ -866,7 +866,7 @@ WidgetStack.prototype = {
     this.panBy(panX, panY, true);
   },
 
-  _getState(wid) {
+  _getState: function(wid) {
     let w = this._widgetState[wid];
     if (!w)
       throw "Unknown widget id '" + wid + "'; widget not in stack";
@@ -930,7 +930,7 @@ WidgetStack.prototype = {
     this._viewportUpdateHandler.apply(window, [vwb, vwib, vis, boundsChanged]);
   },
 
-  _dragCoordsFromClient(cx, cy, t) {
+  _dragCoordsFromClient: function(cx, cy, t) {
     this._dragState.curTime = t ? t : Date.now();
     this._dragState.outerCurX = cx;
     this._dragState.outerCurY = cy;
@@ -941,7 +941,7 @@ WidgetStack.prototype = {
     this._dragState.outerDY = dy;
   },
 
-  _panHandleBarriers(dx, dy) {
+  _panHandleBarriers: function(dx, dy) {
     // XXX unless the barriers are sorted by position, this will break
     // with multiple barriers that are near enough to eachother that a
     // drag could cross more than one.
@@ -1143,7 +1143,7 @@ WidgetStack.prototype = {
   //
   // widget addition/removal
   //
-  _addNewWidget(w) {
+  _addNewWidget: function(w) {
     let wid = w.getAttribute("id");
     if (!wid) {
       reportError("WidgetStack: child widget without id!");
@@ -1220,7 +1220,7 @@ WidgetStack.prototype = {
     log("(New widget: " + wid + (state.viewport ? " [viewport]" : "") + " at: " + state.rect + ")");
   },
 
-  _removeWidget(w) {
+  _removeWidget: function(w) {
     let wid = w.getAttribute("id");
     delete this._widgetState[wid];
     this._updateWidgets();
@@ -1233,7 +1233,7 @@ WidgetStack.prototype = {
   // See setViewportBounds for use of vpOffset* state variables, and for how
   // the actual x and y coords of each widget are calculated based on their offsets
   // and the viewport bounds.
-  _updateWidgets() {
+  _updateWidgets: function() {
     let vp = this._viewport;
 
     for (let wid in this._widgetState) {
@@ -1264,7 +1264,7 @@ WidgetStack.prototype = {
   },
 
   // updates the viewportOverflow/pannableBounds
-  _updateViewportOverflow() {
+  _updateViewportOverflow: function() {
     let vp = this._viewport;
     if (!vp)
       return;
@@ -1296,7 +1296,7 @@ WidgetStack.prototype = {
     this._pannableBounds = null;
   },
 
-  _widgetBounds() {
+  _widgetBounds: function() {
     let r = new wsRect(0, 0, 0, 0);
 
     for (let wid in this._widgetState) {
@@ -1307,7 +1307,7 @@ WidgetStack.prototype = {
     return r;
   },
 
-  _commitState(state) {
+  _commitState: function(state) {
     // if the widget is frozen, don't actually update its left/top;
     // presumably the caller is managing those directly for now.
     if (state.frozen)
@@ -1330,7 +1330,7 @@ WidgetStack.prototype = {
 
   // constrain translate of rect by dx dy to bounds; return dx dy that can
   // be used to bring rect up to the edge of bounds if we'd go over.
-  _rectTranslateConstrain(dx, dy, rect, bounds) {
+  _rectTranslateConstrain: function(dx, dy, rect, bounds) {
     let newX, newY;
 
     // If the rect is larger than the bounds, allow it to increase its overlap
@@ -1357,7 +1357,7 @@ WidgetStack.prototype = {
   },
 
   // add a new barrier from a <spacer>
-  _addNewBarrierFromSpacer(el) {
+  _addNewBarrierFromSpacer: function(el) {
     let t = el.getAttribute("barriertype");
 
     // XXX implement these at some point

@@ -98,7 +98,8 @@ function listElement(aListElement)
 
 listElement.prototype =
   {
-    clearList()
+    clearList:
+      function()
         {
           // remove the menupopup node child of the menulist.
           var popup = this.listElement.firstChild;
@@ -107,7 +108,8 @@ listElement.prototype =
           }
         },
 
-    appendPrinterNames(aDataObject)
+    appendPrinterNames:
+      function(aDataObject)
         {
           if ((null == aDataObject) || !aDataObject.hasMore()) {
             // disable dialog

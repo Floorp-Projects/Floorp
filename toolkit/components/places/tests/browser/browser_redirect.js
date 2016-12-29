@@ -10,7 +10,7 @@ add_task(function* () {
   let visitedPromise = new Promise(resolve => {
     let historyObserver = {
       _redirectNotified: false,
-      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
+      onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
                         aTransitionType) {
         info("Received onVisit: " + aURI.spec);
 
@@ -41,13 +41,13 @@ add_task(function* () {
           });
         });
       },
-      onBeginUpdateBatch() {},
-      onEndUpdateBatch() {},
-      onTitleChanged() {},
-      onDeleteURI() {},
-      onClearHistory() {},
-      onPageChanged() {},
-      onDeleteVisits() {},
+      onBeginUpdateBatch: function() {},
+      onEndUpdateBatch: function() {},
+      onTitleChanged: function() {},
+      onDeleteURI: function() {},
+      onClearHistory: function() {},
+      onPageChanged: function() {},
+      onDeleteVisits: function() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
     PlacesUtils.history.addObserver(historyObserver, false);

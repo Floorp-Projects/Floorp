@@ -334,7 +334,7 @@ const ADDON_IDS = ["softblock1@tests.mozilla.org",
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
-  openWindow(parent, url, name, features, openArgs) {
+  openWindow: function(parent, url, name, features, openArgs) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
@@ -350,7 +350,7 @@ var WindowWatcher = {
 
   },
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIWindowWatcher)
      || iid.equals(Ci.nsISupports))
       return this;
@@ -362,13 +362,13 @@ var WindowWatcher = {
 MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
 var InstallConfirm = {
-  confirm(aWindow, aUrl, aInstalls, aInstallCount) {
+  confirm: function(aWindow, aUrl, aInstalls, aInstallCount) {
     aInstalls.forEach(function(aInstall) {
       aInstall.install();
     });
   },
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.amIWebInstallPrompt)
      || iid.equals(Ci.nsISupports))
       return this;
@@ -417,11 +417,11 @@ function Pbackground_update() {
 
   let updated = new Promise((resolve, reject) => {
     AddonManager.addInstallListener({
-      onNewInstall(aInstall) {
+      onNewInstall: function(aInstall) {
         installCount++;
       },
 
-      onInstallEnded(aInstall) {
+      onInstallEnded: function(aInstall) {
         installCount--;
         // Wait until all started installs have completed
         if (installCount)

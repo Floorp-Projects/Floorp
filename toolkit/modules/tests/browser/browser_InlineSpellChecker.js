@@ -12,7 +12,7 @@ function test() {
 var tests = {
   // Test various possible dictionary name to ensure they display as expected.
   // XXX: This only works for the 'en-US' locale, as the testing involves localized output.
-  testDictionaryDisplayNames() {
+  testDictionaryDisplayNames: function() {
     let isc = new InlineSpellChecker();
 
     // Check non-well-formed language tag.

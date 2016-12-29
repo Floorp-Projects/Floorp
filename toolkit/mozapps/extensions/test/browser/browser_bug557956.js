@@ -75,7 +75,7 @@ function install_test_addons(aCallback) {
     var listener = {
       installCount: 0,
 
-      onInstallEnded() {
+      onInstallEnded: function() {
         this.installCount++;
         if (this.installCount == installs.length) {
           // Switch to the test update URL

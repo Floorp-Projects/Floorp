@@ -52,13 +52,13 @@ const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 * parent 'addons' level logger accordingly.
 */
 var PrefObserver = {
- init() {
+ init: function() {
    Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
    Services.obs.addObserver(this, "xpcom-shutdown", false);
    this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
  },
 
- observe(aSubject, aTopic, aData) {
+ observe: function(aSubject, aTopic, aData) {
    if (aTopic == "xpcom-shutdown") {
      Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
      Services.obs.removeObserver(this, "xpcom-shutdown");
@@ -164,7 +164,7 @@ this.DeferredSave.prototype = {
   },
 
   // Start the pending timer if data is dirty
-  _startTimer() {
+  _startTimer: function() {
     if (!this._pending) {
       return;
     }
@@ -181,7 +181,7 @@ this.DeferredSave.prototype = {
    * @return A Promise<integer> that will be resolved after the data is written to disk;
    *         the promise is resolved with the number of bytes written.
    */
-  saveChanges() {
+  saveChanges: function() {
       this.logger.debug("Save changes");
     if (!this._pending) {
       if (this.writeInProgress) {
@@ -196,7 +196,7 @@ this.DeferredSave.prototype = {
     return this._pending.promise;
   },
 
-  _deferredSave() {
+  _deferredSave: function() {
     let pending = this._pending;
     this._pending = null;
     let writing = this._writing;
@@ -257,7 +257,7 @@ this.DeferredSave.prototype = {
    *         written. If all in-memory data is clean, completes with the
    *         result of the most recent write.
    */
-  flush() {
+  flush: function() {
     // If we have pending changes, cancel our timer and set up the write
     // immediately (_deferredSave queues the write for after the most
     // recent write completes, if it hasn't already)

@@ -14,7 +14,7 @@ function nsSidebar() {
 }
 
 nsSidebar.prototype = {
-  init(window) {
+  init: function(window) {
     this.window = window;
     try {
       this.mm = window.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -27,7 +27,7 @@ nsSidebar.prototype = {
   },
 
   // Deprecated, only left here to avoid breaking old browser-detection scripts.
-  addSearchEngine(engineURL, iconURL, suggestedTitle, suggestedCategory) {
+  addSearchEngine: function(engineURL, iconURL, suggestedTitle, suggestedCategory) {
     if (SHERLOCK_FILE_EXT_REGEXP.test(engineURL)) {
       Cu.reportError("Installing Sherlock search plugins is no longer supported.");
       return;
@@ -39,7 +39,7 @@ nsSidebar.prototype = {
   // This function implements window.external.AddSearchProvider().
   // The capitalization, although nonstandard here, is to match other browsers'
   // APIs and is therefore important.
-  AddSearchProvider(engineURL) {
+  AddSearchProvider: function(engineURL) {
     if (!this.mm) {
       Cu.reportError(`Installing a search provider from this context is not currently supported: ${Error().stack}.`);
       return;
@@ -54,7 +54,7 @@ nsSidebar.prototype = {
   // This function exists to implement window.external.IsSearchProviderInstalled(),
   // for compatibility with other browsers.  The function has been deprecated
   // and so will not be implemented.
-  IsSearchProviderInstalled(engineURL) {
+  IsSearchProviderInstalled: function(engineURL) {
     return 0;
   },
 

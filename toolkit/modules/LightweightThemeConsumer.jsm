@@ -48,12 +48,12 @@ LightweightThemeConsumer.prototype = {
   // Whether a lightweight theme is enabled.
   _active: false,
 
-  enable() {
+  enable: function() {
     this._enabled = true;
     this._update(this._lastData);
   },
 
-  disable() {
+  disable: function() {
     // Dance to keep the data, but reset the applied styles:
     let lastData = this._lastData
     this._update(null);
@@ -61,18 +61,18 @@ LightweightThemeConsumer.prototype = {
     this._lastData = lastData;
   },
 
-  getData() {
+  getData: function() {
     return this._enabled ? Cu.cloneInto(this._lastData, this._win) : null;
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
     this._update(JSON.parse(aData));
   },
 
-  handleEvent(aEvent) {
+  handleEvent: function(aEvent) {
     let {width, height} = this._win.screen;
 
     if (this._lastScreenWidth != width || this._lastScreenHeight != height) {
@@ -86,7 +86,7 @@ LightweightThemeConsumer.prototype = {
     }
   },
 
-  destroy() {
+  destroy: function() {
     if (!PrivateBrowsingUtils.isWindowPrivate(this._win) ||
         PrivateBrowsingUtils.permanentPrivateBrowsing) {
       Services.obs.removeObserver(this, "lightweight-theme-styling-update");
@@ -97,7 +97,7 @@ LightweightThemeConsumer.prototype = {
     this._win = this._doc = null;
   },
 
-  _update(aData) {
+  _update: function(aData) {
     if (!aData) {
       aData = { headerURL: "", footerURL: "", textcolor: "", accentcolor: "" };
       this._lastData = aData;

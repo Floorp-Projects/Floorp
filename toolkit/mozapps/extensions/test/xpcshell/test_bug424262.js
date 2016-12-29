@@ -20,7 +20,7 @@ var RESULTS = [
 ];
 
 var RecommendedCallback = {
-  searchSucceeded(addons, length, total) {
+  searchSucceeded: function(addons, length, total) {
     dump("loaded");
     // Search is complete
     do_check_eq(length, RESULTS.length);
@@ -32,7 +32,7 @@ var RecommendedCallback = {
     server.stop(do_test_finished);
   },
 
-  searchFailed() {
+  searchFailed: function() {
     server.stop(do_test_finished);
     do_throw("Recommended results failed");
   }

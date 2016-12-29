@@ -31,18 +31,18 @@ function CallbackCaller(callback) {
 }
 
 CallbackCaller.prototype = {
-  handleResult(contentPref) {
+  handleResult: function(contentPref) {
     cbHandleResult(this._callback,
                    new ContentPref(contentPref.domain,
                                    contentPref.name,
                                    contentPref.value));
   },
 
-  handleError(result) {
+  handleError: function(result) {
     cbHandleError(this._callback, result);
   },
 
-  handleCompletion(reason) {
+  handleCompletion: function(reason) {
     cbHandleCompletion(this._callback, reason);
   },
 };
@@ -56,7 +56,7 @@ var ContentPrefServiceChild = {
   _mm: Cc["@mozilla.org/childprocessmessagemanager;1"]
          .getService(Ci.nsIMessageSender),
 
-  _getRandomId() {
+  _getRandomId: function() {
     return Cc["@mozilla.org/uuid-generator;1"]
              .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   },
@@ -64,13 +64,13 @@ var ContentPrefServiceChild = {
   // Map from random ID string -> CallbackCaller, per request
   _requests: new Map(),
 
-  init() {
+  init: function() {
     this._mm.addMessageListener("ContentPrefs:HandleResult", this);
     this._mm.addMessageListener("ContentPrefs:HandleError", this);
     this._mm.addMessageListener("ContentPrefs:HandleCompletion", this);
   },
 
-  receiveMessage(msg) {
+  receiveMessage: function(msg) {
     let data = msg.data;
     let callback;
     switch (msg.name) {
@@ -104,34 +104,34 @@ var ContentPrefServiceChild = {
     }
   },
 
-  _callFunction(call, args, callback) {
+  _callFunction: function(call, args, callback) {
     let requestId = this._getRandomId();
-    let data = { call, args, requestId };
+    let data = { call: call, args: args, requestId: requestId };
 
     this._mm.sendAsyncMessage("ContentPrefs:FunctionCall", data);
 
     this._requests.set(requestId, new CallbackCaller(callback));
   },
 
-  getByName(name, context, callback) {
+  getByName: function(name, context, callback) {
     return this._callFunction("getByName",
                               [ name, contextArg(context) ],
                               callback);
   },
 
-  getByDomainAndName(domain, name, context, callback) {
+  getByDomainAndName: function(domain, name, context, callback) {
     return this._callFunction("getByDomainAndName",
                               [ domain, name, contextArg(context) ],
                               callback);
   },
 
-  getBySubdomainAndName(domain, name, context, callback) {
+  getBySubdomainAndName: function(domain, name, context, callback) {
     return this._callFunction("getBySubdomainAndName",
                               [ domain, name, contextArg(context) ],
                               callback);
   },
 
-  getGlobal(name, context, callback) {
+  getGlobal: function(name, context, callback) {
     return this._callFunction("getGlobal",
                               [ name, contextArg(context) ],
                               callback);
@@ -141,59 +141,59 @@ var ContentPrefServiceChild = {
   getCachedBySubdomainAndName: NYI,
   getCachedGlobal: NYI,
 
-  set(domain, name, value, context, callback) {
+  set: function(domain, name, value, context, callback) {
     this._callFunction("set",
                        [ domain, name, value, contextArg(context) ],
                        callback);
   },
 
-  setGlobal(name, value, context, callback) {
+  setGlobal: function(name, value, context, callback) {
     this._callFunction("setGlobal",
                        [ name, value, contextArg(context) ],
                        callback);
   },
 
-  removeByDomainAndName(domain, name, context, callback) {
+  removeByDomainAndName: function(domain, name, context, callback) {
     this._callFunction("removeByDomainAndName",
                        [ domain, name, contextArg(context) ],
                        callback);
   },
 
-  removeBySubdomainAndName(domain, name, context, callback) {
+  removeBySubdomainAndName: function(domain, name, context, callback) {
     this._callFunction("removeBySubdomainAndName",
                        [ domain, name, contextArg(context) ],
                        callback);
   },
 
-  removeGlobal(name, context, callback) {
+  removeGlobal: function(name, context, callback) {
     this._callFunction("removeGlobal", [ name, contextArg(context) ], callback);
   },
 
-  removeByDomain(domain, context, callback) {
+  removeByDomain: function(domain, context, callback) {
     this._callFunction("removeByDomain", [ domain, contextArg(context) ],
                        callback);
   },
 
-  removeBySubdomain(domain, context, callback) {
+  removeBySubdomain: function(domain, context, callback) {
     this._callFunction("removeBySubdomain", [ domain, contextArg(context) ],
                        callback);
   },
 
-  removeByName(name, context, callback) {
+  removeByName: function(name, context, callback) {
     this._callFunction("removeByName", [ name, value, contextArg(context) ],
                        callback);
   },
 
-  removeAllDomains(context, callback) {
+  removeAllDomains: function(context, callback) {
     this._callFunction("removeAllDomains", [ contextArg(context) ], callback);
   },
 
-  removeAllGlobals(context, callback) {
+  removeAllGlobals: function(context, callback) {
     this._callFunction("removeAllGlobals", [ contextArg(context) ],
                        callback);
   },
 
-  addObserverForName(name, observer) {
+  addObserverForName: function(name, observer) {
     let set = this._observers.get(name);
     if (!set) {
       set = new Set();
@@ -204,14 +204,14 @@ var ContentPrefServiceChild = {
 
       // This is the first observer for this name. Start listening for changes
       // to it.
-      this._mm.sendAsyncMessage("ContentPrefs:AddObserverForName", { name });
+      this._mm.sendAsyncMessage("ContentPrefs:AddObserverForName", { name: name });
       this._observers.set(name, set);
     }
 
     set.add(observer);
   },
 
-  removeObserverForName(name, observer) {
+  removeObserverForName: function(name, observer) {
     let set = this._observers.get(name);
     if (!set)
       return;
@@ -219,7 +219,7 @@ var ContentPrefServiceChild = {
     set.delete(observer);
     if (set.size === 0) {
       // This was the last observer for this name. Stop listening for changes.
-      this._mm.sendAsyncMessage("ContentPrefs:RemoveObserverForName", { name });
+      this._mm.sendAsyncMessage("ContentPrefs:RemoveObserverForName", { name: name });
 
       this._observers.delete(name);
       if (this._observers.size === 0) {

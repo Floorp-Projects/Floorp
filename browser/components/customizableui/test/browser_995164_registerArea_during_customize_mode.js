@@ -65,7 +65,7 @@ add_task(function*() {
   otherTB.setAttribute("customizable", "true");
   let wasInformedCorrectlyOfAreaAppearing = false;
   let listener = {
-    onAreaNodeRegistered(aArea, aNode) {
+    onAreaNodeRegistered: function(aArea, aNode) {
       if (aNode == otherTB) {
         wasInformedCorrectlyOfAreaAppearing = true;
       }
@@ -99,14 +99,14 @@ add_task(function*() {
   // (and therefore onAreaNodeRegistered) one, causing the test to fail.
   let windowCloseDeferred = Promise.defer();
   listener = {
-    onAreaNodeUnregistered(aArea, aNode, aReason) {
+    onAreaNodeUnregistered: function(aArea, aNode, aReason) {
       if (aArea == TOOLBARID) {
         is(aNode, otherTB, "Should be informed about other toolbar");
         is(aReason, CustomizableUI.REASON_WINDOW_CLOSED, "Reason should be correct.");
         wasInformedCorrectlyOfAreaDisappearing = (aReason === CustomizableUI.REASON_WINDOW_CLOSED);
       }
     },
-    onWindowClosed(aWindow) {
+    onWindowClosed: function(aWindow) {
       if (aWindow == otherWin) {
         windowCloseDeferred.resolve(aWindow);
       } else {
@@ -133,7 +133,7 @@ add_task(function*() {
   CustomizableUI.removeListener(listener);
   wasInformedCorrectlyOfAreaDisappearing = false;
   listener = {
-    onAreaNodeUnregistered(aArea, aNode, aReason) {
+    onAreaNodeUnregistered: function(aArea, aNode, aReason) {
       if (aArea == TOOLBARID) {
         is(aNode, toolbar, "Should be informed about this window's toolbar");
         is(aReason, CustomizableUI.REASON_AREA_UNREGISTERED, "Reason for final removal should be correct.");

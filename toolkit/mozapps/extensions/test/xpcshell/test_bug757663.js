@@ -19,30 +19,30 @@ var addon1 = {
 
 var listener1 = {
   sawEvent: false,
-  onDisabling() {
+  onDisabling: function() {
     this.sawEvent = true;
     AddonManager.removeAddonListener(this);
   },
-  onNewInstall() {
+  onNewInstall: function() {
     this.sawEvent = true;
     AddonManager.removeInstallListener(this);
   }
 };
 var listener2 = {
   sawEvent: false,
-  onDisabling() {
+  onDisabling: function() {
     this.sawEvent = true;
   },
-  onNewInstall() {
+  onNewInstall: function() {
     this.sawEvent = true;
   }
 };
 var listener3 = {
   sawEvent: false,
-  onDisabling() {
+  onDisabling: function() {
     this.sawEvent = true;
   },
-  onNewInstall() {
+  onNewInstall: function() {
     this.sawEvent = true;
   }
 };

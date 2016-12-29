@@ -12,8 +12,8 @@ Cc["@mozilla.org/moz/jssubscript-loader;1"]
 function MockShellService() {}
 MockShellService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIShellService]),
-  isDefaultBrowser(aStartupCheck, aForAllTypes) { return false; },
-  setDefaultBrowser(aClaimAllTypes, aForAllUsers) {
+  isDefaultBrowser: function(aStartupCheck, aForAllTypes) { return false; },
+  setDefaultBrowser: function(aClaimAllTypes, aForAllUsers) {
     setDefaultBrowserCalled = true;
   },
   shouldCheckDefaultBrowser: false,
@@ -23,12 +23,12 @@ MockShellService.prototype = {
   BACKGROUND_CENTER    : 3,
   BACKGROUND_FILL      : 4,
   BACKGROUND_FIT       : 5,
-  setDesktopBackground(aElement, aPosition) {},
+  setDesktopBackground: function(aElement, aPosition) {},
   APPLICATION_MAIL : 0,
   APPLICATION_NEWS : 1,
-  openApplication(aApplication) {},
+  openApplication: function(aApplication) {},
   desktopBackgroundColor: 0,
-  openApplicationWithURI(aApplication, aURI) {},
+  openApplicationWithURI: function(aApplication, aURI) {},
   defaultFeedReader: 0,
 };
 

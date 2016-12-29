@@ -24,7 +24,7 @@ this.NarrateTestUtils = {
   BACK: "#narrate-skip-previous",
   FORWARD: "#narrate-skip-next",
 
-  isVisible(element) {
+  isVisible: function(element) {
     let style = element.ownerDocument.defaultView.getComputedStyle(element, "");
     if (style.display == "none") {
       return false;
@@ -42,7 +42,7 @@ this.NarrateTestUtils = {
     return true;
   },
 
-  isStoppedState(window, ok) {
+  isStoppedState: function(window, ok) {
     let $ = window.document.querySelector.bind(window.document);
     ok($(this.BACK).disabled, "back button is disabled");
     ok($(this.FORWARD).disabled, "forward button is disabled");
@@ -52,7 +52,7 @@ this.NarrateTestUtils = {
     ok($(this.START).title == "Start", "Button tooltip is correct");
   },
 
-  isStartedState(window, ok) {
+  isStartedState: function(window, ok) {
     let $ = window.document.querySelector.bind(window.document);
     ok(!$(this.BACK).disabled, "back button is enabled");
     ok(!$(this.FORWARD).disabled, "forward button is enabled");
@@ -62,7 +62,7 @@ this.NarrateTestUtils = {
     ok($(this.STOP).title == "Stop", "Button tooltip is correct");
   },
 
-  selectVoice(window, voiceUri) {
+  selectVoice: function(window, voiceUri) {
     if (!this.isVisible(window.document.querySelector(this.VOICE_OPTIONS))) {
       window.document.querySelector(this.VOICE_SELECT).click();
     }
@@ -76,11 +76,11 @@ this.NarrateTestUtils = {
     return voiceOption.classList.contains("selected");
   },
 
-  getEventUtils(window) {
+  getEventUtils: function(window) {
     let eventUtils = {
       "_EU_Ci": Components.interfaces,
       "_EU_Cc": Components.classes,
-      window,
+      window: window,
       parent: window,
       navigator: window.navigator,
       KeyboardEvent: window.KeyboardEvent,
@@ -91,7 +91,7 @@ this.NarrateTestUtils = {
     return eventUtils;
   },
 
-  getReaderReadyPromise(window) {
+  getReaderReadyPromise: function(window) {
     return new Promise(resolve => {
       function observeReady(subject, topic) {
         if (subject == window) {
@@ -108,13 +108,13 @@ this.NarrateTestUtils = {
     });
   },
 
-  waitForNarrateToggle(window) {
+  waitForNarrateToggle: function(window) {
     let toggle = window.document.querySelector(this.TOGGLE);
     return ContentTaskUtils.waitForCondition(
       () => !toggle.hidden, "");
   },
 
-  waitForPrefChange(pref) {
+  waitForPrefChange: function(pref) {
     return new Promise(resolve => {
       function observeChange() {
         Services.prefs.removeObserver(pref, observeChange);
@@ -125,18 +125,18 @@ this.NarrateTestUtils = {
     });
   },
 
-  sendBoundaryEvent(window, name, charIndex, charLength) {
+  sendBoundaryEvent: function(window, name, charIndex, charLength) {
     let detail = { type: "boundary", args: { name, charIndex, charLength } };
     window.dispatchEvent(new window.CustomEvent("testsynthevent",
-      { detail }));
+      { detail: detail }));
   },
 
-  isWordHighlightGone(window, ok) {
+  isWordHighlightGone: function(window, ok) {
     let $ = window.document.querySelector.bind(window.document);
     ok(!$(".narrate-word-highlight"), "No more word highlights exist");
   },
 
-  getWordHighlights(window) {
+  getWordHighlights: function(window) {
     let $$ = window.document.querySelectorAll.bind(window.document);
     let nodes = Array.from($$(".narrate-word-highlight"));
     return nodes.map(node => {

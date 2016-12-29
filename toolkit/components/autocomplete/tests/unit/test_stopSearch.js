@@ -32,14 +32,14 @@ AutoCompleteInput.prototype = {
   set popupOpen(val) { return val; }, // ignore
   get popupOpen() { return false; },
   get searchCount() { return this.searches.length; },
-  getSearchAt(aIndex) { return this.searches[aIndex]; },
-  onSearchBegin() {},
-  onSearchComplete() {},
-  onTextReverted() {},
-  onTextEntered() {},
+  getSearchAt: function(aIndex) { return this.searches[aIndex]; },
+  onSearchBegin: function() {},
+  onSearchComplete: function() {},
+  onTextReverted: function() {},
+  onTextEntered: function() {},
   popup: {
-    selectBy() {},
-    invalidate() {},
+    selectBy: function() {},
+    invalidate: function() {},
     set selectedIndex(val) { return val; }, // ignore
     get selectedIndex() { return -1 },
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
@@ -58,13 +58,13 @@ function AutoCompleteSearch(aName)
 AutoCompleteSearch.prototype = {
   constructor: AutoCompleteSearch,
   stopSearchInvoked: true,
-  startSearch(aSearchString, aSearchParam, aPreviousResult, aListener)
+  startSearch: function(aSearchString, aSearchParam, aPreviousResult, aListener)
   {
     print("Check stop search has been called");
     do_check_true(this.stopSearchInvoked);
     this.stopSearchInvoked = false;
   },
-  stopSearch()
+  stopSearch: function()
   {
     this.stopSearchInvoked = true;
   },
@@ -72,7 +72,7 @@ AutoCompleteSearch.prototype = {
     Ci.nsIFactory
   , Ci.nsIAutoCompleteSearch
   ]),
-  createInstance(outer, iid)
+  createInstance: function(outer, iid)
   {
     return this.QueryInterface(iid);
   }

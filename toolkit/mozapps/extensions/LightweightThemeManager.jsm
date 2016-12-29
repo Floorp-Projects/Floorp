@@ -51,7 +51,7 @@ XPCOMUtils.defineLazyGetter(this, "_prefs", () => {
 });
 
 Object.defineProperty(this, "_maxUsedThemes", {
-  get() {
+  get: function() {
     delete this._maxUsedThemes;
     try {
       this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes");
@@ -62,7 +62,7 @@ Object.defineProperty(this, "_maxUsedThemes", {
     return this._maxUsedThemes;
   },
 
-  set(val) {
+  set: function(val) {
     delete this._maxUsedThemes;
     return this._maxUsedThemes = val;
   },
@@ -151,11 +151,11 @@ this.LightweightThemeManager = {
     return _setCurrentTheme(aData, false);
   },
 
-  setLocalTheme(aData) {
+  setLocalTheme: function(aData) {
     _setCurrentTheme(aData, true);
   },
 
-  getUsedTheme(aId) {
+  getUsedTheme: function(aId) {
     var usedThemes = this.usedThemes;
     for (let usedTheme of usedThemes) {
       if (usedTheme.id == aId)
@@ -164,7 +164,7 @@ this.LightweightThemeManager = {
     return null;
   },
 
-  forgetUsedTheme(aId) {
+  forgetUsedTheme: function(aId) {
     let theme = this.getUsedTheme(aId);
     if (!theme || LightweightThemeManager._builtInThemes.has(theme.id))
       return;
@@ -182,7 +182,7 @@ this.LightweightThemeManager = {
     AddonManagerPrivate.callAddonListeners("onUninstalled", wrapper);
   },
 
-  addBuiltInTheme(theme) {
+  addBuiltInTheme: function(theme) {
     if (!theme || !theme.id || this.usedThemes.some(t => t.id == theme.id)) {
       throw new Error("Trying to add invalid builtIn theme");
     }
@@ -194,7 +194,7 @@ this.LightweightThemeManager = {
     }
   },
 
-  forgetBuiltInTheme(id) {
+  forgetBuiltInTheme: function(id) {
     if (!this._builtInThemes.has(id)) {
       let currentTheme = this.currentTheme;
       if (currentTheme && currentTheme.id == id) {
@@ -204,13 +204,13 @@ this.LightweightThemeManager = {
     return this._builtInThemes.delete(id);
   },
 
-  clearBuiltInThemes() {
+  clearBuiltInThemes: function() {
     for (let id of this._builtInThemes.keys()) {
       this.forgetBuiltInTheme(id);
     }
   },
 
-  previewTheme(aData) {
+  previewTheme: function(aData) {
     let cancel = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
     cancel.data = false;
     Services.obs.notifyObservers(cancel, "lightweight-theme-preview-requested",
@@ -229,7 +229,7 @@ this.LightweightThemeManager = {
     _notifyWindows(aData);
   },
 
-  resetPreview() {
+  resetPreview: function() {
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
@@ -237,7 +237,7 @@ this.LightweightThemeManager = {
     }
   },
 
-  parseTheme(aString, aBaseURI) {
+  parseTheme: function(aString, aBaseURI) {
     try {
       return _sanitizeTheme(JSON.parse(aString), aBaseURI, false);
     } catch (e) {
@@ -245,7 +245,7 @@ this.LightweightThemeManager = {
     }
   },
 
-  updateCurrentTheme() {
+  updateCurrentTheme: function() {
     try {
       if (!_prefs.getBoolPref("update.enabled"))
         return;
@@ -291,7 +291,7 @@ this.LightweightThemeManager = {
    * @param  aData
    *         The lightweight theme to switch to
    */
-  themeChanged(aData) {
+  themeChanged: function(aData) {
     if (_previewTimer) {
       _previewTimer.cancel();
       _previewTimer = null;
@@ -322,7 +322,7 @@ this.LightweightThemeManager = {
    * Starts the Addons provider and enables the new lightweight theme if
    * necessary.
    */
-  startup() {
+  startup: function() {
     if (Services.prefs.prefHasUserValue(PREF_LWTHEME_TO_SELECT)) {
       let id = Services.prefs.getCharPref(PREF_LWTHEME_TO_SELECT);
       if (id)
@@ -338,7 +338,7 @@ this.LightweightThemeManager = {
   /**
    * Shuts down the provider.
    */
-  shutdown() {
+  shutdown: function() {
     _prefs.removeObserver("", _prefObserver);
   },
 
@@ -354,7 +354,7 @@ this.LightweightThemeManager = {
    *         true if the newly enabled add-on will only become enabled after a
    *         restart
    */
-  addonChanged(aId, aType, aPendingRestart) {
+  addonChanged: function(aId, aType, aPendingRestart) {
     if (aType != ADDON_TYPE)
       return;
 
@@ -425,7 +425,7 @@ this.LightweightThemeManager = {
    * @param  aCallback
    *         A callback to pass the Addon to
    */
-  getAddonByID(aId, aCallback) {
+  getAddonByID: function(aId, aCallback) {
     let id = _getInternalID(aId);
     if (!id) {
       aCallback(null);
@@ -449,7 +449,7 @@ this.LightweightThemeManager = {
    * @param  aCallback
    *         A callback to pass an array of Addons to
    */
-  getAddonsByTypes(aTypes, aCallback) {
+  getAddonsByTypes: function(aTypes, aCallback) {
     if (aTypes && aTypes.indexOf(ADDON_TYPE) == -1) {
       aCallback([]);
       return;
@@ -598,20 +598,20 @@ AddonWrapper.prototype = {
     return false;
   },
 
-  uninstall() {
+  uninstall: function() {
     LightweightThemeManager.forgetUsedTheme(themeFor(this).id);
   },
 
-  cancelUninstall() {
+  cancelUninstall: function() {
     throw new Error("Theme is not marked to be uninstalled");
   },
 
-  findUpdates(listener, reason, appVersion, platformVersion) {
+  findUpdates: function(listener, reason, appVersion, platformVersion) {
     AddonManagerPrivate.callNoUpdateListeners(this, listener, reason, appVersion, platformVersion);
   },
 
   // Lightweight themes are always compatible
-  isCompatibleWith(appVersion, platformVersion) {
+  isCompatibleWith: function(appVersion, platformVersion) {
     return true;
   },
 
@@ -628,7 +628,7 @@ AddonWrapper.prototype = {
 
 ["description", "homepageURL", "iconURL"].forEach(function(prop) {
   Object.defineProperty(AddonWrapper.prototype, prop, {
-    get() {
+    get: function() {
       let theme = themeFor(this);
       return prop in theme ? theme[prop] : null;
     },
@@ -638,7 +638,7 @@ AddonWrapper.prototype = {
 
 ["installDate", "updateDate"].forEach(function(prop) {
   Object.defineProperty(AddonWrapper.prototype, prop, {
-    get() {
+    get: function() {
       let theme = themeFor(this);
       return prop in theme ? new Date(theme[prop]) : null;
     },
@@ -805,7 +805,7 @@ function _notifyWindows(aThemeData) {
 
 var _previewTimer;
 var _previewTimerCallback = {
-  notify() {
+  notify: function() {
     LightweightThemeManager.resetPreview();
   }
 };

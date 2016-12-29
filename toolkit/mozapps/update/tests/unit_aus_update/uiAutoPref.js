@@ -5,7 +5,7 @@
 Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
 const WindowWatcher = {
-  openWindow(aParent, aUrl, aName, aFeatures, aArgs) {
+  openWindow: function(aParent, aUrl, aName, aFeatures, aArgs) {
     gCheckFunc();
   },
 
@@ -13,7 +13,7 @@ const WindowWatcher = {
 };
 
 const WindowMediator = {
-  getMostRecentWindow(aWindowType) {
+  getMostRecentWindow: function(aWindowType) {
     do_execute_soon(check_status);
     return { getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow]) };
   },

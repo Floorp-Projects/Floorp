@@ -22,7 +22,7 @@ add_task(function* () {
   let consoleService = Cc["@mozilla.org/consoleservice;1"]
                          .getService(Ci.nsIConsoleService);
   let errorListener = {
-    observe(aMessage) {
+    observe: function(aMessage) {
       if (aMessage.message.includes("NS_ERROR_FAILURE"))
         gConsoleErrors++;
     }

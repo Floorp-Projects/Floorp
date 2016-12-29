@@ -87,7 +87,7 @@ add_test(function() {
   var remoteItem;
 
   var listener = {
-    onDownloadFailed(aInstall) {
+    onDownloadFailed: function(aInstall) {
       aInstall.removeListener(this);
       ok(true, "Install failed as expected");
 
@@ -100,7 +100,7 @@ add_test(function() {
       });
     },
 
-    onInstallEnded() {
+    onInstallEnded: function() {
       ok(false, "Install should have failed");
     }
   }

@@ -186,7 +186,7 @@ function test() {
 }
 
 var tests = {
-  testActivationWrongOrigin(next) {
+  testActivationWrongOrigin: function(next) {
     // At this stage none of our providers exist, so we expect failure.
     Services.prefs.setBoolPref("social.remote-install.enabled", false);
     activateProvider(gTestDomains[0], function() {
@@ -199,7 +199,7 @@ var tests = {
     });
   },
 
-  testIFrameActivation(next) {
+  testIFrameActivation: function(next) {
     activateIFrameProvider(gTestDomains[0], function() {
       is(SocialUI.enabled, false, "SocialUI is not enabled");
       let panel = document.getElementById("servicesInstall-notification");
@@ -209,7 +209,7 @@ var tests = {
     });
   },
 
-  testActivationFirstProvider(next) {
+  testActivationFirstProvider: function(next) {
     // first up we add a manifest entry for a single provider.
     activateOneProvider(gProviders[0], false, function() {
       // we deactivated leaving no providers left, so Social is disabled.
@@ -218,7 +218,7 @@ var tests = {
     });
   },
 
-  testActivationMultipleProvider(next) {
+  testActivationMultipleProvider: function(next) {
     // The trick with this test is to make sure that Social.providers[1] is
     // the current provider when doing the undo - this makes sure that the
     // Social code doesn't fallback to Social.providers[0], which it will
@@ -237,7 +237,7 @@ var tests = {
     });
   },
 
-  testAddonManagerDoubleInstall(next) {
+  testAddonManagerDoubleInstall: function(next) {
     // Create a new tab and load about:addons
     let addonsTab = gBrowser.addTab();
     gBrowser.selectedTab = addonsTab;

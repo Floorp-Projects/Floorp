@@ -25,23 +25,23 @@ RemoteController.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIController,
                                          Ci.nsICommandController]),
 
-  isCommandEnabled(aCommand) {
+  isCommandEnabled: function(aCommand) {
     return this._supportedCommands[aCommand] || false;
   },
 
-  supportsCommand(aCommand) {
+  supportsCommand: function(aCommand) {
     return aCommand in this._supportedCommands;
   },
 
-  doCommand(aCommand) {
+  doCommand: function(aCommand) {
     this._browser.messageManager.sendAsyncMessage("ControllerCommands:Do", aCommand);
   },
 
-  getCommandStateWithParams(aCommand, aCommandParams) {
+  getCommandStateWithParams: function(aCommand, aCommandParams) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  doCommandWithParams(aCommand, aCommandParams) {
+  doCommandWithParams: function(aCommand, aCommandParams) {
     let cmd = {
       cmd: aCommand,
       params: null
@@ -69,15 +69,15 @@ RemoteController.prototype = {
       "ControllerCommands:DoWithParams", cmd);
   },
 
-  getSupportedCommands(aCount, aCommands) {
+  getSupportedCommands: function(aCount, aCommands) {
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  onEvent() {},
+  onEvent: function() {},
 
   // This is intended to be called from the remote-browser binding to update
   // the enabled and disabled commands.
-  enableDisableCommands(aAction,
+  enableDisableCommands: function(aAction,
                                   aEnabledLength, aEnabledCommands,
                                   aDisabledLength, aDisabledCommands) {
     // Clear the list first

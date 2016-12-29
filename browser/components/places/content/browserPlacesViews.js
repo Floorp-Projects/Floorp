@@ -135,8 +135,8 @@ PlacesViewBase.prototype = {
   get selType() {
     return "single";
   },
-  selectItems() { },
-  selectAll() { },
+  selectItems: function() { },
+  selectAll: function() { },
 
   get selectedNode() {
     if (this._contextMenuShown) {
@@ -619,12 +619,12 @@ PlacesViewBase.prototype = {
     }
   },
 
-  nodeTagsChanged() { },
-  nodeDateAddedChanged() { },
-  nodeLastModifiedChanged() { },
-  nodeKeywordChanged() { },
-  sortingChanged() { },
-  batching() { },
+  nodeTagsChanged: function() { },
+  nodeDateAddedChanged: function() { },
+  nodeLastModifiedChanged: function() { },
+  nodeKeywordChanged: function() { },
+  sortingChanged: function() { },
+  batching: function() { },
 
   nodeInserted:
   function PVB_nodeInserted(aParentPlacesNode, aPlacesNode, aIndex) {
@@ -1180,7 +1180,7 @@ PlacesToolbar.prototype = {
     }
   },
 
-  updateOverflowStatus() {
+  updateOverflowStatus: function() {
     if (this._rootElt.scrollLeftMin != this._rootElt.scrollLeftMax) {
       this._onOverflow();
     } else {

@@ -37,13 +37,13 @@ function makeLock(kind) {
     let topic = "test-Phase-" + ++makeLock.counter;
     let phase = AsyncShutdown._getPhase(topic);
     return {
-      addBlocker(...args) {
+      addBlocker: function(...args) {
         return phase.addBlocker(...args);
       },
-      removeBlocker(blocker) {
+      removeBlocker: function(blocker) {
         return phase.removeBlocker(blocker);
       },
-      wait() {
+      wait: function() {
         Services.obs.notifyObservers(null, topic, null);
         return Promise.resolve();
       }
@@ -54,7 +54,7 @@ function makeLock(kind) {
     return {
       addBlocker: barrier.client.addBlocker,
       removeBlocker: barrier.client.removeBlocker,
-      wait() {
+      wait: function() {
         return barrier.wait();
       }
     };
@@ -62,7 +62,7 @@ function makeLock(kind) {
     let name = "test-xpcom-Barrier-" + ++makeLock.counter;
     let barrier = asyncShutdownService.makeBarrier(name);
     return {
-      addBlocker(blockerName, condition, state) {
+      addBlocker: function(blockerName, condition, state) {
         if (condition == null) {
           // Slight trick as `null` or `undefined` cannot be used as keys
           // for `xpcomMap`. Note that this has no incidence on the result
@@ -74,8 +74,8 @@ function makeLock(kind) {
         if (!blocker) {
           blocker = {
             name: blockerName,
-            state,
-            blockShutdown(aBarrierClient) {
+            state: state,
+            blockShutdown: function(aBarrierClient) {
               return Task.spawn(function*() {
                 try {
                   if (typeof condition == "function") {
@@ -94,14 +94,14 @@ function makeLock(kind) {
         let {fileName, lineNumber, stack} = (new Error());
         return barrier.client.addBlocker(blocker, fileName, lineNumber, stack);
       },
-      removeBlocker(condition) {
+      removeBlocker: function(condition) {
         let blocker = makeLock.xpcomMap.get(condition);
         if (!blocker) {
           return;
         }
         barrier.client.removeBlocker(blocker);
       },
-      wait() {
+      wait: function() {
         return new Promise(resolve => {
           barrier.wait(resolve);
         });
@@ -114,7 +114,7 @@ function makeLock(kind) {
     return {
       addBlocker: client.addBlocker,
       removeBlocker: client.removeBlocker,
-      wait() {
+      wait: function() {
         return new Promise(resolve => {
           barrier.wait(resolve);
         });

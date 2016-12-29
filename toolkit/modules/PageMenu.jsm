@@ -20,7 +20,7 @@ PageMenu.prototype = {
   _browser: null,
 
   // Given a target node, get the context menu for it or its ancestor.
-  getContextMenu(aTarget) {
+  getContextMenu: function(aTarget) {
     let target = aTarget;
     while (target) {
       let contextMenu = target.contextMenu;
@@ -35,7 +35,7 @@ PageMenu.prototype = {
 
   // Given a target node, generate a JSON object for any context menu
   // associated with it, or null if there is no context menu.
-  maybeBuild(aTarget) {
+  maybeBuild: function(aTarget) {
     let pageMenu = this.getContextMenu(aTarget);
     if (!pageMenu) {
       return null;
@@ -62,7 +62,7 @@ PageMenu.prototype = {
   },
 
   // Given a JSON menu object and popup, add the context menu to the popup.
-  buildAndAttachMenuWithObject(aMenu, aBrowser, aPopup) {
+  buildAndAttachMenuWithObject: function(aMenu, aBrowser, aPopup) {
     if (!aMenu) {
       return false;
     }
@@ -95,7 +95,7 @@ PageMenu.prototype = {
   },
 
   // Construct the XUL menu structure for a given JSON object.
-  buildXULMenu(aNode, aElementForAppending) {
+  buildXULMenu: function(aNode, aElementForAppending) {
     let document = aElementForAppending.ownerDocument;
 
     let children = aNode.children;
@@ -151,7 +151,7 @@ PageMenu.prototype = {
   },
 
   // Called when the generated menuitem is executed.
-  handleEvent(event) {
+  handleEvent: function(event) {
     let type = event.type;
     let target = event.target;
     if (type == "command" && target.hasAttribute(this.GENERATEDITEMID_ATTR)) {
@@ -183,7 +183,7 @@ PageMenu.prototype = {
   },
 
   // Get the first child of the given element with the given tag name.
-  getImmediateChild(element, tag) {
+  getImmediateChild: function(element, tag) {
     let child = element.firstChild;
     while (child) {
       if (child.localName == tag) {
@@ -197,7 +197,7 @@ PageMenu.prototype = {
   // Return the location where the generated items should be inserted into the
   // given popup. They should be inserted as the next sibling of the returned
   // element.
-  getInsertionPoint(aPopup) {
+  getInsertionPoint: function(aPopup) {
     if (aPopup.hasAttribute(this.PAGEMENU_ATTR))
       return aPopup;
 
@@ -219,7 +219,7 @@ PageMenu.prototype = {
   },
 
   // Remove the generated content from the given popup.
-  removeGeneratedContent(aPopup) {
+  removeGeneratedContent: function(aPopup) {
     let ungenerated = [];
     ungenerated.push(aPopup);
 
@@ -256,7 +256,7 @@ PageMenuParent.prototype = {
    *
    * Returns true if custom menu items were present.
    */
-  buildAndAddToPopup(aTarget, aPopup) {
+  buildAndAddToPopup: function(aTarget, aPopup) {
     let menuObject = this.maybeBuild(aTarget);
     if (!menuObject) {
       return false;
@@ -273,7 +273,7 @@ PageMenuParent.prototype = {
    *
    * Returns true if custom menu items were present.
    */
-  addToPopup(aMenu, aBrowser, aPopup) {
+  addToPopup: function(aMenu, aBrowser, aPopup) {
     return this.buildAndAttachMenuWithObject(aMenu, aBrowser, aPopup);
   }
 }
@@ -300,7 +300,7 @@ PageMenuChild.prototype = {
    *
    * If there is no menu associated with aTarget, null will be returned.
    */
-  build(aTarget) {
+  build: function(aTarget) {
     return this.maybeBuild(aTarget);
   },
 
@@ -309,7 +309,7 @@ PageMenuChild.prototype = {
    * is assumed that only one command will be executed so the builder is
    * cleared afterwards.
    */
-  executeMenu(aId) {
+  executeMenu: function(aId) {
     if (this._builder) {
       this._builder.click(aId);
       this._builder = null;

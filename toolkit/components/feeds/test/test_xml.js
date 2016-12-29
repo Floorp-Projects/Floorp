@@ -32,7 +32,7 @@ function FeedListener(testcase) {
 }
 
 FeedListener.prototype = {
-  handleResult(result) {
+  handleResult: function(result) {
     var feed = result.doc;
     try {
       do_print("Testing feed " + this.testcase.file.path);

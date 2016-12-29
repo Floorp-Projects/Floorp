@@ -7,14 +7,14 @@ function promiseNewEngine(basename) {
   return new Promise((resolve, reject) => {
     info("Waiting for engine to be added: " + basename);
     Services.search.init({
-      onInitComplete() {
+      onInitComplete: function() {
         let url = getRootDirectory(gTestPath) + basename;
         Services.search.addEngine(url, null, "", false, {
-          onSuccess(engine) {
+          onSuccess: function(engine) {
             info("Search engine added: " + basename);
             resolve(engine);
           },
-          onError(errCode) {
+          onError: function(errCode) {
             ok(false, "addEngine failed with error code " + errCode);
             reject();
           }

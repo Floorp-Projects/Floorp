@@ -41,7 +41,7 @@ this.GMPUtils = {
    * @param   aPlugin
    *          The plugin to check.
    */
-  isPluginHidden(aPlugin) {
+  isPluginHidden: function(aPlugin) {
     if (this._is32bitModeMacOS()) {
       // GMPs are hidden on MacOS when running in 32 bit mode.
       // See bug 1291537.
@@ -68,7 +68,7 @@ this.GMPUtils = {
    * @param   aPlugin
    *          The plugin to check.
    */
-  _isPluginSupported(aPlugin) {
+  _isPluginSupported: function(aPlugin) {
     if (this._isPluginForceSupported(aPlugin)) {
       return true;
     }
@@ -86,7 +86,7 @@ this.GMPUtils = {
     return true;
   },
 
-  _is32bitModeMacOS() {
+  _is32bitModeMacOS: function() {
     if (AppConstants.platform != "macosx") {
       return false;
     }
@@ -100,7 +100,7 @@ this.GMPUtils = {
    * @param   aPlugin
    *          The plugin to check.
    */
-  _isPluginVisible(aPlugin) {
+  _isPluginVisible: function(aPlugin) {
     return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_VISIBLE, false, aPlugin.id);
   },
 
@@ -111,7 +111,7 @@ this.GMPUtils = {
    * @param   aPlugin
    *          The plugin to check.
    */
-  _isPluginForceSupported(aPlugin) {
+  _isPluginForceSupported: function(aPlugin) {
     return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_FORCE_SUPPORTED, false, aPlugin.id);
   },
 };
@@ -151,7 +151,7 @@ this.GMPPrefs = {
    * @param aPlugin The plugin to scope the preference to.
    * @return The obtained preference value, or the defaultValue if none exists.
    */
-  get(aKey, aDefaultValue, aPlugin) {
+  get: function(aKey, aDefaultValue, aPlugin) {
     if (aKey === this.KEY_APP_DISTRIBUTION ||
         aKey === this.KEY_APP_DISTRIBUTION_VERSION) {
       let prefValue = "default";
@@ -171,7 +171,7 @@ this.GMPPrefs = {
    * @param aVal The value to set.
    * @param aPlugin The plugin to scope the preference to.
    */
-  set(aKey, aVal, aPlugin) {
+  set: function(aKey, aVal, aPlugin) {
     Preferences.set(this.getPrefKey(aKey, aPlugin), aVal);
   },
 
@@ -182,7 +182,7 @@ this.GMPPrefs = {
    * @param aPlugin The plugin to scope the preference to.
    * @return true if the preference is set, false otherwise.
    */
-  isSet(aKey, aPlugin) {
+  isSet: function(aKey, aPlugin) {
     return Preferences.isSet(this.getPrefKey(aKey, aPlugin));
   },
 
@@ -192,7 +192,7 @@ this.GMPPrefs = {
    * @param aKey The preference key value to use.
    * @param aPlugin The plugin to scope the preference to.
    */
-  reset(aKey, aPlugin) {
+  reset: function(aKey, aPlugin) {
     Preferences.reset(this.getPrefKey(aKey, aPlugin));
   },
 
@@ -202,7 +202,7 @@ this.GMPPrefs = {
    * @param aPlugin The plugin to scope the preference to.
    * @return A preference key scoped to the specified plugin.
    */
-  getPrefKey(aKey, aPlugin) {
+  getPrefKey: function(aKey, aPlugin) {
     return aKey.replace("{0}", aPlugin || "");
   },
 };

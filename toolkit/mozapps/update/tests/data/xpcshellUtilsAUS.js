@@ -1884,7 +1884,7 @@ function getUpdateLog(aLogLeafName) {
  * The update-staged observer for the call to nsIUpdateProcessor:processUpdate.
  */
 const gUpdateStagedObserver = {
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     debugDump("observe called with topic: " + aTopic + ", data: " + aData);
     if (aTopic == "update-staged") {
       Services.obs.removeObserver(gUpdateStagedObserver, "update-staged");
@@ -3657,7 +3657,7 @@ function UpdatePrompt(aCallback) {
 UpdatePrompt.prototype = {
   flags: Ci.nsIClassInfo.SINGLETON,
   getScriptableHelper: () => null,
-  getInterfaces(aCount) {
+  getInterfaces: function(aCount) {
     let interfaces = [Ci.nsISupports, Ci.nsIUpdatePrompt];
     aCount.value = interfaces.length;
     return interfaces;
@@ -3802,7 +3802,7 @@ function createAppInfo(aID, aName, aVersion, aPlatformVersion) {
   };
 
   const XULAppInfoFactory = {
-    createInstance(aOuter, aIID) {
+    createInstance: function(aOuter, aIID) {
       if (aOuter == null) {
         return XULAppInfo.QueryInterface(aIID);
       }

@@ -89,7 +89,7 @@ function test() {
   });
 
   AddonRepository._beginGetAddons(["test1@tests.mozilla.org"], {
-    searchFailed() {
+    searchFailed: function() {
       ok(gSeenRequest, "Should have seen metadata request");
       finish();
     }

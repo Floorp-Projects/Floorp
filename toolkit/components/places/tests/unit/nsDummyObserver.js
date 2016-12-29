@@ -15,27 +15,27 @@ function DummyObserver() {
 
 DummyObserver.prototype = {
   // history observer
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
-  onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
+  onBeginUpdateBatch: function() {},
+  onEndUpdateBatch: function() {},
+  onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
     Services.obs.notifyObservers(null, "dummy-observer-visited", null);
   },
-  onTitleChanged() {},
-  onDeleteURI() {},
-  onClearHistory() {},
-  onPageChanged() {},
-  onDeleteVisits() {},
+  onTitleChanged: function() {},
+  onDeleteURI: function() {},
+  onClearHistory: function() {},
+  onPageChanged: function() {},
+  onDeleteVisits: function() {},
 
   // bookmark observer
   // onBeginUpdateBatch: function() {},
   // onEndUpdateBatch: function() {},
-  onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
+  onItemAdded: function(aItemId, aParentId, aIndex, aItemType, aURI) {
     Services.obs.notifyObservers(null, "dummy-observer-item-added", null);
   },
-  onItemChanged() {},
-  onItemRemoved() {},
-  onItemVisited() {},
-  onItemMoved() {},
+  onItemChanged: function() {},
+  onItemRemoved: function() {},
+  onItemVisited: function() {},
+  onItemMoved: function() {},
 
   classID: Components.ID("62e221d3-68c3-4e1a-8943-a27beb5005fe"),
 

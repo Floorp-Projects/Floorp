@@ -8,7 +8,7 @@ var gExpectedFile = null;
 var gCacheFlushCount = 0;
 
 var CacheFlushObserver = {
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic != "flush-cache-entry")
       return;
     // Ignore flushes triggered by the fake cert DB
@@ -88,7 +88,7 @@ function run_test_2() {
 function run_test_3() {
   AddonManager.getInstallForFile(do_get_addon("test_cacheflush2"), function(aInstall) {
     aInstall.addListener({
-      onInstallStarted() {
+      onInstallStarted: function() {
         // We should flush the staged XPI when completing the install
         gExpectedFile = gProfD.clone();
         gExpectedFile.append("extensions");
@@ -96,7 +96,7 @@ function run_test_3() {
         gExpectedFile.append("addon2@tests.mozilla.org.xpi");
       },
 
-      onInstallEnded() {
+      onInstallEnded: function() {
         do_check_eq(gCacheFlushCount, 1);
         gExpectedFile = null;
         gCacheFlushCount = 0;

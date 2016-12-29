@@ -54,10 +54,10 @@ AutoCompleteInput.prototype = {
   popupOpen: false,
 
   popup: {
-    setSelectedIndex() {},
-    invalidate() {},
+    setSelectedIndex: function() {},
+    invalidate: function() {},
 
-    QueryInterface(iid) {
+    QueryInterface: function(iid) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIAutoCompletePopup))
         return this;
@@ -66,9 +66,9 @@ AutoCompleteInput.prototype = {
     }
   },
 
-  onSearchBegin() {},
+  onSearchBegin: function() {},
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIAutoCompleteInput))
       return this;
@@ -101,7 +101,7 @@ function check_results() {
 
 function addAdaptiveFeedback(aUrl, aSearch, aCallback) {
   let observer = {
-    observe(aSubject, aTopic, aData) {
+    observe: function(aSubject, aTopic, aData) {
       os.removeObserver(observer, PLACES_AUTOCOMPLETE_FEEDBACK_UPDATED_TOPIC);
       do_timeout(0, aCallback);
     }

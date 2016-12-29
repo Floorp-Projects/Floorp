@@ -22,7 +22,7 @@ function run_test() {
     ]),
 
     _changedCount: 0,
-    onItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue,
+    onItemChanged: function(aItemId, aProperty, aIsAnnotationProperty, aValue,
                             aLastModified, aItemType) {
       if (aProperty == "tags") {
         do_check_eq(aItemId, id);
@@ -30,7 +30,7 @@ function run_test() {
       }
     },
 
-    onItemRemoved(aItemId, aParentId, aIndex, aItemType) {
+    onItemRemoved: function(aItemId, aParentId, aIndex, aItemType) {
       if (aItemId == id) {
         PlacesUtils.bookmarks.removeObserver(this);
         do_check_eq(this._changedCount, 2);
@@ -38,11 +38,11 @@ function run_test() {
       }
     },
 
-    onItemAdded() {},
-    onBeginUpdateBatch() {},
-    onEndUpdateBatch() {},
-    onItemVisited() {},
-    onItemMoved() {},
+    onItemAdded: function() {},
+    onBeginUpdateBatch: function() {},
+    onEndUpdateBatch: function() {},
+    onItemVisited: function() {},
+    onItemMoved: function() {},
   };
   PlacesUtils.bookmarks.addObserver(bookmarksObserver, false);
 

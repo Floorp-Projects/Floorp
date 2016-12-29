@@ -40,7 +40,7 @@ var gFilter = null;
 
 var view = {
   get rowCount() { return gPrefView.length; },
-  getCellText(index, col) {
+  getCellText : function(index, col) {
     if (!(index in gPrefView))
       return "";
 
@@ -55,29 +55,29 @@ var view = {
         return value;
     }
   },
-  getRowProperties(index) { return ""; },
-  getCellProperties(index, col) {
+  getRowProperties : function(index) { return ""; },
+  getCellProperties : function(index, col) {
     if (index in gPrefView)
       return gLockProps[gPrefView[index].lockCol];
 
     return "";
   },
-  getColumnProperties(col) { return ""; },
+  getColumnProperties : function(col) { return ""; },
   treebox : null,
   selection : null,
-  isContainer(index) { return false; },
-  isContainerOpen(index) { return false; },
-  isContainerEmpty(index) { return false; },
-  isSorted() { return true; },
-  canDrop(index, orientation) { return false; },
-  drop(row, orientation) {},
-  setTree(out) { this.treebox = out; },
-  getParentIndex(rowIndex) { return -1; },
-  hasNextSibling(rowIndex, afterIndex) { return false; },
-  getLevel(index) { return 1; },
-  getImageSrc(row, col) { return ""; },
-  toggleOpenState(index) {},
-  cycleHeader(col) {
+  isContainer : function(index) { return false; },
+  isContainerOpen : function(index) { return false; },
+  isContainerEmpty : function(index) { return false; },
+  isSorted : function() { return true; },
+  canDrop : function(index, orientation) { return false; },
+  drop : function(row, orientation) {},
+  setTree : function(out) { this.treebox = out; },
+  getParentIndex: function(rowIndex) { return -1; },
+  hasNextSibling: function(rowIndex, afterIndex) { return false; },
+  getLevel: function(index) { return 1; },
+  getImageSrc: function(row, col) { return ""; },
+  toggleOpenState : function(index) {},
+  cycleHeader: function(col) {
     var index = this.selection.currentIndex;
     if (col.id == gSortedColumn) {
       gSortDirection = -gSortDirection;
@@ -108,16 +108,16 @@ var view = {
       this.treebox.ensureRowIsVisible(index);
     }
   },
-  selectionChanged() {},
-  cycleCell(row, col) {},
-  isEditable(row, col) { return false; },
-  isSelectable(row, col) { return false; },
-  setCellValue(row, col, value) {},
-  setCellText(row, col, value) {},
-  performAction(action) {},
-  performActionOnRow(action, row) {},
-  performActionOnCell(action, row, col) {},
-  isSeparator(index) { return false; }
+  selectionChanged : function() {},
+  cycleCell: function(row, col) {},
+  isEditable: function(row, col) { return false; },
+  isSelectable: function(row, col) { return false; },
+  setCellValue: function(row, col, value) {},
+  setCellText: function(row, col, value) {},
+  performAction: function(action) {},
+  performActionOnRow: function(action, row) {},
+  performActionOnCell: function(action, row, col) {},
+  isSeparator: function(index) { return false; }
 };
 
 // find the index in gPrefView of a pref object
@@ -188,7 +188,7 @@ function getNearestIndexOfPref(pref)
 
 var gPrefListener =
 {
-  observe(subject, topic, prefName)
+  observe: function(subject, topic, prefName)
   {
     if (topic != "nsPref:changed")
       return;

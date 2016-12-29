@@ -132,7 +132,7 @@ function AsyncRunner() {
 
   this._callbacks = {
     done: do_test_finished,
-    error(err) {
+    error: function(err) {
       // xpcshell test functions like do_check_eq throw NS_ERROR_ABORT on
       // failure.  Ignore those so they aren't rethrown here.
       if (err !== Cr.NS_ERROR_ABORT) {
@@ -143,7 +143,7 @@ function AsyncRunner() {
         do_throw(err);
       }
     },
-    consoleError(scriptErr) {
+    consoleError: function(scriptErr) {
       // Try to ensure the error is related to the test.
       let filename = scriptErr.sourceName || scriptErr.toString() || "";
       if (filename.indexOf("/toolkit/components/social/") >= 0)

@@ -3,7 +3,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const gfxFrameScript = {
   domUtils: null,
 
-  init() {
+  init: function() {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     let webProgress =  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIWebProgress);
@@ -18,7 +18,7 @@ const gfxFrameScript = {
 
   },
 
-  handleEvent(aEvent) {
+  handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "MozAfterPaint":
         sendAsyncMessage('gfxSanity:ContentLoaded');
@@ -27,7 +27,7 @@ const gfxFrameScript = {
     }
   },
 
-  isSanityTest(aUri) {
+  isSanityTest: function(aUri) {
     if (!aUri) {
       return false;
     }
@@ -35,7 +35,7 @@ const gfxFrameScript = {
     return aUri.endsWith("/sanitytest.html");
   },
 
-  onStateChange(webProgress, req, flags, status) {
+  onStateChange: function(webProgress, req, flags, status) {
     if (webProgress.isTopLevel &&
         (flags & Ci.nsIWebProgressListener.STATE_STOP) &&
         this.isSanityTest(req.name)) {

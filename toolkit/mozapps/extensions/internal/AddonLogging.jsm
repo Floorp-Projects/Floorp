@@ -81,7 +81,7 @@ function AddonLogger(aName) {
 AddonLogger.prototype = {
   name: null,
 
-  error(aStr, aException) {
+  error: function(aStr, aException) {
     let message = formatLogMessage("error", this.name, aStr, aException);
 
     let stack = getStackDetails(aException);
@@ -124,7 +124,7 @@ AddonLogger.prototype = {
     catch (e) { }
   },
 
-  warn(aStr, aException) {
+  warn: function(aStr, aException) {
     let message = formatLogMessage("warn", this.name, aStr, aException);
 
     let stack = getStackDetails(aException);
@@ -139,7 +139,7 @@ AddonLogger.prototype = {
       dump("*** " + message + "\n");
   },
 
-  log(aStr, aException) {
+  log: function(aStr, aException) {
     if (gDebugLogEnabled) {
       let message = formatLogMessage("log", this.name, aStr, aException);
       dump("*** " + message + "\n");
@@ -149,7 +149,7 @@ AddonLogger.prototype = {
 };
 
 this.LogManager = {
-  getLogger(aName, aTarget) {
+  getLogger: function(aName, aTarget) {
     let logger = new AddonLogger(aName);
 
     if (aTarget) {
@@ -167,13 +167,13 @@ this.LogManager = {
 };
 
 var PrefObserver = {
-  init() {
+  init: function() {
     Services.prefs.addObserver(PREF_LOGGING_ENABLED, this, false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
     this.observe(null, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID, PREF_LOGGING_ENABLED);
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     if (aTopic == "xpcom-shutdown") {
       Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
       Services.obs.removeObserver(this, "xpcom-shutdown");

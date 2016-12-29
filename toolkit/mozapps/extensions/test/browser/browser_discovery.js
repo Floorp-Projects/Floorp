@@ -13,7 +13,7 @@ var gProvider;
 var gLoadCompleteCallback = null;
 
 var gProgressListener = {
-  onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     // Only care about the network stop status events
     if (!(aStateFlags & (Ci.nsIWebProgressListener.STATE_IS_NETWORK)) ||
         !(aStateFlags & (Ci.nsIWebProgressListener.STATE_STOP)))
@@ -24,10 +24,10 @@ var gProgressListener = {
     gLoadCompleteCallback = null;
   },
 
-  onLocationChange() { },
-  onSecurityChange() { },
-  onProgressChange() { },
-  onStatusChange() { },
+  onLocationChange: function() { },
+  onSecurityChange: function() { },
+  onProgressChange: function() { },
+  onStatusChange: function() { },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
                                          Ci.nsISupportsWeakReference]),

@@ -120,7 +120,7 @@ function UpdateDetectorMenu(event) {
 var gDetectorInfoCache, gCharsetInfoCache, gPinnedInfoCache;
 
 var CharsetMenu = {
-  build(parent, deprecatedShowAccessKeys = true, showDetector = true) {
+  build: function(parent, deprecatedShowAccessKeys = true, showDetector = true) {
     if (!deprecatedShowAccessKeys) {
       Deprecated.warning("CharsetMenu no longer supports building a menu with no access keys.",
                          "https://bugzilla.mozilla.org/show_bug.cgi?id=1088710");
@@ -164,7 +164,7 @@ var CharsetMenu = {
     gCharsetInfoCache.forEach(charsetInfo => parent.appendChild(createDOMNode(doc, charsetInfo)));
   },
 
-  getData() {
+  getData: function() {
     this._ensureDataReady();
     return {
       detectors: gDetectorInfoCache,
@@ -173,7 +173,7 @@ var CharsetMenu = {
     };
   },
 
-  _ensureDataReady() {
+  _ensureDataReady: function() {
     if (!gDetectorInfoCache) {
       gDetectorInfoCache = this.getDetectorInfo();
       gPinnedInfoCache = this.getCharsetInfo(kPinned, false);
@@ -181,7 +181,7 @@ var CharsetMenu = {
     }
   },
 
-  getDetectorInfo() {
+  getDetectorInfo: function() {
     return kAutoDetectors.map(([detectorName, nodeId]) => ({
       label: this._getDetectorLabel(detectorName),
       accesskey: this._getDetectorAccesskey(detectorName),
@@ -190,7 +190,7 @@ var CharsetMenu = {
     }));
   },
 
-  getCharsetInfo(charsets, sort = true) {
+  getCharsetInfo: function(charsets, sort = true) {
     let list = Array.from(charsets, charset => ({
       label: this._getCharsetLabel(charset),
       accesskey: this._getCharsetAccessKey(charset),
@@ -204,20 +204,20 @@ var CharsetMenu = {
     return list;
   },
 
-  _getDetectorLabel(detector) {
+  _getDetectorLabel: function(detector) {
     try {
       return gBundle.GetStringFromName("charsetMenuAutodet." + detector);
     } catch (ex) {}
     return detector;
   },
-  _getDetectorAccesskey(detector) {
+  _getDetectorAccesskey: function(detector) {
     try {
       return gBundle.GetStringFromName("charsetMenuAutodet." + detector + ".key");
     } catch (ex) {}
     return "";
   },
 
-  _getCharsetLabel(charset) {
+  _getCharsetLabel: function(charset) {
     if (charset == "gbk") {
       // Localization key has been revised
       charset = "gbk.bis";
@@ -227,7 +227,7 @@ var CharsetMenu = {
     } catch (ex) {}
     return charset;
   },
-  _getCharsetAccessKey(charset) {
+  _getCharsetAccessKey: function(charset) {
     if (charset == "gbk") {
       // Localization key has been revised
       charset = "gbk.bis";
@@ -242,7 +242,7 @@ var CharsetMenu = {
    * For substantially similar encodings, treat two encodings as the same
    * for the purpose of the check mark.
    */
-  foldCharset(charset) {
+  foldCharset: function(charset) {
     switch (charset) {
       case "ISO-8859-8-I":
         return "windows-1255";
@@ -255,7 +255,7 @@ var CharsetMenu = {
     }
   },
 
-  update(parent, charset) {
+  update: function(parent, charset) {
     let menuitem = parent.getElementsByAttribute("charset", this.foldCharset(charset)).item(0);
     if (menuitem) {
       menuitem.setAttribute("checked", "true");

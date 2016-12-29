@@ -9,7 +9,7 @@ var StarUI = {
   _isNewBookmark: false,
   _autoCloseTimer: 0,
 
-  _element(aID) {
+  _element: function(aID) {
     return document.getElementById(aID);
   },
 
@@ -633,10 +633,10 @@ var PlacesCommandHook = {
 
     PlacesUIUtils.showBookmarkDialog({ action: "add"
                                      , type: "livemark"
-                                     , feedURI
+                                     , feedURI: feedURI
                                      , siteURI: gBrowser.currentURI
-                                     , title
-                                     , description
+                                     , title: title
+                                     , description: description
                                      , defaultInsertionPoint: toolbarIP
                                      , hiddenRows: [ "feedLocation"
                                                    , "siteLocation"
@@ -1143,7 +1143,7 @@ var PlacesToolbarHelper = {
     return !area || CustomizableUI.TYPE_MENU_PANEL == areaType;
   },
 
-  onPlaceholderCommand() {
+  onPlaceholderCommand: function() {
     let widgetGroup = CustomizableUI.getWidget("personal-bookmarks");
     let widget = widgetGroup.forWindow(window);
     if (widget.overflowed ||
@@ -1152,7 +1152,7 @@ var PlacesToolbarHelper = {
     }
   },
 
-  _getParentToolbar(element) {
+  _getParentToolbar: function(element) {
     while (element) {
       if (element.localName == "toolbar") {
         return element;
@@ -1162,7 +1162,7 @@ var PlacesToolbarHelper = {
     return null;
   },
 
-  onWidgetUnderflow(aNode, aContainer) {
+  onWidgetUnderflow: function(aNode, aContainer) {
     // The view gets broken by being removed and reinserted by the overflowable
     // toolbar, so we have to force an uninit and reinit.
     let win = aNode.ownerGlobal;
@@ -1171,7 +1171,7 @@ var PlacesToolbarHelper = {
     }
   },
 
-  onWidgetAdded(aWidgetId, aArea, aPosition) {
+  onWidgetAdded: function(aWidgetId, aArea, aPosition) {
     if (aWidgetId == "personal-bookmarks" && !this._isCustomizing) {
       // It's possible (with the "Add to Menu", "Add to Toolbar" context
       // options) that the Places Toolbar Items have been moved without
@@ -1182,7 +1182,7 @@ var PlacesToolbarHelper = {
     }
   },
 
-  _resetView() {
+  _resetView: function() {
     if (this._viewElt) {
       // It's possible that the placesView might not exist, and we need to
       // do a full init. This could happen if the Bookmarks Toolbar Items are
@@ -1274,7 +1274,7 @@ var BookmarkingUI = {
       this._getFormattedTooltip("starButtonOff.tooltip2");
   },
 
-  _getFormattedTooltip(strId) {
+  _getFormattedTooltip: function(strId) {
     let args = [];
     let shortcut = document.getElementById(this.BOOKMARK_BUTTON_SHORTCUT);
     if (shortcut)
@@ -1287,7 +1287,7 @@ var BookmarkingUI = {
    * When in the panel, we don't update the button's icon.
    */
   _currentAreaType: null,
-  _shouldUpdateStarState() {
+  _shouldUpdateStarState: function() {
     return this._currentAreaType == CustomizableUI.TYPE_TOOLBAR;
   },
 
@@ -1349,7 +1349,7 @@ var BookmarkingUI = {
     }
   },
 
-  attachPlacesView(event, node) {
+  attachPlacesView: function(event, node) {
     // If the view is already there, bail out early.
     if (node.parentNode._placesView)
       return;
@@ -1577,7 +1577,7 @@ var BookmarkingUI = {
     }
   },
 
-  init() {
+  init: function() {
     CustomizableUI.addListener(this);
     this._updateCustomizationState();
   },
@@ -1757,7 +1757,7 @@ var BookmarkingUI = {
     }, 1000);
   },
 
-  _showSubview() {
+  _showSubview: function() {
     let view = document.getElementById("PanelUI-bookmarks");
     view.addEventListener("ViewShowing", this);
     view.addEventListener("ViewHiding", this);
@@ -1902,11 +1902,11 @@ var BookmarkingUI = {
     }
   },
 
-  onBeginUpdateBatch() {},
-  onEndUpdateBatch() {},
-  onBeforeItemRemoved() {},
-  onItemVisited() {},
-  onItemMoved() {},
+  onBeginUpdateBatch: function() {},
+  onEndUpdateBatch: function() {},
+  onBeforeItemRemoved: function() {},
+  onItemVisited: function() {},
+  onItemMoved: function() {},
 
   // CustomizableUI events:
   _starButtonLabel: null,
@@ -1920,7 +1920,7 @@ var BookmarkingUI = {
     return this._starButtonOverflowedStarredLabel =
       gNavigatorBundle.getString("starButtonOverflowedStarred.label");
   },
-  onWidgetOverflow(aNode, aContainer) {
+  onWidgetOverflow: function(aNode, aContainer) {
     let win = aNode.ownerGlobal;
     if (aNode.id != this.BOOKMARK_BUTTON_ID || win != window)
       return;
@@ -1936,7 +1936,7 @@ var BookmarkingUI = {
     }
   },
 
-  onWidgetUnderflow(aNode, aContainer) {
+  onWidgetUnderflow: function(aNode, aContainer) {
     let win = aNode.ownerGlobal;
     if (aNode.id != this.BOOKMARK_BUTTON_ID || win != window)
       return;

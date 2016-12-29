@@ -37,7 +37,7 @@ var addonIDs = ["test_bug393285_1@tests.mozilla.org",
 
 // A window watcher to deal with the blocklist UI dialog.
 var WindowWatcher = {
-  openWindow(parent, url, name, features, args) {
+  openWindow: function(parent, url, name, features, args) {
     // Should be called to list the newly blocklisted items
     do_check_eq(url, URI_EXTENSION_BLOCKLIST_DIALOG);
 
@@ -53,7 +53,7 @@ var WindowWatcher = {
 
   },
 
-  QueryInterface(iid) {
+  QueryInterface: function(iid) {
     if (iid.equals(Ci.nsIWindowWatcher)
      || iid.equals(Ci.nsISupports))
       return this;

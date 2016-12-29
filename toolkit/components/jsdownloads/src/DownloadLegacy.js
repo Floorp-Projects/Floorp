@@ -166,7 +166,7 @@ DownloadLegacyTransfer.prototype = {
                             aMaxTotalProgress);
   },
 
-  onLocationChange() { },
+  onLocationChange: function() { },
 
   onStatusChange: function DLT_onStatusChange(aWebProgress, aRequest, aStatus,
                                               aMessage)
@@ -184,7 +184,7 @@ DownloadLegacyTransfer.prototype = {
     }
   },
 
-  onSecurityChange() { },
+  onSecurityChange: function() { },
 
   // nsIWebProgressListener2
 
@@ -237,9 +237,9 @@ DownloadLegacyTransfer.prototype = {
       target: { path: aTarget.QueryInterface(Ci.nsIFileURL).file.path,
                 partFilePath: aTempFile && aTempFile.path },
       saver: "legacy",
-      launchWhenSucceeded,
-      contentType,
-      launcherPath
+      launchWhenSucceeded: launchWhenSucceeded,
+      contentType: contentType,
+      launcherPath: launcherPath
     }).then(function DLT_I_onDownload(aDownload) {
       // Legacy components keep partial data when they use a ".part" file.
       if (aTempFile) {
@@ -257,17 +257,17 @@ DownloadLegacyTransfer.prototype = {
     }.bind(this)).then(null, Cu.reportError);
   },
 
-  setSha256Hash(hash)
+  setSha256Hash: function(hash)
   {
     this._sha256Hash = hash;
   },
 
-  setSignatureInfo(signatureInfo)
+  setSignatureInfo: function(signatureInfo)
   {
     this._signatureInfo = signatureInfo;
   },
 
-  setRedirects(redirects)
+  setRedirects: function(redirects)
   {
     this._redirects = redirects;
   },

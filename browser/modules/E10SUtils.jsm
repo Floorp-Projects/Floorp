@@ -46,13 +46,13 @@ this.E10SUtils = {
   WEB_REMOTE_TYPE,
   FILE_REMOTE_TYPE,
 
-  canLoadURIInProcess(aURL, aProcess) {
+  canLoadURIInProcess: function(aURL, aProcess) {
     let remoteType = aProcess == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
                      ? DEFAULT_REMOTE_TYPE : NOT_REMOTE;
     return remoteType == this.getRemoteTypeForURI(aURL, true, remoteType);
   },
 
-  getRemoteTypeForURI(aURL, aMultiProcess,
+  getRemoteTypeForURI: function(aURL, aMultiProcess,
                                 aPreferredRemoteType = DEFAULT_REMOTE_TYPE) {
     if (!aMultiProcess) {
       return NOT_REMOTE;
@@ -143,12 +143,12 @@ this.E10SUtils = {
     return validatedWebRemoteType(aPreferredRemoteType);
   },
 
-  shouldLoadURIInThisProcess(aURI) {
+  shouldLoadURIInThisProcess: function(aURI) {
     let remoteType = Services.appinfo.remoteType;
     return remoteType == this.getRemoteTypeForURI(aURI.spec, true, remoteType);
   },
 
-  shouldLoadURI(aDocShell, aURI, aReferrer) {
+  shouldLoadURI: function(aDocShell, aURI, aReferrer) {
     // Inner frames should always load in the current process
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
@@ -157,7 +157,7 @@ this.E10SUtils = {
     return this.shouldLoadURIInThisProcess(aURI);
   },
 
-  redirectLoad(aDocShell, aURI, aReferrer, aFreshProcess) {
+  redirectLoad: function(aDocShell, aURI, aReferrer, aFreshProcess) {
     // Retarget the load to the correct process
     let messageManager = aDocShell.QueryInterface(Ci.nsIInterfaceRequestor)
                                   .getInterface(Ci.nsIContentFrameMessageManager);
@@ -175,7 +175,7 @@ this.E10SUtils = {
     return false;
   },
 
-  wrapHandlingUserInput(aWindow, aIsHandling, aCallback) {
+  wrapHandlingUserInput: function(aWindow, aIsHandling, aCallback) {
     var handlingUserInput;
     try {
       handlingUserInput = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)

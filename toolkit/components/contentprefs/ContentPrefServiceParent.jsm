@@ -14,7 +14,7 @@ const Cu = Components.utils;
 var ContentPrefServiceParent = {
   _cps2: null,
 
-  init() {
+  init: function() {
     let globalMM = Cc["@mozilla.org/parentprocessmessagemanager;1"]
                      .getService(Ci.nsIMessageListenerManager);
 
@@ -32,7 +32,7 @@ var ContentPrefServiceParent = {
   // Map from message manager -> content pref observer.
   _observers: new Map(),
 
-  handleObserverChange(msg) {
+  handleObserverChange: function(msg) {
     let observer = this._observers.get(msg.target);
     if (msg.name === "child-process-shutdown") {
       // If we didn't have any observers for this child process, don't do
@@ -54,15 +54,15 @@ var ContentPrefServiceParent = {
       // observers for the same name.
       if (!observer) {
         observer = {
-          onContentPrefSet(group, name, value, isPrivate) {
+          onContentPrefSet: function(group, name, value, isPrivate) {
             msg.target.sendAsyncMessage("ContentPrefs:NotifyObservers",
-                                        { name, callback: "onContentPrefSet",
+                                        { name: name, callback: "onContentPrefSet",
                                           args: [ group, name, value, isPrivate ] });
           },
 
-          onContentPrefRemoved(group, name, isPrivate) {
+          onContentPrefRemoved: function(group, name, isPrivate) {
             msg.target.sendAsyncMessage("ContentPrefs:NotifyObservers",
-                                        { name, callback: "onContentPrefRemoved",
+                                        { name: name, callback: "onContentPrefRemoved",
                                           args: [ group, name, isPrivate ] });
           },
 
@@ -92,16 +92,16 @@ var ContentPrefServiceParent = {
     }
   },
 
-  receiveMessage(msg) {
+  receiveMessage: function(msg) {
     let data = msg.data;
 
     let args = data.args;
     let requestId = data.requestId;
 
     let listener = {
-      handleResult(pref) {
+      handleResult: function(pref) {
         msg.target.sendAsyncMessage("ContentPrefs:HandleResult",
-                                    { requestId,
+                                    { requestId: requestId,
                                       contentPref: {
                                         domain: pref.domain,
                                         name: pref.name,
@@ -110,15 +110,15 @@ var ContentPrefServiceParent = {
                                     });
       },
 
-      handleError(error) {
+      handleError: function(error) {
         msg.target.sendAsyncMessage("ContentPrefs:HandleError",
-                                    { requestId,
-                                      error });
+                                    { requestId: requestId,
+                                      error: error });
       },
-      handleCompletion(reason) {
+      handleCompletion: function(reason) {
         msg.target.sendAsyncMessage("ContentPrefs:HandleCompletion",
-                                    { requestId,
-                                      reason });
+                                    { requestId: requestId,
+                                      reason: reason });
       }
     };
 

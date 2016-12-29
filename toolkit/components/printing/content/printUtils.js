@@ -81,7 +81,7 @@ var PrintUtils = {
    *
    * @return true on success, false on failure
    */
-  showPageSetup() {
+  showPageSetup: function() {
     try {
       var printSettings = this.getPrintSettings();
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
@@ -108,7 +108,7 @@ var PrintUtils = {
    * @param aBrowser
    *        The <xul:browser> that the nsIDOMWindow for aWindowID belongs to.
    */
-  printWindow(aWindowID, aBrowser)
+  printWindow: function(aWindowID, aBrowser)
   {
     let mm = aBrowser.messageManager;
     mm.sendAsyncMessage("Printing:Print", {
@@ -123,7 +123,7 @@ var PrintUtils = {
    * Starts the process of printing the contents of window.content.
    *
    */
-  print()
+  print: function()
   {
     if (gBrowser) {
       return this.printWindow(gBrowser.selectedBrowser.outerWindowID,
@@ -186,7 +186,7 @@ var PrintUtils = {
    *        print preview (in which case, the previous aListenerObj passed
    *        to it will be used).
    */
-  printPreview(aListenerObj)
+  printPreview: function(aListenerObj)
   {
     // if we're already in PP mode, don't set the listener; chances
     // are it is null because someone is calling printPreview() to
@@ -254,7 +254,7 @@ var PrintUtils = {
    *        The window from which to get the nsIWebBrowserPrint from.
    * @return nsIWebBrowserPrint
    */
-  getWebBrowserPrint(aWindow)
+  getWebBrowserPrint: function(aWindow)
   {
     let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     let text = "getWebBrowserPrint is now deprecated, and fully unsupported for " +
@@ -279,7 +279,7 @@ var PrintUtils = {
    *
    * @return nsIWebBrowserPrint
    */
-  getPrintPreview() {
+  getPrintPreview: function() {
     let Deprecated = Components.utils.import("resource://gre/modules/Deprecated.jsm", {}).Deprecated;
     let text = "getPrintPreview is now deprecated, and fully unsupported for " +
                "multi-process browsers. Please use a frame script to get " +
@@ -430,7 +430,7 @@ var PrintUtils = {
     return undefined;
   },
 
-  setPrinterDefaultsForSelectedPrinter(aPSSVC, aPrintSettings)
+  setPrinterDefaultsForSelectedPrinter: function(aPSSVC, aPrintSettings)
   {
     if (!aPrintSettings.printerName)
       aPrintSettings.printerName = aPSSVC.defaultPrinterName;
@@ -441,7 +441,7 @@ var PrintUtils = {
     aPSSVC.initPrintSettingsFromPrefs(aPrintSettings, true,  aPrintSettings.kInitSaveAll);
   },
 
-  getPrintSettings()
+  getPrintSettings: function()
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
@@ -469,13 +469,13 @@ var PrintUtils = {
   // This observer is called once the progress dialog has been "opened"
   _obsPP:
   {
-    observe(aSubject, aTopic, aData)
+    observe: function(aSubject, aTopic, aData)
     {
       // delay the print preview to show the content of the progress dialog
       setTimeout(function() { PrintUtils.enterPrintPreview(); }, 0);
     },
 
-    QueryInterface(iid)
+    QueryInterface : function(iid)
     {
       if (iid.equals(Components.interfaces.nsIObserver) ||
           iid.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -485,12 +485,12 @@ var PrintUtils = {
     }
   },
 
-  setSimplifiedMode(shouldSimplify)
+  setSimplifiedMode: function(shouldSimplify)
   {
     this._shouldSimplify = shouldSimplify;
   },
 
-  enterPrintPreview()
+  enterPrintPreview: function()
   {
     // Send a message to the print preview browser to initialize
     // print preview. If we happen to have gotten a print preview
@@ -620,7 +620,7 @@ var PrintUtils = {
     mm.addMessageListener("Printing:Preview:Entered", onEntered);
   },
 
-  exitPrintPreview()
+  exitPrintPreview: function()
   {
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let browserMM = ppBrowser.messageManager;
@@ -649,13 +649,13 @@ var PrintUtils = {
     this._listener.onExit();
   },
 
-  logTelemetry(ID)
+  logTelemetry: function(ID)
   {
     let histogram = Services.telemetry.getHistogramById(ID);
     histogram.add(true);
   },
 
-  onKeyDownPP(aEvent)
+  onKeyDownPP: function(aEvent)
   {
     // Esc exits the PP
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
@@ -663,7 +663,7 @@ var PrintUtils = {
     }
   },
 
-  onKeyPressPP(aEvent)
+  onKeyPressPP: function(aEvent)
   {
     var closeKey;
     try {

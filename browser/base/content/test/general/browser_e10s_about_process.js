@@ -27,11 +27,11 @@ function AboutModule() {
 }
 
 AboutModule.prototype = {
-  newChannel(aURI, aLoadInfo) {
+  newChannel: function(aURI, aLoadInfo) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 
-  getURIFlags(aURI) {
+  getURIFlags: function(aURI) {
     for (let module of TEST_MODULES) {
       if (aURI.path.startsWith(module.path)) {
         return module.flags;
@@ -42,7 +42,7 @@ AboutModule.prototype = {
     return 0;
   },
 
-  getIndexedDBOriginPostfix(aURI) {
+  getIndexedDBOriginPostfix: function(aURI) {
     return null;
   },
 
@@ -50,13 +50,13 @@ AboutModule.prototype = {
 };
 
 var AboutModuleFactory = {
-  createInstance(aOuter, aIID) {
+  createInstance: function(aOuter, aIID) {
     if (aOuter)
       throw Components.results.NS_ERROR_NO_AGGREGATION;
     return new AboutModule().QueryInterface(aIID);
   },
 
-  lockFactory(aLock) {
+  lockFactory: function(aLock) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
 

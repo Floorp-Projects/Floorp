@@ -42,13 +42,13 @@ this.SelectContentHelper = function(aElement, aOptions, aGlobal) {
 }
 
 Object.defineProperty(SelectContentHelper, "open", {
-  get() {
+  get: function() {
     return gOpen;
   },
 });
 
 this.SelectContentHelper.prototype = {
-  init() {
+  init: function() {
     this.global.addMessageListener("Forms:SelectDropDownItem", this);
     this.global.addMessageListener("Forms:DismissedDropDown", this);
     this.global.addMessageListener("Forms:MouseOver", this);
@@ -66,7 +66,7 @@ this.SelectContentHelper.prototype = {
     this.mut.observe(this.element, {childList: true, subtree: true});
   },
 
-  uninit() {
+  uninit: function() {
     this.element.openInParentProcess = false;
     this.global.removeMessageListener("Forms:SelectDropDownItem", this);
     this.global.removeMessageListener("Forms:DismissedDropDown", this);
@@ -83,11 +83,11 @@ this.SelectContentHelper.prototype = {
     gOpen = false;
   },
 
-  showDropDown() {
+  showDropDown: function() {
     this.element.openInParentProcess = true;
     let rect = this._getBoundingContentRect();
     this.global.sendAsyncMessage("Forms:ShowDropDown", {
-      rect,
+      rect: rect,
       options: this._buildOptionList(),
       selectedIndex: this.element.selectedIndex,
       direction: getComputedStyles(this.element).direction,
@@ -96,11 +96,11 @@ this.SelectContentHelper.prototype = {
     gOpen = true;
   },
 
-  _getBoundingContentRect() {
+  _getBoundingContentRect: function() {
     return BrowserUtils.getElementBoundingScreenRect(this.element);
   },
 
-  _buildOptionList() {
+  _buildOptionList: function() {
     return buildOptionListForChildren(this.element);
   },
 
@@ -113,7 +113,7 @@ this.SelectContentHelper.prototype = {
     });
   },
 
-  receiveMessage(message) {
+  receiveMessage: function(message) {
     switch (message.name) {
       case "Forms:SelectDropDownItem":
         this.element.selectedIndex = message.data.value;
@@ -181,7 +181,7 @@ this.SelectContentHelper.prototype = {
     }
   },
 
-  handleEvent(event) {
+  handleEvent: function(event) {
     switch (event.type) {
       case "pagehide":
         if (this.element.ownerDocument === event.target) {
@@ -226,8 +226,8 @@ function buildOptionListForChildren(node) {
 
       let info = {
         index: child.index,
-        tagName,
-        textContent,
+        tagName: tagName,
+        textContent: textContent,
         disabled: child.disabled,
         display: cs.display,
         // We need to do this for every option element as each one can have

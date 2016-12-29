@@ -57,7 +57,7 @@ CrashService.prototype = Object.freeze({
     Ci.nsIObserver,
   ]),
 
-  addCrash(processType, crashType, id) {
+  addCrash: function(processType, crashType, id) {
     switch (processType) {
     case Ci.nsICrashService.PROCESS_TYPE_MAIN:
       processType = Services.crashmanager.PROCESS_TYPE_MAIN;
@@ -98,7 +98,7 @@ CrashService.prototype = Object.freeze({
     );
   },
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     switch (topic) {
       case "profile-after-change":
         // Side-effect is the singleton is instantiated.
