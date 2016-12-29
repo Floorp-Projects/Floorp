@@ -733,6 +733,8 @@ typedef void
  * external string is keeping alive.  The embedder is expected to return a value
  * that corresponds to the size of the allocation that will be released by the
  * JSStringFinalizer passed to JS_NewExternalString for this string.
+ *
+ * Implementations of this callback MUST NOT do anything that can cause GC.
  */
 using JSExternalStringSizeofCallback =
     size_t (*)(JSString* str, mozilla::MallocSizeOf mallocSizeOf);
