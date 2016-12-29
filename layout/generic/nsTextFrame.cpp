@@ -8347,7 +8347,6 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
   if (StyleContext()->IsTextCombined()) {
     aData->mCurrentLine += provider.GetFontMetrics()->EmHeight();
     aData->mTrailingWhitespace = 0;
-    aData->mLineIsEmpty = false;
     return;
   }
 
@@ -8385,7 +8384,6 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
         textRun->GetAdvanceWidth(Range(lineStart, i), &provider));
       width = std::max(0, width);
       aData->mCurrentLine = NSCoordSaturatingAdd(aData->mCurrentLine, width);
-      aData->mLineIsEmpty = false;
 
       if (collapseWhitespace) {
         uint32_t trimStart = GetEndOfTrimmedText(frag, textStyle, lineStart, i, &iter);
@@ -8412,7 +8410,6 @@ nsTextFrame::AddInlinePrefISizeForFlow(nsRenderingContext *aRenderingContext,
         AdvanceToNextTab(aData->mCurrentLine, this,
                          textRun, &tabWidth);
       aData->mCurrentLine = nscoord(afterTab + spacing.mAfter);
-      aData->mLineIsEmpty = false;
       lineStart = i + 1;
     } else if (preformattedNewline) {
       aData->ForceBreak();
