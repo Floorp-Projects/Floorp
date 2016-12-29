@@ -1027,7 +1027,18 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       nsLayoutUtils::RectToGfxRect(aParams.borderArea,
                                    frame->PresContext()->AppUnitsPerDevPixel());
     context.Rectangle(drawingRect, true);
-    context.SetColor(Color(0.0, 1.0, 0.0, 1.0));
+    Color color(0, 0, 0, 0.8);
+    if (maskUsage.shouldGenerateMaskLayer ||
+        maskUsage.shouldGenerateClipMaskLayer) {
+      color.r = 1.0;
+    }
+    if (maskUsage.shouldApplyClipPath) {
+      color.g = 1.0;
+    }
+    if (maskUsage.shouldApplyBasicShape) {
+      color.b = 1.0;
+    }
+    context.SetColor(color);
     context.Fill();
   }
 
