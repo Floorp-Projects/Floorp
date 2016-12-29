@@ -98,7 +98,7 @@ RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowe
 RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
 void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
                           mozilla::ServoStyleSheet* parent,
-                          RawServoImportRuleStrong import_rule,
+                          RawServoImportRuleBorrowed import_rule,
                           const uint8_t* url_bytes,
                           uint32_t url_length,
                           const uint8_t* media_bytes,

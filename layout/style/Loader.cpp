@@ -1407,7 +1407,7 @@ nsresult
 Loader::InsertChildSheet(StyleSheet* aSheet,
                          StyleSheet* aParentSheet,
                          ImportRule* aGeckoParentRule,
-                         RawServoImportRule* aServoParentRule)
+                         const RawServoImportRule* aServoParentRule)
 {
   LOG(("css::Loader::InsertChildSheet"));
   MOZ_ASSERT(aSheet, "Nothing to insert");
@@ -2198,7 +2198,7 @@ Loader::LoadChildSheet(StyleSheet* aParentSheet,
                        nsIURI* aURL,
                        nsMediaList* aMedia,
                        ImportRule* aGeckoParentRule,
-                       RawServoImportRule* aServoParentRule,
+                       const RawServoImportRule* aServoParentRule,
                        LoaderReusableStyleSheets* aReusableSheets)
 {
   LOG(("css::Loader::LoadChildSheet"));
