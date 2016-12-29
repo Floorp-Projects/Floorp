@@ -351,6 +351,12 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
   aWriter.DoubleProperty("interval", interval());
   aWriter.IntProperty("stackwalk", mUseStackWalk);
 
+#ifdef DEBUG
+  aWriter.IntProperty("debug", 1);
+#else
+  aWriter.IntProperty("debug", 0);
+#endif
+
 #ifndef SPS_STANDALONE
   aWriter.IntProperty("gcpoison", JS::IsGCPoisoning() ? 1 : 0);
 
