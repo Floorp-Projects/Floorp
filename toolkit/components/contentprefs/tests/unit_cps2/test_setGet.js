@@ -143,7 +143,7 @@ var tests = [
 
     // (3) Set the pref to a new value but don't wait for it to finish.
     cps.set("a.com", "foo", 2, null, {
-      handleCompletion: function() {
+      handleCompletion() {
         // (6) The pref should be cached after setting it.
         getCachedOK(["a.com", "foo"], true, 2);
       },
@@ -155,10 +155,10 @@ var tests = [
     // (5) Call getByDomainAndName.
     var fetchedPref;
     cps.getByDomainAndName("a.com", "foo", null, {
-      handleResult: function(pref) {
+      handleResult(pref) {
         fetchedPref = pref;
       },
-      handleCompletion: function() {
+      handleCompletion() {
         // (7) Finally, this callback should be called after set's above.
         do_check_true(!!fetchedPref);
         do_check_eq(fetchedPref.value, 2);

@@ -10,7 +10,7 @@ add_task(function*() {
                                          PlacesUtils.bookmarks.DEFAULT_INDEX,
                                          `test ${tagName}`);
     PlacesUtils.tagging.tagURI(uri, [tagName]);
-    yield PlacesTestUtils.addVisits([{uri: uri, title: `Test page with tag ${tagName}`}]);
+    yield PlacesTestUtils.addVisits([{uri, title: `Test page with tag ${tagName}`}]);
   }
 
   // We use different tags for each part of the test, as otherwise the

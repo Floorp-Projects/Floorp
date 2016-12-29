@@ -12,11 +12,11 @@ Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 // Only need to stub the methods actually called by nsSearchService
 var promptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
-  confirmEx: function() {}
+  confirmEx() {}
 };
 var prompt = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
-  alert: function() {}
+  alert() {}
 };
 // Override the prompt service and nsIPrompt, since the search service currently
 // prompts in response to certain installation failures we test here
@@ -38,14 +38,14 @@ add_test(function init_search_service() {
 // Simple test of the search callback
 add_test(function simple_callback_test() {
   let searchCallback = {
-    onSuccess: function(engine) {
+    onSuccess(engine) {
       do_check_true(!!engine);
       do_check_neq(engine.name, Services.search.defaultEngine.name);
       do_check_eq(engine.wrappedJSObject._loadPath,
                   "[http]localhost/test-search-engine.xml");
       run_next_test();
     },
-    onError: function(errorCode) {
+    onError(errorCode) {
       do_throw("search callback returned error: " + errorCode);
     }
   }
@@ -56,10 +56,10 @@ add_test(function simple_callback_test() {
 // Test of the search callback on duplicate engine failures
 add_test(function duplicate_failure_test() {
   let searchCallback = {
-    onSuccess: function(engine) {
+    onSuccess(engine) {
       do_throw("this addition should not have succeeded");
     },
-    onError: function(errorCode) {
+    onError(errorCode) {
       do_check_true(!!errorCode);
       do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE);
       run_next_test();
@@ -73,10 +73,10 @@ add_test(function duplicate_failure_test() {
 // Test of the search callback on failure to load the engine failures
 add_test(function load_failure_test() {
   let searchCallback = {
-    onSuccess: function(engine) {
+    onSuccess(engine) {
       do_throw("this addition should not have succeeded");
     },
-    onError: function(errorCode) {
+    onError(errorCode) {
       do_check_true(!!errorCode);
       do_check_eq(errorCode, Ci.nsISearchInstallCallback.ERROR_UNKNOWN_FAILURE);
       run_next_test();

@@ -166,9 +166,9 @@ add_task(function* init() {
   a7.userDisabled = true;
   t2.userDisabled = false;
   a3.findUpdates({
-    onUpdateFinished: function() {
+    onUpdateFinished() {
       a4.findUpdates({
-        onUpdateFinished: function() {
+        onUpdateFinished() {
           // Let the updates finish before restarting the manager
           deferredUpdateFinished.resolve();
         }

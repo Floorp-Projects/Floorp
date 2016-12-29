@@ -36,11 +36,11 @@ registerCleanupFunction(function() {
 var gTests = [
 {
   desc: "Test the remote commands",
-  teardown: function* () {
+  *teardown() {
     gBrowser.removeCurrentTab();
     yield signOut();
   },
-  run: function* ()
+  *run()
   {
     setPref("identity.fxaccounts.remote.signup.uri",
             "https://example.com/browser/browser/base/content/test/general/accounts_testRemoteCommands.html");
@@ -76,7 +76,7 @@ var gTests = [
 {
   desc: "Test action=signin - no user logged in",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* ()
+  *run()
   {
     // When this loads with no user logged-in, we expect the "normal" URL
     const expected_url = "https://example.com/?is_sign_in";
@@ -95,11 +95,11 @@ var gTests = [
 },
 {
   desc: "Test action=signin - user logged in",
-  teardown: function* () {
+  *teardown() {
     gBrowser.removeCurrentTab();
     yield signOut();
   },
-  run: function* ()
+  *run()
   {
     // When this loads with a user logged-in, we expect the normal URL to
     // have been ignored and the "manage" page to be shown.
@@ -124,7 +124,7 @@ var gTests = [
 {
   desc: "Test action=signin - captive portal",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* ()
+  *run()
   {
     const signinUrl = "https://redirproxy.example.com/test";
     setPref("identity.fxaccounts.remote.signin.uri", signinUrl);
@@ -144,7 +144,7 @@ var gTests = [
     gBrowser.removeCurrentTab();
     BrowserOffline.toggleOfflineStatus();
   },
-  run: function* ()
+  *run()
   {
     BrowserOffline.toggleOfflineStatus();
     Services.cache2.clear();
@@ -164,7 +164,7 @@ var gTests = [
 {
   desc: "Test action=signup - no user logged in",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* ()
+  *run()
   {
     const expected_url = "https://example.com/?is_sign_up";
     setPref("identity.fxaccounts.remote.signup.uri", expected_url);
@@ -183,7 +183,7 @@ var gTests = [
 {
   desc: "Test action=signup - user logged in",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* ()
+  *run()
   {
     const expected_url = "https://example.com/?is_sign_up";
     setPref("identity.fxaccounts.remote.signup.uri", expected_url);
@@ -202,11 +202,11 @@ var gTests = [
 },
 {
   desc: "Test action=reauth",
-  teardown: function* () {
+  *teardown() {
     gBrowser.removeCurrentTab();
     yield signOut();
   },
-  run: function* ()
+  *run()
   {
     const expected_url = "https://example.com/?is_force_auth";
     setPref("identity.fxaccounts.remote.force_auth.uri", expected_url);
@@ -220,11 +220,11 @@ var gTests = [
 },
 {
   desc: "Test with migrateToDevEdition enabled (success)",
-  teardown: function* () {
+  *teardown() {
     gBrowser.removeCurrentTab();
     yield signOut();
   },
-  run: function* ()
+  *run()
   {
     let fxAccountsCommon = {};
     Cu.import("resource://gre/modules/FxAccountsCommon.js", fxAccountsCommon);
@@ -281,11 +281,11 @@ var gTests = [
 },
 {
   desc: "Test with migrateToDevEdition enabled (no user to migrate)",
-  teardown: function* () {
+  *teardown() {
     gBrowser.removeCurrentTab();
     yield signOut();
   },
-  run: function* ()
+  *run()
   {
     const pref = "identity.fxaccounts.migrateToDevEdition";
     changedPrefs.add(pref);
@@ -321,10 +321,10 @@ var gTests = [
 },
 {
   desc: "Test observers about:accounts",
-  teardown: function() {
+  teardown() {
     gBrowser.removeCurrentTab();
   },
-  run: function* () {
+  *run() {
     setPref("identity.fxaccounts.remote.signup.uri", "https://example.com/");
     yield setSignedInUser();
     let tab = yield promiseNewTabLoadEvent("about:accounts");
@@ -339,7 +339,7 @@ var gTests = [
 {
   desc: "Test entrypoint query string, no action, no user logged in",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* () {
+  *run() {
     // When this loads with no user logged-in, we expect the "normal" URL
     setPref("identity.fxaccounts.remote.signup.uri", "https://example.com/");
     let [, url] = yield promiseNewTabWithIframeLoadEvent("about:accounts?entrypoint=abouthome");
@@ -349,7 +349,7 @@ var gTests = [
 {
   desc: "Test entrypoint query string for signin",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* () {
+  *run() {
     // When this loads with no user logged-in, we expect the "normal" URL
     const expected_url = "https://example.com/?is_sign_in";
     setPref("identity.fxaccounts.remote.signin.uri", expected_url);
@@ -360,7 +360,7 @@ var gTests = [
 {
   desc: "Test entrypoint query string for signup",
   teardown: () => gBrowser.removeCurrentTab(),
-  run: function* () {
+  *run() {
     // When this loads with no user logged-in, we expect the "normal" URL
     const sign_up_url = "https://example.com/?is_sign_up";
     setPref("identity.fxaccounts.remote.signup.uri", sign_up_url);
@@ -374,7 +374,7 @@ var gTests = [
   teardown() {
     gBrowser.removeCurrentTab();
   },
-  run: function* () {
+  *run() {
     let signupURL = "https://example.com/";
     setPref("identity.fxaccounts.remote.signup.uri", signupURL);
     let queryStr = "email=foo%40example.com&foo=bar&baz=quux";
@@ -390,7 +390,7 @@ var gTests = [
   teardown() {
     gBrowser.removeCurrentTab();
   },
-  run: function* () {
+  *run() {
     let signupURL = "https://example.com/?param";
     setPref("identity.fxaccounts.remote.signup.uri", signupURL);
     let queryStr = "email=foo%40example.com&foo=bar&baz=quux";
@@ -472,7 +472,7 @@ function checkVisibilities(tab, data) {
     }
     deferred.resolve();
   });
-  mm.sendAsyncMessage("test:check-visibilities", {ids: ids});
+  mm.sendAsyncMessage("test:check-visibilities", {ids});
   return deferred.promise;
 }
 

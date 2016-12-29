@@ -15,7 +15,7 @@ var os = Cc["@mozilla.org/observer-service;1"].
 
 var gObserver = {
   notifications: 0,
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     this.notifications++;
   }
 };

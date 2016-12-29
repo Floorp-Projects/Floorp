@@ -663,7 +663,7 @@ extApplication.prototype = {
     return this.prefs;
   },
 
-  getExtensions: function(callback) {
+  getExtensions(callback) {
     AddonManager.getAddonsByTypes(["extension"], function(addons) {
       callback.callback(new Extensions(addons));
     });

@@ -45,7 +45,7 @@ this.ChromeManifestParser = {
    * @return Array of objects describing each manifest instruction, in the form:
    *         { type: instruction-type, baseURI: string-uri, args: [arguments] }
    **/
-  parseSync: function(aURI) {
+  parseSync(aURI) {
     function parseLine(aLine) {
       let line = aLine.trim();
       if (line.length == 0 || line.charAt(0) == '#')
@@ -56,7 +56,7 @@ this.ChromeManifestParser = {
         let uri = NetUtil.newURI(tokens.shift(), null, aURI);
         data = data.concat(this.parseSync(uri));
       } else {
-        data.push({type: type, baseURI: baseURI, args: tokens});
+        data.push({type, baseURI, args: tokens});
       }
     }
 
@@ -81,7 +81,7 @@ this.ChromeManifestParser = {
     return data;
   },
 
-  _readFromJar: function(aURI) {
+  _readFromJar(aURI) {
     let data = "";
     let entries = [];
     let readers = [];
@@ -124,7 +124,7 @@ this.ChromeManifestParser = {
     return data;
   },
 
-  _readFromFile: function(aURI) {
+  _readFromFile(aURI) {
     let file = aURI.QueryInterface(Ci.nsIFileURL).file;
     if (!file.exists() || !file.isFile())
       return "";
@@ -151,7 +151,7 @@ this.ChromeManifestParser = {
   *         Instruction type to filter by.
   * @return True if any matching instructions were found in the manifest.
   */
-  hasType: function(aManifest, aType) {
+  hasType(aManifest, aType) {
     return aManifest.some(entry => entry.type == aType);
   }
 };

@@ -517,7 +517,7 @@ this.LoginHelper = {
     } else {
       window.openDialog("chrome://passwordmgr/content/passwordManager.xul",
                         "Toolkit:PasswordManager", "",
-                        {filterString : filterString});
+                        {filterString});
     }
   },
 

@@ -20,14 +20,14 @@ const mockUpdateManager = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateManager]),
 
-  createInstance: function(outer, iiD) {
+  createInstance(outer, iiD) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(iiD);
   },
 
-  register: function() {
+  register() {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     if (!registrar.isCIDRegistered(this._mockClassId)) {
       this._originalClassId = registrar.contractIDToCID(this.contractId);
@@ -37,7 +37,7 @@ const mockUpdateManager = {
     }
   },
 
-  unregister: function() {
+  unregister() {
     let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
     registrar.unregisterFactory(this._mockClassId, this);
     registrar.registerFactory(this._originalClassId, "", this.contractId, this._originalFactory);
@@ -47,7 +47,7 @@ const mockUpdateManager = {
     return this._updates.length;
   },
 
-  getUpdateAt: function(index) {
+  getUpdateAt(index) {
     return this._updates[index];
   },
 

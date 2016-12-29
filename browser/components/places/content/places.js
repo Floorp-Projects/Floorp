@@ -32,7 +32,7 @@ var PlacesOrganizer = {
     "editBMPanel_keywordRow",
   ],
 
-  _initFolderTree: function() {
+  _initFolderTree() {
     var leftPaneRoot = PlacesUIUtils.leftPaneFolderId;
     this._places.place = "place:excludeItems=1&expandQueries=0&folder=" + leftPaneRoot;
   },
@@ -1250,7 +1250,7 @@ var ContentArea = {
         let { view, options } = this._specialViews.get(aQueryString);
         if (typeof view == "function") {
           view = view();
-          this._specialViews.set(aQueryString, { view: view, options: options });
+          this._specialViews.set(aQueryString, { view, options });
         }
         return view;
       }
@@ -1356,7 +1356,7 @@ var ContentArea = {
     return viewOptions;
   },
 
-  focus: function() {
+  focus() {
     this._deck.selectedPanel.focus();
   }
 };

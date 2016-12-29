@@ -93,12 +93,12 @@ function populateReportList() {
     // XXX Fallback to be removed once bug 1215247 is complete
     // and the Intl API is available on all platforms.
     dateFormatter = {
-      format: function(date) {
+      format(date) {
         return date.toLocaleDateString();
       }
     }
     timeFormatter = {
-      format: function(date) {
+      format(date) {
         return date.toLocaleTimeString();
       }
     }

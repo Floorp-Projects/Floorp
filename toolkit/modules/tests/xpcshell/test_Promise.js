@@ -1013,7 +1013,7 @@ function wait_for_uncaught(aMustAppear, aTimeout = undefined) {
     let error = new Error("This is an uncaught error " + salt);
     return {
       mustFind: [error.message, error.fileName, error.lineNumber, error.stack],
-      error: error
+      error
     };
   };
   let make_exception_rejection = function make_exception_rejection() {

@@ -101,7 +101,7 @@ function updateDisplayedEmail(user) {
 var wrapper = {
   iframe: null,
 
-  init: function(url, urlParams) {
+  init(url, urlParams) {
     // If a master-password is enabled, we want to encourage the user to
     // unlock it.  Things still work if not, but the user will probably need
     // to re-auth next startup (in which case we will get here again and
@@ -130,7 +130,7 @@ var wrapper = {
     webNav.loadURI(url, Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY, null, null, null);
   },
 
-  retry: function() {
+  retry() {
     let webNav = this.iframe.frameLoader.docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.loadURI(this.url, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY, null, null, null);
   },
@@ -140,7 +140,7 @@ var wrapper = {
                                          Ci.nsISupportsWeakReference,
                                          Ci.nsISupports]),
 
-    onStateChange: function(aWebProgress, aRequest, aState, aStatus) {
+    onStateChange(aWebProgress, aRequest, aState, aStatus) {
       let failure = false;
 
       // Captive portals sometimes redirect users
@@ -164,19 +164,19 @@ var wrapper = {
       }
     },
 
-    onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+    onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
       if (aRequest && aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
         aRequest.cancel(Components.results.NS_BINDING_ABORTED);
         setErrorPage("networkError");
       }
     },
 
-    onProgressChange: function() {},
-    onStatusChange: function() {},
-    onSecurityChange: function() {},
+    onProgressChange() {},
+    onStatusChange() {},
+    onSecurityChange() {},
   },
 
-  handleEvent: function(evt) {
+  handleEvent(evt) {
     switch (evt.type) {
       case "load":
         this.iframe.contentWindow.addEventListener("FirefoxAccountsCommand", this);
@@ -194,7 +194,7 @@ var wrapper = {
    *
    * @param accountData the user's account data and credentials
    */
-  onLogin: function(accountData) {
+  onLogin(accountData) {
     log("Received: 'login'. Data:" + JSON.stringify(accountData));
 
     if (accountData.customizeSync) {
@@ -251,16 +251,16 @@ var wrapper = {
     );
   },
 
-  onCanLinkAccount: function(accountData) {
+  onCanLinkAccount(accountData) {
     // We need to confirm a relink - see shouldAllowRelink for more
     let ok = shouldAllowRelink(accountData.email);
-    this.injectData("message", { status: "can_link_account", data: { ok: ok } });
+    this.injectData("message", { status: "can_link_account", data: { ok } });
   },
 
   /**
    * onSignOut handler erases the current user's session from the fxaccounts service
    */
-  onSignOut: function() {
+  onSignOut() {
     log("Received: 'sign_out'.");
 
     fxAccounts.signOut().then(
@@ -269,7 +269,7 @@ var wrapper = {
     );
   },
 
-  handleRemoteCommand: function(evt) {
+  handleRemoteCommand(evt) {
     log('command: ' + evt.detail.command);
     let data = evt.detail.data;
 
@@ -289,11 +289,11 @@ var wrapper = {
     }
   },
 
-  injectData: function(type, content) {
+  injectData(type, content) {
     return fxAccounts.promiseAccountsSignUpURI().then(authUrl => {
       let data = {
-        type: type,
-        content: content
+        type,
+        content
       };
       this.iframe.contentWindow.postMessage(data, authUrl);
     })

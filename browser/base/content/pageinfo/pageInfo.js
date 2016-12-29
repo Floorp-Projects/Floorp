@@ -24,12 +24,12 @@ pageInfoTreeView.prototype = {
   set rowCount(c) { throw "rowCount is a readonly property"; },
   get rowCount() { return this.rows; },
 
-  setTree: function(tree)
+  setTree(tree)
   {
     this.tree = tree;
   },
 
-  getCellText: function(row, column)
+  getCellText(row, column)
   {
     // row can be null, but js arrays are 0-indexed.
     // colidx cannot be null, but can be larger than the number
@@ -38,16 +38,16 @@ pageInfoTreeView.prototype = {
     return this.data[row][column.index] || "";
   },
 
-  setCellValue: function(row, column, value)
+  setCellValue(row, column, value)
   {
   },
 
-  setCellText: function(row, column, value)
+  setCellText(row, column, value)
   {
     this.data[row][column.index] = value;
   },
 
-  addRow: function(row)
+  addRow(row)
   {
     this.rows = this.data.push(row);
     this.rowCountChanged(this.rows - 1, 1);
@@ -56,24 +56,24 @@ pageInfoTreeView.prototype = {
     }
   },
 
-  addRows: function(rows)
+  addRows(rows)
   {
     for (let row of rows) {
       this.addRow(row);
     }
   },
 
-  rowCountChanged: function(index, count)
+  rowCountChanged(index, count)
   {
     this.tree.rowCountChanged(index, count);
   },
 
-  invalidate: function()
+  invalidate()
   {
     this.tree.invalidate();
   },
 
-  clear: function()
+  clear()
   {
     if (this.tree)
       this.tree.rowCountChanged(0, -this.rows);
@@ -81,12 +81,12 @@ pageInfoTreeView.prototype = {
     this.data = [ ];
   },
 
-  handleCopy: function(row)
+  handleCopy(row)
   {
     return (row < 0 || this.copycol < 0) ? "" : (this.data[row][this.copycol] || "");
   },
 
-  performActionOnRow: function(action, row)
+  performActionOnRow(action, row)
   {
     if (action == "copy") {
       var data = this.handleCopy(row)
@@ -94,7 +94,7 @@ pageInfoTreeView.prototype = {
     }
   },
 
-  onPageMediaSort : function(columnname)
+  onPageMediaSort(columnname)
   {
     var tree = document.getElementById(this.treeid);
     var treecol = tree.columns.getNamedColumn(columnname);
@@ -121,29 +121,29 @@ pageInfoTreeView.prototype = {
     this.sortcol = treecol.index;
   },
 
-  getRowProperties: function(row) { return ""; },
-  getCellProperties: function(row, column) { return ""; },
-  getColumnProperties: function(column) { return ""; },
-  isContainer: function(index) { return false; },
-  isContainerOpen: function(index) { return false; },
-  isSeparator: function(index) { return false; },
-  isSorted: function() { return this.sortcol > -1 },
-  canDrop: function(index, orientation) { return false; },
-  drop: function(row, orientation) { return false; },
-  getParentIndex: function(index) { return 0; },
-  hasNextSibling: function(index, after) { return false; },
-  getLevel: function(index) { return 0; },
-  getImageSrc: function(row, column) { },
-  getProgressMode: function(row, column) { },
-  getCellValue: function(row, column) { },
-  toggleOpenState: function(index) { },
-  cycleHeader: function(col) { },
-  selectionChanged: function() { },
-  cycleCell: function(row, column) { },
-  isEditable: function(row, column) { return false; },
-  isSelectable: function(row, column) { return false; },
-  performAction: function(action) { },
-  performActionOnCell: function(action, row, column) { }
+  getRowProperties(row) { return ""; },
+  getCellProperties(row, column) { return ""; },
+  getColumnProperties(column) { return ""; },
+  isContainer(index) { return false; },
+  isContainerOpen(index) { return false; },
+  isSeparator(index) { return false; },
+  isSorted() { return this.sortcol > -1 },
+  canDrop(index, orientation) { return false; },
+  drop(row, orientation) { return false; },
+  getParentIndex(index) { return 0; },
+  hasNextSibling(index, after) { return false; },
+  getLevel(index) { return 0; },
+  getImageSrc(row, column) { },
+  getProgressMode(row, column) { },
+  getCellValue(row, column) { },
+  toggleOpenState(index) { },
+  cycleHeader(col) { },
+  selectionChanged() { },
+  cycleCell(row, column) { },
+  isEditable(row, column) { return false; },
+  isSelectable(row, column) { return false; },
+  performAction(action) { },
+  performActionOnCell(action, row, column) { }
 };
 
 // mmm, yummy. global variables.
@@ -359,7 +359,7 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser)
 
   // Look for pageInfoListener in content.js. Sends message to listener with arguments.
   mm.sendAsyncMessage("PageInfo:getData", {strings: gStrings,
-                      frameOuterWindowID: frameOuterWindowID},
+                      frameOuterWindowID},
                       { imageElement });
 
   let pageInfoData;
@@ -517,10 +517,10 @@ function toggleGroupbox(id)
 function openCacheEntry(key, cb)
 {
   var checkCacheListener = {
-    onCacheEntryCheck: function(entry, appCache) {
+    onCacheEntryCheck(entry, appCache) {
       return Components.interfaces.nsICacheEntryOpenCallback.ENTRY_WANTED;
     },
-    onCacheEntryAvailable: function(entry, isNew, appCache, status) {
+    onCacheEntryAvailable(entry, isNew, appCache, status) {
       cb(entry);
     }
   };
@@ -1004,7 +1004,7 @@ function makeBlockImage(url)
 }
 
 var imagePermissionObserver = {
-  observe: function(aSubject, aTopic, aData)
+  observe(aSubject, aTopic, aData)
   {
     if (document.getElementById("mediaPreviewBox").collapsed)
       return;

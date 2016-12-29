@@ -500,7 +500,7 @@ add_task(function* test_contenteditable() {
 
 add_task(function* test_copylinkcommand() {
   yield test_contextmenu("#test-link", null, {
-    postCheckContextMenuFn: function*() {
+    *postCheckContextMenuFn() {
       document.commandDispatcher
               .getControllerForCommand("cmd_copyLink")
               .doCommand("cmd_copyLink");
@@ -562,7 +562,7 @@ add_task(function* test_pagemenu() {
      "context-viewsource",   true,
      "context-viewinfo",     true
     ],
-    {postCheckContextMenuFn: function*() {
+    {*postCheckContextMenuFn() {
       let item = contextMenu.getElementsByAttribute("generateditemid", "1")[0];
       ok(item, "Got generated XUL menu item");
       item.doCommand();
@@ -820,11 +820,11 @@ add_task(function* test_click_to_play_blocked_plugin() {
      "context-viewinfo",     true
     ],
     {
-      preCheckContextMenuFn: function*() {
+      *preCheckContextMenuFn() {
         pushPrefs(["plugins.click_to_play", true]);
         setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
       },
-      postCheckContextMenuFn: function*() {
+      *postCheckContextMenuFn() {
         getTestPlugin().enabledState = Ci.nsIPluginTag.STATE_ENABLED;
       }
     }

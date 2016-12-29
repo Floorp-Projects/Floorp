@@ -76,9 +76,9 @@ History.prototype = {
       let lastVisitTime = entry.get("time") || (Date.now() * 1000);
 
       places.push(
-        { uri: uri,
-          title: title,
-          visits: [{ transitionType: transitionType,
+        { uri,
+          title,
+          visits: [{ transitionType,
                      visitDate: lastVisitTime }]
         }
       );
@@ -92,12 +92,12 @@ History.prototype = {
 
     MigrationUtils.insertVisitsWrapper(places, {
       _success: false,
-      handleResult: function() {
+      handleResult() {
         // Importing any entry is considered a successful import.
         this._success = true;
       },
-      handleError: function() {},
-      handleCompletion: function() {
+      handleError() {},
+      handleCompletion() {
         aCallback(this._success);
       }
     });
@@ -320,8 +320,8 @@ IE7FormPasswords.prototype = {
                      fileTimeToSecondsSinceEpoch(currentLoginItem.hiDateTime,
                                                  currentLoginItem.loDateTime) * 1000;
       let currentResult = {
-        creation: creation,
-        url: url,
+        creation,
+        url,
       };
       // The username is UTF-16 and null-terminated.
       currentResult.username =

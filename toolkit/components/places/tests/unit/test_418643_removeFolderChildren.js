@@ -29,7 +29,7 @@ var deletedBookmarkIds = [];
 var observer = {
   // cached ordered array of notified items
   _onItemRemovedItemIds: [],
-  onItemRemoved: function(aItemId, aParentId, aIndex) {
+  onItemRemoved(aItemId, aParentId, aIndex) {
     // We should first get notifications for children, then for their parent
     do_check_eq(this._onItemRemovedItemIds.indexOf(aParentId), -1);
     // Ensure we are not wrongly removing 1 level up
@@ -39,7 +39,7 @@ var observer = {
     this._onItemRemovedItemIds.push(aItemId);
   },
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsINavBookmarkObserver) ||
         aIID.equals(Ci.nsISupports)) {
       return this;

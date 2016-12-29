@@ -42,7 +42,7 @@ add_task(function* () {
     });
   };
 
-  yield BrowserTestUtils.withNewTab({ gBrowser: gBrowser, url: "about:blank" }, function* (browser) {
+  yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, function* (browser) {
     let menu_cut_disabled, menu_copy_disabled;
 
     yield BrowserTestUtils.loadURI(browser, "data:text/html,<div>hello!</div>");

@@ -51,7 +51,7 @@ add_task(function* test_execute()
   for (let transition of transitions) {
     yield PlacesTestUtils.addVisits({
       uri: uri("http://" + transition + ".mozilla.org/"),
-      transition: transition
+      transition
     });
   }
 

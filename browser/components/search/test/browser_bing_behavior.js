@@ -32,7 +32,7 @@ function test() {
     {
       name: "context menu search",
       searchURL: base + "&form=MOZCON",
-      run: function() {
+      run() {
         // Simulate a contextmenu search
         // FIXME: This is a bit "low-level"...
         BrowserSearch.loadSearch("foo", false, "contextmenu");
@@ -41,7 +41,7 @@ function test() {
     {
       name: "keyword search",
       searchURL: base + "&form=MOZLBR",
-      run: function() {
+      run() {
         gURLBar.value = "? foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -50,7 +50,7 @@ function test() {
     {
       name: "keyword search with alias",
       searchURL: base + "&form=MOZLBR",
-      run: function() {
+      run() {
         gURLBar.value = "b foo";
         gURLBar.focus();
         EventUtils.synthesizeKey("VK_RETURN", {});
@@ -59,7 +59,7 @@ function test() {
     {
       name: "search bar search",
       searchURL: base + "&form=MOZSBR",
-      run: function() {
+      run() {
         let sb = BrowserSearch.searchBar;
         sb.focus();
         sb.value = "foo";
@@ -72,7 +72,7 @@ function test() {
     {
       name: "new tab search",
       searchURL: base + "&form=MOZTSB",
-      run: function() {
+      run() {
         function doSearch(doc) {
           // Re-add the listener, and perform a search
           gBrowser.addProgressListener(listener);

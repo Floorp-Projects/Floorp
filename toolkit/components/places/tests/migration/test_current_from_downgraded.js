@@ -5,7 +5,7 @@ add_task(function* setup() {
   yield setupPlacesDatabase(`places_v${CURRENT_SCHEMA_VERSION}.sqlite`);
   // Downgrade the schema version to the first supported one.
   let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
-  let db = yield Sqlite.openConnection({ path: path });
+  let db = yield Sqlite.openConnection({ path });
   yield db.setSchemaVersion(FIRST_UPGRADABLE_SCHEMA_VERSION);
   yield db.close();
 });

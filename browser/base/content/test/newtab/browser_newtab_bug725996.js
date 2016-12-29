@@ -9,7 +9,7 @@ add_task(function* () {
   yield* checkGrid("0,1,2,3,4,5,6,7,8");
 
   function doDrop(data) {
-    return ContentTask.spawn(gBrowser.selectedBrowser, { data: data }, function*(args) {
+    return ContentTask.spawn(gBrowser.selectedBrowser, { data }, function*(args) {
       let dataTransfer = new content.DataTransfer("dragstart", false);
       dataTransfer.mozSetDataAt("text/x-moz-url", args.data, 0);
       let event = content.document.createEvent("DragEvent");

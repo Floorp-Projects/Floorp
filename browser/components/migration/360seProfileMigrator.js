@@ -209,7 +209,7 @@ function Qihoo360seProfileMigrator() {
 Qihoo360seProfileMigrator.prototype = Object.create(MigratorPrototype);
 
 Object.defineProperty(Qihoo360seProfileMigrator.prototype, "sourceProfiles", {
-  get: function() {
+  get() {
     if ("__sourceProfiles" in this)
       return this.__sourceProfiles;
 

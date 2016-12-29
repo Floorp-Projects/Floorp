@@ -59,7 +59,7 @@ function AutoCompleteInput(aSearches) {
 AutoCompleteInput.prototype = {
   popup: {
     selectedIndex: -1,
-    invalidate: function() {},
+    invalidate() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
   popupOpen: false,
@@ -81,7 +81,7 @@ AutoCompleteInput.prototype = {
   get searchCount() {
     return this.searches.length;
   },
-  getSearchAt: function(aIndex) {
+  getSearchAt(aIndex) {
     return this.searches[aIndex];
   },
 
@@ -95,13 +95,13 @@ AutoCompleteInput.prototype = {
   get selectionEnd() {
     return this._selEnd;
   },
-  selectTextRange: function(aStart, aEnd) {
+  selectTextRange(aStart, aEnd) {
     this._selStart = aStart;
     this._selEnd = aEnd;
   },
 
-  onSearchBegin: function() {},
-  onSearchComplete: function() {},
+  onSearchBegin() {},
+  onSearchComplete() {},
 
   onTextEntered: () => false,
   onTextReverted: () => false,
