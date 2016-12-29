@@ -15375,13 +15375,13 @@ class CGFastCallback(CGClass):
                                   bodyInHeader=True,
                                   visibility="public",
                                   body="%s::Trace(aTracer);\n" % baseName)
-        holdMethod = ClassMethod("HoldJSObjectsIfMoreThanOneOwner", "void",
-                                 [],
+        holdMethod = ClassMethod("FinishSlowJSInitIfMoreThanOneOwner", "void",
+                                 [Argument("JSContext*", "aCx")],
                                  inline=True,
                                  bodyInHeader=True,
                                  visibility="public",
                                  body=(
-                                     "%s::HoldJSObjectsIfMoreThanOneOwner();\n" %
+                                     "%s::FinishSlowJSInitIfMoreThanOneOwner(aCx);\n" %
                                      baseName))
 
         CGClass.__init__(self, "Fast%s" % baseName,

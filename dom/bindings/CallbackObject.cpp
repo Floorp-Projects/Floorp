@@ -56,7 +56,7 @@ CallbackObject::Trace(JSTracer* aTracer)
 }
 
 void
-CallbackObject::HoldJSObjectsIfMoreThanOneOwner()
+CallbackObject::FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx)
 {
   MOZ_ASSERT(mRefCnt.get() > 0);
   if (mRefCnt.get() > 1) {
