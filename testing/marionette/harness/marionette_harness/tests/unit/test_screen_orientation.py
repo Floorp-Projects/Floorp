@@ -23,31 +23,31 @@ class TestScreenOrientation(MarionetteTestCase):
             self.assertEqual(self.marionette.orientation, default_orientation, "invalid state")
         MarionetteTestCase.tearDown(self)
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_to_portrait_primary(self):
         self.marionette.set_orientation("portrait-primary")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "portrait-primary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_to_landscape_primary(self):
         self.marionette.set_orientation("landscape-primary")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-primary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_to_portrait_secondary(self):
         self.marionette.set_orientation("portrait-secondary")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "portrait-secondary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_to_landscape_secondary(self):
         self.marionette.set_orientation("landscape-secondary")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-secondary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_to_shorthand_portrait(self):
         # Set orientation to something other than portrait-primary first, since the default is
         # portrait-primary.
@@ -58,29 +58,29 @@ class TestScreenOrientation(MarionetteTestCase):
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "portrait-primary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_to_shorthand_landscape(self):
         self.marionette.set_orientation("landscape")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-primary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_orientation_with_mixed_casing(self):
         self.marionette.set_orientation("lAnDsCaPe")
         new_orientation = self.marionette.orientation
         self.assertEqual(new_orientation, "landscape-primary")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_invalid_orientation(self):
         with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation.format("cheese")):
             self.marionette.set_orientation("cheese")
 
-    @skip_if_desktop
+    @skip_if_desktop("Not supported in Firefox")
     def test_set_null_orientation(self):
         with self.assertRaisesRegexp(errors.MarionetteException, unknown_orientation.format("null")):
             self.marionette.set_orientation(None)
 
-    @skip_if_mobile
+    @skip_if_mobile("Specific test for Firefox")
     def test_unsupported_operation_on_desktop(self):
         with self.assertRaises(errors.UnsupportedOperationException):
             self.marionette.set_orientation("landscape-primary")
