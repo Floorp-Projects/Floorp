@@ -118,6 +118,10 @@ private:
   void ClearResources();
   uint64_t GetChildLayerObserverEpoch() const { return mChildLayerObserverEpoch; }
   bool ShouldParentObserveEpoch();
+  void HandleDPEnd(InfallibleTArray<WebRenderCommand>&& aCommands,
+                   InfallibleTArray<OpDestroy>&& aToDestroy,
+                   const uint64_t& aFwdTransactionId,
+                   const uint64_t& aTransactionId);
 
 private:
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
