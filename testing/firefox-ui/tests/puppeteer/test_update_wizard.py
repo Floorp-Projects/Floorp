@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from firefox_puppeteer import PuppeteerMixin
+from firefox_puppeteer.ui.deck import Panel
 from firefox_puppeteer.ui.update_wizard import UpdateWizardDialog
 from marionette_harness import MarionetteTestCase
 
@@ -60,3 +61,7 @@ class TestUpdateWizard(PuppeteerMixin, MarionetteTestCase):
         # elements of the downloading panel
         self.assertEqual(self.wizard.downloading.progress.get_property('localName'),
                          'progressmeter')
+
+        # check wizard attributes
+        self.assertIsInstance(self.wizard.selected_index, int)
+        self.assertIsInstance(self.wizard.selected_panel, Panel)
