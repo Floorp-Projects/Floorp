@@ -52,7 +52,6 @@ DevToolsModules(
     'reflow.js',
     'root.js',
     'script.js',
-    'settings.js',
     'source.js',
     'storage.js',
     'string.js',

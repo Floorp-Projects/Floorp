@@ -454,9 +454,6 @@ var UI = {
       if (AppManager.preferenceFront) {
         devicePrefsCmd.removeAttribute("disabled");
       }
-      if (AppManager.settingsFront) {
-        settingsCmd.removeAttribute("disabled");
-      }
       disconnectCmd.removeAttribute("disabled");
     } else {
       monitorCmd.setAttribute("disabled", "true");
@@ -1050,10 +1047,6 @@ var Cmds = {
 
   showDevicePrefs: function () {
     UI.selectDeckPanel("devicepreferences");
-  },
-
-  showSettings: function () {
-    UI.selectDeckPanel("devicesettings");
   },
 
   showMonitor: function () {

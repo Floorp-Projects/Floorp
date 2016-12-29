@@ -36,7 +36,6 @@ DevToolsModules(
     'promises.js',
     'reflow.js',
     'script.js',
-    'settings.js',
     'source.js',
     'storage.js',
     'string.js',
