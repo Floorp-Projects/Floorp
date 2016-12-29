@@ -51,9 +51,11 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
 
     def test_navigate_chrome_error(self):
         with self.marionette.using_context("chrome"):
-            self.assertRaisesRegexp(
-                errors.UnsupportedOperationException, "Cannot navigate in chrome context",
-                self.marionette.navigate, "about:blank")
+            self.assertRaises(errors.UnsupportedOperationException,
+                              self.marionette.navigate, "about:blank")
+            self.assertRaises(errors.UnsupportedOperationException, self.marionette.go_back)
+            self.assertRaises(errors.UnsupportedOperationException, self.marionette.go_forward)
+            self.assertRaises(errors.UnsupportedOperationException, self.marionette.refresh)
 
     def test_get_current_url_returns_top_level_browsing_context_url(self):
         self.marionette.navigate(self.iframe_doc)
