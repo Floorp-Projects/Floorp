@@ -34,8 +34,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status,
-      released: released
+      status,
+      released
   });
   samples.push(
     {
@@ -53,8 +53,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status,
-      released: released
+      status,
+      released
   });
   samples.push(
     {
@@ -72,8 +72,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.int32_t,
                                ctypes.int32_t),
-      status: status,
-      released: released
+      status,
+      released
     }
   );
   samples.push(
@@ -92,8 +92,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.int64_t,
                                ctypes.int64_t),
-      status: status,
-      released: released
+      status,
+      released
     }
   );
   samples.push(
@@ -112,8 +112,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.void_t.ptr,
                                ctypes.void_t.ptr),
-      status: status,
-      released: released
+      status,
+      released
     }
   );
   samples.push(
@@ -132,8 +132,8 @@ function run_test()
                                ctypes.bool,
                                ctypes.char.ptr,
                                ctypes.char.ptr),
-      status: status,
-      released: released
+      status,
+      released
     }
   );
   const rect_t = new ctypes.StructType("myRECT",
@@ -157,8 +157,8 @@ function run_test()
                                ctypes.bool,
                                rect_t,
                                rect_t),
-      status: status,
-      released: released
+      status,
+      released
     }
   );
   samples.push(
@@ -177,7 +177,7 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status,
+      status,
       released: function released_eq(i, witness) {
         return i == witness;
       }
@@ -199,7 +199,7 @@ function run_test()
                                ctypes.bool,
                                ctypes.size_t,
                                ctypes.size_t),
-      status: status,
+      status,
       released: function released_rect_eq(i, witness) {
         return witness.top == i
           && witness.bottom == i
@@ -228,7 +228,7 @@ function run_test()
                                ctypes.bool,
                                ctypes.void_t.ptr,
                                ctypes.void_t.ptr),
-      released: released
+      released
     }
   );
 
@@ -397,8 +397,8 @@ function test_executing_forget(size, tc, cleanup)
     let finalizer = ctypes.CDataFinalizer(original, tc.release);
     ref.push(
       {
-        original: original,
-        finalizer: finalizer
+        original,
+        finalizer
       }
     );
     cleanup.add(finalizer);

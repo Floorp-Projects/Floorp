@@ -44,7 +44,7 @@ const NULL_KEY = {};
 let Timers = {
   _timers: new Map(),
 
-  _validTypes: function(histogram, obj, key) {
+  _validTypes(histogram, obj, key) {
     let nonEmptyString = value => {
       return typeof value === "string" && value !== "" && value.length > 0;
     };
@@ -53,7 +53,7 @@ let Timers = {
            (key === NULL_KEY || nonEmptyString(key));
   },
 
-  get: function(histogram, obj, key) {
+  get(histogram, obj, key) {
     key = key === null ? NULL_KEY : key;
     obj = obj || NULL_OBJECT;
 
@@ -64,7 +64,7 @@ let Timers = {
     return this._timers.get(histogram).get(obj).get(key);
   },
 
-  put: function(histogram, obj, key, startTime) {
+  put(histogram, obj, key, startTime) {
     key = key === null ? NULL_KEY : key;
     obj = obj || NULL_OBJECT;
 
@@ -80,7 +80,7 @@ let Timers = {
     return true;
   },
 
-  has: function(histogram, obj, key) {
+  has(histogram, obj, key) {
     key = key === null ? NULL_KEY : key;
     obj = obj || NULL_OBJECT;
 
@@ -89,7 +89,7 @@ let Timers = {
       this._timers.get(histogram).get(obj).has(key);
   },
 
-  delete: function(histogram, obj, key) {
+  delete(histogram, obj, key) {
     key = key === null ? NULL_KEY : key;
     obj = obj || NULL_OBJECT;
 
@@ -132,7 +132,7 @@ this.TelemetryStopwatch = {
    *                    started again, and the existing one will be cleared in
    *                    order to avoid measurements errors.
    */
-  start: function(aHistogram, aObj) {
+  start(aHistogram, aObj) {
     return TelemetryStopwatchImpl.start(aHistogram, aObj, null);
   },
 
@@ -153,7 +153,7 @@ this.TelemetryStopwatch = {
    * @returns {Boolean} True if the timer exist and it was cleared, False
    *                   otherwise.
    */
-  cancel: function(aHistogram, aObj) {
+  cancel(aHistogram, aObj) {
     return TelemetryStopwatchImpl.cancel(aHistogram, aObj, null);
   },
 
@@ -171,7 +171,7 @@ this.TelemetryStopwatch = {
    * @returns {Integer} time in milliseconds or -1 if the stopwatch was not
    *                   found.
    */
-  timeElapsed: function(aHistogram, aObj) {
+  timeElapsed(aHistogram, aObj) {
     return TelemetryStopwatchImpl.timeElapsed(aHistogram, aObj, null);
   },
 
@@ -188,7 +188,7 @@ this.TelemetryStopwatch = {
    * @returns {Boolean} True if the timer was succesfully stopped and the data
    *                    was added to the histogram, False otherwise.
    */
-  finish: function(aHistogram, aObj) {
+  finish(aHistogram, aObj) {
     return TelemetryStopwatchImpl.finish(aHistogram, aObj, null);
   },
 
@@ -214,7 +214,7 @@ this.TelemetryStopwatch = {
    *                    started again, and the existing one will be cleared in
    *                    order to avoid measurements errors.
    */
-  startKeyed: function(aHistogram, aKey, aObj) {
+  startKeyed(aHistogram, aKey, aObj) {
     return TelemetryStopwatchImpl.start(aHistogram, aObj, aKey);
   },
 
@@ -232,7 +232,7 @@ this.TelemetryStopwatch = {
    * @return {Boolean} True if the timer exist and it was cleared, False
    *                   otherwise.
    */
-  cancelKeyed: function(aHistogram, aKey, aObj) {
+  cancelKeyed(aHistogram, aKey, aObj) {
     return TelemetryStopwatchImpl.cancel(aHistogram, aObj, aKey);
   },
 
@@ -251,7 +251,7 @@ this.TelemetryStopwatch = {
    * @return {Integer} time in milliseconds or -1 if the stopwatch was not
    *                   found.
    */
-  timeElapsedKeyed: function(aHistogram, aKey, aObj) {
+  timeElapsedKeyed(aHistogram, aKey, aObj) {
     return TelemetryStopwatchImpl.timeElapsed(aHistogram, aObj, aKey);
   },
 
@@ -270,13 +270,13 @@ this.TelemetryStopwatch = {
    * @returns {Boolean} True if the timer was succesfully stopped and the data
    *                   was added to the histogram, False otherwise.
    */
-  finishKeyed: function(aHistogram, aKey, aObj) {
+  finishKeyed(aHistogram, aKey, aObj) {
     return TelemetryStopwatchImpl.finish(aHistogram, aObj, aKey);
   }
 };
 
 this.TelemetryStopwatchImpl = {
-  start: function(histogram, object, key) {
+  start(histogram, object, key) {
     if (Timers.has(histogram, object, key)) {
       Timers.delete(histogram, object, key);
       Cu.reportError(`TelemetryStopwatch: key "${histogram}" was already ` +
@@ -287,11 +287,11 @@ this.TelemetryStopwatchImpl = {
     return Timers.put(histogram, object, key, Components.utils.now());
   },
 
-  cancel: function(histogram, object, key) {
+  cancel(histogram, object, key) {
     return Timers.delete(histogram, object, key);
   },
 
-  timeElapsed: function(histogram, object, key) {
+  timeElapsed(histogram, object, key) {
     let startTime = Timers.get(histogram, object, key);
     if (startTime === null) {
       Cu.reportError("TelemetryStopwatch: requesting elapsed time for " +
@@ -311,7 +311,7 @@ this.TelemetryStopwatchImpl = {
     }
   },
 
-  finish: function(histogram, object, key) {
+  finish(histogram, object, key) {
     let delta = this.timeElapsed(histogram, object, key);
     if (delta == -1) {
       return false;

@@ -20,7 +20,7 @@ var gSetBackground = {
                      .getService(Ci.nsIShellService);
   },
 
-  load: function()
+  load()
   {
     this._canvas = document.getElementById("screen");
     this._screenWidth = screen.width;
@@ -49,7 +49,7 @@ var gSetBackground = {
     }, 0, this);
   },
 
-  init: function(aImage)
+  init(aImage)
   {
     this._image = aImage;
 
@@ -76,7 +76,7 @@ var gSetBackground = {
     this.updatePosition();
   },
 
-  setDesktopBackground: function()
+  setDesktopBackground()
   {
     if (AppConstants.platform != "macosx") {
       document.persist("menuPosition", "value");
@@ -95,7 +95,7 @@ var gSetBackground = {
                                      Ci.nsIShellService["BACKGROUND_" + this._position]);
   },
 
-  updatePosition: function()
+  updatePosition()
   {
     var ctx = this._canvas.getContext("2d");
     ctx.clearRect(0, 0, this._screenWidth, this._screenHeight);

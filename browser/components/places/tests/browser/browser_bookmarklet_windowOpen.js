@@ -6,9 +6,9 @@ function makeBookmarkFor(url, keyword) {
   return Promise.all([
     PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
                                    title: "bookmarklet",
-                                   url: url }),
-    PlacesUtils.keywords.insert({url: url,
-                                 keyword: keyword})
+                                   url }),
+    PlacesUtils.keywords.insert({url,
+                                 keyword})
   ]);
 
 }

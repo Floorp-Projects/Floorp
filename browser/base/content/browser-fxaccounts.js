@@ -88,7 +88,7 @@ var gFxAccounts = {
            .sort((a, b) => a.name.localeCompare(b.name));
   },
 
-  init: function() {
+  init() {
     // Bail out if we're already initialized and for pop-up windows.
     if (this._initialized || !window.toolbar.visible) {
       return;
@@ -107,7 +107,7 @@ var gFxAccounts = {
     this.updateUI();
   },
 
-  uninit: function() {
+  uninit() {
     if (!this._initialized) {
       return;
     }
@@ -119,7 +119,7 @@ var gFxAccounts = {
     this._initialized = false;
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     switch (topic) {
       case "fxa-migration:state-changed":
         this.onMigrationStateChanged(data, subject);
@@ -133,7 +133,7 @@ var gFxAccounts = {
     }
   },
 
-  onMigrationStateChanged: function() {
+  onMigrationStateChanged() {
     // Since we nuked most of the migration code, this notification will fire
     // once after legacy Sync has been disconnected (and should never fire
     // again)
@@ -175,12 +175,12 @@ var gFxAccounts = {
     this.updateAppMenuItem();
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     this._inCustomizationMode = event.type == "customizationstarting";
     this.updateAppMenuItem();
   },
 
-  updateUI: function() {
+  updateUI() {
     // It's possible someone signed in to FxA after seeing our notification
     // about "Legacy Sync migration" (which now is actually "Legacy Sync
     // auto-disconnect") so kill that notification if it still exists.
@@ -194,7 +194,7 @@ var gFxAccounts = {
   },
 
   // Note that updateAppMenuItem() returns a Promise that's only used by tests.
-  updateAppMenuItem: function() {
+  updateAppMenuItem() {
     let profileInfoEnabled = false;
     try {
       profileInfoEnabled = Services.prefs.getBoolPref("identity.fxaccounts.profile_image.enabled");
@@ -320,7 +320,7 @@ var gFxAccounts = {
     });
   },
 
-  onMenuPanelCommand: function() {
+  onMenuPanelCommand() {
 
     switch (this.panelUIFooter.getAttribute("fxastatus")) {
     case "signedin":
@@ -341,11 +341,11 @@ var gFxAccounts = {
     PanelUI.hide();
   },
 
-  openPreferences: function() {
+  openPreferences() {
     openPreferences("paneSync", { urlParams: { entrypoint: "menupanel" } });
   },
 
-  openAccountsPage: function(action, urlParams = {}) {
+  openAccountsPage(action, urlParams = {}) {
     let params = new URLSearchParams();
     if (action) {
       params.set("action", action);
@@ -361,15 +361,15 @@ var gFxAccounts = {
     });
   },
 
-  openSignInAgainPage: function(entryPoint) {
+  openSignInAgainPage(entryPoint) {
     this.openAccountsPage("reauth", { entrypoint: entryPoint });
   },
 
-  sendTabToDevice: function(url, clientId, title) {
+  sendTabToDevice(url, clientId, title) {
     Weave.Service.clientsEngine.sendURIToClientForDisplay(url, clientId, title);
   },
 
-  populateSendTabToDevicesMenu: function(devicesPopup, url, title) {
+  populateSendTabToDevicesMenu(devicesPopup, url, title) {
     // remove existing menu items
     while (devicesPopup.hasChildNodes()) {
       devicesPopup.removeChild(devicesPopup.firstChild);
@@ -410,7 +410,7 @@ var gFxAccounts = {
     devicesPopup.appendChild(fragment);
   },
 
-  updateTabContextMenu: function(aPopupMenu) {
+  updateTabContextMenu(aPopupMenu) {
     if (!this.sendTabToDeviceEnabled) {
       return;
     }
@@ -420,7 +420,7 @@ var gFxAccounts = {
     .forEach(id => { document.getElementById(id).hidden = !remoteClientPresent });
   },
 
-  initPageContextMenu: function(contextMenu) {
+  initPageContextMenu(contextMenu) {
     if (!this.sendTabToDeviceEnabled) {
       return;
     }

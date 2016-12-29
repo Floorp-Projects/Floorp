@@ -30,7 +30,7 @@ WindowOpenListener.prototype = {
   window: null,
   domwindow: null,
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     is(this.domwindow.document.location.href, this.url, "Should have opened the correct window");
 
     this.domwindow.removeEventListener("load", this, false);
@@ -39,10 +39,10 @@ WindowOpenListener.prototype = {
     executeSoon(function() { self.opencallback(self.domwindow); } );
   },
 
-  onWindowTitleChange: function(window, title) {
+  onWindowTitleChange(window, title) {
   },
 
-  onOpenWindow: function(window) {
+  onOpenWindow(window) {
     if (this.window)
       return;
 
@@ -52,7 +52,7 @@ WindowOpenListener.prototype = {
     this.domwindow.addEventListener("load", this, false);
   },
 
-  onCloseWindow: function(window) {
+  onCloseWindow(window) {
     if (this.window != window)
       return;
 
@@ -71,7 +71,7 @@ WindowOpenListener.prototype = {
 
 
 var gInstallNotificationObserver = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     var installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
     if (gTestInWindow)
       is(installInfo.browser, null, "Notification should have a null browser");

@@ -61,7 +61,7 @@ var gSyncSetup = {
     return document.getElementById("existingServer").selectedIndex == 0;
   },
 
-  init: function() {
+  init() {
     let obs = [
       ["weave:service:change-passphrase", "onResetPassphrase"],
       ["weave:service:login:start",       "onLoginStart"],
@@ -121,14 +121,14 @@ var gSyncSetup = {
                                            .getAttribute("accesskey");
   },
 
-  startNewAccountSetup: function() {
+  startNewAccountSetup() {
     if (!Weave.Utils.ensureMPUnlocked())
       return;
     this._settingUpNew = true;
     this.wizard.pageIndex = NEW_ACCOUNT_START_PAGE;
   },
 
-  useExistingAccount: function() {
+  useExistingAccount() {
     if (!Weave.Utils.ensureMPUnlocked())
       return;
     this._settingUpNew = false;
@@ -173,22 +173,22 @@ var gSyncSetup = {
     gSyncUtils.resetPassphrase(true);
   },
 
-  onResetPassphrase: function() {
+  onResetPassphrase() {
     document.getElementById("existingPassphrase").value =
       Weave.Utils.hyphenatePassphrase(Weave.Service.identity.syncKey);
     this.checkFields();
     this.wizard.advance();
   },
 
-  onLoginStart: function() {
+  onLoginStart() {
     this.toggleLoginFeedback(false);
   },
 
-  onLoginEnd: function() {
+  onLoginEnd() {
     this.toggleLoginFeedback(true);
   },
 
-  sendCredentialsAfterSync: function() {
+  sendCredentialsAfterSync() {
     let send = function() {
       Services.obs.removeObserver("weave:service:sync:finish", send);
       Services.obs.removeObserver("weave:service:sync:error", send);
@@ -202,7 +202,7 @@ var gSyncSetup = {
     Services.obs.addObserver("weave:service:sync:error", send, false);
   },
 
-  toggleLoginFeedback: function(stop) {
+  toggleLoginFeedback(stop) {
     document.getElementById("login-throbber").hidden = stop;
     let password = document.getElementById("existingPasswordFeedbackRow");
     let server = document.getElementById("existingServerFeedbackRow");
@@ -231,7 +231,7 @@ var gSyncSetup = {
     this._setFeedbackMessage(feedback, false, Weave.Status.login);
   },
 
-  setupInitialSync: function() {
+  setupInitialSync() {
     let action = document.getElementById("mergeChoiceRadio").selectedItem.id;
     switch (action) {
       case "resetClient":
@@ -248,11 +248,11 @@ var gSyncSetup = {
   },
 
   // fun with validation!
-  checkFields: function() {
+  checkFields() {
     this.wizard.canAdvance = this.readyToAdvance();
   },
 
-  readyToAdvance: function() {
+  readyToAdvance() {
     switch (this.wizard.pageIndex) {
       case INTRO_PAGE:
         return false;
@@ -293,7 +293,7 @@ var gSyncSetup = {
                               this.pin3.value.length == PIN_PART_LENGTH);
   },
 
-  onEmailInput: function() {
+  onEmailInput() {
     // Check account validity when the user stops typing for 1 second.
     if (this._checkAccountTimer)
       window.clearTimeout(this._checkAccountTimer);
@@ -302,7 +302,7 @@ var gSyncSetup = {
     }, 1000);
   },
 
-  checkAccount: function() {
+  checkAccount() {
     delete this._checkAccountTimer;
     let value = Weave.Utils.normalizeAccount(
       document.getElementById("weaveEmail").value);
@@ -337,7 +337,7 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  onPasswordChange: function() {
+  onPasswordChange() {
     let password = document.getElementById("weavePassword");
     let pwconfirm = document.getElementById("weavePasswordConfirm");
     let [valid, errorString] = gSyncUtils.validatePassword(password, pwconfirm);
@@ -349,7 +349,7 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  onPageShow: function() {
+  onPageShow() {
     switch (this.wizard.pageIndex) {
       case PAIR_PAGE:
         this.wizard.getButton("back").hidden = true;
@@ -420,7 +420,7 @@ var gSyncSetup = {
     }
   },
 
-  onWizardAdvance: function() {
+  onWizardAdvance() {
     // Check pageIndex so we don't prompt before the Sync setup wizard appears.
     // This is a fallback in case the Master Password gets locked mid-wizard.
     if ((this.wizard.pageIndex >= 0) &&
@@ -509,7 +509,7 @@ var gSyncSetup = {
     return true;
   },
 
-  onWizardBack: function() {
+  onWizardBack() {
     switch (this.wizard.pageIndex) {
       case NEW_ACCOUNT_START_PAGE:
         this.wizard.pageIndex = INTRO_PAGE;
@@ -535,7 +535,7 @@ var gSyncSetup = {
     return true;
   },
 
-  wizardFinish: function() {
+  wizardFinish() {
     this.setupInitialSync();
 
     if (this.wizardType == "pair") {
@@ -563,7 +563,7 @@ var gSyncSetup = {
     window.close();
   },
 
-  onWizardCancel: function() {
+  onWizardCancel() {
     if (this._resettingSync)
       return;
 
@@ -572,12 +572,12 @@ var gSyncSetup = {
     Weave.Service.startOver();
   },
 
-  onSyncOptions: function() {
+  onSyncOptions() {
     this._beforeOptionsPage = this.wizard.pageIndex;
     this.wizard.pageIndex = OPTIONS_PAGE;
   },
 
-  returnFromOptions: function() {
+  returnFromOptions() {
     this.wizard.getButton("next").label = this._nextButtonLabel;
     this.wizard.getButton("next").setAttribute("accesskey",
                                                this._nextButtonAccesskey);
@@ -644,7 +644,7 @@ var gSyncSetup = {
     this._jpakeclient.controller = controller;
   },
 
-  startEasySetup: function() {
+  startEasySetup() {
     // Don't do anything if we have a client already (e.g. we went to
     // Sync Options and just came back).
     if (this._jpakeclient)
@@ -691,7 +691,7 @@ var gSyncSetup = {
     this._jpakeclient.receiveNoPIN();
   },
 
-  abortEasySetup: function() {
+  abortEasySetup() {
     document.getElementById("easySetupPIN1").value = "";
     document.getElementById("easySetupPIN2").value = "";
     document.getElementById("easySetupPIN3").value = "";
@@ -702,7 +702,7 @@ var gSyncSetup = {
     delete this._jpakeclient;
   },
 
-  manualSetup: function() {
+  manualSetup() {
     this.abortEasySetup();
     this.wizard.pageIndex = EXISTING_ACCOUNT_LOGIN_PAGE;
   },
@@ -710,7 +710,7 @@ var gSyncSetup = {
   // _handleNoScript is needed because it blocks the captcha. So we temporarily
   // allow the necessary sites so that we can verify the user is in fact a human.
   // This was done with the help of Giorgio (NoScript author). See bug 508112.
-  _handleNoScript: function(addExceptions) {
+  _handleNoScript(addExceptions) {
     // if NoScript isn't installed, or is disabled, bail out.
     let ns = Cc["@maone.net/noscript-service;1"];
     if (ns == null)
@@ -734,7 +734,7 @@ var gSyncSetup = {
     }
   },
 
-  onExistingServerCommand: function() {
+  onExistingServerCommand() {
     let control = document.getElementById("existingServer");
     if (control.selectedIndex == 0) {
       control.removeAttribute("editable");
@@ -750,7 +750,7 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  onExistingServerInput: function() {
+  onExistingServerInput() {
     // Check custom server validity when the user stops typing for 1 second.
     if (this._existingServerTimer)
       window.clearTimeout(this._existingServerTimer);
@@ -759,7 +759,7 @@ var gSyncSetup = {
     }, 1000);
   },
 
-  onServerCommand: function() {
+  onServerCommand() {
     setVisibility(document.getElementById("TOSRow"), this._usingMainServers);
     let control = document.getElementById("server");
     if (!this._usingMainServers) {
@@ -783,7 +783,7 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  onServerInput: function() {
+  onServerInput() {
     // Check custom server validity when the user stops typing for 1 second.
     if (this._checkServerTimer)
       window.clearTimeout(this._checkServerTimer);
@@ -792,7 +792,7 @@ var gSyncSetup = {
     }, 1000);
   },
 
-  checkServer: function() {
+  checkServer() {
     delete this._checkServerTimer;
     let el = document.getElementById("server");
     let valid = false;
@@ -813,7 +813,7 @@ var gSyncSetup = {
     this.checkFields();
   },
 
-  _validateServer: function(element) {
+  _validateServer(element) {
     let valid = false;
     let val = element.value;
     if (!val)
@@ -859,7 +859,7 @@ var gSyncSetup = {
     return valid;
   },
 
-  _handleChoice: function() {
+  _handleChoice() {
     let desc = document.getElementById("mergeChoiceRadio").selectedIndex;
     document.getElementById("chosenActionDeck").selectedIndex = desc;
     switch (desc) {
@@ -983,7 +983,7 @@ var gSyncSetup = {
 
   // sets class and string on a feedback element
   // if no property string is passed in, we clear label/style
-  _setFeedback: function(element, success, string) {
+  _setFeedback(element, success, string) {
     element.hidden = success || !string;
     let classname = success ? "success" : "error";
     let image = element.getElementsByAttribute("class", "statusIcon")[0];
@@ -993,7 +993,7 @@ var gSyncSetup = {
   },
 
   // shim
-  _setFeedbackMessage: function(element, success, string) {
+  _setFeedbackMessage(element, success, string) {
     let str = "";
     if (string) {
       try {
@@ -1015,7 +1015,7 @@ var gSyncSetup = {
     }
   },
 
-  onStateChange: function(webProgress, request, stateFlags, status) {
+  onStateChange(webProgress, request, stateFlags, status) {
     // We're only looking for the end of the frame load
     if ((stateFlags & Ci.nsIWebProgressListener.STATE_STOP) == 0)
       return;
@@ -1029,10 +1029,10 @@ var gSyncSetup = {
     setVisibility(this.captchaBrowser, responseStatus != 404);
     // XXX TODO we should really log any responseStatus other than 200
   },
-  onProgressChange: function() {},
-  onStatusChange: function() {},
-  onSecurityChange: function() {},
-  onLocationChange: function() {}
+  onProgressChange() {},
+  onStatusChange() {},
+  onSecurityChange() {},
+  onLocationChange() {}
 };
 
 // Define lazy getters for various XUL elements.

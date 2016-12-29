@@ -874,7 +874,7 @@ WindowsVaultFormPasswords.prototype = {
 var MSMigrationUtils = {
   MIGRATION_TYPE_IE: 1,
   MIGRATION_TYPE_EDGE: 2,
-  CtypesKernelHelpers: CtypesKernelHelpers,
+  CtypesKernelHelpers,
   getBookmarksMigrator(migrationType = this.MIGRATION_TYPE_IE) {
     return new Bookmarks(migrationType);
   },

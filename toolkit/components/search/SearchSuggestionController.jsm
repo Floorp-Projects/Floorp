@@ -106,7 +106,7 @@ this.SearchSuggestionController.prototype = {
    *
    * @return {Promise} resolving to an object containing results or null.
    */
-  fetch: function(searchTerm, privateMode, engine, userContextId) {
+  fetch(searchTerm, privateMode, engine, userContextId) {
     // There is no smart filtering from previous results here (as there is when looking through
     // history/form data) because the result set returned by the server is different for every typed
     // value - e.g. "ocean breathes" does not return a subset of the results returned for "ocean".
@@ -164,7 +164,7 @@ this.SearchSuggestionController.prototype = {
    * will still be returned because stopping relies on aborting the XMLHTTPRequest to reject the
    * promise for Promise.all.
    */
-  stop: function() {
+  stop() {
     if (this._request) {
       this._request.abort();
     } else if (!this.maxRemoteResults) {
@@ -176,7 +176,7 @@ this.SearchSuggestionController.prototype = {
 
   // Private methods
 
-  _fetchFormHistory: function(searchTerm) {
+  _fetchFormHistory(searchTerm) {
     let deferredFormHistory = Promise.defer();
 
     let acSearchObserver = {
@@ -226,7 +226,7 @@ this.SearchSuggestionController.prototype = {
   /**
    * Fetch suggestions from the search engine over the network.
    */
-  _fetchRemote: function(searchTerm, engine, privateMode, userContextId) {
+  _fetchRemote(searchTerm, engine, privateMode, userContextId) {
     let deferredResponse = Promise.defer();
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsIXMLHttpRequest);
@@ -256,7 +256,7 @@ this.SearchSuggestionController.prototype = {
    * so we can handle the response data.
    * @private
    */
-  _onRemoteLoaded: function(deferredResponse) {
+  _onRemoteLoaded(deferredResponse) {
     if (!this._request) {
       deferredResponse.resolve("Got HTTP response after the request was cancelled");
       return;
@@ -297,7 +297,7 @@ this.SearchSuggestionController.prototype = {
   /**
    * Called when this._remoteResultTimer fires indicating the remote request took too long.
    */
-  _onRemoteTimeout: function() {
+  _onRemoteTimeout() {
     this._request = null;
 
     // FIXME: bug 387341
@@ -316,7 +316,7 @@ this.SearchSuggestionController.prototype = {
    * @param {Array} suggestResults - an array of result objects from different sources (local or remote)
    * @return {Object}
    */
-  _dedupeAndReturnResults: function(suggestResults) {
+  _dedupeAndReturnResults(suggestResults) {
     if (this._searchString === null) {
       // _searchString can be null if stop() was called and remote suggestions
       // were disabled (stopping if we are fetching remote suggestions will
@@ -371,7 +371,7 @@ this.SearchSuggestionController.prototype = {
     return results;
   },
 
-  _reset: function() {
+  _reset() {
     this._request = null;
     if (this._remoteResultTimer) {
       this._remoteResultTimer.cancel();

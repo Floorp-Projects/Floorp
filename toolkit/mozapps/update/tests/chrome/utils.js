@@ -976,7 +976,7 @@ const errorsPrefObserver = {
    * @param  aMaxErrorCount
    *         The value to set the maximum errors preference to.
    */
-  init: function(aObservePref, aMaxErrorPref, aMaxErrorCount) {
+  init(aObservePref, aMaxErrorPref, aMaxErrorCount) {
     this.observedPref = aObservePref;
     this.maxErrorPref = aMaxErrorPref;
 
