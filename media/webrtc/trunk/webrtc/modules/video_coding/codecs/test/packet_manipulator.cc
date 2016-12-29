@@ -57,7 +57,7 @@ int PacketManipulatorImpl::ManipulatePackets(
       active_burst_packets_--;
       nbr_packets_dropped++;
     } else if (RandomUniform() < config_.packet_loss_probability ||
-        packet_loss_has_occurred) {
+               packet_loss_has_occurred) {
       packet_loss_has_occurred = true;
       nbr_packets_dropped++;
       if (config_.packet_loss_mode == kBurst) {
@@ -91,9 +91,9 @@ inline double PacketManipulatorImpl::RandomUniform() {
   // get the same behavior as long as we're using a fixed initial seed.
   critsect_->Enter();
   srand(random_seed_);
-  random_seed_ = rand();
+  random_seed_ = rand();  // NOLINT (rand_r instead of rand)
   critsect_->Leave();
-  return (random_seed_ + 1.0)/(RAND_MAX + 1.0);
+  return (random_seed_ + 1.0) / (RAND_MAX + 1.0);
 }
 
 const char* PacketLossModeToStr(PacketLossMode e) {
@@ -109,4 +109,4 @@ const char* PacketLossModeToStr(PacketLossMode e) {
 }
 
 }  // namespace test
-}  // namespace webrtcc
+}  // namespace webrtc

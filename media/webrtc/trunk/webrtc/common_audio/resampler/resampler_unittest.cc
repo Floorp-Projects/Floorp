@@ -176,7 +176,6 @@ void ResamplerTest::RunResampleTest(int channels,
 }
 
 TEST_F(ResamplerTest, Mono) {
-  const int kChannels = 1;
   // We don't attempt to be exhaustive here, but just get good coverage. Some
   // combinations of rates will not be resampled, and some give an odd
   // resampling factor which makes it more difficult to evaluate.

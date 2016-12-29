@@ -29,6 +29,33 @@ std::string RtpExtension::ToString() const {
   return ss.str();
 }
 
+const char* RtpExtension::kTOffset = "urn:ietf:params:rtp-hdrext:toffset";
+const char* RtpExtension::kAbsSendTime =
+    "http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time";
+const char* RtpExtension::kVideoRotation = "urn:3gpp:video-orientation";
+const char* RtpExtension::kAudioLevel =
+    "urn:ietf:params:rtp-hdrext:ssrc-audio-level";
+const char* RtpExtension::kTransportSequenceNumber =
+    "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions";
+const char* RtpExtension::kRtpStreamId =
+  "urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id";
+
+bool RtpExtension::IsSupportedForAudio(const std::string& name) {
+  return name == webrtc::RtpExtension::kAbsSendTime ||
+         name == webrtc::RtpExtension::kAudioLevel ||
+         name == webrtc::RtpExtension::kTransportSequenceNumber ||
+         name == webrtc::RtpExtension::kRtpStreamId;
+}
+
+bool RtpExtension::IsSupportedForVideo(const std::string& name) {
+  return name == webrtc::RtpExtension::kTOffset ||
+         name == webrtc::RtpExtension::kAbsSendTime ||
+         name == webrtc::RtpExtension::kVideoRotation ||
+         name == webrtc::RtpExtension::kTransportSequenceNumber ||
+         name == webrtc::RtpExtension::kRtpStreamId;
+
+}
+
 VideoStream::VideoStream()
     : width(0),
       height(0),
@@ -63,9 +90,10 @@ std::string VideoStream::ToString() const {
 }
 
 VideoEncoderConfig::VideoEncoderConfig()
-    : content_type(kRealtimeVideo),
+    : content_type(ContentType::kRealtimeVideo),
       encoder_specific_settings(NULL),
-      min_transmit_bitrate_bps(0) {}
+      min_transmit_bitrate_bps(0) {
+}
 
 VideoEncoderConfig::~VideoEncoderConfig() = default;
 
@@ -81,10 +109,10 @@ std::string VideoEncoderConfig::ToString() const {
   ss << ']';
   ss << ", content_type: ";
   switch (content_type) {
-    case kRealtimeVideo:
+    case ContentType::kRealtimeVideo:
       ss << "kRealtimeVideo";
       break;
-    case kScreenshare:
+    case ContentType::kScreen:
       ss << "kScreenshare";
       break;
   }

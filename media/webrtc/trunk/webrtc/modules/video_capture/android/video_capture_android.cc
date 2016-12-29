@@ -8,19 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "AndroidJNIWrapper.h"
 #include "webrtc/modules/video_capture/android/video_capture_android.h"
 
 #include "webrtc/base/common.h"
-#include "webrtc/modules/utility/interface/helpers_android.h"
+#include "webrtc/modules/utility/include/helpers_android.h"
 #include "webrtc/modules/video_capture/android/device_info_android.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/logcat_trace_context.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/logcat_trace_context.h"
+#include "webrtc/system_wrappers/include/logging.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
-static JavaVM* g_jvm = NULL;
+#include "AndroidJNIWrapper.h"
+
+static JavaVM* g_jvm_capture = NULL;
 static jclass g_java_capturer_class = NULL;  // VideoCaptureAndroid.class.
 static jobject g_context = NULL;  // Owned android.content.Context.
 
@@ -41,8 +42,10 @@ void JNICALL ProvideCameraFrame(
     jint rotation,
     jlong timeStamp,
     jlong context) {
-  if (!context)
+  if (!context) {
     return;
+  }
+
   webrtc::videocapturemodule::VideoCaptureAndroid* captureModule =
       reinterpret_cast<webrtc::videocapturemodule::VideoCaptureAndroid*>(
           context);
@@ -53,17 +56,18 @@ void JNICALL ProvideCameraFrame(
 }
 
 int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
-  if (g_java_capturer_class)
+  if (g_java_capturer_class) {
     return 0;
+  }
 
   if (javaVM) {
-    assert(!g_jvm);
-    g_jvm = javaVM;
-    AttachThreadScoped ats(g_jvm);
+    assert(!g_jvm_capture);
+    g_jvm_capture = javaVM;
+    AttachThreadScoped ats(g_jvm_capture);
 
     g_context = jsjni_GetGlobalContextRef();
 
-    videocapturemodule::DeviceInfoAndroid::Initialize(g_jvm);
+    videocapturemodule::DeviceInfoAndroid::Initialize(g_jvm_capture);
 
     g_java_capturer_class =
       jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
@@ -80,14 +84,14 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
                                    native_methods, 2) != 0)
       assert(false);
   } else {
-    if (g_jvm) {
-      AttachThreadScoped ats(g_jvm);
+    if (g_jvm_capture) {
+      AttachThreadScoped ats(g_jvm_capture);
       ats.env()->UnregisterNatives(g_java_capturer_class);
       ats.env()->DeleteGlobalRef(g_java_capturer_class);
       g_java_capturer_class = NULL;
       g_context = NULL;
       videocapturemodule::DeviceInfoAndroid::DeInitialize();
-      g_jvm = NULL;
+      g_jvm_capture = NULL;
     }
   }
 
@@ -152,7 +156,7 @@ int32_t VideoCaptureAndroid::Init(const int32_t id,
   _deviceUniqueId = new char[nameLength + 1];
   memcpy(_deviceUniqueId, deviceUniqueIdUTF8, nameLength + 1);
 
-  AttachThreadScoped ats(g_jvm);
+  AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
   jmethodID ctor = env->GetMethodID(g_java_capturer_class, "<init>", "(IJ)V");
   assert(ctor);
@@ -168,7 +172,7 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
   // Ensure Java camera is released even if our caller didn't explicitly Stop.
   if (_captureStarted)
     StopCapture();
-  AttachThreadScoped ats(g_jvm);
+  AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
 
   // Avoid callbacks into ourself even if the above stopCapture fails.
@@ -182,7 +186,7 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
 int32_t VideoCaptureAndroid::StartCapture(
     const VideoCaptureCapability& capability) {
   CriticalSectionScoped cs(&_apiCs);
-  AttachThreadScoped ats(g_jvm);
+  AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
 
   if (_deviceInfo.GetBestMatchedCapability(
@@ -215,7 +219,7 @@ int32_t VideoCaptureAndroid::StartCapture(
 
 int32_t VideoCaptureAndroid::StopCapture() {
   _apiCs.Enter();
-  AttachThreadScoped ats(g_jvm);
+  AttachThreadScoped ats(g_jvm_capture);
   JNIEnv* env = ats.env();
 
   memset(&_requestedCapability, 0, sizeof(_requestedCapability));

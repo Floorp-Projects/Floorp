@@ -8,20 +8,20 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 #if defined(_WIN32)
 // Windows needs to be included before mmsystem.h
 #include "webrtc/base/win32.h"
 #include <MMSystem.h>
-#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_BSD) || (defined WEBRTC_MAC))
+#elif ((defined WEBRTC_LINUX) || (defined WEBRTC_MAC) || (defined WEBRTC_BSD))
 #include <sys/time.h>
 #include <time.h>
 #endif
 
 #include "webrtc/base/criticalsection.h"
-#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 
@@ -155,9 +155,9 @@ class WindowsRealTimeClock : public RealTimeClock {
   }
 
   static ReferencePoint GetSystemReferencePoint() {
-    ReferencePoint ref = {0};
-    FILETIME ft0 = {0};
-    FILETIME ft1 = {0};
+    ReferencePoint ref = {};
+    FILETIME ft0 = {};
+    FILETIME ft1 = {};
     // Spin waiting for a change in system time. As soon as this change happens,
     // get the matching call for timeGetTime() as soon as possible. This is
     // assumed to be the most accurate offset that we can get between

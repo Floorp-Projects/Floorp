@@ -18,6 +18,21 @@
 
 namespace webrtc {
 
+AudioVector::AudioVector()
+    : array_(new int16_t[kDefaultInitialSize]),
+      first_free_ix_(0),
+      capacity_(kDefaultInitialSize) {
+}
+
+AudioVector::AudioVector(size_t initial_size)
+    : array_(new int16_t[initial_size]),
+      first_free_ix_(initial_size),
+      capacity_(initial_size) {
+  memset(array_.get(), 0, initial_size * sizeof(int16_t));
+}
+
+AudioVector::~AudioVector() = default;
+
 void AudioVector::Clear() {
   first_free_ix_ = 0;
 }
@@ -143,6 +158,16 @@ void AudioVector::CrossFade(const AudioVector& append_this,
   size_t samples_to_push_back = append_this.Size() - fade_length;
   if (samples_to_push_back > 0)
     PushBack(&append_this[fade_length], samples_to_push_back);
+}
+
+// Returns the number of elements in this AudioVector.
+size_t AudioVector::Size() const {
+  return first_free_ix_;
+}
+
+// Returns true if this AudioVector is empty.
+bool AudioVector::Empty() const {
+  return first_free_ix_ == 0;
 }
 
 const int16_t& AudioVector::operator[](size_t index) const {

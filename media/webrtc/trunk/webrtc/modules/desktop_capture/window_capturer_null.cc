@@ -36,7 +36,7 @@ class WindowCapturerNull : public WindowCapturer {
  private:
   Callback* callback_;
 
-  DISALLOW_COPY_AND_ASSIGN(WindowCapturerNull);
+  RTC_DISALLOW_COPY_AND_ASSIGN(WindowCapturerNull);
 };
 
 WindowCapturerNull::WindowCapturerNull()

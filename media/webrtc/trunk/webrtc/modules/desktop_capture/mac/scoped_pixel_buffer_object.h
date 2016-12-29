@@ -33,7 +33,7 @@ class ScopedPixelBufferObject {
   CGLContextObj cgl_context_;
   GLuint pixel_buffer_object_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScopedPixelBufferObject);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScopedPixelBufferObject);
 };
 
 }  // namespace webrtc

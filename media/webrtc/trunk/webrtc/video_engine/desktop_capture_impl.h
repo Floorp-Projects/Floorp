@@ -17,18 +17,17 @@
 
 #include <string>
 
-#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
 #include "webrtc/modules/desktop_capture/shared_memory.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor_shape.h"
 #include "webrtc/modules/desktop_capture/desktop_device_info.h"
 #include "webrtc/modules/desktop_capture/desktop_and_cursor_composer.h"
-#include "webrtc/video_engine/include/vie_capture.h"
 
 using namespace webrtc::videocapturemodule;
 
@@ -171,7 +170,9 @@ public:
   static VideoCaptureModule::DeviceInfo* CreateDeviceInfo(const int32_t id, const CaptureDeviceType type);
 
   int32_t Init(const char* uniqueId, const CaptureDeviceType type);
-
+  //RefCounting for RefCountedModule
+  virtual int32_t AddRef() const override;
+  virtual int32_t Release() const override;
   //Call backs
   virtual void RegisterCaptureDataCallback(VideoCaptureDataCallback& dataCallback) override;
   virtual void DeRegisterCaptureDataCallback() override;
@@ -182,7 +183,7 @@ public:
   virtual int32_t CaptureDelay() override;
   virtual int32_t SetCaptureRotation(VideoRotation rotation) override;
   virtual bool SetApplyRotation(bool enable) override;
-  virtual bool GetApplyRotation() { return true; }
+  virtual bool GetApplyRotation() override { return true; }
 
   virtual void EnableFrameRateCallback(const bool enable) override;
   virtual void EnableNoPictureAlarm(const bool enable) override;
@@ -214,7 +215,7 @@ public:
 protected:
   DesktopCaptureImpl(const int32_t id);
   virtual ~DesktopCaptureImpl();
-  int32_t DeliverCapturedFrame(I420VideoFrame& captureFrame,
+  int32_t DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
                                int64_t capture_time);
 
   static const uint32_t kMaxDesktopCaptureCpuUsage = 50; // maximum CPU usage in %
@@ -245,7 +246,7 @@ private:
   TickTime _incomingFrameTimes[kFrameRateCountHistorySize];// timestamp for local captured frames
   VideoRotation _rotateFrame; //Set if the frame should be rotated by the capture module.
 
-  I420VideoFrame _captureFrame;
+  webrtc::VideoFrame _captureFrame;
 
   // Used to make sure incoming timestamp is increasing for every frame.
   int64_t last_capture_time_;
@@ -263,7 +264,12 @@ public:
 private:
   rtc::scoped_ptr<DesktopAndCursorComposer> desktop_capturer_cursor_composer_;
   rtc::scoped_ptr<EventWrapper> time_event_;
-  rtc::scoped_ptr<ThreadWrapper> capturer_thread_;
+#if defined(_WIN32)
+  rtc::scoped_ptr<rtc::PlatformUIThread> capturer_thread_;
+#else
+  rtc::scoped_ptr<rtc::PlatformThread> capturer_thread_;
+#endif
+  mutable uint32_t mRefCount;
   bool started_;
 };
 

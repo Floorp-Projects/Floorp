@@ -17,12 +17,14 @@
 
 #include <map>
 
-#include "webrtc/modules/interface/module.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/include/module.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
 class CriticalSectionWrapper;
+class RtcEventLog;
+struct PacketInfo;
 
 class BitrateObserver {
   // Observer class for bitrate changes announced due to change in bandwidth
@@ -54,6 +56,8 @@ class BitrateController : public Module {
 
   virtual void SetStartBitrate(int start_bitrate_bps) = 0;
   virtual void SetMinMaxBitrate(int min_bitrate_bps, int max_bitrate_bps) = 0;
+
+  virtual void SetEventLog(RtcEventLog* event_log) = 0;
 
   // Gets the available payload bandwidth in bits per second. Note that
   // this bandwidth excludes packet headers.

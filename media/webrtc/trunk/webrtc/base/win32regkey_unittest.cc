@@ -10,6 +10,7 @@
 
 // Unittest for registry access API
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/win32regkey.h"
@@ -150,18 +151,18 @@ void RegKeyHelperFunctionsTest() {
 
   std::vector<std::wstring> result;
   EXPECT_SUCCEEDED(RegKey::MultiSZBytesToStringArray(
-      reinterpret_cast<const uint8*>(kMultiSZ), sizeof(kMultiSZ), &result));
+      reinterpret_cast<const uint8_t*>(kMultiSZ), sizeof(kMultiSZ), &result));
   EXPECT_EQ(result.size(), 3);
   EXPECT_STREQ(result[0].c_str(), L"abc");
   EXPECT_STREQ(result[1].c_str(), L"def");
   EXPECT_STREQ(result[2].c_str(), L"P12345");
 
   EXPECT_SUCCEEDED(RegKey::MultiSZBytesToStringArray(
-      reinterpret_cast<const uint8*>(kEmptyMultiSZ),
-      sizeof(kEmptyMultiSZ), &result));
+      reinterpret_cast<const uint8_t*>(kEmptyMultiSZ), sizeof(kEmptyMultiSZ),
+      &result));
   EXPECT_EQ(result.size(), 0);
   EXPECT_FALSE(SUCCEEDED(RegKey::MultiSZBytesToStringArray(
-      reinterpret_cast<const uint8*>(kInvalidMultiSZ),
+      reinterpret_cast<const uint8_t*>(kInvalidMultiSZ),
       sizeof(kInvalidMultiSZ), &result)));
 }
 
@@ -173,7 +174,7 @@ void RegKeyNonStaticFunctionsTest() {
   DWORD int_val = 0;
   DWORD64 int64_val = 0;
   wchar_t* str_val = NULL;
-  uint8* binary_val = NULL;
+  uint8_t* binary_val = NULL;
   DWORD uint8_count = 0;
 
   // Just in case...
@@ -265,7 +266,8 @@ void RegKeyNonStaticFunctionsTest() {
 
   // set a binary value
   EXPECT_SUCCEEDED(r_key.SetValue(kValNameBinary,
-      reinterpret_cast<const uint8*>(kBinaryVal), sizeof(kBinaryVal) - 1));
+                                  reinterpret_cast<const uint8_t*>(kBinaryVal),
+                                  sizeof(kBinaryVal) - 1));
 
   // check that the value exists
   EXPECT_TRUE(r_key.HasValue(kValNameBinary));
@@ -277,7 +279,8 @@ void RegKeyNonStaticFunctionsTest() {
 
   // set it again
   EXPECT_SUCCEEDED(r_key.SetValue(kValNameBinary,
-      reinterpret_cast<const uint8*>(kBinaryVal2), sizeof(kBinaryVal) - 1));
+                                  reinterpret_cast<const uint8_t*>(kBinaryVal2),
+                                  sizeof(kBinaryVal) - 1));
 
   // read it again
   EXPECT_SUCCEEDED(r_key.GetValue(kValNameBinary, &binary_val, &uint8_count));
@@ -303,10 +306,11 @@ void RegKeyNonStaticFunctionsTest() {
 
   // set a binary value
   EXPECT_SUCCEEDED(r_key.SetValue(kValNameBinary,
-      reinterpret_cast<const uint8*>(kBinaryVal), sizeof(kBinaryVal) - 1));
+                                  reinterpret_cast<const uint8_t*>(kBinaryVal),
+                                  sizeof(kBinaryVal) - 1));
 
   // get the value count
-  uint32 value_count = r_key.GetValueCount();
+  uint32_t value_count = r_key.GetValueCount();
   EXPECT_EQ(value_count, 4);
 
   // check the value names
@@ -332,7 +336,7 @@ void RegKeyNonStaticFunctionsTest() {
   // check that there are no more values
   EXPECT_FAILED(r_key.GetValueNameAt(4, &value_name, &type));
 
-  uint32 subkey_count = r_key.GetSubkeyCount();
+  uint32_t subkey_count = r_key.GetSubkeyCount();
   EXPECT_EQ(subkey_count, 0);
 
   // now create a subkey and make sure we can get the name
@@ -366,7 +370,7 @@ void RegKeyStaticFunctionsTest() {
   double double_val = 0;
   wchar_t* str_val = NULL;
   std::wstring wstr_val;
-  uint8* binary_val = NULL;
+  uint8_t* binary_val = NULL;
   DWORD uint8_count = 0;
 
   // Just in case...
@@ -377,7 +381,7 @@ void RegKeyStaticFunctionsTest() {
   EXPECT_EQ(RegKey::GetValue(kFullRkey1, kValNameInt, &int_val),
             HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND));
 
-  // set int32
+  // set int32_t
   EXPECT_SUCCEEDED(RegKey::SetValue(kFullRkey1, kValNameInt, kIntVal));
 
   // check that the value exists
@@ -397,7 +401,7 @@ void RegKeyStaticFunctionsTest() {
   // check that the value is gone
   EXPECT_FALSE(RegKey::HasValue(kFullRkey1, kValNameInt));
 
-  // set int64
+  // set int64_t
   EXPECT_SUCCEEDED(RegKey::SetValue(kFullRkey1, kValNameInt64, kIntVal64));
 
   // check that the value exists
@@ -473,8 +477,9 @@ void RegKeyStaticFunctionsTest() {
   EXPECT_FALSE(RegKey::HasValue(kFullRkey1, kValNameStr));
 
   // set binary
-  EXPECT_SUCCEEDED(RegKey::SetValue(kFullRkey1, kValNameBinary,
-      reinterpret_cast<const uint8*>(kBinaryVal), sizeof(kBinaryVal)-1));
+  EXPECT_SUCCEEDED(RegKey::SetValue(
+      kFullRkey1, kValNameBinary, reinterpret_cast<const uint8_t*>(kBinaryVal),
+      sizeof(kBinaryVal) - 1));
 
   // check that the value exists
   EXPECT_TRUE(RegKey::HasValue(kFullRkey1, kValNameBinary));
@@ -492,8 +497,9 @@ void RegKeyStaticFunctionsTest() {
   EXPECT_FALSE(RegKey::HasValue(kFullRkey1, kValNameBinary));
 
   // special case - set a binary value with length 0
-  EXPECT_SUCCEEDED(RegKey::SetValue(kFullRkey1, kValNameBinary,
-      reinterpret_cast<const uint8*>(kBinaryVal), 0));
+  EXPECT_SUCCEEDED(
+      RegKey::SetValue(kFullRkey1, kValNameBinary,
+                       reinterpret_cast<const uint8_t*>(kBinaryVal), 0));
 
   // check that the value exists
   EXPECT_TRUE(RegKey::HasValue(kFullRkey1, kValNameBinary));
@@ -532,20 +538,24 @@ void RegKeyStaticFunctionsTest() {
 
   // test read/write REG_MULTI_SZ value
   std::vector<std::wstring> result;
-  EXPECT_SUCCEEDED(RegKey::SetValueMultiSZ(kFullRkey1, kValNameMultiStr,
-      reinterpret_cast<const uint8*>(kMultiSZ), sizeof(kMultiSZ)));
+  EXPECT_SUCCEEDED(RegKey::SetValueMultiSZ(
+      kFullRkey1, kValNameMultiStr, reinterpret_cast<const uint8_t*>(kMultiSZ),
+      sizeof(kMultiSZ)));
   EXPECT_SUCCEEDED(RegKey::GetValue(kFullRkey1, kValNameMultiStr, &result));
   EXPECT_EQ(result.size(), 3);
   EXPECT_STREQ(result[0].c_str(), L"abc");
   EXPECT_STREQ(result[1].c_str(), L"def");
   EXPECT_STREQ(result[2].c_str(), L"P12345");
-  EXPECT_SUCCEEDED(RegKey::SetValueMultiSZ(kFullRkey1, kValNameMultiStr,
-      reinterpret_cast<const uint8*>(kEmptyMultiSZ), sizeof(kEmptyMultiSZ)));
+  EXPECT_SUCCEEDED(RegKey::SetValueMultiSZ(
+      kFullRkey1, kValNameMultiStr,
+      reinterpret_cast<const uint8_t*>(kEmptyMultiSZ), sizeof(kEmptyMultiSZ)));
   EXPECT_SUCCEEDED(RegKey::GetValue(kFullRkey1, kValNameMultiStr, &result));
   EXPECT_EQ(result.size(), 0);
   // writing REG_MULTI_SZ value will automatically add ending null characters
-  EXPECT_SUCCEEDED(RegKey::SetValueMultiSZ(kFullRkey1, kValNameMultiStr,
-      reinterpret_cast<const uint8*>(kInvalidMultiSZ), sizeof(kInvalidMultiSZ)));
+  EXPECT_SUCCEEDED(
+      RegKey::SetValueMultiSZ(kFullRkey1, kValNameMultiStr,
+                              reinterpret_cast<const uint8_t*>(kInvalidMultiSZ),
+                              sizeof(kInvalidMultiSZ)));
   EXPECT_SUCCEEDED(RegKey::GetValue(kFullRkey1, kValNameMultiStr, &result));
   EXPECT_EQ(result.size(), 1);
   EXPECT_STREQ(result[0].c_str(), L"678");
@@ -555,8 +565,8 @@ void RegKeyStaticFunctionsTest() {
 #ifdef IS_PRIVATE_BUILD
   // get a temp file name
   wchar_t temp_path[MAX_PATH] = {0};
-  EXPECT_LT(::GetTempPath(ARRAY_SIZE(temp_path), temp_path),
-            static_cast<DWORD>(ARRAY_SIZE(temp_path)));
+  EXPECT_LT(::GetTempPath(arraysize(temp_path), temp_path),
+            static_cast<DWORD>(arraysize(temp_path)));
   wchar_t temp_file[MAX_PATH] = {0};
   EXPECT_NE(::GetTempFileName(temp_path, L"rkut_",
                               ::GetTickCount(), temp_file), 0);

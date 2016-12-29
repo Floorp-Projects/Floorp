@@ -12,7 +12,7 @@ namespace mozilla {
 
 static const char* logTag ="MediaCodecVideoCodec";
 
-VideoEncoder* MediaCodecVideoCodec::CreateEncoder(CodecType aCodecType) {
+WebrtcVideoEncoder* MediaCodecVideoCodec::CreateEncoder(CodecType aCodecType) {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   if (aCodecType == CODEC_VP8) {
      return new WebrtcMediaCodecVP8VideoEncoder();
@@ -20,7 +20,7 @@ VideoEncoder* MediaCodecVideoCodec::CreateEncoder(CodecType aCodecType) {
   return nullptr;
 }
 
-VideoDecoder* MediaCodecVideoCodec::CreateDecoder(CodecType aCodecType) {
+WebrtcVideoDecoder* MediaCodecVideoCodec::CreateDecoder(CodecType aCodecType) {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   if (aCodecType == CODEC_VP8) {
     return new WebrtcMediaCodecVP8VideoDecoder();

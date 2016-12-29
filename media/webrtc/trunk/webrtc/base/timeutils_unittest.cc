@@ -10,15 +10,16 @@
 
 #include "webrtc/base/common.h"
 #include "webrtc/base/gunit.h"
+#include "webrtc/base/helpers.h"
 #include "webrtc/base/thread.h"
 #include "webrtc/base/timeutils.h"
 
 namespace rtc {
 
 TEST(TimeTest, TimeInMs) {
-  uint32 ts_earlier = Time();
+  uint32_t ts_earlier = Time();
   Thread::SleepMs(100);
-  uint32 ts_now = Time();
+  uint32_t ts_now = Time();
   // Allow for the thread to wakeup ~20ms early.
   EXPECT_GE(ts_now, ts_earlier + 80);
   // Make sure the Time is not returning in smaller unit like microseconds.
@@ -152,8 +153,8 @@ class TimestampWrapAroundHandlerTest : public testing::Test {
 };
 
 TEST_F(TimestampWrapAroundHandlerTest, Unwrap) {
-  uint32 ts = 0xfffffff2;
-  int64 unwrapped_ts = ts;
+  uint32_t ts = 0xfffffff2;
+  int64_t unwrapped_ts = ts;
   EXPECT_EQ(ts, wraparound_handler_.Unwrap(ts));
   ts = 2;
   unwrapped_ts += 0x10;
@@ -164,6 +165,101 @@ TEST_F(TimestampWrapAroundHandlerTest, Unwrap) {
   ts = 0;
   unwrapped_ts += 0xe;
   EXPECT_EQ(unwrapped_ts, wraparound_handler_.Unwrap(ts));
+}
+
+class TmToSeconds : public testing::Test {
+ public:
+  TmToSeconds() {
+    // Set use of the test RNG to get deterministic expiration timestamp.
+    rtc::SetRandomTestMode(true);
+  }
+  ~TmToSeconds() {
+    // Put it back for the next test.
+    rtc::SetRandomTestMode(false);
+  }
+
+  void TestTmToSeconds(int times) {
+    static char mdays[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    for (int i = 0; i < times; i++) {
+
+      // First generate something correct and check that TmToSeconds is happy.
+      int year = rtc::CreateRandomId() % 400 + 1970;
+
+      bool leap_year = false;
+      if (year % 4 == 0)
+        leap_year = true;
+      if (year % 100 == 0)
+        leap_year = false;
+      if (year % 400 == 0)
+        leap_year = true;
+
+      std::tm tm;
+      tm.tm_year = year - 1900;  // std::tm is year 1900 based.
+      tm.tm_mon = rtc::CreateRandomId() % 12;
+      tm.tm_mday = rtc::CreateRandomId() % mdays[tm.tm_mon] + 1;
+      tm.tm_hour = rtc::CreateRandomId() % 24;
+      tm.tm_min = rtc::CreateRandomId() % 60;
+      tm.tm_sec = rtc::CreateRandomId() % 60;
+      int64_t t = rtc::TmToSeconds(tm);
+      EXPECT_TRUE(t >= 0);
+
+      // Now damage a random field and check that TmToSeconds is unhappy.
+      switch (rtc::CreateRandomId() % 11) {
+        case 0:
+          tm.tm_year = 1969 - 1900;
+          break;
+        case 1:
+          tm.tm_mon = -1;
+          break;
+        case 2:
+          tm.tm_mon = 12;
+          break;
+        case 3:
+          tm.tm_mday = 0;
+          break;
+        case 4:
+          tm.tm_mday = mdays[tm.tm_mon] + (leap_year && tm.tm_mon == 1) + 1;
+          break;
+        case 5:
+          tm.tm_hour = -1;
+          break;
+        case 6:
+          tm.tm_hour = 24;
+          break;
+        case 7:
+          tm.tm_min = -1;
+          break;
+        case 8:
+          tm.tm_min = 60;
+          break;
+        case 9:
+          tm.tm_sec = -1;
+          break;
+        case 10:
+          tm.tm_sec = 60;
+          break;
+      }
+      EXPECT_EQ(rtc::TmToSeconds(tm), -1);
+    }
+    // Check consistency with the system gmtime_r.  With time_t, we can only
+    // portably test dates until 2038, which is achieved by the % 0x80000000.
+    for (int i = 0; i < times; i++) {
+      time_t t = rtc::CreateRandomId() % 0x80000000;
+#if defined(WEBRTC_WIN)
+      std::tm* tm = std::gmtime(&t);
+      EXPECT_TRUE(tm);
+      EXPECT_TRUE(rtc::TmToSeconds(*tm) == t);
+#else
+      std::tm tm;
+      EXPECT_TRUE(gmtime_r(&t, &tm));
+      EXPECT_TRUE(rtc::TmToSeconds(tm) == t);
+#endif
+    }
+  }
+};
+
+TEST_F(TmToSeconds, TestTmToSeconds) {
+  TestTmToSeconds(100000);
 }
 
 }  // namespace rtc

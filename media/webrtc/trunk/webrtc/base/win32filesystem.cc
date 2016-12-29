@@ -15,6 +15,7 @@
 #include <shlobj.h>
 #include <tchar.h>
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/pathutils.h"
 #include "webrtc/base/scoped_ptr.h"
@@ -197,16 +198,16 @@ bool Win32Filesystem::DeleteEmptyFolder(const Pathname &folder) {
 bool Win32Filesystem::GetTemporaryFolder(Pathname &pathname, bool create,
                                          const std::string *append) {
   wchar_t buffer[MAX_PATH + 1];
-  if (!::GetTempPath(ARRAY_SIZE(buffer), buffer))
+  if (!::GetTempPath(arraysize(buffer), buffer))
     return false;
   if (!IsCurrentProcessLowIntegrity() &&
-      !::GetLongPathName(buffer, buffer, ARRAY_SIZE(buffer)))
+      !::GetLongPathName(buffer, buffer, arraysize(buffer)))
     return false;
   size_t len = strlen(buffer);
   if ((len > 0) && (buffer[len-1] != '\\')) {
-    len += strcpyn(buffer + len, ARRAY_SIZE(buffer) - len, L"\\");
+    len += strcpyn(buffer + len, arraysize(buffer) - len, L"\\");
   }
-  if (len >= ARRAY_SIZE(buffer) - 1)
+  if (len >= arraysize(buffer) - 1)
     return false;
   pathname.clear();
   pathname.SetFolder(ToUtf8(buffer));
@@ -295,10 +296,10 @@ bool Win32Filesystem::CopyFile(const Pathname &old_path,
 
 bool Win32Filesystem::IsTemporaryPath(const Pathname& pathname) {
   TCHAR buffer[MAX_PATH + 1];
-  if (!::GetTempPath(ARRAY_SIZE(buffer), buffer))
+  if (!::GetTempPath(arraysize(buffer), buffer))
     return false;
   if (!IsCurrentProcessLowIntegrity() &&
-      !::GetLongPathName(buffer, buffer, ARRAY_SIZE(buffer)))
+      !::GetLongPathName(buffer, buffer, arraysize(buffer)))
     return false;
   return (::strnicmp(ToUtf16(pathname.pathname()).c_str(),
                      buffer, strlen(buffer)) == 0);
@@ -337,7 +338,7 @@ bool Win32Filesystem::GetFileTime(const Pathname& path, FileTimeType which,
 
 bool Win32Filesystem::GetAppPathname(Pathname* path) {
   TCHAR buffer[MAX_PATH + 1];
-  if (0 == ::GetModuleFileName(NULL, buffer, ARRAY_SIZE(buffer)))
+  if (0 == ::GetModuleFileName(NULL, buffer, arraysize(buffer)))
     return false;
   path->SetPathname(ToUtf8(buffer));
   return true;
@@ -351,20 +352,20 @@ bool Win32Filesystem::GetAppDataFolder(Pathname* path, bool per_user) {
   if (!::SHGetSpecialFolderPath(NULL, buffer, csidl, TRUE))
     return false;
   if (!IsCurrentProcessLowIntegrity() &&
-      !::GetLongPathName(buffer, buffer, ARRAY_SIZE(buffer)))
+      !::GetLongPathName(buffer, buffer, arraysize(buffer)))
     return false;
-  size_t len = strcatn(buffer, ARRAY_SIZE(buffer), __T("\\"));
-  len += strcpyn(buffer + len, ARRAY_SIZE(buffer) - len,
+  size_t len = strcatn(buffer, arraysize(buffer), __T("\\"));
+  len += strcpyn(buffer + len, arraysize(buffer) - len,
                  ToUtf16(organization_name_).c_str());
   if ((len > 0) && (buffer[len-1] != __T('\\'))) {
-    len += strcpyn(buffer + len, ARRAY_SIZE(buffer) - len, __T("\\"));
+    len += strcpyn(buffer + len, arraysize(buffer) - len, __T("\\"));
   }
-  len += strcpyn(buffer + len, ARRAY_SIZE(buffer) - len,
+  len += strcpyn(buffer + len, arraysize(buffer) - len,
                  ToUtf16(application_name_).c_str());
   if ((len > 0) && (buffer[len-1] != __T('\\'))) {
-    len += strcpyn(buffer + len, ARRAY_SIZE(buffer) - len, __T("\\"));
+    len += strcpyn(buffer + len, arraysize(buffer) - len, __T("\\"));
   }
-  if (len >= ARRAY_SIZE(buffer) - 1)
+  if (len >= arraysize(buffer) - 1)
     return false;
   path->clear();
   path->SetFolder(ToUtf8(buffer));
@@ -379,7 +380,7 @@ bool Win32Filesystem::GetAppTempFolder(Pathname* path) {
 }
 
 bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path,
-                                       int64 *free_bytes) {
+                                       int64_t* free_bytes) {
   if (!free_bytes) {
     return false;
   }
@@ -405,11 +406,11 @@ bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path,
     return false;
   }
 
-  int64 total_number_of_bytes;  // receives the number of bytes on disk
-  int64 total_number_of_free_bytes;  // receives the free bytes on disk
+  int64_t total_number_of_bytes;       // receives the number of bytes on disk
+  int64_t total_number_of_free_bytes;  // receives the free bytes on disk
   // make sure things won't change in 64 bit machine
   // TODO replace with compile time assert
-  ASSERT(sizeof(ULARGE_INTEGER) == sizeof(uint64));  //NOLINT
+  ASSERT(sizeof(ULARGE_INTEGER) == sizeof(uint64_t));  // NOLINT
   if (::GetDiskFreeSpaceEx(target_drive,
                            (PULARGE_INTEGER)free_bytes,
                            (PULARGE_INTEGER)&total_number_of_bytes,

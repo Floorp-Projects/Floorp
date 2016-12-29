@@ -26,32 +26,32 @@ TEST(RealFourierStaticsTest, AllocatorAlignment) {
     RealFourier::fft_real_scoper real;
     real = RealFourier::AllocRealBuffer(3);
     ASSERT_TRUE(real.get() != nullptr);
-    int64_t ptr_value = reinterpret_cast<int64_t>(real.get());
-    EXPECT_EQ(ptr_value % RealFourier::kFftBufferAlignment, 0);
+    uintptr_t ptr_value = reinterpret_cast<uintptr_t>(real.get());
+    EXPECT_EQ(0u, ptr_value % RealFourier::kFftBufferAlignment);
   }
   {
     RealFourier::fft_cplx_scoper cplx;
     cplx = RealFourier::AllocCplxBuffer(3);
     ASSERT_TRUE(cplx.get() != nullptr);
-    int64_t ptr_value = reinterpret_cast<int64_t>(cplx.get());
-    EXPECT_EQ(ptr_value % RealFourier::kFftBufferAlignment, 0);
+    uintptr_t ptr_value = reinterpret_cast<uintptr_t>(cplx.get());
+    EXPECT_EQ(0u, ptr_value % RealFourier::kFftBufferAlignment);
   }
 }
 
 TEST(RealFourierStaticsTest, OrderComputation) {
-  EXPECT_EQ(RealFourier::FftOrder(13), 4);
-  EXPECT_EQ(RealFourier::FftOrder(32), 5);
-  EXPECT_EQ(RealFourier::FftOrder(2), 1);
-  EXPECT_EQ(RealFourier::FftOrder(1), 0);
+  EXPECT_EQ(4, RealFourier::FftOrder(13));
+  EXPECT_EQ(5, RealFourier::FftOrder(32));
+  EXPECT_EQ(1, RealFourier::FftOrder(2));
+  EXPECT_EQ(0, RealFourier::FftOrder(1));
 }
 
 TEST(RealFourierStaticsTest, ComplexLengthComputation) {
-  EXPECT_EQ(RealFourier::ComplexLength(1), 2);
-  EXPECT_EQ(RealFourier::ComplexLength(2), 3);
-  EXPECT_EQ(RealFourier::ComplexLength(3), 5);
-  EXPECT_EQ(RealFourier::ComplexLength(4), 9);
-  EXPECT_EQ(RealFourier::ComplexLength(5), 17);
-  EXPECT_EQ(RealFourier::ComplexLength(7), 65);
+  EXPECT_EQ(2U, RealFourier::ComplexLength(1));
+  EXPECT_EQ(3U, RealFourier::ComplexLength(2));
+  EXPECT_EQ(5U, RealFourier::ComplexLength(3));
+  EXPECT_EQ(9U, RealFourier::ComplexLength(4));
+  EXPECT_EQ(17U, RealFourier::ComplexLength(5));
+  EXPECT_EQ(65U, RealFourier::ComplexLength(7));
 }
 
 template <typename T>

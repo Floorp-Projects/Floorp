@@ -75,7 +75,7 @@ class MultipartStream : public StreamInterface, public sigslot::has_slots<> {
   size_t current_;  // The index into parts_ of the current read position.
   size_t position_;  // The current read position in bytes.
 
-  DISALLOW_COPY_AND_ASSIGN(MultipartStream);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MultipartStream);
 };
 
 }  // namespace rtc

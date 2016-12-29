@@ -13,7 +13,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/tools/agc/test_utils.h"
 

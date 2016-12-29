@@ -15,7 +15,6 @@
         'unittest_main.cc',
         # Also use this as a convenient dumping ground for misc files that are
         # included by multiple targets below.
-        'fakecpumonitor.h',
         'fakenetwork.h',
         'fakesslidentity.h',
         'faketaskrunner.h',
@@ -23,7 +22,6 @@
         'testbase64.h',
         'testechoserver.h',
         'testutils.h',
-        'win32toolhelp.h',
       ],
       'defines': [
         'GTEST_RELATIVE_PATH',
@@ -31,6 +29,7 @@
       'dependencies': [
         'base.gyp:rtc_base',
         '<(DEPTH)/testing/gtest.gyp:gtest',
+        '<(webrtc_root)/test/test.gyp:field_trial',
       ],
       'direct_dependent_settings': {
         'defines': [
@@ -46,24 +45,25 @@
       'type': 'none',
       'direct_dependent_settings': {
         'sources': [
-          'asynchttprequest_unittest.cc',
+          'array_view_unittest.cc',
           'atomicops_unittest.cc',
           'autodetectproxy_unittest.cc',
           'bandwidthsmoother_unittest.cc',
           'base64_unittest.cc',
           'basictypes_unittest.cc',
           'bind_unittest.cc',
+          'bitbuffer_unittest.cc',
           'buffer_unittest.cc',
+          'bufferqueue_unittest.cc',
           'bytebuffer_unittest.cc',
           'byteorder_unittest.cc',
           'callback_unittest.cc',
-          'cpumonitor_unittest.cc',
           'crc32_unittest.cc',
           'criticalsection_unittest.cc',
           'event_tracer_unittest.cc',
           'event_unittest.cc',
           'exp_filter_unittest.cc',
-          'filelock_unittest.cc',
+          'filerotatingstream_unittest.cc',
           'fileutils_unittest.cc',
           'helpers_unittest.cc',
           'httpbase_unittest.cc',
@@ -77,17 +77,19 @@
           'multipart_unittest.cc',
           'nat_unittest.cc',
           'network_unittest.cc',
-          'nullsocketserver_unittest.cc',
+          'optional_unittest.cc',
           'optionsfile_unittest.cc',
           'pathutils_unittest.cc',
-          'physicalsocketserver_unittest.cc',
+          'platform_thread_unittest.cc',
           'profiler_unittest.cc',
           'proxy_unittest.cc',
           'proxydetect_unittest.cc',
+          'random_unittest.cc',
           'ratelimiter_unittest.cc',
           'ratetracker_unittest.cc',
           'referencecountedsingletonfactory_unittest.cc',
           'rollingaccumulator_unittest.cc',
+          'rtccertificate_unittests.cc',
           'scopedptrcollection_unittest.cc',
           'sha1digest_unittest.cc',
           'sharedexclusivelock_unittest.cc',
@@ -95,9 +97,6 @@
           'sigslot_unittest.cc',
           'sigslottester.h',
           'sigslottester.h.pump',
-          'socket_unittest.cc',
-          'socket_unittest.h',
-          'socketaddress_unittest.cc',
           'stream_unittest.cc',
           'stringencode_unittest.cc',
           'stringutils_unittest.cc',
@@ -110,7 +109,6 @@
           'timeutils_unittest.cc',
           'urlencode_unittest.cc',
           'versionparsing_unittest.cc',
-          'virtualsocket_unittest.cc',
           # TODO(ronghuawu): Reenable this test.
           # 'windowpicker_unittest.cc',
         ],
@@ -127,24 +125,29 @@
             'sources': [
               'win32_unittest.cc',
               'win32regkey_unittest.cc',
-              'win32socketserver_unittest.cc',
-              'win32toolhelp_unittest.cc',
               'win32window_unittest.cc',
               'win32windowpicker_unittest.cc',
               'winfirewall_unittest.cc',
             ],
             'sources!': [
-              # TODO(ronghuawu): Fix TestUdpReadyToSendIPv6 on windows bot
-              # then reenable these tests.
-              'physicalsocketserver_unittest.cc',
-              'socket_unittest.cc',
-              'win32socketserver_unittest.cc',
+              # TODO(pbos): Reenable this test.
               'win32windowpicker_unittest.cc',
             ],
           }],
+          ['OS=="win" and clang==1', {
+            'msvs_settings': {
+              'VCCLCompilerTool': {
+                'AdditionalOptions': [
+                  # Disable warnings failing when compiling with Clang on Windows.
+                  # https://bugs.chromium.org/p/webrtc/issues/detail?id=5366
+                  '-Wno-missing-braces',
+                  '-Wno-unused-const-variable',
+                ],
+              },
+            },
+          }],
           ['OS=="mac"', {
             'sources': [
-              'macsocketserver_unittest.cc',
               'macutils_unittest.cc',
             ],
           }],

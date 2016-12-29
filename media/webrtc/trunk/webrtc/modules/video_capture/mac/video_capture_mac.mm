@@ -16,8 +16,8 @@
 #include "webrtc/modules/video_capture/device_info_impl.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
-#include "webrtc/system_wrappers/interface/ref_count.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/ref_count.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation.h"
 #include "webrtc/modules/video_capture/mac/avfoundation/video_capture_avfoundation_info.h"

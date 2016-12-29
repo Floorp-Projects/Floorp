@@ -440,7 +440,7 @@ WebRtcIsac_CorrelateInterVec(
   int16_t rowCntr;
   int16_t colCntr;
   int16_t interVecDim;
-  double myVec[UB16_LPC_VEC_PER_FRAME];
+  double myVec[UB16_LPC_VEC_PER_FRAME] = {0.0};
   const double* interVecDecorrMat;
 
   switch(bandwidth)

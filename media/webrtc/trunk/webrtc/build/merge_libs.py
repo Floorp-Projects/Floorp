@@ -16,7 +16,7 @@ import os
 import subprocess
 import sys
 
-IGNORE_PATTERNS = ['do_not_use', 'protoc']
+IGNORE_PATTERNS = ['do_not_use', 'protoc', 'genperf']
 
 def FindFiles(path, pattern):
   """Finds files matching |pattern| under |path|.
@@ -36,7 +36,7 @@ def FindFiles(path, pattern):
   files = []
   for root, _, filenames in os.walk(path):
     for filename in fnmatch.filter(filenames, pattern):
-      if filename not in IGNORE_PATTERNS:
+      if all(pattern not in filename for pattern in IGNORE_PATTERNS):
         # We use the relative path here to avoid "argument list too
         # long" errors on Linux.  Note: This doesn't always work, so
         # we use the find command on Linux.

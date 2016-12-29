@@ -11,72 +11,75 @@
 #ifndef WEBRTC_BASE_TIMEUTILS_H_
 #define WEBRTC_BASE_TIMEUTILS_H_
 
+#include <ctime>
 #include <time.h>
 
 #include "webrtc/base/basictypes.h"
 
 namespace rtc {
 
-static const int64 kNumMillisecsPerSec = INT64_C(1000);
-static const int64 kNumMicrosecsPerSec = INT64_C(1000000);
-static const int64 kNumNanosecsPerSec = INT64_C(1000000000);
+static const int64_t kNumMillisecsPerSec = INT64_C(1000);
+static const int64_t kNumMicrosecsPerSec = INT64_C(1000000);
+static const int64_t kNumNanosecsPerSec = INT64_C(1000000000);
 
-static const int64 kNumMicrosecsPerMillisec = kNumMicrosecsPerSec /
-    kNumMillisecsPerSec;
-static const int64 kNumNanosecsPerMillisec =  kNumNanosecsPerSec /
-    kNumMillisecsPerSec;
-static const int64 kNumNanosecsPerMicrosec =  kNumNanosecsPerSec /
-    kNumMicrosecsPerSec;
+static const int64_t kNumMicrosecsPerMillisec =
+    kNumMicrosecsPerSec / kNumMillisecsPerSec;
+static const int64_t kNumNanosecsPerMillisec =
+    kNumNanosecsPerSec / kNumMillisecsPerSec;
+static const int64_t kNumNanosecsPerMicrosec =
+    kNumNanosecsPerSec / kNumMicrosecsPerSec;
 
 // January 1970, in NTP milliseconds.
-static const int64 kJan1970AsNtpMillisecs = INT64_C(2208988800000);
+static const int64_t kJan1970AsNtpMillisecs = INT64_C(2208988800000);
 
-typedef uint32 TimeStamp;
+typedef uint32_t TimeStamp;
 
 // Returns the current time in milliseconds.
-uint32 Time();
+uint32_t Time();
 // Returns the current time in microseconds.
-uint64 TimeMicros();
+uint64_t TimeMicros();
 // Returns the current time in nanoseconds.
-uint64 TimeNanos();
+uint64_t TimeNanos();
 
 // Stores current time in *tm and microseconds in *microseconds.
 void CurrentTmTime(struct tm *tm, int *microseconds);
 
 // Returns a future timestamp, 'elapsed' milliseconds from now.
-uint32 TimeAfter(int32 elapsed);
+uint32_t TimeAfter(int32_t elapsed);
 
 // Comparisons between time values, which can wrap around.
-bool TimeIsBetween(uint32 earlier, uint32 middle, uint32 later);  // Inclusive
-bool TimeIsLaterOrEqual(uint32 earlier, uint32 later);  // Inclusive
-bool TimeIsLater(uint32 earlier, uint32 later);  // Exclusive
+bool TimeIsBetween(uint32_t earlier,
+                   uint32_t middle,
+                   uint32_t later);                         // Inclusive
+bool TimeIsLaterOrEqual(uint32_t earlier, uint32_t later);  // Inclusive
+bool TimeIsLater(uint32_t earlier, uint32_t later);         // Exclusive
 
 // Returns the later of two timestamps.
-inline uint32 TimeMax(uint32 ts1, uint32 ts2) {
+inline uint32_t TimeMax(uint32_t ts1, uint32_t ts2) {
   return TimeIsLaterOrEqual(ts1, ts2) ? ts2 : ts1;
 }
 
 // Returns the earlier of two timestamps.
-inline uint32 TimeMin(uint32 ts1, uint32 ts2) {
+inline uint32_t TimeMin(uint32_t ts1, uint32_t ts2) {
   return TimeIsLaterOrEqual(ts1, ts2) ? ts1 : ts2;
 }
 
 // Number of milliseconds that would elapse between 'earlier' and 'later'
 // timestamps.  The value is negative if 'later' occurs before 'earlier'.
-int32 TimeDiff(uint32 later, uint32 earlier);
+int32_t TimeDiff(uint32_t later, uint32_t earlier);
 
 // The number of milliseconds that have elapsed since 'earlier'.
-inline int32 TimeSince(uint32 earlier) {
+inline int32_t TimeSince(uint32_t earlier) {
   return TimeDiff(Time(), earlier);
 }
 
 // The number of milliseconds that will elapse between now and 'later'.
-inline int32 TimeUntil(uint32 later) {
+inline int32_t TimeUntil(uint32_t later) {
   return TimeDiff(later, Time());
 }
 
 // Converts a unix timestamp in nanoseconds to an NTP timestamp in ms.
-inline int64 UnixTimestampNanosecsToNtpMillisecs(int64 unix_ts_ns) {
+inline int64_t UnixTimestampNanosecsToNtpMillisecs(int64_t unix_ts_ns) {
   return unix_ts_ns / kNumNanosecsPerMillisec + kJan1970AsNtpMillisecs;
 }
 
@@ -84,12 +87,17 @@ class TimestampWrapAroundHandler {
  public:
   TimestampWrapAroundHandler();
 
-  int64 Unwrap(uint32 ts);
+  int64_t Unwrap(uint32_t ts);
 
  private:
-  uint32 last_ts_;
-  int64 num_wrap_;
+  uint32_t last_ts_;
+  int64_t num_wrap_;
 };
+
+// Convert from std::tm, which is relative to 1900-01-01 00:00 to number of
+// seconds from 1970-01-01 00:00 ("epoch").  Don't return time_t since that
+// is still 32 bits on many systems.
+int64_t TmToSeconds(const std::tm& tm);
 
 }  // namespace rtc
 

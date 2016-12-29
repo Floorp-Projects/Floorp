@@ -183,6 +183,11 @@ class TurnServer : public sigslot::has_slots<> {
 
   void set_enable_otu_nonce(bool enable) { enable_otu_nonce_ = enable; }
 
+  // If set to true, reject CreatePermission requests to RFC1918 addresses.
+  void set_reject_private_addresses(bool filter) {
+    reject_private_addresses_ = filter;
+  }
+
   // Starts listening for packets from internal clients.
   void AddInternalSocket(rtc::AsyncPacketSocket* socket,
                          ProtocolType proto);
@@ -255,6 +260,7 @@ class TurnServer : public sigslot::has_slots<> {
   // otu - one-time-use. Server will respond with 438 if it's
   // sees the same nonce in next transaction.
   bool enable_otu_nonce_;
+  bool reject_private_addresses_ = false;
 
   InternalSocketMap server_sockets_;
   ServerSocketMap server_listen_sockets_;

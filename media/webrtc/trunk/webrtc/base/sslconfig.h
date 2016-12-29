@@ -13,8 +13,7 @@
 
 // If no preference has been indicated, default to SChannel on Windows and
 // OpenSSL everywhere else, if it is available.
-#if !defined(SSL_USE_SCHANNEL) && !defined(SSL_USE_OPENSSL) && \
-    !defined(SSL_USE_NSS)
+#if !defined(SSL_USE_SCHANNEL) && !defined(SSL_USE_OPENSSL)
 #if defined(WEBRTC_WIN)
 
 #define SSL_USE_SCHANNEL 1
@@ -23,8 +22,6 @@
 
 #if defined(HAVE_OPENSSL_SSL_H)
 #define SSL_USE_OPENSSL 1
-#elif defined(HAVE_NSS_SSL_H)
-#define SSL_USE_NSS 1
 #endif
 
 #endif  // !defined(WEBRTC_WIN)

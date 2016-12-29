@@ -6,33 +6,37 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("//build/config/arm.gni")
 import("../../build/webrtc.gni")
 
 build_video_processing_sse2 = current_cpu == "x86" || current_cpu == "x64"
 
 source_set("video_processing") {
   sources = [
-    "main/interface/video_processing.h",
-    "main/interface/video_processing_defines.h",
-    "main/source/brighten.cc",
-    "main/source/brighten.h",
-    "main/source/brightness_detection.cc",
-    "main/source/brightness_detection.h",
-    "main/source/color_enhancement.cc",
-    "main/source/color_enhancement.h",
-    "main/source/color_enhancement_private.h",
-    "main/source/content_analysis.cc",
-    "main/source/content_analysis.h",
-    "main/source/deflickering.cc",
-    "main/source/deflickering.h",
-    "main/source/frame_preprocessor.cc",
-    "main/source/frame_preprocessor.h",
-    "main/source/spatial_resampler.cc",
-    "main/source/spatial_resampler.h",
-    "main/source/video_decimator.cc",
-    "main/source/video_decimator.h",
-    "main/source/video_processing_impl.cc",
-    "main/source/video_processing_impl.h",
+    "brightness_detection.cc",
+    "brightness_detection.h",
+    "content_analysis.cc",
+    "content_analysis.h",
+    "deflickering.cc",
+    "deflickering.h",
+    "frame_preprocessor.cc",
+    "frame_preprocessor.h",
+    "include/video_processing.h",
+    "include/video_processing_defines.h",
+    "spatial_resampler.cc",
+    "spatial_resampler.h",
+    "util/denoiser_filter.cc",
+    "util/denoiser_filter.h",
+    "util/denoiser_filter_c.cc",
+    "util/denoiser_filter_c.h",
+    "util/skin_detection.cc",
+    "util/skin_detection.h",
+    "video_decimator.cc",
+    "video_decimator.h",
+    "video_denoiser.cc",
+    "video_denoiser.h",
+    "video_processing_impl.cc",
+    "video_processing_impl.h",
   ]
 
   deps = [
@@ -43,6 +47,9 @@ source_set("video_processing") {
   ]
   if (build_video_processing_sse2) {
     deps += [ ":video_processing_sse2" ]
+  }
+  if (rtc_build_with_neon) {
+    deps += [ ":video_processing_neon" ]
   }
 
   configs += [ "../..:common_config" ]
@@ -57,7 +64,11 @@ source_set("video_processing") {
 
 if (build_video_processing_sse2) {
   source_set("video_processing_sse2") {
-    sources = [ "main/source/content_analysis_sse2.cc" ]
+    sources = [
+      "content_analysis_sse2.cc",
+      "util/denoiser_filter_sse2.cc",
+      "util/denoiser_filter_sse2.h",
+    ]
 
     configs += [ "../..:common_config" ]
     public_configs = [ "../..:common_inherited_config" ]
@@ -71,5 +82,20 @@ if (build_video_processing_sse2) {
     if (is_posix) {
       cflags = [ "-msse2" ]
     }
+  }
+}
+
+if (rtc_build_with_neon) {
+  source_set("video_processing_neon") {
+    sources = [
+      "util/denoiser_filter_neon.cc",
+      "util/denoiser_filter_neon.h",
+    ]
+    if (current_cpu != "arm64") {
+      configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
+      cflags = [ "-mfpu=neon" ]
+    }
+    configs += [ "../..:common_config" ]
+    public_configs = [ "../..:common_inherited_config" ]
   }
 }

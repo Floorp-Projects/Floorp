@@ -20,9 +20,9 @@
 #include <list>
 #include <utility>
 
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/bitrate_controller/send_side_bandwidth_estimation.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 
 namespace webrtc {
 
@@ -40,6 +40,8 @@ class BitrateControllerImpl : public BitrateController {
                                 int max_bitrate_bps) override;
 
   void SetReservedBitrate(uint32_t reserved_bitrate_bps) override;
+
+  void SetEventLog(RtcEventLog* event_log) override;
 
   int64_t TimeUntilNextProcess() override;
   int32_t Process() override;
@@ -64,24 +66,23 @@ class BitrateControllerImpl : public BitrateController {
 
   void OnNetworkChanged(uint32_t bitrate,
                         uint8_t fraction_loss,  // 0 - 255.
-                        int64_t rtt)
-      EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
+                        int64_t rtt) EXCLUSIVE_LOCKS_REQUIRED(critsect_);
 
   // Used by process thread.
   Clock* clock_;
   BitrateObserver* observer_;
   int64_t last_bitrate_update_ms_;
 
-  const rtc::scoped_ptr<CriticalSectionWrapper> critsect_;
-  SendSideBandwidthEstimation bandwidth_estimation_ GUARDED_BY(*critsect_);
-  uint32_t reserved_bitrate_bps_ GUARDED_BY(*critsect_);
+  mutable rtc::CriticalSection critsect_;
+  SendSideBandwidthEstimation bandwidth_estimation_ GUARDED_BY(critsect_);
+  uint32_t reserved_bitrate_bps_ GUARDED_BY(critsect_);
 
-  uint32_t last_bitrate_bps_ GUARDED_BY(*critsect_);
-  uint8_t last_fraction_loss_ GUARDED_BY(*critsect_);
-  int64_t last_rtt_ms_ GUARDED_BY(*critsect_);
-  uint32_t last_reserved_bitrate_bps_ GUARDED_BY(*critsect_);
+  uint32_t last_bitrate_bps_ GUARDED_BY(critsect_);
+  uint8_t last_fraction_loss_ GUARDED_BY(critsect_);
+  int64_t last_rtt_ms_ GUARDED_BY(critsect_);
+  uint32_t last_reserved_bitrate_bps_ GUARDED_BY(critsect_);
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(BitrateControllerImpl);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(BitrateControllerImpl);
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_BITRATE_CONTROLLER_BITRATE_CONTROLLER_IMPL_H_

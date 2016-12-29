@@ -8,16 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_coding/codecs/isac/fix/interface/audio_encoder_isacfix.h"
+#include "webrtc/modules/audio_coding/codecs/isac/fix/include/audio_encoder_isacfix.h"
 
 #include "webrtc/modules/audio_coding/codecs/isac/audio_encoder_isac_t_impl.h"
 
 namespace webrtc {
 
-const uint16_t IsacFix::kFixSampleRate;
-
-// Explicit instantiation of AudioEncoderDecoderIsacT<IsacFix>, a.k.a.
-// AudioEncoderDecoderIsacFix.
-template class AudioEncoderDecoderIsacT<IsacFix>;
+// Explicit instantiation:
+template class AudioEncoderIsacT<IsacFix>;
 
 }  // namespace webrtc

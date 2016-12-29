@@ -10,11 +10,10 @@
 
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/nullsocketserver.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace rtc {
 
-static const uint32 kTimeout = 5000U;
+static const uint32_t kTimeout = 5000U;
 
 class NullSocketServerTest
     : public testing::Test,
@@ -38,7 +37,7 @@ TEST_F(NullSocketServerTest, WaitAndSet) {
 }
 
 TEST_F(NullSocketServerTest, TestWait) {
-  uint32 start = Time();
+  uint32_t start = Time();
   ss_.Wait(200, true);
   // The actual wait time is dependent on the resolution of the timer used by
   // the Event class. Allow for the event to signal ~20ms early.

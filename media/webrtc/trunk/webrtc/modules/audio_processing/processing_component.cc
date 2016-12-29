@@ -55,12 +55,12 @@ bool ProcessingComponent::is_component_enabled() const {
   return enabled_;
 }
 
-void* ProcessingComponent::handle(int index) const {
+void* ProcessingComponent::handle(size_t index) const {
   assert(index < num_handles_);
   return handles_[index];
 }
 
-int ProcessingComponent::num_handles() const {
+size_t ProcessingComponent::num_handles() const {
   return num_handles_;
 }
 
@@ -70,12 +70,12 @@ int ProcessingComponent::Initialize() {
   }
 
   num_handles_ = num_handles_required();
-  if (num_handles_ > static_cast<int>(handles_.size())) {
+  if (num_handles_ > handles_.size()) {
     handles_.resize(num_handles_, NULL);
   }
 
-  assert(static_cast<int>(handles_.size()) >= num_handles_);
-  for (int i = 0; i < num_handles_; i++) {
+  assert(handles_.size() >= num_handles_);
+  for (size_t i = 0; i < num_handles_; i++) {
     if (handles_[i] == NULL) {
       handles_[i] = CreateHandle();
       if (handles_[i] == NULL) {
@@ -98,8 +98,8 @@ int ProcessingComponent::Configure() {
     return AudioProcessing::kNoError;
   }
 
-  assert(static_cast<int>(handles_.size()) >= num_handles_);
-  for (int i = 0; i < num_handles_; i++) {
+  assert(handles_.size() >= num_handles_);
+  for (size_t i = 0; i < num_handles_; i++) {
     int err = ConfigureHandle(handles_[i]);
     if (err != AudioProcessing::kNoError) {
       return GetHandleError(handles_[i]);

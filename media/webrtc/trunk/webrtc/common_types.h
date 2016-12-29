@@ -156,25 +156,12 @@ enum ProcessingTypes
     kRecordingPreprocessing
 };
 
-enum FrameType
-{
-    kFrameEmpty            = 0,
-    kAudioFrameSpeech      = 1,
-    kAudioFrameCN          = 2,
-    kVideoFrameKey         = 3,    // independent frame
-    kVideoFrameDelta       = 4,    // depends on the previus frame
-};
-
-// External transport callback interface
-class Transport
-{
-public:
-    virtual int SendPacket(int channel, const void *data, size_t len) = 0;
-    virtual int SendRTCPPacket(int channel, const void *data, size_t len) = 0;
-
-protected:
-    virtual ~Transport() {}
-    Transport() {}
+enum FrameType {
+  kEmptyFrame = 0,
+  kAudioFrameSpeech = 1,
+  kAudioFrameCN = 2,
+  kVideoFrameKey = 3,
+  kVideoFrameDelta = 4,
 };
 
 // Statistics for an RTCP channel
@@ -304,7 +291,7 @@ struct CodecInst {
   char plname[RTP_PAYLOAD_NAME_SIZE];
   int plfreq;
   int pacsize;
-  int channels;
+  size_t channels;
   int rate;  // bits/sec unlike {start,min,max}Bitrate elsewhere in this file!
 
   bool operator==(const CodecInst& other) const {
@@ -323,12 +310,6 @@ struct CodecInst {
 
 // RTP
 enum {kRtpCsrcSize = 15}; // RFC 3550 page 13
-
-enum RTPDirections
-{
-    kRtpIncoming = 0,
-    kRtpOutgoing
-};
 
 enum PayloadFrequencies
 {
@@ -381,7 +362,7 @@ struct NetworkStatistics           // NETEQ statistics
     // max packet waiting time in the jitter buffer (ms)
     int maxWaitingTimeMs;
     // added samples in off mode due to packet loss
-    int addedSamples;
+    size_t addedSamples;
 };
 
 // Statistics for calls to AudioCodingModule::PlayoutData10Ms().
@@ -571,6 +552,7 @@ enum VideoReceiveState
 enum { kConfigParameterSize = 128};
 enum { kPayloadNameSize = 32};
 enum { kMaxSimulcastStreams = 4};
+enum { kMaxSpatialLayers = 5 };
 enum { kMaxTemporalStreams = 4};
 enum { kRIDSize = 32};
 
@@ -630,7 +612,7 @@ struct VideoCodecVP8 {
   }
 };
 
-// VP9 specific
+// VP9 specific.
 struct VideoCodecVP9 {
   VideoCodecComplexity complexity;
   int                  resilience;
@@ -653,6 +635,7 @@ struct VideoCodecH264 {
   uint8_t        packetizationMode; // 0 or 1
   bool           frameDroppingOn;
   int            keyFrameInterval;
+  double         scaleDownBy;
   // These are NULL/0 if not externally negotiated.
   const uint8_t* spsData;
   size_t         spsLen;
@@ -711,6 +694,13 @@ struct SimulcastStream {
   }
 };
 
+struct SpatialLayer {
+  int scaling_factor_num;
+  int scaling_factor_den;
+  int target_bitrate_bps;
+  // TODO(ivica): Add max_quantizer and min_quantizer?
+};
+
 enum VideoCodecMode {
   kRealtimeVideo,
   kScreensharing
@@ -740,6 +730,7 @@ struct VideoCodec {
   unsigned char       numberOfSimulcastStreams;
   unsigned char       ridId;
   SimulcastStream     simulcastStream[kMaxSimulcastStreams];
+  SpatialLayer spatialLayers[kMaxSpatialLayers];
 
   VideoCodecMode      mode;
 
@@ -786,12 +777,11 @@ struct OverUseDetectorOptions {
         initial_e(),
         initial_process_noise(),
         initial_avg_noise(0.0),
-        initial_var_noise(50),
-        initial_threshold(25.0) {
+        initial_var_noise(50) {
     initial_e[0][0] = 100;
     initial_e[1][1] = 1e-1;
     initial_e[0][1] = initial_e[1][0] = 0;
-    initial_process_noise[0] = 1e-10;
+    initial_process_noise[0] = 1e-13;
     initial_process_noise[1] = 1e-2;
   }
   double initial_slope;
@@ -800,7 +790,6 @@ struct OverUseDetectorOptions {
   double initial_process_noise[2];
   double initial_avg_noise;
   double initial_var_noise;
-  double initial_threshold;
 };
 
 enum CPULoadState {
@@ -852,6 +841,7 @@ struct RTPHeaderExtension {
   // Audio Level includes both level in dBov and voiced/unvoiced bit. See:
   // https://datatracker.ietf.org/doc/draft-lennox-avt-rtp-audio-level-exthdr/
   bool hasAudioLevel;
+  bool voiceActivity;
   uint8_t audioLevel;
 
   // For Coordination of Video Orientation. See
@@ -955,6 +945,11 @@ class StreamDataCountersCallback {
   virtual void DataCountersUpdated(const StreamDataCounters& counters,
                                    uint32_t ssrc) = 0;
 };
+
+// RTCP mode to use. Compound mode is described by RFC 4585 and reduced-size
+// RTCP mode is described by RFC 5506.
+enum class RtcpMode { kOff, kCompound, kReducedSize };
+
 }  // namespace webrtc
 
 #endif  // WEBRTC_COMMON_TYPES_H_

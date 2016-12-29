@@ -11,13 +11,15 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RECEIVE_STATISTICS_IMPL_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RECEIVE_STATISTICS_IMPL_H_
 
-#include "webrtc/modules/rtp_rtcp/interface/receive_statistics.h"
+#include "webrtc/modules/rtp_rtcp/include/receive_statistics.h"
 
 #include <algorithm>
+#include <map>
 
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/source/bitrate.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/ntp_time.h"
 
 namespace webrtc {
 
@@ -36,7 +38,6 @@ class StreamStatisticianImpl : public StreamStatistician {
   void GetReceiveStreamDataCounters(
       StreamDataCounters* data_counters) const override;
   uint32_t BitrateReceived() const override;
-  void ResetStatistics() override;
   bool IsRetransmitOfOldPacket(const RTPHeader& header,
                                int64_t min_rtt) const override;
   bool IsPacketInOrder(uint16_t sequence_number) const override;
@@ -52,9 +53,7 @@ class StreamStatisticianImpl : public StreamStatistician {
  private:
   bool InOrderPacketInternal(uint16_t sequence_number) const;
   RtcpStatistics CalculateRtcpStatistics();
-  void UpdateJitter(const RTPHeader& header,
-                    uint32_t receive_time_secs,
-                    uint32_t receive_time_frac);
+  void UpdateJitter(const RTPHeader& header, NtpTime receive_time);
   void UpdateCounters(const RTPHeader& rtp_header,
                       size_t packet_length,
                       bool retransmitted);
@@ -73,8 +72,7 @@ class StreamStatisticianImpl : public StreamStatistician {
   uint32_t jitter_q4_transmission_time_offset_;
 
   int64_t last_receive_time_ms_;
-  uint32_t last_receive_time_secs_;
-  uint32_t last_receive_time_frac_;
+  NtpTime last_receive_time_ntp_;
   uint32_t last_received_timestamp_;
   int32_t last_received_transmission_time_offset_;
   uint16_t received_seq_first_;
@@ -84,9 +82,6 @@ class StreamStatisticianImpl : public StreamStatistician {
   // Current counter values.
   size_t received_packet_overhead_;
   StreamDataCounters receive_counters_;
-
-  // Stored counter values. Includes sum of reset counter values for the stream.
-  StreamDataCounters stored_sum_receive_counters_;
 
   // Counter values when we sent the last report.
   uint32_t last_report_inorder_packets_;

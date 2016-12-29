@@ -21,10 +21,11 @@ import java.nio.ByteBuffer;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder.Callback;
+
+import android.util.Log;
 
 import org.mozilla.gecko.annotation.WebRTCJNITarget;
 

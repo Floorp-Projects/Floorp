@@ -11,8 +11,8 @@
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/video_render/windows/video_render_windows_impl.h"
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #ifdef DIRECT3D9_RENDERING
 #include "webrtc/modules/video_render/windows/video_render_direct3d9.h"
 #endif

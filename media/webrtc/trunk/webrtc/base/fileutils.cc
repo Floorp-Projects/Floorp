@@ -10,6 +10,7 @@
 
 #include <assert.h>
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/pathutils.h"
 #include "webrtc/base/fileutils.h"
 #include "webrtc/base/stringutils.h"
@@ -273,8 +274,8 @@ bool CreateUniqueFile(Pathname& path, bool create_empty) {
     }
     version += 1;
     char version_base[MAX_PATH];
-    sprintfn(version_base, ARRAY_SIZE(version_base), "%s-%u",
-             basename.c_str(), version);
+    sprintfn(version_base, arraysize(version_base), "%s-%u", basename.c_str(),
+             version);
     path.SetBasename(version_base);
   }
   return true;

@@ -15,17 +15,17 @@
 #include <queue>
 
 #include "webrtc/base/criticalsection.h"
+#include "webrtc/base/platform_thread.h"
 #include "webrtc/base/thread_checker.h"
-#include "webrtc/modules/utility/interface/process_thread.h"
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/modules/utility/include/process_thread.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
 class ProcessThreadImpl : public ProcessThread {
  public:
-  ProcessThreadImpl();
+  explicit ProcessThreadImpl(const char* thread_name);
   ~ProcessThreadImpl() override;
 
   void Start() override;
@@ -70,12 +70,14 @@ class ProcessThreadImpl : public ProcessThread {
 
   rtc::ThreadChecker thread_checker_;
   const rtc::scoped_ptr<EventWrapper> wake_up_;
-  rtc::scoped_ptr<ThreadWrapper> thread_;
+  // TODO(pbos): Remove scoped_ptr and stop recreating the thread.
+  rtc::scoped_ptr<rtc::PlatformThread> thread_;
 
   ModuleList modules_;
   // TODO(tommi): Support delayed tasks.
   std::queue<ProcessTask*> queue_;
   bool stop_;
+  const char* thread_name_;
 };
 
 }  // namespace webrtc

@@ -4497,6 +4497,7 @@ EventStateManager::FireDragEnterOrExit(nsPresContext* aPresContext,
   event.mModifiers = aDragEvent->mModifiers;
   event.buttons = aDragEvent->buttons;
   event.relatedTarget = aRelatedTarget;
+  event.pointerId = aDragEvent->pointerId;
   event.inputSource = aDragEvent->inputSource;
 
   mCurrentTargetContent = aTargetContent;
@@ -4648,6 +4649,7 @@ EventStateManager::InitAndDispatchClickEvent(WidgetMouseEvent* aEvent,
   event.mTimeStamp = aEvent->mTimeStamp;
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
   event.button = aEvent->button;
+  event.pointerId = aEvent->pointerId;
   event.inputSource = aEvent->inputSource;
 
   return aPresShell->HandleEventWithTarget(&event, aCurrentTarget,
