@@ -398,8 +398,8 @@ case "$target" in
 
     AC_DEFINE_UNQUOTED(WINVER,0x$WINVER)
     AC_DEFINE_UNQUOTED(_WIN32_WINNT,0x$WINVER)
-    # Require OS features provided by IE 6.0 SP2 (XP SP2)
-    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0603)
+    # Require OS features provided by IE 8.0 (Win7)
+    AC_DEFINE_UNQUOTED(_WIN32_IE,0x0800)
 
     ;;
 esac
