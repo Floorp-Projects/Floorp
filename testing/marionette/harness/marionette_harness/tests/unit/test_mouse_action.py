@@ -51,7 +51,7 @@ class TestMouseAction(MarionetteTestCase):
         def context_menu_state():
             with self.marionette.using_context("chrome"):
                 cm_el = self.marionette.find_element(By.ID, "contentAreaContextMenu")
-                return cm_el.get_attribute("state")
+                return cm_el.get_property("state")
 
         self.assertEqual("closed", context_menu_state())
         self.action.context_click(click_el).perform()
@@ -88,20 +88,20 @@ class TestMouseAction(MarionetteTestCase):
 
         with self.marionette.using_context("chrome"):
             urlbar = self.marionette.find_element(By.ID, "urlbar")
-            self.assertEqual("", urlbar.get_attribute("value"))
+            self.assertEqual("", urlbar.get_property("value"))
 
             urlbar.send_keys(test_word)
-            self.assertEqual(urlbar.get_attribute("value"), test_word)
+            self.assertEqual(urlbar.get_property("value"), test_word)
             (self.action.double_click(urlbar).perform()
                         .key_down(self.mod_key)
                         .key_down("x").perform())
-            self.assertEqual(urlbar.get_attribute("value"), "")
+            self.assertEqual(urlbar.get_property("value"), "")
 
     def test_chrome_context_click_action(self):
         self.marionette.set_context("chrome")
         def context_menu_state():
             cm_el = self.marionette.find_element(By.ID, "tabContextMenu")
-            return cm_el.get_attribute("state")
+            return cm_el.get_property("state")
 
         currtab = self.marionette.execute_script("return gBrowser.selectedTab")
         self.assertEqual("closed", context_menu_state())

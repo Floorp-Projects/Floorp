@@ -275,6 +275,9 @@ def setup_argument_parser():
 
         import imp
         path = os.path.join(build_obj.topobjdir, mochitest_dir, 'runtests.py')
+        if not os.path.exists(path):
+            path = os.path.join(here, "runtests.py")
+
         with open(path, 'r') as fh:
             imp.load_module('mochitest', fh, path,
                             ('.py', 'r', imp.PY_SOURCE))

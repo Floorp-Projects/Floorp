@@ -62,7 +62,7 @@ class TabBar(UIBaseLib):
 
         :return: Index of the selected tab.
         """
-        return int(self.toolbar.get_attribute('selectedIndex'))
+        return int(self.toolbar.get_property('selectedIndex'))
 
     @property
     def selected_tab(self):
