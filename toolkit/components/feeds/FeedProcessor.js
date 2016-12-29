@@ -155,7 +155,7 @@ function bagHasKey(bag, key) {
 function makePropGetter(key) {
   return function FeedPropGetter(bag) {
     try {
-      return value = bag.getProperty(key);
+      return bag.getProperty(key);
     }
     catch (e) {
     }
