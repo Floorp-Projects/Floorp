@@ -71,7 +71,7 @@ public class DefaultDoorHanger extends DoorHanger {
             setMessage(message);
         }
 
-        final JSONObject options = config.getOptions();
+        final GeckoBundle options = config.getOptions();
         if (options != null) {
             setOptions(options);
         }
@@ -98,37 +98,35 @@ public class DefaultDoorHanger extends DoorHanger {
     }
 
     @Override
-    public void setOptions(final JSONObject options) {
+    public void setOptions(final GeckoBundle options) {
         super.setOptions(options);
 
-        final JSONArray inputs = options.optJSONArray("inputs");
+        final GeckoBundle[] inputs = options.getBundleArray("inputs");
         if (inputs != null) {
             mInputs = new ArrayList<PromptInput>();
 
             final ViewGroup group = (ViewGroup) findViewById(R.id.doorhanger_inputs);
             group.setVisibility(VISIBLE);
 
-            for (int i = 0; i < inputs.length(); i++) {
-                try {
-                    PromptInput input = PromptInput.getInput(
-                            GeckoBundle.fromJSONObject(inputs.getJSONObject(i)));
-                    mInputs.add(input);
+            for (int i = 0; i < inputs.length; i++) {
+                PromptInput input = PromptInput.getInput(inputs[i]);
+                mInputs.add(input);
 
-                    final int padding = mResources.getDimensionPixelSize(R.dimen.doorhanger_section_padding_medium);
-                    View v = input.getView(getContext());
-                    styleInput(input, v);
-                    v.setPadding(0, 0, 0, padding);
-                    group.addView(v);
-                } catch (JSONException ex) { }
+                final int padding = mResources.getDimensionPixelSize(
+                        R.dimen.doorhanger_section_padding_medium);
+                final View v = input.getView(getContext());
+                styleInput(input, v);
+                v.setPadding(0, 0, 0, padding);
+                group.addView(v);
             }
         }
 
-        final String checkBoxText = options.optString("checkbox");
+        final String checkBoxText = options.getString("checkbox");
         if (!TextUtils.isEmpty(checkBoxText)) {
             mCheckBox = (CheckBox) findViewById(R.id.doorhanger_checkbox);
             mCheckBox.setText(checkBoxText);
-            if (options.has("checkboxState")) {
-                final boolean checkBoxState = options.optBoolean("checkboxState");
+            if (options.containsKey("checkboxState")) {
+                final boolean checkBoxState = options.getBoolean("checkboxState");
                 mCheckBox.setChecked(checkBoxState);
             }
             mCheckBox.setVisibility(VISIBLE);

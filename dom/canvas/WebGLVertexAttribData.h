@@ -25,6 +25,7 @@ public:
     WebGLRefPtr<WebGLBuffer> mBuf;
 private:
     GLenum mType;
+    GLenum mBaseType;
     uint8_t mSize; // num of mType vals per vert
     uint8_t mBytesPerVertex;
     bool mNormalized;
@@ -38,6 +39,7 @@ public:
 
     GETTER(IntegerFunc)
     GETTER(Type)
+    GETTER(BaseType)
     GETTER(Size)
     GETTER(BytesPerVertex)
     GETTER(Normalized)

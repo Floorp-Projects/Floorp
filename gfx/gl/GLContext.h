@@ -887,17 +887,21 @@ public:
     void fBindFramebuffer(GLenum target, GLuint framebuffer);
 
     void fInvalidateFramebuffer(GLenum target, GLsizei numAttachments, const GLenum* attachments) {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fInvalidateFramebuffer);
         mSymbols.fInvalidateFramebuffer(target, numAttachments, attachments);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fInvalidateSubFramebuffer(GLenum target, GLsizei numAttachments, const GLenum* attachments, GLint x, GLint y, GLsizei width, GLsizei height) {
+        BeforeGLDrawCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fInvalidateSubFramebuffer);
         mSymbols.fInvalidateSubFramebuffer(target, numAttachments, attachments, x, y, width, height);
         AFTER_GL_CALL;
+        AfterGLDrawCall();
     }
 
     void fBindTexture(GLenum target, GLuint texture) {
@@ -3140,11 +3144,13 @@ public:
                             GLint yoffset, GLint zoffset, GLint x,
                             GLint y, GLsizei width, GLsizei height)
     {
+        BeforeGLReadCall();
         BEFORE_GL_CALL;
         ASSERT_SYMBOL_PRESENT(fCopyTexSubImage3D);
         mSymbols.fCopyTexSubImage3D(target, level, xoffset, yoffset, zoffset,
                                     x, y, width, height);
         AFTER_GL_CALL;
+        AfterGLReadCall();
     }
 
     void fCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat,

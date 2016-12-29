@@ -423,13 +423,14 @@ WebGLFBAttachPoint::GetParameter(const char* funcName, WebGLContext* webgl, JSCo
         default:
             break;
         }
-
+        nsCString attachmentName;
+        WebGLContext::EnumName(attachment, &attachmentName);
         if (webgl->IsWebGL2()) {
             webgl->ErrorInvalidOperation("%s: No attachment at %s.", funcName,
-                                         webgl->EnumName(attachment));
+                                         attachmentName.BeginReading());
         } else {
             webgl->ErrorInvalidEnum("%s: No attachment at %s.", funcName,
-                                    webgl->EnumName(attachment));
+                                    attachmentName.BeginReading());
         }
         return JS::NullValue();
     }
@@ -868,6 +869,44 @@ WebGLFramebuffer::ValidateAndInitAttachments(const char* funcName)
                                                " complete.",
                                                funcName);
     return false;
+}
+
+bool
+WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
+                                          uint32_t drawBuffer, GLenum funcType) const
+{
+    if (buffer != LOCAL_GL_COLOR)
+        return true;
+
+    const auto& attach = mColorAttachments[drawBuffer];
+    if (!count(mResolvedCompleteData->colorDrawBuffers.begin(),
+               mResolvedCompleteData->colorDrawBuffers.end(),
+               &attach))
+    {
+        return true; // DRAW_BUFFERi set to NONE.
+    }
+
+    GLenum attachType;
+    switch (attach.Format()->format->componentType) {
+    case webgl::ComponentType::Int:
+        attachType = LOCAL_GL_INT;
+        break;
+    case webgl::ComponentType::UInt:
+        attachType = LOCAL_GL_UNSIGNED_INT;
+        break;
+    default:
+        attachType = LOCAL_GL_FLOAT;
+        break;
+    }
+
+    if (attachType != funcType) {
+        mContext->ErrorInvalidOperation("%s: This attachment is of type 0x%04x, but"
+                                        " this function is of type 0x%04x.",
+                                        funcName, attachType, funcType);
+        return false;
+    }
+
+    return true;
 }
 
 bool
@@ -1824,6 +1863,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     ////
 
     gl->MakeCurrent();
+    webgl->OnBeforeReadCall();
     WebGLContext::ScopedDrawCallWrapper wrapper(*webgl);
     gl->fBlitFramebuffer(srcX0, srcY0, srcX1, srcY1,
                          dstX0, dstY0, dstX1, dstY1,

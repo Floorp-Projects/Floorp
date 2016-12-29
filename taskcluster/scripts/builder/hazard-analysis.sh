@@ -10,8 +10,6 @@ ANALYSIS_SRCDIR=$JS_SRCDIR/devtools/rootAnalysis
 
 export CC="$TOOLTOOL_DIR/gcc/bin/gcc"
 export CXX="$TOOLTOOL_DIR/gcc/bin/g++"
-export RUSTC="$TOOLTOOL_DIR/rustc/bin/rustc"
-export CARGO="$TOOLTOOL_DIR/rustc/bin/cargo"
 
 PYTHON=python2.7
 if ! which $PYTHON; then
