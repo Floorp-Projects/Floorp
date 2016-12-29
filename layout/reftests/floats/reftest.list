@@ -21,9 +21,6 @@ fails == 345369-2.html 345369-2-ref.html
 == 775350-1.html 775350-1-ref.html
 == 1114329.html 1114329-ref.html
 == 1236745-1.html 1236745-1-ref.html
-== 1260031-1.html?display:table 1260031-1-ref.html
-== 1260031-1.html?display:table-cell 1260031-1-ref.html
-== 1260031-1.html?overflow:hidden 1260031-1-ref.html
 == 1291110-1.html 1291110-1-ref.html
 == 1291110-2.html 1291110-2-ref.html
 == float-in-rtl-1a.html float-in-rtl-1-ref.html

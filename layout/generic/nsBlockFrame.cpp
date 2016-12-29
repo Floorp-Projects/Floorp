@@ -837,9 +837,7 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
       AutoNoisyIndenter lineindent(gNoisyIntrinsic);
 #endif
       if (line->IsBlock()) {
-        if (!data.mLineIsEmpty || BlockCanIntersectFloats(line->mFirstChild)) {
-          data.ForceBreak();
-        }
+        data.ForceBreak();
         data.mCurrentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                         line->mFirstChild, nsLayoutUtils::PREF_ISIZE);
         data.ForceBreak();
@@ -850,13 +848,8 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
           // percentage basis of 0 unconditionally would give strange
           // behavior for calc(10%-3px).
           const nsStyleCoord &indent = StyleText()->mTextIndent;
-          if (indent.ConvertsToLength()) {
-            nscoord length = indent.ToLength();
-            if (length != 0) {
-              data.mCurrentLine += length;
-              data.mLineIsEmpty = false;
-            }
-          }
+          if (indent.ConvertsToLength())
+            data.mCurrentLine += nsRuleNode::ComputeCoordPercentCalc(indent, 0);
         }
         // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
