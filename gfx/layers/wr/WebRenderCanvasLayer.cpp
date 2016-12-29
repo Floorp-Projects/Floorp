@@ -15,6 +15,7 @@
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "PersistentBufferProvider.h"
 #include "SharedSurface.h"
+#include "SharedSurfaceGL.h"
 
 namespace mozilla {
 namespace layers {
@@ -22,86 +23,43 @@ namespace layers {
 WebRenderCanvasLayer::~WebRenderCanvasLayer()
 {
   MOZ_COUNT_DTOR(WebRenderCanvasLayer);
+
+  if (mExternalImageId) {
+    WRBridge()->DeallocExternalImageId(mExternalImageId);
+  }
+}
+
+void
+WebRenderCanvasLayer::Initialize(const Data& aData)
+{
+  ShareableCanvasLayer::Initialize(aData);
+
+  // XXX: Use basic surface factory until we support shared surface.
+  if (!mGLContext || mGLFrontbuffer)
+    return;
+
+  gl::GLScreenBuffer* screen = mGLContext->Screen();
+  auto factory = MakeUnique<gl::SurfaceFactory_Basic>(mGLContext, screen->mCaps, mFlags);
+  screen->Morph(Move(factory));
 }
 
 void
 WebRenderCanvasLayer::RenderLayer()
 {
-  FirePreTransactionCallback();
-  RefPtr<gfx::SourceSurface> surface;
-  // Get the canvas buffer
-  AutoReturnSnapshot autoReturn;
-  if (mAsyncRenderer) {
-    MOZ_ASSERT(!mBufferProvider);
-    MOZ_ASSERT(!mGLContext);
-    surface = mAsyncRenderer->GetSurface();
-  } else if (mGLContext) {
-    gl::SharedSurface* frontbuffer = nullptr;
-    if (mGLFrontbuffer) {
-      frontbuffer = mGLFrontbuffer.get();
-    } else {
-      gl::GLScreenBuffer* screen = mGLContext->Screen();
-      const auto& front = screen->Front();
-      if (front) {
-        frontbuffer = front->Surf();
-      }
-    }
+  UpdateCompositableClient();
 
-    if (!frontbuffer) {
-      NS_WARNING("Null frame received.");
-      return;
-    }
-
-    gfx::IntSize readSize(frontbuffer->mSize);
-    gfx::SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
-                                ? gfx::SurfaceFormat::B8G8R8X8
-                                : gfx::SurfaceFormat::B8G8R8A8;
-    bool needsPremult = frontbuffer->mHasAlpha && !mIsAlphaPremultiplied;
-
-    RefPtr<gfx::DataSourceSurface> resultSurf = GetTempSurface(readSize, format);
-    // There will already be a warning from inside of GetTempSurface, but
-    // it doesn't hurt to complain:
-    if (NS_WARN_IF(!resultSurf)) {
-      return;
-    }
-
-    // Readback handles Flush/MarkDirty.
-    mGLContext->Readback(frontbuffer, resultSurf);
-    if (needsPremult) {
-      gfxUtils::PremultiplyDataSurface(resultSurf, resultSurf);
-    }
-    surface = resultSurf;
-  } else if (mBufferProvider) {
-    surface = mBufferProvider->BorrowSnapshot();
-    autoReturn.mSnapshot = &surface;
-    autoReturn.mBufferProvider = mBufferProvider;
-  }
-  FireDidTransactionCallback();
-
-  if (!surface) {
-    return;
+  if (!mExternalImageId) {
+    mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mCanvasClient);
   }
 
-  WRScrollFrameStackingContextGenerator scrollFrames(this);
-
-  RefPtr<gfx::DataSourceSurface> dataSurface = surface->GetDataSurface();
-  gfx::DataSourceSurface::ScopedMap map(dataSurface, gfx::DataSourceSurface::MapType::READ);
-  //XXX
-  MOZ_RELEASE_ASSERT(surface->GetFormat() == gfx::SurfaceFormat::B8G8R8X8 ||
-                     surface->GetFormat() == gfx::SurfaceFormat::B8G8R8A8, "bad format");
-
-  gfx::IntSize size = surface->GetSize();
-
-  WRImageKey key;
-  gfx::ByteBuffer buf(size.height * map.GetStride(), map.GetData());
-  WRBridge()->SendAddImage(size.width, size.height, map.GetStride(), RGBA8, buf, &key);
+  MOZ_ASSERT(mExternalImageId);
 
   gfx::Matrix4x4 transform;// = GetTransform();
   const bool needsYFlip = (mOriginPos == gl::OriginPos::BottomLeft);
   if (needsYFlip) {
-    transform.PreTranslate(0, size.height, 0).PreScale(1, -1, 1);
+    transform.PreTranslate(0, mBounds.height, 0).PreScale(1, -1, 1);
   }
-  gfx::Rect rect(0, 0, size.width, size.height);
+  gfx::Rect rect(0, 0, mBounds.width, mBounds.height);
   rect = RelativeToTransformedVisible(GetTransform().TransformBounds(rect));
 
   gfx::Rect clip;
@@ -115,11 +73,16 @@ WebRenderCanvasLayer::RenderLayer()
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   WRBridge()->AddWebRenderCommand(
       OpPushDLBuilder(toWrRect(relBounds), toWrRect(overflow), transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushImage(toWrRect(rect), toWrRect(clip), Nothing(), key));
-  Manager()->AddImageKeyForDiscard(key);
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(toWrRect(rect), toWrRect(clip), Nothing(), mExternalImageId));
 
   if (gfxPrefs::LayersDump()) printf_stderr("CanvasLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
   WRBridge()->AddWebRenderCommand(OpPopDLBuilder());
+}
+
+void
+WebRenderCanvasLayer::AttachCompositable()
+{
+  mCanvasClient->Connect();
 }
 
 } // namespace layers
