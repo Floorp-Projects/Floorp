@@ -225,8 +225,13 @@ public class HomePager extends ViewPager implements HomeScreen {
         // list of panels in place.
         mTabStrip.setVisibility(View.INVISIBLE);
 
-        // Load list of panels from configuration
-        lm.initLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
+        // If HomeConfigLoader already exist, force load to select the current item
+        if (lm.getLoader(LOADER_ID_CONFIG) != null) {
+            lm.getLoader(LOADER_ID_CONFIG).forceLoad();
+        } else {
+            // Load list of panels from configuration
+            lm.initLoader(LOADER_ID_CONFIG, null, mConfigLoaderCallbacks);
+        }
 
         if (shouldAnimate) {
             animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
