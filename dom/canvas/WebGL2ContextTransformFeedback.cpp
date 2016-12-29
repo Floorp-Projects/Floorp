@@ -81,10 +81,18 @@ WebGL2Context::BindTransformFeedback(GLenum target, WebGLTransformFeedback* tf)
 
     ////
 
+    if (mBoundTransformFeedback) {
+        mBoundTransformFeedback->AddBufferBindCounts(-1);
+    }
+
     mBoundTransformFeedback = (tf ? tf : mDefaultTransformFeedback);
 
     MakeContextCurrent();
     gl->fBindTransformFeedback(target, mBoundTransformFeedback->mGLName);
+
+    if (mBoundTransformFeedback) {
+        mBoundTransformFeedback->AddBufferBindCounts(+1);
+    }
 }
 
 void

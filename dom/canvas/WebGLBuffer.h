@@ -26,7 +26,6 @@ class WebGLBuffer final
     friend class WebGLContext;
     friend class WebGL2Context;
     friend class WebGLTexture;
-    friend class WebGLTransformFeedback;
 
 public:
     enum class Kind {
@@ -66,6 +65,35 @@ public:
     bool ValidateCanBindToTarget(const char* funcName, GLenum target);
     void BufferData(GLenum target, size_t size, const void* data, GLenum usage);
 
+    ////
+
+    static void AddBindCount(GLenum target, WebGLBuffer* buffer, int8_t addVal) {
+        if (!buffer)
+            return;
+
+        if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER) {
+            MOZ_ASSERT_IF(addVal < 0, buffer->mTFBindCount >= size_t(-addVal));
+            buffer->mTFBindCount += addVal;
+        } else {
+            MOZ_ASSERT_IF(addVal < 0, buffer->mNonTFBindCount >= size_t(-addVal));
+            buffer->mNonTFBindCount += addVal;
+        }
+    }
+
+    static void SetSlot(GLenum target, WebGLBuffer* newBuffer,
+                        WebGLRefPtr<WebGLBuffer>* const out_slot)
+    {
+        WebGLBuffer* const oldBuffer = *out_slot;
+        AddBindCount(target, oldBuffer, -1);
+        AddBindCount(target, newBuffer, +1);
+        *out_slot = newBuffer;
+    }
+
+    bool IsBoundForTF() const { return bool(mTFBindCount); }
+    bool IsBoundForNonTF() const { return bool(mNonTFBindCount); }
+
+    ////
+
     const GLenum mGLName;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLBuffer)
@@ -78,6 +106,8 @@ protected:
     GLenum mUsage;
     size_t mByteLength;
     UniquePtr<WebGLElementArrayCache> mCache;
+    size_t mTFBindCount;
+    size_t mNonTFBindCount;
 };
 
 } // namespace mozilla

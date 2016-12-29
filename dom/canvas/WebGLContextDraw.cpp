@@ -356,6 +356,7 @@ public:
         // Check UBO sizes.
 
         const auto& linkInfo = mWebGL->mActiveProgramLinkInfo;
+
         for (const auto& cur : linkInfo->uniformBlocks) {
             const auto& dataSize = cur->mDataSize;
             const auto& binding = cur->mBinding;
@@ -374,18 +375,10 @@ public:
                 *out_error = true;
                 return;
             }
-        }
 
-        ////
-
-        const auto& tfo = mWebGL->mBoundTransformFeedback;
-        if (tfo) {
-            const auto& buffersForTF = tfo->BuffersForTF();
-            const auto& buffersForUB = mWebGL->BuffersForUB();
-            if (DoSetsIntersect(buffersForTF, buffersForUB)) {
-                mWebGL->ErrorInvalidOperation("%s: At least one WebGLBuffer is bound for"
-                                              " both transform feedback and as a uniform"
-                                              " buffer.",
+            if (binding->mBufferBinding->IsBoundForTF()) {
+                mWebGL->ErrorInvalidOperation("%s: Buffer for uniform block is bound or"
+                                              " in use for transform feedback.",
                                               funcName);
                 *out_error = true;
                 return;
@@ -394,7 +387,38 @@ public:
 
         ////
 
-        for (const auto& progAttrib : mWebGL->mActiveProgramLinkInfo->attribs) {
+        const auto& tfo = mWebGL->mBoundTransformFeedback;
+        if (tfo && tfo->IsActiveAndNotPaused()) {
+            uint32_t numUsed;
+            switch (linkInfo->transformFeedbackBufferMode) {
+            case LOCAL_GL_INTERLEAVED_ATTRIBS:
+                numUsed = 1;
+                break;
+
+            case LOCAL_GL_SEPARATE_ATTRIBS:
+                numUsed = linkInfo->transformFeedbackVaryings.size();
+                break;
+
+            default:
+                MOZ_CRASH();
+            }
+
+            for (uint32_t i = 0; i < numUsed; ++i) {
+                const auto& buffer = tfo->mIndexedBindings[i].mBufferBinding;
+                if (buffer->IsBoundForNonTF()) {
+                    mWebGL->ErrorInvalidOperation("%s: Transform feedback varying %u's"
+                                                  " buffer is bound for"
+                                                  " non-transform-feedback.",
+                                                  funcName, i);
+                    *out_error = true;
+                    return;
+                }
+            }
+        }
+
+        ////
+
+        for (const auto& progAttrib : linkInfo->attribs) {
             const auto& loc = progAttrib.mLoc;
             if (loc == -1)
                 continue;
@@ -404,6 +428,14 @@ public:
             GLenum attribDataBaseType;
             if (attribData.mEnabled) {
                 attribDataBaseType = attribData.BaseType();
+
+                if (attribData.mBuf->IsBoundForTF()) {
+                    mWebGL->ErrorInvalidOperation("%s: Vertex attrib %u's buffer is bound"
+                                                  " or in use for transform feedback.",
+                                                  funcName, loc);
+                    *out_error = true;
+                    return;
+                }
             } else {
                 attribDataBaseType = mWebGL->mGenericVertexAttribTypes[loc];
             }
