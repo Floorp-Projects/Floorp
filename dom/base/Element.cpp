@@ -448,6 +448,7 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
   nsCOMPtr<nsIPresShell> shell = aDocument->GetShell();
   if (!shell || GetPrimaryFrame() || !isXULorPluginElement) {
     *aResult = nullptr;
+
     return true;
   }
 
@@ -456,7 +457,8 @@ Element::GetBindingURL(nsIDocument *aDocument, css::URLValue **aResult)
     nsComputedDOMStyle::GetStyleContextForElementNoFlush(this, nullptr, shell);
   NS_ENSURE_TRUE(sc, false);
 
-  NS_IF_ADDREF(*aResult = sc->StyleDisplay()->mBinding);
+  *aResult = sc->StyleDisplay()->mBinding;
+
   return true;
 }
 
@@ -533,8 +535,8 @@ Element::WrapObject(JSContext *aCx, JS::Handle<JSObject*> aGivenProto)
 
   // Make sure the style context goes away _before_ we load the binding
   // since that can destroy the relevant presshell.
-  RefPtr<css::URLValue> bindingURL;
-  bool ok = GetBindingURL(doc, getter_AddRefs(bindingURL));
+  mozilla::css::URLValue *bindingURL;
+  bool ok = GetBindingURL(doc, &bindingURL);
   if (!ok) {
     dom::Throw(aCx, NS_ERROR_FAILURE);
     return nullptr;
