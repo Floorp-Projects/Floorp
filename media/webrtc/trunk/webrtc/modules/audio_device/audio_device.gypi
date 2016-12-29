@@ -138,13 +138,9 @@
               },
             }],
             ['OS=="linux"', {
-              'sources': [
-                'linux/latebindingsymboltable_linux.cc',
-                'linux/latebindingsymboltable_linux.h',
-              ],
               'link_settings': {
                 'libraries': [
-                  '-ldl','-lX11',
+                  '-ldl',
                 ],
               },
             }],
@@ -168,6 +164,11 @@
               'defines': [
                 'LINUX_ALSA',
               ],
+              'link_settings': {
+                'libraries': [
+                  '-lX11',
+                ],
+              },
               'sources': [
                 'linux/alsasymboltable_linux.cc',
                 'linux/alsasymboltable_linux.h',
@@ -175,6 +176,8 @@
                 'linux/audio_device_alsa_linux.h',
                 'linux/audio_mixer_manager_alsa_linux.cc',
                 'linux/audio_mixer_manager_alsa_linux.h',
+                'linux/latebindingsymboltable_linux.cc',
+                'linux/latebindingsymboltable_linux.h',
               ],
             }],
             ['include_pulse_audio==1', {
@@ -184,11 +187,18 @@
               'defines': [
                 'LINUX_PULSE',
               ],
+              'link_settings': {
+                'libraries': [
+                  '-lX11',
+                ],
+              },
               'sources': [
                 'linux/audio_device_pulse_linux.cc',
                 'linux/audio_device_pulse_linux.h',
                 'linux/audio_mixer_manager_pulse_linux.cc',
                 'linux/audio_mixer_manager_pulse_linux.h',
+                'linux/latebindingsymboltable_linux.cc',
+                'linux/latebindingsymboltable_linux.h',
                 'linux/pulseaudiosymboltable_linux.cc',
                 'linux/pulseaudiosymboltable_linux.h',
               ],

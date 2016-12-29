@@ -139,7 +139,7 @@ WebGL2Context::GetSamplerParameter(JSContext*, const WebGLSampler& sampler, GLen
         return;
 
     default:
-        ErrorInvalidEnum("%s: invalid pname: %s", funcName, EnumName(pname));
+        ErrorInvalidEnumArg(funcName, "pname", pname);
         return;
     }
 }

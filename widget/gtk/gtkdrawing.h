@@ -145,11 +145,8 @@ typedef enum {
   MOZ_GTK_ENTRY,
   /* Paints a GtkExpander. */
   MOZ_GTK_EXPANDER,
-  /* Paints the text window or gets the style context corresponding to the
-     root node of a GtkTextView. */
+  /* Paints a GtkTextView. */
   MOZ_GTK_TEXT_VIEW,
-  /* The "text" window or node of a GtkTextView */
-  MOZ_GTK_TEXT_VIEW_TEXT,
   /* Paints a GtkOptionMenu. */
   MOZ_GTK_DROPDOWN,
   /* Paints a dropdown arrow (a GtkButton containing a down GtkArrow). */
@@ -171,7 +168,7 @@ typedef enum {
   MOZ_GTK_FRAME,
   /* Paints the border of a GtkFrame */
   MOZ_GTK_FRAME_BORDER,
-  /* Paints a resize grip for a GtkTextView */
+  /* Paints a resize grip for a GtkWindow */
   MOZ_GTK_RESIZER,
   /* Paints a GtkProgressBar. */
   MOZ_GTK_PROGRESSBAR,

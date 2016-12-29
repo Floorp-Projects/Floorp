@@ -312,6 +312,18 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
     Add(ARMRegister(dest.reg, 64), ARMRegister(dest.reg, 64), Operand(imm.value));
 }
 
+CodeOffset
+MacroAssembler::add32ToPtrWithPatch(Register src, Register dest)
+{
+    MOZ_CRASH("NYI - add32ToPtrWithPatch");
+}
+
+void
+MacroAssembler::patchAdd32ToPtr(CodeOffset offset, Imm32 imm)
+{
+    MOZ_CRASH("NYI - patchAdd32ToPtr");
+}
+
 void
 MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
 {

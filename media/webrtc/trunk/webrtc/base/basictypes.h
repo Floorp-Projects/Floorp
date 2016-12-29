@@ -11,6 +11,7 @@
 #ifndef WEBRTC_BASE_BASICTYPES_H_
 #define WEBRTC_BASE_BASICTYPES_H_
 
+#include <sys/types.h> // for pid_t
 #include <stddef.h>  // for NULL, size_t
 #include <stdint.h>  // for uintptr_t and (u)int_t types.
 

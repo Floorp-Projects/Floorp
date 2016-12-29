@@ -325,9 +325,11 @@ WebGL2Context::ReadBuffer(GLenum mode)
     if (mode != LOCAL_GL_NONE &&
         mode != LOCAL_GL_BACK)
     {
+        nsCString enumName;
+        EnumName(mode, &enumName);
         ErrorInvalidOperation("%s: If READ_FRAMEBUFFER is null, `mode` must be BACK or"
-                              " NONE. Was %s",
-                              funcName, EnumName(mode));
+                              " NONE. Was %s.",
+                              funcName, enumName.BeginReading());
         return;
     }
 
