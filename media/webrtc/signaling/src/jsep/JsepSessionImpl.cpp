@@ -4,6 +4,7 @@
 
 #include "logging.h"
 
+#include "webrtc/config.h"
 #include "signaling/src/jsep/JsepSessionImpl.h"
 #include <string>
 #include <set>
@@ -116,15 +117,35 @@ JsepSessionImpl::AddTrack(const RefPtr<JsepTrack>& track)
 {
   mLastError.clear();
   MOZ_ASSERT(track->GetDirection() == sdp::kSend);
-
+  MOZ_MTLOG(ML_DEBUG, "Adding track.");
   if (track->GetMediaType() != SdpMediaSection::kApplication) {
     track->SetCNAME(mCNAME);
-
-    if (track->GetSsrcs().empty()) {
-      uint32_t ssrc;
+    // Establish minimum number of required SSRCs
+    // Note that AddTrack is only for send direction
+    size_t minimumSsrcCount = 0;
+    std::vector<JsepTrack::JsConstraints> constraints;
+    track->GetJsConstraints(&constraints);
+    for (auto constraint : constraints) {
+      if (constraint.rid != "") {
+        minimumSsrcCount++;
+      }
+    }
+    // We need at least 1 SSRC
+    minimumSsrcCount = std::max<size_t>(1, minimumSsrcCount);
+    size_t currSsrcCount = track->GetSsrcs().size();
+    if (currSsrcCount < minimumSsrcCount ) {
+      MOZ_MTLOG(ML_DEBUG,
+                "Adding " << (minimumSsrcCount - currSsrcCount) << " SSRCs.");
+    }
+    while (track->GetSsrcs().size() < minimumSsrcCount) {
+      uint32_t ssrc=0;
       nsresult rv = CreateSsrc(&ssrc);
       NS_ENSURE_SUCCESS(rv, rv);
-      track->AddSsrc(ssrc);
+      // Don't add duplicate ssrcs
+      std::vector<uint32_t> ssrcs = track->GetSsrcs();
+      if (std::find(ssrcs.begin(), ssrcs.end(), ssrc) == ssrcs.end()) {
+        track->AddSsrc(ssrc);
+      }
     }
   }
 
@@ -287,19 +308,62 @@ JsepSessionImpl::SetParameters(const std::string& streamId,
   // Add RtpStreamId Extmap
   // SdpDirectionAttribute::Direction is a bitmask
   SdpDirectionAttribute::Direction addVideoExt = SdpDirectionAttribute::kInactive;
+  SdpDirectionAttribute::Direction addAudioExt = SdpDirectionAttribute::kInactive;
   for (auto constraintEntry: constraints) {
     if (constraintEntry.rid != "") {
-      if (it->mTrack->GetMediaType() == SdpMediaSection::kVideo) {
-        addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
-                                                                    | it->mTrack->GetDirection());
+      switch (it->mTrack->GetMediaType()) {
+        case SdpMediaSection::kVideo: {
+           addVideoExt = static_cast<SdpDirectionAttribute::Direction>(addVideoExt
+                                                                       | it->mTrack->GetDirection());
+          break;
+        }
+        case SdpMediaSection::kAudio: {
+          addAudioExt = static_cast<SdpDirectionAttribute::Direction>(addAudioExt
+                                                                      | it->mTrack->GetDirection());
+          break;
+        }
       }
     }
   }
   if (addVideoExt != SdpDirectionAttribute::kInactive) {
     AddVideoRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addVideoExt);
   }
+  if (addAudioExt != SdpDirectionAttribute::kInactive) {
+    AddAudioRtpExtension("urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id", addAudioExt);
+  }
 
   it->mTrack->SetJsConstraints(constraints);
+
+  auto track = it->mTrack;
+  if (track->GetDirection() == sdp::kSend) {
+    // Establish minimum number of required SSRCs
+    // Note that AddTrack is only for send direction
+    size_t minimumSsrcCount = 0;
+    std::vector<JsepTrack::JsConstraints> constraints;
+    track->GetJsConstraints(&constraints);
+    for (auto constraint : constraints) {
+      if (constraint.rid != "") {
+        minimumSsrcCount++;
+      }
+    }
+    // We need at least 1 SSRC
+    minimumSsrcCount = std::max<size_t>(1, minimumSsrcCount);
+    size_t currSsrcCount = track->GetSsrcs().size();
+    if (currSsrcCount < minimumSsrcCount ) {
+      MOZ_MTLOG(ML_DEBUG,
+                "Adding " << (minimumSsrcCount - currSsrcCount) << " SSRCs.");
+    }
+    while (track->GetSsrcs().size() < minimumSsrcCount) {
+      uint32_t ssrc=0;
+      nsresult rv = CreateSsrc(&ssrc);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Don't add duplicate ssrcs
+      std::vector<uint32_t> ssrcs = track->GetSsrcs();
+      if (std::find(ssrcs.begin(), ssrcs.end(), ssrc) == ssrcs.end()) {
+        track->AddSsrc(ssrc);
+      }
+    }
+  }
   return NS_OK;
 }
 
@@ -2217,6 +2281,7 @@ JsepSessionImpl::SetupDefaultCodecs()
       90000     // clock rate (match other video codecs)
       );
   mSupportedCodecs.values.push_back(ulpfec);
+
 
   mSupportedCodecs.values.push_back(new JsepApplicationCodecDescription(
       "5000",

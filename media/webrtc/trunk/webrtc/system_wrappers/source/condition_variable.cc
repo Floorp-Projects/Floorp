@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
+#include "webrtc/system_wrappers/include/condition_variable_wrapper.h"
 
 #if defined(_WIN32)
 #include <windows.h>
 #include "webrtc/system_wrappers/source/condition_variable_event_win.h"
 #include "webrtc/system_wrappers/source/condition_variable_native_win.h"
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC) || defined(WEBRTC_BSD)
 #include <pthread.h>
 #include "webrtc/system_wrappers/source/condition_variable_posix.h"
 #endif
@@ -31,7 +31,7 @@ ConditionVariableWrapper* ConditionVariableWrapper::CreateConditionVariable() {
     ret_val = new ConditionVariableEventWin();
   }
   return ret_val;
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC) || defined(WEBRTC_BSD)
   return ConditionVariablePosix::Create();
 #else
   return NULL;

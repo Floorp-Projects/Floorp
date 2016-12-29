@@ -21,12 +21,6 @@ const char CN_OTHER[] = "main";
 
 const char GROUP_TYPE_BUNDLE[] = "BUNDLE";
 
-const char NS_JINGLE_ICE_UDP[] = "urn:xmpp:jingle:transports:ice-udp:1";
-const char NS_GINGLE_P2P[] = "http://www.google.com/transport/p2p";
-const char NS_GINGLE_RAW[] = "http://www.google.com/transport/raw-udp";
-
-const char ICE_OPTION_GICE[] = "google-ice";
-
 // Minimum ufrag length is 4 characters as per RFC5245. We chose 16 because
 // some internal systems expect username to be 16 bytes.
 const int ICE_UFRAG_LENGTH = 16;
@@ -37,7 +31,6 @@ const size_t ICE_UFRAG_MIN_LENGTH = 4;
 const size_t ICE_PWD_MIN_LENGTH = 22;
 const size_t ICE_UFRAG_MAX_LENGTH = 255;
 const size_t ICE_PWD_MAX_LENGTH = 256;
-const size_t GICE_UFRAG_MAX_LENGTH = 16;
 
 // TODO: This is media-specific, so might belong
 // somewhere like media/base/constants.h
@@ -47,14 +40,6 @@ const int ICE_CANDIDATE_COMPONENT_DEFAULT = 1;
 
 const char NS_JINGLE_RTP[] = "urn:xmpp:jingle:apps:rtp:1";
 const char NS_JINGLE_DRAFT_SCTP[] = "google:jingle:sctp";
-
-const char GICE_CHANNEL_NAME_RTP[] = "rtp";
-const char GICE_CHANNEL_NAME_RTCP[] = "rtcp";
-const char GICE_CHANNEL_NAME_VIDEO_RTP[] = "video_rtp";
-const char GICE_CHANNEL_NAME_VIDEO_RTCP[] = "video_rtcp";
-const char GICE_CHANNEL_NAME_DATA_RTP[] = "data_rtp";
-const char GICE_CHANNEL_NAME_DATA_RTCP[] = "data_rtcp";
-
 
 // From RFC 4145, SDP setup attribute values.
 const char CONNECTIONROLE_ACTIVE_STR[] = "active";

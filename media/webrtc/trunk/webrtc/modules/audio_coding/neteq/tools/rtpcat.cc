@@ -28,18 +28,18 @@ int main(int argc, char* argv[]) {
 
   scoped_ptr<RtpFileWriter> output(
       RtpFileWriter::Create(RtpFileWriter::kRtpDump, argv[argc - 1]));
-  CHECK(output.get() != NULL) << "Cannot open output file.";
+  RTC_CHECK(output.get() != NULL) << "Cannot open output file.";
   printf("Output RTP file: %s\n", argv[argc - 1]);
 
   for (int i = 1; i < argc - 1; i++) {
     scoped_ptr<RtpFileReader> input(
         RtpFileReader::Create(RtpFileReader::kRtpDump, argv[i]));
-    CHECK(input.get() != NULL) << "Cannot open input file " << argv[i];
+    RTC_CHECK(input.get() != NULL) << "Cannot open input file " << argv[i];
     printf("Input RTP file: %s\n", argv[i]);
 
     webrtc::test::RtpPacket packet;
     while (input->NextPacket(&packet))
-      CHECK(output->WritePacket(&packet));
+      RTC_CHECK(output->WritePacket(&packet));
   }
   return 0;
 }

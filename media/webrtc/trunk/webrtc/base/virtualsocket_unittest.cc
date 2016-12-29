@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #endif
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/logging.h"
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/testclient.h"
@@ -21,21 +22,23 @@
 #include "webrtc/base/thread.h"
 #include "webrtc/base/timeutils.h"
 #include "webrtc/base/virtualsocketserver.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 using namespace rtc;
 
 // Sends at a constant rate but with random packet sizes.
 struct Sender : public MessageHandler {
-  Sender(Thread* th, AsyncSocket* s, uint32 rt)
-      : thread(th), socket(new AsyncUDPSocket(s)),
-        done(false), rate(rt), count(0) {
+  Sender(Thread* th, AsyncSocket* s, uint32_t rt)
+      : thread(th),
+        socket(new AsyncUDPSocket(s)),
+        done(false),
+        rate(rt),
+        count(0) {
     last_send = rtc::Time();
     thread->PostDelayed(NextDelay(), this, 1);
   }
 
-  uint32 NextDelay() {
-    uint32 size = (rand() % 4096) + 1;
+  uint32_t NextDelay() {
+    uint32_t size = (rand() % 4096) + 1;
     return 1000 * size / rate;
   }
 
@@ -45,11 +48,11 @@ struct Sender : public MessageHandler {
     if (done)
       return;
 
-    uint32 cur_time = rtc::Time();
-    uint32 delay = cur_time - last_send;
-    uint32 size = rate * delay / 1000;
-    size = std::min<uint32>(size, 4096);
-    size = std::max<uint32>(size, sizeof(uint32));
+    uint32_t cur_time = rtc::Time();
+    uint32_t delay = cur_time - last_send;
+    uint32_t size = rate * delay / 1000;
+    size = std::min<uint32_t>(size, 4096);
+    size = std::max<uint32_t>(size, sizeof(uint32_t));
 
     count += size;
     memcpy(dummy, &cur_time, sizeof(cur_time));
@@ -63,16 +66,23 @@ struct Sender : public MessageHandler {
   scoped_ptr<AsyncUDPSocket> socket;
   rtc::PacketOptions options;
   bool done;
-  uint32 rate;  // bytes per second
-  uint32 count;
-  uint32 last_send;
+  uint32_t rate;  // bytes per second
+  uint32_t count;
+  uint32_t last_send;
   char dummy[4096];
 };
 
 struct Receiver : public MessageHandler, public sigslot::has_slots<> {
-  Receiver(Thread* th, AsyncSocket* s, uint32 bw)
-      : thread(th), socket(new AsyncUDPSocket(s)), bandwidth(bw), done(false),
-        count(0), sec_count(0), sum(0), sum_sq(0), samples(0) {
+  Receiver(Thread* th, AsyncSocket* s, uint32_t bw)
+      : thread(th),
+        socket(new AsyncUDPSocket(s)),
+        bandwidth(bw),
+        done(false),
+        count(0),
+        sec_count(0),
+        sum(0),
+        sum_sq(0),
+        samples(0) {
     socket->SignalReadPacket.connect(this, &Receiver::OnReadPacket);
     thread->PostDelayed(1000, this, 1);
   }
@@ -90,9 +100,9 @@ struct Receiver : public MessageHandler, public sigslot::has_slots<> {
     count += size;
     sec_count += size;
 
-    uint32 send_time = *reinterpret_cast<const uint32*>(data);
-    uint32 recv_time = rtc::Time();
-    uint32 delay = recv_time - send_time;
+    uint32_t send_time = *reinterpret_cast<const uint32_t*>(data);
+    uint32_t recv_time = rtc::Time();
+    uint32_t delay = recv_time - send_time;
     sum += delay;
     sum_sq += delay * delay;
     samples += 1;
@@ -114,13 +124,13 @@ struct Receiver : public MessageHandler, public sigslot::has_slots<> {
 
   Thread* thread;
   scoped_ptr<AsyncUDPSocket> socket;
-  uint32 bandwidth;
+  uint32_t bandwidth;
   bool done;
   size_t count;
   size_t sec_count;
   double sum;
   double sum_sq;
-  uint32 samples;
+  uint32_t samples;
 };
 
 class VirtualSocketServerTest : public testing::Test {
@@ -143,10 +153,45 @@ class VirtualSocketServerTest : public testing::Test {
     } else if (post_ip.family() == AF_INET6) {
       in6_addr post_ip6 = post_ip.ipv6_address();
       in6_addr pre_ip6 = pre_ip.ipv6_address();
-      uint32* post_as_ints = reinterpret_cast<uint32*>(&post_ip6.s6_addr);
-      uint32* pre_as_ints = reinterpret_cast<uint32*>(&pre_ip6.s6_addr);
+      uint32_t* post_as_ints = reinterpret_cast<uint32_t*>(&post_ip6.s6_addr);
+      uint32_t* pre_as_ints = reinterpret_cast<uint32_t*>(&pre_ip6.s6_addr);
       EXPECT_EQ(post_as_ints[3], pre_as_ints[3]);
     }
+  }
+
+  // Test a client can bind to the any address, and all sent packets will have
+  // the default route as the source address. Also, it can receive packets sent
+  // to the default route.
+  void TestDefaultRoute(const IPAddress& default_route) {
+    ss_->SetDefaultRoute(default_route);
+
+    // Create client1 bound to the any address.
+    AsyncSocket* socket =
+        ss_->CreateAsyncSocket(default_route.family(), SOCK_DGRAM);
+    socket->Bind(EmptySocketAddressWithFamily(default_route.family()));
+    SocketAddress client1_any_addr = socket->GetLocalAddress();
+    EXPECT_TRUE(client1_any_addr.IsAnyIP());
+    TestClient* client1 = new TestClient(new AsyncUDPSocket(socket));
+
+    // Create client2 bound to the default route.
+    AsyncSocket* socket2 =
+        ss_->CreateAsyncSocket(default_route.family(), SOCK_DGRAM);
+    socket2->Bind(SocketAddress(default_route, 0));
+    SocketAddress client2_addr = socket2->GetLocalAddress();
+    EXPECT_FALSE(client2_addr.IsAnyIP());
+    TestClient* client2 = new TestClient(new AsyncUDPSocket(socket2));
+
+    // Client1 sends to client2, client2 should see the default route as
+    // client1's address.
+    SocketAddress client1_addr;
+    EXPECT_EQ(6, client1->SendTo("bizbaz", 6, client2_addr));
+    EXPECT_TRUE(client2->CheckNextPacket("bizbaz", 6, &client1_addr));
+    EXPECT_EQ(client1_addr,
+              SocketAddress(default_route, client1_any_addr.port()));
+
+    // Client2 can send back to client1's default route address.
+    EXPECT_EQ(3, client2->SendTo("foo", 3, client1_addr));
+    EXPECT_TRUE(client1->CheckNextPacket("foo", 3, &client2_addr));
   }
 
   void BasicTest(const SocketAddress& initial_addr) {
@@ -585,8 +630,8 @@ class VirtualSocketServerTest : public testing::Test {
     }
 
     // Next, deliver packets at random intervals
-    const uint32 mean = 50;
-    const uint32 stddev = 50;
+    const uint32_t mean = 50;
+    const uint32_t stddev = 50;
 
     ss_->set_delay_mean(mean);
     ss_->set_delay_stddev(stddev);
@@ -619,7 +664,7 @@ class VirtualSocketServerTest : public testing::Test {
     EXPECT_EQ(recv_socket->GetLocalAddress().family(), initial_addr.family());
     ASSERT_EQ(0, send_socket->Connect(recv_socket->GetLocalAddress()));
 
-    uint32 bandwidth = 64 * 1024;
+    uint32_t bandwidth = 64 * 1024;
     ss_->set_bandwidth(bandwidth);
 
     Thread* pthMain = Thread::Current();
@@ -644,8 +689,8 @@ class VirtualSocketServerTest : public testing::Test {
     LOG(LS_VERBOSE) << "seed = " << seed;
     srand(static_cast<unsigned int>(seed));
 
-    const uint32 mean = 2000;
-    const uint32 stddev = 500;
+    const uint32_t mean = 2000;
+    const uint32_t stddev = 500;
 
     ss_->set_delay_mean(mean);
     ss_->set_delay_stddev(stddev);
@@ -789,6 +834,18 @@ TEST_F(VirtualSocketServerTest, basic_v4) {
 TEST_F(VirtualSocketServerTest, basic_v6) {
   SocketAddress ipv6_test_addr(IPAddress(in6addr_any), 5000);
   BasicTest(ipv6_test_addr);
+}
+
+TEST_F(VirtualSocketServerTest, TestDefaultRoute_v4) {
+  IPAddress ipv4_default_addr(0x01020304);
+  TestDefaultRoute(ipv4_default_addr);
+}
+
+TEST_F(VirtualSocketServerTest, TestDefaultRoute_v6) {
+  IPAddress ipv6_default_addr;
+  EXPECT_TRUE(
+      IPFromString("2401:fa00:4:1000:be30:5bff:fee5:c3", &ipv6_default_addr));
+  TestDefaultRoute(ipv6_default_addr);
 }
 
 TEST_F(VirtualSocketServerTest, connect_v4) {
@@ -961,16 +1018,16 @@ TEST_F(VirtualSocketServerTest, CanSendDatagramFromUnboundIPv6ToIPv4Any) {
 }
 
 TEST_F(VirtualSocketServerTest, CreatesStandardDistribution) {
-  const uint32 kTestMean[] = { 10, 100, 333, 1000 };
+  const uint32_t kTestMean[] = {10, 100, 333, 1000};
   const double kTestDev[] = { 0.25, 0.1, 0.01 };
   // TODO: The current code only works for 1000 data points or more.
-  const uint32 kTestSamples[] = { /*10, 100,*/ 1000 };
-  for (size_t midx = 0; midx < ARRAY_SIZE(kTestMean); ++midx) {
-    for (size_t didx = 0; didx < ARRAY_SIZE(kTestDev); ++didx) {
-      for (size_t sidx = 0; sidx < ARRAY_SIZE(kTestSamples); ++sidx) {
+  const uint32_t kTestSamples[] = {/*10, 100,*/ 1000};
+  for (size_t midx = 0; midx < arraysize(kTestMean); ++midx) {
+    for (size_t didx = 0; didx < arraysize(kTestDev); ++didx) {
+      for (size_t sidx = 0; sidx < arraysize(kTestSamples); ++sidx) {
         ASSERT_LT(0u, kTestSamples[sidx]);
-        const uint32 kStdDev =
-            static_cast<uint32>(kTestDev[didx] * kTestMean[midx]);
+        const uint32_t kStdDev =
+            static_cast<uint32_t>(kTestDev[didx] * kTestMean[midx]);
         VirtualSocketServer::Function* f =
             VirtualSocketServer::CreateDistribution(kTestMean[midx],
                                                     kStdDev,
@@ -978,12 +1035,12 @@ TEST_F(VirtualSocketServerTest, CreatesStandardDistribution) {
         ASSERT_TRUE(NULL != f);
         ASSERT_EQ(kTestSamples[sidx], f->size());
         double sum = 0;
-        for (uint32 i = 0; i < f->size(); ++i) {
+        for (uint32_t i = 0; i < f->size(); ++i) {
           sum += (*f)[i].second;
         }
         const double mean = sum / f->size();
         double sum_sq_dev = 0;
-        for (uint32 i = 0; i < f->size(); ++i) {
+        for (uint32_t i = 0; i < f->size(); ++i) {
           double dev = (*f)[i].second - mean;
           sum_sq_dev += dev * dev;
         }

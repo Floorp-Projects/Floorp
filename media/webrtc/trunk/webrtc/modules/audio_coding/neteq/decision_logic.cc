@@ -19,12 +19,12 @@
 #include "webrtc/modules/audio_coding/neteq/expand.h"
 #include "webrtc/modules/audio_coding/neteq/packet_buffer.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 
 DecisionLogic* DecisionLogic::Create(int fs_hz,
-                                     int output_size_samples,
+                                     size_t output_size_samples,
                                      NetEqPlayoutMode playout_mode,
                                      DecoderDatabase* decoder_database,
                                      const PacketBuffer& packet_buffer,
@@ -56,7 +56,7 @@ DecisionLogic* DecisionLogic::Create(int fs_hz,
 }
 
 DecisionLogic::DecisionLogic(int fs_hz,
-                             int output_size_samples,
+                             size_t output_size_samples,
                              NetEqPlayoutMode playout_mode,
                              DecoderDatabase* decoder_database,
                              const PacketBuffer& packet_buffer,
@@ -95,7 +95,7 @@ void DecisionLogic::SoftReset() {
   timescale_hold_off_ = kMinTimescaleInterval;
 }
 
-void DecisionLogic::SetSampleRate(int fs_hz, int output_size_samples) {
+void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
   // TODO(hlundin): Change to an enumerator and skip assert.
   assert(fs_hz == 8000 || fs_hz == 16000 || fs_hz ==  32000 || fs_hz == 48000);
   fs_mult_ = fs_hz / 8000;
@@ -104,7 +104,7 @@ void DecisionLogic::SetSampleRate(int fs_hz, int output_size_samples) {
 
 Operations DecisionLogic::GetDecision(const SyncBuffer& sync_buffer,
                                       const Expand& expand,
-                                      int decoder_frame_length,
+                                      size_t decoder_frame_length,
                                       const RTPHeader* packet_header,
                                       Modes prev_mode,
                                       bool play_dtmf, bool* reset_decoder) {
@@ -123,14 +123,11 @@ Operations DecisionLogic::GetDecision(const SyncBuffer& sync_buffer,
     }
   }
 
-  const int samples_left = static_cast<int>(
-      sync_buffer.FutureLength() - expand.overlap_length());
-  const int cur_size_samples =
+  const size_t samples_left =
+      sync_buffer.FutureLength() - expand.overlap_length();
+  const size_t cur_size_samples =
       samples_left + packet_buffer_.NumSamplesInBuffer(decoder_database_,
                                                        decoder_frame_length);
-  LOG(LS_VERBOSE) << "Buffers: " << packet_buffer_.NumPacketsInBuffer() <<
-      " packets * " << decoder_frame_length << " samples/packet + " <<
-      samples_left << " samples in sync buffer = " << cur_size_samples;
 
   prev_time_scale_ = prev_time_scale_ &&
       (prev_mode == kModeAccelerateSuccess ||
@@ -153,9 +150,10 @@ void DecisionLogic::ExpandDecision(Operations operation) {
   }
 }
 
-void DecisionLogic::FilterBufferLevel(int buffer_size_samples,
+void DecisionLogic::FilterBufferLevel(size_t buffer_size_samples,
                                       Modes prev_mode) {
-  const int elapsed_time_ms = output_size_samples_ / (8 * fs_mult_);
+  const int elapsed_time_ms =
+      static_cast<int>(output_size_samples_ / (8 * fs_mult_));
   delay_manager_->UpdateCounters(elapsed_time_ms);
 
   // Do not update buffer history if currently playing CNG since it will bias
@@ -164,7 +162,7 @@ void DecisionLogic::FilterBufferLevel(int buffer_size_samples,
     buffer_level_filter_->SetTargetBufferLevel(
         delay_manager_->base_target_level());
 
-    int buffer_size_packets = 0;
+    size_t buffer_size_packets = 0;
     if (packet_length_samples_ > 0) {
       // Calculate size in packets.
       buffer_size_packets = buffer_size_samples / packet_length_samples_;

@@ -1,5 +1,7 @@
 load(libdir + "wasm.js");
 
+const LinkError = WebAssembly.LinkError;
+
 // ----------------------------------------------------------------------------
 // exports
 
@@ -104,8 +106,8 @@ var code = '(module (import "a" "b"))';
 assertErrorMessage(() => wasmEvalText(code), TypeError, noImportObj);
 assertErrorMessage(() => wasmEvalText(code, {}), TypeError, notObject);
 assertErrorMessage(() => wasmEvalText(code, {a:1}), TypeError, notObject);
-assertErrorMessage(() => wasmEvalText(code, {a:{}}), TypeError, notFunction);
-assertErrorMessage(() => wasmEvalText(code, {a:{b:1}}), TypeError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:{}}), LinkError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:{b:1}}), LinkError, notFunction);
 wasmEvalText(code, {a:{b:()=>{}}});
 
 var code = '(module (import "" "b"))';
@@ -118,7 +120,7 @@ assertErrorMessage(() => wasmEvalText(code, {a:1}), TypeError, notObject);
 wasmEvalText(code, {a:{"":()=>{}}});
 
 var code = '(module (import "a" "") (import "b" "c") (import "c" ""))';
-assertErrorMessage(() => wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:{}}), TypeError, notFunction);
+assertErrorMessage(() => wasmEvalText(code, {a:()=>{}, b:{c:()=>{}}, c:{}}), LinkError, notFunction);
 wasmEvalText(code, {a:{"":()=>{}}, b:{c:()=>{}}, c:{"":()=>{}}});
 
 wasmEvalText('(module (import "a" "" (result i32)))', {a:{"":()=>{}}});

@@ -13,7 +13,7 @@
 
 #include <string.h>
 
-#include "webrtc/system_wrappers/interface/file_wrapper.h"
+#include "webrtc/system_wrappers/include/file_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {

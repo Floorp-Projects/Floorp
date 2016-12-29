@@ -163,7 +163,7 @@ void FlagList::SplitArgument(const char* arg,
     if (*arg == '=') {
       // make a copy so we can NUL-terminate flag name
       int n = static_cast<int>(arg - *name);
-      CHECK_LT(n, buffer_size);
+      RTC_CHECK_LT(n, buffer_size);
       memcpy(buffer, *name, n * sizeof(char));
       buffer[n] = '\0';
       *name = buffer;
@@ -257,7 +257,8 @@ int FlagList::SetFlagsFromCommandLine(int* argc, const char** argv,
 
 void FlagList::Register(Flag* flag) {
   assert(flag != NULL && strlen(flag->name()) > 0);
-  CHECK(!Lookup(flag->name())) << "flag " << flag->name() << " declared twice";
+  RTC_CHECK(!Lookup(flag->name())) << "flag " << flag->name()
+                                   << " declared twice";
   flag->next_ = list_;
   list_ = flag;
 }

@@ -21,6 +21,8 @@ namespace webrtc {
 // peak-mode is engaged and the DelayManager asks the DelayPeakDetector for
 // the worst peak height.
 
+DelayPeakDetector::~DelayPeakDetector() = default;
+
 DelayPeakDetector::DelayPeakDetector()
   : peak_found_(false),
     peak_detection_threshold_(0),
@@ -38,6 +40,10 @@ void DelayPeakDetector::SetPacketAudioLength(int length_ms) {
   if (length_ms > 0) {
     peak_detection_threshold_ = kPeakHeightMs / length_ms;
   }
+}
+
+bool DelayPeakDetector::peak_found() {
+  return peak_found_;
 }
 
 int DelayPeakDetector::MaxPeakHeight() const {

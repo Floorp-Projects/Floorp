@@ -22,7 +22,7 @@ namespace webrtc {
 class DelayPeakDetector {
  public:
   DelayPeakDetector();
-  virtual ~DelayPeakDetector() {}
+  virtual ~DelayPeakDetector();
   virtual void Reset();
 
   // Notifies the DelayPeakDetector of how much audio data is carried in each
@@ -31,7 +31,7 @@ class DelayPeakDetector {
 
   // Returns true if peak-mode is active. That is, delay peaks were observed
   // recently.
-  virtual bool peak_found() { return peak_found_; }
+  virtual bool peak_found();
 
   // Calculates and returns the maximum delay peak height. Returns -1 if no
   // delay peaks have been observed recently. The unit is number of packets.
@@ -69,7 +69,7 @@ class DelayPeakDetector {
   int peak_detection_threshold_;
   int peak_period_counter_ms_;
 
-  DISALLOW_COPY_AND_ASSIGN(DelayPeakDetector);
+  RTC_DISALLOW_COPY_AND_ASSIGN(DelayPeakDetector);
 };
 
 }  // namespace webrtc

@@ -44,7 +44,7 @@ class RembBweSender : public BweSender {
  private:
   Clock* clock_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(RembBweSender);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RembBweSender);
 };
 
 class RembReceiver : public BweReceiver, public RemoteBitrateObserver {
@@ -70,9 +70,10 @@ class RembReceiver : public BweReceiver, public RemoteBitrateObserver {
   SimulatedClock clock_;
   rtc::scoped_ptr<ReceiveStatistics> recv_stats_;
   int64_t latest_estimate_bps_;
+  int64_t last_feedback_ms_;
   rtc::scoped_ptr<RemoteBitrateEstimator> estimator_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(RembReceiver);
+  RTC_DISALLOW_IMPLICIT_CONSTRUCTORS(RembReceiver);
 };
 
 }  // namespace bwe

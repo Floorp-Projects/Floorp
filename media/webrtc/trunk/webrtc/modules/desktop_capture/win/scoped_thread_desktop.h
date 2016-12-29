@@ -45,7 +45,7 @@ class ScopedThreadDesktop {
   // The desktop handle assigned to the calling thread at creation.
   rtc::scoped_ptr<Desktop> initial_;
 
-  DISALLOW_COPY_AND_ASSIGN(ScopedThreadDesktop);
+  RTC_DISALLOW_COPY_AND_ASSIGN(ScopedThreadDesktop);
 };
 
 }  // namespace webrtc

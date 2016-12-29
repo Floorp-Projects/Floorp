@@ -8,11 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <utility>
+
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/interface/module.h"
+#include "webrtc/modules/include/module.h"
 #include "webrtc/modules/utility/source/process_thread_impl.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
 
 namespace webrtc {
 
@@ -52,13 +54,13 @@ ACTION_P(SetTimestamp, ptr) {
 }
 
 TEST(ProcessThreadImpl, StartStop) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   thread.Start();
   thread.Stop();
 }
 
 TEST(ProcessThreadImpl, MultipleStartStop) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   for (int i = 0; i < 5; ++i) {
     thread.Start();
     thread.Stop();
@@ -67,7 +69,7 @@ TEST(ProcessThreadImpl, MultipleStartStop) {
 
 // Verifies that we get at least call back to Process() on the worker thread.
 TEST(ProcessThreadImpl, ProcessCall) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   thread.Start();
 
   rtc::scoped_ptr<EventWrapper> event(EventWrapper::Create());
@@ -89,7 +91,7 @@ TEST(ProcessThreadImpl, ProcessCall) {
 // Same as ProcessCall except the module is registered before the
 // call to Start().
 TEST(ProcessThreadImpl, ProcessCall2) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   rtc::scoped_ptr<EventWrapper> event(EventWrapper::Create());
 
   MockModule module;
@@ -111,7 +113,7 @@ TEST(ProcessThreadImpl, ProcessCall2) {
 // Tests setting up a module for callbacks and then unregister that module.
 // After unregistration, we should not receive any further callbacks.
 TEST(ProcessThreadImpl, Deregister) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   rtc::scoped_ptr<EventWrapper> event(EventWrapper::Create());
 
   int process_count = 0;
@@ -146,7 +148,7 @@ TEST(ProcessThreadImpl, Deregister) {
 // time.  There's some variance of timing built into it to reduce chance of
 // flakiness on bots.
 void ProcessCallAfterAFewMs(int64_t milliseconds) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   thread.Start();
 
   rtc::scoped_ptr<EventWrapper> event(EventWrapper::Create());
@@ -211,7 +213,7 @@ TEST(ProcessThreadImpl, DISABLED_ProcessCallAfter200ms) {
 // build bots.
 // TODO(tommi): Fix.
 TEST(ProcessThreadImpl, DISABLED_Process50Times) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   thread.Start();
 
   rtc::scoped_ptr<EventWrapper> event(EventWrapper::Create());
@@ -244,15 +246,16 @@ TEST(ProcessThreadImpl, DISABLED_Process50Times) {
 // Tests that we can wake up the worker thread to give us a callback right
 // away when we know the thread is sleeping.
 TEST(ProcessThreadImpl, WakeUp) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   thread.Start();
 
   rtc::scoped_ptr<EventWrapper> started(EventWrapper::Create());
   rtc::scoped_ptr<EventWrapper> called(EventWrapper::Create());
 
   MockModule module;
-  int64_t start_time = 0;
-  int64_t called_time = 0;
+  int64_t start_time;
+  int64_t called_time;
+
   // Ask for a callback after 1000ms.
   // TimeUntilNextProcess will be called twice.
   // The first time we use it to get the thread into a waiting state.
@@ -281,8 +284,6 @@ TEST(ProcessThreadImpl, WakeUp) {
   EXPECT_CALL(module, ProcessThreadAttached(nullptr)).Times(1);
   thread.Stop();
 
-  ASSERT_GT(start_time, 0);
-  ASSERT_GT(called_time, 0);
   EXPECT_GE(called_time, start_time);
   uint32_t diff = called_time - start_time;
   // We should have been called back much quicker than 1sec.
@@ -292,11 +293,11 @@ TEST(ProcessThreadImpl, WakeUp) {
 // Tests that we can post a task that gets run straight away on the worker
 // thread.
 TEST(ProcessThreadImpl, PostTask) {
-  ProcessThreadImpl thread;
+  ProcessThreadImpl thread("ProcessThread");
   rtc::scoped_ptr<EventWrapper> task_ran(EventWrapper::Create());
   rtc::scoped_ptr<RaiseEventTask> task(new RaiseEventTask(task_ran.get()));
   thread.Start();
-  thread.PostTask(task.Pass());
+  thread.PostTask(std::move(task));
   EXPECT_EQ(kEventSignaled, task_ran->Wait(100));
   thread.Stop();
 }

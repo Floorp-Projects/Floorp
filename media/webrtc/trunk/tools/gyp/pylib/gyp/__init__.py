@@ -46,10 +46,13 @@ def FindBuildFiles():
       build_files.append(file)
   return build_files
 
-
+#TODO @@NG Find correct way to pass circular_check to Load
+# Causes a pickle error in gyp.input.CircularException
+# see http://stackoverflow.com/questions/4677012/python-cant-pickle-type-x-attribute-lookup-failed
+# we'll live without the check - jesup
 def Load(build_files, format, default_variables={},
          includes=[], depth='.', params=None, check=False,
-         circular_check=True, duplicate_basename_check=True):
+         circular_check=False, duplicate_basename_check=True):
   """
   Loads one or more specified build files.
   default_variables and includes will be copied before use.

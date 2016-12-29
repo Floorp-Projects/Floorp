@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <utility>
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
@@ -87,7 +87,6 @@ BitrateControllerImpl::BitrateControllerImpl(Clock* clock,
     : clock_(clock),
       observer_(observer),
       last_bitrate_update_ms_(clock_->TimeInMilliseconds()),
-      critsect_(CriticalSectionWrapper::CreateCriticalSection()),
       bandwidth_estimation_(),
       reserved_bitrate_bps_(0),
       last_bitrate_bps_(0),
@@ -107,7 +106,7 @@ RtcpBandwidthObserver* BitrateControllerImpl::CreateRtcpBandwidthObserver() {
 
 void BitrateControllerImpl::SetStartBitrate(int start_bitrate_bps) {
   {
-    CriticalSectionScoped cs(critsect_.get());
+    rtc::CritScope cs(&critsect_);
     bandwidth_estimation_.SetSendBitrate(start_bitrate_bps);
   }
   MaybeTriggerOnNetworkChanged();
@@ -116,7 +115,7 @@ void BitrateControllerImpl::SetStartBitrate(int start_bitrate_bps) {
 void BitrateControllerImpl::SetMinMaxBitrate(int min_bitrate_bps,
                                              int max_bitrate_bps) {
   {
-    CriticalSectionScoped cs(critsect_.get());
+    rtc::CritScope cs(&critsect_);
     bandwidth_estimation_.SetMinMaxBitrate(min_bitrate_bps, max_bitrate_bps);
   }
   MaybeTriggerOnNetworkChanged();
@@ -124,23 +123,29 @@ void BitrateControllerImpl::SetMinMaxBitrate(int min_bitrate_bps,
 
 void BitrateControllerImpl::SetReservedBitrate(uint32_t reserved_bitrate_bps) {
   {
-    CriticalSectionScoped cs(critsect_.get());
+    rtc::CritScope cs(&critsect_);
     reserved_bitrate_bps_ = reserved_bitrate_bps;
   }
   MaybeTriggerOnNetworkChanged();
 }
 
+void BitrateControllerImpl::SetEventLog(RtcEventLog* event_log) {
+  rtc::CritScope cs(&critsect_);
+  bandwidth_estimation_.SetEventLog(event_log);
+}
+
 void BitrateControllerImpl::OnReceivedEstimatedBitrate(uint32_t bitrate) {
   {
-    CriticalSectionScoped cs(critsect_.get());
-    bandwidth_estimation_.UpdateReceiverEstimate(bitrate);
+    rtc::CritScope cs(&critsect_);
+    bandwidth_estimation_.UpdateReceiverEstimate(clock_->TimeInMilliseconds(),
+                                                 bitrate);
   }
   MaybeTriggerOnNetworkChanged();
 }
 
 int64_t BitrateControllerImpl::TimeUntilNextProcess() {
   const int64_t kBitrateControllerUpdateIntervalMs = 25;
-  CriticalSectionScoped cs(critsect_.get());
+  rtc::CritScope cs(&critsect_);
   int64_t time_since_update_ms =
       clock_->TimeInMilliseconds() - last_bitrate_update_ms_;
   return std::max<int64_t>(
@@ -151,7 +156,7 @@ int32_t BitrateControllerImpl::Process() {
   if (TimeUntilNextProcess() > 0)
     return 0;
   {
-    CriticalSectionScoped cs(critsect_.get());
+    rtc::CritScope cs(&critsect_);
     bandwidth_estimation_.UpdateEstimate(clock_->TimeInMilliseconds());
   }
   MaybeTriggerOnNetworkChanged();
@@ -165,7 +170,7 @@ void BitrateControllerImpl::OnReceivedRtcpReceiverReport(
     int number_of_packets,
     int64_t now_ms) {
   {
-    CriticalSectionScoped cs(critsect_.get());
+    rtc::CritScope cs(&critsect_);
     bandwidth_estimation_.UpdateReceiverBlock(fraction_loss, rtt,
                                               number_of_packets, now_ms);
   }
@@ -183,7 +188,7 @@ void BitrateControllerImpl::MaybeTriggerOnNetworkChanged() {
 bool BitrateControllerImpl::GetNetworkParameters(uint32_t* bitrate,
                                                  uint8_t* fraction_loss,
                                                  int64_t* rtt) {
-  CriticalSectionScoped cs(critsect_.get());
+  rtc::CritScope cs(&critsect_);
   int current_bitrate;
   bandwidth_estimation_.CurrentEstimate(&current_bitrate, fraction_loss, rtt);
   *bitrate = current_bitrate;
@@ -205,7 +210,7 @@ bool BitrateControllerImpl::GetNetworkParameters(uint32_t* bitrate,
 }
 
 bool BitrateControllerImpl::AvailableBandwidth(uint32_t* bandwidth) const {
-  CriticalSectionScoped cs(critsect_.get());
+  rtc::CritScope cs(&critsect_);
   int bitrate;
   uint8_t fraction_loss;
   int64_t rtt;
@@ -218,5 +223,4 @@ bool BitrateControllerImpl::AvailableBandwidth(uint32_t* bandwidth) const {
   }
   return false;
 }
-
 }  // namespace webrtc

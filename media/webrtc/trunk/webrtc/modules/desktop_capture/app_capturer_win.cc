@@ -19,7 +19,7 @@
 #include <cassert>
 
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 #include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
@@ -118,7 +118,7 @@ private:
   // WebRTC Window mode
   WindowsCapturerProxy window_capturer_proxy_;
 
-  DISALLOW_COPY_AND_ASSIGN(AppCapturerWin);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AppCapturerWin);
 };
 
 AppCapturerWin::AppCapturerWin(const DesktopCaptureOptions& options)

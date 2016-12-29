@@ -42,7 +42,7 @@ class OutputAudioFile : public AudioSink {
  private:
   FILE* out_file_;
 
-  DISALLOW_COPY_AND_ASSIGN(OutputAudioFile);
+  RTC_DISALLOW_COPY_AND_ASSIGN(OutputAudioFile);
 };
 
 }  // namespace test

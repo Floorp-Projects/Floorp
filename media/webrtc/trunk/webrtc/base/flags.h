@@ -90,17 +90,17 @@ class Flag {
     assert(type_ == BOOL);
     return &variable_->b;
   }
-  
+
   int* int_variable() const {
     assert(type_ == INT);
     return &variable_->i;
   }
-  
+
   double* float_variable() const {
     assert(type_ == FLOAT);
     return &variable_->f;
   }
-  
+
   const char** string_variable() const {
     assert(type_ == STRING);
     return &variable_->s;
@@ -111,17 +111,17 @@ class Flag {
     assert(type_ == BOOL);
     return default_.b;
   }
-  
+
   int int_default() const {
     assert(type_ == INT);
     return default_.i;
   }
-  
+
   double float_default() const {
     assert(type_ == FLOAT);
     return default_.f;
   }
-  
+
   const char* string_default() const {
     assert(type_ == STRING);
     return default_.s;
@@ -261,9 +261,9 @@ class WindowsCommandLineArguments {
   char **argv_;
 
  private:
-  DISALLOW_EVIL_CONSTRUCTORS(WindowsCommandLineArguments);
+  RTC_DISALLOW_COPY_AND_ASSIGN(WindowsCommandLineArguments);
 };
-#endif  // WEBRTC_WIN 
+#endif  // WEBRTC_WIN
 
 }  // namespace rtc
 

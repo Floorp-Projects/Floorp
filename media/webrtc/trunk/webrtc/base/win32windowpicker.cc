@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
 
@@ -58,7 +59,7 @@ BOOL CALLBACK Win32WindowPicker::EnumProc(HWND hwnd, LPARAM l_param) {
   }
 
   TCHAR window_title[500];
-  GetWindowText(hwnd, window_title, ARRAY_SIZE(window_title));
+  GetWindowText(hwnd, window_title, arraysize(window_title));
   std::string title = ToUtf8(window_title);
 
   WindowId id(hwnd);

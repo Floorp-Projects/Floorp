@@ -49,7 +49,7 @@ class MacAsyncSocket : public AsyncSocket, public sigslot::has_slots<> {
   int GetError() const override;
   void SetError(int error) override;
   ConnState GetState() const override;
-  int EstimateMTU(uint16* mtu) override;
+  int EstimateMTU(uint16_t* mtu) override;
   int GetOption(Option opt, int* value) override;
   int SetOption(Option opt, int value) override;
 
@@ -90,7 +90,7 @@ class MacAsyncSocket : public AsyncSocket, public sigslot::has_slots<> {
   ConnState state_;
   AsyncResolver* resolver_;
 
-  DISALLOW_EVIL_CONSTRUCTORS(MacAsyncSocket);
+  RTC_DISALLOW_COPY_AND_ASSIGN(MacAsyncSocket);
 };
 
 }  // namespace rtc

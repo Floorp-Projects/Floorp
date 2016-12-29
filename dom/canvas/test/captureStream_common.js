@@ -146,8 +146,16 @@ CaptureStreamTestHelper.prototype = {
     info("Waiting for video " + video.id + " to match [" +
          refColor.data.join(',') + "] - " + refColor.name +
          " (" + infoString + ")");
+    var paintedFrames = video.mozPaintedFrames-1;
     return this.waitForPixel(video, 0, 0,
-                             px => this.isPixel(px, refColor, threshold))
+                             px => { if (paintedFrames != video.mozPaintedFrames) {
+				       info("Frame: " + video.mozPaintedFrames +
+					    " IsPixel ref=" + refColor.data +
+					    " threshold=" + threshold +
+					    " value=" + px);
+				       paintedFrames = video.mozPaintedFrames;
+				     }
+				     return this.isPixel(px, refColor, threshold); })
       .then(() => ok(true, video.id + " " + infoString));
   },
 

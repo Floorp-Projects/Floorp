@@ -91,7 +91,7 @@ TEST(MultipartTest, TestAddAndRead) {
 
   // Read the multipart stream into StringStream
   std::string str;
-  rtc::StringStream str_stream(str);
+  rtc::StringStream str_stream(&str);
   EXPECT_EQ(rtc::SR_SUCCESS,
             Flow(&multipart, buffer, sizeof(buffer), &str_stream));
   EXPECT_EQ(size, str.length());

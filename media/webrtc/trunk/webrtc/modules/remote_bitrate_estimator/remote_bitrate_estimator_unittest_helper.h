@@ -14,12 +14,13 @@
 #include <list>
 #include <map>
 #include <utility>
+#include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
-#include "webrtc/system_wrappers/interface/clock.h"
+#include "webrtc/system_wrappers/include/clock.h"
 
 namespace webrtc {
 namespace testing {
@@ -100,7 +101,7 @@ class RtpStream {
   uint32_t rtp_timestamp_offset_;
   const double kNtpFracPerMs;
 
-  DISALLOW_COPY_AND_ASSIGN(RtpStream);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpStream);
 };
 
 class StreamGenerator {
@@ -138,7 +139,7 @@ class StreamGenerator {
   // All streams being transmitted on this simulated channel.
   StreamMap streams_;
 
-  DISALLOW_COPY_AND_ASSIGN(StreamGenerator);
+  RTC_DISALLOW_COPY_AND_ASSIGN(StreamGenerator);
 };
 }  // namespace testing
 
@@ -168,7 +169,8 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
                       size_t payload_size,
                       int64_t arrival_time,
                       uint32_t rtp_timestamp,
-                      uint32_t absolute_send_time);
+                      uint32_t absolute_send_time,
+                      bool was_paced);
 
   // Generates a frame of packets belonging to a stream at a given bitrate and
   // with a given ssrc. The stream is pushed through a very simple simulated
@@ -188,7 +190,6 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
                               unsigned int min_bitrate,
                               unsigned int max_bitrate,
                               unsigned int target_bitrate);
-
 
   void TestTimestampGroupingTestHelper();
 
@@ -211,7 +212,7 @@ class RemoteBitrateEstimatorTest : public ::testing::Test {
   rtc::scoped_ptr<RemoteBitrateEstimator> bitrate_estimator_;
   rtc::scoped_ptr<testing::StreamGenerator> stream_generator_;
 
-  DISALLOW_COPY_AND_ASSIGN(RemoteBitrateEstimatorTest);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RemoteBitrateEstimatorTest);
 };
 }  // namespace webrtc
 

@@ -13,14 +13,17 @@
 #include <assert.h>
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/trace_event.h"
 
 namespace webrtc {
 
 int AudioDecoder::Decode(const uint8_t* encoded, size_t encoded_len,
                          int sample_rate_hz, size_t max_decoded_bytes,
                          int16_t* decoded, SpeechType* speech_type) {
+  TRACE_EVENT0("webrtc", "AudioDecoder::Decode");
   int duration = PacketDuration(encoded, encoded_len);
-  if (duration >= 0 && duration * sizeof(int16_t) > max_decoded_bytes) {
+  if (duration >= 0 &&
+      duration * Channels() * sizeof(int16_t) > max_decoded_bytes) {
     return -1;
   }
   return DecodeInternal(encoded, encoded_len, sample_rate_hz, decoded,
@@ -30,18 +33,14 @@ int AudioDecoder::Decode(const uint8_t* encoded, size_t encoded_len,
 int AudioDecoder::DecodeRedundant(const uint8_t* encoded, size_t encoded_len,
                                   int sample_rate_hz, size_t max_decoded_bytes,
                                   int16_t* decoded, SpeechType* speech_type) {
+  TRACE_EVENT0("webrtc", "AudioDecoder::DecodeRedundant");
   int duration = PacketDurationRedundant(encoded, encoded_len);
-  if (duration >= 0 && duration * sizeof(int16_t) > max_decoded_bytes) {
+  if (duration >= 0 &&
+      duration * Channels() * sizeof(int16_t) > max_decoded_bytes) {
     return -1;
   }
   return DecodeRedundantInternal(encoded, encoded_len, sample_rate_hz, decoded,
                                  speech_type);
-}
-
-int AudioDecoder::DecodeInternal(const uint8_t* encoded, size_t encoded_len,
-                                 int sample_rate_hz, int16_t* decoded,
-                                 SpeechType* speech_type) {
-  return kNotImplemented;
 }
 
 int AudioDecoder::DecodeRedundantInternal(const uint8_t* encoded,
@@ -54,7 +53,9 @@ int AudioDecoder::DecodeRedundantInternal(const uint8_t* encoded,
 
 bool AudioDecoder::HasDecodePlc() const { return false; }
 
-int AudioDecoder::DecodePlc(int num_frames, int16_t* decoded) { return -1; }
+size_t AudioDecoder::DecodePlc(size_t num_frames, int16_t* decoded) {
+  return 0;
+}
 
 int AudioDecoder::IncomingPacket(const uint8_t* payload,
                                  size_t payload_len,

@@ -165,7 +165,7 @@ class RollingAccumulator {
   mutable bool min_stale_;
   std::vector<T> samples_;
 
-  DISALLOW_COPY_AND_ASSIGN(RollingAccumulator);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RollingAccumulator);
 };
 
 }  // namespace rtc

@@ -12,12 +12,12 @@
 #define WEBRTC_COMMON_AUDIO_VAD_INCLUDE_VAD_H_
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/vad/include/webrtc_vad.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-// This is a C++ wrapper class for WebRtcVad.
 class Vad {
  public:
   enum Aggressiveness {
@@ -29,17 +29,22 @@ class Vad {
 
   enum Activity { kPassive = 0, kActive = 1, kError = -1 };
 
-  explicit Vad(enum Aggressiveness mode);
+  virtual ~Vad() = default;
 
-  virtual ~Vad();
-
+  // Calculates a VAD decision for the given audio frame. Valid sample rates
+  // are 8000, 16000, and 32000 Hz; the number of samples must be such that the
+  // frame is 10, 20, or 30 ms long.
   virtual Activity VoiceActivity(const int16_t* audio,
                                  size_t num_samples,
-                                 int sample_rate_hz);
+                                 int sample_rate_hz) = 0;
 
- private:
-  VadInst* handle_;
+  // Resets VAD state.
+  virtual void Reset() = 0;
 };
 
+// Returns a Vad instance that's implemented on top of WebRtcVad.
+rtc::scoped_ptr<Vad> CreateVad(Vad::Aggressiveness aggressiveness);
+
 }  // namespace webrtc
+
 #endif  // WEBRTC_COMMON_AUDIO_VAD_INCLUDE_VAD_H_

@@ -8,15 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/fileutils.h"
 #include "webrtc/base/gunit.h"
+#include "webrtc/base/pathutils.h"
 #include "webrtc/base/stream.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace rtc {
 
-namespace {
-static const int kTimeoutMs = 10000;
-}  // namespace
 ///////////////////////////////////////////////////////////////////////////////
 // TestStream
 ///////////////////////////////////////////////////////////////////////////////
@@ -94,71 +92,6 @@ void SeekTest(StreamInterface* stream, const unsigned char value) {
   EXPECT_TRUE(VerifyTestBuffer(buffer, kBufSize, value + 7));
   EXPECT_TRUE(stream->GetPosition(&bytes));
   EXPECT_EQ(20U, bytes);
-}
-
-TEST(StreamSegment, TranslatesPosition) {
-  TestStream* test = new TestStream;
-  // Verify behavior of original stream
-  SeekTest(test, 0);
-  StreamSegment* segment = new StreamSegment(test);
-  // Verify behavior of adapted stream (all values offset by 20)
-  SeekTest(segment, 20);
-  delete segment;
-}
-
-TEST(StreamSegment, SupportsArtificialTermination) {
-  TestStream* test = new TestStream;
-
-  size_t bytes;
-  unsigned char buffer[5000] = { 0 };
-  const size_t kBufSize = sizeof(buffer);
-
-  {
-    StreamInterface* stream = test;
-
-    // Read a lot of bytes
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_SUCCESS);
-    EXPECT_EQ(bytes, kBufSize);
-    EXPECT_TRUE(VerifyTestBuffer(buffer, kBufSize, 0));
-
-    // Test seeking far ahead
-    EXPECT_TRUE(stream->SetPosition(12345));
-
-    // Read a bunch more bytes
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_SUCCESS);
-    EXPECT_EQ(bytes, kBufSize);
-    EXPECT_TRUE(VerifyTestBuffer(buffer, kBufSize, 12345 % 256));
-  }
-
-  // Create a segment of test stream in range [100,600)
-  EXPECT_TRUE(test->SetPosition(100));
-  StreamSegment* segment = new StreamSegment(test, 500);
-
-  {
-    StreamInterface* stream = segment;
-
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_SUCCESS);
-    EXPECT_EQ(500U, bytes);
-    EXPECT_TRUE(VerifyTestBuffer(buffer, 500, 100));
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_EOS);
-
-    // Test seeking past "end" of stream
-    EXPECT_FALSE(stream->SetPosition(12345));
-    EXPECT_FALSE(stream->SetPosition(501));
-
-    // Test seeking to end (edge case)
-    EXPECT_TRUE(stream->SetPosition(500));
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_EOS);
-
-    // Test seeking to start
-    EXPECT_TRUE(stream->SetPosition(0));
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_SUCCESS);
-    EXPECT_EQ(500U, bytes);
-    EXPECT_TRUE(VerifyTestBuffer(buffer, 500, 100));
-    EXPECT_EQ(stream->Read(buffer, kBufSize, &bytes, NULL), SR_EOS);
-  }
-
-  delete segment;
 }
 
 TEST(FifoBufferTest, TestAll) {
@@ -436,62 +369,6 @@ TEST(FifoBufferTest, WriteOffsetAndReadOffset) {
 
   // Read at offset 16, this should fail since we don't have that much data.
   EXPECT_EQ(SR_BLOCK, buf.ReadOffset(out, 10, 16, NULL));
-}
-
-TEST(AsyncWriteTest, TestWrite) {
-  FifoBuffer* buf = new FifoBuffer(100);
-  AsyncWriteStream stream(buf, Thread::Current());
-  EXPECT_EQ(SS_OPEN, stream.GetState());
-
-  // Write "abc".  Will go to the logging thread, which is the current
-  // thread.
-  stream.Write("abc", 3, NULL, NULL);
-  char bytes[100];
-  size_t count;
-  // Messages on the thread's queue haven't been processed, so "abc"
-  // hasn't been written yet.
-  EXPECT_NE(SR_SUCCESS, buf->ReadOffset(&bytes, 3, 0, &count));
-  // Now we process the messages on the thread's queue, so "abc" has
-  // been written.
-  EXPECT_TRUE_WAIT(SR_SUCCESS == buf->ReadOffset(&bytes, 3, 0, &count),
-                   kTimeoutMs);
-  EXPECT_EQ(3u, count);
-  EXPECT_EQ(0, memcmp(bytes, "abc", 3));
-
-  // Write "def".  Will go to the logging thread, which is the current
-  // thread.
-  stream.Write("d", 1, &count, NULL);
-  stream.Write("e", 1, &count, NULL);
-  stream.Write("f", 1, &count, NULL);
-  EXPECT_EQ(1u, count);
-  // Messages on the thread's queue haven't been processed, so "def"
-  // hasn't been written yet.
-  EXPECT_NE(SR_SUCCESS, buf->ReadOffset(&bytes, 3, 3, &count));
-  // Flush() causes the message to be processed, so "def" has now been
-  // written.
-  stream.Flush();
-  EXPECT_EQ(SR_SUCCESS, buf->ReadOffset(&bytes, 3, 3, &count));
-  EXPECT_EQ(3u, count);
-  EXPECT_EQ(0, memcmp(bytes, "def", 3));
-
-  // Write "xyz".  Will go to the logging thread, which is the current
-  // thread.
-  stream.Write("xyz", 3, &count, NULL);
-  EXPECT_EQ(3u, count);
-  // Messages on the thread's queue haven't been processed, so "xyz"
-  // hasn't been written yet.
-  EXPECT_NE(SR_SUCCESS, buf->ReadOffset(&bytes, 3, 6, &count));
-  // Close() causes the message to be processed, so "xyz" has now been
-  // written.
-  stream.Close();
-  EXPECT_EQ(SR_SUCCESS, buf->ReadOffset(&bytes, 3, 6, &count));
-  EXPECT_EQ(3u, count);
-  EXPECT_EQ(0, memcmp(bytes, "xyz", 3));
-  EXPECT_EQ(SS_CLOSED, stream.GetState());
-
-  // Is't closed, so the writes should fail.
-  EXPECT_EQ(SR_ERROR, stream.Write("000", 3, NULL, NULL));
-
 }
 
 }  // namespace rtc

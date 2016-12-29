@@ -72,15 +72,38 @@ runNetworkTest(() => {
       // After requesting a frame it will be captured at the time of next render.
       // Next render will happen at next stable state, at the earliest,
       // i.e., this order of `requestFrame(); draw();` should work.
-      stream1.requestFrame();
       h.drawColor(canvas1, h.red);
+      stream1.requestFrame();
+      var i = 0;
+      return setInterval(function() {
+        try {
+          info("draw " + i ? "green" : "red");
+          h.drawColor(canvas1, i ? h.green : h.red);
+          i = 1 - i;
+          stream1.requestFrame();
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     },
     function DRAW_LOCAL2_RED() {
       // After requesting a frame it will be captured at the time of next render.
       // Next render will happen at next stable state, at the earliest,
       // i.e., this order of `requestFrame(); draw();` should work.
-      stream2.requestFrame();
       h.drawColor(canvas2, h.red);
+      stream2.requestFrame();
+      return setInterval(function() {
+        try {
+          info("draw");
+          h.drawColor(canvas2, i ? h.green : h.red);
+          i = 1 - i;
+          stream2.requestFrame();
+        } catch (e) {
+          // ignore; stream might have shut down, and we don't bother clearing
+          // the setInterval.
+        }
+      }, 500);
     },
     function WAIT_FOR_REMOTE1_RED() {
       return h.waitForPixelColor(vremote1, h.red, 128,

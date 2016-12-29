@@ -15,9 +15,9 @@
 #include "webrtc/modules/audio_device/audio_device_utility.h"
 #include "webrtc/modules/audio_device/sndio/audio_device_sndio.h"
 
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include "Latency.h"
 
@@ -699,9 +699,9 @@ int32_t AudioDeviceSndio::StartRecording()
         return 0;
     }
 
-    _ptrThreadRec = ThreadWrapper::CreateThread(RecThreadFunc,
-                                                this,
-                                                threadName);
+    _ptrThreadRec = new rtc::PlatformThread(RecThreadFunc,
+                                            this,
+                                            threadName);
     if (_ptrThreadRec == NULL)
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
@@ -796,9 +796,9 @@ int32_t AudioDeviceSndio::StartPlayout()
         return 0;
     }
 
-    _ptrThreadPlay =  ThreadWrapper::CreateThread(PlayThreadFunc,
-                                                  this,
-                                                  threadName);
+    _ptrThreadPlay = new rtc::PlatformThread(PlayThreadFunc,
+                                             this,
+                                             threadName);
     if (_ptrThreadPlay == NULL)
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,

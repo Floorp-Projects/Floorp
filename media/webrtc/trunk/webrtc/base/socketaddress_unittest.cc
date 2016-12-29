@@ -27,10 +27,11 @@ const in6_addr kMappedV4Addr = { { {0x00, 0x00, 0x00, 0x00,
                                     0x00, 0x00, 0xFF, 0xFF,
                                     0x01, 0x02, 0x03, 0x04} } };
 const std::string kTestV6AddrString = "2001:db8:1020:3040:5060:7080:90a0:b0c0";
-const std::string kTestV6AddrAnonymizedString = "2001:db8:1020::";
+const std::string kTestV6AddrAnonymizedString = "2001:db8:1020:x:x:x:x:x";
 const std::string kTestV6AddrFullString =
     "[2001:db8:1020:3040:5060:7080:90a0:b0c0]:5678";
-const std::string kTestV6AddrFullAnonymizedString = "[2001:db8:1020::]:5678";
+const std::string kTestV6AddrFullAnonymizedString =
+    "[2001:db8:1020:x:x:x:x:x]:5678";
 
 TEST(SocketAddressTest, TestDefaultCtor) {
   SocketAddress addr;
@@ -325,23 +326,26 @@ TEST(SocketAddressTest, TestToSensitiveString) {
   SocketAddress addr_v4("1.2.3.4", 5678);
   EXPECT_EQ("1.2.3.4", addr_v4.HostAsURIString());
   EXPECT_EQ("1.2.3.4:5678", addr_v4.ToString());
-  EXPECT_EQ("1.2.3.4", addr_v4.HostAsSensitiveURIString());
-  EXPECT_EQ("1.2.3.4:5678", addr_v4.ToSensitiveString());
-  IPAddress::set_strip_sensitive(true);
+
+#if defined(NDEBUG)
   EXPECT_EQ("1.2.3.x", addr_v4.HostAsSensitiveURIString());
   EXPECT_EQ("1.2.3.x:5678", addr_v4.ToSensitiveString());
-  IPAddress::set_strip_sensitive(false);
+#else
+  EXPECT_EQ("1.2.3.4", addr_v4.HostAsSensitiveURIString());
+  EXPECT_EQ("1.2.3.4:5678", addr_v4.ToSensitiveString());
+#endif  // defined(NDEBUG)
 
   SocketAddress addr_v6(kTestV6AddrString, 5678);
   EXPECT_EQ("[" + kTestV6AddrString + "]", addr_v6.HostAsURIString());
   EXPECT_EQ(kTestV6AddrFullString, addr_v6.ToString());
-  EXPECT_EQ("[" + kTestV6AddrString + "]", addr_v6.HostAsSensitiveURIString());
-  EXPECT_EQ(kTestV6AddrFullString, addr_v6.ToSensitiveString());
-  IPAddress::set_strip_sensitive(true);
+#if defined(NDEBUG)
   EXPECT_EQ("[" + kTestV6AddrAnonymizedString + "]",
             addr_v6.HostAsSensitiveURIString());
   EXPECT_EQ(kTestV6AddrFullAnonymizedString, addr_v6.ToSensitiveString());
-  IPAddress::set_strip_sensitive(false);
+#else
+  EXPECT_EQ("[" + kTestV6AddrString + "]", addr_v6.HostAsSensitiveURIString());
+  EXPECT_EQ(kTestV6AddrFullString, addr_v6.ToSensitiveString());
+#endif  // defined(NDEBUG)
 }
 
 }  // namespace rtc

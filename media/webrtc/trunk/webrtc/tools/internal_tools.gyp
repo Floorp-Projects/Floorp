@@ -20,6 +20,9 @@
         'simple_command_line_parser.h',
         'simple_command_line_parser.cc',
       ],
+      'dependencies': [
+        '<(webrtc_root)/common.gyp:gtest_prod',
+      ],
     }, # command_line_parser
   ],
 }

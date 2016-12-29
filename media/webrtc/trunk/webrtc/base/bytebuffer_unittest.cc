@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/base/arraysize.h"
 #include "webrtc/base/bytebuffer.h"
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/common.h"
@@ -16,9 +17,9 @@
 namespace rtc {
 
 TEST(ByteBufferTest, TestByteOrder) {
-  uint16 n16 = 1;
-  uint32 n32 = 1;
-  uint64 n64 = 1;
+  uint16_t n16 = 1;
+  uint32_t n32 = 1;
+  uint64_t n64 = 1;
 
   EXPECT_EQ(n16, NetworkToHost16(HostToNetwork16(n16)));
   EXPECT_EQ(n32, NetworkToHost32(HostToNetwork32(n32)));
@@ -114,48 +115,48 @@ TEST(ByteBufferTest, TestGetSetReadPosition) {
 TEST(ByteBufferTest, TestReadWriteBuffer) {
   ByteBuffer::ByteOrder orders[2] = { ByteBuffer::ORDER_HOST,
                                       ByteBuffer::ORDER_NETWORK };
-  for (size_t i = 0; i < ARRAY_SIZE(orders); i++) {
+  for (size_t i = 0; i < arraysize(orders); i++) {
     ByteBuffer buffer(orders[i]);
     EXPECT_EQ(orders[i], buffer.Order());
-    uint8 ru8;
+    uint8_t ru8;
     EXPECT_FALSE(buffer.ReadUInt8(&ru8));
 
-    // Write and read uint8.
-    uint8 wu8 = 1;
+    // Write and read uint8_t.
+    uint8_t wu8 = 1;
     buffer.WriteUInt8(wu8);
     EXPECT_TRUE(buffer.ReadUInt8(&ru8));
     EXPECT_EQ(wu8, ru8);
     EXPECT_EQ(0U, buffer.Length());
 
-    // Write and read uint16.
-    uint16 wu16 = (1 << 8) + 1;
+    // Write and read uint16_t.
+    uint16_t wu16 = (1 << 8) + 1;
     buffer.WriteUInt16(wu16);
-    uint16 ru16;
+    uint16_t ru16;
     EXPECT_TRUE(buffer.ReadUInt16(&ru16));
     EXPECT_EQ(wu16, ru16);
     EXPECT_EQ(0U, buffer.Length());
 
     // Write and read uint24.
-    uint32 wu24 = (3 << 16) + (2 << 8) + 1;
+    uint32_t wu24 = (3 << 16) + (2 << 8) + 1;
     buffer.WriteUInt24(wu24);
-    uint32 ru24;
+    uint32_t ru24;
     EXPECT_TRUE(buffer.ReadUInt24(&ru24));
     EXPECT_EQ(wu24, ru24);
     EXPECT_EQ(0U, buffer.Length());
 
-    // Write and read uint32.
-    uint32 wu32 = (4 << 24) + (3 << 16) + (2 << 8) + 1;
+    // Write and read uint32_t.
+    uint32_t wu32 = (4 << 24) + (3 << 16) + (2 << 8) + 1;
     buffer.WriteUInt32(wu32);
-    uint32 ru32;
+    uint32_t ru32;
     EXPECT_TRUE(buffer.ReadUInt32(&ru32));
     EXPECT_EQ(wu32, ru32);
     EXPECT_EQ(0U, buffer.Length());
 
-    // Write and read uint64.
-    uint32 another32 = (8 << 24) + (7 << 16) + (6 << 8) + 5;
-    uint64 wu64 = (static_cast<uint64>(another32) << 32) + wu32;
+    // Write and read uint64_t.
+    uint32_t another32 = (8 << 24) + (7 << 16) + (6 << 8) + 5;
+    uint64_t wu64 = (static_cast<uint64_t>(another32) << 32) + wu32;
     buffer.WriteUInt64(wu64);
-    uint64 ru64;
+    uint64_t ru64;
     EXPECT_TRUE(buffer.ReadUInt64(&ru64));
     EXPECT_EQ(wu64, ru64);
     EXPECT_EQ(0U, buffer.Length());

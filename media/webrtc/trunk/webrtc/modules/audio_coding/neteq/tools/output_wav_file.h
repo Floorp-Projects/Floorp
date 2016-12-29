@@ -35,7 +35,7 @@ class OutputWavFile : public AudioSink {
  private:
   WavWriter wav_writer_;
 
-  DISALLOW_COPY_AND_ASSIGN(OutputWavFile);
+  RTC_DISALLOW_COPY_AND_ASSIGN(OutputWavFile);
 };
 
 }  // namespace test

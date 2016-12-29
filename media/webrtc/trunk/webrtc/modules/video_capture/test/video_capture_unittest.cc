@@ -15,17 +15,15 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/base/scoped_ref_ptr.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/modules/utility/interface/process_thread.h"
-#include "webrtc/modules/video_capture/ensure_initialized.h"
-#include "webrtc/modules/video_capture/include/video_capture.h"
-#include "webrtc/modules/video_capture/include/video_capture_factory.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_refptr.h"
-#include "webrtc/system_wrappers/interface/sleep.h"
-#include "webrtc/system_wrappers/interface/tick_util.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
+#include "webrtc/modules/utility/include/process_thread.h"
+#include "webrtc/modules/video_capture/video_capture.h"
+#include "webrtc/modules/video_capture/video_capture_factory.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/sleep.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/video_frame.h"
 
 using rtc::scoped_ptr;
 using webrtc::CriticalSectionWrapper;
@@ -48,14 +46,14 @@ using webrtc::VideoCaptureModule;
       SleepMs(5); \
       res = (ex); \
     } \
-  } while (0);\
+  } while (0)
 
 #define EXPECT_TRUE_WAIT(ex, timeout) \
   do { \
     bool res; \
     WAIT_(ex, timeout, res); \
     if (!res) EXPECT_TRUE(ex); \
-  } while (0);
+  } while (0)
 
 
 static const int kTimeOut = 5000;
@@ -64,8 +62,8 @@ static const int kTestWidth = 352;
 static const int kTestFramerate = 30;
 
 // Compares the content of two video frames.
-static bool CompareFrames(const webrtc::I420VideoFrame& frame1,
-                          const webrtc::I420VideoFrame& frame2) {
+static bool CompareFrames(const webrtc::VideoFrame& frame1,
+                          const webrtc::VideoFrame& frame2) {
   bool result =
       (frame1.stride(webrtc::kYPlane) == frame2.stride(webrtc::kYPlane)) &&
       (frame1.stride(webrtc::kUPlane) == frame2.stride(webrtc::kUPlane)) &&
@@ -104,9 +102,8 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
       printf("No of timing warnings %d\n", timing_warnings_);
   }
 
-  virtual void OnIncomingCapturedFrame(
-      const int32_t id,
-      const webrtc::I420VideoFrame& videoFrame) {
+  virtual void OnIncomingCapturedFrame(const int32_t id,
+                                       const webrtc::VideoFrame& videoFrame) {
     CriticalSectionScoped cs(capture_cs_.get());
     int height = videoFrame.height();
     int width = videoFrame.width();
@@ -175,7 +172,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
     return capability_;
   }
 
-  bool CompareLastFrame(const webrtc::I420VideoFrame& frame) {
+  bool CompareLastFrame(const webrtc::VideoFrame& frame) {
     CriticalSectionScoped cs(capture_cs_.get());
     return CompareFrames(last_frame_, frame);
   }
@@ -192,7 +189,7 @@ class TestVideoCaptureCallback : public VideoCaptureDataCallback {
   int64_t last_render_time_ms_;
   int incoming_frames_;
   int timing_warnings_;
-  webrtc::I420VideoFrame last_frame_;
+  webrtc::VideoFrame last_frame_;
   webrtc::VideoRotation rotate_frame_;
 };
 
@@ -236,14 +233,13 @@ class VideoCaptureTest : public testing::Test {
   VideoCaptureTest() : number_of_devices_(0) {}
 
   void SetUp() {
-    webrtc::videocapturemodule::EnsureInitialized();
     device_info_.reset(VideoCaptureFactory::CreateDeviceInfo(0));
     assert(device_info_.get());
     number_of_devices_ = device_info_->NumberOfDevices();
     ASSERT_GT(number_of_devices_, 0u);
   }
 
-  webrtc::scoped_refptr<VideoCaptureModule> OpenVideoCaptureDevice(
+  rtc::scoped_refptr<VideoCaptureModule> OpenVideoCaptureDevice(
       unsigned int device,
       VideoCaptureDataCallback* callback) {
     char device_name[256];
@@ -252,7 +248,7 @@ class VideoCaptureTest : public testing::Test {
     EXPECT_EQ(0, device_info_->GetDeviceName(
         device, device_name, 256, unique_name, 256));
 
-    webrtc::scoped_refptr<VideoCaptureModule> module(
+    rtc::scoped_refptr<VideoCaptureModule> module(
         VideoCaptureFactory::Create(device, unique_name));
     if (module.get() == NULL)
       return NULL;
@@ -278,12 +274,19 @@ class VideoCaptureTest : public testing::Test {
   unsigned int number_of_devices_;
 };
 
-TEST_F(VideoCaptureTest, CreateDelete) {
+#ifdef WEBRTC_MAC
+// Currently fails on Mac 64-bit, see
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
+#define MAYBE_CreateDelete DISABLED_CreateDelete
+#else
+#define MAYBE_CreateDelete CreateDelete
+#endif
+TEST_F(VideoCaptureTest, MAYBE_CreateDelete) {
   for (int i = 0; i < 5; ++i) {
     int64_t start_time = TickTime::MillisecondTimestamp();
     TestVideoCaptureCallback capture_observer;
-    webrtc::scoped_refptr<VideoCaptureModule> module(OpenVideoCaptureDevice(
-        0, &capture_observer));
+    rtc::scoped_refptr<VideoCaptureModule> module(
+        OpenVideoCaptureDevice(0, &capture_observer));
     ASSERT_TRUE(module.get() != NULL);
 
     VideoCaptureCapability capability;
@@ -315,7 +318,14 @@ TEST_F(VideoCaptureTest, CreateDelete) {
   }
 }
 
-TEST_F(VideoCaptureTest, Capabilities) {
+#ifdef WEBRTC_MAC
+// Currently fails on Mac 64-bit, see
+// https://bugs.chromium.org/p/webrtc/issues/detail?id=5406
+#define MAYBE_Capabilities DISABLED_Capabilities
+#else
+#define MAYBE_Capabilities Capabilities
+#endif
+TEST_F(VideoCaptureTest, MAYBE_Capabilities) {
 #ifdef WEBRTC_MAC
   printf("Video capture capabilities are not supported on Mac.\n");
   return;
@@ -323,8 +333,8 @@ TEST_F(VideoCaptureTest, Capabilities) {
 
   TestVideoCaptureCallback capture_observer;
 
-  webrtc::scoped_refptr<VideoCaptureModule> module(OpenVideoCaptureDevice(
-          0, &capture_observer));
+  rtc::scoped_refptr<VideoCaptureModule> module(
+      OpenVideoCaptureDevice(0, &capture_observer));
   ASSERT_TRUE(module.get() != NULL);
 
   int number_of_capabilities = device_info_->NumberOfCapabilities(
@@ -385,8 +395,8 @@ TEST_F(VideoCaptureTest, DISABLED_TestTwoCameras) {
   }
 
   TestVideoCaptureCallback capture_observer1;
-  webrtc::scoped_refptr<VideoCaptureModule> module1(OpenVideoCaptureDevice(
-          0, &capture_observer1));
+  rtc::scoped_refptr<VideoCaptureModule> module1(
+      OpenVideoCaptureDevice(0, &capture_observer1));
   ASSERT_TRUE(module1.get() != NULL);
   VideoCaptureCapability capability1;
 #ifndef WEBRTC_MAC
@@ -400,8 +410,8 @@ TEST_F(VideoCaptureTest, DISABLED_TestTwoCameras) {
   capture_observer1.SetExpectedCapability(capability1);
 
   TestVideoCaptureCallback capture_observer2;
-  webrtc::scoped_refptr<VideoCaptureModule> module2(OpenVideoCaptureDevice(
-          1, &capture_observer2));
+  rtc::scoped_refptr<VideoCaptureModule> module2(
+      OpenVideoCaptureDevice(1, &capture_observer2));
   ASSERT_TRUE(module1.get() != NULL);
 
 
@@ -430,7 +440,7 @@ class VideoCaptureExternalTest : public testing::Test {
  public:
   void SetUp() {
     capture_module_ = VideoCaptureFactory::Create(0, capture_input_interface_);
-    process_module_ = webrtc::ProcessThread::Create();
+    process_module_ = webrtc::ProcessThread::Create("ProcessThread");
     process_module_->Start();
     process_module_->RegisterModule(capture_module_);
 
@@ -461,9 +471,9 @@ class VideoCaptureExternalTest : public testing::Test {
   }
 
   webrtc::VideoCaptureExternal* capture_input_interface_;
-  webrtc::scoped_refptr<VideoCaptureModule> capture_module_;
+  rtc::scoped_refptr<VideoCaptureModule> capture_module_;
   rtc::scoped_ptr<webrtc::ProcessThread> process_module_;
-  webrtc::I420VideoFrame test_frame_;
+  webrtc::VideoFrame test_frame_;
   TestVideoCaptureCallback capture_callback_;
   TestVideoCaptureFeedBack capture_feedback_;
 };
@@ -482,7 +492,12 @@ TEST_F(VideoCaptureExternalTest, TestExternalCapture) {
 
 // Test frame rate and no picture alarm.
 // Flaky on Win32, see webrtc:3270.
-TEST_F(VideoCaptureExternalTest, DISABLED_ON_WIN(FrameRate)) {
+#if defined(WEBRTC_WIN)
+#define MAYBE_FrameRate DISABLED_FrameRate
+#else
+#define MAYBE_FrameRate FrameRate
+#endif
+TEST_F(VideoCaptureExternalTest, MAYBE_FrameRate) {
   int64_t testTime = 3;
   TickTime startTime = TickTime::Now();
 

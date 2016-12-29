@@ -13,7 +13,7 @@
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format.h"
 
@@ -83,7 +83,7 @@ void TestFua(size_t frame_size,
   fragmentation.fragmentationOffset[0] = 0;
   fragmentation.fragmentationLength[0] = frame_size;
   rtc::scoped_ptr<RtpPacketizer> packetizer(RtpPacketizer::Create(
-      kRtpVideoH264, max_payload_size, NULL, kFrameEmpty));
+      kRtpVideoH264, max_payload_size, NULL, kEmptyFrame));
   packetizer->SetPayloadData(frame.get(), frame_size, &fragmentation);
 
   rtc::scoped_ptr<uint8_t[]> packet(new uint8_t[max_payload_size]);
@@ -157,7 +157,7 @@ TEST(RtpPacketizerH264Test, TestSingleNalu) {
   fragmentation.fragmentationOffset[0] = 0;
   fragmentation.fragmentationLength[0] = sizeof(frame);
   rtc::scoped_ptr<RtpPacketizer> packetizer(
-      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kFrameEmpty));
+      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kEmptyFrame));
   packetizer->SetPayloadData(frame, sizeof(frame), &fragmentation);
   uint8_t packet[kMaxPayloadSize] = {0};
   size_t length = 0;
@@ -186,7 +186,7 @@ TEST(RtpPacketizerH264Test, TestSingleNaluTwoPackets) {
   frame[fragmentation.fragmentationOffset[1]] = 0x01;
 
   rtc::scoped_ptr<RtpPacketizer> packetizer(
-      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kFrameEmpty));
+      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kEmptyFrame));
   packetizer->SetPayloadData(frame, kFrameSize, &fragmentation);
 
   uint8_t packet[kMaxPayloadSize] = {0};
@@ -207,9 +207,9 @@ TEST(RtpPacketizerH264Test, TestSingleNaluTwoPackets) {
 TEST(RtpPacketizerH264Test, TestStapA) {
   const size_t kFrameSize =
       kMaxPayloadSize - 3 * kLengthFieldLength - kNalHeaderSize;
-  uint8_t frame[kFrameSize] = {0x07, 0xFF,  // F=0, NRI=0, Type=7.
-                               0x08, 0xFF,  // F=0, NRI=0, Type=8.
-                               0x05};       // F=0, NRI=0, Type=5.
+  uint8_t frame[kFrameSize] = {0x07, 0xFF,  // F=0, NRI=0, Type=7 (SPS).
+                               0x08, 0xFF,  // F=0, NRI=0, Type=8 (PPS).
+                               0x05};       // F=0, NRI=0, Type=5 (IDR).
   const size_t kPayloadOffset = 5;
   for (size_t i = 0; i < kFrameSize - kPayloadOffset; ++i)
     frame[i + kPayloadOffset] = i;
@@ -223,7 +223,7 @@ TEST(RtpPacketizerH264Test, TestStapA) {
   fragmentation.fragmentationLength[2] =
       kNalHeaderSize + kFrameSize - kPayloadOffset;
   rtc::scoped_ptr<RtpPacketizer> packetizer(
-      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kFrameEmpty));
+      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kEmptyFrame));
   packetizer->SetPayloadData(frame, kFrameSize, &fragmentation);
 
   uint8_t packet[kMaxPayloadSize] = {0};
@@ -258,7 +258,7 @@ TEST(RtpPacketizerH264Test, TestTooSmallForStapAHeaders) {
   fragmentation.fragmentationLength[2] =
       kNalHeaderSize + kFrameSize - kPayloadOffset;
   rtc::scoped_ptr<RtpPacketizer> packetizer(
-      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kFrameEmpty));
+      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kEmptyFrame));
   packetizer->SetPayloadData(frame, kFrameSize, &fragmentation);
 
   uint8_t packet[kMaxPayloadSize] = {0};
@@ -306,7 +306,7 @@ TEST(RtpPacketizerH264Test, TestMixedStapA_FUA) {
     }
   }
   rtc::scoped_ptr<RtpPacketizer> packetizer(
-      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kFrameEmpty));
+      RtpPacketizer::Create(kRtpVideoH264, kMaxPayloadSize, NULL, kEmptyFrame));
   packetizer->SetPayloadData(frame, kFrameSize, &fragmentation);
 
   // First expecting two FU-A packets.
@@ -398,7 +398,7 @@ class RtpDepacketizerH264Test : public ::testing::Test {
 };
 
 TEST_F(RtpDepacketizerH264Test, TestSingleNalu) {
-  uint8_t packet[2] = {0x05, 0xFF};  // F=0, NRI=0, Type=5.
+  uint8_t packet[2] = {0x05, 0xFF};  // F=0, NRI=0, Type=5 (IDR).
   RtpDepacketizer::ParsedPayload payload;
 
   ASSERT_TRUE(depacketizer_->Parse(&payload, packet, sizeof(packet)));
@@ -406,15 +406,34 @@ TEST_F(RtpDepacketizerH264Test, TestSingleNalu) {
   EXPECT_EQ(kVideoFrameKey, payload.frame_type);
   EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
   EXPECT_TRUE(payload.type.Video.isFirstPacket);
-  EXPECT_TRUE(payload.type.Video.codecHeader.H264.single_nalu);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.stap_a);
+  EXPECT_EQ(kH264SingleNalu,
+            payload.type.Video.codecHeader.H264.packetization_type);
+  EXPECT_EQ(kIdr, payload.type.Video.codecHeader.H264.nalu_type);
+}
+
+TEST_F(RtpDepacketizerH264Test, TestSingleNaluSpsWithResolution) {
+  uint8_t packet[] = {kSps, 0x7A, 0x00, 0x1F, 0xBC, 0xD9, 0x40, 0x50,
+                      0x05, 0xBA, 0x10, 0x00, 0x00, 0x03, 0x00, 0xC0,
+                      0x00, 0x00, 0x2A, 0xE0, 0xF1, 0x83, 0x19, 0x60};
+  RtpDepacketizer::ParsedPayload payload;
+
+  ASSERT_TRUE(depacketizer_->Parse(&payload, packet, sizeof(packet)));
+  ExpectPacket(&payload, packet, sizeof(packet));
+  EXPECT_EQ(kVideoFrameKey, payload.frame_type);
+  EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
+  EXPECT_TRUE(payload.type.Video.isFirstPacket);
+  EXPECT_EQ(kH264SingleNalu,
+            payload.type.Video.codecHeader.H264.packetization_type);
+  EXPECT_EQ(1280u, payload.type.Video.width);
+  EXPECT_EQ(720u, payload.type.Video.height);
 }
 
 TEST_F(RtpDepacketizerH264Test, TestStapAKey) {
   uint8_t packet[16] = {kStapA,  // F=0, NRI=0, Type=24.
                         // Length, nal header, payload.
-                        0,      0x02, kIdr, 0xFF, 0,    0x03, kIdr, 0xFF,
-                        0x00,   0,    0x04, kIdr, 0xFF, 0x00, 0x11};
+                        0, 0x02, kSps, 0xFF,
+                        0, 0x03, kPps, 0xFF, 0x00,
+                        0, 0x04, kIdr, 0xFF, 0x00, 0x11};
   RtpDepacketizer::ParsedPayload payload;
 
   ASSERT_TRUE(depacketizer_->Parse(&payload, packet, sizeof(packet)));
@@ -422,8 +441,29 @@ TEST_F(RtpDepacketizerH264Test, TestStapAKey) {
   EXPECT_EQ(kVideoFrameKey, payload.frame_type);
   EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
   EXPECT_TRUE(payload.type.Video.isFirstPacket);
-  EXPECT_TRUE(payload.type.Video.codecHeader.H264.single_nalu);
-  EXPECT_TRUE(payload.type.Video.codecHeader.H264.stap_a);
+  EXPECT_EQ(kH264StapA, payload.type.Video.codecHeader.H264.packetization_type);
+  // NALU type for aggregated packets is the type of the first packet only.
+  EXPECT_EQ(kSps, payload.type.Video.codecHeader.H264.nalu_type);
+}
+
+TEST_F(RtpDepacketizerH264Test, TestStapANaluSpsWithResolution) {
+  uint8_t packet[] = {kStapA,  // F=0, NRI=0, Type=24.
+                      // Length (2 bytes), nal header, payload.
+                      0,      24,   kSps, 0x7A, 0x00, 0x1F, 0xBC, 0xD9,
+                      0x40,   0x50, 0x05, 0xBA, 0x10, 0x00, 0x00, 0x03,
+                      0x00,   0xC0, 0x00, 0x00, 0x2A, 0xE0, 0xF1, 0x83,
+                      0x19,   0x60, 0,    0x03, kIdr, 0xFF, 0x00, 0,
+                      0x04,   kIdr, 0xFF, 0x00, 0x11};
+  RtpDepacketizer::ParsedPayload payload;
+
+  ASSERT_TRUE(depacketizer_->Parse(&payload, packet, sizeof(packet)));
+  ExpectPacket(&payload, packet, sizeof(packet));
+  EXPECT_EQ(kVideoFrameKey, payload.frame_type);
+  EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
+  EXPECT_TRUE(payload.type.Video.isFirstPacket);
+  EXPECT_EQ(kH264StapA, payload.type.Video.codecHeader.H264.packetization_type);
+  EXPECT_EQ(1280u, payload.type.Video.width);
+  EXPECT_EQ(720u, payload.type.Video.height);
 }
 
 TEST_F(RtpDepacketizerH264Test, TestStapADelta) {
@@ -438,8 +478,9 @@ TEST_F(RtpDepacketizerH264Test, TestStapADelta) {
   EXPECT_EQ(kVideoFrameDelta, payload.frame_type);
   EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
   EXPECT_TRUE(payload.type.Video.isFirstPacket);
-  EXPECT_TRUE(payload.type.Video.codecHeader.H264.single_nalu);
-  EXPECT_TRUE(payload.type.Video.codecHeader.H264.stap_a);
+  EXPECT_EQ(kH264StapA, payload.type.Video.codecHeader.H264.packetization_type);
+  // NALU type for aggregated packets is the type of the first packet only.
+  EXPECT_EQ(kSlice, payload.type.Video.codecHeader.H264.nalu_type);
 }
 
 TEST_F(RtpDepacketizerH264Test, TestFuA) {
@@ -473,8 +514,8 @@ TEST_F(RtpDepacketizerH264Test, TestFuA) {
   EXPECT_EQ(kVideoFrameKey, payload.frame_type);
   EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
   EXPECT_TRUE(payload.type.Video.isFirstPacket);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.single_nalu);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.stap_a);
+  EXPECT_EQ(kH264FuA, payload.type.Video.codecHeader.H264.packetization_type);
+  EXPECT_EQ(kIdr, payload.type.Video.codecHeader.H264.nalu_type);
 
   // Following packets will be 2 bytes shorter since they will only be appended
   // onto the first packet.
@@ -484,8 +525,8 @@ TEST_F(RtpDepacketizerH264Test, TestFuA) {
   EXPECT_EQ(kVideoFrameKey, payload.frame_type);
   EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
   EXPECT_FALSE(payload.type.Video.isFirstPacket);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.single_nalu);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.stap_a);
+  EXPECT_EQ(kH264FuA, payload.type.Video.codecHeader.H264.packetization_type);
+  EXPECT_EQ(kIdr, payload.type.Video.codecHeader.H264.nalu_type);
 
   payload = RtpDepacketizer::ParsedPayload();
   ASSERT_TRUE(depacketizer_->Parse(&payload, packet3, sizeof(packet3)));
@@ -493,7 +534,39 @@ TEST_F(RtpDepacketizerH264Test, TestFuA) {
   EXPECT_EQ(kVideoFrameKey, payload.frame_type);
   EXPECT_EQ(kRtpVideoH264, payload.type.Video.codec);
   EXPECT_FALSE(payload.type.Video.isFirstPacket);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.single_nalu);
-  EXPECT_FALSE(payload.type.Video.codecHeader.H264.stap_a);
+  EXPECT_EQ(kH264FuA, payload.type.Video.codecHeader.H264.packetization_type);
+  EXPECT_EQ(kIdr, payload.type.Video.codecHeader.H264.nalu_type);
 }
+
+TEST_F(RtpDepacketizerH264Test, TestEmptyPayload) {
+  // Using a wild pointer to crash on accesses from inside the depacketizer.
+  uint8_t* garbage_ptr = reinterpret_cast<uint8_t*>(0x4711);
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, garbage_ptr, 0));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestTruncatedFuaNalu) {
+  const uint8_t kPayload[] = {0x9c};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestTruncatedSingleStapANalu) {
+  const uint8_t kPayload[] = {0xd8, 0x27};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestTruncationJustAfterSingleStapANalu) {
+  const uint8_t kPayload[] = {0x38, 0x27, 0x27};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
+TEST_F(RtpDepacketizerH264Test, TestShortSpsPacket) {
+  const uint8_t kPayload[] = {0x27, 0x80, 0x00};
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_TRUE(depacketizer_->Parse(&payload, kPayload, sizeof(kPayload)));
+}
+
 }  // namespace webrtc

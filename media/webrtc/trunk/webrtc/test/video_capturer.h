@@ -7,8 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_VIDEO_ENGINE_TEST_COMMON_VIDEO_CAPTURER_H_
-#define WEBRTC_VIDEO_ENGINE_TEST_COMMON_VIDEO_CAPTURER_H_
+#ifndef WEBRTC_TEST_VIDEO_CAPTURER_H_
+#define WEBRTC_TEST_VIDEO_CAPTURER_H_
 
 #include <stddef.h>
 
@@ -16,13 +16,13 @@ namespace webrtc {
 
 class Clock;
 
-class VideoSendStreamInput;
+class VideoCaptureInput;
 
 namespace test {
 
 class VideoCapturer {
  public:
-  static VideoCapturer* Create(VideoSendStreamInput* input,
+  static VideoCapturer* Create(VideoCaptureInput* input,
                                size_t width,
                                size_t height,
                                int fps,
@@ -33,10 +33,10 @@ class VideoCapturer {
   virtual void Stop() = 0;
 
  protected:
-  explicit VideoCapturer(VideoSendStreamInput* input);
-  VideoSendStreamInput* input_;
+  explicit VideoCapturer(VideoCaptureInput* input);
+  VideoCaptureInput* input_;
 };
 }  // test
 }  // webrtc
 
-#endif  // WEBRTC_VIDEO_ENGINE_TEST_COMMON_VIDEO_CAPTURER_H_
+#endif  // WEBRTC_TEST_VIDEO_CAPTURER_H_

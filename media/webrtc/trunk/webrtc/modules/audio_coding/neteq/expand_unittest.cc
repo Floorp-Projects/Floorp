@@ -13,9 +13,14 @@
 #include "webrtc/modules/audio_coding/neteq/expand.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/safe_conversions.h"
+#include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq/background_noise.h"
 #include "webrtc/modules/audio_coding/neteq/random_vector.h"
+#include "webrtc/modules/audio_coding/neteq/statistics_calculator.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
+#include "webrtc/modules/audio_coding/neteq/tools/resample_input_audio_file.h"
+#include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
 
@@ -25,7 +30,8 @@ TEST(Expand, CreateAndDestroy) {
   BackgroundNoise bgn(channels);
   SyncBuffer sync_buffer(1, 1000);
   RandomVector random_vector;
-  Expand expand(&bgn, &sync_buffer, &random_vector, fs, channels);
+  StatisticsCalculator statistics;
+  Expand expand(&bgn, &sync_buffer, &random_vector, &statistics, fs, channels);
 }
 
 TEST(Expand, CreateUsingFactory) {
@@ -34,11 +40,133 @@ TEST(Expand, CreateUsingFactory) {
   BackgroundNoise bgn(channels);
   SyncBuffer sync_buffer(1, 1000);
   RandomVector random_vector;
+  StatisticsCalculator statistics;
   ExpandFactory expand_factory;
-  Expand* expand =
-      expand_factory.Create(&bgn, &sync_buffer, &random_vector, fs, channels);
+  Expand* expand = expand_factory.Create(&bgn, &sync_buffer, &random_vector,
+                                         &statistics, fs, channels);
   EXPECT_TRUE(expand != NULL);
   delete expand;
+}
+
+namespace {
+class FakeStatisticsCalculator : public StatisticsCalculator {
+ public:
+  void LogDelayedPacketOutageEvent(int outage_duration_ms) override {
+    last_outage_duration_ms_ = outage_duration_ms;
+  }
+
+  int last_outage_duration_ms() const { return last_outage_duration_ms_; }
+
+ private:
+  int last_outage_duration_ms_ = 0;
+};
+
+// This is the same size that is given to the SyncBuffer object in NetEq.
+const size_t kNetEqSyncBufferLengthMs = 720;
+}  // namespace
+
+class ExpandTest : public ::testing::Test {
+ protected:
+  ExpandTest()
+      : input_file_(test::ResourcePath("audio_coding/testfile32kHz", "pcm"),
+                    32000),
+        test_sample_rate_hz_(32000),
+        num_channels_(1),
+        background_noise_(num_channels_),
+        sync_buffer_(num_channels_,
+                     kNetEqSyncBufferLengthMs * test_sample_rate_hz_ / 1000),
+        expand_(&background_noise_,
+                &sync_buffer_,
+                &random_vector_,
+                &statistics_,
+                test_sample_rate_hz_,
+                num_channels_) {
+    WebRtcSpl_Init();
+    input_file_.set_output_rate_hz(test_sample_rate_hz_);
+  }
+
+  void SetUp() override {
+    // Fast-forward the input file until there is speech (about 1.1 second into
+    // the file).
+    const size_t speech_start_samples =
+        static_cast<size_t>(test_sample_rate_hz_ * 1.1f);
+    ASSERT_TRUE(input_file_.Seek(speech_start_samples));
+
+    // Pre-load the sync buffer with speech data.
+    ASSERT_TRUE(
+        input_file_.Read(sync_buffer_.Size(), &sync_buffer_.Channel(0)[0]));
+    ASSERT_EQ(1u, num_channels_) << "Fix: Must populate all channels.";
+  }
+
+  test::ResampleInputAudioFile input_file_;
+  int test_sample_rate_hz_;
+  size_t num_channels_;
+  BackgroundNoise background_noise_;
+  SyncBuffer sync_buffer_;
+  RandomVector random_vector_;
+  FakeStatisticsCalculator statistics_;
+  Expand expand_;
+};
+
+// This test calls the expand object to produce concealment data a few times,
+// and then ends by calling SetParametersForNormalAfterExpand. This simulates
+// the situation where the packet next up for decoding was just delayed, not
+// lost.
+TEST_F(ExpandTest, DelayedPacketOutage) {
+  AudioMultiVector output(num_channels_);
+  size_t sum_output_len_samples = 0;
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(0, expand_.Process(&output));
+    EXPECT_GT(output.Size(), 0u);
+    sum_output_len_samples += output.Size();
+    EXPECT_EQ(0, statistics_.last_outage_duration_ms());
+  }
+  expand_.SetParametersForNormalAfterExpand();
+  // Convert |sum_output_len_samples| to milliseconds.
+  EXPECT_EQ(rtc::checked_cast<int>(sum_output_len_samples /
+                                   (test_sample_rate_hz_ / 1000)),
+            statistics_.last_outage_duration_ms());
+}
+
+// This test is similar to DelayedPacketOutage, but ends by calling
+// SetParametersForMergeAfterExpand. This simulates the situation where the
+// packet next up for decoding was actually lost (or at least a later packet
+// arrived before it).
+TEST_F(ExpandTest, LostPacketOutage) {
+  AudioMultiVector output(num_channels_);
+  size_t sum_output_len_samples = 0;
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(0, expand_.Process(&output));
+    EXPECT_GT(output.Size(), 0u);
+    sum_output_len_samples += output.Size();
+    EXPECT_EQ(0, statistics_.last_outage_duration_ms());
+  }
+  expand_.SetParametersForMergeAfterExpand();
+  EXPECT_EQ(0, statistics_.last_outage_duration_ms());
+}
+
+// This test is similar to the DelayedPacketOutage test above, but with the
+// difference that Expand::Reset() is called after 5 calls to Expand::Process().
+// This should reset the statistics, and will in the end lead to an outage of
+// 5 periods instead of 10.
+TEST_F(ExpandTest, CheckOutageStatsAfterReset) {
+  AudioMultiVector output(num_channels_);
+  size_t sum_output_len_samples = 0;
+  for (int i = 0; i < 10; ++i) {
+    EXPECT_EQ(0, expand_.Process(&output));
+    EXPECT_GT(output.Size(), 0u);
+    sum_output_len_samples += output.Size();
+    if (i == 5) {
+      expand_.Reset();
+      sum_output_len_samples = 0;
+    }
+    EXPECT_EQ(0, statistics_.last_outage_duration_ms());
+  }
+  expand_.SetParametersForNormalAfterExpand();
+  // Convert |sum_output_len_samples| to milliseconds.
+  EXPECT_EQ(rtc::checked_cast<int>(sum_output_len_samples /
+                                   (test_sample_rate_hz_ / 1000)),
+            statistics_.last_outage_duration_ms());
 }
 
 // TODO(hlundin): Write more tests.

@@ -347,23 +347,23 @@ MediaEngineRemoteVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   }
 }
 
-int
-MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h,
-                                              unsigned int streams)
+void
+MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h)
 {
-  mWidth = w;
-  mHeight = h;
-  LOG(("MediaEngineRemoteVideoSource Video FrameSizeChange: %ux%u", w, h));
-  return 0;
+#if defined(MOZ_WIDGET_GONK)
+  mMonitor.AssertCurrentThreadOwns(); // mWidth and mHeight are protected...
+#endif
+  if ((mWidth < 0) || (mHeight < 0) ||
+      (w !=  (unsigned int) mWidth) || (h != (unsigned int) mHeight)) {
+    LOG(("MediaEngineRemoteVideoSource Video FrameSizeChange: %ux%u was %ux%u", w, h, mWidth, mHeight));
+    mWidth = w;
+    mHeight = h;
+  }
 }
 
 int
-MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
-                                           size_t size,
-                                           uint32_t time_stamp,
-                                           int64_t ntp_time,
-                                           int64_t render_time,
-                                           void *handle)
+MediaEngineRemoteVideoSource::DeliverFrame(uint8_t* aBuffer ,
+                                    const camera::VideoFrameProperties& aProps)
 {
   // Check for proper state.
   if (mState != kStarted) {
@@ -371,15 +371,13 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
     return 0;
   }
 
-  if ((size_t) (mWidth*mHeight + 2*(((mWidth+1)/2)*((mHeight+1)/2))) != size) {
-    MOZ_ASSERT(false, "Wrong size frame in DeliverFrame!");
-    return 0;
-  }
+  // Update the dimensions
+  FrameSizeChange(aProps.width(), aProps.height());
 
   // Create a video frame and append it to the track.
   RefPtr<layers::PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
 
-  uint8_t* frame = static_cast<uint8_t*> (buffer);
+  uint8_t* frame = static_cast<uint8_t*> (aBuffer);
   const uint8_t lumaBpp = 8;
   const uint8_t chromaBpp = 4;
 
@@ -404,8 +402,9 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
 
 #ifdef DEBUG
   static uint32_t frame_num = 0;
-  LOGFRAME(("frame %d (%dx%d); timestamp %u, ntp_time %" PRIu64 ", render_time %" PRIu64,
-            frame_num++, mWidth, mHeight, time_stamp, ntp_time, render_time));
+  LOGFRAME(("frame %d (%dx%d); timeStamp %u, ntpTimeMs %" PRIu64 ", renderTimeMs %" PRIu64,
+            frame_num++, mWidth, mHeight,
+            aProps.timeStamp(), aProps.ntpTimeMs(), aProps.renderTimeMs()));
 #endif
 
   // we don't touch anything in 'this' until here (except for snapshot,

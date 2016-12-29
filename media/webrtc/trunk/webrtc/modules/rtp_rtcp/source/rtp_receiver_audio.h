@@ -14,8 +14,8 @@
 #include <set>
 
 #include "webrtc/base/scoped_ptr.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_receiver.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/typedefs.h"
@@ -28,8 +28,7 @@ class CriticalSectionWrapper;
 class RTPReceiverAudio : public RTPReceiverStrategy,
                          public TelephoneEventHandler {
  public:
-  RTPReceiverAudio(const int32_t id,
-                   RtpData* data_callback,
+  RTPReceiverAudio(RtpData* data_callback,
                    RtpAudioFeedback* incoming_messages_callback);
   virtual ~RTPReceiverAudio() {}
 
@@ -43,9 +42,7 @@ class RTPReceiverAudio : public RTPReceiverStrategy,
   // Is TelephoneEvent configured with payload type payload_type
   bool TelephoneEventPayloadType(const int8_t payload_type) const;
 
-  TelephoneEventHandler* GetTelephoneEventHandler() {
-    return this;
-  }
+  TelephoneEventHandler* GetTelephoneEventHandler() { return this; }
 
   // Returns true if CNG is configured with payload type payload_type. If so,
   // the frequency and cng_payload_type_has_changed are filled in.
@@ -74,7 +71,6 @@ class RTPReceiverAudio : public RTPReceiverStrategy,
 
   int32_t InvokeOnInitializeDecoder(
       RtpFeedback* callback,
-      int32_t id,
       int8_t payload_type,
       const char payload_name[RTP_PAYLOAD_NAME_SIZE],
       const PayloadUnion& specific_payload) const override;
@@ -93,21 +89,16 @@ class RTPReceiverAudio : public RTPReceiverStrategy,
   // statistics. In addition we sometimes need to tweak the frequency.
   void CheckPayloadChanged(int8_t payload_type,
                            PayloadUnion* specific_payload,
-                           bool* should_reset_statistics,
                            bool* should_discard_changes) override;
 
   int Energy(uint8_t array_of_energy[kRtpCsrcSize]) const override;
 
  private:
-
-  int32_t ParseAudioCodecSpecific(
-      WebRtcRTPHeader* rtp_header,
-      const uint8_t* payload_data,
-      size_t payload_length,
-      const AudioPayload& audio_specific,
-      bool is_red);
-
-  int32_t id_;
+  int32_t ParseAudioCodecSpecific(WebRtcRTPHeader* rtp_header,
+                                  const uint8_t* payload_data,
+                                  size_t payload_length,
+                                  const AudioPayload& audio_specific,
+                                  bool is_red);
 
   uint32_t last_received_frequency_;
 

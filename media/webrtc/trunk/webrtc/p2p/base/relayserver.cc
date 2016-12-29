@@ -27,7 +27,7 @@ namespace cricket {
 const int MAX_LIFETIME = 15 * 60 * 1000;
 
 // The number of bytes in each of the usernames we use.
-const uint32 USERNAME_LENGTH = 16;
+const uint32_t USERNAME_LENGTH = 16;
 
 // Calls SendTo on the given socket and logs any bad results.
 void Send(rtc::AsyncPacketSocket* socket, const char* bytes, size_t size,
@@ -263,8 +263,8 @@ void RelayServer::OnExternalPacket(
     return;
   }
 
-  uint32 length =
-      std::min(static_cast<uint32>(username_attr->length()), USERNAME_LENGTH);
+  uint32_t length =
+      std::min(static_cast<uint32_t>(username_attr->length()), USERNAME_LENGTH);
   std::string username(username_attr->bytes(), length);
   // TODO: Check the HMAC.
 
@@ -355,7 +355,7 @@ void RelayServer::HandleStunAllocate(
     //       else-branch will then disappear.
 
     // Compute the appropriate lifetime for this binding.
-    uint32 lifetime = MAX_LIFETIME;
+    uint32_t lifetime = MAX_LIFETIME;
     const StunUInt32Attribute* lifetime_attr =
         request.GetUInt32(STUN_ATTR_LIFETIME);
     if (lifetime_attr)
@@ -530,7 +530,7 @@ void RelayServer::RemoveBinding(RelayServerBinding* binding) {
 
 void RelayServer::OnMessage(rtc::Message *pmsg) {
 #if ENABLE_DEBUG
-  static const uint32 kMessageAcceptConnection = 1;
+  static const uint32_t kMessageAcceptConnection = 1;
   ASSERT(pmsg->message_id == kMessageAcceptConnection);
 #endif
   rtc::MessageData* data = pmsg->pdata;
@@ -616,7 +616,7 @@ void RelayServerConnection::Send(
   StunByteStringAttribute* data_attr =
       StunAttribute::CreateByteString(STUN_ATTR_DATA);
   ASSERT(size <= 65536);
-  data_attr->CopyBytes(data, uint16(size));
+  data_attr->CopyBytes(data, uint16_t(size));
   msg.AddAttribute(data_attr);
 
   SendStun(msg);
@@ -648,13 +648,16 @@ void RelayServerConnection::Unlock() {
 }
 
 // IDs used for posted messages:
-const uint32 MSG_LIFETIME_TIMER = 1;
+const uint32_t MSG_LIFETIME_TIMER = 1;
 
-RelayServerBinding::RelayServerBinding(
-    RelayServer* server, const std::string& username,
-    const std::string& password, uint32 lifetime)
-  : server_(server), username_(username), password_(password),
-    lifetime_(lifetime) {
+RelayServerBinding::RelayServerBinding(RelayServer* server,
+                                       const std::string& username,
+                                       const std::string& password,
+                                       uint32_t lifetime)
+    : server_(server),
+      username_(username),
+      password_(password),
+      lifetime_(lifetime) {
   // For now, every connection uses the standard magic cookie value.
   magic_cookie_.append(
       reinterpret_cast<const char*>(TURN_MAGIC_COOKIE_VALUE),

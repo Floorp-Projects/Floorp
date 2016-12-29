@@ -10,7 +10,7 @@
 #include <string>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/modules/audio_coding/codecs/isac/main/interface/isac.h"
+#include "webrtc/modules/audio_coding/codecs/isac/main/include/isac.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 struct WebRtcISACStruct;
@@ -79,7 +79,7 @@ TEST_F(IsacTest, IsacUpdateBWE) {
   WebRtcIsac_EncoderInit(isac_codec_, 0);
   WebRtcIsac_DecoderInit(isac_codec_);
 
-  int16_t encoded_bytes;
+  int encoded_bytes;
 
   // Test with call with a small packet (sync packet).
   EXPECT_EQ(-1, WebRtcIsac_UpdateBwEstimate(isac_codec_, bitstream_small_, 7, 1,
@@ -97,10 +97,12 @@ TEST_F(IsacTest, IsacUpdateBWE) {
   encoded_bytes =  WebRtcIsac_Encode(isac_codec_, speech_data_, bitstream_);
   EXPECT_EQ(0, encoded_bytes);
   encoded_bytes =  WebRtcIsac_Encode(isac_codec_, speech_data_, bitstream_);
+  EXPECT_GT(encoded_bytes, 0);
 
   // Call to update bandwidth estimator with real data.
   EXPECT_EQ(0, WebRtcIsac_UpdateBwEstimate(isac_codec_, bitstream_,
-                                           encoded_bytes, 1, 12345, 56789));
+                                           static_cast<size_t>(encoded_bytes),
+                                           1, 12345, 56789));
 
   // Free memory.
   EXPECT_EQ(0, WebRtcIsac_Free(isac_codec_));

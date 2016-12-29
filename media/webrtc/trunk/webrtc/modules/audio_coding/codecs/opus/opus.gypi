@@ -32,7 +32,7 @@
           'conditions': [
             ['build_with_mozilla==1', {
               # Mozilla provides its own build of the opus library.
-              'include_dirs': [
+             'include_dirs': [
                 '/media/libopus/include',
                 '/media/libopus/src',
                 '/media/libopus/celt',
@@ -51,18 +51,17 @@
       'dependencies': [
         'audio_encoder_interface',
       ],
-      'include_dirs': [
-        '<(webrtc_root)',
-      ],
       'defines': [
         'OPUS_COMPLEXITY=<(opus_complexity)'
       ],
       'sources': [
+        'audio_decoder_opus.cc',
+        'audio_decoder_opus.h',
         'audio_encoder_opus.cc',
-        'interface/audio_encoder_opus.h',
-        'interface/opus_interface.h',
+        'audio_encoder_opus.h',
         'opus_inst.h',
         'opus_interface.c',
+        'opus_interface.h',
       ],
     },
   ],
@@ -77,9 +76,6 @@
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:test_support_main',
             '<(DEPTH)/testing/gtest.gyp:gtest',
-          ],
-          'include_dirs': [
-            '<(webrtc_root)',
           ],
           'sources': [
             'opus_fec_test.cc',

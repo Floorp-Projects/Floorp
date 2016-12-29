@@ -16,7 +16,7 @@
 
 #include "webrtc/modules/audio_processing/utility/delay_estimator.h"
 #include "webrtc/modules/audio_processing/utility/delay_estimator_internal.h"
-#include "webrtc/system_wrappers/interface/compile_assert_c.h"
+#include "webrtc/system_wrappers/include/compile_assert_c.h"
 
 // Only bit |kBandFirst| through bit |kBandLast| are processed and
 // |kBandFirst| - |kBandLast| must be < 32.

@@ -10,14 +10,15 @@
 
 #include "webrtc/modules/remote_bitrate_estimator/overuse_estimator.h"
 
-#include <algorithm>
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
+
+#include "webrtc/base/logging.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h"
-#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 
@@ -146,8 +147,8 @@ void OveruseEstimator::UpdateNoiseEstimate(double residual,
               + (1 - beta) * residual;
   var_noise_ = beta * var_noise_
               + (1 - beta) * (avg_noise_ - residual) * (avg_noise_ - residual);
-  if (var_noise_ < 1e-7) {
-    var_noise_ = 1e-7;
+  if (var_noise_ < 1) {
+    var_noise_ = 1;
   }
 }
 }  // namespace webrtc
