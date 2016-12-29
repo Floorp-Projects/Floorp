@@ -228,21 +228,15 @@ protected:
   };
 
   // Just like the public version without the FastCallbackConstructor argument,
-  // except for not calling HoldJSObjects.  If you use this, you MUST ensure
-  // that the object is traced until the HoldJSObjects happens!
+  // except for not calling HoldJSObjects and not capturing async stacks (on the
+  // assumption that we will do that last whenever we decide to actually
+  // HoldJSObjects; see FinishSlowJSInitIfMoreThanOneOwner).  If you use this,
+  // you MUST ensure that the object is traced until the HoldJSObjects happens!
   CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
                  nsIGlobalObject* aIncumbentGlobal,
                  const FastCallbackConstructor&)
   {
-    if (aCx && JS::ContextOptionsRef(aCx).asyncStack()) {
-      JS::RootedObject stack(aCx);
-      if (!JS::CaptureCurrentStack(aCx, &stack)) {
-        JS_ClearPendingException(aCx);
-      }
-      InitNoHold(aCallback, stack, aIncumbentGlobal);
-    } else {
-      InitNoHold(aCallback, nullptr, aIncumbentGlobal);
-    }
+    InitNoHold(aCallback, nullptr, aIncumbentGlobal);
   }
 
   // mCallback is not unwrapped, so it can be a cross-compartment-wrapper.
