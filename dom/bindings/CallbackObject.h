@@ -213,9 +213,10 @@ protected:
   void Trace(JSTracer* aTracer);
 
   // For use from subclasses that want to be traced for a bit then possibly
-  // switch to HoldJSObjects.  If we have more than one owner, this will
-  // HoldJSObjects; otherwise it will just forget all our JS references.
-  void HoldJSObjectsIfMoreThanOneOwner();
+  // switch to HoldJSObjects and do other slow JS-related init work we might do.
+  // If we have more than one owner, this will HoldJSObjects and do said slow
+  // init work; otherwise it will just forget all our JS references.
+  void FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx);
 
   // Struct used as a way to force a CallbackObject constructor to not call
   // HoldJSObjects. We're putting it here so that CallbackObject subclasses will
@@ -577,11 +578,11 @@ public:
   ~RootedCallback()
   {
     // Ensure that our callback starts holding on to its own JS objects as
-    // needed.  Having to null-check here when T is OwningNonNull is a bit
-    // silly, but it's simpler than creating two separate RootedCallback
-    // instantiations for OwningNonNull and RefPtr.
+    // needed.  We really do need to check that things are initialized even when
+    // T is OwningNonNull, because we might be running before the OwningNonNull
+    // ever got assigned to!
     if (IsInitialized(this->get())) {
-      this->get()->HoldJSObjectsIfMoreThanOneOwner();
+      this->get()->FinishSlowJSInitIfMoreThanOneOwner(mCx);
     }
   }
 
