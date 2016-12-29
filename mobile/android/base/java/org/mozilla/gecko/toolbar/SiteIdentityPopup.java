@@ -15,8 +15,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
 import android.widget.ImageView;
 import android.widget.Toast;
-import org.json.JSONException;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.EventDispatcher;
@@ -29,12 +30,12 @@ import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.SnackbarBuilder;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
-import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
@@ -265,19 +266,18 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
         config.setMessage(message);
 
         // Set options.
-        final JSONObject options = new JSONObject();
+        final GeckoBundle options = new GeckoBundle();
 
         // Add action text only if there are other logins to select.
         if (logins.length() > 1) {
-
-            final JSONObject actionText = new JSONObject();
-            actionText.put("type", "SELECT");
+            final GeckoBundle actionText = new GeckoBundle();
+            actionText.putString("type", "SELECT");
 
             final JSONObject bundle = new JSONObject();
             bundle.put("logins", logins);
 
-            actionText.put("bundle", bundle);
-            options.put("actionText", actionText);
+            actionText.putBundle("bundle", GeckoBundle.fromJSONObject(bundle));
+            options.putBundle("actionText", actionText);
         }
 
         config.setOptions(options);
@@ -433,14 +433,10 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
 
         final int icon = blocked ? R.drawable.shield_enabled : R.drawable.shield_disabled;
 
-        final JSONObject options = new JSONObject();
-        final JSONObject tracking = new JSONObject();
-        try {
-            tracking.put("enabled", blocked);
-            options.put("tracking_protection", tracking);
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error adding tracking protection options", e);
-        }
+        final GeckoBundle options = new GeckoBundle();
+        final GeckoBundle tracking = new GeckoBundle();
+        tracking.putBoolean("enabled", blocked);
+        options.putBundle("tracking_protection", tracking);
         config.setOptions(options);
 
         config.setLink(mContext.getString(R.string.learn_more), TRACKING_CONTENT_SUPPORT_URL);

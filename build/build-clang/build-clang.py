@@ -57,6 +57,16 @@ def patch(patch, srcdir):
                '-s'])
 
 
+def do_import_clang_tidy(source_dir):
+    clang_plugin_path = os.path.join(os.path.dirname(sys.argv[0]),
+                                     '..', 'clang-plugin')
+    clang_tidy_path = os.path.join(source_dir,
+                                   'tools/clang/tools/extra/clang-tidy')
+    sys.path.append(clang_plugin_path)
+    from import_mozilla_checks import do_import
+    do_import(clang_plugin_path, clang_tidy_path)
+
+
 def build_package(package_build_dir, run_cmake, cmake_args):
     if not os.path.exists(package_build_dir):
         os.mkdir(package_build_dir)
@@ -259,6 +269,7 @@ if __name__ == "__main__":
 
     llvm_source_dir = source_dir + "/llvm"
     clang_source_dir = source_dir + "/clang"
+    extra_source_dir = source_dir + "/extra"
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
     libcxxabi_source_dir = source_dir + "/libcxxabi"
@@ -294,6 +305,7 @@ if __name__ == "__main__":
     llvm_revision = config["llvm_revision"]
     llvm_repo = config["llvm_repo"]
     clang_repo = config["clang_repo"]
+    extra_repo = config.get("extra_repo")
     compiler_repo = config["compiler_repo"]
     libcxx_repo = config["libcxx_repo"]
     libcxxabi_repo = config.get("libcxxabi_repo")
@@ -312,6 +324,11 @@ if __name__ == "__main__":
         build_libcxx = config["build_libcxx"]
         if build_libcxx not in (True, False):
             raise ValueError("Only boolean values are accepted for build_libcxx.")
+    import_clang_tidy = False
+    if "import_clang_tidy" in config:
+        import_clang_tidy = config["import_clang_tidy"]
+        if import_clang_tidy not in (True, False):
+            raise ValueError("Only boolean values are accepted for import_clang_tidy.")
     assertions = False
     if "assertions" in config:
         assertions = config["assertions"]
@@ -339,6 +356,8 @@ if __name__ == "__main__":
         svn_co(source_dir, libcxx_repo, libcxx_source_dir, llvm_revision)
         if libcxxabi_repo:
             svn_co(source_dir, libcxxabi_repo, libcxxabi_source_dir, llvm_revision)
+        if extra_repo:
+            svn_co(source_dir, extra_repo, extra_source_dir, llvm_revision)
         for p in config.get("patches", {}).get(get_platform(), []):
             patch(p, source_dir)
     else:
@@ -348,9 +367,13 @@ if __name__ == "__main__":
         svn_update(libcxx_source_dir, llvm_revision)
         if libcxxabi_repo:
             svn_update(libcxxabi_source_dir, llvm_revision)
+        if extra_repo:
+            svn_update(extra_source_dir, llvm_revision)
 
     symlinks = [(source_dir + "/clang",
                  llvm_source_dir + "/tools/clang"),
+                (source_dir + "/extra",
+                 llvm_source_dir + "/tools/clang/tools/extra"),
                 (source_dir + "/compiler-rt",
                  llvm_source_dir + "/projects/compiler-rt"),
                 (source_dir + "/libcxx",
@@ -367,6 +390,9 @@ if __name__ == "__main__":
             os.unlink(l[1])
         if os.path.exists(l[0]):
             symlink(l[0], l[1])
+
+    if import_clang_tidy:
+        do_import_clang_tidy(llvm_source_dir)
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)

@@ -9,11 +9,11 @@ import java.util.HashSet;
 
 import android.text.TextUtils;
 import android.widget.PopupWindow;
-import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONArray;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
@@ -24,7 +24,7 @@ import android.view.View;
 import org.mozilla.gecko.widget.DoorhangerConfig;
 
 public class DoorHangerPopup extends AnchoredPopup
-                             implements GeckoEventListener,
+                             implements BundleEventListener,
                                         Tabs.OnTabsChangedListener,
                                         PopupWindow.OnDismissListener,
                                         DoorHanger.OnButtonClickListener {
@@ -42,7 +42,7 @@ public class DoorHangerPopup extends AnchoredPopup
 
         mDoorHangers = new HashSet<DoorHanger>();
 
-        GeckoApp.getEventDispatcher().registerGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().registerUiThreadListener(this,
             "Doorhanger:Add",
             "Doorhanger:Remove");
         Tabs.registerOnTabsChangedListener(this);
@@ -51,7 +51,7 @@ public class DoorHangerPopup extends AnchoredPopup
     }
 
     void destroy() {
-        GeckoApp.getEventDispatcher().unregisterGeckoThreadListener(this,
+        GeckoApp.getEventDispatcher().unregisterUiThreadListener(this,
             "Doorhanger:Add",
             "Doorhanger:Remove");
         Tabs.unregisterOnTabsChangedListener(this);
@@ -76,72 +76,49 @@ public class DoorHangerPopup extends AnchoredPopup
     }
 
     @Override
-    public void handleMessage(String event, JSONObject geckoObject) {
-        try {
-            if (event.equals("Doorhanger:Add")) {
-                final DoorhangerConfig config = makeConfigFromJSON(geckoObject);
+    public void handleMessage(final String event, final GeckoBundle geckoObject,
+                              final EventCallback callback) {
+        if (event.equals("Doorhanger:Add")) {
+            final DoorhangerConfig config = makeConfigFromBundle(geckoObject);
+            addDoorHanger(config);
 
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        addDoorHanger(config);
-                    }
-                });
-            } else if (event.equals("Doorhanger:Remove")) {
-                final int tabId = geckoObject.getInt("tabID");
-                final String value = geckoObject.getString("value");
+        } else if (event.equals("Doorhanger:Remove")) {
+            final int tabId = geckoObject.getInt("tabID");
+            final String value = geckoObject.getString("value");
 
-                ThreadUtils.postToUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        DoorHanger doorHanger = getDoorHanger(tabId, value);
-                        if (doorHanger == null)
-                            return;
-
-                        removeDoorHanger(doorHanger);
-                        updatePopup();
-                    }
-                });
+            DoorHanger doorHanger = getDoorHanger(tabId, value);
+            if (doorHanger == null) {
+                return;
             }
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+            removeDoorHanger(doorHanger);
+            updatePopup();
         }
     }
 
-    private DoorhangerConfig makeConfigFromJSON(JSONObject json) throws JSONException {
-        final int tabId = json.getInt("tabID");
-        final String id = json.getString("value");
+    private DoorhangerConfig makeConfigFromBundle(final GeckoBundle bundle) {
+        final int tabId = bundle.getInt("tabID");
+        final String id = bundle.getString("value");
 
-        final String typeString = json.optString("category");
-        DoorHanger.Type doorhangerType = DoorHanger.Type.DEFAULT;
-        if (DoorHanger.Type.LOGIN.toString().equals(typeString)) {
-            doorhangerType = DoorHanger.Type.LOGIN;
-        } else if (DoorHanger.Type.GEOLOCATION.toString().equals(typeString)) {
-            doorhangerType = DoorHanger.Type.GEOLOCATION;
-        } else if (DoorHanger.Type.DESKTOPNOTIFICATION2.toString().equals(typeString)) {
-            doorhangerType = DoorHanger.Type.DESKTOPNOTIFICATION2;
-        } else if (DoorHanger.Type.WEBRTC.toString().equals(typeString)) {
-            doorhangerType = DoorHanger.Type.WEBRTC;
-        } else if (DoorHanger.Type.VIBRATION.toString().equals(typeString)) {
-            doorhangerType = DoorHanger.Type.VIBRATION;
-        }
+        final String typeString = bundle.getString("category");
+        final DoorHanger.Type doorhangerType = typeString == null ?
+            DoorHanger.Type.DEFAULT : DoorHanger.Type.valueOf(typeString);
 
         final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
 
-        config.setMessage(json.getString("message"));
-        config.setOptions(json.getJSONObject("options"));
+        config.setMessage(bundle.getString("message"));
+        config.setOptions(bundle.getBundle("options"));
 
-        final JSONArray buttonArray = json.getJSONArray("buttons");
-        int numButtons = buttonArray.length();
+        final GeckoBundle[] buttonArray = bundle.getBundleArray("buttons");
+        int numButtons = buttonArray.length;
         if (numButtons > 2) {
             Log.e(LOGTAG, "Doorhanger can have a maximum of two buttons!");
             numButtons = 2;
         }
 
         for (int i = 0; i < numButtons; i++) {
-            final JSONObject buttonJSON = buttonArray.getJSONObject(i);
-            final boolean isPositive = buttonJSON.optBoolean("positive", false);
-            config.setButton(buttonJSON.getString("label"), buttonJSON.getInt("callback"), isPositive);
+            final GeckoBundle button = buttonArray[i];
+            final boolean isPositive = button.getBoolean("positive", false);
+            config.setButton(button.getString("label"), button.getInt("callback"), isPositive);
         }
 
         return config;
