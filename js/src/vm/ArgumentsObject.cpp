@@ -732,7 +732,7 @@ UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId i
         if (argsobj->hasOverriddenLength())
             return true;
     } else {
-        if (!JSID_IS_ATOM(id, cx->names().callee) && !JSID_IS_ATOM(id, cx->names().caller))
+        if (!JSID_IS_ATOM(id, cx->names().callee))
             return true;
 
         attrs = JSPROP_PERMANENT | JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
@@ -762,10 +762,6 @@ UnmappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj)
         return false;
 
     id = NameToId(cx->names().callee);
-    if (!HasProperty(cx, argsobj, id, &found))
-        return false;
-
-    id = NameToId(cx->names().caller);
     if (!HasProperty(cx, argsobj, id, &found))
         return false;
 

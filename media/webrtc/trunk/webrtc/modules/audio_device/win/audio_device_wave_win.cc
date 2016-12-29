@@ -9,11 +9,11 @@
  */
 
 #include "webrtc/modules/audio_device/audio_device_config.h"
-#include "webrtc/modules/audio_device/audio_device_utility.h"
 #include "webrtc/modules/audio_device/win/audio_device_wave_win.h"
 
-#include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/event_wrapper.h"
+#include "webrtc/system_wrappers/include/tick_util.h"
+#include "webrtc/system_wrappers/include/trace.h"
 
 #include <windows.h>
 #include <objbase.h>    // CoTaskMemAlloc, CoTaskMemFree
@@ -47,7 +47,7 @@ namespace webrtc {
 AudioDeviceWindowsWave::AudioDeviceWindowsWave(const int32_t id) :
     _ptrAudioBuffer(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
-    _timeEvent(*EventWrapper::Create()),
+    _timeEvent(*EventTimerWrapper::Create()),
     _recStartEvent(*EventWrapper::Create()),
     _playStartEvent(*EventWrapper::Create()),
     _hGetCaptureVolumeThread(NULL),
@@ -206,7 +206,7 @@ int32_t AudioDeviceWindowsWave::Init()
         return 0;
     }
 
-    const uint32_t nowTime(AudioDeviceUtility::GetTimeInMS());
+    const uint32_t nowTime(TickTime::MillisecondTimestamp());
 
     _recordedBytes = 0;
     _prevRecByteCheckTime = nowTime;
@@ -228,15 +228,9 @@ int32_t AudioDeviceWindowsWave::Init()
     }
 
     const char* threadName = "webrtc_audio_module_thread";
-    _ptrThread = ThreadWrapper::CreateThread(ThreadFunc, this, threadName);
-    if (!_ptrThread->Start())
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "failed to start the audio thread");
-        _ptrThread.reset();
-        return -1;
-    }
-    _ptrThread->SetPriority(kRealtimePriority);
+    _ptrThread.reset(new rtc::PlatformThread(ThreadFunc, this, threadName));
+    _ptrThread->Start();
+    _ptrThread->SetPriority(rtc::kRealtimePriority);
 
     const bool periodic(true);
     if (!_timeEvent.StartTimer(periodic, TIMER_PERIOD_MS))
@@ -250,12 +244,8 @@ int32_t AudioDeviceWindowsWave::Init()
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
                  "periodic timer (dT=%d) is now active", TIMER_PERIOD_MS);
 
-    _hGetCaptureVolumeThread = CreateThread(NULL,
-                                            0,
-                                            GetCaptureVolumeThread,
-                                            this,
-                                            0,
-                                            NULL);
+    _hGetCaptureVolumeThread =
+        CreateThread(NULL, 0, GetCaptureVolumeThread, this, 0, NULL);
     if (_hGetCaptureVolumeThread == NULL)
     {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -265,12 +255,8 @@ int32_t AudioDeviceWindowsWave::Init()
 
     SetThreadPriority(_hGetCaptureVolumeThread, THREAD_PRIORITY_NORMAL);
 
-    _hSetCaptureVolumeThread = CreateThread(NULL,
-                                            0,
-                                            SetCaptureVolumeThread,
-                                            this,
-                                            0,
-                                            NULL);
+    _hSetCaptureVolumeThread =
+        CreateThread(NULL, 0, SetCaptureVolumeThread, this, 0, NULL);
     if (_hSetCaptureVolumeThread == NULL)
     {
         WEBRTC_TRACE(kTraceError, kTraceAudioDevice, _id,
@@ -303,7 +289,7 @@ int32_t AudioDeviceWindowsWave::Terminate()
 
     if (_ptrThread)
     {
-        ThreadWrapper* tmpThread = _ptrThread.release();
+        rtc::PlatformThread* tmpThread = _ptrThread.release();
         _critSect.Leave();
 
         _timeEvent.Set();
@@ -3052,7 +3038,7 @@ bool AudioDeviceWindowsWave::ThreadProcess()
         return true;
     }
 
-    time = AudioDeviceUtility::GetTimeInMS();
+    time = TickTime::MillisecondTimestamp();
 
     if (_startPlay)
     {

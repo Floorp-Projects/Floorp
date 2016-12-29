@@ -20,9 +20,9 @@
 #define SPL_LEVINSON_MAXORDER 20
 
 int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
-                                 int16_t order)
+                                 size_t order)
 {
-    int16_t i, j;
+    size_t i, j;
     // Auto-correlation coefficients in high precision
     int16_t R_hi[SPL_LEVINSON_MAXORDER + 1], R_low[SPL_LEVINSON_MAXORDER + 1];
     // LPC coefficients in high precision
@@ -41,7 +41,7 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
 
     norm = WebRtcSpl_NormW32(R[0]);
 
-    for (i = order; i >= 0; i--)
+    for (i = 0; i <= order; ++i)
     {
         temp1W32 = WEBRTC_SPL_LSHIFT_W32(R[i], norm);
         // Put R in hi and low format
@@ -76,8 +76,7 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
 
     // Alpha = R[0] * (1-K^2)
 
-    temp1W32 = (((WEBRTC_SPL_MUL_16_16(K_hi, K_low) >> 14) + WEBRTC_SPL_MUL_16_16(K_hi, K_hi))
-            << 1); // temp1W32 = k^2 in Q31
+    temp1W32 = ((K_hi * K_low >> 14) + K_hi * K_hi) << 1;  // = k^2 in Q31
 
     temp1W32 = WEBRTC_SPL_ABS_W32(temp1W32); // Guard against <0
     temp1W32 = (int32_t)0x7fffffffL - temp1W32; // temp1W32 = (1 - K[0]*K[0]) in Q31
@@ -87,9 +86,8 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
     tmp_low = (int16_t)((temp1W32 - ((int32_t)tmp_hi << 16)) >> 1);
 
     // Calculate Alpha in Q31
-    temp1W32 = ((WEBRTC_SPL_MUL_16_16(R_hi[0], tmp_hi)
-            + (WEBRTC_SPL_MUL_16_16(R_hi[0], tmp_low) >> 15)
-            + (WEBRTC_SPL_MUL_16_16(R_low[0], tmp_hi) >> 15)) << 1);
+    temp1W32 = (R_hi[0] * tmp_hi + (R_hi[0] * tmp_low >> 15) +
+        (R_low[0] * tmp_hi >> 15)) << 1;
 
     // Normalize Alpha and put it in hi and low format
 
@@ -113,10 +111,10 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
 
         for (j = 1; j < i; j++)
         {
-            // temp1W32 is in Q31
-            temp1W32 += ((WEBRTC_SPL_MUL_16_16(R_hi[j], A_hi[i-j]) << 1)
-                    + (((WEBRTC_SPL_MUL_16_16(R_hi[j], A_low[i-j]) >> 15)
-                            + (WEBRTC_SPL_MUL_16_16(R_low[j], A_hi[i-j]) >> 15)) << 1));
+          // temp1W32 is in Q31
+          temp1W32 += (R_hi[j] * A_hi[i - j] << 1) +
+              (((R_hi[j] * A_low[i - j] >> 15) +
+              (R_low[j] * A_hi[i - j] >> 15)) << 1);
         }
 
         temp1W32 = WEBRTC_SPL_LSHIFT_W32(temp1W32, 4);
@@ -177,9 +175,8 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
                     + WEBRTC_SPL_LSHIFT_W32((int32_t)A_low[j],1);
 
             // temp1W32 += K*A[i-j] in Q27
-            temp1W32 += ((WEBRTC_SPL_MUL_16_16(K_hi, A_hi[i-j])
-                    + (WEBRTC_SPL_MUL_16_16(K_hi, A_low[i-j]) >> 15)
-                    + (WEBRTC_SPL_MUL_16_16(K_low, A_hi[i-j]) >> 15)) << 1);
+            temp1W32 += (K_hi * A_hi[i - j] + (K_hi * A_low[i - j] >> 15) +
+                (K_low * A_hi[i - j] >> 15)) << 1;
 
             // Put Anew in hi and low format
             A_upd_hi[j] = (int16_t)(temp1W32 >> 16);
@@ -197,8 +194,7 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
 
         // Alpha = Alpha * (1-K^2)
 
-        temp1W32 = (((WEBRTC_SPL_MUL_16_16(K_hi, K_low) >> 14)
-                + WEBRTC_SPL_MUL_16_16(K_hi, K_hi)) << 1); // K*K in Q31
+        temp1W32 = ((K_hi * K_low >> 14) + K_hi * K_hi) << 1;  // K*K in Q31
 
         temp1W32 = WEBRTC_SPL_ABS_W32(temp1W32); // Guard against <0
         temp1W32 = (int32_t)0x7fffffffL - temp1W32; // 1 - K*K  in Q31
@@ -208,9 +204,8 @@ int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
         tmp_low = (int16_t)((temp1W32 - ((int32_t)tmp_hi << 16)) >> 1);
 
         // Calculate Alpha = Alpha * (1-K^2) in Q31
-        temp1W32 = ((WEBRTC_SPL_MUL_16_16(Alpha_hi, tmp_hi)
-                + (WEBRTC_SPL_MUL_16_16(Alpha_hi, tmp_low) >> 15)
-                + (WEBRTC_SPL_MUL_16_16(Alpha_low, tmp_hi) >> 15)) << 1);
+        temp1W32 = (Alpha_hi * tmp_hi + (Alpha_hi * tmp_low >> 15) +
+            (Alpha_low * tmp_hi >> 15)) << 1;
 
         // Normalize Alpha and store it on hi and low format
 

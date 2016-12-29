@@ -73,7 +73,7 @@ class XWindowProperty {
   unsigned long size_;  // NOLINT: type required by XGetWindowProperty
   unsigned char* data_;
 
-  DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
+  RTC_DISALLOW_COPY_AND_ASSIGN(XWindowProperty);
 };
 
 // Stupid X11.  It seems none of the synchronous returns codes from X11 calls
@@ -118,7 +118,7 @@ class XErrorSuppressor {
   Display* display_;
   XErrorHandler original_error_handler_;
 
-  DISALLOW_COPY_AND_ASSIGN(XErrorSuppressor);
+  RTC_DISALLOW_COPY_AND_ASSIGN(XErrorSuppressor);
 };
 
 // Hiding all X11 specifics inside its own class. This to avoid
@@ -277,7 +277,7 @@ class XWindowEnumerator {
     return true;
   }
 
-  uint8* GetWindowIcon(const WindowId& id, int* width, int* height) {
+  uint8_t* GetWindowIcon(const WindowId& id, int* width, int* height) {
     if (!Init()) {
       return NULL;
     }
@@ -297,14 +297,14 @@ class XWindowEnumerator {
       LOG(LS_ERROR) << "Failed to get size of the icon.";
       return NULL;
     }
-    // Get the icon data, the format is one uint32 each for width and height,
+    // Get the icon data, the format is one uint32_t each for width and height,
     // followed by the actual pixel data.
     if (size >= 2 &&
         XGetWindowProperty(
             display_, id.id(), net_wm_icon_, 0, size, False, XA_CARDINAL,
             &ret_type, &format, &length, &bytes_after, &data) == Success &&
         data) {
-      uint32* data_ptr = reinterpret_cast<uint32*>(data);
+      uint32_t* data_ptr = reinterpret_cast<uint32_t*>(data);
       int w, h;
       w = data_ptr[0];
       h = data_ptr[1];
@@ -313,8 +313,7 @@ class XWindowEnumerator {
         LOG(LS_ERROR) << "Not a vaild icon.";
         return NULL;
       }
-      uint8* rgba =
-          ArgbToRgba(&data_ptr[2], 0, 0, w, h, w, h, true);
+      uint8_t* rgba = ArgbToRgba(&data_ptr[2], 0, 0, w, h, w, h, true);
       XFree(data);
       *width = w;
       *height = h;
@@ -325,7 +324,7 @@ class XWindowEnumerator {
     }
   }
 
-  uint8* GetWindowThumbnail(const WindowId& id, int width, int height) {
+  uint8_t* GetWindowThumbnail(const WindowId& id, int width, int height) {
     if (!Init()) {
       return NULL;
     }
@@ -390,12 +389,8 @@ class XWindowEnumerator {
       return NULL;
     }
 
-    uint8* data = GetDrawableThumbnail(src_pixmap,
-                                       attr.visual,
-                                       src_width,
-                                       src_height,
-                                       width,
-                                       height);
+    uint8_t* data = GetDrawableThumbnail(src_pixmap, attr.visual, src_width,
+                                         src_height, width, height);
     XFreePixmap(display_, src_pixmap);
     return data;
   }
@@ -408,7 +403,7 @@ class XWindowEnumerator {
     return XScreenCount(display_);
   }
 
-  uint8* GetDesktopThumbnail(const DesktopId& id, int width, int height) {
+  uint8_t* GetDesktopThumbnail(const DesktopId& id, int width, int height) {
     if (!Init()) {
       return NULL;
     }
@@ -445,12 +440,12 @@ class XWindowEnumerator {
   }
 
  private:
-  uint8* GetDrawableThumbnail(Drawable src_drawable,
-                              Visual* visual,
-                              int src_width,
-                              int src_height,
-                              int dst_width,
-                              int dst_height) {
+  uint8_t* GetDrawableThumbnail(Drawable src_drawable,
+                                Visual* visual,
+                                int src_width,
+                                int src_height,
+                                int dst_width,
+                                int dst_height) {
     if (!has_render_extension_) {
       // Without the Xrender extension we would have to read the full window and
       // scale it down in our process. Xrender is over a decade old so we aren't
@@ -561,14 +556,9 @@ class XWindowEnumerator {
                               dst_width,
                               dst_height,
                               AllPlanes, ZPixmap);
-    uint8* data = ArgbToRgba(reinterpret_cast<uint32*>(image->data),
-                             centered_x,
-                             centered_y,
-                             scaled_width,
-                             scaled_height,
-                             dst_width,
-                             dst_height,
-                             false);
+    uint8_t* data = ArgbToRgba(reinterpret_cast<uint32_t*>(image->data),
+                               centered_x, centered_y, scaled_width,
+                               scaled_height, dst_width, dst_height, false);
     XDestroyImage(image);
     XRenderFreePicture(display_, dst);
     XFreePixmap(display_, dst_pixmap);
@@ -576,17 +566,23 @@ class XWindowEnumerator {
     return data;
   }
 
-  uint8* ArgbToRgba(uint32* argb_data, int x, int y, int w, int h,
-                    int stride_x, int stride_y, bool has_alpha) {
-    uint8* p;
+  uint8_t* ArgbToRgba(uint32_t* argb_data,
+                      int x,
+                      int y,
+                      int w,
+                      int h,
+                      int stride_x,
+                      int stride_y,
+                      bool has_alpha) {
+    uint8_t* p;
     int len = stride_x * stride_y * 4;
-    uint8* data = new uint8[len];
+    uint8_t* data = new uint8_t[len];
     memset(data, 0, len);
     p = data + 4 * (y * stride_x + x);
     for (int i = 0; i < h; ++i) {
       for (int j = 0; j < w; ++j) {
-        uint32 argb;
-        uint32 rgba;
+        uint32_t argb;
+        uint32_t rgba;
         argb = argb_data[stride_x * (y + i) + x + j];
         rgba = (argb << 8) | (argb >> 24);
         *p = rgba >> 24;
@@ -691,7 +687,7 @@ class XWindowEnumerator {
       return 0;
     }
     if (type != None) {
-      int64 state = static_cast<int64>(*data);
+      int64_t state = static_cast<int64_t>(*data);
       XFree(data);
       return state == NormalState ? window : 0;
     }
@@ -789,13 +785,14 @@ bool X11WindowPicker::MoveToFront(const WindowId& id) {
   return enumerator_->MoveToFront(id);
 }
 
-
-uint8* X11WindowPicker::GetWindowIcon(const WindowId& id, int* width,
+uint8_t* X11WindowPicker::GetWindowIcon(const WindowId& id,
+                                        int* width,
                                         int* height) {
   return enumerator_->GetWindowIcon(id, width, height);
 }
 
-uint8* X11WindowPicker::GetWindowThumbnail(const WindowId& id, int width,
+uint8_t* X11WindowPicker::GetWindowThumbnail(const WindowId& id,
+                                             int width,
                                              int height) {
   return enumerator_->GetWindowThumbnail(id, width, height);
 }
@@ -804,7 +801,7 @@ int X11WindowPicker::GetNumDesktops() {
   return enumerator_->GetNumDesktops();
 }
 
-uint8* X11WindowPicker::GetDesktopThumbnail(const DesktopId& id,
+uint8_t* X11WindowPicker::GetDesktopThumbnail(const DesktopId& id,
                                               int width,
                                               int height) {
   return enumerator_->GetDesktopThumbnail(id, width, height);

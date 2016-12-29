@@ -10,9 +10,15 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 
 namespace webrtc {
+
+using RTCPUtility::RtcpCommonHeader;
+
+namespace rtcp {
 
 TEST(RtcpUtilityTest, MidNtp) {
   const uint32_t kNtpSec = 0x12345678;
@@ -68,5 +74,88 @@ TEST(RtcpUtilityTest, NackRequestsWithWrap) {
   EXPECT_EQ(8U, stats.requests());
 }
 
+class RtcpParseCommonHeaderTest : public ::testing::Test {
+ public:
+  RtcpParseCommonHeaderTest() { memset(buffer, 0, kBufferCapacityBytes); }
+  virtual ~RtcpParseCommonHeaderTest() {}
+
+ protected:
+  static const size_t kBufferCapacityBytes = 40;
+  uint8_t buffer[kBufferCapacityBytes];
+  RtcpCommonHeader header;
+};
+
+TEST_F(RtcpParseCommonHeaderTest, TooSmallBuffer) {
+  // Buffer needs to be able to hold the header.
+  for (size_t i = 0; i < RtcpCommonHeader::kHeaderSizeBytes; ++i)
+    EXPECT_FALSE(RtcpParseCommonHeader(buffer, i, &header));
+}
+
+TEST_F(RtcpParseCommonHeaderTest, Version) {
+  // Version 2 is the only allowed for now.
+  for (int v = 0; v < 4; ++v) {
+    buffer[0] = v << 6;
+    EXPECT_EQ(v == 2, RtcpParseCommonHeader(
+                          buffer, RtcpCommonHeader::kHeaderSizeBytes, &header));
+  }
+}
+
+TEST_F(RtcpParseCommonHeaderTest, PacketSize) {
+  // Set v = 2, leave p, fmt, pt as 0.
+  buffer[0] = 2 << 6;
+
+  const size_t kBlockSize = 3;
+  ByteWriter<uint16_t>::WriteBigEndian(&buffer[2], kBlockSize);
+  const size_t kSizeInBytes = (kBlockSize + 1) * 4;
+
+  EXPECT_FALSE(RtcpParseCommonHeader(buffer, kSizeInBytes - 1, &header));
+  EXPECT_TRUE(RtcpParseCommonHeader(buffer, kSizeInBytes, &header));
+}
+
+TEST_F(RtcpParseCommonHeaderTest, PayloadSize) {
+  // Set v = 2, p = 1, but leave fmt, pt as 0.
+  buffer[0] = (2 << 6) | (1 << 5);
+
+  // Padding bit set, but no byte for padding (can't specify padding length).
+  EXPECT_FALSE(RtcpParseCommonHeader(buffer, 4, &header));
+
+  const size_t kBlockSize = 3;
+  ByteWriter<uint16_t>::WriteBigEndian(&buffer[2], kBlockSize);
+  const size_t kSizeInBytes = (kBlockSize + 1) * 4;
+  const size_t kPayloadSizeBytes =
+      kSizeInBytes - RtcpCommonHeader::kHeaderSizeBytes;
+
+  // Padding one byte larger than possible.
+  buffer[kSizeInBytes - 1] = kPayloadSizeBytes + 1;
+  EXPECT_FALSE(RtcpParseCommonHeader(buffer, kSizeInBytes, &header));
+
+  // Pure padding packet?
+  buffer[kSizeInBytes - 1] = kPayloadSizeBytes;
+  EXPECT_TRUE(RtcpParseCommonHeader(buffer, kSizeInBytes, &header));
+  EXPECT_EQ(kPayloadSizeBytes, header.padding_bytes);
+  EXPECT_EQ(0u, header.payload_size_bytes);
+
+  // Single byte of actual data.
+  buffer[kSizeInBytes - 1] = kPayloadSizeBytes - 1;
+  EXPECT_TRUE(RtcpParseCommonHeader(buffer, kSizeInBytes, &header));
+  EXPECT_EQ(kPayloadSizeBytes - 1, header.padding_bytes);
+  EXPECT_EQ(1u, header.payload_size_bytes);
+}
+
+TEST_F(RtcpParseCommonHeaderTest, FormatAndPayloadType) {
+  // Format/count and packet type both set to max values.
+  const uint8_t kCountOrFormat = 0x1F;
+  const uint8_t kPacketType = 0xFF;
+  buffer[0] = 2 << 6;  // V = 2.
+  buffer[0] |= kCountOrFormat;
+  buffer[1] = kPacketType;
+
+  EXPECT_TRUE(RtcpParseCommonHeader(buffer, RtcpCommonHeader::kHeaderSizeBytes,
+                                    &header));
+  EXPECT_EQ(kCountOrFormat, header.count_or_format);
+  EXPECT_EQ(kPacketType, header.packet_type);
+}
+
+}  // namespace rtcp
 }  // namespace webrtc
 

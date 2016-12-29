@@ -596,4 +596,11 @@ TEST_F(RtpDepacketizerVp8Test, TestWithPacketizer) {
   EXPECT_EQ(payload.type.Video.codecHeader.VP8.layerSync,
             input_header.layerSync);
 }
+
+TEST_F(RtpDepacketizerVp8Test, TestEmptyPayload) {
+  // Using a wild pointer to crash on accesses from inside the depacketizer.
+  uint8_t* garbage_ptr = reinterpret_cast<uint8_t*>(0x4711);
+  RtpDepacketizer::ParsedPayload payload;
+  EXPECT_FALSE(depacketizer_->Parse(&payload, garbage_ptr, 0));
+}
 }  // namespace webrtc

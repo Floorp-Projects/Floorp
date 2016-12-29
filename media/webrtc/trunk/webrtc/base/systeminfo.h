@@ -28,53 +28,20 @@ class SystemInfo {
 
   SystemInfo();
 
-  // The number of CPU Cores in the system.
-  int GetMaxPhysicalCpus();
   // The number of CPU Threads in the system.
-  int GetMaxCpus();
+  static int GetMaxCpus();
   // The number of CPU Threads currently available to this process.
-  int GetCurCpus();
+  static int GetCurCpus();
   // Identity of the CPUs.
   Architecture GetCpuArchitecture();
   std::string GetCpuVendor();
-  int GetCpuFamily();
-  int GetCpuModel();
-  int GetCpuStepping();
-  // Return size of CPU cache in bytes.  Uses largest available cache (L3).
-  int GetCpuCacheSize();
-  // Estimated speed of the CPUs, in MHz.  e.g. 2400 for 2.4 GHz
-  int GetMaxCpuSpeed();
-  int GetCurCpuSpeed();
   // Total amount of physical memory, in bytes.
-  int64 GetMemorySize();
+  int64_t GetMemorySize();
   // The model name of the machine, e.g. "MacBookAir1,1"
   std::string GetMachineModel();
 
-  // The gpu identifier
-  struct GpuInfo {
-    GpuInfo();
-    ~GpuInfo();
-    std::string device_name;
-    std::string description;
-    int vendor_id;
-    int device_id;
-    std::string driver;
-    std::string driver_version;
-  };
-  bool GetGpuInfo(GpuInfo *info);
-
  private:
-  int physical_cpus_;
-  int logical_cpus_;
-  int cache_size_;
-  Architecture cpu_arch_;
-  std::string cpu_vendor_;
-  int cpu_family_;
-  int cpu_model_;
-  int cpu_stepping_;
-  int cpu_speed_;
-  int64 memory_;
-  std::string machine_model_;
+  static int logical_cpus_;
 };
 
 }  // namespace rtc

@@ -36,7 +36,7 @@ Resampler::Resampler() : state_(NULL), channels_(0)
   // Note: Push will fail until Reset() is called
 }
 
-Resampler::Resampler(int inFreq, int outFreq, int num_channels)
+Resampler::Resampler(int inFreq, int outFreq, size_t num_channels)
     : Resampler() {
   Reset(inFreq, outFreq, num_channels);
 }
@@ -49,7 +49,7 @@ Resampler::~Resampler()
   }
 }
 
-int Resampler::ResetIfNeeded(int inFreq, int outFreq, int num_channels)
+int Resampler::ResetIfNeeded(int inFreq, int outFreq, size_t num_channels)
 {
   if (!state_ || channels_ != num_channels ||
       inFreq != in_freq_ || outFreq != out_freq_)
@@ -64,7 +64,7 @@ int Resampler::ResetIfNeeded(int inFreq, int outFreq, int num_channels)
   }
 }
 
-int Resampler::Reset(int inFreq, int outFreq, int num_channels)
+int Resampler::Reset(int inFreq, int outFreq, size_t num_channels)
 {
   if (num_channels != 1 && num_channels != 2) {
     return -1;
@@ -93,8 +93,8 @@ int Resampler::Reset(int inFreq, int outFreq, int num_channels)
 
 // Synchronous resampling, all output samples are written to samplesOut
 // TODO(jesup) Change to take samples-per-channel in and out
-int Resampler::Push(const int16_t* samplesIn, int lengthIn, int16_t* samplesOut,
-                    int maxLen, int &outLen)
+int Resampler::Push(const int16_t* samplesIn, size_t lengthIn, int16_t* samplesOut,
+                    size_t maxLen, size_t &outLen)
 {
   if (maxLen < lengthIn)
   {
@@ -127,5 +127,4 @@ int Resampler::Push(const int16_t* samplesIn, int lengthIn, int16_t* samplesOut,
   outLen = (int) (channels_ * out);
   return 0;
 }
-
-}  // namespace webrtc
+}// namespace webrtc

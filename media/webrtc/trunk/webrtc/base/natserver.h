@@ -19,6 +19,7 @@
 #include "webrtc/base/thread.h"
 #include "webrtc/base/socketfactory.h"
 #include "webrtc/base/nattypes.h"
+#include "webrtc/base/proxyserver.h"
 
 namespace rtc {
 
@@ -46,27 +47,40 @@ struct AddrCmp {
 
 // Implements the NAT device.  It listens for packets on the internal network,
 // translates them, and sends them out over the external network.
+//
+// TCP connections initiated from the internal side of the NAT server are
+// also supported, by making a connection to the NAT server's TCP address and
+// then sending the remote address in quasi-STUN format. The connection status
+// will be indicated back to the client as a 1 byte status code, where '0'
+// indicates success.
 
-const int NAT_SERVER_PORT = 4237;
+const int NAT_SERVER_UDP_PORT = 4237;
+const int NAT_SERVER_TCP_PORT = 4238;
 
 class NATServer : public sigslot::has_slots<> {
  public:
   NATServer(
-      NATType type, SocketFactory* internal, const SocketAddress& internal_addr,
+      NATType type, SocketFactory* internal,
+      const SocketAddress& internal_udp_addr,
+      const SocketAddress& internal_tcp_addr,
       SocketFactory* external, const SocketAddress& external_ip);
   ~NATServer() override;
 
-  SocketAddress internal_address() const {
-    return server_socket_->GetLocalAddress();
+  SocketAddress internal_udp_address() const {
+    return udp_server_socket_->GetLocalAddress();
+  }
+
+  SocketAddress internal_tcp_address() const {
+    return tcp_proxy_server_->GetServerAddress();
   }
 
   // Packets received on one of the networks.
-  void OnInternalPacket(AsyncPacketSocket* socket, const char* buf,
-                        size_t size, const SocketAddress& addr,
-                        const PacketTime& packet_time);
-  void OnExternalPacket(AsyncPacketSocket* socket, const char* buf,
-                        size_t size, const SocketAddress& remote_addr,
-                        const PacketTime& packet_time);
+  void OnInternalUDPPacket(AsyncPacketSocket* socket, const char* buf,
+                           size_t size, const SocketAddress& addr,
+                           const PacketTime& packet_time);
+  void OnExternalUDPPacket(AsyncPacketSocket* socket, const char* buf,
+                           size_t size, const SocketAddress& remote_addr,
+                           const PacketTime& packet_time);
 
  private:
   typedef std::set<SocketAddress, AddrCmp> AddressSet;
@@ -95,14 +109,13 @@ class NATServer : public sigslot::has_slots<> {
   bool ShouldFilterOut(TransEntry* entry, const SocketAddress& ext_addr);
 
   NAT* nat_;
-  SocketFactory* internal_;
   SocketFactory* external_;
   SocketAddress external_ip_;
-  AsyncUDPSocket* server_socket_;
-  AsyncSocket* tcp_server_socket_;
+  AsyncUDPSocket* udp_server_socket_;
+  ProxyServer* tcp_proxy_server_;
   InternalMap* int_map_;
   ExternalMap* ext_map_;
-  DISALLOW_EVIL_CONSTRUCTORS(NATServer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(NATServer);
 };
 
 }  // namespace rtc

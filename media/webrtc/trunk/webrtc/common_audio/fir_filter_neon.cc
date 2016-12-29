@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "webrtc/system_wrappers/interface/aligned_malloc.h"
+#include "webrtc/system_wrappers/include/aligned_malloc.h"
 
 namespace webrtc {
 

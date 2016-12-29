@@ -12,7 +12,7 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_AUDIO_SINK_H_
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -38,7 +38,7 @@ class AudioSink {
   }
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(AudioSink);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioSink);
 };
 
 // Forks the output audio to two AudioSink objects.
@@ -56,7 +56,7 @@ class AudioSinkFork : public AudioSink {
   AudioSink* left_sink_;
   AudioSink* right_sink_;
 
-  DISALLOW_COPY_AND_ASSIGN(AudioSinkFork);
+  RTC_DISALLOW_COPY_AND_ASSIGN(AudioSinkFork);
 };
 }  // namespace test
 }  // namespace webrtc

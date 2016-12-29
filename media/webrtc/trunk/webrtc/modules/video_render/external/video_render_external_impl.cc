@@ -189,8 +189,7 @@ int32_t VideoRenderExternalImpl::SetBitmap(const void* bitMap,
 
 // VideoRenderCallback
 int32_t VideoRenderExternalImpl::RenderFrame(const uint32_t streamId,
-                                             const I420VideoFrame& videoFrame)
-{
+                                             const VideoFrame& videoFrame) {
     return 0;
 }
 }  // namespace webrtc

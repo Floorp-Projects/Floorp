@@ -511,6 +511,8 @@ DesktopRegion::Iterator::Iterator(const DesktopRegion& region)
   }
 }
 
+DesktopRegion::Iterator::~Iterator() {}
+
 bool DesktopRegion::Iterator::IsAtEnd() const {
   return row_ == region_.rows_.end();
 }

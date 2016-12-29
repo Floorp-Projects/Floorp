@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
 #include <string>
 
 #include "webrtc/base/gunit.h"
@@ -18,8 +19,8 @@
 #include "webrtc/base/network.h"
 #include "webrtc/base/physicalsocketserver.h"
 #include "webrtc/base/testclient.h"
+#include "webrtc/base/asynctcpsocket.h"
 #include "webrtc/base/virtualsocketserver.h"
-#include "webrtc/test/testsupport/gtest_disable.h"
 
 using namespace rtc;
 
@@ -36,6 +37,11 @@ TestClient* CreateTestClient(
   return new TestClient(socket);
 }
 
+TestClient* CreateTCPTestClient(AsyncSocket* socket) {
+  AsyncTCPSocket* packet_socket = new AsyncTCPSocket(socket, false);
+  return new TestClient(packet_socket);
+}
+
 // Tests that when sending from internal_addr to external_addrs through the
 // NAT type specified by nat_type, all external addrs receive the sent packet
 // and, if exp_same is true, all use the same mapped-address on the NAT.
@@ -48,10 +54,11 @@ void TestSend(
 
   SocketAddress server_addr = internal_addr;
   server_addr.SetPort(0);  // Auto-select a port
-  NATServer* nat = new NATServer(
-      nat_type, internal, server_addr, external, external_addrs[0]);
+  NATServer* nat = new NATServer(nat_type, internal, server_addr, server_addr,
+                                 external, external_addrs[0]);
   NATSocketFactory* natsf = new NATSocketFactory(internal,
-                                                 nat->internal_address());
+                                                 nat->internal_udp_address(),
+                                                 nat->internal_tcp_address());
 
   TestClient* in = CreateTestClient(natsf, internal_addr);
   TestClient* out[4];
@@ -99,10 +106,11 @@ void TestRecv(
 
   SocketAddress server_addr = internal_addr;
   server_addr.SetPort(0);  // Auto-select a port
-  NATServer* nat = new NATServer(
-      nat_type, internal, server_addr, external, external_addrs[0]);
+  NATServer* nat = new NATServer(nat_type, internal, server_addr, server_addr,
+                                 external, external_addrs[0]);
   NATSocketFactory* natsf = new NATSocketFactory(internal,
-                                                 nat->internal_address());
+                                                 nat->internal_udp_address(),
+                                                 nat->internal_tcp_address());
 
   TestClient* in = CreateTestClient(natsf, internal_addr);
   TestClient* out[4];
@@ -199,6 +207,12 @@ void TestPhysicalInternal(const SocketAddress& int_addr) {
 
   std::vector<Network*> networks;
   network_manager.GetNetworks(&networks);
+  networks.erase(std::remove_if(networks.begin(), networks.end(),
+                                [](rtc::Network* network) {
+                                  return rtc::kDefaultNetworkIgnoreMask &
+                                         network->type();
+                                }),
+                 networks.end());
   if (networks.empty()) {
     LOG(LS_WARNING) << "Not enough network adapters for test.";
     return;
@@ -249,6 +263,8 @@ TEST(NatTest, TestPhysicalIPv6) {
   }
 }
 
+namespace {
+
 class TestVirtualSocketServer : public VirtualSocketServer {
  public:
   explicit TestVirtualSocketServer(SocketServer* ss)
@@ -260,6 +276,8 @@ class TestVirtualSocketServer : public VirtualSocketServer {
  private:
   scoped_ptr<SocketServer> ss_;
 };
+
+}  // namespace
 
 void TestVirtualInternal(int family) {
   scoped_ptr<TestVirtualSocketServer> int_vss(new TestVirtualSocketServer(
@@ -291,56 +309,86 @@ TEST(NatTest, TestVirtualIPv6) {
   }
 }
 
-// TODO: Finish this test
 class NatTcpTest : public testing::Test, public sigslot::has_slots<> {
  public:
-  NatTcpTest() : connected_(false) {}
-  virtual void SetUp() {
-    int_vss_ = new TestVirtualSocketServer(new PhysicalSocketServer());
-    ext_vss_ = new TestVirtualSocketServer(new PhysicalSocketServer());
-    nat_ = new NATServer(NAT_OPEN_CONE, int_vss_, SocketAddress(),
-                         ext_vss_, SocketAddress());
-    natsf_ = new NATSocketFactory(int_vss_, nat_->internal_address());
+  NatTcpTest()
+      : int_addr_("192.168.0.1", 0),
+        ext_addr_("10.0.0.1", 0),
+        connected_(false),
+        int_pss_(new PhysicalSocketServer()),
+        ext_pss_(new PhysicalSocketServer()),
+        int_vss_(new TestVirtualSocketServer(int_pss_)),
+        ext_vss_(new TestVirtualSocketServer(ext_pss_)),
+        int_thread_(new Thread(int_vss_.get())),
+        ext_thread_(new Thread(ext_vss_.get())),
+        nat_(new NATServer(NAT_OPEN_CONE, int_vss_.get(), int_addr_, int_addr_,
+                           ext_vss_.get(), ext_addr_)),
+        natsf_(new NATSocketFactory(int_vss_.get(),
+                                    nat_->internal_udp_address(),
+                                    nat_->internal_tcp_address())) {
+    int_thread_->Start();
+    ext_thread_->Start();
   }
+
   void OnConnectEvent(AsyncSocket* socket) {
     connected_ = true;
   }
+
   void OnAcceptEvent(AsyncSocket* socket) {
-    accepted_ = server_->Accept(NULL);
+    accepted_.reset(server_->Accept(NULL));
   }
+
   void OnCloseEvent(AsyncSocket* socket, int error) {
   }
+
   void ConnectEvents() {
     server_->SignalReadEvent.connect(this, &NatTcpTest::OnAcceptEvent);
     client_->SignalConnectEvent.connect(this, &NatTcpTest::OnConnectEvent);
   }
-  TestVirtualSocketServer* int_vss_;
-  TestVirtualSocketServer* ext_vss_;
-  NATServer* nat_;
-  NATSocketFactory* natsf_;
-  AsyncSocket* client_;
-  AsyncSocket* server_;
-  AsyncSocket* accepted_;
+
+  SocketAddress int_addr_;
+  SocketAddress ext_addr_;
   bool connected_;
+  PhysicalSocketServer* int_pss_;
+  PhysicalSocketServer* ext_pss_;
+  rtc::scoped_ptr<TestVirtualSocketServer> int_vss_;
+  rtc::scoped_ptr<TestVirtualSocketServer> ext_vss_;
+  rtc::scoped_ptr<Thread> int_thread_;
+  rtc::scoped_ptr<Thread> ext_thread_;
+  rtc::scoped_ptr<NATServer> nat_;
+  rtc::scoped_ptr<NATSocketFactory> natsf_;
+  rtc::scoped_ptr<AsyncSocket> client_;
+  rtc::scoped_ptr<AsyncSocket> server_;
+  rtc::scoped_ptr<AsyncSocket> accepted_;
 };
 
 TEST_F(NatTcpTest, DISABLED_TestConnectOut) {
-  server_ = ext_vss_->CreateAsyncSocket(SOCK_STREAM);
-  server_->Bind(SocketAddress());
+  server_.reset(ext_vss_->CreateAsyncSocket(SOCK_STREAM));
+  server_->Bind(ext_addr_);
   server_->Listen(5);
 
-  client_ = int_vss_->CreateAsyncSocket(SOCK_STREAM);
-  EXPECT_GE(0, client_->Bind(SocketAddress()));
+  client_.reset(natsf_->CreateAsyncSocket(SOCK_STREAM));
+  EXPECT_GE(0, client_->Bind(int_addr_));
   EXPECT_GE(0, client_->Connect(server_->GetLocalAddress()));
-
 
   ConnectEvents();
 
   EXPECT_TRUE_WAIT(connected_, 1000);
   EXPECT_EQ(client_->GetRemoteAddress(), server_->GetLocalAddress());
-  EXPECT_EQ(client_->GetRemoteAddress(), accepted_->GetLocalAddress());
-  EXPECT_EQ(client_->GetLocalAddress(), accepted_->GetRemoteAddress());
+  EXPECT_EQ(accepted_->GetRemoteAddress().ipaddr(), ext_addr_.ipaddr());
 
-  client_->Close();
+  rtc::scoped_ptr<rtc::TestClient> in(CreateTCPTestClient(client_.release()));
+  rtc::scoped_ptr<rtc::TestClient> out(
+      CreateTCPTestClient(accepted_.release()));
+
+  const char* buf = "test_packet";
+  size_t len = strlen(buf);
+
+  in->Send(buf, len);
+  SocketAddress trans_addr;
+  EXPECT_TRUE(out->CheckNextPacket(buf, len, &trans_addr));
+
+  out->Send(buf, len);
+  EXPECT_TRUE(in->CheckNextPacket(buf, len, &trans_addr));
 }
-//#endif
+// #endif

@@ -8,9 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/common.h"
 #include "webrtc/voice_engine/channel_manager.h"
 
+#include "webrtc/common.h"
 #include "webrtc/voice_engine/channel.h"
 
 namespace webrtc {
@@ -49,8 +49,8 @@ ChannelManager::ChannelManager(uint32_t instance_id, const Config& config)
     : config_(config),
       instance_id_(instance_id),
       last_channel_id_(-1),
-      lock_(CriticalSectionWrapper::CreateCriticalSection())
-      {}
+      lock_(CriticalSectionWrapper::CreateCriticalSection()),
+      event_log_(RtcEventLog::Create()) {}
 
 ChannelOwner ChannelManager::CreateChannel() {
   return CreateChannelInternal(config_);
@@ -62,7 +62,8 @@ ChannelOwner ChannelManager::CreateChannel(const Config& external_config) {
 
 ChannelOwner ChannelManager::CreateChannelInternal(const Config& config) {
   Channel* channel;
-  Channel::CreateChannel(channel, ++last_channel_id_, instance_id_, config);
+  Channel::CreateChannel(channel, ++last_channel_id_, instance_id_,
+                         event_log_.get(), config);
   ChannelOwner channel_owner(channel);
 
   CriticalSectionScoped crit(lock_.get());
@@ -95,15 +96,20 @@ void ChannelManager::DestroyChannel(int32_t channel_id) {
   ChannelOwner reference(NULL);
   {
     CriticalSectionScoped crit(lock_.get());
+    std::vector<ChannelOwner>::iterator to_delete = channels_.end();
+    for (auto it = channels_.begin(); it != channels_.end(); ++it) {
+      Channel* channel = it->channel();
+      // For channels associated with the channel to be deleted, disassociate
+      // with that channel.
+      channel->DisassociateSendChannel(channel_id);
 
-    for (std::vector<ChannelOwner>::iterator it = channels_.begin();
-         it != channels_.end();
-         ++it) {
-      if (it->channel()->ChannelId() == channel_id) {
-        reference = *it;
-        channels_.erase(it);
-        break;
+      if (channel->ChannelId() == channel_id) {
+        to_delete = it;
       }
+    }
+    if (to_delete != channels_.end()) {
+      reference = *to_delete;
+      channels_.erase(to_delete);
     }
   }
 }
@@ -122,6 +128,10 @@ void ChannelManager::DestroyAllChannels() {
 size_t ChannelManager::NumOfChannels() const {
   CriticalSectionScoped crit(lock_.get());
   return channels_.size();
+}
+
+RtcEventLog* ChannelManager::GetEventLog() const {
+  return event_log_.get();
 }
 
 ChannelManager::Iterator::Iterator(ChannelManager* channel_manager)

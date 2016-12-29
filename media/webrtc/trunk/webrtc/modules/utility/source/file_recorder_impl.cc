@@ -10,9 +10,9 @@
 
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/engine_configurations.h"
-#include "webrtc/modules/media_file/interface/media_file.h"
+#include "webrtc/modules/media_file/media_file.h"
 #include "webrtc/modules/utility/source/file_recorder_impl.h"
-#include "webrtc/system_wrappers/interface/logging.h"
+#include "webrtc/system_wrappers/include/logging.h"
 
 namespace webrtc {
 FileRecorder* FileRecorder::CreateFileRecorder(uint32_t instanceID,
@@ -32,7 +32,6 @@ FileRecorderImpl::FileRecorderImpl(uint32_t instanceID,
       _fileFormat(fileFormat),
       _moduleFile(MediaFile::CreateMediaFile(_instanceID)),
       codec_info_(),
-      _amrFormat(AMRFileStorage),
       _audioBuffer(),
       _audioEncoder(instanceID),
       _audioResampler()
@@ -62,16 +61,13 @@ int32_t FileRecorderImpl::RegisterModuleFileCallback(
 int32_t FileRecorderImpl::StartRecordingAudioFile(
     const char* fileName,
     const CodecInst& codecInst,
-    uint32_t notificationTimeMs,
-    ACMAMRPackingFormat amrFormat)
+    uint32_t notificationTimeMs)
 {
     if(_moduleFile == NULL)
     {
         return -1;
     }
     codec_info_ = codecInst;
-    _amrFormat = amrFormat;
-
     int32_t retVal = 0;
     retVal =_moduleFile->StartRecordingAudioFile(fileName, _fileFormat,
                                                  codecInst,
@@ -97,12 +93,9 @@ int32_t FileRecorderImpl::StartRecordingAudioFile(
 int32_t FileRecorderImpl::StartRecordingAudioFile(
     OutStream& destStream,
     const CodecInst& codecInst,
-    uint32_t notificationTimeMs,
-    ACMAMRPackingFormat amrFormat)
+    uint32_t notificationTimeMs)
 {
     codec_info_ = codecInst;
-    _amrFormat = amrFormat;
-
     int32_t retVal = _moduleFile->StartRecordingAudioStream(
         destStream,
         _fileFormat,
@@ -156,7 +149,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
         tempAudioFrame.sample_rate_hz_ = incomingAudioFrame.sample_rate_hz_;
         tempAudioFrame.samples_per_channel_ =
           incomingAudioFrame.samples_per_channel_;
-        for (uint16_t i = 0;
+        for (size_t i = 0;
              i < (incomingAudioFrame.samples_per_channel_); i++)
         {
             // Sample value is the average of left and right buffer rounded to
@@ -174,7 +167,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
         tempAudioFrame.sample_rate_hz_ = incomingAudioFrame.sample_rate_hz_;
         tempAudioFrame.samples_per_channel_ =
           incomingAudioFrame.samples_per_channel_;
-        for (uint16_t i = 0;
+        for (size_t i = 0;
              i < (incomingAudioFrame.samples_per_channel_); i++)
         {
             // Duplicate sample to both channels
@@ -210,7 +203,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
             return -1;
         }
     } else {
-        int outLen = 0;
+        size_t outLen = 0;
         _audioResampler.ResetIfNeeded(ptrAudioFrame->sample_rate_hz_,
                                       codec_info_.plfreq,
                                       ptrAudioFrame->num_channels_);
@@ -227,11 +220,7 @@ int32_t FileRecorderImpl::RecordAudioToFile(
     // will be available. Wait until then.
     if (encodedLenInBytes)
     {
-        uint16_t msOfData =
-            ptrAudioFrame->samples_per_channel_ /
-            uint16_t(ptrAudioFrame->sample_rate_hz_ / 1000);
-        if (WriteEncodedAudioData(_audioBuffer, encodedLenInBytes, msOfData,
-                                  playoutTS) == -1)
+        if (WriteEncodedAudioData(_audioBuffer, encodedLenInBytes) == -1)
         {
             return -1;
         }
@@ -244,7 +233,7 @@ int32_t FileRecorderImpl::SetUpAudioEncoder()
     if (_fileFormat == kFileFormatPreencodedFile ||
         STR_CASE_CMP(codec_info_.plname, "L16") != 0)
     {
-        if(_audioEncoder.SetEncodeCodec(codec_info_,_amrFormat) == -1)
+        if(_audioEncoder.SetEncodeCodec(codec_info_) == -1)
         {
             LOG(LS_ERROR) << "SetUpAudioEncoder() codec "
                           << codec_info_.plname << " not supported.";
@@ -264,11 +253,8 @@ int32_t FileRecorderImpl::codec_info(CodecInst& codecInst) const
     return 0;
 }
 
-int32_t FileRecorderImpl::WriteEncodedAudioData(
-    const int8_t* audioBuffer,
-    size_t bufferLength,
-    uint16_t /*millisecondsOfData*/,
-    const TickTime* /*playoutTS*/)
+int32_t FileRecorderImpl::WriteEncodedAudioData(const int8_t* audioBuffer,
+                                                size_t bufferLength)
 {
     return _moduleFile->IncomingAudioData(audioBuffer, bufferLength);
 }

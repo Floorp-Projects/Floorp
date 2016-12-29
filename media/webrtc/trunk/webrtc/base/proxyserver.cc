@@ -36,6 +36,10 @@ ProxyServer::~ProxyServer() {
   }
 }
 
+SocketAddress ProxyServer::GetServerAddress() {
+  return server_socket_->GetLocalAddress();
+}
+
 void ProxyServer::OnAcceptEvent(AsyncSocket* socket) {
   ASSERT(socket != NULL && socket == server_socket_.get());
   AsyncSocket* int_socket = socket->Accept(NULL);

@@ -14,8 +14,8 @@
 #include "nsIObserver.h"
 
 #include "webrtc/common_types.h"
-#include "webrtc/video_engine/include/vie_base.h"
-
+#include "webrtc/call.h"
+#include "webrtc/video/overuse_frame_detector.h"
 extern mozilla::LazyLogModule gLoadManagerLog;
 
 namespace mozilla {
@@ -77,7 +77,7 @@ private:
 };
 
 class LoadManager final : public webrtc::CPULoadStateCallbackInvoker,
-                          public webrtc::CpuOveruseObserver
+                          public webrtc::LoadObserver
 {
 public:
     explicit LoadManager(LoadManagerSingleton* aManager)
@@ -93,13 +93,14 @@ public:
     {
         mManager->RemoveObserver(aObserver);
     }
-    void OveruseDetected() override
+
+    void OnLoadUpdate(webrtc::LoadObserver::Load load_state) override
     {
-        mManager->OveruseDetected();
-    }
-    void NormalUsage() override
-    {
-        mManager->NormalUsage();
+        if (load_state == webrtc::LoadObserver::kOveruse) {
+            mManager->OveruseDetected();
+        } else if (load_state == webrtc::LoadObserver::kUnderuse) {
+            mManager->NormalUsage();
+        }
     }
 
 private:

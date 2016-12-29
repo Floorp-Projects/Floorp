@@ -60,7 +60,8 @@
             test.originalOffer.sdp, test._remote_answer.sdp);
           info("Answer with RIDs: " + JSON.stringify(test._remote_answer));
           ok(test._remote_answer.sdp.match(/a=simulcast:/), "Modified answer has simulcast");
-          ok(test._remote_answer.sdp.match(/a=rid:/), "Modified answer has rid");
+          ok(test._remote_answer.sdp.match(/a=rid:foo/), "Modified answer has rid foo");
+          ok(test._remote_answer.sdp.match(/a=rid:bar/), "Modified answer has rid bar");
         }
       ]);
 
@@ -85,8 +86,8 @@
           ok(vremote, "Should have remote video element for pcRemote");
           ok(vlocal.videoWidth > 0, "source width is positive");
           ok(vlocal.videoHeight > 0, "source height is positive");
-          is(vremote.videoWidth, vlocal.videoWidth, "sink is same width as source");
-          is(vremote.videoHeight, vlocal.videoHeight, "sink is same height as source");
+          is(vremote.videoWidth, vlocal.videoWidth / 2, "sink is same width as source");
+          is(vremote.videoHeight, vlocal.videoHeight / 2, "sink is same height as source");
         },
         function PC_REMOTE_SET_RTP_SECOND_RID(test) {
           // Now, cause pcRemote to filter out everything but the second SSRC.
@@ -95,18 +96,6 @@
         },
         function PC_REMOTE_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
           return test.pcRemote.waitForMediaFlow();
-        },
-        function PC_REMOTE_WAIT_FOR_FRAMES_2() {
-          var vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcRemote");
-          return helper.waitForFrames(vremote);
-        },
-        // For some reason, even though we're getting a 25x25 stream, sometimes
-        // the resolution isn't updated on the video element on the first frame.
-        function PC_REMOTE_WAIT_FOR_FRAMES_3() {
-          var vremote = test.pcRemote.remoteMediaElements[0];
-          ok(vremote, "Should have remote video element for pcRemote");
-          return helper.waitForFrames(vremote);
         },
         function PC_REMOTE_CHECK_SIZE_2() {
           var vlocal = test.pcLocal.localMediaElements[0];

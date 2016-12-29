@@ -20,14 +20,14 @@
 #include "webrtc/modules/audio_coding/neteq/expand.h"
 #include "webrtc/modules/audio_coding/neteq/packet_buffer.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 
 namespace webrtc {
 
 Operations DecisionLogicNormal::GetDecisionSpecialized(
     const SyncBuffer& sync_buffer,
     const Expand& expand,
-    int decoder_frame_length,
+    size_t decoder_frame_length,
     const RTPHeader* packet_header,
     Modes prev_mode,
     bool play_dtmf,
@@ -67,7 +67,8 @@ Operations DecisionLogicNormal::GetDecisionSpecialized(
     return kNormal;
   }
 
-  const uint32_t five_seconds_samples = 5 * 8000 * fs_mult_;
+  const uint32_t five_seconds_samples =
+      static_cast<uint32_t>(5 * 8000 * fs_mult_);
   // Check if the required packet is available.
   if (target_timestamp == available_timestamp) {
     return ExpectedPacketAvailable(prev_mode, play_dtmf);
@@ -87,10 +88,11 @@ Operations DecisionLogicNormal::CngOperation(Modes prev_mode,
                                              uint32_t target_timestamp,
                                              uint32_t available_timestamp) {
   // Signed difference between target and available timestamp.
-  int32_t timestamp_diff = (generated_noise_samples_ + target_timestamp) -
-      available_timestamp;
-  int32_t optimal_level_samp =
-      (delay_manager_->TargetLevel() * packet_length_samples_) >> 8;
+  int32_t timestamp_diff = static_cast<int32_t>(
+      static_cast<uint32_t>(generated_noise_samples_ + target_timestamp) -
+      available_timestamp);
+  int32_t optimal_level_samp = static_cast<int32_t>(
+      (delay_manager_->TargetLevel() * packet_length_samples_) >> 8);
   int32_t excess_waiting_time_samp = -timestamp_diff - optimal_level_samp;
 
   if (excess_waiting_time_samp > optimal_level_samp / 2) {
@@ -132,15 +134,13 @@ Operations DecisionLogicNormal::ExpectedPacketAvailable(Modes prev_mode,
     // Check criterion for time-stretching.
     int low_limit, high_limit;
     delay_manager_->BufferLimits(&low_limit, &high_limit);
-    if ((buffer_level_filter_->filtered_current_level() >= high_limit &&
-        TimescaleAllowed()) ||
-        buffer_level_filter_->filtered_current_level() >= high_limit << 2) {
-      // Buffer level higher than limit and time-scaling allowed,
-      // or buffer level really high.
-      return kAccelerate;
-    } else if ((buffer_level_filter_->filtered_current_level() < low_limit)
-        && TimescaleAllowed()) {
-      return kPreemptiveExpand;
+    if (buffer_level_filter_->filtered_current_level() >= high_limit << 2)
+      return kFastAccelerate;
+    if (TimescaleAllowed()) {
+      if (buffer_level_filter_->filtered_current_level() >= high_limit)
+        return kAccelerate;
+      if (buffer_level_filter_->filtered_current_level() < low_limit)
+        return kPreemptiveExpand;
     }
   }
   return kNormal;
@@ -149,7 +149,7 @@ Operations DecisionLogicNormal::ExpectedPacketAvailable(Modes prev_mode,
 Operations DecisionLogicNormal::FuturePacketAvailable(
     const SyncBuffer& sync_buffer,
     const Expand& expand,
-    int decoder_frame_length,
+    size_t decoder_frame_length,
     Modes prev_mode,
     uint32_t target_timestamp,
     uint32_t available_timestamp,
@@ -172,9 +172,9 @@ Operations DecisionLogicNormal::FuturePacketAvailable(
     }
   }
 
-  const int samples_left = static_cast<int>(sync_buffer.FutureLength() -
-      expand.overlap_length());
-  const int cur_size_samples = samples_left +
+  const size_t samples_left =
+      sync_buffer.FutureLength() - expand.overlap_length();
+  const size_t cur_size_samples = samples_left +
       packet_buffer_.NumPacketsInBuffer() * decoder_frame_length;
 
   // If previous was comfort noise, then no merge is needed.
@@ -184,11 +184,11 @@ Operations DecisionLogicNormal::FuturePacketAvailable(
     // safety precaution), but make sure that the number of samples in buffer
     // is no higher than 4 times the optimal level. (Note that TargetLevel()
     // is in Q8.)
-    int32_t timestamp_diff = (generated_noise_samples_ + target_timestamp) -
-        available_timestamp;
-    if (timestamp_diff >= 0 ||
+    if (static_cast<uint32_t>(generated_noise_samples_ + target_timestamp) >=
+            available_timestamp ||
         cur_size_samples >
-        4 * ((delay_manager_->TargetLevel() * packet_length_samples_) >> 8)) {
+            ((delay_manager_->TargetLevel() * packet_length_samples_) >> 8) *
+            4) {
       // Time to play this new packet.
       return kNormal;
     } else {
@@ -205,7 +205,8 @@ Operations DecisionLogicNormal::FuturePacketAvailable(
   // fs_mult_ * 8 = fs / 1000.)
   if (prev_mode == kModeExpand ||
       (decoder_frame_length < output_size_samples_ &&
-       cur_size_samples > kAllowMergeWithoutExpandMs * fs_mult_ * 8)) {
+       cur_size_samples >
+           static_cast<size_t>(kAllowMergeWithoutExpandMs * fs_mult_ * 8))) {
     return kMerge;
   } else if (play_dtmf) {
     // Play DTMF instead of expand.

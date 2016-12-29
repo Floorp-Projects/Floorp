@@ -18,7 +18,7 @@
 #include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet_source.h"
-#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 
 namespace webrtc {
 
@@ -33,6 +33,10 @@ class RtpFileSource : public PacketSource {
   // Creates an RtpFileSource reading from |file_name|. If the file cannot be
   // opened, or has the wrong format, NULL will be returned.
   static RtpFileSource* Create(const std::string& file_name);
+
+  // Checks whether a files is a valid RTP dump or PCAP (Wireshark) file.
+  static bool ValidRtpDump(const std::string& file_name);
+  static bool ValidPcap(const std::string& file_name);
 
   virtual ~RtpFileSource();
 
@@ -55,7 +59,7 @@ class RtpFileSource : public PacketSource {
   rtc::scoped_ptr<RtpFileReader> rtp_reader_;
   rtc::scoped_ptr<RtpHeaderParser> parser_;
 
-  DISALLOW_COPY_AND_ASSIGN(RtpFileSource);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpFileSource);
 };
 
 }  // namespace test

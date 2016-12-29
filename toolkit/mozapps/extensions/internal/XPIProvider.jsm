@@ -1364,6 +1364,8 @@ function defineSyncGUID(aAddon) {
   });
 }
 
+const TEMPORARY_ADDON_SUFFIX = "@temporary-addon";
+
 // Generate a unique ID based on the path to this temporary add-on location.
 function generateTemporaryInstallID(aFile) {
   const hasher = Cc["@mozilla.org/security/hash;1"]
@@ -1374,7 +1376,7 @@ function generateTemporaryInstallID(aFile) {
   const sess = TEMP_INSTALL_ID_GEN_SESSION;
   hasher.update(sess, sess.length);
   hasher.update(data, data.length);
-  let id = `${getHashStringForCrypto(hasher)}@temporary-addon`;
+  let id = `${getHashStringForCrypto(hasher)}${TEMPORARY_ADDON_SUFFIX}`;
   logger.info(`Generated temp id ${id} (${sess.join("")}) for ${aFile.path}`);
   return id;
 }
@@ -3966,6 +3968,11 @@ this.XPIProvider = {
       return false;
 
     return true;
+  },
+
+  // Identify temporary install IDs.
+  isTemporaryInstallID: function(id) {
+    return id.endsWith(TEMPORARY_ADDON_SUFFIX);
   },
 
   /**

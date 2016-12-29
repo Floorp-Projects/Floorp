@@ -23,7 +23,7 @@
 #include "AudioPacketizer.h"
 #include "StreamTracks.h"
 
-#include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
+#include "webrtc/modules/rtp_rtcp/include/rtp_header_parser.h"
 
 // Should come from MediaEngine.h, but that's a pain to include here
 // because of the MOZILLA_EXTERNAL_LINKAGE stuff.
@@ -154,11 +154,6 @@ class MediaPipeline : public sigslot::has_slots<> {
     MAX_RTP_TYPE
   } RtpType;
 
- protected:
-  virtual ~MediaPipeline();
-  virtual void DetachMedia() {}
-  nsresult AttachTransport_s();
-
   // Separate class to allow ref counting
   class PipelineTransport : public TransportInterface {
    public:
@@ -171,8 +166,8 @@ class MediaPipeline : public sigslot::has_slots<> {
     void Detach() { pipeline_ = nullptr; }
     MediaPipeline *pipeline() const { return pipeline_; }
 
-    virtual nsresult SendRtpPacket(const void* data, int len);
-    virtual nsresult SendRtcpPacket(const void* data, int len);
+    virtual nsresult SendRtpPacket(const uint8_t* data, size_t len);
+    virtual nsresult SendRtcpPacket(const uint8_t* data, size_t len);
 
    private:
     nsresult SendRtpRtcpPacket_s(nsAutoPtr<DataBuffer> data,
@@ -181,6 +176,15 @@ class MediaPipeline : public sigslot::has_slots<> {
     MediaPipeline *pipeline_;  // Raw pointer to avoid cycles
     nsCOMPtr<nsIEventTarget> sts_thread_;
   };
+
+  RefPtr<PipelineTransport> GetPiplelineTransport() {
+    return transport_;
+  }
+
+ protected:
+  virtual ~MediaPipeline();
+  virtual void DetachMedia() {}
+  nsresult AttachTransport_s();
   friend class PipelineTransport;
 
   class TransportInfo {

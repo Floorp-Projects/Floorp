@@ -65,7 +65,7 @@ class TestEchoServer : public sigslot::has_slots<> {
   typedef std::list<AsyncTCPSocket*> ClientList;
   scoped_ptr<AsyncSocket> server_socket_;
   ClientList client_sockets_;
-  DISALLOW_EVIL_CONSTRUCTORS(TestEchoServer);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TestEchoServer);
 };
 
 }  // namespace rtc

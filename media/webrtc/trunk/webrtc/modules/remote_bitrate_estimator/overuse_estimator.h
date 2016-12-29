@@ -63,7 +63,7 @@ class OveruseEstimator {
   double var_noise_;
   std::list<double> ts_delta_hist_;
 
-  DISALLOW_COPY_AND_ASSIGN(OveruseEstimator);
+  RTC_DISALLOW_COPY_AND_ASSIGN(OveruseEstimator);
 };
 }  // namespace webrtc
 

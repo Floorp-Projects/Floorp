@@ -1673,7 +1673,7 @@ function screenshot(id, full=true, highlights=[]) {
 
   // viewport
   if (!id && !full) {
-    canvas = capture.viewport(curContainer.frame.document, highlightEls);
+    canvas = capture.viewport(curContainer.frame, highlightEls);
 
   // element or full document element
   } else {

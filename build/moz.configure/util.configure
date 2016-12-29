@@ -140,19 +140,36 @@ normalize_path = normalize_path()
 @imports(_from='which', _import='which')
 @imports(_from='which', _import='WhichError')
 @imports('itertools')
+@imports('sys')
 @imports(_from='os', _import='pathsep')
+@imports(_from='os', _import='environ')
 def find_program(file, paths=None):
+    # The following snippet comes from `which` itself, with a slight
+    # modification to use lowercase extensions, because it's confusing rustup
+    # (on top of making results not really appealing to the eye).
+
+    # Windows has the concept of a list of extensions (PATHEXT env var).
+    if sys.platform.startswith("win"):
+        exts = [e.lower()
+                for e in environ.get("PATHEXT", "").split(pathsep)]
+        # If '.exe' is not in exts then obviously this is Win9x and
+        # or a bogus PATHEXT, then use a reasonable default.
+        if '.exe' not in exts:
+            exts = ['.com', '.exe', '.bat']
+    else:
+        exts = None
+
     try:
         if is_absolute_or_relative(file):
             return normalize_path(which(os.path.basename(file),
-                                        [os.path.dirname(file)]))
+                                        [os.path.dirname(file)], exts=exts))
         if paths:
             if not isinstance(paths, (list, tuple)):
                 die("Paths provided to find_program must be a list of strings, "
                     "not %r", paths)
             paths = list(itertools.chain(
                 *(p.split(pathsep) for p in paths if p)))
-        return normalize_path(which(file, path=paths))
+        return normalize_path(which(file, path=paths, exts=exts))
     except WhichError:
         return None
 

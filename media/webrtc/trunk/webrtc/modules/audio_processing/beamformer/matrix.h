@@ -67,7 +67,7 @@ class Matrix {
   Matrix() : num_rows_(0), num_columns_(0) {}
 
   // Allocates space for the elements and initializes all values to zero.
-  Matrix(int num_rows, int num_columns)
+  Matrix(size_t num_rows, size_t num_columns)
       : num_rows_(num_rows), num_columns_(num_columns) {
     Resize();
     scratch_data_.resize(num_rows_ * num_columns_);
@@ -75,7 +75,7 @@ class Matrix {
   }
 
   // Copies |data| into the new Matrix.
-  Matrix(const T* data, int num_rows, int num_columns)
+  Matrix(const T* data, size_t num_rows, size_t num_columns)
       : num_rows_(0), num_columns_(0) {
     CopyFrom(data, num_rows, num_columns);
     scratch_data_.resize(num_rows_ * num_columns_);
@@ -90,21 +90,23 @@ class Matrix {
   }
 
   // Copy |data| into the Matrix. The current data is lost.
-  void CopyFrom(const T* const data, int num_rows, int num_columns) {
+  void CopyFrom(const T* const data, size_t num_rows, size_t num_columns) {
     Resize(num_rows, num_columns);
     memcpy(&data_[0], data, num_rows_ * num_columns_ * sizeof(data_[0]));
   }
 
-  Matrix& CopyFromColumn(const T* const* src, int column_index, int num_rows) {
+  Matrix& CopyFromColumn(const T* const* src,
+                         size_t column_index,
+                         size_t num_rows) {
     Resize(1, num_rows);
-    for (int i = 0; i < num_columns_; ++i) {
+    for (size_t i = 0; i < num_columns_; ++i) {
       data_[i] = src[i][column_index];
     }
 
     return *this;
   }
 
-  void Resize(int num_rows, int num_columns) {
+  void Resize(size_t num_rows, size_t num_columns) {
     if (num_rows != num_rows_ || num_columns != num_columns_) {
       num_rows_ = num_rows;
       num_columns_ = num_columns;
@@ -113,16 +115,16 @@ class Matrix {
   }
 
   // Accessors and mutators.
-  int num_rows() const { return num_rows_; }
-  int num_columns() const { return num_columns_; }
+  size_t num_rows() const { return num_rows_; }
+  size_t num_columns() const { return num_columns_; }
   T* const* elements() { return &elements_[0]; }
   const T* const* elements() const { return &elements_[0]; }
 
   T Trace() {
-    CHECK_EQ(num_rows_, num_columns_);
+    RTC_CHECK_EQ(num_rows_, num_columns_);
 
     T trace = 0;
-    for (int i = 0; i < num_rows_; ++i) {
+    for (size_t i = 0; i < num_rows_; ++i) {
       trace += elements_[i][i];
     }
     return trace;
@@ -136,8 +138,8 @@ class Matrix {
   }
 
   Matrix& Transpose(const Matrix& operand) {
-    CHECK_EQ(operand.num_rows_, num_columns_);
-    CHECK_EQ(operand.num_columns_, num_rows_);
+    RTC_CHECK_EQ(operand.num_rows_, num_columns_);
+    RTC_CHECK_EQ(operand.num_columns_, num_rows_);
 
     return Transpose(operand.elements());
   }
@@ -158,8 +160,8 @@ class Matrix {
   }
 
   Matrix& Add(const Matrix& operand) {
-    CHECK_EQ(num_rows_, operand.num_rows_);
-    CHECK_EQ(num_columns_, operand.num_columns_);
+    RTC_CHECK_EQ(num_rows_, operand.num_rows_);
+    RTC_CHECK_EQ(num_columns_, operand.num_columns_);
 
     for (size_t i = 0; i < data_.size(); ++i) {
       data_[i] += operand.data_[i];
@@ -174,8 +176,8 @@ class Matrix {
   }
 
   Matrix& Subtract(const Matrix& operand) {
-    CHECK_EQ(num_rows_, operand.num_rows_);
-    CHECK_EQ(num_columns_, operand.num_columns_);
+    RTC_CHECK_EQ(num_rows_, operand.num_rows_);
+    RTC_CHECK_EQ(num_columns_, operand.num_columns_);
 
     for (size_t i = 0; i < data_.size(); ++i) {
       data_[i] -= operand.data_[i];
@@ -190,8 +192,8 @@ class Matrix {
   }
 
   Matrix& PointwiseMultiply(const Matrix& operand) {
-    CHECK_EQ(num_rows_, operand.num_rows_);
-    CHECK_EQ(num_columns_, operand.num_columns_);
+    RTC_CHECK_EQ(num_rows_, operand.num_rows_);
+    RTC_CHECK_EQ(num_columns_, operand.num_columns_);
 
     for (size_t i = 0; i < data_.size(); ++i) {
       data_[i] *= operand.data_[i];
@@ -206,8 +208,8 @@ class Matrix {
   }
 
   Matrix& PointwiseDivide(const Matrix& operand) {
-    CHECK_EQ(num_rows_, operand.num_rows_);
-    CHECK_EQ(num_columns_, operand.num_columns_);
+    RTC_CHECK_EQ(num_rows_, operand.num_rows_);
+    RTC_CHECK_EQ(num_columns_, operand.num_columns_);
 
     for (size_t i = 0; i < data_.size(); ++i) {
       data_[i] /= operand.data_[i];
@@ -261,15 +263,15 @@ class Matrix {
   }
 
   Matrix& Multiply(const Matrix& lhs, const Matrix& rhs) {
-    CHECK_EQ(lhs.num_columns_, rhs.num_rows_);
-    CHECK_EQ(num_rows_, lhs.num_rows_);
-    CHECK_EQ(num_columns_, rhs.num_columns_);
+    RTC_CHECK_EQ(lhs.num_columns_, rhs.num_rows_);
+    RTC_CHECK_EQ(num_rows_, lhs.num_rows_);
+    RTC_CHECK_EQ(num_columns_, rhs.num_columns_);
 
     return Multiply(lhs.elements(), rhs.num_rows_, rhs.elements());
   }
 
   Matrix& Multiply(const Matrix& rhs) {
-    CHECK_EQ(num_columns_, rhs.num_rows_);
+    RTC_CHECK_EQ(num_columns_, rhs.num_rows_);
 
     CopyDataToScratch();
     Resize(num_rows_, rhs.num_columns_);
@@ -280,8 +282,8 @@ class Matrix {
     std::ostringstream ss;
     ss << std::endl << "Matrix" << std::endl;
 
-    for (int i = 0; i < num_rows_; ++i) {
-      for (int j = 0; j < num_columns_; ++j) {
+    for (size_t i = 0; i < num_rows_; ++i) {
+      for (size_t j = 0; j < num_columns_; ++j) {
         ss << elements_[i][j] << " ";
       }
       ss << std::endl;
@@ -292,8 +294,8 @@ class Matrix {
   }
 
  protected:
-  void SetNumRows(const int num_rows) { num_rows_ = num_rows; }
-  void SetNumColumns(const int num_columns) { num_columns_ = num_columns; }
+  void SetNumRows(const size_t num_rows) { num_rows_ = num_rows; }
+  void SetNumColumns(const size_t num_columns) { num_columns_ = num_columns; }
   T* data() { return &data_[0]; }
   const T* data() const { return &data_[0]; }
   const T* const* scratch_elements() const { return &scratch_elements_[0]; }
@@ -305,7 +307,7 @@ class Matrix {
     data_.resize(size);
     elements_.resize(num_rows_);
 
-    for (int i = 0; i < num_rows_; ++i) {
+    for (size_t i = 0; i < num_rows_; ++i) {
       elements_[i] = &data_[i * num_columns_];
     }
   }
@@ -315,14 +317,14 @@ class Matrix {
     scratch_data_ = data_;
     scratch_elements_.resize(num_rows_);
 
-    for (int i = 0; i < num_rows_; ++i) {
+    for (size_t i = 0; i < num_rows_; ++i) {
       scratch_elements_[i] = &scratch_data_[i * num_columns_];
     }
   }
 
  private:
-  int num_rows_;
-  int num_columns_;
+  size_t num_rows_;
+  size_t num_columns_;
   std::vector<T> data_;
   std::vector<T*> elements_;
 
@@ -334,8 +336,8 @@ class Matrix {
   // Helpers for Transpose and Multiply operations that unify in-place and
   // out-of-place solutions.
   Matrix& Transpose(const T* const* src) {
-    for (int i = 0; i < num_rows_; ++i) {
-      for (int j = 0; j < num_columns_; ++j) {
+    for (size_t i = 0; i < num_rows_; ++i) {
+      for (size_t j = 0; j < num_columns_; ++j) {
         elements_[i][j] = src[j][i];
       }
     }
@@ -343,11 +345,13 @@ class Matrix {
     return *this;
   }
 
-  Matrix& Multiply(const T* const* lhs, int num_rows_rhs, const T* const* rhs) {
-    for (int row = 0; row < num_rows_; ++row) {
-      for (int col = 0; col < num_columns_; ++col) {
+  Matrix& Multiply(const T* const* lhs,
+                   size_t num_rows_rhs,
+                   const T* const* rhs) {
+    for (size_t row = 0; row < num_rows_; ++row) {
+      for (size_t col = 0; col < num_columns_; ++col) {
         T cur_element = 0;
-        for (int i = 0; i < num_rows_rhs; ++i) {
+        for (size_t i = 0; i < num_rows_rhs; ++i) {
           cur_element += lhs[row][i] * rhs[i][col];
         }
 
@@ -358,7 +362,7 @@ class Matrix {
     return *this;
   }
 
-  DISALLOW_COPY_AND_ASSIGN(Matrix);
+  RTC_DISALLOW_COPY_AND_ASSIGN(Matrix);
 };
 
 }  // namespace webrtc

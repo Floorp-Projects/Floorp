@@ -11,8 +11,8 @@
 #include "webrtc/voice_engine/shared_data.h"
 
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/include/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/include/trace.h"
 #include "webrtc/voice_engine/channel.h"
 #include "webrtc/voice_engine/output_mixer.h"
 #include "webrtc/voice_engine/transmit_mixer.h"
@@ -23,16 +23,15 @@ namespace voe {
 
 static int32_t _gInstanceCounter = 0;
 
-SharedData::SharedData(const Config& config) :
-    _instanceId(++_gInstanceCounter),
-    _apiCritPtr(CriticalSectionWrapper::CreateCriticalSection()),
-    _channelManager(_gInstanceCounter, config),
-    _engineStatistics(_gInstanceCounter),
-    _audioDevicePtr(NULL),
-    _moduleProcessThreadPtr(ProcessThread::Create()),
-    _externalRecording(false),
-    _externalPlayout(false)
-{
+SharedData::SharedData(const Config& config)
+    : _instanceId(++_gInstanceCounter),
+      _apiCritPtr(CriticalSectionWrapper::CreateCriticalSection()),
+      _channelManager(_gInstanceCounter, config),
+      _engineStatistics(_gInstanceCounter),
+      _audioDevicePtr(NULL),
+      _moduleProcessThreadPtr(ProcessThread::Create("VoiceProcessThread")),
+      _externalRecording(false),
+      _externalPlayout(false) {
     Trace::CreateTrace();
     if (OutputMixer::Create(_outputMixerPtr, _gInstanceCounter) == 0)
     {

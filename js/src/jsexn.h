@@ -65,6 +65,7 @@ static_assert(JSEXN_ERR == 0 &&
               JSProto_Error + JSEXN_URIERR == JSProto_URIError &&
               JSProto_Error + JSEXN_DEBUGGEEWOULDRUN == JSProto_DebuggeeWouldRun &&
               JSProto_Error + JSEXN_WASMCOMPILEERROR == JSProto_CompileError &&
+              JSProto_Error + JSEXN_WASMLINKERROR == JSProto_LinkError &&
               JSProto_Error + JSEXN_WASMRUNTIMEERROR == JSProto_RuntimeError &&
               JSEXN_WASMRUNTIMEERROR + 1 == JSEXN_WARN &&
               JSEXN_WARN + 1 == JSEXN_LIMIT,

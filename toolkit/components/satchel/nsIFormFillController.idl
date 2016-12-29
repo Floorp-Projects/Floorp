@@ -43,4 +43,12 @@ interface nsIFormFillController : nsISupports
    * @param aInput - The HTML <input> element to tag
    */
   void markAsLoginManagerField(in nsIDOMHTMLInputElement aInput);
+
+  /*
+   * Mark the specified <input> element as being managed by a form autofill component.
+   * Autocomplete requests will be handed off to the autofill component.
+   *
+   * @param aInput - The HTML <input> element to mark
+   */
+  void markAsAutofillField(in nsIDOMHTMLInputElement aInput);
 };

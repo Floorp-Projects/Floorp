@@ -11,32 +11,31 @@
 #include "webrtc/modules/audio_processing/splitting_filter.h"
 
 #include "webrtc/base/checks.h"
-#include "webrtc/common_audio/include/audio_util.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/common_audio/channel_buffer.h"
 
 namespace webrtc {
 
-SplittingFilter::SplittingFilter(int channels)
-    : channels_(channels),
-      two_bands_states_(new TwoBandsStates[channels]),
-      band1_states_(new TwoBandsStates[channels]),
-      band2_states_(new TwoBandsStates[channels]) {
-  for (int i = 0; i < channels; ++i) {
-    analysis_resamplers_.push_back(new PushSincResampler(
-        kSamplesPer48kHzChannel, kSamplesPer64kHzChannel));
-    synthesis_resamplers_.push_back(new PushSincResampler(
-        kSamplesPer64kHzChannel, kSamplesPer48kHzChannel));
+SplittingFilter::SplittingFilter(size_t num_channels,
+                                 size_t num_bands,
+                                 size_t num_frames)
+    : num_bands_(num_bands) {
+  RTC_CHECK(num_bands_ == 2 || num_bands_ == 3);
+  if (num_bands_ == 2) {
+    two_bands_states_.resize(num_channels);
+  } else if (num_bands_ == 3) {
+    for (size_t i = 0; i < num_channels; ++i) {
+      three_band_filter_banks_.push_back(new ThreeBandFilterBank(num_frames));
+    }
   }
 }
 
 void SplittingFilter::Analysis(const IFChannelBuffer* data,
                                IFChannelBuffer* bands) {
-  DCHECK(bands->num_bands() == 2 || bands->num_bands() == 3);
-  DCHECK_EQ(channels_, data->num_channels());
-  DCHECK_EQ(channels_, bands->num_channels());
-  DCHECK_EQ(data->num_frames(),
-            bands->num_frames_per_band() * bands->num_bands());
+  RTC_DCHECK_EQ(num_bands_, bands->num_bands());
+  RTC_DCHECK_EQ(data->num_channels(), bands->num_channels());
+  RTC_DCHECK_EQ(data->num_frames(),
+                bands->num_frames_per_band() * bands->num_bands());
   if (bands->num_bands() == 2) {
     TwoBandsAnalysis(data, bands);
   } else if (bands->num_bands() == 3) {
@@ -46,11 +45,10 @@ void SplittingFilter::Analysis(const IFChannelBuffer* data,
 
 void SplittingFilter::Synthesis(const IFChannelBuffer* bands,
                                 IFChannelBuffer* data) {
-  DCHECK(bands->num_bands() == 2 || bands->num_bands() == 3);
-  DCHECK_EQ(channels_, data->num_channels());
-  DCHECK_EQ(channels_, bands->num_channels());
-  DCHECK_EQ(data->num_frames(),
-            bands->num_frames_per_band() * bands->num_bands());
+  RTC_DCHECK_EQ(num_bands_, bands->num_bands());
+  RTC_DCHECK_EQ(data->num_channels(), bands->num_channels());
+  RTC_DCHECK_EQ(data->num_frames(),
+                bands->num_frames_per_band() * bands->num_bands());
   if (bands->num_bands() == 2) {
     TwoBandsSynthesis(bands, data);
   } else if (bands->num_bands() == 3) {
@@ -60,7 +58,8 @@ void SplittingFilter::Synthesis(const IFChannelBuffer* bands,
 
 void SplittingFilter::TwoBandsAnalysis(const IFChannelBuffer* data,
                                        IFChannelBuffer* bands) {
-  for (int i = 0; i < channels_; ++i) {
+  RTC_DCHECK_EQ(two_bands_states_.size(), data->num_channels());
+  for (size_t i = 0; i < two_bands_states_.size(); ++i) {
     WebRtcSpl_AnalysisQMF(data->ibuf_const()->channels()[i],
                           data->num_frames(),
                           bands->ibuf()->channels(0)[i],
@@ -72,7 +71,8 @@ void SplittingFilter::TwoBandsAnalysis(const IFChannelBuffer* data,
 
 void SplittingFilter::TwoBandsSynthesis(const IFChannelBuffer* bands,
                                         IFChannelBuffer* data) {
-  for (int i = 0; i < channels_; ++i) {
+  RTC_DCHECK_EQ(two_bands_states_.size(), data->num_channels());
+  for (size_t i = 0; i < two_bands_states_.size(); ++i) {
     WebRtcSpl_SynthesisQMF(bands->ibuf_const()->channels(0)[i],
                            bands->ibuf_const()->channels(1)[i],
                            bands->num_frames_per_band(),
@@ -82,82 +82,23 @@ void SplittingFilter::TwoBandsSynthesis(const IFChannelBuffer* bands,
   }
 }
 
-// This is a simple implementation using the existing code and will be replaced
-// by a proper 3 band filter bank.
-// It up-samples from 48kHz to 64kHz, splits twice into 2 bands and discards the
-// uppermost band, because it is empty anyway.
 void SplittingFilter::ThreeBandsAnalysis(const IFChannelBuffer* data,
                                          IFChannelBuffer* bands) {
-  DCHECK_EQ(kSamplesPer48kHzChannel,
-            data->num_frames());
-  InitBuffers();
-  for (int i = 0; i < channels_; ++i) {
-    analysis_resamplers_[i]->Resample(data->ibuf_const()->channels()[i],
-                                      kSamplesPer48kHzChannel,
-                                      int_buffer_.get(),
-                                      kSamplesPer64kHzChannel);
-    WebRtcSpl_AnalysisQMF(int_buffer_.get(),
-                          kSamplesPer64kHzChannel,
-                          int_buffer_.get(),
-                          int_buffer_.get() + kSamplesPer32kHzChannel,
-                          two_bands_states_[i].analysis_state1,
-                          two_bands_states_[i].analysis_state2);
-    WebRtcSpl_AnalysisQMF(int_buffer_.get(),
-                          kSamplesPer32kHzChannel,
-                          bands->ibuf()->channels(0)[i],
-                          bands->ibuf()->channels(1)[i],
-                          band1_states_[i].analysis_state1,
-                          band1_states_[i].analysis_state2);
-    WebRtcSpl_AnalysisQMF(int_buffer_.get() + kSamplesPer32kHzChannel,
-                          kSamplesPer32kHzChannel,
-                          int_buffer_.get(),
-                          bands->ibuf()->channels(2)[i],
-                          band2_states_[i].analysis_state1,
-                          band2_states_[i].analysis_state2);
+  RTC_DCHECK_EQ(three_band_filter_banks_.size(), data->num_channels());
+  for (size_t i = 0; i < three_band_filter_banks_.size(); ++i) {
+    three_band_filter_banks_[i]->Analysis(data->fbuf_const()->channels()[i],
+                                          data->num_frames(),
+                                          bands->fbuf()->bands(i));
   }
 }
 
-// This is a simple implementation using the existing code and will be replaced
-// by a proper 3 band filter bank.
-// Using an empty uppermost band, it merges the 4 bands in 2 steps and
-// down-samples from 64kHz to 48kHz.
 void SplittingFilter::ThreeBandsSynthesis(const IFChannelBuffer* bands,
                                           IFChannelBuffer* data) {
-  DCHECK_EQ(kSamplesPer48kHzChannel,
-            data->num_frames());
-  InitBuffers();
-  for (int i = 0; i < channels_; ++i) {
-    memset(int_buffer_.get(),
-           0,
-           kSamplesPer64kHzChannel * sizeof(int_buffer_[0]));
-    WebRtcSpl_SynthesisQMF(bands->ibuf_const()->channels(0)[i],
-                           bands->ibuf_const()->channels(1)[i],
-                           kSamplesPer16kHzChannel,
-                           int_buffer_.get(),
-                           band1_states_[i].synthesis_state1,
-                           band1_states_[i].synthesis_state2);
-    WebRtcSpl_SynthesisQMF(int_buffer_.get() + kSamplesPer32kHzChannel,
-                           bands->ibuf_const()->channels(2)[i],
-                           kSamplesPer16kHzChannel,
-                           int_buffer_.get() + kSamplesPer32kHzChannel,
-                           band2_states_[i].synthesis_state1,
-                           band2_states_[i].synthesis_state2);
-    WebRtcSpl_SynthesisQMF(int_buffer_.get(),
-                           int_buffer_.get() + kSamplesPer32kHzChannel,
-                           kSamplesPer32kHzChannel,
-                           int_buffer_.get(),
-                           two_bands_states_[i].synthesis_state1,
-                           two_bands_states_[i].synthesis_state2);
-    synthesis_resamplers_[i]->Resample(int_buffer_.get(),
-                                       kSamplesPer64kHzChannel,
-                                       data->ibuf()->channels()[i],
-                                       kSamplesPer48kHzChannel);
-  }
-}
-
-void SplittingFilter::InitBuffers() {
-  if (!int_buffer_) {
-    int_buffer_.reset(new int16_t[kSamplesPer64kHzChannel]);
+  RTC_DCHECK_EQ(three_band_filter_banks_.size(), data->num_channels());
+  for (size_t i = 0; i < three_band_filter_banks_.size(); ++i) {
+    three_band_filter_banks_[i]->Synthesis(bands->fbuf_const()->bands(i),
+                                           bands->num_frames_per_band(),
+                                           data->fbuf()->channels()[i]);
   }
 }
 

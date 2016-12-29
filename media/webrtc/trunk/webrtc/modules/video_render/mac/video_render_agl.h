@@ -15,8 +15,8 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_MAC_VIDEO_RENDER_AGL_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_MAC_VIDEO_RENDER_AGL_H_
 
-#include "webrtc/modules/video_render/include/video_render_defines.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/base/platform_thread.h"
+#include "webrtc/modules/video_render/video_render_defines.h"
 
 #define NEW_HIVIEW_PARENT_EVENT_HANDLER 1
 #define NEW_HIVIEW_EVENT_HANDLER 1
@@ -42,7 +42,7 @@ class VideoChannelAGL : public VideoRenderCallback {
   VideoChannelAGL(AGLContext& aglContext, int iId, VideoRenderAGL* owner);
   virtual ~VideoChannelAGL();
   virtual int FrameSizeChange(int width, int height, int numberOfStreams);
-  virtual int DeliverFrame(const I420VideoFrame& videoFrame);
+  virtual int DeliverFrame(const VideoFrame& videoFrame);
   virtual int UpdateSize(int width, int height);
   int SetStreamSettings(int streamId, float startWidth, float startHeight,
                         float stopWidth, float stopHeight);
@@ -51,8 +51,7 @@ class VideoChannelAGL : public VideoRenderCallback {
   int RenderOffScreenBuffer();
   int IsUpdated(bool& isUpdated);
   virtual int UpdateStretchSize(int stretchHeight, int stretchWidth);
-  virtual int32_t RenderFrame(const uint32_t streamId,
-                              I420VideoFrame& videoFrame);
+  virtual int32_t RenderFrame(const uint32_t streamId, VideoFrame& videoFrame);
 
  private:
 
@@ -143,7 +142,8 @@ class VideoRenderAGL {
   bool _fullScreen;
   int _id;
   webrtc::CriticalSectionWrapper& _renderCritSec;
-  rtc::scoped_ptr<webrtc::ThreadWrapper> _screenUpdateThread;
+  // TODO(pbos): Remove scoped_ptr and use PlatformThread directly.
+  rtc::scoped_ptr<rtc::PlatformThread> _screenUpdateThread;
   webrtc::EventWrapper* _screenUpdateEvent;
   bool _isHIViewRef;
   AGLContext _aglContext;

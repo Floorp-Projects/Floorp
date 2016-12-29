@@ -5,6 +5,8 @@
 #ifndef WebrtcMediaCodecVP8VideoCodec_h__
 #define WebrtcMediaCodecVP8VideoCodec_h__
 
+#include <jni.h>
+
 #include "mozilla/Mutex.h"
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
@@ -12,6 +14,8 @@
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
+
+#include "webrtc/modules/video_coding/include/video_codec_interface.h"
 
 namespace mozilla {
 
@@ -37,9 +41,9 @@ public:
                              int32_t numberOfCores,
                              size_t maxPayloadSize) override;
 
-  virtual int32_t Encode(const webrtc::I420VideoFrame& inputImage,
+  virtual int32_t Encode(const webrtc::VideoFrame& inputImage,
                           const webrtc::CodecSpecificInfo* codecSpecificInfo,
-                          const std::vector<webrtc::VideoFrameType>* frame_types) override;
+                          const std::vector<webrtc::FrameType>* frame_types) override;
 
   virtual int32_t RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) override;
 

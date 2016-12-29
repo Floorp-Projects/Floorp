@@ -32,13 +32,13 @@ inline bool IsValueInRangeForNumericType(Src value) {
 // overflow or underflow. NaN source will always trigger a CHECK.
 template <typename Dst, typename Src>
 inline Dst checked_cast(Src value) {
-  CHECK(IsValueInRangeForNumericType<Dst>(value));
+  RTC_CHECK(IsValueInRangeForNumericType<Dst>(value));
   return static_cast<Dst>(value);
 }
 
 // saturated_cast<> is analogous to static_cast<> for numeric types, except
 // that the specified numeric conversion will saturate rather than overflow or
-// underflow. NaN assignment to an integral will trigger a CHECK condition.
+// underflow. NaN assignment to an integral will trigger a RTC_CHECK condition.
 template <typename Dst, typename Src>
 inline Dst saturated_cast(Src value) {
   // Optimization for floating point values, which already saturate.

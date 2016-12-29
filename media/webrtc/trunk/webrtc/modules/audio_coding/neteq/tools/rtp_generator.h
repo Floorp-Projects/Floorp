@@ -12,7 +12,7 @@
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_TOOLS_RTP_GENERATOR_H_
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/include/module_common_types.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -54,7 +54,7 @@ class RtpGenerator {
   double drift_factor_;
 
  private:
-  DISALLOW_COPY_AND_ASSIGN(RtpGenerator);
+  RTC_DISALLOW_COPY_AND_ASSIGN(RtpGenerator);
 };
 
 class TimestampJumpRtpGenerator : public RtpGenerator {
@@ -75,7 +75,7 @@ class TimestampJumpRtpGenerator : public RtpGenerator {
  private:
   uint32_t jump_from_timestamp_;
   uint32_t jump_to_timestamp_;
-  DISALLOW_COPY_AND_ASSIGN(TimestampJumpRtpGenerator);
+  RTC_DISALLOW_COPY_AND_ASSIGN(TimestampJumpRtpGenerator);
 };
 
 }  // namespace test

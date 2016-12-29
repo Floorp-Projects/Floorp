@@ -5,7 +5,8 @@
 
 var gTestfile = 'arguments-caller-callee.js';
 var BUGNUMBER = 514563;
-var summary = "arguments.caller and arguments.callee are poison pills in ES5";
+var summary = "arguments.caller and arguments.callee are poison pills in ES5, " +
+              "later changed in ES2017 to only poison pill arguments.callee.";
 
 print(BUGNUMBER + ": " + summary);
 
@@ -31,7 +32,7 @@ function expectTypeError(fun)
 }
 
 function bar() { "use strict"; return arguments; }
-expectTypeError(function barCaller() { bar().caller; });
+assertEq(bar().caller, undefined); // No error when accessing arguments.caller in ES2017+
 expectTypeError(function barCallee() { bar().callee; });
 
 function baz() { return arguments; }
@@ -41,15 +42,12 @@ assertEq(baz().callee, baz);
 // accessor identity
 
 function strictMode() { "use strict"; return arguments; }
-var canonicalTTE = Object.getOwnPropertyDescriptor(strictMode(), "caller").get;
+var canonicalTTE = Object.getOwnPropertyDescriptor(strictMode(), "callee").get;
 
 var args = strictMode();
 
 var argsCaller = Object.getOwnPropertyDescriptor(args, "caller");
-assertEq("get" in argsCaller, true);
-assertEq("set" in argsCaller, true);
-assertEq(argsCaller.get, canonicalTTE);
-assertEq(argsCaller.set, canonicalTTE);
+assertEq(argsCaller, undefined);
 
 var argsCallee = Object.getOwnPropertyDescriptor(args, "callee");
 assertEq("get" in argsCallee, true);

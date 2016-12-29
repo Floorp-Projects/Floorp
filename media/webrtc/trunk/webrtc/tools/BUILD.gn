@@ -16,12 +16,49 @@ source_set("tools") {
 
 source_set("command_line_parser") {
   sources = [
-    "simple_command_line_parser.h",
     "simple_command_line_parser.cc",
+    "simple_command_line_parser.h",
   ]
-
+  deps = [
+    "..:gtest_prod",
+  ]
   configs += [ "..:common_config" ]
-  public_configs = [ "..:common_inherited_config"]
+  public_configs = [ "..:common_inherited_config" ]
+}
+
+source_set("video_quality_analysis") {
+  sources = [
+    "frame_analyzer/video_quality_analysis.cc",
+    "frame_analyzer/video_quality_analysis.h",
+  ]
+  deps = [
+    "../common_video",
+  ]
+  public_deps = [
+    "../common_video",
+  ]
+}
+
+executable("frame_analyzer") {
+  sources = [
+    "frame_analyzer/frame_analyzer.cc",
+  ]
+  deps = [
+    ":command_line_parser",
+    ":video_quality_analysis",
+  ]
+}
+
+executable("rgba_to_i420_converter") {
+  sources = [
+    "converter/converter.cc",
+    "converter/converter.h",
+    "converter/rgba_to_i420_converter.cc",
+  ]
+  deps = [
+    ":command_line_parser",
+    "../common_video",
+  ]
 }
 
 # TODO(kjellander): Convert all of tools.gyp into GN here.
@@ -35,7 +72,7 @@ if (!build_with_chromium) {
     ]
 
     configs += [ "..:common_config" ]
-    public_configs = [ "..:common_inherited_config"]
+    public_configs = [ "..:common_inherited_config" ]
 
     deps = [
       ":command_line_parser",

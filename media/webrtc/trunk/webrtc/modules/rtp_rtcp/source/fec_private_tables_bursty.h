@@ -27,7 +27,8 @@
 
 #include "webrtc/typedefs.h"
 
-namespace {
+namespace webrtc {
+namespace fec_private_tables {
 
 const uint8_t kMaskBursty1_1[2] = {
   0x80, 0x00
@@ -756,5 +757,6 @@ const uint8_t** kPacketMaskBurstyTbl[12] = {
   kPacketMaskBursty12
 };
 
-}  // namespace
+}  // namespace fec_private_tables
+}  // namespace webrtc
 #endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_FEC_PRIVATE_TABLES_BURSTY_H_
