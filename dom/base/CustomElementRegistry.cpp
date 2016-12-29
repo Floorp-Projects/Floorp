@@ -428,8 +428,7 @@ CustomElementRegistry::GetCustomPrototype(nsIAtom* aAtom,
 }
 
 void
-CustomElementRegistry::UpgradeCandidates(JSContext* aCx,
-                                         nsIAtom* aKey,
+CustomElementRegistry::UpgradeCandidates(nsIAtom* aKey,
                                          CustomElementDefinition* aDefinition,
                                          ErrorResult& aRv)
 {
@@ -740,7 +739,7 @@ CustomElementRegistry::Define(const nsAString& aName,
    * 13. 14. 15. Upgrade candidates
    */
   // TODO: Bug 1299363 - Implement custom element v1 upgrade algorithm
-  UpgradeCandidates(cx, nameAtom, definition, aRv);
+  UpgradeCandidates(nameAtom, definition, aRv);
 
   /**
    * 16. If this CustomElementRegistry's when-defined promise map contains an
