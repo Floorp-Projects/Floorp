@@ -53,6 +53,17 @@ class BaseAssemblerX64 : public BaseAssembler
         }
     }
 
+    void addq_i32r(int32_t imm, RegisterID dst)
+    {
+        // 32-bit immediate always, for patching.
+        spew("addq       $0x%04x, %s", imm, GPReg64Name(dst));
+        if (dst == rax)
+            m_formatter.oneByteOp64(OP_ADD_EAXIv);
+        else
+            m_formatter.oneByteOp64(OP_GROUP1_EvIz, dst, GROUP1_OP_ADD);
+        m_formatter.immediate32(imm);
+    }
+
     void addq_im(int32_t imm, int32_t offset, RegisterID base)
     {
         spew("addq       $%d, " MEM_ob, imm, ADDR_ob(offset, base));
