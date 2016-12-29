@@ -11,7 +11,6 @@ import android.media.MediaCrypto;
 import android.media.MediaFormat;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.os.TransactionTooLargeException;
 import android.util.Log;
 import android.view.Surface;
 
@@ -169,14 +168,43 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     }
 
     private class OutputProcessor {
+        private final boolean mRenderToSurface;
         private boolean mHasOutputCapacitySet;
         private Queue<Integer> mSentIndices = new LinkedList<>();
         private Queue<Sample> mSentOutputs = new LinkedList<>();
         private boolean mStopped;
 
+        private OutputProcessor(boolean renderToSurface) {
+            mRenderToSurface = renderToSurface;
+        }
+
         private synchronized void onBuffer(int index, MediaCodec.BufferInfo info) {
             if (mStopped) {
                 return;
+            }
+
+            Sample output = obtainOutputSample(index, info);
+            try {
+                mSentIndices.add(index);
+                mSentOutputs.add(output);
+                mCallbacks.onOutput(output);
+            } catch (RemoteException e) {
+                // Dead recipient.
+                e.printStackTrace();
+                mCodec.releaseOutputBuffer(index, false);
+            }
+
+            boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+            if (DEBUG && eos) {
+                Log.d(LOGTAG, "output EOS");
+            }
+        }
+
+        private Sample obtainOutputSample(int index, MediaCodec.BufferInfo info) {
+            Sample sample = mSamplePool.obtainOutput(info);
+
+            if (mRenderToSurface) {
+                return sample;
             }
 
             ByteBuffer output = mCodec.getOutputBuffer(index);
@@ -187,39 +215,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                     mHasOutputCapacitySet = true;
                 }
             }
-            Sample copy = mSamplePool.obtainOutput(info);
-            try {
-                if (info.size > 0) {
-                    copy.buffer.readFromByteBuffer(output, info.offset, info.size);
+
+            if (info.size > 0) {
+                try {
+                    sample.buffer.readFromByteBuffer(output, info.offset, info.size);
+                } catch (IOException e) {
+                    Log.e(LOGTAG, "Fail to read output buffer:" + e.getMessage());
                 }
-                mSentIndices.add(index);
-                mSentOutputs.add(copy);
-                mCallbacks.onOutput(copy);
-            } catch (IOException e) {
-                Log.e(LOGTAG, "Fail to read output buffer:" + e.getMessage());
-                outputDummy(info);
-            } catch (TransactionTooLargeException ttle) {
-                Log.e(LOGTAG, "Output is too large:" + ttle.getMessage());
-                outputDummy(info);
-            } catch (RemoteException e) {
-                // Dead recipient.
-                e.printStackTrace();
             }
 
-            boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
-            if (DEBUG && eos) {
-                Log.d(LOGTAG, "output EOS");
-            }
-       }
-
-        private void outputDummy(MediaCodec.BufferInfo info) {
-            try {
-                if (DEBUG) { Log.d(LOGTAG, "return dummy sample"); }
-                mCallbacks.onOutput(Sample.create(null, info, null));
-            } catch (RemoteException e) {
-                // Dead recipient.
-                e.printStackTrace();
-            }
+            return sample;
         }
 
         private synchronized void onRelease(Sample sample, boolean render) {
@@ -331,8 +336,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
             codec.setCallbacks(new Callbacks(), null);
 
+            boolean renderToSurface = surface != null;
             // Video decoder should config with adaptive playback capability.
-            if (surface != null) {
+            if (renderToSurface) {
                 mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
                                                    fmt.getString(MediaFormat.KEY_MIME));
                 if (mIsAdaptivePlaybackSupported) {
@@ -346,12 +352,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             codec.configure(fmt, surface, crypto, flags);
             mCodec = codec;
             mInputProcessor = new InputProcessor();
-            mOutputProcessor = new OutputProcessor();
-            mSamplePool = new SamplePool(codecName);
-            if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created"); }
+            mOutputProcessor = new OutputProcessor(renderToSurface);
+            mSamplePool = new SamplePool(codecName, renderToSurface);
+            if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created. Render to surface?" + renderToSurface); }
             return true;
         } catch (Exception e) {
-            if (DEBUG) { Log.d(LOGTAG, "FAIL: cannot create codec -- " + codecName); }
+            Log.e(LOGTAG, "FAIL: cannot create codec -- " + codecName);
             e.printStackTrace();
             return false;
         }
