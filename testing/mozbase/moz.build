@@ -47,3 +47,6 @@ TEST_HARNESS_FILES.mozbase += [m + '/**' for m in python_modules]
 TEST_HARNESS_FILES.mozbase += [
     'setup_development.py',
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Testing', 'Mozbase')
