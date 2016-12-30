@@ -289,14 +289,6 @@ ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module)
     if (!object)
         return nullptr;
 
-    RootedId funName(cx, INTERNED_STRING_TO_JSID(cx, cx->names().Symbol_iterator_fun));
-    RootedFunction enumerateFun(cx);
-    enumerateFun = JS::GetSelfHostedFunction(cx, "ModuleNamespaceEnumerate", funName, 0);
-    if (!enumerateFun)
-        return nullptr;
-
-    SetProxyExtra(object, ProxyHandler::EnumerateFunctionSlot, ObjectValue(*enumerateFun));
-
     return &object->as<ModuleNamespaceObject>();
 }
 
@@ -340,11 +332,6 @@ const char ModuleNamespaceObject::ProxyHandler::family = 0;
 ModuleNamespaceObject::ProxyHandler::ProxyHandler()
   : BaseProxyHandler(&family, true)
 {}
-
-JS::Value ModuleNamespaceObject::ProxyHandler::getEnumerateFunction(HandleObject proxy) const
-{
-    return GetProxyExtra(proxy, EnumerateFunctionSlot);
-}
 
 bool
 ModuleNamespaceObject::ProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
@@ -402,15 +389,6 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().iterator) {
-            RootedValue enumerateFun(cx, getEnumerateFunction(proxy));
-            desc.object().set(proxy);
-            desc.setConfigurable(false);
-            desc.setEnumerable(false);
-            desc.setValue(enumerateFun);
-            return true;
-        }
-
         if (symbol == cx->wellKnownSymbols().toStringTag) {
             RootedValue value(cx, StringValue(cx->names().Module));
             desc.object().set(proxy);
@@ -458,8 +436,7 @@ ModuleNamespaceObject::ProxyHandler::has(JSContext* cx, HandleObject proxy, Hand
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        return symbol == cx->wellKnownSymbols().iterator ||
-               symbol == cx->wellKnownSymbols().toStringTag;
+        return symbol == cx->wellKnownSymbols().toStringTag;
     }
 
     *bp = ns->bindings().has(id);
@@ -473,11 +450,6 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().iterator) {
-            vp.set(getEnumerateFunction(proxy));
-            return true;
-        }
-
         if (symbol == cx->wellKnownSymbols().toStringTag) {
             vp.setString(cx->names().Module);
             return true;
