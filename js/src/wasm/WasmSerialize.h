@@ -137,7 +137,7 @@ static inline uint8_t*
 SerializePodVector(uint8_t* cursor, const mozilla::Vector<T, N, SystemAllocPolicy>& vec)
 {
     // This binary format must not change without taking into consideration the
-    // constraints in Assumptions::serialize and Module::serialize.
+    // constraints in Assumptions::serialize.
 
     cursor = WriteScalar<uint32_t>(cursor, vec.length());
     cursor = WriteBytes(cursor, vec.begin(), vec.length() * sizeof(T));
