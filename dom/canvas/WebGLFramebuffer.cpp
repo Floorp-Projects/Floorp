@@ -879,12 +879,11 @@ WebGLFramebuffer::ValidateClearBufferType(const char* funcName, GLenum buffer,
         return true;
 
     const auto& attach = mColorAttachments[drawBuffer];
-    if (!count(mResolvedCompleteData->colorDrawBuffers.begin(),
-               mResolvedCompleteData->colorDrawBuffers.end(),
-               &attach))
-    {
+    if (!attach.IsDefined())
+        return true;
+
+    if (!count(mColorDrawBuffers.begin(), mColorDrawBuffers.end(), &attach))
         return true; // DRAW_BUFFERi set to NONE.
-    }
 
     GLenum attachType;
     switch (attach.Format()->format->componentType) {
@@ -1081,31 +1080,13 @@ WebGLFramebuffer::ResolveAttachmentData(const char* funcName) const
 }
 
 WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
-    : hasSampleBuffers(false)
-    , depthBuffer(nullptr)
-    , stencilBuffer(nullptr)
 {
-    if (parent.mDepthAttachment.IsDefined()) {
-        depthBuffer = &parent.mDepthAttachment;
-    }
-    if (parent.mStencilAttachment.IsDefined()) {
-        stencilBuffer = &parent.mStencilAttachment;
-    }
-    if (parent.mDepthStencilAttachment.IsDefined()) {
-        depthBuffer = &parent.mDepthStencilAttachment;
-        stencilBuffer = &parent.mDepthStencilAttachment;
-    }
 
-    ////
-
-    colorDrawBuffers.reserve(parent.mColorDrawBuffers.size());
     texDrawBuffers.reserve(parent.mColorDrawBuffers.size() + 2); // +2 for depth+stencil.
 
     const auto fnCommon = [&](const WebGLFBAttachPoint& attach) {
         if (!attach.IsDefined())
             return false;
-
-        hasSampleBuffers |= bool(attach.Samples());
 
         if (attach.Texture()) {
             texDrawBuffers.push_back(&attach);
@@ -1135,7 +1116,6 @@ WebGLFramebuffer::ResolvedData::ResolvedData(const WebGLFramebuffer& parent)
             return;
 
         drawSet.insert(WebGLFBAttachPoint::Ordered(attach));
-        colorDrawBuffers.push_back(&attach);
     }
 
     if (parent.mColorReadBuffer) {
@@ -1628,46 +1608,51 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
                                   GLbitfield mask, GLenum filter)
 {
     const char funcName[] = "blitFramebuffer";
-    auto& gl = webgl->gl;
-
+    const auto& gl = webgl->gl;
 
     ////
     // Collect data
 
-    const auto fnGetFormat = [](const WebGLFBAttachPoint* cur) -> const webgl::FormatInfo*
+    const auto fnGetDepthAndStencilAttach = [](const WebGLFramebuffer* fb,
+                                               const WebGLFBAttachPoint** const out_depth,
+                                               const WebGLFBAttachPoint** const out_stencil)
     {
-        if (!cur)
-            return nullptr;
+        *out_depth = nullptr;
+        *out_stencil = nullptr;
 
-        MOZ_ASSERT(cur->IsDefined());
-        return cur->Format()->format;
+        if (!fb)
+            return;
+
+        if (fb->mDepthStencilAttachment.IsDefined()) {
+            *out_depth = *out_stencil = &fb->mDepthStencilAttachment;
+            return;
+        }
+        if (fb->mDepthAttachment.IsDefined()) {
+            *out_depth = &fb->mDepthAttachment;
+        }
+        if (fb->mStencilAttachment.IsDefined()) {
+            *out_stencil = &fb->mStencilAttachment;
+        }
     };
 
-    bool srcSampleBuffers;
-    const webgl::FormatInfo* srcColorFormat;
-    const webgl::FormatInfo* srcDepthFormat;
-    const webgl::FormatInfo* srcStencilFormat;
-
-    if (srcFB) {
-        srcSampleBuffers = srcFB->mResolvedCompleteData->hasSampleBuffers;
-
-        srcColorFormat = fnGetFormat(srcFB->mColorReadBuffer);
-        srcDepthFormat = fnGetFormat(srcFB->mResolvedCompleteData->depthBuffer);
-        srcStencilFormat = fnGetFormat(srcFB->mResolvedCompleteData->stencilBuffer);
-    } else {
-        srcSampleBuffers = false; // Always false.
-
-        GetBackbufferFormats(webgl, &srcColorFormat, &srcDepthFormat, &srcStencilFormat);
-    }
+    const WebGLFBAttachPoint* srcDepthAttach;
+    const WebGLFBAttachPoint* srcStencilAttach;
+    fnGetDepthAndStencilAttach(srcFB, &srcDepthAttach, &srcStencilAttach);
+    const WebGLFBAttachPoint* dstDepthAttach;
+    const WebGLFBAttachPoint* dstStencilAttach;
+    fnGetDepthAndStencilAttach(dstFB, &dstDepthAttach, &dstStencilAttach);
 
     ////
 
-    bool dstSampleBuffers;
-    const webgl::FormatInfo* dstDepthFormat;
-    const webgl::FormatInfo* dstStencilFormat;
-    bool dstHasColor = false;
-    bool colorFormatsMatch = true;
-    bool colorTypesMatch = true;
+    const auto fnGetFormat = [](const WebGLFBAttachPoint* cur,
+                                bool* const out_hasSamples) -> const webgl::FormatInfo*
+    {
+        if (!cur || !cur->IsDefined())
+            return nullptr;
+
+        *out_hasSamples |= bool(cur->Samples());
+        return cur->Format()->format;
+    };
 
     const auto fnNarrowComponentType = [&](const webgl::FormatInfo* format) {
         switch (format->componentType) {
@@ -1680,25 +1665,58 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
         }
     };
 
+    bool srcHasSamples;
+    const webgl::FormatInfo* srcColorFormat;
+    webgl::ComponentType srcColorType = webgl::ComponentType::None;
+    const webgl::FormatInfo* srcDepthFormat;
+    const webgl::FormatInfo* srcStencilFormat;
+
+    if (srcFB) {
+        srcHasSamples = false;
+        srcColorFormat = fnGetFormat(srcFB->mColorReadBuffer, &srcHasSamples);
+        srcDepthFormat = fnGetFormat(srcDepthAttach, &srcHasSamples);
+        srcStencilFormat = fnGetFormat(srcStencilAttach, &srcHasSamples);
+    } else {
+        srcHasSamples = false; // Always false.
+
+        GetBackbufferFormats(webgl, &srcColorFormat, &srcDepthFormat, &srcStencilFormat);
+    }
+
+    if (srcColorFormat) {
+        srcColorType = fnNarrowComponentType(srcColorFormat);
+    }
+
+    ////
+
+    bool dstHasSamples;
+    const webgl::FormatInfo* dstDepthFormat;
+    const webgl::FormatInfo* dstStencilFormat;
+    bool dstHasColor = false;
+    bool colorFormatsMatch = true;
+    bool colorTypesMatch = true;
+
     const auto fnCheckColorFormat = [&](const webgl::FormatInfo* dstFormat) {
         MOZ_ASSERT(dstFormat->r || dstFormat->g || dstFormat->b || dstFormat->a);
         dstHasColor = true;
         colorFormatsMatch &= (dstFormat == srcColorFormat);
-        colorTypesMatch &= ( fnNarrowComponentType(dstFormat) ==
-                             fnNarrowComponentType(srcColorFormat) );
+        colorTypesMatch &= ( fnNarrowComponentType(dstFormat) == srcColorType );
     };
 
     if (dstFB) {
-        dstSampleBuffers = dstFB->mResolvedCompleteData->hasSampleBuffers;
+        dstHasSamples = false;
 
-        dstDepthFormat = fnGetFormat(dstFB->mResolvedCompleteData->depthBuffer);
-        dstStencilFormat = fnGetFormat(dstFB->mResolvedCompleteData->stencilBuffer);
+        for (const auto& cur : dstFB->mColorDrawBuffers) {
+            const auto& format = fnGetFormat(cur, &dstHasSamples);
+            if (!format)
+                continue;
 
-        for (const auto& cur : dstFB->mResolvedCompleteData->colorDrawBuffers) {
-            fnCheckColorFormat(cur->Format()->format);
+            fnCheckColorFormat(format);
         }
+
+        dstDepthFormat = fnGetFormat(dstDepthAttach, &dstHasSamples);
+        dstStencilFormat = fnGetFormat(dstStencilAttach, &dstHasSamples);
     } else {
-        dstSampleBuffers = bool(gl->Screen()->Samples());
+        dstHasSamples = bool(gl->Screen()->Samples());
 
         const webgl::FormatInfo* dstColorFormat;
         GetBackbufferFormats(webgl, &dstColorFormat, &dstDepthFormat, &dstStencilFormat);
@@ -1772,7 +1790,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
      * or I could be missing an interaction in one of the earlier paragraphs.
      */
     if (mask & LOCAL_GL_DEPTH_BUFFER_BIT &&
-        dstDepthFormat != srcDepthFormat)
+        dstDepthFormat && dstDepthFormat != srcDepthFormat)
     {
         webgl->ErrorInvalidOperation("%s: Depth buffer formats must match if selected.",
                                      funcName);
@@ -1780,7 +1798,7 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
     }
 
     if (mask & LOCAL_GL_STENCIL_BUFFER_BIT &&
-        dstStencilFormat != srcStencilFormat)
+        dstStencilFormat && dstStencilFormat != srcStencilFormat)
     {
         webgl->ErrorInvalidOperation("%s: Stencil buffer formats must match if selected.",
                                      funcName);
@@ -1789,16 +1807,16 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
 
     ////
 
-    if (dstSampleBuffers) {
+    if (dstHasSamples) {
         webgl->ErrorInvalidOperation("%s: DRAW_FRAMEBUFFER may not have multiple"
                                      " samples.",
                                      funcName);
         return;
     }
 
-    if (srcSampleBuffers) {
+    if (srcHasSamples) {
         if (mask & LOCAL_GL_COLOR_BUFFER_BIT &&
-            !colorFormatsMatch)
+            dstHasColor && !colorFormatsMatch)
         {
             webgl->ErrorInvalidOperation("%s: Color buffer formats must match if"
                                          " selected, when reading from a multisampled"
@@ -1826,27 +1844,25 @@ WebGLFramebuffer::BlitFramebuffer(WebGLContext* webgl,
         const WebGLFBAttachPoint* feedback = nullptr;
 
         if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
-            for (const auto& cur : dstFB->mResolvedCompleteData->colorDrawBuffers) {
-                if (srcFB->mColorReadBuffer->IsEquivalent(*cur)) {
+            MOZ_ASSERT(srcFB->mColorReadBuffer->IsDefined());
+            for (const auto& cur : dstFB->mColorDrawBuffers) {
+                if (srcFB->mColorReadBuffer->IsEquivalentForFeedback(*cur)) {
                     feedback = cur;
+                    break;
                 }
             }
         }
 
-        const auto& srcDepthBuffer = srcFB->mResolvedCompleteData->depthBuffer;
-        const auto& dstDepthBuffer = dstFB->mResolvedCompleteData->depthBuffer;
         if (mask & LOCAL_GL_DEPTH_BUFFER_BIT &&
-            srcDepthBuffer->IsEquivalent(*dstDepthBuffer))
+            srcDepthAttach->IsEquivalentForFeedback(*dstDepthAttach))
         {
-            feedback = dstDepthBuffer;
+            feedback = dstDepthAttach;
         }
 
-        const auto& srcStencilBuffer = srcFB->mResolvedCompleteData->stencilBuffer;
-        const auto& dstStencilBuffer = dstFB->mResolvedCompleteData->stencilBuffer;
         if (mask & LOCAL_GL_STENCIL_BUFFER_BIT &&
-            srcStencilBuffer->IsEquivalent(*dstStencilBuffer))
+            srcStencilAttach->IsEquivalentForFeedback(*dstStencilAttach))
         {
-            feedback = dstStencilBuffer;
+            feedback = dstStencilAttach;
         }
 
         if (feedback) {
