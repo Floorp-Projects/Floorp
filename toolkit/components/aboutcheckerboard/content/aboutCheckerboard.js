@@ -114,7 +114,7 @@ function loadData() {
         if (destIndex == 0) {
             // create the initial frame
             renderData.push({
-                timestamp: timestamp,
+                timestamp,
                 rects: {},
             });
         } else if (renderData[destIndex - 1].timestamp == timestamp) {

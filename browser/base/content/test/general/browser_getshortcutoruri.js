@@ -19,7 +19,7 @@ function keywordResult(aURL, aPostData, aIsUnsafe) {
 
 function keyWordData() {}
 keyWordData.prototype = {
-  init: function(aKeyWord, aURL, aPostData, aSearchWord) {
+  init(aKeyWord, aURL, aPostData, aSearchWord) {
     this.keyword = aKeyWord;
     this.uri = makeURI(aURL);
     this.postData = aPostData;

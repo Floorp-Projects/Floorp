@@ -30,7 +30,7 @@ MozSelfSupportInterface.prototype = {
 
   _window: null,
 
-  init: function(window) {
+  init(window) {
     this._window = window;
   },
 
@@ -42,34 +42,34 @@ MozSelfSupportInterface.prototype = {
     Preferences.set(PREF_FHR_UPLOAD_ENABLED, enabled);
   },
 
-  resetPref: function(name) {
+  resetPref(name) {
     Services.prefs.clearUserPref(name);
   },
 
-  resetSearchEngines: function() {
+  resetSearchEngines() {
     Services.search.restoreDefaultEngines();
     Services.search.resetToOriginalDefaultEngine();
   },
 
-  getTelemetryPingList: function() {
+  getTelemetryPingList() {
     return this._wrapPromise(TelemetryArchive.promiseArchivedPingList());
   },
 
-  getTelemetryPing: function(pingId) {
+  getTelemetryPing(pingId) {
     return this._wrapPromise(TelemetryArchive.promiseArchivedPingById(pingId));
   },
 
-  getCurrentTelemetryEnvironment: function() {
+  getCurrentTelemetryEnvironment() {
     const current = TelemetryEnvironment.currentEnvironment;
     return new this._window.Promise(resolve => resolve(current));
   },
 
-  getCurrentTelemetrySubsessionPing: function() {
+  getCurrentTelemetrySubsessionPing() {
     const current = TelemetryController.getCurrentPingData(true);
     return new this._window.Promise(resolve => resolve(current));
   },
 
-  _wrapPromise: function(promise) {
+  _wrapPromise(promise) {
     return new this._window.Promise(
       (resolve, reject) => promise.then(resolve, reject));
   },

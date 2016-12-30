@@ -371,10 +371,10 @@ loadListener.prototype = {
 
   // FIXME: bug 253127
   // nsIHttpEventSink
-  onRedirect: function(aChannel, aNewChannel) {},
+  onRedirect(aChannel, aNewChannel) {},
   // nsIProgressEventSink
-  onProgress: function(aRequest, aContext, aProgress, aProgressMax) {},
-  onStatus: function(aRequest, aContext, aStatus, aStatusArg) {}
+  onProgress(aRequest, aContext, aProgress, aProgressMax) {},
+  onStatus(aRequest, aContext, aStatus, aStatusArg) {}
 }
 
 function isPartnerBuild() {
@@ -1427,7 +1427,7 @@ Engine.prototype = {
     LOG("_initFromURIAndLoad: Downloading engine from: \"" + uri.spec + "\".");
 
     var chan = NetUtil.newChannel({
-                 uri: uri,
+                 uri,
                  loadUsingSystemPrincipal: true
                });
 
@@ -1493,7 +1493,7 @@ Engine.prototype = {
     LOG("_initFromURISync: Loading engine from: \"" + uri.spec + "\".");
 
     var chan = NetUtil.newChannel({
-                 uri: uri,
+                 uri,
                  loadUsingSystemPrincipal: true
                });
 
@@ -1779,7 +1779,7 @@ Engine.prototype = {
         LOG("_setIcon: Downloading icon: \"" + uri.spec +
             "\" for engine: \"" + this.name + "\"");
         var chan = NetUtil.newChannel({
-                     uri: uri,
+                     uri,
                      loadUsingSystemPrincipal: true
                    });
 
@@ -2477,7 +2477,7 @@ Engine.prototype = {
   /**
    * Returns URL parsing properties used by _buildParseSubmissionMap.
    */
-  getURLParsingInfo: function() {
+  getURLParsingInfo() {
     let responseType = AppConstants.platform == "android" ? this._defaultMobileResponseType :
                                                             URLTYPE_SEARCH_HTML;
 
@@ -2497,7 +2497,7 @@ Engine.prototype = {
     return {
       mainDomain: templateUrl.host,
       path: templateUrl.filePath.toLowerCase(),
-      termsParameterName: termsParameterName,
+      termsParameterName,
     };
   },
 
@@ -3114,7 +3114,7 @@ SearchService.prototype = {
     LOG("_asyncLoadEngines: done");
   }),
 
-  _asyncReInit: function() {
+  _asyncReInit() {
     LOG("_asyncReInit");
     // Start by clearing the initialized state, so we don't abort early.
     gInitialized = false;
@@ -3548,7 +3548,7 @@ SearchService.prototype = {
     return engines;
   }),
 
-  _convertChannelToFile: function(chan) {
+  _convertChannelToFile(chan) {
     let fileURI = chan.URI;
     while (fileURI instanceof Ci.nsIJARURI)
       fileURI = fileURI.JARFile;
@@ -4349,7 +4349,7 @@ SearchService.prototype = {
     return result;
   },
 
-  _recordEngineTelemetry: function() {
+  _recordEngineTelemetry() {
     Services.telemetry.getHistogramById("SEARCH_SERVICE_ENGINE_COUNT")
             .add(Object.keys(this._engines).length);
     let hasUpdates = false;
@@ -4410,7 +4410,7 @@ SearchService.prototype = {
 
       // Store the same object on each matching map key, as an optimization.
       let mapValueForEngine = {
-        engine: engine,
+        engine,
         termsParameterName: urlParsingInfo.termsParameterName,
       };
 
@@ -4448,7 +4448,7 @@ SearchService.prototype = {
    * Checks to see if any engine has an EngineURL of type URLTYPE_SEARCH_HTML
    * for this request-method, template URL, and query params.
    */
-  hasEngineWithURL: function(method, template, formData) {
+  hasEngineWithURL(method, template, formData) {
     this._ensureInitialized();
 
     // Quick helper method to ensure formData filtered/sorted for compares.

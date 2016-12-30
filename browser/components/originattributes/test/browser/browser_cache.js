@@ -42,8 +42,8 @@ function cacheDataForContext(loadContextInfo) {
     let cacheVisitor = {
       onCacheStorageInfo(num, consumption) {},
       onCacheEntryInfo(uri, idEnhance) {
-        cacheEntries.push({ uri: uri,
-                            idEnhance: idEnhance });
+        cacheEntries.push({ uri,
+                            idEnhance });
       },
       onCacheEntryVisitCompleted() {
         resolve(cacheEntries);
@@ -73,7 +73,7 @@ function observeChannels(onChannel) {
   // We use a dummy proxy filter to catch all channels, even those that do not
   // generate an "http-on-modify-request" notification, such as link preconnects.
   let proxyFilter = {
-    applyFilter : function(aProxyService, aChannel, aProxy) {
+    applyFilter(aProxyService, aChannel, aProxy) {
       // We have the channel; provide it to the callback.
       onChannel(aChannel);
       // Pass on aProxy unmodified.
@@ -141,7 +141,7 @@ function* doInit(aMode) {
 function* doTest(aBrowser) {
 
   let argObj = {
-    randomSuffix: randomSuffix,
+    randomSuffix,
     urlPrefix: TEST_DOMAIN + TEST_PATH,
   };
 

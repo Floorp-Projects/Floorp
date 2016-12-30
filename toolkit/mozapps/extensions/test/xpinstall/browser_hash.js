@@ -13,7 +13,7 @@ function test() {
     "Unsigned XPI": {
       URL: TESTROOT + "amosigned.xpi",
       Hash: "sha1:36ffb0acfd9c6e9682473aaebaab394d38b473c9",
-      toString: function() { return this.URL; }
+      toString() { return this.URL; }
     }
   }));
   gBrowser.selectedTab = gBrowser.addTab();

@@ -76,7 +76,7 @@ add_task(function* () {
 
 function doDragEvent(sourceIndex, dropIndex) {
   return ContentTask.spawn(gBrowser.selectedBrowser,
-                           { sourceIndex: sourceIndex, dropIndex: dropIndex }, function*(args) {
+                           { sourceIndex, dropIndex }, function*(args) {
     let dataTransfer = new content.DataTransfer("dragstart", false);
     let event = content.document.createEvent("DragEvent");
     event.initDragEvent("dragstart", true, true, content, 0, 0, 0, 0, 0,

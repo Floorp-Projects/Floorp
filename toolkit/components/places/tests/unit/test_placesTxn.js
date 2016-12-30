@@ -26,17 +26,17 @@ function* promiseKeyword(keyword, href, postData) {
 // create and add bookmarks observer
 var observer = {
 
-  onBeginUpdateBatch: function() {
+  onBeginUpdateBatch() {
     this._beginUpdateBatch = true;
   },
   _beginUpdateBatch: false,
 
-  onEndUpdateBatch: function() {
+  onEndUpdateBatch() {
     this._endUpdateBatch = true;
   },
   _endUpdateBatch: false,
 
-  onItemAdded: function(id, folder, index, itemType, uri) {
+  onItemAdded(id, folder, index, itemType, uri) {
     this._itemAddedId = id;
     this._itemAddedParent = folder;
     this._itemAddedIndex = index;
@@ -47,7 +47,7 @@ var observer = {
   _itemAddedIndex: null,
   _itemAddedType: null,
 
-  onItemRemoved: function(id, folder, index, itemType) {
+  onItemRemoved(id, folder, index, itemType) {
     this._itemRemovedId = id;
     this._itemRemovedFolder = folder;
     this._itemRemovedIndex = index;
@@ -56,7 +56,7 @@ var observer = {
   _itemRemovedFolder: null,
   _itemRemovedIndex: null,
 
-  onItemChanged: function(id, property, isAnnotationProperty, newValue,
+  onItemChanged(id, property, isAnnotationProperty, newValue,
                           lastModified, itemType) {
     // The transaction manager is being rewritten in bug 891303, so just
     // skip checking this for now.
@@ -72,7 +72,7 @@ var observer = {
   _itemChanged_isAnnotationProperty: null,
   _itemChangedValue: null,
 
-  onItemVisited: function(id, visitID, time) {
+  onItemVisited(id, visitID, time) {
     this._itemVisitedId = id;
     this._itemVisitedVistId = visitID;
     this._itemVisitedTime = time;
@@ -81,7 +81,7 @@ var observer = {
   _itemVisitedVistId: null,
   _itemVisitedTime: null,
 
-  onItemMoved: function(id, oldParent, oldIndex, newParent, newIndex,
+  onItemMoved(id, oldParent, oldIndex, newParent, newIndex,
                         itemType) {
     this._itemMovedId = id;
     this._itemMovedOldParent = oldParent;
@@ -95,7 +95,7 @@ var observer = {
   _itemMovedNewParent: null,
   _itemMovedNewIndex: null,
 
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsINavBookmarkObserver) ||
         iid.equals(Ci.nsISupports)) {
       return this;

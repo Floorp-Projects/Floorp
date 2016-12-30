@@ -19,7 +19,7 @@ add_task(function* setup() {
 
 add_task(function* initial_state() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, DB_FILENAME);
-  let db = yield Sqlite.openConnection({ path: path });
+  let db = yield Sqlite.openConnection({ path });
 
   Assert.equal((yield getTotalGuidAnnotationsCount(db)), 1,
                "There should be 1 obsolete guid annotation");

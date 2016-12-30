@@ -103,8 +103,8 @@ var handleContentContextMenu = function(event) {
 
   let addonInfo = {};
   let subject = {
-    event: event,
-    addonInfo: addonInfo,
+    event,
+    addonInfo,
   };
   subject.wrappedJSObject = subject;
   Services.obs.notifyObservers(subject, "content-contextmenu", null);
@@ -197,18 +197,18 @@ var handleContentContextMenu = function(event) {
     let mainWin = browser.ownerGlobal;
     mainWin.gContextMenuContentData = {
       isRemote: false,
-      event: event,
+      event,
       popupNode: event.target,
-      browser: browser,
-      addonInfo: addonInfo,
+      browser,
+      addonInfo,
       documentURIObject: doc.documentURIObject,
-      docLocation: docLocation,
-      charSet: charSet,
-      referrer: referrer,
-      referrerPolicy: referrerPolicy,
-      contentType: contentType,
-      contentDisposition: contentDisposition,
-      selectionInfo: selectionInfo,
+      docLocation,
+      charSet,
+      referrer,
+      referrerPolicy,
+      contentType,
+      contentDisposition,
+      selectionInfo,
       disableSetDesktopBackground: disableSetDesktopBg,
       loginFillInfo,
       parentAllowsMixedContent,
@@ -262,7 +262,7 @@ function getSerializedSecurityInfo(docShell) {
 }
 
 var AboutNetAndCertErrorListener = {
-  init: function(chromeGlobal) {
+  init(chromeGlobal) {
     addMessageListener("CertErrorDetails", this);
     addMessageListener("Browser:CaptivePortalFreed", this);
     chromeGlobal.addEventListener('AboutNetErrorLoad', this, false, true);
@@ -280,7 +280,7 @@ var AboutNetAndCertErrorListener = {
     return content.document.documentURI.startsWith("about:certerror");
   },
 
-  receiveMessage: function(msg) {
+  receiveMessage(msg) {
     if (!this.isAboutCertError) {
       return;
     }
@@ -348,7 +348,7 @@ var AboutNetAndCertErrorListener = {
     content.dispatchEvent(new content.CustomEvent("AboutNetErrorCaptivePortalFreed"));
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     if (!this.isAboutNetError && !this.isAboutCertError) {
       return;
     }
@@ -372,7 +372,7 @@ var AboutNetAndCertErrorListener = {
     }
   },
 
-  changedCertPrefs: function() {
+  changedCertPrefs() {
     for (let prefName of PREF_SSL_IMPACT) {
       if (Services.prefs.prefHasUserValue(prefName)) {
         return true;
@@ -382,7 +382,7 @@ var AboutNetAndCertErrorListener = {
     return false;
   },
 
-  onPageLoad: function(evt) {
+  onPageLoad(evt) {
     if (this.isAboutCertError) {
       let originalTarget = evt.originalTarget;
       let ownerDoc = originalTarget.ownerDocument;
@@ -394,7 +394,7 @@ var AboutNetAndCertErrorListener = {
       detail: JSON.stringify({
         enabled: Services.prefs.getBoolPref("security.ssl.errorReporting.enabled"),
         changedCertPrefs: this.changedCertPrefs(),
-        automatic: automatic
+        automatic
       })
     }));
 
@@ -402,16 +402,16 @@ var AboutNetAndCertErrorListener = {
                      {reportStatus: TLS_ERROR_REPORT_TELEMETRY_UI_SHOWN});
   },
 
-  openCaptivePortalPage: function(evt) {
+  openCaptivePortalPage(evt) {
     sendAsyncMessage("Browser:OpenCaptivePortalPage");
   },
 
 
-  onResetPreferences: function(evt) {
+  onResetPreferences(evt) {
     sendAsyncMessage("Browser:ResetSSLPreferences");
   },
 
-  onSetAutomatic: function(evt) {
+  onSetAutomatic(evt) {
     sendAsyncMessage("Browser:SetSSLErrorReportAuto", {
       automatic: evt.detail
     });
@@ -427,7 +427,7 @@ var AboutNetAndCertErrorListener = {
     }
   },
 
-  onOverride: function(evt) {
+  onOverride(evt) {
     let {host, port} = content.document.mozDocumentURIIfNotForErrorPages;
     sendAsyncMessage("Browser:OverrideWeakCrypto", { uri: {host, port} });
   }
@@ -443,7 +443,7 @@ var ClickEventHandler = {
       .addSystemEventListener(global, "click", this, true);
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     if (!event.isTrusted || event.defaultPrevented || event.button == 2) {
       return;
     }
@@ -484,7 +484,7 @@ var ClickEventHandler = {
     let json = { button: event.button, shiftKey: event.shiftKey,
                  ctrlKey: event.ctrlKey, metaKey: event.metaKey,
                  altKey: event.altKey, href: null, title: null,
-                 bookmark: false, referrerPolicy: referrerPolicy,
+                 bookmark: false, referrerPolicy,
                  originAttributes: principal ? principal.originAttributes : {},
                  isContentWindowPrivate: PrivateBrowsingUtils.isContentWindowPrivate(ownerDoc.defaultView)};
 
@@ -535,7 +535,7 @@ var ClickEventHandler = {
     }
   },
 
-  onCertError: function(targetElement, ownerDoc) {
+  onCertError(targetElement, ownerDoc) {
     let docShell = ownerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
                                        .getInterface(Ci.nsIWebNavigation)
                                        .QueryInterface(Ci.nsIDocShell);
@@ -547,7 +547,7 @@ var ClickEventHandler = {
     });
   },
 
-  onAboutBlocked: function(targetElement, ownerDoc) {
+  onAboutBlocked(targetElement, ownerDoc) {
     var reason = 'phishing';
     if (/e=malwareBlocked/.test(ownerDoc.documentURI)) {
       reason = 'malware';
@@ -556,13 +556,13 @@ var ClickEventHandler = {
     }
     sendAsyncMessage("Browser:SiteBlockedError", {
       location: ownerDoc.location.href,
-      reason: reason,
+      reason,
       elementId: targetElement.getAttribute("id"),
       isTopFrame: (ownerDoc.defaultView.parent === ownerDoc.defaultView)
     });
   },
 
-  onAboutNetError: function(event, documentURI) {
+  onAboutNetError(event, documentURI) {
     let elmId = event.originalTarget.getAttribute("id");
     if (elmId == "returnButton") {
       sendAsyncMessage("Browser:SSLErrorGoBack", {});
@@ -591,7 +591,7 @@ var ClickEventHandler = {
    *       element. This includes SVG links, because callers expect |node|
    *       to behave like an <a> element, which SVG links (XLink) don't.
    */
-  _hrefAndLinkNodeForClickEvent: function(event) {
+  _hrefAndLinkNodeForClickEvent(event) {
     function isHTMLLink(aNode) {
       // Be consistent with what nsContextMenu.js does.
       return ((aNode instanceof content.HTMLAnchorElement && aNode.href) ||
@@ -656,7 +656,7 @@ addMessageListener("webrtc:StartBrowserSharing", () => {
   let windowID = content.QueryInterface(Ci.nsIInterfaceRequestor)
                         .getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   sendAsyncMessage("webrtc:response:StartBrowserSharing", {
-    windowID: windowID
+    windowID
   });
 });
 
@@ -876,20 +876,20 @@ addMessageListener("Bookmarks:GetPageDetails", (message) => {
   let doc = content.document;
   let isErrorPage = /^about:(neterror|certerror|blocked)/.test(doc.documentURI);
   sendAsyncMessage("Bookmarks:GetPageDetails:Result",
-                   { isErrorPage: isErrorPage,
+                   { isErrorPage,
                      description: PlacesUIUtils.getDescriptionFromDocument(doc) });
 });
 
 var LightWeightThemeWebInstallListener = {
   _previewWindow: null,
 
-  init: function() {
+  init() {
     addEventListener("InstallBrowserTheme", this, false, true);
     addEventListener("PreviewBrowserTheme", this, false, true);
     addEventListener("ResetBrowserThemePreview", this, false, true);
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     switch (event.type) {
       case "InstallBrowserTheme": {
         sendAsyncMessage("LightWeightThemeWebInstaller:Install", {
@@ -923,7 +923,7 @@ var LightWeightThemeWebInstallListener = {
     }
   },
 
-  _resetPreviewWindow: function() {
+  _resetPreviewWindow() {
     this._previewWindow.removeEventListener("pagehide", this, true);
     this._previewWindow = null;
   }
@@ -982,11 +982,11 @@ addMessageListener("ContextMenu:SetAsDesktopBackground", (message) => {
 
 var PageInfoListener = {
 
-  init: function() {
+  init() {
     addMessageListener("PageInfo:getData", this);
   },
 
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     let strings = message.data.strings;
     let window;
     let document;
@@ -1017,7 +1017,7 @@ var PageInfoListener = {
     this.getMediaInfo(document, window, strings);
   },
 
-  getImageInfo: function(imageElement) {
+  getImageInfo(imageElement) {
     let imageInfo = null;
     if (imageElement) {
       imageInfo = {
@@ -1030,7 +1030,7 @@ var PageInfoListener = {
     return imageInfo;
   },
 
-  getMetaInfo: function(document) {
+  getMetaInfo(document) {
     let metaViewRows = [];
 
     // Get the meta tags from the page.
@@ -1044,7 +1044,7 @@ var PageInfoListener = {
     return metaViewRows;
   },
 
-  getWindowInfo: function(window) {
+  getWindowInfo(window) {
     let windowInfo = {};
     windowInfo.isTopWindow = window == window.top;
 
@@ -1058,7 +1058,7 @@ var PageInfoListener = {
     return windowInfo;
   },
 
-  getDocumentInfo: function(document) {
+  getDocumentInfo(document) {
     let docInfo = {};
     docInfo.title = document.title;
     docInfo.location = document.location.toString();
@@ -1079,7 +1079,7 @@ var PageInfoListener = {
     return docInfo;
   },
 
-  getFeedsInfo: function(document, strings) {
+  getFeedsInfo(document, strings) {
     let feeds = [];
     // Get the feeds from the page.
     let linkNodes = document.getElementsByTagName("link");
@@ -1110,13 +1110,13 @@ var PageInfoListener = {
   },
 
   // Only called once to get the media tab's media elements from the content page.
-  getMediaInfo: function(document, window, strings)
+  getMediaInfo(document, window, strings)
   {
     let frameList = this.goThroughFrames(document, window);
     Task.spawn(() => this.processFrames(document, frameList, strings));
   },
 
-  goThroughFrames: function(document, window)
+  goThroughFrames(document, window)
   {
     let frameList = [document];
     if (window && window.frames.length > 0) {
@@ -1130,7 +1130,7 @@ var PageInfoListener = {
     return frameList;
   },
 
-  processFrames: function*(document, frameList, strings)
+  *processFrames(document, frameList, strings)
   {
     let nodeCount = 0;
     for (let doc of frameList) {
@@ -1155,7 +1155,7 @@ var PageInfoListener = {
     sendAsyncMessage("PageInfo:mediaData", {isComplete: true});
   },
 
-  getMediaItems: function(document, strings, elem)
+  getMediaItems(document, strings, elem)
   {
     // Check for images defined in CSS (e.g. background, borders)
     let computedStyle = elem.ownerGlobal.getComputedStyle(elem);
@@ -1241,7 +1241,7 @@ var PageInfoListener = {
    * makePreview in pageInfo.js uses to figure out how to display the preview.
    */
 
-  serializeElementInfo: function(document, url, type, alt, item, isBG)
+  serializeElementInfo(document, url, type, alt, item, isBG)
   {
     let result = {};
 
@@ -1322,7 +1322,7 @@ var PageInfoListener = {
   // Other Misc Stuff
   // Modified from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html
   // parse a node to extract the contents of the node
-  getValueText: function(node)
+  getValueText(node)
   {
 
     let valueText = "";
@@ -1362,7 +1362,7 @@ var PageInfoListener = {
 
   // Copied from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html.
   // Traverse the tree in search of an img or area element and grab its alt tag.
-  getAltText: function(node)
+  getAltText(node)
   {
     let altText = "";
 
@@ -1380,7 +1380,7 @@ var PageInfoListener = {
 
   // Copied from the Links Panel v2.3, http://segment7.net/mozilla/links/links.html.
   // Strip leading and trailing whitespace, and replace multiple consecutive whitespace characters with a single space.
-  stripWS: function(text)
+  stripWS(text)
   {
     let middleRE = /\s+/g;
     let endRE = /(^\s+)|(\s+$)/g;

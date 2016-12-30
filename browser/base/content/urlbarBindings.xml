@@ -825,7 +825,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       <field name="_copyCutController"><![CDATA[
         ({
           urlbar: this,
-          doCommand: function(aCommand) {
+          doCommand(aCommand) {
             var urlbar = this.urlbar;
             var val = urlbar._getSelectedValueForClipboard();
             if (!val)
@@ -849,7 +849,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               .getService(Ci.nsIClipboardHelper)
               .copyString(val);
           },
-          supportsCommand: function(aCommand) {
+          supportsCommand(aCommand) {
             switch (aCommand) {
               case "cmd_copy":
               case "cmd_cut":
@@ -857,12 +857,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             }
             return false;
           },
-          isCommandEnabled: function(aCommand) {
+          isCommandEnabled(aCommand) {
             return this.supportsCommand(aCommand) &&
                    (aCommand != "cmd_cut" || !this.urlbar.readOnly) &&
                    this.urlbar.selectionStart < this.urlbar.selectionEnd;
           },
-          onEvent: function(aEventName) {}
+          onEvent(aEventName) {}
         })
       ]]></field>
 
@@ -1019,7 +1019,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           let [, type, params] = aUrl.match(MOZ_ACTION_REGEX);
 
           let action = {
-            type: type,
+            type,
           };
 
           action.params = JSON.parse(params);
@@ -1114,7 +1114,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // handleEnter, in such a case it won't have been cleared.
           this.handleEnterInstance = {
             searchString: this.mController.searchString,
-            event: event
+            event
           };
 
           if (this.popup.selectedIndex != 0 || this.gotResultForCurrentQuery) {

@@ -49,12 +49,12 @@ const PingServer = {
     return this._started;
   },
 
-  registerPingHandler: function(handler) {
+  registerPingHandler(handler) {
     const wrapped = wrapWithExceptionHandler(handler);
     this._httpServer.registerPrefixHandler("/submit/telemetry/", wrapped);
   },
 
-  resetPingHandler: function() {
+  resetPingHandler() {
     this.registerPingHandler((request, response) => {
       let deferred = this._defers[this._defers.length - 1];
       this._defers.push(PromiseUtils.defer());
@@ -62,7 +62,7 @@ const PingServer = {
     });
   },
 
-  start: function() {
+  start() {
     this._httpServer = new HttpServer();
     this._httpServer.start(-1);
     this._started = true;
@@ -70,19 +70,19 @@ const PingServer = {
     this.resetPingHandler();
   },
 
-  stop: function() {
+  stop() {
     return new Promise(resolve => {
       this._httpServer.stop(resolve);
       this._started = false;
     });
   },
 
-  clearRequests: function() {
+  clearRequests() {
     this._defers = [ PromiseUtils.defer() ];
     this._currentDeferred = 0;
   },
 
-  promiseNextRequest: function() {
+  promiseNextRequest() {
     const deferred = this._defers[this._currentDeferred++];
     // Send the ping to the consumer on the next tick, so that the completion gets
     // signaled to Telemetry.
@@ -90,7 +90,7 @@ const PingServer = {
                                                                Ci.nsIThread.DISPATCH_NORMAL));
   },
 
-  promiseNextPing: function() {
+  promiseNextPing() {
     return this.promiseNextRequest().then(request => decodeRequestPayload(request));
   },
 
@@ -103,7 +103,7 @@ const PingServer = {
     return results;
   }),
 
-  promiseNextPings: function(count) {
+  promiseNextPings(count) {
     return this.promiseNextRequests(count).then(requests => {
       return Array.from(requests, decodeRequestPayload);
     });
@@ -123,7 +123,7 @@ function decodeRequestPayload(request) {
   if (request.getHeader("content-encoding") == "gzip") {
     let observer = {
       buffer: "",
-      onStreamComplete: function(loader, context, status, length, result) {
+      onStreamComplete(loader, context, status, length, result) {
         this.buffer = String.fromCharCode.apply(this, result);
       }
     };

@@ -169,7 +169,7 @@ this.BookmarkJSONUtils = Object.freeze({
         writeOptions.compression = "lz4";
 
       yield OS.File.writeAtomic(aFilePath, jsonString, writeOptions);
-      return { count: count, hash: hash };
+      return { count, hash };
     });
   }
 });
@@ -212,7 +212,7 @@ BookmarkImporter.prototype = {
 
       let uri = NetUtil.newURI(spec);
       let channel = NetUtil.newChannel({
-        uri: uri,
+        uri,
         loadUsingSystemPrincipal: true
       });
       let streamLoader = Cc["@mozilla.org/network/stream-loader;1"]
@@ -428,11 +428,11 @@ BookmarkImporter.prototype = {
           if (feedURI) {
             let lmPromise = PlacesUtils.livemarks.addLivemark({
               title: aData.title,
-              feedURI: feedURI,
+              feedURI,
               parentId: aContainer,
               index: aIndex,
               lastModified: aData.lastModified,
-              siteURI: siteURI,
+              siteURI,
               guid: aData.guid,
               source: this._source
             }).then(aLivemark => {

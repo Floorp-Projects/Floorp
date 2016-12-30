@@ -221,7 +221,7 @@ TransactionsHistory.__proto__ = {
    * @return the proxified transaction object.
    * @see getRawTransaction for retrieving the raw transaction.
    */
-  proxifyTransaction: function(aRawTransaction) {
+  proxifyTransaction(aRawTransaction) {
     let proxy = Object.freeze({
       transact() {
         return TransactionsManager.transact(this);
@@ -744,7 +744,7 @@ DefineTransaction.defineInputProps =
 function(aNames, aValidationFunction, aDefaultValue) {
   for (let name of aNames) {
     this.inputProps.set(name, {
-      validateValue: function(aValue) {
+      validateValue(aValue) {
         if (aValue === undefined)
           return aDefaultValue;
         try {
@@ -755,7 +755,7 @@ function(aNames, aValidationFunction, aDefaultValue) {
         }
       },
 
-      validateInput: function(aInput, aRequired) {
+      validateInput(aInput, aRequired) {
         if (aRequired && !(name in aInput))
           throw new Error(`Required input property is missing: ${name}`);
         return this.validateValue(aInput[name]);
@@ -773,7 +773,7 @@ function(aName, aBasePropertyName) {
     throw new Error(`Unknown input property: ${aBasePropertyName}`);
 
   this.inputProps.set(aName, {
-    validateValue: function(aValue) {
+    validateValue(aValue) {
       if (aValue == undefined)
         return [];
 
@@ -788,7 +788,7 @@ function(aName, aBasePropertyName) {
     // We allow setting either the array property itself (e.g. urls), or a
     // single element of it (url, in that example), that is then transformed
     // into a single-element array.
-    validateInput: function(aInput, aRequired) {
+    validateInput(aInput, aRequired) {
       if (aName in aInput) {
         // It's not allowed to set both though.
         if (aBasePropertyName in aInput) {
@@ -1025,11 +1025,11 @@ function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
         else {
           let livemark =
             yield PlacesUtils.livemarks.addLivemark({ title: aItem.title
-                                                    , feedURI: feedURI
-                                                    , siteURI: siteURI
-                                                    , parentId: parentId
+                                                    , feedURI
+                                                    , siteURI
+                                                    , parentId
                                                     , index: aIndex
-                                                    , guid: guid});
+                                                    , guid});
           itemId = livemark.id;
         }
         break;
@@ -1082,7 +1082,7 @@ PT.NewBookmark = DefineTransaction(["parentGuid", "url"],
                                    ["index", "title", "keyword", "postData",
                                     "annotations", "tags"]);
 PT.NewBookmark.prototype = Object.seal({
-  execute: function(aParentGuid, aURI, aIndex, aTitle,
+  execute(aParentGuid, aURI, aIndex, aTitle,
                     aKeyword, aPostData, aAnnos, aTags) {
     return ExecuteCreateItem(this, aParentGuid,
       function* (parentId, guidToRestore = "") {
@@ -1126,7 +1126,7 @@ PT.NewBookmark.prototype = Object.seal({
 PT.NewFolder = DefineTransaction(["parentGuid", "title"],
                                  ["index", "annotations"]);
 PT.NewFolder.prototype = Object.seal({
-  execute: function(aParentGuid, aTitle, aIndex, aAnnos) {
+  execute(aParentGuid, aTitle, aIndex, aAnnos) {
     return ExecuteCreateItem(this,  aParentGuid,
       function* (parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.createFolder(
@@ -1149,7 +1149,7 @@ PT.NewFolder.prototype = Object.seal({
  */
 PT.NewSeparator = DefineTransaction(["parentGuid"], ["index"]);
 PT.NewSeparator.prototype = Object.seal({
-  execute: function(aParentGuid, aIndex) {
+  execute(aParentGuid, aIndex) {
     return ExecuteCreateItem(this, aParentGuid,
       function* (parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.insertSeparator(
@@ -1172,7 +1172,7 @@ PT.NewSeparator.prototype = Object.seal({
 PT.NewLivemark = DefineTransaction(["feedUrl", "title", "parentGuid"],
                                    ["siteUrl", "index", "annotations"]);
 PT.NewLivemark.prototype = Object.seal({
-  execute: function* (aFeedURI, aTitle, aParentGuid, aSiteURI, aIndex, aAnnos) {
+  *execute(aFeedURI, aTitle, aParentGuid, aSiteURI, aIndex, aAnnos) {
     let livemarkInfo = { title: aTitle
                        , feedURI: aFeedURI
                        , siteURI: aSiteURI
@@ -1218,7 +1218,7 @@ PT.NewLivemark.prototype = Object.seal({
  */
 PT.Move = DefineTransaction(["guid", "newParentGuid"], ["newIndex"]);
 PT.Move.prototype = Object.seal({
-  execute: function* (aGuid, aNewParentGuid, aNewIndex) {
+  *execute(aGuid, aNewParentGuid, aNewIndex) {
     let itemId = yield PlacesUtils.promiseItemId(aGuid),
         oldParentId = PlacesUtils.bookmarks.getFolderIdForItem(itemId),
         oldIndex = PlacesUtils.bookmarks.getItemIndex(itemId),
@@ -1245,7 +1245,7 @@ PT.Move.prototype = Object.seal({
  */
 PT.EditTitle = DefineTransaction(["guid", "title"]);
 PT.EditTitle.prototype = Object.seal({
-  execute: function* (aGuid, aTitle) {
+  *execute(aGuid, aTitle) {
     let itemId = yield PlacesUtils.promiseItemId(aGuid),
         oldTitle = PlacesUtils.bookmarks.getItemTitle(itemId);
     PlacesUtils.bookmarks.setItemTitle(itemId, aTitle);
@@ -1260,7 +1260,7 @@ PT.EditTitle.prototype = Object.seal({
  */
 PT.EditUrl = DefineTransaction(["guid", "url"]);
 PT.EditUrl.prototype = Object.seal({
-  execute: function* (aGuid, aURI) {
+  *execute(aGuid, aURI) {
     let itemId = yield PlacesUtils.promiseItemId(aGuid),
         oldURI = PlacesUtils.bookmarks.getBookmarkURI(itemId),
         oldURITags = PlacesUtils.tagging.getTagsForURI(oldURI),
@@ -1346,7 +1346,7 @@ PT.Annotate.prototype = {
 PT.EditKeyword = DefineTransaction(["guid", "keyword"],
                                    ["postData", "oldKeyword"]);
 PT.EditKeyword.prototype = Object.seal({
-  execute: function* (aGuid, aKeyword, aPostData, aOldKeyword) {
+  *execute(aGuid, aKeyword, aPostData, aOldKeyword) {
     let url;
     let oldKeywordEntry;
     if (aOldKeyword) {
@@ -1360,7 +1360,7 @@ PT.EditKeyword.prototype = Object.seal({
         url = (yield PlacesUtils.bookmarks.fetch(aGuid)).url;
       }
       yield PlacesUtils.keywords.insert({
-        url: url,
+        url,
         keyword: aKeyword,
         postData: aPostData || (oldKeywordEntry ? oldKeywordEntry.postData : "")
       });
@@ -1384,7 +1384,7 @@ PT.EditKeyword.prototype = Object.seal({
  */
 PT.SortByName = DefineTransaction(["guid"]);
 PT.SortByName.prototype = {
-  execute: function* (aGuid) {
+  *execute(aGuid) {
     let itemId = yield PlacesUtils.promiseItemId(aGuid),
         oldOrder = [],  // [itemId] = old index
         contents = PlacesUtils.getFolderContents(itemId, false, false).root,
@@ -1424,7 +1424,7 @@ PT.SortByName.prototype = {
 
     // Set the nex indexes.
     let callback = {
-      runBatched: function() {
+      runBatched() {
         for (let i = 0; i < newOrder.length; ++i) {
           PlacesUtils.bookmarks.setItemIndex(newOrder[i].itemId, i);
         }
@@ -1434,7 +1434,7 @@ PT.SortByName.prototype = {
 
     this.undo = () => {
       let callback = {
-        runBatched: function() {
+        runBatched() {
           for (let item in oldOrder) {
             PlacesUtils.bookmarks.setItemIndex(item, oldOrder[item]);
           }
@@ -1512,7 +1512,7 @@ PT.RemoveBookmarksForUrls.prototype = {
  */
 PT.Tag = DefineTransaction(["urls", "tags"]);
 PT.Tag.prototype = {
-  execute: function* (aURIs, aTags) {
+  *execute(aURIs, aTags) {
     let onUndo = [], onRedo = [];
     for (let uri of aURIs) {
 
@@ -1568,7 +1568,7 @@ PT.Tag.prototype = {
  */
 PT.Untag = DefineTransaction(["urls"], ["tags"]);
 PT.Untag.prototype = {
-  execute: function* (aURIs, aTags) {
+  *execute(aURIs, aTags) {
     let onUndo = [], onRedo = [];
     for (let uri of aURIs) {
       let tagsToRemove;
@@ -1607,7 +1607,7 @@ PT.Untag.prototype = {
 PT.Copy = DefineTransaction(["guid", "newParentGuid"],
                             ["newIndex", "excludingAnnotations"]);
 PT.Copy.prototype = {
-  execute: function* (aGuid, aNewParentGuid, aNewIndex, aExcludingAnnotations) {
+  *execute(aGuid, aNewParentGuid, aNewIndex, aExcludingAnnotations) {
     let creationInfo = null;
     try {
       creationInfo = yield PlacesUtils.promiseBookmarksTree(aGuid);

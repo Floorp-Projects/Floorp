@@ -63,7 +63,7 @@ this.ProfileAge.prototype = {
    * Explicitly make `file`, a filename, a full path
    * relative to our profile path.
    */
-  getPath: function(file) {
+  getPath(file) {
     return OS.Path.join(this.profilePath, file);
   },
 
@@ -71,7 +71,7 @@ this.ProfileAge.prototype = {
    * Return a promise which resolves to the JSON contents
    * of the time file, using the already read value if possible.
    */
-  getTimes: function(file = "times.json") {
+  getTimes(file = "times.json") {
     if (this._times) {
       return Promise.resolve(this._times);
     }
@@ -86,7 +86,7 @@ this.ProfileAge.prototype = {
    * Return a promise which resolves to the JSON contents
    * of the time file in this accessor's profile.
    */
-  readTimes: function(file = "times.json") {
+  readTimes(file = "times.json") {
     return CommonUtils.readJSON(this.getPath(file));
   },
 
@@ -94,7 +94,7 @@ this.ProfileAge.prototype = {
    * Return a promise representing the writing of `contents`
    * to `file` in the specified profile.
    */
-  writeTimes: function(contents, file = "times.json") {
+  writeTimes(contents, file = "times.json") {
     return CommonUtils.writeJSON(contents, this.getPath(file));
   },
 
@@ -102,7 +102,7 @@ this.ProfileAge.prototype = {
    * Merge existing contents with a 'created' field, writing them
    * to the specified file. Promise, naturally.
    */
-  computeAndPersistCreated: function(existingContents, file = "times.json") {
+  computeAndPersistCreated(existingContents, file = "times.json") {
     let path = this.getPath(file);
     function onOldest(oldest) {
       let contents = existingContents || {};
@@ -122,7 +122,7 @@ this.ProfileAge.prototype = {
    * Traverse the contents of the profile directory, finding the oldest file
    * and returning its creation timestamp.
    */
-  getOldestProfileTimestamp: function() {
+  getOldestProfileTimestamp() {
     let self = this;
     let oldest = Date.now() + 1000;
     let iterator = new OS.File.DirectoryIterator(this.profilePath);
@@ -185,7 +185,7 @@ this.ProfileAge.prototype = {
    * be able to make use of that.
    * Returns a promise that is resolved once the file has been written.
    */
-  recordProfileReset: function(time = Date.now(), file = "times.json") {
+  recordProfileReset(time = Date.now(), file = "times.json") {
     return this.getTimes(file).then(
       times => {
         times.reset = time;

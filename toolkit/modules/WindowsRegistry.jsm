@@ -23,7 +23,7 @@ var WindowsRegistry = {
    * @return The key value or undefined if it doesn't exist.  If the key is
    *         a REG_MULTI_SZ, an array is returned.
    */
-  readRegKey: function(aRoot, aPath, aKey, aRegistryNode = 0) {
+  readRegKey(aRoot, aPath, aKey, aRegistryNode = 0) {
     const kRegMultiSz = 7;
     const kMode = Ci.nsIWindowsRegKey.ACCESS_READ | aRegistryNode;
     let registry = Cc["@mozilla.org/windows-registry-key;1"].
@@ -66,7 +66,7 @@ var WindowsRegistry = {
    *        to access a 64-bit (32-bit) key from either a 32-bit or 64-bit application.
    * @return True if the key was removed or never existed, false otherwise.
    */
-  removeRegKey: function(aRoot, aPath, aKey, aRegistryNode = 0) {
+  removeRegKey(aRoot, aPath, aKey, aRegistryNode = 0) {
     let registry = Cc["@mozilla.org/windows-registry-key;1"].
                    createInstance(Ci.nsIWindowsRegKey);
     let result = false;

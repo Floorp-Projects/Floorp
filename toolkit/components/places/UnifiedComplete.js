@@ -384,7 +384,7 @@ XPCOMUtils.defineLazyGetter(this, "SwitchToTabStorage", () => Object.seal({
     , { url: uri.spec, userContextId });
   },
 
-  shutdown: function() {
+  shutdown() {
     this._conn = null;
     this._queue.clear();
   }
@@ -769,7 +769,7 @@ Search.prototype = {
    * @param type
    *        The behavior type to set.
    */
-  setBehavior: function(type) {
+  setBehavior(type) {
     type = type.toUpperCase();
     this._behavior |=
       Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type];
@@ -787,7 +787,7 @@ Search.prototype = {
    *        The behavior type to test for.
    * @return true if the behavior is set, false otherwise.
    */
-  hasBehavior: function(type) {
+  hasBehavior(type) {
     let behavior = Ci.mozIPlacesAutoComplete["BEHAVIOR_" + type.toUpperCase()];
 
     if (this._disablePrivateActions &&
@@ -803,7 +803,7 @@ Search.prototype = {
    * typing.
    */
   _sleepDeferred: null,
-  _sleep: function(aTimeMs) {
+  _sleep(aTimeMs) {
     // Reuse a single instance to try shaving off some usless work before
     // the first query.
     if (!this._sleepTimer)
@@ -822,7 +822,7 @@ Search.prototype = {
    *        An array of search tokens.
    * @return the filtered list of tokens to search with.
    */
-  filterTokens: function(tokens) {
+  filterTokens(tokens) {
     let foundToken = false;
     // Set the proper behavior while filtering tokens.
     for (let i = tokens.length - 1; i >= 0; i--) {
@@ -1152,7 +1152,7 @@ Search.prototype = {
     return this._searchTokens.some(looksLikeUrl);
   },
 
-  _matchKnownUrl: function* (conn) {
+  *_matchKnownUrl(conn) {
     // Hosts have no "/" in them.
     let lastSlashIndex = this._searchString.lastIndexOf("/");
     // Search only URLs if there's a slash in the search string...
@@ -1184,7 +1184,7 @@ Search.prototype = {
     return gotResult;
   },
 
-  _matchExtensionHeuristicResult: function* () {
+  *_matchExtensionHeuristicResult() {
     if (ExtensionSearchHandler.isKeywordRegistered(this._searchTokens[0]) &&
         this._originalSearchString.length > this._searchTokens[0].length) {
       let description = ExtensionSearchHandler.getDescription(this._searchTokens[0]);
@@ -1194,7 +1194,7 @@ Search.prototype = {
     return false;
   },
 
-  _matchPlacesKeyword: function* () {
+  *_matchPlacesKeyword() {
     // The first word could be a keyword, so that's what we'll search.
     let keyword = this._searchTokens[0];
     let entry = yield PlacesUtils.keywords.fetch(this._searchTokens[0]);
@@ -1228,7 +1228,7 @@ Search.prototype = {
     return true;
   },
 
-  _matchSearchEngineUrl: function* () {
+  *_matchSearchEngineUrl() {
     if (!Prefs.autofillSearchEngines)
       return false;
 
@@ -1270,7 +1270,7 @@ Search.prototype = {
 
     this._result.setDefaultIndex(0);
     this._addMatch({
-      value: value,
+      value,
       comment: match.engineName,
       icon: match.iconUrl,
       style: "priority-search",
@@ -1280,7 +1280,7 @@ Search.prototype = {
     return true;
   },
 
-  _matchSearchEngineAlias: function* () {
+  *_matchSearchEngineAlias() {
     if (this._searchTokens.length < 1)
       return false;
 
@@ -1296,7 +1296,7 @@ Search.prototype = {
     return true;
   },
 
-  _matchCurrentSearchEngine: function* () {
+  *_matchCurrentSearchEngine() {
     let match = yield PlacesSearchAutocompleteProvider.getDefaultMatch();
     if (!match)
       return false;
@@ -1338,7 +1338,7 @@ Search.prototype = {
     let value = PlacesUtils.mozActionURI("searchengine", actionURLParams);
 
     this._addMatch({
-      value: value,
+      value,
       comment: match.engineName,
       icon: match.iconUrl,
       style: "action searchengine",
@@ -1393,7 +1393,7 @@ Search.prototype = {
 
   // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
   // scheme isn't specificed.
-  _matchUnknownUrl: function* () {
+  *_matchUnknownUrl() {
     let flags = Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
                 Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
     let fixupInfo = null;
@@ -1435,7 +1435,7 @@ Search.prototype = {
     });
 
     let match = {
-      value: value,
+      value,
       comment: displayURL,
       style: "action visiturl",
       frecency: 0,
@@ -1453,7 +1453,7 @@ Search.prototype = {
     return true;
   },
 
-  _onResultRow: function(row) {
+  _onResultRow(row) {
     if (this._localMatchesCount == 0) {
       TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
     }
@@ -1479,7 +1479,7 @@ Search.prototype = {
       throw StopIteration;
   },
 
-  _maybeRestyleSearchMatch: function(match) {
+  _maybeRestyleSearchMatch(match) {
     // Return if the URL does not represent a search result.
     let parseResult =
       PlacesSearchAutocompleteProvider.parseSubmissionURL(match.value);
@@ -1585,7 +1585,7 @@ Search.prototype = {
     return index;
   },
 
-  _processHostRow: function(row) {
+  _processHostRow(row) {
     let match = {};
     let trimmedHost = row.getResultByIndex(QUERYINDEX_URL);
     let untrimmedHost = row.getResultByIndex(QUERYINDEX_TITLE);
@@ -1614,7 +1614,7 @@ Search.prototype = {
     return match;
   },
 
-  _processUrlRow: function(row) {
+  _processUrlRow(row) {
     let match = {};
     let value = row.getResultByIndex(QUERYINDEX_URL);
     let url = fixupSearchText(value);
@@ -1656,7 +1656,7 @@ Search.prototype = {
     return match;
   },
 
-  _processRow: function(row) {
+  _processRow(row) {
     let match = {};
     match.placeId = row.getResultByIndex(QUERYINDEX_PLACEID);
     let escapedURL = row.getResultByIndex(QUERYINDEX_URL);
@@ -1933,7 +1933,7 @@ Search.prototype = {
    * @param searchOngoing
    *        Indicates whether the search is ongoing.
    */
-  notifyResults: function(searchOngoing) {
+  notifyResults(searchOngoing) {
     let result = this._result;
     let resultCode = result.matchCount ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
     if (searchOngoing) {
@@ -1971,7 +1971,7 @@ UnifiedComplete.prototype = {
    * @resolves to the Sqlite database handle (according to Sqlite.jsm).
    * @rejects javascript exception.
    */
-  getDatabaseHandle: function() {
+  getDatabaseHandle() {
     if (Prefs.enabled && !this._promiseDatabase) {
       this._promiseDatabase = Task.spawn(function* () {
         let conn = yield Sqlite.cloneStorageConnection({
@@ -2018,7 +2018,7 @@ UnifiedComplete.prototype = {
 
   // nsIAutoCompleteSearch
 
-  startSearch: function(searchString, searchParam, previousResult, listener) {
+  startSearch(searchString, searchParam, previousResult, listener) {
     // Stop the search in case the controller has not taken care of it.
     if (this._currentSearch) {
       this.stopSearch();
@@ -2057,7 +2057,7 @@ UnifiedComplete.prototype = {
                             });
   },
 
-  stopSearch: function() {
+  stopSearch() {
     if (this._currentSearch) {
       this._currentSearch.stop();
     }
@@ -2073,7 +2073,7 @@ UnifiedComplete.prototype = {
    *        Indicates if we should notify the AutoComplete listener about our
    *        results or not.
    */
-  finishSearch: function(notify = false) {
+  finishSearch(notify = false) {
     TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, this);
     TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, this);
     // Clear state now to avoid race conditions, see below.
@@ -2100,7 +2100,7 @@ UnifiedComplete.prototype = {
 
   // nsIAutoCompleteSimpleResultListener
 
-  onValueRemoved: function(result, spec, removeFromDB) {
+  onValueRemoved(result, spec, removeFromDB) {
     if (removeFromDB) {
       PlacesUtils.history.removePage(NetUtil.newURI(spec));
     }

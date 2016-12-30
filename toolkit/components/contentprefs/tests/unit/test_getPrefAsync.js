@@ -18,7 +18,7 @@ function run_test() {
 
 function testCallbackObj() {
   cps.getPref(uri, "asynctest", {
-    onResult: function(aValue) {
+    onResult(aValue) {
       do_check_eq(aValue, "pie");
       cps.removePref(uri, "asynctest");
       testNoResult();

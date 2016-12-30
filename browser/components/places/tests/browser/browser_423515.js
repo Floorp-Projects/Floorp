@@ -20,11 +20,11 @@ function test() {
 
   // add a regular folder, should be moveable
   tests.push({
-    populate: function() {
+    populate() {
       this.id =
         PlacesUtils.bookmarks.createFolder(rootId, "", IDX);
     },
-    validate: function() {
+    validate() {
       is(rootNode.childCount, 1,
         "populate added data to the test root");
       is(PlacesControllerDragHelper.canMoveNode(rootNode.getChild(0)),
@@ -34,13 +34,13 @@ function test() {
 
   // add a regular folder shortcut, should be moveable
   tests.push({
-    populate: function() {
+    populate() {
       this.folderId =
         PlacesUtils.bookmarks.createFolder(rootId, "foo", IDX);
       this.shortcutId =
         PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:folder=" + this.folderId), IDX, "bar");
     },
-    validate: function() {
+    validate() {
       is(rootNode.childCount, 2,
         "populated data to the test root");
 
@@ -62,13 +62,13 @@ function test() {
 
   // add a regular query, should be moveable
   tests.push({
-    populate: function() {
+    populate() {
       this.bookmarkId =
         PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("http://foo.com"), IDX, "foo");
       this.queryId =
         PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:terms=foo"), IDX, "bar");
     },
-    validate: function() {
+    validate() {
       is(rootNode.childCount, 2,
         "populated data to the test root");
 
@@ -90,14 +90,14 @@ function test() {
               PlacesUtils.tagsFolderId, PlacesUtils.unfiledBookmarksFolderId,
               PlacesUtils.toolbarFolderId],
     shortcuts: {},
-    populate: function() {
+    populate() {
       for (var i = 0; i < this.folders.length; i++) {
         var id = this.folders[i];
         this.shortcuts[id] =
           PlacesUtils.bookmarks.insertBookmark(rootId, makeURI("place:folder=" + id), IDX, "");
       }
     },
-    validate: function() {
+    validate() {
       // test toolbar shortcut node
       is(rootNode.childCount, this.folders.length,
         "populated data to the test root");
@@ -138,13 +138,13 @@ function test() {
 
   // test that a tag container cannot be moved
   tests.push({
-    populate: function() {
+    populate() {
       // tag a uri
       this.uri = makeURI("http://foo.com");
       PlacesUtils.tagging.tagURI(this.uri, ["bar"]);
       registerCleanupFunction(() => PlacesUtils.tagging.untagURI(this.uri, ["bar"]));
     },
-    validate: function() {
+    validate() {
       // get tag root
       var query = PlacesUtils.history.getNewQuery();
       var options = PlacesUtils.history.getNewQueryOptions();

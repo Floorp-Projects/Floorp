@@ -426,7 +426,7 @@
               { op : "bump",
                 fieldname : textBox.getAttribute("autocompletesearchparam"),
                 value : aData },
-              { handleError : function(aError) {
+              { handleError(aError) {
                   Components.utils.reportError("Saving search to form history failed: " + aError.message);
               }});
           }
@@ -499,7 +499,7 @@
       <![CDATA[
         // Speculatively connect to the current engine's search URI (and
         // suggest URI, if different) to reduce request latency
-        this.currentEngine.speculativeConnect({window: window});
+        this.currentEngine.speculativeConnect({window});
 
         if (this._ignoreFocus) {
           // This window has been re-focused, don't show the suggestions
@@ -825,16 +825,16 @@
       <!-- nsIController -->
       <field name="searchbarController" readonly="true"><![CDATA[({
         _self: this,
-        supportsCommand: function(aCommand) {
+        supportsCommand(aCommand) {
           return aCommand == "cmd_clearhistory" ||
                  aCommand == "cmd_togglesuggest";
         },
 
-        isCommandEnabled: function(aCommand) {
+        isCommandEnabled(aCommand) {
           return true;
         },
 
-        doCommand: function(aCommand) {
+        doCommand(aCommand) {
           switch (aCommand) {
             case "cmd_clearhistory":
               var param = this._self.getAttribute("autocompletesearchparam");
@@ -2245,7 +2245,7 @@
             onSuccess: engine => {
               this._rebuild();
             },
-            onError: function(errorCode) {
+            onError(errorCode) {
               if (errorCode != Ci.nsISearchInstallCallback.ERROR_DUPLICATE_ENGINE) {
                 // Download error is shown by the search service
                 return;

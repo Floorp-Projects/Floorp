@@ -495,7 +495,7 @@ add_task(function* () {
     let oldOpenPrefs = window.openPreferences;
     let openPrefsPromise = new Promise(resolve => {
       window.openPreferences = function(pane, params) {
-        resolve({ pane: pane, params: params });
+        resolve({ pane, params });
       };
     });
 
@@ -647,7 +647,7 @@ function promiseNewEngine(basename) {
   return new Promise((resolve, reject) => {
     let url = getRootDirectory(gTestPath) + basename;
     Services.search.addEngine(url, null, "", false, {
-      onSuccess: function(engine) {
+      onSuccess(engine) {
         info("Search engine added: " + basename);
         registerCleanupFunction(() => {
           try {
@@ -656,7 +656,7 @@ function promiseNewEngine(basename) {
         });
         resolve(engine);
       },
-      onError: function(errCode) {
+      onError(errCode) {
         ok(false, "addEngine failed with error code " + errCode);
         reject();
       },

@@ -64,7 +64,7 @@ ColorAnalyzer.prototype = {
 
   startJob: function ColorAnalyzer_startJob(imageData, callback) {
     this.callbacks.push(callback);
-    this.worker.postMessage({ imageData: imageData, maxColors: 1 });
+    this.worker.postMessage({ imageData, maxColors: 1 });
   },
 
   onWorkerMessage: function ColorAnalyzer_onWorkerMessage(event) {

@@ -45,7 +45,7 @@ add_task(function* test_content_url_annotation() {
   let redirect_url = "https://example.com/browser/toolkit/content/tests/browser/file_redirect_to.html";
 
   yield BrowserTestUtils.withNewTab({
-    gBrowser: gBrowser
+    gBrowser
   }, function* (browser) {
     ok(browser.isRemoteBrowser, "Should be a remote browser");
 

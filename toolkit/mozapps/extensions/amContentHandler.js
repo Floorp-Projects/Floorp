@@ -28,7 +28,7 @@ amContentHandler.prototype = {
    * @param  aRequest
    *         The nsIRequest dealing with the content
    */
-  handleContent: function(aMimetype, aContext, aRequest) {
+  handleContent(aMimetype, aContext, aRequest) {
     if (aMimetype != XPI_CONTENT_TYPE)
       throw Cr.NS_ERROR_WONT_HANDLE_CONTENT;
 
@@ -57,7 +57,7 @@ amContentHandler.prototype = {
       names: [null],
       icons: [null],
       mimetype: XPI_CONTENT_TYPE,
-      principalToInherit: principalToInherit,
+      principalToInherit,
       callbackID: -1
     };
 
@@ -94,7 +94,7 @@ amContentHandler.prototype = {
   classID: Components.ID("{7beb3ba8-6ec3-41b4-b67c-da89b8518922}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIContentHandler]),
 
-  log : function(aMsg) {
+  log(aMsg) {
     let msg = "amContentHandler.js: " + (aMsg.join ? aMsg.join("") : aMsg);
     Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService).
       logStringMessage(msg);

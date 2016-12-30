@@ -54,7 +54,7 @@ Finder.prototype = {
     return this._iterator;
   },
 
-  destroy: function() {
+  destroy() {
     if (this._iterator)
       this._iterator.reset();
     if (this._highlighter) {
@@ -73,16 +73,16 @@ Finder.prototype = {
       this._highlighter = null;
   },
 
-  addResultListener: function(aListener) {
+  addResultListener(aListener) {
     if (this._listeners.indexOf(aListener) === -1)
       this._listeners.push(aListener);
   },
 
-  removeResultListener: function(aListener) {
+  removeResultListener(aListener) {
     this._listeners = this._listeners.filter(l => l != aListener);
   },
 
-  _notify: function(options) {
+  _notify(options) {
     if (typeof options.storeResult != "boolean")
       options.storeResult = true;
 
@@ -187,7 +187,7 @@ Finder.prototype = {
    * @param aLinksOnly Only consider nodes that are links for the search.
    * @param aDrawOutline Puts an outline around matched links.
    */
-  fastFind: function(aSearchString, aLinksOnly, aDrawOutline) {
+  fastFind(aSearchString, aLinksOnly, aDrawOutline) {
     this._lastFindResult = this._fastFind.find(aSearchString, aLinksOnly);
     let searchString = this._fastFind.searchString;
     this._notify({
@@ -209,7 +209,7 @@ Finder.prototype = {
    * @param aLinksOnly Only consider nodes that are links for the search.
    * @param aDrawOutline Puts an outline around matched links.
    */
-  findAgain: function(aFindBackwards, aLinksOnly, aDrawOutline) {
+  findAgain(aFindBackwards, aLinksOnly, aDrawOutline) {
     this._lastFindResult = this._fastFind.findAgain(aFindBackwards, aLinksOnly);
     let searchString = this._fastFind.searchString;
     this._notify({
@@ -226,7 +226,7 @@ Finder.prototype = {
    * Forcibly set the search string of the find clipboard to the currently
    * selected text in the window, on supported platforms (i.e. OSX).
    */
-  setSearchStringToSelection: function() {
+  setSearchStringToSelection() {
     let searchString = this.getActiveSelectionText();
 
     // Empty strings are rather useless to search for.
@@ -241,7 +241,7 @@ Finder.prototype = {
     yield this.highlighter.highlight(aHighlight, aWord, null, aLinksOnly);
   }),
 
-  getInitialSelection: function() {
+  getInitialSelection() {
     this._getWindow().setTimeout(() => {
       let initialSelection = this.getActiveSelectionText();
       for (let l of this._listeners) {
@@ -252,7 +252,7 @@ Finder.prototype = {
     }, 0);
   },
 
-  getActiveSelectionText: function() {
+  getActiveSelectionText() {
     let focusedWindow = {};
     let focusedElement =
       Services.focus.getFocusedElementForWindow(this._getWindow(), true,
@@ -288,18 +288,18 @@ Finder.prototype = {
     return selText;
   },
 
-  enableSelection: function() {
+  enableSelection() {
     this._fastFind.setSelectionModeAndRepaint(Ci.nsISelectionController.SELECTION_ON);
     this._restoreOriginalOutline();
   },
 
-  removeSelection: function() {
+  removeSelection() {
     this._fastFind.collapseSelection();
     this.enableSelection();
     this.highlighter.clear();
   },
 
-  focusContent: function() {
+  focusContent() {
     // Allow Finder listeners to cancel focusing the content.
     for (let l of this._listeners) {
       try {
@@ -328,14 +328,14 @@ Finder.prototype = {
     } catch (e) {}
   },
 
-  onFindbarClose: function() {
+  onFindbarClose() {
     this.enableSelection();
     this.highlighter.highlight(false);
     this.iterator.reset();
     BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", false);
   },
 
-  onFindbarOpen: function() {
+  onFindbarOpen() {
     BrowserUtils.trackToolbarVisibility(this._docShell, "findbar", true);
   },
 
@@ -351,7 +351,7 @@ Finder.prototype = {
       this._iterator.reset();
   },
 
-  keyPress: function(aEvent) {
+  keyPress(aEvent) {
     let controller = this._getSelectionController(this._getWindow());
 
     switch (aEvent.keyCode) {
@@ -359,7 +359,7 @@ Finder.prototype = {
         if (this._fastFind.foundLink) {
           let view = this._fastFind.foundLink.ownerDocument.defaultView;
           this._fastFind.foundLink.dispatchEvent(new view.MouseEvent("click", {
-            view: view,
+            view,
             cancelable: true,
             bubbles: true,
             ctrlKey: aEvent.ctrlKey,
@@ -391,7 +391,7 @@ Finder.prototype = {
     }
   },
 
-  _notifyMatchesCount: function(result = this._currentMatchesCountResult) {
+  _notifyMatchesCount(result = this._currentMatchesCountResult) {
     // The `_currentFound` property is only used for internal bookkeeping.
     delete result._currentFound;
     result.limit = this.matchesCountLimit;
@@ -407,7 +407,7 @@ Finder.prototype = {
     this._currentMatchesCountResult = null;
   },
 
-  requestMatchesCount: function(aWord, aLinksOnly) {
+  requestMatchesCount(aWord, aLinksOnly) {
     if (this._lastFindResult == Ci.nsITypeAheadFind.FIND_NOTFOUND ||
         this.searchString == "" || !aWord || !this.matchesCountLimit) {
       this._notifyMatchesCount({
@@ -474,7 +474,7 @@ Finder.prototype = {
     };
   },
 
-  _getWindow: function() {
+  _getWindow() {
     return this._docShell.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
   },
 
@@ -482,7 +482,7 @@ Finder.prototype = {
    * Get the bounding selection rect in CSS px relative to the origin of the
    * top-level content document.
    */
-  _getResultRect: function() {
+  _getResultRect() {
     let topWin = this._getWindow();
     let win = this._fastFind.currentWindow;
     if (!win)
@@ -529,7 +529,7 @@ Finder.prototype = {
     return rect.translate(scrollX.value, scrollY.value);
   },
 
-  _outlineLink: function(aDrawOutline) {
+  _outlineLink(aDrawOutline) {
     let foundLink = this._fastFind.foundLink;
 
     // Optimization: We are drawing outlines and we matched
@@ -556,7 +556,7 @@ Finder.prototype = {
     }
   },
 
-  _restoreOriginalOutline: function() {
+  _restoreOriginalOutline() {
     // Removes the outline around the last found link.
     if (this._previousLink) {
       this._previousLink.style.outline = this._tmpOutline;
@@ -565,7 +565,7 @@ Finder.prototype = {
     }
   },
 
-  _getSelectionController: function(aWindow) {
+  _getSelectionController(aWindow) {
     // display: none iframes don't have a selection controller, see bug 493658
     try {
       if (!aWindow.innerWidth || !aWindow.innerHeight)
@@ -589,7 +589,7 @@ Finder.prototype = {
 
   // Start of nsIWebProgressListener implementation.
 
-  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
+  onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
     if (!aWebProgress.isTopLevel)
       return;
     // Ignore events that don't change the document.

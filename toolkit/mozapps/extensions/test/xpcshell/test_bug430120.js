@@ -22,7 +22,7 @@ var gBlocklist;
 // This is a replacement for the timer service so we can trigger timers
 var timerService = {
 
-  hasTimer: function(id) {
+  hasTimer(id) {
     var catMan = Components.classes["@mozilla.org/categorymanager;1"]
                            .getService(Components.interfaces.nsICategoryManager);
     var entries = catMan.enumerateCategory(CATEGORY_UPDATE_TIMER);
@@ -37,11 +37,11 @@ var timerService = {
     return false;
   },
 
-  fireTimer: function(id) {
+  fireTimer(id) {
     gBlocklist.QueryInterface(Components.interfaces.nsITimerCallback).notify(null);
   },
 
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Components.interfaces.nsIUpdateTimerManager)
      || iid.equals(Components.interfaces.nsISupports))
       return this;

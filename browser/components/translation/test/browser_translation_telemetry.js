@@ -24,14 +24,14 @@ var MetricsChecker = {
     DETECT_LANG           : Services.telemetry.getHistogramById("SHOULD_AUTO_DETECT_LANGUAGE"),
   },
 
-  reset: function() {
+  reset() {
     for (let i of Object.keys(this.HISTOGRAMS)) {
       this.HISTOGRAMS[i].clear();
     }
     this.updateMetrics();
   },
 
-  updateMetrics: function() {
+  updateMetrics() {
     this._metrics = {
       opportunitiesCount: this.HISTOGRAMS.OPPORTUNITIES.snapshot().sum || 0,
       pageCount: this.HISTOGRAMS.PAGES.snapshot().sum || 0,
@@ -65,7 +65,7 @@ var MetricsChecker = {
   /**
    * A recurrent loop for making assertions about collected metrics.
    */
-  _assertionLoop: function(prevMetrics, metrics, additions) {
+  _assertionLoop(prevMetrics, metrics, additions) {
     for (let metric of Object.keys(additions)) {
       let addition = additions[metric];
       // Allows nesting metrics. Useful for keyed histograms.
@@ -77,7 +77,7 @@ var MetricsChecker = {
     }
   },
 
-  checkAdditions: function(additions) {
+  checkAdditions(additions) {
     let prevMetrics = this._metrics;
     this.updateMetrics();
     this._assertionLoop(prevMetrics, this._metrics, additions);

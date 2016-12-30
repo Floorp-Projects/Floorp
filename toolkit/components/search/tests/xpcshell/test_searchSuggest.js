@@ -556,14 +556,14 @@ function updateSearchHistory(operation, value) {
   FormHistory.update({
                        op: operation,
                        fieldname: "searchbar-history",
-                       value: value,
+                       value,
                      },
                      {
-                       handleError: function(error) {
+                       handleError(error) {
                          do_throw("Error occurred updating form history: " + error);
                          deferred.reject(error);
                        },
-                       handleCompletion: function(reason) {
+                       handleCompletion(reason) {
                          if (!reason)
                            deferred.resolve();
                        }

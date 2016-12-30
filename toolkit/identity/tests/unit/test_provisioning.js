@@ -19,7 +19,7 @@ function test_begin_provisioning() {
       IdentityProvider.beginProvisioning(caller);
     }, function() {},
     {
-      beginProvisioningCallback: function(email, duration_s) {
+      beginProvisioningCallback(email, duration_s) {
         do_check_eq(email, TEST_USER);
         do_check_true(duration_s > 0);
         do_check_true(duration_s <= (24 * 3600));
@@ -49,7 +49,7 @@ function test_raise_provisioning_failure() {
       run_next_test();
     },
     {
-      beginProvisioningCallback: function(email, duration_s) {
+      beginProvisioningCallback(email, duration_s) {
         // raise the failure as if we can't provision this email
         IdentityProvider.raiseProvisioningFailure(_callerId, "can't authenticate this email");
       }
@@ -74,7 +74,7 @@ function test_genkeypair_before_begin_provisioning() {
     },
     {
       // this should not be called at all!
-      genKeyPairCallback: function(pk) {
+      genKeyPairCallback(pk) {
         // a test that will surely fail because we shouldn't be here.
         do_check_true(false);
 
@@ -103,10 +103,10 @@ function test_genkeypair() {
       run_next_test();
     },
     {
-      beginProvisioningCallback: function(email, time_s) {
+      beginProvisioningCallback(email, time_s) {
         IdentityProvider.genKeyPair(_callerId);
       },
-      genKeyPairCallback: function(kp) {
+      genKeyPairCallback(kp) {
         do_check_neq(kp, null);
 
         // yay!
@@ -139,7 +139,7 @@ function test_register_certificate_before_genkeypair() {
       run_next_test();
     },
     {
-      beginProvisioningCallback: function(email, duration_s) {
+      beginProvisioningCallback(email, duration_s) {
         // now we try to register cert but no keygen has been done
         IdentityProvider.registerCertificate(_callerID, "fake-cert");
       }
@@ -175,10 +175,10 @@ function test_register_certificate() {
       });
     },
     {
-      beginProvisioningCallback: function(email, duration_s) {
+      beginProvisioningCallback(email, duration_s) {
         IdentityProvider.genKeyPair(_callerId);
       },
-      genKeyPairCallback: function(pk) {
+      genKeyPairCallback(pk) {
         IdentityProvider.registerCertificate(_callerId, "fake-cert-42");
       }
     }
@@ -214,10 +214,10 @@ function test_get_assertion_after_provision() {
       });
     },
     {
-      beginProvisioningCallback: function(email, duration_s) {
+      beginProvisioningCallback(email, duration_s) {
         IdentityProvider.genKeyPair(_callerId);
       },
-      genKeyPairCallback: function(pk) {
+      genKeyPairCallback(pk) {
         IdentityProvider.registerCertificate(_callerId, "fake-cert-42");
       }
     }

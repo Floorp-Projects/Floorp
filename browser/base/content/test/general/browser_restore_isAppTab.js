@@ -14,7 +14,7 @@ function getMinidumpDirectory() {
 // This observer is needed so we can clean up all evidence of the crash so
 // the testrunner thinks things are peachy.
 var CrashObserver = {
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     is(topic, 'ipc:content-shutdown', 'Received correct observer topic.');
     ok(subject instanceof Ci.nsIPropertyBag2,
        'Subject implements nsIPropertyBag2.');

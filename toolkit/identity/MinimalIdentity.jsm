@@ -63,7 +63,7 @@ IDService.prototype = {
     }
   },
 
-  shutdown: function() {
+  shutdown() {
     Services.obs.removeObserver(this, "quit-application-granted");
   },
 

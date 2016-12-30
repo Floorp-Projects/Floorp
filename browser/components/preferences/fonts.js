@@ -19,7 +19,7 @@ const kFontSizeFmtFixed         = "font.size.fixed.%LANG%";
 const kFontMinSizeFmt           = "font.minimum-size.%LANG%";
 
 var gFontsDialog = {
-  _selectLanguageGroup: function(aLanguageGroup)
+  _selectLanguageGroup(aLanguageGroup)
   {
     var prefs = [{ format: kDefaultFontType,          type: "string",   element: "defaultFontType", fonttype: null},
                  { format: kFontNameFmtSerif,         type: "fontname", element: "serif",      fonttype: "serif"       },
@@ -58,26 +58,26 @@ var gFontsDialog = {
     }
   },
 
-  readFontLanguageGroup: function()
+  readFontLanguageGroup()
   {
     var languagePref = document.getElementById("font.language.group");
     this._selectLanguageGroup(languagePref.value);
     return undefined;
   },
 
-  readUseDocumentFonts: function()
+  readUseDocumentFonts()
   {
     var preference = document.getElementById("browser.display.use_document_fonts");
     return preference.value == 1;
   },
 
-  writeUseDocumentFonts: function()
+  writeUseDocumentFonts()
   {
     var useDocumentFonts = document.getElementById("useDocumentFonts");
     return useDocumentFonts.checked ? 1 : 0;
   },
 
-  onBeforeAccept: function()
+  onBeforeAccept()
   {
     let preferences = document.querySelectorAll("preference[id*='font.minimum-size']");
     // It would be good if we could avoid touching languages the pref pages won't use, but

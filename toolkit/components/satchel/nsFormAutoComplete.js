@@ -189,7 +189,7 @@ FormAutoComplete.prototype = {
     // one is already pending, the existing one is cancelled.
     _pendingClient       : null,
 
-    init : function() {
+    init() {
         // Preferences. Add observer so we get notified of changes.
         this._prefBranch = Services.prefs.getBranch("browser.formfill.");
         this._prefBranch.addObserver("", this.observer, true);
@@ -210,7 +210,7 @@ FormAutoComplete.prototype = {
         QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
                                                 Ci.nsISupportsWeakReference]),
 
-        observe : function(subject, topic, data) {
+        observe(subject, topic, data) {
             let self = this._self;
             if (topic == "nsPref:changed") {
                 let prefName = data;
@@ -260,7 +260,7 @@ FormAutoComplete.prototype = {
      * Internal function for logging debug messages to the Error Console
      * window
      */
-    log : function(message) {
+    log(message) {
         if (!this._debug)
             return;
         dump("FormAutoComplete: " + message + "\n");
@@ -278,7 +278,7 @@ FormAutoComplete.prototype = {
      * aListener -- nsIFormAutoCompleteObserver that listens for the nsIAutoCompleteResult
      *              that may be returned asynchronously.
      */
-    autoCompleteSearchAsync : function(aInputName,
+    autoCompleteSearchAsync(aInputName,
                                         aUntrimmedSearchString,
                                         aField,
                                         aPreviousResult,
@@ -468,7 +468,7 @@ FormAutoComplete.prototype = {
                                           finalComments, historyResult);
     },
 
-    stopAutoCompleteSearch : function() {
+    stopAutoCompleteSearch() {
         if (this._pendingClient) {
             this._pendingClient.cancel();
             this._pendingClient = null;
@@ -485,7 +485,7 @@ FormAutoComplete.prototype = {
      *             containing properties for each result. The callback is only called
      *             when successful.
      */
-    getAutoCompleteValues : function(client, fieldName, searchString, callback) {
+    getAutoCompleteValues(client, fieldName, searchString, callback) {
         let params = {
             agedWeight:         this._agedWeight,
             bucketSize:         this._bucketSize,
@@ -514,7 +514,7 @@ FormAutoComplete.prototype = {
      *
      * Returns: an int
      */
-    _calculateScore : function(entry, aSearchString, searchTokens) {
+    _calculateScore(entry, aSearchString, searchTokens) {
         let boundaryCalc = 0;
         // for each word, calculate word boundary weights
         for (let token of searchTokens) {
@@ -554,7 +554,7 @@ FormAutoCompleteResult.prototype = {
     entries : null,
     fieldName : null,
 
-    _checkIndexBounds : function(index) {
+    _checkIndexBounds(index) {
         if (index < 0 || index >= this.entries.length)
             throw Components.Exception("Index out of range.", Cr.NS_ERROR_ILLEGAL_VALUE);
     },
@@ -582,35 +582,35 @@ FormAutoCompleteResult.prototype = {
         return this.entries.length;
     },
 
-    getValueAt : function(index) {
+    getValueAt(index) {
         this._checkIndexBounds(index);
         return this.entries[index].text;
     },
 
-    getLabelAt: function(index) {
+    getLabelAt(index) {
         return this.getValueAt(index);
     },
 
-    getCommentAt : function(index) {
+    getCommentAt(index) {
         this._checkIndexBounds(index);
         return "";
     },
 
-    getStyleAt : function(index) {
+    getStyleAt(index) {
         this._checkIndexBounds(index);
         return "";
     },
 
-    getImageAt : function(index) {
+    getImageAt(index) {
         this._checkIndexBounds(index);
         return "";
     },
 
-    getFinalCompleteValueAt : function(index) {
+    getFinalCompleteValueAt(index) {
         return this.getValueAt(index);
     },
 
-    removeValueAt : function(index, removeFromDB) {
+    removeValueAt(index, removeFromDB) {
         this._checkIndexBounds(index);
 
         let [removedEntry] = this.entries.splice(index, 1);

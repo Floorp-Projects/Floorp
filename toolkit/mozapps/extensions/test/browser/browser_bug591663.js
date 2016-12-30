@@ -88,14 +88,14 @@ add_test(function() {
 // Test that onInstallStarted properly hides empty notice and adds install to list
 add_test(function() {
   gItem.addTestListener({
-    onDownloadStarted: function() {
+    onDownloadStarted() {
       // Install type unknown until download complete
       check_list(null);
     },
-    onInstallStarted: function() {
+    onInstallStarted() {
       check_list(gItem);
     },
-    onInstallEnded: function() {
+    onInstallEnded() {
       check_list(gItem);
       run_next_test();
     }
@@ -127,13 +127,13 @@ add_test(function() {
   check_list(null);
 
   extension.addTestListener({
-    onDownloadStarted: function() {
+    onDownloadStarted() {
       check_list(null);
     },
-    onInstallStarted: function() {
+    onInstallStarted() {
       check_list(null);
     },
-    onInstallEnded: function() {
+    onInstallEnded() {
       check_list(null);
       extension.cancel();
       run_next_test();

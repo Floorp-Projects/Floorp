@@ -59,7 +59,7 @@ function amManager() {
 }
 
 amManager.prototype = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "addons-startup":
         AddonManagerPrivate.startup();
@@ -75,7 +75,7 @@ amManager.prototype = {
   /**
    * @see amIAddonManager.idl
    */
-  mapURIToAddonID: function(uri, id) {
+  mapURIToAddonID(uri, id) {
     id.value = AddonManager.mapURIToAddonID(uri);
     return !!id.value;
   },
@@ -83,14 +83,14 @@ amManager.prototype = {
   /**
    * @see amIWebInstaller.idl
    */
-  isInstallEnabled: function(aMimetype, aReferer) {
+  isInstallEnabled(aMimetype, aReferer) {
     return AddonManager.isInstallEnabled(aMimetype);
   },
 
   /**
    * @see amIWebInstaller.idl
    */
-  installAddonsFromWebpage: function(aMimetype, aBrowser, aInstallingPrincipal,
+  installAddonsFromWebpage(aMimetype, aBrowser, aInstallingPrincipal,
                                      aUris, aHashes, aNames, aIcons, aCallback) {
     if (aUris.length == 0)
       return false;
@@ -122,22 +122,22 @@ amManager.prototype = {
           installs.push(aInstall);
           if (aCallback) {
             aInstall.addListener({
-              onDownloadCancelled: function(aInstall) {
+              onDownloadCancelled(aInstall) {
                 callCallback(uri, USER_CANCELLED);
               },
 
-              onDownloadFailed: function(aInstall) {
+              onDownloadFailed(aInstall) {
                 if (aInstall.error == AddonManager.ERROR_CORRUPT_FILE)
                   callCallback(uri, CANT_READ_ARCHIVE);
                 else
                   callCallback(uri, DOWNLOAD_ERROR);
               },
 
-              onInstallFailed: function(aInstall) {
+              onInstallFailed(aInstall) {
                 callCallback(uri, EXECUTION_ERROR);
               },
 
-              onInstallEnded: function(aInstall, aStatus) {
+              onInstallEnded(aInstall, aStatus) {
                 callCallback(uri, SUCCESS);
               }
             });
@@ -154,7 +154,7 @@ amManager.prototype = {
     return retval;
   },
 
-  notify: function(aTimer) {
+  notify(aTimer) {
     AddonManagerPrivate.backgroundUpdateTimerHandler();
   },
 
@@ -196,7 +196,7 @@ amManager.prototype = {
    * Listens to requests from child processes for InstallTrigger
    * activity, and sends back callbacks.
    */
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     let payload = aMessage.data;
 
     switch (aMessage.name) {
@@ -208,11 +208,11 @@ amManager.prototype = {
         if (payload.callbackID != -1) {
           let mm = aMessage.target.messageManager;
           callback = {
-            onInstallEnded: function(url, status) {
+            onInstallEnded(url, status) {
               mm.sendAsyncMessage(MSG_INSTALL_CALLBACK, {
                 callbackID: payload.callbackID,
-                url: url,
-                status: status
+                url,
+                status
               });
             },
           };
@@ -276,7 +276,7 @@ amManager.prototype = {
 
   classID: Components.ID("{4399533d-08d1-458c-a87a-235f74451cfa}"),
   _xpcom_factory: {
-    createInstance: function(aOuter, aIid) {
+    createInstance(aOuter, aIid) {
       if (aOuter != null)
         throw Components.Exception("Component does not support aggregation",
                                    Cr.NS_ERROR_NO_AGGREGATION);
