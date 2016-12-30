@@ -25,7 +25,6 @@
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Services.h"
-#include "GeckoProfiler.h"
 
 #include <stdlib.h>
 
@@ -236,13 +235,10 @@ assembleCmdLine(char* const* aArgv, wchar_t** aWideCmdLine, UINT aCodePage)
 void
 nsProcess::Monitor(void* aArg)
 {
-  char stackBaseGuess;
-
   RefPtr<nsProcess> process = dont_AddRef(static_cast<nsProcess*>(aArg));
 
   if (!process->mBlocking) {
     PR_SetCurrentThreadName("RunProcess");
-    profiler_register_thread("RunProcess", &stackBaseGuess);
   }
 
 #if defined(PROCESSMODEL_WINAPI)
@@ -307,10 +303,6 @@ nsProcess::Monitor(void* aArg)
     process->ProcessComplete();
   } else {
     NS_DispatchToMainThread(NewRunnableMethod(process, &nsProcess::ProcessComplete));
-  }
-
-  if (!process->mBlocking) {
-    profiler_unregister_thread();
   }
 }
 

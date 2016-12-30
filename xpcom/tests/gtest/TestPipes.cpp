@@ -107,7 +107,7 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
     nsresult rv;
 
     nsCOMPtr<nsIThread> thread;
-    rv = NS_NewNamedThread("TestPipe", getter_AddRefs(thread), receiver);
+    rv = NS_NewThread(getter_AddRefs(thread), receiver);
     if (NS_FAILED(rv)) return rv;
 
     uint32_t total = 0;
@@ -225,8 +225,7 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
     nsresult rv;
 
     nsCOMPtr<nsIThread> thread;
-    rv = NS_NewNamedThread("TestShortWrites", getter_AddRefs(thread),
-                           receiver);
+    rv = NS_NewThread(getter_AddRefs(thread), receiver);
     if (NS_FAILED(rv)) return rv;
 
     uint32_t total = 0;
@@ -331,15 +330,14 @@ TEST(Pipes, ChainedPipes)
     if (pump == nullptr) return;
 
     nsCOMPtr<nsIThread> thread;
-    rv = NS_NewNamedThread("ChainedPipePump", getter_AddRefs(thread), pump);
+    rv = NS_NewThread(getter_AddRefs(thread), pump);
     if (NS_FAILED(rv)) return;
 
     RefPtr<nsReceiver> receiver = new nsReceiver(in2);
     if (receiver == nullptr) return;
 
     nsCOMPtr<nsIThread> receiverThread;
-    rv = NS_NewNamedThread("ChainedPipeRecv", getter_AddRefs(receiverThread),
-                           receiver);
+    rv = NS_NewThread(getter_AddRefs(receiverThread), receiver);
     if (NS_FAILED(rv)) return;
 
     uint32_t total = 0;

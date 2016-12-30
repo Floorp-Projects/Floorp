@@ -241,9 +241,7 @@ NS_IMETHODIMP nsSound::PlaySystemSound(const nsAString &aSoundAlias)
       return NS_OK;
     nsCOMPtr<nsIRunnable> player = new nsSoundPlayer(this, aSoundAlias);
     NS_ENSURE_TRUE(player, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv =
-      NS_NewNamedThread("PlaySystemSound", getter_AddRefs(mPlayerThread),
-                        player);
+    nsresult rv = NS_NewThread(getter_AddRefs(mPlayerThread), player);
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
   }
@@ -301,8 +299,7 @@ NS_IMETHODIMP nsSound::PlayEventSound(uint32_t aEventId)
 
   nsCOMPtr<nsIRunnable> player = new nsSoundPlayer(this, sound);
   NS_ENSURE_TRUE(player, NS_ERROR_OUT_OF_MEMORY);
-  nsresult rv =
-    NS_NewNamedThread("PlayEventSound", getter_AddRefs(mPlayerThread), player);
+  nsresult rv = NS_NewThread(getter_AddRefs(mPlayerThread), player);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
