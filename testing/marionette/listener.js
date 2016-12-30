@@ -988,23 +988,37 @@ function get(msg) {
         return;
       }
 
-      let isDocument = state & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
-      let isStart = state & Ci.nsIWebProgressListener.STATE_START;
-      let loadedURL = request.URI.spec;
-      // We have to look at the originalURL because for about: pages,
+      const isDocument = state & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
+      const loadedURL = request.URI.spec;
+
+      // We have to look at the originalURL because of about: pages,
       // the loadedURL is what the about: page resolves to, and is
       // not the one that was requested.
-      let originalURL = request.originalURI.spec;
-      let isRequestedURL = loadedURL == requestedURL ||
+      const originalURL = request.originalURI.spec;
+      const isRequestedURL = loadedURL == requestedURL ||
           originalURL == requestedURL;
 
-      if (isDocument && isStart && isRequestedURL) {
-        // We started loading the requested document. This document
-        // might not be the one that ends up firing DOMContentLoaded
-        // (if it, for example, redirects), but because we've started
-        // loading this URL, we know that any future DOMContentLoaded's
-        // are fair game to tell the Marionette client about.
+      if (!isDocument || !isRequestedURL) {
+        return;
+      }
+
+      // We started loading the requested document. This document
+      // might not be the one that ends up firing DOMContentLoaded
+      // (if it, for example, redirects), but because we've started
+      // loading this URL, we know that any future DOMContentLoaded's
+      // are fair game to tell the Marionette client about.
+      if (state & Ci.nsIWebProgressListener.STATE_START) {
         sawLoad = true;
+      }
+
+      // This indicates network stop or last request stop outside of
+      // loading the document.  We hit this when DOMContentLoaded is
+      // not triggered, which is the case for image documents.
+      else if (state & Ci.nsIWebProgressListener.STATE_STOP &&
+          content.document instanceof content.ImageDocument) {
+        pollForReadyState(msg, start, () => {
+          removeEventListener("DOMContentLoaded", onDOMContentLoaded, false);
+        });
       }
     },
 

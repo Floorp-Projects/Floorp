@@ -146,7 +146,6 @@ macosx64-tests-talos:
     - talos-dromaeojs
     - talos-g1
     - talos-g2
-    - talos-g3
     - talos-g4
     - talos-other
     - talos-svgr
