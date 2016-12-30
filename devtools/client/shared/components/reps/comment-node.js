@@ -9,7 +9,12 @@
 define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
-  const { isGrip, cropString, cropMultipleLines } = require("./rep-utils");
+  const {
+    isGrip,
+    cropString,
+    cropMultipleLines,
+    wrapRender,
+  } = require("./rep-utils");
   const { MODE } = require("./constants");
   const nodeConstants = require("devtools/shared/dom-node-constants");
 
@@ -28,7 +33,7 @@ define(function (require, exports, module) {
       mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {
         object,
         mode = MODE.SHORT
@@ -42,7 +47,7 @@ define(function (require, exports, module) {
       }
 
       return span({className: "objectBox theme-comment"}, `<!-- ${textContent} -->`);
-    },
+    }),
   });
 
   // Registration
