@@ -7,7 +7,6 @@
 "use strict";
 
 const { Ci, Cu } = require("chrome");
-const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getStack, callFunctionWithAsyncStack } = require("devtools/shared/platform/stack");
 
@@ -28,22 +27,22 @@ const noop = () => {};
  * augmented with the necessary facilities by passing its prototype to this
  * function.
  *
- * @param aProto object
+ * @param proto object
  *        The prototype object that will be modified.
  */
-function eventSource(aProto) {
+function eventSource(proto) {
   /**
    * Add a listener to the event source for a given event.
    *
-   * @param aName string
+   * @param name string
    *        The event to listen for.
-   * @param aListener function
+   * @param listener function
    *        Called when the event is fired. If the same listener
    *        is added more than once, it will be called once per
    *        addListener call.
    */
-  aProto.addListener = function (aName, aListener) {
-    if (typeof aListener != "function") {
+  proto.addListener = function (name, listener) {
+    if (typeof listener != "function") {
       throw TypeError("Listeners must be functions.");
     }
 
@@ -51,47 +50,46 @@ function eventSource(aProto) {
       this._listeners = {};
     }
 
-    this._getListeners(aName).push(aListener);
+    this._getListeners(name).push(listener);
   };
 
   /**
    * Add a listener to the event source for a given event. The
    * listener will be removed after it is called for the first time.
    *
-   * @param aName string
+   * @param name string
    *        The event to listen for.
-   * @param aListener function
+   * @param listener function
    *        Called when the event is fired.
    */
-  aProto.addOneTimeListener = function (aName, aListener) {
+  proto.addOneTimeListener = function (name, listener) {
     let l = (...args) => {
-      this.removeListener(aName, l);
-      aListener.apply(null, args);
+      this.removeListener(name, l);
+      listener.apply(null, args);
     };
-    this.addListener(aName, l);
+    this.addListener(name, l);
   };
 
   /**
    * Remove a listener from the event source previously added with
    * addListener().
    *
-   * @param aName string
+   * @param name string
    *        The event name used during addListener to add the listener.
-   * @param aListener function
+   * @param listener function
    *        The callback to remove. If addListener was called multiple
    *        times, all instances will be removed.
    */
-  aProto.removeListener = function (aName, aListener) {
-    if (!this._listeners || (aListener && !this._listeners[aName])) {
+  proto.removeListener = function (name, listener) {
+    if (!this._listeners || (listener && !this._listeners[name])) {
       return;
     }
 
-    if (!aListener) {
-      this._listeners[aName] = [];
-    }
-    else {
-      this._listeners[aName] =
-        this._listeners[aName].filter(function (l) { return l != aListener; });
+    if (!listener) {
+      this._listeners[name] = [];
+    } else {
+      this._listeners[name] =
+        this._listeners[name].filter(l => l != listener);
     }
   };
 
@@ -99,27 +97,27 @@ function eventSource(aProto) {
    * Returns the listeners for the specified event name. If none are defined it
    * initializes an empty list and returns that.
    *
-   * @param aName string
+   * @param name string
    *        The event name.
    */
-  aProto._getListeners = function (aName) {
-    if (aName in this._listeners) {
-      return this._listeners[aName];
+  proto._getListeners = function (name) {
+    if (name in this._listeners) {
+      return this._listeners[name];
     }
-    this._listeners[aName] = [];
-    return this._listeners[aName];
+    this._listeners[name] = [];
+    return this._listeners[name];
   };
 
   /**
    * Notify listeners of an event.
    *
-   * @param aName string
+   * @param name string
    *        The event to fire.
    * @param arguments
    *        All arguments will be passed along to the listeners,
    *        including the name argument.
    */
-  aProto.emit = function () {
+  proto.emit = function () {
     if (!this._listeners) {
       return;
     }
@@ -202,9 +200,8 @@ const UnsolicitedPauses = {
  * provides the means to communicate with the server and exchange the messages
  * required by the protocol in a traditional JavaScript API.
  */
-const DebuggerClient = exports.DebuggerClient = function (aTransport)
-{
-  this._transport = aTransport;
+const DebuggerClient = exports.DebuggerClient = function (transport) {
+  this._transport = transport;
   this._transport.hooks = this;
 
   // Map actor ID to client instance for each actor type.
@@ -224,18 +221,18 @@ const DebuggerClient = exports.DebuggerClient = function (aTransport)
    * the connection's root actor.
    */
   this.mainRoot = null;
-  this.expectReply("root", (aPacket) => {
-    this.mainRoot = new RootClient(this, aPacket);
-    this.emit("connected", aPacket.applicationType, aPacket.traits);
+  this.expectReply("root", (packet) => {
+    this.mainRoot = new RootClient(this, packet);
+    this.emit("connected", packet.applicationType, packet.traits);
   });
 };
 
 /**
  * A declarative helper for defining methods that send requests to the server.
  *
- * @param aPacketSkeleton
+ * @param packetSkeleton
  *        The form of the packet to send. Can specify fields to be filled from
- *        the parameters by using the |args| function.
+ *        the parameters by using the |arg| function.
  * @param before
  *        The function to call before sending the packet. Is passed the packet,
  *        and the return value is used as the new packet. The |this| context is
@@ -249,21 +246,21 @@ const DebuggerClient = exports.DebuggerClient = function (aTransport)
  *         The `Request` object that is a Promise object and resolves once
  *         we receive the response. (See request method for more details)
  */
-DebuggerClient.requester = function (aPacketSkeleton, config = {}) {
+DebuggerClient.requester = function (packetSkeleton, config = {}) {
   let { before, after } = config;
   return DevToolsUtils.makeInfallible(function (...args) {
     let outgoingPacket = {
-      to: aPacketSkeleton.to || this.actor
+      to: packetSkeleton.to || this.actor
     };
 
     let maxPosition = -1;
-    for (let k of Object.keys(aPacketSkeleton)) {
-      if (aPacketSkeleton[k] instanceof DebuggerClient.Argument) {
-        let { position } = aPacketSkeleton[k];
-        outgoingPacket[k] = aPacketSkeleton[k].getArgument(args);
+    for (let k of Object.keys(packetSkeleton)) {
+      if (packetSkeleton[k] instanceof DebuggerClient.Argument) {
+        let { position } = packetSkeleton[k];
+        outgoingPacket[k] = packetSkeleton[k].getArgument(args);
         maxPosition = Math.max(position, maxPosition);
       } else {
-        outgoingPacket[k] = aPacketSkeleton[k];
+        outgoingPacket[k] = packetSkeleton[k];
       }
     }
 
@@ -271,37 +268,37 @@ DebuggerClient.requester = function (aPacketSkeleton, config = {}) {
       outgoingPacket = before.call(this, outgoingPacket);
     }
 
-    return this.request(outgoingPacket, DevToolsUtils.makeInfallible((aResponse) => {
+    return this.request(outgoingPacket, DevToolsUtils.makeInfallible((response) => {
       if (after) {
-        let { from } = aResponse;
-        aResponse = after.call(this, aResponse);
-        if (!aResponse.from) {
-          aResponse.from = from;
+        let { from } = response;
+        response = after.call(this, response);
+        if (!response.from) {
+          response.from = from;
         }
       }
 
       // The callback is always the last parameter.
       let thisCallback = args[maxPosition + 1];
       if (thisCallback) {
-        thisCallback(aResponse);
+        thisCallback(response);
       }
     }, "DebuggerClient.requester request callback"));
   }, "DebuggerClient.requester");
 };
 
-function args(aPos) {
-  return new DebuggerClient.Argument(aPos);
+function arg(pos) {
+  return new DebuggerClient.Argument(pos);
 }
 
-DebuggerClient.Argument = function (aPosition) {
-  this.position = aPosition;
+DebuggerClient.Argument = function (position) {
+  this.position = position;
 };
 
-DebuggerClient.Argument.prototype.getArgument = function (aParams) {
-  if (!(this.position in aParams)) {
+DebuggerClient.Argument.prototype.getArgument = function (params) {
+  if (!(this.position in params)) {
     throw new Error("Bad index into params: " + this.position);
   }
-  return aParams[this.position];
+  return params[this.position];
 };
 
 // Expose these to save callers the trouble of importing DebuggerSocket
@@ -320,7 +317,7 @@ DebuggerClient.prototype = {
   /**
    * Connect to the server and start exchanging protocol messages.
    *
-   * @param aOnConnected function
+   * @param onConnected function
    *        If specified, will be called when the greeting packet is
    *        received from the debugging server.
    *
@@ -330,7 +327,7 @@ DebuggerClient.prototype = {
    *         element is the traits object (help figure out the features
    *         and behaviors of the server we connect to. See RootActor).
    */
-  connect: function (aOnConnected) {
+  connect: function (onConnected) {
     let deferred = promise.defer();
     this.emit("connect");
 
@@ -338,12 +335,12 @@ DebuggerClient.prototype = {
     // so it's possible to track all instances.
     events.emit(DebuggerClient, "connect", this);
 
-    this.addOneTimeListener("connected", (aName, aApplicationType, aTraits) => {
-      this.traits = aTraits;
-      if (aOnConnected) {
-        aOnConnected(aApplicationType, aTraits);
+    this.addOneTimeListener("connected", (name, applicationType, traits) => {
+      this.traits = traits;
+      if (onConnected) {
+        onConnected(applicationType, traits);
       }
-      deferred.resolve([aApplicationType, aTraits]);
+      deferred.resolve([applicationType, traits]);
     });
 
     this._transport.ready();
@@ -353,17 +350,17 @@ DebuggerClient.prototype = {
   /**
    * Shut down communication with the debugging server.
    *
-   * @param aOnClosed function
+   * @param onClosed function
    *        If specified, will be called when the debugging connection
    *        has been closed. This parameter is deprecated - please use
    *        the returned Promise.
    * @return Promise
    *         Resolves after the underlying transport is closed.
    */
-  close: function (aOnClosed) {
+  close: function (onClosed) {
     let deferred = promise.defer();
-    if (aOnClosed) {
-      deferred.promise.then(aOnClosed);
+    if (onClosed) {
+      deferred.promise.then(onClosed);
     }
 
     // Disable detach event notifications, because event handlers will be in a
@@ -413,198 +410,206 @@ DebuggerClient.prototype = {
    * This function exists only to preserve DebuggerClient's interface;
    * new code should say 'client.mainRoot.listTabs()'.
    */
-  listTabs: function (aOnResponse) { return this.mainRoot.listTabs(aOnResponse); },
+  listTabs: function (onResponse) {
+    return this.mainRoot.listTabs(onResponse);
+  },
 
   /*
    * This function exists only to preserve DebuggerClient's interface;
    * new code should say 'client.mainRoot.listAddons()'.
    */
-  listAddons: function (aOnResponse) { return this.mainRoot.listAddons(aOnResponse); },
+  listAddons: function (onResponse) {
+    return this.mainRoot.listAddons(onResponse);
+  },
 
-  getTab: function (aFilter) { return this.mainRoot.getTab(aFilter); },
+  getTab: function (filter) {
+    return this.mainRoot.getTab(filter);
+  },
 
   /**
    * Attach to a tab actor.
    *
-   * @param string aTabActor
+   * @param string tabActor
    *        The actor ID for the tab to attach.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet and a TabClient
    *        (which will be undefined on error).
    */
-  attachTab: function (aTabActor, aOnResponse = noop) {
-    if (this._clients.has(aTabActor)) {
-      let cachedTab = this._clients.get(aTabActor);
+  attachTab: function (tabActor, onResponse = noop) {
+    if (this._clients.has(tabActor)) {
+      let cachedTab = this._clients.get(tabActor);
       let cachedResponse = {
         cacheDisabled: cachedTab.cacheDisabled,
         javascriptEnabled: cachedTab.javascriptEnabled,
         traits: cachedTab.traits,
       };
-      DevToolsUtils.executeSoon(() => aOnResponse(cachedResponse, cachedTab));
+      DevToolsUtils.executeSoon(() => onResponse(cachedResponse, cachedTab));
       return promise.resolve([cachedResponse, cachedTab]);
     }
 
     let packet = {
-      to: aTabActor,
+      to: tabActor,
       type: "attach"
     };
-    return this.request(packet).then(aResponse => {
+    return this.request(packet).then(response => {
       let tabClient;
-      if (!aResponse.error) {
-        tabClient = new TabClient(this, aResponse);
+      if (!response.error) {
+        tabClient = new TabClient(this, response);
         this.registerClient(tabClient);
       }
-      aOnResponse(aResponse, tabClient);
-      return [aResponse, tabClient];
+      onResponse(response, tabClient);
+      return [response, tabClient];
     });
   },
 
-  attachWorker: function DC_attachWorker(aWorkerActor, aOnResponse = noop) {
-    let workerClient = this._clients.get(aWorkerActor);
+  attachWorker: function (workerActor, onResponse = noop) {
+    let workerClient = this._clients.get(workerActor);
     if (workerClient !== undefined) {
       let response = {
         from: workerClient.actor,
         type: "attached",
         url: workerClient.url
       };
-      DevToolsUtils.executeSoon(() => aOnResponse(response, workerClient));
+      DevToolsUtils.executeSoon(() => onResponse(response, workerClient));
       return promise.resolve([response, workerClient]);
     }
 
-    return this.request({ to: aWorkerActor, type: "attach" }).then(aResponse => {
-      if (aResponse.error) {
-        aOnResponse(aResponse, null);
-        return [aResponse, null];
+    return this.request({ to: workerActor, type: "attach" }).then(response => {
+      if (response.error) {
+        onResponse(response, null);
+        return [response, null];
       }
 
-      let workerClient = new WorkerClient(this, aResponse);
+      workerClient = new WorkerClient(this, response);
       this.registerClient(workerClient);
-      aOnResponse(aResponse, workerClient);
-      return [aResponse, workerClient];
+      onResponse(response, workerClient);
+      return [response, workerClient];
     });
   },
 
   /**
    * Attach to an addon actor.
    *
-   * @param string aAddonActor
+   * @param string addonActor
    *        The actor ID for the addon to attach.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet and a AddonClient
    *        (which will be undefined on error).
    */
-  attachAddon: function DC_attachAddon(aAddonActor, aOnResponse = noop) {
+  attachAddon: function (addonActor, onResponse = noop) {
     let packet = {
-      to: aAddonActor,
+      to: addonActor,
       type: "attach"
     };
-    return this.request(packet).then(aResponse => {
+    return this.request(packet).then(response => {
       let addonClient;
-      if (!aResponse.error) {
-        addonClient = new AddonClient(this, aAddonActor);
+      if (!response.error) {
+        addonClient = new AddonClient(this, addonActor);
         this.registerClient(addonClient);
         this.activeAddon = addonClient;
       }
-      aOnResponse(aResponse, addonClient);
-      return [aResponse, addonClient];
+      onResponse(response, addonClient);
+      return [response, addonClient];
     });
   },
 
   /**
    * Attach to a Web Console actor.
    *
-   * @param string aConsoleActor
+   * @param string consoleActor
    *        The ID for the console actor to attach to.
-   * @param array aListeners
+   * @param array listeners
    *        The console listeners you want to start.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet and a WebConsoleClient
    *        instance (which will be undefined on error).
    */
   attachConsole:
-  function (aConsoleActor, aListeners, aOnResponse = noop) {
+  function (consoleActor, listeners, onResponse = noop) {
     let packet = {
-      to: aConsoleActor,
+      to: consoleActor,
       type: "startListeners",
-      listeners: aListeners,
+      listeners: listeners,
     };
 
-    return this.request(packet).then(aResponse => {
+    return this.request(packet).then(response => {
       let consoleClient;
-      if (!aResponse.error) {
-        if (this._clients.has(aConsoleActor)) {
-          consoleClient = this._clients.get(aConsoleActor);
+      if (!response.error) {
+        if (this._clients.has(consoleActor)) {
+          consoleClient = this._clients.get(consoleActor);
         } else {
-          consoleClient = new WebConsoleClient(this, aResponse);
+          consoleClient = new WebConsoleClient(this, response);
           this.registerClient(consoleClient);
         }
       }
-      aOnResponse(aResponse, consoleClient);
-      return [aResponse, consoleClient];
+      onResponse(response, consoleClient);
+      return [response, consoleClient];
     });
   },
 
   /**
    * Attach to a global-scoped thread actor for chrome debugging.
    *
-   * @param string aThreadActor
+   * @param string threadActor
    *        The actor ID for the thread to attach.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet and a ThreadClient
    *        (which will be undefined on error).
-   * @param object aOptions
+   * @param object options
    *        Configuration options.
    *        - useSourceMaps: whether to use source maps or not.
    */
-  attachThread: function (aThreadActor, aOnResponse = noop, aOptions = {}) {
-    if (this._clients.has(aThreadActor)) {
-      let client = this._clients.get(aThreadActor);
-      DevToolsUtils.executeSoon(() => aOnResponse({}, client));
+  attachThread: function (threadActor, onResponse = noop, options = {}) {
+    if (this._clients.has(threadActor)) {
+      let client = this._clients.get(threadActor);
+      DevToolsUtils.executeSoon(() => onResponse({}, client));
       return promise.resolve([{}, client]);
     }
 
     let packet = {
-      to: aThreadActor,
+      to: threadActor,
       type: "attach",
-      options: aOptions
+      options,
     };
-    return this.request(packet).then(aResponse => {
-      if (!aResponse.error) {
-        var threadClient = new ThreadClient(this, aThreadActor);
+    return this.request(packet).then(response => {
+      let threadClient;
+      if (!response.error) {
+        threadClient = new ThreadClient(this, threadActor);
         this.registerClient(threadClient);
       }
-      aOnResponse(aResponse, threadClient);
-      return [aResponse, threadClient];
+      onResponse(response, threadClient);
+      return [response, threadClient];
     });
   },
 
   /**
    * Attach to a trace actor.
    *
-   * @param string aTraceActor
+   * @param string traceActor
    *        The actor ID for the tracer to attach.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet and a TraceClient
    *        (which will be undefined on error).
    */
-  attachTracer: function (aTraceActor, aOnResponse = noop) {
-    if (this._clients.has(aTraceActor)) {
-      let client = this._clients.get(aTraceActor);
-      DevToolsUtils.executeSoon(() => aOnResponse({}, client));
+  attachTracer: function (traceActor, onResponse = noop) {
+    if (this._clients.has(traceActor)) {
+      let client = this._clients.get(traceActor);
+      DevToolsUtils.executeSoon(() => onResponse({}, client));
       return promise.resolve([{}, client]);
     }
 
     let packet = {
-      to: aTraceActor,
+      to: traceActor,
       type: "attach"
     };
-    return this.request(packet).then(aResponse => {
-      if (!aResponse.error) {
-        var traceClient = new TraceClient(this, aTraceActor);
+    return this.request(packet).then(response => {
+      let traceClient;
+      if (!response.error) {
+        traceClient = new TraceClient(this, traceActor);
         this.registerClient(traceClient);
       }
-      aOnResponse(aResponse, traceClient);
-      return [aResponse, traceClient];
+      onResponse(response, traceClient);
+      return [response, traceClient];
     });
   },
 
@@ -612,17 +617,17 @@ DebuggerClient.prototype = {
    * Fetch the ChromeActor for the main process or ChildProcessActor for a
    * a given child process ID.
    *
-   * @param number aId
+   * @param number id
    *        The ID for the process to attach (returned by `listProcesses`).
    *        Connected to the main process if omitted, or is 0.
    */
-  getProcess: function (aId) {
+  getProcess: function (id) {
     let packet = {
       to: "root",
       type: "getProcess"
     };
-    if (typeof (aId) == "number") {
-      packet.id = aId;
+    if (typeof (id) == "number") {
+      packet.id = id;
     }
     return this.request(packet);
   },
@@ -630,23 +635,23 @@ DebuggerClient.prototype = {
   /**
    * Release an object actor.
    *
-   * @param string aActor
+   * @param string actor
    *        The actor ID to send the request to.
-   * @param aOnResponse function
+   * @param onResponse function
    *        If specified, will be called with the response packet when
    *        debugging server responds.
    */
   release: DebuggerClient.requester({
-    to: args(0),
+    to: arg(0),
     type: "release"
   }),
 
   /**
    * Send a request to the debugging server.
    *
-   * @param aRequest object
+   * @param packet object
    *        A JSON packet to send to the debugging server.
-   * @param aOnResponse function
+   * @param onResponse function
    *        If specified, will be called with the JSON response packet when
    *        debugging server responds.
    * @return Request
@@ -656,7 +661,7 @@ DebuggerClient.prototype = {
    *         whenever a JSON or a Bulk response is received; and is rejected
    *         if the response is an error.
    *         Note: This return value can be ignored if you are using JSON alone,
-   *         because the callback provided in |aOnResponse| will be bound to the
+   *         because the callback provided in |onResponse| will be bound to the
    *         "json-reply" event automatically.
    *
    *         Events emitted:
@@ -688,30 +693,30 @@ DebuggerClient.prototype = {
    *                     This object also emits "progress" events for each chunk
    *                     that is copied.  See stream-utils.js.
    */
-  request: function (aRequest, aOnResponse) {
+  request: function (packet, onResponse) {
     if (!this.mainRoot) {
       throw Error("Have not yet received a hello packet from the server.");
     }
-    let type = aRequest.type || "";
-    if (!aRequest.to) {
+    let type = packet.type || "";
+    if (!packet.to) {
       throw Error("'" + type + "' request packet has no destination.");
     }
     if (this._closed) {
       let msg = "'" + type + "' request packet to " +
-                "'" + aRequest.to + "' " +
+                "'" + packet.to + "' " +
                "can't be sent as the connection is closed.";
       let resp = { error: "connectionClosed", message: msg };
-      if (aOnResponse) {
-        aOnResponse(resp);
+      if (onResponse) {
+        onResponse(resp);
       }
       return promise.reject(resp);
     }
 
-    let request = new Request(aRequest);
+    let request = new Request(packet);
     request.format = "json";
     request.stack = getStack();
-    if (aOnResponse) {
-      request.on("json-reply", aOnResponse);
+    if (onResponse) {
+      request.on("json-reply", onResponse);
     }
 
     this._sendOrQueueRequest(request);
@@ -861,7 +866,7 @@ DebuggerClient.prototype = {
 
     if (request.format === "json") {
       this._transport.send(request.request);
-      return false;
+      return;
     }
 
     this._transport.startBulkSend(request.request).then((...args) => {
@@ -899,28 +904,28 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Arrange to hand the next reply from |aActor| to the handler bound to
-   * |aRequest|.
+   * Arrange to hand the next reply from |actor| to the handler bound to
+   * |request|.
    *
    * DebuggerClient.prototype.request / startBulkRequest usually takes care of
    * establishing the handler for a given request, but in rare cases (well,
    * greetings from new root actors, is the only case at the moment) we must be
    * prepared for a "reply" that doesn't correspond to any request we sent.
    */
-  expectReply: function (aActor, aRequest) {
-    if (this._activeRequests.has(aActor)) {
-      throw Error("clashing handlers for next reply from " + uneval(aActor));
+  expectReply: function (actor, request) {
+    if (this._activeRequests.has(actor)) {
+      throw Error("clashing handlers for next reply from " + actor);
     }
 
     // If a handler is passed directly (as it is with the handler for the root
     // actor greeting), create a dummy request to bind this to.
-    if (typeof aRequest === "function") {
-      let handler = aRequest;
-      aRequest = new Request();
-      aRequest.on("json-reply", handler);
+    if (typeof request === "function") {
+      let handler = request;
+      request = new Request();
+      request.on("json-reply", handler);
     }
 
-    this._activeRequests.set(aActor, aRequest);
+    this._activeRequests.set(actor, request);
   },
 
   // Transport hooks.
@@ -928,23 +933,23 @@ DebuggerClient.prototype = {
   /**
    * Called by DebuggerTransport to dispatch incoming packets as appropriate.
    *
-   * @param aPacket object
+   * @param packet object
    *        The incoming packet.
    */
-  onPacket: function (aPacket) {
-    if (!aPacket.from) {
+  onPacket: function (packet) {
+    if (!packet.from) {
       DevToolsUtils.reportException(
         "onPacket",
         new Error("Server did not specify an actor, dropping packet: " +
-                  JSON.stringify(aPacket)));
+                  JSON.stringify(packet)));
       return;
     }
 
     // If we have a registered Front for this actor, let it handle the packet
     // and skip all the rest of this unpleasantness.
-    let front = this.getActor(aPacket.from);
+    let front = this.getActor(packet.from);
     if (front) {
-      front.onPacket(aPacket);
+      front.onPacket(packet);
       return;
     }
 
@@ -952,17 +957,17 @@ DebuggerClient.prototype = {
     // This is necessary because we might receive this event while the client is closing,
     // and the clients have already been removed by that point.
     if (this.mainRoot &&
-        aPacket.from == this.mainRoot.actor &&
-        aPacket.type == "forwardingCancelled") {
-      this.purgeRequests(aPacket.prefix);
+        packet.from == this.mainRoot.actor &&
+        packet.type == "forwardingCancelled") {
+      this.purgeRequests(packet.prefix);
       return;
     }
 
-    if (this._clients.has(aPacket.from) && aPacket.type) {
-      let client = this._clients.get(aPacket.from);
-      let type = aPacket.type;
+    if (this._clients.has(packet.from) && packet.type) {
+      let client = this._clients.get(packet.from);
+      let type = packet.type;
       if (client.events.indexOf(type) != -1) {
-        client.emit(type, aPacket);
+        client.emit(type, packet);
         // we ignore the rest, as the client is expected to handle this packet.
         return;
       }
@@ -972,24 +977,24 @@ DebuggerClient.prototype = {
     // See if we have a handler function waiting for a reply from this
     // actor. (Don't count unsolicited notifications or pauses as
     // replies.)
-    if (this._activeRequests.has(aPacket.from) &&
-        !(aPacket.type in UnsolicitedNotifications) &&
-        !(aPacket.type == ThreadStateTypes.paused &&
-          aPacket.why.type in UnsolicitedPauses)) {
-      activeRequest = this._activeRequests.get(aPacket.from);
-      this._activeRequests.delete(aPacket.from);
+    if (this._activeRequests.has(packet.from) &&
+        !(packet.type in UnsolicitedNotifications) &&
+        !(packet.type == ThreadStateTypes.paused &&
+          packet.why.type in UnsolicitedPauses)) {
+      activeRequest = this._activeRequests.get(packet.from);
+      this._activeRequests.delete(packet.from);
     }
 
     // If there is a subsequent request for the same actor, hand it off to the
     // transport.  Delivery of packets on the other end is always async, even
     // in the local transport case.
-    this._attemptNextRequest(aPacket.from);
+    this._attemptNextRequest(packet.from);
 
     // Packets that indicate thread state changes get special treatment.
-    if (aPacket.type in ThreadStateTypes &&
-        this._clients.has(aPacket.from) &&
-        typeof this._clients.get(aPacket.from)._onThreadState == "function") {
-      this._clients.get(aPacket.from)._onThreadState(aPacket);
+    if (packet.type in ThreadStateTypes &&
+        this._clients.has(packet.from) &&
+        typeof this._clients.get(packet.from)._onThreadState == "function") {
+      this._clients.get(packet.from)._onThreadState(packet);
     }
 
     // TODO: Bug 1151156 - Remove once Gecko 40 is on b2g-stable.
@@ -997,10 +1002,10 @@ DebuggerClient.prototype = {
       // On navigation the server resumes, so the client must resume as well.
       // We achieve that by generating a fake resumption packet that triggers
       // the client's thread state change listeners.
-      if (aPacket.type == UnsolicitedNotifications.tabNavigated &&
-          this._clients.has(aPacket.from) &&
-          this._clients.get(aPacket.from).thread) {
-        let thread = this._clients.get(aPacket.from).thread;
+      if (packet.type == UnsolicitedNotifications.tabNavigated &&
+          this._clients.has(packet.from) &&
+          this._clients.get(packet.from).thread) {
+        let thread = this._clients.get(packet.from).thread;
         let resumption = { from: thread._actor, type: "resumed" };
         thread._onThreadState(resumption);
       }
@@ -1008,12 +1013,12 @@ DebuggerClient.prototype = {
 
     // Only try to notify listeners on events, not responses to requests
     // that lack a packet type.
-    if (aPacket.type) {
-      this.emit(aPacket.type, aPacket);
+    if (packet.type) {
+      this.emit(packet.type, packet);
     }
 
     if (activeRequest) {
-      let emitReply = () => activeRequest.emit("json-reply", aPacket);
+      let emitReply = () => activeRequest.emit("json-reply", packet);
       if (activeRequest.stack) {
         callFunctionWithAsyncStack(emitReply, activeRequest.stack,
                                    "DevTools RDP");
@@ -1054,7 +1059,7 @@ DebuggerClient.prototype = {
    *                  that is copied.  See stream-utils.js.
    */
   onBulkPacket: function (packet) {
-    let { actor, type, length } = packet;
+    let { actor } = packet;
 
     if (!actor) {
       DevToolsUtils.reportException(
@@ -1084,7 +1089,7 @@ DebuggerClient.prototype = {
   /**
    * Called by DebuggerTransport when the underlying stream is closed.
    *
-   * @param aStatus nsresult
+   * @param status nsresult
    *        The status code that corresponds to the reason for closing
    *        the stream.
    */
@@ -1280,7 +1285,9 @@ DebuggerClient.prototype = {
 
   poolFor: function (actorID) {
     for (let pool of this._pools) {
-      if (pool.has(actorID)) return pool;
+      if (pool.has(actorID)) {
+        return pool;
+      }
     }
     return null;
   },
@@ -1315,7 +1322,9 @@ Request.prototype = {
     events.emit(this, type, ...args);
   },
 
-  get actor() { return this.request.to || this.request.actor; }
+  get actor() {
+    return this.request.to || this.request.actor;
+  }
 
 };
 
@@ -1324,76 +1333,80 @@ Request.prototype = {
  * is a front to the tab actor created in the server side, hiding the protocol
  * details in a traditional JavaScript API.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aForm object
+ * @param form object
  *        The protocol form for this tab.
  */
-function TabClient(aClient, aForm) {
-  this.client = aClient;
-  this._actor = aForm.from;
-  this._threadActor = aForm.threadActor;
-  this.javascriptEnabled = aForm.javascriptEnabled;
-  this.cacheDisabled = aForm.cacheDisabled;
+function TabClient(client, form) {
+  this.client = client;
+  this._actor = form.from;
+  this._threadActor = form.threadActor;
+  this.javascriptEnabled = form.javascriptEnabled;
+  this.cacheDisabled = form.cacheDisabled;
   this.thread = null;
   this.request = this.client.request;
-  this.traits = aForm.traits || {};
+  this.traits = form.traits || {};
   this.events = ["workerListChanged"];
 }
 
 TabClient.prototype = {
-  get actor() { return this._actor; },
-  get _transport() { return this.client._transport; },
+  get actor() {
+    return this._actor;
+  },
+  get _transport() {
+    return this.client._transport;
+  },
 
   /**
    * Attach to a thread actor.
    *
-   * @param object aOptions
+   * @param object options
    *        Configuration options.
    *        - useSourceMaps: whether to use source maps or not.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet and a ThreadClient
    *        (which will be undefined on error).
    */
-  attachThread: function (aOptions = {}, aOnResponse = noop) {
+  attachThread: function (options = {}, onResponse = noop) {
     if (this.thread) {
-      DevToolsUtils.executeSoon(() => aOnResponse({}, this.thread));
+      DevToolsUtils.executeSoon(() => onResponse({}, this.thread));
       return promise.resolve([{}, this.thread]);
     }
 
     let packet = {
       to: this._threadActor,
       type: "attach",
-      options: aOptions
+      options,
     };
-    return this.request(packet).then(aResponse => {
-      if (!aResponse.error) {
+    return this.request(packet).then(response => {
+      if (!response.error) {
         this.thread = new ThreadClient(this, this._threadActor);
         this.client.registerClient(this.thread);
       }
-      aOnResponse(aResponse, this.thread);
-      return [aResponse, this.thread];
+      onResponse(response, this.thread);
+      return [response, this.thread];
     });
   },
 
   /**
    * Detach the client from the tab actor.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       if (this.thread) {
         this.thread.detach();
       }
-      return aPacket;
+      return packet;
     },
-    after: function (aResponse) {
+    after: function (response) {
       this.client.unregisterClient(this);
-      return aResponse;
+      return response;
     },
   }),
 
@@ -1416,7 +1429,7 @@ TabClient.prototype = {
   },
   _reload: DebuggerClient.requester({
     type: "reload",
-    options: args(0)
+    options: arg(0)
   }),
 
   /**
@@ -1427,28 +1440,28 @@ TabClient.prototype = {
    */
   navigateTo: DebuggerClient.requester({
     type: "navigateTo",
-    url: args(0)
+    url: arg(0)
   }),
 
   /**
    * Reconfigure the tab actor.
    *
-   * @param object aOptions
+   * @param object options
    *        A dictionary object of the new options to use in the tab actor.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   reconfigure: DebuggerClient.requester({
     type: "reconfigure",
-    options: args(0)
+    options: arg(0)
   }),
 
   listWorkers: DebuggerClient.requester({
     type: "listWorkers"
   }),
 
-  attachWorker: function (aWorkerActor, aOnResponse) {
-    this.client.attachWorker(aWorkerActor, aOnResponse);
+  attachWorker: function (workerActor, onResponse) {
+    this.client.attachWorker(workerActor, onResponse);
   },
 
   /**
@@ -1461,17 +1474,17 @@ TabClient.prototype = {
    */
   resolveLocation: DebuggerClient.requester({
     type: "resolveLocation",
-    location: args(0)
+    location: arg(0)
   }),
 };
 
 eventSource(TabClient.prototype);
 
-function WorkerClient(aClient, aForm) {
-  this.client = aClient;
-  this._actor = aForm.from;
+function WorkerClient(client, form) {
+  this.client = client;
+  this._actor = form.from;
   this._isClosed = false;
-  this._url = aForm.url;
+  this._url = form.url;
 
   this._onClose = this._onClose.bind(this);
 
@@ -1502,23 +1515,23 @@ WorkerClient.prototype = {
   },
 
   detach: DebuggerClient.requester({ type: "detach" }, {
-    after: function (aResponse) {
+    after: function (response) {
       if (this.thread) {
         this.client.unregisterClient(this.thread);
       }
       this.client.unregisterClient(this);
-      return aResponse;
+      return response;
     },
   }),
 
-  attachThread: function (aOptions = {}, aOnResponse = noop) {
+  attachThread: function (options = {}, onResponse = noop) {
     if (this.thread) {
       let response = [{
         type: "connected",
         threadActor: this.thread._actor,
         consoleActor: this.consoleActor,
       }, this.thread];
-      DevToolsUtils.executeSoon(() => aOnResponse(response));
+      DevToolsUtils.executeSoon(() => onResponse(response));
       return response;
     }
 
@@ -1526,31 +1539,31 @@ WorkerClient.prototype = {
     return this.request({
       to: this._actor,
       type: "connect",
-      options: aOptions,
-    }).then(connectReponse => {
-      if (connectReponse.error) {
-        aOnResponse(connectReponse, null);
+      options,
+    }).then(connectResponse => {
+      if (connectResponse.error) {
+        onResponse(connectResponse, null);
         return [connectResponse, null];
       }
 
       return this.request({
-        to: connectReponse.threadActor,
+        to: connectResponse.threadActor,
         type: "attach",
-        options: aOptions
+        options,
       }).then(attachResponse => {
         if (attachResponse.error) {
-          aOnResponse(attachResponse, null);
+          onResponse(attachResponse, null);
         }
 
-        this.thread = new ThreadClient(this, connectReponse.threadActor);
-        this.consoleActor = connectReponse.consoleActor;
+        this.thread = new ThreadClient(this, connectResponse.threadActor);
+        this.consoleActor = connectResponse.consoleActor;
         this.client.registerClient(this.thread);
 
-        aOnResponse(connectReponse, this.thread);
+        onResponse(connectResponse, this.thread);
         return [connectResponse, this.thread];
       });
     }, error => {
-      aOnResponse(error, null);
+      onResponse(error, null);
     });
   },
 
@@ -1573,32 +1586,36 @@ WorkerClient.prototype = {
 
 eventSource(WorkerClient.prototype);
 
-function AddonClient(aClient, aActor) {
-  this._client = aClient;
-  this._actor = aActor;
+function AddonClient(client, actor) {
+  this._client = client;
+  this._actor = actor;
   this.request = this._client.request;
   this.events = [];
 }
 
 AddonClient.prototype = {
-  get actor() { return this._actor; },
-  get _transport() { return this._client._transport; },
+  get actor() {
+    return this._actor;
+  },
+  get _transport() {
+    return this._client._transport;
+  },
 
   /**
    * Detach the client from the addon actor.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    after: function (aResponse) {
+    after: function (response) {
       if (this._client.activeAddon === this) {
         this._client.activeAddon = null;
       }
       this._client.unregisterClient(this);
-      return aResponse;
+      return response;
     },
   })
 };
@@ -1609,9 +1626,9 @@ AddonClient.prototype = {
  * for the initial connection; DebuggerClient's 'listTabs' and
  * 'listChildProcesses' methods forward to that root actor.
  *
- * @param aClient object
+ * @param client object
  *      The client connection to which this actor belongs.
- * @param aGreeting string
+ * @param greeting string
  *      The greeting packet from the root actor we're to represent.
  *
  * Properties of a RootClient instance:
@@ -1623,11 +1640,11 @@ AddonClient.prototype = {
  * @property traits object
  *      The traits object, as given in the root actor's greeting packet.
  */
-function RootClient(aClient, aGreeting) {
-  this._client = aClient;
-  this.actor = aGreeting.from;
-  this.applicationType = aGreeting.applicationType;
-  this.traits = aGreeting.traits;
+function RootClient(client, greeting) {
+  this._client = client;
+  this.actor = greeting.from;
+  this.applicationType = greeting.applicationType;
+  this.traits = greeting.traits;
 }
 exports.RootClient = RootClient;
 
@@ -1637,7 +1654,7 @@ RootClient.prototype = {
   /**
    * List the open tabs.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   listTabs: DebuggerClient.requester({ type: "listTabs" }),
@@ -1645,7 +1662,7 @@ RootClient.prototype = {
   /**
    * List the installed addons.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   listAddons: DebuggerClient.requester({ type: "listAddons" }),
@@ -1653,7 +1670,7 @@ RootClient.prototype = {
   /**
    * List the registered workers.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   listWorkers: DebuggerClient.requester({ type: "listWorkers" }),
@@ -1661,7 +1678,7 @@ RootClient.prototype = {
   /**
    * List the registered service workers.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   listServiceWorkerRegistrations: DebuggerClient.requester({
@@ -1671,7 +1688,7 @@ RootClient.prototype = {
   /**
    * List the running processes.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   listProcesses: DebuggerClient.requester({ type: "listProcesses" }),
@@ -1680,7 +1697,7 @@ RootClient.prototype = {
    * Fetch the TabActor for the currently selected tab, or for a specific
    * tab given as first parameter.
    *
-   * @param [optional] object aFilter
+   * @param [optional] object filter
    *        A dictionary object with following optional attributes:
    *         - outerWindowID: used to match tabs in parent process
    *         - tabId: used to match tabs in child processes
@@ -1688,19 +1705,19 @@ RootClient.prototype = {
    *        If nothing is specified, returns the actor for the currently
    *        selected tab.
    */
-  getTab: function (aFilter) {
+  getTab: function (filter) {
     let packet = {
       to: this.actor,
       type: "getTab"
     };
 
-    if (aFilter) {
-      if (typeof (aFilter.outerWindowID) == "number") {
-        packet.outerWindowID = aFilter.outerWindowID;
-      } else if (typeof (aFilter.tabId) == "number") {
-        packet.tabId = aFilter.tabId;
-      } else if ("tab" in aFilter) {
-        let browser = aFilter.tab.linkedBrowser;
+    if (filter) {
+      if (typeof (filter.outerWindowID) == "number") {
+        packet.outerWindowID = filter.outerWindowID;
+      } else if (typeof (filter.tabId) == "number") {
+        packet.tabId = filter.tabId;
+      } else if ("tab" in filter) {
+        let browser = filter.tab.linkedBrowser;
         if (browser.frameLoader.tabParent) {
           // Tabs in child process
           packet.tabId = browser.frameLoader.tabParent.tabId;
@@ -1727,7 +1744,7 @@ RootClient.prototype = {
   /**
    * Description of protocol's actors and methods.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   protocolDescription: DebuggerClient.requester({ type: "protocolDescription" }),
@@ -1736,8 +1753,12 @@ RootClient.prototype = {
    * Methods constructed by DebuggerClient.requester require these forwards
    * on their 'this'.
    */
-  get _transport() { return this._client._transport; },
-  get request() { return this._client.request; }
+  get _transport() {
+    return this._client._transport;
+  },
+  get request() {
+    return this._client.request;
+  }
 };
 
 /**
@@ -1745,16 +1766,16 @@ RootClient.prototype = {
  * is a front to the thread actor created in the server side, hiding the
  * protocol details in a traditional JavaScript API.
  *
- * @param aClient DebuggerClient|TabClient
+ * @param client DebuggerClient|TabClient
  *        The parent of the thread (tab for tab-scoped debuggers, DebuggerClient
  *        for chrome debuggers).
- * @param aActor string
+ * @param actor string
  *        The actor ID for this thread.
  */
-function ThreadClient(aClient, aActor) {
-  this._parent = aClient;
-  this.client = aClient instanceof DebuggerClient ? aClient : aClient.client;
-  this._actor = aActor;
+function ThreadClient(client, actor) {
+  this._parent = client;
+  this.client = client instanceof DebuggerClient ? client : client.client;
+  this._actor = actor;
   this._frameCache = [];
   this._scriptCache = {};
   this._pauseGrips = {};
@@ -1764,40 +1785,48 @@ function ThreadClient(aClient, aActor) {
 
 ThreadClient.prototype = {
   _state: "paused",
-  get state() { return this._state; },
-  get paused() { return this._state === "paused"; },
+  get state() {
+    return this._state;
+  },
+  get paused() {
+    return this._state === "paused";
+  },
 
   _pauseOnExceptions: false,
   _ignoreCaughtExceptions: false,
   _pauseOnDOMEvents: null,
 
   _actor: null,
-  get actor() { return this._actor; },
+  get actor() {
+    return this._actor;
+  },
 
-  get _transport() { return this.client._transport; },
+  get _transport() {
+    return this.client._transport;
+  },
 
-  _assertPaused: function (aCommand) {
+  _assertPaused: function (command) {
     if (!this.paused) {
-      throw Error(aCommand + " command sent while not paused. Currently " + this._state);
+      throw Error(command + " command sent while not paused. Currently " + this._state);
     }
   },
 
   /**
-   * Resume a paused thread. If the optional aLimit parameter is present, then
+   * Resume a paused thread. If the optional limit parameter is present, then
    * the thread will also pause when that limit is reached.
    *
-   * @param [optional] object aLimit
+   * @param [optional] object limit
    *        An object with a type property set to the appropriate limit (next,
    *        step, or finish) per the remote debugging protocol specification.
    *        Use null to specify no limit.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   _doResume: DebuggerClient.requester({
     type: "resume",
-    resumeLimit: args(0)
+    resumeLimit: arg(0)
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       this._assertPaused("resume");
 
       // Put the client in a tentative "resuming" state so we can prevent
@@ -1806,150 +1835,152 @@ ThreadClient.prototype = {
       this._state = "resuming";
 
       if (this._pauseOnExceptions) {
-        aPacket.pauseOnExceptions = this._pauseOnExceptions;
+        packet.pauseOnExceptions = this._pauseOnExceptions;
       }
       if (this._ignoreCaughtExceptions) {
-        aPacket.ignoreCaughtExceptions = this._ignoreCaughtExceptions;
+        packet.ignoreCaughtExceptions = this._ignoreCaughtExceptions;
       }
       if (this._pauseOnDOMEvents) {
-        aPacket.pauseOnDOMEvents = this._pauseOnDOMEvents;
+        packet.pauseOnDOMEvents = this._pauseOnDOMEvents;
       }
-      return aPacket;
+      return packet;
     },
-    after: function (aResponse) {
-      if (aResponse.error && this._state == "resuming") {
+    after: function (response) {
+      if (response.error && this._state == "resuming") {
         // There was an error resuming, update the state to the new one
         // reported by the server, if given (only on wrongState), otherwise
         // reset back to the previous state.
-        if (aResponse.state) {
-          this._state = ThreadStateTypes[aResponse.state];
+        if (response.state) {
+          this._state = ThreadStateTypes[response.state];
         } else {
           this._state = this._previousState;
         }
       }
       delete this._previousState;
-      return aResponse;
+      return response;
     },
   }),
 
   /**
    * Reconfigure the thread actor.
    *
-   * @param object aOptions
+   * @param object options
    *        A dictionary object of the new options to use in the thread actor.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   reconfigure: DebuggerClient.requester({
     type: "reconfigure",
-    options: args(0)
+    options: arg(0)
   }),
 
   /**
    * Resume a paused thread.
    */
-  resume: function (aOnResponse) {
-    return this._doResume(null, aOnResponse);
+  resume: function (onResponse) {
+    return this._doResume(null, onResponse);
   },
 
   /**
    * Resume then pause without stepping.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
-  resumeThenPause: function (aOnResponse) {
-    return this._doResume({ type: "break" }, aOnResponse);
+  resumeThenPause: function (onResponse) {
+    return this._doResume({ type: "break" }, onResponse);
   },
 
   /**
    * Step over a function call.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
-  stepOver: function (aOnResponse) {
-    return this._doResume({ type: "next" }, aOnResponse);
+  stepOver: function (onResponse) {
+    return this._doResume({ type: "next" }, onResponse);
   },
 
   /**
    * Step into a function call.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
-  stepIn: function (aOnResponse) {
-    return this._doResume({ type: "step" }, aOnResponse);
+  stepIn: function (onResponse) {
+    return this._doResume({ type: "step" }, onResponse);
   },
 
   /**
    * Step out of a function call.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
-  stepOut: function (aOnResponse) {
-    return this._doResume({ type: "finish" }, aOnResponse);
+  stepOut: function (onResponse) {
+    return this._doResume({ type: "finish" }, onResponse);
   },
 
   /**
    * Immediately interrupt a running thread.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
-  interrupt: function (aOnResponse) {
-    return this._doInterrupt(null, aOnResponse);
+  interrupt: function (onResponse) {
+    return this._doInterrupt(null, onResponse);
   },
 
   /**
    * Pause execution right before the next JavaScript bytecode is executed.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
-  breakOnNext: function (aOnResponse) {
-    return this._doInterrupt("onNext", aOnResponse);
+  breakOnNext: function (onResponse) {
+    return this._doInterrupt("onNext", onResponse);
   },
 
   /**
    * Interrupt a running thread.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   _doInterrupt: DebuggerClient.requester({
     type: "interrupt",
-    when: args(0)
+    when: arg(0)
   }),
 
   /**
    * Enable or disable pausing when an exception is thrown.
    *
-   * @param boolean aFlag
+   * @param boolean pauseOnExceptions
    *        Enables pausing if true, disables otherwise.
-   * @param function aOnResponse
+   * @param boolean ignoreCaughtExceptions
+   *        Whether to ignore caught exceptions
+   * @param function onResponse
    *        Called with the response packet.
    */
-  pauseOnExceptions: function (aPauseOnExceptions,
-                               aIgnoreCaughtExceptions,
-                               aOnResponse = noop) {
-    this._pauseOnExceptions = aPauseOnExceptions;
-    this._ignoreCaughtExceptions = aIgnoreCaughtExceptions;
+  pauseOnExceptions: function (pauseOnExceptions,
+                               ignoreCaughtExceptions,
+                               onResponse = noop) {
+    this._pauseOnExceptions = pauseOnExceptions;
+    this._ignoreCaughtExceptions = ignoreCaughtExceptions;
 
     // Otherwise send the flag using a standard resume request.
     if (!this.paused) {
-      return this.interrupt(aResponse => {
-        if (aResponse.error) {
+      return this.interrupt(response => {
+        if (response.error) {
           // Can't continue if pausing failed.
-          aOnResponse(aResponse);
-          return aResponse;
+          onResponse(response);
+          return response;
         }
-        return this.resume(aOnResponse);
+        return this.resume(onResponse);
       });
     }
 
-    aOnResponse();
+    onResponse();
     return promise.resolve();
   },
 
@@ -1988,48 +2019,48 @@ ThreadClient.prototype = {
    * Send a clientEvaluate packet to the debuggee. Response
    * will be a resume packet.
    *
-   * @param string aFrame
+   * @param string frame
    *        The actor ID of the frame where the evaluation should take place.
-   * @param string aExpression
+   * @param string expression
    *        The expression that will be evaluated in the scope of the frame
    *        above.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   eval: DebuggerClient.requester({
     type: "clientEvaluate",
-    frame: args(0),
-    expression: args(1)
+    frame: arg(0),
+    expression: arg(1)
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       this._assertPaused("eval");
       // Put the client in a tentative "resuming" state so we can prevent
       // further requests that should only be sent in the paused state.
       this._state = "resuming";
-      return aPacket;
+      return packet;
     },
-    after: function (aResponse) {
-      if (aResponse.error) {
+    after: function (response) {
+      if (response.error) {
         // There was an error resuming, back to paused state.
         this._state = "paused";
       }
-      return aResponse;
+      return response;
     },
   }),
 
   /**
    * Detach from the thread actor.
    *
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the response packet.
    */
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    after: function (aResponse) {
+    after: function (response) {
       this.client.unregisterClient(this);
       this._parent.thread = null;
-      return aResponse;
+      return response;
     },
   }),
 
@@ -2043,7 +2074,7 @@ ThreadClient.prototype = {
    */
   releaseMany: DebuggerClient.requester({
     type: "releaseMany",
-    actors: args(0),
+    actors: arg(0),
   }),
 
   /**
@@ -2054,13 +2085,13 @@ ThreadClient.prototype = {
    */
   threadGrips: DebuggerClient.requester({
     type: "threadGrips",
-    actors: args(0)
+    actors: arg(0)
   }),
 
   /**
    * Return the event listeners defined on the page.
    *
-   * @param aOnResponse Function
+   * @param onResponse Function
    *        Called with the thread's response.
    */
   eventListeners: DebuggerClient.requester({
@@ -2070,7 +2101,7 @@ ThreadClient.prototype = {
   /**
    * Request the loaded sources for the current thread.
    *
-   * @param aOnResponse Function
+   * @param onResponse Function
    *        Called with the thread's response.
    */
   getSources: DebuggerClient.requester({
@@ -2091,19 +2122,19 @@ ThreadClient.prototype = {
   /**
    * Request frames from the callstack for the current thread.
    *
-   * @param aStart integer
+   * @param start integer
    *        The number of the youngest stack frame to return (the youngest
    *        frame is 0).
-   * @param aCount integer
+   * @param count integer
    *        The maximum number of frames to return, or null to return all
    *        frames.
-   * @param aOnResponse function
+   * @param onResponse function
    *        Called with the thread's response.
    */
   getFrames: DebuggerClient.requester({
     type: "frames",
-    start: args(0),
-    count: args(1)
+    start: arg(0),
+    count: arg(1)
   }),
 
   /**
@@ -2111,7 +2142,9 @@ ThreadClient.prototype = {
    * framescleared event to keep up to date on changes to this cache,
    * and can fill it using the fillFrames method.
    */
-  get cachedFrames() { return this._frameCache; },
+  get cachedFrames() {
+    return this._frameCache;
+  },
 
   /**
    * true if there are more stack frames available on the server.
@@ -2122,34 +2155,34 @@ ThreadClient.prototype = {
   },
 
   /**
-   * Ensure that at least aTotal stack frames have been loaded in the
+   * Ensure that at least total stack frames have been loaded in the
    * ThreadClient's stack frame cache. A framesadded event will be
    * sent when the stack frame cache is updated.
    *
-   * @param aTotal number
+   * @param total number
    *        The minimum number of stack frames to be included.
-   * @param aCallback function
+   * @param callback function
    *        Optional callback function called when frames have been loaded
    * @returns true if a framesadded notification should be expected.
    */
-  fillFrames: function (aTotal, aCallback = noop) {
+  fillFrames: function (total, callback = noop) {
     this._assertPaused("fillFrames");
-    if (this._frameCache.length >= aTotal) {
+    if (this._frameCache.length >= total) {
       return false;
     }
 
     let numFrames = this._frameCache.length;
 
-    this.getFrames(numFrames, aTotal - numFrames, (aResponse) => {
-      if (aResponse.error) {
-        aCallback(aResponse);
+    this.getFrames(numFrames, total - numFrames, (response) => {
+      if (response.error) {
+        callback(response);
         return;
       }
 
       let threadGrips = DevToolsUtils.values(this._threadGrips);
 
-      for (let i in aResponse.frames) {
-        let frame = aResponse.frames[i];
+      for (let i in response.frames) {
+        let frame = response.frames[i];
         if (!frame.where.source) {
           // Older servers use urls instead, so we need to resolve
           // them to source actors
@@ -2167,7 +2200,7 @@ ThreadClient.prototype = {
       // frames available.
       this.emit("framesadded");
 
-      aCallback(aResponse);
+      callback(response);
     });
 
     return true;
@@ -2187,16 +2220,16 @@ ThreadClient.prototype = {
   /**
    * Return a ObjectClient object for the given object grip.
    *
-   * @param aGrip object
+   * @param grip object
    *        A pause-lifetime object grip returned by the protocol.
    */
-  pauseGrip: function (aGrip) {
-    if (aGrip.actor in this._pauseGrips) {
-      return this._pauseGrips[aGrip.actor];
+  pauseGrip: function (grip) {
+    if (grip.actor in this._pauseGrips) {
+      return this._pauseGrips[grip.actor];
     }
 
-    let client = new ObjectClient(this.client, aGrip);
-    this._pauseGrips[aGrip.actor] = client;
+    let client = new ObjectClient(this.client, grip);
+    this._pauseGrips[grip.actor] = client;
     return client;
   },
 
@@ -2204,19 +2237,19 @@ ThreadClient.prototype = {
    * Get or create a long string client, checking the grip client cache if it
    * already exists.
    *
-   * @param aGrip Object
+   * @param grip Object
    *        The long string grip returned by the protocol.
-   * @param aGripCacheName String
+   * @param gripCacheName String
    *        The property name of the grip client cache to check for existing
    *        clients in.
    */
-  _longString: function (aGrip, aGripCacheName) {
-    if (aGrip.actor in this[aGripCacheName]) {
-      return this[aGripCacheName][aGrip.actor];
+  _longString: function (grip, gripCacheName) {
+    if (grip.actor in this[gripCacheName]) {
+      return this[gripCacheName][grip.actor];
     }
 
-    let client = new LongStringClient(this.client, aGrip);
-    this[aGripCacheName][aGrip.actor] = client;
+    let client = new LongStringClient(this.client, grip);
+    this[gripCacheName][grip.actor] = client;
     return client;
   },
 
@@ -2224,35 +2257,35 @@ ThreadClient.prototype = {
    * Return an instance of LongStringClient for the given long string grip that
    * is scoped to the current pause.
    *
-   * @param aGrip Object
+   * @param grip Object
    *        The long string grip returned by the protocol.
    */
-  pauseLongString: function (aGrip) {
-    return this._longString(aGrip, "_pauseGrips");
+  pauseLongString: function (grip) {
+    return this._longString(grip, "_pauseGrips");
   },
 
   /**
    * Return an instance of LongStringClient for the given long string grip that
    * is scoped to the thread lifetime.
    *
-   * @param aGrip Object
+   * @param grip Object
    *        The long string grip returned by the protocol.
    */
-  threadLongString: function (aGrip) {
-    return this._longString(aGrip, "_threadGrips");
+  threadLongString: function (grip) {
+    return this._longString(grip, "_threadGrips");
   },
 
   /**
    * Clear and invalidate all the grip clients from the given cache.
    *
-   * @param aGripCacheName
+   * @param gripCacheName
    *        The property name of the grip cache we want to clear.
    */
-  _clearObjectClients: function (aGripCacheName) {
-    for (let id in this[aGripCacheName]) {
-      this[aGripCacheName][id].valid = false;
+  _clearObjectClients: function (gripCacheName) {
+    for (let id in this[gripCacheName]) {
+      this[gripCacheName][id].valid = false;
     }
-    this[aGripCacheName] = {};
+    this[gripCacheName] = {};
   },
 
   /**
@@ -2275,16 +2308,16 @@ ThreadClient.prototype = {
    * Handle thread state change by doing necessary cleanup and notifying all
    * registered listeners.
    */
-  _onThreadState: function (aPacket) {
-    this._state = ThreadStateTypes[aPacket.type];
+  _onThreadState: function (packet) {
+    this._state = ThreadStateTypes[packet.type];
     // The debugger UI may not be initialized yet so we want to keep
     // the packet around so it knows what to pause state to display
     // when it's initialized
-    this._lastPausePacket = aPacket.type === "resumed" ? null : aPacket;
+    this._lastPausePacket = packet.type === "resumed" ? null : packet;
     this._clearFrames();
     this._clearPauseGrips();
-    aPacket.type === ThreadStateTypes.detached && this._clearThreadGrips();
-    this.client._eventsEnabled && this.emit(aPacket.type, aPacket);
+    packet.type === ThreadStateTypes.detached && this._clearThreadGrips();
+    this.client._eventsEnabled && this.emit(packet.type, packet);
   },
 
   getLastPausePacket: function () {
@@ -2294,32 +2327,33 @@ ThreadClient.prototype = {
   /**
    * Return an EnvironmentClient instance for the given environment actor form.
    */
-  environment: function (aForm) {
-    return new EnvironmentClient(this.client, aForm);
+  environment: function (form) {
+    return new EnvironmentClient(this.client, form);
   },
 
   /**
    * Return an instance of SourceClient for the given source actor form.
    */
-  source: function (aForm) {
-    if (aForm.actor in this._threadGrips) {
-      return this._threadGrips[aForm.actor];
+  source: function (form) {
+    if (form.actor in this._threadGrips) {
+      return this._threadGrips[form.actor];
     }
 
-    return this._threadGrips[aForm.actor] = new SourceClient(this, aForm);
+    this._threadGrips[form.actor] = new SourceClient(this, form);
+    return this._threadGrips[form.actor];
   },
 
   /**
    * Request the prototype and own properties of mutlipleObjects.
    *
-   * @param aOnResponse function
+   * @param onResponse function
    *        Called with the request's response.
    * @param actors [string]
    *        List of actor ID of the queried objects.
    */
   getPrototypesAndProperties: DebuggerClient.requester({
     type: "prototypesAndProperties",
-    actors: args(0)
+    actors: arg(0)
   }),
 
   events: ["newSource"]
@@ -2333,14 +2367,14 @@ eventSource(ThreadClient.prototype);
  * server side, hiding the protocol details in a traditional
  * JavaScript API.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aActor string
+ * @param actor string
  *        The actor ID for this thread.
  */
-function TraceClient(aClient, aActor) {
-  this._client = aClient;
-  this._actor = aActor;
+function TraceClient(client, actor) {
+  this._client = client;
+  this._actor = actor;
   this._activeTraces = new Set();
   this._waitingPackets = new Map();
   this._expectedPacket = 0;
@@ -2349,10 +2383,16 @@ function TraceClient(aClient, aActor) {
 }
 
 TraceClient.prototype = {
-  get actor() { return this._actor; },
-  get tracing() { return this._activeTraces.size > 0; },
+  get actor() {
+    return this._actor;
+  },
+  get tracing() {
+    return this._activeTraces.size > 0;
+  },
 
-  get _transport() { return this._client._transport; },
+  get _transport() {
+    return this._client._transport;
+  },
 
   /**
    * Detach from the trace actor.
@@ -2360,41 +2400,41 @@ TraceClient.prototype = {
   detach: DebuggerClient.requester({
     type: "detach"
   }, {
-    after: function (aResponse) {
+    after: function (response) {
       this._client.unregisterClient(this);
-      return aResponse;
+      return response;
     },
   }),
 
   /**
    * Start a new trace.
    *
-   * @param aTrace [string]
+   * @param trace [string]
    *        An array of trace types to be recorded by the new trace.
    *
-   * @param aName string
+   * @param name string
    *        The name of the new trace.
    *
-   * @param aOnResponse function
+   * @param onResponse function
    *        Called with the request's response.
    */
   startTrace: DebuggerClient.requester({
     type: "startTrace",
-    name: args(1),
-    trace: args(0)
+    name: arg(1),
+    trace: arg(0)
   }, {
-    after: function (aResponse) {
-      if (aResponse.error) {
-        return aResponse;
+    after: function (response) {
+      if (response.error) {
+        return response;
       }
 
       if (!this.tracing) {
         this._waitingPackets.clear();
         this._expectedPacket = 0;
       }
-      this._activeTraces.add(aResponse.name);
+      this._activeTraces.add(response.name);
 
-      return aResponse;
+      return response;
     },
   }),
 
@@ -2402,24 +2442,24 @@ TraceClient.prototype = {
    * End a trace. If a name is provided, stop the named
    * trace. Otherwise, stop the most recently started trace.
    *
-   * @param aName string
+   * @param name string
    *        The name of the trace to stop.
    *
-   * @param aOnResponse function
+   * @param onResponse function
    *        Called with the request's response.
    */
   stopTrace: DebuggerClient.requester({
     type: "stopTrace",
-    name: args(0)
+    name: arg(0)
   }, {
-    after: function (aResponse) {
-      if (aResponse.error) {
-        return aResponse;
+    after: function (response) {
+      if (response.error) {
+        return response;
       }
 
-      this._activeTraces.delete(aResponse.name);
+      this._activeTraces.delete(response.name);
 
-      return aResponse;
+      return response;
     },
   })
 };
@@ -2427,22 +2467,25 @@ TraceClient.prototype = {
 /**
  * Grip clients are used to retrieve information about the relevant object.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aGrip object
+ * @param grip object
  *        A pause-lifetime object grip returned by the protocol.
  */
-function ObjectClient(aClient, aGrip)
-{
-  this._grip = aGrip;
-  this._client = aClient;
+function ObjectClient(client, grip) {
+  this._grip = grip;
+  this._client = client;
   this.request = this._client.request;
 }
 exports.ObjectClient = ObjectClient;
 
 ObjectClient.prototype = {
-  get actor() { return this._grip.actor; },
-  get _transport() { return this._client._transport; },
+  get actor() {
+    return this._grip.actor;
+  },
+  get _transport() {
+    return this._client._transport;
+  },
 
   valid: true,
 
@@ -2459,18 +2502,18 @@ ObjectClient.prototype = {
   getDefinitionSite: DebuggerClient.requester({
     type: "definitionSite"
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       if (this._grip.class != "Function") {
         throw new Error("getDefinitionSite is only valid for function grips.");
       }
-      return aPacket;
+      return packet;
     }
   }),
 
   /**
    * Request the names of a function's formal parameters.
    *
-   * @param aOnResponse function
+   * @param onResponse function
    *        Called with an object of the form:
    *        { parameterNames:[<parameterName>, ...] }
    *        where each <parameterName> is the name of a parameter.
@@ -2478,11 +2521,11 @@ ObjectClient.prototype = {
   getParameterNames: DebuggerClient.requester({
     type: "parameterNames"
   }, {
-    before: function (aPacket) {
-      if (this._grip["class"] !== "Function") {
+    before: function (packet) {
+      if (this._grip.class !== "Function") {
         throw new Error("getParameterNames is only valid for function grips.");
       }
-      return aPacket;
+      return packet;
     },
   }),
 
@@ -2490,7 +2533,7 @@ ObjectClient.prototype = {
    * Request the names of the properties defined on the object and not its
    * prototype.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param onResponse function Called with the request's response.
    */
   getOwnPropertyNames: DebuggerClient.requester({
     type: "ownPropertyNames"
@@ -2499,7 +2542,7 @@ ObjectClient.prototype = {
   /**
    * Request the prototype and own properties of the object.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param onResponse function Called with the request's response.
    */
   getPrototypeAndProperties: DebuggerClient.requester({
     type: "prototypeAndProperties"
@@ -2521,17 +2564,17 @@ ObjectClient.prototype = {
    *        - sort Boolean
    *          If true, the iterator will sort the properties by name
    *          before dispatching them.
-   * @param aOnResponse function Called with the client instance.
+   * @param onResponse function Called with the client instance.
    */
   enumProperties: DebuggerClient.requester({
     type: "enumProperties",
-    options: args(0)
+    options: arg(0)
   }, {
-    after: function (aResponse) {
-      if (aResponse.iterator) {
-        return { iterator: new PropertyIteratorClient(this._client, aResponse.iterator) };
+    after: function (response) {
+      if (response.iterator) {
+        return { iterator: new PropertyIteratorClient(this._client, response.iterator) };
       }
-      return aResponse;
+      return response;
     },
   }),
 
@@ -2539,7 +2582,7 @@ ObjectClient.prototype = {
    * Request a PropertyIteratorClient instance to enumerate entries in a
    * Map/Set-like object.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param onResponse function Called with the request's response.
    */
   enumEntries: DebuggerClient.requester({
     type: "enumEntries"
@@ -2563,18 +2606,18 @@ ObjectClient.prototype = {
   /**
    * Request the property descriptor of the object's specified property.
    *
-   * @param aName string The name of the requested property.
-   * @param aOnResponse function Called with the request's response.
+   * @param name string The name of the requested property.
+   * @param onResponse function Called with the request's response.
    */
   getProperty: DebuggerClient.requester({
     type: "property",
-    name: args(0)
+    name: arg(0)
   }),
 
   /**
    * Request the prototype of the object.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param onResponse function Called with the request's response.
    */
   getPrototype: DebuggerClient.requester({
     type: "prototype"
@@ -2583,7 +2626,7 @@ ObjectClient.prototype = {
   /**
    * Request the display string of the object.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param onResponse function Called with the request's response.
    */
   getDisplayString: DebuggerClient.requester({
     type: "displayString"
@@ -2592,16 +2635,16 @@ ObjectClient.prototype = {
   /**
    * Request the scope of the object.
    *
-   * @param aOnResponse function Called with the request's response.
+   * @param onResponse function Called with the request's response.
    */
   getScope: DebuggerClient.requester({
     type: "scope"
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       if (this._grip.class !== "Function") {
         throw new Error("scope is only valid for function grips.");
       }
-      return aPacket;
+      return packet;
     },
   }),
 
@@ -2611,12 +2654,12 @@ ObjectClient.prototype = {
   getDependentPromises: DebuggerClient.requester({
     type: "dependentPromises"
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getDependentPromises is only valid for promise " +
           "grips.");
       }
-      return aPacket;
+      return packet;
     }
   }),
 
@@ -2626,11 +2669,11 @@ ObjectClient.prototype = {
   getPromiseAllocationStack: DebuggerClient.requester({
     type: "allocationStack"
   }, {
-    before: function (aPacket) {
+    before: function (packet) {
       if (this._grip.class !== "Promise") {
         throw new Error("getAllocationStack is only valid for promise grips.");
       }
-      return aPacket;
+      return packet;
     }
   }),
 
@@ -2672,25 +2715,29 @@ ObjectClient.prototype = {
  * this is controled while creating the PropertyIteratorClient
  * from ObjectClient.enumProperties.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aGrip Object
+ * @param grip Object
  *        A PropertyIteratorActor grip returned by the protocol via
  *        TabActor.enumProperties request.
  */
-function PropertyIteratorClient(aClient, aGrip) {
-  this._grip = aGrip;
-  this._client = aClient;
+function PropertyIteratorClient(client, grip) {
+  this._grip = grip;
+  this._client = client;
   this.request = this._client.request;
 }
 
 PropertyIteratorClient.prototype = {
-  get actor() { return this._grip.actor; },
+  get actor() {
+    return this._grip.actor;
+  },
 
   /**
    * Get the total number of properties available in the iterator.
    */
-  get count() { return this._grip.count; },
+  get count() {
+    return this._grip.count;
+  },
 
   /**
    * Get one or more property names that correspond to the positions in the
@@ -2698,12 +2745,12 @@ PropertyIteratorClient.prototype = {
    *
    * @param indexes Array
    *        An array of property indexes.
-   * @param aCallback Function
+   * @param callback Function
    *        The function called when we receive the property names.
    */
   names: DebuggerClient.requester({
     type: "names",
-    indexes: args(0)
+    indexes: arg(0)
   }, {}),
 
   /**
@@ -2713,19 +2760,19 @@ PropertyIteratorClient.prototype = {
    *        The index of the first property to fetch.
    * @param count Number
    *        The number of properties to fetch.
-   * @param aCallback Function
+   * @param callback Function
    *        The function called when we receive the property values.
    */
   slice: DebuggerClient.requester({
     type: "slice",
-    start: args(0),
-    count: args(1)
+    start: arg(0),
+    count: arg(1)
   }, {}),
 
   /**
    * Get all the property values.
    *
-   * @param aCallback Function
+   * @param callback Function
    *        The function called when we receive the property values.
    */
   all: DebuggerClient.requester({
@@ -2737,57 +2784,65 @@ PropertyIteratorClient.prototype = {
  * A LongStringClient provides a way to access "very long" strings from the
  * debugger server.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aGrip Object
+ * @param grip Object
  *        A pause-lifetime long string grip returned by the protocol.
  */
-function LongStringClient(aClient, aGrip) {
-  this._grip = aGrip;
-  this._client = aClient;
+function LongStringClient(client, grip) {
+  this._grip = grip;
+  this._client = client;
   this.request = this._client.request;
 }
 exports.LongStringClient = LongStringClient;
 
 LongStringClient.prototype = {
-  get actor() { return this._grip.actor; },
-  get length() { return this._grip.length; },
-  get initial() { return this._grip.initial; },
-  get _transport() { return this._client._transport; },
+  get actor() {
+    return this._grip.actor;
+  },
+  get length() {
+    return this._grip.length;
+  },
+  get initial() {
+    return this._grip.initial;
+  },
+  get _transport() {
+    return this._client._transport;
+  },
 
   valid: true,
 
   /**
-   * Get the substring of this LongString from aStart to aEnd.
+   * Get the substring of this LongString from start to end.
    *
-   * @param aStart Number
+   * @param start Number
    *        The starting index.
-   * @param aEnd Number
+   * @param end Number
    *        The ending index.
-   * @param aCallback Function
+   * @param callback Function
    *        The function called when we receive the substring.
    */
   substring: DebuggerClient.requester({
     type: "substring",
-    start: args(0),
-    end: args(1)
+    start: arg(0),
+    end: arg(1)
   }),
 };
 
 /**
  * A SourceClient provides a way to access the source text of a script.
  *
- * @param aClient ThreadClient
+ * @param client ThreadClient
  *        The thread client parent.
- * @param aForm Object
+ * @param form Object
  *        The form sent across the remote debugging protocol.
  */
-function SourceClient(aClient, aForm) {
-  this._form = aForm;
-  this._isBlackBoxed = aForm.isBlackBoxed;
-  this._isPrettyPrinted = aForm.isPrettyPrinted;
-  this._activeThread = aClient;
-  this._client = aClient.client;
+function SourceClient(client, form) {
+  this._form = form;
+  this._isBlackBoxed = form.isBlackBoxed;
+  this._isPrettyPrinted = form.isPrettyPrinted;
+  this._activeThread = client;
+  this._client = client.client;
 }
 
 SourceClient.prototype = {
@@ -2813,47 +2868,47 @@ SourceClient.prototype = {
   /**
    * Black box this SourceClient's source.
    *
-   * @param aCallback Function
+   * @param callback Function
    *        The callback function called when we receive the response from the server.
    */
   blackBox: DebuggerClient.requester({
     type: "blackbox"
   }, {
-    after: function (aResponse) {
-      if (!aResponse.error) {
+    after: function (response) {
+      if (!response.error) {
         this._isBlackBoxed = true;
         if (this._activeThread) {
           this._activeThread.emit("blackboxchange", this);
         }
       }
-      return aResponse;
+      return response;
     }
   }),
 
   /**
    * Un-black box this SourceClient's source.
    *
-   * @param aCallback Function
+   * @param callback Function
    *        The callback function called when we receive the response from the server.
    */
   unblackBox: DebuggerClient.requester({
     type: "unblackbox"
   }, {
-    after: function (aResponse) {
-      if (!aResponse.error) {
+    after: function (response) {
+      if (!response.error) {
         this._isBlackBoxed = false;
         if (this._activeThread) {
           this._activeThread.emit("blackboxchange", this);
         }
       }
-      return aResponse;
+      return response;
     }
   }),
 
   /**
    * Get Executable Lines from a source
    *
-   * @param aCallback Function
+   * @param callback Function
    *        The callback function called when we receive the response from the server.
    */
   getExecutableLines: function (cb = noop) {
@@ -2871,105 +2926,105 @@ SourceClient.prototype = {
   /**
    * Get a long string grip for this SourceClient's source.
    */
-  source: function (aCallback = noop) {
+  source: function (callback = noop) {
     let packet = {
       to: this._form.actor,
       type: "source"
     };
-    return this._client.request(packet).then(aResponse => {
-      return this._onSourceResponse(aResponse, aCallback);
+    return this._client.request(packet).then(response => {
+      return this._onSourceResponse(response, callback);
     });
   },
 
   /**
    * Pretty print this source's text.
    */
-  prettyPrint: function (aIndent, aCallback = noop) {
+  prettyPrint: function (indent, callback = noop) {
     const packet = {
       to: this._form.actor,
       type: "prettyPrint",
-      indent: aIndent
+      indent
     };
-    return this._client.request(packet).then(aResponse => {
-      if (!aResponse.error) {
+    return this._client.request(packet).then(response => {
+      if (!response.error) {
         this._isPrettyPrinted = true;
         this._activeThread._clearFrames();
         this._activeThread.emit("prettyprintchange", this);
       }
-      return this._onSourceResponse(aResponse, aCallback);
+      return this._onSourceResponse(response, callback);
     });
   },
 
   /**
    * Stop pretty printing this source's text.
    */
-  disablePrettyPrint: function (aCallback = noop) {
+  disablePrettyPrint: function (callback = noop) {
     const packet = {
       to: this._form.actor,
       type: "disablePrettyPrint"
     };
-    return this._client.request(packet).then(aResponse => {
-      if (!aResponse.error) {
+    return this._client.request(packet).then(response => {
+      if (!response.error) {
         this._isPrettyPrinted = false;
         this._activeThread._clearFrames();
         this._activeThread.emit("prettyprintchange", this);
       }
-      return this._onSourceResponse(aResponse, aCallback);
+      return this._onSourceResponse(response, callback);
     });
   },
 
-  _onSourceResponse: function (aResponse, aCallback) {
-    if (aResponse.error) {
-      aCallback(aResponse);
-      return aResponse;
+  _onSourceResponse: function (response, callback) {
+    if (response.error) {
+      callback(response);
+      return response;
     }
 
-    if (typeof aResponse.source === "string") {
-      aCallback(aResponse);
-      return aResponse;
+    if (typeof response.source === "string") {
+      callback(response);
+      return response;
     }
 
-    let { contentType, source } = aResponse;
+    let { contentType, source } = response;
     let longString = this._activeThread.threadLongString(source);
-    return longString.substring(0, longString.length).then(function (aResponse) {
-      if (aResponse.error) {
-        aCallback(aResponse);
-        return aReponse;
+    return longString.substring(0, longString.length).then(function (resp) {
+      if (resp.error) {
+        callback(resp);
+        return resp;
       }
 
-      let response = {
-        source: aResponse.substring,
+      let newResponse = {
+        source: resp.substring,
         contentType: contentType
       };
-      aCallback(response);
-      return response;
+      callback(newResponse);
+      return newResponse;
     });
   },
 
   /**
    * Request to set a breakpoint in the specified location.
    *
-   * @param object aLocation
+   * @param object location
    *        The location and condition of the breakpoint in
    *        the form of { line[, column, condition] }.
-   * @param function aOnResponse
+   * @param function onResponse
    *        Called with the thread's response.
    */
-  setBreakpoint: function ({ line, column, condition, noSliding }, aOnResponse = noop) {
+  setBreakpoint: function ({ line, column, condition, noSliding }, onResponse = noop) {
     // A helper function that sets the breakpoint.
-    let doSetBreakpoint = aCallback => {
+    let doSetBreakpoint = callback => {
       let root = this._client.mainRoot;
       let location = {
-        line: line,
-        column: column
+        line,
+        column,
       };
 
       let packet = {
         to: this.actor,
         type: "setBreakpoint",
-        location: location,
-        condition: condition,
-        noSliding: noSliding
+        location,
+        condition,
+        noSliding,
       };
 
       // Backwards compatibility: send the breakpoint request to the
@@ -2979,24 +3034,24 @@ SourceClient.prototype = {
         packet.location.url = this.url;
       }
 
-      return this._client.request(packet).then(aResponse => {
+      return this._client.request(packet).then(response => {
         // Ignoring errors, since the user may be setting a breakpoint in a
         // dead script that will reappear on a page reload.
         let bpClient;
-        if (aResponse.actor) {
+        if (response.actor) {
           bpClient = new BreakpointClient(
             this._client,
             this,
-            aResponse.actor,
+            response.actor,
             location,
             root.traits.conditionalBreakpoints ? condition : undefined
           );
         }
-        aOnResponse(aResponse, bpClient);
-        if (aCallback) {
-          aCallback();
+        onResponse(response, bpClient);
+        if (callback) {
+          callback();
         }
-        return [aResponse, bpClient];
+        return [response, bpClient];
       });
     };
 
@@ -3005,14 +3060,14 @@ SourceClient.prototype = {
       return doSetBreakpoint();
     }
     // Otherwise, force a pause in order to set the breakpoint.
-    return this._activeThread.interrupt().then(aResponse => {
-      if (aResponse.error) {
+    return this._activeThread.interrupt().then(response => {
+      if (response.error) {
         // Can't set the breakpoint if pausing failed.
-        aOnResponse(aResponse);
-        return aResponse;
+        onResponse(response);
+        return response;
       }
 
-      const { type, why } = aResponse;
+      const { type, why } = response;
       const cleanUp = type == "paused" && why.type == "interrupted"
             ? () => this._activeThread.resume()
             : noop;
@@ -3025,38 +3080,42 @@ SourceClient.prototype = {
 /**
  * Breakpoint clients are used to remove breakpoints that are no longer used.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aSourceClient SourceClient
+ * @param sourceClient SourceClient
  *        The source where this breakpoint exists
- * @param aActor string
+ * @param actor string
  *        The actor ID for this breakpoint.
- * @param aLocation object
+ * @param location object
  *        The location of the breakpoint. This is an object with two properties:
  *        url and line.
- * @param aCondition string
+ * @param condition string
  *        The conditional expression of the breakpoint
  */
-function BreakpointClient(aClient, aSourceClient, aActor, aLocation, aCondition) {
-  this._client = aClient;
-  this._actor = aActor;
-  this.location = aLocation;
-  this.location.actor = aSourceClient.actor;
-  this.location.url = aSourceClient.url;
-  this.source = aSourceClient;
+function BreakpointClient(client, sourceClient, actor, location, condition) {
+  this._client = client;
+  this._actor = actor;
+  this.location = location;
+  this.location.actor = sourceClient.actor;
+  this.location.url = sourceClient.url;
+  this.source = sourceClient;
   this.request = this._client.request;
 
   // The condition property should only exist if it's a truthy value
-  if (aCondition) {
-    this.condition = aCondition;
+  if (condition) {
+    this.condition = condition;
   }
 }
 
 BreakpointClient.prototype = {
 
   _actor: null,
-  get actor() { return this._actor; },
-  get _transport() { return this._client._transport; },
+  get actor() {
+    return this._actor;
+  },
+  get _transport() {
+    return this._client._transport;
+  },
 
   /**
    * Remove the breakpoint from the server.
@@ -3074,9 +3133,8 @@ BreakpointClient.prototype = {
     // conditional breakpoints
     if (root.traits.conditionalBreakpoints) {
       return "condition" in this;
-    } else {
-      return "conditionalExpression" in this;
     }
+    return "conditionalExpression" in this;
   },
 
   /**
@@ -3090,15 +3148,14 @@ BreakpointClient.prototype = {
     let root = this._client.mainRoot;
     if (root.traits.conditionalBreakpoints) {
       return this.condition;
-    } else {
-      return this.conditionalExpression;
     }
+    return this.conditionalExpression;
   },
 
   /**
    * Set the condition of this breakpoint
    */
-  setCondition: function (gThreadClient, aCondition) {
+  setCondition: function (gThreadClient, condition) {
     let root = this._client.mainRoot;
     let deferred = promise.defer();
 
@@ -3106,32 +3163,31 @@ BreakpointClient.prototype = {
       let info = {
         line: this.location.line,
         column: this.location.column,
-        condition: aCondition
+        condition: condition
       };
 
       // Remove the current breakpoint and add a new one with the
       // condition.
-      this.remove(aResponse => {
-        if (aResponse && aResponse.error) {
-          deferred.reject(aResponse);
+      this.remove(response => {
+        if (response && response.error) {
+          deferred.reject(response);
           return;
         }
 
-        this.source.setBreakpoint(info, (aResponse, aNewBreakpoint) => {
-          if (aResponse && aResponse.error) {
-            deferred.reject(aResponse);
+        this.source.setBreakpoint(info, (resp, newBreakpoint) => {
+          if (resp && resp.error) {
+            deferred.reject(resp);
           } else {
-            deferred.resolve(aNewBreakpoint);
+            deferred.resolve(newBreakpoint);
           }
         });
       });
     } else {
       // The property shouldn't even exist if the condition is blank
-      if (aCondition === "") {
+      if (condition === "") {
         delete this.conditionalExpression;
-      }
-      else {
-        this.conditionalExpression = aCondition;
+      } else {
+        this.conditionalExpression = condition;
       }
       deferred.resolve(this);
     }
@@ -3145,14 +3201,14 @@ eventSource(BreakpointClient.prototype);
 /**
  * Environment clients are used to manipulate the lexical environment actors.
  *
- * @param aClient DebuggerClient
+ * @param client DebuggerClient
  *        The debugger client parent.
- * @param aForm Object
+ * @param form Object
  *        The form sent across the remote debugging protocol.
  */
-function EnvironmentClient(aClient, aForm) {
-  this._client = aClient;
-  this._form = aForm;
+function EnvironmentClient(client, form) {
+  this._client = client;
+  this._form = form;
   this.request = this._client.request;
 }
 exports.EnvironmentClient = EnvironmentClient;
@@ -3162,7 +3218,9 @@ EnvironmentClient.prototype = {
   get actor() {
     return this._form.actor;
   },
-  get _transport() { return this._client._transport; },
+  get _transport() {
+    return this._client._transport;
+  },
 
   /**
    * Fetches the bindings introduced by this lexical environment.
@@ -3177,8 +3235,8 @@ EnvironmentClient.prototype = {
    */
   assign: DebuggerClient.requester({
     type: "assign",
-    name: args(0),
-    value: args(1)
+    name: arg(0),
+    value: arg(1)
   })
 };
 

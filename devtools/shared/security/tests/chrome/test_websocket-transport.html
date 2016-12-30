@@ -9,7 +9,9 @@
 </head>
 <body>
 <script>
-window.onload = function() {
+"use strict";
+
+window.onload = function () {
   const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
   const Services = require("Services");
   const {DebuggerClient} = require("devtools/shared/client/main");
@@ -47,7 +49,7 @@ window.onload = function() {
 
     let client = new DebuggerClient(transport);
     let onUnexpectedClose = () => {
-      do_throw("Closed unexpectedly");
+      ok(false, "Closed unexpectedly");
     };
     client.addListener("closed", onUnexpectedClose);
 
@@ -70,7 +72,7 @@ window.onload = function() {
 
     DebuggerServer.destroy();
   });
-}
+};
 </script>
 </body>
 </html>

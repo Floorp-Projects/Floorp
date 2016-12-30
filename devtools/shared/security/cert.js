@@ -7,7 +7,6 @@
 "use strict";
 
 var { Ci, Cc } = require("chrome");
-var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.defineLazyGetter(this, "localCertService", () => {

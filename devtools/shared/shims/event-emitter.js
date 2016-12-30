@@ -9,10 +9,13 @@
  * specific path.
  */
 
-(function (factory) { // Module boilerplate
-  if (this.module && module.id.indexOf("event-emitter") >= 0) { // require
+(function (factory) {
+  // Module boilerplate
+  if (this.module && module.id.indexOf("event-emitter") >= 0) {
+    // require
     factory.call(this, require, exports, module);
-  } else { // Cu.import
+  } else {
+    // Cu.import
     const Cu = Components.utils;
     const { require } =
       Cu.import("resource://devtools/shared/Loader.jsm", {});

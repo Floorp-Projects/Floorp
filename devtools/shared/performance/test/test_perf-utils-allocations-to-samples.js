@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 /**
  * Tests if allocations data received from the performance actor is properly
  * converted to something that follows the same structure as the samples data
@@ -65,9 +67,15 @@ var EXPECTED_OUTPUT = {
     },
     "data": [
       null,
-      [ null, 1 ], // x (A:1:2)
-      [ 1, 2 ],    // x (A:1:2) > y (B:3:4)
-      [ 2, 3 ]     // x (A:1:2) > y (B:3:4) > C:5:6
+
+      // x (A:1:2)
+      [ null, 1 ],
+
+      // x (A:1:2) > y (B:3:4)
+      [ 1, 2 ],
+
+      // x (A:1:2) > y (B:3:4) > C:5:6
+      [ 2, 3 ]
     ]
   },
   frameTable: {

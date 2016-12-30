@@ -6,9 +6,8 @@
 
 "use strict";
 
-const {Cc, Ci, Cu, Cr} = require("chrome");
+const {Cc, Ci, Cr} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { DebuggerServer } = require("devtools/server/main");
 const { DebuggerClient } = require("devtools/shared/client/main");
 const Services = require("Services");
@@ -70,8 +69,10 @@ const REMOTE_TIMEOUT = "devtools.debugger.remote-timeout";
  *  . Connection.Events.CONNECTING      Trying to connect to host:port
  *  . Connection.Events.CONNECTED       Connection is successful
  *  . Connection.Events.DISCONNECTING   Trying to disconnect from server
- *  . Connection.Events.DISCONNECTED    Disconnected (at client request, or because of a timeout or connection error)
- *  . Connection.Events.STATUS_CHANGED  The connection status (connection.status) has changed
+ *  . Connection.Events.DISCONNECTED    Disconnected (at client request,
+ *                                      or because of a timeout or connection error)
+ *  . Connection.Events.STATUS_CHANGED  The connection status (connection.status)
+ *                                      has changed
  *  . Connection.Events.TIMEOUT         Connection timeout
  *  . Connection.Events.HOST_CHANGED    Host has changed
  *  . Connection.Events.PORT_CHANGED    Port has changed
@@ -168,8 +169,9 @@ Connection.prototype = {
   },
 
   set host(value) {
-    if (this._host && this._host == value)
+    if (this._host && this._host == value) {
       return;
+    }
     this._host = value;
     this.emit(Connection.Events.HOST_CHANGED);
   },
@@ -179,8 +181,9 @@ Connection.prototype = {
   },
 
   set port(value) {
-    if (this._port && this._port == value)
+    if (this._port && this._port == value) {
       return;
+    }
     this._port = value;
     this.emit(Connection.Events.PORT_CHANGED);
   },
@@ -334,8 +337,9 @@ Connection.prototype = {
   },
 
   _setStatus: function (value) {
-    if (this._status && this._status == value)
+    if (this._status && this._status == value) {
       return;
+    }
     this._status = value;
     this.emit(value);
     this.emit(Connection.Events.STATUS_CHANGED, value);
@@ -357,7 +361,9 @@ Connection.prototype = {
         this.log("disconnected (unexpected)");
         break;
       case Connection.Status.CONNECTING:
-        this.log("connection error. Possible causes: USB port not connected, port not forwarded (adb forward), wrong host or port, remote debugging not enabled on the device.");
+        this.log("connection error. Possible causes: USB port not connected, port not " +
+                 "forwarded (adb forward), wrong host or port, remote debugging not " +
+                 "enabled on the device.");
         break;
       default:
         this.log("disconnected");
