@@ -944,11 +944,17 @@ nsDNSService::Observe(nsISupports *subject, const char *topic, const char16_t *d
                  strcmp(topic, NS_NETWORK_LINK_TOPIC) == 0,
                  "unexpected observe call");
 
+    bool flushCache = false;
     if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
         nsAutoCString converted = NS_ConvertUTF16toUTF8(data);
         if (mResolver && !strcmp(converted.get(), NS_NETWORK_LINK_DATA_CHANGED)) {
-            mResolver->FlushCache();
+            flushCache = true;
         }
+    } else if (!strcmp(topic, "last-pb-context-exited")) {
+        flushCache = true;
+    }
+    if (flushCache) {
+        mResolver->FlushCache();
         return NS_OK;
     }
 
