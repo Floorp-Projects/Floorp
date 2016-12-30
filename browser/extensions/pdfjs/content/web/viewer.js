@@ -4119,7 +4119,7 @@ var pdfjsWebLibs;
        }
        if (error === 'cancelled') {
         self.error = null;
-        return Promise.resolve(undefined);
+        return;
        }
        self.renderingState = RenderingStates.FINISHED;
        if (self.loadingIconDiv) {
@@ -4145,25 +4145,21 @@ var pdfjsWebLibs;
         pageNumber: self.id,
         cssTransform: false
        });
-       if (error) {
-        return Promise.reject(error);
-       }
-       return Promise.resolve(undefined);
       };
       var paintTask = this.renderer === RendererType.SVG ? this.paintOnSvg(canvasWrapper) : this.paintOnCanvas(canvasWrapper);
       paintTask.onRenderContinue = renderContinueCallback;
       this.paintTask = paintTask;
       var resultPromise = paintTask.promise.then(function () {
-       return finishPaintTask(null).then(function () {
-        if (textLayer) {
-         pdfPage.getTextContent({ normalizeWhitespace: true }).then(function textContentResolved(textContent) {
-          textLayer.setTextContent(textContent);
-          textLayer.render(TEXT_LAYER_RENDER_DELAY);
-         });
-        }
-       });
+       finishPaintTask(null);
+       if (textLayer) {
+        pdfPage.getTextContent({ normalizeWhitespace: true }).then(function textContentResolved(textContent) {
+         textLayer.setTextContent(textContent);
+         textLayer.render(TEXT_LAYER_RENDER_DELAY);
+        });
+       }
       }, function (reason) {
-       return finishPaintTask(reason);
+       finishPaintTask(reason);
+       throw reason;
       });
       if (this.annotationLayerFactory) {
        if (!this.annotationLayer) {
