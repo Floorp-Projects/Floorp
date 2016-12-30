@@ -5957,10 +5957,10 @@ nsDocument::RegisterElement(JSContext* aCx, const nsAString& aType,
     options.mExtends.Construct(lcName);
   }
 
-  RootedCallback<OwningNonNull<binding_detail::FastFunction>> functionConstructor(aCx);
-  functionConstructor = new binding_detail::FastFunction(aCx, wrappedConstructor, sgo);
+  RefPtr<Function> functionConstructor =
+    new Function(aCx, wrappedConstructor, sgo);
 
-  registry->Define(lcType, functionConstructor, options, rv);
+  registry->Define(lcType, *functionConstructor, options, rv);
 
   aRetval.set(wrappedConstructor);
 }
