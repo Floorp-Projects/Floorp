@@ -268,6 +268,7 @@ install xvinfo
 install patch
 install libuuid-devel
 install openssl-static
+install cmake
 install subversion
 run
 EOF
@@ -427,22 +428,6 @@ peep install -r requirements.txt
 
 # TC-VCS
 npm install -g taskcluster-vcs@2.3.18
-
-# CMake 3.7.1
-cd $BUILD
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 7361172,
-    "digest": "0539d70ce3ac77042a45d638443b09fbf368e253622db980bc6fb15988743eacd031ab850a45c821ec3e9f0f5f886b9c9cb0668aeda184cd457b78abbfe7b629",
-    "algorithm": "sha512",
-    "filename": "cmake-3.7.1.tar.gz",
-    "unpack": true
-}
-]
-EOF
-cd cmake-3.7.1
-./bootstrap && make install
 
 # Ninja
 cd $BUILD
