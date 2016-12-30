@@ -860,14 +860,7 @@
       seekToPosition(newPosition) {
         newPosition /= 1000; // convert from ms
         this.log("+++ seeking to " + newPosition);
-        if (this.videocontrols.isGonk) {
-          // We use fastSeek() on B2G, and an accurate (but slower)
-          // seek on other platforms (that are likely to be higher
-          // perf).
-          this.video.fastSeek(newPosition);
-        } else {
-          this.video.currentTime = newPosition;
-        }
+        this.video.currentTime = newPosition;
       },
 
       setVolume(newVolume) {
@@ -2048,14 +2041,6 @@
     </handler>
   </handlers>
 
-</binding>
-
-<binding id="touchControlsGonk" extends="chrome://global/content/bindings/videocontrols.xml#touchControls">
-  <implementation>
-    <constructor>
-      this.isGonk = true;
-    </constructor>
-  </implementation>
 </binding>
 
 <binding id="noControls">
