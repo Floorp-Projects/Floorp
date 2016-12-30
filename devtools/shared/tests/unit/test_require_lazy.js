@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test devtools.lazyRequireGetter
 
 function run_test() {
@@ -18,7 +20,8 @@ function run_test() {
   const o2 = {};
   let loader = new DevToolsLoader();
 
-  // We have to init the loader by loading any module before lazyRequireGetter is available
+  // We have to init the loader by loading any module before
+  // lazyRequireGetter is available
   loader.require("devtools/shared/DevToolsUtils");
 
   loader.lazyRequireGetter(o2, name, path);
