@@ -16,6 +16,7 @@ Contents:
    adjust
    defaultdomains
    bouncer
+   shutdown
 
 Indices and tables
 ==================
