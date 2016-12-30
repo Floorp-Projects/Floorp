@@ -654,6 +654,17 @@ WebGLProgram::GetAttribLocation(const nsAString& userName_wide) const
     return GLint(info->mLoc);
 }
 
+static GLint
+GetFragDataByUserName(const WebGLProgram* prog,
+                      const nsCString& userName)
+{
+    nsCString mappedName;
+    if (!prog->LinkInfo()->MapFragDataName(userName, &mappedName))
+        return -1;
+
+    return prog->mContext->gl->fGetFragDataLocation(prog->mGLName, mappedName.BeginReading());
+}
+
 GLint
 WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
 {
@@ -665,14 +676,30 @@ WebGLProgram::GetFragDataLocation(const nsAString& userName_wide) const
         return -1;
     }
 
-    const NS_LossyConvertUTF16toASCII userName(userName_wide);
-    nsCString mappedName;
-    if (!LinkInfo()->MapFragDataName(userName, &mappedName))
-        return -1;
 
-    gl::GLContext* gl = mContext->GL();
+    const auto& gl = mContext->gl;
     gl->MakeCurrent();
-    return gl->fGetFragDataLocation(mGLName, mappedName.BeginReading());
+
+    const NS_LossyConvertUTF16toASCII userName(userName_wide);
+#ifdef XP_MACOSX
+    if (gl->WorkAroundDriverBugs()) {
+        // OSX doesn't return locs for indexed names, just the base names.
+        // Indicated by failure in: conformance2/programs/gl-get-frag-data-location.html
+        bool isArray;
+        size_t arrayIndex;
+        nsCString baseUserName;
+        if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex))
+            return -1;
+
+        if (arrayIndex >= mContext->mImplMaxDrawBuffers)
+            return -1;
+
+        const auto baseLoc = GetFragDataByUserName(this, baseUserName);
+        const auto loc = baseLoc + GLint(arrayIndex);
+        return loc;
+    }
+#endif
+    return GetFragDataByUserName(this, userName);
 }
 
 void
