@@ -64,25 +64,6 @@ assertEq(typeof desc.get, "undefined");
 assertEq(typeof desc.set, "undefined");
 assertEq(Object.prototype.toString.call(ns), "[object Module]");
 
-// Test @@iterator method.
-let iteratorFun = ns[Symbol.iterator];
-assertEq(iteratorFun.name, "[Symbol.iterator]");
-
-let iterator = ns[Symbol.iterator]();
-assertEq(iterator[Symbol.iterator](), iterator);
-assertIteratorNext(iterator, "a");
-assertIteratorNext(iterator, "b");
-assertIteratorDone(iterator);
-
-// The iterator's next method can only be called on the object it was originally
-// associated with.
-iterator = ns[Symbol.iterator]();
-let iterator2 = ns[Symbol.iterator]();
-assertThrowsInstanceOf(() => iterator.next.call({}), TypeError);
-assertThrowsInstanceOf(() => iterator.next.call(iterator2), TypeError);
-assertEq(iterator.next.call(iterator).value, "a");
-assertEq(iterator2.next.call(iterator2).value, "a");
-
 // Test cyclic namespace import and access in module evaluation.
 let c = moduleRepo['c'] =
     parseModule("export let c = 1; import * as ns from 'd'; let d = ns.d;");
