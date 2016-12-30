@@ -302,7 +302,9 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
       idx = COLOR_HOTLIGHT;
       break;
     default:
+      NS_WARNING("Unknown color for nsLookAndFeel");
       idx = COLOR_WINDOW;
+      res = NS_ERROR_FAILURE;
       break;
     }
 
