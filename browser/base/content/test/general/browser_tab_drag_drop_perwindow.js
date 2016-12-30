@@ -177,3 +177,40 @@ add_task(function* test_dragging_adoption_events() {
   yield BrowserTestUtils.closeWindow(win1);
   yield BrowserTestUtils.closeWindow(win2);
 });
+
+
+/**
+ * Tests that per-site zoom settings remain active after a tab is
+ * dragged between windows.
+ */
+add_task(function* test_dragging_zoom_handling() {
+  const ZOOM_FACTOR = 1.62;
+
+  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+  let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+
+  let tab1 = yield BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
+  let tab2 = yield BrowserTestUtils.openNewForegroundTab(win2.gBrowser,
+                                                         "http://example.com/");
+
+  win2.FullZoom.setZoom(ZOOM_FACTOR);
+  FullZoomHelper.zoomTest(tab2, ZOOM_FACTOR,
+                          "Original tab should have correct zoom factor");
+
+  let effect = EventUtils.synthesizeDrop(tab2, tab1,
+    [[{type: TAB_DROP_TYPE, data: tab2}]],
+    null, win2, win1);
+  is(effect, "move", "Tab should be moved from win2 to win1.");
+
+  // Delay slightly to make sure we've finished executing any promise
+  // chains in the zoom code.
+  yield new Promise(resolve => setTimeout(resolve, 0));
+
+  FullZoomHelper.zoomTest(win1.gBrowser.selectedTab, ZOOM_FACTOR,
+                          "Dragged tab should have correct zoom factor");
+
+  win1.FullZoom.reset();
+
+  yield BrowserTestUtils.closeWindow(win1);
+  yield BrowserTestUtils.closeWindow(win2);
+});
