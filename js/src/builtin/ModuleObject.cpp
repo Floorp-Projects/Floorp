@@ -394,7 +394,7 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
             desc.object().set(proxy);
             desc.setWritable(false);
             desc.setEnumerable(false);
-            desc.setConfigurable(true);
+            desc.setConfigurable(false);
             desc.setValue(value);
             return true;
         }
