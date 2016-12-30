@@ -209,7 +209,9 @@ assert.string = function (obj, msg = "") {
  */
 assert.object = function (obj, msg = "") {
   msg = msg || error.pprint`Expected ${obj} to be an object`;
-  return assert.that(o => typeof o == "object", msg)(obj);
+  return assert.that(o =>
+      Object.prototype.toString.call(o) == "[object Object]", msg)(obj);
+};
 };
 
 /**
