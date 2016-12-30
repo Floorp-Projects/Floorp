@@ -76,6 +76,15 @@ add_test(function test_object() {
   run_next_test();
 });
 
+add_test(function test_array() {
+  assert.array([]);
+  assert.array(new Array());
+  Assert.throws(() => assert.array(42), InvalidArgumentError);
+  Assert.throws(() => assert.array({}), InvalidArgumentError);
+
+  run_next_test();
+});
+
 add_test(function test_that() {
   equal(1, assert.that(n => n + 1)(1));
   Assert.throws(() => assert.that(() => false)());
