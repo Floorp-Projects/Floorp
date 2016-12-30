@@ -166,7 +166,7 @@ WebGLShader::ShaderSource(const nsAString& source)
         return;
     }
 
-    if (!ValidateGLSLString(sourceWithoutComments, mContext, funcName))
+    if (!ValidateGLSLPreprocString(mContext, funcName, sourceWithoutComments))
         return;
 
     // We checked that the source stripped of comments is in the

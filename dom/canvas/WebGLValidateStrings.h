@@ -28,7 +28,6 @@
 #define WEBGL_VALIDATE_STRINGS_H_
 
 #include "nsString.h"
-#include "nsTArray.h"
 
 namespace mozilla {
 
@@ -36,12 +35,12 @@ class WebGLContext;
 
 bool
 TruncateComments(const nsAString& src, nsAString* const out);
-
-bool ValidateGLSLString(const nsAString& string, WebGLContext* webgl,
-                        const char* funcName);
-
-bool ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl,
-                              const char* funcName);
+bool
+ValidateGLSLPreprocString(WebGLContext* webgl, const char* funcName,
+                          const nsAString& string);
+bool
+ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl,
+                         const char* funcName);
 
 } // namespace mozilla
 
