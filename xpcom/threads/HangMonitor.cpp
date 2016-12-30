@@ -21,7 +21,6 @@
 #endif
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
-#include "GeckoProfiler.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -210,7 +209,6 @@ GetChromeHangReport(Telemetry::ProcessedStack& aStack,
 void
 ThreadMain(void*)
 {
-  AutoProfilerRegister registerThread("Hang Monitor");
   PR_SetCurrentThreadName("Hang Monitor");
 
   MonitorAutoLock lock(*gMonitor);

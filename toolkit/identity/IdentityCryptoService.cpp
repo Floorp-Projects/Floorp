@@ -205,8 +205,7 @@ IdentityCryptoService::GenerateKeyPair(
 
   nsCOMPtr<nsIRunnable> r = new KeyGenRunnable(keyType, callback);
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("GenerateKeyPair", getter_AddRefs(thread),
-                                  r);
+  nsresult rv = NS_NewThread(getter_AddRefs(thread), r);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -310,7 +309,7 @@ KeyPair::Sign(const nsACString & textToSign,
                                              callback);
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv = NS_NewNamedThread("KeyPair Sign", getter_AddRefs(thread), r);
+  nsresult rv = NS_NewThread(getter_AddRefs(thread), r);
   return rv;
 }
 

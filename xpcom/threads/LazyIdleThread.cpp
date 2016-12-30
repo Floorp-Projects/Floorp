@@ -169,7 +169,7 @@ LazyIdleThread::EnsureThread()
     return NS_ERROR_UNEXPECTED;
   }
 
-  rv = NS_NewNamedThread("Lazy Idle", getter_AddRefs(mThread), runnable);
+  rv = NS_NewThread(getter_AddRefs(mThread), runnable);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -180,6 +180,11 @@ LazyIdleThread::EnsureThread()
 void
 LazyIdleThread::InitThread()
 {
+  char aLocal;
+  profiler_register_thread(mName.get(), &aLocal);
+
+  PR_SetCurrentThreadName(mName.get());
+
   // Happens on mThread but mThread may not be set yet...
 
   nsCOMPtr<nsIThreadInternal> thread(do_QueryInterface(NS_GetCurrentThread()));
@@ -206,6 +211,8 @@ LazyIdleThread::CleanupThread()
     MOZ_ASSERT(!mThreadIsShuttingDown, "Shouldn't be true ever!");
     mThreadIsShuttingDown = true;
   }
+
+  profiler_unregister_thread();
 }
 
 void

@@ -212,9 +212,10 @@ public:
     nsrefcnt count = ++mUseCount;
     if (count == 1) {
       // idle -> in-use
-      nsresult rv = NS_NewNamedThread(mName, getter_AddRefs(mThread));
+      nsresult rv = NS_NewThread(getter_AddRefs(mThread));
       MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv) && mThread,
                          "Should successfully create mtransport I/O thread");
+      NS_SetThreadName(mThread, mName);
       r_log(LOG_GENERIC,LOG_DEBUG,"Created wrapped SingletonThread %p",
             mThread.get());
     }

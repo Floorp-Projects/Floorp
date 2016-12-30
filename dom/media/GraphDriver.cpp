@@ -39,6 +39,19 @@ namespace mozilla {
 
 StaticRefPtr<nsIThreadPool> AsyncCubebTask::sThreadPool;
 
+struct AutoProfilerUnregisterThread
+{
+  // The empty ctor is used to silence a pre-4.8.0 GCC unused variable warning.
+  AutoProfilerUnregisterThread()
+  {
+  }
+
+  ~AutoProfilerUnregisterThread()
+  {
+    profiler_unregister_thread();
+  }
+};
+
 GraphDriver::GraphDriver(MediaStreamGraphImpl* aGraphImpl)
   : mIterationStart(0),
     mIterationEnd(0),
@@ -183,7 +196,9 @@ public:
   }
   NS_IMETHOD Run() override
   {
+    char aLocal;
     STREAM_LOG(LogLevel::Debug, ("Starting system thread"));
+    profiler_register_thread("MediaStreamGraph", &aLocal);
     LIFECYCLE_LOG("Starting a new system driver for graph %p\n",
                   mDriver->mGraphImpl);
 
@@ -301,6 +316,8 @@ SystemClockDriver::IsFallback()
 void
 ThreadedDriver::RunThread()
 {
+  AutoProfilerUnregisterThread autoUnregister;
+
   bool stillProcessing = true;
   while (stillProcessing) {
     mIterationStart = IterationEnd();

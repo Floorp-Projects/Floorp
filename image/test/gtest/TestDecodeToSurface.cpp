@@ -69,8 +69,7 @@ RunDecodeToSurface(const ImageTestCase& aTestCase)
   ASSERT_TRUE(inputStream != nullptr);
 
   nsCOMPtr<nsIThread> thread;
-  nsresult rv =
-    NS_NewNamedThread("DecodeToSurface", getter_AddRefs(thread), nullptr);
+  nsresult rv = NS_NewThread(getter_AddRefs(thread), nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // We run the DecodeToSurface tests off-main-thread to ensure that

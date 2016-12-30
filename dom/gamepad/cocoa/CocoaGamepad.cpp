@@ -541,9 +541,8 @@ DarwinGamepadService::StartupInternal()
 
 void DarwinGamepadService::Startup()
 {
-  Unused << NS_NewNamedThread("Gamepad",
-                              getter_AddRefs(mMonitorThread),
-                              new DarwinGamepadServiceStartupRunnable(this));
+  Unused << NS_NewThread(getter_AddRefs(mMonitorThread),
+                         new DarwinGamepadServiceStartupRunnable(this));
 }
 
 void DarwinGamepadService::Shutdown()
