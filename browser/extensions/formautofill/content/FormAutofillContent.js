@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global content */
+
 /*
  * Form Autofill frame script.
  */
@@ -227,28 +229,69 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * @param {Object} listener the listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
-    // TODO: These mock data should be replaced by form autofill API
-    let fieldName = "name";
-    let profiles = [{
-      guid: "test-guid-1",
-      organization: "Sesame Street",
-      streetAddress: "123 Sesame Street.",
-      tel: "1-345-345-3456.",
-    }, {
-      guid: "test-guid-2",
-      organization: "Mozilla",
-      streetAddress: "331 E. Evelyn Avenue",
-      tel: "1-650-903-0800",
-    }];
-    let result = new ProfileAutoCompleteResult(searchString, fieldName, profiles, {});
+    this.forceStop = false;
+    let inputInfo;
 
-    listener.onSearchResult(this, result);
+    this.getInputInfo().then((info) => {
+      inputInfo = info;
+      return this.getProfiles({info, searchString});
+    }).then((profiles) => {
+      if (this.forceStop) {
+        return;
+      }
+
+      let result = new ProfileAutoCompleteResult(searchString, inputInfo, profiles, {});
+
+      listener.onSearchResult(this, result);
+    });
   },
 
   /**
    * Stops an asynchronous search that is in progress
    */
   stopSearch() {
+    this.forceStop = true;
+  },
+
+  /**
+   * Get the profile data from parent process for AutoComplete result.
+   *
+   * @private
+   * @param  {Object} data
+   *         Parameters for querying the corresponding result.
+   * @param  {string} data.searchString
+   *         The typed string for filtering out the matched profile.
+   * @param  {string} data.info
+   *         The input autocomplete property's information.
+   * @returns {Promise}
+   *          Promise that resolves when profiles returned from parent process.
+   */
+  getProfiles(data) {
+    return new Promise((resolve) => {
+      addMessageListener("FormAutofill:Profiles", function getResult(result) {
+        removeMessageListener("FormAutofill:Profiles", getResult);
+        resolve(result.data);
+      });
+
+      sendAsyncMessage("FormAutofill:GetProfiles", data);
+    });
+  },
+
+
+  /**
+   * Get the input's information from FormAutofill heuristics.
+   *
+   * @returns {Promise}
+   *          Promise that resolves when profiles returned from heuristics getInfo API.
+   */
+  getInputInfo() {
+    let input = formFillController.getFocusedInput();
+
+    // It could be synchronous API since FormAutofillHeuristics.getInfo is still
+    // not in parent process yet.
+    return new Promise((resolve) => {
+      resolve(FormAutofillHeuristics.getInfo(input));
+    });
   },
 };
 
@@ -336,5 +379,6 @@ var FormAutofillContent = {
     formFillController.markAsAutofillField(field);
   },
 };
+
 
 FormAutofillContent.init();
