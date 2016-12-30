@@ -211,7 +211,7 @@ error.fromJson = function (json) {
  *     to propagate.
  */
 this.WebDriverError = function (err) {
-  Error.call(this, err);
+  const proto = Error.call(this, err);
   this.name = "WebDriverError";
   this.status = "webdriver error";
 
@@ -220,6 +220,7 @@ this.WebDriverError = function (err) {
     this.stack = err.stack;
   } else {
     this.message = err;
+    this.stack = proto.stack;
   }
 };
 WebDriverError.prototype = Object.create(Error.prototype);
