@@ -10,7 +10,11 @@
 define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
-  const { createFactories, isGrip } = require("./rep-utils");
+  const {
+    createFactories,
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   const { Caption } = createFactories(require("./caption"));
   const { MODE } = require("./constants");
 
@@ -109,7 +113,7 @@ define(function (require, exports, module) {
       return items;
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {
         object,
         mode = MODE.SHORT
@@ -154,7 +158,7 @@ define(function (require, exports, module) {
           )
         )
       );
-    },
+    }),
   });
 
   /**
