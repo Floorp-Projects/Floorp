@@ -1190,8 +1190,8 @@ HTMLTextAreaElement::RestoreState(nsPresState* aState)
     NS_ENSURE_SUCCESS(rv, false);
   }
 
-  if (aState->IsDisabledSet()) {
-    SetDisabled(aState->GetDisabled());
+  if (aState->IsDisabledSet() && !aState->GetDisabled()) {
+    SetDisabled(false);
   }
 
   return false;
