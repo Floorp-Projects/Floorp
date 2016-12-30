@@ -37,8 +37,10 @@ WebGLContext::Clear(GLbitfield mask)
             return;
 
         if (mask & LOCAL_GL_COLOR_BUFFER_BIT) {
-            const auto& resolvedData = mBoundDrawFramebuffer->ResolvedCompleteData();
-            for (const auto& cur : resolvedData->colorDrawBuffers) {
+            for (const auto& cur : mBoundDrawFramebuffer->ColorDrawBuffers()) {
+                if (!cur->IsDefined())
+                    continue;
+
                 switch (cur->Format()->format->componentType) {
                 case webgl::ComponentType::Float:
                 case webgl::ComponentType::NormInt:
