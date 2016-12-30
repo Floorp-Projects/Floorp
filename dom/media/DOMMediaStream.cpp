@@ -191,7 +191,8 @@ public:
     if (track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at the source. Marking it ended.",
                             mStream, track.get()));
-      track->NotifyEnded();
+      NS_DispatchToMainThread(NewRunnableMethod(
+        track, &MediaStreamTrack::NotifyEnded));
     }
   }
 
