@@ -904,7 +904,7 @@ talos-chrome:
     suite: talos
     talos-try-name: chromez
     treeherder-symbol: tc-T(c)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -922,7 +922,7 @@ talos-dromaeojs:
     suite: talos
     talos-try-name: dromaeojs
     treeherder-symbol: tc-T(d)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -940,7 +940,7 @@ talos-g1:
     suite: talos
     talos-try-name: g1
     treeherder-symbol: tc-T(g1)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -958,7 +958,7 @@ talos-g2:
     suite: talos
     talos-try-name: g2
     treeherder-symbol: tc-T(g2)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -976,7 +976,7 @@ talos-g3:
     suite: talos
     talos-try-name: g3
     treeherder-symbol: tc-T(g3)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -994,7 +994,7 @@ talos-g4:
     suite: talos
     talos-try-name: g4
     treeherder-symbol: tc-T(g4)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1012,7 +1012,7 @@ talos-other:
     suite: talos
     talos-try-name: other
     treeherder-symbol: tc-T(o)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1030,7 +1030,7 @@ talos-svgr:
     suite: talos
     talos-try-name: svgr
     treeherder-symbol: tc-T(s)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
@@ -1048,7 +1048,7 @@ talos-tp5o:
     suite: talos
     talos-try-name: tp5o
     treeherder-symbol: tc-T(tp)
-    run-on-projects: []
+    run-on-projects: ['mozilla-beta', 'mozilla-aurora', 'mozilla-central', 'mozilla-inbound', 'autoland', 'graphics', 'try']
     max-run-time: 3600
     mozharness:
         script: talos_script.py
