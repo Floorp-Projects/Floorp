@@ -37,6 +37,7 @@ import uuid
 import zipfile
 import bisection
 
+from ctypes.util import find_library
 from datetime import datetime
 from manifestparser import TestManifest
 from manifestparser.filters import (
@@ -627,7 +628,7 @@ def checkAndConfigureV4l2loopback(device):
     if not mozinfo.isLinux:
         return False, ''
 
-    libc = ctypes.cdll.LoadLibrary('libc.so.6')
+    libc = ctypes.cdll.LoadLibrary(find_library("c"))
     O_RDWR = 2
     # These are from linux/videodev2.h
 
