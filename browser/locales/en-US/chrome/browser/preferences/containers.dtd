@@ -4,6 +4,8 @@
 
 <!ENTITY addButton.label      "Add New Container">
 <!ENTITY addButton.accesskey  "A">
+<!ENTITY preferencesButton.label "Preferences">
+<!ENTITY removeButton.label   "Remove">
 <!-- &#171; is &laquo; however it's not defined in XML -->
 <!ENTITY backLink.label       "&#171; Go Back to Privacy">
 
