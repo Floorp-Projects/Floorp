@@ -537,9 +537,10 @@
         <parameter name="aBrowser"/>
         <parameter name="aStartsBlank"/>
         <parameter name="aWasPreloadedBrowser"/>
+        <parameter name="aOrigStateFlags"/>
         <body>
         <![CDATA[
-          let stateFlags = 0;
+          let stateFlags = aOrigStateFlags || 0;
           // Initialize mStateFlags to non-zero e.g. when creating a progress
           // listener for preloaded browsers as there was no progress listener
           // around when the content started loading. If the content didn't
@@ -2799,6 +2800,9 @@
             var remoteBrowser = aOtherTab.ownerDocument.defaultView.gBrowser;
             var isPending = aOtherTab.hasAttribute("pending");
 
+            let otherTabListener = remoteBrowser._tabListeners.get(aOtherTab);
+            let stateFlags = otherTabListener.mStateFlags;
+
             // Expedite the removal of the icon if it was already scheduled.
             if (aOtherTab._soundPlayingAttrRemovalTimer) {
               clearTimeout(aOtherTab._soundPlayingAttrRemovalTimer);
@@ -2856,7 +2860,7 @@
                   this.mIsBusy = true;
               }
 
-              this._swapBrowserDocShells(aOurTab, otherBrowser);
+              this._swapBrowserDocShells(aOurTab, otherBrowser, stateFlags);
             }
 
             // Handle findbar data (if any)
@@ -2892,6 +2896,7 @@
       <method name="_swapBrowserDocShells">
         <parameter name="aOurTab"/>
         <parameter name="aOtherBrowser"/>
+        <parameter name="aStateFlags"/>
         <body>
           <![CDATA[
             // Unhook our progress listener
@@ -2946,7 +2951,8 @@
             }
 
             // Restore the progress listener
-            tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false);
+            tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false,
+                                                    aStateFlags);
             this._tabListeners.set(aOurTab, tabListener);
 
             const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
