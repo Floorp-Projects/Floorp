@@ -79,7 +79,7 @@ function promise_install_test_addons(aAddonList, aUpdateURL) {
     var listener = {
       installCount: 0,
 
-      onInstallEnded: function() {
+      onInstallEnded() {
         this.installCount++;
         if (this.installCount == installs.length) {
           info("Done add-on installs");
@@ -113,7 +113,7 @@ function* promise_uninstall_test_addons() {
   let deferred = Promise.defer();
   let uninstallCount = addons.length;
   let listener = {
-    onUninstalled: function(aAddon) {
+    onUninstalled(aAddon) {
       if (aAddon) {
         info("Finished uninstalling " + aAddon.id);
       }

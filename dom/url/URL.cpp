@@ -17,7 +17,6 @@
 #include "nsEscape.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsIIOService.h"
-#include "nsIURIWithQuery.h"
 #include "nsIURL.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -525,21 +524,10 @@ URLMainThread::GetPathname(nsAString& aPathname, ErrorResult& aRv) const
   // Do not throw!  Not having a valid URI or URL should result in an empty
   // string.
 
-  nsCOMPtr<nsIURIWithQuery> url(do_QueryInterface(mURI));
-  if (url) {
-    nsAutoCString file;
-    nsresult rv = url->GetFilePath(file);
-    if (NS_SUCCEEDED(rv)) {
-      CopyUTF8toUTF16(file, aPathname);
-    }
-
-    return;
-  }
-
-  nsAutoCString path;
-  nsresult rv = mURI->GetPath(path);
+  nsAutoCString file;
+  nsresult rv = mURI->GetFilePath(file);
   if (NS_SUCCEEDED(rv)) {
-    CopyUTF8toUTF16(path, aPathname);
+    CopyUTF8toUTF16(file, aPathname);
   }
 }
 
@@ -548,11 +536,7 @@ URLMainThread::SetPathname(const nsAString& aPathname, ErrorResult& aRv)
 {
   // Do not throw!
 
-  nsCOMPtr<nsIURIWithQuery> url(do_QueryInterface(mURI));
-  if (url) {
-    url->SetFilePath(NS_ConvertUTF16toUTF8(aPathname));
-    return;
-  }
+  mURI->SetFilePath(NS_ConvertUTF16toUTF8(aPathname));
 }
 
 void
@@ -566,13 +550,9 @@ URLMainThread::GetSearch(nsAString& aSearch, ErrorResult& aRv) const
   nsAutoCString search;
   nsresult rv;
 
-  nsCOMPtr<nsIURIWithQuery> url(do_QueryInterface(mURI));
-  if (url) {
-    rv = url->GetQuery(search);
-    if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
-      CopyUTF8toUTF16(NS_LITERAL_CSTRING("?") + search, aSearch);
-    }
-    return;
+  rv = mURI->GetQuery(search);
+  if (NS_SUCCEEDED(rv) && !search.IsEmpty()) {
+    CopyUTF8toUTF16(NS_LITERAL_CSTRING("?") + search, aSearch);
   }
 }
 
@@ -603,11 +583,7 @@ URLMainThread::SetSearchInternal(const nsAString& aSearch, ErrorResult& aRv)
 {
   // Ignore failures to be compatible with NS4.
 
-  nsCOMPtr<nsIURIWithQuery> uriWithQuery(do_QueryInterface(mURI));
-  if (uriWithQuery) {
-    uriWithQuery->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
-    return;
-  }
+  mURI->SetQuery(NS_ConvertUTF16toUTF8(aSearch));
 }
 
 } // anonymous namespace

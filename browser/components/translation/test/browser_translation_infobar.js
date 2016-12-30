@@ -33,23 +33,23 @@ function waitForCondition(condition, nextTest, errorMsg) {
 }
 
 var TranslationStub = {
-  translate: function(aFrom, aTo) {
+  translate(aFrom, aTo) {
     this.state = Translation.STATE_TRANSLATING;
     this.translatedFrom = aFrom;
     this.translatedTo = aTo;
   },
 
-  _reset: function() {
+  _reset() {
     this.translatedFrom = "";
     this.translatedTo = "";
   },
 
-  failTranslation: function() {
+  failTranslation() {
     this.state = Translation.STATE_ERROR;
     this._reset();
   },
 
-  finishTranslation: function() {
+  finishTranslation() {
     this.showTranslatedContent();
     this.state = Translation.STATE_TRANSLATED;
     this._reset();

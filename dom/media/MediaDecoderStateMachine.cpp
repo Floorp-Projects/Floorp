@@ -556,6 +556,8 @@ public:
       SLOG("Exiting DECODING, decoded for %.3lfs", decodeDuration.ToSeconds());
     }
     mDormantTimer.Reset();
+    mOnAudioPopped.DisconnectIfExists();
+    mOnVideoPopped.DisconnectIfExists();
   }
 
   void Step() override
@@ -751,6 +753,9 @@ private:
 
   // Fired when playback is paused for a while to enter dormant.
   DelayedScheduler mDormantTimer;
+
+  MediaEventListener mOnAudioPopped;
+  MediaEventListener mOnVideoPopped;
 };
 
 /**
@@ -1989,6 +1994,15 @@ DecodingState::Enter()
     return;
   }
 
+  mOnAudioPopped = AudioQueue().PopEvent().Connect(
+    OwnerThread(), [this] () {
+    mMaster->DispatchAudioDecodeTaskIfNeeded();
+  });
+  mOnVideoPopped = VideoQueue().PopEvent().Connect(
+    OwnerThread(), [this] () {
+    mMaster->DispatchVideoDecodeTaskIfNeeded();
+  });
+
   mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
 
   mDecodeStartTime = TimeStamp::Now();
@@ -2615,9 +2629,7 @@ void
 MediaDecoderStateMachine::OnAudioPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
-
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
-  DispatchAudioDecodeTaskIfNeeded();
 }
 
 void
@@ -2625,7 +2637,6 @@ MediaDecoderStateMachine::OnVideoPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
-  DispatchVideoDecodeTaskIfNeeded();
 }
 
 bool

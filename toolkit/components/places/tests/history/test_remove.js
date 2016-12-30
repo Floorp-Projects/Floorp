@@ -25,7 +25,7 @@ add_task(function* test_remove_single() {
 
     let uri = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
     let title = "Visit " + Math.random();
-    yield PlacesTestUtils.addVisits({uri: uri, title: title});
+    yield PlacesTestUtils.addVisits({uri, title});
     Assert.ok(visits_in_database(uri), "History entry created");
 
     let removeArg = yield filter(uri);
@@ -42,21 +42,21 @@ add_task(function* test_remove_single() {
     let observer;
     let promiseObserved = new Promise((resolve, reject) => {
       observer = {
-        onBeginUpdateBatch: function() {},
-        onEndUpdateBatch: function() {},
-        onVisit: function(aUri) {
+        onBeginUpdateBatch() {},
+        onEndUpdateBatch() {},
+        onVisit(aUri) {
           reject(new Error("Unexpected call to onVisit " + aUri.spec));
         },
-        onTitleChanged: function(aUri) {
+        onTitleChanged(aUri) {
           reject(new Error("Unexpected call to onTitleChanged " + aUri.spec));
         },
-        onClearHistory: function() {
+        onClearHistory() {
           reject("Unexpected call to onClearHistory");
         },
-        onPageChanged: function(aUri) {
+        onPageChanged(aUri) {
           reject(new Error("Unexpected call to onPageChanged " + aUri.spec));
         },
-        onFrecencyChanged: function(aURI) {
+        onFrecencyChanged(aURI) {
           try {
             Assert.ok(!shouldRemove, "Observing onFrecencyChanged");
             Assert.equal(aURI.spec, uri.spec, "Observing effect on the right uri");
@@ -64,14 +64,14 @@ add_task(function* test_remove_single() {
             resolve();
           }
         },
-        onManyFrecenciesChanged: function() {
+        onManyFrecenciesChanged() {
           try {
             Assert.ok(!shouldRemove, "Observing onManyFrecenciesChanged");
           } finally {
             resolve();
           }
         },
-        onDeleteURI: function(aURI) {
+        onDeleteURI(aURI) {
           try {
             Assert.ok(shouldRemove, "Observing onDeleteURI");
             Assert.equal(aURI.spec, uri.spec, "Observing effect on the right uri");
@@ -79,7 +79,7 @@ add_task(function* test_remove_single() {
             resolve();
           }
         },
-        onDeleteVisits: function(aURI) {
+        onDeleteVisits(aURI) {
           Assert.equal(aURI.spec, uri.spec, "Observing onDeleteVisits on the right uri");
         }
       };
@@ -121,7 +121,7 @@ add_task(function* test_remove_single() {
   try {
     for (let useCallback of [false, true]) {
       for (let addBookmark of [false, true]) {
-        let options = { useCallback: useCallback, addBookmark: addBookmark };
+        let options = { useCallback, addBookmark };
         yield remover("Testing History.remove() with a single URI", x => x, options);
         yield remover("Testing History.remove() with a single string url", x => x.spec, options);
         yield remover("Testing History.remove() with a single string guid", x => do_get_guid_for_uri(x), options);
@@ -155,9 +155,9 @@ add_task(function* test_remove_many() {
     let title = "Visit " + i + ", " + Math.random();
     let hasBookmark = i % 3 == 0;
     let page = {
-      uri: uri,
-      title: title,
-      hasBookmark: hasBookmark,
+      uri,
+      title,
+      hasBookmark,
       // `true` once `onResult` has been called for this page
       onResultCalled: false,
       // `true` once `onDeleteVisits` has been called for this page
@@ -201,38 +201,38 @@ add_task(function* test_remove_many() {
   }
 
   let observer = {
-    onBeginUpdateBatch: function() {},
-    onEndUpdateBatch: function() {},
-    onVisit: function(aURI) {
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisit(aURI) {
       Assert.ok(false, "Unexpected call to onVisit " + aURI.spec);
     },
-    onTitleChanged: function(aURI) {
+    onTitleChanged(aURI) {
       Assert.ok(false, "Unexpected call to onTitleChanged " + aURI.spec);
     },
-    onClearHistory: function() {
+    onClearHistory() {
       Assert.ok(false, "Unexpected call to onClearHistory");
     },
-    onPageChanged: function(aURI) {
+    onPageChanged(aURI) {
       Assert.ok(false, "Unexpected call to onPageChanged " + aURI.spec);
     },
-    onFrecencyChanged: function(aURI) {
+    onFrecencyChanged(aURI) {
       let origin = pages.find(x =>  x.uri.spec == aURI.spec);
       Assert.ok(origin);
       Assert.ok(origin.hasBookmark, "Observing onFrecencyChanged on a page with a bookmark");
       origin.onFrecencyChangedCalled = true;
       // We do not make sure that `origin.onFrecencyChangedCalled` is `false`, as
     },
-    onManyFrecenciesChanged: function() {
+    onManyFrecenciesChanged() {
       Assert.ok(false, "Observing onManyFrecenciesChanges, this is most likely correct but not covered by this test");
     },
-    onDeleteURI: function(aURI) {
+    onDeleteURI(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
       Assert.ok(!origin.hasBookmark, "Observing onDeleteURI on a page without a bookmark");
       Assert.ok(!origin.onDeleteURICalled, "Observing onDeleteURI for the first time");
       origin.onDeleteURICalled = true;
     },
-    onDeleteVisits: function(aURI) {
+    onDeleteVisits(aURI) {
       let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
       Assert.ok(!origin.onDeleteVisitsCalled, "Observing onDeleteVisits for the first time");

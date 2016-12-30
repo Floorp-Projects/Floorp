@@ -27,11 +27,11 @@ add_task(function* () {
 
   let promiseInstallStatus = new Promise((resolve, reject) => {
     let listener = {
-      onInstallFailed: function() {
+      onInstallFailed() {
         AddonManager.removeInstallListener(listener);
         reject("extension installation should not have failed");
       },
-      onInstallEnded: function() {
+      onInstallEnded() {
         AddonManager.removeInstallListener(listener);
         ok(true, "extension installation should not have failed");
         resolve();

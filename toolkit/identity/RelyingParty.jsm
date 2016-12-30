@@ -108,13 +108,13 @@ IdentityRelyingParty.prototype = {
 
       } else if (aRpCaller.loggedInUser === null) {
         // Generate assertion for existing login
-        let options = {loggedInUser: state.email, origin: origin};
+        let options = {loggedInUser: state.email, origin};
         return this._doLogin(aRpCaller, options);
       }
       // A loggedInUser different from state.email has been specified.
       // Change login identity.
 
-      let options = {loggedInUser: state.email, origin: origin};
+      let options = {loggedInUser: state.email, origin};
       return this._doLogin(aRpCaller, options);
 
     // If the user is not logged in, there are two cases:
@@ -124,7 +124,7 @@ IdentityRelyingParty.prototype = {
 
     }
     if (aRpCaller.loggedInUser) {
-      return this._doLogout(aRpCaller, {origin: origin});
+      return this._doLogout(aRpCaller, {origin});
     }
     return aRpCaller.doReady();
   },
@@ -240,7 +240,7 @@ IdentityRelyingParty.prototype = {
     if (rp && rp.origin) {
       let origin = rp.origin;
       log("logout: origin:", origin);
-      this._doLogout(rp, {origin: origin});
+      this._doLogout(rp, {origin});
     } else {
       log("logout: no RP found with id:", aRpCallerId);
     }

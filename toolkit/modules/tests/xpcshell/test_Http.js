@@ -68,12 +68,12 @@ function getDataChecker(aExpectedMethod, aExpectedData, aExpectedMimeType = null
 add_test(function test_successCallback() {
   do_test_pending();
   let options = {
-    onLoad: function(aResponse) {
+    onLoad(aResponse) {
       do_check_eq(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
-    onError: function(e) {
+    onError(e) {
       do_check_true(false);
       do_test_finished();
       run_next_test();
@@ -85,12 +85,12 @@ add_test(function test_successCallback() {
 add_test(function test_errorCallback() {
   do_test_pending();
   let options = {
-    onSuccess: function(aResponse) {
+    onSuccess(aResponse) {
       do_check_true(false);
       do_test_finished();
       run_next_test();
     },
-    onError: function(e, aResponse) {
+    onError(e, aResponse) {
       do_check_eq(e, "404 - Not Found");
       do_test_finished();
       run_next_test();
@@ -102,12 +102,12 @@ add_test(function test_errorCallback() {
 add_test(function test_PostData() {
   do_test_pending();
   let options = {
-    onLoad: function(aResponse) {
+    onLoad(aResponse) {
       do_check_eq(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
-    onError: function(e) {
+    onError(e) {
       do_check_true(false);
       do_test_finished();
       run_next_test();
@@ -121,12 +121,12 @@ add_test(function test_PutData() {
   do_test_pending();
   let options = {
     method: "PUT",
-    onLoad: function(aResponse) {
+    onLoad(aResponse) {
       do_check_eq(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
-    onError: function(e) {
+    onError(e) {
       do_check_true(false);
       do_test_finished();
       run_next_test();
@@ -139,12 +139,12 @@ add_test(function test_PutData() {
 add_test(function test_GetData() {
   do_test_pending();
   let options = {
-    onLoad: function(aResponse) {
+    onLoad(aResponse) {
       do_check_eq(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
-    onError: function(e) {
+    onError(e) {
       do_check_true(false);
       do_test_finished();
       run_next_test();
@@ -175,12 +175,12 @@ add_test(function test_CustomContentTypeOnPost() {
 
   // Preparing the request parameters.
   let options = {
-    onLoad: function(aResponse) {
+    onLoad(aResponse) {
       do_check_eq(aResponse, "Success!");
       do_test_finished();
       run_next_test();
     },
-    onError: function(e) {
+    onError(e) {
       do_check_true(false);
       do_test_finished();
       run_next_test();
@@ -204,7 +204,7 @@ add_test(function test_OverrideMimeType() {
   // Preparing the request parameters.
   const kMimeType = 'text/xml; charset=UTF-8';
   let options = {
-    onLoad: function(aResponse, xhr) {
+    onLoad(aResponse, xhr) {
       do_check_eq(aResponse, "Success!");
 
       // Set the expected MIME-type.
@@ -217,7 +217,7 @@ add_test(function test_OverrideMimeType() {
       do_test_finished();
       run_next_test();
     },
-    onError: function(e) {
+    onError(e) {
       do_check_true(false);
       do_test_finished();
       run_next_test();

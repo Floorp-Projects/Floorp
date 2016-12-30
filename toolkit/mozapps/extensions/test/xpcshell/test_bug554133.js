@@ -35,7 +35,7 @@ var TESTS = [
 
 var gCurrentTest = 0;
 var SearchCallback = {
-  searchSucceeded: function(addons, length, total) {
+  searchSucceeded(addons, length, total) {
     do_check_false(AddonRepository.isSearching);
     do_check_eq(addons.length, length);
     do_check_eq(length, TESTS[gCurrentTest].length);
@@ -45,7 +45,7 @@ var SearchCallback = {
     run_current_test();
   },
 
-  searchFailed: function() {
+  searchFailed() {
     server.stop(do_test_finished);
     do_throw("Search results failed");
   }

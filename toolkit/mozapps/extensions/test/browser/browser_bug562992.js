@@ -49,7 +49,7 @@ add_test(function() {
 // to an "installed" item, which should have the correct add-on name.
 add_test(function() {
   gInstall.addTestListener({
-    onInstallEnded: function() {
+    onInstallEnded() {
       let list = gManagerWindow.document.getElementById("addon-list");
 
       // To help prevent future breakage, don't assume the item is the only one

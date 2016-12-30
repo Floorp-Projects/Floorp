@@ -116,9 +116,9 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments)
 
   let commit = db.createAsyncStatement("COMMIT");
   commit.executeAsync({
-    handleResult: function() {},
-    handleError: function() {},
-    handleCompletion: function(aReason)
+    handleResult() {},
+    handleError() {},
+    handleCompletion(aReason)
     {
       aCallback.apply(scope, args);
     }

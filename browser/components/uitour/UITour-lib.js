@@ -27,7 +27,7 @@ if (typeof Mozilla == 'undefined') {
     var event = new CustomEvent('mozUITour', {
       bubbles: true,
       detail: {
-	action: action,
+	action,
 	data: data || {}
       }
     });
@@ -94,19 +94,19 @@ if (typeof Mozilla == 'undefined') {
 
   Mozilla.UITour.registerPageID = function(pageID) {
     _sendEvent('registerPageID', {
-      pageID: pageID
+      pageID
     });
   };
 
   Mozilla.UITour.showHeartbeat = function(message, thankyouMessage, flowId, engagementURL,
 					  learnMoreLabel, learnMoreURL, options) {
     var args = {
-      message: message,
-      thankyouMessage: thankyouMessage,
-      flowId: flowId,
-      engagementURL: engagementURL,
-      learnMoreLabel: learnMoreLabel,
-      learnMoreURL: learnMoreURL,
+      message,
+      thankyouMessage,
+      flowId,
+      engagementURL,
+      learnMoreLabel,
+      learnMoreURL,
     };
 
     if (options) {
@@ -123,8 +123,8 @@ if (typeof Mozilla == 'undefined') {
 
   Mozilla.UITour.showHighlight = function(target, effect) {
     _sendEvent('showHighlight', {
-      target: target,
-      effect: effect
+      target,
+      effect
     });
   };
 
@@ -152,13 +152,13 @@ if (typeof Mozilla == 'undefined') {
       targetCallbackID = _waitForCallback(options.targetCallback);
 
     _sendEvent('showInfo', {
-      target: target,
-      title: title,
-      text: text,
-      icon: icon,
+      target,
+      title,
+      text,
+      icon,
       buttons: buttonData,
-      closeButtonCallbackID: closeButtonCallbackID,
-      targetCallbackID: targetCallbackID
+      closeButtonCallbackID,
+      targetCallbackID
     });
   };
 
@@ -209,14 +209,14 @@ if (typeof Mozilla == 'undefined') {
       showCallbackID = _waitForCallback(callback);
 
     _sendEvent('showMenu', {
-      name: name,
-      showCallbackID: showCallbackID,
+      name,
+      showCallbackID,
     });
   };
 
   Mozilla.UITour.hideMenu = function(name) {
     _sendEvent('hideMenu', {
-      name: name
+      name
     });
   };
 
@@ -260,34 +260,34 @@ if (typeof Mozilla == 'undefined') {
 
   Mozilla.UITour.addNavBarWidget = function(name, callback) {
     _sendEvent('addNavBarWidget', {
-      name: name,
+      name,
       callbackID: _waitForCallback(callback),
     });
   };
 
   Mozilla.UITour.setDefaultSearchEngine = function(identifier) {
     _sendEvent('setDefaultSearchEngine', {
-      identifier: identifier,
+      identifier,
     });
   };
 
   Mozilla.UITour.setTreatmentTag = function(name, value) {
     _sendEvent('setTreatmentTag', {
-      name: name,
-      value: value
+      name,
+      value
     });
   };
 
   Mozilla.UITour.getTreatmentTag = function(name, callback) {
     _sendEvent('getTreatmentTag', {
-      name: name,
+      name,
       callbackID: _waitForCallback(callback)
     });
   };
 
   Mozilla.UITour.setSearchTerm = function(term) {
     _sendEvent('setSearchTerm', {
-      term: term
+      term
     });
   };
 
@@ -307,7 +307,7 @@ if (typeof Mozilla == 'undefined') {
 
   Mozilla.UITour.openPreferences = function(pane) {
     _sendEvent('openPreferences', {
-      pane: pane
+      pane
     });
   };
 

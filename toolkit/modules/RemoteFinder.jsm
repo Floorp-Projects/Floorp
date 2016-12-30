@@ -28,7 +28,7 @@ function RemoteFinder(browser) {
 RemoteFinder.prototype = {
   destroy() {},
 
-  swapBrowser: function(aBrowser) {
+  swapBrowser(aBrowser) {
     if (this._messageManager) {
       this._messageManager.removeMessageListener("Finder:Result", this);
       this._messageManager.removeMessageListener("Finder:MatchesResult", this);
@@ -51,15 +51,15 @@ RemoteFinder.prototype = {
     this._listeners.clear();
   },
 
-  addResultListener: function(aListener) {
+  addResultListener(aListener) {
     this._listeners.add(aListener);
   },
 
-  removeResultListener: function(aListener) {
+  removeResultListener(aListener) {
     this._listeners.delete(aListener);
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     // Only Finder:Result messages have the searchString field.
     let callback;
     let params;
@@ -122,40 +122,40 @@ RemoteFinder.prototype = {
                                                   { entireWord: aEntireWord });
   },
 
-  getInitialSelection: function() {
+  getInitialSelection() {
     this._browser.messageManager.sendAsyncMessage("Finder:GetInitialSelection", {});
   },
 
-  fastFind: function(aSearchString, aLinksOnly, aDrawOutline) {
+  fastFind(aSearchString, aLinksOnly, aDrawOutline) {
     this._browser.messageManager.sendAsyncMessage("Finder:FastFind",
                                                   { searchString: aSearchString,
                                                     linksOnly: aLinksOnly,
                                                     drawOutline: aDrawOutline });
   },
 
-  findAgain: function(aFindBackwards, aLinksOnly, aDrawOutline) {
+  findAgain(aFindBackwards, aLinksOnly, aDrawOutline) {
     this._browser.messageManager.sendAsyncMessage("Finder:FindAgain",
                                                   { findBackwards: aFindBackwards,
                                                     linksOnly: aLinksOnly,
                                                     drawOutline: aDrawOutline });
   },
 
-  highlight: function(aHighlight, aWord, aLinksOnly) {
+  highlight(aHighlight, aWord, aLinksOnly) {
     this._browser.messageManager.sendAsyncMessage("Finder:Highlight",
                                                   { highlight: aHighlight,
                                                     linksOnly: aLinksOnly,
                                                     word: aWord });
   },
 
-  enableSelection: function() {
+  enableSelection() {
     this._browser.messageManager.sendAsyncMessage("Finder:EnableSelection");
   },
 
-  removeSelection: function() {
+  removeSelection() {
     this._browser.messageManager.sendAsyncMessage("Finder:RemoveSelection");
   },
 
-  focusContent: function() {
+  focusContent() {
     // Allow Finder listeners to cancel focusing the content.
     for (let l of this._listeners) {
       try {
@@ -171,27 +171,27 @@ RemoteFinder.prototype = {
     this._browser.messageManager.sendAsyncMessage("Finder:FocusContent");
   },
 
-  onFindbarClose: function() {
+  onFindbarClose() {
     this._browser.messageManager.sendAsyncMessage("Finder:FindbarClose");
   },
 
-  onFindbarOpen: function() {
+  onFindbarOpen() {
     this._browser.messageManager.sendAsyncMessage("Finder:FindbarOpen");
   },
 
-  onModalHighlightChange: function(aUseModalHighlight) {
+  onModalHighlightChange(aUseModalHighlight) {
     this._browser.messageManager.sendAsyncMessage("Finder:ModalHighlightChange", {
       useModalHighlight: aUseModalHighlight
     });
   },
 
-  onHighlightAllChange: function(aHighlightAll) {
+  onHighlightAllChange(aHighlightAll) {
     this._browser.messageManager.sendAsyncMessage("Finder:HighlightAllChange", {
       highlightAll: aHighlightAll
     });
   },
 
-  keyPress: function(aEvent) {
+  keyPress(aEvent) {
     this._browser.messageManager.sendAsyncMessage("Finder:KeyPress",
                                                   { keyCode: aEvent.keyCode,
                                                     ctrlKey: aEvent.ctrlKey,
@@ -200,7 +200,7 @@ RemoteFinder.prototype = {
                                                     shiftKey: aEvent.shiftKey });
   },
 
-  requestMatchesCount: function(aSearchString, aLinksOnly) {
+  requestMatchesCount(aSearchString, aLinksOnly) {
     this._browser.messageManager.sendAsyncMessage("Finder:MatchesCount",
                                                   { searchString: aSearchString,
                                                     linksOnly: aLinksOnly });
@@ -238,21 +238,21 @@ RemoteFinderListener.prototype = {
     "Finder:ModalHighlightChange"
   ],
 
-  onFindResult: function(aData) {
+  onFindResult(aData) {
     this._global.sendAsyncMessage("Finder:Result", aData);
   },
 
   // When the child receives messages with results of requestMatchesCount,
   // it passes them forward to the parent.
-  onMatchesCountResult: function(aData) {
+  onMatchesCountResult(aData) {
     this._global.sendAsyncMessage("Finder:MatchesResult", aData);
   },
 
-  onHighlightFinished: function(aData) {
+  onHighlightFinished(aData) {
     this._global.sendAsyncMessage("Finder:HighlightFinished", aData);
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     let data = aMessage.data;
 
     switch (aMessage.name) {
@@ -267,7 +267,7 @@ RemoteFinderListener.prototype = {
       case "Finder:SetSearchStringToSelection": {
         let selection = this._finder.setSearchStringToSelection();
         this._global.sendAsyncMessage("Finder:CurrentSelectionResult",
-                                      { selection: selection,
+                                      { selection,
                                         initial: false });
         break;
       }
@@ -275,7 +275,7 @@ RemoteFinderListener.prototype = {
       case "Finder:GetInitialSelection": {
         let selection = this._finder.getActiveSelectionText();
         this._global.sendAsyncMessage("Finder:CurrentSelectionResult",
-                                      { selection: selection,
+                                      { selection,
                                         initial: true });
         break;
       }

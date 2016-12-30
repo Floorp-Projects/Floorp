@@ -139,7 +139,7 @@ this.Downloads = {
    * @resolves When the download has finished successfully.
    * @rejects JavaScript exception if the download failed.
    */
-  fetch: function(aSource, aTarget, aOptions) {
+  fetch(aSource, aTarget, aOptions) {
     return this.createDownload({
       source: aSource,
       target: aTarget,
@@ -170,7 +170,7 @@ this.Downloads = {
    * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  getList: function(aType)
+  getList(aType)
   {
     if (!this._promiseListsInitialized) {
       this._promiseListsInitialized = Task.spawn(function* () {
@@ -232,7 +232,7 @@ this.Downloads = {
    * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  getSummary: function(aType)
+  getSummary(aType)
   {
     if (aType != Downloads.PUBLIC && aType != Downloads.PRIVATE &&
         aType != Downloads.ALL) {

@@ -19,11 +19,11 @@ this.WindowDraggingElement = function WindowDraggingElement(elem) {
 };
 
 WindowDraggingElement.prototype = {
-  mouseDownCheck: function(e) { return true; },
+  mouseDownCheck(e) { return true; },
   dragTags: ["box", "hbox", "vbox", "spacer", "label", "statusbarpanel", "stack",
              "toolbaritem", "toolbarseparator", "toolbarspring", "toolbarspacer",
              "radiogroup", "deck", "scrollbox", "arrowscrollbox", "tabs"],
-  shouldDrag: function(aEvent) {
+  shouldDrag(aEvent) {
     if (aEvent.button != 0 ||
         this._window.fullScreen ||
         !this.mouseDownCheck.call(this._elem, aEvent) ||
@@ -51,11 +51,11 @@ WindowDraggingElement.prototype = {
     }
     return true;
   },
-  isPanel : function() {
+  isPanel() {
     return this._elem instanceof Components.interfaces.nsIDOMXULElement &&
            this._elem.localName == "panel";
   },
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     let isPanel = this.isPanel();
     switch (aEvent.type) {
       case "mousedown":

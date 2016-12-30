@@ -9,14 +9,14 @@ var tests = [
 function test_history_query() {
   let uri = NetUtil.newURI("http://test.visit.mozilla.com/");
   let title = "Test visit";
-  PlacesTestUtils.addVisits({ uri: uri, title: title }).then(function() {
+  PlacesTestUtils.addVisits({ uri, title }).then(function() {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
     let query = PlacesUtils.history.getNewQuery();
 
     PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                        .asyncExecuteLegacyQueries([query], 1, options, {
-      handleResult: function(aResultSet) {
+      handleResult(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {
             do_check_eq(row.getResultByIndex(1), uri.spec);
@@ -26,10 +26,10 @@ function test_history_query() {
           }
         }
       },
-      handleError: function(aError) {
+      handleError(aError) {
         do_throw("Async execution error (" + aError.result + "): " + aError.message);
       },
-      handleCompletion: function(aReason) {
+      handleCompletion(aReason) {
         run_next_test();
       },
     });
@@ -47,7 +47,7 @@ function test_bookmarks_query() {
 
   PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                      .asyncExecuteLegacyQueries([query], 1, options, {
-    handleResult: function(aResultSet) {
+    handleResult(aResultSet) {
       for (let row; (row = aResultSet.getNextRow());) {
         try {
           do_check_eq(row.getResultByIndex(1), uri.spec);
@@ -57,10 +57,10 @@ function test_bookmarks_query() {
         }
       }
     },
-    handleError: function(aError) {
+    handleError(aError) {
       do_throw("Async execution error (" + aError.result + "): " + aError.message);
     },
-    handleCompletion: function(aReason) {
+    handleCompletion(aReason) {
       run_next_test();
     },
   });

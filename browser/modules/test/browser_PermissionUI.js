@@ -223,7 +223,7 @@ add_task(function* test_with_permission_key() {
       accessKey: "M",
       action: Ci.nsIPermissionManager.ALLOW_ACTION,
       expiryType: Ci.nsIPermissionManager.EXPIRE_SESSION,
-      callback: function() {
+      callback() {
         allowed = true;
       }
     };
@@ -234,7 +234,7 @@ add_task(function* test_with_permission_key() {
       accessKey: "D",
       action: Ci.nsIPermissionManager.DENY_ACTION,
       expiryType: Ci.nsIPermissionManager.EXPIRE_SESSION,
-      callback: function() {
+      callback() {
         denied = true;
       }
     };
@@ -376,7 +376,7 @@ add_task(function* test_no_request() {
     let mainAction = {
       label: "Allow",
       accessKey: "M",
-      callback: function() {
+      callback() {
         allowed = true;
       }
     };
@@ -385,7 +385,7 @@ add_task(function* test_no_request() {
     let secondaryAction = {
       label: "Deny",
       accessKey: "D",
-      callback: function() {
+      callback() {
         denied = true;
       }
     };

@@ -566,18 +566,18 @@
             // count of open requests (should always be 0 or 1)
             mRequestCount: 0,
 
-            destroy: function() {
+            destroy() {
               delete this.mTab;
               delete this.mBrowser;
               delete this.mTabBrowser;
             },
 
-            _callProgressListeners: function() {
+            _callProgressListeners() {
               Array.unshift(arguments, this.mBrowser);
               return this.mTabBrowser._callProgressListeners.apply(this.mTabBrowser, arguments);
             },
 
-            _shouldShowProgress: function(aRequest) {
+            _shouldShowProgress(aRequest) {
               if (this.mBlank)
                 return false;
 
@@ -591,9 +591,9 @@
               return true;
             },
 
-            onProgressChange: function(aWebProgress, aRequest,
-                                       aCurSelfProgress, aMaxSelfProgress,
-                                       aCurTotalProgress, aMaxTotalProgress) {
+            onProgressChange(aWebProgress, aRequest,
+                             aCurSelfProgress, aMaxSelfProgress,
+                             aCurTotalProgress, aMaxTotalProgress) {
               this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
 
               if (!this._shouldShowProgress(aRequest))
@@ -608,15 +608,15 @@
                                            aCurTotalProgress, aMaxTotalProgress]);
             },
 
-            onProgressChange64: function(aWebProgress, aRequest,
-                                         aCurSelfProgress, aMaxSelfProgress,
-                                         aCurTotalProgress, aMaxTotalProgress) {
+            onProgressChange64(aWebProgress, aRequest,
+                               aCurSelfProgress, aMaxSelfProgress,
+                               aCurTotalProgress, aMaxTotalProgress) {
               return this.onProgressChange(aWebProgress, aRequest,
                 aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
                 aMaxTotalProgress);
             },
 
-            onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+            onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
               if (!aRequest)
                 return;
 
@@ -757,8 +757,8 @@
               this.mStatus = aStatus;
             },
 
-            onLocationChange: function(aWebProgress, aRequest, aLocation,
-                                       aFlags) {
+            onLocationChange(aWebProgress, aRequest, aLocation,
+                             aFlags) {
               // OnLocationChange is called for both the top-level content
               // and the subframes.
               let topLevel = aWebProgress.isTopLevel;
@@ -838,7 +838,7 @@
               }
             },
 
-            onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage) {
+            onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
               if (this.mBlank)
                 return;
 
@@ -848,17 +848,17 @@
               this.mMessage = aMessage;
             },
 
-            onSecurityChange: function(aWebProgress, aRequest, aState) {
+            onSecurityChange(aWebProgress, aRequest, aState) {
               this._callProgressListeners("onSecurityChange",
                                           [aWebProgress, aRequest, aState]);
             },
 
-            onRefreshAttempted: function(aWebProgress, aURI, aDelay, aSameURI) {
+            onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI) {
               return this._callProgressListeners("onRefreshAttempted",
                                                  [aWebProgress, aURI, aDelay, aSameURI]);
             },
 
-            QueryInterface: function(aIID) {
+            QueryInterface(aIID) {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
                   aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
                   aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
@@ -2072,7 +2072,7 @@
               // No preloaded browser found, create one.
               browser = this._createBrowser({permanentKey: aTab.permanentKey,
                                              remoteType,
-                                             uriIsAboutBlank: uriIsAboutBlank,
+                                             uriIsAboutBlank,
                                              userContextId: aParams.userContextId,
                                              relatedBrowser: aParams.relatedBrowser,
                                              opener: aParams.opener,
@@ -2124,7 +2124,7 @@
             var evt = new CustomEvent("TabBrowserInserted", { bubbles: true, detail: {} });
             aTab.dispatchEvent(evt);
 
-            return { usingPreloadedContent: usingPreloadedContent };
+            return { usingPreloadedContent };
           ]]>
         </body>
       </method>
@@ -3661,7 +3661,7 @@
             // Wraps nsITimer. Must not use the vanilla setTimeout and
             // clearTimeout, because they will be blocked by nsIPromptService
             // dialogs.
-            setTimer: function(callback, timeout) {
+            setTimer(callback, timeout) {
               let event = {
                 notify: callback
               };
@@ -3672,11 +3672,11 @@
               return timer;
             },
 
-            clearTimer: function(timer) {
+            clearTimer(timer) {
               timer.cancel();
             },
 
-            getTabState: function(tab) {
+            getTabState(tab) {
               let state = this.tabState.get(tab);
               if (state === undefined) {
                 return this.STATE_UNLOADED;
@@ -3692,7 +3692,7 @@
               }
             },
 
-            setTabState: function(tab, state) {
+            setTabState(tab, state) {
               this.setTabStateNoAction(tab, state);
 
               let browser = tab.linkedBrowser;
@@ -3715,7 +3715,7 @@
               return window.windowState == window.STATE_MINIMIZED;
             },
 
-            init: function() {
+            init() {
               this.log("START");
 
               // If we minimized the window before the switcher was activated,
@@ -3735,7 +3735,7 @@
               }
             },
 
-            destroy: function() {
+            destroy() {
               if (this.unloadTimer) {
                 this.clearTimer(this.unloadTimer);
                 this.unloadTimer = null;
@@ -3761,7 +3761,7 @@
               this.activeSuppressDisplayport.clear();
             },
 
-            finish: function() {
+            finish() {
               this.log("FINISH");
 
               this.assert(this.tabbrowser._switcher);
@@ -3796,7 +3796,7 @@
 
             // This function is called after all the main state changes to
             // make sure we display the right tab.
-            updateDisplay: function() {
+            updateDisplay() {
               // Figure out which tab we actually want visible right now.
               let showTab = null;
               if (this.getTabState(this.requestedTab) != this.STATE_LOADED &&
@@ -3855,7 +3855,7 @@
               this.lastVisibleTab = this.visibleTab;
             },
 
-            assert: function(cond) {
+            assert(cond) {
               if (!cond) {
                 dump("Assertion failure\n" + Error().stack);
 
@@ -3867,7 +3867,7 @@
             },
 
             // We've decided to try to load requestedTab.
-            loadRequestedTab: function() {
+            loadRequestedTab() {
               this.assert(!this.loadTimer);
               this.assert(!this.minimized);
 
@@ -3882,7 +3882,7 @@
 
             // This function runs before every event. It fixes up the state
             // to account for closed tabs.
-            preActions: function() {
+            preActions() {
               this.assert(this.tabbrowser._switcher);
               this.assert(this.tabbrowser._switcher === this);
 
@@ -3910,7 +3910,7 @@
             // tab. It's expected that we've already updated all the principal
             // state variables. This function takes care of updating any auxilliary
             // state.
-            postActions: function() {
+            postActions() {
               // Once we finish loading loadingTab, we null it out. So the state should
               // always be LOADING.
               this.assert(!this.loadingTab ||
@@ -3962,7 +3962,7 @@
             },
 
             // Fires when we're ready to unload unused tabs.
-            onUnloadTimeout: function() {
+            onUnloadTimeout() {
               this.logState("onUnloadTimeout");
               this.unloadTimer = null;
               this.preActions();
@@ -3998,7 +3998,7 @@
             },
 
             // Fires when an ongoing load has taken too long.
-            onLoadTimeout: function() {
+            onLoadTimeout() {
               this.logState("onLoadTimeout");
               this.preActions();
               this.loadTimer = null;
@@ -4007,7 +4007,7 @@
             },
 
             // Fires when the layers become available for a tab.
-            onLayersReady: function(browser) {
+            onLayersReady(browser) {
               let tab = this.tabbrowser.getTabForBrowser(browser);
               this.logState(`onLayersReady(${tab._tPos})`);
 
@@ -4027,13 +4027,13 @@
             // Fires when we paint the screen. Any tab switches we initiated
             // previously are done, so there's no need to keep the old layers
             // around.
-            onPaint: function() {
+            onPaint() {
               this.maybeVisibleTabs.clear();
               this.maybeFinishTabSwitch();
             },
 
             // Called when we're done clearing the layers for a tab.
-            onLayersCleared: function(browser) {
+            onLayersCleared(browser) {
               let tab = this.tabbrowser.getTabForBrowser(browser);
               if (tab) {
                 this.logState(`onLayersCleared(${tab._tPos})`);
@@ -4046,7 +4046,7 @@
             // Called when a tab switches from remote to non-remote. In this case
             // a MozLayerTreeReady notification that we requested may never fire,
             // so we need to simulate it.
-            onRemotenessChange: function(tab) {
+            onRemotenessChange(tab) {
               this.logState(`onRemotenessChange(${tab._tPos}, ${tab.linkedBrowser.isRemoteBrowser})`);
               if (!tab.linkedBrowser.isRemoteBrowser) {
                 if (this.getTabState(tab) == this.STATE_LOADING) {
@@ -4059,7 +4059,7 @@
 
             // Called when a tab has been removed, and the browser node is
             // about to be removed from the DOM.
-            onTabRemoved: function(tab) {
+            onTabRemoved(tab) {
               if (this.lastVisibleTab == tab) {
                 // The browser that was being presented to the user is
                 // going to be removed during this tick of the event loop.
@@ -4152,7 +4152,7 @@
 	    },
 
             // Called when the user asks to switch to a given tab.
-            requestTab: function(tab) {
+            requestTab(tab) {
               if (tab === this.requestedTab) {
                 return;
               }
@@ -4179,7 +4179,7 @@
               this.postActions();
             },
 
-            handleEvent: function(event, delayed = false) {
+            handleEvent(event, delayed = false) {
               if (this._processing) {
                 this.setTimer(() => this.handleEvent(event, true), 0);
                 return;
@@ -4217,7 +4217,7 @@
              * timing.
              */
 
-            startTabSwitch: function() {
+            startTabSwitch() {
               TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
               TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
               this.addMarker("AsyncTabSwitch:Start");
@@ -4230,7 +4230,7 @@
              * are hidden). This checks to make sure all conditions are
              * satisfied, and then records the tab switch as finished.
              */
-            maybeFinishTabSwitch: function() {
+            maybeFinishTabSwitch() {
               if (this.switchInProgress && this.requestedTab &&
                   this.getTabState(this.requestedTab) == this.STATE_LOADED) {
                 // After this point the tab has switched from the content thread's point of view.
@@ -4245,7 +4245,7 @@
               }
             },
 
-            spinnerDisplayed: function() {
+            spinnerDisplayed() {
               this.assert(!this.spinnerTab);
               TelemetryStopwatch.start("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
               // We have a second, similar probe for capturing recordings of
@@ -4254,7 +4254,7 @@
               this.addMarker("AsyncTabSwitch:SpinnerShown");
             },
 
-            spinnerHidden: function() {
+            spinnerHidden() {
               this.assert(this.spinnerTab);
               this.log("DEBUG: spinner time = " +
                        TelemetryStopwatch.timeElapsed("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window));
@@ -4265,7 +4265,7 @@
               this.maybeFinishTabSwitch();
             },
 
-            addMarker: function(marker) {
+            addMarker(marker) {
               if (Services.profiler) {
                 Services.profiler.AddMarker(marker);
               }
@@ -4278,7 +4278,7 @@
             _useDumpForLogging: false,
             _logInit: false,
 
-            logging: function() {
+            logging() {
               if (this._useDumpForLogging)
                 return true;
               if (this._logInit)
@@ -4293,14 +4293,14 @@
               return this._shouldLog;
             },
 
-            tinfo: function(tab) {
+            tinfo(tab) {
               if (tab) {
                 return tab._tPos + "(" + tab.linkedBrowser.currentURI.spec + ")";
               }
               return "null";
             },
 
-            log: function(s) {
+            log(s) {
               if (!this.logging())
                 return;
               if (this._useDumpForLogging) {
@@ -4310,7 +4310,7 @@
               }
             },
 
-            logState: function(prefix) {
+            logState(prefix) {
               if (!this.logging())
                 return;
 
@@ -4721,13 +4721,13 @@
               gContextMenuContentData = { isRemote: true,
                                           event: aMessage.objects.event,
                                           popupNode: aMessage.objects.popupNode,
-                                          browser: browser,
+                                          browser,
                                           editFlags: data.editFlags,
-                                          spellInfo: spellInfo,
+                                          spellInfo,
                                           principal: data.principal,
                                           customMenuItems: data.customMenuItems,
                                           addonInfo: data.addonInfo,
-                                          documentURIObject: documentURIObject,
+                                          documentURIObject,
                                           docLocation: data.docLocation,
                                           charSet: data.charSet,
                                           referrer: data.referrer,
@@ -5127,14 +5127,14 @@
             self: this,
             childNodes: [null, this.tabContextMenu, this.tabContainer],
             firstChild: { nextSibling: this.tabContextMenu },
-            getElementsByAttribute: function(attr, attrValue) {
+            getElementsByAttribute(attr, attrValue) {
               if (attr == "anonid" && attrValue == "tabContextMenu")
                 return [this.self.tabContextMenu];
               return [];
             },
             // Also support adding event listeners (forward to the tab container)
-            addEventListener: function(a, b, c) { this.self.tabContainer.addEventListener(a, b, c); },
-            removeEventListener: function(a, b, c) { this.self.tabContainer.removeEventListener(a, b, c); }
+            addEventListener(a, b, c) { this.self.tabContainer.addEventListener(a, b, c); },
+            removeEventListener(a, b, c) { this.self.tabContainer.removeEventListener(a, b, c); }
           });
         ]]>
         </getter>

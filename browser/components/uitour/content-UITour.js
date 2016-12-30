@@ -8,7 +8,7 @@ const PREF_TEST_WHITELIST = "browser.uitour.testingOrigins";
 const UITOUR_PERMISSION   = "uitour";
 
 var UITourListener = {
-  handleEvent: function(event) {
+  handleEvent(event) {
     if (!Services.prefs.getBoolPref("browser.uitour.enabled")) {
       return;
     }
@@ -24,7 +24,7 @@ var UITourListener = {
     });
   },
 
-  isTestingOrigin: function(aURI) {
+  isTestingOrigin(aURI) {
     if (Services.prefs.getPrefType(PREF_TEST_WHITELIST) != Services.prefs.PREF_STRING) {
       return false;
     }
@@ -44,7 +44,7 @@ var UITourListener = {
   },
 
   // This function is copied from UITour.jsm.
-  isSafeScheme: function(aURI) {
+  isSafeScheme(aURI) {
     let allowedSchemes = new Set(["https", "about"]);
     if (!Services.prefs.getBoolPref("browser.uitour.requireSecure"))
       allowedSchemes.add("http");
@@ -55,7 +55,7 @@ var UITourListener = {
     return true;
   },
 
-  ensureTrustedOrigin: function() {
+  ensureTrustedOrigin() {
     if (content.top != content)
       return false;
 
@@ -74,7 +74,7 @@ var UITourListener = {
     return this.isTestingOrigin(uri);
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "UITour:SendPageCallback":
         this.sendPageEvent("Response", aMessage.data);
@@ -85,7 +85,7 @@ var UITourListener = {
       }
   },
 
-  sendPageEvent: function(type, detail) {
+  sendPageEvent(type, detail) {
     if (!this.ensureTrustedOrigin()) {
       return;
     }

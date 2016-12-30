@@ -37,24 +37,24 @@ MockTransfer.prototype = {
       // Continue the test, reporting the success or failure condition.
       mockTransferCallback(this._downloadIsSuccessful);
   },
-  onProgressChange: function() {},
-  onLocationChange: function() {},
+  onProgressChange() {},
+  onLocationChange() {},
   onStatusChange: function MTFC_onStatusChange(aWebProgress, aRequest, aStatus,
                                                aMessage) {
     // If at least one notification reported an error, the download failed.
     if (!Components.isSuccessCode(aStatus))
       this._downloadIsSuccessful = false;
   },
-  onSecurityChange: function() {},
+  onSecurityChange() {},
 
   /* nsIWebProgressListener2 */
-  onProgressChange64: function() {},
-  onRefreshAttempted: function() {},
+  onProgressChange64() {},
+  onRefreshAttempted() {},
 
   /* nsITransfer */
-  init: function() {},
-  setSha256Hash: function() {},
-  setSignatureInfo: function() {}
+  init() {},
+  setSha256Hash() {},
+  setSignatureInfo() {}
 };
 
 // Create an instance of a MockObjectRegisterer whose methods can be used to

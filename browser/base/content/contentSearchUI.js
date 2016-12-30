@@ -90,7 +90,7 @@ ContentSearchUIController.prototype = {
     }
     this._defaultEngine = {
       name: engine.name,
-      icon: icon,
+      icon,
     };
     this._updateDefaultEngineHeader();
 
@@ -189,7 +189,7 @@ ContentSearchUIController.prototype = {
     return this._suggestionsList.children.length;
   },
 
-  selectAndUpdateInput: function(idx) {
+  selectAndUpdateInput(idx) {
     this.selectedIndex = idx;
     let newValue = this.suggestionAtIndex(idx) || this._stickyInputValue;
     // Setting the input value when the value has not changed commits the current
@@ -200,12 +200,12 @@ ContentSearchUIController.prototype = {
     this._updateSearchWithHeader();
   },
 
-  suggestionAtIndex: function(idx) {
+  suggestionAtIndex(idx) {
     let row = this._suggestionsList.children[idx];
     return row ? row.textContent : null;
   },
 
-  deleteSuggestionAtIndex: function(idx) {
+  deleteSuggestionAtIndex(idx) {
     // Only form history suggestions can be deleted.
     if (this.isFormHistorySuggestionAtIndex(idx)) {
       let suggestionStr = this.suggestionAtIndex(idx);
@@ -215,20 +215,20 @@ ContentSearchUIController.prototype = {
     }
   },
 
-  isFormHistorySuggestionAtIndex: function(idx) {
+  isFormHistorySuggestionAtIndex(idx) {
     let row = this._suggestionsList.children[idx];
     return row && row.classList.contains("formHistory");
   },
 
-  addInputValueToFormHistory: function() {
+  addInputValueToFormHistory() {
     this._sendMsg("AddFormHistoryEntry", this.input.value);
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     this["_on" + event.type[0].toUpperCase() + event.type.substr(1)](event);
   },
 
-  _onCommand: function(aEvent) {
+  _onCommand(aEvent) {
     if (this.selectedButtonIndex == this._oneOffButtons.length) {
       // Settings button was selected.
       this._sendMsg("ManageEngines");
@@ -242,7 +242,7 @@ ContentSearchUIController.prototype = {
     }
   },
 
-  search: function(aEvent) {
+  search(aEvent) {
     if (!this.defaultEngine) {
       return; // Not initialized yet.
     }
@@ -291,7 +291,7 @@ ContentSearchUIController.prototype = {
     this.addInputValueToFormHistory();
   },
 
-  _onInput: function() {
+  _onInput() {
     if (!this.input.value) {
       this._stickyInputValue = "";
       this._hideSuggestions();
@@ -304,7 +304,7 @@ ContentSearchUIController.prototype = {
     this._updateSearchWithHeader();
   },
 
-  _onKeypress: function(event) {
+  _onKeypress(event) {
     let selectedIndexDelta = 0;
     let selectedSuggestionDelta = 0;
     let selectedOneOffDelta = 0;
@@ -451,7 +451,7 @@ ContentSearchUIController.prototype = {
   },
 
   _currentEngineIndex: -1,
-  _cycleCurrentEngine: function(aReverse) {
+  _cycleCurrentEngine(aReverse) {
     if ((this._currentEngineIndex == this._engines.length - 1 && !aReverse) ||
         (this._currentEngineIndex == 0 && aReverse)) {
       return;
@@ -461,7 +461,7 @@ ContentSearchUIController.prototype = {
     this._sendMsg("SetCurrentEngine", engineName);
   },
 
-  _onFocus: function() {
+  _onFocus() {
     if (this._mousedown) {
       return;
     }
@@ -474,7 +474,7 @@ ContentSearchUIController.prototype = {
     this._speculativeConnect();
   },
 
-  _onBlur: function() {
+  _onBlur() {
     if (this._mousedown) {
       // At this point, this.input has lost focus, but a new element has not yet
       // received it. If we re-focus this.input directly, the new element will
@@ -486,7 +486,7 @@ ContentSearchUIController.prototype = {
     this._hideSuggestions();
   },
 
-  _onMousemove: function(event) {
+  _onMousemove(event) {
     let idx = this._indexOfTableItem(event.target);
     if (idx >= this.numSuggestions) {
       this.selectedButtonIndex = idx - this.numSuggestions;
@@ -495,14 +495,14 @@ ContentSearchUIController.prototype = {
     this.selectedIndex = idx;
   },
 
-  _onMouseup: function(event) {
+  _onMouseup(event) {
     if (event.button == 2) {
       return;
     }
     this._onCommand(event);
   },
 
-  _onMouseout: function(event) {
+  _onMouseout(event) {
     // We only deselect one-off buttons and the settings button when they are
     // moused out.
     let idx = this._indexOfTableItem(event.originalTarget);
@@ -511,22 +511,22 @@ ContentSearchUIController.prototype = {
     }
   },
 
-  _onClick: function(event) {
+  _onClick(event) {
     this._onMouseup(event);
   },
 
-  _onContentSearchService: function(event) {
+  _onContentSearchService(event) {
     let methodName = "_onMsg" + event.detail.type;
     if (methodName in this) {
       this[methodName](event.detail.data);
     }
   },
 
-  _onMsgFocusInput: function(event) {
+  _onMsgFocusInput(event) {
     this.input.focus();
   },
 
-  _onMsgSuggestions: function(suggestions) {
+  _onMsgSuggestions(suggestions) {
     // Ignore the suggestions if their search string or engine doesn't match
     // ours.  Due to the async nature of message passing, this can easily happen
     // when the user types quickly.
@@ -581,13 +581,13 @@ ContentSearchUIController.prototype = {
     }
   },
 
-  _onMsgSuggestionsCancelled: function() {
+  _onMsgSuggestionsCancelled() {
     if (!this._table.hidden) {
       this._hideSuggestions();
     }
   },
 
-  _onMsgState: function(state) {
+  _onMsgState(state) {
     this.engines = state.engines;
     // No point updating the default engine (and the header) if there's no change.
     if (this.defaultEngine &&
@@ -598,16 +598,16 @@ ContentSearchUIController.prototype = {
     this.defaultEngine = state.currentEngine;
   },
 
-  _onMsgCurrentState: function(state) {
+  _onMsgCurrentState(state) {
     this._onMsgState(state);
   },
 
-  _onMsgCurrentEngine: function(engine) {
+  _onMsgCurrentEngine(engine) {
     this.defaultEngine = engine;
     this._pendingOneOffRefresh = true;
   },
 
-  _onMsgStrings: function(strings) {
+  _onMsgStrings(strings) {
     this._strings = strings;
     this._updateDefaultEngineHeader();
     this._updateSearchWithHeader();
@@ -616,7 +616,7 @@ ContentSearchUIController.prototype = {
     this.input.setAttribute("placeholder", this._strings.searchPlaceholder);
   },
 
-  _updateDefaultEngineHeader: function() {
+  _updateDefaultEngineHeader() {
     let header = document.getElementById("contentSearchDefaultEngineHeader");
     header.firstChild.setAttribute("src", this.defaultEngine.icon);
     if (!this._strings) {
@@ -629,7 +629,7 @@ ContentSearchUIController.prototype = {
       this._strings.searchHeader.replace("%S", this.defaultEngine.name)));
   },
 
-  _updateSearchWithHeader: function() {
+  _updateSearchWithHeader() {
     if (!this._strings) {
       return;
     }
@@ -642,13 +642,13 @@ ContentSearchUIController.prototype = {
     }
   },
 
-  _speculativeConnect: function() {
+  _speculativeConnect() {
     if (this.defaultEngine) {
       this._sendMsg("SpeculativeConnect", this.defaultEngine.name);
     }
   },
 
-  _makeTableRow: function(type, suggestionStr, currentRow, searchWords) {
+  _makeTableRow(type, suggestionStr, currentRow, searchWords) {
     let row = document.createElementNS(HTML_NS, "tr");
     row.dir = "auto";
     row.classList.add("contentSearchSuggestionRow");
@@ -685,28 +685,28 @@ ContentSearchUIController.prototype = {
   },
 
   // Converts favicon array buffer into a data URI.
-  _getFaviconURIFromBuffer: function(buffer) {
+  _getFaviconURIFromBuffer(buffer) {
     let blob = new Blob([buffer]);
     return URL.createObjectURL(blob);
   },
 
   // Adds "@2x" to the name of the given PNG url for "retina" screens.
-  _getImageURIForCurrentResolution: function(uri) {
+  _getImageURIForCurrentResolution(uri) {
     if (window.devicePixelRatio > 1) {
       return uri.replace(/\.png$/, "@2x.png");
     }
     return uri;
   },
 
-  _getSearchEngines: function() {
+  _getSearchEngines() {
     this._sendMsg("GetState");
   },
 
-  _getStrings: function() {
+  _getStrings() {
     this._sendMsg("GetStrings");
   },
 
-  _getSuggestions: function() {
+  _getSuggestions() {
     this._stickyInputValue = this.input.value;
     if (this.defaultEngine) {
       this._sendMsg("GetSuggestions", {
@@ -716,13 +716,13 @@ ContentSearchUIController.prototype = {
     }
   },
 
-  _clearSuggestionRows: function() {
+  _clearSuggestionRows() {
     while (this._suggestionsList.firstElementChild) {
       this._suggestionsList.firstElementChild.remove();
     }
   },
 
-  _hideSuggestions: function() {
+  _hideSuggestions() {
     this.input.setAttribute("aria-expanded", "false");
     this.selectedIndex = -1;
     this.selectedButtonIndex = -1;
@@ -730,7 +730,7 @@ ContentSearchUIController.prototype = {
     this._table.hidden = true;
   },
 
-  _indexOfTableItem: function(elt) {
+  _indexOfTableItem(elt) {
     if (elt.classList.contains("contentSearchOneOffItem")) {
       return this.numSuggestions + this._oneOffButtons.indexOf(elt);
     }
@@ -746,7 +746,7 @@ ContentSearchUIController.prototype = {
     return elt.rowIndex;
   },
 
-  _makeTable: function(id) {
+  _makeTable(id) {
     this._table = document.createElementNS(HTML_NS, "table");
     this._table.id = id;
     this._table.hidden = true;
@@ -815,7 +815,7 @@ ContentSearchUIController.prototype = {
     return this._table;
   },
 
-  _setUpOneOffButtons: function() {
+  _setUpOneOffButtons() {
     // Sometimes we receive a CurrentEngine message from the ContentSearch service
     // before we've received a State message - i.e. before we have our engines.
     if (!this._engines) {
@@ -896,11 +896,11 @@ ContentSearchUIController.prototype = {
     this._oneOffsTable.hidden = false;
   },
 
-  _sendMsg: function(type, data = null) {
+  _sendMsg(type, data = null) {
     dispatchEvent(new CustomEvent("ContentSearchClient", {
       detail: {
-        type: type,
-        data: data,
+        type,
+        data,
       },
     }));
   },

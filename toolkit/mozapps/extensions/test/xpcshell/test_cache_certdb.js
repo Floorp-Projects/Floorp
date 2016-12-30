@@ -58,7 +58,7 @@ function overrideCertDB() {
   }
 
   let certDBFactory = {
-    createInstance: function(outer, iid) {
+    createInstance(outer, iid) {
       if (outer != null) {
         throw Components.results.NS_ERROR_NO_AGGREGATION;
       }

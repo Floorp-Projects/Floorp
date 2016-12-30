@@ -307,9 +307,9 @@ function waitForAsyncUpdates(aCallback, aScope, aArguments) {
 
   let commit = db.createAsyncStatement("COMMIT");
   commit.executeAsync({
-    handleResult: function() {},
-    handleError: function() {},
-    handleCompletion: function(aReason) {
+    handleResult() {},
+    handleError() {},
+    handleCompletion(aReason) {
       aCallback.apply(scope, args);
     }
   });
@@ -418,7 +418,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
     }
 
     let progressListener = {
-      onStateChange: function(webProgress, req, flags, status) {
+      onStateChange(webProgress, req, flags, status) {
         dump("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
 
         if (webProgress.isTopLevel &&
@@ -470,7 +470,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
 function waitForDocLoadComplete(aBrowser = gBrowser) {
   return new Promise(resolve => {
     let listener = {
-      onStateChange: function(webProgress, req, flags, status) {
+      onStateChange(webProgress, req, flags, status) {
         let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
                       Ci.nsIWebProgressListener.STATE_STOP;
         info("Saw state " + flags.toString(16) + " and status " + status.toString(16));
@@ -918,12 +918,12 @@ function promiseNewSearchEngine(basename) {
     info("Waiting for engine to be added: " + basename);
     let url = getRootDirectory(gTestPath) + basename;
     Services.search.addEngine(url, null, "", false, {
-      onSuccess: function(engine) {
+      onSuccess(engine) {
         info("Search engine added: " + basename);
         registerCleanupFunction(() => Services.search.removeEngine(engine));
         resolve(engine);
       },
-      onError: function(errCode) {
+      onError(errCode) {
         Assert.ok(false, "addEngine failed with error code " + errCode);
         reject();
       },
@@ -966,7 +966,7 @@ function isSecurityState(expectedState) {
 function promiseOnBookmarkItemAdded(aExpectedURI) {
   return new Promise((resolve, reject) => {
     let bookmarksObserver = {
-      onItemAdded: function(aItemId, aFolderId, aIndex, aItemType, aURI) {
+      onItemAdded(aItemId, aFolderId, aIndex, aItemType, aURI) {
         info("Added a bookmark to " + aURI.spec);
         PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
         if (aURI.equals(aExpectedURI)) {
@@ -976,12 +976,12 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
           reject(new Error("Added an unexpected bookmark"));
         }
       },
-      onBeginUpdateBatch: function() {},
-      onEndUpdateBatch: function() {},
-      onItemRemoved: function() {},
-      onItemChanged: function() {},
-      onItemVisited: function() {},
-      onItemMoved: function() {},
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onItemRemoved() {},
+      onItemChanged() {},
+      onItemVisited() {},
+      onItemMoved() {},
       QueryInterface: XPCOMUtils.generateQI([
         Ci.nsINavBookmarkObserver,
       ])
@@ -1006,7 +1006,7 @@ function* loadBadCertPage(url) {
     // When the certificate exception dialog has opened, click the button to add
     // an exception.
     let certExceptionDialogObserver = {
-      observe: function(aSubject, aTopic, aData) {
+      observe(aSubject, aTopic, aData) {
         if (aTopic == "cert-exception-ui-ready") {
           Services.obs.removeObserver(this, "cert-exception-ui-ready");
           let certExceptionDialog = getCertExceptionDialog(EXCEPTION_DIALOG_URI);
@@ -1073,7 +1073,7 @@ function setupRemoteClientsFixture(fixture) {
     Object.getOwnPropertyDescriptor(gFxAccounts, "remoteClients").get;
 
   Object.defineProperty(gFxAccounts, "remoteClients", {
-    get: function() { return fixture; }
+    get() { return fixture; }
   });
   return oldRemoteClientsGetter;
 }

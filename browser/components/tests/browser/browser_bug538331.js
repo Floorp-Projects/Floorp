@@ -135,11 +135,11 @@ function test()
 var gWindowCatcher = {
   windowsOpen: 0,
   finishCalled: false,
-  start: function() {
+  start() {
     Services.ww.registerNotification(this);
   },
 
-  finish: function(aFunc) {
+  finish(aFunc) {
     Services.ww.unregisterNotification(this);
     this.finishFunc = aFunc;
     if (this.windowsOpen > 0)
@@ -148,7 +148,7 @@ var gWindowCatcher = {
     this.finishFunc();
   },
 
-  closeWindow: function(win) {
+  closeWindow(win) {
     info("window catcher closing window: " + win.document.documentURI);
     win.close();
     this.windowsOpen--;
@@ -157,11 +157,11 @@ var gWindowCatcher = {
     }
   },
 
-  windowLoad: function(win) {
+  windowLoad(win) {
     executeSoon(this.closeWindow.bind(this, win));
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic != "domwindowopened")
       return;
 

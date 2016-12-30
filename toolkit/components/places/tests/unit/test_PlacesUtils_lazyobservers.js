@@ -10,17 +10,17 @@ function run_test() {
       Ci.nsINavBookmarkObserver,
     ]),
 
-    onBeginUpdateBatch: function() {},
-    onEndUpdateBatch: function() {},
-    onItemAdded: function(aItemId, aParentId, aIndex, aItemType, aURI) {
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onItemAdded(aItemId, aParentId, aIndex, aItemType, aURI) {
       do_check_true(aURI.equals(TEST_URI));
       PlacesUtils.removeLazyBookmarkObserver(this);
       do_test_finished();
     },
-    onItemRemoved: function() {},
-    onItemChanged: function() {},
-    onItemVisited: function() {},
-    onItemMoved: function() {},
+    onItemRemoved() {},
+    onItemChanged() {},
+    onItemVisited() {},
+    onItemMoved() {},
   };
 
   // Check registration and removal with uninitialized bookmarks service.

@@ -64,7 +64,7 @@ this.Buttons = {
 function createWidget() {
   let id = "screenshot-widget";
   let spec = {
-    id: id,
+    id,
     label: "My Button",
     removable: true,
     tooltiptext: "",

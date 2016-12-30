@@ -25,11 +25,11 @@ var ParentUtils = {
 
   updateFormHistory(changes) {
     let handler = {
-      handleError: function(error) {
+      handleError(error) {
         assert.ok(false, error);
         sendAsyncMessage("formHistoryUpdated", { ok: false });
       },
-      handleCompletion: function(reason) {
+      handleCompletion(reason) {
         if (!reason)
           sendAsyncMessage("formHistoryUpdated", { ok: true });
       },

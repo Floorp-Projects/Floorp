@@ -42,7 +42,7 @@ this.TranslationDocument.prototype = {
    *
    * @param document  The document to be translated
    */
-  _init: function(document) {
+  _init(document) {
     let window = document.defaultView;
     let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIDOMWindowUtils);
@@ -94,7 +94,7 @@ this.TranslationDocument.prototype = {
    *
    * @returns           A TranslationItem object.
    */
-  _createItemForNode: function(node, id, isRoot) {
+  _createItemForNode(node, id, isRoot) {
     if (this.itemsMap.has(node)) {
       return this.itemsMap.get(node);
     }
@@ -129,7 +129,7 @@ this.TranslationDocument.prototype = {
    *
    * @returns        A string representation of the TranslationItem.
    */
-  generateTextForItem: function(item) {
+  generateTextForItem(item) {
     if (item.original) {
       return regenerateTextFromOriginalHelper(item);
     }
@@ -187,7 +187,7 @@ this.TranslationDocument.prototype = {
    * Changes the document to display its translated
    * content.
    */
-  showTranslation: function() {
+  showTranslation() {
     this.originalShown = false;
     this._swapDocumentContent("translation");
   },
@@ -196,7 +196,7 @@ this.TranslationDocument.prototype = {
    * Changes the document to display its original
    * content.
    */
-  showOriginal: function() {
+  showOriginal() {
     this.originalShown = true;
     this._swapDocumentContent("original");
   },
@@ -208,7 +208,7 @@ this.TranslationDocument.prototype = {
    * @param target   A string that is either "translation"
    *                 or "original".
    */
-  _swapDocumentContent: function(target) {
+  _swapDocumentContent(target) {
     Task.spawn(function *() {
       // Let the event loop breath on every 100 nodes
       // that are replaced.
@@ -274,7 +274,7 @@ TranslationItem.prototype = {
   isRoot: false,
   isSimpleRoot: false,
 
-  toString: function() {
+  toString() {
     let rootType = "";
     if (this.isRoot) {
       if (this.isSimpleRoot) {
@@ -305,7 +305,7 @@ TranslationItem.prototype = {
    * @param result    A string with the textual result received from the server,
    *                  which can be plain-text or a serialized HTML doc.
    */
-  parseResult: function(result) {
+  parseResult(result) {
     if (this.isSimpleRoot) {
       this.translation = [result];
       return;
@@ -325,7 +325,7 @@ TranslationItem.prototype = {
    * @returns         A TranslationItem with the given id, or null if
    *                  it was not found.
    */
-  getChildById: function(id) {
+  getChildById(id) {
     for (let child of this.children) {
       if (("n" + child.id) == id) {
         return child;
@@ -341,7 +341,7 @@ TranslationItem.prototype = {
    * @param target   A string that is either "translation"
    *                 or "original".
    */
-  swapText: function(target) {
+  swapText(target) {
     swapTextForItem(this, target);
   }
 };
@@ -354,7 +354,7 @@ TranslationItem.prototype = {
  * for correct positioning and spliting of text nodes.
  */
 const TranslationItem_NodePlaceholder = {
-  toString: function() {
+  toString() {
     return "[object TranslationItem_NodePlaceholder]";
   }
 };

@@ -154,6 +154,27 @@ IOMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter, UniqueStacks& aUni
   }
 }
 
+DOMEventMarkerPayload::DOMEventMarkerPayload(const nsAString& aType, uint16_t aPhase,
+                                             const mozilla::TimeStamp& aStartTime,
+                                             const mozilla::TimeStamp& aEndTime)
+  : ProfilerMarkerPayload(aStartTime, aEndTime, nullptr)
+  , mType(aType)
+  , mPhase(aPhase)
+{
+}
+
+DOMEventMarkerPayload::~DOMEventMarkerPayload()
+{
+}
+
+void
+DOMEventMarkerPayload::StreamPayload(SpliceableJSONWriter& aWriter, UniqueStacks& aUniqueStacks)
+{
+  streamCommonProps("DOMEvent", aWriter, aUniqueStacks);
+  aWriter.StringProperty("type", NS_ConvertUTF16toUTF8(mType).get());
+  aWriter.IntProperty("phase", mPhase);
+}
+
 void
 ProfilerJSEventMarker(const char *event)
 {

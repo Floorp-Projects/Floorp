@@ -20,7 +20,7 @@ add_task(function*() {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
     if (testWidgetExists[i]) {
-      let spec = {id: id, type: "button", removable: true, label: "test", tooltiptext: "" + i};
+      let spec = {id, type: "button", removable: true, label: "test", tooltiptext: "" + i};
       CustomizableUI.createWidget(spec);
     }
   }
@@ -57,7 +57,7 @@ add_task(function*() {
   for (let i = 0; i < 5; i++) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
-    let spec = {id: id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
+    let spec = {id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
     CustomizableUI.createWidget(spec);
     CustomizableUI.addWidgetToArea(id, "nav-bar");
   }
@@ -106,7 +106,7 @@ add_task(function*() {
   for (let i = 0; i < 5; i++) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
-    let spec = {id: id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
+    let spec = {id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
     CustomizableUI.createWidget(spec);
     CustomizableUI.addWidgetToArea(id, "nav-bar");
   }
@@ -156,7 +156,7 @@ add_task(function*() {
   for (let i = 0; i < 5; i++) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
-    let spec = {id: id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
+    let spec = {id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
     CustomizableUI.createWidget(spec);
     CustomizableUI.addWidgetToArea(id, "nav-bar");
   }
@@ -207,7 +207,7 @@ add_task(function*() {
   for (let i = 5; i >= 0; i--) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
-    let spec = {id: id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
+    let spec = {id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
     CustomizableUI.createWidget(spec);
     CustomizableUI.addWidgetToArea(id, "nav-bar", 0);
   }
@@ -215,7 +215,7 @@ add_task(function*() {
   for (let i = 10; i < 15; i++) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
-    let spec = {id: id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
+    let spec = {id, type: "button", removable: true, label: "insertNodeInWindow test", tooltiptext: "" + i};
     CustomizableUI.createWidget(spec);
     CustomizableUI.addWidgetToArea(id, "nav-bar");
   }
@@ -269,8 +269,8 @@ add_task(function*() {
     if (i != missingId) {
       // Setting min-width to make the overflow state not depend on styling of the button and/or
       // screen width
-      let spec = {id: id, type: "button", removable: true, label: "test", tooltiptext: "" + i,
-                  onCreated: function(node) {
+      let spec = {id, type: "button", removable: true, label: "test", tooltiptext: "" + i,
+                  onCreated(node) {
                     node.style.minWidth = "200px";
                     if (id == (kTestWidgetPrefix + nonOverflowableId)) {
                       node.setAttribute("overflows", false);
@@ -325,8 +325,8 @@ add_task(function*() {
     if (i != missingId) {
       // Setting min-width to make the overflow state not depend on styling of the button and/or
       // screen width
-      let spec = {id: id, type: "button", removable: true, label: "test", tooltiptext: "" + i,
-                  onCreated: function(node) { node.style.minWidth = "100px"; }};
+      let spec = {id, type: "button", removable: true, label: "test", tooltiptext: "" + i,
+                  onCreated(node) { node.style.minWidth = "100px"; }};
       info("Creating: " + id);
       CustomizableUI.createWidget(spec);
     }
@@ -374,8 +374,8 @@ add_task(function*() {
     if (i != missingId) {
       // Setting min-width to make the overflow state not depend on styling of the button and/or
       // screen width
-      let spec = {id: id, type: "button", removable: true, label: "test", tooltiptext: "" + i,
-                  onCreated: function(node) { node.style.minWidth = "200px"; }};
+      let spec = {id, type: "button", removable: true, label: "test", tooltiptext: "" + i,
+                  onCreated(node) { node.style.minWidth = "200px"; }};
       info("Creating: " + id);
       CustomizableUI.createWidget(spec);
     }

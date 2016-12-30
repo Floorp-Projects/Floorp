@@ -134,7 +134,7 @@ this.LanguageDetector = {
    *      entry with the languge code 'un', indicating the percent of
    *      the text which is unknown.
    */
-  detectLanguage: function(aParams) {
+  detectLanguage(aParams) {
     if (typeof aParams == "string")
       aParams = { text: aParams };
 
