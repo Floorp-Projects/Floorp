@@ -5,7 +5,7 @@ expires-after: 7 days
 deadline-after: 24 hours
 run-on-projects:
     - try
-worker-type: aws-provisioner-v1/symbol-upload
+worker-type: aws-provisioner-v1/gecko-symbol-upload
 worker:
     implementation: docker-worker
     max-run-time: 600
