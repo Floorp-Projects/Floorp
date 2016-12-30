@@ -1256,7 +1256,8 @@
           while (temp && temp.nodeType == Node.ELEMENT_NODE &&
                  !temp.hasAttribute("preference"))
             temp = temp.parentNode;
-          return temp.nodeType == Node.ELEMENT_NODE ? temp : aStartElement;
+          return temp && temp.nodeType == Node.ELEMENT_NODE ?
+                 temp : aStartElement;
         ]]>
         </body>
       </method>
