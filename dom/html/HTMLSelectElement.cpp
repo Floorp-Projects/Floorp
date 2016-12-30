@@ -1585,8 +1585,8 @@ HTMLSelectElement::RestoreState(nsPresState* aState)
     DispatchContentReset();
   }
 
-  if (aState->IsDisabledSet()) {
-    SetDisabled(aState->GetDisabled());
+  if (aState->IsDisabledSet() && !aState->GetDisabled()) {
+    SetDisabled(false);
   }
 
   return false;
