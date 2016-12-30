@@ -31,11 +31,8 @@ MOZ_MUST_USE bool
 RenderInBase(StringBuffer& sb, uint64_t num);
 
 template<class T>
-class Raw;
-
-template<class T>
 MOZ_MUST_USE bool
-RenderNaN(StringBuffer& sb, Raw<T> num);
+RenderNaN(StringBuffer& sb, T num);
 
 // Helper class, StringBuffer wrapper, to track the position (line and column)
 // within the generated source.

@@ -164,13 +164,12 @@ PrintInt64(WasmPrintContext& c, int64_t num)
 }
 
 static bool
-PrintDouble(WasmPrintContext& c, RawF64 num)
+PrintDouble(WasmPrintContext& c, double d)
 {
-    double d = num.fp();
     if (IsNegativeZero(d))
         return c.buffer.append("-0.0");
     if (IsNaN(d))
-        return RenderNaN(c.sb(), num);
+        return RenderNaN(c.sb(), d);
     if (IsInfinite(d)) {
         if (d > 0)
             return c.buffer.append("infinity");
@@ -192,12 +191,11 @@ PrintDouble(WasmPrintContext& c, RawF64 num)
 }
 
 static bool
-PrintFloat32(WasmPrintContext& c, RawF32 num)
+PrintFloat32(WasmPrintContext& c, float f)
 {
-    float f = num.fp();
     if (IsNaN(f))
-        return RenderNaN(c.sb(), num) && c.buffer.append(".f");
-    return PrintDouble(c, RawF64(double(f))) &&
+        return RenderNaN(c.sb(), f) && c.buffer.append(".f");
+    return PrintDouble(c, double(f)) &&
            c.buffer.append("f");
 }
 
