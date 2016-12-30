@@ -220,7 +220,7 @@ History.prototype = {
               places.push({ uri: NetUtil.newURI(entry.get("")),
                             title: entry.get("title"),
                             visits: [{ transitionType: transType,
-                                       visitDate: visitDate }] });
+                                       visitDate }] });
             }
             catch (ex) {
               // Safari's History file may contain malformed URIs which
@@ -232,12 +232,12 @@ History.prototype = {
         if (places.length > 0) {
           MigrationUtils.insertVisitsWrapper(places, {
             _success: false,
-            handleResult: function() {
+            handleResult() {
               // Importing any entry is considered a successful import.
               this._success = true;
             },
-            handleError: function() {},
-            handleCompletion: function() {
+            handleError() {},
+            handleCompletion() {
               aCallback(this._success);
             }
           });

@@ -10,18 +10,18 @@
  * provides accessors to set and query the most basic components of an URI.
  * Subclasses, including nsIURL, impose greater structure on the URI.
  *
- * This interface follows Tim Berners-Lee's URI spec (RFC2396) [1], where the
+ * This interface follows Tim Berners-Lee's URI spec (RFC3986) [1], where the
  * basic URI components are defined as such:
  * <pre>
- *      ftp://username:password@hostname:portnumber/pathname#ref
- *      \ /   \               / \      / \        /\         \ /
- *       -     ---------------   ------   --------  |         -
- *       |            |             |        |      |         |
- *       |            |             |        |      |        Ref
- *       |            |             |       Port    \        /
- *       |            |            Host      /       --------
- *       |         UserPass                 /	         |
- *     Scheme                              /	        Path
+ *      ftp://username:password@hostname:portnumber/pathname?query#ref
+ *      \ /   \               / \      / \        /\       / \   / \ /
+ *       -     ---------------   ------   --------  -------   ---   -
+ *       |            |             |        |         |       |    |
+ *       |            |             |        |      FilePath Query Ref
+ *       |            |             |       Port       \            /
+ *       |            |            Host      /          ------------
+ *       |         UserPass                 /	              |
+ *     Scheme                              /	             Path
  *       \                                /
  *        --------------------------------
  *                       |
@@ -30,13 +30,9 @@
  * The definition of the URI components has been extended to allow for
  * internationalized domain names [2] and the more generic IRI structure [3].
  *
- * Note also that the RFC defines #-separated fragment identifiers as being
- * "not part of the URI".  Despite this, we bundle them as part of the URI, for
- * convenience.
- *
- * [1] http://www.ietf.org/rfc/rfc2396.txt
- * [2] http://www.ietf.org/internet-drafts/draft-ietf-idn-idna-06.txt
- * [3] http://www.ietf.org/internet-drafts/draft-masinter-url-i18n-08.txt
+ * [1] https://tools.ietf.org/html/rfc3986
+ * [2] https://tools.ietf.org/html/rfc5890
+ * [3] https://tools.ietf.org/html/rfc3987
  */
 
 %{C++
@@ -116,7 +112,7 @@ interface nsIURI : nsISupports
 
     /**
      * The Scheme is the protocol to which this URI refers.  The scheme is
-     * restricted to the US-ASCII charset per RFC2396.  Setting this is
+     * restricted to the US-ASCII charset per RFC3986.  Setting this is
      * highly discouraged outside of a protocol handler implementation, since
      * that will generally lead to incorrect results.
      */
@@ -174,6 +170,9 @@ interface nsIURI : nsISupports
      * empty, depending on the protocol).
      *
      * Some characters may be escaped.
+     *
+     * This attribute contains query and ref parts for historical reasons.
+     * Use the 'filePath' attribute if you do not want those parts included.
      */
     attribute AUTF8String path;
 
@@ -281,10 +280,31 @@ interface nsIURI : nsISupports
     /**
      * returns a string for the current URI with the ref element cleared.
      */
-   readonly attribute AUTF8String specIgnoringRef;
+    readonly attribute AUTF8String specIgnoringRef;
 
     /**
      * Returns if there is a reference portion (the part after the "#") of the URI.
      */
-   readonly attribute boolean hasRef;
+    readonly attribute boolean hasRef;
+
+    /************************************************************************
+     * Additional attributes added for .query support:
+     */
+
+    /**
+     * Returns a path including the directory and file portions of a
+     * URL.  For example, the filePath of "http://host/foo/bar.html#baz"
+     * is "/foo/bar.html".
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String filePath;
+
+    /**
+     * Returns the query portion (the part after the "?") of the URL.
+     * If there isn't one, an empty string is returned.
+     *
+     * Some characters may be escaped.
+     */
+    attribute AUTF8String query;
 };

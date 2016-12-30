@@ -76,7 +76,7 @@ FormHandler.prototype = {
                 ? new this.window.Event("autocomplete", { bubbles: true })
                 : new this.window.AutocompleteErrorEvent("autocompleteerror",
                                                          { bubbles: true,
-                                                           reason: reason });
+                                                           reason });
     yield this.waitForTick();
     this.form.dispatchEvent(event);
   }),
@@ -143,7 +143,7 @@ FormHandler.prototype = {
    *          interface, or null if the operation failed because the constraints
    *          on the allowed fields were not honored.
    */
-  collectFormFields: function() {
+  collectFormFields() {
     let autofillData = {
       sections: [],
     };
@@ -173,7 +173,7 @@ FormHandler.prototype = {
         addressType: info.addressType,
         contactType: info.contactType,
         fieldName: info.fieldName,
-        element: element,
+        element,
       });
 
       // The first level is the custom section.
@@ -225,7 +225,7 @@ FormHandler.prototype = {
    *          ],
    *        }
    */
-  autofillFormFields: function(aAutofillResult) {
+  autofillFormFields(aAutofillResult) {
     for (let field of aAutofillResult.fields) {
       // Get the field details, if it was processed by the user interface.
       let fieldDetail = this.fieldDetails
@@ -244,7 +244,7 @@ FormHandler.prototype = {
   /**
    * Waits for one tick of the event loop before resolving the returned promise.
    */
-  waitForTick: function() {
+  waitForTick() {
     return new Promise(function(resolve) {
       Services.tm.currentThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
     });
@@ -263,7 +263,7 @@ FormAutofillContentService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFormAutofillContentService]),
 
   // nsIFormAutofillContentService
-  requestAutocomplete: function(aForm, aWindow) {
+  requestAutocomplete(aForm, aWindow) {
     new FormHandler(aForm, aWindow).handleRequestAutocomplete()
                                    .catch(Cu.reportError);
   },

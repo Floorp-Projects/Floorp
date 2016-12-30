@@ -899,25 +899,25 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow)
   // methods to test along with the functions which determine the expected value
   var checkRowMethods =
   {
-    isContainer: function(row) { return row.container },
-    isContainerOpen: function(row) { return false },
-    isContainerEmpty: function(row) { return (row.children != null && row.children.rows.length == 0) },
-    isSeparator: function(row) { return row.separator },
-    getRowProperties: function(row) { return row.properties },
-    getLevel: function(row) { return row.level },
-    getParentIndex: function(row) { return row.parent },
-    hasNextSibling: function(row) { return r < startRow + length - 1; }
+    isContainer(row) { return row.container },
+    isContainerOpen(row) { return false },
+    isContainerEmpty(row) { return (row.children != null && row.children.rows.length == 0) },
+    isSeparator(row) { return row.separator },
+    getRowProperties(row) { return row.properties },
+    getLevel(row) { return row.level },
+    getParentIndex(row) { return row.parent },
+    hasNextSibling(row) { return r < startRow + length - 1; }
   };
 
   var checkCellMethods =
   {
-    getCellText: function(row, cell) { return cell.label },
-    getCellValue: function(row, cell) { return cell.value },
-    getCellProperties: function(row, cell) { return cell.properties },
-    isEditable: function(row, cell) { return cell.editable },
-    isSelectable: function(row, cell) { return cell.selectable },
-    getImageSrc: function(row, cell) { return cell.image },
-    getProgressMode: function(row, cell) { return cell.mode }
+    getCellText(row, cell) { return cell.label },
+    getCellValue(row, cell) { return cell.value },
+    getCellProperties(row, cell) { return cell.properties },
+    isEditable(row, cell) { return cell.editable },
+    isSelectable(row, cell) { return cell.selectable },
+    getImageSrc(row, cell) { return cell.image },
+    getProgressMode(row, cell) { return cell.mode }
   };
 
   var failedMethods = { };
@@ -1393,8 +1393,8 @@ function convertDOMtoTreeRowInfo(treechildren, level, rowidx)
                       properties: treerow.getAttribute("properties"),
                       container: treeitem.getAttribute("container") == "true",
                       separator: treeitem.localName == "treeseparator",
-                      children: children,
-                      level: level,
+                      children,
+                      level,
                       parent: parentidx });
     }
   }

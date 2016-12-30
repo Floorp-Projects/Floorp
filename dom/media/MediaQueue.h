@@ -43,18 +43,12 @@ public:
 
   inline void Push(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    MOZ_ASSERT(!mEndOfStream);
     MOZ_ASSERT(aItem);
     NS_ADDREF(aItem);
     MOZ_ASSERT(aItem->GetEndTime() >= aItem->mTime);
     nsDeque::Push(aItem);
     mPushEvent.Notify(RefPtr<T>(aItem));
-  }
-
-  inline void PushFront(T* aItem) {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    MOZ_ASSERT(aItem);
-    NS_ADDREF(aItem);
-    nsDeque::PushFront(aItem);
   }
 
   inline already_AddRefed<T> PopFront() {
@@ -64,11 +58,6 @@ public:
       mPopEvent.Notify(rv);
     }
     return rv.forget();
-  }
-
-  inline RefPtr<T> Peek() const {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    return static_cast<T*>(nsDeque::Peek());
   }
 
   inline RefPtr<T> PeekFront() const {
@@ -100,8 +89,10 @@ public:
   // Informs the media queue that it won't be receiving any more items.
   void Finish() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mEndOfStream = true;
-    mFinishEvent.Notify();
+    if (!mEndOfStream) {
+      mEndOfStream = true;
+      mFinishEvent.Notify();
+    }
   }
 
   // Returns the approximate number of microseconds of items in the queue.

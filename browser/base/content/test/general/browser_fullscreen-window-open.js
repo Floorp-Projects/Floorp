@@ -66,7 +66,7 @@ function test_open() {
       title: "test_open",
       param: "",
     },
-    finalizeFn: function() {},
+    finalizeFn() {},
   });
 }
 
@@ -77,7 +77,7 @@ function test_open_with_size() {
       title: "test_open_with_size",
       param: "width=400,height=400",
     },
-    finalizeFn: function() {},
+    finalizeFn() {},
   });
 }
 
@@ -88,7 +88,7 @@ function test_open_with_pos() {
       title: "test_open_with_pos",
       param: "top=200,left=200",
     },
-    finalizeFn: function() {},
+    finalizeFn() {},
   });
 }
 
@@ -100,11 +100,11 @@ function test_open_with_outerSize() {
       title: "test_open_with_outerSize",
       param: "outerWidth=200,outerHeight=200",
     },
-    successFn: function() {
+    successFn() {
       is(window.outerWidth, outerWidth, "Don't change window.outerWidth.");
       is(window.outerHeight, outerHeight, "Don't change window.outerHeight.");
     },
-    finalizeFn: function() {},
+    finalizeFn() {},
   });
 }
 
@@ -116,11 +116,11 @@ function test_open_with_innerSize() {
       title: "test_open_with_innerSize",
       param: "innerWidth=200,innerHeight=200",
     },
-    successFn: function() {
+    successFn() {
       is(window.innerWidth, innerWidth, "Don't change window.innerWidth.");
       is(window.innerHeight, innerHeight, "Don't change window.innerHeight.");
     },
-    finalizeFn: function() {},
+    finalizeFn() {},
   });
 }
 
@@ -131,7 +131,7 @@ function test_open_with_dialog() {
       title: "test_open_with_dialog",
       param: "dialog=yes",
     },
-    finalizeFn: function() {},
+    finalizeFn() {},
   });
 }
 
@@ -148,7 +148,7 @@ function test_open_when_open_new_window_by_pref() {
       title: "test_open_when_open_new_window_by_pref",
       param: "width=400,height=400",
     },
-    finalizeFn: function() {
+    finalizeFn() {
       Services.prefs.clearUserPref(PREF_NAME);
     },
   });
@@ -163,7 +163,7 @@ function test_open_with_pref_to_disable_in_fullscreen() {
       title: "test_open_with_pref_disabled_in_fullscreen",
       param: "width=400,height=400",
     },
-    finalizeFn: function() {
+    finalizeFn() {
       Services.prefs.setBoolPref(PREF_DISABLE_OPEN_NEW_WINDOW, true);
     },
   });
@@ -177,7 +177,7 @@ function test_open_from_chrome() {
       title: "test_open_from_chrome",
       param: "",
     },
-    finalizeFn: function() {}
+    finalizeFn() {}
   });
 }
 
@@ -251,7 +251,7 @@ function waitForWindowOpen(aOptions) {
 
   let listener = new WindowListener(message.title, getBrowserURL(), {
     onSuccess: aOptions.successFn,
-    onFinalize: onFinalize,
+    onFinalize,
   });
   Services.wm.addListener(listener);
 
@@ -292,7 +292,7 @@ function waitForWindowOpenFromChrome(aOptions) {
 
   let listener = new WindowListener(message.title, getBrowserURL(), {
     onSuccess: aOptions.successFn,
-    onFinalize: onFinalize,
+    onFinalize,
   });
   Services.wm.addListener(listener);
 
@@ -312,7 +312,7 @@ WindowListener.prototype = {
   callback_onSuccess: null,
   callBack_onFinalize: null,
 
-  onOpenWindow: function(aXULWindow) {
+  onOpenWindow(aXULWindow) {
     Services.wm.removeListener(this);
 
     let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -340,8 +340,8 @@ WindowListener.prototype = {
     };
     domwindow.addEventListener("load", onLoad, true);
   },
-  onCloseWindow: function(aXULWindow) {},
-  onWindowTitleChange: function(aXULWindow, aNewTitle) {},
+  onCloseWindow(aXULWindow) {},
+  onWindowTitleChange(aXULWindow, aNewTitle) {},
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediatorListener,
                                          Ci.nsISupports]),
 };

@@ -42,7 +42,7 @@ var TestUtils = {
    * @resolves When pending events have been processed.
    * @rejects Never.
    */
-  waitForTick: function() {
+  waitForTick() {
     return new Promise(resolve => executeSoon(resolve));
   },
 
@@ -58,7 +58,7 @@ var TestUtils = {
    * @resolves When the specified time has passed.
    * @rejects Never.
    */
-  waitMs: function(aTimeMs) {
+  waitMs(aTimeMs) {
     return new Promise(resolve => setTimeout(resolve, aTimeMs));
   },
 
@@ -72,7 +72,7 @@ var TestUtils = {
    * @resolves The array [aSubject, aData] from the observed notification.
    * @rejects Never.
    */
-  waitForNotification: function(aTopic) {
+  waitForNotification(aTopic) {
     Output.print("Waiting for notification: '" + aTopic + "'.");
 
     return new Promise(resolve => Services.obs.addObserver(
@@ -96,7 +96,7 @@ var TestUtils = {
    * @resolves The arguments from the observed event.
    * @rejects Never.
    */
-  waitForEvent: function(aTarget, aEventName, aUseCapture = false) {
+  waitForEvent(aTarget, aEventName, aUseCapture = false) {
     Output.print("Waiting for event: '" + aEventName + "' on " + aTarget + ".");
 
     return new Promise(resolve => aTarget.addEventListener(aEventName,
@@ -183,7 +183,7 @@ var FormAutofillTest = {
     // The window is the subject of the observer notification.
     return {
       uiWindow: (yield promiseUIWindow)[0],
-      promiseResult: promiseResult,
+      promiseResult,
     };
   }),
 };

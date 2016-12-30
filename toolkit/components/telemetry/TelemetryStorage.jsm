@@ -146,7 +146,7 @@ this.TelemetryStorage = {
    *
    * @return {Promise} Promise that is resolved when shutdown is complete.
    */
-  shutdown: function() {
+  shutdown() {
     return TelemetryStorageImpl.shutdown();
   },
 
@@ -156,7 +156,7 @@ this.TelemetryStorage = {
    * @param {object} ping The ping data to archive.
    * @return {promise} Promise that is resolved when the ping is successfully archived.
    */
-  saveArchivedPing: function(ping) {
+  saveArchivedPing(ping) {
     return TelemetryStorageImpl.saveArchivedPing(ping);
   },
 
@@ -166,7 +166,7 @@ this.TelemetryStorage = {
    * @param {string} id The pings id.
    * @return {promise<object>} Promise that is resolved with the ping data.
    */
-  loadArchivedPing: function(id) {
+  loadArchivedPing(id) {
     return TelemetryStorageImpl.loadArchivedPing(id);
   },
 
@@ -177,7 +177,7 @@ this.TelemetryStorage = {
    *
    * @return {promise<sequence<object>>}
    */
-  loadArchivedPingList: function() {
+  loadArchivedPingList() {
     return TelemetryStorageImpl.loadArchivedPingList();
   },
 
@@ -187,7 +187,7 @@ this.TelemetryStorage = {
    *
    * @return {Promise} Resolved when the cleanup task completes.
    */
-  runCleanPingArchiveTask: function() {
+  runCleanPingArchiveTask() {
     return TelemetryStorageImpl.runCleanPingArchiveTask();
   },
 
@@ -196,7 +196,7 @@ this.TelemetryStorage = {
    *
    * @return {Promise} Resolved when the cleanup task completes.
    */
-  runEnforcePendingPingsQuotaTask: function() {
+  runEnforcePendingPingsQuotaTask() {
     return TelemetryStorageImpl.runEnforcePendingPingsQuotaTask();
   },
 
@@ -205,28 +205,28 @@ this.TelemetryStorage = {
    *
    * @return {Promise} Resolved when the pings are removed.
    */
-  runRemovePendingPingsTask: function() {
+  runRemovePendingPingsTask() {
     return TelemetryStorageImpl.runRemovePendingPingsTask();
   },
 
   /**
    * Reset the storage state in tests.
    */
-  reset: function() {
+  reset() {
     return TelemetryStorageImpl.reset();
   },
 
   /**
    * Test method that allows waiting on the archive clean task to finish.
    */
-  testCleanupTaskPromise: function() {
+  testCleanupTaskPromise() {
     return (TelemetryStorageImpl._cleanArchiveTask || Promise.resolve());
   },
 
   /**
    * Test method that allows waiting on the pending pings quota task to finish.
    */
-  testPendingQuotaTaskPromise: function() {
+  testPendingQuotaTaskPromise() {
     return (TelemetryStorageImpl._enforcePendingPingsQuotaTask || Promise.resolve());
   },
 
@@ -236,7 +236,7 @@ this.TelemetryStorage = {
    * @param {Object} ping The ping data.
    * @return {Promise} Resolved when the ping was saved.
    */
-  savePendingPing: function(ping) {
+  savePendingPing(ping) {
     return TelemetryStorageImpl.savePendingPing(ping);
   },
 
@@ -245,7 +245,7 @@ this.TelemetryStorage = {
    * @param {Object}  sessionData The session data.
    * @return {Promise} Resolved when the data was saved.
    */
-  saveSessionData: function(sessionData) {
+  saveSessionData(sessionData) {
     return TelemetryStorageImpl.saveSessionData(sessionData);
   },
 
@@ -253,7 +253,7 @@ this.TelemetryStorage = {
    * Loads session data from a session data file.
    * @return {Promise<object>} Resolved with the session data in object form.
    */
-  loadSessionData: function() {
+  loadSessionData() {
     return TelemetryStorageImpl.loadSessionData();
   },
 
@@ -263,7 +263,7 @@ this.TelemetryStorage = {
    * @param {String} id The pings id.
    * @return {Promise} Resolved with the loaded ping data.
    */
-  loadPendingPing: function(id) {
+  loadPendingPing(id) {
     return TelemetryStorageImpl.loadPendingPing(id);
   },
 
@@ -273,7 +273,7 @@ this.TelemetryStorage = {
    * @param {String} id The pings id.
    * @return {Promise} Resolved when the ping was removed.
    */
-  removePendingPing: function(id) {
+  removePendingPing(id) {
     return TelemetryStorageImpl.removePendingPing(id);
   },
 
@@ -287,7 +287,7 @@ this.TelemetryStorage = {
    *
    * @return {Promise<sequence>} Resolved with the ping list.
    */
-  loadPendingPingList: function() {
+  loadPendingPingList() {
     return TelemetryStorageImpl.loadPendingPingList();
    },
 
@@ -301,7 +301,7 @@ this.TelemetryStorage = {
    *
    * @return {sequence} The current pending ping list.
    */
-  getPendingPingList: function() {
+  getPendingPingList() {
     return TelemetryStorageImpl.getPendingPingList();
    },
 
@@ -312,7 +312,7 @@ this.TelemetryStorage = {
    * @param {object} ping The ping data to save.
    * @return {promise} Promise that is resolved when the ping is successfully saved.
    */
-  saveAbortedSessionPing: function(ping) {
+  saveAbortedSessionPing(ping) {
     return TelemetryStorageImpl.saveAbortedSessionPing(ping);
   },
 
@@ -322,7 +322,7 @@ this.TelemetryStorage = {
    * @return {promise<object>} Promise that is resolved with the ping data if found.
    *                           Otherwise returns null.
    */
-  loadAbortedSessionPing: function() {
+  loadAbortedSessionPing() {
     return TelemetryStorageImpl.loadAbortedSessionPing();
   },
 
@@ -331,7 +331,7 @@ this.TelemetryStorage = {
    * @param ping The deletion ping.
    * @return {Promise} A promise resolved when the ping is saved.
    */
-  saveDeletionPing: function(ping) {
+  saveDeletionPing(ping) {
     return TelemetryStorageImpl.saveDeletionPing(ping);
   },
 
@@ -339,14 +339,14 @@ this.TelemetryStorage = {
    * Remove the deletion ping.
    * @return {Promise} Resolved when the ping is deleted from the disk.
    */
-  removeDeletionPing: function() {
+  removeDeletionPing() {
     return TelemetryStorageImpl.removeDeletionPing();
   },
 
   /**
    * Check if the ping id identifies a deletion ping.
    */
-  isDeletionPing: function(aPingId) {
+  isDeletionPing(aPingId) {
     return TelemetryStorageImpl.isDeletionPing(aPingId);
   },
 
@@ -355,7 +355,7 @@ this.TelemetryStorage = {
    *
    * @return {promise} Promise that is resolved once the ping is removed.
    */
-  removeAbortedSessionPing: function() {
+  removeAbortedSessionPing() {
     return TelemetryStorageImpl.removeAbortedSessionPing();
   },
 
@@ -369,7 +369,7 @@ this.TelemetryStorage = {
    * the file exists.
    * @returns {promise}
    */
-  savePingToFile: function(ping, file, overwrite) {
+  savePingToFile(ping, file, overwrite) {
     return TelemetryStorageImpl.savePingToFile(ping, file, overwrite);
   },
 
@@ -381,7 +381,7 @@ this.TelemetryStorage = {
    * if it exists.
    * @returns {promise}
    */
-  savePing: function(ping, overwrite) {
+  savePing(ping, overwrite) {
     return TelemetryStorageImpl.savePing(ping, overwrite);
   },
 
@@ -392,7 +392,7 @@ this.TelemetryStorage = {
    * @param {Object} pingData The ping object.
    * @return {Promise} A promise resolved when the ping is saved to the pings directory.
    */
-  addPendingPing: function(pingData) {
+  addPendingPing(pingData) {
     return TelemetryStorageImpl.addPendingPing(pingData);
   },
 
@@ -402,7 +402,7 @@ this.TelemetryStorage = {
    * @param {object} ping The ping.
    * @returns {promise}
    */
-  cleanupPingFile: function(ping) {
+  cleanupPingFile(ping) {
     return TelemetryStorageImpl.cleanupPingFile(ping);
   },
 
@@ -428,7 +428,7 @@ this.TelemetryStorage = {
    * the future.
    * @return {Promise} Resolved when the database files are deleted.
    */
-  removeFHRDatabase: function() {
+  removeFHRDatabase() {
     return TelemetryStorageImpl.removeFHRDatabase();
   },
 
@@ -439,7 +439,7 @@ this.TelemetryStorage = {
    * @param {String} aType The ping type.
    * @return {String} The full path to the archived ping.
    */
-  _testGetArchivedPingPath: function(aPingId, aDate, aType) {
+  _testGetArchivedPingPath(aPingId, aDate, aType) {
     return getArchivedPingPath(aPingId, aDate, aType);
   },
 
@@ -453,14 +453,14 @@ this.TelemetryStorage = {
    *                    id: <string>,
    *                    type: <string> }
    */
-  _testGetArchivedPingDataFromFileName: function(aFileName) {
+  _testGetArchivedPingDataFromFileName(aFileName) {
     return TelemetryStorageImpl._getArchivedPingDataFromFileName(aFileName);
   },
 
   /**
    * Only used in tests, this helper allows cleaning up the pending ping storage.
    */
-  testClearPendingPings: function() {
+  testClearPendingPings() {
     return TelemetryStorageImpl.runRemovePendingPingsTask();
   }
 };
@@ -486,7 +486,7 @@ SaveSerializer.prototype = {
    * @param {Function} aFunction The task function to enqueue. It must return a promise.
    * @return {Promise} A promise resolved when the enqueued task completes.
    */
-  enqueueTask: function(aFunction) {
+  enqueueTask(aFunction) {
     let promise = new Promise((resolve, reject) =>
       this._queuedOperations.push([aFunction, resolve, reject]));
 
@@ -500,7 +500,7 @@ SaveSerializer.prototype = {
    * Make sure to flush all the pending operations.
    * @return {Promise} A promise resolved when all the pending operations have completed.
    */
-  flushTasks: function() {
+  flushTasks() {
     let dummyTask = () => new Promise(resolve => resolve());
     return this.enqueueTask(dummyTask);
   },
@@ -509,7 +509,7 @@ SaveSerializer.prototype = {
    * Pop a task from the queue, executes it and continue to the next one.
    * This function recursively pops all the tasks.
    */
-  _popAndPerformQueuedOperation: function() {
+  _popAndPerformQueuedOperation() {
     if (!this._queuedOperations.length || this._queuedInProgress) {
       return;
     }
@@ -649,7 +649,7 @@ var TelemetryStorageImpl = {
    * @param {object} ping The ping data to archive.
    * @return {promise} Promise that is resolved when the ping is successfully archived.
    */
-  saveArchivedPing: function(ping) {
+  saveArchivedPing(ping) {
     let promise = this._saveArchivedPingTask(ping);
     this._activelyArchiving.add(promise);
     promise.then((r) => { this._activelyArchiving.delete(promise); },
@@ -732,7 +732,7 @@ var TelemetryStorageImpl = {
   /**
    * Saves session data to disk.
    */
-  saveSessionData: function(sessionData) {
+  saveSessionData(sessionData) {
     return this._stateSaveSerializer.enqueueTask(() => this._saveSessionData(sessionData));
   },
 
@@ -754,7 +754,7 @@ var TelemetryStorageImpl = {
    * @return {Promise<Object>} A promise resolved with an object on success,
    *                           with null otherwise.
    */
-  loadSessionData: function() {
+  loadSessionData() {
     return this._stateSaveSerializer.enqueueTask(() => this._loadSessionData());
   },
 
@@ -807,7 +807,7 @@ var TelemetryStorageImpl = {
    *
    * @return {Promise} Resolved when the cleanup task completes.
    */
-  runCleanPingArchiveTask: function() {
+  runCleanPingArchiveTask() {
     // If there's an archive cleaning task already running, return it.
     if (this._cleanArchiveTask) {
       return this._cleanArchiveTask;
@@ -1141,7 +1141,7 @@ var TelemetryStorageImpl = {
   /**
    * Reset the storage state in tests.
    */
-  reset: function() {
+  reset() {
     this._shutdown = false;
     this._scannedArchiveDirectory = false;
     this._archivedPings = new Map();
@@ -1293,7 +1293,7 @@ var TelemetryStorageImpl = {
    * @param {Object} ping The ping object.
    * @return {Promise} A promise resolved when the ping is saved to the pings directory.
    */
-  addPendingPing: function(ping) {
+  addPendingPing(ping) {
     return this.savePendingPing(ping);
   },
 
@@ -1303,14 +1303,14 @@ var TelemetryStorageImpl = {
    * @param {object} ping The ping.
    * @returns {promise}
    */
-  cleanupPingFile: function(ping) {
+  cleanupPingFile(ping) {
     return OS.File.remove(pingFilePath(ping));
   },
 
-  savePendingPing: function(ping) {
+  savePendingPing(ping) {
     let p = this.savePing(ping, true).then((path) => {
       this._pendingPings.set(ping.id, {
-        path: path,
+        path,
         lastModificationDate: Policy.now().getTime(),
       });
       this._log.trace("savePendingPing - saved ping with id " + ping.id);
@@ -1367,7 +1367,7 @@ var TelemetryStorageImpl = {
     return ping;
   }),
 
-  removePendingPing: function(id) {
+  removePendingPing(id) {
     let info = this._pendingPings.get(id);
     if (!info) {
       this._log.trace("removePendingPing - unknown id " + id);
@@ -1387,7 +1387,7 @@ var TelemetryStorageImpl = {
    *
    * @param {Object<Promise>} The save promise to track.
    */
-  _trackPendingPingSaveTask: function(promise) {
+  _trackPendingPingSaveTask(promise) {
     let clear = () => this._activePendingPingSaves.delete(promise);
     promise.then(clear, clear);
     this._activePendingPingSaves.add(promise);
@@ -1398,7 +1398,7 @@ var TelemetryStorageImpl = {
    * @return {Object<Promise>} A promise resolved when all the pending pings save promises
    *         are resolved.
    */
-  promisePendingPingSaves: function() {
+  promisePendingPingSaves() {
     // Make sure to wait for all the promises, even if they reject. We don't need to log
     // the failures here, as they are already logged elsewhere.
     return waitForAll(this._activePendingPingSaves);
@@ -1456,7 +1456,7 @@ var TelemetryStorageImpl = {
     }
   }),
 
-  loadPendingPingList: function() {
+  loadPendingPingList() {
     // If we already have a pending scanning task active, return that.
     if (this._scanPendingPingsTask) {
       return this._scanPendingPingsTask;
@@ -1479,7 +1479,7 @@ var TelemetryStorageImpl = {
     return this._scanPendingPingsTask;
   },
 
-  getPendingPingList: function() {
+  getPendingPingList() {
     return this._buildPingList();
   },
 
@@ -1555,7 +1555,7 @@ var TelemetryStorageImpl = {
     return this._buildPingList();
   }),
 
-  _buildPingList: function() {
+  _buildPingList() {
     const list = Array.from(this._pendingPings, p => ({
       id: p[0],
       lastModificationDate: p[1].lastModificationDate,
@@ -1620,7 +1620,7 @@ var TelemetryStorageImpl = {
    *                    id: <string>,
    *                    type: <string> }
    */
-  _getArchivedPingDataFromFileName: function(fileName) {
+  _getArchivedPingDataFromFileName(fileName) {
     // Extract the parts.
     let parts = fileName.split(".");
     if (parts.length != 4) {
@@ -1655,9 +1655,9 @@ var TelemetryStorageImpl = {
     }
 
     return {
-      timestamp: timestamp,
+      timestamp,
       id: uuid,
-      type: type,
+      type,
     };
   },
 
@@ -1683,7 +1683,7 @@ var TelemetryStorageImpl = {
     return ping;
   }),
 
-  removeAbortedSessionPing: function() {
+  removeAbortedSessionPing() {
     return this._abortedSessionSerializer.enqueueTask(Task.async(function*() {
       try {
         yield OS.File.remove(gAbortedSessionFilePath, { ignoreAbsent: false });
@@ -1732,7 +1732,7 @@ var TelemetryStorageImpl = {
     }.bind(this)));
   }),
 
-  isDeletionPing: function(aPingId) {
+  isDeletionPing(aPingId) {
     this._log.trace("isDeletionPing - id: " + aPingId);
     let pingInfo = this._pendingPings.get(aPingId);
     if (!pingInfo) {

@@ -86,7 +86,7 @@ function iterateOverPath(path, extensions) {
       try {
         // Iterate through the directory
         yield iterator.forEach(pathEntryIterator);
-        resolve({files: files, subdirs: subdirs});
+        resolve({files, subdirs});
       } catch (ex) {
         reject(ex);
       } finally {

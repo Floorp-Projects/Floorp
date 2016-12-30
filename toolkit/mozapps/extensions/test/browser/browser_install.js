@@ -46,7 +46,7 @@ function installAddon(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_2.xpi",
                                 function(aInstall) {
     aInstall.addListener({
-      onInstallEnded: function() {
+      onInstallEnded() {
         executeSoon(aCallback);
       }
     });
@@ -57,14 +57,14 @@ function installAddon(aCallback) {
 function installUpgrade(aCallback) {
   AddonManager.getAddonByID("install1@tests.mozilla.org", function(aAddon) {
     aAddon.findUpdates({
-      onUpdateAvailable: function(aAddon, aInstall) {
+      onUpdateAvailable(aAddon, aInstall) {
         is(get_list_item_count(), 1, "Should be only one item in the list");
 
         aInstall.addListener({
-          onDownloadEnded: function() {
+          onDownloadEnded() {
             is(get_list_item_count(), 1, "Should be only one item in the list once the update has started");
           },
-          onInstallEnded: function() {
+          onInstallEnded() {
             executeSoon(aCallback);
           }
         });
@@ -78,7 +78,7 @@ function cancelInstall(aCallback) {
   AddonManager.getInstallForURL(TESTROOT + "addons/browser_install1_2.xpi",
                                 function(aInstall) {
     aInstall.addListener({
-      onDownloadEnded: function(aInstall) {
+      onDownloadEnded(aInstall) {
         executeSoon(function() {
           aInstall.cancel();
           aCallback();
@@ -110,7 +110,7 @@ function installSearchResult(aCallback) {
     EventUtils.synthesizeMouseAtCenter(get_node(status, "install-remote-btn"), {}, gManagerWindow);
 
     item.mInstall.addListener({
-      onInstallEnded: function() {
+      onInstallEnded() {
         executeSoon(aCallback);
       }
     });

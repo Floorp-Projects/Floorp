@@ -64,7 +64,7 @@ function test() {
                                .getItemAnnotation(items[i],
                                                   PlacesUIUtils.ORGANIZER_QUERY_ANNO);
     var query = { name: queryName,
-                  itemId: itemId,
+                  itemId,
                   correctTitle: PlacesUtils.bookmarks.getItemTitle(itemId) }
     switch (queryName) {
       case "BookmarksToolbar":

@@ -99,11 +99,11 @@ function installAddonEngine(name = "engine-addon")
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIDirectoryServiceProvider,
                                            Ci.nsIDirectoryServiceProvider2]),
 
-    getFile: function(prop, persistant) {
+    getFile(prop, persistant) {
       throw Cr.NS_ERROR_FAILURE;
     },
 
-    getFiles: function(prop) {
+    getFiles(prop) {
       let result = [];
 
       switch (prop) {
@@ -147,7 +147,7 @@ function installDistributionEngine()
   do_get_file("data/engine-override.xml").copyTo(dir, "bug645970.xml");
 
   Services.dirsvc.registerProvider({
-    getFile: function(aProp, aPersistent) {
+    getFile(aProp, aPersistent) {
       aPersistent.value = true;
       if (aProp == XRE_APP_DISTRIBUTION_DIR)
         return distDir.clone();

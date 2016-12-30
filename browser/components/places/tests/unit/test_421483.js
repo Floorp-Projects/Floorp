@@ -79,7 +79,7 @@ add_task(function* move_smart_bookmark_rename_and_restore() {
 
   // change title and move into new subfolder
   yield PlacesUtils.bookmarks.update({
-    guid: guid,
+    guid,
     parentGuid: subfolder.guid,
     index: PlacesUtils.bookmarks.DEFAULT_INDEX,
     title: "new title"

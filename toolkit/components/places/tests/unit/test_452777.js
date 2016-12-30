@@ -26,7 +26,7 @@ function run_test()
 
   // Now check to make sure it gets added with the right id
   bs.addObserver({
-    onItemAdded: function(aItemId, aFolder, aIndex, aItemType, aURI, aTitle)
+    onItemAdded(aItemId, aFolder, aIndex, aItemType, aURI, aTitle)
     {
       do_check_eq(aItemId, id);
       do_check_eq(aTitle, TITLE);

@@ -163,6 +163,9 @@ module.exports = {
     // No using with
     "no-with": "error",
 
+    // Require object-literal shorthand with ES6 method syntax
+    "object-shorthand": ["error", "always", { "avoidQuotes": true }],
+
     // No spacing inside rest or spread expressions
     "rest-spread-spacing": "error",
 

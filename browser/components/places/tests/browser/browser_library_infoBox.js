@@ -16,7 +16,7 @@ var gLibrary;
 
 gTests.push({
   desc: "Bug 430148 - Remove or hide the more/less button in details pane...",
-  run: function() {
+  run() {
     var PO = gLibrary.PlacesOrganizer;
     let ContentTree = gLibrary.ContentTree;
     var infoBoxExpanderWrapper = getAndCheckElmtById("infoBoxExpanderWrapper");

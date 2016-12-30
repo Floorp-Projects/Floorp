@@ -137,19 +137,19 @@ this.LoginImport.prototype = {
 
           this.store.data.logins.push({
             id: this.store.data.nextId++,
-            hostname: hostname,
-            httpRealm: httpRealm,
-            formSubmitURL: formSubmitURL,
-            usernameField: usernameField,
-            passwordField: passwordField,
-            encryptedUsername: encryptedUsername,
-            encryptedPassword: encryptedPassword,
-            guid: guid,
-            encType: encType,
-            timeCreated: timeCreated,
-            timeLastUsed: timeLastUsed,
-            timePasswordChanged: timePasswordChanged,
-            timesUsed: timesUsed,
+            hostname,
+            httpRealm,
+            formSubmitURL,
+            usernameField,
+            passwordField,
+            encryptedUsername,
+            encryptedPassword,
+            guid,
+            encType,
+            timeCreated,
+            timeLastUsed,
+            timePasswordChanged,
+            timesUsed,
           });
         } catch (ex) {
           Cu.reportError("Error importing login: " + ex);

@@ -246,15 +246,15 @@ add_test(function test_dh_details()
         checkFinished();
       }
     },
-    onItemAnnotationSet: function() {},
-    onPageAnnotationRemoved: function() {},
-    onItemAnnotationRemoved: function() {}
+    onItemAnnotationSet() {},
+    onPageAnnotationRemoved() {},
+    onItemAnnotationRemoved() {}
   }
 
   let historyObserver = {
-    onBeginUpdateBatch: function() {},
-    onEndUpdateBatch: function() {},
-    onVisit: function() {},
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisit() {},
     onTitleChanged: function HO_onTitleChanged(aURI, aPageTitle)
     {
       if (aURI.equals(SOURCE_URI)) {
@@ -263,10 +263,10 @@ add_test(function test_dh_details()
         checkFinished();
       }
     },
-    onDeleteURI: function() {},
-    onClearHistory: function() {},
-    onPageChanged: function() {},
-    onDeleteVisits: function() {}
+    onDeleteURI() {},
+    onClearHistory() {},
+    onPageChanged() {},
+    onDeleteVisits() {}
   };
 
   PlacesUtils.annotations.addObserver(annoObserver, false);

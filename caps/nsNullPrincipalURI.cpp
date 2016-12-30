@@ -166,6 +166,32 @@ nsNullPrincipalURI::SetPath(const nsACString &aPath)
 }
 
 NS_IMETHODIMP
+nsNullPrincipalURI::GetFilePath(nsACString &aFilePath)
+{
+  aFilePath.Truncate();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::SetFilePath(const nsACString &aFilePath)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::GetQuery(nsACString &aQuery)
+{
+  aQuery.Truncate();
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNullPrincipalURI::SetQuery(const nsACString &aQuery)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsNullPrincipalURI::GetRef(nsACString &_ref)
 {
   _ref.Truncate();

@@ -19,7 +19,7 @@ const kBrowserURL = "chrome://browser/content/browser.xul";
 this.ContentWebRTC = {
   _initialized: false,
 
-  init: function() {
+  init() {
     if (this._initialized)
       return;
 
@@ -33,7 +33,7 @@ this.ContentWebRTC = {
       Services.obs.addObserver(processShutdown, "content-child-shutdown", false);
   },
 
-  uninit: function() {
+  uninit() {
     Services.obs.removeObserver(handleGUMRequest, "getUserMedia:request");
     Services.obs.removeObserver(handlePCRequest, "PeerConnection:request");
     Services.obs.removeObserver(updateIndicators, "recording-device-events");
@@ -46,7 +46,7 @@ this.ContentWebRTC = {
   },
 
   // Called only for 'unload' to remove pending gUM prompts in reloaded frames.
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     let contentWindow = aEvent.target.defaultView;
     let mm = getMessageManagerForWindow(contentWindow);
     for (let key of contentWindow.pendingGetUserMediaRequests.keys()) {
@@ -57,7 +57,7 @@ this.ContentWebRTC = {
     }
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "rtcpeer:Allow":
       case "rtcpeer:Deny": {
@@ -115,9 +115,9 @@ function handlePCRequest(aSubject, aTopic, aData) {
   contentWindow.pendingPeerConnectionRequests.add(callID);
 
   let request = {
-    windowID: windowID,
-    innerWindowID: innerWindowID,
-    callID: callID,
+    windowID,
+    innerWindowID,
+    callID,
     documentURI: contentWindow.document.documentURI,
     secure: isSecure,
   };
@@ -210,11 +210,11 @@ function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSec
     windowID: aWindowID,
     documentURI: aContentWindow.document.documentURI,
     secure: aSecure,
-    requestTypes: requestTypes,
-    sharingScreen: sharingScreen,
-    sharingAudio: sharingAudio,
-    audioDevices: audioDevices,
-    videoDevices: videoDevices
+    requestTypes,
+    sharingScreen,
+    sharingAudio,
+    audioDevices,
+    videoDevices
   };
 
   let mm = getMessageManagerForWindow(aContentWindow);

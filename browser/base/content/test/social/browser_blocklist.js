@@ -66,7 +66,7 @@ function test() {
 }
 
 var tests = {
-  testSimpleBlocklist: function(next) {
+  testSimpleBlocklist(next) {
     // this really just tests adding and clearing our blocklist for later tests
     setAndUpdateBlocklist(blocklistURL).then(() => {
       ok(Services.blocklist.isAddonBlocklisted(SocialService.createWrapper(manifest_bad)), "blocking 'blocked'");
@@ -77,7 +77,7 @@ var tests = {
       });
     });
   },
-  testAddingNonBlockedProvider: function(next) {
+  testAddingNonBlockedProvider(next) {
     function finishTest(isgood) {
       ok(isgood, "adding non-blocked provider ok");
       Services.prefs.clearUserPref("social.manifest.good");
@@ -103,7 +103,7 @@ var tests = {
       }
     });
   },
-  testAddingBlockedProvider: function(next) {
+  testAddingBlockedProvider(next) {
     function finishTest(good) {
       ok(good, "Unable to add blocklisted provider");
       Services.prefs.clearUserPref("social.manifest.blocked");
@@ -124,7 +124,7 @@ var tests = {
       }
     });
   },
-  testInstallingBlockedProvider: function(next) {
+  testInstallingBlockedProvider(next) {
     function finishTest(good) {
       ok(good, "Unable to install blocklisted provider");
       resetBlocklist().then(next);
@@ -138,7 +138,7 @@ var tests = {
           origin: manifest_bad.origin,
           url: activationURL,
           manifest: manifest_bad,
-          window: window
+          window
         }
         Social.installProvider(data, function(addonManifest) {
           finishTest(false);
@@ -148,10 +148,10 @@ var tests = {
       }
     });
   },
-  testBlockingExistingProvider: function(next) {
+  testBlockingExistingProvider(next) {
     let listener = {
       _window: null,
-      onOpenWindow: function(aXULWindow) {
+      onOpenWindow(aXULWindow) {
         Services.wm.removeListener(this);
         this._window = aXULWindow;
         let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -177,8 +177,8 @@ var tests = {
           });
         }, false);
       },
-      onCloseWindow: function(aXULWindow) { },
-      onWindowTitleChange: function(aXULWindow, aNewTitle) { }
+      onCloseWindow(aXULWindow) { },
+      onWindowTitleChange(aXULWindow, aNewTitle) { }
     };
 
     Services.wm.addListener(listener);
