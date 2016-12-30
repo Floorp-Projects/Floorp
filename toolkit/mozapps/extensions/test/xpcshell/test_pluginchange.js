@@ -25,7 +25,7 @@ PluginTag.prototype = {
 
   mimeTypes: [],
 
-  getMimeTypes: function(count) {
+  getMimeTypes(count) {
     count.value = this.mimeTypes.length;
     return this.mimeTypes;
   }
@@ -42,7 +42,7 @@ const PLUGINS = [
 
 const gPluginHost = {
   // nsIPluginHost
-  getPluginTags: function(count) {
+  getPluginTags(count) {
     count.value = PLUGINS.length;
     return PLUGINS;
   },

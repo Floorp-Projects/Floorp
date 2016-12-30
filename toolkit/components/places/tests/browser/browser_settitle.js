@@ -26,12 +26,12 @@ add_task(function* ()
   let titleChangedPromise = new Promise(resolve => {
     var historyObserver = {
       data: [],
-      onBeginUpdateBatch: function() {},
-      onEndUpdateBatch: function() {},
-      onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
                         aTransitionType) {
       },
-      onTitleChanged: function(aURI, aPageTitle, aGUID) {
+      onTitleChanged(aURI, aPageTitle, aGUID) {
         this.data.push({ uri: aURI, title: aPageTitle, guid: aGUID });
 
         // We only expect one title change.
@@ -43,10 +43,10 @@ add_task(function* ()
         PlacesUtils.history.removeObserver(this);
         resolve(this.data);
       },
-      onDeleteURI: function() {},
-      onClearHistory: function() {},
-      onPageChanged: function() {},
-      onDeleteVisits: function() {},
+      onDeleteURI() {},
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
     PlacesUtils.history.addObserver(historyObserver, false);

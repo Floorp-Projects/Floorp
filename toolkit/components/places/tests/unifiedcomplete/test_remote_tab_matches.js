@@ -189,7 +189,7 @@ add_task(function* test_localtab_matches_override() {
   // Setup Places to think the tab is open locally.
   let uri = NetUtil.newURI("http://foo.com/");
   yield PlacesTestUtils.addVisits([
-    { uri: uri, title: "An Example" },
+    { uri, title: "An Example" },
   ]);
   addOpenPages(uri, 1);
 

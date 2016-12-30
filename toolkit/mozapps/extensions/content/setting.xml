@@ -31,7 +31,7 @@
       <field name="_observer"><![CDATA[({
         _self: this,
 
-        QueryInterface: function(aIID) {
+        QueryInterface(aIID) {
           const Ci = Components.interfaces;
           if (aIID.equals(Ci.nsIObserver) ||
               aIID.equals(Ci.nsISupportsWeakReference) ||
@@ -41,7 +41,7 @@
           throw Components.Exception("No interface", Components.results.NS_ERROR_NO_INTERFACE);
         },
 
-        observe: function(aSubject, aTopic, aPrefName) {
+        observe(aSubject, aTopic, aPrefName) {
           if (aTopic != "nsPref:changed")
             return;
 

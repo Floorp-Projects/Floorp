@@ -12,7 +12,7 @@ add_task(function* () {
 
   let newTitlePromise = new Promise(resolve => {
     let observer = {
-      onTitleChanged: function(uri, title) {
+      onTitleChanged(uri, title) {
         // If the uri of the page whose title is changing ends with 'new_page',
         // then it's the result of our pushState.
         if (/new_page$/.test(uri.spec)) {
@@ -21,13 +21,13 @@ add_task(function* () {
         }
       },
 
-      onBeginUpdateBatch: function() { },
-      onEndUpdateBatch: function() { },
-      onVisit: function() { },
-      onDeleteURI: function() { },
-      onClearHistory: function() { },
-      onPageChanged: function() { },
-      onDeleteVisits: function() { },
+      onBeginUpdateBatch() { },
+      onEndUpdateBatch() { },
+      onVisit() { },
+      onDeleteURI() { },
+      onClearHistory() { },
+      onPageChanged() { },
+      onDeleteVisits() { },
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
 

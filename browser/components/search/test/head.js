@@ -58,11 +58,11 @@ function promiseNewEngine(basename, options = {}) {
       options.setAsCurrent == undefined ? true : options.setAsCurrent;
     info("Waiting for engine to be added: " + basename);
     Services.search.init({
-      onInitComplete: function() {
+      onInitComplete() {
         let url = getRootDirectory(gTestPath) + basename;
         let current = Services.search.currentEngine;
         Services.search.addEngine(url, null, options.iconURL || "", false, {
-          onSuccess: function(engine) {
+          onSuccess(engine) {
             info("Search engine added: " + basename);
             if (setAsCurrent) {
               Services.search.currentEngine = engine;
@@ -76,7 +76,7 @@ function promiseNewEngine(basename, options = {}) {
             });
             resolve(engine);
           },
-          onError: function(errCode) {
+          onError(errCode) {
             ok(false, "addEngine failed with error code " + errCode);
             reject();
           }

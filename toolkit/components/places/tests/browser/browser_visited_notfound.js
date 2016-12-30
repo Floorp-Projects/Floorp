@@ -31,7 +31,7 @@ function continueTest(aOldFrecency) {
   // Create and add history observer.
   let historyObserver = {
     __proto__: NavHistoryObserver.prototype,
-    onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
+    onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
                       aTransitionType) {
       PlacesUtils.history.removeObserver(historyObserver);
       info("Received onVisit: " + aURI.spec);

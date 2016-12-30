@@ -143,7 +143,7 @@ function test_get_assertion_with_offset() {
     function(err, kp) {
       jwcrypto.generateAssertion("fake-cert", kp, RP_ORIGIN,
         { duration: MINUTE_MS,
-          localtimeOffsetMsec: localtimeOffsetMsec,
+          localtimeOffsetMsec,
           now: localMsec},
           function(err2, backedAssertion) {
             do_check_null(err2);
@@ -256,11 +256,11 @@ function extractComponents(signedObject) {
     do_check_true(!!payload[field]);
   }
 
-  return {header: header,
-          payload: payload,
-          headerSegment: headerSegment,
-          payloadSegment: payloadSegment,
-          cryptoSegment: cryptoSegment};
+  return {header,
+          payload,
+          headerSegment,
+          payloadSegment,
+          cryptoSegment};
 }
 
 var TESTS = [

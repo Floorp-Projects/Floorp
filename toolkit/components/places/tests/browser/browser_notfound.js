@@ -11,7 +11,7 @@ add_task(function* () {
   // Create and add history observer.
   let visitedPromise = new Promise(resolve => {
     let historyObserver = {
-      onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
+      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
                         aTransitionType) {
         PlacesUtils.history.removeObserver(historyObserver);
         info("Received onVisit: " + aURI.spec);
@@ -26,13 +26,13 @@ add_task(function* () {
           });
         });
       },
-      onBeginUpdateBatch: function() {},
-      onEndUpdateBatch: function() {},
-      onTitleChanged: function() {},
-      onDeleteURI: function() {},
-      onClearHistory: function() {},
-      onPageChanged: function() {},
-      onDeleteVisits: function() {},
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onTitleChanged() {},
+      onDeleteURI() {},
+      onClearHistory() {},
+      onPageChanged() {},
+      onDeleteVisits() {},
       QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
     };
     PlacesUtils.history.addObserver(historyObserver, false);

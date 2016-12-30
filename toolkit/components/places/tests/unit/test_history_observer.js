@@ -8,14 +8,14 @@
 function NavHistoryObserver() {
 }
 NavHistoryObserver.prototype = {
-  onBeginUpdateBatch: function() { },
-  onEndUpdateBatch: function() { },
-  onVisit: function() { },
-  onTitleChanged: function() { },
-  onDeleteURI: function() { },
-  onClearHistory: function() { },
-  onPageChanged: function() { },
-  onDeleteVisits: function() { },
+  onBeginUpdateBatch() { },
+  onEndUpdateBatch() { },
+  onVisit() { },
+  onTitleChanged() { },
+  onDeleteURI() { },
+  onClearHistory() { },
+  onPageChanged() { },
+  onDeleteVisits() { },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
 };
 
@@ -43,7 +43,7 @@ function* task_add_visit(uri, timestamp, transition) {
   uri = uri || NetUtil.newURI("http://firefox.com/");
   timestamp = timestamp || Date.now() * 1000;
   yield PlacesTestUtils.addVisits({
-    uri: uri,
+    uri,
     transition: transition || TRANSITION_TYPED,
     visitDate: timestamp
   });
@@ -187,7 +187,7 @@ add_task(function* test_onTitleChanged() {
   let title = "test-title";
   yield PlacesTestUtils.addVisits({
     uri: testuri,
-    title: title
+    title
   });
   yield promiseNotify;
 });

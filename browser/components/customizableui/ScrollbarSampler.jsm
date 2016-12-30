@@ -14,7 +14,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var gSystemScrollbarWidth = null;
 
 this.ScrollbarSampler = {
-  getSystemScrollbarWidth: function() {
+  getSystemScrollbarWidth() {
     if (gSystemScrollbarWidth !== null) {
       return Promise.resolve(gSystemScrollbarWidth);
     }
@@ -27,11 +27,11 @@ this.ScrollbarSampler = {
     });
   },
 
-  resetSystemScrollbarWidth: function() {
+  resetSystemScrollbarWidth() {
     gSystemScrollbarWidth = null;
   },
 
-  _sampleSystemScrollbarWidth: function() {
+  _sampleSystemScrollbarWidth() {
     let hwin = Services.appShell.hiddenDOMWindow;
     let hdoc = hwin.document.documentElement;
     let iframe = hwin.document.createElementNS("http://www.w3.org/1999/xhtml",

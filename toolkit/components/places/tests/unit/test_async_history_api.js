@@ -93,7 +93,7 @@ function VisitObserver(aURI,
 }
 VisitObserver.prototype = {
   __proto__: NavHistoryObserver.prototype,
-  onVisit: function(aURI,
+  onVisit(aURI,
                     aVisitId,
                     aTime,
                     aSessionId,
@@ -577,7 +577,7 @@ add_task(function* test_place_id_ignored() {
     visits: [
       new VisitInfo(),
     ],
-    placeId: placeId,
+    placeId,
   };
 
   do_check_false(yield promiseIsURIVisited(badPlace.uri));

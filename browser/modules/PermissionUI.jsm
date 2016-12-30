@@ -481,7 +481,7 @@ GeolocationPermissionPrompt.prototype = {
         gBrowserBundle.GetStringFromName("geolocation.allowLocation.accesskey"),
       action: null,
       expireType: null,
-      callback: function(state) {
+      callback(state) {
         if (state && state.checkboxChecked) {
           secHistogram.add(ALWAYS_SHARE);
         } else {
@@ -496,7 +496,7 @@ GeolocationPermissionPrompt.prototype = {
       expireType: PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal) ?
                   Ci.nsIPermissionManager.EXPIRE_SESSION :
                   null,
-      callback: function(state) {
+      callback(state) {
         if (state && state.checkboxChecked) {
           secHistogram.add(NEVER_SHARE);
         }

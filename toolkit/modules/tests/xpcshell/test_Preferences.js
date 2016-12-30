@@ -230,7 +230,7 @@ add_test(function test_observe_prefs_function() {
 add_test(function test_observe_prefs_object() {
   let observer = {
     observed: false,
-    observe: function() {
+    observe() {
       this.observed = !this.observed;
     }
   };
@@ -252,7 +252,7 @@ add_test(function test_observe_prefs_object() {
 add_test(function test_observe_prefs_nsIObserver() {
   let observer = {
     observed: false,
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       this.observed = !this.observed;
       do_check_true(subject instanceof Ci.nsIPrefBranch);
       do_check_eq(topic, "nsPref:changed");

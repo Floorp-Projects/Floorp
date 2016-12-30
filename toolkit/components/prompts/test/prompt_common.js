@@ -35,7 +35,7 @@ function handlePrompt(state, action) {
       checkPromptState(msg.promptState, state);
       resolve(true);
     });
-    gChromeScript.sendAsyncMessage("handlePrompt", { action: action, isTabModal: isTabModal});
+    gChromeScript.sendAsyncMessage("handlePrompt", { action, isTabModal});
   });
 }
 

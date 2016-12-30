@@ -78,7 +78,7 @@ function* onViewSourceWindowOpen(aWindow, aIsTab) {
 function* checkMenuItems(contextMenu, isTab, selector, copyLinkExpected, copyEmailExpected, expectedClipboardContent) {
 
   let browser = isTab ? gBrowser.selectedBrowser : gViewSourceWindow.gBrowser;
-  yield ContentTask.spawn(browser, { selector: selector }, function* (arg) {
+  yield ContentTask.spawn(browser, { selector }, function* (arg) {
     content.document.querySelector(arg.selector).scrollIntoView();
   });
 

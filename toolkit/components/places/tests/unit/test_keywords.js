@@ -66,7 +66,7 @@ function expectBookmarkNotifications() {
               return new Date(parseInt(arg / 1000));
             return arg;
           });
-          notifications.push({ name: name, arguments: args });
+          notifications.push({ name, arguments: args });
         }
       }
 

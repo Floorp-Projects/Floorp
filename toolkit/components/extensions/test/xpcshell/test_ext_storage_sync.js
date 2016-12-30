@@ -513,7 +513,6 @@ add_task(function* ensureKeysFor_posts_new_keys() {
       const newBody = yield assertPostedEncryptedKeys(newPost);
       ok(newBody.keys.collections[extensionId], `keys object should have a key for ${extensionId}`);
       ok(newBody.keys.collections[extensionId2], `keys object should have a key for ${extensionId2}`);
-
     });
   });
 });

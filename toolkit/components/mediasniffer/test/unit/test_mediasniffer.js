@@ -45,12 +45,12 @@ const tests = [
 
 // A basic listener that reads checks the if we sniffed properly.
 var listener = {
-  onStartRequest: function(request, context) {
+  onStartRequest(request, context) {
     do_check_eq(request.QueryInterface(Ci.nsIChannel).contentType,
                 tests[testRan].expectedContentType);
   },
 
-  onDataAvailable: function(request, context, stream, offset, count) {
+  onDataAvailable(request, context, stream, offset, count) {
     try {
       var bis = Components.classes["@mozilla.org/binaryinputstream;1"]
                           .createInstance(Components.interfaces.nsIBinaryInputStream);
@@ -61,7 +61,7 @@ var listener = {
     }
   },
 
-  onStopRequest: function(request, context, status) {
+  onStopRequest(request, context, status) {
     testRan++;
     runNext();
   }
@@ -72,7 +72,7 @@ function setupChannel(url, flags)
   let uri = "http://localhost:" +
              httpserver.identity.primaryPort + url;
   var chan = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_MEDIA
   });

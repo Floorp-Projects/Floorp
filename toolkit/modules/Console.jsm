@@ -444,7 +444,7 @@ function stopTimer(aName, aTimestamp) {
   let key = aName.toString();
   let duration = (aTimestamp || Date.now()) - gTimerRegistry.get(key);
   gTimerRegistry.delete(key);
-  return { name: aName, duration: duration };
+  return { name: aName, duration };
 }
 
 /**
@@ -685,7 +685,7 @@ ConsoleAPI.prototype = {
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = startTimer(args[0]);
-    sendConsoleAPIMessage(this, "time", frame, args, { timer: timer });
+    sendConsoleAPIMessage(this, "time", frame, args, { timer });
     dumpMessage(this, "time",
                 "'" + timer.name + "' @ " + (new Date()));
   },
@@ -697,7 +697,7 @@ ConsoleAPI.prototype = {
     let args = Array.prototype.slice.call(arguments, 0);
     let frame = getStack(Components.stack.caller, 1)[0];
     let timer = stopTimer(args[0]);
-    sendConsoleAPIMessage(this, "timeEnd", frame, args, { timer: timer });
+    sendConsoleAPIMessage(this, "timeEnd", frame, args, { timer });
     dumpMessage(this, "timeEnd",
                 "'" + timer.name + "' " + timer.duration + "ms");
   },

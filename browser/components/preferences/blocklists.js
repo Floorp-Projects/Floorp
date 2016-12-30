@@ -22,7 +22,7 @@ var gBlocklistManager = {
     get rowCount() {
       return this._rowCount;
     },
-    getCellText: function(row, column) {
+    getCellText(row, column) {
       if (column.id == "listCol") {
         let list = gBlocklistManager._blockLists[row];
         let desc = list.description ? list.description : "";
@@ -33,21 +33,21 @@ var gBlocklistManager = {
       return "";
     },
 
-    isSeparator: function(index) { return false; },
-    isSorted: function() { return false; },
-    isContainer: function(index) { return false; },
-    setTree: function(tree) {},
-    getImageSrc: function(row, column) {},
-    getProgressMode: function(row, column) {},
-    getCellValue: function(row, column) {
+    isSeparator(index) { return false; },
+    isSorted() { return false; },
+    isContainer(index) { return false; },
+    setTree(tree) {},
+    getImageSrc(row, column) {},
+    getProgressMode(row, column) {},
+    getCellValue(row, column) {
       if (column.id == "selectionCol")
         return gBlocklistManager._blockLists[row].selected;
       return undefined;
     },
-    cycleHeader: function(column) {},
-    getRowProperties: function(row) { return ""; },
-    getColumnProperties: function(column) { return ""; },
-    getCellProperties: function(row, column) {
+    cycleHeader(column) {},
+    getRowProperties(row) { return ""; },
+    getColumnProperties(column) { return ""; },
+    getCellProperties(row, column) {
       if (column.id == "selectionCol") {
         return "checkmark";
       }
@@ -56,7 +56,7 @@ var gBlocklistManager = {
     }
   },
 
-  onWindowKeyPress: function(event) {
+  onWindowKeyPress(event) {
     if (event.keyCode == KeyEvent.DOM_VK_ESCAPE) {
       window.close();
     } else if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
@@ -64,13 +64,13 @@ var gBlocklistManager = {
     }
   },
 
-  onLoad: function() {
+  onLoad() {
     this._bundle = document.getElementById("bundlePreferences");
     let params = window.arguments[0];
     this.init(params);
   },
 
-  init: function(params) {
+  init(params) {
     if (this._type) {
       // reusing an open dialog, clear the old observer
       this.uninit();
@@ -97,9 +97,9 @@ var gBlocklistManager = {
     this._loadBlockLists();
   },
 
-  uninit: function() {},
+  uninit() {},
 
-  onListSelected: function() {
+  onListSelected() {
     for (let list of this._blockLists) {
       list.selected = false;
     }
@@ -108,7 +108,7 @@ var gBlocklistManager = {
     this._updateTree();
   },
 
-  onApplyChanges: function() {
+  onApplyChanges() {
     let activeList = this._getActiveList();
     let selected = null;
     for (let list of this._blockLists) {
@@ -153,7 +153,7 @@ var gBlocklistManager = {
     window.close();
   },
 
-  _loadBlockLists: function() {
+  _loadBlockLists() {
     this._blockLists = [];
 
     // Load blocklists into a table.
@@ -171,7 +171,7 @@ var gBlocklistManager = {
     this._updateTree();
   },
 
-  _createOrUpdateBlockList: function(itemName) {
+  _createOrUpdateBlockList(itemName) {
     let branch = Services.prefs.getBranch(LISTS_PREF_BRANCH);
     let key = branch.getCharPref(itemName);
     let value = this._bundle.getString(key);
@@ -192,13 +192,13 @@ var gBlocklistManager = {
     return list;
   },
 
-  _updateTree: function() {
+  _updateTree() {
     this._tree = document.getElementById("blocklistsTree");
     this._view._rowCount = this._blockLists.length;
     this._tree.view = this._view;
   },
 
-  _getActiveList: function() {
+  _getActiveList() {
     let trackingTable = Services.prefs.getCharPref(TRACKING_TABLE_PREF);
     return trackingTable.includes(CONTENT_LIST_ID) ? CONTENT_LIST_ID : BASE_LIST_ID;
   }

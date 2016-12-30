@@ -35,21 +35,21 @@ AutoCompleteInput.prototype = {
     return this.searches.length;
   },
 
-  getSearchAt: function(aIndex) {
+  getSearchAt(aIndex) {
     return this.searches[aIndex];
   },
 
-  onSearchBegin: function() {},
-  onSearchComplete: function() {},
+  onSearchBegin() {},
+  onSearchComplete() {},
 
   popupOpen: false,
 
   popup: {
-    setSelectedIndex: function(aIndex) {},
-    invalidate: function() {},
+    setSelectedIndex(aIndex) {},
+    invalidate() {},
 
     // nsISupports implementation
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsISupports) ||
           iid.equals(Ci.nsIAutoCompletePopup))
         return this;
@@ -59,7 +59,7 @@ AutoCompleteInput.prototype = {
   },
 
   // nsISupports implementation
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIAutoCompleteInput))
       return this;
@@ -101,34 +101,34 @@ AutoCompleteResult.prototype = {
     return this._values.length;
   },
 
-  getValueAt: function(aIndex) {
+  getValueAt(aIndex) {
     return this._values[aIndex];
   },
 
-  getLabelAt: function(aIndex) {
+  getLabelAt(aIndex) {
     return this.getValueAt(aIndex);
   },
 
-  getCommentAt: function(aIndex) {
+  getCommentAt(aIndex) {
     return this._comments[aIndex];
   },
 
-  getStyleAt: function(aIndex) {
+  getStyleAt(aIndex) {
     return this._styles[aIndex];
   },
 
-  getImageAt: function(aIndex) {
+  getImageAt(aIndex) {
     return "";
   },
 
-  getFinalCompleteValueAt: function(aIndex) {
+  getFinalCompleteValueAt(aIndex) {
     return this.getValueAt(aIndex);
   },
 
-  removeValueAt: function(aRowIndex, aRemoveFromDb) {},
+  removeValueAt(aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIAutoCompleteResult))
       return this;
@@ -160,7 +160,7 @@ AutoCompleteSearch.prototype = {
   /**
    * Return the same result set for every search
    */
-  startSearch: function(aSearchString,
+  startSearch(aSearchString,
                         aSearchParam,
                         aPreviousResult,
                         aListener)
@@ -168,10 +168,10 @@ AutoCompleteSearch.prototype = {
     aListener.onSearchResult(this, this._result);
   },
 
-  stopSearch: function() {},
+  stopSearch() {},
 
   // nsISupports implementation
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsISupports) ||
         iid.equals(Ci.nsIFactory) ||
         iid.equals(Ci.nsIAutoCompleteSearch))
@@ -181,7 +181,7 @@ AutoCompleteSearch.prototype = {
   },
 
   // nsIFactory implementation
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   }
 }

@@ -38,20 +38,20 @@ this.DateTimePickerHelper = {
     "FormDateTime:UpdatePicker"
   ],
 
-  init: function() {
+  init() {
     for (let msg of this.MESSAGES) {
       Services.mm.addMessageListener(msg, this);
     }
   },
 
-  uninit: function() {
+  uninit() {
     for (let msg of this.MESSAGES) {
       Services.mm.removeMessageListener(msg, this);
     }
   },
 
   // nsIMessageListener
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     debug("receiveMessage: " + aMessage.name);
     switch (aMessage.name) {
       case "FormDateTime:OpenPicker": {
@@ -75,7 +75,7 @@ this.DateTimePickerHelper = {
   },
 
   // nsIDOMEventListener
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     debug("handleEvent: " + aEvent.type);
     switch (aEvent.type) {
       case "DateTimePickerValueChanged": {
@@ -96,7 +96,7 @@ this.DateTimePickerHelper = {
   },
 
   // Called when picker value has changed, notify input box about it.
-  updateInputBoxValue: function(aEvent) {
+  updateInputBoxValue(aEvent) {
     // TODO: parse data based on input type.
     const { hour, minute } = aEvent.detail;
     debug("hour: " + hour + ", minute: " + minute);
@@ -108,7 +108,7 @@ this.DateTimePickerHelper = {
   },
 
   // Get picker from browser and show it anchored to the input box.
-  showPicker: function(aBrowser, aData) {
+  showPicker(aBrowser, aData) {
     let rect = aData.rect;
     let type = aData.type;
     let detail = aData.detail;
@@ -146,7 +146,7 @@ this.DateTimePickerHelper = {
   },
 
   // Picker is closed, do some cleanup.
-  close: function() {
+  close() {
     this.removePickerListeners();
     this.picker = null;
     this.weakBrowser = null;
@@ -154,7 +154,7 @@ this.DateTimePickerHelper = {
   },
 
   // Listen to picker's event.
-  addPickerListeners: function() {
+  addPickerListeners() {
     if (!this.picker) {
       return;
     }
@@ -163,7 +163,7 @@ this.DateTimePickerHelper = {
   },
 
   // Stop listening to picker's event.
-  removePickerListeners: function() {
+  removePickerListeners() {
     if (!this.picker) {
       return;
     }

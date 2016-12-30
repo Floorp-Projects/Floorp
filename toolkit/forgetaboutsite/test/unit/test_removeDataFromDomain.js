@@ -404,7 +404,7 @@ function waitForPurgeNotification() {
   let deferred = Promise.defer();
 
   let observer = {
-    observe: function(aSubject, aTopic, aData)
+    observe(aSubject, aTopic, aData)
     {
       Services.obs.removeObserver(observer, "browser:purge-domain-data");
       // test_storage_cleared needs this extra executeSoon because
@@ -548,7 +548,7 @@ function test_cache_cleared()
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   let observer = {
-    observe: function(aSubject, aTopic, aData)
+    observe(aSubject, aTopic, aData)
     {
       os.removeObserver(observer, "cacheservice:empty-cache");
       // Shutdown the download manager.

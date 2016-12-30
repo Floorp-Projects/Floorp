@@ -32,7 +32,7 @@ add_task(function*() {
     let setHomepagePromise = new Promise(function(resolve) {
       let observer = {
         QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
-        observe: function(subject, topic, data) {
+        observe(subject, topic, data) {
           is(topic, "nsPref:changed", "observed correct topic");
           is(data, HOMEPAGE_PREF, "observed correct data");
           let modified = Services.prefs.getComplexValue(HOMEPAGE_PREF,
@@ -57,7 +57,7 @@ add_task(function*() {
   function dropInvalidURI() {
     return new Promise(resolve => {
       let consoleListener = {
-        observe: function(m) {
+        observe(m) {
           if (m.message.includes("NS_ERROR_DOM_BAD_URI")) {
             ok(true, "drop was blocked");
             resolve();

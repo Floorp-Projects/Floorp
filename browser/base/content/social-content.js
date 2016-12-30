@@ -114,7 +114,7 @@ const SocialErrorListener = {
       webNav.loadURI(url, null, null, null, null);
     }
     sendAsyncMessage("Social:ErrorPageNotify", {
-        origin: origin,
+        origin,
         url: src
     });
   },

@@ -192,10 +192,10 @@ var bookmarksObserver = {
   ]),
 
   // nsIAnnotationObserver
-  onItemAnnotationSet: function() {},
-  onItemAnnotationRemoved: function() {},
-  onPageAnnotationSet: function() {},
-  onPageAnnotationRemoved: function() {},
+  onItemAnnotationSet() {},
+  onItemAnnotationRemoved() {},
+  onPageAnnotationSet() {},
+  onPageAnnotationRemoved() {},
 
   // nsINavBookmarkObserver
   onItemAdded: function PSB_onItemAdded(aItemId, aFolderId, aIndex,
@@ -223,7 +223,7 @@ var bookmarksObserver = {
     }
   },
 
-  onItemMoved: function(aItemId,
+  onItemMoved(aItemId,
                         aOldFolderId, aOldIndex,
                         aNewFolderId, aNewIndex,
                         aItemType) {
@@ -242,7 +242,7 @@ var bookmarksObserver = {
 
   onBeginUpdateBatch: function PSB_onBeginUpdateBatch() {},
   onEndUpdateBatch: function PSB_onEndUpdateBatch() {},
-  onItemVisited: function() {},
+  onItemVisited() {},
 
   onItemChanged: function PSB_onItemChanged(aItemId, aProperty,
                                             aIsAnnotationProperty, aNewValue,

@@ -23,7 +23,7 @@ add_task(function* test_execute()
     observer = {
       __proto__: NavHistoryObserver.prototype,
       _visitCount: 0,
-      onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
+      onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
                         aTransitionType, aAdded)
       {
         do_check_eq(aURI.spec, gVisits[this._visitCount].url);

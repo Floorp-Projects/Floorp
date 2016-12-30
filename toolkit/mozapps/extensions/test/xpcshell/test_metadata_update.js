@@ -38,14 +38,14 @@ profileDir.append("extensions");
 var WindowWatcher = {
   expected: false,
 
-  openWindow: function(parent, url, name, features, args) {
+  openWindow(parent, url, name, features, args) {
     do_check_true(Services.startup.interrupted);
     do_check_eq(url, URI_EXTENSION_UPDATE_DIALOG);
     do_check_true(this.expected);
     this.expected = false;
   },
 
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsIWindowWatcher)
      || iid.equals(Ci.nsISupports))
       return this;

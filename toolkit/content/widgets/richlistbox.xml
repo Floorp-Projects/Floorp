@@ -334,8 +334,8 @@
           ({
             mOuter: this,
             item: null,
-            willRebuild: function(builder) { },
-            didRebuild: function(builder) {
+            willRebuild(builder) { },
+            didRebuild(builder) {
               this.mOuter._refreshSelection();
             }
           });

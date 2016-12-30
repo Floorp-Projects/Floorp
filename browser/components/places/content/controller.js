@@ -59,7 +59,7 @@ InsertionPoint.prototype = {
     return this._index = val;
   },
 
-  promiseGuid: function() {
+  promiseGuid() {
     return PlacesUtils.promiseItemGuid(this.itemId);
   },
 
@@ -867,7 +867,7 @@ PlacesController.prototype = {
           let tag = node.parent.title;
           if (!tag)
             tag = PlacesUtils.bookmarks.getItemTitle(tagItemId);
-          transactions.push(PlacesTransactions.Untag({ uri: uri, tag: tag }));
+          transactions.push(PlacesTransactions.Untag({ uri, tag }));
         }
         else {
           let txn = new PlacesUntagURITransaction(uri, [tagItemId]);
@@ -885,7 +885,7 @@ PlacesController.prototype = {
         let tag = node.title;
         let URIs = PlacesUtils.tagging.getURIsForTag(tag);
         if (PlacesUIUtils.useAsyncTransactions) {
-          transactions.push(PlacesTransactions.Untag({ tag: tag, uris: URIs }));
+          transactions.push(PlacesTransactions.Untag({ tag, uris: URIs }));
         }
         else {
           for (var j = 0; j < URIs.length; j++) {
@@ -1308,7 +1308,7 @@ PlacesController.prototype = {
     if (PlacesUIUtils.useAsyncTransactions) {
       if (ip.isTag) {
         let uris = items.filter(item => "uri" in item).map(item => NetUtil.newURI(item.uri));
-        yield PlacesTransactions.Tag({ uris: uris, tag: ip.tagName }).transact();
+        yield PlacesTransactions.Tag({ uris, tag: ip.tagName }).transact();
       }
       else {
         yield PlacesTransactions.batch(function* () {
@@ -1548,7 +1548,7 @@ var PlacesControllerDragHelper = {
    *          A node unwrapped by PlacesUtils.unwrapNodes().
    * @return True if the node can be moved, false otherwise.
    */
-  canMoveUnwrappedNode: function(aUnwrappedNode) {
+  canMoveUnwrappedNode(aUnwrappedNode) {
     return aUnwrappedNode.id > 0 &&
            !PlacesUtils.isRootItem(aUnwrappedNode.id) &&
            (!aUnwrappedNode.parent || !PlacesUIUtils.isContentsReadOnly(aUnwrappedNode.parent)) &&
@@ -1637,7 +1637,7 @@ var PlacesControllerDragHelper = {
         let uri = NetUtil.newURI(unwrapped.uri);
         let tagItemId = insertionPoint.itemId;
         if (PlacesUIUtils.useAsyncTransactions)
-          transactions.push(PlacesTransactions.Tag({ uri: uri, tag: tagName }));
+          transactions.push(PlacesTransactions.Tag({ uri, tag: tagName }));
         else
           transactions.push(new PlacesTagURITransaction(uri, [tagItemId]));
       }
@@ -1679,7 +1679,7 @@ var PlacesControllerDragHelper = {
    * @param   aContainer
    *          The container were we are want to drop
    */
-  disallowInsertion: function(aContainer) {
+  disallowInsertion(aContainer) {
     NS_ASSERT(aContainer, "empty container");
     // Allow dropping into Tag containers and editable folders.
     return !PlacesUtils.nodeIsTagQuery(aContainer) &&

@@ -72,7 +72,7 @@ const MODE_GLOBAL = "global";
 const MODE_RECENT = "recent";
 
 let tabFinder = {
-  update: function() {
+  update() {
     this._map = new Map();
     let windows = Services.wm.getEnumerator("navigator:browser");
     while (windows.hasMoreElements()) {
@@ -97,7 +97,7 @@ let tabFinder = {
    * @return {{tabbrowser: <xul:tabbrowser>, tab: <xul.tab>}} The
    * tabbrowser and tab if the latter could be found.
    */
-  get: function(id) {
+  get(id) {
     let browser = this._map.get(id);
     if (!browser) {
       return null;
@@ -106,7 +106,7 @@ let tabFinder = {
     return {tabbrowser, tab:tabbrowser.getTabForBrowser(browser)};
   },
 
-  getAny: function(ids) {
+  getAny(ids) {
     for (let id of ids) {
       let result = this.get(id);
       if (result) {
@@ -258,7 +258,7 @@ Delta.prototype = {
   /**
    * Initialize, asynchronously.
    */
-  promiseInit: function() {
+  promiseInit() {
     if (this.kind == "webpages") {
       return this._initWebpage();
     } else if (this.kind == "addons") {
@@ -266,7 +266,7 @@ Delta.prototype = {
     }
     throw new TypeError();
   },
-  _initWebpage: function() {
+  _initWebpage() {
     this._initialized = true;
     let found = tabFinder.getAny(this.diff.windowIds);
     if (!found || found.tab.linkedBrowser.contentTitle == null) {
@@ -296,7 +296,7 @@ Delta.prototype = {
     this._show = found;
     this.fullName = this.diff.addonId;
   }),
-  toString: function() {
+  toString() {
     return `[Delta] ${this.diff.key} => ${this.readableName}, ${this.fullName}`;
   }
 };
@@ -444,14 +444,14 @@ var State = {
   /**
    * @return {Promise}
    */
-  promiseDeltaSinceStartOfTime: function() {
+  promiseDeltaSinceStartOfTime() {
     return this._promiseDeltaSince(this._oldest);
   },
 
   /**
    * @return {Promise}
    */
-  promiseDeltaSinceStartOfBuffer: function() {
+  promiseDeltaSinceStartOfBuffer() {
     return this._promiseDeltaSince(this._buffer[0]);
   },
 
@@ -528,10 +528,10 @@ var View = {
      * @return {null} If the `deltaKey` doesn't have a component cached yet.
      * Otherwise, the value stored with `set`.
      */
-    get: function(deltaKey) {
+    get(deltaKey) {
       return this._map.get(deltaKey);
     },
-    set: function(deltaKey, value) {
+    set(deltaKey, value) {
       this._map.set(deltaKey, value);
     },
     /**
@@ -539,7 +539,7 @@ var View = {
      *
      * @param {Set} set a set of deltaKey.
      */
-    trimTo: function(set) {
+    trimTo(set) {
       let remove = [];
       for (let key of this._map.keys()) {
         if (!set.has(key)) {
@@ -560,7 +560,7 @@ var View = {
    * @param {string} nature The nature of the subset. One of "addons", "webpages" or "system".
    * @param {string} currentMode The current display mode. One of MODE_GLOBAL or MODE_RECENT.
    */
-  updateCategory: function(subset, id, nature, currentMode) {
+  updateCategory(subset, id, nature, currentMode) {
     subset = subset.slice().sort(Delta.revCompare);
 
     let watcherAlerts = null;
@@ -657,7 +657,7 @@ var View = {
     this._insertElements(toAdd, id);
   },
 
-  _insertElements: function(elements, id) {
+  _insertElements(elements, id) {
     let eltContainer = document.getElementById(id);
     eltContainer.classList.remove("measuring");
     eltContainer.eltVisibleContent.innerHTML = "";
@@ -681,7 +681,7 @@ var View = {
       eltContainer.textContent = "Nothing";
     }
   },
-  _setupStructure: function(id) {
+  _setupStructure(id) {
     let eltContainer = document.getElementById(id);
     if (!eltContainer.eltVisibleContent) {
       eltContainer.eltVisibleContent = document.createElement("ul");
@@ -712,7 +712,7 @@ var View = {
     return eltContainer;
   },
 
-  _grabOrCreateElements: function(delta, nature) {
+  _grabOrCreateElements(delta, nature) {
     let cachedElements = this.DOMCache.get(delta.key);
     if (cachedElements) {
       if (cachedElements.eltRoot.parentElement) {
@@ -857,7 +857,7 @@ var View = {
 };
 
 var Control = {
-  init: function() {
+  init() {
     this._initAutorefresh();
     this._initDisplayMode();
   },
@@ -886,7 +886,7 @@ var Control = {
     // Inform watchers
     Services.obs.notifyObservers(null, UPDATE_COMPLETE_TOPIC, mode);
   }),
-  _setOptions: function(options) {
+  _setOptions(options) {
     dump(`about:performance _setOptions ${JSON.stringify(options)}\n`);
     let eltRefresh = document.getElementById("check-autorefresh");
     if ((options.autoRefresh > 0) != eltRefresh.checked) {
@@ -897,7 +897,7 @@ var Control = {
       eltCheckRecent.click();
     }
   },
-  _initAutorefresh: function() {
+  _initAutorefresh() {
     let onRefreshChange = (shouldUpdateNow = false) => {
       if (eltRefresh.checked == !!this._autoRefreshInterval) {
         // Nothing to change.
@@ -920,7 +920,7 @@ var Control = {
     onRefreshChange(false);
   },
   _autoRefreshInterval: null,
-  _initDisplayMode: function() {
+  _initDisplayMode() {
     let onModeChange = (shouldUpdateNow) => {
       if (eltCheckRecent.checked) {
         this._displayMode = MODE_RECENT;
@@ -956,7 +956,7 @@ var SubprocessMonitor = {
    * Init will start the process of updating the table if the page is not hidden,
    * and set up an event listener for handling visibility changes.
    */
-  init: function() {
+  init() {
     if (!document.hidden) {
       SubprocessMonitor.updateTable();
     }
@@ -967,7 +967,7 @@ var SubprocessMonitor = {
    * This function updates the table after an interval if the page is visible
    * and clears the interval otherwise.
    */
-  handleVisibilityChange: function() {
+  handleVisibilityChange() {
     if (!document.hidden) {
       SubprocessMonitor.queueUpdate();
     } else {
@@ -980,7 +980,7 @@ var SubprocessMonitor = {
    * This function queues a timer to request the next summary using updateTable
    * after some delay.
    */
-  queueUpdate: function() {
+  queueUpdate() {
     this._timeout = setTimeout(() => this.updateTable(), UPDATE_INTERVAL_MS);
   },
 
@@ -990,7 +990,7 @@ var SubprocessMonitor = {
    * @param {object} summaries The object with the updated RSS and USS values.
    * @param {string} pid The pid represented by the row for which we update.
    */
-  updateRow: function(row, summaries, pid) {
+  updateRow(row, summaries, pid) {
     row.cells[0].textContent = pid;
     let RSSval = DownloadUtils.convertByteUnits(summaries[pid].rss);
     row.cells[1].textContent = RSSval.join(" ");
@@ -1002,7 +1002,7 @@ var SubprocessMonitor = {
    * This function adds a row to the subprocess-performance table for every new pid
    * and populates and regularly updates it with RSS/USS measurements.
    */
-  updateTable: function() {
+  updateTable() {
     if (!document.hidden) {
       Memory.summary().then((summaries) => {
         if (!(Object.keys(summaries).length)) {

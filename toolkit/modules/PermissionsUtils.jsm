@@ -81,7 +81,7 @@ this.PermissionsUtils = {
    * @param aPermission Permission name to be passsed to the Permissions
    *                    Manager.
    */
-  importFromPrefs: function(aPrefBranch, aPermission) {
+  importFromPrefs(aPrefBranch, aPermission) {
     if (!aPrefBranch.endsWith("."))
       aPrefBranch += ".";
 

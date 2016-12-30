@@ -21,9 +21,9 @@ function test() {
   // Create and add history observer.
   var historyObserver = {
     visitCount: Array(),
-    onBeginUpdateBatch: function() {},
-    onEndUpdateBatch: function() {},
-    onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
                       aTransitionType) {
       info("Received onVisit: " + aURI.spec);
       if (aURI.spec in this.visitCount)
@@ -31,11 +31,11 @@ function test() {
       else
         this.visitCount[aURI.spec] = 1;
     },
-    onTitleChanged: function() {},
-    onDeleteURI: function() {},
-    onClearHistory: function() {},
-    onPageChanged: function() {},
-    onDeleteVisits: function() {},
+    onTitleChanged() {},
+    onDeleteURI() {},
+    onClearHistory() {},
+    onPageChanged() {},
+    onDeleteVisits() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver])
   };
   hs.addObserver(historyObserver, false);

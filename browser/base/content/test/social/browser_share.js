@@ -135,7 +135,7 @@ function hasoptions(testOptions, options) {
 }
 
 var tests = {
-  testShareDisabledOnActivation: function(next) {
+  testShareDisabledOnActivation(next) {
     // starting on about:blank page, share should be visible but disabled when
     // adding provider
     is(gBrowser.currentURI.spec, "about:blank");
@@ -157,7 +157,7 @@ var tests = {
       SocialService.disableProvider(manifest.origin, next);
     });
   },
-  testShareEnabledOnActivation: function(next) {
+  testShareEnabledOnActivation(next) {
     // starting from *some* page, share should be visible and enabled when
     // activating provider
     // initialize the button into the navbar
@@ -180,7 +180,7 @@ var tests = {
       });
     });
   },
-  testSharePage: function(next) {
+  testSharePage(next) {
     let testTab;
     let testIndex = 0;
     let testData = corpus[testIndex++];
@@ -222,7 +222,7 @@ var tests = {
     }
     executeSoon(runOneTest);
   },
-  testShareMicroformats: function(next) {
+  testShareMicroformats(next) {
     // initialize the button into the navbar
     CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);
     // ensure correct state
@@ -305,7 +305,7 @@ var tests = {
       });
     });
   },
-  testSharePanelActivation: function(next) {
+  testSharePanelActivation(next) {
     let testTab;
     // cleared in the cleanup function
     Services.prefs.setCharPref("social.directories", "https://example.com");
@@ -352,7 +352,7 @@ var tests = {
       SocialShare.sharePage();
     });
   },
-  testSharePanelDialog: function(next) {
+  testSharePanelDialog(next) {
     let testTab;
     // initialize the button into the navbar
     CustomizableUI.addWidgetToArea("social-share-button", CustomizableUI.AREA_NAVBAR);

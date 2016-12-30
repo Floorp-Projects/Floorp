@@ -338,7 +338,7 @@ function DBAddonInternal(aLoaded) {
 
 DBAddonInternal.prototype = Object.create(AddonInternal.prototype);
 Object.assign(DBAddonInternal.prototype, {
-  applyCompatibilityUpdate: function(aUpdate, aSyncCompatibility) {
+  applyCompatibilityUpdate(aUpdate, aSyncCompatibility) {
     let wasCompatible = this.isCompatible;
 
     this.targetApplications.forEach(function(aTargetApp) {
@@ -361,7 +361,7 @@ Object.assign(DBAddonInternal.prototype, {
       XPIProvider.updateAddonDisabledState(this);
   },
 
-  toJSON: function() {
+  toJSON() {
     let jsonData = copyProperties(this, PROP_JSON_FIELDS);
 
     // Experiments are serialized as disabled so they aren't run on the next
@@ -423,7 +423,7 @@ this.XPIDatabase = {
   /**
    * Mark the current stored data dirty, and schedule a flush to disk
    */
-  saveChanges: function() {
+  saveChanges() {
     if (!this.initialized) {
       throw new Error("Attempt to use XPI database when it is not initialized");
     }
@@ -470,7 +470,7 @@ this.XPIDatabase = {
     });
   },
 
-  flush: function() {
+  flush() {
     // handle the "in memory only" and "saveChanges never called" cases
     if (!this._deferredSave) {
       return Promise.resolve(0);
@@ -483,7 +483,7 @@ this.XPIDatabase = {
    * Converts the current internal state of the XPI addon database to
    * a JSON.stringify()-ready structure
    */
-  toJSON: function() {
+  toJSON() {
     if (!this.addonDB) {
       // We never loaded the database?
       throw new Error("Attempt to save database without loading it first");
@@ -506,7 +506,7 @@ this.XPIDatabase = {
    *              {location: {id1:{addon1}, id2:{addon2}}, location2:{...}, ...}
    *              if there is useful information
    */
-  getMigrateDataFromSQLITE: function() {
+  getMigrateDataFromSQLITE() {
     let connection = null;
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
     // Attempt to open the database
@@ -541,7 +541,7 @@ this.XPIDatabase = {
    *         from the install locations if the database needs to be rebuilt.
    *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
-  syncLoadDB: function(aRebuildOnError) {
+  syncLoadDB(aRebuildOnError) {
     this.migrateData = null;
     let fstream = null;
     let data = "";
@@ -602,7 +602,7 @@ this.XPIDatabase = {
    * @param aRebuildOnError
    *        If true, synchronously reconstruct the database from installed add-ons
    */
-  parseDB: function(aData, aRebuildOnError) {
+  parseDB(aData, aRebuildOnError) {
     let parseTimer = AddonManagerPrivate.simpleTimer("XPIDB_parseDB_MS");
     try {
       // dump("Loaded JSON:\n" + aData + "\n");
@@ -673,7 +673,7 @@ this.XPIDatabase = {
   /**
    * Upgrade database from earlier (sqlite or RDF) version if available
    */
-  upgradeDB: function(aRebuildOnError) {
+  upgradeDB(aRebuildOnError) {
     let upgradeTimer = AddonManagerPrivate.simpleTimer("XPIDB_upgradeDB_MS");
     try {
       let schemaVersion = Services.prefs.getIntPref(PREF_DB_SCHEMA);
@@ -702,7 +702,7 @@ this.XPIDatabase = {
    * Reconstruct when the DB file exists but is unreadable
    * (for example because read permission is denied)
    */
-  rebuildUnreadableDB: function(aError, aRebuildOnError) {
+  rebuildUnreadableDB(aError, aRebuildOnError) {
     let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildUnreadableDB_MS");
     logger.warn("Extensions database " + this.jsonFile.path +
         " exists but is not readable; rebuilding", aError);
@@ -722,7 +722,7 @@ this.XPIDatabase = {
    * @return Promise<Map> resolves to the Map of loaded JSON data stored
    *         in this.addonDB; never rejects.
    */
-  asyncLoadDB: function() {
+  asyncLoadDB() {
     // Already started (and possibly finished) loading
     if (this._dbPromise) {
       return this._dbPromise;
@@ -777,7 +777,7 @@ this.XPIDatabase = {
    *         from the install locations if the database needs to be rebuilt.
    *         (if false, caller is XPIProvider.checkForChanges() which will rebuild)
    */
-  rebuildDatabase: function(aRebuildOnError) {
+  rebuildDatabase(aRebuildOnError) {
     this.addonDB = new Map();
     this.initialized = true;
 
@@ -813,7 +813,7 @@ this.XPIDatabase = {
    *
    * @return an array of persistent descriptors for the directories
    */
-  getActiveBundles: function() {
+  getActiveBundles() {
     let bundles = [];
 
     // non-bootstrapped extensions
@@ -852,7 +852,7 @@ this.XPIDatabase = {
    * @return an object holding information about what add-ons were previously
    *         userDisabled and any updated compatibility information
    */
-  getMigrateDataFromRDF: function(aDbWasMissing) {
+  getMigrateDataFromRDF(aDbWasMissing) {
 
     // Migrate data from extensions.rdf
     let rdffile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_OLD_DATABASE], true);
@@ -924,7 +924,7 @@ this.XPIDatabase = {
    * @return an object holding information about what add-ons were previously
    *         userDisabled and any updated compatibility information
    */
-  getMigrateDataFromDatabase: function(aConnection) {
+  getMigrateDataFromDatabase(aConnection) {
     let migrateData = {};
 
     // Attempt to migrate data from a different (even future!) version of the
@@ -1015,7 +1015,7 @@ this.XPIDatabase = {
    *                          flush after the database is flushed and
    *                          all cleanup is done
    */
-  shutdown: function() {
+  shutdown() {
     logger.debug("shutdown");
     if (this.initialized) {
       // If our last database I/O had an error, try one last time to save.
@@ -1066,7 +1066,7 @@ this.XPIDatabase = {
    *         Called back with an array of addons matching aFilter
    *         or an empty array if none match
    */
-  getAddonList: function(aFilter, aCallback) {
+  getAddonList(aFilter, aCallback) {
     this.asyncLoadDB().then(
       addonDB => {
         let addonList = _filterDB(addonDB, aFilter);
@@ -1087,7 +1087,7 @@ this.XPIDatabase = {
    * @param  aCallback
    *         Called back with the addon, or null if no matching addon is found
    */
-  getAddon: function(aFilter, aCallback) {
+  getAddon(aFilter, aCallback) {
     return this.asyncLoadDB().then(
       addonDB => {
         getRepositoryAddon(_findAddon(addonDB, aFilter), makeSafe(aCallback));
@@ -1110,7 +1110,7 @@ this.XPIDatabase = {
    * @param  aCallback
    *         A callback to pass the DBAddonInternal to
    */
-  getAddonInLocation: function(aId, aLocation, aCallback) {
+  getAddonInLocation(aId, aLocation, aCallback) {
     this.asyncLoadDB().then(
         addonDB => getRepositoryAddon(addonDB.get(aLocation + ":" + aId),
                                       makeSafe(aCallback)));
@@ -1124,7 +1124,7 @@ this.XPIDatabase = {
    * @param  aCallback
    *         A callback to pass the array of DBAddonInternals to
    */
-  getAddonsInLocation: function(aLocation, aCallback) {
+  getAddonsInLocation(aLocation, aCallback) {
     this.getAddonList(aAddon => aAddon._installLocation.name == aLocation, aCallback);
   },
 
@@ -1136,7 +1136,7 @@ this.XPIDatabase = {
    * @param  aCallback
    *         A callback to pass the DBAddonInternal to
    */
-  getVisibleAddonForID: function(aId, aCallback) {
+  getVisibleAddonForID(aId, aCallback) {
     this.getAddon(aAddon => ((aAddon.id == aId) && aAddon.visible),
                   aCallback);
   },
@@ -1149,7 +1149,7 @@ this.XPIDatabase = {
    * @param  aCallback
    *         A callback to pass the array of DBAddonInternals to
    */
-  getVisibleAddons: function(aTypes, aCallback) {
+  getVisibleAddons(aTypes, aCallback) {
     this.getAddonList(aAddon => (aAddon.visible &&
                                  (!aTypes || (aTypes.length == 0) ||
                                   (aTypes.indexOf(aAddon.type) > -1))),
@@ -1163,7 +1163,7 @@ this.XPIDatabase = {
    *         The type of add-on to retrieve
    * @return an array of DBAddonInternals
    */
-  getAddonsByType: function(aType) {
+  getAddonsByType(aType) {
     if (!this.addonDB) {
       // jank-tastic! Must synchronously load DB if the theme switches from
       // an XPI theme to a lightweight theme before the DB has loaded,
@@ -1182,7 +1182,7 @@ this.XPIDatabase = {
    *         The internalName of the add-on to retrieve
    * @return a DBAddonInternal
    */
-  getVisibleAddonForInternalName: function(aInternalName) {
+  getVisibleAddonForInternalName(aInternalName) {
     if (!this.addonDB) {
       // This may be called when the DB hasn't otherwise been loaded
       logger.warn("Synchronous load of XPI database due to getVisibleAddonForInternalName");
@@ -1204,7 +1204,7 @@ this.XPIDatabase = {
    * @param  aCallback
    *         A callback to pass the array of DBAddonInternal to
    */
-  getVisibleAddonsWithPendingOperations: function(aTypes, aCallback) {
+  getVisibleAddonsWithPendingOperations(aTypes, aCallback) {
     this.getAddonList(
         aAddon => (aAddon.visible &&
                    (aAddon.pendingUninstall ||
@@ -1225,7 +1225,7 @@ this.XPIDatabase = {
    *         if no add-on with that GUID is found.
    *
    */
-  getAddonBySyncGUID: function(aGUID, aCallback) {
+  getAddonBySyncGUID(aGUID, aCallback) {
     this.getAddon(aAddon => aAddon.syncGUID == aGUID,
                   aCallback);
   },
@@ -1238,7 +1238,7 @@ this.XPIDatabase = {
    *
    * @return  an array of DBAddonInternals
    */
-  getAddons: function() {
+  getAddons() {
     if (!this.addonDB) {
       return [];
     }
@@ -1254,7 +1254,7 @@ this.XPIDatabase = {
    *         The file descriptor of the add-on
    * @return The DBAddonInternal that was added to the database
    */
-  addAddonMetadata: function(aAddon, aDescriptor) {
+  addAddonMetadata(aAddon, aDescriptor) {
     if (!this.addonDB) {
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_addMetadata",
           XPIProvider.runPhase);
@@ -1284,7 +1284,7 @@ this.XPIDatabase = {
    *         The file descriptor of the add-on
    * @return The DBAddonInternal that was added to the database
    */
-  updateAddonMetadata: function(aOldAddon, aNewAddon, aDescriptor) {
+  updateAddonMetadata(aOldAddon, aNewAddon, aDescriptor) {
     this.removeAddonMetadata(aOldAddon);
     aNewAddon.syncGUID = aOldAddon.syncGUID;
     aNewAddon.installDate = aOldAddon.installDate;
@@ -1303,7 +1303,7 @@ this.XPIDatabase = {
    * @param  aAddon
    *         The DBAddonInternal being removed
    */
-  removeAddonMetadata: function(aAddon) {
+  removeAddonMetadata(aAddon) {
     this.addonDB.delete(aAddon._key);
     this.saveChanges();
   },
@@ -1315,7 +1315,7 @@ this.XPIDatabase = {
    * @param  aAddon
    *         The DBAddonInternal to make visible
    */
-  makeAddonVisible: function(aAddon) {
+  makeAddonVisible(aAddon) {
     logger.debug("Make addon " + aAddon._key + " visible");
     for (let [, otherAddon] of this.addonDB) {
       if ((otherAddon.id == aAddon.id) && (otherAddon._key != aAddon._key)) {
@@ -1336,7 +1336,7 @@ this.XPIDatabase = {
    * @param  aProperties
    *         A dictionary of properties to set
    */
-  setAddonProperties: function(aAddon, aProperties) {
+  setAddonProperties(aAddon, aProperties) {
     for (let key in aProperties) {
       aAddon[key] = aProperties[key];
     }
@@ -1353,7 +1353,7 @@ this.XPIDatabase = {
    *         GUID string to set the value to
    * @throws if another addon already has the specified GUID
    */
-  setAddonSyncGUID: function(aAddon, aGUID) {
+  setAddonSyncGUID(aAddon, aGUID) {
     // Need to make sure no other addon has this GUID
     function excludeSyncGUID(otherAddon) {
       return (otherAddon._key != aAddon._key) && (otherAddon.syncGUID == aGUID);
@@ -1373,14 +1373,14 @@ this.XPIDatabase = {
    * @param  aAddon
    *         The DBAddonInternal to update
    */
-  updateAddonActive: function(aAddon, aActive) {
+  updateAddonActive(aAddon, aActive) {
     logger.debug("Updating active state for add-on " + aAddon.id + " to " + aActive);
 
     aAddon.active = aActive;
     this.saveChanges();
   },
 
-  updateAddonsBlockingE10s: function() {
+  updateAddonsBlockingE10s() {
     let blockE10s = false;
 
     Preferences.set(PREF_E10S_HAS_NONEXEMPT_ADDON, false);
@@ -1398,7 +1398,7 @@ this.XPIDatabase = {
   /**
    * Synchronously calculates and updates all the active flags in the database.
    */
-  updateActiveAddons: function() {
+  updateActiveAddons() {
     if (!this.addonDB) {
       logger.warn("updateActiveAddons called when DB isn't loaded");
       // force the DB to load
@@ -1420,7 +1420,7 @@ this.XPIDatabase = {
    * Writes out the XPI add-ons list for the platform to read.
    * @return true if the file was successfully updated, false otherwise
    */
-  writeAddonsList: function() {
+  writeAddonsList() {
     if (!this.addonDB) {
       // force the DB to load
       AddonManagerPrivate.recordSimpleMeasure("XPIDB_lateOpen_writeList",

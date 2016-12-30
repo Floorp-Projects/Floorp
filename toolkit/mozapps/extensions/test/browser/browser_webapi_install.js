@@ -10,7 +10,7 @@ function waitForClear() {
   const MSG = "WebAPICleanup";
   return new Promise(resolve => {
     let listener = {
-      receiveMessage: function(msg) {
+      receiveMessage(msg) {
         if (msg.name == MSG) {
           Services.mm.removeMessageListener(MSG, listener);
           resolve();
