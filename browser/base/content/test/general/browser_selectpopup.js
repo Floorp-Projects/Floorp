@@ -289,6 +289,7 @@ add_task(function*() {
         });
 
         elem.style = contentStep[1];
+        elem.getBoundingClientRect();
       });
     });
 
@@ -451,6 +452,7 @@ function* performLargePopupTests(win)
     yield ContentTask.spawn(browser, position, function*(contentPosition) {
       let select = content.document.getElementById("one");
       select.setAttribute("style", contentPosition);
+      select.getBoundingClientRect();
     });
     yield contentPainted;
   }
