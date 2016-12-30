@@ -6,7 +6,6 @@
 
 const APP_STARTUP                     = 1;
 const APP_SHUTDOWN                    = 2;
-const ADDON_ENABLE                    = 3;
 const ADDON_DISABLE                   = 4;
 const ADDON_INSTALL                   = 5;
 const ADDON_UNINSTALL                 = 6;
@@ -704,7 +703,7 @@ add_task(function* cancelUninstallTemporary() {
   BootstrapMonitor.checkAddonInstalled(ID, "1.0");
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
   do_check_eq(getInstallReason(ID), ADDON_INSTALL);
-  do_check_eq(getStartupReason(ID), ADDON_ENABLE);
+  do_check_eq(getStartupReason(ID), ADDON_INSTALL);
   do_check_eq(a1.pendingOperations, AddonManager.PENDING_NONE);
   do_check_true(a1.isActive);
   do_check_false(a1.userDisabled);
