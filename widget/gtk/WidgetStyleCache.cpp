@@ -873,19 +873,26 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
                                      GTK_STYLE_CLASS_FRAME);
     case MOZ_GTK_TEXT_VIEW_TEXT:
     case MOZ_GTK_RESIZER:
-      // TODO - create from CSS node
-      style = GetWidgetStyleWithClass(MOZ_GTK_TEXT_VIEW, GTK_STYLE_CLASS_VIEW);
+      style = CreateChildCSSNode("text", MOZ_GTK_TEXT_VIEW);
       if (aNodeType == MOZ_GTK_RESIZER) {
         // The "grip" class provides the correct builtin icon from
         // gtk_render_handle().  The icon is drawn with shaded variants of
         // the background color, and so a transparent background would lead to
         // a transparent resizer.  gtk_render_handle() also uses the
         // background color to draw a background, and so this style otherwise
-        // matches MOZ_GTK_TEXT_VIEW_TEXT to match the background with
+        // matches what is used in GtkTextView to match the background with
         // textarea elements.
+        GdkRGBA color;
+        gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
+                                               &color);
+        if (color.alpha == 0.0) {
+          g_object_unref(style);
+          style = CreateStyleForWidget(gtk_text_view_new(),
+                                       MOZ_GTK_SCROLLED_WINDOW);
+        }
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_GRIP);
       }
-      return style;
+      break;
     case MOZ_GTK_FRAME_BORDER:
       style = CreateChildCSSNode("border", MOZ_GTK_FRAME);
       break;
