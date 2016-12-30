@@ -516,8 +516,7 @@ nsStyleUtil::ComputeFunctionalAlternates(const nsCSSValueList* aList,
     NS_ASSERTION(key != eCSSKeyword_UNKNOWN, "unknown alternate property value");
 
     int32_t alternate;
-    if (key == eCSSKeyword_UNKNOWN ||
-        !nsCSSProps::FindKeyword(key,
+    if (!nsCSSProps::FindKeyword(key,
                                  nsCSSProps::kFontVariantAlternatesFuncsKTable,
                                  alternate)) {
       NS_NOTREACHED("keyword not a font-variant-alternates value");

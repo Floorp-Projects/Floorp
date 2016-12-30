@@ -4226,8 +4226,7 @@ CSSParserImpl::ParseFontFeatureValueSet(nsCSSFontFeatureValuesRule
   // which font-specific variant of font-variant-alternates
   int32_t whichVariant;
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-  if (keyword == eCSSKeyword_UNKNOWN ||
-      !nsCSSProps::FindKeyword(keyword,
+  if (!nsCSSProps::FindKeyword(keyword,
                                nsCSSProps::kFontVariantAlternatesFuncsKTable,
                                whichVariant))
   {
@@ -6733,12 +6732,10 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
       }
       else {
         nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
-        if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
-          int32_t value;
-          if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
-            aValue.SetIntValue(value, eCSSUnit_EnumColor);
-            return CSSParseResult::Ok;
-          }
+        int32_t value;
+        if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
+          aValue.SetIntValue(value, eCSSUnit_EnumColor);
+          return CSSParseResult::Ok;
         }
       }
       break;
@@ -7556,12 +7553,10 @@ CSSParserImpl::ParseEnum(nsCSSValue& aValue,
     return false;
   }
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(*ident);
-  if (eCSSKeyword_UNKNOWN < keyword) {
-    int32_t value;
-    if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
-      aValue.SetIntValue(value, eCSSUnit_Enumerated);
-      return true;
-    }
+  int32_t value;
+  if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
+    aValue.SetIntValue(value, eCSSUnit_Enumerated);
+    return true;
   }
 
   // Put the unknown identifier back and return
@@ -7591,16 +7586,14 @@ CSSParserImpl::ParseAlignEnum(nsCSSValue& aValue,
     }
     keyword = nsCSSKeywords::LookupKeyword(*ident);
   }
-  if (eCSSKeyword_UNKNOWN < keyword) {
-    int32_t value;
-    if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
-      if (baselinePrefix == eCSSKeyword_last &&
-          keyword == eCSSKeyword_baseline) {
-        value = NS_STYLE_ALIGN_LAST_BASELINE;
-      }
-      aValue.SetIntValue(value, eCSSUnit_Enumerated);
-      return true;
+  int32_t value;
+  if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
+    if (baselinePrefix == eCSSKeyword_last &&
+        keyword == eCSSKeyword_baseline) {
+      value = NS_STYLE_ALIGN_LAST_BASELINE;
     }
+    aValue.SetIntValue(value, eCSSUnit_Enumerated);
+    return true;
   }
 
   // Put the unknown identifier back and return
@@ -10659,8 +10652,7 @@ CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
     // This is only a gradient line if it's a box position keyword.
     nsCSSKeyword kw = nsCSSKeywords::LookupKeyword(aId);
     int32_t junk;
-    if (kw != eCSSKeyword_UNKNOWN &&
-        nsCSSProps::FindKeyword(kw, nsCSSProps::kImageLayerPositionKTable,
+    if (nsCSSProps::FindKeyword(kw, nsCSSProps::kImageLayerPositionKTable,
                                 junk)) {
       haveGradientLine = true;
     }
@@ -14469,12 +14461,11 @@ CSSParserImpl::ParseSingleAlternate(int32_t& aWhichFeature,
   // function ==> e.g. swash(flowing) styleset(alt-g, alt-m)
 
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-  if (!(eCSSKeyword_UNKNOWN < keyword &&
-        nsCSSProps::FindKeyword(keyword,
-                                (isIdent ?
-                                 nsCSSProps::kFontVariantAlternatesKTable :
-                                 nsCSSProps::kFontVariantAlternatesFuncsKTable),
-                                aWhichFeature)))
+  if (!nsCSSProps::FindKeyword(keyword,
+                               (isIdent ?
+                                nsCSSProps::kFontVariantAlternatesKTable :
+                                nsCSSProps::kFontVariantAlternatesFuncsKTable),
+                               aWhichFeature))
   {
     // failed, pop token
     UngetToken();
