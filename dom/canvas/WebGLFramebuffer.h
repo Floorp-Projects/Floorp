@@ -102,8 +102,9 @@ public:
 
     void OnBackingStoreRespecified() const;
 
-    bool IsEquivalent(const WebGLFBAttachPoint& other) const {
-        MOZ_ASSERT(IsDefined() && other.IsDefined());
+    bool IsEquivalentForFeedback(const WebGLFBAttachPoint& other) const {
+        if (!IsDefined() || !other.IsDefined())
+            return false;
 
 #define _(X) X == other.X
         return ( _(mRenderbufferPtr) &&
@@ -183,12 +184,6 @@ protected:
     ////
 
     struct ResolvedData {
-        // BlitFramebuffer
-        bool hasSampleBuffers;
-        std::vector<const WebGLFBAttachPoint*> colorDrawBuffers; // Non-null, defined
-        const WebGLFBAttachPoint* depthBuffer; // null if not defined
-        const WebGLFBAttachPoint* stencilBuffer; // null if not defined
-
         // IsFeedback
         std::vector<const WebGLFBAttachPoint*> texDrawBuffers; // Non-null
         std::set<WebGLFBAttachPoint::Ordered> drawSet;
