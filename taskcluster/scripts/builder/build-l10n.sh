@@ -35,6 +35,7 @@ fail() {
 export MOZ_CRASHREPORTER_NO_REPORT=1
 export MOZ_OBJDIR=obj-firefox
 export TINDERBOX_OUTPUT=1
+export MOZ_AUTOMATION=1
 
 # Ensure that in tree libraries can be found
 export LIBRARY_PATH=$LIBRARY_PATH:$WORKSPACE/src/obj-firefox:$WORKSPACE/src/gcc/lib64
