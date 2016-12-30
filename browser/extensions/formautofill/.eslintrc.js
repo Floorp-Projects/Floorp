@@ -4,8 +4,11 @@ module.exports = { // eslint-disable-line no-undef
   "extends": "../../.eslintrc.js",
 
   "globals": {
+    "addMessageListener": false,
     "Components": true,
     "dump": true,
+    "removeMessageListener": false,
+    "sendAsyncMessage": false,
     "TextDecoder": false,
     "TextEncoder": false,
   },
