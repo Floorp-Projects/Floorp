@@ -1551,9 +1551,9 @@ class Assembler : public AssemblerShared
                                Label* documentation = nullptr);
 
     // Load a 64 bit floating point immediate from a pool into a register.
-    BufferOffset as_FImm64Pool(VFPRegister dest, wasm::RawF64 value, Condition c = Always);
+    BufferOffset as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
     // Load a 32 bit floating point immediate from a pool into a register.
-    BufferOffset as_FImm32Pool(VFPRegister dest, wasm::RawF32 value, Condition c = Always);
+    BufferOffset as_FImm32Pool(VFPRegister dest, float value, Condition c = Always);
 
     // Atomic instructions: ldrex, ldrexh, ldrexb, strex, strexh, strexb.
     //

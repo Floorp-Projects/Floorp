@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CustomTypeAnnotation.h"
+#include "Utils.h"
 
 CustomTypeAnnotation StackClass =
     CustomTypeAnnotation("moz_stack_class", "stack");

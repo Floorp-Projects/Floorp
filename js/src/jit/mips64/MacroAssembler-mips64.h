@@ -409,12 +409,10 @@ class MacroAssemblerMIPS64Compat : public MacroAssemblerMIPS64
     void loadInt32OrDouble(const Address& src, FloatRegister dest);
     void loadInt32OrDouble(const BaseIndex& addr, FloatRegister dest);
     void loadConstantDouble(double dp, FloatRegister dest);
-    void loadConstantDouble(wasm::RawF64 d, FloatRegister dest);
 
     void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
-    void loadConstantFloat32(wasm::RawF32 f, FloatRegister dest);
 
     void testNullSet(Condition cond, const ValueOperand& value, Register dest);
 

@@ -16,6 +16,9 @@
   text-overflow: inherit;
   overflow: inherit;
   overflow-clip-box: inherit;
+  /* Need to inherit border-radius too, so when the fieldset has rounded
+     borders we don't leak out the corners for hit-testing purposes. */
+  border-radius: inherit;
   padding: inherit;
   block-size: 100%; /* Need this so percentage block-sizes of kids work right */
   /* Please keep the Multicol/Flex/Grid/Align sections below in sync with

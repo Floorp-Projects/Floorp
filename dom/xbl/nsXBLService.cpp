@@ -462,7 +462,14 @@ nsXBLService::LoadBindings(nsIContent* aContent, nsIURI* aURL,
   // anonymous content created in this function, explicit children for which we
   // defer styling until after XBL bindings are applied, and elements whose existing
   // style was invalidated by a call to SetXBLInsertionParent.
-  AutoStyleNewChildren styleNewChildren(aContent->AsElement());
+  //
+  // However, we skip this styling if aContent is not in the document, since we
+  // should keep such elements unstyled.  (There are some odd cases where we do
+  // apply bindings to elements not in the document.)
+  Maybe<AutoStyleNewChildren> styleNewChildren;
+  if (aContent->IsInComposedDoc()) {
+    styleNewChildren.emplace(aContent->AsElement());
+  }
 
   nsXBLBinding *binding = aContent->GetXBLBinding();
   if (binding) {

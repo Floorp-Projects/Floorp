@@ -844,6 +844,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Call this to get the name of a compartment. */
     JSCompartmentNameCallback compartmentNameCallback;
 
+    /* Callback for doing memory reporting on external strings. */
+    JSExternalStringSizeofCallback externalStringSizeofCallback;
+
     js::ActivityCallback  activityCallback;
     void*                activityCallbackArg;
     void triggerActivityCallback(bool active);
