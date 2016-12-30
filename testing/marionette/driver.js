@@ -188,7 +188,7 @@ Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
   Ci.nsIMessageListener,
   Ci.nsIObserver,
-  Ci.nsISupportsWeakReference
+  Ci.nsISupportsWeakReference,
 ]);
 
 /**
@@ -370,8 +370,9 @@ GeckoDriver.prototype.whenBrowserStarted = function (win, isNewSession) {
       if (mm.childCount !== 0) {
         this.curBrowser.frameRegsPending = 0;
         for (let i = 0; i < mm.childCount; i++) {
-          if (mm.getChildAt(i).childCount !== 0)
+          if (mm.getChildAt(i).childCount !== 0) {
             this.curBrowser.frameRegsPending += 1;
+          }
         }
       }
     }
@@ -513,8 +514,9 @@ GeckoDriver.prototype.listeningPromise = function() {
 /** Create a new session. */
 GeckoDriver.prototype.newSession = function*(cmd, resp) {
   if (this.sessionId) {
-    throw new SessionNotCreatedError("Maximum number of active sessions.")
+    throw new SessionNotCreatedError("Maximum number of active sessions");
   }
+
   this.sessionId = cmd.parameters.sessionId ||
       cmd.parameters.session_id ||
       element.generateUUID();
