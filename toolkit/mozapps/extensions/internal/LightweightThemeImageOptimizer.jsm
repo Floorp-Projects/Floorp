@@ -21,7 +21,7 @@ const ORIGIN_TOP_RIGHT = 1;
 const ORIGIN_BOTTOM_LEFT = 2;
 
 this.LightweightThemeImageOptimizer = {
-  optimize: function(aThemeData, aScreen) {
+  optimize(aThemeData, aScreen) {
     let data = Object.assign({}, aThemeData);
     if (!data.headerURL) {
       return data;
@@ -38,7 +38,7 @@ this.LightweightThemeImageOptimizer = {
     return data;
   },
 
-  purge: function() {
+  purge() {
     let dir = FileUtils.getDir("ProfD", ["lwtheme"]);
     dir.followLinks = false;
     try {
@@ -52,7 +52,7 @@ Object.freeze(LightweightThemeImageOptimizer);
 var ImageCropper = {
   _inProgress: {},
 
-  getCroppedImageURL: function(aImageURL, aScreen, aOrigin) {
+  getCroppedImageURL(aImageURL, aScreen, aOrigin) {
     // We can crop local files, only.
     if (!aImageURL.startsWith("file://")) {
       return aImageURL;
@@ -88,7 +88,7 @@ var ImageCropper = {
     return aImageURL;
   },
 
-  _crop: function(aURI, aTargetFile, aScreen, aOrigin) {
+  _crop(aURI, aTargetFile, aScreen, aOrigin) {
     let inProgress = this._inProgress;
     inProgress[aTargetFile.path] = true;
 
@@ -114,7 +114,7 @@ var ImageCropper = {
 };
 
 var ImageFile = {
-  read: function(aURI, aCallback) {
+  read(aURI, aCallback) {
     this._netUtil.asyncFetch({
       uri: aURI,
       loadUsingSystemPrincipal: true,
@@ -129,7 +129,7 @@ var ImageFile = {
       });
   },
 
-  write: function(aFile, aInputStream, aCallback) {
+  write(aFile, aInputStream, aCallback) {
     let fos = FileUtils.openSafeFileOutputStream(aFile);
     this._netUtil.asyncCopy(aInputStream, fos, function(aResult) {
       FileUtils.closeSafeFileOutputStream(fos);
@@ -150,7 +150,7 @@ XPCOMUtils.defineLazyModuleGetter(ImageFile, "_netUtil",
   "resource://gre/modules/NetUtil.jsm", "NetUtil");
 
 var ImageTools = {
-  decode: function(aInputStream, aContentType) {
+  decode(aInputStream, aContentType) {
     let outParam = {value: null};
 
     try {
@@ -160,7 +160,7 @@ var ImageTools = {
     return outParam.value;
   },
 
-  encode: function(aImage, aScreen, aOrigin, aContentType) {
+  encode(aImage, aScreen, aOrigin, aContentType) {
     let stream;
     let width = Math.min(aImage.width, aScreen.width);
     let height = Math.min(aImage.height, aScreen.height);

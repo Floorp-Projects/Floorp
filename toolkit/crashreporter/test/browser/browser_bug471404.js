@@ -15,9 +15,9 @@ function check_clear_visible(browser, aVisible) {
 }
 
 // each test here has a setup (run before loading about:crashes) and onload (run after about:crashes loads)
-var _tests = [{setup: null, onload: function(browser) { return check_clear_visible(browser, false); }},
-              {setup: function(crD) { return add_fake_crashes(crD, 1); },
-               onload: function(browser) { return check_clear_visible(browser, true); }}
+var _tests = [{setup: null, onload(browser) { return check_clear_visible(browser, false); }},
+              {setup(crD) { return add_fake_crashes(crD, 1); },
+               onload(browser) { return check_clear_visible(browser, true); }}
               ];
 
 add_task(function* test() {

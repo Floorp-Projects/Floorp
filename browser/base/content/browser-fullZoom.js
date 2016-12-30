@@ -89,7 +89,7 @@ var FullZoom = {
 
   // nsIObserver
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "nsPref:changed":
         switch (aData) {
@@ -154,7 +154,7 @@ var FullZoom = {
     let hasPref = false;
     let token = this._getBrowserToken(browser);
     this._cps2.getByDomainAndName(browser.currentURI.spec, this.name, ctxt, {
-      handleResult: function() { hasPref = true; },
+      handleResult() { hasPref = true; },
       handleCompletion: function() {
         if (!hasPref && token.isCurrent)
           this._applyPrefToZoom(undefined, browser);
@@ -223,7 +223,7 @@ var FullZoom = {
     let value = undefined;
     let token = this._getBrowserToken(browser);
     this._cps2.getByDomainAndName(aURI.spec, this.name, ctxt, {
-      handleResult: function(resultPref) { value = resultPref.value; },
+      handleResult(resultPref) { value = resultPref.value; },
       handleCompletion: function() {
         if (!token.isCurrent) {
           this._notifyOnLocationChange(browser);
@@ -269,7 +269,7 @@ var FullZoom = {
    * Sets the zoom level for the given browser to the given floating
    * point value, where 1 is the default zoom level.
    */
-  setZoom: function(value, browser = gBrowser.selectedBrowser) {
+  setZoom(value, browser = gBrowser.selectedBrowser) {
     ZoomManager.setZoomForBrowser(browser, value);
     this._ignorePendingZoomAccesses(browser);
     this._applyZoomToPref(browser);
@@ -487,7 +487,7 @@ var FullZoom = {
       }
       let value = undefined;
       this._cps2.getGlobal(this.name, this._loadContextFromBrowser(browser), {
-        handleResult: function(pref) { value = pref.value; },
+        handleResult(pref) { value = pref.value; },
         handleCompletion: (reason) => {
           this._globalValue = this._ensureValid(value);
           resolve(this._globalValue);

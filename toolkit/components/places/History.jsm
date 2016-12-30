@@ -130,7 +130,7 @@ this.History = Object.freeze({
    *      If `guidOrURI` does not have the expected type or if it is a string
    *      that may be parsed neither as a valid URL nor as a valid GUID.
    */
-  fetch: function(guidOrURI) {
+  fetch(guidOrURI) {
     throw new Error("Method not implemented");
   },
 
@@ -175,7 +175,7 @@ this.History = Object.freeze({
    * @throws (Error)
    *      If an element of `visits` has an invalid `transition`.
    */
-  insert: function(pageInfo) {
+  insert(pageInfo) {
     if (typeof pageInfo != "object" || !pageInfo) {
       throw new TypeError("pageInfo must be an object");
     }
@@ -231,7 +231,7 @@ this.History = Object.freeze({
    * @throws (Error)
    *      If an element of `visits` has an invalid `transition`.
    */
-  insertMany: function(pageInfos, onResult, onError) {
+  insertMany(pageInfos, onResult, onError) {
     let infos = [];
 
     if (!Array.isArray(pageInfos)) {
@@ -281,7 +281,7 @@ this.History = Object.freeze({
    *       is neither a valid GUID nor a valid URI or if `pages`
    *       is an empty array.
    */
-  remove: function(pages, onResult = null) {
+  remove(pages, onResult = null) {
     // Normalize and type-check arguments
     if (Array.isArray(pages)) {
       if (pages.length == 0) {
@@ -303,7 +303,7 @@ this.History = Object.freeze({
         urls.push(normalized.href);
       }
     }
-    let normalizedPages = {guids: guids, urls: urls};
+    let normalizedPages = {guids, urls};
 
     // At this stage, we know that either `guids` is not-empty
     // or `urls` is not-empty.
@@ -348,7 +348,7 @@ this.History = Object.freeze({
    *      If `filter` does not have the expected type, in
    *      particular if the `object` is empty.
    */
-  removeVisitsByFilter: function(filter, onResult = null) {
+  removeVisitsByFilter(filter, onResult = null) {
     if (!filter || typeof filter != "object") {
       throw new TypeError("Expected a filter");
     }
@@ -407,7 +407,7 @@ this.History = Object.freeze({
    *      If `pages` has an unexpected type or if a string provided
    *      is neither not a valid GUID nor a valid URI.
    */
-  hasVisits: function(page, onResult) {
+  hasVisits(page, onResult) {
     throw new Error("Method not implemented");
   },
 
@@ -927,7 +927,7 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
     pages.push(page);
     if (onResult) {
       onResultData.push({
-        guid: guid,
+        guid,
         title: row.getResultByName("title"),
         frecency: row.getResultByName("frecency"),
         url: new URL(url)

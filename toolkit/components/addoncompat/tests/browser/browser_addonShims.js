@@ -14,7 +14,7 @@ function addAddon(url)
     AddonManager.getInstallForURL(url, installer => {
       installer.install();
       let listener = {
-        onInstallEnded: function(addon, addonInstall) {
+        onInstallEnded(addon, addonInstall) {
           installer.removeListener(listener);
 
           // Wait for add-on's startup scripts to execute. See bug 997408
@@ -36,7 +36,7 @@ function removeAddon(addon)
 
   return new Promise(function(resolve, reject) {
     let listener = {
-      onUninstalled: function(uninstalledAddon) {
+      onUninstalled(uninstalledAddon) {
         if (uninstalledAddon != addon) {
           return;
         }
@@ -53,12 +53,12 @@ add_task(function* test_addon_shims() {
   yield SpecialPowers.pushPrefEnv({set: [["dom.ipc.shims.enabledWarnings", true]]});
 
   let addon = yield addAddon(ADDON_URL);
-  yield window.runAddonShimTests({ok: ok, is: is, info: info});
+  yield window.runAddonShimTests({ok, is, info});
   yield removeAddon(addon);
 
   if (Services.appinfo.browserTabsRemoteAutostart) {
     addon = yield addAddon(COMPAT_ADDON_URL);
-    yield window.runAddonTests({ok: ok, is: is, info: info});
+    yield window.runAddonTests({ok, is, info});
     yield removeAddon(addon);
   }
 });

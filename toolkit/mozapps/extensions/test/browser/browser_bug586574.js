@@ -99,7 +99,7 @@ add_test(function() {
                       "#1 Reset to Manual menuitem should be hidden");
 
     var listener = {
-      onPropertyChanged: function(aAddon, aProperties) {
+      onPropertyChanged(aAddon, aProperties) {
         AddonManager.removeAddonListener(listener);
         is(aAddon.id, gProvider.addons[0].id,
            "Should get onPropertyChanged event for correct addon");
@@ -218,7 +218,7 @@ add_test(function() {
                        "#5 Reset to manual menuitem should be visible");
 
     var listener = {
-      onPropertyChanged: function(aAddon, aProperties) {
+      onPropertyChanged(aAddon, aProperties) {
         AddonManager.removeAddonListener(listener);
         is(aAddon.id, gProvider.addons[0].id,
            "Should get onPropertyChanged event for correct addon");

@@ -426,7 +426,7 @@ this.WinTaskbarJumpList =
     // Return the pending statement to the caller, to allow cancelation.
     return PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                               .asyncExecuteLegacyQueries([query], 1, options, {
-      handleResult: function(aResultSet) {
+      handleResult(aResultSet) {
         for (let row; (row = aResultSet.getNextRow());) {
           try {
             aCallback.call(aScope,
@@ -436,11 +436,11 @@ this.WinTaskbarJumpList =
           } catch (e) {}
         }
       },
-      handleError: function(aError) {
+      handleError(aError) {
         Components.utils.reportError(
           "Async execution error (" + aError.result + "): " + aError.message);
       },
-      handleCompletion: function(aReason) {
+      handleCompletion(aReason) {
         aCallback.call(WinTaskbarJumpList, null);
       },
     });

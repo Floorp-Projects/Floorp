@@ -91,13 +91,13 @@ function AbstractWorker(agent) {
 }
 AbstractWorker.prototype = {
   // Default logger: discard all messages
-  log: function() {
+  log() {
   },
 
   /**
    * Handle a message.
    */
-  handleMessage: function(msg) {
+  handleMessage(msg) {
     let data = msg.data;
     this.log("Received message", data);
     let id = data.id;
@@ -141,17 +141,17 @@ AbstractWorker.prototype = {
       if (result instanceof Meta) {
         if ("transfers" in result.meta) {
           // Take advantage of zero-copy transfers
-          this.postMessage({ok: result.data, id: id, durationMs: durationMs},
+          this.postMessage({ok: result.data, id, durationMs},
             result.meta.transfers);
         } else {
-          this.postMessage({ok: result.data, id:id, durationMs: durationMs});
+          this.postMessage({ok: result.data, id, durationMs});
         }
         if (result.meta.shutdown || false) {
           // Time to close the worker
           this.close();
         }
       } else {
-        this.postMessage({ok: result, id:id, durationMs: durationMs});
+        this.postMessage({ok: result, id, durationMs});
       }
     } else if (exn.constructor.name in EXCEPTION_NAMES) {
       // Rather than letting the DOM mechanism [de]serialize built-in
@@ -166,7 +166,7 @@ AbstractWorker.prototype = {
         lineNumber: exn.lineNumber,
         stack: exn.moduleStack
       };
-      this.postMessage({fail: error, id: id, durationMs: durationMs});
+      this.postMessage({fail: error, id, durationMs});
     } else if (exn == StopIteration) {
       // StopIteration is a well-known singleton, and requires a
       // slightly different treatment.
@@ -174,7 +174,7 @@ AbstractWorker.prototype = {
       let error = {
         exn: "StopIteration"
       };
-      this.postMessage({fail: error, id: id, durationMs: durationMs});
+      this.postMessage({fail: error, id, durationMs});
     } else if ("toMsg" in exn) {
       // Extension mechanism for exception [de]serialization. We
       // assume that any exception with a method `toMsg()` knows how
@@ -183,7 +183,7 @@ AbstractWorker.prototype = {
       // object.
       this.log("Sending back an error that knows how to serialize itself", exn, "id is", id);
       let msg = exn.toMsg();
-      this.postMessage({fail: msg, id:id, durationMs: durationMs});
+      this.postMessage({fail: msg, id, durationMs});
     } else {
       // If we encounter an exception for which we have no
       // serialization mechanism in place, we have no choice but to

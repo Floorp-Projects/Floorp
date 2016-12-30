@@ -13,13 +13,13 @@ function run_test() {
   );
   stmt.executeAsync({
     _gotResult: false,
-    handleResult: function(aResultSet) {
+    handleResult(aResultSet) {
       this._gotResult = true;
     },
-    handleError: function(aError) {
+    handleError(aError) {
       do_throw("Unexpected error (" + aError.result + "): " + aError.message);
     },
-    handleCompletion: function(aReason) {
+    handleCompletion(aReason) {
       do_check_true(this._gotResult);
        do_test_finished();
     }

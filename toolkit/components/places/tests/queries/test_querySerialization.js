@@ -228,7 +228,7 @@ const querySwitches = [
   // getFolders
   {
     desc:    "nsINavHistoryQuery.getFolders",
-    matches: function(aQuery1, aQuery2) {
+    matches(aQuery1, aQuery2) {
       var q1Folders = aQuery1.getFolders();
       var q2Folders = aQuery2.getFolders();
       if (q1Folders.length !== q2Folders.length)
@@ -258,7 +258,7 @@ const querySwitches = [
   // tags
   {
     desc:    "nsINavHistoryQuery.getTags",
-    matches: function(aQuery1, aQuery2) {
+    matches(aQuery1, aQuery2) {
       if (aQuery1.tagsAreNot !== aQuery2.tagsAreNot)
         return false;
       var q1Tags = aQuery1.tags;
@@ -314,7 +314,7 @@ const querySwitches = [
   // transitions
   {
     desc: "tests nsINavHistoryQuery.getTransitions",
-    matches: function(aQuery1, aQuery2) {
+    matches(aQuery1, aQuery2) {
       var q1Trans = aQuery1.getTransitions();
       var q2Trans = aQuery2.getTransitions();
       if (q1Trans.length !== q2Trans.length)
@@ -350,7 +350,7 @@ const queryOptionSwitches = [
   // sortingMode
   {
     desc:    "nsINavHistoryQueryOptions.sortingMode",
-    matches: function(aOptions1, aOptions2) {
+    matches(aOptions1, aOptions2) {
       if (aOptions1.sortingMode === aOptions2.sortingMode) {
         switch (aOptions1.sortingMode) {
           case aOptions1.SORT_BY_ANNOTATION_ASCENDING:

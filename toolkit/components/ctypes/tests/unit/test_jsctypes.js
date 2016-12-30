@@ -413,8 +413,8 @@ function run_Int64_tests() {
               ctypes.UInt64("0x8000000000000000"),
               Infinity, -Infinity, NaN, 0.1,
               5.68e21, null, undefined, "", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { ctypes.Int64(vals[i]); }, TypeError);
 
@@ -563,8 +563,8 @@ function run_UInt64_tests() {
   let vals = [-1, 0x10000000000000000, "-1", "-0x1",
               ctypes.Int64("-1"), Infinity, -Infinity, NaN, 0.1,
               5.68e21, null, undefined, "", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { ctypes.UInt64(vals[i]); }, TypeError);
 
@@ -778,8 +778,8 @@ function run_bool_tests(library) {
   let vals = [-1, 2, Infinity, -Infinity, NaN, 0.1,
               ctypes.Int64(0), ctypes.UInt64(0),
               null, undefined, "", "0", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
@@ -858,8 +858,8 @@ function run_integer_tests(library, t, name, size, signed, limits) {
   // don't convert anything else
   let vals = [limits[0] - 1, limits[1] + 1, Infinity, -Infinity, NaN, 0.1,
               null, undefined, "", "0", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
@@ -945,8 +945,8 @@ function run_float_tests(library, t, name, size) {
 
   // don't convert anything else
   let vals = [true, false, null, undefined, "", "0", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
@@ -1045,8 +1045,8 @@ function run_wrapped_integer_tests(library, t, name, size, signed, w, wname, lim
   // don't convert anything else
   let vals = [limits[2], limits[3], Infinity, -Infinity, NaN, 0.1,
               null, undefined, "", "0", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
@@ -1128,8 +1128,8 @@ function run_char_tests(library, t, name, size, signed, limits) {
   // don't convert anything else
   let vals = [limits[0] - 1, limits[1] + 1, Infinity, -Infinity, NaN, 0.1,
               null, undefined, "", "aa", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
@@ -1220,8 +1220,8 @@ function run_char16_tests(library, t, name, limits) {
   // don't convert anything else
   let vals = [limits[0] - 1, limits[1] + 1, Infinity, -Infinity, NaN, 0.1,
               null, undefined, "", "aa", {}, [], new Number(16),
-              {toString: function() { return 7; }},
-              {valueOf: function() { return 7; }}];
+              {toString() { return 7; }},
+              {valueOf() { return 7; }}];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { d.value = vals[i]; }, TypeError);
 
@@ -2223,7 +2223,7 @@ function run_string_tests(library) {
   do_check_eq(test_ansi_len("hello world"), 11);
 
   // don't convert anything else to a string
-  let vals = [true, 0, 1 / 3, undefined, {}, {toString: function() { return "bad"; }}, []];
+  let vals = [true, 0, 1 / 3, undefined, {}, {toString() { return "bad"; }}, []];
   for (let i = 0; i < vals.length; i++)
     do_check_throws(function() { test_ansi_len(vals[i]); }, TypeError);
 

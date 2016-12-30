@@ -37,7 +37,7 @@ function UpdateServiceStub() {
   }
 }
 UpdateServiceStub.prototype = {
-  observe: function() {},
+  observe() {},
   classID: Components.ID("{e43b0010-04ba-4da6-b523-1f92580bc150}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
 };

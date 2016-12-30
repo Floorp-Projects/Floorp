@@ -49,7 +49,7 @@ var gTests = [
 
 {
   desc: "Test the 'Keep Current Settings' button.",
-  run: function* () {
+  *run() {
     let engine = yield promiseNewEngine(kTestEngine, {setAsCurrent: true});
 
     let expectedURL = engine.
@@ -75,7 +75,7 @@ var gTests = [
 
 {
   desc: "Test the 'Restore Search Defaults' button.",
-  run: function* () {
+  *run() {
     let currentEngine = Services.search.currentEngine;
     let originalEngine = Services.search.originalDefaultEngine;
     let doc = gBrowser.contentDocument;
@@ -103,7 +103,7 @@ var gTests = [
 
 {
   desc: "Click the settings link.",
-  run: function* () {
+  *run() {
     let loadPromise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser,
                                                      false,
                                                      "about:preferences#search")
@@ -116,7 +116,7 @@ var gTests = [
 
 {
   desc: "Load another page without clicking any of the buttons.",
-  run: function* () {
+  *run() {
     yield promiseTabLoadEvent(gBrowser.selectedTab, "about:mozilla");
 
     checkTelemetryRecords(TELEMETRY_RESULT_ENUM.CLOSED_PAGE);

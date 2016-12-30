@@ -29,7 +29,7 @@ add_task(function* () {
 
   // Check that we are importing the FHR client ID.
   let clientID = CommonUtils.generateUUID();
-  yield CommonUtils.writeJSON({clientID: clientID}, fhrPath);
+  yield CommonUtils.writeJSON({clientID}, fhrPath);
   Assert.equal(clientID, yield ClientID.getClientID());
 
   // We should persist the ID in DRS now and not pick up a differing ID from FHR.
@@ -60,7 +60,7 @@ add_task(function* () {
   for (let invalidID of invalidIDs) {
     yield ClientID._reset();
     clientID = CommonUtils.generateUUID();
-    yield CommonUtils.writeJSON({clientID: clientID}, fhrPath);
+    yield CommonUtils.writeJSON({clientID}, fhrPath);
     yield CommonUtils.writeJSON({clientID: invalidID}, drsPath);
     Assert.equal(clientID, yield ClientID.getClientID());
   }

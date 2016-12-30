@@ -46,19 +46,19 @@ AutoCompleteInput.prototype = {
   get searchCount() {
     return this.searches.length;
   },
-  getSearchAt: function(aIndex) {
+  getSearchAt(aIndex) {
     return this.searches[aIndex];
   },
 
-  onSearchBegin: function() {},
-  onSearchComplete: function() {},
+  onSearchBegin() {},
+  onSearchComplete() {},
 
   get popupOpen() {
     return false;
   },
   popup: {
     set selectedIndex(aIndex) {},
-    invalidate: function() {},
+    invalidate() {},
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])
   },
 
@@ -120,7 +120,7 @@ function* task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
     },
     popupOpen: true,
     selectedIndex: 0,
-    getValueAt: function() {
+    getValueAt() {
       return aURI.spec;
     },
     searchString: aSearch
@@ -151,7 +151,7 @@ function* task_setCountRank(aURI, aCount, aRank, aSearch, aBookmark)
 function doAdaptiveDecay()
 {
   PlacesUtils.history.runInBatchMode({
-    runBatched: function() {
+    runBatched() {
       for (let i = 0; i < 10; i++) {
         PlacesUtils.history.QueryInterface(Ci.nsIObserver)
                            .observe(null, "idle-daily", null);
@@ -177,7 +177,7 @@ var observer = {
   results: null,
   search: null,
   runCount: -1,
-  observe: function(aSubject, aTopic, aData)
+  observe(aSubject, aTopic, aData)
   {
     if (--this.runCount > 0)
       return;

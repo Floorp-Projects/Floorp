@@ -72,7 +72,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
 // nsIURI -> imgIContainer
 function _imageFromURI(uri, privateMode, callback) {
   let channel = NetUtil.newChannel({
-    uri: uri,
+    uri,
     loadUsingSystemPrincipal: true,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE
   });
@@ -158,7 +158,7 @@ PreviewController.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITaskbarPreviewController,
                                          Ci.nsIDOMEventListener]),
 
-  destroy: function() {
+  destroy() {
     this.tab.removeEventListener("TabAttrModified", this, false);
 
     // Break cycles, otherwise we end up leaking the window with everything
@@ -172,7 +172,7 @@ PreviewController.prototype = {
   },
 
   // Resizes the canvasPreview to 0x0, essentially freeing its memory.
-  resetCanvasPreview: function() {
+  resetCanvasPreview() {
     this.canvasPreview.width = 0;
     this.canvasPreview.height = 0;
   },
@@ -180,7 +180,7 @@ PreviewController.prototype = {
   /**
    * Set the canvas dimensions.
    */
-  resizeCanvasPreview: function(aRequestedWidth, aRequestedHeight) {
+  resizeCanvasPreview(aRequestedWidth, aRequestedHeight) {
     this.canvasPreview.width = aRequestedWidth;
     this.canvasPreview.height = aRequestedHeight;
   },
@@ -204,13 +204,13 @@ PreviewController.prototype = {
     return this.tab.linkedBrowser.getBoundingClientRect();
   },
 
-  cacheBrowserDims: function() {
+  cacheBrowserDims() {
     let dims = this.browserDims;
     this._cachedWidth = dims.width;
     this._cachedHeight = dims.height;
   },
 
-  testCacheBrowserDims: function() {
+  testCacheBrowserDims() {
     let dims = this.browserDims;
     return this._cachedWidth == dims.width &&
       this._cachedHeight == dims.height;
@@ -220,7 +220,7 @@ PreviewController.prototype = {
    * Capture a new thumbnail image for this preview. Called by the controller
    * in response to a request for a new thumbnail image.
    */
-  updateCanvasPreview: function(aFullScale, aCallback) {
+  updateCanvasPreview(aFullScale, aCallback) {
     // Update our cached browser dims so that delayed resize
     // events don't trigger another invalidation if this tab becomes active.
     this.cacheBrowserDims();
@@ -231,7 +231,7 @@ PreviewController.prototype = {
     AeroPeek.resetCacheTimer();
   },
 
-  updateTitleAndTooltip: function() {
+  updateTitleAndTooltip() {
     let title = this.win.tabbrowser.getWindowTitleForBrowser(this.linkedBrowser);
     this.preview.title = title;
     this.preview.tooltip = title;
@@ -264,7 +264,7 @@ PreviewController.prototype = {
    *
    * @param aTaskbarCallback nsITaskbarPreviewCallback results callback
    */
-  requestPreview: function(aTaskbarCallback) {
+  requestPreview(aTaskbarCallback) {
     // Grab a high res content preview
     this.resetCanvasPreview();
     this.updateCanvasPreview(true, (aPreviewCanvas) => {
@@ -312,7 +312,7 @@ PreviewController.prototype = {
    * @param aRequestedWidth width of the requested thumbnail
    * @param aRequestedHeight height of the requested thumbnail
    */
-  requestThumbnail: function(aTaskbarCallback, aRequestedWidth, aRequestedHeight) {
+  requestThumbnail(aTaskbarCallback, aRequestedWidth, aRequestedHeight) {
     this.resizeCanvasPreview(aRequestedWidth, aRequestedHeight);
     this.updateCanvasPreview(false, (aThumbnailCanvas) => {
       aTaskbarCallback.done(aThumbnailCanvas, false);
@@ -321,11 +321,11 @@ PreviewController.prototype = {
 
   // Event handling
 
-  onClose: function() {
+  onClose() {
     this.win.tabbrowser.removeTab(this.tab);
   },
 
-  onActivate: function() {
+  onActivate() {
     this.win.tabbrowser.selectedTab = this.tab;
 
     // Accept activation - this will restore the browser window
@@ -334,7 +334,7 @@ PreviewController.prototype = {
   },
 
   // nsIDOMEventListener
-  handleEvent: function(evt) {
+  handleEvent(evt) {
     switch (evt.type) {
       case "TabAttrModified":
         this.updateTitleAndTooltip();
@@ -389,7 +389,7 @@ TabWindow.prototype = {
   tabEvents: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
   winEvents: ["resize"],
 
-  destroy: function() {
+  destroy() {
     this._destroying = true;
 
     let tabs = this.tabbrowser.tabs;
@@ -417,17 +417,17 @@ TabWindow.prototype = {
     return this.win.innerHeight;
   },
 
-  cacheDims: function() {
+  cacheDims() {
     this._cachedWidth = this.width;
     this._cachedHeight = this.height;
   },
 
-  testCacheDims: function() {
+  testCacheDims() {
     return this._cachedWidth == this.width && this._cachedHeight == this.height;
   },
 
   // Invoked when the given tab is added to this window
-  newTab: function(tab) {
+  newTab(tab) {
     let controller = new PreviewController(this, tab);
     // It's OK to add the preview now while the favicon still loads.
     this.previews.set(tab, controller.preview);
@@ -437,7 +437,7 @@ TabWindow.prototype = {
     controller.updateTitleAndTooltip();
   },
 
-  createTabPreview: function(controller) {
+  createTabPreview(controller) {
     let docShell = this.win
                   .QueryInterface(Ci.nsIInterfaceRequestor)
                   .getInterface(Ci.nsIWebNavigation)
@@ -451,7 +451,7 @@ TabWindow.prototype = {
   },
 
   // Invoked when the given tab is closed
-  removeTab: function(tab) {
+  removeTab(tab) {
     let preview = this.previewFromTab(tab);
     preview.active = false;
     preview.visible = false;
@@ -478,11 +478,11 @@ TabWindow.prototype = {
     this.updateTabOrdering();
   },
 
-  previewFromTab: function(tab) {
+  previewFromTab(tab) {
     return this.previews.get(tab);
   },
 
-  updateTabOrdering: function() {
+  updateTabOrdering() {
     let previews = this.previews;
     let tabs = this.tabbrowser.tabs;
 
@@ -505,7 +505,7 @@ TabWindow.prototype = {
   },
 
   // nsIDOMEventListener
-  handleEvent: function(evt) {
+  handleEvent(evt) {
     let tab = evt.originalTarget;
     switch (evt.type) {
       case "TabOpen":
@@ -531,7 +531,7 @@ TabWindow.prototype = {
   },
 
   // Set or reset a timer that will invalidate visible thumbnails soon.
-  setInvalidationTimer: function() {
+  setInvalidationTimer() {
     if (!this.invalidateTimer) {
       this.invalidateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     }
@@ -551,7 +551,7 @@ TabWindow.prototype = {
     }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
-  onResize: function() {
+  onResize() {
     // Specific to a window.
 
     // Call invalidate on each tab thumbnail so that Windows will request an
@@ -569,7 +569,7 @@ TabWindow.prototype = {
     this.setInvalidationTimer();
   },
 
-  invalidateTabPreview: function(aBrowser) {
+  invalidateTabPreview(aBrowser) {
     for (let [tab, preview] of this.previews) {
       if (aBrowser == tab.linkedBrowser) {
         preview.invalidate();
@@ -580,13 +580,13 @@ TabWindow.prototype = {
 
   // Browser progress listener
 
-  onLocationChange: function(aBrowser) {
+  onLocationChange(aBrowser) {
     // I'm not sure we need this, onStateChange does a really good job
     // of picking up page changes.
     // this.invalidateTabPreview(aBrowser);
   },
 
-  onStateChange: function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+  onStateChange(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
         aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
       this.invalidateTabPreview(aBrowser);
@@ -596,7 +596,7 @@ TabWindow.prototype = {
   directRequestProtocols: new Set([
     "file", "chrome", "resource", "about"
   ]),
-  onLinkIconAvailable: function(aBrowser, aIconURL) {
+  onLinkIconAvailable(aBrowser, aIconURL) {
     let requestURL = null;
     if (aIconURL) {
       let shouldRequestFaviconURL = true;
@@ -662,7 +662,7 @@ this.AeroPeek = {
   // Length of time in seconds that previews are cached
   cacheLifespan: 20,
 
-  initialize: function() {
+  initialize() {
     if (!(WINTASKBAR_CONTRACTID in Cc))
       return;
     this.taskbar = Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar);
@@ -752,25 +752,25 @@ this.AeroPeek = {
     }
   },
 
-  addPreview: function(preview) {
+  addPreview(preview) {
     this.previews.push(preview);
     this.checkPreviewCount();
   },
 
-  removePreview: function(preview) {
+  removePreview(preview) {
     let idx = this.previews.indexOf(preview);
     this.previews.splice(idx, 1);
     this.checkPreviewCount();
   },
 
-  checkPreviewCount: function() {
+  checkPreviewCount() {
     if (!this._prefenabled) {
       return;
     }
     this.enabled = this.previews.length <= this.maxpreviews;
   },
 
-  onOpenWindow: function(win) {
+  onOpenWindow(win) {
     // This occurs when the taskbar service is not available (xp, vista)
     if (!this.available || !this._prefenabled)
       return;
@@ -778,7 +778,7 @@ this.AeroPeek = {
     win.gTaskbarTabGroup = new TabWindow(win);
   },
 
-  onCloseWindow: function(win) {
+  onCloseWindow(win) {
     // This occurs when the taskbar service is not available (xp, vista)
     if (!this.available || !this._prefenabled)
       return;
@@ -790,13 +790,13 @@ this.AeroPeek = {
       this.destroy();
   },
 
-  resetCacheTimer: function() {
+  resetCacheTimer() {
     this.cacheTimer.cancel();
     this.cacheTimer.init(this, 1000 * this.cacheLifespan, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   // nsIObserver
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed" && aData == TOGGLE_PREF_NAME) {
       this._prefenabled = this.prefs.getBoolPref(TOGGLE_PREF_NAME);
     }

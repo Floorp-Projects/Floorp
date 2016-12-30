@@ -27,7 +27,7 @@ var CompatWarning = {
   // might only want to warn about it if the listener actually
   // fires. However, we want the warning to show a stack for the
   // registration site.
-  delayedWarning: function(msg, addon, warning) {
+  delayedWarning(msg, addon, warning) {
     function isShimLayer(filename) {
       return filename.indexOf("CompatWarning.jsm") != -1 ||
         filename.indexOf("RemoteAddonsParent.jsm") != -1 ||
@@ -86,7 +86,7 @@ var CompatWarning = {
     };
   },
 
-  warn: function(msg, addon, warning) {
+  warn(msg, addon, warning) {
     let delayed = this.delayedWarning(msg, addon, warning);
     delayed();
   },

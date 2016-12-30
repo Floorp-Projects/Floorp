@@ -200,7 +200,7 @@ add_task(function* test_basic()
     // When testing DownloadLegacySaver, the download is already started when it
     // is created, thus we must check its basic properties while in progress.
     download = yield promiseStartLegacyDownload(null,
-                                                { targetFile: targetFile });
+                                                { targetFile });
 
     do_check_eq(download.source.url, httpUrl("source.txt"));
     do_check_eq(download.target.path, targetFile.path);
@@ -1391,7 +1391,7 @@ add_task(function* test_error_target()
         // the "error" property checked by promiseDownloadStopped.  This happens
         // because we don't have control over when the download is started.
         download = yield promiseStartLegacyDownload(null,
-                                                    { targetFile: targetFile });
+                                                    { targetFile });
         yield promiseDownloadStopped(download);
       }
       do_throw("The download should have failed.");
@@ -1438,7 +1438,7 @@ add_task(function* test_error_restart()
       download.start().catch(() => {});
     } else {
       download = yield promiseStartLegacyDownload(null,
-                                                  { targetFile: targetFile });
+                                                  { targetFile });
     }
     yield promiseDownloadStopped(download);
     do_throw("The download should have failed.");
@@ -2167,7 +2167,7 @@ add_task(function* test_launch() {
       download = yield Downloads.createDownload({
         source: httpUrl("source.txt"),
         target: getTempFile(TEST_TARGET_FILE_NAME).path,
-        launcherPath: launcherPath,
+        launcherPath,
         launchWhenSucceeded: true
       });
 
@@ -2185,7 +2185,7 @@ add_task(function* test_launch() {
       // it is created, thus we don't test calling "launch" before starting.
       download = yield promiseStartLegacyDownload(
                                          httpUrl("source.txt"),
-                                         { launcherPath: launcherPath,
+                                         { launcherPath,
                                            launchWhenSucceeded: true });
       yield promiseDownloadStopped(download);
     }
@@ -2266,13 +2266,13 @@ add_task(function* test_launchWhenSucceeded() {
         source: httpUrl("source.txt"),
         target: getTempFile(TEST_TARGET_FILE_NAME).path,
         launchWhenSucceeded: true,
-        launcherPath: launcherPath,
+        launcherPath,
       });
       yield download.start();
     } else {
       let download = yield promiseStartLegacyDownload(
                                              httpUrl("source.txt"),
-                                             { launcherPath: launcherPath,
+                                             { launcherPath,
                                                launchWhenSucceeded: true });
       yield promiseDownloadStopped(download);
     }
@@ -2338,7 +2338,7 @@ add_task(function* test_platform_integration()
   }
   let downloadWatcherNotified = false;
   let observer = {
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       do_check_eq(topic, "download-watcher-notify");
       do_check_eq(data, "modified");
       downloadWatcherNotified = true;

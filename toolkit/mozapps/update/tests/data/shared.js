@@ -141,7 +141,7 @@ function reloadUpdateManagerData() {
 }
 
 const observer = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed" && aData == PREF_APP_UPDATE_CHANNEL) {
       let channel = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_CHANNEL);
       if (channel != gChannel) {

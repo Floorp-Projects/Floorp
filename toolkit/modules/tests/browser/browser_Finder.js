@@ -12,10 +12,10 @@ add_task(function* () {
 
   let finder = tab.linkedBrowser.finder;
   let listener = {
-    onFindResult: function() {
+    onFindResult() {
       ok(false, "onFindResult callback wasn't replaced");
     },
-    onHighlightFinished: function() {
+    onHighlightFinished() {
       ok(false, "onHighlightFinished callback wasn't replaced");
     }
   };

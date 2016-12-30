@@ -170,14 +170,14 @@ function get_actual_results() {
     if (item.mInstall || item.isPending("install")) {
       var sourceURI = item.mInstall.sourceURI.spec;
       if (sourceURI == REMOTE_INSTALL_URL) {
-        results.push({name: REMOTE_TO_INSTALL, item: item});
+        results.push({name: REMOTE_TO_INSTALL, item});
         continue;
       }
 
       let result = sourceURI.match(/^http:\/\/example\.com\/(.+)\.xpi$/);
       if (result != null) {
         is(item.mInstall.name.indexOf("PASS"), 0, "Install name should start with PASS");
-        results.push({name: result[1], item: item});
+        results.push({name: result[1], item});
         continue;
       }
     }
@@ -185,7 +185,7 @@ function get_actual_results() {
       let result = item.mAddon.id.match(/^(.+)@tests\.mozilla\.org$/);
       if (result != null) {
         is(item.mAddon.name.indexOf("PASS"), 0, "Addon name should start with PASS");
-        results.push({name: result[1], item: item});
+        results.push({name: result[1], item});
         continue;
       }
     }
@@ -480,7 +480,7 @@ add_test(function() {
   }
 
   sorters.handler = {
-    onSortChanged: function(aSortBy, aAscending) {
+    onSortChanged(aSortBy, aAscending) {
       if (originalHandler && "onSortChanged" in originalHandler)
         originalHandler.onSortChanged(aSortBy, aAscending);
 
@@ -537,7 +537,7 @@ add_test(function() {
   var installBtn = null;
 
   var listener = {
-    onInstallEnded: function(aInstall, aAddon) {
+    onInstallEnded(aInstall, aAddon) {
       // Don't immediately consider the installed add-on as local because
       // if the user was filtering out local add-ons, the installed add-on
       // would vanish. Only consider add-on as local on new searches.

@@ -73,7 +73,7 @@ function run_test_2() {
   restartManager();
 
   AddonManager.addInstallListener({
-    onNewInstall: function() {
+    onNewInstall() {
       do_throw("Should not have seen a new install created");
     }
   });
@@ -123,7 +123,7 @@ function run_test_4() {
                              gPort + "/data/test_hotfix_3.rdf");
 
   AddonManager.addInstallListener({
-    onNewInstall: function() {
+    onNewInstall() {
       do_throw("Should not have seen a new install created");
     }
   });
@@ -139,7 +139,7 @@ function run_test_5() {
                              gPort + "/data/test_hotfix_1.rdf");
 
   AddonManager.addInstallListener({
-    onNewInstall: function() {
+    onNewInstall() {
       do_throw("Should not have seen a new install created");
     }
   });
@@ -172,7 +172,7 @@ function run_test_6() {
 
 function check_test_6() {
   AddonManager.addInstallListener({
-    onNewInstall: function() {
+    onNewInstall() {
       do_throw("Should not have seen a new install created");
     }
   });

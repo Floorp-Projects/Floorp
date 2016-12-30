@@ -75,11 +75,11 @@ function DeferredSaveTester(aDataProvider) {
  */
 function setQuickMockTimer() {
   let quickTimer = {
-    initWithCallback: function(aFunction, aDelay, aType) {
+    initWithCallback(aFunction, aDelay, aType) {
       do_print("Starting quick timer, delay = " + aDelay);
       do_execute_soon(aFunction);
     },
-    cancel: function() {
+    cancel() {
       do_throw("Attempted to cancel a quickMockTimer");
     }
   };
@@ -107,7 +107,7 @@ function setPromiseMockTimer() {
     type: null,
     isCancelled: false,
 
-    initWithCallback: function(aFunction, aDelay, aType) {
+    initWithCallback(aFunction, aDelay, aType) {
       do_print("Starting timer, delay = " + aDelay);
       this.callback = aFunction;
       this.delay = aDelay;
@@ -116,7 +116,7 @@ function setPromiseMockTimer() {
       this.isCancelled = false;
       waiter.resolve(this);
     },
-    cancel: function() {
+    cancel() {
       do_print("Cancelled mock timer");
       this.callback = null;
       this.delay = null;

@@ -56,7 +56,7 @@ Point.prototype = {
     return this;
   },
 
-  isZero: function() {
+  isZero() {
     return this.x == 0 && this.y == 0;
   }
 };
@@ -116,7 +116,7 @@ Rect.prototype = {
     return this.left >= this.right || this.top >= this.bottom;
   },
 
-  setRect: function(x, y, w, h) {
+  setRect(x, y, w, h) {
     this.left = x;
     this.top = y;
     this.right = x + w;
@@ -125,7 +125,7 @@ Rect.prototype = {
     return this;
   },
 
-  setBounds: function(l, t, r, b) {
+  setBounds(l, t, r, b) {
     this.top = t;
     this.left = l;
     this.bottom = b;
@@ -154,7 +154,7 @@ Rect.prototype = {
                           this.top + (this.bottom - this.top) / 2);
   },
 
-  copyFrom: function(other) {
+  copyFrom(other) {
     this.top = other.top;
     this.left = other.left;
     this.bottom = other.bottom;
@@ -163,7 +163,7 @@ Rect.prototype = {
     return this;
   },
 
-  translate: function(x, y) {
+  translate(x, y) {
     this.left += x;
     this.right += x;
     this.top += y;
@@ -172,16 +172,16 @@ Rect.prototype = {
     return this;
   },
 
-  toString: function() {
+  toString() {
     return "[" + this.x + "," + this.y + "," + this.width + "," + this.height + "]";
   },
 
   /** return a new rect that is the union of that one and this one */
-  union: function(other) {
+  union(other) {
     return this.clone().expandToContain(other);
   },
 
-  contains: function(other) {
+  contains(other) {
     if (other.isEmpty()) return true;
     if (this.isEmpty()) return false;
 
@@ -191,11 +191,11 @@ Rect.prototype = {
             other.bottom <= this.bottom);
   },
 
-  intersect: function(other) {
+  intersect(other) {
     return this.clone().restrictTo(other);
   },
 
-  intersects: function(other) {
+  intersects(other) {
     if (this.isEmpty() || other.isEmpty())
       return false;
 

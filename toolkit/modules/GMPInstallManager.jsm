@@ -60,7 +60,7 @@ GMPInstallManager.prototype = {
   /**
    * Obtains a URL with replacement of vars
    */
-  _getURL: function() {
+  _getURL() {
     let log = getScopedLogger("GMPInstallManager._getURL");
     // Use the override URL if it is specified.  The override URL is just like
     // the normal URL but it does not check the cert.
@@ -89,7 +89,7 @@ GMPInstallManager.prototype = {
    *           status: The HTTP status code
    *           type: Sometimes specifies type of rejection
    */
-  checkForAddons: function() {
+  checkForAddons() {
     let log = getScopedLogger("GMPInstallManager.checkForAddons");
     if (this._deferred) {
         log.error("checkForAddons already called");
@@ -137,7 +137,7 @@ GMPInstallManager.prototype = {
    *           type: A string to represent the type of error
    *                 downloaderr, verifyerr or previouserrorencountered
    */
-  installAddon: function(gmpAddon) {
+  installAddon(gmpAddon) {
     if (this._deferred) {
         log.error("previous error encountered");
         return Promise.reject({type: "previouserrorencountered"});
@@ -145,7 +145,7 @@ GMPInstallManager.prototype = {
     this.gmpDownloader = new GMPDownloader(gmpAddon);
     return this.gmpDownloader.start();
   },
-  _getTimeSinceLastCheck: function() {
+  _getTimeSinceLastCheck() {
     let now = Math.round(Date.now() / 1000);
     // Default to 0 here because `now - 0` will be returned later if that case
     // is hit. We want a large value so a check will occur.
@@ -160,18 +160,18 @@ GMPInstallManager.prototype = {
   get _isEMEEnabled() {
     return GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true);
   },
-  _isAddonEnabled: function(aAddon) {
+  _isAddonEnabled(aAddon) {
     return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_ENABLED, true, aAddon);
   },
-  _isAddonUpdateEnabled: function(aAddon) {
+  _isAddonUpdateEnabled(aAddon) {
     return this._isAddonEnabled(aAddon) &&
            GMPPrefs.get(GMPPrefs.KEY_PLUGIN_AUTOUPDATE, true, aAddon);
   },
-  _updateLastCheck: function() {
+  _updateLastCheck() {
     let now = Math.round(Date.now() / 1000);
     GMPPrefs.set(GMPPrefs.KEY_UPDATE_LAST_CHECK, now);
   },
-  _versionchangeOccurred: function() {
+  _versionchangeOccurred() {
     let savedBuildID = GMPPrefs.get(GMPPrefs.KEY_BUILDID, null);
     let buildID = Services.appinfo.platformBuildID;
     if (savedBuildID == buildID) {
@@ -293,7 +293,7 @@ GMPInstallManager.prototype = {
   /**
    * Makes sure everything is cleaned up
    */
-  uninit: function() {
+  uninit() {
     let log = getScopedLogger("GMPInstallManager.uninit");
     if (this._request) {
       log.info("Aborting request");
@@ -332,7 +332,7 @@ GMPAddon.prototype = {
   /**
    * Returns a string representation of the addon
    */
-  toString: function() {
+  toString() {
     return this.id + " (" +
            "isValid: " + this.isValid +
            ", isInstalled: " + this.isInstalled +
@@ -383,7 +383,7 @@ GMPExtractor.prototype = {
    * @return An array of string name entries which can be used
    *         in nsIZipReader.extract
    */
-  _getZipEntries: function(zipReader) {
+  _getZipEntries(zipReader) {
     let entries = [];
     let enumerator = zipReader.findEntries("*.*");
     while (enumerator.hasMore()) {
@@ -398,7 +398,7 @@ GMPExtractor.prototype = {
    * @return a promise which will be resolved or rejected
    *         See GMPInstallManager.installAddon for resolve/rejected info
    */
-  install: function() {
+  install() {
     try {
       let log = getScopedLogger("GMPExtractor.install");
       this._deferred = Promise.defer();
@@ -484,7 +484,7 @@ GMPDownloader.prototype = {
    * @return a promise which will be resolved or rejected
    *         See GMPInstallManager.installAddon for resolve/rejected info
    */
-  start: function() {
+  start() {
     let log = getScopedLogger("GMPDownloader");
     let gmpAddon = this._gmpAddon;
 
@@ -492,7 +492,7 @@ GMPDownloader.prototype = {
       log.info("gmpAddon is not valid, will not continue");
       return Promise.reject({
         target: this,
-        status: status,
+        status,
         type: "downloaderr"
       });
     }

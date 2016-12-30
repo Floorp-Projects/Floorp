@@ -54,8 +54,8 @@ this.SiteDataManager = {
       if (status === Ci.nsIPermissionManager.ALLOW_ACTION ||
           status === Ci.nsIPermissionManager.DENY_ACTION) {
         this._sites.set(perm.principal.origin, {
-          perm: perm,
-          status: status,
+          perm,
+          status,
           quotaUsage: 0,
           appCacheList: [],
           diskCacheList: []
@@ -79,7 +79,7 @@ this.SiteDataManager = {
     for (let site of this._sites.values()) {
       promises.push(new Promise(resolve => {
         let callback = {
-          onUsageResult: function(request) {
+          onUsageResult(request) {
             site.quotaUsage = request.usage;
             resolve();
           }
@@ -121,7 +121,7 @@ this.SiteDataManager = {
       if (this._sites.size) {
         let sites = this._sites;
         let visitor = {
-          onCacheEntryInfo: function(uri, idEnhance, dataSize) {
+          onCacheEntryInfo(uri, idEnhance, dataSize) {
             for (let site of sites.values()) {
               if (site.perm.matchesURI(uri, true)) {
                 site.diskCacheList.push({
@@ -132,7 +132,7 @@ this.SiteDataManager = {
               }
             }
           },
-          onCacheEntryVisitCompleted: function() {
+          onCacheEntryVisitCompleted() {
             resolve();
           }
         };

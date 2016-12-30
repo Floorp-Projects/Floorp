@@ -136,7 +136,7 @@ function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab, aOptions) {
       let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
       if (!aOptions || !aOptions.leaveOpen)
         gBrowser.removeCurrentTab();
-      deferred.resolve({selectedPane: selectedPane, selectedAdvancedTab: selectedAdvancedTab});
+      deferred.resolve({selectedPane, selectedAdvancedTab});
     });
   }, true);
 

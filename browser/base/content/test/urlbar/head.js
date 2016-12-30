@@ -46,7 +46,7 @@ function waitForDocLoadAndStopIt(aExpectedURL, aBrowser = gBrowser.selectedBrows
     }
 
     let progressListener = {
-      onStateChange: function(webProgress, req, flags, status) {
+      onStateChange(webProgress, req, flags, status) {
         dump("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
 
         if (webProgress.isTopLevel &&
@@ -190,12 +190,12 @@ function promiseNewSearchEngine(basename) {
     info("Waiting for engine to be added: " + basename);
     let url = getRootDirectory(gTestPath) + basename;
     Services.search.addEngine(url, null, "", false, {
-      onSuccess: function(engine) {
+      onSuccess(engine) {
         info("Search engine added: " + basename);
         registerCleanupFunction(() => Services.search.removeEngine(engine));
         resolve(engine);
       },
-      onError: function(errCode) {
+      onError(errCode) {
         Assert.ok(false, "addEngine failed with error code " + errCode);
         reject();
       },

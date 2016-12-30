@@ -316,15 +316,15 @@ function openAsyncDatabase(file, options) {
 function executeAsync(statement, onResult) {
   let deferred = Promise.defer();
   statement.executeAsync({
-    handleError: function(error) {
+    handleError(error) {
       deferred.reject(error);
     },
-    handleResult: function(result) {
+    handleResult(result) {
       if (onResult) {
         onResult(result);
       }
     },
-    handleCompletion: function(result) {
+    handleCompletion(result) {
       deferred.resolve(result);
     }
   });
@@ -334,15 +334,15 @@ function executeAsync(statement, onResult) {
 function executeMultipleStatementsAsync(db, statements, onResult) {
   let deferred = Promise.defer();
   db.executeAsync(statements, statements.length, {
-    handleError: function(error) {
+    handleError(error) {
       deferred.reject(error);
     },
-    handleResult: function(result) {
+    handleResult(result) {
       if (onResult) {
         onResult(result);
       }
     },
-    handleCompletion: function(result) {
+    handleCompletion(result) {
       deferred.resolve(result);
     }
   });

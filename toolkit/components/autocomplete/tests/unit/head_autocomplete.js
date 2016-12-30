@@ -37,7 +37,7 @@ AutoCompleteInputBase.prototype = {
   get selectionEnd() {
     return this._selEnd;
   },
-  selectTextRange: function(aStart, aEnd) {
+  selectTextRange(aStart, aEnd) {
     this._selStart = aStart;
     this._selEnd = aEnd;
   },
@@ -46,12 +46,12 @@ AutoCompleteInputBase.prototype = {
     return this.searches.length;
   },
 
-  getSearchAt: function(aIndex) {
+  getSearchAt(aIndex) {
     return this.searches[aIndex];
   },
 
-  onSearchBegin: function() {},
-  onSearchComplete: function() {},
+  onSearchBegin() {},
+  onSearchComplete() {},
 
   popupOpen: false,
 
@@ -89,31 +89,31 @@ AutoCompleteResultBase.prototype = {
     return this._values.length;
   },
 
-  getValueAt: function(aIndex) {
+  getValueAt(aIndex) {
     return this._values[aIndex];
   },
 
-  getLabelAt: function(aIndex) {
+  getLabelAt(aIndex) {
     return this.getValueAt(aIndex);
   },
 
-  getCommentAt: function(aIndex) {
+  getCommentAt(aIndex) {
     return this._comments[aIndex];
   },
 
-  getStyleAt: function(aIndex) {
+  getStyleAt(aIndex) {
     return this._styles[aIndex];
   },
 
-  getImageAt: function(aIndex) {
+  getImageAt(aIndex) {
     return "";
   },
 
-  getFinalCompleteValueAt: function(aIndex) {
+  getFinalCompleteValueAt(aIndex) {
     return this._finalCompleteValues[aIndex] || this._values[aIndex];
   },
 
-  removeValueAt: function(aRowIndex, aRemoveFromDb) {},
+  removeValueAt(aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult])
@@ -135,7 +135,7 @@ AutoCompleteSearchBase.prototype = {
   // AutoCompleteResult
   _result: null,
 
-  startSearch: function(aSearchString,
+  startSearch(aSearchString,
                         aSearchParam,
                         aPreviousResult,
                         aListener) {
@@ -145,14 +145,14 @@ AutoCompleteSearchBase.prototype = {
     aListener.onSearchResult(this, result);
   },
 
-  stopSearch: function() {},
+  stopSearch() {},
 
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
                                          Ci.nsIAutoCompleteSearch]),
 
   // nsIFactory implementation
-  createInstance: function(outer, iid) {
+  createInstance(outer, iid) {
     return this.QueryInterface(iid);
   }
 }

@@ -4,7 +4,7 @@ function waitForSecurityChange(numChanges = 1) {
   return new Promise(resolve => {
     let n = 0;
     let listener = {
-      onSecurityChange: function() {
+      onSecurityChange() {
         n = n + 1;
         info("Received onSecurityChange event " + n + " of " + numChanges);
         if (n >= numChanges) {

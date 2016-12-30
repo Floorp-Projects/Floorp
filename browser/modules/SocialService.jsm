@@ -58,7 +58,7 @@ var SocialServiceInternal = {
   get manifests() {
     return this.manifestsGenerator();
   },
-  getManifestPrefname: function(origin) {
+  getManifestPrefname(origin) {
     // Retrieve the prefname for a given origin/manifest.
     // If no existing pref, return a generated prefname.
     let MANIFEST_PREFS = Services.prefs.getBranch("social.manifest.");
@@ -77,7 +77,7 @@ var SocialServiceInternal = {
     let originUri = Services.io.newURI(origin, null, null);
     return originUri.hostPort.replace('.', '-');
   },
-  orderedProviders: function(aCallback) {
+  orderedProviders(aCallback) {
     if (SocialServiceInternal.providerArray.length < 2) {
       schedule(function() {
         aCallback(SocialServiceInternal.providerArray);
@@ -106,7 +106,7 @@ var SocialServiceInternal = {
 
     try {
       stmt.executeAsync({
-        handleResult: function(aResultSet) {
+        handleResult(aResultSet) {
           let row;
           while ((row = aResultSet.getNextRow())) {
             let rh = row.getResultByName("host");
@@ -114,10 +114,10 @@ var SocialServiceInternal = {
             providers[rh].frecency = parseInt(frecency) || 0;
           }
         },
-        handleError: function(aError) {
+        handleError(aError) {
           Cu.reportError(aError.message + " (Result = " + aError.result + ")");
         },
-        handleCompletion: function(aReason) {
+        handleCompletion(aReason) {
           // the query may not have returned all our providers, so we have
           // stamped the frecency on the provider and sort here. This makes sure
           // all enabled providers get sorted even with frecency zero.
@@ -177,21 +177,21 @@ var ActiveProviders = {
     return this._providers;
   },
 
-  has: function(origin) {
+  has(origin) {
     return (origin in this._providers);
   },
 
-  add: function(origin) {
+  add(origin) {
     this._providers[origin] = 1;
     this._deferredTask.arm();
   },
 
-  delete: function(origin) {
+  delete(origin) {
     delete this._providers[origin];
     this._deferredTask.arm();
   },
 
-  flush: function() {
+  flush() {
     this._deferredTask.disarm();
     this._persist();
   },
@@ -201,7 +201,7 @@ var ActiveProviders = {
     return this._deferredTask = new DeferredTask(this._persist.bind(this), 0);
   },
 
-  _persist: function() {
+  _persist() {
     let string = Cc["@mozilla.org/supports-string;1"].
                  createInstance(Ci.nsISupportsString);
     string.data = JSON.stringify(this._providers);
@@ -454,13 +454,13 @@ this.SocialService = {
   },
 
   // Returns an unordered array of installed providers
-  getProviderList: function(onDone) {
+  getProviderList(onDone) {
     schedule(function() {
       onDone(SocialServiceInternal.providerArray);
     });
   },
 
-  getManifestByOrigin: function(origin) {
+  getManifestByOrigin(origin) {
     for (let manifest of SocialServiceInternal.manifests) {
       if (origin == manifest.origin) {
         return manifest;
@@ -470,11 +470,11 @@ this.SocialService = {
   },
 
   // Returns an array of installed providers, sorted by frecency
-  getOrderedProviderList: function(onDone) {
+  getOrderedProviderList(onDone) {
     SocialServiceInternal.orderedProviders(onDone);
   },
 
-  getOriginActivationType: function(origin) {
+  getOriginActivationType(origin) {
     return getOriginActivationType(origin);
   },
 
@@ -486,7 +486,7 @@ this.SocialService = {
     this._providerListeners.delete(listener);
   },
 
-  _notifyProviderListeners: function(topic, origin, providers) {
+  _notifyProviderListeners(topic, origin, providers) {
     for (let [listener, ] of this._providerListeners) {
       try {
         listener(topic, origin, providers);
@@ -496,7 +496,7 @@ this.SocialService = {
     }
   },
 
-  _manifestFromData: function(type, data, installOrigin) {
+  _manifestFromData(type, data, installOrigin) {
     let featureURLs = ['shareURL'];
     let resolveURLs = featureURLs.concat(['postActivationURL']);
 
@@ -541,7 +541,7 @@ this.SocialService = {
     return data;
   },
 
-  _showInstallNotification: function(data, aAddonInstaller) {
+  _showInstallNotification(data, aAddonInstaller) {
     let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
     let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
@@ -560,7 +560,7 @@ this.SocialService = {
     let action = {
       label: browserBundle.GetStringFromName("service.install.ok.label"),
       accessKey: browserBundle.GetStringFromName("service.install.ok.accesskey"),
-      callback: function() {
+      callback() {
         aAddonInstaller.install();
       },
     };
@@ -576,7 +576,7 @@ this.SocialService = {
                                         action, [], options);
   },
 
-  installProvider: function(data, installCallback, options = {}) {
+  installProvider(data, installCallback, options = {}) {
     data.installType = getOriginActivationType(data.origin);
     // if we get data, we MUST have a valid manifest generated from the data
     let manifest = this._manifestFromData(data.installType, data.manifest, data.origin);
@@ -611,7 +611,7 @@ this.SocialService = {
     }.bind(this));
   },
 
-  _installProvider: function(data, options, installCallback) {
+  _installProvider(data, options, installCallback) {
     if (!data.manifest)
       throw new Error("Cannot install provider without manifest data");
 
@@ -633,7 +633,7 @@ this.SocialService = {
       this._showInstallNotification(data, installer);
   },
 
-  createWrapper: function(manifest) {
+  createWrapper(manifest) {
     return new AddonWrapper(manifest);
   },
 
@@ -642,7 +642,7 @@ this.SocialService = {
    * have knowledge of the currently selected provider here, we will notify
    * the front end to deal with any reload.
    */
-  updateProvider: function(aUpdateOrigin, aManifest) {
+  updateProvider(aUpdateOrigin, aManifest) {
     let installType = this.getOriginActivationType(aUpdateOrigin);
     // if we get data, we MUST have a valid manifest generated from the data
     let manifest = this._manifestFromData(installType, aManifest, aUpdateOrigin);
@@ -670,7 +670,7 @@ this.SocialService = {
 
   },
 
-  uninstallProvider: function(origin, aCallback) {
+  uninstallProvider(origin, aCallback) {
     let manifest = SocialService.getManifestByOrigin(origin);
     let addon = new AddonWrapper(manifest);
     addon.uninstall(aCallback);
@@ -716,7 +716,7 @@ function SocialProvider(input) {
 }
 
 SocialProvider.prototype = {
-  reload: function() {
+  reload() {
     // calling terminate/activate does not set the enabled state whereas setting
     // enabled will call terminate/activate
     this.enabled = false;
@@ -747,7 +747,7 @@ SocialProvider.prototype = {
     return SocialService.getManifestByOrigin(this.origin);
   },
 
-  getPageSize: function(name) {
+  getPageSize(name) {
     let manifest = this.manifest;
     if (manifest && manifest.pageSize)
       return manifest.pageSize[name];
@@ -854,11 +854,11 @@ function AddonInstaller(sourceURI, aManifest, installCallback) {
 }
 
 var SocialAddonProvider = {
-  startup: function() {},
+  startup() {},
 
-  shutdown: function() {},
+  shutdown() {},
 
-  updateAddonAppDisabledStates: function() {
+  updateAddonAppDisabledStates() {
     // we wont bother with "enabling" services that are released from blocklist
     for (let manifest of SocialServiceInternal.manifests) {
       try {
@@ -874,7 +874,7 @@ var SocialAddonProvider = {
     }
   },
 
-  getAddonByID: function(aId, aCallback) {
+  getAddonByID(aId, aCallback) {
     for (let manifest of SocialServiceInternal.manifests) {
       if (aId == getAddonIDFromOrigin(manifest.origin)) {
         aCallback(new AddonWrapper(manifest));
@@ -884,7 +884,7 @@ var SocialAddonProvider = {
     aCallback(null);
   },
 
-  getAddonsByTypes: function(aTypes, aCallback) {
+  getAddonsByTypes(aTypes, aCallback) {
     if (aTypes && aTypes.indexOf(ADDON_TYPE_SERVICE) == -1) {
       aCallback([]);
       return;
@@ -892,7 +892,7 @@ var SocialAddonProvider = {
     aCallback([...SocialServiceInternal.manifests].map(a => new AddonWrapper(a)));
   },
 
-  removeAddon: function(aAddon, aCallback) {
+  removeAddon(aAddon, aCallback) {
     AddonManagerPrivate.callAddonListeners("onUninstalling", aAddon, false);
     aAddon.pendingOperations |= AddonManager.PENDING_UNINSTALL;
     Services.prefs.clearUserPref(getPrefnameFromOrigin(aAddon.manifest.origin));
@@ -943,7 +943,7 @@ AddonWrapper.prototype = {
     return false;
   },
 
-  isCompatibleWith: function(appVersion, platformVersion) {
+  isCompatibleWith(appVersion, platformVersion) {
     return true;
   },
 
@@ -993,7 +993,7 @@ AddonWrapper.prototype = {
     return permissions;
   },
 
-  findUpdates: function(listener, reason, appVersion, platformVersion) {
+  findUpdates(listener, reason, appVersion, platformVersion) {
     if ("onNoCompatibilityUpdateAvailable" in listener)
       listener.onNoCompatibilityUpdateAvailable(this);
     if ("onNoUpdateAvailable" in listener)
@@ -1069,7 +1069,7 @@ AddonWrapper.prototype = {
     return val;
   },
 
-  uninstall: function(aCallback) {
+  uninstall(aCallback) {
     let prefName = getPrefnameFromOrigin(this.manifest.origin);
     if (Services.prefs.prefHasUserValue(prefName)) {
       if (ActiveProviders.has(this.manifest.origin)) {
@@ -1084,7 +1084,7 @@ AddonWrapper.prototype = {
     }
   },
 
-  cancelUninstall: function() {
+  cancelUninstall() {
     this._pending -= AddonManager.PENDING_UNINSTALL;
     AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
   }

@@ -11,7 +11,7 @@ const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry
 var gLogEntries = [];
 
 this.TelemetryLog = Object.freeze({
-  log: function(id, data) {
+  log(id, data) {
     id = String(id);
     var ts;
     try {
@@ -29,7 +29,7 @@ this.TelemetryLog = Object.freeze({
     gLogEntries.push(entry);
   },
 
-  entries: function() {
+  entries() {
     return gLogEntries;
   }
 });

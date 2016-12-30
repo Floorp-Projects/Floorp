@@ -55,7 +55,7 @@ function RemoteMediator(window) {
 }
 
 RemoteMediator.prototype = {
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     if (message.name == MSG_INSTALL_CALLBACK) {
       let payload = message.data;
       let callbackHandler = this._callbacks.get(payload.callbackID);
@@ -65,14 +65,14 @@ RemoteMediator.prototype = {
     }
   },
 
-  enabled: function(url) {
+  enabled(url) {
     let params = {
       mimetype: XPINSTALL_MIMETYPE
     };
     return this.mm.sendSyncMessage(MSG_INSTALL_ENABLED, params)[0];
   },
 
-  install: function(installs, principal, callback, window) {
+  install(installs, principal, callback, window) {
     let callbackID = this._addCallback(callback, installs.uris);
 
     installs.mimetype = XPINSTALL_MIMETYPE;
@@ -109,7 +109,7 @@ RemoteMediator.prototype = {
     return messageManager.sendSyncMessage(MSG_INSTALL_ADDONS, installs)[0];
   },
 
-  _addCallback: function(callback, urls) {
+  _addCallback(callback, urls) {
     if (!callback || typeof callback != "function")
       return -1;
 
@@ -137,7 +137,7 @@ InstallTrigger.prototype = {
   // XPCOM will then duly expose as a property value on the window. All this
   // indirection is necessary because webidl does not (yet) support statics
   // (bug 863952). See bug 926712 for more details about this implementation.
-  init: function(window) {
+  init(window) {
     this._window = window;
     this._principal = window.document.nodePrincipal;
     this._url = window.document.documentURIObject;
@@ -153,15 +153,15 @@ InstallTrigger.prototype = {
     return window.InstallTriggerImpl._create(window, this);
   },
 
-  enabled: function() {
+  enabled() {
     return this._mediator.enabled(this._url.spec);
   },
 
-  updateEnabled: function() {
+  updateEnabled() {
     return this.enabled();
   },
 
-  install: function(installs, callback) {
+  install(installs, callback) {
     let installData = {
       uris: [],
       hashes: [],
@@ -200,7 +200,7 @@ InstallTrigger.prototype = {
     return this._mediator.install(installData, this._principal, callback, this._window);
   },
 
-  startSoftwareUpdate: function(url, flags) {
+  startSoftwareUpdate(url, flags) {
     let filename = Services.io.newURI(url, null, null)
                               .QueryInterface(Ci.nsIURL)
                               .filename;
@@ -209,15 +209,15 @@ InstallTrigger.prototype = {
     return this.install(args);
   },
 
-  installChrome: function(type, url, skin) {
+  installChrome(type, url, skin) {
     return this.startSoftwareUpdate(url);
   },
 
-  _resolveURL: function(url) {
+  _resolveURL(url) {
     return Services.io.newURI(url, null, this._url);
   },
 
-  _checkLoadURIFromScript: function(uri) {
+  _checkLoadURIFromScript(uri) {
     let secman = Services.scriptSecurityManager;
     try {
       secman.checkLoadURIWithPrincipal(this._principal,
