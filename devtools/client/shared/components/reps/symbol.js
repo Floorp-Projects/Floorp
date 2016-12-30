@@ -11,6 +11,8 @@ define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
 
+  const { wrapRender } = require("./rep-utils");
+
   // Shortcuts
   const { span } = React.DOM;
 
@@ -24,7 +26,7 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {object} = this.props;
       let {name} = object;
 
@@ -33,7 +35,7 @@ define(function (require, exports, module) {
           `Symbol(${name || ""})`
         )
       );
-    },
+    }),
   });
 
   function supportsObject(object, type) {

@@ -11,7 +11,11 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { createFactories, isGrip } = require("./rep-utils");
+  const {
+    createFactories,
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   const { rep } = createFactories(require("./grip").Grip);
 
   /**
@@ -34,7 +38,7 @@ define(function (require, exports, module) {
       return title;
     },
 
-    render: function () {
+    render: wrapRender(function () {
       // Use `Object.assign` to keep `this.props` without changes because:
       // 1. JSON.stringify/JSON.parse is slow.
       // 2. Immutable.js is planned for the future.
@@ -80,7 +84,7 @@ define(function (require, exports, module) {
       }
 
       return rep(props);
-    }
+    })
   });
 
   // Registration
