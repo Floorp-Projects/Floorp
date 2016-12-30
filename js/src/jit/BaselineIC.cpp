@@ -963,7 +963,7 @@ DoGetElemFallback(JSContext* cx, BaselineFrame* frame, ICGetElem_Fallback* stub_
     if (!attached && !JitOptions.disableCacheIR) {
         ICStubEngine engine = ICStubEngine::Baseline;
         GetPropIRGenerator gen(cx, pc, CacheKind::GetElem, engine, &isTemporarilyUnoptimizable,
-                               lhs, rhs);
+                               lhs, rhs, CanAttachGetter::Yes);
         if (gen.tryAttachStub()) {
             ICStub* newStub = AttachBaselineCacheIRStub(cx, gen.writerRef(), gen.cacheKind(),
                                                         engine, info.outerScript(cx), stub);

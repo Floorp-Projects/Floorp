@@ -30,12 +30,14 @@ IRGenerator::IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind)
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
                                        ICStubEngine engine,
                                        bool* isTemporarilyUnoptimizable,
-                                       HandleValue val, HandleValue idVal)
+                                       HandleValue val, HandleValue idVal,
+                                       CanAttachGetter canAttachGetter)
   : IRGenerator(cx, pc, cacheKind),
     val_(val),
     idVal_(idVal),
     engine_(engine),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
+    canAttachGetter_(canAttachGetter),
     preliminaryObjectAction_(PreliminaryObjectAction::None)
 {}
 
@@ -223,7 +225,8 @@ enum NativeGetPropCacheability {
 static NativeGetPropCacheability
 CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
                        MutableHandleNativeObject holder, MutableHandleShape shape,
-                       jsbytecode* pc, ICStubEngine engine, bool* isTemporarilyUnoptimizable)
+                       jsbytecode* pc, ICStubEngine engine, CanAttachGetter canAttachGetter,
+                       bool* isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
 
@@ -252,6 +255,9 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
 
     if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc))
         return CanAttachReadSlot;
+
+    if (canAttachGetter == CanAttachGetter::No)
+        return CanAttachNone;
 
     if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable)) {
         // See bug 1226816.
@@ -425,7 +431,8 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
     RootedNativeObject holder(cx_);
 
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
-                                                            engine_, isTemporarilyUnoptimizable_);
+                                                            engine_, canAttachGetter_,
+                                                            isTemporarilyUnoptimizable_);
     MOZ_ASSERT_IF(idempotent(),
                   type == CanAttachNone || (type == CanAttachReadSlot && holder));
     switch (type) {
@@ -476,7 +483,8 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, windowObj, id, &holder, &shape, pc_,
-                                                            engine_, isTemporarilyUnoptimizable_);
+                                                            engine_, canAttachGetter_,
+                                                            isTemporarilyUnoptimizable_);
     if (type != CanAttachCallGetter ||
         !IsCacheableGetPropCallNative(windowObj, holder, shape))
     {
@@ -584,7 +592,7 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     RootedShape shape(cx_);
 
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape,
-                                                                pc_, engine_,
+                                                                pc_, engine_, canAttachGetter_,
                                                                 isTemporarilyUnoptimizable_);
     MOZ_ASSERT_IF(idempotent(),
                   canCache == CanAttachNone || (canCache == CanAttachReadSlot && holder));
