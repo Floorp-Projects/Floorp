@@ -341,8 +341,8 @@ nsPluginFrame::PrepForDrawing(nsIWidget *aWidget)
     // Sometimes, a frame doesn't have a background color or is transparent. In this
     // case, walk up the frame tree until we do find a frame with a background color
     for (nsIFrame* frame = this; frame; frame = frame->GetParent()) {
-      nscolor bgcolor =
-        frame->GetVisitedDependentColor(eCSSProperty_background_color);
+      nscolor bgcolor = frame->
+        GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
       if (NS_GET_A(bgcolor) > 0) {  // make sure we got an actual color
         mWidget->SetBackgroundColor(bgcolor);
         break;
