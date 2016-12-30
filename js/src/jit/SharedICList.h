@@ -35,7 +35,6 @@ namespace jit {
     _(Compare_Int32WithBoolean)                  \
                                                  \
     _(GetProp_Fallback)                          \
-    _(GetProp_CallNativeGlobal)                  \
     _(GetProp_Generic)                           \
                                                  \
     _(CacheIR_Monitored)                         \

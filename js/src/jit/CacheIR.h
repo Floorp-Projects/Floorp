@@ -802,6 +802,7 @@ class MOZ_RAII GetNameIRGenerator : public IRGenerator
     HandlePropertyName name_;
 
     bool tryAttachGlobalNameValue(ObjOperandId objId, HandleId id);
+    bool tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id);
     bool tryAttachEnvironmentName(ObjOperandId objId, HandleId id);
 
   public:
