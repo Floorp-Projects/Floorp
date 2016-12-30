@@ -29,9 +29,8 @@ using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
 using mozilla::LogLevel;
 
-// Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSPasteboardTypeTIFF, \
-                               @"Apple PNG pasteboard type", \
+                               NSPasteboardTypePNG, \
                                nil
 
 extern PRLogModuleInfo* sCocoaLog;

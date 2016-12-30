@@ -41,6 +41,8 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+
+using mozilla::BitwiseCast;
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
 using mozilla::IsSame;
@@ -304,7 +306,9 @@ GetImports(JSContext* cx,
                     uint32_t bits;
                     if (!ReadCustomFloat32NaNObject(cx, v, &bits))
                         return false;
-                    val = Val(RawF32::fromBits(bits));
+                    float f;
+                    BitwiseCast(bits, &f);
+                    val = Val(f);
                     break;
                 }
                 if (!v.isNumber())
@@ -312,7 +316,7 @@ GetImports(JSContext* cx,
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
-                val = Val(RawF32(float(d)));
+                val = Val(float(d));
                 break;
               }
               case ValType::F64: {
@@ -320,7 +324,9 @@ GetImports(JSContext* cx,
                     uint64_t bits;
                     if (!ReadCustomDoubleNaNObject(cx, v, &bits))
                         return false;
-                    val = Val(RawF64::fromBits(bits));
+                    double d;
+                    BitwiseCast(bits, &d);
+                    val = Val(d);
                     break;
                 }
                 if (!v.isNumber())
@@ -328,7 +334,7 @@ GetImports(JSContext* cx,
                 double d;
                 if (!ToNumber(cx, v, &d))
                     return false;
-                val = Val(RawF64(d));
+                val = Val(d);
                 break;
               }
               default: {

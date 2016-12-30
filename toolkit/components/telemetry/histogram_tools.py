@@ -13,6 +13,7 @@ import sys
 # Constants.
 MAX_LABEL_LENGTH = 20
 MAX_LABEL_COUNT = 100
+MIN_CATEGORICAL_BUCKET_COUNT = 50
 
 # histogram_tools.py is used by scripts from a mozilla-central build tree
 # and also by outside consumers, such as the telemetry server.  We need
@@ -223,7 +224,7 @@ associated with the histogram.  Returns None if no guarding is necessary."""
             'flag': always_allowed_keys,
             'count': always_allowed_keys,
             'enumerated': always_allowed_keys + ['n_values'],
-            'categorical': always_allowed_keys + ['labels'],
+            'categorical': always_allowed_keys + ['labels', 'n_values'],
             'linear': general_keys,
             'exponential': general_keys,
         }
@@ -407,7 +408,12 @@ associated with the histogram.  Returns None if no guarding is necessary."""
 
     @staticmethod
     def categorical_bucket_parameters(definition):
-        n_values = len(definition['labels'])
+        # Categorical histograms default to 50 buckets to make working with them easier.
+        # Otherwise when adding labels later we run into problems with the pipeline not supporting bucket changes.
+        # This can be overridden using the n_values field.
+        n_values = max(len(definition['labels']),
+                       definition.get('n_values', 0),
+                       MIN_CATEGORICAL_BUCKET_COUNT)
         return (1, n_values, n_values + 1)
 
     @staticmethod

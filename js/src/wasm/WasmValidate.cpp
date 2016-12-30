@@ -1139,14 +1139,14 @@ DecodeInitializerExpression(Decoder& d, const GlobalDescVector& globals, ValType
         break;
       }
       case uint16_t(Op::F32Const): {
-        RawF32 f32;
+        float f32;
         if (!d.readFixedF32(&f32))
             return d.fail("failed to read initializer f32 expression");
         *init = InitExpr(Val(f32));
         break;
       }
       case uint16_t(Op::F64Const): {
-        RawF64 f64;
+        double f64;
         if (!d.readFixedF64(&f64))
             return d.fail("failed to read initializer f64 expression");
         *init = InitExpr(Val(f64));

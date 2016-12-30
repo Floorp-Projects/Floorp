@@ -25,6 +25,7 @@ using namespace jit;
 
 using mozilla::Abs;
 using mozilla::BitwiseCast;
+using mozilla::IsPositiveZero;
 
 bool
 isValueDTRDCandidate(ValueOperand& val)
@@ -1527,19 +1528,19 @@ MacroAssemblerARM::ma_vsqrt_f32(FloatRegister src, FloatRegister dest, Condition
 }
 
 static inline uint32_t
-DoubleHighWord(wasm::RawF64 value)
+DoubleHighWord(double d)
 {
-    return static_cast<uint32_t>(value.bits() >> 32);
+    return static_cast<uint32_t>(BitwiseCast<uint64_t>(d) >> 32);
 }
 
 static inline uint32_t
-DoubleLowWord(wasm::RawF64 value)
+DoubleLowWord(double d)
 {
-    return value.bits() & uint32_t(0xffffffff);
+    return static_cast<uint32_t>(BitwiseCast<uint64_t>(d)) & uint32_t(0xffffffff);
 }
 
 void
-MacroAssemblerARM::ma_vimm(wasm::RawF64 value, FloatRegister dest, Condition cc)
+MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
 {
     if (HasVFPv3()) {
         if (DoubleLowWord(value) == 0) {
@@ -1562,11 +1563,11 @@ MacroAssemblerARM::ma_vimm(wasm::RawF64 value, FloatRegister dest, Condition cc)
 }
 
 void
-MacroAssemblerARM::ma_vimm_f32(wasm::RawF32 value, FloatRegister dest, Condition cc)
+MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
 {
     VFPRegister vd = VFPRegister(dest).singleOverlay();
     if (HasVFPv3()) {
-        if (value.bits() == 0) {
+        if (IsPositiveZero(value)) {
             // To zero a register, load 1.0, then execute sN <- sN - sN.
             as_vimm(vd, VFPImm::One, cc);
             as_vsub(vd, vd, vd, cc);
@@ -1580,7 +1581,7 @@ MacroAssemblerARM::ma_vimm_f32(wasm::RawF32 value, FloatRegister dest, Condition
         // paths. It is still necessary to firstly check that the double low
         // word is zero because some float32 numbers set these bits and this can
         // not be ignored.
-        wasm::RawF64 doubleValue(double(value.fp()));
+        double doubleValue(value);
         if (DoubleLowWord(doubleValue) == 0) {
             VFPImm enc(DoubleHighWord(doubleValue));
             if (enc.isValid()) {
@@ -3162,12 +3163,6 @@ MacroAssemblerARMCompat::int32ValueToFloat32(const ValueOperand& operand, FloatR
 void
 MacroAssemblerARMCompat::loadConstantFloat32(float f, FloatRegister dest)
 {
-    loadConstantFloat32(wasm::RawF32(f), dest);
-}
-
-void
-MacroAssemblerARMCompat::loadConstantFloat32(wasm::RawF32 f, FloatRegister dest)
-{
     ma_vimm_f32(f, dest);
 }
 
@@ -3231,12 +3226,6 @@ MacroAssemblerARMCompat::loadInt32OrDouble(Register base, Register index,
 
 void
 MacroAssemblerARMCompat::loadConstantDouble(double dp, FloatRegister dest)
-{
-    loadConstantDouble(wasm::RawF64(dp), dest);
-}
-
-void
-MacroAssemblerARMCompat::loadConstantDouble(wasm::RawF64 dp, FloatRegister dest)
 {
     ma_vimm(dp, dest);
 }

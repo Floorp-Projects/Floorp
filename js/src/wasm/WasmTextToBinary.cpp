@@ -1780,7 +1780,10 @@ ParseNaNLiteral(WasmParseContext& c, WasmToken token, const char16_t* cur, bool 
     }
 
     value = (isNegated ? Traits::kSignBit : 0) | Traits::kExponentBits | value;
-    return new (c.lifo) AstConst(Val(Raw<Float>::fromBits(value)));
+
+    Float flt;
+    BitwiseCast(value, &flt);
+    return new (c.lifo) AstConst(Val(flt));
 
   error:
     c.ts.generateError(token, c.error);
@@ -1932,7 +1935,7 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token)
     }
 
     if (token.kind() != WasmToken::Float)
-        return new (c.lifo) AstConst(Val(Raw<Float>(result)));
+        return new (c.lifo) AstConst(Val(Float(result)));
 
     const char16_t* begin = token.begin();
     const char16_t* end = token.end();
@@ -1983,7 +1986,7 @@ ParseFloatLiteral(WasmParseContext& c, WasmToken token)
     if (isNegated)
         result = -result;
 
-    return new (c.lifo) AstConst(Val(Raw<Float>(result)));
+    return new (c.lifo) AstConst(Val(Float(result)));
 }
 
 static AstConst*
