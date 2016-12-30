@@ -1,12 +1,12 @@
-/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
 
 // Test DevToolsUtils.defineLazyPrototypeGetter
 
 function Class() {}
 DevToolsUtils.defineLazyPrototypeGetter(Class.prototype, "foo", () => []);
-
 
 function run_test() {
   test_prototype_attributes();

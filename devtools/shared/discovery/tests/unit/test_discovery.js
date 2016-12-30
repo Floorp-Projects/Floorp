@@ -8,7 +8,6 @@ var Cu = Components.utils;
 const { require } =
   Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
-const promise = require("promise");
 const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");

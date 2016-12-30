@@ -30,7 +30,7 @@ add_task(function* () {
 });
 
 add_task(function* () {
-  var object = {
+  let object = {
     x: 1,
     y: "foo",
     z: true

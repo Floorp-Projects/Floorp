@@ -2,6 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test DevToolsUtils.assert
 
 ALLOW_CONSOLE_ERRORS = true;
@@ -32,5 +34,6 @@ function run_test() {
   }
 
   ok(assertionFailed,
-     "The assertion should have failed, which should throw an error when assertions are enabled.");
+     "The assertion should have failed, which should throw an error when assertions " +
+     "are enabled.");
 }
