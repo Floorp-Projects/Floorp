@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
 const { ActorPool, appendExtraActors, createExtraActors } =
   require("devtools/server/actors/common");
 const { RootActor } = require("devtools/server/actors/root");
@@ -11,8 +9,8 @@ const { DebuggerServer } = require("devtools/server/main");
 const promise = require("promise");
 
 var gTestGlobals = [];
-DebuggerServer.addTestGlobal = function (global) {
-  gTestGlobals.push(global);
+DebuggerServer.addTestGlobal = function (aGlobal) {
+  gTestGlobals.push(aGlobal);
 };
 
 // A mock tab list, for use by tests. This simply presents each global in
@@ -22,18 +20,18 @@ DebuggerServer.addTestGlobal = function (global) {
 // As implemented now, we consult gTestGlobals when we're constructed, not
 // when we're iterated over, so tests have to add their globals before the
 // root actor is created.
-function TestTabList(connection) {
-  this.conn = connection;
+function TestTabList(aConnection) {
+  this.conn = aConnection;
 
   // An array of actors for each global added with
   // DebuggerServer.addTestGlobal.
   this._tabActors = [];
 
   // A pool mapping those actors' names to the actors.
-  this._tabActorPool = new ActorPool(connection);
+  this._tabActorPool = new ActorPool(aConnection);
 
   for (let global of gTestGlobals) {
-    let actor = new TestTabActor(connection, global);
+    let actor = new TestTabActor(aConnection, global);
     actor.selected = false;
     this._tabActors.push(actor);
     this._tabActorPool.addActor(actor);
@@ -42,7 +40,7 @@ function TestTabList(connection) {
     this._tabActors[0].selected = true;
   }
 
-  connection.addActorPool(this._tabActorPool);
+  aConnection.addActorPool(this._tabActorPool);
 }
 
 TestTabList.prototype = {
@@ -52,18 +50,18 @@ TestTabList.prototype = {
   }
 };
 
-function createRootActor(connection) {
-  let root = new RootActor(connection, {
-    tabList: new TestTabList(connection),
+function createRootActor(aConnection) {
+  let root = new RootActor(aConnection, {
+    tabList: new TestTabList(aConnection),
     globalActorFactories: DebuggerServer.globalActorFactories
   });
   root.applicationType = "xpcshell-tests";
   return root;
 }
 
-function TestTabActor(connection, global) {
-  this.conn = connection;
-  this._global = global;
+function TestTabActor(aConnection, aGlobal) {
+  this.conn = aConnection;
+  this._global = aGlobal;
   this._threadActor = new ThreadActor(this, this._global);
   this.conn.addActor(this._threadActor);
   this._attached = false;
@@ -98,7 +96,7 @@ TestTabActor.prototype = {
     return response;
   },
 
-  onAttach: function (request) {
+  onAttach: function (aRequest) {
     this._attached = true;
 
     let response = { type: "tabAttached", threadActor: this._threadActor.actorID };
@@ -107,9 +105,9 @@ TestTabActor.prototype = {
     return response;
   },
 
-  onDetach: function (request) {
+  onDetach: function (aRequest) {
     if (!this._attached) {
-      return { "error": "wrongState" };
+      return { "error":"wrongState" };
     }
     return { type: "detached" };
   },

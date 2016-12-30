@@ -1,9 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-/* global XPCNativeWrapper */
-
 "use strict";
 
 const { Ci, Cu } = require("chrome");
@@ -275,14 +272,12 @@ SimulatorCore.prototype = {
         }
       }
       let unwrapped = XPCNativeWrapper.unwrap(target);
-      /* eslint-disable no-inline-comments */
       unwrapped.sendTouchEvent(name, clone([0]),       // event type, id
                                clone([evt.clientX]),   // x
                                clone([evt.clientY]),   // y
                                clone([1]), clone([1]), // rx, ry
                                clone([0]), clone([0]), // rotation, force
                                1);                     // count
-      /* eslint-enable no-inline-comments */
       return;
     }
     let document = target.ownerDocument;
@@ -344,10 +339,10 @@ SimulatorCore.prototype = {
     let utils = content.QueryInterface(Ci.nsIInterfaceRequestor)
                        .getInterface(Ci.nsIDOMWindowUtils);
 
-    let allowZoom = {};
-    let minZoom = {};
-    let maxZoom = {};
-    let autoSize = {};
+    let allowZoom = {},
+        minZoom = {},
+        maxZoom = {},
+        autoSize = {};
 
     utils.getViewportInfo(content.innerWidth, content.innerHeight, {},
                           allowZoom, minZoom, maxZoom, {}, {}, autoSize);
@@ -357,15 +352,14 @@ SimulatorCore.prototype = {
     // delay. But Firefox didn't support this property now, we can't get
     // this value from utils.getVisitedDependentComputedStyle() to check
     // if we should suppress 300ms delay.
-    /* eslint-disable no-inline-comments */
     if (!allowZoom.value ||                   // user-scalable = no
         minZoom.value === maxZoom.value ||    // minimum-scale = maximum-scale
         autoSize.value                        // width = device-width
     ) {
-    /* eslint-enable no-inline-comments */
       return 0;
+    } else {
+      return 300;
     }
-    return 300;
   }
 };
 
