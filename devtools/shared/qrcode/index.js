@@ -4,6 +4,7 @@
 
 "use strict";
 
+const { Cu } = require("chrome");
 const promise = require("promise");
 const defer = require("devtools/shared/defer");
 

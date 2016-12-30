@@ -38,8 +38,7 @@ add_task(function* () {
   serverAuth.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
-  // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
+  serverAuth.receiveOOB = () => oobData.promise; // Skip prompt for tests
 
   let listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
@@ -99,8 +98,7 @@ add_task(function* () {
   serverAuth.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
-  // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
+  serverAuth.receiveOOB = () => oobData.promise; // Skip prompt for tests
 
   let listener = DebuggerServer.createListener();
   ok(listener, "Socket listener created");
@@ -163,8 +161,7 @@ add_task(function* () {
   serverAuth.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
-  // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
+  serverAuth.receiveOOB = () => oobData.promise; // Skip prompt for tests
 
   let clientAuth = new AuthenticatorType.Client();
   clientAuth.sendOOB = ({ oob }) => {
@@ -218,8 +215,7 @@ add_task(function* () {
   serverAuth.allowConnection = () => {
     return DebuggerServer.AuthenticationResult.ALLOW;
   };
-  // Skip prompt for tests
-  serverAuth.receiveOOB = () => oobData.promise;
+  serverAuth.receiveOOB = () => oobData.promise; // Skip prompt for tests
 
   let clientAuth = new AuthenticatorType.Client();
   clientAuth.sendOOB = ({ oob }) => {
