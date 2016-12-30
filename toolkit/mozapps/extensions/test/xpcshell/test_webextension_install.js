@@ -492,7 +492,7 @@ add_task(function* test_permissions() {
   let install = yield AddonManager.getInstallForFile(xpi);
 
   let perminfo;
-  install._permHandler = info => {
+  install.promptHandler = info => {
     perminfo = info;
     return Promise.resolve();
   };
@@ -530,7 +530,7 @@ add_task(function* test_permissions() {
   let install = yield AddonManager.getInstallForFile(xpi);
 
   let perminfo;
-  install._permHandler = info => {
+  install.promptHandler = info => {
     perminfo = info;
     return Promise.reject();
   };
