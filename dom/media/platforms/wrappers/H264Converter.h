@@ -59,14 +59,14 @@ private:
   void UpdateConfigFromExtraData(MediaByteBuffer* aExtraData);
 
   void OnDecoderInitDone(const TrackType aTrackType);
-  void OnDecoderInitFailed(MediaResult aError);
+  void OnDecoderInitFailed(const MediaResult& aError);
 
   RefPtr<PlatformDecoderModule> mPDM;
   VideoInfo mCurrentConfig;
   RefPtr<layers::KnowsCompositor> mKnowsCompositor;
   RefPtr<layers::ImageContainer> mImageContainer;
   const RefPtr<TaskQueue> mTaskQueue;
-  nsTArray<RefPtr<MediaRawData>> mMediaRawSamples;
+  RefPtr<MediaRawData> mPendingSample;
   MediaDataDecoderCallback* mCallback;
   RefPtr<MediaDataDecoder> mDecoder;
   MozPromiseRequestHolder<InitPromise> mInitPromiseRequest;
