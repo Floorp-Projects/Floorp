@@ -22,6 +22,7 @@
 #include "nsIObserver.h"
 #include "mozilla/Services.h"
 #include "nsXULAppAPI.h"
+#include "GeckoProfiler.h"
 
 #include <algorithm>
 
@@ -54,6 +55,7 @@ private:
   // Background hang monitor thread function
   static void MonitorThread(void* aData)
   {
+    AutoProfilerRegister registerThread("BgHangMonitor");
     PR_SetCurrentThreadName("BgHangManager");
 
     /* We do not hold a reference to BackgroundHangManager here
