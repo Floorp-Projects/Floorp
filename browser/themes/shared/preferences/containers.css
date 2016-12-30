@@ -10,12 +10,12 @@
   --preference-active-color: #858585;
 }
 
-radiogroup {
+.radio-buttons {
   display: flex;
   margin-inline-start: 0.35rem;
 }
 
-radio {
+.radio-buttons > radio {
   flex: auto;
   display: flex;
   align-items: center;
@@ -35,19 +35,23 @@ radio {
   fill: #4d4d4d;
 }
 
+.radio-buttons > radio {
+  padding-inline-start: 2px;
+}
+
 radio > [data-identity-icon] {
   inline-size: 22px;
   block-size: 22px;
 }
 
-radio[selected=true] {
+.radio-buttons > radio[selected=true] {
   outline-color: var(--preference-unselected-color);
 }
 
-radio[focused=true] {
+.radio-buttons > radio[focused=true] {
   outline-color: var(--preference-selected-color);
 }
 
-radio:hover:active {
+.radio-buttons > radio:hover:active {
   outline-color: var(--preference-active-color);
 }

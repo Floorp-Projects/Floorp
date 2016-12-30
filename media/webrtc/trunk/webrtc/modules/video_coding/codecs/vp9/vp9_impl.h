@@ -166,6 +166,11 @@ class VP9DecoderImpl : public VP9Decoder {
  private:
   int ReturnFrame(const vpx_image_t* img, uint32_t timeStamp);
 
+#ifndef USE_WRAPPED_I420_BUFFER
+  // Temporarily keep VideoFrame in a separate buffer
+  // Once we debug WrappedI420VideoFrame usage, we can get rid of this
+  VideoFrame decoded_image_;
+#endif
   // Memory pool used to share buffers between libvpx and webrtc.
   Vp9FrameBufferPool frame_buffer_pool_;
   DecodedImageCallback* decode_complete_callback_;

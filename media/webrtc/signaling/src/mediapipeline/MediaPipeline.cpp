@@ -1203,7 +1203,7 @@ void MediaPipeline::PacketReceived(TransportLayer *layer,
 }
 
 class MediaPipelineTransmit::PipelineListener
-  : public DirectMediaStreamTrackListener
+  : public MediaStreamVideoSink
 {
 friend class MediaPipelineTransmit;
 public:
@@ -1291,15 +1291,17 @@ public:
   void NotifyDirectListenerInstalled(InstallationResult aResult) override;
   void NotifyDirectListenerUninstalled() override;
 
+  // Implement MediaStreamVideoSink
+  void SetCurrentFrames(const VideoSegment& aSegment) override;
+  void ClearFrames() override {}
+
 private:
   void UnsetTrackIdImpl() {
     MutexAutoLock lock(mMutex);
     track_id_ = track_id_external_ = TRACK_INVALID;
   }
 
-  void NewData(MediaStreamGraph* graph,
-               StreamTime offset,
-               const MediaSegment& media);
+  void NewData(const MediaSegment& media, TrackRate aRate = 0);
 
   RefPtr<MediaSessionConduit> conduit_;
   RefPtr<AudioProxyThread> audio_processing_;
@@ -1388,34 +1390,6 @@ protected:
 };
 #endif
 
-class MediaPipelineTransmit::PipelineVideoSink :
-  public MediaStreamVideoSink
-{
-public:
-  explicit PipelineVideoSink(const RefPtr<MediaSessionConduit>& conduit,
-                             MediaPipelineTransmit::PipelineListener* listener)
-    : conduit_(conduit)
-    , pipelineListener_(listener)
-  {
-  }
-
-  virtual void SetCurrentFrames(const VideoSegment& aSegment) override;
-  virtual void ClearFrames() override {}
-
-private:
-  ~PipelineVideoSink() {
-    // release conduit on mainthread.  Must use forget()!
-    nsresult rv = NS_DispatchToMainThread(new
-      ConduitDeleteEvent(conduit_.forget()));
-    MOZ_ASSERT(!NS_FAILED(rv),"Could not dispatch conduit shutdown to main");
-    if (NS_FAILED(rv)) {
-      MOZ_CRASH();
-    }
-  }
-  RefPtr<MediaSessionConduit> conduit_;
-  MediaPipelineTransmit::PipelineListener* pipelineListener_;
-};
-
 MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& pc,
     nsCOMPtr<nsIEventTarget> main_thread,
@@ -1430,7 +1404,6 @@ MediaPipelineTransmit::MediaPipelineTransmit(
   MediaPipeline(pc, TRANSMIT, main_thread, sts_thread, track_id, level,
                 conduit, rtp_transport, rtcp_transport, filter),
   listener_(new PipelineListener(conduit)),
-  video_sink_(new PipelineVideoSink(conduit, listener_)),
   domtrack_(domtrack)
 {
   if (!IsVideo()) {
@@ -1488,10 +1461,6 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
   domtrack_->AddDirectListener(listener_);
   domtrack_->AddListener(listener_);
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  domtrack_->AddDirectListener(video_sink_);
-#endif
-
 #ifndef MOZILLA_INTERNAL_API
   // this enables the unit tests that can't fiddle with principals and the like
   listener_->SetEnabled(true);
@@ -1540,7 +1509,6 @@ MediaPipelineTransmit::DetachMedia()
   if (domtrack_) {
     domtrack_->RemoveDirectListener(listener_);
     domtrack_->RemoveListener(listener_);
-    domtrack_->RemoveDirectListener(video_sink_);
     domtrack_ = nullptr;
   }
   // Let the listener be destroyed with the pipeline (or later).
@@ -1743,7 +1711,14 @@ NotifyRealtimeTrackData(MediaStreamGraph* graph,
                       this << ", offset=" << offset <<
                       ", duration=" << media.GetDuration());
 
-  NewData(graph, offset, media);
+  if (media.GetType() == MediaSegment::VIDEO) {
+    // We have to call the upstream NotifyRealtimeTrackData and
+    // MediaStreamVideoSink will route them to SetCurrentFrames.
+    MediaStreamVideoSink::NotifyRealtimeTrackData(graph, offset, media);
+    return;
+  }
+
+  NewData(media, graph->GraphRate());
 }
 
 void MediaPipelineTransmit::PipelineListener::
@@ -1752,10 +1727,17 @@ NotifyQueuedChanges(MediaStreamGraph* graph,
                     const MediaSegment& queued_media) {
   MOZ_MTLOG(ML_DEBUG, "MediaPipeline::NotifyQueuedChanges()");
 
-  // ignore non-direct data if we're also getting direct data
-  if (!direct_connect_) {
-    NewData(graph, offset, queued_media);
+  if (queued_media.GetType() == MediaSegment::VIDEO) {
+    // We always get video from SetCurrentFrames().
+    return;
   }
+
+  if (direct_connect_) {
+    // ignore non-direct data if we're also getting direct data
+    return;
+  }
+
+  NewData(queued_media, graph->GraphRate());
 }
 
 void MediaPipelineTransmit::PipelineListener::
@@ -1774,9 +1756,7 @@ NotifyDirectListenerUninstalled() {
 }
 
 void MediaPipelineTransmit::PipelineListener::
-NewData(MediaStreamGraph* graph,
-        StreamTime offset,
-        const MediaSegment& media) {
+NewData(const MediaSegment& media, TrackRate aRate /* = 0 */) {
   if (!active_) {
     MOZ_MTLOG(ML_DEBUG, "Discarding packets because transport not ready");
     return;
@@ -1794,49 +1774,27 @@ NewData(MediaStreamGraph* graph,
   // track type and it's destined for us
   // See bug 784517
   if (media.GetType() == MediaSegment::AUDIO) {
-    AudioSegment* audio = const_cast<AudioSegment *>(
-        static_cast<const AudioSegment *>(&media));
+    MOZ_RELEASE_ASSERT(aRate > 0);
 
-    AudioSegment::ChunkIterator iter(*audio);
-    while(!iter.IsEnded()) {
-      TrackRate rate;
-#ifdef USE_FAKE_MEDIA_STREAMS
-      rate = Fake_MediaStream::GraphRate();
-#else
-      rate = graph->GraphRate();
-#endif
-      audio_processing_->QueueAudioChunk(rate, *iter, enabled_);
-      iter.Next();
+    AudioSegment* audio = const_cast<AudioSegment *>(static_cast<const AudioSegment*>(&media));
+    for(AudioSegment::ChunkIterator iter(*audio); !iter.IsEnded(); iter.Next()) {
+      audio_processing_->QueueAudioChunk(aRate, *iter, enabled_);
     }
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   } else {
-    // Ignore
+    VideoSegment* video = const_cast<VideoSegment *>(static_cast<const VideoSegment*>(&media));
+    VideoSegment::ChunkIterator iter(*video);
+    for(VideoSegment::ChunkIterator iter(*video); !iter.IsEnded(); iter.Next()) {
+      converter_->QueueVideoChunk(*iter, !enabled_);
+    }
+#endif // MOZILLA_EXTERNAL_LINKAGE
   }
 }
 
-void MediaPipelineTransmit::PipelineVideoSink::
+void MediaPipelineTransmit::PipelineListener::
 SetCurrentFrames(const VideoSegment& aSegment)
 {
-  MOZ_ASSERT(pipelineListener_);
-
-  if (!pipelineListener_->active_) {
-    MOZ_MTLOG(ML_DEBUG, "Discarding packets because transport not ready");
-    return;
-  }
-
-  if (conduit_->type() != MediaSessionConduit::VIDEO) {
-    // Ignore data of wrong kind in case we have a muxed stream
-    return;
-  }
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-    VideoSegment* video = const_cast<VideoSegment *>(&aSegment);
-
-    VideoSegment::ChunkIterator iter(*video);
-    while(!iter.IsEnded()) {
-      pipelineListener_->converter_->QueueVideoChunk(*iter, !pipelineListener_->enabled_);
-      iter.Next();
-    }
-#endif
+  NewData(aSegment);
 }
 
 class TrackAddedCallback {
