@@ -1156,18 +1156,6 @@ static const JSFunctionSpec string_iterator_methods[] = {
     JS_FS_END
 };
 
-enum {
-    ListIteratorSlotIteratedObject,
-    ListIteratorSlotNextIndex,
-    ListIteratorSlotNextMethod,
-    ListIteratorSlotCount
-};
-
-const Class ListIteratorObject::class_ = {
-    "List Iterator",
-    JSCLASS_HAS_RESERVED_SLOTS(ListIteratorSlotCount)
-};
-
 JSObject*
 js::ValueToIterator(JSContext* cx, unsigned flags, HandleValue vp)
 {
