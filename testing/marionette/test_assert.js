@@ -69,7 +69,9 @@ add_test(function test_string() {
 add_test(function test_object() {
   assert.object({});
   assert.object(new Object());
-  Assert.throws(() => assert.object(42), InvalidArgumentError);
+  for (let typ of [42, "foo", true, null, undefined]) {
+    Assert.throws(() => assert.object(typ), InvalidArgumentError);
+  }
 
   run_next_test();
 });
