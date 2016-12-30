@@ -81,12 +81,15 @@ add_test(function test_toJson() {
       /Unserialisable error type: [object Error]/);
 
   let e0 = new WebDriverError();
-  deepEqual({error: e0.status, message: "", stacktrace: ""},
-      error.toJson(e0));
+  let e0s = error.toJson(e0);
+  equal(e0s.error, "webdriver error");
+  equal(e0s.message, "");
+  equal(e0s.stacktrace, e0.stack);
 
   let e1 = new WebDriverError("a");
-  deepEqual({error: e1.status, message: "a", stacktrace: ""},
-      error.toJson(e1));
+  let e1s = error.toJson(e1);
+  equal(e1s.message, e1.message);
+  equal(e1s.stacktrace, e1.stack);
 
   let e2 = new JavaScriptError("first", "second", "third", "fourth");
   let e2s = error.toJson(e2);
@@ -107,10 +110,17 @@ add_test(function test_fromJson() {
   Assert.throws(() => error.fromJson({}),
       /Undeserialisable error type: undefined/);
 
+  // stacks will be different
   let e1 = new WebDriverError("1");
-  deepEqual(e1, error.fromJson({error: "webdriver error", message: "1"}));
+  let e1r = error.fromJson({error: "webdriver error", message: "1"});
+  equal(e1r.status, e1.status);
+  equal(e1r.message, e1.message);
+
+  // stacks will be different
   let e2 = new InvalidArgumentError("2");
-  deepEqual(e2, error.fromJson({error: "invalid argument", message: "2"}));
+  let e2r = error.fromJson({error: "invalid argument", message: "2"});
+  equal(e2r.status, e2.status);
+  equal(e2r.message, e2.message);
 
   let e3 = new JavaScriptError("first", "second", "third", "fourth");
   let e3s = error.toJson(e3);
