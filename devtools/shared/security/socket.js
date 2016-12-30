@@ -6,7 +6,7 @@
 
 "use strict";
 
-var { Ci, Cc, CC, Cr } = require("chrome");
+var { Ci, Cc, CC, Cr, Cu } = require("chrome");
 
 // Ensure PSM is initialized to support TLS sockets
 Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
@@ -143,8 +143,7 @@ var _getTransport = Task.async(function* (settings) {
 
   let attempt = yield _attemptTransport(settings);
   if (attempt.transport) {
-    // Success
-    return attempt.transport;
+    return attempt.transport; // Success
   }
 
   // If the server cert failed validation, store a temporary override and make
@@ -157,8 +156,7 @@ var _getTransport = Task.async(function* (settings) {
 
   attempt = yield _attemptTransport(settings);
   if (attempt.transport) {
-    // Success
-    return attempt.transport;
+    return attempt.transport; // Success
   }
 
   throw new Error("Connection failed even after cert override");
@@ -358,7 +356,7 @@ function _storeCertOverride(s, host, port) {
   let overrideBits = Ci.nsICertOverrideService.ERROR_UNTRUSTED |
                      Ci.nsICertOverrideService.ERROR_MISMATCH;
   certOverrideService.rememberValidityOverride(host, port, cert, overrideBits,
-                                               true /* temporary */); // eslint-disable-line
+                                               true /* temporary */);
 }
 
 /**

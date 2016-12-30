@@ -8,6 +8,7 @@
 
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
+var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
@@ -407,8 +408,7 @@ OOBCert.Client.prototype = {
   }),
 
   _createRandom() {
-    // 16 bytes / 128 bits
-    const length = 16;
+    const length = 16; // 16 bytes / 128 bits
     let rng = Cc["@mozilla.org/security/random-generator;1"]
               .createInstance(Ci.nsIRandomGenerator);
     let bytes = rng.generateRandomBytes(length);
@@ -545,11 +545,9 @@ OOBCert.Server.prototype = {
     switch (authResult) {
       case AuthenticationResult.ALLOW_PERSIST:
       case AuthenticationResult.ALLOW:
-        // Further processing
-        break;
+        break; // Further processing
       default:
-        // Abort for any negative results
-        return authResult;
+        return authResult; // Abort for any negative results
     }
 
     // Examine additional data for authentication
