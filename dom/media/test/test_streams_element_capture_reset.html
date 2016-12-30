@@ -17,8 +17,6 @@ SimpleTest.waitForExplicitFinish();
 var v = document.getElementById('v');
 var vout = document.getElementById('vout');
 var vout_untilended = document.getElementById('vout_untilended');
-vout.srcObject = v.mozCaptureStream();
-vout_untilended.srcObject = v.mozCaptureStreamUntilEnded();
 
 function dumpEvent(event) {
   var v = event.target;
@@ -101,17 +99,27 @@ function startTest(test) {
   v.addEventListener("ended", ended, false);
   vout_untilended.addEventListener("ended", ended, false);
 
-  v.src = test.name;
-  v.name = test.name;
-  v.play();
-
   function checkNoEnded() {
     ok(false, "ended event received unexpectedly");
   };
 
   vout.addEventListener("ended", checkNoEnded, false);
-  vout.play();
-  vout_untilended.play();
+
+  v.src = test.name;
+  v.name = test.name;
+  v.preload = "metadata";
+
+  function loadedmetadata() {
+    vout.srcObject = v.mozCaptureStream();
+    vout.play();
+
+    vout_untilended.srcObject = v.mozCaptureStreamUntilEnded();
+    vout_untilended.play();
+
+    v.play();
+  };
+
+  v.addEventListener("loadedmetadata", loadedmetadata, {once: true});
 }
 
 var testVideo = getPlayableVideo(gSmallTests);
