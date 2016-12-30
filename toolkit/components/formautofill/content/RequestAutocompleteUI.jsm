@@ -40,7 +40,7 @@ this.RequestAutocompleteUI.prototype = {
 
     // Wrap the callback function so that it survives XPCOM.
     let args = {
-      resolveFn: resolveFn,
+      resolveFn,
       autofillData: this._autofillData,
     };
     args.wrappedJSObject = args;

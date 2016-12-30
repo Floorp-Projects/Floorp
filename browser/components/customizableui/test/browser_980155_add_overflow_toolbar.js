@@ -14,7 +14,7 @@ add_task(function* addOverflowingToolbar() {
   for (let i = 0; i < 10; i++) {
     let id = kTestWidgetPrefix + i;
     widgetIds.push(id);
-    let spec = {id: id, type: "button", removable: true, label: "test", tooltiptext: "" + i};
+    let spec = {id, type: "button", removable: true, label: "test", tooltiptext: "" + i};
     CustomizableUI.createWidget(spec);
   }
 

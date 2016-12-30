@@ -38,7 +38,7 @@ function end_test() {
 function install_locale(aCallback) {
   gInstall = gProvider.createInstalls(gInstallProperties)[0];
   gInstall.addTestListener({
-    onInstallEnded: function(aInstall) {
+    onInstallEnded(aInstall) {
       gInstall.removeTestListener(this);
       executeSoon(aCallback);
     }

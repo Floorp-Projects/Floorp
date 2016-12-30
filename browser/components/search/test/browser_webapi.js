@@ -14,7 +14,7 @@ function AddSearchProvider(...args) {
 function promiseDialogOpened() {
   return new Promise((resolve, reject) => {
     Services.wm.addListener({
-      onOpenWindow: function(xulWin) {
+      onOpenWindow(xulWin) {
         Services.wm.removeListener(this);
 
         let win = xulWin.QueryInterface(Ci.nsIInterfaceRequestor)

@@ -20,7 +20,7 @@ var currentZoom = 1;
 var closedWithEnter = false;
 
 this.SelectParentHelper = {
-  populate: function(menulist, items, selectedIndex, zoom) {
+  populate(menulist, items, selectedIndex, zoom) {
     // Clear the current contents of the popup
     menulist.menupopup.textContent = "";
     currentZoom = zoom;
@@ -28,7 +28,7 @@ this.SelectParentHelper = {
     populateChildren(menulist, items, selectedIndex, zoom);
   },
 
-  open: function(browser, menulist, rect, isOpenedViaTouch) {
+  open(browser, menulist, rect, isOpenedViaTouch) {
     menulist.hidden = false;
     currentBrowser = browser;
     closedWithEnter = false;
@@ -63,13 +63,13 @@ this.SelectParentHelper = {
     menupopup.openPopupAtScreenRect(AppConstants.platform == "macosx" ? "selection" : "after_start", rect.left, rect.top, rect.width, rect.height, false, false);
   },
 
-  hide: function(menulist, browser) {
+  hide(menulist, browser) {
     if (currentBrowser == browser) {
       menulist.menupopup.hidePopup();
     }
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     switch (event.type) {
       case "mouseup":
         currentBrowser.messageManager.sendAsyncMessage("Forms:MouseUp", {});
@@ -93,7 +93,7 @@ this.SelectParentHelper = {
         if (event.target.hasAttribute("value")) {
           currentBrowser.messageManager.sendAsyncMessage("Forms:SelectDropDownItem", {
             value: event.target.value,
-            closedWithEnter: closedWithEnter
+            closedWithEnter
           });
         }
         break;
@@ -130,7 +130,7 @@ this.SelectParentHelper = {
     }
   },
 
-  _registerListeners: function(browser, popup) {
+  _registerListeners(browser, popup) {
     popup.addEventListener("command", this);
     popup.addEventListener("popuphidden", this);
     popup.addEventListener("mouseover", this);
@@ -141,7 +141,7 @@ this.SelectParentHelper = {
     browser.messageManager.addMessageListener("Forms:UpdateDropDown", this);
   },
 
-  _unregisterListeners: function(browser, popup) {
+  _unregisterListeners(browser, popup) {
     popup.removeEventListener("command", this);
     popup.removeEventListener("popuphidden", this);
     popup.removeEventListener("mouseover", this);

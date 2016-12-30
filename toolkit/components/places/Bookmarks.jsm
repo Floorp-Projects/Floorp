@@ -478,7 +478,7 @@ var Bookmarks = Object.freeze({
    * @return {Promise} resolved when the removal is complete.
    * @resolves once the removal is complete.
    */
-  eraseEverything: function(options = {}) {
+  eraseEverything(options = {}) {
     return PlacesUtils.withConnectionWrapper("Bookmarks.jsm: eraseEverything",
       db => db.executeTransaction(function* () {
         const folderGuids = [this.toolbarGuid, this.menuGuid, this.unfiledGuid,
@@ -767,7 +767,7 @@ var Bookmarks = Object.freeze({
       throw new Error("Query object is required");
     }
     if (typeof query === "string") {
-      query = { query: query };
+      query = { query };
     }
     if (typeof query !== "object") {
       throw new Error("Query must be an object or a string");
@@ -868,7 +868,7 @@ function updateBookmark(info, item, newParent) {
             `UPDATE moz_bookmarks SET position = position + :sign
              WHERE parent = :newParentId
                AND position BETWEEN :lowIndex AND :highIndex
-            `, { sign: sign, newParentId: newParent._id,
+            `, { sign, newParentId: newParent._id,
                  lowIndex: Math.min(item.index, newIndex),
                  highIndex: Math.max(item.index, newIndex) });
         } else {
@@ -885,7 +885,7 @@ function updateBookmark(info, item, newParent) {
             `UPDATE moz_bookmarks SET position = position + :sign
              WHERE parent = :newParentId
                AND position >= :newIndex
-            `, { sign: +1, newParentId: newParent._id, newIndex: newIndex });
+            `, { sign: +1, newParentId: newParent._id, newIndex });
 
           yield setAncestorsLastModified(db, item.parentGuid, info.lastModified,
                                          syncChangeDelta);

@@ -15,7 +15,7 @@ var gAddon = null;
 
 // If the user enables the add-on through some other UI close this window
 var EnableListener = {
-  onEnabling: function(aAddon) {
+  onEnabling(aAddon) {
     if (aAddon.id == gAddon.id)
       window.close();
   }

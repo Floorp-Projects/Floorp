@@ -198,10 +198,10 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0)
                     .QueryInterface(Ci.nsIWebBrowserPersistable);
   let stack = Components.stack.caller;
   persistable.startPersistence(aOuterWindowID, {
-    onDocumentReady: function(document) {
+    onDocumentReady(document) {
       saveDocument(document, aSkipPrompt);
     },
-    onError: function(status) {
+    onError(status) {
       throw new Components.Exception("saveBrowser failed asynchronously in startPersistence",
                                      status, stack);
     }
@@ -426,11 +426,11 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
 
     var fpParams = {
       fpTitleKey: aFilePickerTitleKey,
-      fileInfo: fileInfo,
+      fileInfo,
       contentType: aContentType,
-      saveMode: saveMode,
+      saveMode,
       saveAsType: kSaveAsType_Complete,
-      file: file
+      file
     };
 
     // Find a URI to use for determining last-downloaded-to directory
@@ -468,7 +468,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
     }
 
     var persistArgs = {
-      sourceURI         : sourceURI,
+      sourceURI,
       sourceReferrer    : aReferrer,
       sourceDocument    : useSaveDocument ? aDocument : null,
       targetContentType : (saveAsType == kSaveAsType_Text) ? "text/plain" : null,
@@ -476,7 +476,7 @@ function internalSave(aURL, aDocument, aDefaultFileName, aContentDisposition,
       sourceCacheKey    : aCacheKey,
       sourcePostData    : nonCPOWDocument ? getPostData(aDocument) : null,
       bypassCache       : aShouldBypassCache,
-      isPrivate         : isPrivate,
+      isPrivate,
     };
 
     // Start the actual save process
@@ -821,7 +821,7 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
   initFileInfo(fileInfo, aURL, null, null, null, null);
 
   let filepickerParams = {
-    fileInfo: fileInfo,
+    fileInfo,
     saveMode: SAVEMODE_FILEONLY
   };
 
@@ -832,7 +832,7 @@ function DownloadURL(aURL, aFileName, aInitiatingDocument) {
 
     let file = filepickerParams.file;
     let download = yield Downloads.createDownload({
-      source: { url: aURL, isPrivate: isPrivate },
+      source: { url: aURL, isPrivate },
       target: { path: file.path, partFilePath: file.path + ".part" }
     });
     download.tryToKeepPartialData = true;
@@ -1301,13 +1301,13 @@ function openURL(aURL)
     loadgroup.groupObserver = loadListener;
 
     var uriListener = {
-      onStartURIOpen: function(uri) { return false; },
-      doContent: function(ctype, preferred, request, handler) { return false; },
-      isPreferred: function(ctype, desired) { return false; },
-      canHandleContent: function(ctype, preferred, desired) { return false; },
+      onStartURIOpen(uri) { return false; },
+      doContent(ctype, preferred, request, handler) { return false; },
+      isPreferred(ctype, desired) { return false; },
+      canHandleContent(ctype, preferred, desired) { return false; },
       loadCookie: null,
       parentContentListener: null,
-      getInterface: function(iid) {
+      getInterface(iid) {
         if (iid.equals(Components.interfaces.nsIURIContentListener))
           return this;
         if (iid.equals(Components.interfaces.nsILoadGroup))
@@ -1317,7 +1317,7 @@ function openURL(aURL)
     }
 
     var channel = NetUtil.newChannel({
-      uri: uri,
+      uri,
       loadUsingSystemPrincipal: true
     });
 

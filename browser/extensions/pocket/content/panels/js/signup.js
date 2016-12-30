@@ -61,7 +61,7 @@ var PKT_SIGNUP_OVERLAY = function(options)
 };
 
 PKT_SIGNUP_OVERLAY.prototype = {
-    create : function()
+    create()
     {
         var controlvariant = window.location.href.match(/controlvariant=([\w|\.]*)&?/);
         if (controlvariant && controlvariant.length > 1)
@@ -145,7 +145,7 @@ PKT_SIGNUP_OVERLAY.prototype = {
 var PKT_SIGNUP = function() {};
 
 PKT_SIGNUP.prototype = {
-    init: function() {
+    init() {
         if (this.inited) {
             return;
         }
@@ -155,15 +155,15 @@ PKT_SIGNUP.prototype = {
         this.inited = true;
     },
 
-    addMessageListener: function(messageId, callback) {
+    addMessageListener(messageId, callback) {
         pktPanelMessaging.addMessageListener(this.panelId, messageId, callback);
     },
 
-    sendMessage: function(messageId, payload, callback) {
+    sendMessage(messageId, payload, callback) {
         pktPanelMessaging.sendMessage(this.panelId, messageId, payload, callback);
     },
 
-    create: function() {
+    create() {
         this.overlay.create();
 
         // tell back end we're ready

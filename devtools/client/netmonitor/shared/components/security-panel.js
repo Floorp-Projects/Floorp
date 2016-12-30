@@ -104,8 +104,8 @@ function SecurityPanel({
 SecurityPanel.displayName = "SecurityPanel";
 
 SecurityPanel.propTypes = {
-  securityInfo: PropTypes.object.isRequired,
-  url: PropTypes.string.isRequired,
+  securityInfo: PropTypes.object,
+  url: PropTypes.string,
 };
 
 function renderValue(weaknessReasons = [], props) {
@@ -124,7 +124,7 @@ function renderValue(weaknessReasons = [], props) {
       // Display one line selectable text for security details
       input({
         className: "textbox-input",
-        readonly: "true",
+        readOnly: "true",
         value,
       })
     ,

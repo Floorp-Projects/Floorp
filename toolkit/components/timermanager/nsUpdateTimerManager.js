@@ -279,7 +279,7 @@ TimerManager.prototype = {
    * Starts the timer, if necessary, and ensures that it will fire soon enough
    * to happen after time |interval| (in milliseconds).
    */
-  _ensureTimer: function(interval) {
+  _ensureTimer(interval) {
     if (!this._canEnsureTimer) {
       return;
     }
@@ -296,7 +296,7 @@ TimerManager.prototype = {
   /**
    * Stops the timer, if it is running.
    */
-  _cancelTimer: function() {
+  _cancelTimer() {
     if (this._timer) {
       this._timer.cancel();
       this._timer = null;
@@ -323,9 +323,9 @@ TimerManager.prototype = {
     if (lastUpdateTime == 0) {
       Services.prefs.setIntPref(prefLastUpdate, lastUpdateTime);
     }
-    this._timers[id] = {callback: callback,
-                        interval: interval,
-                        lastUpdateTime: lastUpdateTime};
+    this._timers[id] = {callback,
+                        interval,
+                        lastUpdateTime};
 
     this._ensureTimer(interval * 1000);
   },

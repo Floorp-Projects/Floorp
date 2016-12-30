@@ -8,7 +8,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "nsIURI.h"
-#include "nsIURIWithQuery.h"
 #include "nsISerializable.h"
 #include "nsString.h"
 #include "nsIClassInfo.h"
@@ -28,7 +27,7 @@ namespace net {
 }
 
 class nsSimpleURI
-    : public nsIURIWithQuery
+    : public nsIURI
     , public nsISerializable
     , public nsIClassInfo
     , public nsIMutable
@@ -41,7 +40,6 @@ protected:
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
-    NS_DECL_NSIURIWITHQUERY
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
     NS_DECL_NSIMUTABLE

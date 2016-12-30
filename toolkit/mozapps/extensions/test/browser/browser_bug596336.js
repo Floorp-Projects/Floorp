@@ -30,7 +30,7 @@ function install_addon(aXpi) {
     AddonManager.getInstallForURL(TESTROOT + "addons/" + aXpi + ".xpi",
                                   function(aInstall) {
       aInstall.addListener({
-        onInstallEnded: function(aInstall) {
+        onInstallEnded(aInstall) {
           resolve();
         }
       });

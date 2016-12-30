@@ -29,8 +29,11 @@
 #include "mozilla/dom/TouchEvent.h"
 #include "mozilla/TimelineConsumers.h"
 #include "mozilla/EventTimelineMarker.h"
+#include "mozilla/TimeStamp.h"
 
 #include "EventListenerService.h"
+#include "GeckoProfiler.h"
+#include "ProfilerMarkers.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -1281,7 +1284,35 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
               listener = listenerHolder.ptr();
               hasRemovedListener = true;
             }
-            if (NS_FAILED(HandleEventSubType(listener, *aDOMEvent, aCurrentTarget))) {
+
+            nsresult rv = NS_OK;
+            if (profiler_is_active()) {
+              // Add a profiler label and a profiler marker for the actual
+              // dispatch of the event.
+              // This is a very hot code path, so we need to make sure not to
+              // do this extra work when we're not profiling.
+              nsAutoString typeStr;
+              (*aDOMEvent)->GetType(typeStr);
+              PROFILER_LABEL_PRINTF("EventListenerManager", "HandleEventInternal",
+                                    js::ProfileEntry::Category::EVENTS,
+                                    "%s",
+                                    NS_LossyConvertUTF16toASCII(typeStr).get());
+              TimeStamp startTime = TimeStamp::Now();
+
+              rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
+
+              TimeStamp endTime = TimeStamp::Now();
+              uint16_t phase;
+              (*aDOMEvent)->GetEventPhase(&phase);
+              PROFILER_MARKER_PAYLOAD("DOMEvent",
+                                      new DOMEventMarkerPayload(typeStr, phase,
+                                                                startTime,
+                                                                endTime));
+            } else {
+              rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
+            }
+
+            if (NS_FAILED(rv)) {
               aEvent->mFlags.mExceptionWasRaised = true;
             }
             aEvent->mFlags.mInPassiveListener = false;

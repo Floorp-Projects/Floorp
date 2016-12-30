@@ -53,7 +53,7 @@ Narrator.prototype = {
         // For example, paragraphs. But nested anchors and other elements
         // are not interesting since their text already appears in their
         // parent's textContent.
-        acceptNode: function(node) {
+        acceptNode(node) {
           if (this._matches.has(node.parentNode)) {
             // Reject sub-trees of accepted nodes.
             return nf.FILTER_REJECT;
@@ -106,7 +106,7 @@ Narrator.prototype = {
       this._win.speechSynthesis.pending;
   },
 
-  _getVoice: function(voiceURI) {
+  _getVoice(voiceURI) {
     if (!this._voiceMap || !this._voiceMap.has(voiceURI)) {
       this._voiceMap = new Map(
         this._win.speechSynthesis.getVoices().map(v => [v.voiceURI, v]));
@@ -115,7 +115,7 @@ Narrator.prototype = {
     return this._voiceMap.get(voiceURI);
   },
 
-  _isParagraphInView: function(paragraph) {
+  _isParagraphInView(paragraph) {
     if (!paragraph) {
       return false;
     }
@@ -124,13 +124,13 @@ Narrator.prototype = {
     return bb.top >= 0 && bb.top < this._win.innerHeight;
   },
 
-  _sendTestEvent: function(eventType, detail) {
+  _sendTestEvent(eventType, detail) {
     let win = this._win;
     win.dispatchEvent(new win.CustomEvent(eventType,
       { detail: Cu.cloneInto(detail, win.document) }));
   },
 
-  _speakInner: function() {
+  _speakInner() {
     this._win.speechSynthesis.cancel();
     let tw = this._treeWalker;
     let paragraph = tw.currentNode;
@@ -235,7 +235,7 @@ Narrator.prototype = {
     });
   },
 
-  start: function(speechOptions) {
+  start(speechOptions) {
     this._speechOptions = {
       rate: speechOptions.rate,
       voice: this._getVoice(speechOptions.voice)
@@ -264,32 +264,32 @@ Narrator.prototype = {
     });
   },
 
-  stop: function() {
+  stop() {
     this._stopped = true;
     this._win.speechSynthesis.cancel();
   },
 
-  skipNext: function() {
+  skipNext() {
     this._win.speechSynthesis.cancel();
   },
 
-  skipPrevious: function() {
+  skipPrevious() {
     this._goBackParagraphs(this._timeIntoParagraph < PREV_THRESHOLD ? 2 : 1);
   },
 
-  setRate: function(rate) {
+  setRate(rate) {
     this._speechOptions.rate = rate;
     /* repeat current paragraph */
     this._goBackParagraphs(1);
   },
 
-  setVoice: function(voice) {
+  setVoice(voice) {
     this._speechOptions.voice = this._getVoice(voice);
     /* repeat current paragraph */
     this._goBackParagraphs(1);
   },
 
-  _goBackParagraphs: function(count) {
+  _goBackParagraphs(count) {
     let tw = this._treeWalker;
     for (let i = 0; i < count; i++) {
       if (!tw.previousNode()) {
@@ -316,7 +316,7 @@ Highlighter.prototype = {
    * @param {Number} startOffset the start offset
    * @param {Number} length the length in characters of the range
    */
-  highlight: function(startOffset, length) {
+  highlight(startOffset, length) {
     let containerRect = this.container.getBoundingClientRect();
     let range = this._getRange(startOffset, startOffset + length);
     let rangeRects = range.getClientRects();
@@ -362,7 +362,7 @@ Highlighter.prototype = {
   /**
    * Releases reference to container and removes all highlight nodes.
    */
-  remove: function() {
+  remove() {
     for (let node of this._nodes) {
       node.remove();
     }
@@ -376,7 +376,7 @@ Highlighter.prototype = {
    *
    * @param {Number} count number of nodes needed
    */
-  _getFreshHighlightNodes: function(count) {
+  _getFreshHighlightNodes(count) {
     let doc = this.container.ownerDocument;
     let nodes = Array.from(this._nodes);
 
@@ -403,7 +403,7 @@ Highlighter.prototype = {
    * @param {Number} startOffset the start offset
    * @param {Number} endOffset the end offset
    */
-  _getRange: function(startOffset, endOffset) {
+  _getRange(startOffset, endOffset) {
     let doc = this.container.ownerDocument;
     let i = 0;
     let treeWalker = doc.createTreeWalker(

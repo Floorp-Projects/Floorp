@@ -217,7 +217,7 @@ function* checkItem(aExpected, aNode) {
           do_check_eq((yield PlacesUtils.getCharsetForURI(testURI)), aExpected.charset);
           break;
         case "feedUrl":
-          let livemark = yield PlacesUtils.livemarks.getLivemark({ id: id });
+          let livemark = yield PlacesUtils.livemarks.getLivemark({ id });
           do_check_eq(livemark.siteURI.spec, aExpected.url);
           do_check_eq(livemark.feedURI.spec, aExpected.feedUrl);
           break;

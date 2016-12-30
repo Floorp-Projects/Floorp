@@ -23,7 +23,7 @@ add_task(function*() {
   Services.search.currentEngine = gEngine;
 
   let uri = NetUtil.newURI("http://s.example.com/search?q=foo&client=1");
-  yield PlacesTestUtils.addVisits({ uri: uri, title: "Foo - SearchEngine Search" });
+  yield PlacesTestUtils.addVisits({ uri, title: "Foo - SearchEngine Search" });
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:mozilla");
 

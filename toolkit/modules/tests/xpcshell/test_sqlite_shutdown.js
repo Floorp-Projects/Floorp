@@ -17,7 +17,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 
 function getConnection(dbName, extraOptions = {}) {
   let path = dbName + ".sqlite";
-  let options = {path: path};
+  let options = {path};
   for (let [k, v] of Object.entries(extraOptions)) {
     options[k] = v;
   }
@@ -49,7 +49,7 @@ function sleep(ms) {
                 .createInstance(Ci.nsITimer);
 
   timer.initWithCallback({
-    notify: function() {
+    notify() {
       deferred.resolve();
     },
   }, ms, timer.TYPE_ONE_SHOT);

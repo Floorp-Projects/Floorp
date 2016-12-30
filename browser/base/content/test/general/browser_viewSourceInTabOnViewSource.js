@@ -1,7 +1,7 @@
 function wait_while_tab_is_busy() {
   return new Promise(resolve => {
     let progressListener = {
-      onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
+      onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
           gBrowser.removeProgressListener(this);
           setTimeout(resolve, 0);

@@ -152,7 +152,7 @@ function display(info, pushService) {
 
   unregisterButton.onclick = function() {
     let cb = {
-      unregisterSucceeded: function() {
+      unregisterSucceeded() {
         parent.removeChild(div);
 
         if (!--gSWCount) {
@@ -161,7 +161,7 @@ function display(info, pushService) {
         }
       },
 
-      unregisterFailed: function() {
+      unregisterFailed() {
         alert(bundle.GetStringFromName('unregisterError'));
       },
 

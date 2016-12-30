@@ -21,7 +21,7 @@ profileDir.append("extensions");
 // when expected
 var gLWThemeChanged = false;
 var LightweightThemeObserver = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update")
       return;
 
@@ -1068,7 +1068,7 @@ function run_test_21() {
 
     AddonManager.getAddonByID("1@personas.mozilla.org", function(p1) {
       AddonManager.addAddonListener({
-        onEnabling: function(aAddon) {
+        onEnabling(aAddon) {
           do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
           do_check_true(hasFlag(aAddon.pendingOperations, AddonManager.PENDING_ENABLE));
 

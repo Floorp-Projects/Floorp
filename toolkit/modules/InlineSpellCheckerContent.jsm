@@ -68,7 +68,7 @@ var InlineSpellCheckerContent = {
              misspelling: spellChecker.mMisspelling,
              spellSuggestions: this._generateSpellSuggestions(),
              currentDictionary: spellChecker.mInlineSpellChecker.spellChecker.GetCurrentDictionary(),
-             dictionaryList: dictionaryList };
+             dictionaryList };
   },
 
   uninitContextMenu() {

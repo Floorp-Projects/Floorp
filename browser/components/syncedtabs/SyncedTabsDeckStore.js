@@ -31,7 +31,7 @@ Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
     let panels = this._panels.map(panel => {
       return {id: panel, selected: panel === this._selectedPanel};
     });
-    this.emit("change", {panels, isUpdatable: isUpdatable});
+    this.emit("change", {panels, isUpdatable});
   },
 
   /**

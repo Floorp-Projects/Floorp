@@ -27,7 +27,7 @@ function loadViewSourceWindow(URL) {
 
 function closeViewSourceWindow(aWindow, aCallback) {
   Services.wm.addListener({
-    onCloseWindow: function() {
+    onCloseWindow() {
       Services.wm.removeListener(this);
       executeSoon(aCallback);
     }

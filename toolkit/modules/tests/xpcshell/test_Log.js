@@ -448,9 +448,11 @@ add_task(function* log_message_with_params() {
 
   // We use object.valueOf() internally; make sure a broken valueOf() method
   // doesn't cause the logger to fail.
+  /* eslint-disable object-shorthand */
   let vOf = {a: 1, valueOf: function() {throw "oh noes valueOf"}};
   do_check_eq(formatMessage("Broken valueOf ${}", vOf),
               'Broken valueOf ({a:1, valueOf:(function () {throw "oh noes valueOf"})})');
+  /* eslint-enable object-shorthand */
 
   // Test edge cases of bad data to formatter:
   // If 'params' is not an object, format it as a basic type.

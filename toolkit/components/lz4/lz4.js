@@ -150,7 +150,7 @@ exports.decompressFileContent = decompressFileContent;
 
 if (typeof Components != "undefined") {
   this.Lz4 = {
-    compressFileContent: compressFileContent,
-    decompressFileContent: decompressFileContent
+    compressFileContent,
+    decompressFileContent
   };
 }

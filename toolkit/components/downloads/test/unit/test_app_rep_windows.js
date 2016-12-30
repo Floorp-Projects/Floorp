@@ -119,8 +119,8 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
   copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
               aCloseWhenDone);
   copier.asyncCopy({
-    onStartRequest: function() { },
-    onStopRequest: function(aRequest, aContext, aStatusCode)
+    onStartRequest() { },
+    onStopRequest(aRequest, aContext, aStatusCode)
     {
       if (Components.isSuccessCode(aStatusCode)) {
         deferred.resolve();

@@ -66,9 +66,9 @@ function URLFetcher(url, timeout) {
 
 URLFetcher.prototype = {
   _isAborted: false,
-  ontimeout: function() {},
-  onerror: function() {},
-  abort: function() {
+  ontimeout() {},
+  onerror() {},
+  abort() {
     if (!this._isAborted) {
       this._isAborted = true;
       this._xhr.abort();
@@ -339,7 +339,7 @@ CaptivePortalDetector.prototype = {
     let id = this._allocateRequestId();
     let details = {
       type: kOpenCaptivePortalLoginEvent,
-      id: id,
+      id,
       url: this._canonicalSiteURL,
     };
     this._loginObserver.attach();

@@ -58,7 +58,7 @@ add_task(function test_web_channel_broker_listener() {
       _originCheckCallback: requestPrincipal => {
         return VALID_WEB_CHANNEL_ORIGIN.prePath === requestPrincipal.origin;
       },
-      deliver: function(data, sender) {
+      deliver(data, sender) {
         do_check_eq(data.id, VALID_WEB_CHANNEL_ID);
         do_check_eq(data.message.command, "hello");
         do_check_neq(sender, undefined);
