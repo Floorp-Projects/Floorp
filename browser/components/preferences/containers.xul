@@ -32,7 +32,7 @@
   <vbox class="contentPane largeDialogContainer" flex="1" hidden="true" id="containers-content">
     <hbox align="start">
       <label id="nameLabel" control="name" value="&name.label;" accesskey="&name.accesskey;"/>
-      <textbox id="name" flex="1" onkeyup="gContainersManager.checkForm();" />
+      <textbox id="name" placeholder="&name.placeholder;" flex="1" onkeyup="gContainersManager.checkForm();" />
     </hbox>
     <hbox align="center" id="iconWrapper">
       <label id="iconLabel" control="icon" value="&icon.label;" accesskey="&icon.accesskey;"/>
