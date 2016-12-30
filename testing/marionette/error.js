@@ -205,14 +205,22 @@ error.fromJson = function (json) {
  * WebDriverError is the prototypal parent of all WebDriver errors.
  * It should not be used directly, as it does not correspond to a real
  * error in the specification.
+ *
+ * @param {(string|Error)=} err
+ *     Optional string describing error situation or Error instance
+ *     to propagate.
  */
-this.WebDriverError = function (msg, stack = undefined) {
-  Error.call(this, msg);
+this.WebDriverError = function (err) {
+  Error.call(this, err);
   this.name = "WebDriverError";
-  this.message = msg;
-  this.stack = stack;
   this.status = "webdriver error";
-  this.stack = stack;
+
+  if (error.isError(err)) {
+    this.message = err.message;
+    this.stack = err.stack;
+  } else {
+    this.message = err;
+  }
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
