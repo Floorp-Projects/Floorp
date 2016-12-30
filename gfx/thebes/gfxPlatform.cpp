@@ -2457,7 +2457,7 @@ gfxPlatform::AsyncPanZoomEnabled()
   }
 #ifdef MOZ_ENABLE_WEBRENDER
   // For webrender hacking we have a special pref to disable APZ even with e10s
-  if (!gfxPrefs::APZAllowWithWebRender()) {
+  if (gfxPrefs::WebRenderEnabled() && !gfxPrefs::APZAllowWithWebRender()) {
     return false;
   }
 #endif // MOZ_ENABLE_WEBRENDER
