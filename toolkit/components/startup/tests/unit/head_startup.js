@@ -24,7 +24,9 @@ function createAppInfo(ID, name, version, platformVersion = "1.0") {
       return gAppInfo.QueryInterface(iid);
     }
   };
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+
+  let registrar =
+    Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
   registrar.registerFactory(XULRUNTIME_CID, "XULRuntime",
                             XULRUNTIME_CONTRACTID, XULAppInfoFactory);
 }

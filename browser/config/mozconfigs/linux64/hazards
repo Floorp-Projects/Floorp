@@ -7,6 +7,12 @@
 # with a script that invokes the real gcc with -fplugin and its configuration
 # directives. Instead, duplicate the contents of that mozconfig here:
 
+MOZ_AUTOMATION_BUILD_SYMBOLS=0
+MOZ_AUTOMATION_L10N_CHECK=0
+MOZ_AUTOMATION_PACKAGE=0
+MOZ_AUTOMATION_PACKAGE_TESTS=0
+MOZ_AUTOMATION_UPLOAD=0
+
 . "$topsrcdir/build/mozconfig.common"
 ac_add_options --enable-elf-hack
 
@@ -28,11 +34,6 @@ ac_add_options --without-ccache
 CFLAGS="$CFLAGS -Wno-attributes"
 CPPFLAGS="$CPPFLAGS -Wno-attributes"
 CXXFLAGS="$CXXFLAGS -Wno-attributes"
-
-# Override rust toolchain paths. In this build they're in $TOOLTOOL_DIR
-# instead of $topsrcdir as referenced by mozconfig.common.
-RUSTC=$TOOLTOOL_DIR/rustc/bin/rustc
-CARGO=$TOOLTOOL_DIR/rustc/bin/cargo
 
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 . $topsrcdir/build/unix/mozconfig.gtk

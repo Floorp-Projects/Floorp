@@ -17,6 +17,12 @@
 #include <sys/syscall.h>
 #endif
 
+#if defined(__NetBSD__)
+#include <lwp.h>
+#elif defined(__FreeBSD__)
+#include <pthread_np.h>
+#endif
+
 namespace rtc {
 
 #if defined(WEBRTC_WIN)
@@ -39,6 +45,14 @@ PlatformThreadId CurrentThreadId() {
   ret =  syscall(__NR_gettid);
 #elif defined(WEBRTC_ANDROID)
   ret = gettid();
+#elif defined(__NetBSD__)
+  ret = _lwp_self();
+#elif defined(__DragonFly__)
+  ret = lwp_gettid();
+#elif defined(__OpenBSD__)
+  ret = reinterpret_cast<uintptr_t> (pthread_self());
+#elif defined(__FreeBSD__)
+  ret = pthread_getthreadid_np();
 #else
   // Default implementation for nacl and solaris.
   ret = reinterpret_cast<pid_t>(pthread_self());

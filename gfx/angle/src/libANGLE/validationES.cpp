@@ -252,7 +252,7 @@ bool ValidateReadPixelsBase(ValidationContext *context,
     const gl::Extents size(width, height, 1);
     const auto &pack = context->getGLState().getPackState();
 
-    auto endByteOrErr = formatInfo.computePackUnpackEndByte(type, size, pack, false);
+    auto endByteOrErr = formatInfo.computePackUnpackEndByte(size, pack, false);
     if (endByteOrErr.isError())
     {
         context->handleError(endByteOrErr.getError());
@@ -1538,7 +1538,7 @@ bool ValidImageDataSize(ValidationContext *context,
     const auto &unpack = context->getGLState().getUnpackState();
 
     bool targetIs3D   = textureTarget == GL_TEXTURE_3D || textureTarget == GL_TEXTURE_2D_ARRAY;
-    auto endByteOrErr = formatInfo.computePackUnpackEndByte(type, size, unpack, targetIs3D);
+    auto endByteOrErr = formatInfo.computePackUnpackEndByte(size, unpack, targetIs3D);
     if (endByteOrErr.isError())
     {
         context->handleError(endByteOrErr.getError());
@@ -3219,7 +3219,7 @@ bool ValidateDrawElements(ValidationContext *context,
         return false;
     }
 
-    if (!ValidateDrawAttribs(context, primcount, static_cast<GLint>(indexRangeOut->vertexCount())))
+    if (!ValidateDrawAttribs(context, primcount, static_cast<GLint>(indexRangeOut->end + 1)))
     {
         return false;
     }

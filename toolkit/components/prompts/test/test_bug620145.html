@@ -24,6 +24,8 @@
 <button id="button" onmouseup="openAlert()">Button</button>
 
 <script class="testbody" type="text/javascript">
+/* import-globals-from ../../../../testing/mochitest/tests/SimpleTest/EventUtils.js */
+/* import-globals-from prompt_common.js */
 var selectionTest = false;
 
 function openAlert() {
@@ -57,7 +59,7 @@ add_task(function* runTest() {
     buttonClick: "ok",
   };
 
-  promptDone = handlePrompt(state, action);
+  let promptDone = handlePrompt(state, action);
 
   var button = $("button");
   dispatchMouseEvent(button, "mousedown");
@@ -82,7 +84,7 @@ add_task(function* runTest() {
 function dispatchMouseEvent(target, type)
 {
   var win = target.ownerDocument.defaultView;
-  e = document.createEvent("MouseEvent");
+  let e = document.createEvent("MouseEvent");
   e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
               false, false, false, false, 0, null);
   var utils = SpecialPowers.getDOMWindowUtils(win);

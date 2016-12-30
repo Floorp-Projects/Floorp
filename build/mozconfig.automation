@@ -31,3 +31,5 @@ if test "$MOZ_AUTOMATION_PRETTY" = "1"; then
     # we don't build it without, so this is set to 1.
     mk_add_options "export MOZ_AUTOMATION_PRETTY_UPDATE_PACKAGING=1"
 fi
+
+export MOZ_AUTOMATION_MOZCONFIG=1

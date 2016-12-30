@@ -3,6 +3,15 @@
 
 const trimPref = "browser.urlbar.trimURLs";
 const phishyUserPassPref = "network.http.phishy-userpass-length";
+const decodeURLpref = "browser.urlbar.decodeURLsOnCopy";
+
+function toUnicode(input) {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+                    .createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+
+  return converter.ConvertToUnicode(input);
+}
 
 function test() {
 
@@ -12,6 +21,7 @@ function test() {
     gBrowser.removeTab(tab);
     Services.prefs.clearUserPref(trimPref);
     Services.prefs.clearUserPref(phishyUserPassPref);
+    Services.prefs.clearUserPref(decodeURLpref);
     URLBarSetURI();
   });
 
@@ -141,7 +151,17 @@ var tests = [
   {
     copyVal: "<data:text/html,(%C3%A9 %25P>)",
     copyExpected: "data:text/html,(%C3%A9 %25P",
-  }
+  },
+  {
+    setup: function() { Services.prefs.setBoolPref(decodeURLpref, true); },
+    loadURL: "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
+    expectedURL: toUnicode("example.com/биография"),
+    copyExpected: toUnicode("http://example.com/биография")
+  },
+  {
+    copyVal: toUnicode("<example.com/би>ография"),
+    copyExpected: toUnicode("http://example.com/би")
+  },
 ];
 
 function nextTest() {
@@ -160,6 +180,10 @@ function runTest(testCase, cb) {
     }
 
     testCopy(testCase.copyVal, testCase.copyExpected, cb);
+  }
+
+  if (testCase.setup) {
+    testCase.setup();
   }
 
   if (testCase.loadURL) {
