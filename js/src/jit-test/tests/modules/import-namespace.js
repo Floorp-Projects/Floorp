@@ -19,9 +19,19 @@ function testHasNames(names, expected) {
     });
 }
 
+function testEqualArrays(actual, expected) {
+	assertEq(Array.isArray(actual), true);
+	assertEq(Array.isArray(expected), true);
+    assertEq(actual.length, expected.length);
+    for (let i = 0; i < expected.length; i++) {
+    	assertEq(actual[i], expected[i]);
+    }
+}
+
 let a = moduleRepo['a'] = parseModule(
-    `export var a = 1;
-     export var b = 2;`
+    `// Reflection methods should return these exports alphabetically sorted.
+     export var b = 2;
+     export var a = 1;`
 );
 
 let b = moduleRepo['b'] = parseModule(
@@ -65,6 +75,11 @@ assertEq(desc.configurable, false);
 assertEq(typeof desc.get, "undefined");
 assertEq(typeof desc.set, "undefined");
 assertEq(Object.prototype.toString.call(ns), "[object Module]");
+
+// Test [[OwnPropertyKeys]] internal method.
+testEqualArrays(Reflect.ownKeys(ns), ["a", "b", Symbol.toStringTag]);
+testEqualArrays(Object.getOwnPropertyNames(ns), ["a", "b"]);
+testEqualArrays(Object.getOwnPropertySymbols(ns), [Symbol.toStringTag]);
 
 // Test cyclic namespace import and access in module evaluation.
 let c = moduleRepo['c'] =

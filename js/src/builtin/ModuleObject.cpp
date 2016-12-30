@@ -500,7 +500,7 @@ ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     RootedObject exports(cx, &ns->exports());
     uint32_t count;
-    if (!GetLengthProperty(cx, exports, &count) || !props.reserve(props.length() + count))
+    if (!GetLengthProperty(cx, exports, &count) || !props.reserve(props.length() + count + 1))
         return false;
 
     Rooted<ValueVector> names(cx, ValueVector(cx));
@@ -509,6 +509,8 @@ ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject
 
     for (uint32_t i = 0; i < count; i++)
         props.infallibleAppend(AtomToId(&names[i].toString()->asAtom()));
+
+    props.infallibleAppend(SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
 
     return true;
 }
