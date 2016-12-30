@@ -26,3 +26,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 
 TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += ['StructuredLog.jsm']
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "General")
+
+with Files("tests/xpcshell/**"):
+    BUG_COMPONENT = ("Testing", "XPCShell Harness")
+
+with Files("tests/browser/**"):
+    BUG_COMPONENT = ("Testing", "BrowserTest")

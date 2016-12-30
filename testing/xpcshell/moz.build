@@ -13,3 +13,6 @@ PYTHON_UNITTEST_MANIFESTS += [
 TESTING_JS_MODULES += [
     'dbg-actors.js',
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "XPCShell Harness")
