@@ -4793,7 +4793,6 @@ ContentParent::RecvPURLClassifierConstructor(PURLClassifierParent* aActor,
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aActor);
-  *aSuccess = false;
 
   auto* actor = static_cast<URLClassifierParent*>(aActor);
   nsCOMPtr<nsIPrincipal> principal(aPrincipal);
