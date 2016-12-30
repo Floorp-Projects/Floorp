@@ -114,7 +114,6 @@ MainThreadIOLoggerImpl::Init()
 /* static */ void
 MainThreadIOLoggerImpl::sIOThreadFunc(void* aArg)
 {
-  AutoProfilerRegister registerThread("MainThreadIOLogger");
   PR_SetCurrentThreadName("MainThreadIOLogger");
   MainThreadIOLoggerImpl* obj = static_cast<MainThreadIOLoggerImpl*>(aArg);
   obj->IOThreadFunc();

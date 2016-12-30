@@ -11,7 +11,6 @@
 #include "nsReadableUtils.h"
 #include "nsPKCS11Slot.h"
 #include "nsProtectedAuthThread.h"
-#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -20,7 +19,6 @@ NS_IMPL_ISUPPORTS(nsProtectedAuthThread, nsIProtectedAuthThread)
 
 static void nsProtectedAuthThreadRunner(void *arg)
 {
-    AutoProfilerRegister registerThread("Protected Auth");
     PR_SetCurrentThreadName("Protected Auth");
 
     nsProtectedAuthThread *self = static_cast<nsProtectedAuthThread *>(arg);

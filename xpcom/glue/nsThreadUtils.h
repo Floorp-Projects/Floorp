@@ -33,6 +33,24 @@
 // for convenience.
 
 /**
+ * Set name of the target thread.  This operation is asynchronous.
+ */
+extern void NS_SetThreadName(nsIThread* aThread, const nsACString& aName);
+
+/**
+ * Static length version of the above function checking length of the
+ * name at compile time.
+ */
+template<size_t LEN>
+inline void
+NS_SetThreadName(nsIThread* aThread, const char (&aName)[LEN])
+{
+  static_assert(LEN <= 16,
+                "Thread name must be no more than 16 characters");
+  NS_SetThreadName(aThread, nsDependentCString(aName));
+}
+
+/**
  * Create a new thread, and optionally provide an initial event for the thread.
  *
  * @param aResult
@@ -53,12 +71,6 @@ NS_NewThread(nsIThread** aResult,
 /**
  * Creates a named thread, otherwise the same as NS_NewThread
  */
-extern nsresult
-NS_NewNamedThread(const nsACString& aName,
-                  nsIThread** aResult,
-                  nsIRunnable* aInitialEvent = nullptr,
-                  uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE);
-
 template<size_t LEN>
 inline nsresult
 NS_NewNamedThread(const char (&aName)[LEN],
@@ -66,10 +78,21 @@ NS_NewNamedThread(const char (&aName)[LEN],
                   nsIRunnable* aInitialEvent = nullptr,
                   uint32_t aStackSize = nsIThreadManager::DEFAULT_STACK_SIZE)
 {
-  static_assert(LEN <= 16,
-                "Thread name must be no more than 16 characters");
-  return NS_NewNamedThread(nsDependentCString(aName, LEN - 1),
-                           aResult, aInitialEvent, aStackSize);
+  // Hold a ref while dispatching the initial event to match NS_NewThread()
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_NewThread(getter_AddRefs(thread), nullptr, aStackSize);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  NS_SetThreadName<LEN>(thread, aName);
+  if (aInitialEvent) {
+    rv = thread->Dispatch(aInitialEvent, NS_DISPATCH_NORMAL);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Initial event dispatch failed");
+  }
+
+  *aResult = nullptr;
+  thread.swap(*aResult);
+  return rv;
 }
 
 /**
@@ -1003,15 +1026,12 @@ public:
   nsThreadPoolNaming() : mCounter(0) {}
 
   /**
-   * Returns a thread name as "<aPoolName> #<n>" and increments the counter.
+   * Creates and sets next thread name as "<aPoolName> #<n>"
+   * on the specified thread.  If no thread is specified (aThread
+   * is null) then the name is synchronously set on the current thread.
    */
-  nsCString GetNextThreadName(const nsACString& aPoolName);
-
-  template<size_t LEN>
-  nsCString GetNextThreadName(const char (&aPoolName)[LEN])
-  {
-    return GetNextThreadName(nsDependentCString(aPoolName, LEN - 1));
-  }
+  void SetThreadPoolName(const nsACString& aPoolName,
+                         nsIThread* aThread = nullptr);
 
 private:
   mozilla::Atomic<uint32_t> mCounter;

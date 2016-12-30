@@ -152,7 +152,7 @@ BackgroundFileSaver::Init()
   rv = NS_GetCurrentThread(getter_AddRefs(mControlThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = NS_NewNamedThread("BgFileSaver", getter_AddRefs(mWorkerThread));
+  rv = NS_NewThread(getter_AddRefs(mWorkerThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
   sThreadCount++;

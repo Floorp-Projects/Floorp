@@ -46,7 +46,7 @@ TEST(storage_service_init_background_thread_DeathTest, Test)
   do_check_true(event);
 
   nsCOMPtr<nsIThread> thread;
-  do_check_success(NS_NewNamedThread("StorageService", getter_AddRefs(thread)));
+  do_check_success(NS_NewThread(getter_AddRefs(thread)));
 
   do_check_success(thread->Dispatch(event, NS_DISPATCH_NORMAL));
 
