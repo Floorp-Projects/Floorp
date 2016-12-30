@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { Cc, Ci, Cu, Cr } = require("chrome");
 loader.lazyRequireGetter(this, "extend",
   "sdk/util/object", true);
 
@@ -16,7 +15,8 @@ function mapRecordingOptions(type, options) {
   if (type === "profiler") {
     return {
       entries: options.bufferSize,
-      interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000)) : void 0
+      interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000))
+                                        : void 0
     };
   }
 
@@ -568,7 +568,8 @@ UniqueStacks.prototype.getOrAddFrameIndex = function (frame) {
   let implementationIndex = this.getOrAddStringIndex(frame.implementation);
 
   // Super dumb.
-  let hash = `${locationIndex} ${implementationIndex || ""} ${frame.line || ""} ${frame.category || ""}`;
+  let hash = `${locationIndex} ${implementationIndex || ""} ` +
+             `${frame.line || ""} ${frame.category || ""}`;
 
   let index = frameHash[hash];
   if (index !== undefined) {
