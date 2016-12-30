@@ -117,9 +117,6 @@ protected:
   // The current menu that is active (highlighted), which may not be open. This will
   // be null if no menu is active.
   nsMenuFrame* mCurrentMenu;
-
-  mozilla::dom::EventTarget* mTarget;
-
 }; // class nsMenuBarFrame
 
 #endif
