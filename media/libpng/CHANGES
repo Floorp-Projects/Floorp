@@ -5754,6 +5754,26 @@ Version 1.6.26 [October 20, 2016]
   Cosmetic change, "ptr != 0" to "ptr != NULL" in png.c and pngrutil.c
   Despammed email addresses (replaced "@" with " at ").
 
+Version 1.6.27beta01 [November 2, 2016]
+  Restrict the new ADLER32-skipping to IDAT chunks.  It broke iCCP chunk
+    handling: an erroneous iCCP chunk would throw a png_error and reject the
+    entire PNG image instead of rejecting just the iCCP chunk with a warning,
+    if built with zlib-1.2.8.1.
+
+Version 1.6.27rc01 [December 27, 2016]
+  Control ADLER32 checking with new PNG_IGNORE_ADLER32 option.
+  Removed the use of a macro containing the pre-processor 'defined'
+    operator.  It is unclear whether this is valid; a macro that
+    "generates" 'defined' is not permitted, but the use of the word
+    "generates" within the C90 standard seems to imply more than simple
+    substitution of an expression itself containing a well-formed defined
+    operation.
+  Added ARM support to CMakeLists.txt (Andreas Franek).
+
+Version 1.6.27 [December 29, 2016]
+  Fixed a potential null pointer dereference in png_set_text_2() (bug report
+    and patch by Patrick Keshishian).
+
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net
 (subscription required; visit
 https://lists.sourceforge.net/lists/listinfo/png-mng-implement
