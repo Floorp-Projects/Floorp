@@ -39,7 +39,9 @@ assertEq(getModuleEnvironmentValue(b, "x"), 3);
 
 // Test module namespace internal methods as defined in 9.4.6
 assertEq(Object.getPrototypeOf(ns), null);
-assertThrowsInstanceOf(() => Object.setPrototypeOf(ns, null), TypeError);
+assertEq(Reflect.setPrototypeOf(ns, null), true);
+assertEq(Reflect.setPrototypeOf(ns, Object.prototype), false);
+assertThrowsInstanceOf(() => Object.setPrototypeOf(ns, {}), TypeError);
 assertThrowsInstanceOf(function() { ns.foo = 1; }, TypeError);
 assertEq(Object.isExtensible(ns), false);
 Object.preventExtensions(ns);

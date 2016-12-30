@@ -345,6 +345,8 @@ bool
 ModuleNamespaceObject::ProxyHandler::setPrototype(JSContext* cx, HandleObject proxy,
                                                   HandleObject proto, ObjectOpResult& result) const
 {
+    if (!proto)
+        return result.succeed();
     return result.failCantSetProto();
 }
 
