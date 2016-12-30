@@ -670,22 +670,6 @@ BaselineInspector::templateCallObject()
     return &res->as<CallObject>();
 }
 
-static Shape*
-GlobalShapeForGetPropFunction(ICStub* stub)
-{
-    if (stub->isGetProp_CallNativeGlobal()) {
-        ICGetProp_CallNativeGlobal* nstub = stub->toGetProp_CallNativeGlobal();
-        if (nstub->isOwnGetter())
-            return nullptr;
-
-        Shape* shape = nstub->globalShape();
-        MOZ_ASSERT(shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL);
-        return shape;
-    }
-
-    return nullptr;
-}
-
 static bool
 MatchCacheIRReceiverGuard(CacheIRReader& reader, ICCacheIR_Monitored* stub, ObjOperandId objId,
                           ReceiverGuard* receiver)
@@ -880,27 +864,7 @@ BaselineInspector::commonGetPropFunction(jsbytecode* pc, bool innerized,
     const ICEntry& entry = icEntryFromPC(pc);
 
     for (ICStub* stub = entry.firstStub(); stub; stub = stub->next()) {
-        if (stub->isGetProp_CallNativeGlobal()) {
-            ICGetPropCallGetter* nstub = static_cast<ICGetPropCallGetter*>(stub);
-            bool isOwn = nstub->isOwnGetter();
-            if (!isOwn && !AddReceiver(nstub->receiverGuard(), receivers, convertUnboxedGroups))
-                return false;
-
-            if (!*commonGetter) {
-                *holder = isOwn ? nullptr : nstub->holder().get();
-                *holderShape = nstub->holderShape();
-                *commonGetter = nstub->getter();
-                *globalShape = GlobalShapeForGetPropFunction(nstub);
-                *isOwnProperty = isOwn;
-            } else if (nstub->holderShape() != *holderShape ||
-                       GlobalShapeForGetPropFunction(nstub) != *globalShape ||
-                       isOwn != *isOwnProperty)
-            {
-                return false;
-            } else {
-                MOZ_ASSERT(*commonGetter == nstub->getter());
-            }
-        } else if (stub->isCacheIR_Monitored()) {
+        if (stub->isCacheIR_Monitored()) {
             if (!AddCacheIRGetPropFunction(stub->toCacheIR_Monitored(), innerized,
                                            holder, holderShape,
                                            commonGetter, globalShape, isOwnProperty, receivers,
