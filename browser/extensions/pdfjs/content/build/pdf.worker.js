@@ -23,8 +23,8 @@
  }
 }(this, function (exports) {
  'use strict';
- var pdfjsVersion = '1.6.401';
- var pdfjsBuild = 'b629be05';
+ var pdfjsVersion = '1.6.418';
+ var pdfjsBuild = '59afb4b9';
  var pdfjsFilePath = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
  var pdfjsLibs = {};
  (function pdfjsWrapper() {
@@ -45245,10 +45245,10 @@
        }
        if (!font.vertical) {
         textChunk.lastAdvanceWidth = width;
-        textChunk.width += width * textChunk.textAdvanceScale;
+        textChunk.width += width;
        } else {
         textChunk.lastAdvanceHeight = height;
-        textChunk.height += Math.abs(height * textChunk.textAdvanceScale);
+        textChunk.height += Math.abs(height);
        }
        return textChunk;
       }
@@ -45269,6 +45269,8 @@
        if (!textContentItem.initialized) {
         return;
        }
+       textContentItem.width *= textContentItem.textAdvanceScale;
+       textContentItem.height *= textContentItem.textAdvanceScale;
        textContent.items.push(runBidiTransform(textContentItem));
        textContentItem.initialized = false;
        textContentItem.str.length = 0;
@@ -45381,16 +45383,16 @@
            advance = items[j] * textState.fontSize / 1000;
            var breakTextRun = false;
            if (textState.font.vertical) {
-            offset = advance * (textState.textHScale * textState.textMatrix[2] + textState.textMatrix[3]);
-            textState.translateTextMatrix(0, advance);
+            offset = advance;
+            textState.translateTextMatrix(0, offset);
             breakTextRun = textContentItem.textRunBreakAllowed && advance > textContentItem.fakeMultiSpaceMax;
             if (!breakTextRun) {
              textContentItem.height += offset;
             }
            } else {
             advance = -advance;
-            offset = advance * (textState.textHScale * textState.textMatrix[0] + textState.textMatrix[1]);
-            textState.translateTextMatrix(advance, 0);
+            offset = advance * textState.textHScale;
+            textState.translateTextMatrix(offset, 0);
             breakTextRun = textContentItem.textRunBreakAllowed && advance > textContentItem.fakeMultiSpaceMax;
             if (!breakTextRun) {
              textContentItem.width += offset;
@@ -45884,7 +45886,16 @@
          } else if (isRef(entry)) {
           hash.update(entry.toString());
          } else if (isArray(entry)) {
-          hash.update(entry.length.toString());
+          var diffLength = entry.length, diffBuf = new Array(diffLength);
+          for (var j = 0; j < diffLength; j++) {
+           var diffEntry = entry[j];
+           if (isName(diffEntry)) {
+            diffBuf[j] = diffEntry.name;
+           } else if (isNum(diffEntry) || isRef(diffEntry)) {
+            diffBuf[j] = diffEntry.toString();
+           }
+          }
+          hash.update(diffBuf.join());
          }
         }
        }
@@ -47160,6 +47171,8 @@
       switch (fieldType) {
       case 'Tx':
        return new TextWidgetAnnotation(parameters);
+      case 'Btn':
+       return new ButtonWidgetAnnotation(parameters);
       case 'Ch':
        return new ChoiceWidgetAnnotation(parameters);
       }
@@ -47587,17 +47600,72 @@
     });
     return TextWidgetAnnotation;
    }();
+   var ButtonWidgetAnnotation = function ButtonWidgetAnnotationClosure() {
+    function ButtonWidgetAnnotation(params) {
+     WidgetAnnotation.call(this, params);
+     this.data.checkBox = !this.hasFieldFlag(AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(AnnotationFieldFlag.PUSHBUTTON);
+     if (this.data.checkBox) {
+      if (!isName(this.data.fieldValue)) {
+       return;
+      }
+      this.data.fieldValue = this.data.fieldValue.name;
+     }
+     this.data.radioButton = this.hasFieldFlag(AnnotationFieldFlag.RADIO) && !this.hasFieldFlag(AnnotationFieldFlag.PUSHBUTTON);
+     if (this.data.radioButton) {
+      this.data.fieldValue = this.data.buttonValue = null;
+      var fieldParent = params.dict.get('Parent');
+      if (!isDict(fieldParent) || !fieldParent.has('V')) {
+       return;
+      }
+      var fieldParentValue = fieldParent.get('V');
+      if (!isName(fieldParentValue)) {
+       return;
+      }
+      this.data.fieldValue = fieldParentValue.name;
+      var appearanceStates = params.dict.get('AP');
+      if (!isDict(appearanceStates)) {
+       return;
+      }
+      var normalAppearanceState = appearanceStates.get('N');
+      if (!isDict(normalAppearanceState)) {
+       return;
+      }
+      var keys = normalAppearanceState.getKeys();
+      for (var i = 0, ii = keys.length; i < ii; i++) {
+       if (keys[i] !== 'Off') {
+        this.data.buttonValue = keys[i];
+        break;
+       }
+      }
+     }
+    }
+    Util.inherit(ButtonWidgetAnnotation, WidgetAnnotation, {
+     getOperatorList: function ButtonWidgetAnnotation_getOperatorList(evaluator, task, renderForms) {
+      var operatorList = new OperatorList();
+      if (renderForms) {
+       return Promise.resolve(operatorList);
+      }
+      if (this.appearance) {
+       return Annotation.prototype.getOperatorList.call(this, evaluator, task, renderForms);
+      }
+      return Promise.resolve(operatorList);
+     }
+    });
+    return ButtonWidgetAnnotation;
+   }();
    var ChoiceWidgetAnnotation = function ChoiceWidgetAnnotationClosure() {
     function ChoiceWidgetAnnotation(params) {
      WidgetAnnotation.call(this, params);
      this.data.options = [];
-     var options = params.dict.getArray('Opt');
+     var options = params.dict.get('Opt');
      if (isArray(options)) {
+      var xref = params.xref;
       for (var i = 0, ii = options.length; i < ii; i++) {
-       var option = options[i];
+       var option = xref.fetchIfRef(options[i]);
+       var isOptionArray = isArray(option);
        this.data.options[i] = {
-        exportValue: isArray(option) ? option[0] : option,
-        displayValue: isArray(option) ? option[1] : option
+        exportValue: isOptionArray ? xref.fetchIfRef(option[0]) : option,
+        displayValue: isOptionArray ? xref.fetchIfRef(option[1]) : option
        };
       }
      }
