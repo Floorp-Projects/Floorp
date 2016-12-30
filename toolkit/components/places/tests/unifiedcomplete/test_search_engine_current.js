@@ -32,7 +32,7 @@ add_task(function*() {
   do_print("search engine, after current engine has changed");
   Services.search.addEngineWithDetails("MozSearch2", "", "", "", "GET",
                                        "http://s.example.com/search2");
-  engine = Services.search.getEngineByName("MozSearch2");
+  let engine = Services.search.getEngineByName("MozSearch2");
   notEqual(Services.search.currentEngine, engine, "New engine shouldn't be the current engine yet");
   Services.search.currentEngine = engine;
   yield check_autocomplete({

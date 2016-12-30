@@ -309,6 +309,24 @@ MacroAssembler::add64(Imm64 imm, Register64 dest)
     ma_adc(imm.hi(), dest.high, scratch, LeaveCC);
 }
 
+CodeOffset
+MacroAssembler::add32ToPtrWithPatch(Register src, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    CodeOffset offs = CodeOffset(currentOffset());
+    ma_movPatchable(Imm32(0), scratch, Always);
+    ma_add(src, scratch, dest);
+    return offs;
+}
+
+void
+MacroAssembler::patchAdd32ToPtr(CodeOffset offset, Imm32 imm)
+{
+    ScratchRegisterScope scratch(*this);
+    ma_mov_patch(imm, scratch, Always,
+                 HasMOVWT() ? L_MOVWT : L_LDR, offsetToInstruction(offset));
+}
+
 void
 MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
 {

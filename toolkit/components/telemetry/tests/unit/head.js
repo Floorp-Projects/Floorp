@@ -194,6 +194,10 @@ function fakeSchedulerTimer(set, clear) {
   session.Policy.clearSchedulerTickTimeout = clear;
 }
 
+/* global TelemetrySession:false, TelemetryEnvironment:false, TelemetryController:false,
+          TelemetryStorage:false, TelemetrySend:false, TelemetryReportingPolicy:false
+ */
+
 /**
  * Fake the current date.
  * This passes all received arguments to a new Date constructor and
@@ -308,6 +312,8 @@ if (runningInParent) {
   },
   () => {});
 
+  // This gets imported via fakeNow();
+  /* global TelemetrySend */
   do_register_cleanup(() => TelemetrySend.shutdown());
 }
 
