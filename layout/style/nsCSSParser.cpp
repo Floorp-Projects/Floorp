@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TypedEnumBits.h"
@@ -51,6 +52,7 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "nsRuleData.h"
 #include "mozilla/CSSVariableValues.h"
@@ -6688,6 +6690,31 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
   return declaration.forget();
 }
 
+static Maybe<int32_t>
+GetEnumColorValue(nsCSSKeyword aKeyword, bool aIsChrome)
+{
+  int32_t value;
+  if (!nsCSSProps::FindKeyword(aKeyword, nsCSSProps::kColorKTable, value)) {
+    // Unknown color keyword.
+    return Nothing();
+  }
+  if (value < 0) {
+    // Known special color keyword handled by style system,
+    // e.g. NS_COLOR_CURRENTCOLOR. See nsStyleConsts.h.
+    return Some(value);
+  }
+  nscolor color;
+  auto colorID = static_cast<LookAndFeel::ColorID>(value);
+  if (NS_FAILED(LookAndFeel::GetColor(colorID, !aIsChrome, &color))) {
+    // Known LookAndFeel::ColorID, but this platform's LookAndFeel impl
+    // doesn't map it to a color. (This might be a platform-specific
+    // ColorID, which only makes sense on another platform.)
+    return Nothing();
+  }
+  // Known color provided by LookAndFeel.
+  return Some(value);
+}
+
 CSSParseResult
 CSSParserImpl::ParseColor(nsCSSValue& aValue)
 {
@@ -6725,20 +6752,18 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
       }
       break;
 
-    case eCSSToken_Ident:
+    case eCSSToken_Ident: {
       if (NS_ColorNameToRGB(tk->mIdent, &rgba)) {
         aValue.SetStringValue(tk->mIdent, eCSSUnit_Ident);
         return CSSParseResult::Ok;
       }
-      else {
-        nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
-        int32_t value;
-        if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
-          aValue.SetIntValue(value, eCSSUnit_EnumColor);
-          return CSSParseResult::Ok;
-        }
+      nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
+      if (Maybe<int32_t> value = GetEnumColorValue(keyword, mIsChrome)) {
+        aValue.SetIntValue(value.value(), eCSSUnit_EnumColor);
+        return CSSParseResult::Ok;
       }
       break;
+    }
     case eCSSToken_Function: {
       bool isRGB;
       bool isHSL;
