@@ -18,8 +18,8 @@ MozIntl::MozIntl() = default;
 
 MozIntl::~MozIntl() = default;
 
-NS_IMETHODIMP
-MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
+static nsresult
+AddFunctions(JSContext* cx, JS::Handle<JS::Value> val, const JSFunctionSpec* funcs)
 {
   if (!val.isObject()) {
     return NS_ERROR_INVALID_ARG;
@@ -31,11 +31,6 @@ MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
   }
 
   JSAutoCompartment ac(cx, realIntlObj);
-
-  static const JSFunctionSpec funcs[] = {
-    JS_SELF_HOSTED_FN("getCalendarInfo", "Intl_getCalendarInfo", 1, 0),
-    JS_FS_END
-  };
 
   if (!JS_DefineFunctions(cx, realIntlObj, funcs)) {
     return NS_ERROR_FAILURE;
@@ -45,7 +40,29 @@ MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
 }
 
 NS_IMETHODIMP
+MozIntl::AddGetCalendarInfo(JS::Handle<JS::Value> val, JSContext* cx)
+{
+  static const JSFunctionSpec funcs[] = {
+    JS_SELF_HOSTED_FN("getCalendarInfo", "Intl_getCalendarInfo", 1, 0),
+    JS_FS_END
+  };
+
+  return AddFunctions(cx, val, funcs);
+}
+
+NS_IMETHODIMP
 MozIntl::AddGetDisplayNames(JS::Handle<JS::Value> val, JSContext* cx)
+{
+  static const JSFunctionSpec funcs[] = {
+    JS_SELF_HOSTED_FN("getDisplayNames", "Intl_getDisplayNames", 2, 0),
+    JS_FS_END
+  };
+
+  return AddFunctions(cx, val, funcs);
+}
+
+NS_IMETHODIMP
+MozIntl::AddPluralRulesConstructor(JS::Handle<JS::Value> val, JSContext* cx)
 {
   if (!val.isObject()) {
     return NS_ERROR_INVALID_ARG;
@@ -58,12 +75,7 @@ MozIntl::AddGetDisplayNames(JS::Handle<JS::Value> val, JSContext* cx)
 
   JSAutoCompartment ac(cx, realIntlObj);
 
-  static const JSFunctionSpec funcs[] = {
-    JS_SELF_HOSTED_FN("getDisplayNames", "Intl_getDisplayNames", 2, 0),
-    JS_FS_END
-  };
-
-  if (!JS_DefineFunctions(cx, realIntlObj, funcs)) {
+  if (!js::AddPluralRulesConstructor(cx, realIntlObj)) {
     return NS_ERROR_FAILURE;
   }
 

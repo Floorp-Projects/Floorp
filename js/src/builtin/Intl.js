@@ -1786,11 +1786,11 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
 
     // Compute formatting options.
     // Step 15.
-    var s = lazyNumberFormatData.style;
-    internalProps.style = s;
+    var style = lazyNumberFormatData.style;
+    internalProps.style = style;
 
     // Steps 19, 21.
-    if (s === "currency") {
+    if (style === "currency") {
         internalProps.currency = lazyNumberFormatData.currency;
         internalProps.currencyDisplay = lazyNumberFormatData.currencyDisplay;
     }
@@ -1954,15 +1954,15 @@ function InitializeNumberFormat(numberFormat, locales, options) {
 
     // Compute formatting options.
     // Step 14.
-    var s = GetOption(options, "style", "string", ["decimal", "percent", "currency"], "decimal");
-    lazyNumberFormatData.style = s;
+    var style = GetOption(options, "style", "string", ["decimal", "percent", "currency"], "decimal");
+    lazyNumberFormatData.style = style;
 
     // Steps 16-19.
     var c = GetOption(options, "currency", "string", undefined, undefined);
     if (c !== undefined && !IsWellFormedCurrencyCode(c))
         ThrowRangeError(JSMSG_INVALID_CURRENCY_CODE, c);
     var cDigits;
-    if (s === "currency") {
+    if (style === "currency") {
         if (c === undefined)
             ThrowTypeError(JSMSG_UNDEFINED_CURRENCY);
 
@@ -1974,17 +1974,17 @@ function InitializeNumberFormat(numberFormat, locales, options) {
 
     // Step 20.
     var cd = GetOption(options, "currencyDisplay", "string", ["code", "symbol", "name"], "symbol");
-    if (s === "currency")
+    if (style === "currency")
         lazyNumberFormatData.currencyDisplay = cd;
 
     // Steps 22-24.
-    SetNumberFormatDigitOptions(lazyNumberFormatData, options, s === "currency" ? cDigits: 0);
+    SetNumberFormatDigitOptions(lazyNumberFormatData, options, style === "currency" ? cDigits: 0);
 
     // Step 25.
     if (lazyNumberFormatData.maximumFractionDigits === undefined) {
-        let mxfdDefault = s === "currency"
+        let mxfdDefault = style === "currency"
                           ? cDigits
-                          : s === "percent"
+                          : style === "percent"
                           ? 0
                           : 3;
         lazyNumberFormatData.maximumFractionDigits =

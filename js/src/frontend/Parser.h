@@ -734,8 +734,140 @@ class UsedNameTracker
     }
 };
 
+class ParserBase : public StrictModeGetter
+{
+  private:
+    ParserBase* thisForCtor() { return this; }
+
+  public:
+    ExclusiveContext* const context;
+
+    LifoAlloc& alloc;
+
+    TokenStream tokenStream;
+    LifoAlloc::Mark tempPoolMark;
+
+    /* list of parsed objects for GC tracing */
+    ObjectBox* traceListHead;
+
+    /* innermost parse context (stack-allocated) */
+    ParseContext* pc;
+
+    // For tracking used names in this parsing session.
+    UsedNameTracker& usedNames;
+
+    /* Compression token for aborting. */
+    SourceCompressionTask* sct;
+
+    ScriptSource*       ss;
+
+    /* Root atoms and objects allocated for the parsed tree. */
+    AutoKeepAtoms       keepAtoms;
+
+    /* Perform constant-folding; must be true when interfacing with the emitter. */
+    const bool          foldConstants:1;
+
+  protected:
+#if DEBUG
+    /* Our fallible 'checkOptions' member function has been called. */
+    bool checkOptionsCalled:1;
+#endif
+
+    /*
+     * Not all language constructs can be handled during syntax parsing. If it
+     * is not known whether the parse succeeds or fails, this bit is set and
+     * the parse will return false.
+     */
+    bool abortedSyntaxParse:1;
+
+    /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
+    bool isUnexpectedEOF_:1;
+
+  public:
+    ParserBase(ExclusiveContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
+               const char16_t* chars, size_t length, bool foldConstants,
+               UsedNameTracker& usedNames, Parser<SyntaxParseHandler>* syntaxParser,
+               LazyScript* lazyOuterFunction);
+    ~ParserBase();
+
+    const char* getFilename() const { return tokenStream.getFilename(); }
+    JSVersion versionNumber() const { return tokenStream.versionNumber(); }
+    TokenPos pos() const { return tokenStream.currentToken().pos; }
+
+    // Determine whether |yield| is a valid name in the current context, or
+    // whether it's prohibited due to strictness, JS version, or occurrence
+    // inside a star generator.
+    bool yieldExpressionsSupported() {
+        return (versionNumber() >= JSVERSION_1_7 || pc->isGenerator()) && !pc->isAsync();
+    }
+
+    virtual bool strictMode() { return pc->sc()->strict(); }
+    bool setLocalStrictMode(bool strict) {
+        MOZ_ASSERT(tokenStream.debugHasNoLookahead());
+        return pc->sc()->setLocalStrictMode(strict);
+    }
+
+    const ReadOnlyCompileOptions& options() const {
+        return tokenStream.options();
+    }
+
+    bool hadAbortedSyntaxParse() {
+        return abortedSyntaxParse;
+    }
+    void clearAbortedSyntaxParse() {
+        abortedSyntaxParse = false;
+    }
+
+    bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
+
+    bool reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...);
+
+    /* Report the given error at the current offset. */
+    void error(unsigned errorNumber, ...);
+
+    /* Report the given error at the given offset. */
+    void errorAt(uint32_t offset, unsigned errorNumber, ...);
+
+    /*
+     * Handle a strict mode error at the current offset.  Report an error if in
+     * strict mode code, or warn if not, using the given error number and
+     * arguments.
+     */
+    MOZ_MUST_USE bool strictModeError(unsigned errorNumber, ...);
+
+    /*
+     * Handle a strict mode error at the given offset.  Report an error if in
+     * strict mode code, or warn if not, using the given error number and
+     * arguments.
+     */
+    MOZ_MUST_USE bool strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...);
+
+    /* Report the given warning at the current offset. */
+    MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
+
+    /* Report the given warning at the given offset. */
+    MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...);
+
+    /*
+     * If extra warnings are enabled, report the given warning at the current
+     * offset.
+     */
+    MOZ_MUST_USE bool extraWarning(unsigned errorNumber, ...);
+
+    bool isValidStrictBinding(PropertyName* name);
+
+    void addTelemetry(JSCompartment::DeprecatedLanguageExtension e);
+
+    bool warnOnceAboutExprClosure();
+    bool warnOnceAboutForEach();
+
+  protected:
+    enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
+    enum ForInitLocation { InForInit, NotInForInit };
+};
+
 template <typename ParseHandler>
-class Parser final : private JS::AutoGCRooter, public StrictModeGetter
+class Parser final : public ParserBase, private JS::AutoGCRooter
 {
   private:
     using Node = typename ParseHandler::Node;
@@ -853,94 +985,13 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
     };
 
   public:
-    ExclusiveContext* const context;
-
-    LifoAlloc& alloc;
-
-    TokenStream tokenStream;
-    LifoAlloc::Mark tempPoolMark;
-
-    /* list of parsed objects for GC tracing */
-    ObjectBox* traceListHead;
-
-    /* innermost parse context (stack-allocated) */
-    ParseContext* pc;
-
-    // For tracking used names in this parsing session.
-    UsedNameTracker& usedNames;
-
-    /* Compression token for aborting. */
-    SourceCompressionTask* sct;
-
-    ScriptSource*       ss;
-
-    /* Root atoms and objects allocated for the parsed tree. */
-    AutoKeepAtoms       keepAtoms;
-
-    /* Perform constant-folding; must be true when interfacing with the emitter. */
-    const bool          foldConstants:1;
-
-  private:
-#if DEBUG
-    /* Our fallible 'checkOptions' member function has been called. */
-    bool checkOptionsCalled:1;
-#endif
-
-    /*
-     * Not all language constructs can be handled during syntax parsing. If it
-     * is not known whether the parse succeeds or fails, this bit is set and
-     * the parse will return false.
-     */
-    bool abortedSyntaxParse:1;
-
-    /* Unexpected end of input, i.e. TOK_EOF not at top-level. */
-    bool isUnexpectedEOF_:1;
-
-  public:
     /* State specific to the kind of parse being performed. */
     ParseHandler handler;
 
     void prepareNodeForMutation(Node node) { handler.prepareNodeForMutation(node); }
     void freeTree(Node node) { handler.freeTree(node); }
 
-  private:
-    bool reportHelper(ParseReportKind kind, bool strict, uint32_t offset,
-                      unsigned errorNumber, va_list args);
   public:
-    bool reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...);
-
-    /* Report the given error at the current offset. */
-    void error(unsigned errorNumber, ...);
-
-    /* Report the given error at the given offset. */
-    void errorAt(uint32_t offset, unsigned errorNumber, ...);
-
-    /*
-     * Handle a strict mode error at the current offset.  Report an error if in
-     * strict mode code, or warn if not, using the given error number and
-     * arguments.
-     */
-    MOZ_MUST_USE bool strictModeError(unsigned errorNumber, ...);
-
-    /*
-     * Handle a strict mode error at the given offset.  Report an error if in
-     * strict mode code, or warn if not, using the given error number and
-     * arguments.
-     */
-    MOZ_MUST_USE bool strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...);
-
-    /* Report the given warning at the current offset. */
-    MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
-
-    /* Report the given warning at the given offset. */
-    MOZ_MUST_USE bool warningAt(uint32_t offset, unsigned errorNumber, ...);
-
-    /*
-     * If extra warnings are enabled, report the given warning at the current
-     * offset.
-     */
-    MOZ_MUST_USE bool extraWarning(unsigned errorNumber, ...);
-
     Parser(ExclusiveContext* cx, LifoAlloc& alloc, const ReadOnlyCompileOptions& options,
            const char16_t* chars, size_t length, bool foldConstants, UsedNameTracker& usedNames,
            Parser<SyntaxParseHandler>* syntaxParser, LazyScript* lazyOuterFunction);
@@ -970,9 +1021,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     friend void js::frontend::TraceParser(JSTracer* trc, JS::AutoGCRooter* parser);
 
-    const char* getFilename() const { return tokenStream.getFilename(); }
-    JSVersion versionNumber() const { return tokenStream.versionNumber(); }
-
     /*
      * Parse a top-level JS script.
      */
@@ -996,15 +1044,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                             HandleObject proto);
 
     void trace(JSTracer* trc);
-
-    bool hadAbortedSyntaxParse() {
-        return abortedSyntaxParse;
-    }
-    void clearAbortedSyntaxParse() {
-        abortedSyntaxParse = false;
-    }
-
-    bool isUnexpectedEOF() const { return isUnexpectedEOF_; }
 
     bool checkUnescapedName();
 
@@ -1074,31 +1113,10 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
                                          mozilla::Maybe<uint32_t> parameterListEnd = mozilla::Nothing(),
                                          bool isStandaloneFunction = false);
 
-    // Determine whether |yield| is a valid name in the current context, or
-    // whether it's prohibited due to strictness, JS version, or occurrence
-    // inside a star generator.
-    bool yieldExpressionsSupported() {
-        return (versionNumber() >= JSVERSION_1_7 || pc->isGenerator()) && !pc->isAsync();
-    }
-
     // Match the current token against the BindingIdentifier production with
     // the given Yield parameter.  If there is no match, report a syntax
     // error.
     PropertyName* bindingIdentifier(YieldHandling yieldHandling);
-
-    virtual bool strictMode() { return pc->sc()->strict(); }
-    bool setLocalStrictMode(bool strict) {
-        MOZ_ASSERT(tokenStream.debugHasNoLookahead());
-        return pc->sc()->setLocalStrictMode(strict);
-    }
-
-    const ReadOnlyCompileOptions& options() const {
-        return tokenStream.options();
-    }
-
-  private:
-    enum InvokedPrediction { PredictUninvoked = false, PredictInvoked = true };
-    enum ForInitLocation { InForInit, NotInForInit };
 
   private:
     /*
@@ -1371,8 +1389,6 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     bool hasValidSimpleStrictParameterNames();
 
-    bool isValidStrictBinding(PropertyName* name);
-
     void reportRedeclaration(HandlePropertyName name, DeclarationKind kind, TokenPos pos);
     bool notePositionalFormalParameter(Node fn, HandlePropertyName name,
                                        bool disallowDuplicateParams, bool* duplicatedParam);
@@ -1428,14 +1444,7 @@ class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 
     JSAtom* prefixAccessorName(PropertyType propType, HandleAtom propAtom);
 
-    TokenPos pos() const { return tokenStream.currentToken().pos; }
-
     bool asmJS(Node list);
-
-    void addTelemetry(JSCompartment::DeprecatedLanguageExtension e);
-
-    bool warnOnceAboutExprClosure();
-    bool warnOnceAboutForEach();
 };
 
 } /* namespace frontend */

@@ -164,7 +164,6 @@ class MacroAssemblerMIPSShared : public Assembler
 
     // fp instructions
     void ma_lis(FloatRegister dest, float value);
-    void ma_lis(FloatRegister dest, wasm::RawF32 value);
     void ma_liNegZero(FloatRegister dest);
 
     void ma_sd(FloatRegister fd, BaseIndex address);
