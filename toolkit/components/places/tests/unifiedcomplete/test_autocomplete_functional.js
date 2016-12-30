@@ -153,19 +153,19 @@ add_task(function* test_complete_fragment() {
 add_task(function* test_autocomplete_enabled_pref() {
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, false);
   let types = ["history", "bookmark", "openpage"];
-  for (type of types) {
+  for (let type of types) {
     do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), false,
                 "suggest." + type + "pref should be false");
   }
   Services.prefs.setBoolPref(PREF_AUTOCOMPLETE_ENABLED, true);
-  for (type of types) {
+  for (let type of types) {
     do_check_eq(Services.prefs.getBoolPref("browser.urlbar.suggest." + type), true,
                 "suggest." + type + "pref should be true");
   }
 
   // Clear prefs.
   Services.prefs.clearUserPref(PREF_AUTOCOMPLETE_ENABLED);
-  for (type of types) {
+  for (let type of types) {
     Services.prefs.clearUserPref("browser.urlbar.suggest." + type);
   }
 });

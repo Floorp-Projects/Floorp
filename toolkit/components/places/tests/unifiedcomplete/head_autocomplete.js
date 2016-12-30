@@ -14,6 +14,7 @@ Cu.import("resource://testing-common/httpd.js");
 
 // Import common head.
 {
+  /* import-globals-from ../head_common.js */
   let commonFile = do_get_file("../head_common.js", false);
   let uri = Services.io.newFileURI(commonFile);
   Services.scriptloader.loadSubScript(uri.spec, this);

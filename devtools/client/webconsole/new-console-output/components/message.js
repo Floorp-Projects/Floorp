@@ -15,6 +15,7 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const { l10n } = require("devtools/client/webconsole/new-console-output/utils/messages");
 const actions = require("devtools/client/webconsole/new-console-output/actions/index");
+const {MESSAGE_SOURCE} = require("devtools/client/webconsole/new-console-output/constants");
 const CollapseButton = createFactory(require("devtools/client/webconsole/new-console-output/components/collapse-button"));
 const MessageIndent = createFactory(require("devtools/client/webconsole/new-console-output/components/message-indent").MessageIndent);
 const MessageIcon = createFactory(require("devtools/client/webconsole/new-console-output/components/message-icon"));
@@ -45,6 +46,8 @@ const Message = createClass({
     serviceContainer: PropTypes.shape({
       emitNewMessage: PropTypes.func.isRequired,
       onViewSourceInDebugger: PropTypes.func.isRequired,
+      onViewSourceInScratchpad: PropTypes.func.isRequired,
+      onViewSourceInStyleEditor: PropTypes.func.isRequired,
       sourceMapService: PropTypes.any,
     }),
   },
@@ -112,7 +115,8 @@ const Message = createClass({
     } else if (stacktrace) {
       const child = open ? StackTrace({
         stacktrace: stacktrace,
-        onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger
+        onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
+        onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad,
       }) : null;
       attachment = dom.div({ className: "stacktrace devtools-monospace" }, child);
     }
@@ -135,11 +139,24 @@ const Message = createClass({
 
     const repeat = this.props.repeat ? MessageRepeat({repeat: this.props.repeat}) : null;
 
+    let onFrameClick;
+    if (serviceContainer && frame) {
+      if (source === MESSAGE_SOURCE.CSS) {
+        onFrameClick = serviceContainer.onViewSourceInStyleEditor;
+      } else if (/^Scratchpad\/\d+$/.test(frame.source)) {
+        onFrameClick = serviceContainer.onViewSourceInScratchpad;
+      } else {
+        // Point everything else to debugger, if source not available,
+        // it will fall back to view-source.
+        onFrameClick = serviceContainer.onViewSourceInDebugger;
+      }
+    }
+
     // Configure the location.
     const location = dom.span({ className: "message-location devtools-monospace" },
       frame ? FrameView({
         frame,
-        onClick: serviceContainer ? serviceContainer.onViewSourceInDebugger : undefined,
+        onClick: onFrameClick,
         showEmptyPathAsHost: true,
         sourceMapService: serviceContainer ? serviceContainer.sourceMapService : undefined
       }) : null

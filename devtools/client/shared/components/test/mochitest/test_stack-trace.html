@@ -44,7 +44,8 @@ window.onload = function () {
 
     let props = {
       stacktrace,
-      onViewSourceInDebugger: () => {}
+      onViewSourceInDebugger: () => {},
+      onViewSourceInScratchpad: () => {},
     };
 
     let trace = ReactDOM.render(StackTrace(props), window.document.body);

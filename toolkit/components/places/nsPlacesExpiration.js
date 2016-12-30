@@ -833,7 +833,7 @@ nsPlacesExpiration.prototype = {
          memSizeBytes = Services.sysinfo.getProperty("memsize");
       } catch (ex) {}
       if (memSizeBytes <= 0) {
-        memsize = MEMSIZE_FALLBACK_BYTES;
+        memSizeBytes = MEMSIZE_FALLBACK_BYTES;
       }
 
       let diskAvailableBytes = DISKSIZE_FALLBACK_BYTES;

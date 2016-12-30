@@ -9,6 +9,9 @@
  * the "copy" and "legacy" saver implementations.
  */
 
+/* import-globals-from head.js */
+/* global gUseLegacySaver */
+
 "use strict";
 
 // Globals

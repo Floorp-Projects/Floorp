@@ -503,9 +503,9 @@ class BaseCompiler
     ValTypeVector               SigI_;
     ValTypeVector               Sig_;
     Label                       returnLabel_;
-    Label                       outOfLinePrologue_;
-    Label                       bodyLabel_;
+    Label                       stackOverflowLabel_;
     TrapOffset                  prologueTrapOffset_;
+    CodeOffset                  stackAddOffset_;
 
     LatentOp                    latentOp_;       // Latent operation for branch (seen next)
     ValType                     latentType_;     // Operand type, if latentOp_ is true
@@ -2052,16 +2052,18 @@ class BaseCompiler
 
         maxFramePushed_ = localSize_;
 
-        // We won't know until after we've generated code how big the
-        // frame will be (we may need arbitrary spill slots and
-        // outgoing param slots) so branch to code emitted after the
-        // function body that will perform the check.
+        // We won't know until after we've generated code how big the frame will
+        // be (we may need arbitrary spill slots and outgoing param slots) so
+        // emit a patchable add that is patched in endFunction().
         //
-        // Code there will also assume that the fixed-size stack frame
-        // has been allocated.
+        // ScratchReg may be used by branchPtr(), so use ABINonArgReg0 for the
+        // effective address.
 
-        masm.jump(&outOfLinePrologue_);
-        masm.bind(&bodyLabel_);
+        stackAddOffset_ = masm.add32ToPtrWithPatch(StackPointer, ABINonArgReg0);
+        masm.branchPtr(Assembler::AboveOrEqual,
+                       Address(WasmTlsReg, offsetof(TlsData, stackLimit)),
+                       ABINonArgReg0,
+                       &stackOverflowLabel_);
 
         // Copy arguments from registers to stack.
 
@@ -2118,30 +2120,18 @@ class BaseCompiler
     }
 
     bool endFunction() {
-        // Always branch to outOfLinePrologue_ or returnLabel_.
+        // Always branch to stackOverflowLabel_ or returnLabel_.
         masm.breakpoint();
 
-        // Out-of-line prologue.  Assumes that the in-line prologue has
-        // been executed and that a frame of size = localSize_ + sizeof(Frame)
-        // has been allocated.
-
-        masm.bind(&outOfLinePrologue_);
-
+        // Patch the add in the prologue so that it checks against the correct
+        // frame size.
         MOZ_ASSERT(maxFramePushed_ >= localSize_);
-
-        // ABINonArgReg0 != ScratchReg, which can be used by branchPtr().
-
-        masm.movePtr(masm.getStackPointer(), ABINonArgReg0);
-        if (maxFramePushed_ - localSize_)
-            masm.subPtr(Imm32(maxFramePushed_ - localSize_), ABINonArgReg0);
-        masm.branchPtr(Assembler::Below,
-                       Address(WasmTlsReg, offsetof(TlsData, stackLimit)),
-                       ABINonArgReg0,
-                       &bodyLabel_);
+        masm.patchAdd32ToPtr(stackAddOffset_, Imm32(-int32_t(maxFramePushed_ - localSize_)));
 
         // Since we just overflowed the stack, to be on the safe side, pop the
         // stack so that, when the trap exit stub executes, it is a safe
         // distance away from the end of the native stack.
+        masm.bind(&stackOverflowLabel_);
         if (localSize_)
             masm.addToStackPtr(Imm32(localSize_));
         masm.jump(TrapDesc(prologueTrapOffset_, Trap::StackOverflow, /* framePushed = */ 0));
@@ -7556,6 +7546,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       maxFramePushed_(0),
       deadCode_(false),
       prologueTrapOffset_(trapOffset()),
+      stackAddOffset_(0),
       latentOp_(LatentOp::None),
       latentType_(ValType::I32),
       latentIntCmp_(Assembler::Equal),
