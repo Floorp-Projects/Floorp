@@ -536,10 +536,6 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
 
     MakeContextCurrent();
 
-    // For OpenGL compat. profiles, we always keep vertex attrib 0 array enabled.
-    if (gl->IsCompatibilityProfile())
-        gl->fEnableVertexAttribArray(0);
-
     if (MinCapabilityMode())
         mGLMaxVertexAttribs = MINVALUE_GL_MAX_VERTEX_ATTRIBS;
     else
