@@ -36,21 +36,80 @@ int32_t nsMenuBarListener::mAccessKey = -1;
 Modifiers nsMenuBarListener::mAccessKeyMask = 0;
 bool nsMenuBarListener::mAccessKeyFocuses = false;
 
-nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
-  :mAccessKeyDown(false), mAccessKeyDownCanceled(false)
+nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBarFrame,
+                                     nsIContent* aMenuBarContent)
+  : mMenuBarFrame(aMenuBarFrame)
+  , mEventTarget(aMenuBarContent ? aMenuBarContent->GetComposedDoc() : nullptr)
+  , mTopWindowEventTarget(nullptr)
+  , mAccessKeyDown(false)
+  , mAccessKeyDownCanceled(false)
 {
-  mMenuBarFrame = aMenuBar;
+  MOZ_ASSERT(mEventTarget);
+
+  // Hook up the menubar as a key listener on the whole document.  This will
+  // see every keypress that occurs, but after everyone else does.
+
+  // Also hook up the listener to the window listening for focus events. This
+  // is so we can keep proper state as the user alt-tabs through processes.
+
+  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keypress"),
+                                       this, false);
+  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keydown"),
+                                       this, false);
+  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("keyup"), this, false);
+  mEventTarget->AddSystemEventListener(NS_LITERAL_STRING("mozaccesskeynotfound"),
+                                       this, false);
+
+  // mousedown event should be handled in all phase
+  mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this, true);
+  mEventTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), this, false);
+  mEventTarget->AddEventListener(NS_LITERAL_STRING("blur"), this, true);
+
+  mEventTarget->AddEventListener(
+                  NS_LITERAL_STRING("MozDOMFullscreen:Entered"), this, false);
+
+  // Needs to listen to the deactivate event of the window.
+  RefPtr<EventTarget> topWindowEventTarget =
+    nsContentUtils::GetWindowRoot(aMenuBarContent->GetComposedDoc());
+  mTopWindowEventTarget = topWindowEventTarget.get();
+
+  mTopWindowEventTarget->AddSystemEventListener(NS_LITERAL_STRING("deactivate"),
+                                                this, true);
 }
 
 ////////////////////////////////////////////////////////////////////////
 nsMenuBarListener::~nsMenuBarListener() 
 {
+  MOZ_ASSERT(!mEventTarget,
+             "OnDestroyMenuBarFrame() should've alreay been called");
 }
 
 void
 nsMenuBarListener::OnDestroyMenuBarFrame()
 {
+  mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keypress"),
+                                          this, false);
+  mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keydown"),
+                                          this, false);
+  mEventTarget->RemoveSystemEventListener(NS_LITERAL_STRING("keyup"),
+                                          this, false);
+  mEventTarget->RemoveSystemEventListener(
+                  NS_LITERAL_STRING("mozaccesskeynotfound"), this, false);
+
+  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), this, true);
+  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"),
+                                    this, false);
+  mEventTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), this, true);
+
+  mEventTarget->RemoveEventListener(
+                  NS_LITERAL_STRING("MozDOMFullscreen:Entered"), this, false);
+
+  mTopWindowEventTarget->RemoveSystemEventListener(
+                           NS_LITERAL_STRING("deactivate"), this, true);
+
   mMenuBarFrame = nullptr;
+  mEventTarget = nullptr;
+  mTopWindowEventTarget = nullptr;
 }
 
 void
@@ -369,14 +428,24 @@ nsMenuBarListener::Blur(nsIDOMEvent* aEvent)
 {
   if (!mMenuBarFrame->IsMenuOpen() && mMenuBarFrame->IsActive()) {
     ToggleMenuActiveState();
+    mAccessKeyDown = false;
+    mAccessKeyDownCanceled = false;
   }
+  return NS_OK; // means I am NOT consuming event
+}
+
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsMenuBarListener::OnWindowDeactivated(nsIDOMEvent* aEvent)
+{
   // Reset the accesskey state because we cannot receive the keyup event for
   // the pressing accesskey.
   mAccessKeyDown = false;
   mAccessKeyDownCanceled = false;
   return NS_OK; // means I am NOT consuming event
 }
-  
+
 ////////////////////////////////////////////////////////////////////////
 nsresult 
 nsMenuBarListener::MouseDown(nsIDOMEvent* aMouseEvent)
@@ -441,6 +510,9 @@ nsMenuBarListener::HandleEvent(nsIDOMEvent* aEvent)
   }
   if (eventType.EqualsLiteral("blur")) {
     return Blur(aEvent);
+  }
+  if (eventType.EqualsLiteral("deactivate")) {
+    return OnWindowDeactivated(aEvent);
   }
   if (eventType.EqualsLiteral("mousedown")) {
     return MouseDown(aEvent);
