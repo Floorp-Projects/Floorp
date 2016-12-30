@@ -386,7 +386,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter
     }
 
     bool reportError(ParseNode* pn, unsigned errorNumber, ...);
-    bool reportStrictWarning(ParseNode* pn, unsigned errorNumber, ...);
+    bool reportExtraWarning(ParseNode* pn, unsigned errorNumber, ...);
     bool reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...);
 
     // If pn contains a useful expression, return true with *answer set to true.

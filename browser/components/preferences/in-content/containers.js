@@ -67,7 +67,7 @@ let gContainersPane = {
     this._rebuildView();
   },
 
-  onPeferenceClick(button) {
+  onPreferenceClick(button) {
     this.openPreferenceDialog(button.getAttribute("value"));
   },
 

@@ -59,6 +59,12 @@ Gecko_NodeIsElement(RawGeckoNodeBorrowed aNode)
   return aNode->IsElement();
 }
 
+bool
+Gecko_IsInDocument(RawGeckoNodeBorrowed aNode)
+{
+  return aNode->IsInComposedDoc();
+}
+
 RawGeckoNodeBorrowedOrNull
 Gecko_GetParentNode(RawGeckoNodeBorrowed aNode)
 {

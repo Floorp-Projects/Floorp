@@ -766,10 +766,9 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::F32: {
-        float f = val.f32().fp();
+        float f = val.f32();
         if (JitOptions.wasmTestMode && IsNaN(f)) {
-            uint32_t bits = val.f32().bits();
-            RootedObject obj(cx, CreateCustomNaNObject(cx, (float*)&bits));
+            RootedObject obj(cx, CreateCustomNaNObject(cx, &f));
             if (!obj)
                 return false;
             jsval.set(ObjectValue(*obj));
@@ -779,10 +778,9 @@ GetGlobalExport(JSContext* cx, const GlobalDescVector& globals, uint32_t globalI
         return true;
       }
       case ValType::F64: {
-        double d = val.f64().fp();
+        double d = val.f64();
         if (JitOptions.wasmTestMode && IsNaN(d)) {
-            uint64_t bits = val.f64().bits();
-            RootedObject obj(cx, CreateCustomNaNObject(cx, (double*)&bits));
+            RootedObject obj(cx, CreateCustomNaNObject(cx, &d));
             if (!obj)
                 return false;
             jsval.set(ObjectValue(*obj));

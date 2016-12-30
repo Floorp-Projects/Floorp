@@ -1581,8 +1581,8 @@ class MConstant : public MNullaryInstruction
     static MConstant* New(TempAllocator::Fallible alloc, const Value& v,
                           CompilerConstraintList* constraints = nullptr);
     static MConstant* New(TempAllocator& alloc, const Value& v, MIRType type);
-    static MConstant* New(TempAllocator& alloc, wasm::RawF32 bits);
-    static MConstant* New(TempAllocator& alloc, wasm::RawF64 bits);
+    static MConstant* NewRawFloat32(TempAllocator& alloc, float f);
+    static MConstant* NewRawDouble(TempAllocator& alloc, double d);
     static MConstant* NewFloat32(TempAllocator& alloc, double d);
     static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
@@ -1650,21 +1650,13 @@ class MConstant : public MNullaryInstruction
     bool isInt32(int32_t i) const {
         return type() == MIRType::Int32 && payload_.i32 == i;
     }
-    double toDouble() const {
+    const double& toDouble() const {
         MOZ_ASSERT(type() == MIRType::Double);
         return payload_.d;
     }
-    wasm::RawF64 toRawF64() const {
-        MOZ_ASSERT(type() == MIRType::Double);
-        return wasm::RawF64::fromBits(payload_.i64);
-    }
-    float toFloat32() const {
+    const float& toFloat32() const {
         MOZ_ASSERT(type() == MIRType::Float32);
         return payload_.f;
-    }
-    wasm::RawF32 toRawF32() const {
-        MOZ_ASSERT(type() == MIRType::Float32);
-        return wasm::RawF32::fromBits(payload_.i32);
     }
     JSString* toString() const {
         MOZ_ASSERT(type() == MIRType::String);

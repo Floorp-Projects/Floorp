@@ -12,7 +12,6 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/Basic/Version.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Frontend/FrontendPluginRegistry.h"
 #include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/DenseMap.h"
