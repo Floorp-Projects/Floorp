@@ -76,6 +76,15 @@ add_test(function test_object() {
   run_next_test();
 });
 
+add_test(function test_in() {
+  assert.in("foo", {foo: 42});
+  for (let typ of [{}, 42, true, null, undefined]) {
+    Assert.throws(() => assert.in("foo", typ), InvalidArgumentError);
+  }
+
+  run_next_test();
+});
+
 add_test(function test_array() {
   assert.array([]);
   assert.array(new Array());
