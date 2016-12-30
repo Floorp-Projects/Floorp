@@ -343,29 +343,29 @@ class FunctionCompiler
         return constant;
     }
 
+    MDefinition* constant(float f)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewRawFloat32(alloc(), f);
+        curBlock_->add(constant);
+        return constant;
+    }
+
+    MDefinition* constant(double d)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewRawDouble(alloc(), d);
+        curBlock_->add(constant);
+        return constant;
+    }
+
     MDefinition* constant(int64_t i)
     {
         if (inDeadCode())
             return nullptr;
         MConstant* constant = MConstant::NewInt64(alloc(), i);
-        curBlock_->add(constant);
-        return constant;
-    }
-
-    MDefinition* constant(RawF32 f)
-    {
-        if (inDeadCode())
-            return nullptr;
-        MConstant* constant = MConstant::New(alloc(), f);
-        curBlock_->add(constant);
-        return constant;
-    }
-
-    MDefinition* constant(RawF64 d)
-    {
-        if (inDeadCode())
-            return nullptr;
-        MConstant* constant = MConstant::New(alloc(), d);
         curBlock_->add(constant);
         return constant;
     }
@@ -3334,7 +3334,7 @@ EmitExpr(FunctionCompiler& f)
 
       // F32
       case Op::F32Const: {
-        RawF32 f32;
+        float f32;
         if (!f.iter().readF32Const(&f32))
             return false;
 
@@ -3392,7 +3392,7 @@ EmitExpr(FunctionCompiler& f)
 
       // F64
       case Op::F64Const: {
-        RawF64 f64;
+        double f64;
         if (!f.iter().readF64Const(&f64))
             return false;
 

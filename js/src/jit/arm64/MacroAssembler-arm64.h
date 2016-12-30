@@ -1403,12 +1403,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         convertInt32ToFloat32(operand.valueReg(), dest);
     }
 
-    void loadConstantDouble(wasm::RawF64 d, FloatRegister dest) {
-        loadConstantDouble(d.fp(), dest);
-    }
-    void loadConstantFloat32(wasm::RawF32 f, FloatRegister dest) {
-        loadConstantFloat32(f.fp(), dest);
-    }
     void loadConstantDouble(double d, FloatRegister dest) {
         Fmov(ARMFPRegister(dest, 64), d);
     }
