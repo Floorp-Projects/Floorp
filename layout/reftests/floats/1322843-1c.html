@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<title>Bug 1322843 - Intrinsic width with float</title>
+<style>
+  #outer {
+    width: -moz-fit-content;
+    width: fit-content;
+    background: red;
+  }
+  #float {
+    float: right;
+    width: 200px;
+    height: 100px;
+    background: green;
+  }
+  #inner {
+    width: 200px;
+    height: 100px;
+    clear: right;
+    overflow: hidden; /* to establish block formatting context */
+    background: green;
+  }
+</style>
+<div id="outer">
+  <div id="float"></div>
+  <div id="inner"></div>
+</div>
