@@ -17,6 +17,7 @@ var PREFS = [
   ["devtools.netmonitor.enabled", true],
   ["devtools.scratchpad.enabled", true]
 ];
+
 function test() {
   Task.spawn(function* () {
     // Store and enable all optional dev tools panels
@@ -26,20 +27,19 @@ function test() {
     let addonDebugger = yield initAddonDebugger(ADDON_ID);
 
     // Check only valid tabs are shown
-    let tabs = addonDebugger.frame.contentDocument.getElementById("toolbox-tabs").children;
+    let tabs = addonDebugger.frame.contentDocument.querySelectorAll(".toolbox-tabs button")
+
     let expectedTabs = ["webconsole", "jsdebugger", "scratchpad"];
 
     is(tabs.length, expectedTabs.length, "displaying only " + expectedTabs.length + " tabs in addon debugger");
     Array.forEach(tabs, (tab, i) => {
       let toolName = expectedTabs[i];
-      is(tab.getAttribute("toolid"), toolName, "displaying " + toolName);
+      is(tab.getAttribute("data-id"), toolName, "displaying " + toolName);
     });
 
     // Check no toolbox buttons are shown
-    let buttons = addonDebugger.frame.contentDocument.getElementById("toolbox-buttons").children;
-    Array.forEach(buttons, (btn, i) => {
-      is(btn.hidden, true, "no toolbox buttons for the addon debugger -- " + btn.className);
-    });
+    let buttons = addonDebugger.frame.contentDocument.querySelectorAll("#toolbox-buttons-end button");
+    is(buttons.length, 0, "no toolbox buttons for the addon debugger");
 
     yield addonDebugger.destroy();
     yield removeAddon(addon);
