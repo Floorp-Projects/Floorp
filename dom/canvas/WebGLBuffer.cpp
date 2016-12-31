@@ -18,6 +18,8 @@ WebGLBuffer::WebGLBuffer(WebGLContext* webgl, GLuint buf)
     , mContent(Kind::Undefined)
     , mUsage(LOCAL_GL_STATIC_DRAW)
     , mByteLength(0)
+    , mTFBindCount(0)
+    , mNonTFBindCount(0)
 {
     mContext->mBuffers.insertBack(this);
 }

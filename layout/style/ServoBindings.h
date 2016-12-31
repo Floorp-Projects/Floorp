@@ -29,6 +29,7 @@ class nsIPrincipal;
 class nsIURI;
 struct nsFont;
 namespace mozilla {
+  class ServoStyleSheet;
   class FontFamilyList;
   enum FontFamilyType : uint32_t;
 }
@@ -95,6 +96,13 @@ RawGeckoElementBorrowedOrNull Gecko_GetLastChildElement(RawGeckoElementBorrowed 
 RawGeckoElementBorrowedOrNull Gecko_GetPrevSiblingElement(RawGeckoElementBorrowed element);
 RawGeckoElementBorrowedOrNull Gecko_GetNextSiblingElement(RawGeckoElementBorrowed element);
 RawGeckoElementBorrowedOrNull Gecko_GetDocumentElement(RawGeckoDocumentBorrowed document);
+void Gecko_LoadStyleSheet(mozilla::css::Loader* loader,
+                          mozilla::ServoStyleSheet* parent,
+                          RawServoImportRuleBorrowed import_rule,
+                          const uint8_t* url_bytes,
+                          uint32_t url_length,
+                          const uint8_t* media_bytes,
+                          uint32_t media_length);
 
 // By default, Servo walks the DOM by traversing the siblings of the DOM-view
 // first child. This generally works, but misses anonymous children, which we

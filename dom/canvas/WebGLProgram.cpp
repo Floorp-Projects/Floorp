@@ -435,6 +435,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
 webgl::LinkedProgramInfo::LinkedProgramInfo(WebGLProgram* prog)
     : prog(prog)
+    , transformFeedbackBufferMode(prog->mNextLink_TransformFeedbackBufferMode)
 { }
 
 webgl::LinkedProgramInfo::~LinkedProgramInfo()
@@ -697,21 +698,35 @@ WebGLProgram::GetProgramParameter(GLenum pname) const
     if (mContext->IsWebGL2()) {
         switch (pname) {
         case LOCAL_GL_ACTIVE_UNIFORM_BLOCKS:
-            return JS::Int32Value(GetProgramiv(gl, mGLName, pname));
+            if (!IsLinked())
+                return JS::NumberValue(0);
+            return JS::NumberValue(LinkInfo()->uniformBlocks.size());
 
         case LOCAL_GL_TRANSFORM_FEEDBACK_VARYINGS:
-            return JS::Int32Value(mNextLink_TransformFeedbackVaryings.size());
+            if (!IsLinked())
+                return JS::NumberValue(0);
+            return JS::NumberValue(LinkInfo()->transformFeedbackVaryings.size());
 
         case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
-            return JS::Int32Value(mNextLink_TransformFeedbackBufferMode);
+            if (!IsLinked())
+                return JS::NumberValue(LOCAL_GL_INTERLEAVED_ATTRIBS);
+            return JS::NumberValue(LinkInfo()->transformFeedbackBufferMode);
        }
     }
 
     switch (pname) {
     case LOCAL_GL_ATTACHED_SHADERS:
+        return JS::NumberValue( int(bool(mVertShader.get())) + int(bool(mFragShader)) );
+
     case LOCAL_GL_ACTIVE_UNIFORMS:
+        if (!IsLinked())
+            return JS::NumberValue(0);
+        return JS::NumberValue(LinkInfo()->uniforms.size());
+
     case LOCAL_GL_ACTIVE_ATTRIBUTES:
-        return JS::Int32Value(GetProgramiv(gl, mGLName, pname));
+        if (!IsLinked())
+            return JS::NumberValue(0);
+        return JS::NumberValue(LinkInfo()->attribs.size());
 
     case LOCAL_GL_DELETE_STATUS:
         return JS::BooleanValue(IsDeleteRequested());
@@ -725,6 +740,7 @@ WebGLProgram::GetProgramParameter(GLenum pname) const
         if (gl->WorkAroundDriverBugs())
             return JS::BooleanValue(true);
 #endif
+        // Todo: Implement this in our code.
         return JS::BooleanValue(bool(GetProgramiv(gl, mGLName, pname)));
 
     default:

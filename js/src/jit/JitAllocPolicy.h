@@ -173,7 +173,7 @@ struct TempObject
                       "Placement new argument type must inherit from TempObject");
         MOZ_ASSERT(pos);
         return pos;
-    }        
+    }
 };
 
 template <typename T>

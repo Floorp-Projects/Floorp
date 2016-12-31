@@ -135,7 +135,6 @@ static const char pluginSandboxRules[] =
   "(allow file-read*\n"
   "    (regex #\"^/etc$\")\n"
   "    (regex #\"^/dev/u?random$\")\n"
-  "    (regex #\"^/(private/)?var($|/)\")\n"
   "    (literal \"/usr/share/icu/icudt51l.dat\")\n"
   "    (regex #\"^/System/Library/Displays/Overrides/*\")\n"
   "    (regex #\"^/System/Library/CoreServices/CoreTypes.bundle/*\")\n"

@@ -237,6 +237,16 @@ DefaultJitOptions::DefaultJitOptions()
     // included in the bounds check.
     SET_DEFAULT(wasmFoldOffsets, true);
 
+    // Until which wasm bytecode size should we accumulate functions, in order
+    // to compile efficiently on helper threads (see also bug 1320374).
+    SET_DEFAULT(wasmBatchThreshold, 10000);
+
+    // In order to have different batching thresholds for Ion and the wasm
+    // baseline, and since a same batch can contain both Ion and baseline
+    // compiled functions, we make Ion functions weight more by using a scaling
+    // factor.
+    SET_DEFAULT(wasmBatchIonScaleFactor, 9);
+
     // Determines whether we suppress using signal handlers
     // for interrupting jit-ed code. This is used only for testing.
     SET_DEFAULT(ionInterruptWithoutSignals, false);
