@@ -12,14 +12,14 @@
 #include "mozilla/Attributes.h"
 #include "nsSMILCSSProperty.h"
 
-/* We'll use the empty-string atom |nsGkAtoms::_empty| as the key for storing
- * an element's animated content style rule in its Property Table, under the
+/* We'll use the empty-string atom |nsGkAtoms::_empty| as the key for storing an
+ * element's animated content style declaration in its Property Table, under the
  * property-category SMIL_MAPPED_ATTR_ANIMVAL.  Everything else stored in that
  * category is keyed off of the XML attribute name, so the empty string is a
  * good "reserved" key to use for storing the style rule (since XML attributes
  * all have nonempty names).
  */
-#define SMIL_MAPPED_ATTR_STYLERULE_ATOM nsGkAtoms::_empty
+#define SMIL_MAPPED_ATTR_STYLEDECL_ATOM nsGkAtoms::_empty
 
 /**
  * nsSMILMappedAttribute: Implements the nsISMILAttr interface for SMIL
