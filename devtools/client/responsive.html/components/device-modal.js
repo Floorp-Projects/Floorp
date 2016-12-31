@@ -49,7 +49,10 @@ module.exports = createClass({
     window.removeEventListener("keydown", this.onKeyDown, true);
   },
 
-  onDeviceCheckboxClick({ target }) {
+  onDeviceCheckboxClick({ button, target }) {
+    if (button !== 0){
+      return;
+    }
     this.setState({
       [target.value]: !this.state[target.value]
     });
