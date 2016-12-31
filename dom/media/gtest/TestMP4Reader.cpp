@@ -44,7 +44,7 @@ public:
   void Init() {
     nsCOMPtr<nsIThread> thread;
     nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &TestBinding::ReadMetadata);
-    nsresult rv = NS_NewNamedThread("ReadMetadata", getter_AddRefs(thread), r);
+    nsresult rv = NS_NewThread(getter_AddRefs(thread), r);
     EXPECT_EQ(NS_OK, rv);
     thread->Shutdown();
   }

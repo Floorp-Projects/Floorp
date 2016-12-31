@@ -315,7 +315,7 @@ NS_IMPL_ISUPPORTS(FileChannelWorker, nsIRunnable)
 ////////////////////////////////////////////////////////////////////////////////
 
 void
-Test(CreateFun create, const char* name, uint32_t count,
+Test(CreateFun create, uint32_t count,
      nsIFile* inDirSpec, nsIFile* outDirSpec, uint32_t bufSize)
 {
     nsresult rv;
@@ -375,8 +375,7 @@ Test(CreateFun create, const char* name, uint32_t count,
                     bufSize);
         if (NS_FAILED(rv)) goto done;
 
-        rv = NS_NewNamedThread(name, getter_AddRefs(thread),
-                               worker, 0, PR_JOINABLE_THREAD);
+        rv = NS_NewThread(getter_AddRefs(thread), worker, 0, PR_JOINABLE_THREAD);
         if (NS_FAILED(rv)) goto done;
 
         bool inserted = threads.InsertObjectAt(thread, i);
@@ -434,44 +433,42 @@ main(int argc, char* argv[])
         if (NS_FAILED(rv)) return rv;
 
         CreateFun create = FileChannelWorker::Create;
-        const char* name = "FileChannelWorker";
         Test(create, 1, inDirFile, outDirFile, 16 * 1024);
 #if 1
         printf("FileChannelWorker *****************************\n");
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
 #endif
         create = FileSpecWorker::Create;
-        name = "FileSpecWorker";
         printf("FileSpecWorker ********************************\n");
 #if 1
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 16 * 1024);
 #endif
 #if 1
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
-        Test(create, name, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
+        Test(create, 20, inDirFile, outDirFile, 4 * 1024);
 #endif
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM

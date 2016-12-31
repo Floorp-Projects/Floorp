@@ -1246,8 +1246,7 @@ nsUpdateProcessor::ProcessUpdate(nsIUpdate* aUpdate)
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod(this, &nsUpdateProcessor::StartStagedUpdate);
-  return NS_NewNamedThread("Update Watcher", getter_AddRefs(mProcessWatcher),
-                           r);
+  return NS_NewThread(getter_AddRefs(mProcessWatcher), r);
 }
 
 
