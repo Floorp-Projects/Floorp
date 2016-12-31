@@ -34,6 +34,7 @@ Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/modal.js");
 Cu.import("chrome://marionette/content/proxy.js");
+Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/simpletest.js");
 
 this.EXPORTED_SYMBOLS = ["GeckoDriver", "Context"];
@@ -123,15 +124,6 @@ this.GeckoDriver = function (appName, server) {
   this.observing = null;
   this._browserIds = new WeakMap();
 
-  // user-defined timeouts
-  this.scriptTimeout = 30000;  // 30 seconds
-  this.searchTimeout = null;
-  this.pageTimeout = 300000;  // five minutes
-
-  // Unsigned or invalid TLS certificates will be ignored if secureTLS
-  // is set to false.
-  this.secureTLS = true;
-
   // The curent context decides if commands should affect chrome- or
   // content space.
   this.context = Context.CONTENT;
@@ -147,24 +139,7 @@ this.GeckoDriver = function (appName, server) {
   this.marionetteLog = new logging.ContentLogger();
   this.testName = null;
 
-  this.sessionCapabilities = {
-    // mandated capabilities
-    "browserName": Services.appinfo.name.toLowerCase(),
-    "browserVersion": Services.appinfo.version,
-    "platformName": Services.sysinfo.getProperty("name").toLowerCase(),
-    "platformVersion": Services.sysinfo.getProperty("version"),
-    "acceptInsecureCerts": !this.secureTLS,
-
-    // supported features
-    "rotatable": this.appName == "B2G",
-    "proxy": {},
-
-    // proprietary extensions
-    "specificationLevel": 0,
-    "moz:processID": Services.appinfo.processID,
-    "moz:profile": Services.dirsvc.get("ProfD", Ci.nsIFile).path,
-    "moz:accessibilityChecks": false,
-  };
+  this.sessionCapabilities = new session.Capabilities();
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
@@ -182,7 +157,9 @@ this.GeckoDriver = function (appName, server) {
 };
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
-  get: function () { return this.sessionCapabilities["moz:accessibilityChecks"]; }
+  get: function () {
+    return this.sessionCapabilities.get("moz:accessibilityChecks");
+  }
 });
 
 GeckoDriver.prototype.QueryInterface = XPCOMUtils.generateQI([
@@ -466,13 +443,16 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
 
   this.wins.set(reg.id, listenerWindow);
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
-    this.sendAsync("newSession", this.sessionCapabilities, this.newSessionCommandId);
+    this.sendAsync(
+        "newSession",
+        this.sessionCapabilities.toJSON(),
+        this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
       this.newSessionCommandId = null;
     }
   }
 
-  return [reg, mainContent, this.sessionCapabilities];
+  return [reg, mainContent, this.sessionCapabilities.toJSON()];
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -511,6 +491,28 @@ GeckoDriver.prototype.listeningPromise = function() {
   });
 };
 
+Object.defineProperty(GeckoDriver.prototype, "timeouts", {
+  get: function () {
+    return this.sessionCapabilities.get("timeouts");
+  },
+
+  set: function (newTimeouts) {
+    this.sessionCapabilities.set("timeouts", newTimeouts);
+  },
+});
+
+Object.defineProperty(GeckoDriver.prototype, "secureTLS", {
+  get: function () {
+    return !this.sessionCapabilities.get("acceptInsecureCerts");
+  }
+});
+
+Object.defineProperty(GeckoDriver.prototype, "proxy", {
+  get: function () {
+    return this.sessionCapabilities.get("proxy");
+  }
+});
+
 /** Create a new session. */
 GeckoDriver.prototype.newSession = function*(cmd, resp) {
   if (this.sessionId) {
@@ -520,17 +522,25 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   this.sessionId = cmd.parameters.sessionId ||
       cmd.parameters.session_id ||
       element.generateUUID();
-
   this.newSessionCommandId = cmd.id;
-  this.setSessionCapabilities(cmd.parameters.capabilities);
 
-  this.scriptTimeout = 10000;
+  try {
+    this.sessionCapabilities = session.Capabilities.fromJSON(
+        cmd.parameters.capabilities, {merge: true});
+    logger.config("Matched capabilities: " +
+        JSON.stringify(this.sessionCapabilities));
+  } catch (e) {
+    throw new SessionNotCreatedError(e);
+  }
 
-  this.secureTLS = !this.sessionCapabilities.acceptInsecureCerts;
   if (!this.secureTLS) {
     logger.warn("TLS certificate errors will be ignored for this session");
     let acceptAllCerts = new cert.InsecureSweepingOverride();
     cert.installOverride(acceptAllCerts);
+  }
+
+  if (this.proxy.init()) {
+    logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
   }
 
   // If we are testing accessibility with marionette, start a11y service in
@@ -621,128 +631,6 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
  */
 GeckoDriver.prototype.getSessionCapabilities = function (cmd, resp) {
   resp.body.capabilities = this.sessionCapabilities;
-};
-
-/**
- * Update the sessionCapabilities object with the keys that have been
- * passed in when a new session is created.
- *
- * This is not a public API, only available when a new session is
- * created.
- *
- * @param {Object} newCaps
- *     Key/value dictionary to overwrite session's current capabilities.
- */
-GeckoDriver.prototype.setSessionCapabilities = function (newCaps) {
-  const copy = (from, to={}) => {
-    let errors = [];
-
-    // Remove any duplicates between required and desired in favour of the
-    // required capabilities
-    if (from !== null && from.desiredCapabilities) {
-      for (let cap in from.requiredCapabilities) {
-        if (from.desiredCapabilities[cap]) {
-          delete from.desiredCapabilities[cap];
-        }
-      }
-
-      // Let's remove the sessionCapabilities from desired capabilities
-      for (let cap in this.sessionCapabilities) {
-        if (from.desiredCapabilities && from.desiredCapabilities[cap]) {
-          delete from.desiredCapabilities[cap];
-        }
-      }
-    }
-
-    for (let key in from) {
-      switch (key) {
-        case "desiredCapabilities":
-          to = copy(from[key], to);
-          break;
-
-        case "requiredCapabilities":
-          if (from[key].proxy) {
-              this.setUpProxy(from[key].proxy);
-              to.proxy = from[key].proxy;
-              delete from[key].proxy;
-          }
-          for (let caps in from[key]) {
-            if (from[key][caps] !== this.sessionCapabilities[caps]) {
-              errors.push(from[key][caps] + " does not equal " +
-                  this.sessionCapabilities[caps]);
-            }
-          }
-          break;
-
-        default:
-          to[key] = from[key];
-      }
-    }
-
-    if (Object.keys(errors).length == 0) {
-      return to;
-    }
-
-    throw new SessionNotCreatedError(
-        `Not all requiredCapabilities could be met: ${JSON.stringify(errors)}`);
-  };
-
-  // clone, overwrite, and set
-  let caps = copy(this.sessionCapabilities);
-  caps = copy(newCaps, caps);
-  logger.config("Changing capabilities: " + JSON.stringify(caps));
-  this.sessionCapabilities = caps;
-};
-
-GeckoDriver.prototype.setUpProxy = function (proxy) {
-  logger.config("User-provided proxy settings: " + JSON.stringify(proxy));
-
-  assert.object(proxy);
-  if (!proxy.hasOwnProperty("proxyType")) {
-    throw new InvalidArgumentError();
-  }
-  switch (proxy.proxyType.toUpperCase()) {
-    case "MANUAL":
-      Preferences.set("network.proxy.type", 1);
-      if (proxy.httpProxy && proxy.httpProxyPort){
-        Preferences.set("network.proxy.http", proxy.httpProxy);
-        Preferences.set("network.proxy.http_port", proxy.httpProxyPort);
-      }
-      if (proxy.sslProxy && proxy.sslProxyPort){
-        Preferences.set("network.proxy.ssl", proxy.sslProxy);
-        Preferences.set("network.proxy.ssl_port", proxy.sslProxyPort);
-      }
-      if (proxy.ftpProxy && proxy.ftpProxyPort) {
-        Preferences.set("network.proxy.ftp", proxy.ftpProxy);
-        Preferences.set("network.proxy.ftp_port", proxy.ftpProxyPort);
-      }
-      if (proxy.socksProxy) {
-        Preferences.set("network.proxy.socks", proxy.socksProxy);
-        Preferences.set("network.proxy.socks_port", proxy.socksProxyPort);
-        if (proxy.socksVersion) {
-          Preferences.set("network.proxy.socks_version", proxy.socksVersion);
-        }
-      }
-      break;
-
-    case "PAC":
-      Preferences.set("network.proxy.type", 2);
-      Preferences.set("network.proxy.autoconfig_url", proxy.proxyAutoconfigUrl);
-      break;
-
-    case "AUTODETECT":
-      Preferences.set("network.proxy.type", 4);
-      break;
-
-    case "SYSTEM":
-      Preferences.set("network.proxy.type", 5);
-      break;
-
-    case "NOPROXY":
-    default:
-      Preferences.set("network.proxy.type", 0);
-      break;
-  }
 };
 
 /**
@@ -838,7 +726,7 @@ GeckoDriver.prototype.getContext = function (cmd, resp) {
  */
 GeckoDriver.prototype.executeScript = function*(cmd, resp) {
   let {script, args, scriptTimeout} = cmd.parameters;
-  scriptTimeout = scriptTimeout || this.scriptTimeout;
+  scriptTimeout = scriptTimeout || this.timeouts.script;
 
   let opts = {
     sandboxName: cmd.parameters.sandbox,
@@ -911,7 +799,7 @@ GeckoDriver.prototype.executeScript = function*(cmd, resp) {
  */
 GeckoDriver.prototype.executeAsyncScript = function* (cmd, resp) {
   let {script, args, scriptTimeout} = cmd.parameters;
-  scriptTimeout = scriptTimeout || this.scriptTimeout;
+  scriptTimeout = scriptTimeout || this.timeouts.script;
 
   let opts = {
     sandboxName: cmd.parameters.sandbox,
@@ -961,7 +849,7 @@ GeckoDriver.prototype.execute_ = function (script, args, timeout, opts = {}) {
  */
 GeckoDriver.prototype.executeJSScript = function* (cmd, resp) {
   let {script, args, scriptTimeout} = cmd.parameters;
-  scriptTimeout = scriptTimeout || this.scriptTimeout;
+  scriptTimeout = scriptTimeout || this.timeouts.script;
 
   let opts = {
     filename: cmd.parameters.filename,
@@ -1023,7 +911,7 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
 
   let url = cmd.parameters.url;
 
-  let get = this.listener.get({url: url, pageTimeout: this.pageTimeout});
+  let get = this.listener.get({url: url, pageTimeout: this.timeouts.pageLoad});
   // TODO(ato): Bug 1242595
   let id = this.listener.activeMessageId;
 
@@ -1032,7 +920,7 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
   // send errors.
   this.curBrowser.pendingCommands.push(() => {
     cmd.parameters.command_id = id;
-    cmd.parameters.pageTimeout = this.pageTimeout;
+    cmd.parameters.pageTimeout = this.timeouts.pageLoad;
     this.mm.broadcastAsyncMessage(
         "Marionette:pollForReadyState" + this.curBrowser.curFrameId,
         cmd.parameters);
@@ -1562,11 +1450,7 @@ GeckoDriver.prototype.switchToFrame = function* (cmd, resp) {
 };
 
 GeckoDriver.prototype.getTimeouts = function (cmd, resp) {
-  return {
-    "implicit": this.searchTimeout,
-    "script": this.scriptTimeout,
-    "page load": this.pageTimeout,
-  };
+  return this.timeouts;
 };
 
 /**
@@ -1583,36 +1467,19 @@ GeckoDriver.prototype.getTimeouts = function (cmd, resp) {
 GeckoDriver.prototype.setTimeouts = function (cmd, resp) {
   // backwards compatibility with old API
   // that accepted a dictionary {type: <string>, ms: <number>}
-  let timeouts = {};
+  let json = {};
   if (typeof cmd.parameters == "object" &&
       "type" in cmd.parameters &&
       "ms" in cmd.parameters) {
     logger.warn("Using deprecated data structure for setting timeouts");
-    timeouts = {[cmd.parameters.type]: parseInt(cmd.parameters.ms)};
+    json = {[cmd.parameters.type]: parseInt(cmd.parameters.ms)};
   } else {
-    timeouts = cmd.parameters;
+    json = cmd.parameters;
   }
 
-  for (let [typ, ms] of Object.entries(timeouts)) {
-    assert.positiveInteger(ms);
-
-    switch (typ) {
-      case "implicit":
-        this.searchTimeout = ms;
-        break;
-
-      case "script":
-        this.scriptTimeout = ms;
-        break;
-
-      case "page load":
-        this.pageTimeout = ms;
-        break;
-
-      default:
-        throw new InvalidArgumentError();
-    }
-  }
+  // merge with existing timeouts
+  let merged = Object.assign(this.timeouts.toJSON(), json);
+  this.timeouts = session.Timeouts.fromJSON(merged);
 };
 
 /** Single tap. */
@@ -1730,7 +1597,7 @@ GeckoDriver.prototype.findElement = function*(cmd, resp) {
   let expr = cmd.parameters.value;
   let opts = {
     startNode: cmd.parameters.element,
-    timeout: this.searchTimeout,
+    timeout: this.timeouts.implicit,
     all: false,
   };
 
@@ -1773,7 +1640,7 @@ GeckoDriver.prototype.findElements = function*(cmd, resp) {
   let expr = cmd.parameters.value;
   let opts = {
     startNode: cmd.parameters.element,
-    timeout: this.searchTimeout,
+    timeout: this.timeouts.implicit,
     all: true,
   };
 
