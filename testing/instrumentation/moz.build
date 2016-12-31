@@ -7,3 +7,6 @@
 TEST_HARNESS_FILES.instrumentation += [
     'runinstrumentation.py',
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox for Android", "Testing")

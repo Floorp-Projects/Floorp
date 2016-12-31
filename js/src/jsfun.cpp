@@ -849,7 +849,7 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
         return nullptr;
 
     functionProto->initScript(script);
-    ObjectGroup* protoGroup = functionProto->getGroup(cx);
+    ObjectGroup* protoGroup = JSObject::getGroup(cx, functionProto);
     if (!protoGroup)
         return nullptr;
 
