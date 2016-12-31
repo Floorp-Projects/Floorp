@@ -339,8 +339,7 @@ IE7FormPasswords.prototype = {
   },
 };
 
-function IEProfileMigrator()
-{
+function IEProfileMigrator() {
   this.wrappedJSObject = this; // export this to be able to use it in the unittest.
 }
 

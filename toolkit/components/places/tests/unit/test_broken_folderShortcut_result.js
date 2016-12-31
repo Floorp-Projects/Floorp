@@ -1,13 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   PlacesUtils.bookmarks.insertBookmark(
     PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("http://1.moz.org/"),
     PlacesUtils.bookmarks.DEFAULT_INDEX, "Bookmark 1"

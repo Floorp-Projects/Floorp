@@ -229,8 +229,7 @@ var testRunner = {
     p.then(function() {
       if (that._currentTest == that.tests.length - 1) {
         finish();
-      }
-      else {
+      } else {
         that.runTests();
       }
     });
@@ -282,7 +281,7 @@ var testRunner = {
               for (let prop of ["type", "capability"]) {
                 if (expected[prop])
                   is(permission[prop], expected[prop],
-                    "property: \"" + prop  + "\" should be equal");
+                    "property: \"" + prop + "\" should be equal");
               }
 
               if (expected.origin) {

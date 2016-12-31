@@ -297,8 +297,7 @@
             if (val) {
               if (this.hour < 12)
                 this.hour += 12;
-            }
-            else if (this.hour >= 12)
+            } else if (this.hour >= 12)
               this.hour -= 12;
             return val;
           ]]>
@@ -367,18 +366,15 @@
             if (field == this._fieldAMPM) {
               this.isPM = !this.isPM;
               this._fireEvent("change", this);
-            }
-            else {
+            } else {
               var oldval;
               var change = aDir;
               if (field == this.hourField) {
                 oldval = this.hour;
-              }
-              else if (field == this.minuteField) {
+              } else if (field == this.minuteField) {
                 oldval = this.minute;
                 change *= this.increment;
-              }
-              else if (field == this.secondField) {
+              } else if (field == this.secondField) {
                 oldval = this.second;
               }
 
@@ -433,18 +429,15 @@
                   if (aValue > 12)
                     aValue -= 12;
                   this._fieldAMPM.value = this.pmIndicator;
-                }
-                else {
+                } else {
                   if (aValue == 0)
                     aValue = 12;
                   this._fieldAMPM.value = this.amIndicator;
                 }
               }
-            }
-            else if (aField == this.minuteField) {
+            } else if (aField == this.minuteField) {
               prependZero = this.minuteLeadingZero;
-            }
-            else if (aField == this.secondField) {
+            } else if (aField == this.secondField) {
               prependZero = this.secondLeadingZero;
             }
 
@@ -514,8 +507,7 @@
                   size = this.pmIndicator.length;
                 this._fieldAMPM.size = size;
                 this._fieldAMPM.maxLength = size;
-              }
-              else {
+              } else {
                 this._fieldAMPM.parentNode.collapsed = true;
               }
             }
@@ -681,16 +673,14 @@
                 this._dateValue.setDate(0);
                 this._updateUI(this.dateField, this.date);
               }
-            }
-            else if (aField == this.monthField) {
+            } else if (aField == this.monthField) {
               let oldDate = this.date;
               this._dateValue.setMonth(aValue);
               if (oldDate != this.date) {
                 this._dateValue.setDate(0);
                 this._updateUI(this.dateField, this.date);
               }
-            }
-            else if (aField == this.dateField) {
+            } else if (aField == this.dateField) {
               this._dateValue.setDate(aValue);
             }
 
@@ -715,12 +705,10 @@
                 aField.value = ("000" + aValue).slice(-4);
                 return;
               }
-            }
-            else if (aField == this.monthField) {
+            } else if (aField == this.monthField) {
               aValue++;
               prependZero = this.monthLeadingZero;
-            }
-            else if (aField == this.dateField) {
+            } else if (aField == this.dateField) {
               prependZero = this.dateLeadingZero;
             }
             if (prependZero && aValue < 10)
@@ -1052,8 +1040,7 @@
               var expectedMonth = aValue;
               if (aField == this.monthField) {
                 this._displayedDate.setMonth(aValue);
-              }
-              else {
+              } else {
                 expectedMonth = this._displayedDate.getMonth();
                 this._displayedDate.setFullYear(aValue);
               }
@@ -1067,8 +1054,7 @@
 
               date = new Date(this._displayedDate);
               currentMonth = this._displayedDate.getMonth();
-            }
-            else {
+            } else {
               var samemonth = (this._displayedDate &&
                                this._displayedDate.getMonth() == this.month &&
                                this._displayedDate.getFullYear() == this.year);
@@ -1123,8 +1109,7 @@
                     this._selectedItem = item;
                     item.setAttribute("selected", "true");
                   }
-                }
-                else {
+                } else {
                   item.value = "";
                 }
 

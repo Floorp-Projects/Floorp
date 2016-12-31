@@ -175,9 +175,9 @@ function startTest() {
     checkForm(f++, "testuser", "xxxxxxxx", "");
     checkForm(f++, "testuser", "testpass", "xxxxxxxx");
     checkForm(f++, "testuser", "testpass", "");
-    checkForm(f++, "",         "xxxxxxxx", "testpass");
-    checkForm(f++, "testpass", "",         "");
-    checkForm(f++, "xxxxxxxx", "",         "");
+    checkForm(f++, "", "xxxxxxxx", "testpass");
+    checkForm(f++, "testpass", "", "");
+    checkForm(f++, "xxxxxxxx", "", "");
 
     SimpleTest.finish();
 }

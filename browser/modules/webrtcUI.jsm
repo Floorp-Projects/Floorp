@@ -105,8 +105,10 @@ this.webrtcUI = {
     let precedence =
       ["Screen", "Window", "Application", "Browser", ""];
 
-    list.sort((a, b) => { return precedence.indexOf(a) -
-                                 precedence.indexOf(b); });
+    list.sort((a, b) => {
+ return precedence.indexOf(a) -
+                                 precedence.indexOf(b);
+});
 
     return list[0];
   },
@@ -522,8 +524,7 @@ function prompt(aBrowser, aRequest) {
                                                      [monitorIndex]);
               ++monitorIndex;
             }
-          }
-          else {
+          } else {
             name = device.name;
             if (type == "application") {
               // The application names returned by the platform are of the form:
@@ -579,8 +580,7 @@ function prompt(aBrowser, aRequest) {
             if (type == "screen") {
               string = bundle.getFormattedString("getUserMedia.shareScreenWarning.message",
                                                  [learnMore]);
-            }
-            else {
+            } else {
               let brand =
                 doc.getElementById("bundle_brand").getString("brandShortName");
               string = bundle.getFormattedString("getUserMedia.shareFirefoxWarning.message",
@@ -755,11 +755,9 @@ function getGlobalIndicator() {
       let activeStreams;
       if (type == "Camera") {
         activeStreams = webrtcUI.getActiveStreams(true, false, false);
-      }
-      else if (type == "Microphone") {
+      } else if (type == "Microphone") {
         activeStreams = webrtcUI.getActiveStreams(false, true, false);
-      }
-      else if (type == "Screen") {
+      } else if (type == "Screen") {
         activeStreams = webrtcUI.getActiveStreams(false, false, true);
         type = webrtcUI.showScreenSharingIndicator;
       }
@@ -833,8 +831,7 @@ function getGlobalIndicator() {
         menu.appendChild(menupopup);
 
         this[field] = menu;
-      }
-      else if (this[field] && !aState) {
+      } else if (this[field] && !aState) {
         this._statusBar.removeItem(this[field]);
         this[field].remove();
         this[field] = null

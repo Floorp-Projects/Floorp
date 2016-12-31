@@ -13,8 +13,7 @@ function run_test() {
   try {
     Components.utils.import("resource://gre/modules/AddonManager.jsm");
     do_throw("AddonManager should have refused to load");
-  }
-  catch (ex) {
+  } catch (ex) {
     do_print(ex.message);
     do_check_true(!!ex.message);
   }

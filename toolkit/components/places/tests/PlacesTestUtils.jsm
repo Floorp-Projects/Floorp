@@ -44,8 +44,7 @@ this.PlacesTestUtils = Object.freeze({
         placeInfo instanceof URL ||
         typeof placeInfo == "string") {
       places.push({ uri: placeInfo });
-    }
-    else if (Array.isArray(placeInfo)) {
+    } else if (Array.isArray(placeInfo)) {
       places = places.concat(placeInfo);
     } else if (typeof placeInfo == "object" && placeInfo.uri) {
       places.push(placeInfo)

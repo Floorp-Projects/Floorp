@@ -4,18 +4,15 @@
 
 var service = Components.classes["@mozilla.org/addon-path-service;1"].getService(Components.interfaces.amIAddonPathService);
 
-function insert(path, value)
-{
+function insert(path, value) {
   service.insertPath("/test/" + path, value);
 }
 
-function find(path)
-{
+function find(path) {
   return service.findAddonId("/test/" + path);
 }
 
-function run_test()
-{
+function run_test() {
   insert("abc", "10");
   insert("def", "11");
   insert("axy", "12");

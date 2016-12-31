@@ -43,14 +43,14 @@ PluginContent.prototype = {
     // Note that the XBL binding is untrusted
     global.addEventListener("PluginBindingAttached", this, true, true);
     global.addEventListener("PluginPlaceholderReplaced", this, true, true);
-    global.addEventListener("PluginCrashed",         this, true);
-    global.addEventListener("PluginOutdated",        this, true);
-    global.addEventListener("PluginInstantiated",    this, true);
-    global.addEventListener("PluginRemoved",         this, true);
-    global.addEventListener("pagehide",              this, true);
-    global.addEventListener("pageshow",              this, true);
-    global.addEventListener("unload",                this);
-    global.addEventListener("HiddenPlugin",          this, true);
+    global.addEventListener("PluginCrashed", this, true);
+    global.addEventListener("PluginOutdated", this, true);
+    global.addEventListener("PluginInstantiated", this, true);
+    global.addEventListener("PluginRemoved", this, true);
+    global.addEventListener("pagehide", this, true);
+    global.addEventListener("pageshow", this, true);
+    global.addEventListener("unload", this);
+    global.addEventListener("HiddenPlugin", this, true);
 
     global.addMessageListener("BrowserPlugins:ActivatePlugins", this);
     global.addMessageListener("BrowserPlugins:NotificationShown", this);
@@ -67,14 +67,14 @@ PluginContent.prototype = {
 
     global.removeEventListener("PluginBindingAttached", this, true);
     global.removeEventListener("PluginPlaceholderReplaced", this, true, true);
-    global.removeEventListener("PluginCrashed",         this, true);
-    global.removeEventListener("PluginOutdated",        this, true);
-    global.removeEventListener("PluginInstantiated",    this, true);
-    global.removeEventListener("PluginRemoved",         this, true);
-    global.removeEventListener("pagehide",              this, true);
-    global.removeEventListener("pageshow",              this, true);
-    global.removeEventListener("unload",                this);
-    global.removeEventListener("HiddenPlugin",          this, true);
+    global.removeEventListener("PluginCrashed", this, true);
+    global.removeEventListener("PluginOutdated", this, true);
+    global.removeEventListener("PluginInstantiated", this, true);
+    global.removeEventListener("PluginRemoved", this, true);
+    global.removeEventListener("pagehide", this, true);
+    global.removeEventListener("pageshow", this, true);
+    global.removeEventListener("unload", this);
+    global.removeEventListener("HiddenPlugin", this, true);
 
     global.removeMessageListener("BrowserPlugins:ActivatePlugins", this);
     global.removeMessageListener("BrowserPlugins:NotificationShown", this);
@@ -859,8 +859,7 @@ PluginContent.prototype = {
       if (permissionObj) {
         pluginInfo.pluginPermissionPrePath = permissionObj.principal.originNoSuffix;
         pluginInfo.pluginPermissionType = permissionObj.expireType;
-      }
-      else {
+      } else {
         pluginInfo.pluginPermissionPrePath = principal.originNoSuffix;
         pluginInfo.pluginPermissionType = undefined;
       }

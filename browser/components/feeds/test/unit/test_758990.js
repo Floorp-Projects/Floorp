@@ -2,8 +2,7 @@ function run_test() {
   var success = false;
   try {
     ios.newURI("feed:javascript:alert('hi');", null, null);
-  }
-  catch (e) {
+  } catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }
   if (!success)
@@ -12,8 +11,7 @@ function run_test() {
   success = false;
   try {
     ios.newURI("feed:data:text/html,hi", null, null);
-  }
-  catch (e) {
+  } catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }
   if (!success)
@@ -22,8 +20,7 @@ function run_test() {
   success = false;
   try {
     ios.newURI("pcast:javascript:alert('hi');", null, null);
-  }
-  catch (e) {
+  } catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }
   if (!success)
@@ -32,8 +29,7 @@ function run_test() {
   success = false;
   try {
     ios.newURI("pcast:data:text/html,hi", null, null);
-  }
-  catch (e) {
+  } catch (e) {
     success = e.result == Cr.NS_ERROR_MALFORMED_URI;
   }
   if (!success)

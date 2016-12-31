@@ -178,8 +178,7 @@ function check_test_1() {
       try {
         chromeReg.convertChromeURL(NetUtil.newURI("chrome://dict/content/dict.xul"));
         do_throw("Chrome manifest should not have been registered");
-      }
-      catch (e) {
+      } catch (e) {
         // Expected the chrome url to not be registered
       }
 

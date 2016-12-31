@@ -20,8 +20,7 @@ function getAboutModule(aURL) {
   let contract = "@mozilla.org/network/protocol/about;1?what=" + moduleName;
   try {
     return Cc[contract].getService(Ci.nsIAboutModule);
-  }
-  catch (e) {
+  } catch (e) {
     // Either the about module isn't defined or it is broken. In either case
     // ignore it.
     return null;

@@ -311,8 +311,7 @@ function run_test() {
   try {
     ltm.currentTheme = data;
     do_throw("Should have rejected a theme with no name");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected exception
   }
 
@@ -321,8 +320,7 @@ function run_test() {
   try {
     ltm.currentTheme = data;
     do_throw("Should have rejected a theme with a bad headerURL");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected exception
   }
 
@@ -331,8 +329,7 @@ function run_test() {
   try {
     ltm.currentTheme = data;
     do_throw("Should have rejected a theme with a non-http(s) headerURL");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected exception
   }
 
@@ -341,8 +338,7 @@ function run_test() {
   try {
     ltm.currentTheme = data;
     do_throw("Should have rejected a theme with a non-http(s) headerURL");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected exception
   }
 
@@ -367,8 +363,7 @@ function run_test() {
   try {
     ltm.setLocalTheme(data);
     do_throw("Should have rejected a theme with a non-http(s), non-file headerURL");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected exception
   }
 
@@ -377,8 +372,7 @@ function run_test() {
   try {
     ltm.currentTheme = data;
     do_throw("Should have rejected a theme with no ID");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected exception
   }
 

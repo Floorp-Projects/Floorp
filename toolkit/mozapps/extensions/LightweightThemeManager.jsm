@@ -55,8 +55,7 @@ Object.defineProperty(this, "_maxUsedThemes", {
     delete this._maxUsedThemes;
     try {
       this._maxUsedThemes = _prefs.getIntPref("maxUsedThemes");
-    }
-    catch (e) {
+    } catch (e) {
       this._maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
     }
     return this._maxUsedThemes;
@@ -370,14 +369,12 @@ this.LightweightThemeManager = {
       if (next) {
         AddonManagerPrivate.callAddonListeners("onOperationCancelled",
                                                new AddonWrapper(this.getUsedTheme(next)));
-      }
-      else if (id == current.id) {
+      } else if (id == current.id) {
         AddonManagerPrivate.callAddonListeners("onOperationCancelled",
                                                new AddonWrapper(current));
         return;
       }
-    }
-    catch (e) {
+    } catch (e) {
     }
 
     if (current) {
@@ -388,8 +385,7 @@ this.LightweightThemeManager = {
       if (aPendingRestart) {
         Services.prefs.setCharPref(PREF_LWTHEME_TO_SELECT, "");
         AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, true);
-      }
-      else {
+      } else {
         AddonManagerPrivate.callAddonListeners("onDisabling", wrapper, false);
         this.themeChanged(null);
         AddonManagerPrivate.callAddonListeners("onDisabled", wrapper);
@@ -407,8 +403,7 @@ this.LightweightThemeManager = {
 
         // Flush the preferences to disk so they survive any crash
         Services.prefs.savePrefFile(null);
-      }
-      else {
+      } else {
         AddonManagerPrivate.callAddonListeners("onEnabling", wrapper, false);
         this.themeChanged(theme);
         AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
@@ -519,8 +514,7 @@ AddonWrapper.prototype = {
       try {
         if (Services.prefs.getBoolPref(PREF_EM_DSS_ENABLED))
           return AddonManager.OP_NEEDS_RESTART_NONE;
-      }
-      catch (e) {
+      } catch (e) {
       }
       return AddonManager.OP_NEEDS_RESTART_ENABLE;
     }
@@ -557,8 +551,7 @@ AddonWrapper.prototype = {
     try {
       let toSelect = Services.prefs.getCharPref(PREF_LWTHEME_TO_SELECT);
       return id != toSelect;
-    }
-    catch (e) {
+    } catch (e) {
       let current = LightweightThemeManager.currentTheme;
       return !current || current.id != id;
     }
@@ -740,8 +733,7 @@ function _sanitizeTheme(aData, aBaseURI, aLocal) {
       if ((prop == "updateURL" ? /^https:/ : resourceProtocolExp).test(val))
         return val;
       return null;
-    }
-    catch (e) {
+    } catch (e) {
       return null;
     }
   }
@@ -818,8 +810,7 @@ function _prefObserver(aSubject, aTopic, aData) {
     case "maxUsedThemes":
       try {
         _maxUsedThemes = _prefs.getIntPref(aData);
-      }
-      catch (e) {
+      } catch (e) {
         _maxUsedThemes = DEFAULT_MAX_USED_THEMES_COUNT;
       }
       // Update the theme list to remove any themes over the number we keep

@@ -125,7 +125,7 @@ function objEquiv(a, b) {
     return false;
   }
   // An identical 'prototype' property.
-  if ((a.prototype || undefined)  != (b.prototype || undefined)) {
+  if ((a.prototype || undefined) != (b.prototype || undefined)) {
     return false;
   }
   // Object.keys may be broken through screwy arguments passing. Converting to

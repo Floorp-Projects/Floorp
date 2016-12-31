@@ -180,16 +180,14 @@ function get_actual_results() {
         results.push({name: result[1], item});
         continue;
       }
-    }
-    else if (item.mAddon) {
+    } else if (item.mAddon) {
       let result = item.mAddon.id.match(/^(.+)@tests\.mozilla\.org$/);
       if (result != null) {
         is(item.mAddon.name.indexOf("PASS"), 0, "Addon name should start with PASS");
         results.push({name: result[1], item});
         continue;
       }
-    }
-    else {
+    } else {
       ok(false, "Found an item in the list that was neither installing or installed");
     }
   }
@@ -267,8 +265,7 @@ function check_results(aQuery, aSortBy, aReverseOrder, aShowLocal) {
   var xpinstall_enabled = true;
   try {
     xpinstall_enabled = Services.prefs.getBoolPref(PREF_XPI_ENABLED);
-  }
-  catch (e) {}
+  } catch (e) {}
 
   // When XPI Instalation is disabled, those buttons are hidden and unused
   if (xpinstall_enabled) {

@@ -12,8 +12,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
  * If other participants are found they will be unregistered, to avoid conflicts
  * with the test itself.
  */
-function load_test_vacuum_component()
-{
+function load_test_vacuum_component() {
   const CATEGORY_NAME = "vacuum-participant";
 
   do_load_manifest("vacuumParticipant.manifest");
@@ -32,8 +31,7 @@ function load_test_vacuum_component()
       print("Check that only one test entry exists.");
       do_check_false(found);
       found = true;
-    }
-    else {
+    } else {
       // Temporary unregister other participants for this test.
       catMan.deleteCategoryEntry("vacuum-participant", entry, false);
     }
@@ -45,8 +43,7 @@ function load_test_vacuum_component()
 /**
  * Sends a fake idle-daily notification to the VACUUM Manager.
  */
-function synthesize_idle_daily()
-{
+function synthesize_idle_daily() {
   let vm = Cc["@mozilla.org/storage/vacuum;1"].getService(Ci.nsIObserver);
   vm.observe(null, "idle-daily", null);
 }
@@ -55,15 +52,13 @@ function synthesize_idle_daily()
  * Returns a new nsIFile reference for a profile database.
  * @param filename for the database, excluded the .sqlite extension.
  */
-function new_db_file(name)
-{
+function new_db_file(name) {
   let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append(name + ".sqlite");
   return file;
 }
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
 
   // Change initial page size.  Do it immediately since it would require an
@@ -77,8 +72,7 @@ function run_test()
     while (stmt.executeStep()) {
       do_check_eq(stmt.row.page_size, 1024);
     }
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 
@@ -89,8 +83,7 @@ function run_test()
 
 const TESTS = [
 
-  function test_common_vacuum()
-  {
+  function test_common_vacuum() {
     print("\n*** Test that a VACUUM correctly happens and all notifications are fired.");
     // Wait for VACUUM begin.
     let beginVacuumReceived = false;
@@ -109,8 +102,7 @@ const TESTS = [
 
       if (aData == "vacuum-begin") {
         heavyIOTaskBeginReceived = true;
-      }
-      else if (aData == "vacuum-end") {
+      } else if (aData == "vacuum-end") {
         heavyIOTaskEndReceived = true;
       }
     }, "heavy-io-task", false);
@@ -130,8 +122,7 @@ const TESTS = [
     synthesize_idle_daily();
   },
 
-  function test_skipped_if_recent_vacuum()
-  {
+  function test_skipped_if_recent_vacuum() {
     print("\n*** Test that a VACUUM is skipped if it was run recently.");
     Services.prefs.setIntPref("storage.vacuum.last.testVacuum.sqlite",
                               parseInt(Date.now() / 1000));
@@ -157,8 +148,7 @@ const TESTS = [
     synthesize_idle_daily();
   },
 
-  function test_page_size_change()
-  {
+  function test_page_size_change() {
     print("\n*** Test that a VACUUM changes page_size");
 
     // We did setup the database with a small page size, the previous vacuum
@@ -170,16 +160,14 @@ const TESTS = [
       while (stmt.executeStep()) {
         do_check_eq(stmt.row.page_size, conn.defaultPageSize);
       }
-    }
-    finally {
+    } finally {
       stmt.finalize();
     }
 
     run_next_test();
   },
 
-  function test_skipped_optout_vacuum()
-  {
+  function test_skipped_optout_vacuum() {
     print("\n*** Test that a VACUUM is skipped if the participant wants to opt-out.");
     Services.obs.notifyObservers(null, "test-options", "opt-out");
 
@@ -271,8 +259,7 @@ const TESTS = [
   },
   */
 
-  function test_memory_database_crash()
-  {
+  function test_memory_database_crash() {
     print("\n*** Test that we don't crash trying to vacuum a memory database");
     Services.obs.notifyObservers(null, "test-options", "memory");
 
@@ -320,13 +307,11 @@ const TESTS = [
   */
 ];
 
-function run_next_test()
-{
+function run_next_test() {
   if (TESTS.length == 0) {
     Services.obs.notifyObservers(null, "test-options", "dispose");
     do_test_finished();
-  }
-  else {
+  } else {
     // Set last VACUUM to a date in the past.
     Services.prefs.setIntPref("storage.vacuum.last.testVacuum.sqlite",
                               parseInt(Date.now() / 1000 - 31 * 86400));

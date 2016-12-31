@@ -179,8 +179,7 @@ AsyncRunner.prototype = {
         this.next();
         return;
       }
-    }
-    catch (err) {
+    } catch (err) {
       this._callbacks.error(err);
     }
 
@@ -202,8 +201,7 @@ AsyncRunner.prototype = {
 
   observe: function observe(msg) {
     if (msg instanceof Ci.nsIScriptError &&
-        !(msg.flags & Ci.nsIScriptError.warningFlag))
-    {
+        !(msg.flags & Ci.nsIScriptError.warningFlag)) {
       this._callbacks.consoleError(msg);
     }
   },

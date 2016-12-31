@@ -84,8 +84,7 @@ var messageHandlers = {
     let row;
     if (itemIndex == -1) {
       row = gController._table.firstChild;
-    }
-    else {
+    } else {
       let allElts = [...gController._suggestionsList.children,
                      ...gController._oneOffButtons,
                      content.document.getElementById("contentSearchSettingsButton")];
@@ -107,8 +106,7 @@ var messageHandlers = {
     let row;
     if (eltIdx == -1) {
       row = gController._table.firstChild;
-    }
-    else {
+    } else {
       let allElts = [...gController._suggestionsList.children,
                      ...gController._oneOffButtons,
                      content.document.getElementById("contentSearchSettingsButton")];

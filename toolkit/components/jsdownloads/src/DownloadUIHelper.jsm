@@ -63,8 +63,7 @@ this.DownloadUIHelper = {
    *
    * @return A DownloadPrompter object.
    */
-  getPrompter(aParent)
-  {
+  getPrompter(aParent) {
     return new DownloadPrompter(aParent || null);
   },
 };
@@ -104,8 +103,7 @@ XPCOMUtils.defineLazyGetter(DownloadUIHelper, "strings", function() {
  *        The nsIDOMWindow to which prompts should be attached, or null to
  *        attach prompts to the most recently active window.
  */
-this.DownloadPrompter = function(aParent)
-{
+this.DownloadPrompter = function(aParent) {
   if (AppConstants.MOZ_B2G) {
     // On B2G there is no prompter implementation.
     this._prompter = null;
@@ -139,8 +137,7 @@ this.DownloadPrompter.prototype = {
    * @resolves Boolean indicating whether the launch operation can continue.
    * @rejects JavaScript exception.
    */
-  confirmLaunchExecutable(aPath)
-  {
+  confirmLaunchExecutable(aPath) {
     const kPrefAlertOnEXEOpen = "browser.download.manager.alertOnEXEOpen";
 
     try {
@@ -190,8 +187,7 @@ this.DownloadPrompter.prototype = {
    *         operation.
    */
   confirmCancelDownloads: function DP_confirmCancelDownload(aDownloadsCount,
-                                                            aPromptType)
-  {
+                                                            aPromptType) {
     // Always continue in case we have no prompter implementation, or if there
     // are no active downloads.
     if (!this._prompter || aDownloadsCount <= 0) {

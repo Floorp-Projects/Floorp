@@ -4,8 +4,7 @@
 const PREF_NEWTAB_ROWS = "browser.newtabpage.rows";
 const PREF_NEWTAB_COLUMNS = "browser.newtabpage.columns";
 
-function getCellsCount()
-{
+function getCellsCount() {
   return ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
     return content.gGrid.cells.length;
   });

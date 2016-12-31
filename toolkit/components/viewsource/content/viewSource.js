@@ -784,8 +784,7 @@ this.__defineGetter__("gPageLoader", function() {
 });
 
 // Strips the |view-source:| for internalSave()
-function ViewSourceSavePage()
-{
+function ViewSourceSavePage() {
   internalSave(gBrowser.currentURI.spec.replace(/^view-source:/i, ""),
                null, null, null, null, null, "SaveLinkTitle",
                null, null, gBrowser.contentDocumentAsCPOW, null,
@@ -830,8 +829,7 @@ function ViewSourceReload() {
   viewSourceChrome.reload();
 }
 
-function getWebNavigation()
-{
+function getWebNavigation() {
   Deprecated.warning("getWebNavigation() is deprecated - please use " +
                      "viewSourceChrome.webNav instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
@@ -851,16 +849,14 @@ function viewSource(url) {
   viewSourceChrome.loadURL(url);
 }
 
-function ViewSourceGoToLine()
-{
+function ViewSourceGoToLine() {
   Deprecated.warning("ViewSourceGoToLine() is deprecated - please use " +
                      "viewSourceChrome.promptAndGoToLine() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");
   viewSourceChrome.promptAndGoToLine();
 }
 
-function goToLine(line)
-{
+function goToLine(line) {
   Deprecated.warning("goToLine() is deprecated - please use " +
                      "viewSourceChrome.goToLine() instead.",
                      "https://developer.mozilla.org/en-US/Add-ons/Code_snippets/View_Source_for_XUL_Applications");

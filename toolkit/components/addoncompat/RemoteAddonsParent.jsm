@@ -26,8 +26,7 @@ Cu.permitCPOWsInScope(this);
 
 // Similar to Python. Returns dict[key] if it exists. Otherwise,
 // sets dict[key] to default_ and returns default_.
-function setDefault(dict, key, default_)
-{
+function setDefault(dict, key, default_) {
   if (key in dict) {
     return dict[key];
   }
@@ -88,8 +87,7 @@ NotificationTracker.init();
 // getters, and setters. See multiprocessShims.js for an explanation
 // of how these are used. The constructor here just allows one
 // interposition to inherit members from another.
-function Interposition(name, base)
-{
+function Interposition(name, base) {
   this.name = name;
   if (base) {
     this.methods = Object.create(base.methods);
@@ -597,8 +595,7 @@ EventTargetParent.init();
 // the child process handle the event and pass it up via
 // EventTargetParent.
 var filteringListeners = new WeakMap();
-function makeFilteringListener(eventType, listener)
-{
+function makeFilteringListener(eventType, listener) {
   // Some events are actually targeted at the <browser> element
   // itself, so we only handle the ones where know that won't happen.
   let eventTypes = ["mousedown", "mouseup", "click"];
@@ -680,8 +677,7 @@ ContentDocShellTreeItemInterposition.getters.rootTreeItem =
       .QueryInterface(Ci.nsIDocShellTreeItem);
   };
 
-function chromeGlobalForContentWindow(window)
-{
+function chromeGlobalForContentWindow(window) {
     return window
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebNavigation)
@@ -858,8 +854,7 @@ RemoteBrowserElementInterposition.getters.contentWindow = function(addon, target
   return target.contentWindowAsCPOW;
 };
 
-function getContentDocument(addon, browser)
-{
+function getContentDocument(addon, browser) {
   if (!browser.contentWindowAsCPOW) {
     return makeDummyContentWindow(browser).document;
   }
@@ -926,8 +921,7 @@ TabBrowserElementInterposition.getters.sessionHistory = function(addon, target) 
 // real listener but passes CPOWs for the nsIWebProgress and
 // nsIRequest arguments.
 var progressListeners = {global: new WeakMap(), tabs: new WeakMap()};
-function wrapProgressListener(kind, listener)
-{
+function wrapProgressListener(kind, listener) {
   if (progressListeners[kind].has(listener)) {
     return progressListeners[kind].get(listener);
   }

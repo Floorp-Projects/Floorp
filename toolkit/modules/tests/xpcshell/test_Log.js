@@ -503,8 +503,7 @@ add_task(function* test_log_err_only() {
    */
   try {
     eval("javascript syntax error");
-  }
-  catch (e) {
+  } catch (e) {
     log.error(e);
     msg = appender.messages.pop();
     do_check_eq(msg.message, null);
@@ -578,8 +577,7 @@ add_task(function* format_errors() {
   try {
     yield Promise.resolve();  // Scrambles the stack
     eval("javascript syntax error");
-  }
-  catch (e) {
+  } catch (e) {
     str = pFormat.format(e);
     do_check_true(str.includes("SyntaxError: missing ;"));
     // Make sure we identified it as an Error and formatted the error location as

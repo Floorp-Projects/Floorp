@@ -95,8 +95,7 @@ var FeedHandler = {
     let feeds = gBrowser.selectedBrowser.feeds;
     try {
       openUILink(href, event, { ignoreAlt: true });
-    }
-    finally {
+    } finally {
       // We might default to a livebookmarks modal dialog,
       // so reset that if the user happens to click it again
       gBrowser.selectedBrowser.feeds = feeds;

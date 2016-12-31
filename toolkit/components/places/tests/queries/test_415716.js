@@ -27,8 +27,7 @@ function modHistoryTypes(val) {
   return TRANSITION_TYPED;
 }
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
@@ -36,8 +35,7 @@ function run_test()
  * Builds a test database by hand using various times, annotations and
  * visit numbers for this test
  */
-add_task(function* test_buildTestDatabase()
-{
+add_task(function* test_buildTestDatabase() {
   // This is the set of visits that we will match - our min visit is 2 so that's
   // why we add more visits to the same URIs.
   let testURI = uri("http://www.foo.com");
@@ -77,8 +75,7 @@ add_task(function* test_buildTestDatabase()
  * minVisits == 2 &&
  * maxVisits == 10
  */
-add_task(function test_execute()
-{
+add_task(function test_execute() {
   let query = PlacesUtils.history.getNewQuery();
   query.annotation = "moz-test-places/testing123";
   query.beginTime = daybefore * 1000;
