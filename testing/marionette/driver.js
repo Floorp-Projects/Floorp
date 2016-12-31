@@ -139,7 +139,7 @@ this.GeckoDriver = function (appName, server) {
   this.marionetteLog = new logging.ContentLogger();
   this.testName = null;
 
-  this.sessionCapabilities = new session.Capabilities();
+  this.capabilities = new session.Capabilities();
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
@@ -158,7 +158,7 @@ this.GeckoDriver = function (appName, server) {
 
 Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
   get: function () {
-    return this.sessionCapabilities.get("moz:accessibilityChecks");
+    return this.capabilities.get("moz:accessibilityChecks");
   }
 });
 
@@ -445,14 +445,14 @@ GeckoDriver.prototype.registerBrowser = function (id, be) {
   if (nullPrevious && (this.curBrowser.curFrameId !== null)) {
     this.sendAsync(
         "newSession",
-        this.sessionCapabilities.toJSON(),
+        this.capabilities.toJSON(),
         this.newSessionCommandId);
     if (this.curBrowser.isNewSession) {
       this.newSessionCommandId = null;
     }
   }
 
-  return [reg, mainContent, this.sessionCapabilities.toJSON()];
+  return [reg, mainContent, this.capabilities.toJSON()];
 };
 
 GeckoDriver.prototype.registerPromise = function() {
@@ -493,23 +493,23 @@ GeckoDriver.prototype.listeningPromise = function() {
 
 Object.defineProperty(GeckoDriver.prototype, "timeouts", {
   get: function () {
-    return this.sessionCapabilities.get("timeouts");
+    return this.capabilities.get("timeouts");
   },
 
   set: function (newTimeouts) {
-    this.sessionCapabilities.set("timeouts", newTimeouts);
+    this.capabilities.set("timeouts", newTimeouts);
   },
 });
 
 Object.defineProperty(GeckoDriver.prototype, "secureTLS", {
   get: function () {
-    return !this.sessionCapabilities.get("acceptInsecureCerts");
+    return !this.capabilities.get("acceptInsecureCerts");
   }
 });
 
 Object.defineProperty(GeckoDriver.prototype, "proxy", {
   get: function () {
-    return this.sessionCapabilities.get("proxy");
+    return this.capabilities.get("proxy");
   }
 });
 
@@ -525,10 +525,10 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   this.newSessionCommandId = cmd.id;
 
   try {
-    this.sessionCapabilities = session.Capabilities.fromJSON(
+    this.capabilities = session.Capabilities.fromJSON(
         cmd.parameters.capabilities, {merge: true});
     logger.config("Matched capabilities: " +
-        JSON.stringify(this.sessionCapabilities));
+        JSON.stringify(this.capabilities));
   } catch (e) {
     throw new SessionNotCreatedError(e);
   }
@@ -614,7 +614,7 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
 
   return {
     sessionId: this.sessionId,
-    capabilities: this.sessionCapabilities,
+    capabilities: this.capabilities,
   };
 };
 
@@ -630,7 +630,7 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
  * numerical or string.
  */
 GeckoDriver.prototype.getSessionCapabilities = function (cmd, resp) {
-  resp.body.capabilities = this.sessionCapabilities;
+  resp.body.capabilities = this.capabilities;
 };
 
 /**
@@ -2232,7 +2232,7 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
   cert.uninstallOverride();
 
   this.sessionId = null;
-  this.sessionCapabilities = new session.Capabilities();
+  this.capabilities = new session.Capabilities();
 };
 
 /**
@@ -2680,7 +2680,7 @@ GeckoDriver.prototype.receiveMessage = function (message) {
         // If remoteness gets updated we need to call newSession. In the case
         // of desktop this just sets up a small amount of state that doesn't
         // change over the course of a session.
-        this.sendAsync("newSession", this.sessionCapabilities);
+        this.sendAsync("newSession", this.capabilities);
         this.curBrowser.flushPendingCommands();
       }
       break;
