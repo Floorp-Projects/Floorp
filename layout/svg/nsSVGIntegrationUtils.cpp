@@ -1027,7 +1027,20 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       nsLayoutUtils::RectToGfxRect(aParams.borderArea,
                                    frame->PresContext()->AppUnitsPerDevPixel());
     context.Rectangle(drawingRect, true);
-    context.SetColor(Color(0.0, 1.0, 0.0, 1.0));
+    Color overlayColor(0.0f, 0.0f, 0.0f, 0.8f);
+    if (maskUsage.shouldGenerateMaskLayer) {
+      overlayColor.r = 1.0f; // red represents css positioned mask.
+    }
+    if (maskUsage.shouldApplyClipPath ||
+        maskUsage.shouldGenerateClipMaskLayer) {
+      overlayColor.g = 1.0f; // green represents clip-path:<clip-source>.
+    }
+    if (maskUsage.shouldApplyBasicShape) {
+      overlayColor.b = 1.0f; // blue represents
+                             // clip-path:<basic-shape>||<geometry-box>.
+    }
+
+    context.SetColor(overlayColor);
     context.Fill();
   }
 

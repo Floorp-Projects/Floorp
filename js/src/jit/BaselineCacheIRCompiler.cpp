@@ -415,9 +415,9 @@ BaselineCacheIRCompiler::emitCallScriptedGetterResult()
     return true;
 }
 
-typedef bool (*DoCallNativeGetterFn)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
-static const VMFunction DoCallNativeGetterInfo =
-    FunctionInfo<DoCallNativeGetterFn>(DoCallNativeGetter, "DoCallNativeGetter");
+typedef bool (*CallNativeGetterFn)(JSContext*, HandleFunction, HandleObject, MutableHandleValue);
+static const VMFunction CallNativeGetterInfo =
+    FunctionInfo<CallNativeGetterFn>(CallNativeGetter, "CallNativeGetter");
 
 bool
 BaselineCacheIRCompiler::emitCallNativeGetterResult()
@@ -439,7 +439,7 @@ BaselineCacheIRCompiler::emitCallNativeGetterResult()
     masm.Push(obj);
     masm.Push(scratch);
 
-    if (!callVM(masm, DoCallNativeGetterInfo))
+    if (!callVM(masm, CallNativeGetterInfo))
         return false;
 
     stubFrame.leave(masm);

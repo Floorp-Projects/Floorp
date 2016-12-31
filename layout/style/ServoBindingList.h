@@ -26,9 +26,23 @@ SERVO_BINDING_FUNC(Servo_Element_ShouldTraverse, bool, RawGeckoElementBorrowed n
 SERVO_BINDING_FUNC(Servo_StyleSheet_Empty, RawServoStyleSheetStrong,
                    mozilla::css::SheetParsingMode parsing_mode)
 SERVO_BINDING_FUNC(Servo_StyleSheet_FromUTF8Bytes, RawServoStyleSheetStrong,
+                   mozilla::css::Loader* loader,
+                   mozilla::ServoStyleSheet* gecko_stylesheet,
                    const nsACString* data,
                    mozilla::css::SheetParsingMode parsing_mode,
                    const nsACString* base_url,
+                   ThreadSafeURIHolder* base,
+                   ThreadSafeURIHolder* referrer,
+                   ThreadSafePrincipalHolder* principal)
+SERVO_BINDING_FUNC(Servo_ImportRule_GetSheet,
+                   RawServoStyleSheetStrong,
+                   const RawServoImportRuleBorrowed import_rule)
+SERVO_BINDING_FUNC(Servo_StyleSheet_ClearAndUpdate,
+                   void,
+                   RawServoStyleSheetBorrowed stylesheet,
+                   mozilla::css::Loader* loader,
+                   mozilla::ServoStyleSheet* gecko_stylesheet,
+                   const nsACString* data,
                    ThreadSafeURIHolder* base,
                    ThreadSafeURIHolder* referrer,
                    ThreadSafePrincipalHolder* principal)

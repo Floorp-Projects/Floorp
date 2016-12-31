@@ -55,6 +55,8 @@ ModuleGenerator::ModuleGenerator()
     startOfUnpatchedCallsites_(0),
     parallel_(false),
     outstanding_(0),
+    currentTask_(nullptr),
+    batchedBytecode_(0),
     activeFuncDef_(nullptr),
     startedFuncDefs_(false),
     finishedFuncDefs_(false),
@@ -96,6 +98,8 @@ ModuleGenerator::~ModuleGenerator()
     } else {
         MOZ_ASSERT(!outstanding_);
     }
+    MOZ_ASSERT_IF(finishedFuncDefs_, !batchedBytecode_);
+    MOZ_ASSERT_IF(finishedFuncDefs_, !currentTask_);
 }
 
 bool
@@ -391,42 +395,45 @@ ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits)
 bool
 ModuleGenerator::finishTask(CompileTask* task)
 {
-    const FuncBytes& func = task->func();
-    FuncCompileResults& results = task->results();
-
     masm_.haltingAlign(CodeAlignment);
 
     // Before merging in the new function's code, if calls in a prior function
     // body might go out of range, insert far jumps to extend the range.
-    if ((masm_.size() - startOfUnpatchedCallsites_) + results.masm().size() > JumpRange()) {
+    if ((masm_.size() - startOfUnpatchedCallsites_) + task->masm().size() > JumpRange()) {
         startOfUnpatchedCallsites_ = masm_.size();
         if (!patchCallSites())
             return false;
     }
 
-    // Offset the recorded FuncOffsets by the offset of the function in the
-    // whole module's code segment.
     uint32_t offsetInWhole = masm_.size();
-    results.offsets().offsetBy(offsetInWhole);
+    for (const FuncCompileUnit& unit : task->units()) {
+        const FuncBytes& func = unit.func();
 
-    // Add the CodeRange for this function.
-    uint32_t funcCodeRangeIndex = metadata_->codeRanges.length();
-    if (!metadata_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), results.offsets()))
-        return false;
+        // Offset the recorded FuncOffsets by the offset of the function in the
+        // whole module's code segment.
+        FuncOffsets offsets = unit.offsets();
+        offsets.offsetBy(offsetInWhole);
 
-    MOZ_ASSERT(!funcIsCompiled(func.index()));
-    funcToCodeRange_[func.index()] = funcCodeRangeIndex;
+        // Add the CodeRange for this function.
+        uint32_t funcCodeRangeIndex = metadata_->codeRanges.length();
+        if (!metadata_->codeRanges.emplaceBack(func.index(), func.lineOrBytecode(), offsets))
+            return false;
+
+        MOZ_ASSERT(!funcIsCompiled(func.index()));
+        funcToCodeRange_[func.index()] = funcCodeRangeIndex;
+    }
 
     // Merge the compiled results into the whole-module masm.
     mozilla::DebugOnly<size_t> sizeBefore = masm_.size();
-    if (!masm_.asmMergeWith(results.masm()))
+    if (!masm_.asmMergeWith(task->masm()))
         return false;
-    MOZ_ASSERT(masm_.size() == offsetInWhole + results.masm().size());
+    MOZ_ASSERT(masm_.size() == offsetInWhole + task->masm().size());
 
-    UniqueBytes recycled;
-    task->reset(&recycled);
+    if (!task->reset(&freeFuncBytes_))
+        return false;
+
     freeTasks_.infallibleAppend(task);
-    return freeBytes_.emplaceBack(Move(recycled));
+    return true;
 }
 
 bool
@@ -864,15 +871,6 @@ ModuleGenerator::startFuncDefs()
     for (size_t i = 0; i < numTasks; i++)
         freeTasks_.infallibleAppend(&tasks_[i]);
 
-    if (!freeBytes_.reserve(numTasks))
-        return false;
-    for (size_t i = 0; i < numTasks; i++) {
-        auto bytes = js::MakeUnique<Bytes>();
-        if (!bytes)
-            return false;
-        freeBytes_.infallibleAppend(Move(bytes));
-    }
-
     startedFuncDefs_ = true;
     MOZ_ASSERT(!finishedFuncDefs_);
     return true;
@@ -885,18 +883,50 @@ ModuleGenerator::startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg)
     MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
 
-    if (!freeBytes_.empty()) {
-        fg->bytes_ = Move(freeBytes_.back());
-        freeBytes_.popBack();
+    if (!freeFuncBytes_.empty()) {
+        fg->funcBytes_ = Move(freeFuncBytes_.back());
+        freeFuncBytes_.popBack();
     } else {
-        fg->bytes_ = js::MakeUnique<Bytes>();
-        if (!fg->bytes_)
+        fg->funcBytes_ = js::MakeUnique<FuncBytes>();
+        if (!fg->funcBytes_)
             return false;
     }
 
-    fg->lineOrBytecode_ = lineOrBytecode;
+    if (!currentTask_) {
+        if (freeTasks_.empty() && !finishOutstandingTask())
+            return false;
+        currentTask_ = freeTasks_.popCopy();
+    }
+
+    fg->funcBytes_->setLineOrBytecode(lineOrBytecode);
     fg->m_ = this;
     activeFuncDef_ = fg;
+    return true;
+}
+
+bool
+ModuleGenerator::launchBatchCompile()
+{
+    MOZ_ASSERT(currentTask_);
+
+    size_t numBatchedFuncs = currentTask_->units().length();
+    MOZ_ASSERT(numBatchedFuncs);
+
+    if (parallel_) {
+        if (!StartOffThreadWasmCompile(currentTask_))
+            return false;
+        outstanding_++;
+    } else {
+        if (!CompileFunction(currentTask_))
+            return false;
+        if (!finishTask(currentTask_))
+            return false;
+    }
+
+    currentTask_ = nullptr;
+    batchedBytecode_ = 0;
+
+    numFinishedFuncDefs_ += numBatchedFuncs;
     return true;
 }
 
@@ -905,38 +935,29 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 {
     MOZ_ASSERT(activeFuncDef_ == fg);
 
-    auto func = js::MakeUnique<FuncBytes>(Move(fg->bytes_),
-                                          funcIndex,
-                                          funcSig(funcIndex),
-                                          fg->lineOrBytecode_,
-                                          Move(fg->callSiteLineNums_));
-    if (!func)
-        return false;
+    UniqueFuncBytes func = Move(fg->funcBytes_);
+
+    func->setFunc(funcIndex, &funcSig(funcIndex));
 
     auto mode = alwaysBaseline_ && BaselineCanCompile(fg)
-                ? CompileTask::CompileMode::Baseline
-                : CompileTask::CompileMode::Ion;
+                ? CompileMode::Baseline
+                : CompileMode::Ion;
 
-    if (freeTasks_.empty() && !finishOutstandingTask())
+    CheckedInt<uint32_t> newBatched = func->bytes().length();
+    if (mode == CompileMode::Ion)
+        newBatched *= JitOptions.wasmBatchIonScaleFactor;
+    newBatched += batchedBytecode_;
+
+    if (!currentTask_->units().emplaceBack(Move(func), mode))
         return false;
 
-    CompileTask* task = freeTasks_.popCopy();
-    task->init(Move(func), mode);
-
-    if (parallel_) {
-        if (!StartOffThreadWasmCompile(task))
-            return false;
-        outstanding_++;
-    } else {
-        if (!CompileFunction(task))
-            return false;
-        if (!finishTask(task))
-            return false;
-    }
+    if (newBatched.isValid() && newBatched.value() < JitOptions.wasmBatchThreshold)
+        batchedBytecode_ = newBatched.value();
+    else if (!launchBatchCompile())
+        return false;
 
     fg->m_ = nullptr;
     activeFuncDef_ = nullptr;
-    numFinishedFuncDefs_++;
     return true;
 }
 
@@ -946,6 +967,9 @@ ModuleGenerator::finishFuncDefs()
     MOZ_ASSERT(startedFuncDefs_);
     MOZ_ASSERT(!activeFuncDef_);
     MOZ_ASSERT(!finishedFuncDefs_);
+
+    if (currentTask_ && !launchBatchCompile())
+        return false;
 
     while (outstanding_ > 0) {
         if (!finishOutstandingTask())
@@ -1146,14 +1170,18 @@ wasm::CompileFunction(CompileTask* task)
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
 
-    switch (task->mode()) {
-      case wasm::CompileTask::CompileMode::Ion:
-        return wasm::IonCompileFunction(task);
-      case wasm::CompileTask::CompileMode::Baseline:
-        return wasm::BaselineCompileFunction(task);
-      case wasm::CompileTask::CompileMode::None:
-        break;
+    for (FuncCompileUnit& unit : task->units()) {
+        switch (unit.mode()) {
+          case CompileMode::Ion:
+            if (!IonCompileFunction(task, &unit))
+                return false;
+            break;
+          case CompileMode::Baseline:
+            if (!BaselineCompileFunction(task, &unit))
+                return false;
+            break;
+        }
     }
 
-    MOZ_CRASH("Uninitialized task");
+    return true;
 }
