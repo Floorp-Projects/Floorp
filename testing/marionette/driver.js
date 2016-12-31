@@ -2213,8 +2213,6 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
     }
   }
 
-  this.sessionId = null;
-
   if (this.observing !== null) {
     for (let topic in this.observing) {
       Services.obs.removeObserver(this.observing[topic], topic);
@@ -2224,6 +2222,9 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
 
   this.sandboxes.clear();
   cert.uninstallOverride();
+
+  this.sessionId = null;
+  this.sessionCapabilities = new session.Capabilities();
 };
 
 /**
