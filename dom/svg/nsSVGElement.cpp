@@ -53,6 +53,8 @@
 #include "nsAttrValueOrString.h"
 #include "nsSMILAnimationController.h"
 #include "mozilla/dom/SVGElementBinding.h"
+#include "mozilla/DeclarationBlock.h"
+#include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/Unused.h"
 #include "mozilla/RestyleManagerHandle.h"
 #include "mozilla/RestyleManagerHandleInlines.h"
@@ -91,6 +93,10 @@ nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
 
 nsSVGElement::nsSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsSVGElementBase(aNodeInfo)
+{
+}
+
+nsSVGElement::~nsSVGElement()
 {
 }
 
@@ -293,12 +299,11 @@ nsSVGElement::AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
              "Unexpected use of nsMappedAttributes within SVG");
 
   // If this is an svg presentation attribute we need to map it into
-  // the content stylerule.
+  // the content declaration block.
   // XXX For some reason incremental mapping doesn't work, so for now
-  // just delete the style rule and lazily reconstruct it in
-  // GetContentStyleRule()
+  // just delete the style rule and lazily reconstruct it as needed).
   if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
-    mContentStyleRule = nullptr;
+    mContentDeclarationBlock = nullptr;
   }
 
   if (IsEventAttributeName(aName) && aValue) {
@@ -659,9 +664,11 @@ nsSVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsIAtom* aName,
   // Maybe consolidate?
 
   if (aNamespaceID == kNameSpaceID_None) {
-    // If this is an svg presentation attribute, remove rule to force an update
-    if (IsAttributeMapped(aName))
-      mContentStyleRule = nullptr;
+    // If this is an svg presentation attribute, remove declaration block to
+    // force an update
+    if (IsAttributeMapped(aName)) {
+      mContentDeclarationBlock = nullptr;
+    }
 
     if (IsEventAttributeName(aName)) {
       EventListenerManager* manager = GetExistingListenerManager();
@@ -903,11 +910,12 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 #ifdef DEBUG
 //  printf("nsSVGElement(%p)::WalkContentStyleRules()\n", this);
 #endif
-  if (!mContentStyleRule)
-    UpdateContentStyleRule();
+  if (!mContentDeclarationBlock) {
+    UpdateContentDeclarationBlock();
+  }
 
-  if (mContentStyleRule) {
-    css::Declaration* declaration = mContentStyleRule->GetDeclaration();
+  if (mContentDeclarationBlock) {
+    css::Declaration* declaration = mContentDeclarationBlock->AsGecko();
     declaration->SetImmutable();
     aRuleWalker->Forward(declaration);
   }
@@ -1153,9 +1161,13 @@ public:
   void ParseMappedAttrValue(nsIAtom* aMappedAttrName,
                             const nsAString& aMappedAttrValue);
 
-  // If we've parsed any values for mapped attributes, this method returns
-  // a new already_AddRefed css::StyleRule that incorporates the parsed
+  // If we've parsed any values for mapped attributes, this method returns the
+  // already_AddRefed css::Declaration that incorporates the parsed
   // values. Otherwise, this method returns null.
+  already_AddRefed<css::Declaration> GetDeclarationBlock();
+
+  // Like GetDeclarationBlock(), but returns a StyleRule.  It's about to go
+  // away once we convert the animation bits to GetDeclarationBlock().
   already_AddRefed<css::StyleRule> CreateStyleRule();
 
 private:
@@ -1168,7 +1180,7 @@ private:
   nsCOMPtr<nsIURI>  mBaseURI;
 
   // Declaration for storing parsed values (lazily initialized)
-  css::Declaration* mDecl;
+  RefPtr<css::Declaration> mDecl;
 
   // For reporting use counters
   nsSVGElement*     mElement;
@@ -1179,15 +1191,15 @@ MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
                                    already_AddRefed<nsIURI> aBaseURI,
                                    nsSVGElement* aElement)
   : mParser(aLoader), mDocURI(aDocURI), mBaseURI(aBaseURI),
-    mDecl(nullptr), mElement(aElement)
+    mElement(aElement)
 {
 }
 
 MappedAttrParser::~MappedAttrParser()
 {
   MOZ_ASSERT(!mDecl,
-             "If mDecl was initialized, it should have been converted "
-             "into a style rule (and had its pointer cleared)");
+             "If mDecl was initialized, it should have been returned via "
+             "GetDeclarationBlock (and had its pointer cleared)");
 }
 
 void
@@ -1241,6 +1253,12 @@ MappedAttrParser::ParseMappedAttrValue(nsIAtom* aMappedAttrName,
   }
 }
 
+already_AddRefed<css::Declaration>
+MappedAttrParser::GetDeclarationBlock()
+{
+  return mDecl.forget();
+}
+
 already_AddRefed<css::StyleRule>
 MappedAttrParser::CreateStyleRule()
 {
@@ -1259,9 +1277,10 @@ MappedAttrParser::CreateStyleRule()
 // Implementation Helpers:
 
 void
-nsSVGElement::UpdateContentStyleRule()
+nsSVGElement::UpdateContentDeclarationBlock()
 {
-  NS_ASSERTION(!mContentStyleRule, "we already have a content style rule");
+  NS_ASSERTION(!mContentDeclarationBlock,
+               "we already have a content declaration block");
 
   uint32_t attrCount = mAttrsAndChildren.AttrCount();
   if (!attrCount) {
@@ -1310,7 +1329,7 @@ nsSVGElement::UpdateContentStyleRule()
     mAttrsAndChildren.AttrAt(i)->ToString(value);
     mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
   }
-  mContentStyleRule = mappedAttrParser.CreateStyleRule();
+  mContentDeclarationBlock = mappedAttrParser.GetDeclarationBlock();
 }
 
 static void

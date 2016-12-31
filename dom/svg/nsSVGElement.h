@@ -39,6 +39,8 @@ class nsSVGString;
 class nsSVGViewBox;
 
 namespace mozilla {
+class DeclarationBlock;
+
 namespace dom {
 class SVGSVGElement;
 
@@ -78,7 +80,7 @@ protected:
   friend nsresult NS_NewSVGElement(mozilla::dom::Element **aResult,
                                    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   nsresult Init();
-  virtual ~nsSVGElement(){}
+  virtual ~nsSVGElement();
 
 public:
 
@@ -343,7 +345,7 @@ protected:
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
 
-  void UpdateContentStyleRule();
+  void UpdateContentDeclarationBlock();
   void UpdateAnimatedContentStyleRule();
   mozilla::css::StyleRule* GetAnimatedContentStyleRule();
 
@@ -635,7 +637,7 @@ private:
 
   nsSVGClass mClassAttribute;
   nsAutoPtr<nsAttrValue> mClassAnimAttr;
-  RefPtr<mozilla::css::StyleRule> mContentStyleRule;
+  RefPtr<mozilla::DeclarationBlock> mContentDeclarationBlock;
 };
 
 /**
