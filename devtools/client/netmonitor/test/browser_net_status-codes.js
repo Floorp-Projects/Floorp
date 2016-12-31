@@ -155,14 +155,13 @@ add_task(function* () {
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[0];
 
     let { method, uri, details: { status, statusText } } = data;
-    is(tabpanel.querySelector("#headers-summary-url-value").getAttribute("value"),
-      uri, "The url summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-method-value").getAttribute("value"),
-      method, "The method summary value is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-status-circle").getAttribute("data-code"),
-      status, "The status summary code is incorrect.");
-    is(tabpanel.querySelector("#headers-summary-status-value").getAttribute("value"),
-      status + " " + statusText, "The status summary value is incorrect.");
+    let summaryValues = tabpanel.querySelectorAll(".tabpanel-summary-value.textbox-input");
+    is(summaryValues[0].value, uri, "The url summary value is incorrect.");
+    is(summaryValues[1].value, method, "The method summary value is incorrect.");
+    is(tabpanel.querySelector(".requests-menu-status-icon").dataset.code, status,
+      "The status summary code is incorrect.");
+    is(summaryValues[3].value, status + " " + statusText,
+      "The status summary value is incorrect.");
   }
 
   /**
