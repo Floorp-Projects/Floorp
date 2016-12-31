@@ -62,21 +62,17 @@ ServoStyleSheet::GetParentSheet() const
 void
 ServoStyleSheet::AppendStyleSheet(ServoStyleSheet* aSheet)
 {
-  // XXXheycam: When we implement support for child sheets, we'll have
-  // to fix SetOwningDocument to propagate the owning document down
-  // to the children.
-  MOZ_CRASH("stylo: not implemented");
+  aSheet->mDocument = mDocument;
 }
 
 nsresult
-ServoStyleSheet::ParseSheet(const nsAString& aInput,
+ServoStyleSheet::ParseSheet(css::Loader* aLoader,
+                            const nsAString& aInput,
                             nsIURI* aSheetURI,
                             nsIURI* aBaseURI,
                             nsIPrincipal* aSheetPrincipal,
                             uint32_t aLineNumber)
 {
-  DropSheet();
-
   RefPtr<ThreadSafeURIHolder> base = new ThreadSafeURIHolder(aBaseURI);
   RefPtr<ThreadSafeURIHolder> referrer = new ThreadSafeURIHolder(aSheetURI);
   RefPtr<ThreadSafePrincipalHolder> principal =
@@ -87,8 +83,15 @@ ServoStyleSheet::ParseSheet(const nsAString& aInput,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ConvertUTF16toUTF8 input(aInput);
-  mSheet = Servo_StyleSheet_FromUTF8Bytes(&input, mParsingMode, &baseString,
-                                          base, referrer, principal).Consume();
+  if (!mSheet) {
+    mSheet =
+      Servo_StyleSheet_FromUTF8Bytes(aLoader, this, &input, mParsingMode,
+                                     &baseString, base, referrer,
+                                     principal).Consume();
+  } else {
+    Servo_StyleSheet_ClearAndUpdate(mSheet, aLoader, this, &input, base,
+                                    referrer, principal);
+  }
 
   return NS_OK;
 }

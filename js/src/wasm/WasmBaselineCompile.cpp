@@ -512,7 +512,7 @@ class BaseCompiler
     Assembler::Condition        latentIntCmp_;   // Comparison operator, if latentOp_ == Compare, int types
     Assembler::DoubleCondition  latentDoubleCmp_;// Comparison operator, if latentOp_ == Compare, float types
 
-    FuncCompileResults&         compileResults_;
+    FuncOffsets                 offsets_;
     MacroAssembler&             masm;            // No '_' suffix - too tedious...
 
     AllocatableGeneralRegisterSet availGPR_;
@@ -567,11 +567,12 @@ class BaseCompiler
                  Decoder& decoder,
                  const FuncBytes& func,
                  const ValTypeVector& locals,
-                 FuncCompileResults& compileResults);
+                 TempAllocator* alloc,
+                 MacroAssembler* masm);
 
     MOZ_MUST_USE bool init();
 
-    void finish();
+    FuncOffsets finish();
 
     MOZ_MUST_USE bool emitFunction();
 
@@ -2053,7 +2054,7 @@ class BaseCompiler
         JitSpew(JitSpew_Codegen, "# Emitting wasm baseline code");
 
         SigIdDesc sigId = env_.funcSigs[func_.index()]->id;
-        GenerateFunctionPrologue(masm, localSize_, sigId, &compileResults_.offsets());
+        GenerateFunctionPrologue(masm, localSize_, sigId, &offsets_);
 
         MOZ_ASSERT(masm.framePushed() == uint32_t(localSize_));
 
@@ -2148,7 +2149,7 @@ class BaseCompiler
         // Restore the TLS register in case it was overwritten by the function.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
 
-        GenerateFunctionEpilogue(masm, localSize_, &compileResults_.offsets());
+        GenerateFunctionEpilogue(masm, localSize_, &offsets_);
 
 #if defined(JS_ION_PERF)
         // FIXME - profiling code missing.  Bug 1286948.
@@ -2162,7 +2163,7 @@ class BaseCompiler
 
         masm.wasmEmitTrapOutOfLineCode();
 
-        compileResults_.offsets().end = masm.currentOffset();
+        offsets_.end = masm.currentOffset();
 
         // A frame greater than 256KB is implausible, probably an attack,
         // so fail the compilation.
@@ -7540,12 +7541,13 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            Decoder& decoder,
                            const FuncBytes& func,
                            const ValTypeVector& locals,
-                           FuncCompileResults& compileResults)
+                           TempAllocator* alloc,
+                           MacroAssembler* masm)
     : env_(env),
       iter_(decoder, func.lineOrBytecode()),
       func_(func),
       lastReadCallSite_(0),
-      alloc_(compileResults.alloc()),
+      alloc_(*alloc),
       locals_(locals),
       localSize_(0),
       varLow_(0),
@@ -7558,8 +7560,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       latentType_(ValType::I32),
       latentIntCmp_(Assembler::Equal),
       latentDoubleCmp_(Assembler::DoubleEqual),
-      compileResults_(compileResults),
-      masm(compileResults_.masm()),
+      masm(*masm),
       availGPR_(GeneralRegisterSet::All()),
       availFPU_(FloatRegisterSet::All()),
 #ifdef DEBUG
@@ -7702,13 +7703,15 @@ BaseCompiler::init()
     return true;
 }
 
-void
+FuncOffsets
 BaseCompiler::finish()
 {
     MOZ_ASSERT(done(), "all bytes must be consumed");
     MOZ_ASSERT(func_.callSiteLineNums().length() == lastReadCallSite_);
 
     masm.flushBuffer();
+
+    return offsets_;
 }
 
 static LiveRegisterSet
@@ -7756,12 +7759,11 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 }
 
 bool
-js::wasm::BaselineCompileFunction(CompileTask* task)
+js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit)
 {
-    MOZ_ASSERT(task->mode() == CompileTask::CompileMode::Baseline);
+    MOZ_ASSERT(unit->mode() == CompileMode::Baseline);
 
-    const FuncBytes& func = task->func();
-    FuncCompileResults& results = task->results();
+    const FuncBytes& func = unit->func();
 
     Decoder d(func.bytes());
 
@@ -7775,19 +7777,18 @@ js::wasm::BaselineCompileFunction(CompileTask* task)
 
     // The MacroAssembler will sometimes access the jitContext.
 
-    JitContext jitContext(&results.alloc());
+    JitContext jitContext(&task->alloc());
 
     // One-pass baseline compilation.
 
-    BaseCompiler f(task->env(), d, func, locals, results);
+    BaseCompiler f(task->env(), d, func, locals, &task->alloc(), &task->masm());
     if (!f.init())
         return false;
 
     if (!f.emitFunction())
         return false;
 
-    f.finish();
-
+    unit->finish(f.finish());
     return true;
 }
 
