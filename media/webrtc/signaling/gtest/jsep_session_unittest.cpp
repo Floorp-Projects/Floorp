@@ -824,21 +824,26 @@ protected:
                                     size_t transportLevel,
                                     const std::string& context) const
       {
+        Address expectedAddress = "0.0.0.0";
+        Port expectedPort = 9U;
+
         if (expectDefault) {
           // Copy so we can be terse and use []
           auto defaultCandidates = mDefaultCandidates;
-          ASSERT_EQ(defaultCandidates[transportLevel][RTP].first,
-                    msection.GetConnection().GetAddress())
-            << context << " (level " << msection.GetLevel() << ")";
-          ASSERT_EQ(defaultCandidates[transportLevel][RTP].second,
-                    msection.GetPort())
-            << context << " (level " << msection.GetLevel() << ")";
-        } else {
-          ASSERT_EQ("0.0.0.0", msection.GetConnection().GetAddress())
-            << context << " (level " << msection.GetLevel() << ")";
-          ASSERT_EQ(9U, msection.GetPort())
-            << context << " (level " << msection.GetLevel() << ")";
+          expectedAddress = defaultCandidates[transportLevel][RTP].first;
+          expectedPort = defaultCandidates[transportLevel][RTP].second;
         }
+
+        // if bundle-only attribute is present, expect port 0
+        const SdpAttributeList& attrs = msection.GetAttributeList();
+        if (attrs.HasAttribute(SdpAttribute::kBundleOnlyAttribute)) {
+          expectedPort = 0U;
+        }
+
+        ASSERT_EQ(expectedAddress, msection.GetConnection().GetAddress())
+          << context << " (level " << msection.GetLevel() << ")";
+        ASSERT_EQ(expectedPort, msection.GetPort())
+          << context << " (level " << msection.GetLevel() << ")";
       }
 
       void CheckDefaultRtcpCandidate(bool expectDefault,
@@ -1074,11 +1079,15 @@ private:
         ASSERT_EQ(SdpMediaSection::kUdpTlsRtpSavpf, msection.GetProtocol());
       }
 
-      if (msection.GetPort() == 0) {
+      const SdpAttributeList& attrs = msection.GetAttributeList();
+      bool bundle_only = attrs.HasAttribute(SdpAttribute::kBundleOnlyAttribute);
+
+      // port 0 only means disabled when the bundle-only attribute is missing
+      if (!bundle_only && msection.GetPort() == 0) {
         ValidateDisabledMSection(&msection);
         continue;
       }
-      const SdpAttributeList& attrs = msection.GetAttributeList();
+
       ASSERT_EQ(source.mIceUfrag, attrs.GetIceUfrag());
       ASSERT_EQ(source.mIcePwd, attrs.GetIcePwd());
       const SdpFingerprintAttributeList& fps = attrs.GetFingerprint();
@@ -4152,10 +4161,12 @@ TEST_P(JsepSessionTest, TestMaxBundle)
   ASSERT_FALSE(
       parsedOffer->GetMediaSection(0).GetAttributeList().HasAttribute(
         SdpAttribute::kBundleOnlyAttribute));
+  ASSERT_NE(0U, parsedOffer->GetMediaSection(0).GetPort());
   for (size_t i = 1; i < parsedOffer->GetMediaSectionCount(); ++i) {
     ASSERT_TRUE(
         parsedOffer->GetMediaSection(i).GetAttributeList().HasAttribute(
           SdpAttribute::kBundleOnlyAttribute));
+    ASSERT_EQ(0U, parsedOffer->GetMediaSection(i).GetPort());
   }
 
 
