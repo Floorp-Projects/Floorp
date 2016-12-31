@@ -3704,7 +3704,7 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
     RootedObjectGroup oldGroup(cx);
     RootedShape oldShape(cx);
     if (cache.canAttachStub()) {
-        oldGroup = obj->getGroup(cx);
+        oldGroup = JSObject::getGroup(cx, obj);
         if (!oldGroup)
             return false;
 
