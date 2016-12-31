@@ -38,8 +38,7 @@ this.PlacesDBUtils = {
    * @param aTasks
    *        Tasks object to execute.
    */
-  _executeTasks: function PDBU__executeTasks(aTasks)
-  {
+  _executeTasks: function PDBU__executeTasks(aTasks) {
     if (PlacesDBUtils._isShuttingDown) {
       aTasks.log("- We are shutting down. Will not schedule the tasks.");
       aTasks.clear();
@@ -48,8 +47,7 @@ this.PlacesDBUtils = {
     let task = aTasks.pop();
     if (task) {
       task.call(PlacesDBUtils, aTasks);
-    }
-    else {
+    } else {
       // All tasks have been completed.
       // Telemetry the time it took for maintenance, if a start time exists.
       if (aTasks._telemetryStart) {
@@ -82,8 +80,7 @@ this.PlacesDBUtils = {
    * @param [optional] aScope
    *        Scope for the callback.
    */
-  maintenanceOnIdle: function PDBU_maintenanceOnIdle(aCallback, aScope)
-  {
+  maintenanceOnIdle: function PDBU_maintenanceOnIdle(aCallback, aScope) {
     let tasks = new Tasks([
       this.checkIntegrity
     , this.checkCoherence
@@ -110,8 +107,7 @@ this.PlacesDBUtils = {
    * @param [optional] aScope
    *        Scope for the callback.
    */
-  checkAndFixDatabase: function PDBU_checkAndFixDatabase(aCallback, aScope)
-  {
+  checkAndFixDatabase: function PDBU_checkAndFixDatabase(aCallback, aScope) {
     let tasks = new Tasks([
       this.checkIntegrity
     , this.checkCoherence
@@ -131,8 +127,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  _refreshUI: function PDBU__refreshUI(aTasks)
-  {
+  _refreshUI: function PDBU__refreshUI(aTasks) {
     let tasks = new Tasks(aTasks);
 
     // Send batch update notifications to update the UI.
@@ -142,8 +137,7 @@ this.PlacesDBUtils = {
     PlacesDBUtils._executeTasks(tasks);
   },
 
-  _handleError: function PDBU__handleError(aError)
-  {
+  _handleError: function PDBU__handleError(aError) {
     Cu.reportError("Async statement execution returned with '" +
                    aError.result + "', '" + aError.message + "'");
   },
@@ -154,8 +148,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  reindex: function PDBU_reindex(aTasks)
-  {
+  reindex: function PDBU_reindex(aTasks) {
     let tasks = new Tasks(aTasks);
     tasks.log("> Reindex");
 
@@ -164,12 +157,10 @@ this.PlacesDBUtils = {
       handleError: PlacesDBUtils._handleError,
       handleResult() {},
 
-      handleCompletion(aReason)
-      {
+      handleCompletion(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           tasks.log("+ The database has been reindexed");
-        }
-        else {
+        } else {
           tasks.log("- Unable to reindex database");
         }
 
@@ -197,8 +188,7 @@ this.PlacesDBUtils = {
    * @param [optional] aSkipdReindex
    *        Whether to try to reindex database or not.
    */
-  checkIntegrity: function PDBU_checkIntegrity(aTasks, aSkipReindex)
-  {
+  checkIntegrity: function PDBU_checkIntegrity(aTasks, aSkipReindex) {
     let tasks = new Tasks(aTasks);
     tasks.log("> Integrity check");
 
@@ -208,14 +198,12 @@ this.PlacesDBUtils = {
       handleError: PlacesDBUtils._handleError,
 
       _corrupt: false,
-      handleResult(aResultSet)
-      {
+      handleResult(aResultSet) {
         let row = aResultSet.getNextRow();
         this._corrupt = row.getResultByIndex(0) != "ok";
       },
 
-      handleCompletion(aReason)
-      {
+      handleCompletion(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           if (this._corrupt) {
             tasks.log("- The database is corrupt");
@@ -223,19 +211,16 @@ this.PlacesDBUtils = {
               tasks.log("- Unable to fix corruption, database will be replaced on next startup");
               Services.prefs.setBoolPref("places.database.replaceOnStartup", true);
               tasks.clear();
-            }
-            else {
+            } else {
               // Try to reindex, this often fixed simple indices corruption.
               // We insert from the top of the queue, they will run inverse.
               tasks.push(PlacesDBUtils._checkIntegritySkipReindex);
               tasks.push(PlacesDBUtils.reindex);
             }
-          }
-          else {
+          } else {
             tasks.log("+ The database is sane");
           }
-        }
-        else {
+        } else {
           tasks.log("- Unable to check database status");
           tasks.clear();
         }
@@ -252,8 +237,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  checkCoherence: function PDBU_checkCoherence(aTasks)
-  {
+  checkCoherence: function PDBU_checkCoherence(aTasks) {
     let tasks = new Tasks(aTasks);
     tasks.log("> Coherence check");
 
@@ -262,12 +246,10 @@ this.PlacesDBUtils = {
       handleError: PlacesDBUtils._handleError,
       handleResult() {},
 
-      handleCompletion(aReason)
-      {
+      handleCompletion(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           tasks.log("+ The database is coherent");
-        }
-        else {
+        } else {
           tasks.log("- Unable to check database coherence");
           tasks.clear();
         }
@@ -278,8 +260,7 @@ this.PlacesDBUtils = {
     stmts.forEach(aStmt => aStmt.finalize());
   },
 
-  _getBoundCoherenceStatements: function PDBU__getBoundCoherenceStatements()
-  {
+  _getBoundCoherenceStatements: function PDBU__getBoundCoherenceStatements() {
     let cleanupStatements = [];
 
     // MOZ_ANNO_ATTRIBUTES
@@ -735,8 +716,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  vacuum: function PDBU_vacuum(aTasks)
-  {
+  vacuum: function PDBU_vacuum(aTasks) {
     let tasks = new Tasks(aTasks);
     tasks.log("> Vacuum");
 
@@ -750,16 +730,14 @@ this.PlacesDBUtils = {
       handleError: PlacesDBUtils._handleError,
       handleResult() {},
 
-      handleCompletion(aReason)
-      {
+      handleCompletion(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           tasks.log("+ The database has been vacuumed");
           let vacuumedDBFile = Services.dirsvc.get("ProfD", Ci.nsILocalFile);
           vacuumedDBFile.append("places.sqlite");
           tasks.log("Final database size is " +
                     parseInt(vacuumedDBFile.fileSize / 1024) + " KiB");
-        }
-        else {
+        } else {
           tasks.log("- Unable to vacuum database");
           tasks.clear();
         }
@@ -776,8 +754,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  expire: function PDBU_expire(aTasks)
-  {
+  expire: function PDBU_expire(aTasks) {
     let tasks = new Tasks(aTasks);
     tasks.log("> Orphans expiration");
 
@@ -800,8 +777,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  stats: function PDBU_stats(aTasks)
-  {
+  stats: function PDBU_stats(aTasks) {
     let tasks = new Tasks(aTasks);
     tasks.log("> Statistics");
 
@@ -862,8 +838,7 @@ this.PlacesDBUtils = {
    * @param [optional] aTasks
    *        Tasks object to execute.
    */
-  telemetry: function PDBU_telemetry(aTasks)
-  {
+  telemetry: function PDBU_telemetry(aTasks) {
     let tasks = new Tasks(aTasks);
 
     // This will be populated with one integer property for each probe result,
@@ -1054,16 +1029,14 @@ this.PlacesDBUtils = {
  * @param [optional] aTasks
  *        Array of tasks or another Tasks object to clone.
  */
-function Tasks(aTasks)
-{
+function Tasks(aTasks) {
   if (aTasks) {
     if (Array.isArray(aTasks)) {
       this._list = aTasks.slice(0, aTasks.length);
-    }
-    // This supports passing in a Tasks-like object, with a "list" property,
-    // for compatibility reasons.
-    else if (typeof(aTasks) == "object" &&
-             (Tasks instanceof Tasks || "list" in aTasks)) {
+    } else if (typeof(aTasks) == "object" &&
+               (Tasks instanceof Tasks || "list" in aTasks)) {
+      // This supports passing in a Tasks-like object, with a "list" property,
+      // for compatibility reasons.
       this._list = aTasks.list;
       this._log = aTasks.messages;
       this.callback = aTasks.callback;
@@ -1086,8 +1059,7 @@ Tasks.prototype = {
    * @param aNewElt
    *        Task to be added.
    */
-  push: function T_push(aNewElt)
-  {
+  push: function T_push(aNewElt) {
     this._list.unshift(aNewElt);
   },
 
@@ -1096,24 +1068,21 @@ Tasks.prototype = {
    *
    * @return next task or undefined if no task is left.
    */
-  pop: function T_pop()
-  {
+  pop: function T_pop() {
     return this._list.shift();
   },
 
   /**
    * Removes all tasks.
    */
-  clear: function T_clear()
-  {
+  clear: function T_clear() {
     this._list.length = 0;
   },
 
   /**
    * Returns array of tasks ordered from the next to be run to the latest.
    */
-  get list()
-  {
+  get list() {
     return this._list.slice(0, this._list.length);
   },
 
@@ -1123,16 +1092,14 @@ Tasks.prototype = {
    * @param aMsg
    *        String message to be added.
    */
-  log: function T_log(aMsg)
-  {
+  log: function T_log(aMsg) {
     this._log.push(aMsg);
   },
 
   /**
    * Returns array of log messages ordered from oldest to newest.
    */
-  get messages()
-  {
+  get messages() {
     return this._log.slice(0, this._log.length);
   },
 }

@@ -359,8 +359,7 @@ function runNextTest() {
     gCurrentTest.setup(function() {
       execute_test_in_sidebar();
     });
-  }
-  else {
+  } else {
     // Finished all tests.
     finish();
   }
@@ -434,8 +433,7 @@ function open_properties_dialog() {
             command = "placesCmd_new:bookmark";
           else
             ok(false, "You didn't set a valid itemType for adding an item");
-        }
-        else
+        } else
           command = "placesCmd_createBookmark";
         break;
       default:

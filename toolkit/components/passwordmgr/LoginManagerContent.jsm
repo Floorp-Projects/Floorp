@@ -738,7 +738,7 @@ var LoginManagerContent = {
       } else if (pw2 == pw3) {
         oldPasswordField = pwFields[0].element;
         newPasswordField = pwFields[2].element;
-      } else  if (pw1 == pw3) {
+      } else if (pw1 == pw3) {
         // A bit odd, but could make sense with the right page layout.
         newPasswordField = pwFields[0].element;
         oldPasswordField = pwFields[1].element;
@@ -1277,7 +1277,7 @@ UserAutoCompleteResult.prototype = {
         return -1;
 
       if (userA > userB)
-        return  1;
+        return 1;
 
       return 0;
     }

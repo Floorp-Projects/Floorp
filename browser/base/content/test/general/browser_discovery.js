@@ -100,8 +100,7 @@ function runSearchDiscoveryTest() {
                                        (browser.engines[0].title == title);
     ok(hasEngine, testCase.text);
     browser.engines = null;
-  }
-  else
+  } else
     ok(!testCase.pass, testCase.text);
 
   searchDiscoveryTests.shift();

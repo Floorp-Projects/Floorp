@@ -76,7 +76,7 @@ Prompter.prototype = {
 
     confirmEx(domWin, title, text, flags, button0, button1, button2, checkLabel, checkValue) {
         let p = this.pickPrompter(domWin);
-        return p.confirmEx(title, text,  flags, button0, button1, button2, checkLabel, checkValue);
+        return p.confirmEx(title, text, flags, button0, button1, button2, checkLabel, checkValue);
     },
 
     prompt(domWin, title, text, value, checkLabel, checkValue) {

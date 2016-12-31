@@ -7,9 +7,9 @@ add_task(function* () {
 
   checkTabs(4);
 
-  yield ctrlTabTest([2],       1, 0);
+  yield ctrlTabTest([2], 1, 0);
   yield ctrlTabTest([2, 3, 1], 2, 2);
-  yield ctrlTabTest([],        4, 2);
+  yield ctrlTabTest([], 4, 2);
 
   {
     let selectedIndex = gBrowser.tabContainer.selectedIndex;

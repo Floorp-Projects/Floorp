@@ -28,8 +28,7 @@ function getColumn(table, column, fromColumnName, fromColumnValue) {
     stmt.params.val = fromColumnValue;
     ok(stmt.executeStep(), "Expect to get a row");
     return stmt.row[column];
-  }
-  finally {
+  } finally {
     stmt.reset();
   }
 }
@@ -58,8 +57,7 @@ add_task(function* () {
 
     if (currentIndex == 0) {
       is(fromVisitId, 0, "First visit has no from visit");
-    }
-    else {
+    } else {
       var lastVisitId = getColumn("moz_historyvisits", "place_id", "id", fromVisitId);
       var fromVisitUrl = getColumn("moz_places", "url", "id", lastVisitId);
       is(fromVisitUrl, expectedUrls[currentIndex - 1],

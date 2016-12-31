@@ -18,8 +18,7 @@ function nsDoTestsForAutoCompleteWithComposition(aDescription,
                                                  aAutoCompleteController,
                                                  aIsFunc,
                                                  aGetTargetValueFunc,
-                                                 aOnFinishFunc)
-{
+                                                 aOnFinishFunc) {
   this._description = aDescription;
   this._window = aWindow;
   this._target = aTarget;
@@ -48,8 +47,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
   _getTargetValue() { return "not initialized"; },
   _onFinish: null,
 
-  _doTests()
-  {
+  _doTests() {
     if (++this._testingIndex == this._tests.length) {
       this._controller.input.completeDefaultIndex =
         this._DefaultCompleteDefaultIndex;
@@ -70,8 +68,7 @@ nsDoTestsForAutoCompleteWithComposition.prototype = {
     this._checkResult.bind(this));
   },
 
-  _checkResult()
-  {
+  _checkResult() {
     var test = this._tests[this._testingIndex];
     this._is(this._getTargetValue(), test.value,
              this._description + ", " + test.description + ": value");

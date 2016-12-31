@@ -186,8 +186,7 @@ add_task(function* test_defaultSynchronousAtNormal() {
   try {
     stmt.executeStep();
     do_check_eq(1, stmt.getInt32(0));
-  }
-  finally {
+  } finally {
     stmt.reset();
     stmt.finalize();
   }

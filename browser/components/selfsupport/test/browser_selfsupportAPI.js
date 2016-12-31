@@ -46,8 +46,7 @@ function test_resetPref() {
   // see discussion in bug 1075160
 }
 
-function test_resetSearchEngines()
-{
+function test_resetSearchEngines() {
   const defaultEngineOriginal = Services.search.defaultEngine;
   const visibleEnginesOriginal = Services.search.getVisibleEngines();
 
@@ -81,8 +80,7 @@ function test_resetSearchEngines()
   // we don't remove user-added engines as they are only used if selected
 }
 
-function test()
-{
+function test() {
   test_resetPref();
   test_resetSearchEngines();
 }

@@ -142,7 +142,7 @@ function startTest() {
   }
 
   is($_(9, "uname").value, "testuser", "Checking for unmodified username 9");
-  is($_(9, "pword").value, "",         "Checking for unfilled password 9");
+  is($_(9, "pword").value, "", "Checking for unfilled password 9");
 
   is($_("10-A", "uname").value, "", "Checking for unfilled username 10A");
   is($_("10-A", "pword").value, "", "Checking for unfilled password 10A");
@@ -157,7 +157,7 @@ function startTest() {
   // that the submit button for the neutered forms don't do anything.
   // If the test finds extra forms the submit() causes the test to timeout, then
   // there may be a security issue.
-  is(document.forms.length,  11,  "Checking for unexpected forms");
+  is(document.forms.length, 11, "Checking for unexpected forms");
   $("neutered_submit10").click();
   $("neutered_submit11").click();
 

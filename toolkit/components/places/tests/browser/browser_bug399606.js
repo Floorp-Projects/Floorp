@@ -68,8 +68,7 @@ function test() {
       loadCount = 0;
       gBrowser.addEventListener("DOMContentLoaded", handleLoad, true);
       gBrowser.loadURI(uri);
-    }
-    else {
+    } else {
       confirm_results();
     }
   }

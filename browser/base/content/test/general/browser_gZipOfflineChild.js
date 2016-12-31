@@ -39,8 +39,7 @@ function handleMessageEvents(event) {
         // it will throw an exception, so handle this case.
         try {
           var bodyInnerHTML = event.source.document.body.innerHTML;
-        }
-        catch (e) {
+        } catch (e) {
           bodyInnerHTML = "";
         }
         if (cacheCount == 2 || bodyInnerHTML.includes("error")) {

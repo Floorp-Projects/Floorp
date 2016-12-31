@@ -220,7 +220,7 @@ function test_dependent_prefs(win) {
         control.getAttribute("id") + " should " + (checked ? "not " : "") + "be checked");
     });
 
-    is(thirdPartyCookieMenu.value == "always" || thirdPartyCookieMenu.value == "visited", checked, "third-party cookies should "  + (checked ? "not " : "") + "be limited");
+    is(thirdPartyCookieMenu.value == "always" || thirdPartyCookieMenu.value == "visited", checked, "third-party cookies should " + (checked ? "not " : "") + "be limited");
   }
 
   // controls should be checked in remember mode

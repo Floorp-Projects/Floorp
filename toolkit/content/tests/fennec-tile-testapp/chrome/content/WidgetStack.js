@@ -121,7 +121,7 @@ wsRect.prototype = {
   },
 
   equals: function equals(r) {
-    return (r != null       &&
+    return (r != null &&
             this.top == r.top &&
             this.left == r.left &&
             this.bottom == r.bottom &&
@@ -976,12 +976,10 @@ WidgetStack.prototype = {
         // 100 <= 100 && 100-(-5) > 100
 
         if ((vr.left <= b.x && vr.left + dx > b.x) ||
-            (vr.left >= b.x && vr.left + dx < b.x))
-        {
+            (vr.left >= b.x && vr.left + dx < b.x)) {
           dbx = b.x - vr.left;
         } else if ((vr.right <= b.x && vr.right + dx > b.x) ||
-                   (vr.right >= b.x && vr.right + dx < b.x))
-        {
+                   (vr.right >= b.x && vr.right + dx < b.x)) {
           dbx = b.x - vr.right;
         } else {
           delete this._dragState.barrierState[i];
@@ -1030,12 +1028,10 @@ WidgetStack.prototype = {
         // 100 <= 100 && 100-(-5) > 100
 
         if ((vr.top <= b.y && vr.top + dy > b.y) ||
-            (vr.top >= b.y && vr.top + dy < b.y))
-        {
+            (vr.top >= b.y && vr.top + dy < b.y)) {
           dby = b.y - vr.top;
         } else if ((vr.bottom <= b.y && vr.bottom + dy > b.y) ||
-                   (vr.bottom >= b.y && vr.bottom + dy < b.y))
-        {
+                   (vr.bottom >= b.y && vr.bottom + dy < b.y)) {
           dby = b.y - vr.bottom;
         } else {
           delete this._dragState.barrierState[i];
@@ -1196,8 +1192,7 @@ WidgetStack.prototype = {
       state.viewport = true;
 
       if (w.hasAttribute("vptargetx") && w.hasAttribute("vptargety") &&
-          w.hasAttribute("vptargetw") && w.hasAttribute("vptargeth"))
-      {
+          w.hasAttribute("vptargetw") && w.hasAttribute("vptargeth")) {
         let wx = parseInt(w.getAttribute("vptargetx"));
         let wy = parseInt(w.getAttribute("vptargety"));
         let ww = parseInt(w.getAttribute("vptargetw"));
@@ -1365,8 +1360,7 @@ WidgetStack.prototype = {
     // t != "tb" && t != "bt" &&
 
     if (t != "horizontal" &&
-        t != "vertical")
-    {
+        t != "vertical") {
       throw "Invalid barrier type: " + t;
     }
 

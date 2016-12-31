@@ -572,8 +572,7 @@ add_task(function* test_offline_cache() {
     // Check if the cache has been deleted
     var size = -1;
     var visitor = {
-      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory)
-      {
+      onCacheStorageInfo(aEntryCount, aConsumption, aCapacity, aDiskDirectory) {
         size = aConsumption;
       }
     };
@@ -840,8 +839,7 @@ WindowHelper.prototype = {
     if (aDurVal === Sanitizer.TIMESPAN_EVERYTHING) {
       is(this.isWarningPanelVisible(), true,
          "Warning panel should be visible for TIMESPAN_EVERYTHING");
-    }
-    else {
+    } else {
       is(this.isWarningPanelVisible(), false,
          "Warning panel should not be visible for non-TIMESPAN_EVERYTHING");
     }
@@ -912,8 +910,7 @@ function promiseAddFormEntryWithMinutesAgo(aMinutesAgo) {
 /**
  * Checks if a form entry exists.
  */
-function formNameExists(name)
-{
+function formNameExists(name) {
   return new Promise((resolve, reject) => {
     let count = 0;
     FormHistory.count({ fieldname: name },

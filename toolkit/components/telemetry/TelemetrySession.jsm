@@ -1207,15 +1207,12 @@ var Impl = {
     let val;
     if (units == Ci.nsIMemoryReporter.UNITS_BYTES) {
       val = Math.floor(amount / 1024);
-    }
-    else if (units == Ci.nsIMemoryReporter.UNITS_PERCENTAGE) {
+    } else if (units == Ci.nsIMemoryReporter.UNITS_PERCENTAGE) {
       // UNITS_PERCENTAGE amounts are 100x greater than their raw value.
       val = Math.floor(amount / 100);
-    }
-    else if (units == Ci.nsIMemoryReporter.UNITS_COUNT) {
+    } else if (units == Ci.nsIMemoryReporter.UNITS_COUNT) {
       val = amount;
-    }
-    else if (units == Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE) {
+    } else if (units == Ci.nsIMemoryReporter.UNITS_COUNT_CUMULATIVE) {
       // If the reporter gives us a cumulative count, we'll report the
       // difference in its value between now and our previous ping.
 
@@ -1229,8 +1226,7 @@ var Impl = {
 
       val = amount - this._prevValues[id];
       this._prevValues[id] = amount;
-    }
-    else {
+    } else {
       NS_ASSERT(false, "Can't handle memory reporter with units " + units);
       return;
     }
@@ -1307,8 +1303,7 @@ var Impl = {
 
     // Only include the GPU process if we've accumulated data for it.
     if (HISTOGRAM_SUFFIXES.GPU in histograms ||
-        HISTOGRAM_SUFFIXES.GPU in keyedHistograms)
-    {
+        HISTOGRAM_SUFFIXES.GPU in keyedHistograms) {
       payloadObj.processes.gpu = {
         histograms: histograms[HISTOGRAM_SUFFIXES.GPU],
         keyedHistograms: keyedHistograms[HISTOGRAM_SUFFIXES.GPU],

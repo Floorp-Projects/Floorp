@@ -89,8 +89,7 @@ function LinksStorage() {
         throw new Error("Unsupported newTab storage version");
       }
       // Add further migration steps here.
-    }
-    else {
+    } else {
       // This is a downgrade.  Since we cannot predict future, upgrades should
       // be backwards compatible.  We will set the version to the old value
       // regardless, so, on next upgrade, the migration steps will run again.
@@ -1193,8 +1192,7 @@ var Links = {
         existingLink.title = aLink.title;
         updatePages = true;
       }
-    }
-    else if (this._sortProperties.every(prop => prop in aLink)) {
+    } else if (this._sortProperties.every(prop => prop in aLink)) {
       // Before doing the O(lg n) insertion below, do an O(1) check for the
       // common case where the new link is too low-ranked to be in the list.
       if (sortedLinks.length && sortedLinks.length == aProvider.maxNumLinks) {

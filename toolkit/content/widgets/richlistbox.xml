@@ -374,8 +374,7 @@
 
                 if (this.scrollBoxObject.height) {
                   this.ensureElementIsVisible(currentItem);
-                }
-                else {
+                } else {
                   // XXX hack around a bug in ensureElementIsVisible as it will
                   // scroll beyond the last element, bug 493645.
                   var previousElement = this.dir == "reverse" ? currentItem.nextSibling :

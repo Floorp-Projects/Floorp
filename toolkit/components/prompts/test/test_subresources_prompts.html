@@ -35,8 +35,7 @@ var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
 var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
 var iframe_prompt = document.getElementById("iframe_prompt");
 
-add_task(function* runTest()
-{
+add_task(function* runTest() {
   // This test depends on tab modal prompts being enabled.
   if (!isTabModal) {
     todo(false, "Test disabled when tab modal prompts are not enabled.");
@@ -109,8 +108,7 @@ add_task(function* runTest()
   yield promptDone;
 });
 
-add_task(function* runTestAuth()
-{
+add_task(function* runTestAuth() {
   // Following tests chack prompt message for a cross-origin and not
   // cross-origin subresources load
 
@@ -190,8 +188,7 @@ add_task(function* runTestAuth()
                       SpecialPowers.wrap(iframe_prompt.contentWindow).document);
 });
 
-function dispatchMouseEvent(target, type)
-{
+function dispatchMouseEvent(target, type) {
   var win = SpecialPowers.unwrap(target.ownerDocument.defaultView);
   var e = document.createEvent("MouseEvent");
   e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,

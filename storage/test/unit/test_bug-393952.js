@@ -6,8 +6,7 @@
 // has a UNIQUE text column.   StorageUnicodeFunctions::likeFunction()
 // needs to handle null aArgv[0] and aArgv[1]
 
-function setup()
-{
+function setup() {
   getOpenedDatabase().createTable("t1", "x TEXT UNIQUE");
 
   var stmt = createStatement("INSERT INTO t1 (x) VALUES ('a')");
@@ -16,8 +15,7 @@ function setup()
   stmt.finalize();
 }
 
-function test_vacuum()
-{
+function test_vacuum() {
   var stmt = createStatement("VACUUM;");
   stmt.executeStep();
   stmt.reset();
@@ -26,8 +24,7 @@ function test_vacuum()
 
 var tests = [test_vacuum];
 
-function run_test()
-{
+function run_test() {
   setup();
 
   for (var i = 0; i < tests.length; i++)

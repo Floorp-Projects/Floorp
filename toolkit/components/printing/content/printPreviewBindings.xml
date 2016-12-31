@@ -300,8 +300,7 @@
           this.setScaleCombobox(aValue);
           this.mScaleCombobox.setAttribute('lastValidInx', this.mScaleCombobox.selectedIndex);
 
-          if (settings.scaling != aValue || settings.shrinkToFit)
-          {
+          if (settings.scaling != aValue || settings.shrinkToFit) {
             settings.shrinkToFit = false;
             settings.scaling = aValue;
             this.savePrintSettings(settings, settings.kInitSaveShrinkToFit | settings.kInitSaveScaling);
@@ -319,8 +318,7 @@
           var orientValue = (aOrientation == "portrait") ? kIPrintSettings.kPortraitOrientation :
                                                            kIPrintSettings.kLandscapeOrientation;
           var settings = PrintUtils.getPrintSettings();
-          if (settings.orientation != orientValue)
-          {
+          if (settings.orientation != orientValue) {
             settings.orientation = orientValue;
             this.savePrintSettings(settings, settings.kInitSaveOrientation);
             PrintUtils.printPreview();

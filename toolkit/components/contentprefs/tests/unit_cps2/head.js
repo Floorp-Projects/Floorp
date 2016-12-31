@@ -50,7 +50,7 @@ function runAsyncTests(tests, dontResetBefore = false) {
       // So. We make sure to dump this stuff so that it shows up in the logs, but
       // don't turn them into duplicate failures of the exception that was already
       // propagated to the caller.
-      dump("AsyncRunner.jsm observed console error: " +  scriptErr + "\n");
+      dump("AsyncRunner.jsm observed console error: " + scriptErr + "\n");
     }
   });
 
@@ -106,8 +106,7 @@ function do_check_throws(fn) {
   let threw = false;
   try {
     fn();
-  }
-  catch (err) {
+  } catch (err) {
     threw = true;
   }
   ok(threw);

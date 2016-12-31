@@ -24,8 +24,7 @@ this.Locale = {
       let locale = Preferences.get(PREF_SELECTED_LOCALE, null, Ci.nsIPrefLocalizedString);
       if (locale)
         return locale;
-    }
-    catch (e) {}
+    } catch (e) {}
     return Preferences.get(PREF_SELECTED_LOCALE, "en-US");
   },
 

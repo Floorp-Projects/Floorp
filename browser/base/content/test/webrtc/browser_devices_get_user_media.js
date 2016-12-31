@@ -205,8 +205,7 @@ var gTests = [
           expected.video = true;
         if (aRequestAudio)
           expected.audio = true;
-      }
-      else {
+      } else {
         yield expectObserverCalled("getUserMedia:response:deny");
         yield expectObserverCalled("recording-window-ended");
       }
@@ -281,8 +280,7 @@ var gTests = [
         });
         yield expectObserverCalled("getUserMedia:response:deny");
         yield expectObserverCalled("recording-window-ended");
-      }
-      else {
+      } else {
         let expectedMessage = aExpectStream ? "ok" : permissionError;
         let promise = promiseMessage(expectedMessage);
         yield promiseRequestDevice(aRequestAudio, aRequestVideo);
@@ -305,8 +303,7 @@ var gTests = [
                            " to be shared");
 
           yield closeStream();
-        }
-        else {
+        } else {
           yield expectObserverCalled("recording-window-ended");
         }
       }
@@ -450,8 +447,7 @@ var gTests = [
     if ("nsISystemStatusBar" in Ci) {
       let activeStreams = webrtcUI.getActiveStreams(true, false, false);
       webrtcUI.showSharingDoorhanger(activeStreams[0]);
-    }
-    else {
+    } else {
       let win =
         Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       let elt = win.document.getElementById("audioVideoButton");

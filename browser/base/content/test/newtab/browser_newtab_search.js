@@ -228,8 +228,7 @@ function promiseNewSearchEngine({name: basename, numLogos}) {
   });
 }
 
-function* checkCurrentEngine(engineInfo)
-{
+function* checkCurrentEngine(engineInfo) {
   let engine = Services.search.currentEngine;
   ok(engine.name.includes(engineInfo.name),
      "Sanity check: current engine: engine.name=" + engine.name +

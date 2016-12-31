@@ -104,7 +104,7 @@ function closeToolbarCustomizationUI(aCallback, aBrowserWin) {
 }
 
 function waitForCondition(condition, nextTest, errorMsg, retryTimes) {
-  retryTimes = typeof retryTimes !== 'undefined' ?  retryTimes : 30;
+  retryTimes = typeof retryTimes !== 'undefined' ? retryTimes : 30;
   var tries = 0;
   var interval = setInterval(function() {
     if (tries >= retryTimes) {
@@ -614,8 +614,7 @@ var FullZoomHelper = {
  * @resolves to the received event
  * @rejects if a valid load event is not received within a meaningful interval
  */
-function promiseTabLoadEvent(tab, url)
-{
+function promiseTabLoadEvent(tab, url) {
   info("Wait tab event: load");
 
   function handle(loadedUrl) {
@@ -673,7 +672,7 @@ function waitForNewTabEvent(aTabBrowser) {
  */
 function assertMixedContentBlockingState(tabbrowser, states = {}) {
   if (!tabbrowser || !("activeLoaded" in states) ||
-      !("activeBlocked" in states) || !("passiveLoaded" in states))  {
+      !("activeBlocked" in states) || !("passiveLoaded" in states)) {
     throw new Error("assertMixedContentBlockingState requires a browser and a states object");
   }
 
@@ -902,8 +901,7 @@ function promiseNotificationShown(notification) {
  *           notification.
  * @rejects Never.
  */
-function promiseTopicObserved(aTopic)
-{
+function promiseTopicObserved(aTopic) {
   return new Promise((resolve) => {
     Services.obs.addObserver(
       function PTO_observe(aSubject, aTopic2, aData) {
@@ -971,8 +969,7 @@ function promiseOnBookmarkItemAdded(aExpectedURI) {
         PlacesUtils.bookmarks.removeObserver(bookmarksObserver);
         if (aURI.equals(aExpectedURI)) {
           resolve();
-        }
-        else {
+        } else {
           reject(new Error("Added an unexpected bookmark"));
         }
       },
