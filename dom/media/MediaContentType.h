@@ -35,20 +35,6 @@ public:
   const MediaMIMEType& Type() const { return mExtendedMIMEType.Type(); }
   const MediaExtendedMIMEType& ExtendedType() const { return mExtendedMIMEType; }
 
-  // MIME "type/subtype". Guaranteed not to be empty.
-  const nsACString& GetMIMEType() const { return mExtendedMIMEType.Type().AsString(); }
-
-  // Was there an explicit 'codecs' parameter provided?
-  bool HaveCodecs() const { return mExtendedMIMEType.HaveCodecs(); }
-  // Codecs. May be empty if not provided or explicitly provided as empty.
-  const nsAString& GetCodecs() const { return mExtendedMIMEType.Codecs().AsString(); }
-
-  // Sizes and rates.
-  Maybe<int32_t> GetWidth() const { return mExtendedMIMEType.GetWidth(); }
-  Maybe<int32_t> GetHeight() const { return mExtendedMIMEType.GetHeight(); }
-  Maybe<int32_t> GetFramerate() const { return mExtendedMIMEType.GetFramerate(); }
-  Maybe<int32_t> GetBitrate() const { return mExtendedMIMEType.GetBitrate(); }
-
 private:
   MediaExtendedMIMEType mExtendedMIMEType;
 };
