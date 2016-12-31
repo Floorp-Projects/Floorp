@@ -134,17 +134,16 @@ JSObject::setSingleton(js::ExclusiveContext* cx, js::HandleObject obj)
     return true;
 }
 
-inline js::ObjectGroup*
-JSObject::getGroup(JSContext* cx)
+/* static */ inline js::ObjectGroup*
+JSObject::getGroup(JSContext* cx, js::HandleObject obj)
 {
-    MOZ_ASSERT(cx->compartment() == compartment());
-    if (hasLazyGroup()) {
-        JS::RootedObject self(cx, this);
-        if (cx->compartment() != compartment())
+    MOZ_ASSERT(cx->compartment() == obj->compartment());
+    if (obj->hasLazyGroup()) {
+        if (cx->compartment() != obj->compartment())
             MOZ_CRASH();
-        return makeLazyGroup(cx, self);
+        return makeLazyGroup(cx, obj);
     }
-    return group_;
+    return obj->group_;
 }
 
 inline void

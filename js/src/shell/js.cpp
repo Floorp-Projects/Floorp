@@ -3472,8 +3472,8 @@ GroupOf(JSContext* cx, unsigned argc, JS::Value* vp)
         JS_ReportErrorASCII(cx, "groupOf: object expected");
         return false;
     }
-    JSObject* obj = &args[0].toObject();
-    ObjectGroup* group = obj->getGroup(cx);
+    RootedObject obj(cx, &args[0].toObject());
+    ObjectGroup* group = JSObject::getGroup(cx, obj);
     if (!group)
         return false;
     args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
