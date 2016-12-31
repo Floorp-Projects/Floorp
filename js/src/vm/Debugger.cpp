@@ -2235,7 +2235,7 @@ Debugger::appendAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame
     RootedAtom ctorName(cx);
     {
         AutoCompartment ac(cx, obj);
-        if (!obj->constructorDisplayAtom(cx, &ctorName))
+        if (!JSObject::constructorDisplayAtom(cx, obj, &ctorName))
             return false;
     }
 

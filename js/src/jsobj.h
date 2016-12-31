@@ -286,7 +286,8 @@ class JSObject : public js::gc::Cell
      * If this object was instantiated with `new Ctor`, return the constructor's
      * display atom. Otherwise, return nullptr.
      */
-    bool constructorDisplayAtom(JSContext* cx, js::MutableHandleAtom name);
+    static bool constructorDisplayAtom(JSContext* cx, js::HandleObject obj,
+                                       js::MutableHandleAtom name);
 
     /*
      * The same as constructorDisplayAtom above, however if this object has a

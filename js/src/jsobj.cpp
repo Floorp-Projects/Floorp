@@ -3907,11 +3907,10 @@ displayAtomFromObjectGroup(ObjectGroup& group)
     return script->function()->displayAtom();
 }
 
-bool
-JSObject::constructorDisplayAtom(JSContext* cx, js::MutableHandleAtom name)
+/* static */ bool
+JSObject::constructorDisplayAtom(JSContext* cx, js::HandleObject obj, js::MutableHandleAtom name)
 {
-    RootedObject self(cx, this); // Temporary change.
-    ObjectGroup *g = JSObject::getGroup(cx, self);
+    ObjectGroup *g = JSObject::getGroup(cx, obj);
     if (!g)
         return false;
 
