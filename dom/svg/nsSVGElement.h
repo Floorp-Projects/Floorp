@@ -13,7 +13,6 @@
 */
 
 #include "mozilla/Attributes.h"
-#include "mozilla/css/StyleRule.h"
 #include "nsAutoPtr.h"
 #include "nsChangeHint.h"
 #include "nsCOMPtr.h"
@@ -39,6 +38,8 @@ class nsSVGString;
 class nsSVGViewBox;
 
 namespace mozilla {
+class DeclarationBlock;
+
 namespace dom {
 class SVGSVGElement;
 
@@ -78,7 +79,7 @@ protected:
   friend nsresult NS_NewSVGElement(mozilla::dom::Element **aResult,
                                    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   nsresult Init();
-  virtual ~nsSVGElement(){}
+  virtual ~nsSVGElement();
 
 public:
 
@@ -343,9 +344,9 @@ protected:
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
 
-  void UpdateContentStyleRule();
-  void UpdateAnimatedContentStyleRule();
-  mozilla::css::StyleRule* GetAnimatedContentStyleRule();
+  void UpdateContentDeclarationBlock();
+  void UpdateAnimatedContentDeclarationBlock();
+  mozilla::DeclarationBlock* GetAnimatedContentDeclarationBlock();
 
   nsAttrValue WillChangeValue(nsIAtom* aName);
   // aNewValue is set to the old value. This value may be invalid if
@@ -635,7 +636,7 @@ private:
 
   nsSVGClass mClassAttribute;
   nsAutoPtr<nsAttrValue> mClassAnimAttr;
-  RefPtr<mozilla::css::StyleRule> mContentStyleRule;
+  RefPtr<mozilla::DeclarationBlock> mContentDeclarationBlock;
 };
 
 /**

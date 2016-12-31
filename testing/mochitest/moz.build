@@ -165,3 +165,20 @@ TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
     '/testing/tools/websocketprocessbridge/websocketprocessbridge_requirements.txt',
 ]
 
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")
+
+with Files("chrome/**"):
+    BUG_COMPONENT = ("Testing", "Mochitest Chrome")
+
+with Files("chrome-harness.js"):
+    BUG_COMPONENT = ("Testing", "Mochitest Chrome")
+
+with Files("BrowserTestUtils/**"):
+    BUG_COMPONENT = ("Testing", "BrowserTest")
+
+with Files("browser*"):
+    BUG_COMPONENT = ("Testing", "BrowserTest")
+
+with Files("tests/browser/**"):
+    BUG_COMPONENT = ("Testing", "BrowserTest")

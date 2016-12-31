@@ -883,7 +883,7 @@ CreateThisForFunctionWithGroup(JSContext* cx, HandleObjectGroup group,
 
             if (newKind == SingletonObject) {
                 Rooted<TaggedProto> proto(cx, TaggedProto(templateObject->staticPrototype()));
-                if (!res->splicePrototype(cx, &PlainObject::class_, proto))
+                if (!JSObject::splicePrototype(cx, res, &PlainObject::class_, proto))
                     return nullptr;
             } else {
                 res->setGroup(group);
@@ -1507,9 +1507,9 @@ JSObject::swap(JSContext* cx, HandleObject a, HandleObject b)
 
     AutoCompartment ac(cx, a);
 
-    if (!a->getGroup(cx))
+    if (!JSObject::getGroup(cx, a))
         oomUnsafe.crash("JSObject::swap");
-    if (!b->getGroup(cx))
+    if (!JSObject::getGroup(cx, b))
         oomUnsafe.crash("JSObject::swap");
 
     /*
@@ -1740,7 +1740,7 @@ DefineConstructorAndPrototype(JSContext* cx, HandleObject obj, JSProtoKey key, H
 
         /* Bootstrap Function.prototype (see also JS_InitStandardClasses). */
         Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
-        if (ctor->getClass() == clasp && !ctor->splicePrototype(cx, clasp, tagged))
+        if (ctor->getClass() == clasp && !JSObject::splicePrototype(cx, ctor, clasp, tagged))
             goto bad;
     }
 
@@ -1880,7 +1880,7 @@ js::SetClassAndProto(JSContext* cx, HandleObject obj,
          * Just splice the prototype, but mark the properties as unknown for
          * consistent behavior.
          */
-        if (!obj->splicePrototype(cx, clasp, proto))
+        if (!JSObject::splicePrototype(cx, obj, clasp, proto))
             return false;
         MarkObjectGroupUnknownProperties(cx, obj->group());
         return true;
@@ -3907,10 +3907,10 @@ displayAtomFromObjectGroup(ObjectGroup& group)
     return script->function()->displayAtom();
 }
 
-bool
-JSObject::constructorDisplayAtom(JSContext* cx, js::MutableHandleAtom name)
+/* static */ bool
+JSObject::constructorDisplayAtom(JSContext* cx, js::HandleObject obj, js::MutableHandleAtom name)
 {
-    ObjectGroup *g = getGroup(cx);
+    ObjectGroup *g = JSObject::getGroup(cx, obj);
     if (!g)
         return false;
 
