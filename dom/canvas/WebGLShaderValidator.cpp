@@ -271,9 +271,35 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
                     continue;
 
                 if (!itrVert->isSameUniformAtLinkTime(*itrFrag)) {
-                    nsPrintfCString error("Uniform `%s`is not linkable between"
+                    nsPrintfCString error("Uniform `%s` is not linkable between"
                                           " attached shaders.",
                                           itrFrag->name.c_str());
+                    *out_log = error;
+                    return false;
+                }
+
+                break;
+            }
+        }
+    }
+    {
+        const auto vertVars = sh::GetInterfaceBlocks(prev->mHandle);
+        const auto fragVars = sh::GetInterfaceBlocks(mHandle);
+        if (!vertVars || !fragVars) {
+            nsPrintfCString error("Could not create uniform block list.");
+            *out_log = error;
+            return false;
+        }
+
+        for (const auto& fragVar : *fragVars) {
+            for (const auto& vertVar : *vertVars) {
+                if (vertVar.name != fragVar.name)
+                    continue;
+
+                if (!vertVar.isSameInterfaceBlockAtLinkTime(fragVar)) {
+                    nsPrintfCString error("Interface block `%s` is not linkable between"
+                                          " attached shaders.",
+                                          fragVar.name.c_str());
                     *out_log = error;
                     return false;
                 }
