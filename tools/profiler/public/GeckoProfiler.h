@@ -248,14 +248,6 @@ static inline bool profiler_in_privacy_mode() { return false; }
 static inline void profiler_log(const char *str) {}
 static inline void profiler_log(const char *fmt, va_list args) {}
 
-class AutoProfilerRegister final MOZ_STACK_CLASS
-{
-  AutoProfilerRegister(const char* aName) {}
-private:
-  AutoProfilerRegister(const AutoProfilerRegister&) = delete;
-  AutoProfilerRegister& operator=(const AutoProfilerRegister&) = delete;
-};
-
 #else
 
 #include "GeckoProfilerImpl.h"
