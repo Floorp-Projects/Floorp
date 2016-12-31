@@ -444,7 +444,7 @@ class JSObject : public js::gc::Cell
      * For bootstrapping, whether to splice a prototype for Function.prototype
      * or the global object.
      */
-    bool shouldSplicePrototype(JSContext* cx);
+    bool shouldSplicePrototype();
 
     /*
      * Environment chains.
