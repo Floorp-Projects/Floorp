@@ -168,8 +168,6 @@ class FunctionCompiler
     uint32_t                   blockDepth_;
     ControlFlowPatchsVector    blockPatches_;
 
-    FuncCompileResults&        compileResults_;
-
     // TLS pointer argument to the current function.
     MWasmParameter*            tlsPointer_;
 
@@ -178,8 +176,7 @@ class FunctionCompiler
                      Decoder& decoder,
                      const FuncBytes& func,
                      const ValTypeVector& locals,
-                     MIRGenerator& mirGen,
-                     FuncCompileResults& compileResults)
+                     MIRGenerator& mirGen)
       : env_(env),
         iter_(decoder, func.lineOrBytecode()),
         func_(func),
@@ -194,14 +191,12 @@ class FunctionCompiler
         maxStackArgBytes_(0),
         loopDepth_(0),
         blockDepth_(0),
-        compileResults_(compileResults),
         tlsPointer_(nullptr)
     {}
 
     const ModuleEnvironment&   env() const   { return env_; }
     IonOpIter&                 iter()        { return iter_; }
     TempAllocator&             alloc() const { return alloc_; }
-    MacroAssembler&            masm() const  { return compileResults_.masm(); }
     const Sig&                 sig() const   { return func_.sig(); }
 
     TrapOffset trapOffset() const {
@@ -3697,12 +3692,12 @@ EmitExpr(FunctionCompiler& f)
 }
 
 bool
-wasm::IonCompileFunction(CompileTask* task)
+wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit)
 {
-    MOZ_ASSERT(task->mode() == CompileTask::CompileMode::Ion);
+    MOZ_ASSERT(unit->mode() == CompileMode::Ion);
 
-    const FuncBytes& func = task->func();
-    FuncCompileResults& results = task->results();
+    const FuncBytes& func = unit->func();
+    const ModuleEnvironment& env = task->env();
 
     Decoder d(func.bytes());
 
@@ -3711,18 +3706,18 @@ wasm::IonCompileFunction(CompileTask* task)
     ValTypeVector locals;
     if (!locals.appendAll(func.sig().args()))
         return false;
-    if (!DecodeLocalEntries(d, task->env().kind, &locals))
+    if (!DecodeLocalEntries(d, env.kind, &locals))
         return false;
 
     // Set up for Ion compilation.
 
-    JitContext jitContext(&results.alloc());
+    JitContext jitContext(&task->alloc());
     const JitCompileOptions options;
-    MIRGraph graph(&results.alloc());
+    MIRGraph graph(&task->alloc());
     CompileInfo compileInfo(locals.length());
-    MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
+    MIRGenerator mir(nullptr, options, &task->alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::Wasm));
-    mir.initMinWasmHeapLength(task->env().minMemoryLength);
+    mir.initMinWasmHeapLength(env.minMemoryLength);
 
     // Capture the prologue's trap site before decoding the function.
 
@@ -3730,7 +3725,7 @@ wasm::IonCompileFunction(CompileTask* task)
 
     // Build MIR graph
     {
-        FunctionCompiler f(task->env(), d, func, locals, mir, results);
+        FunctionCompiler f(env, d, func, locals, mir);
         if (!f.init())
             return false;
 
@@ -3770,11 +3765,15 @@ wasm::IonCompileFunction(CompileTask* task)
         if (!lir)
             return false;
 
-        SigIdDesc sigId = task->env().funcSigs[func.index()]->id;
+        SigIdDesc sigId = env.funcSigs[func.index()]->id;
 
-        CodeGenerator codegen(&mir, lir, &results.masm());
-        if (!codegen.generateWasm(sigId, prologueTrapOffset, &results.offsets()))
+        CodeGenerator codegen(&mir, lir, &task->masm());
+
+        FuncOffsets offsets;
+        if (!codegen.generateWasm(sigId, prologueTrapOffset, &offsets))
             return false;
+
+        unit->finish(offsets);
     }
 
     return true;

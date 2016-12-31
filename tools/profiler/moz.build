@@ -150,3 +150,6 @@ if CONFIG['GNU_CXX']:
         '-Wno-error=shadow',
         '-Wno-ignored-qualifiers', # due to use of breakpad headers
     ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Gecko Profiler')

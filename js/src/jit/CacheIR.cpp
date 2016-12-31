@@ -30,12 +30,14 @@ IRGenerator::IRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind)
 GetPropIRGenerator::GetPropIRGenerator(JSContext* cx, jsbytecode* pc, CacheKind cacheKind,
                                        ICStubEngine engine,
                                        bool* isTemporarilyUnoptimizable,
-                                       HandleValue val, HandleValue idVal)
+                                       HandleValue val, HandleValue idVal,
+                                       CanAttachGetter canAttachGetter)
   : IRGenerator(cx, pc, cacheKind),
     val_(val),
     idVal_(idVal),
     engine_(engine),
     isTemporarilyUnoptimizable_(isTemporarilyUnoptimizable),
+    canAttachGetter_(canAttachGetter),
     preliminaryObjectAction_(PreliminaryObjectAction::None)
 {}
 
@@ -223,7 +225,8 @@ enum NativeGetPropCacheability {
 static NativeGetPropCacheability
 CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
                        MutableHandleNativeObject holder, MutableHandleShape shape,
-                       jsbytecode* pc, ICStubEngine engine, bool* isTemporarilyUnoptimizable)
+                       jsbytecode* pc, ICStubEngine engine, CanAttachGetter canAttachGetter,
+                       bool* isTemporarilyUnoptimizable)
 {
     MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
 
@@ -252,6 +255,9 @@ CanAttachNativeGetProp(JSContext* cx, HandleObject obj, HandleId id,
 
     if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc))
         return CanAttachReadSlot;
+
+    if (canAttachGetter == CanAttachGetter::No)
+        return CanAttachNone;
 
     if (IsCacheableGetPropCallScripted(obj, holder, shape, isTemporarilyUnoptimizable)) {
         // See bug 1226816.
@@ -425,7 +431,8 @@ GetPropIRGenerator::tryAttachNative(HandleObject obj, ObjOperandId objId, Handle
     RootedNativeObject holder(cx_);
 
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_,
-                                                            engine_, isTemporarilyUnoptimizable_);
+                                                            engine_, canAttachGetter_,
+                                                            isTemporarilyUnoptimizable_);
     MOZ_ASSERT_IF(idempotent(),
                   type == CanAttachNone || (type == CanAttachReadSlot && holder));
     switch (type) {
@@ -476,7 +483,8 @@ GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, H
     RootedShape shape(cx_);
     RootedNativeObject holder(cx_);
     NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, windowObj, id, &holder, &shape, pc_,
-                                                            engine_, isTemporarilyUnoptimizable_);
+                                                            engine_, canAttachGetter_,
+                                                            isTemporarilyUnoptimizable_);
     if (type != CanAttachCallGetter ||
         !IsCacheableGetPropCallNative(windowObj, holder, shape))
     {
@@ -584,7 +592,7 @@ GetPropIRGenerator::tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId o
     RootedShape shape(cx_);
 
     NativeGetPropCacheability canCache = CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape,
-                                                                pc_, engine_,
+                                                                pc_, engine_, canAttachGetter_,
                                                                 isTemporarilyUnoptimizable_);
     MOZ_ASSERT_IF(idempotent(),
                   canCache == CanAttachNone || (canCache == CanAttachReadSlot && holder));
@@ -1153,10 +1161,42 @@ GetNameIRGenerator::tryAttachStub()
 
     if (tryAttachGlobalNameValue(envId, id))
         return true;
+    if (tryAttachGlobalNameGetter(envId, id))
+        return true;
     if (tryAttachEnvironmentName(envId, id))
         return true;
 
     return false;
+}
+
+bool
+CanAttachGlobalName(JSContext* cx, Handle<LexicalEnvironmentObject*> globalLexical, HandleId id,
+                    MutableHandleNativeObject holder, MutableHandleShape shape)
+{
+    // The property must be found, and it must be found as a normal data property.
+    RootedNativeObject current(cx, globalLexical);
+    while (true) {
+        shape.set(current->lookup(cx, id));
+        if (shape)
+            break;
+
+        if (current == globalLexical) {
+            current = &globalLexical->global();
+        } else {
+            // In the browser the global prototype chain should be immutable.
+            if (!current->staticPrototypeIsImmutable())
+                return false;
+
+            JSObject* proto = current->staticPrototype();
+            if (!proto || !proto->is<NativeObject>())
+                return false;
+
+            current = &proto->as<NativeObject>();
+        }
+    }
+
+    holder.set(current);
+    return true;
 }
 
 bool
@@ -1168,44 +1208,31 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
     Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
     MOZ_ASSERT(globalLexical->isGlobal());
 
-    // The property must be found, and it must be found as a normal data property.
-    RootedShape shape(cx_);
-    RootedNativeObject current(cx_, globalLexical);
-    while (true) {
-        shape = current->lookup(cx_, id);
-        if (shape)
-            break;
-        if (current == globalLexical) {
-            current = &globalLexical->global();
-        } else {
-            // In the browser the global prototype chain should be immutable.
-            if (!current->staticPrototypeIsImmutable())
-                return false;
-            JSObject* proto = current->staticPrototype();
-            if (!proto || !proto->is<NativeObject>())
-                return false;
-            current = &proto->as<NativeObject>();
-        }
-    }
 
+    RootedNativeObject holder(cx_);
+    RootedShape shape(cx_);
+    if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape))
+        return false;
+
+    // The property must be found, and it must be found as a normal data property.
     if (!shape->hasDefaultGetter() || !shape->hasSlot())
         return false;
 
     // Instantiate this global property, for use during Ion compilation.
     if (IsIonEnabled(cx_))
-        EnsureTrackPropertyTypes(cx_, current, id);
+        EnsureTrackPropertyTypes(cx_, holder, id);
 
-    if (current == globalLexical) {
+    if (holder == globalLexical) {
         // There is no need to guard on the shape. Lexical bindings are
         // non-configurable, and this stub cannot be shared across globals.
-        size_t dynamicSlotOffset = current->dynamicSlotIndex(shape->slot()) * sizeof(Value);
+        size_t dynamicSlotOffset = holder->dynamicSlotIndex(shape->slot()) * sizeof(Value);
         writer.loadDynamicSlotResult(objId, dynamicSlotOffset);
     } else {
-        // Check the prototype chain from the global to the current
+        // Check the prototype chain from the global to the holder
         // prototype. Ignore the global lexical scope as it doesn't figure
         // into the prototype chain. We guard on the global lexical
         // scope's shape independently.
-        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), current, shape))
+        if (!IsCacheableGetPropReadSlotForIonOrCacheIR(&globalLexical->global(), holder, shape))
             return false;
 
         // Shape guard for global lexical.
@@ -1216,16 +1243,56 @@ GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId, HandleId id)
         writer.guardShape(globalId, globalLexical->global().lastProperty());
 
         ObjOperandId holderId = globalId;
-        if (current != &globalLexical->global()) {
+        if (holder != &globalLexical->global()) {
             // Shape guard holder.
-            holderId = writer.loadObject(current);
-            writer.guardShape(holderId, current->lastProperty());
+            holderId = writer.loadObject(holder);
+            writer.guardShape(holderId, holder->lastProperty());
         }
 
-        EmitLoadSlotResult(writer, holderId, current, shape);
+        EmitLoadSlotResult(writer, holderId, holder, shape);
     }
 
     writer.typeMonitorResult();
+    return true;
+}
+
+bool
+GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId, HandleId id)
+{
+    if (!IsGlobalOp(JSOp(*pc_)) || script_->hasNonSyntacticScope())
+        return false;
+
+    Handle<LexicalEnvironmentObject*> globalLexical = env_.as<LexicalEnvironmentObject>();
+    MOZ_ASSERT(globalLexical->isGlobal());
+
+    RootedNativeObject holder(cx_);
+    RootedShape shape(cx_);
+    if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape))
+        return false;
+
+    if (holder == globalLexical)
+        return false;
+
+    if (!IsCacheableGetPropCallNative(&globalLexical->global(), holder, shape))
+        return false;
+
+    if (IsIonEnabled(cx_))
+        EnsureTrackPropertyTypes(cx_, holder, id);
+
+    // Shape guard for global lexical.
+    writer.guardShape(objId, globalLexical->lastProperty());
+
+    // Guard on the shape of the GlobalObject.
+    ObjOperandId globalId = writer.loadEnclosingEnvironment(objId);
+    writer.guardShape(globalId, globalLexical->global().lastProperty());
+
+    if (holder != &globalLexical->global()) {
+        // Shape guard holder.
+        ObjOperandId holderId = writer.loadObject(holder);
+        writer.guardShape(holderId, holder->lastProperty());
+    }
+
+    EmitCallGetterResultNoGuards(writer, &globalLexical->global(), holder, shape, globalId);
     return true;
 }
 

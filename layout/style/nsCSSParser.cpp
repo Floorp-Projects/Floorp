@@ -3798,8 +3798,8 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
                              uint32_t aColumnNumber)
 {
   RefPtr<css::ImportRule> rule = new css::ImportRule(aMedia, aURLSpec,
-                                                       aLineNumber,
-                                                       aColumnNumber);
+                                                     aLineNumber,
+                                                     aColumnNumber);
   (*aAppendFunc)(rule, aData);
 
   // Diagnose bad URIs even if we don't have a child loader.
@@ -3817,7 +3817,9 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
   }
 
   if (mChildLoader) {
-    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule, mReusableSheets);
+    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule,
+                                 /* aServoParentRule = */ nullptr,
+                                 mReusableSheets);
   }
 }
 
