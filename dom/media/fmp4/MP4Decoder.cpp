@@ -77,22 +77,22 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
   // Whitelist MP4 types, so they explicitly match what we encounter on
   // the web, as opposed to what we use internally (i.e. what our demuxers
   // etc output).
-  const bool isMP4Audio = aType.GetMIMEType().EqualsASCII("audio/mp4") ||
-                          aType.GetMIMEType().EqualsASCII("audio/x-m4a");
+  const bool isMP4Audio = aType.Type() == MEDIAMIMETYPE("audio/mp4") ||
+                          aType.Type() == MEDIAMIMETYPE("audio/x-m4a");
   const bool isMP4Video =
   // On B2G, treat 3GPP as MP4 when Gonk PDM is available.
 #ifdef MOZ_GONK_MEDIACODEC
-      aType.GetMIMEType().EqualsASCII(VIDEO_3GPP) ||
+      aType.Type() == MEDIAMIMETYPE(VIDEO_3GPP) ||
 #endif
-      aType.GetMIMEType().EqualsASCII("video/mp4") ||
-      aType.GetMIMEType().EqualsASCII("video/quicktime") ||
-      aType.GetMIMEType().EqualsASCII("video/x-m4v");
+      aType.Type() == MEDIAMIMETYPE("video/mp4") ||
+      aType.Type() == MEDIAMIMETYPE("video/quicktime") ||
+      aType.Type() == MEDIAMIMETYPE("video/x-m4v");
   if (!isMP4Audio && !isMP4Video) {
     return false;
   }
 
   nsTArray<UniquePtr<TrackInfo>> trackInfos;
-  if (aType.GetCodecs().IsEmpty()) {
+  if (aType.ExtendedType().Codecs().IsEmpty()) {
     // No codecs specified. Assume H.264
     if (isMP4Audio) {
       trackInfos.AppendElement(
@@ -108,7 +108,7 @@ MP4Decoder::CanHandleMediaType(const MediaContentType& aType,
     // Verify that all the codecs specified are ones that we expect that
     // we can play.
     nsTArray<nsString> codecs;
-    if (!ParseCodecsString(aType.GetCodecs(), codecs)) {
+    if (!ParseCodecsString(aType.ExtendedType().Codecs().AsString(), codecs)) {
       return false;
     }
     for (const nsString& codec : codecs) {
