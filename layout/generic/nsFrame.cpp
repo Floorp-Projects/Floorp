@@ -1116,9 +1116,10 @@ nsIFrame::GetPaddingRect() const
 }
 
 WritingMode
-nsIFrame::GetWritingMode(nsIFrame* aSubFrame) const
+nsIFrame::GetWritingMode(WritingMode aSelfWM, nsIFrame* aSubFrame) const
 {
-  WritingMode writingMode = GetWritingMode();
+  MOZ_ASSERT(aSelfWM == GetWritingMode());
+  WritingMode writingMode = aSelfWM;
 
   if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
     nsBidiLevel frameLevel = nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);

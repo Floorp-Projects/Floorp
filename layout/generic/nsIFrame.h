@@ -770,8 +770,10 @@ public:
    * level of the given subframe (typically the first frame on the line),
    * not this frame's writing mode, because the container frame could be split
    * by hard line breaks into multiple paragraphs with different base direction.
+   * @param aSelfWM the WM of 'this'
    */
-  mozilla::WritingMode GetWritingMode(nsIFrame* aSubFrame) const;
+  mozilla::WritingMode GetWritingMode(mozilla::WritingMode aSelfWM,
+                                      nsIFrame* aSubFrame) const;
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
