@@ -14,6 +14,7 @@
 #include "mozilla/EffectSet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/ViewportFrame.h"
+#include "mozilla/css/StyleRule.h" // For nsCSSSelector
 #include "nsLayoutUtils.h"
 #include "AnimationCommon.h" // For GetLayerAnimationInfo
 #include "FrameLayerBuilder.h"

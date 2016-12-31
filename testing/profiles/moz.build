@@ -10,3 +10,6 @@ mochitest_profile_files = [
 
 TEST_HARNESS_FILES.testing.mochitest.profile_data += mochitest_profile_files
 TEST_HARNESS_FILES['web-platform'].prefs += mochitest_profile_files
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")

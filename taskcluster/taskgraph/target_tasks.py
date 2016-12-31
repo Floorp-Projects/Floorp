@@ -93,8 +93,8 @@ def target_tasks_ash(full_task_graph, parameters):
         # and none of this linux64-asan/debug stuff
         if platform == 'linux64-asan' and task.attributes['build_type'] == 'debug':
             return False
-        # no non-et10s tests
-        if task.attributes.get('unittest_suite') or task.attributes.get('talos_siute'):
+        # no non-e10s tests
+        if task.attributes.get('unittest_suite') or task.attributes.get('talos_suite'):
             if not task.attributes.get('e10s'):
                 return False
         # don't upload symbols
