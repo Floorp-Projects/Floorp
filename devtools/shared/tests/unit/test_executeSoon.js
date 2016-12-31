@@ -11,7 +11,6 @@
  */
 
 var { executeSoon } = require("devtools/shared/DevToolsUtils");
-var promise = require("promise");
 var defer = require("devtools/shared/defer");
 var Services = require("Services");
 

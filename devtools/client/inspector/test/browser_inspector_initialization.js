@@ -57,9 +57,7 @@ function* testToolboxInitialization(testActor, tab) {
   yield testBreadcrumbs("span", inspector);
 
   info("Destroying toolbox");
-  let destroyed = toolbox.once("destroyed");
-  toolbox.destroy();
-  yield destroyed;
+  yield toolbox.destroy();
 
   ok("true", "'destroyed' notification received.");
   ok(!gDevTools.getToolbox(target), "Toolbox destroyed.");

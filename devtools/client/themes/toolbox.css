@@ -49,15 +49,32 @@
   padding: 0;
   background: var(--theme-tab-toolbar-background);
   border-bottom-color: var(--theme-splitter-color);
+  display: flex;
 }
 
-#toolbox-tabs {
+.toolbox-tabs {
   margin: 0;
+  flex: 1;
+}
+
+.toolbox-tabs-wrapper {
+  position: relative;
+  display: flex;
+  flex: 1;
+}
+
+.toolbox-tabs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
 }
 
 /* Set flex attribute to Toolbox buttons and Picker container so,
-   they don't overlapp with the tab bar */
-#toolbox-buttons {
+   they don't overlap with the tab bar */
+#toolbox-buttons-end {
   display: flex;
 }
 
@@ -65,22 +82,38 @@
   display: flex;
 }
 
-/* Toolbox tabs */
+#toolbox-buttons-start {
+  border: solid 0 var(--theme-splitter-color);
+  border-inline-end-width: 1px;
+}
 
+/* Toolbox tabs */
 .devtools-tab {
-  -moz-appearance: none;
-  -moz-binding: url("chrome://global/content/bindings/general.xml#control-item");
-  -moz-box-align: center;
   min-width: 32px;
   min-height: 24px;
-  max-width: 100px;
   margin: 0;
   padding: 0;
   border-style: solid;
   border-width: 0;
   border-inline-start-width: 1px;
-  -moz-box-align: center;
-  -moz-box-flex: 1;
+  padding-inline-end: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: transparent;
+}
+
+.devtools-tab-icon-only {
+  padding-inline-end: 2px;
+}
+
+.devtools-tab span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-inline-end: 13px;
+  position: relative;
+  top: 1px;
 }
 
 /* Save space on the tab-strip in Firebug theme */
@@ -114,17 +147,17 @@
   background-color: var(--toolbar-tab-hover-active);
 }
 
-.theme-dark .devtools-tab:not([selected])[highlighted] {
+.theme-dark .devtools-tab:not(.selected).highlighted {
   background-color: hsla(99, 100%, 14%, .3);
 }
 
-.theme-light .devtools-tab:not([selected])[highlighted] {
+.theme-light .devtools-tab:not(.selected).highlighted {
   background-color: rgba(44, 187, 15, .2);
 }
 
 /* Display execution pointer in the Debugger tab to indicate
    that the debugger is paused. */
-.theme-firebug #toolbox-tab-jsdebugger.devtools-tab:not([selected])[highlighted] {
+.theme-firebug #toolbox-tab-jsdebugger.devtools-tab:not(.selected).highlighted {
   background-color: rgba(89, 178, 234, .2);
   background-image: url(chrome://devtools/skin/images/firebug/tool-debugger-paused.svg);
   background-repeat: no-repeat;
@@ -132,27 +165,29 @@
   background-position: 3px 6px;
 }
 
-.devtools-tab > image {
+.devtools-tab > img {
   border: none;
   margin: 0;
-  margin-inline-start: 4px;
+  margin-inline-start: 10px;
   opacity: 0.6;
   max-height: 16px;
   width: 16px; /* Prevents collapse during theme switching */
+  vertical-align: text-top;
+  margin-inline-end: 6px;
 }
 
 /* Support invertable icon flags and make icon white when it's on a blue background */
-.theme-light .devtools-tab[icon-invertable="light-theme"]:not([selected]) > image,
-.devtools-tab[icon-invertable="dark-theme"][selected] > image {
+.theme-light .devtools-tab.icon-invertable-light-theme:not(.selected) > img,
+.devtools-tab.icon-invertable-dark-theme.selected > img {
   filter: invert(1);
 }
 
 /* Don't apply any filter to non-invertable command button icons */
 .command-button:not(.command-button-invertable),
-/* [icon-invertable="light-theme"] icons are white, so do not invert them for the dark theme */
-.theme-dark .devtools-tab[icon-invertable="light-theme"] > image,
+/* icon-invertable-light-theme icons are white, so do not invert them for the dark theme */
+.theme-dark .devtools-tab.icon-invertable-light-theme > img,
 /* Since "highlighted" icons are green, we should omit the filter */
-.devtools-tab[icon-invertable][highlighted]:not([selected]) > image {
+.devtools-tab.icon-invertable.highlighted:not(.selected) > img {
   filter: none;
 }
 
@@ -161,55 +196,50 @@
   margin: 0 4px;
 }
 
-.devtools-tab:hover > image {
+.devtools-tab:hover > img {
   opacity: 0.8;
 }
 
-.devtools-tab:active > image,
-.devtools-tab[selected] > image {
+.devtools-tab:active > img,
+.devtools-tab.selected > img {
   opacity: 1;
 }
 
-.devtools-tabbar .devtools-tab[selected],
-.devtools-tabbar .devtools-tab[selected]:hover:active {
+.devtools-tabbar .devtools-tab.selected,
+.devtools-tabbar .devtools-tab.selected:hover:active {
   color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }
 
-#toolbox-tabs .devtools-tab[selected],
-#toolbox-tabs .devtools-tab[highlighted] {
+.toolbox-tabs .devtools-tab.selected,
+.toolbox-tabs .devtools-tab.highlighted {
   border-width: 0;
   padding-inline-start: 1px;
 }
 
-#toolbox-tabs .devtools-tab[selected]:last-child,
-#toolbox-tabs .devtools-tab[highlighted]:last-child {
-  padding-inline-end: 1px;
-}
-
-#toolbox-tabs .devtools-tab[selected] + .devtools-tab,
-#toolbox-tabs .devtools-tab[highlighted] + .devtools-tab {
+.toolbox-tabs .devtools-tab.selected + .devtools-tab,
+.toolbox-tabs .devtools-tab.highlighted + .devtools-tab {
   border-inline-start-width: 0;
   padding-inline-start: 1px;
 }
 
-#toolbox-tabs .devtools-tab:first-child[selected] {
+.toolbox-tabs .devtools-tab:first-child {
   border-inline-start-width: 0;
 }
 
-#toolbox-tabs .devtools-tab:last-child {
+.toolbox-tabs .devtools-tab:last-child {
   border-inline-end-width: 1px;
 }
 
-.devtools-tab:not([highlighted]) > .highlighted-icon,
-.devtools-tab[selected] > .highlighted-icon,
-.devtools-tab:not([selected])[highlighted] > .default-icon {
-  visibility: collapse;
+.devtools-tab:not(.highlighted) > .highlighted-icon,
+.devtools-tab.selected > .highlighted-icon,
+.devtools-tab:not(.selected).highlighted > .default-icon {
+  display: none;
 }
 
 /* The options tab is special - it doesn't have the same parent
    as the other tabs (toolbox-option-container vs toolbox-tabs) */
-#toolbox-option-container .devtools-tab:not([selected]) {
+#toolbox-option-container .devtools-tab:not(.selected) {
   background-color: transparent;
 }
 #toolbox-option-container .devtools-tab {
@@ -217,12 +247,16 @@
   border-width: 0;
   padding-inline-start: 1px;
 }
-#toolbox-tab-options > image {
-  margin: 0 8px;
+#toolbox-option-container img {
+  margin-inline-end: 6px;
+  margin-inline-start: 6px;
 }
 
 /* Toolbox controls */
 
+#toolbox-controls, #toolbox-dock-buttons {
+  display: flex;
+}
 #toolbox-controls > button,
 #toolbox-dock-buttons > button {
   -moz-appearance: none;
@@ -263,7 +297,16 @@
   background-image: url("chrome://devtools/skin/images/dock-bottom-maximize@2x.png");
 }
 
-#toolbox-buttons:empty + .devtools-separator,
+/**
+ * Ensure that when the toolbar collapses in on itself when there is not enough room
+ * that it still looks reasonable.
+ */
+.devtools-tabbar > div {
+  background-color: var(--theme-tab-toolbar-background);
+  z-index: 0;
+}
+
+#toolbox-buttons-end:empty + .devtools-separator,
 .devtools-separator[invisible] {
   visibility: hidden;
 }
@@ -293,12 +336,12 @@
 }
 
 .command-button:hover:active,
-.command-button[checked=true]:not(:hover) {
+.command-button.checked:not(:hover) {
   background-color: var(--toolbar-tab-hover-active)
 }
 
 .theme-light .command-button:hover:active,
-.theme-light .command-button[checked=true]:not(:hover) {
+.theme-light .command-button.checked:not(:hover) {
   background-color: inherit;
 }
 
@@ -307,8 +350,8 @@
 }
 
 .command-button:hover:active::before,
-.command-button[checked=true]::before,
-.command-button[open=true]::before {
+.command-button.checked::before,
+.command-button.open::before {
   opacity: 1;
 }
 
