@@ -99,7 +99,7 @@
 
   function isCommandButtonChecked() {
     return toolbox.doc.querySelector("#command-button-splitconsole")
-      .hasAttribute("checked");
+      .classList.contains("checked");
   }
 
   function toggleSplitConsoleWithEscape() {

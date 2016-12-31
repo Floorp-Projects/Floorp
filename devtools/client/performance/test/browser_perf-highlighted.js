@@ -21,27 +21,27 @@ add_task(function* () {
   let tab = toolbox.doc.getElementById("toolbox-tab-performance");
 
   yield console.profile("rust");
-  yield waitUntil(() => tab.hasAttribute("highlighted"));
+  yield waitUntil(() => tab.classList.contains("highlighted"));
 
-  ok(tab.hasAttribute("highlighted"), "Performance tab is highlighted during recording " +
-    "from console.profile when unloaded.");
+  ok(tab.classList.contains("highlighted"), "Performance tab is highlighted during " +
+    "recording from console.profile when unloaded.");
 
   yield console.profileEnd("rust");
-  yield waitUntil(() => !tab.hasAttribute("highlighted"));
+  yield waitUntil(() => !tab.classList.contains("highlighted"));
 
-  ok(!tab.hasAttribute("highlighted"),
+  ok(!tab.classList.contains("highlighted"),
     "Performance tab is no longer highlighted when console.profile recording finishes.");
 
   let { panel } = yield initPerformanceInTab({ tab: target.tab });
 
   yield startRecording(panel);
 
-  ok(tab.hasAttribute("highlighted"),
+  ok(tab.classList.contains("highlighted"),
     "Performance tab is highlighted during recording while in performance tool.");
 
   yield stopRecording(panel);
 
-  ok(!tab.hasAttribute("highlighted"),
+  ok(!tab.classList.contains("highlighted"),
     "Performance tab is no longer highlighted when recording finishes.");
 
   yield teardownToolboxAndRemoveTab(panel);
