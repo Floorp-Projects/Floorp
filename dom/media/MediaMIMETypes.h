@@ -15,7 +15,7 @@ namespace mozilla {
 // Class containing pointing at a media MIME "type/subtype" string literal.
 // See IsMediaMIMEType for restrictions.
 // Mainly used to help construct a MediaMIMEType through the statically-checked
-// MEDIAMIMETYPE macro.
+// MEDIAMIMETYPE macro, or to compare a MediaMIMEType to a literal.
 class DependentMediaMIMEType
 {
 public:
@@ -55,6 +55,26 @@ public:
 
   // MIME "type/subtype", always lowercase.
   const nsACString& AsString() const { return mMIMEType; }
+
+  // Comparison with DependentMediaMIMEType.
+  // Useful to compare to MEDIAMIMETYPE literals.
+  bool operator==(const DependentMediaMIMEType& aOther) const
+  {
+    return mMIMEType.Equals(aOther.AsDependentString());
+  }
+  bool operator!=(const DependentMediaMIMEType& aOther) const
+  {
+    return !mMIMEType.Equals(aOther.AsDependentString());
+  }
+
+  bool operator==(const MediaMIMEType& aOther) const
+  {
+    return mMIMEType.Equals(aOther.mMIMEType);
+  }
+  bool operator!=(const MediaMIMEType& aOther) const
+  {
+    return !mMIMEType.Equals(aOther.mMIMEType);
+  }
 
 private:
   friend Maybe<MediaMIMEType> MakeMediaMIMEType(const nsAString& aType);
