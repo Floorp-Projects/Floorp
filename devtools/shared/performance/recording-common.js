@@ -9,7 +9,7 @@
  * and LegacyPerformanceRecording for helper methods to access data.
  */
 
-const PerformanceRecordingCommon = exports.PerformanceRecordingCommon = {
+exports.PerformanceRecordingCommon = {
   // Private fields, only needed when a recording is started or stopped.
   _console: false,
   _imported: false,
@@ -35,18 +35,32 @@ const PerformanceRecordingCommon = exports.PerformanceRecordingCommon = {
    * Helper methods for returning the status of the recording.
    * These methods should be consistent on both the front and actor.
    */
-  isRecording: function () { return this._recording; },
-  isCompleted: function () { return this._completed || this.isImported(); },
-  isFinalizing: function () { return !this.isRecording() && !this.isCompleted(); },
-  isConsole: function () { return this._console; },
-  isImported: function () { return this._imported; },
+  isRecording: function () {
+    return this._recording;
+  },
+  isCompleted: function () {
+    return this._completed || this.isImported();
+  },
+  isFinalizing: function () {
+    return !this.isRecording() && !this.isCompleted();
+  },
+  isConsole: function () {
+    return this._console;
+  },
+  isImported: function () {
+    return this._imported;
+  },
 
   /**
    * Helper methods for returning configuration for the recording.
    * These methods should be consistent on both the front and actor.
    */
-  getConfiguration: function () { return this._configuration; },
-  getLabel: function () { return this._label; },
+  getConfiguration: function () {
+    return this._configuration;
+  },
+  getLabel: function () {
+    return this._label;
+  },
 
   /**
    * Gets duration of this recording, in milliseconds.
@@ -59,25 +73,43 @@ const PerformanceRecordingCommon = exports.PerformanceRecordingCommon = {
     // the duration from the profiler; if between recording and being finalized,
     // use the last estimated duration.
     if (this.isRecording()) {
-      return this._estimatedDuration = Date.now() - this._localStartTime;
-    } else {
-      return this._duration || this._estimatedDuration || 0;
+      this._estimatedDuration = Date.now() - this._localStartTime;
+      return this._estimatedDuration;
     }
+    return this._duration || this._estimatedDuration || 0;
   },
 
   /**
    * Helper methods for returning recording data.
    * These methods should be consistent on both the front and actor.
    */
-  getMarkers: function () { return this._markers; },
-  getFrames: function () { return this._frames; },
-  getMemory: function () { return this._memory; },
-  getTicks: function () { return this._ticks; },
-  getAllocations: function () { return this._allocations; },
-  getProfile: function () { return this._profile; },
-  getHostSystemInfo: function () { return this._systemHost; },
-  getClientSystemInfo: function () { return this._systemClient; },
-  getStartingBufferStatus: function () { return this._startingBufferStatus; },
+  getMarkers: function () {
+    return this._markers;
+  },
+  getFrames: function () {
+    return this._frames;
+  },
+  getMemory: function () {
+    return this._memory;
+  },
+  getTicks: function () {
+    return this._ticks;
+  },
+  getAllocations: function () {
+    return this._allocations;
+  },
+  getProfile: function () {
+    return this._profile;
+  },
+  getHostSystemInfo: function () {
+    return this._systemHost;
+  },
+  getClientSystemInfo: function () {
+    return this._systemClient;
+  },
+  getStartingBufferStatus: function () {
+    return this._startingBufferStatus;
+  },
 
   getAllData: function () {
     let label = this.getLabel();
@@ -92,6 +124,18 @@ const PerformanceRecordingCommon = exports.PerformanceRecordingCommon = {
     let systemHost = this.getHostSystemInfo();
     let systemClient = this.getClientSystemInfo();
 
-    return { label, duration, markers, frames, memory, ticks, allocations, profile, configuration, systemHost, systemClient };
+    return {
+      label,
+      duration,
+      markers,
+      frames,
+      memory,
+      ticks,
+      allocations,
+      profile,
+      configuration,
+      systemHost,
+      systemClient
+    };
   },
 };

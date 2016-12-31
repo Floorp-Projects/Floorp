@@ -470,6 +470,11 @@ exports.defaultThemes = [
 // addons that have manually inserted toolbarbuttons into DOM.
 // (By default, supported target is only local tab)
 exports.ToolboxButtons = [
+  { id: "command-button-pick",
+    isTargetSupported: target => {
+      return target.activeTab && target.activeTab.traits.frames;
+    }
+  },
   { id: "command-button-frames",
     isTargetSupported: target => {
       return target.activeTab && target.activeTab.traits.frames;
