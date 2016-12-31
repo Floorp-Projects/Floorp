@@ -182,19 +182,11 @@ GlobalPCList.prototype = {
       }
     } else if (topic == "profile-change-net-teardown" ||
                topic == "network:offline-about-to-go-offline") {
-      // Delete all peerconnections on shutdown - mostly synchronously (we
-      // need them to be done deleting transports and streams before we
-      // return)! All socket operations must be queued to STS thread
-      // before we return to here.
-      // Also kill them if "Work Offline" is selected - more can be created
-      // while offline, but attempts to connect them should fail.
-      for (let winId in this._list) {
-        cleanupWinId(this._list, winId);
-      }
+      // As Necko doesn't prevent us from accessing the network we still need to
+      // monitor the network offline/online state here. See bug 1326483
       this._networkdown = true;
     } else if (topic == "network:offline-status-changed") {
       if (data == "offline") {
-        // this._list shold be empty here
         this._networkdown = true;
       } else if (data == "online") {
         this._networkdown = false;
@@ -1211,9 +1203,11 @@ RTCPeerConnection.prototype = {
   },
 
   changeIceConnectionState: function(state) {
-    this._iceConnectionState = state;
-    _globalPCList.notifyLifecycleObservers(this, "iceconnectionstatechange");
-    this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
+    if (state != this._iceConnectionState) {
+      this._iceConnectionState = state;
+      _globalPCList.notifyLifecycleObservers(this, "iceconnectionstatechange");
+      this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
+    }
   },
 
   getStats: function(selector, onSucc, onErr) {
@@ -1370,35 +1364,25 @@ PeerConnectionObserver.prototype = {
   //
   // iceConnectionState:
   // -------------------
-  //   new           The ICE Agent is gathering addresses and/or waiting for
-  //                 remote candidates to be supplied.
+  //   new           Any of the RTCIceTransports are in the new state and none
+  //                 of them are in the checking, failed or disconnected state.
   //
-  //   checking      The ICE Agent has received remote candidates on at least
-  //                 one component, and is checking candidate pairs but has not
-  //                 yet found a connection. In addition to checking, it may
-  //                 also still be gathering.
+  //   checking      Any of the RTCIceTransports are in the checking state and
+  //                 none of them are in the failed or disconnected state.
   //
-  //   connected     The ICE Agent has found a usable connection for all
-  //                 components but is still checking other candidate pairs to
-  //                 see if there is a better connection. It may also still be
-  //                 gathering.
-  //
-  //   completed     The ICE Agent has finished gathering and checking and found
-  //                 a connection for all components. Open issue: it is not
-  //                 clear how the non controlling ICE side knows it is in the
+  //   connected     All RTCIceTransports are in the connected, completed or
+  //                 closed state and at least one of them is in the connected
   //                 state.
   //
-  //   failed        The ICE Agent is finished checking all candidate pairs and
-  //                 failed to find a connection for at least one component.
-  //                 Connections may have been found for some components.
+  //   completed     All RTCIceTransports are in the completed or closed state
+  //                 and at least one of them is in the completed state.
   //
-  //   disconnected  Liveness checks have failed for one or more components.
-  //                 This is more aggressive than failed, and may trigger
-  //                 intermittently (and resolve itself without action) on a
-  //                 flaky network.
+  //   failed        Any of the RTCIceTransports are in the failed state.
   //
-  //   closed        The ICE Agent has shut down and is no longer responding to
-  //                 STUN requests.
+  //   disconnected  Any of the RTCIceTransports are in the disconnected state
+  //                 and none of them are in the failed state.
+  //
+  //   closed        All of the RTCIceTransports are in the closed state.
 
   handleIceConnectionStateChange: function(iceConnectionState) {
     let pc = this._dompc;
