@@ -12,10 +12,47 @@
 
 namespace mozilla {
 
+// Class containing pointing at a media MIME "type/subtype" string literal.
+// See IsMediaMIMEType for restrictions.
+// Mainly used to help construct a MediaMIMEType through the statically-checked
+// MEDIAMIMETYPE macro.
+class DependentMediaMIMEType
+{
+public:
+  // Construction from a literal. Checked in debug builds.
+  // Use MEDIAMIMETYPE macro instead, for static checking.
+  template <size_t N>
+  explicit DependentMediaMIMEType(const char (&aType)[N])
+    : mMIMEType(aType, N - 1)
+  {
+    MOZ_ASSERT(IsMediaMIMEType(aType, N - 1), "Invalid media MIME type");
+  }
+
+  // MIME "type/subtype".
+  const nsDependentCString& AsDependentString() const { return mMIMEType; }
+
+private:
+  nsDependentCString mMIMEType;
+};
+
+// Instantiate a DependentMediaMIMEType from a literal. Statically checked.
+#define MEDIAMIMETYPE(LIT)                                            \
+  static_cast<const DependentMediaMIMEType&>(                         \
+    []() {                                                            \
+      static_assert(IsMediaMIMEType(LIT), "Invalid media MIME type"); \
+      return DependentMediaMIMEType(LIT);                             \
+    }())
+
 // Class containing only pre-parsed lowercase media MIME type/subtype.
 class MediaMIMEType
 {
 public:
+  // Construction from a DependentMediaMIMEType, with its inherent checks.
+  // Implicit so MEDIAMIMETYPE can be used wherever a MediaMIMEType is expected.
+  MOZ_IMPLICIT MediaMIMEType(const DependentMediaMIMEType& aType)
+    : mMIMEType(aType.AsDependentString())
+  {}
+
   // MIME "type/subtype", always lowercase.
   const nsACString& AsString() const { return mMIMEType; }
 
