@@ -22,8 +22,11 @@
 #include "nsServiceManagerUtils.h" // do_GetService
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
+#include "nsIIOService.h" // NS_IOSERVICE_*
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+
+#include "nsCRTGlue.h"
 
 #include "gmp-video-decode.h" // GMP_API_VIDEO_DECODER
 #include "gmp-video-encode.h" // GMP_API_VIDEO_ENCODER
@@ -34,12 +37,12 @@ namespace mozilla {
 
 using namespace dom;
 
-class PeerConnectionCtxShutdown : public nsIObserver
+class PeerConnectionCtxObserver : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
 
-  PeerConnectionCtxShutdown() {}
+  PeerConnectionCtxObserver() {}
 
   void Init()
     {
@@ -53,6 +56,10 @@ public:
 #ifdef MOZILLA_INTERNAL_API
       rv = observerService->AddObserver(this,
                                         NS_XPCOM_SHUTDOWN_OBSERVER_ID,
+                                        false);
+      MOZ_ALWAYS_SUCCEEDS(rv);
+      rv = observerService->AddObserver(this,
+                                        NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                         false);
       MOZ_ALWAYS_SUCCEEDS(rv);
 #endif
@@ -71,34 +78,52 @@ public:
         return NS_ERROR_FAILURE;
 
       nsresult rv = observerService->RemoveObserver(this,
-                                                    NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+                                           NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
+      MOZ_ALWAYS_SUCCEEDS(rv);
+      rv = observerService->RemoveObserver(this,
+                                           NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       MOZ_ALWAYS_SUCCEEDS(rv);
 
       // Make sure we're not deleted while still inside ::Observe()
-      RefPtr<PeerConnectionCtxShutdown> kungFuDeathGrip(this);
-      PeerConnectionCtx::gPeerConnectionCtxShutdown = nullptr;
+      RefPtr<PeerConnectionCtxObserver> kungFuDeathGrip(this);
+      PeerConnectionCtx::gPeerConnectionCtxObserver = nullptr;
+    }
+    if (strcmp(aTopic, NS_IOSERVICE_OFFLINE_STATUS_TOPIC) == 0) {
+      const nsLiteralString onlineString(u"" NS_IOSERVICE_ONLINE);
+      const nsLiteralString offlineString(u"" NS_IOSERVICE_OFFLINE);
+      if (NS_strcmp(aData, offlineString.get()) == 0) {
+        CSFLogDebug(logTag, "Updating network state to offline");
+        PeerConnectionCtx::UpdateNetworkState(false);
+      } else if(NS_strcmp(aData, onlineString.get()) == 0) {
+        CSFLogDebug(logTag, "Updating network state to online");
+        PeerConnectionCtx::UpdateNetworkState(true);
+      } else {
+        CSFLogDebug(logTag, "Received unsupported network state event");
+        MOZ_CRASH();
+      }
     }
     return NS_OK;
   }
 
 private:
-  virtual ~PeerConnectionCtxShutdown()
+  virtual ~PeerConnectionCtxObserver()
     {
       nsCOMPtr<nsIObserverService> observerService =
         services::GetObserverService();
       if (observerService)
+        observerService->RemoveObserver(this, NS_IOSERVICE_OFFLINE_STATUS_TOPIC);
         observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     }
 };
 
-NS_IMPL_ISUPPORTS(PeerConnectionCtxShutdown, nsIObserver);
+NS_IMPL_ISUPPORTS(PeerConnectionCtxObserver, nsIObserver);
 }
 
 namespace mozilla {
 
 PeerConnectionCtx* PeerConnectionCtx::gInstance;
 nsIThread* PeerConnectionCtx::gMainThread;
-StaticRefPtr<PeerConnectionCtxShutdown> PeerConnectionCtx::gPeerConnectionCtxShutdown;
+StaticRefPtr<PeerConnectionCtxObserver> PeerConnectionCtx::gPeerConnectionCtxObserver;
 
 const std::map<const std::string, PeerConnectionImpl *>&
 PeerConnectionCtx::mGetPeerConnections()
@@ -129,9 +154,9 @@ nsresult PeerConnectionCtx::InitializeGlobal(nsIThread *mainThread,
 
     gInstance = ctx;
 
-    if (!PeerConnectionCtx::gPeerConnectionCtxShutdown) {
-      PeerConnectionCtx::gPeerConnectionCtxShutdown = new PeerConnectionCtxShutdown();
-      PeerConnectionCtx::gPeerConnectionCtxShutdown->Init();
+    if (!PeerConnectionCtx::gPeerConnectionCtxObserver) {
+      PeerConnectionCtx::gPeerConnectionCtxObserver = new PeerConnectionCtxObserver();
+      PeerConnectionCtx::gPeerConnectionCtxObserver->Init();
     }
   }
 
@@ -333,6 +358,17 @@ PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure
   }
 }
 #endif
+
+void
+PeerConnectionCtx::UpdateNetworkState(bool online) {
+  auto ctx = GetInstance();
+  if (ctx->mPeerConnections.empty()) {
+    return;
+  }
+  for (auto pc : ctx->mPeerConnections) {
+    pc.second->UpdateNetworkState(online);
+  }
+}
 
 nsresult PeerConnectionCtx::Initialize() {
   initGMP();
