@@ -85,8 +85,7 @@ TitleChangedObserver.prototype = {
  */
 function VisitObserver(aURI,
                        aGUID,
-                       aCallback)
-{
+                       aCallback) {
   this.uri = aURI;
   this.guid = aGUID;
   this.callback = aCallback;
@@ -99,8 +98,7 @@ VisitObserver.prototype = {
                     aSessionId,
                     aReferringId,
                     aTransitionType,
-                    aGUID)
-  {
+                    aGUID) {
     do_print("onVisit(" + aURI.spec + ", " + aVisitId + ", " + aTime +
              ", " + aSessionId + ", " + aReferringId + ", " +
              aTransitionType + ", " + aGUID + ")");
@@ -120,8 +118,7 @@ VisitObserver.prototype = {
  *        The expected title in the database.
  */
 function do_check_title_for_uri(aURI,
-                                aTitle)
-{
+                                aTitle) {
   let stack = Components.stack.caller;
   let stmt = DBConn().createStatement(
     `SELECT title
@@ -151,8 +148,7 @@ add_task(function* test_invalid_uri_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
@@ -169,8 +165,7 @@ add_task(function* test_invalid_uri_throws() {
     try {
       yield promiseUpdatePlaces(place);
       do_throw("Should have thrown!");
-    }
-    catch (e) {
+    } catch (e) {
       do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
     }
   }
@@ -181,8 +176,7 @@ add_task(function* test_invalid_places_throws() {
   try {
     PlacesUtils.asyncHistory.updatePlaces();
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS);
   }
 
@@ -199,8 +193,7 @@ add_task(function* test_invalid_places_throws() {
     try {
       yield promiseUpdatePlaces(value);
       do_throw("Should have thrown!");
-    }
-    catch (e) {
+    } catch (e) {
       do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
     }
   }
@@ -218,8 +211,7 @@ add_task(function* test_invalid_guid_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
@@ -229,8 +221,7 @@ add_task(function* test_invalid_guid_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
@@ -265,8 +256,7 @@ add_task(function* test_no_visits_throws() {
         try {
           yield promiseUpdatePlaces(place);
           do_throw("Should have thrown!");
-        }
-        catch (e) {
+        } catch (e) {
           do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
         }
       }
@@ -285,8 +275,7 @@ add_task(function* test_add_visit_no_date_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
@@ -302,8 +291,7 @@ add_task(function* test_add_visit_no_transitionType_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
@@ -320,8 +308,7 @@ add_task(function* test_add_visit_invalid_transitionType_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 
@@ -330,8 +317,7 @@ add_task(function* test_add_visit_invalid_transitionType_throws() {
   try {
     yield promiseUpdatePlaces(place);
     do_throw("Should have thrown!");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(e.result, Cr.NS_ERROR_INVALID_ARG);
   }
 });
@@ -363,8 +349,7 @@ add_task(function* test_non_addable_uri_errors() {
         ],
       };
       places.push(place);
-    }
-    catch (e) {
+    } catch (e) {
       if (e.result != Cr.NS_ERROR_FAILURE) {
         throw e;
       }
@@ -668,9 +653,8 @@ add_task(function* test_add_visit() {
 
       // Check mozIVisitInfo properties.
       do_check_eq(visit.visitId, 0);
-    }
-    // But they should be valid for non-embed visits.
-    else {
+    } else {
+      // But they should be valid for non-embed visits.
       // Check mozIPlaceInfo properties.
       do_check_true(placeInfo.placeId > 0);
       do_check_valid_places_guid(placeInfo.guid);
@@ -1066,8 +1050,7 @@ add_task(function* test_callbacks_not_supplied() {
         ],
       };
       places.push(place);
-    }
-    catch (e) {
+    } catch (e) {
       if (e.result != Cr.NS_ERROR_FAILURE) {
         throw e;
       }
@@ -1112,7 +1095,6 @@ add_task(function* test_typed_hidden_not_overwritten() {
                "The page should be marked as not hidden");
 });
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }

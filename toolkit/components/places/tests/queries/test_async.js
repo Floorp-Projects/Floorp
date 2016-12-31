@@ -170,8 +170,7 @@ Test.prototype = {
     if (aExpectedMin === aExpectedMax) {
       print(aState + " should be observed only " + aExpectedMin +
             " times (actual = " + cnt + ")");
-    }
-    else {
+    } else {
       print(aState + " should be observed at least " + aExpectedMin +
             " times and at most " + aExpectedMax + " times (actual = " +
             cnt + ")");
@@ -207,8 +206,7 @@ Test.prototype = {
           default:
             do_throw("Unexpected new state! " + newState);
           }
-        }
-        catch (err) {
+        } catch (err) {
           do_throw(err);
         }
       },
@@ -349,13 +347,11 @@ var DataHelper = {
   }
 };
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_async()
-{
+add_task(function* test_async() {
   for (let test of tests) {
     yield PlacesUtils.bookmarks.eraseEverything();
 

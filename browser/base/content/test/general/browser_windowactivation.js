@@ -24,8 +24,7 @@ function reallyRunTests() {
   gURLBar.focus();
 
   var loadCount = 0;
-  function check()
-  {
+  function check() {
     // wait for both tabs to load
     if (++loadCount != 2) {
       return;
@@ -107,8 +106,7 @@ function reallyRunTests() {
   gBrowser.selectedTab = tab1;
 }
 
-function sendGetBackgroundRequest(ifChanged)
-{
+function sendGetBackgroundRequest(ifChanged) {
   browser1.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged });
   browser2.messageManager.sendAsyncMessage("Test:GetBackgroundColor", { ifChanged });
 }
@@ -120,16 +118,14 @@ function runOtherWindowTests() {
   }, otherWindow);
 }
 
-function finishTest()
-{
+function finishTest() {
   gBrowser.removeCurrentTab();
   gBrowser.removeCurrentTab();
   otherWindow = null;
   finish();
 }
 
-function childFunction()
-{
+function childFunction() {
   let oldColor = null;
 
   let expectingResponse = false;

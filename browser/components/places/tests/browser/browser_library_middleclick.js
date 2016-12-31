@@ -245,8 +245,7 @@ function runNextTest() {
     waitForFocus(function() {
       mouseEventOnCell(gLibrary.ContentTree.view, 0, 0, { button: 1 });
     }, gLibrary);
-  }
-  else {
+  } else {
     // No more tests.
 
     // Close Library window.

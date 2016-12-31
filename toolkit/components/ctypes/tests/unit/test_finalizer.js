@@ -1,7 +1,6 @@
 var TEST_SIZE = 100;
 
-function run_test()
-{
+function run_test() {
   let library = open_ctypes_test_lib();
 
   let start = library.declare("test_finalizer_start", ctypes.default_abi,
@@ -297,8 +296,7 @@ function count_finalized(size, tc) {
  * - that (some) finalizers are executed;
  * - that no finalizer is executed twice (this is done on the C side).
  */
-function test_executing_finalizers(size, tc, cleanup)
-{
+function test_executing_finalizers(size, tc, cleanup) {
   dump("test_executing_finalizers " + tc.name + "\n");
   // Allocate |size| items without references
   for (let i = 0; i < size; ++i) {
@@ -343,8 +341,7 @@ function test_result_dispose(size, tc, cleanup) {
  * - |dispose| is executed properly
  * - finalizers are not executed after |dispose|
  */
-function test_executing_dispose(size, tc, cleanup)
-{
+function test_executing_dispose(size, tc, cleanup) {
   dump("test_executing_dispose " + tc.name + "\n");
   let ref = [];
   // Allocate |size| items with references
@@ -387,8 +384,7 @@ function test_executing_dispose(size, tc, cleanup)
  * - |forget| has the right content
  * - finalizers are not executed after |forget|
  */
-function test_executing_forget(size, tc, cleanup)
-{
+function test_executing_forget(size, tc, cleanup) {
   dump("test_executing_forget " + tc.name + "\n");
   let ref = [];
   // Allocate |size| items with references
@@ -433,8 +429,7 @@ function test_executing_forget(size, tc, cleanup)
 /**
  * Check that finalizers are not executed
  */
-function test_do_not_execute_finalizers_on_referenced_stuff(size, tc, cleanup)
-{
+function test_do_not_execute_finalizers_on_referenced_stuff(size, tc, cleanup) {
   dump("test_do_not_execute_finalizers_on_referenced_stuff " + tc.name + "\n");
 
   let ref = [];

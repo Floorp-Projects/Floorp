@@ -83,8 +83,7 @@
             try {
               this._scrollIncrement = this._prefBranch
                                           .getIntPref("toolkit.scrollbox.scrollIncrement");
-            }
-            catch (ex) {
+            } catch (ex) {
               this._scrollIncrement = 20;
             }
           }
@@ -102,8 +101,7 @@
               try {
                 this._smoothScroll = this._prefBranch
                                          .getBoolPref("toolkit.scrollbox.smoothScroll");
-              }
-              catch (ex) {
+              } catch (ex) {
                 this._smoothScroll = true;
               }
             }
@@ -604,16 +602,14 @@
           if (this.hasAttribute("notoverflowing")) {
             scrolledToStart = true;
             scrolledToEnd = true;
-          }
-          else if (this.scrollPosition == 0) {
+          } else if (this.scrollPosition == 0) {
             // In the RTL case, this means the _last_ element in the
             // scrollbox is visible
             if (this._isRTLScrollbox)
               scrolledToEnd = true;
             else
               scrolledToStart = true;
-          }
-          else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
+          } else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
             // In the RTL case, this means the _first_ element in the
             // scrollbox is visible
             if (this._isRTLScrollbox)
@@ -648,16 +644,15 @@
             scrollAmount = event.deltaY * this.scrollClientSize;
           else
             scrollAmount = event.deltaY * this.lineScrollAmount;
-        }
-        // We allow vertical scrolling to scroll a horizontal scrollbox
-        // because many users have a vertical scroll wheel but no
-        // horizontal support.
-        // Because of this, we need to avoid scrolling chaos on trackpads
-        // and mouse wheels that support simultaneous scrolling in both axes.
-        // We do this by scrolling only when the last two scroll events were
-        // on the same axis as the current scroll event.
-        // For diagonal scroll events we only respect the dominant axis.
-        else {
+        } else {
+          // We allow vertical scrolling to scroll a horizontal scrollbox
+          // because many users have a vertical scroll wheel but no
+          // horizontal support.
+          // Because of this, we need to avoid scrolling chaos on trackpads
+          // and mouse wheels that support simultaneous scrolling in both axes.
+          // We do this by scrolling only when the last two scroll events were
+          // on the same axis as the current scroll event.
+          // For diagonal scroll events we only respect the dominant axis.
           let isVertical = Math.abs(event.deltaY) > Math.abs(event.deltaX);
           let delta = isVertical ? event.deltaY : event.deltaX;
           let scrollByDelta = isVertical && this._isRTLScrollbox ? -delta : delta;
@@ -735,8 +730,7 @@
         if (this.orient == "vertical") {
           if (event.detail == 1)
             return;
-        }
-        else if (event.detail == 0) {
+        } else if (event.detail == 0) {
           // horizontal scrollbox
           return;
         }
@@ -751,8 +745,7 @@
           let childNodes = this._getScrollableElements();
           if (childNodes && childNodes.length)
             this.ensureElementIsVisible(childNodes[0], false);
-        }
-        catch (e) {
+        } catch (e) {
           this.removeAttribute("notoverflowing");
         }
       ]]></handler>
@@ -770,8 +763,7 @@
         if (this.orient == "vertical") {
           if (event.detail == 1)
             return;
-        }
-        else if (event.detail == 0) {
+        } else if (event.detail == 0) {
           // horizontal scrollbox
           return;
         }
@@ -785,8 +777,7 @@
           // means that the notoverflowing attribute was removed erroneously,
           // as the whole overflow event should not be happening in that case.
           this._updateScrollButtonsDisabledState();
-        }
-        catch (e) {
+        } catch (e) {
           this.setAttribute("notoverflowing", "true");
         }
       ]]></handler>
@@ -835,8 +826,7 @@
         try {
           this._scrollDelay = this._prefBranch
                                   .getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay");
-        }
-        catch (ex) {
+        } catch (ex) {
         }
       ]]></constructor>
 

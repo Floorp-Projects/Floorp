@@ -376,8 +376,7 @@ function getCertChain(securityInfoAsString) {
   return certChain;
 }
 
-function getDERString(cert)
-{
+function getDERString(cert) {
   var length = {};
   var derArray = cert.getRawDER(length);
   var derString = '';
@@ -387,8 +386,7 @@ function getDERString(cert)
   return derString;
 }
 
-function getPEMString(cert)
-{
+function getPEMString(cert) {
   var derb64 = btoa(getDERString(cert));
   // Wrap the Base64 string into lines of 64 characters,
   // with CRLF line breaks (as specified in RFC 1421).

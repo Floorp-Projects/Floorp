@@ -237,8 +237,7 @@ add_task(function*() {
         ["addon6@tests.mozilla.org"]);
     check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED,
         ["addon4@tests.mozilla.org"]);
-  }
-  else {
+  } else {
     do_print("Previous XPI save succeeded");
     check_startup_changes(AddonManager.STARTUP_CHANGE_INSTALLED, []);
     check_startup_changes(AddonManager.STARTUP_CHANGE_UNINSTALLED, []);

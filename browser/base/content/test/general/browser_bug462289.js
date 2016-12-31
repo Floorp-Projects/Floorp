@@ -1,7 +1,6 @@
 var tab1, tab2;
 
-function focus_in_navbar()
-{
+function focus_in_navbar() {
   var parent = document.activeElement.parentNode;
   while (parent && parent.id != "nav-bar")
     parent = parent.parentNode;
@@ -9,8 +8,7 @@ function focus_in_navbar()
   return parent != null;
 }
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   tab1 = gBrowser.addTab("about:blank", {skipAnimation: true});
@@ -20,8 +18,7 @@ function test()
   executeSoon(step2);
 }
 
-function step2()
-{
+function step2() {
   is(gBrowser.selectedTab, tab1, "1st click on tab1 selects tab");
   isnot(document.activeElement, tab1, "1st click on tab1 does not activate tab");
 
@@ -29,8 +26,7 @@ function step2()
   executeSoon(step3);
 }
 
-function step3()
-{
+function step3() {
   is(gBrowser.selectedTab, tab1, "2nd click on selected tab1 keeps tab selected");
   isnot(document.activeElement, tab1, "2nd click on selected tab1 does not activate tab");
 
@@ -44,8 +40,7 @@ function step3()
   executeSoon(step4);
 }
 
-function step4()
-{
+function step4() {
   is(gBrowser.selectedTab, tab1, "3rd click on activated tab1 keeps tab selected");
   is(document.activeElement, tab1, "3rd click on activated tab1 keeps tab activated");
 
@@ -53,8 +48,7 @@ function step4()
   EventUtils.synthesizeMouseAtCenter(tab2, {});
 }
 
-function step5()
-{
+function step5() {
   gBrowser.removeEventListener("TabSwitchDone", step5);
 
   // The tabbox selects a tab within a setTimeout in a bubbling mousedown event
@@ -69,8 +63,7 @@ function step5()
   executeSoon(step6);
 }
 
-function step6()
-{
+function step6() {
   is(gBrowser.selectedTab, tab2, "middle-button mousedown on selected tab2 keeps tab selected");
   isnot(document.activeElement, tab2, "middle-button mousedown on selected tab2 does not activate tab");
 

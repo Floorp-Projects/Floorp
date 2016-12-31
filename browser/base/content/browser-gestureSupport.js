@@ -338,8 +338,7 @@ var gGestureSupport = {
         node.dispatchEvent(cmdEvent);
       }
 
-    }
-    else {
+    } else {
       goDoCommand(aCommand);
     }
   },
@@ -405,8 +404,7 @@ var gGestureSupport = {
     if ((gHistorySwipeAnimation.isAnimationRunning()) &&
         (aDir == "RIGHT" || aDir == "LEFT")) {
       gHistorySwipeAnimation.processSwipeEvent(aEvent, aDir);
-    }
-    else {
+    } else {
       this.processSwipeEvent(aEvent, aDir);
     }
   },
@@ -432,8 +430,7 @@ var gGestureSupport = {
       else if (type == "number")
         getFunc = "Int";
       return gPrefService["get" + getFunc + "Pref"](branch + aPref);
-    }
-    catch (e) {
+    } catch (e) {
       return aDef;
     }
   },
@@ -649,8 +646,7 @@ var gHistorySwipeAnimation = {
         this._handleFastSwiping();
       }
       this.updateAnimation(0);
-    }
-    else {
+    } else {
       // Get the session history from SessionStore.
       let updateSessionHistory = sessionHistory => {
         this._startingIndex = sessionHistory.index;
@@ -850,8 +846,7 @@ var gHistorySwipeAnimation = {
   _doesIndexExistInHistory: function HSA__doesIndexExistInHistory(aIndex) {
     try {
       return SessionStore.getSessionHistory(gBrowser.selectedTab).entries[aIndex] != null;
-    }
-    catch (ex) {
+    } catch (ex) {
       return false;
     }
   },
@@ -1154,8 +1149,7 @@ var gHistorySwipeAnimation = {
       img.onload = function() {
         URL.revokeObjectURL(url);
       };
-    }
-    finally {
+    } finally {
       img.src = url;
       return img;
     }

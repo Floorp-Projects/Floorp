@@ -86,8 +86,7 @@ var test = {
       var excludeRootChildNode = excludeRootNode.getChild(0);
       do_check_eq(excludeRootChildNode.uri, this._restoreRootExcludeURI.spec);
       excludeRootNode.containerOpen = false;
-    }
-    else {
+    } else {
       // exclude root should not exist anymore
       do_check_eq(rootNode.childCount, PLACES_ROOTS_COUNT + 1);
       restoreRootIndex = PLACES_ROOTS_COUNT;

@@ -15,8 +15,7 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/Console.jsm");
 
-function section(number, url)
-{
+function section(number, url) {
   const baseURL = "https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Limitations_of_chrome_scripts";
   return { number, url: baseURL + url };
 }

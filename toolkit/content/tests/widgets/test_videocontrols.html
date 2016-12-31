@@ -108,9 +108,9 @@ function runTest(event) {
       break;
 
     case 2:
-      is(event.type, "play",  "checking event type");
+      is(event.type, "play", "checking event type");
       is(video.paused, false, "checking video play state");
-      is(video.muted, false,  "checking video mute state");
+      is(video.muted, false, "checking video mute state");
 
       // Click the pause button
       SimpleTest.executeSoon(() => {
@@ -120,8 +120,8 @@ function runTest(event) {
 
     case 3:
       is(event.type, "pause", "checking event type");
-      is(video.paused, true,  "checking video play state");
-      is(video.muted, false,  "checking video mute state");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, false, "checking video mute state");
 
       SimpleTest.executeSoon(() => {
         synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Mute.
@@ -130,8 +130,8 @@ function runTest(event) {
 
     case 4:
       is(event.type, "volumechange", "checking event type");
-      is(video.paused, true,  "checking video play state");
-      is(video.muted,  true,  "checking video mute state");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, true, "checking video mute state");
 
       SimpleTest.executeSoon(() => {
         synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Unmute.
@@ -144,8 +144,8 @@ function runTest(event) {
      */
     case 5:
       is(event.type, "volumechange", "checking event type");
-      is(video.paused, true,  "checking video play state");
-      is(video.muted,  false, "checking video mute state");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, false, "checking video mute state");
 
       video.style.border = "medium solid purple";
       video.style.borderWidth = "30px 40px 50px 60px";
@@ -159,16 +159,16 @@ function runTest(event) {
       break;
 
     case 6:
-      is(event.type, "play",  "checking event type");
+      is(event.type, "play", "checking event type");
       is(video.paused, false, "checking video play state");
-      is(video.muted, false,  "checking video mute state");
+      is(video.muted, false, "checking video mute state");
       video.pause();
       break;
 
     case 7:
-      is(event.type, "pause",  "checking event type");
+      is(event.type, "pause", "checking event type");
       is(video.paused, true, "checking video play state");
-      is(video.muted, false,  "checking video mute state");
+      is(video.muted, false, "checking video mute state");
 
       // Click the mute button
       SimpleTest.executeSoon(() => {
@@ -178,8 +178,8 @@ function runTest(event) {
 
     case 8:
       is(event.type, "volumechange", "checking event type");
-      is(video.paused, true,  "checking video play state");
-      is(video.muted,  true,  "checking video mute state");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, true, "checking video mute state");
       // Clear the style set in test 5.
       video.style.border = "";
       video.style.borderWidth = "";
@@ -193,8 +193,8 @@ function runTest(event) {
      */
     case 9:
       is(event.type, "volumechange", "checking event type");
-      is(video.paused, true,  "checking video play state");
-      is(video.muted,  false,  "checking video mute state");
+      is(video.paused, true, "checking video play state");
+      is(video.muted, false, "checking video mute state");
       ok(true, "video position is at " + video.currentTime);
       video.currentTime = 0.0;
       break;
@@ -217,8 +217,8 @@ function runTest(event) {
         var beginDragX = scrubberOffsetX;
         var endDragX = scrubberOffsetX + (scrubberWidth / 2);
         synthesizeMouse(video, beginDragX, scrubberCenterY, { type: "mousedown", button: 0 });
-        synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mousemove", button: 0 });
-        synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mouseup",   button: 0 });
+        synthesizeMouse(video, endDragX, scrubberCenterY, { type: "mousemove", button: 0 });
+        synthesizeMouse(video, endDragX, scrubberCenterY, { type: "mouseup",   button: 0 });
       });
       break;
 
@@ -387,9 +387,9 @@ function runTest(event) {
 
 
 function canplaythroughevent(event) {
-  video.removeEventListener("canplaythrough",  canplaythroughevent, false);
+  video.removeEventListener("canplaythrough", canplaythroughevent, false);
   // Other events expected by the test.
-  video.addEventListener("play",  runTest, false);
+  video.addEventListener("play", runTest, false);
   video.addEventListener("pause", runTest, false);
   video.addEventListener("volumechange", runTest, false);
   video.addEventListener("seeking", runTest, false);
@@ -409,7 +409,7 @@ function loadevent(event) {
   SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
 }
 
-window.addEventListener("load",  loadevent, false);
+window.addEventListener("load", loadevent, false);
 
 SimpleTest.waitForExplicitFinish();
 

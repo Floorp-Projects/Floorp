@@ -114,134 +114,75 @@ var Sqlite3 = {
   Type
 };
 
-declareLazyFFI(Sqlite3, "open", lib, "sqlite3_open", null,
-               /* return*/    Type.int,
-               /* path*/      Type.char.in_ptr,
+declareLazyFFI(Sqlite3, "open", lib, "sqlite3_open", null, Type.int, Type.char.in_ptr,
                /* db handle*/ Type.sqlite3_ptr.out_ptr);
 
-declareLazyFFI(Sqlite3, "open_v2", lib, "sqlite3_open_v2", null,
-               /* return*/    Type.int,
-               /* path*/      Type.char.in_ptr,
-               /* db handle*/ Type.sqlite3_ptr.out_ptr,
-               /* flags*/     Type.int,
-               /* VFS*/       Type.char.in_ptr);
+declareLazyFFI(Sqlite3, "open_v2", lib, "sqlite3_open_v2", null, Type.int, Type.char.in_ptr,
+               /* db handle*/ Type.sqlite3_ptr.out_ptr, Type.int, Type.char.in_ptr);
 
-declareLazyFFI(Sqlite3, "close", lib, "sqlite3_close", null,
-               /* return*/    Type.int,
+declareLazyFFI(Sqlite3, "close", lib, "sqlite3_close", null, Type.int,
                /* db handle*/ Type.sqlite3_ptr);
 
-declareLazyFFI(Sqlite3, "prepare_v2", lib, "sqlite3_prepare_v2", null,
-               /* return*/    Type.int,
-               /* db handle*/ Type.sqlite3_ptr,
-               /* zSql*/      Type.char.in_ptr,
-               /* nByte*/     Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr.out_ptr,
-               /* unused*/    Type.cstring.out_ptr);
+declareLazyFFI(Sqlite3, "prepare_v2", lib, "sqlite3_prepare_v2", null, Type.int,
+               /* db handle*/ Type.sqlite3_ptr, Type.char.in_ptr, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr.out_ptr, Type.cstring.out_ptr);
 
-declareLazyFFI(Sqlite3, "step", lib, "sqlite3_step", null,
-               /* return*/    Type.int,
+declareLazyFFI(Sqlite3, "step", lib, "sqlite3_step", null, Type.int,
                /* statement*/ Type.sqlite3_stmt_ptr);
 
-declareLazyFFI(Sqlite3, "finalize", lib, "sqlite3_finalize", null,
-               /* return*/    Type.int,
+declareLazyFFI(Sqlite3, "finalize", lib, "sqlite3_finalize", null, Type.int,
                /* statement*/ Type.sqlite3_stmt_ptr);
 
-declareLazyFFI(Sqlite3, "reset", lib, "sqlite3_reset", null,
-               /* return*/    Type.int,
+declareLazyFFI(Sqlite3, "reset", lib, "sqlite3_reset", null, Type.int,
                /* statement*/ Type.sqlite3_stmt_ptr);
 
-declareLazyFFI(Sqlite3, "column_int", lib, "sqlite3_column_int", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_int", lib, "sqlite3_column_int", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "column_blob", lib, "sqlite3_column_blob", null,
-               /* return*/    Type.voidptr_t,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_blob", lib, "sqlite3_column_blob", null, Type.voidptr_t,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "column_bytes", lib, "sqlite3_column_bytes", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_bytes", lib, "sqlite3_column_bytes", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
 declareLazyFFI(Sqlite3, "column_bytes16", lib, "sqlite3_column_bytes16",
-                             null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+                             null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "column_double", lib, "sqlite3_column_double", null,
-               /* return*/    Type.double,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_double", lib, "sqlite3_column_double", null, Type.double,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "column_int64", lib, "sqlite3_column_int64", null,
-               /* return*/    Type.sqlite3_int64,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_int64", lib, "sqlite3_column_int64", null, Type.sqlite3_int64,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "column_text", lib, "sqlite3_column_text", null,
-               /* return*/    Type.cstring,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_text", lib, "sqlite3_column_text", null, Type.cstring,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "column_text16", lib, "sqlite3_column_text16", null,
-               /* return*/    Type.wstring,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* col*/       Type.int);
+declareLazyFFI(Sqlite3, "column_text16", lib, "sqlite3_column_text16", null, Type.wstring,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "bind_int", lib, "sqlite3_bind_int", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* index*/     Type.int,
-               /* value*/     Type.int);
+declareLazyFFI(Sqlite3, "bind_int", lib, "sqlite3_bind_int", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int, Type.int);
 
-declareLazyFFI(Sqlite3, "bind_int64", lib, "sqlite3_bind_int64", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* index*/     Type.int,
-               /* value*/     Type.sqlite3_int64);
+declareLazyFFI(Sqlite3, "bind_int64", lib, "sqlite3_bind_int64", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int, Type.sqlite3_int64);
 
-declareLazyFFI(Sqlite3, "bind_double", lib, "sqlite3_bind_double", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* index*/     Type.int,
-               /* value*/     Type.double);
+declareLazyFFI(Sqlite3, "bind_double", lib, "sqlite3_bind_double", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int, Type.double);
 
-declareLazyFFI(Sqlite3, "bind_null", lib, "sqlite3_bind_null", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* index*/     Type.int);
+declareLazyFFI(Sqlite3, "bind_null", lib, "sqlite3_bind_null", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int);
 
-declareLazyFFI(Sqlite3, "bind_zeroblob", lib, "sqlite3_bind_zeroblob", null,
-               /* return*/    Type.int,
-               /* statement*/ Type.sqlite3_stmt_ptr,
-               /* index*/     Type.int,
-               /* nBytes*/    Type.int);
+declareLazyFFI(Sqlite3, "bind_zeroblob", lib, "sqlite3_bind_zeroblob", null, Type.int,
+               /* statement*/ Type.sqlite3_stmt_ptr, Type.int, Type.int);
 
-declareLazyFFI(Sqlite3, "bind_text", lib, "sqlite3_bind_text", null,
-               /* return*/     Type.int,
-               /* statement*/  Type.sqlite3_stmt_ptr,
-               /* index*/      Type.int,
-               /* value*/      Type.cstring,
-               /* nBytes*/     Type.int,
+declareLazyFFI(Sqlite3, "bind_text", lib, "sqlite3_bind_text", null, Type.int, Type.sqlite3_stmt_ptr, Type.int, Type.cstring, Type.int,
                /* destructor*/ Type.sqlite3_destructor_ptr);
 
-declareLazyFFI(Sqlite3, "bind_text16", lib, "sqlite3_bind_text16", null,
-               /* return*/     Type.int,
-               /* statement*/  Type.sqlite3_stmt_ptr,
-               /* index*/      Type.int,
-               /* value*/      Type.wstring,
-               /* nBytes*/     Type.int,
+declareLazyFFI(Sqlite3, "bind_text16", lib, "sqlite3_bind_text16", null, Type.int, Type.sqlite3_stmt_ptr, Type.int, Type.wstring, Type.int,
                /* destructor*/ Type.sqlite3_destructor_ptr);
 
-declareLazyFFI(Sqlite3, "bind_blob", lib, "sqlite3_bind_blob", null,
-               /* return*/     Type.int,
-               /* statement*/  Type.sqlite3_stmt_ptr,
-               /* index*/      Type.int,
-               /* value*/      Type.voidptr_t,
-               /* nBytes*/     Type.int,
+declareLazyFFI(Sqlite3, "bind_blob", lib, "sqlite3_bind_blob", null, Type.int, Type.sqlite3_stmt_ptr, Type.int, Type.voidptr_t, Type.int,
                /* destructor*/ Type.sqlite3_destructor_ptr);
 
 module.exports = {

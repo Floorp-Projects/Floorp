@@ -11,8 +11,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function RemoteSecurityUI()
-{
+function RemoteSecurityUI() {
     this._SSLStatus = null;
     this._state = 0;
 }

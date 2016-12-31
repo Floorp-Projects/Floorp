@@ -41,13 +41,11 @@
 /**
  * This test will test Queries that use relative search terms and URI options
  */
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_searchterms_uri()
-{
+add_task(function* test_searchterms_uri() {
   yield task_populateDB(testData);
    var query = PlacesUtils.history.getNewQuery();
    query.searchTerms = "moz";

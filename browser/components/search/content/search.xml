@@ -301,8 +301,7 @@
             // showHistoryPopup does a startSearch("") call, ensure the
             // controller handles the text from the input box instead:
             this._textbox.mController.handleText();
-          }
-          else if (aShowOnlySettingsIfEmpty) {
+          } else if (aShowOnlySettingsIfEmpty) {
             this.setAttribute("showonlysettings", "true");
           }
         ]]></body>
@@ -340,13 +339,11 @@
             if (aEvent.button == 2)
               return;
             where = whereToOpenLink(aEvent, false, true);
-          }
-          else if (aForceNewTab) {
+          } else if (aForceNewTab) {
             where = "tab";
             if (Services.prefs.getBoolPref("browser.tabs.loadInBackground"))
               where += "-background";
-          }
-          else {
+          } else {
             var newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
             if (((aEvent instanceof KeyboardEvent) && aEvent.altKey) ^ newTabPref)
               where = "tab";
@@ -472,8 +469,7 @@
           Services.search.addEngine(target.getAttribute("uri"), null,
                                     target.getAttribute("src"), false,
                                     installCallback);
-        }
-        else
+        } else
           return;
 
         this.focus();
@@ -1031,8 +1027,7 @@
           let uri = currentEngine.iconURI;
           if (uri) {
             this.setAttribute("src", uri.spec);
-          }
-          else {
+          } else {
             // If the default has just been changed to a provider without icon,
             // avoid showing the icon of the previous default provider.
             this.removeAttribute("src");
@@ -1098,8 +1093,7 @@
           // Setting this with an xbl-inherited attribute gets overridden the
           // second time the user clicks the glass icon for some reason...
           tree.collapsed = true;
-        }
-        else {
+        } else {
           this.removeAttribute("showonlysettings");
           // Uncollapse as long as we have a tree with a view which has >= 1 row.
           // The autocomplete binding itself will take care of uncollapsing later,
@@ -1436,8 +1430,7 @@
                         headerSearchText.nextSibling.value;
             if (!isOneOffSelected)
               headerPanel.selectedIndex = 1;
-          }
-          else {
+          } else {
             let noSearchHeader =
               document.getAnonymousElementByAttribute(this, "anonid",
                                                       "searchbar-oneoffheader-search");
@@ -1730,8 +1723,7 @@
                                                         "searchbar-oneoffheader-engine");
               header.selectedIndex = 2;
               headerEngineText.value = val.engine.name;
-            }
-            else {
+            } else {
               header.selectedIndex = this.query ? 1 : 0;
             }
             if (this.textbox) {
@@ -1808,8 +1800,7 @@
                 inBackground: true,
               };
             }
-          }
-          else {
+          } else {
             var newTabPref = Services.prefs.getBoolPref("browser.search.openintab");
             if (((aEvent instanceof KeyboardEvent) && aEvent.altKey) ^ newTabPref)
               where = "tab";
@@ -1945,19 +1936,15 @@
               !event.metaKey &&
               this.getAttribute("disabletab") != "true") {
             stopEvent = this.advanceSelection(!event.shiftKey, false, true);
-          }
-
-          // Alt + up/down is very similar to (shift +) tab but differs in that
-          // it loops through the list, whereas tab will move the focus out.
-          else if (event.altKey &&
-                   (event.keyCode == KeyEvent.DOM_VK_DOWN ||
-                    event.keyCode == KeyEvent.DOM_VK_UP)) {
+          } else if (event.altKey &&
+                     (event.keyCode == KeyEvent.DOM_VK_DOWN ||
+                      event.keyCode == KeyEvent.DOM_VK_UP)) {
+            // Alt + up/down is very similar to (shift +) tab but differs in that
+            // it loops through the list, whereas tab will move the focus out.
             stopEvent =
               this.advanceSelection(event.keyCode == KeyEvent.DOM_VK_DOWN,
                                     true, false);
-          }
-
-          else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP) {
+          } else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_UP) {
             if (numListItems > 0) {
               if (this.popup.selectedIndex > 0) {
                 // The autocomplete controller should handle this case.
@@ -1985,9 +1972,7 @@
             } else {
               stopEvent = this.advanceSelection(false, true, true);
             }
-          }
-
-          else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
+          } else if (event.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_DOWN) {
             if (numListItems > 0) {
               if (this.popup.selectedIndex >= 0 &&
                   this.popup.selectedIndex < numListItems - 1) {
@@ -2022,20 +2007,18 @@
             } else {
               stopEvent = this.advanceSelection(true, true, true);
             }
-          }
-
-          // If the add-engine overflow menu item is selected and the user
-          // presses the right arrow key, open the submenu.  Unfortunately
-          // handling the left arrow key -- to close the popup -- isn't
-          // straightforward.  Once the popup is open, it consumes all key
-          // events.  Setting ignorekeys=handled on it doesn't help, since the
-          // popup handles all arrow keys.  Setting ignorekeys=true on it does
-          // mean that the popup no longer consumes the left arrow key, but then
-          // it no longer handles up/down keys to select items in the popup.
-          else if (this.selectedButton &&
-                   this.selectedButton.getAttribute("anonid") ==
-                     "addengine-menu-button" &&
-                   event.keyCode == KeyEvent.DOM_VK_RIGHT) {
+          } else if (this.selectedButton &&
+                     this.selectedButton.getAttribute("anonid") ==
+                       "addengine-menu-button" &&
+                     event.keyCode == KeyEvent.DOM_VK_RIGHT) {
+            // If the add-engine overflow menu item is selected and the user
+            // presses the right arrow key, open the submenu.  Unfortunately
+            // handling the left arrow key -- to close the popup -- isn't
+            // straightforward.  Once the popup is open, it consumes all key
+            // events.  Setting ignorekeys=handled on it doesn't help, since the
+            // popup handles all arrow keys.  Setting ignorekeys=true on it does
+            // mean that the popup no longer consumes the left arrow key, but then
+            // it no longer handles up/down keys to select items in the popup.
             this.selectedButton.open = true;
             stopEvent = true;
           }

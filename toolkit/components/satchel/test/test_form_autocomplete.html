@@ -204,20 +204,17 @@ function checkForm(expectedValue) {
 var testNum = 0;
 var expectingPopup = false;
 
-function expectPopup()
-{
+function expectPopup() {
   info("expecting popup for test " + testNum);
   expectingPopup = true;
 }
 
-function popupShownListener()
-{
+function popupShownListener() {
   info("popup shown for test " + testNum);
   if (expectingPopup) {
     expectingPopup = false;
     SimpleTest.executeSoon(runTest);
-  }
-  else {
+  } else {
     ok(false, "Autocomplete popup not expected during test " + testNum);
   }
 }
@@ -1030,14 +1027,12 @@ function runTest() {
   }
 }
 
-function addEntry(name, value)
-{
+function addEntry(name, value) {
   updateFormHistory({ op : "add", fieldname : name, value }, runTest);
 }
 
 // Runs the next test when scroll event occurs
-function waitForScroll()
-{
+function waitForScroll() {
   addEventListener("scroll", function() {
     if (!window.pageYOffset)
       return;
@@ -1047,8 +1042,7 @@ function waitForScroll()
   }, false);
 }
 
-function waitForMenuChange(expectedCount, expectedFirstValue)
-{
+function waitForMenuChange(expectedCount, expectedFirstValue) {
     notifyMenuChanged(expectedCount, expectedFirstValue, runTest);
 }
 

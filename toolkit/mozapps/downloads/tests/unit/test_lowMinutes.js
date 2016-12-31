@@ -39,8 +39,7 @@ var expectedTimes = [
 ];
 _(expectedTimes.join("\n"));
 
-function run_test()
-{
+function run_test() {
   expectedTimes.forEach(function([time, expectStatus, comment]) {
     _("Running test with time", time);
     _("Test comment:", comment);

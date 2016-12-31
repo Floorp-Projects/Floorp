@@ -162,8 +162,7 @@ var BookmarkPropertiesPanel = {
 
       if ("defaultInsertionPoint" in dialogInfo) {
         this._defaultInsertionPoint = dialogInfo.defaultInsertionPoint;
-      }
-      else {
+      } else {
         this._defaultInsertionPoint =
           new InsertionPoint(PlacesUtils.bookmarksMenuFolderId,
                              PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -181,8 +180,7 @@ var BookmarkPropertiesPanel = {
               this._title = this._getURITitleFromHistory(this._uri) ||
                             this._uri.spec;
             }
-          }
-          else {
+          } else {
             this._uri = PlacesUtils._uri("about:blank");
             this._title = this._strings.getString("newBookmarkDefault");
             this._dummyItem = true;
@@ -207,8 +205,7 @@ var BookmarkPropertiesPanel = {
             if ("URIList" in dialogInfo) {
               this._title = this._strings.getString("bookmarkAllTabsDefault");
               this._URIs = dialogInfo.URIList;
-            }
-            else
+            } else
               this._title = this._strings.getString("newFolderDefault");
               this._dummyItem = true;
           }
@@ -225,16 +222,14 @@ var BookmarkPropertiesPanel = {
             if (this._feedURI) {
               this._title = this._getURITitleFromHistory(this._feedURI) ||
                             this._feedURI.spec;
-            }
-            else
+            } else
               this._title = this._strings.getString("newLivemarkDefault");
           }
       }
 
       if ("description" in dialogInfo)
         this._description = dialogInfo.description;
-    }
-    else { // edit
+    } else { // edit
       this._node = dialogInfo.node;
       this._title = this._node.title;
       if (PlacesUtils.nodeIsFolder(this._node))
@@ -388,8 +383,7 @@ var BookmarkPropertiesPanel = {
       PlacesTransactions.batch(function* () {
         yield this._batchBlockingDeferred.promise;
       }.bind(this));
-    }
-    else {
+    } else {
       PlacesUtils.transactionManager.beginBatch(null);
     }
     this._batching = true;
@@ -402,8 +396,7 @@ var BookmarkPropertiesPanel = {
     if (PlacesUIUtils.useAsyncTransactions) {
       this._batchBlockingDeferred.resolve();
       this._batchBlockingDeferred = null;
-    }
-    else {
+    } else {
       PlacesUtils.transactionManager.endBatch(false);
     }
     this._batching = false;
@@ -658,23 +651,20 @@ var BookmarkPropertiesPanel = {
         PlacesUtils.setCharsetForURI(this._uri, this._charSet);
 
       itemGuid = yield PlacesTransactions.NewBookmark(info).transact();
-    }
-    else if (this._itemType == LIVEMARK_CONTAINER) {
+    } else if (this._itemType == LIVEMARK_CONTAINER) {
       info.feedUrl = this._feedURI;
       if (this._siteURI)
         info.siteUrl = this._siteURI;
 
       itemGuid = yield PlacesTransactions.NewLivemark(info).transact();
-    }
-    else if (this._itemType == BOOKMARK_FOLDER) {
+    } else if (this._itemType == BOOKMARK_FOLDER) {
       itemGuid = yield PlacesTransactions.NewFolder(info).transact();
       for (let uri of this._URIs) {
         let placeInfo = yield PlacesUtils.promisePlaceInfo(uri);
         let title = placeInfo ? placeInfo.title : "";
         yield PlacesTransactions.transact({ parentGuid: itemGuid, uri, title });
       }
-    }
-    else {
+    } else {
       throw new Error(`unexpected value for _itemType:  ${this._itemType}`);
     }
 

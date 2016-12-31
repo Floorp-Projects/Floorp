@@ -205,8 +205,7 @@ var PluginProvider = {
 
         seenPlugins[tag.name][tag.description] = plugin;
         list[plugin.id] = plugin;
-      }
-      else {
+      } else {
         seenPlugins[tag.name][tag.description].tags.push(tag);
       }
     }

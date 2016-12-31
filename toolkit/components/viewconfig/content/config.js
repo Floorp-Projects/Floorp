@@ -86,8 +86,7 @@ var view = {
         gPrefView.reverse();
       if (index >= 0)
         index = gPrefView.length - index - 1;
-    }
-    else {
+    } else {
       var pref = null;
       if (index >= 0)
         pref = gPrefView[index];
@@ -122,8 +121,7 @@ var view = {
 
 // find the index in gPrefView of a pref object
 // or -1 if it does not exist in the filtered view
-function getViewIndexOfPref(pref)
-{
+function getViewIndexOfPref(pref) {
   var low = -1, high = gPrefView.length;
   var index = (low + high) >> 1;
   while (index > low) {
@@ -140,8 +138,7 @@ function getViewIndexOfPref(pref)
 }
 
 // find the index in gPrefView where a pref object belongs
-function getNearestViewIndexOfPref(pref)
-{
+function getNearestViewIndexOfPref(pref) {
   var low = -1, high = gPrefView.length;
   var index = (low + high) >> 1;
   while (index > low) {
@@ -155,8 +152,7 @@ function getNearestViewIndexOfPref(pref)
 }
 
 // find the index in gPrefArray of a pref object
-function getIndexOfPref(pref)
-{
+function getIndexOfPref(pref) {
   var low = -1, high = gPrefArray.length;
   var index = (low + high) >> 1;
   while (index > low) {
@@ -172,8 +168,7 @@ function getIndexOfPref(pref)
   return index;
 }
 
-function getNearestIndexOfPref(pref)
-{
+function getNearestIndexOfPref(pref) {
   var low = -1, high = gPrefArray.length;
   var index = (low + high) >> 1;
   while (index > low) {
@@ -188,8 +183,7 @@ function getNearestIndexOfPref(pref)
 
 var gPrefListener =
 {
-  observe(subject, topic, prefName)
-  {
+  observe(subject, topic, prefName) {
     if (topic != "nsPref:changed")
       return;
 
@@ -220,8 +214,7 @@ var gPrefListener =
           gPrefView.splice(viewIndex, 1);
         }
       }
-    }
-    else {
+    } else {
       fetchPref(prefName, arrayIndex);
       pref = gPrefArray.pop();
       updateArray = true;
@@ -239,8 +232,7 @@ var gPrefListener =
         // View is filtered, reinsert in the view separately
         newIndex = getNearestViewIndexOfPref(pref);
         gPrefView.splice(newIndex, 0, pref);
-      }
-      else if (gFilter) {
+      } else if (gFilter) {
         // View is filtered, but nothing to update
         return;
       }
@@ -255,8 +247,7 @@ var gPrefListener =
 
       if (selectedIndex == viewIndex) {
         selectedIndex = newIndex;
-      }
-      else if (selectedIndex >= low && selectedIndex <= high) {
+      } else if (selectedIndex >= low && selectedIndex <= high) {
         selectedIndex += (newIndex > viewIndex) ? -1 : 1;
       }
       if (selectedIndex >= 0) {
@@ -268,8 +259,7 @@ var gPrefListener =
   }
 };
 
-function prefObject(prefName, prefIndex)
-{
+function prefObject(prefName, prefIndex) {
   this.prefCol = prefName;
 }
 
@@ -280,8 +270,7 @@ prefObject.prototype =
   valueCol: ""
 };
 
-function fetchPref(prefName, prefIndex)
-{
+function fetchPref(prefName, prefIndex) {
   var pref = new prefObject(prefName);
 
   gPrefHash[prefName] = pref;
@@ -319,8 +308,7 @@ function fetchPref(prefName, prefIndex)
   }
 }
 
-function onConfigLoad()
-{
+function onConfigLoad() {
   // Load strings
   gConfigBundle = document.getElementById("configBundle");
 
@@ -341,16 +329,14 @@ function onConfigLoad()
 }
 
 // Unhide the warning message
-function ShowPrefs()
-{
+function ShowPrefs() {
   gPrefBranch.getChildList("").forEach(fetchPref);
 
   var descending = document.getElementsByAttribute("sortDirection", "descending");
   if (descending.item(0)) {
     gSortedColumn = descending[0].id;
     gSortDirection = -1;
-  }
-  else {
+  } else {
     var ascending = document.getElementsByAttribute("sortDirection", "ascending");
     if (ascending.item(0))
       gSortedColumn = ascending[0].id;
@@ -386,8 +372,7 @@ function ShowPrefs()
   textbox.focus();
 }
 
-function onConfigUnload()
-{
+function onConfigUnload() {
   if (document.getElementById("configDeck").getAttribute("selectedIndex") == 1) {
     gPrefBranch.removeObserver("", gPrefListener);
     var configTree = document.getElementById("configTree");
@@ -396,8 +381,7 @@ function onConfigUnload()
   }
 }
 
-function FilterPrefs()
-{
+function FilterPrefs() {
   if (document.getElementById("configDeck").getAttribute("selectedIndex") != 1) {
     return;
   }
@@ -408,12 +392,10 @@ function FilterPrefs()
     var r = substring.match(/^\/(.*)\/(i?)$/);
     try {
       gFilter = RegExp(r[1], r[2]);
-    }
-    catch (e) {
+    } catch (e) {
       return; // Do nothing on incomplete or bad RegExp
     }
-  }
-  else if (substring) {
+  } else if (substring) {
     gFilter = RegExp(substring.replace(/([^* \w])/g, "\\$1")
                               .replace(/^\*+/, "").replace(/\*+/g, ".*"), "i");
   } else {
@@ -435,8 +417,7 @@ function FilterPrefs()
   gotoPref(prefCol);
 }
 
-function prefColSortFunction(x, y)
-{
+function prefColSortFunction(x, y) {
   if (x.prefCol > y.prefCol)
     return gSortDirection;
   if (x.prefCol < y.prefCol)
@@ -444,22 +425,19 @@ function prefColSortFunction(x, y)
   return 0;
 }
 
-function lockColSortFunction(x, y)
-{
+function lockColSortFunction(x, y) {
   if (x.lockCol != y.lockCol)
     return gSortDirection * (y.lockCol - x.lockCol);
   return prefColSortFunction(x, y);
 }
 
-function typeColSortFunction(x, y)
-{
+function typeColSortFunction(x, y) {
   if (x.typeCol != y.typeCol)
     return gSortDirection * (y.typeCol - x.typeCol);
   return prefColSortFunction(x, y);
 }
 
-function valueColSortFunction(x, y)
-{
+function valueColSortFunction(x, y) {
   if (x.valueCol > y.valueCol)
     return gSortDirection;
   if (x.valueCol < y.valueCol)
@@ -489,8 +467,7 @@ const configController = {
   }
 }
 
-function updateContextMenu()
-{
+function updateContextMenu() {
   var lockCol = PREF_IS_LOCKED;
   var typeCol = nsIPrefBranch.PREF_STRING;
   var valueCol = "";
@@ -530,36 +507,30 @@ function updateContextMenu()
   toggleSelected.hidden = !canToggle;
 }
 
-function copyPref()
-{
+function copyPref() {
   var pref = gPrefView[view.selection.currentIndex];
   gClipboardHelper.copyString(pref.prefCol + ';' + pref.valueCol);
 }
 
-function copyName()
-{
+function copyName() {
   gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].prefCol);
 }
 
-function copyValue()
-{
+function copyValue() {
   gClipboardHelper.copyString(gPrefView[view.selection.currentIndex].valueCol);
 }
 
-function ModifySelected()
-{
+function ModifySelected() {
   if (view.selection.currentIndex >= 0)
     ModifyPref(gPrefView[view.selection.currentIndex]);
 }
 
-function ResetSelected()
-{
+function ResetSelected() {
   var entry = gPrefView[view.selection.currentIndex];
   gPrefBranch.clearUserPref(entry.prefCol);
 }
 
-function NewPref(type)
-{
+function NewPref(type) {
   var result = { value: "" };
   var dummy = { value: 0 };
   if (Services.prompt.prompt(window,
@@ -584,8 +555,7 @@ function NewPref(type)
   }
 }
 
-function gotoPref(pref)
-{
+function gotoPref(pref) {
   // make sure the pref exists and is displayed in the current view
   var index = pref in gPrefHash ? getViewIndexOfPref(gPrefHash[pref]) : -1;
   if (index >= 0) {
@@ -597,8 +567,7 @@ function gotoPref(pref)
   }
 }
 
-function ModifyPref(entry)
-{
+function ModifyPref(entry) {
   if (entry.lockCol == PREF_IS_LOCKED)
     return false;
   var title = gConfigBundle.getFormattedString("modify_title", [gTypeStrs[entry.typeCol]]);

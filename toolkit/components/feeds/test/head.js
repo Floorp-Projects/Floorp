@@ -43,7 +43,7 @@ function readTestData(testFile) {
     } while (hasmore);
 
   } catch (e) {
-    Assert.ok(false, "FAILED! Error reading testFile case in file " + testFile.leafName  + " ---- " + e);
+    Assert.ok(false, "FAILED! Error reading testFile case in file " + testFile.leafName + " ---- " + e);
   } finally {
     istream.close();
   }

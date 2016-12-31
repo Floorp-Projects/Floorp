@@ -44,8 +44,7 @@ FormHistoryStartup.prototype = {
   inited: false,
   pendingQuery: null,
 
-  init()
-  {
+  init() {
     if (this.inited)
       return;
     this.inited = true;

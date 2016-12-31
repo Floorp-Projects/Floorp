@@ -59,8 +59,7 @@ var gViewSourceUtils = {
    * @param aLineNumber (deprecated, optional)
    *        The line number to focus on once the source is loaded.
    */
-  viewSource(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber)
-  {
+  viewSource(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber) {
     var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Components.interfaces.nsIPrefBranch);
     if (prefs.getBoolPref("view_source.editor.external")) {
@@ -125,8 +124,7 @@ var gViewSourceUtils = {
         let viewSourceBrowser = new ViewSourceBrowser(browserToOpenIn);
         viewSourceBrowser.loadViewSourceFromSelection(message.data.uri, message.data.drawSelection,
                                                       message.data.baseURI);
-      }
-      else {
+      } else {
         window.openDialog("chrome://global/content/viewPartialSource.xul",
                           "_blank", "all,dialog=no",
                           {
@@ -142,8 +140,7 @@ var gViewSourceUtils = {
   },
 
   // Opens the interval view source viewer
-  _openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber)
-  {
+  _openInInternalViewer(aArgsOrURL, aPageDescriptor, aDocument, aLineNumber) {
     // try to open a view-source window while inheriting the charset (if any)
     var charset = null;
     var isForcedCharset = false;
@@ -343,16 +340,14 @@ var gViewSourceUtils = {
   },
 
   // Default callback - opens the internal viewer if the external editor failed
-  internalViewerFallback(result, data)
-  {
+  internalViewerFallback(result, data) {
     if (!result) {
       this._openInInternalViewer(data.url, data.pageDescriptor, data.doc, data.lineNumber);
     }
   },
 
   // Calls the callback, keeping in mind undefined or null values.
-  handleCallBack(aCallBack, result, data)
-  {
+  handleCallBack(aCallBack, result, data) {
     Services.telemetry
             .getHistogramById("VIEW_SOURCE_EXTERNAL_RESULT_BOOLEAN")
             .add(result);
@@ -365,8 +360,7 @@ var gViewSourceUtils = {
   },
 
   // Returns nsIProcess of the external view source editor or null
-  getExternalViewSourceEditor()
-  {
+  getExternalViewSourceEditor() {
     try {
       let viewSourceAppPath =
           Components.classes["@mozilla.org/preferences-service;1"]
@@ -378,8 +372,7 @@ var gViewSourceUtils = {
       editor.init(viewSourceAppPath);
 
       return editor;
-    }
-    catch (ex) {
+    } catch (ex) {
       Components.utils.reportError(ex);
     }
 

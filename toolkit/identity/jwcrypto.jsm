@@ -83,8 +83,7 @@ function sign(aPayload, aKeypair, aCallback) {
   });
 }
 
-function jwcryptoClass()
-{
+function jwcryptoClass() {
 }
 
 jwcryptoClass.prototype = {

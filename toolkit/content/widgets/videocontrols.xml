@@ -32,7 +32,9 @@
 
   <constructor>
     <![CDATA[
+    /* eslint-disable no-multi-spaces */
     this.scrubberNameFormat = ]]>"&scrubberScale.nameFormat;"<![CDATA[;
+    /* eslint-enable no-multi-spaces */
     this.positionValue = "";
     this.durationValue = "";
     this.valueBar = null;
@@ -83,7 +85,7 @@
 
         case "maxpos":
           // Update the value bar to match the thumb position.
-          this.valueBar.value = Math.round(this.value / newValue  * 10000); // has max=10000
+          this.valueBar.value = Math.round(this.value / newValue * 10000); // has max=10000
           this.setAttribute("max", newValue);
           break;
       }

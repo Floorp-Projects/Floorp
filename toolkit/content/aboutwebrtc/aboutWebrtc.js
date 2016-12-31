@@ -526,7 +526,7 @@ RTPStats.prototype = {
 
   generateRTPStats() {
     let remoteRtpStats = {};
-    let rtpStats = [].concat((this._report.inboundRTPStreamStats  || []),
+    let rtpStats = [].concat((this._report.inboundRTPStreamStats || []),
                              (this._report.outboundRTPStreamStats || []));
 
     // Generate an id-to-streamStat index for each streamStat that is marked

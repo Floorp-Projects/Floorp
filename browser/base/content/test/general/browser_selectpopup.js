@@ -64,8 +64,7 @@ const PAGECONTENT_TRANSLATED =
   "</iframe>" +
   "</div></body></html>";
 
-function openSelectPopup(selectPopup, withMouse, selector = "select",  win = window)
-{
+function openSelectPopup(selectPopup, withMouse, selector = "select", win = window) {
   let popupShownPromise = BrowserTestUtils.waitForEvent(selectPopup, "popupshown");
 
   if (withMouse) {
@@ -77,8 +76,7 @@ function openSelectPopup(selectPopup, withMouse, selector = "select",  win = win
   return popupShownPromise;
 }
 
-function hideSelectPopup(selectPopup, mode = "enter", win = window)
-{
+function hideSelectPopup(selectPopup, mode = "enter", win = window) {
   let browser = win.gBrowser.selectedBrowser;
   let selectClosedPromise = ContentTask.spawn(browser, null, function*() {
     Cu.import("resource://gre/modules/SelectContentHelper.jsm");
@@ -87,33 +85,28 @@ function hideSelectPopup(selectPopup, mode = "enter", win = window)
 
   if (mode == "escape") {
     EventUtils.synthesizeKey("KEY_Escape", { code: "Escape" }, win);
-  }
-  else if (mode == "enter") {
+  } else if (mode == "enter") {
     EventUtils.synthesizeKey("KEY_Enter", { code: "Enter" }, win);
-  }
-  else if (mode == "click") {
+  } else if (mode == "click") {
     EventUtils.synthesizeMouseAtCenter(selectPopup.lastChild, { }, win);
   }
 
   return selectClosedPromise;
 }
 
-function getInputEvents()
-{
+function getInputEvents() {
   return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     return content.wrappedJSObject.gInputEvents;
   });
 }
 
-function getChangeEvents()
-{
+function getChangeEvents() {
   return ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
     return content.wrappedJSObject.gChangeEvents;
   });
 }
 
-function* doSelectTests(contentType, dtd)
-{
+function* doSelectTests(contentType, dtd) {
   const pageUrl = "data:" + contentType + "," + escape(dtd + "\n" + PAGECONTENT);
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
 
@@ -290,8 +283,7 @@ add_task(function*() {
         if (contentStep[0] == "select") {
           changedWin = content.document.getElementById("frame").contentWindow;
           elem = changedWin.document.getElementById("select");
-        }
-        else {
+        } else {
           elem = content.document.getElementById(contentStep[0]);
         }
 
@@ -411,8 +403,7 @@ add_task(function* test_event_order() {
   });
 });
 
-function* performLargePopupTests(win)
-{
+function* performLargePopupTests(win) {
   let browser = win.gBrowser.selectedBrowser;
 
   yield ContentTask.spawn(browser, null, function*() {

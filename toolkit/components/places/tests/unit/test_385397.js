@@ -6,13 +6,11 @@
 
 const TOTAL_SITES = 20;
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   let now = (Date.now() - 10000) * 1000;
 
   for (let i = 0; i < TOTAL_SITES; i++) {

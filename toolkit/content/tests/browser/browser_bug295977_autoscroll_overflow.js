@@ -1,6 +1,5 @@
 requestLongerTimeout(2);
-add_task(function* ()
-{
+add_task(function* () {
   function pushPref(name, value) {
     return SpecialPowers.pushPrefEnv({"set": [[name, value]]});
   }

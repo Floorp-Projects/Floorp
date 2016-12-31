@@ -17,8 +17,7 @@
  * @note Expiration ignores any visit added in the last 7 days, but it's
  *       better be safe against DST issues, by going back one day more.
  */
-function getExpirablePRTime()
-{
+function getExpirablePRTime() {
   let dateObj = new Date();
   // Normalize to midnight
   dateObj.setHours(0);
@@ -39,8 +38,7 @@ function getExpirablePRTime()
  * @return {Promise}
  * @rejects JavaScript exception.
  */
-function promiseExpirableDownloadVisit(aSourceUrl)
-{
+function promiseExpirableDownloadVisit(aSourceUrl) {
   let deferred = Promise.defer();
   PlacesUtils.asyncHistory.updatePlaces(
     {
@@ -69,8 +67,7 @@ function promiseExpirableDownloadVisit(aSourceUrl)
 /**
  * Checks the testing mechanism used to build different download lists.
  */
-add_task(function* test_construction()
-{
+add_task(function* test_construction() {
   let downloadListOne = yield promiseNewList();
   let downloadListTwo = yield promiseNewList();
   let privateDownloadListOne = yield promiseNewList(true);
@@ -84,8 +81,7 @@ add_task(function* test_construction()
 /**
  * Checks the methods to add and retrieve items from the list.
  */
-add_task(function* test_add_getAll()
-{
+add_task(function* test_add_getAll() {
   let list = yield promiseNewList();
 
   let downloadOne = yield promiseNewDownload();
@@ -110,8 +106,7 @@ add_task(function* test_add_getAll()
 /**
  * Checks the method to remove items from the list.
  */
-add_task(function* test_remove()
-{
+add_task(function* test_remove() {
   let list = yield promiseNewList();
 
   yield list.add(yield promiseNewDownload());
@@ -132,8 +127,7 @@ add_task(function* test_remove()
  * DownloadCombinedList object combine the contents of the global DownloadList
  * objects for public and private downloads.
  */
-add_task(function* test_DownloadCombinedList_add_remove_getAll()
-{
+add_task(function* test_DownloadCombinedList_add_remove_getAll() {
   let publicList = yield promiseNewList();
   let privateList = yield Downloads.getList(Downloads.PRIVATE);
   let combinedList = yield Downloads.getList(Downloads.ALL);
@@ -172,8 +166,7 @@ add_task(function* test_DownloadCombinedList_add_remove_getAll()
  * adding and removing views works as expected, both for a normal and a combined
  * list.
  */
-add_task(function* test_notifications_add_remove()
-{
+add_task(function* test_notifications_add_remove() {
   for (let isCombined of [false, true]) {
     // Force creating a new list for both the public and combined cases.
     let list = yield promiseNewList();
@@ -237,8 +230,7 @@ add_task(function* test_notifications_add_remove()
  * Checks that views receive the download change notifications, both for a
  * normal and a combined list.
  */
-add_task(function* test_notifications_change()
-{
+add_task(function* test_notifications_change() {
   for (let isCombined of [false, true]) {
     // Force creating a new list for both the public and combined cases.
     let list = yield promiseNewList();
@@ -276,8 +268,7 @@ add_task(function* test_notifications_change()
 /**
  * Checks that the reference to "this" is correct in the view callbacks.
  */
-add_task(function* test_notifications_this()
-{
+add_task(function* test_notifications_this() {
   let list = yield promiseNewList();
 
   // Check that we receive change notifications.
@@ -317,8 +308,7 @@ add_task(function* test_notifications_this()
 /**
  * Checks that download is removed on history expiration.
  */
-add_task(function* test_history_expiration()
-{
+add_task(function* test_history_expiration() {
   mustInterruptResponses();
 
   function cleanup() {
@@ -372,8 +362,7 @@ add_task(function* test_history_expiration()
 /**
  * Checks all downloads are removed after clearing history.
  */
-add_task(function* test_history_clear()
-{
+add_task(function* test_history_clear() {
   let list = yield promiseNewList();
   let downloadOne = yield promiseNewDownload();
   let downloadTwo = yield promiseNewDownload();
@@ -404,8 +393,7 @@ add_task(function* test_history_clear()
  * Tests the removeFinished method to ensure that it only removes
  * finished downloads.
  */
-add_task(function* test_removeFinished()
-{
+add_task(function* test_removeFinished() {
   let list = yield promiseNewList();
   let downloadOne = yield promiseNewDownload();
   let downloadTwo = yield promiseNewDownload();
@@ -450,8 +438,7 @@ add_task(function* test_removeFinished()
  * Tests the global DownloadSummary objects for the public, private, and
  * combined download lists.
  */
-add_task(function* test_DownloadSummary()
-{
+add_task(function* test_DownloadSummary() {
   mustInterruptResponses();
 
   let publicList = yield promiseNewList();
@@ -544,8 +531,7 @@ add_task(function* test_DownloadSummary()
  * the combined summary when adding a public download, as we assume that if we
  * pass the test in this case we will also pass it in the others.
  */
-add_task(function* test_DownloadSummary_notifications()
-{
+add_task(function* test_DownloadSummary_notifications() {
   let list = yield promiseNewList();
   let summary = yield Downloads.getSummary(Downloads.ALL);
 
