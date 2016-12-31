@@ -362,6 +362,76 @@ CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
   const nsACString& aCodecMIMEType,
   const MediaContentType& aContentType);
 
+namespace detail {
+
+// aString should start with aMajor + '/'.
+constexpr bool
+StartsWithMIMETypeMajor(const char* aString,
+                        const char* aMajor, size_t aMajorRemaining)
+{
+  return (aMajorRemaining == 0 && *aString == '/')
+         || (*aString == *aMajor
+             && StartsWithMIMETypeMajor(aString + 1,
+                                        aMajor + 1, aMajorRemaining - 1));
+}
+
+// aString should only contain [a-z0-9\-\.] and a final '\0'.
+constexpr bool
+EndsWithMIMESubtype(const char* aString, size_t aRemaining)
+{
+  return aRemaining == 0
+         || (((*aString >= 'a' && *aString <= 'z')
+              || (*aString >= '0' && *aString <= '9')
+              || *aString == '-'
+              || *aString == '.')
+             && EndsWithMIMESubtype(aString + 1, aRemaining - 1));
+}
+
+// Simple MIME-type literal string checker with a given (major) type.
+// Only accepts "{aMajor}/[a-z0-9\-\.]+".
+template <size_t MajorLengthPlus1>
+constexpr bool
+IsMIMETypeWithMajor(const char* aString, size_t aLength,
+                    const char (&aMajor)[MajorLengthPlus1])
+{
+  return aLength > MajorLengthPlus1 // Major + '/' + at least 1 char
+         && StartsWithMIMETypeMajor(aString, aMajor, MajorLengthPlus1 - 1)
+         && EndsWithMIMESubtype(aString + MajorLengthPlus1,
+                                aLength - MajorLengthPlus1);
+}
+
+} // namespace detail
+
+// Simple MIME-type string checker.
+// Only accepts lowercase "{application,audio,video}/[a-z0-9\-\.]+".
+// Add more if necessary.
+constexpr bool
+IsMediaMIMEType(const char* aString, size_t aLength)
+{
+  return detail::IsMIMETypeWithMajor(aString, aLength, "application")
+         || detail::IsMIMETypeWithMajor(aString, aLength, "audio")
+         || detail::IsMIMETypeWithMajor(aString, aLength, "video");
+}
+
+// Simple MIME-type string literal checker.
+// Only accepts lowercase "{application,audio,video}/[a-z0-9\-\.]+".
+// Add more if necessary.
+template <size_t LengthPlus1>
+constexpr bool
+IsMediaMIMEType(const char (&aString)[LengthPlus1])
+{
+  return IsMediaMIMEType(aString, LengthPlus1 - 1);
+}
+
+// Simple MIME-type string checker.
+// Only accepts lowercase "{application,audio,video}/[a-z0-9\-\.]+".
+// Add more if necessary.
+inline bool
+IsMediaMIMEType(const nsACString& aString)
+{
+  return IsMediaMIMEType(aString.Data(), aString.Length());
+}
+
 enum class StringListRangeEmptyItems
 {
   // Skip all empty items (empty string will process nothing)
