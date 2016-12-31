@@ -141,7 +141,7 @@ LinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 Module::serializedSize(size_t* maybeBytecodeSize, size_t* maybeCompiledSize) const
 {
     if (maybeBytecodeSize)
-        *maybeBytecodeSize = SerializedPodVectorSize(bytecode_->bytes);
+        *maybeBytecodeSize = bytecode_->bytes.length();
 
     if (maybeCompiledSize) {
         *maybeCompiledSize = assumptions_.serializedSize() +
@@ -164,9 +164,13 @@ Module::serialize(uint8_t* maybeBytecodeBegin, size_t maybeBytecodeSize,
 
     if (maybeBytecodeBegin) {
         // Bytecode deserialization is not guarded by Assumptions and thus must not
-        // change incompatibly between builds.
+        // change incompatibly between builds. Thus, for simplicity, the format
+        // of the bytecode file is simply a .wasm file (thus, backwards
+        // compatibility is ensured by backwards compatibility of the wasm
+        // binary format).
 
-        uint8_t* bytecodeEnd = SerializePodVector(maybeBytecodeBegin, bytecode_->bytes);
+        const Bytes& bytes = bytecode_->bytes;
+        uint8_t* bytecodeEnd = WriteBytes(maybeBytecodeBegin, bytes.begin(), bytes.length());
         MOZ_RELEASE_ASSERT(bytecodeEnd == maybeBytecodeBegin + maybeBytecodeSize);
     }
 
@@ -204,14 +208,10 @@ Module::deserialize(const uint8_t* bytecodeBegin, size_t bytecodeSize,
                     Metadata* maybeMetadata)
 {
     MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode)
+    if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeSize))
         return nullptr;
 
-    const uint8_t* bytecodeEnd = DeserializePodVector(bytecodeBegin, &bytecode->bytes);
-    if (!bytecodeEnd)
-        return nullptr;
-
-    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeBegin + bytecodeSize);
+    memcpy(bytecode->bytes.begin(), bytecodeBegin, bytecodeSize);
 
     Assumptions assumptions;
     const uint8_t* cursor = assumptions.deserialize(compiledBegin, compiledSize);
@@ -344,15 +344,15 @@ wasm::DeserializeModule(PRFileDesc* bytecodeFile, PRFileDesc* maybeCompiledFile,
                                    compiledMapping.get(), compiledInfo.size);
     }
 
+    // Since the compiled file's assumptions don't match, we must recompile from
+    // bytecode. The bytecode file format is simply that of a .wasm (see
+    // Module::serialize).
+
     MutableBytes bytecode = js_new<ShareableBytes>();
-    if (!bytecode)
+    if (!bytecode || !bytecode->bytes.initLengthUninitialized(bytecodeInfo.size))
         return nullptr;
 
-    const uint8_t* bytecodeEnd = DeserializePodVector(bytecodeMapping.get(), &bytecode->bytes);
-    if (!bytecodeEnd)
-        return nullptr;
-
-    MOZ_RELEASE_ASSERT(bytecodeEnd == bytecodeMapping.get() + bytecodeInfo.size);
+    memcpy(bytecode->bytes.begin(), bytecodeMapping.get(), bytecodeInfo.size);
 
     ScriptedCaller scriptedCaller;
     scriptedCaller.filename = Move(filename);

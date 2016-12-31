@@ -1373,6 +1373,24 @@ ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal,
 }
 
 bool
+CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
+                 MutableHandleValue result)
+{
+    MOZ_ASSERT(callee->isNative());
+    JSNative natfun = callee->native();
+
+    JS::AutoValueArray<2> vp(cx);
+    vp[0].setObject(*callee.get());
+    vp[1].setObject(*obj.get());
+
+    if (!natfun(cx, 0, vp.begin()))
+        return false;
+
+    result.set(vp[0]);
+    return true;
+}
+
+bool
 EqualStringsHelper(JSString* str1, JSString* str2)
 {
     MOZ_ASSERT(str1->isAtom());

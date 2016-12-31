@@ -8436,9 +8436,11 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
 
     size_t bytecodeSize, compiledSize;
     module.serializedSize(&bytecodeSize, &compiledSize);
+    MOZ_RELEASE_ASSERT(bytecodeSize == 0);
+    MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
 
-    size_t serializedSize = 2 * sizeof(uint32_t) +
-                            bytecodeSize + compiledSize +
+    size_t serializedSize = sizeof(uint32_t) +
+                            compiledSize +
                             moduleChars.serializedSize();
 
     JS::OpenAsmJSCacheEntryForWriteOp open = cx->asmJSCacheOps().openEntryForWrite;
@@ -8461,16 +8463,10 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, Module& module, ExclusiveContext* c
     // between any two builds (regardless of platform, architecture, ...).
     // (The Module::assumptionsMatch() guard everything in the Module and
     // afterwards.)
-    MOZ_RELEASE_ASSERT(bytecodeSize <= UINT32_MAX);
-    MOZ_RELEASE_ASSERT(compiledSize <= UINT32_MAX);
-    cursor = WriteScalar<uint32_t>(cursor, bytecodeSize);
     cursor = WriteScalar<uint32_t>(cursor, compiledSize);
 
-    uint8_t* compiledBegin = cursor;
-    uint8_t* bytecodeBegin = compiledBegin + compiledSize;;
-
-    module.serialize(bytecodeBegin, bytecodeSize, compiledBegin, compiledSize);
-    cursor = bytecodeBegin + bytecodeSize;
+    module.serialize(/* bytecodeBegin = */ nullptr, /* bytecodeSize = */ 0, cursor, compiledSize);
+    cursor += compiledSize;
 
     cursor = moduleChars.serialize(cursor);
 
@@ -8501,33 +8497,29 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loaded
     size_t remain = entry.serializedSize;
     const uint8_t* cursor = entry.memory;
 
-    uint32_t bytecodeSize, compiledSize;
-    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &bytecodeSize)) &&
-    (cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &compiledSize));
+    uint32_t compiledSize;
+    cursor = ReadScalarChecked<uint32_t>(cursor, &remain, &compiledSize);
     if (!cursor)
         return true;
-
-    const uint8_t* compiledBegin = cursor;
-    const uint8_t* bytecodeBegin = compiledBegin + compiledSize;
 
     Assumptions assumptions;
     if (!assumptions.initBuildIdFromContext(cx))
         return false;
 
-    if (!Module::assumptionsMatch(assumptions, compiledBegin, remain))
+    if (!Module::assumptionsMatch(assumptions, cursor, remain))
         return true;
 
     MutableAsmJSMetadata asmJSMetadata = cx->new_<AsmJSMetadata>();
     if (!asmJSMetadata)
         return false;
 
-    *module = Module::deserialize(bytecodeBegin, bytecodeSize, compiledBegin, compiledSize,
-                                  asmJSMetadata.get());
+    *module = Module::deserialize(/* bytecodeBegin = */ nullptr, /* bytecodeSize = */ 0,
+                                  cursor, compiledSize, asmJSMetadata.get());
     if (!*module) {
         ReportOutOfMemory(cx);
         return false;
     }
-    cursor = bytecodeBegin + bytecodeSize;
+    cursor += compiledSize;
 
     // Due to the hash comparison made by openEntryForRead, this should succeed
     // with high probability.
