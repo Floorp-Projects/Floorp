@@ -346,7 +346,7 @@ class JSObject : public js::gc::Cell
     // Change an existing object to have a singleton group.
     static bool changeToSingleton(JSContext* cx, js::HandleObject obj);
 
-    inline js::ObjectGroup* getGroup(JSContext* cx);
+    static inline js::ObjectGroup* getGroup(JSContext* cx, js::HandleObject obj);
 
     const js::GCPtrObjectGroup& groupFromGC() const {
         /* Direct field access for use by GC. */

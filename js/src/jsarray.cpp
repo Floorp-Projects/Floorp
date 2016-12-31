@@ -621,7 +621,7 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         // for..in iteration over the array. Keys deleted before being reached
         // during the iteration must not be visited, and suppressing them here
         // would be too costly.
-        ObjectGroup* arrGroup = arr->getGroup(cx);
+        ObjectGroup* arrGroup = JSObject::getGroup(cx, arr);
         if (MOZ_UNLIKELY(!arrGroup))
             return false;
         if (!arr->isIndexed() && !MOZ_UNLIKELY(arrGroup->hasAllFlags(OBJECT_FLAG_ITERATED))) {
@@ -1324,7 +1324,7 @@ InitArrayElements(JSContext* cx, HandleObject obj, uint32_t start,
     if (count == 0)
         return true;
 
-    ObjectGroup* group = obj->getGroup(cx);
+    ObjectGroup* group = JSObject::getGroup(cx, obj);
     if (!group)
         return false;
 
@@ -2192,7 +2192,7 @@ ArrayShiftDenseKernel(JSContext* cx, HandleObject obj, MutableHandleValue rval)
     if (ObjectMayHaveExtraIndexedProperties(obj))
         return DenseElementResult::Incomplete;
 
-    RootedObjectGroup group(cx, obj->getGroup(cx));
+    RootedObjectGroup group(cx, JSObject::getGroup(cx, obj));
     if (MOZ_UNLIKELY(!group))
         return DenseElementResult::Failure;
 
@@ -2395,7 +2395,7 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
      * deleted if a hole is moved from one location to another location not yet
      * visited.  See bug 690622.
      */
-    ObjectGroup* arrGroup = arr->getGroup(cx);
+    ObjectGroup* arrGroup = JSObject::getGroup(cx, arr);
     if (!arrGroup) {
         cx->recoverFromOutOfMemory();
         return false;
@@ -3633,7 +3633,7 @@ js::NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup g
 // UnboxedArrayObject::MaximumCapacity might be exceeded).
 template <uint32_t maxLength>
 static inline JSObject*
-NewArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
+NewArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length,
                       NewObjectKind newKind = GenericObject)
 {
     if (!obj->is<ArrayObject>() && !obj->is<UnboxedArrayObject>())
@@ -3642,7 +3642,7 @@ NewArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
     if (obj->staticPrototype() != cx->global()->maybeGetArrayPrototype())
         return NewArray<maxLength>(cx, length, nullptr, newKind);
 
-    RootedObjectGroup group(cx, obj->getGroup(cx));
+    RootedObjectGroup group(cx, JSObject::getGroup(cx, obj));
     if (!group)
         return nullptr;
 
@@ -3650,14 +3650,14 @@ NewArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
 }
 
 JSObject*
-js::NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
+js::NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length,
                                         NewObjectKind newKind)
 {
     return NewArrayTryReuseGroup<UINT32_MAX>(cx, obj, length, newKind);
 }
 
 JSObject*
-js::NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length)
+js::NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length)
 {
     return NewArrayTryReuseGroup<ArrayObject::EagerAllocationMaxLength>(cx, obj, length);
 }

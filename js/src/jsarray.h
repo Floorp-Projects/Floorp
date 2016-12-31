@@ -85,11 +85,11 @@ extern JSObject*
 NewPartlyAllocatedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length);
 
 extern JSObject*
-NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length,
+NewFullyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length,
                                     NewObjectKind newKind = GenericObject);
 
 extern JSObject*
-NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, JSObject* obj, size_t length);
+NewPartlyAllocatedArrayTryReuseGroup(JSContext* cx, HandleObject obj, size_t length);
 
 extern JSObject*
 NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,

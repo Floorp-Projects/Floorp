@@ -341,7 +341,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
         // Make sure the global object's group has been instantiated, so the
         // flag change will be observed.
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        if (!cx->global()->getGroup(cx))
+        if (!JSObject::getGroup(cx, cx->global()))
             oomUnsafe.crash("ArrayBufferObject::detach");
         MarkObjectGroupFlags(cx, cx->global(), OBJECT_FLAG_TYPED_OBJECT_HAS_DETACHED_BUFFER);
         cx->compartment()->detachedTypedObjects = 1;

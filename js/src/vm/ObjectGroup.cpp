@@ -286,12 +286,13 @@ JSObject::splicePrototype(JSContext* cx, const Class* clasp, Handle<TaggedProto>
         return false;
 
     // Force type instantiation when splicing lazy group.
-    RootedObjectGroup group(cx, self->getGroup(cx));
+    RootedObjectGroup group(cx, JSObject::getGroup(cx, self));
     if (!group)
         return false;
     RootedObjectGroup protoGroup(cx, nullptr);
     if (proto.isObject()) {
-        protoGroup = proto.toObject()->getGroup(cx);
+        RootedObject protoObj(cx, proto.toObject());
+        protoGroup = JSObject::getGroup(cx, protoObj);
         if (!protoGroup)
             return false;
     }
