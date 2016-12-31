@@ -47,8 +47,8 @@ const REPLY_TIMEOUT = 5000;
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 
 XPCOMUtils.defineLazyGetter(this, "converter", () => {
-  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-             createInstance(Ci.nsIScriptableUnicodeConverter);
+  let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
+             .createInstance(Ci.nsIScriptableUnicodeConverter);
   conv.charset = "utf8";
   return conv;
 });
@@ -77,7 +77,8 @@ function log(msg) {
 function Transport(port) {
   EventEmitter.decorate(this);
   try {
-    this.socket = new UDPSocket(port, false, Services.scriptSecurityManager.getSystemPrincipal());
+    this.socket = new UDPSocket(port, false,
+                                Services.scriptSecurityManager.getSystemPrincipal());
     this.socket.joinMulticast(ADDRESS);
     this.socket.asyncListen(this);
   } catch (e) {
@@ -146,7 +147,8 @@ function LocalDevice() {
       Cc["@mozilla.org/settingsService;1"].getService(Ci.nsISettingsService);
     Services.obs.addObserver(this, "mozsettings-changed", false);
   }
-  this._get(); // Trigger |_get| to load name eagerly
+  // Trigger |_get| to load name eagerly
+  this._get();
 }
 
 LocalDevice.SETTING = "devtools.discovery.device";
@@ -344,7 +346,8 @@ Discovery.prototype = {
 
   _startListeningForScan: function () {
     if (this._transports.scan) {
-      return; // Already listening
+      // Already listening
+      return;
     }
     log("LISTEN FOR SCAN");
     this._transports.scan = new this.Transport(SCAN_PORT);
@@ -353,7 +356,8 @@ Discovery.prototype = {
 
   _stopListeningForScan: function () {
     if (!this._transports.scan) {
-      return; // Not listening
+      // Not listening
+      return;
     }
     this._transports.scan.off("message", this._onRemoteScan);
     this._transports.scan.destroy();
@@ -362,7 +366,8 @@ Discovery.prototype = {
 
   _startListeningForUpdate: function () {
     if (this._transports.update) {
-      return; // Already listening
+      // Already listening
+      return;
     }
     log("LISTEN FOR UPDATE");
     this._transports.update = new this.Transport(UPDATE_PORT);
@@ -371,7 +376,8 @@ Discovery.prototype = {
 
   _stopListeningForUpdate: function () {
     if (!this._transports.update) {
-      return; // Not listening
+      // Not listening
+      return;
     }
     this._transports.update.off("message", this._onRemoteUpdate);
     this._transports.update.destroy();
