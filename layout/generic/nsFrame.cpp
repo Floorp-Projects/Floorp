@@ -1116,7 +1116,8 @@ nsIFrame::GetPaddingRect() const
 }
 
 WritingMode
-nsIFrame::GetWritingMode(WritingMode aSelfWM, nsIFrame* aSubFrame) const
+nsIFrame::WritingModeForLine(WritingMode aSelfWM,
+                             nsIFrame*   aSubFrame) const
 {
   MOZ_ASSERT(aSelfWM == GetWritingMode());
   WritingMode writingMode = aSelfWM;
