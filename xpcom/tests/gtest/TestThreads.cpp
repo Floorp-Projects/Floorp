@@ -49,7 +49,7 @@ TEST(Threads, Main)
     EXPECT_TRUE(event);
 
     nsCOMPtr<nsIThread> runner;
-    rv = NS_NewNamedThread("TestThreadsMain", getter_AddRefs(runner), event);
+    rv = NS_NewThread(getter_AddRefs(runner), event);
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 
     nsCOMPtr<nsIThread> thread;
@@ -112,8 +112,7 @@ TEST(Threads, Stress)
 
         for (k = 0; k < threads; k++) {
             nsCOMPtr<nsIThread> t;
-            nsresult rv = NS_NewNamedThread("StressRunner", getter_AddRefs(t),
-                                            new nsStressRunner(k));
+            nsresult rv = NS_NewThread(getter_AddRefs(t), new nsStressRunner(k));
             EXPECT_TRUE(NS_SUCCEEDED(rv));
             NS_ADDREF(array[k] = t);
         }
@@ -170,8 +169,7 @@ public:
         {
           mozilla::MonitorAutoLock lock(*gBeginAsyncShutdownMonitor);
 
-          rv = NS_NewNamedThread("AsyncShutdownPr", getter_AddRefs(t),
-                                 new AsyncShutdownPreparer());
+          rv = NS_NewThread(getter_AddRefs(t), new AsyncShutdownPreparer());
           EXPECT_TRUE(NS_SUCCEEDED(rv));
 
           lock.Wait();
@@ -223,8 +221,7 @@ TEST(Threads, AsyncShutdown)
   {
     mozilla::MonitorAutoLock lock(*gAsyncShutdownReadyMonitor);
 
-    rv = NS_NewNamedThread("AsyncShutdownWt", getter_AddRefs(t),
-                           new AsyncShutdownWaiter());
+    rv = NS_NewThread(getter_AddRefs(t), new AsyncShutdownWaiter());
     EXPECT_TRUE(NS_SUCCEEDED(rv));
 
     lock.Wait();

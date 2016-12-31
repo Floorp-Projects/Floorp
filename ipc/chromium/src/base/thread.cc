@@ -153,7 +153,8 @@ void Thread::StopSoon() {
 }
 
 void Thread::ThreadMain() {
-  mozilla::AutoProfilerRegister registerThread(name_.c_str());
+  char aLocal;
+  profiler_register_thread(name_.c_str(), &aLocal);
   mozilla::IOInterposer::RegisterCurrentThread();
 
   // The message loop for this thread.
@@ -185,6 +186,7 @@ void Thread::ThreadMain() {
   DCHECK(GetThreadWasQuitProperly());
 
   mozilla::IOInterposer::UnregisterCurrentThread();
+  profiler_unregister_thread();
 
 #ifdef MOZ_TASK_TRACER
   mozilla::tasktracer::FreeTraceInfo();

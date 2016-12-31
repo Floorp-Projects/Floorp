@@ -12,7 +12,6 @@
 #include "nsNSSShutDown.h"
 #include "PSMRunnable.h"
 #include "mozilla/DebugOnly.h"
-#include "GeckoProfiler.h"
 
 using namespace mozilla;
 using namespace mozilla::psm;
@@ -115,7 +114,6 @@ nsresult nsKeygenThread::ConsumeResult(
 
 static void nsKeygenThreadRunner(void *arg)
 {
-  AutoProfilerRegister registerThread("Keygen");
   PR_SetCurrentThreadName("Keygen");
   nsKeygenThread *self = static_cast<nsKeygenThread *>(arg);
   self->Run();
