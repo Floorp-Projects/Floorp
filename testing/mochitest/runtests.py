@@ -2217,7 +2217,6 @@ toolbar#nav-bar {
             info = mozinfo.info
             skip_leak_conditions = [
                 (info['debug'] and options.flavor == 'plain' and d.startswith('toolkit/components/extensions/test/mochitest') and info['os'] == 'mac', 'bug 1326456'),  # noqa
-                (info['debug'] and options.flavor == 'browser' and d.startswith('browser/components/extensions/test/browser') and info['os'] == 'mac', 'bug 1325141'),  # noqa
                 (info['debug'] and options.flavor == 'plain' and d == 'dom/animation/test/css-animations', 'bug 1325277'),  # noqa
                 (info['debug'] and options.flavor == 'plain' and d == 'dom/tests/mochitest/gamepad' and info['os'] == 'win', 'bug 1324592'),  # noqa
                 (info['debug'] and options.flavor == 'plain' and d == 'toolkit/components/prompts/test' and info['os'] == 'mac', 'bug 1325275'),  # noqa
