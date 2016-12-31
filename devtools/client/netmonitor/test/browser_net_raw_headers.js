@@ -11,7 +11,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, EVENTS, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -24,17 +24,19 @@ add_task(function* () {
 
   let origItem = RequestsMenu.getItemAtIndex(0);
 
-  let onTabEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
+  wait = waitForDOM(document, "#headers-tabpanel .summary");
   RequestsMenu.selectedItem = origItem;
-  yield onTabEvent;
+  yield wait;
 
+  wait = waitForDOM(document, ".raw-headers-container textarea", 2);
   EventUtils.sendMouseEvent({ type: "click" },
-    document.getElementById("toggle-raw-headers"));
+    document.querySelectorAll(".tool-button")[1]);
+  yield wait;
 
   testShowRawHeaders(origItem);
 
   EventUtils.sendMouseEvent({ type: "click" },
-    document.getElementById("toggle-raw-headers"));
+    document.querySelectorAll(".tool-button")[1]);
 
   testHideRawHeaders(document);
 
@@ -44,12 +46,14 @@ add_task(function* () {
    * Tests that raw headers were displayed correctly
    */
   function testShowRawHeaders(data) {
-    let requestHeaders = document.getElementById("raw-request-headers-textarea").value;
+    let requestHeaders = document
+      .querySelectorAll(".raw-headers-container textarea")[0].value;
     for (let header of data.requestHeaders.headers) {
       ok(requestHeaders.includes(header.name + ": " + header.value),
         "textarea contains request headers");
     }
-    let responseHeaders = document.getElementById("raw-response-headers-textarea").value;
+    let responseHeaders = document
+      .querySelectorAll(".raw-headers-container textarea")[1].value;
     for (let header of data.responseHeaders.headers) {
       ok(responseHeaders.includes(header.name + ": " + header.value),
         "textarea contains response headers");
@@ -57,14 +61,10 @@ add_task(function* () {
   }
 
   /*
-   * Tests that raw headers textareas are hidden and empty
+   * Tests that raw headers textareas are hidden
    */
   function testHideRawHeaders() {
-    let rawHeadersHidden = document.getElementById("raw-headers").getAttribute("hidden");
-    let requestTextarea = document.getElementById("raw-request-headers-textarea");
-    let responseTextarea = document.getElementById("raw-response-headers-textarea");
-    ok(rawHeadersHidden, "raw headers textareas are hidden");
-    ok(requestTextarea.value == "", "raw request headers textarea is empty");
-    ok(responseTextarea.value == "", "raw response headers textarea is empty");
+    ok(!document.querySelector(".raw-headers-container"),
+      "raw request headers textarea is empty");
   }
 });
