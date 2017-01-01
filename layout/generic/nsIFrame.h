@@ -765,13 +765,16 @@ public:
   }
 
   /**
-   * Get the writing mode of this frame, but if it is styled with
-   * unicode-bidi: plaintext, reset the direction to the resolved paragraph
+   * Construct a writing mode for line layout in this frame.  This is
+   * the writing mode of this frame, except that if this frame is styled with
+   * unicode-bidi:plaintext, we reset the direction to the resolved paragraph
    * level of the given subframe (typically the first frame on the line),
-   * not this frame's writing mode, because the container frame could be split
-   * by hard line breaks into multiple paragraphs with different base direction.
+   * because the container frame could be split by hard line breaks into
+   * multiple paragraphs with different base direction.
+   * @param aSelfWM the WM of 'this'
    */
-  mozilla::WritingMode GetWritingMode(nsIFrame* aSubFrame) const;
+  mozilla::WritingMode WritingModeForLine(mozilla::WritingMode aSelfWM,
+                                          nsIFrame* aSubFrame) const;
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
