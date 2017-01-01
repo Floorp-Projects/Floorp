@@ -63,19 +63,6 @@ CodecListContains(char const *const * aCodecs, const String& aCodec)
 }
 
 static bool
-IsOggSupportedType(const nsACString& aType,
-                   const nsAString& aCodecs = EmptyString())
-{
-  return OggDecoder::CanHandleMediaType(aType, aCodecs);
-}
-
-static bool
-IsOggTypeAndEnabled(const nsACString& aType)
-{
-  return IsOggSupportedType(aType);
-}
-
-static bool
 IsWebMSupportedType(const nsACString& aType,
                     const nsAString& aCodecs = EmptyString())
 {
@@ -203,9 +190,8 @@ CanHandleCodecsType(const MediaContentType& aType,
   const MediaContentType mimeType(aType.Type());
 
   char const* const* codecList = nullptr;
-  if (IsOggTypeAndEnabled(mimeType.Type().AsString())) {
-    if (IsOggSupportedType(aType.Type().AsString(),
-                           aType.ExtendedType().Codecs().AsString())) {
+  if (OggDecoder::IsSupportedType(mimeType)) {
+    if (OggDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -314,7 +300,7 @@ CanHandleMediaType(const MediaContentType& aType,
   // Content type with just the MIME type/subtype, no codecs.
   const MediaContentType mimeType(aType.Type());
 
-  if (IsOggTypeAndEnabled(mimeType.Type().AsString())) {
+  if (OggDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
   if (IsWaveSupportedType(mimeType.Type().AsString())) {
@@ -415,7 +401,7 @@ InstantiateDecoder(const MediaContentType& aType,
     decoder = new ADTSDecoder(aOwner);
     return decoder.forget();
   }
-  if (IsOggSupportedType(aType.Type().AsString())) {
+  if (OggDecoder::IsSupportedType(aType)) {
     decoder = new OggDecoder(aOwner);
     return decoder.forget();
   }
@@ -481,6 +467,11 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (!aDecoder) {
     return decoderReader;
   }
+  Maybe<MediaContentType> type = MakeMediaContentType(aType);
+  if (!type) {
+    return decoderReader;
+  }
+
 #ifdef MOZ_FMP4
   if (IsMP4SupportedType(aType, /* DecoderDoctorDiagnostics* */ nullptr)) {
     decoderReader = new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()));
@@ -498,7 +489,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (IsFlacSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new FlacDemuxer(aDecoder->GetResource()));
   } else
-  if (IsOggSupportedType(aType)) {
+  if (OggDecoder::IsSupportedType(*type)) {
     decoderReader = new MediaFormatReader(aDecoder, new OggDemuxer(aDecoder->GetResource()));
   } else
 #ifdef MOZ_ANDROID_OMX
@@ -532,8 +523,13 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     return false;
   }
 
+  Maybe<MediaContentType> type = MakeMediaContentType(aType);
+  if (!type) {
+    return false;
+  }
+
   return
-    IsOggSupportedType(aType) ||
+    OggDecoder::IsSupportedType(*type) ||
     IsWebMSupportedType(aType) ||
 #ifdef MOZ_ANDROID_OMX
     (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(aType)) ||
