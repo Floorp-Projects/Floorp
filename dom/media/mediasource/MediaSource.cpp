@@ -72,8 +72,8 @@ static bool
 IsWebMForced(DecoderDoctorDiagnostics* aDiagnostics)
 {
   bool mp4supported =
-    DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"),
-                                       aDiagnostics);
+    DecoderTraits::IsMP4SupportedType(MediaContentType(MEDIAMIMETYPE("video/mp4")),
+                                      aDiagnostics);
   bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
 #ifdef MOZ_WIDGET_ANDROID
   return !mp4supported || !hwsupported || VP9Benchmark::IsVP9DecodeFast() ||
