@@ -651,8 +651,7 @@ GetSupportedCapabilities(const CodecType aCodecType,
               NS_ConvertUTF16toUTF8(robustness).get());
       continue;
     }
-    const bool isWebM =
-      DecoderTraits::IsWebMTypeAndEnabled(contentType.Type().AsString());
+    const bool isWebM = WebMDecoder::IsSupportedType(contentType);
     if (isWebM && !aKeySystem.mWebM.IsSupported()) {
       EME_LOG("MediaKeySystemConfiguration (label='%s') "
               "MediaKeySystemMediaCapability('%s','%s') unsupported; "
