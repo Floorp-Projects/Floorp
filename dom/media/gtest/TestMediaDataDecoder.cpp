@@ -8,6 +8,7 @@
 #include "MockMediaResource.h"
 #include "DecoderTraits.h"
 #include "MediaContentType.h"
+#include "MP4Decoder.h"
 #include "MP4Demuxer.h"
 #include "WebMDecoder.h"
 #include "WebMDemuxer.h"
@@ -44,8 +45,9 @@ private:
 
 TEST(MediaDataDecoder, H264)
 {
-  if (!DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4")
-        , /* DecoderDoctorDiagnostics* */ nullptr)) {
+  if (!DecoderTraits::IsMP4SupportedType(
+         MediaContentType(MEDIAMIMETYPE("video/mp4")),
+         /* DecoderDoctorDiagnostics* */ nullptr)) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MediaResource> resource =

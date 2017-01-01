@@ -101,31 +101,12 @@ IsDirectShowSupportedType(const nsACString& aType)
 }
 #endif
 
-#ifdef MOZ_FMP4
-static bool
-IsMP4SupportedType(const MediaContentType& aParsedType,
-                   DecoderDoctorDiagnostics* aDiagnostics)
-{
-  return MP4Decoder::CanHandleMediaType(aParsedType, aDiagnostics);
-}
-static bool
-IsMP4SupportedType(const nsACString& aType,
-                   DecoderDoctorDiagnostics* aDiagnostics)
-{
-  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
-  if (!contentType) {
-    return false;
-  }
-  return IsMP4SupportedType(*contentType, aDiagnostics);
-}
-#endif
-
 /* static */ bool
-DecoderTraits::IsMP4TypeAndEnabled(const nsACString& aType,
-                                   DecoderDoctorDiagnostics* aDiagnostics)
+DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
+                                  DecoderDoctorDiagnostics* aDiagnostics)
 {
 #ifdef MOZ_FMP4
-  return IsMP4SupportedType(aType, aDiagnostics);
+  return MP4Decoder::IsSupportedType(aType, aDiagnostics);
 #else
   return false;
 #endif
@@ -202,8 +183,9 @@ CanHandleCodecsType(const MediaContentType& aType,
   }
 #endif
 #ifdef MOZ_FMP4
-  if (DecoderTraits::IsMP4TypeAndEnabled(mimeType.Type().AsString(), aDiagnostics)) {
-    if (IsMP4SupportedType(aType, aDiagnostics)) {
+  if (MP4Decoder::IsSupportedType(mimeType,
+                                  /* DecoderDoctorDiagnostics* */ nullptr)) {
+    if (MP4Decoder::IsSupportedType(aType, aDiagnostics)) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -286,9 +268,11 @@ CanHandleMediaType(const MediaContentType& aType,
   if (IsWaveSupportedType(mimeType.Type().AsString())) {
     return CANPLAY_MAYBE;
   }
-  if (DecoderTraits::IsMP4TypeAndEnabled(mimeType.Type().AsString(), aDiagnostics)) {
+#ifdef MOZ_FMP4
+  if (MP4Decoder::IsSupportedType(mimeType, aDiagnostics)) {
     return CANPLAY_MAYBE;
   }
+#endif
 #if !defined(MOZ_OMX_WEBM_DECODER)
   if (WebMDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
@@ -368,7 +352,7 @@ InstantiateDecoder(const MediaContentType& aType,
   RefPtr<MediaDecoder> decoder;
 
 #ifdef MOZ_FMP4
-  if (IsMP4SupportedType(aType.Type().AsString(), aDiagnostics)) {
+  if (MP4Decoder::IsSupportedType(aType, aDiagnostics)) {
     decoder = new MP4Decoder(aOwner);
     return decoder.forget();
   }
@@ -453,7 +437,8 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   }
 
 #ifdef MOZ_FMP4
-  if (IsMP4SupportedType(aType, /* DecoderDoctorDiagnostics* */ nullptr)) {
+  if (MP4Decoder::IsSupportedType(*type,
+                                  /* DecoderDoctorDiagnostics* */ nullptr)) {
     decoderReader = new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()));
   } else
 #endif
@@ -515,7 +500,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(aType)) ||
 #endif
 #ifdef MOZ_FMP4
-    IsMP4SupportedType(aType, /* DecoderDoctorDiagnostics* */ nullptr) ||
+    MP4Decoder::IsSupportedType(*type, /* DecoderDoctorDiagnostics* */ nullptr) ||
 #endif
     IsMP3SupportedType(aType) ||
     IsAACSupportedType(aType) ||

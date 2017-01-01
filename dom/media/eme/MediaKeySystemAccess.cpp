@@ -640,8 +640,7 @@ GetSupportedCapabilities(const CodecType aCodecType,
     // case-insensitive."'. We're using nsContentTypeParser and that is
     // case-insensitive and converts all its parameter outputs to lower case.)
     const bool isMP4 =
-      DecoderTraits::IsMP4TypeAndEnabled(contentType.Type().AsString(),
-                                         aDiagnostics);
+      DecoderTraits::IsMP4SupportedType(contentType, aDiagnostics);
     if (isMP4 && !aKeySystem.mMP4.IsSupported()) {
       EME_LOG("MediaKeySystemConfiguration (label='%s') "
               "MediaKeySystemMediaCapability('%s','%s') unsupported; "
