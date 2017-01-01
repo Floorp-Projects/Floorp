@@ -9,6 +9,8 @@
 #include "mozilla/DocumentStyleRootIterator.h"
 #include "mozilla/ServoRestyleManager.h"
 #include "mozilla/dom/ChildIterator.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInlines.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIDocumentInlines.h"

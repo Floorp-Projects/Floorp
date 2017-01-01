@@ -117,8 +117,9 @@ ia2AccessibleComponent::get_background(IA2Color* aBackground)
     return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
-  if (frame)
-    *aBackground = frame->StyleBackground()->mBackgroundColor;
+  if (frame) {
+    *aBackground = frame->StyleBackground()->BackgroundColor(frame);
+  }
 
   return S_OK;
 

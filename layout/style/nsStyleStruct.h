@@ -942,8 +942,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
     return nsChangeHint(0);
   }
 
+  // Return the background color as nscolor.
+  nscolor BackgroundColor(const nsIFrame* aFrame) const;
+  nscolor BackgroundColor(nsStyleContext* aContext) const;
+
   // True if this background is completely transparent.
-  bool IsTransparent() const;
+  bool IsTransparent(const nsIFrame* aFrame) const;
+  bool IsTransparent(nsStyleContext* aContext) const;
 
   // We have to take slower codepaths for fixed background attachment,
   // but we don't want to do that when there's no image.
@@ -958,7 +963,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   const nsStyleImageLayers::Layer& BottomLayer() const { return mImage.BottomLayer(); }
 
   nsStyleImageLayers mImage;
-  nscolor mBackgroundColor;       // [reset]
+  mozilla::StyleComplexColor mBackgroundColor;       // [reset]
 };
 
 #define NS_SPACING_MARGIN   0
