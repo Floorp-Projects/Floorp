@@ -320,11 +320,10 @@ nsTableCellFrame::DecorateForSelection(DrawTarget* aDrawTarget, nsPoint aPt)
           LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectBackground);
       }
       nscoord threePx = nsPresContext::CSSPixelsToAppUnits(3);
-      if ((mRect.width > threePx) && (mRect.height > threePx))
-      {
-        //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
-        bordercolor = EnsureDifferentColors(bordercolor,
-                                            StyleBackground()->mBackgroundColor);
+      if ((mRect.width > threePx) && (mRect.height > threePx)) {
+        //compare bordercolor to background-color
+        bordercolor = EnsureDifferentColors(
+          bordercolor, StyleBackground()->BackgroundColor(this));
 
         int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
         Point devPixelOffset = NSPointToPoint(aPt, appUnitsPerDevPixel);
@@ -501,7 +500,8 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     
       // display background if we need to.
       if (aBuilder->IsForEventDelivery() ||
-          !StyleBackground()->IsTransparent() || StyleDisplay()->mAppearance) {
+          !StyleBackground()->IsTransparent(this) ||
+          StyleDisplay()->mAppearance) {
         if (!tableFrame->IsBorderCollapse() ||
             aBuilder->IsAtRootOfPseudoStackingContext() ||
             aBuilder->IsForEventDelivery()) {

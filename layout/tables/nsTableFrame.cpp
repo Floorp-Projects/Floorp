@@ -1285,7 +1285,7 @@ static inline bool FrameHasBorderOrBackground(nsTableFrame* tableFrame, nsIFrame
   if (f->StyleBorder()->HasBorder()) {
     return true;
   }
-  if (!f->StyleBackground()->IsTransparent() ||
+  if (!f->StyleBackground()->IsTransparent(f) ||
       f->StyleDisplay()->mAppearance) {
     
     nsTableCellFrame *cellFrame = do_QueryFrame(f);
@@ -6362,7 +6362,7 @@ public:
   nsTableCellMap*       mTableCellMap;
   nsCellMap*            mCellMap;
   WritingMode           mTableWM;
-  const nsStyleBackground* mTableBgColor;
+  nscolor               mTableBgColor;
   nsTableFrame::RowGroupArray mRowGroups;
 
   nsTableRowGroupFrame* mPrevRg;
@@ -6480,7 +6480,7 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
 
   nsIFrame* bgFrame =
     nsCSSRendering::FindNonTransparentBackgroundFrame(aTable);
-  mTableBgColor = bgFrame->StyleBackground();
+  mTableBgColor = bgFrame->StyleBackground()->BackgroundColor(bgFrame);
 }
 
 bool
