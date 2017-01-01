@@ -56,8 +56,10 @@ public:
   // vice versa.
   static bool IsSupportedInVideoDocument(const nsACString& aType);
 
-  static bool IsMP4TypeAndEnabled(const nsACString& aType,
-                                  DecoderDoctorDiagnostics* aDiagnostics);
+  // Convenience function that returns false if MOZ_FMP4 is not defined,
+  // otherwise defers to MP4Decoder::IsSupportedType().
+  static bool IsMP4SupportedType(const MediaContentType& aType,
+                                 DecoderDoctorDiagnostics* aDiagnostics);
 };
 
 } // namespace mozilla
