@@ -714,17 +714,17 @@ struct nsCSSRendering {
 
   // Draw a border segment in the table collapsing border model without
   // beveling corners
-  static void DrawTableBorderSegment(DrawTarget&          aDrawTarget,
-                                     uint8_t              aBorderStyle,
-                                     nscolor              aBorderColor,
-                                     const nsStyleBackground* aBGColor,
-                                     const nsRect&        aBorderRect,
-                                     int32_t              aAppUnitsPerDevPixel,
-                                     int32_t              aAppUnitsPerCSSPixel,
-                                     uint8_t              aStartBevelSide = 0,
-                                     nscoord              aStartBevelOffset = 0,
-                                     uint8_t              aEndBevelSide = 0,
-                                     nscoord              aEndBevelOffset = 0);
+  static void DrawTableBorderSegment(DrawTarget&   aDrawTarget,
+                                     uint8_t       aBorderStyle,
+                                     nscolor       aBorderColor,
+                                     nscolor       aBGColor,
+                                     const nsRect& aBorderRect,
+                                     int32_t       aAppUnitsPerDevPixel,
+                                     int32_t       aAppUnitsPerCSSPixel,
+                                     uint8_t       aStartBevelSide = 0,
+                                     nscoord       aStartBevelOffset = 0,
+                                     uint8_t       aEndBevelSide = 0,
+                                     nscoord       aEndBevelOffset = 0);
 
   // NOTE: pt, dirtyRect, lineSize, ascent, offset in the following
   //       structs are non-rounded device pixels, not app units.

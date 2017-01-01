@@ -14,6 +14,10 @@ class nsIDocument;
 
 namespace mozilla {
 
+namespace dom {
+class Element;
+} // namespace dom
+
 /**
  * DocumentStyleRootIterator traverses the roots of the document from the
  * perspective of the Servo-backed style system.  This will first traverse
@@ -25,7 +29,7 @@ public:
   explicit DocumentStyleRootIterator(nsIDocument* aDocument);
   ~DocumentStyleRootIterator() { MOZ_COUNT_DTOR(DocumentStyleRootIterator); }
 
-  Element* GetNextStyleRoot();
+  dom::Element* GetNextStyleRoot();
 
 private:
   AutoTArray<nsIContent*, 8> mStyleRoots;
