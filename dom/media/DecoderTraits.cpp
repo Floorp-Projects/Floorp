@@ -363,7 +363,12 @@ DecoderTraits::CanHandleContentType(const MediaContentType& aContentType,
 bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
                                           DecoderDoctorDiagnostics* aDiagnostics)
 {
-  if (IsWaveSupportedType(nsDependentCString(aMIMEType))) {
+  Maybe<MediaContentType> contentType = MakeMediaContentType(aMIMEType);
+  if (!contentType) {
+    return false;
+  }
+
+  if (IsWaveSupportedType(contentType->Type().AsString())) {
     // We should not return true for Wave types, since there are some
     // Wave codecs actually in use in the wild that we don't support, and
     // we should allow those to be handled by plugins or helper apps.
@@ -375,26 +380,21 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
   // If an external plugin which can handle quicktime video is available
   // (and not disabled), prefer it over native playback as there several
   // codecs found in the wild that we do not handle.
-  if (nsDependentCString(aMIMEType).EqualsASCII("video/quicktime")) {
+  if (contentType->Type() == MEDIAMIMETYPE("video/quicktime")) {
     RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
     if (pluginHost &&
-        pluginHost->HavePluginForType(nsDependentCString(aMIMEType))) {
+        pluginHost->HavePluginForType(contentType->Type().AsString())) {
       return false;
     }
   }
 
-  Maybe<MediaContentType> parsed = MakeMediaContentType(aMIMEType);
-  if (!parsed) {
-    return false;
-  }
-  return CanHandleMediaType(*parsed, aDiagnostics)
-         != CANPLAY_NO;
+  return CanHandleMediaType(*contentType, aDiagnostics) != CANPLAY_NO;
 }
 
 // Instantiates but does not initialize decoder.
 static
 already_AddRefed<MediaDecoder>
-InstantiateDecoder(const nsACString& aType,
+InstantiateDecoder(const MediaContentType& aType,
                    MediaDecoderOwner* aOwner,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
@@ -402,40 +402,41 @@ InstantiateDecoder(const nsACString& aType,
   RefPtr<MediaDecoder> decoder;
 
 #ifdef MOZ_FMP4
-  if (IsMP4SupportedType(aType, aDiagnostics)) {
+  if (IsMP4SupportedType(aType.Type().AsString(), aDiagnostics)) {
     decoder = new MP4Decoder(aOwner);
     return decoder.forget();
   }
 #endif
-  if (IsMP3SupportedType(aType)) {
+  if (IsMP3SupportedType(aType.Type().AsString())) {
     decoder = new MP3Decoder(aOwner);
     return decoder.forget();
   }
-  if (IsAACSupportedType(aType)) {
+  if (IsAACSupportedType(aType.Type().AsString())) {
     decoder = new ADTSDecoder(aOwner);
     return decoder.forget();
   }
-  if (IsOggSupportedType(aType)) {
+  if (IsOggSupportedType(aType.Type().AsString())) {
     decoder = new OggDecoder(aOwner);
     return decoder.forget();
   }
-  if (IsWaveSupportedType(aType)) {
+  if (IsWaveSupportedType(aType.Type().AsString())) {
     decoder = new WaveDecoder(aOwner);
     return decoder.forget();
   }
-  if (IsFlacSupportedType(aType)) {
+  if (IsFlacSupportedType(aType.Type().AsString())) {
     decoder = new FlacDecoder(aOwner);
     return decoder.forget();
   }
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
-      EnsureAndroidMediaPluginHost()->FindDecoder(aType, nullptr)) {
-    decoder = new AndroidMediaDecoder(aOwner, aType);
+      EnsureAndroidMediaPluginHost()->FindDecoder(aType.Type().AsString(),
+                                                  nullptr)) {
+    decoder = new AndroidMediaDecoder(aOwner, aType.Type().AsString());
     return decoder.forget();
   }
 #endif
 
-  if (IsWebMSupportedType(aType)) {
+  if (IsWebMSupportedType(aType.Type().AsString())) {
     decoder = new WebMDecoder(aOwner);
     return decoder.forget();
   }
@@ -443,13 +444,13 @@ InstantiateDecoder(const nsACString& aType,
 #ifdef MOZ_DIRECTSHOW
   // Note: DirectShow should come before WMF, so that we prefer DirectShow's
   // MP3 support over WMF's.
-  if (IsDirectShowSupportedType(aType)) {
+  if (IsDirectShowSupportedType(aType.Type().AsString())) {
     decoder = new DirectShowDecoder(aOwner);
     return decoder.forget();
   }
 #endif
 
-  if (IsHttpLiveStreamingType(aType)) {
+  if (IsHttpLiveStreamingType(aType.Type().AsString())) {
     // We don't have an HLS decoder.
     Telemetry::Accumulate(Telemetry::MEDIA_HLS_DECODER_SUCCESS, false);
   }
@@ -464,7 +465,11 @@ DecoderTraits::CreateDecoder(const nsACString& aType,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return InstantiateDecoder(aType, aOwner, aDiagnostics);
+  Maybe<MediaContentType> type = MakeMediaContentType(aType);
+  if (!type) {
+    return nullptr;
+  }
+  return InstantiateDecoder(*type, aOwner, aDiagnostics);
 }
 
 /* static */
