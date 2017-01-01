@@ -113,13 +113,6 @@ DecoderTraits::IsMP4SupportedType(const MediaContentType& aType,
 }
 
 static bool
-IsMP3SupportedType(const nsACString& aType,
-                   const nsAString& aCodecs = EmptyString())
-{
-  return MP3Decoder::CanHandleMediaType(aType, aCodecs);
-}
-
-static bool
 IsAACSupportedType(const nsACString& aType,
                    const nsAString& aCodecs = EmptyString())
 {
@@ -194,8 +187,7 @@ CanHandleCodecsType(const MediaContentType& aType,
     }
   }
 #endif
-  if (IsMP3SupportedType(mimeType.Type().AsString(),
-                         aType.ExtendedType().Codecs().AsString())) {
+  if (MP3Decoder::IsSupportedType(aType)) {
     return CANPLAY_YES;
   }
   if (IsAACSupportedType(mimeType.Type().AsString(),
@@ -278,7 +270,7 @@ CanHandleMediaType(const MediaContentType& aType,
     return CANPLAY_MAYBE;
   }
 #endif
-  if (IsMP3SupportedType(mimeType.Type().AsString())) {
+  if (MP3Decoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
   if (IsAACSupportedType(mimeType.Type().AsString())) {
@@ -357,7 +349,7 @@ InstantiateDecoder(const MediaContentType& aType,
     return decoder.forget();
   }
 #endif
-  if (IsMP3SupportedType(aType.Type().AsString())) {
+  if (MP3Decoder::IsSupportedType(aType)) {
     decoder = new MP3Decoder(aOwner);
     return decoder.forget();
   }
@@ -442,7 +434,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new MediaFormatReader(aDecoder, new MP4Demuxer(aDecoder->GetResource()));
   } else
 #endif
-  if (IsMP3SupportedType(aType)) {
+  if (MP3Decoder::IsSupportedType(*type)) {
     decoderReader = new MediaFormatReader(aDecoder, new mp3::MP3Demuxer(aDecoder->GetResource()));
   } else
   if (IsAACSupportedType(aType)) {
@@ -502,7 +494,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 #ifdef MOZ_FMP4
     MP4Decoder::IsSupportedType(*type, /* DecoderDoctorDiagnostics* */ nullptr) ||
 #endif
-    IsMP3SupportedType(aType) ||
+    MP3Decoder::IsSupportedType(*type) ||
     IsAACSupportedType(aType) ||
     IsFlacSupportedType(aType) ||
 #ifdef MOZ_DIRECTSHOW
