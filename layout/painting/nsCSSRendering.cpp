@@ -21,6 +21,7 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsPoint.h"
 #include "nsRect.h"
 #include "nsIPresShell.h"

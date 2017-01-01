@@ -4,7 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MaskLayerImageCache.h"
+
 #include "ImageContainer.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 using namespace mozilla::layers;
 
