@@ -10,6 +10,8 @@
 
 namespace mozilla {
 
+class MediaContentType;
+
 class OggDecoder : public MediaDecoder
 {
 public:
@@ -37,13 +39,10 @@ public:
     return mShutdownBit;
   }
 
-  // Returns true if aMIMEType is a type that we think we can render with the
-  // a platform decoder backend. If aCodecs is non emtpy, it is filled
-  // with a comma-delimited list of codecs to check support for.
-  static bool CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
-                                 const nsAString& aCodecs);
-
-  static bool IsEnabled();
+  // Returns true if aContentType is an Ogg type that we think we can render
+  // with an enabled platform decoder backend.
+  // If provided, codecs are checked for support.
+  static bool IsSupportedType(const MediaContentType& aContentType);
 
 protected:
   void ShutdownBitChanged() override
