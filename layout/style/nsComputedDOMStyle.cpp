@@ -85,7 +85,7 @@ already_AddRefed<CSSValue>
 GetBackgroundList(T nsStyleImageLayers::Layer::* aMember,
                   uint32_t nsStyleImageLayers::* aCount,
                   const nsStyleImageLayers& aLayers,
-                  const KTableEntry aTable[])
+                  const nsCSSProps::KTableEntry aTable[])
 {
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
 
