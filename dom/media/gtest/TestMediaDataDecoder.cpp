@@ -7,7 +7,9 @@
 #include "Benchmark.h"
 #include "MockMediaResource.h"
 #include "DecoderTraits.h"
+#include "MediaContentType.h"
 #include "MP4Demuxer.h"
+#include "WebMDecoder.h"
 #include "WebMDemuxer.h"
 
 using namespace mozilla;
@@ -58,7 +60,7 @@ TEST(MediaDataDecoder, H264)
 
 TEST(MediaDataDecoder, VP9)
 {
-  if (!DecoderTraits::IsWebMTypeAndEnabled(NS_LITERAL_CSTRING("video/webm"))) {
+  if (!WebMDecoder::IsSupportedType(MediaContentType(MEDIAMIMETYPE("video/webm")))) {
     EXPECT_TRUE(true);
   } else {
     RefPtr<MediaResource> resource =

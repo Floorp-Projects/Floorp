@@ -62,25 +62,6 @@ CodecListContains(char const *const * aCodecs, const String& aCodec)
   return false;
 }
 
-static bool
-IsWebMSupportedType(const nsACString& aType,
-                    const nsAString& aCodecs = EmptyString())
-{
-  return WebMDecoder::CanHandleMediaType(aType, aCodecs);
-}
-
-/* static */ bool
-DecoderTraits::IsWebMTypeAndEnabled(const nsACString& aType)
-{
-  return IsWebMSupportedType(aType);
-}
-
-/* static */ bool
-DecoderTraits::IsWebMAudioType(const nsACString& aType)
-{
-  return aType.EqualsASCII("audio/webm");
-}
-
 static char const *const gHttpLiveStreamingTypes[] = {
   // For m3u8.
   // https://tools.ietf.org/html/draft-pantos-http-live-streaming-19#section-10
@@ -210,9 +191,8 @@ CanHandleCodecsType(const MediaContentType& aType,
     }
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (DecoderTraits::IsWebMTypeAndEnabled(mimeType.Type().AsString())) {
-    if (IsWebMSupportedType(aType.Type().AsString(),
-                            aType.ExtendedType().Codecs().AsString())) {
+  if (WebMDecoder::IsSupportedType(mimeType)) {
+    if (WebMDecoder::IsSupportedType(aType)) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -310,7 +290,7 @@ CanHandleMediaType(const MediaContentType& aType,
     return CANPLAY_MAYBE;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (DecoderTraits::IsWebMTypeAndEnabled(mimeType.Type().AsString())) {
+  if (WebMDecoder::IsSupportedType(mimeType)) {
     return CANPLAY_MAYBE;
   }
 #endif
@@ -422,7 +402,7 @@ InstantiateDecoder(const MediaContentType& aType,
   }
 #endif
 
-  if (IsWebMSupportedType(aType.Type().AsString())) {
+  if (WebMDecoder::IsSupportedType(aType)) {
     decoder = new WebMDecoder(aOwner);
     return decoder.forget();
   }
@@ -498,7 +478,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
 #endif
-  if (IsWebMSupportedType(aType)) {
+  if (WebMDecoder::IsSupportedType(*type)) {
     decoderReader =
       new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()));
   } else
@@ -530,7 +510,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
 
   return
     OggDecoder::IsSupportedType(*type) ||
-    IsWebMSupportedType(aType) ||
+    WebMDecoder::IsSupportedType(*type) ||
 #ifdef MOZ_ANDROID_OMX
     (MediaDecoder::IsAndroidMediaPluginEnabled() && IsAndroidMediaType(aType)) ||
 #endif
