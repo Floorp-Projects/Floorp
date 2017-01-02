@@ -409,6 +409,18 @@ class AssemblerX86Shared : public AssemblerShared
                preBarriers_.oom();
     }
 
+    void disableProtection() { masm.disableProtection(); }
+    void enableProtection() { masm.enableProtection(); }
+    void setLowerBoundForProtection(size_t size) {
+        masm.setLowerBoundForProtection(size);
+    }
+    void unprotectRegion(unsigned char* first, size_t size) {
+        masm.unprotectRegion(first, size);
+    }
+    void reprotectRegion(unsigned char* first, size_t size) {
+        masm.reprotectRegion(first, size);
+    }
+
     void setPrinter(Sprinter* sp) {
         masm.setPrinter(sp);
     }

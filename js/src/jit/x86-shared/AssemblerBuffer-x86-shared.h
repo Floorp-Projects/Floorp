@@ -136,6 +136,29 @@ namespace jit {
             return m_buffer.begin();
         }
 
+#ifndef RELEASE_OR_BETA
+        void disableProtection() { m_buffer.disableProtection(); }
+        void enableProtection() { m_buffer.enableProtection(); }
+        void setLowerBoundForProtection(size_t size)
+        {
+            m_buffer.setLowerBoundForProtection(size);
+        }
+        void unprotectRegion(unsigned char* first, size_t size)
+        {
+            m_buffer.unprotectRegion(first, size);
+        }
+        void reprotectRegion(unsigned char* first, size_t size)
+        {
+            m_buffer.reprotectRegion(first, size);
+        }
+#else
+        void disableProtection() {}
+        void enableProtection() {}
+        void setLowerBoundForProtection(size_t) {}
+        void unprotectRegion(unsigned char*, size_t) {}
+        void reprotectRegion(unsigned char*, size_t) {}
+#endif
+
     protected:
         /*
          * OOM handling: This class can OOM in the ensureSpace() method trying
