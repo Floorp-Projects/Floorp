@@ -97,7 +97,9 @@ AssemblerX86Shared::trace(JSTracer* trc)
     }
     if (dataRelocations_.length()) {
         CompactBufferReader reader(dataRelocations_);
-        ::TraceDataRelocations(trc, masm.data(), reader);
+        unsigned char* code = masm.acquireData();
+        ::TraceDataRelocations(trc, code, reader);
+        masm.releaseData();
     }
 }
 
@@ -261,7 +263,9 @@ AssemblerX86Shared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
 #ifdef DEBUG
     if (masm.oom())
         return;
-    Disassembler::VerifyHeapAccess(masm.data() + begin, masm.data() + end, heapAccess);
+    unsigned char* code = masm.acquireData();
+    Disassembler::VerifyHeapAccess(code + begin, code + end, heapAccess);
+    masm.releaseData();
 #endif
 }
 

@@ -97,7 +97,7 @@ class PageProtectingVector final
     bool protectUnusedEnabled;
 
     bool reentrancyGuardEnabled;
-    mozilla::Atomic<bool, mozilla::ReleaseAcquire> reentrancyGuard;
+    mutable mozilla::Atomic<bool, mozilla::ReleaseAcquire> reentrancyGuard;
 
     MOZ_ALWAYS_INLINE void resetTest() {
         MOZ_ASSERT(protectUsedEnabled || protectUnusedEnabled);
@@ -282,20 +282,20 @@ class PageProtectingVector final
     template<typename U>
     MOZ_NEVER_INLINE MOZ_MUST_USE bool appendSlow(const U* values, size_t size);
 
-    MOZ_ALWAYS_INLINE void lock() {
+    MOZ_ALWAYS_INLINE void lock() const {
         if (MOZ_LIKELY(!GuardAgainstReentrancy || !reentrancyGuardEnabled))
             return;
         if (MOZ_UNLIKELY(!reentrancyGuard.compareExchange(false, true)))
             lockSlow();
     }
 
-    MOZ_ALWAYS_INLINE void unlock() {
+    MOZ_ALWAYS_INLINE void unlock() const {
         if (!GuardAgainstReentrancy)
             return;
         reentrancyGuard = false;
     }
 
-    MOZ_NEVER_INLINE void lockSlow();
+    MOZ_NEVER_INLINE void lockSlow() const;
 
     /* A helper class to guard against concurrent access. */
     class AutoGuardAgainstReentrancy
@@ -313,6 +313,9 @@ class PageProtectingVector final
             vector.unlock();
         }
     };
+
+    MOZ_ALWAYS_INLINE T* begin() { return vector.begin(); }
+    MOZ_ALWAYS_INLINE const T* begin() const { return vector.begin(); }
 
   public:
     explicit PageProtectingVector(AllocPolicy policy = AllocPolicy())
@@ -393,8 +396,19 @@ class PageProtectingVector final
     MOZ_ALWAYS_INLINE size_t capacity() const { return vector.capacity(); }
     MOZ_ALWAYS_INLINE size_t length() const { return vector.length(); }
 
-    MOZ_ALWAYS_INLINE T* begin() { return vector.begin(); }
-    MOZ_ALWAYS_INLINE const T* begin() const { return vector.begin(); }
+    MOZ_ALWAYS_INLINE T* acquire() {
+        lock();
+        return begin();
+    }
+
+    MOZ_ALWAYS_INLINE const T* acquire() const {
+        lock();
+        return begin();
+    }
+
+    MOZ_ALWAYS_INLINE void release() const {
+        unlock();
+    }
 
     void clear() {
         AutoGuardAgainstReentrancy guard(*this);
@@ -486,7 +500,7 @@ PageProtectingVector<T, N, AP, P, Q, G, I>::appendSlow(const U* values, size_t s
 
 template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
 MOZ_NEVER_INLINE void
-PageProtectingVector<T, N, AP, P, Q, G, I>::lockSlow()
+PageProtectingVector<T, N, AP, P, Q, G, I>::lockSlow() const
 {
     MOZ_CRASH("Cannot access PageProtectingVector from more than one thread at a time!");
 }
