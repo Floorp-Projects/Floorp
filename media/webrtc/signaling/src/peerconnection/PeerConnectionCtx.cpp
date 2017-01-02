@@ -12,11 +12,9 @@
 #include "mozilla/Telemetry.h"
 #include "browser_logging/WebRtcLog.h"
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
 #include <mozilla/Types.h>
-#endif
 
 #include "nsNetCID.h" // NS_SOCKETTRANSPORTSERVICE_CONTRACTID
 #include "nsServiceManagerUtils.h" // do_GetService
@@ -190,7 +188,6 @@ void PeerConnectionCtx::Destroy() {
   StopWebRtcLog();
 }
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 typedef Vector<nsAutoPtr<RTCStatsQuery>> RTCStatsQueries;
 
 // Telemetry reporting every second after start of first call.
@@ -362,7 +359,6 @@ PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure
     NS_ENSURE_SUCCESS_VOID(rv);
   }
 }
-#endif
 
 void
 PeerConnectionCtx::UpdateNetworkState(bool online) {
@@ -378,7 +374,6 @@ PeerConnectionCtx::UpdateNetworkState(bool online) {
 nsresult PeerConnectionCtx::Initialize() {
   initGMP();
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   mTelemetryTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
   MOZ_ASSERT(mTelemetryTimer);
   nsresult rv = mTelemetryTimer->SetTarget(gMainThread);
@@ -389,7 +384,6 @@ nsresult PeerConnectionCtx::Initialize() {
   if (XRE_IsContentProcess()) {
     WebrtcGlobalChild::Create();
   }
-#endif // MOZILLA_INTERNAL_API
 
   return NS_OK;
 }
@@ -442,11 +436,9 @@ nsresult PeerConnectionCtx::Cleanup() {
 PeerConnectionCtx::~PeerConnectionCtx() {
     // ensure mTelemetryTimer ends on main thread
   MOZ_ASSERT(NS_IsMainThread());
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   if (mTelemetryTimer) {
     mTelemetryTimer->Cancel();
   }
-#endif
 };
 
 void PeerConnectionCtx::queueJSEPOperation(nsIRunnable* aOperation) {

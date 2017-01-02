@@ -7,9 +7,7 @@
 
 #include <string>
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "WebrtcGlobalChild.h"
-#endif
 
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
@@ -55,12 +53,10 @@ class PeerConnectionCtx {
   friend class PeerConnectionWrapper;
   friend class mozilla::dom::WebrtcGlobalInformation;
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // WebrtcGlobalInformation uses this; we put it here so we don't need to
   // create another shutdown observer class.
   mozilla::dom::Sequence<mozilla::dom::RTCStatsReportInternal>
     mStatsForClosedPeerConnections;
-#endif
 
   const std::map<const std::string, PeerConnectionImpl *>& mGetPeerConnections();
  private:
@@ -81,7 +77,6 @@ class PeerConnectionCtx {
   static void
   EverySecondTelemetryCallback_m(nsITimer* timer, void *);
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   nsCOMPtr<nsITimer> mTelemetryTimer;
 
 public:
@@ -89,7 +84,6 @@ public:
   //std::map<nsString,nsAutoPtr<mozilla::dom::RTCStatsReportInternal>> mLastReports;
   nsTArray<nsAutoPtr<mozilla::dom::RTCStatsReportInternal>> mLastReports;
 private:
-#endif
 
   // We cannot form offers/answers properly until the Gecko Media Plugin stuff
   // has been initted, which is a complicated mess of thread dispatches,
