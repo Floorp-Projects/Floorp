@@ -1971,8 +1971,8 @@ nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
 
   UniqueCERTCertificate serverCert(SSL_PeerCertificate(socket));
   if (!serverCert) {
-    NS_NOTREACHED("Missing server certificate should have been detected during "
-                  "server cert authentication.");
+    MOZ_ASSERT_UNREACHABLE(
+      "Missing server cert should have been detected during server cert auth.");
     PR_SetError(SSL_ERROR_NO_CERTIFICATE, 0);
     return SECFailure;
   }
@@ -2315,12 +2315,12 @@ nsSSLIOLayerImportFD(PRFileDesc* fd,
   }
   if (SECSuccess != SSL_AuthCertificateHook(sslSock, AuthCertificateHook,
                                             infoObject)) {
-    NS_NOTREACHED("failed to configure AuthCertificateHook");
+    MOZ_ASSERT_UNREACHABLE("Failed to configure AuthCertificateHook");
     goto loser;
   }
 
   if (SECSuccess != SSL_SetURL(sslSock, host)) {
-    NS_NOTREACHED("SSL_SetURL failed");
+    MOZ_ASSERT_UNREACHABLE("SSL_SetURL failed");
     goto loser;
   }
 
