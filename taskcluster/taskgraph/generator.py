@@ -197,6 +197,7 @@ class TaskGraphGenerator(object):
         full_task_graph = TaskGraph(all_tasks,
                                     Graph(full_task_set.graph.nodes, edges))
         full_task_graph.for_each_task(verify_task_graph_symbol, scratch_pad={})
+        full_task_graph.for_each_task(verify_gecko_v2_routes, scratch_pad={})
         logger.info("Full task graph contains %d tasks and %d dependencies" % (
             len(full_task_set.graph.nodes), len(edges)))
         yield 'full_task_graph', full_task_graph
@@ -222,7 +223,6 @@ class TaskGraphGenerator(object):
         target_task_graph = TaskGraph(
             {l: all_tasks[l] for l in target_graph.nodes},
             target_graph)
-        target_task_graph.for_each_task(verify_gecko_v2_routes, scratch_pad={})
         yield 'target_task_graph', target_task_graph
 
         logger.info("Generating optimized task graph")
