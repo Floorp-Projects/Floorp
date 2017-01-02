@@ -373,6 +373,9 @@ class MacroAssembler : public MacroAssemblerSpecific
         initWithAllocator();
         armbuffer_.id = 0;
 #endif
+
+        // Disable page protection for WASM.
+        disableProtection();
     }
 
     void constructRoot(JSContext* cx) {
