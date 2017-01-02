@@ -125,9 +125,7 @@ crmf_generic_encoder_callback(void *arg, const char *buf, unsigned long len,
         encoderArg->allocatedLen = newSize;
     }
     cursor = &(encoderArg->buffer->data[encoderArg->buffer->len]);
-    if (len) {
-        PORT_Memcpy(cursor, buf, len);
-    }
+    PORT_Memcpy(cursor, buf, len);
     encoderArg->buffer->len += len;
 }
 

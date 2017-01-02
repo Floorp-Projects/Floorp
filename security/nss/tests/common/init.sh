@@ -193,7 +193,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     html_passed()
     {
         html_detect_core "$@" || return
-        html_passed_ignore_core "$@"
+        increase_msg_id
+        html "<TR><TD>#${MSG_ID}: $1 ${HTML_PASSED}"
+        echo "${SCRIPTNAME}: #${MSG_ID}: $* - PASSED"
     }
     html_failed_ignore_core()
     {
@@ -204,7 +206,9 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     html_failed()
     {
         html_detect_core "$@" || return
-        html_failed_ignore_core "$@" || return
+        increase_msg_id
+        html "<TR><TD>#${MSG_ID}: $1 ${HTML_FAILED}"
+        echo "${SCRIPTNAME}: #${MSG_ID}: $* - FAILED"
     }
     html_unknown_ignore_core()
     {
@@ -282,11 +286,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     fi
 
     if [ "${OBJDIR}" = "" ]; then
-        if [ -f ${DIST}/latest ]; then
-            OBJDIR=$(cat ${DIST}/latest)
-        else
-            OBJDIR=`($MAKE -s -C $COMMON objdir_name)`
-        fi
+        OBJDIR=`(cd $COMMON; $MAKE objdir_name)`
     fi
     if [ "${OS_ARCH}" = "" ]; then
         OS_ARCH=`(cd $COMMON; $MAKE os_arch)`

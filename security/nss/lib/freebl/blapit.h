@@ -78,8 +78,13 @@ typedef int __BLAPI_DEPRECATED __attribute__((deprecated));
  */
 #define MAX_ECKEY_LEN 72 /* Bytes */
 
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+#define EC_MAX_KEY_BITS 571 /* in bits */
+#define EC_MIN_KEY_BITS 112 /* in bits */
+#else
 #define EC_MAX_KEY_BITS 521 /* in bits */
 #define EC_MIN_KEY_BITS 256 /* in bits */
+#endif
 
 /* EC point compression format */
 #define EC_POINT_FORM_COMPRESSED_Y0 0x02
@@ -338,8 +343,7 @@ typedef enum { ec_params_explicit,
 } ECParamsType;
 
 typedef enum { ec_field_GFp = 1,
-               ec_field_GF2m,
-               ec_field_plain
+               ec_field_GF2m
 } ECFieldType;
 
 struct ECFieldIDStr {
@@ -377,7 +381,6 @@ struct ECParamsStr {
     SECItem DEREncoding;
     ECCurveName name;
     SECItem curveOID;
-    int pointSize;
 };
 typedef struct ECParamsStr ECParams;
 

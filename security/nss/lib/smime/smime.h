@@ -12,6 +12,7 @@
 
 #include "cms.h"
 
+
 /************************************************************************/
 SEC_BEGIN_PROTOS
 
@@ -38,9 +39,9 @@ SEC_BEGIN_PROTOS
  * If the cipher preference is successfully recorded, SECSuccess
  * is returned.  Otherwise SECFailure is returned.  The only errors
  * are due to failure allocating memory or bad parameters/calls:
- *      SEC_ERROR_XXX ("which" is not in the S/MIME cipher family)
- *      SEC_ERROR_XXX (function is being called more times than there
- *              are known/expected ciphers)
+ *	SEC_ERROR_XXX ("which" is not in the S/MIME cipher family)
+ *	SEC_ERROR_XXX (function is being called more times than there
+ *		are known/expected ciphers)
  */
 extern SECStatus NSS_SMIMEUtil_EnableCipher(long which, int on);
 
@@ -77,8 +78,8 @@ extern PRBool NSS_SMIMEUtil_DecryptionAllowed(SECAlgorithmID *algid, PK11SymKey 
  *
  * It takes no arguments.  The return value is a simple boolean:
  *   PR_TRUE means encryption (or decryption) is *possible*
- *      (but may still fail due to other reasons, like because we cannot
- *      find all the necessary certs, etc.; PR_TRUE is *not* a guarantee)
+ *	(but may still fail due to other reasons, like because we cannot
+ *	find all the necessary certs, etc.; PR_TRUE is *not* a guarantee)
  *   PR_FALSE means encryption (or decryption) is not permitted
  *
  * There are no errors from this routine.
@@ -96,28 +97,24 @@ extern SECStatus NSS_SMIMEUtil_CreateSMIMECapabilities(PLArenaPool *poolp, SECIt
 /*
  * NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs - create S/MIME encryption key preferences attr value
  */
-extern SECStatus NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs(PLArenaPool *poolp,
-                                                      SECItem *dest, CERTCertificate *cert);
+extern SECStatus NSS_SMIMEUtil_CreateSMIMEEncKeyPrefs(PLArenaPool *poolp, SECItem *dest, CERTCertificate *cert);
 
 /*
  * NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs - create S/MIME encryption key preferences attr value using MS oid
  */
-extern SECStatus NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs(PLArenaPool *poolp,
-                                                        SECItem *dest, CERTCertificate *cert);
+extern SECStatus NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs(PLArenaPool *poolp, SECItem *dest, CERTCertificate *cert);
 
 /*
  * NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference - find cert marked by EncryptionKeyPreference
  *          attribute
  */
-extern CERTCertificate *NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(CERTCertDBHandle *certdb,
-                                                                         SECItem *DERekp);
+extern CERTCertificate *NSS_SMIMEUtil_GetCertFromEncryptionKeyPreference(CERTCertDBHandle *certdb, SECItem *DERekp);
 
 /*
  * NSS_SMIMEUtil_FindBulkAlgForRecipients - find bulk algorithm suitable for all recipients
  */
 extern SECStatus
-NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts,
-                                       SECOidTag *bulkalgtag, int *keysize);
+NSS_SMIMEUtil_FindBulkAlgForRecipients(CERTCertificate **rcerts, SECOidTag *bulkalgtag, int *keysize);
 
 /*
  * Return a boolean that indicates whether the underlying library

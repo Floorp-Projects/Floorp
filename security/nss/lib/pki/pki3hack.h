@@ -23,13 +23,13 @@
 
 PR_BEGIN_EXTERN_C
 
-#define NSSITEM_FROM_SECITEM(nssit, secit) \
-    (nssit)->data = (void *)(secit)->data; \
+#define NSSITEM_FROM_SECITEM(nssit, secit)  \
+    (nssit)->data = (void *)(secit)->data;  \
     (nssit)->size = (PRUint32)(secit)->len;
 
 #define SECITEM_FROM_NSSITEM(secit, nssit)          \
     (secit)->data = (unsigned char *)(nssit)->data; \
-    (secit)->len = (unsigned int)(nssit)->size;
+    (secit)->len  = (unsigned int)(nssit)->size;
 
 NSS_EXTERN NSSTrustDomain *
 STAN_GetDefaultTrustDomain();
@@ -67,7 +67,7 @@ STAN_GetCERTCertificateOrRelease(NSSCertificate *c);
 NSS_EXTERN NSSCertificate *
 STAN_GetNSSCertificate(CERTCertificate *c);
 
-NSS_EXTERN CERTCertTrust *
+NSS_EXTERN CERTCertTrust * 
 nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc);
 
 NSS_EXTERN PRStatus
@@ -90,59 +90,74 @@ STAN_GetCERTCertificateNameForInstance(PLArenaPool *arenaOpt,
 
 /* exposing this */
 NSS_EXTERN NSSCertificate *
-NSSCertificate_Create(NSSArena *arenaOpt);
+NSSCertificate_Create
+(
+  NSSArena *arenaOpt
+);
 
-/* This function is being put here because it is a hack for
+/* This function is being put here because it is a hack for 
  * PK11_FindCertFromNickname.
  */
 NSS_EXTERN NSSCertificate *
-nssTrustDomain_FindBestCertificateByNicknameForToken(
-    NSSTrustDomain *td,
-    NSSToken *token,
-    NSSUTF8 *name,
-    NSSTime *timeOpt, /* NULL for "now" */
-    NSSUsage *usage,
-    NSSPolicies *policiesOpt /* NULL for none */
-    );
+nssTrustDomain_FindBestCertificateByNicknameForToken
+(
+  NSSTrustDomain *td,
+  NSSToken *token,
+  NSSUTF8 *name,
+  NSSTime *timeOpt, /* NULL for "now" */
+  NSSUsage *usage,
+  NSSPolicies *policiesOpt /* NULL for none */
+);
 
-/* This function is being put here because it is a hack for
+/* This function is being put here because it is a hack for 
  * PK11_FindCertsFromNickname.
  */
 NSS_EXTERN NSSCertificate **
-nssTrustDomain_FindCertificatesByNicknameForToken(
-    NSSTrustDomain *td,
-    NSSToken *token,
-    NSSUTF8 *name,
-    NSSCertificate *rvOpt[],
-    PRUint32 maximumOpt, /* 0 for no max */
-    NSSArena *arenaOpt);
+nssTrustDomain_FindCertificatesByNicknameForToken
+(
+  NSSTrustDomain *td,
+  NSSToken *token,
+  NSSUTF8 *name,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt, /* 0 for no max */
+  NSSArena *arenaOpt
+);
 
 /* CERT_TraversePermCertsForSubject */
 NSS_EXTERN PRStatus
-nssTrustDomain_TraverseCertificatesBySubject(
-    NSSTrustDomain *td,
-    NSSDER *subject,
-    PRStatus (*callback)(NSSCertificate *c, void *arg),
-    void *arg);
+nssTrustDomain_TraverseCertificatesBySubject
+(
+  NSSTrustDomain *td,
+  NSSDER *subject,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
 
 /* CERT_TraversePermCertsForNickname */
 NSS_EXTERN PRStatus
-nssTrustDomain_TraverseCertificatesByNickname(
-    NSSTrustDomain *td,
-    NSSUTF8 *nickname,
-    PRStatus (*callback)(NSSCertificate *c, void *arg),
-    void *arg);
+nssTrustDomain_TraverseCertificatesByNickname
+(
+  NSSTrustDomain *td,
+  NSSUTF8 *nickname,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
 
 /* SEC_TraversePermCerts */
 NSS_EXTERN PRStatus
-nssTrustDomain_TraverseCertificates(
-    NSSTrustDomain *td,
-    PRStatus (*callback)(NSSCertificate *c, void *arg),
-    void *arg);
+nssTrustDomain_TraverseCertificates
+(
+  NSSTrustDomain *td,
+  PRStatus (*callback)(NSSCertificate *c, void *arg),
+  void *arg
+);
 
 /* CERT_AddTempCertToPerm */
 NSS_EXTERN PRStatus
-nssTrustDomain_AddTempCertToPerm(NSSCertificate *c);
+nssTrustDomain_AddTempCertToPerm
+(
+  NSSCertificate *c
+);
 
 PR_END_EXTERN_C
 

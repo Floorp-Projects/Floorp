@@ -99,7 +99,7 @@ nssCKFWMechanism_Destroy(
 {
     /* destroy any fw resources held by nssCKFWMechanism (currently none) */
 
-    if (fwMechanism->mdMechanism->Destroy) {
+    if (!fwMechanism->mdMechanism->Destroy) {
         /* destroys it's parent as well */
         fwMechanism->mdMechanism->Destroy(
             fwMechanism->mdMechanism,

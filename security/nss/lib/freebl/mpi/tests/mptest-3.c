@@ -17,6 +17,7 @@
 
 #include "mpi.h"
 
+#define SQRT 1 /* define nonzero to get square-root test  */
 #define EXPT 0 /* define nonzero to get exponentiate test */
 
 int
@@ -95,6 +96,21 @@ main(int argc, char *argv[])
     printf("c = ");
     mp_print(&c, stdout);
     fputc('\n', stdout);
+
+#if SQRT
+    printf("\nc = sqrt(a)\n");
+    if ((res = mp_sqrt(&a, &c)) != MP_OKAY) {
+        printf("mp_sqrt: %s\n", mp_strerror(res));
+    } else {
+        printf("c = ");
+        mp_print(&c, stdout);
+        fputc('\n', stdout);
+        mp_sqr(&c, &c);
+        printf("c^2 = ");
+        mp_print(&c, stdout);
+        fputc('\n', stdout);
+    }
+#endif
 
     mp_clear(&d);
     mp_clear(&c);

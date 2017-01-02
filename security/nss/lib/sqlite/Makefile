@@ -14,7 +14,6 @@ include manifest.mn
 # (2) Include "global" configuration information. (OPTIONAL)          #
 #######################################################################
 
-USE_GCOV =
 include $(CORE_DEPTH)/coreconf/config.mk
 
 #######################################################################

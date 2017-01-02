@@ -26,31 +26,32 @@ SEC_BEGIN_PROTOS
  ************************************************************/
 void PK11_FreeSlotList(PK11SlotList *list);
 SECStatus PK11_FreeSlotListElement(PK11SlotList *list, PK11SlotListElement *le);
-PK11SlotListElement *PK11_GetFirstSafe(PK11SlotList *list);
-PK11SlotListElement *PK11_GetNextSafe(PK11SlotList *list,
-                                      PK11SlotListElement *le, PRBool restart);
+PK11SlotListElement * PK11_GetFirstSafe(PK11SlotList *list);
+PK11SlotListElement *PK11_GetNextSafe(PK11SlotList *list, 
+				PK11SlotListElement *le, PRBool restart);
 
 /************************************************************
  * Generic Slot Management
  ************************************************************/
 PK11SlotInfo *PK11_ReferenceSlot(PK11SlotInfo *slot);
 void PK11_FreeSlot(PK11SlotInfo *slot);
-SECStatus PK11_DestroyObject(PK11SlotInfo *slot, CK_OBJECT_HANDLE object);
-SECStatus PK11_DestroyTokenObject(PK11SlotInfo *slot, CK_OBJECT_HANDLE object);
+SECStatus PK11_DestroyObject(PK11SlotInfo *slot,CK_OBJECT_HANDLE object);
+SECStatus PK11_DestroyTokenObject(PK11SlotInfo *slot,CK_OBJECT_HANDLE object);
 PK11SlotInfo *PK11_GetInternalKeySlot(void);
 PK11SlotInfo *PK11_GetInternalSlot(void);
 SECStatus PK11_Logout(PK11SlotInfo *slot);
 void PK11_LogoutAll(void);
 
+
 /************************************************************
  *  Slot Password Management
  ************************************************************/
-void PK11_SetSlotPWValues(PK11SlotInfo *slot, int askpw, int timeout);
-void PK11_GetSlotPWValues(PK11SlotInfo *slot, int *askpw, int *timeout);
+void PK11_SetSlotPWValues(PK11SlotInfo *slot,int askpw, int timeout);
+void PK11_GetSlotPWValues(PK11SlotInfo *slot,int *askpw, int *timeout);
 SECStatus PK11_CheckSSOPassword(PK11SlotInfo *slot, char *ssopw);
 SECStatus PK11_CheckUserPassword(PK11SlotInfo *slot, const char *pw);
 PRBool PK11_IsLoggedIn(PK11SlotInfo *slot, void *wincx);
-SECStatus PK11_InitPin(PK11SlotInfo *slot, const char *ssopw,
+SECStatus PK11_InitPin(PK11SlotInfo *slot,const char *ssopw,
                        const char *pk11_userpwd);
 SECStatus PK11_ChangePW(PK11SlotInfo *slot, const char *oldpw,
                         const char *newpw);
@@ -59,6 +60,7 @@ int PK11_GetMinimumPwdLength(PK11SlotInfo *slot);
 SECStatus PK11_ResetToken(PK11SlotInfo *slot, char *sso_pwd);
 SECStatus PK11_Authenticate(PK11SlotInfo *slot, PRBool loadCerts, void *wincx);
 SECStatus PK11_TokenRefresh(PK11SlotInfo *slot);
+
 
 /******************************************************************
  *           Slot info functions
@@ -71,12 +73,12 @@ PK11SlotInfo *PK11_FindSlotByName(const char *name);
  * returned.
  ******************************************************************/
 PK11SlotList *PK11_FindSlotsByNames(const char *dllName,
-                                    const char *slotName, const char *tokenName, PRBool presentOnly);
+        const char* slotName, const char* tokenName, PRBool presentOnly);
 PRBool PK11_IsReadOnly(PK11SlotInfo *slot);
 PRBool PK11_IsInternal(PK11SlotInfo *slot);
 PRBool PK11_IsInternalKeySlot(PK11SlotInfo *slot);
-char *PK11_GetTokenName(PK11SlotInfo *slot);
-char *PK11_GetSlotName(PK11SlotInfo *slot);
+char * PK11_GetTokenName(PK11SlotInfo *slot);
+char * PK11_GetSlotName(PK11SlotInfo *slot);
 PRBool PK11_NeedLogin(PK11SlotInfo *slot);
 PRBool PK11_IsFriendly(PK11SlotInfo *slot);
 PRBool PK11_IsHW(PK11SlotInfo *slot);
@@ -103,34 +105,34 @@ PRBool PK11_UserDisableSlot(PK11SlotInfo *slot);
 PRBool PK11_UserEnableSlot(PK11SlotInfo *slot);
 /*
  * wait for a specific slot event.
- * event is a specific event to wait for. Currently only
+ * event is a specific event to wait for. Currently only 
  *    PK11TokenChangeOrRemovalEvent and PK11TokenPresentEvents are defined.
  * timeout can be an interval time to wait, PR_INTERVAL_NO_WAIT (meaning only
  * poll once), or PR_INTERVAL_NO_TIMEOUT (meaning block until a change).
- * pollInterval is a suggested pulling interval value. '0' means use the
+ * pollInterval is a suggested pulling interval value. '0' means use the 
  *  default. Future implementations that don't poll may ignore this value.
- * series is the current series for the last slot. This should be the series
+ * series is the current series for the last slot. This should be the series 
  *  value for the slot the last time you read persistant information from the
  *  slot. For instance, if you publish a cert from the slot, you should obtain
- *  the slot series at that time. Then PK11_WaitForTokenEvent can detect a
- *  a change in the slot between the time you publish and the time
+ *  the slot series at that time. Then PK11_WaitForTokenEvent can detect a 
+ *  a change in the slot between the time you publish and the time 
  *  PK11_WaitForTokenEvent is called, elliminating potential race conditions.
  *
  * The current status that is returned is:
  *   PK11TokenNotRemovable - always returned for any non-removable token.
  *   PK11TokenPresent - returned when the token is present and we are waiting
- *     on a PK11TokenPresentEvent. Then next event to look for is a
+ *     on a PK11TokenPresentEvent. Then next event to look for is a 
  *     PK11TokenChangeOrRemovalEvent.
  *   PK11TokenChanged - returned when the old token has been removed and a new
- *     token ad been inserted, and we are waiting for a
+ *     token ad been inserted, and we are waiting for a 
  *     PK11TokenChangeOrRemovalEvent. The next event to look for is another
  *     PK11TokenChangeOrRemovalEvent.
- *   PK11TokenRemoved - returned when the token is not present and we are
- *     waiting for a PK11TokenChangeOrRemovalEvent. The next event to look for
+ *   PK11TokenRemoved - returned when the token is not present and we are 
+ *     waiting for a PK11TokenChangeOrRemovalEvent. The next event to look for 
  *     is a PK11TokenPresentEvent.
  */
 PK11TokenStatus PK11_WaitForTokenEvent(PK11SlotInfo *slot, PK11TokenEvent event,
-                                       PRIntervalTime timeout, PRIntervalTime pollInterval, int series);
+	PRIntervalTime timeout, PRIntervalTime pollInterval, int series);
 
 PRBool PK11_NeedPWInit(void);
 PRBool PK11_TokenExists(CK_MECHANISM_TYPE);
@@ -143,16 +145,16 @@ SECMODModule *PK11_GetModule(PK11SlotInfo *slot);
  *********************************************************************/
 PRBool PK11_IsPresent(PK11SlotInfo *slot);
 PRBool PK11_DoesMechanism(PK11SlotInfo *slot, CK_MECHANISM_TYPE type);
-PK11SlotList *PK11_GetAllTokens(CK_MECHANISM_TYPE type, PRBool needRW,
-                                PRBool loadCerts, void *wincx);
-PK11SlotInfo *PK11_GetBestSlotMultipleWithAttributes(CK_MECHANISM_TYPE *type,
-                                                     CK_FLAGS *mechFlag, unsigned int *keySize,
-                                                     unsigned int count, void *wincx);
-PK11SlotInfo *PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type,
-                                       unsigned int count, void *wincx);
+PK11SlotList * PK11_GetAllTokens(CK_MECHANISM_TYPE type,PRBool needRW,
+					PRBool loadCerts, void *wincx);
+PK11SlotInfo *PK11_GetBestSlotMultipleWithAttributes(CK_MECHANISM_TYPE *type, 
+		CK_FLAGS *mechFlag, unsigned int *keySize, 
+		unsigned int count, void *wincx);
+PK11SlotInfo *PK11_GetBestSlotMultiple(CK_MECHANISM_TYPE *type, 
+					unsigned int count, void *wincx);
 PK11SlotInfo *PK11_GetBestSlot(CK_MECHANISM_TYPE type, void *wincx);
-PK11SlotInfo *PK11_GetBestSlotWithAttributes(CK_MECHANISM_TYPE type,
-                                             CK_FLAGS mechFlag, unsigned int keySize, void *wincx);
+PK11SlotInfo *PK11_GetBestSlotWithAttributes(CK_MECHANISM_TYPE type, 
+		CK_FLAGS mechFlag, unsigned int keySize, void *wincx);
 CK_MECHANISM_TYPE PK11_GetBestWrapMechanism(PK11SlotInfo *slot);
 int PK11_GetBestKeyLength(PK11SlotInfo *slot, CK_MECHANISM_TYPE type);
 
@@ -216,28 +218,31 @@ SECStatus SECMOD_CloseUserDB(PK11SlotInfo *slot);
  */
 PK11SlotInfo *SECMOD_OpenNewSlot(SECMODModule *mod, const char *moduleSpec);
 
+
 /*
- * merge the permanent objects from on token to another
+ * merge the permanent objects from on token to another 
  */
 SECStatus PK11_MergeTokens(PK11SlotInfo *targetSlot, PK11SlotInfo *sourceSlot,
-                           PK11MergeLog *log, void *targetPwArg, void *sourcePwArg);
+                PK11MergeLog *log, void *targetPwArg, void *sourcePwArg);
 
 /*
  * create and destroy merge logs needed by PK11_MergeTokens
  */
-PK11MergeLog *PK11_CreateMergeLog(void);
+PK11MergeLog * PK11_CreateMergeLog(void);
 void PK11_DestroyMergeLog(PK11MergeLog *log);
+
+
 
 /*********************************************************************
  *       Mechanism Mapping functions
  *********************************************************************/
-CK_KEY_TYPE PK11_GetKeyType(CK_MECHANISM_TYPE type, unsigned long len);
+CK_KEY_TYPE PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len);
 CK_MECHANISM_TYPE PK11_GetKeyGen(CK_MECHANISM_TYPE type);
-int PK11_GetBlockSize(CK_MECHANISM_TYPE type, SECItem *params);
+int PK11_GetBlockSize(CK_MECHANISM_TYPE type,SECItem *params);
 int PK11_GetIVLength(CK_MECHANISM_TYPE type);
-SECItem *PK11_ParamFromIV(CK_MECHANISM_TYPE type, SECItem *iv);
-unsigned char *PK11_IVFromParam(CK_MECHANISM_TYPE type, SECItem *param, int *len);
-SECItem *PK11_BlockData(SECItem *data, unsigned long size);
+SECItem *PK11_ParamFromIV(CK_MECHANISM_TYPE type,SECItem *iv);
+unsigned char *PK11_IVFromParam(CK_MECHANISM_TYPE type,SECItem *param,int *len);
+SECItem * PK11_BlockData(SECItem *data,unsigned long size);
 
 /* PKCS #11 to DER mapping functions */
 SECItem *PK11_ParamFromAlgid(SECAlgorithmID *algid);
@@ -246,35 +251,35 @@ CK_MECHANISM_TYPE PK11_AlgtagToMechanism(SECOidTag algTag);
 SECOidTag PK11_MechanismToAlgtag(CK_MECHANISM_TYPE type);
 SECOidTag PK11_FortezzaMapSig(SECOidTag algTag);
 SECStatus PK11_ParamToAlgid(SECOidTag algtag, SECItem *param,
-                            PLArenaPool *arena, SECAlgorithmID *algid);
-SECStatus PK11_SeedRandom(PK11SlotInfo *, unsigned char *data, int len);
-SECStatus PK11_GenerateRandomOnSlot(PK11SlotInfo *, unsigned char *data, int len);
+                                   PLArenaPool *arena, SECAlgorithmID *algid);
+SECStatus PK11_SeedRandom(PK11SlotInfo *,unsigned char *data,int len);
+SECStatus PK11_GenerateRandomOnSlot(PK11SlotInfo *,unsigned char *data,int len);
 SECStatus PK11_RandomUpdate(void *data, size_t bytes);
-SECStatus PK11_GenerateRandom(unsigned char *data, int len);
+SECStatus PK11_GenerateRandom(unsigned char *data,int len);
 
 /* warning: cannot work with pkcs 5 v2
  * use algorithm ID s instead of pkcs #11 mechanism pointers */
 CK_RV PK11_MapPBEMechanismToCryptoMechanism(CK_MECHANISM_PTR pPBEMechanism,
-                                            CK_MECHANISM_PTR pCryptoMechanism,
-                                            SECItem *pbe_pwd, PRBool bad3DES);
+					    CK_MECHANISM_PTR pCryptoMechanism,
+					    SECItem *pbe_pwd, PRBool bad3DES);
 CK_MECHANISM_TYPE PK11_GetPadMechanism(CK_MECHANISM_TYPE);
 CK_MECHANISM_TYPE PK11_MapSignKeyType(KeyType keyType);
 
 /**********************************************************************
- *                   Symmetric, Public, and Private Keys
+ *                   Symmetric, Public, and Private Keys 
  **********************************************************************/
 void PK11_FreeSymKey(PK11SymKey *key);
 PK11SymKey *PK11_ReferenceSymKey(PK11SymKey *symKey);
 PK11SymKey *PK11_ImportSymKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
-                              PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, void *wincx);
-PK11SymKey *PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot,
-                                       CK_MECHANISM_TYPE type, PK11Origin origin, CK_ATTRIBUTE_TYPE operation,
-                                       SECItem *key, CK_FLAGS flags, PRBool isPerm, void *wincx);
+    PK11Origin origin, CK_ATTRIBUTE_TYPE operation, SECItem *key, void *wincx);
+PK11SymKey *PK11_ImportSymKeyWithFlags(PK11SlotInfo *slot, 
+    CK_MECHANISM_TYPE type, PK11Origin origin, CK_ATTRIBUTE_TYPE operation, 
+    SECItem *key, CK_FLAGS flags, PRBool isPerm, void *wincx);
 PK11SymKey *PK11_SymKeyFromHandle(PK11SlotInfo *slot, PK11SymKey *parent,
-                                  PK11Origin origin, CK_MECHANISM_TYPE type, CK_OBJECT_HANDLE keyID,
-                                  PRBool owner, void *wincx);
+    PK11Origin origin, CK_MECHANISM_TYPE type, CK_OBJECT_HANDLE keyID, 
+    PRBool owner, void *wincx);
 PK11SymKey *PK11_GetWrapKey(PK11SlotInfo *slot, int wrap,
-                            CK_MECHANISM_TYPE type, int series, void *wincx);
+			      CK_MECHANISM_TYPE type,int series, void *wincx);
 /*
  * This function is not thread-safe.  It can only be called when only
  * one thread has a reference to wrapKey.
@@ -283,42 +288,43 @@ void PK11_SetWrapKey(PK11SlotInfo *slot, int wrap, PK11SymKey *wrapKey);
 CK_MECHANISM_TYPE PK11_GetMechanism(PK11SymKey *symKey);
 /*
  * import a public key into the desired slot
- *
- * This function takes a public key structure and creates a public key in a
+ *  
+ * This function takes a public key structure and creates a public key in a 
  * given slot. If isToken is set, then a persistant public key is created.
  *
  * Note: it is possible for this function to return a handle for a key which
  * is persistant, even if isToken is not set.
  */
-CK_OBJECT_HANDLE PK11_ImportPublicKey(PK11SlotInfo *slot,
-                                      SECKEYPublicKey *pubKey, PRBool isToken);
-PK11SymKey *PK11_KeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
-                        SECItem *param, int keySize, void *wincx);
+CK_OBJECT_HANDLE PK11_ImportPublicKey(PK11SlotInfo *slot, 
+				SECKEYPublicKey *pubKey, PRBool isToken);
+PK11SymKey *PK11_KeyGen(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
+				SECItem *param,	int keySize,void *wincx);
 PK11SymKey *PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
-                             SECItem *param, int keySize, SECItem *keyid,
-                             PRBool isToken, void *wincx);
+				SECItem *param, int keySize, SECItem *keyid,
+				PRBool isToken, void *wincx);
 PK11SymKey *PK11_TokenKeyGenWithFlags(PK11SlotInfo *slot,
-                                      CK_MECHANISM_TYPE type, SECItem *param,
-                                      int keySize, SECItem *keyid, CK_FLAGS opFlags,
-                                      PK11AttrFlags attrFlags, void *wincx);
+				CK_MECHANISM_TYPE type, SECItem *param,
+				int keySize, SECItem *keyid, CK_FLAGS opFlags,
+				PK11AttrFlags attrFlags, void *wincx);
 /* Generates a key using the exact template supplied by the caller. The other
  * PK11_[Token]KeyGen mechanisms should be used instead of this one whenever
  * they work because they include/exclude the CKA_VALUE_LEN template value
  * based on the mechanism type as required by many tokens.
- *
+ * 
  * keyGenType should be PK11_GetKeyGenWithSize(type, <key size>) or it should
  * be equal to type if PK11_GetKeyGenWithSize cannot be used (e.g. because
  * pk11wrap does not know about the mechanisms).
  */
 PK11SymKey *PK11_KeyGenWithTemplate(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
                                     CK_MECHANISM_TYPE keyGenType,
-                                    SECItem *param, CK_ATTRIBUTE *attrs,
+                                    SECItem *param, CK_ATTRIBUTE * attrs,
                                     unsigned int attrsCount, void *wincx);
-PK11SymKey *PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
-                                     void *wincx);
+PK11SymKey * PK11_ListFixedKeysInSlot(PK11SlotInfo *slot, char *nickname,
+								void *wincx);
 PK11SymKey *PK11_GetNextSymKey(PK11SymKey *symKey);
 CK_KEY_TYPE PK11_GetSymKeyType(PK11SymKey *key);
 CK_OBJECT_HANDLE PK11_GetSymKeyHandle(PK11SymKey *symKey);
+
 
 /*
  * PK11_SetSymKeyUserData
@@ -327,22 +333,22 @@ CK_OBJECT_HANDLE PK11_GetSymKeyHandle(PK11SymKey *symKey);
  *    symKey - key where data will be set.
  *    data - data to be set.
  *    freefunc - function used to free the data.
- * Setting user data on symKeys with existing user data already set will cause
+ * Setting user data on symKeys with existing user data already set will cause 
  * the existing user data to be freed before the new user data is set.
- * Freeing user data is done by calling the user specified freefunc.
- * If freefunc is NULL, the user data is assumed to be global or static an
- * not freed. Passing NULL for user data to PK11_SetSymKeyUserData has the
- * effect of freeing any existing user data, and clearing the user data
- * pointer. If user data exists when the symKey is finally freed, that
+ * Freeing user data is done by calling the user specified freefunc. 
+ * If freefunc is NULL, the user data is assumed to be global or static an 
+ * not freed. Passing NULL for user data to PK11_SetSymKeyUserData has the 
+ * effect of freeing any existing user data, and clearing the user data 
+ * pointer. If user data exists when the symKey is finally freed, that 
  * data will be freed with freefunc.
  *
  * Applications should only use this function on keys which the application
  * has created directly, as there is only one user data value per key.
  */
-void PK11_SetSymKeyUserData(PK11SymKey *symKey, void *data,
-                            PK11FreeDataFunc freefunc);
-/* PK11_GetSymKeyUserData
- *   retrieves generic user data which was set on a key by
+void PK11_SetSymKeyUserData(PK11SymKey *symKey, void *data, 
+                                 PK11FreeDataFunc freefunc);
+/* PK11_GetSymKeyUserData 
+ *   retrieves generic user data which was set on a key by 
  * PK11_SetSymKeyUserData.
  *    symKey - key with data to be fetched
  *
@@ -354,15 +360,15 @@ void PK11_SetSymKeyUserData(PK11SymKey *symKey, void *data,
 void *PK11_GetSymKeyUserData(PK11SymKey *symKey);
 
 SECStatus PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
-                             PK11SymKey *symKey, SECItem *wrappedKey);
+				PK11SymKey *symKey, SECItem *wrappedKey);
 SECStatus PK11_WrapSymKey(CK_MECHANISM_TYPE type, SECItem *params,
-                          PK11SymKey *wrappingKey, PK11SymKey *symKey, SECItem *wrappedKey);
+	 PK11SymKey *wrappingKey, PK11SymKey *symKey, SECItem *wrappedKey);
 /* move a key to 'slot' optionally set the key attributes according to either
  * operation or the  flags and making the key permanent at the same time.
- * If the key is moved to the same slot, operation and flags values are
+ * If the key is moved to the same slot, operation and flags values are 
  * currently ignored */
-PK11SymKey *PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation,
-                            CK_FLAGS flags, PRBool perm, PK11SymKey *symKey);
+PK11SymKey *PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation, 
+			CK_FLAGS flags, PRBool  perm, PK11SymKey *symKey);
 /*
  * derive a new key from the base key.
  *  PK11_Derive returns a key which can do exactly one operation, and is
@@ -373,30 +379,31 @@ PK11SymKey *PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation,
  *  (optionally) make the key permanent (token key).
  */
 PK11SymKey *PK11_Derive(PK11SymKey *baseKey, CK_MECHANISM_TYPE mechanism,
-                        SECItem *param, CK_MECHANISM_TYPE target,
-                        CK_ATTRIBUTE_TYPE operation, int keySize);
-PK11SymKey *PK11_DeriveWithFlags(PK11SymKey *baseKey,
-                                 CK_MECHANISM_TYPE derive, SECItem *param, CK_MECHANISM_TYPE target,
-                                 CK_ATTRIBUTE_TYPE operation, int keySize, CK_FLAGS flags);
-PK11SymKey *PK11_DeriveWithFlagsPerm(PK11SymKey *baseKey,
-                                     CK_MECHANISM_TYPE derive,
-                                     SECItem *param, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation,
-                                     int keySize, CK_FLAGS flags, PRBool isPerm);
+   			SECItem *param, CK_MECHANISM_TYPE target, 
+		        CK_ATTRIBUTE_TYPE operation, int keySize);
+PK11SymKey *PK11_DeriveWithFlags( PK11SymKey *baseKey, 
+	CK_MECHANISM_TYPE derive, SECItem *param, CK_MECHANISM_TYPE target, 
+	CK_ATTRIBUTE_TYPE operation, int keySize, CK_FLAGS flags);
+PK11SymKey * PK11_DeriveWithFlagsPerm( PK11SymKey *baseKey, 
+	CK_MECHANISM_TYPE derive, 
+	SECItem *param, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, 
+	int keySize, CK_FLAGS flags, PRBool isPerm);
 PK11SymKey *
-PK11_DeriveWithTemplate(PK11SymKey *baseKey, CK_MECHANISM_TYPE derive,
-                        SECItem *param, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation,
-                        int keySize, CK_ATTRIBUTE *userAttr, unsigned int numAttrs,
-                        PRBool isPerm);
+PK11_DeriveWithTemplate( PK11SymKey *baseKey, CK_MECHANISM_TYPE derive, 
+	SECItem *param, CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, 
+	int keySize, CK_ATTRIBUTE *userAttr, unsigned int numAttrs,
+							 PRBool isPerm);
 
-PK11SymKey *PK11_PubDerive(SECKEYPrivateKey *privKey,
-                           SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
-                           CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
-                           CK_ATTRIBUTE_TYPE operation, int keySize, void *wincx);
-PK11SymKey *PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey,
-                                  SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
-                                  CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
-                                  CK_ATTRIBUTE_TYPE operation, int keySize,
-                                  CK_ULONG kdf, SECItem *sharedData, void *wincx);
+
+PK11SymKey *PK11_PubDerive( SECKEYPrivateKey *privKey, 
+ SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
+ CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
+		 CK_ATTRIBUTE_TYPE operation, int keySize,void *wincx) ;
+PK11SymKey *PK11_PubDeriveWithKDF( SECKEYPrivateKey *privKey, 
+ SECKEYPublicKey *pubKey, PRBool isSender, SECItem *randomA, SECItem *randomB,
+ CK_MECHANISM_TYPE derive, CK_MECHANISM_TYPE target,
+		 CK_ATTRIBUTE_TYPE operation, int keySize,
+		 CK_ULONG kdf, SECItem *sharedData, void *wincx);
 
 /*
  * unwrap a new key with a symetric key.
@@ -407,50 +414,50 @@ PK11SymKey *PK11_PubDeriveWithKDF(SECKEYPrivateKey *privKey,
  *  PK11_UnwrapWithFlagsPerm is the same as PK11_UnwrapWithFlags except you can
  *  (optionally) make the key permanent (token key).
  */
-PK11SymKey *PK11_UnwrapSymKey(PK11SymKey *key,
-                              CK_MECHANISM_TYPE wraptype, SECItem *param, SECItem *wrapppedKey,
-                              CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
-PK11SymKey *PK11_UnwrapSymKeyWithFlags(PK11SymKey *wrappingKey,
-                                       CK_MECHANISM_TYPE wrapType, SECItem *param, SECItem *wrappedKey,
-                                       CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize,
-                                       CK_FLAGS flags);
-PK11SymKey *PK11_UnwrapSymKeyWithFlagsPerm(PK11SymKey *wrappingKey,
-                                           CK_MECHANISM_TYPE wrapType,
-                                           SECItem *param, SECItem *wrappedKey,
-                                           CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation,
-                                           int keySize, CK_FLAGS flags, PRBool isPerm);
+PK11SymKey *PK11_UnwrapSymKey(PK11SymKey *key, 
+	CK_MECHANISM_TYPE wraptype, SECItem *param, SECItem *wrapppedKey,  
+	CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
+PK11SymKey *PK11_UnwrapSymKeyWithFlags(PK11SymKey *wrappingKey, 
+	CK_MECHANISM_TYPE wrapType, SECItem *param, SECItem *wrappedKey, 
+	CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize, 
+	CK_FLAGS flags);
+PK11SymKey * PK11_UnwrapSymKeyWithFlagsPerm(PK11SymKey *wrappingKey, 
+	CK_MECHANISM_TYPE wrapType,
+        SECItem *param, SECItem *wrappedKey, 
+	CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, 
+	 int keySize, CK_FLAGS flags, PRBool isPerm);
 
 /*
  * unwrap a new key with a private key.
  *  PK11_PubUnwrap returns a key which can do exactly one operation, and is
  * ephemeral (session key).
- *  PK11_PubUnwrapWithFlagsPerm is the same as PK11_PubUnwrap except you can
- * use * CKF_ flags to enable more than one operation, and optionally make
+ *  PK11_PubUnwrapWithFlagsPerm is the same as PK11_PubUnwrap except you can 
+ * use * CKF_ flags to enable more than one operation, and optionally make 
  * the key permanent (token key).
  */
 PK11SymKey *PK11_PubUnwrapSymKey(SECKEYPrivateKey *key, SECItem *wrapppedKey,
-                                 CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
-PK11SymKey *PK11_PubUnwrapSymKeyWithFlagsPerm(SECKEYPrivateKey *wrappingKey,
-                                              SECItem *wrappedKey, CK_MECHANISM_TYPE target,
-                                              CK_ATTRIBUTE_TYPE operation, int keySize,
-                                              CK_FLAGS flags, PRBool isPerm);
-PK11SymKey *PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
-                              SECItem *keyID, void *wincx);
-SECStatus PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey, PRBool force);
+	 CK_MECHANISM_TYPE target, CK_ATTRIBUTE_TYPE operation, int keySize);
+PK11SymKey * PK11_PubUnwrapSymKeyWithFlagsPerm(SECKEYPrivateKey *wrappingKey, 
+	  SECItem *wrappedKey, CK_MECHANISM_TYPE target, 
+	  CK_ATTRIBUTE_TYPE operation, int keySize,
+	  CK_FLAGS flags, PRBool isPerm);
+PK11SymKey *PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, 
+						SECItem *keyID, void *wincx);
+SECStatus PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey,PRBool force);
 SECStatus PK11_DeleteTokenPublicKey(SECKEYPublicKey *pubKey);
 SECStatus PK11_DeleteTokenSymKey(PK11SymKey *symKey);
-SECStatus PK11_DeleteTokenCertAndKey(CERTCertificate *cert, void *wincx);
-SECKEYPrivateKey *PK11_LoadPrivKey(PK11SlotInfo *slot,
-                                   SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey,
-                                   PRBool token, PRBool sensitive);
-char *PK11_GetSymKeyNickname(PK11SymKey *symKey);
-char *PK11_GetPrivateKeyNickname(SECKEYPrivateKey *privKey);
-char *PK11_GetPublicKeyNickname(SECKEYPublicKey *pubKey);
+SECStatus PK11_DeleteTokenCertAndKey(CERTCertificate *cert,void *wincx);
+SECKEYPrivateKey * PK11_LoadPrivKey(PK11SlotInfo *slot,
+		SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
+					PRBool token, PRBool sensitive);
+char * PK11_GetSymKeyNickname(PK11SymKey *symKey);
+char * PK11_GetPrivateKeyNickname(SECKEYPrivateKey *privKey);
+char * PK11_GetPublicKeyNickname(SECKEYPublicKey *pubKey);
 SECStatus PK11_SetSymKeyNickname(PK11SymKey *symKey, const char *nickname);
-SECStatus PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey,
-                                     const char *nickname);
-SECStatus PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey,
-                                    const char *nickname);
+SECStatus PK11_SetPrivateKeyNickname(SECKEYPrivateKey *privKey, 
+							const char *nickname);
+SECStatus PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey, 
+							const char *nickname);
 
 /*
  * Using __PK11_SetCertificateNickname is *DANGEROUS*.
@@ -465,17 +472,17 @@ SECStatus PK11_SetPublicKeyNickname(SECKEYPublicKey *pubKey,
  * If you ignore this warning, your process is TAINTED and will most likely misbehave.
  */
 SECStatus __PK11_SetCertificateNickname(CERTCertificate *cert,
-                                        const char *nickname);
+                                      const char *nickname);
 
 /* size to hold key in bytes */
 unsigned int PK11_GetKeyLength(PK11SymKey *key);
 /* size of actual secret parts of key in bits */
 /* algid is because RC4 strength is determined by the effective bits as well
  * as the key bits */
-unsigned int PK11_GetKeyStrength(PK11SymKey *key, SECAlgorithmID *algid);
+unsigned int PK11_GetKeyStrength(PK11SymKey *key,SECAlgorithmID *algid);
 SECStatus PK11_ExtractKeyValue(PK11SymKey *symKey);
-SECItem *PK11_GetKeyData(PK11SymKey *symKey);
-PK11SlotInfo *PK11_GetSlotFromKey(PK11SymKey *symKey);
+SECItem * PK11_GetKeyData(PK11SymKey *symKey);
+PK11SlotInfo * PK11_GetSlotFromKey(PK11SymKey *symKey);
 void *PK11_GetWindow(PK11SymKey *symKey);
 
 /*
@@ -486,17 +493,17 @@ void *PK11_GetWindow(PK11SymKey *symKey);
  *
  * The underlying key usage is set using opFlags. opFlagsMask specifies
  * which operations are specified by opFlags. For instance to turn encrypt
- * on and signing off, opFlags would be CKF_ENCRYPT|CKF_DECRYPT and
+ * on and signing off, opFlags would be CKF_ENCRYPT|CKF_DECRYPT and 
  * opFlagsMask would be CKF_ENCRYPT|CKF_DECRYPT|CKF_SIGN|CKF_VERIFY. You
- * need to specify both the public and private key flags,
- * PK11_GenerateKeyPairWithOpFlags will sort out the correct flag to the
- * correct key type. Flags not specified in opFlagMask will be defaulted
+ * need to specify both the public and private key flags, 
+ * PK11_GenerateKeyPairWithOpFlags will sort out the correct flag to the 
+ * correct key type. Flags not specified in opFlagMask will be defaulted 
  * according to mechanism type and token capabilities.
  */
 SECKEYPrivateKey *PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot,
-                                                  CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
-                                                  PK11AttrFlags attrFlags, CK_FLAGS opFlags, CK_FLAGS opFlagsMask,
-                                                  void *wincx);
+   CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
+   PK11AttrFlags attrFlags, CK_FLAGS opFlags, CK_FLAGS opFlagsMask,
+    void *wincx);
 /*
  * The attrFlags is the logical OR of the PK11_ATTR_XXX bitflags.
  * These flags apply to the private key.  The PK11_ATTR_TOKEN,
@@ -504,28 +511,28 @@ SECKEYPrivateKey *PK11_GenerateKeyPairWithOpFlags(PK11SlotInfo *slot,
  * flags also apply to the public key.
  */
 SECKEYPrivateKey *PK11_GenerateKeyPairWithFlags(PK11SlotInfo *slot,
-                                                CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
-                                                PK11AttrFlags attrFlags, void *wincx);
+   CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
+		 	    PK11AttrFlags attrFlags, void *wincx);
 SECKEYPrivateKey *PK11_GenerateKeyPair(PK11SlotInfo *slot,
-                                       CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
-                                       PRBool isPerm, PRBool isSensitive, void *wincx);
-SECKEYPrivateKey *PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot,
-                                              CERTCertificate *cert, void *wincx);
-SECKEYPrivateKey *PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx);
-SECKEYPrivateKey *PK11_FindKeyByKeyID(PK11SlotInfo *slot, SECItem *keyID,
-                                      void *wincx);
-int PK11_GetPrivateModulusLen(SECKEYPrivateKey *key);
+   CK_MECHANISM_TYPE type, void *param, SECKEYPublicKey **pubk,
+		 	    PRBool isPerm, PRBool isSensitive, void *wincx);
+SECKEYPrivateKey * PK11_FindPrivateKeyFromCert(PK11SlotInfo *slot,
+				 	CERTCertificate *cert, void *wincx);
+SECKEYPrivateKey * PK11_FindKeyByAnyCert(CERTCertificate *cert, void *wincx);
+SECKEYPrivateKey * PK11_FindKeyByKeyID(PK11SlotInfo *slot, SECItem *keyID,
+				       void *wincx);
+int PK11_GetPrivateModulusLen(SECKEYPrivateKey *key); 
 
 SECStatus PK11_Decrypt(PK11SymKey *symkey,
-                       CK_MECHANISM_TYPE mechanism, SECItem *param,
-                       unsigned char *out, unsigned int *outLen,
-                       unsigned int maxLen,
-                       const unsigned char *enc, unsigned int encLen);
+		       CK_MECHANISM_TYPE mechanism, SECItem *param,
+		       unsigned char *out, unsigned int *outLen,
+		       unsigned int maxLen,
+		       const unsigned char *enc, unsigned int encLen);
 SECStatus PK11_Encrypt(PK11SymKey *symKey,
-                       CK_MECHANISM_TYPE mechanism, SECItem *param,
-                       unsigned char *out, unsigned int *outLen,
-                       unsigned int maxLen,
-                       const unsigned char *data, unsigned int dataLen);
+		       CK_MECHANISM_TYPE mechanism, SECItem *param,
+		       unsigned char *out, unsigned int *outLen,
+		       unsigned int maxLen,
+		       const unsigned char *data, unsigned int dataLen);
 
 /* note: despite the name, this function takes a private key. */
 SECStatus PK11_PubDecryptRaw(SECKEYPrivateKey *key,
@@ -561,134 +568,134 @@ SECStatus PK11_PubEncrypt(SECKEYPublicKey *key,
                           const unsigned char *data, unsigned int dataLen,
                           void *wincx);
 
-SECStatus PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot,
-                                    SECKEYPrivateKeyInfo *pki, SECItem *nickname,
-                                    SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
-                                    unsigned int usage, void *wincx);
-SECStatus PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
-                                                SECKEYPrivateKeyInfo *pki, SECItem *nickname,
-                                                SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
-                                                unsigned int usage, SECKEYPrivateKey **privk, void *wincx);
-SECStatus PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot,
-                                       SECItem *derPKI, SECItem *nickname,
-                                       SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
-                                       unsigned int usage, void *wincx);
-SECStatus PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
-                                                   SECItem *derPKI, SECItem *nickname,
-                                                   SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
-                                                   unsigned int usage, SECKEYPrivateKey **privk, void *wincx);
-SECStatus PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot,
-                                             SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem,
-                                             SECItem *nickname, SECItem *publicValue, PRBool isPerm,
-                                             PRBool isPrivate, KeyType type,
-                                             unsigned int usage, void *wincx);
-SECStatus PK11_ImportEncryptedPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot,
-                                                         SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem,
-                                                         SECItem *nickname, SECItem *publicValue, PRBool isPerm,
-                                                         PRBool isPrivate, KeyType type,
-                                                         unsigned int usage, SECKEYPrivateKey **privk, void *wincx);
+SECStatus PK11_ImportPrivateKeyInfo(PK11SlotInfo *slot, 
+		SECKEYPrivateKeyInfo *pki, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, void *wincx);
+SECStatus PK11_ImportPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, 
+		SECKEYPrivateKeyInfo *pki, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, SECKEYPrivateKey** privk, void *wincx);
+SECStatus PK11_ImportDERPrivateKeyInfo(PK11SlotInfo *slot, 
+		SECItem *derPKI, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, void *wincx);
+SECStatus PK11_ImportDERPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, 
+		SECItem *derPKI, SECItem *nickname,
+		SECItem *publicValue, PRBool isPerm, PRBool isPrivate,
+		unsigned int usage, SECKEYPrivateKey** privk, void *wincx);
+SECStatus PK11_ImportEncryptedPrivateKeyInfo(PK11SlotInfo *slot, 
+		SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem, 
+		SECItem *nickname, SECItem *publicValue, PRBool isPerm,
+		PRBool isPrivate, KeyType type, 
+		unsigned int usage, void *wincx);
+SECStatus PK11_ImportEncryptedPrivateKeyInfoAndReturnKey(PK11SlotInfo *slot, 
+		SECKEYEncryptedPrivateKeyInfo *epki, SECItem *pwitem, 
+		SECItem *nickname, SECItem *publicValue, PRBool isPerm,
+		PRBool isPrivate, KeyType type, 
+		unsigned int usage, SECKEYPrivateKey** privk, void *wincx);
 SECItem *PK11_ExportDERPrivateKeyInfo(SECKEYPrivateKey *pk, void *wincx);
 SECKEYPrivateKeyInfo *PK11_ExportPrivKeyInfo(
-    SECKEYPrivateKey *pk, void *wincx);
+		SECKEYPrivateKey *pk, void *wincx);
 SECKEYPrivateKeyInfo *PK11_ExportPrivateKeyInfo(
-    CERTCertificate *cert, void *wincx);
+		CERTCertificate *cert, void *wincx);
 SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivKeyInfo(
-    PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
-    SECKEYPrivateKey *pk, int iteration, void *wincx);
+		PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
+		SECKEYPrivateKey *pk, int iteration, void *wincx);
 SECKEYEncryptedPrivateKeyInfo *PK11_ExportEncryptedPrivateKeyInfo(
-    PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
-    CERTCertificate *cert, int iteration, void *wincx);
-SECKEYPrivateKey *PK11_FindKeyByDERCert(PK11SlotInfo *slot,
-                                        CERTCertificate *cert, void *wincx);
+		PK11SlotInfo *slot, SECOidTag algTag, SECItem *pwitem,
+		CERTCertificate *cert, int iteration, void *wincx);
+SECKEYPrivateKey *PK11_FindKeyByDERCert(PK11SlotInfo *slot, 
+					CERTCertificate *cert, void *wincx);
 SECKEYPublicKey *PK11_MakeKEAPubKey(unsigned char *data, int length);
 SECStatus PK11_DigestKey(PK11Context *context, PK11SymKey *key);
 PRBool PK11_VerifyKeyOK(PK11SymKey *key);
-SECKEYPrivateKey *PK11_UnwrapPrivKey(PK11SlotInfo *slot,
-                                     PK11SymKey *wrappingKey, CK_MECHANISM_TYPE wrapType,
-                                     SECItem *param, SECItem *wrappedKey, SECItem *label,
-                                     SECItem *publicValue, PRBool token, PRBool sensitive,
-                                     CK_KEY_TYPE keyType, CK_ATTRIBUTE_TYPE *usage, int usageCount,
-                                     void *wincx);
+SECKEYPrivateKey *PK11_UnwrapPrivKey(PK11SlotInfo *slot, 
+		PK11SymKey *wrappingKey, CK_MECHANISM_TYPE wrapType,
+		SECItem *param, SECItem *wrappedKey, SECItem *label, 
+		SECItem *publicValue, PRBool token, PRBool sensitive,
+		CK_KEY_TYPE keyType, CK_ATTRIBUTE_TYPE *usage, int usageCount,
+		void *wincx);
 SECStatus PK11_WrapPrivKey(PK11SlotInfo *slot, PK11SymKey *wrappingKey,
-                           SECKEYPrivateKey *privKey, CK_MECHANISM_TYPE wrapType,
-                           SECItem *param, SECItem *wrappedKey, void *wincx);
+			   SECKEYPrivateKey *privKey, CK_MECHANISM_TYPE wrapType,
+			   SECItem *param, SECItem *wrappedKey, void *wincx);
 /*
  * The caller of PK11_DEREncodePublicKey should free the returned SECItem with
  * a SECITEM_FreeItem(..., PR_TRUE) call.
  */
-SECItem *PK11_DEREncodePublicKey(const SECKEYPublicKey *pubk);
-PK11SymKey *PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
-                                      CK_MECHANISM_TYPE mech);
-SECKEYPrivateKeyList *PK11_ListPrivKeysInSlot(PK11SlotInfo *slot,
-                                              char *nickname, void *wincx);
-SECKEYPublicKeyList *PK11_ListPublicKeysInSlot(PK11SlotInfo *slot,
-                                               char *nickname);
+SECItem* PK11_DEREncodePublicKey(const SECKEYPublicKey *pubk);
+PK11SymKey* PK11_CopySymKeyForSigning(PK11SymKey *originalKey,
+	CK_MECHANISM_TYPE mech);
+SECKEYPrivateKeyList* PK11_ListPrivKeysInSlot(PK11SlotInfo *slot,
+						 char *nickname, void *wincx);
+SECKEYPublicKeyList* PK11_ListPublicKeysInSlot(PK11SlotInfo *slot,
+							char *nickname);
 SECKEYPQGParams *PK11_GetPQGParamsFromPrivateKey(SECKEYPrivateKey *privKey);
 /* deprecated */
-SECKEYPrivateKeyList *PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot);
+SECKEYPrivateKeyList* PK11_ListPrivateKeysInSlot(PK11SlotInfo *slot);
 
 PK11SymKey *PK11_ConvertSessionSymKeyToTokenSymKey(PK11SymKey *symk,
-                                                   void *wincx);
+	void *wincx);
 SECKEYPrivateKey *PK11_ConvertSessionPrivKeyToTokenPrivKey(
-    SECKEYPrivateKey *privk, void *wincx);
-SECKEYPrivateKey *PK11_CopyTokenPrivKeyToSessionPrivKey(PK11SlotInfo *destSlot,
-                                                        SECKEYPrivateKey *privKey);
+	SECKEYPrivateKey *privk, void* wincx);
+SECKEYPrivateKey * PK11_CopyTokenPrivKeyToSessionPrivKey(PK11SlotInfo *destSlot,
+				      SECKEYPrivateKey *privKey);
 
 /**********************************************************************
  *                   Certs
  **********************************************************************/
 SECItem *PK11_MakeIDFromPubKey(SECItem *pubKeyData);
 SECStatus PK11_TraverseSlotCerts(
-    SECStatus (*callback)(CERTCertificate *, SECItem *, void *),
-    void *arg, void *wincx);
-CERTCertificate *PK11_FindCertFromNickname(const char *nickname, void *wincx);
-CERTCertList *PK11_FindCertsFromEmailAddress(const char *email, void *wincx);
-CERTCertList *PK11_FindCertsFromNickname(const char *nickname, void *wincx);
+     SECStatus(* callback)(CERTCertificate*,SECItem *,void *),
+                                                void *arg, void *wincx);
+CERTCertificate * PK11_FindCertFromNickname(const char *nickname, void *wincx);
+CERTCertList * PK11_FindCertsFromEmailAddress(const char *email, void *wincx);
+CERTCertList * PK11_FindCertsFromNickname(const char *nickname, void *wincx);
 CERTCertificate *PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey);
 SECStatus PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
-                          CK_OBJECT_HANDLE key, const char *nickname,
-                          PRBool includeTrust);
+                CK_OBJECT_HANDLE key, const char *nickname, 
+                PRBool includeTrust);
 SECStatus PK11_ImportDERCert(PK11SlotInfo *slot, SECItem *derCert,
-                             CK_OBJECT_HANDLE key, char *nickname, PRBool includeTrust);
-PK11SlotInfo *PK11_ImportCertForKey(CERTCertificate *cert,
+                CK_OBJECT_HANDLE key, char *nickname, PRBool includeTrust);
+PK11SlotInfo *PK11_ImportCertForKey(CERTCertificate *cert, 
                                     const char *nickname, void *wincx);
 PK11SlotInfo *PK11_ImportDERCertForKey(SECItem *derCert, char *nickname,
-                                       void *wincx);
+								void *wincx);
 PK11SlotInfo *PK11_KeyForCertExists(CERTCertificate *cert,
-                                    CK_OBJECT_HANDLE *keyPtr, void *wincx);
+					CK_OBJECT_HANDLE *keyPtr, void *wincx);
 PK11SlotInfo *PK11_KeyForDERCertExists(SECItem *derCert,
-                                       CK_OBJECT_HANDLE *keyPtr, void *wincx);
-CERTCertificate *PK11_FindCertByIssuerAndSN(PK11SlotInfo **slot,
-                                            CERTIssuerAndSN *sn, void *wincx);
-CERTCertificate *PK11_FindCertAndKeyByRecipientList(PK11SlotInfo **slot,
-                                                    SEC_PKCS7RecipientInfo **array, SEC_PKCS7RecipientInfo **rip,
-                                                    SECKEYPrivateKey **privKey, void *wincx);
+					CK_OBJECT_HANDLE *keyPtr, void *wincx);
+CERTCertificate * PK11_FindCertByIssuerAndSN(PK11SlotInfo **slot,
+					CERTIssuerAndSN *sn, void *wincx);
+CERTCertificate * PK11_FindCertAndKeyByRecipientList(PK11SlotInfo **slot,
+	SEC_PKCS7RecipientInfo **array, SEC_PKCS7RecipientInfo **rip,
+				SECKEYPrivateKey**privKey, void *wincx);
 int PK11_FindCertAndKeyByRecipientListNew(NSSCMSRecipient **recipientlist,
-                                          void *wincx);
+				void *wincx);
 SECStatus PK11_TraverseCertsForSubjectInSlot(CERTCertificate *cert,
-                                             PK11SlotInfo *slot, SECStatus (*callback)(CERTCertificate *, void *),
-                                             void *arg);
-CERTCertificate *PK11_FindCertFromDERCert(PK11SlotInfo *slot,
-                                          CERTCertificate *cert, void *wincx);
+	PK11SlotInfo *slot, SECStatus(*callback)(CERTCertificate *, void *),
+	void *arg);
+CERTCertificate *PK11_FindCertFromDERCert(PK11SlotInfo *slot, 
+					  CERTCertificate *cert, void *wincx);
 CERTCertificate *PK11_FindCertFromDERCertItem(PK11SlotInfo *slot,
-                                              const SECItem *derCert, void *wincx);
+                                          const SECItem *derCert, void *wincx);
 SECStatus PK11_ImportCertForKeyToSlot(PK11SlotInfo *slot, CERTCertificate *cert,
-                                      char *nickname, PRBool addUsage,
-                                      void *wincx);
-CERTCertificate *PK11_FindBestKEAMatch(CERTCertificate *serverCert, void *wincx);
+					char *nickname, PRBool addUsage,
+					void *wincx);
+CERTCertificate *PK11_FindBestKEAMatch(CERTCertificate *serverCert,void *wincx);
 PRBool PK11_FortezzaHasKEA(CERTCertificate *cert);
 CK_OBJECT_HANDLE PK11_FindCertInSlot(PK11SlotInfo *slot, CERTCertificate *cert,
-                                     void *wincx);
+				     void *wincx);
 SECStatus PK11_TraverseCertsForNicknameInSlot(SECItem *nickname,
-                                              PK11SlotInfo *slot, SECStatus (*callback)(CERTCertificate *, void *),
-                                              void *arg);
-CERTCertList *PK11_ListCerts(PK11CertListType type, void *pwarg);
-CERTCertList *PK11_ListCertsInSlot(PK11SlotInfo *slot);
-CERTSignedCrl *PK11_ImportCRL(PK11SlotInfo *slot, SECItem *derCRL, char *url,
-                              int type, void *wincx, PRInt32 importOptions, PLArenaPool *arena, PRInt32 decodeOptions);
+	PK11SlotInfo *slot, SECStatus(*callback)(CERTCertificate *, void *),
+	void *arg);
+CERTCertList * PK11_ListCerts(PK11CertListType type, void *pwarg);
+CERTCertList * PK11_ListCertsInSlot(PK11SlotInfo *slot);
+CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
+    int type, void *wincx, PRInt32 importOptions, PLArenaPool* arena, PRInt32 decodeOptions);
 
 /**********************************************************************
- *                   Sign/Verify
+ *                   Sign/Verify 
  **********************************************************************/
 
 /*
@@ -699,30 +706,32 @@ CERTSignedCrl *PK11_ImportCRL(PK11SlotInfo *slot, SECItem *derCRL, char *url,
  * -1 on failure?)
  */
 int PK11_SignatureLen(SECKEYPrivateKey *key);
-PK11SlotInfo *PK11_GetSlotFromPrivateKey(SECKEYPrivateKey *key);
+PK11SlotInfo * PK11_GetSlotFromPrivateKey(SECKEYPrivateKey *key);
 SECStatus PK11_Sign(SECKEYPrivateKey *key, SECItem *sig,
-                    const SECItem *hash);
+		    const SECItem *hash);
 SECStatus PK11_SignWithMechanism(SECKEYPrivateKey *key,
                                  CK_MECHANISM_TYPE mechanism,
                                  const SECItem *param, SECItem *sig,
                                  const SECItem *hash);
 SECStatus PK11_SignWithSymKey(PK11SymKey *symKey, CK_MECHANISM_TYPE mechanism,
-                              SECItem *param, SECItem *sig, const SECItem *data);
+		    SECItem *param, SECItem *sig, const SECItem *data);
 SECStatus PK11_VerifyRecover(SECKEYPublicKey *key, const SECItem *sig,
-                             SECItem *dsig, void *wincx);
+			     SECItem *dsig, void * wincx);
 SECStatus PK11_Verify(SECKEYPublicKey *key, const SECItem *sig,
-                      const SECItem *hash, void *wincx);
+		      const SECItem *hash, void *wincx);
 SECStatus PK11_VerifyWithMechanism(SECKEYPublicKey *key,
                                    CK_MECHANISM_TYPE mechanism,
                                    const SECItem *param, const SECItem *sig,
                                    const SECItem *hash, void *wincx);
+
+
 
 /**********************************************************************
  *                   Crypto Contexts
  **********************************************************************/
 void PK11_DestroyContext(PK11Context *context, PRBool freeit);
 PK11Context *PK11_CreateContextBySymKey(CK_MECHANISM_TYPE type,
-                                        CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey, SECItem *param);
+	CK_ATTRIBUTE_TYPE operation, PK11SymKey *symKey, SECItem *param);
 PK11Context *PK11_CreateDigestContext(SECOidTag hashAlg);
 PK11Context *PK11_CloneContext(PK11Context *old);
 SECStatus PK11_DigestBegin(PK11Context *cx);
@@ -731,17 +740,17 @@ SECStatus PK11_DigestBegin(PK11Context *cx);
  * the hash algorithm 'hashAlg'.
  */
 SECStatus PK11_HashBuf(SECOidTag hashAlg, unsigned char *out,
-                       const unsigned char *in, PRInt32 len);
-SECStatus PK11_DigestOp(PK11Context *context, const unsigned char *in,
+		       const unsigned char *in, PRInt32 len);
+SECStatus PK11_DigestOp(PK11Context *context, const unsigned char *in, 
                         unsigned len);
-SECStatus PK11_CipherOp(PK11Context *context, unsigned char *out, int *outlen,
-                        int maxout, const unsigned char *in, int inlen);
+SECStatus PK11_CipherOp(PK11Context *context, unsigned char * out, int *outlen, 
+			int maxout, const unsigned char *in, int inlen);
 SECStatus PK11_Finalize(PK11Context *context);
-SECStatus PK11_DigestFinal(PK11Context *context, unsigned char *data,
-                           unsigned int *outLen, unsigned int length);
+SECStatus PK11_DigestFinal(PK11Context *context, unsigned char *data, 
+				unsigned int *outLen, unsigned int length);
 #define PK11_CipherFinal PK11_DigestFinal
-SECStatus PK11_SaveContext(PK11Context *cx, unsigned char *save,
-                           int *len, int saveLength);
+SECStatus PK11_SaveContext(PK11Context *cx,unsigned char *save,
+						int *len, int saveLength);
 
 /* Save the context's state, with possible allocation.
  * The caller may supply an already allocated buffer in preAllocBuf,
@@ -757,19 +766,20 @@ PK11_SaveContextAlloc(PK11Context *cx,
                       unsigned char *preAllocBuf, unsigned int pabLen,
                       unsigned int *stateLen);
 
-SECStatus PK11_RestoreContext(PK11Context *cx, unsigned char *save, int len);
-SECStatus PK11_GenerateFortezzaIV(PK11SymKey *symKey, unsigned char *iv, int len);
-void PK11_SetFortezzaHack(PK11SymKey *symKey);
+SECStatus PK11_RestoreContext(PK11Context *cx,unsigned char *save,int len);
+SECStatus PK11_GenerateFortezzaIV(PK11SymKey *symKey,unsigned char *iv,int len);
+void PK11_SetFortezzaHack(PK11SymKey *symKey) ;
+
 
 /**********************************************************************
- *                   PBE functions
+ *                   PBE functions 
  **********************************************************************/
 
 /* This function creates PBE parameters from the given inputs.  The result
  * can be used to create a password integrity key for PKCS#12, by sending
  * the return value to PK11_KeyGen along with the appropriate mechanism.
  */
-SECItem *
+SECItem * 
 PK11_CreatePBEParams(SECItem *salt, SECItem *pwd, unsigned int iterations);
 
 /* free params created above (can be called after keygen is done */
@@ -785,13 +795,13 @@ PK11_CreatePBEV2AlgorithmID(SECOidTag pbeAlgTag, SECOidTag cipherAlgTag,
                             SECOidTag prfAlgTag, int keyLength, int iteration,
                             SECItem *salt);
 PK11SymKey *
-PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
-               PRBool faulty3DES, void *wincx);
+PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid,  SECItem *pwitem,
+	       PRBool faulty3DES, void *wincx);
 
 /* warning: cannot work with PKCS 5 v2 use PK11_PBEKeyGen instead */
 PK11SymKey *
 PK11_RawPBEKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *params,
-                  SECItem *pwitem, PRBool faulty3DES, void *wincx);
+		SECItem *pwitem, PRBool faulty3DES, void *wincx);
 SECItem *
 PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem);
 /*
@@ -800,38 +810,38 @@ PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem);
  *  Caller is responsible for freeing the return parameter (param).
  */
 CK_MECHANISM_TYPE
-PK11_GetPBECryptoMechanism(SECAlgorithmID *algid,
-                           SECItem **param, SECItem *pwd);
+PK11_GetPBECryptoMechanism(SECAlgorithmID *algid, 
+			   SECItem **param, SECItem *pwd);
 
 /**********************************************************************
  * Functions to manage secmod flags
  **********************************************************************/
 const PK11DefaultArrayEntry *PK11_GetDefaultArray(int *size);
 SECStatus PK11_UpdateSlotAttribute(PK11SlotInfo *slot,
-                                   const PK11DefaultArrayEntry *entry,
-                                   PRBool add);
+				   const PK11DefaultArrayEntry *entry,
+				   PRBool add);
 
 /**********************************************************************
  * Functions to look at PKCS #11 dependent data
  **********************************************************************/
-PK11GenericObject *PK11_FindGenericObjects(PK11SlotInfo *slot,
-                                           CK_OBJECT_CLASS objClass);
+PK11GenericObject *PK11_FindGenericObjects(PK11SlotInfo *slot, 
+						CK_OBJECT_CLASS objClass);
 PK11GenericObject *PK11_GetNextGenericObject(PK11GenericObject *object);
 PK11GenericObject *PK11_GetPrevGenericObject(PK11GenericObject *object);
 SECStatus PK11_UnlinkGenericObject(PK11GenericObject *object);
 SECStatus PK11_LinkGenericObject(PK11GenericObject *list,
-                                 PK11GenericObject *object);
+				 PK11GenericObject *object);
 SECStatus PK11_DestroyGenericObjects(PK11GenericObject *object);
 SECStatus PK11_DestroyGenericObject(PK11GenericObject *object);
-PK11GenericObject *PK11_CreateGenericObject(PK11SlotInfo *slot,
-                                            const CK_ATTRIBUTE *pTemplate,
-                                            int count, PRBool token);
+PK11GenericObject *PK11_CreateGenericObject(PK11SlotInfo *slot, 
+				   const CK_ATTRIBUTE *pTemplate, 
+				   int count, PRBool token);
 
 /*
  * PK11_ReadRawAttribute and PK11_WriteRawAttribute are generic
  * functions to read and modify the actual PKCS #11 attributes of
  * the underlying pkcs #11 object.
- *
+ * 
  * object is a pointer to an NSS object that represents the underlying
  *  PKCS #11 object. It's type must match the type of PK11ObjectType
  *  as follows:
@@ -850,10 +860,10 @@ PK11GenericObject *PK11_CreateGenericObject(PK11SlotInfo *slot,
  * pointed to by item using a SECITEM_FreeItem(item, PR_FALSE) or
  * PORT_Free(item->data) call.
  */
-SECStatus PK11_ReadRawAttribute(PK11ObjectType type, void *object,
-                                CK_ATTRIBUTE_TYPE attr, SECItem *item);
-SECStatus PK11_WriteRawAttribute(PK11ObjectType type, void *object,
-                                 CK_ATTRIBUTE_TYPE attr, SECItem *item);
+SECStatus PK11_ReadRawAttribute(PK11ObjectType type, void *object, 
+				CK_ATTRIBUTE_TYPE attr, SECItem *item);
+SECStatus PK11_WriteRawAttribute(PK11ObjectType type, void *object, 
+				CK_ATTRIBUTE_TYPE attr, SECItem *item);
 
 /*
  * PK11_GetAllSlotsForCert returns all the slots that a given certificate
@@ -868,7 +878,7 @@ PK11_GetAllSlotsForCert(CERTCertificate *cert, void *arg);
  **********************************************************************/
 SECItem *
 PK11_GetLowLevelKeyIDForCert(PK11SlotInfo *slot,
-                             CERTCertificate *cert, void *pwarg);
+					CERTCertificate *cert, void *pwarg);
 SECItem *
 PK11_GetLowLevelKeyIDForPrivateKey(SECKEYPrivateKey *key);
 

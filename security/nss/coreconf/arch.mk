@@ -6,19 +6,27 @@
 #######################################################################
 # Master "Core Components" macros for getting the OS architecture     #
 # defines these symbols:
+# 64BIT_TAG
 # OS_ARCH	(from uname -r)
 # OS_TEST	(from uname -m)
 # OS_RELEASE	(from uname -v and/or -r)
 # OS_TARGET	User defined, or set to OS_ARCH
 # CPU_ARCH  	(from unmame -m or -p, ONLY on WINNT)
 # OS_CONFIG	OS_TARGET + OS_RELEASE
-# OBJDIR_TAG    (uses ASAN_TAG, GCOV_TAG, 64BIT_TAG)
+# ASAN_TAG
+# OBJDIR_TAG
 # OBJDIR_NAME
 #######################################################################
 
 #
 # Macros for getting the OS architecture
 #
+
+ifeq ($(USE_64), 1)
+	64BIT_TAG=_64
+else
+	64BIT_TAG=
+endif
 
 OS_ARCH := $(subst /,_,$(shell uname -s))
 
@@ -250,8 +258,7 @@ endif
 OS_CONFIG = $(OS_TARGET)$(OS_RELEASE)
 
 #
-# OBJDIR_TAG depends on the predefined variable BUILD_OPT,
-# to distinguish between debug and release builds.
+# Set Address Sanitizer prefix.
 #
 
 ifeq ($(USE_ASAN), 1)
@@ -259,25 +266,19 @@ ifeq ($(USE_ASAN), 1)
 else
     ASAN_TAG =
 endif
-ifeq ($(USE_GCOV), 1)
-    GCOV_TAG = _GCOV
-else
-    GCOV_TAG =
-endif
-ifeq ($(USE_64), 1)
-    64BIT_TAG = _64
-else
-    64BIT_TAG =
-endif
-OBJDIR_TAG_BASE=$(ASAN_TAG)$(GCOV_TAG)$(64BIT_TAG)
+
+#
+# OBJDIR_TAG depends on the predefined variable BUILD_OPT,
+# to distinguish between debug and release builds.
+#
 
 ifdef BUILD_OPT
-    OBJDIR_TAG = $(OBJDIR_TAG_BASE)_OPT
+    OBJDIR_TAG = $(64BIT_TAG)$(ASAN_TAG)_OPT
 else
     ifdef BUILD_IDG
-	OBJDIR_TAG = $(OBJDIR_TAG_BASE)_IDG
+	OBJDIR_TAG = $(64BIT_TAG)$(ASAN_TAG)_IDG
     else
-	OBJDIR_TAG = $(OBJDIR_TAG_BASE)_DBG
+	OBJDIR_TAG = $(64BIT_TAG)$(ASAN_TAG)_DBG
     endif
 endif
 
@@ -291,12 +292,10 @@ endif
 #
 
 ifdef CROSS_COMPILE
-    OBJDIR_NAME_COMPILER =
+OBJDIR_NAME = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
 else
-    OBJDIR_NAME_COMPILER = $(COMPILER_TAG)
+OBJDIR_NAME = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(COMPILER_TAG)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJ
 endif
-OBJDIR_NAME_BASE = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(OBJDIR_NAME_COMPILER)$(LIBC_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG)
-OBJDIR_NAME = $(OBJDIR_NAME_BASE).OBJ
 
 
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
@@ -306,7 +305,11 @@ ifndef BUILD_OPT
 # (RTL) in the debug build
 #
 ifdef USE_DEBUG_RTL
-    OBJDIR_NAME = $(OBJDIR_NAME_BASE).OBJD
+    ifdef CROSS_COMPILE
+    OBJDIR_NAME = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJD
+    else
+    OBJDIR_NAME = $(OS_TARGET)$(OS_RELEASE)$(CPU_TAG)$(COMPILER_TAG)$(IMPL_STRATEGY)$(OBJDIR_TAG).OBJD
+    endif
 endif
 endif
 endif

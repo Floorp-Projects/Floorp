@@ -9,7 +9,11 @@
 #define _SOFTKVER_H_
 
 #ifndef NSS_DISABLE_ECC
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
+#define SOFTOKEN_ECC_STRING " Extended ECC"
+#else
 #define SOFTOKEN_ECC_STRING " Basic ECC"
+#endif
 #else
 #define SOFTOKEN_ECC_STRING ""
 #endif
@@ -21,10 +25,10 @@
  * The format of the version string should be
  *     "<major version>.<minor version>[.<patch level>[.<build number>]][ <ECC>][ <Beta>]"
  */
-#define SOFTOKEN_VERSION "3.28" SOFTOKEN_ECC_STRING
+#define SOFTOKEN_VERSION "3.27.2" SOFTOKEN_ECC_STRING
 #define SOFTOKEN_VMAJOR 3
-#define SOFTOKEN_VMINOR 28
-#define SOFTOKEN_VPATCH 0
+#define SOFTOKEN_VMINOR 27
+#define SOFTOKEN_VPATCH 2
 #define SOFTOKEN_VBUILD 0
 #define SOFTOKEN_BETA PR_FALSE
 

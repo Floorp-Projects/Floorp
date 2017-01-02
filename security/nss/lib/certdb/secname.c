@@ -588,11 +588,8 @@ CERT_CompareName(const CERTName *a, const CERTName *b)
         return SECGreaterThan;
 
     for (;;) {
-        if (!ardns++ || !brdns++) {
-            break;
-        }
-        ardn = *ardns;
-        brdn = *brdns;
+        ardn = *ardns++;
+        brdn = *brdns++;
         if (!ardn) {
             break;
         }
