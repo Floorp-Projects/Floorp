@@ -45,7 +45,7 @@ PR_BEGIN_EXTERN_C
  *
  * The key objects defined here can only be created on tokens, and can only
  * exist on tokens.  Therefore, any instance of a key object must have
- * a corresponding cryptoki instance.  OTOH, certificates created in
+ * a corresponding cryptoki instance.  OTOH, certificates created in 
  * crypto contexts need not be stored as session objects on the token.
  * There are good performance reasons for not doing so.  The certificate
  * and trust objects have been defined with a cryptoContext field to
@@ -65,14 +65,15 @@ typedef enum {
  * This is the base object class, common to all PKI objects defined in
  * nsspkit.h
  */
-struct nssPKIObjectStr {
+struct nssPKIObjectStr 
+{
     /* The arena for all object memory */
     NSSArena *arena;
     /* Atomically incremented/decremented reference counting */
     PRInt32 refCount;
     /* lock protects the array of nssCryptokiInstance's of the object */
     union {
-        PZLock *lock;
+        PZLock* lock;
         PZMonitor *mlock;
     } sync;
     nssPKILockType lockType;
@@ -99,7 +100,8 @@ typedef struct nssSMIMEProfileStr nssSMIMEProfile;
 
 typedef struct nssPKIObjectStr nssPKIObject;
 
-struct NSSTrustStr {
+struct NSSTrustStr 
+{
     nssPKIObject object;
     NSSCertificate *certificate;
     nssTrustLevel serverAuth;
@@ -109,7 +111,8 @@ struct NSSTrustStr {
     PRBool stepUpApproved;
 };
 
-struct nssSMIMEProfileStr {
+struct nssSMIMEProfileStr
+{
     nssPKIObject object;
     NSSCertificate *certificate;
     NSSASCII7 *email;
@@ -118,7 +121,8 @@ struct nssSMIMEProfileStr {
     NSSItem *profileData;
 };
 
-struct NSSCertificateStr {
+struct NSSCertificateStr
+{
     nssPKIObject object;
     NSSCertificateType type;
     NSSItem id;
@@ -150,7 +154,8 @@ struct NSSTrustDomainStr {
     CERTStatusConfig *statusConfig;
 };
 
-struct NSSCryptoContextStr {
+struct NSSCryptoContextStr
+{
     PRInt32 refCount;
     NSSArena *arena;
     NSSTrustDomain *td;
@@ -164,10 +169,10 @@ struct NSSTimeStr {
 };
 
 struct NSSCRLStr {
-    nssPKIObject object;
-    NSSDER encoding;
-    NSSUTF8 *url;
-    PRBool isKRL;
+  nssPKIObject object;
+  NSSDER encoding;
+  NSSUTF8 *url;
+  PRBool isKRL;
 };
 
 typedef struct NSSCRLStr NSSCRL;

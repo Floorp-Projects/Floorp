@@ -9,10 +9,10 @@
 #include "key.h"
 #include "pkcs11.h"
 #include "secpkcs7.h"
-#include "secdig.h" /* for SGNDigestInfo */
+#include "secdig.h"	/* for SGNDigestInfo */
 #include "pkcs12t.h"
 
-#define SEC_PKCS12_VERSION 3
+#define SEC_PKCS12_VERSION	3
 
 /* structure declarations */
 typedef struct sec_PKCS12PFXItemStr sec_PKCS12PFXItem;
@@ -32,8 +32,8 @@ struct sec_PKCS12CertBagStr {
 
     /* certificate information */
     union {
-        SECItem x509Cert;
-        SECItem SDSICert;
+	SECItem x509Cert;
+	SECItem SDSICert;
     } value;
 };
 
@@ -43,7 +43,7 @@ struct sec_PKCS12CRLBagStr {
 
     /* certificate information */
     union {
-        SECItem x509CRL;
+	SECItem x509CRL;
     } value;
 };
 
@@ -67,12 +67,12 @@ struct sec_PKCS12SafeBagStr {
 
     /* Dependent upon the type of bag being used. */
     union {
-        SECKEYPrivateKeyInfo *pkcs8KeyBag;
-        SECKEYEncryptedPrivateKeyInfo *pkcs8ShroudedKeyBag;
-        sec_PKCS12CertBag *certBag;
-        sec_PKCS12CRLBag *crlBag;
-        sec_PKCS12SecretBag *secretBag;
-        sec_PKCS12SafeContents *safeContents;
+	SECKEYPrivateKeyInfo *pkcs8KeyBag;
+	SECKEYEncryptedPrivateKeyInfo *pkcs8ShroudedKeyBag;
+	sec_PKCS12CertBag *certBag;
+	sec_PKCS12CRLBag *crlBag;
+	sec_PKCS12SecretBag *secretBag;
+	sec_PKCS12SafeContents *safeContents;
     } safeBagContent;
 
     sec_PKCS12Attribute **attribs;
@@ -92,11 +92,11 @@ struct sec_PKCS12SafeBagStr {
     PRBool oldBagType;
     SECPKCS12TargetTokenCAs tokenCAs;
 };
-
+    
 struct sec_PKCS12SafeContentsStr {
     sec_PKCS12SafeBag **safeBags;
     SECItem **encodedSafeBags;
-
+    
     /* used locally */
     PLArenaPool *arena;
     unsigned int bagCount;

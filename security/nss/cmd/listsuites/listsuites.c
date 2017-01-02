@@ -50,12 +50,13 @@ main(int argc, char **argv)
         }
         fprintf(stdout,
                 "%s:\n" /* up to 37 spaces  */
-                "  0x%04hx %-5s %-5s %-8s %3hd %-6s %-8s %-4s Domestic %-11s\n",
+                "  0x%04hx %-5s %-5s %-8s %3hd %-6s %-8s %-4s %-8s %-11s\n",
                 info.cipherSuiteName, info.cipherSuite,
                 info.keaTypeName, info.authAlgorithmName, info.symCipherName,
                 info.effectiveKeyBits, info.macAlgorithmName,
                 enabled ? "Enabled" : "Disabled",
                 info.isFIPS ? "FIPS" : "",
+                info.isExportable ? "Export" : "Domestic",
                 info.nonStandard ? "nonStandard" : "");
     }
     return errCount;

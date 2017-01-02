@@ -496,12 +496,3 @@ ER3(SSL_ERROR_RX_MALFORMED_HELLO_RETRY_REQUEST, (SSL_ERROR_BASE + 155),
 
 ER3(SSL_ERROR_BAD_2ND_CLIENT_HELLO, (SSL_ERROR_BASE + 156),
     "SSL received a second Client Hello message without a usable key share.")
-
-ER3(SSL_ERROR_MISSING_SIGNATURE_ALGORITHMS_EXTENSION, (SSL_ERROR_BASE + 157),
-    "SSL expected a signature algorithms extension.")
-
-ER3(SSL_ERROR_MALFORMED_PSK_KEY_EXCHANGE_MODES, (SSL_ERROR_BASE + 158),
-    "SSL received a malformed PSK key exchange modes extension.")
-
-ER3(SSL_ERROR_MISSING_PSK_KEY_EXCHANGE_MODES, (SSL_ERROR_BASE + 159),
-    "SSL expected a missing PSK key exchange modes extension.")

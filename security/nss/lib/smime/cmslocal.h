@@ -23,7 +23,7 @@ extern const SEC_ASN1Template NSSCMSContentInfoTemplate[];
 struct NSSCMSContentInfoPrivateStr {
     NSSCMSCipherContext *ciphcx;
     NSSCMSDigestContext *digcx;
-    PRBool dontStream;
+    PRBool  dontStream;
 };
 
 /************************************************************************/
@@ -37,6 +37,7 @@ SEC_BEGIN_PROTOS
  * SECSuccess, the cinfo->private field is safe to dereference.
  */
 SECStatus NSS_CMSContentInfo_Private_Init(NSSCMSContentInfo *cinfo);
+
 
 /***********************************************************************
  * cmscipher.c - en/decryption routines
@@ -104,12 +105,12 @@ NSS_CMSCipherContext_EncryptLength(NSSCMSCipherContext *cc, unsigned int input_l
  * "output" and storing the output length in "*output_len_p".
  * "cc" is the return value from NSS_CMSCipher_StartDecrypt.
  * When "final" is true, this is the last of the data to be decrypted.
- */
+ */ 
 extern SECStatus
 NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
-                             unsigned int *output_len_p, unsigned int max_output_len,
-                             const unsigned char *input, unsigned int input_len,
-                             PRBool final);
+		  unsigned int *output_len_p, unsigned int max_output_len,
+		  const unsigned char *input, unsigned int input_len,
+		  PRBool final);
 
 /*
  * NSS_CMSCipherContext_Encrypt - do the encryption
@@ -127,12 +128,12 @@ NSS_CMSCipherContext_Decrypt(NSSCMSCipherContext *cc, unsigned char *output,
  * "output" and storing the output length in "*output_len_p".
  * "cc" is the return value from NSS_CMSCipher_StartEncrypt.
  * When "final" is true, this is the last of the data to be encrypted.
- */
+ */ 
 extern SECStatus
 NSS_CMSCipherContext_Encrypt(NSSCMSCipherContext *cc, unsigned char *output,
-                             unsigned int *output_len_p, unsigned int max_output_len,
-                             const unsigned char *input, unsigned int input_len,
-                             PRBool final);
+		  unsigned int *output_len_p, unsigned int max_output_len,
+		  const unsigned char *input, unsigned int input_len,
+		  PRBool final);
 
 /************************************************************************
  * cmspubkey.c - public key operations
@@ -166,12 +167,12 @@ NSS_CMSUtil_DecryptSymKey_RSA(SECKEYPrivateKey *privkey, SECItem *encKey, SECOid
 
 extern SECStatus
 NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *key,
-                               SECItem *encKey, SECItem **ukm, SECAlgorithmID *keyEncAlg,
-                               SECItem *originatorPubKey);
+			SECItem *encKey, SECItem **ukm, SECAlgorithmID *keyEncAlg,
+			SECItem *originatorPubKey);
 
 extern PK11SymKey *
 NSS_CMSUtil_DecryptSymKey_ESDH(SECKEYPrivateKey *privkey, SECItem *encKey,
-                               SECAlgorithmID *keyEncAlg, SECOidTag bulkalgtag, void *pwfn_arg);
+			SECAlgorithmID *keyEncAlg, SECOidTag bulkalgtag, void *pwfn_arg);
 
 /************************************************************************
  * cmsreclist.c - recipient list stuff
@@ -212,13 +213,13 @@ NSS_CMSArray_Count(void **array);
  *
  * If "secondary" is not NULL, the same reordering gets applied to it.
  * If "tertiary" is not NULL, the same reordering gets applied to it.
- * "compare" is a function that returns
+ * "compare" is a function that returns 
  *  < 0 when the first element is less than the second
  *  = 0 when the first element is equal to the second
  *  > 0 when the first element is greater than the second
  */
 extern void
-NSS_CMSArray_Sort(void **primary, int (*compare)(void *, void *), void **secondary, void **tertiary);
+NSS_CMSArray_Sort(void **primary, int (*compare)(void *,void *), void **secondary, void **tertiary);
 
 /************************************************************************
  * cmsattr.c - misc attribute functions
@@ -295,7 +296,7 @@ NSS_CMSAttributeArray_FindAttrByOidTag(NSSCMSAttribute **attrs, SECOidTag oidtag
 
 /*
  * NSS_CMSAttributeArray_AddAttr - add an attribute to an
- * array of attributes.
+ * array of attributes. 
  */
 extern SECStatus
 NSS_CMSAttributeArray_AddAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, NSSCMSAttribute *attr);
@@ -304,8 +305,7 @@ NSS_CMSAttributeArray_AddAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, NSSC
  * NSS_CMSAttributeArray_SetAttr - set an attribute's value in a set of attributes
  */
 extern SECStatus
-NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs,
-                              SECOidTag type, SECItem *value, PRBool encoded);
+NSS_CMSAttributeArray_SetAttr(PLArenaPool *poolp, NSSCMSAttribute ***attrs, SECOidTag type, SECItem *value, PRBool encoded);
 
 /*
  * NSS_CMSSignedData_AddTempCertificate - add temporary certificate references.
@@ -320,31 +320,33 @@ NSS_CMSSignedData_AddTempCertificate(NSSCMSSignedData *sigd, CERTCertificate *ce
  */
 SECOidTag NSS_CMSUtil_MapSignAlgs(SECOidTag signAlg);
 
+
 /************************************************************************/
 
 /*
  * local functions to handle user defined S/MIME content types
  */
 
+
 PRBool NSS_CMSType_IsWrapper(SECOidTag type);
 PRBool NSS_CMSType_IsData(SECOidTag type);
 size_t NSS_CMSType_GetContentSize(SECOidTag type);
-const SEC_ASN1Template *NSS_CMSType_GetTemplate(SECOidTag type);
+const SEC_ASN1Template * NSS_CMSType_GetTemplate(SECOidTag type);
 
 void NSS_CMSGenericWrapperData_Destroy(SECOidTag type,
-                                       NSSCMSGenericWrapperData *gd);
-SECStatus NSS_CMSGenericWrapperData_Decode_BeforeData(SECOidTag type,
-                                                      NSSCMSGenericWrapperData *gd);
-SECStatus NSS_CMSGenericWrapperData_Decode_AfterData(SECOidTag type,
-                                                     NSSCMSGenericWrapperData *gd);
-SECStatus NSS_CMSGenericWrapperData_Decode_AfterEnd(SECOidTag type,
-                                                    NSSCMSGenericWrapperData *gd);
-SECStatus NSS_CMSGenericWrapperData_Encode_BeforeStart(SECOidTag type,
-                                                       NSSCMSGenericWrapperData *gd);
-SECStatus NSS_CMSGenericWrapperData_Encode_BeforeData(SECOidTag type,
-                                                      NSSCMSGenericWrapperData *gd);
-SECStatus NSS_CMSGenericWrapperData_Encode_AfterData(SECOidTag type,
-                                                     NSSCMSGenericWrapperData *gd);
+					NSSCMSGenericWrapperData *gd);
+SECStatus NSS_CMSGenericWrapperData_Decode_BeforeData(SECOidTag type, 
+					NSSCMSGenericWrapperData *gd);
+SECStatus NSS_CMSGenericWrapperData_Decode_AfterData(SECOidTag type, 
+					NSSCMSGenericWrapperData *gd);
+SECStatus NSS_CMSGenericWrapperData_Decode_AfterEnd(SECOidTag type, 
+					NSSCMSGenericWrapperData *gd);
+SECStatus NSS_CMSGenericWrapperData_Encode_BeforeStart(SECOidTag type, 
+					NSSCMSGenericWrapperData *gd);
+SECStatus NSS_CMSGenericWrapperData_Encode_BeforeData(SECOidTag type, 
+					NSSCMSGenericWrapperData *gd);
+SECStatus NSS_CMSGenericWrapperData_Encode_AfterData(SECOidTag type, 
+					NSSCMSGenericWrapperData *gd);
 
 SEC_END_PROTOS
 

@@ -41,7 +41,6 @@ ecperf_cleanup()
 
 ecperf_init
 ECPERF_OUT=$(ecperf 2>&1)
-echo "$ECPERF_OUT"
 ECPERF_OUT=`echo $ECPERF_OUT | grep -i 'failed\|Assertion failure'`
 # TODO: this is a perf test we don't check for performance here but only failed
 if [ -n "$ECPERF_OUT" ] ; then

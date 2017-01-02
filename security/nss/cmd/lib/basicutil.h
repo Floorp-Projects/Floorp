@@ -13,7 +13,6 @@
 #include "base64.h"
 #include "secasn1.h"
 #include "secder.h"
-#include "sslt.h"
 #include <stdio.h>
 
 #ifdef SECUTIL_NEW
@@ -112,10 +111,6 @@ SECU_ParseCommandLine(int argc, char **argv, char *progName,
                       const secuCommand *cmd);
 char *
 SECU_GetOptionArg(const secuCommand *cmd, int optionNum);
-
-SECStatus parseGroupList(const char *arg, SSLNamedGroup **enabledGroups,
-                         unsigned int *enabledGroupsCount);
-SSLNamedGroup groupNameToNamedGroup(char *name);
 
 /*
  *

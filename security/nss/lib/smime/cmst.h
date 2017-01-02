@@ -76,14 +76,18 @@ typedef struct NSSCMSDigestContextStr NSSCMSDigestContext;
 
 typedef struct NSSCMSContentInfoPrivateStr NSSCMSContentInfoPrivate;
 
-typedef SECStatus (*NSSCMSGenericWrapperDataCallback)(NSSCMSGenericWrapperData *);
-typedef void (*NSSCMSGenericWrapperDataDestroy)(NSSCMSGenericWrapperData *);
+typedef SECStatus (*NSSCMSGenericWrapperDataCallback)
+						(NSSCMSGenericWrapperData *);
+typedef   void    (*NSSCMSGenericWrapperDataDestroy) 
+						(NSSCMSGenericWrapperData *);
 
 extern const SEC_ASN1Template NSSCMSGenericWrapperDataTemplate[];
 extern const SEC_ASN1Template NSS_PointerToCMSGenericWrapperDataTemplate[];
 
 SEC_ASN1_CHOOSER_DECLARE(NSS_PointerToCMSGenericWrapperDataTemplate)
 SEC_ASN1_CHOOSER_DECLARE(NSSCMSGenericWrapperDataTemplate)
+
+
 
 /*
  * Type of function passed to NSSCMSDecode or NSSCMSDecoderStart.
@@ -106,43 +110,44 @@ typedef void (*NSSCMSContentCallback)(void *arg, const char *buf, unsigned long 
  */
 typedef PK11SymKey *(*NSSCMSGetDecryptKeyCallback)(void *arg, SECAlgorithmID *algid);
 
+
 /* =============================================================================
  * ENCAPSULATED CONTENTINFO & CONTENTINFO
  */
 
 union NSSCMSContentUnion {
     /* either unstructured */
-    SECItem *data;
+    SECItem *			data;
     /* or structured data */
-    NSSCMSDigestedData *digestedData;
-    NSSCMSEncryptedData *encryptedData;
-    NSSCMSEnvelopedData *envelopedData;
-    NSSCMSSignedData *signedData;
-    NSSCMSGenericWrapperData *genericData;
+    NSSCMSDigestedData *	digestedData;
+    NSSCMSEncryptedData	*	encryptedData;
+    NSSCMSEnvelopedData	*	envelopedData;
+    NSSCMSSignedData *		signedData;
+    NSSCMSGenericWrapperData *	genericData;
     /* or anonymous pointer to something */
-    void *pointer;
+    void *			pointer;
 };
 
 struct NSSCMSContentInfoStr {
-    SECItem contentType;
-    NSSCMSContent content;
+    SECItem			contentType;
+    NSSCMSContent		content;
     /* --------- local; not part of encoding --------- */
-    SECOidData *contentTypeTag;
+    SECOidData *		contentTypeTag;	
 
     /* additional info for encryptedData and envelopedData */
     /* we waste this space for signedData and digestedData. sue me. */
 
-    SECAlgorithmID contentEncAlg;
-    SECItem *rawContent; /* encrypted DER, optional */
-                         /* XXXX bytes not encrypted, but encoded? */
+    SECAlgorithmID		contentEncAlg;
+    SECItem *			rawContent;		/* encrypted DER, optional */
+							/* XXXX bytes not encrypted, but encoded? */
     /* --------- local; not part of encoding --------- */
-    PK11SymKey *bulkkey;                   /* bulk encryption key */
-    int keysize;                           /* size of bulk encryption key
-                                           * (only used by creation code) */
-    SECOidTag contentEncAlgTag;            /* oid tag of encryption algorithm
-                                           * (only used by creation code) */
-    NSSCMSContentInfoPrivate *privateInfo; /* place for NSS private info */
-    void *reserved;                        /* keep binary compatibility */
+    PK11SymKey *		bulkkey;		/* bulk encryption key */
+    int				keysize;		/* size of bulk encryption key
+							 * (only used by creation code) */
+    SECOidTag			contentEncAlgTag;	/* oid tag of encryption algorithm
+							 * (only used by creation code) */
+    NSSCMSContentInfoPrivate	*privateInfo;		/* place for NSS private info */
+    void		*reserved;			/* keep binary compatibility */
 };
 
 /* =============================================================================
@@ -150,28 +155,28 @@ struct NSSCMSContentInfoStr {
  */
 
 struct NSSCMSMessageStr {
-    NSSCMSContentInfo contentInfo; /* "outer" cinfo */
+    NSSCMSContentInfo	contentInfo;		/* "outer" cinfo */
     /* --------- local; not part of encoding --------- */
-    PLArenaPool *poolp;
-    PRBool poolp_is_ours;
-    int refCount;
+    PLArenaPool *	poolp;
+    PRBool		poolp_is_ours;
+    int			refCount;
     /* properties of the "inner" data */
-    SECAlgorithmID **detached_digestalgs;
-    SECItem **detached_digests;
-    void *pwfn_arg;
+    SECAlgorithmID **	detached_digestalgs;
+    SECItem **		detached_digests;
+    void *		pwfn_arg;
     NSSCMSGetDecryptKeyCallback decrypt_key_cb;
-    void *decrypt_key_cb_arg;
+    void *		decrypt_key_cb_arg;
 };
 
 /* ============================================================================
  * GENERIC WRAPPER
- *
+ * 
  * used for user defined types.
  */
 struct NSSCMSGenericWrapperDataStr {
-    NSSCMSContentInfo contentInfo;
+    NSSCMSContentInfo	contentInfo;
     /* ---- local; not part of encoding ------ */
-    NSSCMSMessage *cmsg;
+    NSSCMSMessage *	cmsg;
     /* wrapperspecific data starts here */
 };
 
@@ -180,23 +185,23 @@ struct NSSCMSGenericWrapperDataStr {
  */
 
 struct NSSCMSSignedDataStr {
-    SECItem version;
-    SECAlgorithmID **digestAlgorithms;
-    NSSCMSContentInfo contentInfo;
-    SECItem **rawCerts;
-    CERTSignedCrl **crls;
-    NSSCMSSignerInfo **signerInfos;
+    SECItem			version;
+    SECAlgorithmID **		digestAlgorithms;
+    NSSCMSContentInfo		contentInfo;
+    SECItem **			rawCerts;
+    CERTSignedCrl **		crls;
+    NSSCMSSignerInfo **		signerInfos;
     /* --------- local; not part of encoding --------- */
-    NSSCMSMessage *cmsg; /* back pointer to message */
-    SECItem **digests;
-    CERTCertificate **certs;
-    CERTCertificateList **certLists;
-    CERTCertificate **tempCerts; /* temporary certs, needed
-                                  * for example for signature
-                                  * verification */
+    NSSCMSMessage *		cmsg;			/* back pointer to message */
+    SECItem **			digests;
+    CERTCertificate **		certs;
+    CERTCertificateList **	certLists;
+    CERTCertificate **          tempCerts;              /* temporary certs, needed
+                                                         * for example for signature
+                                                         * verification */
 };
-#define NSS_CMS_SIGNED_DATA_VERSION_BASIC 1 /* what we *create* */
-#define NSS_CMS_SIGNED_DATA_VERSION_EXT 3   /* what we *create* */
+#define NSS_CMS_SIGNED_DATA_VERSION_BASIC	1	/* what we *create* */
+#define NSS_CMS_SIGNED_DATA_VERSION_EXT		3	/* what we *create* */
 
 typedef enum {
     NSSCMSVS_Unverified = 0,
@@ -219,30 +224,30 @@ typedef enum {
 struct NSSCMSSignerIdentifierStr {
     NSSCMSSignerIDSelector identifierType;
     union {
-        CERTIssuerAndSN *issuerAndSN;
-        SECItem *subjectKeyID;
+	CERTIssuerAndSN *issuerAndSN;
+	SECItem *subjectKeyID;
     } id;
 };
 
 struct NSSCMSSignerInfoStr {
-    SECItem version;
-    NSSCMSSignerIdentifier signerIdentifier;
-    SECAlgorithmID digestAlg;
-    NSSCMSAttribute **authAttr;
-    SECAlgorithmID digestEncAlg;
-    SECItem encDigest;
-    NSSCMSAttribute **unAuthAttr;
+    SECItem			version;
+    NSSCMSSignerIdentifier	signerIdentifier;
+    SECAlgorithmID		digestAlg;
+    NSSCMSAttribute **		authAttr;
+    SECAlgorithmID		digestEncAlg;
+    SECItem			encDigest;
+    NSSCMSAttribute **		unAuthAttr;
     /* --------- local; not part of encoding --------- */
-    NSSCMSMessage *cmsg; /* back pointer to message */
-    CERTCertificate *cert;
-    CERTCertificateList *certList;
-    PRTime signingTime;
-    NSSCMSVerificationStatus verificationStatus;
-    SECKEYPrivateKey *signingKey; /* Used if we're using subjKeyID*/
-    SECKEYPublicKey *pubKey;
+    NSSCMSMessage *		cmsg;			/* back pointer to message */
+    CERTCertificate *		cert;
+    CERTCertificateList *	certList;
+    PRTime			signingTime;
+    NSSCMSVerificationStatus	verificationStatus;
+    SECKEYPrivateKey *          signingKey; /* Used if we're using subjKeyID*/
+    SECKEYPublicKey *           pubKey;
 };
-#define NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN 1 /* what we *create* */
-#define NSS_CMS_SIGNER_INFO_VERSION_SUBJKEY 3  /* what we *create* */
+#define NSS_CMS_SIGNER_INFO_VERSION_ISSUERSN	1	/* what we *create* */
+#define NSS_CMS_SIGNER_INFO_VERSION_SUBJKEY	3	/* what we *create* */
 
 typedef enum {
     NSSCMSCM_None = 0,
@@ -255,22 +260,22 @@ typedef enum {
  * ENVELOPED DATA
  */
 struct NSSCMSEnvelopedDataStr {
-    SECItem version;
-    NSSCMSOriginatorInfo *originatorInfo; /* optional */
-    NSSCMSRecipientInfo **recipientInfos;
-    NSSCMSContentInfo contentInfo;
-    NSSCMSAttribute **unprotectedAttr;
+    SECItem			version;
+    NSSCMSOriginatorInfo *	originatorInfo;		/* optional */
+    NSSCMSRecipientInfo **	recipientInfos;
+    NSSCMSContentInfo		contentInfo;
+    NSSCMSAttribute **		unprotectedAttr;
     /* --------- local; not part of encoding --------- */
-    NSSCMSMessage *cmsg; /* back pointer to message */
+    NSSCMSMessage *		cmsg;			/* back pointer to message */
 };
-#define NSS_CMS_ENVELOPED_DATA_VERSION_REG 0 /* what we *create* */
-#define NSS_CMS_ENVELOPED_DATA_VERSION_ADV 2 /* what we *create* */
+#define NSS_CMS_ENVELOPED_DATA_VERSION_REG	0	/* what we *create* */
+#define NSS_CMS_ENVELOPED_DATA_VERSION_ADV	2	/* what we *create* */
 
 struct NSSCMSOriginatorInfoStr {
-    SECItem **rawCerts;
-    CERTSignedCrl **crls;
+    SECItem **			rawCerts;
+    CERTSignedCrl **		crls;
     /* --------- local; not part of encoding --------- */
-    CERTCertificate **certs;
+    CERTCertificate **		certs;
 };
 
 /* -----------------------------------------------------------------------------
@@ -283,19 +288,19 @@ typedef enum {
 } NSSCMSRecipientIDSelector;
 
 struct NSSCMSRecipientIdentifierStr {
-    NSSCMSRecipientIDSelector identifierType;
+    NSSCMSRecipientIDSelector	identifierType;
     union {
-        CERTIssuerAndSN *issuerAndSN;
-        SECItem *subjectKeyID;
+	CERTIssuerAndSN		*issuerAndSN;
+	SECItem 		*subjectKeyID;
     } id;
 };
 typedef struct NSSCMSRecipientIdentifierStr NSSCMSRecipientIdentifier;
 
 struct NSSCMSKeyTransRecipientInfoStr {
-    SECItem version;
-    NSSCMSRecipientIdentifier recipientIdentifier;
-    SECAlgorithmID keyEncAlg;
-    SECItem encKey;
+    SECItem			version;
+    NSSCMSRecipientIdentifier	recipientIdentifier;
+    SECAlgorithmID		keyEncAlg;
+    SECItem			encKey;
 };
 typedef struct NSSCMSKeyTransRecipientInfoStr NSSCMSKeyTransRecipientInfo;
 
@@ -305,21 +310,21 @@ typedef struct NSSCMSKeyTransRecipientInfoStr NSSCMSKeyTransRecipientInfo;
  */
 struct NSSCMSKeyTransRecipientInfoExStr {
     NSSCMSKeyTransRecipientInfo recipientInfo;
-    int version; /* version of this structure (0) */
+    int version;  /* version of this structure (0) */
     SECKEYPublicKey *pubKey;
 };
 
 typedef struct NSSCMSKeyTransRecipientInfoExStr NSSCMSKeyTransRecipientInfoEx;
 
-#define NSS_CMS_KEYTRANS_RECIPIENT_INFO_VERSION_ISSUERSN 0 /* what we *create* */
-#define NSS_CMS_KEYTRANS_RECIPIENT_INFO_VERSION_SUBJKEY 2  /* what we *create* */
+#define NSS_CMS_KEYTRANS_RECIPIENT_INFO_VERSION_ISSUERSN	0	/* what we *create* */
+#define NSS_CMS_KEYTRANS_RECIPIENT_INFO_VERSION_SUBJKEY		2	/* what we *create* */
 
 /* -----------------------------------------------------------------------------
  * key agreement recipient info
  */
 struct NSSCMSOriginatorPublicKeyStr {
-    SECAlgorithmID algorithmIdentifier;
-    SECItem publicKey; /* bit string! */
+    SECAlgorithmID			algorithmIdentifier;
+    SECItem				publicKey;			/* bit string! */
 };
 typedef struct NSSCMSOriginatorPublicKeyStr NSSCMSOriginatorPublicKey;
 
@@ -332,17 +337,17 @@ typedef enum {
 struct NSSCMSOriginatorIdentifierOrKeyStr {
     NSSCMSOriginatorIDOrKeySelector identifierType;
     union {
-        CERTIssuerAndSN *issuerAndSN;                  /* static-static */
-        SECItem *subjectKeyID;                         /* static-static */
-        NSSCMSOriginatorPublicKey originatorPublicKey; /* ephemeral-static */
+	CERTIssuerAndSN			*issuerAndSN;		/* static-static */
+	SECItem				*subjectKeyID;		/* static-static */
+	NSSCMSOriginatorPublicKey	originatorPublicKey;	/* ephemeral-static */
     } id;
 };
 typedef struct NSSCMSOriginatorIdentifierOrKeyStr NSSCMSOriginatorIdentifierOrKey;
 
 struct NSSCMSRecipientKeyIdentifierStr {
-    SECItem *subjectKeyIdentifier;
-    SECItem *date;  /* optional */
-    SECItem *other; /* optional */
+    SECItem *				subjectKeyIdentifier;
+    SECItem *				date;			/* optional */
+    SECItem *				other;			/* optional */
 };
 typedef struct NSSCMSRecipientKeyIdentifierStr NSSCMSRecipientKeyIdentifier;
 
@@ -352,50 +357,50 @@ typedef enum {
 } NSSCMSKeyAgreeRecipientIDSelector;
 
 struct NSSCMSKeyAgreeRecipientIdentifierStr {
-    NSSCMSKeyAgreeRecipientIDSelector identifierType;
+    NSSCMSKeyAgreeRecipientIDSelector	identifierType;
     union {
-        CERTIssuerAndSN *issuerAndSN;
-        NSSCMSRecipientKeyIdentifier recipientKeyIdentifier;
+	CERTIssuerAndSN			*issuerAndSN;
+	NSSCMSRecipientKeyIdentifier	recipientKeyIdentifier;
     } id;
 };
 typedef struct NSSCMSKeyAgreeRecipientIdentifierStr NSSCMSKeyAgreeRecipientIdentifier;
 
 struct NSSCMSRecipientEncryptedKeyStr {
-    NSSCMSKeyAgreeRecipientIdentifier recipientIdentifier;
-    SECItem encKey;
+    NSSCMSKeyAgreeRecipientIdentifier	recipientIdentifier;
+    SECItem				encKey;
 };
 typedef struct NSSCMSRecipientEncryptedKeyStr NSSCMSRecipientEncryptedKey;
 
 struct NSSCMSKeyAgreeRecipientInfoStr {
-    SECItem version;
-    NSSCMSOriginatorIdentifierOrKey originatorIdentifierOrKey;
-    SECItem *ukm; /* optional */
-    SECAlgorithmID keyEncAlg;
-    NSSCMSRecipientEncryptedKey **recipientEncryptedKeys;
+    SECItem				version;
+    NSSCMSOriginatorIdentifierOrKey	originatorIdentifierOrKey;
+    SECItem *				ukm;				/* optional */
+    SECAlgorithmID			keyEncAlg;
+    NSSCMSRecipientEncryptedKey **	recipientEncryptedKeys;
 };
 typedef struct NSSCMSKeyAgreeRecipientInfoStr NSSCMSKeyAgreeRecipientInfo;
 
-#define NSS_CMS_KEYAGREE_RECIPIENT_INFO_VERSION 3 /* what we *create* */
+#define NSS_CMS_KEYAGREE_RECIPIENT_INFO_VERSION	3	/* what we *create* */
 
 /* -----------------------------------------------------------------------------
  * KEK recipient info
  */
 struct NSSCMSKEKIdentifierStr {
-    SECItem keyIdentifier;
-    SECItem *date;  /* optional */
-    SECItem *other; /* optional */
+    SECItem			keyIdentifier;
+    SECItem *			date;			/* optional */
+    SECItem *			other;			/* optional */
 };
 typedef struct NSSCMSKEKIdentifierStr NSSCMSKEKIdentifier;
 
 struct NSSCMSKEKRecipientInfoStr {
-    SECItem version;
-    NSSCMSKEKIdentifier kekIdentifier;
-    SECAlgorithmID keyEncAlg;
-    SECItem encKey;
+    SECItem			version;
+    NSSCMSKEKIdentifier		kekIdentifier;
+    SECAlgorithmID		keyEncAlg;
+    SECItem			encKey;
 };
 typedef struct NSSCMSKEKRecipientInfoStr NSSCMSKEKRecipientInfo;
 
-#define NSS_CMS_KEK_RECIPIENT_INFO_VERSION 4 /* what we *create* */
+#define NSS_CMS_KEK_RECIPIENT_INFO_VERSION	4	/* what we *create* */
 
 /* -----------------------------------------------------------------------------
  * recipient info
@@ -409,12 +414,12 @@ typedef enum {
 
 /*
  * In order to preserve backwards binary compatibility when implementing
- * creation of Recipient Info's that uses subjectKeyID in the
+ * creation of Recipient Info's that uses subjectKeyID in the 
  * keyTransRecipientInfo we need to stash a public key pointer in this
  * structure somewhere.  We figured out that NSSCMSKeyTransRecipientInfo
  * is the smallest member of the ri union.  We're in luck since that's
  * the very structure that would need to use the public key. So we created
- * a new structure NSSCMSKeyTransRecipientInfoEx which has a member
+ * a new structure NSSCMSKeyTransRecipientInfoEx which has a member 
  * NSSCMSKeyTransRecipientInfo as the first member followed by a version
  * and a public key pointer.  This way we can keep backwards compatibility
  * without changing the size of this structure.
@@ -432,43 +437,43 @@ typedef enum {
 struct NSSCMSRecipientInfoStr {
     NSSCMSRecipientInfoIDSelector recipientInfoType;
     union {
-        NSSCMSKeyTransRecipientInfo keyTransRecipientInfo;
-        NSSCMSKeyAgreeRecipientInfo keyAgreeRecipientInfo;
-        NSSCMSKEKRecipientInfo kekRecipientInfo;
-        NSSCMSKeyTransRecipientInfoEx keyTransRecipientInfoEx;
+	NSSCMSKeyTransRecipientInfo keyTransRecipientInfo;
+	NSSCMSKeyAgreeRecipientInfo keyAgreeRecipientInfo;
+	NSSCMSKEKRecipientInfo kekRecipientInfo;
+	NSSCMSKeyTransRecipientInfoEx keyTransRecipientInfoEx;
     } ri;
     /* --------- local; not part of encoding --------- */
-    NSSCMSMessage *cmsg;   /* back pointer to message */
-    CERTCertificate *cert; /* recipient's certificate */
+    NSSCMSMessage *		cmsg;			/* back pointer to message */
+    CERTCertificate *		cert;			/* recipient's certificate */
 };
 
 /* =============================================================================
  * DIGESTED DATA
  */
 struct NSSCMSDigestedDataStr {
-    SECItem version;
-    SECAlgorithmID digestAlg;
-    NSSCMSContentInfo contentInfo;
-    SECItem digest;
+    SECItem			version;
+    SECAlgorithmID		digestAlg;
+    NSSCMSContentInfo		contentInfo;
+    SECItem			digest;
     /* --------- local; not part of encoding --------- */
-    NSSCMSMessage *cmsg; /* back pointer */
-    SECItem cdigest;     /* calculated digest */
+    NSSCMSMessage *		cmsg;		/* back pointer */
+    SECItem			cdigest;	/* calculated digest */
 };
-#define NSS_CMS_DIGESTED_DATA_VERSION_DATA 0  /* what we *create* */
-#define NSS_CMS_DIGESTED_DATA_VERSION_ENCAP 2 /* what we *create* */
+#define NSS_CMS_DIGESTED_DATA_VERSION_DATA	0	/* what we *create* */
+#define NSS_CMS_DIGESTED_DATA_VERSION_ENCAP	2	/* what we *create* */
 
 /* =============================================================================
  * ENCRYPTED DATA
  */
 struct NSSCMSEncryptedDataStr {
-    SECItem version;
-    NSSCMSContentInfo contentInfo;
-    NSSCMSAttribute **unprotectedAttr; /* optional */
+    SECItem			version;
+    NSSCMSContentInfo		contentInfo;
+    NSSCMSAttribute **		unprotectedAttr;	/* optional */
     /* --------- local; not part of encoding --------- */
-    NSSCMSMessage *cmsg; /* back pointer */
+    NSSCMSMessage *		cmsg;		/* back pointer */
 };
-#define NSS_CMS_ENCRYPTED_DATA_VERSION 0        /* what we *create* */
-#define NSS_CMS_ENCRYPTED_DATA_VERSION_UPATTR 2 /* what we *create* */
+#define NSS_CMS_ENCRYPTED_DATA_VERSION		0	/* what we *create* */
+#define NSS_CMS_ENCRYPTED_DATA_VERSION_UPATTR	2	/* what we *create* */
 
 /*
  * *****************************************************************************
@@ -481,11 +486,11 @@ struct NSSCMSEncryptedDataStr {
  */
 struct NSSCMSAttributeStr {
     /* The following fields make up an encoded Attribute: */
-    SECItem type;
-    SECItem **values; /* data may or may not be encoded */
+    SECItem			type;
+    SECItem **			values;	/* data may or may not be encoded */
     /* The following fields are not part of an encoded Attribute: */
-    SECOidData *typeTag;
-    PRBool encoded; /* when true, values are encoded */
+    SECOidData *		typeTag;
+    PRBool			encoded;	/* when true, values are encoded */
 };
 
 #endif /* _CMST_H_ */

@@ -40,6 +40,8 @@ static const ssl3CipherSuite nonDTLSSuites[] = {
     TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
     TLS_RSA_WITH_RC4_128_MD5,
     TLS_RSA_WITH_RC4_128_SHA,
+    TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
+    TLS_RSA_EXPORT_WITH_RC4_40_MD5,
     0 /* End of list marker */
 };
 
@@ -802,6 +804,54 @@ dtls_SendSavedWriteData(sslSocket *ss)
     return SECSuccess;
 }
 
+/* Compress, MAC, encrypt a DTLS record. Allows specification of
+ * the epoch using epoch value. If use_epoch is PR_TRUE then
+ * we use the provided epoch. If use_epoch is PR_FALSE then
+ * whatever the current value is in effect is used.
+ *
+ * Called from ssl3_SendRecord()
+ */
+SECStatus
+dtls_CompressMACEncryptRecord(sslSocket *ss,
+                              ssl3CipherSpec *cwSpec,
+                              SSL3ContentType type,
+                              const SSL3Opaque *pIn,
+                              PRUint32 contentLen,
+                              sslBuffer *wrBuf)
+{
+    SECStatus rv = SECFailure;
+
+    ssl_GetSpecReadLock(ss); /********************************/
+
+    /* The reason for this switch-hitting code is that we might have
+     * a flight of records spanning an epoch boundary, e.g.,
+     *
+     * ClientKeyExchange (epoch = 0)
+     * ChangeCipherSpec (epoch = 0)
+     * Finished (epoch = 1)
+     *
+     * Thus, each record needs a different cipher spec. The information
+     * about which epoch to use is carried with the record.
+     */
+    if (!cwSpec) {
+        cwSpec = ss->ssl3.cwSpec;
+    } else {
+        PORT_Assert(type == content_handshake ||
+                    type == content_change_cipher_spec);
+    }
+
+    if (cwSpec->version < SSL_LIBRARY_VERSION_TLS_1_3) {
+        rv = ssl3_CompressMACEncryptRecord(cwSpec, ss->sec.isServer, PR_TRUE,
+                                           PR_FALSE, type, pIn, contentLen,
+                                           wrBuf);
+    } else {
+        rv = tls13_ProtectRecord(ss, cwSpec, type, pIn, contentLen, wrBuf);
+    }
+    ssl_ReleaseSpecReadLock(ss); /************************************/
+
+    return rv;
+}
+
 static SECStatus
 dtls_StartTimer(sslSocket *ss, PRUint32 time, DTLSTimerCb cb)
 {
@@ -951,7 +1001,8 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 {
     int errCode = SSL_ERROR_RX_MALFORMED_HELLO_VERIFY_REQUEST;
     SECStatus rv;
-    SSL3ProtocolVersion temp;
+    PRInt32 temp;
+    SECItem cookie = { siBuffer, NULL, 0 };
     SSL3AlertDescription desc = illegal_parameter;
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle hello_verify_request handshake",
@@ -965,35 +1016,29 @@ dtls_HandleHelloVerifyRequest(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
         goto alert_loser;
     }
 
-    /* The version.
-     *
-     * RFC 4347 required that you verify that the server versions
-     * match (Section 4.2.1) in the HelloVerifyRequest and the
-     * ServerHello.
-     *
-     * RFC 6347 suggests (SHOULD) that servers always use 1.0 in
-     * HelloVerifyRequest and allows the versions not to match,
-     * especially when 1.2 is being negotiated.
-     *
-     * Therefore we do not do anything to enforce a match, just
-     * read and check that this value is sane.
-     */
-    rv = ssl_ClientReadVersion(ss, &b, &length, &temp);
-    if (rv != SECSuccess) {
+    /* The version */
+    temp = ssl3_ConsumeHandshakeNumber(ss, 2, &b, &length);
+    if (temp < 0) {
         goto loser; /* alert has been sent */
     }
 
-    /* Read the cookie.
-     * IMPORTANT: The value of ss->ssl3.hs.cookie is only valid while the
-     * HelloVerifyRequest message remains valid. */
-    rv = ssl3_ConsumeHandshakeVariable(ss, &ss->ssl3.hs.cookie, 1, &b, &length);
+    if (temp != SSL_LIBRARY_VERSION_DTLS_1_0_WIRE &&
+        temp != SSL_LIBRARY_VERSION_DTLS_1_2_WIRE) {
+        goto alert_loser;
+    }
+
+    /* The cookie */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &cookie, 1, &b, &length);
     if (rv != SECSuccess) {
         goto loser; /* alert has been sent */
     }
-    if (ss->ssl3.hs.cookie.len > DTLS_COOKIE_BYTES) {
+    if (cookie.len > DTLS_COOKIE_BYTES) {
         desc = decode_error;
         goto alert_loser; /* malformed. */
     }
+
+    PORT_Memcpy(ss->ssl3.hs.cookie, cookie.data, cookie.len);
+    ss->ssl3.hs.cookieLen = cookie.len;
 
     ssl_GetXmitBufLock(ss); /*******************************/
 
