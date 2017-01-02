@@ -104,9 +104,7 @@
 
 #include "mozilla/net/DataChannelProtocol.h"
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaStreamGraphImpl.h"
-#endif
 
 #ifdef XP_WIN
 // We need to undef the MS macro again in case the windows include file
@@ -116,9 +114,7 @@
 #endif
 #endif // XP_WIN
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaSegment.h"
-#endif
 
 #ifdef USE_FAKE_PCOBSERVER
 #include "FakePCObserver.h"

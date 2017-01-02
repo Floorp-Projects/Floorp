@@ -50,11 +50,6 @@ class AFakePCObserver;
 #endif
 }
 
-#ifdef USE_FAKE_MEDIA_STREAMS
-class Fake_DOMMediaStream;
-class Fake_MediaStreamTrack;
-#endif
-
 class nsGlobalWindow;
 class nsDOMDataChannel;
 
@@ -67,11 +62,7 @@ class NrIceStunServer;
 class NrIceTurnServer;
 class MediaPipeline;
 
-#ifdef USE_FAKE_MEDIA_STREAMS
-typedef Fake_DOMMediaStream DOMMediaStream;
-#else
 class DOMMediaStream;
-#endif
 
 namespace dom {
 class RTCCertificate;
@@ -81,11 +72,7 @@ struct RTCIceServer;
 struct RTCOfferOptions;
 struct RTCRtpParameters;
 class RTCRtpSender;
-#ifdef USE_FAKE_MEDIA_STREAMS
-typedef Fake_MediaStreamTrack MediaStreamTrack;
-#else
 class MediaStreamTrack;
-#endif
 
 #ifdef USE_FAKE_PCOBSERVER
 typedef test::AFakePCObserver PeerConnectionObserver;
