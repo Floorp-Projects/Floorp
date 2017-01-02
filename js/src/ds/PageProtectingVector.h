@@ -7,6 +7,7 @@
 #ifndef ds_PageProtectingVector_h
 #define ds_PageProtectingVector_h
 
+#include "mozilla/Atomics.h"
 #include "mozilla/Vector.h"
 
 #include "ds/MemoryProtectionExceptionHandler.h"
@@ -33,6 +34,7 @@ template<typename T,
          class AllocPolicy = mozilla::MallocAllocPolicy,
          bool ProtectUsed = true,
          bool ProtectUnused = true,
+         bool GuardAgainstReentrancy = true,
          size_t InitialLowerBound = 0>
 class PageProtectingVector final
 {
@@ -94,6 +96,9 @@ class PageProtectingVector final
     bool protectUsedEnabled;
     bool protectUnusedEnabled;
 
+    bool reentrancyGuardEnabled;
+    mozilla::Atomic<bool, mozilla::ReleaseAcquire> reentrancyGuard;
+
     MOZ_ALWAYS_INLINE void resetTest() {
         MOZ_ASSERT(protectUsedEnabled || protectUnusedEnabled);
         size_t nextPage = (pageSize - (uintptr_t(begin() + length()) & pageMask)) >> elemShift;
@@ -119,6 +124,8 @@ class PageProtectingVector final
                              (uintptr_t(begin()) & elemMask) == 0 && capacity() >= lowerBound;
         protectUnusedEnabled = ProtectUnused && usable && enabled && initPage <= lastPage &&
                                (uintptr_t(begin()) & elemMask) == 0 && capacity() >= lowerBound;
+        reentrancyGuardEnabled = GuardAgainstReentrancy && enabled && initPage <= lastPage &&
+                                 capacity() >= lowerBound;
         setTestInitial();
     }
 
@@ -275,6 +282,38 @@ class PageProtectingVector final
     template<typename U>
     MOZ_NEVER_INLINE MOZ_MUST_USE bool appendSlow(const U* values, size_t size);
 
+    MOZ_ALWAYS_INLINE void lock() {
+        if (MOZ_LIKELY(!GuardAgainstReentrancy || !reentrancyGuardEnabled))
+            return;
+        if (MOZ_UNLIKELY(!reentrancyGuard.compareExchange(false, true)))
+            lockSlow();
+    }
+
+    MOZ_ALWAYS_INLINE void unlock() {
+        if (!GuardAgainstReentrancy)
+            return;
+        reentrancyGuard = false;
+    }
+
+    MOZ_NEVER_INLINE void lockSlow();
+
+    /* A helper class to guard against concurrent access. */
+    class AutoGuardAgainstReentrancy
+    {
+        PageProtectingVector& vector;
+
+      public:
+        MOZ_ALWAYS_INLINE explicit AutoGuardAgainstReentrancy(PageProtectingVector& holder)
+          : vector(holder)
+        {
+            vector.lock();
+        }
+
+        MOZ_ALWAYS_INLINE ~AutoGuardAgainstReentrancy() {
+            vector.unlock();
+        }
+    };
+
   public:
     explicit PageProtectingVector(AllocPolicy policy = AllocPolicy())
       : vector(policy),
@@ -289,7 +328,9 @@ class PageProtectingVector final
         usable(true),
         enabled(true),
         protectUsedEnabled(false),
-        protectUnusedEnabled(false)
+        protectUnusedEnabled(false),
+        reentrancyGuardEnabled(false),
+        reentrancyGuard(false)
     {
         if (gc::SystemPageSize() != pageSize)
             usable = false;
@@ -356,12 +397,14 @@ class PageProtectingVector final
     MOZ_ALWAYS_INLINE const T* begin() const { return vector.begin(); }
 
     void clear() {
+        AutoGuardAgainstReentrancy guard(*this);
         unprotectOldBuffer();
         vector.clear();
         protectNewBuffer();
     }
 
     MOZ_ALWAYS_INLINE MOZ_MUST_USE bool reserve(size_t size) {
+        AutoGuardAgainstReentrancy guard(*this);
         if (MOZ_LIKELY(size <= capacity()))
             return vector.reserve(size);
         return reserveSlow(size);
@@ -369,6 +412,7 @@ class PageProtectingVector final
 
     template<typename U>
     MOZ_ALWAYS_INLINE void infallibleAppend(const U* values, size_t size) {
+        AutoGuardAgainstReentrancy guard(*this);
         elemsUntilTest -= size;
         if (MOZ_LIKELY(elemsUntilTest >= 0))
             return vector.infallibleAppend(values, size);
@@ -377,6 +421,7 @@ class PageProtectingVector final
 
     template<typename U>
     MOZ_ALWAYS_INLINE MOZ_MUST_USE bool append(const U* values, size_t size) {
+        AutoGuardAgainstReentrancy guard(*this);
         elemsUntilTest -= size;
         if (MOZ_LIKELY(elemsUntilTest >= 0))
             return vector.append(values, size);
@@ -384,9 +429,9 @@ class PageProtectingVector final
     }
 };
 
-template<typename T, size_t N, class AP, bool P, bool Q, size_t I>
+template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
 MOZ_NEVER_INLINE void
-PageProtectingVector<T, N, AP, P, Q, I>::unprotectRegionSlow(uintptr_t l, uintptr_t r)
+PageProtectingVector<T, N, AP, P, Q, G, I>::unprotectRegionSlow(uintptr_t l, uintptr_t r)
 {
     if (l < initPage)
         l = initPage;
@@ -397,9 +442,9 @@ PageProtectingVector<T, N, AP, P, Q, I>::unprotectRegionSlow(uintptr_t l, uintpt
     gc::UnprotectPages(addr, size);
 }
 
-template<typename T, size_t N, class AP, bool P, bool Q, size_t I>
+template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
 MOZ_NEVER_INLINE void
-PageProtectingVector<T, N, AP, P, Q, I>::reprotectRegionSlow(uintptr_t l, uintptr_t r)
+PageProtectingVector<T, N, AP, P, Q, G, I>::reprotectRegionSlow(uintptr_t l, uintptr_t r)
 {
     if (l < initPage)
         l = initPage;
@@ -410,17 +455,17 @@ PageProtectingVector<T, N, AP, P, Q, I>::reprotectRegionSlow(uintptr_t l, uintpt
     gc::MakePagesReadOnly(addr, size);
 }
 
-template<typename T, size_t N, class AP, bool P, bool Q, size_t I>
+template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
 MOZ_NEVER_INLINE MOZ_MUST_USE bool
-PageProtectingVector<T, N, AP, P, Q, I>::reserveSlow(size_t size)
+PageProtectingVector<T, N, AP, P, Q, G, I>::reserveSlow(size_t size)
 {
     return reserveNewBuffer(size);
 }
 
-template<typename T, size_t N, class AP, bool P, bool Q, size_t I>
+template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
 template<typename U>
 MOZ_NEVER_INLINE void
-PageProtectingVector<T, N, AP, P, Q, I>::infallibleAppendSlow(const U* values, size_t size)
+PageProtectingVector<T, N, AP, P, Q, G, I>::infallibleAppendSlow(const U* values, size_t size)
 {
     // Ensure that we're here because we reached a page
     // boundary and not because of a buffer overflow.
@@ -429,14 +474,21 @@ PageProtectingVector<T, N, AP, P, Q, I>::infallibleAppendSlow(const U* values, s
     infallibleAppendNewPage(values, size);
 }
 
-template<typename T, size_t N, class AP, bool P, bool Q, size_t I>
+template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
 template<typename U>
 MOZ_NEVER_INLINE MOZ_MUST_USE bool
-PageProtectingVector<T, N, AP, P, Q, I>::appendSlow(const U* values, size_t size)
+PageProtectingVector<T, N, AP, P, Q, G, I>::appendSlow(const U* values, size_t size)
 {
     if (MOZ_LIKELY(length() + size <= capacity()))
         return appendNewPage(values, size);
     return appendNewBuffer(values, size);
+}
+
+template<typename T, size_t N, class AP, bool P, bool Q, bool G, size_t I>
+MOZ_NEVER_INLINE void
+PageProtectingVector<T, N, AP, P, Q, G, I>::lockSlow()
+{
+    MOZ_CRASH("Cannot access PageProtectingVector from more than one thread at a time!");
 }
 
 } /* namespace js */
