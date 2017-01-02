@@ -234,7 +234,6 @@ mp_div(a, b, q, r)      - computes q, r such that a = bq + r
 mp_div_2d(a, d, q, r)   - computes q = a / 2^d, r = a % 2^d
 mp_expt(a, b, c)        - computes c = a ** b
 mp_2expt(a, k)          - computes a = 2^k
-mp_sqrt(a, c)           - computes c = floor(sqrt(a))
 
 The mp_div_2d() function efficiently computes division by powers of
 two.  Either the q or r parameter may be NULL, in which case that

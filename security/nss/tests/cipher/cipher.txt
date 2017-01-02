@@ -45,6 +45,7 @@
 	0	rsa_oaep_-D	RSA_DecryptOAEP
 	0	rsa_pss_-S	RSA_SignPSS
 	0	rsa_pss_-V	RSA_CheckSignPSS
+	0	rsa_-K		RSA_Populate
 	0	dsa_-S		DSA_Sign
 	0	dsa_-V		DSA_Verify
 	0	md2_-H		MD2_Hash

@@ -1958,10 +1958,11 @@ DPCache_SelectCRL(CRLDPCache* cache)
         qsort(cache->crls, cache->ncrls, sizeof(CachedCrl*), SortImperfectCRLs);
         return SECSuccess;
     }
-    /* all CRLs are good, sort them by thisUpdate */
-    qsort(cache->crls, cache->ncrls, sizeof(CachedCrl*), SortCRLsByThisUpdate);
 
     if (cache->ncrls) {
+        /* all CRLs are good, sort them by thisUpdate */
+        qsort(cache->crls, cache->ncrls, sizeof(CachedCrl*), SortCRLsByThisUpdate);
+
         /* pick the newest CRL */
         selected = cache->crls[cache->ncrls - 1];
 
@@ -2781,7 +2782,7 @@ cert_CacheCRLByGeneralName(CERTCertDBHandle* dbhandle, SECItem* crl,
     rv = cert_FindCRLByGeneralName(ncc, canonicalizedName, &oldEntry);
     PORT_Assert(SECSuccess == rv);
     if (SECSuccess != rv) {
-        rv = cert_ReleaseNamedCRLCache(ncc);
+        (void)cert_ReleaseNamedCRLCache(ncc);
         SECITEM_ZfreeItem(crl, PR_TRUE);
         return SECFailure;
     }

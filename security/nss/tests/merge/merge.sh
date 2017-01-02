@@ -104,7 +104,9 @@ merge_init()
   certutil -N -d ${CONFLICT1DIR} -f ${R_PWFILE}
   certutil -N -d ${CONFLICT2DIR} -f ${R_PWFILE}
   certutil -A -n Alice -t ,, -i ${R_CADIR}/TestUser41.cert -d ${CONFLICT1DIR}
-  certutil -A -n "Alice #1" -t ,, -i ${R_CADIR}/TestUser42.cert -d ${CONFLICT1DIR}
+  # modify CONFLICTDIR potentially corrupting the database
+  certutil -A -n "Alice #1" -t C,, -i ${R_CADIR}/TestUser42.cert -d ${CONFLICT1DIR} -f ${R_PWFILE}
+  certutil -M -n "Alice #1" -t ,, -d ${CONFLICT1DIR} -f ${R_PWFILE}
   certutil -A -n "Alice #99" -t ,, -i ${R_CADIR}/TestUser43.cert -d ${CONFLICT1DIR}
   certutil -A -n Alice -t ,, -i ${R_CADIR}/TestUser44.cert -d ${CONFLICT2DIR}
   certutil -A -n "Alice #1" -t ,, -i ${R_CADIR}/TestUser45.cert -d ${CONFLICT2DIR}
@@ -268,5 +270,8 @@ merge_cleanup()
 
 merge_init
 merge_main
+echo "TEST_MODE=${TEST_MODE}"
+echo "NSS_DEFAULT_DB_TYPE=${NSS_DEFAULT_DB_TYPE}"
 merge_cleanup
+
 

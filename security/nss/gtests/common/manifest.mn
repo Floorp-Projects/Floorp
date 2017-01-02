@@ -1,0 +1,21 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+CORE_DEPTH = ../..
+DEPTH      = ../..
+MODULE = nss
+
+CPPSRCS = \
+      gtests.cc \
+      $(NULL)
+
+INCLUDES += -I$(CORE_DEPTH)/gtests/google_test/gtest/include \
+            -I$(CORE_DEPTH)/gtests/common
+
+REQUIRES = gtest
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)
+
+# NOTE: this is not actually used but required to build gtests.o
+PROGRAM = gtests

@@ -6,19 +6,20 @@
 #define _CMSRECLIST_H
 
 struct NSSCMSRecipientStr {
-    int				riIndex;	/* this recipient's index in recipientInfo array */
-    int				subIndex;	/* index into recipientEncryptedKeys */
-						/* (only in NSSCMSKeyAgreeRecipientInfoStr) */
-    enum {RLIssuerSN=0, RLSubjKeyID=1} kind;	/* for conversion recipientinfos -> recipientlist */
+    int riIndex;  /* this recipient's index in recipientInfo array */
+    int subIndex; /* index into recipientEncryptedKeys */
+                  /* (only in NSSCMSKeyAgreeRecipientInfoStr) */
+    enum { RLIssuerSN = 0,
+           RLSubjKeyID = 1 } kind; /* for conversion recipientinfos -> recipientlist */
     union {
-	CERTIssuerAndSN *	issuerAndSN;
-	SECItem *		subjectKeyID;
+        CERTIssuerAndSN* issuerAndSN;
+        SECItem* subjectKeyID;
     } id;
 
     /* result data (filled out for each recipient that's us) */
-    CERTCertificate *		cert;
-    SECKEYPrivateKey *		privkey;
-    PK11SlotInfo *		slot;
+    CERTCertificate* cert;
+    SECKEYPrivateKey* privkey;
+    PK11SlotInfo* slot;
 };
 
 typedef struct NSSCMSRecipientStr NSSCMSRecipient;

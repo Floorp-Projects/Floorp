@@ -6,7 +6,6 @@
 #include "mplogic.h"
 #include "ecl.h"
 #include "ecl-priv.h"
-#include "ec2.h"
 #include "ecp.h"
 #include <stdlib.h>
 #include <string.h>
@@ -129,50 +128,6 @@ CLEANUP:
     return group;
 }
 
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-/* Construct a generic ECGroup for elliptic curves over binary polynomial
- * fields. */
-ECGroup *
-ECGroup_consGF2m(const mp_int *irr, const unsigned int irr_arr[5],
-                 const mp_int *curvea, const mp_int *curveb,
-                 const mp_int *genx, const mp_int *geny,
-                 const mp_int *order, int cofactor)
-{
-    mp_err res = MP_OKAY;
-    ECGroup *group = NULL;
-
-    group = ECGroup_new();
-    if (group == NULL)
-        return NULL;
-
-    group->meth = GFMethod_consGF2m(irr, irr_arr);
-    if (group->meth == NULL) {
-        res = MP_MEM;
-        goto CLEANUP;
-    }
-    MP_CHECKOK(mp_copy(curvea, &group->curvea));
-    MP_CHECKOK(mp_copy(curveb, &group->curveb));
-    MP_CHECKOK(mp_copy(genx, &group->genx));
-    MP_CHECKOK(mp_copy(geny, &group->geny));
-    MP_CHECKOK(mp_copy(order, &group->order));
-    group->cofactor = cofactor;
-    group->point_add = &ec_GF2m_pt_add_aff;
-    group->point_sub = &ec_GF2m_pt_sub_aff;
-    group->point_dbl = &ec_GF2m_pt_dbl_aff;
-    group->point_mul = &ec_GF2m_pt_mul_mont;
-    group->base_point_mul = NULL;
-    group->points_mul = &ec_pts_mul_basic;
-    group->validate_point = &ec_GF2m_validate_point;
-
-CLEANUP:
-    if (res != MP_OKAY) {
-        ECGroup_free(group);
-        return NULL;
-    }
-    return group;
-}
-#endif
-
 /* Construct ECGroup from hex parameters and name, if any. Called by
  * ECGroup_fromHex and ECGroup_fromName. */
 ECGroup *
@@ -214,62 +169,6 @@ ecgroup_fromNameAndHex(const ECCurveName name,
     /* determine which optimizations (if any) to use */
     if (params->field == ECField_GFp) {
         switch (name) {
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-#ifdef ECL_USE_FP
-            case ECCurve_SECG_PRIME_160R1:
-                group =
-                    ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
-                                    &order, params->cofactor);
-                if (group == NULL) {
-                    res = MP_UNDEF;
-                    goto CLEANUP;
-                }
-                MP_CHECKOK(ec_group_set_secp160r1_fp(group));
-                break;
-#endif
-            case ECCurve_SECG_PRIME_192R1:
-#ifdef ECL_USE_FP
-                group =
-                    ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
-                                    &order, params->cofactor);
-                if (group == NULL) {
-                    res = MP_UNDEF;
-                    goto CLEANUP;
-                }
-                MP_CHECKOK(ec_group_set_nistp192_fp(group));
-#else
-                group =
-                    ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
-                                    &order, params->cofactor);
-                if (group == NULL) {
-                    res = MP_UNDEF;
-                    goto CLEANUP;
-                }
-                MP_CHECKOK(ec_group_set_gfp192(group, name));
-#endif
-                break;
-            case ECCurve_SECG_PRIME_224R1:
-#ifdef ECL_USE_FP
-                group =
-                    ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
-                                    &order, params->cofactor);
-                if (group == NULL) {
-                    res = MP_UNDEF;
-                    goto CLEANUP;
-                }
-                MP_CHECKOK(ec_group_set_nistp224_fp(group));
-#else
-                group =
-                    ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
-                                    &order, params->cofactor);
-                if (group == NULL) {
-                    res = MP_UNDEF;
-                    goto CLEANUP;
-                }
-                MP_CHECKOK(ec_group_set_gfp224(group, name));
-#endif
-                break;
-#endif /* NSS_ECC_MORE_THAN_SUITE_B */
             case ECCurve_SECG_PRIME_256R1:
                 group =
                     ECGroup_consGFp(&irr, &curvea, &curveb, &genx, &geny,
@@ -301,25 +200,6 @@ ecgroup_fromNameAndHex(const ECCurveName name,
                     goto CLEANUP;
                 }
         }
-#ifdef NSS_ECC_MORE_THAN_SUITE_B
-    } else if (params->field == ECField_GF2m) {
-        group = ECGroup_consGF2m(&irr, NULL, &curvea, &curveb, &genx, &geny, &order, params->cofactor);
-        if (group == NULL) {
-            res = MP_UNDEF;
-            goto CLEANUP;
-        }
-        if ((name == ECCurve_NIST_K163) ||
-            (name == ECCurve_NIST_B163) ||
-            (name == ECCurve_SECG_CHAR2_163R1)) {
-            MP_CHECKOK(ec_group_set_gf2m163(group, name));
-        } else if ((name == ECCurve_SECG_CHAR2_193R1) ||
-                   (name == ECCurve_SECG_CHAR2_193R2)) {
-            MP_CHECKOK(ec_group_set_gf2m193(group, name));
-        } else if ((name == ECCurve_NIST_K233) ||
-                   (name == ECCurve_NIST_B233)) {
-            MP_CHECKOK(ec_group_set_gf2m233(group, name));
-        }
-#endif
     } else {
         res = MP_UNDEF;
         goto CLEANUP;

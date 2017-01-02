@@ -36,5 +36,8 @@ export default function (context_path) {
     return sha256(file + "|" + fs.readFileSync(file, "utf-8"));
   });
 
-  return sha256(hashes.join(","));
+  // Generate a new prefix every month to ensure the image stays buildable.
+  let now = new Date();
+  let prefix = `${now.getUTCFullYear()}-${now.getUTCMonth() + 1}:`;
+  return sha256(prefix + hashes.join(","));
 }

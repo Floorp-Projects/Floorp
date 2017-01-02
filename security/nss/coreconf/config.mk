@@ -150,10 +150,6 @@ ifdef NSS_DISABLE_ECC
 DEFINES += -DNSS_DISABLE_ECC
 endif
 
-ifdef NSS_ECC_MORE_THAN_SUITE_B
-DEFINES += -DNSS_ECC_MORE_THAN_SUITE_B
-endif
-
 ifdef NSS_ALLOW_UNSUPPORTED_CRITICAL
 DEFINES += -DNSS_ALLOW_UNSUPPORTED_CRITICAL
 endif
@@ -212,8 +208,3 @@ DEFINES += -DSSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES
 # exported symbols, which causes problem when NSS is built as part of Mozilla.
 # So we add a NSS_SSL_ENABLE_ZLIB variable to allow Mozilla to turn this off.
 NSS_SSL_ENABLE_ZLIB = 1
-
-# Allow disabling PKCS11 bypass.
-ifdef NSS_NO_PKCS11_BYPASS
-DEFINES += -DNO_PKCS11_BYPASS
-endif
