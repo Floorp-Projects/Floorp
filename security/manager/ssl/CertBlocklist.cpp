@@ -6,6 +6,7 @@
 
 #include "CertBlocklist.h"
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Logging.h"
@@ -512,7 +513,7 @@ CertBlocklist::SaveEntries()
   }
 
   nsCOMPtr<nsISafeOutputStream> safeStream = do_QueryInterface(outputStream);
-  NS_ASSERTION(safeStream, "expected a safe output stream!");
+  MOZ_ASSERT(safeStream, "expected a safe output stream!");
   if (!safeStream) {
     return NS_ERROR_FAILURE;
   }
