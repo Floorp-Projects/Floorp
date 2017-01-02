@@ -42,7 +42,6 @@
 
 #include "nsProxyRelease.h"
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
@@ -52,7 +51,6 @@
 #include "VideoStreamTrack.h"
 #include "MediaStreamError.h"
 #include "MediaManager.h"
-#endif
 
 
 
@@ -124,7 +122,6 @@ SourceStreamInfo::EndTrack(MediaStream* stream, dom::MediaStreamTrack* track)
     return;
   }
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   class Message : public ControlMessage {
    public:
     Message(MediaStream* stream, TrackID track)
@@ -140,8 +137,6 @@ SourceStreamInfo::EndTrack(MediaStream* stream, dom::MediaStreamTrack* track)
 
   stream->GraphImpl()->AppendMessage(
       MakeUnique<Message>(stream, track->mTrackID));
-#endif
-
 }
 
 void
@@ -282,7 +277,6 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
 nsresult
 PeerConnectionMedia::InitProxy()
 {
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // Allow mochitests to disable this, since mochitest configures a fake proxy
   // that serves up content.
   bool disable = Preferences::GetBool("media.peerconnection.disable_http_proxy",
@@ -291,7 +285,6 @@ PeerConnectionMedia::InitProxy()
     mProxyResolveCompleted = true;
     return NS_OK;
   }
-#endif
 
   nsresult rv;
   nsCOMPtr<nsIProtocolProxyService> pps =
@@ -360,11 +353,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
   nsresult rv = InitProxy();
   NS_ENSURE_SUCCESS(rv, rv);
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   bool ice_tcp = Preferences::GetBool("media.peerconnection.ice.tcp", false);
-#else
-  bool ice_tcp = false;
-#endif
 
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
@@ -384,11 +373,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return rv;
   }
   // Give us a way to globally turn off TURN support
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   bool disabled = Preferences::GetBool("media.peerconnection.turn.disable", false);
-#else
-  bool disabled = false;
-#endif
   if (!disabled) {
     if (NS_FAILED(rv = mIceCtxHdlr->ctx()->SetTurnServers(turn_servers))) {
       CSFLogError(logTag, "%s: Failed to set turn servers", __FUNCTION__);
@@ -791,16 +776,12 @@ PeerConnectionMedia::GetPrefDefaultAddressOnly() const
 {
   ASSERT_ON_THREAD(mMainThread); // will crash on STS thread
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   uint64_t winId = mParent->GetWindow()->WindowID();
 
   bool default_address_only = Preferences::GetBool(
     "media.peerconnection.ice.default_address_only", false);
   default_address_only |=
     !MediaManager::Get()->IsActivelyCapturingOrHasAPermission(winId);
-#else
-  bool default_address_only = true;
-#endif
   return default_address_only;
 }
 
@@ -809,11 +790,7 @@ PeerConnectionMedia::GetPrefProxyOnly() const
 {
   ASSERT_ON_THREAD(mMainThread); // will crash on STS thread
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   return Preferences::GetBool("media.peerconnection.ice.proxy_only", false);
-#else
-  return false;
-#endif
 }
 
 void
@@ -1471,7 +1448,6 @@ LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
   return NS_OK;
 }
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 /**
  * Tells you if any local track is isolated to a specific peer identity.
  * Obviously, we want all the tracks to be isolated equally so that they can
@@ -1550,7 +1526,6 @@ void RemoteSourceStreamInfo::UpdatePrincipal_m(nsIPrincipal* aPrincipal)
     }
   }
 }
-#endif // MOZILLA_INTERNAL_API
 
 bool
 PeerConnectionMedia::AnyCodecHasPluginID(uint64_t aPluginID)
@@ -1702,7 +1677,6 @@ LocalSourceStreamInfo::ForgetPipelineByTrackId_m(const std::string& trackId)
   return nullptr;
 }
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 auto
 RemoteTrackSource::ApplyConstraints(
     nsPIDOMWindowInner* aWindow,
@@ -1715,6 +1689,5 @@ RemoteTrackSource::ApplyConstraints(
                                       NS_LITERAL_STRING("")));
   return p.forget();
 }
-#endif
 
 } // namespace mozilla
