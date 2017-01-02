@@ -334,15 +334,11 @@ static uint32_t GetSecurityStateFromSecurityInfoAndRequest(nsISupports* info,
 
 
 //  nsIWebProgressListener
-NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
-                                        nsIRequest* aRequest,
-                                        int32_t aCurSelfProgress,
-                                        int32_t aMaxSelfProgress,
-                                        int32_t aCurTotalProgress,
-                                        int32_t aMaxTotalProgress)
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress*, nsIRequest*, int32_t,
+                                        int32_t, int32_t, int32_t)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("Should have been excluded in AddProgressListener()");
   return NS_OK;
 }
 
@@ -1132,12 +1128,10 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress* aWebProgress,
-                                      nsIRequest* aRequest,
-                                      nsresult aStatus,
-                                      const char16_t* aMessage)
+nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress*, nsIRequest*, nsresult,
+                                      const char16_t*)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("Should have been excluded in AddProgressListener()");
   return NS_OK;
 }
 

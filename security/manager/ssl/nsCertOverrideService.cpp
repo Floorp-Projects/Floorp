@@ -100,7 +100,7 @@ nsresult
 nsCertOverrideService::Init()
 {
   if (!NS_IsMainThread()) {
-    NS_NOTREACHED("nsCertOverrideService initialized off main thread");
+    MOZ_ASSERT_UNREACHABLE("nsCertOverrideService initialized off main thread");
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
