@@ -35,8 +35,16 @@
   --highlighter-bubble-border-color: rgba(255, 255, 255, 0.2);
 }
 
+/**
+ * Highlighters are asbolute positioned in the page by default.
+ * A single highlighter can have fixed position in its css class if needed (see below the
+ * eye dropper or rulers highlighter, for example); but if it has to handle the
+ * document's scrolling (as rulers does), it would lag a bit behind due the APZ (Async
+ * Pan/Zoom module), that performs asynchronously panning and zooming on the compositor
+ * thread rather than the main thread.
+ */
 :-moz-native-anonymous .highlighter-container {
-  position: fixed;
+  position: absolute;
   width: 100%;
   height: 100%;
   /* The container for all highlighters doesn't react to pointer-events by
@@ -383,6 +391,10 @@
   cursor: crosshair;
 }
 
+:-moz-native-anonymous .measuring-tool-highlighter-elements {
+  position: absolute;
+}
+
 :-moz-native-anonymous .measuring-tool-highlighter-root path {
   shape-rendering: crispEdges;
   fill: rgba(135, 206, 235, 0.6);
@@ -443,7 +455,7 @@
   --label-height: 23px;
   --color: #e0e0e0;
 
-  position: absolute;
+  position: fixed;
   /* Tool start position. This should match the X/Y defines in JS */
   top: 100px;
   left: 100px;

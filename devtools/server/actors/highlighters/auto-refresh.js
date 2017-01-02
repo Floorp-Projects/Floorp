@@ -7,11 +7,41 @@
 const { Cu } = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { isNodeValid } = require("./utils/markup");
-const { getAdjustedQuads } = require("devtools/shared/layout/utils");
+const { getAdjustedQuads, getCurrentZoom,
+        getWindowDimensions } = require("devtools/shared/layout/utils");
 
 // Note that the order of items in this array is important because it is used
 // for drawing the BoxModelHighlighter's path elements correctly.
 const BOX_MODEL_REGIONS = ["margin", "border", "padding", "content"];
+const QUADS_PROPS = ["p1", "p2", "p3", "p4", "bounds"];
+
+function areValuesDifferent(oldValue, newValue, zoom) {
+  let delta = Math.abs(oldValue.toFixed(4) - newValue.toFixed(4));
+  return delta / zoom > 1 / zoom;
+}
+
+function areQuadsDifferent(oldQuads, newQuads, zoom) {
+  for (let region of BOX_MODEL_REGIONS) {
+    if (oldQuads[region].length !== newQuads[region].length) {
+      return true;
+    }
+
+    for (let i = 0; i < oldQuads[region].length; i++) {
+      for (let prop of QUADS_PROPS) {
+        let oldProp = oldQuads[region][i][prop];
+        let newProp = newQuads[region][i][prop];
+
+        for (let key of Object.keys(oldProp)) {
+          if (areValuesDifferent(oldProp[key], newProp[key], zoom)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
 
 /**
  * Base class for auto-refresh-on-change highlighters. Sub classes will have a
@@ -40,6 +70,8 @@ function AutoRefreshHighlighter(highlighterEnv) {
 
   this.currentNode = null;
   this.currentQuads = {};
+
+  this._winDimensions = getWindowDimensions(this.win);
 
   this.update = this.update.bind(this);
 }
@@ -139,6 +171,8 @@ AutoRefreshHighlighter.prototype = {
    * Update the stored box quads by reading the current node's box quads.
    */
   _updateAdjustedQuads: function () {
+    this.currentQuads = {};
+
     for (let region of BOX_MODEL_REGIONS) {
       this.currentQuads[region] = getAdjustedQuads(
         this.win,
@@ -152,17 +186,32 @@ AutoRefreshHighlighter.prototype = {
    * @return {Boolean}
    */
   _hasMoved: function () {
-    let oldQuads = JSON.stringify(this.currentQuads);
+    let oldQuads = this.currentQuads;
     this._updateAdjustedQuads();
-    let newQuads = JSON.stringify(this.currentQuads);
-    return oldQuads !== newQuads;
+
+    return areQuadsDifferent(oldQuads, this.currentQuads, getCurrentZoom(this.win));
+  },
+
+  /**
+   * Update the knowledge we have of the current window's dimensions and return `true`
+   * if they have changed since.
+   * @return {Boolean}
+   */
+  _haveWindowDimensionsChanged: function () {
+    let { width, height } = getWindowDimensions(this.win);
+    let haveChanged = (this._winDimensions.width !== width ||
+                      this._winDimensions.height !== height);
+
+    this._winDimensions = { width, height };
+    return haveChanged;
   },
 
   /**
    * Update the highlighter if the node has moved since the last update.
    */
   update: function () {
-    if (!this._isNodeValid(this.currentNode) || !this._hasMoved()) {
+    if (!this._isNodeValid(this.currentNode) ||
+       (!this._hasMoved() && !this._haveWindowDimensionsChanged())) {
       return;
     }
 
