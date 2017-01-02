@@ -203,6 +203,10 @@ function getAdjustedQuads(boundaryWindow, node, region) {
 
   let [xOffset, yOffset] = getFrameOffsets(boundaryWindow, node);
   let scale = getCurrentZoom(node);
+  let { scrollX, scrollY } = boundaryWindow;
+
+  xOffset += scrollX * scale;
+  yOffset += scrollY * scale;
 
   let adjustedQuads = [];
   for (let quad of quads) {
@@ -320,7 +324,7 @@ function getNodeBounds(boundaryWindow, node) {
   if (!node) {
     return null;
   }
-
+  let { scrollX, scrollY } = boundaryWindow;
   let scale = getCurrentZoom(node);
 
   // Find out the offset of the node in its current frame
@@ -347,8 +351,8 @@ function getNodeBounds(boundaryWindow, node) {
 
   // And add the potential frame offset if the node is nested
   let [xOffset, yOffset] = getFrameOffsets(boundaryWindow, node);
-  xOffset += offsetLeft;
-  yOffset += offsetTop;
+  xOffset += offsetLeft + scrollX;
+  yOffset += offsetTop + scrollY;
 
   xOffset *= scale;
   yOffset *= scale;
@@ -627,6 +631,33 @@ function getCurrentZoom(node) {
   return utilsFor(win).fullZoom;
 }
 exports.getCurrentZoom = getCurrentZoom;
+
+/**
+ * Returns the window's dimensions for the `window` given.
+ *
+ * @return {Object} An object with `width` and `height` properties, representing the
+ * number of pixels for the document's size.
+ */
+function getWindowDimensions(window) {
+  // First we'll try without flushing layout, because it's way faster.
+  let windowUtils = utilsFor(window);
+  let { width, height } = windowUtils.getRootBounds();
+
+  if (!width || !height) {
+    // We need a flush after all :'(
+    width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
+    height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
+
+    let scrollbarHeight = {};
+    let scrollbarWidth = {};
+    windowUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
+    width -= scrollbarWidth.value;
+    height -= scrollbarHeight.value;
+  }
+
+  return { width, height };
+}
+exports.getWindowDimensions = getWindowDimensions;
 
 /**
  * Return the default view for a given node, where node can be:
