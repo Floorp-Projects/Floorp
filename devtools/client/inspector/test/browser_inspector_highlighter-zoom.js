@@ -9,22 +9,15 @@
 
 const TEST_URL = "data:text/html;charset=utf-8,<div>zoom me</div>";
 
-// TEST_LEVELS entries should contain the following properties:
-// - level: the zoom level to test
-// - expected: the style attribute value to check for on the root highlighter
-//   element.
-const TEST_LEVELS = [{
-  level: 2,
-  expected: "position:absolute;transform-origin:top left;" +
-            "transform:scale(0.5);width:200%;height:200%;"
-}, {
-  level: 1,
-  expected: "position:absolute;width:100%;height:100%;"
-}, {
-  level: .5,
-  expected: "position:absolute;transform-origin:top left;" +
-            "transform:scale(2);width:50%;height:50%;"
-}];
+// TEST_LEVELS entries should contain the zoom level to test.
+const TEST_LEVELS = [2, 1, .5];
+
+// Returns the expected style attribute value to check for on the root highlighter
+// element, for the values given.
+const expectedStyle = (w, h, z) =>
+        (z !== 1 ? `transform-origin:top left; transform:scale(${1 / z}); ` : "") +
+        `position:absolute; width:${w * z}px;height:${h * z}px; ` +
+        "overflow:hidden";
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
@@ -35,7 +28,7 @@ add_task(function* () {
   let isVisible = yield testActor.isHighlighting();
   ok(isVisible, "The highlighter is visible");
 
-  for (let {level, expected} of TEST_LEVELS) {
+  for (let level of TEST_LEVELS) {
     info("Zoom to level " + level +
          " and check that the highlighter is correct");
 
@@ -48,7 +41,9 @@ add_task(function* () {
     info("Check that the highlighter root wrapper node was scaled down");
 
     let style = yield getRootNodeStyle(testActor);
-    is(style, expected, "The style attribute of the root element is correct");
+    let { width, height } = yield testActor.getWindowDimensions();
+    is(style, expectedStyle(width, height, level),
+      "The style attribute of the root element is correct");
   }
 });
 
