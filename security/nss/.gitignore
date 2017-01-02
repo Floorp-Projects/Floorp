@@ -3,3 +3,17 @@
 *OPT.OBJ/
 *DBG.OBJ/
 *DBG.OBJD/
+out/*
+*.pyc
+*.bak
+*.out
+*.rej
+*.patch
+GPATH
+GRTAGS
+GTAGS
+#*
+.#*
+.ycm_extra_conf.py*
+fuzz/libFuzzer/*
+fuzz/corpus

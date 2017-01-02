@@ -3,6 +3,11 @@
 set -v -e -x
 
 if [ $(id -u) = 0 ]; then
+    # set up fake uname
+    if [ ! -f /bin/uname-real ]; then
+        mv /bin/uname /bin/uname-real
+        ln -s /home/worker/bin/uname.sh /bin/uname
+    fi
     # Drop privileges by re-running this script.
     exec su worker $0
 fi

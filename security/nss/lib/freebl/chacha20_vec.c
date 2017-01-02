@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "chacha20.h"
+#include "blapii.h"
 
 #ifndef CHACHA_RNDS
 #define CHACHA_RNDS 20 /* 8 (high speed), 20 (conservative), 12 (middle) */
@@ -133,7 +134,7 @@ typedef unsigned vec __attribute__((vector_size(16)));
     STORE(op + d + 8, LOAD(in + d + 8) ^ REVV_BE(v2)); \
     STORE(op + d + 12, LOAD(in + d + 12) ^ REVV_BE(v3));
 
-void
+void NO_SANITIZE_ALIGNMENT
 ChaCha20XOR(unsigned char *out, const unsigned char *in, unsigned int inlen,
             const unsigned char key[32], const unsigned char nonce[12],
             uint32_t counter)

@@ -1240,10 +1240,15 @@ AddCrlDistPoint(void *extHandle)
             }
         }
 
-        crlDistPoints->distPoints =
-            PORT_ArenaGrow(arena, crlDistPoints->distPoints,
-                           sizeof(*crlDistPoints->distPoints) * count,
-                           sizeof(*crlDistPoints->distPoints) * (count + 1));
+        if (crlDistPoints->distPoints) {
+            crlDistPoints->distPoints =
+                PORT_ArenaGrow(arena, crlDistPoints->distPoints,
+                               sizeof(*crlDistPoints->distPoints) * count,
+                               sizeof(*crlDistPoints->distPoints) * (count + 1));
+        } else {
+            crlDistPoints->distPoints =
+                PORT_ArenaZAlloc(arena, sizeof(*crlDistPoints->distPoints) * (count + 1));
+        }
         if (crlDistPoints->distPoints == NULL) {
             GEN_BREAK(SECFailure);
         }

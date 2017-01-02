@@ -1943,6 +1943,10 @@ pkix_PrepareForwardBuilderStateForAIA(
         state->status = BUILD_TRYAIA;
 }
 
+extern SECStatus
+isIssuerCertAllowedAtCertIssuanceTime(CERTCertificate *issuerCert,
+                                      CERTCertificate *referenceCert);
+
 /*
  * FUNCTION: pkix_BuildForwardDepthFirstSearch
  * DESCRIPTION:
@@ -2057,6 +2061,7 @@ pkix_BuildForwardDepthFirstSearch(
         PKIX_ComCertSelParams *certSelParams = NULL;
         PKIX_TrustAnchor *trustAnchor = NULL;
         PKIX_PL_Cert *trustedCert = NULL;
+        PKIX_PL_Cert *targetCert = NULL;
         PKIX_VerifyNode *verifyNode = NULL;
         PKIX_Error *verifyError = NULL;
         PKIX_Error *finalError = NULL;
@@ -2072,6 +2077,7 @@ pkix_BuildForwardDepthFirstSearch(
         validityDate = state->validityDate;
         canBeCached = state->canBeCached;
         PKIX_DECREF(*pValResult);
+        targetCert = state->buildConstants.targetCert;
 
         /*
          * We return if successful; if we fall off the end
@@ -2353,6 +2359,12 @@ pkix_BuildForwardDepthFirstSearch(
                             (PKIX_PL_Object **)&(state->candidateCert),
                             plContext),
                             PKIX_LISTGETITEMFAILED);
+
+                    if (isIssuerCertAllowedAtCertIssuanceTime(
+                          state->candidateCert->nssCert, targetCert->nssCert)
+                            != SECSuccess) {
+                        PKIX_ERROR(PKIX_CERTISBLACKLISTEDATISSUANCETIME);
+                    }
 
                     if ((state->verifyNode) != NULL) {
                             PKIX_CHECK_FATAL(pkix_VerifyNode_Create

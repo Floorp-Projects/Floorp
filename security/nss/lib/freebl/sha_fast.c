@@ -115,7 +115,7 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
             shaCompress(&ctx->H[H2X], ctx->W);
         }
     }
-#if !defined(SHA_ALLOW_UNALIGNED_ACCESS)
+#if !defined(HAVE_UNALIGNED_ACCESS)
     if ((ptrdiff_t)dataIn % sizeof(PRUint32)) {
         while (len >= 64U) {
             memcpy(ctx->B, dataIn, 64);
@@ -140,7 +140,7 @@ SHA1_Update(SHA1Context *ctx, const unsigned char *dataIn, unsigned int len)
 /*
  *  SHA: Generate hash value from context
  */
-void
+void NO_SANITIZE_ALIGNMENT
 SHA1_End(SHA1Context *ctx, unsigned char *hashout,
          unsigned int *pDigestLen, unsigned int maxDigestLen)
 {
@@ -240,7 +240,7 @@ SHA1_EndRaw(SHA1Context *ctx, unsigned char *hashout,
  * results in code that is 3 times faster than the previous NSS sha_fast
  * code on AMD64.
  */
-static void
+static void NO_SANITIZE_ALIGNMENT
 shaCompress(volatile SHA_HW_t *X, const PRUint32 *inbuf)
 {
     register SHA_HW_t A, B, C, D, E;

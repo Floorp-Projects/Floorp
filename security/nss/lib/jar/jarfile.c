@@ -657,7 +657,7 @@ static int
 jar_listzip(JAR *jar, JAR_FILE fp)
 {
     ZZLink *ent;
-    JAR_Item *it;
+    JAR_Item *it = NULL;
     JAR_Physical *phy = NULL;
     struct ZipLocal *Local = PORT_ZNew(struct ZipLocal);
     struct ZipCentral *Central = PORT_ZNew(struct ZipCentral);

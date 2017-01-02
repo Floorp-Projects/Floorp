@@ -21,8 +21,8 @@ SEC_BEGIN_PROTOS
 /* private */
 SECAlgorithmID *
 sec_pkcs5CreateAlgorithmID(SECOidTag algorithm, SECOidTag cipherAlgorithm,
-			SECOidTag prfAlg, SECOidTag *pPbeAlgorithm,
-			int keyLengh, SECItem *salt, int iteration);
+                           SECOidTag prfAlg, SECOidTag *pPbeAlgorithm,
+                           int keyLengh, SECItem *salt, int iteration);
 
 /* Get the initialization vector.  The password is passed in, hashing
  * is performed, and the initialization vector is returned.
@@ -47,12 +47,11 @@ int SEC_PKCS5GetKeyLength(SECAlgorithmID *algid);
 
 PBEBitGenContext *
 PBE_CreateContext(SECOidTag hashAlgorithm, PBEBitGenID bitGenPurpose,
-        SECItem *pwitem, SECItem *salt, unsigned int bitsNeeded,
-        unsigned int iterations);
+                  SECItem *pwitem, SECItem *salt, unsigned int bitsNeeded,
+                  unsigned int iterations);
 
 void
 PBE_DestroyContext(PBEBitGenContext *context);
-
 
 SECItem *
 PBE_GenerateBits(PBEBitGenContext *context);

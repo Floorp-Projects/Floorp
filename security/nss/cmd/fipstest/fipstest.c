@@ -2523,7 +2523,7 @@ ecdsa_pkv_test(char *reqfn)
                 PORT_Free(pubkey.data);
                 pubkey.data = NULL;
             }
-            SECITEM_AllocItem(NULL, &pubkey, 2 * len + 1);
+            SECITEM_AllocItem(NULL, &pubkey, ecparams->pointSize);
             if (pubkey.data == NULL) {
                 goto loser;
             }

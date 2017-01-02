@@ -10,6 +10,7 @@
 #endif
 
 #include "blapi.h"
+#include "blapii.h"
 #include "secerr.h"
 #ifdef XP_UNIX_XXX
 #include <stddef.h> /* for ptrdiff_t */
@@ -363,7 +364,7 @@ rc2_Decrypt1Block(RC2Context *cx, RC2Block *output, RC2Block *input)
     output->s[3] = R3;
 }
 
-static SECStatus
+static SECStatus NO_SANITIZE_ALIGNMENT
 rc2_EncryptECB(RC2Context *cx, unsigned char *output,
                const unsigned char *input, unsigned int inputLen)
 {
@@ -380,7 +381,7 @@ rc2_EncryptECB(RC2Context *cx, unsigned char *output,
     return SECSuccess;
 }
 
-static SECStatus
+static SECStatus NO_SANITIZE_ALIGNMENT
 rc2_DecryptECB(RC2Context *cx, unsigned char *output,
                const unsigned char *input, unsigned int inputLen)
 {
@@ -397,7 +398,7 @@ rc2_DecryptECB(RC2Context *cx, unsigned char *output,
     return SECSuccess;
 }
 
-static SECStatus
+static SECStatus NO_SANITIZE_ALIGNMENT
 rc2_EncryptCBC(RC2Context *cx, unsigned char *output,
                const unsigned char *input, unsigned int inputLen)
 {
@@ -418,7 +419,7 @@ rc2_EncryptCBC(RC2Context *cx, unsigned char *output,
     return SECSuccess;
 }
 
-static SECStatus
+static SECStatus NO_SANITIZE_ALIGNMENT
 rc2_DecryptCBC(RC2Context *cx, unsigned char *output,
                const unsigned char *input, unsigned int inputLen)
 {

@@ -51,4 +51,4 @@ endif
 
 $(OBJDIR)/certdata.c: $(NSS_CERTDATA_TXT) certdata.perl
 	@$(MAKE_OBJDIR)
-	$(PERL) certdata.perl < $(NSS_CERTDATA_TXT) > $@
+	$(PERL) certdata.perl $(NSS_CERTDATA_TXT) $@
