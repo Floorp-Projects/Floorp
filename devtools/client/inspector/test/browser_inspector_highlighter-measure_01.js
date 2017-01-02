@@ -37,7 +37,7 @@ add_task(function* () {
 function* isHiddenByDefault({isElementHidden}) {
   info("Checking the highlighter is hidden by default");
 
-  let hidden = yield isElementHidden("elements");
+  let hidden = yield isElementHidden("root");
   ok(hidden, "highlighter's root is hidden by default");
 
   hidden = yield isElementHidden("label-size");
