@@ -3832,3 +3832,46 @@ SECU_ParseSSLVersionRangeString(const char *input,
 
     return SECSuccess;
 }
+
+SECItem *
+SECU_HexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
+{
+    int i = 0;
+    int byteval = 0;
+    int tmp = PORT_Strlen(str);
+
+    PORT_Assert(arena);
+    PORT_Assert(item);
+
+    if ((tmp % 2) != 0) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return NULL;
+    }
+
+    item = SECITEM_AllocItem(arena, item, tmp / 2);
+    if (item == NULL) {
+        return NULL;
+    }
+
+    while (str[i]) {
+        if ((str[i] >= '0') && (str[i] <= '9')) {
+            tmp = str[i] - '0';
+        } else if ((str[i] >= 'a') && (str[i] <= 'f')) {
+            tmp = str[i] - 'a' + 10;
+        } else if ((str[i] >= 'A') && (str[i] <= 'F')) {
+            tmp = str[i] - 'A' + 10;
+        } else {
+            /* item is in arena and gets freed by the caller */
+            return NULL;
+        }
+
+        byteval = byteval * 16 + tmp;
+        if ((i % 2) != 0) {
+            item->data[i / 2] = byteval;
+            byteval = 0;
+        }
+        i++;
+    }
+
+    return item;
+}

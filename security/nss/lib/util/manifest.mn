@@ -7,6 +7,7 @@ CORE_DEPTH = ../..
 EXPORTS = \
 	base64.h \
 	ciferfam.h \
+	eccutil.h \
 	hasht.h \
 	nssb64.h \
 	nssb64t.h \

@@ -34,15 +34,16 @@ NSS_CMSEnvelopedData_Create(NSSCMSMessage *cmsg, SECOidTag algorithm, int keysiz
 
     envd = (NSSCMSEnvelopedData *)PORT_ArenaZAlloc(poolp, sizeof(NSSCMSEnvelopedData));
     if (envd == NULL)
-	goto loser;
+        goto loser;
 
     envd->cmsg = cmsg;
 
     /* version is set in NSS_CMSEnvelopedData_Encode_BeforeStart() */
 
-    rv = NSS_CMSContentInfo_SetContentEncAlg(poolp, &(envd->contentInfo), algorithm, NULL, keysize);
+    rv = NSS_CMSContentInfo_SetContentEncAlg(poolp, &(envd->contentInfo),
+                                             algorithm, NULL, keysize);
     if (rv != SECSuccess)
-	goto loser;
+        goto loser;
 
     PORT_ArenaUnmark(poolp, mark);
     return envd;
@@ -62,17 +63,16 @@ NSS_CMSEnvelopedData_Destroy(NSSCMSEnvelopedData *edp)
     NSSCMSRecipientInfo *ri;
 
     if (edp == NULL)
-	return;
+        return;
 
     recipientinfos = edp->recipientInfos;
     if (recipientinfos == NULL)
-	return;
+        return;
 
     while ((ri = *recipientinfos++) != NULL)
-	NSS_CMSRecipientInfo_Destroy(ri);
+        NSS_CMSRecipientInfo_Destroy(ri);
 
-   NSS_CMSContentInfo_Destroy(&(edp->contentInfo));
-
+    NSS_CMSContentInfo_Destroy(&(edp->contentInfo));
 }
 
 /*
@@ -104,11 +104,11 @@ NSS_CMSEnvelopedData_AddRecipient(NSSCMSEnvelopedData *edp, NSSCMSRecipientInfo 
 
     rv = NSS_CMSArray_Add(edp->cmsg->poolp, (void ***)&(edp->recipientInfos), (void *)rip);
     if (rv != SECSuccess) {
-	PORT_ArenaRelease(edp->cmsg->poolp, mark);
-	return SECFailure;
+        PORT_ArenaRelease(edp->cmsg->poolp, mark);
+        return SECFailure;
     }
 
-    PORT_ArenaUnmark (edp->cmsg->poolp, mark);
+    PORT_ArenaUnmark(edp->cmsg->poolp, mark);
     return SECSuccess;
 }
 
@@ -146,65 +146,68 @@ NSS_CMSEnvelopedData_Encode_BeforeStart(NSSCMSEnvelopedData *envd)
 
     recipientinfos = envd->recipientInfos;
     if (recipientinfos == NULL) {
-	PORT_SetError(SEC_ERROR_BAD_DATA);
+        PORT_SetError(SEC_ERROR_BAD_DATA);
 #if 0
-	PORT_SetErrorString("Cannot find recipientinfos to encode.");
+    PORT_SetErrorString("Cannot find recipientinfos to encode.");
 #endif
-	goto loser;
+        goto loser;
     }
 
     version = NSS_CMS_ENVELOPED_DATA_VERSION_REG;
     if (envd->originatorInfo != NULL || envd->unprotectedAttr != NULL) {
-	version = NSS_CMS_ENVELOPED_DATA_VERSION_ADV;
+        version = NSS_CMS_ENVELOPED_DATA_VERSION_ADV;
     } else {
-	for (i = 0; recipientinfos[i] != NULL; i++) {
-	    if (NSS_CMSRecipientInfo_GetVersion(recipientinfos[i]) != 0) {
-		version = NSS_CMS_ENVELOPED_DATA_VERSION_ADV;
-		break;
-	    }
-	}
+        for (i = 0; recipientinfos[i] != NULL; i++) {
+            if (NSS_CMSRecipientInfo_GetVersion(recipientinfos[i]) != 0) {
+                version = NSS_CMS_ENVELOPED_DATA_VERSION_ADV;
+                break;
+            }
+        }
     }
     dummy = SEC_ASN1EncodeInteger(poolp, &(envd->version), version);
     if (dummy == NULL)
-	goto loser;
+        goto loser;
 
     /* now we need to have a proper content encryption algorithm
      * on the SMIME level, we would figure one out by looking at SMIME capabilities
      * we cannot do that on our level, so if none is set already, we'll just go
      * with one of the mandatory algorithms (3DES) */
     if ((bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo)) == SEC_OID_UNKNOWN) {
-	rv = NSS_CMSContentInfo_SetContentEncAlg(poolp, cinfo, SEC_OID_DES_EDE3_CBC, NULL, 168);
-	if (rv != SECSuccess)
-	    goto loser;
-	bulkalgtag = SEC_OID_DES_EDE3_CBC;
-    } 
+        rv = NSS_CMSContentInfo_SetContentEncAlg(poolp, cinfo, SEC_OID_DES_EDE3_CBC, NULL, 168);
+        if (rv != SECSuccess)
+            goto loser;
+        bulkalgtag = SEC_OID_DES_EDE3_CBC;
+    }
 
     /* generate a random bulk key suitable for content encryption alg */
     type = PK11_AlgtagToMechanism(bulkalgtag);
     slot = PK11_GetBestSlot(type, envd->cmsg->pwfn_arg);
     if (slot == NULL)
-	goto loser;	/* error has been set by PK11_GetBestSlot */
+        goto loser; /* error has been set by PK11_GetBestSlot */
 
     /* this is expensive... */
-    bulkkey = PK11_KeyGen(slot, type, NULL, NSS_CMSContentInfo_GetBulkKeySize(cinfo) / 8, envd->cmsg->pwfn_arg);
+    bulkkey = PK11_KeyGen(slot, type, NULL,
+                          NSS_CMSContentInfo_GetBulkKeySize(cinfo) / 8,
+                          envd->cmsg->pwfn_arg);
     PK11_FreeSlot(slot);
     if (bulkkey == NULL)
-	goto loser;	/* error has been set by PK11_KeyGen */
+        goto loser; /* error has been set by PK11_KeyGen */
 
     mark = PORT_ArenaMark(poolp);
 
     /* Encrypt the bulk key with the public key of each recipient.  */
     for (i = 0; recipientinfos[i] != NULL; i++) {
-	rv = NSS_CMSRecipientInfo_WrapBulkKey(recipientinfos[i], bulkkey, bulkalgtag);
-	if (rv != SECSuccess)
-	    goto loser;	/* error has been set by NSS_CMSRecipientInfo_EncryptBulkKey */
-	    		/* could be: alg not supported etc. */
+        rv = NSS_CMSRecipientInfo_WrapBulkKey(recipientinfos[i], bulkkey, bulkalgtag);
+        if (rv != SECSuccess)
+            goto loser; /* error has been set by NSS_CMSRecipientInfo_EncryptBulkKey */
+                        /* could be: alg not supported etc. */
     }
 
     /* the recipientinfos are all finished. now sort them by DER for SET OF encoding */
-    rv = NSS_CMSArray_SortByDER((void **)envd->recipientInfos, NSSCMSRecipientInfoTemplate, NULL);
+    rv = NSS_CMSArray_SortByDER((void **)envd->recipientInfos,
+                                NSSCMSRecipientInfoTemplate, NULL);
     if (rv != SECSuccess)
-	goto loser;	/* error has been set by NSS_CMSArray_SortByDER */
+        goto loser; /* error has been set by NSS_CMSArray_SortByDER */
 
     /* store the bulk key in the contentInfo so that the encoder can find it */
     NSS_CMSContentInfo_SetBulkKey(cinfo, bulkkey);
@@ -217,9 +220,9 @@ NSS_CMSEnvelopedData_Encode_BeforeStart(NSSCMSEnvelopedData *envd)
 
 loser:
     if (mark != NULL)
-	PORT_ArenaRelease (poolp, mark);
+        PORT_ArenaRelease(poolp, mark);
     if (bulkkey)
-	PK11_FreeSymKey(bulkkey);
+        PK11_FreeSymKey(bulkkey);
 
     return SECFailure;
 }
@@ -243,14 +246,14 @@ NSS_CMSEnvelopedData_Encode_BeforeData(NSSCMSEnvelopedData *envd)
     /* find bulkkey and algorithm - must have been set by NSS_CMSEnvelopedData_Encode_BeforeStart */
     bulkkey = NSS_CMSContentInfo_GetBulkKey(cinfo);
     if (bulkkey == NULL)
-	return SECFailure;
+        return SECFailure;
     algid = NSS_CMSContentInfo_GetContentEncAlg(cinfo);
     if (algid == NULL)
-	return SECFailure;
+        return SECFailure;
 
     rv = NSS_CMSContentInfo_Private_Init(cinfo);
     if (rv != SECSuccess) {
-	return SECFailure;
+        return SECFailure;
     }
     /* this may modify algid (with IVs generated in a token).
      * it is essential that algid is a pointer to the contentEncAlg data, not a
@@ -258,7 +261,7 @@ NSS_CMSEnvelopedData_Encode_BeforeData(NSSCMSEnvelopedData *envd)
     cinfo->privateInfo->ciphcx = NSS_CMSCipherContext_StartEncrypt(envd->cmsg->poolp, bulkkey, algid);
     PK11_FreeSymKey(bulkkey);
     if (cinfo->privateInfo->ciphcx == NULL)
-	return SECFailure;
+        return SECFailure;
 
     return SECSuccess;
 }
@@ -270,8 +273,8 @@ SECStatus
 NSS_CMSEnvelopedData_Encode_AfterData(NSSCMSEnvelopedData *envd)
 {
     if (envd->contentInfo.privateInfo && envd->contentInfo.privateInfo->ciphcx) {
-	NSS_CMSCipherContext_Destroy(envd->contentInfo.privateInfo->ciphcx);
-	envd->contentInfo.privateInfo->ciphcx = NULL;
+        NSS_CMSCipherContext_Destroy(envd->contentInfo.privateInfo->ciphcx);
+        envd->contentInfo.privateInfo->ciphcx = NULL;
     }
 
     /* nothing else to do after data */
@@ -279,7 +282,7 @@ NSS_CMSEnvelopedData_Encode_AfterData(NSSCMSEnvelopedData *envd)
 }
 
 /*
- * NSS_CMSEnvelopedData_Decode_BeforeData - find our recipientinfo, 
+ * NSS_CMSEnvelopedData_Decode_BeforeData - find our recipientinfo,
  * derive bulk key & set up our contentinfo
  */
 SECStatus
@@ -296,18 +299,18 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
     int rlIndex;
 
     if (NSS_CMSArray_Count((void **)envd->recipientInfos) == 0) {
-	PORT_SetError(SEC_ERROR_BAD_DATA);
+        PORT_SetError(SEC_ERROR_BAD_DATA);
 #if 0
-	PORT_SetErrorString("No recipient data in envelope.");
+    PORT_SetErrorString("No recipient data in envelope.");
 #endif
-	goto loser;
+        goto loser;
     }
 
     /* look if one of OUR cert's issuerSN is on the list of recipients, and if so,  */
     /* get the cert and private key for it right away */
     recipient_list = nss_cms_recipient_list_create(envd->recipientInfos);
     if (recipient_list == NULL)
-	goto loser;
+        goto loser;
 
     /* what about multiple recipientInfos that match?
      * especially if, for some reason, we could not produce a bulk key with the first match?!
@@ -317,17 +320,17 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
 
     /* if that fails, then we're not an intended recipient and cannot decrypt */
     if (rlIndex < 0) {
-	PORT_SetError(SEC_ERROR_NOT_A_RECIPIENT);
+        PORT_SetError(SEC_ERROR_NOT_A_RECIPIENT);
 #if 0
-	PORT_SetErrorString("Cannot decrypt data because proper key cannot be found.");
+    PORT_SetErrorString("Cannot decrypt data because proper key cannot be found.");
 #endif
-	goto loser;
+        goto loser;
     }
 
     recipient = recipient_list[rlIndex];
     if (!recipient->cert || !recipient->privkey) {
-	/* XXX should set an error code ?!? */
-	goto loser;
+        /* XXX should set an error code ?!? */
+        goto loser;
     }
     /* get a pointer to "our" recipientinfo */
     ri = envd->recipientInfos[recipient->riIndex];
@@ -335,16 +338,16 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
     cinfo = &(envd->contentInfo);
     bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo);
     if (bulkalgtag == SEC_OID_UNKNOWN) {
-	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-    } else 
-	bulkkey = 
-	    NSS_CMSRecipientInfo_UnwrapBulkKey(ri,recipient->subIndex,
-						    recipient->cert,
-						    recipient->privkey,
-						    bulkalgtag);
+        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+    } else
+        bulkkey =
+            NSS_CMSRecipientInfo_UnwrapBulkKey(ri, recipient->subIndex,
+                                               recipient->cert,
+                                               recipient->privkey,
+                                               bulkalgtag);
     if (bulkkey == NULL) {
-	/* no success finding a bulk key */
-	goto loser;
+        /* no success finding a bulk key */
+        goto loser;
     }
 
     NSS_CMSContentInfo_SetBulkKey(cinfo, bulkkey);
@@ -353,21 +356,20 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
 
     rv = NSS_CMSContentInfo_Private_Init(cinfo);
     if (rv != SECSuccess) {
-	goto loser;
+        goto loser;
     }
     rv = SECFailure;
     cinfo->privateInfo->ciphcx = NSS_CMSCipherContext_StartDecrypt(bulkkey, bulkalg);
     if (cinfo->privateInfo->ciphcx == NULL)
-	goto loser;		/* error has been set by NSS_CMSCipherContext_StartDecrypt */
-
+        goto loser; /* error has been set by NSS_CMSCipherContext_StartDecrypt */
 
     rv = SECSuccess;
 
 loser:
     if (bulkkey)
-	PK11_FreeSymKey(bulkkey);
+        PK11_FreeSymKey(bulkkey);
     if (recipient_list != NULL)
-	nss_cms_recipient_list_destroy(recipient_list);
+        nss_cms_recipient_list_destroy(recipient_list);
     return rv;
 }
 
@@ -378,8 +380,8 @@ SECStatus
 NSS_CMSEnvelopedData_Decode_AfterData(NSSCMSEnvelopedData *envd)
 {
     if (envd && envd->contentInfo.privateInfo && envd->contentInfo.privateInfo->ciphcx) {
-	NSS_CMSCipherContext_Destroy(envd->contentInfo.privateInfo->ciphcx);
-	envd->contentInfo.privateInfo->ciphcx = NULL;
+        NSS_CMSCipherContext_Destroy(envd->contentInfo.privateInfo->ciphcx);
+        envd->contentInfo.privateInfo->ciphcx = NULL;
     }
 
     return SECSuccess;
@@ -394,4 +396,3 @@ NSS_CMSEnvelopedData_Decode_AfterEnd(NSSCMSEnvelopedData *envd)
     /* apply final touches */
     return SECSuccess;
 }
-

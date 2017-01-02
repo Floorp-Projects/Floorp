@@ -1871,6 +1871,10 @@ print_ssl(DataBufferList *s, int length, unsigned char *buffer)
 
     db = PR_NEW(struct _DataBuffer);
 
+    if (!db) {
+        return;
+    }
+
     db->buffer = (unsigned char *)PORT_Alloc(length);
     db->length = length;
     db->offset = 0;
