@@ -1,5 +1,5 @@
 load 336081-1.xhtml
-asserts-if(stylo,2) load 336104.html # bug 1324669
+asserts-if(stylo,2-3) load 336104.html # bug 1324669
 skip-if(stylo) load 382527-1.html # bug 1323649
 load 382778-1.html
 asserts-if(stylo,1) load 402172-1.html # bug 1324663
