@@ -5,7 +5,7 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
-const { getCurrentZoom,
+const { getCurrentZoom, getWindowDimensions,
   getRootBindingParent } = require("devtools/shared/layout/utils");
 const { on, emit } = require("sdk/event/core");
 
@@ -529,14 +529,23 @@ CanvasFrameAnonymousContentHelper.prototype = {
    * @param {String} id The ID of the root element inserted with this API.
    */
   scaleRootElement: function (node, id) {
+    let boundaryWindow = this.highlighterEnv.window;
     let zoom = getCurrentZoom(node);
-    let value = "position:absolute;width:100%;height:100%;";
+    // Hide the root element and force the reflow in order to get the proper window's
+    // dimensions without increasing them.
+    this.setAttributeForElement(id, "style", "display: none");
+    node.offsetWidth;
+
+    let { width, height } = getWindowDimensions(boundaryWindow);
+    let value = "";
 
     if (zoom !== 1) {
-      value = "position:absolute;";
-      value += "transform-origin:top left;transform:scale(" + (1 / zoom) + ");";
-      value += "width:" + (100 * zoom) + "%;height:" + (100 * zoom) + "%;";
+      value = `transform-origin:top left; transform:scale(${1 / zoom}); `;
+      width *= zoom;
+      height *= zoom;
     }
+
+    value += `position:absolute; width:${width}px;height:${height}px; overflow:hidden`;
 
     this.setAttributeForElement(id, "style", value);
   }
