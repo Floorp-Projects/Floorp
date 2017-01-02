@@ -33,7 +33,9 @@
 
 #include "EventListenerService.h"
 #include "GeckoProfiler.h"
+#ifdef MOZ_ENABLE_PROFILER_SPS
 #include "ProfilerMarkers.h"
+#endif
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -1287,6 +1289,7 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
 
             nsresult rv = NS_OK;
             if (profiler_is_active()) {
+#ifdef MOZ_ENABLE_PROFILER_SPS
               // Add a profiler label and a profiler marker for the actual
               // dispatch of the event.
               // This is a very hot code path, so we need to make sure not to
@@ -1308,6 +1311,9 @@ EventListenerManager::HandleEventInternal(nsPresContext* aPresContext,
                                       new DOMEventMarkerPayload(typeStr, phase,
                                                                 startTime,
                                                                 endTime));
+#else
+              MOZ_CRASH("SPS profiler is N/A but profiler_is_active() returned true");
+#endif
             } else {
               rv = HandleEventSubType(listener, *aDOMEvent, aCurrentTarget);
             }
