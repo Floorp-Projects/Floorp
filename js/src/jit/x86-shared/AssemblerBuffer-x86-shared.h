@@ -116,11 +116,6 @@ namespace jit {
             return true;
         }
 
-        unsigned char* data()
-        {
-            return m_buffer.begin();
-        }
-
         size_t size() const
         {
             return m_buffer.length();
@@ -131,12 +126,15 @@ namespace jit {
             return m_oom;
         }
 
-        const unsigned char* buffer() const {
-            MOZ_ASSERT(!m_oom);
-            return m_buffer.begin();
-        }
-
 #ifndef RELEASE_OR_BETA
+        const unsigned char* acquireBuffer() const
+        {
+            MOZ_RELEASE_ASSERT(!m_oom);
+            return m_buffer.acquire();
+        }
+        void releaseBuffer() const { m_buffer.release(); }
+        unsigned char* acquireData() { return m_buffer.acquire(); }
+        void releaseData() const { m_buffer.release(); }
         void disableProtection() { m_buffer.disableProtection(); }
         void enableProtection() { m_buffer.enableProtection(); }
         void setLowerBoundForProtection(size_t size)
@@ -152,6 +150,14 @@ namespace jit {
             m_buffer.reprotectRegion(first, size);
         }
 #else
+        const unsigned char* acquireBuffer() const
+        {
+            MOZ_RELEASE_ASSERT(!m_oom);
+            return m_buffer.begin();
+        }
+        void releaseBuffer() const {}
+        unsigned char* acquireData() { return m_buffer.begin(); }
+        void releaseData() const {}
         void disableProtection() {}
         void enableProtection() {}
         void setLowerBoundForProtection(size_t) {}
