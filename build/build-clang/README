@@ -39,8 +39,21 @@ build-clang.py accepts a JSON config format with the following fields:
 * gcc_dir: Path to the gcc toolchain installation, only required on Linux.
 * cc: Path to the bootsraping C Compiler.
 * cxx: Path to the bootsraping C++ Compiler.
+* ar: Path to the library archiver tool.
+* ranlib: Path to the ranlib tool.
+* ld: Path to the linker.
 * patches: Optional list of patches to apply per platform.  Supported platforms: macosx64, linux32, linux64.  The default is Release.
 * build_type: The type of build to make.  Supported types: Release, Debug, RelWithDebInfo or MinSizeRel.
 * build_libcxx: Whether to build with libcxx.  The default is false.
 * import_clang_tidy: Whether to import Mozilla checks into clang-tidy before building.  The default is false.
+* osx_cross_compile: Whether to invoke CMake for OS X cross compile builds.
 * assertions: Whether to enable LLVM assertions.  The default is false.
+
+Environment Variables
+---------------------
+
+The following environment variables are used for cross-compile builds targeting OS X on Linux.
+
+* CROSS_CCTOOLS_PATH: Path to the cctools directory where the cross compiler toolchain is located.
+* CROSS_SYSROOT: Path to the OS X SDK directory for cross compile builds.
+* LIBCXX_INCLUDE_PATH: Path to the cross compiler libc++ headers.
