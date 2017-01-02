@@ -58,6 +58,21 @@ public:
     unsigned char* data() { return m_formatter.data(); }
     bool oom() const { return m_formatter.oom(); }
 
+    void disableProtection() { m_formatter.disableProtection(); }
+    void enableProtection() { m_formatter.enableProtection(); }
+    void setLowerBoundForProtection(size_t size)
+    {
+        m_formatter.setLowerBoundForProtection(size);
+    }
+    void unprotectRegion(unsigned char* first, size_t size)
+    {
+        m_formatter.unprotectRegion(first, size);
+    }
+    void reprotectRegion(unsigned char* first, size_t size)
+    {
+        m_formatter.reprotectRegion(first, size);
+    }
+
     void nop()
     {
         spew("nop");
@@ -5103,6 +5118,21 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
         bool oom() const { return m_buffer.oom(); }
         bool isAligned(int alignment) const { return m_buffer.isAligned(alignment); }
         unsigned char* data() { return m_buffer.data(); }
+
+        void disableProtection() { m_buffer.disableProtection(); }
+        void enableProtection() { m_buffer.enableProtection(); }
+        void setLowerBoundForProtection(size_t size)
+        {
+            m_buffer.setLowerBoundForProtection(size);
+        }
+        void unprotectRegion(unsigned char* first, size_t size)
+        {
+            m_buffer.unprotectRegion(first, size);
+        }
+        void reprotectRegion(unsigned char* first, size_t size)
+        {
+            m_buffer.reprotectRegion(first, size);
+        }
 
         MOZ_MUST_USE bool append(const unsigned char* values, size_t size)
         {
