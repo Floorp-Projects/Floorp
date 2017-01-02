@@ -14,6 +14,7 @@
 #endif
 
 #include "des.h"
+#include "blapii.h"
 #include <stddef.h>
 #include "secerr.h"
 
@@ -54,7 +55,7 @@ DES_EDE3_ECB(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
     }
 }
 
-static void
+static void NO_SANITIZE_ALIGNMENT
 DES_CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     const BYTE *bufend = in + len;
@@ -71,7 +72,7 @@ DES_CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
     }
 }
 
-static void
+static void NO_SANITIZE_ALIGNMENT
 DES_CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     const BYTE *bufend;
@@ -91,7 +92,7 @@ DES_CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
     }
 }
 
-static void
+static void NO_SANITIZE_ALIGNMENT
 DES_EDE3CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     const BYTE *bufend = in + len;
@@ -110,7 +111,7 @@ DES_EDE3CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
     }
 }
 
-static void
+static void NO_SANITIZE_ALIGNMENT
 DES_EDE3CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     const BYTE *bufend;

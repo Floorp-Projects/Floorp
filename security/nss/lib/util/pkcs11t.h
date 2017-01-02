@@ -1592,7 +1592,7 @@ typedef struct CK_SSL3_KEY_MAT_PARAMS {
     CK_ULONG ulMacSizeInBits;
     CK_ULONG ulKeySizeInBits;
     CK_ULONG ulIVSizeInBits;
-    CK_BBOOL bIsExport;
+    CK_BBOOL bIsExport; /* Unused. Must be set to CK_FALSE. */
     CK_SSL3_RANDOM_DATA RandomInfo;
     CK_SSL3_KEY_MAT_OUT_PTR pReturnedKeyMaterial;
 } CK_SSL3_KEY_MAT_PARAMS;
@@ -1695,7 +1695,7 @@ typedef struct CK_WTLS_KEY_MAT_PARAMS {
     CK_ULONG ulKeySizeInBits;
     CK_ULONG ulIVSizeInBits;
     CK_ULONG ulSequenceNumber;
-    CK_BBOOL bIsExport;
+    CK_BBOOL bIsExport; /* Unused. Must be set to CK_FALSE. */
     CK_WTLS_RANDOM_DATA RandomInfo;
     CK_WTLS_KEY_MAT_OUT_PTR pReturnedKeyMaterial;
 } CK_WTLS_KEY_MAT_PARAMS;

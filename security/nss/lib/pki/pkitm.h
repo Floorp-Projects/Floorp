@@ -22,9 +22,9 @@
 PR_BEGIN_EXTERN_C
 
 typedef enum nssCertIDMatchEnum {
-  nssCertIDMatch_Yes = 0,
-  nssCertIDMatch_No = 1,
-  nssCertIDMatch_Unknown = 2
+    nssCertIDMatch_Yes = 0,
+    nssCertIDMatch_No = 1,
+    nssCertIDMatch_Unknown = 2
 } nssCertIDMatch;
 
 /*
@@ -39,29 +39,29 @@ struct nssDecodedCertStr {
     NSSCertificateType type;
     void *data;
     /* returns the unique identifier for the cert */
-    NSSItem *  (*getIdentifier)(nssDecodedCert *dc);
+    NSSItem *(*getIdentifier)(nssDecodedCert *dc);
     /* returns the unique identifier for this cert's issuer */
-    void *     (*getIssuerIdentifier)(nssDecodedCert *dc);
+    void *(*getIssuerIdentifier)(nssDecodedCert *dc);
     /* is id the identifier for this cert? */
     nssCertIDMatch (*matchIdentifier)(nssDecodedCert *dc, void *id);
     /* is this cert a valid CA cert? */
-    PRBool     (*isValidIssuer)(nssDecodedCert *dc);
+    PRBool (*isValidIssuer)(nssDecodedCert *dc);
     /* returns the cert usage */
-    NSSUsage * (*getUsage)(nssDecodedCert *dc);
+    NSSUsage *(*getUsage)(nssDecodedCert *dc);
     /* is time within the validity period of the cert? */
-    PRBool     (*isValidAtTime)(nssDecodedCert *dc, NSSTime *time);
+    PRBool (*isValidAtTime)(nssDecodedCert *dc, NSSTime *time);
     /* is the validity period of this cert newer than cmpdc? */
-    PRBool     (*isNewerThan)(nssDecodedCert *dc, nssDecodedCert *cmpdc);
+    PRBool (*isNewerThan)(nssDecodedCert *dc, nssDecodedCert *cmpdc);
     /* does the usage for this cert match the requested usage? */
-    PRBool     (*matchUsage)(nssDecodedCert *dc, const NSSUsage *usage);
+    PRBool (*matchUsage)(nssDecodedCert *dc, const NSSUsage *usage);
     /* is this cert trusted for the requested usage? */
-    PRBool     (*isTrustedForUsage)(nssDecodedCert *dc,
-                                    const NSSUsage *usage);
+    PRBool (*isTrustedForUsage)(nssDecodedCert *dc,
+                                const NSSUsage *usage);
     /* extract the email address */
     NSSASCII7 *(*getEmailAddress)(nssDecodedCert *dc);
     /* extract the DER-encoded serial number */
-    PRStatus   (*getDERSerialNumber)(nssDecodedCert *dc,
-                                     NSSDER *derSerial, NSSArena *arena);
+    PRStatus (*getDERSerialNumber)(nssDecodedCert *dc,
+                                   NSSDER *derSerial, NSSArena *arena);
 };
 
 struct NSSUsageStr {
@@ -74,13 +74,13 @@ typedef struct nssPKIObjectCollectionStr nssPKIObjectCollection;
 
 typedef struct
 {
-  union {
-    PRStatus (*  cert)(NSSCertificate *c, void *arg);
-    PRStatus (*   crl)(NSSCRL       *crl, void *arg);
-    PRStatus (* pvkey)(NSSPrivateKey *vk, void *arg);
-    PRStatus (* pbkey)(NSSPublicKey *bk, void *arg);
-  } func;
-  void *arg;
+    union {
+        PRStatus (*cert)(NSSCertificate *c, void *arg);
+        PRStatus (*crl)(NSSCRL *crl, void *arg);
+        PRStatus (*pvkey)(NSSPrivateKey *vk, void *arg);
+        PRStatus (*pbkey)(NSSPublicKey *bk, void *arg);
+    } func;
+    void *arg;
 } nssPKIObjectCallback;
 
 PR_END_EXTERN_C

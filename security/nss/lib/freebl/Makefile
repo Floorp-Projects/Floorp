@@ -504,14 +504,19 @@ endif
 
 # poly1305-donna-x64-sse2-incremental-source.c requires __int128 support
 # in GCC 4.6.0.
-ifdef CC_IS_CLANG
-    HAVE_INT128_SUPPORT = 1
-else ifeq (1,$(CC_IS_GCC))
-    ifneq (,$(filter 4.6 4.7 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
-        HAVE_INT128_SUPPORT = 1
-    endif
-    ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
-        HAVE_INT128_SUPPORT = 1
+ifdef USE_64
+    ifdef CC_IS_CLANG
+            HAVE_INT128_SUPPORT = 1
+            DEFINES += -DHAVE_INT128_SUPPORT
+    else ifeq (1,$(CC_IS_GCC))
+        ifneq (,$(filter 4.6 4.7 4.8 4.9,$(word 1,$(GCC_VERSION)).$(word 2,$(GCC_VERSION))))
+            HAVE_INT128_SUPPORT = 1
+            DEFINES += -DHAVE_INT128_SUPPORT
+        endif
+        ifeq (,$(filter 0 1 2 3 4,$(word 1,$(GCC_VERSION))))
+            HAVE_INT128_SUPPORT = 1
+            DEFINES += -DHAVE_INT128_SUPPORT
+        endif
     endif
 endif
 
@@ -533,6 +538,19 @@ ifndef NSS_DISABLE_CHACHAPOLY
         EXTRA_SRCS += chacha20.c
     endif # x86_64
 endif # NSS_DISABLE_CHACHAPOLY
+
+ifeq (,$(filter-out i386 x386 x86 x86_64,$(CPU_ARCH)))
+    # All intel architectures get the 64 bit version
+    # With custom uint128 if necessary (faster than generic 32 bit version).
+    ECL_SRCS += curve25519_64.c
+else
+    # All non intel architectures get the generic 32 bit implementation (slow!)
+    ECL_SRCS += curve25519_32.c
+endif
+
+ifndef HAVE_INT128_SUPPORT
+    ECL_SRCS += uint128.c
+endif
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
