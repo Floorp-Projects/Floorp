@@ -373,7 +373,7 @@ static CERTSignedCrl *
 CreateModifiedCRLCopy(PLArenaPool *arena, CERTCertDBHandle *certHandle,
                       CERTCertificate **cert, char *certNickName,
                       PRFileDesc *inFile, PRInt32 decodeOptions,
-                      PRInt32 importOptions)
+                      PRInt32 importOptions, secuPWData *pwdata)
 {
     SECItem crlDER = { 0, NULL, 0 };
     CERTSignedCrl *signCrl = NULL;
@@ -419,7 +419,7 @@ CreateModifiedCRLCopy(PLArenaPool *arena, CERTCertDBHandle *certHandle,
             }
 
             rv = CERT_VerifySignedData(&modCrl->signatureWrap, *cert,
-                                       PR_Now(), NULL);
+                                       PR_Now(), pwdata);
             if (rv != SECSuccess) {
                 SECU_PrintError(progName, "fail to verify signed data\n");
                 goto loser;
@@ -707,7 +707,8 @@ GenerateCRL(CERTCertDBHandle *certHandle, char *certNickName,
 
     if (modifyFlag == PR_TRUE) {
         signCrl = CreateModifiedCRLCopy(arena, certHandle, &cert, certNickName,
-                                        inFile, decodeOptions, importOptions);
+                                        inFile, decodeOptions, importOptions,
+                                        pwdata);
         if (signCrl == NULL) {
             rv = SECFailure;
             goto loser;

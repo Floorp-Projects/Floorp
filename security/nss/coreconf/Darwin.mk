@@ -3,14 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+CC     ?= gcc
+CCC    ?= g++
+RANLIB ?= ranlib
+
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 include $(CORE_DEPTH)/coreconf/Werror.mk
 
 DEFAULT_COMPILER = gcc
-
-CC		= gcc
-CCC		= g++
-RANLIB		= ranlib
 
 ifndef CPU_ARCH
 # When cross-compiling, CPU_ARCH should already be defined as the target
@@ -109,6 +109,12 @@ DSO_CFLAGS	= -fPIC
 DARWIN_DYLIB_VERSIONS = -compatibility_version 1 -current_version 1
 # May override this with -bundle to create a loadable module.
 DSO_LDOPTS	= -dynamiclib $(DARWIN_DYLIB_VERSIONS) -install_name @executable_path/$(notdir $@) -headerpad_max_install_names
+
+ifdef USE_GCOV
+   OS_CFLAGS += --coverage
+   LDFLAGS += --coverage
+   DSO_LDOPTS += --coverage
+endif
 
 MKSHLIB		= $(CC) $(DSO_LDOPTS) $(DARWIN_SDK_SHLIBFLAGS)
 DLL_SUFFIX	= dylib

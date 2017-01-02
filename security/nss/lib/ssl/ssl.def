@@ -212,3 +212,12 @@ SSL_NamedGroupConfig;
 ;+    local:
 ;+*;
 ;+};
+;+NSS_3.28 {    # NSS 3.28 release
+;+    global:
+SSL_ExportEarlyKeyingMaterial;
+SSL_SendAdditionalKeyShares;
+SSL_SignatureSchemePrefSet;
+SSL_SignatureSchemePrefGet;
+;+    local:
+;+*;
+;+};

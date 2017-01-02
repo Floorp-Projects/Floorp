@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 
-set -v -e -x
-
 source $(dirname $0)/tools.sh
 
 if [[ $(id -u) -eq 0 ]]; then
-    # Set compiler.
-    switch_compilers
-
     # Drop privileges by re-running this script.
     exec su worker $0
 fi

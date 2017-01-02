@@ -779,7 +779,6 @@ nssutil_mkRootFlags(PRBool hasRootCerts, PRBool hasRootTrust)
         if (!first)
             PORT_Strcat(flags, ",");
         PORT_Strcat(flags, "hasRootTrust");
-        first = PR_FALSE;
     }
     return flags;
 }
@@ -982,7 +981,6 @@ nssutil_mkNSSFlags(PRBool internal, PRBool isFIPS,
         if (!first)
             PORT_Strcat(flags, ",");
         PORT_Strcat(flags, "critical");
-        first = PR_FALSE;
     }
     return flags;
 }
