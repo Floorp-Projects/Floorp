@@ -22,8 +22,7 @@ function parseOptions(opts) {
   }
 
   // Parse platforms.
-  let allPlatforms = ["linux", "linux64", "linux64-asan", "win64", "arm",
-                      "linux64-gyp", "linux64-gyp-asan", "linux64-fuzz"];
+  let allPlatforms = ["linux", "linux64", "linux64-asan", "win64", "arm"];
   let platforms = intersect(opts.platform.split(/\s*,\s*/), allPlatforms);
 
   // If the given value is nonsense or "none" default to all platforms.
@@ -32,13 +31,9 @@ function parseOptions(opts) {
   }
 
   // Parse unit tests.
-  let aliases = {"gtests": "gtest"};
-  let allUnitTests = ["bogo", "crmf", "chains", "cipher", "db", "ec", "fips",
-                      "gtest", "lowhash", "merge", "sdr", "smime", "tools",
-                      "ssl", "mpi", "scert", "spki"];
-  let unittests = intersect(opts.unittests.split(/\s*,\s*/).map(t => {
-    return aliases[t] || t;
-  }), allUnitTests);
+  let allUnitTests = ["crmf", "chains", "cipher", "db", "ec", "fips", "gtest",
+                      "lowhash", "merge", "sdr", "smime", "tools", "ssl"];
+  let unittests = intersect(opts.unittests.split(/\s*,\s*/), allUnitTests);
 
   // If the given value is "all" run all tests.
   // If it's nonsense then don't run any tests.
@@ -82,10 +77,6 @@ function filter(opts) {
     // Filter unit tests.
     if (task.tests) {
       let found = opts.unittests.some(test => {
-        // TODO: think of something more intelligent here.
-        if (task.symbol.toLowerCase().startsWith("mpi") && test == "mpi") {
-          return true;
-        }
         return (task.group || task.symbol).toLowerCase().startsWith(test);
       });
 
@@ -106,9 +97,6 @@ function filter(opts) {
       let aliases = {
         "linux": "linux32",
         "linux64-asan": "linux64",
-        "linux64-fuzz": "linux64",
-        "linux64-gyp": "linux64",
-        "linux64-gyp-asan": "linux64",
         "win64": "windows2012-64",
         "arm": "linux32"
       };
@@ -121,12 +109,6 @@ function filter(opts) {
         keep &= coll("asan");
       } else if (platform == "arm") {
         keep &= coll("arm-opt") || coll("arm-debug");
-      } else if (platform == "linux64-gyp") {
-        keep &= coll("gyp");
-      } else if (platform == "linux64-gyp-asan") {
-        keep &= coll("gyp-asan");
-      } else if (platform == "linux64-fuzz") {
-        keep &= coll("fuzz");
       } else {
         keep &= coll("opt") || coll("debug");
       }
@@ -139,8 +121,7 @@ function filter(opts) {
     }
 
     // Finally, filter by build type.
-    let isDebug = coll("debug") || coll("asan") || coll("arm-debug") ||
-                  coll("gyp") || coll("fuzz");
+    let isDebug = coll("debug") || coll("asan") || coll("arm-debug");
     return (isDebug && opts.builds.includes("d")) ||
            (!isDebug && opts.builds.includes("o"));
   }

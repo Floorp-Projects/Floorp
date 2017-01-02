@@ -35,9 +35,9 @@ SEC_BEGIN_PROTOS
  */
 extern NSSCMSDecoderContext *
 NSS_CMSDecoder_Start(PLArenaPool *poolp,
-                     NSSCMSContentCallback cb, void *cb_arg,
-                     PK11PasswordFunc pwfn, void *pwfn_arg,
-                     NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg);
+		      NSSCMSContentCallback cb, void *cb_arg,
+		      PK11PasswordFunc pwfn, void *pwfn_arg,
+		      NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg);
 
 /*
  * NSS_CMSDecoder_Update - feed DER-encoded data to decoder
@@ -62,9 +62,9 @@ NSS_CMSDecoder_Finish(NSSCMSDecoderContext *p7dcx);
  */
 extern NSSCMSMessage *
 NSS_CMSMessage_CreateFromDER(SECItem *DERmessage,
-                             NSSCMSContentCallback cb, void *cb_arg,
-                             PK11PasswordFunc pwfn, void *pwfn_arg,
-                             NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg);
+		    NSSCMSContentCallback cb, void *cb_arg,
+		    PK11PasswordFunc pwfn, void *pwfn_arg,
+		    NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg);
 
 /************************************************************************
  * cmsencode.c - CMS encoding
@@ -84,11 +84,11 @@ NSS_CMSMessage_CreateFromDER(SECItem *DERmessage,
  */
 extern NSSCMSEncoderContext *
 NSS_CMSEncoder_Start(NSSCMSMessage *cmsg,
-                     NSSCMSContentCallback outputfn, void *outputarg,
-                     SECItem *dest, PLArenaPool *destpoolp,
-                     PK11PasswordFunc pwfn, void *pwfn_arg,
-                     NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg,
-                     SECAlgorithmID **detached_digestalgs, SECItem **detached_digests);
+			NSSCMSContentCallback outputfn, void *outputarg,
+			SECItem *dest, PLArenaPool *destpoolp,
+			PK11PasswordFunc pwfn, void *pwfn_arg,
+			NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg,
+			SECAlgorithmID **detached_digestalgs, SECItem **detached_digests);
 
 /*
  * NSS_CMSEncoder_Update - take content data delivery from the user
@@ -138,9 +138,9 @@ NSS_CMSMessage_Create(PLArenaPool *poolp);
  */
 extern void
 NSS_CMSMessage_SetEncodingParams(NSSCMSMessage *cmsg,
-                                 PK11PasswordFunc pwfn, void *pwfn_arg,
-                                 NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg,
-                                 SECAlgorithmID **detached_digestalgs, SECItem **detached_digests);
+			PK11PasswordFunc pwfn, void *pwfn_arg,
+			NSSCMSGetDecryptKeyCallback decrypt_key_cb, void *decrypt_key_cb_arg,
+			SECAlgorithmID **detached_digestalgs, SECItem **detached_digests);
 
 /*
  * NSS_CMSMessage_Destroy - destroy a CMS message and all of its sub-pieces.
@@ -149,7 +149,7 @@ extern void
 NSS_CMSMessage_Destroy(NSSCMSMessage *cmsg);
 
 /*
- * NSS_CMSMessage_Copy - return a copy of the given message.
+ * NSS_CMSMessage_Copy - return a copy of the given message. 
  *
  * The copy may be virtual or may be real -- either way, the result needs
  * to be passed to NSS_CMSMessage_Destroy later (as does the original).
@@ -170,7 +170,7 @@ extern NSSCMSContentInfo *
 NSS_CMSMessage_GetContentInfo(NSSCMSMessage *cmsg);
 
 /*
- * Return a pointer to the actual content.
+ * Return a pointer to the actual content. 
  * In the case of those types which are encrypted, this returns the *plain* content.
  * In case of nested contentInfos, this descends and retrieves the innermost content.
  */
@@ -275,6 +275,7 @@ NSS_CMSContentInfo_SetContent_EncryptedData(NSSCMSMessage *cmsg, NSSCMSContentIn
 extern SECStatus
 NSS_CMSContentInfo_SetDontStream(NSSCMSContentInfo *cinfo, PRBool dontStream);
 
+
 /*
  * NSS_CMSContentInfo_GetContent - get pointer to inner content
  *
@@ -283,7 +284,7 @@ NSS_CMSContentInfo_SetDontStream(NSSCMSContentInfo *cinfo, PRBool dontStream);
 extern void *
 NSS_CMSContentInfo_GetContent(NSSCMSContentInfo *cinfo);
 
-/*
+/* 
  * NSS_CMSContentInfo_GetInnerContent - get pointer to innermost content
  *
  * this is typically only called by NSS_CMSMessage_GetContent()
@@ -316,11 +317,11 @@ NSS_CMSContentInfo_GetContentEncAlg(NSSCMSContentInfo *cinfo);
 
 extern SECStatus
 NSS_CMSContentInfo_SetContentEncAlg(PLArenaPool *poolp, NSSCMSContentInfo *cinfo,
-                                    SECOidTag bulkalgtag, SECItem *parameters, int keysize);
+				    SECOidTag bulkalgtag, SECItem *parameters, int keysize);
 
 extern SECStatus
 NSS_CMSContentInfo_SetContentEncAlgID(PLArenaPool *poolp, NSSCMSContentInfo *cinfo,
-                                      SECAlgorithmID *algid, int keysize);
+				    SECAlgorithmID *algid, int keysize);
 
 extern void
 NSS_CMSContentInfo_SetBulkKey(NSSCMSContentInfo *cinfo, PK11SymKey *bulkkey);
@@ -353,28 +354,28 @@ extern int
 NSS_CMSUtil_DERCompare(void *a, void *b);
 
 /*
- * NSS_CMSAlgArray_GetIndexByAlgID - find a specific algorithm in an array of
+ * NSS_CMSAlgArray_GetIndexByAlgID - find a specific algorithm in an array of 
  * algorithms.
  *
  * algorithmArray - array of algorithm IDs
  * algid - algorithmid of algorithm to pick
  *
  * Returns:
- *  An integer containing the index of the algorithm in the array or -1 if
+ *  An integer containing the index of the algorithm in the array or -1 if 
  *  algorithm was not found.
  */
 extern int
 NSS_CMSAlgArray_GetIndexByAlgID(SECAlgorithmID **algorithmArray, SECAlgorithmID *algid);
 
 /*
- * NSS_CMSAlgArray_GetIndexByAlgID - find a specific algorithm in an array of
+ * NSS_CMSAlgArray_GetIndexByAlgID - find a specific algorithm in an array of 
  * algorithms.
  *
  * algorithmArray - array of algorithm IDs
  * algiddata - id of algorithm to pick
  *
  * Returns:
- *  An integer containing the index of the algorithm in the array or -1 if
+ *  An integer containing the index of the algorithm in the array or -1 if 
  *  algorithm was not found.
  */
 extern int
@@ -452,7 +453,7 @@ NSS_CMSSignedData_Decode_AfterData(NSSCMSSignedData *sigd);
 extern SECStatus
 NSS_CMSSignedData_Decode_AfterEnd(NSSCMSSignedData *sigd);
 
-/*
+/* 
  * NSS_CMSSignedData_GetSignerInfos - retrieve the SignedData's signer list
  */
 extern NSSCMSSignerInfo **
@@ -464,7 +465,7 @@ NSS_CMSSignedData_SignerInfoCount(NSSCMSSignedData *sigd);
 extern NSSCMSSignerInfo *
 NSS_CMSSignedData_GetSignerInfo(NSSCMSSignedData *sigd, int i);
 
-/*
+/* 
  * NSS_CMSSignedData_GetDigestAlgs - retrieve the SignedData's digest algorithm list
  */
 extern SECAlgorithmID **
@@ -476,7 +477,7 @@ NSS_CMSSignedData_GetDigestAlgs(NSSCMSSignedData *sigd);
 extern NSSCMSContentInfo *
 NSS_CMSSignedData_GetContentInfo(NSSCMSSignedData *sigd);
 
-/*
+/* 
  * NSS_CMSSignedData_GetCertificateList - retrieve the SignedData's certificate list
  */
 extern SECItem **
@@ -484,7 +485,7 @@ NSS_CMSSignedData_GetCertificateList(NSSCMSSignedData *sigd);
 
 extern SECStatus
 NSS_CMSSignedData_ImportCerts(NSSCMSSignedData *sigd, CERTCertDBHandle *certdb,
-                              SECCertUsage certusage, PRBool keepcerts);
+				SECCertUsage certusage, PRBool keepcerts);
 
 /*
  * NSS_CMSSignedData_HasDigests - see if we have digests in place
@@ -503,21 +504,21 @@ NSS_CMSSignedData_HasDigests(NSSCMSSignedData *sigd);
  */
 extern SECStatus
 NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i, CERTCertDBHandle *certdb,
-                                   SECCertUsage certusage);
+				    SECCertUsage certusage);
 
 /*
  * NSS_CMSSignedData_VerifyCertsOnly - verify the certs in a certs-only message
 */
 extern SECStatus
-NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd,
-                                  CERTCertDBHandle *certdb,
+NSS_CMSSignedData_VerifyCertsOnly(NSSCMSSignedData *sigd, 
+                                  CERTCertDBHandle *certdb, 
                                   SECCertUsage usage);
 
 extern SECStatus
 NSS_CMSSignedData_AddCertList(NSSCMSSignedData *sigd, CERTCertificateList *certlist);
 
 /*
- * NSS_CMSSignedData_AddCertChain - add cert and its entire chain to the set of certs
+ * NSS_CMSSignedData_AddCertChain - add cert and its entire chain to the set of certs 
  */
 extern SECStatus
 NSS_CMSSignedData_AddCertChain(NSSCMSSignedData *sigd, CERTCertificate *cert);
@@ -530,23 +531,23 @@ NSS_CMSSignedData_ContainsCertsOrCrls(NSSCMSSignedData *sigd);
 
 extern SECStatus
 NSS_CMSSignedData_AddSignerInfo(NSSCMSSignedData *sigd,
-                                NSSCMSSignerInfo *signerinfo);
+				NSSCMSSignerInfo *signerinfo);
 
 extern SECStatus
 NSS_CMSSignedData_SetDigests(NSSCMSSignedData *sigd,
-                             SECAlgorithmID **digestalgs,
-                             SECItem **digests);
+				SECAlgorithmID **digestalgs,
+				SECItem **digests);
 
 extern SECStatus
 NSS_CMSSignedData_SetDigestValue(NSSCMSSignedData *sigd,
-                                 SECOidTag digestalgtag,
-                                 SECItem *digestdata);
+				SECOidTag digestalgtag,
+				SECItem *digestdata);
 
 extern SECStatus
 NSS_CMSSignedData_AddDigest(PLArenaPool *poolp,
-                            NSSCMSSignedData *sigd,
-                            SECOidTag digestalgtag,
-                            SECItem *digest);
+				NSSCMSSignedData *sigd,
+				SECOidTag digestalgtag,
+				SECItem *digest);
 
 extern SECItem *
 NSS_CMSSignedData_GetDigestValue(NSSCMSSignedData *sigd, SECOidTag digestalgtag);
@@ -588,7 +589,7 @@ NSS_CMSSignerInfo_Sign(NSSCMSSignerInfo *signerinfo, SECItem *digest, SECItem *c
 
 extern SECStatus
 NSS_CMSSignerInfo_VerifyCertificate(NSSCMSSignerInfo *signerinfo, CERTCertDBHandle *certdb,
-                                    SECCertUsage certusage);
+			    SECCertUsage certusage);
 
 /*
  * NSS_CMSSignerInfo_Verify - verify the signature of a single SignerInfo
@@ -616,7 +617,7 @@ NSS_CMSSignerInfo_GetCertList(NSSCMSSignerInfo *signerinfo);
 
 /*
  * NSS_CMSSignerInfo_GetSigningTime - return the signing time,
- *                                    in UTCTime format, of a CMS signerInfo.
+ *				      in UTCTime format, of a CMS signerInfo.
  *
  * sinfo - signerInfo data for this signer
  *
@@ -658,21 +659,21 @@ NSS_CMSSignerInfo_GetSignerEmailAddress(NSSCMSSignerInfo *sinfo);
 
 /*
  * NSS_CMSSignerInfo_AddAuthAttr - add an attribute to the
- * authenticated (i.e. signed) attributes of "signerinfo".
+ * authenticated (i.e. signed) attributes of "signerinfo". 
  */
 extern SECStatus
 NSS_CMSSignerInfo_AddAuthAttr(NSSCMSSignerInfo *signerinfo, NSSCMSAttribute *attr);
 
 /*
  * NSS_CMSSignerInfo_AddUnauthAttr - add an attribute to the
- * unauthenticated attributes of "signerinfo".
+ * unauthenticated attributes of "signerinfo". 
  */
 extern SECStatus
 NSS_CMSSignerInfo_AddUnauthAttr(NSSCMSSignerInfo *signerinfo, NSSCMSAttribute *attr);
 
-/*
+/* 
  * NSS_CMSSignerInfo_AddSigningTime - add the signing time to the
- * authenticated (i.e. signed) attributes of "signerinfo".
+ * authenticated (i.e. signed) attributes of "signerinfo". 
  *
  * This is expected to be included in outgoing signed
  * messages for email (S/MIME) but is likely useful in other situations.
@@ -715,12 +716,12 @@ NSS_CMSSignerInfo_AddSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertific
 SECStatus
 NSS_CMSSignerInfo_AddMSSMIMEEncKeyPrefs(NSSCMSSignerInfo *signerinfo, CERTCertificate *cert, CERTCertDBHandle *certdb);
 
-/*
+/* 
  * NSS_CMSSignerInfo_AddCounterSignature - countersign a signerinfo
  */
 extern SECStatus
 NSS_CMSSignerInfo_AddCounterSignature(NSSCMSSignerInfo *signerinfo,
-                                      SECOidTag digestalg, CERTCertificate signingcert);
+				    SECOidTag digestalg, CERTCertificate signingcert);
 
 /*
  * XXXX the following needs to be done in the S/MIME layer code
@@ -793,7 +794,7 @@ extern SECStatus
 NSS_CMSEnvelopedData_Encode_AfterData(NSSCMSEnvelopedData *envd);
 
 /*
- * NSS_CMSEnvelopedData_Decode_BeforeData - find our recipientinfo,
+ * NSS_CMSEnvelopedData_Decode_BeforeData - find our recipientinfo, 
  * derive bulk key & set up our contentinfo
  */
 extern SECStatus
@@ -811,6 +812,7 @@ NSS_CMSEnvelopedData_Decode_AfterData(NSSCMSEnvelopedData *envd);
 extern SECStatus
 NSS_CMSEnvelopedData_Decode_AfterEnd(NSSCMSEnvelopedData *envd);
 
+
 /************************************************************************
  * cmsrecinfo.c - CMS recipientInfo methods
  ************************************************************************/
@@ -825,43 +827,42 @@ extern NSSCMSRecipientInfo *
 NSS_CMSRecipientInfo_Create(NSSCMSMessage *cmsg, CERTCertificate *cert);
 
 extern NSSCMSRecipientInfo *
-NSS_CMSRecipientInfo_CreateWithSubjKeyID(NSSCMSMessage *cmsg,
-                                         SECItem *subjKeyID,
+NSS_CMSRecipientInfo_CreateWithSubjKeyID(NSSCMSMessage   *cmsg, 
+                                         SECItem         *subjKeyID,
                                          SECKEYPublicKey *pubKey);
 
 extern NSSCMSRecipientInfo *
-NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert(NSSCMSMessage *cmsg,
+NSS_CMSRecipientInfo_CreateWithSubjKeyIDFromCert(NSSCMSMessage *cmsg, 
                                                  CERTCertificate *cert);
 
 /*
- * NSS_CMSRecipientInfo_CreateNew - create a blank recipientinfo for
+ * NSS_CMSRecipientInfo_CreateNew - create a blank recipientinfo for 
  * applications which want to encode their own CMS structures and
  * key exchange types.
  */
 extern NSSCMSRecipientInfo *
-NSS_CMSRecipientInfo_CreateNew(void *pwfn_arg);
+NSS_CMSRecipientInfo_CreateNew(void* pwfn_arg);
 
 /*
  * NSS_CMSRecipientInfo_CreateFromDER - create a recipientinfo  from partially
- * decoded DER data for applications which want to encode their own CMS
+ * decoded DER data for applications which want to encode their own CMS 
  * structures and key exchange types.
  */
 extern NSSCMSRecipientInfo *
-NSS_CMSRecipientInfo_CreateFromDER(SECItem *input, void *pwfn_arg);
+NSS_CMSRecipientInfo_CreateFromDER(SECItem* input, void* pwfn_arg);
 
 extern void
 NSS_CMSRecipientInfo_Destroy(NSSCMSRecipientInfo *ri);
 
 /*
  * NSS_CMSRecipientInfo_GetCertAndKey - retrieve the cert and key from the
- * recipientInfo struct. If retcert or retkey are NULL, the cert or
- * key (respectively) would not be returned). This function is a no-op if both
+ * recipientInfo struct. If retcert or retkey are NULL, the cert or 
+ * key (respectively) would not be returned). This function is a no-op if both 
  * retcert and retkey are NULL. Caller inherits ownership of the cert and key
  * he requested (and is responsible to free them).
  */
 SECStatus NSS_CMSRecipientInfo_GetCertAndKey(NSSCMSRecipientInfo *ri,
-                                             CERTCertificate **retcert,
-                                             SECKEYPrivateKey **retkey);
+   CERTCertificate** retcert, SECKEYPrivateKey** retkey);
 
 extern int
 NSS_CMSRecipientInfo_GetVersion(NSSCMSRecipientInfo *ri);
@@ -872,21 +873,19 @@ NSS_CMSRecipientInfo_GetEncryptedKey(NSSCMSRecipientInfo *ri, int subIndex);
 /*
  * NSS_CMSRecipientInfo_Encode - encode an NSS_CMSRecipientInfo as ASN.1
  */
-SECStatus NSS_CMSRecipientInfo_Encode(PLArenaPool *poolp,
+SECStatus NSS_CMSRecipientInfo_Encode(PLArenaPool* poolp,
                                       const NSSCMSRecipientInfo *src,
-                                      SECItem *returned);
+                                      SECItem* returned);
 
 extern SECOidTag
 NSS_CMSRecipientInfo_GetKeyEncryptionAlgorithmTag(NSSCMSRecipientInfo *ri);
 
 extern SECStatus
-NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey,
-                                 SECOidTag bulkalgtag);
+NSS_CMSRecipientInfo_WrapBulkKey(NSSCMSRecipientInfo *ri, PK11SymKey *bulkkey, SECOidTag bulkalgtag);
 
 extern PK11SymKey *
 NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
-                                   CERTCertificate *cert, SECKEYPrivateKey *privkey,
-                                   SECOidTag bulkalgtag);
+		CERTCertificate *cert, SECKEYPrivateKey *privkey, SECOidTag bulkalgtag);
 
 /************************************************************************
  * cmsencdata.c - CMS encryptedData methods
@@ -896,7 +895,7 @@ NSS_CMSRecipientInfo_UnwrapBulkKey(NSSCMSRecipientInfo *ri, int subIndex,
  *
  * "algorithm" specifies the bulk encryption algorithm to use.
  * "keysize" is the key size.
- *
+ * 
  * An error results in a return value of NULL and an error set.
  * (Retrieve specific errors via PORT_GetError()/XP_GetError().)
  */
@@ -1077,7 +1076,7 @@ NSS_CMSDigestContext_Cancel(NSSCMSDigestContext *cmsdigcx);
  */
 extern SECStatus
 NSS_CMSDigestContext_FinishMultiple(NSSCMSDigestContext *cmsdigcx, PLArenaPool *poolp,
-                                    SECItem ***digestsp);
+			    SECItem ***digestsp);
 
 /*
  * NSS_CMSDigestContext_FinishSingle - same as NSS_CMSDigestContext_FinishMultiple,
@@ -1085,10 +1084,10 @@ NSS_CMSDigestContext_FinishMultiple(NSSCMSDigestContext *cmsdigcx, PLArenaPool *
  */
 extern SECStatus
 NSS_CMSDigestContext_FinishSingle(NSSCMSDigestContext *cmsdigcx, PLArenaPool *poolp,
-                                  SECItem *digest);
+			    SECItem *digest);
 
 /************************************************************************
- *
+ * 
  ************************************************************************/
 
 /* shortcuts for basic use */
@@ -1099,11 +1098,12 @@ NSS_CMSDigestContext_FinishSingle(NSSCMSDigestContext *cmsdigcx, PLArenaPool *po
  *                    stored in arena's pool.
  */
 extern SECStatus
-NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut,
+NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut, 
                  PLArenaPool *arena);
 
+
 /************************************************************************
- *
+ * 
  ************************************************************************/
 
 /*
@@ -1116,36 +1116,36 @@ NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut,
  *  This function allows you to register new content types. There are basically
  *  Two different types of content, Wrappping content, and Data.
  *
- *  For data types, All the functions below can be zero or NULL excext
+ *  For data types, All the functions below can be zero or NULL excext 
  *  type and is isData, which should be your oid tag and PR_FALSE respectively
  *
  *  For wrapping types, everything must be provided, or you will get encoder
  *  failures.
  *
- *  If NSS doesn't already define the OID that you need, you can register
+ *  If NSS doesn't already define the OID that you need, you can register 
  *  your own with SECOID_AddEntry.
- *
+ * 
  *  Once you have defined your new content type, you can pass your new content
  *  type to NSS_CMSContentInfo_SetContent().
- *
- *  If you are using a wrapping type you can pass your own data structure in
- *  the ptr field, but it must contain and embedded NSSCMSGenericWrappingData
- *  structure as the first element. The size you pass to
- *  NSS_CMSType_RegisterContentType is the total size of your self defined
- *  data structure. NSS_CMSContentInfo_GetContent will return that data
- *  structure from the content info. Your ASN1Template will be evaluated
+ * 
+ *  If you are using a wrapping type you can pass your own data structure in 
+ *  the ptr field, but it must contain and embedded NSSCMSGenericWrappingData 
+ *  structure as the first element. The size you pass to 
+ *  NSS_CMSType_RegisterContentType is the total size of your self defined 
+ *  data structure. NSS_CMSContentInfo_GetContent will return that data 
+ *  structure from the content info. Your ASN1Template will be evaluated 
  *  against that data structure.
  */
 SECStatus NSS_CMSType_RegisterContentType(SECOidTag type,
-                                          SEC_ASN1Template *asn1Template, size_t size,
-                                          NSSCMSGenericWrapperDataDestroy destroy,
-                                          NSSCMSGenericWrapperDataCallback decode_before,
-                                          NSSCMSGenericWrapperDataCallback decode_after,
-                                          NSSCMSGenericWrapperDataCallback decode_end,
-                                          NSSCMSGenericWrapperDataCallback encode_start,
-                                          NSSCMSGenericWrapperDataCallback encode_before,
-                                          NSSCMSGenericWrapperDataCallback encode_after,
-                                          PRBool isData);
+                          SEC_ASN1Template *asn1Template, size_t size,
+                          NSSCMSGenericWrapperDataDestroy  destroy,
+                          NSSCMSGenericWrapperDataCallback decode_before,
+                          NSSCMSGenericWrapperDataCallback decode_after,
+                          NSSCMSGenericWrapperDataCallback decode_end,
+                          NSSCMSGenericWrapperDataCallback encode_start,
+                          NSSCMSGenericWrapperDataCallback encode_before,
+                          NSSCMSGenericWrapperDataCallback encode_after,
+                          PRBool isData);
 
 /************************************************************************/
 SEC_END_PROTOS

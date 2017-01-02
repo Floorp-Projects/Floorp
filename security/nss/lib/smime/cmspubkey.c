@@ -25,7 +25,7 @@
  * according to PKCS#1 and RFC2633 (S/MIME)
  */
 SECStatus
-NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert,
+NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert, 
                               PK11SymKey *bulkkey,
                               SECItem *encKey)
 {
@@ -34,7 +34,7 @@ NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert,
 
     publickey = CERT_ExtractPublicKey(cert);
     if (publickey == NULL)
-        return SECFailure;
+	return SECFailure;
 
     rv = NSS_CMSUtil_EncryptSymKey_RSAPubKey(poolp, publickey, bulkkey, encKey);
     SECKEY_DestroyPublicKey(publickey);
@@ -42,8 +42,8 @@ NSS_CMSUtil_EncryptSymKey_RSA(PLArenaPool *poolp, CERTCertificate *cert,
 }
 
 SECStatus
-NSS_CMSUtil_EncryptSymKey_RSAPubKey(PLArenaPool *poolp,
-                                    SECKEYPublicKey *publickey,
+NSS_CMSUtil_EncryptSymKey_RSAPubKey(PLArenaPool *poolp, 
+                                    SECKEYPublicKey *publickey, 
                                     PK11SymKey *bulkkey, SECItem *encKey)
 {
     SECStatus rv;
@@ -51,36 +51,37 @@ NSS_CMSUtil_EncryptSymKey_RSAPubKey(PLArenaPool *poolp,
     KeyType keyType;
     void *mark = NULL;
 
+
     mark = PORT_ArenaMark(poolp);
     if (!mark)
-        goto loser;
+	goto loser;
 
     /* sanity check */
     keyType = SECKEY_GetPublicKeyType(publickey);
     PORT_Assert(keyType == rsaKey);
     if (keyType != rsaKey) {
-        goto loser;
+	goto loser;
     }
     /* allocate memory for the encrypted key */
-    data_len = SECKEY_PublicKeyStrength(publickey); /* block size (assumed to be > keylen) */
-    encKey->data = (unsigned char *)PORT_ArenaAlloc(poolp, data_len);
+    data_len = SECKEY_PublicKeyStrength(publickey);	/* block size (assumed to be > keylen) */
+    encKey->data = (unsigned char*)PORT_ArenaAlloc(poolp, data_len);
     encKey->len = data_len;
     if (encKey->data == NULL)
-        goto loser;
+	goto loser;
 
     /* encrypt the key now */
     rv = PK11_PubWrapSymKey(PK11_AlgtagToMechanism(SEC_OID_PKCS1_RSA_ENCRYPTION),
-                            publickey, bulkkey, encKey);
+				publickey, bulkkey, encKey);
 
     if (rv != SECSuccess)
-        goto loser;
+	goto loser;
 
     PORT_ArenaUnmark(poolp, mark);
     return SECSuccess;
 
 loser:
     if (mark) {
-        PORT_ArenaRelease(poolp, mark);
+	PORT_ArenaRelease(poolp, mark);
     }
     return SECFailure;
 }
@@ -100,8 +101,8 @@ NSS_CMSUtil_DecryptSymKey_RSA(SECKEYPrivateKey *privkey, SECItem *encKey, SECOid
     PORT_Assert(bulkalgtag != SEC_OID_UNKNOWN);
     target = PK11_AlgtagToMechanism(bulkalgtag);
     if (bulkalgtag == SEC_OID_UNKNOWN || target == CKM_INVALID_MECHANISM) {
-        PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
-        return NULL;
+	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	return NULL;
     }
     return PK11_PubUnwrapSymKey(privkey, encKey, target, CKA_DECRYPT, 0);
 }
@@ -110,12 +111,12 @@ NSS_CMSUtil_DecryptSymKey_RSA(SECKEYPrivateKey *privkey, SECItem *encKey, SECOid
 
 SECStatus
 NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11SymKey *key,
-                               SECItem *encKey, SECItem **ukm, SECAlgorithmID *keyEncAlg,
-                               SECItem *pubKey)
+			SECItem *encKey, SECItem **ukm, SECAlgorithmID *keyEncAlg,
+			SECItem *pubKey)
 {
 #if 0 /* not yet done */
-    SECOidTag certalgtag;       /* the certificate's encryption algorithm */
-    SECOidTag encalgtag;        /* the algorithm used for key exchange/agreement */
+    SECOidTag certalgtag;	/* the certificate's encryption algorithm */
+    SECOidTag encalgtag;	/* the algorithm used for key exchange/agreement */
     SECStatus rv;
     SECItem *params = NULL;
     int data_len;
@@ -147,7 +148,7 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
     /* XXXX */ourPubKey = CERT_ExtractPublicKey(ourCert);
     if (ourPubKey == NULL)
     {
-        goto loser;
+	goto loser;
     }
     SECITEM_CopyItem(arena, pubKey, /* XXX */&(ourPubKey->u.fortezza.KEAKey));
     SECKEY_DestroyPublicKey(ourPubKey); /* we only need the private key from now on */
@@ -160,24 +161,24 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
 
     /* If ukm desired, prepare it - allocate enough space (filled with zeros). */
     if (ukm) {
-        ukm->data = (unsigned char*)PORT_ArenaZAlloc(arena,/* XXXX */);
-        ukm->len = /* XXXX */;
+	ukm->data = (unsigned char*)PORT_ArenaZAlloc(arena,/* XXXX */);
+	ukm->len = /* XXXX */;
     }
 
     /* Generate the KEK (key exchange key) according to RFC2631 which we use
      * to wrap the bulk encryption key. */
     kek = PK11_PubDerive(ourPrivKey, publickey, PR_TRUE,
-                         ukm, NULL,
-                         /* XXXX */CKM_KEA_KEY_DERIVE, /* XXXX */CKM_SKIPJACK_WRAP,
-                         CKA_WRAP, 0, wincx);
+			 ukm, NULL,
+			 /* XXXX */CKM_KEA_KEY_DERIVE, /* XXXX */CKM_SKIPJACK_WRAP,
+			 CKA_WRAP, 0, wincx);
 
     SECKEY_DestroyPublicKey(publickey);
     SECKEY_DestroyPrivateKey(ourPrivKey);
     publickey = NULL;
     ourPrivKey = NULL;
-
+    
     if (!kek)
-        goto loser;
+	goto loser;
 
     /* allocate space for the encrypted CEK (bulk key) */
     encKey->data = (unsigned char*)PORT_ArenaAlloc(poolp, SMIME_FORTEZZA_MAX_KEY_SIZE);
@@ -185,8 +186,8 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
 
     if (encKey->data == NULL)
     {
-        PK11_FreeSymKey(kek);
-        goto loser;
+	PK11_FreeSymKey(kek);
+	goto loser;
     }
 
 
@@ -195,23 +196,23 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
     switch (/* XXXX */PK11_AlgtagToMechanism(enccinfo->encalg))
     {
     case /* XXXX */CKM_SKIPJACK_CFB8:
-        err = PK11_WrapSymKey(/* XXXX */CKM_CMS3DES_WRAP, NULL, kek, bulkkey, encKey);
-        whichKEA = NSSCMSKEAUsesSkipjack;
-        break;
+	err = PK11_WrapSymKey(/* XXXX */CKM_CMS3DES_WRAP, NULL, kek, bulkkey, encKey);
+	whichKEA = NSSCMSKEAUsesSkipjack;
+	break;
     case /* XXXX */CKM_SKIPJACK_CFB8:
-        err = PK11_WrapSymKey(/* XXXX */CKM_CMSRC2_WRAP, NULL, kek, bulkkey, encKey);
-        whichKEA = NSSCMSKEAUsesSkipjack;
-        break;
+	err = PK11_WrapSymKey(/* XXXX */CKM_CMSRC2_WRAP, NULL, kek, bulkkey, encKey);
+	whichKEA = NSSCMSKEAUsesSkipjack;
+	break;
     default:
-        /* XXXX what do we do here? Neither RC2 nor 3DES... */
+	/* XXXX what do we do here? Neither RC2 nor 3DES... */
         err = SECFailure;
         /* set error */
-        break;
+	break;
     }
 
-    PK11_FreeSymKey(kek);       /* we do not need the KEK anymore */
+    PK11_FreeSymKey(kek);	/* we do not need the KEK anymore */
     if (err != SECSuccess)
-        goto loser;
+	goto loser;
 
     PORT_Assert(whichKEA != NSSCMSKEAInvalid);
 
@@ -219,17 +220,17 @@ NSS_CMSUtil_EncryptSymKey_ESDH(PLArenaPool *poolp, CERTCertificate *cert, PK11Sy
     /* params is the DER encoded key wrap algorithm (with parameters!) (XXX) */
     params = SEC_ASN1EncodeItem(arena, NULL, &keaParams, sec_pkcs7_get_kea_template(whichKEA));
     if (params == NULL)
-        goto loser;
+	goto loser;
 
     /* now set keyEncAlg */
     rv = SECOID_SetAlgorithmID(poolp, keyEncAlg, SEC_OID_CMS_EPHEMERAL_STATIC_DIFFIE_HELLMAN, params);
     if (rv != SECSuccess)
-        goto loser;
+	goto loser;
 
     /* XXXXXXX this is not right yet */
 loser:
     if (arena) {
-        PORT_FreeArena(arena, PR_FALSE);
+	PORT_FreeArena(arena, PR_FALSE);
     }
     if (publickey) {
         SECKEY_DestroyPublicKey(publickey);
@@ -242,9 +243,7 @@ loser:
 }
 
 PK11SymKey *
-NSS_CMSUtil_DecryptSymKey_ESDH(SECKEYPrivateKey *privkey, SECItem *encKey,
-                               SECAlgorithmID *keyEncAlg, SECOidTag bulkalgtag,
-                               void *pwfn_arg)
+NSS_CMSUtil_DecryptSymKey_ESDH(SECKEYPrivateKey *privkey, SECItem *encKey, SECAlgorithmID *keyEncAlg, SECOidTag bulkalgtag, void *pwfn_arg)
 {
 #if 0 /* not yet done */
     SECStatus err;
@@ -255,27 +254,27 @@ NSS_CMSUtil_DecryptSymKey_ESDH(SECKEYPrivateKey *privkey, SECItem *encKey,
 
    /* XXXX get originator's public key */
    originatorPubKey = PK11_MakeKEAPubKey(keaParams.originatorKEAKey.data,
-                           keaParams.originatorKEAKey.len);
+			   keaParams.originatorKEAKey.len);
    if (originatorPubKey == NULL)
       goto loser;
-
+    
    /* Generate the TEK (token exchange key) which we use to unwrap the bulk encryption key.
       The Derive function generates a shared secret and combines it with the originatorRA
       data to come up with an unique session key */
    tek = PK11_PubDerive(privkey, originatorPubKey, PR_FALSE,
-                         &keaParams.originatorRA, NULL,
-                         CKM_KEA_KEY_DERIVE, CKM_SKIPJACK_WRAP,
-                         CKA_WRAP, 0, pwfn_arg);
-   SECKEY_DestroyPublicKey(originatorPubKey);   /* not needed anymore */
+			 &keaParams.originatorRA, NULL,
+			 CKM_KEA_KEY_DERIVE, CKM_SKIPJACK_WRAP,
+			 CKA_WRAP, 0, pwfn_arg);
+   SECKEY_DestroyPublicKey(originatorPubKey);	/* not needed anymore */
    if (tek == NULL)
-        goto loser;
-
+	goto loser;
+    
     /* Now that we have the TEK, unwrap the bulk key
        with which to decrypt the message. */
     /* Skipjack is being used as the bulk encryption algorithm.*/
     /* Unwrap the bulk key. */
     bulkkey = PK11_UnwrapSymKey(tek, CKM_SKIPJACK_WRAP, NULL,
-                                encKey, CKM_SKIPJACK_CBC64, CKA_DECRYPT, 0);
+				encKey, CKM_SKIPJACK_CBC64, CKA_DECRYPT, 0);
 
     return bulkkey;
 
@@ -283,3 +282,4 @@ loser:
 #endif
     return NULL;
 }
+

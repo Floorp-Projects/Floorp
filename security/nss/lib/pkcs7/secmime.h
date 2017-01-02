@@ -12,6 +12,7 @@
 
 #include "secpkcs7.h"
 
+
 /************************************************************************/
 SEC_BEGIN_PROTOS
 
@@ -116,10 +117,10 @@ extern PRBool SECMIME_EncryptionPossible(void);
  * (Retrieve specific errors via PORT_GetError()/XP_GetError().)
  */
 extern SEC_PKCS7ContentInfo *SECMIME_CreateEncrypted(CERTCertificate *scert,
-                                                     CERTCertificate **rcerts,
-                                                     CERTCertDBHandle *certdb,
-                                                     SECKEYGetPasswordKey pwfn,
-                                                     void *pwfn_arg);
+						     CERTCertificate **rcerts,
+						     CERTCertDBHandle *certdb,
+						     SECKEYGetPasswordKey pwfn,
+						     void *pwfn_arg);
 
 /*
  * Start an S/MIME signing context.
@@ -129,7 +130,7 @@ extern SEC_PKCS7ContentInfo *SECMIME_CreateEncrypted(CERTCertificate *scert,
  *
  * "certdb" is the cert database to use for verifying the cert.
  * It can be NULL if a default database is available (like in the client).
- *
+ * 
  * "digestalg" names the digest algorithm.  (It should be SEC_OID_SHA1;
  * XXX There should be SECMIME functions for hashing, or the hashing should
  * be built into this interface, which we would like because we would
@@ -147,12 +148,12 @@ extern SEC_PKCS7ContentInfo *SECMIME_CreateEncrypted(CERTCertificate *scert,
  * (Retrieve specific errors via PORT_GetError()/XP_GetError().)
  */
 extern SEC_PKCS7ContentInfo *SECMIME_CreateSigned(CERTCertificate *scert,
-                                                  CERTCertificate *ecert,
-                                                  CERTCertDBHandle *certdb,
-                                                  SECOidTag digestalg,
-                                                  SECItem *digest,
-                                                  SECKEYGetPasswordKey pwfn,
-                                                  void *pwfn_arg);
+						  CERTCertificate *ecert,
+						  CERTCertDBHandle *certdb,
+						  SECOidTag digestalg,
+						  SECItem *digest,
+						  SECKEYGetPasswordKey pwfn,
+						  void *pwfn_arg);
 
 /************************************************************************/
 SEC_END_PROTOS

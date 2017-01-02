@@ -322,18 +322,15 @@ sec_port_ucs2_utf8_conversion_function(
                 len += 1;
             else if (inBuf[i + H_0] < 0x08)
                 len += 2;
-            else if (((inBuf[i + H_0] & 0xFC) == 0xD8)) {
+            else if (((inBuf[i + 0 + H_0] & 0xFC) == 0xD8)) {
                 if (((inBufLen - i) > 2) && ((inBuf[i + 2 + H_0] & 0xFC) == 0xDC)) {
                     i += 2;
                     len += 4;
                 } else {
                     return PR_FALSE;
                 }
-            } else if ((inBuf[i + H_0] & 0xFC) == 0xDC) {
-                return PR_FALSE;
-            } else {
+            } else
                 len += 3;
-            }
         }
 
         if (len > maxOutBufLen) {

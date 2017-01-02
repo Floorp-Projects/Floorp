@@ -18,7 +18,7 @@ typedef PRUint16 SSL3ProtocolVersion;
 /* The TLS 1.3 draft version. Used to avoid negotiating
  * between incompatible pre-standard TLS 1.3 drafts.
  * TODO(ekr@rtfm.com): Remove when TLS 1.3 is published. */
-#define TLS_1_3_DRAFT_VERSION 18
+#define TLS_1_3_DRAFT_VERSION 14
 
 typedef PRUint16 ssl3CipherSuite;
 /* The cipher suites are defined in sslproto.h */
@@ -32,7 +32,6 @@ typedef PRUint16 ssl3CipherSuite;
 #define SSL3_RANDOM_LENGTH 32
 
 #define SSL3_RECORD_HEADER_LENGTH 5
-#define TLS13_RECORD_HEADER_LENGTH_SHORT 2
 
 /* SSL3_RECORD_HEADER_LENGTH + epoch/sequence_number */
 #define DTLS_RECORD_HEADER_LENGTH 13
@@ -186,11 +185,19 @@ typedef struct {
 typedef enum {
     kea_null,
     kea_rsa,
+    kea_rsa_export,
+    kea_rsa_export_1024,
     kea_dh_dss,
+    kea_dh_dss_export,
     kea_dh_rsa,
+    kea_dh_rsa_export,
     kea_dhe_dss,
+    kea_dhe_dss_export,
     kea_dhe_rsa,
+    kea_dhe_rsa_export,
     kea_dh_anon,
+    kea_dh_anon_export,
+    kea_rsa_fips,
     kea_ecdh_ecdsa,
     kea_ecdhe_ecdsa,
     kea_ecdh_rsa,
@@ -198,7 +205,6 @@ typedef enum {
     kea_ecdh_anon,
     kea_ecdhe_psk,
     kea_dhe_psk,
-    kea_tls13_any,
 } SSL3KeyExchangeAlgorithm;
 
 typedef struct {
@@ -289,14 +295,14 @@ typedef struct {
     PRUint32 ticket_lifetime_hint;
     PRUint32 flags;
     PRUint32 ticket_age_add;
-    PRUint32 max_early_data_size;
     SECItem ticket;
 } NewSessionTicket;
 
 typedef enum {
-    tls13_psk_ke = 0,
-    tls13_psk_dh_ke = 1
-} TLS13PskKEModes;
+    ticket_allow_early_data = 1,
+    ticket_allow_dhe_resumption = 2,
+    ticket_allow_psk_resumption = 4
+} TLS13SessionTicketFlags;
 
 typedef enum {
     CLIENT_AUTH_ANONYMOUS = 0,
@@ -325,5 +331,29 @@ typedef struct {
 #define TLS_EX_SESS_TICKET_MAC_LENGTH 32
 
 #define TLS_STE_NO_SERVER_NAME -1
+
+typedef enum {
+    ssl_sig_none = 0,
+    ssl_sig_rsa_pkcs1_sha1 = 0x0201,
+    ssl_sig_rsa_pkcs1_sha256 = 0x0401,
+    ssl_sig_rsa_pkcs1_sha384 = 0x0501,
+    ssl_sig_rsa_pkcs1_sha512 = 0x0601,
+    /* For ECDSA, the pairing of the hash with a specific curve is only enforced
+     * in TLS 1.3; in TLS 1.2 any curve can be used with each of these. */
+    ssl_sig_ecdsa_secp256r1_sha256 = 0x0403,
+    ssl_sig_ecdsa_secp384r1_sha384 = 0x0503,
+    ssl_sig_ecdsa_secp521r1_sha512 = 0x0603,
+    ssl_sig_rsa_pss_sha256 = 0x0804,
+    ssl_sig_rsa_pss_sha384 = 0x0805,
+    ssl_sig_rsa_pss_sha512 = 0x0806,
+    ssl_sig_ed25519 = 0x0807,
+    ssl_sig_ed448 = 0x0808,
+
+    ssl_sig_dsa_sha1 = 0x0202,
+    ssl_sig_dsa_sha256 = 0x0402,
+    ssl_sig_dsa_sha384 = 0x0502,
+    ssl_sig_dsa_sha512 = 0x0602,
+    ssl_sig_ecdsa_sha1 = 0x0203
+} SignatureScheme;
 
 #endif /* __ssl3proto_h_ */

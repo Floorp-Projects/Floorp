@@ -8,7 +8,6 @@
 #include "ecl.h"
 #include "mpi.h"
 #include "mplogic.h"
-#include "../blapii.h"
 
 /* MAX_FIELD_SIZE_DIGITS is the maximum size of field element supported */
 /* the following needs to go away... */
@@ -117,7 +116,8 @@ struct GFMethodStr {
 /* Construct generic GFMethods. */
 GFMethod *GFMethod_consGFp(const mp_int *irr);
 GFMethod *GFMethod_consGFp_mont(const mp_int *irr);
-
+GFMethod *GFMethod_consGF2m(const mp_int *irr,
+                            const unsigned int irr_arr[5]);
 /* Free the memory allocated (if any) to a GFMethod object. */
 void GFMethod_free(GFMethod *meth);
 
@@ -253,5 +253,4 @@ mp_err ec_group_set_nistp192_fp(ECGroup *group);
 mp_err ec_group_set_nistp224_fp(ECGroup *group);
 #endif
 
-SECStatus ec_Curve25519_mul(PRUint8 *q, const PRUint8 *s, const PRUint8 *p);
 #endif /* __ecl_priv_h_ */

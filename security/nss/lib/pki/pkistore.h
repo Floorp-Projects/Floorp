@@ -15,7 +15,7 @@
 
 PR_BEGIN_EXTERN_C
 
-/*
+/* 
  * PKI Stores
  *
  * This is a set of routines for managing local stores of PKI objects.
@@ -24,7 +24,7 @@ PR_BEGIN_EXTERN_C
  * here for storing local references to keys.
  */
 
-/*
+/* 
  * nssCertificateStore
  *
  * Manages local store of certificate, trust, and S/MIME profile objects.
@@ -34,29 +34,37 @@ PR_BEGIN_EXTERN_C
  */
 
 NSS_EXTERN nssCertificateStore *
-nssCertificateStore_Create(
-    NSSArena *arenaOpt);
+nssCertificateStore_Create
+(
+  NSSArena *arenaOpt
+);
 
 NSS_EXTERN PRStatus
-nssCertificateStore_Destroy(
-    nssCertificateStore *store);
+nssCertificateStore_Destroy
+(
+  nssCertificateStore *store
+);
 
 /* Atomic Find cert in store, or add this cert to the store.
 ** Ref counts properly maintained.
 */
 NSS_EXTERN NSSCertificate *
-nssCertificateStore_FindOrAdd(
-    nssCertificateStore *store,
-    NSSCertificate *c);
+nssCertificateStore_FindOrAdd 
+(
+  nssCertificateStore *store,
+  NSSCertificate *c
+);
 
 NSS_EXTERN void
-nssCertificateStore_RemoveCertLOCKED(
-    nssCertificateStore *store,
-    NSSCertificate *cert);
+nssCertificateStore_RemoveCertLOCKED
+(
+  nssCertificateStore *store,
+  NSSCertificate *cert
+);
 
 struct nssCertificateStoreTraceStr {
-    nssCertificateStore *store;
-    PZLock *lock;
+    nssCertificateStore* store;
+    PZLock* lock;
     PRBool locked;
     PRBool unlocked;
 };
@@ -64,74 +72,96 @@ struct nssCertificateStoreTraceStr {
 typedef struct nssCertificateStoreTraceStr nssCertificateStoreTrace;
 
 NSS_EXTERN void
-nssCertificateStore_Lock(
-    nssCertificateStore *store, nssCertificateStoreTrace *out);
+nssCertificateStore_Lock (
+  nssCertificateStore *store, nssCertificateStoreTrace* out
+);
 
 NSS_EXTERN void
-nssCertificateStore_Unlock(
-    nssCertificateStore *store, const nssCertificateStoreTrace *in,
-    nssCertificateStoreTrace *out);
+nssCertificateStore_Unlock (
+  nssCertificateStore *store, const nssCertificateStoreTrace* in,
+  nssCertificateStoreTrace* out
+);
 
 NSS_EXTERN NSSCertificate **
-nssCertificateStore_FindCertificatesBySubject(
-    nssCertificateStore *store,
-    NSSDER *subject,
-    NSSCertificate *rvOpt[],
-    PRUint32 maximumOpt,
-    NSSArena *arenaOpt);
+nssCertificateStore_FindCertificatesBySubject
+(
+  nssCertificateStore *store,
+  NSSDER *subject,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
 
 NSS_EXTERN NSSCertificate **
-nssCertificateStore_FindCertificatesByNickname(
-    nssCertificateStore *store,
-    const NSSUTF8 *nickname,
-    NSSCertificate *rvOpt[],
-    PRUint32 maximumOpt,
-    NSSArena *arenaOpt);
+nssCertificateStore_FindCertificatesByNickname
+(
+  nssCertificateStore *store,
+  const NSSUTF8 *nickname,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
 
 NSS_EXTERN NSSCertificate **
-nssCertificateStore_FindCertificatesByEmail(
-    nssCertificateStore *store,
-    NSSASCII7 *email,
-    NSSCertificate *rvOpt[],
-    PRUint32 maximumOpt,
-    NSSArena *arenaOpt);
+nssCertificateStore_FindCertificatesByEmail
+(
+  nssCertificateStore *store,
+  NSSASCII7 *email,
+  NSSCertificate *rvOpt[],
+  PRUint32 maximumOpt,
+  NSSArena *arenaOpt
+);
 
 NSS_EXTERN NSSCertificate *
-nssCertificateStore_FindCertificateByIssuerAndSerialNumber(
-    nssCertificateStore *store,
-    NSSDER *issuer,
-    NSSDER *serial);
+nssCertificateStore_FindCertificateByIssuerAndSerialNumber
+(
+  nssCertificateStore *store,
+  NSSDER *issuer,
+  NSSDER *serial
+);
 
 NSS_EXTERN NSSCertificate *
-nssCertificateStore_FindCertificateByEncodedCertificate(
-    nssCertificateStore *store,
-    NSSDER *encoding);
+nssCertificateStore_FindCertificateByEncodedCertificate
+(
+  nssCertificateStore *store,
+  NSSDER *encoding
+);
 
 NSS_EXTERN PRStatus
-nssCertificateStore_AddTrust(
-    nssCertificateStore *store,
-    NSSTrust *trust);
+nssCertificateStore_AddTrust
+(
+  nssCertificateStore *store,
+  NSSTrust *trust
+);
 
 NSS_EXTERN NSSTrust *
-nssCertificateStore_FindTrustForCertificate(
-    nssCertificateStore *store,
-    NSSCertificate *cert);
+nssCertificateStore_FindTrustForCertificate
+(
+  nssCertificateStore *store,
+  NSSCertificate *cert
+);
 
 NSS_EXTERN PRStatus
-nssCertificateStore_AddSMIMEProfile(
-    nssCertificateStore *store,
-    nssSMIMEProfile *profile);
+nssCertificateStore_AddSMIMEProfile
+(
+  nssCertificateStore *store,
+  nssSMIMEProfile *profile
+);
 
 NSS_EXTERN nssSMIMEProfile *
-nssCertificateStore_FindSMIMEProfileForCertificate(
-    nssCertificateStore *store,
-    NSSCertificate *cert);
+nssCertificateStore_FindSMIMEProfileForCertificate
+(
+  nssCertificateStore *store,
+  NSSCertificate *cert
+);
 
 NSS_EXTERN void
-nssCertificateStore_DumpStoreInfo(
-    nssCertificateStore *store,
-    void (*cert_dump_iter)(const void *, void *, void *),
-    void *arg);
+nssCertificateStore_DumpStoreInfo
+(
+  nssCertificateStore *store,
+  void (* cert_dump_iter)(const void *, void *, void *),
+  void *arg
+);
 
 PR_END_EXTERN_C
 

@@ -15,6 +15,11 @@
 #include "nss.h"      /* for NSS_RegisterShutdown */
 #include "prinit.h"   /* for PR_CallOnceWithArg */
 
+#define MAX_BLOCK_CYPHER_SIZE 32
+
+#define TEST_FOR_FAILURE /* reminder */
+#define SET_ERROR_CODE   /* reminder */
+
 /* Returns a SECStatus: SECSuccess or SECFailure, NOT SECWouldBlock.
  *
  * Currently, the list of functions called through ss->handshake is:
@@ -198,9 +203,6 @@ SSL_ResetHandshake(PRFileDesc *s, PRBool asServer)
 
     ssl_ReleaseSSL3HandshakeLock(ss);
     ssl_Release1stHandshakeLock(ss);
-
-    ssl3_DestroyRemoteExtensions(&ss->ssl3.hs.remoteExtensions);
-    ssl3_ResetExtensionData(&ss->xtnData);
 
     if (!ss->TCPconnected)
         ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
@@ -1111,7 +1113,7 @@ SSL_InvalidateSession(PRFileDesc *fd)
         ssl_Get1stHandshakeLock(ss);
         ssl_GetSSL3HandshakeLock(ss);
 
-        if (ss->sec.ci.sid) {
+        if (ss->sec.ci.sid && ss->sec.uncache) {
             ss->sec.uncache(ss->sec.ci.sid);
             rv = SECSuccess;
         }

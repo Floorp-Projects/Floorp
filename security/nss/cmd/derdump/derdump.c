@@ -34,13 +34,12 @@ main(int argc, char **argv)
     char *progName;
     FILE *outFile;
     PRFileDesc *inFile;
-    SECItem der = { siBuffer, NULL, 0 };
+    SECItem der;
     SECStatus rv;
     PRInt16 xp_error;
     PRBool raw = PR_FALSE;
     PLOptState *optstate;
     PLOptStatus status;
-    int retval = -1;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName + 1 : argv[0];
@@ -56,7 +55,7 @@ main(int argc, char **argv)
                 if (!inFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for reading\n",
                             progName, optstate->value);
-                    goto cleanup;
+                    return -1;
                 }
                 break;
 
@@ -65,7 +64,7 @@ main(int argc, char **argv)
                 if (!outFile) {
                     fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
                             progName, optstate->value);
-                    goto cleanup;
+                    return -1;
                 }
                 break;
 
@@ -86,19 +85,17 @@ main(int argc, char **argv)
     if (!outFile)
         outFile = stdout;
 
-    rv = NSS_NoDB_Init(NULL);
+    rv = NSS_NoDB_Init(NULL); /* XXX */
     if (rv != SECSuccess) {
         SECU_PrintPRandOSError(progName);
-        goto cleanup;
+        return -1;
     }
 
     rv = SECU_ReadDERFromFile(&der, inFile, PR_FALSE, PR_FALSE);
     if (rv == SECSuccess) {
         rv = DER_PrettyPrint(outFile, &der, raw);
-        if (rv == SECSuccess) {
-            retval = 0;
-            goto cleanup;
-        }
+        if (rv == SECSuccess)
+            return 0;
     }
 
     xp_error = PORT_GetError();
@@ -108,21 +105,5 @@ main(int argc, char **argv)
     if (errno) {
         SECU_PrintSystemError(progName, "errno=%d", errno);
     }
-    retval = 1;
-
-cleanup:
-    retval |= NSS_Shutdown();
-    if (inFile) {
-        PR_Close(inFile);
-    }
-    if (outFile) {
-        fflush(outFile);
-        fclose(outFile);
-    }
-    PL_DestroyOptState(optstate);
-    if (der.data) {
-        PORT_Free(der.data);
-    }
-
-    return retval;
+    return 1;
 }

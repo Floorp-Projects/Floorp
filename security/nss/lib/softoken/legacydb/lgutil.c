@@ -67,9 +67,7 @@ lg_Attribute2SecItem(PLArenaPool *arena, CK_ATTRIBUTE_TYPE type,
         return CKR_HOST_MEMORY;
     }
     item->len = len;
-    if (item->len) {
-        PORT_Memcpy(item->data, attribute->pValue, len);
-    }
+    PORT_Memcpy(item->data, attribute->pValue, len);
     return CKR_OK;
 }
 

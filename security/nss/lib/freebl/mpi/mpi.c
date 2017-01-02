@@ -19,6 +19,10 @@
 #undef MP_ASSEMBLY_SQUARE
 #endif
 
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#define inline __inline
+#endif
+
 #if MP_LOGTAB
 /*
   A table of the logs of 2 for various bases (the 0 and 1 entries of
@@ -35,10 +39,6 @@
   which are the output bases supported.
  */
 #include "logtab.h"
-#endif
-
-#ifdef CT_VERIF
-#include <valgrind/memcheck.h>
 #endif
 
 /* {{{ Constant strings */
@@ -85,26 +85,6 @@ mp_set_prec(mp_size prec)
 } /* end mp_set_prec() */
 
 /* }}} */
-
-#ifdef CT_VERIF
-void
-mp_taint(mp_int *mp)
-{
-    size_t i;
-    for (i = 0; i < mp->used; ++i) {
-        VALGRIND_MAKE_MEM_UNDEFINED(&(mp->dp[i]), sizeof(mp_digit));
-    }
-}
-
-void
-mp_untaint(mp_int *mp)
-{
-    size_t i;
-    for (i = 0; i < mp->used; ++i) {
-        VALGRIND_MAKE_MEM_DEFINED(&(mp->dp[i]), sizeof(mp_digit));
-    }
-}
-#endif
 
 /*------------------------------------------------------------------------*/
 /* {{{ mp_init(mp) */
@@ -1314,6 +1294,88 @@ mp_mod_d(const mp_int *a, mp_digit d, mp_digit *c)
     return MP_OKAY;
 
 } /* end mp_mod_d() */
+
+/* }}} */
+
+/* {{{ mp_sqrt(a, b) */
+
+/*
+  mp_sqrt(a, b)
+
+  Compute the integer square root of a, and store the result in b.
+  Uses an integer-arithmetic version of Newton's iterative linear
+  approximation technique to determine this value; the result has the
+  following two properties:
+
+     b^2 <= a
+     (b+1)^2 >= a
+
+  It is a range error to pass a negative value.
+ */
+mp_err
+mp_sqrt(const mp_int *a, mp_int *b)
+{
+    mp_int x, t;
+    mp_err res;
+    mp_size used;
+
+    ARGCHK(a != NULL && b != NULL, MP_BADARG);
+
+    /* Cannot take square root of a negative value */
+    if (SIGN(a) == NEG)
+        return MP_RANGE;
+
+    /* Special cases for zero and one, trivial     */
+    if (mp_cmp_d(a, 1) <= 0)
+        return mp_copy(a, b);
+
+    /* Initialize the temporaries we'll use below  */
+    if ((res = mp_init_size(&t, USED(a))) != MP_OKAY)
+        return res;
+
+    /* Compute an initial guess for the iteration as a itself */
+    if ((res = mp_init_copy(&x, a)) != MP_OKAY)
+        goto X;
+
+    used = MP_USED(&x);
+    if (used > 1) {
+        s_mp_rshd(&x, used / 2);
+    }
+
+    for (;;) {
+        /* t = (x * x) - a */
+        if ((res = mp_copy(&x, &t)) != MP_OKAY ||
+            (res = mp_sqr(&t, &t)) != MP_OKAY ||
+            (res = mp_sub(&t, a, &t)) != MP_OKAY)
+            goto CLEANUP;
+
+        /* t = t / 2x       */
+        s_mp_mul_2(&x);
+        if ((res = mp_div(&t, &x, &t, NULL)) != MP_OKAY)
+            goto CLEANUP;
+        s_mp_div_2(&x);
+
+        /* Terminate the loop, if the quotient is zero */
+        if (mp_cmp_z(&t) == MP_EQ)
+            break;
+
+        /* x = x - t       */
+        if ((res = mp_sub(&x, &t, &x)) != MP_OKAY)
+            goto CLEANUP;
+    }
+
+    /* Copy result to output parameter */
+    MP_CHECKOK(mp_sub_d(&x, 1, &x));
+    s_mp_exch(&x, b);
+
+CLEANUP:
+    mp_clear(&x);
+X:
+    mp_clear(&t);
+
+    return res;
+
+} /* end mp_sqrt() */
 
 /* }}} */
 
@@ -2781,7 +2843,7 @@ s_mp_pad(mp_int *mp, mp_size min)
 /* {{{ s_mp_setz(dp, count) */
 
 /* Set 'count' digits pointed to by dp to be zeroes                       */
-void
+inline void
 s_mp_setz(mp_digit *dp, mp_size count)
 {
 #if MP_MEMSET == 0
@@ -2800,7 +2862,7 @@ s_mp_setz(mp_digit *dp, mp_size count)
 /* {{{ s_mp_copy(sp, dp, count) */
 
 /* Copy 'count' digits from sp to dp                                      */
-void
+inline void
 s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 {
 #if MP_MEMCPY == 0
@@ -2818,7 +2880,7 @@ s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 /* {{{ s_mp_alloc(nb, ni) */
 
 /* Allocate ni records of nb bytes each, and return a pointer to that     */
-void *
+inline void *
 s_mp_alloc(size_t nb, size_t ni)
 {
     return calloc(nb, ni);
@@ -2830,7 +2892,7 @@ s_mp_alloc(size_t nb, size_t ni)
 /* {{{ s_mp_free(ptr) */
 
 /* Free the memory pointed to by ptr                                      */
-void
+inline void
 s_mp_free(void *ptr)
 {
     if (ptr) {
@@ -2843,7 +2905,7 @@ s_mp_free(void *ptr)
 /* {{{ s_mp_clamp(mp) */
 
 /* Remove leading zeroes from the given value                             */
-void
+inline void
 s_mp_clamp(mp_int *mp)
 {
     mp_size used = MP_USED(mp);

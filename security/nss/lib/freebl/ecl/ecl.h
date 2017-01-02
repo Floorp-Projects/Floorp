@@ -8,7 +8,6 @@
 #ifndef __ecl_h_
 #define __ecl_h_
 
-#include "blapi.h"
 #include "ecl-exp.h"
 #include "mpi.h"
 
@@ -53,8 +52,5 @@ mp_err ECPoints_mul(const ECGroup *group, const mp_int *k1,
  * is invalid, or an error code if the validation could not be
  * performed. */
 mp_err ECPoint_validate(const ECGroup *group, const mp_int *px, const mp_int *py);
-
-SECStatus ec_Curve25519_pt_mul(SECItem *X, SECItem *k, SECItem *P);
-SECStatus ec_Curve25519_pt_validate(const SECItem *px);
 
 #endif /* __ecl_h_ */

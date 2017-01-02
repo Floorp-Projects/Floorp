@@ -23,7 +23,7 @@ nssToken_GetTrustDomain(NSSToken *token);
 
 void PK11Slot_SetNSSToken(PK11SlotInfo *sl, NSSToken *nsst);
 
-NSSToken *PK11Slot_GetNSSToken(PK11SlotInfo *sl);
+NSSToken * PK11Slot_GetNSSToken(PK11SlotInfo *sl);
 
 PR_END_EXTERN_C
 

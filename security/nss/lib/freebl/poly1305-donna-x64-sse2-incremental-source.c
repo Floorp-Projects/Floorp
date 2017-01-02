@@ -12,7 +12,6 @@
 #include <stdint.h>
 
 #include "poly1305.h"
-#include "blapii.h"
 
 #define ALIGN(x) __attribute__((aligned(x)))
 #define INLINE inline
@@ -92,7 +91,7 @@ static poly1305_state_internal INLINE
 }
 
 /* copy 0-63 bytes */
-static void INLINE NO_SANITIZE_ALIGNMENT
+static void INLINE
 poly1305_block_copy(uint8_t *dst, const uint8_t *src, size_t bytes)
 {
     size_t offset = src - dst;
