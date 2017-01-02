@@ -7,9 +7,7 @@
 
 #include "MediaPipeline.h"
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaStreamGraphImpl.h"
-#endif
 
 #include <math.h>
 
@@ -1713,7 +1711,6 @@ nsresult MediaPipeline::PipelineTransport::SendRtcpPacket(
 
 void MediaPipelineTransmit::PipelineListener::
 UnsetTrackId(MediaStreamGraphImpl* graph) {
-#ifndef USE_FAKE_MEDIA_STREAMS
   class Message : public ControlMessage {
   public:
     explicit Message(PipelineListener* listener) :
@@ -1725,9 +1722,6 @@ UnsetTrackId(MediaStreamGraphImpl* graph) {
     RefPtr<PipelineListener> listener_;
   };
   graph->AppendMessage(MakeUnique<Message>(this));
-#else
-  UnsetTrackIdImpl();
-#endif
 }
 // Called if we're attached with AddDirectListener()
 void MediaPipelineTransmit::PipelineListener::
@@ -1893,7 +1887,6 @@ class GenericReceiveListener : public MediaStreamListener
     source_->EndTrack(track_id_);
   }
 
-#ifndef USE_FAKE_MEDIA_STREAMS
   // Must be called on the main thread
   void SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
   {
@@ -1924,7 +1917,6 @@ class GenericReceiveListener : public MediaStreamListener
   {
     principal_handle_ = principal_handle;
   }
-#endif // USE_FAKE_MEDIA_STREAMS
 
  protected:
   SourceMediaStream *source_;
@@ -2110,12 +2102,10 @@ nsresult MediaPipelineReceiveAudio::Init() {
   return MediaPipelineReceive::Init();
 }
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 void MediaPipelineReceiveAudio::SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
 {
   listener_->SetPrincipalHandle_m(principal_handle);
 }
-#endif // USE_FAKE_MEDIA_STREAMS
 
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
@@ -2346,11 +2336,9 @@ nsresult MediaPipelineReceiveVideo::Init() {
   return MediaPipelineReceive::Init();
 }
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 void MediaPipelineReceiveVideo::SetPrincipalHandle_m(const PrincipalHandle& principal_handle)
 {
   listener_->SetPrincipalHandle_m(principal_handle);
 }
-#endif // USE_FAKE_MEDIA_STREAMS
 
 }  // end namespace

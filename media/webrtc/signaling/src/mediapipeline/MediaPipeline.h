@@ -10,9 +10,6 @@
 
 #include "sigslot.h"
 
-#ifdef USE_FAKE_MEDIA_STREAMS
-#include "FakeMediaStreams.h"
-#endif
 #include "MediaConduitInterface.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Atomics.h"
@@ -39,13 +36,11 @@ class AudioProxyThread;
 class VideoFrameConverter;
 #endif
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 namespace dom {
   class MediaStreamTrack;
 } // namespace dom
 
 class SourceMediaStream;
-#endif // USE_FAKE_MEDIA_STREAMS
 
 // A class that represents the pipeline of audio and video
 // The dataflow looks like:
@@ -381,11 +376,9 @@ class MediaPipelineReceive : public MediaPipeline {
 
   int segments_added() const { return segments_added_; }
 
-#ifndef USE_FAKE_MEDIA_STREAMS
   // Sets the PrincipalHandle we set on the media chunks produced by this
   // pipeline. Must be called on the main thread.
   virtual void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) = 0;
-#endif // USE_FAKE_MEDIA_STREAMS
  protected:
   ~MediaPipelineReceive();
 
@@ -422,9 +415,7 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
   nsresult Init() override;
   bool IsVideo() const override { return false; }
 
-#ifndef USE_FAKE_MEDIA_STREAMS
   void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override;
-#endif // USE_FAKE_MEDIA_STREAMS
 
  private:
   // Separate class to allow ref counting
@@ -461,9 +452,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   nsresult Init() override;
   bool IsVideo() const override { return true; }
 
-#ifndef USE_FAKE_MEDIA_STREAMS
   void SetPrincipalHandle_m(const PrincipalHandle& principal_handle) override;
-#endif // USE_FAKE_MEDIA_STREAMS
 
  private:
   class PipelineRenderer;

@@ -23,19 +23,12 @@
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepTransport.h"
 
-#ifdef USE_FAKE_STREAMS
-#include "DOMMediaStream.h"
-#include "FakeMediaStreams.h"
-#else
 #include "MediaSegment.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "MediaStreamGraph.h"
 #endif
-#endif
 
-#ifndef USE_FAKE_MEDIA_STREAMS
 #include "MediaStreamGraphImpl.h"
-#endif
 
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
