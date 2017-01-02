@@ -42,6 +42,10 @@ gtest_start()
 {
   echo "gtests: ${GTESTS}"
   for i in ${GTESTS}; do
+    if [ ! -f ${BINDIR}/$i ]; then
+      html_unknown "Skipping $i (not built)"
+      continue
+    fi
     GTESTDIR="${HOSTDIR}/$i"
     html_head "$i"
     if [ ! -d "$GTESTDIR" ]; then
@@ -51,9 +55,10 @@ gtest_start()
     GTESTREPORT="$GTESTDIR/report.xml"
     PARSED_REPORT="$GTESTDIR/report.parsed"
     echo "executing $i"
-    ${BINDIR}/$i -d "$GTESTDIR" --gtest_output=xml:"${GTESTREPORT}"
-    echo "test output dir: ${GTESTREPORT}"
+    ${BINDIR}/$i -d "$GTESTDIR" --gtest_output=xml:"${GTESTREPORT}" \
+                                --gtest_filter="${GTESTFILTER-*}"
     html_msg $? 0 "$i run successfully"
+    echo "test output dir: ${GTESTREPORT}"
     echo "executing sed to parse the xml report"
     sed -f ${COMMON}/parsegtestreport.sed "${GTESTREPORT}" > "${PARSED_REPORT}"
     echo "processing the parsed report"

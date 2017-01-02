@@ -24,10 +24,6 @@ apt-get install -y --no-install-recommends ${apt_packages[@]}
 pip install --upgrade pip
 pip install Mercurial
 
-# Compiler options.
-update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 30
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 30
-
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales
 

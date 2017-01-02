@@ -175,15 +175,6 @@ ssl_FindServerCertByAuthType(const sslSocket *ss, SSLAuthType authType)
 SECStatus
 ssl_OneTimeCertSetup(sslSocket *ss, const sslServerCert *sc)
 {
-    /* Generate a step-down RSA key. */
-    if (sc->certType.authType == ssl_auth_rsa_decrypt &&
-        sc->serverKeyBits > 512 &&
-        !ss->opt.noStepDown && !ss->stepDownKeyPair) {
-        if (ssl3_CreateRSAStepDownKeys(ss) != SECSuccess) {
-            return SECFailure;
-        }
-    }
-
     if (PR_SUCCESS != PR_CallOnceWithArg(&setupServerCAListOnce,
                                          &serverCAListSetup,
                                          (void *)(ss->dbHandle))) {
@@ -283,7 +274,7 @@ ssl_PopulateSignedCertTimestamps(sslServerCert *sc,
     if (sc->signedCertTimestamps.len) {
         SECITEM_FreeItem(&sc->signedCertTimestamps, PR_FALSE);
     }
-    if (signedCertTimestamps) {
+    if (signedCertTimestamps && signedCertTimestamps->len) {
         return SECITEM_CopyItem(NULL, &sc->signedCertTimestamps,
                                 signedCertTimestamps);
     }

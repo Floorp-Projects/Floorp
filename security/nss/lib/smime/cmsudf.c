@@ -21,7 +21,7 @@ struct nsscmstypeInfoStr {
     SEC_ASN1Template *template;
     size_t size;
     PRBool isData;
-    NSSCMSGenericWrapperDataDestroy  destroy;
+    NSSCMSGenericWrapperDataDestroy destroy;
     NSSCMSGenericWrapperDataCallback decode_before;
     NSSCMSGenericWrapperDataCallback decode_after;
     NSSCMSGenericWrapperDataCallback decode_end;
@@ -49,29 +49,29 @@ SECStatus
 nss_cmstype_shutdown(void *appData, void *reserved)
 {
     if (nsscmstypeHashLock) {
-	PR_Lock(nsscmstypeHashLock);
+        PR_Lock(nsscmstypeHashLock);
     }
     if (nsscmstypeHash) {
-	PL_HashTableDestroy(nsscmstypeHash);
-	nsscmstypeHash = NULL;
+        PL_HashTableDestroy(nsscmstypeHash);
+        nsscmstypeHash = NULL;
     }
     if (nsscmstypeArena) {
-	PORT_FreeArena(nsscmstypeArena, PR_FALSE);
-	nsscmstypeArena = NULL;
+        PORT_FreeArena(nsscmstypeArena, PR_FALSE);
+        nsscmstypeArena = NULL;
     }
     if (nsscmstypeAddLock) {
-	PR_DestroyLock(nsscmstypeAddLock);
+        PR_DestroyLock(nsscmstypeAddLock);
     }
     if (nsscmstypeHashLock) {
-	PRLock *oldLock = nsscmstypeHashLock;
-	nsscmstypeHashLock = NULL;
-	PR_Unlock(oldLock);
-	PR_DestroyLock(oldLock);
+        PRLock *oldLock = nsscmstypeHashLock;
+        nsscmstypeHashLock = NULL;
+        PR_Unlock(oldLock);
+        PR_DestroyLock(oldLock);
     }
 
     /* don't clear out the PR_ONCE data if we failed our inital call */
     if (appData == NULL) {
-    	nsscmstypeOnce = nsscmstypeClearOnce;
+        nsscmstypeOnce = nsscmstypeClearOnce;
     }
     return SECSuccess;
 }
@@ -79,16 +79,16 @@ nss_cmstype_shutdown(void *appData, void *reserved)
 static PLHashNumber
 nss_cmstype_hash_key(const void *key)
 {
-   return (PLHashNumber)((char *)key - (char *)NULL);
+    return (PLHashNumber)((char *)key - (char *)NULL);
 }
 
 static PRIntn
 nss_cmstype_compare_keys(const void *v1, const void *v2)
 {
-   PLHashNumber value1 = nss_cmstype_hash_key(v1);
-   PLHashNumber value2 = nss_cmstype_hash_key(v2);
+    PLHashNumber value1 = nss_cmstype_hash_key(v1);
+    PLHashNumber value2 = nss_cmstype_hash_key(v2);
 
-   return (value1 == value2);
+    return (value1 == value2);
 }
 
 /*
@@ -99,27 +99,28 @@ static PRStatus
 nss_cmstype_init(void)
 {
     SECStatus rv;
-        
+
     nsscmstypeHashLock = PR_NewLock();
     if (nsscmstypeHashLock == NULL) {
-	return PR_FAILURE;
+        return PR_FAILURE;
     }
     nsscmstypeAddLock = PR_NewLock();
     if (nsscmstypeHashLock == NULL) {
-	goto fail;
+        goto fail;
     }
-    nsscmstypeHash = PL_NewHashTable(64, nss_cmstype_hash_key, 
-		nss_cmstype_compare_keys, PL_CompareValues, NULL, NULL);
+    nsscmstypeHash = PL_NewHashTable(64, nss_cmstype_hash_key,
+                                     nss_cmstype_compare_keys,
+                                     PL_CompareValues, NULL, NULL);
     if (nsscmstypeHash == NULL) {
-	goto fail;
+        goto fail;
     }
     nsscmstypeArena = PORT_NewArena(2048);
     if (nsscmstypeArena == NULL) {
-	goto fail;
+        goto fail;
     }
     rv = NSS_RegisterShutdown(nss_cmstype_shutdown, NULL);
     if (rv != SECSuccess) {
-	goto fail;
+        goto fail;
     }
     return PR_SUCCESS;
 
@@ -128,20 +129,20 @@ fail:
     return PR_FAILURE;
 }
 
- 
 /*
  * look up and registered SIME type
  */
 static const nsscmstypeInfo *
 nss_cmstype_lookup(SECOidTag type)
 {
-    nsscmstypeInfo *typeInfo = NULL;;
+    nsscmstypeInfo *typeInfo = NULL;
+    ;
     if (!nsscmstypeHash) {
-	return NULL;
+        return NULL;
     }
     PR_Lock(nsscmstypeHashLock);
     if (nsscmstypeHash) {
-	typeInfo = PL_HashTableLookupConst(nsscmstypeHash, (void *)type);
+        typeInfo = PL_HashTableLookupConst(nsscmstypeHash, (void *)type);
     }
     PR_Unlock(nsscmstypeHashLock);
     return typeInfo;
@@ -156,21 +157,20 @@ nss_cmstype_add(SECOidTag type, nsscmstypeInfo *typeinfo)
     PLHashEntry *entry;
 
     if (!nsscmstypeHash) {
-	/* assert? this shouldn't happen */
-	return SECFailure;
+        /* assert? this shouldn't happen */
+        return SECFailure;
     }
     PR_Lock(nsscmstypeHashLock);
     /* this is really paranoia. If we really are racing nsscmstypeHash, we'll
      * also be racing nsscmstypeHashLock... */
     if (!nsscmstypeHash) {
-	PR_Unlock(nsscmstypeHashLock);
-	return SECFailure;
+        PR_Unlock(nsscmstypeHashLock);
+        return SECFailure;
     }
     entry = PL_HashTableAdd(nsscmstypeHash, (void *)type, typeinfo);
     PR_Unlock(nsscmstypeHashLock);
     return entry ? SECSuccess : SECFailure;
 }
-
 
 /* helper functions to manage new content types
  */
@@ -181,16 +181,16 @@ NSS_CMSType_IsWrapper(SECOidTag type)
     const nsscmstypeInfo *typeInfo = NULL;
 
     switch (type) {
-    case SEC_OID_PKCS7_SIGNED_DATA:
-    case SEC_OID_PKCS7_ENVELOPED_DATA:
-    case SEC_OID_PKCS7_DIGESTED_DATA:
-    case SEC_OID_PKCS7_ENCRYPTED_DATA:
-	return PR_TRUE;
-    default:
-	typeInfo = nss_cmstype_lookup(type);
-	if (typeInfo && !typeInfo->isData) {
-	    return PR_TRUE;
-	}
+        case SEC_OID_PKCS7_SIGNED_DATA:
+        case SEC_OID_PKCS7_ENVELOPED_DATA:
+        case SEC_OID_PKCS7_DIGESTED_DATA:
+        case SEC_OID_PKCS7_ENCRYPTED_DATA:
+            return PR_TRUE;
+        default:
+            typeInfo = nss_cmstype_lookup(type);
+            if (typeInfo && !typeInfo->isData) {
+                return PR_TRUE;
+            }
     }
     return PR_FALSE;
 }
@@ -201,13 +201,13 @@ NSS_CMSType_IsData(SECOidTag type)
     const nsscmstypeInfo *typeInfo = NULL;
 
     switch (type) {
-    case SEC_OID_PKCS7_DATA:
-	return PR_TRUE;
-    default:
-	typeInfo = nss_cmstype_lookup(type);
-	if (typeInfo && typeInfo->isData) {
-	    return PR_TRUE;
-	}
+        case SEC_OID_PKCS7_DATA:
+            return PR_TRUE;
+        default:
+            typeInfo = nss_cmstype_lookup(type);
+            if (typeInfo && typeInfo->isData) {
+                return PR_TRUE;
+            }
     }
     return PR_FALSE;
 }
@@ -218,7 +218,7 @@ NSS_CMSType_GetTemplate(SECOidTag type)
     const nsscmstypeInfo *typeInfo = nss_cmstype_lookup(type);
 
     if (typeInfo && typeInfo->template) {
-	return typeInfo->template;
+        return typeInfo->template;
     }
     return SEC_ASN1_GET(SEC_PointerToOctetStringTemplate);
 }
@@ -229,10 +229,9 @@ NSS_CMSType_GetContentSize(SECOidTag type)
     const nsscmstypeInfo *typeInfo = nss_cmstype_lookup(type);
 
     if (typeInfo) {
-	return typeInfo->size;
+        return typeInfo->size;
     }
     return sizeof(SECItem *);
-
 }
 
 void
@@ -241,191 +240,187 @@ NSS_CMSGenericWrapperData_Destroy(SECOidTag type, NSSCMSGenericWrapperData *gd)
     const nsscmstypeInfo *typeInfo = nss_cmstype_lookup(type);
 
     if (typeInfo && typeInfo->destroy) {
-	(*typeInfo->destroy)(gd);
+        (*typeInfo->destroy)(gd);
     }
-    
 }
 
-
 SECStatus
-NSS_CMSGenericWrapperData_Decode_BeforeData(SECOidTag type, 
-				     NSSCMSGenericWrapperData *gd)
+NSS_CMSGenericWrapperData_Decode_BeforeData(SECOidTag type,
+                                            NSSCMSGenericWrapperData *gd)
 {
     const nsscmstypeInfo *typeInfo;
 
     /* short cut common case */
     if (type == SEC_OID_PKCS7_DATA) {
-	return SECSuccess;
+        return SECSuccess;
     }
 
     typeInfo = nss_cmstype_lookup(type);
     if (typeInfo) {
-	if  (typeInfo->decode_before) {
-	    return (*typeInfo->decode_before)(gd);
-	}
-	/* decoder ops optional for data tags */
-	if (typeInfo->isData) {
-	    return SECSuccess;
-	}
-    }
-    /* expected a function, but none existed */
-    return SECFailure;
-    
-}
-
-SECStatus
-NSS_CMSGenericWrapperData_Decode_AfterData(SECOidTag type, 
-				    NSSCMSGenericWrapperData *gd)
-{
-    const nsscmstypeInfo *typeInfo;
-
-    /* short cut common case */
-    if (type == SEC_OID_PKCS7_DATA) {
-	return SECSuccess;
-    }
-
-    typeInfo = nss_cmstype_lookup(type);
-    if (typeInfo) {
-	if  (typeInfo->decode_after) {
-	    return (*typeInfo->decode_after)(gd);
-	}
-	/* decoder ops optional for data tags */
-	if (typeInfo->isData) {
-	    return SECSuccess;
-	}
+        if (typeInfo->decode_before) {
+            return (*typeInfo->decode_before)(gd);
+        }
+        /* decoder ops optional for data tags */
+        if (typeInfo->isData) {
+            return SECSuccess;
+        }
     }
     /* expected a function, but none existed */
     return SECFailure;
 }
 
 SECStatus
-NSS_CMSGenericWrapperData_Decode_AfterEnd(SECOidTag type, 
-				   NSSCMSGenericWrapperData *gd)
+NSS_CMSGenericWrapperData_Decode_AfterData(SECOidTag type,
+                                           NSSCMSGenericWrapperData *gd)
 {
     const nsscmstypeInfo *typeInfo;
 
     /* short cut common case */
     if (type == SEC_OID_PKCS7_DATA) {
-	return SECSuccess;
+        return SECSuccess;
     }
 
     typeInfo = nss_cmstype_lookup(type);
     if (typeInfo) {
-	if  (typeInfo->decode_end) {
-	    return (*typeInfo->decode_end)(gd);
-	}
-	/* decoder ops optional for data tags */
-	if (typeInfo->isData) {
-	    return SECSuccess;
-	}
+        if (typeInfo->decode_after) {
+            return (*typeInfo->decode_after)(gd);
+        }
+        /* decoder ops optional for data tags */
+        if (typeInfo->isData) {
+            return SECSuccess;
+        }
     }
     /* expected a function, but none existed */
     return SECFailure;
 }
 
 SECStatus
-NSS_CMSGenericWrapperData_Encode_BeforeStart(SECOidTag type, 
-				      NSSCMSGenericWrapperData *gd)
+NSS_CMSGenericWrapperData_Decode_AfterEnd(SECOidTag type,
+                                          NSSCMSGenericWrapperData *gd)
 {
     const nsscmstypeInfo *typeInfo;
 
     /* short cut common case */
     if (type == SEC_OID_PKCS7_DATA) {
-	return SECSuccess;
+        return SECSuccess;
     }
 
     typeInfo = nss_cmstype_lookup(type);
     if (typeInfo) {
-	if  (typeInfo->encode_start) {
-	    return (*typeInfo->encode_start)(gd);
-	}
-	/* decoder ops optional for data tags */
-	if (typeInfo->isData) {
-	    return SECSuccess;
-	}
+        if (typeInfo->decode_end) {
+            return (*typeInfo->decode_end)(gd);
+        }
+        /* decoder ops optional for data tags */
+        if (typeInfo->isData) {
+            return SECSuccess;
+        }
     }
     /* expected a function, but none existed */
     return SECFailure;
 }
 
 SECStatus
-NSS_CMSGenericWrapperData_Encode_BeforeData(SECOidTag type, 
-				     NSSCMSGenericWrapperData *gd)
+NSS_CMSGenericWrapperData_Encode_BeforeStart(SECOidTag type,
+                                             NSSCMSGenericWrapperData *gd)
 {
     const nsscmstypeInfo *typeInfo;
 
     /* short cut common case */
     if (type == SEC_OID_PKCS7_DATA) {
-	return SECSuccess;
+        return SECSuccess;
     }
 
     typeInfo = nss_cmstype_lookup(type);
     if (typeInfo) {
-	if  (typeInfo->encode_before) {
-	    return (*typeInfo->encode_before)(gd);
-	}
-	/* decoder ops optional for data tags */
-	if (typeInfo->isData) {
-	    return SECSuccess;
-	}
+        if (typeInfo->encode_start) {
+            return (*typeInfo->encode_start)(gd);
+        }
+        /* decoder ops optional for data tags */
+        if (typeInfo->isData) {
+            return SECSuccess;
+        }
     }
     /* expected a function, but none existed */
     return SECFailure;
 }
 
 SECStatus
-NSS_CMSGenericWrapperData_Encode_AfterData(SECOidTag type, 
-				    NSSCMSGenericWrapperData *gd)
+NSS_CMSGenericWrapperData_Encode_BeforeData(SECOidTag type,
+                                            NSSCMSGenericWrapperData *gd)
 {
     const nsscmstypeInfo *typeInfo;
 
     /* short cut common case */
     if (type == SEC_OID_PKCS7_DATA) {
-	return SECSuccess;
+        return SECSuccess;
     }
 
     typeInfo = nss_cmstype_lookup(type);
     if (typeInfo) {
-	if  (typeInfo->encode_after) {
-	    return (*typeInfo->encode_after)(gd);
-	}
-	/* decoder ops optional for data tags */
-	if (typeInfo->isData) {
-	    return SECSuccess;
-	}
+        if (typeInfo->encode_before) {
+            return (*typeInfo->encode_before)(gd);
+        }
+        /* decoder ops optional for data tags */
+        if (typeInfo->isData) {
+            return SECSuccess;
+        }
     }
     /* expected a function, but none existed */
     return SECFailure;
 }
 
+SECStatus
+NSS_CMSGenericWrapperData_Encode_AfterData(SECOidTag type,
+                                           NSSCMSGenericWrapperData *gd)
+{
+    const nsscmstypeInfo *typeInfo;
+
+    /* short cut common case */
+    if (type == SEC_OID_PKCS7_DATA) {
+        return SECSuccess;
+    }
+
+    typeInfo = nss_cmstype_lookup(type);
+    if (typeInfo) {
+        if (typeInfo->encode_after) {
+            return (*typeInfo->encode_after)(gd);
+        }
+        /* decoder ops optional for data tags */
+        if (typeInfo->isData) {
+            return SECSuccess;
+        }
+    }
+    /* expected a function, but none existed */
+    return SECFailure;
+}
 
 SECStatus
-NSS_CMSType_RegisterContentType(SECOidTag type, 
-			SEC_ASN1Template *asn1Template, size_t size, 
-			NSSCMSGenericWrapperDataDestroy destroy,
-			NSSCMSGenericWrapperDataCallback decode_before,
-			NSSCMSGenericWrapperDataCallback decode_after,
-			NSSCMSGenericWrapperDataCallback decode_end,
-			NSSCMSGenericWrapperDataCallback encode_start,
-			NSSCMSGenericWrapperDataCallback encode_before,
-			NSSCMSGenericWrapperDataCallback encode_after,
-			PRBool isData)
+NSS_CMSType_RegisterContentType(SECOidTag type,
+                                SEC_ASN1Template *asn1Template, size_t size,
+                                NSSCMSGenericWrapperDataDestroy destroy,
+                                NSSCMSGenericWrapperDataCallback decode_before,
+                                NSSCMSGenericWrapperDataCallback decode_after,
+                                NSSCMSGenericWrapperDataCallback decode_end,
+                                NSSCMSGenericWrapperDataCallback encode_start,
+                                NSSCMSGenericWrapperDataCallback encode_before,
+                                NSSCMSGenericWrapperDataCallback encode_after,
+                                PRBool isData)
 {
     PRStatus rc;
     SECStatus rv;
     nsscmstypeInfo *typeInfo;
     const nsscmstypeInfo *exists;
 
-    rc = PR_CallOnce( &nsscmstypeOnce, nss_cmstype_init);
+    rc = PR_CallOnce(&nsscmstypeOnce, nss_cmstype_init);
     if (rc == PR_FAILURE) {
-	return SECFailure;
+        return SECFailure;
     }
     PR_Lock(nsscmstypeAddLock);
     exists = nss_cmstype_lookup(type);
     if (exists) {
-	PR_Unlock(nsscmstypeAddLock);
-	/* already added */
-	return SECSuccess;
+        PR_Unlock(nsscmstypeAddLock);
+        /* already added */
+        return SECSuccess;
     }
     typeInfo = PORT_ArenaNew(nsscmstypeArena, nsscmstypeInfo);
     typeInfo->type = type;
@@ -443,4 +438,3 @@ NSS_CMSType_RegisterContentType(SECOidTag type,
     PR_Unlock(nsscmstypeAddLock);
     return rv;
 }
-

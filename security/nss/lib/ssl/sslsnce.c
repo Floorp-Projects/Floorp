@@ -35,8 +35,8 @@
  *     certCacheEntry           certCacheData[numCertCacheEntries];
  *     SSLWrappedSymWrappingKey keyCacheData[ssl_auth_size][SSL_NUM_WRAP_MECHS];
  *     PRUint8                  keyNameSuffix[SESS_TICKET_KEY_VAR_NAME_LEN]
- *     encKeyCacheEntry         ticketEncKey; // Wrapped in non-bypass mode
- *     encKeyCacheEntry         ticketMacKey; // Wrapped in non-bypass mode
+ *     encKeyCacheEntry         ticketEncKey; // Wrapped
+ *     encKeyCacheEntry         ticketMacKey; // Wrapped
  *     PRBool                   ticketKeysValid;
  *     sidCacheLock             srvNameCacheLock;
  *     srvNameCacheEntry        srvNameData[ numSrvNameCacheEntries ];
@@ -53,12 +53,8 @@
 #include "pk11func.h"
 #include "base64.h"
 #include "keyhi.h"
-#ifdef NO_PKCS11_BYPASS
 #include "blapit.h"
 #include "sechash.h"
-#else
-#include "blapi.h"
-#endif
 
 #include <stdio.h>
 
@@ -80,8 +76,6 @@
 
 #endif
 #include <sys/types.h>
-
-#define SET_ERROR_CODE /* reminder */
 
 #include "nspr.h"
 #include "sslmutex.h"
@@ -398,12 +392,8 @@ CacheSrvName(cacheDesc *cache, SECItem *name, sidCacheEntry *sce)
     snce.type = name->type;
     snce.nameLen = name->len;
     PORT_Memcpy(snce.name, name->data, snce.nameLen);
-#ifdef NO_PKCS11_BYPASS
     HASH_HashBuf(HASH_AlgSHA256, snce.nameHash, name->data, name->len);
-#else
-    SHA256_HashBuf(snce.nameHash, (unsigned char *)name->data,
-                   name->len);
-#endif
+
     /* get index of the next name */
     ndx = Get32BitNameHash(name);
     /* get lock on cert cache */
@@ -1124,6 +1114,7 @@ InitCache(cacheDesc *cache, int maxCacheEntries, int maxCertCacheEntries,
 
 loser:
     CloseCache(cache);
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
 
@@ -1178,7 +1169,6 @@ ssl_ConfigServerSessionIDCacheInstanceWithOpt(cacheDesc *cache,
     rv = InitCache(cache, maxCacheEntries, maxCertCacheEntries,
                    maxSrvNameCacheEntries, ssl3_timeout, directory, shared);
     if (rv) {
-        SET_ERROR_CODE
         return SECFailure;
     }
 
@@ -1262,7 +1252,7 @@ ssl_ConfigMPServerSIDCacheWithOpt(PRUint32 ssl3_timeout,
     prStatus = PR_ExportFileMapAsString(cache->cacheMemMap,
                                         sizeof fmString, fmString);
     if ((prStatus != PR_SUCCESS) || !(fmStrLen = strlen(fmString))) {
-        SET_ERROR_CODE
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
@@ -1271,12 +1261,12 @@ ssl_ConfigMPServerSIDCacheWithOpt(PRUint32 ssl3_timeout,
 
     inhValue = BTOA_DataToAscii((unsigned char *)&inherit, sizeof inherit);
     if (!inhValue || !strlen(inhValue)) {
-        SET_ERROR_CODE
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
     envValue = PR_smprintf("%s,%s", inhValue, fmString);
     if (!envValue || !strlen(envValue)) {
-        SET_ERROR_CODE
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
     PORT_Free(inhValue);
@@ -1284,7 +1274,7 @@ ssl_ConfigMPServerSIDCacheWithOpt(PRUint32 ssl3_timeout,
     putEnvFailed = (SECStatus)NSS_PutEnv(envVarName, envValue);
     PR_smprintf_free(envValue);
     if (putEnvFailed) {
-        SET_ERROR_CODE
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         result = SECFailure;
     }
 
@@ -1373,7 +1363,7 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
     if (!envString) {
         envString = PR_GetEnvSecure(envVarName);
         if (!envString) {
-            SET_ERROR_CODE
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
             return SECFailure;
         }
     }
@@ -1387,11 +1377,9 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
 
     decoString = ATOB_AsciiToData(myEnvString, &decoLen);
     if (!decoString) {
-        SET_ERROR_CODE
         goto loser;
     }
     if (decoLen != sizeof inherit) {
-        SET_ERROR_CODE
         goto loser;
     }
 
@@ -1416,7 +1404,6 @@ SSL_InheritMPServerSIDCacheInstance(cacheDesc *cache, const char *envString)
     cache->sharedCache = (cacheDesc *)cache->cacheMem;
 
     if (cache->sharedCache->cacheMemSize != cache->cacheMemSize) {
-        SET_ERROR_CODE
         goto loser;
     }
 
@@ -1507,6 +1494,7 @@ loser:
     if (decoString)
         PORT_Free(decoString);
     CloseCache(cache);
+    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     return SECFailure;
 }
 
@@ -1833,10 +1821,10 @@ loser:
 }
 
 PRBool
-ssl_GetSessionTicketKeysPKCS11(SECKEYPrivateKey *svrPrivKey,
-                               SECKEYPublicKey *svrPubKey, void *pwArg,
-                               unsigned char *keyName, PK11SymKey **aesKey,
-                               PK11SymKey **macKey)
+ssl_GetSessionTicketKeys(SECKEYPrivateKey *svrPrivKey,
+                         SECKEYPublicKey *svrPubKey, void *pwArg,
+                         unsigned char *keyName, PK11SymKey **aesKey,
+                         PK11SymKey **macKey)
 {
     PRUint32 now = 0;
     PRBool rv = PR_FALSE;
@@ -1868,70 +1856,6 @@ loser:
     UnlockSidCacheLock(cache->keyCacheLock);
     if (rv && !keysGenerated)
         rv = UnwrapCachedTicketKeys(svrPrivKey, keyName, aesKey, macKey);
-    return rv;
-}
-
-PRBool
-ssl_GetSessionTicketKeys(unsigned char *keyName, unsigned char *encKey,
-                         unsigned char *macKey)
-{
-    PRBool rv = PR_FALSE;
-    PRUint32 now = 0;
-    cacheDesc *cache = &globalCache;
-    PRUint8 ticketMacKey[SHA256_LENGTH], ticketEncKey[AES_256_KEY_LENGTH];
-    PRUint8 ticketKeyNameSuffixLocal[SESS_TICKET_KEY_VAR_NAME_LEN];
-    PRUint8 *ticketMacKeyPtr, *ticketEncKeyPtr, *ticketKeyNameSuffix;
-    PRBool cacheIsEnabled = PR_TRUE;
-
-    if (!cache->cacheMem) { /* cache is uninitialized */
-        cacheIsEnabled = PR_FALSE;
-        ticketKeyNameSuffix = ticketKeyNameSuffixLocal;
-        ticketEncKeyPtr = ticketEncKey;
-        ticketMacKeyPtr = ticketMacKey;
-    } else {
-        /* these values have constant memory locations in the cache.
-         * Ok to reference them without holding the lock. */
-        ticketKeyNameSuffix = cache->ticketKeyNameSuffix;
-        ticketEncKeyPtr = cache->ticketEncKey->bytes;
-        ticketMacKeyPtr = cache->ticketMacKey->bytes;
-    }
-
-    if (cacheIsEnabled) {
-        /* Grab lock if initialized. */
-        now = LockSidCacheLock(cache->keyCacheLock, now);
-        if (!now)
-            return rv;
-    }
-    /* Going to regenerate keys on every call if cache was not
-     * initialized. */
-    if (!cacheIsEnabled || !*(cache->ticketKeysValid)) {
-        if (PK11_GenerateRandom(ticketKeyNameSuffix,
-                                SESS_TICKET_KEY_VAR_NAME_LEN) !=
-            SECSuccess)
-            goto loser;
-        if (PK11_GenerateRandom(ticketEncKeyPtr,
-                                AES_256_KEY_LENGTH) != SECSuccess)
-            goto loser;
-        if (PK11_GenerateRandom(ticketMacKeyPtr,
-                                SHA256_LENGTH) != SECSuccess)
-            goto loser;
-        if (cacheIsEnabled) {
-            *(cache->ticketKeysValid) = 1;
-        }
-    }
-
-    rv = PR_TRUE;
-
-loser:
-    if (cacheIsEnabled) {
-        UnlockSidCacheLock(cache->keyCacheLock);
-    }
-    if (rv) {
-        PORT_Memcpy(keyName, ticketKeyNameSuffix,
-                    SESS_TICKET_KEY_VAR_NAME_LEN);
-        PORT_Memcpy(encKey, ticketEncKeyPtr, AES_256_KEY_LENGTH);
-        PORT_Memcpy(macKey, ticketMacKeyPtr, SHA256_LENGTH);
-    }
     return rv;
 }
 

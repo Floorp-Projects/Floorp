@@ -26,7 +26,7 @@ typedef struct sslServerCertTypeStr {
      * of the end-entity certificate key.  The keys in other certificates in
      * the chain aren't directly relevant to the operation of TLS (though it
      * might make certificate validation difficult, libssl doesn't care). */
-    const namedGroupDef *namedCurve;
+    const sslNamedGroupDef *namedCurve;
 } sslServerCertType;
 
 typedef struct sslServerCertStr {
