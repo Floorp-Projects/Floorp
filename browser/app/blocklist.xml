@@ -855,6 +855,7 @@
     </emItem>
     <emItem blockID="i21" id="support@update-firefox.com">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i499" id="{babb9931-ad56-444c-b935-38bffe18ad26}">
       <prefs/>
@@ -958,6 +959,7 @@
     </emItem>
     <emItem blockID="i7" id="{2224e955-00e9-4613-a844-ce69fccaae91}">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i868" id="{6e7f6f9f-8ce6-4611-add2-05f0f7049ee6}">
       <prefs/>
@@ -1004,6 +1006,7 @@
     </emItem>
     <emItem blockID="i47" id="youtube@youtube2.com">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i453" id="/^brasilescape.*\@facebook\.com$/">
       <prefs/>
@@ -1057,6 +1060,10 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
+    <emItem blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
     <emItem blockID="i226" id="{462be121-2b54-4218-bf00-b9bf8135b23f}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
@@ -1065,11 +1072,9 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.0.8" severity="1"/>
     </emItem>
-    <emItem blockID="i13" id="{E8E88AB0-7182-11DF-904E-6045E0D72085}">
-      <prefs/>
-    </emItem>
     <emItem blockID="i44" id="sigma@labs.mozilla">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
     <emItem blockID="i258" id="helperbar@helperbar.com">
       <prefs/>
@@ -1402,6 +1407,7 @@
     </emItem>
     <emItem blockID="i48" id="admin@youtubespeedup.com">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i766" id="/^[a-z0-9]+@foxysecure[a-z0-9]*\.com$/">
       <prefs/>
@@ -1417,6 +1423,7 @@
     </emItem>
     <emItem blockID="i43" id="supportaccessplugin@gmail.com">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i660" id="youplayer@addons.mozilla.org">
       <prefs/>
@@ -1671,7 +1678,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="i1424" id="/^(jid0-S9kkzfTvEmC985BVmf8ZOzA5nLM@jetpack|jid1-qps14pkDB6UDvA@jetpack|jid1-Tsr09YnAqIWL0Q@jetpack|shole@ats.ext|voipgrid@jetpack|{38a64ef0-7181-11e3-981f-0800200c9a66}|eochoa@ualberta.ca)$/">
+    <emItem blockID="i1424" id="/^(jid0-S9kkzfTvEmC985BVmf8ZOzA5nLM@jetpack|jid1-qps14pkDB6UDvA@jetpack|jid1-Tsr09YnAqIWL0Q@jetpack|shole@ats.ext|{38a64ef0-7181-11e3-981f-0800200c9a66}|eochoa@ualberta.ca)$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
@@ -1982,6 +1989,7 @@
     </emItem>
     <emItem blockID="i10" id="{8CE11043-9A15-4207-A565-0C94C42D590D}">
       <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="i788" id="{729c9605-0626-4792-9584-4cbe65b243e6}">
       <prefs/>
