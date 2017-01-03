@@ -6,12 +6,16 @@ package org.mozilla.gecko.util;
 
 import android.content.res.TypedArray;
 import android.os.Build;
+import android.support.v4.text.TextUtilsCompat;
 import android.support.v4.view.MarginLayoutParamsCompat;
+import android.support.v4.view.ViewCompat;
 import android.view.View;
 import android.view.ViewGroup;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
+
+import java.util.Locale;
 
 public class ViewUtil {
 
@@ -49,6 +53,23 @@ public class ViewUtil {
             }
         } else {
             MarginLayoutParamsCompat.setMarginStart(layoutParams, marginStart);
+        }
+    }
+
+    /**
+     * Force set layout direction to RTL or LTR by Locale.
+     * @param view
+     * @param locale
+     */
+    public static void setLayoutDirection(View view, Locale locale) {
+        switch (TextUtilsCompat.getLayoutDirectionFromLocale(locale)) {
+            case ViewCompat.LAYOUT_DIRECTION_RTL:
+                ViewCompat.setLayoutDirection(view, ViewCompat.LAYOUT_DIRECTION_RTL);
+                break;
+            case ViewCompat.LAYOUT_DIRECTION_LTR:
+            default:
+                ViewCompat.setLayoutDirection(view, ViewCompat.LAYOUT_DIRECTION_LTR);
+                break;
         }
     }
 }
