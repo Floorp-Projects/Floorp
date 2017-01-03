@@ -237,8 +237,8 @@
   opacity: .8;
 }
 
-.tab-icon-sound[soundplaying-scheduledremoval]:not(:hover),
-.tab-icon-overlay[soundplaying-scheduledremoval]:not(:hover) {
+.tab-icon-sound[soundplaying-scheduledremoval]:not([muted]):not(:hover),
+.tab-icon-overlay[soundplaying-scheduledremoval]:not([muted]):not(:hover) {
   transition: opacity .3s linear var(--soundplaying-removal-delay);
   opacity: 0;
 }
