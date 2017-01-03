@@ -42,11 +42,9 @@ add_task(function* () {
 
   let targetElement = name.parentNode.parentNode;
   let status = targetElement.querySelector(".target-status");
-  // We might miss the registering state in some setup...
-  if (status.textContent == "Registering") {
-    yield waitForMutation(serviceWorkersElement, { childList: true, subtree: true });
-  }
+  is(status.textContent, "Registering", "Service worker is currently registering");
 
+  yield waitForMutation(serviceWorkersElement, { childList: true, subtree: true });
   is(status.textContent, "Running", "Service worker is currently running");
 
   yield waitForMutation(serviceWorkersElement, { attributes: true, subtree: true });
