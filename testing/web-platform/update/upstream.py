@@ -26,11 +26,12 @@ def rewrite_patch(patch, strip_dir):
         strip_dir = "/%s"% strip_dir
 
     new_diff = []
-    line_starts = ["diff ", "+++ ", "--- ", "rename from ", "rename to "]
+    line_starts = [("diff ", True), ("+++ ", True), ("--- ", True), ("rename from ", False), ("rename to ", False)]
     for line in patch.diff.split("\n"):
-        for start in line_starts:
+        for start, leading_slash in line_starts:
+            strip = strip_dir if leading_slash else strip_dir[1:]
             if line.startswith(start):
-                new_diff.append(line.replace(strip_dir, "").encode("utf8"))
+                new_diff.append(line.replace(strip, "").encode("utf8"))
                 break
         else:
             new_diff.append(line)
