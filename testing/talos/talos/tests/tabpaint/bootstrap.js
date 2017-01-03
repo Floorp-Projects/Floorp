@@ -28,6 +28,8 @@ Cu.import("resource:///modules/RecentWindow.jsm");
 
 const TAB_ANIMATION_PREF = "browser.tabs.animate";
 
+const PROCESS_COUNT_PREF = "dom.ipc.processCount";
+
 const TARGET_URI = "chrome://tabpaint/content/target.html";
 
 var TabPaint = {
@@ -70,6 +72,8 @@ var TabPaint = {
 
     this.originalTabsAnimate = Services.prefs.getBoolPref(TAB_ANIMATION_PREF);
     Services.prefs.setBoolPref(TAB_ANIMATION_PREF, false);
+    this.originalProcessCount = Services.prefs.getIntPref(PROCESS_COUNT_PREF);
+    Services.prefs.setIntPref(PROCESS_COUNT_PREF, 1);
   },
 
   uninit() {
@@ -78,6 +82,7 @@ var TabPaint = {
     }
 
     Services.prefs.setBoolPref(TAB_ANIMATION_PREF, this.originalTabsAnimate);
+    Services.prefs.setIntPref(PROCESS_COUNT_PREF, this.originalProcessCount);
   },
 
   receiveMessage(msg) {
