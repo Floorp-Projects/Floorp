@@ -1074,10 +1074,7 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     // more way: its prototype chain is lazily initialized. That is,
     // global->getProto() might be null right now because we haven't created
     // Object.prototype yet. Force it now.
-    if (!global->getOrCreateObjectPrototype(cx))
-        return false;
-
-    return true;
+    return global->getOrCreateObjectPrototype(cx);
 }
 
 JS_PUBLIC_API(bool)
