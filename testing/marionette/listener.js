@@ -13,7 +13,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
     .getService(Ci.mozIJSSubScriptLoader);
 
 Cu.import("chrome://marionette/content/accessibility.js");
-Cu.import("chrome://marionette/content/legacyaction.js");
+Cu.import("chrome://marionette/content/action.js");
 Cu.import("chrome://marionette/content/atom.js");
 Cu.import("chrome://marionette/content/capture.js");
 Cu.import("chrome://marionette/content/cookies.js");
@@ -22,6 +22,7 @@ Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/evaluate.js");
 Cu.import("chrome://marionette/content/event.js");
 Cu.import("chrome://marionette/content/interaction.js");
+Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/navigate.js");
 Cu.import("chrome://marionette/content/proxy.js");
@@ -239,6 +240,8 @@ var getCookiesFn = dispatch(getCookies);
 var singleTapFn = dispatch(singleTap);
 var takeScreenshotFn = dispatch(takeScreenshot);
 var getScreenshotHashFn = dispatch(getScreenshotHash);
+var performActionsFn = dispatch(performActions);
+var releaseActionsFn = dispatch(releaseActions);
 var actionChainFn = dispatch(actionChain);
 var multiActionFn = dispatch(multiAction);
 var addCookieFn = dispatch(addCookie);
@@ -258,6 +261,8 @@ function startListeners() {
   addMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
   addMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
   addMessageListenerId("Marionette:singleTap", singleTapFn);
+  addMessageListenerId("Marionette:performActions", performActionsFn);
+  addMessageListenerId("Marionette:releaseActions", releaseActionsFn);
   addMessageListenerId("Marionette:actionChain", actionChainFn);
   addMessageListenerId("Marionette:multiAction", multiActionFn);
   addMessageListenerId("Marionette:get", get);
@@ -362,6 +367,8 @@ function deleteSession(msg) {
   removeMessageListenerId("Marionette:executeInSandbox", executeInSandboxFn);
   removeMessageListenerId("Marionette:executeSimpleTest", executeSimpleTestFn);
   removeMessageListenerId("Marionette:singleTap", singleTapFn);
+  removeMessageListenerId("Marionette:performActions", performActionsFn);
+  removeMessageListenerId("Marionette:releaseActions", releaseActionsFn);
   removeMessageListenerId("Marionette:actionChain", actionChainFn);
   removeMessageListenerId("Marionette:multiAction", multiActionFn);
   removeMessageListenerId("Marionette:get", get);
@@ -409,6 +416,12 @@ function deleteSession(msg) {
   curContainer = { frame: content, shadowRoot: null };
   curContainer.frame.focus();
   legacyactions.touchIds = {};
+  if (action.inputStateMap !== undefined) {
+    action.inputStateMap.clear();
+  }
+  if (action.inputsToCancel !== undefined) {
+    action.inputsToCancel.length = 0;
+  }
 }
 
 /**
@@ -477,6 +490,8 @@ function resetValues() {
   sandboxes.clear();
   curContainer = {frame: content, shadowRoot: null};
   legacyactions.mouseEventsOnly = false;
+  action.inputStateMap = new Map();
+  action.inputsToCancel = [];
 }
 
 /**
@@ -663,6 +678,30 @@ function createATouch(el, corx, cory, touchId) {
    legacyactions.getCoordinateInfo(el, corx, cory);
   let atouch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
   return atouch;
+}
+
+/**
+ * Perform a series of grouped actions at the specified points in time.
+ *
+ * @param {obj} msg
+ *      Object with an |actions| attribute that is an Array of objects
+ *      each of which represents an action sequence.
+ */
+function performActions(msg) {
+  let chain = action.Chain.fromJson(msg.actions);
+  action.dispatch(chain, seenEls, curContainer);
+}
+
+/**
+ * The Release Actions command is used to release all the keys and pointer
+ * buttons that are currently depressed. This causes events to be fired as if
+ * the state was released by an explicit series of actions. It also clears all
+ * the internal state of the virtual devices.
+ */
+function releaseActions() {
+  action.dispatchTickActions(action.inputsToCancel.reverse(), 0, seenEls, curContainer);
+  action.inputsToCancel.length = 0;
+  action.inputStateMap.clear();
 }
 
 /**
