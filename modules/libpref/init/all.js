@@ -2879,11 +2879,7 @@ pref("dom.ipc.plugins.asyncdrawing.enabled", false);
 pref("dom.ipc.plugins.asyncdrawing.enabled", true);
 #endif
 
-#ifdef NIGHTLY_BUILD
-pref("dom.ipc.processCount", 2);
-#else
 pref("dom.ipc.processCount", 1);
-#endif
 
 // Override default dom.ipc.processCount for some remote content process types.
 pref("dom.ipc.processCount.webLargeAllocation", 2);
