@@ -248,6 +248,8 @@ protected:
 
   static void SetPrintAsIs(nsPrintObject* aPO, bool aAsIs = true);
 
+  void DisconnectPagePrintTimer();
+
   // Static member variables
   bool mIsCreatingPrintPreview;
   bool mIsDoingPrinting;
