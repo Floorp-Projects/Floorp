@@ -157,7 +157,6 @@ function loadTPSContentScript(browser) {
                        .getInterface(Ci.nsIDOMWindowUtils);
       let lastTransactionId = cwu.lastTransactionId;
       Services.profiler.AddMarker("Content waiting for id > " + lastTransactionId);
-
       addEventListener("MozAfterPaint", function onPaint(event) {
         Services.profiler.AddMarker("Content saw transaction id: " + event.transactionId);
         if (event.transactionId > lastTransactionId) {
@@ -401,6 +400,18 @@ function test(window) {
 
     let tabs = gBrowser.getTabsToTheEndFrom(initialTab);
     let times = [];
+
+    for (let tab of tabs) {
+      // Let's do an initial run to warm up any paint related caches
+      // (like glyph caches for text). In the next loop we will start with
+      // a GC before each switch so we don't need here.
+      // Note: in case of multiple content processes, closing all the tabs
+      // would close the related content processes, and even if we kept them
+      // alive it would be unlikely that the same pages end up in the same
+      // content processes, so we cannot do this at the manifest level.
+      yield switchToTab(tab);
+      yield switchToTab(initialTab);
+    }
 
     for (let tab of tabs) {
       yield forceGC(win, tab.linkedBrowser);
