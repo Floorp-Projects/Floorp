@@ -836,7 +836,7 @@ protected:
   void BeginTrackingRemoteDragGesture(nsIContent* aContent);
   void StopTrackingDragGesture();
   void GenerateDragGesture(nsPresContext* aPresContext,
-                           WidgetMouseEvent* aEvent);
+                           WidgetInputEvent* aEvent);
 
   /**
    * Determine which node the drag should be targeted at.
@@ -963,6 +963,8 @@ private:
   uint32_t mLClickCount;
   uint32_t mMClickCount;
   uint32_t mRClickCount;
+
+  bool mInTouchDrag;
 
   bool m_haveShutdown;
 
