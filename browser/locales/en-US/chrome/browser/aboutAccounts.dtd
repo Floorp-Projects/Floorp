@@ -3,7 +3,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY aboutAccounts.welcome "Welcome to &syncBrand.shortName.label;">
-<!ENTITY aboutAccounts.connected "Account connected">
 
 <!ENTITY aboutAccountsConfig.description "Sign in to sync your tabs, bookmarks, passwords &amp; more.">
 <!ENTITY aboutAccountsConfig.startButton.label "Get started">
