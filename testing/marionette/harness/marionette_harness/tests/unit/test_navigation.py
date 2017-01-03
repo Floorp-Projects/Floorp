@@ -36,7 +36,14 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
 
     @property
     def location_href(self):
-        return self.marionette.execute_script("return window.location.href")
+        # Windows 8 has recently seen a proliferation of intermittent
+        # test failures to do with failing to compare "about:blank" ==
+        # u"about:blank". For the sake of consistenty, we encode the
+        # returned URL as Unicode here to ensure that the values are
+        # absolutely of the same type.
+        #
+        # (https://bugzilla.mozilla.org/show_bug.cgi?id=1322862)
+        return self.marionette.execute_script("return window.location.href").encode("utf-8")
 
     def test_set_location_through_execute_script(self):
         self.marionette.execute_script(
