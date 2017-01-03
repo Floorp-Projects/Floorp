@@ -147,9 +147,18 @@ TCPSocketParent::RecvOpenBind(const nsCString& aRemoteHost,
   }
 
   nsCOMPtr<nsISocketTransport> socketTransport;
-  rv = sts->CreateTransport(nullptr, 0,
-                            aRemoteHost, aRemotePort,
-                            nullptr, getter_AddRefs(socketTransport));
+  if (aUseSSL) {
+    const char* socketTypes[1];
+    socketTypes[0] = "ssl";
+    rv = sts->CreateTransport(socketTypes, 1,
+                              aRemoteHost, aRemotePort,
+                              nullptr, getter_AddRefs(socketTransport));
+  } else {
+    rv = sts->CreateTransport(nullptr, 0,
+                              aRemoteHost, aRemotePort,
+                              nullptr, getter_AddRefs(socketTransport));
+  }
+
   if (NS_FAILED(rv)) {
     FireInteralError(this, __LINE__);
     return IPC_OK();
