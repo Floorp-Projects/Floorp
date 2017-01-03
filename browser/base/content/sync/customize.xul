@@ -39,7 +39,7 @@
                  />
 
   <vbox align="start">
-      <checkbox label="&engine.tabs.label;"
+      <checkbox label="&engine.tabs.label2;"
                 accesskey="&engine.tabs.accesskey;"
                 preference="engine.tabs"/>
       <checkbox label="&engine.bookmarks.label;"

@@ -116,7 +116,7 @@
                       preference="engine.history"/>
           </richlistitem>
           <richlistitem>
-            <checkbox label="&engine.tabs.label;"
+            <checkbox label="&engine.tabs.label2;"
                       accesskey="&engine.tabs.accesskey;"
                       preference="engine.tabs"/>
           </richlistitem>
@@ -286,7 +286,7 @@
           <caption><label>&signedIn.engines.label;</label></caption>
           <hbox id="fxaSyncEngines">
             <vbox align="start" flex="1">
-              <checkbox label="&engine.tabs.label;"
+              <checkbox label="&engine.tabs.label2;"
                         accesskey="&engine.tabs.accesskey;"
                         preference="engine.tabs"/>
               <checkbox label="&engine.bookmarks.label;"
