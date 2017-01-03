@@ -91,6 +91,7 @@ class NrIceMediaStream;
 
 extern const char kNrIceTransportUdp[];
 extern const char kNrIceTransportTcp[];
+extern const char kNrIceTransportTls[];
 
 class NrIceStunServer {
  public:
