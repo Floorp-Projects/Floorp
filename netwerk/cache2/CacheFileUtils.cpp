@@ -35,7 +35,7 @@ public:
   explicit KeyParser(nsACString const& aInput)
     : Tokenizer(aInput)
     // Initialize attributes to their default values
-    , originAttribs(0, false)
+    , originAttribs(false)
     , isAnonymous(false)
     // Initialize the cache key to a zero length by default
     , lastTag(0)

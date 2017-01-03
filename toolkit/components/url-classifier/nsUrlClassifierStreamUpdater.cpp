@@ -131,7 +131,9 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  loadInfo->SetOriginAttributes(mozilla::NeckoOriginAttributes(NECKO_SAFEBROWSING_APP_ID, false));
+  mozilla::NeckoOriginAttributes neckoAttrs(false);
+  neckoAttrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
+  loadInfo->SetOriginAttributes(neckoAttrs);
 
   mBeganStream = false;
 
@@ -174,15 +176,6 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
     rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Connection"), NS_LITERAL_CSTRING("close"), false);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // Create a custom LoadContext for SafeBrowsing, so we can use callbacks on
-  // the channel to query the appId which allows separation of safebrowsing
-  // cookies in a separate jar.
-  DocShellOriginAttributes attrs;
-  attrs.mAppId = NECKO_SAFEBROWSING_APP_ID;
-  nsCOMPtr<nsIInterfaceRequestor> sbContext = new mozilla::LoadContext(attrs);
-  rv = mChannel->SetNotificationCallbacks(sbContext);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Make the request.
   rv = mChannel->AsyncOpen2(this);

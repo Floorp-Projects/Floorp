@@ -256,7 +256,6 @@ interface nsIScriptSecurityManager : nsISupports
 
     const unsigned long NO_APP_ID = 0;
     const unsigned long UNKNOWN_APP_ID = 4294967295; // UINT32_MAX
-    const unsigned long SAFEBROWSING_APP_ID = 4294967294; // UINT32_MAX - 1
 
     const unsigned long DEFAULT_USER_CONTEXT_ID = 0;
 
