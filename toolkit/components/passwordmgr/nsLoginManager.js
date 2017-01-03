@@ -485,6 +485,23 @@ LoginManager.prototype = {
     let form = LoginFormFactory.createFromField(aElement);
     let isSecure = InsecurePasswordUtils.isFormSecure(form);
     let isPasswordField = aElement.type == "password";
+
+    let completeSearch = (autoCompleteLookupPromise, { logins, messageManager }) => {
+      // If the search was canceled before we got our
+      // results, don't bother reporting them.
+      if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
+        return;
+      }
+
+      this._autoCompleteLookupPromise = null;
+      let results = new UserAutoCompleteResult(aSearchString, logins, {
+        messageManager,
+        isSecure,
+        isPasswordField,
+      });
+      aCallback.onSearchCompletion(results);
+    };
+
     if (isPasswordField) {
       // The login items won't be filtered for password field.
       aSearchString = "";
@@ -511,23 +528,8 @@ LoginManager.prototype = {
     let autoCompleteLookupPromise = this._autoCompleteLookupPromise =
       LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
                                                    aElement, rect);
-    autoCompleteLookupPromise.then(({ logins, messageManager }) => {
-                               // If the search was canceled before we got our
-                               // results, don't bother reporting them.
-                               if (this._autoCompleteLookupPromise !== autoCompleteLookupPromise) {
-                                 return;
-                               }
-
-                               this._autoCompleteLookupPromise = null;
-                               let results =
-                                 new UserAutoCompleteResult(aSearchString, logins, {
-                                   messageManager,
-                                   isSecure,
-                                   isPasswordField,
-                                 });
-                               aCallback.onSearchCompletion(results);
-                             })
-                            .then(null, Cu.reportError);
+    autoCompleteLookupPromise.then(completeSearch.bind(this, autoCompleteLookupPromise))
+                             .then(null, Cu.reportError);
   },
 
   stopSearch() {
