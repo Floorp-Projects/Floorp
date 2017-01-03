@@ -62,6 +62,22 @@ nsLookAndFeel::~nsLookAndFeel()
 }
 
 #if MOZ_WIDGET_GTK != 2
+// Modifies color |*aDest| as if a pattern of color |aSource| was painted with
+// CAIRO_OPERATOR_OVER to a surface with color |*aDest|.
+static void
+ApplyColorOver(const GdkRGBA& aSource, GdkRGBA* aDest) {
+    gdouble sourceCoef = aSource.alpha;
+    gdouble destCoef = aDest->alpha * (1.0 - sourceCoef);
+    gdouble resultAlpha = sourceCoef + destCoef;
+    if (resultAlpha != 0.0) { // don't divide by zero
+        destCoef /= resultAlpha;
+        sourceCoef /= resultAlpha;
+        aDest->red = sourceCoef * aSource.red + destCoef * aDest->red;
+        aDest->green = sourceCoef * aSource.green + destCoef * aDest->green;
+        aDest->blue = sourceCoef * aSource.blue + destCoef * aDest->blue;
+    }
+}
+
 static void
 GetLightAndDarkness(const GdkRGBA& aColor,
                     double* aLightness, double* aDarkness)
@@ -1284,9 +1300,19 @@ nsLookAndFeel::Init()
     }
 #else
     // Text colors
+    GdkRGBA bgColor;
+    // If the text window background is translucent, then the background of
+    // the textview root node is visible.
     style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW);
-    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
-    sMozFieldBackground = GDK_RGBA_TO_NS_RGBA(color);
+    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
+                                           &bgColor);
+    ReleaseStyleContext(style);
+
+    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW_TEXT);
+    gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL,
+                                           &color);
+    ApplyColorOver(color, &bgColor);
+    sMozFieldBackground = GDK_RGBA_TO_NS_RGBA(bgColor);
     gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sMozFieldText = GDK_RGBA_TO_NS_RGBA(color);
 

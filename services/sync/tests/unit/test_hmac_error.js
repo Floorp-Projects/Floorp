@@ -231,6 +231,7 @@ add_task(async function hmac_error_during_node_reassignment() {
 
             Svc.Prefs.resetBranch("");
             Service.recordManager.clearCache();
+            engine._tracker.clearChangedIDs();
             server.stop(resolve);
           };
 
