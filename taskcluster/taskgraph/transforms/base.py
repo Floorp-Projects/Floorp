@@ -143,7 +143,7 @@ def resolve_keyed_by(item, field, item_name):
         return item
 
     # regular expression match
-    matches = [(k, v) for k, v in alternatives.iteritems() if re.match(k, key)]
+    matches = [(k, v) for k, v in alternatives.iteritems() if re.match(k + '$', key)]
     if len(matches) > 1:
         raise Exception(
             "Multiple matching values for {} {!r} found while determining item {} in {}".format(
