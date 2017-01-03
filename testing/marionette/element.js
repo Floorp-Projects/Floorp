@@ -234,7 +234,7 @@ element.Store = class {
  *     If a single element is requested, this error will throw if the
  *     element is not found.
  */
-element.find = function(container, strategy, selector, opts = {}) {
+element.find = function (container, strategy, selector, opts = {}) {
   opts.all = !!opts.all;
   opts.timeout = opts.timeout || 0;
 
@@ -327,7 +327,7 @@ function find_(container, strategy, selector, searchFn, opts) {
  * @return {DOMElement}
  *     First element matching expression.
  */
-element.findByXPath = function(root, startNode, expr) {
+element.findByXPath = function (root, startNode, expr) {
   let iter = root.evaluate(expr, startNode, null,
       Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null)
   return iter.singleNodeValue;
@@ -346,7 +346,7 @@ element.findByXPath = function(root, startNode, expr) {
  * @return {Array.<DOMElement>}
  *     Sequence of found elements matching expression.
  */
-element.findByXPathAll = function(root, startNode, expr) {
+element.findByXPathAll = function (root, startNode, expr) {
   let rv = [];
   let iter = root.evaluate(expr, startNode, null,
       Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
@@ -369,7 +369,7 @@ element.findByXPathAll = function(root, startNode, expr) {
  * @return {Array.<DOMAnchorElement>}
  *     Sequence of link elements which text is |s|.
  */
-element.findByLinkText = function(node, s) {
+element.findByLinkText = function (node, s) {
   return filterLinks(node, link => link.text.trim() === s);
 };
 
@@ -384,7 +384,7 @@ element.findByLinkText = function(node, s) {
  * @return {Array.<DOMAnchorElement>}
  *     Sequence of link elements which text containins |s|.
  */
-element.findByPartialLinkText = function(node, s) {
+element.findByPartialLinkText = function (node, s) {
   return filterLinks(node, link => link.text.indexOf(s) != -1);
 };
 
@@ -633,7 +633,7 @@ function implicitlyWaitFor(func, timeout, interval = 100) {
 }
 
 /** Determines if |obj| is an HTML or JS collection. */
-element.isCollection = function(seq) {
+element.isCollection = function (seq) {
   switch (Object.prototype.toString.call(seq)) {
     case "[object Arguments]":
     case "[object Array]":
@@ -650,7 +650,7 @@ element.isCollection = function(seq) {
   }
 };
 
-element.makeWebElement = function(uuid) {
+element.makeWebElement = function (uuid) {
   return {
     [element.Key]: uuid,
     [element.LegacyKey]: uuid,
@@ -665,7 +665,7 @@ element.makeWebElement = function(uuid) {
  * @return {boolean}
  *     True if |ref| has either expected property.
  */
-element.isWebElementReference = function(ref) {
+element.isWebElementReference = function (ref) {
   let properties = Object.getOwnPropertyNames(ref);
   return properties.includes(element.Key) || properties.includes(element.LegacyKey);
 };
@@ -692,7 +692,7 @@ element.generateUUID = function() {
  *     Same object as provided by |obj| with the web elements replaced
  *     by DOM elements.
  */
-element.fromJson = function(
+element.fromJson = function (
     obj, seenEls, win, shadowRoot = undefined) {
   switch (typeof obj) {
     case "boolean":
@@ -748,7 +748,7 @@ element.fromJson = function(
  *     Same object as provided by |obj| with the elements replaced by
  *     web elements.
  */
-element.toJson = function(obj, seenEls) {
+element.toJson = function (obj, seenEls) {
   let t = Object.prototype.toString.call(obj);
 
   // null
@@ -801,7 +801,7 @@ element.toJson = function(obj, seenEls) {
  * @return {boolean}
  *     Flag indicating that the element is disconnected.
  */
-element.isDisconnected = function(el, frame, shadowRoot = undefined) {
+element.isDisconnected = function (el, frame, shadowRoot = undefined) {
   // shadow dom
   if (shadowRoot && frame.ShadowRoot) {
     if (el.compareDocumentPosition(shadowRoot) &
@@ -844,7 +844,7 @@ element.isDisconnected = function(el, frame, shadowRoot = undefined) {
  * @throws TypeError
  *     If |xOffset| or |yOffset| are not numbers.
  */
-element.coordinates = function(
+element.coordinates = function (
     node, xOffset = undefined, yOffset = undefined) {
 
   let box = node.getBoundingClientRect();
@@ -881,7 +881,7 @@ element.coordinates = function(
  * @return {boolean}
  *     True if if |el| is in viewport, false otherwise.
  */
-element.inViewport = function(el, x = undefined, y = undefined) {
+element.inViewport = function (el, x = undefined, y = undefined) {
   let win = el.ownerDocument.defaultView;
   let c = element.coordinates(el, x, y);
   let vp = {
@@ -915,7 +915,7 @@ element.inViewport = function(el, x = undefined, y = undefined) {
  * @return {boolean}
  *     True if visible, false otherwise.
  */
-element.isVisible = function(el, x = undefined, y = undefined) {
+element.isVisible = function (el, x = undefined, y = undefined) {
   let win = el.ownerDocument.defaultView;
 
   // Bug 1094246: webdriver's isShown doesn't work with content xul
@@ -936,7 +936,7 @@ element.isVisible = function(el, x = undefined, y = undefined) {
   return true;
 };
 
-element.isInteractable = function(el) {
+element.isInteractable = function (el) {
   return element.isPointerInteractable(el) ||
       element.isKeyboardInteractable(el);
 };
@@ -953,7 +953,7 @@ element.isInteractable = function(el) {
  * @return {boolean}
  *     True if interactable, false otherwise.
  */
-element.isPointerInteractable = function(el) {
+element.isPointerInteractable = function (el) {
   let tree = element.getInteractableElementTree(el, el.ownerDocument);
   return tree[0] === el;
 };
@@ -971,7 +971,7 @@ element.isPointerInteractable = function(el) {
  * @return {Map.<string, number>}
  *     X and Y coordinates that denotes the in-view centre point of |rect|.
  */
-element.getInViewCentrePoint = function(rect, win) {
+element.getInViewCentrePoint = function (rect, win) {
   const {max, min} = Math;
 
   let x = {
@@ -1004,7 +1004,7 @@ element.getInViewCentrePoint = function(rect, win) {
  * @return {Array.<DOMElement>}
  *     Sequence of non-opaque elements in paint order.
  */
-element.getInteractableElementTree = function(el, doc) {
+element.getInteractableElementTree = function (el, doc) {
   let win = doc.defaultView;
 
   // pointer-interactable elements tree, step 1
@@ -1030,7 +1030,7 @@ element.getInteractableElementTree = function(el, doc) {
 
 // TODO(ato): Not implemented.
 // In fact, it's not defined in the spec.
-element.isKeyboardInteractable = function(el) {
+element.isKeyboardInteractable = function (el) {
   return true;
 };
 
@@ -1040,13 +1040,13 @@ element.isKeyboardInteractable = function(el) {
  * @param {DOMElement} el
  *     Element to scroll into view.
  */
-element.scrollIntoView = function(el) {
+element.scrollIntoView = function (el) {
   if (el.scrollIntoView) {
     el.scrollIntoView({block: "end", inline: "nearest", behavior: "instant"});
   }
 };
 
-element.isXULElement = function(el) {
+element.isXULElement = function (el) {
   let ns = atom.getElementAttribute(el, "namespaceURI");
   return ns.indexOf("there.is.only.xul") >= 0;
 };
@@ -1085,7 +1085,7 @@ const boolEls = {
  * @return {boolean}
  *     True if the attribute is boolean, false otherwise.
  */
-element.isBooleanAttribute = function(el, attr) {
+element.isBooleanAttribute = function (el, attr) {
   if (el.namespaceURI !== XMLNS) {
     return false;
   }

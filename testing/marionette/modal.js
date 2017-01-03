@@ -37,7 +37,7 @@ modal = {
  *     {@code modal.COMMON_DIALOG_LOADED} or
  *     {@code modal.TABMODAL_DIALOG_LOADED}.
  */
-modal.addHandler = function(handler) {
+modal.addHandler = function (handler) {
   if (!isFirefox()) {
     return;
   }
@@ -57,7 +57,7 @@ modal.addHandler = function(handler) {
  *     The handler previously passed to modal.addHandler which will now
  *     be removed.
  */
-modal.removeHandler = function(toRemove) {
+modal.removeHandler = function (toRemove) {
   if (!isFirefox()) {
     return;
   }
