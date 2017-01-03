@@ -1055,10 +1055,16 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
 
   nsDependentCSubstring urlSpec(reinterpret_cast<const char*>(aURLString),
                                 aURLStringLength);
-
-  // Servo's loader guarantees that the URL is valid.
   nsCOMPtr<nsIURI> uri;
-  MOZ_ALWAYS_SUCCEEDS(NS_NewURI(getter_AddRefs(uri), urlSpec));
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), urlSpec);
+
+  if (NS_FAILED(rv)) {
+    // Servo and Gecko have different ideas of what a valid URL is, so we might
+    // get in here with a URL string that NS_NewURI can't handle.  If so,
+    // silently do nothing.  Eventually we should be able to assert that the
+    // NS_NewURI succeeds, here.
+    return;
+  }
 
   aLoader->LoadChildSheet(aParent, uri, media, nullptr, aImportRule, nullptr);
 }
