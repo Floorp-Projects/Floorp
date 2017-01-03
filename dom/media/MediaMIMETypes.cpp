@@ -28,6 +28,9 @@ MakeMediaMIMEType(const nsAString& aType)
   }
 
   NS_ConvertUTF16toUTF8 mime8{mime};
+  if (!IsMediaMIMEType(mime8)) {
+    return Nothing();
+  }
 
   return Some(MediaMIMEType(mime8));
 }
@@ -103,6 +106,9 @@ MakeMediaExtendedMIMEType(const nsAString& aType)
   }
 
   NS_ConvertUTF16toUTF8 mime8{mime};
+  if (!IsMediaMIMEType(mime8)) {
+    return Nothing();
+  }
 
   nsAutoString codecs;
   rv = parser.GetParameter("codecs", codecs);
