@@ -4,6 +4,9 @@
 
 macosx64-clang-tidy/opt:
     description: "Clang-tidy build"
+    index:
+        product: static-analysis
+        job-name: macosx64-clang-tidy
     treeherder:
         kind: build
         platform: osx-10-10/opt

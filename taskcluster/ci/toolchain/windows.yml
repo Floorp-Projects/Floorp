@@ -44,6 +44,9 @@ win64-clang-cl/opt:
 
 win32-clang-tidy/opt:
     description: "Clang-tidy toolchain build"
+    index:
+        product: static-analysis
+        job-name: win32-clang-tidy
     treeherder:
         kind: build
         platform: windows-2012-32/opt
@@ -64,6 +67,9 @@ win32-clang-tidy/opt:
 
 win64-clang-tidy/opt:
     description: "Clang-tidy toolchain build"
+    index:
+        product: static-analysis
+        job-name: win64-clang-tidy
     treeherder:
         kind: build
         platform: windows-2012-64/opt
