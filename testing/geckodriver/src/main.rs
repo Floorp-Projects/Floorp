@@ -11,7 +11,6 @@ extern crate rustc_serialize;
 #[macro_use]
 extern crate slog;
 extern crate slog_atomic;
-extern crate slog_extra;
 extern crate slog_stdlog;
 extern crate slog_stream;
 extern crate zip;

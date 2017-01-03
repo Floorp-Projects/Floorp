@@ -8,8 +8,7 @@ use chrono::{DateTime, Local};
 use slog;
 use slog::DrainExt;
 use slog_atomic::{AtomicSwitch, AtomicSwitchCtrl};
-use slog_extra::Async;
-use slog_stream::{Format, async_stream};
+use slog_stream::{stream, Format, Streamer};
 use slog::Level as SlogLevel;
 use slog::{LevelFilter, Logger};
 use slog::{OwnedKeyValueList, Record};
@@ -119,8 +118,8 @@ pub fn init(level: &Option<LogLevel>) {
     }
 }
 
-fn filtered_gecko_log(level: &LogLevel) -> LevelFilter<Async> {
-    let io = async_stream(io::stderr(), GeckoFormat {});
+fn filtered_gecko_log(level: &LogLevel) -> LevelFilter<Streamer<io::Stderr, GeckoFormat>> {
+    let io = stream(io::stderr(), GeckoFormat {});
     slog::level_filter(level.to_slog(), io)
 }
 
