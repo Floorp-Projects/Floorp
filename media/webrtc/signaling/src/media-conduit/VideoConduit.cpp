@@ -1528,8 +1528,8 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
 
     CSFLogDebug(logTag,
                 "%s: Requesting resolution change to %ux%u (from %ux%u), jsScaleDownBy=%f",
-                __FUNCTION__, width, height, (unsigned int)video_stream.width,
-                (unsigned int)video_stream.height, simStream.jsScaleDownBy);
+                __FUNCTION__, width, height, static_cast<unsigned int>(video_stream.width),
+                static_cast<unsigned int>(video_stream.height), simStream.jsScaleDownBy);
 
     MOZ_ASSERT(simStream.jsScaleDownBy >= 1.0);
     uint32_t new_width = (width / simStream.jsScaleDownBy);
@@ -1559,7 +1559,8 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
 
     CSFLogDebug(
       logTag, "%s: Encoder resolution changed to %ux%u @ %ufps, bitrate %u:%u",
-      __FUNCTION__, video_stream.width, video_stream.height, mSendingFramerate,
+      __FUNCTION__, static_cast<unsigned int>(video_stream.width),
+      static_cast<unsigned int>(video_stream.height), mSendingFramerate,
       video_stream.min_bitrate_bps, video_stream.max_bitrate_bps);
   });
   if (!mSendStream->ReconfigureVideoEncoder(mEncoderConfig.GenerateConfig())) {
