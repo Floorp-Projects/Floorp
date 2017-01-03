@@ -502,15 +502,16 @@ LoginManager.prototype = {
       aCallback.onSearchCompletion(results);
     };
 
-    if (isPasswordField) {
-      // The login items won't be filtered for password field.
-      aSearchString = "";
+    if (isPasswordField && aSearchString) {
+      // Return empty result on password fields with password already filled.
+      let acLookupPromise = this._autoCompleteLookupPromise = Promise.resolve({ logins: [] });
+      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
+      return;
     }
 
     if (!this._remember) {
-      setTimeout(function() {
-        aCallback.onSearchCompletion(new UserAutoCompleteResult(aSearchString, [], {isSecure}));
-      }, 0);
+      let acLookupPromise = this._autoCompleteLookupPromise = Promise.resolve({ logins: [] });
+      acLookupPromise.then(completeSearch.bind(this, acLookupPromise));
       return;
     }
 
@@ -525,10 +526,10 @@ LoginManager.prototype = {
     }
 
     let rect = BrowserUtils.getElementBoundingScreenRect(aElement);
-    let autoCompleteLookupPromise = this._autoCompleteLookupPromise =
+    let acLookupPromise = this._autoCompleteLookupPromise =
       LoginManagerContent._autoCompleteSearchAsync(aSearchString, previousResult,
                                                    aElement, rect);
-    autoCompleteLookupPromise.then(completeSearch.bind(this, autoCompleteLookupPromise))
+    acLookupPromise.then(completeSearch.bind(this, acLookupPromise))
                              .then(null, Cu.reportError);
   },
 
