@@ -2,10 +2,28 @@
 
 All notable changes to this program is documented in this file.
 
-## Unreleased
+## 0.12.0 (2017-01-03)
 
 ### Added
+- Added _Take Element Screenshot_ command
+- Added new _Status_ command
 - Described supported WebDriver capabilities in README
+- Added endpoint for the _Get Timeouts_ command, but it is not yet implemented
+- Implemented dispatching of new actions API
+
+### Changed
+- Synced Firefox preferences with those used in Mozilla automation
+- Default log level for debug builds of Firefox, which used to be `DEBUG`, changed to `INFO`-level
+- WebDriver library dependency upgraded to 0.17.1
+- Using _session not created_ error when failing to start session
+- geckodriver will exit with exit code 69 to indicate that the port is unavailable
+
+### Fixed
+- Improved logging when starting Firefox
+- Reverted to synchronous logging, which should address cases of inconsistent output when failing to bind to port
+- Clarified in README that geckodriver is not supported on Windows XP
+- Added documentation of supported capabilities to README
+- Included capabilities example in README
 
 ## 0.11.1 (2016-10-10)
 
