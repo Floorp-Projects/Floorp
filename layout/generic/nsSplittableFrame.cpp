@@ -209,11 +209,11 @@ nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
 nscoord
 nsSplittableFrame::ConsumedBSize(WritingMode aWM) const
 {
-  nscoord height = 0;
+  nscoord bSize = 0;
   for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
-    height += prev->GetContentRectRelativeToSelf().height;
+    bSize += prev->ContentBSize(aWM);
   }
-  return height;
+  return bSize;
 }
 
 nscoord
