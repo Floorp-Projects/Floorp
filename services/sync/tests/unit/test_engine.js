@@ -102,6 +102,7 @@ add_task(async function test_resetClient() {
 
   engine.wasReset = false;
   engineObserver.reset();
+  engine._tracker.clearChangedIDs();
 });
 
 add_task(async function test_invalidChangedIDs() {
@@ -120,6 +121,7 @@ add_task(async function test_invalidChangedIDs() {
   ok(tracker._storage.dataReady);
 
   do_check_true(tracker.changedIDs.placeholder);
+  engine._tracker.clearChangedIDs();
 });
 
 add_task(async function test_wipeClient() {
@@ -142,6 +144,7 @@ add_task(async function test_wipeClient() {
   engine.wasReset = false;
   engine._store.wasWiped = false;
   engineObserver.reset();
+  engine._tracker.clearChangedIDs();
 });
 
 add_task(async function test_enabled() {
@@ -180,6 +183,7 @@ add_task(async function test_sync() {
     Svc.Prefs.resetBranch("");
     engine.wasSynced = false;
     engineObserver.reset();
+    engine._tracker.clearChangedIDs();
   }
 });
 
@@ -208,4 +212,6 @@ add_task(async function test_disabled_no_track() {
   Svc.Prefs.set("engine." + engine.prefName, false);
   do_check_false(tracker._isTracking);
   do_check_empty(tracker.changedIDs);
+
+  engine._tracker.clearChangedIDs();
 });

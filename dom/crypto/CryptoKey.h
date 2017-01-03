@@ -202,8 +202,8 @@ private:
 
   // Only one key handle should be set, according to the KeyType
   CryptoBuffer mSymKey;
-  ScopedSECKEYPrivateKey mPrivateKey;
-  ScopedSECKEYPublicKey mPublicKey;
+  UniqueSECKEYPrivateKey mPrivateKey;
+  UniqueSECKEYPublicKey mPublicKey;
 };
 
 } // namespace dom
