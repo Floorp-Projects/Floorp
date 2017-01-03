@@ -493,7 +493,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
       aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
                    aWhichFrame, SamplingFilter::POINT,
                    /* no SVGImageContext */ Nothing(),
-                   imgIContainer::FLAG_SYNC_DECODE);
+                   imgIContainer::FLAG_SYNC_DECODE, 1.0);
 
     if (res != mozilla::image::DrawResult::SUCCESS) {
       return NS_ERROR_FAILURE;
