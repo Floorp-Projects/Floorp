@@ -964,6 +964,16 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU process launch time in milliseconds"
   },
+  "GPU_PROCESS_INITIALIZATION_TIME_MS" : {
+    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1324095],
+    "kind": "exponential",
+    "high": 64000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
