@@ -4461,6 +4461,35 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
 
   int64_t timestamp;
 
+#ifndef RELEASE_OR_BETA
+  bool exists;
+  rv = directory->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!exists) {
+    nsString leafName;
+    nsresult rv = directory->GetLeafName(leafName);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!leafName.EqualsLiteral(kChromeOrigin)) {
+      nsCString spec;
+      PrincipalOriginAttributes attrs;
+      bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
+                                              spec, &attrs);
+      if (NS_WARN_IF(!result)) {
+        QM_WARNING("Preventing creation of a new origin directory which is not "
+                   "supported by our origin parser!");
+
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
+#endif
+
   bool created;
   rv = EnsureDirectory(directory, &created);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -6676,7 +6705,8 @@ OriginParser::HandleSchema(const nsDependentCSubstring& aToken)
       aToken.EqualsLiteral("indexeddb") ||
       (isFile = aToken.EqualsLiteral("file")) ||
       aToken.EqualsLiteral("app") ||
-      aToken.EqualsLiteral("resource")) {
+      aToken.EqualsLiteral("resource") ||
+      aToken.EqualsLiteral("moz-extension")) {
     mSchema = aToken;
 
     if (isAbout) {
