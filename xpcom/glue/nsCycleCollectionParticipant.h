@@ -113,10 +113,37 @@ private:
 class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
-  constexpr nsCycleCollectionParticipant() : mMightSkip(false) {}
-  constexpr explicit nsCycleCollectionParticipant(bool aSkip) : mMightSkip(aSkip) {}
+  constexpr nsCycleCollectionParticipant()
+    : mMightSkip(false)
+    , mTraverseShouldTrace(false)
+  {
+  }
+
+  constexpr explicit nsCycleCollectionParticipant(bool aSkip,
+                                                  bool aTraverseShouldTrace = false)
+    : mMightSkip(aSkip)
+    , mTraverseShouldTrace(aTraverseShouldTrace)
+  {
+  }
 
   NS_IMETHOD Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb) = 0;
+
+  nsresult TraverseNativeAndJS(void* aPtr,
+                               nsCycleCollectionTraversalCallback& aCb)
+  {
+    nsresult rv = Traverse(aPtr, aCb);
+    if (mTraverseShouldTrace) {
+      // Note, we always call Trace, even if Traverse returned
+      // NS_SUCCESS_INTERRUPTED_TRAVERSE.
+      TraceCallbackFunc noteJsChild(&nsCycleCollectionParticipant::NoteJSChild);
+      Trace(aPtr, noteJsChild, &aCb);
+    }
+    return rv;
+  }
+
+    // Implemented in nsCycleCollectorTraceJSHelpers.cpp.
+  static void NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
+                          void* aClosure);
 
   NS_IMETHOD_(void) Root(void* aPtr) = 0;
   NS_IMETHOD_(void) Unlink(void* aPtr) = 0;
@@ -172,26 +199,24 @@ protected:
 
 private:
   const bool mMightSkip;
+  const bool mTraverseShouldTrace;
 };
 
 class NS_NO_VTABLE nsScriptObjectTracer : public nsCycleCollectionParticipant
 {
 public:
   constexpr nsScriptObjectTracer()
-    : nsCycleCollectionParticipant(false)
+    : nsCycleCollectionParticipant(false, true)
   {
   }
   constexpr explicit nsScriptObjectTracer(bool aSkip)
-    : nsCycleCollectionParticipant(aSkip)
+    : nsCycleCollectionParticipant(aSkip, true)
   {
   }
 
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
                           void* aClosure) override = 0;
 
-  // Implemented in nsCycleCollectorTraceJSHelpers.cpp.
-  static void NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
-                          void* aClosure);
 };
 
 class NS_NO_VTABLE nsXPCOMCycleCollectionParticipant : public nsScriptObjectTracer
@@ -441,10 +466,6 @@ DowncastCCParticipant(void* aPtr)
   CycleCollectionNoteChild(cb, tmp->_field, #_field);
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS                       \
-  {                                                                            \
-  TraceCallbackFunc noteJsChild(&nsScriptObjectTracer::NoteJSChild);           \
-  Trace(p, noteJsChild, &cb);                                                  \
-  }
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END                                  \
     (void)tmp;                                                                 \
