@@ -1465,7 +1465,7 @@ impl ToJson for KeyDownAction {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
         data.insert("type".to_owned(),
-                    "keyUp".to_json());
+                    "keyDown".to_json());
         data.insert("value".to_owned(),
                     self.value.to_string().to_json());
         Json::Object(data)
