@@ -834,16 +834,14 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
   mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
 {
   nsresult rv;
-  int32_t appId, inIsolatedMozBrowser;
+  int32_t inIsolatedMozBrowser;
 
-  rv = aFunctionArguments->GetInt32(0, &appId);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = aFunctionArguments->GetInt32(1, &inIsolatedMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Create an originAttributes object by appId and inIsolatedMozBrowser.
+  // Create an originAttributes object by inIsolatedMozBrowser.
   // Then create the originSuffix string from this object.
-  NeckoOriginAttributes attrs(appId, (inIsolatedMozBrowser ? 1 : 0));
+  NeckoOriginAttributes attrs((inIsolatedMozBrowser ? 1 : 0));
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
