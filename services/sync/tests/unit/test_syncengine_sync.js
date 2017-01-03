@@ -15,19 +15,20 @@ function makeRotaryEngine() {
   return new RotaryEngine(Service);
 }
 
-function clean() {
+function clean(engine) {
   Svc.Prefs.resetBranch("");
   Svc.Prefs.set("log.logger.engine.rotary", "Trace");
   Service.recordManager.clearCache();
+  engine._tracker.clearChangedIDs();
 }
 
-async function cleanAndGo(server) {
-  clean();
+async function cleanAndGo(engine, server) {
+  clean(engine);
   await promiseStopServer(server);
 }
 
-async function promiseClean(server) {
-  clean();
+async function promiseClean(engine, server) {
+  clean(engine);
   await promiseStopServer(server);
 }
 
@@ -128,7 +129,7 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
     do_check_eq(collection.payload("scotsman"), undefined);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -157,7 +158,7 @@ add_task(async function test_syncStartup_serverHasNewerVersion() {
     do_check_eq(error.failureCode, VERSION_OUT_OF_DATE);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -193,7 +194,7 @@ add_task(async function test_syncStartup_syncIDMismatchResetsClient() {
     do_check_eq(engine.lastSync, 0);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -217,7 +218,7 @@ add_task(async function test_processIncoming_emptyServer() {
     do_check_eq(engine.lastSync, 0);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -278,7 +279,7 @@ add_task(async function test_processIncoming_createFromServer() {
     do_check_eq(engine._store.items['../pathological'], "Pathological Case");
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -389,7 +390,7 @@ add_task(async function test_processIncoming_reconcile() {
     // The 'nukeme' record marked as deleted is removed.
     do_check_eq(engine._store.items.nukeme, undefined);
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -425,7 +426,7 @@ add_task(async function test_processIncoming_reconcile_local_deleted() {
   do_check_eq(1, collection.count());
   do_check_neq(undefined, collection.wbo("DUPE_INCOMING"));
 
-  await cleanAndGo(server);
+  await cleanAndGo(engine, server);
 });
 
 add_task(async function test_processIncoming_reconcile_equivalent() {
@@ -448,7 +449,7 @@ add_task(async function test_processIncoming_reconcile_equivalent() {
 
   do_check_attribute_count(engine._store.items, 1);
 
-  await cleanAndGo(server);
+  await cleanAndGo(engine, server);
 });
 
 add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_new() {
@@ -487,7 +488,7 @@ add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_new(
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_true(payload.deleted);
 
-  await cleanAndGo(server);
+  await cleanAndGo(engine, server);
 });
 
 add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_old() {
@@ -526,7 +527,7 @@ add_task(async function test_processIncoming_reconcile_locally_deleted_dupe_old(
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("incoming", payload.denomination);
 
-  await cleanAndGo(server);
+  await cleanAndGo(engine, server);
 });
 
 add_task(async function test_processIncoming_reconcile_changed_dupe() {
@@ -563,7 +564,7 @@ add_task(async function test_processIncoming_reconcile_changed_dupe() {
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("local", payload.denomination);
 
-  await cleanAndGo(server);
+  await cleanAndGo(engine, server);
 });
 
 add_task(async function test_processIncoming_reconcile_changed_dupe_new() {
@@ -600,7 +601,7 @@ add_task(async function test_processIncoming_reconcile_changed_dupe_new() {
   do_check_neq(undefined, wbo);
   let payload = JSON.parse(JSON.parse(wbo.payload).ciphertext);
   do_check_eq("incoming", payload.denomination);
-  await cleanAndGo(server);
+  await cleanAndGo(engine, server);
 });
 
 add_task(async function test_processIncoming_mobile_batchSize() {
@@ -669,7 +670,7 @@ add_task(async function test_processIncoming_mobile_batchSize() {
     }
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -736,7 +737,7 @@ add_task(async function test_processIncoming_store_toFetch() {
     do_check_eq(engine.lastSync, collection.wbo("record-no-99").modified);
 
   } finally {
-    await promiseClean(server);
+    await promiseClean(engine, server);
   }
 });
 
@@ -805,7 +806,7 @@ add_task(async function test_processIncoming_resume_toFetch() {
     do_check_eq(engine._store.items.failed2, "Record No. 2");
     do_check_eq(engine.previousFailed.length, 0);
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -860,7 +861,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
     do_check_eq(engine.previousFailed[1], "record-no-8");
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -913,7 +914,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
     do_check_attribute_count(engine._store.items, APPLY_BATCH_SIZE * 3);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1002,7 +1003,7 @@ add_task(async function test_processIncoming_notify_count() {
 
     Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1088,7 +1089,7 @@ add_task(async function test_processIncoming_previousFailed() {
     do_check_eq(engine._store.items['record-no-12'], "Record No. 12");
     do_check_eq(engine._store.items['record-no-13'], "Record No. 13");
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1222,7 +1223,7 @@ add_task(async function test_processIncoming_failed_records() {
     do_check_eq(batchDownload(BOGUS_RECORDS.length), 4);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1303,7 +1304,7 @@ add_task(async function test_processIncoming_decrypt_failed() {
     do_check_eq(observerSubject.failed, 4);
 
   } finally {
-    await promiseClean(server);
+    await promiseClean(engine, server);
   }
 });
 
@@ -1362,7 +1363,7 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
     do_check_eq(collection.payload("flying"), undefined);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1409,7 +1410,7 @@ add_task(async function test_uploadOutgoing_huge() {
     do_check_eq(engine._tracker.changedIDs["flying"], undefined);
 
   } finally {
-    cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1472,7 +1473,7 @@ add_task(async function test_uploadOutgoing_failed() {
     do_check_eq(engine._tracker.changedIDs['peppercorn'], PEPPERCORN_CHANGED);
 
   } finally {
-    await promiseClean(server);
+    await promiseClean(engine, server);
   }
 });
 
@@ -1541,7 +1542,7 @@ add_task(async function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     do_check_eq(noOfUploads, Math.ceil(234/MAX_UPLOAD_RECORDS));
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1579,7 +1580,7 @@ add_task(async function test_uploadOutgoing_largeRecords() {
     }
     ok(!!error);
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1636,7 +1637,7 @@ add_task(async function test_syncFinish_deleteByIds() {
     do_check_eq(engine._delete.ids, undefined);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1707,7 +1708,7 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
     do_check_eq(engine._delete.ids, undefined);
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1783,7 +1784,7 @@ add_task(async function test_sync_partialUpload() {
     }
 
   } finally {
-    await promiseClean(server);
+    await promiseClean(engine, server);
   }
 });
 
@@ -1810,7 +1811,7 @@ add_task(async function test_canDecrypt_noCryptoKeys() {
     do_check_false(engine.canDecrypt());
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 });
 
@@ -1836,7 +1837,7 @@ add_task(async function test_canDecrypt_true() {
     do_check_true(engine.canDecrypt());
 
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
   }
 
 });
@@ -1893,7 +1894,7 @@ add_task(async function test_syncapplied_observer() {
 
     do_check_true(Service.scheduler.hasIncomingItems);
   } finally {
-    await cleanAndGo(server);
+    await cleanAndGo(engine, server);
     Service.scheduler.hasIncomingItems = false;
     Svc.Obs.remove("weave:engine:sync:applied", onApplied);
   }

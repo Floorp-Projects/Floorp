@@ -199,6 +199,7 @@ add_test(function test_properties() {
     equal(engine.lastRecordUpload, Math.floor(now / 1000));
   } finally {
     Svc.Prefs.resetBranch("");
+    engine._tracker.clearChangedIDs();
     run_next_test();
   }
 });
@@ -359,6 +360,7 @@ add_test(function test_client_name_change() {
 
   Svc.Obs.notify("weave:engine:stop-tracking");
 
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -390,6 +392,7 @@ add_test(function test_send_command() {
 
   notEqual(tracker.changedIDs[remoteId], undefined);
 
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -446,6 +449,7 @@ add_test(function test_command_validation() {
     }
 
   }
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -481,6 +485,7 @@ add_test(function test_command_duplication() {
   clientCommands = engine._readCommands()[remoteId];
   equal(clientCommands.length, 2);
 
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -498,6 +503,7 @@ add_test(function test_command_invalid_client() {
 
   equal(error.message.indexOf("Unknown remote client ID: "), 0);
 
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -515,6 +521,7 @@ add_test(function test_process_incoming_commands() {
     Service.recordManager.clearCache();
     engine._resetClient();
 
+    engine._tracker.clearChangedIDs();
     run_next_test();
   };
 
@@ -809,6 +816,7 @@ add_test(function test_send_uri_to_client_for_display() {
   Service.recordManager.clearCache();
   engine._resetClient();
 
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -841,6 +849,7 @@ add_test(function test_receive_display_uri() {
     equal(subject[0].title, title);
     equal(data, null);
 
+    engine._tracker.clearChangedIDs();
     run_next_test();
   };
 
@@ -877,6 +886,7 @@ add_test(function test_optional_client_fields() {
   // See Bug 1100722, Bug 1100723.
 
   engine._resetClient();
+  engine._tracker.clearChangedIDs();
   run_next_test();
 });
 
@@ -1433,6 +1443,7 @@ add_task(async function test_command_sync() {
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
+    engine._tracker.clearChangedIDs();
 
     try {
       server.deleteCollections("foo");
