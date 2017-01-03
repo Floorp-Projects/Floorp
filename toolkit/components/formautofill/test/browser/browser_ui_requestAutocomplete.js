@@ -7,6 +7,12 @@
 
 "use strict";
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    set: [["dom.ipc.processCount", 1]]
+  });
+});
+
 /**
  * Open the requestAutocomplete UI and test that selecting a profile results in
  * the correct data being sent back to the opener.
