@@ -159,7 +159,7 @@ public:
    */
   void SelectBitrates(unsigned short width,
                       unsigned short height,
-                      unsigned int cap,
+                      int cap,
                       int32_t aLastFramerateTenths,
                       webrtc::VideoStream& aVideoStream);
 
@@ -463,11 +463,11 @@ private:
   unsigned short mNumReceivingStreams;
   bool mVideoLatencyTestEnable;
   uint64_t mVideoLatencyAvg;
-  uint32_t mMinBitrate;
-  uint32_t mStartBitrate;
-  uint32_t mPrefMaxBitrate;
-  uint32_t mNegotiatedMaxBitrate;
-  uint32_t mMinBitrateEstimate;
+  int mMinBitrate;
+  int mStartBitrate;
+  int mPrefMaxBitrate;
+  int mMinBitrateEstimate;
+  int mNegotiatedMaxBitrate;
 
   bool mRtpStreamIdEnabled;
   uint8_t mRtpStreamIdExtId;

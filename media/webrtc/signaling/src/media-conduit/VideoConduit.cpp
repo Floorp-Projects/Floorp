@@ -78,7 +78,7 @@ const uint32_t WebrtcVideoConduit::kDefaultMaxBitrate_bps = KBPS(2000);
 
 // 32 bytes is what WebRTC CodecInst expects
 const unsigned int WebrtcVideoConduit::CODEC_PLNAME_SIZE = 32;
-static const unsigned int kViEMinCodecBitrate = 30;
+static const int kViEMinCodecBitrate = 30;
 
 template<typename T>
 T MinIgnoreZero(const T& a, const T& b)
@@ -1246,10 +1246,10 @@ WebrtcVideoConduit::CreateEncoder(webrtc::VideoEncoder::EncoderType aType,
 
 struct ResolutionAndBitrateLimits
 {
-  uint32_t resolution_in_mb;
-  uint32_t min_bitrate_bps;
-  uint32_t start_bitrate_bps;
-  uint32_t max_bitrate_bps;
+  int resolution_in_mb;
+  int min_bitrate_bps;
+  int start_bitrate_bps;
+  int max_bitrate_bps;
 };
 
 #define MB_OF(w,h) ((unsigned int)((((w+15)>>4))*((unsigned int)((h+15)>>4))))
@@ -1271,7 +1271,7 @@ static ResolutionAndBitrateLimits kResolutionAndBitrateLimits[] = {
 
 void
 WebrtcVideoConduit::SelectBitrates(
-  unsigned short width, unsigned short height, uint32_t cap,
+  unsigned short width, unsigned short height, int cap,
   int32_t aLastFramerateTenths,
   webrtc::VideoStream& aVideoStream)
 {
@@ -1280,7 +1280,7 @@ WebrtcVideoConduit::SelectBitrates(
   int& out_max = aVideoStream.max_bitrate_bps;
   // max bandwidth should be proportional (not linearly!) to resolution, and
   // proportional (perhaps linearly, or close) to current frame rate.
-  unsigned int fs = MB_OF(width, height);
+  int fs = MB_OF(width, height);
 
   for (ResolutionAndBitrateLimits resAndLimits : kResolutionAndBitrateLimits) {
     if (fs > resAndLimits.resolution_in_mb &&
@@ -1288,9 +1288,9 @@ WebrtcVideoConduit::SelectBitrates(
         // (or if we're at the end of the array).
         (!cap || resAndLimits.start_bitrate_bps <= cap ||
          resAndLimits.resolution_in_mb == 0)) {
-      out_min = static_cast<int>(MinIgnoreZero(resAndLimits.min_bitrate_bps, cap));
-      out_start = static_cast<int>(MinIgnoreZero(resAndLimits.start_bitrate_bps, cap));
-      out_max = static_cast<int>(MinIgnoreZero(resAndLimits.max_bitrate_bps, cap));
+      out_min = MinIgnoreZero(resAndLimits.min_bitrate_bps, cap);
+      out_start = MinIgnoreZero(resAndLimits.start_bitrate_bps, cap);
+      out_max = MinIgnoreZero(resAndLimits.max_bitrate_bps, cap);
       break;
     }
   }
@@ -1302,20 +1302,20 @@ WebrtcVideoConduit::SelectBitrates(
   if (framerate >= 10) {
     out_min = out_min * (framerate / 30);
     out_start = out_start * (framerate / 30);
-    out_max = std::max(static_cast<unsigned int>(out_max * (framerate / 30)), cap);
+    out_max = std::max(static_cast<int>(out_max * (framerate / 30)), cap);
   } else {
     // At low framerates, don't reduce bandwidth as much - cut slope to 1/2.
     // Mostly this would be ultra-low-light situations/mobile or screensharing.
     out_min = out_min * ((10 - (framerate / 2)) / 30);
     out_start = out_start * ((10 - (framerate / 2)) / 30);
-    out_max = std::max(static_cast<unsigned int>(out_max * ((10 - (framerate / 2)) / 30)), cap);
+    out_max = std::max(static_cast<int>(out_max * ((10 - (framerate / 2)) / 30)), cap);
   }
 
   if (mMinBitrate && mMinBitrate > out_min) {
     out_min = mMinBitrate;
   }
   // If we try to set a minimum bitrate that is too low, ViE will reject it.
-  out_min = std::max(static_cast<int>(kViEMinCodecBitrate), out_min);
+  out_min = std::max(kViEMinCodecBitrate, out_min);
   if (mStartBitrate && mStartBitrate > out_start) {
     out_start = mStartBitrate;
   }
