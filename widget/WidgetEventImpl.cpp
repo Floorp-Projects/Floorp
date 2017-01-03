@@ -377,6 +377,10 @@ WidgetEvent::IsAllowedToDispatchDOMEvent() const
 {
   switch (mClass) {
     case eMouseEventClass:
+      if (mMessage == eMouseTouchDrag) {
+        return false;
+      }
+      MOZ_FALLTHROUGH;
     case ePointerEventClass:
       // We want synthesized mouse moves to cause mouseover and mouseout
       // DOM events (EventStateManager::PreHandleEvent), but not mousemove
