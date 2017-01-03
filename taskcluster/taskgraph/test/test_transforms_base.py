@@ -105,6 +105,13 @@ class TestResolveKeyedBy(unittest.TestCase):
                 'x', 'n'),
             {'f': 'shoes', 'x': 'feet'})
 
+    def test_match_partial_regexp(self):
+        self.assertEqual(
+            resolve_keyed_by(
+                {'f': 'shoes', 'x': {'by-f': {'sh': 'feet', 'default': 'hands'}}},
+                'x', 'n'),
+            {'f': 'shoes', 'x': 'hands'})
+
     def test_match_default(self):
         self.assertEqual(
             resolve_keyed_by(
