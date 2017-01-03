@@ -59,7 +59,7 @@ var SUPPORTED_STRATEGIES = new Set([
 
 var capabilities = {};
 
-var actions = new action.Chain(checkForInterrupted);
+var legacyactions = new legacyaction.Chain(checkForInterrupted);
 
 // the unload handler
 var onunload;
@@ -141,7 +141,7 @@ function registerSelf() {
 
 function emitTouchEventForIFrame(message) {
   message = message.json;
-  let identifier = actions.nextTouchId;
+  let identifier = legacyactions.nextTouchId;
 
   let domWindowUtils = curContainer.frame.
     QueryInterface(Components.interfaces.nsIInterfaceRequestor).
@@ -328,7 +328,7 @@ function newSession(msg) {
     // events being the result of a physical mouse action.
     // This is especially important for the touch event shim,
     // in order to prevent creating touch event for these fake mouse events.
-    actions.inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
+    legacyactions.inputSource = Ci.nsIDOMMouseEvent.MOZ_SOURCE_TOUCH;
   }
 }
 
@@ -408,7 +408,7 @@ function deleteSession(msg) {
   // reset container frame to the top-most frame
   curContainer = { frame: content, shadowRoot: null };
   curContainer.frame.focus();
-  actions.touchIds = {};
+  legacyactions.touchIds = {};
 }
 
 /**
@@ -476,7 +476,7 @@ function sendLog(msg) {
 function resetValues() {
   sandboxes.clear();
   curContainer = {frame: content, shadowRoot: null};
-  actions.mouseEventsOnly = false;
+  legacyactions.mouseEventsOnly = false;
 }
 
 /**
@@ -506,7 +506,7 @@ function checkForInterrupted() {
     if (wasInterrupted()) {
       if (previousContainer) {
         // if previousContainer is set, then we're in a single process environment
-        curContainer = actions.container = previousContainer;
+        curContainer = legacyactions.container = previousContainer;
         previousContainer = null;
       }
       else {
@@ -595,7 +595,7 @@ function emitTouchEvent(type, touch) {
                    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                    getInterface(Components.interfaces.nsIWebNavigation).
                    QueryInterface(Components.interfaces.nsIDocShell);
-    if (docShell.asyncPanZoomEnabled && actions.scrolling) {
+    if (docShell.asyncPanZoomEnabled && legacyactions.scrolling) {
       // if we're in APZ and we're scrolling, we must use sendNativeTouchPoint to dispatch our touchmove events
       let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
       // only call emitTouchEventForIFrame if we're inside an iframe.
@@ -639,16 +639,16 @@ function singleTap(id, corx, cory) {
     a11y.assertVisible(acc, el, visible);
     a11y.assertActionable(acc, el);
     if (!curContainer.frame.document.createTouch) {
-      actions.mouseEventsOnly = true;
+      legacyactions.mouseEventsOnly = true;
     }
     let c = element.coordinates(el, corx, cory);
-    if (!actions.mouseEventsOnly) {
-      let touchId = actions.nextTouchId++;
+    if (!legacyactions.mouseEventsOnly) {
+      let touchId = legacyactions.nextTouchId++;
       let touch = createATouch(el, c.x, c.y, touchId);
       emitTouchEvent('touchstart', touch);
       emitTouchEvent('touchend', touch);
     }
-    actions.mouseTap(el.ownerDocument, c.x, c.y);
+    legacyactions.mouseTap(el.ownerDocument, c.x, c.y);
   });
 }
 
@@ -660,7 +660,7 @@ function createATouch(el, corx, cory, touchId) {
   let doc = el.ownerDocument;
   let win = doc.defaultView;
   let [clientX, clientY, pageX, pageY, screenX, screenY] =
-    actions.getCoordinateInfo(el, corx, cory);
+   legacyactions.getCoordinateInfo(el, corx, cory);
   let atouch = doc.createTouch(win, el, touchId, pageX, pageY, screenX, screenY, clientX, clientY);
   return atouch;
 }
@@ -673,7 +673,7 @@ function actionChain(chain, touchId) {
   touchProvider.createATouch = createATouch;
   touchProvider.emitTouchEvent = emitTouchEvent;
 
-  return actions.dispatchActions(
+  return legacyactions.dispatchActions(
       chain,
       touchId,
       curContainer,
