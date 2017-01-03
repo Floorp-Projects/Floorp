@@ -7,6 +7,8 @@
  * This file is loaded by "loader.js".
  */
 
+/* import-globals-from loader.js */
+
 "use strict";
 
 // The testing framework is fully initialized at this point, you can add

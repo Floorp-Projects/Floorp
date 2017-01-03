@@ -10,6 +10,7 @@ add_task(function* test_setup() {
 
   const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/general/";
   const contextmenu_common = chrome_base + "contextmenu_common.js";
+  /* import-globals-from contextmenu_common.js */
   Services.scriptloader.loadSubScript(contextmenu_common, this);
 });
 
