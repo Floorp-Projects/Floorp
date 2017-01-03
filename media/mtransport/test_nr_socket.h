@@ -138,6 +138,7 @@ class TestNat {
       refresh_on_ingress_(false),
       block_udp_(false),
       block_stun_(false),
+      block_tcp_(false),
       delay_stun_resp_ms_(0),
       sockets_() {}
 
@@ -169,6 +170,7 @@ class TestNat {
     bool refresh_on_ingress_;
     bool block_udp_;
     bool block_stun_;
+    bool block_tcp_;
     /* Note: this can only delay a single response so far (bug 1253657) */
     uint32_t delay_stun_resp_ms_;
 
@@ -320,6 +322,7 @@ class TestNrSocket : public NrSocketBase {
     // same nat.
     RefPtr<NrSocketBase> internal_socket_;
     RefPtr<TestNat> nat_;
+    bool tls_;
     // Since our comparison logic is different depending on what kind of NAT
     // we simulate, and the STL does not make it very easy to switch out the
     // comparison function at runtime, and these lists are going to be very
