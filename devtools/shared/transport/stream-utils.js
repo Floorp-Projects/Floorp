@@ -4,12 +4,11 @@
 
 "use strict";
 
-const { Ci, Cc, Cu, Cr, CC } = require("chrome");
+const { Ci, Cc, Cr, CC } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpv } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
-const promise = require("promise");
 const defer = require("devtools/shared/defer");
 
 DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
@@ -70,8 +69,8 @@ function StreamCopier(input, output, length) {
   if (IOUtil.outputStreamIsBuffered(output)) {
     this.output = output;
   } else {
-    this.output = Cc["@mozilla.org/network/buffered-output-stream;1"].
-                  createInstance(Ci.nsIBufferedOutputStream);
+    this.output = Cc["@mozilla.org/network/buffered-output-stream;1"]
+                  .createInstance(Ci.nsIBufferedOutputStream);
     this.output.init(output, BUFFER_SIZE);
   }
   this._length = length;
@@ -124,9 +123,8 @@ StreamCopier.prototype = {
         this._debug("Waiting for output stream");
         this.baseAsyncOutput.asyncWait(this, 0, 0, Services.tm.currentThread);
         return;
-      } else {
-        throw e;
       }
+      throw e;
     }
 
     this._amountLeft -= bytesCopied;
@@ -162,9 +160,8 @@ StreamCopier.prototype = {
         this._debug("Waiting for output stream");
         this.baseAsyncOutput.asyncWait(this, 0, 0, Services.tm.currentThread);
         return;
-      } else {
-        throw e;
       }
+      throw e;
     }
     this._deferred.resolve();
   },

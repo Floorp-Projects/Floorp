@@ -15,8 +15,7 @@ function getAddonManager() {
       AddonManager: require("resource://gre/modules/AddonManager.jsm").AddonManager,
       addonManagerActive: true
     };
-  }
-  catch (ex) {
+  } catch (ex) {
     // Fake up an AddonManager just enough to let the file load
     return {
       AddonManager: {
@@ -28,21 +27,15 @@ function getAddonManager() {
   }
 }
 
-const { Cc, Ci, Cu } = require("chrome");
 const { AddonManager, addonManagerActive } = getAddonManager();
 const l10n = require("gcli/l10n");
-
-const BRAND_SHORT_NAME = Cc["@mozilla.org/intl/stringbundle;1"]
-                           .getService(Ci.nsIStringBundleService)
-                           .createBundle("chrome://branding/locale/brand.properties")
-                           .GetStringFromName("brandShortName");
 
 /**
  * Takes a function that uses a callback as its last parameter, and returns a
  * new function that returns a promise instead.
  * This should probably live in async-util
  */
-const promiseify = function(scope, functionWithLastParamCallback) {
+const promiseify = function (scope, functionWithLastParamCallback) {
   return (...args) => {
     return new Promise(resolve => {
       args.push((...results) => {
@@ -50,7 +43,7 @@ const promiseify = function(scope, functionWithLastParamCallback) {
       });
       functionWithLastParamCallback.apply(scope, args);
     });
-  }
+  };
 };
 
 // Convert callback based functions to promise based ones
@@ -65,7 +58,7 @@ function pendingOperations(addon) {
     "PENDING_ENABLE", "PENDING_DISABLE", "PENDING_UNINSTALL",
     "PENDING_INSTALL", "PENDING_UPGRADE"
   ];
-  return allOperations.reduce(function(operations, opName) {
+  return allOperations.reduce(function (operations, opName) {
     return addon.pendingOperations & AddonManager[opName] ?
       operations.concat(opName) :
       operations;
@@ -79,15 +72,19 @@ var items = [
     parent: "selection",
     stringifyProperty: "name",
     cacheable: true,
-    constructor: function() {
+    constructor: function () {
       // Tell GCLI to clear the cache of addons when one is added or removed
       let listener = {
-        onInstalled: addon => { this.clearCache(); },
-        onUninstalled: addon => { this.clearCache(); },
+        onInstalled: addon => {
+          this.clearCache();
+        },
+        onUninstalled: addon => {
+          this.clearCache();
+        },
       };
       AddonManager.addAddonListener(listener);
     },
-    lookup: function() {
+    lookup: function () {
       return getAllAddons().then(addons => {
         return addons.map(addon => {
           let name = addon.name + " " + addon.version;
@@ -114,10 +111,10 @@ var items = [
       defaultValue: "all",
       description: l10n.lookup("addonListTypeDesc")
     }],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let types = (args.type === "all") ? null : [ args.type ];
       return getAddonsByTypes(types).then(addons => {
-        addons = addons.map(function(addon) {
+        addons = addons.map(function (addon) {
           return {
             name: addon.name,
             version: addon.version,
@@ -133,7 +130,7 @@ var items = [
     item: "converter",
     from: "addonsInfo",
     to: "view",
-    exec: function(addonsInfo, context) {
+    exec: function (addonsInfo, context) {
       if (!addonsInfo.addons.length) {
         return context.createView({
           html: "<p>${message}</p>",
@@ -167,7 +164,7 @@ var items = [
       function arrangeAddons(addons) {
         let enabledAddons = [];
         let disabledAddons = [];
-        addons.forEach(function(addon) {
+        addons.forEach(function (addon) {
           if (addon.isActive) {
             enabledAddons.push(addon);
           } else {
@@ -208,7 +205,7 @@ var items = [
           "</table>",
         data: {
           header: header,
-          addons: arrangeAddons(addonsInfo.addons).map(function(addon) {
+          addons: arrangeAddons(addonsInfo.addons).map(function (addon) {
             return {
               name: addon.name,
               label: addon.name.replace(/\s/g, "_") +
@@ -220,7 +217,7 @@ var items = [
                  + addon.pendingOperations.map(lookupOperation).join(", ")
                  + ")") :
                 "",
-              toggleActionName: isActiveForToggle(addon) ? "disable": "enable",
+              toggleActionName: isActiveForToggle(addon) ? "disable" : "enable",
               toggleActionMessage: isActiveForToggle(addon) ?
                 l10n.lookup("addonListOutDisable") :
                 l10n.lookup("addonListOutEnable")
@@ -244,7 +241,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.userDisabled) {
         args.addon.userDisabled = false;
@@ -266,7 +263,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       // If the addon is not disabled or is set to "click to play" then
       // disable it. Otherwise display the message "Add-on is already
       // disabled."
@@ -292,7 +289,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.type !== "plugin") {
         return l10n.lookupFormat("addonCantCtp", [ name ]);
