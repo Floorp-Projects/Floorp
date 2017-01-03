@@ -18,11 +18,9 @@ from multiprocessing import Process, Event
 from ..localpaths import repo_root
 
 import sslutils
-from manifest.sourcefile import meta_re
 from wptserve import server as wptserve, handlers
 from wptserve import stash
 from wptserve.logger import set_logger
-from wptserve.handlers import filesystem_path
 from mod_pywebsocket import standalone as pywebsocket
 
 def replace_end(s, old, new):
@@ -34,71 +32,38 @@ def replace_end(s, old, new):
     return s[:-len(old)] + new
 
 
-class BaseWorkerHandler(object):
-    source_suffix = None
-    url_suffix = None
-    path_suffix = None
-    response_template = None
-
-    def __init__(self, base_path=None, url_base="/"):
-        self.base_path = base_path
-        self.url_base = url_base
+class WorkersHandler(object):
+    def __init__(self):
         self.handler = handlers.handler(self.handle_request)
 
     def __call__(self, request, response):
         return self.handler(request, response)
 
     def handle_request(self, request, response):
-        url_path = replace_end(request.url_parts.path, self.source_suffix, self.url_suffix)
-        meta = self._get_meta(request)
-        return self.response_template % {"meta": meta, "url_path": url_path}
-
-    def _get_meta(self, request):
-        path = filesystem_path(self.base_path, request, self.url_base)
-        path = replace_end(path, self.source_suffix, self.path_suffix)
-        meta_values = []
-        with open(path) as f:
-            for line in f:
-                m = meta_re.match(line)
-                if m:
-                    name, content = m.groups()
-                    name = name.replace('"', '\\"').replace(">", "&gt;")
-                    content = content.replace('"', '\\"').replace(">", "&gt;")
-                    meta_values.append((name, content))
-        return "\n".join('<meta name="%s" content="%s">' % item for item in meta_values)
-
-
-class WorkerHandler(BaseWorkerHandler):
-    source_suffix = ".worker.html"
-    url_suffix = ".worker.js"
-    path_suffix = ".worker.js"
-
-    response_template = """<!doctype html>
+        worker_path = replace_end(request.url_parts.path, ".worker.html", ".worker.js")
+        return """<!doctype html>
 <meta charset=utf-8>
-%(meta)s
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
 <script>
-fetch_tests_from_worker(new Worker("%(url_path)s"));
+fetch_tests_from_worker(new Worker("%s"));
 </script>
-"""
+""" % (worker_path,)
 
 
-class AnyWorkerHandler(WorkerHandler):
-    source_suffix = ".any.worker.html"
-    url_suffix = ".any.worker.js"
-    path_suffix = ".any.js"
+class AnyHtmlHandler(object):
+    def __init__(self):
+        self.handler = handlers.handler(self.handle_request)
 
+    def __call__(self, request, response):
+        return self.handler(request, response)
 
-class AnyHtmlHandler(BaseWorkerHandler):
-    source_suffix = ".any.html"
-    url_suffix = ".any.js"
-    path_suffix = ".any.js"
-
-    response_template =  """<!doctype html>
+    def handle_request(self, request, response):
+        test_path = replace_end(request.url_parts.path, ".any.html", ".any.js")
+        return """\
+<!doctype html>
 <meta charset=utf-8>
-%(meta)s
 <script>
 self.GLOBAL = {
   isWindow: function() { return true; },
@@ -108,38 +73,37 @@ self.GLOBAL = {
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <div id=log></div>
-<script src="%(url_path)s"></script>
-"""
+<script src="%s"></script>
+""" % (test_path,)
 
 
-class AnyWorkerScriptHandler(BaseWorkerHandler):
-    source_suffix = ".any.worker.js"
-    url_suffix = ".any.js"
-    path_suffix = None
+class AnyWorkerHandler(object):
+    def __init__(self):
+        self.handler = handlers.handler(self.handle_request)
 
-    response_template = """\
+    def __call__(self, request, response):
+        return self.handler(request, response)
+
+    def handle_request(self, request, response):
+        test_path = replace_end(request.url_parts.path, ".any.worker.js", ".any.js")
+        return """\
 self.GLOBAL = {
   isWindow: function() { return false; },
   isWorker: function() { return true; },
 };
 importScripts("/resources/testharness.js");
-importScripts("%(url_path)s");
+importScripts("%s");
 done();
-"""
-
-    def _get_meta(self, path):
-        return None
+""" % (test_path,)
 
 
 rewrites = [("GET", "/resources/WebIDLParser.js", "/resources/webidl2/lib/webidl2.js")]
-
 
 subdomains = [u"www",
               u"www1",
               u"www2",
               u"天気の良い日",
               u"élève"]
-
 
 class RoutesBuilder(object):
     def __init__(self):
@@ -153,10 +117,9 @@ class RoutesBuilder(object):
                           ("*", "/serve.py", handlers.ErrorHandler(404))]
 
         self.static = [
+            ("GET", "*.worker.html", WorkersHandler()),
             ("GET", "*.any.html", AnyHtmlHandler()),
-            ("GET", "*.any.worker.html", AnyWorkerHandler()),
-            ("GET", "*.any.worker.js", AnyWorkerScriptHandler()),
-            ("GET", "*.worker.html", WorkerHandler()),
+            ("GET", "*.any.worker.js", AnyWorkerHandler()),
         ]
 
         self.mountpoint_routes = OrderedDict()
@@ -199,9 +162,11 @@ class RoutesBuilder(object):
 
 def build_routes(aliases):
     builder = RoutesBuilder()
-    for url, directory in aliases.items():
+    for alias in aliases:
+        url = alias["url-path"]
+        directory = alias["local-dir"]
         if not url.startswith("/") or len(directory) == 0:
-            logger.error("A map entry of 'aliases' must be \"/<url-path>\": \"<local-directory>\"")
+            logger.error("\"url-path\" value must start with '/'.")
             continue
         if url.endswith("/"):
             builder.add_mount_point(url, directory)
@@ -550,7 +515,7 @@ def set_computed_defaults(config):
         config["ws_doc_root"] = os.path.join(root, "websockets", "handlers")
 
     if not value_set(config, "aliases"):
-        config["aliases"] = {}
+        config["aliases"] = []
 
 
 def merge_json(base_obj, override_obj):
@@ -636,7 +601,11 @@ def main():
 
     setup_logger(config["log_level"])
 
-    with stash.StashServer((config["host"], get_port()), authkey=str(uuid.uuid4())):
+    stash_address = None
+    if config["bind_hostname"]:
+        stash_address = (config["host"], get_port())
+
+    with stash.StashServer(stash_address, authkey=str(uuid.uuid4())):
         with get_ssl_environment(config) as ssl_env:
             config_, servers = start(config, ssl_env, build_routes(config["aliases"]), **kwargs)
 

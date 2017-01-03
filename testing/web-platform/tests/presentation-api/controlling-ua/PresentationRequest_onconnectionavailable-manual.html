@@ -5,7 +5,7 @@
 <link rel="help" href="https://w3c.github.io/presentation-api/#starting-a-presentation">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
-
+<script src="common.js"></script>
 <p>Click the button below and select the available presentation display, to start the manual test.</p>
 <button id="presentBtn">Start Presentation Test</button>
 
@@ -19,21 +19,16 @@
     // ----------
     var presentBtn = document.getElementById("presentBtn");
 
-    // ------------
-    // Request init
-    // ------------
-    var validUnixDate = new Date().getTime() + String(Math.floor(Math.random() * 1e5)),
-            validPresURL = '../receiving-ua/idlharness.html#__castAppId__=2334D33A/__castClientId__=' + validUnixDate,
-            request = new PresentationRequest(validPresURL);
-
     // --------------------------------------------------------------------------
     // Start New PresentationRequest.onconnectionavailable Test (success) - begin
     // --------------------------------------------------------------------------
     var startPresentation = function () {
+        presentBtn.disabled = true;
         promise_test(function (t) {
             // Note: During starting a presentation, the connectionavailable event is fired (step 20)
             //       after the promise P is resolved (step 19).
             return new Promise(function(resolve, reject) {
+                var request = new PresentationRequest(presentationUrls);
                 request.onconnectionavailable = function (evt) {
                     resolve(evt.connection);
                 };

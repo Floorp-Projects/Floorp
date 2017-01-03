@@ -5,6 +5,7 @@
 <link rel="help" href="http://w3c.github.io/presentation-api/#dfn-controlling-user-agent">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="common.js"></script>
 
 <p>Click the button below to start the manual test. If prompted to select a device, please dismiss the dialog box. The test passes if a "PASS" result appears.</p>
 <button id="presentBtn" onclick="startPresentation()">Start Presentation Test</button>
@@ -15,19 +16,14 @@
     // ----------
     var presentBtn = document.getElementById("presentBtn");
 
-    // ------------
-    // Request init
-    // ------------
-    var validUnixDate = new Date().getTime() + String(Math.floor(Math.random() * 1e5)),
-            validPresURL = '../receiving-ua/idlharness.html#__castAppId__=2334D33A/__castClientId__=' + validUnixDate,
-            request1 = new PresentationRequest(validPresURL),
-            request2 = new PresentationRequest(validPresURL);
-
     // -------------------------------------------
     // Start New Presentation Test (error) - begin
     // -------------------------------------------
     var startPresentation = function () {
+        presentBtn.disabled = true;
         promise_test(function (t) {
+            var request1 = new PresentationRequest(presentationUrls),
+                request2 = new PresentationRequest(presentationUrls);
             request1.start().catch(function(){});
             return promise_rejects(t, 'OperationError', request2.start());
         });
