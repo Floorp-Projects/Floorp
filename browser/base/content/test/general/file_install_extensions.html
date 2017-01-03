@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+<script type="text/javascript">
+function installMozAM(url) {
+  return navigator.mozAddonManager.createInstall({url}).then(install => new Promise(resolve => {
+    const EVENTS = [
+      "onDownloadCancelled",
+      "onDownloadFailed",
+      "onInstallCancelled",
+      "onInstallEnded",
+      "onInstallFailed",
+    ];
+    for (let event of EVENTS) {
+      install.addEventListener(event, () => { resolve(event); });
+    }
+    install.install();
+  }));
+}
+</script>
+</body>
+</html>
