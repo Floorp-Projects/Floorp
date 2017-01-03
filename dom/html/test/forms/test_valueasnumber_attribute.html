@@ -46,8 +46,7 @@ function checkAvailability()
     ["color", false],
     ["month", true],
     ["week", true],
-     // TODO: temporary set to false until bug 888331 is fixed.
-    ["datetime-local", false],
+    ["datetime-local", true],
   ];
 
   var element = document.createElement('input');
@@ -612,7 +611,6 @@ function checkWeekGet()
   var element = document.createElement('input');
   element.type = "week";
   for (let data of validData) {
-    dump("Test: " + data[0]);
     element.value = data[0];
     is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
        "integer value representing this week");
@@ -698,7 +696,120 @@ function checkWeekSet()
 
     try {
       element.valueAsNumber = data[0];
-      is(element.value, data[1], "valueAsNumber should set the value to " + data[1]);
+      is(element.value, data[1], "valueAsNumber should set the value to " +
+                                 data[1]);
+    } catch(e) {
+      caught = true;
+    }
+
+    if (data[2]) {
+      ok(caught, "valueAsNumber should have thrown");
+      is(element.value, data[1], "the value should not have changed");
+    } else {
+      ok(!caught, "valueAsNumber should not have thrown");
+    }
+  }
+}
+
+function checkDatetimeLocalGet() {
+  var validData =
+  [
+    // Simple cases.
+    [ "2016-12-20T09:58",          Date.UTC(2016, 11, 20, 9, 58)          ],
+    [ "2016-12-20T09:58:30",       Date.UTC(2016, 11, 20, 9, 58, 30)      ],
+    [ "2016-12-20T09:58:30.123",   Date.UTC(2016, 11, 20, 9, 58, 30, 123) ],
+    [ "2017-01-01T10:00",          Date.UTC(2017, 0, 1, 10, 0, 0)         ],
+    [ "1969-12-31T12:00:00",       Date.UTC(1969, 11, 31, 12, 0, 0)       ],
+    [ "1970-01-01T00:00",          0                                      ],
+    // Leap years.
+    [ "1804-02-29 12:34",          Date.UTC(1804, 1, 29, 12, 34, 0)       ],
+    [ "2016-02-29T12:34",          Date.UTC(2016, 1, 29, 12, 34, 0)       ],
+    [ "2016-12-31T12:34:56",       Date.UTC(2016, 11, 31, 12, 34, 56)     ],
+    [ "2016-01-01T12:34:56.789",   Date.UTC(2016, 0, 1, 12, 34, 56, 789)  ],
+    [ "2017-01-01 12:34:56.789",   Date.UTC(2017, 0, 1, 12, 34, 56, 789)  ],
+    // Maximum valid datetime-local (limited by the ecma date object range).
+    [ "275760-09-13T00:00",        8640000000000000                       ],
+    // Minimum valid datetime-local (limited by the input element minimum valid value).
+    [ "0001-01-01T00:00",          -62135596800000                        ],
+  ];
+
+  var invalidData =
+  [
+    "invaliddatetime-local",
+    "0000-01-01T00:00",
+    "2016-12-25T00:00Z",
+    "2015-02-29T12:34",
+    "1-1-1T12:00",
+    // Out of range.
+    "275760-09-13T12:00",
+  ];
+
+  var element = document.createElement('input');
+  element.type = "datetime-local";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsNumber, data[1], "valueAsNumber should return the " +
+       "integer value representing this datetime-local");
+  }
+
+  for (let data of invalidData) {
+    element.value = data;
+    ok(isNaN(element.valueAsNumber), "valueAsNumber should return NaN "  +
+       "when the element value is not a valid datetime-local");
+  }
+}
+
+function checkDatetimeLocalSet()
+{
+  var testData =
+  [
+    // Simple cases.
+    [ Date.UTC(2016, 11, 20, 9, 58, 0),       "2016-12-20T09:58",       ],
+    [ Date.UTC(2016, 11, 20, 9, 58, 30),      "2016-12-20T09:58:30"     ],
+    [ Date.UTC(2016, 11, 20, 9, 58, 30, 123), "2016-12-20T09:58:30.123" ],
+    [ Date.UTC(2017, 0, 1, 10, 0, 0),         "2017-01-01T10:00"        ],
+    [ Date.UTC(1969, 11, 31, 12, 0, 0),       "1969-12-31T12:00"        ],
+    [ 0,                                      "1970-01-01T00:00"        ],
+    // Maximum valid week (limited by the ecma date object range).
+    [ 8640000000000000,  "275760-09-13T00:00"      ],
+    // Minimum valid datetime-local (limited by the input element minimum valid value).
+    [ -62135596800000,   "0001-01-01T00:00"        ],
+    // Leap years.
+    [ Date.UTC(1804, 1, 29, 12, 34, 0),       "1804-02-29T12:34"        ],
+    [ Date.UTC(2016, 1, 29, 12, 34, 0),       "2016-02-29T12:34"        ],
+    [ Date.UTC(2016, 11, 31, 12, 34, 56),     "2016-12-31T12:34:56"     ],
+    [ Date.UTC(2016, 0, 1, 12, 34, 56, 789),  "2016-01-01T12:34:56.789" ],
+    [ Date.UTC(2017, 0, 1, 12, 34, 56, 789),  "2017-01-01T12:34:56.789" ],
+    // "Values must be truncated to valid datetime-local"
+    [ 0.3,               "1970-01-01T00:00"        ],
+    [ 1e-1,              "1970-01-01T00:00"        ],
+    [ -1  ,              "1969-12-31T23:59:59.999" ],
+    [ -345600000,        "1969-12-28T00:00"        ],
+    // Invalid numbers.
+    // Those are implicitly converted to numbers
+    [ "",                "1970-01-01T00:00"        ],
+    [ true,              "1970-01-01T00:00:00.001" ],
+    [ false,             "1970-01-01T00:00"        ],
+    [ null,              "1970-01-01T00:00"        ],
+    // Those are converted to NaN, the corresponding week string is the empty string
+    [ "invaliddatetime-local", "" ],
+    [ NaN,                     "" ],
+    [ undefined,               "" ],
+    // Infinity will keep the current value and throw (so we need to set a current value).
+    [ Date.UTC(2016, 11, 27, 15, 10, 0), "2016-12-27T15:10"       ],
+    [ Infinity,                          "2016-12-27T15:10", true ],
+    [ -Infinity,                         "2016-12-27T15:10", true ],
+  ];
+
+  var element = document.createElement('input');
+  element.type = "datetime-local";
+  for (let data of testData) {
+    var caught = false;
+
+    try {
+      element.valueAsNumber = data[0];
+      is(element.value, data[1], "valueAsNumber should set the value to " +
+                                 data[1]);
     } catch(e) {
       caught = true;
     }
@@ -737,6 +848,10 @@ checkMonthSet();
 // <input type='week'> test
 checkWeekGet();
 checkWeekSet();
+
+// <input type='datetime-local'> test
+checkDatetimeLocalGet();
+checkDatetimeLocalSet();
 
 </script>
 </pre>
