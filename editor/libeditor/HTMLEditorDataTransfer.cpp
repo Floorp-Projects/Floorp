@@ -1538,6 +1538,13 @@ HTMLEditor::CanPaste(int32_t aSelectionType,
   NS_ENSURE_ARG_POINTER(aCanPaste);
   *aCanPaste = false;
 
+  // Always enable the paste command when inside of a HTML or XHTML document.
+  nsCOMPtr<nsIDocument> doc = GetDocument();
+  if (doc && doc->IsHTMLOrXHTML()) {
+    *aCanPaste = true;
+    return NS_OK;
+  }
+
   // can't paste if readonly
   if (!IsModifiable()) {
     return NS_OK;
