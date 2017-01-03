@@ -473,6 +473,14 @@ const TEST_DATA = [
     instruction: {type: "remove", name: "color", index: 1},
     expected: "\n  a:b;\n   /* background-color: seagreen; */\n  e:f;",
   },
+
+  {
+    desc: "regression test for bug 1328016",
+    input: "position:absolute;top50px;height:50px;width:50px;",
+    instruction: {type: "set", name: "width", value: "60px", priority: "",
+                  index: 2},
+    expected: "position:absolute;top50px;height:50px;width:60px;",
+  },
 ];
 
 function rewriteDeclarations(inputString, instruction, defaultIndentation) {

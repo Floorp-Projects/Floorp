@@ -12,7 +12,7 @@ const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const {TextProperty} =
       require("devtools/client/inspector/rules/models/text-property");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
-const {parseDeclarations} = require("devtools/shared/css/parsing-utils");
+const {parseNamedDeclarations} = require("devtools/shared/css/parsing-utils");
 const Services = require("Services");
 
 const STYLE_INSPECTOR_PROPERTIES = "devtools/shared/locales/styleinspector.properties";
@@ -242,8 +242,8 @@ Rule.prototype = {
       // Note that even though StyleRuleActors normally provide parsed
       // declarations already, _applyPropertiesNoAuthored is only used when
       // connected to older backend that do not provide them. So parse here.
-      for (let cssProp of parseDeclarations(this.cssProperties.isKnown,
-                                            this.style.authoredText)) {
+      for (let cssProp of parseNamedDeclarations(this.cssProperties.isKnown,
+                                                 this.style.authoredText)) {
         cssProps[cssProp.name] = cssProp;
       }
 
@@ -440,18 +440,15 @@ Rule.prototype = {
     // Starting with FF49, StyleRuleActors provide parsed declarations.
     let props = this.style.declarations;
     if (!props.length) {
-      props = parseDeclarations(this.cssProperties.isKnown,
-                                this.style.authoredText, true);
+      // If the authored text has an invalid property, it will show up
+      // as nameless.  Skip these as we don't currently have a good
+      // way to display them.
+      props = parseNamedDeclarations(this.cssProperties.isKnown,
+                                     this.style.authoredText, true);
     }
 
     for (let prop of props) {
       let name = prop.name;
-      // If the authored text has an invalid property, it will show up
-      // as nameless.  Skip these as we don't currently have a good
-      // way to display them.
-      if (!name) {
-        continue;
-      }
       // In an inherited rule, we only show inherited properties.
       // However, we must keep all properties in order for rule
       // rewriting to work properly.  So, compute the "invisible"
