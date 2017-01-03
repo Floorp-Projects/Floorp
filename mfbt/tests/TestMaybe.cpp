@@ -285,6 +285,20 @@ TestBasicFeatures()
   MOZ_RELEASE_ASSERT(mayValueCRef->GetStatus() == eWasDefaultConstructed);
   mayValue.reset();
 
+  // Check that we can create and reference Maybe<const Type>.
+  Maybe<const BasicValue> mayCValue1 = Some(BasicValue(5));
+  MOZ_RELEASE_ASSERT(mayCValue1);
+  MOZ_RELEASE_ASSERT(mayCValue1.isSome());
+  MOZ_RELEASE_ASSERT(*mayCValue1 == BasicValue(5));
+  const Maybe<const BasicValue>& mayCValue1Ref = mayCValue1;
+  MOZ_RELEASE_ASSERT(mayCValue1Ref == mayCValue1);
+  MOZ_RELEASE_ASSERT(*mayCValue1Ref == BasicValue(5));
+  Maybe<const BasicValue> mayCValue2;
+  mayCValue2.emplace(6);
+  MOZ_RELEASE_ASSERT(mayCValue2);
+  MOZ_RELEASE_ASSERT(mayCValue2.isSome());
+  MOZ_RELEASE_ASSERT(*mayCValue2 == BasicValue(6));
+
   return true;
 }
 
