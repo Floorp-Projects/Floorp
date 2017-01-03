@@ -2134,7 +2134,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput
   /**
    * BStart of this fragment in "grid space" (i.e. the concatenation of content
    * areas of all fragments).  Equal to mRows.mSizes[mStartRow].mPosition,
-   * or, if this fragment starts after the last row, the GetConsumedBSize().
+   * or, if this fragment starts after the last row, the ConsumedBSize().
    */
   nscoord mFragBStart;
   /** The start row for this fragment. */
@@ -6118,7 +6118,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
                                         SizingConstraint::eNoConstraint);
     bSize = computedSize.BSize(wm);
   } else {
-    consumedBSize = GetConsumedBSize();
+    consumedBSize = ConsumedBSize(wm);
     gridReflowInput.InitializeForContinuation(this, consumedBSize);
     const uint32_t numRows = gridReflowInput.mRows.mSizes.Length();
     bSize = gridReflowInput.mRows.GridLineEdge(numRows,

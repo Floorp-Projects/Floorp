@@ -87,7 +87,7 @@ protected:
    *       O(N^2)! So, use this function with caution and minimize the number
    *       of calls to this method.
    */
-  nscoord GetConsumedBSize() const;
+  nscoord ConsumedBSize(mozilla::WritingMode aWM) const;
 
   /**
    * Retrieve the effective computed block size of this frame, which is the
