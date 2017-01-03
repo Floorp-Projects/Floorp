@@ -25,6 +25,9 @@ linux64-clang/opt:
 
 linux64-clang-tidy/opt:
     description: "Clang-tidy build"
+    index:
+        product: static-analysis
+        job-name: linux64-clang-tidy
     treeherder:
         kind: build
         platform: linux64/opt
