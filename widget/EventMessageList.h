@@ -87,6 +87,7 @@ NS_EVENT_MESSAGE(eMouseOut)
 NS_EVENT_MESSAGE(eMouseHitTest)
 NS_EVENT_MESSAGE(eMouseEnter)
 NS_EVENT_MESSAGE(eMouseLeave)
+NS_EVENT_MESSAGE(eMouseTouchDrag)
 NS_EVENT_MESSAGE(eMouseLongTap)
 NS_EVENT_MESSAGE_FIRST_LAST(eMouseEvent, eMouseMove, eMouseLongTap)
 
