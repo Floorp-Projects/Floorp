@@ -2279,7 +2279,7 @@ CCGraphBuilder::BuildGraph(SliceBudget& aBudget)
     SetFirstChild();
 
     if (pi->mParticipant) {
-      nsresult rv = pi->mParticipant->Traverse(pi->mPointer, *this);
+      nsresult rv = pi->mParticipant->TraverseNativeAndJS(pi->mPointer, *this);
       MOZ_RELEASE_ASSERT(!NS_FAILED(rv), "Cycle collector Traverse method failed");
     }
 
@@ -2553,7 +2553,7 @@ static bool
 MayHaveChild(void* aObj, nsCycleCollectionParticipant* aCp)
 {
   ChildFinder cf;
-  aCp->Traverse(aObj, cf);
+  aCp->TraverseNativeAndJS(aObj, cf);
   return cf.MayHaveChild();
 }
 
