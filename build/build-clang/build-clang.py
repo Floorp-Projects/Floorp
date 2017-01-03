@@ -67,11 +67,10 @@ def do_import_clang_tidy(source_dir):
     do_import(clang_plugin_path, clang_tidy_path)
 
 
-def build_package(package_build_dir, run_cmake, cmake_args):
+def build_package(package_build_dir, cmake_args):
     if not os.path.exists(package_build_dir):
         os.mkdir(package_build_dir)
-    if run_cmake:
-        run_in(package_build_dir, ["cmake"] + cmake_args)
+    run_in(package_build_dir, ["cmake"] + cmake_args)
     run_in(package_build_dir, ["ninja", "install"])
 
 
@@ -199,9 +198,11 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
     build_dir = stage_dir + "/build"
     inst_dir = stage_dir + "/clang"
 
-    run_cmake = True
-    if os.path.exists(build_dir + "/build.ninja"):
-        run_cmake = False
+    # If CMake has already been run, it may have been run with different
+    # arguments, so we need to re-run it.  Make sure the cached copy of the
+    # previous CMake run is cleared before running it again.
+    if os.path.exists(build_dir + "/CMakeCache.txt"):
+        os.path.remove(build_dir + "/CMakeCache.txt")
 
     # cmake doesn't deal well with backslashes in paths.
     def slashify_path(path):
@@ -223,7 +224,7 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
                   src_dir];
     if is_windows():
         cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
-    build_package(build_dir, run_cmake, cmake_args)
+    build_package(build_dir, cmake_args)
 
     if is_linux():
         install_libgcc(gcc_dir, inst_dir)
