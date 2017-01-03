@@ -408,6 +408,8 @@ var commandsPeerConnectionOfferAnswer = [
   function PC_LOCAL_CHECK_STATS(test) {
     return test.pcLocal.getStats().then(stats => {
       test.pcLocal.checkStats(stats, test.testOptions.steeplechase);
+    }).then(() => {
+      test.pcLocal.getStatsLegacy(null, test.pcLocal.checkLegacyStatTypeNames, e => {});
     });
   },
 
