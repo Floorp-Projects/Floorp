@@ -57,7 +57,7 @@ def patch(patch, srcdir):
                '-s'])
 
 
-def do_import_clang_tidy(source_dir):
+def import_clang_tidy(source_dir):
     clang_plugin_path = os.path.join(os.path.dirname(sys.argv[0]),
                                      '..', 'clang-plugin')
     clang_tidy_path = os.path.join(source_dir,
@@ -126,6 +126,16 @@ def mkdir_p(path):
     except OSError as e:
         if e.errno != errno.EEXIST or not os.path.isdir(path):
             raise
+
+
+def delete(path):
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+    else:
+        try:
+            os.unlink(path)
+        except:
+            pass
 
 
 def install_libgcc(gcc_dir, clang_dir):
@@ -281,6 +291,72 @@ def get_tool(config, key):
     except which.WhichError:
         raise ValueError("%s not found on PATH" % f)
 
+
+# This function is intended to be called on the final build directory when
+# building clang-tidy.  Its job is to remove all of the files which won't
+# be used for clang-tidy to reduce the download size.  Currently when this
+# function finishes its job, it will leave final_dir with a layout like this:
+#
+# clang/
+#   bin/
+#     clang-tidy
+#   include/
+#     * (nothing will be deleted here)
+#   lib/
+#     clang/
+#       4.0.0/
+#         include/
+#           * (nothing will be deleted here)
+#   share/
+#     clang/
+#       clang-tidy-diff.py
+#       run-clang-tidy.py
+def prune_final_dir_for_clang_tidy(final_dir):
+    # Make sure we only have what we expect.
+    dirs = ("bin", "include", "lib", "libexec", "msbuild-bin", "share", "tools")
+    for f in glob.glob("%s/*" % final_dir):
+        if os.path.basename(f) not in dirs:
+            raise Exception("Found unknown file %s in the final directory" % f)
+        if not os.path.isdir(f):
+            raise Exception("Expected %s to be a directory" %f)
+
+    # In bin/, only keep clang-tidy.
+    re_clang_tidy = re.compile(r"^clang-tidy(\.exe)?$", re.I)
+    for f in glob.glob("%s/bin/*" % final_dir):
+        if re_clang_tidy.search(os.path.basename(f)) is None:
+            delete(f)
+
+    # Keep include/ intact.
+
+    # In lib/, only keep lib/clang/N.M.O/include.
+    re_ver_num = re.compile(r"^\d+\.\d+\.\d+$", re.I)
+    for f in glob.glob("%s/lib/*" % final_dir):
+        if os.path.basename(f) != "clang":
+            delete(f)
+    for f in glob.glob("%s/lib/clang/*" % final_dir):
+        if re_ver_num.search(os.path.basename(f)) is None:
+            delete(f)
+    for f in glob.glob("%s/lib/clang/*/*" % final_dir):
+        if os.path.basename(f) != "include":
+            delete(f)
+
+    # Completely remove libexec/, msbuilld-bin and tools, if it exists.
+    shutil.rmtree(os.path.join(final_dir, "libexec"))
+    for d in ("msbuild-bin", "tools"):
+        d = os.path.join(final_dir, d)
+        if os.path.exists(d):
+            shutil.rmtree(d)
+
+    # In share/, only keep share/clang/*tidy*
+    re_clang_tidy = re.compile(r"tidy", re.I)
+    for f in glob.glob("%s/share/*" % final_dir):
+        if os.path.basename(f) != "clang":
+            delete(f)
+    for f in glob.glob("%s/share/clang/*" % final_dir):
+        if re_clang_tidy.search(os.path.basename(f)) is None:
+            delete(f)
+
+
 if __name__ == "__main__":
     # The directories end up in the debug info, so the easy way of getting
     # a reproducible build is to run it in a know absolute directory.
@@ -358,11 +434,11 @@ if __name__ == "__main__":
         build_libcxx = config["build_libcxx"]
         if build_libcxx not in (True, False):
             raise ValueError("Only boolean values are accepted for build_libcxx.")
-    import_clang_tidy = False
-    if "import_clang_tidy" in config:
-        import_clang_tidy = config["import_clang_tidy"]
-        if import_clang_tidy not in (True, False):
-            raise ValueError("Only boolean values are accepted for import_clang_tidy.")
+    build_clang_tidy = False
+    if "build_clang_tidy" in config:
+        build_clang_tidy = config["build_clang_tidy"]
+        if build_clang_tidy not in (True, False):
+            raise ValueError("Only boolean values are accepted for build_clang_tidy.")
     osx_cross_compile = False
     if "osx_cross_compile" in config:
         osx_cross_compile = config["osx_cross_compile"]
@@ -437,15 +513,12 @@ if __name__ == "__main__":
         # On Windows, we have to re-copy the whole directory every time.
         if not is_windows() and os.path.islink(l[1]):
             continue
-        if os.path.isdir(l[1]):
-            shutil.rmtree(l[1])
-        elif os.path.exists(l[1]):
-            os.unlink(l[1])
+        delete(l[1]);
         if os.path.exists(l[0]):
             symlink(l[0], l[1])
 
-    if import_clang_tidy:
-        do_import_clang_tidy(llvm_source_dir)
+    if build_clang_tidy:
+        import_clang_tidy(llvm_source_dir)
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
@@ -538,7 +611,12 @@ if __name__ == "__main__":
             llvm_source_dir, stage3_dir, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir)
 
+    package_name = "clang"
+    if build_clang_tidy:
+        prune_final_dir_for_clang_tidy(os.path.join(final_stage_dir, "clang"))
+        package_name = "clang-tidy"
+
     if is_darwin() or is_windows():
-        build_tar_package("tar", "clang.tar.bz2", final_stage_dir, "clang")
+        build_tar_package("tar", package_name + ".tar.bz2", final_stage_dir, "clang")
     else:
-        build_tar_package("tar", "clang.tar.xz", final_stage_dir, "clang")
+        build_tar_package("tar", package_name + ".tar.xz", final_stage_dir, "clang")
