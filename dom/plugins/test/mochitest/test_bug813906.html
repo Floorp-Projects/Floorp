@@ -18,21 +18,35 @@ function f() {
 </script>
 
 <script type="application/javascript">
+SimpleTest.requestFlakyTimeout(
+  "Blocking an iframe does not cause the onerror event to be fired");
+
 SimpleTest.waitForExplicitFinish();
 setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
 var frameLoadCount = 0;
+
+function frameNavBlocked() {
+  isnot(SpecialPowers.wrap(window.frame1).location.href.indexOf('chrome://'),
+        0, 'plugin shouldnt be able to cause navigation to chrome URLs');
+  SimpleTest.finish();
+}
+
 function frameLoaded() {
   frameLoadCount++;
   if (frameLoadCount == 1) {
     document.getElementsByTagName("object")[0].type = "application/x-test";
     document.getElementsByTagName("use")[0].setAttributeNS("http://www.w3.org/1999/xlink", "href", location.href + "#a");
-  } else if (frameLoadCount == 2) {
-    isnot(SpecialPowers.wrap(window.frame1).location.href.indexOf('chrome://'),
-          0, 'plugin shouldnt be able to cause navigation to chrome URLs');
-    SimpleTest.finish();
+
+    // wait two seconds and verify that frame navigation did not succeed
+    setTimeout(frameNavBlocked, 2000);
+    return;
   }
+  // we should never get here, but just in case, make sure the test fails in that case.
+  ok(false, "onload() event should not fire for blocked navigation");
+  SimpleTest.finish();
 }
+
 </script>
 
 <!-- Note that <svg:use> ends up creating an anonymous subtree, which means that the plugin
