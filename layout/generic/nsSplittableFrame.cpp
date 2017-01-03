@@ -207,7 +207,7 @@ nsSplittableFrame::RemoveFromFlow(nsIFrame* aFrame)
 }
 
 nscoord
-nsSplittableFrame::GetConsumedBSize() const
+nsSplittableFrame::ConsumedBSize(WritingMode aWM) const
 {
   nscoord height = 0;
   for (nsIFrame* prev = GetPrevInFlow(); prev; prev = prev->GetPrevInFlow()) {
@@ -226,7 +226,7 @@ nsSplittableFrame::GetEffectiveComputedBSize(const ReflowInput& aReflowInput,
   }
 
   if (aConsumedBSize == NS_INTRINSICSIZE) {
-    aConsumedBSize = GetConsumedBSize();
+    aConsumedBSize = ConsumedBSize(aReflowInput.GetWritingMode());
   }
 
   bSize -= aConsumedBSize;
