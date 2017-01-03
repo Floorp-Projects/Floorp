@@ -213,9 +213,10 @@ protected:
   void Trace(JSTracer* aTracer);
 
   // For use from subclasses that want to be traced for a bit then possibly
-  // switch to HoldJSObjects.  If we have more than one owner, this will
-  // HoldJSObjects; otherwise it will just forget all our JS references.
-  void HoldJSObjectsIfMoreThanOneOwner();
+  // switch to HoldJSObjects and do other slow JS-related init work we might do.
+  // If we have more than one owner, this will HoldJSObjects and do said slow
+  // init work; otherwise it will just forget all our JS references.
+  void FinishSlowJSInitIfMoreThanOneOwner(JSContext* aCx);
 
   // Struct used as a way to force a CallbackObject constructor to not call
   // HoldJSObjects. We're putting it here so that CallbackObject subclasses will
@@ -227,21 +228,14 @@ protected:
   };
 
   // Just like the public version without the FastCallbackConstructor argument,
-  // except for not calling HoldJSObjects.  If you use this, you MUST ensure
-  // that the object is traced until the HoldJSObjects happens!
-  CallbackObject(JSContext* aCx, JS::Handle<JSObject*> aCallback,
-                 nsIGlobalObject* aIncumbentGlobal,
+  // except for not calling HoldJSObjects and not capturing async stacks (on the
+  // assumption that we will do that last whenever we decide to actually
+  // HoldJSObjects; see FinishSlowJSInitIfMoreThanOneOwner).  If you use this,
+  // you MUST ensure that the object is traced until the HoldJSObjects happens!
+  CallbackObject(JS::Handle<JSObject*> aCallback,
                  const FastCallbackConstructor&)
   {
-    if (aCx && JS::ContextOptionsRef(aCx).asyncStack()) {
-      JS::RootedObject stack(aCx);
-      if (!JS::CaptureCurrentStack(aCx, &stack)) {
-        JS_ClearPendingException(aCx);
-      }
-      InitNoHold(aCallback, stack, aIncumbentGlobal);
-    } else {
-      InitNoHold(aCallback, nullptr, aIncumbentGlobal);
-    }
+    InitNoHold(aCallback, nullptr, nullptr);
   }
 
   // mCallback is not unwrapped, so it can be a cross-compartment-wrapper.
@@ -545,11 +539,12 @@ ImplCycleCollectionUnlink(CallbackObjectHolder<T, U>& aField)
 // it ensures that the callback is traced, and that if something is holding onto
 // the callback when we're done with it HoldJSObjects is called.
 template<typename T>
-class RootedCallback : public JS::Rooted<T>
+class MOZ_RAII RootedCallback : public JS::Rooted<T>
 {
 public:
   explicit RootedCallback(JSContext* cx)
     : JS::Rooted<T>(cx)
+    , mCx(cx)
   {}
 
   // We need a way to make assignment from pointers (how we're normally used)
@@ -576,11 +571,11 @@ public:
   ~RootedCallback()
   {
     // Ensure that our callback starts holding on to its own JS objects as
-    // needed.  Having to null-check here when T is OwningNonNull is a bit
-    // silly, but it's simpler than creating two separate RootedCallback
-    // instantiations for OwningNonNull and RefPtr.
+    // needed.  We really do need to check that things are initialized even when
+    // T is OwningNonNull, because we might be running before the OwningNonNull
+    // ever got assigned to!
     if (IsInitialized(this->get())) {
-      this->get()->HoldJSObjectsIfMoreThanOneOwner();
+      this->get()->FinishSlowJSInitIfMoreThanOneOwner(mCx);
     }
   }
 
@@ -599,6 +594,8 @@ private:
   {
     return aOwningNonNull.isInitialized();
   }
+
+  JSContext* mCx;
 };
 
 } // namespace dom

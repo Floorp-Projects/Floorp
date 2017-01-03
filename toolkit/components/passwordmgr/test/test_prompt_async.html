@@ -39,7 +39,7 @@
             windowsOpen : 0,
             windowsRegistered : 0,
 
-            QueryInterface : function(iid) {
+            QueryInterface(iid) {
                 const interfaces = [Ci.nsIObserver, Ci.nsISupports];
 
                 if (!interfaces.some( function(v) { return iid.equals(v); } ))
@@ -47,7 +47,7 @@
                 return this;
             },
 
-            observe: function(subject, topic, data) {
+            observe(subject, topic, data) {
                 if (topic === "domwindowopened") {
                     this.windowsOpen++;
                     this.windowsRegistered++;
@@ -59,14 +59,14 @@
                 }
             },
 
-            shutdown: function() {
+            shutdown() {
                 var observerService = SpecialPowers.Cc["@mozilla.org/observer-service;1"]
                                                .getService(Ci.nsIObserverService);
                 observerService.removeObserver(this, "domwindowopened");
                 observerService.removeObserver(this, "domwindowclosed");
             },
 
-            reset: function() {
+            reset() {
                 this.windowsOpen = 0;
                 this.windowsRegistered = 0;
             }
@@ -130,7 +130,7 @@
         }
 
 	var resolveCallback = SpecialPowers.wrapCallbackObject({
-	QueryInterface : function(iid) {
+	QueryInterface(iid) {
 	const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
         if (!interfaces.some( function(v) { return iid.equals(v); } ))
@@ -138,7 +138,7 @@
 	  return this;
 	},
 
-	onProxyAvailable : function(req, uri, pi, status) {
+	onProxyAvailable(req, uri, pi, status) {
           initLogins(pi);
           doTest(testNum);
 	}

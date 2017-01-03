@@ -22,28 +22,28 @@ var annoObserver = {
   PAGE_lastSet_URI: "",
   PAGE_lastSet_AnnoName: "",
 
-  onPageAnnotationSet: function(aURI, aName) {
+  onPageAnnotationSet(aURI, aName) {
     this.PAGE_lastSet_URI = aURI.spec;
     this.PAGE_lastSet_AnnoName = aName;
   },
 
   ITEM_lastSet_Id: -1,
   ITEM_lastSet_AnnoName: "",
-  onItemAnnotationSet: function(aItemId, aName) {
+  onItemAnnotationSet(aItemId, aName) {
     this.ITEM_lastSet_Id = aItemId;
     this.ITEM_lastSet_AnnoName = aName;
   },
 
   PAGE_lastRemoved_URI: "",
   PAGE_lastRemoved_AnnoName: "",
-  onPageAnnotationRemoved: function(aURI, aName) {
+  onPageAnnotationRemoved(aURI, aName) {
     this.PAGE_lastRemoved_URI = aURI.spec;
     this.PAGE_lastRemoved_AnnoName = aName;
   },
 
   ITEM_lastRemoved_Id: -1,
   ITEM_lastRemoved_AnnoName: "",
-  onItemAnnotationRemoved: function(aItemId, aName) {
+  onItemAnnotationRemoved(aItemId, aName) {
     this.ITEM_lastRemoved_Id = aItemId;
     this.ITEM_lastRemoved_AnnoName = aName;
   }

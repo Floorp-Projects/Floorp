@@ -104,12 +104,12 @@ function getTaskId(stackFrame) {
 
 // This is a shared helper for mochitest-chrome and mochitest-browser.
 var _mochitestAssert = {
-  ok: function(actual) {
+  ok(actual) {
     let stack = Components.stack.caller;
     ok(actual, "[" + stack.name + " : " + stack.lineNumber + "] " + actual +
                " == true");
   },
-  equal: function(actual, expected) {
+  equal(actual, expected) {
     let stack = Components.stack.caller;
     is(actual, expected, "[" + stack.name + " : " + stack.lineNumber + "] " +
                actual + " == " + expected);

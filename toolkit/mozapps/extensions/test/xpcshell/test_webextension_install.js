@@ -111,12 +111,12 @@ add_task(function* test_multiple_no_id_extensions() {
   };
 
   let extension1 = ExtensionTestUtils.loadExtension({
-    manifest: manifest,
+    manifest,
     useAddonManager: "temporary",
   });
 
   let extension2 = ExtensionTestUtils.loadExtension({
-    manifest: manifest,
+    manifest,
     useAddonManager: "temporary",
   });
 
@@ -155,7 +155,7 @@ add_task(function* test_bss_id() {
   equal(addon, null, "Add-on is not installed");
 
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: manifest,
+    manifest,
     useAddonManager: "temporary",
   });
   yield extension.startup();
@@ -192,7 +192,7 @@ add_task(function* test_two_ids() {
   }
 
   let extension = ExtensionTestUtils.loadExtension({
-    manifest: manifest,
+    manifest,
     useAddonManager: "temporary",
   });
   yield extension.startup();

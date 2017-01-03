@@ -203,20 +203,20 @@ function promiseWaitForVisit(aUrl)
 
   PlacesUtils.history.addObserver({
     QueryInterface: XPCOMUtils.generateQI([Ci.nsINavHistoryObserver]),
-    onBeginUpdateBatch: function() {},
-    onEndUpdateBatch: function() {},
-    onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID,
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
                       aTransitionType, aGUID, aHidden) {
       if (aURI.equals(uri)) {
         PlacesUtils.history.removeObserver(this);
         deferred.resolve([aTime, aTransitionType]);
       }
     },
-    onTitleChanged: function() {},
-    onDeleteURI: function() {},
-    onClearHistory: function() {},
-    onPageChanged: function() {},
-    onDeleteVisits: function() {},
+    onTitleChanged() {},
+    onDeleteURI() {},
+    onClearHistory() {},
+    onPageChanged() {},
+    onDeleteVisits() {},
   }, false);
 
   return deferred.promise;
@@ -342,7 +342,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     // Temporarily register a view that will get notified when the download we
     // are controlling becomes visible in the list of downloads.
     aList.addView({
-      onDownloadAdded: function(aDownload) {
+      onDownloadAdded(aDownload) {
         aList.removeView(this).then(null, do_report_unexpected_exception);
 
         // Remove the download to keep the list empty for the next test.  This
@@ -395,7 +395,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
     // Temporarily register a view that will get notified when the download we
     // are controlling becomes visible in the list of downloads.
     aList.addView({
-      onDownloadAdded: function(aDownload) {
+      onDownloadAdded(aDownload) {
         aList.removeView(this).then(null, do_report_unexpected_exception);
 
         // Remove the download to keep the list empty for the next test.  This
@@ -417,7 +417,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
     channel.asyncOpen2({
       contentListener: null,
 
-      onStartRequest: function(aRequest, aContext)
+      onStartRequest(aRequest, aContext)
       {
         let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
         this.contentListener = gExternalHelperAppService.doContent(
@@ -425,12 +425,12 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
         this.contentListener.onStartRequest(aRequest, aContext);
       },
 
-      onStopRequest: function(aRequest, aContext, aStatusCode)
+      onStopRequest(aRequest, aContext, aStatusCode)
       {
         this.contentListener.onStopRequest(aRequest, aContext, aStatusCode);
       },
 
-      onDataAvailable: function(aRequest, aContext, aInputStream, aOffset,
+      onDataAvailable(aRequest, aContext, aInputStream, aOffset,
                                 aCount)
       {
         this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
@@ -577,10 +577,10 @@ function startFakeServer()
 {
   let serverSocket = new ServerSocket(-1, true, -1);
   serverSocket.asyncListen({
-    onSocketAccepted: function(aServ, aTransport) {
+    onSocketAccepted(aServ, aTransport) {
       aTransport.close(Cr.NS_BINDING_ABORTED);
     },
-    onStopListening: function() { },
+    onStopListening() { },
   });
   return serverSocket;
 }

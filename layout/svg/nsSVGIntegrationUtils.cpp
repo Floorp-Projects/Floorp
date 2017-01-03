@@ -750,9 +750,9 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     return DrawResult::SUCCESS;
   }
 
-  if (maskUsage.opacity == 0.0f) {
-    return DrawResult::SUCCESS;
-  }
+  // XXX Bug 1323912.
+  MOZ_ASSERT(maskUsage.opacity == 1.0,
+             "nsSVGIntegrationUtils::PaintMask can not handle opacity now.");
 
   gfxContext& ctx = aParams.ctx;
   nsIFrame* firstFrame =
@@ -761,10 +761,7 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     nsSVGEffects::GetEffectProperties(firstFrame);
 
   DrawResult result = DrawResult::SUCCESS;
-  nsPoint offsetToBoundingBox;
-  nsPoint offsetToUserSpace;
-  gfxContextMatrixAutoSaveRestore matSR;
-    RefPtr<DrawTarget> maskTarget = ctx.GetDrawTarget();
+  RefPtr<DrawTarget> maskTarget = ctx.GetDrawTarget();
 
   if (maskUsage.shouldGenerateMaskLayer &&
       maskUsage.shouldGenerateClipMaskLayer) {
@@ -778,19 +775,25 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
                                                      SurfaceFormat::A8);
   }
 
+  gfxContextMatrixAutoSaveRestore matSR;
+  nsPoint offsetToBoundingBox;
+  nsPoint offsetToUserSpace;
+
+  // Paint clip-path-basic-shape onto ctx
+  gfxContextAutoSaveRestore basicShapeSR;
   if (maskUsage.shouldApplyBasicShape) {
     matSR.SetContext(&ctx);
 
     SetupContextMatrix(firstFrame, aParams, offsetToBoundingBox,
                        offsetToUserSpace);
 
+    basicShapeSR.SetContext(&ctx);
     nsCSSClipPathInstance::ApplyBasicShapeClip(ctx, frame);
     if (!maskUsage.shouldGenerateMaskLayer) {
       // Only have basic-shape clip-path effect. Fill clipped region by
       // opaque white.
-      ctx.SetColor(Color(0.0, 0.0, 0.0, 1.0));
+      ctx.SetColor(Color(1.0, 1.0, 1.0, 1.0));
       ctx.Fill();
-      ctx.PopClip();
 
       return result;
     }
@@ -804,24 +807,13 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     SetupContextMatrix(frame, aParams, offsetToBoundingBox,
                        offsetToUserSpace);
     nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
-    // XXX Bug 1323912.
-    MOZ_ASSERT(maskUsage.opacity == 1.0,
-               "nsSVGIntegrationUtils::PaintMask can not handle opacity now.");
+
     result = PaintMaskSurface(aParams, maskTarget, 1.0,
                               firstFrame->StyleContext(), maskFrames,
                               ctx.CurrentMatrix(), offsetToUserSpace);
     if (result != DrawResult::SUCCESS) {
-      if (maskUsage.shouldApplyBasicShape) {
-        ctx.PopClip();
-      }
-
       return result;
     }
-  }
-
-  if (maskUsage.shouldApplyBasicShape) {
-    ctx.PopClip();
-    return result;
   }
 
   // Paint clip-path onto ctx.
@@ -1027,7 +1019,20 @@ nsSVGIntegrationUtils::PaintMaskAndClipPath(const PaintFramesParams& aParams)
       nsLayoutUtils::RectToGfxRect(aParams.borderArea,
                                    frame->PresContext()->AppUnitsPerDevPixel());
     context.Rectangle(drawingRect, true);
-    context.SetColor(Color(0.0, 1.0, 0.0, 1.0));
+    Color overlayColor(0.0f, 0.0f, 0.0f, 0.8f);
+    if (maskUsage.shouldGenerateMaskLayer) {
+      overlayColor.r = 1.0f; // red represents css positioned mask.
+    }
+    if (maskUsage.shouldApplyClipPath ||
+        maskUsage.shouldGenerateClipMaskLayer) {
+      overlayColor.g = 1.0f; // green represents clip-path:<clip-source>.
+    }
+    if (maskUsage.shouldApplyBasicShape) {
+      overlayColor.b = 1.0f; // blue represents
+                             // clip-path:<basic-shape>||<geometry-box>.
+    }
+
+    context.SetColor(overlayColor);
     context.Fill();
   }
 

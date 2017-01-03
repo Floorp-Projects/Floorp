@@ -68,7 +68,7 @@ function preparePlugin(browser, pluginFallbackState) {
     // Somehow, I'm able to get away with overriding the getter for
     // this XPCOM object. Probably because I've got chrome privledges.
     Object.defineProperty(plugin, "pluginFallbackType", {
-      get: function() {
+      get() {
         return contentPluginFallbackState;
       }
     });
@@ -162,7 +162,7 @@ add_task(function* testChromeHearsPluginCrashFirst() {
     // actually crashing the plugin again. We hack around this by overriding
     // the pluginFallbackType again.
     Object.defineProperty(plugin, "pluginFallbackType", {
-      get: function() {
+      get() {
         return Ci.nsIObjectLoadingContent.PLUGIN_CRASHED;
       },
     });

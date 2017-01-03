@@ -25,7 +25,7 @@ var gStart = 0;
 var gLast = 0;
 
 var HTTPObserver = {
-  observeActivity: function(aChannel, aType, aSubtype, aTimestamp, aSizeData,
+  observeActivity(aChannel, aType, aSubtype, aTimestamp, aSizeData,
                             aStringData) {
     aChannel.QueryInterface(Ci.nsIChannel);
 
@@ -90,14 +90,14 @@ function run_update_tests(callback) {
 
     AddonUpdateChecker.checkForUpdates("addon1@tests.mozilla.org",
                                        null, url, {
-      onUpdateCheckComplete: function(updates) {
+      onUpdateCheckComplete(updates) {
         is(updates.length, 1, "Should be the right number of results");
         is(SUCCESS, expectedStatus, message);
         info("Update test ran in " + (Date.now() - gLast) + "ms");
         run_next_update_test();
       },
 
-      onUpdateCheckError: function(status) {
+      onUpdateCheckError(status) {
         is(status, expectedStatus, message);
         info("Update test ran in " + (Date.now() - gLast) + "ms");
         run_next_update_test();

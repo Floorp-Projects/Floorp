@@ -24,7 +24,7 @@ add_task(function *() {
     let test = tests[index];
 
     yield ContentTask.spawn(gBrowser.selectedBrowser,
-                            { element: test.element, type: test.type, index: index },
+                            { element: test.element, type: test.type, index },
                             function* (arg) {
       let element = content.document.createElement(arg.element);
       element.id = "element" + arg.index;

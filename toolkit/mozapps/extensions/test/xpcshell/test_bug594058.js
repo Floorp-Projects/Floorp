@@ -20,11 +20,11 @@ var gCachePurged = false;
 
 // Override the window watcher
 var WindowWatcher = {
-  openWindow: function(parent, url, name, features, args) {
+  openWindow(parent, url, name, features, args) {
     do_check_false(gCachePurged);
   },
 
-  QueryInterface: function(iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsIWindowWatcher)
      || iid.equals(Ci.nsISupports))
       return this;
@@ -45,7 +45,7 @@ function run_test() {
   let obs = AM_Cc["@mozilla.org/observer-service;1"].
     getService(AM_Ci.nsIObserverService);
   obs.addObserver({
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       gCachePurged = true;
     }
   }, "startupcache-invalidate", false);

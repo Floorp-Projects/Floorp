@@ -16,7 +16,7 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
 });
 
 var gContentPane = {
-  init: function()
+  init()
   {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -99,7 +99,7 @@ var gContentPane = {
    * Utility function to enable/disable the button specified by aButtonID based
    * on the value of the Boolean preference specified by aPreferenceID.
    */
-  updateButtons: function(aButtonID, aPreferenceID)
+  updateButtons(aButtonID, aPreferenceID)
   {
     var button = document.getElementById(aButtonID);
     var preference = document.getElementById(aPreferenceID);
@@ -145,7 +145,7 @@ var gContentPane = {
    * Displays the popup exceptions dialog where specific site popup preferences
    * can be set.
    */
-  showPopupExceptions: function()
+  showPopupExceptions()
   {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible: false, sessionVisible: false, allowVisible: true,
@@ -162,7 +162,7 @@ var gContentPane = {
   /**
    * Populates the default font list in UI.
    */
-  _rebuildFonts: function()
+  _rebuildFonts()
   {
     var preferences = document.getElementById("contentPreferences");
     // Ensure preferences are "visible" to ensure bindings work.
@@ -177,7 +177,7 @@ var gContentPane = {
   /**
    *
    */
-  _selectDefaultLanguageGroup: function(aLanguageGroup, aIsSerif)
+  _selectDefaultLanguageGroup(aLanguageGroup, aIsSerif)
   {
     const kFontNameFmtSerif         = "font.name.serif.%LANG%";
     const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
@@ -228,7 +228,7 @@ var gContentPane = {
    * Returns the type of the current default font for the language denoted by
    * aLanguageGroup.
    */
-  _readDefaultFontTypeForLanguage: function(aLanguageGroup)
+  _readDefaultFontTypeForLanguage(aLanguageGroup)
   {
     const kDefaultFontType = "font.default.%LANG%";
     var defaultFontTypePref = kDefaultFontType.replace(/%LANG%/, aLanguageGroup);
@@ -248,7 +248,7 @@ var gContentPane = {
    * Displays the fonts dialog, where web page font names and sizes can be
    * configured.
    */
-  configureFonts: function()
+  configureFonts()
   {
     gSubDialog.open("chrome://browser/content/preferences/fonts.xul", "resizable=no");
   },
@@ -257,7 +257,7 @@ var gContentPane = {
    * Displays the colors dialog, where default web page/link/etc. colors can be
    * configured.
    */
-  configureColors: function()
+  configureColors()
   {
     gSubDialog.open("chrome://browser/content/preferences/colors.xul", "resizable=no");
   },
@@ -267,7 +267,7 @@ var gContentPane = {
   /**
    * Shows a dialog in which the preferred language for web content may be set.
    */
-  showLanguages: function()
+  showLanguages()
   {
     gSubDialog.open("chrome://browser/content/preferences/languages.xul");
   },
@@ -276,18 +276,18 @@ var gContentPane = {
    * Displays the translation exceptions dialog where specific site and language
    * translation preferences can be set.
    */
-  showTranslationExceptions: function()
+  showTranslationExceptions()
   {
     gSubDialog.open("chrome://browser/content/preferences/translation.xul");
   },
 
-  openTranslationProviderAttribution: function()
+  openTranslationProviderAttribution()
   {
     Components.utils.import("resource:///modules/translation/Translation.jsm");
     Translation.openProviderAttribution();
   },
 
-  toggleDoNotDisturbNotifications: function(event)
+  toggleDoNotDisturbNotifications(event)
   {
     AlertsServiceDND.manualDoNotDisturb = event.target.checked;
   },

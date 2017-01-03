@@ -292,6 +292,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void AddIceCandidate(const std::string& candidate, const std::string& mid,
                        uint32_t aMLine);
 
+  // Handle notifications of network online/offline events.
+  void UpdateNetworkState(bool online);
+
   // Handle complete media pipelines.
   nsresult UpdateMediaPipelines(const JsepSession& session);
 
@@ -491,6 +494,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void AddIceCandidate_s(const std::string& aCandidate, const std::string& aMid,
                          uint32_t aMLine);
 
+  void UpdateNetworkState_s(bool online);
 
   // ICE events
   void IceGatheringStateChange_s(NrIceCtx* ctx,

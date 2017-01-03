@@ -13,12 +13,12 @@ function getPanelBrowser()
 }
 
 var panelProgressListener = {
-    onProgressChange : function(aWebProgress, aRequest,
+    onProgressChange(aWebProgress, aRequest,
                                 aCurSelfProgress, aMaxSelfProgress,
                                 aCurTotalProgress, aMaxTotalProgress) {
     },
 
-    onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
     {
         if (!aRequest)
           return;
@@ -38,17 +38,17 @@ var panelProgressListener = {
     }
     ,
 
-    onLocationChange : function(aWebProgress, aRequest, aLocation, aFlags) {
+    onLocationChange(aWebProgress, aRequest, aLocation, aFlags) {
         UpdateBackForwardCommands(getPanelBrowser().webNavigation);
     },
 
-    onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
+    onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
     },
 
-    onSecurityChange : function(aWebProgress, aRequest, aState) {
+    onSecurityChange(aWebProgress, aRequest, aState) {
     },
 
-    QueryInterface : function(aIID)
+    QueryInterface(aIID)
     {
         if (aIID.equals(Ci.nsIWebProgressListener) ||
             aIID.equals(Ci.nsISupportsWeakReference) ||

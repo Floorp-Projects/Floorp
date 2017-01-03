@@ -43,7 +43,7 @@ var Microformats; // jshint ignore:line
 
     modules.Parser.prototype = {
 
-        init: function() {
+        init() {
             this.rootNode = null;
             this.document = null;
             this.options = {
@@ -67,7 +67,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} options
          * @return {Object}
          */
-        get: function(options) {
+        get(options) {
             var out = this.formatEmpty(),
                 data = [],
                 rels;
@@ -126,7 +126,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} options
          * @return {Object}
          */
-        getParent: function(node, options) {
+        getParent(node, options) {
             this.init();
             options = (options) ? options : {};
 
@@ -144,7 +144,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} rootNode
          * @return {Int}
          */
-        count: function( options ) {
+        count( options ) {
             var out = {},
                 items,
                 classItems,
@@ -194,7 +194,7 @@ var Microformats; // jshint ignore:line
          * @param  {Objecte} options
          * @return {Boolean}
          */
-        isMicroformat: function( node, options ) {
+        isMicroformat( node, options ) {
             var classes,
                 i;
 
@@ -227,7 +227,7 @@ var Microformats; // jshint ignore:line
          * @param  {Objecte} options
          * @return {Boolean}
          */
-        hasMicroformats: function( node, options ) {
+        hasMicroformats( node, options ) {
             var items,
                 i;
 
@@ -258,7 +258,7 @@ var Microformats; // jshint ignore:line
          *
          * @param  {Array} maps
          */
-        add: function( maps ) {
+        add( maps ) {
             maps.forEach(function(map) {
                 if (map && map.root && map.name && map.properties) {
                 modules.maps[map.name] = JSON.parse(JSON.stringify(map));
@@ -275,7 +275,7 @@ var Microformats; // jshint ignore:line
          * @param  {Int} recursive
          * @return {Object}
          */
-        getParentTreeWalk: function(node, options, recursive) {
+        getParentTreeWalk(node, options, recursive) {
             options = (options) ? options : {};
 
             // recursive calls
@@ -303,7 +303,7 @@ var Microformats; // jshint ignore:line
          *
          * @param  {Object} options
          */
-        getDOMContext: function( options ) {
+        getDOMContext( options ) {
             var nodes = modules.domUtils.getDOMContext( options );
             this.rootNode = nodes.rootNode;
             this.document = nodes.document;
@@ -316,7 +316,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} options
          * @return {Boolean}
          */
-        prepareDOM: function( options ) {
+        prepareDOM( options ) {
             var baseTag,
                 href;
 
@@ -370,7 +370,7 @@ var Microformats; // jshint ignore:line
          *
          *   @return {Object}
          */
-        formatError: function() {
+        formatError() {
             var out = this.formatEmpty();
             out.errors = this.errors;
             return out;
@@ -382,7 +382,7 @@ var Microformats; // jshint ignore:line
          *
          *   @return {Object}
          */
-        formatEmpty: function() {
+        formatEmpty() {
             return {
                 'items': [],
                 'rels': {},
@@ -392,7 +392,7 @@ var Microformats; // jshint ignore:line
 
 
         // find microformats of a given type and return node structures
-        findFilterNodes: function(rootNode, filters) {
+        findFilterNodes(rootNode, filters) {
             if (modules.utils.isString(filters)) {
                 filters = [filters];
             }
@@ -438,7 +438,7 @@ var Microformats; // jshint ignore:line
          * @param  {Int} count
          * @param  {Object}
          */
-        appendCount: function(name, count, out) {
+        appendCount(name, count, out) {
             if (out[name]) {
                 out[name] = out[name] + count;
             } else {
@@ -454,7 +454,7 @@ var Microformats; // jshint ignore:line
          * @param  {Array} filters
          * @return {Boolean}
          */
-        shouldInclude: function(uf, filters) {
+        shouldInclude(uf, filters) {
             var i;
 
             if (modules.utils.isArray(filters) && filters.length > 0) {
@@ -477,7 +477,7 @@ var Microformats; // jshint ignore:line
          * @param  {Boolean} includeRoot
          * @return {Array}
          */
-        findRootNodes: function(rootNode, includeRoot) {
+        findRootNodes(rootNode, includeRoot) {
             var arr = null,
                 out = [],
                 classList = [],
@@ -538,7 +538,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {Array}
          */
-        walkRoot: function(node) {
+        walkRoot(node) {
             var context = this,
                 children = [],
                 child,
@@ -577,7 +577,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {Array}
          */
-        walkTree: function(node) {
+        walkTree(node) {
             var classes,
                 out = [],
                 obj,
@@ -612,7 +612,7 @@ var Microformats; // jshint ignore:line
          * @param  {Int} rootID
          * @param  {Object} parentClasses
          */
-        walkChildren: function(node, out, ufName, rootID, parentClasses) {
+        walkChildren(node, out, ufName, rootID, parentClasses) {
             var context = this,
                 children = [],
                 rootItem,
@@ -777,7 +777,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} uf
          * @return {String || Object}
          */
-        getValue: function(node, className, uf) {
+        getValue(node, className, uf) {
             var value = '';
 
             if (modules.utils.startWith(className, 'p-')) {
@@ -806,7 +806,7 @@ var Microformats; // jshint ignore:line
          * @param  {Boolean} valueParse
          * @return {String}
          */
-        getPValue: function(node, valueParse) {
+        getPValue(node, valueParse) {
             var out = '';
             if (valueParse) {
                 out = this.getValueClass(node, 'p');
@@ -846,7 +846,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {Object}
          */
-        getEValue: function(node) {
+        getEValue(node) {
 
             var out = {value: '', html: ''};
 
@@ -867,7 +867,7 @@ var Microformats; // jshint ignore:line
          * @param  {Boolean} valueParse
          * @return {String}
          */
-        getUValue: function(node, valueParse) {
+        getUValue(node, valueParse) {
             var out = '';
             if (valueParse) {
                 out = this.getValueClass(node, 'u');
@@ -919,7 +919,7 @@ var Microformats; // jshint ignore:line
          * @param  {Boolean} valueParse
          * @return {String}
          */
-        getDTValue: function(node, className, uf, valueParse) {
+        getDTValue(node, className, uf, valueParse) {
             var out = '';
 
             if (valueParse) {
@@ -974,7 +974,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} id
          * @param  {String} propertyName
          */
-        appendRootID: function(node, id, propertyName) {
+        appendRootID(node, id, propertyName) {
             if (this.hasRootID(node, id, propertyName) === false) {
                 var rootids = [];
                 if (modules.domUtils.hasAttribute(node, 'rootids')) {
@@ -994,7 +994,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} propertyName
          * @return {Boolean}
          */
-        hasRootID: function(node, id, propertyName) {
+        hasRootID(node, id, propertyName) {
             var rootids = [];
             if (!modules.domUtils.hasAttribute(node, 'rootids')) {
                 return false;
@@ -1012,7 +1012,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} propertyName
          * @return {String || null}
          */
-        getValueClass: function(node, propertyType) {
+        getValueClass(node, propertyType) {
             var context = this,
                 children = [],
                 out = [],
@@ -1068,7 +1068,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        getValueTitle: function(node) {
+        getValueTitle(node) {
             var out = [],
                 items,
                 i,
@@ -1093,7 +1093,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {Boolean}
          */
-        hasHClass: function(node) {
+        hasHClass(node) {
             var classes = this.getUfClassNames(node);
             if (classes.root && classes.root.length > 0) {
                 return true;
@@ -1109,7 +1109,7 @@ var Microformats; // jshint ignore:line
          * @param  {Array} ufNameArr
          * @return {Object}
          */
-        getUfClassNames: function(node, ufNameArr) {
+        getUfClassNames(node, ufNameArr) {
             var context = this,
                 out = {
                     'root': [],
@@ -1258,7 +1258,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} name
          * @return {Object || null}
          */
-        getMapping: function(name) {
+        getMapping(name) {
             var key;
             for (key in modules.maps) {
                 if (modules.maps[key].root === name || key === name) {
@@ -1275,7 +1275,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} name
          * @return {String || null}
          */
-        getV2RootName: function(name) {
+        getV2RootName(name) {
             var key;
             for (key in modules.maps) {
                 if (modules.maps[key].root === name) {
@@ -1293,7 +1293,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} propertyVersion
          * @return {Boolean}
          */
-        isAllowedPropertyVersion: function(typeVersion, propertyVersion) {
+        isAllowedPropertyVersion(typeVersion, propertyVersion) {
             if (this.options.overlappingVersions === true) {
                 return true;
             }
@@ -1308,7 +1308,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} value
          * @return {Object}
          */
-        createUfObject: function(names, typeVersion, value) {
+        createUfObject(names, typeVersion, value) {
             var out = {};
 
             // is more than just whitespace
@@ -1337,7 +1337,7 @@ var Microformats; // jshint ignore:line
          *
          * @param  {Object} microformat
          */
-        cleanUfObject: function( microformat ) {
+        cleanUfObject( microformat ) {
             delete microformat.times;
             delete microformat.dates;
             delete microformat.typeVersion;
@@ -1353,7 +1353,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {String}
          */
-        removePropPrefix: function(text) {
+        removePropPrefix(text) {
             var i;
 
             i = this.propertyPrefixes.length;
@@ -1374,7 +1374,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attrName
          * @param  {String} baseUrl
          */
-        expandURLs: function(node, attrName, baseUrl) {
+        expandURLs(node, attrName, baseUrl) {
             var i,
                 nodes,
                 attr;
@@ -1403,7 +1403,7 @@ var Microformats; // jshint ignore:line
          *
          * @param  {Object} options
          */
-        mergeOptions: function(options) {
+        mergeOptions(options) {
             var key;
             for (key in options) {
                 if (options.hasOwnProperty(key)) {
@@ -1418,7 +1418,7 @@ var Microformats; // jshint ignore:line
          *
          * @param  {DOM Node} rootNode
          */
-        removeRootIds: function(rootNode) {
+        removeRootIds(rootNode) {
             var arr,
                 i;
 
@@ -1435,7 +1435,7 @@ var Microformats; // jshint ignore:line
          *
          * @param  {DOM Node} rootNode
          */
-        clearUpDom: function(rootNode) {
+        clearUpDom(rootNode) {
             if (this.removeIncludes) {
                 this.removeIncludes(rootNode);
             }
@@ -1751,15 +1751,15 @@ var Microformats; // jshint ignore:line
             if (uf.value && !uf.altValue) {
                 // first p-name of the h-* child
                 if (modules.utils.startWith(parentPropertyName, 'p-') && propertyName === 'p-name') {
-                    uf.altValue = {name: propertyName, value: value};
+                    uf.altValue = {name: propertyName, value};
                 }
                 // if it's an e-* property element
                 if (modules.utils.startWith(parentPropertyName, 'e-') && modules.utils.startWith(propertyName, 'e-')) {
-                    uf.altValue = {name: propertyName, value: value};
+                    uf.altValue = {name: propertyName, value};
                 }
                 // if it's an u-* property element
                 if (modules.utils.startWith(parentPropertyName, 'u-') && propertyName === 'u-url') {
-                    uf.altValue = {name: propertyName, value: value};
+                    uf.altValue = {name: propertyName, value};
                 }
             }
             return uf;
@@ -2205,7 +2205,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} obj
          * @return {Boolean}
          */
-        isString: function( obj ) {
+        isString( obj ) {
             return typeof( obj ) === 'string';
         },
 
@@ -2215,7 +2215,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} obj
          * @return {Boolean}
          */
-        isNumber: function( obj ) {
+        isNumber( obj ) {
             return !isNaN(parseFloat( obj )) && isFinite( obj );
         },
 
@@ -2226,7 +2226,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} obj
          * @return {Boolean}
          */
-        isArray: function( obj ) {
+        isArray( obj ) {
             return obj && !( obj.propertyIsEnumerable( 'length' ) ) && typeof obj === 'object' && typeof obj.length === 'number';
         },
 
@@ -2237,7 +2237,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} obj
          * @return {Boolean}
          */
-        isFunction: function(obj) {
+        isFunction(obj) {
             return !!(obj && obj.constructor && obj.call && obj.apply);
         },
 
@@ -2249,7 +2249,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} test
          * @return {Boolean}
          */
-        startWith: function( text, test ) {
+        startWith( text, test ) {
             return (text.indexOf(test) === 0);
         },
 
@@ -2260,7 +2260,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {String}
          */
-        trim: function( text ) {
+        trim( text ) {
             if (text && this.isString(text)) {
                 return (text.trim()) ? text.trim() : text.replace(/^\s+|\s+$/g, '');
             }
@@ -2276,7 +2276,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} character
          * @return {String}
          */
-        replaceCharAt: function( text, index, character ) {
+        replaceCharAt( text, index, character ) {
             if (text && text.length > index) {
                return text.substr(0, index) + character + text.substr(index + character.length);
             }
@@ -2290,7 +2290,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {String}
          */
-        trimWhitespace: function( text ) {
+        trimWhitespace( text ) {
             if (text && text.length) {
                 var i = text.length,
                     x = 0;
@@ -2325,7 +2325,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Boolean}
          */
-        isOnlyWhiteSpace: function( text ) {
+        isOnlyWhiteSpace( text ) {
             return !(/[^\t\n\r ]/.test( text ));
         },
 
@@ -2336,7 +2336,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Sring}
          */
-        collapseWhiteSpace: function( text ) {
+        collapseWhiteSpace( text ) {
             return text.replace(/[\t\n\r ]+/g, ' ');
         },
 
@@ -2347,7 +2347,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} obj
          * @return {Boolean}
          */
-        hasProperties: function( obj ) {
+        hasProperties( obj ) {
             var key;
             for (key in obj) {
                 if ( obj.hasOwnProperty( key ) ) {
@@ -2365,7 +2365,7 @@ var Microformats; // jshint ignore:line
          * @param  {Boolean} reverse
          * @return {Int}
          */
-        sortObjects: function(property, reverse) {
+        sortObjects(property, reverse) {
             reverse = (reverse) ? -1 : 1;
             return function(a, b) {
                 a = a[property];
@@ -2395,7 +2395,7 @@ var Microformats; // jshint ignore:line
          *
          * @return {Object || undefined}
          */
-        getDOMParser: function() {
+        getDOMParser() {
             if (typeof DOMParser === "undefined") {
                 try {
                     return Components.classes["@mozilla.org/xmlextras/domparser;1"]
@@ -2415,7 +2415,7 @@ var Microformats; // jshint ignore:line
          * @param  {Object} options
          * @return {DOM Node} node
          */
-        getDOMContext: function( options ) {
+        getDOMContext( options ) {
 
             // if a node is passed
             if (options.node) {
@@ -2465,7 +2465,7 @@ var Microformats; // jshint ignore:line
         * @param  {Dom Document}
         * @return {DOM Node} node
         */
-        getTopMostNode: function( node ) {
+        getTopMostNode( node ) {
             // var doc = this.ownerDocument(node);
             // if(doc && doc.nodeType && doc.nodeType === 9 && doc.documentElement){
             //  return doc.documentElement;
@@ -2481,7 +2481,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {Dom Document}
          */
-        ownerDocument: function(node) {
+        ownerDocument(node) {
             return node.ownerDocument;
         },
 
@@ -2492,7 +2492,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        textContent: function(node) {
+        textContent(node) {
             if (node.textContent) {
                 return node.textContent;
             } else if (node.innerText) {
@@ -2508,7 +2508,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        innerHTML: function(node) {
+        innerHTML(node) {
             return node.innerHTML;
         },
 
@@ -2520,7 +2520,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @return {Boolean}
          */
-        hasAttribute: function(node, attributeName) {
+        hasAttribute(node, attributeName) {
             return node.hasAttribute(attributeName);
         },
 
@@ -2533,7 +2533,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} value
          * @return {Boolean}
          */
-        hasAttributeValue: function(node, attributeName, value) {
+        hasAttributeValue(node, attributeName, value) {
             return (this.getAttributeList(node, attributeName).indexOf(value) > -1);
         },
 
@@ -2545,7 +2545,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @return {String || null}
          */
-        getAttribute: function(node, attributeName) {
+        getAttribute(node, attributeName) {
             return node.getAttribute(attributeName);
         },
 
@@ -2557,7 +2557,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @param  {String} attributeValue
          */
-        setAttribute: function(node, attributeName, attributeValue) {
+        setAttribute(node, attributeName, attributeValue) {
             node.setAttribute(attributeName, attributeValue);
         },
 
@@ -2568,7 +2568,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @param  {String} attributeName
          */
-        removeAttribute: function(node, attributeName) {
+        removeAttribute(node, attributeName) {
             node.removeAttribute(attributeName);
         },
 
@@ -2580,7 +2580,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} id
          * @return {DOM Node}
          */
-        getElementById: function(docNode, id) {
+        getElementById(docNode, id) {
             return docNode.querySelector( '#' + id );
         },
 
@@ -2592,7 +2592,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} selector
          * @return {DOM Node}
          */
-        querySelector: function(docNode, selector) {
+        querySelector(docNode, selector) {
             return docNode.querySelector( selector );
         },
 
@@ -2604,7 +2604,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @return {Array}
          */
-        getAttributeList: function(node, attributeName) {
+        getAttributeList(node, attributeName) {
             var out = [],
                 attList;
 
@@ -2627,7 +2627,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @return {NodeList}
          */
-        getNodesByAttribute: function(node, attributeName) {
+        getNodesByAttribute(node, attributeName) {
             var selector = '[' + attributeName + ']';
             return node.querySelectorAll(selector);
         },
@@ -2640,7 +2640,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @return {DOM NodeList}
          */
-        getNodesByAttributeValue: function(rootNode, name, value) {
+        getNodesByAttributeValue(rootNode, name, value) {
             var arr = [],
                 x = 0,
                 i,
@@ -2667,7 +2667,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} attributeName
          * @return {String || null}
          */
-        getAttrValFromTagList: function(node, tagNames, attributeName) {
+        getAttrValFromTagList(node, tagNames, attributeName) {
             var i = tagNames.length;
 
             while (i--) {
@@ -2689,7 +2689,7 @@ var Microformats; // jshint ignore:line
          * @param  {Array} tagNames
          * @return {DOM Node || null}
          */
-        getSingleDescendant: function(node) {
+        getSingleDescendant(node) {
             return this.getDescendant( node, null, false );
         },
 
@@ -2701,7 +2701,7 @@ var Microformats; // jshint ignore:line
          * @param  {Array} tagNames
          * @return {DOM Node || null}
          */
-        getSingleDescendantOfType: function(node, tagNames) {
+        getSingleDescendantOfType(node, tagNames) {
             return this.getDescendant( node, tagNames, true );
         },
 
@@ -2713,7 +2713,7 @@ var Microformats; // jshint ignore:line
          * @param  {Array} tagNames
          * @return {DOM Node || null}
          */
-        getDescendant: function( node, tagNames, onlyOfType ) {
+        getDescendant( node, tagNames, onlyOfType ) {
             var i = node.children.length,
                 countAll = 0,
                 countOfType = 0,
@@ -2750,7 +2750,7 @@ var Microformats; // jshint ignore:line
          * @param  {Array} tagNames
          * @return {Boolean}
          */
-        hasTagName: function(node, tagNames) {
+        hasTagName(node, tagNames) {
             var i = tagNames.length;
             while (i--) {
                 if (node.tagName.toLowerCase() === tagNames[i]) {
@@ -2768,7 +2768,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} childNode
          * @return {DOM Node}
          */
-        appendChild: function(node, childNode) {
+        appendChild(node, childNode) {
             return node.appendChild(childNode);
         },
 
@@ -2779,7 +2779,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} childNode
          * @return {DOM Node || null}
          */
-        removeChild: function(childNode) {
+        removeChild(childNode) {
             if (childNode.parentNode) {
                 return childNode.parentNode.removeChild(childNode);
             }
@@ -2793,7 +2793,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {DOM Node}
          */
-        clone: function(node) {
+        clone(node) {
             var newNode = node.cloneNode(true);
             newNode.removeAttribute('id');
             return newNode;
@@ -2806,7 +2806,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        getElementText: function( node ) {
+        getElementText( node ) {
             if (node && node.data) {
                 return node.data;
             }
@@ -2820,7 +2820,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {Array}
          */
-        getOrderedAttributes: function( node ) {
+        getOrderedAttributes( node ) {
             var nodeStr = node.outerHTML,
                 attrs = [];
 
@@ -2841,7 +2841,7 @@ var Microformats; // jshint ignore:line
          * @param  String} text
          * @return {String}
          */
-        decodeEntities: function( doc, text ) {
+        decodeEntities( doc, text ) {
             // return text;
             return doc.createTextNode( text ).nodeValue;
         },
@@ -2853,7 +2853,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Document} document
          * @return {DOM Document}
          */
-        cloneDocument: function( document ) {
+        cloneDocument( document ) {
             var newNode,
                 newDocument = null;
 
@@ -2872,7 +2872,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Document} document
          * @return {Boolean}
          */
-        canCloneDocument: function( document ) {
+        canCloneDocument( document ) {
             return (document && document.importNode && document.implementation && document.implementation.createHTMLDocument);
         },
 
@@ -2883,7 +2883,7 @@ var Microformats; // jshint ignore:line
          *   @param  {DOM Node} node
          *   @return {Int}
          */
-        getChildIndex: function(node) {
+        getChildIndex(node) {
             var parent = node.parentNode,
                 i = -1,
                 child;
@@ -2902,7 +2902,7 @@ var Microformats; // jshint ignore:line
          *   @param  {DOM Node} node
          *   @return {Array}
          */
-        getNodePath: function(node) {
+        getNodePath(node) {
             var parent = node.parentNode,
                 path = [],
                 index = this.getChildIndex(node);
@@ -2923,7 +2923,7 @@ var Microformats; // jshint ignore:line
          *   @param  {Array} path
          *   @return {DOM Node}
          */
-        getNodeByPath: function(document, path) {
+        getNodeByPath(document, path) {
             var node = document.documentElement,
                 i = 0,
                 index;
@@ -2940,7 +2940,7 @@ var Microformats; // jshint ignore:line
         *   @param  {DOM node} node
         *   @return {Array}
         */
-        getChildren: function( node ) {
+        getChildren( node ) {
             return node.children;
         },
 
@@ -2951,7 +2951,7 @@ var Microformats; // jshint ignore:line
         *   @param  {String} tagName
         *   @return {DOM node}
         */
-        createNode: function( tagName ) {
+        createNode( tagName ) {
             return this.document.createElement(tagName);
         },
 
@@ -2963,7 +2963,7 @@ var Microformats; // jshint ignore:line
         *   @param  {String} text
         *   @return {DOM node}
         */
-        createNodeWithText: function( tagName, text ) {
+        createNodeWithText( tagName, text ) {
             var node = this.document.createElement(tagName);
             node.innerHTML = text;
             return node;
@@ -2980,7 +2980,7 @@ var Microformats; // jshint ignore:line
         /**
          * creates DOM objects needed to resolve URLs
          */
-        init: function() {
+        init() {
             // this._domParser = new DOMParser();
             this._domParser = modules.domUtils.getDOMParser();
             // do not use a head tag it does not work with IE9
@@ -2998,7 +2998,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} baseUrl
          * @return {String}
          */
-        resolve: function(url, baseUrl) {
+        resolve(url, baseUrl) {
             // use modern URL web API where we can
             if (modules.utils.isString(url) && modules.utils.isString(baseUrl) && url.indexOf('://') === -1) {
                 // this try catch is required as IE has an URL object but no constuctor support
@@ -3062,7 +3062,7 @@ var Microformats; // jshint ignore:line
          * clear all states
          *
          */
-        clear: function() {
+        clear() {
             this.clearDate();
             this.clearTime();
             this.clearTimeZone();
@@ -3074,7 +3074,7 @@ var Microformats; // jshint ignore:line
          * clear date states
          *
          */
-        clearDate: function() {
+        clearDate() {
             this.dY = -1;
             this.dM = -1;
             this.dD = -1;
@@ -3086,7 +3086,7 @@ var Microformats; // jshint ignore:line
          * clear time states
          *
          */
-        clearTime: function() {
+        clearTime() {
             this.tH = -1;
             this.tM = -1;
             this.tS = -1;
@@ -3098,7 +3098,7 @@ var Microformats; // jshint ignore:line
          * clear timezone states
          *
          */
-        clearTimeZone: function() {
+        clearTimeZone() {
             this.tzH = -1;
             this.tzM = -1;
             this.tzPN = '+';
@@ -3110,7 +3110,7 @@ var Microformats; // jshint ignore:line
          * resets the auto profile state
          *
          */
-        setAutoProfileState: function() {
+        setAutoProfileState() {
             this.autoProfile = {
                sep: 'T',
                dsep: '-',
@@ -3128,7 +3128,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format
          * @return {String}
          */
-        parse: function( dateString, format ) {
+        parse( dateString, format ) {
             this.clear();
 
             var parts = [],
@@ -3218,7 +3218,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format
          * @return {String}
          */
-        parseDate: function( dateString, format ) {
+        parseDate( dateString, format ) {
             this.clearDate();
 
             var parts = [];
@@ -3263,7 +3263,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format
          * @return {String}
          */
-        parseTime: function( timeString, format ) {
+        parseTime( timeString, format ) {
             this.clearTime();
             var parts = [];
 
@@ -3297,7 +3297,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format
          * @return {String}
          */
-        parseTimeZone: function( timeString, format ) {
+        parseTimeZone( timeString, format ) {
             this.clearTimeZone();
             var parts = [];
 
@@ -3337,7 +3337,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format
          * @return {String}
          */
-        toString: function( format ) {
+        toString( format ) {
             var output = '';
 
             if (format) {
@@ -3374,7 +3374,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format
          * @return {String}
          */
-        toTimeString: function( format ) {
+        toTimeString( format ) {
             var out = '';
 
             if (format) {
@@ -3417,7 +3417,7 @@ var Microformats; // jshint ignore:line
          * set the current profile to W3C Note, RFC 3339, HTML5, or auto profile
          *
          */
-        setFormatSep: function() {
+        setFormatSep() {
             switch ( this.format.toLowerCase() ) {
                 case 'rfc3339':
                     this.sep = 'T';
@@ -3456,7 +3456,7 @@ var Microformats; // jshint ignore:line
          *
          * @return {Boolean}
          */
-        hasFullDate: function() {
+        hasFullDate() {
             return (this.dY !== -1 && this.dM !== -1 && this.dD !== -1);
         },
 
@@ -3466,7 +3466,7 @@ var Microformats; // jshint ignore:line
          *
          * @return {Boolean}
          */
-        hasDate: function() {
+        hasDate() {
             return (this.dY !== -1);
         },
 
@@ -3476,7 +3476,7 @@ var Microformats; // jshint ignore:line
          *
          * @return {Boolean}
          */
-        hasTime: function() {
+        hasTime() {
             return (this.tH !== -1);
         },
 
@@ -3485,7 +3485,7 @@ var Microformats; // jshint ignore:line
          *
          * @return {Boolean}
          */
-        hasTimeZone: function() {
+        hasTimeZone() {
             return (this.tzH !== -1);
         }
 
@@ -3503,7 +3503,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Boolean}
          */
-        hasAM: function( text ) {
+        hasAM( text ) {
             text = text.toLowerCase();
             return (text.indexOf('am') > -1 || text.indexOf('a.m.') > -1);
         },
@@ -3515,7 +3515,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Boolean}
          */
-        hasPM: function( text ) {
+        hasPM( text ) {
             text = text.toLowerCase();
             return (text.indexOf('pm') > -1 || text.indexOf('p.m.') > -1);
         },
@@ -3527,7 +3527,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {String}
          */
-        removeAMPM: function( text ) {
+        removeAMPM( text ) {
             return text.replace('pm', '').replace('p.m.', '').replace('am', '').replace('a.m.', '');
         },
 
@@ -3538,7 +3538,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Boolean}
          */
-        isDuration: function( text ) {
+        isDuration( text ) {
             if (modules.utils.isString( text )) {
                 text = text.toLowerCase();
                 if (modules.utils.startWith(text, 'p') ) {
@@ -3556,7 +3556,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Boolean}
          */
-        isTime: function( text ) {
+        isTime( text ) {
             if (modules.utils.isString(text)) {
                 text = text.toLowerCase();
                 text = modules.utils.trim( text );
@@ -3592,7 +3592,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {String}
          */
-        parseAmPmTime: function( text ) {
+        parseAmPmTime( text ) {
             var out = text,
                 times = [];
 
@@ -3643,7 +3643,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format ( Modules.ISODate profile format )
          * @return {Object} Modules.ISODate
          */
-        dateTimeUnion: function(date, time, format) {
+        dateTimeUnion(date, time, format) {
             var isodate = new modules.ISODate(date, format),
                 isotime = new modules.ISODate();
 
@@ -3670,7 +3670,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} format ( Modules.ISODate profile format )
          * @return {Object} Modules.ISODate
          */
-        concatFragments: function(arr, format) {
+        concatFragments(arr, format) {
             var out = new modules.ISODate(),
                 i = 0,
                 value = '';
@@ -3721,7 +3721,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {Array} Modules.ISODate
          */
-        splitTimeAndZone: function( text ) {
+        splitTimeAndZone( text ) {
            var out = [text],
                chars = ['-', '+', 'z', 'Z'],
                i = chars.length;
@@ -3762,7 +3762,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} textFormat
          * @return {String}
          */
-        parse: function(doc, node, textFormat) {
+        parse(doc, node, textFormat) {
             var out;
             this.textFormat = (textFormat) ? textFormat : this.textFormat;
             if (this.textFormat === 'normalised') {
@@ -3784,7 +3784,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} textFormat
          * @return {String}
          */
-        parseText: function( doc, text, textFormat ) {
+        parseText( doc, text, textFormat ) {
            var node = modules.domUtils.createNodeWithText( 'div', text );
            return this.parse( doc, node, textFormat );
         },
@@ -3797,7 +3797,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} textFormat
          * @return {String}
          */
-        formatText: function( doc, text, textFormat ) {
+        formatText( doc, text, textFormat ) {
            this.textFormat = (textFormat) ? textFormat : this.textFormat;
            if (text) {
               var out = '',
@@ -3821,7 +3821,7 @@ var Microformats; // jshint ignore:line
          * @param  {String} text
          * @return {String}
          */
-        normalise: function( doc, text ) {
+        normalise( doc, text ) {
             text = text.replace( /&nbsp;/g, ' ') ;    // exchanges html entity for space into space char
             text = modules.utils.collapseWhiteSpace( text );     // removes linefeeds, tabs and addtional spaces
             text = modules.domUtils.decodeEntities( doc, text );  // decode HTML entities
@@ -3836,7 +3836,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        walkTreeForText: function( node ) {
+        walkTreeForText( node ) {
             var out = '',
                 j = 0;
 
@@ -3882,7 +3882,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        parse: function( node ) {
+        parse( node ) {
             var out = '',
                 j = 0;
 
@@ -3907,7 +3907,7 @@ var Microformats; // jshint ignore:line
          * @param  {DOM Node} node
          * @return {String}
          */
-        walkTreeForHtml: function( node ) {
+        walkTreeForHtml( node ) {
             var out = '',
                 j = 0;
 

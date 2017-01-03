@@ -56,7 +56,7 @@ function promiseExpirableDownloadVisit(aSourceUrl)
                                           aResultCode);
         deferred.reject(ex);
       },
-      handleResult: function() {},
+      handleResult() {},
       handleCompletion: function handleCompletion() {
         deferred.resolve();
       }
@@ -192,7 +192,7 @@ add_task(function* test_notifications_add_remove()
     // Check that we receive add notifications for existing elements.
     let addNotifications = 0;
     let viewOne = {
-      onDownloadAdded: function(aDownload) {
+      onDownloadAdded(aDownload) {
         // The first download to be notified should be the first that was added.
         if (addNotifications == 0) {
           do_check_eq(aDownload, downloadOne);
@@ -212,7 +212,7 @@ add_task(function* test_notifications_add_remove()
     // Check that we receive remove notifications.
     let removeNotifications = 0;
     let viewTwo = {
-      onDownloadRemoved: function(aDownload) {
+      onDownloadRemoved(aDownload) {
         do_check_eq(aDownload, downloadOne);
         removeNotifications++;
       },
@@ -257,7 +257,7 @@ add_task(function* test_notifications_change()
     // Check that we receive change notifications.
     let receivedOnDownloadChanged = false;
     yield list.addView({
-      onDownloadChanged: function(aDownload) {
+      onDownloadChanged(aDownload) {
         do_check_eq(aDownload, downloadOne);
         receivedOnDownloadChanged = true;
       },
@@ -285,18 +285,18 @@ add_task(function* test_notifications_this()
   let receivedOnDownloadChanged = false;
   let receivedOnDownloadRemoved = false;
   let view = {
-    onDownloadAdded: function() {
+    onDownloadAdded() {
       do_check_eq(this, view);
       receivedOnDownloadAdded = true;
     },
-    onDownloadChanged: function() {
+    onDownloadChanged() {
       // Only do this check once.
       if (!receivedOnDownloadChanged) {
         do_check_eq(this, view);
         receivedOnDownloadChanged = true;
       }
     },
-    onDownloadRemoved: function() {
+    onDownloadRemoved() {
       do_check_eq(this, view);
       receivedOnDownloadRemoved = true;
     },
@@ -336,7 +336,7 @@ add_task(function* test_history_expiration()
   let deferred = Promise.defer();
   let removeNotifications = 0;
   let downloadView = {
-    onDownloadRemoved: function(aDownload) {
+    onDownloadRemoved(aDownload) {
       if (++removeNotifications == 2) {
         deferred.resolve();
       }
@@ -383,7 +383,7 @@ add_task(function* test_history_clear()
   let deferred = Promise.defer();
   let removeNotifications = 0;
   let downloadView = {
-    onDownloadRemoved: function(aDownload) {
+    onDownloadRemoved(aDownload) {
       if (++removeNotifications == 2) {
         deferred.resolve();
       }
@@ -419,7 +419,7 @@ add_task(function* test_removeFinished()
   let deferred = Promise.defer();
   let removeNotifications = 0;
   let downloadView = {
-    onDownloadRemoved: function(aDownload) {
+    onDownloadRemoved(aDownload) {
       do_check_true(aDownload == downloadOne ||
                     aDownload == downloadTwo ||
                     aDownload == downloadThree);
@@ -555,7 +555,7 @@ add_task(function* test_DownloadSummary_notifications()
   // Check that we receive change notifications.
   let receivedOnSummaryChanged = false;
   yield summary.addView({
-    onSummaryChanged: function() {
+    onSummaryChanged() {
       receivedOnSummaryChanged = true;
     },
   });

@@ -765,13 +765,16 @@ public:
   }
 
   /**
-   * Get the writing mode of this frame, but if it is styled with
-   * unicode-bidi: plaintext, reset the direction to the resolved paragraph
+   * Construct a writing mode for line layout in this frame.  This is
+   * the writing mode of this frame, except that if this frame is styled with
+   * unicode-bidi:plaintext, we reset the direction to the resolved paragraph
    * level of the given subframe (typically the first frame on the line),
-   * not this frame's writing mode, because the container frame could be split
-   * by hard line breaks into multiple paragraphs with different base direction.
+   * because the container frame could be split by hard line breaks into
+   * multiple paragraphs with different base direction.
+   * @param aSelfWM the WM of 'this'
    */
-  mozilla::WritingMode GetWritingMode(nsIFrame* aSubFrame) const;
+  mozilla::WritingMode WritingModeForLine(mozilla::WritingMode aSelfWM,
+                                          nsIFrame* aSubFrame) const;
 
   /**
    * Bounding rect of the frame. The values are in app units, and the origin is
@@ -2020,11 +2023,29 @@ public:
   };
 
   struct InlinePrefISizeData : public InlineIntrinsicISizeData {
+    typedef mozilla::StyleClear StyleClear;
+
     InlinePrefISizeData()
       : mLineIsEmpty(true)
     {}
 
-    void ForceBreak();
+    /**
+     * Finish the current line and start a new line.
+     *
+     * @param aBreakType controls whether isize of floats are considered
+     * and what floats are kept for the next line:
+     *  * |None| skips handling floats, which means no floats are
+     *    removed, and isizes of floats are not considered either.
+     *  * |Both| takes floats into consideration when computing isize
+     *    of the current line, and removes all floats after that.
+     *  * |Left| and |Right| do the same as |Both| except that they only
+     *    remove floats on the given side, and any floats on the other
+     *    side that are prior to a float on the given side that has a
+     *    'clear' property that clears them.
+     * All other values of StyleClear must be converted to the four
+     * physical values above for this function.
+     */
+    void ForceBreak(StyleClear aBreakType = StyleClear::Both);
 
     // The default implementation for nsIFrame::AddInlinePrefISize.
     void DefaultAddInlinePrefISize(nscoord aISize);

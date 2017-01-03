@@ -356,7 +356,7 @@ this.PlacesBackups = {
           let name = this.getFilenameForDate(undefined, true);
           let newFilename = appendMetaDataToFilename(name,
                                                      { count: nodeCount,
-                                                       hash: hash });
+                                                       hash });
           let newFilePath = OS.Path.join(backupFolderPath, newFilename);
           let backupFile = yield getBackupFileForSameDate(name);
           if (backupFile) {
@@ -453,7 +453,7 @@ this.PlacesBackups = {
                                                  failIfHashIs: mostRecentHash });
         newFilenameWithMetaData = appendMetaDataToFilename(newBackupFilename,
                                                            { count: nodeCount,
-                                                             hash: hash });
+                                                             hash });
       } catch (ex) {
         if (!ex.becauseSameHash) {
           throw ex;

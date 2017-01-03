@@ -7,3 +7,6 @@
 TEST_HARNESS_FILES.testing.mochitest.runtimes += [
     '**/mochitest-*.runtimes.json',
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Testing", "Mochitest")

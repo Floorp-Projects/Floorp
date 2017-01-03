@@ -33,7 +33,7 @@ var testUrl = location.href.replace(/\.\w+$/, ".js");
 var promiseParentInitFinished = new Promise(function(resolve) {
   parentScript.addMessageListener("finish_load_in_parent", resolve);
 });
-parentScript.sendAsyncMessage("start_load_in_parent", { testUrl: testUrl });
+parentScript.sendAsyncMessage("start_load_in_parent", { testUrl });
 
 // Define output functions so they look the same across all frameworks.
 var Output = {

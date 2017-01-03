@@ -21,7 +21,7 @@ const HTTP_ENDPOINT_WITH_KEYS = "/browser/browser/base/content/test/general/brow
 var gTests = [
   {
     desc: "FxA OAuth - should open a new tab, complete OAuth flow",
-    run: function() {
+    run() {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
         let properURL = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
@@ -74,7 +74,7 @@ var gTests = [
   },
   {
     desc: "FxA OAuth - should open a new tab, complete OAuth flow when forcing auth",
-    run: function() {
+    run() {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
         let properURL = "http://example.com/browser/browser/base/content/test/general/browser_fxa_oauth.html";
@@ -131,7 +131,7 @@ var gTests = [
   },
   {
     desc: "FxA OAuth - should receive an error when there's a state mismatch",
-    run: function() {
+    run() {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
 
@@ -169,7 +169,7 @@ var gTests = [
   },
   {
     desc: "FxA OAuth - should be able to request keys during OAuth flow",
-    run: function() {
+    run() {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
 
@@ -211,7 +211,7 @@ var gTests = [
   },
   {
     desc: "FxA OAuth - should not receive keys if not explicitly requested",
-    run: function() {
+    run() {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
 
@@ -252,7 +252,7 @@ var gTests = [
   },
   {
     desc: "FxA OAuth - should receive an error if keys could not be obtained",
-    run: function() {
+    run() {
       return new Promise(function(resolve, reject) {
         let tabOpened = false;
 

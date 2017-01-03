@@ -21,6 +21,7 @@ function FilterButtons({
 
     return button({
       id: `requests-menu-filter-${type}-button`,
+      key: type,
       className: classList.join(" "),
       "data-key": type,
       onClick: toggleRequestFilterType,
@@ -32,8 +33,8 @@ function FilterButtons({
 }
 
 FilterButtons.propTypes = {
-  state: PropTypes.object.isRequired,
-  toggleRequestFilterType: PropTypes.func.iRequired,
+  requestFilterTypes: PropTypes.object.isRequired,
+  toggleRequestFilterType: PropTypes.func.isRequired,
 };
 
 module.exports = connect(

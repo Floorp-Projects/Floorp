@@ -19,7 +19,7 @@ add_task(function* test() {
   let modifiedLogin;
   let testNumber = 0;
   let testObserver = {
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       if (topic == "passwordmgr-dialog-updated") {
         switch (testNumber) {
           case 1:

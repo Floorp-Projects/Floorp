@@ -44,7 +44,7 @@ let gTestHangReport = {
   TEST_CALLBACK_TERMPLUGIN: 3,
 
   _hangType: 1,
-  _tcb: function(aCallbackType) {},
+  _tcb(aCallbackType) {},
 
   get hangType() {
     return this._hangType;
@@ -58,26 +58,26 @@ let gTestHangReport = {
     this._tcb = aValue;
   },
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Components.interfaces.nsIHangReport) ||
         aIID.equals(Components.interfaces.nsISupports))
       return this;
     throw Components.results.NS_NOINTERFACE;
   },
 
-  userCanceled: function() {
+  userCanceled() {
     this._tcb(this.TEST_CALLBACK_CANCELED);
   },
 
-  terminateScript: function() {
+  terminateScript() {
     this._tcb(this.TEST_CALLBACK_TERMSCRIPT);
   },
 
-  terminatePlugin: function() {
+  terminatePlugin() {
     this._tcb(this.TEST_CALLBACK_TERMPLUGIN);
   },
 
-  isReportForBrowser: function(aFrameLoader) {
+  isReportForBrowser(aFrameLoader) {
     return true;
   }
 };

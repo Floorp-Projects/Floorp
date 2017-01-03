@@ -8,8 +8,10 @@
 <!DOCTYPE overlay [
   <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
   <!ENTITY % applicationsDTD SYSTEM "chrome://browser/locale/preferences/applications.dtd">
+  <!ENTITY % containersDTD SYSTEM "chrome://browser/locale/preferences/containers.dtd">
   %brandDTD;
   %applicationsDTD;
+  %containersDTD;
 ]>
 
 <bindings id="handlerBindings"
@@ -78,14 +80,14 @@
         </xul:hbox>
         <xul:hbox flex="1" align="right">
           <xul:button anonid="preferencesButton"
+                      label="&preferencesButton.label;"
                       xbl:inherits="value=userContextId"
-                      onclick="gContainersPane.onPeferenceClick(event.originalTarget)">
-            Preferences
+                      onclick="gContainersPane.onPreferenceClick(event.originalTarget)">
           </xul:button>
           <xul:button anonid="removeButton"
+                      label="&removeButton.label;"
                       xbl:inherits="value=userContextId"
                       onclick="gContainersPane.onRemoveClick(event.originalTarget)">
-            Remove
           </xul:button>
         </xul:hbox>
       </xul:hbox>

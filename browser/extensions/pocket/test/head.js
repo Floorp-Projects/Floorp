@@ -36,7 +36,7 @@ function promisePocketDisabled() {
   }
   return new Promise((resolve, reject) => {
     let listener = {
-      onWidgetDestroyed: function(widgetid) {
+      onWidgetDestroyed(widgetid) {
         if (widgetid == "pocket-button") {
           CustomizableUI.removeListener(listener);
           info( "pocket-button destroyed");

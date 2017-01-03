@@ -40,7 +40,7 @@ var TestRunner = {
   /**
    * Starts the test runner.
    */
-  run: function() {
+  run() {
     waitForExplicitFinish();
 
     SessionStore.promiseInitialized.then(function() {
@@ -58,7 +58,7 @@ var TestRunner = {
    * @param aValue This value will be passed to the yielder via the runner's
    *               iterator.
    */
-  next: function(aValue) {
+  next(aValue) {
     let obj = TestRunner._iter.next(aValue);
     if (obj.done) {
       finish();

@@ -1135,7 +1135,7 @@ PlacesTreeView.prototype = {
     this._selection = val;
   },
 
-  getRowProperties: function() { return ""; },
+  getRowProperties() { return ""; },
 
   getCellProperties:
   function PTV_getCellProperties(aRow, aColumn) {
@@ -1217,7 +1217,7 @@ PlacesTreeView.prototype = {
     return props + " " + properties;
   },
 
-  getColumnProperties: function(aColumn) { return ""; },
+  getColumnProperties(aColumn) { return ""; },
 
   isContainer: function PTV_isContainer(aRow) {
     // Only leaf nodes aren't listed in the rows array.
@@ -1414,7 +1414,7 @@ PlacesTreeView.prototype = {
     return false;
   },
 
-  getLevel: function(aRow) {
+  getLevel(aRow) {
     return this._getNodeForRow(aRow).indentLevel;
   },
 
@@ -1427,8 +1427,8 @@ PlacesTreeView.prototype = {
     return node.icon;
   },
 
-  getProgressMode: function(aRow, aColumn) { },
-  getCellValue: function(aRow, aColumn) { },
+  getProgressMode(aRow, aColumn) { },
+  getCellValue(aRow, aColumn) { },
 
   getCellText: function PTV_getCellText(aRow, aColumn) {
     let node = this._getNodeForRow(aRow);
@@ -1717,10 +1717,10 @@ PlacesTreeView.prototype = {
     }
   },
 
-  selectionChanged: function() { },
-  cycleCell: function(aRow, aColumn) { },
-  isSelectable: function(aRow, aColumn) { return false; },
-  performAction: function(aAction) { },
-  performActionOnRow: function(aAction, aRow) { },
-  performActionOnCell: function(aAction, aRow, aColumn) { }
+  selectionChanged() { },
+  cycleCell(aRow, aColumn) { },
+  isSelectable(aRow, aColumn) { return false; },
+  performAction(aAction) { },
+  performActionOnRow(aAction, aRow) { },
+  performActionOnCell(aAction, aRow, aColumn) { }
 };

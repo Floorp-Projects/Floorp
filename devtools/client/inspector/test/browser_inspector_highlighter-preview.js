@@ -52,5 +52,5 @@ function* checkElementSelected(selector, inspector) {
 
 function checkPickerMode(toolbox, isOn) {
   let pickerButton = toolbox.doc.querySelector("#command-button-pick");
-  is(pickerButton.hasAttribute("checked"), isOn, "The picker mode is correct");
+  is(pickerButton.classList.contains("checked"), isOn, "The picker mode is correct");
 }

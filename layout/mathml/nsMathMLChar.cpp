@@ -1986,9 +1986,9 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
       nsDisplayMathMLSelectionRect(aBuilder, aForFrame, *aSelectedRect));
   }
   else if (mRect.width && mRect.height) {
-    const nsStyleBackground* backg = styleContext->StyleBackground();
     if (styleContext != parentContext &&
-        NS_GET_A(backg->mBackgroundColor) > 0) {
+        NS_GET_A(styleContext->StyleBackground()->
+                 BackgroundColor(styleContext)) > 0) {
       nsDisplayBackgroundImage::AppendBackgroundItemsToTop(
         aBuilder, aForFrame, mRect, aLists.BorderBackground(),
         /* aAllowWillPaintBorderOptimization */ true, styleContext);

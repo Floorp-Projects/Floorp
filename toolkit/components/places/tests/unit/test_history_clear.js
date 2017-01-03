@@ -10,15 +10,15 @@ function promiseOnClearHistoryObserved() {
   let deferred = Promise.defer();
 
   let historyObserver = {
-    onBeginUpdateBatch: function() {},
-    onEndUpdateBatch: function() {},
-    onVisit: function() {},
-    onTitleChanged: function() {},
-    onDeleteURI: function(aURI) {},
-    onPageChanged: function() {},
-    onDeleteVisits: function() {},
+    onBeginUpdateBatch() {},
+    onEndUpdateBatch() {},
+    onVisit() {},
+    onTitleChanged() {},
+    onDeleteURI(aURI) {},
+    onPageChanged() {},
+    onDeleteVisits() {},
 
-    onClearHistory: function() {
+    onClearHistory() {
       PlacesUtils.history.removeObserver(this, false);
       deferred.resolve();
     },

@@ -38,7 +38,7 @@ function ellipseString(aStr, doFront)
 
 // all progress notifications are done through the nsIWebProgressListener implementation...
 var progressListener = {
-    onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus)
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
     {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START)
       {
@@ -84,7 +84,7 @@ var progressListener = {
       }
     },
 
-    onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
+    onProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress)
     {
       if (switchUI)
       {
@@ -141,23 +141,23 @@ var progressListener = {
       }
     },
 
-	  onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags)
+	  onLocationChange(aWebProgress, aRequest, aLocation, aFlags)
     {
       // we can ignore this notification
     },
 
-    onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
+    onStatusChange(aWebProgress, aRequest, aStatus, aMessage)
     {
       if (aMessage != "")
         dialog.title.setAttribute("value", aMessage);
     },
 
-    onSecurityChange: function(aWebProgress, aRequest, state)
+    onSecurityChange(aWebProgress, aRequest, state)
     {
       // we can ignore this notification
     },
 
-    QueryInterface : function(iid)
+    QueryInterface(iid)
     {
      if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
       return this;

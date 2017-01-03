@@ -308,16 +308,16 @@ class MOZ_STACK_CLASS OpIter : private Policy
         *out = d_.uncheckedReadVarU64();
         return true;
     }
-    MOZ_MUST_USE bool readFixedF32(RawF32* out) {
+    MOZ_MUST_USE bool readFixedF32(float* out) {
         if (Validate)
             return d_.readFixedF32(out);
-        *out = d_.uncheckedReadFixedF32();
+        d_.uncheckedReadFixedF32(out);
         return true;
     }
-    MOZ_MUST_USE bool readFixedF64(RawF64* out) {
+    MOZ_MUST_USE bool readFixedF64(double* out) {
         if (Validate)
             return d_.readFixedF64(out);
-        *out = d_.uncheckedReadFixedF64();
+        d_.uncheckedReadFixedF64(out);
         return true;
     }
     MOZ_MUST_USE bool readFixedI8x16(I8x16* out) {
@@ -575,8 +575,8 @@ class MOZ_STACK_CLASS OpIter : private Policy
     MOZ_MUST_USE bool readTeeGlobal(const GlobalDescVector& globals, uint32_t* id, Value* value);
     MOZ_MUST_USE bool readI32Const(int32_t* i32);
     MOZ_MUST_USE bool readI64Const(int64_t* i64);
-    MOZ_MUST_USE bool readF32Const(RawF32* f32);
-    MOZ_MUST_USE bool readF64Const(RawF64* f64);
+    MOZ_MUST_USE bool readF32Const(float* f32);
+    MOZ_MUST_USE bool readF64Const(double* f64);
     MOZ_MUST_USE bool readI8x16Const(I8x16* i8x16);
     MOZ_MUST_USE bool readI16x8Const(I16x8* i16x8);
     MOZ_MUST_USE bool readI32x4Const(I32x4* i32x4);
@@ -1618,11 +1618,11 @@ OpIter<Policy>::readI64Const(int64_t* i64)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readF32Const(RawF32* f32)
+OpIter<Policy>::readF32Const(float* f32)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::F32);
 
-    RawF32 unused;
+    float unused;
     if (!readFixedF32(Output ? f32 : &unused))
         return false;
 
@@ -1634,11 +1634,11 @@ OpIter<Policy>::readF32Const(RawF32* f32)
 
 template <typename Policy>
 inline bool
-OpIter<Policy>::readF64Const(RawF64* f64)
+OpIter<Policy>::readF64Const(double* f64)
 {
     MOZ_ASSERT(Classify(op_) == OpKind::F64);
 
-    RawF64 unused;
+    double unused;
     if (!readFixedF64(Output ? f64 : &unused))
        return false;
 

@@ -45,13 +45,13 @@ var popupTests = [
 {
   testname: "mouse click on trigger",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  test: function() {
+  test() {
     // for menus, no trigger will be set. For non-menus using the popup
     // attribute, the trigger will be set to the node with the popup attribute
     gExpectedTriggerNode = gIsMenu ? "notset" : gTrigger;
     synthesizeMouse(gTrigger, 4, 4, { });
   },
-  result: function(testname) {
+  result(testname) {
     gExpectedTriggerNode = null;
     // menus are the anchor but non-menus are opened at screen coordinates
     is(gMenuPopup.anchorNode, gIsMenu ? gTrigger : null, testname + " anchorNode");
@@ -82,59 +82,59 @@ var popupTests = [
   // highlights the first item
   testname: "cursor down no selection",
   events: [ "DOMMenuItemActive item1" ],
-  test: function() { synthesizeKey("VK_DOWN", { }); },
-  result: function(testname) { checkActive(gMenuPopup, "item1", testname); }
+  test() { synthesizeKey("VK_DOWN", { }); },
+  result(testname) { checkActive(gMenuPopup, "item1", testname); }
 },
 {
   // check that pressing cursor up wraps and highlights the last item
   testname: "cursor up wrap",
-  events: function() {
+  events() {
     // No wrapping on menus on Mac
     return platformIsMac() ? [] : [ "DOMMenuItemInactive item1", "DOMMenuItemActive last" ]
   },
-  test: function() { synthesizeKey("VK_UP", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("VK_UP", { }); },
+  result(testname) {
     checkActive(gMenuPopup, platformIsMac() ? "item1" : "last", testname);
   }
 },
 {
   // check that pressing cursor down wraps and highlights the first item
   testname: "cursor down wrap",
-  condition: function() { return !platformIsMac() },
+  condition() { return !platformIsMac() },
   events: ["DOMMenuItemInactive last", "DOMMenuItemActive item1" ],
-  test: function() { synthesizeKey("VK_DOWN", { }); },
-  result: function(testname) { checkActive(gMenuPopup, "item1", testname); }
+  test() { synthesizeKey("VK_DOWN", { }); },
+  result(testname) { checkActive(gMenuPopup, "item1", testname); }
 },
 {
   // check that pressing cursor down highlights the second item
   testname: "cursor down",
   events: [ "DOMMenuItemInactive item1", "DOMMenuItemActive item2" ],
-  test: function() { synthesizeKey("VK_DOWN", { }); },
-  result: function(testname) { checkActive(gMenuPopup, "item2", testname); }
+  test() { synthesizeKey("VK_DOWN", { }); },
+  result(testname) { checkActive(gMenuPopup, "item2", testname); }
 },
 {
   // check that pressing cursor up highlights the second item
   testname: "cursor up",
   events: [ "DOMMenuItemInactive item2", "DOMMenuItemActive item1" ],
-  test: function() { synthesizeKey("VK_UP", { }); },
-  result: function(testname) { checkActive(gMenuPopup, "item1", testname); }
+  test() { synthesizeKey("VK_UP", { }); },
+  result(testname) { checkActive(gMenuPopup, "item1", testname); }
 },
 {
   // cursor left should not do anything
   testname: "cursor left",
-  test: function() { synthesizeKey("VK_LEFT", { }); },
-  result: function(testname) { checkActive(gMenuPopup, "item1", testname); }
+  test() { synthesizeKey("VK_LEFT", { }); },
+  result(testname) { checkActive(gMenuPopup, "item1", testname); }
 },
 {
   // cursor right should not do anything
   testname: "cursor right",
-  test: function() { synthesizeKey("VK_RIGHT", { }); },
-  result: function(testname) { checkActive(gMenuPopup, "item1", testname); }
+  test() { synthesizeKey("VK_RIGHT", { }); },
+  result(testname) { checkActive(gMenuPopup, "item1", testname); }
 },
 {
   // check cursor down when a disabled item exists in the menu
   testname: "cursor down disabled",
-  events: function() {
+  events() {
     // On Windows, disabled items are included when navigating, but on
     // other platforms, disabled items are skipped over
     if (navigator.platform.indexOf("Win") == 0) {
@@ -142,7 +142,7 @@ var popupTests = [
     }
     return [ "DOMMenuItemInactive item1", "DOMMenuItemActive amenu" ];
   },
-  test: function() {
+  test() {
     document.getElementById("item2").disabled = true;
     synthesizeKey("VK_DOWN", { });
   }
@@ -150,7 +150,7 @@ var popupTests = [
 {
   // check cursor up when a disabled item exists in the menu
   testname: "cursor up disabled",
-  events: function() {
+  events() {
     if (navigator.platform.indexOf("Win") == 0) {
       return [ "DOMMenuItemInactive item2", "DOMMenuItemActive amenu",
                "DOMMenuItemInactive amenu", "DOMMenuItemActive item2",
@@ -158,7 +158,7 @@ var popupTests = [
     }
     return [ "DOMMenuItemInactive amenu", "DOMMenuItemActive item1" ];
   },
-  test: function() {
+  test() {
     if (navigator.platform.indexOf("Win") == 0)
       synthesizeKey("VK_DOWN", { });
     synthesizeKey("VK_UP", { });
@@ -170,14 +170,14 @@ var popupTests = [
   testname: "mouse click outside",
   events: [ "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuItemInactive item1", "DOMMenuInactive thepopup" ],
-  test: function() {
+  test() {
     gMenuPopup.hidePopup();
     // XXXndeakin event simulation fires events outside of the platform specific
     // widget code so the popup capturing isn't handled. Thus, the menu won't
     // rollup this way.
     // synthesizeMouse(gTrigger, 0, -12, { });
   },
-  result: function(testname, step) {
+  result(testname, step) {
     is(gMenuPopup.anchorNode, null, testname + " anchorNode");
     is(gMenuPopup.triggerNode, null, testname + " triggerNode");
     is(document.popupNode, null, testname + " document.popupNode");
@@ -196,11 +196,11 @@ var popupTests = [
           "leftcenter topright", "rightcenter topright",
           "bottomleft bottomleft", "bottomcenter bottomleft", "bottomright bottomleft",
           "topleft bottomright", "bottomcenter bottomright", "rightcenter topright"],
-  test: function(testname, step) {
+  test(testname, step) {
     gExpectedTriggerNode = "notset";
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     // no triggerNode because it was opened without passing an event
     gExpectedTriggerNode = null;
     is(gMenuPopup.anchorNode, gTrigger, testname + " anchorNode");
@@ -220,11 +220,11 @@ var popupTests = [
           "leftcenter topright", "rightcenter topright",
           "bottomleft bottomleft", "bottomcenter bottomleft", "bottomright bottomleft",
           "topleft bottomright", "bottomcenter bottomright", "rightcenter topright"],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("style", "margin: 10px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     var rightmod = step == "before_end" || step == "after_end" ||
                    step == "start_before" || step == "start_after" ||
                    step.match(/topright$/) || step.match(/bottomright$/);
@@ -242,11 +242,11 @@ var popupTests = [
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
           "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("style", "margin: -8px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     var rightmod = step == "before_end" || step == "after_end" ||
                    step == "start_before" || step == "start_after";
     var bottommod = step == "before_start" || step == "before_end" ||
@@ -261,11 +261,11 @@ var popupTests = [
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
           "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("style", "margin: 1000px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     var popuprect = gMenuPopup.getBoundingClientRect();
     // as there is more room on the 'end' or 'after' side, popups will always
     // appear on the right or bottom corners, depending on which side they are
@@ -285,11 +285,11 @@ var popupTests = [
   autohide: "thepopup",
   steps: ["before_start", "before_end", "after_start", "after_end",
           "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap"],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("style", "margin: -1000px;");
     gMenuPopup.openPopup(gTrigger, step, 0, 0, false, false);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     var popuprect = gMenuPopup.getBoundingClientRect();
     // using negative margins causes the reverse of positive margins, and
     // popups will appear on the left or top corners.
@@ -306,10 +306,10 @@ var popupTests = [
   testname: "popup with unknown step",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function() {
+  test() {
     gMenuPopup.openPopup(gTrigger, "other", 0, 0, false, false);
   },
-  result: function(testname) {
+  result(testname) {
     var triggerrect = gMenuPopup.getBoundingClientRect();
     var popuprect = gMenuPopup.getBoundingClientRect();
     is(Math.round(popuprect.left), triggerrect.left, testname + " x position ");
@@ -325,11 +325,11 @@ var popupTests = [
   steps: ["before_start", "before_end", "after_start", "after_end",
           "start_before", "start_after", "end_before", "end_after", "after_pointer", "overlap",
           "topcenter topleft", "topright bottomright", "leftcenter topright"],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("position", step);
     gMenuPopup.openPopup(gTrigger, "", 0, 0, false, false);
   },
-  result: function(testname, step) { compareEdge(gTrigger, gMenuPopup, step, 0, 0, testname); }
+  result(testname, step) { compareEdge(gTrigger, gMenuPopup, step, 0, 0, testname); }
 },
 {
   // this test checks to ensure that the attributes override flag to openPopup
@@ -337,13 +337,13 @@ var popupTests = [
   // event to openPopup to check the trigger node.
   testname: "open popup anchored with override",
   events: [ "popupshowing thepopup 0010", "popupshown thepopup" ],
-  test: function(testname, step) {
+  test(testname, step) {
     // attribute overrides the position passed in
     gMenuPopup.setAttribute("position", "end_after");
     gExpectedTriggerNode = gCachedEvent.target;
     gMenuPopup.openPopup(gTrigger, "before_start", 0, 0, false, true, gCachedEvent);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     gExpectedTriggerNode = null;
     is(gMenuPopup.anchorNode, gTrigger, testname + " anchorNode");
     is(gMenuPopup.triggerNode, gCachedEvent.target, testname + " triggerNode");
@@ -355,7 +355,7 @@ var popupTests = [
   testname: "close popup with escape",
   events: [ "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuInactive thepopup", ],
-  test: function(testname, step) {
+  test(testname, step) {
     synthesizeKey("VK_ESCAPE", { });
     checkClosed("trigger", testname);
   }
@@ -365,18 +365,18 @@ var popupTests = [
   testname: "open popup anchored with offsets",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     // attribute is empty so does not override
     gMenuPopup.setAttribute("position", "");
     gMenuPopup.openPopup(gTrigger, "before_start", 5, 10, true, true);
   },
-  result: function(testname, step) { compareEdge(gTrigger, gMenuPopup, "before_start", 5, 10, testname); }
+  result(testname, step) { compareEdge(gTrigger, gMenuPopup, "before_start", 5, 10, testname); }
 },
 {
   // these tests check to ensure that passing an anchor and position
   // puts the popup in the right place
   testname: "show popup anchored",
-  condition: function() {
+  condition() {
     // only perform this test for popups not in a menu, such as those using
     // the popup attribute, as the showPopup implementation in popup.xml
     // calls openMenu if the popup is inside a menu
@@ -389,14 +389,14 @@ var popupTests = [
           ["topright", "topleft"], ["topright", "bottomright"],
           ["bottomleft", "bottomright"], ["bottomleft", "topleft"],
           ["bottomright", "bottomleft"], ["bottomright", "topright"]],
-  test: function(testname, step) {
+  test(testname, step) {
     // the attributes should be ignored
     gMenuPopup.setAttribute("popupanchor", "topright");
     gMenuPopup.setAttribute("popupalign", "bottomright");
     gMenuPopup.setAttribute("position", "end_after");
     gMenuPopup.showPopup(gTrigger, -1, -1, "popup", step[0], step[1]);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     var pos = convertPosition(step[0], step[1]);
     compareEdge(gTrigger, gMenuPopup, pos, 0, 0, testname);
     gMenuPopup.removeAttribute("popupanchor");
@@ -406,14 +406,14 @@ var popupTests = [
 },
 {
   testname: "show popup with position",
-  condition: function() { return !gIsMenu; },
+  condition() { return !gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.showPopup(gTrigger, gScreenX + 60, gScreenY + 15,
                          "context", "topleft", "bottomright");
   },
-  result: function(testname, step) {
+  result(testname, step) {
     var rect = gMenuPopup.getBoundingClientRect();
     ok(true, gScreenX + "," + gScreenY);
     is(rect.left, 60, testname + " left");
@@ -427,8 +427,8 @@ var popupTests = [
   // to the viewport.
   testname: "open popup unanchored",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  test: function(testname, step) { gMenuPopup.openPopup(null, "after_start", 6, 8, false); },
-  result: function(testname, step) {
+  test(testname, step) { gMenuPopup.openPopup(null, "after_start", 6, 8, false); },
+  result(testname, step) {
     var rect = gMenuPopup.getBoundingClientRect();
     ok(rect.left == 6 && rect.top == 8 && rect.right && rect.bottom, testname);
   }
@@ -438,27 +438,27 @@ var popupTests = [
   events: [ "DOMMenuInactive thepopup", "command item3",
             "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuItemInactive item3" ],
-  test: function(testname, step) {
+  test(testname, step) {
     var item3 = document.getElementById("item3");
     synthesizeMouse(item3, 4, 4, { });
   },
-  result: function(testname, step) { checkClosed("trigger", testname); }
+  result(testname, step) { checkClosed("trigger", testname); }
 },
 {
   testname: "close popup",
-  condition: function() { return false; },
+  condition() { return false; },
   events: [ "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuInactive thepopup" ],
-  test: function(testname, step) { gMenuPopup.hidePopup(); }
+  test(testname, step) { gMenuPopup.hidePopup(); }
 },
 {
   testname: "open popup at screen",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  test: function(testname, step) {
+  test(testname, step) {
     gExpectedTriggerNode = "notset";
     gMenuPopup.openPopupAtScreen(gScreenX + 24, gScreenY + 20, false);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     gExpectedTriggerNode = null;
     is(gMenuPopup.anchorNode, null, testname + " anchorNode");
     is(gMenuPopup.triggerNode, null, testname + " triggerNode");
@@ -480,17 +480,17 @@ var popupTests = [
             "command amenu", "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuItemInactive amenu"
            ],
-  test: function() { synthesizeKey("M", { }); },
-  result: function(testname) { checkClosed("trigger", testname); }
+  test() { synthesizeKey("M", { }); },
+  result(testname) { checkClosed("trigger", testname); }
 },
 {
   testname: "open context popup at screen",
   events: [ "popupshowing thepopup 0010", "popupshown thepopup" ],
-  test: function(testname, step) {
+  test(testname, step) {
     gExpectedTriggerNode = gCachedEvent.target;
     gMenuPopup.openPopupAtScreen(gScreenX + 8, gScreenY + 16, true, gCachedEvent);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     gExpectedTriggerNode = null;
     is(gMenuPopup.anchorNode, null, testname + " anchorNode");
     is(gMenuPopup.triggerNode, gCachedEvent.target, testname + " triggerNode");
@@ -526,8 +526,8 @@ var popupTests = [
   // close because there is more than one item corresponding to that letter
   testname: "menuitem with non accelerator",
   events: [ "DOMMenuItemActive one" ],
-  test: function() { synthesizeKey("O", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("O", { }); },
+  result(testname) {
     checkOpen("trigger", testname);
     checkActive(gMenuPopup, "one", testname);
   }
@@ -537,8 +537,8 @@ var popupTests = [
   // that letter
   testname: "menuitem with non accelerator again",
   events: [ "DOMMenuItemInactive one", "DOMMenuItemActive submenu" ],
-  test: function() { synthesizeKey("O", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("O", { }); },
+  result(testname) {
     // 'submenu' is a menu but it should not be open
     checkOpen("trigger", testname);
     checkClosed("submenu", testname);
@@ -550,8 +550,8 @@ var popupTests = [
   testname: "open submenu with cursor right",
   events: [ "popupshowing submenupopup", "DOMMenuItemActive submenuitem",
             "popupshown submenupopup" ],
-  test: function() { synthesizeKey("VK_RIGHT", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("VK_RIGHT", { }); },
+  result(testname) {
     checkOpen("trigger", testname);
     checkOpen("submenu", testname);
     checkActive(gMenuPopup, "submenu", testname);
@@ -564,8 +564,8 @@ var popupTests = [
   events: [ "popuphiding submenupopup", "popuphidden submenupopup",
             "DOMMenuItemInactive submenuitem", "DOMMenuInactive submenupopup",
             "DOMMenuItemActive submenu" ],
-  test: function() { synthesizeKey("VK_LEFT", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("VK_LEFT", { }); },
+  result(testname) {
     checkOpen("trigger", testname);
     checkClosed("submenu", testname);
     checkActive(gMenuPopup, "submenu", testname);
@@ -577,8 +577,8 @@ var popupTests = [
   testname: "open submenu with enter",
   events: [ "popupshowing submenupopup", "DOMMenuItemActive submenuitem",
             "popupshown submenupopup" ],
-  test: function() { synthesizeKey("VK_RETURN", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("VK_RETURN", { }); },
+  result(testname) {
     checkOpen("trigger", testname);
     checkOpen("submenu", testname);
     checkActive(gMenuPopup, "submenu", testname);
@@ -591,8 +591,8 @@ var popupTests = [
   events: [ "popuphiding submenupopup", "popuphidden submenupopup",
             "DOMMenuItemInactive submenuitem", "DOMMenuInactive submenupopup",
             "DOMMenuItemActive submenu" ],
-  test: function() { synthesizeKey("VK_ESCAPE", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("VK_ESCAPE", { }); },
+  result(testname) {
     checkOpen("trigger", testname);
     checkClosed("submenu", testname);
     checkActive(gMenuPopup, "submenu", testname);
@@ -604,7 +604,7 @@ var popupTests = [
   // select the disabled item on Windows, but select the next item on other
   // platforms
   testname: "menuitem with non accelerator disabled",
-  events: function() {
+  events() {
     if (navigator.platform.indexOf("Win") == 0) {
       return [ "DOMMenuItemInactive submenu", "DOMMenuItemActive other",
                "DOMMenuItemInactive other", "DOMMenuItemActive item1" ];
@@ -612,8 +612,8 @@ var popupTests = [
     return [ "DOMMenuItemInactive submenu", "DOMMenuItemActive last",
              "DOMMenuItemInactive last", "DOMMenuItemActive item1" ];
   },
-  test: function() { synthesizeKey("O", { }); synthesizeKey("F", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("O", { }); synthesizeKey("F", { }); },
+  result(testname) {
     checkActive(gMenuPopup, "item1", testname);
   }
 },
@@ -621,8 +621,8 @@ var popupTests = [
   // pressing a letter that doesn't correspond to an accelerator nor the
   // first letter of a menu. This should have no effect.
   testname: "menuitem with keypress no accelerator found",
-  test: function() { synthesizeKey("G", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("G", { }); },
+  result(testname) {
     checkOpen("trigger", testname);
     checkActive(gMenuPopup, "item1", testname);
   }
@@ -636,8 +636,8 @@ var popupTests = [
             "command amenu", "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuItemInactive amenu",
            ],
-  test: function() { synthesizeKey("M", { }); },
-  result: function(testname) {
+  test() { synthesizeKey("M", { }); },
+  result(testname) {
     checkClosed("trigger", testname);
     checkActive(gMenuPopup, "", testname);
   }
@@ -646,15 +646,15 @@ var popupTests = [
   testname: "open context popup at screen with all modifiers set",
   events: [ "popupshowing thepopup 1111", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.openPopupAtScreen(gScreenX + 8, gScreenY + 16, true, gCachedEvent2);
   }
 },
 {
   testname: "open popup with open property",
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  test: function(testname, step) { openMenu(gTrigger); },
-  result: function(testname, step) {
+  test(testname, step) { openMenu(gTrigger); },
+  result(testname, step) {
     checkOpen("trigger", testname);
     if (gIsMenu)
       compareEdge(gTrigger, gMenuPopup, "after_start", 0, 0, testname);
@@ -664,8 +664,8 @@ var popupTests = [
   testname: "open submenu with open property",
   events: [ "popupshowing submenupopup", "DOMMenuItemActive submenu",
             "popupshown submenupopup" ],
-  test: function(testname, step) { openMenu(document.getElementById("submenu")); },
-  result: function(testname, step) {
+  test(testname, step) { openMenu(document.getElementById("submenu")); },
+  result(testname, step) {
     checkOpen("trigger", testname);
     checkOpen("submenu", testname);
     // XXXndeakin
@@ -682,67 +682,67 @@ var popupTests = [
             "DOMMenuInactive submenupopup",
             "DOMMenuItemInactive submenu", "DOMMenuItemInactive submenu",
             "DOMMenuInactive thepopup", ],
-  test: function() { gMenuPopup.hidePopup(); },
-  result: function(testname, step) {
+  test() { gMenuPopup.hidePopup(); },
+  result(testname, step) {
     checkClosed("trigger", testname);
     checkClosed("submenu", testname);
   }
 },
 {
   testname: "open submenu with open property without parent open",
-  test: function(testname, step) { openMenu(document.getElementById("submenu")); },
-  result: function(testname, step) {
+  test(testname, step) { openMenu(document.getElementById("submenu")); },
+  result(testname, step) {
     checkClosed("trigger", testname);
     checkClosed("submenu", testname);
   }
 },
 {
   testname: "open popup with open property and position",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("position", "before_start");
     openMenu(gTrigger);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     compareEdge(gTrigger, gMenuPopup, "before_start", 0, 0, testname);
   }
 },
 {
   testname: "close popup with open property",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuInactive thepopup" ],
-  test: function(testname, step) { closeMenu(gTrigger, gMenuPopup); },
-  result: function(testname, step) { checkClosed("trigger", testname); }
+  test(testname, step) { closeMenu(gTrigger, gMenuPopup); },
+  result(testname, step) { checkClosed("trigger", testname); }
 },
 {
   testname: "open popup with open property, position, anchor and alignment",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.setAttribute("position", "start_after");
     gMenuPopup.setAttribute("popupanchor", "topright");
     gMenuPopup.setAttribute("popupalign", "bottomright");
     openMenu(gTrigger);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     compareEdge(gTrigger, gMenuPopup, "start_after", 0, 0, testname);
   }
 },
 {
   testname: "open popup with open property, anchor and alignment",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.removeAttribute("position");
     gMenuPopup.setAttribute("popupanchor", "bottomright");
     gMenuPopup.setAttribute("popupalign", "topright");
     openMenu(gTrigger);
   },
-  result: function(testname, step) {
+  result(testname, step) {
     compareEdge(gTrigger, gMenuPopup, "after_end", 0, 0, testname);
     gMenuPopup.removeAttribute("popupanchor");
     gMenuPopup.removeAttribute("popupalign");
@@ -750,54 +750,54 @@ var popupTests = [
 },
 {
   testname: "focus and cursor down on trigger",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     gTrigger.focus();
     synthesizeKey("VK_DOWN", { altKey: !platformIsMac() });
   },
-  result: function(testname, step) {
+  result(testname, step) {
     checkOpen("trigger", testname);
     checkActive(gMenuPopup, "", testname);
   }
 },
 {
   testname: "focus and cursor up on trigger",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
-  test: function(testname, step) {
+  test(testname, step) {
     gTrigger.focus();
     synthesizeKey("VK_UP", { altKey: !platformIsMac() });
   },
-  result: function(testname, step) {
+  result(testname, step) {
     checkOpen("trigger", testname);
     checkActive(gMenuPopup, "", testname);
   }
 },
 {
   testname: "select and enter on menuitem",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "DOMMenuItemActive item1", "DOMMenuItemInactive item1",
             "DOMMenuInactive thepopup", "command item1",
             "popuphiding thepopup", "popuphidden thepopup",
             "DOMMenuItemInactive item1" ],
-  test: function(testname, step) {
+  test(testname, step) {
     synthesizeKey("VK_DOWN", { });
     synthesizeKey("VK_RETURN", { });
   },
-  result: function(testname, step) { checkClosed("trigger", testname); }
+  result(testname, step) { checkClosed("trigger", testname); }
 },
 {
   testname: "focus trigger and key to open",
-  condition: function() { return gIsMenu; },
+  condition() { return gIsMenu; },
   events: [ "popupshowing thepopup", "popupshown thepopup" ],
   autohide: "thepopup",
-  test: function(testname, step) {
+  test(testname, step) {
     gTrigger.focus();
     synthesizeKey(platformIsMac() ? " " : "VK_F4", { });
   },
-  result: function(testname, step) {
+  result(testname, step) {
     checkOpen("trigger", testname);
     checkActive(gMenuPopup, "", testname);
   }
@@ -805,26 +805,26 @@ var popupTests = [
 {
   // the menu should only open when the meta or alt key is not pressed
   testname: "focus trigger and key wrong modifier",
-  condition: function() { return gIsMenu; },
-  test: function(testname, step) {
+  condition() { return gIsMenu; },
+  test(testname, step) {
     gTrigger.focus();
     if (platformIsMac())
       synthesizeKey("VK_F4", { altKey: true });
     else
       synthesizeKey("", { metaKey: true });
   },
-  result: function(testname, step) {
+  result(testname, step) {
     checkClosed("trigger", testname);
   }
 },
 {
   testname: "mouse click on disabled menu",
-  condition: function() { return gIsMenu; },
-  test: function(testname, step) {
+  condition() { return gIsMenu; },
+  test(testname, step) {
     gTrigger.setAttribute("disabled", "true");
     synthesizeMouse(gTrigger, 4, 4, { });
   },
-  result: function(testname, step) {
+  result(testname, step) {
     checkClosed("trigger", testname);
     gTrigger.removeAttribute("disabled");
   }
@@ -836,7 +836,7 @@ var popupTests = [
   events: [ "popupshowing thepopup", "popupshowing submenupopup",
             "popupshown thepopup", "DOMMenuItemActive submenu",
             "popupshown submenupopup" ],
-  test: function(testname, step) {
+  test(testname, step) {
     gMenuPopup.openPopup(gTrigger, "after_start", 0, 0, false, true);
     document.getElementById("submenupopup").
       openPopup(gTrigger, "end_before", 0, 0, false, true);
@@ -847,7 +847,7 @@ var popupTests = [
 {
   // remove the content nodes for the popup
   testname: "remove content",
-  test: function(testname, step) {
+  test(testname, step) {
     var submenupopup = document.getElementById("submenupopup");
     submenupopup.parentNode.removeChild(submenupopup);
     var popup = document.getElementById("thepopup");

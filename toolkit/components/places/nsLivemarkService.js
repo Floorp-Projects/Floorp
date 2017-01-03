@@ -782,7 +782,7 @@ LivemarkLoadListener.prototype = {
         }
 
         let title = entry.title ? entry.title.plainText() : "";
-        livemarkChildren.push({ uri: uri, title: title, visited: false });
+        livemarkChildren.push({ uri, title, visited: false });
       }
 
       this._livemark.children = livemarkChildren;
