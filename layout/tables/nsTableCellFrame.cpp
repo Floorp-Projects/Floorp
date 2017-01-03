@@ -376,7 +376,7 @@ nsTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
                                                 aRenderingContext,
                                                 aDirtyRect, rect,
                                                 this, aFlags);
-  return nsCSSRendering::PaintBackground(params);
+  return nsCSSRendering::PaintStyleImageLayer(params);
 }
 
 // Called by nsTablePainter
@@ -1204,7 +1204,6 @@ nsBCTableCellFrame::GetBorderOverflow()
   return halfBorder.GetPhysicalMargin(wm);
 }
 
-
 DrawResult
 nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect,
@@ -1230,5 +1229,6 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
                                                 aRenderingContext, aDirtyRect,
                                                 rect, this,
                                                 aFlags);
-  return nsCSSRendering::PaintBackgroundWithSC(params, StyleContext(), myBorder);
+  return nsCSSRendering::PaintStyleImageLayerWithSC(params, StyleContext(),
+                                                    myBorder);
 }
