@@ -53,7 +53,7 @@ this.cert = {
  * @throws {Components.Exception}
  *     If unable to register or initialise |service|.
  */
-cert.installOverride = function(service) {
+cert.installOverride = function (service) {
   if (this.currentOverride) {
     return;
   }
@@ -102,7 +102,7 @@ cert.InsecureSweepingOverride = function() {
   // make your life miserable.
   let service = function() {};
   service.prototype = {
-    hasMatchingOverride: function(
+    hasMatchingOverride: function (
         aHostName, aPort, aCert, aOverrideBits, aIsTemporary) {
       aIsTemporary.value = false;
       aOverrideBits.value =

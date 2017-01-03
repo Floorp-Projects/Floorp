@@ -98,7 +98,7 @@ this.evaluate = {};
  * @throws ScriptTimeoutError
  *   If the script was interrupted due to script timeout.
  */
-evaluate.sandbox = function(sb, script, args = [], opts = {}) {
+evaluate.sandbox = function (sb, script, args = [], opts = {}) {
   let scriptTimeoutID, timeoutHandler, unloadHandler;
 
   let promise = new Promise((resolve, reject) => {
@@ -190,7 +190,7 @@ this.sandbox = {};
  * @return {Sandbox}
  *     The augmented sandbox.
  */
-sandbox.augment = function(sb, adapter) {
+sandbox.augment = function (sb, adapter) {
   function* entries(obj) {
      for (let key of Object.keys(obj)) {
        yield [key, obj[key]];
@@ -217,7 +217,7 @@ sandbox.augment = function(sb, adapter) {
  * @return {Sandbox}
  *     The created sandbox.
  */
-sandbox.create = function(window, principal = null, opts = {}) {
+sandbox.create = function (window, principal = null, opts = {}) {
   let p = principal || window;
   opts = Object.assign({
     sameZoneAs: window,
@@ -238,7 +238,7 @@ sandbox.create = function(window, principal = null, opts = {}) {
  * @return {Sandbox}
  *     The created sandbox.
  */
-sandbox.createMutable = function(window) {
+sandbox.createMutable = function (window) {
   let opts = {
     wantComponents: false,
     wantXrays: false,
@@ -246,13 +246,13 @@ sandbox.createMutable = function(window) {
   return sandbox.create(window, null, opts);
 };
 
-sandbox.createSystemPrincipal = function(window) {
+sandbox.createSystemPrincipal = function (window) {
   let principal = Cc["@mozilla.org/systemprincipal;1"]
       .createInstance(Ci.nsIPrincipal);
   return sandbox.create(window, principal);
 };
 
-sandbox.createSimpleTest = function(window, harness) {
+sandbox.createSimpleTest = function (window, harness) {
   let sb = sandbox.create(window);
   sb = sandbox.augment(sb, harness);
   sb[FINISH] = () => sb[COMPLETE](harness.generate_results());

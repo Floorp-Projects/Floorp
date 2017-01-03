@@ -56,7 +56,7 @@ this.error = {};
  * @return {boolean}
  *     True if error, false otherwise.
  */
-error.isError = function(val) {
+error.isError = function (val) {
   if (val === null || typeof val != "object") {
     return false;
   } else if (val instanceof Ci.nsIException) {
@@ -75,7 +75,7 @@ error.isError = function(val) {
 /**
  * Checks if obj is an object in the WebDriverError prototypal chain.
  */
-error.isWebDriverError = function(obj) {
+error.isWebDriverError = function (obj) {
   return error.isError(obj) &&
       ("name" in obj && ERRORS.has(obj.name));
 };
@@ -84,7 +84,7 @@ error.isWebDriverError = function(obj) {
  * Wraps an Error prototype in a WebDriverError.  If the given error is
  * already a WebDriverError, this is effectively a no-op.
  */
-error.wrap = function(err) {
+error.wrap = function (err) {
   if (error.isWebDriverError(err)) {
     return err;
   }
@@ -95,7 +95,7 @@ error.wrap = function(err) {
  * Wraps an Error as a WebDriverError type.  If the given error is already
  * in the WebDriverError prototype chain, this function acts as a no-op.
  */
-error.wrap = function(err) {
+error.wrap = function (err) {
   if (error.isWebDriverError(err)) {
     return err;
   }
@@ -106,7 +106,7 @@ error.wrap = function(err) {
  * Unhandled error reporter.  Dumps the error and its stacktrace to console,
  * and reports error to the Browser Console.
  */
-error.report = function(err) {
+error.report = function (err) {
   let msg = `Marionette threw an error: ${error.stringify(err)}`;
   dump(msg + "\n");
   if (Cu.reportError) {
@@ -117,7 +117,7 @@ error.report = function(err) {
 /**
  * Prettifies an instance of Error and its stacktrace to a string.
  */
-error.stringify = function(err) {
+error.stringify = function (err) {
   try {
     let s = err.toString();
     if ("stack" in err) {
@@ -138,7 +138,7 @@ error.stringify = function(err) {
  *     error.pprint`Expected boolean, got ${input}`;
  *     => "Expected boolean, got [object Object] {"value": true}"
  */
-error.pprint = function(strings, ...values) {
+error.pprint = function (strings, ...values) {
   let res = [];
   for (let i = 0; i < strings.length; i++) {
     res.push(strings[i]);
@@ -166,7 +166,7 @@ error.pprint = function(strings, ...values) {
  * @throws {TypeError}
  *     If error type is not serialisable.
  */
-error.toJson = function(err) {
+error.toJson = function (err) {
   if (!error.isWebDriverError(err)) {
     throw new TypeError(`Unserialisable error type: ${err}`);
   }
@@ -188,7 +188,7 @@ error.toJson = function(err) {
  * @return {WebDriverError}
  *     Deserialised error prototype.
  */
-error.fromJson = function(json) {
+error.fromJson = function (json) {
   if (!statusLookup.has(json.error)) {
     throw new TypeError(`Undeserialisable error type: ${json.error}`);
   }
@@ -206,7 +206,7 @@ error.fromJson = function(json) {
  * It should not be used directly, as it does not correspond to a real
  * error in the specification.
  */
-this.WebDriverError = function(msg, stack = undefined) {
+this.WebDriverError = function (msg, stack = undefined) {
   Error.call(this, msg);
   this.name = "WebDriverError";
   this.message = msg;
@@ -216,49 +216,49 @@ this.WebDriverError = function(msg, stack = undefined) {
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
-this.ElementNotAccessibleError = function(msg) {
+this.ElementNotAccessibleError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "ElementNotAccessibleError";
   this.status = "element not accessible";
 };
 ElementNotAccessibleError.prototype = Object.create(WebDriverError.prototype);
 
-this.ElementNotVisibleError = function(msg) {
+this.ElementNotVisibleError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "ElementNotVisibleError";
   this.status = "element not visible";
 };
 ElementNotVisibleError.prototype = Object.create(WebDriverError.prototype);
 
-this.InsecureCertificateError = function(msg) {
+this.InsecureCertificateError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "InsecureCertificateError";
   this.status = "insecure certificate";
 };
 InsecureCertificateError.prototype = Object.create(WebDriverError.prototype);
 
-this.InvalidArgumentError = function(msg) {
+this.InvalidArgumentError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "InvalidArgumentError";
   this.status = "invalid argument";
 };
 InvalidArgumentError.prototype = Object.create(WebDriverError.prototype);
 
-this.InvalidElementStateError = function(msg) {
+this.InvalidElementStateError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "InvalidElementStateError";
   this.status = "invalid element state";
 };
 InvalidElementStateError.prototype = Object.create(WebDriverError.prototype);
 
-this.InvalidSelectorError = function(msg) {
+this.InvalidSelectorError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "InvalidSelectorError";
   this.status = "invalid selector";
 };
 InvalidSelectorError.prototype = Object.create(WebDriverError.prototype);
 
-this.InvalidSessionIdError = function(msg) {
+this.InvalidSessionIdError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "InvalidSessionIdError";
   this.status = "invalid session id";
@@ -282,7 +282,7 @@ InvalidSessionIdError.prototype = Object.create(WebDriverError.prototype);
  * @param {string=} script
  *     The JS script being executed in text form.
  */
-this.JavaScriptError = function(
+this.JavaScriptError = function (
     err, fnName = null, file = null, line = null, script = null) {
   let msg = String(err);
   let trace = "";
@@ -317,84 +317,84 @@ this.JavaScriptError = function(
 };
 JavaScriptError.prototype = Object.create(WebDriverError.prototype);
 
-this.NoAlertOpenError = function(msg) {
+this.NoAlertOpenError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "NoAlertOpenError";
   this.status = "no such alert";
 };
 NoAlertOpenError.prototype = Object.create(WebDriverError.prototype);
 
-this.NoSuchElementError = function(msg) {
+this.NoSuchElementError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "NoSuchElementError";
   this.status = "no such element";
 };
 NoSuchElementError.prototype = Object.create(WebDriverError.prototype);
 
-this.NoSuchFrameError = function(msg) {
+this.NoSuchFrameError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "NoSuchFrameError";
   this.status = "no such frame";
 };
 NoSuchFrameError.prototype = Object.create(WebDriverError.prototype);
 
-this.NoSuchWindowError = function(msg) {
+this.NoSuchWindowError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "NoSuchWindowError";
   this.status = "no such window";
 };
 NoSuchWindowError.prototype = Object.create(WebDriverError.prototype);
 
-this.ScriptTimeoutError = function(msg) {
+this.ScriptTimeoutError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "ScriptTimeoutError";
   this.status = "script timeout";
 };
 ScriptTimeoutError.prototype = Object.create(WebDriverError.prototype);
 
-this.SessionNotCreatedError = function(msg) {
+this.SessionNotCreatedError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "SessionNotCreatedError";
   this.status = "session not created";
 };
 SessionNotCreatedError.prototype = Object.create(WebDriverError.prototype);
 
-this.StaleElementReferenceError = function(msg) {
+this.StaleElementReferenceError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "StaleElementReferenceError";
   this.status = "stale element reference";
 };
 StaleElementReferenceError.prototype = Object.create(WebDriverError.prototype);
 
-this.TimeoutError = function(msg) {
+this.TimeoutError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "TimeoutError";
   this.status = "timeout";
 };
 TimeoutError.prototype = Object.create(WebDriverError.prototype);
 
-this.UnableToSetCookieError = function(msg) {
+this.UnableToSetCookieError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "UnableToSetCookieError";
   this.status = "unable to set cookie";
 };
 UnableToSetCookieError.prototype = Object.create(WebDriverError.prototype);
 
-this.UnknownCommandError = function(msg) {
+this.UnknownCommandError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "UnknownCommandError";
   this.status = "unknown command";
 };
 UnknownCommandError.prototype = Object.create(WebDriverError.prototype);
 
-this.UnknownError = function(msg) {
+this.UnknownError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "UnknownError";
   this.status = "unknown error";
 };
 UnknownError.prototype = Object.create(WebDriverError.prototype);
 
-this.UnsupportedOperationError = function(msg) {
+this.UnsupportedOperationError = function (msg) {
   WebDriverError.call(this, msg);
   this.name = "UnsupportedOperationError";
   this.status = "unsupported operation";
