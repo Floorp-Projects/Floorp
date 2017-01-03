@@ -193,6 +193,25 @@ assert.object = function (obj, msg = "") {
 };
 
 /**
+ * Asserts that |obj| is an Array.
+ *
+ * @param {?} obj
+ *     Value to test.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {Object}
+ *     |obj| is returned unaltered.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |obj| is not an Array.
+ */
+assert.array = function (obj, msg = "") {
+  msg = msg || error.pprint`Expected ${obj} to be an Array`;
+  return assert.that(o => Array.isArray(o), msg)(obj);
+};
+
+/**
  * Returns a function that is used to assert the |predicate|.
  *
  * @param {function(?): boolean} predicate
