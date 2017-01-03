@@ -68,7 +68,7 @@ nsresult
 PrintTargetPDF::EndPage()
 {
   cairo_surface_show_page(mCairoSurface);
-  return NS_OK;
+  return PrintTarget::EndPage();
 }
 
 void
