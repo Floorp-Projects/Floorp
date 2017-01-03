@@ -40,10 +40,10 @@ const isGUID = /[A-Za-z0-9\+\/]{16}/;
 function searchEntries(terms, params, iter) {
   let results = [];
   FormHistory.search(terms, params, { handleResult: result => results.push(result),
-                                      handleError: function(error) {
+                                      handleError(error) {
                                         do_throw("Error occurred searching form history: " + error);
                                       },
-                                      handleCompletion: function(reason) { if (!reason) iter.next(results); }
+                                      handleCompletion(reason) { if (!reason) iter.next(results); }
                                     });
 }
 
@@ -58,16 +58,16 @@ function countEntries(name, value, then) {
 
   let count = 0;
   FormHistory.count(obj, { handleResult: result => count = result,
-                           handleError: function(error) {
+                           handleError(error) {
                              do_throw("Error occurred searching form history: " + error);
                            },
-                           handleCompletion: function(reason) { if (!reason) then(count); }
+                           handleCompletion(reason) { if (!reason) then(count); }
                          });
 }
 
 // Perform a single form history update and call then() when done.
 function updateEntry(op, name, value, then) {
-  var obj = { op: op };
+  var obj = { op };
   if (name !== null)
     obj.fieldname = name;
   if (value !== null)
@@ -78,16 +78,16 @@ function updateEntry(op, name, value, then) {
 // Add a single form history entry with the current time and call then() when done.
 function addEntry(name, value, then) {
   let now = Date.now() * 1000;
-  updateFormHistory({ op: "add", fieldname: name, value: value, timesUsed: 1,
+  updateFormHistory({ op: "add", fieldname: name, value, timesUsed: 1,
                       firstUsed: now, lastUsed: now }, then);
 }
 
 // Wrapper around FormHistory.update which handles errors. Calls then() when done.
 function updateFormHistory(changes, then) {
-  FormHistory.update(changes, { handleError: function(error) {
+  FormHistory.update(changes, { handleError(error) {
                                   do_throw("Error occurred updating form history: " + error);
                                 },
-                                handleCompletion: function(reason) { if (!reason) then(); },
+                                handleCompletion(reason) { if (!reason) then(); },
                               });
 }
 

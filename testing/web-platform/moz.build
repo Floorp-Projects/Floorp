@@ -21,3 +21,18 @@ TEST_HARNESS_FILES['web-platform'].certs = [
     'certs/web-platform.test.key',
     'certs/web-platform.test.pem',
 ]
+
+with Files("update/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("harness/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("certs/**"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("mach*"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")
+
+with Files("*.py"):
+    BUG_COMPONENT = ("Testing", "web-platform-tests")

@@ -57,7 +57,7 @@ var gTests = [
 
 {
   desc: "Test activation with enable panel",
-  snippet: snippet,
+  snippet,
   panel: true
 },
 

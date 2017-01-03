@@ -82,7 +82,7 @@ load 369150-1.html
 load 369150-2.html
 load 369227-1.xhtml
 load 369542-1.html
-asserts-if(stylo,2) load 369542-2.html # bug 1324646
+load 369542-2.html
 load 369547-1.html
 load 370174-1.html
 load 370174-2.html
@@ -360,7 +360,7 @@ load 494300-1.xul
 load 494332-1.html
 load 495875-1.html
 load 495875-2.html
-asserts-if(stylo,4-12) load 496742.html # bug 1324633
+asserts-if(stylo,4-14) load 496742.html # bug 1324633
 load 499138.html
 load 499857-1.html
 load 499862-1.html
@@ -614,7 +614,7 @@ load details-display-none-summary-3.html
 load details-open-overflow-auto.html
 load details-open-overflow-hidden.html
 load details-three-columns.html
-asserts-if(stylo,10) load first-letter-638937-1.html # bug 1324663
+load first-letter-638937-1.html
 load first-letter-638937-2.html
 load flex-nested-abspos-1.html
 pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(0-100) load font-inflation-762332.html # bug 762332

@@ -648,12 +648,45 @@ int nr_ice_peer_ctx_dump_state(nr_ice_peer_ctx *pctx,FILE *out)
   }
 #endif
 
+void nr_ice_peer_ctx_refresh_consent_all_streams(nr_ice_peer_ctx *pctx)
+  {
+    nr_ice_media_stream *str;
+
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): refreshing consent on all streams",pctx->label);
+
+    str=STAILQ_FIRST(&pctx->peer_streams);
+    while(str) {
+      nr_ice_media_stream_refresh_consent_all(str);
+      str=STAILQ_NEXT(str,entry);
+    }
+  }
+
 void nr_ice_peer_ctx_disconnected(nr_ice_peer_ctx *pctx)
   {
     if (pctx->reported_connected &&
         pctx->handler &&
         pctx->handler->vtbl->ice_disconnected) {
       pctx->handler->vtbl->ice_disconnected(pctx->handler->obj, pctx);
+
+      pctx->reported_connected = 0;
+    }
+  }
+
+void nr_ice_peer_ctx_disconnect_all_streams(nr_ice_peer_ctx *pctx)
+  {
+    nr_ice_media_stream *str;
+
+    r_log(LOG_ICE,LOG_INFO,"ICE-PEER(%s): disconnecting all streams",pctx->label);
+
+    str=STAILQ_FIRST(&pctx->peer_streams);
+    while(str) {
+      nr_ice_media_stream_disconnect_all_components(str);
+
+      /* The first stream to be disconnected will cause the peer ctx to signal
+         the disconnect up. */
+      nr_ice_media_stream_set_disconnected(str, NR_ICE_MEDIA_STREAM_DISCONNECTED);
+
+      str=STAILQ_NEXT(str,entry);
     }
   }
 
@@ -687,7 +720,7 @@ int nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
 
     str=STAILQ_FIRST(&pctx->peer_streams);
     while(str){
-      if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_COMPLETED){
+      if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_CONNECTED){
         succeeded++;
       }
       else if(str->ice_state==NR_ICE_MEDIA_STREAM_CHECKS_FAILED){
@@ -716,7 +749,6 @@ int nr_ice_peer_ctx_check_if_connected(nr_ice_peer_ctx *pctx)
 
   done:
     _status=0;
-//  abort:
     return(_status);
   }
 

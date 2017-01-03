@@ -23,8 +23,8 @@
  }
 }(this, function (exports) {
  'use strict';
- var pdfjsVersion = '1.6.401';
- var pdfjsBuild = 'b629be05';
+ var pdfjsVersion = '1.6.418';
+ var pdfjsBuild = '59afb4b9';
  var pdfjsFilePath = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
  var pdfjsLibs = {};
  (function pdfjsWrapper() {
@@ -1808,6 +1808,15 @@
       switch (fieldType) {
       case 'Tx':
        return new TextWidgetAnnotationElement(parameters);
+      case 'Btn':
+       if (parameters.data.radioButton) {
+        return new RadioButtonWidgetAnnotationElement(parameters);
+       } else if (parameters.data.checkBox) {
+        return new CheckboxWidgetAnnotationElement(parameters);
+       } else {
+        warn('Unimplemented button widget annotation: pushbutton');
+       }
+       break;
       case 'Ch':
        return new ChoiceWidgetAnnotationElement(parameters);
       }
@@ -2074,6 +2083,45 @@
      }
     });
     return TextWidgetAnnotationElement;
+   }();
+   var CheckboxWidgetAnnotationElement = function CheckboxWidgetAnnotationElementClosure() {
+    function CheckboxWidgetAnnotationElement(parameters) {
+     WidgetAnnotationElement.call(this, parameters, parameters.renderInteractiveForms);
+    }
+    Util.inherit(CheckboxWidgetAnnotationElement, WidgetAnnotationElement, {
+     render: function CheckboxWidgetAnnotationElement_render() {
+      this.container.className = 'buttonWidgetAnnotation checkBox';
+      var element = document.createElement('input');
+      element.disabled = this.data.readOnly;
+      element.type = 'checkbox';
+      if (this.data.fieldValue && this.data.fieldValue !== 'Off') {
+       element.setAttribute('checked', true);
+      }
+      this.container.appendChild(element);
+      return this.container;
+     }
+    });
+    return CheckboxWidgetAnnotationElement;
+   }();
+   var RadioButtonWidgetAnnotationElement = function RadioButtonWidgetAnnotationElementClosure() {
+    function RadioButtonWidgetAnnotationElement(parameters) {
+     WidgetAnnotationElement.call(this, parameters, parameters.renderInteractiveForms);
+    }
+    Util.inherit(RadioButtonWidgetAnnotationElement, WidgetAnnotationElement, {
+     render: function RadioButtonWidgetAnnotationElement_render() {
+      this.container.className = 'buttonWidgetAnnotation radioButton';
+      var element = document.createElement('input');
+      element.disabled = this.data.readOnly;
+      element.type = 'radio';
+      element.name = this.data.fieldName;
+      if (this.data.fieldValue === this.data.buttonValue) {
+       element.setAttribute('checked', true);
+      }
+      this.container.appendChild(element);
+      return this.container;
+     }
+    });
+    return RadioButtonWidgetAnnotationElement;
    }();
    var ChoiceWidgetAnnotationElement = function ChoiceWidgetAnnotationElementClosure() {
     function ChoiceWidgetAnnotationElement(parameters) {

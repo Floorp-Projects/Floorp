@@ -178,11 +178,11 @@ add_test(function() {
 
   var install = gProvider.installs[0];
   var listener = {
-    onInstallStarted: function() {
+    onInstallStarted() {
       info("Install started");
       is_element_visible(item._installStatus, "Install progress widget should be visible");
     },
-    onInstallEnded: function() {
+    onInstallEnded() {
       install.removeTestListener(this);
       info("Install ended");
       is_element_hidden(item._installStatus, "Install progress widget should be hidden");

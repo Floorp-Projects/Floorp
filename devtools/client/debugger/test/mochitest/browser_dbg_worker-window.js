@@ -48,7 +48,7 @@ add_task(function* () {
      "worker URL in host title");
 
   let toolTabs = toolbox.doc.querySelectorAll(".devtools-tab");
-  let activeTools = [...toolTabs].map(tab=>tab.getAttribute("toolid"));
+  let activeTools = [...toolTabs].map(tab=>tab.getAttribute("data-id"));
 
   is(activeTools.join(","), "webconsole,jsdebugger,scratchpad,options",
     "Correct set of tools supported by worker");

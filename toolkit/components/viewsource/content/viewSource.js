@@ -441,7 +441,7 @@ ViewSourceChrome.prototype = {
       // If we don't have history enabled, we have to do a reload in order to
       // show the character set change. See bug 136322.
       this.sendAsyncMessage("ViewSource:SetCharacterSet", {
-        charset: charset,
+        charset,
         doPageLoad: this.historyEnabled,
       });
 

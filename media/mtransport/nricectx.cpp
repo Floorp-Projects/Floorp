@@ -971,6 +971,16 @@ nsresult NrIceCtx::Finalize() {
   return NS_OK;
 }
 
+void NrIceCtx::UpdateNetworkState(bool online) {
+  MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): updating network state to " <<
+            (online ? "online" : "offline"));
+  if (online) {
+    nr_ice_peer_ctx_refresh_consent_all_streams(peer_);
+  } else {
+    nr_ice_peer_ctx_disconnect_all_streams(peer_);
+  }
+}
+
 void NrIceCtx::SetConnectionState(ConnectionState state) {
   if (state == connection_state_)
     return;

@@ -1,18 +1,18 @@
 pref(dom.animations-api.core.enabled,true) load 1239889-1.html
 asserts-if(stylo,3) pref(dom.animations-api.core.enabled,true) load 1244595-1.html # bug 1324696
-asserts-if(stylo,3-4) pref(dom.animations-api.core.enabled,true) load 1216842-1.html # bug 1324695
-asserts-if(stylo,3-5) pref(dom.animations-api.core.enabled,true) load 1216842-2.html # bug 1324695
+asserts-if(stylo,3-10) pref(dom.animations-api.core.enabled,true) load 1216842-1.html # bug 1324695
+asserts-if(stylo,3-10) pref(dom.animations-api.core.enabled,true) load 1216842-2.html # bug 1324695
 asserts-if(stylo,3) pref(dom.animations-api.core.enabled,true) load 1216842-3.html # bug 1324691
 asserts-if(stylo,3) pref(dom.animations-api.core.enabled,true) load 1216842-4.html # bug 1324691
-asserts-if(stylo,4-5) pref(dom.animations-api.core.enabled,true) load 1216842-5.html # bug 1324693
-asserts-if(stylo,4-5) pref(dom.animations-api.core.enabled,true) load 1216842-6.html # bug 1324693
-asserts-if(stylo,3-5) pref(dom.animations-api.core.enabled,true) load 1272475-1.html # bug 1324693
-asserts-if(stylo,4-7) pref(dom.animations-api.core.enabled,true) load 1272475-2.html # bug 1324693
+asserts-if(stylo,4-10) pref(dom.animations-api.core.enabled,true) load 1216842-5.html # bug 1324693
+asserts-if(stylo,4-10) pref(dom.animations-api.core.enabled,true) load 1216842-6.html # bug 1324693
+asserts-if(stylo,3-10) pref(dom.animations-api.core.enabled,true) load 1272475-1.html # bug 1324693
+asserts-if(stylo,4-10) pref(dom.animations-api.core.enabled,true) load 1272475-2.html # bug 1324693
 asserts-if(stylo,5) pref(dom.animations-api.core.enabled,true) load 1278485-1.html # bug 1324691
 asserts-if(stylo,31) pref(dom.animations-api.core.enabled,true) load 1277272-1.html # bug 1324694
 asserts-if(stylo,2) pref(dom.animations-api.core.enabled,true) load 1290535-1.html # bug 1324690
 pref(dom.animations-api.core.enabled,true) load 1304886-1.html
 pref(dom.animations-api.core.enabled,true) load 1322382-1.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1322291-1.html # bug 1323733
-pref(dom.animations-api.core.enabled,true) load 1323114-1.html
-pref(dom.animations-api.core.enabled,true) load 1323114-2.html
+asserts-if(stylo,0-5) pref(dom.animations-api.core.enabled,true) load 1323114-1.html # bug 1324690
+asserts-if(stylo,0-5) pref(dom.animations-api.core.enabled,true) load 1323114-2.html # bug 1324690

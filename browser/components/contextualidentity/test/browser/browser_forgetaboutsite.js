@@ -98,22 +98,22 @@ function OpenCacheEntry(key, where, flags, lci)
     CacheListener.prototype = {
       _appCache: null,
 
-      QueryInterface: function(iid) {
+      QueryInterface(iid) {
         if (iid.equals(Components.interfaces.nsICacheEntryOpenCallback) ||
             iid.equals(Components.interfaces.nsISupports))
           return this;
         throw Components.results.NS_ERROR_NO_INTERFACE;
       },
 
-      onCacheEntryCheck: function(entry, appCache) {
+      onCacheEntryCheck(entry, appCache) {
         return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
       },
 
-      onCacheEntryAvailable: function(entry, isnew, appCache, status) {
+      onCacheEntryAvailable(entry, isnew, appCache, status) {
         resolve();
       },
 
-      run: function() {
+      run() {
         let storage = getCacheStorage(where, lci, this._appCache);
         storage.asyncOpenURI(key, "", flags, this);
       }

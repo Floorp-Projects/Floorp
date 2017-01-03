@@ -66,7 +66,7 @@
      */
     Object.defineProperty(Error.prototype, "moduleStack",
     {
-      get: function() {
+      get() {
         return this.stack;
       }
     });
@@ -77,7 +77,7 @@
      */
     Object.defineProperty(Error.prototype, "moduleName",
     {
-      get: function() {
+      get() {
         let match = this.stack.match(/\@(.*):.*:/);
         if (match) {
           return match[1];
@@ -110,8 +110,8 @@
       // Identification of the module
       let module = {
         id: path,
-        uri: uri,
-        exports: exports
+        uri,
+        exports
       };
 
       // Make module available immediately

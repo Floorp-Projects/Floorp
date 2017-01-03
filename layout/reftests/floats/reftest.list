@@ -26,6 +26,12 @@ fails == 345369-2.html 345369-2-ref.html
 == 1260031-1.html?overflow:hidden 1260031-1-ref.html
 == 1291110-1.html 1291110-1-ref.html
 == 1291110-2.html 1291110-2-ref.html
+== 1322843-1a.html 1322843-1-ref.html
+== 1322843-1b.html 1322843-1-ref.html
+== 1322843-1c.html 1322843-1-ref.html
+== 1322843-1d.html 1322843-1-ref.html
+== 1322843-1e.html 1322843-1-ref.html
+== 1322843-1f.html 1322843-1-ref.html
 == float-in-rtl-1a.html float-in-rtl-1-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-1b.html float-in-rtl-1-ref.html
 fuzzy-if(skiaContent,1,27000) == float-in-rtl-1c.html float-in-rtl-1-ref.html

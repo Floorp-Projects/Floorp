@@ -38,16 +38,16 @@ add_task(function* init() {
     info("adding search history values: " + kValues);
     let addOps = kValues.map(value => { return {op: "add",
                                              fieldname: "searchbar-history",
-                                             value: value}
+                                             value}
                                    });
     searchbar.FormHistory.update(addOps, {
-      handleCompletion: function() {
+      handleCompletion() {
         registerCleanupFunction(() => {
           info("removing search history values: " + kValues);
           let removeOps =
             kValues.map(value => { return {op: "remove",
                                            fieldname: "searchbar-history",
-                                           value: value}
+                                           value}
                                  });
           searchbar.FormHistory.update(removeOps);
         });

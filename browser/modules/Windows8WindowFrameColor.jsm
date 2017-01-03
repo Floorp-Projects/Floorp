@@ -14,7 +14,7 @@ var Registry = Cu.import("resource://gre/modules/WindowsRegistry.jsm").WindowsRe
 var Windows8WindowFrameColor = {
   _windowFrameColor: null,
 
-  get: function() {
+  get() {
     if (this._windowFrameColor)
       return this._windowFrameColor;
 

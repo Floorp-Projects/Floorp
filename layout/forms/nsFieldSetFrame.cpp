@@ -89,21 +89,18 @@ nsFieldSetFrame::GetLegend() const
   return mFrames.FirstChild();
 }
 
-class nsDisplayFieldSetBorderBackground : public nsDisplayItem {
+class nsDisplayFieldSetBorder : public nsDisplayItem {
 public:
-  nsDisplayFieldSetBorderBackground(nsDisplayListBuilder* aBuilder,
-                                    nsFieldSetFrame* aFrame)
+  nsDisplayFieldSetBorder(nsDisplayListBuilder* aBuilder,
+                          nsFieldSetFrame* aFrame)
     : nsDisplayItem(aBuilder, aFrame) {
-    MOZ_COUNT_CTOR(nsDisplayFieldSetBorderBackground);
+    MOZ_COUNT_CTOR(nsDisplayFieldSetBorder);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
-  virtual ~nsDisplayFieldSetBorderBackground() {
-    MOZ_COUNT_DTOR(nsDisplayFieldSetBorderBackground);
+  virtual ~nsDisplayFieldSetBorder() {
+    MOZ_COUNT_DTOR(nsDisplayFieldSetBorder);
   }
 #endif
-  virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState,
-                       nsTArray<nsIFrame*> *aOutFrames) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override;
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override;
@@ -111,21 +108,12 @@ public:
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion *aInvalidRegion) override;
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override;
-  NS_DISPLAY_DECL_NAME("FieldSetBorderBackground", TYPE_FIELDSET_BORDER_BACKGROUND)
+  NS_DISPLAY_DECL_NAME("FieldSetBorder", TYPE_FIELDSET_BORDER_BACKGROUND)
 };
 
-void nsDisplayFieldSetBorderBackground::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                                                HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames)
-{
-  // aPt is guaranteed to be in this item's bounds. We do the hit test based on the
-  // frame bounds even though our background doesn't cover the whole frame.
-  // It's not clear whether this is correct.
-  aOutFrames->AppendElement(mFrame);
-}
-
 void
-nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                         nsRenderingContext* aCtx)
+nsDisplayFieldSetBorder::Paint(nsDisplayListBuilder* aBuilder,
+                               nsRenderingContext* aCtx)
 {
   DrawResult result = static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorder(aBuilder, *aCtx, ToReferenceFrame(), mVisibleRect);
@@ -134,15 +122,15 @@ nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 nsDisplayItemGeometry*
-nsDisplayFieldSetBorderBackground::AllocateGeometry(nsDisplayListBuilder* aBuilder)
+nsDisplayFieldSetBorder::AllocateGeometry(nsDisplayListBuilder* aBuilder)
 {
   return new nsDisplayItemGenericImageGeometry(this, aBuilder);
 }
 
 void
-nsDisplayFieldSetBorderBackground::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
-                                                             const nsDisplayItemGeometry* aGeometry,
-                                                             nsRegion *aInvalidRegion)
+nsDisplayFieldSetBorder::ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
+                                                   const nsDisplayItemGeometry* aGeometry,
+                                                   nsRegion *aInvalidRegion)
 {
   auto geometry =
     static_cast<const nsDisplayItemGenericImageGeometry*>(aGeometry);
@@ -157,8 +145,8 @@ nsDisplayFieldSetBorderBackground::ComputeInvalidationRegion(nsDisplayListBuilde
 }
 
 nsRect
-nsDisplayFieldSetBorderBackground::GetBounds(nsDisplayListBuilder* aBuilder,
-                                             bool* aSnap)
+nsDisplayFieldSetBorder::GetBounds(nsDisplayListBuilder* aBuilder,
+                                   bool* aSnap)
 {
   // Just go ahead and claim our frame's overflow rect as the bounds, because we
   // may have border-image-outset or other features that cause borders to extend
@@ -190,7 +178,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       /* aAllowWillPaintBorderOptimization = */ false);
 
     aLists.BorderBackground()->AppendNewToTop(new (aBuilder)
-      nsDisplayFieldSetBorderBackground(aBuilder, this));
+      nsDisplayFieldSetBorder(aBuilder, this));
   
     DisplayOutlineUnconditional(aBuilder, aLists);
 

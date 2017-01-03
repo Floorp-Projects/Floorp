@@ -45,7 +45,7 @@ CPUBurner.prototype = {
     }
     return false;
   }),
-  dispose: function() {
+  dispose() {
     info(`CPUBurner: Closing tab for ${this.url}\n`);
     gBrowser.removeTab(this.tab);
   }
@@ -142,7 +142,7 @@ function AlertListener(accept, {register, unregister}) {
   register();
 }
 AlertListener.prototype = {
-  unregister: function() {
+  unregister() {
     this.reset();
     if (this._unregistered) {
       info(`head.js: No need to unregister, we're already unregistered.\n`);
@@ -153,7 +153,7 @@ AlertListener.prototype = {
     this._unregister();
     info(`head.js: Unregistration complete.\n`);
   },
-  reset: function() {
+  reset() {
     this.triggered = false;
     this.result = null;
   },
@@ -181,7 +181,7 @@ function AddonBurner(addonId = "fake add-on id: " + Math.random()) {
 }
 AddonBurner.prototype = Object.create(CPUBurner.prototype);
 Object.defineProperty(AddonBurner.prototype, "addonId", {
-  get: function() {
+  get() {
     return this._addonId;
   }
 });

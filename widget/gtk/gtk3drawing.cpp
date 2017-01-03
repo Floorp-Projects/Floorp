@@ -870,7 +870,7 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
 }
 
 static gint
-moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* rect,
+moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* aRect,
                         GtkWidgetState* state,
                         GtkTextDirection direction)
 {
@@ -878,24 +878,24 @@ moz_gtk_text_view_paint(cairo_t *cr, GdkRectangle* rect,
 
     GtkStyleContext* style_frame =
         ClaimStyleContext(MOZ_GTK_SCROLLED_WINDOW, direction, state_flags);
-    gtk_render_frame(style_frame, cr, rect->x, rect->y, rect->width, rect->height);
+    gtk_render_frame(style_frame, cr,
+                     aRect->x, aRect->y, aRect->width, aRect->height);
 
-    GtkBorder border, padding;
-    gtk_style_context_get_border(style_frame, state_flags, &border);
-    gtk_style_context_get_padding(style_frame, state_flags, &padding);
+    GdkRectangle rect = *aRect;
+    InsetByBorderPadding(&rect, style_frame);
+
     ReleaseStyleContext(style_frame);
 
     GtkStyleContext* style =
         ClaimStyleContext(MOZ_GTK_TEXT_VIEW, direction, state_flags);
-
-    gint xthickness = border.left + padding.left;
-    gint ythickness = border.top + padding.top;
-
-    gtk_render_background(style, cr,
-                          rect->x + xthickness, rect->y + ythickness,
-                          rect->width - 2 * xthickness,
-                          rect->height - 2 * ythickness);
-
+    gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
+    ReleaseStyleContext(style);
+    // There is a separate "text" window, which usually provides the
+    // background behind the text.  However, this is transparent in Ambiance
+    // for GTK 3.20, in which case the MOZ_GTK_TEXT_VIEW background is
+    // visible.
+    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW_TEXT, direction, state_flags);
+    gtk_render_background(style, cr, rect.x, rect.y, rect.width, rect.height);
     ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
@@ -1325,17 +1325,9 @@ moz_gtk_resizer_paint(cairo_t *cr, GdkRectangle* rect,
                       GtkWidgetState* state,
                       GtkTextDirection direction)
 {
-    GtkStyleContext* style;
-
-    // gtk_render_handle() draws a background, so use GtkTextView and its
-    // GTK_STYLE_CLASS_VIEW to match the background with textarea elements.
-    // The resizer is drawn with shaded variants of the background color, and
-    // so a transparent background would lead to a transparent resizer.
-    style = ClaimStyleContext(MOZ_GTK_TEXT_VIEW, GTK_TEXT_DIR_LTR,
-                              GetStateFlagsFromGtkWidgetState(state));
-    // TODO - we need to save/restore style when gtk 3.20 CSS node path
-    // is used
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_GRIP);
+    GtkStyleContext* style =
+        ClaimStyleContext(MOZ_GTK_RESIZER, GTK_TEXT_DIR_LTR,
+                          GetStateFlagsFromGtkWidgetState(state));
 
     // Workaround unico not respecting the text direction for resizers.
     // See bug 1174248.

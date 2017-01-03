@@ -178,7 +178,7 @@ this.ForgetAboutSite = {
                getService(Ci.nsIContentPrefService2);
     cps2.removeBySubdomain(aDomain, null, {
       handleCompletion: () => onContentPrefsRemovalFinished(),
-      handleError: function() {}
+      handleError() {}
     });
 
     // Predictive network data - like cache, no way to clear this per

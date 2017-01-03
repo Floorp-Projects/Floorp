@@ -25,7 +25,7 @@ var invalidURITest = {
   _itemUrl: "http://test.mozilla.org/",
   _itemId: null,
 
-  populate: function() {
+  populate() {
     // add a valid bookmark
     PlacesUtils.bookmarks.insertBookmark(PlacesUtils.toolbarFolderId,
                                          PlacesUtils._uri(this._itemUrl),
@@ -39,11 +39,11 @@ var invalidURITest = {
                                            this._itemTitle);
   },
 
-  clean: function() {
+  clean() {
     PlacesUtils.bookmarks.removeItem(this._itemId);
   },
 
-  validate: function(aExpectValidItemsCount) {
+  validate(aExpectValidItemsCount) {
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     var options = PlacesUtils.history.getNewQueryOptions();

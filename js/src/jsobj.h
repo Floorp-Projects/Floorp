@@ -286,7 +286,8 @@ class JSObject : public js::gc::Cell
      * If this object was instantiated with `new Ctor`, return the constructor's
      * display atom. Otherwise, return nullptr.
      */
-    bool constructorDisplayAtom(JSContext* cx, js::MutableHandleAtom name);
+    static bool constructorDisplayAtom(JSContext* cx, js::HandleObject obj,
+                                       js::MutableHandleAtom name);
 
     /*
      * The same as constructorDisplayAtom above, however if this object has a
@@ -346,7 +347,7 @@ class JSObject : public js::gc::Cell
     // Change an existing object to have a singleton group.
     static bool changeToSingleton(JSContext* cx, js::HandleObject obj);
 
-    inline js::ObjectGroup* getGroup(JSContext* cx);
+    static inline js::ObjectGroup* getGroup(JSContext* cx, js::HandleObject obj);
 
     const js::GCPtrObjectGroup& groupFromGC() const {
         /* Direct field access for use by GC. */
@@ -436,13 +437,14 @@ class JSObject : public js::gc::Cell
     }
 
     /* Set a new prototype for an object with a singleton type. */
-    bool splicePrototype(JSContext* cx, const js::Class* clasp, js::Handle<js::TaggedProto> proto);
+    static bool splicePrototype(JSContext* cx, js::HandleObject obj, const js::Class* clasp,
+                                js::Handle<js::TaggedProto> proto);
 
     /*
      * For bootstrapping, whether to splice a prototype for Function.prototype
      * or the global object.
      */
-    bool shouldSplicePrototype(JSContext* cx);
+    bool shouldSplicePrototype();
 
     /*
      * Environment chains.

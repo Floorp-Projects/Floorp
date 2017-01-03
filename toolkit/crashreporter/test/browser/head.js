@@ -26,7 +26,7 @@ function make_fake_appdir() {
   create_subdir(crashesDir, "submitted");
 
   _provider = {
-    getFile: function(prop, persistent) {
+    getFile(prop, persistent) {
       persistent.value = true;
       if (prop == "UAppData") {
         return appD.clone();
@@ -39,7 +39,7 @@ function make_fake_appdir() {
       dump("WARNING: make_fake_appdir - fake nsIDirectoryServiceProvider - Unexpected getFile for: '" + prop + "'\n");
       return null;
     },
-    QueryInterface: function(iid) {
+    QueryInterface(iid) {
       if (iid.equals(Ci.nsIDirectoryServiceProvider) ||
           iid.equals(Ci.nsISupports)) {
         return this;

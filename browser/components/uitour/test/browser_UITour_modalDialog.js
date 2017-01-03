@@ -22,7 +22,7 @@ function startCallbackTimer() {
 
 
 var observer = SpecialPowers.wrapCallbackObject({
-    QueryInterface : function(iid) {
+    QueryInterface(iid) {
         const interfaces = [Ci.nsIObserver,
                             Ci.nsISupports, Ci.nsISupportsWeakReference];
 
@@ -31,7 +31,7 @@ var observer = SpecialPowers.wrapCallbackObject({
         return this;
     },
 
-    observe : function(subject, topic, data) {
+    observe(subject, topic, data) {
         var doc = getDialogDoc();
         if (doc)
             handleDialog(doc);

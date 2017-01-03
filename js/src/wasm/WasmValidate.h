@@ -198,11 +198,11 @@ class Encoder
     MOZ_MUST_USE bool writeFixedU32(uint32_t i) {
         return write<uint32_t>(i);
     }
-    MOZ_MUST_USE bool writeFixedF32(RawF32 f) {
-        return write<uint32_t>(f.bits());
+    MOZ_MUST_USE bool writeFixedF32(float f) {
+        return write<float>(f);
     }
-    MOZ_MUST_USE bool writeFixedF64(RawF64 d) {
-        return write<uint64_t>(d.bits());
+    MOZ_MUST_USE bool writeFixedF64(double d) {
+        return write<double>(d);
     }
     MOZ_MUST_USE bool writeFixedI8x16(const I8x16& i8x16) {
         return write<I8x16>(i8x16);
@@ -437,19 +437,11 @@ class Decoder
     MOZ_MUST_USE bool readFixedU32(uint32_t* u) {
         return read<uint32_t>(u);
     }
-    MOZ_MUST_USE bool readFixedF32(RawF32* f) {
-        uint32_t u;
-        if (!read<uint32_t>(&u))
-            return false;
-        *f = RawF32::fromBits(u);
-        return true;
+    MOZ_MUST_USE bool readFixedF32(float* f) {
+        return read<float>(f);
     }
-    MOZ_MUST_USE bool readFixedF64(RawF64* d) {
-        uint64_t u;
-        if (!read<uint64_t>(&u))
-            return false;
-        *d = RawF64::fromBits(u);
-        return true;
+    MOZ_MUST_USE bool readFixedF64(double* d) {
+        return read<double>(d);
     }
     MOZ_MUST_USE bool readFixedI8x16(I8x16* i8x16) {
         return read<I8x16>(i8x16);
@@ -556,11 +548,11 @@ class Decoder
     uint32_t uncheckedReadFixedU32() {
         return uncheckedRead<uint32_t>();
     }
-    RawF32 uncheckedReadFixedF32() {
-        return RawF32::fromBits(uncheckedRead<uint32_t>());
+    void uncheckedReadFixedF32(float* out) {
+        uncheckedRead<float>(out);
     }
-    RawF64 uncheckedReadFixedF64() {
-        return RawF64::fromBits(uncheckedRead<uint64_t>());
+    void uncheckedReadFixedF64(double* out) {
+        uncheckedRead<double>(out);
     }
     template <typename UInt>
     UInt uncheckedReadVarU() {

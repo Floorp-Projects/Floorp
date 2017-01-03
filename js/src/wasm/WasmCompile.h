@@ -19,7 +19,6 @@
 #ifndef wasm_compile_h
 #define wasm_compile_h
 
-#include "wasm/WasmJS.h"
 #include "wasm/WasmModule.h"
 
 namespace js {
@@ -40,7 +39,7 @@ struct CompileArgs
 {
     Assumptions assumptions;
     ScriptedCaller scriptedCaller;
-    MOZ_INIT_OUTSIDE_CTOR bool alwaysBaseline;
+    bool alwaysBaseline;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),

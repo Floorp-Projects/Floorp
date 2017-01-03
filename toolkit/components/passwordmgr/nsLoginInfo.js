@@ -29,7 +29,7 @@ nsLoginInfo.prototype = {
   usernameField : null,
   passwordField : null,
 
-  init : function(aHostname, aFormSubmitURL, aHttpRealm,
+  init(aHostname, aFormSubmitURL, aHttpRealm,
                   aUsername,      aPassword,
                   aUsernameField, aPasswordField) {
     this.hostname      = aHostname;
@@ -47,7 +47,7 @@ nsLoginInfo.prototype = {
     });
   },
 
-  equals : function(aLogin) {
+  equals(aLogin) {
     if (this.hostname      != aLogin.hostname      ||
         this.formSubmitURL != aLogin.formSubmitURL ||
         this.httpRealm     != aLogin.httpRealm     ||
@@ -60,7 +60,7 @@ nsLoginInfo.prototype = {
     return true;
   },
 
-  clone : function() {
+  clone() {
     let clone = Cc["@mozilla.org/login-manager/loginInfo;1"].
                 createInstance(Ci.nsILoginInfo);
     clone.init(this.hostname, this.formSubmitURL, this.httpRealm,

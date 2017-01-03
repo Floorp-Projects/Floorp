@@ -55,7 +55,6 @@ protected:
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
-    NS_DECL_NSIURIWITHQUERY
     NS_DECL_NSIURL
     NS_DECL_NSIFILEURL
     NS_DECL_NSISTANDARDURL
@@ -302,9 +301,6 @@ private:
     static nsIIDNService               *gIDN;
     static char                         gHostLimitDigits[];
     static bool                         gInitialized;
-    static bool                         gEscapeUTF8;
-    static bool                         gAlwaysEncodeInUTF8;
-    static bool                         gEncodeQueryInUTF8;
 
 public:
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN

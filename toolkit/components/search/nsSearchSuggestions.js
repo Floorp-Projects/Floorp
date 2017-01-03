@@ -23,7 +23,7 @@ function SuggestAutoComplete() {
 }
 SuggestAutoComplete.prototype = {
 
-  _init: function() {
+  _init() {
     this._suggestionController = new SearchSuggestionController(obj => this.onResultsReturned(obj));
     this._suggestionController.maxLocalResults = this._historyLimit;
   },
@@ -54,7 +54,7 @@ SuggestAutoComplete.prototype = {
    * Callback for handling results from SearchSuggestionController.jsm
    * @private
    */
-  onResultsReturned: function(results) {
+  onResultsReturned(results) {
     let finalResults = [];
     let finalComments = [];
 
@@ -85,7 +85,7 @@ SuggestAutoComplete.prototype = {
    * @param comments      an array of metadata corresponding to the results
    * @private
    */
-  onResultsReady: function(searchString, results, comments, formHistoryResult) {
+  onResultsReady(searchString, results, comments, formHistoryResult) {
     if (this._listener) {
       // Create a copy of the results array to use as labels, since
       // FormAutoCompleteResult doesn't like being passed the same array
@@ -122,7 +122,7 @@ SuggestAutoComplete.prototype = {
    * @param listener        object implementing nsIAutoCompleteObserver which
    *                        we notify when results are ready.
    */
-  startSearch: function(searchString, searchParam, previousResult, listener) {
+  startSearch(searchString, searchParam, previousResult, listener) {
     // Don't reuse a previous form history result when it no longer applies.
     if (!previousResult)
       this._formHistoryResult = null;
@@ -157,7 +157,7 @@ SuggestAutoComplete.prototype = {
   /**
    * Actual implementation of search.
    */
-  _triggerSearch: function(searchString, searchParam, listener, privacyMode) {
+  _triggerSearch(searchString, searchParam, listener, privacyMode) {
     this._listener = listener;
     this._suggestionController.fetch(searchString,
                                      privacyMode,
@@ -168,7 +168,7 @@ SuggestAutoComplete.prototype = {
    * Ends the search result gathering process. Part of nsIAutoCompleteSearch
    * implementation.
    */
-  stopSearch: function() {
+  stopSearch() {
     this._suggestionController.stop();
   },
 

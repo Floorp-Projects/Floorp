@@ -2427,15 +2427,29 @@ IsCacheableSetPropCallNative(HandleObject obj, HandleObject holder, HandleShape 
     if (!shape || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
         return false;
 
-    return shape->hasSetterValue() && shape->setterObject() &&
-           shape->setterObject()->is<JSFunction>() &&
-           shape->setterObject()->as<JSFunction>().isNative();
+    if (!shape->hasSetterValue())
+        return false;
+
+    if (!shape->setterObject() || !shape->setterObject()->is<JSFunction>())
+        return false;
+
+    JSFunction& setter = shape->setterObject()->as<JSFunction>();
+    if (!setter.isNative())
+        return false;
+
+    if (setter.jitInfo() && !setter.jitInfo()->needsOuterizedThisObject())
+        return true;
+
+    return !IsWindow(obj);
 }
 
 static bool
 IsCacheableSetPropCallScripted(HandleObject obj, HandleObject holder, HandleShape shape)
 {
     if (!shape || !IsCacheableProtoChainForIonOrCacheIR(obj, holder))
+        return false;
+
+    if (IsWindow(obj))
         return false;
 
     return shape->hasSetterValue() && shape->setterObject() &&
@@ -3690,7 +3704,7 @@ SetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
     RootedObjectGroup oldGroup(cx);
     RootedShape oldShape(cx);
     if (cache.canAttachStub()) {
-        oldGroup = obj->getGroup(cx);
+        oldGroup = JSObject::getGroup(cx, obj);
         if (!oldGroup)
             return false;
 

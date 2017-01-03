@@ -59,7 +59,7 @@ HierarchicalClustering.prototype = {
         // a unique key for this cluster, stays constant unless merged itself
         key: index,
         // index of cluster in clusters array, can change during any merge
-        index: index,
+        index,
         // how many clusters have been merged into this one
         size: 1
       };

@@ -60,7 +60,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
           details += "," + contentFM.focusedElement.id;
         }
 
-        sendSyncMessage("BrowserTest:FocusChanged", { details : details });
+        sendSyncMessage("BrowserTest:FocusChanged", { details });
       }, true);
     });
   }

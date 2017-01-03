@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/TypedEnumBits.h"
@@ -51,6 +52,7 @@
 #include "CSSCalc.h"
 #include "nsMediaFeatures.h"
 #include "nsLayoutUtils.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/Preferences.h"
 #include "nsRuleData.h"
 #include "mozilla/CSSVariableValues.h"
@@ -3796,8 +3798,8 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
                              uint32_t aColumnNumber)
 {
   RefPtr<css::ImportRule> rule = new css::ImportRule(aMedia, aURLSpec,
-                                                       aLineNumber,
-                                                       aColumnNumber);
+                                                     aLineNumber,
+                                                     aColumnNumber);
   (*aAppendFunc)(rule, aData);
 
   // Diagnose bad URIs even if we don't have a child loader.
@@ -3815,7 +3817,9 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
   }
 
   if (mChildLoader) {
-    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule, mReusableSheets);
+    mChildLoader->LoadChildSheet(mSheet, url, aMedia, rule,
+                                 /* aServoParentRule = */ nullptr,
+                                 mReusableSheets);
   }
 }
 
@@ -4226,8 +4230,7 @@ CSSParserImpl::ParseFontFeatureValueSet(nsCSSFontFeatureValuesRule
   // which font-specific variant of font-variant-alternates
   int32_t whichVariant;
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-  if (keyword == eCSSKeyword_UNKNOWN ||
-      !nsCSSProps::FindKeyword(keyword,
+  if (!nsCSSProps::FindKeyword(keyword,
                                nsCSSProps::kFontVariantAlternatesFuncsKTable,
                                whichVariant))
   {
@@ -6689,6 +6692,31 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
   return declaration.forget();
 }
 
+static Maybe<int32_t>
+GetEnumColorValue(nsCSSKeyword aKeyword, bool aIsChrome)
+{
+  int32_t value;
+  if (!nsCSSProps::FindKeyword(aKeyword, nsCSSProps::kColorKTable, value)) {
+    // Unknown color keyword.
+    return Nothing();
+  }
+  if (value < 0) {
+    // Known special color keyword handled by style system,
+    // e.g. NS_COLOR_CURRENTCOLOR. See nsStyleConsts.h.
+    return Some(value);
+  }
+  nscolor color;
+  auto colorID = static_cast<LookAndFeel::ColorID>(value);
+  if (NS_FAILED(LookAndFeel::GetColor(colorID, !aIsChrome, &color))) {
+    // Known LookAndFeel::ColorID, but this platform's LookAndFeel impl
+    // doesn't map it to a color. (This might be a platform-specific
+    // ColorID, which only makes sense on another platform.)
+    return Nothing();
+  }
+  // Known color provided by LookAndFeel.
+  return Some(value);
+}
+
 CSSParseResult
 CSSParserImpl::ParseColor(nsCSSValue& aValue)
 {
@@ -6726,22 +6754,18 @@ CSSParserImpl::ParseColor(nsCSSValue& aValue)
       }
       break;
 
-    case eCSSToken_Ident:
+    case eCSSToken_Ident: {
       if (NS_ColorNameToRGB(tk->mIdent, &rgba)) {
         aValue.SetStringValue(tk->mIdent, eCSSUnit_Ident);
         return CSSParseResult::Ok;
       }
-      else {
-        nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
-        if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
-          int32_t value;
-          if (nsCSSProps::FindKeyword(keyword, nsCSSProps::kColorKTable, value)) {
-            aValue.SetIntValue(value, eCSSUnit_EnumColor);
-            return CSSParseResult::Ok;
-          }
-        }
+      nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
+      if (Maybe<int32_t> value = GetEnumColorValue(keyword, mIsChrome)) {
+        aValue.SetIntValue(value.value(), eCSSUnit_EnumColor);
+        return CSSParseResult::Ok;
       }
       break;
+    }
     case eCSSToken_Function: {
       bool isRGB;
       bool isHSL;
@@ -7556,12 +7580,10 @@ CSSParserImpl::ParseEnum(nsCSSValue& aValue,
     return false;
   }
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(*ident);
-  if (eCSSKeyword_UNKNOWN < keyword) {
-    int32_t value;
-    if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
-      aValue.SetIntValue(value, eCSSUnit_Enumerated);
-      return true;
-    }
+  int32_t value;
+  if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
+    aValue.SetIntValue(value, eCSSUnit_Enumerated);
+    return true;
   }
 
   // Put the unknown identifier back and return
@@ -7591,16 +7613,14 @@ CSSParserImpl::ParseAlignEnum(nsCSSValue& aValue,
     }
     keyword = nsCSSKeywords::LookupKeyword(*ident);
   }
-  if (eCSSKeyword_UNKNOWN < keyword) {
-    int32_t value;
-    if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
-      if (baselinePrefix == eCSSKeyword_last &&
-          keyword == eCSSKeyword_baseline) {
-        value = NS_STYLE_ALIGN_LAST_BASELINE;
-      }
-      aValue.SetIntValue(value, eCSSUnit_Enumerated);
-      return true;
+  int32_t value;
+  if (nsCSSProps::FindKeyword(keyword, aKeywordTable, value)) {
+    if (baselinePrefix == eCSSKeyword_last &&
+        keyword == eCSSKeyword_baseline) {
+      value = NS_STYLE_ALIGN_LAST_BASELINE;
     }
+    aValue.SetIntValue(value, eCSSUnit_Enumerated);
+    return true;
   }
 
   // Put the unknown identifier back and return
@@ -10659,8 +10679,7 @@ CSSParserImpl::IsLegacyGradientLine(const nsCSSTokenType& aType,
     // This is only a gradient line if it's a box position keyword.
     nsCSSKeyword kw = nsCSSKeywords::LookupKeyword(aId);
     int32_t junk;
-    if (kw != eCSSKeyword_UNKNOWN &&
-        nsCSSProps::FindKeyword(kw, nsCSSProps::kImageLayerPositionKTable,
+    if (nsCSSProps::FindKeyword(kw, nsCSSProps::kImageLayerPositionKTable,
                                 junk)) {
       haveGradientLine = true;
     }
@@ -14469,12 +14488,11 @@ CSSParserImpl::ParseSingleAlternate(int32_t& aWhichFeature,
   // function ==> e.g. swash(flowing) styleset(alt-g, alt-m)
 
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
-  if (!(eCSSKeyword_UNKNOWN < keyword &&
-        nsCSSProps::FindKeyword(keyword,
-                                (isIdent ?
-                                 nsCSSProps::kFontVariantAlternatesKTable :
-                                 nsCSSProps::kFontVariantAlternatesFuncsKTable),
-                                aWhichFeature)))
+  if (!nsCSSProps::FindKeyword(keyword,
+                               (isIdent ?
+                                nsCSSProps::kFontVariantAlternatesKTable :
+                                nsCSSProps::kFontVariantAlternatesFuncsKTable),
+                               aWhichFeature))
   {
     // failed, pop token
     UngetToken();

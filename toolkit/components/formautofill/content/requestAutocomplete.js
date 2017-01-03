@@ -22,7 +22,7 @@ const RequestAutocompleteDialog = {
   resolveFn: null,
   autofillData: null,
 
-  onLoad: function() {
+  onLoad() {
     Task.spawn(function* () {
       let args = window.arguments[0].wrappedJSObject;
       this.resolveFn = args.resolveFn;
@@ -35,7 +35,7 @@ const RequestAutocompleteDialog = {
     }.bind(this)).catch(Cu.reportError);
   },
 
-  onAccept: function() {
+  onAccept() {
     // TODO: Replace with autofill storage module (bug 1018304).
     const dummyDB = {
       "": {
@@ -65,7 +65,7 @@ const RequestAutocompleteDialog = {
 
           result.fields.push({
             section: section.name,
-            addressType: addressType,
+            addressType,
             contactType: field.contactType,
             fieldName: field.fieldName,
             value: dummyDB[addressType][fieldName],
@@ -78,7 +78,7 @@ const RequestAutocompleteDialog = {
     this.resolveFn(result);
   },
 
-  onCancel: function() {
+  onCancel() {
     window.close();
     this.resolveFn({ canceled: true });
   },

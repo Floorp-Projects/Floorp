@@ -620,11 +620,11 @@ nsPlacesExpiration.prototype = {
     this._expireWithActionAndLimit(ACTION.CLEAR_HISTORY, LIMIT.UNLIMITED);
   },
 
-  onVisit: function() {},
-  onTitleChanged: function() {},
-  onDeleteURI: function() {},
-  onPageChanged: function() {},
-  onDeleteVisits: function() {},
+  onVisit() {},
+  onTitleChanged() {},
+  onDeleteURI() {},
+  onPageChanged() {},
+  onDeleteVisits() {},
 
   // nsITimerCallback
 
@@ -902,17 +902,17 @@ nsPlacesExpiration.prototype = {
     this._cachedStatements["LIMIT_COUNT"].executeAsync({
       _pagesCount: 0,
       _statsCount: 0,
-      handleResult: function(aResults) {
+      handleResult(aResults) {
         let row = aResults.getNextRow();
         this._pagesCount = row.getResultByIndex(0);
         this._statsCount = row.getResultByIndex(1);
       },
-      handleCompletion: function(aReason) {
+      handleCompletion(aReason) {
         if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
           aCallback(this._pagesCount, this._statsCount);
         }
       },
-      handleError: function(aError) {
+      handleError(aError) {
         Cu.reportError("Async statement execution returned with '" +
                        aError.result + "', '" + aError.message + "'");
       }

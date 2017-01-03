@@ -13,7 +13,7 @@ add_task(function* test_bug1174036() {
 
       let finder = browser.finder;
       let listener = {
-        onFindResult: function() {
+        onFindResult() {
           ok(false, "callback wasn't replaced");
         }
       };

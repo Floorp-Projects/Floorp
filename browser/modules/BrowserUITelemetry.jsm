@@ -170,7 +170,7 @@ const BUCKET_PREFIX = "bucket_";
 const BUCKET_SEPARATOR = "|";
 
 this.BrowserUITelemetry = {
-  init: function() {
+  init() {
     UITelemetry.addSimpleMeasureFunction("toolbars",
                                          this.getToolbarMeasures.bind(this));
     UITelemetry.addSimpleMeasureFunction("contextmenu",
@@ -189,7 +189,7 @@ this.BrowserUITelemetry = {
     CustomizableUI.addListener(this);
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "sessionstore-windows-restored":
         this._gatherFirstWindowMeasurements();
@@ -241,7 +241,7 @@ this.BrowserUITelemetry = {
    * @returns a reference to the second last object in the chain -
    *          so in our example, that'd be "b".
    */
-  _ensureObjectChain: function(aKeys, aEndWith, aRoot) {
+  _ensureObjectChain(aKeys, aEndWith, aRoot) {
     let current = aRoot;
     let parent = null;
     aKeys.unshift(this._bucket);
@@ -260,13 +260,13 @@ this.BrowserUITelemetry = {
   },
 
   _countableEvents: {},
-  _countEvent: function(aKeyArray, root = this._countableEvents) {
+  _countEvent(aKeyArray, root = this._countableEvents) {
     let countObject = this._ensureObjectChain(aKeyArray, 0, root);
     let lastItemKey = aKeyArray[aKeyArray.length - 1];
     countObject[lastItemKey]++;
   },
 
-  _countMouseUpEvent: function(aCategory, aAction, aButton) {
+  _countMouseUpEvent(aCategory, aAction, aButton) {
     const BUTTONS = ["left", "middle", "right"];
     let buttonKey = BUTTONS[aButton];
     if (buttonKey) {
@@ -275,7 +275,7 @@ this.BrowserUITelemetry = {
   },
 
   _firstWindowMeasurements: null,
-  _gatherFirstWindowMeasurements: function() {
+  _gatherFirstWindowMeasurements() {
     // We'll gather measurements as soon as the session has restored.
     // We do this here instead of waiting for UITelemetry to ask for
     // our measurements because at that point all browser windows have
@@ -295,7 +295,7 @@ this.BrowserUITelemetry = {
     });
   },
 
-  _registerWindow: function(aWindow) {
+  _registerWindow(aWindow) {
     aWindow.addEventListener("unload", this);
     let document = aWindow.document;
 
@@ -323,7 +323,7 @@ this.BrowserUITelemetry = {
     WINDOW_DURATION_MAP.set(aWindow, {});
   },
 
-  _unregisterWindow: function(aWindow) {
+  _unregisterWindow(aWindow) {
     aWindow.removeEventListener("unload", this);
     let document = aWindow.document;
 
@@ -349,7 +349,7 @@ this.BrowserUITelemetry = {
     }
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     switch (aEvent.type) {
       case "unload":
         this._unregisterWindow(aEvent.currentTarget);
@@ -363,7 +363,7 @@ this.BrowserUITelemetry = {
     }
   },
 
-  _handleMouseUp: function(aEvent) {
+  _handleMouseUp(aEvent) {
     let targetID = aEvent.currentTarget.id;
 
     switch (targetID) {
@@ -381,7 +381,7 @@ this.BrowserUITelemetry = {
     }
   },
 
-  _handleMouseDown: function(aEvent) {
+  _handleMouseDown(aEvent) {
     if (aEvent.currentTarget.id == "PanelUI-menu-button") {
       // _countMouseUpEvent expects a detail for the second argument,
       // but we don't really have any details to give. Just passing in
@@ -391,13 +391,13 @@ this.BrowserUITelemetry = {
     }
   },
 
-  _PlacesChevronMouseUp: function(aEvent) {
+  _PlacesChevronMouseUp(aEvent) {
     let target = aEvent.originalTarget;
     let result = target.id == "PlacesChevron" ? "chevron" : "overflowed-item";
     this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
   },
 
-  _PlacesToolbarItemsMouseUp: function(aEvent) {
+  _PlacesToolbarItemsMouseUp(aEvent) {
     let target = aEvent.originalTarget;
     // If this isn't a bookmark-item, we don't care about it.
     if (!target.classList.contains("bookmark-item")) {
@@ -408,14 +408,14 @@ this.BrowserUITelemetry = {
     this._countMouseUpEvent("click-bookmarks-bar", result, aEvent.button);
   },
 
-  _menubarMouseUp: function(aEvent) {
+  _menubarMouseUp(aEvent) {
     let target = aEvent.originalTarget;
     let tag = target.localName
     let result = (tag == "menu" || tag == "menuitem") ? tag : "other";
     this._countMouseUpEvent("click-menubar", result, aEvent.button);
   },
 
-  _bookmarksMenuButtonMouseUp: function(aEvent) {
+  _bookmarksMenuButtonMouseUp(aEvent) {
     let bookmarksWidget = CustomizableUI.getWidget("bookmarks-menu-button");
     if (bookmarksWidget.areaType == CustomizableUI.TYPE_MENU_PANEL) {
       // In the menu panel, only the star is visible, and that opens up the
@@ -441,7 +441,7 @@ this.BrowserUITelemetry = {
     }
   },
 
-  _checkForBuiltinItem: function(aEvent) {
+  _checkForBuiltinItem(aEvent) {
     let item = aEvent.originalTarget;
 
     // We don't want to count clicks on the private browsing
@@ -482,7 +482,7 @@ this.BrowserUITelemetry = {
     }
   },
 
-  _getWindowMeasurements: function(aWindow, searchResult) {
+  _getWindowMeasurements(aWindow, searchResult) {
     let document = aWindow.document;
     let result = {};
 
@@ -582,14 +582,14 @@ this.BrowserUITelemetry = {
     return result;
   },
 
-  getToolbarMeasures: function() {
+  getToolbarMeasures() {
     let result = this._firstWindowMeasurements || {};
     result.countableEvents = this._countableEvents;
     result.durations = this._durations;
     return result;
   },
 
-  getSyncState: function() {
+  getSyncState() {
     let result = {};
     for (let sub of ["desktop", "mobile"]) {
       let count = 0;
@@ -601,11 +601,11 @@ this.BrowserUITelemetry = {
     return result;
   },
 
-  countCustomizationEvent: function(aEventType) {
+  countCustomizationEvent(aEventType) {
     this._countEvent(["customize", aEventType]);
   },
 
-  countSearchEvent: function(source, query, selection) {
+  countSearchEvent(source, query, selection) {
     this._countEvent(["search", source]);
     if ((/^[a-zA-Z]+:[^\/\\]/).test(query)) {
       this._countEvent(["search", "urlbar-keyword"]);
@@ -615,35 +615,35 @@ this.BrowserUITelemetry = {
     }
   },
 
-  countOneoffSearchEvent: function(id, type, where) {
+  countOneoffSearchEvent(id, type, where) {
     this._countEvent(["search-oneoff", id, type, where]);
   },
 
-  countSearchSettingsEvent: function(source) {
+  countSearchSettingsEvent(source) {
     this._countEvent(["click-builtin-item", source, "search-settings"]);
   },
 
-  countPanicEvent: function(timeId) {
+  countPanicEvent(timeId) {
     this._countEvent(["forget-button", timeId]);
   },
 
-  countTabMutingEvent: function(action, reason) {
+  countTabMutingEvent(action, reason) {
     this._countEvent(["tab-audio-control", action, reason || "no reason given"]);
   },
 
-  countSyncedTabEvent: function(what, where) {
+  countSyncedTabEvent(what, where) {
     // "what" will be, eg, "open"
     // "where" will be "toolbarbutton-subview" or "sidebar"
     this._countEvent(["synced-tabs", what, where]);
   },
 
-  countSidebarEvent: function(sidebarID, action) {
+  countSidebarEvent(sidebarID, action) {
     // sidebarID is the ID of the sidebar (duh!)
     // action will be "hide" or "show"
     this._countEvent(["sidebar", sidebarID, action]);
   },
 
-  _logAwesomeBarSearchResult: function(url) {
+  _logAwesomeBarSearchResult(url) {
     let spec = Services.search.parseSubmissionURL(url);
     if (spec.engine) {
       let matchedEngine = "default";
@@ -658,7 +658,7 @@ this.BrowserUITelemetry = {
     customization: [],
   },
 
-  onCustomizeStart: function(aWindow) {
+  onCustomizeStart(aWindow) {
     this._countEvent(["customize", "start"]);
     let durationMap = WINDOW_DURATION_MAP.get(aWindow);
     if (!durationMap) {
@@ -672,12 +672,12 @@ this.BrowserUITelemetry = {
     };
   },
 
-  onCustomizeEnd: function(aWindow) {
+  onCustomizeEnd(aWindow) {
     let durationMap = WINDOW_DURATION_MAP.get(aWindow);
     if (durationMap && "customization" in durationMap) {
       let duration = aWindow.performance.now() - durationMap.customization.start;
       this._durations.customization.push({
-        duration: duration,
+        duration,
         bucket: durationMap.customization.bucket,
       });
       delete durationMap.customization;
@@ -720,7 +720,7 @@ this.BrowserUITelemetry = {
 
   _contextMenuInteractions: {},
 
-  registerContextMenuInteraction: function(keys, itemID) {
+  registerContextMenuInteraction(keys, itemID) {
     if (itemID) {
       if (itemID == "openlinkprivate") {
         // Don't record anything, not even an other-item count
@@ -738,7 +738,7 @@ this.BrowserUITelemetry = {
     this._countEvent(keys, this._contextMenuInteractions);
   },
 
-  getContextMenuInfo: function() {
+  getContextMenuInfo() {
     return this._contextMenuInteractions;
   },
 
@@ -777,7 +777,7 @@ this.BrowserUITelemetry = {
    *
    * @param aName  Name of bucket, or null for default bucket name (__DEFAULT__)
    */
-  setBucket: function(aName) {
+  setBucket(aName) {
     if (this._bucketTimer) {
       Timer.clearTimeout(this._bucketTimer);
       this._bucketTimer = null;
@@ -820,7 +820,7 @@ this.BrowserUITelemetry = {
   *                    timed as though they started expiring 300ms before
   *                    setExpiringBucket was called.
   */
-  setExpiringBucket: function(aName, aTimeSteps, aTimeOffset = 0) {
+  setExpiringBucket(aName, aTimeSteps, aTimeOffset = 0) {
     if (aTimeSteps.length === 0) {
       this.setBucket(null);
       return;
@@ -858,7 +858,7 @@ this.BrowserUITelemetry = {
    *
    * @return Minimal string representation.
    */
-  _toTimeStr: function(aTimeMS) {
+  _toTimeStr(aTimeMS) {
     let timeStr = "";
 
     function reduce(aUnitLength, aSymbol) {

@@ -20,12 +20,12 @@ function run_test() {
   var expectedRemove = null;
 
   AddonManager.addTypeListener({
-    onTypeAdded: function(aType) {
+    onTypeAdded(aType) {
       do_check_eq(aType.id, expectedAdd);
       expectedAdd = null;
     },
 
-    onTypeRemoved: function(aType) {
+    onTypeRemoved(aType) {
       do_check_eq(aType.id, expectedRemove);
       expectedRemove = null;
     }

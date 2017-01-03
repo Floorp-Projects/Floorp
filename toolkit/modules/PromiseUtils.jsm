@@ -15,7 +15,7 @@ this.PromiseUtils = {
    * @return {Deferred} an object consisting of a pending Promise "promise"
    * and methods "resolve" and "reject" to change its state.
    */
-  defer : function() {
+  defer() {
     return new Deferred();
   },
 }

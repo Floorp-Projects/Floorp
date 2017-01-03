@@ -135,30 +135,36 @@ OptionsPanel.prototype = {
     }
   },
 
-  setupToolbarButtonsList: function () {
+  setupToolbarButtonsList: Task.async(function* () {
+    // Ensure the toolbox is open, and the buttons are all set up.
+    yield this.toolbox.isOpen;
+
     let enabledToolbarButtonsBox = this.panelDoc.getElementById(
       "enabled-toolbox-buttons-box");
 
-    let toggleableButtons = this.toolbox.toolboxButtons;
-    let setToolboxButtonsVisibility =
-      this.toolbox.setToolboxButtonsVisibility.bind(this.toolbox);
+    let toolbarButtons = this.toolbox.toolbarButtons;
+
+    if (!toolbarButtons) {
+      console.warn("The command buttons weren't initiated yet.");
+      return;
+    }
 
     let onCheckboxClick = (checkbox) => {
-      let toolDefinition = toggleableButtons.filter(
+      let commandButton = toolbarButtons.filter(
         toggleableButton => toggleableButton.id === checkbox.id)[0];
       Services.prefs.setBoolPref(
-        toolDefinition.visibilityswitch, checkbox.checked);
-      setToolboxButtonsVisibility();
+        commandButton.visibilityswitch, checkbox.checked);
+      this.toolbox.updateToolboxButtonsVisibility();
     };
 
-    let createCommandCheckbox = tool => {
+    let createCommandCheckbox = button => {
       let checkboxLabel = this.panelDoc.createElement("label");
       let checkboxSpanLabel = this.panelDoc.createElement("span");
-      checkboxSpanLabel.textContent = tool.label;
+      checkboxSpanLabel.textContent = button.description;
       let checkboxInput = this.panelDoc.createElement("input");
       checkboxInput.setAttribute("type", "checkbox");
-      checkboxInput.setAttribute("id", tool.id);
-      if (InfallibleGetBoolPref(tool.visibilityswitch)) {
+      checkboxInput.setAttribute("id", button.id);
+      if (button.isVisible) {
         checkboxInput.setAttribute("checked", true);
       }
       checkboxInput.addEventListener("change",
@@ -169,14 +175,14 @@ OptionsPanel.prototype = {
       return checkboxLabel;
     };
 
-    for (let tool of toggleableButtons) {
-      if (!tool.isTargetSupported(this.toolbox.target)) {
+    for (let button of toolbarButtons) {
+      if (!button.isTargetSupported(this.toolbox.target)) {
         continue;
       }
 
-      enabledToolbarButtonsBox.appendChild(createCommandCheckbox(tool));
+      enabledToolbarButtonsBox.appendChild(createCommandCheckbox(button));
     }
-  },
+  }),
 
   setupToolsList: function () {
     let defaultToolsBox = this.panelDoc.getElementById("default-tools-box");

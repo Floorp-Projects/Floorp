@@ -59,7 +59,7 @@ add_task(function* test_deepEqual() {
   Assert.ok(deepEqual(a1, a2));
 
   let nbRoot = {
-    toString: function() { return this.first + " " + this.last; }
+    toString() { return this.first + " " + this.last; }
   };
 
   function nameBuilder(first, last) {
