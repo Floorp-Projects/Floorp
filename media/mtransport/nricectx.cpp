@@ -109,6 +109,7 @@ MOZ_MTLOG_MODULE("mtransport")
 
 const char kNrIceTransportUdp[] = "udp";
 const char kNrIceTransportTcp[] = "tcp";
+const char kNrIceTransportTls[] = "tls";
 
 static bool initialized = false;
 
@@ -211,6 +212,9 @@ nsresult NrIceStunServer::ToNicerStunStruct(nr_ice_stun_server *server) const {
     server->transport = IPPROTO_UDP;
   } else if (transport_ == kNrIceTransportTcp) {
     server->transport = IPPROTO_TCP;
+  } else if (transport_ == kNrIceTransportTls) {
+    server->transport = IPPROTO_TCP;
+    server->tls = 1;
   } else {
     MOZ_MTLOG(ML_ERROR, "Unsupported STUN server transport: " << transport_);
     return NS_ERROR_FAILURE;
