@@ -133,6 +133,8 @@ All notable changes to this program is documented in this file.
 
 
 ## 0.6.0 (2016-01-12)
+
+### Added
 - Add Get Page Source endpoint
 
 ### Changed
