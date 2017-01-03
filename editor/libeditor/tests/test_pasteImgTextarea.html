@@ -1,0 +1,20 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<img id="i" src="green.png">
+<textarea id="t"></textarea>
+
+<script>
+let loaded = new Promise(resolve => addLoadEvent(resolve));
+    add_task(function*() {
+        yield loaded;
+        SpecialPowers.setCommandNode(window, document.getElementById("i"));
+        SpecialPowers.doCommand(window, "cmd_copyImageContents");
+        let input = document.getElementById("t");
+        input.focus();
+        var controller =
+          SpecialPowers.wrap(input).controllers.getControllerForCommand("cmd_paste");
+        is(controller.isCommandEnabled("cmd_paste"), true,
+           "paste should be enabled in html textareas when an image is on the clipboard");
+    });
+</script>
