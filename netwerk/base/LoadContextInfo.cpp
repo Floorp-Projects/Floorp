@@ -137,8 +137,7 @@ LoadContextInfo *
 GetLoadContextInfo(nsILoadContext *aLoadContext, bool aIsAnonymous)
 {
   if (!aLoadContext) {
-    return new LoadContextInfo(aIsAnonymous,
-                               NeckoOriginAttributes(nsILoadContextInfo::NO_APP_ID, false));
+    return new LoadContextInfo(aIsAnonymous, NeckoOriginAttributes(false));
   }
 
   DebugOnly<bool> pb = aLoadContext->UsePrivateBrowsing();

@@ -672,8 +672,12 @@ bool NS_HasBeenCrossOrigin(nsIChannel* aChannel, bool aReport = false);
 // know about script security manager.
 #define NECKO_NO_APP_ID 0
 #define NECKO_UNKNOWN_APP_ID UINT32_MAX
-// special app id reserved for separating the safebrowsing cookie
-#define NECKO_SAFEBROWSING_APP_ID UINT32_MAX - 1
+
+// Unique first-party domain for separating the safebrowsing cookie.
+// Note if this value is changed, code in test_cookiejars_safebrowsing.js
+// should also be changed.
+#define NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN \
+  "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla"
 
 /**
  * Determines whether appcache should be checked for a given URI.
