@@ -1537,8 +1537,8 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
     video_stream.width = width;
     video_stream.height = height;
     video_stream.max_framerate = mSendingFramerate;
-    unsigned int out_min, out_start, out_max;
-    SelectBitrates(video_stream.width, video_stream.height, 0,
+    SelectBitrates(video_stream.width, video_stream.height,
+                   MinIgnoreZero(mNegotiatedMaxBitrate, simStream.jsMaxBitrate),
                    mLastFramerateTenths, video_stream);
     CSFLogVerbose(logTag, "%s: new_width=%" PRIu32 " new_height=%" PRIu32,
                   __FUNCTION__, new_width, new_height);
