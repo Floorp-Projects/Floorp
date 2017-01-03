@@ -217,11 +217,8 @@ nsPrintEngine::nsPrintEngine() :
   mIsDoingPrintPreview(false),
   mProgressDialogIsShown(false),
   mScreenDPI(115.0f),
-  mPrt(nullptr),
   mPagePrintTimer(nullptr),
   mPageSeqFrame(nullptr),
-  mPrtPreview(nullptr),
-  mOldPrtPreview(nullptr),
   mDebugFile(nullptr),
   mLoadCounter(0),
   mDidLoadDataForPrinting(false),
@@ -244,23 +241,11 @@ void nsPrintEngine::Destroy()
   }
   mIsDestroying = true;
 
-  if (mPrt) {
-    delete mPrt;
-    mPrt = nullptr;
-  }
+  mPrt = nullptr;
 
 #ifdef NS_PRINT_PREVIEW
-  if (mPrtPreview) {
-    delete mPrtPreview;
-    mPrtPreview = nullptr;
-  }
-
-  // This is insruance
-  if (mOldPrtPreview) {
-    delete mOldPrtPreview;
-    mOldPrtPreview = nullptr;
-  }
-
+  mPrtPreview = nullptr;
+  mOldPrtPreview = nullptr;
 #endif
   mDocViewerPrint = nullptr;
 }
@@ -268,11 +253,7 @@ void nsPrintEngine::Destroy()
 //-------------------------------------------------------
 void nsPrintEngine::DestroyPrintingData()
 {
-  if (mPrt) {
-    nsPrintData* data = mPrt;
-    mPrt = nullptr;
-    delete data;
-  }
+  mPrt = nullptr;
 }
 
 //---------------------------------------------------------------------------------
@@ -415,7 +396,6 @@ nsPrintEngine::CommonPrint(bool                    aIsPrintPreview,
     if (rv != NS_ERROR_ABORT && rv != NS_ERROR_OUT_OF_MEMORY) {
       FirePrintingErrorEvent(rv);
     }
-    delete mPrt;
     mPrt = nullptr;
   }
 
@@ -437,15 +417,15 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
     mProgressDialogIsShown = pps != nullptr;
 
     if (mIsDoingPrintPreview) {
-      mOldPrtPreview = mPrtPreview;
-      mPrtPreview = nullptr;
+      mOldPrtPreview = Move(mPrtPreview);
     }
   } else {
     mProgressDialogIsShown = false;
   }
 
-  mPrt = new nsPrintData(aIsPrintPreview ? nsPrintData::eIsPrintPreview :
-                                           nsPrintData::eIsPrinting);
+  mPrt = mozilla::MakeUnique<nsPrintData>(aIsPrintPreview
+                                          ? nsPrintData::eIsPrintPreview
+                                          : nsPrintData::eIsPrinting);
   NS_ENSURE_TRUE(mPrt, NS_ERROR_OUT_OF_MEMORY);
 
   // if they don't pass in a PrintSettings, then get the Global PS
@@ -878,9 +858,9 @@ nsPrintEngine::GetPrintPreviewNumPages(int32_t *aPrintPreviewNumPages)
   // When calling this function, the FinishPrintPreview() function might not
   // been called as there are still some 
   if (mPrtPreview) {
-    prt = mPrtPreview;
+    prt = mPrtPreview.get();
   } else {
-    prt = mPrt;
+    prt = mPrt.get();
   }
   if ((!prt) ||
       NS_FAILED(GetSeqFrameAndCountPagesInternal(prt->mPrintObject, seqFrame, *aPrintPreviewNumPages))) {
@@ -3359,10 +3339,10 @@ nsPrintEngine::TurnScriptingOn(bool aDoTurnOn)
     return;
   }
 
-  nsPrintData* prt = mPrt;
+  nsPrintData* prt = mPrt.get();
 #ifdef NS_PRINT_PREVIEW
   if (!prt) {
-    prt = mPrtPreview;
+    prt = mPrtPreview.get();
   }
 #endif
   if (!prt) {
@@ -3465,7 +3445,6 @@ nsPrintEngine::FinishPrintPreview()
 
 
   if (mIsDoingPrintPreview && mOldPrtPreview) {
-    delete mOldPrtPreview;
     mOldPrtPreview = nullptr;
   }
 
@@ -3474,8 +3453,7 @@ nsPrintEngine::FinishPrintPreview()
 
   // PrintPreview was built using the mPrt (code reuse)
   // then we assign it over
-  mPrtPreview = mPrt;
-  mPrt        = nullptr;
+  mPrtPreview = Move(mPrt);
 
 #endif // NS_PRINT_PREVIEW
 
