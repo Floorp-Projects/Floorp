@@ -1330,9 +1330,8 @@ InplaceEditor.prototype = {
           startCheckQuery = "";
         }
 
-        list =
-          ["!important",
-           ...this._getCSSValuesForPropertyName(this.property.name)];
+        list = ["!important",
+                ...this._getCSSValuesForPropertyName(this.property.name)];
 
         if (query == "") {
           // Do not suggest '!important' without any manually typed character.
@@ -1356,9 +1355,8 @@ InplaceEditor.prototype = {
             // We are in CSS value completion
             let propertyName =
               query.match(/[;"'=]\s*([^"';:= ]+)\s*:\s*[^"';:=]*$/)[1];
-            list =
-              ["!important;",
-               ...this._getCSSValuesForPropertyName(propertyName)];
+            list = ["!important;",
+                    ...this._getCSSValuesForPropertyName(propertyName)];
             let matchLastQuery = /([^\s,.\/]+$)/.exec(match[2] || "");
             if (matchLastQuery) {
               startCheckQuery = matchLastQuery[0];

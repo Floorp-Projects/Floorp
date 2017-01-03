@@ -86,12 +86,14 @@ function testGetColor() {
 }
 
 function testColorExistence() {
-  const vars = ["body-background", "sidebar-background", "contrast-background",
-   "tab-toolbar-background", "toolbar-background", "selection-background",
-   "selection-color", "selection-background-semitransparent", "splitter-color", "comment",
-   "body-color", "body-color-alt", "content-color1", "content-color2", "content-color3",
-   "highlight-green", "highlight-blue", "highlight-bluegrey", "highlight-purple",
-   "highlight-lightorange", "highlight-orange", "highlight-red", "highlight-pink"
+  const vars = [
+    "body-background", "sidebar-background", "contrast-background",
+    "tab-toolbar-background", "toolbar-background", "selection-background",
+    "selection-color", "selection-background-semitransparent", "splitter-color",
+    "comment", "body-color", "body-color-alt", "content-color1", "content-color2",
+    "content-color3", "highlight-green", "highlight-blue", "highlight-bluegrey",
+    "highlight-purple", "highlight-lightorange", "highlight-orange", "highlight-red",
+    "highlight-pink"
   ];
 
   for (let type of vars) {
