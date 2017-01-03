@@ -1097,7 +1097,8 @@
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
           this._updateStatusUI(aResult, aFindPrevious);
-          this._enableFindButtons(aResult !== this.nsITypeAheadFind.FIND_NOTFOUND);
+          this._enableFindButtons(aResult !== this.nsITypeAheadFind.FIND_NOTFOUND &&
+            !!this._findField.value);
         ]]></body>
       </method>
 
@@ -1346,6 +1347,7 @@
             this._findField.value = aSelectionString;
 
           if (aIsInitialSelection) {
+            this._enableFindButtons(!!this._findField.value);
             this._findField.select();
             this._findField.focus();
 
