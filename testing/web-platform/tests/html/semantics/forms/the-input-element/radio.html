@@ -23,7 +23,6 @@
 <input type=radio name=group4 id=radio10>
 <input type=radio name=group4 id=radio11 checked>
 
-
 <script>
   var radio1 = document.getElementById('radio1'),
       radio2 = document.getElementById('radio2'),
@@ -64,7 +63,7 @@
     radio4.checked = true;
     assert_false(radio3.checked);
     assert_true(radio4.checked);
-  }, "radio inputs with the same non-ASCII name attributes belong to the same radio button group");
+  }, "radio inputs with non-ASCII name attributes belong to the same radio button group");
 
   test(function(){
     assert_true(radio8.checked);
