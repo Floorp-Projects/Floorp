@@ -176,10 +176,18 @@ ValidateGLSLPreprocString(WebGLContext* webgl, const char* funcName,
 {
     for (size_t i = 0; i < string.Length(); ++i) {
         const auto& cur = string[i];
+
         if (!IsValidGLSLPreprocChar(cur)) {
-           webgl->ErrorInvalidValue("%s: String contains the illegal character 0x%x.",
-                                    funcName, cur);
-           return false;
+            webgl->ErrorInvalidValue("%s: String contains the illegal character 0x%x.",
+                                     funcName, cur);
+            return false;
+        }
+
+        if (cur == '\\' && !webgl->IsWebGL2()) {
+            // Todo: Backslash is technically still invalid in WebGLSL 1 under even under
+            // WebGL 2.
+            webgl->ErrorInvalidValue("%s: Backslash is not valid in WebGL 1.", funcName);
+            return false;
         }
     }
 
