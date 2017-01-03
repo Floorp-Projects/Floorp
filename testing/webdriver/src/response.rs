@@ -77,12 +77,12 @@ impl WindowSizeResponse {
 
 #[derive(RustcEncodable, Debug)]
 pub struct WindowPositionResponse {
-    pub x: u64,
-    pub y: u64,
+    pub x: i64,
+    pub y: i64,
 }
 
 impl WindowPositionResponse {
-    pub fn new(x: u64, y: u64) -> WindowPositionResponse {
+    pub fn new(x: i64, y: i64) -> WindowPositionResponse {
         WindowPositionResponse { x: x, y: y }
     }
 }
