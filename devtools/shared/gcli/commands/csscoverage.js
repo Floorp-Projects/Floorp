@@ -4,8 +4,6 @@
 
 "use strict";
 
-const { Cc, Ci } = require("chrome");
-
 const domtemplate = require("gcli/util/domtemplate");
 const csscoverage = require("devtools/shared/fronts/csscoverage");
 const l10n = csscoverage.l10n;
@@ -37,7 +35,7 @@ exports.items = [
         manual: l10n.lookup("csscoverageStartNoReloadManual")
       }
     ],
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {
         throw new Error(l10n.lookup("csscoverageNoRemoteError"));
@@ -52,7 +50,7 @@ exports.items = [
     name: "csscoverage stop",
     hidden: true,
     description: l10n.lookup("csscoverageStopDesc2"),
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
       if (usage == null) {
@@ -68,7 +66,7 @@ exports.items = [
     name: "csscoverage oneshot",
     hidden: true,
     description: l10n.lookup("csscoverageOneShotDesc2"),
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
       if (usage == null) {
@@ -85,25 +83,27 @@ exports.items = [
     hidden: true,
     description: l10n.lookup("csscoverageToggleDesc2"),
     state: {
-      isChecked: function(target) {
+      isChecked: function (target) {
         return csscoverage.getUsage(target).then(usage => {
           return usage.isRunning();
         });
       },
-      onChange: function(target, handler) {
+      onChange: function (target, handler) {
         csscoverage.getUsage(target).then(usage => {
-          this.handler = ev => { handler("state-change", ev); };
+          this.handler = ev => {
+            handler("state-change", ev);
+          };
           usage.on("state-change", this.handler);
         });
       },
-      offChange: function(target, handler) {
+      offChange: function (target, handler) {
         csscoverage.getUsage(target).then(usage => {
           usage.off("state-change", this.handler);
           this.handler = undefined;
         });
       },
     },
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
       if (usage == null) {
@@ -120,7 +120,7 @@ exports.items = [
     name: "csscoverage report",
     hidden: true,
     description: l10n.lookup("csscoverageReportDesc2"),
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {
         throw new Error(l10n.lookup("csscoverageNoRemoteError"));
@@ -137,7 +137,7 @@ exports.items = [
     item: "converter",
     from: "csscoveragePageReport",
     to: "dom",
-    exec: function*(csscoveragePageReport, context) {
+    exec: function* (csscoveragePageReport, context) {
       let target = context.environment.target;
 
       let toolbox = yield gDevTools.showToolbox(target, "styleeditor");
@@ -185,7 +185,8 @@ exports.items = [
       // Create a new chart.
       let container = host.querySelector(".csscoverage-report-chart");
       let chart = Chart.PieTable(panel._panelDoc, {
-        diameter: 200, // px
+        // px
+        diameter: 200,
         title: "CSS Usage",
         data: [
           { size: data.summary.preload, label: "Used Preload" },
