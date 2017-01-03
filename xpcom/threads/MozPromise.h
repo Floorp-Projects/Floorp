@@ -578,6 +578,57 @@ protected:
     Maybe<RejectFunction> mRejectFunction; // Only accessed and deleted on dispatch thread.
   };
 
+  // Specialization of FunctionThenValue (with 2nd template arg being 'void')
+  // that only takes one function, to be called with a ResolveOrRejectValue.
+  template<typename ResolveRejectFunction>
+  class FunctionThenValue<ResolveRejectFunction, void> : public ThenValueBase
+  {
+  public:
+    FunctionThenValue(AbstractThread* aResponseTarget,
+                      ResolveRejectFunction&& aResolveRejectFunction,
+                      const char* aCallSite)
+      : ThenValueBase(aResponseTarget, aCallSite)
+    {
+      mResolveRejectFunction.emplace(Move(aResolveRejectFunction));
+    }
+
+    void Disconnect() override
+    {
+      ThenValueBase::Disconnect();
+
+      // If a Request has been disconnected, we don't guarantee that the
+      // resolve/reject runnable will be dispatched. Destroy our callbacks
+      // now so that any references in closures are released predictable on
+      // the dispatch thread.
+      mResolveRejectFunction.reset();
+    }
+
+  protected:
+    already_AddRefed<MozPromise> DoResolveOrRejectInternal(const ResolveOrRejectValue& aValue) override
+    {
+      // Note: The usage of InvokeCallbackMethod here requires that
+      // ResolveRejectFunction is capture-lambdas (i.e. anonymous
+      // classes with ::operator()), since it allows us to share code more easily.
+      // We could fix this if need be, though it's quite easy to work around by
+      // just capturing something.
+      RefPtr<MozPromise> completion =
+        InvokeCallbackMethod(mResolveRejectFunction.ptr(),
+                             &ResolveRejectFunction::operator(),
+                             aValue);
+
+      // Destroy callbacks after invocation so that any references in closures are
+      // released predictably on the dispatch thread. Otherwise, they would be
+      // released on whatever thread last drops its reference to the ThenValue,
+      // which may or may not be ok.
+      mResolveRejectFunction.reset();
+
+      return completion.forget();
+    }
+
+  private:
+    Maybe<ResolveRejectFunction> mResolveRejectFunction; // Only accessed and deleted on dispatch thread.
+  };
+
 public:
   void ThenInternal(AbstractThread* aResponseThread, ThenValueBase* aThenValue,
                     const char* aCallSite)
@@ -685,6 +736,16 @@ public:
     using ThenType = FunctionThenValue<ResolveFunction, RejectFunction>;
     RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
       Move(aResolveFunction), Move(aRejectFunction), aCallSite);
+    return ThenCommand(aResponseThread, aCallSite, thenValue.forget(), this);
+  }
+
+  template<typename ResolveRejectFunction>
+  ThenCommand Then(AbstractThread* aResponseThread, const char* aCallSite,
+                   ResolveRejectFunction&& aResolveRejectFunction)
+  {
+    using ThenType = FunctionThenValue<ResolveRejectFunction, void>;
+    RefPtr<ThenValueBase> thenValue = new ThenType(aResponseThread,
+      Move(aResolveRejectFunction), aCallSite);
     return ThenCommand(aResponseThread, aCallSite, thenValue.forget(), this);
   }
 
