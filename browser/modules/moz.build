@@ -26,6 +26,7 @@ EXTRA_JS_MODULES += [
     'ContentWebRTC.jsm',
     'DirectoryLinksProvider.jsm',
     'E10SUtils.jsm',
+    'ExtensionsUI.jsm',
     'Feeds.jsm',
     'FormSubmitObserver.jsm',
     'FormValidationHandler.jsm',

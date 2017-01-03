@@ -3091,6 +3091,11 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   font-weight: bold;
 }
 
+.addon-webext-perm-header {
+  font-weight: bold;
+  font-size: 1.3em;
+}
+
 /* Status panel */
 
 .statuspanel-label {
