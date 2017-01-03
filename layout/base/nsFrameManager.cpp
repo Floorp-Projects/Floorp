@@ -171,21 +171,17 @@ nsFrameManager::GetPlaceholderFrameFor(const nsIFrame* aFrame)
   return nullptr;
 }
 
-nsresult
+void
 nsFrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
 {
-  NS_PRECONDITION(aPlaceholderFrame, "null param unexpected");
-  NS_PRECONDITION(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
-                  "unexpected frame type");
+  MOZ_ASSERT(aPlaceholderFrame, "null param unexpected");
+  MOZ_ASSERT(nsGkAtoms::placeholderFrame == aPlaceholderFrame->GetType(),
+             "unexpected frame type");
   auto entry = static_cast<PlaceholderMapEntry*>
-    (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame(), fallible));
-  if (!entry)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ASSERTION(!entry->placeholderFrame, "Registering a placeholder for a frame that already has a placeholder!");
+    (mPlaceholderMap.Add(aPlaceholderFrame->GetOutOfFlowFrame()));
+  MOZ_ASSERT(!entry->placeholderFrame,
+             "Registering a placeholder for a frame that already has a placeholder!");
   entry->placeholderFrame = aPlaceholderFrame;
-
-  return NS_OK;
 }
 
 void
