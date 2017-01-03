@@ -5,7 +5,7 @@ var {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const BASE_URI = "http://mochi.test:8888/browser/dom/base/test/empty.html";
 
 add_task(function* test_initialize() {
-  let tab = gBrowser.addTab(BASE_URI);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, BASE_URI);
   let browser = gBrowser.getBrowserForTab(tab);
 
   let blob = yield ContentTask.spawn(browser, null, function() {
