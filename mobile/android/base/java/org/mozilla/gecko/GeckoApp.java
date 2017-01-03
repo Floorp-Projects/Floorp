@@ -111,6 +111,7 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.util.ViewUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1502,6 +1503,9 @@ public abstract class GeckoApp
         if (loc.equals(mLastLocale)) {
             Log.d(LOGTAG, "New locale same as old; onLocaleReady has nothing to do.");
         }
+        BrowserLocaleManager.getInstance().updateConfiguration(GeckoApp.this, loc);
+        ViewUtil.setLayoutDirection(getWindow().getDecorView(), loc);
+        refreshChrome();
 
         // The URL bar hint needs to be populated.
         TextView urlBar = (TextView) findViewById(R.id.url_bar_title);
