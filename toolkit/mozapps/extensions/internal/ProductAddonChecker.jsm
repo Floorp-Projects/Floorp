@@ -17,6 +17,9 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 /*globals OS*/
 
+XPCOMUtils.defineLazyModuleGetter(this, "ServiceRequest",
+                                  "resource://gre/modules/ServiceRequest.jsm");
+
 var logger = Log.repository.getLogger("addons.productaddons");
 
 // This exists so that tests can override the XHR behaviour for downloading
@@ -92,6 +95,11 @@ function downloadXML(url, allowNonBuiltIn = false, allowedCerts = null) {
     request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
     // Prevent the request from writing to the cache.
     request.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
+    // Use conservative TLS settings. See bug 1325501.
+    // TODO move to ServiceRequest.
+    if (request.channel instanceof Ci.nsIHttpChannelInternal) {
+      request.channel.QueryInterface(Ci.nsIHttpChannelInternal).beConservative = true;
+    }
     request.timeout = TIMEOUT_DELAY_MS;
 
     request.overrideMimeType("text/xml");
@@ -188,8 +196,7 @@ function parseXML(document) {
  */
 function downloadFile(url) {
   return new Promise((resolve, reject) => {
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                  createInstance(Ci.nsISupports);
+    let xhr = new XMLHttpRequest();
     xhr.onload = function(response) {
       logger.info("downloadXHR File download. status=" + xhr.status);
       if (xhr.status != 200 && xhr.status != 206) {
@@ -221,6 +228,11 @@ function downloadFile(url) {
     xhr.responseType = "arraybuffer";
     try {
       xhr.open("GET", url);
+      // Use conservative TLS settings. See bug 1325501.
+      // TODO move to ServiceRequest.
+      if (xhr.channel instanceof Ci.nsIHttpChannelInternal) {
+        xhr.channel.QueryInterface(Ci.nsIHttpChannelInternal).beConservative = true;
+      }
       xhr.send(null);
     } catch (ex) {
       reject(ex);
