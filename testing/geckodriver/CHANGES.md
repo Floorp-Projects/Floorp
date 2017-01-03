@@ -146,8 +146,6 @@ All notable changes to this program is documented in this file.
 
 ## 0.5.0 (2015-12-10)
 
-### Added
-
 ### Changed
 - Update argparse dependency to use Cargo
 - Update to the latest version of the Marionette wire protocol
