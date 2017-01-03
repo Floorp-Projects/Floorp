@@ -53,7 +53,7 @@ exports.items = [
       },
       description: l10n.lookup("injectLibraryDesc")
     }],
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let document = context.environment.document;
       let library = args.library;
       let name = (library.type === "selection") ?
@@ -68,7 +68,7 @@ exports.items = [
       try {
         // Check if URI is valid
         Services.io.newURI(src, null, null);
-      } catch(e) {
+      } catch (e) {
         return l10n.lookupFormat("injectFailed", [name]);
       }
 

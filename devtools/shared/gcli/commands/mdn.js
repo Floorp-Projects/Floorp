@@ -28,7 +28,7 @@ exports.items = [{
     defaultValue: null,
     description: l10n.lookup("mdnCssProp")
   }],
-  exec: function(args) {
+  exec: function (args) {
     if (!MdnDocsWidget) {
       return null;
     }
@@ -47,7 +47,7 @@ exports.items = [{
   item: "converter",
   from: "cssPropertyOutput",
   to: "dom",
-  exec: function(result, context) {
+  exec: function (result, context) {
     let propertyName = result.property;
 
     let document = context.document;
