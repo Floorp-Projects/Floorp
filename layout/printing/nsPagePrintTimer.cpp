@@ -86,10 +86,10 @@ nsPagePrintTimer::Run()
 
   // donePrinting will be true if it completed successfully or
   // if the printing was cancelled
-  donePrinting = mPrintEngine->PrintPage(mPrintObj, inRange);
+  donePrinting = !mPrintEngine || mPrintEngine->PrintPage(mPrintObj, inRange);
   if (donePrinting) {
     // now clean up print or print the next webshell
-    if (mPrintEngine->DonePrintingPages(mPrintObj, NS_OK)) {
+    if (!mPrintEngine || mPrintEngine->DonePrintingPages(mPrintObj, NS_OK)) {
       initNewTimer = false;
       mDone = true;
     }
@@ -104,7 +104,9 @@ nsPagePrintTimer::Run()
     nsresult result = StartTimer(inRange);
     if (NS_FAILED(result)) {
       mDone = true;     // had a failure.. we are finished..
-      mPrintEngine->SetIsPrinting(false);
+      if (mPrintEngine) {
+        mPrintEngine->SetIsPrinting(false);
+      }
     }
   }
   return NS_OK;
@@ -149,7 +151,10 @@ nsPagePrintTimer::Notify(nsITimer *timer)
   }
 
   if (mDocViewerPrint) {
-    bool donePrePrint = mPrintEngine->PrePrintPage();
+    bool donePrePrint = true;
+    if (mPrintEngine) {
+      donePrePrint = mPrintEngine->PrePrintPage();
+    }
 
     if (donePrePrint && !mWaitingForRemotePrint) {
       StopWatchDogTimer();
