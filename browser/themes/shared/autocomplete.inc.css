@@ -48,6 +48,7 @@
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"][selected] {
   background-color: var(--arrowpanel-dimmed-further);
+  color: -moz-DialogText;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] > .ac-title {
