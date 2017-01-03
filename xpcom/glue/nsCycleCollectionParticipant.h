@@ -126,12 +126,12 @@ public:
   {
   }
 
-  NS_IMETHOD Traverse(void* aPtr, nsCycleCollectionTraversalCallback& aCb) = 0;
+  NS_IMETHOD TraverseNative(void* aPtr, nsCycleCollectionTraversalCallback& aCb) = 0;
 
   nsresult TraverseNativeAndJS(void* aPtr,
                                nsCycleCollectionTraversalCallback& aCb)
   {
-    nsresult rv = Traverse(aPtr, aCb);
+    nsresult rv = TraverseNative(aPtr, aCb);
     if (mTraverseShouldTrace) {
       // Note, we always call Trace, even if Traverse returned
       // NS_SUCCESS_INTERRUPTED_TRAVERSE.
@@ -434,7 +434,7 @@ DowncastCCParticipant(void* aPtr)
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)               \
   NS_IMETHODIMP                                                                \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                              \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraverseNative                        \
                          (void *p, nsCycleCollectionTraversalCallback &cb)     \
   {                                                                            \
     _class *tmp = DowncastCCParticipant<_class >(p);
@@ -450,7 +450,7 @@ DowncastCCParticipant(void* aPtr)
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(_class, _base_class) \
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(_class)                     \
     nsISupports *s = static_cast<nsISupports*>(p);                             \
-    if (NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::Traverse(s, cb)            \
+    if (NS_CYCLE_COLLECTION_CLASSNAME(_base_class)::TraverseNative(s, cb)      \
         == NS_SUCCESS_INTERRUPTED_TRAVERSE) {                                  \
       return NS_SUCCESS_INTERRUPTED_TRAVERSE;                                  \
     }
@@ -532,7 +532,7 @@ DowncastCCParticipant(void* aPtr)
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)           \
 public:                                                                        \
-  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)         \
+  NS_IMETHOD TraverseNative(void *p, nsCycleCollectionTraversalCallback &cb)   \
     override;                                                                  \
   NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                           \
   NS_IMETHOD_(void) DeleteCycleCollectable(void *p) override                   \
@@ -667,7 +667,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 #define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class,        \
                                                                 _base_class)   \
 public:                                                                        \
-  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)         \
+  NS_IMETHOD TraverseNative(void *p, nsCycleCollectionTraversalCallback &cb)   \
     override;                                                                  \
   NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                           \
   static _class* Downcast(nsISupports* s)                                      \
@@ -723,7 +723,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
     NS_IMETHOD_(void) Root(void *n) override;                                  \
     NS_IMETHOD_(void) Unlink(void *n) override;                                \
     NS_IMETHOD_(void) Unroot(void *n) override;                                \
-    NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb)       \
+    NS_IMETHOD TraverseNative(void *n, nsCycleCollectionTraversalCallback &cb) \
       override;                                                                \
     NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                         \
     NS_IMETHOD_(void) DeleteCycleCollectable(void *n) override                 \
