@@ -5,14 +5,13 @@ All notable changes to this program is documented in this file.
 ## 0.12.0 (2017-01-03)
 
 ### Added
-- Added _Take Element Screenshot_ command
-- Added new _Status_ command
-- Described supported WebDriver capabilities in README
-- Added endpoint for the _Get Timeouts_ command, but it is not yet implemented
-- Implemented dispatching of new actions API
+- Added [_Take Element Screenshot_](https://w3c.github.io/webdriver/webdriver-spec.html#take-element-screenshot) command
+- Added new [_Status_](https://w3c.github.io/webdriver/webdriver-spec.html#status) command
+- Added routing for the [_Get Timeouts_](https://w3c.github.io/webdriver/webdriver-spec.html#get-timeouts) command, but it is not yet implemented in Marionette, and will return an _unsupported operation_ error until it is
+- Implemented routing for [new actions API](https://w3c.github.io/webdriver/webdriver-spec.html#actions), but it too is not yet fully implemented in Marionette
 
 ### Changed
-- Synced Firefox preferences with those used in Mozilla automation
+- [Synced Firefox preferences](https://github.com/mozilla/geckodriver/commit/2bfdc3ec8151c427a6a75a6ba3ad203459540495) with those used in Mozilla automation
 - Default log level for debug builds of Firefox, which used to be `DEBUG`, changed to `INFO`-level
 - WebDriver library dependency upgraded to 0.17.1
 - Using _session not created_ error when failing to start session
@@ -22,8 +21,8 @@ All notable changes to this program is documented in this file.
 - Improved logging when starting Firefox
 - Reverted to synchronous logging, which should address cases of inconsistent output when failing to bind to port
 - Clarified in README that geckodriver is not supported on Windows XP
-- Added documentation of supported capabilities to README
-- Included capabilities example in README
+- Added documentation of supported capabilities to [README](https://github.com/mozilla/geckodriver/blob/master/README.md)
+- Included capabilities example in [README](https://github.com/mozilla/geckodriver/blob/master/README.md)
 
 ## 0.11.1 (2016-10-10)
 
