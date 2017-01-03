@@ -167,7 +167,6 @@ int main()
 #ifdef _M_X64
       TestHook("user32.dll", "GetKeyState") &&
 #endif
-      TestHook("user32.dll", "SetWinEventHook") &&
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
