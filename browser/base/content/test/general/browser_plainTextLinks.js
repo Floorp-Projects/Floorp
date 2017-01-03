@@ -119,7 +119,7 @@ add_task(function *() {
   let contentAreaContextMenu = document.getElementById("contentAreaContextMenu");
 
   for (let testid = 0; testid < checks.length; testid++) {
-    let menuPosition = yield ContentTask.spawn(gBrowser.selectedBrowser, { testid: testid }, function* (arg) {
+    let menuPosition = yield ContentTask.spawn(gBrowser.selectedBrowser, { testid }, function* (arg) {
       let range = content.tests[arg.testid]();
 
       // Get the range of the selection and determine its coordinates. These

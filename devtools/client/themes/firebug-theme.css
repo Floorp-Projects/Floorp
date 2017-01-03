@@ -94,6 +94,22 @@
 .theme-firebug .devtools-sidebar-tabs tab {
 }
 
+.theme-firebug .devtools-tab span {
+  padding-inline-end: 0;
+}
+
+/* Tweak the margin and padding values differently for sidebar and the main tab bar */
+.theme-firebug .devtools-tab,
+.theme-firebug .devtools-tab.selected {
+  padding: 2px 4px 0 4px;
+  margin: 3px 1px -1px;
+}
+
+.theme-firebug .devtools-sidebar-tabs tab {
+  margin: 3px 0 -1px 0;
+  padding: 2px 0 0 0;
+}
+
 /* In order to hide bottom-border of side panel tabs we need
  to make the parent element overflow visible, so child element
  can move one pixel down to hide the bottom border of the parent. */
@@ -107,7 +123,7 @@
   border-bottom: 1px solid transparent;
 }
 
-.theme-firebug .devtools-tab[selected],
+.theme-firebug .devtools-tab.selected,
 .theme-firebug .devtools-sidebar-tabs tab[selected] {
   background-color: rgb(247, 251, 254);
   border: 1px solid rgb(170, 188, 207) !important;
@@ -116,8 +132,8 @@
   color: inherit;
 }
 
-.theme-firebug .devtools-tab spacer,
-.theme-firebug .devtools-tab image {
+.theme-firebug .devtools-tabbar .devtools-separator,
+.theme-firebug .devtools-tab img {
   display: none;
 }
 
@@ -135,7 +151,7 @@
   margin: 0 4px !important;
 }
 
-.theme-firebug #panelSideBox .devtools-tab[selected],
+.theme-firebug #panelSideBox .devtools-tab.selected,
 .theme-firebug .devtools-sidebar-tabs tab[selected] {
   background-color: white;
 }
@@ -155,13 +171,21 @@
 .theme-firebug #toolbox-tab-options::before {
   content: url(chrome://devtools/skin/images/firebug/tool-options.svg);
   display: block;
-  margin: 4px 7px 0;
+  margin: 4px 4px 0;
 }
 
 .theme-firebug #toolbox-tab-options:not([selected]):hover::before {
   filter: brightness(80%);
 }
 
+/* Element picker */
+.theme-firebug #toolbox-buttons-start {
+  border: none;
+}
+
+.theme-firebug #command-button-pick {
+    top: 6px;
+}
 /* Toolbar */
 
 .theme-firebug .theme-toolbar,
@@ -232,4 +256,10 @@
 
 .theme-firebug #element-picker {
   min-height: 21px;
+}
+
+/* Make sure the toolbar buttons shrink nicely. */
+
+#toolbox-buttons-end {
+  background-image: linear-gradient(rgba(253, 253, 253, 0.2), rgba(253, 253, 253, 0));
 }

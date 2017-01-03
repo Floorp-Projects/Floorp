@@ -30,17 +30,15 @@
   </keyset>
 
   <vbox class="contentPane largeDialogContainer" flex="1" hidden="true" id="containers-content">
-    <description id="permissionsText" control="url"/>
-    <separator class="thin"/>
     <hbox align="start">
-      <label id="nameLabel" control="url" value="&name.label;" accesskey="&name.accesskey;"/>
-      <textbox id="name" flex="1" onkeyup="gContainersManager.checkForm();" />
+      <label id="nameLabel" control="name" value="&name.label;" accesskey="&name.accesskey;"/>
+      <textbox id="name" placeholder="&name.placeholder;" flex="1" onkeyup="gContainersManager.checkForm();" />
     </hbox>
     <hbox align="center" id="iconWrapper">
-      <label id="iconLabel" control="url" value="&icon.label;" accesskey="&icon.accesskey;"/>
+      <label id="iconLabel" control="icon" value="&icon.label;" accesskey="&icon.accesskey;"/>
     </hbox>
     <hbox align="center" id="colorWrapper">
-      <label id="colorLabel" control="url" value="&color.label;" accesskey="&color.accesskey;"/>
+      <label id="colorLabel" control="color" value="&color.label;" accesskey="&color.accesskey;"/>
     </hbox>
   </vbox>
   <vbox>

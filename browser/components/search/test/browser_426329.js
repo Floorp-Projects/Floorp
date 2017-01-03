@@ -47,11 +47,11 @@ function getMenuEntries() {
 function countEntries(name, value) {
   return new Promise(resolve => {
     let count = 0;
-    let obj = name && value ? {fieldname: name, value: value} : {};
+    let obj = name && value ? {fieldname: name, value} : {};
     FormHistory.count(obj,
-                      { handleResult: function(result) { count = result; },
-                        handleError: function(error) { throw error; },
-                        handleCompletion: function(reason) {
+                      { handleResult(result) { count = result; },
+                        handleError(error) { throw error; },
+                        handleCompletion(reason) {
                           if (!reason) {
                             resolve(count);
                           }

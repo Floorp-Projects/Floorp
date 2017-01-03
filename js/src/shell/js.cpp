@@ -50,6 +50,7 @@
 #include "jsarray.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jsfriendapi.h"
 #include "jsfun.h"
 #include "jsobj.h"
 #include "jsprf.h"
@@ -910,6 +911,9 @@ AddIntlExtras(JSContext* cx, unsigned argc, Value* vp)
     };
 
     if (!JS_DefineFunctions(cx, intl, funcs))
+        return false;
+
+    if (!js::AddPluralRulesConstructor(cx, intl))
         return false;
 
     args.rval().setUndefined();
@@ -3468,8 +3472,8 @@ GroupOf(JSContext* cx, unsigned argc, JS::Value* vp)
         JS_ReportErrorASCII(cx, "groupOf: object expected");
         return false;
     }
-    JSObject* obj = &args[0].toObject();
-    ObjectGroup* group = obj->getGroup(cx);
+    RootedObject obj(cx, &args[0].toObject());
+    ObjectGroup* group = JSObject::getGroup(cx, obj);
     if (!group)
         return false;
     args.rval().set(JS_NumberValue(double(uintptr_t(group) >> 3)));
@@ -6103,7 +6107,8 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "provided object (this should generally be Intl itself).  The added\n"
 "functions and their behavior are experimental: don't depend upon them\n"
 "unless you're willing to update your code if these experimental APIs change\n"
-"underneath you."),
+"underneath you.  Calling this function more than once in a realm/global\n"
+"will throw."),
 #endif // ENABLE_INTL_API
 
     JS_FS_HELP_END

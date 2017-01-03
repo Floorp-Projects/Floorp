@@ -1044,10 +1044,11 @@ static bool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
       LookAndFeel::ColorID colorID = (LookAndFeel::ColorID) intValue;
       bool useStandinsForNativeColors = aPresContext &&
                                         !aPresContext->IsChrome();
-      if (NS_SUCCEEDED(LookAndFeel::GetColor(colorID,
-                                    useStandinsForNativeColors, &aResult))) {
-        result = true;
-      }
+      DebugOnly<nsresult> rv =
+        LookAndFeel::GetColor(colorID, useStandinsForNativeColors, &aResult);
+      MOZ_ASSERT(NS_SUCCEEDED(rv),
+                 "Unknown enum colors should have been rejected by parser");
+      result = true;
     }
     else {
       aResult = NS_RGB(0, 0, 0);
@@ -7416,17 +7417,13 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 {
   COMPUTE_START_RESET(Background, bg, parentBG)
 
-  // background-color: color, string, inherit
-  const nsCSSValue* backColorValue = aRuleData->ValueForBackgroundColor();
-  if (eCSSUnit_Initial == backColorValue->GetUnit() ||
-      eCSSUnit_Unset == backColorValue->GetUnit()) {
-    bg->mBackgroundColor = NS_RGBA(0, 0, 0, 0);
-  } else if (!SetColor(*backColorValue, parentBG->mBackgroundColor,
-                       mPresContext, aContext, bg->mBackgroundColor,
-                       conditions)) {
-    NS_ASSERTION(eCSSUnit_Null == backColorValue->GetUnit(),
-                 "unexpected color unit");
-  }
+  // background-color: color, inherit
+  SetComplexColor<eUnsetInitial>(*aRuleData->ValueForBackgroundColor(),
+                                 parentBG->mBackgroundColor,
+                                 StyleComplexColor::FromColor(
+                                     NS_RGBA(0, 0, 0, 0)),
+                                 mPresContext,
+                                 bg->mBackgroundColor, conditions);
 
   uint32_t maxItemCount = 1;
   bool rebuild = false;

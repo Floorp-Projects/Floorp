@@ -69,7 +69,7 @@ add_task(function* init_tests() {
     get controller() { return thing; },
     popupOpen: true,
     selectedIndex: 0,
-    getValueAt: function() { return TEST_URI.spec; },
+    getValueAt() { return TEST_URI.spec; },
     searchString: TEST_TITLE,
   };
   Services.obs.notifyObservers(thing, TOPIC_AUTOCOMPLETE_FEEDBACK_INCOMING,

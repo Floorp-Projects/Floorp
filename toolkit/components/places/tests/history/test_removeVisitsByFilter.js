@@ -50,14 +50,14 @@ add_task(function* test_removeVisitsByFilter() {
         visitDate: dbDate,
         test: {
           // `visitDate`, as a Date
-          jsDate: jsDate,
+          jsDate,
           // `true` if we expect that the visit will be removed
           toRemove: false,
           // `true` if `onRow` informed of the removal of this visit
           announcedByOnRow: false,
           // `true` if there is a bookmark for this URI, i.e. of the page
           // should not be entirely removed.
-          hasBookmark: hasBookmark,
+          hasBookmark,
           onFrecencyChanged: null,
           onDeleteURI: null,
         },
@@ -132,39 +132,39 @@ add_task(function* test_removeVisitsByFilter() {
 
     let observer = {
       deferred: PromiseUtils.defer(),
-      onBeginUpdateBatch: function() {},
-      onEndUpdateBatch: function() {},
-      onVisit: function(uri) {
+      onBeginUpdateBatch() {},
+      onEndUpdateBatch() {},
+      onVisit(uri) {
         this.deferred.reject(new Error("Unexpected call to onVisit " + uri.spec));
       },
-      onTitleChanged: function(uri) {
+      onTitleChanged(uri) {
         this.deferred.reject(new Error("Unexpected call to onTitleChanged " + uri.spec));
       },
-      onClearHistory: function() {
+      onClearHistory() {
         this.deferred.reject("Unexpected call to onClearHistory");
       },
-      onPageChanged: function(uri) {
+      onPageChanged(uri) {
         this.deferred.reject(new Error("Unexpected call to onPageChanged " + uri.spec));
       },
-      onFrecencyChanged: function(aURI) {
+      onFrecencyChanged(aURI) {
         do_print("onFrecencyChanged " + aURI.spec);
         let deferred = frecencyChangePromises.get(aURI.spec);
         Assert.ok(!!deferred, "Observing onFrecencyChanged");
         deferred.resolve();
       },
-      onManyFrecenciesChanged: function() {
+      onManyFrecenciesChanged() {
         do_print("Many frecencies changed");
         for (let [, deferred] of frecencyChangePromises) {
           deferred.resolve();
         }
       },
-      onDeleteURI: function(aURI) {
+      onDeleteURI(aURI) {
         do_print("onDeleteURI " + aURI.spec);
         let deferred = uriDeletePromises.get(aURI.spec);
         Assert.ok(!!deferred, "Observing onDeleteURI");
         deferred.resolve();
       },
-      onDeleteVisits: function(aURI) {
+      onDeleteVisits(aURI) {
         // Not sure we can test anything.
       }
     };
@@ -238,7 +238,7 @@ add_task(function* test_removeVisitsByFilter() {
     for (let bookmarks of [[], [5, 6]]) {
       let options = {
         sampleSize: size,
-        bookmarks: bookmarks,
+        bookmarks,
       };
       if ("begin" in range) {
         options.begin = range.begin;

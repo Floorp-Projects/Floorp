@@ -584,7 +584,7 @@ this.PlacesUIUtils = {
    * @return  a Places Transaction that can be transacted for performing the
    *          move/insert command.
    */
-  getTransactionForData: function(aData, aType, aNewParentGuid, aIndex, aCopy) {
+  getTransactionForData(aData, aType, aNewParentGuid, aIndex, aCopy) {
     if (!this.SUPPORTED_FLAVORS.includes(aData.type))
       throw new Error(`Unsupported '${aData.type}' data type`);
 
@@ -617,7 +617,7 @@ this.PlacesUIUtils = {
     let title = aData.type != PlacesUtils.TYPE_UNICODE ? aData.title
                                                        : aData.uri;
     return PlacesTransactions.NewBookmark({ uri: NetUtil.newURI(aData.uri)
-                                          , title: title
+                                          , title
                                           , parentGuid: aNewParentGuid
                                           , index: aIndex });
   },
@@ -797,7 +797,7 @@ this.PlacesUIUtils = {
    *        a node, except the root node of a query.
    * @return true if the aNode represents a removable entry, false otherwise.
    */
-  canUserRemove: function(aNode) {
+  canUserRemove(aNode) {
     let parentNode = aNode.parent;
     if (!parentNode) {
       // canUserRemove doesn't accept root nodes.
@@ -845,7 +845,7 @@ this.PlacesUIUtils = {
    * @note livemark "folders" are considered read-only (but see bug 1072833).
    * @return true if aItemId points to a read-only folder, false otherwise.
    */
-  isContentsReadOnly: function(aNodeOrItemId) {
+  isContentsReadOnly(aNodeOrItemId) {
     let itemId;
     if (typeof(aNodeOrItemId) == "number") {
       itemId = aNodeOrItemId;
@@ -1408,7 +1408,7 @@ this.PlacesUIUtils = {
     return queryName;
   },
 
-  shouldShowTabsFromOtherComputersMenuitem: function() {
+  shouldShowTabsFromOtherComputersMenuitem() {
     let weaveOK = Weave.Status.checkSetup() != Weave.CLIENT_NOT_CONFIGURED &&
                   Weave.Svc.Prefs.get("firstSync", "") != "notReady";
     return weaveOK;
@@ -1691,7 +1691,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
      *        boolean value.
      * @return nsITransaction object.
      */
-    setLoadInSidebar: function(aItemId, aLoadInSidebar)
+    setLoadInSidebar(aItemId, aLoadInSidebar)
     {
       let annoObj = { name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
                       type: Ci.nsIAnnotationService.TYPE_INT32,
@@ -1710,7 +1710,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
     *        new description.
     * @return nsITransaction object.
     */
-    editItemDescription: function(aItemId, aDescription)
+    editItemDescription(aItemId, aDescription)
     {
       let annoObj = { name: PlacesUIUtils.DESCRIPTION_ANNO,
                       type: Ci.nsIAnnotationService.TYPE_STRING,

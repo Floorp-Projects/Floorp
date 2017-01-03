@@ -41,7 +41,7 @@ var ClickEventHandler = {
     addMessageListener("Autoscroll:Stop", this);
   },
 
-  isAutoscrollBlocker: function(node) {
+  isAutoscrollBlocker(node) {
     let mmPaste = Services.prefs.getBoolPref("middlemouse.paste");
     let mmScrollbarPosition = Services.prefs.getBoolPref("middlemouse.scrollbarPosition");
 
@@ -66,7 +66,7 @@ var ClickEventHandler = {
     return false;
   },
 
-  findNearestScrollableElement: function(aNode) {
+  findNearestScrollableElement(aNode) {
     // this is a list of overflow property values that allow scrolling
     const scrollingAllowed = ['scroll', 'auto'];
 
@@ -123,7 +123,7 @@ var ClickEventHandler = {
     }
   },
 
-  startScroll: function(event) {
+  startScroll(event) {
 
     this.findNearestScrollableElement(event.originalTarget);
 
@@ -154,7 +154,7 @@ var ClickEventHandler = {
     content.requestAnimationFrame(this.autoscrollLoop);
   },
 
-  stopScroll: function() {
+  stopScroll() {
     if (this._scrollable) {
       this._scrollable.mozScrollSnap();
       this._scrollable = null;
@@ -164,7 +164,7 @@ var ClickEventHandler = {
     }
   },
 
-  accelerate: function(curr, start) {
+  accelerate(curr, start) {
     const speed = 12;
     var val = (curr - start) / speed;
 
@@ -175,13 +175,13 @@ var ClickEventHandler = {
     return 0;
   },
 
-  roundToZero: function(num) {
+  roundToZero(num) {
     if (num > 0)
       return Math.floor(num);
     return Math.ceil(num);
   },
 
-  autoscrollLoop: function(timestamp) {
+  autoscrollLoop(timestamp) {
     if (!this._scrollable) {
       // Scrolling has been canceled
       return;
@@ -223,7 +223,7 @@ var ClickEventHandler = {
     content.requestAnimationFrame(this.autoscrollLoop);
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     if (event.type == "mousemove") {
       this._screenX = event.screenX;
       this._screenY = event.screenY;
@@ -246,7 +246,7 @@ var ClickEventHandler = {
     }
   },
 
-  receiveMessage: function(msg) {
+  receiveMessage(msg) {
     switch (msg.name) {
       case "Autoscroll:Stop": {
         this.stopScroll();
@@ -261,7 +261,7 @@ var PopupBlocking = {
   popupData: null,
   popupDataInternal: null,
 
-  init: function() {
+  init() {
     addEventListener("DOMPopupBlocked", this, true);
     addEventListener("pageshow", this, true);
     addEventListener("pagehide", this, true);
@@ -270,7 +270,7 @@ var PopupBlocking = {
     addMessageListener("PopupBlocking:GetBlockedPopupList", this);
   },
 
-  receiveMessage: function(msg) {
+  receiveMessage(msg) {
     switch (msg.name) {
       case "PopupBlocking:UnblockPopup": {
         let i = msg.data.index;
@@ -315,7 +315,7 @@ var PopupBlocking = {
     }
   },
 
-  handleEvent: function(ev) {
+  handleEvent(ev) {
     switch (ev.type) {
       case "DOMPopupBlocked":
         return this.onPopupBlocked(ev);
@@ -327,7 +327,7 @@ var PopupBlocking = {
     return undefined;
   },
 
-  onPopupBlocked: function(ev) {
+  onPopupBlocked(ev) {
     if (!this.popupData) {
       this.popupData = new Array();
       this.popupDataInternal = new Array();
@@ -349,7 +349,7 @@ var PopupBlocking = {
     this.updateBlockedPopups(true);
   },
 
-  onPageShow: function(ev) {
+  onPageShow(ev) {
     if (this.popupData) {
       let i = 0;
       while (i < this.popupData.length) {
@@ -371,7 +371,7 @@ var PopupBlocking = {
     }
   },
 
-  onPageHide: function(ev) {
+  onPageHide(ev) {
     if (this.popupData) {
       this.popupData = null;
       this.popupDataInternal = null;
@@ -379,7 +379,7 @@ var PopupBlocking = {
     }
   },
 
-  updateBlockedPopups: function(freshPopup) {
+  updateBlockedPopups(freshPopup) {
     sendAsyncMessage("PopupBlocking:UpdateBlockedPopups",
       {
         count: this.popupData ? this.popupData.length : 0,
@@ -432,7 +432,7 @@ var Printing = {
       let nsresult = event.detail;
       sendAsyncMessage("Printing:Error", {
         isPrinting: wbp.doingPrint,
-        nsresult: nsresult,
+        nsresult,
       });
     }
   },
@@ -505,7 +505,7 @@ var Printing = {
       // into the DOM has finished rendering. If our layout engine is still painting, we
       // will wait for MozAfterPaint event to be fired.
       let webProgressListener = {
-        onStateChange: function(webProgress, req, flags, status) {
+        onStateChange(webProgress, req, flags, status) {
           if (flags & Ci.nsIWebProgressListener.STATE_STOP) {
             webProgress.removeProgressListener(webProgressListener);
             let domUtils = content.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -725,7 +725,7 @@ var Printing = {
   updatePageCount() {
     let numPages = docShell.printPreview.printPreviewNumPages;
     sendAsyncMessage("Printing:Preview:UpdatePageCount", {
-      numPages: numPages,
+      numPages,
     });
   },
 
@@ -848,7 +848,7 @@ var FindBar = {
     }
     // sendSyncMessage returns an array of the responses from all listeners
     let rv = sendSyncMessage("Findbar:Keypress", {
-      fakeEvent: fakeEvent,
+      fakeEvent,
       shouldFastFind: fastFind.should
     });
     if (rv.indexOf(false) !== -1) {
@@ -1059,11 +1059,11 @@ addMessageListener("Browser:PurgeSessionHistory", function BrowserPurgeHistory()
 });
 
 var ViewSelectionSource = {
-  init: function() {
+  init() {
     addMessageListener("ViewSource:GetSelection", this);
   },
 
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     if (message.name == "ViewSource:GetSelection") {
       let selectionDetails;
       try {
@@ -1080,7 +1080,7 @@ var ViewSelectionSource = {
    * "tumbler" notation.
    * See FIXptr: http://lists.w3.org/Archives/Public/www-xml-linking-comments/2001AprJun/att-0074/01-NOTE-FIXptr-20010425.htm
    */
-  getPath: function(ancestor, node) {
+  getPath(ancestor, node) {
     var n = node;
     var p = n.parentNode;
     if (n == ancestor || !p)
@@ -1101,7 +1101,7 @@ var ViewSelectionSource = {
     return path;
   },
 
-  getSelection: function() {
+  getSelection() {
     // These are markers used to delimit the selection during processing. They
     // are removed from the final rendering.
     // We use noncharacter Unicode codepoints to minimize the risk of clashing
@@ -1239,7 +1239,7 @@ var ViewSelectionSource = {
    * @param node
    *        Some element within the fragment of interest.
    */
-  getMathMLSelection: function(node) {
+  getMathMLSelection(node) {
     var Node = node.ownerDocument.defaultView.Node;
     this._lineCount = 0;
     this._startTargetLine = 0;
@@ -1288,7 +1288,7 @@ var ViewSelectionSource = {
     return Services.prefs.getBoolPref("view_source.wrap_long_lines");
   },
 
-  getInnerMarkup: function(node, indent) {
+  getInnerMarkup(node, indent) {
     var str = '';
     for (var i = 0; i < node.childNodes.length; i++) {
       str += this.getOuterMarkup(node.childNodes.item(i), indent);
@@ -1296,7 +1296,7 @@ var ViewSelectionSource = {
     return str;
   },
 
-  getOuterMarkup: function(node, indent) {
+  getOuterMarkup(node, indent) {
     var Node = node.ownerDocument.defaultView.Node;
     var newline = "";
     var padding = "";
@@ -1371,7 +1371,7 @@ var ViewSelectionSource = {
     return str;
   },
 
-  unicodeToEntity: function(text) {
+  unicodeToEntity(text) {
     const charTable = {
       '&': '&amp;<span class="entity">amp;</span>',
       '<': '&amp;<span class="entity">lt;</span>',
@@ -1440,7 +1440,7 @@ let AutoCompletePopup = {
     "FormAutoComplete:RequestFocus",
   ],
 
-  init: function() {
+  init() {
     addEventListener("unload", this);
     addEventListener("DOMContentLoaded", this);
 
@@ -1452,7 +1452,7 @@ let AutoCompletePopup = {
     this._popupOpen = false;
   },
 
-  destroy: function() {
+  destroy() {
     if (this._connected) {
       let controller = Cc["@mozilla.org/satchel/form-fill-controller;1"]
                          .getService(Ci.nsIFormFillController);
@@ -1542,7 +1542,7 @@ let AutoCompletePopup = {
     return this._popupOpen;
   },
 
-  openAutocompletePopup: function(input, element) {
+  openAutocompletePopup(input, element) {
     if (this._popupOpen || !input) {
       return;
     }
@@ -1557,7 +1557,7 @@ let AutoCompletePopup = {
     this._input = input;
   },
 
-  closePopup: function() {
+  closePopup() {
     // We set this here instead of just waiting for the
     // PopupClosed message to do it so that we don't end
     // up in a state where the content thinks that a popup
@@ -1566,17 +1566,17 @@ let AutoCompletePopup = {
     sendAsyncMessage("FormAutoComplete:ClosePopup", {});
   },
 
-  invalidate: function() {
+  invalidate() {
     if (this._popupOpen) {
       let results = this.getResultsFromController(this._input);
       sendAsyncMessage("FormAutoComplete:Invalidate", { results });
     }
   },
 
-  selectBy: function(reverse, page) {
+  selectBy(reverse, page) {
     this._index = sendSyncMessage("FormAutoComplete:SelectBy", {
-      reverse: reverse,
-      page: page
+      reverse,
+      page
     });
   },
 
@@ -1617,7 +1617,7 @@ let DateTimePickerListener = {
    * On init, just listen for the event to open the picker, once the picker is
    * opened, we'll listen for update and close events.
    */
-  init: function() {
+  init() {
     addEventListener("MozOpenDateTimePicker", this);
     this._inputElement = null;
 
@@ -1626,7 +1626,7 @@ let DateTimePickerListener = {
     });
   },
 
-  uninit: function() {
+  uninit() {
     removeEventListener("MozOpenDateTimePicker", this);
     this._inputElement = null;
   },
@@ -1634,7 +1634,7 @@ let DateTimePickerListener = {
   /**
    * Cleanup function called when picker is closed.
    */
-  close: function() {
+  close() {
     this.removeListeners();
     this._inputElement.setDateTimePickerState(false);
     this._inputElement = null;
@@ -1644,7 +1644,7 @@ let DateTimePickerListener = {
    * Called after picker is opened to start listening for input box update
    * events.
    */
-  addListeners: function() {
+  addListeners() {
     addEventListener("MozUpdateDateTimePicker", this);
     addEventListener("MozCloseDateTimePicker", this);
     addEventListener("pagehide", this);
@@ -1656,7 +1656,7 @@ let DateTimePickerListener = {
   /**
    * Stop listeneing for events when picker is closed.
    */
-  removeListeners: function() {
+  removeListeners() {
     removeEventListener("MozUpdateDateTimePicker", this);
     removeEventListener("MozCloseDateTimePicker", this);
     removeEventListener("pagehide", this);
@@ -1668,7 +1668,7 @@ let DateTimePickerListener = {
   /**
    * Helper function that returns the CSS direction property of the element.
    */
-  getComputedDirection: function(aElement) {
+  getComputedDirection(aElement) {
     return aElement.ownerDocument.defaultView.getComputedStyle(aElement)
       .getPropertyValue("direction");
   },
@@ -1677,18 +1677,18 @@ let DateTimePickerListener = {
    * Helper function that returns the rect of the element, which is the position
    * relative to the left/top of the content area.
    */
-  getBoundingContentRect: function(aElement) {
+  getBoundingContentRect(aElement) {
     return BrowserUtils.getElementBoundingRect(aElement);
   },
 
-  getTimePickerPref: function() {
+  getTimePickerPref() {
     return Services.prefs.getBoolPref("dom.forms.datetime.timepicker");
   },
 
   /**
    * nsIMessageListener.
    */
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "FormDateTime:PickerClosed": {
         this.close();
@@ -1707,7 +1707,7 @@ let DateTimePickerListener = {
    * nsIDOMEventListener, for chrome events sent by the input element and other
    * DOM events.
    */
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     switch (aEvent.type) {
       case "MozOpenDateTimePicker": {
         // Time picker is disabled when preffed off
@@ -1769,7 +1769,7 @@ DateTimePickerListener.init();
  * See bug 1312881 and bug 1297867 for more details.
  */
 let TelemetryScrollTracker = {
-  init: function() {
+  init() {
     this._ignore = false;
     this._prevScrollY = 0;
     this._maxScrollY = 0;
@@ -1782,7 +1782,7 @@ let TelemetryScrollTracker = {
     addEventListener("pagehide", this, { passive: true });
   },
 
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     if (aEvent.target !== content.document) {
       return;
     }
@@ -1822,7 +1822,7 @@ let TelemetryScrollTracker = {
     }
   },
 
-  shouldIgnorePage: function() {
+  shouldIgnorePage() {
     return content.location == "" ||
            content.location.protocol === "about:";
   }

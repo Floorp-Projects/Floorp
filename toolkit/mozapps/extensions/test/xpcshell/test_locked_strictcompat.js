@@ -168,9 +168,9 @@ add_task(function* init() {
   a7.userDisabled = true;
   t2.userDisabled = false;
   a3.findUpdates({
-    onUpdateFinished: function() {
+    onUpdateFinished() {
       a4.findUpdates({
-        onUpdateFinished: function() {
+        onUpdateFinished() {
           deferredUpdateFinished.resolve();
         }
       }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);

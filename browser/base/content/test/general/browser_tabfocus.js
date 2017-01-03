@@ -53,7 +53,7 @@ function* getFocusedElementForBrowser(browser, dontCheckExtraFocus = false)
       // additional focus related properties. This is needed as both URLs are
       // loaded using the same child process and share focus managers.
       browser.messageManager.sendAsyncMessage("Browser:GetFocusedElement",
-        { dontCheckExtraFocus : dontCheckExtraFocus });
+        { dontCheckExtraFocus });
     });
   }
   var focusedWindow = {};
@@ -113,7 +113,7 @@ function focusInChild()
       }
     }
 
-    sendSyncMessage("Browser:GetCurrentFocus", { details : details });
+    sendSyncMessage("Browser:GetCurrentFocus", { details });
   });
 }
 
@@ -122,7 +122,7 @@ function focusElementInChild(elementid, type)
   let browser = (elementid.indexOf("1") >= 0) ? browser1 : browser2;
   if (gMultiProcessBrowser) {
     browser.messageManager.sendAsyncMessage("Browser:ChangeFocus",
-                                            { id: elementid, type: type });
+                                            { id: elementid, type });
   }
   else {
     browser.contentDocument.getElementById(elementid)[type]();

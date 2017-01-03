@@ -544,17 +544,13 @@ SpecialPowersObserverAPI.prototype = {
       }
 
       case "SPStartupExtension": {
-        let {ExtensionData, Management} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
+        let {ExtensionData} = Components.utils.import("resource://gre/modules/Extension.jsm", {});
 
         let id = aMessage.data.id;
         let extension = this._extensions.get(id);
-        let startupListener = (msg, ext) => {
-          if (ext == extension) {
-            this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [extension.id]});
-            Management.off("startup", startupListener);
-          }
-        };
-        Management.on("startup", startupListener);
+        extension.on("startup", () => {
+          this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionSetId", args: [extension.id]});
+        });
 
         // Make sure the extension passes the packaging checks when
         // they're run on a bare archive rather than a running instance,
@@ -579,7 +575,6 @@ SpecialPowersObserverAPI.prototype = {
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionStarted", args: []});
         }).catch(e => {
           dump(`Extension startup failed: ${e}\n${e.stack}`);
-          Management.off("startup", startupListener);
           this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionFailed", args: []});
         });
         return undefined;

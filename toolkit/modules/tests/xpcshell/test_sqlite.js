@@ -26,7 +26,7 @@ function sleep(ms) {
                 .createInstance(Ci.nsITimer);
 
   timer.initWithCallback({
-    notify: function() {
+    notify() {
       deferred.resolve();
     },
   }, ms, timer.TYPE_ONE_SHOT);
@@ -42,7 +42,7 @@ function failTestsOnAutoClose(enabled)  {
 
 function getConnection(dbName, extraOptions = {}) {
   let path = dbName + ".sqlite";
-  let options = {path: path};
+  let options = {path};
   for (let [k, v] of Object.entries(extraOptions)) {
     options[k] = v;
   }
@@ -99,7 +99,7 @@ add_task(function* test_open_normal() {
 add_task(function* test_open_unshared() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "test_open_unshared.sqlite");
 
-  let c = yield Sqlite.openConnection({path: path, sharedMemoryCache: false});
+  let c = yield Sqlite.openConnection({path, sharedMemoryCache: false});
   yield c.close();
 });
 
@@ -496,7 +496,7 @@ add_task(function* test_no_shrink_on_init() {
 
   let count = 0;
   Object.defineProperty(c._connectionData, "shrinkMemory", {
-    value: function() {
+    value() {
       count++;
     },
   });
@@ -522,7 +522,7 @@ add_task(function* test_idle_shrink_fires() {
 
   let count = 0;
   Object.defineProperty(c._connectionData, "shrinkMemory", {
-    value: function() {
+    value() {
       count++;
       let promise = oldShrink.call(c._connectionData);
       shrinkPromises.push(promise);
@@ -566,7 +566,7 @@ add_task(function* test_idle_shrink_reset_on_operation() {
   let count = 0;
 
   Object.defineProperty(c._connectionData, "shrinkMemory", {
-    value: function() {
+    value() {
       count++;
       let promise = oldShrink.call(c._connectionData);
       shrinkPromises.push(promise);
@@ -837,7 +837,7 @@ add_task(function* test_direct() {
 
   let deferred = Promise.defer();
   begin.executeAsync({
-    handleCompletion: function(reason) {
+    handleCompletion(reason) {
       deferred.resolve();
     }
   });
@@ -848,10 +848,10 @@ add_task(function* test_direct() {
   deferred = Promise.defer();
   print("Executing async.");
   statement.executeAsync({
-    handleResult: function(resultSet) {
+    handleResult(resultSet) {
     },
 
-    handleError:  function(error) {
+    handleError(error) {
       print("Error when executing SQL (" + error.result + "): " +
             error.message);
       print("Original error: " + error.error);
@@ -859,7 +859,7 @@ add_task(function* test_direct() {
       deferred.reject();
     },
 
-    handleCompletion: function(reason) {
+    handleCompletion(reason) {
       print("Completed.");
       deferred.resolve();
     }
@@ -869,7 +869,7 @@ add_task(function* test_direct() {
 
   deferred = Promise.defer();
   end.executeAsync({
-    handleCompletion: function(reason) {
+    handleCompletion(reason) {
       deferred.resolve();
     }
   });
@@ -941,7 +941,7 @@ add_task(function* test_clone() {
 // Test clone(readOnly) method.
 add_task(function* test_readOnly_clone() {
   let path = OS.Path.join(OS.Constants.Path.profileDir, "test_readOnly_clone.sqlite");
-  let c = yield Sqlite.openConnection({path: path, sharedMemoryCache: false});
+  let c = yield Sqlite.openConnection({path, sharedMemoryCache: false});
 
   let clone = yield c.clone(true);
   // Just check that it works.
@@ -1002,7 +1002,7 @@ add_task(function* test_warning_message_on_finalization() {
   let deferred = Promise.defer();
 
   let listener = {
-    observe: function(msg) {
+    observe(msg) {
       let messageText = msg.message;
       // Make sure the message starts with a warning containing the
       // connection identifier
@@ -1028,7 +1028,7 @@ add_task(function* test_error_message_on_unknown_finalization() {
   let deferred = Promise.defer();
 
   let listener = {
-    observe: function(msg) {
+    observe(msg) {
       let messageText = msg.message;
       if (messageText.indexOf("Error: Attempt to finalize unknown " +
                               "Sqlite connection: foo") !== -1) {
@@ -1050,7 +1050,7 @@ add_task(function* test_forget_witness_on_close() {
   let forgetCalled = false;
   let oldWitness = c._witness;
   c._witness = {
-    forget: function() {
+    forget() {
       forgetCalled = true;
       oldWitness.forget();
     },

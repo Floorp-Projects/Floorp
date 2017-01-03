@@ -623,8 +623,8 @@ this.PlacesUtils = {
     }
   },
 
-  onPageAnnotationSet: function() {},
-  onPageAnnotationRemoved: function() {},
+  onPageAnnotationSet() {},
+  onPageAnnotationRemoved() {},
 
 
   // nsITransactionListener
@@ -654,11 +654,11 @@ this.PlacesUtils = {
     // initial createItem transaction, or even worse, the batched editing of
     // some other item.
     // DO NOT MOVE this to the window scope, that would leak (bug 490068)!
-    this.transactionManager.doTransaction({ doTransaction: function() {},
-                                            undoTransaction: function() {},
-                                            redoTransaction: function() {},
+    this.transactionManager.doTransaction({ doTransaction() {},
+                                            undoTransaction() {},
+                                            redoTransaction() {},
                                             isTransient: false,
-                                            merge: function() { return false; }
+                                            merge() { return false; }
                                           });
   },
 
@@ -1626,7 +1626,7 @@ this.PlacesUtils = {
       handleError: function handleError(aResultCode, aPlaceInfo) {
         deferred.reject(new Components.Exception("Error", aResultCode));
       },
-      handleCompletion: function() {
+      handleCompletion() {
         deferred.resolve(this._placeInfo);
       }
     });
@@ -1642,7 +1642,7 @@ this.PlacesUtils = {
    *           properties: { uri, dataLen, data, mimeType }
    * @rejects JavaScript exception if the given url has no associated favicon.
    */
-  promiseFaviconData: function(aPageUrl) {
+  promiseFaviconData(aPageUrl) {
     let deferred = Promise.defer();
     PlacesUtils.favicons.getFaviconDataForPage(NetUtil.newURI(aPageUrl),
       function(aURI, aDataLen, aData, aMimeType) {
@@ -1665,7 +1665,7 @@ this.PlacesUtils = {
    * @resolves to the nsIURL of the favicon link
    * @rejects if the given url has no associated favicon.
    */
-  promiseFaviconLinkUrl: function(aPageUrl) {
+  promiseFaviconLinkUrl(aPageUrl) {
     let deferred = Promise.defer();
     if (!(aPageUrl instanceof Ci.nsIURI))
       aPageUrl = NetUtil.newURI(aPageUrl);
@@ -1976,7 +1976,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "history", function() {
              .QueryInterface(Ci.nsIBrowserHistory)
              .QueryInterface(Ci.nsPIPlacesDatabase);
   return Object.freeze(new Proxy(hs, {
-    get: function(target, name) {
+    get(target, name) {
       let property, object;
       if (name in target) {
         property = target[name];
@@ -2053,7 +2053,7 @@ XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
   // referenced by the transaction manager has the module itself as global.
   return Object.create(tm, {
     "doTransaction": {
-      value: function(aTransaction) {
+      value(aTransaction) {
         tm.doTransaction(aTransaction);
       }
     }
@@ -2266,7 +2266,7 @@ var Keywords = {
              SET place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
                  post_data = :post_data
              WHERE keyword = :keyword
-            `, { url: url.href, keyword: keyword, post_data: postData });
+            `, { url: url.href, keyword, post_data: postData });
           yield notifyKeywordChange(oldEntry.url.href, "", source);
         } else {
           // An entry for the given page could be missing, in such a case we need to
@@ -2281,7 +2281,7 @@ var Keywords = {
           yield db.executeCached(
             `INSERT INTO moz_keywords (keyword, place_id, post_data)
              VALUES (:keyword, (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :post_data)
-            `, { url: url.href, keyword: keyword, post_data: postData });
+            `, { url: url.href, keyword, post_data: postData });
         }
 
         yield PlacesSyncUtils.bookmarks.addSyncChangesForBookmarksWithURL(
@@ -2535,7 +2535,7 @@ var GuidHelper = {
     this.idsForGuids.delete(guid);
   },
 
-  ensureObservingRemovedItems: function() {
+  ensureObservingRemovedItems() {
     if (!("observer" in this)) {
       /**
        * This observers serves two purposes:
@@ -2559,11 +2559,11 @@ var GuidHelper = {
 
         QueryInterface: XPCOMUtils.generateQI(Ci.nsINavBookmarkObserver),
 
-        onBeginUpdateBatch: function() {},
-        onEndUpdateBatch: function() {},
-        onItemChanged: function() {},
-        onItemVisited: function() {},
-        onItemMoved: function() {},
+        onBeginUpdateBatch() {},
+        onEndUpdateBatch() {},
+        onItemChanged() {},
+        onItemVisited() {},
+        onItemMoved() {},
       };
       PlacesUtils.bookmarks.addObserver(this.observer, false);
       PlacesUtils.registerShutdownFunction(() => {
@@ -3398,7 +3398,7 @@ PlacesSetItemAnnotationTransaction.prototype = {
       this.item.annotations = [{ name: annoName,
                                 type: type.value,
                                 flags: flags.value,
-                                value: value,
+                                value,
                                 expires: expires.value }];
     }
     else {
@@ -3455,7 +3455,7 @@ PlacesSetPageAnnotationTransaction.prototype = {
                                                             annoName);
       this.item.annotations = [{ name: annoName,
                                 flags: flags.value,
-                                value: value,
+                                value,
                                 expires: expires.value }];
     }
     else {
@@ -3743,7 +3743,7 @@ PlacesSortFolderByNameTransaction.prototype = {
 
     // set the nex indexes
     let callback = {
-      runBatched: function() {
+      runBatched() {
         for (let i = 0; i < newOrder.length; ++i) {
           PlacesUtils.bookmarks.setItemIndex(newOrder[i].itemId, i);
         }
@@ -3756,7 +3756,7 @@ PlacesSortFolderByNameTransaction.prototype = {
   {
     let callback = {
       _self: this,
-      runBatched: function() {
+      runBatched() {
         for (let item in this._self._oldOrder)
           PlacesUtils.bookmarks.setItemIndex(item, this._self._oldOrder[item]);
       }

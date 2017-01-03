@@ -538,7 +538,7 @@ CSS_PROP_BACKGROUND(
     VARIANT_HC,
     nullptr,
     offsetof(nsStyleBackground, mBackgroundColor),
-    eStyleAnimType_Color)
+    eStyleAnimType_ComplexColor)
 CSS_PROP_BACKGROUND(
     background-image,
     background_image,

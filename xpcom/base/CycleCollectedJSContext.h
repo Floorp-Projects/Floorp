@@ -216,6 +216,12 @@ private:
                                           JS::gcreason::Reason aReason);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
   static void LargeAllocationFailureCallback(void* aData);
+  /**
+   * Callback for reporting external string memory.
+   */
+  static size_t SizeofExternalStringCallback(JSString* aStr,
+                                             mozilla::MallocSizeOf aMallocSizeOf);
+
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
                               void* aData);
   static JSObject* GetIncumbentGlobalCallback(JSContext* aCx);

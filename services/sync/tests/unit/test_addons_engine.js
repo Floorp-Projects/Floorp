@@ -36,6 +36,7 @@ function advance_test() {
   reconciler.saveState(null, cb);
   cb.wait();
 
+  tracker.clearChangedIDs();
   run_next_test();
 }
 

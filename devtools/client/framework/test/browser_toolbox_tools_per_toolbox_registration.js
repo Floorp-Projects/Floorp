@@ -132,8 +132,9 @@ function toolboxToolUnregistered() {
 }
 
 function cleanup() {
-  toolbox.destroy();
-  toolbox = null;
-  gBrowser.removeCurrentTab();
-  finish();
+  toolbox.destroy().then(() => {;
+    toolbox = null;
+    gBrowser.removeCurrentTab();
+    finish();
+  });
 }

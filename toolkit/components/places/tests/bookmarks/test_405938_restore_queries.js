@@ -91,7 +91,7 @@ var test = {
                                          DEFAULT_INDEX, this._queryTitle3);
   },
 
-  clean: function() {},
+  clean() {},
 
   validate: function validate() {
     // Throw a wrench in the works by inserting some new bookmarks,

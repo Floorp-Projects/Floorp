@@ -153,7 +153,7 @@ var tests = [
     copyExpected: "data:text/html,(%C3%A9 %25P",
   },
   {
-    setup: function() { Services.prefs.setBoolPref(decodeURLpref, true); },
+    setup() { Services.prefs.setBoolPref(decodeURLpref, true); },
     loadURL: "http://example.com/%D0%B1%D0%B8%D0%BE%D0%B3%D1%80%D0%B0%D1%84%D0%B8%D1%8F",
     expectedURL: toUnicode("example.com/биография"),
     copyExpected: toUnicode("http://example.com/биография")

@@ -44,19 +44,19 @@ add_test(function test_corruptFormHistoryDB_emptyInit() {
   do_log_info("test that FormHistory initializes an empty DB in place of corrupt DB.");
 
   FormHistory.count({}, {
-    handleResult : function(aNumEntries) {
+    handleResult(aNumEntries) {
       do_check_true(aNumEntries == 0);
       FormHistory.count({ fieldname : "name-A", value : "value-A" }, {
-        handleResult : function(aNumEntries2) {
+        handleResult(aNumEntries2) {
           do_check_true(aNumEntries2 == 0);
           run_next_test();
         },
-        handleError : function(aError2) {
+        handleError(aError2) {
           do_throw("DB initialized after reading a corrupt DB file found an entry.");
         }
       });
     },
-    handleError : function(aError) {
+    handleError(aError) {
       do_throw("DB initialized after reading a corrupt DB file is not empty.");
     }
   });

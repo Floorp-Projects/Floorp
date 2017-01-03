@@ -87,6 +87,7 @@ struct LinkedProgramInfo final
     //////
 
     WebGLProgram* const prog;
+    const GLenum transformFeedbackBufferMode;
 
     std::vector<AttribInfo> attribs;
     std::vector<UniformInfo*> uniforms; // Owns its contents.

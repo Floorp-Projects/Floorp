@@ -18,7 +18,7 @@ var gTabsListener = {
   _loadedURIs: [],
   _openTabsCount: 0,
 
-  handleEvent: function(aEvent) {
+  handleEvent(aEvent) {
     if (aEvent.type != "TabOpen")
       return;
 
@@ -32,7 +32,7 @@ var gTabsListener = {
        "Tab has been opened in current browser window");
   },
 
-  onLocationChange: function(aBrowser, aWebProgress, aRequest, aLocationURI,
+  onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI,
                              aFlags) {
     var spec = aLocationURI.spec;
     ok(true, spec);
@@ -76,7 +76,7 @@ gTests.push({
   URIs: ["about:buildconfig"],
   _itemId: -1,
 
-  setup: function() {
+  setup() {
     var bs = PlacesUtils.bookmarks;
     // Add a new unsorted bookmark.
     this._itemId = bs.insertBookmark(bs.unfiledBookmarksFolder,
@@ -92,11 +92,11 @@ gTests.push({
     is(bookmarkNode.uri, this.URIs[0], "Found bookmark in the right pane");
   },
 
-  finish: function() {
+  finish() {
     setTimeout(runNextTest, 0);
   },
 
-  cleanup: function() {
+  cleanup() {
     PlacesUtils.bookmarks.removeItem(this._itemId);
   }
 });
@@ -109,7 +109,7 @@ gTests.push({
   URIs: ["about:buildconfig", "about:"],
   _folderId: -1,
 
-  setup: function() {
+  setup() {
     var bs = PlacesUtils.bookmarks;
     // Create a new folder.
     var folderId = bs.createFolder(bs.unfiledBookmarksFolder,
@@ -134,11 +134,11 @@ gTests.push({
     is(folderNode.title, "Folder", "Found folder in the right pane");
   },
 
-  finish: function() {
+  finish() {
     setTimeout(runNextTest, 0);
   },
 
-  cleanup: function() {
+  cleanup() {
     PlacesUtils.bookmarks.removeItem(this._folderId);
   }
 });
@@ -152,7 +152,7 @@ gTests.push({
   _folderId: -1,
   _queryId: -1,
 
-  setup: function() {
+  setup() {
     var bs = PlacesUtils.bookmarks;
     // Create a new folder.
     var folderId = bs.createFolder(bs.unfiledBookmarksFolder,
@@ -191,11 +191,11 @@ gTests.push({
     is(folderNode.title, "Query", "Found query in the right pane");
   },
 
-  finish: function() {
+  finish() {
     setTimeout(runNextTest, 0);
   },
 
-  cleanup: function() {
+  cleanup() {
     PlacesUtils.bookmarks.removeItem(this._folderId);
     PlacesUtils.bookmarks.removeItem(this._queryId);
   }

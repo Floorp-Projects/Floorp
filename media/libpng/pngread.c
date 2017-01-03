@@ -317,7 +317,7 @@ png_read_frame_head(png_structp png_ptr, png_infop info_ptr)
             /* discard trailing fdATs for frames other than the first */
             if (have_chunk_after_DAT == 0 && png_ptr->num_frames_read > 1)
                 png_crc_finish(png_ptr, length - 4);
-            else if(png_ptr->mode & PNG_HAVE_fcTL)
+            else if (png_ptr->mode & PNG_HAVE_fcTL)
             {
                 png_ptr->idat_size = length - 4;
                 png_ptr->mode |= PNG_HAVE_IDAT;

@@ -1453,7 +1453,7 @@ nsListControlFrame::AboutToDropDown()
   mLastDropdownBackstopColor = NS_RGBA(0,0,0,0);
   while (NS_GET_A(mLastDropdownBackstopColor) < 255 && context) {
     mLastDropdownBackstopColor =
-      NS_ComposeColors(context->StyleBackground()->mBackgroundColor,
+      NS_ComposeColors(context->StyleBackground()->BackgroundColor(context),
                        mLastDropdownBackstopColor);
     context = context->GetParent();
   }

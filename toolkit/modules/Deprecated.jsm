@@ -57,7 +57,7 @@ this.Deprecated = {
    *        snapshot of the current JavaScript callstack will be
    *        logged.
    */
-  warning: function(aText, aUrl, aStack) {
+  warning(aText, aUrl, aStack) {
     if (!logWarnings) {
       return;
     }

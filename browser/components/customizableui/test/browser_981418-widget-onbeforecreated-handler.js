@@ -13,7 +13,7 @@ add_task(function* testAddOnBeforeCreatedWidget() {
     id: kWidgetId,
     type: 'view',
     viewId: kWidgetId + 'idontexistyet',
-    onBeforeCreated: function(doc) {
+    onBeforeCreated(doc) {
       let view = doc.createElement("panelview");
       view.id = kWidgetId + 'idontexistyet';
       let label = doc.createElement("label");
@@ -23,7 +23,7 @@ add_task(function* testAddOnBeforeCreatedWidget() {
       document.getElementById("PanelUI-multiView").appendChild(view);
       onBeforeCreatedCalled = true;
     },
-    onViewShowing: function() {
+    onViewShowing() {
       viewShownDeferred.resolve();
     }
   };

@@ -14,7 +14,7 @@
 var tests = [
   {
     desc: "Removing a tagged bookmark should cause the tag to be removed.",
-    run:   function() {
+    run() {
       print("  Make a bookmark.");
       var bmId = bmsvc.insertBookmark(bmsvc.unfiledBookmarksFolder,
                                       BOOKMARK_URI,
@@ -36,7 +36,7 @@ var tests = [
   {
     desc: "Removing a folder containing a tagged bookmark should cause the " +
           "tag to be removed.",
-    run:   function() {
+    run() {
       print("  Make a folder.");
       var folderId = bmsvc.createFolder(bmsvc.unfiledBookmarksFolder,
                                         "test folder",

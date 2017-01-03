@@ -780,7 +780,7 @@ TokenStream::reportWarning(unsigned errorNumber, ...)
 }
 
 bool
-TokenStream::reportStrictWarningErrorNumberVA(uint32_t offset, unsigned errorNumber, va_list args)
+TokenStream::reportExtraWarningErrorNumberVA(uint32_t offset, unsigned errorNumber, va_list args)
 {
     if (!options().extraWarningsOption)
         return true;

@@ -567,12 +567,94 @@ FunctionBox::initWithEnclosingScope(Scope* enclosingScope)
     computeInWith(enclosingScope);
 }
 
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::reportHelper(ParseReportKind kind, bool strict, uint32_t offset,
-                                   unsigned errorNumber, va_list args)
+void
+ParserBase::error(unsigned errorNumber, ...)
 {
+    va_list args;
+    va_start(args, errorNumber);
+#ifdef DEBUG
+    bool result =
+#endif
+        tokenStream.reportCompileErrorNumberVA(pos().begin, JSREPORT_ERROR, errorNumber, args);
+    MOZ_ASSERT(!result, "reporting an error returned true?");
+    va_end(args);
+}
+
+void
+ParserBase::errorAt(uint32_t offset, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+#ifdef DEBUG
+    bool result =
+#endif
+        tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
+    MOZ_ASSERT(!result, "reporting an error returned true?");
+    va_end(args);
+}
+
+bool
+ParserBase::warning(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result =
+        tokenStream.reportCompileErrorNumberVA(pos().begin, JSREPORT_WARNING, errorNumber, args);
+    va_end(args);
+    return result;
+}
+
+bool
+ParserBase::warningAt(uint32_t offset, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result =
+        tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
+    va_end(args);
+    return result;
+}
+
+bool
+ParserBase::extraWarning(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool result = tokenStream.reportExtraWarningErrorNumberVA(pos().begin, errorNumber, args);
+    va_end(args);
+    return result;
+}
+
+bool
+ParserBase::strictModeError(unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool res =
+        tokenStream.reportStrictModeErrorNumberVA(pos().begin, pc->sc()->strict(),
+                                                  errorNumber, args);
+    va_end(args);
+    return res;
+}
+
+bool
+ParserBase::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
+    bool res =
+        tokenStream.reportStrictModeErrorNumberVA(offset, pc->sc()->strict(), errorNumber, args);
+    va_end(args);
+    return res;
+}
+
+bool
+ParserBase::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...)
+{
+    va_list args;
+    va_start(args, errorNumber);
     bool result = false;
+    uint32_t offset = TokenStream::NoOffset;
     switch (kind) {
       case ParseError:
         result = tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_ERROR, errorNumber, args);
@@ -582,105 +664,12 @@ Parser<ParseHandler>::reportHelper(ParseReportKind kind, bool strict, uint32_t o
             tokenStream.reportCompileErrorNumberVA(offset, JSREPORT_WARNING, errorNumber, args);
         break;
       case ParseExtraWarning:
-        result = tokenStream.reportStrictWarningErrorNumberVA(offset, errorNumber, args);
+        result = tokenStream.reportExtraWarningErrorNumberVA(offset, errorNumber, args);
         break;
       case ParseStrictError:
         result = tokenStream.reportStrictModeErrorNumberVA(offset, strict, errorNumber, args);
         break;
     }
-    return result;
-}
-
-template <typename ParseHandler>
-void
-Parser<ParseHandler>::error(unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-#ifdef DEBUG
-    bool result =
-#endif
-        reportHelper(ParseError, false, pos().begin, errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
-    va_end(args);
-}
-
-template <typename ParseHandler>
-void
-Parser<ParseHandler>::errorAt(uint32_t offset, unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-#ifdef DEBUG
-    bool result =
-#endif
-        reportHelper(ParseError, false, offset, errorNumber, args);
-    MOZ_ASSERT(!result, "reporting an error returned true?");
-    va_end(args);
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::warning(unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = reportHelper(ParseWarning, false, pos().begin, errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::warningAt(uint32_t offset, unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = reportHelper(ParseWarning, false, offset, errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::extraWarning(unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = reportHelper(ParseExtraWarning, false, pos().begin, errorNumber, args);
-    va_end(args);
-    return result;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::strictModeError(unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool res = reportHelper(ParseStrictError, pc->sc()->strict(), pos().begin, errorNumber, args);
-    va_end(args);
-    return res;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::strictModeErrorAt(uint32_t offset, unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool res = reportHelper(ParseStrictError, pc->sc()->strict(), offset, errorNumber, args);
-    va_end(args);
-    return res;
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::reportNoOffset(ParseReportKind kind, bool strict, unsigned errorNumber, ...)
-{
-    va_list args;
-    va_start(args, errorNumber);
-    bool result = reportHelper(kind, strict, TokenStream::NoOffset, errorNumber, args);
     va_end(args);
     return result;
 }
@@ -701,16 +690,14 @@ Parser<SyntaxParseHandler>::abortIfSyntaxParser()
     return false;
 }
 
-template <typename ParseHandler>
-Parser<ParseHandler>::Parser(ExclusiveContext* cx, LifoAlloc& alloc,
-                             const ReadOnlyCompileOptions& options,
-                             const char16_t* chars, size_t length,
-                             bool foldConstants,
-                             UsedNameTracker& usedNames,
-                             Parser<SyntaxParseHandler>* syntaxParser,
-                             LazyScript* lazyOuterFunction)
-  : AutoGCRooter(cx, PARSER),
-    context(cx),
+ParserBase::ParserBase(ExclusiveContext* cx, LifoAlloc& alloc,
+                       const ReadOnlyCompileOptions& options,
+                       const char16_t* chars, size_t length,
+                       bool foldConstants,
+                       UsedNameTracker& usedNames,
+                       Parser<SyntaxParseHandler>* syntaxParser,
+                       LazyScript* lazyOuterFunction)
+  : context(cx),
     alloc(alloc),
     tokenStream(cx, options, chars, length, thisForCtor()),
     traceListHead(nullptr),
@@ -724,38 +711,14 @@ Parser<ParseHandler>::Parser(ExclusiveContext* cx, LifoAlloc& alloc,
     checkOptionsCalled(false),
 #endif
     abortedSyntaxParse(false),
-    isUnexpectedEOF_(false),
-    handler(cx, alloc, tokenStream, syntaxParser, lazyOuterFunction)
+    isUnexpectedEOF_(false)
 {
     cx->perThreadData->frontendCollectionPool.addActiveCompilation();
-
-    // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
-    // which are not generated if functions are parsed lazily. Note that the
-    // standard "use strict" does not inhibit lazy parsing.
-    if (options.extraWarningsOption)
-        handler.disableSyntaxParser();
-
     tempPoolMark = alloc.mark();
 }
 
-template<typename ParseHandler>
-bool
-Parser<ParseHandler>::checkOptions()
+ParserBase::~ParserBase()
 {
-#ifdef DEBUG
-    checkOptionsCalled = true;
-#endif
-
-    if (!tokenStream.checkOptions())
-        return false;
-
-    return true;
-}
-
-template <typename ParseHandler>
-Parser<ParseHandler>::~Parser()
-{
-    MOZ_ASSERT(checkOptionsCalled);
     alloc.release(tempPoolMark);
 
     /*
@@ -766,6 +729,43 @@ Parser<ParseHandler>::~Parser()
     alloc.freeAllIfHugeAndUnused();
 
     context->perThreadData->frontendCollectionPool.removeActiveCompilation();
+}
+
+template <typename ParseHandler>
+Parser<ParseHandler>::Parser(ExclusiveContext* cx, LifoAlloc& alloc,
+                             const ReadOnlyCompileOptions& options,
+                             const char16_t* chars, size_t length,
+                             bool foldConstants,
+                             UsedNameTracker& usedNames,
+                             Parser<SyntaxParseHandler>* syntaxParser,
+                             LazyScript* lazyOuterFunction)
+  : ParserBase(cx, alloc, options, chars, length, foldConstants, usedNames, syntaxParser,
+              lazyOuterFunction),
+    AutoGCRooter(cx, PARSER),
+    handler(cx, alloc, tokenStream, syntaxParser, lazyOuterFunction)
+{
+    // The Mozilla specific JSOPTION_EXTRA_WARNINGS option adds extra warnings
+    // which are not generated if functions are parsed lazily. Note that the
+    // standard "use strict" does not inhibit lazy parsing.
+    if (options.extraWarningsOption)
+        handler.disableSyntaxParser();
+}
+
+template<typename ParseHandler>
+bool
+Parser<ParseHandler>::checkOptions()
+{
+#ifdef DEBUG
+    checkOptionsCalled = true;
+#endif
+
+    return tokenStream.checkOptions();
+}
+
+template <typename ParseHandler>
+Parser<ParseHandler>::~Parser()
+{
+    MOZ_ASSERT(checkOptionsCalled);
 }
 
 template <typename ParseHandler>
@@ -894,9 +894,8 @@ Parser<ParseHandler>::parse()
  * Strict mode forbids introducing new definitions for 'eval', 'arguments', or
  * for any strict mode reserved keyword.
  */
-template <typename ParseHandler>
 bool
-Parser<ParseHandler>::isValidStrictBinding(PropertyName* name)
+ParserBase::isValidStrictBinding(PropertyName* name)
 {
     return name != context->names().eval &&
            name != context->names().arguments &&
@@ -9544,9 +9543,8 @@ Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHan
     return expr(inHandling, yieldHandling, tripledotHandling, possibleError, PredictInvoked);
 }
 
-template <typename ParseHandler>
 void
-Parser<ParseHandler>::addTelemetry(JSCompartment::DeprecatedLanguageExtension e)
+ParserBase::addTelemetry(JSCompartment::DeprecatedLanguageExtension e)
 {
     JSContext* cx = context->maybeJSContext();
     if (!cx)
@@ -9554,9 +9552,8 @@ Parser<ParseHandler>::addTelemetry(JSCompartment::DeprecatedLanguageExtension e)
     cx->compartment()->addTelemetry(getFilename(), e);
 }
 
-template <typename ParseHandler>
 bool
-Parser<ParseHandler>::warnOnceAboutExprClosure()
+ParserBase::warnOnceAboutExprClosure()
 {
 #ifndef RELEASE_OR_BETA
     JSContext* cx = context->maybeJSContext();
@@ -9572,9 +9569,8 @@ Parser<ParseHandler>::warnOnceAboutExprClosure()
     return true;
 }
 
-template <typename ParseHandler>
 bool
-Parser<ParseHandler>::warnOnceAboutForEach()
+ParserBase::warnOnceAboutForEach()
 {
     JSContext* cx = context->maybeJSContext();
     if (!cx)

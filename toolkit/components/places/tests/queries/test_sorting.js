@@ -44,7 +44,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -62,7 +62,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     // no reverse sorting for SORT BY NONE
   }
 });
@@ -115,7 +115,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -133,7 +133,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -213,7 +213,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -231,7 +231,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -318,7 +318,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -335,7 +335,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_URI_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -416,7 +416,7 @@ tests.push({
     ]);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -434,7 +434,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -513,7 +513,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -531,7 +531,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_KEYWORD_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -601,7 +601,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -619,7 +619,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -697,7 +697,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -715,7 +715,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -795,7 +795,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
@@ -813,7 +813,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_TAGS_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -891,7 +891,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
 
@@ -908,7 +908,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -972,7 +972,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
 
@@ -989,7 +989,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -1053,7 +1053,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
 
@@ -1070,7 +1070,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -1134,7 +1134,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     // Query
     var query = PlacesUtils.history.getNewQuery();
 
@@ -1151,7 +1151,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_ANNOTATION_DESCENDING;
     this._sortedData.reverse();
     this.check();
@@ -1227,7 +1227,7 @@ tests.push({
     yield task_populateDB(this._unsortedData);
   },
 
-  check: function() {
+  check() {
     var query = PlacesUtils.history.getNewQuery();
     var options = PlacesUtils.history.getNewQueryOptions();
     options.sortingMode = this._sortingMode;
@@ -1238,7 +1238,7 @@ tests.push({
     root.containerOpen = false;
   },
 
-  check_reverse: function() {
+  check_reverse() {
     this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING;
     this._sortedData.reverse();
     this.check();

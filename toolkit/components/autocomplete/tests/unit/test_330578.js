@@ -9,7 +9,7 @@ var gResultListener = {
   _lastValue: "",
   _lastRemoveFromDb: false,
 
-  onValueRemoved: function(aResult, aValue, aRemoveFromDb) {
+  onValueRemoved(aResult, aValue, aRemoveFromDb) {
     this._lastResult = aResult;
     this._lastValue = aValue;
     this._lastRemoveFromDb = aRemoveFromDb;

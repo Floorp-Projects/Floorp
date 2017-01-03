@@ -216,6 +216,8 @@ static LONG getTZKeyName(char* tzKeyName, int32_t length) {
              &cbData);
     }
 
+    RegCloseKey(hkey);
+
     return result;
 }
 

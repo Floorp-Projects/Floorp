@@ -432,7 +432,8 @@ public:
     // need to create the promise even it is not used at all.
     RefPtr<MediaDecoder::SeekPromise> x = mPendingSeek.mPromise.Ensure(__func__);
 
-    mMaster->Reset();
+    mMaster->ResetDecode();
+    mMaster->StopMediaSink();
     mMaster->mReader->ReleaseResources();
   }
 
@@ -556,6 +557,8 @@ public:
       SLOG("Exiting DECODING, decoded for %.3lfs", decodeDuration.ToSeconds());
     }
     mDormantTimer.Reset();
+    mOnAudioPopped.DisconnectIfExists();
+    mOnVideoPopped.DisconnectIfExists();
   }
 
   void Step() override
@@ -751,6 +754,9 @@ private:
 
   // Fired when playback is paused for a while to enter dormant.
   DelayedScheduler mDormantTimer;
+
+  MediaEventListener mOnAudioPopped;
+  MediaEventListener mOnVideoPopped;
 };
 
 /**
@@ -971,9 +977,10 @@ private:
     mDoneVideoSeeking = !Info().HasVideo();
 
     if (mSeekJob.mTarget->IsVideoOnly()) {
-      mMaster->Reset(TrackInfo::kVideoTrack);
+      mMaster->ResetDecode(TrackInfo::kVideoTrack);
     } else {
-      mMaster->Reset();
+      mMaster->ResetDecode();
+      mMaster->StopMediaSink();
     }
 
     DemuxerSeek();
@@ -1989,6 +1996,15 @@ DecodingState::Enter()
     return;
   }
 
+  mOnAudioPopped = AudioQueue().PopEvent().Connect(
+    OwnerThread(), [this] () {
+    mMaster->DispatchAudioDecodeTaskIfNeeded();
+  });
+  mOnVideoPopped = VideoQueue().PopEvent().Connect(
+    OwnerThread(), [this] () {
+    mMaster->DispatchVideoDecodeTaskIfNeeded();
+  });
+
   mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
 
   mDecodeStartTime = TimeStamp::Now();
@@ -2270,8 +2286,8 @@ ShutdownState::Enter()
   master->mAudioWaitRequest.DisconnectIfExists();
   master->mVideoWaitRequest.DisconnectIfExists();
 
-  master->Reset();
-
+  master->ResetDecode();
+  master->StopMediaSink();
   master->mMediaSink->Shutdown();
 
   // Prevent dangling pointers by disconnecting the listeners.
@@ -2615,9 +2631,7 @@ void
 MediaDecoderStateMachine::OnAudioPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
-
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
-  DispatchAudioDecodeTaskIfNeeded();
 }
 
 void
@@ -2625,7 +2639,6 @@ MediaDecoderStateMachine::OnVideoPopped(const RefPtr<MediaData>& aSample)
 {
   MOZ_ASSERT(OnTaskQueue());
   mPlaybackOffset = std::max(mPlaybackOffset.Ref(), aSample->mOffset);
-  DispatchVideoDecodeTaskIfNeeded();
 }
 
 bool
@@ -3365,7 +3378,7 @@ MediaDecoderStateMachine::RunStateMachine()
 }
 
 void
-MediaDecoderStateMachine::Reset(TrackSet aTracks)
+MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("MediaDecoderStateMachine::Reset");
@@ -3381,14 +3394,6 @@ MediaDecoderStateMachine::Reset(TrackSet aTracks)
   // Assert that aTracks specifies to reset the video track because we
   // don't currently support resetting just the audio track.
   MOZ_ASSERT(aTracks.contains(TrackInfo::kVideoTrack));
-
-  if (aTracks.contains(TrackInfo::kAudioTrack) &&
-      aTracks.contains(TrackInfo::kVideoTrack)) {
-    // Stop the audio thread. Otherwise, MediaSink might be accessing AudioQueue
-    // outside of the decoder monitor while we are clearing the queue and causes
-    // crash for no samples to be popped.
-    StopMediaSink();
-  }
 
   if (aTracks.contains(TrackInfo::kVideoTrack)) {
     mDecodedVideoEndTime = 0;

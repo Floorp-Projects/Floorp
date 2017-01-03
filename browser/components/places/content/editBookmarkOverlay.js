@@ -393,7 +393,7 @@ var gEditItemOverlay = {
     this._recentFolders = [];
     for (let i = 0; i < folderIds.length; i++) {
       var lastUsed = annos.getItemAnnotation(folderIds[i], LAST_USED_ANNO);
-      this._recentFolders.push({ folderId: folderIds[i], lastUsed: lastUsed });
+      this._recentFolders.push({ folderId: folderIds[i], lastUsed });
     }
     this._recentFolders.sort(function(a, b) {
       if (b.lastUsed < a.lastUsed)

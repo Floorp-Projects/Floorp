@@ -97,7 +97,7 @@ add_task(function* search() {
     engine.getSubmission(data.searchString, "", data.whence).uri.spec;
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "Search",
-    data: data,
+    data,
     expectedURL: submissionURL,
   });
   let msg = yield waitForTestMsg("loadStopped");
@@ -121,7 +121,7 @@ add_task(function* searchInBackgroundTab() {
     engine.getSubmission(data.searchString, "", data.whence).uri.spec;
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "Search",
-    data: data,
+    data,
     expectedURL: submissionURL,
   });
 
@@ -315,11 +315,11 @@ function waitForNewEngine(basename, numImages) {
   let addDeferred = Promise.defer();
   let url = getRootDirectory(gTestPath) + basename;
   Services.search.addEngine(url, null, "", false, {
-    onSuccess: function(engine) {
+    onSuccess(engine) {
       info("Search engine added: " + basename);
       addDeferred.resolve(engine);
     },
-    onError: function(errCode) {
+    onError(errCode) {
       ok(false, "addEngine failed with error code " + errCode);
       addDeferred.reject();
     },

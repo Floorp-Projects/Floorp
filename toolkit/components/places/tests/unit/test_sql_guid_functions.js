@@ -73,7 +73,7 @@ function test_guid_on_background()
   let stmt = DBConn().createAsyncStatement("SELECT GENERATE_GUID()");
   let checked = false;
   stmt.executeAsync({
-    handleResult: function(aResult) {
+    handleResult(aResult) {
       try {
         let row = aResult.getNextRow();
         check_invariants(row.getResultByIndex(0));
@@ -84,7 +84,7 @@ function test_guid_on_background()
         do_throw(e);
       }
     },
-    handleCompletion: function(aReason) {
+    handleCompletion(aReason) {
       do_check_eq(aReason, Ci.mozIStorageStatementCallback.REASON_FINISHED);
       do_check_true(checked);
       run_next_test();

@@ -184,18 +184,18 @@ function promiseMessage(type, data, numExpectedAcks = 1) {
   let ackMsgName = "TestMessageAck";
   let msgID = gNextMessageID++;
   gMsgMan.sendAsyncMessage(testMsgName, {
-    type: type,
+    type,
     messageID: msgID,
-    data: data,
+    data,
   });
   let ackPromises = [];
   for (let i = 0; i < numExpectedAcks; i++) {
     let ackIndex = i;
     ackPromises.push(new Promise(resolve => {
       info("Waiting for message ack: " + JSON.stringify({
-        type: type,
-        msgID: msgID,
-        ackIndex: ackIndex,
+        type,
+        msgID,
+        ackIndex,
       }));
       gMsgMan.addMessageListener(ackMsgName, function onMsg(msg) {
         // Messages have IDs so that an ack can be correctly paired with the
@@ -207,9 +207,9 @@ function promiseMessage(type, data, numExpectedAcks = 1) {
           return;
         }
         info("Received message ack: " + JSON.stringify({
-          type: type,
+          type,
           msgID: msg.data.messageID,
-          ackIndex: ackIndex,
+          ackIndex,
         }));
         gMsgMan.removeMessageListener(ackMsgName, onMsg);
         resolve(msg.data.data);

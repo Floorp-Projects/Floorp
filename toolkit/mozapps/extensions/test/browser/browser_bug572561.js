@@ -15,22 +15,22 @@ var gInstallProperties = [{
 var gInstall;
 var gExpectedCancel = false;
 var gTestInstallListener = {
-  onInstallStarted: function(aInstall) {
+  onInstallStarted(aInstall) {
     check_hidden(false);
   },
 
-  onInstallEnded: function(aInstall) {
+  onInstallEnded(aInstall) {
     check_hidden(false);
     run_next_test();
   },
 
-  onInstallCancelled: function(aInstall) {
+  onInstallCancelled(aInstall) {
     ok(gExpectedCancel, "Should expect install cancel");
     check_hidden(false);
     run_next_test();
   },
 
-  onInstallFailed: function(aInstall) {
+  onInstallFailed(aInstall) {
     ok(false, "Did not expect onInstallFailed");
     run_next_test();
   }

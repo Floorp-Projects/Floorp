@@ -50,7 +50,7 @@ this.AddonRepository_SQLiteMigrator = {
    * @returns bool          True if a migration will happen (DB was
    *                        found and succesfully opened)
    */
-  migrate: function(aCallback) {
+  migrate(aCallback) {
     if (!this._openConnection()) {
       this._closeConnection();
       aCallback([]);
@@ -74,7 +74,7 @@ this.AddonRepository_SQLiteMigrator = {
    *
    * @return bool           Whether the DB was opened successfully.
    */
-  _openConnection: function() {
+  _openConnection() {
     delete this.connection;
 
     let dbfile = FileUtils.getFile(KEY_PROFILEDIR, [FILE_DATABASE], true);
@@ -141,7 +141,7 @@ this.AddonRepository_SQLiteMigrator = {
     return true;
   },
 
-  _closeConnection: function() {
+  _closeConnection() {
     for (let key in this.asyncStatementsCache) {
       let stmt = this.asyncStatementsCache[key];
       stmt.finalize();
@@ -161,7 +161,7 @@ this.AddonRepository_SQLiteMigrator = {
    * @param  aCallback
    *         The callback to pass the add-ons back to
    */
-  _retrieveStoredData: function(aCallback) {
+  _retrieveStoredData(aCallback) {
     let addons = {};
 
     // Retrieve all data from the addon table
@@ -177,7 +177,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleError: this.asyncErrorLogger,
 
-        handleCompletion: function(aReason) {
+        handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
             logger.error("Error retrieving add-ons from database. Returning empty results");
             aCallback({});
@@ -211,7 +211,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleError: this.asyncErrorLogger,
 
-        handleCompletion: function(aReason) {
+        handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
             logger.error("Error retrieving developers from database. Returning empty results");
             aCallback({});
@@ -244,7 +244,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleError: this.asyncErrorLogger,
 
-        handleCompletion: function(aReason) {
+        handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
             logger.error("Error retrieving screenshots from database. Returning empty results");
             aCallback({});
@@ -276,7 +276,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleError: this.asyncErrorLogger,
 
-        handleCompletion: function(aReason) {
+        handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
             logger.error("Error retrieving compatibility overrides from database. Returning empty results");
             aCallback({});
@@ -309,7 +309,7 @@ this.AddonRepository_SQLiteMigrator = {
 
         handleError: this.asyncErrorLogger,
 
-        handleCompletion: function(aReason) {
+        handleCompletion(aReason) {
           if (aReason != Ci.mozIStorageStatementCallback.REASON_FINISHED) {
             logger.error("Error retrieving icons from database. Returning empty results");
             aCallback({});
@@ -342,7 +342,7 @@ this.AddonRepository_SQLiteMigrator = {
    * @return a mozIStorageAsyncStatement for the SQL corresponding to the
    *         unique key
    */
-  getAsyncStatement: function(aKey) {
+  getAsyncStatement(aKey) {
     if (aKey in this.asyncStatementsCache)
       return this.asyncStatementsCache[aKey];
 
@@ -389,7 +389,7 @@ this.AddonRepository_SQLiteMigrator = {
    *         The asynchronous row to use
    * @return The created add-on
    */
-  _makeAddonFromAsyncRow: function(aRow) {
+  _makeAddonFromAsyncRow(aRow) {
     // This is intentionally not an AddonSearchResult object in order
     // to allow AddonDatabase._parseAddon to parse it, same as if it
     // was read from the JSON database.
@@ -410,7 +410,7 @@ this.AddonRepository_SQLiteMigrator = {
    *         The asynchronous row to use
    * @return The created developer
    */
-  _makeDeveloperFromAsyncRow: function(aRow) {
+  _makeDeveloperFromAsyncRow(aRow) {
     let name = aRow.getResultByName("name");
     let url = aRow.getResultByName("url")
     return new AddonManagerPrivate.AddonAuthor(name, url);
@@ -423,7 +423,7 @@ this.AddonRepository_SQLiteMigrator = {
    *         The asynchronous row to use
    * @return The created screenshot
    */
-  _makeScreenshotFromAsyncRow: function(aRow) {
+  _makeScreenshotFromAsyncRow(aRow) {
     let url = aRow.getResultByName("url");
     let width = aRow.getResultByName("width");
     let height = aRow.getResultByName("height");
@@ -442,7 +442,7 @@ this.AddonRepository_SQLiteMigrator = {
    *         The asynchronous row to use
    * @return The created CompatibilityOverride
    */
-  _makeCompatOverrideFromAsyncRow: function(aRow) {
+  _makeCompatOverrideFromAsyncRow(aRow) {
     let type = aRow.getResultByName("type");
     let minVersion = aRow.getResultByName("minVersion");
     let maxVersion = aRow.getResultByName("maxVersion");
@@ -464,10 +464,10 @@ this.AddonRepository_SQLiteMigrator = {
    *         The asynchronous row to use
    * @return An object containing the size and URL of the icon
    */
-  _makeIconFromAsyncRow: function(aRow) {
+  _makeIconFromAsyncRow(aRow) {
     let size = aRow.getResultByName("size");
     let url = aRow.getResultByName("url");
-    return { size: size, url: url };
+    return { size, url };
   },
 
   /**
@@ -478,7 +478,7 @@ this.AddonRepository_SQLiteMigrator = {
    * @param  aErrorString
    *         An error message
    */
-  logSQLError: function(aError, aErrorString) {
+  logSQLError(aError, aErrorString) {
     logger.error("SQL error " + aError + ": " + aErrorString);
   },
 
@@ -488,14 +488,14 @@ this.AddonRepository_SQLiteMigrator = {
    * @param  aError
    *         A mozIStorageError to log
    */
-  asyncErrorLogger: function(aError) {
+  asyncErrorLogger(aError) {
     logger.error("Async SQL error " + aError.result + ": " + aError.message);
   },
 
   /**
    * Synchronously creates the triggers in the database.
    */
-  _createTriggers: function() {
+  _createTriggers() {
     this.connection.executeSimpleSQL("DROP TRIGGER IF EXISTS delete_addon");
     this.connection.executeSimpleSQL("CREATE TRIGGER delete_addon AFTER DELETE " +
       "ON addon BEGIN " +
@@ -509,7 +509,7 @@ this.AddonRepository_SQLiteMigrator = {
   /**
    * Synchronously creates the indices in the database.
    */
-  _createIndices: function() {
+  _createIndices() {
     this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS developer_idx " +
                                      "ON developer (addon_internal_id)");
     this.connection.executeSimpleSQL("CREATE INDEX IF NOT EXISTS screenshot_idx " +

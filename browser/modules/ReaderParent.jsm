@@ -28,20 +28,20 @@ var ReaderParent = {
     "Reader:UpdateReaderButton",
   ],
 
-  init: function() {
+  init() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     for (let msg of this.MESSAGES) {
       mm.addMessageListener(msg, this);
     }
   },
 
-  receiveMessage: function(message) {
+  receiveMessage(message) {
     switch (message.name) {
       case "Reader:ArticleGet":
         this._getArticle(message.data.url, message.target).then((article) => {
           // Make sure the target browser is still alive before trying to send data back.
           if (message.target.messageManager) {
-            message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { article: article });
+            message.target.messageManager.sendAsyncMessage("Reader:ArticleData", { article });
           }
         }, e => {
           if (e && e.newURL) {
@@ -80,7 +80,7 @@ var ReaderParent = {
     }
   },
 
-  updateReaderButton: function(browser) {
+  updateReaderButton(browser) {
     let win = browser.ownerGlobal;
     if (browser != win.gBrowser.selectedBrowser) {
       return;
@@ -124,7 +124,7 @@ var ReaderParent = {
     }
   },
 
-  forceShowReaderIcon: function(browser) {
+  forceShowReaderIcon(browser) {
     browser.isArticle = true;
     this.updateReaderButton(browser);
   },
@@ -136,7 +136,7 @@ var ReaderParent = {
     this.toggleReaderMode(event);
   },
 
-  toggleReaderMode: function(event) {
+  toggleReaderMode(event) {
     let win = event.target.ownerGlobal;
     let browser = win.gBrowser.selectedBrowser;
     browser.messageManager.sendAsyncMessage("Reader:ToggleReaderMode");

@@ -21,13 +21,13 @@ const mockOfflineAppCacheHelper = {
 
   originalClear: null,
 
-  register: function() {
+  register() {
     this.originalClear = OfflineAppCacheHelper.clear;
     this.clear = sinon.spy();
     OfflineAppCacheHelper.clear = this.clear;
   },
 
-  unregister: function() {
+  unregister() {
     OfflineAppCacheHelper.clear = this.originalClear;
   }
 };
@@ -55,7 +55,7 @@ function getQuotaUsage(origin) {
 function getCacheUsage() {
   return new Promise(resolve => {
     let obs = {
-      onNetworkCacheDiskConsumption: function(usage) {
+      onNetworkCacheDiskConsumption(usage) {
         resolve(usage);
       },
       QueryInterface: XPCOMUtils.generateQI([

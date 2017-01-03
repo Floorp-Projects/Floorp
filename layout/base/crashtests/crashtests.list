@@ -103,7 +103,7 @@ asserts-if(stylo,3) load 343293-2.xhtml # bug 1324663
 load 343540-1.html
 load 344057-1.xhtml
 load 344064-1.html
-asserts-if(stylo,9) load 344300-1.html # bug 1324673
+asserts-if(stylo,1-9) load 344300-1.html # bug 1324673
 load 344300-2.html
 load 344340-1.xul
 load 347898-1.html
@@ -137,7 +137,7 @@ load 367243-1.html
 load 367498-1.html
 load 367498-2.html
 load 369176-1.html
-asserts-if(stylo,8-22) load 369547-1.html # bug 1324663
+asserts-if(stylo,0-22) load 369547-1.html # bug 1324663
 load 369547-2.html
 load 369945-1.xhtml
 load 371681-1.xhtml
@@ -460,7 +460,7 @@ asserts-if(stylo,2) load 942690.html # bug 1324705
 load 973390-1.html
 load 1001237.html
 load 1009036.html
-load 1043163-1.html
+asserts-if(stylo,1) load 1043163-1.html # bug 1324647
 load 1061028.html
 asserts-if(stylo,3-4) load 1107508-1.html # bug 1324669
 load 1116104.html

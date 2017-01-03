@@ -41,7 +41,7 @@ XPInstallConfirm.init = function()
 
   let installMap = new WeakMap();
   let installListener = {
-    onDownloadCancelled: function(install) {
+    onDownloadCancelled(install) {
       itemList.removeChild(installMap.get(install));
       if (--numItemsToInstall == 0)
         window.close();

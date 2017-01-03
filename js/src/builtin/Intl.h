@@ -496,6 +496,7 @@ UCharToChar16(const UChar* chars)
 {
   return reinterpret_cast<const char16_t*>(chars);
 }
+
 #endif // ENABLE_INTL_API
 
 } // namespace js

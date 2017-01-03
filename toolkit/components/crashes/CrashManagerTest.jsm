@@ -57,7 +57,7 @@ this.TestingCrashManager = function(options) {
 this.TestingCrashManager.prototype = {
   __proto__: CrashManager.prototype,
 
-  createDummyDump: function(submitted = false, date = new Date(), hr = false) {
+  createDummyDump(submitted = false, date = new Date(), hr = false) {
     let uuid = Cc["@mozilla.org/uuid-generator;1"]
                 .getService(Ci.nsIUUIDGenerator)
                 .generateUUID()
@@ -89,7 +89,7 @@ this.TestingCrashManager.prototype = {
     });
   },
 
-  createIgnoredDumpFile: function(filename, submitted = false) {
+  createIgnoredDumpFile(filename, submitted = false) {
     let path;
     if (submitted) {
       path = OS.Path.join(this._submittedDumpsDir, filename);
@@ -104,7 +104,7 @@ this.TestingCrashManager.prototype = {
     });
   },
 
-  createEventsFile: function(filename, type, date, content, index = 0) {
+  createEventsFile(filename, type, date, content, index = 0) {
     let path = OS.Path.join(this._eventsDirs[index], filename);
 
     let data = type + "\n" +
@@ -124,7 +124,7 @@ this.TestingCrashManager.prototype = {
    *
    * We can probably delete this once we have actual events defined.
    */
-  _handleEventFilePayload: function(store, entry, type, date, payload) {
+  _handleEventFilePayload(store, entry, type, date, payload) {
     if (type == "test.1") {
       if (payload == "malformed") {
         return this.EVENT_FILE_ERROR_MALFORMED;

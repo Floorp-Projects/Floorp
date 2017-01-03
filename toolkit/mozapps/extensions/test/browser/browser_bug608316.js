@@ -30,7 +30,7 @@ function end_test() {
 add_test(function() {
   var sawUninstall = false;
   var listener = {
-    onUninstalling: function(aAddon, aRestartRequired) {
+    onUninstalling(aAddon, aRestartRequired) {
       if (aAddon.id != "addon1@tests.mozilla.org")
         return;
       sawUninstall = true;

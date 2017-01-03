@@ -23,18 +23,18 @@ var quotesTest = {
   _folderTitle: '"quoted folder"',
   _folderId: null,
 
-  populate: function() {
+  populate() {
     this._folderId =
       PlacesUtils.bookmarks.createFolder(PlacesUtils.toolbarFolderId,
                                          this._folderTitle,
                                          PlacesUtils.bookmarks.DEFAULT_INDEX);
   },
 
-  clean: function() {
+  clean() {
     PlacesUtils.bookmarks.removeItem(this._folderId);
   },
 
-  validate: function() {
+  validate() {
     var query = PlacesUtils.history.getNewQuery();
     query.setFolders([PlacesUtils.bookmarks.toolbarFolder], 1);
     var result = PlacesUtils.history.executeQuery(query, PlacesUtils.history.getNewQueryOptions());

@@ -76,14 +76,14 @@ var startupComplete = new Promise(resolve => startupCompleteResolver = resolve);
 
 function proxyChannelListener() { }
 proxyChannelListener.prototype = {
-  onStartRequest: function(request, context) {
+  onStartRequest(request, context) {
     startupCompleteResolver();
   },
-  onStopRequest: function(request, context, status) { }
+  onStopRequest(request, context, status) { }
 };
 
 var resolveCallback = SpecialPowers.wrapCallbackObject({
-  QueryInterface : function(iid) {
+  QueryInterface(iid) {
     const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
 
     if (!interfaces.some( function(v) { return iid.equals(v); } ))
@@ -91,7 +91,7 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
     return this;
   },
 
-  onProxyAvailable : function(req, uri, pi, status) {
+  onProxyAvailable(req, uri, pi, status) {
     initLogins(pi);
 
     // I'm cheating a bit here... We should probably do some magic foo to get

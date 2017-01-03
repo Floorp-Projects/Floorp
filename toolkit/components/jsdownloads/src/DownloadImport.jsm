@@ -68,7 +68,7 @@ this.DownloadImport.prototype = {
    *           from the previous database has been read and added to
    *           the DownloadList)
    */
-  import: function() {
+  import() {
     return Task.spawn(function* task_DI_import() {
       let connection = yield Sqlite.openConnection({ path: this.path });
 
@@ -142,7 +142,7 @@ this.DownloadImport.prototype = {
             let downloadOptions = {
               source: {
                 url: source,
-                referrer: referrer
+                referrer
               },
               target: {
                 path: targetPath,
@@ -150,13 +150,13 @@ this.DownloadImport.prototype = {
               },
               saver: {
                 type: "copy",
-                entityID: entityID
+                entityID
               },
               startTime: new Date(startTime / 1000),
               totalBytes: maxBytes,
               hasPartialData: !!tempPath,
               tryToKeepPartialData: true,
-              launchWhenSucceeded: launchWhenSucceeded,
+              launchWhenSucceeded,
               contentType: mimeType,
               launcherPath: preferredApplication
             };

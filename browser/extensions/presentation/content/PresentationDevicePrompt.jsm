@@ -171,7 +171,7 @@ PresentationPermissionPrompt.prototype = {
     }
     return this.principal.URI.hostPort;
   },
-  _createPopupContent: function() {
+  _createPopupContent() {
     log("_createPopupContent");
 
     if (!this._devices.length) {
@@ -223,7 +223,7 @@ PresentationDevicePrompt.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDevicePrompt]),
 
   // This will be fired when window.PresentationRequest(URL).start() is called.
-  promptDeviceSelection: function(aRequest) {
+  promptDeviceSelection(aRequest) {
     log("promptDeviceSelection");
 
     // Cancel request if no available device.
@@ -238,7 +238,7 @@ PresentationDevicePrompt.prototype = {
     let promptUI = new PresentationPermissionPrompt(aRequest, devices);
     promptUI.prompt();
   },
-  _loadDevices: function() {
+  _loadDevices() {
     let deviceManager = Cc["@mozilla.org/presentation-device/manager;1"]
                         .getService(Ci.nsIPresentationDeviceManager);
     let devices = deviceManager.getAvailableDevices().QueryInterface(Ci.nsIArray);

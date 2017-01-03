@@ -258,7 +258,7 @@ var SidebarUI = {
 
       let selBrowser = gBrowser.selectedBrowser;
       selBrowser.messageManager.sendAsyncMessage("Sidebar:VisibilityChange",
-        {commandID: commandID, isOpen: true}
+        {commandID, isOpen: true}
       );
       BrowserUITelemetry.countSidebarEvent(commandID, "show");
     });
@@ -296,7 +296,7 @@ var SidebarUI = {
     let selBrowser = gBrowser.selectedBrowser;
     selBrowser.focus();
     selBrowser.messageManager.sendAsyncMessage("Sidebar:VisibilityChange",
-      {commandID: commandID, isOpen: false}
+      {commandID, isOpen: false}
     );
     BrowserUITelemetry.countSidebarEvent(commandID, "hide");
   },

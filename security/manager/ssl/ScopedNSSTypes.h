@@ -62,9 +62,6 @@ MapSECStatus(SECStatus rv)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificate,
                                           CERTCertificate,
                                           CERT_DestroyCertificate)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTSubjectPublicKeyInfo,
-                                          CERTSubjectPublicKeyInfo,
-                                          SECKEY_DestroySubjectPublicKeyInfo)
 
 namespace internal {
 
@@ -186,9 +183,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SlotInfo,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SymKey,
                                           PK11SymKey,
                                           PK11_FreeSymKey)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11GenericObject,
-                                          PK11GenericObject,
-                                          PK11_DestroyGenericObject)
 namespace internal {
 
 inline void
@@ -200,11 +194,6 @@ PORT_FreeArena_false(PLArenaPool* arena)
 }
 
 } // namespace internal
-
-// Deprecated: use the equivalent UniquePtr templates instead.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPLArenaPool,
-                                          PLArenaPool,
-                                          internal::PORT_FreeArena_false)
 
 // Wrapper around NSS's SECItem_AllocItem that handles OOM the same way as
 // other allocators.
@@ -340,6 +329,9 @@ MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueNSSCMSSignedData,
                                       NSSCMSSignedData,
                                       NSS_CMSSignedData_Destroy)
 
+MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11GenericObject,
+                                      PK11GenericObject,
+                                      PK11_DestroyGenericObject)
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniquePK11SlotInfo,
                                       PK11SlotInfo,
                                       PK11_FreeSlot)

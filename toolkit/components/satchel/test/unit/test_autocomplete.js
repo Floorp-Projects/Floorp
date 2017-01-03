@@ -86,7 +86,7 @@ add_test(function test2() {
     do_log_info("Check search contains all entries");
 
     fac.autoCompleteSearchAsync("field1", "", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             do_check_eq(numRecords, aResults.matchCount);
             run_next_test();
         }
@@ -98,7 +98,7 @@ add_test(function test3() {
 
     let lastFound = numRecords;
     fac.autoCompleteSearchAsync("field1", "", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             for (let i = 0; i < numRecords; i += 2) {
                 do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
@@ -113,7 +113,7 @@ add_test(function test4() {
 
     let lastFound = numRecords;
     fac.autoCompleteSearchAsync("field1", "v", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             for (let i = 0; i < numRecords; i += 2) {
                 do_check_eq(parseInt(aResults.getValueAt(i + 1).substr(5), 10), --lastFound);
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5), 10), --lastFound);
@@ -143,7 +143,7 @@ add_test(function test6() {
 
     let lastFound = timesUsedSamples;
     fac.autoCompleteSearchAsync("field2", "", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             for (let i = 0; i < timesUsedSamples; i++) {
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5)), --lastFound);
             }
@@ -157,7 +157,7 @@ add_test(function test7() {
 
     let lastFound = timesUsedSamples;
     fac.autoCompleteSearchAsync("field2", "v", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             for (let i = 0; i < timesUsedSamples; i++) {
                 do_check_eq(parseInt(aResults.getValueAt(i).substr(5)), --lastFound);
             }
@@ -181,7 +181,7 @@ add_test(function test8() {
 
 add_test(function test9() {
     fac.autoCompleteSearchAsync("field3", "", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             do_check_eq(aResults.getValueAt(0), "senior citizen");
             do_check_eq(aResults.getValueAt(1), "old but not senior");
             run_next_test();
@@ -204,7 +204,7 @@ add_test(function test10() {
 
 add_test(function test11() {
     fac.autoCompleteSearchAsync("field4", "", null, null, null, {
-        onSearchCompletion : function(aResults) {
+        onSearchCompletion(aResults) {
             do_check_eq(aResults.matchCount, 3);
             run_next_test();
         }
@@ -218,7 +218,7 @@ add_test(function test12() {
 
     let changes = [ ];
     for (let value of syncValues) {
-      changes.push({ op : "add", fieldname: "field5", value: value });
+      changes.push({ op : "add", fieldname: "field5", value });
     }
     updateFormHistory(changes, run_next_test);
 });
@@ -233,7 +233,7 @@ add_test(function test_token_limit_DB() {
         fac.autoCompleteSearchAsync("field_token_cap",
                                     "a b c d e f g h i j .",
                                     null, previousResult, null, {
-                                        onSearchCompletion : function(aResults) {
+                                        onSearchCompletion(aResults) {
                                             do_check_eq(aResults.matchCount, 0,
                                                         "All search tokens should be used with " +
                                                         "previous results");
@@ -255,7 +255,7 @@ add_test(function test_token_limit_DB() {
         fac.autoCompleteSearchAsync("field_token_cap",
                                     "a b c d e f g h i j .",
                                     null, null, null, {
-                                        onSearchCompletion : function(aResults) {
+                                        onSearchCompletion(aResults) {
                                             do_check_eq(aResults.matchCount, 1,
                                                         "Only the first MAX_SEARCH_TOKENS tokens " +
                                                         "should be used for DB queries");

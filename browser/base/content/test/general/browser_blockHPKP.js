@@ -60,7 +60,7 @@ function loadPinningPage() {
 // After the site is pinned try to load with a subdomain site that should
 // fail to validate
 var successfulPinningPageListener = {
-  handleEvent: function() {
+  handleEvent() {
     gBrowser.selectedBrowser.removeEventListener("load", this, true);
     BrowserTestUtils.loadURI(gBrowser.selectedBrowser, "https://" + kBadPinningDomain).then(function() {
       return promiseErrorPageLoaded(gBrowser.selectedBrowser);

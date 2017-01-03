@@ -15,7 +15,7 @@ function test() {
 }
 
 var tests = {
-  testGetDimensions: function() {
+  testGetDimensions() {
     let r = new Rect(5, 10, 100, 50);
     ok(r.left == 5, "rect has correct left value");
     ok(r.top == 10, "rect has correct top value");
@@ -27,7 +27,7 @@ var tests = {
     ok(r.y == 10, "rect has correct y value");
   },
 
-  testIsEmpty: function() {
+  testIsEmpty() {
     let r = new Rect(0, 0, 0, 10);
     ok(r.isEmpty(), "rect with nonpositive width is empty");
     r = new Rect(0, 0, 10, 0);
@@ -36,7 +36,7 @@ var tests = {
     ok(!r.isEmpty(), "rect with positive dimensions is not empty");
   },
 
-  testRestrictTo: function() {
+  testRestrictTo() {
     let r1 = new Rect(10, 10, 100, 100);
     let r2 = new Rect(50, 50, 100, 100);
     r1.restrictTo(r2);
@@ -58,7 +58,7 @@ var tests = {
     ok(r1.isEmpty(), "intersection of empty and empty is empty");
   },
 
-  testExpandToContain: function() {
+  testExpandToContain() {
     let r1 = new Rect(10, 10, 100, 100);
     let r2 = new Rect(50, 50, 100, 100);
     r1.expandToContain(r2);

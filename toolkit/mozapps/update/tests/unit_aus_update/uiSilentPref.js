@@ -10,11 +10,11 @@ Components.utils.import("resource://testing-common/MockRegistrar.jsm");
  */
 
 const WindowWatcher = {
-  openWindow: function(aParent, aUrl, aName, aFeatures, aArgs) {
+  openWindow(aParent, aUrl, aName, aFeatures, aArgs) {
     gCheckFunc();
   },
 
-  getNewPrompter: function(aParent) {
+  getNewPrompter(aParent) {
     gCheckFunc();
   },
 

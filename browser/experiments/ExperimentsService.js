@@ -54,7 +54,7 @@ ExperimentsService.prototype = {
   classID: Components.ID("{f7800463-3b97-47f9-9341-b7617e6d8d49}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsIObserver]),
 
-  notify: function(timer) {
+  notify(timer) {
     if (!gExperimentsEnabled) {
       return;
     }
@@ -67,14 +67,14 @@ ExperimentsService.prototype = {
     }
   },
 
-  _delayedInit: function() {
+  _delayedInit() {
     if (!this._initialized) {
       this._initialized = true;
       Experiments.instance(); // for side effects
     }
   },
 
-  observe: function(subject, topic, data) {
+  observe(subject, topic, data) {
     switch (topic) {
       case "profile-after-change":
         if (gExperimentsEnabled) {

@@ -18,8 +18,8 @@ var gTests = [
 
   {
     desc: "Simple left click",
-    setup: function() {},
-    clean: function() {},
+    setup() {},
+    clean() {},
     event: {},
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
     expectedInvokedMethods: [],
@@ -28,8 +28,8 @@ var gTests = [
 
   {
     desc: "Ctrl/Cmd left click",
-    setup: function() {},
-    clean: function() {},
+    setup() {},
+    clean() {},
     event: { ctrlKey: true,
              metaKey: true },
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
@@ -41,10 +41,10 @@ var gTests = [
   // just be like Alt click.
   {
     desc: "Shift+Alt left click",
-    setup: function() {
+    setup() {
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
-    clean: function() {
+    clean() {
       gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { shiftKey: true,
@@ -56,10 +56,10 @@ var gTests = [
 
   {
     desc: "Shift+Alt left click on XLinks",
-    setup: function() {
+    setup() {
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
-    clean: function() {
+    clean() {
       gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { shiftKey: true,
@@ -71,8 +71,8 @@ var gTests = [
 
   {
     desc: "Shift click",
-    setup: function() {},
-    clean: function() {},
+    setup() {},
+    clean() {},
     event: { shiftKey: true },
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
     expectedInvokedMethods: [ "urlSecurityCheck", "openLinkIn" ],
@@ -81,10 +81,10 @@ var gTests = [
 
   {
     desc: "Alt click",
-    setup: function() {
+    setup() {
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
-    clean: function() {
+    clean() {
       gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { altKey: true },
@@ -95,10 +95,10 @@ var gTests = [
 
   {
     desc: "Alt click on XLinks",
-    setup: function() {
+    setup() {
       gPrefService.setBoolPref("browser.altClickSave", true);
     },
-    clean: function() {
+    clean() {
       gPrefService.clearUserPref("browser.altClickSave");
     },
     event: { altKey: true },
@@ -109,8 +109,8 @@ var gTests = [
 
   {
     desc: "Panel click",
-    setup: function() {},
-    clean: function() {},
+    setup() {},
+    clean() {},
     event: {},
     targets: [ "panellink" ],
     expectedInvokedMethods: [ "urlSecurityCheck", "loadURI" ],
@@ -119,8 +119,8 @@ var gTests = [
 
   {
     desc: "Simple middle click opentab",
-    setup: function() {},
-    clean: function() {},
+    setup() {},
+    clean() {},
     event: { button: 1 },
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
     expectedInvokedMethods: [ "urlSecurityCheck", "openLinkIn" ],
@@ -129,10 +129,10 @@ var gTests = [
 
   {
     desc: "Simple middle click openwin",
-    setup: function() {
+    setup() {
       gPrefService.setBoolPref("browser.tabs.opentabfor.middleclick", false);
     },
-    clean: function() {
+    clean() {
       gPrefService.clearUserPref("browser.tabs.opentabfor.middleclick");
     },
     event: { button: 1 },
@@ -143,11 +143,11 @@ var gTests = [
 
   {
     desc: "Middle mouse paste",
-    setup: function() {
+    setup() {
       gPrefService.setBoolPref("middlemouse.contentLoadURL", true);
       gPrefService.setBoolPref("general.autoScroll", false);
     },
-    clean: function() {
+    clean() {
       gPrefService.clearUserPref("middlemouse.contentLoadURL");
       gPrefService.clearUserPref("general.autoScroll");
     },
@@ -199,7 +199,7 @@ function test() {
 
 // Click handler used to steal click events.
 var gClickHandler = {
-  handleEvent: function(event) {
+  handleEvent(event) {
     let linkId = event.target.id || event.target.localName;
     is(event.type, "click",
        gCurrentTest.desc + ":Handler received a click event on " + linkId);

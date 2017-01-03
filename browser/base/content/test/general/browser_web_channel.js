@@ -20,7 +20,7 @@ const HTTP_REDIRECTED_IFRAME_PATH = "http://example.org";
 var gTests = [
   {
     desc: "WebChannel generic message",
-    run: function* () {
+    *run() {
       return new Promise(function(resolve, reject) {
         let tab;
         let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH, null, null));
@@ -38,7 +38,7 @@ var gTests = [
   },
   {
     desc: "WebChannel generic message in a private window.",
-    run: function* () {
+    *run() {
       let promiseTestDone = new Promise(function(resolve, reject) {
         let channel = new WebChannel("generic", Services.io.newURI(HTTP_PATH, null, null));
         channel.listen(function(id, message, target) {
@@ -58,7 +58,7 @@ var gTests = [
   },
   {
     desc: "WebChannel two way communication",
-    run: function* () {
+    *run() {
       return new Promise(function(resolve, reject) {
         let tab;
         let channel = new WebChannel("twoway", Services.io.newURI(HTTP_PATH, null, null));
@@ -85,7 +85,7 @@ var gTests = [
   },
   {
     desc: "WebChannel two way communication in an iframe",
-    run: function* () {
+    *run() {
       let parentChannel = new WebChannel("echo", Services.io.newURI(HTTP_PATH, null, null));
       let iframeChannel = new WebChannel("twoway", Services.io.newURI(HTTP_IFRAME_PATH, null, null));
       let promiseTestDone = new Promise(function(resolve, reject) {
@@ -108,7 +108,7 @@ var gTests = [
         });
       });
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: HTTP_PATH + HTTP_ENDPOINT + "?iframe"
       }, function* () {
         yield promiseTestDone;
@@ -119,7 +119,7 @@ var gTests = [
   },
   {
     desc: "WebChannel response to a redirected iframe",
-    run: function* () {
+    *run() {
       /**
        * This test checks that WebChannel responses are only sent
        * to an iframe if the iframe has not redirected to another origin.
@@ -172,7 +172,7 @@ var gTests = [
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: HTTP_PATH + HTTP_ENDPOINT + "?iframe_pre_redirect"
       }, function* () {
         yield promiseTestDone;
@@ -183,7 +183,7 @@ var gTests = [
   },
   {
     desc: "WebChannel multichannel",
-    run: function* () {
+    *run() {
       return new Promise(function(resolve, reject) {
         let tab;
         let channel = new WebChannel("multichannel", Services.io.newURI(HTTP_PATH, null, null));
@@ -200,7 +200,7 @@ var gTests = [
   },
   {
     desc: "WebChannel unsolicited send, using system principal",
-    run: function* () {
+    *run() {
       let channel = new WebChannel("echo", Services.io.newURI(HTTP_PATH, null, null));
 
       // an unsolicted message is sent from Chrome->Content which is then
@@ -230,7 +230,7 @@ var gTests = [
   },
   {
     desc: "WebChannel unsolicited send, using target origin's principal",
-    run: function* () {
+    *run() {
       let targetURI = Services.io.newURI(HTTP_PATH, null, null);
       let channel = new WebChannel("echo", targetURI);
 
@@ -263,7 +263,7 @@ var gTests = [
   },
   {
     desc: "WebChannel unsolicited send with principal mismatch",
-    run: function* () {
+    *run() {
       let targetURI = Services.io.newURI(HTTP_PATH, null, null);
       let channel = new WebChannel("echo", targetURI);
 
@@ -284,7 +284,7 @@ var gTests = [
       });
 
       yield BrowserTestUtils.withNewTab({
-        gBrowser: gBrowser,
+        gBrowser,
         url: HTTP_PATH + HTTP_ENDPOINT + "?unsolicited"
       }, function* (targetBrowser) {
 
@@ -314,7 +314,7 @@ var gTests = [
   },
   {
     desc: "WebChannel non-window target",
-    run: function* () {
+    *run() {
       /**
        * This test ensures messages can be received from and responses
        * sent to non-window elements.
@@ -350,7 +350,7 @@ var gTests = [
   },
   {
     desc: "WebChannel disallows non-string message from non-whitelisted origin",
-    run: function* () {
+    *run() {
       /**
        * This test ensures that non-string messages can't be sent via WebChannels.
        * We create a page (on a non-whitelisted origin) which should send us two
@@ -377,7 +377,7 @@ var gTests = [
   },
   {
     desc: "WebChannel allows both string and non-string message from whitelisted origin",
-    run: function* () {
+    *run() {
       /**
        * Same process as above, but we whitelist the origin before loading the page,
        * and expect to get *both* messages back (each exactly once).
@@ -419,7 +419,7 @@ var gTests = [
   },
   {
     desc: "WebChannel errors handling the message are delivered back to content",
-    run: function* () {
+    *run() {
       const ERRNO_UNKNOWN_ERROR              = 999; // WebChannel.jsm doesn't export this.
 
       // The channel where we purposely fail responding to a command.
@@ -455,7 +455,7 @@ var gTests = [
   },
   {
     desc: "WebChannel errors due to an invalid channel are delivered back to content",
-    run: function* () {
+    *run() {
       const ERRNO_NO_SUCH_CHANNEL            = 2; // WebChannel.jsm doesn't export this.
       // The channel where we see the response when the content sees the error
       let echoChannel = new WebChannel("echo", Services.io.newURI(HTTP_PATH, null, null));

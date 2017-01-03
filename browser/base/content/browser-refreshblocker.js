@@ -17,7 +17,7 @@ var RefreshBlocker = {
     gBrowser.removeEventListener("RefreshBlocked", this);
   },
 
-  handleEvent: function(event) {
+  handleEvent(event) {
     if (event.type == "RefreshBlocked") {
       this.block(event.originalTarget, event.detail);
     }
@@ -68,7 +68,7 @@ var RefreshBlocker = {
       let buttons = [{
         label: refreshButtonText,
         accessKey: refreshButtonAccesskey,
-        callback: function() {
+        callback() {
           if (browser.messageManager) {
             browser.messageManager.sendAsyncMessage("RefreshBlocker:Refresh", data);
           }
