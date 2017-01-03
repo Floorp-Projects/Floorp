@@ -765,6 +765,8 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     bool tryAttachTypedElement(HandleObject obj, ObjOperandId objId,
                                uint32_t index, Int32OperandId indexId);
 
+    bool tryAttachProxyElement(HandleObject obj, ObjOperandId objId);
+
     ValOperandId getElemKeyValueId() const {
         MOZ_ASSERT(cacheKind_ == CacheKind::GetElem);
         return ValOperandId(1);
