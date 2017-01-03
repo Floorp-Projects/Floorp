@@ -385,7 +385,6 @@ checkbox:-moz-focusring {
 .devtools-button:disabled,
 .devtools-button[disabled],
 .devtools-toolbarbutton[disabled] {
-  pointer-events: none;
   opacity: 0.5 !important;
 }
 
