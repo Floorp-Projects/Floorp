@@ -396,6 +396,9 @@ static const char contentSandboxRules[] =
   "      (subpath appTempDir))\n"
   "  (allow file-write*\n"
   "      (subpath appTempDir))\n"
+  "\n"
+  "; bug 1324610\n"
+  "  (allow network-outbound (literal \"/private/var/run/cupsd\"))\n"
 #ifdef DEBUG
   "\n"
   "; bug 1303987\n"
