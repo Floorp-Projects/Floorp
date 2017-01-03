@@ -112,6 +112,40 @@ TEST(MozPromise, BasicReject)
   });
 }
 
+TEST(MozPromise, BasicResolveOrRejectResolved)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+  RunOnTaskQueue(queue, [queue] () -> void {
+    TestPromise::CreateAndResolve(42, __func__)->Then(queue, __func__,
+      [queue] (const TestPromise::ResolveOrRejectValue& aValue) -> void
+      {
+        EXPECT_TRUE(aValue.IsResolve());
+        EXPECT_FALSE(aValue.IsReject());
+        EXPECT_FALSE(aValue.IsNothing());
+        EXPECT_EQ(aValue.ResolveValue(), 42);
+        queue->BeginShutdown();
+      });
+  });
+}
+
+TEST(MozPromise, BasicResolveOrRejectRejected)
+{
+  AutoTaskQueue atq;
+  RefPtr<TaskQueue> queue = atq.Queue();
+  RunOnTaskQueue(queue, [queue] () -> void {
+    TestPromise::CreateAndReject(42.0, __func__)->Then(queue, __func__,
+      [queue] (const TestPromise::ResolveOrRejectValue& aValue) -> void
+      {
+        EXPECT_TRUE(aValue.IsReject());
+        EXPECT_FALSE(aValue.IsResolve());
+        EXPECT_FALSE(aValue.IsNothing());
+        EXPECT_EQ(aValue.RejectValue(), 42.0);
+        queue->BeginShutdown();
+      });
+  });
+}
+
 TEST(MozPromise, AsyncResolve)
 {
   AutoTaskQueue atq;
