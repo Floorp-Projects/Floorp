@@ -22,7 +22,7 @@ var remoteFrames = [];
  * An object representing a frame that Marionette has loaded a
  * frame script in.
  */
-frame.RemoteFrame = function(windowId, frameId) {
+frame.RemoteFrame = function (windowId, frameId) {
   // outerWindowId relative to main process
   this.windowId = windowId;
   // actual frame relative to the windowId's frames list

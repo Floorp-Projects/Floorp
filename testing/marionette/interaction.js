@@ -173,7 +173,7 @@ interaction.clickElement = function*(el, strict = false, specCompat = false) {
  * @return {Object.<string, number>}
  *     X- and Y-position.
  */
-interaction.calculateCentreCoords = function(el) {
+interaction.calculateCentreCoords = function (el) {
   let rects = el.getClientRects();
   return {
     x: rects[0].left + rects[0].width / 2.0,
@@ -198,7 +198,7 @@ interaction.calculateCentreCoords = function(el) {
  * @throws Error
  *     If unable to find |el|'s parent <select> element.
  */
-interaction.selectOption = function(el) {
+interaction.selectOption = function (el) {
   if (element.isXULElement(el)) {
     throw new Error("XUL dropdowns not supported");
   }
@@ -231,7 +231,7 @@ interaction.selectOption = function(el) {
  * @param {string} path
  *     Full path to file.
  */
-interaction.uploadFile = function(el, path) {
+interaction.uploadFile = function (el, path) {
   let file;
   try {
     file = File.createFromFileName(path);
@@ -269,7 +269,7 @@ interaction.uploadFile = function(el, path) {
  * @throws {Error}
  *     If unable to find the <select> element.
  */
-interaction.getSelectForOptionElement = function(optionEl) {
+interaction.getSelectForOptionElement = function (optionEl) {
   let parent = optionEl;
   while (parent.parentNode && parent.localName != "select") {
     parent = parent.parentNode;
@@ -294,7 +294,7 @@ interaction.getSelectForOptionElement = function(optionEl) {
  * @param {boolean=} strict
  *     Enforce strict accessibility tests.
  */
-interaction.sendKeysToElement = function(el, value, ignoreVisibility, strict = false) {
+interaction.sendKeysToElement = function (el, value, ignoreVisibility, strict = false) {
   let win = getWindow(el);
   let a11y = accessibility.get(strict);
   return a11y.getAccessible(el, true).then(acc => {
@@ -314,7 +314,7 @@ interaction.sendKeysToElement = function(el, value, ignoreVisibility, strict = f
  * @return {boolean}
  *     True if element is displayed, false otherwise.
  */
-interaction.isElementDisplayed = function(el, strict = false) {
+interaction.isElementDisplayed = function (el, strict = false) {
   let win = getWindow(el);
   let displayed = atom.isElementDisplayed(el, win);
 
@@ -334,7 +334,7 @@ interaction.isElementDisplayed = function(el, strict = false) {
  * @return {boolean}
  *     True if enabled, false otherwise.
  */
-interaction.isElementEnabled = function(el, strict = false) {
+interaction.isElementEnabled = function (el, strict = false) {
   let enabled = true;
   let win = getWindow(el);
 
@@ -371,7 +371,7 @@ interaction.isElementEnabled = function(el, strict = false) {
  * @return {boolean}
  *     True if element is selected, false otherwise.
  */
-interaction.isElementSelected = function(el, strict = false) {
+interaction.isElementSelected = function (el, strict = false) {
   let selected = true;
   let win = getWindow(el);
 

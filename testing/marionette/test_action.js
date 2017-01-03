@@ -65,7 +65,7 @@ add_test(function test_processPointerUpDownAction() {
 add_test(function test_validateActionDurationAndCoordinates() {
   let actionItem = {};
   let actionSequence = {id: "some_id"};
-  let check = function(type, subtype, message = undefined) {
+  let check = function (type, subtype, message = undefined) {
     message = message || `duration: ${actionItem.duration}, subtype: ${subtype}`;
     actionItem.type = subtype;
     actionSequence.type = type;
@@ -211,7 +211,7 @@ add_test(function test_processPauseAction() {
 add_test(function test_processActionSubtypeValidation() {
   let actionItem = {type: "dancing"};
   let actionSequence = {id: "some_id"};
-  let check = function(regex) {
+  let check = function (regex) {
     let message = `type: ${actionSequence.type}, subtype: ${actionItem.type}`;
     checkErrors(regex, action.Action.fromJson, [actionSequence, actionItem], message);
   };

@@ -28,7 +28,7 @@ this.navigate = {};
  *     If |current| is not defined, or any of |current| or |future|
  *     are invalid URLs.
  */
-navigate.isLoadEventExpected = function(current, future = undefined) {
+navigate.isLoadEventExpected = function (current, future = undefined) {
   if (typeof current == "undefined") {
     throw TypeError("Expected at least one URL");
   }
@@ -94,7 +94,7 @@ navigate.isLoadEventExpected = function(current, future = undefined) {
  *     If |o| is not a valid type or if is a string that cannot be parsed
  *     as a URL.
  */
-navigate.IdempotentURL = function(o) {
+navigate.IdempotentURL = function (o) {
   let url = new URL(o);
 
   let hash = url.hash;
