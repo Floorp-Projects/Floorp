@@ -134,6 +134,14 @@ NewDateObject(JSContext* cx, ClippedTime time);
 JS_PUBLIC_API(double)
 MakeDate(double year, unsigned month, unsigned day);
 
+// Year is a year, month is 0-11, day is 1-based, and time is in milliseconds.
+// The return value is a number of milliseconds since the epoch.
+//
+// Consistent with the MakeDate algorithm defined in ECMAScript, this value is
+// *not* clipped!  Use JS::TimeClip if you need a clipped date.
+JS_PUBLIC_API(double)
+MakeDate(double year, unsigned month, unsigned day, double time);
+
 // Takes an integer number of milliseconds since the epoch and returns the
 // year.  Can return NaN, and will do so if NaN is passed in.
 JS_PUBLIC_API(double)
