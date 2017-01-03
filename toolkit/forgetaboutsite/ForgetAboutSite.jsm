@@ -185,7 +185,7 @@ this.ForgetAboutSite = {
     np.reset();
 
     // Push notifications.
-    promises.push(new Promise(resolve => {
+    promises.push(new Promise((resolve, reject) => {
       var push = Cc["@mozilla.org/push/Service;1"]
                   .getService(Ci.nsIPushService);
       push.clearForDomain(aDomain, status => {

@@ -584,4 +584,3 @@ add_task(function* test_setRemoteCrashID() {
   Assert.ok(s.setRemoteCrashID("crash1", "bp-1"));
   Assert.equal(s.crashes[0].remoteID, "bp-1");
 });
-

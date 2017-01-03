@@ -12,6 +12,7 @@ module.exports = {
   // All globals made available in the test environment.
   "globals": {
     "add_task": false,
+    "addLoadEvent": false,
     "Assert": false,
     "EventUtils": false,
     "executeSoon": false,
@@ -24,6 +25,7 @@ module.exports = {
     "is": false,
     "isnot": false,
     "ok": false,
+    "privateNoteIntentionalCrash": false,
     "promise": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,

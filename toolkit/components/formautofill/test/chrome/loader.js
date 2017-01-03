@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/SimpleTest.js", this);
 
+/* import-globals-from ../loader_common.js */
 var sharedUrl = SimpleTest.getTestFileURL("loader_common.js");
 Services.scriptloader.loadSubScript(sharedUrl, this);
 
@@ -100,6 +101,7 @@ add_task(function* wait_loading_in_parent_process() {
   yield promiseParentInitFinished;
 });
 
+/* import-globals-from ../head_common.js */
 var headUrl = SimpleTest.getTestFileURL("head_common.js");
 Services.scriptloader.loadSubScript(headUrl, this);
 
