@@ -2097,10 +2097,14 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   nsIDocument* doc = thisContent->OwnerDoc();
   nsresult rv = NS_OK;
 
-  // Sanity check
-  if (!InActiveDocument(thisContent)) {
-    NS_NOTREACHED("LoadObject called while not bound to an active document");
-    return NS_ERROR_UNEXPECTED;
+  // Per bug 1318303, if the parent document is not active, load the alternative
+  // and return.
+  if (!doc->IsCurrentActiveDocument()) {
+    // Since this can be triggered on change of attributes, make sure we've
+    // unloaded whatever is loaded first.
+    UnloadObject();
+    LoadFallback(eFallbackAlternate, false);
+    return NS_OK;
   }
 
   // XXX(johns): In these cases, we refuse to touch our content and just
