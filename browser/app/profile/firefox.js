@@ -1221,7 +1221,8 @@ pref("security.mixed_content.block_active_content", true);
 // Show degraded UI for http pages with password fields.
 pref("security.insecure_password.ui.enabled", true);
 
-pref("security.insecure_field_warning.contextual.enabled", false);
+// Show in-content login form warning UI for insecure login fields
+pref("security.insecure_field_warning.contextual.enabled", true);
 
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);

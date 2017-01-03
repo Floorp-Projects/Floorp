@@ -1539,7 +1539,6 @@ nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
   , mRootElementFrame(nullptr)
   , mRootElementStyleFrame(nullptr)
   , mDocElementContainingBlock(nullptr)
-  , mGfxScrollFrame(nullptr)
   , mPageSequenceFrame(nullptr)
   , mCurrentDepth(0)
 #ifdef DEBUG
@@ -2792,7 +2791,7 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
       the root element.
     mDocElementContainingBlock is the parent of mRootElementFrame
       (i.e. nsCanvasFrame or nsRootBoxFrame)
-    mGfxScrollFrame is the nsHTMLScrollFrame mentioned above, or null if there isn't one
+
     mPageSequenceFrame is the nsSimplePageSequenceFrame, or null if there isn't one
   */
 
@@ -2911,7 +2910,6 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
                                                   true,
                                                   newFrame);
       parentFrame = newFrame;
-      mGfxScrollFrame = newFrame;
   }
 
   rootFrame->SetStyleContextWithoutNotification(rootPseudoStyle);
@@ -8558,7 +8556,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*  aContainer,
       mRootElementStyleFrame = nullptr;
       mDocElementContainingBlock = nullptr;
       mPageSequenceFrame = nullptr;
-      mGfxScrollFrame = nullptr;
       mHasRootAbsPosContainingBlock = false;
     }
 
