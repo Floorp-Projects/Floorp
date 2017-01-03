@@ -158,6 +158,7 @@ def svn_co(source_dir, url, directory, revision):
 
 def svn_update(directory, revision):
     run_in(directory, ["svn", "update", "-q", "-r", revision])
+    run_in(directory, ["svn", "revert", "-q", "-R", revision])
 
 
 def get_platform():
@@ -350,25 +351,34 @@ if __name__ == "__main__":
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
-        svn_co(source_dir, llvm_repo, llvm_source_dir, llvm_revision)
-        svn_co(source_dir, clang_repo, clang_source_dir, llvm_revision)
-        svn_co(source_dir, compiler_repo, compiler_rt_source_dir, llvm_revision)
-        svn_co(source_dir, libcxx_repo, libcxx_source_dir, llvm_revision)
-        if libcxxabi_repo:
-            svn_co(source_dir, libcxxabi_repo, libcxxabi_source_dir, llvm_revision)
-        if extra_repo:
-            svn_co(source_dir, extra_repo, extra_source_dir, llvm_revision)
-        for p in config.get("patches", {}).get(get_platform(), []):
-            patch(p, source_dir)
-    else:
+    if os.path.exists(llvm_source_dir):
         svn_update(llvm_source_dir, llvm_revision)
+    else:
+        svn_co(source_dir, llvm_repo, llvm_source_dir, llvm_revision)
+    if os.path.exists(clang_source_dir):
         svn_update(clang_source_dir, llvm_revision)
+    else:
+        svn_co(source_dir, clang_repo, clang_source_dir, llvm_revision)
+    if os.path.exists(compiler_rt_source_dir):
         svn_update(compiler_rt_source_dir, llvm_revision)
+    else:
+        svn_co(source_dir, compiler_repo, compiler_rt_source_dir, llvm_revision)
+    if os.path.exists(libcxx_source_dir):
         svn_update(libcxx_source_dir, llvm_revision)
-        if libcxxabi_repo:
+    else:
+        svn_co(source_dir, libcxx_repo, libcxx_source_dir, llvm_revision)
+    if libcxxabi_repo:
+        if os.path.exists(libcxxabi_source_dir):
             svn_update(libcxxabi_source_dir, llvm_revision)
-        if extra_repo:
+        else:
+            svn_co(source_dir, libcxxabi_repo, libcxxabi_source_dir, llvm_revision)
+    if extra_repo:
+        if os.path.exists(extra_source_dir):
             svn_update(extra_source_dir, llvm_revision)
+        else:
+            svn_co(source_dir, extra_repo, extra_source_dir, llvm_revision)
+    for p in config.get("patches", {}).get(get_platform(), []):
+        patch(p, source_dir)
 
     symlinks = [(source_dir + "/clang",
                  llvm_source_dir + "/tools/clang"),
