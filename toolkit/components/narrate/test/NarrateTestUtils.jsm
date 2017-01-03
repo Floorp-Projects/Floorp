@@ -141,8 +141,8 @@ this.NarrateTestUtils = {
     let nodes = Array.from($$(".narrate-word-highlight"));
     return nodes.map(node => {
       return { word: node.dataset.word,
-               left: Number(node.style.left.replace(/px$/, "")),
-               top: Number(node.style.top.replace(/px$/, ""))};
+        left: Number(node.style.left.replace(/px$/, "")),
+        top: Number(node.style.top.replace(/px$/, ""))};
     });
   }
 };
