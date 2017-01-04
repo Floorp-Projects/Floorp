@@ -45,7 +45,7 @@ struct gfxRect :
      */
     bool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
-    gfxPoint AtCorner(mozilla::css::Corner corner) const {
+    gfxPoint AtCorner(mozilla::Corner corner) const {
         switch (corner) {
             case NS_CORNER_TOP_LEFT: return TopLeft();
             case NS_CORNER_TOP_RIGHT: return TopRight();
