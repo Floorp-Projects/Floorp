@@ -161,6 +161,7 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesBorrowedOrNull parent_style_or_null,
                    nsIAtom* pseudoTag, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
+                   RawServoStyleSetBorrowed set,
                    ServoComputedValuesBorrowedOrNull parent_style)
 
 // Initialize Servo components. Should be called exactly once at startup.
