@@ -380,7 +380,8 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   MOZ_ASSERT(InImageBridgeChildThread());
   MOZ_ASSERT(CanSend());
 
-  uint64_t id = 0;
+  static uint64_t sNextID = 1;
+  uint64_t id = sNextID++;
 
   PImageContainerChild* imageContainerChild = nullptr;
   if (aImageContainer)
@@ -388,7 +389,8 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
 
   PCompositableChild* child =
     SendPCompositableConstructor(aCompositable->GetTextureInfo(),
-                                 imageContainerChild, &id);
+                                 id,
+                                 imageContainerChild);
   if (!child) {
     return;
   }
@@ -397,7 +399,8 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
 
 PCompositableChild*
 ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo,
-                                          PImageContainerChild* aChild, uint64_t* aID)
+                                          const uint64_t& aID,
+                                          PImageContainerChild* aChild)
 {
   MOZ_ASSERT(CanSend());
   return AsyncCompositableChild::CreateActor();
