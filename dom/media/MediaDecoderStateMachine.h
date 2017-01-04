@@ -448,9 +448,6 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
-  void DispatchAudioDecodeTaskIfNeeded();
-  void DispatchVideoDecodeTaskIfNeeded();
-
   // Dispatch a task to decode audio if there is not.
   void EnsureAudioDecodeTaskQueued();
 
