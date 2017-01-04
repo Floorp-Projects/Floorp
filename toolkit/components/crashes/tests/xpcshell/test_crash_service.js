@@ -7,7 +7,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://testing-common/AppData.jsm", this);
-var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", this);
+var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", {});
 
 function run_test() {
   run_next_test();
