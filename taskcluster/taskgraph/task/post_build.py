@@ -50,4 +50,5 @@ class PostBuildTask(transform.TransformTask):
             post_task = copy.deepcopy(prototype)
             post_task['build-label'] = task.label
             post_task['build-platform'] = platform
+            post_task['build-task'] = task
             yield post_task

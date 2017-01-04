@@ -16,4 +16,8 @@ job-template: job-template.yml
 only-for-build-platforms:
     - linux64/opt
     - linux64/debug
+    - linux64-nightly/opt
+    - linux-nightly/opt
     - android-api-15/opt
+    - android-api-15-nightly/opt
+    - android-x86-nightly/opt
