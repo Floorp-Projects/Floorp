@@ -47,6 +47,7 @@ const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
 const PREF_WEBAPI_TESTING             = "extensions.webapi.testing";
+const PREF_WEBEXT_PREF_PROMPTS        = "extensions.webextPermissionPrompts";
 
 const UPDATE_REQUEST_VERSION          = 2;
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
@@ -78,6 +79,8 @@ Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AddonRepository",
@@ -2801,6 +2804,30 @@ var AddonManagerInternal = {
 
       return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall",
                                                    options.hash).then(install => {
+        if (Preferences.get(PREF_WEBEXT_PREF_PROMPTS, false)) {
+          install._permHandler = info => new Promise((resolve, reject) => {
+            const observer = {
+              observe(subject, topic, data) {
+                if (topic == "webextension-permission-response" &&
+                    subject.wrappedJSObject.info.addon == info.addon) {
+                  let answer = JSON.parse(data);
+                  Services.obs.removeObserver(this, "webextension-permission-response");
+                  if (answer) {
+                    resolve();
+                  } else {
+                    reject();
+                  }
+                }
+              }
+            };
+
+            Services.obs.addObserver(observer, "webextension-permission-response", false);
+
+            let subject = {wrappedJSObject: {target, info}};
+            Services.obs.notifyObservers(subject, "webextension-permission-prompt", null);
+          });
+        }
+
         let id = this.nextInstall++;
         let listener = this.makeListener(id, target.messageManager);
         install.addListener(listener);
