@@ -51,9 +51,6 @@ struct gfxRect :
             case NS_CORNER_TOP_RIGHT: return TopRight();
             case NS_CORNER_BOTTOM_RIGHT: return BottomRight();
             case NS_CORNER_BOTTOM_LEFT: return BottomLeft();
-            default:
-                NS_ERROR("Invalid corner!");
-                break;
         }
         return gfxPoint(0.0, 0.0);
     }
