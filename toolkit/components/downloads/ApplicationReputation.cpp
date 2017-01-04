@@ -1278,8 +1278,9 @@ PendingLookup::SendRemoteQueryInternal()
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
   if (loadInfo) {
-    loadInfo->SetOriginAttributes(
-      mozilla::NeckoOriginAttributes(NECKO_SAFEBROWSING_APP_ID, false));
+    mozilla::NeckoOriginAttributes neckoAttrs(false);
+    neckoAttrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
+    loadInfo->SetOriginAttributes(neckoAttrs);
   }
 
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel, &rv));
@@ -1293,14 +1294,6 @@ PendingLookup::SendRemoteQueryInternal()
   rv = uploadChannel->ExplicitSetUploadStream(sstream,
     NS_LITERAL_CSTRING("application/octet-stream"), serialized.size(),
     NS_LITERAL_CSTRING("POST"), false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Set the Safebrowsing cookie jar, so that the regular Google cookie is not
-  // sent with this request. See bug 897516.
-  DocShellOriginAttributes attrs;
-  attrs.mAppId = NECKO_SAFEBROWSING_APP_ID;
-  nsCOMPtr<nsIInterfaceRequestor> loadContext = new mozilla::LoadContext(attrs);
-  rv = mChannel->SetNotificationCallbacks(loadContext);
   NS_ENSURE_SUCCESS(rv, rv);
 
   uint32_t timeoutMs = Preferences::GetUint(PREF_SB_DOWNLOADS_REMOTE_TIMEOUT, 10000);

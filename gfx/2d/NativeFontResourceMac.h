@@ -23,7 +23,7 @@ public:
     Create(uint8_t *aFontData, uint32_t aDataLength);
 
   already_AddRefed<ScaledFont>
-    CreateScaledFont(uint32_t aIndex, uint32_t aGlyphSize);
+    CreateScaledFont(uint32_t aIndex, Float aGlyphSize);
 
   ~NativeFontResourceMac()
   {

@@ -522,6 +522,9 @@ struct ExceptionHandlerState
 
     /* Each Mach exception handler runs in its own thread. */
     Thread handlerThread;
+
+    /* Ensure that the exception handler thread is terminated before we quit. */
+    ~ExceptionHandlerState() { MemoryProtectionExceptionHandler::uninstall(); }
 };
 
 /* This choice of ID is arbitrary, but must not match our exception ID. */
