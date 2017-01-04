@@ -1998,13 +1998,13 @@ DecodingState::Enter()
 
   mOnAudioPopped = AudioQueue().PopEvent().Connect(
     OwnerThread(), [this] () {
-    if (mMaster->NeedToDecodeAudio()) {
+    if (mMaster->IsAudioDecoding() && !mMaster->HaveEnoughDecodedAudio()) {
       mMaster->EnsureAudioDecodeTaskQueued();
     }
   });
   mOnVideoPopped = VideoQueue().PopEvent().Connect(
     OwnerThread(), [this] () {
-    if (mMaster->NeedToDecodeVideo()) {
+    if (mMaster->IsVideoDecoding() && !mMaster->HaveEnoughDecodedVideo()) {
       mMaster->EnsureVideoDecodeTaskQueued();
     }
   });
