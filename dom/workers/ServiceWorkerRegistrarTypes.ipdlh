@@ -18,6 +18,8 @@ struct ServiceWorkerRegistrationData
   nsString cacheName;
 
   PrincipalInfo principal;
+
+  uint32_t loadFlags;
 };
 
 } // namespace dom

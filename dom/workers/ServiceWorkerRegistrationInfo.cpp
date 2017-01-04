@@ -73,10 +73,12 @@ ServiceWorkerRegistrationInfo::Clear()
 }
 
 ServiceWorkerRegistrationInfo::ServiceWorkerRegistrationInfo(const nsACString& aScope,
-                                                             nsIPrincipal* aPrincipal)
+                                                             nsIPrincipal* aPrincipal,
+                                                             nsLoadFlags aLoadFlags)
   : mControlledDocumentsCounter(0)
   , mUpdateState(NoUpdate)
   , mLastUpdateCheckTime(0)
+  , mLoadFlags(aLoadFlags)
   , mScope(aScope)
   , mPrincipal(aPrincipal)
   , mPendingUninstall(false)
@@ -546,6 +548,12 @@ bool
 ServiceWorkerRegistrationInfo::IsIdle() const
 {
   return !mActiveWorker || mActiveWorker->WorkerPrivate()->IsIdle();
+}
+
+nsLoadFlags
+ServiceWorkerRegistrationInfo::GetLoadFlags() const
+{
+  return mLoadFlags;
 }
 
 END_WORKERS_NAMESPACE
