@@ -103,6 +103,12 @@ public:
     mJob->ComparisonResult(aStatus, aInCacheAndEqual, aNewCacheName, aMaxScope);
   }
 
+  virtual void
+  SaveLoadFlags(nsLoadFlags aLoadFlags) override
+  {
+    mJob->SetLoadFlags(aLoadFlags);
+  }
+
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateJob::CompareCallback, override)
 };
 
@@ -167,9 +173,11 @@ public:
 ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(nsIPrincipal* aPrincipal,
                                                const nsACString& aScope,
                                                const nsACString& aScriptSpec,
-                                               nsILoadGroup* aLoadGroup)
+                                               nsILoadGroup* aLoadGroup,
+                                               nsLoadFlags aLoadFlags)
   : ServiceWorkerJob(Type::Update, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
+  , mLoadFlags(aLoadFlags)
 {
 }
 
@@ -185,9 +193,11 @@ ServiceWorkerUpdateJob::ServiceWorkerUpdateJob(Type aType,
                                                nsIPrincipal* aPrincipal,
                                                const nsACString& aScope,
                                                const nsACString& aScriptSpec,
-                                               nsILoadGroup* aLoadGroup)
+                                               nsILoadGroup* aLoadGroup,
+                                               nsLoadFlags aLoadFlags)
   : ServiceWorkerJob(aType, aPrincipal, aScope, aScriptSpec)
   , mLoadGroup(aLoadGroup)
+  , mLoadFlags(aLoadFlags)
 {
 }
 
@@ -318,6 +328,18 @@ ServiceWorkerUpdateJob::Update()
   }
 }
 
+nsLoadFlags
+ServiceWorkerUpdateJob::GetLoadFlags() const
+{
+  return mLoadFlags;
+}
+
+void
+ServiceWorkerUpdateJob::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+  mLoadFlags = aLoadFlags;
+}
+
 void
 ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                                          bool aInCacheAndEqual,
@@ -415,8 +437,9 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   RefPtr<ServiceWorkerInfo> sw =
     new ServiceWorkerInfo(mRegistration->mPrincipal,
                           mRegistration->mScope,
-                          mScriptSpec, aNewCacheName,
-                          mRegistration->GetLoadFlags());
+                          mScriptSpec,
+                          aNewCacheName,
+                          mLoadFlags);
 
   mRegistration->SetEvaluating(sw);
 

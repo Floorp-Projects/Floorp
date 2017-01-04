@@ -18,8 +18,7 @@ ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
                                                    nsILoadGroup* aLoadGroup,
                                                    nsLoadFlags aLoadFlags)
   : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
-                           aLoadGroup)
-  , mLoadFlags(aLoadFlags)
+                           aLoadGroup, aLoadFlags)
 {
 }
 
@@ -38,8 +37,8 @@ ServiceWorkerRegisterJob::AsyncExecute()
     swm->GetRegistration(mPrincipal, mScope);
 
   if (registration) {
-    bool isSameLoadFlags = registration->GetLoadFlags() == mLoadFlags;
-    registration->SetLoadFlags(mLoadFlags);
+    bool isSameLoadFlags = registration->GetLoadFlags() == GetLoadFlags();
+    registration->SetLoadFlags(GetLoadFlags());
 
     // If we are resurrecting an uninstalling registration, then persist
     // it to disk again.  We preemptively removed it earlier during
@@ -56,7 +55,8 @@ ServiceWorkerRegisterJob::AsyncExecute()
       return;
     }
   } else {
-    registration = swm->CreateNewRegistration(mScope, mPrincipal, mLoadFlags);
+    registration = swm->CreateNewRegistration(mScope, mPrincipal,
+                                              GetLoadFlags());
   }
 
   SetRegistration(registration);

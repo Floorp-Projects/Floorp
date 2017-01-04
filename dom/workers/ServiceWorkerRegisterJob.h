@@ -18,8 +18,6 @@ namespace workers {
 // spec algorithms.
 class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob
 {
-  const nsLoadFlags mLoadFlags;
-
 public:
   ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
                            const nsACString& aScope,
