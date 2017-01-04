@@ -14,6 +14,8 @@ const HTTP_MISMATCH_PATH = "http://example.org";
 const HTTP_IFRAME_PATH = "http://mochi.test:8888";
 const HTTP_REDIRECTED_IFRAME_PATH = "http://example.org";
 
+requestLongerTimeout(2); // timeouts in debug builds.
+
 // Keep this synced with /mobile/android/tests/browser/robocop/testWebChannel.js
 // as much as possible.  (We only have that since we can't run browser chrome
 // tests on Android.  Yet?)
