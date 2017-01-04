@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>mask-size animation after finish</title>
+<style>
+  @keyframes changeMaskSize {
+    from { mask-size: 50px 50px; }
+    to { mask-size: 25px 25px; }
+  }
+  #test {
+    height: 100px;
+    width: 100px;
+    mask-repeat: no-repeat;
+    mask-position: center center;
+    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50"><rect x="0" y="0" width="50" height="50" fill="blue"/></svg>');
+    animation: changeMaskSize 0.01s forwards;
+  }
+
+  #inner {
+    height: 100px;
+    width: 100px;
+    background-color: blue;
+    box-sizing: border-box;
+    /* Apply will-change property to force paint mask on mask layer */
+    border: 1px solid transparent;
+    will-change: transform;
+  }
+</style>
+<div id="test"><div id="inner"></div></div>
+<script>
+document.getElementById("test").addEventListener("animationend", () => {
+  requestAnimationFrame(() => {
+    document.documentElement.classList.remove("reftest-wait");
+  })
+}, false);
+</script>
