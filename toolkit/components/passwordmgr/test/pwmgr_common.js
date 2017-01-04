@@ -432,7 +432,12 @@ if (this.addMessageListener) {
   });
 } else {
   // Code to only run in the mochitest pages (not in the chrome script).
+  SpecialPowers.pushPrefEnv({"set": [["signon.autofillForms.http", true],
+                                     ["security.insecure_field_warning.contextual.enabled", false]]
+                            });
+
   SimpleTest.registerCleanupFunction(() => {
+    SpecialPowers.popPrefEnv();
     runInParent(function cleanupParent() {
       const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
       Cu.import("resource://gre/modules/Services.jsm");
