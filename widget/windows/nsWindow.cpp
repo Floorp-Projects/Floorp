@@ -4178,9 +4178,15 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     if (mTouchWindow) {
       // If mTouchWindow is true, then we must have APZ enabled and be
       // feeding it raw touch events. In that case we don't need to
-      // send touch-generated mouse events to content.
+      // send touch-generated mouse events to content. The only exception is
+      // the touch-generated mouse double-click, which is used to start off the
+      // touch-based drag-and-drop gesture.
       MOZ_ASSERT(mAPZC);
-      return result;
+      if (aEventMessage == eMouseDoubleClick) {
+        aEventMessage = eMouseTouchDrag;
+      } else {
+        return result;
+      }
     }
   }
 
