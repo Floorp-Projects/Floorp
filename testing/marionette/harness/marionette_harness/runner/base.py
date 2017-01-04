@@ -831,10 +831,13 @@ class BaseMarionetteTestRunner(object):
             except Exception:
                 self.logger.warning('Could not get device info', exc_info=True)
 
-        if self.appinfo.get('browserTabsRemoteAutostart', False):
-            self.logger.info("e10s is enabled")
-        else:
-            self.logger.info("e10s is disabled")
+        appinfo_e10s = self.appinfo.get('browserTabsRemoteAutostart', False)
+        self.logger.info("e10s is {}".format("enabled" if appinfo_e10s else "disabled"))
+        if self.e10s != appinfo_e10s:
+            message_e10s = ("BaseMarionetteTestRunner configuration (self.e10s) does "
+                            "not match browser appinfo")
+            self.cleanup()
+            raise AssertionError(message_e10s)
 
         self.logger.suite_start(self.tests,
                                 version_info=self.version_info,
