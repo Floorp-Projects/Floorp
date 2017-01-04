@@ -431,7 +431,7 @@ enum Corner {
 
 // Creates a for loop that walks over the four mozilla::Corner values. This
 // implementation uses the same technique as NS_FOR_CSS_SIDES.
-#define NS_FOR_CSS_CORNERS(var_)                                        \
+#define NS_FOR_CSS_FULL_CORNERS(var_)                                   \
   int32_t MOZ_CONCAT(var_,__LINE__) = mozilla::eCornerTopLeft;          \
   for (mozilla::Corner var_;                                            \
        MOZ_CONCAT(var_,__LINE__) <= mozilla::eCornerBottomLeft &&       \

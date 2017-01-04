@@ -16,8 +16,6 @@
 
 namespace mozilla {
 
-#define NS_FOR_CSS_FULL_CORNERS(var_) for (int32_t var_ = 0; var_ < 4; ++var_)
-
 // Indices into "half corner" arrays (nsStyleCorners e.g.)
 #define NS_CORNER_TOP_LEFT_X      0
 #define NS_CORNER_TOP_LEFT_Y      1

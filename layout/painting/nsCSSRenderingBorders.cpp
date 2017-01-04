@@ -3357,7 +3357,7 @@ nsCSSBorderRenderer::DrawBorders()
      * a 1.0 unit border all around and no border radius.
      */
 
-    NS_FOR_CSS_CORNERS(corner) {
+    NS_FOR_CSS_FULL_CORNERS(corner) {
       const mozilla::Side sides[2] = { mozilla::Side(corner), PREV_SIDE(corner) };
 
       if (!IsZeroSize(mBorderRadii[corner]))
@@ -3372,7 +3372,7 @@ nsCSSBorderRenderer::DrawBorders()
     }
 
     // First, the corners
-    NS_FOR_CSS_CORNERS(corner) {
+    NS_FOR_CSS_FULL_CORNERS(corner) {
       // if there's no corner, don't do all this work for it
       if (IsZeroSize(mBorderCornerDimensions[corner]))
         continue;
