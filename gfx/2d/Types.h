@@ -421,26 +421,28 @@ enum Corner {
   eCornerTopLeft = 0,
   eCornerTopRight = 1,
   eCornerBottomRight = 2,
-  eCornerBottomLeft = 3,
-  eNumCorners = 4
+  eCornerBottomLeft = 3
 };
 
 #define NS_CORNER_TOP_LEFT mozilla::eCornerTopLeft
 #define NS_CORNER_TOP_RIGHT mozilla::eCornerTopRight
 #define NS_CORNER_BOTTOM_RIGHT mozilla::eCornerBottomRight
 #define NS_CORNER_BOTTOM_LEFT mozilla::eCornerBottomLeft
-#define NS_NUM_CORNERS mozilla::eNumCorners
 
-#define NS_FOR_CSS_CORNERS(var_)                       \
-  for (mozilla::Corner var_ = NS_CORNER_TOP_LEFT;      \
-       var_ <= NS_CORNER_BOTTOM_LEFT;                  \
-       var_++)
+// Creates a for loop that walks over the four mozilla::Corner values. This
+// implementation uses the same technique as NS_FOR_CSS_SIDES.
+#define NS_FOR_CSS_CORNERS(var_)                                        \
+  int32_t MOZ_CONCAT(var_,__LINE__) = mozilla::eCornerTopLeft;          \
+  for (mozilla::Corner var_;                                            \
+       MOZ_CONCAT(var_,__LINE__) <= mozilla::eCornerBottomLeft &&       \
+         (var_ = mozilla::Corner(MOZ_CONCAT(var_,__LINE__)), true);     \
+       ++MOZ_CONCAT(var_,__LINE__))
 
-static inline Corner operator++(Corner& corner, int) {
-  MOZ_ASSERT(corner >= NS_CORNER_TOP_LEFT &&
-             corner < NS_NUM_CORNERS, "Out of range corner");
-  corner = Corner(corner + 1);
-  return corner;
+static inline Corner operator++(Corner& aCorner) {
+  MOZ_ASSERT(aCorner >= eCornerTopLeft && aCorner <= eCornerBottomLeft,
+             "Out of range corner!");
+  aCorner = Corner(aCorner + 1);
+  return aCorner;
 }
 
 } // namespace mozilla
