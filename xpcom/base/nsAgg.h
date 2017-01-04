@@ -79,7 +79,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                        \
 {                                                                           \
 public:                                                                     \
   NS_IMETHOD_(void) Unlink(void *p) override;                               \
-  NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)      \
+  NS_IMETHOD TraverseNative(void *p, nsCycleCollectionTraversalCallback &cb)\
     override;                                                               \
   NS_DECL_CYCLE_COLLECTION_CLASS_NAME_METHOD(_class)                        \
   NS_IMETHOD_(void) DeleteCycleCollectable(void* p) override                \
@@ -278,7 +278,7 @@ _class::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr)        \
 
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_AGGREGATED(_class)          \
   NS_IMETHODIMP                                                             \
-  NS_CYCLE_COLLECTION_CLASSNAME(_class)::Traverse                           \
+  NS_CYCLE_COLLECTION_CLASSNAME(_class)::TraverseNative                     \
                          (void *p, nsCycleCollectionTraversalCallback &cb)  \
   {                                                                         \
     nsISupports *s = static_cast<nsISupports*>(p);                          \

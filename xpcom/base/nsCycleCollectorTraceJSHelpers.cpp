@@ -21,8 +21,9 @@ CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 void
-nsScriptObjectTracer::NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
-                                  void* aClosure)
+nsCycleCollectionParticipant::NoteJSChild(JS::GCCellPtr aGCThing,
+                                          const char* aName,
+                                          void* aClosure)
 {
   nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);

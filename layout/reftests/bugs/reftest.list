@@ -1985,4 +1985,5 @@ fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 fuzzy(2,40000) == 1316719-1a.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1b.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
+skip-if(Android) != 1318769-1.html 1318769-1-ref.html
 == 1322512-1.html 1322512-1-ref.html

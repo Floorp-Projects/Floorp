@@ -114,11 +114,11 @@ win64/pgo:
         config:
             - builds/taskcluster_firefox_windows_64_opt.py
 
-win32-clang/debug:
+win32-st-an/debug:
     description: "Win32 Static Analysis Debug (clang-cl)"
     index:
         product: firefox
-        job-name: win32-clang-debug
+        job-name: win32-st-an-debug
     treeherder:
         platform: windows2012-32/debug
         symbol: tc(S)
@@ -133,11 +133,11 @@ win32-clang/debug:
         config:
             - builds/taskcluster_firefox_win32_clang_debug.py
 
-win32-clang/opt:
+win32-st-an/opt:
     description: "Win32 Static Analysis Opt (clang-cl)"
     index:
         product: firefox
-        job-name: win32-clang-opt
+        job-name: win32-st-an-opt
     treeherder:
         platform: windows2012-32/opt
         symbol: tc(S)
@@ -152,11 +152,11 @@ win32-clang/opt:
         config:
             - builds/taskcluster_firefox_win32_clang.py
 
-win64-clang/debug:
+win64-st-an/debug:
     description: "Win64 Static Analysis Debug (clang-cl)"
     index:
         product: firefox
-        job-name: win64-clang-debug
+        job-name: win64-st-an-debug
     treeherder:
         platform: windows2012-64/debug
         symbol: tc(S)
@@ -171,11 +171,11 @@ win64-clang/debug:
         config:
             - builds/taskcluster_firefox_win64_clang_debug.py
 
-win64-clang/opt:
+win64-st-an/opt:
     description: "Win64 Static Analysis Opt (clang-cl)"
     index:
         product: firefox
-        job-name: win64-clang-opt
+        job-name: win64-st-an-opt
     treeherder:
         platform: windows2012-64/opt
         symbol: tc(S)

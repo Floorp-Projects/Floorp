@@ -44,6 +44,7 @@ description("Test for invalid passed parameters");
 
 var wtu = WebGLTestUtils;
 var context = wtu.create3DContext();
+var contextVersion = wtu.getDefault3DContextVersion();
 
 debug("");
 debug("Test createShader()");
@@ -110,7 +111,7 @@ function generateShaderSource(opt_invalidIdentifierChar, opt_invalidCommentChar)
                           + "varying float " + validAttribName + ";\n"
                           + "void main() {\n"
                           + validAttribName  + " = " + validUniformName + ";\n"
-                          + "gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }\n";
+                          + "gl_Position = vec4(0.0, 0.0, 0.0, 1.0); }\n"
                           + "//.+-/*%<>[](){}^|&~=!:;,?# " + invalidCommentString;
 }
 var vShader = context.createShader(context.VERTEX_SHADER);
@@ -143,6 +144,9 @@ shouldBe("context.getError()", "context.NO_ERROR");
 debug("");
 debug("Test shaderSource() with invalid characters");
 for (var i = 0; i < invalidSet.length; ++i) {
+  // Backslash as line-continuation is allowed in WebGL 2.0.
+  if (contextVersion > 1 && invalidSet[i] == '\\')
+    continue;
   var validShaderSource = generateShaderSource(undefined, invalidSet[i]);
   context.shaderSource(vShader, validShaderSource);
   shouldBe("context.getError()", "context.NO_ERROR");

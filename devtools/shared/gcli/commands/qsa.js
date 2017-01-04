@@ -17,7 +17,7 @@ exports.items = [
       type: "nodelist",
       description: l10n.lookup("qsaQueryDesc")
     }],
-    exec: function(args, context) {
+    exec: function (args, context) {
       return args.query.length;
     }
   }

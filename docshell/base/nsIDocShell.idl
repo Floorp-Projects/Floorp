@@ -1112,38 +1112,16 @@ interface nsIDocShell : nsIDocShellTreeItem
   const unsigned long TOUCHEVENTS_OVERRIDE_NONE = 2;
 
   /**
-   * A DocShell is locked to the current process if it would be
-   * content-observable for a process switch to occur before performing a
-   * navigation load. It is important to ensure that a DocShell is not process
-   * locked before performing process changing loads.
-   */
-  [infallible] readonly attribute boolean isProcessLocked;
-  /**
-   * Return PROCESS_LOCK_NONE if docShell is not locked to current process,
-   * otherwise return the reason why process is locked.
-   */
-  [infallible] readonly attribute unsigned long processLockReason;
-  /**
-   * The DocShell is not locked to the current process, and a navigation may
-   * proceed in a new process.
-   */
-  const unsigned long PROCESS_LOCK_NONE = 0;
-  /**
-   * The DocShell is locked to the current process because it is not a
-   * toplevel browsing context.
-   */
-  const unsigned long PROCESS_LOCK_IFRAME = 1;
-  /**
-   * The DocShell is locked to the current process because there exist other
-   * related browsing contexts which may be holding a reference.
-   */
-  const unsigned long PROCESS_LOCK_RELATED_CONTEXTS = 2;
-  /**
-   * The DocShell is locked to the current process because the current
-   * process is not a content process.
+   * This value is `true` if its corresponding unit of related browsing contexts
+   * (TabGroup) contains only 1 toplevel window, and that window is the outer
+   * window corresponding to this docshell.
    *
-   * NOTE: Some loads may not consider this a hard process lock, and may wish to
-   * ignore this reason.
+   * The value is `false` otherwise. This is the case if the docshell is an
+   * iframe, has window.opener set, or another window with window.opener
+   * referring to this window exists.
+   *
+   * If this value is `false`, it would be web content visible for a load
+   * occuring in this docshell to be performed within a different docshell.
    */
-  const unsigned long PROCESS_LOCK_NON_CONTENT = 3;
+  [infallible] readonly attribute boolean isOnlyToplevelInTabGroup;
 };

@@ -273,7 +273,7 @@ module.exports = {
     // Disallow declaring the same variable more than once (we use let anyway).
     "no-redeclare": "error",
     // Disallow multiple spaces in a regular expression literal.
-    "no-regex-spaces": "error",
+    "no-regex-spaces": "off",
     // Allow reserved words being used as object literal keys.
     "no-reserved-keys": "off",
     // Don't restrict usage of specified node modules (not a node environment).

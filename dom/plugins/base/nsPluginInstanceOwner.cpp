@@ -535,16 +535,6 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL, baseURI);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-  if (aDoCheckLoadURIChecks) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
-    NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
-
-    rv = secMan->CheckLoadURIWithPrincipal(content->NodePrincipal(), uri,
-                                           nsIScriptSecurityManager::STANDARD);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   nsCOMPtr<nsIInputStream> headersDataStream;
   if (aPostStream && aHeadersData) {
     if (!aHeadersDataLen)
@@ -563,8 +553,21 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
     Preferences::GetInt("privacy.popups.disable_from_plugins");
   nsAutoPopupStatePusher popupStatePusher((PopupControlState)blockPopups);
 
+
+  // if security checks (in particular CheckLoadURIWithPrincipal) needs
+  // to be skipped we are creating a codebasePrincipal to make sure
+  // that security check succeeds. Please note that we do not want to
+  // fall back to using the systemPrincipal, because that would also
+  // bypass ContentPolicy checks which should still be enforced.
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  if (!aDoCheckLoadURIChecks) {
+    mozilla::PrincipalOriginAttributes attrs =
+      BasePrincipal::Cast(content->NodePrincipal())->OriginAttributesRef();
+    triggeringPrincipal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+  }
+
   rv = lh->OnLinkClick(content, uri, unitarget.get(), NullString(),
-                       aPostStream, headersDataStream, true);
+                       aPostStream, headersDataStream, true, triggeringPrincipal);
 
   return rv;
 }

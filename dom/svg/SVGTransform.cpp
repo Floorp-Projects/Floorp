@@ -51,7 +51,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mList)
   SVGMatrix* matrix =
     SVGMatrixTearoffTable().GetTearoff(tmp);
   CycleCollectionNoteChild(cb, matrix, "matrix");
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(SVGTransform)
