@@ -47,10 +47,10 @@ struct gfxRect :
 
     gfxPoint AtCorner(mozilla::Corner corner) const {
         switch (corner) {
-            case NS_CORNER_TOP_LEFT: return TopLeft();
-            case NS_CORNER_TOP_RIGHT: return TopRight();
-            case NS_CORNER_BOTTOM_RIGHT: return BottomRight();
-            case NS_CORNER_BOTTOM_LEFT: return BottomLeft();
+            case mozilla::eCornerTopLeft: return TopLeft();
+            case mozilla::eCornerTopRight: return TopRight();
+            case mozilla::eCornerBottomRight: return BottomRight();
+            case mozilla::eCornerBottomLeft: return BottomLeft();
         }
         return gfxPoint(0.0, 0.0);
     }
