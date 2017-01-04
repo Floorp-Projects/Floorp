@@ -32,6 +32,7 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include "ScaledFontFontconfig.h"
+#include "NativeFontResourceFontconfig.h"
 #endif
 
 #ifdef WIN32
@@ -524,8 +525,10 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
         return NativeFontResourceGDI::Create(aData, aSize,
                                              /* aNeedsCairo = */ true);
       }
-#elif XP_DARWIN
+#elif defined(XP_DARWIN)
       return NativeFontResourceMac::Create(aData, aSize);
+#elif defined(MOZ_WIDGET_GTK)
+      return NativeFontResourceFontconfig::Create(aData, aSize);
 #else
       gfxWarning() << "Unable to create cairo scaled font from truetype data";
       return nullptr;
@@ -533,6 +536,24 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
     }
   default:
     gfxWarning() << "Unable to create requested font resource from truetype data";
+    return nullptr;
+  }
+}
+
+already_AddRefed<ScaledFont>
+Factory::CreateScaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength, Float aSize)
+{
+  switch (aType) {
+#ifdef WIN32
+  case FontType::GDI:
+    return ScaledFontWin::CreateFromFontDescriptor(aData, aDataLength, aSize);
+#endif
+#ifdef MOZ_WIDGET_GTK
+  case FontType::FONTCONFIG:
+    return ScaledFontFontconfig::CreateFromFontDescriptor(aData, aDataLength, aSize);
+#endif
+  default:
+    gfxWarning() << "Invalid type specified for ScaledFont font descriptor";
     return nullptr;
   }
 }
