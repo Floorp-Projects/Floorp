@@ -351,6 +351,7 @@ ImageBridgeChild::ImageBridgeChild()
   : mCanSend(false)
   , mCalledClose(false)
   , mFwdTransactionId(0)
+  , mContainerMapLock("ImageBridgeChild.mContainerMapLock")
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -378,11 +379,17 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   MOZ_ASSERT(InImageBridgeChildThread());
   MOZ_ASSERT(CanSend());
 
+  // Note: this is static, rather than per-IBC, so IDs are not re-used across
+  // ImageBridgeChild instances. This is relevant for the GPU process, where
+  // we don't want old IDs to potentially leak into a recreated ImageBridge.
   static uint64_t sNextID = 1;
   uint64_t id = sNextID++;
 
-  MOZ_ASSERT(!mImageContainers.Contains(id));
-  mImageContainers.Put(id, aImageContainer);
+  {
+    MutexAutoLock lock(mContainerMapLock);
+    MOZ_ASSERT(!mImageContainers.Contains(id));
+    mImageContainers.Put(id, aImageContainer);
+  }
 
   PCompositableChild* child =
     SendPCompositableConstructor(aCompositable->GetTextureInfo(), id);
@@ -390,6 +397,13 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
     return;
   }
   aCompositable->InitIPDLActor(child, id);
+}
+
+void
+ImageBridgeChild::ForgetImageContainer(uint64_t aAsyncContainerID)
+{
+  MutexAutoLock lock(mContainerMapLock);
+  mImageContainers.Remove(aAsyncContainerID);
 }
 
 PCompositableChild*
@@ -405,12 +419,14 @@ ImageBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
   AsyncCompositableChild* actor = static_cast<AsyncCompositableChild*>(aActor);
   MOZ_ASSERT(actor->GetAsyncID());
 
-  mImageContainers.Remove(actor->GetAsyncID());
+  {
+    MutexAutoLock lock(mContainerMapLock);
+    mImageContainers.Remove(actor->GetAsyncID());
+  }
 
   AsyncCompositableChild::DestroyActor(aActor);
   return true;
 }
-
 
 Thread* ImageBridgeChild::GetThread() const
 {
@@ -1089,7 +1105,11 @@ mozilla::ipc::IPCResult
 ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications)
 {
   for (auto& n : aNotifications) {
-    RefPtr<ImageContainer> imageContainer = mImageContainers.Get(n.asyncCompositableID());
+    RefPtr<ImageContainer> imageContainer;
+    {
+      MutexAutoLock lock(mContainerMapLock);
+      imageContainer = mImageContainers.Get(n.asyncCompositableID());
+    }
     if (imageContainer) {
       imageContainer->NotifyComposite(n);
     }
