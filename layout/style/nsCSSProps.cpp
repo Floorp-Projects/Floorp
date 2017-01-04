@@ -1479,9 +1479,9 @@ const KTableEntry nsCSSProps::kFlexWrapKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kHyphensKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_HYPHENS_NONE },
-  { eCSSKeyword_manual, NS_STYLE_HYPHENS_MANUAL },
-  { eCSSKeyword_auto, NS_STYLE_HYPHENS_AUTO },
+  { eCSSKeyword_none, StyleHyphens::None },
+  { eCSSKeyword_manual, StyleHyphens::Manual },
+  { eCSSKeyword_auto, StyleHyphens::Auto },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
