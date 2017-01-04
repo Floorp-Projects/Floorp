@@ -179,7 +179,9 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
                    nsRestyleHint restyle_hint, nsChangeHint change_hint)
 SERVO_BINDING_FUNC(Servo_CheckChangeHint, nsChangeHint, RawGeckoElementBorrowed element)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, mozilla::ConsumeStyleBehavior consume)
+                   RawGeckoElementBorrowed element,
+                   RawServoStyleSetBorrowed set,
+                   mozilla::ConsumeStyleBehavior consume)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    bool is_probe, RawServoStyleSetBorrowed set)

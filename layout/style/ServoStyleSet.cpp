@@ -133,7 +133,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
     computedValues =
       Servo_ResolveStyleLazily(element, nullptr, aConsume, mRawSet.get()).Consume();
   } else {
-    computedValues = Servo_ResolveStyle(element, aConsume).Consume();
+    computedValues = ResolveServoStyle(element, aConsume);
   }
 
   MOZ_ASSERT(computedValues);
@@ -555,4 +555,11 @@ void
 ServoStyleSet::RecomputeDefaultComputedStyles()
 {
   Servo_StyleSet_RecomputeDefaultStyles(mRawSet.get(), mPresContext);
+}
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveServoStyle(Element* aElement,
+                                 ConsumeStyleBehavior aConsume)
+{
+  return Servo_ResolveStyle(aElement, mRawSet.get(), aConsume).Consume();  
 }
