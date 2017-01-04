@@ -474,13 +474,9 @@ function Pmanual_update(aVersion) {
           onInstallEnded: resolve
         })
       }));
-    }
 
-    // Use the default web installer to cancel/allow installs based on whether
-    // the add-on is valid or not.
-    let webInstaller = Cc["@mozilla.org/addons/web-install-listener;1"]
-                       .getService(Ci.amIWebInstallListener);
-    webInstaller.onWebInstallRequested(null, null, installs);
+      AddonManager.installAddonFromAOM(null, null, install);
+    }
 
     return Promise.all(completePromises);
   });

@@ -89,6 +89,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PromptUtils",
+                                  "resource://gre/modules/SharedPromptUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   let certUtils = {};
@@ -442,6 +446,257 @@ BrowserListener.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
                                          Ci.nsIWebProgressListener,
                                          Ci.nsIObserver])
+};
+
+function installNotifyObservers(aTopic, aBrowser, aUri, aInstalls, aInstallFn) {
+  let info = {
+    wrappedJSObject: {
+      browser: aBrowser,
+      originatingURI: aUri,
+      installs: aInstalls,
+      install: aInstallFn,
+    },
+  };
+  Services.obs.notifyObservers(info, aTopic, null);
+}
+
+/**
+ * Creates a new installer to monitor downloads and prompt to install when
+ * ready
+ *
+ * @param  aBrowser
+ *         The browser that started the installations
+ * @param  aUrl
+ *         The URL that started the installations
+ * @param  aInstalls
+ *         An array of AddonInstalls
+ */
+function Installer(aBrowser, aUrl, aInstalls) {
+  this.browser = aBrowser;
+  this.url = aUrl;
+  this.downloads = aInstalls;
+  this.installed = [];
+
+  installNotifyObservers("addon-install-started", aBrowser, aUrl, aInstalls);
+
+  const READY_STATES = [
+    AddonManager.STATE_AVAILABLE,
+    AddonManager.STATE_DOWNLOAD_FAILED,
+    AddonManager.STATE_INSTALL_FAILED,
+    AddonManager.STATE_CANCELLED,
+  ];
+  for (let install of aInstalls) {
+    install.addListener(this);
+
+    // Start downloading if it hasn't already begun
+    if (READY_STATES.indexOf(install.state) != -1)
+      install.install();
+  }
+
+  this.checkAllDownloaded();
+}
+
+Installer.prototype = {
+  URI_XPINSTALL_DIALOG: "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul",
+  browser: null,
+  downloads: null,
+  installed: null,
+  isDownloading: true,
+
+  /**
+   * Checks if all downloads are now complete and if so prompts to install.
+   */
+  checkAllDownloaded: function() {
+    // Prevent re-entrancy caused by the confirmation dialog cancelling unwanted
+    // installs.
+    if (!this.isDownloading)
+      return;
+
+    var failed = [];
+    var installs = [];
+
+    for (let install of this.downloads) {
+      switch (install.state) {
+        case AddonManager.STATE_AVAILABLE:
+        case AddonManager.STATE_DOWNLOADING:
+          // Exit early if any add-ons haven't started downloading yet or are
+          // still downloading
+          return;
+        case AddonManager.STATE_DOWNLOAD_FAILED:
+          failed.push(install);
+          break;
+        case AddonManager.STATE_DOWNLOADED:
+          // App disabled items are not compatible and so fail to install
+          if (install.addon.appDisabled)
+            failed.push(install);
+          else
+            installs.push(install);
+          break;
+        case AddonManager.STATE_CANCELLED:
+          // Just ignore cancelled downloads
+          break;
+        default:
+          logger.warn("Download of " + install.sourceURI.spec + " in unexpected state " +
+                      install.state);
+      }
+    }
+
+    this.isDownloading = false;
+    this.downloads = installs;
+
+    if (failed.length > 0) {
+      // Stop listening and cancel any installs that are failed because of
+      // compatibility reasons.
+      for (let install of failed) {
+        if (install.state == AddonManager.STATE_DOWNLOADED) {
+          install.removeListener(this);
+          install.cancel();
+        }
+      }
+      installNotifyObservers("addon-install-failed", this.browser, this.url, failed);
+    }
+
+    // If none of the downloads were successful then exit early
+    if (this.downloads.length == 0)
+      return;
+
+    // Check for a custom installation prompt that may be provided by the
+    // applicaton
+    if ("@mozilla.org/addons/web-install-prompt;1" in Cc) {
+      try {
+        let prompt = Cc["@mozilla.org/addons/web-install-prompt;1"].
+                                  getService(Ci.amIWebInstallPrompt);
+        prompt.confirm(this.browser, this.url, this.downloads, this.downloads.length);
+        return;
+      } catch (e) {}
+    }
+
+    if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+      installNotifyObservers("addon-install-confirmation", this.browser, this.url, this.downloads);
+      return;
+    }
+
+    let args = {};
+    args.url = this.url;
+    args.installs = this.downloads;
+    args.wrappedJSObject = args;
+
+    try {
+      Cc["@mozilla.org/base/telemetry;1"].
+                   getService(Ci.nsITelemetry).
+                   getHistogramById("SECURITY_UI").
+                   add(Ci.nsISecurityUITelemetry.WARNING_CONFIRM_ADDON_INSTALL);
+      let parentWindow = null;
+      if (this.browser) {
+        parentWindow = this.browser.ownerDocument.defaultView;
+        PromptUtils.fireDialogEvent(parentWindow, "DOMWillOpenModalDialog", this.browser);
+      }
+      Services.ww.openWindow(parentWindow, this.URI_XPINSTALL_DIALOG,
+                             null, "chrome,modal,centerscreen", args);
+    } catch (e) {
+      logger.warn("Exception showing install confirmation dialog", e);
+      for (let install of this.downloads) {
+        install.removeListener(this);
+        // Cancel the installs, as currently there is no way to make them fail
+        // from here.
+        install.cancel();
+      }
+      installNotifyObservers("addon-install-cancelled", this.browser, this.url,
+                      this.downloads);
+    }
+  },
+
+  /**
+   * Checks if all installs are now complete and if so notifies observers.
+   */
+  checkAllInstalled: function() {
+    var failed = [];
+
+    for (let install of this.downloads) {
+      switch (install.state) {
+        case AddonManager.STATE_DOWNLOADED:
+        case AddonManager.STATE_INSTALLING:
+          // Exit early if any add-ons haven't started installing yet or are
+          // still installing
+          return;
+        case AddonManager.STATE_INSTALL_FAILED:
+          failed.push(install);
+          break;
+      }
+    }
+
+    this.downloads = null;
+
+    if (failed.length > 0)
+      installNotifyObservers("addon-install-failed", this.browser, this.url, failed);
+
+    if (this.installed.length > 0)
+      installNotifyObservers("addon-install-complete", this.browser, this.url, this.installed);
+    this.installed = null;
+  },
+
+  onDownloadCancelled: function(aInstall) {
+    aInstall.removeListener(this);
+    this.checkAllDownloaded();
+  },
+
+  onDownloadFailed: function(aInstall) {
+    aInstall.removeListener(this);
+    this.checkAllDownloaded();
+  },
+
+  onDownloadEnded: function(aInstall) {
+    this.checkAllDownloaded();
+    return false;
+  },
+
+  onInstallCancelled: function(aInstall) {
+    aInstall.removeListener(this);
+    this.checkAllInstalled();
+  },
+
+  onInstallFailed: function(aInstall) {
+    aInstall.removeListener(this);
+    this.checkAllInstalled();
+  },
+
+  onInstallEnded: function(aInstall) {
+    aInstall.removeListener(this);
+    this.installed.push(aInstall);
+
+    // If installing a theme that is disabled and can be enabled then enable it
+    if (aInstall.addon.type == "theme" &&
+        aInstall.addon.userDisabled == true &&
+        aInstall.addon.appDisabled == false) {
+          aInstall.addon.userDisabled = false;
+    }
+
+    this.checkAllInstalled();
+  }
+};
+
+const weblistener = {
+  onWebInstallDisabled: function(aBrowser, aUri, aInstalls) {
+    installNotifyObservers("addon-install-disabled", aBrowser, aUri, aInstalls);
+  },
+
+  onWebInstallOriginBlocked: function(aBrowser, aUri, aInstalls) {
+    installNotifyObservers("addon-install-origin-blocked", aBrowser, aUri, aInstalls);
+    return false;
+  },
+
+  onWebInstallBlocked: function(aBrowser, aUri, aInstalls) {
+    installNotifyObservers("addon-install-blocked", aBrowser, aUri, aInstalls,
+                           function() { new Installer(this.browser, this.originatingURI, this.installs); });
+    return false;
+  },
+
+  onWebInstallRequested: function(aBrowser, aUri, aInstalls) {
+    new Installer(aBrowser, aUri, aInstalls);
+
+    // We start the installs ourself
+    return false;
+  },
 };
 
 /**
@@ -2045,12 +2300,6 @@ var AddonManagerInternal = {
       throw Components.Exception("aInstallingPrincipal must be a nsIPrincipal",
                                  Cr.NS_ERROR_INVALID_ARG);
 
-    if (!("@mozilla.org/addons/web-install-listener;1" in Cc)) {
-      logger.warn("No web installer available, cancelling install");
-      aInstall.cancel();
-      return;
-    }
-
     // When a chrome in-content UI has loaded a <browser> inside to host a
     // website we want to do our security checks on the inner-browser but
     // notify front-end that install events came from the outer-browser (the
@@ -2065,9 +2314,6 @@ var AddonManagerInternal = {
       topBrowser = docShell.chromeEventHandler;
 
     try {
-      let weblistener = Cc["@mozilla.org/addons/web-install-listener;1"].
-                        getService(Ci.amIWebInstallListener);
-
       if (!this.isInstallEnabled(aMimetype)) {
         aInstall.cancel();
 
@@ -2077,10 +2323,8 @@ var AddonManagerInternal = {
       } else if (!aBrowser.contentPrincipal || !aInstallingPrincipal.subsumes(aBrowser.contentPrincipal)) {
         aInstall.cancel();
 
-        if (weblistener instanceof Ci.amIWebInstallListener2) {
-          weblistener.onWebInstallOriginBlocked(topBrowser, aInstallingPrincipal.URI,
-                                                [aInstall], 1);
-        }
+        weblistener.onWebInstallOriginBlocked(topBrowser, aInstallingPrincipal.URI,
+                                              [aInstall], 1);
         return;
       }
 
@@ -2105,6 +2349,25 @@ var AddonManagerInternal = {
       logger.warn("Failure calling web installer", e);
       aInstall.cancel();
     }
+  },
+
+  /**
+   * Starts installation of an AddonInstall created from add-ons manager
+   * front-end code (e.g., drag-and-drop of xpis or "Install Add-on from File"
+   *
+   * @param  browser
+   *         The browser element where the installation was initiated
+   * @param  uri
+   *         The URI of the page where the installation was initiated
+   * @param  install
+   *         The AddonInstall to be installed
+   */
+  installAddonFromAOM(browser, uri, install) {
+    if (!gStarted)
+      throw Components.Exception("AddonManager is not initialized",
+                                 Cr.NS_ERROR_NOT_INITIALIZED);
+
+    weblistener.onWebInstallRequested(browser, uri, [install]);
   },
 
   /**
@@ -3407,6 +3670,10 @@ this.AddonManager = {
     AddonManagerInternal.installAddonFromWebpage(aType, aBrowser,
                                                  aInstallingPrincipal,
                                                  aInstall);
+  },
+
+  installAddonFromAOM(aBrowser, aUri, aInstall) {
+    AddonManagerInternal.installAddonFromAOM(aBrowser, aUri, aInstall);
   },
 
   installTemporaryAddon(aDirectory) {
