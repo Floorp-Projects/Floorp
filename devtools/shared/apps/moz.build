@@ -5,6 +5,5 @@
 
 DevToolsModules(
     'app-actor-front.js',
-    'Devices.jsm',
-    'Simulator.jsm'
+    'Devices.jsm'
 )
