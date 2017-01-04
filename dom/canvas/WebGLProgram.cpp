@@ -172,7 +172,7 @@ webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
 
 //////////
 
-#define DUMP_SHADERVAR_MAPPINGS
+//#define DUMP_SHADERVAR_MAPPINGS
 
 static already_AddRefed<const webgl::LinkedProgramInfo>
 QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
@@ -240,12 +240,22 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
         ///////
 
-        const GLint loc = gl->fGetAttribLocation(prog->mGLName,
-                                                 mappedName.BeginReading());
+        GLint loc = gl->fGetAttribLocation(prog->mGLName,
+                                           mappedName.BeginReading());
+        if (gl->WorkAroundDriverBugs() &&
+            mappedName.EqualsIgnoreCase("gl_", 3))
+        {
+            // Catch when this is fixed, so we can remove this.
+            // Or, discover if this happens outside ANGLE.
+            MOZ_ASSERT(gl->IsANGLE() == (loc != -1));
+
+            loc = -1;
+        }
 #ifdef DUMP_SHADERVAR_MAPPINGS
         printf_stderr("[attrib %u/%u] @%i %s->%s\n", i, numActiveAttribs, loc,
                       userName.BeginReading(), mappedName.BeginReading());
 #endif
+        MOZ_ASSERT_IF(mappedName.EqualsIgnoreCase("gl_", 3), loc == -1);
 
         ///////
 
