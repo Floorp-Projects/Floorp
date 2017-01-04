@@ -39573,6 +39573,12 @@
             "url": "/selection/setBaseAndExtent.html"
           }
         ],
+        "service-workers/service-worker/registration-useCache.https.html": [
+          {
+            "path": "service-workers/service-worker/registration-useCache.https.html",
+            "url": "/service-workers/service-worker/registration-useCache.https.html"
+          }
+        ],
         "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html": [
           {
             "path": "uievents/order-of-events/focus-events/focus-automated-blink-webkit.html",
