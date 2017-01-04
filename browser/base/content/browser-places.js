@@ -118,8 +118,7 @@ var StarUI = {
           case KeyEvent.DOM_VK_RETURN:
             if (aEvent.target.classList.contains("expander-up") ||
                 aEvent.target.classList.contains("expander-down") ||
-                aEvent.target.id == "editBMPanel_newFolderButton" ||
-                aEvent.target.id == "editBookmarkPanelRemoveButton") {
+                aEvent.target.id == "editBMPanel_newFolderButton") {
               // XXX Why is this necessary? The defaultPrevented check should
               //    be enough.
               break;
