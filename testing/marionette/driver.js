@@ -590,6 +590,8 @@ GeckoDriver.prototype.newSession = function*(cmd, resp) {
   yield registerBrowsers;
   yield browserListening;
 
+  this.curBrowser.browserForTab.focus();
+
   return {
     sessionId: this.sessionId,
     capabilities: this.sessionCapabilities,
@@ -1027,6 +1029,7 @@ GeckoDriver.prototype.get = function*(cmd, resp) {
   });
 
   yield get;
+  this.curBrowser.browserForTab.focus();
 };
 
 /**
@@ -2336,8 +2339,7 @@ GeckoDriver.prototype.sessionTearDown = function (cmd, resp) {
   if (this.mainFrame) {
     try {
       this.mainFrame.focus();
-    }
-    catch (e) {
+    } catch (e) {
       this.mainFrame = null;
     }
   }
