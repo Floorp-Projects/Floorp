@@ -21,7 +21,7 @@ function checkInstallConfirmation(...urls) {
 
   let notificationCount = 0;
   let observer = {
-    observe: function(aSubject, aTopic, aData) {
+    observe(aSubject, aTopic, aData) {
       var installInfo = aSubject.wrappedJSObject;
       if (gTestInWindow)
         is(installInfo.browser, null, "Notification should have a null browser");
