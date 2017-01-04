@@ -239,19 +239,21 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose()
 }
 
 PCompositableParent*
-ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo,
-                                            const uint64_t& aID,
-                                            PImageContainerParent* aImageContainer)
+ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo, const uint64_t& aID)
 {
-  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo, aImageContainer);
+  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo);
   if (mCompositables.find(aID) != mCompositables.end()) {
     NS_ERROR("Async compositable ID already exists");
+    return actor;
+  }
+  if (!aID) {
+    NS_ERROR("Expected non-zero async compositable ID");
     return actor;
   }
 
   CompositableHost* host = CompositableHost::FromIPDLActor(actor);
 
-  host->SetAsyncID(aID);
+  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), aID));
   mCompositables[aID] = host;
 
   return actor;
@@ -260,7 +262,8 @@ ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo,
 bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
   if (CompositableHost* host = CompositableHost::FromIPDLActor(aActor)) {
-    mCompositables.erase(host->GetAsyncID());
+    const AsyncCompositableRef& ref = host->GetAsyncRef();
+    mCompositables.erase(ref.mAsyncId);
   }
   return CompositableHost::DestroyIPDLActor(aActor);
 }
@@ -316,20 +319,20 @@ ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageDat
 class ProcessIdComparator
 {
 public:
-  bool Equals(const ImageCompositeNotification& aA,
-              const ImageCompositeNotification& aB) const
+  bool Equals(const ImageCompositeNotificationInfo& aA,
+              const ImageCompositeNotificationInfo& aB) const
   {
-    return aA.imageContainerParent()->OtherPid() == aB.imageContainerParent()->OtherPid();
+    return aA.mImageBridgeProcessId == aB.mImageBridgeProcessId;
   }
-  bool LessThan(const ImageCompositeNotification& aA,
-                const ImageCompositeNotification& aB) const
+  bool LessThan(const ImageCompositeNotificationInfo& aA,
+                const ImageCompositeNotificationInfo& aB) const
   {
-    return aA.imageContainerParent()->OtherPid() < aB.imageContainerParent()->OtherPid();
+    return aA.mImageBridgeProcessId < aB.mImageBridgeProcessId;
   }
 };
 
 /* static */ bool
-ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& aNotifications)
+ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo>& aNotifications)
 {
   // Group the notifications by destination process ID and then send the
   // notifications in one message per group.
@@ -338,13 +341,13 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotification>& a
   bool ok = true;
   while (i < aNotifications.Length()) {
     AutoTArray<ImageCompositeNotification,1> notifications;
-    notifications.AppendElement(aNotifications[i]);
+    notifications.AppendElement(aNotifications[i].mNotification);
     uint32_t end = i + 1;
-    MOZ_ASSERT(aNotifications[i].imageContainerParent());
-    ProcessId pid = aNotifications[i].imageContainerParent()->OtherPid();
+    MOZ_ASSERT(aNotifications[i].mNotification.asyncCompositableID());
+    ProcessId pid = aNotifications[i].mImageBridgeProcessId;
     while (end < aNotifications.Length() &&
-           aNotifications[end].imageContainerParent()->OtherPid() == pid) {
-      notifications.AppendElement(aNotifications[end]);
+           aNotifications[end].mImageBridgeProcessId == pid) {
+      notifications.AppendElement(aNotifications[end].mNotification);
       ++end;
     }
     GetInstance(pid)->SendPendingAsyncMessages();

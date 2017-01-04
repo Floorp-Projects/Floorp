@@ -170,8 +170,7 @@ public:
   virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
 
   PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo,
-                                              const uint64_t& aID,
-                                              PImageContainerChild* aChild) override;
+                                              const uint64_t& aID) override;
   bool DeallocPCompositableChild(PCompositableChild* aActor) override;
 
   virtual PTextureChild*
@@ -393,6 +392,11 @@ private:
    * It defer calling of TextureClient recycle callback.
    */
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingRecycled;
+
+  /**
+   * Mapping from async compositable IDs to image containers.
+   */
+  nsDataHashtable<nsUint64HashKey, RefPtr<ImageContainer>> mImageContainers;
 };
 
 } // namespace layers

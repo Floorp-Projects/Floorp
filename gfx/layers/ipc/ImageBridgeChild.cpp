@@ -383,14 +383,11 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   static uint64_t sNextID = 1;
   uint64_t id = sNextID++;
 
-  PImageContainerChild* imageContainerChild = nullptr;
-  if (aImageContainer)
-    imageContainerChild = aImageContainer->GetPImageContainerChild();
+  MOZ_ASSERT(!mImageContainers.Contains(id));
+  mImageContainers.Put(id, aImageContainer);
 
   PCompositableChild* child =
-    SendPCompositableConstructor(aCompositable->GetTextureInfo(),
-                                 id,
-                                 imageContainerChild);
+    SendPCompositableConstructor(aCompositable->GetTextureInfo(), id);
   if (!child) {
     return;
   }
@@ -398,17 +395,20 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
 }
 
 PCompositableChild*
-ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo,
-                                          const uint64_t& aID,
-                                          PImageContainerChild* aChild)
+ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo, const uint64_t& aID)
 {
   MOZ_ASSERT(CanSend());
-  return AsyncCompositableChild::CreateActor();
+  return AsyncCompositableChild::CreateActor(aID);
 }
 
 bool
 ImageBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
 {
+  AsyncCompositableChild* actor = static_cast<AsyncCompositableChild*>(aActor);
+  MOZ_ASSERT(actor->GetAsyncID());
+
+  mImageContainers.Remove(actor->GetAsyncID());
+
   AsyncCompositableChild::DestroyActor(aActor);
   return true;
 }
@@ -1135,10 +1135,9 @@ mozilla::ipc::IPCResult
 ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications)
 {
   for (auto& n : aNotifications) {
-    ImageContainerChild* child =
-      static_cast<ImageContainerChild*>(n.imageContainerChild());
-    if (child) {
-      child->NotifyComposite(n);
+    RefPtr<ImageContainer> imageContainer = mImageContainers.Get(n.asyncCompositableID());
+    if (imageContainer) {
+      imageContainer->NotifyComposite(n);
     }
   }
   return IPC_OK();
