@@ -166,7 +166,7 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   bool recreateContext = primaryFrame && changeHint;
   if (recreateContext) {
     RefPtr<ServoComputedValues> computedValues
-      = Servo_ResolveStyle(aElement, ConsumeStyleBehavior::Consume).Consume();
+      = aStyleSet->ResolveServoStyle(aElement, ConsumeStyleBehavior::Consume);
 
     // Hold the old style context alive, because it could become a dangling
     // pointer during the replacement. In practice it's not a huge deal (on
