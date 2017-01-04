@@ -7,7 +7,6 @@
 #include "mozilla/ServoBindings.h"
 
 #include "ChildIterator.h"
-#include "StyleStructContext.h"
 #include "gfxFontFamilyList.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSParser.h"
