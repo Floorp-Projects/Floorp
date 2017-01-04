@@ -62,18 +62,15 @@ var PrefObserver = {
    if (aTopic == "xpcom-shutdown") {
      Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
      Services.obs.removeObserver(this, "xpcom-shutdown");
-   }
-   else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
+   } else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
      let debugLogEnabled = false;
      try {
        debugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED);
-     }
-     catch (e) {
+     } catch (e) {
      }
      if (debugLogEnabled) {
        parentLogger.level = Log.Level.Debug;
-     }
-     else {
+     } else {
        parentLogger.level = Log.Level.Warn;
      }
    }
@@ -207,8 +204,7 @@ this.DeferredSave.prototype = {
     let toSave = null;
     try {
       toSave = this._dataProvider();
-    }
-    catch (e) {
+    } catch (e) {
         this.logger.error("Deferred save dataProvider failed", e);
       writing.then(null, error => {})
         .then(count => {

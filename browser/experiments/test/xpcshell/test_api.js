@@ -90,7 +90,7 @@ add_task(function* test_getExperiments() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate1 = futureDate(baseDate,  50 * MS_IN_ONE_DAY);
+  let startDate1 = futureDate(baseDate, 50 * MS_IN_ONE_DAY);
   let endDate1   = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let startDate2 = futureDate(baseDate, 150 * MS_IN_ONE_DAY);
   let endDate2   = futureDate(baseDate, 200 * MS_IN_ONE_DAY);
@@ -161,8 +161,7 @@ add_task(function* test_getExperiments() {
   try {
     yield experiments.getExperimentBranch();
     Assert.ok(false, "getExperimentBranch should fail with no experiment");
-  }
-  catch (e) {
+  } catch (e) {
     Assert.ok(true, "getExperimentBranch correctly threw");
   }
 
@@ -307,7 +306,7 @@ add_task(function* test_getActiveExperimentID() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate1 = futureDate(baseDate,  50 * MS_IN_ONE_DAY);
+  let startDate1 = futureDate(baseDate, 50 * MS_IN_ONE_DAY);
   let endDate1   = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
 
   gManifestObject = {
@@ -357,7 +356,7 @@ add_task(function* test_addonAlreadyInstalled() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate  = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate  = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate    = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -636,7 +635,7 @@ add_task(function* test_installFailure() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -767,7 +766,7 @@ add_task(function* test_userDisabledAndUpdated() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -866,7 +865,7 @@ add_task(function* test_updateActiveExperiment() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -957,7 +956,7 @@ add_task(function* test_disableActiveExperiment() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -1050,7 +1049,7 @@ add_task(function* test_freezePendingExperiment() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -1128,7 +1127,7 @@ add_task(function* test_freezeActiveExperiment() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -1208,7 +1207,7 @@ add_task(function* test_removeActiveExperiment() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate  = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate  = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate    = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
   let startDate2 = futureDate(baseDate, 20000 * MS_IN_ONE_DAY);
   let endDate2   = futureDate(baseDate, 30000 * MS_IN_ONE_DAY);
@@ -1299,7 +1298,7 @@ add_task(function* test_invalidUrl() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate   = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -1355,7 +1354,7 @@ add_task(function* test_unexpectedUninstall() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate  = futureDate(baseDate,   100 * MS_IN_ONE_DAY);
+  let startDate  = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let endDate    = futureDate(baseDate, 10000 * MS_IN_ONE_DAY);
 
   // The manifest data we test with.
@@ -1536,8 +1535,8 @@ add_task(function* testMaxStartTimeEvaluation() {
   // Dates the following tests are based on.
 
   let startDate    = new Date(2014, 5, 1, 12);
-  let now          = futureDate(startDate, 10   * MS_IN_ONE_DAY);
-  let maxStartDate = futureDate(startDate, 100  * MS_IN_ONE_DAY);
+  let now          = futureDate(startDate, 10 * MS_IN_ONE_DAY);
+  let maxStartDate = futureDate(startDate, 100 * MS_IN_ONE_DAY);
   let endDate      = futureDate(startDate, 1000 * MS_IN_ONE_DAY);
 
   defineNow(gPolicy, now);

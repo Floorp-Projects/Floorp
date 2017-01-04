@@ -69,7 +69,8 @@ var MemoryFlameGraphView = Heritage.extend(DetailsSubview, {
                       && L10N.getStr("table.idle")
     });
 
-    this.graph.setData({ data,
+    this.graph.setData({
+      data,
       bounds: {
         startTime: 0,
         endTime: duration

@@ -17,8 +17,7 @@ Cu.import("resource://testing-common/httpd.js", this);
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
-function contentHandler(metadata, response)
-{
+function contentHandler(metadata, response) {
   dump("contentHandler called for path: " + metadata._path + "\n");
   // We intentionally don't finish writing the response here to let the
   // client time out.

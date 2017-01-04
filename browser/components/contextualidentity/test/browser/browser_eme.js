@@ -30,8 +30,7 @@ function* openTabInUserContext(uri, userContextId) {
   return {tab, browser};
 }
 
-function HexToBase64(hex)
-{
+function HexToBase64(hex) {
   var bin = "";
   for (var i = 0; i < hex.length; i += 2) {
     bin += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
@@ -39,8 +38,7 @@ function HexToBase64(hex)
   return window.btoa(bin).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
 }
 
-function Base64ToHex(str)
-{
+function Base64ToHex(str) {
   var bin = window.atob(str.replace(/-/g, "+").replace(/_/g, "/"));
   var res = "";
   for (var i = 0; i < bin.length; i++) {

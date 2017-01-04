@@ -13,8 +13,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gHistory",
 // change its uri, then remove it, and
 // for each change check that moz_hosts has correctly been updated.
 
-function isHostInMozPlaces(aURI)
-{
+function isHostInMozPlaces(aURI) {
   let stmt = DBConn().createStatement(
     `SELECT url
        FROM moz_places
@@ -32,8 +31,7 @@ function isHostInMozPlaces(aURI)
   return result;
 }
 
-function isHostInMozHosts(aURI, aTyped, aPrefix)
-{
+function isHostInMozHosts(aURI, aTyped, aPrefix) {
   let stmt = DBConn().createStatement(
     `SELECT host, typed, prefix
        FROM moz_hosts
@@ -68,8 +66,7 @@ var urls = [{uri: NetUtil.newURI("http://visit1.mozilla.org"),
 
 const NEW_URL = "http://different.mozilla.org/";
 
-add_task(function* test_moz_hosts_update()
-{
+add_task(function* test_moz_hosts_update() {
   let places = [];
   urls.forEach(function(url) {
     let place = { uri: url.uri,
@@ -85,8 +82,7 @@ add_task(function* test_moz_hosts_update()
   do_check_true(isHostInMozHosts(urls[2].uri, urls[2].typed, urls[2].prefix));
 });
 
-add_task(function* test_remove_places()
-{
+add_task(function* test_remove_places() {
   for (let idx in urls) {
     PlacesUtils.history.removePage(urls[idx].uri);
   }
@@ -98,8 +94,7 @@ add_task(function* test_remove_places()
   }
 });
 
-add_task(function* test_bookmark_changes()
-{
+add_task(function* test_bookmark_changes() {
   let testUri = NetUtil.newURI("http://test.mozilla.org");
 
   let itemId = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -120,8 +115,7 @@ add_task(function* test_bookmark_changes()
   do_check_false(isHostInMozHosts(NetUtil.newURI("http://test.mozilla.org"), false, null));
 });
 
-add_task(function* test_bookmark_removal()
-{
+add_task(function* test_bookmark_removal() {
   let itemId = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.unfiledBookmarksFolderId,
                                                     PlacesUtils.bookmarks.DEFAULT_INDEX);
   let newUri = NetUtil.newURI(NEW_URL);
@@ -131,8 +125,7 @@ add_task(function* test_bookmark_removal()
   do_check_false(isHostInMozHosts(newUri, false, null));
 });
 
-add_task(function* test_moz_hosts_typed_update()
-{
+add_task(function* test_moz_hosts_typed_update() {
   const TEST_URI = NetUtil.newURI("http://typed.mozilla.com");
   let places = [{ uri: TEST_URI
                 , title: "test for " + TEST_URI.spec
@@ -148,8 +141,7 @@ add_task(function* test_moz_hosts_typed_update()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_moz_hosts_www_remove()
-{
+add_task(function* test_moz_hosts_www_remove() {
   function* test_removal(aURIToRemove, aURIToKeep, aCallback) {
     let places = [{ uri: aURIToRemove
                   , title: "test for " + aURIToRemove.spec
@@ -178,8 +170,7 @@ add_task(function* test_moz_hosts_www_remove()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_moz_hosts_ftp_matchall()
-{
+add_task(function* test_moz_hosts_ftp_matchall() {
   const TEST_URI_1 = NetUtil.newURI("ftp://www.mozilla.com/");
   const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
@@ -191,8 +182,7 @@ add_task(function* test_moz_hosts_ftp_matchall()
   do_check_true(isHostInMozHosts(TEST_URI_1, true, "ftp://"));
 });
 
-add_task(function* test_moz_hosts_ftp_not_matchall()
-{
+add_task(function* test_moz_hosts_ftp_not_matchall() {
   const TEST_URI_1 = NetUtil.newURI("http://mozilla.com/");
   const TEST_URI_2 = NetUtil.newURI("ftp://mozilla.com/");
 
@@ -204,8 +194,7 @@ add_task(function* test_moz_hosts_ftp_not_matchall()
   do_check_true(isHostInMozHosts(TEST_URI_1, true, null));
 });
 
-add_task(function* test_moz_hosts_update_2()
-{
+add_task(function* test_moz_hosts_update_2() {
   // Check that updating trigger takes into account prefixes for different
   // rev_hosts.
   const TEST_URI_1 = NetUtil.newURI("https://www.google.it/");
@@ -220,7 +209,6 @@ add_task(function* test_moz_hosts_update_2()
   do_check_true(isHostInMozHosts(TEST_URI_1, true, "https://www."));
 });
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }

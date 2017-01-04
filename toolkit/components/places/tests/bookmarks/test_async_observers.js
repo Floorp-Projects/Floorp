@@ -18,8 +18,7 @@ var observer = {
    * directly in the observer because there are cases where we must wait for
    * other asynchronous events to be completed in addition to this.
    */
-  setupCompletionPromise()
-  {
+  setupCompletionPromise() {
     this.observedBookmarks = 0;
     this.deferred = Promise.defer();
     return this.deferred.promise;
@@ -31,8 +30,7 @@ var observer = {
   onItemRemoved() {},
   onItemMoved() {},
   onItemChanged(aItemId, aProperty, aIsAnnotation, aNewValue,
-                          aLastModified, aItemType)
-  {
+                          aLastModified, aItemType) {
     do_print("Check that we got the correct change information.");
     do_check_neq(this.bookmarks.indexOf(aItemId), -1);
     if (aProperty == "favicon") {
@@ -40,14 +38,12 @@ var observer = {
       do_check_eq(aNewValue, SMALLPNG_DATA_URI.spec);
       do_check_eq(aLastModified, 0);
       do_check_eq(aItemType, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    }
-    else if (aProperty == "cleartime") {
+    } else if (aProperty == "cleartime") {
       do_check_false(aIsAnnotation);
       do_check_eq(aNewValue, "");
       do_check_eq(aLastModified, 0);
       do_check_eq(aItemType, PlacesUtils.bookmarks.TYPE_BOOKMARK);
-    }
-    else {
+    } else {
       do_throw("Unexpected property change " + aProperty);
     }
 
@@ -55,8 +51,7 @@ var observer = {
       this.deferred.resolve();
     }
   },
-  onItemVisited(aItemId, aVisitId, aTime)
-  {
+  onItemVisited(aItemId, aVisitId, aTime) {
     do_print("Check that we got the correct visit information.");
     do_check_neq(this.bookmarks.indexOf(aItemId), -1);
     this.observedVisitId = aVisitId;
@@ -72,8 +67,7 @@ var observer = {
 };
 PlacesUtils.bookmarks.addObserver(observer, false);
 
-add_task(function* test_add_visit()
-{
+add_task(function* test_add_visit() {
   let observerPromise = observer.setupCompletionPromise();
 
   // Add a visit to the bookmark and wait for the observer.
@@ -102,8 +96,7 @@ add_task(function* test_add_visit()
   do_check_eq(observer.observedVisitId, visitId);
 });
 
-add_task(function* test_add_icon()
-{
+add_task(function* test_add_icon() {
   let observerPromise = observer.setupCompletionPromise();
   PlacesUtils.favicons.setAndFetchFaviconForPage(NetUtil.newURI("http://book.ma.rk/"),
                                                  SMALLPNG_DATA_URI, true,
@@ -113,20 +106,17 @@ add_task(function* test_add_icon()
   yield observerPromise;
 });
 
-add_task(function* test_remove_page()
-{
+add_task(function* test_remove_page() {
   let observerPromise = observer.setupCompletionPromise();
   PlacesUtils.history.removePage(NetUtil.newURI("http://book.ma.rk/"));
   yield observerPromise;
 });
 
-add_task(function cleanup()
-{
+add_task(function cleanup() {
   PlacesUtils.bookmarks.removeObserver(observer, false);
 });
 
-add_task(function* shutdown()
-{
+add_task(function* shutdown() {
   // Check that async observers don't try to create async statements after
   // shutdown.  That would cause assertions, since the async thread is gone
   // already.  Note that in such a case the notifications are not fired, so we
@@ -157,8 +147,7 @@ add_task(function* shutdown()
   yield deferred.promise;
 });
 
-function run_test()
-{
+function run_test() {
   // Add multiple bookmarks to the same uri.
   observer.bookmarks.push(
     PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,

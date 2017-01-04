@@ -66,8 +66,7 @@ try {
   do_throw("Could not get tagging service\n");
 }
 
-function ensure_tag_results(uris, searchTerm)
-{
+function ensure_tag_results(uris, searchTerm) {
   print("Searching for '" + searchTerm + "'");
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);

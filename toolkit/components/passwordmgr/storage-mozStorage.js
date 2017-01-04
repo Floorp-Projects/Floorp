@@ -99,18 +99,18 @@ LoginManagerStorage_mozStorage.prototype = {
   _dbSchema: {
     tables: {
       moz_logins:         "id                  INTEGER PRIMARY KEY," +
-                          "hostname            TEXT NOT NULL,"       +
-                          "httpRealm           TEXT,"                +
-                          "formSubmitURL       TEXT,"                +
-                          "usernameField       TEXT NOT NULL,"       +
-                          "passwordField       TEXT NOT NULL,"       +
-                          "encryptedUsername   TEXT NOT NULL,"       +
-                          "encryptedPassword   TEXT NOT NULL,"       +
-                          "guid                TEXT,"                +
-                          "encType             INTEGER,"             +
-                          "timeCreated         INTEGER,"             +
-                          "timeLastUsed        INTEGER,"             +
-                          "timePasswordChanged INTEGER,"             +
+                          "hostname            TEXT NOT NULL," +
+                          "httpRealm           TEXT," +
+                          "formSubmitURL       TEXT," +
+                          "usernameField       TEXT NOT NULL," +
+                          "passwordField       TEXT NOT NULL," +
+                          "encryptedUsername   TEXT NOT NULL," +
+                          "encryptedPassword   TEXT NOT NULL," +
+                          "guid                TEXT," +
+                          "encType             INTEGER," +
+                          "timeCreated         INTEGER," +
+                          "timeLastUsed        INTEGER," +
+                          "timePasswordChanged INTEGER," +
                           "timesUsed           INTEGER",
       // Changes must be reflected in this._dbAreExpectedColumnsPresent(),
       // this._searchLogins(), and this.modifyLogin().
@@ -119,7 +119,7 @@ LoginManagerStorage_mozStorage.prototype = {
                           "hostname           TEXT UNIQUE ON CONFLICT REPLACE",
 
       moz_deleted_logins: "id                  INTEGER PRIMARY KEY," +
-                          "guid                TEXT,"                +
+                          "guid                TEXT," +
                           "timeDeleted         INTEGER",
     },
     indices: {
@@ -929,7 +929,7 @@ LoginManagerStorage_mozStorage.prototype = {
         this[migrateFunction]();
       }
     } catch (e) {
-      this.log("Migration failed: "  + e);
+      this.log("Migration failed: " + e);
       transaction.rollback();
       throw e;
     }

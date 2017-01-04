@@ -85,13 +85,11 @@ function run_test() {
     if (osVersion) {
       try {
         osVersion += " (" + sysInfo.getProperty("secondaryLibrary") + ")";
-      }
-      catch (e) {
+      } catch (e) {
       }
       gOSVersion = encodeURIComponent(osVersion);
     }
-  }
-  catch (e) {
+  } catch (e) {
   }
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");

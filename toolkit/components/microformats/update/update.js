@@ -193,7 +193,7 @@ function getLastBuildState( repo, callback ) {
 	  if (!error && response.statusCode == 200) {
 		var buildState = null,
 			json = JSON.parse(body);
-			if (json && json.repo &&  json.repo.last_build_state ) {
+			if (json && json.repo && json.repo.last_build_state ) {
 				buildState = json.repo.last_build_state;
 			}
 	    callback(null, buildState);

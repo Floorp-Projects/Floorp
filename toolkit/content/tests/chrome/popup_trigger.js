@@ -5,8 +5,7 @@ var gScreenX = -1, gScreenY = -1;
 var gCachedEvent = null;
 var gCachedEvent2 = null;
 
-function cacheEvent(modifiers)
-{
+function cacheEvent(modifiers) {
   var cachedEvent = null;
 
   var mouseFn = function(event) {
@@ -20,8 +19,7 @@ function cacheEvent(modifiers)
   return cachedEvent;
 }
 
-function runTests()
-{
+function runTests() {
   if (screen.height < 768) {
     ok(false, "popup tests are likely to fail for screen heights less than 768 pixels");
   }
@@ -857,7 +855,6 @@ var popupTests = [
 
 ];
 
-function platformIsMac()
-{
+function platformIsMac() {
     return navigator.platform.indexOf("Mac") > -1;
 }

@@ -169,8 +169,7 @@ function makeSafe(aCallback) {
   return function(...aArgs) {
     try {
       aCallback(...aArgs);
-    }
-    catch (ex) {
+    } catch (ex) {
       logger.warn("XPI Database callback failed", ex);
     }
   }
@@ -212,8 +211,7 @@ function asyncMap(aObjects, aMethod, aCallback) {
       aMethod(aObject, function(aResult) {
         asyncMap_gotValue(aIndex, aResult);
       });
-    }
-    catch (e) {
+    } catch (e) {
       logger.warn("Async map function failed", e);
       asyncMap_gotValue(aIndex, undefined);
     }
@@ -230,8 +228,7 @@ function* resultRows(aStatement) {
   try {
     while (stepStatement(aStatement))
       yield aStatement.row;
-  }
-  finally {
+  } finally {
     aStatement.reset();
   }
 }
@@ -258,8 +255,7 @@ function logSQLError(aError, aErrorString) {
 function stepStatement(aStatement) {
   try {
     return aStatement.executeStep();
-  }
-  catch (e) {
+  } catch (e) {
     logSQLError(XPIDatabase.connection.lastError,
                 XPIDatabase.connection.lastErrorString);
     throw e;
@@ -309,8 +305,7 @@ function DBAddonInternal(aLoaded) {
   if (aLoaded._installLocation) {
     this._installLocation = aLoaded._installLocation;
     this.location = aLoaded._installLocation.name;
-  }
-  else if (aLoaded.location) {
+  } else if (aLoaded.location) {
     this._installLocation = XPIProvider.installLocationsByName[this.location];
   }
 
@@ -512,8 +507,7 @@ this.XPIDatabase = {
     // Attempt to open the database
     try {
       connection = Services.storage.openUnsharedDatabase(dbfile);
-    }
-    catch (e) {
+    } catch (e) {
       logger.warn("Failed to open sqlite database " + dbfile.path + " for upgrade", e);
       return null;
     }
@@ -566,27 +560,22 @@ this.XPIDatabase = {
 
         readTimer.done();
         this.parseDB(data, aRebuildOnError);
-      }
-      catch (e) {
+      } catch (e) {
         logger.error("Failed to load XPI JSON data from profile", e);
         let rebuildTimer = AddonManagerPrivate.simpleTimer("XPIDB_rebuildReadFailed_MS");
         this.rebuildDatabase(aRebuildOnError);
         rebuildTimer.done();
-      }
-      finally {
+      } finally {
         if (cstream)
           cstream.close();
       }
-    }
-    catch (e) {
+    } catch (e) {
       if (e.result === Cr.NS_ERROR_FILE_NOT_FOUND) {
         this.upgradeDB(aRebuildOnError);
-      }
-      else {
+      } else {
         this.rebuildUnreadableDB(e, aRebuildOnError);
       }
-    }
-    finally {
+    } finally {
       if (fstream)
         fstream.close();
     }
@@ -637,8 +626,7 @@ this.XPIDatabase = {
         loadedAddon._sourceBundle = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
         try {
           loadedAddon._sourceBundle.persistentDescriptor = loadedAddon.descriptor;
-        }
-        catch (e) {
+        } catch (e) {
           // We can fail here when the descriptor is invalid, usually from the
           // wrong OS
           logger.warn("Could not find source bundle for add-on " + loadedAddon.id, e);
@@ -651,16 +639,14 @@ this.XPIDatabase = {
       this.addonDB = addonDB;
       logger.debug("Successfully read XPI database");
       this.initialized = true;
-    }
-    catch (e) {
+    } catch (e) {
       // If we catch and log a SyntaxError from the JSON
       // parser, the xpcshell test harness fails the test for us: bug 870828
       parseTimer.done();
       if (e.name == "SyntaxError") {
         logger.error("Syntax error parsing saved XPI JSON data");
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "syntax");
-      }
-      else {
+      } else {
         logger.error("Failed to load XPI JSON data from profile", e);
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "other");
       }
@@ -681,14 +667,12 @@ this.XPIDatabase = {
         // we should have an older SQLITE database
         logger.debug("Attempting to upgrade from SQLITE database");
         this.migrateData = this.getMigrateDataFromSQLITE();
-      }
-      else {
+      } else {
         // we've upgraded before but the JSON file is gone, fall through
         // and rebuild from scratch
         AddonManagerPrivate.recordSimpleMeasure("XPIDB_startupError", "dbMissing");
       }
-    }
-    catch (e) {
+    } catch (e) {
       // No schema version pref means either a really old upgrade (RDF) or
       // a new profile
       this.migrateData = this.getMigrateDataFromRDF();
@@ -759,8 +743,7 @@ this.XPIDatabase = {
         }
         if (error.becauseNoSuchFile) {
           this.upgradeDB(true);
-        }
-        else {
+        } else {
           // it's there but unreadable
           this.rebuildUnreadableDB(error, true);
         }
@@ -796,8 +779,7 @@ this.XPIDatabase = {
       logger.warn("Rebuilding add-ons database from installed extensions.");
       try {
         XPIDatabaseReconcile.processFileChanges({}, false);
-      }
-      catch (e) {
+      } catch (e) {
         logger.error("Failed to rebuild XPI database from installed extensions", e);
       }
       // Make sure to update the active add-ons and add-ons list on shutdown
@@ -833,8 +815,7 @@ this.XPIDatabase = {
 
       while (keys.hasMore())
         bundles.push(parser.getString("ExtensionDirs", keys.getNext()));
-    }
-    catch (e) {
+    } catch (e) {
       logger.warn("Failed to parse extensions.ini", e);
       return null;
     }
@@ -900,8 +881,7 @@ this.XPIDatabase = {
             if (minVersion) {
               appInfo.minVersion = minVersion;
               appInfo.maxVersion = getRDFProperty(ds, targetApp, "updatedMaxVersion");
-            }
-            else {
+            } else {
               appInfo.minVersion = getRDFProperty(ds, targetApp, "minVersion");
               appInfo.maxVersion = getRDFProperty(ds, targetApp, "maxVersion");
             }
@@ -909,8 +889,7 @@ this.XPIDatabase = {
           }
         }
       }
-    }
-    catch (e) {
+    } catch (e) {
       logger.warn("Error reading " + FILE_OLD_DATABASE, e);
       migrateData = null;
     }
@@ -941,11 +920,9 @@ this.XPIDatabase = {
         if (REQUIRED.indexOf(row.name) != -1) {
           reqCount++;
           props.push(row.name);
-        }
-        else if (DB_METADATA.indexOf(row.name) != -1) {
+        } else if (DB_METADATA.indexOf(row.name) != -1) {
           props.push(row.name);
-        }
-        else if (DB_BOOL_METADATA.indexOf(row.name) != -1) {
+        } else if (DB_BOOL_METADATA.indexOf(row.name) != -1) {
           props.push(row.name);
         }
       }
@@ -993,13 +970,11 @@ this.XPIDatabase = {
           }
         }
       }
-    }
-    catch (e) {
+    } catch (e) {
       // An error here means the schema is too different to read
       logger.error("Error migrating data", e);
       return null;
-    }
-    finally {
+    } finally {
       if (taStmt)
         taStmt.finalize();
       if (stmt)
@@ -1459,8 +1434,7 @@ this.XPIDatabase = {
     let themes = [];
     if (dssEnabled) {
       themes = _filterDB(this.addonDB, aAddon => aAddon.type == "theme");
-    }
-    else {
+    } else {
       let activeTheme = _findAddon(
         this.addonDB,
         aAddon => (aAddon.type == "theme") &&
@@ -1501,19 +1475,16 @@ this.XPIDatabase = {
         addonsListTmp.moveTo(addonsListTmp.parent, FILE_XPI_ADDONS_LIST);
 
         Services.prefs.setCharPref(PREF_EM_ENABLED_ADDONS, enabledAddons.join(","));
-      }
-      catch (e) {
+      } catch (e) {
         logger.error("Failed to write add-ons list to profile directory", e);
         return false;
       }
-    }
-    else {
+    } else {
       if (addonsList.exists()) {
         logger.debug("Deleting add-ons list");
         try {
           addonsList.remove(false);
-        }
-        catch (e) {
+        } catch (e) {
           logger.error("Failed to remove " + addonsList.path, e);
           return false;
         }
@@ -1627,8 +1598,7 @@ this.XPIDatabaseReconcile = {
         throw new Error("Invalid addon ID: expected addon ID " + aId +
                         ", found " + aNewAddon.id + " in manifest");
       }
-    }
-    catch (e) {
+    } catch (e) {
       logger.warn("addMetadata: Add-on " + aId + " is invalid", e);
 
       // Remove the invalid add-on from the install location if the install
@@ -1763,8 +1733,7 @@ this.XPIDatabaseReconcile = {
       // add-on.
       if (aNewAddon.id != aOldAddon.id)
         throw new Error("Incorrect id in install manifest for existing add-on " + aOldAddon.id);
-    }
-    catch (e) {
+    } catch (e) {
       logger.warn("updateMetadata: Add-on " + aOldAddon.id + " is invalid", e);
       XPIDatabase.removeAddonMetadata(aOldAddon);
       XPIStates.removeAddon(aOldAddon.location, aOldAddon.id);
@@ -1906,8 +1875,7 @@ this.XPIDatabaseReconcile = {
     let exists = (aAddon) => {
       try {
         return aAddon._sourceBundle.exists();
-      }
-      catch (e) {
+      } catch (e) {
         if (e.result == Cr.NS_ERROR_NOT_INITIALIZED)
           return false;
         throw e;
@@ -1974,27 +1942,23 @@ this.XPIDatabaseReconcile = {
                 (aUpdateCompatibility && (installLocation.name == KEY_APP_GLOBAL ||
                                           installLocation.name == KEY_APP_SYSTEM_DEFAULTS))) {
               newAddon = this.updateMetadata(installLocation, oldAddon, xpiState, newAddon);
-            }
-            else if (oldAddon.descriptor != xpiState.descriptor) {
+            } else if (oldAddon.descriptor != xpiState.descriptor) {
               newAddon = this.updateDescriptor(installLocation, oldAddon, xpiState);
-            }
-            // Check compatility when the application version and/or schema
-            // version has changed. A schema change also reloads metadata from
-            // the manifests.
-            else if (aUpdateCompatibility || aSchemaChange) {
+            } else if (aUpdateCompatibility || aSchemaChange) {
+              // Check compatility when the application version and/or schema
+              // version has changed. A schema change also reloads metadata from
+              // the manifests.
               newAddon = this.updateCompatibility(installLocation, oldAddon, xpiState,
                                                   aOldAppVersion, aOldPlatformVersion,
                                                   aSchemaChange);
-            }
-            else {
+            } else {
               // No change
               newAddon = oldAddon;
             }
 
             if (newAddon)
               locationAddonMap.set(newAddon.id, newAddon);
-          }
-          else {
+          } else {
             // The add-on is in the DB, but not in xpiState (and thus not on disk).
             this.removeMetadata(oldAddon);
           }
@@ -2085,8 +2049,7 @@ this.XPIDatabaseReconcile = {
             else
               currentAddon.userDisabled = true;
           }
-        }
-        else {
+        } else {
           // This is a new install
           if (currentAddon.foreignInstall)
             AddonManagerPrivate.addStartupChange(AddonManager.STARTUP_CHANGE_INSTALLED, id);
@@ -2100,8 +2063,7 @@ this.XPIDatabaseReconcile = {
               XPIProvider.unloadBootstrapScope(currentAddon.id);
           }
         }
-      }
-      else {
+      } else {
         if (previousAddon !== currentAddon) {
           // This is an add-on that has changed, either the metadata was reloaded
           // or the version in a different location has become visible

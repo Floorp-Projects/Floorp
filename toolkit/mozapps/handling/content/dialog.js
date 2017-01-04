@@ -51,8 +51,7 @@ var dialog = {
  /**
   * This function initializes the content of the dialog.
   */
-  initialize: function initialize()
-  {
+  initialize: function initialize() {
     this._handlerInfo = window.arguments[7].QueryInterface(Ci.nsIHandlerInfo);
     this._URI         = window.arguments[8].QueryInterface(Ci.nsIURI);
     this._windowCtxt  = window.arguments[9];
@@ -103,8 +102,7 @@ var dialog = {
  /**
   * Populates the list that a user can choose from.
   */
-  populateList: function populateList()
-  {
+  populateList: function populateList() {
     var items = document.getElementById("items");
     var possibleHandlers = this._handlerInfo.possibleApplicationHandlers;
     var preferredHandler = this._handlerInfo.preferredApplicationHandler;
@@ -121,8 +119,7 @@ var dialog = {
         // See if we have an nsILocalHandlerApp and set the icon
         let uri = ios.newFileURI(app.executable);
         elm.setAttribute("image", "moz-icon://" + uri.spec + "?size=32");
-      }
-      else if (app instanceof Ci.nsIWebHandlerApp) {
+      } else if (app instanceof Ci.nsIWebHandlerApp) {
         let uri = ios.newURI(app.uriTemplate, null, null);
         if (/^https?/.test(uri.scheme)) {
           // Unfortunately we can't use the favicon service to get the favicon,
@@ -134,11 +131,9 @@ var dialog = {
           elm.setAttribute("image", uri.prePath + "/favicon.ico");
         }
         elm.setAttribute("description", uri.prePath);
-      }
-      else if (app instanceof Ci.nsIDBusHandlerApp) {
+      } else if (app instanceof Ci.nsIDBusHandlerApp) {
 	  elm.setAttribute("description", app.method);
-      }
-      else
+      } else
         throw "unknown handler type";
 
       items.insertBefore(elm, this._itemChoose);
@@ -163,8 +158,7 @@ var dialog = {
  /**
   * Brings up a filepicker and allows a user to choose an application.
   */
-  chooseApplication: function chooseApplication()
-  {
+  chooseApplication: function chooseApplication() {
     var bundle = document.getElementById("base-strings");
     var title = bundle.getString("choose.application.title");
 
@@ -206,8 +200,7 @@ var dialog = {
  /**
   * Function called when the OK button is pressed.
   */
-  onAccept: function onAccept()
-  {
+  onAccept: function onAccept() {
     var checkbox = document.getElementById("remember");
     if (!checkbox.hidden) {
       // We need to make sure that the default is properly set now
@@ -215,8 +208,7 @@ var dialog = {
         // default OS handler doesn't have this property
         this._handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
         this._handlerInfo.preferredApplicationHandler = this.selectedItem.obj;
-      }
-      else
+      } else
         this._handlerInfo.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
     }
     this._handlerInfo.alwaysAskBeforeHandling = !checkbox.checked;
@@ -233,8 +225,7 @@ var dialog = {
  /**
   * Determines if the OK button should be disabled or not
   */
-  updateOKButton: function updateOKButton()
-  {
+  updateOKButton: function updateOKButton() {
     this._okButton.disabled = this._itemChoose.selected ||
                               this._buttonDisabled;
   },
@@ -242,8 +233,7 @@ var dialog = {
  /**
   * Updates the UI based on the checkbox being checked or not.
   */
-  onCheck: function onCheck()
-  {
+  onCheck: function onCheck() {
     if (document.getElementById("remember").checked)
       document.getElementById("remember-text").setAttribute("visible", "true");
     else
@@ -253,8 +243,7 @@ var dialog = {
   /**
    * Function called when the user double clicks on an item of the list
    */
-  onDblClick: function onDblClick()
-  {
+  onDblClick: function onDblClick() {
     if (this.selectedItem == this._itemChoose)
       this.chooseApplication();
     else
@@ -266,12 +255,10 @@ var dialog = {
  /**
   * Returns/sets the selected element in the richlistbox
   */
-  get selectedItem()
-  {
+  get selectedItem() {
     return document.getElementById("items").selectedItem;
   },
-  set selectedItem(aItem)
-  {
+  set selectedItem(aItem) {
     return document.getElementById("items").selectedItem = aItem;
   }
 

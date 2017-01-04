@@ -6,6 +6,7 @@ import calendar
 import random
 import time
 
+from marionette_driver.errors import UnsupportedOperationException
 from marionette_harness import MarionetteTestCase
 
 
@@ -35,6 +36,17 @@ class CookieTest(MarionetteTestCase):
         self.marionette.add_cookie(cookie)
         cookies = self.marionette.get_cookies()
         self.assertEquals(0, len(cookies))
+
+    def test_chrome_error(self):
+        with self.marionette.using_context("chrome"):
+            self.assertRaises(UnsupportedOperationException,
+                              self.marionette.add_cookie, self.COOKIE_A)
+            self.assertRaises(UnsupportedOperationException,
+                              self.marionette.delete_cookie, self.COOKIE_A)
+            self.assertRaises(UnsupportedOperationException,
+                              self.marionette.delete_all_cookies)
+            self.assertRaises(UnsupportedOperationException,
+                              self.marionette.get_cookies)
 
     def test_delete_all_cookie(self):
         self.marionette.add_cookie(self.COOKIE_A)

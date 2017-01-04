@@ -185,23 +185,23 @@ add_task(function* () {
     ["ne 3",
      {line: 2, ch: 11}],
     ["line 1",
-      {line: 0, ch: 9}],
+     {line: 0, ch: 9}],
     // Testing find prev
     ["line",
-      {line: 4, ch: 11},
-      true],
+     {line: 4, ch: 11},
+     true],
     ["line",
-      {line: 3, ch: 10},
-      true],
+     {line: 3, ch: 10},
+     true],
     ["line",
-      {line: 2, ch: 9},
-      true],
+     {line: 2, ch: 9},
+     true],
     ["line",
-      {line: 1, ch: 8},
-      true],
+     {line: 1, ch: 8},
+     true],
     ["line",
-      {line: 0, ch: 7},
-      true]
+     {line: 0, ch: 7},
+     true]
   ];
 
   for (let v of testVectors) {

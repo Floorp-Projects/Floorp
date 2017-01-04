@@ -52,8 +52,7 @@ function* cutCurrentSelection(elementQueryString, property, browser) {
 
 // Test that you are able to pasteTransferable for plain text
 // which is handled by TextEditor::PasteTransferable to paste into the editor.
-add_task(function* test_paste_transferable_plain_text()
-{
+add_task(function* test_paste_transferable_plain_text() {
   let testPage =
     'data:text/html,' +
     '<textarea id="textarea">Write something here</textarea>';
@@ -84,8 +83,7 @@ add_task(function* test_paste_transferable_plain_text()
 // BrowserTestUtils.synthesizeKey("a", {accelKey: true}, browser);
 // doesn't seem to trigger for contenteditable which is why we use
 // Selection to select the contenteditable contents.
-add_task(function* test_paste_transferable_html()
-{
+add_task(function* test_paste_transferable_html() {
   let testPage =
     'data:text/html,' +
     '<div contenteditable="true"><b>Bold Text</b><i>italics</i></div>';

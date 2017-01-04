@@ -259,7 +259,7 @@ function ConnectionData(connection, identifier, options = {}) {
   Barriers.connections.client.addBlocker(
     this._identifier + ": waiting for shutdown",
     this._deferredClose.promise,
-    () =>  ({
+    () => ({
       identifier: this._identifier,
       isCloseRequested: this._closeRequested,
       hasDbConn: !!this._dbConn,

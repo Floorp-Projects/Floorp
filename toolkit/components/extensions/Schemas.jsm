@@ -1829,9 +1829,9 @@ this.Schemas = {
   parseFunction(path, fun) {
     let f = new FunctionEntry(fun, path, fun.name,
                               this.parseSchema(fun, path,
-                                               ["name", "unsupported", "returns",
-                                                "permissions",
-                                                "allowAmbiguousOptionalArguments"]),
+                                ["name", "unsupported", "returns",
+                                 "permissions",
+                                 "allowAmbiguousOptionalArguments"]),
                               fun.unsupported || false,
                               fun.allowAmbiguousOptionalArguments || false,
                               fun.returns || null,
@@ -1907,8 +1907,8 @@ this.Schemas = {
     /* eslint-enable no-unused-vars */
 
     let type = this.parseSchema(event, [namespaceName],
-                                ["name", "unsupported", "permissions",
-                                 "extraParameters", "returns", "filters"]);
+      ["name", "unsupported", "permissions",
+       "extraParameters", "returns", "filters"]);
 
     let e = new Event(event, [namespaceName], event.name, type, extras,
                       event.unsupported || false,

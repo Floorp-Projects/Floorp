@@ -48,8 +48,7 @@ var resultObserver = {
   containerStateChanged(aNode, aOldState, aNewState) {
     if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_OPENED) {
       this.openedContainer = aNode;
-    }
-    else if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_CLOSED) {
+    } else if (aNewState == Ci.nsINavHistoryContainerResultNode.STATE_CLOSED) {
       this.closedContainer = aNode;
     }
   },

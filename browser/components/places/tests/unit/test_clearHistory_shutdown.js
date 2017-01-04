@@ -146,7 +146,7 @@ function storeCache(aURL, aContent) {
         var written = os.write(aContent, aContent.length);
         if (written != aContent.length) {
           do_throw("os.write has not written all data!\n" +
-                   "  Expected: " + written  + "\n" +
+                   "  Expected: " + written + "\n" +
                    "  Actual: " + aContent.length + "\n");
         }
         os.close();

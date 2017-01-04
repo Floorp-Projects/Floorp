@@ -67,8 +67,7 @@ var listener = {
   }
 };
 
-function setupChannel(url, flags)
-{
+function setupChannel(url, flags) {
   let uri = "http://localhost:" +
              httpserver.identity.primaryPort + url;
   var chan = NetUtil.newChannel({

@@ -14,13 +14,13 @@ var gHttpRoot   = null;
 var gPolicy     = null;
 
 function ManifestEntry(data) {
-  this.id        = data.id        || EXPERIMENT1_ID;
-  this.xpiURL    = data.xpiURL    || gHttpRoot + EXPERIMENT1_XPI_NAME;
-  this.xpiHash   = data.xpiHash   || EXPERIMENT1_XPI_SHA1;
-  this.appName   = data.appName   || ["XPCShell"];
-  this.channel   = data.appName   || ["nightly"];
+  this.id        = data.id || EXPERIMENT1_ID;
+  this.xpiURL    = data.xpiURL || gHttpRoot + EXPERIMENT1_XPI_NAME;
+  this.xpiHash   = data.xpiHash || EXPERIMENT1_XPI_SHA1;
+  this.appName   = data.appName || ["XPCShell"];
+  this.channel   = data.appName || ["nightly"];
   this.startTime = data.startTime || new Date(2010, 0, 1, 12).getTime() / 1000;
-  this.endTime   = data.endTime   || new Date(9001, 0, 1, 12).getTime() / 1000;
+  this.endTime   = data.endTime || new Date(9001, 0, 1, 12).getTime() / 1000;
   this.maxActiveSeconds = data.maxActiveSeconds || 5 * SEC_IN_ONE_DAY;
 }
 

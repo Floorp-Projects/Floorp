@@ -37,67 +37,57 @@ add_task(function* invalid_setter_calls() {
     var query = PlacesUtils.history.getNewQuery();
     query.tags = null;
     do_throw("Passing null to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     query = PlacesUtils.history.getNewQuery();
     query.tags = "this should not work";
     do_throw("Passing a string to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery([null]);
     do_throw("Passing one-element array with null to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery([undefined]);
     do_throw("Passing one-element array with undefined to SetTags " +
              "should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery(["foo", null, "bar"]);
     do_throw("Passing mixture of tags and null to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery(["foo", undefined, "bar"]);
     do_throw("Passing mixture of tags and undefined to SetTags " +
              "should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery([1, 2, 3]);
     do_throw("Passing numbers to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery(["foo", 1, 2, 3]);
     do_throw("Passing mixture of tags and numbers to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     var str = PlacesUtils.toISupportsString("foo");
     query = PlacesUtils.history.getNewQuery();
     query.tags = str;
     do_throw("Passing nsISupportsString to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 
   try {
     makeQuery([str]);
     do_throw("Passing array of nsISupportsStrings to SetTags should fail");
-  }
-  catch (exc) {}
+  } catch (exc) {}
 });
 
 add_task(function* not_setting_tags() {
@@ -731,8 +721,7 @@ function setsAreEqual(aArr1, aArr2, aIsOrdered) {
     for (let i = 0; i < aArr1.length; i++) {
       do_check_eq(aArr1[i], aArr2[i]);
     }
-  }
-  else {
+  } else {
     aArr1.forEach(u => do_check_true(aArr2.indexOf(u) >= 0));
     aArr2.forEach(u => do_check_true(aArr1.indexOf(u) >= 0));
   }

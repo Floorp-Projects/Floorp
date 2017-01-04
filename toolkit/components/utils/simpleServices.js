@@ -24,8 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
-function AddonPolicyService()
-{
+function AddonPolicyService() {
   this.wrappedJSObject = this;
   this.cspStrings = new Map();
   this.backgroundPageUrlCallbacks = new Map();
@@ -223,8 +222,7 @@ AddonPolicyService.prototype = {
  * See SubstituteChannel in netwerk/protocol/res/ExtensionProtocolHandler.cpp
  * for usage.
  */
-function AddonLocalizationConverter()
-{
+function AddonLocalizationConverter() {
   this.aps = Cc["@mozilla.org/addons/policy-service;1"].getService(Ci.nsIAddonPolicyService)
     .wrappedJSObject;
 }

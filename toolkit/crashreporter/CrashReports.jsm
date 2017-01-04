@@ -12,16 +12,14 @@ this.CrashReports = {
   pendingDir: null,
   reportsDir: null,
   submittedDir: null,
-  getReports: function CrashReports_getReports()
-  {
+  getReports: function CrashReports_getReports() {
     let reports = [];
 
     try {
       // Ignore any non http/https urls
       if (!/^https?:/i.test(Services.prefs.getCharPref("breakpad.reportURL")))
         return reports;
-    }
-    catch (e) { }
+    } catch (e) { }
 
     if (this.submittedDir.exists() && this.submittedDir.isDirectory()) {
       let entries = this.submittedDir.directoryEntries;
@@ -63,23 +61,20 @@ this.CrashReports = {
   }
 }
 
-function CrashReports_pendingDir()
-{
+function CrashReports_pendingDir() {
   let pendingDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
   pendingDir.append("Crash Reports");
   pendingDir.append("pending");
   return pendingDir;
 }
 
-function CrashReports_reportsDir()
-{
+function CrashReports_reportsDir() {
   let reportsDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
   reportsDir.append("Crash Reports");
   return reportsDir;
 }
 
-function CrashReports_submittedDir()
-{
+function CrashReports_submittedDir() {
   let submittedDir = Services.dirsvc.get("UAppData", Components.interfaces.nsIFile);
   submittedDir.append("Crash Reports");
   submittedDir.append("submitted");

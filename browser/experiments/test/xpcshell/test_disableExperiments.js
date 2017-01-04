@@ -68,7 +68,7 @@ add_task(function* test_disableExperiments() {
   // Dates the following tests are based on.
 
   let baseDate   = new Date(2014, 5, 1, 12);
-  let startDate1 = futureDate(baseDate,  50 * MS_IN_ONE_DAY);
+  let startDate1 = futureDate(baseDate, 50 * MS_IN_ONE_DAY);
   let endDate1   = futureDate(baseDate, 100 * MS_IN_ONE_DAY);
   let startDate2 = futureDate(baseDate, 150 * MS_IN_ONE_DAY);
   let endDate2   = futureDate(baseDate, 200 * MS_IN_ONE_DAY);

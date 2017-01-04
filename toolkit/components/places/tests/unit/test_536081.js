@@ -14,13 +14,11 @@ const URLS = [
     s: "goog" },
 ];
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   for (let url of URLS) {
     yield task_test_url(url);
   }
@@ -49,8 +47,7 @@ function check_empty_table(table_name) {
   try {
     stmt.executeStep();
     do_check_eq(stmt.getInt32(0), 0);
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 }

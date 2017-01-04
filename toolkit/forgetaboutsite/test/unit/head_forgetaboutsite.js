@@ -12,8 +12,7 @@ var profileDir = do_get_profile();
 /**
  * Removes any files that could make our tests fail.
  */
-function cleanUp()
-{
+function cleanUp() {
   let files = [
     "places.sqlite",
     "cookies.sqlite",

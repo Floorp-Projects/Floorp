@@ -45,8 +45,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
               "AND n.name = :anno_name " +
             "ORDER BY a.dateAdded DESC LIMIT 1 " +
           ")";
-  }
-  else if (aIdentifier instanceof Ci.nsIURI) {
+  } else if (aIdentifier instanceof Ci.nsIURI) {
     // Page annotation.
     as.setPageAnnotation(aIdentifier, aName, aValue, 0, aExpirePolicy);
     // Update dateAdded for the last added annotation.
@@ -59,8 +58,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
             "AND n.name = :anno_name " +
             "ORDER BY a.dateAdded DESC LIMIT 1 " +
           ")";
-  }
-  else
+  } else
     do_throw("Wrong identifier type");
 
   let stmt = DBConn().createStatement(sql);
@@ -71,8 +69,7 @@ function add_old_anno(aIdentifier, aName, aValue, aExpirePolicy,
   stmt.params.anno_name = aName;
   try {
     stmt.executeStep();
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 }

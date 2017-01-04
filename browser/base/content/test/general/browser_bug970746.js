@@ -108,7 +108,7 @@ add_task(function *() {
 
     if (test.shouldBeShown) {
       ok(menuItem.label.includes(test.expectedLabelContents),
-         "Menu item text '" + menuItem.label  + "' contains the correct search terms '" + test.expectedLabelContents  + "'");
+         "Menu item text '" + menuItem.label + "' contains the correct search terms '" + test.expectedLabelContents + "'");
     }
 
     let popupHiddenPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popuphidden");

@@ -59,8 +59,7 @@ var gCookiesWindow = {
           window.arguments[0] &&
           window.arguments[0].filterString)
         this.setFilter(window.arguments[0].filterString);
-    }
-    else if (document.getElementById("filter").value != "") {
+    } else if (document.getElementById("filter").value != "") {
       this.filter();
     }
 
@@ -100,8 +99,7 @@ var gCookiesWindow = {
         this._handleCookieChanged(aCookie, strippedHost);
       else if (aData == "added")
         this._handleCookieAdded(aCookie, strippedHost);
-    }
-    else if (aData == "cleared") {
+    } else if (aData == "cleared") {
       this._hosts = {};
       this._hostOrder = [];
 
@@ -110,8 +108,7 @@ var gCookiesWindow = {
       this._tree.treeBoxObject.rowCountChanged(0, -oldRowCount);
       this._view.selection.clearSelection();
       this._updateRemoveAllButton();
-    }
-    else if (aData == "reload") {
+    } else if (aData == "reload") {
       // first, clear any existing entries
       this.observe(aCookie, aTopic, "cleared");
 
@@ -144,12 +141,10 @@ var gCookiesWindow = {
               break;
             }
           }
-        }
-        else if (hostItem.open)
+        } else if (hostItem.open)
           rowIndex += hostItem.cookies.length;
       }
-    }
-    else {
+    } else {
       // Just walk the filter list to find the item. It doesn't matter that
       // we don't update the main Host collection when we do this, because
       // when the filter is reset the Host collection is rebuilt anyway.
@@ -182,8 +177,7 @@ var gCookiesWindow = {
       // see the additional rows as they're hidden.
       if (addedHost.value || this._hosts[strippedHost].open)
         ++rowCountImpact;
-    }
-    else {
+    } else {
       // We're in search mode, and the cookie being added matches
       // the search condition, so add it to the list.
       var c = this._makeCookieObject(strippedHost, changedCookie);
@@ -248,16 +242,14 @@ var gCookiesWindow = {
               }
               ++count;
             }
-          }
-          else {
+          } else {
             // A host entry was open, but we weren't looking for an index
             // within that host entry's children, so skip forward over the
             // entry's children. We need to add one to increment for the
             // host value too.
             count += currHost.cookies.length + 1;
           }
-        }
-        else
+        } else
           ++count;
 
         for (let k = cacheStart; k < count; k++)
@@ -319,8 +311,7 @@ var gCookiesWindow = {
           return item.rawHost;
         else if (aColumn.id == "nameCol")
           return item.name;
-      }
-      else if (aColumn.id == "domainCol") {
+      } else if (aColumn.id == "domainCol") {
         return this._filterSet[aIndex].rawHost;
       } else if (aColumn.id == "nameCol") {
         return this._filterSet[aIndex].name;
@@ -499,8 +490,7 @@ var gCookiesWindow = {
 
         var strippedHost = this._makeStrippedHost(cookie.host);
         this._addCookie(strippedHost, cookie, hostCount);
-      }
-      else
+      } else
         break;
     }
     this._view._rowCount = hostCount.value;
@@ -543,8 +533,7 @@ var gCookiesWindow = {
       for (let id of ids) {
         document.getElementById(id).disabled = false;
       }
-    }
-    else {
+    } else {
       var noneSelected = this._bundle.getString("noCookieSelected");
       properties = { name: noneSelected, value: noneSelected, host: noneSelected,
                      path: noneSelected, expires: noneSelected,
@@ -670,8 +659,7 @@ var gCookiesWindow = {
         if (!this._view.hasNextSibling(-1, ci))
           --nextSelected;
         this._view._removeItemAtIndex(ci);
-      }
-      else {
+      } else {
         var parent = this._view._getItemAtIndex(item.parentIndex);
         --rowCountImpact;
         if (parent.cookies.length == 1) {
@@ -683,8 +671,7 @@ var gCookiesWindow = {
             --nextSelected;
           this._view._removeItemAtIndex(item.parentIndex);
           invalidateRow = item.parentIndex;
-        }
-        else {
+        } else {
           deleteItems.push(item);
           if (!this._view.hasNextSibling(-1, ci))
             --nextSelected;
@@ -695,8 +682,7 @@ var gCookiesWindow = {
       tbo.rowCountChanged(ci, rowCountImpact);
       if (invalidateRow != -1)
         tbo.invalidateRow(invalidateRow);
-    }
-    else {
+    } else {
       var rangeCount = seln.getRangeCount();
       // Traverse backwards through selections to avoid messing
       // up the indices when they are deleted.
@@ -739,8 +725,7 @@ var gCookiesWindow = {
       this._view._rowCount = 0;
       this._tree.treeBoxObject.rowCountChanged(0, -rowCount);
       this.performDeletion(deleteItems);
-    }
-    else {
+    } else {
       this._cm.removeAll();
     }
     this._updateRemoveAllButton();
@@ -793,8 +778,7 @@ var gCookiesWindow = {
     if (aProperty == "rawHost") {
       domainCol.setAttribute("sortDirection", sortOrderString);
       nameCol.removeAttribute("sortDirection");
-    }
-    else {
+    } else {
       nameCol.setAttribute("sortDirection", sortOrderString);
       domainCol.removeAttribute("sortDirection");
     }
@@ -828,8 +812,7 @@ var gCookiesWindow = {
     if (sortby == "") {
       this._lastSortAscending = false;
       this.sort("rawHost");
-    }
-    else {
+    } else {
       this._lastSortAscending = !this._lastSortAscending;
       this.sort(sortby);
     }

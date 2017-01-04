@@ -464,8 +464,7 @@ this.ContentSearch = {
     if (data === "engine-current") {
       let engine = yield this._currentEngineObj();
       this._broadcast("CurrentEngine", engine);
-    }
-    else if (data !== "engine-default") {
+    } else if (data !== "engine-default") {
       // engine-default is always sent with engine-current and isn't otherwise
       // relevant to content searches.
       let state = yield this.currentStateObj();
@@ -539,8 +538,7 @@ this.ContentSearch = {
     try {
       // This throws if the URI is erroneously encoded.
       xhr.send();
-    }
-    catch (err) {
+    } catch (err) {
       return Promise.resolve(null);
     }
     return deferred.promise;

@@ -146,8 +146,7 @@ add_task(function* test_download_nourl() {
 
     yield OS.File.remove(path);
     do_throw("Should not have downloaded a file with a missing url");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a missing url.");
   }
 });
@@ -160,8 +159,7 @@ add_task(function* test_download_missing() {
 
     yield OS.File.remove(path);
     do_throw("Should not have downloaded a missing file");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true(true, "Should have thrown when downloading a missing file.");
   }
 });
@@ -189,8 +187,7 @@ add_task(function* test_download_badsize() {
 
     yield OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad size");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a bad size.");
   }
 });
@@ -205,8 +202,7 @@ add_task(function* test_download_badhashfn() {
 
     yield OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad hash function");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a bad hash function.");
   }
 });
@@ -221,8 +217,7 @@ add_task(function* test_download_badhash() {
 
     yield OS.File.remove(path);
     do_throw("Should not have downloaded a file with a bad hash");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true(true, "Should have thrown when downloading a file with a bad hash.");
   }
 });
