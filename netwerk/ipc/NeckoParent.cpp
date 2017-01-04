@@ -495,7 +495,8 @@ NeckoParent::RecvPDataChannelConstructor(PDataChannelParent* actor,
                                          const uint32_t& channelId)
 {
   DataChannelParent* p = static_cast<DataChannelParent*>(actor);
-  MOZ_DIAGNOSTIC_ASSERT(p->Init(channelId));
+  DebugOnly<bool> rv = p->Init(channelId);
+  MOZ_ASSERT(rv);
   return IPC_OK();
 }
 
