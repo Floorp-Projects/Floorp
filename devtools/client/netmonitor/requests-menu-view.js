@@ -208,30 +208,25 @@ RequestsMenuView.prototype = {
 
     if (responseContent && responseContent.content) {
       let request = getRequestById(this.store.getState(), action.id);
-      let { text, encoding } = responseContent.content;
       if (request) {
         let { mimeType } = request;
+        let { text, encoding } = responseContent.content;
+        let response = yield gNetwork.getString(text);
+        let payload = {};
 
-        // Fetch response data if the response is an image (to display thumbnail)
         if (mimeType.includes("image/")) {
-          let responseBody = yield gNetwork.getString(text);
-          const dataUri = formDataURI(mimeType, encoding, responseBody);
-          yield this.store.dispatch(Actions.updateRequest(
-            action.id,
-            { responseContentDataUri: dataUri },
-            true
-          ));
+          payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
+        }
+
+        if (mimeType.includes("text/")) {
+          responseContent.content.text = response;
+          payload.responseContent = responseContent;
+        }
+
+        yield this.store.dispatch(Actions.updateRequest(action.id, payload, true));
+
+        if (mimeType.includes("image/")) {
           window.emit(EVENTS.RESPONSE_IMAGE_THUMBNAIL_DISPLAYED);
-        // Fetch response text only if the response is html, but not all text/*
-        } else if (mimeType.includes("text/html") && typeof text !== "string") {
-          let responseBody = yield gNetwork.getString(text);
-          responseContent.content.text = responseBody;
-          responseContent = Object.assign({}, responseContent);
-          yield this.store.dispatch(Actions.updateRequest(
-            action.id,
-            { responseContent },
-            true
-          ));
         }
       }
     }
@@ -245,9 +240,12 @@ RequestsMenuView.prototype = {
       const headersSize = headers.reduce((acc, { name, value }) => {
         return acc + name.length + value.length + 2;
       }, 0);
-      yield this.store.dispatch(Actions.updateRequest(action.id, {
-        requestHeadersFromUploadStream: { headers, headersSize }
-      }, true));
+      let payload = {};
+      requestPostData.postData.text = postData;
+      payload.requestPostData = Object.assign({}, requestPostData);
+      payload.requestHeadersFromUploadStream = { headers, headersSize };
+
+      yield this.store.dispatch(Actions.updateRequest(action.id, payload, true));
     }
   }),
 
