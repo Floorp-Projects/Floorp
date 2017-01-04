@@ -2658,7 +2658,8 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
 
   RefPtr<ServiceWorkerUpdateJob> job =
     new ServiceWorkerUpdateJob(principal, registration->mScope,
-                               newest->ScriptSpec(), nullptr);
+                               newest->ScriptSpec(), nullptr,
+                               registration->GetLoadFlags());
   queue->ScheduleJob(job);
 }
 
@@ -2742,7 +2743,8 @@ ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
   // its argument."
   RefPtr<ServiceWorkerUpdateJob> job =
     new ServiceWorkerUpdateJob(aPrincipal, registration->mScope,
-                               newest->ScriptSpec(), nullptr);
+                               newest->ScriptSpec(), nullptr,
+                               registration->GetLoadFlags());
 
   RefPtr<UpdateJobCallback> cb = new UpdateJobCallback(aCallback);
   job->AppendResultCallback(cb);
