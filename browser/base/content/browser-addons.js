@@ -215,7 +215,7 @@ const gXPInstallObserver = {
 
   observe(aSubject, aTopic, aData) {
     var brandBundle = document.getElementById("bundle_brand");
-    var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
+    var installInfo = aSubject.wrappedJSObject;
     var browser = installInfo.browser;
 
     // Make sure the browser is still alive.

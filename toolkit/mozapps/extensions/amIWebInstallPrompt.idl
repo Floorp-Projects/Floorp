@@ -1,0 +1,34 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+interface nsIURI;
+interface nsIVariant;
+
+/**
+ * amIWebInstallPrompt is used, if available, by the default implementation of 
+ * amIWebInstallInfo to display a confirmation UI to the user before running
+ * installs.
+ */
+[scriptable, uuid(386906f1-4d18-45bf-bc81-5dcd68e42c3b)]
+interface amIWebInstallPrompt : nsISupports
+{
+  /**
+   * Get a confirmation that the user wants to start the installs.
+   *
+   * @param  aBrowser
+   *         The browser that triggered the installs
+   * @param  aUri
+   *         The URI of the site that triggered the installs
+   * @param  aInstalls
+   *         The AddonInstalls that were requested
+   * @param  aCount
+   *         The number of AddonInstalls
+   */
+  void confirm(in nsIDOMElement aBrowser, in nsIURI aUri,
+               [array, size_is(aCount)] in nsIVariant aInstalls,
+               [optional] in uint32_t aCount);
+};
