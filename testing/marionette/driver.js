@@ -2663,7 +2663,7 @@ GeckoDriver.prototype.acceptConnections = function (cmd, resp) {
  * session.
  */
 GeckoDriver.prototype.quitApplication = function (cmd, resp) {
-  assert.firefox()
+  assert.firefox("Bug 1298921 - In app initiated quit not yet available beside Firefox")
 
   let flags = Ci.nsIAppStartup.eAttemptQuit;
   for (let k of cmd.parameters.flags || []) {
