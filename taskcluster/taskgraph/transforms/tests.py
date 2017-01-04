@@ -63,6 +63,7 @@ BUILDER_NAME_PREFIX = {
     'linux64-asan': 'Ubuntu ASAN VM 12.04 x64',
     'linux64-ccov': 'Ubuntu Code Coverage VM 12.04 x64',
     'linux64-jsdcov': 'Ubuntu Code Coverage VM 12.04 x64',
+    'linux64-stylo': 'Ubuntu VM 12.04 x64',
     'macosx64': 'Rev7 MacOSX Yosemite 10.10.5',
     'android-4.3-arm7-api-15': 'Android 4.3 armv7 API 15+',
     'android-4.2-x86': 'Android 4.2 x86 Emulator',
