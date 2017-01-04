@@ -19,8 +19,6 @@ namespace mozilla {
 };
 using mozilla::dom::FontListEntry;
 
-typedef struct FT_LibraryRec_ *FT_Library;
-
 class gfxAndroidPlatform : public gfxPlatform {
 public:
     gfxAndroidPlatform();
@@ -60,7 +58,7 @@ public:
     virtual bool FontHintingEnabled() override;
     virtual bool RequiresLinearZoom() override;
 
-    FT_Library GetFTLibrary();
+    FT_Library GetFTLibrary() override;
 
     virtual bool CanRenderContentToDataSurface() const override {
       return true;

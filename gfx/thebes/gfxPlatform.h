@@ -39,6 +39,7 @@ class nsIAtom;
 class nsIObserver;
 class SRGBOverrideObserver;
 class gfxTextPerfMetrics;
+typedef struct FT_LibraryRec_ *FT_Library;
 
 namespace mozilla {
 namespace gl {
@@ -698,6 +699,10 @@ public:
      * GPUProcessManager, in the UI process.
      */
     virtual void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData);
+
+    virtual FT_Library GetFTLibrary() {
+      return nullptr;
+    }
 
 protected:
     gfxPlatform();
