@@ -964,6 +964,16 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU process launch time in milliseconds"
   },
+  "GPU_PROCESS_INITIALIZATION_TIME_MS" : {
+    "alert_emails": ["george@mozilla.com", "danderson@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1324095],
+    "kind": "exponential",
+    "high": 64000,
+    "n_buckets": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "GPU process initialization (excluding XPCOM and fork time) time in milliseconds"
+  },
   "JS_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT": {
     "alert_emails": ["jdemooij@mozilla.com"],
     "expires_in_version": "never",
@@ -2323,6 +2333,15 @@
     "kind": "enumerated",
     "n_values": 32,
     "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
+  },
+  "SPDY_CONTINUED_HEADERS": {
+    "expires_in_version": "59",
+    "alert_emails": ["necko@mozilla.com"],
+    "bug_numbers": [1324855],
+    "kind": "exponential",
+    "high": 32000000,
+    "n_buckets": 75,
+    "description": "Size of continued H2 headers in bytes."
   },
   "HPACK_ELEMENTS_EVICTED_DECOMPRESSOR": {
     "expires_in_version": "never",

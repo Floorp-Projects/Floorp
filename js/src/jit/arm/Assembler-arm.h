@@ -1395,6 +1395,12 @@ class Assembler : public AssemblerShared
 
     bool oom() const;
 
+    void disableProtection() {}
+    void enableProtection() {}
+    void setLowerBoundForProtection(size_t) {}
+    void unprotectRegion(unsigned char*, size_t) {}
+    void reprotectRegion(unsigned char*, size_t) {}
+
     void setPrinter(Sprinter* sp) {
 #ifdef JS_DISASM_ARM
         printer_ = sp;
