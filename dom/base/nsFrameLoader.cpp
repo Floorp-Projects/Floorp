@@ -988,8 +988,15 @@ nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
   NS_PRECONDITION(mOwnerContent, "Must have owning content");
 
   nsAutoString value;
-  bool isContent = mOwnerContent->AttrValueIs(
-    kNameSpaceID_None, TypeAttrName(), nsGkAtoms::content, eIgnoreCase);
+  bool isContent = false;
+  mOwnerContent->GetAttr(kNameSpaceID_None, TypeAttrName(), value);
+
+  // we accept "content" and "content-xxx" values.
+  // We ignore anything that comes after 'content-'.
+  isContent = value.LowerCaseEqualsLiteral("content") ||
+    StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                     nsCaseInsensitiveStringComparator());
+
 
   // Force mozbrowser frames to always be typeContent, even if the
   // mozbrowser interfaces are disabled.
@@ -2893,8 +2900,12 @@ nsFrameLoader::TryRemoteBrowser()
       return false;
     }
 
-    if (!mOwnerContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                    nsGkAtoms::content, eIgnoreCase)) {
+    nsAutoString value;
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+
+    if (!value.LowerCaseEqualsLiteral("content") &&
+        !StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                          nsCaseInsensitiveStringComparator())) {
       return false;
     }
 
@@ -3354,7 +3365,13 @@ nsFrameLoader::AttributeChanged(nsIDocument* aDocument,
 #endif
 
   parentTreeOwner->ContentShellRemoved(mDocShell);
-  if (aElement->AttrValueIs(kNameSpaceID_None, TypeAttrName(), nsGkAtoms::content, eIgnoreCase)) {
+
+  nsAutoString value;
+  aElement->GetAttr(kNameSpaceID_None, TypeAttrName(), value);
+
+  if (value.LowerCaseEqualsLiteral("content") ||
+      StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                       nsCaseInsensitiveStringComparator())) {
     parentTreeOwner->ContentShellAdded(mDocShell, is_primary);
   }
 }
