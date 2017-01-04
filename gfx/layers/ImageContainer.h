@@ -632,10 +632,6 @@ private:
   // mFrameIDsNotYetComposited
   ProducerID mCurrentProducerID;
 
-  // Object must be released on the ImageBridge thread. Field is immutable
-  // after creation of the ImageContainer.
-  RefPtr<ImageContainerChild> mIPDLChild;
-
   static mozilla::Atomic<uint32_t> sGenerationCounter;
 };
 
