@@ -162,6 +162,12 @@ public:
   void AssertTreeIsClean() {}
 #endif
 
+  /**
+   * Recompute our default computed styles.  This will eagerly create a new set
+   * of default computed style structs.
+   */
+  void RecomputeDefaultComputedStyles();
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,
