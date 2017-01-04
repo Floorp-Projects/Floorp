@@ -305,7 +305,7 @@ var ServerLoggingListener = Class({
       // If multiple logs come from the same line only the first log
       // has info about the backtrace. So, remember the last valid
       // location and use it for those that not set.
-      let location = this.parseBacktrace(backtrace);
+      let location = parseBacktrace(backtrace);
       if (location) {
         lastLocation = location;
       } else {
@@ -320,22 +320,6 @@ var ServerLoggingListener = Class({
     }
 
     return parsedMessage;
-  },
-
-  parseBacktrace: function (backtrace) {
-    if (!backtrace) {
-      return null;
-    }
-
-    let result = backtrace.match(/\s*(\d+)$/);
-    if (!result || result.length < 2) {
-      return backtrace;
-    }
-
-    return {
-      url: backtrace.slice(0, -result[0].length),
-      line: result[1]
-    };
   },
 
   getColumnMap: function (data) {
@@ -503,6 +487,22 @@ function format(msg) {
   return msg;
 }
 
+function parseBacktrace(backtrace) {
+  if (!backtrace) {
+    return null;
+  }
+
+  let result = backtrace.match(/^(.+?)\s*:\s*(\d+)$/);
+  if (!result || result.length != 3) {
+    return { url: backtrace };
+  }
+
+  return {
+    url: result[1],
+    line: parseInt(result[2], 10)
+  };
+}
+
 // These helper are cloned from SDK to avoid loading to
 // much SDK modules just because of two functions.
 function getInnerId(win) {
@@ -512,3 +512,4 @@ function getInnerId(win) {
 
 // Exports from this module
 exports.ServerLoggingListener = ServerLoggingListener;
+exports.parseBacktrace = parseBacktrace;
