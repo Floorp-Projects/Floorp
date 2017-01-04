@@ -33,4 +33,12 @@ assertEq(format.format(date), "2012年12月12日 3:00:00");
 format = new Intl.DateTimeFormat("ar-ma-u-ca-islamicc", longFormatOptions);
 assertEq(format.format(date), "28 محرم، 1434 03:00:00");
 
+
+// Test the .name property of the "format" getter.
+var desc = Object.getOwnPropertyDescriptor(Intl.DateTimeFormat.prototype, "format");
+assertEq(desc !== undefined, true);
+assertEq(typeof desc.get, "function");
+assertEq(desc.get.name, "get format");
+
+
 reportCompare(0, 0, 'ok');
