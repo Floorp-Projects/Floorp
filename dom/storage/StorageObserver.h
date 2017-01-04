@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIDOMStorageObserver_h__
-#define nsIDOMStorageObserver_h__
+#ifndef mozilla_dom_StorageObserver_h
+#define mozilla_dom_StorageObserver_h
 
 #include "nsIObserver.h"
 #include "nsITimer.h"
@@ -16,26 +16,26 @@
 namespace mozilla {
 namespace dom {
 
-class DOMStorageObserver;
+class StorageObserver;
 
-// Implementers are DOMStorageManager and DOMStorageDBParent to forward to
+// Implementers are StorageManager and StorageDBParent to forward to
 // child processes.
-class DOMStorageObserverSink
+class StorageObserverSink
 {
 public:
-  virtual ~DOMStorageObserverSink() {}
+  virtual ~StorageObserverSink() {}
 
 private:
-  friend class DOMStorageObserver;
+  friend class StorageObserver;
   virtual nsresult Observe(const char* aTopic,
                            const nsAString& aOriginAttributesPattern,
                            const nsACString& aOriginScope) = 0;
 };
 
-// Statically (though layout statics) initialized observer receiving and processing
-// chrome clearing notifications, such as cookie deletion etc.
-class DOMStorageObserver : public nsIObserver
-                         , public nsSupportsWeakReference
+// Statically (through layout statics) initialized observer receiving and
+// processing chrome clearing notifications, such as cookie deletion etc.
+class StorageObserver : public nsIObserver
+                      , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -43,27 +43,27 @@ public:
 
   static nsresult Init();
   static nsresult Shutdown();
-  static DOMStorageObserver* Self() { return sSelf; }
+  static StorageObserver* Self() { return sSelf; }
 
-  void AddSink(DOMStorageObserverSink* aObs);
-  void RemoveSink(DOMStorageObserverSink* aObs);
+  void AddSink(StorageObserverSink* aObs);
+  void RemoveSink(StorageObserverSink* aObs);
   void Notify(const char* aTopic,
               const nsAString& aOriginAttributesPattern = EmptyString(),
               const nsACString& aOriginScope = EmptyCString());
 
 private:
-  virtual ~DOMStorageObserver() {}
+  virtual ~StorageObserver() {}
 
   static void TestingPrefChanged(const char* aPrefName, void* aClosure);
 
-  static DOMStorageObserver* sSelf;
+  static StorageObserver* sSelf;
 
   // Weak references
-  nsTArray<DOMStorageObserverSink*> mSinks;
+  nsTArray<StorageObserverSink*> mSinks;
   nsCOMPtr<nsITimer> mDBThreadStartDelayTimer;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif
+#endif // mozilla_dom_StorageObserver_h
