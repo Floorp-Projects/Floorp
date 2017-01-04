@@ -1023,11 +1023,14 @@ SessionStore.prototype = {
     aHistory = aHistory || { entries: [{ url: aBrowser.currentURI.spec, title: aBrowser.contentTitle }], index: 1 };
 
     let tabData = {};
+    let tab = aWindow.BrowserApp.getTabForBrowser(aBrowser);
     tabData.entries = aHistory.entries;
     tabData.index = aHistory.index;
     tabData.attributes = { image: aBrowser.mIconURL };
-    tabData.desktopMode = aWindow.BrowserApp.getTabForBrowser(aBrowser).desktopMode;
+    tabData.desktopMode = tab.desktopMode;
     tabData.isPrivate = aBrowser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing;
+    tabData.tabId = tab.id;
+    tabData.parentId = tab.parentId;
 
     aBrowser.__SS_data = tabData;
   },
@@ -1644,10 +1647,10 @@ SessionStore.prototype = {
         tab = window.BrowserApp.addTab(entry.url, params);
       } else {
         tab = window.BrowserApp.getTabForId(tabData.tabId);
-        delete tabData.tabId;
 
         // Don't restore tab if user has closed it
         if (tab == null) {
+          delete tabData.tabId;
           continue;
         }
       }
