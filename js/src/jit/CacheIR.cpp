@@ -854,22 +854,26 @@ GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId, HandleId id)
     if (!proto)
         return false;
 
-    // Instantiate this property, for use during Ion compilation.
-    if (IsIonEnabled(cx_))
-        EnsureTrackPropertyTypes(cx_, proto, id);
-
-    // For now, only look for properties directly set on the prototype.
-    Shape* shape = proto->lookup(cx_, id);
-    if (!shape || !shape->hasSlot() || !shape->hasDefaultGetter())
+    RootedShape shape(cx_);
+    RootedNativeObject holder(cx_);
+    NativeGetPropCacheability type = CanAttachNativeGetProp(cx_, proto, id, &holder, &shape, pc_,
+                                                            engine_, canAttachGetter_,
+                                                            isTemporarilyUnoptimizable_);
+    if (type != CanAttachReadSlot)
         return false;
+
+    if (holder) {
+        // Instantiate this property, for use during Ion compilation.
+        if (IsIonEnabled(cx_))
+            EnsureTrackPropertyTypes(cx_, holder, id);
+    }
 
     writer.guardType(valId, primitiveType);
     maybeEmitIdGuard(id);
 
     ObjOperandId protoId = writer.loadObject(proto);
-    writer.guardShape(protoId, proto->lastProperty());
-    EmitLoadSlotResult(writer, protoId, proto, shape);
-    writer.typeMonitorResult();
+    EmitReadSlotResult(writer, proto, holder, shape, protoId);
+    EmitReadSlotReturn(writer, proto, holder, shape);
     return true;
 }
 

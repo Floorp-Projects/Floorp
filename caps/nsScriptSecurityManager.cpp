@@ -163,6 +163,7 @@ class ClassInfoData
 public:
     ClassInfoData(nsIClassInfo *aClassInfo, const char *aName)
         : mClassInfo(aClassInfo),
+          mFlags(0),
           mName(const_cast<char *>(aName)),
           mDidGetFlags(false),
           mMustFreeName(false)

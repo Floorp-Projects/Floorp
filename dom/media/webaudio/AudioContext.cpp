@@ -434,8 +434,8 @@ AudioContext::CreateBiquadFilter(ErrorResult& aRv)
 }
 
 already_AddRefed<IIRFilterNode>
-AudioContext::CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<double>& aFeedforward,
-                              const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback,
+AudioContext::CreateIIRFilter(const Sequence<double>& aFeedforward,
+                              const Sequence<double>& aFeedback,
                               mozilla::ErrorResult& aRv)
 {
   IIRFilterOptions options;

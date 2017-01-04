@@ -27,11 +27,11 @@ exports.items = [
     name: "calllog start",
     description: l10n.lookup("calllogStartDesc"),
 
-    exec: function(args, context) {
+    exec: function (args, context) {
       let contentWindow = context.environment.window;
 
       let dbg = new Debugger(contentWindow);
-      dbg.onEnterFrame = function(frame) {
+      dbg.onEnterFrame = function (frame) {
         // BUG 773652 -  Make the output from the GCLI calllog command nicer
         contentWindow.console.log("Method call: " + this.callDescription(frame));
       }.bind(this);
@@ -45,12 +45,11 @@ exports.items = [
       return l10n.lookup("calllogStartReply");
     },
 
-    callDescription: function(frame) {
+    callDescription: function (frame) {
       let name = "<anonymous>";
       if (frame.callee.name) {
         name = frame.callee.name;
-      }
-      else {
+      } else {
         let desc = frame.callee.getOwnPropertyDescriptor("displayName");
         if (desc && desc.value && typeof desc.value == "string") {
           name = desc.value;
@@ -61,7 +60,7 @@ exports.items = [
       return name + "(" + args + ")";
     },
 
-    valueToString: function(value) {
+    valueToString: function (value) {
       if (typeof value !== "object" || value === null) {
         return uneval(value);
       }
@@ -74,7 +73,7 @@ exports.items = [
     name: "calllog stop",
     description: l10n.lookup("calllogStopDesc"),
 
-    exec: function(args, context) {
+    exec: function (args, context) {
       let numDebuggers = debuggers.length;
       if (numDebuggers == 0) {
         return l10n.lookup("calllogStopNoLogging");
@@ -111,7 +110,7 @@ exports.items = [
         manual: l10n.lookup("calllogChromeSourceTypeManual"),
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let globalObj;
       let contentWindow = context.environment.window;
 
@@ -136,17 +135,16 @@ exports.items = [
         }
       } else {
         let chromeWin = context.environment.chromeDocument.defaultView;
-        let sandbox = new Cu.Sandbox(chromeWin,
-                                    {
-                                      sandboxPrototype: chromeWin,
-                                      wantXrays: false,
-                                      sandboxName: "gcli-cmd-calllog-chrome"
-                                    });
+        let sandbox = new Cu.Sandbox(chromeWin, {
+          sandboxPrototype: chromeWin,
+          wantXrays: false,
+          sandboxName: "gcli-cmd-calllog-chrome"
+        });
         let returnVal;
         try {
           returnVal = Cu.evalInSandbox(args.source, sandbox, "ECMAv5");
           sandboxes.push(sandbox);
-        } catch(e) {
+        } catch (e) {
           // We need to save the message before cleaning up else e contains a dead
           // object.
           let msg = l10n.lookup("callLogChromeEvalException") + ": " + e;
@@ -164,7 +162,7 @@ exports.items = [
       let dbg = new Debugger(globalObj);
       chromeDebuggers.push(dbg);
 
-      dbg.onEnterFrame = function(frame) {
+      dbg.onEnterFrame = function (frame) {
         // BUG 773652 -  Make the output from the GCLI calllog command nicer
         contentWindow.console.log(l10n.lookup("callLogChromeMethodCall") +
                                   ": " + this.callDescription(frame));
@@ -177,13 +175,14 @@ exports.items = [
       return l10n.lookup("calllogChromeStartReply");
     },
 
-    valueToString: function(value) {
-      if (typeof value !== "object" || value === null)
+    valueToString: function (value) {
+      if (typeof value !== "object" || value === null) {
         return uneval(value);
+      }
       return "[object " + value.class + "]";
     },
 
-    callDescription: function(frame) {
+    callDescription: function (frame) {
       let name = frame.callee.name || l10n.lookup("callLogChromeAnonFunction");
       let args = frame.arguments.map(this.valueToString).join(", ");
       return name + "(" + args + ")";
@@ -197,7 +196,7 @@ exports.items = [
     get hidden() {
       return gcli.hiddenByChromePref();
     },
-    exec: function(args, context) {
+    exec: function (args, context) {
       let numDebuggers = chromeDebuggers.length;
       if (numDebuggers == 0) {
         return l10n.lookup("calllogChromeStopNoLogging");

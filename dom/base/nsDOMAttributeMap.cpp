@@ -65,7 +65,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttributeMap)
   for (auto iter = tmp->mAttributeCache.Iter(); !iter.Done(); iter.Next()) {
     cb.NoteXPCOMChild(static_cast<nsINode*>(iter.Data().get()));
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
