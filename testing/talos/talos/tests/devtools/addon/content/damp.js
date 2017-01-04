@@ -114,6 +114,17 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
+  waitForNetworkRequests: Task.async(function*(label, toolbox) {
+    const { NetMonitorController } = toolbox.getCurrentPanel().panelWin;
+    const start = performance.now();
+    yield NetMonitorController.waitForAllRequestsFinished();
+    const end = performance.now();
+    this._results.push({
+      name: label + ".requestsFinished.DAMP",
+      value: end - start
+    });
+  }),
+
   _consoleBulkLoggingTest: Task.async(function*() {
     let TOTAL_MESSAGES = 10;
     let tab = yield this.testSetup(SIMPLE_URL);
@@ -310,8 +321,10 @@ Damp.prototype = {
 
       netmonitorOpen: Task.async(function*() {
         yield this.testSetup(url);
-        yield openToolboxAndLog(label + ".netmonitor", "netmonitor");
+        const toolbox = yield openToolboxAndLog(label + ".netmonitor", "netmonitor");
+        const requestsDone = this.waitForNetworkRequests(label + ".netmonitor", toolbox);
         yield reloadPageAndLog(label + ".netmonitor");
+        yield requestsDone;
         yield closeToolboxAndLog(label + ".netmonitor");
         yield this.testTeardown();
       }),
