@@ -18,6 +18,7 @@
 /* Panel Content */
 
 .panelContent {
+  direction: ltr;
   overflow-y: auto;
   width: 100%;
 }
