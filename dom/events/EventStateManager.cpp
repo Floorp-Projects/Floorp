@@ -298,6 +298,7 @@ EventStateManager::EventStateManager()
   , mLClickCount(0)
   , mMClickCount(0)
   , mRClickCount(0)
+  , mInTouchDrag(false)
   , m_haveShutdown(false)
 {
   if (sESMInstanceCount == 0) {
@@ -605,11 +606,25 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     return NS_OK;
   }
 
+  WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
+  if (touchEvent && mInTouchDrag) {
+    if (touchEvent->mMessage == eTouchMove) {
+      GenerateDragGesture(aPresContext, touchEvent);
+    } else {
+      mInTouchDrag = false;
+      StopTrackingDragGesture();
+    }
+  }
+
   switch (aEvent->mMessage) {
   case eContextMenu:
     if (sIsPointerLocked) {
       return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
+    break;
+  case eMouseTouchDrag:
+    mInTouchDrag = true;
+    BeginTrackingDragGesture(aPresContext, mouseEvent, aTargetFrame);
     break;
   case eMouseDown: {
     switch (mouseEvent->button) {
@@ -1629,7 +1644,7 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   mGestureModifiers = inDownEvent->mModifiers;
   mGestureDownButtons = inDownEvent->buttons;
 
-  if (Prefs::ClickHoldContextMenu()) {
+  if (inDownEvent->mMessage != eMouseTouchDrag && Prefs::ClickHoldContextMenu()) {
     // fire off a timer to track click-hold
     CreateClickHoldTimer(aPresContext, inDownFrame, inDownEvent);
   }
@@ -1678,7 +1693,7 @@ EventStateManager::FillInEventFromGestureDown(WidgetMouseEvent* aEvent)
 // the mouse down, then fire off a drag gesture event.
 void
 EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
-                                       WidgetMouseEvent* aEvent)
+                                       WidgetInputEvent* aEvent)
 {
   NS_ASSERTION(aPresContext, "This shouldn't happen.");
   if (IsTrackingDragGesture()) {
@@ -1721,8 +1736,9 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
     }
 
     // fire drag gesture if mouse has moved enough
-    LayoutDeviceIntPoint pt =
-      aEvent->mRefPoint + aEvent->mWidget->WidgetToScreenOffset();
+    LayoutDeviceIntPoint pt = aEvent->mWidget->WidgetToScreenOffset() +
+      (aEvent->AsTouchEvent() ? aEvent->AsTouchEvent()->mTouches[0]->mRefPoint
+                              : aEvent->mRefPoint);
     LayoutDeviceIntPoint distance = pt - mGestureDownPoint;
     if (Abs(distance.x) > AssertedCast<uint32_t>(pixelThresholdX) ||
         Abs(distance.y) > AssertedCast<uint32_t>(pixelThresholdY)) {
@@ -1771,7 +1787,13 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       FillInEventFromGestureDown(&startEvent);
 
       startEvent.mDataTransfer = dataTransfer;
-      startEvent.inputSource = aEvent->inputSource;
+      if (aEvent->AsMouseEvent()) {
+        startEvent.inputSource = aEvent->AsMouseEvent()->inputSource;
+      } else if (aEvent->AsTouchEvent()) {
+        startEvent.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+      } else {
+        MOZ_ASSERT(false);
+      }
 
       // Dispatch to the DOM. By setting mCurrentTarget we are faking
       // out the ESM and telling it that the current target frame is
