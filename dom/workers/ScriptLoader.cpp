@@ -228,6 +228,7 @@ struct ScriptLoadInfo
   , mExecutionScheduled(false)
   , mExecutionResult(false)
   , mCacheStatus(Uncached)
+  , mLoadFlags(nsIRequest::LOAD_NORMAL)
   { }
 
   ~ScriptLoadInfo()
@@ -289,6 +290,8 @@ struct ScriptLoadInfo
   };
 
   CacheStatus mCacheStatus;
+
+  nsLoadFlags mLoadFlags;
 
   Maybe<bool> mMutedErrorFlag;
 
@@ -902,7 +905,7 @@ private:
     ScriptLoadInfo& loadInfo = mLoadInfos[aIndex];
     nsresult& rv = loadInfo.mLoadResult;
 
-    nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+    nsLoadFlags loadFlags = loadInfo.mLoadFlags;
 
     // Get the top-level worker.
     WorkerPrivate* topWorkerPrivate = mWorkerPrivate;
@@ -924,13 +927,6 @@ private:
           NS_ENSURE_SUCCESS(rv, rv);
         }
       }
-    }
-
-    // If we are loading a script for a ServiceWorker then we must not
-    // try to intercept it.  If the interception matches the current
-    // ServiceWorker's scope then we could deadlock the load.
-    if (mWorkerPrivate->IsServiceWorker()) {
-      loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
     }
 
     if (!channel) {
@@ -2252,6 +2248,7 @@ LoadMainScript(WorkerPrivate* aWorkerPrivate,
 
   ScriptLoadInfo* info = loadInfos.AppendElement();
   info->mURL = aScriptURL;
+  info->mLoadFlags = aWorkerPrivate->GetLoadFlags();
 
   LoadAllScripts(aWorkerPrivate, loadInfos, true, aWorkerScriptType, aRv);
 }
@@ -2277,6 +2274,7 @@ Load(WorkerPrivate* aWorkerPrivate,
 
   for (uint32_t index = 0; index < urlCount; index++) {
     loadInfos[index].mURL = aScriptURLs[index];
+    loadInfos[index].mLoadFlags = aWorkerPrivate->GetLoadFlags();
   }
 
   LoadAllScripts(aWorkerPrivate, loadInfos, false, aWorkerScriptType, aRv);
