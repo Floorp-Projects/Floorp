@@ -9,8 +9,7 @@ const nsICookiePermission = Components.interfaces.nsICookiePermission;
 
 const NOTIFICATION_FLUSH_PERMISSIONS = "flush-pending-permissions";
 
-function Permission(principal, type, capability)
-{
+function Permission(principal, type, capability) {
   this.principal = principal;
   this.origin = principal.origin;
   this.type = type;
@@ -28,12 +27,10 @@ var gPermissionManager = {
 
   _view: {
     _rowCount: 0,
-    get rowCount()
-    {
+    get rowCount() {
       return this._rowCount;
     },
-    getCellText(aRow, aColumn)
-    {
+    getCellText(aRow, aColumn) {
       if (aColumn.id == "siteCol")
         return gPermissionManager._permissions[aRow].origin;
       else if (aColumn.id == "statusCol")
@@ -59,8 +56,7 @@ var gPermissionManager = {
     }
   },
 
-  _getCapabilityString(aCapability)
-  {
+  _getCapabilityString(aCapability) {
     var stringKey = null;
     switch (aCapability) {
     case nsIPermissionManager.ALLOW_ACTION:
@@ -79,8 +75,7 @@ var gPermissionManager = {
     return this._bundle.getString(stringKey);
   },
 
-  addPermission(aCapability)
-  {
+  addPermission(aCapability) {
     var textbox = document.getElementById("url");
     var input_url = textbox.value.replace(/^\s*/, ""); // trim any leading space
     let principal;
@@ -131,8 +126,7 @@ var gPermissionManager = {
     if (!permissionExists) {
       this._permissionsToAdd.set(principal.origin, permissionParams);
       this._addPermission(permissionParams);
-    }
-    else if (!capabilityExists) {
+    } else if (!capabilityExists) {
       this._permissionsToAdd.set(principal.origin, permissionParams);
       this._handleCapabilityChange();
     }
@@ -147,8 +141,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = this._permissions.length == 0;
   },
 
-  _removePermission(aPermission)
-  {
+  _removePermission(aPermission) {
     this._removePermissionFromList(aPermission.principal);
 
     // If this permission was added during this session, let's remove
@@ -162,8 +155,7 @@ var gPermissionManager = {
 
   },
 
-  _handleCapabilityChange()
-  {
+  _handleCapabilityChange() {
     // Re-do the sort, if the status changed from Block to Allow
     // or vice versa, since if we're sorted on status, we may no
     // longer be in order.
@@ -173,8 +165,7 @@ var gPermissionManager = {
     this._tree.treeBoxObject.invalidate();
   },
 
-  _addPermission(aPermission)
-  {
+  _addPermission(aPermission) {
     this._addPermissionToList(aPermission);
     ++this._view._rowCount;
     this._tree.treeBoxObject.rowCountChanged(this._view.rowCount - 1, 1);
@@ -182,8 +173,7 @@ var gPermissionManager = {
     this._resortPermissions();
   },
 
-  _resortPermissions()
-  {
+  _resortPermissions() {
     gTreeUtils.sort(this._tree, this._view, this._permissions,
                     this._lastPermissionSortColumn,
                     this._permissionsComparator,
@@ -191,34 +181,29 @@ var gPermissionManager = {
                     !this._lastPermissionSortAscending); // keep sort direction
   },
 
-  onHostInput(aSiteField)
-  {
+  onHostInput(aSiteField) {
     document.getElementById("btnSession").disabled = !aSiteField.value;
     document.getElementById("btnBlock").disabled = !aSiteField.value;
     document.getElementById("btnAllow").disabled = !aSiteField.value;
   },
 
-  onWindowKeyPress(aEvent)
-  {
+  onWindowKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE)
       window.close();
   },
 
-  onHostKeyPress(aEvent)
-  {
+  onHostKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_RETURN)
       document.getElementById("btnAllow").click();
   },
 
-  onLoad()
-  {
+  onLoad() {
     this._bundle = document.getElementById("bundlePreferences");
     var params = window.arguments[0];
     this.init(params);
   },
 
-  init(aParams)
-  {
+  init(aParams) {
     if (this._type) {
       // reusing an open dialog, clear the old observer
       this.uninit();
@@ -275,8 +260,7 @@ var gPermissionManager = {
     urlField.focus();
   },
 
-  uninit()
-  {
+  uninit() {
     if (!this._observerRemoved) {
       Services.obs.removeObserver(this, "perm-changed");
 
@@ -284,8 +268,7 @@ var gPermissionManager = {
     }
   },
 
-  observe(aSubject, aTopic, aData)
-  {
+  observe(aSubject, aTopic, aData) {
     if (aTopic == "perm-changed") {
       var permission = aSubject.QueryInterface(Components.interfaces.nsIPermission);
 
@@ -295,8 +278,7 @@ var gPermissionManager = {
 
       if (aData == "added") {
         this._addPermission(permission);
-      }
-      else if (aData == "changed") {
+      } else if (aData == "changed") {
         for (var i = 0; i < this._permissions.length; ++i) {
           if (permission.matches(this._permissions[i].principal, true)) {
             this._permissions[i].capability = this._getCapabilityString(permission.capability);
@@ -304,23 +286,20 @@ var gPermissionManager = {
           }
         }
         this._handleCapabilityChange();
-      }
-      else if (aData == "deleted") {
+      } else if (aData == "deleted") {
         this._removePermissionFromList(permission.principal);
       }
     }
   },
 
-  onPermissionSelected()
-  {
+  onPermissionSelected() {
     var hasSelection = this._tree.view.selection.count > 0;
     var hasRows = this._tree.view.rowCount > 0;
     document.getElementById("removePermission").disabled = !hasRows || !hasSelection;
     document.getElementById("removeAllPermissions").disabled = !hasRows;
   },
 
-  onPermissionDeleted()
-  {
+  onPermissionDeleted() {
     if (!this._view.rowCount)
       return;
     var removedPermissions = [];
@@ -333,8 +312,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = !this._permissions.length;
   },
 
-  onAllPermissionsDeleted()
-  {
+  onAllPermissionsDeleted() {
     if (!this._view.rowCount)
       return;
     var removedPermissions = [];
@@ -347,8 +325,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = true;
   },
 
-  onPermissionKeyPress(aEvent)
-  {
+  onPermissionKeyPress(aEvent) {
     if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE) {
       this.onPermissionDeleted();
     } else if (AppConstants.platform == "macosx" &&
@@ -359,14 +336,12 @@ var gPermissionManager = {
 
   _lastPermissionSortColumn: "",
   _lastPermissionSortAscending: false,
-  _permissionsComparator(a, b)
-  {
+  _permissionsComparator(a, b) {
     return a.toLowerCase().localeCompare(b.toLowerCase());
   },
 
 
-  onPermissionSort(aColumn)
-  {
+  onPermissionSort(aColumn) {
     this._lastPermissionSortAscending = gTreeUtils.sort(this._tree,
                                                         this._view,
                                                         this._permissions,
@@ -377,8 +352,7 @@ var gPermissionManager = {
     this._lastPermissionSortColumn = aColumn;
   },
 
-  onApplyChanges()
-  {
+  onApplyChanges() {
     // Stop observing permission changes since we are about
     // to write out the pending adds/deletes and don't need
     // to update the UI
@@ -395,8 +369,7 @@ var gPermissionManager = {
     window.close();
   },
 
-  _loadPermissions()
-  {
+  _loadPermissions() {
     this._tree = document.getElementById("permissionsTree");
     this._permissions = [];
 
@@ -417,8 +390,7 @@ var gPermissionManager = {
     document.getElementById("removeAllPermissions").disabled = this._permissions.length == 0;
   },
 
-  _addPermissionToList(aPermission)
-  {
+  _addPermissionToList(aPermission) {
     if (aPermission.type == this._type &&
         (!this._manageCapability ||
          (aPermission.capability == this._manageCapability))) {
@@ -432,8 +404,7 @@ var gPermissionManager = {
     }
   },
 
-  _removePermissionFromList(aPrincipal)
-  {
+  _removePermissionFromList(aPrincipal) {
     for (let i = 0; i < this._permissions.length; ++i) {
       if (this._permissions[i].principal.equals(aPrincipal)) {
         this._permissions.splice(i, 1);
@@ -445,18 +416,15 @@ var gPermissionManager = {
     }
   },
 
-  setOrigin(aOrigin)
-  {
+  setOrigin(aOrigin) {
     document.getElementById("url").value = aOrigin;
   }
 };
 
-function setOrigin(aOrigin)
-{
+function setOrigin(aOrigin) {
   gPermissionManager.setOrigin(aOrigin);
 }
 
-function initWithParams(aParams)
-{
+function initWithParams(aParams) {
   gPermissionManager.init(aParams);
 }

@@ -1338,8 +1338,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
                   continue;
                 }
               }
-            }
-            else {
+            } else {
               // need to create a new item
               item = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "richlistitem");
               item.setAttribute("dir", this.style.direction);
@@ -1358,8 +1357,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               // re-use the existing item
               item._adjustAcItem();
               item.collapsed = false;
-            }
-            else {
+            } else {
               // set the class at the end so we can use the attributes
               // in the xbl constructor
               item.className = "autocomplete-richlistitem";

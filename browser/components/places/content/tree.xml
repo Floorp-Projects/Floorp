@@ -46,8 +46,7 @@
         <getter><![CDATA[
           try {
             return this.treeBoxObject.view.wrappedJSObject || null;
-          }
-          catch (e) {
+          } catch (e) {
             return null;
           }
         ]]></getter>
@@ -262,8 +261,7 @@
         <getter><![CDATA[
           try {
             return this.view.QueryInterface(Ci.nsINavHistoryResultObserver).result;
-          }
-          catch (e) {
+          } catch (e) {
             return null;
           }
         ]]></getter>
@@ -481,17 +479,15 @@
               // it, rather than insert adjacent to it.
               container = lastSelected;
               index = -1;
-            }
-            else if (lastSelected.containerOpen &&
-                     orientation == Ci.nsITreeView.DROP_AFTER &&
-                     lastSelected.hasChildren) {
+            } else if (lastSelected.containerOpen &&
+                       orientation == Ci.nsITreeView.DROP_AFTER &&
+                       lastSelected.hasChildren) {
              // If the last selected item is an open container and the user is
              // trying to drag into it as a first item, really insert into it.
              container = lastSelected;
              orientation = Ci.nsITreeView.DROP_ON;
              index = 0;
-            }
-            else {
+            } else {
               // Use the last-selected node's container.
               container = lastSelected.parent;
 
@@ -509,17 +505,15 @@
                     Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
                 // If we are within a sorted view, insert at the end
                 index = -1;
-              }
-              else if (queryOptions.excludeItems ||
-                       queryOptions.excludeQueries ||
-                       queryOptions.excludeReadOnlyFolders) {
+              } else if (queryOptions.excludeItems ||
+                         queryOptions.excludeQueries ||
+                         queryOptions.excludeReadOnlyFolders) {
                 // Some item may be invisible, insert near last selected one.
                 // We don't replace index here to avoid requests to the db,
                 // instead it will be calculated later by the controller.
                 index = -1;
                 dropNearItemId = lastSelected.itemId;
-              }
-              else {
+              } else {
                 var lsi = container.getChildIndex(lastSelected);
                 index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
               }
@@ -623,8 +617,7 @@
             // this node if we don't find any additional results here.
             var previousOpenness = node.containerOpen;
             node.containerOpen = true;
-            for (var child = 0;  child < node.childCount && ids.length > 0;
-                 child++) {
+            for (var child = 0; child < node.childCount && ids.length > 0; child++) {
               var childNode = node.getChild(child);
               var found = findNodes(childNode);
               if (!foundOne)
@@ -646,8 +639,7 @@
             result.suppressNotifications = true
           try {
             findNodes(this.result.root);
-          }
-          finally {
+          } finally {
             if (!didSuppressNotifications)
               result.suppressNotifications = false;
           }
@@ -770,14 +762,12 @@
         if (cell.row == -1) {
           // If the row is not valid we try to insert inside the resultNode.
           orientation = Ci.nsITreeView.DROP_ON;
-        }
-        else if (PlacesUtils.nodeIsContainer(node) &&
+        } else if (PlacesUtils.nodeIsContainer(node) &&
                  eventY > rowHeight * 0.75) {
           // If we are below the 75% of a container the treeview we try
           // to drop after the node.
           orientation = Ci.nsITreeView.DROP_AFTER;
-        }
-        else if (PlacesUtils.nodeIsContainer(node) &&
+        } else if (PlacesUtils.nodeIsContainer(node) &&
                  eventY > rowHeight * 0.25) {
           // If we are below the 25% of a container the treeview we try
           // to drop inside the node.

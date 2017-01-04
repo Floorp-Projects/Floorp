@@ -2,8 +2,7 @@
 PKT_SAVED_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
-var PKT_SAVED_OVERLAY = function(options)
-{
+var PKT_SAVED_OVERLAY = function(options) {
     var myself = this;
     this.inited = false;
     this.active = false;
@@ -38,18 +37,14 @@ var PKT_SAVED_OVERLAY = function(options)
         }
     };
     this.fillUserTags = function() {
-        thePKT_SAVED.sendMessage("getTags", {}, function(resp)
-        {
-            if (typeof resp == 'object' && typeof resp.tags == 'object')
-            {
+        thePKT_SAVED.sendMessage("getTags", {}, function(resp) {
+            if (typeof resp == 'object' && typeof resp.tags == 'object') {
                 myself.userTags = resp.tags;
             }
         });
     };
-    this.fillSuggestedTags = function()
-    {
-        if (!$('.pkt_ext_suggestedtag_detail').length)
-        {
+    this.fillSuggestedTags = function() {
+        if (!$('.pkt_ext_suggestedtag_detail').length) {
             myself.suggestedTagsLoaded = true;
             myself.startCloseTimer();
             return;
@@ -58,14 +53,11 @@ var PKT_SAVED_OVERLAY = function(options)
         thePKT_SAVED.sendMessage("getSuggestedTags",
         {
             url: myself.savedUrl
-        }, function(resp)
-        {
+        }, function(resp) {
             $('.pkt_ext_suggestedtag_detail').removeClass('pkt_ext_suggestedtag_detail_loading');
-            if (resp.status == 'success')
-            {
+            if (resp.status == 'success') {
                 var newtags = [];
-                for (var i = 0; i < resp.value.suggestedTags.length; i++)
-                {
+                for (var i = 0; i < resp.value.suggestedTags.length; i++) {
                     newtags.push(resp.value.suggestedTags[i].tag);
                 }
                 myself.suggestedTagsLoaded = true;
@@ -73,8 +65,7 @@ var PKT_SAVED_OVERLAY = function(options)
                     myself.startCloseTimer();
                 }
                 myself.fillTagContainer(newtags, $('.pkt_ext_suggestedtag_detail ul'), 'token_suggestedtag');
-            }
-            else if (resp.status == 'error') {
+            } else if (resp.status == 'error') {
                 var msg = $('<p class="suggestedtag_msg">');
                 msg.text(resp.error.message);
                 $('.pkt_ext_suggestedtag_detail').append(msg);
@@ -98,26 +89,20 @@ var PKT_SAVED_OVERLAY = function(options)
             myself.closeValid = false;
         });
     };
-    this.startCloseTimer = function(manualtime)
-    {
+    this.startCloseTimer = function(manualtime) {
         var settime = manualtime ? manualtime : myself.autocloseTiming;
-        if (typeof myself.autocloseTimer == 'number')
-        {
+        if (typeof myself.autocloseTimer == 'number') {
             clearTimeout(myself.autocloseTimer);
         }
-        myself.autocloseTimer = setTimeout(function()
-        {
-            if (myself.closeValid || myself.preventCloseTimerCancel)
-            {
+        myself.autocloseTimer = setTimeout(function() {
+            if (myself.closeValid || myself.preventCloseTimerCancel) {
                 myself.preventCloseTimerCancel = false;
                 myself.closePopup();
             }
         }, settime);
     };
-    this.stopCloseTimer = function()
-    {
-        if (myself.preventCloseTimerCancel)
-        {
+    this.stopCloseTimer = function() {
+        if (myself.preventCloseTimerCancel) {
             return;
         }
         clearTimeout(myself.autocloseTimer);
@@ -128,12 +113,9 @@ var PKT_SAVED_OVERLAY = function(options)
     };
     this.checkValidTagSubmit = function() {
         var inputlength = $.trim($('.pkt_ext_tag_input_wrapper').find('.token-input-input-token').children('input').val()).length;
-        if ($('.pkt_ext_containersaved').find('.token-input-token').length || (inputlength > 0 && inputlength < 26))
-        {
+        if ($('.pkt_ext_containersaved').find('.token-input-token').length || (inputlength > 0 && inputlength < 26)) {
             $('.pkt_ext_containersaved').find('.pkt_ext_btn').removeClass('pkt_ext_btn_disabled');
-        }
-        else
-        {
+        } else {
             $('.pkt_ext_containersaved').find('.pkt_ext_btn').addClass('pkt_ext_btn_disabled');
         }
         myself.updateSlidingTagList();
@@ -145,22 +127,16 @@ var PKT_SAVED_OVERLAY = function(options)
         var listleftnatural = listleft - listleftmanual;
         var leftwidth = $('.pkt_ext_tag_input_wrapper').outerWidth();
 
-        if ((inputleft + listleft + 20) > leftwidth)
-        {
+        if ((inputleft + listleft + 20) > leftwidth) {
             $('.token-input-list').css('left', Math.min(((inputleft + listleftnatural - leftwidth + 20) * -1), 0) + 'px');
-        }
-        else
-        {
+        } else {
             $('.token-input-list').css('left', '0');
         }
     };
     this.checkPlaceholderStatus = function() {
-        if (this.wrapper.find('.pkt_ext_tag_input_wrapper').find('.token-input-token').length)
-        {
+        if (this.wrapper.find('.pkt_ext_tag_input_wrapper').find('.token-input-token').length) {
             this.wrapper.find('.token-input-input-token input').attr('placeholder', '');
-        }
-        else
-        {
+        } else {
             this.wrapper.find('.token-input-input-token input').attr('placeholder', $('.pkt_ext_tag_input').attr('placeholder')).css('width', '200px');
         }
     };
@@ -265,8 +241,7 @@ var PKT_SAVED_OVERLAY = function(options)
                     e.stopImmediatePropagation();
                     inputwrapper.find('.pkt_ext_tag_input').tokenInput('remove', {name:selected.find('p').text()});
                 }
-            }
-            else if ($(e.target).parent().hasClass('token-input-input-token')) {
+            } else if ($(e.target).parent().hasClass('token-input-input-token')) {
                 e.stopImmediatePropagation();
             }
         });
@@ -290,18 +265,15 @@ var PKT_SAVED_OVERLAY = function(options)
     this.initAddTagInput = function() {
         $('.pkt_ext_btn').click(function(e) {
             e.preventDefault();
-            if ($(this).hasClass('pkt_ext_btn_disabled') || $('.pkt_ext_edit_msg_active').filter('.pkt_ext_edit_msg_error').length)
-            {
+            if ($(this).hasClass('pkt_ext_btn_disabled') || $('.pkt_ext_edit_msg_active').filter('.pkt_ext_edit_msg_error').length) {
                 return;
             }
             myself.disableInput();
             $('.pkt_ext_containersaved').find('.pkt_ext_detail h2').text(myself.dictJSON.processingtags);
             var originaltags = [];
-            $('.token-input-token').each(function()
-            {
+            $('.token-input-token').each(function() {
                 var text = $.trim($(this).find('p').text());
-                if (text.length)
-                {
+                if (text.length) {
                     originaltags.push(text);
                 }
             });
@@ -310,14 +282,10 @@ var PKT_SAVED_OVERLAY = function(options)
             {
                 url: myself.savedUrl,
                 tags: originaltags
-            }, function(resp)
-            {
-                if (resp.status == 'success')
-                {
+            }, function(resp) {
+                if (resp.status == 'success') {
                     myself.showStateFinalMsg(myself.dictJSON.tagssaved);
-                }
-                else if (resp.status == 'error')
-                {
+                } else if (resp.status == 'error') {
                     $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error.message);
                 }
             });
@@ -340,8 +308,7 @@ var PKT_SAVED_OVERLAY = function(options)
                 }, function(resp) {
                     if (resp.status == 'success') {
                         myself.showStateFinalMsg(myself.dictJSON.pageremoved);
-                    }
-                    else if (resp.status == 'error') {
+                    } else if (resp.status == 'error') {
                         $('.pkt_ext_edit_msg').addClass('pkt_ext_edit_msg_error pkt_ext_edit_msg_active').text(resp.error.message);
                     }
                 });
@@ -349,8 +316,7 @@ var PKT_SAVED_OVERLAY = function(options)
         });
     };
     this.initOpenListInput = function() {
-        $('.pkt_ext_openpocket').click(function(e)
-        {
+        $('.pkt_ext_openpocket').click(function(e) {
             e.preventDefault();
             thePKT_SAVED.sendMessage("openTabWithUrl",
             {
@@ -402,8 +368,7 @@ var PKT_SAVED_OVERLAY = function(options)
     this.showStateSaved = function(initobj) {
         this.wrapper.find('.pkt_ext_detail h2').text(this.dictJSON.pagesaved);
         this.wrapper.find('.pkt_ext_btn').addClass('pkt_ext_btn_disabled');
-        if (typeof initobj.item == 'object')
-        {
+        if (typeof initobj.item == 'object') {
             this.savedItemId = initobj.item.item_id;
             this.savedUrl = initobj.item.given_url;
         }
@@ -412,8 +377,7 @@ var PKT_SAVED_OVERLAY = function(options)
         myself.fillUserTags();
         if (myself.suggestedTagsLoaded) {
             myself.startCloseTimer();
-        }
-        else {
+        } else {
             myself.fillSuggestedTags();
         }
     };
@@ -425,8 +389,7 @@ var PKT_SAVED_OVERLAY = function(options)
             '"': '&quot;',
             "'": '&#39;'
         };
-        if (typeof s !== 'string')
-        {
+        if (typeof s !== 'string') {
             return '';
         }
         return String(s).replace(/[&<>"']/g, function(str) {
@@ -434,8 +397,7 @@ var PKT_SAVED_OVERLAY = function(options)
         });
     };
     this.showStateFinalMsg = function(msg) {
-        this.wrapper.find('.pkt_ext_tag_detail').one('webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd', function(e)
-        {
+        this.wrapper.find('.pkt_ext_tag_detail').one('webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd', function(e) {
             $(this).off('webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd');
             myself.preventCloseTimerCancel = true;
             myself.startCloseTimer(myself.autocloseTimingFinalState);
@@ -450,17 +412,14 @@ var PKT_SAVED_OVERLAY = function(options)
         this.preventCloseTimerCancel = true;
         this.startCloseTimer(myself.autocloseTimingFinalState);
     }
-    this.getTranslations = function()
-    {
+    this.getTranslations = function() {
         this.dictJSON = window.pocketStrings;
     };
 };
 
 PKT_SAVED_OVERLAY.prototype = {
-    create()
-    {
-        if (this.active)
-        {
+    create() {
+        if (this.active) {
             return;
         }
         this.active = true;
@@ -472,14 +431,12 @@ PKT_SAVED_OVERLAY.prototype = {
         this.dictJSON.pockethost = this.pockethost;
 
         // extra modifier class for collapsed state
-        if (this.inoverflowmenu)
-        {
+        if (this.inoverflowmenu) {
             $('body').addClass('pkt_ext_saved_overflow');
         }
 
         // extra modifier class for language
-        if (this.locale)
-        {
+        if (this.locale) {
             $('body').addClass('pkt_ext_saved_' + this.locale);
         }
 
@@ -497,10 +454,8 @@ PKT_SAVED_OVERLAY.prototype = {
         this.initOpenListInput();
         this.initAutoCloseEvents();
     },
-    createPremiumFunctionality()
-    {
-        if (this.premiumStatus && !$('.pkt_ext_suggestedtag_detail').length)
-        {
+    createPremiumFunctionality() {
+        if (this.premiumStatus && !$('.pkt_ext_suggestedtag_detail').length) {
             $('body').append(Handlebars.templates.saved_premiumshell(this.dictJSON));
             $('.pkt_ext_initload').append(Handlebars.templates.saved_premiumextras(this.dictJSON));
         }
@@ -533,23 +488,19 @@ PKT_SAVED.prototype = {
     create() {
         var myself = this;
         var url = window.location.href.match(/premiumStatus=([\w|\d|\.]*)&?/);
-        if (url && url.length > 1)
-        {
+        if (url && url.length > 1) {
             myself.overlay.premiumStatus = (url[1] == '1');
         }
         var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
-        if (host && host.length > 1)
-        {
+        if (host && host.length > 1) {
             myself.overlay.pockethost = host[1];
         }
         var inoverflowmenu = window.location.href.match(/inoverflowmenu=([\w|\.]*)&?/);
-        if (inoverflowmenu && inoverflowmenu.length > 1)
-        {
+        if (inoverflowmenu && inoverflowmenu.length > 1) {
             myself.overlay.inoverflowmenu = (inoverflowmenu[1] == 'true');
         }
         var locale = window.location.href.match(/locale=([\w|\.]*)&?/);
-        if (locale && locale.length > 1)
-        {
+        if (locale && locale.length > 1) {
             myself.overlay.locale = locale[1].toLowerCase();
         }
 
@@ -559,22 +510,15 @@ PKT_SAVED.prototype = {
         thePKT_SAVED.sendMessage("show");
 
         // wait confirmation of save before flipping to final saved state
-        thePKT_SAVED.addMessageListener("saveLink", function(resp)
-        {
+        thePKT_SAVED.addMessageListener("saveLink", function(resp) {
             if (resp.status == 'error') {
-                if (typeof resp.error == 'object')
-                {
-                    if (resp.error.localizedKey)
-                    {
+                if (typeof resp.error == 'object') {
+                    if (resp.error.localizedKey) {
                         myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved, myself.overlay.dictJSON[resp.error.localizedKey]);
-                    }
-                    else
-                    {
+                    } else {
                         myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved, resp.error.message);
                     }
-                }
-                else
-                {
+                } else {
                     myself.overlay.showStateError(myself.overlay.dictJSON.pagenotsaved, myself.overlay.dictJSON.errorgeneric);
                 }
                 return;
@@ -586,8 +530,7 @@ PKT_SAVED.prototype = {
     }
 }
 
-$(function()
-{
+$(function() {
     if (!window.thePKT_SAVED) {
         var thePKT_SAVED = new PKT_SAVED();
         window.thePKT_SAVED = thePKT_SAVED;

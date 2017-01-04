@@ -10,14 +10,12 @@ function run_sql(d, sql) {
   stmt.finalize();
 }
 
-function new_file(name)
-{
+function new_file(name) {
   var file = dirSvc.get("ProfD", Ci.nsIFile);
   file.append(name);
   return file;
 }
-function run_test()
-{
+function run_test() {
   const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
   let read_hgram = Telemetry.getHistogramById("MOZ_SQLITE_OTHER_READ_B");
   let old_sum = read_hgram.snapshot().sum;

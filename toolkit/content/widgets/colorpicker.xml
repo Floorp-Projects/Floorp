@@ -212,8 +212,7 @@
           this.hoverCell(this.mBox.childNodes[0].childNodes[0]);
 
           // used to capture keydown at the document level
-          this.mPickerKeyDown = function(aEvent)
-          {
+          this.mPickerKeyDown = function(aEvent) {
             document._focusedPicker.pickerKeyDown(aEvent);
           }
 
@@ -236,8 +235,7 @@
                 cancel = true;
             }
             return !cancel;
-          }
-          catch (e) {
+          } catch (e) {
             Components.utils.reportError(e);
           }
           return false;
@@ -492,8 +490,7 @@
                 cancel = true;
             }
             return !cancel;
-          }
-          catch (e) {
+          } catch (e) {
             dump(e);
           }
           return false;

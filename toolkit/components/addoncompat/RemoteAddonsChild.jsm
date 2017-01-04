@@ -26,8 +26,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "contentSecManager",
 
 // Similar to Python. Returns dict[key] if it exists. Otherwise,
 // sets dict[key] to default_ and returns default_.
-function setDefault(dict, key, default_)
-{
+function setDefault(dict, key, default_) {
   if (key in dict) {
     return dict[key];
   }
@@ -214,8 +213,7 @@ var ContentPolicyChild = {
 
 // This is a shim channel whose only purpose is to return some string
 // data from an about: protocol handler.
-function AboutProtocolChannel(uri, contractID, loadInfo)
-{
+function AboutProtocolChannel(uri, contractID, loadInfo) {
   this.URI = uri;
   this.originalURI = uri;
   this._contractID = contractID;
@@ -311,8 +309,7 @@ AboutProtocolChannel.prototype = {
 };
 
 // This shim protocol handler is used when content fetches an about: URL.
-function AboutProtocolInstance(contractID)
-{
+function AboutProtocolInstance(contractID) {
   this._contractID = contractID;
   this._uriFlags = undefined;
 }
@@ -424,8 +421,7 @@ var ObserverChild = {
 // There is one of these objects per browser tab in the child. When an
 // add-on in the parent listens for an event, this child object
 // listens for that event in the child.
-function EventTargetChild(childGlobal)
-{
+function EventTargetChild(childGlobal) {
   this._childGlobal = childGlobal;
   this.capturingHandler = (event) => this.handleEvent(true, event);
   this.nonCapturingHandler = (event) => this.handleEvent(false, event);
@@ -474,8 +470,7 @@ EventTargetChild.prototype = {
 // reference in the child. For simplicity, we kill off these strong
 // references whenever we navigate away from the page for which the
 // sandbox was created.
-function SandboxChild(chromeGlobal)
-{
+function SandboxChild(chromeGlobal) {
   this.chromeGlobal = chromeGlobal;
   this.sandboxes = [];
 }

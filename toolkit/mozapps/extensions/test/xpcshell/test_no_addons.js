@@ -22,8 +22,7 @@ function run_test() {
 function checkPending() {
   try {
     do_check_false(Services.prefs.getBoolPref("extensions.pendingOperations"));
-  }
-  catch (e) {
+  } catch (e) {
     // OK
   }
 }
@@ -31,8 +30,7 @@ function checkPending() {
 function checkString(aPref, aValue) {
   try {
     do_check_eq(Services.prefs.getCharPref(aPref), aValue)
-  }
-  catch (e) {
+  } catch (e) {
     // OK
   }
 }

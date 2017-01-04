@@ -6,7 +6,7 @@
 
 // Globals
 
-XPCOMUtils.defineLazyModuleGetter(this,  "OSCrypto",
+XPCOMUtils.defineLazyModuleGetter(this, "OSCrypto",
                                   "resource://gre/modules/OSCrypto.jsm");
 
 var crypto = new OSCrypto();

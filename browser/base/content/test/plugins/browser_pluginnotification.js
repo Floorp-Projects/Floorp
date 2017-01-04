@@ -499,8 +499,7 @@ add_task(function* () {
       is(item.value, "block", "Test 21d, test plugin 2 should start blocked");
       centerItem = item;
       break;
-    }
-    else {
+    } else {
       is(item.value, "allownow", "Test 21d, test plugin should be enabled");
     }
   }

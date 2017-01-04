@@ -26,7 +26,7 @@ add_UITour_task(function* test_info_icon() {
 
   let imageURL = getRootDirectory(gTestPath) + "image.png";
   imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.org/");
-  is(icon.src, imageURL,  "Popup should have correct icon shown");
+  is(icon.src, imageURL, "Popup should have correct icon shown");
 
   is(buttons.hasChildNodes(), false, "Popup should have no buttons");
 }),
@@ -44,7 +44,7 @@ add_UITour_task(function* test_info_buttons_1() {
 
   let imageURL = getRootDirectory(gTestPath) + "image.png";
   imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.org/");
-  is(icon.src, imageURL,  "Popup should have correct icon shown");
+  is(icon.src, imageURL, "Popup should have correct icon shown");
 
   let buttons = document.getElementById("UITourTooltipButtons");
   is(buttons.childElementCount, 4, "Popup should have four buttons");
@@ -92,7 +92,7 @@ add_UITour_task(function* test_info_buttons_2() {
 
   let imageURL = getRootDirectory(gTestPath) + "image.png";
   imageURL = imageURL.replace("chrome://mochitests/content/", "https://example.org/");
-  is(icon.src, imageURL,  "Popup should have correct icon shown");
+  is(icon.src, imageURL, "Popup should have correct icon shown");
 
   let buttons = document.getElementById("UITourTooltipButtons");
   is(buttons.childElementCount, 4, "Popup should have four buttons");

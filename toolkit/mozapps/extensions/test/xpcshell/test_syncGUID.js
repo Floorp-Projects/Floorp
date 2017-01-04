@@ -93,8 +93,7 @@ add_test(function test_error_on_duplicate_syncguid_insert() {
           try {
             addons[1].syncGUID = addons[0].syncGUID;
             do_throw("Should not get here.");
-          }
-          catch (e) {
+          } catch (e) {
             do_check_true(e.message.startsWith("Addon sync GUID conflict"));
             restartManager();
 

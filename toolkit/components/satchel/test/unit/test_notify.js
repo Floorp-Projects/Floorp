@@ -41,8 +41,7 @@ function run_test() {
   testIterator.next();
 }
 
-function next_test()
-{
+function next_test() {
   testIterator.next();
 }
 

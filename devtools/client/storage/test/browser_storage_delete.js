@@ -10,17 +10,17 @@
 
 const TEST_CASES = [
   [["localStorage", "http://test1.example.org"],
-    "ls1", "name"],
+   "ls1", "name"],
   [["sessionStorage", "http://test1.example.org"],
-    "ss1", "name"],
+   "ss1", "name"],
   [
     ["cookies", "test1.example.org"],
     getCookieId("c1", "test1.example.org", "/browser"), "name"
   ],
   [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"],
-    1, "name"],
+   1, "name"],
   [["Cache", "http://test1.example.org", "plop"],
-    MAIN_DOMAIN + "404_cached_file.js", "url"],
+   MAIN_DOMAIN + "404_cached_file.js", "url"],
 ];
 
 add_task(function* () {

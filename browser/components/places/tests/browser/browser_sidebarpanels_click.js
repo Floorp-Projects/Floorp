@@ -130,8 +130,7 @@ function test() {
 
     if (tests.length == 0) {
       finish();
-    }
-    else {
+    } else {
       // Create a new tab and run the test.
       gBrowser.selectedTab = gBrowser.addTab();
       currentTest = tests.shift();

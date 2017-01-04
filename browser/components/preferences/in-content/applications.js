@@ -503,8 +503,7 @@ FeedHandlerInfo.prototype = {
     if (aNewValue instanceof Ci.nsILocalHandlerApp) {
       this.element(this._prefSelectedApp).value = aNewValue.executable;
       this.element(this._prefSelectedReader).value = "client";
-    }
-    else if (aNewValue instanceof Ci.nsIWebContentHandlerInfo) {
+    } else if (aNewValue instanceof Ci.nsIWebContentHandlerInfo) {
       this.element(this._prefSelectedWeb).value = aNewValue.uri;
       this.element(this._prefSelectedReader).value = "web";
       // Make the web handler be the new "auto handler" for feeds.
@@ -591,8 +590,7 @@ FeedHandlerInfo.prototype = {
     if (AppConstants.HAVE_SHELL_SERVICE) {
       try {
         defaultFeedReader = this._shellSvc.defaultFeedReader;
-      }
-      catch (ex) {
+      } catch (ex) {
         // no default reader or _shellSvc is null
       }
     }
@@ -605,8 +603,7 @@ FeedHandlerInfo.prototype = {
       handlerApp.executable = defaultFeedReader;
 
       this.__defaultApplicationHandler = handlerApp;
-    }
-    else {
+    } else {
       this.__defaultApplicationHandler = null;
     }
 
@@ -618,8 +615,7 @@ FeedHandlerInfo.prototype = {
       try {
         if (this._shellSvc.defaultFeedReader)
           return true;
-      }
-      catch (ex) {
+      } catch (ex) {
         // no default reader or _shellSvc is null
       }
     }
@@ -735,8 +731,7 @@ FeedHandlerInfo.prototype = {
           if (app.equals(preferredApp))
             pref.reset();
         }
-      }
-      else {
+      } else {
         app.QueryInterface(Ci.nsIWebContentHandlerInfo);
         this._converterSvc.removeContentHandler(app.contentType, app.uri);
       }
@@ -874,8 +869,7 @@ var gApplicationsPane = {
   // Initialization & Destruction
 
   init() {
-    function setEventListener(aId, aEventType, aCallback)
-    {
+    function setEventListener(aId, aEventType, aCallback) {
       document.getElementById(aId)
               .addEventListener(aEventType, aCallback.bind(gApplicationsPane));
     }
@@ -928,8 +922,7 @@ var gApplicationsPane = {
       // from the xul file was used.  If we are sorting on the other
       // column, we should remove it.
       document.getElementById("typeColumn").removeAttribute("sortDirection");
-    }
-    else
+    } else
       this._sortColumn = document.getElementById("typeColumn");
 
     // Load the data and build the list of handlers.
@@ -1478,8 +1471,7 @@ var gApplicationsPane = {
                                                     .getTypeFromExtension("exe");
       canOpenWithOtherApp = handlerInfo.type != executableType;
     }
-    if (canOpenWithOtherApp)
-    {
+    if (canOpenWithOtherApp) {
       let menuItem = document.createElement("menuitem");
       menuItem.className = "choose-app-item";
       menuItem.addEventListener("command", function(e) {
@@ -1611,8 +1603,7 @@ var gApplicationsPane = {
 
     try {
       this._storeAction(aActionItem);
-    }
-    finally {
+    } finally {
       this._storingAction = false;
     }
   },
@@ -1886,8 +1877,7 @@ var gApplicationsPane = {
           let url = wrappedHandlerInfo.getProperty("defaultApplicationIconURL");
           if (url)
             return url + "?size=16";
-        }
-        catch (ex) {}
+        } catch (ex) {}
       }
     }
 

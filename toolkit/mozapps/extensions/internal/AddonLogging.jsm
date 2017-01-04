@@ -65,8 +65,7 @@ function getStackDetails(aException) {
       sourceName: stackFrame.filename,
       lineNumber: stackFrame.lineNumber
     };
-  }
-  catch (e) {
+  } catch (e) {
     return {
       sourceName: null,
       lineNumber: 0
@@ -120,8 +119,7 @@ AddonLogger.prototype = {
                          message + " at " + stack.sourceName + ":" +
                          stack.lineNumber + "\n");
       writer.close();
-    }
-    catch (e) { }
+    } catch (e) { }
   },
 
   warn(aStr, aException) {
@@ -177,12 +175,10 @@ var PrefObserver = {
     if (aTopic == "xpcom-shutdown") {
       Services.prefs.removeObserver(PREF_LOGGING_ENABLED, this);
       Services.obs.removeObserver(this, "xpcom-shutdown");
-    }
-    else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
+    } else if (aTopic == NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) {
       try {
         gDebugLogEnabled = Services.prefs.getBoolPref(PREF_LOGGING_ENABLED);
-      }
-      catch (e) {
+      } catch (e) {
         gDebugLogEnabled = false;
       }
     }

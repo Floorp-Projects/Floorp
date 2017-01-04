@@ -281,7 +281,7 @@ IdentityProviderService.prototype = {
       reportError("registerCertificate", "No provision flow or caller");
       return;
     }
-    if (!provFlow.kp)  {
+    if (!provFlow.kp) {
       let errStr = "Cannot register a certificate without a keypair";
       reportError("registerCertificate", errStr);
       provFlow.callback(errStr);

@@ -27,7 +27,7 @@ var makeDebugger = require("./utils/make-debugger");
 
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
-loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
+loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
 loader.lazyImporter(this, "ExtensionContent", "resource://gre/modules/ExtensionContent.jsm");
 
 // Assumptions on events module:

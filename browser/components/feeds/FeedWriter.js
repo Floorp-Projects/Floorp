@@ -22,8 +22,7 @@ function LOG(str) {
   let shouldLog = false;
   try {
     shouldLog = prefB.getBoolPref("feeds.log");
-  }
-  catch (ex) {
+  } catch (ex) {
   }
 
   if (shouldLog)
@@ -169,8 +168,7 @@ FeedWriter.prototype = {
   _getPropertyAsString(container, property) {
     try {
       return container.fields.getPropertyAsAString(property);
-    }
-    catch (e) {
+    } catch (e) {
     }
     return "";
   },
@@ -206,8 +204,7 @@ FeedWriter.prototype = {
       // checkLoadURIStrWithPrincipal will throw if the link URI should not be
       // loaded, either because our feedURI isn't allowed to load it or per
       // the rules specified in |flags|, so we'll never "linkify" the link...
-    }
-    catch (e) {
+    } catch (e) {
       // Not allowed to load this link because secman.checkLoadURIStr threw
       return;
     }
@@ -359,8 +356,7 @@ FeedWriter.prototype = {
 
       this._safeSetURIAttribute(feedTitleLink, "href",
                                 parts.getPropertyAsAString("link"));
-    }
-    catch (e) {
+    } catch (e) {
       LOG("Failed to set Title Image (this is benign): " + e);
     }
   },
@@ -505,7 +501,7 @@ FeedWriter.prototype = {
           if (handlerInfoWrapper)
             type_text = handlerInfoWrapper.description;
 
-          if  (type_text && type_text.length > 0)
+          if (type_text && type_text.length > 0)
             mozicon = "moz-icon://goat?size=16&contentType=" + enc.get("type");
 
         } catch (ex) { }
@@ -562,8 +558,7 @@ FeedWriter.prototype = {
     try {
       result =
         feedService.getFeedResult(this._getOriginalURI(this._window));
-    }
-    catch (e) {
+    } catch (e) {
       LOG("Subscribe Preview: feed not available?!");
     }
 
@@ -574,8 +569,7 @@ FeedWriter.prototype = {
     let container;
     try {
       container = result.doc;
-    }
-    catch (e) {
+    } catch (e) {
       LOG("Subscribe Preview: no result.doc? Why didn't the original reload?");
       return null;
     }
@@ -616,8 +610,7 @@ FeedWriter.prototype = {
       try {
         if (Services.prefs.getCharPref(getPrefActionForType(feedType)) != "ask")
           alwaysUse = true;
-      }
-      catch (ex) { }
+      } catch (ex) { }
       this._setCheckboxCheckedState(checkbox, alwaysUse);
     }
   },
@@ -707,8 +700,7 @@ FeedWriter.prototype = {
     let handler = "bookmarks";
     try {
       handler = prefs.getCharPref(getPrefReaderForType(feedType));
-    }
-    catch (ex) { }
+    } catch (ex) { }
 
     switch (handler) {
       case "web": {
@@ -846,8 +838,7 @@ FeedWriter.prototype = {
     let showFirstRunUI = true;
     try {
       showFirstRunUI = Services.prefs.getBoolPref(PREF_SHOW_FIRST_RUN_UI);
-    }
-    catch (ex) { }
+    } catch (ex) { }
     if (showFirstRunUI) {
       let textfeedinfo1, textfeedinfo2;
       switch (feedType) {
@@ -994,8 +985,7 @@ FeedWriter.prototype = {
       this._setTitleText(container);
       this._setTitleImage(container);
       this._writeFeedContent(container);
-    }
-    finally {
+    } finally {
       this._removeFeedFromCache();
     }
   },

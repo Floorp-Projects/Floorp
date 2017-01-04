@@ -52,8 +52,7 @@ add_task(function*() {
   try {
     chromeReg.convertChromeURL(NetUtil.newURI("chrome://webex/content/webex.xul"));
     do_throw("Chrome manifest should not have been registered");
-  }
-  catch (e) {
+  } catch (e) {
     // Expected the chrome url to not be registered
   }
 

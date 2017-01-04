@@ -109,9 +109,9 @@ function executeInContent(name, data = {}, objects = {},
  */
 function* getComputedStyleProperty(selector, pseudo, propName) {
   return yield executeInContent("Test:GetComputedStylePropertyValue",
-                                {selector,
-                                pseudo,
-                                name: propName});
+    {selector,
+     pseudo,
+     name: propName});
 }
 
 /**
@@ -146,10 +146,10 @@ function getStyle(testActor, selector, propName) {
  */
 function* waitForComputedStyleProperty(selector, pseudo, name, expected) {
   return yield executeInContent("Test:WaitForComputedStylePropertyValue",
-                                {selector,
-                                pseudo,
-                                expected,
-                                name});
+    {selector,
+     pseudo,
+     expected,
+     name});
 }
 
 /**

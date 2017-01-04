@@ -30,8 +30,7 @@ var gUtf16Conn;
  * Since we create a UTF-16 database we have to clean it up, in addition to
  * the normal cleanup of Storage tests.
  */
-function cleanupLocaleTests()
-{
+function cleanupLocaleTests() {
   print("-- Cleaning up test_locale_collation.js suite.");
   gUtf16Conn.close();
   cleanup();
@@ -43,8 +42,7 @@ function cleanupLocaleTests()
  *
  * @return A connection to the database.
  */
-function createUtf16Database()
-{
+function createUtf16Database() {
   print("Creating the in-memory UTF-16-encoded database.");
   let conn = getService().openSpecialDatabase("memory");
   conn.executeSimpleSQL("PRAGMA encoding = 'UTF-16'");
@@ -70,8 +68,7 @@ function createUtf16Database()
  * @param aExpected
  *        An array of strings to which aActual should be equivalent.
  */
-function ensureResultsAreCorrect(aActual, aExpected)
-{
+function ensureResultsAreCorrect(aActual, aExpected) {
   print("Actual results:   " + aActual);
   print("Expected results: " + aExpected);
 
@@ -91,8 +88,7 @@ function ensureResultsAreCorrect(aActual, aExpected)
  *         A connection to either the UTF-8 database or the UTF-16 database.
  * @return The resulting strings in an array.
  */
-function getResults(aCollation, aConn)
-{
+function getResults(aCollation, aConn) {
   let results = [];
   let stmt = aConn.createStatement("SELECT t FROM test " +
                                    "ORDER BY t COLLATE " + aCollation + " ASC");
@@ -110,8 +106,7 @@ function getResults(aCollation, aConn)
  * @param aConn
  *        A connection to either the UTF-8 database or the UTF-16 database.
  */
-function initTableWithStrings(aStrings, aConn)
-{
+function initTableWithStrings(aStrings, aConn) {
   print("Initializing test table.");
 
   aConn.executeSimpleSQL("DROP TABLE IF EXISTS test");
@@ -134,8 +129,7 @@ function initTableWithStrings(aStrings, aConn)
  *         strength is computed from this value.
  * @return A function to use as a sorting callback.
  */
-function localeCompare(aCollation)
-{
+function localeCompare(aCollation) {
   var strength;
 
   switch (aCollation) {
@@ -166,8 +160,7 @@ function localeCompare(aCollation)
  *
  * @return The test data as an array of strings.
  */
-function readTestData()
-{
+function readTestData() {
   print("Reading in test data.");
 
   let file = do_get_file(DATA_BASENAME);
@@ -197,8 +190,7 @@ function readTestData()
  * @param aConn
  *        A connection to either the UTF-8 database or the UTF-16 database.
  */
-function runTest(aCollation, aConn)
-{
+function runTest(aCollation, aConn) {
   ensureResultsAreCorrect(getResults(aCollation, aConn),
                           gStrings.slice(0).sort(localeCompare(aCollation)));
 }
@@ -211,8 +203,7 @@ function runTest(aCollation, aConn)
  *        The name of one of our custom locale collations.  The rows from the
  *        database and the expected results are ordered by this collation.
  */
-function runUtf8Test(aCollation)
-{
+function runUtf8Test(aCollation) {
   runTest(aCollation, getOpenedDatabase());
 }
 
@@ -224,16 +215,14 @@ function runUtf8Test(aCollation)
  *        The name of one of our custom locale collations.  The rows from the
  *        database and the expected results are ordered by this collation.
  */
-function runUtf16Test(aCollation)
-{
+function runUtf16Test(aCollation) {
   runTest(aCollation, gUtf16Conn);
 }
 
 /**
  * Sets up the test suite.
  */
-function setup()
-{
+function setup() {
   print("-- Setting up the test_locale_collation.js suite.");
 
   gStrings = readTestData();
@@ -294,8 +283,7 @@ var gTests = [
   },
 ];
 
-function run_test()
-{
+function run_test() {
   setup();
   gTests.forEach(function(test) {
     print("-- Running test: " + test.desc);
