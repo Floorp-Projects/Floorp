@@ -14,6 +14,7 @@ from unittest.case import (
 from .decorators import (
     parameterized,
     run_if_e10s,
+    run_if_manage_instance,
     skip_if_chrome,
     skip_if_desktop,
     skip_if_e10s,
