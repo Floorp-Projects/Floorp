@@ -42,7 +42,7 @@ class nsDeviceContext;
 #endif
 class StyleStructContext {
 public:
-  MOZ_IMPLICIT StyleStructContext(nsPresContext* aPresContext)
+  MOZ_IMPLICIT StyleStructContext(const nsPresContext* aPresContext)
     : mPresContext(aPresContext) { MOZ_ASSERT(aPresContext); }
   static StyleStructContext ServoContext() { return StyleStructContext(); }
 
@@ -113,7 +113,7 @@ private:
   nsDeviceContext* HackilyFindSomeDeviceContext();
 
   StyleStructContext() : mPresContext(nullptr) {}
-  nsPresContext* mPresContext;
+  const nsPresContext* mPresContext;
 };
 
 #undef SERVO_DEFAULT
