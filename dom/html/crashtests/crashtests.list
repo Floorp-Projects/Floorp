@@ -51,7 +51,7 @@ load 680922-1.xul
 load 682058.xhtml
 load 682460.html
 load 738744.xhtml
-asserts-if(stylo,6) load 741218.json # bug 1324634
+asserts-if(stylo,6-28) load 741218.json # bug 1324634
 load 741250.xhtml
 load 795221-1.html
 asserts-if(stylo,1) load 795221-2.html # bug 1324702

@@ -65,7 +65,7 @@ NativeFontResourceGDI::~NativeFontResourceGDI()
 }
 
 already_AddRefed<ScaledFont>
-NativeFontResourceGDI::CreateScaledFont(uint32_t aIndex, uint32_t aGlyphSize)
+NativeFontResourceGDI::CreateScaledFont(uint32_t aIndex, Float aGlyphSize)
 {
   if (aIndex >= mFontNames.length()) {
     gfxWarning() << "Font index is too high for font resource.";
