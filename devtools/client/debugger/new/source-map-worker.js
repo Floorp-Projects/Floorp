@@ -89,7 +89,8 @@ var Debugger =
 	    var _map$generatedPositio = map.generatedPositionFor({
 	      source: originalSource.url,
 	      line: location.line,
-	      column: location.column == null ? 0 : location.column
+	      column: location.column == null ? 0 : location.column,
+          bias: SourceMapConsumer.LEAST_UPPER_BOUND
 	    });
 	
 	    var line = _map$generatedPositio.line;
