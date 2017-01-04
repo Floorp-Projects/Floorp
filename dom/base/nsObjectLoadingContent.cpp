@@ -2097,11 +2097,10 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
   nsIDocument* doc = thisContent->OwnerDoc();
   nsresult rv = NS_OK;
 
-  // Per bug 1318303, if the parent document is not active, load the alternative
-  // and return.
-  if (!doc->IsCurrentActiveDocument()) {
-    LoadFallback(eFallbackAlternate, false);
-    return NS_OK;
+  // Sanity check
+  if (!InActiveDocument(thisContent)) {
+    NS_NOTREACHED("LoadObject called while not bound to an active document");
+    return NS_ERROR_UNEXPECTED;
   }
 
   // XXX(johns): In these cases, we refuse to touch our content and just
