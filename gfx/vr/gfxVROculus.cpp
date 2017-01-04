@@ -122,15 +122,15 @@ static pfn_ovr_GetMirrorTextureBufferGL ovr_GetMirrorTextureBufferGL = nullptr;
 #define OVR_MINOR_VERSION   10
 
 static const ovrButton kOculusTouchLButton[] = {
+  ovrButton_LThumb,
   ovrButton_X,
-  ovrButton_Y,
-  ovrButton_LThumb
+  ovrButton_Y
 };
 
 static const ovrButton kOculusTouchRButton[] = {
+  ovrButton_RThumb,
   ovrButton_A,
   ovrButton_B,
-  ovrButton_RThumb
 };
 
 static const uint32_t kNumOculusButton = sizeof(kOculusTouchLButton) /
@@ -939,7 +939,7 @@ VRSystemManagerOculus::GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult)
 void
 VRSystemManagerOculus::HandleInput()
 {
-   // mSession is available after VRDisplay is created
+  // mSession is available after VRDisplay is created
   // at GetHMDs().
   if (!mSession) {
     return;
@@ -964,7 +964,33 @@ void
 VRSystemManagerOculus::HandleButtonPress(uint32_t aControllerIdx,
                                          uint64_t aButtonPressed)
 {
-  // TODO: Bug 1305890
+  MOZ_ASSERT(sizeof(kOculusTouchLButton) / sizeof(ovrButton) ==
+             sizeof(kOculusTouchRButton) / sizeof(ovrButton));
+
+  RefPtr<impl::VRControllerOculus> controller(mOculusController[aControllerIdx]);
+  MOZ_ASSERT(controller);
+  GamepadHand hand = controller->GetHand();
+  uint64_t diff = (controller->GetButtonPressed() ^ aButtonPressed);
+  uint32_t buttonMask = 0;
+
+  for (uint32_t i = 0; i < kNumOculusButton; ++i) {
+    switch (hand) {
+      case mozilla::dom::GamepadHand::Left:
+        buttonMask = kOculusTouchLButton[i];
+        break;
+      case mozilla::dom::GamepadHand::Right:
+        buttonMask = kOculusTouchRButton[i];
+        break;
+      default:
+        MOZ_ASSERT(false);
+        break;
+    }
+    if (diff & buttonMask) {
+      NewButtonEvent(aControllerIdx, i, diff & aButtonPressed);
+    }
+  }
+
+  controller->SetButtonPressed(aButtonPressed);
 }
 
 void
