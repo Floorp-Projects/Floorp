@@ -96,11 +96,8 @@ public:
 
   // Placeholder frame functions
   nsPlaceholderFrame* GetPlaceholderFrameFor(const nsIFrame* aFrame);
-  nsresult
-    RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
-
-  void
-    UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
+  void RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
+  void UnregisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame);
 
   void      ClearPlaceholderFrameMap();
 

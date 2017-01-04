@@ -133,7 +133,7 @@ nsWrapperCache::CheckCCWrapperTraversal(void* aScriptObjectHolder,
   // see through the COM layer, so we use a suppression to help it.
   JS::AutoSuppressGCAnalysis suppress;
 
-  aTracer->Traverse(aScriptObjectHolder, callback);
+  aTracer->TraverseNativeAndJS(aScriptObjectHolder, callback);
   MOZ_ASSERT(callback.mFound,
              "Cycle collection participant didn't traverse to preserved "
              "wrapper! This will probably crash.");

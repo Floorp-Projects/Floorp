@@ -38,7 +38,7 @@ exports.items = [
         }
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let contentViewer = getContentViewer(context);
       contentViewer.emulateMedium(args.type);
     }
@@ -48,7 +48,7 @@ exports.items = [
     runAt: "server",
     name: "media reset",
     description: l10n.lookup("mediaResetDesc"),
-    exec: function(args, context) {
+    exec: function (args, context) {
       let contentViewer = getContentViewer(context);
       contentViewer.stopEmulatingMedium();
     }

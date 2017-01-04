@@ -205,6 +205,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
 {
   nscoord knownFeasibleBSize = aFeasibleBSize;
   nscoord knownInfeasibleBSize = aInfeasibleBSize;
+  WritingMode wm = aReflowInput.GetWritingMode();
 
   const nsStyleColumn* colStyle = StyleColumn();
   nscoord availContentISize = GetAvailableContentISize(aReflowInput);
@@ -212,7 +213,7 @@ nsColumnSetFrame::ChooseColumnStrategy(const ReflowInput& aReflowInput,
     availContentISize = aReflowInput.ComputedISize();
   }
 
-  nscoord consumedBSize = GetConsumedBSize();
+  nscoord consumedBSize = ConsumedBSize(wm);
 
   // The effective computed height is the height of the current continuation
   // of the column set frame. This should be the same as the computed height

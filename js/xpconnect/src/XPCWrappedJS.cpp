@@ -93,7 +93,7 @@ nsXPCWrappedJS::CanSkip()
 }
 
 NS_IMETHODIMP
-NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
+NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::TraverseNative
    (void* p, nsCycleCollectionTraversalCallback& cb)
 {
     nsISupports* s = static_cast<nsISupports*>(p);

@@ -24,7 +24,7 @@ const { Ci, Cc } = require("chrome");
 const l10n = require("gcli/l10n");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "cookieMgr", function() {
+XPCOMUtils.defineLazyGetter(this, "cookieMgr", function () {
   return Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
 });
 
@@ -52,9 +52,9 @@ function translateExpires(expires) {
     return l10n.lookup("cookieListOutSession");
   }
 
-  let expires_msec = expires * 1000;
+  let expiresMsec = expires * 1000;
 
-  return (new Date(expires_msec)).toLocaleString();
+  return (new Date(expiresMsec)).toLocaleString();
 }
 
 /**
@@ -86,17 +86,16 @@ exports.items = [
     description: l10n.lookup("cookieListDesc"),
     manual: l10n.lookup("cookieListManual"),
     returnType: "cookies",
-    exec: function(args, context) {
+    exec: function (args, context) {
       if (context.environment.target.isRemote) {
         throw new Error("The cookie gcli commands only work in a local tab, " +
                         "see bug 1221488");
       }
       let host = new URL(context.environment.target.url).host;
-      let contentWindow  = context.environment.window;
+      let contentWindow = context.environment.window;
       host = sanitizeHost(host);
-      let enm = cookieMgr.getCookiesFromHost(host, contentWindow.document.
-                                                   nodePrincipal.
-                                                   originAttributes);
+      let { originAttributes } = contentWindow.document.nodePrincipal;
+      let enm = cookieMgr.getCookiesFromHost(host, originAttributes);
 
       let cookies = [];
       while (enm.hasMoreElements()) {
@@ -131,17 +130,16 @@ exports.items = [
         description: l10n.lookup("cookieRemoveKeyDesc"),
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       if (context.environment.target.isRemote) {
         throw new Error("The cookie gcli commands only work in a local tab, " +
                         "see bug 1221488");
       }
       let host = new URL(context.environment.target.url).host;
-      let contentWindow  = context.environment.window;
+      let contentWindow = context.environment.window;
       host = sanitizeHost(host);
-      let enm = cookieMgr.getCookiesFromHost(host, contentWindow.document.
-                                                   nodePrincipal.
-                                                   originAttributes);
+      let { originAttributes } = contentWindow.document.nodePrincipal;
+      let enm = cookieMgr.getCookiesFromHost(host, originAttributes);
 
       while (enm.hasMoreElements()) {
         let cookie = enm.getNext().QueryInterface(Ci.nsICookie);
@@ -158,7 +156,7 @@ exports.items = [
     item: "converter",
     from: "cookies",
     to: "view",
-    exec: function(cookies, context) {
+    exec: function (cookies, context) {
       if (cookies.length == 0) {
         let host = new URL(context.environment.target.url).host;
         host = sanitizeHost(host);
@@ -275,7 +273,7 @@ exports.items = [
         ]
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       if (context.environment.target.isRemote) {
         throw new Error("The cookie gcli commands only work in a local tab, " +
                         "see bug 1221488");
@@ -283,7 +281,7 @@ exports.items = [
       let host = new URL(context.environment.target.url).host;
       host = sanitizeHost(host);
       let time = Date.parse(args.expires) / 1000;
-      let contentWindow  = context.environment.window;
+      let contentWindow = context.environment.window;
       cookieMgr.add(args.domain ? "." + args.domain : host,
                     args.path ? args.path : "/",
                     args.name,
@@ -292,9 +290,7 @@ exports.items = [
                     args.httpOnly,
                     args.session,
                     time,
-                    contentWindow.document.
-                                  nodePrincipal.
-                                  originAttributes);
+                    contentWindow.document.nodePrincipal.originAttributes);
     }
   }
 ];

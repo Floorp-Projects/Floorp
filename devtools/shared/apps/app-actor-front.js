@@ -37,8 +37,7 @@ function addDirToZip(writer, dir, basePath) {
 
     if (file.isHidden() ||
         file.isSpecial() ||
-        file.equals(writer.file))
-    {
+        file.equals(writer.file)) {
       continue;
     }
 
@@ -62,12 +61,15 @@ function addDirToZip(writer, dir, basePath) {
  */
 function getResultText(code) {
   let regexp =
-    /^\[Exception... "(.*)"  nsresult: "0x[0-9a-fA-F]* \((.*)\)"  location: ".*"  data: .*\]$/;
-  let ex = Cc["@mozilla.org/js/xpc/Exception;1"].
-           createInstance(Ci.nsIXPCException);
+    /^\[Exception... "(.*)"  nsresult: "0x[0-9a-fA-F]* \((.*)\)"  location: ".*"  data: .*\]$/; // eslint-disable-line
+  let ex = Cc["@mozilla.org/js/xpc/Exception;1"]
+           .createInstance(Ci.nsIXPCException);
   ex.initialize(null, code, null, null, null, null);
   let [, message, name] = regexp.exec(ex.toString());
-  return { name: name, message: message };
+  return {
+    name,
+    message
+  };
 }
 
 function zipDirectory(zipFile, dirToArchive) {
@@ -75,7 +77,7 @@ function zipDirectory(zipFile, dirToArchive) {
   let writer = Cc["@mozilla.org/zipwriter;1"].createInstance(Ci.nsIZipWriter);
   writer.open(zipFile, PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE);
 
-  this.addDirToZip(writer, dirToArchive, "");
+  addDirToZip(writer, dirToArchive, "");
 
   writer.processQueue({
     onStartRequest: function onStartRequest(request, context) {},
@@ -83,8 +85,7 @@ function zipDirectory(zipFile, dirToArchive) {
       if (status == Cr.NS_OK) {
         writer.close();
         deferred.resolve(zipFile);
-      }
-      else {
+      } else {
         let { name, message } = getResultText(status);
         deferred.reject(name + ": " + message);
       }
@@ -97,9 +98,8 @@ function zipDirectory(zipFile, dirToArchive) {
 function uploadPackage(client, webappsActor, packageFile, progressCallback) {
   if (client.traits.bulk) {
     return uploadPackageBulk(client, webappsActor, packageFile, progressCallback);
-  } else {
-    return uploadPackageJSON(client, webappsActor, packageFile, progressCallback);
   }
+  return uploadPackageJSON(client, webappsActor, packageFile, progressCallback);
 }
 
 function uploadPackageJSON(client, webappsActor, packageFile, progressCallback) {
@@ -125,48 +125,45 @@ function uploadPackageJSON(client, webappsActor, packageFile, progressCallback) 
 
   function openFile(actor) {
     let openedFile;
-    OS.File.open(packageFile.path)
-      .then(file => {
-        openedFile = file;
-        return openedFile.stat();
-      })
-      .then(fileInfo => {
-        fileSize = fileInfo.size;
-        emitProgress();
-        uploadChunk(actor, openedFile);
-      });
+    OS.File.open(packageFile.path).then(file => {
+      openedFile = file;
+      return openedFile.stat();
+    }).then(fileInfo => {
+      fileSize = fileInfo.size;
+      emitProgress();
+      uploadChunk(actor, openedFile);
+    });
   }
   function uploadChunk(actor, file) {
-    file.read(CHUNK_SIZE)
-        .then(function (bytes) {
-          bytesRead += bytes.length;
-          emitProgress();
-          // To work around the fact that JSON.stringify translates the typed
-          // array to object, we are encoding the typed array here into a string
-          let chunk = String.fromCharCode.apply(null, bytes);
+    file.read(CHUNK_SIZE).then(function (bytes) {
+      bytesRead += bytes.length;
+      emitProgress();
+      // To work around the fact that JSON.stringify translates the typed
+      // array to object, we are encoding the typed array here into a string
+      let chunk = String.fromCharCode.apply(null, bytes);
 
-          let request = {
-            to: actor,
-            type: "chunk",
-            chunk: chunk
-          };
-          client.request(request, (res) => {
-            if (bytes.length == CHUNK_SIZE) {
-              uploadChunk(actor, file);
-            } else {
-              file.close().then(function () {
-                endsUpload(actor);
-              });
-            }
+      let chunkRequest = {
+        to: actor,
+        type: "chunk",
+        chunk,
+      };
+      client.request(chunkRequest, (res) => {
+        if (bytes.length == CHUNK_SIZE) {
+          uploadChunk(actor, file);
+        } else {
+          file.close().then(function () {
+            endsUpload(actor);
           });
-        });
+        }
+      });
+    });
   }
   function endsUpload(actor) {
-    let request = {
+    let doneRequest = {
       to: actor,
       type: "done"
     };
-    client.request(request, (res) => {
+    client.request(doneRequest, (res) => {
       deferred.resolve(actor);
     });
   }
@@ -190,13 +187,13 @@ function uploadPackageBulk(client, webappsActor, packageFile, progressCallback) 
     let fileSize = packageFile.fileSize;
     console.log("File size: " + fileSize);
 
-    let request = client.startBulkRequest({
+    let streamRequest = client.startBulkRequest({
       actor: actor,
       type: "stream",
       length: fileSize
     });
 
-    request.on("bulk-send-ready", ({copyFrom}) => {
+    streamRequest.on("bulk-send-ready", ({copyFrom}) => {
       NetUtil.asyncFetch({
         uri: NetUtil.newURI(packageFile),
         loadUsingSystemPrincipal: true
@@ -245,36 +242,37 @@ function installPackaged(client, webappsActor, packagePath, appId, progressCallb
     packagePromise = promise.resolve(file);
   }
   packagePromise.then((zipFile) => {
-    uploadPackage(client, webappsActor, zipFile, progressCallback)
-        .then((fileActor) => {
-          let request = {
-            to: webappsActor,
-            type: "install",
-            appId: appId,
-            upload: fileActor
-          };
-          client.request(request, (res) => {
-            // If the install method immediatly fails,
-            // reject immediatly the installPackaged promise.
-            // Otherwise, wait for webappsEvent for completion
-            if (res.error) {
-              deferred.reject(res);
-            }
-            if ("error" in res)
-              deferred.reject({error: res.error, message: res.message});
-            else
-              deferred.resolve({appId: res.appId});
-          });
-          // Ensure deleting the temporary package file, but only if that a temporary
-          // package created when we pass a directory as `packagePath`
-          if (zipFile != file)
-            zipFile.remove(false);
-          // In case of success or error, ensure deleting the temporary package file
-          // also created on the device, but only once install request is done
-          deferred.promise.then(
-            () => removeServerTemporaryFile(client, fileActor),
-            () => removeServerTemporaryFile(client, fileActor));
-        });
+    uploadPackage(client, webappsActor, zipFile, progressCallback).then((fileActor) => {
+      let request = {
+        to: webappsActor,
+        type: "install",
+        appId: appId,
+        upload: fileActor
+      };
+      client.request(request, (res) => {
+        // If the install method immediatly fails,
+        // reject immediatly the installPackaged promise.
+        // Otherwise, wait for webappsEvent for completion
+        if (res.error) {
+          deferred.reject(res);
+        }
+        if ("error" in res) {
+          deferred.reject({error: res.error, message: res.message});
+        } else {
+          deferred.resolve({appId: res.appId});
+        }
+      });
+      // Ensure deleting the temporary package file, but only if that a temporary
+      // package created when we pass a directory as `packagePath`
+      if (zipFile != file) {
+        zipFile.remove(false);
+      }
+      // In case of success or error, ensure deleting the temporary package file
+      // also created on the device, but only once install request is done
+      deferred.promise.then(
+        () => removeServerTemporaryFile(client, fileActor),
+        () => removeServerTemporaryFile(client, fileActor));
+    });
   });
   return deferred.promise;
 }
@@ -293,10 +291,11 @@ function installHosted(client, webappsActor, appId, metadata, manifest) {
     if (res.error) {
       deferred.reject(res);
     }
-    if ("error" in res)
+    if ("error" in res) {
       deferred.reject({error: res.error, message: res.message});
-    else
+    } else {
       deferred.resolve({appId: res.appId});
+    }
   });
   return deferred.promise;
 }
@@ -307,8 +306,9 @@ function getTargetForApp(client, webappsActor, manifestURL) {
   // of the same app in order to show only one toolbox per app and
   // avoid re-creating lot of objects twice.
   let existingTarget = appTargets.get(manifestURL);
-  if (existingTarget)
+  if (existingTarget) {
     return promise.resolve(existingTarget);
+  }
 
   let deferred = defer();
   let request = {
@@ -343,23 +343,22 @@ function getTargetForApp(client, webappsActor, manifestURL) {
 exports.getTargetForApp = getTargetForApp;
 
 function reloadApp(client, webappsActor, manifestURL) {
-  return getTargetForApp(client,
-                         webappsActor,
-                         manifestURL).
-    then((target) => {
-      // Request the ContentActor to reload the app
-      let request = {
-        to: target.form.actor,
-        type: "reload",
-        options: {
-          force: true
-        },
-        manifestURL: manifestURL
-      };
-      return client.request(request);
-    }, () => {
-      throw new Error("Not running");
-    });
+  return getTargetForApp(
+    client, webappsActor, manifestURL
+  ).then((target) => {
+    // Request the ContentActor to reload the app
+    let request = {
+      to: target.form.actor,
+      type: "reload",
+      options: {
+        force: true
+      },
+      manifestURL,
+    };
+    return client.request(request);
+  }, () => {
+    throw new Error("Not running");
+  });
 }
 exports.reloadApp = reloadApp;
 
@@ -423,25 +422,26 @@ App.prototype = {
       type: "getAppActor",
       manifestURL: this.manifest.manifestURL
     };
-    return this.client.request(request)
-                      .then(res => {
-                        return this._form = res.actor;
-                      });
+    return this.client.request(request).then(res => {
+      this._form = res.actor;
+      return this._form;
+    });
   },
 
   getTarget: function () {
     if (this._target) {
       return promise.resolve(this._target);
     }
-    return this.getForm().
-      then((form) => getTarget(this.client, form)).
-      then((target) => {
-        target.on("close", () => {
-          delete this._form;
-          delete this._target;
-        });
-        return this._target = target;
+    return this.getForm().then(
+      (form) => getTarget(this.client, form)
+    ).then((target) => {
+      target.on("close", () => {
+        delete this._form;
+        delete this._target;
       });
+      this._target = target;
+      return this._target;
+    });
   },
 
   launch: function () {
@@ -486,7 +486,6 @@ App.prototype = {
     return deferred.promise;
   }
 };
-
 
 /**
  * `AppActorFront` is a client for the webapps actor.
@@ -537,23 +536,21 @@ AppActorFront.prototype = {
     let app = this._apps ? this._apps.get(manifestURL) : null;
     if (app) {
       return promise.resolve(app);
-    } else {
-      let request = {
-        to: this.actor,
-        type: "getApp",
-        manifestURL: manifestURL
-      };
-      return this.client.request(request)
-                 .then(res => {
-                   let app = new App(this.client, this.actor, res.app);
-                   if (this._apps) {
-                     this._apps.set(manifestURL, app);
-                   }
-                   return app;
-                 }, e => {
-                   console.error("Unable to retrieve app", manifestURL, e);
-                 });
     }
+    let request = {
+      to: this.actor,
+      type: "getApp",
+      manifestURL,
+    };
+    return this.client.request(request).then(res => {
+      app = new App(this.client, this.actor, res.app);
+      if (this._apps) {
+        this._apps.set(manifestURL, app);
+      }
+      return app;
+    }, e => {
+      console.error("Unable to retrieve app", manifestURL, e);
+    });
   },
 
   /**
@@ -583,47 +580,42 @@ AppActorFront.prototype = {
       to: this.actor,
       type: "getAll"
     };
-    return this._loadingPromise = this.client.request(request)
-      .then(res => {
-        delete this._loadingPromise;
-        this._apps = new Map();
-        for (let a of res.apps) {
-          let app = new App(this.client, this.actor, a);
-          this._apps.set(a.manifestURL, app);
-        }
-      })
-      .then(() => {
-        // Then retrieve all running apps in order to flag them as running
-        let request = {
-          to: this.actor,
-          type: "listRunningApps"
-        };
-        return this.client.request(request)
-                   .then(res => res.apps);
-      })
-      .then(apps => {
-        let promises = apps.map(manifestURL => {
-          // _getApp creates `App` instance and register it to AppActorFront
-          return this._getApp(manifestURL)
-                      .then(app => {
-                        app.running = true;
-                        // Fake appOpen event for all already opened
-                        this._notifyListeners("appOpen", app);
-                      });
+    this._loadingPromise = this.client.request(request).then(res => {
+      delete this._loadingPromise;
+      this._apps = new Map();
+      for (let a of res.apps) {
+        let app = new App(this.client, this.actor, a);
+        this._apps.set(a.manifestURL, app);
+      }
+    }).then(() => {
+      // Then retrieve all running apps in order to flag them as running
+      let listRequest = {
+        to: this.actor,
+        type: "listRunningApps"
+      };
+      return this.client.request(listRequest).then(res => res.apps);
+    }).then(apps => {
+      let promises = apps.map(manifestURL => {
+        // _getApp creates `App` instance and register it to AppActorFront
+        return this._getApp(manifestURL).then(app => {
+          app.running = true;
+          // Fake appOpen event for all already opened
+          this._notifyListeners("appOpen", app);
         });
-        return promise.all(promises);
-      })
-      .then(() => {
-        // Finally ask to receive all app events
-        return this._listenAppEvents(listener);
       });
+      return promise.all(promises);
+    }).then(() => {
+      // Finally ask to receive all app events
+      return this._listenAppEvents(listener);
+    });
+    return this._loadingPromise;
   },
 
   fetchIcons: function () {
     // On demand, retrieve apps icons in order to be able
     // to synchronously retrieve it on `App` objects
     let promises = [];
-    for (let [manifestURL, app] of this._apps) {
+    for (let [, app] of this._apps) {
       promises.push(app.getIcon());
     }
 
@@ -708,16 +700,15 @@ AppActorFront.prototype = {
             to: this.actor,
             type: "listRunningApps"
           };
-          this.client.request(request)
-              .then(res => {
-                if (res.apps.indexOf(manifestURL) !== -1) {
-                  app.running = true;
-                  this._notifyListeners("appInstall", app);
-                  this._notifyListeners("appOpen", app);
-                } else {
-                  this._notifyListeners("appInstall", app);
-                }
-              });
+          this.client.request(request).then(res => {
+            if (res.apps.indexOf(manifestURL) !== -1) {
+              app.running = true;
+              this._notifyListeners("appInstall", app);
+              this._notifyListeners("appOpen", app);
+            } else {
+              this._notifyListeners("appInstall", app);
+            }
+          });
           break;
         case "appUninstall":
           // Fake a appClose event if we didn't got one before uninstall
@@ -796,22 +787,19 @@ AppActorFront.prototype = {
         }
       }
     };
-    this._listenAppEvents(listener)
-        // Execute the request
-        .then(request)
-        .then(response => {
-          finalAppId = response.appId;
-          manifestURL = response.manifestURL;
+    // Execute the request
+    this._listenAppEvents(listener).then(request).then(response => {
+      finalAppId = response.appId;
+      manifestURL = response.manifestURL;
 
-          // Resolves immediately if the appInstall event
-          // was dispatched during the request.
-          if (manifestURL in installs) {
-            resolve(installs[manifestURL]);
-          }
-        }, deferred.reject);
+      // Resolves immediately if the appInstall event
+      // was dispatched during the request.
+      if (manifestURL in installs) {
+        resolve(installs[manifestURL]);
+      }
+    }, deferred.reject);
 
     return deferred.promise;
-
   },
 
   /*
@@ -826,12 +814,12 @@ AppActorFront.prototype = {
     let manifestURL = metadata.manifestURL ||
                       metadata.origin + "/manifest.webapp";
     let request = () => {
-      return installHosted(this.client, this.actor, appId, metadata,
-                           manifest)
-        .then(response => ({
-          appId: response.appId,
-          manifestURL: manifestURL
-        }));
+      return installHosted(
+        this.client, this.actor, appId, metadata, manifest
+      ).then(response => ({
+        appId: response.appId,
+        manifestURL: manifestURL
+      }));
     };
     return this._install(request);
   }
