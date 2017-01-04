@@ -24,12 +24,11 @@
  *     Called to clean up at the end of use
  */
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpn, dumpv } = DevToolsUtils;
 const flags = require("devtools/shared/flags");
 const StreamUtils = require("devtools/shared/transport/stream-utils");
-const promise = require("promise");
 const defer = require("devtools/shared/defer");
 
 DevToolsUtils.defineLazyGetter(this, "unicodeConverter", () => {
@@ -136,7 +135,9 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   /**
    * Gets the object (not the serialized string) being read or written.
    */
-  get: function () { return this._object; },
+  get: function () {
+    return this._object;
+  },
 
   /**
    * Sets the object to be sent when write() is called.
@@ -200,7 +201,9 @@ JSONPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(JSONPacket.prototype, "done", {
-  get: function () { return this._done; }
+  get: function () {
+    return this._done;
+  }
 });
 
 JSONPacket.prototype.toString = function () {
@@ -369,9 +372,10 @@ Object.defineProperty(BulkPacket.prototype, "header", {
 });
 
 Object.defineProperty(BulkPacket.prototype, "done", {
-  get: function () { return this._done; },
+  get: function () {
+    return this._done;
+  },
 });
-
 
 BulkPacket.prototype.toString = function () {
   return "Bulk: " + JSON.stringify(this.header, null, 2);
@@ -408,7 +412,9 @@ RawPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(RawPacket.prototype, "done", {
-  get: function () { return this._done; }
+  get: function () {
+    return this._done;
+  }
 });
 
 exports.RawPacket = RawPacket;

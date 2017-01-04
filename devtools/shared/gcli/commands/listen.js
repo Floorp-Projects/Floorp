@@ -69,7 +69,7 @@ exports.items = [
       },
     ],
     exec: function (args, context) {
-      var listener = debuggerServer.createListener();
+      let listener = debuggerServer.createListener();
       if (!listener) {
         throw new Error(l10n.lookup("listenDisabledOutput"));
       }

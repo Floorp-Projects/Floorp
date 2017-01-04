@@ -264,7 +264,7 @@ FeedConverter.prototype = {
       }
 
       chromeChannel.loadGroup = this._request.loadGroup;
-      chromeChannel.asyncOpen(this._listener, null);
+      chromeChannel.asyncOpen2(this._listener);
     } finally {
       this._releaseHandles();
     }

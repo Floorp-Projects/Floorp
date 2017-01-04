@@ -116,16 +116,9 @@ devtools/server/tests/browser/**
 !devtools/server/tests/browser/browser_webextension_inspected_window.js
 devtools/server/tests/mochitest/**
 devtools/server/tests/unit/**
-devtools/shared/apps/**
-devtools/shared/gcli/**
-!devtools/shared/gcli/templater.js
 devtools/shared/heapsnapshot/**
-devtools/shared/transport/**
-!devtools/shared/transport/transport.js
-!devtools/shared/transport/websocket-transport.js
+devtools/shared/transport/tests/unit/**
 devtools/shared/webconsole/test/**
-devtools/shared/worker/**
-!devtools/shared/worker/worker.js
 
 # Ignore devtools pre-processed files
 devtools/client/framework/toolbox-process-window.js
@@ -136,7 +129,7 @@ devtools/client/preferences/**
 # Ignore devtools third-party libs
 devtools/shared/jsbeautify/*
 devtools/shared/acorn/*
-devtools/client/sourceeditor/tern/*
+devtools/shared/gcli/source/*
 devtools/shared/node-properties/*
 devtools/shared/pretty-fast/*
 devtools/shared/sourcemap/*
@@ -147,6 +140,7 @@ devtools/client/shared/demangle.js
 devtools/client/shared/vendor/*
 devtools/client/sourceeditor/codemirror/*.js
 devtools/client/sourceeditor/codemirror/**/*.js
+devtools/client/sourceeditor/tern/*
 devtools/client/sourceeditor/test/cm_mode_ruby.js
 devtools/client/sourceeditor/test/codemirror/*
 devtools/client/inspector/markup/test/lib_*
