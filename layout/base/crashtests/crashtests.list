@@ -78,7 +78,7 @@ load 325984-1.xhtml
 load 325984-2.html
 load 328944-1.xul
 load 329900-1.html
-skip-if(stylo) load 330015-1.html # bug 1323678
+load 330015-1.html
 load 331204-1.html
 load 331679-1.xhtml
 load 331679-2.xml
@@ -182,7 +182,7 @@ load 393326-1.html
 load 393326-2.html
 load 393661-1.html
 load 393801-1.html
-skip-if(stylo) load 394014-1.html # bug 1323678
+load 394014-1.html
 load 394014-2.html
 load 394150-1.xhtml
 load 397011-1.xhtml
