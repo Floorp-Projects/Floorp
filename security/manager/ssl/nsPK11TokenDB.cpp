@@ -467,6 +467,10 @@ nsPK11TokenDB::FindTokenByName(const nsACString& tokenName,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  if (tokenName.IsEmpty()) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
   UniquePK11SlotInfo slot(
     PK11_FindSlotByName(PromiseFlatCString(tokenName).get()));
   if (!slot) {
