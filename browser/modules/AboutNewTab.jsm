@@ -13,12 +13,10 @@ this.EXPORTED_SYMBOLS = [ "AboutNewTab" ];
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
-  "resource:///modules/AutoMigrate.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
-  "resource://gre/modules/NewTabUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RemotePages",
   "resource://gre/modules/RemotePageManager.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+  "resource://gre/modules/NewTabUtils.jsm");
 
 var AboutNewTab = {
 
@@ -27,8 +25,6 @@ var AboutNewTab = {
   init() {
     this.pageListener = new RemotePages("about:newtab");
     this.pageListener.addMessageListener("NewTab:Customize", this.customize.bind(this));
-    this.pageListener.addMessageListener("NewTab:MaybeShowAutoMigrationUndoNotification",
-      (msg) => AutoMigrate.maybeShowUndoNotification(msg.target.browser));
   },
 
   customize(message) {
