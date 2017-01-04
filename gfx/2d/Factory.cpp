@@ -156,6 +156,10 @@ namespace gfx {
 // In Gecko, this value is managed by gfx.logging.level in gfxPrefs.
 int32_t LoggingPrefs::sGfxLogLevel = LOG_DEFAULT;
 
+#ifdef MOZ_ENABLE_FREETYPE
+FT_Library Factory::mFTLibrary = nullptr;
+#endif
+
 #ifdef WIN32
 ID3D11Device *Factory::mD3D11Device = nullptr;
 ID2D1Device *Factory::mD2D1Device = nullptr;
@@ -192,6 +196,12 @@ Factory::ShutDown()
     delete sConfig;
     sConfig = nullptr;
   }
+
+#ifdef MOZ_ENABLE_FREETYPE
+  if (mFTLibrary) {
+    mFTLibrary = nullptr;
+  }
+#endif
 }
 
 bool
@@ -568,6 +578,21 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
   return retVal.forget();
 }
 
+
+#ifdef MOZ_ENABLE_FREETYPE
+void
+Factory::SetFTLibrary(FT_Library aFTLibrary)
+{
+  mFTLibrary = aFTLibrary;
+}
+
+FT_Library
+Factory::GetFTLibrary()
+{
+  MOZ_ASSERT(mFTLibrary);
+  return mFTLibrary;
+}
+#endif
 
 #ifdef WIN32
 already_AddRefed<DrawTarget>
