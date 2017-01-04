@@ -69,6 +69,21 @@ def run_if_e10s(reason):
     return decorator
 
 
+def run_if_manage_instance(reason):
+    """Decorator which runs a test if Marionette manages the application instance."""
+    def decorator(test_item):
+        if not isinstance(test_item, types.FunctionType):
+            raise Exception('Decorator only supported for functions')
+
+        @functools.wraps(test_item)
+        def skip_wrapper(self, *args, **kwargs):
+            if self.marionette.instance is None:
+                raise SkipTest(reason)
+            return test_item(self, *args, **kwargs)
+        return skip_wrapper
+    return decorator
+
+
 def skip_if_chrome(reason):
     """Decorator which skips a test if chrome context is active."""
     def decorator(test_item):
