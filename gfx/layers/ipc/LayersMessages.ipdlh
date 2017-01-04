@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include protocol PCompositable;
 include protocol PCompositorBridge;
-include protocol PImageContainer;
 include protocol PRenderFrame;
 include protocol PTexture;
 

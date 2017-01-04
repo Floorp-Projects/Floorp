@@ -16,7 +16,6 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
-#include "mozilla/layers/ImageContainerChild.h"
 #include "mozilla/layers/LayersMessages.h"
 #include "mozilla/layers/SharedPlanarYCbCrImage.h"
 #include "mozilla/layers/SharedRGBImage.h"
@@ -109,8 +108,7 @@ ImageContainer::EnsureImageClient(bool aCreate)
 
   RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton();
   if (imageBridge) {
-    mIPDLChild = new ImageContainerChild(this);
-    mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this, mIPDLChild);
+    mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this);
     if (mImageClient) {
       mAsyncContainerID = mImageClient->GetAsyncID();
     }
@@ -148,12 +146,6 @@ ImageContainer::ImageContainer(uint64_t aAsyncContainerID)
 
 ImageContainer::~ImageContainer()
 {
-  if (mIPDLChild) {
-    mIPDLChild->ForgetImageContainer();
-    if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
-      imageBridge->ReleaseImageContainer(mIPDLChild);
-    }
-  }
 }
 
 RefPtr<PlanarYCbCrImage>
@@ -758,12 +750,6 @@ SourceSurfaceImage::GetTextureClient(KnowsCompositor* aForwarder)
 
   mTextureClients.Put(aForwarder->GetSerial(), textureClient);
   return textureClient;
-}
-
-PImageContainerChild*
-ImageContainer::GetPImageContainerChild()
-{
-  return mIPDLChild;
 }
 
 ImageContainer::ProducerID
