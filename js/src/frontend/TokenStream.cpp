@@ -470,14 +470,13 @@ TokenStream::~TokenStream()
 # define fast_getc getc
 #endif
 
-MOZ_ALWAYS_INLINE void
+MOZ_MUST_USE MOZ_ALWAYS_INLINE bool
 TokenStream::updateLineInfoForEOL()
 {
     prevLinebase = linebase;
     linebase = userbuf.offset();
     lineno++;
-    if (!srcCoords.add(lineno, linebase))
-        flags.hitOOM = true;
+    return srcCoords.add(lineno, linebase);
 }
 
 MOZ_ALWAYS_INLINE void
@@ -518,7 +517,9 @@ TokenStream::getChar(int32_t* cp)
         return true;
     } while (false);
 
-    updateLineInfoForEOL();
+    if (!updateLineInfoForEOL())
+        return false;
+
     *cp = '\n';
     return true;
 }
@@ -630,10 +631,6 @@ TokenStream::advance(size_t position)
     cur->pos.begin = userbuf.offset();
     MOZ_MAKE_MEM_UNDEFINED(&cur->type, sizeof(cur->type));
     lookahead = 0;
-
-    if (flags.hitOOM)
-        return false;
-
     return true;
 }
 
@@ -1345,7 +1342,9 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     if (MOZ_UNLIKELY(c >= 128)) {
         if (unicode::IsSpaceOrBOM2(c)) {
             if (c == LINE_SEPARATOR || c == PARA_SEPARATOR) {
-                updateLineInfoForEOL();
+                if (!updateLineInfoForEOL())
+                    goto error;
+
                 updateFlagsForEOL();
             }
 
@@ -1561,7 +1560,8 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
         // If it's a \r\n sequence: treat as a single EOL, skip over the \n.
         if (c == '\r' && userbuf.hasRawChars())
             userbuf.matchRawChar('\n');
-        updateLineInfoForEOL();
+        if (!updateLineInfoForEOL())
+            goto error;
         updateFlagsForEOL();
         goto retry;
     }
@@ -1924,9 +1924,6 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     MOZ_CRASH("should have jumped to |out| or |error|");
 
   out:
-    if (flags.hitOOM)
-        return false;
-
     flags.isDirtyLine = true;
     tp->pos.end = userbuf.offset();
 #ifdef DEBUG
@@ -1941,9 +1938,6 @@ TokenStream::getTokenInternal(TokenKind* ttp, Modifier modifier)
     return true;
 
   error:
-    if (flags.hitOOM)
-        return false;
-
     flags.isDirtyLine = true;
     tp->pos.end = userbuf.offset();
     MOZ_MAKE_MEM_UNDEFINED(&tp->type, sizeof(tp->type));
@@ -2169,7 +2163,10 @@ TokenStream::getStringOrTemplateToken(int untilChar, Token** tp)
                 if (userbuf.peekRawChar() == '\n')
                     skipCharsIgnoreEOL(1);
             }
-            updateLineInfoForEOL();
+
+            if (!updateLineInfoForEOL())
+                return false;
+
             updateFlagsForEOL();
         } else if (parsingTemplate && c == '$') {
             if ((nc = getCharIgnoreEOL()) == '{')
