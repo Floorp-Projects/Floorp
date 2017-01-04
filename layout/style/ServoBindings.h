@@ -293,6 +293,9 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
   void Gecko_Construct_nsStyle##name(nsStyle##name* ptr);                      \
+  void Gecko_Construct_Default_nsStyle##name(                                  \
+    nsStyle##name* ptr,                                                        \
+    RawGeckoPresContextBorrowed pres_context);                                 \
   void Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,                   \
                                          const nsStyle##name* other);          \
   void Gecko_Destroy_nsStyle##name(nsStyle##name* ptr);

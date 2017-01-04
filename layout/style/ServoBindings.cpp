@@ -1080,6 +1080,13 @@ Gecko_Construct_nsStyle##name(nsStyle##name* ptr)                             \
 }                                                                             \
                                                                               \
 void                                                                          \
+Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,                     \
+                                      const nsPresContext* pres_context)      \
+{                                                                             \
+  new (ptr) nsStyle##name(pres_context);                                      \
+}                                                                             \
+                                                                              \
+void                                                                          \
 Gecko_CopyConstruct_nsStyle##name(nsStyle##name* ptr,                         \
                                   const nsStyle##name* other)                 \
 {                                                                             \
