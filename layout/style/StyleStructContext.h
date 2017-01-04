@@ -9,6 +9,7 @@
 #include "CounterStyleManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "nsPresContext.h"
+#include "mozilla/StyleSetHandle.h"
 
 class nsDeviceContext;
 
@@ -88,6 +89,12 @@ public:
   mozilla::CounterStyle* BuildCounterStyle(const nsSubstring& aName)
   {
     SERVO_DEFAULT(mozilla::CounterStyleManager::GetBuiltinStyle(NS_STYLE_LIST_STYLE_DISC));
+    // For the servo case we want to keep not calling into the counter style
+    // manager even if we have a prescontext, because we haven't made that work
+    // with servo yet.
+    if (mPresContext->StyleSet()->IsServo()) {
+      return mozilla::CounterStyleManager::GetBuiltinStyle(NS_STYLE_LIST_STYLE_DISC);
+    }
     return mPresContext->CounterStyleManager()->BuildCounterStyle(aName);
   }
 
