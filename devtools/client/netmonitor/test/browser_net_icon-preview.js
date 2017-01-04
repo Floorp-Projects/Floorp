@@ -17,6 +17,8 @@ add_task(function* () {
         gStore } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
+  RequestsMenu.lazyUpdate = false;
+
   let wait = waitForEvents();
   yield performRequests();
   yield wait;

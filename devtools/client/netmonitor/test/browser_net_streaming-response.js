@@ -51,9 +51,9 @@ add_task(function* () {
   // the hls-m3u8 part
   testEditorContent(editor, REQUESTS[0]);
 
+  wait = panelWin.once(panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
   RequestsMenu.selectedIndex = 1;
-  yield panelWin.once(panelWin.EVENTS.TAB_UPDATED);
-  yield panelWin.once(panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
+  yield wait;
 
   // the mpeg-dash part
   testEditorContent(editor, REQUESTS[1]);
