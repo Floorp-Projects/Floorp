@@ -9,13 +9,8 @@ UPLOAD_DIR=$WORKSPACE/artifacts
 
 cd $HOME_DIR/src
 
-chmod +x taskcluster/docker/recipes/tooltool.py
-: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
-export TOOLTOOL_CACHE
-
-
 TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/macosx64/cross-clang.manifest
-./taskcluster/docker/recipes/tooltool.py --url=http://relengapi/tooltool/ -m "${TOOLTOOL_MANIFEST}" fetch
+. taskcluster/scripts/misc/tooltool-download.sh
 
 # ld needs libLTO.so from llvm
 export LD_LIBRARY_PATH=$HOME_DIR/src/clang/lib
