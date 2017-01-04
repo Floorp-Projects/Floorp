@@ -170,7 +170,8 @@ public:
   virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
 
   PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo,
-                                              PImageContainerChild* aChild, uint64_t* aID) override;
+                                              const uint64_t& aID,
+                                              PImageContainerChild* aChild) override;
   bool DeallocPCompositableChild(PCompositableChild* aActor) override;
 
   virtual PTextureChild*
