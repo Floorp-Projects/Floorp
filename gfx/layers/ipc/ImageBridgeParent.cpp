@@ -59,7 +59,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
 
   // creates the map only if it has not been created already, so it is safe
   // with several bridges
-  CompositableMap::Create();
   sImageBridges[aChildProcessId] = this;
   SetOtherProcessId(aChildProcessId);
 }
@@ -251,13 +250,22 @@ ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo,
                                             PImageContainerParent* aImageContainer,
                                             uint64_t* aID)
 {
+  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo, aImageContainer);
+  CompositableHost* host = CompositableHost::FromIPDLActor(actor);
+
   uint64_t id = GenImageContainerID();
+  host->SetAsyncID(id);
+  mCompositables[id] = host;
+
   *aID = id;
-  return CompositableHost::CreateIPDLActor(this, aInfo, id, aImageContainer);
+  return actor;
 }
 
 bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
+  if (CompositableHost* host = CompositableHost::FromIPDLActor(aActor)) {
+    mCompositables.erase(host->GetAsyncID());
+  }
   return CompositableHost::DestroyIPDLActor(aActor);
 }
 
@@ -448,6 +456,16 @@ ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransaction
   if (!IsAboutToSendAsyncMessages()) {
     SendPendingAsyncMessages();
   }
+}
+
+CompositableHost*
+ImageBridgeParent::FindCompositable(uint64_t aId)
+{
+  auto iter = mCompositables.find(aId);
+  if (iter == mCompositables.end()) {
+    return nullptr;
+  }
+  return iter->second;
 }
 
 } // namespace layers
