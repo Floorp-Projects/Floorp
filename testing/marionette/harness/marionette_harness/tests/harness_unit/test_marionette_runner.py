@@ -125,6 +125,9 @@ def test_build_kwargs_basic_args(build_kwargs_using):
 
     basic_args = ['socket_timeout', 'prefs',
                   'startup_timeout', 'verbose', 'symbols_path']
+    args_dict = {a: getattr(sentinel, a) for a in basic_args}
+    # Mock an update method to work with calls to MarionetteTestRunner()
+    args_dict['prefs'].update = Mock(return_value={})
     built_kwargs = build_kwargs_using([(a, getattr(sentinel, a)) for a in basic_args])
     for arg in basic_args:
         assert built_kwargs[arg] is getattr(sentinel, arg)
