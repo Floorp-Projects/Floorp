@@ -2519,7 +2519,7 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
     return false;
   }
 
-  if (VideoQueue().GetSize() - 1 < GetAmpleVideoFrames() * mPlaybackRate) {
+  if (VideoQueue().GetSize() < GetAmpleVideoFrames() * mPlaybackRate + 1) {
     return false;
   }
 
