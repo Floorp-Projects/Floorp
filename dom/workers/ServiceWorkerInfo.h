@@ -30,6 +30,7 @@ private:
   const nsCString mScope;
   const nsCString mScriptSpec;
   const nsString mCacheName;
+  const nsLoadFlags mLoadFlags;
   ServiceWorkerState mState;
   PrincipalOriginAttributes mOriginAttributes;
 
@@ -103,7 +104,8 @@ public:
   ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                     const nsACString& aScope,
                     const nsACString& aScriptSpec,
-                    const nsAString& aCacheName);
+                    const nsAString& aCacheName,
+                    nsLoadFlags aLoadFlags);
 
   ServiceWorkerState
   State() const
@@ -121,6 +123,12 @@ public:
   CacheName() const
   {
     return mCacheName;
+  }
+
+  nsLoadFlags
+  GetLoadFlags() const
+  {
+    return mLoadFlags;
   }
 
   uint64_t
