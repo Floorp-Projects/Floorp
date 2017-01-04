@@ -49,7 +49,10 @@ module.exports = createClass({
     window.removeEventListener("keydown", this.onKeyDown, true);
   },
 
-  onDeviceCheckboxClick({ target }) {
+  onDeviceCheckboxChange({ nativeEvent: { button }, target }) {
+    if (button !== 0) {
+      return;
+    }
     this.setState({
       [target.value]: !this.state[target.value]
     });
@@ -154,7 +157,7 @@ module.exports = createClass({
                     type: "checkbox",
                     value: device.name,
                     checked: this.state[device.name],
-                    onChange: this.onDeviceCheckboxClick,
+                    onChange: this.onDeviceCheckboxChange,
                   }),
                   device.name
                 );
