@@ -225,8 +225,13 @@ Converter.prototype = {
       os = "linux";
     }
 
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Ci.nsIXULChromeRegistry);
+    let dir = chromeReg.isLocaleRTL("global") ? "rtl" : "ltr";
+
     return "<!DOCTYPE html>\n" +
-      "<html platform=\"" + os + "\" class=\"" + themeClassName + "\">" +
+      "<html platform=\"" + os + "\" class=\"" + themeClassName +
+        "\" dir=\"" + dir + "\">" +
       "<head><title>" + this.htmlEncode(title) + "</title>" +
       "<base href=\"" + this.htmlEncode(baseUrl) + "\">" +
       "<link rel=\"stylesheet\" type=\"text/css\" href=\"" +
@@ -256,10 +261,14 @@ Converter.prototype = {
     output += "</div><div id=\"json\">" + this.highlightError(data,
       errorInfo.line, errorInfo.column) + "</div>";
 
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
+                        .getService(Ci.nsIXULChromeRegistry);
+    let dir = chromeReg.isLocaleRTL("global") ? "rtl" : "ltr";
+
     return "<!DOCTYPE html>\n" +
       "<html><head><title>" + this.htmlEncode(uri + " - Error") + "</title>" +
       "<base href=\"" + this.htmlEncode(this.data.url()) + "\">" +
-      "</head><body>" +
+      "</head><body dir=\"" + dir + "\">" +
       output +
       "</body></html>";
   },

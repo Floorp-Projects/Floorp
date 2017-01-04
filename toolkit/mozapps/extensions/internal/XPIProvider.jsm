@@ -87,6 +87,12 @@ XPCOMUtils.defineLazyGetter(this, "CertUtils", function() {
   return certUtils;
 });
 
+XPCOMUtils.defineLazyGetter(this, "IconDetails", () => {
+  const {ExtensionUtils} = Cu.import("resource://gre/modules/ExtensionUtils.jsm", {});
+  return ExtensionUtils.IconDetails;
+});
+
+
 Cu.importGlobalProperties(["URL"]);
 
 const nsIFile = Components.Constructor("@mozilla.org/file/local;1", "nsIFile",
@@ -5597,6 +5603,18 @@ class AddonInstall {
     }).bind(this));
   }
 
+  getIcon(desiredSize = 64) {
+    if (!this.addon.icons || !this.file) {
+      return null;
+    }
+
+    let {icon} = IconDetails.getPreferredIcon(this.addon.icons, null, desiredSize);
+    if (icon.startsWith("chrome://")) {
+      return icon;
+    }
+    return buildJarURI(this.file, icon).spec;
+  }
+
   /**
    * This method should be called when the XPI is ready to be installed,
    * i.e., when a download finishes or when a local file has been verified.
@@ -5608,8 +5626,9 @@ class AddonInstall {
     Task.spawn((function*() {
       if (this.permHandler) {
         let info = {
-          existinAddon: this.existingAddon,
-          addon: this.addon,
+          existingAddon: this.existingAddon ? this.existingAddon.wrapper : null,
+          addon: this.addon.wrapper,
+          icon: this.getIcon(),
         };
 
         try {
@@ -7523,6 +7542,10 @@ AddonWrapper.prototype = {
       return false;
     }
     return (addon._installLocation.name == KEY_APP_PROFILE);
+  },
+
+  get userPermissions() {
+    return addonFor(this).userPermissions;
   },
 
   isCompatibleWith(aAppVersion, aPlatformVersion) {
