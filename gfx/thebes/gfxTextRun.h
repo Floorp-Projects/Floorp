@@ -35,6 +35,7 @@ class gfxMissingFontRecorder;
 
 namespace mozilla {
 class SVGContextPaint;
+enum class StyleHyphens : uint8_t;
 };
 
 /**
@@ -192,8 +193,8 @@ public:
 
         // Returns the provider's hyphenation setting, so callers can decide
         // whether it is necessary to call GetHyphenationBreaks.
-        // Result is an NS_STYLE_HYPHENS_* value.
-        virtual int8_t GetHyphensOption() = 0;
+        // Result is an StyleHyphens value.
+        virtual mozilla::StyleHyphens GetHyphensOption() = 0;
 
         // Returns the extra width that will be consumed by a hyphen. This should
         // be constant for a given textrun.
