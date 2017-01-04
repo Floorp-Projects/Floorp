@@ -25,7 +25,6 @@ CompositableChild::DestroyActor(PCompositableChild* aChild)
 
 CompositableChild::CompositableChild()
  : mCompositableClient(nullptr),
-   mAsyncID(0),
    mCanSend(true)
 {
 }
@@ -41,10 +40,9 @@ CompositableChild::IsConnected() const
 }
 
 void
-CompositableChild::Init(CompositableClient* aCompositable, uint64_t aAsyncID)
+CompositableChild::Init(CompositableClient* aCompositable)
 {
   mCompositableClient = aCompositable;
-  mAsyncID = aAsyncID;
 }
 
 void
