@@ -27,6 +27,9 @@ ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mer
 # %include taskcluster/docker/recipes/install-make.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-make.sh /setup/install-make.sh
 
+# %include taskcluster/docker/recipes/install-cmake.sh
+ADD topsrcdir/taskcluster/docker/recipes/install-cmake.sh /setup/install-cmake.sh
+
 # %include taskcluster/docker/recipes/centos6-build-system-setup.sh
 ADD topsrcdir/taskcluster/docker/recipes/centos6-build-system-setup.sh /setup/system-setup.sh
 
