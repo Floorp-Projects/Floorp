@@ -127,7 +127,7 @@ Point FindBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
 //                    |            |
 //                    v mPoints[0] |
 //                    -------------+
-void GetBezierPointsForCorner(Bezier* aBezier, mozilla::css::Corner aCorner,
+void GetBezierPointsForCorner(Bezier* aBezier, mozilla::Corner aCorner,
                               const Point& aCornerPoint,
                               const Size& aCornerSize);
 
