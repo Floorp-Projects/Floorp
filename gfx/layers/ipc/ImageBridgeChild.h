@@ -270,6 +270,8 @@ public:
 
   void Destroy(CompositableChild* aCompositable) override;
 
+  void ForgetImageContainer(uint64_t aAsyncContainerID);
+
   /**
    * Hold TextureClient ref until end of usage on host side if TextureFlags::RECYCLE is set.
    * Host side's usage is checked via CompositableRef.
@@ -386,7 +388,8 @@ private:
   /**
    * Mapping from async compositable IDs to image containers.
    */
-  nsDataHashtable<nsUint64HashKey, RefPtr<ImageContainer>> mImageContainers;
+  Mutex mContainerMapLock;
+  nsDataHashtable<nsUint64HashKey, ImageContainer*> mImageContainers;
 };
 
 } // namespace layers
