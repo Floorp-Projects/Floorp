@@ -357,45 +357,45 @@ CASE(NS_CORNER_BOTTOM_LEFT_Y,  false);
 #define CASE(corner, result)                                                  \
   static_assert(NS_HALF_TO_FULL_CORNER(corner) == result,                 \
                 "NS_HALF_TO_FULL_CORNER is wrong")
-CASE(NS_CORNER_TOP_LEFT_X,     NS_CORNER_TOP_LEFT);
-CASE(NS_CORNER_TOP_LEFT_Y,     NS_CORNER_TOP_LEFT);
-CASE(NS_CORNER_TOP_RIGHT_X,    NS_CORNER_TOP_RIGHT);
-CASE(NS_CORNER_TOP_RIGHT_Y,    NS_CORNER_TOP_RIGHT);
-CASE(NS_CORNER_BOTTOM_RIGHT_X, NS_CORNER_BOTTOM_RIGHT);
-CASE(NS_CORNER_BOTTOM_RIGHT_Y, NS_CORNER_BOTTOM_RIGHT);
-CASE(NS_CORNER_BOTTOM_LEFT_X,  NS_CORNER_BOTTOM_LEFT);
-CASE(NS_CORNER_BOTTOM_LEFT_Y,  NS_CORNER_BOTTOM_LEFT);
+CASE(NS_CORNER_TOP_LEFT_X,     eCornerTopLeft);
+CASE(NS_CORNER_TOP_LEFT_Y,     eCornerTopLeft);
+CASE(NS_CORNER_TOP_RIGHT_X,    eCornerTopRight);
+CASE(NS_CORNER_TOP_RIGHT_Y,    eCornerTopRight);
+CASE(NS_CORNER_BOTTOM_RIGHT_X, eCornerBottomRight);
+CASE(NS_CORNER_BOTTOM_RIGHT_Y, eCornerBottomRight);
+CASE(NS_CORNER_BOTTOM_LEFT_X,  eCornerBottomLeft);
+CASE(NS_CORNER_BOTTOM_LEFT_Y,  eCornerBottomLeft);
 #undef CASE
 
 // Validation of NS_FULL_TO_HALF_CORNER.
 #define CASE(corner, vert, result)                                            \
   static_assert(NS_FULL_TO_HALF_CORNER(corner, vert) == result,           \
                 "NS_FULL_TO_HALF_CORNER is wrong")
-CASE(NS_CORNER_TOP_LEFT,     false, NS_CORNER_TOP_LEFT_X);
-CASE(NS_CORNER_TOP_LEFT,     true,  NS_CORNER_TOP_LEFT_Y);
-CASE(NS_CORNER_TOP_RIGHT,    false, NS_CORNER_TOP_RIGHT_X);
-CASE(NS_CORNER_TOP_RIGHT,    true,  NS_CORNER_TOP_RIGHT_Y);
-CASE(NS_CORNER_BOTTOM_RIGHT, false, NS_CORNER_BOTTOM_RIGHT_X);
-CASE(NS_CORNER_BOTTOM_RIGHT, true,  NS_CORNER_BOTTOM_RIGHT_Y);
-CASE(NS_CORNER_BOTTOM_LEFT,  false, NS_CORNER_BOTTOM_LEFT_X);
-CASE(NS_CORNER_BOTTOM_LEFT,  true,  NS_CORNER_BOTTOM_LEFT_Y);
+CASE(eCornerTopLeft,     false, NS_CORNER_TOP_LEFT_X);
+CASE(eCornerTopLeft,     true,  NS_CORNER_TOP_LEFT_Y);
+CASE(eCornerTopRight,    false, NS_CORNER_TOP_RIGHT_X);
+CASE(eCornerTopRight,    true,  NS_CORNER_TOP_RIGHT_Y);
+CASE(eCornerBottomRight, false, NS_CORNER_BOTTOM_RIGHT_X);
+CASE(eCornerBottomRight, true,  NS_CORNER_BOTTOM_RIGHT_Y);
+CASE(eCornerBottomLeft,  false, NS_CORNER_BOTTOM_LEFT_X);
+CASE(eCornerBottomLeft,  true,  NS_CORNER_BOTTOM_LEFT_Y);
 #undef CASE
 
 // Validation of NS_SIDE_TO_{FULL,HALF}_CORNER.
 #define CASE(side, second, result)                                            \
   static_assert(NS_SIDE_TO_FULL_CORNER(side, second) == result,           \
                 "NS_SIDE_TO_FULL_CORNER is wrong")
-CASE(eSideTop,    false, NS_CORNER_TOP_LEFT);
-CASE(eSideTop,    true,  NS_CORNER_TOP_RIGHT);
+CASE(eSideTop,    false, eCornerTopLeft);
+CASE(eSideTop,    true,  eCornerTopRight);
 
-CASE(eSideRight,  false, NS_CORNER_TOP_RIGHT);
-CASE(eSideRight,  true,  NS_CORNER_BOTTOM_RIGHT);
+CASE(eSideRight,  false, eCornerTopRight);
+CASE(eSideRight,  true,  eCornerBottomRight);
 
-CASE(eSideBottom, false, NS_CORNER_BOTTOM_RIGHT);
-CASE(eSideBottom, true,  NS_CORNER_BOTTOM_LEFT);
+CASE(eSideBottom, false, eCornerBottomRight);
+CASE(eSideBottom, true,  eCornerBottomLeft);
 
-CASE(eSideLeft,   false, NS_CORNER_BOTTOM_LEFT);
-CASE(eSideLeft,   true,  NS_CORNER_TOP_LEFT);
+CASE(eSideLeft,   false, eCornerBottomLeft);
+CASE(eSideLeft,   true,  eCornerTopLeft);
 #undef CASE
 
 #define CASE(side, second, parallel, result)                                  \

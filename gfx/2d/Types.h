@@ -424,11 +424,6 @@ enum Corner {
   eCornerBottomLeft = 3
 };
 
-#define NS_CORNER_TOP_LEFT mozilla::eCornerTopLeft
-#define NS_CORNER_TOP_RIGHT mozilla::eCornerTopRight
-#define NS_CORNER_BOTTOM_RIGHT mozilla::eCornerBottomRight
-#define NS_CORNER_BOTTOM_LEFT mozilla::eCornerBottomLeft
-
 // Creates a for loop that walks over the four mozilla::Corner values. This
 // implementation uses the same technique as NS_FOR_CSS_SIDES.
 #define NS_FOR_CSS_FULL_CORNERS(var_)                                   \
