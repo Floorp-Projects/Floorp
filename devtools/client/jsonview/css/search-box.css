@@ -18,7 +18,12 @@
   color: var(--theme-content-color1);
   width: 200px;
   margin-top: 0;
-  margin-right: 1px;
+  margin-inline-end: 1px;
   float: right;
-  padding-left: 20px;
+  padding-inline-start: 20px;
+}
+
+.searchBox:dir(rtl) {
+  float: left;
+  background-position: calc(100% - 2px) center;
 }
