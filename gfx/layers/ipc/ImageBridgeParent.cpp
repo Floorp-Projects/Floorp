@@ -238,26 +238,22 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose()
   return IPC_OK();
 }
 
-static  uint64_t GenImageContainerID() {
-  static uint64_t sNextImageID = 1;
-
-  ++sNextImageID;
-  return sNextImageID;
-}
-
 PCompositableParent*
 ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo,
-                                            PImageContainerParent* aImageContainer,
-                                            uint64_t* aID)
+                                            const uint64_t& aID,
+                                            PImageContainerParent* aImageContainer)
 {
   PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo, aImageContainer);
+  if (mCompositables.find(aID) != mCompositables.end()) {
+    NS_ERROR("Async compositable ID already exists");
+    return actor;
+  }
+
   CompositableHost* host = CompositableHost::FromIPDLActor(actor);
 
-  uint64_t id = GenImageContainerID();
-  host->SetAsyncID(id);
-  mCompositables[id] = host;
+  host->SetAsyncID(aID);
+  mCompositables[aID] = host;
 
-  *aID = id;
   return actor;
 }
 

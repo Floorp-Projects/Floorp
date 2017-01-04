@@ -79,8 +79,8 @@ public:
                                                 const uint64_t& aFwdTransactionId) override;
 
   PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo,
-                                                PImageContainerParent* aImageContainer,
-                                                uint64_t*) override;
+                                                const uint64_t& aID,
+                                                PImageContainerParent* aImageContainer) override;
   bool DeallocPCompositableParent(PCompositableParent* aActor) override;
 
   virtual PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
