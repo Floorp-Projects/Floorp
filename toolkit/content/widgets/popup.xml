@@ -331,6 +331,19 @@
         var prevFocus = this._prevFocus ? this._prevFocus.get() : null;
         this._currentFocus = null;
         this._prevFocus = null;
+
+        // Avoid changing focus if focus changed while we hide the popup
+        // (This can happen e.g. if the popup is hiding as a result of a
+        // click/keypress that focused something)
+        let nowFocus;
+        try {
+          nowFocus = document.commandDispatcher.focusedElement;
+        } catch (e) {
+          nowFocus = document.activeElement;
+        }
+        if (nowFocus && nowFocus != currentFocus)
+          return;
+
         if (prevFocus && this.getAttribute("norestorefocus") != "true") {
           // Try to restore focus
           try {
