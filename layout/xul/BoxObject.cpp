@@ -53,7 +53,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(BoxObject)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(BoxObject)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   if (tmp->mPropertyTable) {
     for (auto iter = tmp->mPropertyTable->Iter(); !iter.Done(); iter.Next()) {
       cb.NoteXPCOMChild(iter.UserData());

@@ -1,9 +1,12 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-(function (root, factory) {
-  "use strict";
 
+/* eslint-env amd */
+
+"use strict";
+
+(function (root, factory) {
   if (typeof define === "function" && define.amd) {
     define(factory);
   } else if (typeof exports === "object") {
@@ -12,8 +15,6 @@
     root.workerHelper = factory();
   }
 }(this, function () {
-  "use strict";
-
   /**
    * This file is to only be included by ChromeWorkers. This exposes
    * a `createTask` function to workers to register tasks for communication
@@ -81,23 +82,20 @@
       }
 
       try {
-        let results;
         handleResponse(taskFn(data));
-      } catch (e) {
-        handleError(e);
+      } catch (ex) {
+        handleError(ex);
       }
 
       function handleResponse(response) {
         // If a promise
         if (response && typeof response.then === "function") {
           response.then(val => self.postMessage({ id, response: val }), handleError);
-        }
-        // If an error object
-        else if (response instanceof Error) {
+        } else if (response instanceof Error) {
+          // If an error object
           handleError(response);
-        }
-        // If anything else
-        else {
+        } else {
+          // If anything else
           self.postMessage({ id, response });
         }
       }
@@ -106,21 +104,23 @@
         try {
           // First, try and structured clone the error across directly.
           self.postMessage({ id, error });
-        } catch (_) {
+        } catch (x) {
           // We could not clone whatever error value was given. Do our best to
           // stringify it.
           let errorString = `Error while performing task "${task}": `;
 
           try {
             errorString += error.toString();
-          } catch (_) {
+          } catch (ex) {
             errorString += "<could not stringify error>";
           }
 
           if ("stack" in error) {
             try {
               errorString += "\n" + error.stack;
-            } catch (_) { }
+            } catch (err) {
+              // Do nothing
+            }
           }
 
           self.postMessage({ id, error: errorString });
@@ -130,4 +130,4 @@
   }
 
   return { createTask: createTask };
-}.bind(this)));
+}));

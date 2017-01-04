@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci } = require("chrome");
 const l10n = require("gcli/l10n");
 
 exports.items = [
@@ -37,7 +37,7 @@ exports.items = [
         name: "selector",
         type: "string",
         description: l10n.lookup("pagemodReplaceSelectorDesc"),
-        defaultValue: "*:not(script):not(style):not(embed):not(object):not(frame):not(iframe):not(frameset)",
+        defaultValue: "*:not(script):not(style):not(embed):not(object):not(frame):not(iframe):not(frameset)", // eslint-disable-line
       },
       {
         name: "root",
@@ -63,10 +63,10 @@ exports.items = [
       },
     ],
     // Make a given string safe to use in a regular expression.
-    escapeRegex: function(aString) {
-      return aString.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+    escapeRegex: function (string) {
+      return string.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
     },
-    exec: function(args, context) {
+    exec: function (args, context) {
       let searchTextNodes = !args.attrOnly;
       let searchAttributes = !args.contentOnly;
       let regexOptions = args.ignoreCase ? "ig" : "g";
@@ -117,8 +117,7 @@ exports.items = [
       }
 
       return l10n.lookupFormat("pagemodReplaceResult",
-                              [elements.length, replacedTextNodes,
-                                replacedAttributes]);
+        [elements.length, replacedTextNodes, replacedAttributes]);
     }
   },
   {
@@ -153,7 +152,7 @@ exports.items = [
         description: l10n.lookup("pagemodRemoveElementIfEmptyOnlyDesc"),
       },
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let root = args.root || context.environment.document;
       let elements = Array.prototype.slice.call(root.querySelectorAll(args.search));
 
@@ -207,7 +206,7 @@ exports.items = [
         description: l10n.lookup("pagemodRemoveAttributeIgnoreCaseDesc"),
       },
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let root = args.root || context.environment.document;
       let regexOptions = args.ignoreCase ? "ig" : "g";
       let attributeRegex = new RegExp(args.searchAttributes, regexOptions);
@@ -221,7 +220,7 @@ exports.items = [
           continue;
         }
 
-        var attrs = Array.prototype.slice.call(element.attributes);
+        let attrs = Array.prototype.slice.call(element.attributes);
         for (let y = 0; y < attrs.length; y++) {
           let attr = attrs[y];
           if (attributeRegex.test(attr.name)) {
@@ -255,7 +254,7 @@ exports.items = [
         defaultValue: "window"
       }
     ],
-    exec: function(args, context) {
+    exec: function (args, context) {
       let html = context.environment.document.documentElement.outerHTML;
       if (args.destination === "stdout") {
         return html;
@@ -265,12 +264,12 @@ exports.items = [
         let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"]
                           .getService(Ci.nsIClipboardHelper);
         clipboard.copyString(url);
-        return '';
+        return "";
       }
 
       let url = "data:text/plain;charset=utf8," + encodeURIComponent(html);
       context.environment.window.open(url);
-      return '';
+      return "";
     }
   }
 ];

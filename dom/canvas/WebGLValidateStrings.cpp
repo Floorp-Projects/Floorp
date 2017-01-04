@@ -5,130 +5,192 @@
 
 #include "WebGLValidateStrings.h"
 
-#include "nsString.h"
 #include "WebGLContext.h"
 
 namespace mozilla {
-// The following code was taken from the WebKit WebGL implementation,
-// which can be found here:
-// http://trac.webkit.org/browser/trunk/Source/WebCore/html/canvas/WebGLRenderingContext.cpp?rev=93625#L121
-// Note that some modifications were done to adapt it to Mozilla.
-/****** BEGIN CODE TAKEN FROM WEBKIT ******/
-bool IsValidGLSLCharacter(char16_t c)
-{
-    // Printing characters are valid except " $ ` @ \ ' DEL.
-    if (c >= 32 && c <= 126 &&
-        c != '"' && c != '$' && c != '`' && c != '@' && c != '\\' && c != '\'')
-    {
-         return true;
-    }
-
-    // Horizontal tab, line feed, vertical tab, form feed, carriage return
-    // are also valid.
-    if (c >= 9 && c <= 13) {
-         return true;
-    }
-
-    return false;
-}
-
-void StripComments::process(char16_t c)
-{
-    if (isNewline(c)) {
-        // No matter what state we are in, pass through newlines
-        // so we preserve line numbers.
-        emit(c);
-
-        if (m_parseState != InMultiLineComment)
-            m_parseState = BeginningOfLine;
-
-        return;
-    }
-
-    char16_t temp = 0;
-    switch (m_parseState) {
-    case BeginningOfLine:
-        // If it's an ASCII space.
-        if (c <= ' ' && (c == ' ' || (c <= 0xD && c >= 0x9))) {
-            emit(c);
-            break;
-        }
-
-        if (c == '#') {
-            m_parseState = InPreprocessorDirective;
-            emit(c);
-            break;
-        }
-
-        // Transition to normal state and re-handle character.
-        m_parseState = MiddleOfLine;
-        process(c);
-        break;
-
-    case MiddleOfLine:
-        if (c == '/' && peek(temp)) {
-            if (temp == '/') {
-                m_parseState = InSingleLineComment;
-                emit(' ');
-                advance();
-                break;
-            }
-
-            if (temp == '*') {
-                m_parseState = InMultiLineComment;
-                // Emit the comment start in case the user has
-                // an unclosed comment and we want to later
-                // signal an error.
-                emit('/');
-                emit('*');
-                advance();
-                break;
-            }
-        }
-
-        emit(c);
-        break;
-
-    case InPreprocessorDirective:
-        // No matter what the character is, just pass it
-        // through. Do not parse comments in this state. This
-        // might not be the right thing to do long term, but it
-        // should handle the #error preprocessor directive.
-        emit(c);
-        break;
-
-    case InSingleLineComment:
-        // The newline code at the top of this function takes care
-        // of resetting our state when we get out of the
-        // single-line comment. Swallow all other characters.
-        break;
-
-    case InMultiLineComment:
-        if (c == '*' && peek(temp) && temp == '/') {
-            emit('*');
-            emit('/');
-            m_parseState = MiddleOfLine;
-            advance();
-            break;
-        }
-
-        // Swallow all other characters. Unclear whether we may
-        // want or need to just emit a space per character to try
-        // to preserve column numbers for debugging purposes.
-        break;
-    }
-}
-
-/****** END CODE TAKEN FROM WEBKIT ******/
 
 bool
-ValidateGLSLString(const nsAString& string, WebGLContext* webgl, const char* funcName)
+TruncateComments(const nsAString& src, nsAString* const out)
+{
+    const size_t dstByteCount = src.Length() * sizeof(src[0]);
+    const UniqueBuffer dst(malloc(dstByteCount));
+    if (!dst)
+        return false;
+
+    auto srcItr = src.BeginReading();
+    const auto srcEnd = src.EndReading();
+    const auto dstBegin = (decltype(src[0])*)dst.get();
+    auto dstItr = dstBegin;
+
+    const auto fnEmitUntil = [&](const decltype(srcItr)& nextSrcItr) {
+        while (srcItr != nextSrcItr) {
+            *dstItr = *srcItr;
+            ++srcItr;
+            ++dstItr;
+        }
+    };
+
+    const auto fnFindSoonestOf = [&](const nsString* needles, size_t needleCount,
+                                     size_t* const out_foundId)
+    {
+        auto foundItr = srcItr;
+        while (foundItr != srcEnd) {
+            const auto haystack = Substring(foundItr, srcEnd);
+            for (size_t i = 0; i < needleCount; i++) {
+                if (StringBeginsWith(haystack, needles[i])) {
+                    *out_foundId = i;
+                    return foundItr;
+                }
+            }
+            ++foundItr;
+        }
+        *out_foundId = needleCount;
+        return foundItr;
+    };
+
+    ////
+
+    const nsString commentBeginnings[] = { NS_LITERAL_STRING("//"),
+                                           NS_LITERAL_STRING("/*"),
+                                           nsString() }; // Final empty string for "found
+                                                         // nothing".
+    const nsString lineCommentEndings[] = { NS_LITERAL_STRING("\\\n"),
+                                            NS_LITERAL_STRING("\n"),
+                                            nsString() };
+    const nsString blockCommentEndings[] = { NS_LITERAL_STRING("\n"),
+                                             NS_LITERAL_STRING("*/"),
+                                             nsString() };
+
+    while (srcItr != srcEnd) {
+        size_t foundId;
+        fnEmitUntil( fnFindSoonestOf(commentBeginnings, 2, &foundId) );
+        fnEmitUntil(srcItr + commentBeginnings[foundId].Length()); // Final empty string
+                                                                   // allows us to skip
+                                                                   // forward here
+                                                                   // unconditionally.
+        switch (foundId) {
+        case 0: // line comment
+            while (true) {
+                size_t endId;
+                srcItr = fnFindSoonestOf(lineCommentEndings, 2, &endId);
+                fnEmitUntil(srcItr + lineCommentEndings[endId].Length());
+                if (endId == 0)
+                    continue;
+                break;
+            }
+            break;
+
+        case 1: // block comment
+            while (true) {
+                size_t endId;
+                srcItr = fnFindSoonestOf(blockCommentEndings, 2, &endId);
+                fnEmitUntil(srcItr + blockCommentEndings[endId].Length());
+                if (endId == 0)
+                    continue;
+                break;
+            }
+            break;
+
+        default: // not found
+            break;
+        }
+    }
+
+    MOZ_ASSERT((dstBegin+1) - dstBegin == 1);
+    const uint32_t dstCharLen = dstItr - dstBegin;
+    if (!out->Assign(dstBegin, dstCharLen, mozilla::fallible))
+        return false;
+
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool
+IsValidGLSLChar(char16_t c)
+{
+    if (('a' <= c && c <= 'z') ||
+        ('A' <= c && c <= 'Z') ||
+        ('0' <= c && c <= '9'))
+    {
+        return true;
+    }
+
+    switch (c) {
+    case ' ':
+    case '\t':
+    case '\v':
+    case '\f':
+    case '\r':
+    case '\n':
+    case '_':
+    case '.':
+    case '+':
+    case '-':
+    case '/':
+    case '*':
+    case '%':
+    case '<':
+    case '>':
+    case '[':
+    case ']':
+    case '(':
+    case ')':
+    case '{':
+    case '}':
+    case '^':
+    case '|':
+    case '&':
+    case '~':
+    case '=':
+    case '!':
+    case ':':
+    case ';':
+    case ',':
+    case '?':
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+static bool
+IsValidGLSLPreprocChar(char16_t c)
+{
+    if (IsValidGLSLChar(c))
+        return true;
+
+    switch (c) {
+    case '\\':
+    case '#':
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+////
+
+bool
+ValidateGLSLPreprocString(WebGLContext* webgl, const char* funcName,
+                          const nsAString& string)
 {
     for (size_t i = 0; i < string.Length(); ++i) {
-        if (!IsValidGLSLCharacter(string.CharAt(i))) {
-           webgl->ErrorInvalidValue("%s: String contains the illegal character '%d'",
-                                    funcName, string.CharAt(i));
-           return false;
+        const auto& cur = string[i];
+
+        if (!IsValidGLSLPreprocChar(cur)) {
+            webgl->ErrorInvalidValue("%s: String contains the illegal character 0x%x.",
+                                     funcName, cur);
+            return false;
+        }
+
+        if (cur == '\\' && !webgl->IsWebGL2()) {
+            // Todo: Backslash is technically still invalid in WebGLSL 1 under even under
+            // WebGL 2.
+            webgl->ErrorInvalidValue("%s: Backslash is not valid in WebGL 1.", funcName);
+            return false;
         }
     }
 
@@ -143,14 +205,20 @@ ValidateGLSLVariableName(const nsAString& name, WebGLContext* webgl, const char*
 
     const uint32_t maxSize = webgl->IsWebGL2() ? 1024 : 256;
     if (name.Length() > maxSize) {
-        webgl->ErrorInvalidValue("%s: Identifier is %d characters long, exceeds the"
-                                 " maximum allowed length of %d characters.",
+        webgl->ErrorInvalidValue("%s: Identifier is %u characters long, exceeds the"
+                                 " maximum allowed length of %u characters.",
                                  funcName, name.Length(), maxSize);
         return false;
     }
 
-    if (!ValidateGLSLString(name, webgl, funcName))
-        return false;
+    for (size_t i = 0; i < name.Length(); ++i) {
+        const auto& cur = name[i];
+        if (!IsValidGLSLChar(cur)) {
+           webgl->ErrorInvalidValue("%s: String contains the illegal character 0x%x'.",
+                                    funcName, cur);
+           return false;
+        }
+    }
 
     nsString prefix1 = NS_LITERAL_STRING("webgl_");
     nsString prefix2 = NS_LITERAL_STRING("_webgl_");

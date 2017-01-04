@@ -1,12 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Tests that the devtools/shared/worker can handle:
 // returned primitives (or promise or Error)
 //
 // And tests `workerify` by doing so.
 
-const { DevToolsWorker, workerify } = require("devtools/shared/worker/worker");
+const { workerify } = require("devtools/shared/worker/worker");
 function square(x) {
   return x * x;
 }

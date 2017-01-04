@@ -47,8 +47,7 @@ var validTypes =
   ["color", false],
   ["month", true],
   ["week", true],
-  // TODO: temporary set to false until bug 888331 is fixed.
-  ["datetime-local", false],
+  ["datetime-local", true],
 ];
 
 function checkAvailability()
@@ -622,6 +621,107 @@ function checkWeekSet()
   }
 }
 
+function checkDatetimeLocalGet()
+{
+  var validData =
+  [
+    // Simple cases.
+    [ "2016-12-27T10:30",          Date.UTC(2016, 11, 27, 10, 30, 0)       ],
+    [ "2016-12-27T10:30:40",       Date.UTC(2016, 11, 27, 10, 30, 40)      ],
+    [ "2016-12-27T10:30:40.567",   Date.UTC(2016, 11, 27, 10, 30, 40, 567) ],
+    [ "1969-12-31T12:00:00",       Date.UTC(1969, 11, 31, 12, 0, 0)        ],
+    [ "1970-01-01T00:00",          0                                       ],
+    // Leap years.
+    [ "1804-02-29 12:34",          Date.UTC(1804, 1, 29, 12, 34, 0)        ],
+    [ "2016-02-29T12:34",          Date.UTC(2016, 1, 29, 12, 34, 0)        ],
+    [ "2016-12-31T12:34:56",       Date.UTC(2016, 11, 31, 12, 34, 56)      ],
+    [ "2016-01-01T12:34:56.789",   Date.UTC(2016, 0, 1, 12, 34, 56, 789)   ],
+    [ "2017-01-01 12:34:56.789",   Date.UTC(2017, 0, 1, 12, 34, 56, 789)   ],
+    // Maximum valid datetime-local (limited by the ecma date object range).
+    [ "275760-09-13T00:00",        8640000000000000                        ],
+    // Minimum valid datetime-local (limited by the input element minimum valid value).
+    [ "0001-01-01T00:00",          -62135596800000                         ],
+  ];
+
+  var invalidData =
+  [
+    [ "invaliddateime-local" ],
+    [ "0000-01-01T00:00"     ],
+    [ "2016-12-25T00:00Z"    ],
+    [ "2015-02-29T12:34"     ],
+    [ "1-1-1T12:00"          ],
+    [ ""                     ],
+    // This datetime-local is valid for the input element, but is out of the
+    // date object range. In this case, on getting valueAsDate, a Date object
+    // will be created, but it will have a NaN internal value, and will return
+    // the string "Invalid Date".
+    [ "275760-09-13T12:00", true ],
+  ];
+
+  element.type = "datetime-local";
+  for (let data of validData) {
+    element.value = data[0];
+    is(element.valueAsDate.valueOf(), data[1],
+       "valueAsDate should return the " +
+       "valid date object representing this datetime-local");
+  }
+
+  for (let data of invalidData) {
+    element.value = data[0];
+    if (data[1]) {
+      is(String(element.valueAsDate), "Invalid Date",
+         "valueAsDate should return an invalid Date object "  +
+         "when the element value is not a valid datetime-local");
+    } else {
+      is(element.valueAsDate, null,
+         "valueAsDate should return null "  +
+         "when the element value is not a valid datetime-local");
+    }
+  }
+}
+
+function checkDatetimeLocalSet()
+{
+  var testData =
+  [
+    // Simple cases.
+    [ Date.UTC(2016, 11, 27, 10, 30, 0),       "2016-12-27T10:30"        ],
+    [ Date.UTC(2016, 11, 27, 10, 30, 30),      "2016-12-27T10:30:30"     ],
+    [ Date.UTC(1999, 11, 31, 23, 59, 59),      "1999-12-31T23:59:59"     ],
+    [ Date.UTC(1999, 11, 31, 23, 59, 59, 999), "1999-12-31T23:59:59.999" ],
+    [ Date.UTC(123456, 7, 8, 9, 10),           "123456-08-08T09:10"      ],
+    [ 0,                                       "1970-01-01T00:00"        ],
+    // Maximum valid datetime-local (limited by the ecma date object range).
+    [ 8640000000000000,      "275760-09-13T00:00"      ],
+    // Minimum valid datetime-local (limited by the input element minimum valid value).
+    [ -62135596800000,       "0001-01-01T00:00"        ],
+    // Leap years.
+    [ Date.UTC(1804, 1, 29, 12, 34, 0),        "1804-02-29T12:34"        ],
+    [ Date.UTC(2016, 1, 29, 12, 34, 0),        "2016-02-29T12:34"        ],
+    [ Date.UTC(2016, 11, 31, 12, 34, 56),      "2016-12-31T12:34:56"     ],
+    [ Date.UTC(2016, 0, 1, 12, 34, 56, 789),   "2016-01-01T12:34:56.789" ],
+    [ Date.UTC(2017, 0, 1, 12, 34, 56, 789),   "2017-01-01T12:34:56.789" ],
+    // "Values must be truncated to valid datetime-local"
+    [ 123.123456789123,      "1970-01-01T00:00:00.123" ],
+    [ 1e-1,                  "1970-01-01T00:00"        ],
+    [ -1.1,                  "1969-12-31T23:59:59.999" ],
+    [ -345600000,            "1969-12-28T00:00"        ],
+    // Negative years, this is out of range for the input element,
+    // the corresponding datetime-local string is the empty string
+    [ -62135596800001,       ""                        ],
+  ];
+
+  element.type = "datetime-local";
+  for (let data of testData) {
+    element.valueAsDate = new Date(data[0]);
+    is(element.value, data[1], "valueAsDate should set the value to " +
+                               data[1]);
+    element.valueAsDate = new testFrame.Date(data[0]);
+    is(element.value, data[1], "valueAsDate with other-global date should " +
+                               "set the value to " + data[1]);
+  }
+}
+
 checkAvailability();
 checkGarbageValues();
 checkWithBustedPrototype();
@@ -641,6 +741,10 @@ checkMonthSet();
 // Test <input type='week'>.
 checkWeekGet();
 checkWeekSet();
+
+// Test <input type='datetime-local'>.
+checkDatetimeLocalGet();
+checkDatetimeLocalSet();
 
 </script>
 </pre>
