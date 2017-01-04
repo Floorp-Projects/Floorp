@@ -179,7 +179,6 @@ devtools.jar:
     skin/canvasdebugger.css (themes/canvasdebugger.css)
     skin/debugger.css (themes/debugger.css)
     skin/netmonitor.css (themes/netmonitor.css)
-    skin/dom.css (themes/dom.css)
     skin/performance.css (themes/performance.css)
     skin/memory.css (themes/memory.css)
     skin/scratchpad.css (themes/scratchpad.css)
