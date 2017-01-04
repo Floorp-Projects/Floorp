@@ -126,4 +126,12 @@ expected = [
 ];
 assertEqualArray(input.sort(collator.compare), expected, collator);
 
+
+// Test the .name property of the "compare" getter.
+var desc = Object.getOwnPropertyDescriptor(Intl.Collator.prototype, "compare");
+assertEq(desc !== undefined, true);
+assertEq(typeof desc.get, "function");
+assertEq(desc.get.name, "get compare");
+
+
 reportCompare(0, 0, 'ok');
