@@ -114,32 +114,10 @@ protected:
   virtual mozilla::ipc::IPCResult RecvPaintTime(const uint64_t& aTransactionId,
                                                 const TimeDuration& aPaintTime) override;
 
-  virtual mozilla::ipc::IPCResult RecvUpdate(EditArray&& cset,
-                                             OpDestroyArray&& aToDestroy,
-                                             const uint64_t& aFwdTransactionId,
-                                             const uint64_t& aTransactionId,
-                                             const TargetConfig& targetConfig,
-                                             PluginsArray&& aPlugins,
-                                             const bool& isFirstPaint,
-                                             const bool& scheduleComposite,
-                                             const uint32_t& paintSequenceNumber,
-                                             const bool& isRepeatTransaction,
-                                             const mozilla::TimeStamp& aTransactionStart,
-                                             const int32_t& aPaintSyncId,
+  virtual mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo,
                                              EditReplyArray* reply) override;
 
-  virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(EditArray&& cset,
-                                                   OpDestroyArray&& aToDestroy,
-                                                   const uint64_t& aFwdTransactionId,
-                                                   const uint64_t& aTransactionId,
-                                                   const TargetConfig& targetConfig,
-                                                   PluginsArray&& aPlugins,
-                                                   const bool& isFirstPaint,
-                                                   const bool& scheduleComposite,
-                                                   const uint32_t& paintSequenceNumber,
-                                                   const bool& isRepeatTransaction,
-                                                   const mozilla::TimeStamp& aTransactionStart,
-                                                   const int32_t& aPaintSyncId) override;
+  virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(const TransactionInfo& aInfo) override;
 
   virtual mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
   virtual mozilla::ipc::IPCResult RecvReleaseLayer(const LayerHandle& aHandle) override;

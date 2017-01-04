@@ -539,5 +539,21 @@ union AsyncParentMessageData {
   OpNotifyNotUsed;
 };
 
+struct TransactionInfo
+{
+  Edit[] cset;
+  OpDestroy[] toDestroy;
+  uint64_t fwdTransactionId;
+  uint64_t id;
+  TargetConfig targetConfig;
+  PluginWindowData[] plugins;
+  bool isFirstPaint;
+  bool scheduleComposite;
+  uint32_t paintSequenceNumber;
+  bool isRepeatTransaction;
+  TimeStamp transactionStart;
+  int32_t paintSyncId;
+};
+
 } // namespace
 } // namespace
