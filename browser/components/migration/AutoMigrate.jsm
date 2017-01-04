@@ -16,7 +16,7 @@ const kAutoMigrateBrowserPref = "browser.migrate.automigrate.browser";
 const kAutoMigrateLastUndoPromptDateMsPref = "browser.migrate.automigrate.lastUndoPromptDateMs";
 const kAutoMigrateDaysToOfferUndoPref = "browser.migrate.automigrate.daysToOfferUndo";
 
-const kNotificationId = "abouthome-automigration-undo";
+const kNotificationId = "automigration-undo";
 
 Cu.import("resource:///modules/MigrationUtils.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -255,14 +255,15 @@ const AutoMigrate = {
     }
 
     // The tab might have navigated since we requested the undo state:
-    if (target.currentURI.spec != "about:home" ||
+    let canUndoFromThisPage = ["about:home", "about:newtab"].includes(target.currentURI.spec);
+    if (!canUndoFromThisPage ||
         !Preferences.get(kUndoUIEnabledPref, false)) {
       return;
     }
 
     let win = target.ownerGlobal;
     let notificationBox = win.gBrowser.getNotificationBox(target);
-    if (!notificationBox || notificationBox.getNotificationWithValue("abouthome-automigration-undo")) {
+    if (!notificationBox || notificationBox.getNotificationWithValue(kNotificationId)) {
       return;
     }
 
