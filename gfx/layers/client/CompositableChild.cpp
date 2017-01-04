@@ -71,15 +71,16 @@ CompositableChild::ActorDestroy(ActorDestroyReason)
 }
 
 /* static */ PCompositableChild*
-AsyncCompositableChild::CreateActor()
+AsyncCompositableChild::CreateActor(uint64_t aAsyncID)
 {
-  AsyncCompositableChild* child = new AsyncCompositableChild();
+  AsyncCompositableChild* child = new AsyncCompositableChild(aAsyncID);
   child->AddRef();
   return child;
 }
 
-AsyncCompositableChild::AsyncCompositableChild()
- : mLock("AsyncCompositableChild.mLock")
+AsyncCompositableChild::AsyncCompositableChild(uint64_t aAsyncID)
+ : mLock("AsyncCompositableChild.mLock"),
+   mAsyncID(aAsyncID)
 {
 }
 

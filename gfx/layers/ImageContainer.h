@@ -562,6 +562,8 @@ public:
     return mDroppedImageCount;
   }
 
+  void NotifyComposite(const ImageCompositeNotification& aNotification);
+
   PImageContainerChild* GetPImageContainerChild();
 
   /**
@@ -584,8 +586,6 @@ private:
   void EnsureActiveImage();
 
   void EnsureImageClient(bool aCreate);
-
-  void NotifyCompositeInternal(const ImageCompositeNotification& aNotification);
 
   // ReentrantMonitor to protect thread safe access to the "current
   // image", and any other state which is shared between threads.

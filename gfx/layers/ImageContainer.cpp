@@ -360,7 +360,7 @@ ImageContainer::GetCurrentSize()
 }
 
 void
-ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotification)
+ImageContainer::NotifyComposite(const ImageCompositeNotification& aNotification)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 

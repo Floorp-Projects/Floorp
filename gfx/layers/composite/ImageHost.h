@@ -67,8 +67,6 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual void SetImageContainer(ImageContainerParent* aImageContainer) override;
-
   gfx::IntSize GetImageSize() const override;
 
   virtual LayerRenderState GetRenderState() override;
@@ -147,8 +145,6 @@ protected:
   int ChooseImageIndex() const;
 
   nsTArray<TimedImage> mImages;
-  // Weak reference, will be null if mImageContainer has been destroyed.
-  ImageContainerParent* mImageContainer;
   int32_t mLastFrameID;
   int32_t mLastProducerID;
   /**
