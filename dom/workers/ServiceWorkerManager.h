@@ -187,7 +187,9 @@ public:
   GetRegistration(nsIPrincipal* aPrincipal, const nsACString& aScope) const;
 
   ServiceWorkerRegistrationInfo*
-  CreateNewRegistration(const nsCString& aScope, nsIPrincipal* aPrincipal);
+  CreateNewRegistration(const nsCString& aScope,
+                        nsIPrincipal* aPrincipal,
+                        nsLoadFlags aLoadFlags);
 
   void
   RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistration);

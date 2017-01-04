@@ -51,7 +51,8 @@ ServiceWorkerRegisterJob::AsyncExecute()
       return;
     }
   } else {
-    registration = swm->CreateNewRegistration(mScope, mPrincipal);
+    registration = swm->CreateNewRegistration(mScope, mPrincipal,
+                                              nsIRequest::LOAD_NORMAL);
   }
 
   SetRegistration(registration);
