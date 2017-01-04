@@ -734,9 +734,15 @@ function ArrayIteratorNext() {
     var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
 
     // Step 8-9.
-    var len = IsPossiblyWrappedTypedArray(a)
-              ? PossiblyWrappedTypedArrayLength(a)
-              : ToLength(a.length);
+    var len;
+    if (IsPossiblyWrappedTypedArray(a)) {
+        if (PossiblyWrappedTypedArrayHasDetachedBuffer(a))
+            ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+
+        len = PossiblyWrappedTypedArrayLength(a);
+    } else {
+        len = ToLength(a.length);
+    }
 
     // Step 10.
     if (index >= len) {
