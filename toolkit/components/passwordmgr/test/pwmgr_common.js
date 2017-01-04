@@ -115,10 +115,10 @@ function doKey(aKey, modifier) {
                QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor).
                getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
 
-  if (wutils.sendKeyEvent("keydown",  key, 0, modifier)) {
+  if (wutils.sendKeyEvent("keydown", key, 0, modifier)) {
     wutils.sendKeyEvent("keypress", key, 0, modifier);
   }
-  wutils.sendKeyEvent("keyup",    key, 0, modifier);
+  wutils.sendKeyEvent("keyup", key, 0, modifier);
 }
 
 /**

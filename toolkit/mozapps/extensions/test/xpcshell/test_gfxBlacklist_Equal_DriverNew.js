@@ -71,8 +71,7 @@ function run_test() {
 
   do_test_pending();
 
-  function checkBlacklist()
-  {
+  function checkBlacklist() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 

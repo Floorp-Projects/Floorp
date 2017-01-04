@@ -197,15 +197,13 @@ var Harness = {
 
       if (!result) {
         window.document.documentElement.cancelDialog();
-      }
-      else {
+      } else {
         // Initially the accept button is disabled on a countdown timer
         var button = window.document.documentElement.getButton("accept");
         button.disabled = false;
         window.document.documentElement.acceptDialog();
       }
-    }
-    else if (window.document.location.href == PROMPT_URL) {
+    } else if (window.document.location.href == PROMPT_URL) {
         var promptType = window.args.promptType;
         switch (promptType) {
           case "alert":
@@ -224,12 +222,10 @@ var Harness = {
                       window.document.getElementById("loginTextbox").value = auth[0];
                       window.document.getElementById("password1Textbox").value = auth[1];
                       window.document.documentElement.acceptDialog();
-                    }
-                    else {
+                    } else {
                       window.document.documentElement.cancelDialog();
                     }
-                  }
-                  else {
+                  } else {
                     window.document.documentElement.cancelDialog();
                   }
                 break;
@@ -273,8 +269,7 @@ var Harness = {
     if (this.installBlockedCallback && this.installBlockedCallback(installInfo)) {
       this.installBlockedCallback = null;
       installInfo.install();
-    }
-    else {
+    } else {
       this.expectingCancelled = true;
       installInfo.installs.forEach(function(install) {
         install.cancel();

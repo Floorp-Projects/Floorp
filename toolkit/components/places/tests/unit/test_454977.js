@@ -8,11 +8,9 @@
 var visit_count = 0;
 
 // Returns the Place ID corresponding to an added visit.
-function* task_add_visit(aURI, aVisitType)
-{
+function* task_add_visit(aURI, aVisitType) {
   // Add the visit asynchronously, and save its visit ID.
-  let deferUpdatePlaces = new Promise((resolve, reject) =>
-  {
+  let deferUpdatePlaces = new Promise((resolve, reject) => {
     PlacesUtils.asyncHistory.updatePlaces({
       uri: aURI,
       visits: [{ transitionType: aVisitType, visitDate: Date.now() * 1000 }]
@@ -61,8 +59,7 @@ function* task_add_visit(aURI, aVisitType)
  * @param   aExpectedCountWithHidden
  *          Number of history results we are expecting (included hidden ones)
  */
-function check_results(aExpectedCount, aExpectedCountWithHidden)
-{
+function check_results(aExpectedCount, aExpectedCountWithHidden) {
   let query = PlacesUtils.history.getNewQuery();
   // used to check visit_count
   query.minVisits = visit_count;
@@ -86,13 +83,11 @@ function check_results(aExpectedCount, aExpectedCountWithHidden)
 }
 
 // main
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   const TEST_URI = uri("http://test.mozilla.org/");
 
   // Add a visit that force hidden

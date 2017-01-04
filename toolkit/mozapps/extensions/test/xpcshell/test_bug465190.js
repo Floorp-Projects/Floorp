@@ -25,8 +25,7 @@ var dirProvider2 = {
 Services.dirsvc.QueryInterface(Components.interfaces.nsIDirectoryService)
                .registerProvider(dirProvider2);
 
-function run_test()
-{
+function run_test() {
   var log = gProfD.clone();
   log.append("extensions.log");
   do_check_false(log.exists());

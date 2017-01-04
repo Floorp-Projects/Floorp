@@ -11,21 +11,18 @@ var gVisits = [{url: "http://www.mozilla.com/",
                {url: "http://www.espn.com/",
                 transition: TRANSITION_LINK}];
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   let observer;
   let completionPromise = new Promise(resolveCompletionPromise => {
     observer = {
       __proto__: NavHistoryObserver.prototype,
       _visitCount: 0,
       onVisit(aURI, aVisitID, aTime, aSessionID, aReferringID,
-                        aTransitionType, aAdded)
-      {
+                        aTransitionType, aAdded) {
         do_check_eq(aURI.spec, gVisits[this._visitCount].url);
         do_check_eq(aTransitionType, gVisits[this._visitCount].transition);
         this._visitCount++;

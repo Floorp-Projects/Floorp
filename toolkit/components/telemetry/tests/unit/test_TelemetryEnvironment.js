@@ -650,8 +650,7 @@ function checkSystemSection(data) {
     Assert.equal(features.gpuProcess.status, gfxData.features.gpuProcess.status);
     Assert.equal(features.opengl, gfxData.features.opengl);
     Assert.equal(features.webgl, gfxData.features.webgl);
-  }
-  catch (e) {}
+  } catch (e) {}
 }
 
 function checkActiveAddon(data) {

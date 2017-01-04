@@ -67,8 +67,7 @@ add_task(function* () {
         }
       }
       shouldExist = true;
-    }
-    else {
+    } else {
       backupFilename = PlacesBackups.getFilenameForDate(new Date(dates[i]));
       backupFile = bookmarksBackupDir.clone();
       backupFile.append(backupFilename);

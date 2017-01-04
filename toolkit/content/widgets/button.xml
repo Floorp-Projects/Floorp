@@ -301,8 +301,7 @@
           if (!v && this.buttondown) {
             this.buttondown = false;
             this._pendingActive = true;
-          }
-          else if (this._pendingActive) {
+          } else if (this._pendingActive) {
             this.buttondown = true;
             this._pendingActive = false;
           }

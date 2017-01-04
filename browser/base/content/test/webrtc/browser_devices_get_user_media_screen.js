@@ -480,8 +480,7 @@ var gTests = [
     if ("nsISystemStatusBar" in Ci) {
       let activeStreams = webrtcUI.getActiveStreams(false, false, true);
       webrtcUI.showSharingDoorhanger(activeStreams[0]);
-    }
-    else {
+    } else {
       let win =
         Services.wm.getMostRecentWindow("Browser:WebRTCGlobalIndicator");
       let elt = win.document.getElementById("screenShareButton");

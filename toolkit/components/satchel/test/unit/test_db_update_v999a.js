@@ -13,19 +13,16 @@
 
 var iter = tests();
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
   iter.next();
 }
 
-function next_test()
-{
+function next_test() {
   iter.next();
 }
 
-function* tests()
-{
+function* tests() {
   try {
   var testnum = 0;
 

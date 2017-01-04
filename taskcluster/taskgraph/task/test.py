@@ -49,8 +49,8 @@ class TestTask(transform.TransformTask):
                 test['build-label'] = test_platform['build-label']
                 test['test-name'] = test_name
 
-                logger.debug("Generating tasks for {} test {} on platform {}".format(
-                    kind, test_name, test['test-platform']))
+                logger.debug("Generating tasks for test {} on platform {}".format(
+                    test_name, test['test-platform']))
                 yield test
 
     @classmethod

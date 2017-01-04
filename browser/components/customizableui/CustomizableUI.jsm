@@ -1342,8 +1342,7 @@ var CustomizableUIInternal = {
       }
       if (!node || !(node instanceof aDocument.defaultView.XULElement))
         log.error("Custom widget with id " + aWidget.id + " does not return a valid node");
-    }
-    else {
+    } else {
       if (aWidget.onBeforeCreated) {
         aWidget.onBeforeCreated(aDocument);
       }
@@ -4324,18 +4323,16 @@ OverflowableToolbar.prototype = {
         aNode.setAttribute("cui-anchorid", this._chevron.id);
         aNode.setAttribute("overflowedItem", true);
         CustomizableUIInternal.notifyListeners("onWidgetOverflow", aNode, this._target);
-      }
-      // If it is not overflowed and not in the toolbar, and was not overflowed
-      // either, it moved out of the toolbar. That means there's now space in there!
-      // Let's try to move stuff back:
-      else if (!nowInBar) {
+      } else if (!nowInBar) {
+        // If it is not overflowed and not in the toolbar, and was not overflowed
+        // either, it moved out of the toolbar. That means there's now space in there!
+        // Let's try to move stuff back:
         this._moveItemsBackToTheirOrigin(true);
       }
       // If it's in the toolbar now, then we don't care. An overflow event may
       // fire afterwards; that's ok!
-    }
-    // If it used to be overflowed...
-    else if (!nowOverflowed) {
+    } else if (!nowOverflowed) {
+      // If it used to be overflowed...
       // ... and isn't anymore, let's remove our bookkeeping:
       this._collapsed.delete(aNode.id);
       aNode.removeAttribute("cui-anchorid");

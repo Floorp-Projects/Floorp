@@ -267,8 +267,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "ABI", function() {
   let abi = null;
   try {
     abi = Services.appinfo.XPCOMABI;
-  }
-  catch (e) {
+  } catch (e) {
     Cu.reportError("XPCOM ABI unknown");
   }
 
@@ -293,8 +292,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
   try {
     osVersion = Services.sysinfo.getProperty("name") + " " +
                 Services.sysinfo.getProperty("version");
-  }
-  catch (e) {
+  } catch (e) {
     Cu.reportError("OS Version unknown.");
   }
 
@@ -365,8 +363,7 @@ XPCOMUtils.defineLazyGetter(UpdateUtils, "OSVersion", function() {
 
     try {
       osVersion += " (" + Services.sysinfo.getProperty("secondaryLibrary") + ")";
-    }
-    catch (e) {
+    } catch (e) {
       // Not all platforms have a secondary widget library, so an error is nothing to worry about.
     }
     osVersion = encodeURIComponent(osVersion);

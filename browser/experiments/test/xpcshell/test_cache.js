@@ -130,7 +130,7 @@ add_task(function* test_cache() {
   for (let i = 0; i < gManifestObject.experiments.length; ++i) {
     let experiment = gManifestObject.experiments[i];
     startDates.push(futureDate(baseDate, (50 + (150 * i)) * MS_IN_ONE_DAY));
-    endDates  .push(futureDate(startDates[i], 50 * MS_IN_ONE_DAY));
+    endDates .push(futureDate(startDates[i], 50 * MS_IN_ONE_DAY));
     experiment.startTime = dateToSeconds(startDates[i]);
     experiment.endTime   = dateToSeconds(endDates[i]);
   }
@@ -311,7 +311,7 @@ add_task(function* test_expiration() {
     // Spread out experiments in time so that one experiment can end and expire while
     // the next is still running.
     startDates.push(futureDate(baseDate, (50 + (200 * i)) * MS_IN_ONE_DAY));
-    endDates  .push(futureDate(startDates[i], 50 * MS_IN_ONE_DAY));
+    endDates .push(futureDate(startDates[i], 50 * MS_IN_ONE_DAY));
     experiment.startTime = dateToSeconds(startDates[i]);
     experiment.endTime   = dateToSeconds(endDates[i]);
   }

@@ -21,8 +21,7 @@ this.EXPORTED_SYMBOLS = ["ForgetAboutSite"];
  * "mozilla.org", this will return true.  It would return false the other way
  * around.
  */
-function hasRootDomain(str, aDomain)
-{
+function hasRootDomain(str, aDomain) {
   let index = str.indexOf(aDomain);
   // If aDomain is not found, we know we do not have it as a root domain.
   if (index == -1)
@@ -45,8 +44,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 this.ForgetAboutSite = {
-  removeDataFromDomain: function CRH_removeDataFromDomain(aDomain)
-  {
+  removeDataFromDomain: function CRH_removeDataFromDomain(aDomain) {
     PlacesUtils.history.removePagesFromHost(aDomain, true);
 
     // Cache
@@ -121,10 +119,9 @@ this.ForgetAboutSite = {
       for (let i = 0; i < logins.length; i++)
         if (hasRootDomain(logins[i].hostname, aDomain))
           lm.removeLogin(logins[i]);
-    }
-    // XXXehsan: is there a better way to do this rather than this
-    // hacky comparison?
-    catch (ex) {
+    } catch (ex) {
+      // XXXehsan: is there a better way to do this rather than this
+      // hacky comparison?
       if (ex.message.indexOf("User canceled Master Password entry") == -1) {
         throw ex;
       }

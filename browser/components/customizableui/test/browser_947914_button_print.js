@@ -26,8 +26,7 @@ add_task(function*() {
       PanelUI.hide();
       yield panelHiddenPromise;
       info("Menu panel was closed");
-    }
-    else {
+    } else {
       printButton.click();
       yield waitForCondition(() => gInPrintPreviewMode);
 

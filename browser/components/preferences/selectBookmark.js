@@ -72,8 +72,7 @@ var SelectBookmarkDialog = {
         }
       }
       contents.containerOpen = false;
-    }
-    else {
+    } else {
       urls.push(selectedNode.uri);
       names.push(selectedNode.title);
     }

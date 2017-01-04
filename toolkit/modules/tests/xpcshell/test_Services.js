@@ -23,8 +23,7 @@ function checkService(service, interface) {
 
 // Tests
 
-function run_test()
-{
+function run_test() {
   do_get_profile();
 
   checkService("appShell", Ci.nsIAppShellService);

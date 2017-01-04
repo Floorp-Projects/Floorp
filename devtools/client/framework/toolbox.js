@@ -13,7 +13,6 @@ const OS_IS_64_BITS = "DEVTOOLS_OS_IS_64_BITS_PER_USER";
 const HOST_HISTOGRAM = "DEVTOOLS_TOOLBOX_HOST";
 const SCREENSIZE_HISTOGRAM = "DEVTOOLS_SCREEN_RESOLUTION_ENUMERATED_PER_USER";
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const { SourceMapService } = require("./source-map-service");
 
 var {Ci, Cu} = require("chrome");
 var promise = require("promise");
@@ -23,8 +22,6 @@ var {Task} = require("devtools/shared/task");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
-var HUDService = require("devtools/client/webconsole/hudservice");
-var viewSource = require("devtools/client/shared/view-source");
 var { attachThread, detachThread } = require("./attach-thread");
 var Menu = require("devtools/client/framework/menu");
 var MenuItem = require("devtools/client/framework/menu-item");
@@ -63,8 +60,12 @@ loader.lazyRequireGetter(this, "settleAll",
   "devtools/shared/ThreadSafeDevToolsUtils", true);
 loader.lazyRequireGetter(this, "ToolboxButtons",
   "devtools/client/definitions", true);
-loader.lazyRequireGetter(this, "ViewHelpers",
-  "devtools/client/shared/widgets/view-helpers", true);
+loader.lazyRequireGetter(this, "SourceMapService",
+  "devtools/client/framework/source-map-service", true);
+loader.lazyRequireGetter(this, "HUDService",
+  "devtools/client/webconsole/hudservice");
+loader.lazyRequireGetter(this, "viewSource",
+  "devtools/client/shared/view-source");
 
 loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/har/toolbox-overlay").register;

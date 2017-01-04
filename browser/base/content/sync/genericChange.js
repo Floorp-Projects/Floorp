@@ -65,8 +65,7 @@ var Change = {
           introText.textContent = this._str("new.recoverykey.introText");
           this._dialog.getButton("finish").label
             = this._str("new.recoverykey.acceptButton");
-        }
-        else {
+        } else {
           document.getElementById("generatePassphraseButton").hidden = false;
           document.getElementById("passphraseBackupButtons").hidden = false;
           this._passphraseBox.setAttribute("readonly", "true");
@@ -97,8 +96,7 @@ var Change = {
           this._dialog.getButton("finish").label
             = this._str("new.password.acceptButton");
           document.getElementById("textBox2Row").hidden = true;
-        }
-        else {
+        } else {
           document.title = this._str("change.password.title");
           box2label.value = this._str("new.password.confirm");
           introText.textContent = this._str("change.password3.introText");
@@ -161,12 +159,10 @@ var Change = {
         this._updateStatus("change.recoverykey.success", "success");
         Weave.Service.persistLogin();
         Weave.Service.scheduler.delayedAutoConnect(0);
-      }
-      else {
+      } else {
         this._updateStatus("new.passphrase.status.incorrect", "error");
       }
-    }
-    else {
+    } else {
       this._updateStatus("change.recoverykey.label", "active");
 
       if (Weave.Service.changePassphrase(pp))
@@ -184,12 +180,10 @@ var Change = {
       if (Weave.Service.login()) {
         this._updateStatus("change.password.status.success", "success");
         Weave.Service.persistLogin();
-      }
-      else {
+      } else {
         this._updateStatus("new.password.status.incorrect", "error");
       }
-    }
-    else {
+    } else {
       this._updateStatus("change.password.status.active", "active");
 
       if (Weave.Service.changePassword(this._firstBox.value))
@@ -210,8 +204,7 @@ var Change = {
         [valid, errorString] = gSyncUtils.validatePassword(this._firstBox);
       else
         [valid, errorString] = gSyncUtils.validatePassword(this._firstBox, this._secondBox);
-    }
-    else {
+    } else {
       if (!this._updatingPassphrase)
         return;
 

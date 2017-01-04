@@ -86,8 +86,7 @@ function* checkBookmark(uri, expected_title) {
 
 // BrowserTestUtils.browserLoaded doesn't work for the about pages, so use a
 // custom page load listener.
-function promisePageLoaded(browser)
-{
+function promisePageLoaded(browser) {
   return ContentTask.spawn(browser, null, function* () {
     yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true,
         (event) => {

@@ -24,15 +24,13 @@ const SCHEMES = {
 };
 
 var gRunner;
-function run_test()
-{
+function run_test() {
   do_test_pending();
   gRunner = step();
   gRunner.next();
 }
 
-function* step()
-{
+function* step() {
   let history = Cc["@mozilla.org/browser/history;1"]
                   .getService(Ci.mozIAsyncHistory);
 

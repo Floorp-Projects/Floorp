@@ -75,13 +75,11 @@ function* check_installed(conditions) {
 
       // Verify the add-on actually started
       BootstrapMonitor.checkAddonStarted(id, version);
-    }
-    else {
+    } else {
       if (isUpgrade) {
         // Add-on should not be installed
         do_check_eq(addon, null);
-      }
-      else {
+      } else {
         // Either add-on should not be installed or it shouldn't be active
         do_check_true(!addon || !addon.isActive);
       }

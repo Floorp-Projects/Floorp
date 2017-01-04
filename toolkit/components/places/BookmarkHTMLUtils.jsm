@@ -1042,7 +1042,7 @@ BookmarkExporter.prototype = {
   },
 
   _writeAttribute(aName, aValue) {
-    this._write(' ' +  aName + '="' + aValue + '"');
+    this._write(' ' + aName + '="' + aValue + '"');
   },
 
   _writeLine(aText) {
@@ -1063,8 +1063,7 @@ BookmarkExporter.prototype = {
     if (aItem == this._root) {
       this._writeLine("<H1>" + escapeHtmlEntities(this._root.title) + "</H1>");
       this._writeLine("");
-    }
-    else {
+    } else {
       this._write(aIndent + "<DT><H3");
       this._writeDateAttributes(aItem);
 

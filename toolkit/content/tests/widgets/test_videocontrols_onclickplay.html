@@ -30,7 +30,7 @@ function loadevent(event) {
   SpecialPowers.pushPrefEnv({"set": [["media.cache_size", 40000]]}, startMediaLoad);
 }
 
-window.addEventListener("load",  loadevent, false);
+window.addEventListener("load", loadevent, false);
 
 function runTest() {
   video.addEventListener("click", function() {

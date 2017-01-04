@@ -46,8 +46,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function* test_history_clear()
-{
+add_task(function* test_history_clear() {
   yield promiseInit;
 
   yield PlacesTestUtils.addVisits([

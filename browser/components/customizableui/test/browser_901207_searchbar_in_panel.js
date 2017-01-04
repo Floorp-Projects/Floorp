@@ -6,8 +6,7 @@
 
 logActiveElement();
 
-function* waitForSearchBarFocus()
-{
+function* waitForSearchBarFocus() {
   let searchbar = document.getElementById("searchbar");
   yield waitForCondition(function() {
     logActiveElement();

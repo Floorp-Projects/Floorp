@@ -27,8 +27,7 @@ var updateListener = {
   },
 }
 
-function run_test()
-{
+function run_test() {
   // Setup for test
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");

@@ -216,7 +216,7 @@ add_task(function* test_remove_many() {
       Assert.ok(false, "Unexpected call to onPageChanged " + aURI.spec);
     },
     onFrecencyChanged(aURI) {
-      let origin = pages.find(x =>  x.uri.spec == aURI.spec);
+      let origin = pages.find(x => x.uri.spec == aURI.spec);
       Assert.ok(origin);
       Assert.ok(origin.hasBookmark, "Observing onFrecencyChanged on a page with a bookmark");
       origin.onFrecencyChangedCalled = true;
@@ -279,17 +279,17 @@ add_task(function* cleanup() {
 // Test the various error cases
 add_task(function* test_error_cases() {
   Assert.throws(
-    () =>  PlacesUtils.history.remove(),
+    () => PlacesUtils.history.remove(),
     /TypeError: Invalid url/,
     "History.remove with no argument should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.remove(null),
+    () => PlacesUtils.history.remove(null),
     /TypeError: Invalid url/,
     "History.remove with `null` should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.remove(undefined),
+    () => PlacesUtils.history.remove(undefined),
     /TypeError: Invalid url/,
     "History.remove with `undefined` should throw a TypeError"
   );
@@ -346,7 +346,7 @@ add_task(function* test_orphans() {
   yield PlacesTestUtils.addVisits({ uri });
 
   PlacesUtils.favicons.setAndFetchFaviconForPage(
-    uri, SMALLPNG_DATA_URI, true,  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    uri, SMALLPNG_DATA_URI, true, PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
     null, Services.scriptSecurityManager.getSystemPrincipal());
   PlacesUtils.annotations.setPageAnnotation(uri, "test", "restval", 0,
                                             PlacesUtils.annotations.EXPIRE_NEVER);

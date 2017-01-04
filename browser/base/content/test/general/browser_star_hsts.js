@@ -63,8 +63,7 @@ function promiseStarState(aValue) {
  *        The url to wait for, same as aURL if not defined.
  * @return {Promise} resolved when the event is handled.
  */
-function promiseTabLoadEvent(aTab, aURL, aFinalURL)
-{
+function promiseTabLoadEvent(aTab, aURL, aFinalURL) {
   if (!aFinalURL)
     aFinalURL = aURL;
   let deferred = Promise.defer();

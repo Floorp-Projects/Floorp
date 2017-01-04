@@ -65,7 +65,7 @@ const Accordion = React.createClass({
       (created[i] || opened[i]) ?
         div(
           { className: "_content",
-              style: { display: opened[i] ? "block" : "none" }
+            style: { display: opened[i] ? "block" : "none" }
           },
           React.createElement(item.component, item.componentProps || {})
         ) :

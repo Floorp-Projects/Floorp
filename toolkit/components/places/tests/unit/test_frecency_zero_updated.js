@@ -3,13 +3,11 @@
 
 // Tests a zero frecency is correctly updated when inserting new valid visits.
 
-function run_test()
-{
+function run_test() {
   run_next_test()
 }
 
-add_task(function* ()
-{
+add_task(function* () {
   const TEST_URI = NetUtil.newURI("http://example.com/");
   let id = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 TEST_URI,

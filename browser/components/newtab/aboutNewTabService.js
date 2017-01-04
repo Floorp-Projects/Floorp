@@ -191,7 +191,7 @@ AboutNewTabService.prototype = {
    */
   get defaultURL() {
     let csTest = Services.prefs.getBoolPref(PREF_REMOTE_CS_TEST);
-    if (this._remoteEnabled || csTest)  {
+    if (this._remoteEnabled || csTest) {
       return this._remoteURL;
     }
     return LOCAL_NEWTAB_URL;

@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function closeWindow(aClose, aPromptFunction)
-{
+function closeWindow(aClose, aPromptFunction) {
   let { AppConstants } = Components.utils.import("resource://gre/modules/AppConstants.jsm");
 
   // Closing the last window doesn't quit the application on OS X.
@@ -39,8 +38,7 @@ function closeWindow(aClose, aPromptFunction)
   return true;
 }
 
-function canQuitApplication(aData)
-{
+function canQuitApplication(aData) {
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
   if (!os) return true;
@@ -53,13 +51,11 @@ function canQuitApplication(aData)
     // Something aborted the quit process.
     if (cancelQuit.data)
       return false;
-  }
-  catch (ex) { }
+  } catch (ex) { }
   return true;
 }
 
-function goQuitApplication()
-{
+function goQuitApplication() {
   if (!canQuitApplication())
     return false;
 
@@ -73,8 +69,7 @@ function goQuitApplication()
 //
 // Command Updater functions
 //
-function goUpdateCommand(aCommand)
-{
+function goUpdateCommand(aCommand) {
   try {
     var controller = top.document.commandDispatcher
                         .getControllerForCommand(aCommand);
@@ -84,30 +79,26 @@ function goUpdateCommand(aCommand)
       enabled = controller.isCommandEnabled(aCommand);
 
     goSetCommandEnabled(aCommand, enabled);
-  }
-  catch (e) {
+  } catch (e) {
     Components.utils.reportError("An error occurred updating the " +
                                  aCommand + " command: " + e);
   }
 }
 
-function goDoCommand(aCommand)
-{
+function goDoCommand(aCommand) {
   try {
     var controller = top.document.commandDispatcher
                         .getControllerForCommand(aCommand);
     if (controller && controller.isCommandEnabled(aCommand))
       controller.doCommand(aCommand);
-  }
-  catch (e) {
+  } catch (e) {
     Components.utils.reportError("An error occurred executing the " +
                                  aCommand + " command: " + e);
   }
 }
 
 
-function goSetCommandEnabled(aID, aEnabled)
-{
+function goSetCommandEnabled(aID, aEnabled) {
   var node = document.getElementById(aID);
 
   if (node) {
@@ -118,8 +109,7 @@ function goSetCommandEnabled(aID, aEnabled)
   }
 }
 
-function goSetMenuValue(aCommand, aLabelAttribute)
-{
+function goSetMenuValue(aCommand, aLabelAttribute) {
   var commandNode = top.document.getElementById(aCommand);
   if (commandNode) {
     var label = commandNode.getAttribute(aLabelAttribute);
@@ -128,8 +118,7 @@ function goSetMenuValue(aCommand, aLabelAttribute)
   }
 }
 
-function goSetAccessKey(aCommand, aValueAttribute)
-{
+function goSetAccessKey(aCommand, aValueAttribute) {
   var commandNode = top.document.getElementById(aCommand);
   if (commandNode) {
     var value = commandNode.getAttribute(aValueAttribute);
@@ -141,8 +130,7 @@ function goSetAccessKey(aCommand, aValueAttribute)
 // this function is used to inform all the controllers attached to a node that an event has occurred
 // (e.g. the tree controllers need to be informed of blur events so that they can change some of the
 // menu items back to their default values)
-function goOnEvent(aNode, aEvent)
-{
+function goOnEvent(aNode, aEvent) {
   var numControllers = aNode.controllers.getControllerCount();
   var controller;
 
@@ -153,8 +141,7 @@ function goOnEvent(aNode, aEvent)
   }
 }
 
-function setTooltipText(aID, aTooltipText)
-{
+function setTooltipText(aID, aTooltipText) {
   var element = document.getElementById(aID);
   if (element)
     element.setAttribute("tooltiptext", aTooltipText);

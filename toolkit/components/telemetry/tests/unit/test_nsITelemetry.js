@@ -7,8 +7,7 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 
 // Return an array of numbers from lower up to, excluding, upper
-function numberRange(lower, upper)
-{
+function numberRange(lower, upper) {
   let a = [];
   for (let i = lower; i < upper; ++i) {
     a.push(i);
@@ -200,8 +199,7 @@ add_task(function* test_count_histogram() {
   do_check_eq(s.sum, 2);
 });
 
-add_task(function* test_categorical_histogram()
-{
+add_task(function* test_categorical_histogram() {
   let h1 = Telemetry.getHistogramById("TELEMETRY_TEST_CATEGORICAL");
   for (let v of ["CommonLabel", "Label2", "Label3", "Label3", 0, 0, 1]) {
     h1.add(v);

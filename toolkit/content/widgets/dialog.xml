@@ -186,9 +186,8 @@
                     // so return focus to the tab itself
                     initialFocusedElt.focus();
                   }
-                }
-                else if (!/Mac/.test(navigator.platform) &&
-                         focusedElt.hasAttribute("dlgtype") && focusedElt != defaultButton) {
+                } else if (!/Mac/.test(navigator.platform) &&
+                           focusedElt.hasAttribute("dlgtype") && focusedElt != defaultButton) {
                   defaultButton.focus();
                 }
               }
@@ -331,11 +330,10 @@
           if (newDefaultButton) {
             this.setAttribute("defaultButton", aNewDefault);
             newDefaultButton.setAttribute("default", "true");
-          }
-          else {
+          } else {
             this.setAttribute("defaultButton", "none");
             if (aNewDefault != "none")
-              dump("invalid new default button: " +  aNewDefault + ", assuming: none\n");
+              dump("invalid new default button: " + aNewDefault + ", assuming: none\n");
           }
         ]]>
         </body>

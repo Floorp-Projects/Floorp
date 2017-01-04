@@ -588,8 +588,7 @@
         if (this.getRowCount() > 0) {
           if (this.currentIndex == -1) {
             this.currentIndex = this.getIndexOfFirstVisibleRow();
-          }
-          else {
+          } else {
             this.currentItem._fireEvent("DOMMenuItemActive");
           }
         }
@@ -826,8 +825,7 @@
               this.addItemToSelection(this.currentItem);
               // Prevent page from scrolling on the space key.
               event.preventDefault();
-            }
-            else if (!this.currentItem.disabled) {
+            } else if (!this.currentItem.disabled) {
               this.currentItem.checked = !this.currentItem.checked;
               this.currentItem.doCommand();
               // Prevent page from scrolling on the space key.
@@ -991,16 +989,13 @@
         control._userSelecting = true;
         if (control.selType != "multiple") {
           control.selectItem(this);
-        }
-        else if (event.ctrlKey || event.metaKey) {
+        } else if (event.ctrlKey || event.metaKey) {
           control.toggleItemSelection(this);
           control.currentItem = this;
-        }
-        else if (event.shiftKey) {
+        } else if (event.shiftKey) {
           control.selectItemRange(null, this);
           control.currentItem = this;
-        }
-        else {
+        } else {
           /* We want to deselect all the selected items except what was
             clicked, UNLESS it was a right-click.  We have to do this
             in click rather than mousedown so that you can drag a

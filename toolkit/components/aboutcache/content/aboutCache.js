@@ -28,8 +28,7 @@ addEventListener('DOMContentLoaded', function() {
 
 // When user presses the [Update] button, we build a new context key according the UI control
 // values and navigate to a new about:cache?storage=<name>&context=<key> URL.
-function navigate()
-{
+function navigate() {
   context = '';
   if ($('anon').checked)
     context += 'a,';

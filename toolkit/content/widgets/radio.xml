@@ -124,8 +124,7 @@
             val.setAttribute("focused", focused);
             val.setAttribute("selected", "true");
             this.setAttribute("value", val.value);
-          }
-          else {
+          } else {
             this.removeAttribute("value");
           }
 
@@ -218,8 +217,7 @@
 
             this.selectedItem = children[i];
             children[i].doCommand();
-          }
-          else {
+          } else {
             do {
               if (i == 0)
                 i = children.length;

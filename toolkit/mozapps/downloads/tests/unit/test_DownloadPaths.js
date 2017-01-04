@@ -23,8 +23,7 @@ Cu.import("resource://gre/modules/DownloadPaths.jsm");
  *
  * @returns nsIFile pointing to the new or existing directory.
  */
-function createTemporarySaveDirectory()
-{
+function createTemporarySaveDirectory() {
   var saveDir = Cc["@mozilla.org/file/directory_service;1"].
                 getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   saveDir.append("testsavedir");
@@ -34,8 +33,7 @@ function createTemporarySaveDirectory()
   return saveDir;
 }
 
-function testSplitBaseNameAndExtension(aLeafName, [aBase, aExt])
-{
+function testSplitBaseNameAndExtension(aLeafName, [aBase, aExt]) {
   var [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
   do_check_eq(base, aBase);
   do_check_eq(ext, aExt);
@@ -51,27 +49,25 @@ function testSplitBaseNameAndExtension(aLeafName, [aBase, aExt])
   do_check_eq(ext, aExt);
 }
 
-function testCreateNiceUniqueFile(aTempFile, aExpectedLeafName)
-{
+function testCreateNiceUniqueFile(aTempFile, aExpectedLeafName) {
   var createdFile = DownloadPaths.createNiceUniqueFile(aTempFile);
   do_check_eq(createdFile.leafName, aExpectedLeafName);
 }
 
-function run_test()
-{
+function run_test() {
   // Usual file names.
-  testSplitBaseNameAndExtension("base",             ["base", ""]);
-  testSplitBaseNameAndExtension("base.ext",         ["base", ".ext"]);
+  testSplitBaseNameAndExtension("base", ["base", ""]);
+  testSplitBaseNameAndExtension("base.ext", ["base", ".ext"]);
   testSplitBaseNameAndExtension("base.application", ["base", ".application"]);
-  testSplitBaseNameAndExtension("base.x.Z",         ["base", ".x.Z"]);
-  testSplitBaseNameAndExtension("base.ext.Z",       ["base", ".ext.Z"]);
-  testSplitBaseNameAndExtension("base.ext.gz",      ["base", ".ext.gz"]);
-  testSplitBaseNameAndExtension("base.ext.Bz2",     ["base", ".ext.Bz2"]);
-  testSplitBaseNameAndExtension("base..ext",        ["base.", ".ext"]);
-  testSplitBaseNameAndExtension("base..Z",          ["base.", ".Z"]);
-  testSplitBaseNameAndExtension("base. .Z",         ["base. ", ".Z"]);
-  testSplitBaseNameAndExtension("base.base.Bz2",    ["base.base", ".Bz2"]);
-  testSplitBaseNameAndExtension("base  .ext",       ["base  ", ".ext"]);
+  testSplitBaseNameAndExtension("base.x.Z", ["base", ".x.Z"]);
+  testSplitBaseNameAndExtension("base.ext.Z", ["base", ".ext.Z"]);
+  testSplitBaseNameAndExtension("base.ext.gz", ["base", ".ext.gz"]);
+  testSplitBaseNameAndExtension("base.ext.Bz2", ["base", ".ext.Bz2"]);
+  testSplitBaseNameAndExtension("base..ext", ["base.", ".ext"]);
+  testSplitBaseNameAndExtension("base..Z", ["base.", ".Z"]);
+  testSplitBaseNameAndExtension("base. .Z", ["base. ", ".Z"]);
+  testSplitBaseNameAndExtension("base.base.Bz2", ["base.base", ".Bz2"]);
+  testSplitBaseNameAndExtension("base  .ext", ["base  ", ".ext"]);
 
   // Corner cases. A name ending with a dot technically has no extension, but
   // we consider the ending dot separately from the base name so that modifying
@@ -79,19 +75,19 @@ function run_test()
   // Names beginning with a dot are hidden files on Unix-like platforms and if
   // their name doesn't contain another dot they should have no extension, but
   // on Windows the whole name is considered as an extension.
-  testSplitBaseNameAndExtension("base.",            ["base", "."]);
-  testSplitBaseNameAndExtension(".ext",             ["", ".ext"]);
+  testSplitBaseNameAndExtension("base.", ["base", "."]);
+  testSplitBaseNameAndExtension(".ext", ["", ".ext"]);
 
   // Unusual file names (not recommended as input to the function).
-  testSplitBaseNameAndExtension("base. ",           ["base", ". "]);
-  testSplitBaseNameAndExtension("base ",            ["base ", ""]);
-  testSplitBaseNameAndExtension("",                 ["", ""]);
-  testSplitBaseNameAndExtension(" ",                [" ", ""]);
-  testSplitBaseNameAndExtension(" . ",              [" ", ". "]);
-  testSplitBaseNameAndExtension(" .. ",             [" .", ". "]);
-  testSplitBaseNameAndExtension(" .ext",            [" ", ".ext"]);
-  testSplitBaseNameAndExtension(" .ext. ",          [" .ext", ". "]);
-  testSplitBaseNameAndExtension(" .ext.gz ",        [" .ext", ".gz "]);
+  testSplitBaseNameAndExtension("base. ", ["base", ". "]);
+  testSplitBaseNameAndExtension("base ", ["base ", ""]);
+  testSplitBaseNameAndExtension("", ["", ""]);
+  testSplitBaseNameAndExtension(" ", [" ", ""]);
+  testSplitBaseNameAndExtension(" . ", [" ", ". "]);
+  testSplitBaseNameAndExtension(" .. ", [" .", ". "]);
+  testSplitBaseNameAndExtension(" .ext", [" ", ".ext"]);
+  testSplitBaseNameAndExtension(" .ext. ", [" .ext", ". "]);
+  testSplitBaseNameAndExtension(" .ext.gz ", [" .ext", ".gz "]);
 
   var destDir = createTemporarySaveDirectory();
   try {

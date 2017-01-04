@@ -33,8 +33,7 @@ MessageListener.prototype = {
     for (let listener of listeners.values()) {
       try {
         listener(message);
-      }
-      catch (e) {
+      } catch (e) {
         Cu.reportError(e);
       }
     }
@@ -263,8 +262,7 @@ MessagePort.prototype = {
     try {
       // This can fail in the child process if the tab has already been closed
       this.messageManager.removeMessageListener("RemotePage:Message", this.message);
-    }
-    catch (e) { }
+    } catch (e) { }
     this.messageManager = null;
     this.destroyed = true;
     this.portID = null;
@@ -347,8 +345,7 @@ ChromeMessagePort.prototype.destroy = function() {
   try {
     this._browser.removeEventListener(
         "SwapDocShells", this.swapBrowsers, false);
-  }
-  catch (e) {
+  } catch (e) {
     // It's possible the browser instance is already dead so we can just ignore
     // this error.
   }
@@ -390,8 +387,7 @@ function ChildMessagePort(contentFrame, window) {
   window.addEventListener("unload", () => {
     try {
       this.sendAsyncMessage("RemotePage:Unload");
-    }
-    catch (e) {
+    } catch (e) {
       // If the tab has been closed the frame message manager has already been
       // destroyed
     }

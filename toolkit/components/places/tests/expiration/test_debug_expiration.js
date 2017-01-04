@@ -10,8 +10,7 @@
 
 var gNow = getExpirablePRTime(60);
 
-add_task(function* test_expire_orphans()
-{
+add_task(function* test_expire_orphans() {
   // Add visits to 2 pages and force a orphan expiration. Visits should survive.
   yield PlacesTestUtils.addVisits({
     uri: uri("http://page1.mozilla.org/"),
@@ -41,8 +40,7 @@ add_task(function* test_expire_orphans()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_expire_orphans_optionalarg()
-{
+add_task(function* test_expire_orphans_optionalarg() {
   // Add visits to 2 pages and force a orphan expiration. Visits should survive.
   yield PlacesTestUtils.addVisits({
     uri: uri("http://page1.mozilla.org/"),
@@ -72,8 +70,7 @@ add_task(function* test_expire_orphans_optionalarg()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_expire_limited()
-{
+add_task(function* test_expire_limited() {
   yield PlacesTestUtils.addVisits([
     { // Should be expired cause it's the oldest visit
       uri: "http://old.mozilla.org/",
@@ -97,8 +94,7 @@ add_task(function* test_expire_limited()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_expire_limited_longurl()
-{
+add_task(function* test_expire_limited_longurl() {
   let longurl = "http://long.mozilla.org/" + "a".repeat(232);
   yield PlacesTestUtils.addVisits([
     { // Should be expired cause it's the oldest visit
@@ -126,8 +122,7 @@ add_task(function* test_expire_limited_longurl()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_expire_limited_exoticurl()
-{
+add_task(function* test_expire_limited_exoticurl() {
   yield PlacesTestUtils.addVisits([
     { // Should be expired cause it's the oldest visit
       uri: "http://old.mozilla.org/",
@@ -160,8 +155,7 @@ add_task(function* test_expire_limited_exoticurl()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* test_expire_unlimited()
-{
+add_task(function* test_expire_unlimited() {
   let longurl = "http://long.mozilla.org/" + "a".repeat(232);
   yield PlacesTestUtils.addVisits([
     {
@@ -214,8 +208,7 @@ add_task(function* test_expire_unlimited()
   yield PlacesTestUtils.clearHistory();
 });
 
-function run_test()
-{
+function run_test() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
   // Set maxPages to a low value, so it's easy to go over it.

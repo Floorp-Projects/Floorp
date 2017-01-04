@@ -10,8 +10,7 @@ var gSearchBox;
 var gHistoryGrouping = "";
 var gSearching = false;
 
-function HistorySidebarInit()
-{
+function HistorySidebarInit() {
   gHistoryTree = document.getElementById("historyTree");
   gSearchBox = document.getElementById("search-box");
 
@@ -32,14 +31,12 @@ function HistorySidebarInit()
   searchHistory("");
 }
 
-function GroupBy(groupingType)
-{
+function GroupBy(groupingType) {
   gHistoryGrouping = groupingType;
   searchHistory(gSearchBox.value);
 }
 
-function searchHistory(aInput)
-{
+function searchHistory(aInput) {
   var query = PlacesUtils.history.getNewQuery();
   var options = PlacesUtils.history.getNewQueryOptions();
 

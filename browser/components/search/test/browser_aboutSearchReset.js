@@ -125,8 +125,7 @@ var gTests = [
 
 ];
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
   Task.spawn(function* () {
     let oldCanRecord = Services.telemetry.canRecordExtended;

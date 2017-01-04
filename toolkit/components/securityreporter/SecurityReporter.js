@@ -20,8 +20,7 @@ const HISTOGRAM_ID = "TLS_ERROR_REPORT_UI";
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
 
-function getDERString(cert)
-{
+function getDERString(cert) {
   var length = {};
   var derArray = cert.getRawDER(length);
   var derString = '';

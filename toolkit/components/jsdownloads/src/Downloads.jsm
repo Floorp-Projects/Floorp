@@ -102,8 +102,7 @@ this.Downloads = {
    * @resolves The newly created Download object.
    * @rejects JavaScript exception.
    */
-  createDownload: function D_createDownload(aProperties)
-  {
+  createDownload: function D_createDownload(aProperties) {
     try {
       return Promise.resolve(Download.fromSerializable(aProperties));
     } catch (ex) {
@@ -170,8 +169,7 @@ this.Downloads = {
    * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  getList(aType)
-  {
+  getList(aType) {
     if (!this._promiseListsInitialized) {
       this._promiseListsInitialized = Task.spawn(function* () {
         let publicList = new DownloadList();
@@ -232,8 +230,7 @@ this.Downloads = {
    * @resolves The requested DownloadList or DownloadCombinedList object.
    * @rejects JavaScript exception.
    */
-  getSummary(aType)
-  {
+  getSummary(aType) {
     if (aType != Downloads.PUBLIC && aType != Downloads.PRIVATE &&
         aType != Downloads.ALL) {
       throw new Error("Invalid aType argument.");

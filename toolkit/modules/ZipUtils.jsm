@@ -56,8 +56,7 @@ function saveStreamAsync(aPath, aStream, aFile) {
   function readFailed(error) {
     try {
       aStream.close();
-    }
-    catch (e) {
+    } catch (e) {
       logger.error("Failed to close JAR stream for " + aPath);
     }
 
@@ -78,8 +77,7 @@ function saveStreamAsync(aPath, aStream, aFile) {
       aFile.write(data, { bytes: count }).then(function() {
         input.asyncWait(readData, 0, 0, Services.tm.currentThread);
       }, readFailed);
-    }
-    catch (e) {
+    } catch (e) {
       if (e.result == Cr.NS_BASE_STREAM_CLOSED)
         deferred.resolve(aFile.close());
       else
@@ -110,8 +108,7 @@ this.ZipUtils = {
 
     try {
       zipReader.open(aZipFile);
-    }
-    catch (e) {
+    } catch (e) {
       return Promise.reject(e);
     }
 
@@ -132,13 +129,11 @@ this.ZipUtils = {
         if (zipentry.isDirectory) {
           try {
             yield OS.File.makeDir(path);
-          }
-          catch (e) {
+          } catch (e) {
             dump("extractFilesAsync: failed to create directory " + path + "\n");
             throw e;
           }
-        }
-        else {
+        } else {
           let options = { unixMode: zipentry.permissions | FileUtils.PERMS_FILE };
           try {
             let file = yield OS.File.open(path, { truncate: true }, options);
@@ -146,8 +141,7 @@ this.ZipUtils = {
               yield file.close();
             else
               yield saveStreamAsync(path, zipReader.getInputStream(entryName), file);
-          }
-          catch (e) {
+          } catch (e) {
             dump("extractFilesAsync: failed to extract file " + path + "\n");
             throw e;
           }
@@ -192,8 +186,7 @@ this.ZipUtils = {
           try {
             target.create(Ci.nsIFile.DIRECTORY_TYPE,
                           FileUtils.PERMS_DIRECTORY);
-          }
-          catch (e) {
+          } catch (e) {
             dump("extractFiles: failed to create target directory for extraction file = " + target.path + "\n");
           }
         }
@@ -209,13 +202,11 @@ this.ZipUtils = {
         zipReader.extract(entryName, target);
         try {
           target.permissions |= FileUtils.PERMS_FILE;
-        }
-        catch (e) {
+        } catch (e) {
           dump("Failed to set permissions " + FileUtils.PERMS_FILE.toString(8) + " on " + target.path + " " + e + "\n");
         }
       }
-    }
-    finally {
+    } finally {
       zipReader.close();
     }
   }

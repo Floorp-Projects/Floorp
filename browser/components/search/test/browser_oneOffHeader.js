@@ -44,8 +44,7 @@ function* synthesizeNativeMouseMove(aElement) {
 
   // Wait for the mouseup event to occur before continuing.
   return new Promise((resolve, reject) => {
-    function eventOccurred(e)
-    {
+    function eventOccurred(e) {
       aElement.removeEventListener("mouseover", eventOccurred, true);
       resolve();
     }

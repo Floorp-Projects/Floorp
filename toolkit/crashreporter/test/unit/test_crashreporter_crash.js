@@ -1,5 +1,4 @@
-function run_test()
-{
+function run_test() {
   var is_win7_or_newer = false;
   var is_windows = false;
   var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]

@@ -77,14 +77,12 @@ AutoCompleteInput.prototype = {
   }
 }
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
   PlacesTestUtils.addVisits(url).then(continue_test);
 }
 
-function continue_test()
-{
+function continue_test() {
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 

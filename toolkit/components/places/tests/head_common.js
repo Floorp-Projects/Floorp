@@ -246,8 +246,7 @@ function clearDB() {
  * @param aName
  *        The name of the table or view to output.
  */
-function dump_table(aName)
-{
+function dump_table(aName) {
   let stmt = DBConn().createStatement("SELECT * FROM " + aName);
 
   print("\n*** Printing data from " + aName);
@@ -295,8 +294,7 @@ function dump_table(aName)
  *        nsIURI or address to look for.
  * @return place id of the page or 0 if not found
  */
-function page_in_database(aURI)
-{
+function page_in_database(aURI) {
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
     "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url"
@@ -306,8 +304,7 @@ function page_in_database(aURI)
     if (!stmt.executeStep())
       return 0;
     return stmt.getInt64(0);
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 }
@@ -318,8 +315,7 @@ function page_in_database(aURI)
  *        nsIURI or address to look for.
  * @return number of visits found.
  */
-function visits_in_database(aURI)
-{
+function visits_in_database(aURI) {
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
     `SELECT count(*) FROM moz_historyvisits v
@@ -331,8 +327,7 @@ function visits_in_database(aURI)
     if (!stmt.executeStep())
       return 0;
     return stmt.getInt64(0);
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 }
@@ -367,8 +362,7 @@ function check_no_bookmarks() {
  * @resolves The array [aSubject, aData] from the observed notification.
  * @rejects Never.
  */
-function promiseTopicObserved(aTopic)
-{
+function promiseTopicObserved(aTopic) {
   return new Promise(resolve => {
     Services.obs.addObserver(function observe(aObsSubject, aObsTopic, aObsData) {
       Services.obs.removeObserver(observe, aObsTopic);
@@ -532,8 +526,7 @@ function check_JSON_backup(aIsAutomaticBackup) {
  *        The URI or spec to get frecency for.
  * @return the frecency value.
  */
-function frecencyForUrl(aURI)
-{
+function frecencyForUrl(aURI) {
   let url = aURI;
   if (aURI instanceof Ci.nsIURI) {
     url = aURI.spec;
@@ -561,8 +554,7 @@ function frecencyForUrl(aURI)
  *        The URI or spec to get hidden for.
  * @return @return true if the url is hidden, false otherwise.
  */
-function isUrlHidden(aURI)
-{
+function isUrlHidden(aURI) {
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
     "SELECT hidden FROM moz_places WHERE url_hash = hash(?1) AND url = ?1"
@@ -601,8 +593,7 @@ function is_time_ordered(before, after) {
  * @param aCallback
  *        Function to be called when done.
  */
-function waitForConnectionClosed(aCallback)
-{
+function waitForConnectionClosed(aCallback) {
   promiseTopicObserved("places-connection-closed").then(aCallback);
   shutdownPlaces();
 }
@@ -616,8 +607,7 @@ function waitForConnectionClosed(aCallback)
  *        The stack frame used to report the error.
  */
 function do_check_valid_places_guid(aGuid,
-                                    aStack)
-{
+                                    aStack) {
   if (!aStack) {
     aStack = Components.stack.caller;
   }
@@ -634,8 +624,7 @@ function do_check_valid_places_guid(aGuid,
  * @return the associated the guid.
  */
 function do_get_guid_for_uri(aURI,
-                             aStack)
-{
+                             aStack) {
   if (!aStack) {
     aStack = Components.stack.caller;
   }
@@ -661,8 +650,7 @@ function do_get_guid_for_uri(aURI,
  *        The expected guid in the database.
  */
 function do_check_guid_for_uri(aURI,
-                               aGUID)
-{
+                               aGUID) {
   let caller = Components.stack.caller;
   let guid = do_get_guid_for_uri(aURI, caller);
   if (aGUID) {
@@ -681,8 +669,7 @@ function do_check_guid_for_uri(aURI,
  * @return the associated the guid.
  */
 function do_get_guid_for_bookmark(aId,
-                                  aStack)
-{
+                                  aStack) {
   if (!aStack) {
     aStack = Components.stack.caller;
   }
@@ -708,8 +695,7 @@ function do_get_guid_for_bookmark(aId,
  *        The expected guid in the database.
  */
 function do_check_guid_for_bookmark(aId,
-                                    aGUID)
-{
+                                    aGUID) {
   let caller = Components.stack.caller;
   let guid = do_get_guid_for_bookmark(aId, caller);
   if (aGUID) {
@@ -729,8 +715,7 @@ function do_check_guid_for_bookmark(aId,
  *        Whether the comparison should take in count position of the elements.
  * @return true if the arrays contain the same elements, false otherwise.
  */
-function do_compare_arrays(a1, a2, sorted)
-{
+function do_compare_arrays(a1, a2, sorted) {
   if (a1.length != a2.length)
     return false;
 

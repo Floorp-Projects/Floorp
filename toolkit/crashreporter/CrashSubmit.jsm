@@ -216,8 +216,7 @@ function Submitter(id, recordSubmission, noThrottle, extraExtraKeyVals) {
 }
 
 Submitter.prototype = {
-  submitSuccess: function Submitter_submitSuccess(ret)
-  {
+  submitSuccess: function Submitter_submitSuccess(ret) {
     // Write out the details file to submitted/
     writeSubmittedReport(ret.CrashID, ret.ViewURL);
 
@@ -233,8 +232,7 @@ Submitter.prototype = {
       for (let i of this.additionalDumps) {
         i.dump.remove(false);
       }
-    }
-    catch (ex) {
+    } catch (ex) {
       // report an error? not much the user can do here.
     }
 
@@ -255,8 +253,7 @@ Submitter.prototype = {
       CrashSubmit._activeSubmissions.splice(idx, 1);
   },
 
-  submitForm: function Submitter_submitForm()
-  {
+  submitForm: function Submitter_submitForm() {
     if (!('ServerURL' in this.extraKeyVals)) {
       return false;
     }
@@ -343,8 +340,7 @@ Submitter.prototype = {
     return true;
   },
 
-  notifyStatus: function Submitter_notify(status, ret)
-  {
+  notifyStatus: function Submitter_notify(status, ret) {
     let propBag = Cc["@mozilla.org/hash-property-bag;1"].
                   createInstance(Ci.nsIWritablePropertyBag2);
     propBag.setPropertyAsAString("minidumpID", this.id);
@@ -373,8 +369,7 @@ Submitter.prototype = {
     }
   },
 
-  submit: function Submitter_submit()
-  {
+  submit: function Submitter_submit() {
     let [dump, extra, memory] = getPendingMinidump(this.id);
 
     if (!dump.exists() || !extra.exists()) {
@@ -450,8 +445,7 @@ this.CrashSubmit = {
    *  @return a Promise that is fulfilled with the server crash ID when the
    *          submission succeeds and rejected otherwise.
    */
-  submit: function CrashSubmit_submit(id, params)
-  {
+  submit: function CrashSubmit_submit(id, params) {
     params = params || {};
     let recordSubmission = false;
     let noThrottle = false;

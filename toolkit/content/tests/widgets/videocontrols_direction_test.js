@@ -61,8 +61,7 @@ function runTest(index) {
       if (result) {
         canvases[0].cleanup();
         canvases[1].cleanup();
-      }
-      else {
+      } else {
         info("Snapshot of canvas 1: " + canvases[0].snapshot.toDataURL());
         info("Snapshot of canvas 2: " + canvases[1].snapshot.toDataURL());
       }

@@ -629,16 +629,13 @@ extApplication.prototype = {
   observe: function app_observe(aSubject, aTopic, aData) {
     if (aTopic == "app-startup") {
       this.events.dispatch("load", "application");
-    }
-    else if (aTopic == "final-ui-startup") {
+    } else if (aTopic == "final-ui-startup") {
       this.events.dispatch("ready", "application");
-    }
-    else if (aTopic == "quit-application-requested") {
+    } else if (aTopic == "quit-application-requested") {
       // we can stop the quit by checking the return value
       if (this.events.dispatch("quit", "application") == false)
         aSubject.data = true;
-    }
-    else if (aTopic == "xpcom-shutdown") {
+    } else if (aTopic == "xpcom-shutdown") {
       this.events.dispatch("unload", "application");
       gExtensionObserver = null;
       gPreferenceObserver = null;

@@ -39,25 +39,25 @@ function promiseCreateDatabaseSchema(aConnection)
     yield aConnection.setSchemaVersion(5);
     yield aConnection.execute("CREATE TABLE moz_logins (" +
                               "id                  INTEGER PRIMARY KEY," +
-                              "hostname            TEXT NOT NULL,"       +
-                              "httpRealm           TEXT,"                +
-                              "formSubmitURL       TEXT,"                +
-                              "usernameField       TEXT NOT NULL,"       +
-                              "passwordField       TEXT NOT NULL,"       +
-                              "encryptedUsername   TEXT NOT NULL,"       +
-                              "encryptedPassword   TEXT NOT NULL,"       +
-                              "guid                TEXT,"                +
-                              "encType             INTEGER,"             +
-                              "timeCreated         INTEGER,"             +
-                              "timeLastUsed        INTEGER,"             +
-                              "timePasswordChanged INTEGER,"             +
+                              "hostname            TEXT NOT NULL," +
+                              "httpRealm           TEXT," +
+                              "formSubmitURL       TEXT," +
+                              "usernameField       TEXT NOT NULL," +
+                              "passwordField       TEXT NOT NULL," +
+                              "encryptedUsername   TEXT NOT NULL," +
+                              "encryptedPassword   TEXT NOT NULL," +
+                              "guid                TEXT," +
+                              "encType             INTEGER," +
+                              "timeCreated         INTEGER," +
+                              "timeLastUsed        INTEGER," +
+                              "timePasswordChanged INTEGER," +
                               "timesUsed           INTEGER)");
-    yield aConnection.execute("CREATE TABLE moz_disabledHosts ("         +
+    yield aConnection.execute("CREATE TABLE moz_disabledHosts (" +
                               "id                  INTEGER PRIMARY KEY," +
                               "hostname            TEXT UNIQUE)");
-    yield aConnection.execute("CREATE TABLE moz_deleted_logins ("        +
+    yield aConnection.execute("CREATE TABLE moz_deleted_logins (" +
                               "id                  INTEGER PRIMARY KEY," +
-                              "guid                TEXT,"                +
+                              "guid                TEXT," +
                               "timeDeleted         INTEGER)");
   });
 }

@@ -124,8 +124,7 @@ var updateListener = {
 }
 
 var requestHandler = {
-  handle(metadata, response)
-  {
+  handle(metadata, response) {
     var expected = EXPECTED[metadata.path.substring(1)];
     var params = metadata.queryString.split("&");
     do_check_eq(params.length, 10);

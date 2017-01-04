@@ -31,8 +31,7 @@ var completedResolve;
 var waitingURL, waitingEvent;
 var rootWindowID;
 
-function gotEvent(event, details)
-{
+function gotEvent(event, details) {
   if (!details.url.startsWith(BASE)) {
     return;
   }
@@ -61,8 +60,7 @@ function gotEvent(event, details)
   }
 }
 
-function loadViaFrameScript(url, event, script)
-{
+function loadViaFrameScript(url, event, script) {
   // Loading via a frame script ensures that the chrome process never
   // "gets ahead" of frame scripts in non-e10s mode.
   received = [];

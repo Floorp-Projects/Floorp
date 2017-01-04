@@ -36,8 +36,7 @@ function test() {
 
     try {
       Services.prefs.clearUserPref(PREF_INSTALL_REQUIREBUILTINCERTS);
-    }
-    catch (e) {
+    } catch (e) {
     }
 
     if (gPendingInstall) {
@@ -45,8 +44,7 @@ function test() {
       ok(false, "Timed out in the middle of downloading " + gPendingInstall.sourceURI.spec);
       try {
         gPendingInstall.cancel();
-      }
-      catch (e) {
+      } catch (e) {
       }
     }
   });
@@ -76,8 +74,7 @@ function run_install_tests(callback) {
       var url = mainURL + redirect + redirectURL + xpi;
       var message = "Should have seen the right result for an install redirected from " +
                     mainURL + " to " + redirectURL;
-    }
-    else {
+    } else {
       url = mainURL + xpi;
       message = "Should have seen the right result for an install from " +
                 mainURL;
@@ -122,60 +119,60 @@ function addCertOverrides() {
 // and no hashes
 add_test(function() {
   // Tests that a simple install works as expected.
-  add_install_test(HTTP,       null,       SUCCESS);
-  add_install_test(HTTPS,      null,       NETWORK_FAILURE);
-  add_install_test(NOCERT,     null,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, null,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  null,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    null,       NETWORK_FAILURE);
+  add_install_test(HTTP, null, SUCCESS);
+  add_install_test(HTTPS, null, NETWORK_FAILURE);
+  add_install_test(NOCERT, null, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, null, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, null, NETWORK_FAILURE);
+  add_install_test(EXPIRED, null, NETWORK_FAILURE);
 
   // Tests that redirecting from http to other servers works as expected
-  add_install_test(HTTP,       HTTP,       SUCCESS);
-  add_install_test(HTTP,       HTTPS,      SUCCESS);
-  add_install_test(HTTP,       NOCERT,     NETWORK_FAILURE);
-  add_install_test(HTTP,       SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(HTTP,       UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(HTTP,       EXPIRED,    NETWORK_FAILURE);
+  add_install_test(HTTP, HTTP, SUCCESS);
+  add_install_test(HTTP, HTTPS, SUCCESS);
+  add_install_test(HTTP, NOCERT, NETWORK_FAILURE);
+  add_install_test(HTTP, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(HTTP, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(HTTP, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_install_test(HTTPS,      HTTP,       NETWORK_FAILURE);
-  add_install_test(HTTPS,      HTTPS,      NETWORK_FAILURE);
-  add_install_test(HTTPS,      NOCERT,     NETWORK_FAILURE);
-  add_install_test(HTTPS,      SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(HTTPS,      UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(HTTPS,      EXPIRED,    NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTP, NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTPS, NETWORK_FAILURE);
+  add_install_test(HTTPS, NOCERT, NETWORK_FAILURE);
+  add_install_test(HTTPS, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(HTTPS, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(HTTPS, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_install_test(NOCERT,     HTTP,       NETWORK_FAILURE);
-  add_install_test(NOCERT,     HTTPS,      NETWORK_FAILURE);
-  add_install_test(NOCERT,     NOCERT,     NETWORK_FAILURE);
-  add_install_test(NOCERT,     SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(NOCERT,     UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(NOCERT,     EXPIRED,    NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTP, NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTPS, NETWORK_FAILURE);
+  add_install_test(NOCERT, NOCERT, NETWORK_FAILURE);
+  add_install_test(NOCERT, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(NOCERT, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(NOCERT, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_install_test(SELFSIGNED, HTTP,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, HTTPS,      NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, NOCERT,     NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTP, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTPS, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, NOCERT, NETWORK_FAILURE);
   add_install_test(SELFSIGNED, SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, EXPIRED,    NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_install_test(UNTRUSTED,  HTTP,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  HTTPS,      NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  NOCERT,     NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  EXPIRED,    NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTP, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTPS, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, NOCERT, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_install_test(EXPIRED,    HTTP,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    HTTPS,      NETWORK_FAILURE);
-  add_install_test(EXPIRED,    NOCERT,     NETWORK_FAILURE);
-  add_install_test(EXPIRED,    SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(EXPIRED,    UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(EXPIRED,    EXPIRED,    NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTP, NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTPS, NETWORK_FAILURE);
+  add_install_test(EXPIRED, NOCERT, NETWORK_FAILURE);
+  add_install_test(EXPIRED, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(EXPIRED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(EXPIRED, EXPIRED, NETWORK_FAILURE);
 
   run_install_tests(run_next_test);
 });
@@ -186,60 +183,60 @@ add_test(function() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 
   // Tests that a simple install works as expected.
-  add_install_test(HTTP,       null,       SUCCESS);
-  add_install_test(HTTPS,      null,       SUCCESS);
-  add_install_test(NOCERT,     null,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, null,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  null,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    null,       NETWORK_FAILURE);
+  add_install_test(HTTP, null, SUCCESS);
+  add_install_test(HTTPS, null, SUCCESS);
+  add_install_test(NOCERT, null, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, null, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, null, NETWORK_FAILURE);
+  add_install_test(EXPIRED, null, NETWORK_FAILURE);
 
   // Tests that redirecting from http to other servers works as expected
-  add_install_test(HTTP,       HTTP,       SUCCESS);
-  add_install_test(HTTP,       HTTPS,      SUCCESS);
-  add_install_test(HTTP,       NOCERT,     NETWORK_FAILURE);
-  add_install_test(HTTP,       SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(HTTP,       UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(HTTP,       EXPIRED,    NETWORK_FAILURE);
+  add_install_test(HTTP, HTTP, SUCCESS);
+  add_install_test(HTTP, HTTPS, SUCCESS);
+  add_install_test(HTTP, NOCERT, NETWORK_FAILURE);
+  add_install_test(HTTP, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(HTTP, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(HTTP, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_install_test(HTTPS,      HTTP,       NETWORK_FAILURE);
-  add_install_test(HTTPS,      HTTPS,      SUCCESS);
-  add_install_test(HTTPS,      NOCERT,     NETWORK_FAILURE);
-  add_install_test(HTTPS,      SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(HTTPS,      UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(HTTPS,      EXPIRED,    NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTP, NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTPS, SUCCESS);
+  add_install_test(HTTPS, NOCERT, NETWORK_FAILURE);
+  add_install_test(HTTPS, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(HTTPS, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(HTTPS, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_install_test(NOCERT,     HTTP,       NETWORK_FAILURE);
-  add_install_test(NOCERT,     HTTPS,      NETWORK_FAILURE);
-  add_install_test(NOCERT,     NOCERT,     NETWORK_FAILURE);
-  add_install_test(NOCERT,     SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(NOCERT,     UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(NOCERT,     EXPIRED,    NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTP, NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTPS, NETWORK_FAILURE);
+  add_install_test(NOCERT, NOCERT, NETWORK_FAILURE);
+  add_install_test(NOCERT, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(NOCERT, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(NOCERT, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_install_test(SELFSIGNED, HTTP,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, HTTPS,      NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, NOCERT,     NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTP, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTPS, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, NOCERT, NETWORK_FAILURE);
   add_install_test(SELFSIGNED, SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, EXPIRED,    NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_install_test(UNTRUSTED,  HTTP,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  HTTPS,      NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  NOCERT,     NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  EXPIRED,    NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTP, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTPS, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, NOCERT, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_install_test(EXPIRED,    HTTP,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    HTTPS,      NETWORK_FAILURE);
-  add_install_test(EXPIRED,    NOCERT,     NETWORK_FAILURE);
-  add_install_test(EXPIRED,    SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(EXPIRED,    UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(EXPIRED,    EXPIRED,    NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTP, NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTPS, NETWORK_FAILURE);
+  add_install_test(EXPIRED, NOCERT, NETWORK_FAILURE);
+  add_install_test(EXPIRED, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(EXPIRED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(EXPIRED, EXPIRED, NETWORK_FAILURE);
 
   run_install_tests(run_next_test);
 });
@@ -251,60 +248,60 @@ add_test(function() {
   addCertOverrides();
 
   // Tests that a simple install works as expected.
-  add_install_test(HTTP,       null,       SUCCESS);
-  add_install_test(HTTPS,      null,       NETWORK_FAILURE);
-  add_install_test(NOCERT,     null,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, null,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  null,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    null,       NETWORK_FAILURE);
+  add_install_test(HTTP, null, SUCCESS);
+  add_install_test(HTTPS, null, NETWORK_FAILURE);
+  add_install_test(NOCERT, null, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, null, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, null, NETWORK_FAILURE);
+  add_install_test(EXPIRED, null, NETWORK_FAILURE);
 
   // Tests that redirecting from http to other servers works as expected
-  add_install_test(HTTP,       HTTP,       SUCCESS);
-  add_install_test(HTTP,       HTTPS,      SUCCESS);
-  add_install_test(HTTP,       NOCERT,     SUCCESS);
-  add_install_test(HTTP,       SELFSIGNED, SUCCESS);
-  add_install_test(HTTP,       UNTRUSTED,  SUCCESS);
-  add_install_test(HTTP,       EXPIRED,    SUCCESS);
+  add_install_test(HTTP, HTTP, SUCCESS);
+  add_install_test(HTTP, HTTPS, SUCCESS);
+  add_install_test(HTTP, NOCERT, SUCCESS);
+  add_install_test(HTTP, SELFSIGNED, SUCCESS);
+  add_install_test(HTTP, UNTRUSTED, SUCCESS);
+  add_install_test(HTTP, EXPIRED, SUCCESS);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_install_test(HTTPS,      HTTP,       NETWORK_FAILURE);
-  add_install_test(HTTPS,      HTTPS,      NETWORK_FAILURE);
-  add_install_test(HTTPS,      NOCERT,     NETWORK_FAILURE);
-  add_install_test(HTTPS,      SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(HTTPS,      UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(HTTPS,      EXPIRED,    NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTP, NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTPS, NETWORK_FAILURE);
+  add_install_test(HTTPS, NOCERT, NETWORK_FAILURE);
+  add_install_test(HTTPS, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(HTTPS, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(HTTPS, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_install_test(NOCERT,     HTTP,       NETWORK_FAILURE);
-  add_install_test(NOCERT,     HTTPS,      NETWORK_FAILURE);
-  add_install_test(NOCERT,     NOCERT,     NETWORK_FAILURE);
-  add_install_test(NOCERT,     SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(NOCERT,     UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(NOCERT,     EXPIRED,    NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTP, NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTPS, NETWORK_FAILURE);
+  add_install_test(NOCERT, NOCERT, NETWORK_FAILURE);
+  add_install_test(NOCERT, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(NOCERT, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(NOCERT, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_install_test(SELFSIGNED, HTTP,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, HTTPS,      NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, NOCERT,     NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTP, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTPS, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, NOCERT, NETWORK_FAILURE);
   add_install_test(SELFSIGNED, SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, EXPIRED,    NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_install_test(UNTRUSTED,  HTTP,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  HTTPS,      NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  NOCERT,     NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  EXPIRED,    NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTP, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTPS, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, NOCERT, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, EXPIRED, NETWORK_FAILURE);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_install_test(EXPIRED,    HTTP,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    HTTPS,      NETWORK_FAILURE);
-  add_install_test(EXPIRED,    NOCERT,     NETWORK_FAILURE);
-  add_install_test(EXPIRED,    SELFSIGNED, NETWORK_FAILURE);
-  add_install_test(EXPIRED,    UNTRUSTED,  NETWORK_FAILURE);
-  add_install_test(EXPIRED,    EXPIRED,    NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTP, NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTPS, NETWORK_FAILURE);
+  add_install_test(EXPIRED, NOCERT, NETWORK_FAILURE);
+  add_install_test(EXPIRED, SELFSIGNED, NETWORK_FAILURE);
+  add_install_test(EXPIRED, UNTRUSTED, NETWORK_FAILURE);
+  add_install_test(EXPIRED, EXPIRED, NETWORK_FAILURE);
 
   run_install_tests(run_next_test);
 });
@@ -315,60 +312,60 @@ add_test(function() {
   Services.prefs.setBoolPref(PREF_INSTALL_REQUIREBUILTINCERTS, false);
 
   // Tests that a simple install works as expected.
-  add_install_test(HTTP,       null,       SUCCESS);
-  add_install_test(HTTPS,      null,       SUCCESS);
-  add_install_test(NOCERT,     null,       SUCCESS);
-  add_install_test(SELFSIGNED, null,       SUCCESS);
-  add_install_test(UNTRUSTED,  null,       SUCCESS);
-  add_install_test(EXPIRED,    null,       SUCCESS);
+  add_install_test(HTTP, null, SUCCESS);
+  add_install_test(HTTPS, null, SUCCESS);
+  add_install_test(NOCERT, null, SUCCESS);
+  add_install_test(SELFSIGNED, null, SUCCESS);
+  add_install_test(UNTRUSTED, null, SUCCESS);
+  add_install_test(EXPIRED, null, SUCCESS);
 
   // Tests that redirecting from http to other servers works as expected
-  add_install_test(HTTP,       HTTP,       SUCCESS);
-  add_install_test(HTTP,       HTTPS,      SUCCESS);
-  add_install_test(HTTP,       NOCERT,     SUCCESS);
-  add_install_test(HTTP,       SELFSIGNED, SUCCESS);
-  add_install_test(HTTP,       UNTRUSTED,  SUCCESS);
-  add_install_test(HTTP,       EXPIRED,    SUCCESS);
+  add_install_test(HTTP, HTTP, SUCCESS);
+  add_install_test(HTTP, HTTPS, SUCCESS);
+  add_install_test(HTTP, NOCERT, SUCCESS);
+  add_install_test(HTTP, SELFSIGNED, SUCCESS);
+  add_install_test(HTTP, UNTRUSTED, SUCCESS);
+  add_install_test(HTTP, EXPIRED, SUCCESS);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_install_test(HTTPS,      HTTP,       NETWORK_FAILURE);
-  add_install_test(HTTPS,      HTTPS,      SUCCESS);
-  add_install_test(HTTPS,      NOCERT,     SUCCESS);
-  add_install_test(HTTPS,      SELFSIGNED, SUCCESS);
-  add_install_test(HTTPS,      UNTRUSTED,  SUCCESS);
-  add_install_test(HTTPS,      EXPIRED,    SUCCESS);
+  add_install_test(HTTPS, HTTP, NETWORK_FAILURE);
+  add_install_test(HTTPS, HTTPS, SUCCESS);
+  add_install_test(HTTPS, NOCERT, SUCCESS);
+  add_install_test(HTTPS, SELFSIGNED, SUCCESS);
+  add_install_test(HTTPS, UNTRUSTED, SUCCESS);
+  add_install_test(HTTPS, EXPIRED, SUCCESS);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_install_test(NOCERT,     HTTP,       NETWORK_FAILURE);
-  add_install_test(NOCERT,     HTTPS,      SUCCESS);
-  add_install_test(NOCERT,     NOCERT,     SUCCESS);
-  add_install_test(NOCERT,     SELFSIGNED, SUCCESS);
-  add_install_test(NOCERT,     UNTRUSTED,  SUCCESS);
-  add_install_test(NOCERT,     EXPIRED,    SUCCESS);
+  add_install_test(NOCERT, HTTP, NETWORK_FAILURE);
+  add_install_test(NOCERT, HTTPS, SUCCESS);
+  add_install_test(NOCERT, NOCERT, SUCCESS);
+  add_install_test(NOCERT, SELFSIGNED, SUCCESS);
+  add_install_test(NOCERT, UNTRUSTED, SUCCESS);
+  add_install_test(NOCERT, EXPIRED, SUCCESS);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_install_test(SELFSIGNED, HTTP,       NETWORK_FAILURE);
-  add_install_test(SELFSIGNED, HTTPS,      SUCCESS);
-  add_install_test(SELFSIGNED, NOCERT,     SUCCESS);
+  add_install_test(SELFSIGNED, HTTP, NETWORK_FAILURE);
+  add_install_test(SELFSIGNED, HTTPS, SUCCESS);
+  add_install_test(SELFSIGNED, NOCERT, SUCCESS);
   add_install_test(SELFSIGNED, SELFSIGNED, SUCCESS);
-  add_install_test(SELFSIGNED, UNTRUSTED,  SUCCESS);
-  add_install_test(SELFSIGNED, EXPIRED,    SUCCESS);
+  add_install_test(SELFSIGNED, UNTRUSTED, SUCCESS);
+  add_install_test(SELFSIGNED, EXPIRED, SUCCESS);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_install_test(UNTRUSTED,  HTTP,       NETWORK_FAILURE);
-  add_install_test(UNTRUSTED,  HTTPS,      SUCCESS);
-  add_install_test(UNTRUSTED,  NOCERT,     SUCCESS);
-  add_install_test(UNTRUSTED,  SELFSIGNED, SUCCESS);
-  add_install_test(UNTRUSTED,  UNTRUSTED,  SUCCESS);
-  add_install_test(UNTRUSTED,  EXPIRED,    SUCCESS);
+  add_install_test(UNTRUSTED, HTTP, NETWORK_FAILURE);
+  add_install_test(UNTRUSTED, HTTPS, SUCCESS);
+  add_install_test(UNTRUSTED, NOCERT, SUCCESS);
+  add_install_test(UNTRUSTED, SELFSIGNED, SUCCESS);
+  add_install_test(UNTRUSTED, UNTRUSTED, SUCCESS);
+  add_install_test(UNTRUSTED, EXPIRED, SUCCESS);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_install_test(EXPIRED,    HTTP,       NETWORK_FAILURE);
-  add_install_test(EXPIRED,    HTTPS,      SUCCESS);
-  add_install_test(EXPIRED,    NOCERT,     SUCCESS);
-  add_install_test(EXPIRED,    SELFSIGNED, SUCCESS);
-  add_install_test(EXPIRED,    UNTRUSTED,  SUCCESS);
-  add_install_test(EXPIRED,    EXPIRED,    SUCCESS);
+  add_install_test(EXPIRED, HTTP, NETWORK_FAILURE);
+  add_install_test(EXPIRED, HTTPS, SUCCESS);
+  add_install_test(EXPIRED, NOCERT, SUCCESS);
+  add_install_test(EXPIRED, SELFSIGNED, SUCCESS);
+  add_install_test(EXPIRED, UNTRUSTED, SUCCESS);
+  add_install_test(EXPIRED, EXPIRED, SUCCESS);
 
   run_install_tests(run_next_test);
 });

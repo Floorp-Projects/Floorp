@@ -11,11 +11,11 @@ function expectedURL(aSearchTerms) {
 
 function simulateClick(aEvent, aTarget) {
   var event = document.createEvent("MouseEvent");
-  var ctrlKeyArg  = aEvent.ctrlKey  || false;
-  var altKeyArg   = aEvent.altKey   || false;
+  var ctrlKeyArg  = aEvent.ctrlKey || false;
+  var altKeyArg   = aEvent.altKey || false;
   var shiftKeyArg = aEvent.shiftKey || false;
-  var metaKeyArg  = aEvent.metaKey  || false;
-  var buttonArg   = aEvent.button   || 0;
+  var metaKeyArg  = aEvent.metaKey || false;
+  var buttonArg   = aEvent.button || 0;
   event.initMouseEvent("click", true, true, window,
                         0, 0, 0, 0, 0,
                         ctrlKeyArg, altKeyArg, shiftKeyArg, metaKeyArg,

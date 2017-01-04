@@ -71,8 +71,7 @@ var security = {
         retval.encryptionAlgorithm = status.cipherName;
         retval.encryptionStrength = status.secretKeyLength;
         version = status.protocolVersion;
-      }
-      catch (e) {
+      } catch (e) {
       }
 
       switch (version) {
@@ -152,8 +151,7 @@ var security = {
   /**
    * Open the cookie manager window
    */
-  viewCookies()
-  {
+  viewCookies() {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     var win = wm.getMostRecentWindow("Browser:Cookies");
@@ -163,8 +161,7 @@ var security = {
     var eTLD;
     try {
       eTLD = eTLDService.getBaseDomain(this.uri);
-    }
-    catch (e) {
+    } catch (e) {
       // getBaseDomain will fail if the host is an IP address or is empty
       eTLD = this.uri.asciiHost;
     }
@@ -172,8 +169,7 @@ var security = {
     if (win) {
       win.gCookiesWindow.setFilter(eTLD);
       win.focus();
-    }
-    else
+    } else
       window.openDialog("chrome://browser/content/preferences/cookies.xul",
                         "Browser:Cookies", "", {filterString : eTLD});
   },
@@ -211,8 +207,7 @@ function securityOnLoad(uri, windowInfo) {
     if (info.isEV) {
       owner = info.cert.organization;
       verifier = security.mapIssuerOrganization(info.cAName);
-    }
-    else {
+    } else {
       // Technically, a non-EV cert might specify an owner in the O field or not,
       // depending on the CA's issuing policies.  However we don't have any programmatic
       // way to tell those apart, and no policy way to establish which organization
@@ -223,8 +218,7 @@ function securityOnLoad(uri, windowInfo) {
                                                 info.cert.issuerCommonName ||
                                                 info.cert.issuerName);
     }
-  }
-  else {
+  } else {
     // We don't have valid identity credentials.
     owner = pageInfoBundle.getString("securityNoOwner");
     verifier = pageInfoBundle.getString("notset");
@@ -238,8 +232,7 @@ function securityOnLoad(uri, windowInfo) {
   if (info.cert) {
     security._cert = info.cert;
     viewCert.collapsed = false;
-  }
-  else
+  } else
     viewCert.collapsed = true;
 
   /* Set Privacy & History section text */
@@ -255,12 +248,10 @@ function securityOnLoad(uri, windowInfo) {
   if (visitCount > 1) {
     setText("security-privacy-history-value",
             pageInfoBundle.getFormattedString("securityNVisits", [visitCount.toLocaleString()]));
-  }
-  else if (visitCount == 1) {
+  } else if (visitCount == 1) {
     setText("security-privacy-history-value",
             pageInfoBundle.getString("securityOneVisit"));
-  }
-  else {
+  } else {
     setText("security-privacy-history-value", noStr);
   }
 
@@ -282,8 +273,7 @@ function securityOnLoad(uri, windowInfo) {
       msg1 = pkiBundle.getString("pageInfo_WeakCipher");
     }
     msg2 = pkiBundle.getString("pageInfo_Privacy_None2");
-  }
-  else if (info.encryptionStrength > 0) {
+  } else if (info.encryptionStrength > 0) {
     hdr = pkiBundle.getFormattedString("pageInfo_EncryptionWithBitsAndProtocol",
                                        [info.encryptionAlgorithm,
                                         info.encryptionStrength + "",
@@ -291,8 +281,7 @@ function securityOnLoad(uri, windowInfo) {
     msg1 = pkiBundle.getString("pageInfo_Privacy_Encrypted1");
     msg2 = pkiBundle.getString("pageInfo_Privacy_Encrypted2");
     security._cert = info.cert;
-  }
-  else {
+  } else {
     hdr = pkiBundle.getString("pageInfo_NoEncryption");
     if (info.hostName != null)
       msg1 = pkiBundle.getFormattedString("pageInfo_Privacy_None1", [info.hostName]);
@@ -315,8 +304,7 @@ function securityOnLoad(uri, windowInfo) {
   }
 }
 
-function setText(id, value)
-{
+function setText(id, value) {
   var element = document.getElementById(id);
   if (!element)
     return;
@@ -330,8 +318,7 @@ function setText(id, value)
   }
 }
 
-function viewCertHelper(parent, cert)
-{
+function viewCertHelper(parent, cert) {
   if (!cert)
     return;
 

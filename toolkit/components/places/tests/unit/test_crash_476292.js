@@ -10,8 +10,7 @@
  * service was created before the history service was.
  */
 
-function run_test()
-{
+function run_test() {
   // First, we need to move our old database file into our test profile
   // directory.  This will trigger DATABASE_STATUS_UPGRADED (CREATE is not
   // sufficient since there will be no entries to update frecencies for, which

@@ -4,13 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   var referrer = uri("about:blank");
 
   // add a http:// uri
@@ -55,8 +53,7 @@ add_task(function* test_execute()
   for (let currentURL of URLS) {
     try {
       var cantAddUri = uri(currentURL);
-    }
-    catch (e) {
+    } catch (e) {
       // nsIIOService.newURI() can throw if e.g. our app knows about imap://
       // but the account is not set up and so the URL is invalid for us.
       // Note this in the log but ignore as it's not the subject of this test.

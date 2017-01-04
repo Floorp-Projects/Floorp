@@ -71,8 +71,7 @@ function run_test() {
 
   do_test_pending();
 
-  function checkBlacklist()
-  {
+  function checkBlacklist() {
     var failureId = {};
     var status;
 

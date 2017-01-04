@@ -57,11 +57,10 @@ add_task(function* () {
   const TESTCASE_URI = makeDocument(
     [makeStylesheet(".a")],
     [makeDocument([],
-                  [FOUR,
-                   DOCUMENT_WITH_INLINE_STYLE]),
-     makeDocument([makeStylesheet(".b"),
-                   SIMPLE],
-                  [makeDocument([makeStylesheet(".c")],
+      [FOUR,
+       DOCUMENT_WITH_INLINE_STYLE]),
+     makeDocument([makeStylesheet(".b"), SIMPLE],
+       [makeDocument([makeStylesheet(".c")],
                                 [])]),
      makeDocument([SIMPLE], []),
      SIMPLE_DOCUMENT

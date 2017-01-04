@@ -96,9 +96,9 @@ this.LoginHelper = {
   checkLoginValues(aLogin) {
     function badCharacterPresent(l, c) {
       return ((l.formSubmitURL && l.formSubmitURL.indexOf(c) != -1) ||
-              (l.httpRealm     && l.httpRealm.indexOf(c)     != -1) ||
-                                  l.hostname.indexOf(c)      != -1  ||
-                                  l.usernameField.indexOf(c) != -1  ||
+              (l.httpRealm && l.httpRealm.indexOf(c) != -1) ||
+                                  l.hostname.indexOf(c) != -1 ||
+                                  l.usernameField.indexOf(c) != -1 ||
                                   l.passwordField.indexOf(c) != -1);
     }
 
@@ -537,10 +537,10 @@ this.LoginHelper = {
     let fieldType = (element.hasAttribute("type") ?
                      element.getAttribute("type").toLowerCase() :
                      element.type);
-    if (fieldType == "text"  ||
+    if (fieldType == "text" ||
         fieldType == "email" ||
-        fieldType == "url"   ||
-        fieldType == "tel"   ||
+        fieldType == "url" ||
+        fieldType == "tel" ||
         fieldType == "number") {
       return true;
     }
@@ -569,7 +569,7 @@ this.LoginHelper = {
     login.QueryInterface(Ci.nsILoginMetaInfo);
     login.timeCreated = loginData.timeCreated;
     login.timeLastUsed = loginData.timeLastUsed || loginData.timeCreated;
-    login.timePasswordChanged = loginData.timePasswordChanged  || loginData.timeCreated;
+    login.timePasswordChanged = loginData.timePasswordChanged || loginData.timeCreated;
     login.timesUsed = loginData.timesUsed || 1;
     // While here we're passing formSubmitURL and httpRealm, they could be empty/null and get
     // ignored in that case, leading to multiple logins for the same username.

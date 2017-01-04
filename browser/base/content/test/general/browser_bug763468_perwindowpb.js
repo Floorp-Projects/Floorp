@@ -29,7 +29,7 @@ function test() {
       }
 
       is(aWindow.gBrowser.currentURI.spec, newTabURL,
-        "URL of NewTab should be " + newTabURL + " in " + mode +  " mode");
+        "URL of NewTab should be " + newTabURL + " in " + mode + " mode");
 
       aWindow.gBrowser.removeTab(aWindow.gBrowser.selectedTab);
       aCallback();

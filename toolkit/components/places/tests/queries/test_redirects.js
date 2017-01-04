@@ -22,8 +22,8 @@ function check_results_callback(aSequence) {
   let maxResults = aSequence[1];
   let sortingMode = aSequence[2];
   print("\nTESTING: includeHidden(" + includeHidden + ")," +
-                  " maxResults("    + maxResults    + ")," +
-                  " sortingMode("   + sortingMode   + ").");
+                  " maxResults(" + maxResults + ")," +
+                  " sortingMode(" + sortingMode + ").");
 
   function isHidden(aVisit) {
     return aVisit.transType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
@@ -128,8 +128,7 @@ function check_results_callback(aSequence) {
  *         computed
  * @return the total number of sequences in the product
  */
-function cartProd(aSequences, aCallback)
-{
+function cartProd(aSequences, aCallback) {
   if (aSequences.length === 0)
     return 0;
 
@@ -170,15 +169,13 @@ function cartProd(aSequences, aCallback)
         // All element pointers are past the ends of their sequences.
         if (seqPtr < 0)
           done = true;
-      }
-      else break;
+      } else break;
     }
   }
   return numProds;
 }
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
@@ -187,8 +184,7 @@ function run_test()
  * We will generate visit-chains like:
  *   visit -> redirect_temp -> redirect_perm
  */
-add_task(function* test_add_visits_to_database()
-{
+add_task(function* test_add_visits_to_database() {
   yield PlacesUtils.bookmarks.eraseEverything();
 
   // We don't really bother on this, but we need a time to add visits.
@@ -287,8 +283,7 @@ add_task(function* test_add_visits_to_database()
   yield task_populateDB(visits);
 });
 
-add_task(function* test_redirects()
-{
+add_task(function* test_redirects() {
   // Frecency and hidden are updated asynchronously, wait for them.
   yield PlacesTestUtils.promiseAsyncUpdates();
 

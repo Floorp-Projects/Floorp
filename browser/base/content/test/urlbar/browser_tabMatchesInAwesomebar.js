@@ -162,8 +162,7 @@ function ensure_opentabs_match_db() {
   });
 }
 
-function checkAutocompleteResults(aExpected, aCallback)
-{
+function checkAutocompleteResults(aExpected, aCallback) {
   gController.input = {
     timeout: 10,
     textValue: "",
@@ -176,8 +175,7 @@ function checkAutocompleteResults(aExpected, aCallback)
     completeDefaultIndex: false,
     get popup() { return this; },
     onSearchBegin() {},
-    onSearchComplete()
-    {
+    onSearchComplete() {
       info("Found " + gController.matchCount + " matches.");
       // Check to see the expected uris and titles match up (in any order)
       for (let i = 0; i < gController.matchCount; i++) {

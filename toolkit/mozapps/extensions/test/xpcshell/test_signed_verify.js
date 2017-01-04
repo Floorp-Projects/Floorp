@@ -112,8 +112,7 @@ function verify_enables([startFile, startState], [endFile, endState]) {
         ["onEnabling", false],
         "onEnabled"
       ];
-    }
-    else {
+    } else {
       events[ID] = [
         ["onPropertyChanged", ["appDisabled"]],
         "onEnabling"
@@ -174,8 +173,7 @@ function verify_disables([startFile, startState], [endFile, endState]) {
         ["onDisabling", false],
         "onDisabled"
       ];
-    }
-    else {
+    } else {
       events[ID] = [
         ["onPropertyChanged", ["appDisabled"]],
         "onDisabling"

@@ -71,8 +71,7 @@ os.addObserver(observer, "browser:purge-session-history", true);
 function readLastDirPref() {
   try {
     return Services.prefs.getComplexValue(LAST_DIR_PREF, nsIFile);
-  }
-  catch (e) {
+  } catch (e) {
     return null;
   }
 }
@@ -80,8 +79,7 @@ function readLastDirPref() {
 function isContentPrefEnabled() {
   try {
     return Services.prefs.getBoolPref(SAVE_PER_SITE_PREF);
-  }
-  catch (e) {
+  } catch (e) {
     return true;
   }
 }

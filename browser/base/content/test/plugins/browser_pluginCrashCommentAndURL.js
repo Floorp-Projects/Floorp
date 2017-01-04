@@ -197,8 +197,7 @@ function onSubmitStatus(aSubject, aData) {
 function getPropertyBagValue(bag, key) {
   try {
     var val = bag.getProperty(key);
-  }
-  catch (e) {
+  } catch (e) {
     if (e.result != Cr.NS_ERROR_FAILURE) {
       throw e;
     }

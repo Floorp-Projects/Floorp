@@ -55,8 +55,7 @@ function construct_file(suffix) {
   return file;
 }
 
-function write_late_writes_file(stack, suffix)
-{
+function write_late_writes_file(stack, suffix) {
   let file = construct_file(suffix);
   let contents = N_MODULES + "\n";
   for (let id in LOADED_MODULES) {

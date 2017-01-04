@@ -142,7 +142,7 @@ module.exports = {
     // Only useful in a node environment.
     "handle-callback-err": "off",
     // Tab width.
-    "indent": ["error", 2, {"SwitchCase": 1}],
+    "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     // Enforces spacing between keys and values in object literal properties.
     "key-spacing": ["error", {"beforeColon": false, "afterColon": true}],
     // Enforces unix style line breaks.
