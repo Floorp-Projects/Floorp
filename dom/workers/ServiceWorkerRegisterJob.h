@@ -18,11 +18,14 @@ namespace workers {
 // spec algorithms.
 class ServiceWorkerRegisterJob final : public ServiceWorkerUpdateJob
 {
+  const nsLoadFlags mLoadFlags;
+
 public:
   ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
                            const nsACString& aScope,
                            const nsACString& aScriptSpec,
-                           nsILoadGroup* aLoadGroup);
+                           nsILoadGroup* aLoadGroup,
+                           nsLoadFlags aLoadFlags);
 
 private:
   // Implement the Register algorithm steps and then call the parent class

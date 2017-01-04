@@ -15,9 +15,11 @@ namespace workers {
 ServiceWorkerRegisterJob::ServiceWorkerRegisterJob(nsIPrincipal* aPrincipal,
                                                    const nsACString& aScope,
                                                    const nsACString& aScriptSpec,
-                                                   nsILoadGroup* aLoadGroup)
+                                                   nsILoadGroup* aLoadGroup,
+                                                   nsLoadFlags aLoadFlags)
   : ServiceWorkerUpdateJob(Type::Register, aPrincipal, aScope, aScriptSpec,
                            aLoadGroup)
+  , mLoadFlags(aLoadFlags)
 {
 }
 
@@ -36,6 +38,9 @@ ServiceWorkerRegisterJob::AsyncExecute()
     swm->GetRegistration(mPrincipal, mScope);
 
   if (registration) {
+    bool isSameLoadFlags = registration->GetLoadFlags() == mLoadFlags;
+    registration->SetLoadFlags(mLoadFlags);
+
     // If we are resurrecting an uninstalling registration, then persist
     // it to disk again.  We preemptively removed it earlier during
     // unregister so that closing the window by shutting down the browser
@@ -45,14 +50,13 @@ ServiceWorkerRegisterJob::AsyncExecute()
     }
     registration->mPendingUninstall = false;
     RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-    if (newest && mScriptSpec.Equals(newest->ScriptSpec())) {
+    if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && isSameLoadFlags) {
       SetRegistration(registration);
       Finish(NS_OK);
       return;
     }
   } else {
-    registration = swm->CreateNewRegistration(mScope, mPrincipal,
-                                              nsIRequest::LOAD_NORMAL);
+    registration = swm->CreateNewRegistration(mScope, mPrincipal, mLoadFlags);
   }
 
   SetRegistration(registration);

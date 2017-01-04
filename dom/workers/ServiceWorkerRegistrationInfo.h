@@ -27,7 +27,7 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t mLastUpdateCheckTime;
 
-  const nsLoadFlags mLoadFlags;
+  nsLoadFlags mLoadFlags;
 
   RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
   RefPtr<ServiceWorkerInfo> mActiveWorker;
@@ -178,6 +178,9 @@ public:
 
   nsLoadFlags
   GetLoadFlags() const;
+
+  void
+  SetLoadFlags(nsLoadFlags aLoadFlags);
 
 private:
   enum TransitionType {
