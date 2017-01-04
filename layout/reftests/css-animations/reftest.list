@@ -41,3 +41,12 @@ fails == background-position-in-delay.html background-position-ref.html # This t
 == background-position-after-finish.html background-position-ref.html
 fails == background-position-running.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position currently creates an active layer, and reftest-opaque-layer only handles items assigned to PaintedLayers.
 fails == background-position-important.html background-position-ref.html # This test fails the reftest-opaque-layer check since animating background-position overridden by a non-animated !important style also creates an active layer, and reftest-opaque-layer only handles items that are assigned to PaintedLayers.
+
+== mask-position-after-finish-1a.html mask-anim-ref.html
+== mask-position-after-finish-1b.html mask-anim-ref.html
+== mask-position-in-delay-1a.html mask-anim-ref.html
+== mask-position-in-delay-1b.html mask-anim-ref.html
+== mask-size-after-finish-1a.html mask-anim-ref.html
+== mask-size-after-finish-1b.html mask-anim-ref.html
+== mask-size-in-delay-1a.html mask-anim-ref.html
+== mask-size-in-delay-1b.html mask-anim-ref.html
