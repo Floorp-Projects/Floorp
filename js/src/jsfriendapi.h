@@ -364,61 +364,8 @@ extern JS_FRIEND_DATA(const js::ObjectOps) ProxyObjectOps;
 #define PROXY_CLASS_DEF(name, flags) \
   PROXY_CLASS_WITH_EXT(name, flags, &js::ProxyClassExtension)
 
-/*
- * Proxy stubs, similar to JS_*Stub, for embedder proxy class definitions.
- *
- * NB: Should not be called directly.
- */
-
-extern JS_FRIEND_API(bool)
-proxy_LookupProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp,
-                    JS::MutableHandle<Shape*> propp);
-extern JS_FRIEND_API(bool)
-proxy_DefineProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::Handle<JS::PropertyDescriptor> desc,
-                     JS::ObjectOpResult& result);
-extern JS_FRIEND_API(bool)
-proxy_HasProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* foundp);
-extern JS_FRIEND_API(bool)
-proxy_GetProperty(JSContext* cx, JS::HandleObject obj, JS::HandleValue receiver, JS::HandleId id,
-                  JS::MutableHandleValue vp);
-extern JS_FRIEND_API(bool)
-proxy_SetProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleValue bp,
-                  JS::HandleValue receiver, JS::ObjectOpResult& result);
-extern JS_FRIEND_API(bool)
-proxy_GetOwnPropertyDescriptor(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                               JS::MutableHandle<JS::PropertyDescriptor> desc);
-extern JS_FRIEND_API(bool)
-proxy_DeleteProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
-                     JS::ObjectOpResult& result);
-
-extern JS_FRIEND_API(void)
-proxy_Trace(JSTracer* trc, JSObject* obj);
 extern JS_FRIEND_API(JSObject*)
 proxy_WeakmapKeyDelegate(JSObject* obj);
-extern JS_FRIEND_API(bool)
-proxy_Convert(JSContext* cx, JS::HandleObject proxy, JSType hint, JS::MutableHandleValue vp);
-extern JS_FRIEND_API(void)
-proxy_Finalize(FreeOp* fop, JSObject* obj);
-extern JS_FRIEND_API(void)
-proxy_ObjectMoved(JSObject* obj, const JSObject* old);
-extern JS_FRIEND_API(bool)
-proxy_HasInstance(JSContext* cx, JS::HandleObject proxy, JS::MutableHandleValue v, bool* bp);
-extern JS_FRIEND_API(bool)
-proxy_Call(JSContext* cx, unsigned argc, JS::Value* vp);
-extern JS_FRIEND_API(bool)
-proxy_Construct(JSContext* cx, unsigned argc, JS::Value* vp);
-extern JS_FRIEND_API(JSObject*)
-proxy_innerObject(JSObject* obj);
-extern JS_FRIEND_API(bool)
-proxy_Watch(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::HandleObject callable);
-extern JS_FRIEND_API(bool)
-proxy_Unwatch(JSContext* cx, JS::HandleObject obj, JS::HandleId id);
-extern JS_FRIEND_API(bool)
-proxy_GetElements(JSContext* cx, JS::HandleObject proxy, uint32_t begin, uint32_t end,
-                  ElementAdder* adder);
-extern JS_FRIEND_API(JSString*)
-proxy_FunToString(JSContext* cx, JS::HandleObject proxy, unsigned indent);
 
 /**
  * A class of objects that return source code on demand.

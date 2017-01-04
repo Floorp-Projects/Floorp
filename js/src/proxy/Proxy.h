@@ -74,6 +74,11 @@ class Proxy
     static void trace(JSTracer* trc, JSObject* obj);
 };
 
+bool
+proxy_Call(JSContext* cx, unsigned argc, Value* vp);
+bool
+proxy_Construct(JSContext* cx, unsigned argc, Value* vp);
+
 } /* namespace js */
 
 #endif /* proxy_Proxy_h */
