@@ -557,6 +557,15 @@ ServoStyleSet::RecomputeDefaultComputedStyles()
   Servo_StyleSet_RecomputeDefaultStyles(mRawSet.get(), mPresContext);
 }
 
+ServoComputedValuesStrong
+ServoStyleSet::RestyleWithAddedDeclaration(RawServoDeclarationBlock* aDeclarations,
+                                           const ServoComputedValues* aPreviousStyle)
+{
+  return Servo_RestyleWithAddedDeclaration(mRawSet.get(), aDeclarations,
+                                           aPreviousStyle);
+}
+
+
 already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement,
                                  ConsumeStyleBehavior aConsume)
