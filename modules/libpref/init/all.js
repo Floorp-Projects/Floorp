@@ -305,12 +305,7 @@ pref("mathml.disabled",    false);
 // Enable scale transform for stretchy MathML operators. See bug 414277.
 pref("mathml.scale_stretchy_operators.enabled", true);
 
-// Enabled on nightly only until we fix mochitest failures.
-#ifdef NIGHTLY_BUILD
 pref("media.dormant-on-pause-timeout-ms", 5000);
-#else
-pref("media.dormant-on-pause-timeout-ms", -1);
-#endif
 
 // Media cache size in kilobytes
 pref("media.cache_size", 512000);
