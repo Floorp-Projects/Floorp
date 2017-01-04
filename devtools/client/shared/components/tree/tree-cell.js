@@ -10,7 +10,7 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Shortcuts
-  const { td, span } = React.DOM;
+  const { input, span, td } = React.DOM;
   const PropTypes = React.PropTypes;
 
   /**
@@ -26,16 +26,23 @@ define(function (require, exports, module) {
       decorator: PropTypes.object,
       id: PropTypes.string.isRequired,
       member: PropTypes.object.isRequired,
-      renderValue: PropTypes.func.isRequired
+      renderValue: PropTypes.func.isRequired,
+      enableInput: PropTypes.bool,
+    },
+
+    getInitialState: function () {
+      return {
+        inputEnabled: false,
+      };
     },
 
     /**
      * Optimize cell rendering. Rerender cell content only if
      * the value or expanded state changes.
      */
-    shouldComponentUpdate: function (nextProps) {
+    shouldComponentUpdate: function (nextProps, nextState) {
       return (this.props.value != nextProps.value) ||
-        (this.props.member.open != nextProps.member.open);
+        (this.state !== nextState);
     },
 
     getCellClass: function (object, id) {
@@ -57,12 +64,22 @@ define(function (require, exports, module) {
       return classNames;
     },
 
+    updateInputEnabled: function (evt) {
+      this.setState(Object.assign({}, this.state, {
+        inputEnabled: evt.target.nodeName !== "input",
+      }));
+    },
+
     render: function () {
-      let member = this.props.member;
+      let {
+        member,
+        id,
+        value,
+        decorator,
+        renderValue,
+        enableInput,
+      } = this.props;
       let type = member.type || "";
-      let id = this.props.id;
-      let value = this.props.value;
-      let decorator = this.props.decorator;
 
       // Compute class name list for the <td> element.
       let classNames = this.getCellClass(member.object, id) || [];
@@ -71,7 +88,7 @@ define(function (require, exports, module) {
 
       // Render value using a default render function or custom
       // provided function from props or a decorator.
-      let renderValue = this.props.renderValue || defaultRenderValue;
+      renderValue = renderValue || defaultRenderValue;
       if (decorator && decorator.renderValue) {
         renderValue = decorator.renderValue(member.object, id) || renderValue;
       }
@@ -80,10 +97,27 @@ define(function (require, exports, module) {
         object: value,
       });
 
+      let cellElement;
+      if (enableInput && this.state.inputEnabled && type !== "object") {
+        classNames.push("inputEnabled");
+        cellElement = input({
+          autoFocus: true,
+          onBlur: this.updateInputEnabled,
+          readOnly: true,
+          value,
+        });
+      } else {
+        cellElement = span({
+          onClick: (type !== "object") ? this.updateInputEnabled : null,
+        },
+          renderValue(props)
+        );
+      }
+
       // Render me!
       return (
         td({ className: classNames.join(" ") },
-          span({}, renderValue(props))
+          cellElement
         )
       );
     }

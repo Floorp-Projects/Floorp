@@ -80,9 +80,9 @@ define(function (require, exports, module) {
             className: classNames.join(" "),
             style: cellStyle,
             key: col.id},
-            div({ className: visible ? "treeHeaderCellBox" : "" },
-              visible ? col.title : ""
-            )
+            visible ? div({ className: "treeHeaderCellBox"},
+              col.title
+            ) : null,
           )
         );
       });
