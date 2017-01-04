@@ -42,6 +42,9 @@ typedef _cairo_scaled_font cairo_scaled_font_t;
 struct _FcPattern;
 typedef _FcPattern FcPattern;
 
+struct FT_LibraryRec_;
+typedef FT_LibraryRec_* FT_Library;
+
 struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
@@ -1492,6 +1495,15 @@ public:
 #ifdef XP_DARWIN
   static already_AddRefed<GlyphRenderingOptions>
     CreateCGGlyphRenderingOptions(const Color &aFontSmoothingBackgroundColor);
+#endif
+
+#ifdef MOZ_ENABLE_FREETYPE
+  static void SetFTLibrary(FT_Library aFTLibrary);
+  static FT_Library GetFTLibrary();
+
+private:
+  static FT_Library mFTLibrary;
+public:
 #endif
 
 #ifdef WIN32
