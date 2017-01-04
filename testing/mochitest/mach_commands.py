@@ -6,7 +6,6 @@ from __future__ import absolute_import, unicode_literals
 
 from argparse import Namespace
 from collections import defaultdict
-from itertools import chain
 import logging
 import os
 import sys
@@ -76,61 +75,7 @@ NOW_RUNNING = '''
 '''
 
 
-# Maps test flavors to data needed to run them
-ALL_FLAVORS = {
-    'mochitest': {
-        'suite': 'plain',
-        'aliases': ('plain', 'mochitest'),
-        'enabled_apps': ('firefox', 'android'),
-        'extra_args': {
-            'flavor': 'plain',
-        }
-    },
-    'chrome': {
-        'suite': 'chrome',
-        'aliases': ('chrome', 'mochitest-chrome'),
-        'enabled_apps': ('firefox', 'android'),
-        'extra_args': {
-            'flavor': 'chrome',
-        }
-    },
-    'browser-chrome': {
-        'suite': 'browser',
-        'aliases': ('browser', 'browser-chrome', 'mochitest-browser-chrome', 'bc'),
-        'enabled_apps': ('firefox',),
-        'extra_args': {
-            'flavor': 'browser',
-        }
-    },
-    'jetpack-package': {
-        'suite': 'jetpack-package',
-        'aliases': ('jetpack-package', 'mochitest-jetpack-package', 'jpp'),
-        'enabled_apps': ('firefox',),
-        'extra_args': {
-            'flavor': 'jetpack-package',
-        }
-    },
-    'jetpack-addon': {
-        'suite': 'jetpack-addon',
-        'aliases': ('jetpack-addon', 'mochitest-jetpack-addon', 'jpa'),
-        'enabled_apps': ('firefox',),
-        'extra_args': {
-            'flavor': 'jetpack-addon',
-        }
-    },
-    'a11y': {
-        'suite': 'a11y',
-        'aliases': ('a11y', 'mochitest-a11y', 'accessibility'),
-        'enabled_apps': ('firefox',),
-        'extra_args': {
-            'flavor': 'a11y',
-        }
-    },
-}
-
 SUPPORTED_APPS = ['firefox', 'android']
-SUPPORTED_FLAVORS = list(chain.from_iterable([f['aliases'] for f in ALL_FLAVORS.values()]))
-CANONICAL_FLAVORS = sorted([f['aliases'][0] for f in ALL_FLAVORS.values()])
 
 parser = None
 
@@ -334,11 +279,9 @@ class MachCommands(MachCommandBase):
              conditions=[is_buildapp_in(*SUPPORTED_APPS)],
              description='Run any flavor of mochitest (integration test).',
              parser=setup_argument_parser)
-    @CommandArgument('-f', '--flavor',
-                     metavar='{{{}}}'.format(', '.join(CANONICAL_FLAVORS)),
-                     choices=SUPPORTED_FLAVORS,
-                     help='Only run tests of this flavor.')
     def run_mochitest_general(self, flavor=None, test_objects=None, resolve_tests=True, **kwargs):
+        from mochitest.mochitest_options import ALL_FLAVORS
+
         buildapp = None
         for app in SUPPORTED_APPS:
             if is_buildapp_in(app)(self):

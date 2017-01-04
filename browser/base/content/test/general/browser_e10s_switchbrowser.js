@@ -80,8 +80,7 @@ var waitForLoadWithFlags = Task.async(function*(uri, flags = Ci.nsIWebNavigation
 
     if (flags & Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY) {
       gExpectedHistory.entries.pop();
-    }
-    else {
+    } else {
       gExpectedHistory.index++;
     }
 

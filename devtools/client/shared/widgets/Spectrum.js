@@ -211,7 +211,7 @@ Spectrum.prototype = {
     let rgb = Spectrum.hsvToRgb(this.hsv[0], this.hsv[1], this.hsv[2],
       this.hsv[3]);
     return [Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]),
-      Math.round(rgb[3] * 100) / 100];
+            Math.round(rgb[3] * 100) / 100];
   },
 
   get rgbNoSatVal() {

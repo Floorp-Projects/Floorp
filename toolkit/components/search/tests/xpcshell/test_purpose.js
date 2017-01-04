@@ -32,21 +32,21 @@ add_task(function* test_purpose() {
   }
 
   let base = "http://www.google.com/search?q=foo&ie=utf-8&oe=utf-8&aq=t";
-  check_submission("",              "foo");
-  check_submission("",              "foo", null);
-  check_submission("",              "foo", "text/html");
-  check_submission("&channel=rcs",  "foo", null,        "contextmenu");
-  check_submission("&channel=rcs",  "foo", "text/html", "contextmenu");
-  check_submission("&channel=fflb", "foo", null,        "keyword");
+  check_submission("", "foo");
+  check_submission("", "foo", null);
+  check_submission("", "foo", "text/html");
+  check_submission("&channel=rcs", "foo", null, "contextmenu");
+  check_submission("&channel=rcs", "foo", "text/html", "contextmenu");
+  check_submission("&channel=fflb", "foo", null, "keyword");
   check_submission("&channel=fflb", "foo", "text/html", "keyword");
-  check_submission("",              "foo", "text/html", "invalid");
+  check_submission("", "foo", "text/html", "invalid");
 
   // Tests for a param that varies with a purpose but has a default value.
   base = "http://www.google.com/search?q=foo";
   check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose");
   check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", null);
   check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", "");
-  check_submission("&channel=rcs",  "foo", "application/x-moz-default-purpose", "contextmenu");
+  check_submission("&channel=rcs", "foo", "application/x-moz-default-purpose", "contextmenu");
   check_submission("&channel=fflb", "foo", "application/x-moz-default-purpose", "keyword");
   check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", "searchbar");
   check_submission("&channel=ffsb", "foo", "application/x-moz-default-purpose", "invalid");
@@ -54,7 +54,7 @@ add_task(function* test_purpose() {
   // Tests for a purpose on the search form (ie. empty query).
   engine = Services.search.getEngineByName("engine-rel-searchform-purpose");
   base = "http://www.google.com/search?q=";
-  check_submission("&channel=sb", "", null,        "searchbar");
+  check_submission("&channel=sb", "", null, "searchbar");
   check_submission("&channel=sb", "", "text/html", "searchbar");
 
   // verify that the 'system' purpose falls back to the 'searchbar' purpose.

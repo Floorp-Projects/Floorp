@@ -4,8 +4,7 @@
 const URL = "http://mochi.test:8888/browser/toolkit/components/thumbnails/" +
             "test/background_red_scroll.html";
 
-function isRedThumbnailFuzz(r, g, b, expectedR, expectedB, expectedG, aFuzz)
-{
+function isRedThumbnailFuzz(r, g, b, expectedR, expectedB, expectedG, aFuzz) {
   return (Math.abs(r - expectedR) <= aFuzz) &&
          (Math.abs(g - expectedG) <= aFuzz) &&
          (Math.abs(b - expectedB) <= aFuzz);

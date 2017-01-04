@@ -279,8 +279,7 @@ TranslationItem.prototype = {
     if (this.isRoot) {
       if (this.isSimpleRoot) {
         rootType = " (simple root)";
-      }
-      else {
+      } else {
         rootType = " (non simple root)";
       }
     }

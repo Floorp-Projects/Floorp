@@ -44,8 +44,7 @@ function* clean_up() {
   yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
 }
 
-add_task(function* test_alt_click()
-{
+add_task(function* test_alt_click() {
   yield setup();
 
   let downloadList = yield Downloads.getList(Downloads.ALL);
@@ -73,8 +72,7 @@ add_task(function* test_alt_click()
   yield* clean_up();
 });
 
-add_task(function* test_alt_click_on_xlinks()
-{
+add_task(function* test_alt_click_on_xlinks() {
   yield setup();
 
   let downloadList = yield Downloads.getList(Downloads.ALL);

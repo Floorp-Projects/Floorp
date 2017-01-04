@@ -485,8 +485,7 @@
           this.selectedItem = aNewTab;
           if (isTabFocused) {
             aNewTab.focus();
-          }
-          else if (this.getAttribute("setfocus") != "false") {
+          } else if (this.getAttribute("setfocus") != "false") {
             let selectedPanel = this.tabbox.selectedPanel;
             document.commandDispatcher.advanceFocusIntoSubtree(selectedPanel);
 

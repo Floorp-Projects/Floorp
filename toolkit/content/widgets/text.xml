@@ -104,8 +104,7 @@
                 val = prefs.getComplexValue(prefNameAlwaysAppendAccessKey,
                                             nsIPrefLocalizedString).data;
                 this.mAlwaysAppendAccessKey = (val == "true");
-              }
-              catch (e) {
+              } catch (e) {
                 this.mInsertSeparator = true;
               }
             }
@@ -216,8 +215,7 @@
           <![CDATA[
             if (element.previousSibling instanceof Text) {
               element.previousSibling.appendData(element.textContent)
-            }
-            else {
+            } else {
               element.parentNode.insertBefore(element.firstChild, element);
             }
             element.parentNode.removeChild(element);
@@ -323,8 +321,7 @@
             try {
               secMan.checkLoadURIWithPrincipal(principal, uri,
                                                nsISSM.DISALLOW_INHERIT_PRINCIPAL);
-            }
-            catch (ex) {
+            } catch (ex) {
               var msg = "Error: Cannot open a " + uri.scheme + ": link using \
                          the text-link binding.";
               Components.utils.reportError(msg);
@@ -343,8 +340,7 @@
               return;
             }
 
-          }
-          catch (ex) {
+          } catch (ex) {
             Components.utils.reportError(ex);
           }
 

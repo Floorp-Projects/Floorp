@@ -77,14 +77,12 @@ function run_test() {
 
   do_test_pending();
 
-  function blacklistAdded(aSubject, aTopic, aData)
-  {
+  function blacklistAdded(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
     do_execute_soon(ensureBlacklistSet);
   }
-  function ensureBlacklistSet()
-  {
+  function ensureBlacklistSet() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
 
@@ -102,14 +100,12 @@ function run_test() {
     load_blocklist("test_gfxBlacklist2.xml");
   }
 
-  function blacklistRemoved(aSubject, aTopic, aData)
-  {
+  function blacklistRemoved(aSubject, aTopic, aData) {
     // If we wait until after we go through the event loop, gfxInfo is sure to
     // have processed the gfxItems event.
     do_execute_soon(ensureBlacklistUnset);
   }
-  function ensureBlacklistUnset()
-  {
+  function ensureBlacklistUnset() {
     var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 

@@ -24,8 +24,7 @@ var behaviours = {
   tabs: "select-extended-keynav mac:select-keynav-wraps allow-other-value selection-required keynav-leftright"
 };
 
-function behaviourContains(tag, behaviour)
-{
+function behaviourContains(tag, behaviour) {
   var platform = "none:";
   if (navigator.platform.indexOf("Mac") >= 0)
     platform = "mac:";
@@ -38,8 +37,7 @@ function behaviourContains(tag, behaviour)
   return re.test(" " + behaviours[tag] + " ");
 }
 
-function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
-{
+function test_nsIDOMXULSelectControlElement(element, childtag, testprefix) {
   var testid = (testprefix) ? testprefix + " " : "";
   testid += element.localName + " nsIDOMXULSelectControlElement ";
 
@@ -200,8 +198,7 @@ function test_nsIDOMXULSelectControlElement(element, childtag, testprefix)
                                               allowOtherValue ? "number8" : "");
 }
 
-function test_nsIDOMXULSelectControlElement_init(element, testprefix)
-{
+function test_nsIDOMXULSelectControlElement_init(element, testprefix) {
   // editable menulists use the label as the value
   var isEditable = (element.localName == "menulist" && element.editable);
 
@@ -225,8 +222,7 @@ function test_nsIDOMXULSelectControlElement_init(element, testprefix)
 
 function test_nsIDOMXULSelectControlElement_States(element, testid,
                                                    expectedcount, expecteditem,
-                                                   expectedindex, expectedvalue)
-{
+                                                   expectedindex, expectedvalue) {
   // need an itemCount property here
   var count = element.itemCount;
   is(count, expectedcount, testid + " item count");
@@ -239,8 +235,7 @@ function test_nsIDOMXULSelectControlElement_States(element, testid,
   }
 }
 
-function test_nsIDOMXULSelectControlElement_insertItemAt(element, index, expectedindex, testid, number)
-{
+function test_nsIDOMXULSelectControlElement_insertItemAt(element, index, expectedindex, testid, number) {
   var expectedCount = element.itemCount;
   var expectedSelItem = element.selectedItem;
   var expectedSelIndex = element.selectedIndex;
@@ -266,8 +261,7 @@ function test_nsIDOMXULSelectControlElement_insertItemAt(element, index, expecte
   * Parameters:
   *   element - element to test
   */
-function test_nsIDOMXULSelectControlElement_UI(element, testprefix)
-{
+function test_nsIDOMXULSelectControlElement_UI(element, testprefix) {
   var testid = (testprefix) ? testprefix + " " : "";
   testid += element.localName + " nsIDOMXULSelectControlElement UI ";
 
@@ -373,8 +367,7 @@ function test_nsIDOMXULSelectControlElement_UI(element, testprefix)
     expectedValue = keyWrap ? "fourth" : "third";
     test_nsIDOMXULSelectControlElement_States(element, testid + "key up disabled 2", 4,
       expectedItem, expectedIndex, expectedValue);
-  }
-  else {
+  } else {
     // in this case, disabled items should behave the same as non-disabled items.
     element.selectedIndex = 0;
     synthesizeKeyExpectEvent(forwardKey, {}, element, "select", testid + "key down disabled");

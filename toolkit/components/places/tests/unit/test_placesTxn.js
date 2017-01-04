@@ -900,8 +900,7 @@ add_task(function* test_create_item_with_childTxn() {
 
     itemWChildTxn.undoTransaction();
     do_check_eq(observer._itemRemovedId, newId);
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("Setting a child transaction in a createItem transaction did throw: " + ex);
   }
 });
@@ -930,8 +929,7 @@ add_task(function* test_create_folder_with_child_itemTxn() {
 
     txn.undoTransaction();
     do_check_false(bmsvc.isBookmarked(childURI));
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("Setting a child item transaction in a createFolder transaction did throw: " + ex);
   }
 });

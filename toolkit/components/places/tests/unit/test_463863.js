@@ -40,13 +40,11 @@ function runQuery(aResultType) {
   root.containerOpen = false;
 }
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   // add visits, one for each transition type
   for (let transition of transitions) {
     yield PlacesTestUtils.addVisits({

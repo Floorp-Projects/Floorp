@@ -496,19 +496,16 @@ add_task(function* ensureKeysFor_posts_new_keys() {
       // OK, even on a new profile.
       yield cryptoCollection._clear();
       server.clearPosts();
-      // Restore the first posted keyring
-      server.addRecordInPast("storage-sync-crypto", post.body.data);
+      // Restore the first posted keyring, but add a last_modified date
+      const firstPostedKeyring = Object.assign({}, post.body.data, {last_modified: server.etag});
+      server.addRecordInPast("storage-sync-crypto", firstPostedKeyring);
       const extensionId2 = uuid();
       newKeys = yield ExtensionStorageSync.ensureKeysFor([extensionId2]);
       ok(newKeys.hasKeysFor([extensionId]), `didn't forget key for ${extensionId}`);
       ok(newKeys.hasKeysFor([extensionId2]), `new key generated for ${extensionId2}`);
 
       posts = server.getPosts();
-      // FIXME: some kind of bug where we try to repush the
-      // server_wins version multiple times in a single sync. We
-      // actually push 5 times as of this writing.
-      // See bug 1321571.
-      // equal(posts.length, 1);
+      equal(posts.length, 1);
       const newPost = posts[posts.length - 1];
       const newBody = yield assertPostedEncryptedKeys(newPost);
       ok(newBody.keys.collections[extensionId], `keys object should have a key for ${extensionId}`);

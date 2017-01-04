@@ -255,7 +255,7 @@ TranslationUI.prototype = {
 
     // or if we should never show the infobar for this domain.
     let perms = Services.perms;
-    if (perms.testExactPermission(aURI, "translate") ==  perms.DENY_ACTION) {
+    if (perms.testExactPermission(aURI, "translate") == perms.DENY_ACTION) {
       TranslationTelemetry.recordAutoRejectedTranslationOffer();
       return false;
     }

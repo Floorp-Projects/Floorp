@@ -386,14 +386,12 @@ add_task(function* test_bookmarks() {
           node.type == node.RESULT_TYPE_SEPARATOR ||
           node.type == node.RESULT_TYPE_QUERY) {
         do_check_true(node.itemId > 0);
-      }
-      else {
+      } else {
         do_check_eq(node.itemId, -1);
       }
     }
     rootNode.containerOpen = false;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("bookmarks query: " + ex);
   }
 
@@ -420,8 +418,7 @@ add_task(function* test_bookmarks() {
     do_check_eq(rootNode.getChild(0).title, "title 1");
     do_check_eq(rootNode.getChild(1).title, "title 2");
     rootNode.containerOpen = false;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("bookmarks query: " + ex);
   }
 
@@ -513,8 +510,7 @@ add_task(function* test_bookmarks() {
     do_check_eq(node.title, "ZZZXXXYYY");
     do_check_true(node.itemId > 0);
     rootNode.containerOpen = false;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("bookmarks query: " + ex);
   }
 
@@ -540,8 +536,7 @@ add_task(function* test_bookmarks() {
     do_check_true(node.lastModified > 0);
 
     rootNode.containerOpen = false;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("bookmarks query: " + ex);
   }
 
@@ -569,8 +564,7 @@ add_task(function* test_bookmarks() {
       }
     }
     rootNode.containerOpen = false;
-  }
-  catch (ex) {
+  } catch (ex) {
     do_throw("bookmarks query: " + ex);
   }
 

@@ -77,8 +77,7 @@ TaggingService.prototype = {
       if (stmt.executeStep()) {
         return stmt.row.id;
       }
-    }
-    finally {
+    } finally {
       stmt.finalize();
     }
     return -1;
@@ -121,16 +120,14 @@ TaggingService.prototype = {
         // We can't know the name at this point, since a previous tag could
         // want to change it.
         tag.__defineGetter__("name", () => this._tagFolders[tag.id]);
-      }
-      else if (typeof(idOrName) == "string" && idOrName.length > 0 &&
+      } else if (typeof(idOrName) == "string" && idOrName.length > 0 &&
                idOrName.length <= Ci.nsITaggingService.MAX_TAG_LENGTH) {
         // This is a tag name.
         tag.name = trim ? idOrName.trim() : idOrName;
         // We can't know the id at this point, since a previous tag could
         // have created it.
         tag.__defineGetter__("id", () => this._getItemIdForTag(tag.name));
-      }
-      else {
+      } else {
         throw Cr.NS_ERROR_INVALID_ARG;
       }
       return tag;
@@ -138,8 +135,7 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  tagURI: function TS_tagURI(aURI, aTags, aSource)
-  {
+  tagURI: function TS_tagURI(aURI, aTags, aSource) {
     if (!aURI || !aTags || !Array.isArray(aTags)) {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
@@ -208,8 +204,7 @@ TaggingService.prototype = {
       if (stmt.executeStep()) {
         count = stmt.row.count;
       }
-    }
-    finally {
+    } finally {
       stmt.finalize();
     }
 
@@ -219,8 +214,7 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  untagURI: function TS_untagURI(aURI, aTags, aSource)
-  {
+  untagURI: function TS_untagURI(aURI, aTags, aSource) {
     if (!aURI || (aTags && !Array.isArray(aTags))) {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
@@ -290,8 +284,7 @@ TaggingService.prototype = {
           uris.push(Services.io.newURI(stmt.row.url, null, null));
         } catch (ex) {}
       }
-    }
-    finally {
+    } finally {
       stmt.finalize();
     }
 
@@ -335,8 +328,7 @@ TaggingService.prototype = {
         while (stmt.executeStep()) {
           this.__tagFolders[stmt.row.id] = stmt.row.title;
         }
-      }
-      finally {
+      } finally {
         stmt.finalize();
       }
     }
@@ -400,14 +392,12 @@ TaggingService.prototype = {
         if (this._tagFolders[stmt.row.parent]) {
           // This is a tag entry.
           itemIds.push(stmt.row.id);
-        }
-        else {
+        } else {
           // This is a real bookmark, so the bookmarked URI is not an orphan.
           isBookmarked = true;
         }
       }
-    }
-    finally {
+    } finally {
       stmt.finalize();
     }
 
@@ -431,9 +421,8 @@ TaggingService.prototype = {
     // Item is a tag folder.
     if (aFolderId == PlacesUtils.tagsFolderId && this._tagFolders[aItemId]) {
       delete this._tagFolders[aItemId];
-    }
-    // Item is a bookmark that was removed from a non-tag folder.
-    else if (aURI && !this._tagFolders[aFolderId]) {
+    } else if (aURI && !this._tagFolders[aFolderId]) {
+      // Item is a bookmark that was removed from a non-tag folder.
       // If the only bookmark items now associated with the bookmark's URI are
       // contained in tag folders, the URI is no longer properly bookmarked, so
       // untag it.
@@ -443,9 +432,8 @@ TaggingService.prototype = {
           PlacesUtils.bookmarks.removeItem(itemIds[i], aSource);
         } catch (ex) {}
       }
-    }
-    // Item is a tag entry.  If this was the last entry for this tag, remove it.
-    else if (aURI && this._tagFolders[aFolderId]) {
+    } else if (aURI && this._tagFolders[aFolderId]) {
+      // Item is a tag entry.  If this was the last entry for this tag, remove it.
       this._removeTagIfEmpty(aFolderId, aSource);
     }
   },

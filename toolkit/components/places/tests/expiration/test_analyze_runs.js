@@ -35,12 +35,10 @@ function do_check_analyze_ran(aTableName, aRan) {
     if (aRan) {
       do_check_true(stmt.executeStep());
       do_check_neq(stmt.row.idx, null);
-    }
-    else {
+    } else {
       do_check_false(stmt.executeStep());
     }
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 }

@@ -17,8 +17,7 @@ var gProfileManagerBundle;
 var gBrandBundle;
 var gProfileService;
 
-function startup()
-{
+function startup() {
   try {
     gDialogParams = window.arguments[0].
       QueryInterface(I.nsIDialogParamBlock);
@@ -50,22 +49,19 @@ function startup()
             profilesElement.selectItem(a);
           }, 0, listitem);
         }
-      }
-      catch (e) { }
+      } catch (e) { }
     }
 
     var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
     autoSelectLastProfile.checked = gProfileService.startWithLastProfile;
     profilesElement.focus();
-  }
-  catch (e) {
+  } catch (e) {
     window.close();
     throw (e);
   }
 }
 
-function acceptDialog()
-{
+function acceptDialog() {
   var appName = gBrandBundle.getString("brandShortName");
 
   var profilesElement = document.getElementById("profiles");
@@ -83,8 +79,7 @@ function acceptDialog()
 
   try {
     profileLock = selectedProfile.profile.lock({ value: null });
-  }
-  catch (e) {
+  } catch (e) {
     if (!selectedProfile.profile.rootDir.exists()) {
       var missingTitle = gProfileManagerBundle.getString("profileMissingTitle");
       var missing =
@@ -113,15 +108,13 @@ function acceptDialog()
   return true;
 }
 
-function exitDialog()
-{
+function exitDialog() {
   updateStartupPrefs();
 
   return true;
 }
 
-function updateStartupPrefs()
-{
+function updateStartupPrefs() {
   var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
   gProfileService.startWithLastProfile = autoSelectLastProfile.checked;
 
@@ -130,10 +123,8 @@ function updateStartupPrefs()
 }
 
 // handle key event on listboxes
-function onProfilesKey(aEvent)
-{
-  switch ( aEvent.keyCode )
-  {
+function onProfilesKey(aEvent) {
+  switch ( aEvent.keyCode ) {
   case KeyEvent.DOM_VK_BACK_SPACE:
     if (AppConstants.platform != "macosx")
       break;
@@ -146,15 +137,13 @@ function onProfilesKey(aEvent)
   }
 }
 
-function onProfilesDblClick(aEvent)
-{
+function onProfilesDblClick(aEvent) {
   if (aEvent.target.localName == "listitem")
     document.documentElement.acceptDialog();
 }
 
 // invoke the createProfile Wizard
-function CreateProfileWizard()
-{
+function CreateProfileWizard() {
   window.openDialog('chrome://mozapps/content/profile/createProfileWizard.xul',
                     '', 'centerscreen,chrome,modal,titlebar', gProfileService);
 }
@@ -162,8 +151,7 @@ function CreateProfileWizard()
 /**
  * Called from createProfileWizard to update the display.
  */
-function CreateProfile(aProfile)
-{
+function CreateProfile(aProfile) {
   var profilesElement = document.getElementById("profiles");
 
   var listitem = profilesElement.appendItem(aProfile.name, "");
@@ -179,8 +167,7 @@ function CreateProfile(aProfile)
 }
 
 // rename the selected profile
-function RenameProfile()
-{
+function RenameProfile() {
   var profilesElement = document.getElementById("profiles");
   var selectedItem = profilesElement.selectedItem;
   if (!selectedItem) {
@@ -205,8 +192,7 @@ function RenameProfile()
 
     try {
       selectedProfile.name = newName;
-    }
-    catch (e) {
+    } catch (e) {
       var alTitle = gProfileManagerBundle.getString("profileNameInvalidTitle");
       var alMsg = gProfileManagerBundle.getFormattedString("profileNameInvalid", [newName]);
       Services.prompt.alert(window, alTitle, alMsg);
@@ -225,8 +211,7 @@ function RenameProfile()
   return false;
 }
 
-function ConfirmDelete()
-{
+function ConfirmDelete() {
   var profileList = document.getElementById( "profiles" );
 
   var selectedItem = profileList.selectedItem;

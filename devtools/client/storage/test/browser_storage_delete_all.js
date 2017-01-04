@@ -43,7 +43,7 @@ add_task(function* () {
     [["sessionStorage", "https://sectest1.example.org"], "iframe-s-ss1", "name"],
     [["indexedDB", "http://test1.example.org", "idb1 (default)", "obj1"], 1, "name"],
     [["Cache", "http://test1.example.org", "plop"],
-      MAIN_DOMAIN + "404_cached_file.js", "url"],
+     MAIN_DOMAIN + "404_cached_file.js", "url"],
   ];
 
   for (let [store, rowName, cellToClick] of deleteHosts) {

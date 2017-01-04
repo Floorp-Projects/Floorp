@@ -120,8 +120,7 @@
                                     tagName,
                                     elt._placesNode.itemId);
                 return dropPoint;
-              }
-              else if (eventY - eltY < eltHeight * 0.80) {
+              } else if (eventY - eltY < eltHeight * 0.80) {
                 // If mouse is in the middle of the element, drop inside folder.
                 dropPoint.ip = new InsertionPoint(
                                     PlacesUtils.getConcreteItemId(elt._placesNode),
@@ -131,8 +130,7 @@
                 dropPoint.folderElt = elt;
                 return dropPoint;
               }
-            }
-            else if (eventY - eltY <= eltHeight / 2) {
+            } else if (eventY - eltY <= eltHeight / 2) {
               // This is a non-folder node or a readonly folder.
               // If the mouse is above the middle, drop above this item.
               dropPoint.ip = new InsertionPoint(
@@ -215,9 +213,7 @@
             this._folder.elt.lastChild.setAttribute("autoopened", "true");
             this._folder.elt.lastChild.showPopup(this._folder.elt);
             this._folder.openTimer = null;
-          }
-
-          else if (aTimer == this._folder.closeTimer) {
+          } else if (aTimer == this._folder.closeTimer) {
             // Timer to close a submenu that's been dragged off of.
             // Only close the submenu if the mouse isn't being dragged over any
             // of its child menus.
@@ -232,9 +228,7 @@
             // open while its children are being dragged over.)
             if (!draggingOverChild)
               this.closeParentMenus();
-          }
-
-          else if (aTimer == this.closeMenuTimer) {
+          } else if (aTimer == this.closeMenuTimer) {
             // Timer to close this menu after the drag exit.
             var popup = this._self;
             // if we are no more dragging we can leave the menu open to allow
@@ -408,8 +402,7 @@
           }
           // Since we are dropping into a folder set the corresponding style.
           dropPoint.folderElt.setAttribute("_moz-menuactive", true);
-        }
-        else {
+        } else {
           // We are not dragging over a folder.
           // Clear out old _overFolder information.
           this._overFolder.clear();
@@ -445,8 +438,7 @@
             elt = elt.nextSibling;
           newMarginTop = elt ? elt.boxObject.screenY - sbo.screenY :
                                sbo.height;
-        }
-        else if (scrollDir == 1)
+        } else if (scrollDir == 1)
           newMarginTop = sbo.height;
 
         // Set the new marginTop based on arrowscrollbox.
@@ -556,13 +548,11 @@
             if (position.indexOf("start_") == 0) {
               container.dir = "reverse";
               this.setAttribute("side", isRTL ? "left" : "right");
-            }
-            else {
+            } else {
               container.dir = "";
               this.setAttribute("side", isRTL ? "right" : "left");
             }
-          }
-          else if (position.indexOf("before_") == 0 || position.indexOf("after_") == 0) {
+          } else if (position.indexOf("before_") == 0 || position.indexOf("after_") == 0) {
             container.orient = "";
             arrowbox.orient = "";
             if (position.indexOf("_end") > 0) {
@@ -575,8 +565,7 @@
             if (position.indexOf("before_") == 0) {
               container.dir = "reverse";
               this.setAttribute("side", "bottom");
-            }
-            else {
+            } else {
               container.dir = "";
               this.setAttribute("side", "top");
             }

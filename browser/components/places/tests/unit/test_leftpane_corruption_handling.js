@@ -161,8 +161,7 @@ function hierarchyToObj(aNode) {
   o.annos = PlacesUtils.getAnnotationsForItem(aNode.itemId)
   if (PlacesUtils.nodeIsURI(aNode)) {
     o.uri = aNode.uri;
-  }
-  else if (PlacesUtils.nodeIsFolder(aNode)) {
+  } else if (PlacesUtils.nodeIsFolder(aNode)) {
     o.children = [];
     PlacesUtils.asContainer(aNode).containerOpen = true;
     for (let i = 0; i < aNode.childCount; ++i) {

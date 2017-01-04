@@ -725,8 +725,7 @@ var gSyncSetup = {
           ns.setJSEnabled(site, true); // allow site
         }
       }, this);
-    }
-    else {
+    } else {
       this._disabledSites.forEach(function(site) {
         ns.setJSEnabled(site, false);
       });
@@ -801,8 +800,7 @@ var gSyncSetup = {
       valid = this._validateServer(el);
       let str = valid ? "" : "serverInvalid.label";
       this._setFeedbackMessage(feedback, valid, str);
-    }
-    else
+    } else
       this._setFeedbackMessage(feedback, true);
 
     // Recheck account against the new server.
@@ -845,8 +843,7 @@ var gSyncSetup = {
       if (valid) {
         this.loadCaptcha();
       }
-    }
-    else if (uri) {
+    } else if (uri) {
       valid = true;
       Weave.Service.serverURL = uri.spec;
     }

@@ -10,8 +10,7 @@ const URL = BASE + "/file_WebRequest_page2.html";
 
 var requested = [];
 
-function onBeforeRequest(details)
-{
+function onBeforeRequest(details) {
   info(`onBeforeRequest ${details.url}`);
   if (details.url.startsWith(BASE)) {
     requested.push(details.url);
@@ -20,8 +19,7 @@ function onBeforeRequest(details)
 
 var sendHeaders = [];
 
-function onBeforeSendHeaders(details)
-{
+function onBeforeSendHeaders(details) {
   info(`onBeforeSendHeaders ${details.url}`);
   if (details.url.startsWith(BASE)) {
     sendHeaders.push(details.url);
@@ -30,8 +28,7 @@ function onBeforeSendHeaders(details)
 
 var completed = [];
 
-function onResponseStarted(details)
-{
+function onResponseStarted(details) {
   if (details.url.startsWith(BASE)) {
     completed.push(details.url);
   }
@@ -41,8 +38,7 @@ const expected_urls = [BASE + "/file_style_good.css",
                        BASE + "/file_style_bad.css",
                        BASE + "/file_style_redirect.css"];
 
-function removeDupes(list)
-{
+function removeDupes(list) {
   let j = 0;
   for (let i = 1; i < list.length; i++) {
     if (list[i] != list[j]) {
@@ -55,8 +51,7 @@ function removeDupes(list)
   list.length = j + 1;
 }
 
-function compareLists(list1, list2, kind)
-{
+function compareLists(list1, list2, kind) {
   list1.sort();
   removeDupes(list1);
   list2.sort();

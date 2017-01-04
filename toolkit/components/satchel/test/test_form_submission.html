@@ -100,8 +100,7 @@
   <form id="form15" onsubmit="return checkSubmit(15)">
     <script type="text/javascript">
       var form = document.getElementById('form15');
-      for (let i = 0; i != 10; i++)
-      {
+      for (let i = 0; i != 10; i++) {
         let input = document.createElement('input');
         input.type = 'text';
         input.name = 'test' + (i + 1);
@@ -115,8 +114,7 @@
   <form id="form16" onsubmit="return checkSubmit(16)">
     <script type="text/javascript">
       form = document.getElementById('form16');
-      for (let i = 0; i != 10; i++)
-      {
+      for (let i = 0; i != 10; i++) {
         let input = document.createElement('input');
         input.type = 'text';
         input.name = 'test' + (i + 1);
@@ -217,8 +215,7 @@
   <form id="form107" onsubmit="return checkSubmit(107)">
     <script type="text/javascript">
       form = document.getElementById('form107');
-      for (let i = 0; i != 10; i++)
-      {
+      for (let i = 0; i != 10; i++) {
         let input = document.createElement('input');
         input.type = 'text';
         input.name = 'test7_' + (i + 1);
@@ -233,8 +230,7 @@
   <form id="form108" onsubmit="return checkSubmit(108)">
     <script type="text/javascript">
       form = document.getElementById('form108');
-      for (let i = 0; i != 10; i++)
-      {
+      for (let i = 0; i != 10; i++) {
         let input = document.createElement('input');
         input.type = 'text';
         input.name = 'test8_' + (i + 1);
@@ -452,8 +448,7 @@ function checkSubmit(formNum) {
   return submitForm(formNum);
 }
 
-function submitForm(formNum)
-{
+function submitForm(formNum) {
   // Forms 20 and 21 requires browser.formfill.saveHttpsForms to be false
   if (formNum == 19)
     SpecialPowers.setBoolPref("browser.formfill.saveHttpsForms", false);
@@ -507,8 +502,7 @@ function submitForm(formNum)
       if (nextFormNum == 21 || nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
         document.getElementById("iframe").contentWindow.clickButton(nextFormNum);
-      }
-      else {
+      } else {
         var button = getFormSubmitButton(nextFormNum);
         button.click();
       }

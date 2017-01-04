@@ -19,16 +19,14 @@ var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
  *        This determines which service should be called when calling the second
  *        runInBatchMode the second time.
  */
-function callback(aService)
-{
+function callback(aService) {
   this.callCount = 0;
   this.service = aService;
 }
 callback.prototype = {
   // nsINavHistoryBatchCallback
 
-  runBatched(aUserData)
-  {
+  runBatched(aUserData) {
     this.callCount++;
 
     if (this.callCount == 1) {

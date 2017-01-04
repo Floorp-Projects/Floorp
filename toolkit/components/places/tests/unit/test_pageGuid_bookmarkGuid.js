@@ -114,8 +114,7 @@ add_task(function* test_addItemsWithInvalidGUIDsFails() {
     bmsvc.createFolder(bmsvc.placesRoot, "XYZ folder",
                        bmsvc.DEFAULT_INDEX, INVALID_GUID);
     do_throw("Adding a folder with an invalid guid should fail");
-  }
-  catch (ex) { }
+  } catch (ex) { }
 
   let folder = bmsvc.createFolder(bmsvc.placesRoot, "test folder",
                                   bmsvc.DEFAULT_INDEX);
@@ -123,14 +122,12 @@ add_task(function* test_addItemsWithInvalidGUIDsFails() {
     bmsvc.insertBookmark(folder, uri("http://test.tld"), bmsvc.DEFAULT_INDEX,
                          "title", INVALID_GUID);
     do_throw("Adding a bookmark with an invalid guid should fail");
-  }
-  catch (ex) { }
+  } catch (ex) { }
 
   try {
     bmsvc.insertSeparator(folder, bmsvc.DEFAULT_INDEX, INVALID_GUID);
     do_throw("Adding a separator with an invalid guid should fail");
-  }
-  catch (ex) { }
+  } catch (ex) { }
 
   yield PlacesUtils.bookmarks.eraseEverything();
 });
@@ -172,8 +169,7 @@ add_task(function* test_usingSameGUIDFails() {
     bmsvc.createFolder(bmsvc.placesRoot, "test folder 2",
                        bmsvc.DEFAULT_INDEX, GUID);
     do_throw("Using the same guid twice should fail");
-  }
-  catch (ex) { }
+  } catch (ex) { }
 
   yield PlacesUtils.bookmarks.eraseEverything();
 });

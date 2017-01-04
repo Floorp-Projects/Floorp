@@ -23,8 +23,7 @@ const TRANSITION_DOWNLOAD = PlacesUtils.history.TRANSITION_DOWNLOAD;
  * param aCallback
  *        Callback function that will get the property value.
  */
-function fieldForUrl(aURI, aFieldName, aCallback)
-{
+function fieldForUrl(aURI, aFieldName, aCallback) {
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase)
                                 .DBConnection.createAsyncStatement(
@@ -128,8 +127,7 @@ function addVisits(aPlaceInfo, aWindow, aCallback, aStack) {
   let places = [];
   if (aPlaceInfo instanceof Ci.nsIURI) {
     places.push({ uri: aPlaceInfo });
-  }
-  else if (Array.isArray(aPlaceInfo)) {
+  } else if (Array.isArray(aPlaceInfo)) {
     places = places.concat(aPlaceInfo);
   } else {
     places.push(aPlaceInfo)

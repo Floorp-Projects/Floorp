@@ -112,13 +112,11 @@ var testDataAddedLater = [
   }
 ];
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_sort_date_site_grouping()
-{
+add_task(function* test_sort_date_site_grouping() {
   yield task_populateDB(testData);
 
   // On Linux, the (local files) folder is shown after sites unlike Mac/Windows.

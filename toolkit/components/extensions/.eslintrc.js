@@ -101,7 +101,7 @@ module.exports = { // eslint-disable-line no-undef
     "generator-star-spacing": ["error", {"before": false, "after": true}],
 
     // Two space indent
-    "indent": ["error", 2, {"SwitchCase": 1}],
+    "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
 
     // Space after colon not before in property declarations
     "key-spacing": ["error", {"beforeColon": false, "afterColon": true, "mode": "minimum"}],

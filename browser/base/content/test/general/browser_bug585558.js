@@ -84,18 +84,18 @@ function test_movedLower() {
 
 function test_hoverOne() {
   EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[4], { type: "mousemove" });
-  testAttrib(gBrowser.tabs[3], "beforehovered", true,  "Fourth tab marked beforehovered");
+  testAttrib(gBrowser.tabs[3], "beforehovered", true, "Fourth tab marked beforehovered");
   EventUtils.synthesizeMouseAtCenter(gBrowser.tabs[3], { type: "mousemove" });
-  testAttrib(gBrowser.tabs[2], "beforehovered", true,  "Third tab marked beforehovered!");
-  testAttrib(gBrowser.tabs[2], "afterhovered",  false, "Third tab not marked afterhovered!");
-  testAttrib(gBrowser.tabs[4], "afterhovered",  true,  "Fifth tab marked afterhovered!");
+  testAttrib(gBrowser.tabs[2], "beforehovered", true, "Third tab marked beforehovered!");
+  testAttrib(gBrowser.tabs[2], "afterhovered", false, "Third tab not marked afterhovered!");
+  testAttrib(gBrowser.tabs[4], "afterhovered", true, "Fifth tab marked afterhovered!");
   testAttrib(gBrowser.tabs[4], "beforehovered", false, "Fifth tab not marked beforehovered!");
   testAttrib(gBrowser.tabs[0], "beforehovered", false, "First tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[0], "afterhovered",  false, "First tab not marked afterhovered!");
+  testAttrib(gBrowser.tabs[0], "afterhovered", false, "First tab not marked afterhovered!");
   testAttrib(gBrowser.tabs[1], "beforehovered", false, "Second tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[1], "afterhovered",  false, "Second tab not marked afterhovered!");
+  testAttrib(gBrowser.tabs[1], "afterhovered", false, "Second tab not marked afterhovered!");
   testAttrib(gBrowser.tabs[3], "beforehovered", false, "Fourth tab not marked beforehovered!");
-  testAttrib(gBrowser.tabs[3], "afterhovered",  false, "Fourth tab not marked afterhovered!");
+  testAttrib(gBrowser.tabs[3], "afterhovered", false, "Fourth tab not marked afterhovered!");
   gBrowser.removeTab(tabs.pop());
   executeSoon(test_hoverStatePersistence);
 }
@@ -105,14 +105,14 @@ function test_hoverStatePersistence() {
   // a tab is selected and then unselected again. See bug 856107.
 
   function assertState() {
-    testAttrib(gBrowser.tabs[0], "beforehovered", true,  "First tab still marked beforehovered!");
-    testAttrib(gBrowser.tabs[0], "afterhovered",  false, "First tab not marked afterhovered!");
-    testAttrib(gBrowser.tabs[2], "afterhovered",  true,  "Third tab still marked afterhovered!");
+    testAttrib(gBrowser.tabs[0], "beforehovered", true, "First tab still marked beforehovered!");
+    testAttrib(gBrowser.tabs[0], "afterhovered", false, "First tab not marked afterhovered!");
+    testAttrib(gBrowser.tabs[2], "afterhovered", true, "Third tab still marked afterhovered!");
     testAttrib(gBrowser.tabs[2], "beforehovered", false, "Third tab not marked afterhovered!");
     testAttrib(gBrowser.tabs[1], "beforehovered", false, "Second tab not marked beforehovered!");
-    testAttrib(gBrowser.tabs[1], "afterhovered",  false, "Second tab not marked afterhovered!");
+    testAttrib(gBrowser.tabs[1], "afterhovered", false, "Second tab not marked afterhovered!");
     testAttrib(gBrowser.tabs[3], "beforehovered", false, "Fourth tab not marked beforehovered!");
-    testAttrib(gBrowser.tabs[3], "afterhovered",  false, "Fourth tab not marked afterhovered!");
+    testAttrib(gBrowser.tabs[3], "afterhovered", false, "Fourth tab not marked afterhovered!");
   }
 
   gBrowser.selectedTab = gBrowser.tabs[3];

@@ -8,21 +8,21 @@
 const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 const NODES = [
   {selector: "#i1111", ids: "i1 i11 i111 i1111", nodeName: "div",
-    title: "div#i1111"},
+   title: "div#i1111"},
   {selector: "#i22", ids: "i2 i22", nodeName: "div",
-    title: "div#i22"},
+   title: "div#i22"},
   {selector: "#i2111", ids: "i2 i21 i211 i2111", nodeName: "div",
-    title: "div#i2111"},
+   title: "div#i2111"},
   {selector: "#i21", ids: "i2 i21 i211 i2111", nodeName: "div",
-    title: "div#i21"},
+   title: "div#i21"},
   {selector: "#i22211", ids: "i2 i22 i222 i2221 i22211", nodeName: "div",
-    title: "div#i22211"},
+   title: "div#i22211"},
   {selector: "#i22", ids: "i2 i22 i222 i2221 i22211", nodeName: "div",
-    title: "div#i22"},
+   title: "div#i22"},
   {selector: "#i3", ids: "i3", nodeName: "article",
-    title: "article#i3"},
+   title: "article#i3"},
   {selector: "clipPath", ids: "vector clip", nodeName: "clipPath",
-    title: "clipPath#clip"},
+   title: "clipPath#clip"},
 ];
 
 add_task(function* () {

@@ -65,8 +65,7 @@
               event.initEvent(eventName, true, true);
               let f = new Function("event", body);
               f.call(this, event);
-            }
-            catch (e) {
+            } catch (e) {
               Cu.reportError(e);
             }
           ]]>

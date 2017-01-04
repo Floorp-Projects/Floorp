@@ -31,16 +31,14 @@
       // which is the URL displayed in the location bar, i.e.
       // the URI that the user attempted to load.
 
-      function getErrorCode()
-      {
+      function getErrorCode() {
         var url = document.documentURI;
         var error = url.search(/e\=/);
         var duffUrl = url.search(/\&u\=/);
         return decodeURIComponent(url.slice(error + 2, duffUrl));
       }
 
-      function getURL()
-      {
+      function getURL() {
         var url = document.documentURI;
         var match = url.match(/&u=([^&]+)&/);
 
@@ -61,8 +59,7 @@
        * Check whether this warning page should be overridable or whether
        * the "ignore warning" button should be hidden.
        */
-      function getOverride()
-      {
+      function getOverride() {
         var url = document.documentURI;
         var match = url.match(/&o=1&/);
         return !!match;
@@ -72,8 +69,7 @@
        * Attempt to get the hostname via document.location.  Fail back
        * to getURL so that we always return something meaningful.
        */
-      function getHostString()
-      {
+      function getHostString() {
         try {
           return document.location.hostname;
         } catch (e) {
@@ -81,8 +77,7 @@
         }
       }
 
-      function initPage()
-      {
+      function initPage() {
         var error = "";
         switch (getErrorCode()) {
           case "malwareBlocked" :

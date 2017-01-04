@@ -803,8 +803,7 @@
                       .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                       .getInterface(Components.interfaces.nsIXULWindow)
                       .XULBrowserWindow;
-            }
-            catch (ex) { }
+            } catch (ex) { }
             if (!this._xulBrowserWindow)
               return false;
           }

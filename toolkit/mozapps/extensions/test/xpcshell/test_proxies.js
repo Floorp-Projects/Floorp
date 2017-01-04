@@ -106,8 +106,7 @@ function* run_proxy_tests() {
 
     if (addon.type == "proxy") {
       writeFile(addon.directory.path, addon.proxyFile)
-    }
-    else if (addon.type == "symlink") {
+    } else if (addon.type == "symlink") {
       yield createSymlink(addon.directory, addon.proxyFile)
     }
   }
@@ -172,8 +171,7 @@ function* run_proxy_tests() {
           addon.proxyFile.remove(false);
         } catch (e) {}
       }
-    }
-    catch (e) {
+    } catch (e) {
       do_throw(e);
     }
   });

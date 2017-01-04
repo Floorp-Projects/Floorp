@@ -35,8 +35,7 @@ var tests = [
       try {
         validateObject(snapshot, SNAPSHOT_SCHEMA);
         ok(true, "The snapshot should conform to the schema.");
-      }
-      catch (err) {
+      } catch (err) {
         ok(false, "Schema mismatch, " + err);
       }
       done();

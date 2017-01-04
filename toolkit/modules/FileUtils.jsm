@@ -148,8 +148,7 @@ this.FileUtils = {
       try {
         stream.finish();
         return;
-      }
-      catch (e) {
+      } catch (e) {
       }
     }
     stream.close();
@@ -165,8 +164,7 @@ this.FileUtils = {
       try {
         stream.finish();
         return;
-      }
-      catch (e) {
+      } catch (e) {
       }
     }
     stream.close();

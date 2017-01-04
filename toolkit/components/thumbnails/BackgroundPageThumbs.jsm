@@ -452,8 +452,7 @@ Capture.prototype = {
       for (let callback of doneCallbacks) {
         try {
           callback.call(options, this.url);
-        }
-        catch (err) {
+        } catch (err) {
           Cu.reportError(err);
         }
       }

@@ -3,8 +3,7 @@
 
 load("../unit/head_crashreporter.js");
 
-function run_test()
-{
+function run_test() {
   var is_win7_or_newer = false;
   var ph = Components.classes["@mozilla.org/network/protocol;1?name=http"]
              .getService(Components.interfaces.nsIHttpProtocolHandler);

@@ -182,10 +182,10 @@ TileManager.prototype = {
 	};
       }
 
-      let starti = rect.left  >> kTileExponentWidth;
+      let starti = rect.left >> kTileExponentWidth;
       let endi   = rect.right >> kTileExponentWidth;
 
-      let startj = rect.top    >> kTileExponentHeight;
+      let startj = rect.top >> kTileExponentHeight;
       let endj   = rect.bottom >> kTileExponentHeight;
 
       let tile = null;
@@ -533,8 +533,7 @@ TileManager.TileCache.prototype = {
 
     for (; k >= 0; --k) {
       if (pool[k].free &&
-          (!evictionGuard || evictionGuard(pool[k])))
-      {
+          (!evictionGuard || evictionGuard(pool[k]))) {
         victim = pool[k];
         break;
       }
@@ -678,10 +677,10 @@ TileManager.TileCache.prototype = {
       };
     }
 
-    let starti = rect.left  >> kTileExponentWidth;
+    let starti = rect.left >> kTileExponentWidth;
     let endi   = rect.right >> kTileExponentWidth;
 
-    let startj = rect.top    >> kTileExponentHeight;
+    let startj = rect.top >> kTileExponentHeight;
     let endj   = rect.bottom >> kTileExponentHeight;
 
     let tile = null;

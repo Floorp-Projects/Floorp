@@ -120,8 +120,7 @@ function setSort(aOrganizerWin, aTree, aUnsortFirst, aShouldFail, aCol, aDir) {
     if (!aCol && !aDir) {
       prevSortKey = null;
       prevSortDir = null;
-    }
-    else {
+    } else {
       if (aCol)
         prevSortKey = SORT_LOOKUP_TABLE[aCol.getAttribute("anonid")].key;
       else if (prevSortKey === null)

@@ -32,8 +32,7 @@ var paramHandlerFactory = {
   }
 };
 
-function initTest()
-{
+function initTest() {
   do_test_pending();
   // Setup extension manager
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
@@ -67,8 +66,7 @@ function initTest()
   startupManager();
 }
 
-function shutdownTest()
-{
+function shutdownTest() {
   shutdownManager();
 
   gComponentRegistrar.unregisterFactory(CLASS_ID, paramHandlerFactory);
@@ -78,8 +76,7 @@ function shutdownTest()
   do_test_finished();
 }
 
-function run_test()
-{
+function run_test() {
   initTest();
 
   AddonManager.getAddonByID("test@mozilla.org", function(item) {

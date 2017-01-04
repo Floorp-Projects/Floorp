@@ -65,8 +65,7 @@ function run_test() {
 
   do_test_pending();
 
-  function checkBlacklist()
-  {
+  function checkBlacklist() {
     var driverVersion = gfxInfo.adapterDriverVersion;
     if (driverVersion) {
       var status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT2D);

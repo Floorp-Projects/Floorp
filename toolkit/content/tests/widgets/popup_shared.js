@@ -38,8 +38,7 @@ var gExpectedTriggerNode = null;
 var gWindowUtils;
 var gPopupWidth = -1, gPopupHeight = -1;
 
-function startPopupTests(tests)
-{
+function startPopupTests(tests) {
   document.addEventListener("popupshowing", eventOccurred, false);
   document.addEventListener("popupshown", eventOccurred, false);
   document.addEventListener("popuphiding", eventOccurred, false);
@@ -57,8 +56,7 @@ function startPopupTests(tests)
   goNext();
 }
 
-function finish()
-{
+function finish() {
   if (window.opener) {
     window.close();
     window.opener.SimpleTest.finish();
@@ -86,8 +84,7 @@ function disableNonTestMouse(aDisable) {
   gWindowUtils.disableNonTestMouseEvents(aDisable);
 }
 
-function eventOccurred(event)
-{
+function eventOccurred(event) {
   if (gPopupTests.length <= gTestIndex) {
     ok(false, "Extra " + event.type + " event fired");
     return;
@@ -171,8 +168,7 @@ function eventOccurred(event)
   }
 }
 
-function checkResult()
-{
+function checkResult() {
   var step = null;
   var test = gPopupTests[gTestIndex];
   if ("steps" in test)
@@ -190,8 +186,7 @@ function checkResult()
   goNextStep();
 }
 
-function goNextStep()
-{
+function goNextStep() {
   gTestEventIndex = 0;
 
   var step = null;
@@ -208,8 +203,7 @@ function goNextStep()
   goNext();
 }
 
-function goNext()
-{
+function goNext() {
   // We want to continue after the next animation frame so that
   // we're in a stable state and don't get spurious mouse events at unexpected targets.
   window.requestAnimationFrame(
@@ -219,8 +213,7 @@ function goNext()
   );
 }
 
-function goNextStepSync()
-{
+function goNextStepSync() {
   if (gTestIndex >= 0 && "end" in gPopupTests[gTestIndex] && gPopupTests[gTestIndex].end) {
     finish();
     return;
@@ -252,18 +245,15 @@ function goNextStepSync()
     } else if (typeof test.events == "function" && !test.events().length) {
       checkResult();
     }
-  }
-  else {
+  } else {
     finish();
   }
 }
 
-function openMenu(menu)
-{
+function openMenu(menu) {
   if ("open" in menu) {
     menu.open = true;
-  }
-  else {
+  } else {
     var bo = menu.boxObject;
     if (bo instanceof MenuBoxObject)
       bo.openMenu(true);
@@ -272,12 +262,10 @@ function openMenu(menu)
   }
 }
 
-function closeMenu(menu, popup)
-{
+function closeMenu(menu, popup) {
   if ("open" in menu) {
     menu.open = false;
-  }
-  else {
+  } else {
     var bo = menu.boxObject;
     if (bo instanceof MenuBoxObject)
       bo.openMenu(false);
@@ -286,8 +274,7 @@ function closeMenu(menu, popup)
   }
 }
 
-function checkActive(popup, id, testname)
-{
+function checkActive(popup, id, testname) {
   var activeok = true;
   var children = popup.childNodes;
   for (var c = 0; c < children.length; c++) {
@@ -301,8 +288,7 @@ function checkActive(popup, id, testname)
   ok(activeok, testname + " item " + (id ? id : "none") + " active");
 }
 
-function checkOpen(menuid, testname)
-{
+function checkOpen(menuid, testname) {
   var menu = document.getElementById(menuid);
   if ("open" in menu)
     ok(menu.open, testname + " " + menuid + " menu is open");
@@ -310,8 +296,7 @@ function checkOpen(menuid, testname)
     ok(menu.getAttribute("open") == "true", testname + " " + menuid + " menu is open");
 }
 
-function checkClosed(menuid, testname)
-{
+function checkClosed(menuid, testname) {
   var menu = document.getElementById(menuid);
   if ("open" in menu)
     ok(!menu.open, testname + " " + menuid + " menu is open");
@@ -319,8 +304,7 @@ function checkClosed(menuid, testname)
     ok(!menu.hasAttribute("open"), testname + " " + menuid + " menu is closed");
 }
 
-function convertPosition(anchor, align)
-{
+function convertPosition(anchor, align) {
   if (anchor == "topleft" && align == "topleft") return "overlap";
   if (anchor == "topleft" && align == "topright") return "start_before";
   if (anchor == "topleft" && align == "bottomleft") return "before_start";
@@ -340,13 +324,11 @@ function convertPosition(anchor, align)
  * which can shift the bottom/right up to 0.5px from its "ideal" location,
  * and could cause it to round differently. (See bug 622507.)
  */
-function isWithinHalfPixel(a, b)
-{
+function isWithinHalfPixel(a, b) {
   return Math.abs(a - b) <= 0.5;
 }
 
-function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
-{
+function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
   testname += " " + edge;
 
   checkOpen(anchor.id, testname);
@@ -359,8 +341,7 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname)
     ok((Math.round(popuprect.right) - Math.round(popuprect.left)) &&
        (Math.round(popuprect.bottom) - Math.round(popuprect.top)),
        testname + " size");
-  }
-  else {
+  } else {
     is(Math.round(popuprect.width), gPopupWidth, testname + " width");
     is(Math.round(popuprect.height), gPopupHeight, testname + " height");
   }

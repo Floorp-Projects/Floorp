@@ -11,8 +11,7 @@
 var Cu = Components.utils;
 Cu.import("resource://gre/modules/DownloadUtils.jsm");
 
-function run_test()
-{
+function run_test() {
   // Simulate having multiple downloads requesting time left
   let downloadTimes = {};
   for (let time of [1, 30, 60, 3456, 9999])

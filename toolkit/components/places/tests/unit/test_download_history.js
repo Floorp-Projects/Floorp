@@ -64,21 +64,18 @@ function waitForOnDeleteVisits(aCallback) {
   PlacesUtils.history.addObserver(historyObserver, false);
 }
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_test(function test_dh_is_from_places()
-{
+add_test(function test_dh_is_from_places() {
   // Test that this nsIDownloadHistory is the one places implements.
   do_check_true(gDownloadHistory instanceof Ci.mozIAsyncHistory);
 
   run_next_test();
 });
 
-add_test(function test_dh_addRemoveDownload()
-{
+add_test(function test_dh_addRemoveDownload() {
   waitForOnVisit(function DHAD_onVisit(aURI) {
     do_check_true(aURI.equals(DOWNLOAD_URI));
 
@@ -99,8 +96,7 @@ add_test(function test_dh_addRemoveDownload()
   gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
 });
 
-add_test(function test_dh_addMultiRemoveDownload()
-{
+add_test(function test_dh_addMultiRemoveDownload() {
   PlacesTestUtils.addVisits({
     uri: DOWNLOAD_URI,
     transition: TRANSITION_TYPED
@@ -122,8 +118,7 @@ add_test(function test_dh_addMultiRemoveDownload()
   });
 });
 
-add_test(function test_dh_addBookmarkRemoveDownload()
-{
+add_test(function test_dh_addBookmarkRemoveDownload() {
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        DOWNLOAD_URI,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
@@ -144,8 +139,7 @@ add_test(function test_dh_addBookmarkRemoveDownload()
   gDownloadHistory.addDownload(DOWNLOAD_URI, null, Date.now() * 1000);
 });
 
-add_test(function test_dh_addDownload_referrer()
-{
+add_test(function test_dh_addDownload_referrer() {
   waitForOnVisit(function DHAD_prepareReferrer(aURI, aVisitID) {
     do_check_true(aURI.equals(REFERRER_URI));
     let referrerVisitId = aVisitID;
@@ -175,8 +169,7 @@ add_test(function test_dh_addDownload_referrer()
   });
 });
 
-add_test(function test_dh_addDownload_disabledHistory()
-{
+add_test(function test_dh_addDownload_disabledHistory() {
   waitForOnVisit(function DHAD_onVisit(aURI) {
     // We should only receive the notification for the non-private URI.  This
     // test is based on the assumption that visit notifications are received in
@@ -204,8 +197,7 @@ add_test(function test_dh_addDownload_disabledHistory()
  * Tests that nsIDownloadHistory::AddDownload saves the additional download
  * details if the optional destination URL is specified.
  */
-add_test(function test_dh_details()
-{
+add_test(function test_dh_details() {
   const REMOTE_URI = NetUtil.newURI("http://localhost/");
   const SOURCE_URI = NetUtil.newURI("http://example.com/test_dh_details");
   const DEST_FILE_NAME = "dest.txt";
@@ -217,8 +209,7 @@ add_test(function test_dh_details()
   let destinationFileUriSet = false;
   let destinationFileNameSet = false;
 
-  function checkFinished()
-  {
+  function checkFinished() {
     if (titleSet && destinationFileUriSet && destinationFileNameSet) {
       PlacesUtils.annotations.removeObserver(annoObserver);
       PlacesUtils.history.removeObserver(historyObserver);
@@ -228,12 +219,10 @@ add_test(function test_dh_details()
   }
 
   let annoObserver = {
-    onPageAnnotationSet: function AO_onPageAnnotationSet(aPage, aName)
-    {
+    onPageAnnotationSet: function AO_onPageAnnotationSet(aPage, aName) {
       if (aPage.equals(SOURCE_URI)) {
         let value = PlacesUtils.annotations.getPageAnnotation(aPage, aName);
-        switch (aName)
-        {
+        switch (aName) {
           case "downloads/destinationFileURI":
             destinationFileUriSet = true;
             do_check_eq(value, destFileUri.spec);
@@ -255,8 +244,7 @@ add_test(function test_dh_details()
     onBeginUpdateBatch() {},
     onEndUpdateBatch() {},
     onVisit() {},
-    onTitleChanged: function HO_onTitleChanged(aURI, aPageTitle)
-    {
+    onTitleChanged: function HO_onTitleChanged(aURI, aPageTitle) {
       if (aURI.equals(SOURCE_URI)) {
         titleSet = true;
         do_check_eq(aPageTitle, DEST_FILE_NAME);

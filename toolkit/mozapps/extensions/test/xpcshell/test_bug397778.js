@@ -9,8 +9,7 @@ const PREF_SELECTED_LOCALE = "general.useragent.locale";
 const ADDON = "test_bug397778";
 const ID = "bug397778@tests.mozilla.org";
 
-function run_test()
-{
+function run_test() {
   // Setup for test
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");

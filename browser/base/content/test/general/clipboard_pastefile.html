@@ -1,13 +1,11 @@
 <html><body>
 <script>
-function checkPaste(event)
-{
+function checkPaste(event) {
   let output = document.getElementById("output");
   output.textContent = checkPasteHelper(event);
 }
 
-function checkPasteHelper(event)
-{
+function checkPasteHelper(event) {
   let dt = event.clipboardData;
   if (dt.types.length != 2)
     return "Wrong number of types; got " + dt.types.length;

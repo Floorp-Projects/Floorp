@@ -3345,7 +3345,7 @@ var Microformats; // jshint ignore:line
             }
             this.setFormatSep();
 
-            if (this.dY  > -1) {
+            if (this.dY > -1) {
                 output = this.dY;
                 if (this.dM > 0 && this.dM < 13) {
                     output += this.dsep + this.dM;
@@ -3561,7 +3561,7 @@ var Microformats; // jshint ignore:line
                 text = text.toLowerCase();
                 text = modules.utils.trim( text );
                 // start with timezone char
-                if ( text.match(':') && ( modules.utils.startWith(text, 'z') || modules.utils.startWith(text, '-')  || modules.utils.startWith(text, '+') )) {
+                if ( text.match(':') && ( modules.utils.startWith(text, 'z') || modules.utils.startWith(text, '-') || modules.utils.startWith(text, '+') )) {
                     return true;
                 }
                 // has ante meridiem or post meridiem
@@ -3926,7 +3926,7 @@ var Microformats; // jshint ignore:line
                 // add attributes
                 var attrs = modules.domUtils.getOrderedAttributes(node);
                 for (j = 0; j < attrs.length; j++) {
-                    out += ' ' + attrs[j].name +  '=' + '"' + attrs[j].value + '"';
+                    out += ' ' + attrs[j].name + '=' + '"' + attrs[j].value + '"';
                 }
 
                 if (this.selfClosingElt.indexOf(node.tagName.toLowerCase()) === -1) {

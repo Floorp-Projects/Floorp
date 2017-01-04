@@ -533,8 +533,7 @@ add_task(function* prepareDownloadsToImport() {
  * Prepares the list of downloads to be added to the database that should
  * *not* be imported by the import procedure.
  */
-add_task(function* prepareNonImportableDownloads()
-{
+add_task(function* prepareNonImportableDownloads() {
   gDownloadsRowNonImportable = [
     // Download with no source (should never happen in normal circumstances).
     {
@@ -657,8 +656,7 @@ add_task(function* prepareNonImportableDownloads()
  * import of that data to the new Downloads API to verify that the import
  * worked correctly.
  */
-add_task(function* test_downloadImport()
-{
+add_task(function* test_downloadImport() {
   let connection = null;
   let downloadsSqlite = getTempFile("downloads.sqlite").path;
 

@@ -81,8 +81,7 @@ add_task(function* runTest() {
   checkSelection();
 });
 
-function dispatchMouseEvent(target, type)
-{
+function dispatchMouseEvent(target, type) {
   var win = target.ownerDocument.defaultView;
   let e = document.createEvent("MouseEvent");
   e.initEvent(type, false, false, win, 0, 1, 1, 1, 1,
@@ -92,8 +91,7 @@ function dispatchMouseEvent(target, type)
   ok(true, type + " sent to " + target.id);
 }
 
-function checkSelection()
-{
+function checkSelection() {
   if (!selectionTest) {
     todo(false, "Selection test is disabled when tab modal prompts are not enabled.");
   } else {

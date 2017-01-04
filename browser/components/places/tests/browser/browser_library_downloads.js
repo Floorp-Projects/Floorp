@@ -60,8 +60,7 @@ function test() {
   openLibrary(onLibraryReady, "Downloads");
 }
 
-function VisitInfo(aTransitionType)
-{
+function VisitInfo(aTransitionType) {
   this.transitionType =
     aTransitionType === undefined ?
       PlacesUtils.history.TRANSITION_LINK : aTransitionType;

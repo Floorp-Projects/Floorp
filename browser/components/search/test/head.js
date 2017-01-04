@@ -98,8 +98,7 @@ function promiseNewEngine(basename, options = {}) {
  * @resolves to the received event
  * @rejects if a valid load event is not received within a meaningful interval
  */
-function promiseTabLoadEvent(tab, url)
-{
+function promiseTabLoadEvent(tab, url) {
   info("Wait tab event: load");
 
   function handle(loadedUrl) {

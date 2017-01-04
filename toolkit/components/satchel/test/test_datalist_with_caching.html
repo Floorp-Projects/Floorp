@@ -79,8 +79,7 @@ function popupShownListener() {
   if (expectingPopup) {
     expectingPopup();
     expectingPopup = null;
-  }
-  else {
+  } else {
     ok(false, "Autocomplete popup not expected during test " + testNum);
   }
 }

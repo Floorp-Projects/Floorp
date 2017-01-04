@@ -96,8 +96,7 @@ function test() {
           if (win.gSearch.currentEngineName ==
               Services.search.currentEngine.name) {
             doSearch(win.document);
-          }
-          else {
+          } else {
             info("Waiting for newtab search init");
             win.addEventListener("ContentSearchService", function done(searchServiceEvent) {
               info("Got newtab search event " + searchServiceEvent.detail.type);

@@ -189,7 +189,7 @@ function init() {
   stopLoggingButton.addEventListener("click", stopLogging);
 
   try {
-    let file = gDirServ.getFile("TmpD",  {});
+    let file = gDirServ.getFile("TmpD", {});
     file.append("log.txt");
     document.getElementById("log-file").value = file.path;
   } catch (e) {
@@ -405,8 +405,7 @@ function displayDNSLookup(data) {
       row.appendChild(col(address));
       new_cont.appendChild(row);
     }
-  }
-  else {
+  } else {
     new_cont.appendChild(col(data.error));
   }
 

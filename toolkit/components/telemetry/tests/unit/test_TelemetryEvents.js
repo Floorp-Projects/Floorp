@@ -196,13 +196,13 @@ add_task(function* test_valueLimits() {
   let LIMIT = 80;
   let expected = [
     ["telemetry.test", "test1", "object1", "a".repeat(LIMIT - 10), null],
-    ["telemetry.test", "test1", "object1", "a".repeat(LIMIT     ), null],
-    ["telemetry.test", "test1", "object1", "a".repeat(LIMIT +  1), null],
+    ["telemetry.test", "test1", "object1", "a".repeat(LIMIT ), null],
+    ["telemetry.test", "test1", "object1", "a".repeat(LIMIT + 1), null],
     ["telemetry.test", "test1", "object1", "a".repeat(LIMIT + 10), null],
 
     ["telemetry.test", "test1", "object1", null, {key1: "a".repeat(LIMIT - 10)}],
-    ["telemetry.test", "test1", "object1", null, {key1: "a".repeat(LIMIT     )}],
-    ["telemetry.test", "test1", "object1", null, {key1: "a".repeat(LIMIT +  1)}],
+    ["telemetry.test", "test1", "object1", null, {key1: "a".repeat(LIMIT )}],
+    ["telemetry.test", "test1", "object1", null, {key1: "a".repeat(LIMIT + 1)}],
     ["telemetry.test", "test1", "object1", null, {key1: "a".repeat(LIMIT + 10)}],
   ];
 

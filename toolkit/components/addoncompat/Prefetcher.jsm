@@ -91,8 +91,7 @@ function isPrimitive(v) {
   return type !== "object" && type !== "function";
 }
 
-function objAddr(obj)
-{
+function objAddr(obj) {
 /*
   if (!isPrimitive(obj)) {
     return String(obj) + "[" + Cu.getJSTestingFunctions().objectAddress(obj) + "]";
@@ -101,8 +100,7 @@ function objAddr(obj)
 */
 }
 
-function log(/* ...args*/)
-{
+function log(/* ...args*/) {
 /*
   for (let arg of args) {
     dump(arg);
@@ -112,8 +110,7 @@ function log(/* ...args*/)
 */
 }
 
-function logPrefetch(/* kind, value1, component, value2*/)
-{
+function logPrefetch(/* kind, value1, component, value2*/) {
 /*
   log("prefetching", kind, objAddr(value1) + "." + component, "=", objAddr(value2));
 */
@@ -134,15 +131,13 @@ function logPrefetch(/* kind, value1, component, value2*/)
  *     generated.
  */
 
-function PropertyOp(outputTable, inputTable, prop)
-{
+function PropertyOp(outputTable, inputTable, prop) {
   this.outputTable = outputTable;
   this.inputTable = inputTable;
   this.prop = prop;
 }
 
-PropertyOp.prototype.addObject = function(database, obj)
-{
+PropertyOp.prototype.addObject = function(database, obj) {
   let has = false, propValue;
   try {
     if (this.prop in obj) {
@@ -161,8 +156,7 @@ PropertyOp.prototype.addObject = function(database, obj)
   }
 }
 
-PropertyOp.prototype.makeCacheEntry = function(item, cache)
-{
+PropertyOp.prototype.makeCacheEntry = function(item, cache) {
   let [, obj, , propValue] = item;
 
   let desc = { configurable: false, enumerable: true, writable: false, value: propValue };
@@ -174,16 +168,14 @@ PropertyOp.prototype.makeCacheEntry = function(item, cache)
   propMap.set(this.prop, desc);
 }
 
-function MethodOp(outputTable, inputTable, method, ...args)
-{
+function MethodOp(outputTable, inputTable, method, ...args) {
   this.outputTable = outputTable;
   this.inputTable = inputTable;
   this.method = method;
   this.args = args;
 }
 
-MethodOp.prototype.addObject = function(database, obj)
-{
+MethodOp.prototype.addObject = function(database, obj) {
   let result;
   try {
     result = obj[this.method].apply(obj, this.args);
@@ -199,8 +191,7 @@ MethodOp.prototype.addObject = function(database, obj)
   }
 }
 
-MethodOp.prototype.makeCacheEntry = function(item, cache)
-{
+MethodOp.prototype.makeCacheEntry = function(item, cache) {
   let [, obj, result] = item;
 
   if (!cache.has(obj)) {
@@ -226,14 +217,12 @@ MethodOp.prototype.makeCacheEntry = function(item, cache)
   propMap.set(this.method, desc);
 }
 
-function CollectionOp(outputTable, inputTable)
-{
+function CollectionOp(outputTable, inputTable) {
   this.outputTable = outputTable;
   this.inputTable = inputTable;
 }
 
-CollectionOp.prototype.addObject = function(database, obj)
-{
+CollectionOp.prototype.addObject = function(database, obj) {
   let elements = [];
   try {
     let len = obj.length;
@@ -254,8 +243,7 @@ CollectionOp.prototype.addObject = function(database, obj)
   }
 }
 
-CollectionOp.prototype.makeCacheEntry = function(item, cache)
-{
+CollectionOp.prototype.makeCacheEntry = function(item, cache) {
   let [, obj, ...elements] = item;
 
   if (!cache.has(obj)) {
@@ -272,19 +260,16 @@ CollectionOp.prototype.makeCacheEntry = function(item, cache)
   }
 }
 
-function CopyOp(outputTable, inputTable)
-{
+function CopyOp(outputTable, inputTable) {
   this.outputTable = outputTable;
   this.inputTable = inputTable;
 }
 
-CopyOp.prototype.addObject = function(database, obj)
-{
+CopyOp.prototype.addObject = function(database, obj) {
   database.add(this.outputTable, obj);
 }
 
-function Database(trigger, addons)
-{
+function Database(trigger, addons) {
   // Create a map of rules that apply to this specific trigger and set
   // of add-ons. The rules are indexed based on their inputTable.
   this.rules = new Map();

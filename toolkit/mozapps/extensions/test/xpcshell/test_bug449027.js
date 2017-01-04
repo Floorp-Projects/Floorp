@@ -187,8 +187,7 @@ var ADDONS = [{
   toolkitBlocks: true
 }];
 
-function MockPluginTag(name, version, start, appBlocks, toolkitBlocks)
-{
+function MockPluginTag(name, version, start, appBlocks, toolkitBlocks) {
   this.name = name;
   this.version = version;
   this.start = start;

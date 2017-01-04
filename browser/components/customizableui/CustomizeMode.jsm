@@ -1146,7 +1146,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  persistCurrentSets(aSetBeforePersisting)  {
+  persistCurrentSets(aSetBeforePersisting) {
     let document = this.document;
     let toolbars = document.querySelectorAll("toolbar[customizable='true'][currentset]");
     for (let toolbar of toolbars) {
@@ -2054,7 +2054,7 @@ CustomizeMode.prototype = {
         aItem.getBoundingClientRect();
         aItem.removeAttribute("notransition");
       }
-    } else  {
+    } else {
       aItem.removeAttribute("dragover");
       if (aNextItem) {
         let nextArea = this._getCustomizableParent(aNextItem);
@@ -2155,7 +2155,7 @@ CustomizeMode.prototype = {
   _getDragOverNode(aEvent, aAreaElement, aInToolbar, aDraggedItemId) {
     let expectedParent = aAreaElement.customizationTarget || aAreaElement;
     // Our tests are stupid. Cope:
-    if (!aEvent.clientX  && !aEvent.clientY) {
+    if (!aEvent.clientX && !aEvent.clientY) {
       return aEvent.target;
     }
     // Offset the drag event's position with the offset to the center of

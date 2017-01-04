@@ -37,8 +37,7 @@
           if (val) {
             this.image = this._getIconURLForFile(val);
             this.label = this._getDisplayNameForFile(val);
-          }
-          else {
+          } else {
             this.removeAttribute("image");
             var bundle = document.getAnonymousElementByAttribute(this, "anonid", "bundle");
             this.label = bundle.getString("downloadHelperNoneSelected");
@@ -55,16 +54,14 @@
             var lfw = aFile.QueryInterface(Components.interfaces.nsILocalFileWin);
             try {
               return lfw.getVersionInfoField("FileDescription");
-            }
-            catch (e) {
+            } catch (e) {
               // fall through to the filename
             }
           } else if (/Mac/.test(navigator.platform)) {
             var lfm = aFile.QueryInterface(Components.interfaces.nsILocalFileMac);
             try {
               return lfm.bundleDisplayName;
-            }
-            catch (e) {
+            } catch (e) {
               // fall through to the file name
             }
           }

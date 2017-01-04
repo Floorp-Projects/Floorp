@@ -12,8 +12,7 @@ var originalGeoURL;
  * Clean the profile of any cache file left from a previous run.
  * Returns a boolean indicating if the cache file existed.
  */
-function removeCacheFile()
-{
+function removeCacheFile() {
   const CACHE_FILENAME = "search.json.mozlz4";
 
   let file =  Services.dirsvc.get("ProfD", Ci.nsIFile);

@@ -72,8 +72,7 @@ var RemoteTabViewer = {
         } else {
           clientTabs++;
         }
-      }
-      else if (item.getAttribute("type") == "client") {
+      } else if (item.getAttribute("type") == "client") {
         if (currentClient) {
           if (clientTabs == 0) {
             currentClient.hidden = true;
@@ -306,8 +305,7 @@ var RemoteTabViewer = {
       let lastFetch = 0;
       try {
         lastFetch = Services.prefs.getIntPref("services.sync.lastTabFetch");
-      }
-      catch (e) {
+      } catch (e) {
         /* Just use the default value of 0 */
       }
 

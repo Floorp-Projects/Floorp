@@ -6,25 +6,21 @@
 Components.utils.import("resource://gre/modules/MatchPattern.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
-function test(url, pattern)
-{
+function test(url, pattern) {
   let uri = Services.io.newURI(url, null, null);
   let m = new MatchPattern(pattern);
   return m.matches(uri);
 }
 
-function pass({url, pattern})
-{
+function pass({url, pattern}) {
   do_check_true(test(url, pattern), `Expected match: ${JSON.stringify(pattern)}, ${url}`);
 }
 
-function fail({url, pattern})
-{
+function fail({url, pattern}) {
   do_check_false(test(url, pattern), `Expected no match: ${JSON.stringify(pattern)}, ${url}`);
 }
 
-function run_test()
-{
+function run_test() {
   // Invalid pattern.
   fail({url: "http://mozilla.org", pattern: ""});
 

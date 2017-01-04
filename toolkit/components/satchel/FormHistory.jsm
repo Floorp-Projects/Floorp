@@ -135,14 +135,12 @@ function sendNotification(aType, aData) {
                      createInstance(Ci.nsISupportsString);
     strWrapper.data = aData;
     aData = strWrapper;
-  }
-  else if (typeof aData == "number") {
+  } else if (typeof aData == "number") {
     let intWrapper = Cc["@mozilla.org/supports-PRInt64;1"].
                      createInstance(Ci.nsISupportsPRInt64);
     intWrapper.data = aData;
     aData = intWrapper;
-  }
-  else if (aData) {
+  } else if (aData) {
     throw Components.Exception("Invalid type " + (typeof aType) + " passed to sendNotification",
                                Cr.NS_ERROR_ILLEGAL_VALUE);
   }
@@ -509,7 +507,7 @@ function dbMigrate(oldVersion) {
       Migrators["dbMigrateToVersion" + v]();
     }
   } catch (e) {
-    this.log("Migration failed: "  + e);
+    this.log("Migration failed: " + e);
     this.dbConnection.rollbackTransaction();
     throw e;
   }
@@ -775,7 +773,7 @@ this.FormHistory = {
 
   search : function formHistorySearch(aSelectTerms, aSearchData, aCallbacks) {
     // if no terms selected, select everything
-    aSelectTerms = (aSelectTerms) ?  aSelectTerms : validFields;
+    aSelectTerms = (aSelectTerms) ? aSelectTerms : validFields;
     validateSearchData(aSearchData, "Search");
 
     let stmt = makeSearchStatement(aSearchData, aSelectTerms);
@@ -951,8 +949,7 @@ this.FormHistory = {
             if (completedSearches == numSearches) {
               if (!aReason && !searchFailed) {
                 updateFormHistoryWrite(aChanges, aCallbacks);
-              }
-              else if (aCallbacks && aCallbacks.handleCompletion) {
+              } else if (aCallbacks && aCallbacks.handleCompletion) {
                 aCallbacks.handleCompletion(1);
               }
             }

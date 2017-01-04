@@ -79,7 +79,7 @@ function _onInputKeyPress(event, callback) {
   // key to be used here (e.g. "a", "F1", "arrowUp", ...).
   var key = event.which || event.keyCode;
 
-  if (key != PrefObserver['keyCodeDown']  &&
+  if (key != PrefObserver['keyCodeDown'] &&
       key != PrefObserver['keyCodeRight'] &&
       key != PrefObserver['keyCodeUp'] &&
       key != PrefObserver['keyCodeLeft'] &&
@@ -300,8 +300,7 @@ function _getBestToFocus(nodes, key, currentlyFocused) {
     let curDist = _spatialDistanceOfCorner(currentlyFocused, nodes[i], key);
     if ((curDist > bestDist) || curDist === -1) {
       continue;
-    }
-    else if (curDist === bestDist) {
+    } else if (curDist === bestDist) {
       let midCurDist = _spatialDistance(currentlyFocused, nodes[i]);
       let midBestDist = _spatialDistance(currentlyFocused, best);
       if (midCurDist > midBestDist)
@@ -427,11 +426,9 @@ function _spatialDistanceOfCorner(from, to, key) {
       hDistance = Math.abs(fromRect.left - toRect.right);
       if (toRect.bottom <= fromRect.top) {
         vDistance = fromRect.top - toRect.bottom;
-      }
-      else if (fromRect.bottom <= toRect.top) {
+      } else if (fromRect.bottom <= toRect.top) {
         vDistance = toRect.top - fromRect.bottom;
-      }
-      else {
+      } else {
         vDistance = 0;
       }
       break;
@@ -442,11 +439,9 @@ function _spatialDistanceOfCorner(from, to, key) {
       hDistance = Math.abs(toRect.left - fromRect.right);
       if (toRect.bottom <= fromRect.top) {
         vDistance = fromRect.top - toRect.bottom;
-      }
-      else if (fromRect.bottom <= toRect.top) {
+      } else if (fromRect.bottom <= toRect.top) {
         vDistance = toRect.top - fromRect.bottom;
-      }
-      else {
+      } else {
         vDistance = 0;
       }
       break;
@@ -457,11 +452,9 @@ function _spatialDistanceOfCorner(from, to, key) {
       vDistance = Math.abs(fromRect.top - toRect.bottom);
       if (fromRect.right <= toRect.left) {
         hDistance = toRect.left - fromRect.right;
-      }
-      else if (toRect.right <= fromRect.left) {
+      } else if (toRect.right <= fromRect.left) {
         hDistance = fromRect.left - toRect.right;
-      }
-      else {
+      } else {
         hDistance = 0;
       }
       break;
@@ -472,11 +465,9 @@ function _spatialDistanceOfCorner(from, to, key) {
       vDistance = Math.abs(toRect.top - fromRect.bottom);
       if (fromRect.right <= toRect.left) {
         hDistance = toRect.left - fromRect.right;
-      }
-      else if (toRect.right <= fromRect.left) {
+      } else if (toRect.right <= fromRect.left) {
         hDistance = fromRect.left - toRect.right;
-      }
-      else {
+      } else {
         hDistance = 0;
       }
       break;

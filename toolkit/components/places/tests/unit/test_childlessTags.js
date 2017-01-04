@@ -108,8 +108,7 @@ function ensureTagsExist(aTags) {
   resultRoot.containerOpen = false;
 }
 
-function run_test()
-{
+function run_test() {
   tests.forEach(function(test) {
     print("Running test: " + test.desc);
     test.run();

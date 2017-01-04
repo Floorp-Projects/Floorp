@@ -126,8 +126,7 @@ var gPluginHandler = {
       }
       Services.telemetry.getHistogramById("PLUGINS_NOTIFICATION_PLUGIN_COUNT")
         .add(histogramCount);
-    }
-    else if (event == "dismissed") {
+    } else if (event == "dismissed") {
       // Once the popup is dismissed, clicking the icon should show the full
       // list again
       this.options.primaryPlugin = null;
@@ -251,8 +250,7 @@ var gPluginHandler = {
         if (!url) {
           url = Services.blocklist.getPluginBlocklistURL(pluginInfo.pluginTag);
         }
-      }
-      else {
+      } else {
         url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "clicktoplay";
       }
       pluginInfo.detailsLink = url;

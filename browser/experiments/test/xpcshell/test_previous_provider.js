@@ -167,12 +167,10 @@ add_task(function* test_active_and_previous() {
     if (addon.id == EXPERIMENT1_ID) {
       Assert.equal(addon.isActive, false, "Add-on is not active.");
       Assert.ok(addon.appDisabled, "Should be a previous experiment.");
-    }
-    else if (addon.id == EXPERIMENT2_ID) {
+    } else if (addon.id == EXPERIMENT2_ID) {
       Assert.ok(addon.isActive, "Add-on is active.");
       Assert.ok(!addon.appDisabled, "Should not be a previous experiment.");
-    }
-    else {
+    } else {
       throw new Error("Unexpected add-on ID: " + addon.id);
     }
   }

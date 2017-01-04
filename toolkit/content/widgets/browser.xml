@@ -22,8 +22,7 @@
             var enabled = true;
             try {
               enabled = this.mPrefs.getBoolPref("general.autoScroll");
-            }
-            catch (ex) {
+            } catch (ex) {
             }
 
             return enabled;
@@ -161,8 +160,7 @@
           <![CDATA[
             try {
               this.loadURI(this.homePage);
-            }
-            catch (e) {
+            } catch (e) {
             }
           ]]>
         </body>
@@ -802,7 +800,7 @@
             this._audioBlocked = false;
             this.messageManager.sendAsyncMessage("AudioPlayback",
                                                  {type: "resumeMedia"});
-            let  event = document.createEvent("Events");
+            let event = document.createEvent("Events");
             event.initEvent("DOMAudioPlaybackBlockStopped", true, false);
             this.dispatchEvent(event);
           ]]>
@@ -928,15 +926,13 @@
                 }
               }
             }
-          }
-          catch (e) {
+          } catch (e) {
             Components.utils.reportError(e);
           }
           try {
             // Ensures the securityUI is initialized.
             var securityUI = this.securityUI; // eslint-disable-line no-unused-vars
-          }
-          catch (e) {
+          } catch (e) {
           }
 
           // XXX tabbrowser.xml sets "relatedBrowser" as a direct property on
@@ -1143,8 +1139,7 @@
               if (this.hasAttribute("autoscrollpopup")) {
                 // our creator provided a popup to share
                 this._autoScrollPopup = document.getElementById(this.getAttribute("autoscrollpopup"));
-              }
-              else {
+              } else {
                 // we weren't provided a popup; we have to use the global scope
                 this._autoScrollPopup = this._createAutoScrollPopup();
                 document.documentElement.appendChild(this._autoScrollPopup);
@@ -1374,8 +1369,7 @@
             // lazily re-created on access. We need to do this because they
             // might have attached the wrong docShell.
             this._fastFind = aOtherBrowser._fastFind = null;
-          }
-          else {
+          } else {
             // Rewire the remote listeners
             this._remoteWebNavigationImpl.swapBrowser(this);
             aOtherBrowser._remoteWebNavigationImpl.swapBrowser(aOtherBrowser);
@@ -1513,8 +1507,7 @@
             if (checkValue.value) {
               try {
                 this.mPrefs.setBoolPref(kPrefWarnOnEnable, false);
-              }
-              catch (ex) {
+              } catch (ex) {
               }
             }
           }

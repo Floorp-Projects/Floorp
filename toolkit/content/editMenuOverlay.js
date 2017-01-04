@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // update menu items that rely on focus or on the current selection
-function goUpdateGlobalEditMenuItems()
-{
+function goUpdateGlobalEditMenuItems() {
   // Don't bother updating the edit commands if they aren't visible in any way
   // (i.e. the Edit menu isn't open, nor is the context menu open, nor have the
   // cut, copy, and paste buttons been added to the toolbars) for performance.
@@ -26,14 +25,12 @@ function goUpdateGlobalEditMenuItems()
 }
 
 // update menu items that relate to undo/redo
-function goUpdateUndoEditMenuItems()
-{
+function goUpdateUndoEditMenuItems() {
   goUpdateCommand("cmd_undo");
   goUpdateCommand("cmd_redo");
 }
 
 // update menu items that depend on clipboard contents
-function goUpdatePasteMenuItems()
-{
+function goUpdatePasteMenuItems() {
   goUpdateCommand("cmd_paste");
 }

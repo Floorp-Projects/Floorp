@@ -167,11 +167,9 @@ function isManifestRegistered(file) {
     // We want the location of the XPI or directory itself.
     if (manifest instanceof AM_Ci.nsIJARURI) {
       manifest = manifest.JARFile.QueryInterface(AM_Ci.nsIFileURL).file;
-    }
-    else if (manifest instanceof AM_Ci.nsIFileURL) {
+    } else if (manifest instanceof AM_Ci.nsIFileURL) {
       manifest = manifest.file.parent;
-    }
-    else {
+    } else {
       continue;
     }
 
@@ -289,8 +287,7 @@ this.BootstrapMonitor = {
       for (let resolve of this.installPromises)
         resolve();
       this.installPromises = [];
-    }
-    else {
+    } else {
       this.checkMatches(this.installed.get(id), info);
     }
 
@@ -310,8 +307,7 @@ this.BootstrapMonitor = {
       // consistent.
       if (info.reason == 2 /* APP_SHUTDOWN */)
         Components.manager.removeBootstrappedManifestLocation(installPath);
-    }
-    else {
+    } else {
       this.checkAddonNotStarted(id);
     }
 
@@ -322,8 +318,7 @@ this.BootstrapMonitor = {
 
       this.installed.delete(id);
       this.uninstalled.set(id, info)
-    }
-    else if (info.event == "startup") {
+    } else if (info.event == "startup") {
       this.started.set(id, info);
 
       // Chrome should be registered at this point
@@ -343,8 +338,7 @@ function isNightlyChannel() {
   var channel = "default";
   try {
     channel = Services.prefs.getCharPref("app.update.channel");
-  }
-  catch (e) { }
+  } catch (e) { }
 
   return channel != "aurora" && channel != "beta" && channel != "release" && channel != "esr";
 }
@@ -498,8 +492,7 @@ function do_check_addon(aActualAddon, aExpectedAddon, aProperties) {
       }
 
       return;
-    }
-    else if (expectedValue && !actualValue) {
+    } else if (expectedValue && !actualValue) {
       do_throw("Missing property for add-on " + aExpectedAddon.id +
         ": expected addon[" + aProperty + "] = " + expectedValue);
       return;
@@ -1200,8 +1193,7 @@ function do_exception_wrap(func) {
   return function() {
     try {
       func.apply(null, arguments);
-    }
-    catch (e) {
+    } catch (e) {
       do_report_unexpected_exception(e);
     }
   };
@@ -1292,8 +1284,7 @@ function* serveSystemUpdate(xml, perform_update, testserver) {
 
   try {
     yield perform_update();
-  }
-  finally {
+  } finally {
     testserver.registerPathHandler("/data/update.xml", null);
   }
 }

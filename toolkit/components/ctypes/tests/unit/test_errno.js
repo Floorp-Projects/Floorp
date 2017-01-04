@@ -4,8 +4,7 @@ Components.utils.import("resource://gre/modules/ctypes.jsm");
 var scope = {};
 var ctypes = ctypes;
 
-function run_test()
-{
+function run_test() {
   // Launch the test with regular loading of ctypes.jsm
   main_test();
 
@@ -16,8 +15,7 @@ function run_test()
   main_test();
 }
 
-function main_test()
-{
+function main_test() {
   "use strict";
   let library = open_ctypes_test_lib();
   let set_errno = library.declare("set_errno", ctypes.default_abi,

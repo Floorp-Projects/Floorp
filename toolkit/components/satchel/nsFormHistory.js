@@ -663,7 +663,7 @@ FormHistory.prototype = {
                 this[migrateFunction]();
             }
         } catch (e) {
-            this.log("Migration failed: "  + e);
+            this.log("Migration failed: " + e);
             this.dbConnection.rollbackTransaction();
             throw e;
         }

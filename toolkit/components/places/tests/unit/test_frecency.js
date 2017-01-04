@@ -71,14 +71,12 @@ AutoCompleteInput.prototype = {
   }
 }
 
-function ensure_results(uris, searchTerm)
-{
+function ensure_results(uris, searchTerm) {
   PlacesTestUtils.promiseAsyncUpdates()
                  .then(() => ensure_results_internal(uris, searchTerm));
 }
 
-function ensure_results_internal(uris, searchTerm)
-{
+function ensure_results_internal(uris, searchTerm) {
   var controller = Components.classes["@mozilla.org/autocomplete/controller;1"].
                    getService(Components.interfaces.nsIAutoCompleteController);
 
@@ -122,8 +120,7 @@ try {
   do_throw("Could not get history service\n");
 }
 
-function* task_setCountDate(aURI, aCount, aDate)
-{
+function* task_setCountDate(aURI, aCount, aDate) {
   // We need visits so that frecency can be computed over multiple visits
   let visits = [];
   for (let i = 0; i < aCount; i++) {
@@ -132,8 +129,7 @@ function* task_setCountDate(aURI, aCount, aDate)
   yield PlacesTestUtils.addVisits(visits);
 }
 
-function setBookmark(aURI)
-{
+function setBookmark(aURI) {
   bmksvc.insertBookmark(bmksvc.bookmarksMenuFolder, aURI, -1, "bleh");
 }
 
@@ -268,8 +264,7 @@ function*() {
  */
 var deferEnsureResults;
 
-add_task(function* test_frecency()
-{
+add_task(function* test_frecency() {
   // Disable autoFill for this test.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   do_register_cleanup(() => Services.prefs.clearUserPref("browser.urlbar.autoFill"));

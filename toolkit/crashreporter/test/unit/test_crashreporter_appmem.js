@@ -1,5 +1,4 @@
-function run_test()
-{
+function run_test() {
   do_crash(function() {
 	     appAddr = CrashTestUtils.saveAppMemory();
 	     crashReporter.registerAppMemory(appAddr, 32);

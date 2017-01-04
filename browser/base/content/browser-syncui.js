@@ -399,8 +399,7 @@ var gSyncUI = {
       try {
         let lastSync = new Date(Services.prefs.getCharPref("services.sync.lastSync"));
         tooltiptext = this.formatLastSyncDate(lastSync);
-      }
-      catch (e) {
+      } catch (e) {
         // pref doesn't exist (which will be the case until we've seen the
         // first successful sync) or is invalid (which should be impossible!)
         // Just leave tooltiptext as the empty string in these cases, which

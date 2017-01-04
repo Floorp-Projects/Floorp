@@ -173,8 +173,7 @@ function nextTest() {
     ok(true, "TEST: " + testCase.desc);
     dump("TEST: " + testCase.desc + "\n");
     testCase.run();
-  }
-  else {
+  } else {
     // Close Library window.
     gLibrary.close();
     // No need to cleanup anything, we have a correct left pane now.

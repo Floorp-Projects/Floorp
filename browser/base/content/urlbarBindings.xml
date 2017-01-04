@@ -1562,8 +1562,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               document.getElementById("identity-icon").getBoundingClientRect();
             this.siteIconStart = popupDirection == "rtl" ? identityRect.right
                                                          : identityRect.left;
-          }
-          else {
+          } else {
             // Reset the alignment so that the site icons are positioned
             // according to whatever's in the CSS.
             this.siteIconStart = undefined;
@@ -1993,8 +1992,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           if (aMaxProgress == -1) {
             this.progressmeter.setAttribute("mode", "undetermined");
-          }
-          else {
+          } else {
             this.progressmeter.setAttribute("mode", "determined");
             this.progressmeter.setAttribute("value", (aProgress * 100) / aMaxProgress);
           }
@@ -2035,8 +2033,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           installs.forEach(function(aInstall) {
             try {
               aInstall.cancel();
-            }
-            catch (e) {
+            } catch (e) {
               // Cancel will throw if the download has already failed
             }
           }, this);
@@ -2074,8 +2071,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             } else {
               PopupNotifications.remove(this.notification);
             }
-          }
-          else {
+          } else {
             this.setProgress(progress, maxProgress);
           }
         ]]></body>
@@ -2142,8 +2138,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         if (this.action.fallbackType == Ci.nsIObjectLoadingContent.PLUGIN_ACTIVE) {
           if (this.action.pluginPermissionType == Ci.nsIPermissionManager.EXPIRE_SESSION) {
             curState = "allownow";
-          }
-          else {
+          } else {
             curState = "allowalways";
           }
         }
@@ -2166,8 +2161,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             gPluginHandler.managePlugins();
           };
           document.getAnonymousElementByAttribute(this, "anonid", "center-item-warning-icon").hidden = true;
-        }
-        else {
+        } else {
           url = this.action.detailsLink;
 
           switch (this.action.blocklistState) {
@@ -2213,8 +2207,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (linkHandler) {
             link.addEventListener("click", linkHandler, false);
           }
-        }
-        else {
+        } else {
           link.hidden = true;
         }
       ]]></constructor>
@@ -2363,8 +2356,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                              child.action.permissionString;
             }
             showBox.hidden = false;
-          }
-          else {
+          } else {
             for (let child of this.childNodes) {
               if (child.tagName != "row") {
                 continue;
@@ -2425,8 +2417,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             if (isWindowPrivate) {
               this._buttonContainer.hidden = true;
             }
-          }
-          else if (action.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED) {
+          } else if (action.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED) {
             let linkElement =
               document.getAnonymousElementByAttribute(
                          this, "anonid", "click-to-play-plugins-notification-link");
@@ -2438,16 +2429,14 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               "pluginActivateDisabled.message", [action.pluginName, this._brandShortName]) + " ";
             this._buttonContainer.hidden = true;
             return;
-          }
-          else if (action.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
+          } else if (action.blocklistState == Ci.nsIBlocklistService.STATE_BLOCKED) {
             let descElement = document.getAnonymousElementByAttribute(this, "anonid", "click-to-play-plugins-notification-description");
             descElement.textContent = gNavigatorBundle.getFormattedString(
               "pluginActivateBlocked.message", [action.pluginName, this._brandShortName]) + " ";
             this._setupLink("pluginActivate.learnMore", action.detailsLink);
             this._buttonContainer.hidden = true;
             return;
-          }
-          else {
+          } else {
             button1 = {
               label: "pluginActivateNow.label",
               accesskey: "pluginActivateNow.accesskey",
@@ -2499,8 +2488,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           this._secondaryButton.setAttribute("action", button2.action);
           if (button1.default) {
             this._primaryButton.setAttribute("default", "true");
-          }
-          else if (button2.default) {
+          } else if (button2.default) {
             this._secondaryButton.setAttribute("default", "true");
           }
         ]]></body>
@@ -2610,8 +2598,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           aEvent.preventDefault();
           if (this._primaryButton.getAttribute("default") == "true") {
             this._primaryButton.click();
-          }
-          else if (this._secondaryButton.getAttribute("default") == "true") {
+          } else if (this._secondaryButton.getAttribute("default") == "true") {
             this._secondaryButton.click();
           }
         ]]></body>

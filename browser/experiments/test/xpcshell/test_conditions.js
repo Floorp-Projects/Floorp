@@ -236,23 +236,23 @@ add_task(function* test_times() {
     // start time
 
     [true,  null, now,
-      {startTime: nowSec -  5 * SEC_IN_ONE_DAY,
+      {startTime: nowSec - 5 * SEC_IN_ONE_DAY,
          endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [true,  null, now,
       {startTime: nowSec,
          endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [false,  "startTime", now,
-      {startTime: nowSec +  5 * SEC_IN_ONE_DAY,
+      {startTime: nowSec + 5 * SEC_IN_ONE_DAY,
          endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
 
     // end time
 
     [false,  "endTime", now,
-      {startTime: nowSec -  5 * SEC_IN_ONE_DAY,
+      {startTime: nowSec - 5 * SEC_IN_ONE_DAY,
          endTime: nowSec - 10 * SEC_IN_ONE_DAY}],
     [false,  "endTime", now,
-      {startTime: nowSec -  5 * SEC_IN_ONE_DAY,
-         endTime: nowSec -  5 * SEC_IN_ONE_DAY}],
+      {startTime: nowSec - 5 * SEC_IN_ONE_DAY,
+         endTime: nowSec - 5 * SEC_IN_ONE_DAY}],
 
     // max start time
 
@@ -261,7 +261,7 @@ add_task(function* test_times() {
           startTime: nowSec - 10 * SEC_IN_ONE_DAY,
             endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [false,  "maxStartTime", now,
-      {maxStartTime: nowSec -  1 * SEC_IN_ONE_DAY,
+      {maxStartTime: nowSec - 1 * SEC_IN_ONE_DAY,
           startTime: nowSec - 10 * SEC_IN_ONE_DAY,
             endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [false,  "maxStartTime", now,
@@ -273,7 +273,7 @@ add_task(function* test_times() {
           startTime: nowSec - 10 * SEC_IN_ONE_DAY,
             endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
     [true,  null, now,
-      {maxStartTime: nowSec +  1 * SEC_IN_ONE_DAY,
+      {maxStartTime: nowSec + 1 * SEC_IN_ONE_DAY,
           startTime: nowSec - 10 * SEC_IN_ONE_DAY,
             endTime: nowSec + 10 * SEC_IN_ONE_DAY}],
 

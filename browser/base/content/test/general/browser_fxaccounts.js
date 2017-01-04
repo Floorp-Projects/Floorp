@@ -215,8 +215,7 @@ var promiseTabOpen = Task.async(function*(urlBase) {
   yield whenUnloaded;
 });
 
-function promiseTabUnloaded(tab)
-{
+function promiseTabUnloaded(tab) {
   return new Promise(resolve => {
     info("Wait for tab to unload");
     function handle(event) {

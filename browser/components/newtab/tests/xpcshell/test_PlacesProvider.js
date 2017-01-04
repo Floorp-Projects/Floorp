@@ -338,16 +338,14 @@ add_task(function* test_Links_execute_query() {
   try {
     yield provider.executePlacesQuery("select from moz");
     do_throw("bad sql should've thrown");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true("expected failure - bad sql");
   }
   // missing bindings
   try {
     yield provider.executePlacesQuery("select * from moz_places limit :limit");
     do_throw("bad sql should've thrown");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true("expected failure - missing bidning");
   }
   // non-existent column name
@@ -355,8 +353,7 @@ add_task(function* test_Links_execute_query() {
     yield provider.executePlacesQuery("select * from moz_places limit :limit",
                                      {columns: ["no-such-column"], params: {limit: 4}});
     do_throw("bad sql should've thrown");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_true("expected failure - wrong column name");
   }
 

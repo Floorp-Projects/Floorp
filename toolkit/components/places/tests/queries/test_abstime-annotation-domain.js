@@ -120,13 +120,11 @@ var testData = [
  *                 AND annotationIsNot(match) GROUP BY Domain, Day SORT BY uri,ascending
  *                 excludeITems(should be ignored)
  */
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_abstime_annotation_domain()
-{
+add_task(function* test_abstime_annotation_domain() {
   // Initialize database
   yield task_populateDB(testData);
 

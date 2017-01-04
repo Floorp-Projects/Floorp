@@ -86,8 +86,7 @@ var tags = [
  *         computed
  * @return the total number of sequences in the product
  */
-function cartProd(aSequences, aCallback)
-{
+function cartProd(aSequences, aCallback) {
   if (aSequences.length === 0)
     return 0;
 
@@ -128,8 +127,7 @@ function cartProd(aSequences, aCallback)
         // All element pointers are past the ends of their sequences.
         if (seqPtr < 0)
           done = true;
-      }
-      else break;
+      } else break;
     }
   }
   return numProds;
@@ -179,8 +177,7 @@ function test_query_callback(aSequence) {
     // Date containers are always sorted by date descending.
     check_children_sorting(root,
                            Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
-  }
-  else
+  } else
     check_children_sorting(root, sortingMode.value);
 
   // Now Check sorting of the first child container.
@@ -202,14 +199,12 @@ function test_query_callback(aSequence) {
     check_children_sorting(innerContainer,
                            Ci.nsINavHistoryQueryOptions.SORT_BY_TITLE_ASCENDING);
     innerContainer.containerOpen = false;
-  }
-  else if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
+  } else if (resultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY) {
     // Sorting mode for tag contents is hardcoded for now, to allow for faster
     // duplicates filtering.
     check_children_sorting(container,
                            Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-  }
-  else
+  } else
     check_children_sorting(container, sortingMode.value);
 
   container.containerOpen = false;
@@ -246,15 +241,13 @@ function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMo
       // Date containers are always sorted by date descending.
       check_children_sorting(root,
                              Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING);
-    }
-    else if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
+    } else if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
              (aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
               aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)) {
       // Site containers don't have a good time property to sort by.
       check_children_sorting(root,
                              Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-    }
-    else
+    } else
       check_children_sorting(root, aOriginalSortingMode.value);
 
     // Now Check sorting of the first child container.
@@ -274,21 +267,18 @@ function test_result_sortingMode_change(aResult, aResultType, aOriginalSortingMo
       innerContainer.containerOpen = true;
       check_children_sorting(innerContainer, aForcedSortingMode.value);
       innerContainer.containerOpen = false;
-    }
-    else {
+    } else {
       if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_QUERY ||
           aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_DATE_SITE_QUERY ||
           aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY) {
         // Date containers are always sorted by date descending.
         check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-      }
-      else if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
+      } else if (aResultType.value == Ci.nsINavHistoryQueryOptions.RESULTS_AS_SITE_QUERY &&
              (aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_ASCENDING ||
               aOriginalSortingMode.value == Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING)) {
         // Site containers don't have a good time property to sort by.
         check_children_sorting(root, Ci.nsINavHistoryQueryOptions.SORT_BY_NONE);
-      }
-      else
+      } else
         check_children_sorting(root, aOriginalSortingMode.value);
 
       // Children should always be sorted.
@@ -381,13 +371,11 @@ function check_children_sorting(aRootNode, aExpectedSortingMode) {
 
 // Main
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_containersQueries_sorting()
-{
+add_task(function* test_containersQueries_sorting() {
   // Add visits, bookmarks and tags to our database.
   var timeInMilliseconds = Date.now();
   var visitCount = 0;

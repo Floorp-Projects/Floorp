@@ -320,7 +320,7 @@ var LoginManagerParent = {
     formLogin.init(hostname, formSubmitURL, null,
                    (usernameField ? usernameField.value : ""),
                    newPasswordField.value,
-                   (usernameField ? usernameField.name  : ""),
+                   (usernameField ? usernameField.name : ""),
                    newPasswordField.name);
 
     let logins = LoginHelper.searchLoginsWithObject({

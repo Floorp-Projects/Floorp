@@ -41,16 +41,16 @@ function handlePrompt(state, action) {
 
 function checkPromptState(promptState, expectedState) {
     // XXX check title? OS X has title in content
-    is(promptState.msg,         expectedState.msg,         "Checking expected message");
+    is(promptState.msg, expectedState.msg, "Checking expected message");
     if (isOSX && !isTabModal)
       ok(!promptState.titleHidden, "Checking title always visible on OS X");
     else
       is(promptState.titleHidden, expectedState.titleHidden, "Checking title visibility");
-    is(promptState.textHidden,  expectedState.textHidden,  "Checking textbox visibility");
-    is(promptState.passHidden,  expectedState.passHidden,  "Checking passbox visibility");
+    is(promptState.textHidden, expectedState.textHidden, "Checking textbox visibility");
+    is(promptState.passHidden, expectedState.passHidden, "Checking passbox visibility");
     is(promptState.checkHidden, expectedState.checkHidden, "Checking checkbox visibility");
-    is(promptState.checkMsg,    expectedState.checkMsg,    "Checking checkbox label");
-    is(promptState.checked,     expectedState.checked,     "Checking checkbox checked");
+    is(promptState.checkMsg, expectedState.checkMsg, "Checking checkbox label");
+    is(promptState.checked, expectedState.checked, "Checking checkbox checked");
     if (!isTabModal)
       is(promptState.iconClass, "spaced " + expectedState.iconClass, "Checking expected icon CSS class");
     is(promptState.textValue, expectedState.textValue, "Checking textbox value");
@@ -68,7 +68,7 @@ function checkPromptState(promptState, expectedState) {
 
     // For prompts with a time-delay button.
     if (expectedState.butt0Disabled) {
-        is(promptState.butt0Disabled, true,  "Checking accept-button is disabled");
+        is(promptState.butt0Disabled, true, "Checking accept-button is disabled");
         is(promptState.butt1Disabled, false, "Checking cancel-button isn't disabled");
     }
 

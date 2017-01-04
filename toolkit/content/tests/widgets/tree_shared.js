@@ -19,8 +19,7 @@ var columns_hiertree =
 // expanded. The tree should only display four rows at a time. If editable,
 // the cell at row 1 and column 0 must be editable, and the cell at row 2 and
 // column 1 must not be editable.
-function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid)
-{
+function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid) {
   // Stop keystrokes that aren't handled by the tree from leaking out and
   // scrolling the main Mochitests window!
   function preventDefault(event) {
@@ -124,8 +123,7 @@ function testtag_tree(treeid, treerowinfoid, seltype, columnstype, testid)
   SimpleTest.finish();
 }
 
-function testtag_tree_columns(tree, expectedColumns, testid)
-{
+function testtag_tree_columns(tree, expectedColumns, testid) {
   testid += " ";
 
   var columns = tree.columns;
@@ -183,7 +181,7 @@ function testtag_tree_columns(tree, expectedColumns, testid)
     // check the view's getColumnProperties method
     var properties = tree.view.getColumnProperties(column);
     var expectedProperties = expectedColumn.properties;
-    is(properties,  expectedProperties ? expectedProperties : "", adjtestid + "getColumnProperties");
+    is(properties, expectedProperties ? expectedProperties : "", adjtestid + "getColumnProperties");
   }
 
   is(columns.getFirstColumn(), columns[0], testid + "getFirstColumn");
@@ -200,8 +198,7 @@ function testtag_tree_columns(tree, expectedColumns, testid)
   is(columns.getColumnFor(tree), null, testid + "getColumnFor other");
 }
 
-function testtag_tree_TreeSelection(tree, testid, multiple)
-{
+function testtag_tree_TreeSelection(tree, testid, multiple) {
   testid += " selection ";
 
   var selection = tree.view.selection;
@@ -320,8 +317,7 @@ function testtag_tree_TreeSelection(tree, testid, multiple)
 */
 }
 
-function testtag_tree_TreeSelection_UI(tree, testid, multiple)
-{
+function testtag_tree_TreeSelection_UI(tree, testid, multiple) {
   testid += " selection UI ";
 
   var selection = tree.view.selection;
@@ -331,8 +327,7 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
 
   var keydownFired = 0;
   var keypressFired = 0;
-  function keydownListener(event)
-  {
+  function keydownListener(event) {
     keydownFired++;
   }
   function keypressListener(event) {
@@ -618,8 +613,7 @@ function testtag_tree_TreeSelection_UI(tree, testid, multiple)
   is(keypressFired, multiple ? 2 : 1, "keypress event wasn't fired properly");
 }
 
-function testtag_tree_UI_editing(tree, testid, rowInfo)
-{
+function testtag_tree_UI_editing(tree, testid, rowInfo) {
   testid += " editing UI ";
 
   // check editing UI
@@ -638,8 +632,7 @@ function testtag_tree_UI_editing(tree, testid, rowInfo)
     wasOpen = tree.view.isContainerOpen(row);
 
   // Test whether a keystroke can enter text entry, and another can exit.
-  if (tree.selType == "cell")
-  {
+  if (tree.selType == "cell") {
     tree.stopEditing(false);
     ok(!tree.editingColumn, "Should not be editing tree cell now");
     tree.view.selection.currentColumn = ecolumn;
@@ -693,8 +686,7 @@ function testtag_tree_UI_editing(tree, testid, rowInfo)
   tree.stopEditing(false);
 }
 
-function testtag_tree_TreeSelection_UI_cell(tree, testid, rowInfo)
-{
+function testtag_tree_TreeSelection_UI_cell(tree, testid, rowInfo) {
   testid += " selection UI cell ";
 
   var columns = tree.columns;
@@ -869,8 +861,7 @@ function testtag_tree_TreeSelection_UI_cell(tree, testid, rowInfo)
   sendKey("HOME");
 }
 
-function testtag_tree_TreeView(tree, testid, rowInfo)
-{
+function testtag_tree_TreeView(tree, testid, rowInfo) {
   testid += " view ";
 
   var columns = tree.columns;
@@ -889,8 +880,7 @@ function testtag_tree_TreeView(tree, testid, rowInfo)
   is(view.getCellValue(1, columns[0]), "Another Changed Value", "setCellText");
 }
 
-function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow)
-{
+function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow) {
   var r;
   var columns = tree.columns;
   var view = tree.view;
@@ -944,8 +934,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow)
       expected = checkRowMethods[checkMethod](row, r);
       if (checkMethod == "hasNextSibling") {
         actual = view[checkMethod](r, r);
-      }
-      else {
+      } else {
         actual = view[checkMethod](r);
       }
       if (actual !== expected) {
@@ -986,8 +975,7 @@ function testtag_tree_TreeView_rows(tree, testid, rowInfo, startRow)
     is("toggleOpenState ok", "toggleOpenState ok", testid + "toggleOpenState");
 }
 
-function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo)
-{
+function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo) {
   // check if cycleHeader sorts the columns
   var columnIndex = 0;
   var view = tree.view;
@@ -1053,8 +1041,7 @@ function testtag_tree_TreeView_rows_sort(tree, testid, rowInfo)
 // selected is an array of the indicies of the selected rows
 // column is the selected column
 // viewidx is the row that should be visible at the top of the tree
-function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewidx, column)
-{
+function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewidx, column) {
   var selection = tree.view.selection;
 
   if (!column)
@@ -1088,8 +1075,7 @@ function testtag_tree_TreeSelection_State(tree, testid, current, selected, viewi
   is(compareArrays(selected, actualSelected), true, testid + " range selection [" + selected + "]");
 }
 
-function testtag_tree_column_reorder()
-{
+function testtag_tree_column_reorder() {
   // Make sure the tree is scrolled into the view, otherwise the test will
   // fail
   var testframe = window.parent.document.getElementById("testframe");
@@ -1156,27 +1142,22 @@ function testtag_tree_column_reorder()
   SimpleTest.finish();
 }
 
-function testtag_tree_wheel(aTree)
-{
+function testtag_tree_wheel(aTree) {
   const deltaModes = [
     WheelEvent.DOM_DELTA_PIXEL,  // 0
     WheelEvent.DOM_DELTA_LINE,   // 1
     WheelEvent.DOM_DELTA_PAGE    // 2
   ];
-  function helper(aStart, aDelta, aIntDelta, aDeltaMode)
-  {
+  function helper(aStart, aDelta, aIntDelta, aDeltaMode) {
     aTree.treeBoxObject.scrollToRow(aStart);
     var expected;
     if (!aIntDelta) {
       expected = aStart;
-    }
-    else if (aDeltaMode != WheelEvent.DOM_DELTA_PAGE) {
+    } else if (aDeltaMode != WheelEvent.DOM_DELTA_PAGE) {
       expected = aStart + aIntDelta;
-    }
-    else if (aIntDelta > 0) {
+    } else if (aIntDelta > 0) {
       expected = aStart + aTree.treeBoxObject.getPageLength();
-    }
-    else {
+    } else {
       expected = aStart - aTree.treeBoxObject.getPageLength();
     }
 
@@ -1214,22 +1195,21 @@ function testtag_tree_wheel(aTree)
 
   deltaModes.forEach(function(aDeltaMode) {
     var delta = (aDeltaMode == WheelEvent.DOM_DELTA_PIXEL) ? 5.0 : 0.3;
-    helper(2, -delta,  0, aDeltaMode);
+    helper(2, -delta, 0, aDeltaMode);
     helper(2, -delta, -1, aDeltaMode);
-    helper(2,  delta,  0, aDeltaMode);
-    helper(2,  delta,  1, aDeltaMode);
-    helper(2, -2 * delta,  0, aDeltaMode);
+    helper(2, delta, 0, aDeltaMode);
+    helper(2, delta, 1, aDeltaMode);
+    helper(2, -2 * delta, 0, aDeltaMode);
     helper(2, -2 * delta, -1, aDeltaMode);
-    helper(2,  2 * delta,  0, aDeltaMode);
-    helper(2,  2 * delta,  1, aDeltaMode);
+    helper(2, 2 * delta, 0, aDeltaMode);
+    helper(2, 2 * delta, 1, aDeltaMode);
   });
 
   window.removeEventListener("wheel", wheelListener, false);
   is(defaultPrevented, 48, "wheel event default prevented");
 }
 
-function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumber, aAfter)
-{
+function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumber, aAfter) {
   var columns = getSortedColumnArray(aTree);
 
   var down = columns[aMouseDownColumnNumber].element;
@@ -1251,8 +1231,7 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
       let move = columns[i].element;
       synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
     }
-  }
-  else {
+  } else {
     for (let i = aMouseDownColumnNumber; i >= aMouseUpColumnNumber; i--) {
       let move = columns[i].element;
       synthesizeMouse(move, offsetX, 3, { type: "mousemove"});
@@ -1262,8 +1241,7 @@ function synthesizeColumnDrag(aTree, aMouseDownColumnNumber, aMouseUpColumnNumbe
   synthesizeMouse(up, offsetX, 3, { type: "mouseup"});
 }
 
-function arrayMove(aArray, aFrom, aTo, aAfter)
-{
+function arrayMove(aArray, aFrom, aTo, aAfter) {
   var o = aArray.splice(aFrom, 1)[0];
   if (aTo > aFrom) {
     aTo--;
@@ -1276,8 +1254,7 @@ function arrayMove(aArray, aFrom, aTo, aAfter)
   aArray.splice(aTo, 0, o);
 }
 
-function getSortedColumnArray(aTree)
-{
+function getSortedColumnArray(aTree) {
   var columns = aTree.columns;
   var array = [];
   for (let i = 0; i < columns.length; i++) {
@@ -1292,8 +1269,7 @@ function getSortedColumnArray(aTree)
   return array;
 }
 
-function checkColumns(aTree, aReference, aMessage)
-{
+function checkColumns(aTree, aReference, aMessage) {
   var columns = getSortedColumnArray(aTree);
   var ids = [];
   columns.forEach(function(e) {
@@ -1302,15 +1278,13 @@ function checkColumns(aTree, aReference, aMessage)
   is(compareArrays(ids, aReference), true, aMessage);
 }
 
-function mouseOnCell(tree, row, column, testname)
-{
+function mouseOnCell(tree, row, column, testname) {
   var rect = tree.boxObject.getCoordsForCellItem(row, column, "text");
 
   synthesizeMouseExpectEvent(tree.body, rect.x, rect.y, {}, tree, "select", testname);
 }
 
-function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount)
-{
+function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount) {
   var columnHeader = aColumns[aColumnIndex].element;
   var columnHeaderRect = columnHeader.getBoundingClientRect();
   var columnWidth = columnHeaderRect.right - columnHeaderRect.left;
@@ -1324,8 +1298,7 @@ function mouseClickOnColumnHeader(aColumns, aColumnIndex, aButton, aClickCount)
   }
 }
 
-function mouseDblClickOnCell(tree, row, column, testname)
-{
+function mouseDblClickOnCell(tree, row, column, testname) {
   // select the row we will edit
   var selection = tree.view.selection;
   selection.select(row);
@@ -1337,8 +1310,7 @@ function mouseDblClickOnCell(tree, row, column, testname)
   synthesizeMouse(tree.body, rect.x, rect.y, { clickCount: 2 }, null);
 }
 
-function compareArrays(arr1, arr2)
-{
+function compareArrays(arr1, arr2) {
   if (arr1.length != arr2.length)
     return false;
 
@@ -1350,8 +1322,7 @@ function compareArrays(arr1, arr2)
   return true;
 }
 
-function convertProperties(arr)
-{
+function convertProperties(arr) {
   var results = [];
   var count = arr.Count();
   for (let i = 0; i < count; i++)
@@ -1361,8 +1332,7 @@ function convertProperties(arr)
   return results.join(" ");
 }
 
-function convertDOMtoTreeRowInfo(treechildren, level, rowidx)
-{
+function convertDOMtoTreeRowInfo(treechildren, level, rowidx) {
   var obj = { rows: [] };
 
   var parentidx = rowidx.value;

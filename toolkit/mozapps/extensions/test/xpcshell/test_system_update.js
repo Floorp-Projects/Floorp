@@ -114,8 +114,7 @@ function* check_installed(conditions) {
 
       // Verify the add-on actually started
       BootstrapMonitor.checkAddonStarted(id, version);
-    }
-    else {
+    } else {
       do_print(`Checking state of add-on ${id}, expecting it to be missing`);
 
       if (isUpgrade) {
@@ -526,8 +525,7 @@ function* verify_state(initialState, finalState = undefined, alreadyUpgraded = f
 
   if (finalState == undefined) {
     finalState = initialState;
-  }
-  else if (finalState.some(a => a.isUpgrade)) {
+  } else if (finalState.some(a => a.isUpgrade)) {
     // If the new state is using the profile then that directory will exist.
     expectedDirs++;
   }
@@ -558,16 +556,14 @@ function* exec_test(setupName, testName) {
   try {
     if ("test" in test) {
       yield test.test();
-    }
-    else {
+    } else {
       yield installSystemAddons(yield buildSystemAddonUpdates(test.updateList, root), testserver);
     }
 
     if (test.fails) {
       do_throw("Expected this test to fail");
     }
-  }
-  catch (e) {
+  } catch (e) {
     if (!test.fails) {
       do_throw(e);
     }
@@ -577,8 +573,7 @@ function* exec_test(setupName, testName) {
   // and updated add-ons.
   if (test.finalState && setupName in test.finalState) {
     yield verify_state(setup.initialState, test.finalState[setupName]);
-  }
-  else {
+  } else {
     yield verify_state(setup.initialState, test.finalState);
   }
 

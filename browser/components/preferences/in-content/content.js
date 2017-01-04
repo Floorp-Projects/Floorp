@@ -16,10 +16,8 @@ XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
 });
 
 var gContentPane = {
-  init()
-  {
-    function setEventListener(aId, aEventType, aCallback)
-    {
+  init() {
+    function setEventListener(aId, aEventType, aCallback) {
       document.getElementById(aId)
               .addEventListener(aEventType, aCallback.bind(gContentPane));
     }
@@ -99,8 +97,7 @@ var gContentPane = {
    * Utility function to enable/disable the button specified by aButtonID based
    * on the value of the Boolean preference specified by aPreferenceID.
    */
-  updateButtons(aButtonID, aPreferenceID)
-  {
+  updateButtons(aButtonID, aPreferenceID) {
     var button = document.getElementById(aButtonID);
     var preference = document.getElementById(aPreferenceID);
     button.disabled = preference.value != true;
@@ -122,8 +119,7 @@ var gContentPane = {
    * Displays the notifications exceptions dialog where specific site notification
    * preferences can be set.
    */
-  showNotificationExceptions()
-  {
+  showNotificationExceptions() {
     let bundlePreferences = document.getElementById("bundlePreferences");
     let params = { permissionType: "desktop-notification" };
     params.windowTitle = bundlePreferences.getString("notificationspermissionstitle");
@@ -145,8 +141,7 @@ var gContentPane = {
    * Displays the popup exceptions dialog where specific site popup preferences
    * can be set.
    */
-  showPopupExceptions()
-  {
+  showPopupExceptions() {
     var bundlePreferences = document.getElementById("bundlePreferences");
     var params = { blockVisible: false, sessionVisible: false, allowVisible: true,
                    prefilledHost: "", permissionType: "popup" }
@@ -162,8 +157,7 @@ var gContentPane = {
   /**
    * Populates the default font list in UI.
    */
-  _rebuildFonts()
-  {
+  _rebuildFonts() {
     var preferences = document.getElementById("contentPreferences");
     // Ensure preferences are "visible" to ensure bindings work.
     preferences.hidden = false;
@@ -177,8 +171,7 @@ var gContentPane = {
   /**
    *
    */
-  _selectDefaultLanguageGroup(aLanguageGroup, aIsSerif)
-  {
+  _selectDefaultLanguageGroup(aLanguageGroup, aIsSerif) {
     const kFontNameFmtSerif         = "font.name.serif.%LANG%";
     const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
     const kFontNameListFmtSerif     = "font.name-list.serif.%LANG%";
@@ -228,8 +221,7 @@ var gContentPane = {
    * Returns the type of the current default font for the language denoted by
    * aLanguageGroup.
    */
-  _readDefaultFontTypeForLanguage(aLanguageGroup)
-  {
+  _readDefaultFontTypeForLanguage(aLanguageGroup) {
     const kDefaultFontType = "font.default.%LANG%";
     var defaultFontTypePref = kDefaultFontType.replace(/%LANG%/, aLanguageGroup);
     var preference = document.getElementById(defaultFontTypePref);
@@ -248,8 +240,7 @@ var gContentPane = {
    * Displays the fonts dialog, where web page font names and sizes can be
    * configured.
    */
-  configureFonts()
-  {
+  configureFonts() {
     gSubDialog.open("chrome://browser/content/preferences/fonts.xul", "resizable=no");
   },
 
@@ -257,8 +248,7 @@ var gContentPane = {
    * Displays the colors dialog, where default web page/link/etc. colors can be
    * configured.
    */
-  configureColors()
-  {
+  configureColors() {
     gSubDialog.open("chrome://browser/content/preferences/colors.xul", "resizable=no");
   },
 
@@ -267,8 +257,7 @@ var gContentPane = {
   /**
    * Shows a dialog in which the preferred language for web content may be set.
    */
-  showLanguages()
-  {
+  showLanguages() {
     gSubDialog.open("chrome://browser/content/preferences/languages.xul");
   },
 
@@ -276,19 +265,16 @@ var gContentPane = {
    * Displays the translation exceptions dialog where specific site and language
    * translation preferences can be set.
    */
-  showTranslationExceptions()
-  {
+  showTranslationExceptions() {
     gSubDialog.open("chrome://browser/content/preferences/translation.xul");
   },
 
-  openTranslationProviderAttribution()
-  {
+  openTranslationProviderAttribution() {
     Components.utils.import("resource:///modules/translation/Translation.jsm");
     Translation.openProviderAttribution();
   },
 
-  toggleDoNotDisturbNotifications(event)
-  {
+  toggleDoNotDisturbNotifications(event) {
     AlertsServiceDND.manualDoNotDisturb = event.target.checked;
   },
 };

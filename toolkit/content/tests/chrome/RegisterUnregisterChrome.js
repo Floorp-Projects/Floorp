@@ -16,8 +16,7 @@ var gPrefs     = Cc["@mozilla.org/preferences-service;1"].
 
 // Create the temporary file in the profile, instead of in TmpD, because
 // we know the mochitest harness kills off the profile when it's done.
-function copyToTemporaryFile(f)
-{
+function copyToTemporaryFile(f) {
   let tmpd = gDirSvc.get("ProfD", Ci.nsIFile);
   tmpf = tmpd.clone();
   tmpf.append("temp.manifest");
@@ -27,8 +26,7 @@ function copyToTemporaryFile(f)
   return tmpf;
 }
 
-function* dirIter(directory)
-{
+function* dirIter(directory) {
   var ioSvc = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
   var testsDir = ioSvc.newURI(directory, null, null)
@@ -77,15 +75,13 @@ function copyDirToTempProfile(path, subdirname) {
 
 }
 
-function convertChromeURI(chromeURI)
-{
+function convertChromeURI(chromeURI) {
   let uri = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService).newURI(chromeURI, null, null);
   return gChromeReg.convertChromeURL(uri);
 }
 
-function chromeURIToFile(chromeURI)
-{
+function chromeURIToFile(chromeURI) {
   var jar = getJar(chromeURI);
   if (jar) {
     var tmpDir = extractJarToTmp(jar);
@@ -102,8 +98,7 @@ function chromeURIToFile(chromeURI)
 
 // Register a chrome manifest temporarily and return a function which un-does
 // the registrarion when no longer needed.
-function createManifestTemporarily(tempDir, manifestText)
-{
+function createManifestTemporarily(tempDir, manifestText) {
   gPrefs.setBoolPref(XUL_CACHE_PREF, true);
 
   tempDir.append("temp.manifest");
@@ -131,8 +126,7 @@ function createManifestTemporarily(tempDir, manifestText)
 
 // Register a chrome manifest temporarily and return a function which un-does
 // the registrarion when no longer needed.
-function registerManifestTemporarily(manifestURI)
-{
+function registerManifestTemporarily(manifestURI) {
   gPrefs.setBoolPref(XUL_CACHE_PREF, true);
 
   let file = chromeURIToFile(manifestURI);
@@ -151,8 +145,7 @@ function registerManifestTemporarily(manifestURI)
   }
 }
 
-function registerManifestPermanently(manifestURI)
-{
+function registerManifestPermanently(manifestURI) {
   var chromepath = chromeURIToFile(manifestURI);
 
   Components.manager.QueryInterface(Ci.nsIComponentRegistrar).

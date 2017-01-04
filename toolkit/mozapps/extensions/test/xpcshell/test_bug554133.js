@@ -56,13 +56,11 @@ function run_current_test() {
     var query = TESTS[gCurrentTest].query;
     var maxResults = TESTS[gCurrentTest].maxResults;
     AddonRepository.searchAddons(query, maxResults, SearchCallback);
-  }
-  else
+  } else
     server.stop(do_test_finished);
 }
 
-function run_test()
-{
+function run_test() {
   // Setup for test
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");

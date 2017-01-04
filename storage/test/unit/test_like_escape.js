@@ -5,8 +5,7 @@
 const LATIN1_AE = "\xc6";
 const LATIN1_ae = "\xe6";
 
-function setup()
-{
+function setup() {
   getOpenedDatabase().createTable("t1", "x TEXT");
 
   var stmt = createStatement("INSERT INTO t1 (x) VALUES ('foo/bar_baz%20cheese')");
@@ -20,8 +19,7 @@ function setup()
   stmt.finalize();
 }
 
-function test_escape_for_like_ascii()
-{
+function test_escape_for_like_ascii() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
   var paramForLike = stmt.escapeStringForLIKE("oo/bar_baz%20chees", '/');
   // verify that we escaped / _ and %
@@ -33,8 +31,7 @@ function test_escape_for_like_ascii()
   stmt.finalize();
 }
 
-function test_escape_for_like_non_ascii()
-{
+function test_escape_for_like_non_ascii() {
   var stmt = createStatement("SELECT x FROM t1 WHERE x LIKE ?1 ESCAPE '/'");
   var paramForLike = stmt.escapeStringForLIKE("oo%20" + LATIN1_AE + "/_ba", '/');
   // verify that we escaped / _ and %
@@ -48,8 +45,7 @@ function test_escape_for_like_non_ascii()
 
 var tests = [test_escape_for_like_ascii, test_escape_for_like_non_ascii];
 
-function run_test()
-{
+function run_test() {
   setup();
 
   for (var i = 0; i < tests.length; i++) {

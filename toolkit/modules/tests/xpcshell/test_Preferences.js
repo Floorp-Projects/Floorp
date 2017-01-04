@@ -91,8 +91,7 @@ add_test(function test_set_null_pref() {
     Preferences.set("test_set_null_pref", null);
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
-  }
-  catch (ex) {}
+  } catch (ex) {}
 
   run_next_test();
 });
@@ -102,8 +101,7 @@ add_test(function test_set_undefined_pref() {
     Preferences.set("test_set_undefined_pref");
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
-  }
-  catch (ex) {}
+  } catch (ex) {}
 
   run_next_test();
 });
@@ -113,8 +111,7 @@ add_test(function test_set_unsupported_pref() {
     Preferences.set("test_set_unsupported_pref", new Array());
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
-  }
-  catch (ex) {}
+  } catch (ex) {}
 
   run_next_test();
 });
@@ -166,8 +163,7 @@ add_test(function test_set_get_number_pref() {
     Preferences.set("test_set_get_number_pref", Math.pow(2, 31));
     // We expect this to throw, so the test is designed to fail if it doesn't.
     do_check_true(false);
-  }
-  catch (ex) {}
+  } catch (ex) {}
 
   // Clean up.
   Preferences.reset("test_set_get_number_pref");

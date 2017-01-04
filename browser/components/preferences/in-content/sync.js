@@ -97,8 +97,7 @@ var gSyncPane = {
       let cachedComputerName;
       try {
         cachedComputerName = Services.prefs.getCharPref("services.sync.client.name");
-      }
-      catch (e) {
+      } catch (e) {
         cachedComputerName = "";
       }
       document.getElementById("fxaEmailAddress1").textContent = username;
@@ -196,8 +195,7 @@ var gSyncPane = {
   },
 
   _setupEventListeners() {
-    function setEventListener(aId, aEventType, aCallback)
-    {
+    function setEventListener(aId, aEventType, aCallback) {
       document.getElementById(aId)
               .addEventListener(aEventType, aCallback.bind(gSyncPane));
     }

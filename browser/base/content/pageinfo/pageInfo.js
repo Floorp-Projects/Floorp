@@ -6,8 +6,7 @@ Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 // define a js object to implement nsITreeView
-function pageInfoTreeView(treeid, copycol)
-{
+function pageInfoTreeView(treeid, copycol) {
   // copycol is the index number for the column that we want to add to
   // the copy-n-paste buffer when the user hits accel-c
   this.treeid = treeid;
@@ -24,13 +23,11 @@ pageInfoTreeView.prototype = {
   set rowCount(c) { throw "rowCount is a readonly property"; },
   get rowCount() { return this.rows; },
 
-  setTree(tree)
-  {
+  setTree(tree) {
     this.tree = tree;
   },
 
-  getCellText(row, column)
-  {
+  getCellText(row, column) {
     // row can be null, but js arrays are 0-indexed.
     // colidx cannot be null, but can be larger than the number
     // of columns in the array. In this case it's the fault of
@@ -38,17 +35,14 @@ pageInfoTreeView.prototype = {
     return this.data[row][column.index] || "";
   },
 
-  setCellValue(row, column, value)
-  {
+  setCellValue(row, column, value) {
   },
 
-  setCellText(row, column, value)
-  {
+  setCellText(row, column, value) {
     this.data[row][column.index] = value;
   },
 
-  addRow(row)
-  {
+  addRow(row) {
     this.rows = this.data.push(row);
     this.rowCountChanged(this.rows - 1, 1);
     if (this.selection.count == 0 && this.rowCount && !gImageElement) {
@@ -56,46 +50,39 @@ pageInfoTreeView.prototype = {
     }
   },
 
-  addRows(rows)
-  {
+  addRows(rows) {
     for (let row of rows) {
       this.addRow(row);
     }
   },
 
-  rowCountChanged(index, count)
-  {
+  rowCountChanged(index, count) {
     this.tree.rowCountChanged(index, count);
   },
 
-  invalidate()
-  {
+  invalidate() {
     this.tree.invalidate();
   },
 
-  clear()
-  {
+  clear() {
     if (this.tree)
       this.tree.rowCountChanged(0, -this.rows);
     this.rows = 0;
     this.data = [ ];
   },
 
-  handleCopy(row)
-  {
+  handleCopy(row) {
     return (row < 0 || this.copycol < 0) ? "" : (this.data[row][this.copycol] || "");
   },
 
-  performActionOnRow(action, row)
-  {
+  performActionOnRow(action, row) {
     if (action == "copy") {
       var data = this.handleCopy(row)
       this.tree.treeBody.parentNode.setAttribute("copybuffer", data);
     }
   },
 
-  onPageMediaSort(columnname)
-  {
+  onPageMediaSort(columnname) {
     var tree = document.getElementById(this.treeid);
     var treecol = tree.columns.getNamedColumn(columnname);
 
@@ -314,8 +301,7 @@ var onUnloadRegistry = [ ];
  *                                the calling window's document will be used
  *                         - initialTab: (optional) id of the inital tab to display
  */
-function onLoadPageInfo()
-{
+function onLoadPageInfo() {
   gBundle = document.getElementById("pageinfobundle");
   gStrings.unknown = gBundle.getString("unknown");
   gStrings.notSet = gBundle.getString("notset");
@@ -346,8 +332,7 @@ function onLoadPageInfo()
             .notifyObservers(window, "page-info-dialog-loaded", null);
 }
 
-function loadPageInfo(frameOuterWindowID, imageElement, browser)
-{
+function loadPageInfo(frameOuterWindowID, imageElement, browser) {
   browser = browser || window.opener.gBrowser.selectedBrowser;
   let mm = browser.messageManager;
 
@@ -415,8 +400,7 @@ function loadPageInfo(frameOuterWindowID, imageElement, browser)
   onLoadRegistry.forEach(function(func) { func(); });
 }
 
-function resetPageInfo(args)
-{
+function resetPageInfo(args) {
   /* Reset Meta tags part */
   gMetaView.clear();
 
@@ -443,8 +427,7 @@ function resetPageInfo(args)
   loadTab(args);
 }
 
-function onUnloadPageInfo()
-{
+function onUnloadPageInfo() {
   // Remove the observer, only if there is at least 1 image.
   if (!document.getElementById("mediaTab").hidden) {
     Components.classes["@mozilla.org/observer-service;1"]
@@ -456,8 +439,7 @@ function onUnloadPageInfo()
   onUnloadRegistry.forEach(function(func) { func(); });
 }
 
-function doHelpButton()
-{
+function doHelpButton() {
   const helpTopics = {
     "generalPanel":  "pageinfo_general",
     "mediaPanel":    "pageinfo_media",
@@ -471,15 +453,13 @@ function doHelpButton()
   openHelpLink(helpdoc);
 }
 
-function showTab(id)
-{
+function showTab(id) {
   var deck  = document.getElementById("mainDeck");
   var pagel = document.getElementById(id + "Panel");
   deck.selectedPanel = pagel;
 }
 
-function loadTab(args)
-{
+function loadTab(args) {
   // If the "View Image Info" context menu item was used, the related image
   // element is provided as an argument. This can't be a background image.
   let imageElement = args && args.imageElement;
@@ -497,15 +477,13 @@ function loadTab(args)
   radioGroup.focus();
 }
 
-function toggleGroupbox(id)
-{
+function toggleGroupbox(id) {
   var elt = document.getElementById(id);
   if (elt.hasAttribute("closed")) {
     elt.removeAttribute("closed");
     if (elt.flexWhenOpened)
       elt.flex = elt.flexWhenOpened;
-  }
-  else {
+  } else {
     elt.setAttribute("closed", "true");
     if (elt.flex) {
       elt.flexWhenOpened = elt.flex;
@@ -514,8 +492,7 @@ function toggleGroupbox(id)
   }
 }
 
-function openCacheEntry(key, cb)
-{
+function openCacheEntry(key, cb) {
   var checkCacheListener = {
     onCacheEntryCheck(entry, appCache) {
       return Components.interfaces.nsICacheEntryOpenCallback.ENTRY_WANTED;
@@ -527,8 +504,7 @@ function openCacheEntry(key, cb)
   diskStorage.asyncOpenURI(Services.io.newURI(key, null, null), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
 }
 
-function makeGeneralTab(metaViewRows, docInfo)
-{
+function makeGeneralTab(metaViewRows, docInfo) {
   var title = (docInfo.title) ? docInfo.title : gBundle.getString("noPageTitle");
   document.getElementById("titletext").value = title;
 
@@ -586,8 +562,7 @@ function makeGeneralTab(metaViewRows, docInfo)
   });
 }
 
-function addImage(imageViewRow)
-{
+function addImage(imageViewRow) {
   let [url, type, alt, elem, isBg] = imageViewRow;
 
   if (!url)
@@ -619,8 +594,7 @@ function addImage(imageViewRow)
                 .getService(Components.interfaces.nsIObserverService)
                 .addObserver(imagePermissionObserver, "perm-changed", false);
     }
-  }
-  else {
+  } else {
     var i = gImageHash[url][type][alt];
     gImageView.data[i][COL_IMAGE_COUNT]++;
     // The same image can occur several times on the page at different sizes.
@@ -637,14 +611,12 @@ function addImage(imageViewRow)
 }
 
 // Link Stuff
-function openURL(target)
-{
+function openURL(target) {
   var url = target.parentNode.childNodes[2].value;
   window.open(url, "_blank", "chrome");
 }
 
-function onBeginLinkDrag(event, urlField, descField)
-{
+function onBeginLinkDrag(event, urlField, descField) {
   if (event.originalTarget.localName != "treechildren")
     return;
 
@@ -669,8 +641,7 @@ function onBeginLinkDrag(event, urlField, descField)
 }
 
 // Image Stuff
-function getSelectedRows(tree)
-{
+function getSelectedRows(tree) {
   var start = { };
   var end   = { };
   var numRanges = tree.view.selection.getRangeCount();
@@ -685,14 +656,12 @@ function getSelectedRows(tree)
   return rowArray;
 }
 
-function getSelectedRow(tree)
-{
+function getSelectedRow(tree) {
   var rows = getSelectedRows(tree);
   return (rows.length == 1) ? rows[0] : -1;
 }
 
-function selectSaveFolder(aCallback)
-{
+function selectSaveFolder(aCallback) {
   const nsILocalFile = Components.interfaces.nsILocalFile;
   const nsIFilePicker = Components.interfaces.nsIFilePicker;
   let titleText = gBundle.getString("mediaSelectFolder");
@@ -720,8 +689,7 @@ function selectSaveFolder(aCallback)
   fp.open(fpCallback);
 }
 
-function saveMedia()
-{
+function saveMedia() {
   var tree = document.getElementById("imagetree");
   var rowArray = getSelectedRows(tree);
   if (rowArray.length == 1) {
@@ -780,8 +748,7 @@ function saveMedia()
   }
 }
 
-function onBlockImage()
-{
+function onBlockImage() {
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
 
@@ -793,8 +760,7 @@ function onBlockImage()
     permissionManager.remove(uri, "image");
 }
 
-function onImageSelect()
-{
+function onImageSelect() {
   var previewBox   = document.getElementById("mediaPreviewBox");
   var mediaSaveBox = document.getElementById("mediaSaveBox");
   var splitter     = document.getElementById("mediaSplitter");
@@ -805,14 +771,12 @@ function onImageSelect()
     mediaSaveBox.collapsed = true;
     splitter.collapsed     = true;
     tree.flex = 1;
-  }
-  else if (count > 1) {
+  } else if (count > 1) {
     splitter.collapsed     = true;
     previewBox.collapsed   = true;
     mediaSaveBox.collapsed = false;
     tree.flex = 1;
-  }
-  else {
+  } else {
     mediaSaveBox.collapsed = true;
     splitter.collapsed     = false;
     previewBox.collapsed   = false;
@@ -822,8 +786,7 @@ function onImageSelect()
 }
 
 // Makes the media preview (image, video, etc) for the selected row on the media tab.
-function makePreview(row)
-{
+function makePreview(row) {
   var item = gImageView.data[row][COL_IMAGE_NODE];
   var url = gImageView.data[row][COL_IMAGE_ADDRESS];
   var isBG = gImageView.data[row][COL_IMAGE_BG];
@@ -843,8 +806,7 @@ function makePreview(row)
       var kbSize = Math.round(imageSize / 1024 * 100) / 100;
       sizeText = gBundle.getFormattedString("generalSize",
                                             [formatNumber(kbSize), formatNumber(imageSize)]);
-    }
-    else
+    } else
       sizeText = gBundle.getString("mediaUnknownNotCached");
     setItemValue("imagesizetext", sizeText);
 
@@ -862,13 +824,11 @@ function makePreview(row)
                                                  [imageType, numFrames]);
         else
           imageType = gBundle.getFormattedString("mediaImageType", [imageType]);
-      }
-      else {
+      } else {
         // the MIME type doesn't begin with image/, display the raw type
         imageType = mimeType;
       }
-    }
-    else {
+    } else {
       // We couldn't find the type, fall back to the value in the treeview
       imageType = gImageView.data[row][COL_IMAGE_TYPE];
     }
@@ -906,8 +866,7 @@ function makePreview(row)
       if (!isBG) {
         newImage.width = ("width" in item && item.width) || newImage.naturalWidth;
         newImage.height = ("height" in item && item.height) || newImage.naturalHeight;
-      }
-      else {
+      } else {
         // the Width and Height of an HTML tag should not be used for its background image
         // (for example, "table" can have "width" or "height" attributes)
         newImage.width = item.naturalWidth || newImage.naturalWidth;
@@ -924,8 +883,7 @@ function makePreview(row)
 
       document.getElementById("theimagecontainer").collapsed = false
       document.getElementById("brokenimagecontainer").collapsed = true;
-    }
-    else if (item.HTMLVideoElement && isProtocolAllowed) {
+    } else if (item.HTMLVideoElement && isProtocolAllowed) {
       newImage = document.createElementNS("http://www.w3.org/1999/xhtml", "video");
       newImage.id = "thepreviewimage";
       newImage.src = url;
@@ -935,8 +893,7 @@ function makePreview(row)
 
       document.getElementById("theimagecontainer").collapsed = false;
       document.getElementById("brokenimagecontainer").collapsed = true;
-    }
-    else if (item.HTMLAudioElement && isProtocolAllowed) {
+    } else if (item.HTMLAudioElement && isProtocolAllowed) {
       newImage = new Audio;
       newImage.id = "thepreviewimage";
       newImage.src = url;
@@ -945,8 +902,7 @@ function makePreview(row)
 
       document.getElementById("theimagecontainer").collapsed = false;
       document.getElementById("brokenimagecontainer").collapsed = true;
-    }
-    else {
+    } else {
       // fallback image for protocols not allowed (e.g., javascript:)
       // or elements not [yet] handled (e.g., object, embed).
       document.getElementById("brokenimagecontainer").collapsed = false;
@@ -961,8 +917,7 @@ function makePreview(row)
                                                 formatNumber(physHeight),
                                                 formatNumber(width),
                                                 formatNumber(height)]);
-      }
-      else {
+      } else {
         imageSize = gBundle.getFormattedString("mediaDimensions",
                                                [formatNumber(width),
                                                 formatNumber(height)]);
@@ -977,8 +932,7 @@ function makePreview(row)
   });
 }
 
-function makeBlockImage(url)
-{
+function makeBlockImage(url) {
   var permissionManager = Components.classes[PERMISSION_CONTRACTID]
                                     .getService(nsIPermissionManager);
   var prefs = Components.classes[PREFERENCES_CONTRACTID]
@@ -997,15 +951,13 @@ function makeBlockImage(url)
       checkbox.label = gBundle.getFormattedString("mediaBlockImage", [uri.host]);
       var perm = permissionManager.testPermission(uri, "image");
       checkbox.checked = perm == nsIPermissionManager.DENY_ACTION;
-    }
-    else
+    } else
       checkbox.hidden = true;
   }
 }
 
 var imagePermissionObserver = {
-  observe(aSubject, aTopic, aData)
-  {
+  observe(aSubject, aTopic, aData) {
     if (document.getElementById("mediaPreviewBox").collapsed)
       return;
 
@@ -1023,8 +975,7 @@ var imagePermissionObserver = {
   }
 }
 
-function getContentTypeFromHeaders(cacheEntryDescriptor)
-{
+function getContentTypeFromHeaders(cacheEntryDescriptor) {
   if (!cacheEntryDescriptor)
     return null;
 
@@ -1033,24 +984,20 @@ function getContentTypeFromHeaders(cacheEntryDescriptor)
   return type && type[1];
 }
 
-function setItemValue(id, value)
-{
+function setItemValue(id, value) {
   var item = document.getElementById(id);
   if (value) {
     item.parentNode.collapsed = false;
     item.value = value;
-  }
-  else
+  } else
     item.parentNode.collapsed = true;
 }
 
-function formatNumber(number)
-{
+function formatNumber(number) {
   return (+number).toLocaleString();  // coerce number to a numeric value before calling toLocaleString()
 }
 
-function formatDate(datestr, unknown)
-{
+function formatDate(datestr, unknown) {
   var date = new Date(datestr);
   if (!date.valueOf())
     return unknown;
@@ -1063,8 +1010,7 @@ function formatDate(datestr, unknown)
   return date.toLocaleString(locale, dtOptions);
 }
 
-function doCopy()
-{
+function doCopy() {
   if (!gClipboardHelper)
     return;
 
@@ -1094,24 +1040,21 @@ function doCopy()
   }
 }
 
-function doSelectAllMedia()
-{
+function doSelectAllMedia() {
   var tree = document.getElementById("imagetree");
 
   if (tree)
     tree.view.selection.selectAll();
 }
 
-function doSelectAll()
-{
+function doSelectAll() {
   var elem = document.commandDispatcher.focusedElement;
 
   if (elem && "treeBoxObject" in elem)
     elem.view.selection.selectAll();
 }
 
-function selectImage()
-{
+function selectImage() {
   if (!gImageElement)
     return;
 
@@ -1132,8 +1075,7 @@ function selectImage()
   }
 }
 
-function checkProtocol(img)
-{
+function checkProtocol(img) {
   var url = img[COL_IMAGE_ADDRESS];
   return /^data:image\//i.test(url) ||
     /^(https?|ftp|file|about|chrome|resource):/.test(url);

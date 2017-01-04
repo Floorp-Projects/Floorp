@@ -39,12 +39,11 @@ const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
 const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
 const nsIBaseWindow         = Components.interfaces.nsIBaseWindow;
 
-var   titleBundle           = null;
-var   filterBundle          = null;
-var   lastDirectory         = null;
+var titleBundle           = null;
+var filterBundle          = null;
+var lastDirectory         = null;
 
-function nsFilePicker()
-{
+function nsFilePicker() {
   if (!titleBundle)
     titleBundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
   if (!filterBundle)
@@ -82,26 +81,26 @@ nsFilePicker.prototype = {
     this.mDisplayDirectory = a &&
       a.clone().QueryInterface(nsILocalFile);
   },
-  get displayDirectory()  {
+  get displayDirectory() {
     return this.mDisplayDirectory &&
            this.mDisplayDirectory.clone()
                .QueryInterface(nsILocalFile);
   },
 
   /* readonly attribute nsILocalFile file; */
-  get file()  { return this.mFilesEnumerator.mFiles[0]; },
+  get file() { return this.mFilesEnumerator.mFiles[0]; },
 
   /* readonly attribute nsISimpleEnumerator files; */
-  get files()  { return this.mFilesEnumerator; },
+  get files() { return this.mFilesEnumerator; },
 
   /* we don't support directories, yet */
-  get domFileOrDirectory()  {
+  get domFileOrDirectory() {
     let enumerator = this.domFileOrDirectoryEnumerator;
     return enumerator ? enumerator.mFiles[0] : null;
   },
 
   /* readonly attribute nsISimpleEnumerator domFileOrDirectoryEnumerator; */
-  get domFileOrDirectoryEnumerator()  {
+  get domFileOrDirectoryEnumerator() {
     if (!this.mFilesEnumerator) {
       return null;
     }
@@ -138,7 +137,7 @@ nsFilePicker.prototype = {
   },
 
   /* readonly attribute nsIURI fileURL; */
-  get fileURL()  {
+  get fileURL() {
     if (this.mFileURL)
       return this.mFileURL;
 
@@ -153,7 +152,7 @@ nsFilePicker.prototype = {
 
   /* attribute wstring defaultString; */
   set defaultString(a) { this.mDefaultString = a; },
-  get defaultString()  { return this.mDefaultString; },
+  get defaultString() { return this.mDefaultString; },
 
   /* attribute wstring defaultExtension */
   set defaultExtension(ext) { },
@@ -165,7 +164,7 @@ nsFilePicker.prototype = {
 
   /* attribute boolean addToRecentDocs; */
   set addToRecentDocs(a) {},
-  get addToRecentDocs()  { return false; },
+  get addToRecentDocs() { return false; },
 
   /* readonly attribute short mode; */
   get mode() { return this.mMode; },
@@ -299,8 +298,7 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsFilePicker]);
 
 var strBundleService = null;
 
-function srGetStrBundle(path)
-{
+function srGetStrBundle(path) {
   var strBundle = null;
 
   if (!strBundleService) {

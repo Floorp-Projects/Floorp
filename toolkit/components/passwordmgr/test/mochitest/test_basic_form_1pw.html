@@ -148,12 +148,12 @@ function startTest() {
     checkForm(f++, "testuser", "testpass");
     checkForm(f++, "testuser", "testpass");
     checkForm(f++, "xxxxxxxx", "");
-    checkForm(f++, "",         "testpass");
-    checkForm(f++, "",         "xxxxxxxx");
+    checkForm(f++, "", "testpass");
+    checkForm(f++, "", "xxxxxxxx");
 
     // 9-14
     checkForm(f++, "testpass", "");
-    checkForm(f++, "",         "testuser", "testpass");
+    checkForm(f++, "", "testuser", "testpass");
     checkForm(f++, "testuser", "testpass", "");
     checkForm(f++, "testpass", "xxxxxxxx");
     checkForm(f++, "xxxxxxxx", "testuser", "testpass");

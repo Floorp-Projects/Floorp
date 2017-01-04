@@ -48,8 +48,7 @@ if (!isChild) {
   gProfD = do_get_profile();
 }
 
-function dumpn(text)
-{
+function dumpn(text) {
   dump("search test: " + text + "\n");
 }
 
@@ -57,8 +56,7 @@ function dumpn(text)
  * Configure preferences to load engines from
  * chrome://testsearchplugin/locale/searchplugins/
  */
-function configureToLoadJarEngines()
-{
+function configureToLoadJarEngines() {
   let url = "chrome://testsearchplugin/locale/searchplugins/";
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
@@ -76,8 +74,7 @@ function configureToLoadJarEngines()
  * Fake the installation of an add-on in the profile, by creating the
  * directory and registering it with the directory service.
  */
-function installAddonEngine(name = "engine-addon")
-{
+function installAddonEngine(name = "engine-addon") {
   const XRE_EXTENSIONS_DIR_LIST = "XREExtDL";
   const profD = do_get_profile().QueryInterface(Ci.nsILocalFile);
 
@@ -127,8 +124,7 @@ function installAddonEngine(name = "engine-addon")
  * Copy the engine-distribution.xml engine to a fake distribution
  * created in the profile, and registered with the directory service.
  */
-function installDistributionEngine()
-{
+function installDistributionEngine() {
   const XRE_APP_DISTRIBUTION_DIR = "XREAppDist";
 
   const profD = do_get_profile().QueryInterface(Ci.nsILocalFile);
@@ -159,8 +155,7 @@ function installDistributionEngine()
 /**
  * Clean the profile of any metadata files left from a previous run.
  */
-function removeMetadata()
-{
+function removeMetadata() {
   let file = gProfD.clone();
   file.append("search-metadata.json");
   if (file.exists()) {
@@ -227,8 +222,7 @@ var forceExpiration = Task.async(function* () {
  * Clean the profile of any cache file left from a previous run.
  * Returns a boolean indicating if the cache file existed.
  */
-function removeCacheFile()
-{
+function removeCacheFile() {
   let file = gProfD.clone();
   file.append(CACHE_FILENAME);
   if (file.exists()) {
@@ -468,7 +462,7 @@ function setUpGeoDefaults() {
 
   do_get_file("data/engine2.xml").copyTo(engineDir, "engine2.xml");
 
-  setLocalizedDefaultPref("defaultenginename",    "Test search engine");
+  setLocalizedDefaultPref("defaultenginename", "Test search engine");
   setLocalizedDefaultPref("defaultenginename.US", "A second test engine");
 
   do_register_cleanup(function() {

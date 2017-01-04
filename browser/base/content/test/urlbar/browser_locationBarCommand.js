@@ -203,8 +203,7 @@ function promiseNewTabSwitched() {
   });
 }
 
-function promiseCheckChildNoFocusedElement(browser)
-{
+function promiseCheckChildNoFocusedElement(browser) {
   if (!gMultiProcessBrowser) {
     Assert.equal(Services.focus.focusedElement, null, "There should be no focused element");
     return null;

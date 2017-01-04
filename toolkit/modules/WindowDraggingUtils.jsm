@@ -72,8 +72,7 @@ WindowDraggingElement.prototype = {
           let screenRect = this._elem.getOuterScreenRect();
           this._deltaX = aEvent.screenX - screenRect.left;
           this._deltaY = aEvent.screenY - screenRect.top;
-        }
-        else {
+        } else {
           this._deltaX = aEvent.screenX - this._window.screenX;
           this._deltaY = aEvent.screenY - this._window.screenY;
         }

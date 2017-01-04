@@ -157,8 +157,7 @@ add_task(function* test_addLivemark_parentId_succeeds() {
   PlacesUtils.bookmarks.addObserver({
     __proto__: NavBookmarkObserver.prototype,
     onItemAdded: function onItemAdded(aItemId, aParentId, aIndex, aItemType,
-                                      aURI, aTitle)
-    {
+                                      aURI, aTitle) {
       onItemAddedCalled = true;
       PlacesUtils.bookmarks.removeObserver(this);
       do_check_eq(aParentId, PlacesUtils.unfiledBookmarksFolderId);
@@ -329,8 +328,7 @@ add_task(function* test_removeLivemark_nonExistent_fails() {
   try {
     yield PlacesUtils.livemarks.removeLivemark({ id: 1337 });
     do_throw("Removing a non-existent livemark should fail");
-  }
-  catch (ex) {
+  } catch (ex) {
   }
 });
 

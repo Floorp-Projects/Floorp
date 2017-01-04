@@ -55,8 +55,7 @@ function updateIndicatorState() {
     let stringId = "webrtcIndicator.sharing" + shareTypes.join("And") + ".tooltip";
     audioVideoButton.setAttribute("tooltiptext",
                                    gStringBundle.GetStringFromName(stringId));
-  }
-  else {
+  } else {
     audioVideoButton.removeAttribute("tooltiptext");
   }
 
@@ -67,8 +66,7 @@ function updateIndicatorState() {
       webrtcUI.showScreenSharingIndicator + ".tooltip";
     screenShareButton.setAttribute("tooltiptext",
                                     gStringBundle.GetStringFromName(stringId));
-  }
-  else {
+  } else {
     screenShareButton.removeAttribute("tooltiptext");
   }
 
