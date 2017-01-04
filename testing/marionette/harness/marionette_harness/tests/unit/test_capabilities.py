@@ -43,10 +43,11 @@ class TestCapabilities(MarionetteTestCase):
         self.assertEqual(self.caps["moz:processID"], self.appinfo["processID"])
         self.assertEqual(self.marionette.process_id, self.appinfo["processID"])
 
-        current_profile = self.marionette.instance.runner.profile.profile
         self.assertIn("moz:profile", self.caps)
-        self.assertEqual(self.caps["moz:profile"], current_profile)
-        self.assertEqual(self.marionette.profile, current_profile)
+        if self.marionette.instance is not None:
+            current_profile = self.marionette.instance.runner.profile.profile
+            self.assertEqual(self.caps["moz:profile"], current_profile)
+            self.assertEqual(self.marionette.profile, current_profile)
 
         self.assertIn("moz:accessibilityChecks", self.caps)
         self.assertFalse(self.caps["moz:accessibilityChecks"])

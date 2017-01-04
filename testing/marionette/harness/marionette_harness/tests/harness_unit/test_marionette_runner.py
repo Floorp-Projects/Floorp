@@ -301,6 +301,7 @@ def test_add_test_directory(runner):
 def test_add_test_manifest(mock_runner, manifest_with_tests, monkeypatch, test_files_exist):
     monkeypatch.setattr('marionette_harness.runner.base.TestManifest',
                         manifest_with_tests.manifest_class)
+    mock_runner.marionette = mock_runner.driverclass()
     with patch('marionette_harness.runner.base.os.path.exists', return_value=test_files_exist):
         if test_files_exist or manifest_with_tests.n_enabled == 0:
             mock_runner.add_test(manifest_with_tests.filepath)
@@ -322,6 +323,7 @@ def get_kwargs_passed_to_manifest(mock_runner, manifest, monkeypatch, **kwargs):
                         {'mozinfo_key': 'mozinfo_val'})
     for attr in kwargs:
         setattr(mock_runner, attr, kwargs[attr])
+    mock_runner.marionette = mock_runner.driverclass()
     with patch('marionette_harness.runner.base.os.path.exists', return_value=True):
         mock_runner.add_test(manifest.filepath)
     call_args, call_kwargs = manifest.manifest_class().active_tests.call_args
