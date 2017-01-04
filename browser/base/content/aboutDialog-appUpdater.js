@@ -24,8 +24,7 @@ function onUnload(aEvent) {
 }
 
 
-function appUpdater()
-{
+function appUpdater() {
   XPCOMUtils.defineLazyServiceGetter(this, "aus",
                                      "@mozilla.org/updates/update-service;1",
                                      "nsIApplicationUpdateService");
@@ -142,8 +141,7 @@ appUpdater.prototype =
   get updateEnabled() {
     try {
       return Services.prefs.getBoolPref("app.update.enabled");
-    }
-    catch (e) { }
+    } catch (e) { }
     return true; // Firefox default is true
   },
 
@@ -157,8 +155,7 @@ appUpdater.prototype =
   get updateAuto() {
     try {
       return Services.prefs.getBoolPref("app.update.auto");
-    }
-    catch (e) { }
+    } catch (e) { }
     return true; // Firefox default is true
   },
 

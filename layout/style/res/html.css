@@ -756,6 +756,13 @@ audio:not([controls]) {
   display: none;
 }
 
+audio[controls] {
+  /* This ensures that intrinsic sizing can reliably shrinkwrap our
+      controls (which are also always horizontal) and produce a
+      reasonable intrinsic size from them. */
+  writing-mode: horizontal-tb !important;
+}
+
 *|*::-moz-html-canvas-content {
   display: block !important;
   /* we want to be an absolute and fixed container */
@@ -796,6 +803,27 @@ details[open] > summary:-moz-native-anonymous {
 details > summary:first-of-type > *|* {
   /* Cancel "list-style-position: inside" inherited from summary. */
   list-style-position: initial;
+}
+
+/* <dialog> element styles */
+
+dialog {
+  position: absolute;
+  offset-inline-start: 0;
+  offset-inline-end: 0;
+  color: black;
+  margin: auto;
+  border-width: initial;
+  border-style: solid;
+  border-color: initial;
+  border-image: initial;
+  padding: 1em;
+  background: white;
+  width: -moz-fit-content;
+}
+
+dialog:not([open]) {
+  display: none;
 }
 
 /* emulation of non-standard HTML <marquee> tag */

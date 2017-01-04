@@ -201,8 +201,7 @@
             if (popup && 0 <= val) {
               if (val < popup.childNodes.length)
                 this.selectedItem = popup.childNodes[val];
-            }
-            else
+            } else
               this.selectedItem = null;
             return val;
           ]]>
@@ -236,16 +235,14 @@
               for (let attr of attributeFilter) {
                 if (val.hasAttribute(attr)) {
                   this.setAttribute(attr, val.getAttribute(attr));
-                }
-                else {
+                } else {
                   this.removeAttribute(attr);
                 }
               }
 
               this.mAttributeObserver = new MutationObserver(this.handleMutation.bind(this));
               this.mAttributeObserver.observe(val, { attributeFilter });
-            }
-            else {
+            } else {
               for (let attr of attributeFilter) {
                 this.removeAttribute(attr);
               }
@@ -279,8 +276,7 @@
                   case "description":
                     if (t.hasAttribute(attrName)) {
                       this.setAttribute(attrName, t.getAttribute(attrName));
-                    }
-                    else {
+                    } else {
                       this.removeAttribute(attrName);
                     }
                 }
@@ -509,8 +505,7 @@
               this.inputField.value = label;
               this.setAttribute('value', label);
               this.setAttribute('label', label);
-            }
-            else {
+            } else {
               this.inputField.value = "";
               this.removeAttribute('value');
               this.removeAttribute('label');

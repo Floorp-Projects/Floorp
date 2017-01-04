@@ -50,13 +50,11 @@ var annoObserver = {
 };
 
 // main
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   var testURI = uri("http://mozilla.com/");
   var testItemId = bmsvc.insertBookmark(bmsvc.bookmarksMenuFolder, testURI, -1, "");
   var testAnnoName = "moz-test-places/annotations";
@@ -292,8 +290,7 @@ add_task(function* test_execute()
     try {
       annosvc.setItemAnnotation(id, "foo", "bar", 0, 0);
       do_throw("setItemAnnotation* should throw for invalid item id: " + id)
-    }
-    catch (ex) { }
+    } catch (ex) { }
   }
 
   // setting an annotation with EXPIRE_HISTORY for an item should throw
@@ -301,8 +298,7 @@ add_task(function* test_execute()
   try {
     annosvc.setItemAnnotation(itemId, "foo", "bar", 0, annosvc.EXPIRE_WITH_HISTORY);
     do_throw("setting an item annotation with EXPIRE_HISTORY should throw");
-  }
-  catch (ex) {
+  } catch (ex) {
   }
 
   annosvc.removeObserver(annoObserver);
@@ -352,8 +348,7 @@ add_test(function test_getAnnotationsHavingName() {
         else
           do_check_eq(result.itemId, fid);
         do_check_guid_for_bookmark(result.itemId, result.guid);
-      }
-      else {
+      } else {
         do_check_guid_for_uri(result.uri, result.guid);
       }
     }

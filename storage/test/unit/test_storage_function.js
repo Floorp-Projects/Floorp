@@ -6,8 +6,7 @@
 
 var testNums = [1, 2, 3, 4];
 
-function setup()
-{
+function setup() {
   getOpenedDatabase().createTable("function_tests", "id INTEGER PRIMARY KEY");
 
   var stmt = createStatement("INSERT INTO function_tests (id) VALUES(?1)");
@@ -28,14 +27,12 @@ var testSquareFunction = {
   }
 };
 
-function test_function_registration()
-{
+function test_function_registration() {
   var msc = getOpenedDatabase();
   msc.createFunction("test_square", 1, testSquareFunction);
 }
 
-function test_function_no_double_registration()
-{
+function test_function_no_double_registration() {
   var msc = getOpenedDatabase();
   try {
     msc.createFunction("test_square", 2, testSquareFunction);
@@ -45,22 +42,19 @@ function test_function_no_double_registration()
   }
 }
 
-function test_function_removal()
-{
+function test_function_removal() {
   var msc = getOpenedDatabase();
   msc.removeFunction("test_square");
   // Should be Ok now
   msc.createFunction("test_square", 1, testSquareFunction);
 }
 
-function test_function_aliases()
-{
+function test_function_aliases() {
   var msc = getOpenedDatabase();
   msc.createFunction("test_square2", 1, testSquareFunction);
 }
 
-function test_function_call()
-{
+function test_function_call() {
   var stmt = createStatement("SELECT test_square(id) FROM function_tests");
   while (stmt.executeStep()) {
     // Do nothing.
@@ -70,8 +64,7 @@ function test_function_call()
   stmt.finalize();
 }
 
-function test_function_result()
-{
+function test_function_result() {
   var stmt = createStatement("SELECT test_square(42) FROM function_tests");
   stmt.executeStep();
   do_check_eq(42 * 42, stmt.getInt32(0));
@@ -83,8 +76,7 @@ var tests = [test_function_registration, test_function_no_double_registration,
              test_function_removal, test_function_aliases, test_function_call,
              test_function_result];
 
-function run_test()
-{
+function run_test() {
   setup();
 
   for (var i = 0; i < tests.length; i++) {

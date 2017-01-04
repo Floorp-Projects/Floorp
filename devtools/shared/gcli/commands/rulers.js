@@ -39,7 +39,7 @@ exports.items = [
       onChange: (target, handler) => eventEmitter.on("changed", handler),
       offChange: (target, handler) => eventEmitter.off("changed", handler)
     },
-    exec: function*(args, context) {
+    exec: function* (args, context) {
       let { target } = context.environment;
 
       // Pipe the call to the server command.
@@ -71,7 +71,7 @@ exports.items = [
     runAt: "server",
     hidden: true,
     returnType: "highlighterVisibility",
-    exec: function(args, context) {
+    exec: function (args, context) {
       let env = context.environment;
       let { document } = env;
       let id = getOuterId(env.window);
@@ -97,8 +97,8 @@ exports.items = [
       // window is refreshed or closed with the rulers shown.
       events.once(highlighter, "destroy", () => {
         if (highlighters.has(document)) {
-          let { environment } = highlighters.get(document);
-          environment.destroy();
+          let { environment: toDestroy } = highlighters.get(document);
+          toDestroy.destroy();
           highlighters.delete(document);
         }
       });

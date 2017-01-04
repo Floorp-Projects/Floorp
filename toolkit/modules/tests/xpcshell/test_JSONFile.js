@@ -35,8 +35,7 @@ let gFileCounter = Math.floor(Math.random() * 1000000);
  *       operation in the file system may still be pending, preventing a new
  *       file with the same name to be created.
  */
-function getTempFile(aLeafName)
-{
+function getTempFile(aLeafName) {
   // Prepend a serial number to the extension in the suggested leaf name.
   let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
   let leafName = base + "-" + gFileCounter + ext;
@@ -68,8 +67,7 @@ const TEST_DATA = {
 
 // Tests
 
-add_task(function* test_save_reload()
-{
+add_task(function* test_save_reload() {
   let storeForSave = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
@@ -99,8 +97,7 @@ add_task(function* test_save_reload()
   Assert.deepEqual(storeForLoad.data, TEST_DATA);
 });
 
-add_task(function* test_load_sync()
-{
+add_task(function* test_load_sync() {
   let storeForSave = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path
   });
@@ -116,8 +113,7 @@ add_task(function* test_load_sync()
   Assert.deepEqual(storeForLoad.data, TEST_DATA);
 });
 
-add_task(function* test_load_with_dataPostProcessor()
-{
+add_task(function* test_load_with_dataPostProcessor() {
   let storeForSave = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path
   });
@@ -141,8 +137,7 @@ add_task(function* test_load_with_dataPostProcessor()
   do_check_eq(storeForLoad.data.test, random);
 });
 
-add_task(function* test_load_with_dataPostProcessor_fails()
-{
+add_task(function* test_load_with_dataPostProcessor_fails() {
   let store = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
     dataPostProcessor: () => {
@@ -155,8 +150,7 @@ add_task(function* test_load_with_dataPostProcessor_fails()
   do_check_false(store.dataReady);
 });
 
-add_task(function* test_load_sync_with_dataPostProcessor_fails()
-{
+add_task(function* test_load_sync_with_dataPostProcessor_fails() {
   let store = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
     dataPostProcessor: () => {
@@ -173,8 +167,7 @@ add_task(function* test_load_sync_with_dataPostProcessor_fails()
  * Loads data from a string in a predefined format.  The purpose of this test is
  * to verify that the JSON format used in previous versions can be loaded.
  */
-add_task(function* test_load_string_predefined()
-{
+add_task(function* test_load_string_predefined() {
   let store = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
@@ -193,8 +186,7 @@ add_task(function* test_load_string_predefined()
 /**
  * Loads data from a malformed JSON string.
  */
-add_task(function* test_load_string_malformed()
-{
+add_task(function* test_load_string_malformed() {
   let store = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
@@ -219,8 +211,7 @@ add_task(function* test_load_string_malformed()
  * Loads data from a malformed JSON string, using the synchronous initialization
  * path.
  */
-add_task(function* test_load_string_malformed_sync()
-{
+add_task(function* test_load_string_malformed_sync() {
   let store = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
@@ -241,8 +232,7 @@ add_task(function* test_load_string_malformed_sync()
   do_check_matches(store.data, {});
 });
 
-add_task(function* test_overwrite_data()
-{
+add_task(function* test_overwrite_data() {
   let storeForSave = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
   });
@@ -275,8 +265,7 @@ add_task(function* test_overwrite_data()
   Assert.deepEqual(storeForLoad.data, TEST_DATA);
 });
 
-add_task(function* test_beforeSave()
-{
+add_task(function* test_beforeSave() {
   let store;
   let promiseBeforeSave = new Promise((resolve) => {
     store = new JSONFile({
@@ -291,8 +280,7 @@ add_task(function* test_beforeSave()
   yield promiseBeforeSave;
 });
 
-add_task(function* test_beforeSave_rejects()
-{
+add_task(function* test_beforeSave_rejects() {
   let storeForSave = new JSONFile({
     path: getTempFile(TEST_STORE_FILE_NAME).path,
     beforeSave() {

@@ -1676,6 +1676,11 @@ fails-if(layersGPUAccelerated&&cocoaWidget) fuzzy-if(!layersGPUAccelerated,41,26
 needs-focus == 652301-1a.html 652301-1-ref.html
 needs-focus == 652301-1b.html 652301-1-ref.html
 fuzzy-if(skiaContent,2,5) == 652775-1.html 652775-1-ref.html
+HTTP == 652991-1a.html 652991-1-ref.html
+HTTP == 652991-1b.html 652991-1-ref.html
+HTTP == 652991-2.html 652991-2-ref.html
+HTTP == 652991-3.html 652991-3-ref.html
+HTTP == 652991-4.html 652991-4-ref.html
 fuzzy-if(skiaContent,1,5) == 653930-1.html 653930-1-ref.html
 HTTP(..) == 654057-1.html 654057-1-ref.html
 fuzzy-if(skiaContent,1,4500) fails-if(webrender) == 654950-1.html 654950-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
@@ -1980,11 +1985,5 @@ fuzzy(2,20000) == 1315113-2.html 1315113-2-ref.html
 fuzzy(2,40000) == 1316719-1a.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1b.html 1316719-1-ref.html
 fuzzy(2,40000) == 1316719-1c.html 1316719-1-ref.html
-
-HTTP == 652991-1a.html 652991-1-ref.html
-HTTP == 652991-1b.html 652991-1-ref.html
-HTTP == 652991-2.html 652991-2-ref.html
-HTTP == 652991-3.html 652991-3-ref.html
-HTTP == 652991-4.html 652991-4-ref.html
-
-
+skip-if(Android) != 1318769-1.html 1318769-1-ref.html
+== 1322512-1.html 1322512-1-ref.html

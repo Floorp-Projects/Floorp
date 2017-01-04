@@ -50,10 +50,10 @@ function doKey(aKey, modifier) {
     // Window utils for sending fake key events.
     var wutils = SpecialPowers.getDOMWindowUtils(window);
 
-    if (wutils.sendKeyEvent("keydown",  key, 0, modifier)) {
+    if (wutils.sendKeyEvent("keydown", key, 0, modifier)) {
       wutils.sendKeyEvent("keypress", key, 0, modifier);
     }
-    wutils.sendKeyEvent("keyup",    key, 0, modifier);
+    wutils.sendKeyEvent("keyup", key, 0, modifier);
 }
 
 function registerPopupShownListener(listener) {

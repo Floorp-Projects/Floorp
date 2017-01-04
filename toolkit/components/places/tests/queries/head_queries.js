@@ -39,8 +39,7 @@ const olderthansixmonths = today - (DAY_MICROSEC * 31 * 7);
  * appropriate.  This function is an asynchronous task, it can be called using
  * "Task.spawn" or using the "yield" function inside another task.
  */
-function* task_populateDB(aArray)
-{
+function* task_populateDB(aArray) {
   // Iterate over aArray and execute all instructions.
   for (let arrayItem of aArray) {
     try {
@@ -65,11 +64,9 @@ function* task_populateDB(aArray)
           stmt.params.url = qdata.uri;
           try {
             stmt.executeAsync();
-          }
-          catch (ex) {
+          } catch (ex) {
             print("Error while setting visit_count.");
-          }
-          finally {
+          } finally {
             stmt.finalize();
           }
         }
@@ -83,11 +80,9 @@ function* task_populateDB(aArray)
         stmt.params.url = qdata.uri;
         try {
           stmt.executeAsync();
-        }
-        catch (ex) {
+        } catch (ex) {
           print("Error while setting hidden.");
-        }
-        finally {
+        } finally {
           stmt.finalize();
         }
       }

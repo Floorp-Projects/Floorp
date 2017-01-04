@@ -30,8 +30,7 @@ function* synthesizeNativeMouseClick(aElement) {
 
   // Wait for the mouseup event to occur before continuing.
   return new Promise((resolve, reject) => {
-    function eventOccurred(e)
-    {
+    function eventOccurred(e) {
       aElement.removeEventListener("mouseup", eventOccurred, true);
       resolve();
     }
@@ -56,7 +55,8 @@ add_task(function* init() {
 
   yield new Promise((resolve, reject) => {
     info("adding search history values: " + kValues);
-    let addOps = kValues.map(value => { return {op: "add",
+    let addOps = kValues.map(value => {
+ return {op: "add",
                                              fieldname: "searchbar-history",
                                              value}
                                    });
@@ -65,7 +65,8 @@ add_task(function* init() {
         registerCleanupFunction(() => {
           info("removing search history values: " + kValues);
           let removeOps =
-            kValues.map(value => { return {op: "remove",
+            kValues.map(value => {
+ return {op: "remove",
                                            fieldname: "searchbar-history",
                                            value}
                                  });

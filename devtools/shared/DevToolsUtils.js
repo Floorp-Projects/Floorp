@@ -402,11 +402,11 @@ DevToolsUtils.defineLazyGetter(this, "NetworkHelper", () => {
  * http://www.softwareishard.com/blog/firebug/nsitraceablechannel-intercept-http-traffic/
  */
 function mainThreadFetch(urlIn, aOptions = { loadFromCache: true,
-                                          policy: Ci.nsIContentPolicy.TYPE_OTHER,
-                                          window: null,
-                                          charset: null,
-                                          principal: null,
-                                          cacheKey: null }) {
+                                             policy: Ci.nsIContentPolicy.TYPE_OTHER,
+                                             window: null,
+                                             charset: null,
+                                             principal: null,
+                                             cacheKey: null }) {
   // Create a channel.
   let url = urlIn.split(" -> ").pop();
   let channel;

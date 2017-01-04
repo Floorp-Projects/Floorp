@@ -17,8 +17,7 @@ function do_check_permission_prefs(preferences) {
   for (let pref of preferences) {
     try {
       do_check_eq(Services.prefs.getCharPref(pref), "");
-    }
-    catch (e) {
+    } catch (e) {
       // Successfully emptied
     }
   }

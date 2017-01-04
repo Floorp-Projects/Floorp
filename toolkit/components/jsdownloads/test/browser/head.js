@@ -55,8 +55,7 @@ var gFileCounter = Math.floor(Math.random() * 1000000);
  *       operation in the file system may still be pending, preventing a new
  *       file with the same name to be created.
  */
-function getTempFile(aLeafName)
-{
+function getTempFile(aLeafName) {
   // Prepend a serial number to the extension in the suggested leaf name.
   let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
   let leafName = base + "-" + gFileCounter + ext;

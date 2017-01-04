@@ -16,8 +16,7 @@ var aaListener = {
   }
 };
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
   let search = Cc['@mozilla.org/autocomplete/search;1?name=form-history'].
                getService(Components.interfaces.nsIAutoCompleteSearch);

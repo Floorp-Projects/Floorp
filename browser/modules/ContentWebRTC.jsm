@@ -308,16 +308,13 @@ function updateIndicators(aSubject, aTopic, aData) {
     if (tabState.screen) {
       if (tabState.screen == "Screen") {
         state.showScreenSharingIndicator = "Screen";
-      }
-      else if (tabState.screen == "Window") {
+      } else if (tabState.screen == "Window") {
         if (state.showScreenSharingIndicator != "Screen")
           state.showScreenSharingIndicator = "Window";
-      }
-      else if (tabState.screen == "Application") {
+      } else if (tabState.screen == "Application") {
         if (!state.showScreenSharingIndicator)
           state.showScreenSharingIndicator = "Application";
-      }
-      else if (tabState.screen == "Browser") {
+      } else if (tabState.screen == "Browser") {
         if (!state.showScreenSharingIndicator)
           state.showScreenSharingIndicator = "Browser";
       }

@@ -421,16 +421,6 @@ GlobalObject::initStandardClasses(JSContext* cx, Handle<GlobalObject*> global)
         return false;
     }
 
-    // Resolve a "global" self-referential property if necessary, per a stage-3
-    // proposal.  https://github.com/tc39/ecma262/pull/702
-    //
-    // Ideally we'd just have the Object class define this, just as it defines
-    // |eval|.  See the comment in |JS_ResolveStandardClass| for why we can't
-    // do this.
-    RootedValue v(cx, ObjectValue(*ToWindowProxyIfWindow(global)));
-    if (!DefineProperty(cx, global, cx->names().global, v, nullptr, nullptr, JSPROP_RESOLVING))
-        return false;
-
     for (size_t k = 0; k < JSProto_LIMIT; ++k) {
         if (!ensureConstructor(cx, global, static_cast<JSProtoKey>(k)))
             return false;

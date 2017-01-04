@@ -11,8 +11,7 @@
  * https://bugzilla.mozilla.org/show_bug.cgi?id=412132
  */
 
-add_task(function* changeuri_unvisited_bookmark()
-{
+add_task(function* changeuri_unvisited_bookmark() {
   do_print("After changing URI of bookmark, frecency of bookmark's " +
            "original URI should be zero if original URI is unvisited and " +
            "no longer bookmarked.");
@@ -37,8 +36,7 @@ add_task(function* changeuri_unvisited_bookmark()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* changeuri_visited_bookmark()
-{
+add_task(function* changeuri_visited_bookmark() {
   do_print("After changing URI of bookmark, frecency of bookmark's " +
            "original URI should not be zero if original URI is visited.");
   const TEST_URI = NetUtil.newURI("http://example.com/1");
@@ -67,8 +65,7 @@ add_task(function* changeuri_visited_bookmark()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* changeuri_bookmark_still_bookmarked()
-{
+add_task(function* changeuri_bookmark_still_bookmarked() {
   do_print("After changing URI of bookmark, frecency of bookmark's " +
            "original URI should not be zero if original URI is still " +
            "bookmarked.");
@@ -98,16 +95,13 @@ add_task(function* changeuri_bookmark_still_bookmarked()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function* changeuri_nonexistent_bookmark()
-{
+add_task(function* changeuri_nonexistent_bookmark() {
   do_print("Changing the URI of a nonexistent bookmark should fail.");
-  function tryChange(itemId)
-  {
+  function tryChange(itemId) {
     try {
       PlacesUtils.bookmarks.changeBookmarkURI(itemId + 1, uri("http://example.com/2"));
       do_throw("Nonexistent bookmark should throw.");
-    }
-    catch (ex) {}
+    } catch (ex) {}
   }
 
   // First try a straight-up bogus item ID, one greater than the current max
@@ -130,7 +124,6 @@ add_task(function* changeuri_nonexistent_bookmark()
   yield PlacesTestUtils.clearHistory();
 });
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }

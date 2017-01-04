@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var gTreeUtils = {
-  deleteAll(aTree, aView, aItems, aDeletedItems)
-  {
+  deleteAll(aTree, aView, aItems, aDeletedItems) {
     for (var i = 0; i < aItems.length; ++i)
       aDeletedItems.push(aItems[i]);
     aItems.splice(0, aItems.length);
@@ -15,8 +14,7 @@ var gTreeUtils = {
     aTree.treeBoxObject.rowCountChanged(0, -oldCount);
   },
 
-  deleteSelectedItems(aTree, aView, aItems, aDeletedItems)
-  {
+  deleteSelectedItems(aTree, aView, aItems, aDeletedItems) {
     var selection = aTree.view.selection;
     selection.selectEventsSuppressed = true;
 
@@ -52,8 +50,7 @@ var gTreeUtils = {
   },
 
   sort(aTree, aView, aDataSet, aColumn, aComparator,
-                 aLastSortColumn, aLastSortAscending)
-  {
+                 aLastSortColumn, aLastSortAscending) {
     var ascending = (aColumn == aLastSortColumn) ? !aLastSortAscending : true;
     if (aDataSet.length == 0)
       return ascending;

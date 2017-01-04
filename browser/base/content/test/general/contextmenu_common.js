@@ -19,8 +19,7 @@ function openContextMenuFor(element, shiftkey, waitForSpellCheck) {
     if (waitForSpellCheck) {
       var { onSpellCheck } = SpecialPowers.Cu.import("resource://gre/modules/AsyncSpellCheckTestHelper.jsm", {});
       onSpellCheck(element, actuallyOpenContextMenuFor);
-    }
-    else {
+    } else {
       actuallyOpenContextMenuFor();
     }
 }

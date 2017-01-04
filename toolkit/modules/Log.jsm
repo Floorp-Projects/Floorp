@@ -101,8 +101,7 @@ this.Log = {
       try {
         aObject.QueryInterface(Ci[i]);
         interfaces.push(i);
-      }
-      catch (ex) {}
+      } catch (ex) {}
     }
 
     return interfaces;
@@ -120,8 +119,7 @@ this.Log = {
             (typeof(aObject[p]) == "object" || typeof(aObject[p]) == "function"))
           continue;
         properties.push(p + " = " + aObject[p]);
-      }
-      catch (ex) {
+      } catch (ex) {
         properties.push(p + " = " + ex);
       }
     }
@@ -152,8 +150,7 @@ this.Log = {
     }
     if (e instanceof Ci.nsIException) {
       return e.toString() + " " + Log.stackTrace(e);
-    }
-    else if (isError(e)) {
+    } else if (isError(e)) {
       return Log._formatError(e);
     }
     // else
@@ -663,8 +660,7 @@ ParameterFormatter.prototype = {
       }
       if (ob instanceof Ci.nsIException) {
         return ob.toString() + " " + Log.stackTrace(ob);
-      }
-      else if (isError(ob)) {
+      } else if (isError(ob)) {
         return Log._formatError(ob);
       }
       // Just JSONify it. Filter out our internal fields and those the caller has
@@ -675,8 +671,7 @@ ParameterFormatter.prototype = {
         }
         return val;
       });
-    }
-    catch (e) {
+    } catch (e) {
       dumpError("Exception trying to format object for log message: " + Log.exceptionStr(e));
     }
     // Fancy formatting failed. Just toSource() it - but even this may fail!

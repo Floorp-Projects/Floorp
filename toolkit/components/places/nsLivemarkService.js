@@ -123,8 +123,7 @@ LivemarkService.prototype = {
   _startReloadTimer(livemarksMap, forceUpdate, reloaded) {
     if (this._reloadTimer) {
       this._reloadTimer.cancel();
-    }
-    else {
+    } else {
       this._reloadTimer = Cc["@mozilla.org/timer;1"]
                             .createInstance(Ci.nsITimer);
     }
@@ -415,8 +414,7 @@ LivemarkService.prototype = {
  *
  * @note terminate() must be invoked before getting rid of this object.
  */
-function Livemark(aLivemarkInfo)
-{
+function Livemark(aLivemarkInfo) {
   this.id = aLivemarkInfo.id;
   this.guid = aLivemarkInfo.guid;
   this.feedURI = aLivemarkInfo.feedURI;
@@ -481,8 +479,7 @@ Livemark.prototype = {
     try {
       secMan.checkLoadURIWithPrincipal(feedPrincipal, aSiteURI,
                                        Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-    }
-    catch (ex) {
+    } catch (ex) {
       return;
     }
 
@@ -546,8 +543,7 @@ Livemark.prototype = {
       channel.asyncOpen2(listener);
 
       this.loadGroup = loadgroup;
-    }
-    catch (ex) {
+    } catch (ex) {
       this.status = Ci.mozILivemark.STATUS_FAILED;
     }
   },
@@ -776,8 +772,7 @@ LivemarkLoadListener.prototype = {
           Services.scriptSecurityManager
                   .checkLoadURIWithPrincipal(feedPrincipal, uri,
                                              Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
-        }
-        catch (ex) {
+        } catch (ex) {
           continue;
         }
 
@@ -786,11 +781,9 @@ LivemarkLoadListener.prototype = {
       }
 
       this._livemark.children = livemarkChildren;
-    }
-    catch (ex) {
+    } catch (ex) {
       this.abort(ex);
-    }
-    finally {
+    } finally {
       this._processor.listener = null;
       this._processor = null;
     }
@@ -816,8 +809,7 @@ LivemarkLoadListener.prototype = {
       this._processor.listener = this;
       this._processor.parseAsync(null, channel.URI);
       this._processor.onStartRequest(aRequest, aContext);
-    }
-    catch (ex) {
+    } catch (ex) {
       Components.utils.reportError("Livemark Service: feed processor received an invalid channel for " + channel.URI.spec);
       this.abort(ex);
     }
@@ -852,11 +844,9 @@ LivemarkLoadListener.prototype = {
         }
       }
       this._setResourceTTL(EXPIRE_TIME_MS);
-    }
-    catch (ex) {
+    } catch (ex) {
       this.abort(ex);
-    }
-    finally {
+    } finally {
       if (this._livemark.status == Ci.mozILivemark.STATUS_LOADING) {
         this._livemark.status = Ci.mozILivemark.STATUS_READY;
       }

@@ -60,7 +60,8 @@ var AnimationsPanel = {
     }
 
     // Binding functions that need to be called in scope.
-    for (let functionName of ["onKeyDown", "onPickerStarted",
+    for (let functionName of [
+      "onKeyDown", "onPickerStarted",
       "onPickerStopped", "refreshAnimationsUI", "onToggleAllClicked",
       "onTabNavigated", "onTimelineDataChanged", "onTimelinePlayClicked",
       "onTimelineRewindClicked", "onRateChanged"]) {

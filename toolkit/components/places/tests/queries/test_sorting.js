@@ -1245,13 +1245,11 @@ tests.push({
   }
 });
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_sorting()
-{
+add_task(function* test_sorting() {
   for (let test of tests) {
     yield test.setup();
     yield PlacesTestUtils.promiseAsyncUpdates();

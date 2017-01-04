@@ -5,7 +5,8 @@
 from marionette_driver.by import By
 from marionette_driver.errors import (
     NoSuchElementException,
-    StaleElementException
+    StaleElementException,
+    UnsupportedOperationException,
 )
 
 from marionette_harness import MarionetteTestCase
@@ -21,6 +22,11 @@ class TestShadowDom(MarionetteTestCase):
         self.host = self.marionette.find_element(By.ID, "host")
         self.marionette.switch_to_shadow_root(self.host)
         self.button = self.marionette.find_element(By.ID, "button")
+
+    def test_chrome_error(self):
+        with self.marionette.using_context("chrome"):
+            self.assertRaises(UnsupportedOperationException,
+                              self.marionette.switch_to_shadow_root)
 
     def test_shadow_dom(self):
         # Button in shadow root should be actionable

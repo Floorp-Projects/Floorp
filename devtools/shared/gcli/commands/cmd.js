@@ -5,18 +5,19 @@
 "use strict";
 
 const { Cc, Ci, Cu } = require("chrome");
+const { OS, TextDecoder } = Cu.import("resource://gre/modules/osfile.jsm", {});
+const { Task } = require("devtools/shared/task");
 
-const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
-const { TextEncoder, TextDecoder } = Cu.import('resource://gre/modules/commonjs/toolkit/loader.js', {});
 const gcli = require("gcli/index");
 const l10n = require("gcli/l10n");
 
-loader.lazyGetter(this, "prefBranch", function() {
-  let prefService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+loader.lazyGetter(this, "prefBranch", function () {
+  let prefService = Cc["@mozilla.org/preferences-service;1"]
+                      .getService(Ci.nsIPrefService);
   return prefService.getBranch(null).QueryInterface(Ci.nsIPrefBranch2);
 });
 
-loader.lazyGetter(this, "supportsString", function() {
+loader.lazyGetter(this, "supportsString", function () {
   return Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
 });
 
@@ -66,30 +67,32 @@ function loadItemsFromMozDir() {
 
   // We need to return (a promise of) an array of items from the *.mozcmd
   // files in dirName (which we can assume to be a valid directory now)
-  return statPromise.then(() => {
+  return Task.async(function* () {
+    yield statPromise;
     let itemPromises = [];
 
     let iterator = new OS.File.DirectoryIterator(dirName);
-    let iterPromise = iterator.forEach(entry => {
-      if (entry.name.match(/.*\.mozcmd$/) && !entry.isDir) {
-        itemPromises.push(loadCommandFile(entry));
-      }
-    });
-
-    return iterPromise.then(() => {
-      iterator.close();
-      return Promise.all(itemPromises).then((itemsArray) => {
-        return itemsArray.reduce((prev, curr) => {
-          return prev.concat(curr);
-        }, []);
+    try {
+      yield iterator.forEach(entry => {
+        if (entry.name.match(/.*\.mozcmd$/) && !entry.isDir) {
+          itemPromises.push(loadCommandFile(entry));
+        }
       });
-    }, reason => { iterator.close(); throw reason; });
+      iterator.close();
+      let itemsArray = yield Promise.all(itemPromises);
+      return itemsArray.reduce((prev, curr) => {
+        return prev.concat(curr);
+      }, []);
+    } catch (e) {
+      iterator.close();
+      throw e;
+    }
   });
 }
 
-exports.mozDirLoader = function(name) {
+exports.mozDirLoader = function (name) {
   return loadItemsFromMozDir().then(items => {
-    return { items: items };
+    return { items };
   });
 };
 
@@ -100,10 +103,10 @@ exports.mozDirLoader = function(name) {
  */
 function loadCommandFile(entry) {
   let readPromise = OS.File.read(entry.path);
-  return readPromise = readPromise.then(array => {
+  readPromise = readPromise.then(array => {
     let decoder = new TextDecoder();
     let source = decoder.decode(array);
-    var principal = Cc["@mozilla.org/systemprincipal;1"]
+    let principal = Cc["@mozilla.org/systemprincipal;1"]
                       .createInstance(Ci.nsIPrincipal);
 
     let sandbox = new Cu.Sandbox(principal, {
@@ -113,11 +116,12 @@ function loadCommandFile(entry) {
 
     if (!Array.isArray(data)) {
       console.error("Command file '" + entry.name + "' does not have top level array.");
-      return;
+      return null;
     }
 
     return data;
   });
+  return readPromise;
 }
 
 exports.items = [
@@ -136,7 +140,7 @@ exports.items = [
     get hidden() {
       return !prefBranch.prefHasUserValue(PREF_DIR);
     },
-    exec: function(args, context) {
+    exec: function (args, context) {
       gcli.load();
 
       let dirName = prefBranch.getComplexValue(PREF_DIR,
@@ -164,9 +168,10 @@ exports.items = [
     ],
     returnType: "string",
     get hidden() {
-      return true; // !prefBranch.prefHasUserValue(PREF_DIR);
+      // !prefBranch.prefHasUserValue(PREF_DIR);
+      return true;
     },
-    exec: function(args, context) {
+    exec: function (args, context) {
       supportsString.data = args.directory;
       prefBranch.setComplexValue(PREF_DIR, Ci.nsISupportsString, supportsString);
 

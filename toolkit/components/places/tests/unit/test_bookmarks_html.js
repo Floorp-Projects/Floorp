@@ -73,8 +73,7 @@ var gBookmarksFileOld;
 // Places bookmarks.html file pointer.
 var gBookmarksFileNew;
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
@@ -106,8 +105,7 @@ add_task(function* setup() {
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_import_new()
-{
+add_task(function* test_import_new() {
   // Test importing a Places bookmarks.html file.
   // 1. import bookmarks.exported.html
   // 2. run the test-suite
@@ -120,8 +118,7 @@ add_task(function* test_import_new()
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_emptytitle_export()
-{
+add_task(function* test_emptytitle_export() {
   // Test exporting and importing with an empty-titled bookmark.
   // 1. import bookmarks
   // 2. create an empty-titled bookmark.
@@ -166,8 +163,7 @@ add_task(function* test_emptytitle_export()
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_import_chromefavicon()
-{
+add_task(function* test_import_chromefavicon() {
   // Test exporting and importing with a bookmark pointing to a chrome favicon.
   // 1. import bookmarks
   // 2. create a bookmark pointing to a chrome favicon.
@@ -248,8 +244,7 @@ add_task(function* test_import_chromefavicon()
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
-add_task(function* test_import_ontop()
-{
+add_task(function* test_import_ontop() {
   // Test importing the exported bookmarks.html file *on top of* the existing
   // bookmarks.
   // 1. empty bookmarks db
@@ -270,8 +265,7 @@ add_task(function* test_import_ontop()
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
-function* testImportedBookmarks()
-{
+function* testImportedBookmarks() {
   for (let group in test_bookmarks) {
     do_print("[testImportedBookmarks()] Checking group '" + group + "'");
 
@@ -299,8 +293,7 @@ function* testImportedBookmarks()
   }
 }
 
-function* checkItem(aExpected, aNode)
-{
+function* checkItem(aExpected, aNode) {
   let id = aNode.itemId;
 
   return Task.spawn(function* () {

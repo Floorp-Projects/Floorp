@@ -44,7 +44,7 @@ add_task(function* test_context_menu_iframe_fill() {
     let inputRect = passwordInput.getBoundingClientRect();
     let clickPos = {
       offsetX: iframeRect.left + inputRect.width / 2,
-      offsetY: iframeRect.top  + inputRect.height / 2,
+      offsetY: iframeRect.top + inputRect.height / 2,
     };
 
     // Synthesize a right mouse click over the password input element.

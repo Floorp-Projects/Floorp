@@ -2136,6 +2136,11 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   font-weight: bold;
 }
 
+.addon-webext-perm-header {
+  font-weight: bold;
+  font-size: 1.3em;
+}
+
 /* Notification icon box */
 
 .notification-anchor-icon:-moz-focusring {

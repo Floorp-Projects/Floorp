@@ -1927,6 +1927,22 @@ HTMLInputElement::ConvertStringToNumber(nsAString& aValue,
         aResultValue = Decimal::fromDouble(days * kMsPerDay);
         return true;
       }
+    case NS_FORM_INPUT_DATETIME_LOCAL:
+      {
+        uint32_t year, month, day, timeInMs;
+        if (!ParseDateTimeLocal(aValue, &year, &month, &day, &timeInMs)) {
+          return false;
+        }
+
+        JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day,
+                                                         timeInMs));
+        if (!time.isValid()) {
+          return false;
+        }
+
+        aResultValue = Decimal::fromDouble(time.toDouble());
+        return true;
+      }
     default:
       MOZ_ASSERT(false, "Unrecognized input type");
       return false;
@@ -2102,21 +2118,17 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
       }
     case NS_FORM_INPUT_TIME:
       {
+        aValue = aValue.floor();
         // Per spec, we need to truncate |aValue| and we should only represent
         // times inside a day [00:00, 24:00[, which means that we should do a
         // modulo on |aValue| using the number of milliseconds in a day (86400000).
-        uint32_t value = NS_floorModulo(aValue.floor(), Decimal(86400000)).toDouble();
+        uint32_t value =
+          NS_floorModulo(aValue, Decimal::fromDouble(kMsPerDay)).toDouble();
 
-        uint16_t milliseconds = value % 1000;
-        value /= 1000;
-
-        uint8_t seconds = value % 60;
-        value /= 60;
-
-        uint8_t minutes = value % 60;
-        value /= 60;
-
-        uint8_t hours = value;
+        uint16_t milliseconds, seconds, minutes, hours;
+        if (!GetTimeFromMs(value, &hours, &minutes, &seconds, &milliseconds)) {
+          return false;
+        }
 
         if (milliseconds != 0) {
           aResultString.AppendPrintf("%02d:%02d:%02d.%03d",
@@ -2186,6 +2198,42 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
         aResultString.AppendPrintf("%04.0f-W%02d", year, week);
         return true;
       }
+    case NS_FORM_INPUT_DATETIME_LOCAL:
+      {
+        aValue = aValue.floor();
+
+        uint32_t timeValue =
+          NS_floorModulo(aValue, Decimal::fromDouble(kMsPerDay)).toDouble();
+
+        uint16_t milliseconds, seconds, minutes, hours;
+        if (!GetTimeFromMs(timeValue,
+                           &hours, &minutes, &seconds, &milliseconds)) {
+          return false;
+        }
+
+        double year = JS::YearFromTime(aValue.toDouble());
+        double month = JS::MonthFromTime(aValue.toDouble());
+        double day = JS::DayFromTime(aValue.toDouble());
+
+        if (IsNaN(year) || IsNaN(month) || IsNaN(day)) {
+          return false;
+        }
+
+        if (milliseconds != 0) {
+          aResultString.AppendPrintf("%04.0f-%02.0f-%02.0fT%02d:%02d:%02d.%03d",
+                                     year, month + 1, day, hours, minutes,
+                                     seconds, milliseconds);
+        } else if (seconds != 0) {
+          aResultString.AppendPrintf("%04.0f-%02.0f-%02.0fT%02d:%02d:%02d",
+                                     year, month + 1, day, hours, minutes,
+                                     seconds);
+        } else {
+          aResultString.AppendPrintf("%04.0f-%02.0f-%02.0fT%02d:%02d",
+                                     year, month + 1, day, hours, minutes);
+        }
+
+        return true;
+      }
     default:
       MOZ_ASSERT(false, "Unrecognized input type");
       return false;
@@ -2196,8 +2244,7 @@ HTMLInputElement::ConvertNumberToString(Decimal aValue,
 Nullable<Date>
 HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 {
-  // TODO: this is temporary until bug 888331 is fixed.
-  if (!IsDateTimeInputType(mType) || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
+  if (!IsDateTimeInputType(mType)) {
     return Nullable<Date>();
   }
 
@@ -2255,6 +2302,19 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 
       return Nullable<Date>(Date(time));
     }
+    case NS_FORM_INPUT_DATETIME_LOCAL:
+    {
+      uint32_t year, month, day, timeInMs;
+      nsAutoString value;
+      GetNonFileValueInternal(value);
+      if (!ParseDateTimeLocal(value, &year, &month, &day, &timeInMs)) {
+        return Nullable<Date>();
+      }
+
+      JS::ClippedTime time = JS::TimeClip(JS::MakeDate(year, month - 1, day,
+                                                       timeInMs));
+      return Nullable<Date>(Date(time));
+    }
   }
 
   MOZ_ASSERT(false, "Unrecognized input type");
@@ -2265,8 +2325,7 @@ HTMLInputElement::GetValueAsDate(ErrorResult& aRv)
 void
 HTMLInputElement::SetValueAsDate(Nullable<Date> aDate, ErrorResult& aRv)
 {
-  // TODO: this is temporary until bug 888331 is fixed.
-  if (!IsDateTimeInputType(mType) || mType == NS_FORM_INPUT_DATETIME_LOCAL) {
+  if (!IsDateTimeInputType(mType)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -5352,6 +5411,29 @@ HTMLInputElement::MaximumWeekInYear(uint32_t aYear) const
 }
 
 bool
+HTMLInputElement::GetTimeFromMs(double aValue, uint16_t* aHours,
+                                uint16_t* aMinutes, uint16_t* aSeconds,
+                                uint16_t* aMilliseconds) const {
+  MOZ_ASSERT(aValue >= 0 && aValue < kMsPerDay,
+             "aValue must be milliseconds within a day!");
+
+  uint32_t value = floor(aValue);
+
+  *aMilliseconds = value % 1000;
+  value /= 1000;
+
+  *aSeconds = value % 60;
+  value /= 60;
+
+  *aMinutes = value % 60;
+  value /= 60;
+
+  *aHours = value;
+
+  return true;
+}
+
+bool
 HTMLInputElement::IsValidWeek(const nsAString& aValue) const
 {
   uint32_t year, week;
@@ -6999,8 +7081,8 @@ HTMLInputElement::RestoreState(nsPresState* aState)
     }
   }
 
-  if (aState->IsDisabledSet()) {
-    SetDisabled(aState->GetDisabled());
+  if (aState->IsDisabledSet() && !aState->GetDisabled()) {
+    SetDisabled(false);
   }
 
   return restoredCheckedState;

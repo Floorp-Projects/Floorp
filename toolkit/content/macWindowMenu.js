@@ -4,8 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function macWindowMenuDidShow()
-{
+function macWindowMenuDidShow() {
   var windowManagerDS =
     Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
               .getService(Components.interfaces.nsIWindowDataSource);
@@ -21,16 +20,14 @@ function macWindowMenuDidShow()
   }
 }
 
-function toOpenWindow( aWindow )
-{
+function toOpenWindow( aWindow ) {
   // deminiaturize the window, if it's in the Dock
   if (aWindow.windowState == STATE_MINIMIZED)
     aWindow.restore();
   aWindow.document.commandDispatcher.focusedWindow.focus();
 }
 
-function ShowWindowFromResource( node )
-{
+function ShowWindowFromResource( node ) {
   var windowManagerDS =
     Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator']
               .getService(Components.interfaces.nsIWindowDataSource);
@@ -42,8 +39,7 @@ function ShowWindowFromResource( node )
     toOpenWindow(desiredWindow);
 }
 
-function zoomWindow()
-{
+function zoomWindow() {
   if (window.windowState == STATE_NORMAL)
     window.maximize();
   else

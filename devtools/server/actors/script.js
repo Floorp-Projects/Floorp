@@ -7,18 +7,13 @@
 "use strict";
 
 const Services = require("Services");
-const { Cc, Ci, Cu, Cr, components, ChromeWorker } = require("chrome");
+const { Cc, Ci, Cr } = require("chrome");
 const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
-const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
-const { EnvironmentActor } = require("devtools/server/actors/environment");
-const { FrameActor } = require("devtools/server/actors/frame");
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
-const { SourceActor, getSourceURL } = require("devtools/server/actors/source");
-const { DebuggerServer } = require("devtools/server/main");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const flags = require("devtools/shared/flags");
-const { assert, dumpn, update, fetch } = DevToolsUtils;
+const { assert, dumpn } = DevToolsUtils;
 const promise = require("promise");
 const xpcInspector = require("xpcInspector");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
@@ -36,6 +31,11 @@ loader.lazyRequireGetter(this, "CssLogic", "devtools/server/css-logic", true);
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
+loader.lazyRequireGetter(this, "BreakpointActor", "devtools/server/actors/breakpoint", true);
+loader.lazyRequireGetter(this, "setBreakpointAtEntryPoints", "devtools/server/actors/breakpoint", true);
+loader.lazyRequireGetter(this, "getSourceURL", "devtools/server/actors/source", true);
+loader.lazyRequireGetter(this, "EnvironmentActor", "devtools/server/actors/environment", true);
+loader.lazyRequireGetter(this, "FrameActor", "devtools/server/actors/frame", true);
 
 /**
  * A BreakpointActorMap is a map from locations to instances of BreakpointActor.

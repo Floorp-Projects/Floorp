@@ -152,8 +152,7 @@ AutoCompleteSearch.prototype = {
   startSearch(aSearchString,
                         aSearchParam,
                         aPreviousResult,
-                        aListener)
-  {
+                        aListener) {
     var result = this._result;
     if (result._values.length > 0) {
       result.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS_ONGOING;

@@ -809,7 +809,7 @@ this.AddonRepository = {
 
     let url = this._formatURLPref(pref, params);
 
-    let  handleResults = (aElements, aTotalResults, aCompatData) => {
+    let handleResults = (aElements, aTotalResults, aCompatData) => {
       // Don't use this._parseAddons() so that, for example,
       // incompatible add-ons are not filtered out
       let results = [];
@@ -1321,8 +1321,7 @@ this.AddonRepository = {
         AddonManager.getInstallForURL(result.xpiURL, callback,
                                       "application/x-xpinstall", result.xpiHash,
                                       addon.name, addon.icons, addon.version);
-      }
-      else {
+      } else {
         callback(null);
       }
     }
@@ -1818,7 +1817,7 @@ var AddonDatabase = {
       try {
         switch (expectedProperty) {
           case "sourceURI":
-            addon.sourceURI = value ? NetUtil.newURI(value) :  null;
+            addon.sourceURI = value ? NetUtil.newURI(value) : null;
             break;
 
           case "creator":

@@ -37,8 +37,7 @@ var gListener = {
   }
 };
 
-function run_test()
-{
+function run_test() {
   Components.classes["@mozilla.org/autocomplete/search;1?name=file"]
             .getService(Components.interfaces.nsIAutoCompleteSearch)
             .startSearch("test", path, null, gListener);

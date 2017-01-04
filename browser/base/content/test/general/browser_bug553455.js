@@ -260,8 +260,7 @@ function test_disabledInstall() {
 
     try {
       ok(Services.prefs.getBoolPref("xpinstall.enabled"), "Installation should be enabled");
-    }
-    catch (e) {
+    } catch (e) {
       ok(false, "xpinstall.enabled should be set");
     }
 

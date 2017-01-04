@@ -10,6 +10,9 @@
 #include "mozilla/gfx/PGPUParent.h"
 
 namespace mozilla {
+
+class TimeStamp;
+
 namespace gfx {
 
 class VsyncBridgeParent;
@@ -53,6 +56,7 @@ public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
+  const TimeStamp mLaunchTime;
   RefPtr<VsyncBridgeParent> mVsyncBridge;
 };
 

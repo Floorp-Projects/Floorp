@@ -770,12 +770,6 @@ private:
   // the tab's docshell is inactive.
   bool mPreserveLayers;
 
-  // Normally we call ForceTabPaint when activating a tab. But we don't do this
-  // the first time we activate a tab. The tab is probably busy running the
-  // initial content scripts and we don't want to force painting then; they're
-  // probably quick and there's some cost to forcing painting.
-  bool mFirstActivate;
-
 public:
   static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);
 };

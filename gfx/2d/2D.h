@@ -741,7 +741,7 @@ public:
    * @return an already_addrefed ScaledFont, containing nullptr if failed.
    */
   virtual already_AddRefed<ScaledFont>
-    CreateScaledFont(uint32_t aIndex, uint32_t aGlyphSize) = 0;
+    CreateScaledFont(uint32_t aIndex, Float aGlyphSize) = 0;
 
   virtual ~NativeFontResource() {};
 };

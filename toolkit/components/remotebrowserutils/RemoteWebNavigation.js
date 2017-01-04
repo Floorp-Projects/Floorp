@@ -12,18 +12,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
-function makeURI(url)
-{
+function makeURI(url) {
   return Services.io.newURI(url, null, null);
 }
 
-function readInputStreamToString(aStream)
-{
+function readInputStreamToString(aStream) {
   return NetUtil.readInputStreamToString(aStream, aStream.available());
 }
 
-function RemoteWebNavigation()
-{
+function RemoteWebNavigation() {
   this.wrappedJSObject = this;
 }
 
@@ -129,8 +126,7 @@ RemoteWebNavigation.prototype = {
   _sendMessage(aMessage, aData) {
     try {
       this._browser.messageManager.sendAsyncMessage(aMessage, aData);
-    }
-    catch (e) {
+    } catch (e) {
       Cu.reportError(e);
     }
   },

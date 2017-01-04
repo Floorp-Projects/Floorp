@@ -70,9 +70,9 @@ const ATTRIBUTE_TYPES = [
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "area", type: TYPE_URI},
   {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_CSS_RESOURCE_URI,
   /* eslint-enable */
-    isValid: (namespaceURI, tagName, attributes) => {
-      return getAttribute(attributes, "rel") === "stylesheet";
-    }},
+   isValid: (namespaceURI, tagName, attributes) => {
+     return getAttribute(attributes, "rel") === "stylesheet";
+   }},
   /* eslint-disable max-len */
   {namespaceURI: "*", attributeName: "href", tagName: "link", type: TYPE_URI},
   {namespaceURI: HTML_NS, attributeName: "href", tagName: "base", type: TYPE_URI},

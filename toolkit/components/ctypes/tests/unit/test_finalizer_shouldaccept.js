@@ -10,8 +10,7 @@ var acquire, dispose, reset_errno, dispose_errno,
   acquire_void_ptr, dispose_void_ptr,
   acquire_string, dispose_string;
 
-function run_test()
-{
+function run_test() {
   let library = open_ctypes_test_lib();
 
   let start = library.declare("test_finalizer_start", ctypes.default_abi,
@@ -63,8 +62,7 @@ function run_test()
 /**
  * Check that toString succeeds before/after forget/dispose.
  */
-function test_to_string()
-{
+function test_to_string() {
   do_print("Starting test_to_string");
   let a = ctypes.CDataFinalizer(acquire(0), dispose);
   do_check_eq(a.toString(), "0");
@@ -80,8 +78,7 @@ function test_to_string()
 /**
  * Check that toSource succeeds before/after forget/dispose.
  */
-function test_to_source()
-{
+function test_to_source() {
   do_print("Starting test_to_source");
   let value = acquire(0);
   let a = ctypes.CDataFinalizer(value, dispose);
@@ -104,8 +101,7 @@ function test_to_source()
 /**
  * Test conversion to int32
  */
-function test_to_int()
-{
+function test_to_int() {
   let value = 2;
   let wrapped, converted, finalizable;
   wrapped = ctypes.int32_t(value);
@@ -125,8 +121,7 @@ function test_to_int()
 /**
  * Test that dispose can change errno but finalization cannot
  */
-function test_errno(size, tc, cleanup)
-{
+function test_errno(size, tc, cleanup) {
   reset_errno();
   do_check_eq(ctypes.errno, 0);
 
@@ -148,8 +143,7 @@ function test_errno(size, tc, cleanup)
 /**
  * Check that a finalizable of a pointer can be used as a pointer
  */
-function test_to_pointer()
-{
+function test_to_pointer() {
   let ptr = ctypes.int32_t(2).address();
   let finalizable = ctypes.CDataFinalizer(ptr, dispose_ptr);
   let unwrapped = ctypes.int32_t.ptr(finalizable);
@@ -162,8 +156,7 @@ function test_to_pointer()
 /**
  * Test that readstring can be applied to a finalizer
  */
-function test_readstring(size)
-{
+function test_readstring(size) {
   for (let i = 0; i < size; ++i) {
     let acquired = acquire_string(i);
     let finalizable = ctypes.CDataFinalizer(acquired,

@@ -32,7 +32,9 @@
 
   <constructor>
     <![CDATA[
+    /* eslint-disable no-multi-spaces */
     this.scrubberNameFormat = ]]>"&scrubberScale.nameFormat;"<![CDATA[;
+    /* eslint-enable no-multi-spaces */
     this.positionValue = "";
     this.durationValue = "";
     this.valueBar = null;
@@ -83,7 +85,7 @@
 
         case "maxpos":
           // Update the value bar to match the thumb position.
-          this.valueBar.value = Math.round(this.value / newValue  * 10000); // has max=10000
+          this.valueBar.value = Math.round(this.value / newValue * 10000); // has max=10000
           this.setAttribute("max", newValue);
           break;
       }
@@ -860,14 +862,7 @@
       seekToPosition(newPosition) {
         newPosition /= 1000; // convert from ms
         this.log("+++ seeking to " + newPosition);
-        if (this.videocontrols.isGonk) {
-          // We use fastSeek() on B2G, and an accurate (but slower)
-          // seek on other platforms (that are likely to be higher
-          // perf).
-          this.video.fastSeek(newPosition);
-        } else {
-          this.video.currentTime = newPosition;
-        }
+        this.video.currentTime = newPosition;
       },
 
       setVolume(newVolume) {
@@ -2048,14 +2043,6 @@
     </handler>
   </handlers>
 
-</binding>
-
-<binding id="touchControlsGonk" extends="chrome://global/content/bindings/videocontrols.xml#touchControls">
-  <implementation>
-    <constructor>
-      this.isGonk = true;
-    </constructor>
-  </implementation>
 </binding>
 
 <binding id="noControls">

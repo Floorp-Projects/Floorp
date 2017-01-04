@@ -87,8 +87,7 @@ function popupShownListener() {
   if (expectingPopup) {
     expectingPopup = false;
     SimpleTest.executeSoon(runTest);
-  }
-  else {
+  } else {
     ok(false, "Autocomplete popup not expected during test " + testNum);
   }
 }

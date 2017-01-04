@@ -176,8 +176,7 @@ var DirectoryLinksProvider = {
       try {
         this.__linksURL = Services.prefs.getCharPref(this._observedPrefs["linksURL"]);
         this.__linksURLModified = Services.prefs.prefHasUserValue(this._observedPrefs["linksURL"]);
-      }
-      catch (e) {
+      } catch (e) {
         Cu.reportError("Error fetching directory links url from prefs: " + e);
       }
     }
@@ -192,8 +191,7 @@ var DirectoryLinksProvider = {
     let matchOS;
     try {
       matchOS = Services.prefs.getBoolPref(PREF_MATCH_OS_LOCALE);
-    }
-    catch (e) {}
+    } catch (e) {}
 
     if (matchOS) {
       return Services.locale.getLocaleComponentForUserAgent();
@@ -205,13 +203,11 @@ var DirectoryLinksProvider = {
       if (locale) {
         return locale.data;
       }
-    }
-    catch (e) {}
+    } catch (e) {}
 
     try {
       return Services.prefs.getCharPref(PREF_SELECTED_LOCALE);
-    }
-    catch (e) {}
+    } catch (e) {}
 
     return "en-US";
   },
@@ -227,8 +223,7 @@ var DirectoryLinksProvider = {
         if (Services.prefs.getBoolPref("privacy.donottrackheader.enabled")) {
           enhanced = false;
         }
-      }
-      catch (ex) {}
+      } catch (ex) {}
       Services.prefs.setBoolPref(PREF_NEWTAB_ENHANCED, enhanced);
     }
   },
@@ -391,9 +386,8 @@ var DirectoryLinksProvider = {
         let linksObj = JSON.parse(json);
         output = {directory: linksObj.directory || [],
                   suggested: linksObj.suggested || [],
-                  enhanced:  linksObj.enhanced  || []};
-      }
-      catch (e) {
+                  enhanced:  linksObj.enhanced || []};
+      } catch (e) {
         Cu.reportError(e);
       }
       return output || emptyOutput;
@@ -534,12 +528,11 @@ var DirectoryLinksProvider = {
           this._addFrequencyCapView(url);
         }
       });
-    }
-    // any click action on a suggested tile should stop that tile suggestion
-    // click/block - user either removed a tile or went to a landing page
-    // pin - tile turned into history tile, should no longer be suggested
-    // unpin - the tile was pinned before, should not matter
-    else {
+    } else {
+      // any click action on a suggested tile should stop that tile suggestion
+      // click/block - user either removed a tile or went to a landing page
+      // pin - tile turned into history tile, should no longer be suggested
+      // unpin - the tile was pinned before, should not matter
       // suggested tile has targetedSite, or frecent_sites if it was pinned
       let {frecent_sites, targetedSite, url} = sites[triggeringSiteIndex].link;
       if (frecent_sites || targetedSite) {
@@ -552,8 +545,7 @@ var DirectoryLinksProvider = {
     try {
       newtabEnhanced = Services.prefs.getBoolPref(PREF_NEWTAB_ENHANCED);
       pingEndPoint = Services.prefs.getCharPref(PREF_DIRECTORY_PING);
-    }
-    catch (ex) {}
+    } catch (ex) {}
 
     // Bug 1240245 - We no longer send pings, but frequency capping and fetching
     // tests depend on the following actions, so references to PING remain.
@@ -600,8 +592,7 @@ var DirectoryLinksProvider = {
 
       // URIs without base domains will be allowed
       base = Services.eTLD.getBaseDomain(uri);
-    }
-    catch (ex) {}
+    } catch (ex) {}
     // Require a scheme match and the base only if desired
     return allowed.has(scheme) && (!checkBase || ALLOWED_URL_BASE.has(base));
   },
@@ -965,8 +956,7 @@ var DirectoryLinksProvider = {
       let jsonObject = {};
       try {
         jsonObject = JSON.parse(jsonString);
-      }
-      catch (e) {
+      } catch (e) {
         Cu.reportError(e);
       }
 
@@ -1028,8 +1018,7 @@ var DirectoryLinksProvider = {
       let binaryData = yield OS.File.read(filePath);
       let json = gTextDecoder.decode(binaryData);
       jsonObj = JSON.parse(json);
-    }
-    catch (e) {}
+    } catch (e) {}
     return jsonObj || nullObject;
   }),
 
@@ -1081,8 +1070,7 @@ var DirectoryLinksProvider = {
     if (link.frequency_caps) {
       capsObject.dailyCap = link.frequency_caps.daily || DEFAULT_DAILY_FREQUENCY_CAP;
       capsObject.totalCap = link.frequency_caps.total || DEFAULT_TOTAL_FREQUENCY_CAP;
-    }
-    else {
+    } else {
       // fallback to defaults
       capsObject.dailyCap = DEFAULT_DAILY_FREQUENCY_CAP;
       capsObject.totalCap = DEFAULT_TOTAL_FREQUENCY_CAP;

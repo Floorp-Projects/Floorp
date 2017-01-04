@@ -1,5 +1,4 @@
-add_task(function * ()
-{
+add_task(function * () {
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, true);
 
@@ -16,8 +15,7 @@ add_task(function * ()
   /**
    * Encapsulates EventUtils.sendChar().
    */
-  function sendChar(aChar)
-  {
+  function sendChar(aChar) {
     key = aChar;
     dispatchedKeyEvents = kNoKeyEvents;
     EventUtils.sendChar(key);
@@ -28,8 +26,7 @@ add_task(function * ()
   /**
    * Encapsulates EventUtils.sendKey().
    */
-  function sendKey(aKey)
-  {
+  function sendKey(aKey) {
     key = aKey;
     dispatchedKeyEvents = kNoKeyEvents;
     EventUtils.sendKey(key);
@@ -37,8 +34,7 @@ add_task(function * ()
        "unexpected key events were dispatched or not dispatched: " + key);
   }
 
-  function onKey(aEvent)
-  {
+  function onKey(aEvent) {
 //    if (aEvent.target != root && aEvent.target != root.ownerDocument.body) {
 //      ok(false, "unknown target: " + aEvent.target.tagName);
 //      return;
