@@ -1074,12 +1074,6 @@ NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \
-Gecko_Construct_nsStyle##name(nsStyle##name* ptr)                             \
-{                                                                             \
-  new (ptr) nsStyle##name(StyleStructContext::ServoContext());                \
-}                                                                             \
-                                                                              \
-void                                                                          \
 Gecko_Construct_Default_nsStyle##name(nsStyle##name* ptr,                     \
                                       const nsPresContext* pres_context)      \
 {                                                                             \
@@ -1097,6 +1091,12 @@ void                                                                          \
 Gecko_Destroy_nsStyle##name(nsStyle##name* ptr)                               \
 {                                                                             \
   ptr->~nsStyle##name();                                                      \
+}
+
+void
+Gecko_Construct_nsStyleVariables(nsStyleVariables* ptr)
+{
+  new (ptr) nsStyleVariables();
 }
 
 #include "nsStyleStructList.h"

@@ -4134,6 +4134,11 @@ nsStyleUIReset::CalcDifference(const nsStyleUIReset& aNewData) const
 // nsStyleVariables
 //
 
+nsStyleVariables::nsStyleVariables()
+{
+  MOZ_COUNT_CTOR(nsStyleVariables);
+}
+
 nsStyleVariables::nsStyleVariables(StyleStructContext aContext)
 {
   MOZ_COUNT_CTOR(nsStyleVariables);
