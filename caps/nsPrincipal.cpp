@@ -183,8 +183,23 @@ nsPrincipal::GetOriginInternal(nsACString& aOrigin)
   // in the origin string
   nsCOMPtr<nsIStandardURL> standardURL = do_QueryInterface(origin);
   NS_ENSURE_TRUE(standardURL, NS_ERROR_FAILURE);
+
   rv = origin->GetAsciiSpec(aOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // The origin, when taken from the spec, should not contain the ref part of
+  // the URL.
+
+  int32_t pos = aOrigin.FindChar('?');
+  int32_t hashPos = aOrigin.FindChar('#');
+
+  if (hashPos != kNotFound && (pos == kNotFound || hashPos < pos)) {
+    pos = hashPos;
+  }
+
+  if (pos != kNotFound) {
+    aOrigin.Truncate(pos);
+  }
 
   return NS_OK;
 }
