@@ -415,7 +415,8 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
   RefPtr<ServiceWorkerInfo> sw =
     new ServiceWorkerInfo(mRegistration->mPrincipal,
                           mRegistration->mScope,
-                          mScriptSpec, aNewCacheName);
+                          mScriptSpec, aNewCacheName,
+                          mRegistration->GetLoadFlags());
 
   mRegistration->SetEvaluating(sw);
 

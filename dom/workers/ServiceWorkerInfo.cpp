@@ -171,11 +171,13 @@ ServiceWorkerInfo::UpdateState(ServiceWorkerState aState)
 ServiceWorkerInfo::ServiceWorkerInfo(nsIPrincipal* aPrincipal,
                                      const nsACString& aScope,
                                      const nsACString& aScriptSpec,
-                                     const nsAString& aCacheName)
+                                     const nsAString& aCacheName,
+                                     nsLoadFlags aLoadFlags)
   : mPrincipal(aPrincipal)
   , mScope(aScope)
   , mScriptSpec(aScriptSpec)
   , mCacheName(aCacheName)
+  , mLoadFlags(aLoadFlags)
   , mState(ServiceWorkerState::EndGuard_)
   , mServiceWorkerID(GetNextID())
   , mServiceWorkerPrivate(new ServiceWorkerPrivate(this))
