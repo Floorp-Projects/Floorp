@@ -34,8 +34,7 @@ add_task(function* database_is_valid() {
   Assert.equal((yield db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
 });
 
-add_task(function* test_bookmark_guid_annotation_removed()
-{
+add_task(function* test_bookmark_guid_annotation_removed() {
   let db = yield PlacesUtils.promiseDBConnection();
   Assert.equal((yield getTotalGuidAnnotationsCount(db)), 0,
                "There should be no more obsolete GUID annotations.");

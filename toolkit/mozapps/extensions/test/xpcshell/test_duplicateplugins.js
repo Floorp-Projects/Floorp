@@ -125,24 +125,20 @@ function run_test_1() {
       if (aAddon.name == "Duplicate Plugin 1") {
         found_plugin(0, aAddon.id);
         do_check_eq(aAddon.description, "A duplicate plugin");
-      }
-      else if (aAddon.name == "Duplicate Plugin 2") {
+      } else if (aAddon.name == "Duplicate Plugin 2") {
         found_plugin(1, aAddon.id);
         do_check_eq(aAddon.description, "Another duplicate plugin");
-      }
-      else if (aAddon.name == "Another Non-duplicate Plugin") {
+      } else if (aAddon.name == "Another Non-duplicate Plugin") {
         found_plugin(5, aAddon.id);
         do_check_eq(aAddon.description, "Not a duplicate plugin");
-      }
-      else if (aAddon.name == "Non-duplicate Plugin") {
+      } else if (aAddon.name == "Non-duplicate Plugin") {
         if (aAddon.description == "Not a duplicate plugin")
           found_plugin(3, aAddon.id);
         else if (aAddon.description == "Not a duplicate because the descriptions are different")
           found_plugin(4, aAddon.id);
         else
           do_throw("Found unexpected plugin with description " + aAddon.description);
-      }
-      else {
+      } else {
         do_throw("Found unexpected plugin " + aAddon.name);
       }
     });

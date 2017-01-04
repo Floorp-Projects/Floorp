@@ -52,8 +52,7 @@ function runNextTest() {
   let testCase = gTests.shift();
   if (testCase) {
     executeSoon(testCase);
-  }
-  else {
+  } else {
     finish();
   }
 }
@@ -332,8 +331,7 @@ WindowListener.prototype = {
           domwindow.close();
           executeSoon(this.callBack_onFinalize);
         }.bind(this), 3000);
-      }
-      else {
+      } else {
         domwindow.close();
         executeSoon(this.callBack_onFinalize);
       }

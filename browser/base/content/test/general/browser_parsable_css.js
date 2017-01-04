@@ -229,8 +229,7 @@ function processCSSRules(sheet) {
   }
 }
 
-function chromeFileExists(aURI)
-{
+function chromeFileExists(aURI) {
   let available = 0;
   try {
     let channel = NetUtil.newChannel({uri: aURI, loadUsingSystemPrincipal: true});

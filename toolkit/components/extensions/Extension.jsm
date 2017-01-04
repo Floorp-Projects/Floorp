@@ -377,6 +377,12 @@ this.ExtensionData = class {
       hosts: this.whiteListedHosts.pat,
       apis: [...this.apiNames],
     };
+
+    if (Array.isArray(this.manifest.content_scripts)) {
+      for (let entry of this.manifest.content_scripts) {
+        result.hosts.push(...entry.matches);
+      }
+    }
     const EXP_PATTERN = /^experiments\.\w+/;
     result.permissions = [...this.permissions]
       .filter(p => !result.hosts.includes(p) && !EXP_PATTERN.test(p));

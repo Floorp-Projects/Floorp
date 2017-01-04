@@ -131,7 +131,7 @@ add_test(function test5() {
     let changes =  [];
     for (let i = 0; i < timesUsedSamples; i++) {
         let timesUsed = (timesUsedSamples - i);
-        let change = { op : "add", fieldname: "field2", value: "value" + (timesUsedSamples - 1 -  i),
+        let change = { op : "add", fieldname: "field2", value: "value" + (timesUsedSamples - 1 - i),
                        timesUsed: timesUsed * timeGroupingSize, firstUsed: now, lastUsed: now };
         changes.push(change);
     }

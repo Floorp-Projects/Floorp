@@ -5,6 +5,7 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
 from argparse import ArgumentParser, SUPPRESS
 from distutils.util import strtobool
+from itertools import chain
 from urlparse import urlparse
 import json
 import os
@@ -28,6 +29,62 @@ try:
 except ImportError:
     build_obj = None
     conditions = None
+
+
+# Maps test flavors to data needed to run them
+ALL_FLAVORS = {
+    'mochitest': {
+        'suite': 'plain',
+        'aliases': ('plain', 'mochitest'),
+        'enabled_apps': ('firefox', 'android'),
+        'extra_args': {
+            'flavor': 'plain',
+        },
+        'install_subdir': 'tests',
+    },
+    'chrome': {
+        'suite': 'chrome',
+        'aliases': ('chrome', 'mochitest-chrome'),
+        'enabled_apps': ('firefox', 'android'),
+        'extra_args': {
+            'flavor': 'chrome',
+        }
+    },
+    'browser-chrome': {
+        'suite': 'browser',
+        'aliases': ('browser', 'browser-chrome', 'mochitest-browser-chrome', 'bc'),
+        'enabled_apps': ('firefox',),
+        'extra_args': {
+            'flavor': 'browser',
+        }
+    },
+    'jetpack-package': {
+        'suite': 'jetpack-package',
+        'aliases': ('jetpack-package', 'mochitest-jetpack-package', 'jpp'),
+        'enabled_apps': ('firefox',),
+        'extra_args': {
+            'flavor': 'jetpack-package',
+        }
+    },
+    'jetpack-addon': {
+        'suite': 'jetpack-addon',
+        'aliases': ('jetpack-addon', 'mochitest-jetpack-addon', 'jpa'),
+        'enabled_apps': ('firefox',),
+        'extra_args': {
+            'flavor': 'jetpack-addon',
+        }
+    },
+    'a11y': {
+        'suite': 'a11y',
+        'aliases': ('a11y', 'mochitest-a11y', 'accessibility'),
+        'enabled_apps': ('firefox',),
+        'extra_args': {
+            'flavor': 'a11y',
+        }
+    },
+}
+SUPPORTED_FLAVORS = list(chain.from_iterable([f['aliases'] for f in ALL_FLAVORS.values()]))
+CANONICAL_FLAVORS = sorted([f['aliases'][0] for f in ALL_FLAVORS.values()])
 
 
 def get_default_valgrind_suppression_files():
@@ -85,8 +142,6 @@ class ArgumentContainer():
 
 class MochitestArguments(ArgumentContainer):
     """General mochitest arguments."""
-
-    FLAVORS = ('a11y', 'browser', 'chrome', 'jetpack-addon', 'jetpack-package', 'plain')
     LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "FATAL")
 
     args = [
@@ -98,10 +153,10 @@ class MochitestArguments(ArgumentContainer):
                   "(to run recursively). If omitted, the entire suite is run.",
           }],
         [["-f", "--flavor"],
-         {"default": "plain",
-          "choices": FLAVORS,
-          "help": "Mochitest flavor to run, one of {}. Defaults to 'plain'.".format(FLAVORS),
-          "suppress": build_obj is not None,
+         {"choices": SUPPORTED_FLAVORS,
+          "metavar": "{{{}}}".format(', '.join(CANONICAL_FLAVORS)),
+          "default": None,
+          "help": "Only run tests of this flavor.",
           }],
         [["--keep-open"],
          {"nargs": "?",
@@ -582,6 +637,9 @@ class MochitestArguments(ArgumentContainer):
                 parser.error("Error: Path {} doesn't exist. Are you executing "
                              "$objdir/_tests/testing/mochitest/runtests.py?".format(
                                  options.app))
+
+        if options.flavor is None:
+            options.flavor = 'plain'
 
         if options.gmp_path is None and options.app and build_obj:
             # Need to fix the location of gmp_fake which might not be shipped in the binary

@@ -24,7 +24,7 @@ module.exports = { // eslint-disable-line no-undef
     //"curly": "error",
     "dot-notation": "error",
     "eol-last": "error",
-    "indent": ["warn", 2, {"SwitchCase": 1}],
+    "indent": ["warn", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     // "key-spacing": ["warn", {"beforeColon": false, "afterColon": true}],
     "keyword-spacing": "warn",
     "max-nested-callbacks": ["error", 3],

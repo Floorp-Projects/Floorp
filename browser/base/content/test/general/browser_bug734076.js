@@ -1,8 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function* ()
-{
+add_task(function* () {
   let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, null, false);
 
   let browser = tab.linkedBrowser;

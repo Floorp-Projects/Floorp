@@ -330,8 +330,7 @@ var FullScreen = {
       // In DOM fullscreen mode, we hide toolbars with CSS
       if (!document.fullscreenElement)
         this.hideNavToolbox(true);
-    }
-    else {
+    } else {
       this.showNavToolbox(false);
       // This is needed if they use the context menu to quit fullscreen
       this._isPopupOpen = false;
@@ -495,30 +494,26 @@ var FullScreen = {
                  .getInterface(Ci.nsIDOMWindowUtils);
   },
 
-  getMouseTargetRect()
-  {
+  getMouseTargetRect() {
     return this._mouseTargetRect;
   },
 
   // Event callbacks
-  _expandCallback()
-  {
+  _expandCallback() {
     FullScreen.showNavToolbox();
   },
-  onMouseEnter()
-  {
+  onMouseEnter() {
     FullScreen.hideNavToolbox();
   },
-  _keyToggleCallback(aEvent)
-  {
+  _keyToggleCallback(aEvent) {
     // if we can use the keyboard (eg Ctrl+L or Ctrl+E) to open the toolbars, we
     // should provide a way to collapse them too.
     if (aEvent.keyCode == aEvent.DOM_VK_ESCAPE) {
       FullScreen.hideNavToolbox();
-    }
-    // F6 is another shortcut to the address bar, but its not covered in OpenLocation()
-    else if (aEvent.keyCode == aEvent.DOM_VK_F6)
+    } else if (aEvent.keyCode == aEvent.DOM_VK_F6) {
+      // F6 is another shortcut to the address bar, but its not covered in OpenLocation()
       FullScreen.showNavToolbox();
+    }
   },
 
   // Checks whether we are allowed to collapse the chrome
@@ -546,8 +541,7 @@ var FullScreen = {
     return true;
   },
 
-  _setPopupOpen(aEvent)
-  {
+  _setPopupOpen(aEvent) {
     // Popups should only veto chrome collapsing if they were opened when the chrome was not collapsed.
     // Otherwise, they would not affect chrome and the user would expect the chrome to go away.
     // e.g. we wouldn't want the autoscroll icon firing this event, so when the user
@@ -564,12 +558,10 @@ var FullScreen = {
   },
 
   // Autohide helpers for the context menu item
-  getAutohide(aItem)
-  {
+  getAutohide(aItem) {
     aItem.setAttribute("checked", gPrefService.getBoolPref("browser.fullscreen.autohide"));
   },
-  setAutohide()
-  {
+  setAutohide() {
     gPrefService.setBoolPref("browser.fullscreen.autohide", !gPrefService.getBoolPref("browser.fullscreen.autohide"));
     // Try again to hide toolbar when we change the pref.
     FullScreen.hideNavToolbox(true);
@@ -662,8 +654,7 @@ var FullScreen = {
     if (fullscreenctls.parentNode == navbar && ctlsOnTabbar) {
       fullscreenctls.removeAttribute("flex");
       document.getElementById("TabsToolbar").appendChild(fullscreenctls);
-    }
-    else if (fullscreenctls.parentNode.id == "TabsToolbar" && !ctlsOnTabbar) {
+    } else if (fullscreenctls.parentNode.id == "TabsToolbar" && !ctlsOnTabbar) {
       fullscreenctls.setAttribute("flex", "1");
       navbar.appendChild(fullscreenctls);
     }

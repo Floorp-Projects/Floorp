@@ -72,14 +72,14 @@ var JsFlameGraphView = Heritage.extend(DetailsSubview, {
     });
 
     this.graph.setData({ data,
-      bounds: {
-        startTime: 0,
-        endTime: duration
-      },
-      visible: {
-        startTime: interval.startTime || 0,
-        endTime: interval.endTime || duration
-      }
+                         bounds: {
+                           startTime: 0,
+                           endTime: duration
+                         },
+                         visible: {
+                           startTime: interval.startTime || 0,
+                           endTime: interval.endTime || duration
+                         }
     });
 
     this.graph.focus();

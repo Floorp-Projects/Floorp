@@ -61,15 +61,13 @@ var gTests = [
 
 {
   desc: "Test the remote commands",
-  setup: Task.async(function*()
-  {
+  setup: Task.async(function*() {
     Preferences.set(TELEMETRY_LOG_PREF, "Trace");
     yield setupPingArchive();
     Preferences.set("datareporting.healthreport.about.reportUrl",
                     HTTPS_BASE + "healthreport_testRemoteCommands.html");
   }),
-  run(iframe)
-  {
+  run(iframe) {
     let deferred = Promise.defer();
     let results = 0;
     try {
@@ -78,8 +76,7 @@ var gTests = [
         if (data.type == "testResult") {
           ok(data.pass, data.info);
           results++;
-        }
-        else if (data.type == "testsComplete") {
+        } else if (data.type == "testsComplete") {
           is(results, data.count, "Checking number of results received matches the number of tests that should have run");
           iframe.contentWindow.removeEventListener("FirefoxHealthReportTestResponse", evtHandler, true);
           deferred.resolve();
@@ -96,8 +93,7 @@ var gTests = [
 
 ]; // gTests
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   // xxxmpc leaving this here until we resolve bug 854038 and bug 854060
@@ -119,8 +115,7 @@ function test()
   });
 }
 
-function promiseNewTabLoadEvent(aUrl, aEventType = "load")
-{
+function promiseNewTabLoadEvent(aUrl, aEventType = "load") {
   let deferred = Promise.defer();
   let tab = gBrowser.selectedTab = gBrowser.addTab(aUrl);
   tab.linkedBrowser.addEventListener(aEventType, function load(event) {

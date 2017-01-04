@@ -1030,7 +1030,7 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
 
-    Handle<GlobalObject*> global = obj.as<GlobalObject>();
+    Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     *resolved = false;
 
     if (!JSID_IS_ATOM(id))
@@ -1038,26 +1038,11 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     JSAtom* idAtom = JSID_TO_ATOM(id);
-    if (idAtom == cx->names().undefined) {
+    JSAtom* undefinedAtom = cx->names().undefined;
+    if (idAtom == undefinedAtom) {
         *resolved = true;
         return DefineProperty(cx, global, id, UndefinedHandleValue, nullptr, nullptr,
                               JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_RESOLVING);
-    }
-
-    // Resolve a "global" self-referential property if necessary, per a stage-3
-    // proposal.  https://github.com/tc39/ecma262/pull/702
-    //
-    // We could also do this in |FinishObjectClassInit| to trim the global
-    // resolve hook.  Unfortunately, |ToWindowProxyIfWindow| doesn't work then:
-    // the browser's |nsGlobalWindow::SetNewDocument| invokes Object init
-    // *before* it sets the global's WindowProxy using |js::SetWindowProxy|.
-    //
-    // Refactoring global object creation code to support this approach is a
-    // challenge for another day.
-    if (idAtom == cx->names().global) {
-        *resolved = true;
-        RootedValue v(cx, ObjectValue(*ToWindowProxyIfWindow(global)));
-        return DefineProperty(cx, global, id, v, nullptr, nullptr, JSPROP_RESOLVING);
     }
 
     /* Try for class constructors/prototypes named by well-known atoms. */
@@ -1112,7 +1097,6 @@ JS_MayResolveStandardClass(const JSAtomState& names, jsid id, JSObject* maybeObj
     // better, we need a JSContext here; it's fine as it is.)
 
     return atom == names.undefined ||
-           atom == names.global ||
            LookupStdName(names, atom, standard_class_names) ||
            LookupStdName(names, atom, builtin_property_names);
 }

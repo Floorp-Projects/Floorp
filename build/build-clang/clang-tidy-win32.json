@@ -1,0 +1,16 @@
+{
+    "llvm_revision": "290055",
+    "stages": "1",
+    "build_libcxx": false,
+    "build_type": "Release",
+    "assertions": false,
+    "import_clang_tidy": true,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/trunk",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/trunk",
+    "extra_repo": "https://llvm.org/svn/llvm-project/clang-tools-extra/trunk",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/trunk",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/trunk",
+    "python_path": "c:/mozilla-build/python/python.exe",
+    "cc": "cl.exe",
+    "cxx": "cl.exe"
+}

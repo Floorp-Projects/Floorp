@@ -7,13 +7,11 @@
 
 // Tests
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_test(function test_normal()
-{
+add_test(function test_normal() {
   let pageURI = NetUtil.newURI("http://example.com/normal");
 
   PlacesTestUtils.addVisits(pageURI).then(function() {
@@ -35,8 +33,7 @@ add_test(function test_normal()
   });
 });
 
-add_test(function test_missing()
-{
+add_test(function test_missing() {
   let pageURI = NetUtil.newURI("http://example.com/missing");
 
   PlacesUtils.favicons.getFaviconURLForPage(pageURI,

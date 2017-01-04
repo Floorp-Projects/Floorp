@@ -45,8 +45,7 @@ function runTest(event) {
   EventUtils.synthesizeMouseAtCenter(link, { type: "contextmenu", button: 2 }, browser.contentWindow);
 }
 
-function contextMenuOpened()
-{
+function contextMenuOpened() {
   var sidebar = document.getElementById("sidebar");
   sidebar.contentDocument.removeEventListener("popupshown", contextMenuOpened, false);
 
@@ -55,8 +54,7 @@ function contextMenuOpened()
   copyLinkCommand.doCommand();
 }
 
-function copyLinkCommandExecuted(event)
-{
+function copyLinkCommandExecuted(event) {
   event.target.removeEventListener("command", copyLinkCommandExecuted, false);
 
   var sidebar = document.getElementById("sidebar");
@@ -70,8 +68,7 @@ function copyLinkCommandExecuted(event)
   event.target.parentNode.hidePopup();
 }
 
-function contextMenuClosed()
-{
+function contextMenuClosed() {
   var sidebar = document.getElementById("sidebar");
   sidebar.contentDocument.removeEventListener("popuphidden", contextMenuClosed, false);
 

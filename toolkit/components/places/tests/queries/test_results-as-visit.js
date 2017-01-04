@@ -37,13 +37,11 @@ function createTestData() {
 /**
  * This test will test Queries that use relative search terms and URI options
  */
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_results_as_visit()
-{
+add_task(function* test_results_as_visit() {
    createTestData();
    yield task_populateDB(testData);
    var query = PlacesUtils.history.getNewQuery();

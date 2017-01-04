@@ -68,7 +68,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScrollableFrame.h"
-#include "nsContentPolicyUtils.h" // NS_CheckContentLoadPolicy(...)
 #include "nsISeekableStream.h"
 #include "nsAutoPtr.h"
 #include "nsQueryObject.h"
@@ -1633,7 +1632,7 @@ nsDocShell::LoadStream(nsIInputStream* aStream, nsIURI* aURI,
                                          uri,
                                          aStream,
                                          triggeringPrincipal,
-                                         nsILoadInfo::SEC_NORMAL,
+                                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                          nsIContentPolicy::TYPE_OTHER,
                                          aContentType,
                                          aContentCharset);
@@ -9866,23 +9865,6 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 #endif
     }
 
-    int16_t shouldLoad = nsIContentPolicy::ACCEPT;
-    rv = NS_CheckContentLoadPolicy(contentType,
-                                   aURI,
-                                   aTriggeringPrincipal,
-                                   requestingContext,
-                                   EmptyCString(),  // mime guess
-                                   nullptr,  // extra
-                                   &shouldLoad);
-
-    if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      if (NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) {
-        return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
-      }
-
-      return NS_ERROR_CONTENT_BLOCKED;
-    }
-
     // If HSTS priming was set by nsMixedContentBlocker::ShouldLoad, and we
     // would block due to mixed content, go ahead and block here. If we try to
     // proceed with priming, we will error out later on.
@@ -10881,7 +10863,8 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   }
 
   nsLoadFlags loadFlags = mDefaultLoadFlags;
-  nsSecurityFlags securityFlags = nsILoadInfo::SEC_NORMAL;
+  nsSecurityFlags securityFlags =
+    nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
   if (aFirstParty) {
     // tag first party URL loads
@@ -13804,7 +13787,8 @@ public:
                    nsIInputStream* aPostDataStream,
                    nsIInputStream* aHeadersDataStream,
                    bool aNoOpenerImplied,
-                   bool aIsTrusted);
+                   bool aIsTrusted,
+                   nsIPrincipal* aTriggeringPrincipal);
 
   NS_IMETHOD Run() override
   {
@@ -13821,7 +13805,7 @@ public:
                                 mTargetSpec.get(), mFileName,
                                 mPostDataStream, mHeadersDataStream,
                                 mNoOpenerImplied,
-                                nullptr, nullptr);
+                                nullptr, nullptr, mTriggeringPrincipal);
     }
     return NS_OK;
   }
@@ -13837,6 +13821,7 @@ private:
   PopupControlState mPopupState;
   bool mNoOpenerImplied;
   bool mIsTrusted;
+  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
 };
 
 OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
@@ -13847,7 +13832,8 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
                                    nsIInputStream* aPostDataStream,
                                    nsIInputStream* aHeadersDataStream,
                                    bool aNoOpenerImplied,
-                                   bool aIsTrusted)
+                                   bool aIsTrusted,
+                                   nsIPrincipal* aTriggeringPrincipal)
   : mHandler(aHandler)
   , mURI(aURI)
   , mTargetSpec(aTargetSpec)
@@ -13858,6 +13844,7 @@ OnLinkClickEvent::OnLinkClickEvent(nsDocShell* aHandler,
   , mPopupState(mHandler->mScriptGlobal->GetPopupControlState())
   , mNoOpenerImplied(aNoOpenerImplied)
   , mIsTrusted(aIsTrusted)
+  , mTriggeringPrincipal(aTriggeringPrincipal)
 {
 }
 
@@ -13868,7 +13855,8 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
                         const nsAString& aFileName,
                         nsIInputStream* aPostDataStream,
                         nsIInputStream* aHeadersDataStream,
-                        bool aIsTrusted)
+                        bool aIsTrusted,
+                        nsIPrincipal* aTriggeringPrincipal)
 {
   NS_ASSERTION(NS_IsMainThread(), "wrong thread");
 
@@ -13912,7 +13900,7 @@ nsDocShell::OnLinkClick(nsIContent* aContent,
   nsCOMPtr<nsIRunnable> ev =
     new OnLinkClickEvent(this, aContent, aURI, target.get(), aFileName,
                          aPostDataStream, aHeadersDataStream, noOpenerImplied,
-                         aIsTrusted);
+                         aIsTrusted, aTriggeringPrincipal);
   return NS_DispatchToCurrentThread(ev);
 }
 
@@ -13925,7 +13913,8 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
                             nsIInputStream* aHeadersDataStream,
                             bool aNoOpenerImplied,
                             nsIDocShell** aDocShell,
-                            nsIRequest** aRequest)
+                            nsIRequest** aRequest,
+                            nsIPrincipal* aTriggeringPrincipal)
 {
   // Initialize the DocShell / Request
   if (aDocShell) {
@@ -14051,13 +14040,18 @@ nsDocShell::OnLinkClickSync(nsIContent* aContent,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // if the triggeringPrincipal is not passed explicitly, then we
+  // fall back to using doc->NodePrincipal() as the triggeringPrincipal.
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal =
+    aTriggeringPrincipal ? aTriggeringPrincipal
+                         : aContent->NodePrincipal();
+
   nsresult rv = InternalLoad(clonedURI,                 // New URI
                              nullptr,                   // Original URI
                              false,                     // LoadReplace
                              referer,                   // Referer URI
                              refererPolicy,             // Referer policy
-                             aContent->NodePrincipal(), // Triggering is our node's
-                                                        // principal
+                             triggeringPrincipal,
                              aContent->NodePrincipal(),
                              flags,
                              target,                    // Window target
@@ -14739,44 +14733,31 @@ nsDocShell::GetCommandManager()
 }
 
 NS_IMETHODIMP
-nsDocShell::GetIsProcessLocked(bool* aIsLocked)
+nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult)
 {
-  MOZ_ASSERT(aIsLocked);
-  *aIsLocked = GetProcessLockReason() != PROCESS_LOCK_NONE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetProcessLockReason(uint32_t* aReason)
-{
-  MOZ_ASSERT(aReason);
+  MOZ_ASSERT(aResult);
 
   nsPIDOMWindowOuter* outer = GetWindow();
   MOZ_ASSERT(outer);
 
-  // Check if we are a toplevel window
+  // If we are not toplevel then we are not the only toplevel window in the tab
+  // group.
   if (outer->GetScriptableParentOrNull()) {
-    *aReason = PROCESS_LOCK_IFRAME;
+    *aResult = false;
     return NS_OK;
   }
 
-  // If we have any other toplevel windows in our tab group, then we cannot
-  // perform the navigation.
+  // If we have any other toplevel windows in our tab group, then we are not the
+  // only toplevel window in the tab group.
   nsTArray<nsPIDOMWindowOuter*> toplevelWindows =
     outer->TabGroup()->GetTopLevelWindows();
   if (toplevelWindows.Length() > 1) {
-    *aReason = PROCESS_LOCK_RELATED_CONTEXTS;
+    *aResult = false;
     return NS_OK;
   }
   MOZ_ASSERT(toplevelWindows.Length() == 1);
   MOZ_ASSERT(toplevelWindows[0] == outer);
 
-  // If we aren't in a content process, we cannot perform a cross-process load.
-  if (!XRE_IsContentProcess()) {
-    *aReason = PROCESS_LOCK_NON_CONTENT;
-    return NS_OK;
-  }
-
-  *aReason = PROCESS_LOCK_NONE;
+  *aResult = true;
   return NS_OK;
 }

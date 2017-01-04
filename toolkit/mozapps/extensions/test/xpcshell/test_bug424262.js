@@ -38,8 +38,7 @@ var RecommendedCallback = {
   }
 };
 
-function run_test()
-{
+function run_test() {
   // EM needs to be running.
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9");
   startupManager();

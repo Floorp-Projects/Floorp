@@ -1,5 +1,4 @@
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   let scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].

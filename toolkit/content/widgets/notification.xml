@@ -280,8 +280,7 @@
                 this._setBlockingState(this.currentNotification);
                 return;
               }
-            }
-            else {
+            } else {
               this._closedNotification = aNotification;
               var notifications = this.allNotifications;
               var idx = notifications.length - 1;
@@ -355,10 +354,8 @@
                 context.globalAlpha = 0.5;
                 context.drawWindow(win, win.scrollX, win.scrollY,
                                    width, height, bgcolor);
-              }
-              catch (ex) { }
-            }
-            else if (canvas) {
+              } catch (ex) { }
+            } else if (canvas) {
               canvas.parentNode.removeChild(canvas);
               this._blockingCanvas = null;
               let content = this.firstChild;
@@ -469,8 +466,7 @@
               document.getElementById(button.popup).
                 openPopup(aEvent.originalTarget, "after_start", 0, 0, false, false, aEvent);
               aEvent.stopPropagation();
-            }
-            else {
+            } else {
               var callback = button.callback;
               if (callback) {
                 var result = callback(this, button, aEvent.target);

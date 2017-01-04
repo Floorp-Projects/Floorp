@@ -10,15 +10,13 @@ function _(str) {
   return str.replace(/\./g, gDecimalSymbol);
 }
 
-function testConvertByteUnits(aBytes, aValue, aUnit)
-{
+function testConvertByteUnits(aBytes, aValue, aUnit) {
   let [value, unit] = DownloadUtils.convertByteUnits(aBytes);
   do_check_eq(value, aValue);
   do_check_eq(unit, aUnit);
 }
 
-function testTransferTotal(aCurrBytes, aMaxBytes, aTransfer)
-{
+function testTransferTotal(aCurrBytes, aMaxBytes, aTransfer) {
   let transfer = DownloadUtils.getTransferTotal(aCurrBytes, aMaxBytes);
   do_check_eq(transfer, aTransfer);
 }
@@ -28,8 +26,7 @@ var gDash = DownloadUtils.getDownloadStatus(0)[0].match(/remaining (.) 0 bytes/)
 
 var gVals = [0, 100, 2345, 55555, 982341, 23194134, 1482, 58, 9921949201, 13498132, Infinity];
 
-function testStatus(aFunc, aCurr, aMore, aRate, aTest)
-{
+function testStatus(aFunc, aCurr, aMore, aRate, aTest) {
   dump("Status Test: " + [aCurr, aMore, aRate, aTest] + "\n");
   let curr = gVals[aCurr];
   let max = curr + gVals[aMore];
@@ -52,8 +49,7 @@ function testStatus(aFunc, aCurr, aMore, aRate, aTest)
     do_check_true(Math.abs(last - aTest[1]) < .1);
 }
 
-function testURI(aURI, aDisp, aHost)
-{
+function testURI(aURI, aDisp, aHost) {
   dump("URI Test: " + [aURI, aDisp, aHost] + "\n");
 
   let [disp, host] = DownloadUtils.getURIHost(aURI);
@@ -64,16 +60,14 @@ function testURI(aURI, aDisp, aHost)
 }
 
 
-function testGetReadableDates(aDate, aCompactValue)
-{
+function testGetReadableDates(aDate, aCompactValue) {
   const now = new Date(2000, 11, 31, 11, 59, 59);
 
   let [dateCompact] = DownloadUtils.getReadableDates(aDate, now);
   do_check_eq(dateCompact, aCompactValue);
 }
 
-function testAllGetReadableDates()
-{
+function testAllGetReadableDates() {
   // This test cannot depend on the current date and time, or the date format.
   // It depends on being run with the English localization, however.
   const today_11_30     = new Date(2000, 11, 31, 11, 30, 15);
@@ -120,8 +114,7 @@ function testAllGetReadableDates()
                                                    2000, 12, 31, 11, 30, 0));
 }
 
-function run_test()
-{
+function run_test() {
   testConvertByteUnits(-1, "-1", "bytes");
   testConvertByteUnits(1, _("1"), "bytes");
   testConvertByteUnits(42, _("42"), "bytes");

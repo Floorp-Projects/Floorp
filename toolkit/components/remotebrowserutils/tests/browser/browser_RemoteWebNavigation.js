@@ -131,8 +131,7 @@ add_task(function* test_badarguments() {
                                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                                   null, {}, null);
     ok(false, "Should have seen an exception from trying to pass some postdata");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some postdata");
   }
 
@@ -141,8 +140,7 @@ add_task(function* test_badarguments() {
                                   Ci.nsIWebNavigation.LOAD_FLAGS_NONE,
                                   null, null, {});
     ok(false, "Should have seen an exception from trying to pass some headers");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen an exception from trying to pass some headers");
   }
 

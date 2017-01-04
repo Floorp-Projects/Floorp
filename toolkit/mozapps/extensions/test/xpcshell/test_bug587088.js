@@ -30,8 +30,7 @@ function check_addon(aAddon, aVersion) {
   if (aVersion == "1.0") {
     do_check_true(aAddon.hasResource("testfile1"));
     do_check_false(aAddon.hasResource("testfile2"));
-  }
-  else {
+  } else {
     do_check_false(aAddon.hasResource("testfile1"));
     do_check_true(aAddon.hasResource("testfile2"));
   }
@@ -61,8 +60,7 @@ function check_addon_uninstalling(aAddon, aAfterRestart) {
   if (aAfterRestart) {
     do_check_false(aAddon.isActive);
     do_check_false(isExtensionInAddonsList(profileDir, aAddon.id));
-  }
-  else {
+  } else {
     do_check_true(aAddon.isActive);
     do_check_true(isExtensionInAddonsList(profileDir, aAddon.id));
   }

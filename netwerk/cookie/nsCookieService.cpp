@@ -75,7 +75,7 @@ static nsCookieService *gCookieService;
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
 
 #define COOKIES_FILE "cookies.sqlite"
-#define COOKIES_SCHEMA_VERSION 7
+#define COOKIES_SCHEMA_VERSION 8
 
 // parameter indexes; see EnsureReadDomain, EnsureReadComplete and
 // ReadCookieDBListener::HandleResult
@@ -834,16 +834,14 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
   mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
 {
   nsresult rv;
-  int32_t appId, inIsolatedMozBrowser;
+  int32_t inIsolatedMozBrowser;
 
-  rv = aFunctionArguments->GetInt32(0, &appId);
-  NS_ENSURE_SUCCESS(rv, rv);
   rv = aFunctionArguments->GetInt32(1, &inIsolatedMozBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Create an originAttributes object by appId and inIsolatedMozBrowser.
+  // Create an originAttributes object by inIsolatedMozBrowser.
   // Then create the originSuffix string from this object.
-  NeckoOriginAttributes attrs(appId, (inIsolatedMozBrowser ? 1 : 0));
+  NeckoOriginAttributes attrs((inIsolatedMozBrowser ? 1 : 0));
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
@@ -1333,6 +1331,75 @@ nsCookieService::TryInitDB(bool aRecreateDB)
         COOKIE_LOGSTRING(LogLevel::Debug,
           ("Upgraded database to schema version 7"));
       }
+      MOZ_FALLTHROUGH;
+
+    case 7:
+      {
+        // Remove the appId field from moz_cookies.
+        //
+        // Unfortunately sqlite doesn't support dropping columns using ALTER
+        // TABLE, so we need to go through the procedure documented in
+        // https://www.sqlite.org/lang_altertable.html.
+
+        // Drop existing index
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+             "DROP INDEX moz_basedomain"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // Create a new_moz_cookies table without the appId field.
+        rv = CreateTableWorker("new_moz_cookies");
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // Move the data over.
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "INSERT INTO new_moz_cookies ("
+              "id, "
+              "baseDomain, "
+              "originAttributes, "
+              "name, "
+              "value, "
+              "host, "
+              "path, "
+              "expiry, "
+              "lastAccessed, "
+              "creationTime, "
+              "isSecure, "
+              "isHttpOnly, "
+              "inBrowserElement "
+            ") SELECT "
+              "id, "
+              "baseDomain, "
+              "originAttributes, "
+              "name, "
+              "value, "
+              "host, "
+              "path, "
+              "expiry, "
+              "lastAccessed, "
+              "creationTime, "
+              "isSecure, "
+              "isHttpOnly, "
+              "inBrowserElement "
+            "FROM moz_cookies;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // Drop the old table
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "DROP TABLE moz_cookies;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // Rename new_moz_cookies to moz_cookies.
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "ALTER TABLE new_moz_cookies RENAME TO moz_cookies;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // Recreate our index.
+        rv = CreateIndex();
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        COOKIE_LOGSTRING(LogLevel::Debug,
+          ("Upgraded database to schema version 8"));
+      }
 
       // No more upgrades. Update the schema version.
       rv = mDefaultDBState->dbConn->SetSchemaVersion(COOKIES_SCHEMA_VERSION);
@@ -1478,19 +1545,15 @@ nsCookieService::TryInitDB(bool aRecreateDB)
 
 // Sets the schema version and creates the moz_cookies table.
 nsresult
-nsCookieService::CreateTable()
+nsCookieService::CreateTableWorker(const char* aName)
 {
-  // Set the schema version, before creating the table.
-  nsresult rv = mDefaultDBState->dbConn->SetSchemaVersion(
-    COOKIES_SCHEMA_VERSION);
-  if (NS_FAILED(rv)) return rv;
-
   // Create the table.
   // We default originAttributes to empty string: this is so if users revert to
   // an older Firefox version that doesn't know about this field, any cookies
   // set will still work once they upgrade back.
-  rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "CREATE TABLE moz_cookies ("
+  nsAutoCString command("CREATE TABLE ");
+  command.Append(aName);
+  command.Append(" ("
       "id INTEGER PRIMARY KEY, "
       "baseDomain TEXT, "
       "originAttributes TEXT NOT NULL DEFAULT '', "
@@ -1503,12 +1566,30 @@ nsCookieService::CreateTable()
       "creationTime INTEGER, "
       "isSecure INTEGER, "
       "isHttpOnly INTEGER, "
-      "appId INTEGER DEFAULT 0, "
       "inBrowserElement INTEGER DEFAULT 0, "
       "CONSTRAINT moz_uniqueid UNIQUE (name, host, path, originAttributes)"
-    ")"));
+    ")");
+  return mDefaultDBState->dbConn->ExecuteSimpleSQL(command);
+}
+
+// Sets the schema version and creates the moz_cookies table.
+nsresult
+nsCookieService::CreateTable()
+{
+  // Set the schema version, before creating the table.
+  nsresult rv = mDefaultDBState->dbConn->SetSchemaVersion(
+    COOKIES_SCHEMA_VERSION);
   if (NS_FAILED(rv)) return rv;
 
+  rv = CreateTableWorker("moz_cookies");
+  if (NS_FAILED(rv)) return rv;
+
+  return CreateIndex();
+}
+
+nsresult
+nsCookieService::CreateIndex()
+{
   // Create an index on baseDomain.
   return mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE INDEX moz_basedomain ON moz_cookies (baseDomain, "
@@ -2981,7 +3062,7 @@ nsCookieService::ImportCookies(nsIFile *aCookieFile)
     if (NS_FAILED(rv))
       continue;
 
-    // pre-existing cookies have appId=0, inIsolatedMozBrowser=false set by default
+    // pre-existing cookies have inIsolatedMozBrowser=false set by default
     // constructor of NeckoOriginAttributes().
     nsCookieKey key = DEFAULT_APP_KEY(baseDomain);
 
@@ -4757,10 +4838,6 @@ nsCookieService::GetCookiesWithOriginAttributes(
   if (!mDBState) {
     NS_WARNING("No DBState! Profile already closed?");
     return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (aPattern.mAppId.WasPassed() && aPattern.mAppId.Value() == NECKO_UNKNOWN_APP_ID) {
-    return NS_ERROR_INVALID_ARG;
   }
 
   nsCOMArray<nsICookie> cookies;

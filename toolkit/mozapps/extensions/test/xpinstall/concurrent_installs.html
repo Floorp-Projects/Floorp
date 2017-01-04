@@ -24,8 +24,7 @@ function startInstall() {
   };
   try {
     document.getElementById("return").textContent = InstallTrigger.install(triggers, installCallback);
-  }
-  catch (e) {
+  } catch (e) {
     document.getElementById("return").textContent = "exception";
     throw e;
   }

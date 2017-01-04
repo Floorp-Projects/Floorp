@@ -18,8 +18,7 @@ var showDetails = "";
 var hideDetails = "";
 var detailsAccessKey = "";
 
-function onload()
-{
+function onload() {
   doSetOKCancel(cookieAcceptNormal, cookieDeny, cookieAcceptSession);
 
   var dialog = document.documentElement;
@@ -130,8 +129,7 @@ function onload()
   } catch (ex) {}
 }
 
-function showhideinfo()
-{
+function showhideinfo() {
   var infobox = document.getElementById('infobox');
 
   if (infobox.hidden) {
@@ -144,8 +142,7 @@ function showhideinfo()
   sizeToContent();
 }
 
-function cookieAcceptNormal()
-{
+function cookieAcceptNormal() {
   // accept the cookie normally
   params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_COOKIE);
   // And remember that when needed
@@ -153,8 +150,7 @@ function cookieAcceptNormal()
   window.close();
 }
 
-function cookieAcceptSession()
-{
+function cookieAcceptSession() {
   // accept for the session only
   params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_SESSION_COOKIE);
   // And remember that when needed
@@ -162,8 +158,7 @@ function cookieAcceptSession()
   window.close();
 }
 
-function cookieDeny()
-{
+function cookieDeny() {
   // say that the cookie was rejected
   params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.DENY_COOKIE);
   // And remember that when needed

@@ -25,9 +25,6 @@ namespace mozilla {
  * typically provided by nsDocShell.  This is only used when the original
  * docshell is in a different process and we need to copy certain values from
  * it.
- *
- * Note: we also generate a new nsILoadContext using LoadContext(uint32_t aAppId)
- * to separate the safebrowsing cookie.
  */
 
 class LoadContext final

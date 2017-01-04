@@ -314,8 +314,7 @@ function check_notification_pt2(args) {
         default:
           do_throw("Unknown addon: " + addon.item.name);
       }
-    }
-    else {
+    } else {
       switch (addon.item.id) {
         case "test_bug455906_2@tests.mozilla.org":
           do_check_false(addon.blocked);
@@ -395,8 +394,7 @@ function check_notification_pt3(args) {
         default:
           do_throw("Unknown addon: " + addon.item.name);
       }
-    }
-    else {
+    } else {
       switch (addon.item.id) {
         case "test_bug455906_2@tests.mozilla.org":
           do_check_true(addon.blocked);

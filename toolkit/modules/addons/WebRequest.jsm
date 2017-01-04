@@ -535,8 +535,8 @@ HttpObserverManager = {
       let loadContext = this.getLoadContext(channel);
       if (!this.errorCheck(channel, loadContext, channelData)) {
         this.runChannelListener(channel, loadContext, "onError",
-                                {error: this.activityErrorsMap.get(lastActivity) ||
-                                        `NS_ERROR_NET_UNKNOWN_${lastActivity}`});
+          {error: this.activityErrorsMap.get(lastActivity) ||
+                  `NS_ERROR_NET_UNKNOWN_${lastActivity}`});
       }
     } else if (lastActivity !== this.GOOD_LAST_ACTIVITY &&
                lastActivity !== nsIHttpActivityObserver.ACTIVITY_SUBTYPE_TRANSACTION_CLOSE) {

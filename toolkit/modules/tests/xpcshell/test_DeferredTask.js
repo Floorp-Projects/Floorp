@@ -27,15 +27,13 @@ const T = 100;
 /**
  * Waits for the specified timeout before resolving the returned promise.
  */
-function promiseTimeout(aTimeoutMs)
-{
+function promiseTimeout(aTimeoutMs) {
   let deferred = Promise.defer();
   do_timeout(aTimeoutMs, deferred.resolve);
   return deferred.promise;
 }
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
@@ -44,16 +42,14 @@ function run_test()
 /**
  * Creates a simple DeferredTask and executes it once.
  */
-add_test(function test_arm_simple()
-{
+add_test(function test_arm_simple() {
   new DeferredTask(run_next_test, 10).arm();
 });
 
 /**
  * Checks that the delay set for the task is respected.
  */
-add_test(function test_arm_delay_respected()
-{
+add_test(function test_arm_delay_respected() {
   let executed1 = false;
   let executed2 = false;
 
@@ -72,8 +68,7 @@ add_test(function test_arm_delay_respected()
 /**
  * Checks that calling "arm" again does not introduce further delay.
  */
-add_test(function test_arm_delay_notrestarted()
-{
+add_test(function test_arm_delay_notrestarted() {
   let executed = false;
 
   // Create a task that will run later.
@@ -93,8 +88,7 @@ add_test(function test_arm_delay_notrestarted()
 /**
  * Checks that a task runs only once when armed multiple times synchronously.
  */
-add_test(function test_arm_coalesced()
-{
+add_test(function test_arm_coalesced() {
   let executed = false;
 
   let deferredTask = new DeferredTask(function() {
@@ -111,8 +105,7 @@ add_test(function test_arm_coalesced()
  * Checks that a task runs only once when armed multiple times synchronously,
  * even when it has been created with a delay of zero milliseconds.
  */
-add_test(function test_arm_coalesced_nodelay()
-{
+add_test(function test_arm_coalesced_nodelay() {
   let executed = false;
 
   let deferredTask = new DeferredTask(function() {
@@ -128,8 +121,7 @@ add_test(function test_arm_coalesced_nodelay()
 /**
  * Checks that a task can be armed again while running.
  */
-add_test(function test_arm_recursive()
-{
+add_test(function test_arm_recursive() {
   let executed = false;
 
   let deferredTask = new DeferredTask(function() {
@@ -148,8 +140,7 @@ add_test(function test_arm_recursive()
  * Checks that calling "arm" while an asynchronous task is running waits until
  * the task is finished before restarting the delay.
  */
-add_test(function test_arm_async()
-{
+add_test(function test_arm_async() {
   let finishedExecution = false;
   let finishedExecutionAgain = false;
 
@@ -197,8 +188,7 @@ add_test(function test_arm_async()
 /**
  * Checks that an armed task can be disarmed.
  */
-add_test(function test_disarm()
-{
+add_test(function test_disarm() {
   // Create a task that will run later.
   let deferredTask = new DeferredTask(function() {
     do_throw("This task should not run.");
@@ -215,8 +205,7 @@ add_test(function test_disarm()
 /**
  * Checks that calling "disarm" allows the delay to be restarted.
  */
-add_test(function test_disarm_delay_restarted()
-{
+add_test(function test_disarm_delay_restarted() {
   let executed = false;
 
   let deferredTask = new DeferredTask(() => { executed = true; }, 4 * T);
@@ -241,8 +230,7 @@ add_test(function test_disarm_delay_restarted()
  * Checks that calling "disarm" while an asynchronous task is running does not
  * prevent the task to finish.
  */
-add_test(function test_disarm_async()
-{
+add_test(function test_disarm_async() {
   let finishedExecution = false;
 
   let deferredTask = new DeferredTask(function* () {
@@ -271,8 +259,7 @@ add_test(function test_disarm_async()
  * Checks that calling "arm" immediately followed by "disarm" while an
  * asynchronous task is running does not cause it to run again.
  */
-add_test(function test_disarm_immediate_async()
-{
+add_test(function test_disarm_immediate_async() {
   let executed = false;
 
   let deferredTask = new DeferredTask(function* () {
@@ -300,8 +287,7 @@ add_test(function test_disarm_immediate_async()
 /**
  * Checks the isArmed and isRunning properties with a synchronous task.
  */
-add_test(function test_isArmed_isRunning()
-{
+add_test(function test_isArmed_isRunning() {
   let deferredTask = new DeferredTask(function() {
     do_check_true(deferredTask.isRunning);
     do_check_false(deferredTask.isArmed);
@@ -321,8 +307,7 @@ add_test(function test_isArmed_isRunning()
 /**
  * Checks that the "finalize" method executes a synchronous task.
  */
-add_test(function test_finalize()
-{
+add_test(function test_finalize() {
   let executed = false;
   let timePassed = false;
 
@@ -345,8 +330,7 @@ add_test(function test_finalize()
  * Checks that the "finalize" method executes the task again from start to
  * finish in case it is already running.
  */
-add_test(function test_finalize_executes_entirely()
-{
+add_test(function test_finalize_executes_entirely() {
   let executed = false;
   let executedAgain = false;
   let timePassed = false;

@@ -16,9 +16,6 @@ function run_test()
 
   // These should still fail because we haven't added a createRootActor
   // implementation yet.
-  check_except(function () {
-    DebuggerServer.createListener();
-  });
   check_except(DebuggerServer.closeAllListeners);
   check_except(DebuggerServer.connectPipe);
 

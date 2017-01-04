@@ -271,8 +271,7 @@
           var col = this.view.selection.currentColumn;
           if (col) {
             col = left ? col.getPrevious() : col.getNext();
-          }
-          else {
+          } else {
             col = this.columns.getKeyColumn();
           }
           while (col && (col.width == 0 || !col.selectable ||
@@ -996,10 +995,9 @@
              this.view.selection.toggleSelect(c);
              event.preventDefault();
            }
-         }
-         else if (!this.disableKeyNavigation && event.charCode > 0 &&
-                  !event.altKey && !this._isAccelPressed(event) &&
-                  !event.metaKey && !event.ctrlKey) {
+         } else if (!this.disableKeyNavigation && event.charCode > 0 &&
+                    !event.altKey && !this._isAccelPressed(event) &&
+                    !event.metaKey && !event.ctrlKey) {
            var l = this._keyNavigate(event);
            if (l >= 0) {
              this.view.selection.timedSelect(l, this._selectDelay);
@@ -1377,8 +1375,7 @@
               // the same as the column we're moving, don't move
               if (before && col == sib) {
                 move = false;
-              }
-              else if (!before && col == col.mTargetCol) {
+              } else if (!before && col == col.mTargetCol) {
                 // If this is an after move and the column we're moving is
                 // the same as the target column, don't move.
                 move = false;
@@ -1533,16 +1530,14 @@
             var popup = document.getAnonymousElementByAttribute(this, "anonid", "popup");
             this.buildPopup(popup);
             popup.showPopup(this, -1, -1, "popup", "bottomright", "topright");
-          }
-          else {
+          } else {
             var tree = this.parentNode.parentNode;
             tree.stopEditing(true);
             var menuitem = document.getAnonymousElementByAttribute(this, "anonid", "menuitem");
             if (event.originalTarget == menuitem) {
               tree.columns.restoreNaturalOrder();
               tree._ensureColumnOrder();
-            }
-            else {
+            } else {
               var colindex = event.originalTarget.getAttribute("colindex");
               var column = tree.columns[colindex];
               if (column) {

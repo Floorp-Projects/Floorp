@@ -142,7 +142,7 @@ module.exports = {
     // Only useful in a node environment.
     "handle-callback-err": "off",
     // Tab width.
-    "indent": ["error", 2, {"SwitchCase": 1}],
+    "indent": ["error", 2, {"SwitchCase": 1, "ArrayExpression": "first", "ObjectExpression": "first"}],
     // Enforces spacing between keys and values in object literal properties.
     "key-spacing": ["error", {"beforeColon": false, "afterColon": true}],
     // Enforces unix style line breaks.
@@ -273,7 +273,7 @@ module.exports = {
     // Disallow declaring the same variable more than once (we use let anyway).
     "no-redeclare": "error",
     // Disallow multiple spaces in a regular expression literal.
-    "no-regex-spaces": "error",
+    "no-regex-spaces": "off",
     // Allow reserved words being used as object literal keys.
     "no-reserved-keys": "off",
     // Don't restrict usage of specified node modules (not a node environment).

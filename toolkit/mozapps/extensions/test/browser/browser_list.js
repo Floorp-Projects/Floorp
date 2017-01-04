@@ -775,8 +775,7 @@ add_task(function*() {
 
   try {
     Services.prefs.clearUserPref("accessibility.tabfocus_applies_to_xul");
-  }
-  catch (e) { }
+  } catch (e) { }
 });
 
 

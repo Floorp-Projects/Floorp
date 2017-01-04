@@ -7,8 +7,7 @@ var dbConnection; // used for deleted table tests
 
 Cu.import("resource://gre/modules/Promise.jsm");
 
-function countDeletedEntries(expected)
-{
+function countDeletedEntries(expected) {
   let deferred = Promise.defer();
   let stmt = dbConnection.createAsyncStatement("SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory");
   stmt.executeAsync({
@@ -27,8 +26,7 @@ function countDeletedEntries(expected)
   return deferred.promise;
 }
 
-function checkTimeDeleted(guid, checkFunction)
-{
+function checkTimeDeleted(guid, checkFunction) {
   let deferred = Promise.defer();
   let stmt = dbConnection.createAsyncStatement("SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid");
   stmt.params.guid = guid;
@@ -48,8 +46,7 @@ function checkTimeDeleted(guid, checkFunction)
   return deferred.promise;
 }
 
-function promiseUpdateEntry(op, name, value)
-{
+function promiseUpdateEntry(op, name, value) {
   var change = { op };
   if (name !== null)
     change.fieldname = name;
@@ -75,8 +72,7 @@ function promiseUpdate(change) {
   });
 }
 
-function promiseSearchEntries(terms, params)
-{
+function promiseSearchEntries(terms, params) {
   let deferred = Promise.defer();
   let results = [];
   FormHistory.search(terms, params,
@@ -90,15 +86,13 @@ function promiseSearchEntries(terms, params)
   return deferred.promise;
 }
 
-function promiseCountEntries(name, value, checkFn)
-{
+function promiseCountEntries(name, value, checkFn) {
   let deferred = Promise.defer();
   countEntries(name, value, function(result) { checkFn(result); deferred.resolve(); } );
   return deferred.promise;
 }
 
-add_task(function* ()
-{
+add_task(function* () {
   let oldSupportsDeletedTable = FormHistory._supportsDeletedTable;
   FormHistory._supportsDeletedTable = true;
 
@@ -258,8 +252,7 @@ add_task(function* ()
   yield promiseUpdateEntry("add", "field1", "value1");
   yield promiseCountEntries("field1", "value1", checkExists);
 
-  let processFirstResult = function processResults(results)
-  {
+  let processFirstResult = function processResults(results) {
     // Only handle the first result
     if (results.length > 0) {
       let result = results[0];
@@ -445,8 +438,7 @@ add_task(function* ()
 
   } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + e;
-  }
-  finally {
+  } finally {
     FormHistory._supportsDeletedTable = oldSupportsDeletedTable;
     dbConnection.asyncClose(do_test_finished);
   }

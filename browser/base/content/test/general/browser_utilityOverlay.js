@@ -20,8 +20,7 @@ function runNextTest() {
     let testFun = gTests.shift();
     info("Running " + testFun.name);
     testFun()
-  }
-  else {
+  } else {
     finish();
   }
 }

@@ -34,8 +34,7 @@ function getEventDir() {
  *       Certain types of crashes may not cause the process to
  *       exit with an error.
  */
-function do_crash(setup, callback, canReturnZero)
-{
+function do_crash(setup, callback, canReturnZero) {
   // get current process filename (xpcshell)
   let ds = Components.classes["@mozilla.org/file/directory_service;1"]
     .getService(Components.interfaces.nsIProperties);
@@ -75,9 +74,9 @@ function do_crash(setup, callback, canReturnZero)
 
   try {
       process.run(true, args, args.length);
-  }
-  catch (ex) {} // on Windows we exit with a -1 status when crashing.
-  finally {
+  } catch (ex) {
+    // on Windows we exit with a -1 status when crashing.
+  } finally {
     env.set("CRASHES_EVENTS_DIR", "");
   }
 
@@ -101,8 +100,7 @@ function getMinidump() {
   return null;
 }
 
-function handleMinidump(callback)
-{
+function handleMinidump(callback) {
   // find minidump
   let minidump = getMinidump();
 
@@ -147,8 +145,7 @@ function handleMinidump(callback)
   }
 }
 
-function do_content_crash(setup, callback)
-{
+function do_content_crash(setup, callback) {
   do_load_child_test_harness();
   do_test_pending();
 

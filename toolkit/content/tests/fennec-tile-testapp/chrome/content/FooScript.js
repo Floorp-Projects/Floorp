@@ -72,7 +72,7 @@ BrowserView.prototype = {
 
     let tileContainer = document.getElementById("tile_container");
     tileContainer.addEventListener("mousedown", onMouseDown, true);
-    tileContainer.addEventListener("mouseup",   onMouseUp,   true);
+    tileContainer.addEventListener("mouseup", onMouseUp, true);
     tileContainer.addEventListener("mousemove", onMouseMove, true);
     this._tileContainer = tileContainer;
 

@@ -61,8 +61,7 @@ function populateReportList() {
     // Ignore any non http/https urls
     if (!/^https?:/i.test(reportURL))
       reportURL = null;
-  }
-  catch (e) { }
+  } catch (e) { }
   if (!reportURL) {
     document.getElementById("clear-reports").style.display = "none";
     document.getElementById("reportList").style.display = "none";
@@ -117,8 +116,7 @@ function populateReportList() {
     if (reports[i].pending) {
       link.setAttribute("href", aboutThrottling.spec);
       link.addEventListener("click", submitPendingReport, true);
-    }
-    else {
+    } else {
       link.setAttribute("href", reportURL + reports[i].id);
     }
     link.setAttribute("id", reports[i].id);

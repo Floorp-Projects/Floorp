@@ -93,8 +93,7 @@ this.Feeds = {
         BrowserUtils.urlSecurityCheck(aLink.href, principalToCheck,
                                       Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
         return type || "application/rss+xml";
-      }
-      catch (ex) {
+      } catch (ex) {
       }
     }
 
