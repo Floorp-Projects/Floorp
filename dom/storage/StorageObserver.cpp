@@ -4,10 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMStorageObserver.h"
+#include "StorageObserver.h"
 
-#include "DOMStorageDBThread.h"
-#include "DOMStorageCache.h"
+#include "StorageDBThread.h"
+#include "StorageCache.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "nsIObserverService.h"
@@ -34,18 +34,18 @@ static const uint32_t kStartupDelay = 0;
 
 const char kTestingPref[] = "dom.storage.testing";
 
-NS_IMPL_ISUPPORTS(DOMStorageObserver,
+NS_IMPL_ISUPPORTS(StorageObserver,
                   nsIObserver,
                   nsISupportsWeakReference)
 
-DOMStorageObserver* DOMStorageObserver::sSelf = nullptr;
+StorageObserver* StorageObserver::sSelf = nullptr;
 
 extern nsresult
 CreateReversedDomain(const nsACString& aAsciiDomain, nsACString& aKey);
 
 // static
 nsresult
-DOMStorageObserver::Init()
+StorageObserver::Init()
 {
   if (sSelf) {
     return NS_OK;
@@ -56,7 +56,7 @@ DOMStorageObserver::Init()
     return NS_ERROR_UNEXPECTED;
   }
 
-  sSelf = new DOMStorageObserver();
+  sSelf = new StorageObserver();
   NS_ADDREF(sSelf);
 
   // Chrome clear operations.
@@ -85,7 +85,7 @@ DOMStorageObserver::Init()
 
 // static
 nsresult
-DOMStorageObserver::Shutdown()
+StorageObserver::Shutdown()
 {
   if (!sSelf) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -97,7 +97,7 @@ DOMStorageObserver::Shutdown()
 
 // static
 void
-DOMStorageObserver::TestingPrefChanged(const char* aPrefName, void* aClosure)
+StorageObserver::TestingPrefChanged(const char* aPrefName, void* aClosure)
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (!obs) {
@@ -122,32 +122,32 @@ DOMStorageObserver::TestingPrefChanged(const char* aPrefName, void* aClosure)
 }
 
 void
-DOMStorageObserver::AddSink(DOMStorageObserverSink* aObs)
+StorageObserver::AddSink(StorageObserverSink* aObs)
 {
   mSinks.AppendElement(aObs);
 }
 
 void
-DOMStorageObserver::RemoveSink(DOMStorageObserverSink* aObs)
+StorageObserver::RemoveSink(StorageObserverSink* aObs)
 {
   mSinks.RemoveElement(aObs);
 }
 
 void
-DOMStorageObserver::Notify(const char* aTopic,
-                           const nsAString& aOriginAttributesPattern,
-                           const nsACString& aOriginScope)
+StorageObserver::Notify(const char* aTopic,
+                        const nsAString& aOriginAttributesPattern,
+                        const nsACString& aOriginScope)
 {
   for (uint32_t i = 0; i < mSinks.Length(); ++i) {
-    DOMStorageObserverSink* sink = mSinks[i];
+    StorageObserverSink* sink = mSinks[i];
     sink->Observe(aTopic, aOriginAttributesPattern, aOriginScope);
   }
 }
 
 NS_IMETHODIMP
-DOMStorageObserver::Observe(nsISupports* aSubject,
-                            const char* aTopic,
-                            const char16_t* aData)
+StorageObserver::Observe(nsISupports* aSubject,
+                         const char* aTopic,
+                         const char16_t* aData)
 {
   nsresult rv;
 
@@ -176,7 +176,7 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
     if (timer == mDBThreadStartDelayTimer) {
       mDBThreadStartDelayTimer = nullptr;
 
-      DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
+      StorageDBBridge* db = StorageCache::StartDatabase();
       NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
     }
 
@@ -189,7 +189,7 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
-    DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
+    StorageDBBridge* db = StorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
     db->AsyncClearAll();
@@ -246,7 +246,8 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
     rv = CreateReversedDomain(host, originScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    Notify("session-only-cleared", NS_ConvertUTF8toUTF16(originSuffix), originScope);
+    Notify("session-only-cleared", NS_ConvertUTF8toUTF16(originSuffix),
+           originScope);
 
     return NS_OK;
   }
@@ -261,7 +262,8 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
       rv = converter->ConvertUTF8toACE(NS_ConvertUTF16toUTF8(aData), aceDomain);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
-      // In case the IDN service is not available, this is the best we can come up with!
+      // In case the IDN service is not available, this is the best we can come
+      // up with!
       NS_EscapeURL(NS_ConvertUTF16toUTF8(aData),
                    esc_OnlyNonASCII | esc_AlwaysCopy,
                    aceDomain);
@@ -271,7 +273,7 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
     rv = CreateReversedDomain(aceDomain, originScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
+    StorageDBBridge* db = StorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
     db->AsyncClearMatchingOrigin(originScope);
@@ -296,7 +298,7 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
       return NS_ERROR_FAILURE;
     }
 
-    DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
+    StorageDBBridge* db = StorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
     db->AsyncClearMatchingOriginAttributes(pattern);
@@ -314,9 +316,9 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
 
   if (!strcmp(aTopic, "profile-before-change") ||
       !strcmp(aTopic, "xpcom-shutdown")) {
-    rv = DOMStorageCache::StopDatabase();
+    rv = StorageCache::StopDatabase();
     if (NS_FAILED(rv)) {
-      NS_WARNING("Error while stopping DOMStorage DB background thread");
+      NS_WARNING("Error while stopping Storage DB background thread");
     }
 
     return NS_OK;
@@ -334,7 +336,7 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
 
 #ifdef DOM_STORAGE_TESTS
   if (!strcmp(aTopic, "domstorage-test-flush-force")) {
-    DOMStorageDBBridge* db = DOMStorageCache::GetDatabase();
+    StorageDBBridge* db = StorageCache::GetDatabase();
     if (db) {
       db->AsyncFlush();
     }
