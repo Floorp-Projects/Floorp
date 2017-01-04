@@ -225,7 +225,7 @@ exports.MarkerDOMUtils = {
       hbox.className = "marker-details-customcontainer";
 
       let label = doc.createElement("label");
-      label.className = "custom-button devtools-button";
+      label.className = "custom-button";
       label.setAttribute("value", "Show allocation triggers");
       label.setAttribute("type", "show-allocations");
       label.setAttribute("data-action", JSON.stringify({
