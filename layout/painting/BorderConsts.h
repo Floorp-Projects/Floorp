@@ -10,10 +10,10 @@
 #define DOT_LENGTH  1           // square
 #define DASH_LENGTH 3           // 3 times longer than dot
 
-#define C_TL NS_CORNER_TOP_LEFT
-#define C_TR NS_CORNER_TOP_RIGHT
-#define C_BR NS_CORNER_BOTTOM_RIGHT
-#define C_BL NS_CORNER_BOTTOM_LEFT
+#define C_TL mozilla::eCornerTopLeft
+#define C_TR mozilla::eCornerTopRight
+#define C_BR mozilla::eCornerBottomRight
+#define C_BL mozilla::eCornerBottomLeft
 
 #define BORDER_SEGMENT_COUNT_MAX 100
 #define BORDER_DOTTED_CORNER_MAX_RADIUS 100000

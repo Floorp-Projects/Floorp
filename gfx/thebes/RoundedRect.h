@@ -24,17 +24,25 @@ struct RoundedRect {
         rect.width = std::max(0., rect.width - aLeftWidth - aRightWidth);
         rect.height = std::max(0., rect.height - aTopWidth - aBottomWidth);
 
-        corners.radii[NS_CORNER_TOP_LEFT].width  = std::max(0., corners.radii[NS_CORNER_TOP_LEFT].width - aLeftWidth);
-        corners.radii[NS_CORNER_TOP_LEFT].height = std::max(0., corners.radii[NS_CORNER_TOP_LEFT].height - aTopWidth);
+        corners.radii[mozilla::eCornerTopLeft].width =
+            std::max(0., corners.radii[mozilla::eCornerTopLeft].width - aLeftWidth);
+        corners.radii[mozilla::eCornerTopLeft].height =
+            std::max(0., corners.radii[mozilla::eCornerTopLeft].height - aTopWidth);
 
-        corners.radii[NS_CORNER_TOP_RIGHT].width  = std::max(0., corners.radii[NS_CORNER_TOP_RIGHT].width - aRightWidth);
-        corners.radii[NS_CORNER_TOP_RIGHT].height = std::max(0., corners.radii[NS_CORNER_TOP_RIGHT].height - aTopWidth);
+        corners.radii[mozilla::eCornerTopRight].width =
+            std::max(0., corners.radii[mozilla::eCornerTopRight].width - aRightWidth);
+        corners.radii[mozilla::eCornerTopRight].height =
+            std::max(0., corners.radii[mozilla::eCornerTopRight].height - aTopWidth);
 
-        corners.radii[NS_CORNER_BOTTOM_LEFT].width  = std::max(0., corners.radii[NS_CORNER_BOTTOM_LEFT].width - aLeftWidth);
-        corners.radii[NS_CORNER_BOTTOM_LEFT].height = std::max(0., corners.radii[NS_CORNER_BOTTOM_LEFT].height - aBottomWidth);
+        corners.radii[mozilla::eCornerBottomLeft].width =
+            std::max(0., corners.radii[mozilla::eCornerBottomLeft].width - aLeftWidth);
+        corners.radii[mozilla::eCornerBottomLeft].height =
+            std::max(0., corners.radii[mozilla::eCornerBottomLeft].height - aBottomWidth);
 
-        corners.radii[NS_CORNER_BOTTOM_RIGHT].width  = std::max(0., corners.radii[NS_CORNER_BOTTOM_RIGHT].width - aRightWidth);
-        corners.radii[NS_CORNER_BOTTOM_RIGHT].height = std::max(0., corners.radii[NS_CORNER_BOTTOM_RIGHT].height - aBottomWidth);
+        corners.radii[mozilla::eCornerBottomRight].width =
+            std::max(0., corners.radii[mozilla::eCornerBottomRight].width - aRightWidth);
+        corners.radii[mozilla::eCornerBottomRight].height =
+            std::max(0., corners.radii[mozilla::eCornerBottomRight].height - aBottomWidth);
     }
     gfxRect rect;
     RectCornerRadii corners;
