@@ -277,6 +277,9 @@ ifdef OBJCOPY
 ifneq ($(OBJCOPY), :) # see build/autoconf/toolchain.m4:102 for why this is necessary
 ifndef PKG_SKIP_STRIP
 STRIP_CPP_TESTS := 1
+# Dumping symbols will modify our test programs, so make sure we don't try to
+# strip them as this is happening.
+generatesymbols: stage-cppunittests
 endif
 endif
 endif
