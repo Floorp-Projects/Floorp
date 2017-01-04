@@ -81,8 +81,7 @@ var popupElement = document.getElementById("editBookmarkPanel");
 var titleElement = document.getElementById("editBookmarkPanelTitle");
 var removeElement = document.getElementById("editBookmarkPanelRemoveButton");
 
-function checkBookmarksPanel(invoker, phase)
-{
+function checkBookmarksPanel(invoker, phase) {
   let onPopupShown = function(aEvent) {
     if (aEvent.originalTarget == popupElement) {
       popupElement.removeEventListener("popupshown", arguments.callee, false);

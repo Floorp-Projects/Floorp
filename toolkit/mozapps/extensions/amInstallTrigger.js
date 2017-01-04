@@ -28,8 +28,7 @@ function CallbackObject(id, callback, urls, mediator) {
   this.callCallback = function(url, status) {
     try {
       this.callback(url, status);
-    }
-    catch (e) {
+    } catch (e) {
       log.warn("InstallTrigger callback threw an exception: " + e);
     }
 
@@ -224,8 +223,7 @@ InstallTrigger.prototype = {
                                        uri,
                                        secman.DISALLOW_INHERIT_PRINCIPAL);
       return true;
-    }
-    catch (e) {
+    } catch (e) {
       return false;
     }
   },

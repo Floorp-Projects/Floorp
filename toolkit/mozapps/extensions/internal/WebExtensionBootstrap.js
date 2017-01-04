@@ -21,21 +21,17 @@ const BOOTSTRAP_REASON_TO_STRING_MAP = {
   8: "ADDON_DOWNGRADE",
 }
 
-function install(data, reason)
-{
+function install(data, reason) {
 }
 
-function startup(data, reason)
-{
+function startup(data, reason) {
   extension = new Extension(data, BOOTSTRAP_REASON_TO_STRING_MAP[reason]);
   extension.startup();
 }
 
-function shutdown(data, reason)
-{
+function shutdown(data, reason) {
   extension.shutdown();
 }
 
-function uninstall(data, reason)
-{
+function uninstall(data, reason) {
 }

@@ -6,8 +6,7 @@
 
 var XPInstallConfirm = {};
 
-XPInstallConfirm.init = function()
-{
+XPInstallConfirm.init = function() {
   Components.utils.import("resource://gre/modules/AddonManager.jsm");
 
   var _installCountdown;
@@ -63,8 +62,7 @@ XPInstallConfirm.init = function()
       installItem.type = type;
     if (install.certName) {
       installItem.cert = bundle.getFormattedString("signed", [install.certName]);
-    }
-    else {
+    } else {
       installItem.cert = bundle.getString("unverified");
     }
     installItem.signed = install.certName ? "true" : "false";
@@ -92,8 +90,7 @@ XPInstallConfirm.init = function()
       okButton.label = bundle.getString("installButtonLabel");
       okButton.disabled = false;
       clearInterval(_installCountdownInterval);
-    }
-    else
+    } else
       okButton.label = bundle.getFormattedString("installButtonDisabledLabel", [_installCountdown]);
   }
 
@@ -155,8 +152,7 @@ XPInstallConfirm.init = function()
     if (XPInstallConfirm._installOK) {
       for (let install of args.installs)
         install.install();
-    }
-    else {
+    } else {
       for (let install of args.installs) {
         if (install.state != AddonManager.STATE_CANCELLED)
           install.cancel();
@@ -172,13 +168,11 @@ XPInstallConfirm.init = function()
 
     okButton.disabled = true;
     setWidgetsAfterFocus();
-  }
-  else
+  } else
     okButton.label = bundle.getString("installButtonLabel");
 }
 
-XPInstallConfirm.onOK = function()
-{
+XPInstallConfirm.onOK = function() {
   Components.classes["@mozilla.org/base/telemetry;1"].
     getService(Components.interfaces.nsITelemetry).
     getHistogramById("SECURITY_UI").
@@ -188,8 +182,7 @@ XPInstallConfirm.onOK = function()
   return true;
 }
 
-XPInstallConfirm.onCancel = function()
-{
+XPInstallConfirm.onCancel = function() {
   // Perform the install or cancel after the window has unloaded
   XPInstallConfirm._installOK = false;
   return true;

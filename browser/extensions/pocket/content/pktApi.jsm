@@ -101,8 +101,7 @@ var pktApi = (function() {
             if (o && typeof o === "object" && o !== null) {
                 return o;
             }
-        }
-        catch (e) { }
+        } catch (e) { }
 
         return undefined;
     };
@@ -141,8 +140,7 @@ var pktApi = (function() {
 
         if (!value)
             prefBranch.clearUserPref(key);
-        else
-        {
+        else {
             // We use complexValue as tags can have utf-8 characters in them
             var str = Components.classes["@mozilla.org/supports-string;1"].createInstance(Components.interfaces.nsISupportsString);
             str.data = value;
@@ -620,8 +618,7 @@ var pktApi = (function() {
         var valArray = [];
 
         // If not assigned yet, pick and store a value
-        if (!assignedValue)
-        {
+        if (!assignedValue) {
             // Get a weighted array of test variants from the testOptions object
             Object.keys(testOptions).forEach(function(key) {
               for (var i = 0; i < testOptions[key]; i++) {

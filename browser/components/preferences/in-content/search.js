@@ -22,8 +22,7 @@ var gSearchPane = {
               .getService(Components.interfaces.mozIPlacesAutoComplete);
   },
 
-  init()
-  {
+  init() {
     gEngineView = new EngineView(new EngineStore());
     document.getElementById("engineList").view = gEngineView;
     this.buildDefaultEngineDropDown();
@@ -222,8 +221,7 @@ var gSearchPane = {
                                newValue.toString());
       // Prevent page from scrolling on the space key.
       aEvent.preventDefault();
-    }
-    else {
+    } else {
       let isMac = Services.appinfo.OS == "Darwin";
       if ((isMac && aEvent.keyCode == KeyEvent.DOM_VK_RETURN) ||
           (!isMac && aEvent.keyCode == KeyEvent.DOM_VK_F2)) {

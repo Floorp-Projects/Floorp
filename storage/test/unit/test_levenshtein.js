@@ -4,8 +4,7 @@
 
 // This file tests the Levenshtein Distance function we've registered.
 
-function createUtf16Database()
-{
+function createUtf16Database() {
   print("Creating the in-memory UTF-16-encoded database.");
   let conn = getService().openSpecialDatabase("memory");
   conn.executeSimpleSQL("PRAGMA encoding = 'UTF-16'");
@@ -22,8 +21,7 @@ function createUtf16Database()
   return conn;
 }
 
-function check_levenshtein(db, s, t, expectedDistance)
-{
+function check_levenshtein(db, s, t, expectedDistance) {
   var stmt = db.createStatement("SELECT levenshteinDistance(:s, :t) AS result");
   stmt.params.s = s;
   stmt.params.t = t;
@@ -36,8 +34,7 @@ function check_levenshtein(db, s, t, expectedDistance)
   }
 }
 
-function testLevenshtein(db)
-{
+function testLevenshtein(db) {
   // Basic tests.
   check_levenshtein(db, "", "", 0);
   check_levenshtein(db, "foo", "", 3);
@@ -63,8 +60,7 @@ function testLevenshtein(db)
   check_levenshtein(db, dots1000, dashes1000, 1000);
 }
 
-function run_test()
-{
+function run_test() {
   testLevenshtein(getOpenedDatabase());
   testLevenshtein(createUtf16Database());
 }

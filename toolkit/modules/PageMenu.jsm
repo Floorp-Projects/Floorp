@@ -160,8 +160,7 @@ PageMenu.prototype = {
       // browser to execute the menuitem.
       if (this._builder) {
         this._builder.click(target.getAttribute(this.GENERATEDITEMID_ATTR));
-      }
-      else if (this._browser) {
+      } else if (this._browser) {
         let win = target.ownerDocument.defaultView;
         let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
                              .getInterface(Ci.nsIDOMWindowUtils);

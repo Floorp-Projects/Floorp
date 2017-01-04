@@ -88,8 +88,7 @@ function run_test() {
 function end_test() {
   if (!gGlobalExisted) {
     globalDir.remove(true);
-  }
-  else {
+  } else {
     globalDir.append(do_get_expected_addon_name("addon4@tests.mozilla.org"));
     globalDir.remove(true);
   }

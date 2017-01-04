@@ -105,8 +105,7 @@ function testHash(aBrowser, aTestAddonVisible, aCallback) {
   isnot(hash, null, "There should be a hash");
   try {
     var data = JSON.parse(hash);
-  }
-  catch (e) {
+  } catch (e) {
     ok(false, "Hash should have been valid JSON: " + e);
     aCallback();
     return;
@@ -516,7 +515,7 @@ add_test(function() {
 // Test for Bug 703929 - Loading the discover view from a chrome XUL file fails when
 // the add-on manager is reopened.
 add_test(function() {
-  const url = "chrome://mochitests/content/" +  RELATIVE_DIR + "addon_about.xul";
+  const url = "chrome://mochitests/content/" + RELATIVE_DIR + "addon_about.xul";
   Services.prefs.setCharPref(PREF_DISCOVERURL, url);
 
   open_manager("addons://discover/", function(aWindow) {
@@ -541,7 +540,7 @@ add_test(function() {
 // Bug 711693 - Send the compatibility mode when loading the Discovery pane
 add_test(function() {
   info("Test '%COMPATIBILITY_MODE%' in the URL is correctly replaced by 'normal'");
-  Services.prefs.setCharPref(PREF_DISCOVERURL,  MAIN_URL + "?mode=%COMPATIBILITY_MODE%");
+  Services.prefs.setCharPref(PREF_DISCOVERURL, MAIN_URL + "?mode=%COMPATIBILITY_MODE%");
   Services.prefs.setBoolPref(PREF_STRICT_COMPAT, false);
 
   open_manager("addons://discover/", function(aWindow) {

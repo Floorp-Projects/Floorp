@@ -1,5 +1,4 @@
-add_task(function* ()
-{
+add_task(function* () {
   const kPrefName_AutoScroll = "general.autoScroll";
   Services.prefs.setBoolPref(kPrefName_AutoScroll, false);
 

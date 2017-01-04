@@ -13,8 +13,7 @@ add_task(function* database_is_valid() {
   Assert.equal((yield db.getSchemaVersion()), CURRENT_SCHEMA_VERSION);
 });
 
-add_task(function* test_bookmark_guid_annotation_removed()
-{
+add_task(function* test_bookmark_guid_annotation_removed() {
   yield PlacesUtils.bookmarks.eraseEverything();
 
   let db = yield PlacesUtils.promiseDBConnection();

@@ -17,8 +17,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
  * @resolves The array [subject, data] from the observed notification.
  * @rejects Never.
  */
-function promiseTopicObserved(topic)
-{
+function promiseTopicObserved(topic) {
   let deferred = Promise.defer();
   info("Waiting for observer topic " + topic);
   Services.obs.addObserver(function PTO_observe(obsSubject, obsTopic, obsData) {
@@ -32,8 +31,7 @@ function promiseTopicObserved(topic)
  * Called after opening a new window or switching windows, this will wait until
  * we are sure that an attempt to display a notification will not fail.
  */
-function* waitForWindowReadyForPopupNotifications(win)
-{
+function* waitForWindowReadyForPopupNotifications(win) {
   // These are the same checks that PopupNotifications.jsm makes before it
   // allows a notification to open.
   yield BrowserTestUtils.waitForCondition(
@@ -58,8 +56,7 @@ function* waitForWindowReadyForPopupNotifications(win)
  * @resolves to the received event
  * @rejects if a valid load event is not received within a meaningful interval
  */
-function promiseTabLoadEvent(tab, url)
-{
+function promiseTabLoadEvent(tab, url) {
   let browser = tab.linkedBrowser;
 
   if (url) {

@@ -19,8 +19,7 @@ this.InlineSpellChecker = function InlineSpellChecker(aEditor) {
 
 InlineSpellChecker.prototype = {
   // Call this function to initialize for a given editor
-  init(aEditor)
-  {
+  init(aEditor) {
     this.uninit();
     this.mEditor = aEditor;
     try {
@@ -31,8 +30,7 @@ InlineSpellChecker.prototype = {
     }
   },
 
-  initFromRemote(aSpellInfo)
-  {
+  initFromRemote(aSpellInfo) {
     if (this.mRemote)
       throw new Error("Unexpected state");
     this.uninit();
@@ -45,8 +43,7 @@ InlineSpellChecker.prototype = {
   },
 
   // call this to clear state
-  uninit()
-  {
+  uninit() {
     if (this.mRemote) {
       this.mRemote.uninit();
       this.mRemote = null;
@@ -67,8 +64,7 @@ InlineSpellChecker.prototype = {
 
   // for each UI event, you must call this function, it will compute the
   // word the cursor is over
-  initFromEvent(rangeParent, rangeOffset)
-  {
+  initFromEvent(rangeParent, rangeOffset) {
     this.mOverMisspelling = false;
 
     if (!rangeParent || !this.mInlineSpellChecker)
@@ -92,8 +88,7 @@ InlineSpellChecker.prototype = {
 
   // returns false if there should be no spellchecking UI enabled at all, true
   // means that you can at least give the user the ability to turn it on.
-  get canSpellCheck()
-  {
+  get canSpellCheck() {
     // inline spell checker objects will be created only if there are actual
     // dictionaries available
     if (this.mRemote)
@@ -111,15 +106,13 @@ InlineSpellChecker.prototype = {
   },
 
   // Whether spellchecking is enabled in the current box
-  get enabled()
-  {
+  get enabled() {
     if (this.mRemote)
       return this.mRemote.enableRealTimeSpell;
     return (this.mInlineSpellChecker &&
             this.mInlineSpellChecker.enableRealTimeSpell);
   },
-  set enabled(isEnabled)
-  {
+  set enabled(isEnabled) {
     if (this.mRemote)
       this.mRemote.setSpellcheckUserOverride(isEnabled);
     else if (this.mInlineSpellChecker)
@@ -127,15 +120,13 @@ InlineSpellChecker.prototype = {
   },
 
   // returns true if the given event is over a misspelled word
-  get overMisspelling()
-  {
+  get overMisspelling() {
     return this.mOverMisspelling;
   },
 
   // this prepends up to "maxNumber" suggestions at the given menu position
   // for the word under the cursor. Returns the number of suggestions inserted.
-  addSuggestionsToMenu(menu, insertBefore, maxNumber)
-  {
+  addSuggestionsToMenu(menu, insertBefore, maxNumber) {
     if (!this.mRemote && (!this.mInlineSpellChecker || !this.mOverMisspelling))
       return 0; // nothing to do
 
@@ -172,8 +163,7 @@ InlineSpellChecker.prototype = {
 
   // undoes the work of addSuggestionsToMenu for the same menu
   // (call from popup hiding)
-  clearSuggestionsFromMenu()
-  {
+  clearSuggestionsFromMenu() {
     for (var i = 0; i < this.mSuggestionItems.length; i++) {
       this.mMenu.removeChild(this.mSuggestionItems[i]);
     }
@@ -199,8 +189,7 @@ InlineSpellChecker.prototype = {
 
   // returns the number of dictionary languages. If insertBefore is NULL, this
   // does an append to the given menu
-  addDictionaryListToMenu(menu, insertBefore)
-  {
+  addDictionaryListToMenu(menu, insertBefore) {
     this.mDictionaryMenu = menu;
     this.mDictionaryNames = [];
     this.mDictionaryItems = [];
@@ -213,8 +202,7 @@ InlineSpellChecker.prototype = {
     if (this.mRemote) {
       list = this.mRemote.dictionaryList;
       curlang = this.mRemote.currentDictionary;
-    }
-    else if (this.mInlineSpellChecker) {
+    } else if (this.mInlineSpellChecker) {
       var spellchecker = this.mInlineSpellChecker.spellChecker;
       var o1 = {}, o2 = {};
       spellchecker.GetDictionaryList(o1, o2);
@@ -318,8 +306,7 @@ InlineSpellChecker.prototype = {
 
   // undoes the work of addDictionaryListToMenu for the menu
   // (call on popup hiding)
-  clearDictionaryListFromMenu()
-  {
+  clearDictionaryListFromMenu() {
     for (var i = 0; i < this.mDictionaryItems.length; i++) {
       this.mDictionaryMenu.removeChild(this.mDictionaryItems[i]);
     }
@@ -327,8 +314,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a dictionary
-  selectDictionary(index)
-  {
+  selectDictionary(index) {
     if (this.mRemote) {
       this.mRemote.selectDictionary(index);
       return;
@@ -341,8 +327,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for selecting a suggested replacement
-  replaceMisspelling(index)
-  {
+  replaceMisspelling(index) {
     if (this.mRemote) {
       this.mRemote.replaceMisspelling(index);
       return;
@@ -356,8 +341,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for enabling or disabling spellchecking
-  toggleEnabled()
-  {
+  toggleEnabled() {
     if (this.mRemote)
       this.mRemote.toggleEnabled();
     else
@@ -365,8 +349,7 @@ InlineSpellChecker.prototype = {
   },
 
   // callback for adding the current misspelling to the user-defined dictionary
-  addToDictionary()
-  {
+  addToDictionary() {
     // Prevent the undo stack from growing over the max depth
     if (this.mAddedWordStack.length == MAX_UNDO_STACK_DEPTH)
       this.mAddedWordStack.shift();
@@ -379,10 +362,8 @@ InlineSpellChecker.prototype = {
     }
   },
   // callback for removing the last added word to the dictionary LIFO fashion
-  undoAddToDictionary()
-  {
-    if (this.mAddedWordStack.length > 0)
-    {
+  undoAddToDictionary() {
+    if (this.mAddedWordStack.length > 0) {
       var word = this.mAddedWordStack.pop();
       if (this.mRemote)
         this.mRemote.undoAddToDictionary(word);
@@ -390,13 +371,11 @@ InlineSpellChecker.prototype = {
         this.mInlineSpellChecker.removeWordFromDictionary(word);
     }
   },
-  canUndo()
-  {
+  canUndo() {
     // Return true if we have words on the stack
     return (this.mAddedWordStack.length > 0);
   },
-  ignoreWord()
-  {
+  ignoreWord() {
     if (this.mRemote)
       this.mRemote.ignoreWord();
     else
@@ -504,8 +483,7 @@ var SpellCheckHelper = {
               this.getComputedStyle(element, "-moz-user-modify") == "read-write") {
             isEditable = true;
           }
-        }
-        catch (ex) {
+        } catch (ex) {
           // If someone built with composer disabled, we can't get an editing session.
         }
 

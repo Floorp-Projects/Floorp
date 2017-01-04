@@ -154,7 +154,7 @@ this.checkCert =
 
   validateCert(cert, aCerts);
 
-  if (aAllowNonBuiltInCerts ===  true)
+  if (aAllowNonBuiltInCerts === true)
     return;
 
   var issuerCert = cert;

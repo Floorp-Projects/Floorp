@@ -7,8 +7,7 @@ const NS_ERROR_MODULE_NETWORK = 2152398848;
 const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
 const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
 
-function getPanelBrowser()
-{
+function getPanelBrowser() {
     return document.getElementById("web-panels-browser");
 }
 
@@ -18,8 +17,7 @@ var panelProgressListener = {
                                 aCurTotalProgress, aMaxTotalProgress) {
     },
 
-    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus)
-    {
+    onStateChange(aWebProgress, aRequest, aStateFlags, aStatus) {
         if (!aRequest)
           return;
 
@@ -30,8 +28,7 @@ var panelProgressListener = {
         if (aStateFlags & Ci.nsIWebProgressListener.STATE_START &&
             aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
             window.parent.document.getElementById('sidebar-throbber').setAttribute("loading", "true");
-        }
-        else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
                 aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
             window.parent.document.getElementById('sidebar-throbber').removeAttribute("loading");
         }
@@ -48,8 +45,7 @@ var panelProgressListener = {
     onSecurityChange(aWebProgress, aRequest, aState) {
     },
 
-    QueryInterface(aIID)
-    {
+    QueryInterface(aIID) {
         if (aIID.equals(Ci.nsIWebProgressListener) ||
             aIID.equals(Ci.nsISupportsWeakReference) ||
             aIID.equals(Ci.nsISupports))
@@ -69,8 +65,7 @@ function loadWebPanel(aURI) {
     panelBrowser.setAttribute("cachedurl", aURI);
 }
 
-function load()
-{
+function load() {
     var panelBrowser = getPanelBrowser();
     panelBrowser.webProgress.addProgressListener(panelProgressListener,
                                                  Ci.nsIWebProgress.NOTIFY_ALL);
@@ -85,18 +80,15 @@ function load()
     gLoadFired = true;
 }
 
-function unload()
-{
+function unload() {
     getPanelBrowser().webProgress.removeProgressListener(panelProgressListener);
 }
 
-function PanelBrowserStop()
-{
+function PanelBrowserStop() {
     getPanelBrowser().webNavigation.stop(nsIWebNavigation.STOP_ALL)
 }
 
-function PanelBrowserReload()
-{
+function PanelBrowserReload() {
     getPanelBrowser().webNavigation
                      .sessionHistory
                      .QueryInterface(nsIWebNavigation)

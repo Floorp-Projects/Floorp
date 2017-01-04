@@ -71,8 +71,7 @@ function run_test() {
   if (appBlocklist.exists()) {
     try {
       appBlocklist.moveTo(gAppDir, "blocklist.old");
-    }
-    catch (e) {
+    } catch (e) {
       todo(false, "Aborting test due to unmovable blocklist file: " + e);
       return;
     }

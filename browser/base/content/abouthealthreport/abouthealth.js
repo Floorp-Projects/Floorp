@@ -42,8 +42,7 @@ var healthReportWrapper = {
         enabled: MozSelfSupport.healthReportDataSubmissionEnabled,
       };
       healthReportWrapper.injectData("prefs", prefsObj);
-    }
-    catch (ex) {
+    } catch (ex) {
       healthReportWrapper.reportFailure(healthReportWrapper.ERROR_PREFS_FAILED);
     }
   },

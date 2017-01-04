@@ -23,8 +23,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 
 // Simulates an expiration at shutdown.
-function shutdownExpiration()
-{
+function shutdownExpiration() {
   let expire = Cc["@mozilla.org/places/expiration;1"].getService(Ci.nsIObserver);
   expire.observe(null, "places-will-close-connection", null);
 }
@@ -73,8 +72,7 @@ function getInterval() {
 function clearInterval() {
   try {
     Services.prefs.clearUserPref("places.history.expiration.interval_seconds");
-  }
-  catch (ex) {}
+  } catch (ex) {}
 }
 
 
@@ -87,8 +85,7 @@ function getMaxPages() {
 function clearMaxPages() {
   try {
     Services.prefs.clearUserPref("places.history.expiration.max_pages");
-  }
-  catch (ex) {}
+  } catch (ex) {}
 }
 
 
@@ -101,8 +98,7 @@ function getHistoryEnabled() {
 function clearHistoryEnabled() {
   try {
     Services.prefs.clearUserPref("places.history.enabled");
-  }
-  catch (ex) {}
+  } catch (ex) {}
 }
 
 /**

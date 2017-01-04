@@ -16,8 +16,7 @@ XPCOMUtils.defineLazyGetter(this, "gLangBundle", () =>
 const kPermissionType = "translate";
 const kLanguagesPref = "browser.translation.neverForLanguages";
 
-function Tree(aId, aData)
-{
+function Tree(aId, aData) {
   this._data = aData;
   this._tree = document.getElementById(aId);
   this._tree.view = this;
@@ -80,8 +79,7 @@ Tree.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITreeView])
 };
 
-function Lang(aCode)
-{
+function Lang(aCode) {
   this.langCode = aCode;
   this._label = gLangBundle.GetStringFromName(aCode);
 }
@@ -141,8 +139,7 @@ var gTranslationExceptions = {
           return;
         let removed = this._sites.splice(0, this._sites.length);
         this._siteTree.boxObject.rowCountChanged(0, -removed.length);
-      }
-      else {
+      } else {
         let perm = aSubject.QueryInterface(Ci.nsIPermission);
         if (perm.type != kPermissionType)
           return;
@@ -155,8 +152,7 @@ var gTranslationExceptions = {
           let boxObject = this._siteTree.boxObject;
           boxObject.rowCountChanged(0, 1);
           boxObject.invalidate();
-        }
-        else if (aData == "deleted") {
+        } else if (aData == "deleted") {
           let index = this._sites.indexOf(perm.principal.origin);
           if (index == -1)
             return;
@@ -167,8 +163,7 @@ var gTranslationExceptions = {
         }
       }
       this.onSiteSelected();
-    }
-    else if (aTopic == "nsPref:changed") {
+    } else if (aTopic == "nsPref:changed") {
       this._langs = this.getLanguageExceptions();
       let change = this._langs.length - this._langTree.rowCount;
       this._langTree._data = this._langs;

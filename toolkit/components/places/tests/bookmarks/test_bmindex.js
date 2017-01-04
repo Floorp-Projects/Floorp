@@ -42,8 +42,7 @@ function run_test() {
       if (randIndex < -1)
         do_throw("Creating a bookmark at an invalid index should throw");
       bookmarks.push(id);
-    }
-    catch (ex) {
+    } catch (ex) {
       if (randIndex >= -1)
         do_throw("Creating a bookmark at a valid index should not throw");
     }
@@ -58,8 +57,7 @@ function run_test() {
       if (randIndex < -1)
         do_throw("Creating a separator at an invalid index should throw");
       bookmarks.push(id);
-    }
-    catch (ex) {
+    } catch (ex) {
       if (randIndex >= -1)
         do_throw("Creating a separator at a valid index should not throw");
     }
@@ -75,8 +73,7 @@ function run_test() {
       if (randIndex < -1)
         do_throw("Creating a folder at an invalid index should throw");
       bookmarks.push(id);
-    }
-    catch (ex) {
+    } catch (ex) {
       if (randIndex >= -1)
         do_throw("Creating a folder at a valid index should not throw");
     }
@@ -102,8 +99,7 @@ function run_test() {
       bs.moveItem(id, bs.unfiledBookmarksFolder, newIndex);
       if (newIndex < -1)
         do_throw("Moving an item to a negative index should throw\n");
-    }
-    catch (ex) {
+    } catch (ex) {
       if (newIndex >= -1)
         do_throw("Moving an item to a valid index should not throw\n");
     }

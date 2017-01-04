@@ -41,10 +41,8 @@ add_task(function* setup() {
   var tags = pluginHost.getPluginTags();
 
   // Find the test plugin
-  for (var i = 0; i < tags.length; i++)
-  {
-    if (tags[i].name == "Test Plug-in")
-    {
+  for (var i = 0; i < tags.length; i++) {
+    if (tags[i].name == "Test Plug-in") {
       pluginTag = tags[i];
     }
   }

@@ -9,42 +9,42 @@ add_task(function* test_insert_error_cases() {
   const TEST_URL = "http://mozilla.com";
 
   Assert.throws(
-    () =>  PlacesUtils.history.insert(),
+    () => PlacesUtils.history.insert(),
     /TypeError: pageInfo must be an object/,
     "passing a null into History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert(1),
+    () => PlacesUtils.history.insert(1),
     /TypeError: pageInfo must be an object/,
     "passing a non object into History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({}),
+    () => PlacesUtils.history.insert({}),
     /TypeError: PageInfo object must have a url property/,
     "passing an object without a url to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({url: 123}),
+    () => PlacesUtils.history.insert({url: 123}),
     /TypeError: Invalid url or guid: 123/,
     "passing an object with an invalid url to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({url: TEST_URL}),
+    () => PlacesUtils.history.insert({url: TEST_URL}),
     /TypeError: PageInfo object must have an array of visits/,
     "passing an object without a visits property to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({url: TEST_URL, visits: 1}),
+    () => PlacesUtils.history.insert({url: TEST_URL, visits: 1}),
     /TypeError: PageInfo object must have an array of visits/,
     "passing an object with a non-array visits property to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({url: TEST_URL, visits: []}),
+    () => PlacesUtils.history.insert({url: TEST_URL, visits: []}),
     /TypeError: PageInfo object must have an array of visits/,
     "passing an object with an empty array as the visits property to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({
+    () => PlacesUtils.history.insert({
       url: TEST_URL,
       visits: [
         {
@@ -56,7 +56,7 @@ add_task(function* test_insert_error_cases() {
     "passing a visit object with an invalid date to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({
+    () => PlacesUtils.history.insert({
       url: TEST_URL,
       visits: [
         {
@@ -73,7 +73,7 @@ add_task(function* test_insert_error_cases() {
   let futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + 1000);
   Assert.throws(
-    () =>  PlacesUtils.history.insert({
+    () => PlacesUtils.history.insert({
       url: TEST_URL,
       visits: [
         {
@@ -85,7 +85,7 @@ add_task(function* test_insert_error_cases() {
     "passing a visit object with a future date to History.insert should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insert({
+    () => PlacesUtils.history.insert({
       url: TEST_URL,
       visits: [
         {transition: "a"}
@@ -159,17 +159,17 @@ add_task(function* test_insert_multiple_error_cases() {
   };
 
   Assert.throws(
-    () =>  PlacesUtils.history.insertMany(),
+    () => PlacesUtils.history.insertMany(),
     /TypeError: pageInfos must be an array/,
     "passing a null into History.insertMany should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insertMany([]),
+    () => PlacesUtils.history.insertMany([]),
     /TypeError: pageInfos may not be an empty array/,
     "passing an empty array into History.insertMany should throw a TypeError"
   );
   Assert.throws(
-    () =>  PlacesUtils.history.insertMany([validPageInfo, {}]),
+    () => PlacesUtils.history.insertMany([validPageInfo, {}]),
     /TypeError: PageInfo object must have a url property/,
     "passing a second invalid PageInfo object to History.insertMany should throw a TypeError"
   );

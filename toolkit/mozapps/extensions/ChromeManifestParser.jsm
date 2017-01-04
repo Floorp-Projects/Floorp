@@ -112,8 +112,7 @@ this.ChromeManifestParser = {
       // First entry is the actual file we want to read.
       let zis = reader.getInputStream(entries[0]);
       data = NetUtil.readInputStreamToString(zis, zis.available());
-    }
-    finally {
+    } finally {
       // Close readers in reverse order.
       for (let i = readers.length - 1; i >= 0; i--) {
         readers[i].close();

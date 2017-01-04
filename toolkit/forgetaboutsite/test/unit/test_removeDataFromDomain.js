@@ -44,8 +44,7 @@ const PREFERENCE_NAME = "test-pref";
  *        The spec of the URI to create.
  * @returns an nsIURI representing aURIString.
  */
-function uri(aURIString)
-{
+function uri(aURIString) {
   return Cc["@mozilla.org/network/io-service;1"].
          getService(Ci.nsIIOService).
          newURI(aURIString, null, null);
@@ -61,8 +60,7 @@ function uri(aURIString)
  * @resolves When the check has been added successfully.
  * @rejects JavaScript exception.
  */
-function promiseIsURIVisited(aURI)
-{
+function promiseIsURIVisited(aURI) {
   let deferred = Promise.defer();
   PlacesUtils.asyncHistory.isURIVisited(aURI, function(unused, aIsVisited) {
     deferred.resolve(aIsVisited);
@@ -76,8 +74,7 @@ function promiseIsURIVisited(aURI)
  *
  * @param aDomain
  */
-function add_cookie(aDomain)
-{
+function add_cookie(aDomain) {
   check_cookie_exists(aDomain, false);
   let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
   cm.add(aDomain, COOKIE_PATH, COOKIE_NAME, "", false, false, false,
@@ -93,8 +90,7 @@ function add_cookie(aDomain)
  * @param aExists
  *        True if the cookie should exist, false otherwise.
  */
-function check_cookie_exists(aDomain, aExists)
-{
+function check_cookie_exists(aDomain, aExists) {
   let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager2);
   let cookie = {
     host: aDomain,
@@ -111,8 +107,7 @@ function check_cookie_exists(aDomain, aExists)
  * @param aHost
  *        The host to add to the list of disabled hosts.
  */
-function add_disabled_host(aHost)
-{
+function add_disabled_host(aHost) {
   check_disabled_host(aHost, false);
   let lm = Cc["@mozilla.org/login-manager;1"].
            getService(Ci.nsILoginManager);
@@ -128,8 +123,7 @@ function add_disabled_host(aHost)
  * @param aIsDisabled
  *        True if the host should be disabled, false otherwise.
  */
-function check_disabled_host(aHost, aIsDisabled)
-{
+function check_disabled_host(aHost, aIsDisabled) {
   let lm = Cc["@mozilla.org/login-manager;1"].
            getService(Ci.nsILoginManager);
   let checker = aIsDisabled ? do_check_false : do_check_true;
@@ -142,8 +136,7 @@ function check_disabled_host(aHost, aIsDisabled)
  * @param aHost
  *        The host to add the login for.
  */
-function add_login(aHost)
-{
+function add_login(aHost) {
   check_login_exists(aHost, false);
   let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
               createInstance(Ci.nsILoginInfo);
@@ -163,8 +156,7 @@ function add_login(aHost)
  * @param aExists
  *        True if the login should exist, false otherwise.
  */
-function check_login_exists(aHost, aExists)
-{
+function check_login_exists(aHost, aExists) {
   let lm = Cc["@mozilla.org/login-manager;1"].
            getService(Ci.nsILoginManager);
   let count = { value: 0 };
@@ -178,8 +170,7 @@ function check_login_exists(aHost, aExists)
  * @param aURI
  *        The URI to add the test permission for.
  */
-function add_permission(aURI)
-{
+function add_permission(aURI) {
   check_permission_exists(aURI, false);
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
@@ -199,8 +190,7 @@ function add_permission(aURI)
  * @param aExists
  *        True if the permission should exist, false otherwise.
  */
-function check_permission_exists(aURI, aExists)
-{
+function check_permission_exists(aURI, aExists) {
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
@@ -218,8 +208,7 @@ function check_permission_exists(aURI, aExists)
  * @param aURI
  *        The URI to add a preference for.
  */
-function add_preference(aURI)
-{
+function add_preference(aURI) {
   let deferred = Promise.defer();
   let cp = Cc["@mozilla.org/content-pref/service;1"].
              getService(Ci.nsIContentPrefService2);
@@ -235,8 +224,7 @@ function add_preference(aURI)
  * @param aURI
  *        The URI to check if a preference exists.
  */
-function preference_exists(aURI)
-{
+function preference_exists(aURI) {
   let deferred = Promise.defer();
   let cp = Cc["@mozilla.org/content-pref/service;1"].
              getService(Ci.nsIContentPrefService2);
@@ -251,8 +239,7 @@ function preference_exists(aURI)
 // Test Functions
 
 // History
-function* test_history_cleared_with_direct_match()
-{
+function* test_history_cleared_with_direct_match() {
   const TEST_URI = uri("http://mozilla.org/foo");
   do_check_false(yield promiseIsURIVisited(TEST_URI));
   yield PlacesTestUtils.addVisits(TEST_URI);
@@ -261,8 +248,7 @@ function* test_history_cleared_with_direct_match()
   do_check_false(yield promiseIsURIVisited(TEST_URI));
 }
 
-function* test_history_cleared_with_subdomain()
-{
+function* test_history_cleared_with_subdomain() {
   const TEST_URI = uri("http://www.mozilla.org/foo");
   do_check_false(yield promiseIsURIVisited(TEST_URI));
   yield PlacesTestUtils.addVisits(TEST_URI);
@@ -271,8 +257,7 @@ function* test_history_cleared_with_subdomain()
   do_check_false(yield promiseIsURIVisited(TEST_URI));
 }
 
-function* test_history_not_cleared_with_uri_contains_domain()
-{
+function* test_history_not_cleared_with_uri_contains_domain() {
   const TEST_URI = uri("http://ilovemozilla.org/foo");
   do_check_false(yield promiseIsURIVisited(TEST_URI));
   yield PlacesTestUtils.addVisits(TEST_URI);
@@ -285,24 +270,21 @@ function* test_history_not_cleared_with_uri_contains_domain()
 }
 
 // Cookie Service
-function test_cookie_cleared_with_direct_match()
-{
+function test_cookie_cleared_with_direct_match() {
   const TEST_DOMAIN = "mozilla.org";
   add_cookie(TEST_DOMAIN);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, false);
 }
 
-function test_cookie_cleared_with_subdomain()
-{
+function test_cookie_cleared_with_subdomain() {
   const TEST_DOMAIN = "www.mozilla.org";
   add_cookie(TEST_DOMAIN);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_cookie_exists(TEST_DOMAIN, false);
 }
 
-function test_cookie_not_cleared_with_uri_contains_domain()
-{
+function test_cookie_not_cleared_with_uri_contains_domain() {
   const TEST_DOMAIN = "ilovemozilla.org";
   add_cookie(TEST_DOMAIN);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
@@ -310,24 +292,21 @@ function test_cookie_not_cleared_with_uri_contains_domain()
 }
 
 // Login Manager
-function test_login_manager_disabled_hosts_cleared_with_direct_match()
-{
+function test_login_manager_disabled_hosts_cleared_with_direct_match() {
   const TEST_HOST = "http://mozilla.org";
   add_disabled_host(TEST_HOST);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_disabled_host(TEST_HOST, false);
 }
 
-function test_login_manager_disabled_hosts_cleared_with_subdomain()
-{
+function test_login_manager_disabled_hosts_cleared_with_subdomain() {
   const TEST_HOST = "http://www.mozilla.org";
   add_disabled_host(TEST_HOST);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_disabled_host(TEST_HOST, false);
 }
 
-function test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain()
-{
+function test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain() {
   const TEST_HOST = "http://ilovemozilla.org";
   add_disabled_host(TEST_HOST);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
@@ -340,24 +319,21 @@ function test_login_manager_disabled_hosts_not_cleared_with_uri_contains_domain(
   check_disabled_host(TEST_HOST, false);
 }
 
-function test_login_manager_logins_cleared_with_direct_match()
-{
+function test_login_manager_logins_cleared_with_direct_match() {
   const TEST_HOST = "http://mozilla.org";
   add_login(TEST_HOST);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, false);
 }
 
-function test_login_manager_logins_cleared_with_subdomain()
-{
+function test_login_manager_logins_cleared_with_subdomain() {
   const TEST_HOST = "http://www.mozilla.org";
   add_login(TEST_HOST);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_login_exists(TEST_HOST, false);
 }
 
-function test_login_manager_logins_not_cleared_with_uri_contains_domain()
-{
+function test_login_manager_logins_not_cleared_with_uri_contains_domain() {
   const TEST_HOST = "http://ilovemozilla.org";
   add_login(TEST_HOST);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
@@ -370,24 +346,21 @@ function test_login_manager_logins_not_cleared_with_uri_contains_domain()
 }
 
 // Permission Manager
-function test_permission_manager_cleared_with_direct_match()
-{
+function test_permission_manager_cleared_with_direct_match() {
   const TEST_URI = uri("http://mozilla.org");
   add_permission(TEST_URI);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_permission_exists(TEST_URI, false);
 }
 
-function test_permission_manager_cleared_with_subdomain()
-{
+function test_permission_manager_cleared_with_subdomain() {
   const TEST_URI = uri("http://www.mozilla.org");
   add_permission(TEST_URI);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
   check_permission_exists(TEST_URI, false);
 }
 
-function test_permission_manager_not_cleared_with_uri_contains_domain()
-{
+function test_permission_manager_not_cleared_with_uri_contains_domain() {
   const TEST_URI = uri("http://ilovemozilla.org");
   add_permission(TEST_URI);
   ForgetAboutSite.removeDataFromDomain("mozilla.org");
@@ -404,8 +377,7 @@ function waitForPurgeNotification() {
   let deferred = Promise.defer();
 
   let observer = {
-    observe(aSubject, aTopic, aData)
-    {
+    observe(aSubject, aTopic, aData) {
       Services.obs.removeObserver(observer, "browser:purge-domain-data");
       // test_storage_cleared needs this extra executeSoon because
       // the DOMStorage clean-up is also listening to this same observer
@@ -421,8 +393,7 @@ function waitForPurgeNotification() {
 }
 
 // Content Preferences
-function* test_content_preferences_cleared_with_direct_match()
-{
+function* test_content_preferences_cleared_with_direct_match() {
   const TEST_URI = uri("http://mozilla.org");
   do_check_false(yield preference_exists(TEST_URI));
   yield add_preference(TEST_URI);
@@ -432,8 +403,7 @@ function* test_content_preferences_cleared_with_direct_match()
   do_check_false(yield preference_exists(TEST_URI));
 }
 
-function* test_content_preferences_cleared_with_subdomain()
-{
+function* test_content_preferences_cleared_with_subdomain() {
   const TEST_URI = uri("http://www.mozilla.org");
   do_check_false(yield preference_exists(TEST_URI));
   yield add_preference(TEST_URI);
@@ -443,8 +413,7 @@ function* test_content_preferences_cleared_with_subdomain()
   do_check_false(yield preference_exists(TEST_URI));
 }
 
-function* test_content_preferences_not_cleared_with_uri_contains_domain()
-{
+function* test_content_preferences_not_cleared_with_uri_contains_domain() {
   const TEST_URI = uri("http://ilovemozilla.org");
   do_check_false(yield preference_exists(TEST_URI));
   yield add_preference(TEST_URI);
@@ -459,8 +428,7 @@ function* test_content_preferences_not_cleared_with_uri_contains_domain()
   do_check_false(yield preference_exists(TEST_URI));
 }
 
-function push_registration_exists(aURL, ps)
-{
+function push_registration_exists(aURL, ps) {
   return new Promise(resolve => {
     let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
                 .getService(Ci.nsIScriptSecurityManager);
@@ -476,8 +444,7 @@ function push_registration_exists(aURL, ps)
 }
 
 // Push
-function* test_push_cleared()
-{
+function* test_push_cleared() {
   let ps;
   try {
     ps = Cc["@mozilla.org/push/Service;1"].
@@ -535,8 +502,7 @@ function* test_push_cleared()
 }
 
 // Cache
-function test_cache_cleared()
-{
+function test_cache_cleared() {
   // Because this test is asynchronous, it should be the last test
   do_check_true(tests[tests.length - 1] == arguments.callee);
 
@@ -548,8 +514,7 @@ function test_cache_cleared()
   let os = Cc["@mozilla.org/observer-service;1"].
            getService(Ci.nsIObserverService);
   let observer = {
-    observe(aSubject, aTopic, aData)
-    {
+    observe(aSubject, aTopic, aData) {
       os.removeObserver(observer, "cacheservice:empty-cache");
       // Shutdown the download manager.
       Services.obs.notifyObservers(null, "quit-application", null);
@@ -561,10 +526,8 @@ function test_cache_cleared()
   do_test_pending();
 }
 
-function* test_storage_cleared()
-{
-  function getStorageForURI(aURI)
-  {
+function* test_storage_cleared() {
+  function getStorageForURI(aURI) {
     let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
               .getService(Ci.nsIScriptSecurityManager);
     let principal = ssm.createCodebasePrincipal(aURI, {});
@@ -638,8 +601,7 @@ var tests = [
   test_cache_cleared,
 ];
 
-function run_test()
-{
+function run_test() {
   for (let i = 0; i < tests.length; i++)
     add_task(tests[i]);
 

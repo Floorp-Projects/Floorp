@@ -181,8 +181,7 @@ function ensureItemsRemoved(...items) {
     // We accept both guids and full info object here.
     if (typeof(item) == "string") {
       Assert.ok(observer.itemsRemoved.has(item));
-    }
-    else {
+    } else {
       Assert.ok(observer.itemsRemoved.has(item.guid));
       let info = observer.itemsRemoved.get(item.guid);
       Assert.equal(info.parentGuid, item.parentGuid);
@@ -282,23 +281,19 @@ function* ensureEqualBookmarksTrees(aOriginal,
                                         false,
                                         true);
       }
-    }
-    else if (property == "guid") {
+    } else if (property == "guid") {
       // guid shouldn't be copied if the item was not restored.
       Assert.notEqual(aOriginal.guid, aNew.guid);
-    }
-    else if (property == "dateAdded") {
+    } else if (property == "dateAdded") {
       // dateAdded shouldn't be copied if the item was not restored.
       Assert.ok(is_time_ordered(aOriginal.dateAdded, aNew.dateAdded));
-    }
-    else if (property == "lastModified") {
+    } else if (property == "lastModified") {
       // same same, except for the never-changed case
       if (!aOriginal.lastModified)
         Assert.ok(!aNew.lastModified);
       else
         Assert.ok(is_time_ordered(aOriginal.lastModified, aNew.lastModified));
-    }
-    else if (aCheckParentAndPosition ||
+    } else if (aCheckParentAndPosition ||
              (property != "parentGuid" && property != "index")) {
       Assert.deepEqual(aOriginal[property], aNew[property]);
     }
@@ -328,8 +323,7 @@ add_task(function* test_recycled_transactions() {
     try {
       yield aTransaction.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
-    }
-    catch (ex) { }
+    } catch (ex) { }
     ensureUndoState(txns, undoPosition);
   }
 
@@ -351,8 +345,7 @@ add_task(function* test_recycled_transactions() {
     try {
       yield txn_a.transact();
       do_throw("Shouldn't be able to use the same transaction twice");
-    }
-    catch (ex) { }
+    } catch (ex) { }
     ensureUndoState();
     yield txn_b.transact();
   });
@@ -1214,12 +1207,10 @@ add_task(function* test_untag_uri() {
     if (aInfo instanceof Ci.nsIURI) {
       urls = [aInfo];
       tagsRemoved = [];
-    }
-    else if (Array.isArray(aInfo)) {
+    } else if (Array.isArray(aInfo)) {
       urls = aInfo;
       tagsRemoved = [];
-    }
-    else {
+    } else {
       urls = "url" in aInfo ? [aInfo.url] : aInfo.urls;
       tagsRemoved = "tag" in aInfo ? [aInfo.tag] : aInfo.tags;
     }
@@ -1585,13 +1576,13 @@ add_task(function* test_copy_excluding_annotations() {
     yield PT.Copy({ guid: folderGuid
                   , newParentGuid: rootGuid
                   , excludingAnnotation: "a" }).transact();
-  yield ensureAnnosSet(excluding_a_dupeGuid,  "b", "c");
+  yield ensureAnnosSet(excluding_a_dupeGuid, "b", "c");
 
   let excluding_ac_dupeGuid =
     yield PT.Copy({ guid: folderGuid
                   , newParentGuid: rootGuid
                   , excludingAnnotations: ["a", "c"] }).transact();
-  yield ensureAnnosSet(excluding_ac_dupeGuid,  "b");
+  yield ensureAnnosSet(excluding_ac_dupeGuid, "b");
 
   // Cleanup
   yield PT.undo();

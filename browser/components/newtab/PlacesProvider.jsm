@@ -211,9 +211,8 @@ Links.prototype = {
         // check if caller wants to handle query raws
         if (callback) {
           callback(aRow);
-        }
-        // otherwise fill in the item and add items array
-        else {
+        } else {
+          // otherwise fill in the item and add items array
           let item = null;
           // if columns array is given construct an object
           if (columns && Array.isArray(columns)) {

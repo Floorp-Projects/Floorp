@@ -188,8 +188,7 @@ registerCleanupFunction(function() {
 function log_exceptions(aCallback, ...aArgs) {
   try {
     return aCallback.apply(null, aArgs);
-  }
-  catch (e) {
+  } catch (e) {
     info("Exception thrown: " + e);
     throw e;
   }
@@ -680,8 +679,7 @@ function addCertOverride(host, bits) {
     req.open("GET", "https://" + host + "/", false);
     req.channel.notificationCallbacks = new CertOverrideListener(host, bits);
     req.send(null);
-  }
-  catch (e) {
+  } catch (e) {
     // This request will fail since the SSL server is not trusted yet
   }
 }
@@ -1267,8 +1265,7 @@ MockAddon.prototype = {
     if (newActive == this.isActive) {
       this.pendingOperations -= (newActive ? AddonManager.PENDING_DISABLE : AddonManager.PENDING_ENABLE);
       AddonManagerPrivate.callAddonListeners("onOperationCancelled", this);
-    }
-    else if (newActive) {
+    } else if (newActive) {
       let needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE);
       this.pendingOperations |= AddonManager.PENDING_ENABLE;
       AddonManagerPrivate.callAddonListeners("onEnabling", this, needsRestart);
@@ -1277,8 +1274,7 @@ MockAddon.prototype = {
         this.pendingOperations -= AddonManager.PENDING_ENABLE;
         AddonManagerPrivate.callAddonListeners("onEnabled", this);
       }
-    }
-    else {
+    } else {
       let needsRestart = !!(this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_DISABLE);
       this.pendingOperations |= AddonManager.PENDING_DISABLE;
       AddonManagerPrivate.callAddonListeners("onDisabling", this, needsRestart);
@@ -1424,8 +1420,7 @@ MockInstall.prototype = {
         if (aMethod in listener)
           if (listener[aMethod].call(listener, this, this.addon) === false)
             result = false;
-      }
-      catch (e) {
+      } catch (e) {
         ok(false, "Test listener threw exception: " + e);
       }
     }

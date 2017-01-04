@@ -101,8 +101,7 @@
           try {
             this.editor.transactionManager.clear();
             return true;
-          }
-          catch (e) {}
+          } catch (e) {}
           return false;
         ]]></body>
       </method>

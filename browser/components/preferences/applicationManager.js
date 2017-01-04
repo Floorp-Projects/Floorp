@@ -68,8 +68,7 @@ var gAppManagerDialog = {
     if (list.getRowCount() == 0) {
       // The list is now empty, make the bottom part disappear
       document.getElementById("appDetails").hidden = true;
-    }
-    else {
+    } else {
       // Select the item at the same index, if we removed the last
       // item of the list, select the previous item
       if (index == list.getRowCount())

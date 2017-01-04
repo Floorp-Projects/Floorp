@@ -79,7 +79,7 @@ var gSyncUtils = {
 
   get tosURL() {
     let root = this.fxAccountsEnabled ? "fxa." : "";
-    return  Weave.Svc.Prefs.get(root + "termsURL");
+    return Weave.Svc.Prefs.get(root + "termsURL");
   },
 
   openToS() {
@@ -88,7 +88,7 @@ var gSyncUtils = {
 
   get privacyPolicyURL() {
     let root = this.fxAccountsEnabled ? "fxa." : "";
-    return  Weave.Svc.Prefs.get(root + "privacyURL");
+    return Weave.Svc.Prefs.get(root + "privacyURL");
   },
 
   openPrivacyPolicy() {

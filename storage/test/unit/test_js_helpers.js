@@ -11,8 +11,7 @@
 
 // Test Functions
 
-function test_params_enumerate()
-{
+function test_params_enumerate() {
   let stmt = createStatement(
     "SELECT * FROM test WHERE id IN (:a, :b, :c)"
   );
@@ -27,8 +26,7 @@ function test_params_enumerate()
   }
 }
 
-function test_params_prototype()
-{
+function test_params_prototype() {
   let stmt = createStatement(
     "SELECT * FROM sqlite_master"
   );
@@ -40,8 +38,7 @@ function test_params_prototype()
   stmt.finalize();
 }
 
-function test_row_prototype()
-{
+function test_row_prototype() {
   let stmt = createStatement(
     "SELECT * FROM sqlite_master"
   );
@@ -58,8 +55,7 @@ function test_row_prototype()
   stmt.finalize();
 }
 
-function test_params_gets_sync()
-{
+function test_params_gets_sync() {
   // Added for bug 562866.
   /*
   let stmt = createStatement(
@@ -79,8 +75,7 @@ function test_params_gets_sync()
   */
 }
 
-function test_params_gets_async()
-{
+function test_params_gets_async() {
   // Added for bug 562866.
   /*
   let stmt = createAsyncStatement(
@@ -109,8 +104,7 @@ var tests = [
   test_params_gets_sync,
   test_params_gets_async,
 ];
-function run_test()
-{
+function run_test() {
   cleanup();
 
   // Create our database.

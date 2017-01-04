@@ -130,14 +130,12 @@ function readShortFile(aFile) {
     try {
       // Assume that the file is much shorter than 1 MiB.
       return scrInputStream.read(1048576);
-    }
-    finally {
+    } finally {
       // Close the scriptable stream after reading, even if the operation
       // failed.
       scrInputStream.close();
     }
-  }
-  finally {
+  } finally {
     // Close the stream after reading, if it is still open, even if the read
     // operation failed.
     inputStream.close();

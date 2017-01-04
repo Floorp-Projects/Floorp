@@ -26,13 +26,11 @@ var pages = [
   "http://b.mozilla.org/8/",
 ];
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_initialize()
-{
+add_task(function* test_initialize() {
   var noon = new Date();
   noon.setHours(12);
 

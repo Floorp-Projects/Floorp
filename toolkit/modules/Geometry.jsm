@@ -311,9 +311,9 @@ Rect.prototype = {
    */
   blend: function blend(rect, scalar) {
     return new Rect(
-      this.left   + (rect.left   - this.left  ) * scalar,
-      this.top    + (rect.top    - this.top   ) * scalar,
-      this.width  + (rect.width  - this.width ) * scalar,
+      this.left + (rect.left - this.left ) * scalar,
+      this.top + (rect.top - this.top ) * scalar,
+      this.width + (rect.width - this.width ) * scalar,
       this.height + (rect.height - this.height) * scalar);
   },
 

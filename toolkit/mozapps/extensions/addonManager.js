@@ -112,8 +112,7 @@ amManager.prototype = {
         function callCallback(aUri, aStatus) {
           try {
             aCallback.onInstallEnded(aUri, aStatus);
-          }
-          catch (e) {
+          } catch (e) {
             Components.utils.reportError(e);
           }
         }
@@ -142,8 +141,7 @@ amManager.prototype = {
               }
             });
           }
-        }
-        else if (aCallback) {
+        } else if (aCallback) {
           aCallback.onInstallEnded(uri, UNSUPPORTED_TYPE);
         }
         buildNextInstall();
@@ -241,8 +239,7 @@ amManager.prototype = {
         let API = AddonManager.webAPI;
         if (payload.type in API) {
           API[payload.type](aMessage.target, ...payload.args).then(resolve, reject);
-        }
-        else {
+        } else {
           reject("Unknown Add-on API request.");
         }
         break;

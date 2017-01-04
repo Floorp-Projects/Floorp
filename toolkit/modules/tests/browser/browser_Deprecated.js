@@ -137,8 +137,7 @@ function nextTest() {
 
       if (test.expectedObservation === null) {
         ok(false, "Deprecated warning not expected");
-      }
-      else {
+      } else {
         test.expectedObservation(aMessage);
       }
 

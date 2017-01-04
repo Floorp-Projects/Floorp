@@ -910,7 +910,7 @@ let WebChannelMessageToChromeListener = {
         }
       }
       sendAsyncMessage("WebChannelMessageToChrome", e.detail, { eventTarget: e.target }, principal);
-    } else  {
+    } else {
       Cu.reportError("WebChannel message failed. No message detail.");
     }
   }
@@ -1190,8 +1190,7 @@ var ViewSelectionSource = {
           else
             endContainer.parentNode.insertBefore(tmpNode, endContainer.nextSibling);
         }
-      }
-      else {
+      } else {
         tmpNode = dataDoc.createTextNode(MARK_SELECTION_END);
         endContainer.insertBefore(tmpNode, endContainer.childNodes.item(endOffset));
       }
@@ -1215,8 +1214,7 @@ var ViewSelectionSource = {
           else
             startContainer.parentNode.insertBefore(tmpNode, startContainer.nextSibling);
         }
-      }
-      else {
+      } else {
         tmpNode = dataDoc.createTextNode(MARK_SELECTION_START);
         startContainer.insertBefore(tmpNode, startContainer.childNodes.item(startOffset));
       }
@@ -1274,7 +1272,7 @@ var ViewSelectionSource = {
     + '</style>'
     + '</head>'
     + '<body id="viewsource"' + wrapClass
-    +        ' onload="document.title=\'' + title + '\'; document.getElementById(\'target\').scrollIntoView(true)">'
+    + ' onload="document.title=\'' + title + '\'; document.getElementById(\'target\').scrollIntoView(true)">'
     + '<pre>'
     + this.getOuterMarkup(topNode, 0)
     + '</pre></body></html>'
@@ -1320,35 +1318,33 @@ var ViewSelectionSource = {
         padding += " ";
       }
       str += newline + padding
-          +  '&lt;<span class="start-tag">' + node.nodeName + '</span>';
+          + '&lt;<span class="start-tag">' + node.nodeName + '</span>';
       for (var i = 0; i < node.attributes.length; i++) {
         var attr = node.attributes.item(i);
         if (attr.nodeName.match(/^[-_]moz/)) {
           continue;
         }
         str += ' <span class="attribute-name">'
-            +  attr.nodeName
-            +  '</span>=<span class="attribute-value">"'
-            +  this.unicodeToEntity(attr.nodeValue)
-            +  '"</span>';
+            + attr.nodeName
+            + '</span>=<span class="attribute-value">"'
+            + this.unicodeToEntity(attr.nodeValue)
+            + '"</span>';
       }
       if (!node.hasChildNodes()) {
         str += "/&gt;";
-      }
-      else {
+      } else {
         str += "&gt;";
         var oldLine = this._lineCount;
         str += this.getInnerMarkup(node, indent + 2);
         if (oldLine == this._lineCount) {
           newline = "";
           padding = "";
-        }
-        else {
+        } else {
           newline = (this._lineCount == this._endTargetLine) ? "" : "\n";
           this._lineCount++;
         }
         str += newline + padding
-            +  '&lt;/<span class="end-tag">' + node.nodeName + '</span>&gt;';
+            + '&lt;/<span class="end-tag">' + node.nodeName + '</span>&gt;';
       }
       break;
     case Node.TEXT_NODE: // Text

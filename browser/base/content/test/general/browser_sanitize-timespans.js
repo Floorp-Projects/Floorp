@@ -502,8 +502,7 @@ function* setupFormHistory() {
     return deferred.promise;
   }
 
-  function update(changes)
-  {
+  function update(changes) {
     let deferred = Promise.defer();
     FormHistory.update(changes, { handleError(error) {
                                     deferred.reject(error);

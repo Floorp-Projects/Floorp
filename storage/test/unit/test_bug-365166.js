@@ -5,8 +5,7 @@ function run_test() {
   test('user');
   test('schema');
 
-  function test(param)
-  {
+  function test(param) {
     var colName = param + "_version";
     var sql = "PRAGMA " + colName;
 

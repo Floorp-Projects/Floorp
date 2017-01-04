@@ -11,14 +11,12 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function newURI(spec)
-{
+function newURI(spec) {
     return Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService)
                                                     .newURI(spec, null, null);
 }
 
-function RemoteWebProgressRequest(spec, originalSpec, requestCPOW)
-{
+function RemoteWebProgressRequest(spec, originalSpec, requestCPOW) {
   this.wrappedJSObject = this;
 
   this._uri = newURI(spec);

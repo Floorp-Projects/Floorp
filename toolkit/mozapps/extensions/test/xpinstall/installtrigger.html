@@ -27,8 +27,7 @@ function startInstall() {
     document.getElementById("return").textContent = InstallTrigger.install(triggers, installCallback);
     dump("Sending InstallTriggered\n");
     window.dispatchEvent(event);
-  }
-  catch (e) {
+  } catch (e) {
     document.getElementById("return").textContent = "exception";
     dump("Sending InstallTriggered\n");
     window.dispatchEvent(event);

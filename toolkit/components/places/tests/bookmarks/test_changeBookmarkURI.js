@@ -19,8 +19,7 @@ var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
  * @param aUnbookmarkedUri
  *        a URI that is not currently bookmarked at all
  */
-function checkUris(aBookmarkId, aBookmarkedUri, aUnbookmarkedUri)
-{
+function checkUris(aBookmarkId, aBookmarkedUri, aUnbookmarkedUri) {
   // Ensure that aBookmarkedUri equals some URI that is bookmarked
   var uri = bmsvc.getBookmarkedURIFor(aBookmarkedUri);
   do_check_neq(uri, null);

@@ -167,8 +167,10 @@ GMPWrapper.prototype = {
   get description() { return this._plugin.description; },
   get fullDescription() { return this._plugin.fullDescription; },
 
-  get version() { return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_VERSION, null,
-                                      this._plugin.id); },
+  get version() {
+ return GMPPrefs.get(GMPPrefs.KEY_PLUGIN_VERSION, null,
+                                      this._plugin.id);
+},
 
   get isActive() {
     return !this.appDisabled &&
@@ -186,9 +188,11 @@ GMPWrapper.prototype = {
   get userDisabled() {
     return !GMPPrefs.get(GMPPrefs.KEY_PLUGIN_ENABLED, true, this._plugin.id);
   },
-  set userDisabled(aVal) { GMPPrefs.set(GMPPrefs.KEY_PLUGIN_ENABLED,
+  set userDisabled(aVal) {
+ GMPPrefs.set(GMPPrefs.KEY_PLUGIN_ENABLED,
                                         aVal === false,
-                                        this._plugin.id); },
+                                        this._plugin.id);
+},
 
   get blocklistState() { return Ci.nsIBlocklistService.STATE_NOT_BLOCKED; },
   get size() { return 0; },

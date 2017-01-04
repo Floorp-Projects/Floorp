@@ -1,5 +1,4 @@
-add_task(function *()
-{
+add_task(function *() {
   let keyUps = 0;
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, "data:text/html,<body>");

@@ -75,12 +75,14 @@ module.exports = createClass({
     let listContent;
 
     if (state == Types.deviceListState.LOADED) {
-      listContent = [dom.option({
-        value: "",
-        title: "",
-        disabled: true,
-        hidden: true,
-      }, getStr("responsive.noDeviceSelected")),
+      listContent = [
+        dom.option({
+          value: "",
+          title: "",
+          disabled: true,
+          hidden: true,
+        },
+        getStr("responsive.noDeviceSelected")),
         options.map(device => {
           return dom.option({
             key: device.name,

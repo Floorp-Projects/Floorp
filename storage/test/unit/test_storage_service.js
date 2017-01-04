@@ -7,8 +7,7 @@
 
 const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
 
-function test_openSpecialDatabase_invalid_arg()
-{
+function test_openSpecialDatabase_invalid_arg() {
   try {
     getService().openSpecialDatabase("abcd");
     do_throw("We should not get here!");
@@ -19,8 +18,7 @@ function test_openSpecialDatabase_invalid_arg()
   }
 }
 
-function test_openDatabase_null_file()
-{
+function test_openDatabase_null_file() {
   try {
     getService().openDatabase(null);
     do_throw("We should not get here!");
@@ -31,8 +29,7 @@ function test_openDatabase_null_file()
   }
 }
 
-function test_openUnsharedDatabase_null_file()
-{
+function test_openUnsharedDatabase_null_file() {
   try {
     getService().openUnsharedDatabase(null);
     do_throw("We should not get here!");
@@ -43,8 +40,7 @@ function test_openUnsharedDatabase_null_file()
   }
 }
 
-function test_openDatabase_file_DNE()
-{
+function test_openDatabase_file_DNE() {
   // the file should be created after calling
   var db = getTestDB();
   do_check_false(db.exists());
@@ -52,8 +48,7 @@ function test_openDatabase_file_DNE()
   do_check_true(db.exists());
 }
 
-function test_openDatabase_file_exists()
-{
+function test_openDatabase_file_exists() {
   // it should already exist from our last test
   var db = getTestDB();
   do_check_true(db.exists());
@@ -61,30 +56,25 @@ function test_openDatabase_file_exists()
   do_check_true(db.exists());
 }
 
-function test_corrupt_db_throws_with_openDatabase()
-{
+function test_corrupt_db_throws_with_openDatabase() {
   try {
     getDatabase(getCorruptDB());
     do_throw("should not be here");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
   }
 }
 
-function test_fake_db_throws_with_openDatabase()
-{
+function test_fake_db_throws_with_openDatabase() {
   try {
     getDatabase(getFakeDB());
     do_throw("should not be here");
-  }
-  catch (e) {
+  } catch (e) {
     do_check_eq(Cr.NS_ERROR_FILE_CORRUPTED, e.result);
   }
 }
 
-function test_backup_not_new_filename()
-{
+function test_backup_not_new_filename() {
   const fname = getTestDB().leafName;
 
   var backup = getService().backupDatabaseFile(getTestDB(), fname);
@@ -93,16 +83,14 @@ function test_backup_not_new_filename()
   backup.remove(false);
 }
 
-function test_backup_new_filename()
-{
+function test_backup_new_filename() {
   var backup = getService().backupDatabaseFile(getTestDB(), BACKUP_FILE_NAME);
   do_check_eq(BACKUP_FILE_NAME, backup.leafName);
 
   backup.remove(false);
 }
 
-function test_backup_new_folder()
-{
+function test_backup_new_folder() {
   var parentDir = getTestDB().parent;
   parentDir.append("test_storage_temp");
   if (parentDir.exists())
@@ -131,8 +119,7 @@ var tests = [
   test_backup_new_folder,
 ];
 
-function run_test()
-{
+function run_test() {
   for (var i = 0; i < tests.length; i++) {
     tests[i]();
   }

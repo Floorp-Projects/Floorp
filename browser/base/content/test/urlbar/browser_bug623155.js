@@ -91,8 +91,7 @@ var gWebProgressListener = {
     } else if (aLocation.ref == "FG") {
       // This is foreground tab's request.
       is(gNewTab, gBrowser.selectedTab, "This is a foreground tab.");
-    }
-    else {
+    } else {
       // We shonuld not reach here.
       ok(false, "This URI hash is not expected:" + aLocation.ref);
     }
@@ -117,8 +116,7 @@ function delayed(aIsSelectedTab) {
   if (!aIsSelectedTab) {
     // If this was a background request, go on a foreground request.
     gBrowser.selectedBrowser.loadURI(REDIRECT_FROM + "#FG");
-  }
-  else {
+  } else {
     // Othrewise, nothing to do remains.
     finish();
   }

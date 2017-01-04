@@ -24,7 +24,8 @@ const COLLAPSE_DATA_URL_REGEX = /^data.+base64/;
 const COLLAPSE_DATA_URL_LENGTH = 60;
 
 // Contains only void (without end tag) HTML elements
-const HTML_VOID_ELEMENTS = [ "area", "base", "br", "col", "command", "embed",
+const HTML_VOID_ELEMENTS = [
+  "area", "base", "br", "col", "command", "embed",
   "hr", "img", "input", "keygen", "link", "meta", "param", "source",
   "track", "wbr" ];
 

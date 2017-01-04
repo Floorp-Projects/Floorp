@@ -37,19 +37,16 @@ function test_finished() {
 
 var iter = tests();
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
   iter.next();
 }
 
-function next_test()
-{
+function next_test() {
   iter.next();
 }
 
-function* tests()
-{
+function* tests() {
   Services.obs.addObserver(TestObserver, "satchel-storage-changed", true);
 
   // ===== test init =====
@@ -82,8 +79,7 @@ function* tests()
 
   // Update some existing entries to have ages relative to when the test runs.
   var now = 1000 * Date.now();
-  let updateLastUsed = function updateLastUsedFn(results, age)
-  {
+  let updateLastUsed = function updateLastUsedFn(results, age) {
     let lastUsed = now - age * 24 * PR_HOURS;
 
     let changes = [ ];

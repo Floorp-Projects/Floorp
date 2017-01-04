@@ -86,7 +86,7 @@ function test() {
     let detailUninstall = aWindow.document.getElementById("detail-uninstall-btn");
       ok(detailEnable.getAttribute("tooltiptext") == aEnable);
       ok(detailDisable.getAttribute("tooltiptext") == aDisable);
-      ok(detailUninstall.getAttribute("tooltiptext")  == aRemove);
+      ok(detailUninstall.getAttribute("tooltiptext") == aRemove);
     }
 
     function showInDetailView(aAddonId) {

@@ -19,14 +19,12 @@
     return z;
   }
 
-  function runTest()
-  {
+  function runTest() {
     ok(isNaN(doDiv(0.0, 0.0)), "Undefined division-by-zero doesn't crash");
 
     try {
       document.getElementById('plugin1').enableFPExceptions();
-    }
-    catch (e) {
+    } catch (e) {
       ok(true, "No special code to set the FPU bit in the testplugin.");
       SimpleTest.finish();
       return;

@@ -14,8 +14,7 @@ function runNextTest() {
       t.success();
       runNextTest();
     }, cleanup);
-  }
-  else {
+  } else {
     cleanup();
   }
 }

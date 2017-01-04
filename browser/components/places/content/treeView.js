@@ -57,8 +57,7 @@ PlacesTreeView.prototype = {
       // This triggers containerStateChanged which then builds the visible
       // section.
       this._rootNode.containerOpen = true;
-    }
-    else
+    } else
       this.invalidateContainer(this._rootNode);
 
     // "Activate" the sorting column and update commands.
@@ -171,13 +170,11 @@ PlacesTreeView.prototype = {
     let useNodeIndex = typeof(aNodeIndex) == "number";
     if (parent == this._rootNode) {
       row = useNodeIndex ? aNodeIndex : this._rootNode.getChildIndex(aNode);
-    }
-    else if (useNodeIndex && typeof(aParentRow) == "number") {
+    } else if (useNodeIndex && typeof(aParentRow) == "number") {
       // If we have both the row of the parent node, and the node's index, we
       // can avoid searching the rows array if the parent is a plain container.
       row = aParentRow + aNodeIndex + 1;
-    }
-    else {
+    } else {
       // Look for the node in the nodes array.  Start the search at the parent
       // row.  If the parent row isn't passed, we'll pass undefined to indexOf,
       // which is fine.
@@ -263,8 +260,7 @@ PlacesTreeView.prototype = {
    * @return the number of rows which were inserted.
    */
   _buildVisibleSection:
-  function PTV__buildVisibleSection(aContainer, aFirstChildRow, aToOpen)
-  {
+  function PTV__buildVisibleSection(aContainer, aFirstChildRow, aToOpen) {
     // There's nothing to do if the container is closed.
     if (!aContainer.containerOpen)
       return 0;
@@ -629,8 +625,7 @@ PlacesTreeView.prototype = {
         row = aNewIndex;
       else
         row = parentRow + aNewIndex + 1;
-    }
-    else {
+    } else {
       // Here, we try to find the next visible element in the child list so we
       // can set the new visible index to be right before that.  Note that we
       // have to search down instead of up, because some siblings could have
@@ -859,8 +854,7 @@ PlacesTreeView.prototype = {
   nodeAnnotationChanged: function PTV_nodeAnnotationChanged(aNode, aAnno) {
     if (aAnno == PlacesUIUtils.DESCRIPTION_ANNO) {
       this._invalidateCellValue(aNode, this.COLUMN_TYPE_DESCRIPTION);
-    }
-    else if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
+    } else if (aAnno == PlacesUtils.LMANNO_FEEDURI) {
       PlacesUtils.livemarks.getLivemark({ id: aNode.itemId })
         .then(aLivemark => {
           this._controller.cacheLivemarkInfo(aNode, aLivemark);
@@ -904,8 +898,7 @@ PlacesTreeView.prototype = {
               PlacesUtils.livemarks.reloadLivemarks();
               if (shouldInvalidate)
                 this.invalidateContainer(aNode);
-            }
-            else {
+            } else {
               aLivemark.unregisterForUpdates(aNode);
             }
           }, () => undefined);
@@ -931,8 +924,7 @@ PlacesTreeView.prototype = {
 
         return;
       }
-    }
-    else {
+    } else {
       // Update the twisty state.
       let row = this._getRowForNode(aContainer);
       this._tree.invalidateRow(row);
@@ -1071,8 +1063,7 @@ PlacesTreeView.prototype = {
       this._inBatchMode = this.selection.selectEventsSuppressed = aToggleMode;
       if (this._inBatchMode) {
         this._tree.beginUpdateBatch();
-      }
-      else {
+      } else {
         this._tree.endUpdateBatch();
       }
     }
@@ -1092,8 +1083,7 @@ PlacesTreeView.prototype = {
       this._rootNode = this._result.root;
       this._cellProperties = new Map();
       this._cuttingNodes = new Set();
-    }
-    else if (this._result) {
+    } else if (this._result) {
       delete this._result;
       delete this._rootNode;
       delete this._cellProperties;
@@ -1118,8 +1108,7 @@ PlacesTreeView.prototype = {
     // The API allows passing invisible nodes.
     try {
       return this._getRowForNode(aNode, true);
-    }
-    catch (ex) { }
+    } catch (ex) { }
 
     return Ci.nsINavHistoryResultTreeViewer.INDEX_INVISIBLE;
   },
@@ -1174,13 +1163,11 @@ PlacesTreeView.prototype = {
             properties += " dayContainer";
           else if (PlacesUtils.nodeIsHost(node))
             properties += " hostContainer";
-        }
-        else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
+        } else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER ||
                  nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT) {
           if (this._controller.hasCachedLivemarkInfo(node)) {
             properties += " livemark";
-          }
-          else {
+          } else {
             PlacesUtils.livemarks.getLivemark({ id: node.itemId })
               .then(aLivemark => {
                 this._controller.cacheLivemarkInfo(node, aLivemark);
@@ -1197,8 +1184,7 @@ PlacesTreeView.prototype = {
           if (queryName)
             properties += " OrganizerQuery_" + queryName;
         }
-      }
-      else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
+      } else if (nodeType == Ci.nsINavHistoryResultNode.RESULT_TYPE_SEPARATOR)
         properties += " separator";
       else if (PlacesUtils.nodeIsURI(node)) {
         properties += " " + PlacesUIUtils.guessUrlSchemeForUI(node.uri);
@@ -1301,8 +1287,7 @@ PlacesTreeView.prototype = {
         // it, rather than insert adjacent to it.
         container = lastSelected;
         index = -1;
-      }
-      else if (lastSelected.containerOpen &&
+      } else if (lastSelected.containerOpen &&
                orientation == Ci.nsITreeView.DROP_AFTER &&
                lastSelected.hasChildren) {
         // If the last selected node is an open container and the user is
@@ -1310,8 +1295,7 @@ PlacesTreeView.prototype = {
         container = lastSelected;
         orientation = Ci.nsITreeView.DROP_ON;
         index = 0;
-      }
-      else {
+      } else {
         // Use the last-selected node's container.
         container = lastSelected.parent;
 
@@ -1334,8 +1318,7 @@ PlacesTreeView.prototype = {
               Ci.nsINavHistoryQueryOptions.SORT_BY_NONE) {
           // If we are within a sorted view, insert at the end.
           index = -1;
-        }
-        else if (queryOptions.excludeItems ||
+        } else if (queryOptions.excludeItems ||
                  queryOptions.excludeQueries ||
                  queryOptions.excludeReadOnlyFolders) {
           // Some item may be invisible, insert near last selected one.
@@ -1343,8 +1326,7 @@ PlacesTreeView.prototype = {
           // instead it will be calculated later by the controller.
           index = -1;
           dropNearItemId = lastSelected.itemId;
-        }
-        else {
+        } else {
           let lsi = container.getChildIndex(lastSelected);
           index = orientation == Ci.nsITreeView.DROP_BEFORE ? lsi : lsi + 1;
         }
@@ -1466,8 +1448,7 @@ PlacesTreeView.prototype = {
           try {
             return PlacesUtils.annotations.
                                getItemAnnotation(node.itemId, PlacesUIUtils.DESCRIPTION_ANNO);
-          }
-          catch (ex) { /* has no description */ }
+          } catch (ex) { /* has no description */ }
         }
         return "";
       case this.COLUMN_TYPE_DATEADDED:
@@ -1601,8 +1582,7 @@ PlacesTreeView.prototype = {
             oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO) {
           newSort = NHQO.SORT_BY_ANNOTATION_DESCENDING;
           newSortingAnnotation = PlacesUIUtils.DESCRIPTION_ANNO;
-        }
-        else if (allowTriState &&
+        } else if (allowTriState &&
                  oldSort == NHQO.SORT_BY_ANNOTATION_DESCENDING &&
                  oldSortingAnnotation == PlacesUIUtils.DESCRIPTION_ANNO)
           newSort = NHQO.SORT_BY_NONE;

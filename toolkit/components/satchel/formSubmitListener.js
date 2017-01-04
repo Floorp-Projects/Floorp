@@ -178,8 +178,7 @@ var satchelFormListener = {
                 this.log("sending entries to parent process for form " + form.id);
                 sendAsyncMessage("FormHistory:FormSubmitEntries", entries);
             }
-        }
-        catch (e) {
+        } catch (e) {
             this.log("notify failed: " + e);
         }
     }

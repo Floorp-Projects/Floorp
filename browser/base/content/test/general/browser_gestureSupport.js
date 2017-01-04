@@ -12,8 +12,7 @@ var test_utils;
 var test_commandset;
 var test_prefBranch = "browser.gesture.";
 
-function test()
-{
+function test() {
   waitForExplicitFinish();
 
   // Disable the default gestures support during the test
@@ -47,8 +46,7 @@ var test_expectedModifiers;
 var test_expectedClickCount;
 var test_imageTab;
 
-function test_gestureListener(evt)
-{
+function test_gestureListener(evt) {
   is(evt.type, test_expectedType,
      "evt.type (" + evt.type + ") does not match expected value");
   is(evt.target, test_utils.elementFromPoint(20, 20, false, false),
@@ -83,8 +81,7 @@ function test_gestureListener(evt)
   test_eventCount++;
 }
 
-function test_helper1(type, direction, delta, modifiers)
-{
+function test_helper1(type, direction, delta, modifiers) {
   // Setup the expected values
   test_expectedType = type;
   test_expectedDirection = direction;
@@ -100,8 +97,7 @@ function test_helper1(type, direction, delta, modifiers)
   is(expectedEventCount, test_eventCount, "Event (" + type + ") was never received by event listener");
 }
 
-function test_clicks(type, clicks)
-{
+function test_clicks(type, clicks) {
   // Setup the expected values
   test_expectedType = type;
   test_expectedDirection = 0;
@@ -118,8 +114,7 @@ function test_clicks(type, clicks)
   is(expectedEventCount, test_eventCount, "Event (" + type + ") was never received by event listener");
 }
 
-function test_TestEventListeners()
-{
+function test_TestEventListeners() {
   let e = test_helper1;  // easier to type this name
 
   // Swipe gesture animation events
@@ -184,22 +179,19 @@ function test_TestEventListeners()
   e("MozSwipeGesture", SimpleGestureEvent.DIRECTION_RIGHT, 0, modifier);
 }
 
-function test_eventDispatchListener(evt)
-{
+function test_eventDispatchListener(evt) {
   test_eventCount++;
   evt.stopPropagation();
 }
 
-function test_helper2(type, direction, delta, altKey, ctrlKey, shiftKey, metaKey)
-{
+function test_helper2(type, direction, delta, altKey, ctrlKey, shiftKey, metaKey) {
   let event = null;
   let successful;
 
   try {
     event = document.createEvent("SimpleGestureEvent");
     successful = true;
-  }
-  catch (ex) {
+  } catch (ex) {
     successful = false;
   }
   ok(successful, "Unable to create SimpleGestureEvent");
@@ -211,8 +203,7 @@ function test_helper2(type, direction, delta, altKey, ctrlKey, shiftKey, metaKey
                                  1, window,
                                  0, direction, delta, 0);
     successful = true;
-  }
-  catch (ex) {
+  } catch (ex) {
     successful = false;
   }
   ok(successful, "event.initSimpleGestureEvent should not fail");
@@ -242,8 +233,7 @@ function test_helper2(type, direction, delta, altKey, ctrlKey, shiftKey, metaKey
   is(expectedEventCount, test_eventCount, "Dispatched event was never received by listener");
 }
 
-function test_TestEventCreation()
-{
+function test_TestEventCreation() {
   // Event creation
   test_helper2("MozMagnifyGesture", SimpleGestureEvent.DIRECTION_RIGHT, 20.0,
                true, false, true, false);
@@ -251,8 +241,7 @@ function test_TestEventCreation()
                false, true, false, true);
 }
 
-function test_EnsureConstantsAreDisjoint()
-{
+function test_EnsureConstantsAreDisjoint() {
   let up = SimpleGestureEvent.DIRECTION_UP;
   let down = SimpleGestureEvent.DIRECTION_DOWN;
   let left = SimpleGestureEvent.DIRECTION_LEFT;
@@ -273,8 +262,7 @@ function test_EnsureConstantsAreDisjoint()
 // Helper for test of latched event processing. Emits the actual
 // gesture events to test whether the commands associated with the
 // gesture will only trigger once for each direction of movement.
-function test_emitLatchedEvents(eventPrefix, initialDelta, cmd)
-{
+function test_emitLatchedEvents(eventPrefix, initialDelta, cmd) {
   let cumulativeDelta = 0;
   let isIncreasing = initialDelta > 0;
 
@@ -348,8 +336,7 @@ function test_emitLatchedEvents(eventPrefix, initialDelta, cmd)
   checkBoth(6, "Increasing command was triggered", "Decreasing command was triggered");
 }
 
-function test_addCommand(prefName, id)
-{
+function test_addCommand(prefName, id) {
   let cmd = test_commandset.appendChild(document.createElement("command"));
   cmd.setAttribute("id", id);
   cmd.setAttribute("oncommand", "this.callCount++;");
@@ -361,15 +348,13 @@ function test_addCommand(prefName, id)
   return cmd;
 }
 
-function test_removeCommand(cmd)
-{
+function test_removeCommand(cmd) {
   gPrefService.setCharPref(cmd.origPrefName, cmd.origPrefValue);
   test_commandset.removeChild(cmd);
 }
 
 // Test whether latched events are only called once per direction of motion.
-function test_latchedGesture(gesture, inc, dec, eventPrefix)
-{
+function test_latchedGesture(gesture, inc, dec, eventPrefix) {
   let branch = test_prefBranch + gesture + ".";
 
   // Put the gesture into latched mode.
@@ -393,8 +378,7 @@ function test_latchedGesture(gesture, inc, dec, eventPrefix)
 }
 
 // Test whether non-latched events are triggered upon sufficient motion.
-function test_thresholdGesture(gesture, inc, dec, eventPrefix)
-{
+function test_thresholdGesture(gesture, inc, dec, eventPrefix) {
   let branch = test_prefBranch + gesture + ".";
 
   // Disable latched mode for this gesture.
@@ -447,8 +431,7 @@ function test_thresholdGesture(gesture, inc, dec, eventPrefix)
   test_removeCommand(cmdDec);
 }
 
-function test_swipeGestures()
-{
+function test_swipeGestures() {
   // easier to type names for the direction constants
   let up = SimpleGestureEvent.DIRECTION_UP;
   let down = SimpleGestureEvent.DIRECTION_DOWN;
@@ -521,8 +504,7 @@ function test_swipeGestures()
 }
 
 
-function test_rotateHelperGetImageRotation(aImageElement)
-{
+function test_rotateHelperGetImageRotation(aImageElement) {
   // Get the true image rotation from the transform matrix, bounded
   // to 0 <= result < 360
   let transformValue = content.window.getComputedStyle(aImageElement, null)
@@ -539,8 +521,7 @@ function test_rotateHelperGetImageRotation(aImageElement)
 }
 
 function test_rotateHelperOneGesture(aImageElement, aCurrentRotation,
-                                     aDirection, aAmount, aStop)
-{
+                                     aDirection, aAmount, aStop) {
   if (aAmount <= 0 || aAmount > 90) // Bound to 0 < aAmount <= 90
     return;
 
@@ -583,8 +564,7 @@ function test_rotateHelperOneGesture(aImageElement, aCurrentRotation,
   if (aAmount < 45 && aStop) {
     // Rotate a bit, then stop.  Expect no change at end of gesture.
     finalExpectedRotation = aCurrentRotation;
-  }
-  else {
+  } else {
     // Either not stopping (expect 90 degree change in aDirection), OR
     // stopping but after 45, (expect 90 degree change in aDirection)
     finalExpectedRotation = (aCurrentRotation +
@@ -601,8 +581,7 @@ function test_rotateHelperOneGesture(aImageElement, aCurrentRotation,
      ", dir=" + (aDirection == clockwise ? "cl" : "ccl"));
 }
 
-function test_rotateGesturesOnTab()
-{
+function test_rotateGesturesOnTab() {
   gBrowser.selectedBrowser.removeEventListener("load", test_rotateGesturesOnTab, true);
 
   if (!(content.document instanceof ImageDocument)) {
@@ -638,14 +617,14 @@ function test_rotateGesturesOnTab()
     // Test each case: at each 90 degree snap; cl/ccl;
     // amount more or less than 45; stop and hold or don't (32 total tests)
     // The amount added to the initRot is where it is expected to be
-    test_rotateHelperOneGesture(imgElem, normRot(initRot +   0), cl,  35, true );
-    test_rotateHelperOneGesture(imgElem, normRot(initRot +   0), cl,  35, false);
-    test_rotateHelperOneGesture(imgElem, normRot(initRot +  90), cl,  55, true );
-    test_rotateHelperOneGesture(imgElem, normRot(initRot + 180), cl,  55, false);
+    test_rotateHelperOneGesture(imgElem, normRot(initRot + 0), cl, 35, true );
+    test_rotateHelperOneGesture(imgElem, normRot(initRot + 0), cl, 35, false);
+    test_rotateHelperOneGesture(imgElem, normRot(initRot + 90), cl, 55, true );
+    test_rotateHelperOneGesture(imgElem, normRot(initRot + 180), cl, 55, false);
     test_rotateHelperOneGesture(imgElem, normRot(initRot + 270), ccl, 35, true );
     test_rotateHelperOneGesture(imgElem, normRot(initRot + 270), ccl, 35, false);
     test_rotateHelperOneGesture(imgElem, normRot(initRot + 180), ccl, 55, true );
-    test_rotateHelperOneGesture(imgElem, normRot(initRot +  90), ccl, 55, false);
+    test_rotateHelperOneGesture(imgElem, normRot(initRot + 90), ccl, 55, false);
 
     // Manually rotate it 90 degrees clockwise to prepare for next iteration,
     // and force flush
@@ -661,8 +640,7 @@ function test_rotateGesturesOnTab()
   finish();
 }
 
-function test_rotateGestures()
-{
+function test_rotateGestures() {
   test_imageTab = gBrowser.addTab("chrome://branding/content/about-logo.png");
   gBrowser.selectedTab = test_imageTab;
 

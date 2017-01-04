@@ -149,8 +149,7 @@ add_test(function() {
       if (gUseInContentUI) {
         is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
         run_next_test();
-      }
-      else {
+      } else {
         waitForFocus(run_next_test, gManagerWindow);
       }
     });
@@ -175,8 +174,7 @@ add_test(function() {
       if (gUseInContentUI) {
         is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
         run_next_test();
-      }
-      else {
+      } else {
         waitForFocus(run_next_test, gManagerWindow);
       }
     });

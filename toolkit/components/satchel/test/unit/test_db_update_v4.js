@@ -6,15 +6,13 @@ var testnum = 0;
 
 var iter;
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
   iter = next_test();
   iter.next();
 }
 
-function* next_test()
-{
+function* next_test() {
   try {
 
   // ===== test init =====

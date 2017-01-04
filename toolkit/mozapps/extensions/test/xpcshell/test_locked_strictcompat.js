@@ -494,8 +494,7 @@ add_task(function* run_test_1() {
     do_check_true(a3.isActive);
     do_check_false(a3.appDisabled);
     do_check_true(isExtensionInAddonsList(profileDir, a3.id));
-  }
-  else {
+  } else {
     do_print("XPI save succeeded");
     do_check_false(a3.isActive);
     do_check_true(a3.appDisabled);
@@ -511,8 +510,7 @@ add_task(function* run_test_1() {
   if (OS.Constants.Win) {
     do_check_true(a4.userDisabled);
     do_check_false(a4.appDisabled);
-  }
-  else {
+  } else {
     do_check_false(a4.userDisabled);
     do_check_true(a4.appDisabled);
   }

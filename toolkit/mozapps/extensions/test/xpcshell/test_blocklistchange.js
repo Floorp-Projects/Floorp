@@ -506,14 +506,12 @@ function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
     do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     do_print("blocked, PERM_CAN_DISABLE " + aAddon.id);
     do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
-  }
-  else if (aAddon.userDisabled) {
+  } else if (aAddon.userDisabled) {
     do_print("userDisabled, PERM_CAN_ENABLE " + aAddon.id);
     do_check_true(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     do_print("userDisabled, PERM_CAN_DISABLE " + aAddon.id);
     do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_DISABLE));
-  }
-  else {
+  } else {
     do_print("other, PERM_CAN_ENABLE " + aAddon.id);
     do_check_false(hasFlag(aAddon.permissions, AddonManager.PERM_CAN_ENABLE));
     if (aAddon.type != "theme") {
@@ -531,8 +529,7 @@ function check_addon(aAddon, aExpectedVersion, aExpectedUserDisabled,
 
   if (aExpectedUserDisabled || aExpectedState == Ci.nsIBlocklistService.STATE_BLOCKED) {
     do_check_false(willBeActive);
-  }
-  else {
+  } else {
     do_check_true(willBeActive);
   }
 }

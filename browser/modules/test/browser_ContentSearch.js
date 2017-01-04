@@ -393,8 +393,7 @@ function arrayBufferFromDataURI(uri) {
   };
   try {
     xhr.send();
-  }
-  catch (err) {
+  } catch (err) {
     return Promise.resolve(null);
   }
   return deferred.promise;

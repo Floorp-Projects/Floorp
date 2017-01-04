@@ -633,8 +633,7 @@ add_task(function* onItemRemoved_folder_recursive() {
   yield promise;
 });
 
-add_task(function cleanup()
-{
+add_task(function cleanup() {
   PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
   PlacesUtils.bookmarks.removeObserver(gBookmarkSkipObserver);
 });

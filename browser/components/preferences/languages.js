@@ -10,32 +10,27 @@ var gLanguagesDialog = {
 
   _selectedItemID         : null,
 
-  init()
-  {
+  init() {
     if (!this._availableLanguagesList.length)
       this._loadAvailableLanguages();
   },
 
   // Ugly hack used to trigger extra reflow in order to work around XUL bug 1194844;
   // see bug 1194346.
-  forceReflow()
-  {
+  forceReflow() {
     this._activeLanguages.style.fontKerning = "none";
     setTimeout("gLanguagesDialog._activeLanguages.style.removeProperty('font-kerning')", 0);
   },
 
-  get _activeLanguages()
-  {
+  get _activeLanguages() {
     return document.getElementById("activeLanguages");
   },
 
-  get _availableLanguages()
-  {
+  get _availableLanguages() {
     return document.getElementById("availableLanguages");
   },
 
-  _loadAvailableLanguages()
-  {
+  _loadAvailableLanguages() {
     // This is a parser for: resource://gre/res/language.properties
     // The file is formatted like so:
     // ab[-cd].accept=true|false
@@ -46,8 +41,7 @@ var gLanguagesDialog = {
     var bundleLanguages   = document.getElementById("bundleLanguages");
     var bundlePreferences = document.getElementById("bundlePreferences");
 
-    function LanguageInfo(aName, aABCD, aIsVisible)
-    {
+    function LanguageInfo(aName, aABCD, aIsVisible) {
       this.name = aName;
       this.abcd = aABCD;
       this.isVisible = aIsVisible;
@@ -71,15 +65,13 @@ var gLanguagesDialog = {
           var language = "";
           try {
             language = bundleLanguages.getString(ab);
-          }
-          catch (e) { continue; }
+          } catch (e) { continue; }
 
           var region = "";
           if (useABCDFormat) {
             try {
               region = bundleRegions.getString(cd);
-            }
-            catch (e) { continue; }
+            } catch (e) { continue; }
           }
 
           var name = "";
@@ -102,8 +94,7 @@ var gLanguagesDialog = {
     this._buildAvailableLanguageList();
   },
 
-  _buildAvailableLanguageList()
-  {
+  _buildAvailableLanguageList() {
     var availableLanguagesPopup = document.getElementById("availableLanguagesPopup");
     while (availableLanguagesPopup.hasChildNodes())
       availableLanguagesPopup.removeChild(availableLanguagesPopup.firstChild);
@@ -126,8 +117,7 @@ var gLanguagesDialog = {
     }
   },
 
-  readAcceptLanguages()
-  {
+  readAcceptLanguages() {
     while (this._activeLanguages.hasChildNodes())
       this._activeLanguages.removeChild(this._activeLanguages.firstChild);
 
@@ -160,21 +150,18 @@ var gLanguagesDialog = {
     return undefined;
   },
 
-  writeAcceptLanguages()
-  {
+  writeAcceptLanguages() {
     return undefined;
   },
 
-  onAvailableLanguageSelect()
-  {
+  onAvailableLanguageSelect() {
     var addButton = document.getElementById("addButton");
     addButton.disabled = false;
 
     this._availableLanguages.removeAttribute("accesskey");
   },
 
-  addLanguage()
-  {
+  addLanguage() {
     var selectedID = this._availableLanguages.selectedItem.id;
     var preference = document.getElementById("intl.accept_languages");
     var arrayOfPrefs = preference.value.toLowerCase().split(/\s*,\s*/);
@@ -201,8 +188,7 @@ var gLanguagesDialog = {
     this._availableLanguages.setAttribute("label", this._availableLanguages.getAttribute("label2"));
   },
 
-  removeLanguage()
-  {
+  removeLanguage() {
     // Build the new preference value string.
     var languagesArray = [];
     for (var i = 0; i < this._activeLanguages.childNodes.length; ++i) {
@@ -229,8 +215,7 @@ var gLanguagesDialog = {
     this._buildAvailableLanguageList();
   },
 
-  _getLanguageName(aABCD)
-  {
+  _getLanguageName(aABCD) {
     if (!this._availableLanguagesList.length)
       this._loadAvailableLanguages();
     for (var i = 0; i < this._availableLanguagesList.length; ++i) {
@@ -240,8 +225,7 @@ var gLanguagesDialog = {
     return "";
   },
 
-  moveUp()
-  {
+  moveUp() {
     var selectedItem = this._activeLanguages.selectedItems[0];
     var previousItem = selectedItem.previousSibling;
 
@@ -264,8 +248,7 @@ var gLanguagesDialog = {
     preference.value = string;
   },
 
-  moveDown()
-  {
+  moveDown() {
     var selectedItem = this._activeLanguages.selectedItems[0];
     var nextItem = selectedItem.nextSibling;
 
@@ -288,8 +271,7 @@ var gLanguagesDialog = {
     preference.value = string;
   },
 
-  onLanguageSelect()
-  {
+  onLanguageSelect() {
     var upButton = document.getElementById("up");
     var downButton = document.getElementById("down");
     var removeButton = document.getElementById("remove");

@@ -64,4 +64,4 @@ MockTransfer.prototype = {
 // transfer objects that are requested will be mock objects, until the
 // "unregister" method is called.
 var mockTransferRegisterer =
-  new MockObjectRegisterer("@mozilla.org/transfer;1",  MockTransfer);
+  new MockObjectRegisterer("@mozilla.org/transfer;1", MockTransfer);

@@ -68,16 +68,14 @@ function test_bookmarks_query() {
 
 ];
 
-function bookmark(aURI, aTitle)
-{
+function bookmark(aURI, aTitle) {
   PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                        aURI,
                                        PlacesUtils.bookmarks.DEFAULT_INDEX,
                                        aTitle);
 }
 
-function run_test()
-{
+function run_test() {
   do_test_pending();
   run_next_test();
 }

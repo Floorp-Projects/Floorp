@@ -14,7 +14,7 @@ module.exports = {
     "block-spacing": "error",
 
     // No newline before open brace for a block
-    // "brace-style": "error",
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 
     // No space before always a space after a comma
     "comma-spacing": ["error", {"before": false, "after": true}],
@@ -109,7 +109,7 @@ module.exports = {
     "no-mixed-spaces-and-tabs": ["error", "smart-tabs"],
 
     // No unnecessary spacing
-    // "no-multi-spaces": ["error", { exceptions: { "AssignmentExpression": true, "VariableDeclarator": true, "ArrayExpression": true, "ObjectExpression": true } }],
+    "no-multi-spaces": ["error", { exceptions: { "AssignmentExpression": true, "VariableDeclarator": true, "ArrayExpression": true, "ObjectExpression": true } }],
 
     // No reassigning native JS objects
     "no-native-reassign": "error",

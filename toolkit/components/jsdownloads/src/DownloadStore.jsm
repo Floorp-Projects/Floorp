@@ -69,8 +69,7 @@ XPCOMUtils.defineLazyGetter(this, "gTextEncoder", function() {
  * @param aPath
  *        String containing the file path where data should be saved.
  */
-this.DownloadStore = function(aList, aPath)
-{
+this.DownloadStore = function(aList, aPath) {
   this.list = aList;
   this.path = aPath;
 }
@@ -99,8 +98,7 @@ this.DownloadStore.prototype = {
    * @resolves When the operation finished successfully.
    * @rejects JavaScript exception.
    */
-  load: function DS_load()
-  {
+  load: function DS_load() {
     return Task.spawn(function* task_DS_load() {
       let bytes;
       try {
@@ -152,8 +150,7 @@ this.DownloadStore.prototype = {
    * @resolves When the operation finished successfully.
    * @rejects JavaScript exception.
    */
-  save: function DS_save()
-  {
+  save: function DS_save() {
     return Task.spawn(function* task_DS_save() {
       let downloads = yield this.list.getAll();
 

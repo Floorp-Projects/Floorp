@@ -113,8 +113,7 @@ GMPInstallManager.prototype = {
     addonPromise.then(res => {
       if (!res || !res.gmpAddons) {
         this._deferred.resolve({gmpAddons: []});
-      }
-      else {
+      } else {
         res.gmpAddons = res.gmpAddons.map(a => new GMPAddon(a));
         this._deferred.resolve(res);
       }
@@ -473,8 +472,7 @@ GMPExtractor.prototype = {
  * the specified GMPAddon object.
  * @param gmpAddon The addon to install.
  */
-function GMPDownloader(gmpAddon)
-{
+function GMPDownloader(gmpAddon) {
   this._gmpAddon = gmpAddon;
 }
 

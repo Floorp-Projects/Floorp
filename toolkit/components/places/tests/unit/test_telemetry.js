@@ -63,8 +63,7 @@ function getExpirablePRTime(daysAgo = 7) {
   return dateObj.getTime() * 1000;
 }
 
-add_task(function* test_execute()
-{
+add_task(function* test_execute() {
   // Put some trash in the database.
   let uri = NetUtil.newURI("http://moz.org/");
 
@@ -105,7 +104,7 @@ add_task(function* test_execute()
 
   for (let i = 0; i < 3; i++) {
     yield PlacesTestUtils.addVisits({
-      uri: NetUtil.newURI("http://" +  i + ".moz.org/"),
+      uri: NetUtil.newURI("http://" + i + ".moz.org/"),
       visitDate: newTimeInMicroseconds()
     });
   }

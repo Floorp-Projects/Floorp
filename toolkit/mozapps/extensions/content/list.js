@@ -60,8 +60,7 @@ function init() {
       var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
                                 .getService(Components.interfaces.nsIURLFormatter);
       var url = formatter.formatURLPref("extensions.blocklist.detailsURL");
-    }
-    catch (e) { }
+    } catch (e) { }
 
     var params = {
       moreInfoURL: url,
@@ -76,16 +75,14 @@ function init() {
       accept.accessKey = extensionsBundle.getString("softBlockedInstallAcceptKey");
       de.getButton("cancel").focus();
       document.addEventListener("dialogaccept", allowInstall, false);
-    }
-    else {
+    } else {
       params.title = extensionsBundle.getString("blocklistedInstallTitle2");
       params.message1 = extensionsBundle.getFormattedString("blocklistedInstallMsg2",
                                                            [args.GetString(0)]);
       de.buttons = "accept";
       de.getButton("accept").focus();
     }
-  }
-  else {
+  } else {
     items = window.arguments[0];
     params = window.arguments[1];
   }

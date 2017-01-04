@@ -18,16 +18,14 @@ const nsIPK11Token = Components.interfaces.nsIPK11Token;
 var params;
 var pw1;
 
-function init()
-{
+function init() {
   pw1 = document.getElementById("pw1");
 
   process();
 }
 
 
-function process()
-{
+function process() {
   let bundle = document.getElementById("bundlePreferences");
 
   // If the token is unitialized, don't use the old password box.
@@ -69,8 +67,7 @@ function process()
   checkPasswords();
 }
 
-function setPassword()
-{
+function setPassword() {
   var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
                                 .getService(Components.interfaces.nsIPromptService);
@@ -152,8 +149,7 @@ function setPassword()
     window.close();
 }
 
-function setPasswordStrength()
-{
+function setPasswordStrength() {
 // Here is how we weigh the quality of the password
 // number of characters
 // numbers
@@ -204,8 +200,7 @@ function setPasswordStrength()
   return;
 }
 
-function checkPasswords()
-{
+function checkPasswords() {
   var pw1 = document.getElementById('pw1').value;
   var pw2 = document.getElementById('pw2').value;
   var ok = document.documentElement.getButton("accept");
@@ -226,8 +221,7 @@ function checkPasswords()
 
   if (pw1 == pw2) {
     ok.setAttribute("disabled", "false");
-  } else
-  {
+  } else {
     ok.setAttribute("disabled", "true");
   }
 

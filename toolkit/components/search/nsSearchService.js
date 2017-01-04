@@ -1010,16 +1010,14 @@ function ParamSubstitution(aParamValue, aSearchTerms, aEngine) {
   var distributionID = Services.appinfo.distributionID;
   try {
     distributionID = Services.prefs.getCharPref(BROWSER_SEARCH_PREF + "distributionID");
-  }
-  catch (ex) { }
+  } catch (ex) { }
   var official = MOZ_OFFICIAL;
   try {
     if (Services.prefs.getBoolPref(BROWSER_SEARCH_PREF + "official"))
       official = "official";
     else
       official = "unofficial";
-  }
-  catch (ex) { }
+  } catch (ex) { }
 
   // Custom search parameters. These are only available to default search
   // engines.
@@ -1194,8 +1192,7 @@ EngineURL.prototype = {
           this.addParam(param.name, value);
         }
         this._addMozParam(param);
-      }
-      else
+      } else
         this.addParam(param.name, param.value, param.purpose || undefined);
     }
   },
@@ -1275,8 +1272,7 @@ function Engine(aLocation, aIsReadOnly) {
     let shortName;
     if (file) {
       shortName = file.leafName;
-    }
-    else if (uri && uri instanceof Ci.nsIURL) {
+    } else if (uri && uri instanceof Ci.nsIURL) {
       if (aIsReadOnly || (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
                           uri.scheme == "resource")) {
         shortName = uri.fileName;
@@ -1301,11 +1297,9 @@ function Engine(aLocation, aIsReadOnly) {
       // They aren't default engines (because they aren't app-shipped), but we
       // still need to give their id an [app] prefix for backward compat.
       this._id = "[app]/" + this._shortName + ".xml";
-    }
-    else if (!aIsReadOnly) {
+    } else if (!aIsReadOnly) {
       this._id = "[profile]/" + this._shortName + ".xml";
-    }
-    else {
+    } else {
       // If the engine is neither a default one, nor a user-installed one,
       // it must be extension-shipped, so use the full path as id.
       LOG("Setting _id to full path for engine from " + this._loadPath);
@@ -1544,7 +1538,7 @@ Engine.prototype = {
 
     var ps = Services.prompt;
     var buttonFlags = (ps.BUTTON_TITLE_IS_STRING * ps.BUTTON_POS_0) +
-                      (ps.BUTTON_TITLE_CANCEL    * ps.BUTTON_POS_1) +
+                      (ps.BUTTON_TITLE_CANCEL * ps.BUTTON_POS_1) +
                        ps.BUTTON_POS_0_DEFAULT;
 
     var checked = {value: false};
@@ -2686,7 +2680,7 @@ SearchService.prototype = {
   // If initialization has not been completed yet, perform synchronous
   // initialization.
   // Throws in case of initialization error.
-  _ensureInitialized: function  SRCH_SVC__ensureInitialized() {
+  _ensureInitialized: function SRCH_SVC__ensureInitialized() {
     if (gInitialized) {
       if (!Components.isSuccessCode(this._initRV)) {
         LOG("_ensureInitialized: failure");
@@ -3823,8 +3817,7 @@ SearchService.prototype = {
           this.__sortedEngines.push(engine);
           addedEngines[engine.name] = engine;
         }
-      }
-      catch (e) { }
+      } catch (e) { }
 
       let prefNameBase = getGeoSpecificPrefName(BROWSER_SEARCH_PREF + "order");
       while (true) {

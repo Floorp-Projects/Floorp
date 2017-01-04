@@ -20,7 +20,7 @@ Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this)
 
 // Below are test cases for XUL element
 add_task(function* test_xul_text_link_label() {
-  let  url = chrome_base + "subtst_contextmenu_xul.xul";
+  let url = chrome_base + "subtst_contextmenu_xul.xul";
 
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, url);
 

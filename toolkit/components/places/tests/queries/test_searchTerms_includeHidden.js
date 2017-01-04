@@ -48,18 +48,15 @@ const TEST_DATA = [
   }
 ];
 
-function run_test()
-{
+function run_test() {
   run_next_test();
 }
 
-add_task(function* test_initalize()
-{
+add_task(function* test_initalize() {
   yield task_populateDB(VISITS);
 });
 
-add_task(function* test_searchTerms_includeHidden()
-{
+add_task(function* test_searchTerms_includeHidden() {
   for (let data of TEST_DATA) {
     let query = PlacesUtils.history.getNewQuery();
     query.searchTerms = data.searchTerms;

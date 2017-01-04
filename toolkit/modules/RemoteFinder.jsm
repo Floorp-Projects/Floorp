@@ -34,8 +34,7 @@ RemoteFinder.prototype = {
       this._messageManager.removeMessageListener("Finder:MatchesResult", this);
       this._messageManager.removeMessageListener("Finder:CurrentSelectionResult", this);
       this._messageManager.removeMessageListener("Finder:HighlightFinished", this);
-    }
-    else {
+    } else {
       aBrowser.messageManager.sendAsyncMessage("Finder:Initialize");
     }
 

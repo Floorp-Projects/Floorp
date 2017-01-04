@@ -1318,8 +1318,7 @@ tests.push({
 
 // ------------------------------------------------------------------------------
 
-add_task(function* test_preventive_maintenance()
-{
+add_task(function* test_preventive_maintenance() {
   // Get current bookmarks max ID for cleanup
   let stmt = mDBConn.createStatement("SELECT MAX(id) FROM moz_bookmarks");
   stmt.executeStep();

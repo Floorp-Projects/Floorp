@@ -30,8 +30,7 @@ function removeNotificationOnEnd(notification, installs) {
 }
 
 const gXPInstallObserver = {
-  _findChildShell(aDocShell, aSoughtShell)
-  {
+  _findChildShell(aDocShell, aSoughtShell) {
     if (aDocShell == aSoughtShell)
       return aDocShell;
 
@@ -45,8 +44,7 @@ const gXPInstallObserver = {
     return null;
   },
 
-  _getBrowser(aDocShell)
-  {
+  _getBrowser(aDocShell) {
     for (let browser of gBrowser.browsers) {
       if (this._findChildShell(browser.docShell, aDocShell))
         return browser;
@@ -163,14 +161,12 @@ const gXPInstallObserver = {
       messageString = gNavigatorBundle.getString("addonConfirmInstallUnsigned.message");
       notification.setAttribute("warning", "true");
       options.learnMoreURL += "unsigned-addons";
-    }
-    else if (unsigned.length == 0) {
+    } else if (unsigned.length == 0) {
       // All add-ons are verified or don't need to be verified
       messageString = gNavigatorBundle.getString("addonConfirmInstall.message");
       notification.removeAttribute("warning");
       options.learnMoreURL += "find-and-install-add-ons";
-    }
-    else {
+    } else {
       // Some of the add-ons are unverified, the list of names will indicate
       // which
       messageString = gNavigatorBundle.getString("addonConfirmInstallSomeUnsigned.message");
@@ -217,8 +213,7 @@ const gXPInstallObserver = {
             .add(Ci.nsISecurityUITelemetry.WARNING_CONFIRM_ADDON_INSTALL);
   },
 
-  observe(aSubject, aTopic, aData)
-  {
+  observe(aSubject, aTopic, aData) {
     var brandBundle = document.getElementById("bundle_brand");
     var installInfo = aSubject.QueryInterface(Components.interfaces.amIWebInstallInfo);
     var browser = installInfo.browser;
@@ -247,8 +242,7 @@ const gXPInstallObserver = {
       if (gPrefService.prefIsLocked("xpinstall.enabled")) {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessageLocked");
         buttons = [];
-      }
-      else {
+      } else {
         messageString = gNavigatorBundle.getString("xpinstallDisabledMessage");
 
         action = {
@@ -442,8 +436,7 @@ const gXPInstallObserver = {
           accessKey: gNavigatorBundle.getString("addonInstallRestartIgnoreButton.accesskey"),
           callback: () => {},
         }];
-      }
-      else {
+      } else {
         messageString = gNavigatorBundle.getString("addonsInstalled");
         action = null;
       }
@@ -683,8 +676,7 @@ var LightWeightThemeWebInstaller = {
     let uri;
     try {
       uri = makeURI(srcURIString);
-    }
-    catch (e) {
+    } catch (e) {
       // makeURI fails if srcURIString is a nonsense URI
       return false;
     }

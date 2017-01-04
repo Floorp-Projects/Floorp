@@ -27,8 +27,7 @@ function breakAddon(file) {
   if (TEST_UNPACKED) {
     file.append("test.txt");
     file.remove(true);
-  }
-  else {
+  } else {
     var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
                createInstance(AM_Ci.nsIZipWriter);
     zipW.open(file, FileUtils.MODE_RDWR | FileUtils.MODE_APPEND);

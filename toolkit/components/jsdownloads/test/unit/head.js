@@ -84,8 +84,7 @@ const TEST_DATA_SHORT_GZIP_ENCODED =
 /**
  * All the tests are implemented with add_task, this starts them automatically.
  */
-function run_test()
-{
+function run_test() {
   do_get_profile();
   run_next_test();
 }
@@ -126,8 +125,7 @@ var gFileCounter = Math.floor(Math.random() * 1000000);
  *       operation in the file system may still be pending, preventing a new
  *       file with the same name to be created.
  */
-function getTempFile(aLeafName)
-{
+function getTempFile(aLeafName) {
   // Prepend a serial number to the extension in the suggested leaf name.
   let [base, ext] = DownloadPaths.splitBaseNameAndExtension(aLeafName);
   let leafName = base + "-" + gFileCounter + ext;
@@ -164,8 +162,7 @@ function getTempFile(aLeafName)
  * @resolves When pending events have been processed.
  * @rejects Never.
  */
-function promiseExecuteSoon()
-{
+function promiseExecuteSoon() {
   let deferred = Promise.defer();
   do_execute_soon(deferred.resolve);
   return deferred.promise;
@@ -178,8 +175,7 @@ function promiseExecuteSoon()
  * @resolves When pending events have been processed.
  * @rejects Never.
  */
-function promiseTimeout(aTime)
-{
+function promiseTimeout(aTime) {
   let deferred = Promise.defer();
   do_timeout(aTime, deferred.resolve);
   return deferred.promise;
@@ -195,8 +191,7 @@ function promiseTimeout(aTime)
  * @resolves Array [aTime, aTransitionType] from nsINavHistoryObserver.onVisit.
  * @rejects Never.
  */
-function promiseWaitForVisit(aUrl)
-{
+function promiseWaitForVisit(aUrl) {
   let deferred = Promise.defer();
 
   let uri = NetUtil.newURI(aUrl);
@@ -417,22 +412,19 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
     channel.asyncOpen2({
       contentListener: null,
 
-      onStartRequest(aRequest, aContext)
-      {
+      onStartRequest(aRequest, aContext) {
         let requestChannel = aRequest.QueryInterface(Ci.nsIChannel);
         this.contentListener = gExternalHelperAppService.doContent(
                                      requestChannel.contentType, aRequest, null, true);
         this.contentListener.onStartRequest(aRequest, aContext);
       },
 
-      onStopRequest(aRequest, aContext, aStatusCode)
-      {
+      onStopRequest(aRequest, aContext, aStatusCode) {
         this.contentListener.onStopRequest(aRequest, aContext, aStatusCode);
       },
 
       onDataAvailable(aRequest, aContext, aInputStream, aOffset,
-                                aCount)
-      {
+                                aCount) {
         this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
                                              aOffset, aCount);
       },
@@ -507,8 +499,7 @@ function promiseDownloadStopped(aDownload) {
  * @resolves The newly created DownloadList object.
  * @rejects JavaScript exception.
  */
-function promiseNewList(aIsPrivate)
-{
+function promiseNewList(aIsPrivate) {
   // We need to clear all the internal state for the list and summary objects,
   // since all the objects are interdependent internally.
   Downloads._promiseListsInitialized = null;
@@ -531,8 +522,7 @@ function promiseNewList(aIsPrivate)
  * @resolves When the operation completes.
  * @rejects Never.
  */
-function promiseVerifyContents(aPath, aExpectedContents)
-{
+function promiseVerifyContents(aPath, aExpectedContents) {
   return Task.spawn(function* () {
     let file = new FileUtils.File(aPath);
 
@@ -573,8 +563,7 @@ function promiseVerifyContents(aPath, aExpectedContents)
  * @returns nsIServerSocket that listens for connections.  Call its "close"
  *          method to stop listening and free the server port.
  */
-function startFakeServer()
-{
+function startFakeServer() {
   let serverSocket = new ServerSocket(-1, true, -1);
   serverSocket.asyncListen({
     onSocketAccepted(aServ, aTransport) {
@@ -608,8 +597,7 @@ var _gDeferResponses = Promise.defer();
  * If an interruptible request is started before the function is called, it may
  * or may not be blocked depending on the actual sequence of events.
  */
-function mustInterruptResponses()
-{
+function mustInterruptResponses() {
   // If there are pending blocked requests, allow them to complete.  This is
   // done to prevent requests from being blocked forever, but should not affect
   // the test logic, since previously started requests should not be monitored
@@ -623,8 +611,7 @@ function mustInterruptResponses()
 /**
  * Allows all the current and future interruptible requests to complete.
  */
-function continueResponses()
-{
+function continueResponses() {
   do_print("Interruptible responses are now allowed to continue.");
   _gDeferResponses.resolve();
 }
@@ -641,8 +628,7 @@ function continueResponses()
  *        This function is called with the aRequest and aResponse arguments of
  *        the server, when the continueResponses function is called.
  */
-function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn)
-{
+function registerInterruptibleHandler(aPath, aFirstPartFn, aSecondPartFn) {
   gHttpServer.registerPathHandler(aPath, function(aRequest, aResponse) {
     do_print("Interruptible request started.");
 
@@ -677,8 +663,7 @@ var gMostRecentFirstBytePos;
 
 // Initialization functions common to all tests
 
-add_task(function test_common_initialize()
-{
+add_task(function test_common_initialize() {
   // Start the HTTP server.
   gHttpServer = new HttpServer();
   gHttpServer.registerDirectory("/", do_get_file("../data"));
