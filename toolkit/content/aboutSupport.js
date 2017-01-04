@@ -89,8 +89,7 @@ var snapshotFormatters = {
       // Ignore any non http/https urls
       if (!/^https?:/i.test(reportURL))
         reportURL = null;
-    }
-    catch (e) { }
+    } catch (e) { }
     if (!reportURL) {
       $("crashes-noConfig").style.display = "block";
       $("crashes-noConfig").classList.remove("no-copy");
@@ -110,22 +109,17 @@ var snapshotFormatters = {
       let date = new Date(crash.date);
       let timePassed = dateNow - date;
       let formattedDate;
-      if (timePassed >= 24 * 60 * 60 * 1000)
-      {
+      if (timePassed >= 24 * 60 * 60 * 1000) {
         let daysPassed = Math.round(timePassed / (24 * 60 * 60 * 1000));
         let daysPassedString = strings.GetStringFromName("crashesTimeDays");
         formattedDate = PluralForm.get(daysPassed, daysPassedString)
                                   .replace("#1", daysPassed);
-      }
-      else if (timePassed >= 60 * 60 * 1000)
-      {
+      } else if (timePassed >= 60 * 60 * 1000) {
         let hoursPassed = Math.round(timePassed / (60 * 60 * 1000));
         let hoursPassedString = strings.GetStringFromName("crashesTimeHours");
         formattedDate = PluralForm.get(hoursPassed, hoursPassedString)
                                   .replace("#1", hoursPassed);
-      }
-      else
-      {
+      } else {
         let minutesPassed = Math.max(Math.round(timePassed / (60 * 1000)), 1);
         let minutesPassedString = strings.GetStringFromName("crashesTimeMinutes");
         formattedDate = PluralForm.get(minutesPassed, minutesPassedString)
@@ -203,8 +197,7 @@ var snapshotFormatters = {
         try {
           return strings.formatStringFromName(nameOrMsg, msgArray,
                                               msgArray.length);
-        }
-        catch (err) {
+        } catch (err) {
           // Throws if nameOrMsg is not a name in the bundle.  This shouldn't
           // actually happen though, since msgArray.length > 1 => nameOrMsg is a
           // name in the bundle, not a message, and the remaining msgArray
@@ -214,8 +207,7 @@ var snapshotFormatters = {
       }
       try {
         return strings.GetStringFromName(nameOrMsg);
-      }
-      catch (err) {
+      } catch (err) {
         // Throws if nameOrMsg is not a name in the bundle.
       }
       return nameOrMsg;
@@ -620,8 +612,7 @@ function stringBundle() {
            "chrome://global/locale/aboutSupport.properties");
 }
 
-function assembleFromGraphicsFailure(i, data)
-{
+function assembleFromGraphicsFailure(i, data) {
   // Only cover the cases we have today; for example, we do not have
   // log failures that assert and we assume the log level is 1/error.
   let message = data.failures[i];
@@ -682,8 +673,7 @@ function copyRawDataToClipboard(button) {
         Services.androidBridge.handleGeckoMessage(message);
       }
     });
-  }
-  catch (err) {
+  } catch (err) {
     if (button)
       button.disabled = false;
     throw err;
@@ -793,8 +783,7 @@ Serializer.prototype = {
         let text = this._nodeText(child);
         this._appendText(text);
         hasText = hasText || !!text.trim();
-      }
-      else if (child.nodeType == Node.ELEMENT_NODE)
+      } else if (child.nodeType == Node.ELEMENT_NODE)
         this._serializeElement(child);
     }
 
@@ -984,8 +973,7 @@ function setupEventListeners() {
   $("restart-in-safe-mode-button").addEventListener("click", function(event) {
     if (Services.obs.enumerateObservers("restart-in-safe-mode").hasMoreElements()) {
       Services.obs.notifyObservers(null, "restart-in-safe-mode", "");
-    }
-    else {
+    } else {
       safeModeRestart();
     }
   });

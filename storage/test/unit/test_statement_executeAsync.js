@@ -42,8 +42,7 @@ const BLOB = [1, 2];
  *        result row at that ordinal position and takes the result tuple and
  *        the call stack for the original call.
  */
-function execAsync(aStmt, aOptions, aResults)
-{
+function execAsync(aStmt, aOptions, aResults) {
   let caller = Components.stack.caller;
   if (aOptions == null)
     aOptions = {};
@@ -52,14 +51,11 @@ function execAsync(aStmt, aOptions, aResults)
   let resultsChecker;
   if (aResults == null) {
     resultsExpected = 0;
-  }
-  else if (typeof aResults == "number") {
+  } else if (typeof aResults == "number") {
     resultsExpected = aResults;
-  }
-  else if (typeof aResults == "function") {
+  } else if (typeof aResults == "function") {
     resultsChecker = aResults;
-  }
-  else { // array
+  } else { // array
     resultsExpected = aResults.length;
     resultsChecker = function(aResultNum, aTup, aCaller) {
       aResults[aResultNum](aTup, aCaller);
@@ -83,8 +79,7 @@ function execAsync(aStmt, aOptions, aResults)
   let completed = false;
 
   let listener = {
-    handleResult(aResultSet)
-    {
+    handleResult(aResultSet) {
       let row, resultsSeenThisCall = 0;
       while ((row = aResultSet.getNextRow()) != null) {
         if (resultsChecker)
@@ -96,14 +91,12 @@ function execAsync(aStmt, aOptions, aResults)
       if (!resultsSeenThisCall)
         do_throw("handleResult invoked with 0 result rows!");
     },
-    handleError(aError)
-    {
+    handleError(aError) {
       if (errorCodeSeen != false)
         do_throw("handleError called when we already had an error!");
       errorCodeSeen = aError.result;
     },
-    handleCompletion(aReason)
-    {
+    handleCompletion(aReason) {
       if (completed) // paranoia check
         do_throw("Received a second handleCompletion notification!", caller);
 
@@ -132,8 +125,7 @@ function execAsync(aStmt, aOptions, aResults)
   if (("cancel" in aOptions && aOptions.cancel) ||
       ("returnPending" in aOptions && aOptions.returnPending)) {
     pending = aStmt.executeAsync(listener);
-  }
-  else {
+  } else {
     aStmt.executeAsync(listener);
   }
 
@@ -153,8 +145,7 @@ function execAsync(aStmt, aOptions, aResults)
  * result in any crashes.  Async-only since the synchronous case generates the
  * error synchronously (and is tested elsewhere).
  */
-function test_illegal_sql_async_deferred()
-{
+function test_illegal_sql_async_deferred() {
   // gibberish
   let stmt = makeTestStatement("I AM A ROBOT. DO AS I SAY.");
   execAsync(stmt, {error: Ci.mozIStorageError.ERROR});
@@ -169,8 +160,7 @@ function test_illegal_sql_async_deferred()
 }
 test_illegal_sql_async_deferred.asyncOnly = true;
 
-function test_create_table()
-{
+function test_create_table() {
   // Ensure our table doesn't exist
   do_check_false(getOpenedDatabase().tableExists("test"));
 
@@ -197,8 +187,7 @@ function test_create_table()
   run_next_test();
 }
 
-function test_add_data()
-{
+function test_add_data() {
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
@@ -219,8 +208,7 @@ function test_add_data()
   run_next_test();
 }
 
-function test_get_data()
-{
+function test_get_data() {
   var stmt = makeTestStatement(
     "SELECT string, number, nuller, blober, id FROM test WHERE id = ?"
   );
@@ -276,8 +264,7 @@ function test_get_data()
   run_next_test();
 }
 
-function test_tuple_out_of_bounds()
-{
+function test_tuple_out_of_bounds() {
   var stmt = makeTestStatement(
     "SELECT string FROM test"
   );
@@ -299,8 +286,7 @@ function test_tuple_out_of_bounds()
         try {
           tuple[methods[i]](tuple.numEntries);
           do_throw("did not throw :(");
-        }
-        catch (e) {
+        } catch (e) {
           do_check_eq(Cr.NS_ERROR_ILLEGAL_VALUE, e.result);
         }
       }
@@ -311,8 +297,7 @@ function test_tuple_out_of_bounds()
         var size = { value: 0 };
         tuple.getBlob(tuple.numEntries, blob, size);
         do_throw("did not throw :(");
-      }
-      catch (e) {
+      } catch (e) {
         do_check_eq(Cr.NS_ERROR_ILLEGAL_VALUE, e.result);
       }
     }]);
@@ -320,8 +305,7 @@ function test_tuple_out_of_bounds()
   run_next_test();
 }
 
-function test_no_listener_works_on_success()
-{
+function test_no_listener_works_on_success() {
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
@@ -333,8 +317,7 @@ function test_no_listener_works_on_success()
   run_next_test();
 }
 
-function test_no_listener_works_on_results()
-{
+function test_no_listener_works_on_results() {
   var stmt = makeTestStatement(
     "SELECT ?"
   );
@@ -346,8 +329,7 @@ function test_no_listener_works_on_results()
   run_next_test();
 }
 
-function test_no_listener_works_on_error()
-{
+function test_no_listener_works_on_error() {
   // commit without a transaction will trigger an error
   var stmt = makeTestStatement(
     "COMMIT"
@@ -359,8 +341,7 @@ function test_no_listener_works_on_error()
   run_next_test();
 }
 
-function test_partial_listener_works()
-{
+function test_partial_listener_works() {
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
@@ -386,8 +367,7 @@ function test_partial_listener_works()
  * up.  test_AsyncCancellation in test_true_async.cpp is our test that canceling
  * actually works correctly.
  */
-function test_immediate_cancellation()
-{
+function test_immediate_cancellation() {
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
@@ -400,8 +380,7 @@ function test_immediate_cancellation()
 /**
  * Test that calling cancel twice throws the second time.
  */
-function test_double_cancellation()
-{
+function test_double_cancellation() {
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
@@ -419,8 +398,7 @@ function test_double_cancellation()
  * Verify that nothing untoward happens if we try and cancel something after it
  * has fully run to completion.
  */
-function test_cancellation_after_execution()
-{
+function test_cancellation_after_execution() {
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
@@ -440,8 +418,7 @@ function test_cancellation_after_execution()
  * incorrectly interleaved, but that part was brittle (it's totally fine for
  * handleResult to get called multiple times) and not comprehensive.
  */
-function test_double_execute()
-{
+function test_double_execute() {
   var stmt = makeTestStatement(
     "SELECT 1"
   );
@@ -451,8 +428,7 @@ function test_double_execute()
   run_next_test();
 }
 
-function test_finalized_statement_does_not_crash()
-{
+function test_finalized_statement_does_not_crash() {
   var stmt = makeTestStatement(
     "SELECT * FROM TEST"
   );
@@ -471,8 +447,7 @@ function test_finalized_statement_does_not_crash()
 /**
  * Bind by mozIStorageBindingParams on the mozIStorageBaseStatement by index.
  */
-function test_bind_direct_binding_params_by_index()
-{
+function test_bind_direct_binding_params_by_index() {
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
@@ -494,8 +469,7 @@ function test_bind_direct_binding_params_by_index()
 /**
  * Bind by mozIStorageBindingParams on the mozIStorageBaseStatement by name.
  */
-function test_bind_direct_binding_params_by_name()
-{
+function test_bind_direct_binding_params_by_name() {
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (:int, :text, :real, :null, :blob)"
@@ -514,8 +488,7 @@ function test_bind_direct_binding_params_by_name()
   run_next_test();
 }
 
-function test_bind_js_params_helper_by_index()
-{
+function test_bind_js_params_helper_by_index() {
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, NULL)"
@@ -533,8 +506,7 @@ function test_bind_js_params_helper_by_index()
   run_next_test();
 }
 
-function test_bind_js_params_helper_by_name()
-{
+function test_bind_js_params_helper_by_name() {
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (:int, :text, :real, :null, NULL)"
@@ -552,8 +524,7 @@ function test_bind_js_params_helper_by_name()
   run_next_test();
 }
 
-function test_bind_multiple_rows_by_index()
-{
+function test_bind_multiple_rows_by_index() {
   const AMOUNT_TO_ADD = 5;
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
@@ -579,8 +550,7 @@ function test_bind_multiple_rows_by_index()
   run_next_test();
 }
 
-function test_bind_multiple_rows_by_name()
-{
+function test_bind_multiple_rows_by_name() {
   const AMOUNT_TO_ADD = 5;
   var stmt = makeTestStatement(
     "INSERT INTO test (id, string, number, nuller, blober) " +
@@ -610,8 +580,7 @@ function test_bind_multiple_rows_by_name()
  * Verify that a mozIStorageStatement instance throws immediately when we
  * try and bind to an illegal index.
  */
-function test_bind_out_of_bounds_sync_immediate()
-{
+function test_bind_out_of_bounds_sync_immediate() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (?)"
@@ -636,8 +605,7 @@ test_bind_out_of_bounds_sync_immediate.syncOnly = true;
  * Verify that a mozIStorageAsyncStatement reports an error asynchronously when
  * we bind to an illegal index.
  */
-function test_bind_out_of_bounds_async_deferred()
-{
+function test_bind_out_of_bounds_async_deferred() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (?)"
@@ -657,8 +625,7 @@ function test_bind_out_of_bounds_async_deferred()
 }
 test_bind_out_of_bounds_async_deferred.asyncOnly = true;
 
-function test_bind_no_such_name_sync_immediate()
-{
+function test_bind_no_such_name_sync_immediate() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:foo)"
@@ -679,8 +646,7 @@ function test_bind_no_such_name_sync_immediate()
 }
 test_bind_no_such_name_sync_immediate.syncOnly = true;
 
-function test_bind_no_such_name_async_deferred()
-{
+function test_bind_no_such_name_async_deferred() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:foo)"
@@ -699,8 +665,7 @@ function test_bind_no_such_name_async_deferred()
 }
 test_bind_no_such_name_async_deferred.asyncOnly = true;
 
-function test_bind_bogus_type_by_index()
-{
+function test_bind_bogus_type_by_index() {
   // We try to bind a JS Object here that should fail to bind.
   let stmt = makeTestStatement(
     "INSERT INTO test (blober) " +
@@ -715,8 +680,7 @@ function test_bind_bogus_type_by_index()
   run_next_test();
 }
 
-function test_bind_bogus_type_by_name()
-{
+function test_bind_bogus_type_by_name() {
   // We try to bind a JS Object here that should fail to bind.
   let stmt = makeTestStatement(
     "INSERT INTO test (blober) " +
@@ -731,8 +695,7 @@ function test_bind_bogus_type_by_name()
   run_next_test();
 }
 
-function test_bind_params_already_locked()
-{
+function test_bind_params_already_locked() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
@@ -751,8 +714,7 @@ function test_bind_params_already_locked()
   run_next_test();
 }
 
-function test_bind_params_array_already_locked()
-{
+function test_bind_params_array_already_locked() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
@@ -774,8 +736,7 @@ function test_bind_params_array_already_locked()
   run_next_test();
 }
 
-function test_no_binding_params_from_locked_array()
-{
+function test_no_binding_params_from_locked_array() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
@@ -796,8 +757,7 @@ function test_no_binding_params_from_locked_array()
   run_next_test();
 }
 
-function test_not_right_owning_array()
-{
+function test_not_right_owning_array() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
@@ -816,8 +776,7 @@ function test_not_right_owning_array()
   run_next_test();
 }
 
-function test_not_right_owning_statement()
-{
+function test_not_right_owning_statement() {
   let stmt1 = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
@@ -842,8 +801,7 @@ function test_not_right_owning_statement()
   run_next_test();
 }
 
-function test_bind_empty_array()
-{
+function test_bind_empty_array() {
   let stmt = makeTestStatement(
     "INSERT INTO test (id) " +
     "VALUES (:int)"
@@ -860,8 +818,7 @@ function test_bind_empty_array()
   run_next_test();
 }
 
-function test_multiple_results()
-{
+function test_multiple_results() {
   let expectedResults = getTableRowCount("test");
   // Sanity check - we should have more than one result, but let's be sure.
   do_check_true(expectedResults > 1);
@@ -943,8 +900,7 @@ var index = 0;
 const STARTING_UNIQUE_ID = 2;
 var nextUniqueId = STARTING_UNIQUE_ID;
 
-function run_next_test()
-{
+function run_next_test() {
   function _run_next_test() {
     // use a loop so we can skip tests...
     while (index < tests.length) {
@@ -959,8 +915,7 @@ function run_next_test()
         print("****** Running the next test: " + test.name);
         test();
         return;
-      }
-      catch (e) {
+      } catch (e) {
         do_throw(e);
       }
     }
@@ -989,8 +944,7 @@ function run_next_test()
   }
 }
 
-function run_test()
-{
+function run_test() {
   cleanup();
 
   do_test_pending();

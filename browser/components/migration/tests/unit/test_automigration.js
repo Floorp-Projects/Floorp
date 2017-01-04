@@ -29,8 +29,7 @@ do_register_cleanup(function() {
 
 // This should be replaced by using History.fetch with a fetchVisits option,
 // once that becomes available
-function* visitsForURL(url)
-{
+function* visitsForURL(url) {
   let visitCount = 0;
   let db = yield PlacesUtils.promiseDBConnection();
   visitCount = yield db.execute(

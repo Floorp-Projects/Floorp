@@ -187,11 +187,9 @@
             var buttons = this.spinButtons;
             if (this.wrapAround) {
               buttons.decreaseDisabled = buttons.increaseDisabled = false;
-            }
-            else if (this.disabled || this.readOnly) {
+            } else if (this.disabled || this.readOnly) {
               buttons.decreaseDisabled = buttons.increaseDisabled = true;
-            }
-            else {
+            } else {
               buttons.decreaseDisabled = (this.valueNumber <= this.min);
               buttons.increaseDisabled = (this.valueNumber >= this.max);
             }

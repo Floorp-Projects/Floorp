@@ -93,9 +93,11 @@ function doKeyUnprivileged(key) {
   let prEvent = document.createEvent('KeyboardEvent');
   let upEvent = document.createEvent('KeyboardEvent');
 
+  /* eslint-disable no-multi-spaces */
   dnEvent.initKeyEvent("keydown",  true, true, null, false, false, false, false, alwaysval, 0);
   prEvent.initKeyEvent("keypress", true, true, null, false, false, false, false, keycode, charcode);
   upEvent.initKeyEvent("keyup",    true, true, null, false, false, false, false, alwaysval, 0);
+  /* eslint-enable no-multi-spaces */
 
   input.dispatchEvent(dnEvent);
   input.dispatchEvent(prEvent);
@@ -107,9 +109,11 @@ function doClickWithMouseEventUnprivileged() {
   let upEvent = document.createEvent('MouseEvent');
   let ckEvent = document.createEvent('MouseEvent');
 
+  /* eslint-disable no-multi-spaces */
   dnEvent.initMouseEvent("mousedown",  true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
   upEvent.initMouseEvent("mouseup",    true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
   ckEvent.initMouseEvent("mouseclick", true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+  /* eslint-enable no-multi-spaces */
 
   input.dispatchEvent(dnEvent);
   input.dispatchEvent(upEvent);

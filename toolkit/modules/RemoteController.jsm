@@ -12,8 +12,7 @@ const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function RemoteController(browser)
-{
+function RemoteController(browser) {
   this._browser = browser;
 
   // A map of commands that have had their enabled/disabled state assigned. The

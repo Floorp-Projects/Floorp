@@ -5,10 +5,10 @@
 /*
  * Description of the test:
  *   We show that we can separate the safebrowsing cookie by creating a custom
- *   OriginAttributes using a reserved AppId (UINT_32_MAX - 1). Setting this
+ *   OriginAttributes using a unique safebrowsing first-party domain. Setting this
  *   custom OriginAttributes on the loadInfo of the channel allows us to query the
- *   AppId and therefore separate the safebrowing cookie in its own cookie-jar.
- *   For testing safebrowsing update we do >> NOT << emulate a response
+ *   first-party domain and therefore separate the safebrowing cookie in its own
+ *   cookie-jar. For testing safebrowsing update we do >> NOT << emulate a response
  *   in the body, rather we only set the cookies in the header of the response
  *   and confirm that cookies are separated in their own cookie-jar.
  *
@@ -148,7 +148,9 @@ add_test(function test_non_safebrowsing_cookie() {
 add_test(function test_safebrowsing_cookie() {
 
   var cookieName = 'sbCookie_id4294967294';
-  var originAttributes = new OriginAttributes(Ci.nsIScriptSecurityManager.SAFEBROWSING_APP_ID, false, 0);
+  var originAttributes = new OriginAttributes(0, false, 0);
+  originAttributes.firstPartyDomain =
+    "safebrowsing.86868755-6b82-4842-b301-72671a0db32e.mozilla";
 
   function setSafeBrowsingCookie() {
     var channel = setupChannel(setCookiePath, originAttributes);

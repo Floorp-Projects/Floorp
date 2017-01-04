@@ -152,8 +152,7 @@ Installer.prototype = {
                      getService(Ci.amIWebInstallPrompt);
         prompt.confirm(this.browser, this.url, this.downloads, this.downloads.length);
         return;
-      }
-      catch (e) {}
+      } catch (e) {}
     }
 
     if (Preferences.get("xpinstall.customConfirmationUI", false)) {

@@ -703,11 +703,9 @@ function checkState(actualState, expectedInputVal, expectedSuggestions,
   };
   if (expectedSelectedButtonIdx != undefined) {
     expectedState.selectedButtonIndex = expectedSelectedButtonIdx;
-  }
-  else if (expectedSelectedIdx < expectedSuggestions.length) {
+  } else if (expectedSelectedIdx < expectedSuggestions.length) {
     expectedState.selectedButtonIndex = -1;
-  }
-  else {
+  } else {
     expectedState.selectedButtonIndex = expectedSelectedIdx - expectedSuggestions.length;
   }
 

@@ -6,8 +6,7 @@
 const ADDON = "test_bug425657";
 const ID = "bug425657@tests.mozilla.org";
 
-function run_test()
-{
+function run_test() {
   // Setup for test
   do_test_pending();
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");

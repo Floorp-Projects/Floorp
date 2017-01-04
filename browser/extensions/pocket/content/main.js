@@ -119,8 +119,7 @@ var pktUI = (function() {
      */
     function showSignUp() {
         // AB test: Direct logged-out users to tab vs panel
-        if (pktApi.getSignupPanelTabTestVariant() == 'v2')
-        {
+        if (pktApi.getSignupPanelTabTestVariant() == 'v2') {
             let site = Services.prefs.getCharPref("extensions.pocket.site");
             openTabWithUrl('https://' + site + '/firefox_learnmore?s=ffi&t=autoredirect&tv=page_learnmore&src=ff_ext', true);
 
@@ -131,22 +130,17 @@ var pktUI = (function() {
         }
 
         // Control: Show panel as normal
-        getFirefoxAccountSignedInUser(function(userdata)
-        {
+        getFirefoxAccountSignedInUser(function(userdata) {
             var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
             var startheight = 490;
             var inOverflowMenu = isInOverflowMenu();
             var controlvariant = pktApi.getSignupPanelTabTestVariant() == 'control';
 
-            if (inOverflowMenu)
-            {
+            if (inOverflowMenu) {
                 startheight = overflowMenuHeight;
-            }
-            else
-            {
+            } else {
                 startheight = 460;
-                if (fxasignedin == '1')
-                {
+                if (fxasignedin == '1') {
                     startheight = 406;
                 }
             }
@@ -154,12 +148,9 @@ var pktUI = (function() {
                 startheight = 427;
             }
             var variant;
-            if (inOverflowMenu)
-            {
+            if (inOverflowMenu) {
                 variant = 'overflow';
-            }
-            else
-            {
+            } else {
                 variant = 'storyboard_lm';
             }
 
@@ -323,7 +314,7 @@ var pktUI = (function() {
           iframe.style.height = subview.parentNode.clientHeight + "px";
         } else {
           // Set an explicit size, panel will adapt.
-          iframe.style.width  = options.width  + "px";
+          iframe.style.width  = options.width + "px";
           iframe.style.height = options.height + "px";
         }
     }

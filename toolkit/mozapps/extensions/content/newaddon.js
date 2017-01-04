@@ -84,8 +84,7 @@ function initialize() {
     // Only mark the add-on as seen if the page actually gets focus
     if (document.hasFocus()) {
       aAddon.markAsSeen();
-    }
-    else {
+    } else {
       document.addEventListener("focus", () => aAddon.markAsSeen(), false);
     }
 
@@ -127,7 +126,7 @@ function restartClicked() {
 
   let appStartup = Components.classes["@mozilla.org/toolkit/app-startup;1"].
                    getService(Components.interfaces.nsIAppStartup);
-  appStartup.quit(Ci.nsIAppStartup.eAttemptQuit |  Ci.nsIAppStartup.eRestart);
+  appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
 }
 
 function cancelClicked() {

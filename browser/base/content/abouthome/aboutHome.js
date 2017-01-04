@@ -104,8 +104,7 @@ var gSnippetsMapCallbacks = [];
  * @note Snippets should never directly manage the underlying storage, since
  *       it may change inadvertently.
  */
-function ensureSnippetsMapThen(aCallback)
-{
+function ensureSnippetsMapThen(aCallback) {
   if (gSnippetsMap) {
     aCallback(gSnippetsMap);
     return;
@@ -210,16 +209,14 @@ function ensureSnippetsMapThen(aCallback)
   }
 }
 
-function onSearchSubmit(aEvent)
-{
+function onSearchSubmit(aEvent) {
   gContentSearchController.search(aEvent);
 }
 
 
 var gContentSearchController;
 
-function setupSearch()
-{
+function setupSearch() {
   // Set submit button label for when CSS background are disabled (e.g.
   // high contrast mode).
   document.getElementById("searchSubmit").value =
@@ -244,8 +241,7 @@ function setupSearch()
 /**
  * Inform the test harness that we're done loading the page.
  */
-function loadCompleted()
-{
+function loadCompleted() {
   var event = new CustomEvent("AboutHomeLoadSnippetsCompleted", {bubbles:true});
   document.dispatchEvent(event);
 }
@@ -254,8 +250,7 @@ function loadCompleted()
  * Update the local snippets from the remote storage, then show them through
  * showSnippets.
  */
-function loadSnippets()
-{
+function loadSnippets() {
   if (!gSnippetsMap)
     throw new Error("Snippets map has not properly been initialized");
 
@@ -312,8 +307,7 @@ function loadSnippets()
  *        a "too much recursion" exception.
  */
 var _snippetsShown = false;
-function showSnippets()
-{
+function showSnippets() {
   let snippetsElt = document.getElementById("snippets");
 
   // Show about:rights notification, if needed.
@@ -363,8 +357,7 @@ function showSnippets()
 /**
  * Clear snippets element contents and show default snippets.
  */
-function showDefaultSnippets()
-{
+function showDefaultSnippets() {
   // Clear eventual contents...
   let snippetsElt = document.getElementById("snippets");
   snippetsElt.innerHTML = "";

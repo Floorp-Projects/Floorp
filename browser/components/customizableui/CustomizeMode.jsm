@@ -1146,7 +1146,7 @@ CustomizeMode.prototype = {
     }
   },
 
-  persistCurrentSets(aSetBeforePersisting)  {
+  persistCurrentSets(aSetBeforePersisting) {
     let document = this.document;
     let toolbars = document.querySelectorAll("toolbar[customizable='true'][currentset]");
     for (let toolbar of toolbars) {
@@ -1394,9 +1394,16 @@ CustomizeMode.prototype = {
 
       let themes = [aDefaultTheme];
       let lwts = LightweightThemeManager.usedThemes;
+      let currentLwt = LightweightThemeManager.currentTheme;
+      let currentLwtIndex = lwts.indexOf(currentLwt);
+      if (currentLwtIndex > -1) {
+        // Make sure that the current lightweight theme
+        // is at the beginning of the array to avoid truncation
+        // in the next step.
+        lwts = lwts.splice(currentLwtIndex, 1).concat(lwts);
+      }
       if (lwts.length > RECENT_LWT_COUNT)
         lwts.length = RECENT_LWT_COUNT;
-      let currentLwt = LightweightThemeManager.currentTheme;
       for (let lwt of lwts) {
         lwt.isActive = !!currentLwt && (lwt.id == currentLwt.id);
         themes.push(lwt);
@@ -2054,7 +2061,7 @@ CustomizeMode.prototype = {
         aItem.getBoundingClientRect();
         aItem.removeAttribute("notransition");
       }
-    } else  {
+    } else {
       aItem.removeAttribute("dragover");
       if (aNextItem) {
         let nextArea = this._getCustomizableParent(aNextItem);
@@ -2155,7 +2162,7 @@ CustomizeMode.prototype = {
   _getDragOverNode(aEvent, aAreaElement, aInToolbar, aDraggedItemId) {
     let expectedParent = aAreaElement.customizationTarget || aAreaElement;
     // Our tests are stupid. Cope:
-    if (!aEvent.clientX  && !aEvent.clientY) {
+    if (!aEvent.clientX && !aEvent.clientY) {
       return aEvent.target;
     }
     // Offset the drag event's position with the offset to the center of

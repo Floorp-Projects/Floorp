@@ -39,20 +39,17 @@ and returns its `actorID`. That's the main role of RootActor.
   RootActor (root.js)
    |
    |-- BrowserTabActor (webbrowser.js)
-   |   Targets tabs living in the parent process when e10s (multiprocess)
-   |   is turned off for this tab.
-   |   Returned by "listTabs" or "getTab" requests.
-   |
-   |-- RemoteBrowserActor (webbrowser.js)
-   |   Targets tabs living in the child process when e10s (multiprocess) is
-   |   turned on for this tab. Note that this is just a proxy for ContentActor,
-   |   that lives in the child process.
+   |   Targets tabs living in the parent or child process. Note that this is
+   |   just a proxy for ContentActor, which is loaded via the tab's message
+   |   manager as a frame script in the process containing the tab. This proxy
+   |   via message manager is always used, even when e10s is disabled.
    |   Returned by "listTabs" or "getTab" requests.
    |   |
    |   \-> ContentActor (childtab.js)
-   |       Targets tabs living out-of-process (e10s) or apps (on firefox OS).
-   |       Returned by "connect" on RemoteBrowserActor (for tabs) or
-   |       "getAppActor" on the Webapps actor (for apps).
+   |       The "real" actor for a tab, which runs in whichever process holds the
+   |       content.  BrowserTabActor communicates with this via the tab's
+   |       message manager.
+   |       Returned by "connect" on BrowserTabActor.
    |
    |-- WorkerActor (worker.js)
    |   Targets a worker (applies to various kinds like web worker, service

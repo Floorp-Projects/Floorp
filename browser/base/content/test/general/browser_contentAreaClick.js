@@ -273,8 +273,7 @@ function runNextTest() {
     if (gTests.length > 0) {
       gCurrentTest = gTests.shift();
       gCurrentTest.setup();
-    }
-    else {
+    } else {
       finishTest();
       return;
     }

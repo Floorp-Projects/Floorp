@@ -81,8 +81,7 @@ function run_update_tests(callback) {
       var url = mainURL + redirect + redirectURL + updaterdf;
       var message = "Should have seen the right result for an update check redirected from " +
                     mainURL + " to " + redirectURL;
-    }
-    else {
+    } else {
       url = mainURL + updaterdf;
       message = "Should have seen the right result for an update check from " +
                 mainURL;
@@ -119,60 +118,60 @@ function addCertOverrides() {
 // Runs tests with built-in certificates required and no certificate exceptions.
 add_test(function() {
   // Tests that a simple update.rdf retrieval works as expected.
-  add_update_test(HTTP,       null,       SUCCESS);
-  add_update_test(HTTPS,      null,       DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     null,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, null,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  null,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    null,       DOWNLOAD_ERROR);
+  add_update_test(HTTP, null, SUCCESS);
+  add_update_test(HTTPS, null, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, null, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, null, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, null, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, null, DOWNLOAD_ERROR);
 
   // Tests that redirecting from http to other servers works as expected
-  add_update_test(HTTP,       HTTP,       SUCCESS);
-  add_update_test(HTTP,       HTTPS,      SUCCESS);
-  add_update_test(HTTP,       NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(HTTP,       SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(HTTP,       UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(HTTP,       EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(HTTP, HTTP, SUCCESS);
+  add_update_test(HTTP, HTTPS, SUCCESS);
+  add_update_test(HTTP, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(HTTP, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(HTTP, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(HTTP, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_update_test(HTTPS,      HTTP,       DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTP, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_update_test(NOCERT,     HTTP,       DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTP, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_update_test(SELFSIGNED, HTTP,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, NOCERT,     DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, NOCERT, DOWNLOAD_ERROR);
   add_update_test(SELFSIGNED, SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_update_test(UNTRUSTED,  HTTP,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_update_test(EXPIRED,    HTTP,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, EXPIRED, DOWNLOAD_ERROR);
 
   run_update_tests(run_next_test);
 });
@@ -183,60 +182,60 @@ add_test(function() {
   Services.prefs.setBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS, false);
 
   // Tests that a simple update.rdf retrieval works as expected.
-  add_update_test(HTTP,       null,       SUCCESS);
-  add_update_test(HTTPS,      null,       SUCCESS);
-  add_update_test(NOCERT,     null,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, null,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  null,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    null,       DOWNLOAD_ERROR);
+  add_update_test(HTTP, null, SUCCESS);
+  add_update_test(HTTPS, null, SUCCESS);
+  add_update_test(NOCERT, null, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, null, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, null, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, null, DOWNLOAD_ERROR);
 
   // Tests that redirecting from http to other servers works as expected
-  add_update_test(HTTP,       HTTP,       SUCCESS);
-  add_update_test(HTTP,       HTTPS,      SUCCESS);
-  add_update_test(HTTP,       NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(HTTP,       SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(HTTP,       UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(HTTP,       EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(HTTP, HTTP, SUCCESS);
+  add_update_test(HTTP, HTTPS, SUCCESS);
+  add_update_test(HTTP, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(HTTP, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(HTTP, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(HTTP, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_update_test(HTTPS,      HTTP,       DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      HTTPS,      SUCCESS);
-  add_update_test(HTTPS,      NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTP, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTPS, SUCCESS);
+  add_update_test(HTTPS, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_update_test(NOCERT,     HTTP,       DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTP, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_update_test(SELFSIGNED, HTTP,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, NOCERT,     DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, NOCERT, DOWNLOAD_ERROR);
   add_update_test(SELFSIGNED, SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_update_test(UNTRUSTED,  HTTP,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_update_test(EXPIRED,    HTTP,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, EXPIRED, DOWNLOAD_ERROR);
 
   run_update_tests(run_next_test);
 });
@@ -247,60 +246,60 @@ add_test(function() {
   addCertOverrides();
 
   // Tests that a simple update.rdf retrieval works as expected.
-  add_update_test(HTTP,       null,       SUCCESS);
-  add_update_test(HTTPS,      null,       DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     null,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, null,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  null,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    null,       DOWNLOAD_ERROR);
+  add_update_test(HTTP, null, SUCCESS);
+  add_update_test(HTTPS, null, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, null, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, null, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, null, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, null, DOWNLOAD_ERROR);
 
   // Tests that redirecting from http to other servers works as expected
-  add_update_test(HTTP,       HTTP,       SUCCESS);
-  add_update_test(HTTP,       HTTPS,      SUCCESS);
-  add_update_test(HTTP,       NOCERT,     SUCCESS);
-  add_update_test(HTTP,       SELFSIGNED, SUCCESS);
-  add_update_test(HTTP,       UNTRUSTED,  SUCCESS);
-  add_update_test(HTTP,       EXPIRED,    SUCCESS);
+  add_update_test(HTTP, HTTP, SUCCESS);
+  add_update_test(HTTP, HTTPS, SUCCESS);
+  add_update_test(HTTP, NOCERT, SUCCESS);
+  add_update_test(HTTP, SELFSIGNED, SUCCESS);
+  add_update_test(HTTP, UNTRUSTED, SUCCESS);
+  add_update_test(HTTP, EXPIRED, SUCCESS);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_update_test(HTTPS,      HTTP,       DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTP, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_update_test(NOCERT,     HTTP,       DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTP, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_update_test(SELFSIGNED, HTTP,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, NOCERT,     DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, NOCERT, DOWNLOAD_ERROR);
   add_update_test(SELFSIGNED, SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_update_test(UNTRUSTED,  HTTP,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, EXPIRED, DOWNLOAD_ERROR);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_update_test(EXPIRED,    HTTP,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    HTTPS,      DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    NOCERT,     DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    SELFSIGNED, DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    UNTRUSTED,  DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    EXPIRED,    DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTPS, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, NOCERT, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, SELFSIGNED, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, UNTRUSTED, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, EXPIRED, DOWNLOAD_ERROR);
 
   run_update_tests(run_next_test);
 });
@@ -311,60 +310,60 @@ add_test(function() {
   Services.prefs.setBoolPref(PREF_UPDATE_REQUIREBUILTINCERTS, false);
 
   // Tests that a simple update.rdf retrieval works as expected.
-  add_update_test(HTTP,       null,       SUCCESS);
-  add_update_test(HTTPS,      null,       SUCCESS);
-  add_update_test(NOCERT,     null,       SUCCESS);
-  add_update_test(SELFSIGNED, null,       SUCCESS);
-  add_update_test(UNTRUSTED,  null,       SUCCESS);
-  add_update_test(EXPIRED,    null,       SUCCESS);
+  add_update_test(HTTP, null, SUCCESS);
+  add_update_test(HTTPS, null, SUCCESS);
+  add_update_test(NOCERT, null, SUCCESS);
+  add_update_test(SELFSIGNED, null, SUCCESS);
+  add_update_test(UNTRUSTED, null, SUCCESS);
+  add_update_test(EXPIRED, null, SUCCESS);
 
   // Tests that redirecting from http to other servers works as expected
-  add_update_test(HTTP,       HTTP,       SUCCESS);
-  add_update_test(HTTP,       HTTPS,      SUCCESS);
-  add_update_test(HTTP,       NOCERT,     SUCCESS);
-  add_update_test(HTTP,       SELFSIGNED, SUCCESS);
-  add_update_test(HTTP,       UNTRUSTED,  SUCCESS);
-  add_update_test(HTTP,       EXPIRED,    SUCCESS);
+  add_update_test(HTTP, HTTP, SUCCESS);
+  add_update_test(HTTP, HTTPS, SUCCESS);
+  add_update_test(HTTP, NOCERT, SUCCESS);
+  add_update_test(HTTP, SELFSIGNED, SUCCESS);
+  add_update_test(HTTP, UNTRUSTED, SUCCESS);
+  add_update_test(HTTP, EXPIRED, SUCCESS);
 
   // Tests that redirecting from valid https to other servers works as expected
-  add_update_test(HTTPS,      HTTP,       DOWNLOAD_ERROR);
-  add_update_test(HTTPS,      HTTPS,      SUCCESS);
-  add_update_test(HTTPS,      NOCERT,     SUCCESS);
-  add_update_test(HTTPS,      SELFSIGNED, SUCCESS);
-  add_update_test(HTTPS,      UNTRUSTED,  SUCCESS);
-  add_update_test(HTTPS,      EXPIRED,    SUCCESS);
+  add_update_test(HTTPS, HTTP, DOWNLOAD_ERROR);
+  add_update_test(HTTPS, HTTPS, SUCCESS);
+  add_update_test(HTTPS, NOCERT, SUCCESS);
+  add_update_test(HTTPS, SELFSIGNED, SUCCESS);
+  add_update_test(HTTPS, UNTRUSTED, SUCCESS);
+  add_update_test(HTTPS, EXPIRED, SUCCESS);
 
   // Tests that redirecting from nocert https to other servers works as expected
-  add_update_test(NOCERT,     HTTP,       DOWNLOAD_ERROR);
-  add_update_test(NOCERT,     HTTPS,      SUCCESS);
-  add_update_test(NOCERT,     NOCERT,     SUCCESS);
-  add_update_test(NOCERT,     SELFSIGNED, SUCCESS);
-  add_update_test(NOCERT,     UNTRUSTED,  SUCCESS);
-  add_update_test(NOCERT,     EXPIRED,    SUCCESS);
+  add_update_test(NOCERT, HTTP, DOWNLOAD_ERROR);
+  add_update_test(NOCERT, HTTPS, SUCCESS);
+  add_update_test(NOCERT, NOCERT, SUCCESS);
+  add_update_test(NOCERT, SELFSIGNED, SUCCESS);
+  add_update_test(NOCERT, UNTRUSTED, SUCCESS);
+  add_update_test(NOCERT, EXPIRED, SUCCESS);
 
   // Tests that redirecting from self-signed https to other servers works as expected
-  add_update_test(SELFSIGNED, HTTP,       DOWNLOAD_ERROR);
-  add_update_test(SELFSIGNED, HTTPS,      SUCCESS);
-  add_update_test(SELFSIGNED, NOCERT,     SUCCESS);
+  add_update_test(SELFSIGNED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(SELFSIGNED, HTTPS, SUCCESS);
+  add_update_test(SELFSIGNED, NOCERT, SUCCESS);
   add_update_test(SELFSIGNED, SELFSIGNED, SUCCESS);
-  add_update_test(SELFSIGNED, UNTRUSTED,  SUCCESS);
-  add_update_test(SELFSIGNED, EXPIRED,    SUCCESS);
+  add_update_test(SELFSIGNED, UNTRUSTED, SUCCESS);
+  add_update_test(SELFSIGNED, EXPIRED, SUCCESS);
 
   // Tests that redirecting from untrusted https to other servers works as expected
-  add_update_test(UNTRUSTED,  HTTP,       DOWNLOAD_ERROR);
-  add_update_test(UNTRUSTED,  HTTPS,      SUCCESS);
-  add_update_test(UNTRUSTED,  NOCERT,     SUCCESS);
-  add_update_test(UNTRUSTED,  SELFSIGNED, SUCCESS);
-  add_update_test(UNTRUSTED,  UNTRUSTED,  SUCCESS);
-  add_update_test(UNTRUSTED,  EXPIRED,    SUCCESS);
+  add_update_test(UNTRUSTED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(UNTRUSTED, HTTPS, SUCCESS);
+  add_update_test(UNTRUSTED, NOCERT, SUCCESS);
+  add_update_test(UNTRUSTED, SELFSIGNED, SUCCESS);
+  add_update_test(UNTRUSTED, UNTRUSTED, SUCCESS);
+  add_update_test(UNTRUSTED, EXPIRED, SUCCESS);
 
   // Tests that redirecting from expired https to other servers works as expected
-  add_update_test(EXPIRED,    HTTP,       DOWNLOAD_ERROR);
-  add_update_test(EXPIRED,    HTTPS,      SUCCESS);
-  add_update_test(EXPIRED,    NOCERT,     SUCCESS);
-  add_update_test(EXPIRED,    SELFSIGNED, SUCCESS);
-  add_update_test(EXPIRED,    UNTRUSTED,  SUCCESS);
-  add_update_test(EXPIRED,    EXPIRED,    SUCCESS);
+  add_update_test(EXPIRED, HTTP, DOWNLOAD_ERROR);
+  add_update_test(EXPIRED, HTTPS, SUCCESS);
+  add_update_test(EXPIRED, NOCERT, SUCCESS);
+  add_update_test(EXPIRED, SELFSIGNED, SUCCESS);
+  add_update_test(EXPIRED, UNTRUSTED, SUCCESS);
+  add_update_test(EXPIRED, EXPIRED, SUCCESS);
 
   run_update_tests(run_next_test);
 });

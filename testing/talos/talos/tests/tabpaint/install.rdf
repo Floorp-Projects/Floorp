@@ -4,7 +4,7 @@
     <em:id>tabpaint-test@mozilla.org</em:id>
     <em:type>2</em:type>
     <em:name>tabpaint test</em:name>
-    <em:version>1.0.0</em:version>
+    <em:version>1.0.1</em:version>
     <em:bootstrap>true</em:bootstrap>
     <em:description>Measures the performance of opening tabs</em:description>
     <em:creator>Mike Conley</em:creator>

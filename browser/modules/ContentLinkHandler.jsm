@@ -120,8 +120,7 @@ this.ContentLinkHandler = {
 
             let re = /^(?:https?|ftp):/i;
             if (type == "application/opensearchdescription+xml" && link.title &&
-                re.test(link.href))
-            {
+                re.test(link.href)) {
               let engine = { title: link.title, href: link.href };
               chromeGlobal.sendAsyncMessage("Link:AddSearch",
                                             {engine,

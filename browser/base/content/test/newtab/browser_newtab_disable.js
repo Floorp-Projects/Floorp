@@ -12,8 +12,7 @@ add_task(function* () {
 
   let firstTab = yield* addNewTabPageTab();
 
-  function isGridDisabled(browser = gBrowser.selectedBrowser)
-  {
+  function isGridDisabled(browser = gBrowser.selectedBrowser) {
     return ContentTask.spawn(browser, {}, function*() {
       return content.gGrid.node.hasAttribute("page-disabled");
     });

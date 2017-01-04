@@ -72,8 +72,7 @@ function syncToggleCaretNoDialog(expected) {
   is(prefVal, expected, "Caret browsing should now be " + expectedStr);
 }
 
-function waitForFocusOnInput(browser)
-{
+function waitForFocusOnInput(browser) {
   return ContentTask.spawn(browser, null, function* () {
     let textEl = content.document.getElementById("in");
     return ContentTaskUtils.waitForCondition(() => {
@@ -82,8 +81,7 @@ function waitForFocusOnInput(browser)
   });
 }
 
-function focusInput(browser)
-{
+function focusInput(browser) {
   return ContentTask.spawn(browser, null, function* () {
     let textEl = content.document.getElementById("in");
     textEl.focus();

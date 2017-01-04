@@ -19,8 +19,7 @@ add_task(function* test() {
         is((yield getTransitionForUrl(url)), null,
            "Embed visits should not get a database entry.");
         deferredLeftFrameVisit.resolve();
-      }
-      else if (url == RIGHT_URL ) {
+      } else if (url == RIGHT_URL ) {
         is((yield getTransitionForUrl(url)),
            PlacesUtils.history.TRANSITION_FRAMED_LINK,
            "User activated visits should get a FRAMED_LINK transition.");

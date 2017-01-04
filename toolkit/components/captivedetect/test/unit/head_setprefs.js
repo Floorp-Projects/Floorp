@@ -34,8 +34,7 @@ function setupPrefs() {
   prefs.setIntPref(kPrefsPollingTime, 1);
 }
 
-function run_captivedetect_test(xhr_handler, fakeUIResponse, testfun)
-{
+function run_captivedetect_test(xhr_handler, fakeUIResponse, testfun) {
   gServer = new HttpServer();
   gServer.registerPathHandler(kCanonicalSitePath, xhr_handler);
   gServer.start(-1);

@@ -29,7 +29,23 @@ var mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
 // We need to wait for the hidden window to load, but can't access
 // an event target for a regular event listener.
 var hidden = mainWindow.Services.appShell.hiddenPrivateDOMWindow;
-mainWindow.PrivateBrowsingUtils.whenHiddenPrivateWindowReady(function(hidden) {
+
+function isNotLoaded() {
+  return ["complete", "interactive"].indexOf(hidden.document.readyState) == -1;
+}
+if (isNotLoaded()) {
+  setTimeout(function poll() {
+    if (isNotLoaded()) {
+      setTimeout(poll, 100);
+      return;
+    }
+    onHiddenPrivateWindowReady();
+  }, 4);
+} else {
+  onHiddenPrivateWindowReady();
+}
+
+function onHiddenPrivateWindowReady() {
   var iframe = hidden.document.createElement('iframe');
   iframe.src = 'generic.html';
   hidden.document.body.appendChild(iframe);
@@ -40,7 +56,7 @@ mainWindow.PrivateBrowsingUtils.whenHiddenPrivateWindowReady(function(hidden) {
     win.close();
     win = null;
   }, false);
-});
+}
 
 function observer(aSubject, aTopic, aData) {
   is(aTopic, "last-pb-context-exited", "Unexpected observer topic");

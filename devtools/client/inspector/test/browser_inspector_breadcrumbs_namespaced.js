@@ -24,9 +24,9 @@ const TEST_URI = "data:application/xhtml+xml;charset=utf-8," + encodeURI(XHTML);
 
 const NODES = [
   {selector: "clipPath", nodes: ["svg:svg", "svg:clipPath"],
-    nodeName: "svg:clipPath", title: "svg:clipPath#clip"},
+   nodeName: "svg:clipPath", title: "svg:clipPath#clip"},
   {selector: "circle", nodes: ["svg:svg", "svg:circle"],
-    nodeName: "svg:circle", title: "svg:circle"},
+   nodeName: "svg:circle", title: "svg:circle"},
 ];
 
 add_task(function* () {

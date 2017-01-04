@@ -18,12 +18,10 @@ var ac = Cc["@mozilla.org/autocomplete/search;1?name=unifiedcomplete"].
 
 // Test Functions
 
-function test_stopSearch()
-{
+function test_stopSearch() {
   try {
     ac.stopSearch();
-  }
-  catch (e) {
+  } catch (e) {
     do_throw("we should not have caught anything!");
   }
 }
@@ -33,7 +31,6 @@ function test_stopSearch()
 var tests = [
   test_stopSearch,
 ];
-function run_test()
-{
+function run_test() {
   tests.forEach(test => test());
 }

@@ -9,8 +9,7 @@ const URL = BASE + "/file_WebRequest_page1.html";
 
 var expected_browser;
 
-function checkType(details)
-{
+function checkType(details) {
   let expected_type = "???";
   if (details.url.indexOf("style") != -1) {
     expected_type = "stylesheet";
@@ -32,8 +31,7 @@ var windowIDs = new Map();
 
 var requested = [];
 
-function onBeforeRequest(details)
-{
+function onBeforeRequest(details) {
   info(`onBeforeRequest ${details.url}`);
   if (details.url.startsWith(BASE)) {
     requested.push(details.url);
@@ -56,8 +54,7 @@ function onBeforeRequest(details)
 
 var sendHeaders = [];
 
-function onBeforeSendHeaders(details)
-{
+function onBeforeSendHeaders(details) {
   info(`onBeforeSendHeaders ${details.url}`);
   if (details.url.startsWith(BASE)) {
     sendHeaders.push(details.url);
@@ -76,8 +73,7 @@ function onBeforeSendHeaders(details)
 
 var beforeRedirect = [];
 
-function onBeforeRedirect(details)
-{
+function onBeforeRedirect(details) {
   info(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
   checkType(details);
   if (details.url.startsWith(BASE)) {
@@ -98,8 +94,7 @@ function onBeforeRedirect(details)
 
 var headersReceived = [];
 
-function onResponseStarted(details)
-{
+function onResponseStarted(details) {
   if (details.url.startsWith(BASE)) {
     headersReceived.push(details.url);
   }
@@ -118,7 +113,7 @@ const expected_requested = [BASE + "/file_WebRequest_page1.html",
                             BASE + "/file_script_xhr.js",
                             BASE + "/file_WebRequest_page2.html",
                             BASE + "/nonexistent_script_url.js",
-                            BASE +  "/WebRequest_redirection.sjs",
+                            BASE + "/WebRequest_redirection.sjs",
                             BASE + "/dummy_page.html",
                             BASE + "/xhr_resource"];
 
@@ -132,12 +127,12 @@ const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/file_script_xhr.js",
                               BASE + "/file_WebRequest_page2.html",
                               BASE + "/nonexistent_script_url.js",
-                              BASE +  "/WebRequest_redirection.sjs",
+                              BASE + "/WebRequest_redirection.sjs",
                               BASE + "/dummy_page.html",
                               BASE + "/xhr_resource"];
 
 const expected_beforeRedirect = expected_sendHeaders.filter(u => /_redirect\./.test(u))
-                                  .concat(BASE +  "/WebRequest_redirection.sjs");
+                                  .concat(BASE + "/WebRequest_redirection.sjs");
 
 const expected_headersReceived = [BASE + "/file_WebRequest_page1.html",
                                   BASE + "/file_style_good.css",
@@ -149,8 +144,7 @@ const expected_headersReceived = [BASE + "/file_WebRequest_page1.html",
                                   BASE + "/dummy_page.html",
                                   BASE + "/xhr_resource"];
 
-function removeDupes(list)
-{
+function removeDupes(list) {
   let j = 0;
   for (let i = 1; i < list.length; i++) {
     if (list[i] != list[j]) {
@@ -163,8 +157,7 @@ function removeDupes(list)
   list.length = j + 1;
 }
 
-function compareLists(list1, list2, kind)
-{
+function compareLists(list1, list2, kind) {
   list1.sort();
   removeDupes(list1);
   list2.sort();
@@ -172,8 +165,7 @@ function compareLists(list1, list2, kind)
   is(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-function* test_once()
-{
+function* test_once() {
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, null, ["blocking"]);
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking"]);
   WebRequest.onBeforeRedirect.addListener(onBeforeRedirect);

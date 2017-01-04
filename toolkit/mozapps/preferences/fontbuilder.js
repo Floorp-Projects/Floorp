@@ -6,8 +6,7 @@
 
 var FontBuilder = {
   _enumerator: null,
-  get enumerator()
-  {
+  get enumerator() {
     if (!this._enumerator) {
       this._enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
                                    .createInstance(Components.interfaces.nsIFontEnumerator);
@@ -17,8 +16,7 @@ var FontBuilder = {
 
   _allFonts: null,
   _langGroupSupported: false,
-  buildFontList(aLanguage, aFontType, aMenuList)
-  {
+  buildFontList(aLanguage, aFontType, aMenuList) {
     // Reset the list
     while (aMenuList.hasChildNodes())
       aMenuList.removeChild(aMenuList.firstChild);
@@ -79,8 +77,7 @@ var FontBuilder = {
           menuitem.setAttribute("value", this._allFonts[i]);
           menuitem.setAttribute("label", this._allFonts[i]);
           popup.appendChild(menuitem);
-        }
-        else {
+        } else {
           builtItem = builtItem.nextSibling;
           builtItemValue = builtItem ? builtItem.getAttribute("value") : null;
         }
@@ -89,8 +86,7 @@ var FontBuilder = {
     aMenuList.appendChild(popup);
   },
 
-  readFontSelection(aElement)
-  {
+  readFontSelection(aElement) {
     // Determine the appropriate value to select, for the following cases:
     // - there is no setting
     // - the font selected by the user is no longer present (e.g. deleted from
