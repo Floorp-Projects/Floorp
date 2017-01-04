@@ -42,15 +42,10 @@ class CompositableParent : public ParentActor<PCompositableParent>
 public:
   CompositableParent(CompositableParentManager* aMgr,
                      const TextureInfo& aTextureInfo,
-                     uint64_t aID = 0,
                      PImageContainerParent* aImageContainer = nullptr)
   {
     MOZ_COUNT_CTOR(CompositableParent);
     mHost = CompositableHost::Create(aTextureInfo);
-    mHost->SetAsyncID(aID);
-    if (aID) {
-      CompositableMap::Set(aID, this);
-    }
     if (aImageContainer) {
       mHost->SetImageContainer(
           static_cast<ImageContainerParent*>(aImageContainer));
@@ -60,7 +55,6 @@ public:
   ~CompositableParent()
   {
     MOZ_COUNT_DTOR(CompositableParent);
-    CompositableMap::Erase(mHost->GetAsyncID());
   }
 
   virtual void Destroy() override
@@ -94,10 +88,9 @@ CompositableHost::~CompositableHost()
 PCompositableParent*
 CompositableHost::CreateIPDLActor(CompositableParentManager* aMgr,
                                   const TextureInfo& aTextureInfo,
-                                  uint64_t aID,
                                   PImageContainerParent* aImageContainer)
 {
-  return new CompositableParent(aMgr, aTextureInfo, aID, aImageContainer);
+  return new CompositableParent(aMgr, aTextureInfo, aImageContainer);
 }
 
 bool
@@ -230,63 +223,6 @@ CompositableHost::ReceivedDestroy(PCompositableParent* aActor)
 {
   static_cast<CompositableParent*>(aActor)->RecvDestroy();
 }
-
-namespace CompositableMap {
-
-typedef std::map<uint64_t, PCompositableParent*> CompositableMap_t;
-static CompositableMap_t* sCompositableMap = nullptr;
-bool IsCreated() {
-  return sCompositableMap != nullptr;
-}
-PCompositableParent* Get(uint64_t aID)
-{
-  if (!IsCreated() || aID == 0) {
-    return nullptr;
-  }
-  CompositableMap_t::iterator it = sCompositableMap->find(aID);
-  if (it == sCompositableMap->end()) {
-    return nullptr;
-  }
-  return it->second;
-}
-void Set(uint64_t aID, PCompositableParent* aParent)
-{
-  if (!IsCreated() || aID == 0) {
-    return;
-  }
-  (*sCompositableMap)[aID] = aParent;
-}
-void Erase(uint64_t aID)
-{
-  if (!IsCreated() || aID == 0) {
-    return;
-  }
-  CompositableMap_t::iterator it = sCompositableMap->find(aID);
-  if (it != sCompositableMap->end()) {
-    sCompositableMap->erase(it);
-  }
-}
-void Clear()
-{
-  if (!IsCreated()) {
-    return;
-  }
-  sCompositableMap->clear();
-}
-void Create()
-{
-  if (sCompositableMap == nullptr) {
-    sCompositableMap = new CompositableMap_t;
-  }
-}
-void Destroy()
-{
-  Clear();
-  delete sCompositableMap;
-  sCompositableMap = nullptr;
-}
-
-} // namespace CompositableMap
 
 } // namespace layers
 } // namespace mozilla

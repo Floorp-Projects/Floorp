@@ -604,17 +604,20 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     }
     case Edit::TOpAttachAsyncCompositable: {
       const OpAttachAsyncCompositable& op = edit.get_OpAttachAsyncCompositable();
-      PCompositableParent* compositableParent = CompositableMap::Get(op.containerID());
-      if (!compositableParent) {
-        NS_ERROR("CompositableParent not found in the map");
-        return IPC_FAIL_NO_REASON(this);
-      }
       if (mPendingCompositorUpdates) {
         // Do not attach compositables from old layer trees. Return true since
         // content cannot handle errors.
         return IPC_OK();
       }
-      CompositableHost* host = CompositableHost::FromIPDLActor(compositableParent);
+      ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(OtherPid());
+      if (!imageBridge) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      CompositableHost* host = imageBridge->FindCompositable(op.containerID());
+      if (!host) {
+        NS_ERROR("CompositableHost not found in the map");
+        return IPC_FAIL_NO_REASON(this);
+      }
       if (!Attach(AsLayer(op.layer()), host, true)) {
         return IPC_FAIL_NO_REASON(this);
       }
