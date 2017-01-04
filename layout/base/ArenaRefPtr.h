@@ -97,15 +97,10 @@ public:
 
   ~ArenaRefPtr() { assign(nullptr); }
 
-#ifdef MOZ_HAVE_REF_QUALIFIERS
   operator T*() const & { return get(); }
   operator T*() const && = delete;
   explicit operator bool() const { return !!mPtr; }
   bool operator!() const { return !mPtr; }
-#else
-  operator T*() const { return get(); }
-#endif
-
   T* operator->() const { return mPtr.operator->(); }
   T& operator*() const { return *get(); }
 

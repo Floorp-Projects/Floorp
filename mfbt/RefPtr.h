@@ -283,10 +283,7 @@ public:
     return const_cast<T*>(mRawPtr);
   }
 
-  operator T*() const
-#ifdef MOZ_HAVE_REF_QUALIFIERS
-  &
-#endif
+  operator T*() const &
   /*
     ...makes an |RefPtr| act like its underlying raw pointer type whenever it
     is used in a context where a raw pointer is expected.  It is this operator
@@ -299,7 +296,6 @@ public:
     return get();
   }
 
-#ifdef MOZ_HAVE_REF_QUALIFIERS
   // Don't allow implicit conversion of temporary RefPtr to raw pointer,
   // because the refcount might be one and the pointer will immediately become
   // invalid.
@@ -310,7 +306,6 @@ public:
   // operator bool instead of the deleted operator T*?
   explicit operator bool() const { return !!mRawPtr; }
   bool operator!() const { return !mRawPtr; }
-#endif
 
   T*
   operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN
