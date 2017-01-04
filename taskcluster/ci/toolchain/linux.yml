@@ -12,6 +12,7 @@ linux64-clang/opt:
     run:
         using: toolchain-script
         script: build-clang-linux.sh
+        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
@@ -36,6 +37,7 @@ linux64-clang-tidy/opt:
     run:
         using: toolchain-script
         script: build-clang-tidy-linux.sh
+        tooltool-downloads: public
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         implementation: docker-worker
