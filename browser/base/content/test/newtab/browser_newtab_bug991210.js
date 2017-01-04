@@ -20,8 +20,7 @@ add_task(function* () {
   afterLoadProvider.callback([]);
 
   yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    let {_cellMargin, _cellHeight, _cellWidth, node} = content.gGrid;
-    Assert.notEqual(_cellMargin, null, "grid has a computed cell margin");
+    let {_cellHeight, _cellWidth, node} = content.gGrid;
     Assert.notEqual(_cellHeight, null, "grid has a computed cell height");
     Assert.notEqual(_cellWidth, null, "grid has a computed cell width");
     let {height, maxHeight, maxWidth} = node.style;
