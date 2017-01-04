@@ -674,7 +674,6 @@ Code::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
 }
 
 const char experimentalWarning[] =
-    "Temporary\n"
     ".--.      .--.   ____       .-'''-. ,---.    ,---.\n"
     "|  |_     |  | .'  __ `.   / _     \\|    \\  /    |\n"
     "| _( )_   |  |/   '  \\  \\ (`' )/`--'|  ,  \\/  ,  |\n"
@@ -684,12 +683,13 @@ const char experimentalWarning[] =
     "|  '  /\\  `  ||  _( )_  |\\    `-'  ||  (_,_)  |  |\n"
     "|    /  \\    |\\ (_ o _) / \\       / |  |      |  |\n"
     "`---'    `---` '.(_,_).'   `-...-'  '--'      '--'\n"
-    "text support (Work In Progress):\n\n";
+    "WebAssembly text support and debugging is not supported in this version. You can download\n"
+    "and use the following versions which have experimental debugger support:\n"
+    "- Firefox Developer Edition: https://www.mozilla.org/en-US/firefox/developer/\n"
+    "- Firefox Nightly: https://www.mozilla.org/en-US/firefox/nightly"
+    ;
 
-const size_t experimentalWarningLinesCount = 12;
-
-const char enabledMessage[] =
-    "Restart with developer tools open to view WebAssembly source";
+const size_t experimentalWarningLinesCount = 13;
 
 struct LineComparator
 {
@@ -705,37 +705,8 @@ JSString*
 Code::createText(JSContext* cx)
 {
     StringBuffer buffer(cx);
-    if (maybeBytecode_) {
-        const Bytes& bytes = maybeBytecode_->bytes;
-        if (!buffer.append(experimentalWarning))
-            return nullptr;
-
-        maybeSourceMap_.reset(cx->runtime()->new_<GeneratedSourceMap>(cx));
-        if (!maybeSourceMap_)
-            return nullptr;
-
-        if (!BinaryToText(cx, bytes.begin(), bytes.length(), buffer, maybeSourceMap_.get()))
-            return nullptr;
-
-#if DEBUG
-        // Checking source map invariant: expression and function locations must be sorted
-        // by line number.
-        uint32_t lastLineno = 0;
-        for (const ExprLoc& loc : maybeSourceMap_->exprlocs()) {
-            MOZ_ASSERT(lastLineno <= loc.lineno);
-            lastLineno = loc.lineno;
-        }
-        lastLineno = 0;
-        for (const FunctionLoc& loc : maybeSourceMap_->functionlocs()) {
-            MOZ_ASSERT(lastLineno <= loc.startLineno);
-            MOZ_ASSERT(loc.startLineno <= loc.endLineno);
-            lastLineno = loc.endLineno + 1;
-        }
-#endif
-    } else {
-        if (!buffer.append(enabledMessage))
-            return nullptr;
-    }
+    if (!buffer.append(experimentalWarning))
+        return nullptr;
     return buffer.finishString();
 }
 
