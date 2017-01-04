@@ -1724,7 +1724,7 @@ CompositorBridgeParent::DidComposite(TimeStamp& aCompositeStart,
   mPendingTransaction = 0;
 
   if (mLayerManager) {
-    nsTArray<ImageCompositeNotification> notifications;
+    nsTArray<ImageCompositeNotificationInfo> notifications;
     mLayerManager->ExtractImageCompositeNotifications(&notifications);
     if (!notifications.IsEmpty()) {
       Unused << ImageBridgeParent::NotifyImageComposites(notifications);

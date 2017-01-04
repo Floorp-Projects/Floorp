@@ -16,9 +16,6 @@ namespace layers {
 
 ImageContainerParent::~ImageContainerParent()
 {
-  while (!mImageHosts.IsEmpty()) {
-    mImageHosts[mImageHosts.Length() - 1]->SetImageContainer(nullptr);
-  }
 }
 
 mozilla::ipc::IPCResult ImageContainerParent::RecvAsyncDelete()

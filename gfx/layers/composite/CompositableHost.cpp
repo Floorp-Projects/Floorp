@@ -40,16 +40,10 @@ class Compositor;
 class CompositableParent : public ParentActor<PCompositableParent>
 {
 public:
-  CompositableParent(CompositableParentManager* aMgr,
-                     const TextureInfo& aTextureInfo,
-                     PImageContainerParent* aImageContainer = nullptr)
+  CompositableParent(CompositableParentManager* aMgr, const TextureInfo& aTextureInfo)
   {
     MOZ_COUNT_CTOR(CompositableParent);
     mHost = CompositableHost::Create(aTextureInfo);
-    if (aImageContainer) {
-      mHost->SetImageContainer(
-          static_cast<ImageContainerParent*>(aImageContainer));
-    }
   }
 
   ~CompositableParent()
@@ -69,7 +63,6 @@ public:
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   : mTextureInfo(aTextureInfo)
-  , mAsyncID(0)
   , mCompositorID(0)
   , mCompositor(nullptr)
   , mLayer(nullptr)
@@ -87,10 +80,9 @@ CompositableHost::~CompositableHost()
 
 PCompositableParent*
 CompositableHost::CreateIPDLActor(CompositableParentManager* aMgr,
-                                  const TextureInfo& aTextureInfo,
-                                  PImageContainerParent* aImageContainer)
+                                  const TextureInfo& aTextureInfo)
 {
-  return new CompositableParent(aMgr, aTextureInfo, aImageContainer);
+  return new CompositableParent(aMgr, aTextureInfo);
 }
 
 bool

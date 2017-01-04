@@ -32,7 +32,7 @@ ImageContainerChild::NotifyComposite(const ImageCompositeNotification& aNotifica
 
   MutexAutoLock lock(mLock);
   if (mImageContainer) {
-    mImageContainer->NotifyCompositeInternal(aNotification);
+    mImageContainer->NotifyComposite(aNotification);
   }
 }
 
