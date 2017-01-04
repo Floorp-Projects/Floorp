@@ -103,6 +103,7 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    ThreadSafePrincipalHolder* principal)
 SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
                    ServoComputedValuesStrong,
+                   RawServoStyleSetBorrowed set,
                    RawServoDeclarationBlockBorrowed declarations,
                    ServoComputedValuesBorrowed previous_style)
 
