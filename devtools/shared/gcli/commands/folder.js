@@ -4,25 +4,24 @@
 
 "use strict";
 
-const { Cc, Ci, Cu, CC } = require("chrome");
+const { Cc, Ci, CC } = require("chrome");
 const Services = require("Services");
 const l10n = require("gcli/l10n");
 const dirService = Cc["@mozilla.org/file/directory_service;1"]
                       .getService(Ci.nsIProperties);
 
-function showFolder(aPath) {
-  let nsLocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile",
+function showFolder(path) {
+  let NSLocalFile = CC("@mozilla.org/file/local;1", "nsILocalFile",
                         "initWithPath");
 
   try {
-    let file = new nsLocalFile(aPath);
+    let file = new NSLocalFile(path);
 
     if (file.exists()) {
       file.reveal();
-      return l10n.lookupFormat("folderOpenDirResult", [aPath]);
-    } else {
-      return l10n.lookup("folderInvalidPath");
+      return l10n.lookupFormat("folderOpenDirResult", [path]);
     }
+    return l10n.lookup("folderInvalidPath");
   } catch (e) {
     return l10n.lookup("folderInvalidPath");
   }
@@ -47,7 +46,7 @@ exports.items = [
       }
     ],
     returnType: "string",
-    exec: function(args, context) {
+    exec: function (args, context) {
       let dirName = args.path;
 
       // replaces ~ with the home directory path in unix and windows
@@ -67,7 +66,7 @@ exports.items = [
     name: "folder openprofile",
     description: l10n.lookup("folderOpenProfileDesc"),
     returnType: "string",
-    exec: function(args, context) {
+    exec: function (args, context) {
       // Get the profile directory.
       let currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
       let profileDir = currProfD.path;

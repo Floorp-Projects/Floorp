@@ -5133,7 +5133,7 @@ nsContentUtils::TriggerLink(nsIContent *aContent, nsPresContext *aPresContext,
 
     handler->OnLinkClick(aContent, aLinkURI,
                          fileName.IsVoid() ? aTargetSpec.get() : EmptyString().get(),
-                         fileName, nullptr, nullptr, aIsTrusted);
+                         fileName, nullptr, nullptr, aIsTrusted, aContent->NodePrincipal());
   }
 }
 
@@ -9702,39 +9702,28 @@ nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel)
     return false;
   }
 
-  nsIDocShell* docShell = outer->GetDocShell();
   nsIDocument* doc = outer->GetExtantDoc();
 
-  // If the docshell is not allowed to change process, report an error based on
-  // the reason
-  const char* errorName = nullptr;
-  switch (docShell->GetProcessLockReason()) {
-    case nsIDocShell::PROCESS_LOCK_NON_CONTENT:
-      errorName = "LargeAllocationNonE10S";
-      break;
-    case nsIDocShell::PROCESS_LOCK_IFRAME:
-      errorName = "LargeAllocationIFrame";
-      break;
-    case nsIDocShell::PROCESS_LOCK_RELATED_CONTEXTS:
-      errorName = "LargeAllocationRelatedBrowsingContexts";
-      break;
-    case nsIDocShell::PROCESS_LOCK_NONE:
-      // Don't print a warning, we're allowed to change processes!
-      break;
-    default:
-      MOZ_ASSERT(false, "Should be unreachable!");
-      return false;
-  }
-
-  if (errorName) {
+  if (!XRE_IsContentProcess()) {
     if (doc) {
       nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                       NS_LITERAL_CSTRING("DOM"),
                                       doc,
                                       nsContentUtils::eDOM_PROPERTIES,
-                                      errorName);
+                                      "LargeAllocationNonE10S");
     }
+    return false;
+  }
 
+  nsIDocShell* docShell = outer->GetDocShell();
+  if (!docShell->GetIsOnlyToplevelInTabGroup()) {
+    if (doc) {
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DOM"),
+                                      doc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "LargeAllocationRelatedBrowsingContexts");
+    }
     return false;
   }
 

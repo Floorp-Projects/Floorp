@@ -8,6 +8,9 @@
 #include "nsIStreamListener.h"
 #include "nsIDocument.h"
 #include "nsMixedContentBlocker.h"
+#include "nsCDefaultURIFixup.h"
+#include "nsIURIFixup.h"
+#include "nsINestedURI.h"
 
 #include "mozilla/dom/Element.h"
 
@@ -167,10 +170,6 @@ DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
 static nsresult
 DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsContentPolicyType contentPolicyType =
     aLoadInfo->GetExternalContentPolicyType();
   nsContentPolicyType internalContentPolicyType =
@@ -178,12 +177,24 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
   nsCString mimeTypeGuess;
   nsCOMPtr<nsINode> requestingContext = nullptr;
 
-#ifdef DEBUG
-  // Don't enforce TYPE_DOCUMENT assertions for loads
-  // initiated by javascript tests.
-  bool skipContentTypeCheck = false;
-  skipContentTypeCheck = Preferences::GetBool("network.loadinfo.skip_type_assertion");
-#endif
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+      contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    // TYPE_DOCUMENT and TYPE_SUBDOCUMENT loads might potentially
+    // be wyciwyg:// channels. Let's fix up the URI so we can
+    // perform proper security checks.
+    nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv) && urifixup) {
+      nsCOMPtr<nsIURI> fixedURI;
+      rv = urifixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
+      if (NS_SUCCEEDED(rv)) {
+        uri = fixedURI;
+      }
+    }
+  }
 
   switch(contentPolicyType) {
     case nsIContentPolicy::TYPE_OTHER: {
@@ -217,16 +228,14 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_DOCUMENT: {
-      MOZ_ASSERT(skipContentTypeCheck || false, "contentPolicyType not supported yet");
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 
     case nsIContentPolicy::TYPE_SUBDOCUMENT: {
       mimeTypeGuess = NS_LITERAL_CSTRING("text/html");
       requestingContext = aLoadInfo->LoadingNode();
-      MOZ_ASSERT(!requestingContext ||
-                 requestingContext->NodeType() == nsIDOMNode::DOCUMENT_NODE,
-                 "type_subdocument requires requestingContext of type Document");
       break;
     }
 
@@ -370,18 +379,32 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
       MOZ_ASSERT(false, "can not perform security check without a valid contentType");
   }
 
+  // For document loads we use the triggeringPrincipal as the originPrincipal.
+  // Note the the loadingPrincipal for loads of TYPE_DOCUMENT is a nullptr.
+  nsCOMPtr<nsIPrincipal> principal =
+    (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+     contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT)
+    ? aLoadInfo->TriggeringPrincipal()
+    : aLoadInfo->LoadingPrincipal();
+
   int16_t shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(internalContentPolicyType,
                                  uri,
-                                 aLoadInfo->LoadingPrincipal(),
+                                 principal,
                                  requestingContext,
                                  mimeTypeGuess,
                                  nullptr,        //extra,
                                  &shouldLoad,
                                  nsContentUtils::GetContentPolicy(),
                                  nsContentUtils::GetSecurityManager());
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (NS_CP_REJECTED(shouldLoad)) {
+
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
+    if ((NS_SUCCEEDED(rv) && shouldLoad == nsIContentPolicy::REJECT_TYPE) &&
+        (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+         contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT)) {
+      // for docshell loads we might have to return SHOW_ALT.
+      return NS_ERROR_CONTENT_BLOCKED_SHOW_ALT;
+    }
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
@@ -528,6 +551,30 @@ nsContentSecurityManager::CheckChannel(nsIChannel* aChannel)
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsContentPolicyType contentPolicyType =
+    loadInfo->GetExternalContentPolicyType();
+
+  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT ||
+      contentPolicyType == nsIContentPolicy::TYPE_SUBDOCUMENT) {
+    // query the nested URI for security checks like in the case of view-source
+    nsCOMPtr<nsINestedURI> nestedURI = do_QueryInterface(uri);
+    if (nestedURI) {
+      nestedURI->GetInnerURI(getter_AddRefs(uri));
+    }
+
+    // TYPE_DOCUMENT and TYPE_SUBDOCUMENT loads might potentially
+    // be wyciwyg:// channels. Let's fix up the URI so we can
+    // perform proper security checks.
+    nsCOMPtr<nsIURIFixup> urifixup(do_GetService(NS_URIFIXUP_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv) && urifixup) {
+      nsCOMPtr<nsIURI> fixedURI;
+      rv = urifixup->CreateExposableURI(uri, getter_AddRefs(fixedURI));
+      if (NS_SUCCEEDED(rv)) {
+        uri = fixedURI;
+      }
+    }
+  }
 
   // Handle cookie policies
   uint32_t cookiePolicy = loadInfo->GetCookiePolicy();

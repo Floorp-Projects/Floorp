@@ -81,13 +81,14 @@ protected:
   {}
 
   /**
-   * Determine the height consumed by our previous-in-flows.
+   * Return the sum of the block-axis content size of our prev-in-flows.
+   * @param aWM a writing-mode to determine the block-axis
    *
    * @note (bz) This makes laying out a splittable frame with N in-flows
    *       O(N^2)! So, use this function with caution and minimize the number
    *       of calls to this method.
    */
-  nscoord GetConsumedBSize() const;
+  nscoord ConsumedBSize(mozilla::WritingMode aWM) const;
 
   /**
    * Retrieve the effective computed block size of this frame, which is the

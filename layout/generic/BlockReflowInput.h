@@ -197,9 +197,10 @@ public:
   }
 
   /**
-   * Retrieve the block-direction size "consumed" by any previous-in-flows.
+   * Retrieve the block-axis content size "consumed" by any prev-in-flows.
+   * @note the value is cached so subsequent calls will return the same value
    */
-  nscoord GetConsumedBSize();
+  nscoord ConsumedBSize();
 
   // Reconstruct the previous block-end margin that goes before |aLine|.
   void ReconstructMarginBefore(nsLineList::iterator aLine);
