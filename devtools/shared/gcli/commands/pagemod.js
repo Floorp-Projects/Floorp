@@ -117,8 +117,7 @@ exports.items = [
       }
 
       return l10n.lookupFormat("pagemodReplaceResult",
-                              [elements.length, replacedTextNodes,
-                                replacedAttributes]);
+        [elements.length, replacedTextNodes, replacedAttributes]);
     }
   },
   {
