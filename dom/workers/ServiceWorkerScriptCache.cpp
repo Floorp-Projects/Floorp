@@ -626,6 +626,7 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsIL
   nsLoadFlags flags = nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     mManager->GetRegistration();
+  flags |= registration->GetLoadFlags();
   if (registration->IsLastUpdateCheckTimeOverOneDay()) {
     flags |= nsIRequest::LOAD_BYPASS_CACHE;
   }
