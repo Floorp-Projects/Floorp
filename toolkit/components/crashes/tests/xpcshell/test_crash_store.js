@@ -9,7 +9,7 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", this);
+var {CrashManager, CrashStore, dateToDays} = Cu.import("resource://gre/modules/CrashManager.jsm", {});
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
@@ -30,8 +30,6 @@ const {
   SUBMISSION_RESULT_OK,
   SUBMISSION_RESULT_FAILED,
 } = CrashManager.prototype;
-
-const CrashStore = bsp.CrashStore;
 
 var STORE_DIR_COUNT = 0;
 
@@ -469,8 +467,8 @@ add_task(function* test_high_water() {
   Assert.equal(crashes.length, 2 * s.HIGH_WATER_DAILY_THRESHOLD);
 
   // But raw counts should be preserved.
-  let day1 = bsp.dateToDays(d1);
-  let day2 = bsp.dateToDays(d2);
+  let day1 = dateToDays(d1);
+  let day2 = dateToDays(d2);
   Assert.ok(s._countsByDay.has(day1));
   Assert.ok(s._countsByDay.has(day2));
 
