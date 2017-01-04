@@ -39,7 +39,6 @@ namespace layers {
 class AsyncCanvasRenderer;
 class ImageClient;
 class ImageContainer;
-class ImageContainerChild;
 class ImageBridgeParent;
 class CompositableClient;
 struct CompositableTransaction;
@@ -184,11 +183,6 @@ public:
   bool
   DeallocPMediaSystemResourceManagerChild(PMediaSystemResourceManagerChild* aActor) override;
 
-  virtual PImageContainerChild*
-  AllocPImageContainerChild() override;
-  virtual bool
-  DeallocPImageContainerChild(PImageContainerChild* actor) override;
-
   virtual mozilla::ipc::IPCResult
   RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
@@ -198,18 +192,15 @@ public:
   // Create an ImageClient from any thread.
   RefPtr<ImageClient> CreateImageClient(
     CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
+    ImageContainer* aImageContainer);
 
   // Create an ImageClient from the ImageBridge thread.
   RefPtr<ImageClient> CreateImageClientNow(
     CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
+    ImageContainer* aImageContainer);
 
   already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClient::CanvasClientType aType,
                                                     TextureFlags aFlag);
-  void ReleaseImageContainer(RefPtr<ImageContainerChild> aChild);
   void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
   void UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageContainer> aContainer);
   static void DispatchReleaseTextureClient(TextureClient* aClient);
@@ -243,8 +234,7 @@ private:
     SynchronousTask* aTask,
     RefPtr<ImageClient>* result,
     CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
+    ImageContainer* aImageContainer);
 
   void ReleaseTextureClientNow(TextureClient* aClient);
 

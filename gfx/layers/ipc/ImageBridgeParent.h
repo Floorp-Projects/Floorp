@@ -9,7 +9,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint32_t, uint64_t
 #include "CompositableTransactionParent.h"
-#include "ImageContainerParent.h"
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT_HELPER2
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
@@ -35,9 +34,7 @@ namespace layers {
 struct ImageCompositeNotificationInfo;
 
 /**
- * ImageBridgeParent is the manager Protocol of ImageContainerParent.
- * It's purpose is mainly to setup the IPDL connection. Most of the
- * interesting stuff is in ImageContainerParent.
+ * ImageBridgeParent is the manager Protocol of async Compositables.
  */
 class ImageBridgeParent final : public PImageBridgeParent,
                                 public CompositableParentManager,
@@ -92,8 +89,6 @@ public:
 
   PMediaSystemResourceManagerParent* AllocPMediaSystemResourceManagerParent() override;
   bool DeallocPMediaSystemResourceManagerParent(PMediaSystemResourceManagerParent* aActor) override;
-  virtual PImageContainerParent* AllocPImageContainerParent() override;
-  virtual bool DeallocPImageContainerParent(PImageContainerParent* actor) override;
 
   // Shutdown step 1
   virtual mozilla::ipc::IPCResult RecvWillClose() override;
