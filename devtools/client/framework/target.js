@@ -386,8 +386,13 @@ TabTarget.prototype = {
       // DebuggerServer here, once and for all tools.
       if (!DebuggerServer.initialized) {
         DebuggerServer.init();
-        DebuggerServer.addBrowserActors();
       }
+      // When connecting to a local tab, we only need the root actor.
+      // Then we are going to call DebuggerServer.connectToChild and talk
+      // directly with actors living in the child process.
+      // We also need browser actors for actor registry which enabled addons
+      // to register custom actors.
+      DebuggerServer.registerActors({ root: true, browser: true, tab: false });
 
       this._client = new DebuggerClient(DebuggerServer.connectPipe());
       // A local TabTarget will never perform chrome debugging.

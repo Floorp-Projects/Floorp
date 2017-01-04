@@ -5,8 +5,7 @@ try {
 } catch (e) {
 }
 
-function open_ctypes_test_lib()
-{
+function open_ctypes_test_lib() {
   return ctypes.open(do_get_file(ctypes.libraryName("jsctypes-test")).path);
 }
 

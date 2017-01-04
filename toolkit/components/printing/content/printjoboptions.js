@@ -15,8 +15,7 @@ var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = true;
 
 // ---------------------------------------------------
-function checkDouble(element, maxVal)
-{
+function checkDouble(element, maxVal) {
   var value = element.value;
   if (value && value.length > 0) {
     value = value.replace(/[^\.|^0-9]/g, "");
@@ -31,8 +30,7 @@ function checkDouble(element, maxVal)
 }
 
 // ---------------------------------------------------
-function isListOfPrinterFeaturesAvailable()
-{
+function isListOfPrinterFeaturesAvailable() {
   var has_printerfeatures = false;
 
   try {
@@ -44,16 +42,14 @@ function isListOfPrinterFeaturesAvailable()
 }
 
 // ---------------------------------------------------
-function getDoubleStr(val, dec)
-{
+function getDoubleStr(val, dec) {
   var str = val.toString();
   var inx = str.indexOf(".");
   return str.substring(0, inx + dec + 1);
 }
 
 // ---------------------------------------------------
-function initDialog()
-{
+function initDialog() {
   gPrintBundle = document.getElementById("printBundle");
 
   dialog = {};
@@ -77,43 +73,37 @@ function initDialog()
 }
 
 // ---------------------------------------------------
-function round10(val)
-{
+function round10(val) {
   return Math.round(val * 10) / 10;
 }
 
 
 // ---------------------------------------------------
-function paperListElement(aPaperListElement)
-  {
+function paperListElement(aPaperListElement) {
     this.paperListElement = aPaperListElement;
   }
 
 paperListElement.prototype =
   {
-    clearPaperList()
-        {
+    clearPaperList() {
           // remove the menupopup node child of the menulist.
           this.paperListElement.removeChild(this.paperListElement.firstChild);
         },
 
-    appendPaperNames(aDataObject)
-        {
+    appendPaperNames(aDataObject) {
           var popupNode = document.createElement("menupopup");
-          for (var i = 0;i < aDataObject.length;i++)  {
+          for (var i = 0;i < aDataObject.length;i++) {
             var paperObj = aDataObject[i];
             var itemNode = document.createElement("menuitem");
             var label;
             try {
               label = gPrintBundle.getString(paperObj.name);
-            }
-            catch (e) {
+            } catch (e) {
               /* No name in string bundle ? Then build one manually (this
                * usually happens when gPaperArray was build by createPaperArrayFromPrinterFeatures() ...) */
               if (paperObj.inches) {
                 label = paperObj.name + " (" + round10(paperObj.width) + "x" + round10(paperObj.height) + " inch)";
-              }
-              else {
+              } else {
                 label = paperObj.name + " (" + paperObj.width + "x" + paperObj.height + " mm)";
               }
             }
@@ -126,8 +116,7 @@ paperListElement.prototype =
   };
 
 // ---------------------------------------------------
-function createPaperArrayFromDefaults()
-{
+function createPaperArrayFromDefaults() {
   var paperNames   = ["letterSize", "legalSize", "exectiveSize", "a5Size", "a4Size", "a3Size", "a2Size", "a1Size", "a0Size"];
   // var paperNames   = ["&letterRadio.label;", "&legalRadio.label;", "&exectiveRadio.label;", "&a4Radio.label;", "&a3Radio.label;"];
   var paperWidths  = [ 8.5,  8.5,  7.25, 148.0, 210.0, 287.0, 420.0, 594.0,  841.0];
@@ -145,10 +134,9 @@ function createPaperArrayFromDefaults()
 
     /* Calculate the width/height in millimeters */
     if (paperInches[i]) {
-      obj.width_mm  = paperWidths[i]  * 25.4;
+      obj.width_mm  = paperWidths[i] * 25.4;
       obj.height_mm = paperHeights[i] * 25.4;
-    }
-    else {
+    } else {
       obj.width_mm  = paperWidths[i];
       obj.height_mm = paperHeights[i];
     }
@@ -157,8 +145,7 @@ function createPaperArrayFromDefaults()
 }
 
 // ---------------------------------------------------
-function createPaperArrayFromPrinterFeatures()
-{
+function createPaperArrayFromPrinterFeatures() {
   var printername = gPrintSettings.printerName;
   if (doDebug) {
     dump("createPaperArrayFromPrinterFeatures for " + printername + ".\n");
@@ -175,16 +162,15 @@ function createPaperArrayFromPrinterFeatures()
   for (var i = 0;i < numPapers;i++) {
     var obj       = {};
     obj.name      = gPrefs.getCharPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".name");
-    obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".width_mm");
-    obj.height_mm = gPrefs.getIntPref("print.tmp.printerfeatures."  + printername + ".paper." + i + ".height_mm");
+    obj.width_mm  = gPrefs.getIntPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".width_mm");
+    obj.height_mm = gPrefs.getIntPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".height_mm");
     obj.inches    = gPrefs.getBoolPref("print.tmp.printerfeatures." + printername + ".paper." + i + ".is_inch");
 
     /* Calculate the width/height in paper's native units (either inches or millimeters) */
     if (obj.inches) {
-      obj.width  = obj.width_mm  / 25.4;
+      obj.width  = obj.width_mm / 25.4;
       obj.height = obj.height_mm / 25.4;
-    }
-    else {
+    } else {
       obj.width  = obj.width_mm;
       obj.height = obj.height_mm;
     }
@@ -198,19 +184,16 @@ function createPaperArrayFromPrinterFeatures()
 }
 
 // ---------------------------------------------------
-function createPaperArray()
-{
+function createPaperArray() {
   if (isListOfPrinterFeaturesAvailable()) {
     createPaperArrayFromPrinterFeatures();
-  }
-  else {
+  } else {
     createPaperArrayFromDefaults();
   }
 }
 
 // ---------------------------------------------------
-function createPaperSizeList(selectedInx)
-{
+function createPaperSizeList(selectedInx) {
   var selectElement = new paperListElement(dialog.paperList);
   selectElement.clearPaperList();
 
@@ -224,8 +207,7 @@ function createPaperSizeList(selectedInx)
 }
 
 // ---------------------------------------------------
-function loadDialog()
-{
+function loadDialog() {
   var print_paper_unit       = 0;
   var print_paper_width      = 0.0;
   var print_paper_height     = 0.0;
@@ -323,8 +305,7 @@ function loadDialog()
 }
 
 // ---------------------------------------------------
-function onLoad()
-{
+function onLoad() {
   // Init dialog.
   initDialog();
 
@@ -343,8 +324,7 @@ function onLoad()
 }
 
 // ---------------------------------------------------
-function onAccept()
-{
+function onAccept() {
   var print_paper_unit        = gPrintSettingsInterface.kPaperSizeInches;
   var print_paper_width       = 0.0;
   var print_paper_height      = 0.0;

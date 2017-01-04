@@ -81,16 +81,14 @@ add_task(function* init_navigate() {
   try {
     port.addMessageListener("Foo", failOnMessage);
     ok(false, "Should have seen exception");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen exception");
   }
 
   try {
     port.sendAsyncMessage("Foo");
     ok(false, "Should have seen exception");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen exception");
   }
 
@@ -120,16 +118,14 @@ add_task(function* init_close() {
   try {
     port.addMessageListener("Foo", failOnMessage);
     ok(false, "Should have seen exception");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen exception");
   }
 
   try {
     port.sendAsyncMessage("Foo");
     ok(false, "Should have seen exception");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen exception");
   }
 });
@@ -164,8 +160,7 @@ add_task(function* multiple_ports() {
   try {
     port2.addMessageListener("Pong", failOnMessage);
     ok(false, "Should not have been able to add a new message listener to a destroyed port.");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should not have been able to add a new message listener to a destroyed port.");
   }
 
@@ -298,16 +293,14 @@ add_task(function* remote_pages_basic() {
   try {
     pages.addMessageListener("Foo", failOnMessage);
     ok(false, "Should have seen exception");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen exception");
   }
 
   try {
     pages.sendAsyncMessage("Foo");
     ok(false, "Should have seen exception");
-  }
-  catch (e) {
+  } catch (e) {
     ok(true, "Should have seen exception");
   }
 });

@@ -7,8 +7,7 @@ try {
 
 var acquire, dispose, null_dispose, compare, dispose_64;
 
-function run_test()
-{
+function run_test() {
   let library = open_ctypes_test_lib();
 
   let start = library.declare("test_finalizer_start", ctypes.default_abi,
@@ -107,8 +106,7 @@ function test_double_dispose() {
 /**
  * Test that nothing (too) bad happens when the finalizer is NULL
  */
-function test_null_dispose()
-{
+function test_null_dispose() {
   let exception;
 
   exception = false;
@@ -124,8 +122,7 @@ function test_null_dispose()
  * Test that conversion of a disposed/forgotten CDataFinalizer to a C
  * value fails nicely.
  */
-function test_pass_disposed()
-{
+function test_pass_disposed() {
   let exception, v;
 
   exception = false;
@@ -161,8 +158,7 @@ function test_pass_disposed()
   do_check_true(exception);
 }
 
-function test_wrong_type()
-{
+function test_wrong_type() {
   let int32_v = ctypes.int32_t(99);
   let exception;
   try {

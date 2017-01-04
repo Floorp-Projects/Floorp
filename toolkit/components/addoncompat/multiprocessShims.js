@@ -61,8 +61,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "RemoteAddonsParent",
  * being set to.
  */
 
-function AddonInterpositionService()
-{
+function AddonInterpositionService() {
   Prefetcher.init();
   RemoteAddonsParent.init();
 
@@ -141,8 +140,7 @@ AddonInterpositionService.prototype = {
     } else {
       try {
         interp = this._taggedInterpositions[this.getObjectTag(target)];
-      }
-      catch (e) {
+      } catch (e) {
         Cu.reportError(new Components.Exception("Failed to interpose object", e.result, Components.stack.caller));
       }
     }

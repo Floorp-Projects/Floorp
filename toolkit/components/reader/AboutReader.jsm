@@ -89,9 +89,11 @@ var AboutReader = function(mm, win, articlePromise) {
 
   let colorSchemeValues = JSON.parse(Services.prefs.getCharPref("reader.color_scheme.values"));
   let colorSchemeOptions = colorSchemeValues.map((value) => {
-    return { name: gStrings.GetStringFromName("aboutReader.colorScheme." + value),
-             value,
-             itemClass: value + "-button" };
+    return {
+      name: gStrings.GetStringFromName("aboutReader.colorScheme." + value),
+      value,
+      itemClass: value + "-button"
+    };
   });
 
   let colorScheme = Services.prefs.getCharPref("reader.color_scheme");

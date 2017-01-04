@@ -148,15 +148,13 @@ function startTest() {
 
 // Make sure that the first (numInputFields - 1) were not saved (as they were not changed).
 // Call done() when finished.
-function checkCountEntries(formNum, index, done)
-{
+function checkCountEntries(formNum, index, done) {
   countEntries("test" + index, index,
     function(num) {
       ok(!num, "checking unsaved value " + index);
       if (index < numInputFields) {
         checkCountEntries(formNum, index + 1, done);
-      }
-      else {
+      } else {
         done(formNum);
       }
     });

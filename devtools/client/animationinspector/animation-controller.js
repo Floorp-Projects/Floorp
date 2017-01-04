@@ -85,7 +85,7 @@ var getServerTraits = Task.async(function* (target) {
     { name: "hasSetCurrentTime", actor: "animationplayer",
       method: "setCurrentTime" },
     { name: "hasMutationEvents", actor: "animations",
-     method: "stopAnimationPlayerUpdates" },
+      method: "stopAnimationPlayerUpdates" },
     { name: "hasSetPlaybackRate", actor: "animationplayer",
       method: "setPlaybackRate" },
     { name: "hasSetPlaybackRates", actor: "animations",

@@ -48,7 +48,7 @@ let Timers = {
     let nonEmptyString = value => {
       return typeof value === "string" && value !== "" && value.length > 0;
     };
-    return  nonEmptyString(histogram) &&
+    return nonEmptyString(histogram) &&
             typeof obj == "object" &&
            (key === NULL_KEY || nonEmptyString(key));
   },

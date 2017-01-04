@@ -171,6 +171,15 @@ var DebuggerServer = {
   allowChromeProcess: false,
 
   /**
+   * We run a special server in child process whose main actor is an instance
+   * of ContentActor, but that isn't a root actor. Instead there is no root
+   * actor registered on DebuggerServer.
+   */
+  get rootlessServer() {
+    return !this.isModuleRegistered("devtools/server/actors/webbrowser");
+  },
+
+  /**
    * Initialize the debugger server.
    */
   init() {
@@ -229,9 +238,43 @@ var DebuggerServer = {
       throw new Error("DebuggerServer has not been initialized.");
     }
 
-    if (!this.createRootActor) {
+    if (!this.rootlessServer && !this.createRootActor) {
       throw new Error("Use DebuggerServer.addActors() to add a root actor " +
                       "implementation.");
+    }
+  },
+
+  /**
+   * Register all type of actors. Only register the one that are not already
+   * registered.
+   *
+   * @param root boolean
+   *        Registers the root actor from webbrowser module, which is used to
+   *        connect to and fetch any other actor.
+   * @param browser boolean
+   *        Registers all the parent process actors useful for debugging the
+   *        runtime itself, like preferences and addons actors.
+   * @param tab boolean
+   *        Registers all the tab actors like console, script, ... all useful
+   *        for debugging a target context.
+   * @param windowType string
+   *        "windowtype" attribute of the main chrome windows. Used by some
+   *        actors to retrieve them.
+   */
+  registerActors({ root = true, browser = true, tab = true,
+                   windowType = "navigator:browser" }) {
+    this.chromeWindowType = windowType;
+
+    if (browser) {
+      this.addBrowserActors(windowType);
+    }
+
+    if (root) {
+      this.registerModule("devtools/server/actors/webbrowser");
+    }
+
+    if (tab) {
+      this.addTabActors();
     }
   },
 
@@ -284,7 +327,7 @@ var DebuggerServer = {
    */
   registerModule(id, options) {
     if (id in gRegisteredModules) {
-      throw new Error("Tried to register a module twice: " + id + "\n");
+      return;
     }
 
     if (options) {
@@ -417,25 +460,6 @@ var DebuggerServer = {
       constructor: "HeapSnapshotFileActor",
       type: { global: true }
     });
-  },
-
-  /**
-   * Install tab actors in documents loaded in content childs
-   */
-  addChildActors() {
-    // In case of apps being loaded in parent process, DebuggerServer is already
-    // initialized and browser actors are already loaded,
-    // but childtab.js hasn't been loaded yet.
-    if (!DebuggerServer.tabActorFactories.hasOwnProperty("consoleActor")) {
-      this.addTabActors();
-    }
-    // But webbrowser.js and childtab.js aren't loaded from shell.js.
-    if (!this.isModuleRegistered("devtools/server/actors/webbrowser")) {
-      this.registerModule("devtools/server/actors/webbrowser");
-    }
-    if (!("ContentActor" in this)) {
-      this.addActors("resource://devtools/server/actors/childtab.js");
-    }
   },
 
   /**

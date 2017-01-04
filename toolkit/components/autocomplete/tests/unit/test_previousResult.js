@@ -164,8 +164,7 @@ AutoCompleteSearch.prototype = {
   startSearch(aSearchString,
                         aSearchParam,
                         aPreviousResult,
-                        aListener)
-  {
+                        aListener) {
     this._previousResult = aPreviousResult;
     aListener.onSearchResult(this, this._result);
   },

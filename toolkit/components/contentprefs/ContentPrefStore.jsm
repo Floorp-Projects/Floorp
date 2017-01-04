@@ -18,8 +18,7 @@ ContentPrefStore.prototype = {
       if (!this._groups.has(group))
         this._groups.set(group, new Map());
       this._groups.get(group).set(name, val);
-    }
-    else {
+    } else {
       this._globalNames.set(name, val);
     }
   },
@@ -53,8 +52,7 @@ ContentPrefStore.prototype = {
         if (this._groups.get(group).size == 0)
           this._groups.delete(group);
       }
-    }
-    else {
+    } else {
       this._globalNames.delete(name);
     }
   },
@@ -62,8 +60,7 @@ ContentPrefStore.prototype = {
   removeGroup: function CPS_removeGroup(group) {
     if (group) {
       this._groups.delete(group);
-    }
-    else {
+    } else {
       this._globalNames.clear();
     }
   },
@@ -111,12 +108,10 @@ ContentPrefStore.prototype = {
             }
           }
         }
-      }
-      else if (this._groups.has(group)) {
+      } else if (this._groups.has(group)) {
         yield group;
       }
-    }
-    else if (this._globalNames.size) {
+    } else if (this._globalNames.size) {
       yield null;
     }
   },

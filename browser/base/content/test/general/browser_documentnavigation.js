@@ -10,8 +10,7 @@ var testPage3 = "data:text/html,<html id='html3'><body id='body3' contenteditabl
 
 var fm = Services.focus;
 
-function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent, desc)
-{
+function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent, desc) {
   let focusChangedInChildResolver = null;
   let focusPromise = onContent ? new Promise(resolve => focusChangedInChildResolver = resolve) :
                                  BrowserTestUtils.waitForEvent(window, "focus", true);
@@ -39,8 +38,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
             break;
           }
         }
-      }
-      else if (contentExpectedElement.localName == "html") {
+      } else if (contentExpectedElement.localName == "html") {
         contentExpectedElement = contentExpectedElement.ownerDocument;
       }
 
@@ -86,8 +84,7 @@ function* expectFocusOnF6(backward, expectedDocument, expectedElement, onContent
 }
 
 // Load a page and navigate between it and the chrome window.
-add_task(function* ()
-{
+add_task(function* () {
   let page1Promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   gBrowser.selectedBrowser.loadURI(testPage1);
   yield page1Promise;
@@ -124,8 +121,7 @@ add_task(function* ()
 });
 
 // Open a second tab. Document focus should skip the background tab.
-add_task(function* ()
-{
+add_task(function* () {
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage2);
 
   yield* expectFocusOnF6(false, "main-window", gURLBar.inputField,
@@ -138,8 +134,7 @@ add_task(function* ()
 
 // Shift+F6 should navigate backwards. There's only one document here so the effect
 // is the same.
-add_task(function* ()
-{
+add_task(function* () {
   gURLBar.focus();
   yield* expectFocusOnF6(true, "html1", "html1",
                                true, "back focus content page");
@@ -148,8 +143,7 @@ add_task(function* ()
 });
 
 // Open the sidebar and navigate between the sidebar, content and top-level window
-add_task(function* ()
-{
+add_task(function* () {
   let sidebar = document.getElementById("sidebar");
 
   let loadPromise = BrowserTestUtils.waitForEvent(sidebar, "load", true);
@@ -179,8 +173,7 @@ add_task(function* ()
 });
 
 // Navigate when the downloads panel is open
-add_task(function* ()
-{
+add_task(function* () {
   yield pushPrefs(["accessibility.tabfocus", 7]);
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(document, "popupshown", true);
@@ -210,8 +203,7 @@ add_task(function* ()
 });
 
 // Navigation with a contenteditable body
-add_task(function* ()
-{
+add_task(function* () {
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
 
   // The body should be focused when it is editable, not the root.
@@ -232,8 +224,7 @@ add_task(function* ()
 });
 
 // Navigation with a frameset loaded
-add_task(function* ()
-{
+add_task(function* () {
   yield BrowserTestUtils.openNewForegroundTab(gBrowser,
     "http://mochi.test:8888/browser/browser/base/content/test/general/file_documentnavigation_frameset.html");
 

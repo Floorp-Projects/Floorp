@@ -11,8 +11,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
 // start up, so it's not active until we load content that needs to do a
 // check. This helper bypasses the delay to get the svc up and running
 // immediately. Note, call this after remote content has loaded.
-function promiseInitContentBlocklistSvc(aBrowser)
-{
+function promiseInitContentBlocklistSvc(aBrowser) {
   return ContentTask.spawn(aBrowser, {}, function* () {
     try {
       Cc["@mozilla.org/extensions/blocklist;1"]

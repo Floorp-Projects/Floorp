@@ -23,8 +23,7 @@ var cachedMouseDown = null;
 var previousWidth = 0, originalWidth = 0;
 var loadInWindow = false;
 
-function splitterCallback(adjustment)
-{
+function splitterCallback(adjustment) {
   var newWidth = Number($("leftbox").width); // getBoundingClientRect().width;
   var expectedWidth = previousWidth + adjustment;
   if (expectedWidth > $("splitterbox").getBoundingClientRect().width)
@@ -33,13 +32,11 @@ function splitterCallback(adjustment)
   previousWidth = newWidth;
 }
 
-function selectionCallback(adjustment)
-{
+function selectionCallback(adjustment) {
   if (adjustment == 4000) {
     is(frames[0].getSelection().toString(), "This is some text", "selection after drag (" + adjustment + ")");
     ok(frames[0].scrollY > 40, "selection caused scroll down (" + adjustment + ")");
-  }
-  else {
+  } else {
     if (adjustment == 0) {
       is(frames[0].getSelection().toString(), ".", "selection after drag (" + adjustment + ")");
     }
@@ -47,8 +44,7 @@ function selectionCallback(adjustment)
   }
 }
 
-function framesetCallback(adjustment)
-{
+function framesetCallback(adjustment) {
   var newWidth = frames[1].frames[0].document.documentElement.clientWidth;
   var expectedWidth = originalWidth + adjustment;
   if (adjustment == 0)
@@ -61,8 +57,7 @@ function framesetCallback(adjustment)
 
 var otherWindow = null;
 
-function selectionScrollCheck()
-{
+function selectionScrollCheck() {
   var element = otherWindow.document.documentElement;
 
   var count = 0;
@@ -93,8 +88,7 @@ function selectionScrollCheck()
 
     if (loadInWindow) {
       SimpleTest.finish();
-    }
-    else {
+    } else {
       // now try again, but open the page in a new window
       loadInWindow = true;
       synthesizeMouse(document.getElementById("custom"), 2, 2, { type: "mousedown" });
@@ -113,8 +107,7 @@ function selectionScrollCheck()
   });
 }
 
-function runTests()
-{
+function runTests() {
   previousWidth = $("leftbox").getBoundingClientRect().width;
   runCaptureTest($("splitter"), splitterCallback);
 
@@ -214,8 +207,7 @@ function runTests()
   SimpleTest.waitForFocus(selectionScrollCheck, otherWindow);
 }
 
-function runCaptureTest(element, callback)
-{
+function runCaptureTest(element, callback) {
   var expectedTarget = null;
 
   var win = element.ownerDocument.defaultView;

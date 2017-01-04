@@ -18,8 +18,7 @@
  *        The file to return from.
  * @return the contents of the file in the form of a string.
  */
-function getFileContents(aFile)
-{
+function getFileContents(aFile) {
   let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
                 createInstance(Ci.nsIFileInputStream);
   fstream.init(aFile, -1, 0, 0);
@@ -44,8 +43,7 @@ add_test(function test_delete_removes_data() {
   stmt.params.data = TEST_STRING;
   try {
     stmt.execute();
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
 
@@ -60,8 +58,7 @@ add_test(function test_delete_removes_data() {
   stmt.params.data = TEST_STRING;
   try {
     stmt.execute();
-  }
-  finally {
+  } finally {
     stmt.finalize();
   }
   db.close();
@@ -73,8 +70,7 @@ add_test(function test_delete_removes_data() {
   run_next_test();
 });
 
-function run_test()
-{
+function run_test() {
   cleanup();
   run_next_test();
 }

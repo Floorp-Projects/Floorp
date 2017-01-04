@@ -272,8 +272,7 @@ TransactionsHistory.__proto__ = {
     if (this.length == 0 || aForceNewEntry) {
       this.clearRedoEntries();
       this.unshift([aProxifiedTransaction]);
-    }
-    else {
+    } else {
       this[this.undoPosition].unshift(aProxifiedTransaction);
     }
   },
@@ -325,8 +324,7 @@ var PlacesTransactions = {
         for (let txn of aToBatch) {
           try {
             yield txn.transact();
-          }
-          catch (ex) {
+          } catch (ex) {
             console.error(ex);
           }
         }
@@ -544,8 +542,7 @@ var TransactionsManager = {
       try {
         // We should return here, but bug 958949 makes that impossible.
         rv = (yield Task.spawn(aTask));
-      }
-      finally {
+      } finally {
         this._batching = false;
         this._createdBatchEntry = false;
       }
@@ -565,8 +562,7 @@ var TransactionsManager = {
       for (let txnProxy of entry) {
         try {
           yield TransactionsHistory.getRawTransaction(txnProxy).undo();
-        }
-        catch (ex) {
+        } catch (ex) {
           // If one transaction is broken, it's not safe to work with any other
           // undo entry.  Report the error and clear the undo history.
           console.error(ex,
@@ -598,8 +594,7 @@ var TransactionsManager = {
             yield transaction.redo();
           else
             yield transaction.execute();
-        }
-        catch (ex) {
+        } catch (ex) {
           // If one transaction is broken, it's not safe to work with any other
           // redo entry. Report the error and clear the undo history.
           console.error(ex,
@@ -640,8 +635,7 @@ var TransactionsManager = {
       let win = Services.focus.activeWindow;
       if (win)
         win.updateCommands("undo");
-    }
-    catch (ex) { console.error(ex, "Couldn't update undo commands"); }
+    } catch (ex) { console.error(ex, "Couldn't update undo commands"); }
   }
 };
 
@@ -749,8 +743,7 @@ function(aNames, aValidationFunction, aDefaultValue) {
           return aDefaultValue;
         try {
           return aValidationFunction(aValue);
-        }
-        catch (ex) {
+        } catch (ex) {
           throw new Error(`Invalid value for input property ${name}`);
         }
       },
@@ -1021,8 +1014,7 @@ function* createItemsFromBookmarksTree(aBookmarksTree, aRestoring = false,
               yield createItem(child, guid);
             }
           }
-        }
-        else {
+        } else {
           let livemark =
             yield PlacesUtils.livemarks.addLivemark({ title: aItem.title
                                                     , feedURI
@@ -1127,7 +1119,7 @@ PT.NewFolder = DefineTransaction(["parentGuid", "title"],
                                  ["index", "annotations"]);
 PT.NewFolder.prototype = Object.seal({
   execute(aParentGuid, aTitle, aIndex, aAnnos) {
-    return ExecuteCreateItem(this,  aParentGuid,
+    return ExecuteCreateItem(this, aParentGuid,
       function* (parentId, guidToRestore = "") {
         let itemId = PlacesUtils.bookmarks.createFolder(
           parentId, aTitle, aIndex, guidToRestore);
@@ -1313,8 +1305,7 @@ PT.Annotate.prototype = {
         let currentAnno = currentAnnos.find(a => a.name == newAnno.name);
         if (currentAnno) {
           undoAnnos.push(currentAnno);
-        }
-        else {
+        } else {
           // An unset value removes the annotation.
           undoAnnos.push({ name: newAnno.name });
         }
@@ -1411,8 +1402,7 @@ PT.SortByName.prototype = {
           preSep.splice(0, preSep.length);
         }
         newOrder.push(node);
-      }
-      else
+      } else
         preSep.push(node);
     }
     contents.containerOpen = false;
@@ -1456,8 +1446,7 @@ PT.Remove.prototype = {
     function promiseBookmarksTree(guid) {
       try {
         return PlacesUtils.promiseBookmarksTree(guid);
-      }
-      catch (ex) {
+      } catch (ex) {
         throw new Error("Failed to get info for the specified item (guid: " +
                         guid + "). Ex: " + ex);
       }
@@ -1532,8 +1521,7 @@ PT.Tag.prototype = {
         yield createTxn.execute();
         onUndo.unshift(createTxn.undo.bind(createTxn));
         onRedo.push(createTxn.redo.bind(createTxn));
-      }
-      else {
+      } else {
         let currentTags = PlacesUtils.tagging.getTagsForURI(uri);
         let newTags = aTags.filter(t => !currentTags.includes(t));
         PlacesUtils.tagging.tagURI(uri, newTags);
@@ -1611,8 +1599,7 @@ PT.Copy.prototype = {
     let creationInfo = null;
     try {
       creationInfo = yield PlacesUtils.promiseBookmarksTree(aGuid);
-    }
-    catch (ex) {
+    } catch (ex) {
       throw new Error("Failed to get info for the specified item (guid: " +
                       aGuid + "). Ex: " + ex);
     }

@@ -127,12 +127,10 @@ function check_test_1() {
         try {
           zipReader.open(archiveFile);
           do_check_true(zipReader.hasEntry(jarURI.JAREntry));
-        }
-        finally {
+        } finally {
           zipReader.close();
         }
-      }
-      else {
+      } else {
         let iconFile = uri.QueryInterface(AM_Ci.nsIFileURL).file;
         do_check_true(iconFile.exists());
       }

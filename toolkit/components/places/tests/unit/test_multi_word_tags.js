@@ -16,8 +16,7 @@ try {
 try {
   var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
               getService(Ci.nsINavBookmarksService);
-}
-catch (ex) {
+} catch (ex) {
   do_throw("Could not get the nav-bookmarks-service\n");
 }
 

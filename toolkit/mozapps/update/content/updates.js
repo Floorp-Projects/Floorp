@@ -99,8 +99,7 @@ function openUpdateURL(event) {
 function getPref(func, preference, defaultValue) {
   try {
     return Services.prefs[func](preference);
-  }
-  catch (e) {
+  } catch (e) {
     LOG("General", "getPref - failed to get preference: " + preference);
   }
   return defaultValue;
@@ -447,8 +446,7 @@ var gUpdates = {
         aCallback(this.updatesFoundPageId);
         return;
       }
-    }
-    else {
+    } else {
       var um = CoC["@mozilla.org/updates/update-manager;1"].
                getService(CoI.nsIUpdateManager);
       if (um.activeUpdate) {
@@ -790,8 +788,7 @@ var gDownloadingPage = {
 
       if (activeUpdate)
         this._setUIState(!aus.isDownloading);
-    }
-    catch (e) {
+    } catch (e) {
       LOG("gDownloadingPage", "onPageShow - error: " + e);
     }
 
@@ -855,8 +852,7 @@ var gDownloadingPage = {
         let pausedStatus = gUpdates.getAUSString("downloadPausedStatus", [status]);
         this._setStatus(pausedStatus);
       }
-    }
-    else {
+    } else {
       if (this._downloadProgress.mode != "undetermined")
         this._downloadProgress.mode = "undetermined";
       this._pauseButton.setAttribute("paused", "false");

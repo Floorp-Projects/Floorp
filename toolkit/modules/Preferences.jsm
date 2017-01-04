@@ -29,8 +29,7 @@ this.Preferences =
         this._defaultBranch = args.defaultBranch;
       if (args.privacyContext)
         this._privacyContext = args.privacyContext;
-    }
-    else if (args)
+    } else if (args)
       this._branchStr = args;
   };
 
@@ -313,8 +312,8 @@ Preferences.ignore = function(prefName, callback, thisObject) {
   // make it.  We could index by fullBranch, but we can't index by callback
   // or thisObject, as far as I know, since the keys to JavaScript hashes
   // (a.k.a. objects) can apparently only be primitive values.
-  let [observer] = observers.filter(v => v.prefName   == fullPrefName &&
-                                         v.callback   == callback &&
+  let [observer] = observers.filter(v => v.prefName == fullPrefName &&
+                                         v.callback == callback &&
                                          v.thisObject == thisObject);
 
   if (observer) {
@@ -328,8 +327,7 @@ Preferences.ignore = function(prefName, callback, thisObject) {
 Preferences.resetBranch = function(prefBranch = "") {
   try {
     this._prefBranch.resetBranch(prefBranch);
-  }
-  catch (ex) {
+  } catch (ex) {
     // The current implementation of nsIPrefBranch in Mozilla
     // doesn't implement resetBranch, so we do it ourselves.
     if (ex.result == Cr.NS_ERROR_NOT_IMPLEMENTED)
@@ -414,8 +412,7 @@ PrefObserver.prototype = {
         this.callback.call(this.thisObject, prefValue);
       else
         this.callback(prefValue);
-    }
-    else // typeof this.callback == "object" (nsIObserver)
+    } else // typeof this.callback == "object" (nsIObserver)
       this.callback.observe(subject, topic, data);
   }
 };

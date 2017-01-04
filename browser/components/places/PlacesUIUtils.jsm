@@ -330,8 +330,7 @@ this.PlacesUIUtils = {
    * @see this._copyableAnnotations for the list of copyable annotations.
    */
   _getURIItemCopyTransaction:
-  function PUIU__getURIItemCopyTransaction(aData, aContainer, aIndex)
-  {
+  function PUIU__getURIItemCopyTransaction(aData, aContainer, aIndex) {
     let transactions = [];
     if (aData.dateAdded) {
       transactions.push(
@@ -400,22 +399,18 @@ this.PlacesUIUtils = {
             transactions.push(
               PlacesUIUtils._getLivemarkCopyTransaction(node, aContainer, index)
             );
-          }
-          else {
+          } else {
             transactions.push(
               PlacesUIUtils._getFolderCopyTransaction(node, aContainer, index)
             );
           }
-        }
-        else if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
+        } else if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR) {
           transactions.push(new PlacesCreateSeparatorTransaction(-1, index));
-        }
-        else if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE) {
+        } else if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE) {
           transactions.push(
             PlacesUIUtils._getURIItemCopyTransaction(node, -1, index)
           );
-        }
-        else {
+        } else {
           throw new Error("Unexpected item under a bookmarks folder");
         }
       }
@@ -484,8 +479,7 @@ this.PlacesUIUtils = {
    * @see this._copyableAnnotations for the list of copyable annotations.
    */
   _getLivemarkCopyTransaction:
-  function PUIU__getLivemarkCopyTransaction(aData, aContainer, aIndex)
-  {
+  function PUIU__getLivemarkCopyTransaction(aData, aContainer, aIndex) {
     if (!aData.livemark || !aData.annos) {
       throw new Error("node is not a livemark");
     }
@@ -496,8 +490,7 @@ this.PlacesUIUtils = {
       annos = aData.annos.filter(function(aAnno) {
         if (aAnno.name == PlacesUtils.LMANNO_FEEDURI) {
           feedURI = PlacesUtils._uri(aAnno.value);
-        }
-        else if (aAnno.name == PlacesUtils.LMANNO_SITEURI) {
+        } else if (aAnno.name == PlacesUtils.LMANNO_SITEURI) {
           siteURI = PlacesUtils._uri(aAnno.value);
         }
         return this._copyableAnnotations.includes(aAnno.name)
@@ -525,8 +518,7 @@ this.PlacesUIUtils = {
    *         the move/insert.
    */
   makeTransaction:
-  function PUIU_makeTransaction(data, type, container, index, copy)
-  {
+  function PUIU_makeTransaction(data, type, container, index, copy) {
     switch (data.type) {
       case PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER:
         if (copy) {
@@ -849,11 +841,9 @@ this.PlacesUIUtils = {
     let itemId;
     if (typeof(aNodeOrItemId) == "number") {
       itemId = aNodeOrItemId;
-    }
-    else if (PlacesUtils.nodeIsFolder(aNodeOrItemId)) {
+    } else if (PlacesUtils.nodeIsFolder(aNodeOrItemId)) {
       itemId = PlacesUtils.getConcreteItemId(aNodeOrItemId);
-    }
-    else {
+    } else {
       throw new Error("invalid value for aNodeOrItemId");
     }
 
@@ -1104,13 +1094,11 @@ this.PlacesUIUtils = {
                            (host ? "/" + this.ellipsis + "/" : "") + fileName :
                            uri.path);
         }
-      }
-      catch (e) {
+      } catch (e) {
         // Use (no title) for non-standard URIs (data:, javascript:, ...)
         title = "";
       }
-    }
-    else
+    } else
       title = aNode.title;
 
     return title || this.getString("noTitle");
@@ -1169,8 +1157,7 @@ this.PlacesUIUtils = {
         as.removeItemAnnotation(aItemId, PlacesUIUtils.ORGANIZER_QUERY_ANNO);
         // This will throw if the annotation is an orphan.
         bs.removeItem(aItemId);
-      }
-      catch (e) { /* orphan anno */ }
+      } catch (e) { /* orphan anno */ }
     }
 
     // Returns true if item really exists, false otherwise.
@@ -1178,8 +1165,7 @@ this.PlacesUIUtils = {
       try {
         bs.getItemIndex(aItemId);
         return true;
-      }
-      catch (e) {
+      } catch (e) {
         return false;
       }
     }
@@ -1190,8 +1176,7 @@ this.PlacesUIUtils = {
       // Something went wrong, we cannot have more than one left pane folder,
       // remove all left pane folders and continue.  We will create a new one.
       items.forEach(safeRemoveItem);
-    }
-    else if (items.length == 1 && items[0] != -1) {
+    } else if (items.length == 1 && items[0] != -1) {
       leftPaneRoot = items[0];
       // Check that organizer left pane root is valid.
       let version = as.getItemAnnotation(leftPaneRoot, this.ORGANIZER_FOLDER_ANNO);
@@ -1264,8 +1249,7 @@ this.PlacesUIUtils = {
         // have a bad parent, so we have to remove all items one by one.
         queryItems.forEach(safeRemoveItem);
         safeRemoveItem(leftPaneRoot);
-      }
-      else {
+      } else {
         // Everything is fine, return the current left pane folder.
         delete this.leftPaneFolderId;
         return this.leftPaneFolderId = leftPaneRoot;
@@ -1306,8 +1290,7 @@ this.PlacesUIUtils = {
           as.setItemAnnotation(folderId, PlacesUIUtils.ORGANIZER_FOLDER_ANNO,
                                PlacesUIUtils.ORGANIZER_LEFTPANE_VERSION,
                                0, as.EXPIRE_NEVER);
-        }
-        else {
+        } else {
           // Mark as special organizer folder.
           as.setItemAnnotation(folderId, PlacesUIUtils.ORGANIZER_QUERY_ANNO, aFolderName,
                            0, as.EXPIRE_NEVER);
@@ -1391,13 +1374,11 @@ this.PlacesUIUtils = {
       try {
         queryName = PlacesUtils.annotations.
                                 getItemAnnotation(aItemId, this.ORGANIZER_QUERY_ANNO);
-      }
-      catch (ex) {
+      } catch (ex) {
         // doesn't have the annotation
         queryName = "";
       }
-    }
-    else {
+    } else {
       // If the left pane has already been built, use the name->id map
       // cached in PlacesUIUtils.
       for (let [name, id] of Object.entries(this.leftPaneQueries)) {
@@ -1481,8 +1462,7 @@ this.PlacesUIUtils = {
         let uri = null;
         try {
           uri = PlacesUtils.bookmarks.getBookmarkURI(itemId);
-        }
-        catch (ex) { }
+        } catch (ex) { }
         return uri ? uri.spec : "";
       });
     }
@@ -1588,8 +1568,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ellipsis", function() {
 XPCOMUtils.defineLazyGetter(PlacesUIUtils, "useAsyncTransactions", function() {
   try {
     return Services.prefs.getBoolPref("browser.places.useAsyncTransactions");
-  }
-  catch (ex) { }
+  } catch (ex) { }
   return false;
 });
 
@@ -1691,8 +1670,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
      *        boolean value.
      * @return nsITransaction object.
      */
-    setLoadInSidebar(aItemId, aLoadInSidebar)
-    {
+    setLoadInSidebar(aItemId, aLoadInSidebar) {
       let annoObj = { name: PlacesUIUtils.LOAD_IN_SIDEBAR_ANNO,
                       type: Ci.nsIAnnotationService.TYPE_INT32,
                       flags: 0,
@@ -1710,8 +1688,7 @@ XPCOMUtils.defineLazyGetter(PlacesUIUtils, "ptm", function() {
     *        new description.
     * @return nsITransaction object.
     */
-    editItemDescription(aItemId, aDescription)
-    {
+    editItemDescription(aItemId, aDescription) {
       let annoObj = { name: PlacesUIUtils.DESCRIPTION_ANNO,
                       type: Ci.nsIAnnotationService.TYPE_STRING,
                       flags: 0,

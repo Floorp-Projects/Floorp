@@ -105,8 +105,7 @@ function nextTest() {
     var testCase = gTests.shift();
     info("Start of test: " + testCase.desc);
     testCase.run();
-  }
-  else {
+  } else {
     // Close Library window.
     gLibrary.close();
     finish();

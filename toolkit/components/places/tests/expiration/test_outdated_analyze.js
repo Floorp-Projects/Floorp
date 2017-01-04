@@ -51,8 +51,8 @@ function run_test() {
     // Check that statistica are up-to-date.
     let stmt = DBConn().createAsyncStatement(
       "SELECT (SELECT COUNT(*) FROM moz_places) - "
-      +        "(SELECT SUBSTR(stat,1,LENGTH(stat)-2) FROM sqlite_stat1 "
-      +         "WHERE idx = 'moz_places_url_hashindex')"
+      + "(SELECT SUBSTR(stat,1,LENGTH(stat)-2) FROM sqlite_stat1 "
+      + "WHERE idx = 'moz_places_url_hashindex')"
     );
     stmt.executeAsync({
       handleResult(aResultSet) {

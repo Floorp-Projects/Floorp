@@ -184,8 +184,7 @@ const gWindowObserver = {
       // named finishTest) for finishing the test.
       try {
         finishTest();
-      }
-      catch (e) {
+      } catch (e) {
         finishTestDefault();
       }
       return;
@@ -248,8 +247,7 @@ function runTestDefaultWaitForWindowClosed() {
   if (gCloseWindowTimeoutCounter > CLOSE_WINDOW_TIMEOUT_MAXCOUNT) {
     try {
       finishTest();
-    }
-    catch (e) {
+    } catch (e) {
       finishTestDefault();
     }
     return;
@@ -323,8 +321,7 @@ function finishTestTimeout(aTimer) {
 
   try {
     finishTest();
-  }
-  catch (e) {
+  } catch (e) {
     finishTestDefault();
   }
 }
@@ -845,8 +842,7 @@ function resetFiles() {
   if (updatedDir.exists()) {
     try {
       removeDirRecursive(updatedDir);
-    }
-    catch (e) {
+    } catch (e) {
       logTestInfo("Unable to remove directory. Path: " + updatedDir.path +
                   ", Exception: " + e);
     }
@@ -913,8 +909,7 @@ function resetPrefs() {
 
   try {
     Services.prefs.deleteBranch(PREFBRANCH_APP_UPDATE_NEVER);
-  }
-  catch (e) {
+  } catch (e) {
   }
 }
 

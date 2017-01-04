@@ -14,7 +14,7 @@ const Services = require("Services");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { TabSources } = require("./utils/TabSources");
 
-loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
+loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker-list", true);
 
 function ChildProcessActor(aConnection) {
   this.conn = aConnection;

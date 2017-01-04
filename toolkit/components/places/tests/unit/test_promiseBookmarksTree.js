@@ -38,8 +38,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
     compare_prop_to_value("index",
                           PlacesUtils.bookmarks.getItemIndex(aNode.itemId),
                           false);
-  }
-  else {
+  } else {
     compare_prop("index", "bookmarkIndex");
   }
 
@@ -49,8 +48,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
   if (aIsRootItem && aNode.itemId != PlacesUtils.placesRootId) {
     do_check_true("parentGuid" in aItem);
     yield check_has_child(aItem.parentGuid, aItem.guid)
-  }
-  else {
+  } else {
     check_unset("parentGuid");
   }
 
@@ -61,8 +59,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
     };
     do_check_true(Array.isArray(aItem.annos))
     do_check_eq(annosToString(aItem.annos), annosToString(expectedAnnos));
-  }
-  else {
+  } else {
     check_unset("annos");
   }
   const BOOKMARK_ONLY_PROPS = ["uri", "iconuri", "tags", "charset", "keyword"];
@@ -99,8 +96,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
             yield compareToNode(aItem.children[i], expectedChildrenNodes[i],
                                 false, aExcludedGuids);
         }
-      }
-      else {
+      } else {
         check_unset("children");
       }
 
@@ -140,8 +136,7 @@ function* compareToNode(aItem, aNode, aIsRootItem, aExcludedGuids = []) {
       if (aNode.icon) {
         let nodeIconData = aNode.icon.replace("moz-anno:favicon:", "");
         compare_prop_to_value("iconuri", nodeIconData);
-      }
-      else {
+      } else {
         check_unset(aItem.iconuri);
       }
 
@@ -245,7 +240,7 @@ add_task(function* () {
   let guidsPassedToExcludeCallback = new Set();
   let placesRootWithoutTheMenu =
   yield test_promiseBookmarksTreeAgainstResult(PlacesUtils.bookmarks.rootGuid, {
-    excludeItemsCallback: aItem =>  {
+    excludeItemsCallback: aItem => {
       guidsPassedToExcludeCallback.add(aItem.guid);
       return aItem.root == "bookmarksMenuFolder";
     },

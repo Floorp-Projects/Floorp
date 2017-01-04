@@ -756,6 +756,13 @@ audio:not([controls]) {
   display: none;
 }
 
+audio[controls] {
+  /* This ensures that intrinsic sizing can reliably shrinkwrap our
+      controls (which are also always horizontal) and produce a
+      reasonable intrinsic size from them. */
+  writing-mode: horizontal-tb !important;
+}
+
 *|*::-moz-html-canvas-content {
   display: block !important;
   /* we want to be an absolute and fixed container */

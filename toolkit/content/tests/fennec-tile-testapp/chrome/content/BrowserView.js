@@ -182,7 +182,7 @@ function() {
   // }
 
   function resizeContainerToViewport(container, viewportRect) {
-    container.style.width  = viewportRect.width  + 'px';
+    container.style.width  = viewportRect.width + 'px';
     container.style.height = viewportRect.height + 'px';
   }
 
@@ -674,9 +674,9 @@ BrowserView.BrowserViewportState.prototype = {
 
   toString: function toString() {
     let props = ['\tviewportRect=' + this.viewportRect.toString(),
-                 '\tvisibleX='     + this.visibleX,
-                 '\tvisibleY='     + this.visibleY,
-                 '\tzoomLevel='    + this.zoomLevel];
+                 '\tvisibleX=' + this.visibleX,
+                 '\tvisibleY=' + this.visibleY,
+                 '\tzoomLevel=' + this.zoomLevel];
 
     return '[BrowserViewportState] {\n' + props.join(',\n') + '\n}';
   }
