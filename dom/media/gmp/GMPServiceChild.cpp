@@ -396,11 +396,9 @@ class OpenPGMPServiceChild : public mozilla::Runnable
 {
 public:
   OpenPGMPServiceChild(UniquePtr<GMPServiceChild>&& aGMPServiceChild,
-                       mozilla::ipc::Transport* aTransport,
-                       base::ProcessId aOtherPid)
+                       ipc::Endpoint<PGMPServiceChild>&& aEndpoint)
     : mGMPServiceChild(Move(aGMPServiceChild)),
-      mTransport(aTransport),
-      mOtherPid(aOtherPid)
+      mEndpoint(Move(aEndpoint))
   {
   }
 
@@ -409,8 +407,7 @@ public:
     RefPtr<GeckoMediaPluginServiceChild> gmp =
       GeckoMediaPluginServiceChild::GetSingleton();
     MOZ_ASSERT(!gmp->mServiceChild);
-    if (mGMPServiceChild->Open(mTransport, mOtherPid, XRE_GetIOMessageLoop(),
-                               ipc::ChildSide)) {
+    if (mEndpoint.Bind(mGMPServiceChild.get())) {
       gmp->SetServiceChild(Move(mGMPServiceChild));
     } else {
       gmp->SetServiceChild(nullptr);
@@ -420,13 +417,12 @@ public:
 
 private:
   UniquePtr<GMPServiceChild> mGMPServiceChild;
-  mozilla::ipc::Transport* mTransport;
-  base::ProcessId mOtherPid;
+  ipc::Endpoint<PGMPServiceChild> mEndpoint;
 };
 
 /* static */
-PGMPServiceChild*
-GMPServiceChild::Create(Transport* aTransport, ProcessId aOtherPid)
+bool
+GMPServiceChild::Create(Endpoint<PGMPServiceChild>&& aGMPService)
 {
   RefPtr<GeckoMediaPluginServiceChild> gmp =
     GeckoMediaPluginServiceChild::GetSingleton();
@@ -436,18 +432,12 @@ GMPServiceChild::Create(Transport* aTransport, ProcessId aOtherPid)
 
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
 
-  GMPServiceChild* result = serviceChild.get();
   rv = gmpThread->Dispatch(new OpenPGMPServiceChild(Move(serviceChild),
-                                                    aTransport,
-                                                    aOtherPid),
+                                                    Move(aGMPService)),
                            NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  return result;
+  return NS_SUCCEEDED(rv);
 }
 
 } // namespace gmp

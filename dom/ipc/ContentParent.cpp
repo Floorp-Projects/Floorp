@@ -835,9 +835,28 @@ static nsIDocShell* GetOpenerDocShellHelper(Element* aFrameElement)
 mozilla::ipc::IPCResult
 ContentParent::RecvCreateGMPService()
 {
-  if (!PGMPService::Open(this)) {
+  Endpoint<PGMPServiceParent> parent;
+  Endpoint<PGMPServiceChild> child;
+
+  nsresult rv;
+  rv = PGMPService::CreateEndpoints(base::GetCurrentProcId(),
+                                    OtherPid(),
+                                    &parent, &child);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "CreateEndpoints failed");
     return IPC_FAIL_NO_REASON(this);
   }
+
+  if (!GMPServiceParent::Create(Move(parent))) {
+    MOZ_ASSERT(false, "GMPServiceParent::Create failed");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
+  if (!SendInitGMPService(Move(child))) {
+    MOZ_ASSERT(false, "SendInitGMPService failed");
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   return IPC_OK();
 }
 
@@ -2462,13 +2481,6 @@ ContentParent::Observe(nsISupports* aSubject,
     Unused << SendNotifyEmptyHTTPCache();
   }
   return NS_OK;
-}
-
-PGMPServiceParent*
-ContentParent::AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
-                                      base::ProcessId aOtherProcess)
-{
-  return GMPServiceParent::Create(aTransport, aOtherProcess);
 }
 
 PBackgroundParent*

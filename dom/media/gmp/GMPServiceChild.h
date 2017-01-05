@@ -77,7 +77,7 @@ public:
 
   void GetAlreadyBridgedTo(nsTArray<ProcessId>& aAlreadyBridgedTo);
 
-  static PGMPServiceChild* Create(Transport* aTransport, ProcessId aOtherPid);
+  static bool Create(Endpoint<PGMPServiceChild>&& aGMPService);
 
 private:
   nsRefPtrHashtable<nsUint64HashKey, GMPContentParent> mContentParents;

@@ -225,7 +225,7 @@ public:
                                            nsCString* aID) override;
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);
+  static bool Create(Endpoint<PGMPServiceParent>&& aGMPService);
 
   mozilla::ipc::IPCResult RecvLaunchGMP(const nsCString& aNodeId,
                                         const nsCString& aAPI,
