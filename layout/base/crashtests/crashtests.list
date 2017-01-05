@@ -334,8 +334,8 @@ load 522374-2.html
 load 526378-1.xul
 load 534367-1.xhtml
 load 534368-1.xhtml
-asserts-if(stylo,16) load 534768-1.html # bug 1324660
-asserts-if(stylo,16) load 534768-2.html # bug 1324660
+load 534768-1.html
+load 534768-2.html
 load 535721-1.xhtml
 load 535911-1.xhtml
 load 536623-1.xhtml
