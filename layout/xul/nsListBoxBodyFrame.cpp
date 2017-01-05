@@ -703,7 +703,6 @@ nsListBoxBodyFrame::ComputeIntrinsicISize(nsBoxLayoutState& aBoxLayoutState)
     nsPresContext *presContext = aBoxLayoutState.PresContext();
     styleContext = presContext->StyleSet()->
       ResolveStyleFor(firstRowContent->AsElement(), nullptr,
-                      ConsumeStyleBehavior::DontConsume,
                       LazyComputeBehavior::Allow);
 
     nscoord width = 0;
