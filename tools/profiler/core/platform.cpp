@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -152,6 +154,72 @@ void Sampler::Shutdown() {
     sLUL = nullptr;
   }
 #endif
+}
+
+bool
+Sampler::RegisterCurrentThread(const char* aName,
+                               PseudoStack* aPseudoStack,
+                               bool aIsMainThread, void* stackTop)
+{
+  if (!sRegisteredThreadsMutex)
+    return false;
+
+  ::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+  Thread::tid_t id = Thread::GetCurrentId();
+
+  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+    ThreadInfo* info = sRegisteredThreads->at(i);
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      // Thread already registered. This means the first unregister will be
+      // too early.
+      ASSERT(false);
+      return false;
+    }
+  }
+
+  set_tls_stack_top(stackTop);
+
+  ThreadInfo* info = new StackOwningThreadInfo(aName, id,
+    aIsMainThread, aPseudoStack, stackTop);
+
+  if (sActiveSampler) {
+    sActiveSampler->RegisterThread(info);
+  }
+
+  sRegisteredThreads->push_back(info);
+
+  return true;
+}
+
+void
+Sampler::UnregisterCurrentThread()
+{
+  if (!sRegisteredThreadsMutex)
+    return;
+
+  tlsStackTop.set(nullptr);
+
+  ::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+  Thread::tid_t id = Thread::GetCurrentId();
+
+  for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
+    ThreadInfo* info = sRegisteredThreads->at(i);
+    if (info->ThreadId() == id && !info->IsPendingDelete()) {
+      if (profiler_is_active()) {
+        // We still want to show the results of this thread if you
+        // save the profile shortly after a thread is terminated.
+        // For now we will defer the delete to profile stop.
+        info->SetPendingDelete();
+        break;
+      } else {
+        delete info;
+        sRegisteredThreads->erase(sRegisteredThreads->begin() + i);
+        break;
+      }
+    }
+  }
 }
 
 StackOwningThreadInfo::StackOwningThreadInfo(const char* aName, int aThreadId,
