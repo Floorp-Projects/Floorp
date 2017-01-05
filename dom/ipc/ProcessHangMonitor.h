@@ -41,7 +41,7 @@ class ProcessHangMonitor final
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static void AddProcess(dom::ContentParent* aContentParent);
+  static PProcessHangMonitorParent* AddProcess(dom::ContentParent* aContentParent);
   static void RemoveProcess(PProcessHangMonitorParent* aParent);
 
   static void ClearHang();
