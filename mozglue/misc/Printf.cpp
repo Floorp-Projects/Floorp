@@ -276,9 +276,10 @@ mozilla::PrintfTarget::cvt_f(double d, const char* fmt0, const char* fmt1)
         }
     }
 #endif
-    SprintfLiteral(fout, fin, d);
+    size_t len = SprintfLiteral(fout, fin, d);
+    MOZ_ASSERT(len <= sizeof(fout));
 
-    return emit(fout, strlen(fout));
+    return emit(fout, len);
 }
 
 /*
