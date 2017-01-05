@@ -2975,19 +2975,6 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
     return;
   }
 
-  // NeedToDecodeAudio() can go from false to true while we hold the
-  // monitor, but it can't go from true to false. This can happen because
-  // NeedToDecodeAudio() takes into account the amount of decoded audio
-  // that's been written to the AudioStream but not played yet. So if we
-  // were calling NeedToDecodeAudio() twice and we thread-context switch
-  // between the calls, audio can play, which can affect the return value
-  // of NeedToDecodeAudio() giving inconsistent results. So we cache the
-  // value returned by NeedToDecodeAudio(), and make decisions
-  // based on the cached value. If NeedToDecodeAudio() has
-  // returned false, and then subsequently returns true and we're not
-  // playing, it will probably be OK since we don't need to consume data
-  // anyway.
-
   const bool needToDecodeAudio = NeedToDecodeAudio();
   const bool needToDecodeVideo = NeedToDecodeVideo();
 
