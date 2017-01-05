@@ -1,0 +1,162 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const {
+  createClass,
+  createFactory,
+  DOM,
+  PropTypes,
+} = require("devtools/client/shared/vendor/react");
+const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
+const { MODE } = require("devtools/client/shared/components/reps/constants");
+const { FILTER_SEARCH_DELAY } = require("../../constants");
+
+// Components
+const Editor = createFactory(require("devtools/client/netmonitor/shared/components/editor"));
+const SearchBox = createFactory(require("devtools/client/shared/components/search-box"));
+const TreeView = createFactory(require("devtools/client/shared/components/tree/tree-view"));
+const TreeRow = createFactory(require("devtools/client/shared/components/tree/tree-row"));
+const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
+
+const { div, tr, td } = DOM;
+
+/*
+ * Properties View component
+ * A scrollable tree view component which provides some useful features for
+ * representing object properties.
+ *
+ * Search filter - Set enableFilter to enable / disable SearchBox feature.
+ * Tree view - Default enabled.
+ * Source editor - Enable by specifying object level 1 property name to "editorText".
+ * Rep - Default enabled.
+ */
+const PropertiesView = createClass({
+  displayName: "PropertiesView",
+
+  propTypes: {
+    object: PropTypes.object,
+    enableInput: PropTypes.bool,
+    expandableStrings: PropTypes.bool,
+    filterPlaceHolder: PropTypes.string,
+    sectionNames: PropTypes.array,
+  },
+
+  getDefaultProps() {
+    return {
+      enableInput: true,
+      enableFilter: true,
+      expandableStrings: false,
+      filterPlaceHolder: "",
+    };
+  },
+
+  getInitialState() {
+    return {
+      filterText: "",
+    };
+  },
+
+  getRowClass(object, sectionNames) {
+    return sectionNames.includes(object.name) ? "tree-section" : "";
+  },
+
+  onFilter(object, whiteList) {
+    let { name, value } = object;
+    let filterText = this.state.filterText;
+
+    if (!filterText || whiteList.includes(name)) {
+      return true;
+    }
+
+    let jsonString = JSON.stringify({ [name]: value }).toLowerCase();
+    return jsonString.includes(filterText.toLowerCase());
+  },
+
+  renderRowWithEditor(props) {
+    const { level, name, value } = props.member;
+    // Display source editor when prop name specify to editorText
+    if (level === 1 && name === "editorText") {
+      return (
+        tr({},
+          td({ colSpan: 2 },
+            Editor({ text: value })
+          )
+        )
+      );
+    }
+
+    return TreeRow(props);
+  },
+
+  renderValueWithRep(props) {
+    // Hide rep summary for sections
+    if (props.member.level === 0) {
+      return null;
+    }
+
+    return Rep(Object.assign(props, {
+      // FIXME: A workaround for the issue in StringRep
+      // Force StringRep to crop the text everytime
+      member: Object.assign({}, props.member, { open: false }),
+      mode: MODE.TINY,
+      cropLimit: 60,
+    }));
+  },
+
+  updateFilterText(filterText) {
+    this.setState({
+      filterText,
+    });
+  },
+
+  render() {
+    const {
+      object,
+      decorator,
+      enableInput,
+      enableFilter,
+      expandableStrings,
+      filterPlaceHolder,
+      renderRow,
+      renderValue,
+      sectionNames,
+    } = this.props;
+
+    return (
+      div({ className: "properties-view" },
+        enableFilter && div({ className: "searchbox-section" },
+          SearchBox({
+            delay: FILTER_SEARCH_DELAY,
+            type: "filter",
+            onChange: this.updateFilterText,
+            placeholder: filterPlaceHolder,
+          }),
+        ),
+        div({ className: "tree-container" },
+          TreeView({
+            object,
+            columns: [{
+              id: "value",
+              width: "100%",
+            }],
+            decorator: decorator || {
+              getRowClass: (rowObject) => this.getRowClass(rowObject, sectionNames),
+            },
+            enableInput,
+            expandableStrings,
+            expandedNodes: new Set(sectionNames.map((sec) => "/" + sec)),
+            onFilter: (props) => this.onFilter(props, sectionNames),
+            renderRow: renderRow || this.renderRowWithEditor,
+            renderValue: renderValue || this.renderValueWithRep,
+          }),
+        ),
+      )
+    );
+  }
+
+});
+
+module.exports = PropertiesView;
