@@ -1794,58 +1794,58 @@ class OpenPGMPServiceParent : public mozilla::Runnable
 {
 public:
   OpenPGMPServiceParent(GMPServiceParent* aGMPServiceParent,
-                        mozilla::ipc::Transport* aTransport,
-                        base::ProcessId aOtherPid,
+                        ipc::Endpoint<PGMPServiceParent>&& aEndpoint,
                         bool* aResult)
     : mGMPServiceParent(aGMPServiceParent),
-      mTransport(aTransport),
-      mOtherPid(aOtherPid),
+      mEndpoint(Move(aEndpoint)),
       mResult(aResult)
   {
   }
 
   NS_IMETHOD Run() override
   {
-    *mResult = mGMPServiceParent->Open(mTransport, mOtherPid,
-                                       XRE_GetIOMessageLoop(), ipc::ParentSide);
+    *mResult = mEndpoint.Bind(mGMPServiceParent);
     return NS_OK;
   }
 
 private:
   GMPServiceParent* mGMPServiceParent;
-  mozilla::ipc::Transport* mTransport;
-  base::ProcessId mOtherPid;
+  ipc::Endpoint<PGMPServiceParent> mEndpoint;
   bool* mResult;
 };
 
 /* static */
-PGMPServiceParent*
-GMPServiceParent::Create(Transport* aTransport, ProcessId aOtherPid)
+bool
+GMPServiceParent::Create(Endpoint<PGMPServiceParent>&& aGMPService)
 {
   RefPtr<GeckoMediaPluginServiceParent> gmp =
     GeckoMediaPluginServiceParent::GetSingleton();
 
   if (gmp->mShuttingDown) {
     // Shutdown is initiated. There is no point creating a new actor.
-    return nullptr;
+    return false;
   }
 
   nsCOMPtr<nsIThread> gmpThread;
   nsresult rv = gmp->GetThread(getter_AddRefs(gmpThread));
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
 
   nsAutoPtr<GMPServiceParent> serviceParent(new GMPServiceParent(gmp));
-
   bool ok;
   rv = gmpThread->Dispatch(new OpenPGMPServiceParent(serviceParent,
-                                                     aTransport,
-                                                     aOtherPid, &ok),
+                                                     Move(aGMPService),
+                                                     &ok),
                            NS_DISPATCH_SYNC);
+
   if (NS_FAILED(rv) || !ok) {
-    return nullptr;
+    return false;
   }
 
-  return serviceParent.forget();
+  // Now that the service parent is set up, it will be destroyed by
+  // ActorDestroy.
+  Unused << serviceParent.forget();
+
+  return true;
 }
 
 } // namespace gmp
