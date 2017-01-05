@@ -570,5 +570,5 @@ already_AddRefed<ServoComputedValues>
 ServoStyleSet::ResolveServoStyle(Element* aElement,
                                  ConsumeStyleBehavior aConsume)
 {
-  return Servo_ResolveStyle(aElement, mRawSet.get(), aConsume).Consume();  
+  return Servo_ResolveStyle(aElement, mRawSet.get(), aConsume).Consume();
 }
