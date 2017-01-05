@@ -4064,9 +4064,9 @@ DrawBorderImage(nsPresContext*       aPresContext,
   nsMargin border;
   NS_FOR_CSS_SIDES(s) {
     nsStyleCoord coord = aStyleBorder.mBorderImageSlice.Get(s);
-    int32_t imgDimension = NS_SIDE_IS_VERTICAL(s)
+    int32_t imgDimension = SideIsVertical(s)
                            ? imageSize.width : imageSize.height;
-    nscoord borderDimension = NS_SIDE_IS_VERTICAL(s)
+    nscoord borderDimension = SideIsVertical(s)
                            ? borderImgArea.width : borderImgArea.height;
     double value;
     switch (coord.GetUnit()) {
