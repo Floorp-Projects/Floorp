@@ -25,7 +25,6 @@ CompositableChild::DestroyActor(PCompositableChild* aChild)
 
 CompositableChild::CompositableChild()
  : mCompositableClient(nullptr),
-   mAsyncID(0),
    mCanSend(true)
 {
 }
@@ -41,10 +40,9 @@ CompositableChild::IsConnected() const
 }
 
 void
-CompositableChild::Init(CompositableClient* aCompositable, uint64_t aAsyncID)
+CompositableChild::Init(CompositableClient* aCompositable)
 {
   mCompositableClient = aCompositable;
-  mAsyncID = aAsyncID;
 }
 
 void
@@ -73,15 +71,16 @@ CompositableChild::ActorDestroy(ActorDestroyReason)
 }
 
 /* static */ PCompositableChild*
-AsyncCompositableChild::CreateActor()
+AsyncCompositableChild::CreateActor(uint64_t aAsyncID)
 {
-  AsyncCompositableChild* child = new AsyncCompositableChild();
+  AsyncCompositableChild* child = new AsyncCompositableChild(aAsyncID);
   child->AddRef();
   return child;
 }
 
-AsyncCompositableChild::AsyncCompositableChild()
- : mLock("AsyncCompositableChild.mLock")
+AsyncCompositableChild::AsyncCompositableChild(uint64_t aAsyncID)
+ : mLock("AsyncCompositableChild.mLock"),
+   mAsyncID(aAsyncID)
 {
 }
 

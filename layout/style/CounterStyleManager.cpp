@@ -2029,8 +2029,11 @@ CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
 
   // It is intentional that the predefined names are case-insensitive
   // but the user-defined names case-sensitive.
-  // XXXheycam ServoStyleSets do not support custom counter styles yet.
+  // XXXheycam ServoStyleSets do not support custom counter styles yet.  Bug
+  // 1328319.
   StyleSetHandle styleSet = mPresContext->StyleSet();
+  // When this assertion is removed, please remove the hack to avoid it in
+  // nsStyleList::nsStyleList.
   NS_ASSERTION(styleSet->IsGecko(),
                "stylo: ServoStyleSets do not support custom counter "
                "styles yet");
@@ -2075,8 +2078,11 @@ CounterStyleManager::NotifyRuleChanged()
     RefPtr<CounterStyle>& style = iter.Data();
     bool toBeUpdated = false;
     bool toBeRemoved = false;
-    // XXXheycam ServoStyleSets do not support custom counter styles yet.
+    // XXXheycam ServoStyleSets do not support custom counter styles yet.  Bug
+    // 1328319.
     StyleSetHandle styleSet = mPresContext->StyleSet();
+    // When this assertion is removed, please remove the hack to avoid it in
+    // nsStyleList::nsStyleList.
     NS_ASSERTION(styleSet->IsGecko(),
                  "stylo: ServoStyleSets do not support custom counter "
                  "styles yet");

@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMStorageCache.h"
+#include "StorageCache.h"
 
-#include "DOMStorage.h"
-#include "DOMStorageDBThread.h"
-#include "DOMStorageIPC.h"
-#include "DOMStorageManager.h"
+#include "Storage.h"
+#include "StorageDBThread.h"
+#include "StorageIPC.h"
+#include "StorageManager.h"
 
 #include "nsAutoPtr.h"
 #include "nsDOMString.h"
@@ -24,8 +24,8 @@ namespace dom {
 #define DOM_STORAGE_CACHE_KEEP_ALIVE_TIME_MS 20000
 
 // static
-DOMStorageDBBridge* DOMStorageCache::sDatabase = nullptr;
-bool DOMStorageCache::sDatabaseDown = false;
+StorageDBBridge* StorageCache::sDatabase = nullptr;
+bool StorageCache::sDatabaseDown = false;
 
 namespace {
 
@@ -48,25 +48,25 @@ GetDataSetIndex(bool aPrivate, bool aSessionOnly)
 }
 
 inline uint32_t
-GetDataSetIndex(const DOMStorage* aStorage)
+GetDataSetIndex(const Storage* aStorage)
 {
   return GetDataSetIndex(aStorage->IsPrivate(), aStorage->IsSessionOnly());
 }
 
 } // namespace
 
-// DOMStorageCacheBridge
+// StorageCacheBridge
 
-NS_IMPL_ADDREF(DOMStorageCacheBridge)
+NS_IMPL_ADDREF(StorageCacheBridge)
 
 // Since there is no consumer of return value of Release, we can turn this 
-// method to void to make implementation of asynchronous DOMStorageCache::Release
+// method to void to make implementation of asynchronous StorageCache::Release
 // much simpler.
-NS_IMETHODIMP_(void) DOMStorageCacheBridge::Release(void)
+NS_IMETHODIMP_(void) StorageCacheBridge::Release(void)
 {
   MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
   nsrefcnt count = --mRefCnt;
-  NS_LOG_RELEASE(this, count, "DOMStorageCacheBridge");
+  NS_LOG_RELEASE(this, count, "StorageCacheBridge");
   if (0 == count) {
     mRefCnt = 1; /* stabilize */
     /* enable this to find non-threadsafe destructors: */
@@ -75,57 +75,57 @@ NS_IMETHODIMP_(void) DOMStorageCacheBridge::Release(void)
   }
 }
 
-// DOMStorageCache
+// StorageCache
 
-DOMStorageCache::DOMStorageCache(const nsACString* aOriginNoSuffix)
-: mOriginNoSuffix(*aOriginNoSuffix)
-, mMonitor("DOMStorageCache")
-, mLoaded(false)
-, mLoadResult(NS_OK)
-, mInitialized(false)
-, mPersistent(false)
-, mSessionOnlyDataSetActive(false)
-, mPreloadTelemetryRecorded(false)
+StorageCache::StorageCache(const nsACString* aOriginNoSuffix)
+  : mOriginNoSuffix(*aOriginNoSuffix)
+  , mMonitor("StorageCache")
+  , mLoaded(false)
+  , mLoadResult(NS_OK)
+  , mInitialized(false)
+  , mPersistent(false)
+  , mSessionOnlyDataSetActive(false)
+  , mPreloadTelemetryRecorded(false)
 {
-  MOZ_COUNT_CTOR(DOMStorageCache);
+  MOZ_COUNT_CTOR(StorageCache);
 }
 
-DOMStorageCache::~DOMStorageCache()
+StorageCache::~StorageCache()
 {
   if (mManager) {
     mManager->DropCache(this);
   }
 
-  MOZ_COUNT_DTOR(DOMStorageCache);
+  MOZ_COUNT_DTOR(StorageCache);
 }
 
 NS_IMETHODIMP_(void)
-DOMStorageCache::Release(void)
+StorageCache::Release(void)
 {
   // We must actually release on the main thread since the cache removes it
   // self from the manager's hash table.  And we don't want to lock access to
   // that hash table.
   if (NS_IsMainThread()) {
-    DOMStorageCacheBridge::Release();
+    StorageCacheBridge::Release();
     return;
   }
 
-  RefPtr<nsRunnableMethod<DOMStorageCacheBridge, void, false> > event =
-    NewNonOwningRunnableMethod(static_cast<DOMStorageCacheBridge*>(this),
-                               &DOMStorageCacheBridge::Release);
+  RefPtr<nsRunnableMethod<StorageCacheBridge, void, false> > event =
+    NewNonOwningRunnableMethod(static_cast<StorageCacheBridge*>(this),
+                               &StorageCacheBridge::Release);
 
   nsresult rv = NS_DispatchToMainThread(event);
   if (NS_FAILED(rv)) {
-    NS_WARNING("DOMStorageCache::Release() on a non-main thread");
-    DOMStorageCacheBridge::Release();
+    NS_WARNING("StorageCache::Release() on a non-main thread");
+    StorageCacheBridge::Release();
   }
 }
 
 void
-DOMStorageCache::Init(DOMStorageManager* aManager,
-                      bool aPersistent,
-                      nsIPrincipal* aPrincipal,
-                      const nsACString& aQuotaOriginScope)
+StorageCache::Init(StorageManagerBase* aManager,
+                   bool aPersistent,
+                   nsIPrincipal* aPrincipal,
+                   const nsACString& aQuotaOriginScope)
 {
   if (mInitialized) {
     return;
@@ -156,7 +156,7 @@ DOMStorageCache::Init(DOMStorageManager* aManager,
 }
 
 inline bool
-DOMStorageCache::Persist(const DOMStorage* aStorage) const
+StorageCache::Persist(const Storage* aStorage) const
 {
   return mPersistent &&
          !aStorage->IsSessionOnly() &&
@@ -164,13 +164,13 @@ DOMStorageCache::Persist(const DOMStorage* aStorage) const
 }
 
 const nsCString
-DOMStorageCache::Origin() const
+StorageCache::Origin() const
 {
-  return DOMStorageManager::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
+  return StorageManagerBase::CreateOrigin(mOriginSuffix, mOriginNoSuffix);
 }
 
-DOMStorageCache::Data&
-DOMStorageCache::DataSet(const DOMStorage* aStorage)
+StorageCache::Data&
+StorageCache::DataSet(const Storage* aStorage)
 {
   uint32_t index = GetDataSetIndex(aStorage);
 
@@ -198,13 +198,13 @@ DOMStorageCache::DataSet(const DOMStorage* aStorage)
 }
 
 bool
-DOMStorageCache::ProcessUsageDelta(const DOMStorage* aStorage, int64_t aDelta)
+StorageCache::ProcessUsageDelta(const Storage* aStorage, int64_t aDelta)
 {
   return ProcessUsageDelta(GetDataSetIndex(aStorage), aDelta);
 }
 
 bool
-DOMStorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta)
+StorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDelta)
 {
   // Check if we are in a low disk space situation
   if (aDelta > 0 && mManager && mManager->IsLowDiskSpace()) {
@@ -214,7 +214,7 @@ DOMStorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDel
   // Check limit per this origin
   Data& data = mData[aGetDataSetIndex];
   uint64_t newOriginUsage = data.mOriginQuotaUsage + aDelta;
-  if (aDelta > 0 && newOriginUsage > DOMStorageManager::GetQuota()) {
+  if (aDelta > 0 && newOriginUsage > StorageManagerBase::GetQuota()) {
     return false;
   }
 
@@ -229,7 +229,7 @@ DOMStorageCache::ProcessUsageDelta(uint32_t aGetDataSetIndex, const int64_t aDel
 }
 
 void
-DOMStorageCache::Preload()
+StorageCache::Preload()
 {
   if (mLoaded || !mPersistent) {
     return;
@@ -248,9 +248,9 @@ namespace {
 
 // This class is passed to timer as a tick observer.  It refers the cache
 // and keeps it alive for a time.
-class DOMStorageCacheHolder : public nsITimerCallback
+class StorageCacheHolder : public nsITimerCallback
 {
-  virtual ~DOMStorageCacheHolder() {}
+  virtual ~StorageCacheHolder() {}
 
   NS_DECL_ISUPPORTS
 
@@ -261,18 +261,18 @@ class DOMStorageCacheHolder : public nsITimerCallback
     return NS_OK;
   }
 
-  RefPtr<DOMStorageCache> mCache;
+  RefPtr<StorageCache> mCache;
 
 public:
-  explicit DOMStorageCacheHolder(DOMStorageCache* aCache) : mCache(aCache) {}
+  explicit StorageCacheHolder(StorageCache* aCache) : mCache(aCache) {}
 };
 
-NS_IMPL_ISUPPORTS(DOMStorageCacheHolder, nsITimerCallback)
+NS_IMPL_ISUPPORTS(StorageCacheHolder, nsITimerCallback)
 
 } // namespace
 
 void
-DOMStorageCache::KeepAlive()
+StorageCache::KeepAlive()
 {
   // Missing reference back to the manager means the cache is not responsible
   // for its lifetime.  Used for keeping sessionStorage live forever.
@@ -282,7 +282,7 @@ DOMStorageCache::KeepAlive()
 
   if (!NS_IsMainThread()) {
     // Timer and the holder must be initialized on the main thread.
-    NS_DispatchToMainThread(NewRunnableMethod(this, &DOMStorageCache::KeepAlive));
+    NS_DispatchToMainThread(NewRunnableMethod(this, &StorageCache::KeepAlive));
     return;
   }
 
@@ -291,7 +291,7 @@ DOMStorageCache::KeepAlive()
     return;
   }
 
-  RefPtr<DOMStorageCacheHolder> holder = new DOMStorageCacheHolder(this);
+  RefPtr<StorageCacheHolder> holder = new StorageCacheHolder(this);
   timer->InitWithCallback(holder, DOM_STORAGE_CACHE_KEEP_ALIVE_TIME_MS,
                           nsITimer::TYPE_ONE_SHOT);
 
@@ -307,9 +307,14 @@ class TelemetryAutoTimer
 {
 public:
   explicit TelemetryAutoTimer(Telemetry::ID aId)
-    : id(aId), start(TimeStamp::Now()) {}
+    : id(aId), start(TimeStamp::Now())
+  {}
+
   ~TelemetryAutoTimer()
-    { Telemetry::AccumulateDelta_impl<Telemetry::Millisecond>::compute(id, start); }
+  {
+    Telemetry::AccumulateDelta_impl<Telemetry::Millisecond>::compute(id, start);
+  }
+
 private:
   Telemetry::ID id;
   const TimeStamp start;
@@ -318,7 +323,7 @@ private:
 } // namespace
 
 void
-DOMStorageCache::WaitForPreload(Telemetry::ID aTelemetryID)
+StorageCache::WaitForPreload(Telemetry::ID aTelemetryID)
 {
   if (!mPersistent) {
     return;
@@ -354,7 +359,7 @@ DOMStorageCache::WaitForPreload(Telemetry::ID aTelemetryID)
 }
 
 nsresult
-DOMStorageCache::GetLength(const DOMStorage* aStorage, uint32_t* aRetval)
+StorageCache::GetLength(const Storage* aStorage, uint32_t* aRetval)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETLENGTH_BLOCKING_MS);
@@ -368,7 +373,8 @@ DOMStorageCache::GetLength(const DOMStorage* aStorage, uint32_t* aRetval)
 }
 
 nsresult
-DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& aRetval)
+StorageCache::GetKey(const Storage* aStorage, uint32_t aIndex,
+                     nsAString& aRetval)
 {
   // XXX: This does a linear search for the key at index, which would
   // suck if there's a large numer of indexes. Do we care? If so,
@@ -394,7 +400,7 @@ DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& 
 }
 
 void
-DOMStorageCache::GetKeys(const DOMStorage* aStorage, nsTArray<nsString>& aKeys)
+StorageCache::GetKeys(const Storage* aStorage, nsTArray<nsString>& aKeys)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETALLKEYS_BLOCKING_MS);
@@ -410,8 +416,8 @@ DOMStorageCache::GetKeys(const DOMStorage* aStorage, nsTArray<nsString>& aKeys)
 }
 
 nsresult
-DOMStorageCache::GetItem(const DOMStorage* aStorage, const nsAString& aKey,
-                         nsAString& aRetval)
+StorageCache::GetItem(const Storage* aStorage, const nsAString& aKey,
+                      nsAString& aRetval)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_GETVALUE_BLOCKING_MS);
@@ -432,8 +438,8 @@ DOMStorageCache::GetItem(const DOMStorage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-DOMStorageCache::SetItem(const DOMStorage* aStorage, const nsAString& aKey,
-                         const nsString& aValue, nsString& aOld)
+StorageCache::SetItem(const Storage* aStorage, const nsAString& aKey,
+                      const nsString& aValue, nsString& aOld)
 {
   // Size of the cache that will change after this action.
   int64_t delta = 0;
@@ -484,8 +490,8 @@ DOMStorageCache::SetItem(const DOMStorage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-DOMStorageCache::RemoveItem(const DOMStorage* aStorage, const nsAString& aKey,
-                            nsString& aOld)
+StorageCache::RemoveItem(const Storage* aStorage, const nsAString& aKey,
+                         nsString& aOld)
 {
   if (Persist(aStorage)) {
     WaitForPreload(Telemetry::LOCALDOMSTORAGE_REMOVEKEY_BLOCKING_MS);
@@ -520,7 +526,7 @@ DOMStorageCache::RemoveItem(const DOMStorage* aStorage, const nsAString& aKey,
 }
 
 nsresult
-DOMStorageCache::Clear(const DOMStorage* aStorage)
+StorageCache::Clear(const Storage* aStorage)
 {
   bool refresh = false;
   if (Persist(aStorage)) {
@@ -560,7 +566,7 @@ DOMStorageCache::Clear(const DOMStorage* aStorage)
 }
 
 void
-DOMStorageCache::CloneFrom(const DOMStorageCache* aThat)
+StorageCache::CloneFrom(const StorageCache* aThat)
 {
   // This will never be called on anything else than SessionStorage.
   // This means mData will never be touched on any other thread than
@@ -582,18 +588,19 @@ DOMStorageCache::CloneFrom(const DOMStorageCache* aThat)
   }
 }
 
-// Defined in DOMStorageManager.cpp
+// Defined in StorageManager.cpp
 extern bool
-PrincipalsEqual(nsIPrincipal* aObjectPrincipal, nsIPrincipal* aSubjectPrincipal);
+PrincipalsEqual(nsIPrincipal* aObjectPrincipal,
+                nsIPrincipal* aSubjectPrincipal);
 
 bool
-DOMStorageCache::CheckPrincipal(nsIPrincipal* aPrincipal) const
+StorageCache::CheckPrincipal(nsIPrincipal* aPrincipal) const
 {
   return PrincipalsEqual(mPrincipal, aPrincipal);
 }
 
 void
-DOMStorageCache::UnloadItems(uint32_t aUnloadFlags)
+StorageCache::UnloadItems(uint32_t aUnloadFlags)
 {
   if (aUnloadFlags & kUnloadDefault) {
     // Must wait for preload to pass correct usage to ProcessUsageDelta
@@ -629,10 +636,10 @@ DOMStorageCache::UnloadItems(uint32_t aUnloadFlags)
 #endif
 }
 
-// DOMStorageCacheBridge
+// StorageCacheBridge
 
 uint32_t
-DOMStorageCache::LoadedCount()
+StorageCache::LoadedCount()
 {
   MonitorAutoLock monitor(mMonitor);
   Data& data = mData[kDefaultSet];
@@ -640,7 +647,7 @@ DOMStorageCache::LoadedCount()
 }
 
 bool
-DOMStorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
+StorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
 {
   MonitorAutoLock monitor(mMonitor);
   if (mLoaded) {
@@ -658,7 +665,7 @@ DOMStorageCache::LoadItem(const nsAString& aKey, const nsString& aValue)
 }
 
 void
-DOMStorageCache::LoadDone(nsresult aRv)
+StorageCache::LoadDone(nsresult aRv)
 {
   // Keep the preloaded cache alive for a time
   KeepAlive();
@@ -670,7 +677,7 @@ DOMStorageCache::LoadDone(nsresult aRv)
 }
 
 void
-DOMStorageCache::LoadWait()
+StorageCache::LoadWait()
 {
   MonitorAutoLock monitor(mMonitor);
   while (!mLoaded) {
@@ -678,9 +685,9 @@ DOMStorageCache::LoadWait()
   }
 }
 
-// DOMStorageUsage
+// StorageUsage
 
-DOMStorageUsage::DOMStorageUsage(const nsACString& aOriginScope)
+StorageUsage::StorageUsage(const nsACString& aOriginScope)
   : mOriginScope(aOriginScope)
 {
   mUsage[kDefaultSet] = mUsage[kPrivateSet] = mUsage[kSessionSet] = 0LL;
@@ -706,7 +713,7 @@ private:
 } // namespace
 
 void
-DOMStorageUsage::LoadUsage(const int64_t aUsage)
+StorageUsage::LoadUsage(const int64_t aUsage)
 {
   // Using kDefaultSet index since it is the index for the persitent data
   // stored in the database we have just loaded usage for.
@@ -722,12 +729,13 @@ DOMStorageUsage::LoadUsage(const int64_t aUsage)
 }
 
 bool
-DOMStorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, const int64_t aDelta)
+StorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex,
+                                         const int64_t aDelta)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   int64_t newUsage = mUsage[aDataSetIndex] + aDelta;
-  if (aDelta > 0 && newUsage > DOMStorageManager::GetQuota()) {
+  if (aDelta > 0 && newUsage > StorageManagerBase::GetQuota()) {
     return false;
   }
 
@@ -737,8 +745,8 @@ DOMStorageUsage::CheckAndSetETLD1UsageDelta(uint32_t aDataSetIndex, const int64_
 
 
 // static
-DOMStorageDBBridge*
-DOMStorageCache::StartDatabase()
+StorageDBBridge*
+StorageCache::StartDatabase()
 {
   if (sDatabase || sDatabaseDown) {
     // When sDatabaseDown is at true, sDatabase is null.
@@ -748,7 +756,7 @@ DOMStorageCache::StartDatabase()
   }
 
   if (XRE_IsParentProcess()) {
-    nsAutoPtr<DOMStorageDBThread> db(new DOMStorageDBThread());
+    nsAutoPtr<StorageDBThread> db(new StorageDBThread());
 
     nsresult rv = db->Init();
     if (NS_FAILED(rv)) {
@@ -760,7 +768,7 @@ DOMStorageCache::StartDatabase()
     // Use DOMLocalStorageManager::Ensure in case we're called from
     // DOMSessionStorageManager's initializer and we haven't yet initialized the
     // local storage manager.
-    RefPtr<DOMStorageDBChild> db = new DOMStorageDBChild(
+    RefPtr<StorageDBChild> db = new StorageDBChild(
         DOMLocalStorageManager::Ensure());
 
     nsresult rv = db->Init();
@@ -775,15 +783,15 @@ DOMStorageCache::StartDatabase()
 }
 
 // static
-DOMStorageDBBridge*
-DOMStorageCache::GetDatabase()
+StorageDBBridge*
+StorageCache::GetDatabase()
 {
   return sDatabase;
 }
 
 // static
 nsresult
-DOMStorageCache::StopDatabase()
+StorageCache::StopDatabase()
 {
   if (!sDatabase) {
     return NS_OK;
@@ -795,7 +803,7 @@ DOMStorageCache::StopDatabase()
   if (XRE_IsParentProcess()) {
     delete sDatabase;
   } else {
-    DOMStorageDBChild* child = static_cast<DOMStorageDBChild*>(sDatabase);
+    StorageDBChild* child = static_cast<StorageDBChild*>(sDatabase);
     NS_RELEASE(child);
   }
 

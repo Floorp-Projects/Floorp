@@ -34,8 +34,9 @@ CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
 
   mForwarder->AssertInForwarderThread();
 
+  mAsyncID = aAsyncID;
   mCompositableChild = static_cast<CompositableChild*>(aActor);
-  mCompositableChild->Init(this, aAsyncID);
+  mCompositableChild->Init(this);
 }
 
 /* static */ RefPtr<CompositableClient>
@@ -56,6 +57,7 @@ CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
                                        TextureFlags aTextureFlags)
 : mForwarder(aForwarder)
 , mTextureFlags(aTextureFlags)
+, mAsyncID(0)
 {
 }
 
@@ -120,7 +122,7 @@ uint64_t
 CompositableClient::GetAsyncID() const
 {
   if (mCompositableChild) {
-    return mCompositableChild->GetAsyncID();
+    return mAsyncID;
   }
   return 0; // zero is always an invalid async ID
 }

@@ -1887,7 +1887,7 @@ wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
                   LifoAlloc& lifo, AstModule** module)
 {
     AstModule* result = new(lifo) AstModule(lifo);
-    if (!result->init())
+    if (!result || !result->init())
         return false;
 
     UniqueChars error;

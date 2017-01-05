@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include protocol PCompositable;
 include protocol PCompositorBridge;
-include protocol PImageContainer;
 include protocol PRenderFrame;
 include protocol PTexture;
 
@@ -523,7 +522,7 @@ struct OpContentBufferSwap {
  * image is composited by an ImageHost.
  */
 struct ImageCompositeNotification {
-  PImageContainer imageContainer;
+  uint64_t asyncCompositableID;
   TimeStamp imageTimeStamp;
   TimeStamp firstCompositeTimeStamp;
   uint32_t frameID;
@@ -538,6 +537,22 @@ union EditReply {
 
 union AsyncParentMessageData {
   OpNotifyNotUsed;
+};
+
+struct TransactionInfo
+{
+  Edit[] cset;
+  OpDestroy[] toDestroy;
+  uint64_t fwdTransactionId;
+  uint64_t id;
+  TargetConfig targetConfig;
+  PluginWindowData[] plugins;
+  bool isFirstPaint;
+  bool scheduleComposite;
+  uint32_t paintSequenceNumber;
+  bool isRepeatTransaction;
+  TimeStamp transactionStart;
+  int32_t paintSyncId;
 };
 
 } // namespace
