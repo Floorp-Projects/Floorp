@@ -78,6 +78,9 @@ module.exports = {
     // No duplicate cases in switch statements
     "no-duplicate-case": "error",
 
+    // Disallow unnecessary calls to .bind()
+    "no-extra-bind": "error",
+
     // No labels
     "no-labels": "error",
 

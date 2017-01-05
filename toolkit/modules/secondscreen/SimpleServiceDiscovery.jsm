@@ -80,7 +80,7 @@ var SimpleServiceDiscovery = {
       } else if (name.startsWith("ST")) {
         service.target = row.substr(4).trim();
       }
-    }.bind(this));
+    });
 
     if (service.location && service.target) {
       service.location = this._forceTrailingSlash(service.location);

@@ -1161,7 +1161,7 @@ BrowserGlue.prototype = {
       if (willPrompt) {
         Services.tm.mainThread.dispatch(function() {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
-        }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
       }
     }
 
