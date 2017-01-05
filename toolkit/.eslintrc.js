@@ -60,6 +60,9 @@ module.exports = {
     // Use [] instead of Array()
     // "no-array-constructor": "error",
 
+    // Disallow assignment operators in conditional statements
+    "no-cond-assign": "error",
+
     // Disallow the use of debugger
     "no-debugger": "error",
 

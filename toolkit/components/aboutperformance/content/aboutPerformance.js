@@ -1016,7 +1016,7 @@ var SubprocessMonitor = {
         // We first iterate the table to check if summaries exist for rowPids,
         // if yes, update them and delete the pid's summary or else hide the row
         // for recycling it. Start at row 1 instead of 0 (to skip the header row).
-        for (let i = 1, row; row = resultTable.rows[i]; i++) {
+        for (let i = 1, row; (row = resultTable.rows[i]); i++) {
           let rowPid = row.dataset.pid;
           let summary = summaries[rowPid];
           if (summary) {

@@ -457,8 +457,8 @@ var snapshotFormatters = {
           let contents;
           if (entry.message.length > 0 && entry.message[0] == "#") {
             // This is a failure ID. See nsIGfxInfo.idl.
-            let m;
-            if (m = /#BLOCKLIST_FEATURE_FAILURE_BUG_(\d+)/.exec(entry.message)) {
+            let m = /#BLOCKLIST_FEATURE_FAILURE_BUG_(\d+)/.exec(entry.message);
+            if (m) {
               let bugSpan = $.new("span");
               bugSpan.textContent = strings.GetStringFromName("blocklistedBug") + "; ";
 

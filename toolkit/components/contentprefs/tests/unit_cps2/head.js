@@ -341,7 +341,7 @@ function dbOK(expectedRows) {
     },
     handleResult(results) {
       let row = null;
-      while (row = results.getNextRow()) {
+      while ((row = results.getNextRow())) {
         actualRows.push(cols.map(c => row.getResultByName(c)));
       }
     },
