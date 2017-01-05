@@ -5308,9 +5308,17 @@ WorkerPrivate::CancelAllTimeouts()
 }
 
 already_AddRefed<nsIEventTarget>
-WorkerPrivate::CreateNewSyncLoop()
+WorkerPrivate::CreateNewSyncLoop(Status aFailStatus)
 {
   AssertIsOnWorkerThread();
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (mStatus >= aFailStatus) {
+      return nullptr;
+    }
+  }
 
   nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(NS_GetCurrentThread());
   MOZ_ASSERT(thread);

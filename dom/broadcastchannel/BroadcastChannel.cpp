@@ -334,7 +334,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
     RefPtr<InitializeRunnable> runnable =
       new InitializeRunnable(workerPrivate, origin, principalInfo, aRv);
-    runnable->Dispatch(aRv);
+    runnable->Dispatch(Closing, aRv);
   }
 
   if (aRv.Failed()) {
