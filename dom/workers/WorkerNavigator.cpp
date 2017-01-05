@@ -169,7 +169,7 @@ WorkerNavigator::GetUserAgent(nsString& aUserAgent, CallerType aCallerType,
   RefPtr<GetUserAgentRunnable> runnable =
     new GetUserAgentRunnable(workerPrivate, aUserAgent);
 
-  runnable->Dispatch(aRv);
+  runnable->Dispatch(Terminating, aRv);
 }
 
 uint64_t
