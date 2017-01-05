@@ -177,6 +177,7 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
       }
       r_log(NR_LOG_STUN, LOG_ERR, "GetAdaptersAddresses() returned error (%d)", r);
       RFREE(AdapterAddresses);
+      AdapterAddresses = NULL;
     }
 
     if (n >= 5) {
