@@ -3436,7 +3436,7 @@ var PrintPreviewListener = {
       let browser = gBrowser.selectedBrowser;
       let preferredRemoteType = browser.remoteType;
       this._tabBeforePrintPreview = gBrowser.selectedTab;
-      this._printPreviewTab = gBrowser.loadOneTab("about:blank", {
+      this._printPreviewTab = gBrowser.loadOneTab("about:printpreview", {
         inBackground: false,
         preferredRemoteType,
         sameProcessAsFrameLoader: browser.frameLoader
@@ -3447,7 +3447,7 @@ var PrintPreviewListener = {
   },
   createSimplifiedBrowser() {
     let browser = this._tabBeforePrintPreview.linkedBrowser;
-    this._simplifyPageTab = gBrowser.loadOneTab("about:blank", {
+    this._simplifyPageTab = gBrowser.loadOneTab("about:printpreview", {
       inBackground: true,
       sameProcessAsFrameLoader: browser.frameLoader
      });
