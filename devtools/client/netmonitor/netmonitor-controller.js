@@ -711,12 +711,6 @@ NetworkEventsHandler.prototype = {
    *         are available, or rejected if something goes wrong.
    */
   getString: function (stringGrip) {
-    // FIXME: this.webConsoleClient will be undefined in mochitest,
-    // so we return string instantly to skip undefined error
-    if (typeof stringGrip === "string") {
-      return stringGrip;
-    }
-
     return this.webConsoleClient.getString(stringGrip);
   }
 };
