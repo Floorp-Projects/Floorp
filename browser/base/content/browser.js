@@ -6664,7 +6664,7 @@ var gIdentityHandler = {
     return this._identityBox = document.getElementById("identity-box");
   },
   get _identityPopupMultiView() {
-    delete this._identityPopupMultiView;
+    delete _identityPopupMultiView;
     return document.getElementById("identity-popup-multiView");
   },
   get _identityPopupContentHosts() {
