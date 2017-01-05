@@ -205,6 +205,13 @@ interface nsIHttpChannelInternal : nsISupports
      */
     attribute boolean allowAltSvc;
 
+    /**
+     * If true, do not use newer protocol features that might have interop problems
+     * on the Internet. Intended only for use with critical infra like the updater.
+     * default is false.
+     */
+    attribute boolean beConservative;
+
     readonly attribute PRTime lastModifiedTime;
 
     /**
