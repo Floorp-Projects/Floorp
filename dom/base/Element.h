@@ -23,7 +23,7 @@
 #include "nsINodeList.h"
 #include "nsNodeUtils.h"
 #include "nsAttrAndChildArray.h"
-#include "mozFlushType.h"
+#include "mozilla/FlushType.h"
 #include "nsDOMAttributeMap.h"
 #include "nsPresContext.h"
 #include "mozilla/CORSMode.h"

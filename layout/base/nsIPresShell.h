@@ -22,6 +22,7 @@
 
 #include "mozilla/ArenaObjectID.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/FlushType.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleSetHandle.h"
@@ -39,7 +40,6 @@
 #include "nsFrameManagerBase.h"
 #include "nsRect.h"
 #include "nsRegionFwd.h"
-#include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
 #include "nsChangeHint.h"
