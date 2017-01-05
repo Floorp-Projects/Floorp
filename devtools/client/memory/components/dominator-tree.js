@@ -114,6 +114,7 @@ module.exports = createClass({
     onViewSourceInDebugger: PropTypes.func.isRequired,
     onExpand: PropTypes.func.isRequired,
     onCollapse: PropTypes.func.isRequired,
+    onFocus: PropTypes.func.isRequired,
   },
 
   shouldComponentUpdate(nextProps, nextState) {
