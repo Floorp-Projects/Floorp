@@ -1279,7 +1279,7 @@ static already_AddRefed<mozilla::dom::NodeInfo> nullNodeInfo;
 nsIDocument::nsIDocument()
   : nsINode(nullNodeInfo),
     mReferrerPolicySet(false),
-    mReferrerPolicy(mozilla::net::RP_Default),
+    mReferrerPolicy(mozilla::net::RP_Unset),
     mBlockAllMixedContent(false),
     mBlockAllMixedContentPreloads(false),
     mUpgradeInsecureRequests(false),
@@ -2468,7 +2468,7 @@ nsDocument::ApplySettingsFromCSP(bool aSpeculative)
     if (csp) {
       // Set up any Referrer Policy specified by CSP
       bool hasReferrerPolicy = false;
-      uint32_t referrerPolicy = mozilla::net::RP_Default;
+      uint32_t referrerPolicy = mozilla::net::RP_Unset;
       rv = csp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
       NS_ENSURE_SUCCESS_VOID(rv);
       if (hasReferrerPolicy) {

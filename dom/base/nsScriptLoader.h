@@ -91,7 +91,7 @@ public:
       mLineNo(1),
       mCORSMode(aCORSMode),
       mIntegrity(aIntegrity),
-      mReferrerPolicy(mozilla::net::RP_Default)
+      mReferrerPolicy(mozilla::net::RP_Unset)
   {
   }
 

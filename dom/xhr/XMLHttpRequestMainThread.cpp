@@ -2603,7 +2603,7 @@ XMLHttpRequestMainThread::InitiateFetch(nsIInputStream* aUploadStream,
       nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
       nsCOMPtr<nsIDocument> doc = owner ? owner->GetExtantDoc() : nullptr;
       mozilla::net::ReferrerPolicy referrerPolicy = doc ?
-        doc->GetReferrerPolicy() : mozilla::net::RP_Default;
+        doc->GetReferrerPolicy() : mozilla::net::RP_Unset;
       nsContentUtils::SetFetchReferrerURIWithPolicy(mPrincipal, doc,
                                                     httpChannel, referrerPolicy);
     }

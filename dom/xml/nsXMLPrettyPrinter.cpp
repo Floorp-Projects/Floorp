@@ -105,7 +105,7 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
     rv = nsSyncLoadService::LoadDocument(xslUri, nsIContentPolicy::TYPE_XSLT,
                                          nsContentUtils::GetSystemPrincipal(),
                                          nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                         nullptr, true, mozilla::net::RP_Default,
+                                         nullptr, true, mozilla::net::RP_Unset,
                                          getter_AddRefs(xslDocument));
     NS_ENSURE_SUCCESS(rv, rv);
 

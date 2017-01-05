@@ -855,7 +855,7 @@ function _loadURIWithFlags(browser, uri, params) {
   let flags = params.flags || 0;
   let referrer = params.referrerURI;
   let referrerPolicy = ('referrerPolicy' in params ? params.referrerPolicy :
-                        Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
+                        Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
   let postData = params.postData;
 
   let currentRemoteType = browser.remoteType;
@@ -1196,7 +1196,7 @@ var gBrowserInit = {
           }
         }
         let referrerPolicy = (window.arguments[5] != undefined ?
-            window.arguments[5] : Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
+            window.arguments[5] : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
         let userContextId = (window.arguments[6] != undefined ?
             window.arguments[6] : Ci.nsIScriptSecurityManager.DEFAULT_USER_CONTEXT_ID);
         loadURI(uriToLoad, referrerURI, window.arguments[3] || null,
@@ -5014,7 +5014,7 @@ nsBrowserAccess.prototype = {
     }
 
     let referrer = aOpener ? makeURI(aOpener.location.href) : null;
-    let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT;
+    let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
     if (aOpener && aOpener.document) {
       referrerPolicy = aOpener.document.referrerPolicy;
     }

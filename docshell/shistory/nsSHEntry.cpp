@@ -24,7 +24,7 @@ static uint32_t gEntryID = 0;
 nsSHEntry::nsSHEntry()
   : mShared(new nsSHEntryShared())
   , mLoadReplace(false)
-  , mReferrerPolicy(mozilla::net::RP_Default)
+  , mReferrerPolicy(mozilla::net::RP_Unset)
   , mLoadType(0)
   , mID(gEntryID++)
   , mScrollPositionX(0)

@@ -2009,8 +2009,7 @@ imgLoader::LoadImageXPCOM(nsIURI* aURI,
     nsresult rv = LoadImage(aURI,
                             aInitialDocumentURI,
                             aReferrerURI,
-                            refpol == mozilla::net::RP_Unset ?
-                              mozilla::net::RP_Default : refpol,
+                            refpol,
                             aLoadingPrincipal,
                             aLoadGroup,
                             aObserver,
@@ -2365,7 +2364,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
         ? loadInfo->InternalContentPolicyType()
         : nsIContentPolicy::TYPE_INTERNAL_IMAGE;
 
-      if (ValidateEntry(entry, uri, nullptr, nullptr, RP_Default,
+      if (ValidateEntry(entry, uri, nullptr, nullptr, RP_Unset,
                         nullptr, aObserver, aCX, requestFlags,
                         policyType, false, nullptr,
                         nullptr, imgIRequest::CORS_NONE)) {
@@ -2454,7 +2453,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // can set aHadInsecureRedirect to false here.
     rv = request->Init(originalURI, uri, /* aHadInsecureRedirect = */ false,
                        channel, channel, entry, aCX, nullptr,
-                       imgIRequest::CORS_NONE, RP_Default);
+                       imgIRequest::CORS_NONE, RP_Unset);
     NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<ProxyListener> pl =
