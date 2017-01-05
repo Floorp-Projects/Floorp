@@ -21,14 +21,14 @@ using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 namespace mozilla {
 namespace layers {
 
-struct OpPushDLBuilder {
+struct OpDPPushStackingContext {
   WRRect bounds;
   WRRect overflow;
   Matrix4x4 matrix;
   uint64_t scrollid;
 };
 
-struct OpPopDLBuilder { };
+struct OpDPPopStackingContext { };
 
 struct OpDPPushRect {
   WRRect bounds;
@@ -73,8 +73,8 @@ struct OpDPPushIframe {
 };
 
 union WebRenderCommand {
-  OpPushDLBuilder;
-  OpPopDLBuilder;
+  OpDPPushStackingContext;
+  OpDPPopStackingContext;
   OpDPPushRect;
   OpDPPushBorder;
   OpDPPushImage;
