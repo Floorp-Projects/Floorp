@@ -1303,8 +1303,8 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
   bool haveRadius = false;
   double ratio = 1.0f;
   NS_FOR_CSS_SIDES(side) {
-    uint32_t hc1 = NS_SIDE_TO_HALF_CORNER(side, false, true);
-    uint32_t hc2 = NS_SIDE_TO_HALF_CORNER(side, true, true);
+    uint32_t hc1 = SideToHalfCorner(side, false, true);
+    uint32_t hc2 = SideToHalfCorner(side, true, true);
     nscoord length =
       SideIsVertical(side) ? aBorderArea.height : aBorderArea.width;
     nscoord sum = aRadii[hc1] + aRadii[hc2];
@@ -1329,8 +1329,8 @@ nsIFrame::InsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 {
   NS_FOR_CSS_SIDES(side) {
     nscoord offset = aOffsets.Side(side);
-    uint32_t hc1 = NS_SIDE_TO_HALF_CORNER(side, false, false);
-    uint32_t hc2 = NS_SIDE_TO_HALF_CORNER(side, true, false);
+    uint32_t hc1 = SideToHalfCorner(side, false, false);
+    uint32_t hc2 = SideToHalfCorner(side, true, false);
     aRadii[hc1] = std::max(0, aRadii[hc1] - offset);
     aRadii[hc2] = std::max(0, aRadii[hc2] - offset);
   }
@@ -1354,8 +1354,8 @@ nsIFrame::OutsetBorderRadii(nscoord aRadii[8], const nsMargin &aOffsets)
 
   NS_FOR_CSS_SIDES(side) {
     const nscoord offset = aOffsets.Side(side);
-    const uint32_t hc1 = NS_SIDE_TO_HALF_CORNER(side, false, false);
-    const uint32_t hc2 = NS_SIDE_TO_HALF_CORNER(side, true, false);
+    const uint32_t hc1 = SideToHalfCorner(side, false, false);
+    const uint32_t hc2 = SideToHalfCorner(side, true, false);
     if (aRadii[hc1] > 0) {
       const nscoord offset1 = AdjustOffset(aRadii[hc1], offset);
       aRadii[hc1] = std::max(0, aRadii[hc1] + offset1);
