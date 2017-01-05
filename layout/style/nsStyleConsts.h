@@ -20,8 +20,6 @@ namespace mozilla {
 // nsStyleCoord.cpp.
 // Arguments must not have side effects.
 
-#define NS_SIDE_TO_FULL_CORNER(side_, second_) \
-  (((side_) + !!(second_)) % 4)
 #define NS_SIDE_TO_HALF_CORNER(side_, second_, parallel_) \
   ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
 
