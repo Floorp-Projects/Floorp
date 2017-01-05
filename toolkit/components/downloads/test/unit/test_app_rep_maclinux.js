@@ -141,6 +141,14 @@ add_task(function test_setup() {
   });
 
   gHttpServer.start(4444);
+
+  do_register_cleanup(function() {
+    return Task.spawn(function* () {
+      yield new Promise(resolve => {
+        gHttpServer.stop(resolve);
+      });
+    });
+  });
 });
 
 // Construct a response with redirect urls.

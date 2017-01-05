@@ -214,6 +214,8 @@ nsPagePrintTimer::Stop()
 void
 nsPagePrintTimer::Fail()
 {
+  NS_WARNING("nsPagePrintTimer::Fail called");
+
   mDone = true;
   Stop();
   if (mPrintEngine) {

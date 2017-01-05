@@ -156,6 +156,9 @@ function do_content_crash(setup, callback) {
                 .getService(Components.interfaces.nsICrashReporter);
   crashReporter.minidumpPath = do_get_tempdir();
 
+  /* import-globals-from ../unit/crasher_subprocess_head.js */
+  /* import-globals-from ../unit/crasher_subprocess_tail.js */
+
   let headfile = do_get_file("../unit/crasher_subprocess_head.js");
   let tailfile = do_get_file("../unit/crasher_subprocess_tail.js");
   if (setup) {

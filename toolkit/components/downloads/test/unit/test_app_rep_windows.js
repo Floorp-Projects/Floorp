@@ -18,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 const BackgroundFileSaverOutputStream = Components.Constructor(
       "@mozilla.org/network/background-file-saver;1?mode=outputstream",
@@ -122,7 +120,7 @@ function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
       if (Components.isSuccessCode(aStatusCode)) {
         deferred.resolve();
       } else {
-        deferred.reject(new Components.Exception(aResult));
+        deferred.reject(new Components.Exception(aStatusCode));
       }
     },
   }, null);
@@ -238,6 +236,14 @@ add_task(function* test_setup() {
   });
 
   gHttpServer.start(4444);
+
+  do_register_cleanup(function() {
+    return Task.spawn(function* () {
+      yield new Promise(resolve => {
+        gHttpServer.stop(resolve);
+      });
+    });
+  });
 });
 
 // Construct a response with redirect urls.

@@ -371,6 +371,25 @@ static inline FillRule GetFillRule(SkPath::FillType aFillType)
   return FillRule::FILL_EVEN_ODD;
 }
 
+/**
+ * Returns true if the canvas is backed by pixels.  Returns false if the canvas
+ * wraps an SkPDFDocument, for example.
+ *
+ * Note: It is not clear whether the test used to implement this function may
+ * result in it returning false in some circumstances even when the canvas
+ * _is_ pixel backed.  In other words maybe it is possible for such a canvas to
+ * have kUnknown_SkPixelGeometry?
+ */
+static inline bool IsBackedByPixels(const SkCanvas* aCanvas)
+{
+  SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
+  if (!aCanvas->getProps(&props) ||
+      props.pixelGeometry() == kUnknown_SkPixelGeometry) {
+    return false;
+  }
+  return true;
+}
+
 } // namespace gfx
 } // namespace mozilla
 

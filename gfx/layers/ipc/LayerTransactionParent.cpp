@@ -88,30 +88,16 @@ LayerTransactionParent::Destroy()
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
-                                         InfallibleTArray<OpDestroy>&& aToDestroy,
-                                         const uint64_t& aFwdTransactionId,
-                                         const uint64_t& aTransactionId,
-                                         const TargetConfig& targetConfig,
-                                         PluginsArray&& aPlugins,
-                                         const bool& isFirstPaint,
-                                         const bool& scheduleComposite,
-                                         const uint32_t& paintSequenceNumber,
-                                         const bool& isRepeatTransaction,
-                                         const mozilla::TimeStamp& aTransactionStart,
-                                         const int32_t& aPaintSyncId)
+LayerTransactionParent::RecvUpdateNoSwap(const TransactionInfo& txn)
 {
-  return RecvUpdate(Move(cset), Move(aToDestroy), aFwdTransactionId,
-      aTransactionId, targetConfig, Move(aPlugins), isFirstPaint,
-      scheduleComposite, paintSequenceNumber, isRepeatTransaction,
-      aTransactionStart, aPaintSyncId, nullptr);
+  return RecvUpdate(txn, nullptr);
 }
 
 class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender
 {
 public:
   explicit AutoLayerTransactionParentAsyncMessageSender(LayerTransactionParent* aLayerTransaction,
-                                                        InfallibleTArray<OpDestroy>* aDestroyActors = nullptr)
+                                                        const InfallibleTArray<OpDestroy>* aDestroyActors = nullptr)
     : mLayerTransaction(aLayerTransaction)
     , mActorsToDestroy(aDestroyActors)
   {
@@ -133,7 +119,7 @@ public:
   }
 private:
   LayerTransactionParent* mLayerTransaction;
-  InfallibleTArray<OpDestroy>* mActorsToDestroy;
+  const InfallibleTArray<OpDestroy>* mActorsToDestroy;
 };
 
 mozilla::ipc::IPCResult
@@ -145,18 +131,7 @@ LayerTransactionParent::RecvPaintTime(const uint64_t& aTransactionId,
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
-                                   InfallibleTArray<OpDestroy>&& aToDestroy,
-                                   const uint64_t& aFwdTransactionId,
-                                   const uint64_t& aTransactionId,
-                                   const TargetConfig& targetConfig,
-                                   PluginsArray&& aPlugins,
-                                   const bool& isFirstPaint,
-                                   const bool& scheduleComposite,
-                                   const uint32_t& paintSequenceNumber,
-                                   const bool& isRepeatTransaction,
-                                   const mozilla::TimeStamp& aTransactionStart,
-                                   const int32_t& aPaintSyncId,
+LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
                                    InfallibleTArray<EditReply>* reply)
 {
   profiler_tracing("Paint", "LayerTransaction", TRACING_INTERVAL_START);
@@ -167,12 +142,12 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   TimeStamp updateStart = TimeStamp::Now();
 #endif
 
-  MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", cset.Length()));
+  MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", aInfo.cset().Length()));
 
-  UpdateFwdTransactionId(aFwdTransactionId);
+  UpdateFwdTransactionId(aInfo.fwdTransactionId());
 
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
-    for (const auto& op : aToDestroy) {
+    for (const auto& op : aInfo.toDestroy()) {
       DestroyActor(op);
     }
     return IPC_OK();
@@ -180,7 +155,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
 
   // This ensures that destroy operations are always processed. It is not safe
   // to early-return from RecvUpdate without doing so.
-  AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
+  AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this, &aInfo.toDestroy());
   EditReplyVector replyv;
 
   {
@@ -191,8 +166,8 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   // not all edits require an update to the hit testing tree
   bool updateHitTestingTree = false;
 
-  for (EditArray::index_type i = 0; i < cset.Length(); ++i) {
-    Edit& edit = cset[i];
+  for (EditArray::index_type i = 0; i < aInfo.cset().Length(); ++i) {
+    const Edit& edit = const_cast<Edit&>(aInfo.cset()[i]);
 
     switch (edit.type()) {
     // Create* ops
@@ -289,12 +264,12 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     case Edit::TOpSetLayerAttributes: {
       MOZ_LAYERS_LOG(("[ParentSide] SetLayerAttributes"));
 
-      OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
+      const OpSetLayerAttributes& osla = edit.get_OpSetLayerAttributes();
       Layer* layer = AsLayer(osla.layer());
       if (!layer) {
         return IPC_FAIL_NO_REASON(this);
       }
-      LayerAttributes& attrs = osla.attrs();
+      const LayerAttributes& attrs = osla.attrs();
 
       const CommonLayerAttributes& common = attrs.common();
       layer->SetLayerBounds(common.layerBounds());
@@ -350,7 +325,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetAncestorMaskLayers(maskLayers);
 
       typedef SpecificLayerAttributes Specific;
-      SpecificLayerAttributes& specific = attrs.specific();
+      const SpecificLayerAttributes& specific = attrs.specific();
       switch (specific.type()) {
       case Specific::Tnull_t:
         break;
@@ -404,9 +379,10 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         if (!textLayer) {
           return IPC_FAIL_NO_REASON(this);
         }
-        textLayer->SetBounds(specific.get_TextLayerAttributes().bounds());
-        textLayer->SetGlyphs(Move(specific.get_TextLayerAttributes().glyphs()));
-        textLayer->SetScaledFont(reinterpret_cast<gfx::ScaledFont*>(specific.get_TextLayerAttributes().scaledFont()));
+        const auto& tla = specific.get_TextLayerAttributes();
+        textLayer->SetBounds(tla.bounds());
+        textLayer->SetGlyphs(Move(const_cast<nsTArray<GlyphArray>&>(tla.glyphs())));
+        textLayer->SetScaledFont(reinterpret_cast<gfx::ScaledFont*>(tla.scaledFont()));
         break;
       }
       case Specific::TBorderLayerAttributes: {
@@ -604,17 +580,20 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     }
     case Edit::TOpAttachAsyncCompositable: {
       const OpAttachAsyncCompositable& op = edit.get_OpAttachAsyncCompositable();
-      PCompositableParent* compositableParent = CompositableMap::Get(op.containerID());
-      if (!compositableParent) {
-        NS_ERROR("CompositableParent not found in the map");
-        return IPC_FAIL_NO_REASON(this);
-      }
       if (mPendingCompositorUpdates) {
         // Do not attach compositables from old layer trees. Return true since
         // content cannot handle errors.
         return IPC_OK();
       }
-      CompositableHost* host = CompositableHost::FromIPDLActor(compositableParent);
+      ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(OtherPid());
+      if (!imageBridge) {
+        return IPC_FAIL_NO_REASON(this);
+      }
+      CompositableHost* host = imageBridge->FindCompositable(op.containerID());
+      if (!host) {
+        NS_ERROR("CompositableHost not found in the map");
+        return IPC_FAIL_NO_REASON(this);
+      }
       if (!Attach(AsLayer(op.layer()), host, true)) {
         return IPC_FAIL_NO_REASON(this);
       }
@@ -628,10 +607,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     }
   }
 
-  mCompositorBridge->ShadowLayersUpdated(this, aTransactionId, targetConfig,
-                                         aPlugins, isFirstPaint, scheduleComposite,
-                                         paintSequenceNumber, isRepeatTransaction,
-                                         aPaintSyncId, updateHitTestingTree);
+  mCompositorBridge->ShadowLayersUpdated(this, aInfo, updateHitTestingTree);
 
   {
     AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
@@ -664,7 +640,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   if (drawFps) {
     uint32_t visualWarningTrigger = gfxPrefs::LayerTransactionWarning();
     // The default theshold is 200ms to trigger, hit red when it take 4 times longer
-    TimeDuration latency = TimeStamp::Now() - aTransactionStart;
+    TimeDuration latency = TimeStamp::Now() - aInfo.transactionStart();
     if (latency > TimeDuration::FromMilliseconds(visualWarningTrigger)) {
       float severity = (latency - TimeDuration::FromMilliseconds(visualWarningTrigger)).ToMilliseconds() /
                          (4 * visualWarningTrigger);
@@ -960,7 +936,7 @@ LayerTransactionParent::RecvForceComposite()
 PCompositableParent*
 LayerTransactionParent::AllocPCompositableParent(const TextureInfo& aInfo)
 {
-  return CompositableHost::CreateIPDLActor(this, aInfo, 0);
+  return CompositableHost::CreateIPDLActor(this, aInfo);
 }
 
 bool

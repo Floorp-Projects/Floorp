@@ -1010,8 +1010,8 @@ LoginManagerPrompter.prototype = {
       mainAction,
       secondaryActions,
       {
+        timeout: Date.now() + 10000,
         persistWhileVisible: true,
-        persistent: true,
         passwordNotificationType: type,
         hideClose: true,
         eventCallback(topic) {

@@ -23,6 +23,7 @@ import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.RawResource;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -393,7 +394,7 @@ public class SearchEngineManager implements SharedPreferences.OnSharedPreference
                 urlConnection.setRequestMethod("POST");
                 urlConnection.setRequestProperty("User-Agent", USER_AGENT);
                 urlConnection.setRequestProperty("Content-Type", "application/json");
-                urlConnection.setFixedLengthStreamingMode(message.getBytes().length);
+                urlConnection.setFixedLengthStreamingMode(message.getBytes(StringUtils.UTF_8).length);
 
                 final OutputStream out = urlConnection.getOutputStream();
                 out.write(message.getBytes());

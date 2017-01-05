@@ -7,6 +7,7 @@ package org.mozilla.gecko;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -20,6 +21,7 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.util.NetworkUtils;
+import org.mozilla.gecko.util.StringUtils;
 
 /**
  * Use network-based search suggestions.
@@ -134,7 +136,7 @@ public class SuggestClient {
 
     private String convertStreamToString(java.io.InputStream is) {
         try {
-            return new java.util.Scanner(is).useDelimiter("\\A").next();
+            return new java.util.Scanner(new InputStreamReader(is, StringUtils.UTF_8)).useDelimiter("\\A").next();
         } catch (java.util.NoSuchElementException e) {
             return "";
         }

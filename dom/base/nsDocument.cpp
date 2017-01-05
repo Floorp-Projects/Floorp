@@ -3652,16 +3652,6 @@ already_AddRefed<nsIPresShell>
 nsDocument::CreateShell(nsPresContext* aContext, nsViewManager* aViewManager,
                         StyleSetHandle aStyleSet)
 {
-  // Don't add anything here.  Add it to |doCreateShell| instead.
-  // This exists so that subclasses can pass other values for the 4th
-  // parameter some of the time.
-  return doCreateShell(aContext, aViewManager, aStyleSet);
-}
-
-already_AddRefed<nsIPresShell>
-nsDocument::doCreateShell(nsPresContext* aContext,
-                          nsViewManager* aViewManager, StyleSetHandle aStyleSet)
-{
   NS_ASSERTION(!mPresShell, "We have a presshell already!");
 
   NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);

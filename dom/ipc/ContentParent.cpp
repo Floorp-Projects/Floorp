@@ -41,7 +41,6 @@
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/DataTransfer.h"
-#include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
@@ -53,6 +52,7 @@
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
+#include "mozilla/dom/StorageIPC.h"
 #include "mozilla/dom/devicestorage/DeviceStorageRequestParent.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/Permissions.h"
@@ -3040,13 +3040,13 @@ ContentParent::DeallocPMediaParent(media::PMediaParent *aActor)
 PStorageParent*
 ContentParent::AllocPStorageParent()
 {
-  return new DOMStorageDBParent();
+  return new StorageDBParent();
 }
 
 bool
 ContentParent::DeallocPStorageParent(PStorageParent* aActor)
 {
-  DOMStorageDBParent* child = static_cast<DOMStorageDBParent*>(aActor);
+  StorageDBParent* child = static_cast<StorageDBParent*>(aActor);
   child->ReleaseIPDLReference();
   return true;
 }

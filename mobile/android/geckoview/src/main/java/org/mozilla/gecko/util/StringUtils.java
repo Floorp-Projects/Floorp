@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,6 +20,12 @@ public class StringUtils {
 
     private static final String FILTER_URL_PREFIX = "filter://";
     private static final String USER_ENTERED_URL_PREFIX = "user-entered:";
+
+
+    /**
+     * The UTF-8 charset.
+     */
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 
     /*
      * This method tries to guess if the given string could be a search query or URL,

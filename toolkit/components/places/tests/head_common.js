@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// It is expected that the test files importing this file define Cu etc.
+/* global Cu, Ci, Cc, Cr */
+
 const CURRENT_SCHEMA_VERSION = 36;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 11;
 

@@ -7,6 +7,8 @@
 
 "use strict";
 
+/* import-globals-from loader.js */
+
 /**
  * Tests the truth assertion function.
  */
