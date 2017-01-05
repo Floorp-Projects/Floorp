@@ -1316,7 +1316,6 @@ nsHttpChannel::CallOnStartRequest()
     if (mListener) {
         MOZ_ASSERT(!mOnStartRequestCalled,
                    "We should not call OsStartRequest twice");
-        nsCOMPtr<nsIStreamListener> deleteProtector(mListener);
         rv = mListener->OnStartRequest(this, mListenerContext);
         mOnStartRequestCalled = true;
         if (NS_FAILED(rv))
