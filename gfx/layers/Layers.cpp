@@ -1182,6 +1182,43 @@ ContainerLayer::InsertAfter(Layer* aChild, Layer* aAfter)
   return true;
 }
 
+void
+ContainerLayer::RemoveAllChildren()
+{
+  // Optimizes "while (mFirstChild) ContainerLayer::RemoveChild(mFirstChild);"
+  Layer* current = mFirstChild;
+
+  // This is inlining DidRemoveChild() on each layer; we can skip the calls
+  // to NotifyPaintedLayerRemoved as it gets taken care of when as we call
+  // NotifyRemoved prior to removing any layers.
+  while (current) {
+    Layer* next = current->GetNextSibling();
+    if (current->GetType() == TYPE_READBACK) {
+      static_cast<ReadbackLayer*>(current)->NotifyRemoved();
+    }
+    current = next;
+  }
+
+  current = mFirstChild;
+  mFirstChild = nullptr;
+  while (current) {
+    MOZ_ASSERT(!current->GetPrevSibling());
+
+    Layer* next = current->GetNextSibling();
+    current->SetParent(nullptr);
+    current->SetNextSibling(nullptr);
+    if (next) {
+      next->SetPrevSibling(nullptr);
+    }
+    NS_RELEASE(current);
+    current = next;
+  }
+}
+
+// Note that ContainerLayer::RemoveAllChildren is an optimized
+// version of this code; if you make changes to ContainerLayer::RemoveChild
+// consider whether the matching changes need to be made to
+// ContainerLayer::RemoveAllChildren
 bool
 ContainerLayer::RemoveChild(Layer *aChild)
 {
@@ -1625,6 +1662,10 @@ ContainerLayer::HasOpaqueAncestorLayer(Layer* aLayer)
   return false;
 }
 
+// Note that ContainerLayer::RemoveAllChildren contains an optimized
+// version of this code; if you make changes to ContainerLayer::DidRemoveChild
+// consider whether the matching changes need to be made to
+// ContainerLayer::RemoveAllChildren
 void
 ContainerLayer::DidRemoveChild(Layer* aLayer)
 {
