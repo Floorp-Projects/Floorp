@@ -1256,7 +1256,7 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
   NS_FOR_CSS_HALF_CORNERS(i) {
     const nsStyleCoord c = aBorderRadius.Get(i);
     nscoord axis =
-      NS_HALF_CORNER_IS_X(i) ? aFrameSize.width : aFrameSize.height;
+      HalfCornerIsX(i) ? aFrameSize.width : aFrameSize.height;
 
     if (c.IsCoordPercentCalcUnit()) {
       aRadii[i] = nsRuleNode::ComputeCoordPercentCalc(c, axis);
