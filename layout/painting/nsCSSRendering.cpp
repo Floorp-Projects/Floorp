@@ -635,14 +635,14 @@ nsCSSRendering::ComputePixelRadii(const nscoord *aAppUnitsRadii,
   NS_FOR_CSS_HALF_CORNERS(corner)
     radii[corner] = Float(aAppUnitsRadii[corner]) / aAppUnitsPerPixel;
 
-  (*oBorderRadii)[C_TL] = Size(radii[NS_CORNER_TOP_LEFT_X],
-                               radii[NS_CORNER_TOP_LEFT_Y]);
-  (*oBorderRadii)[C_TR] = Size(radii[NS_CORNER_TOP_RIGHT_X],
-                               radii[NS_CORNER_TOP_RIGHT_Y]);
-  (*oBorderRadii)[C_BR] = Size(radii[NS_CORNER_BOTTOM_RIGHT_X],
-                               radii[NS_CORNER_BOTTOM_RIGHT_Y]);
-  (*oBorderRadii)[C_BL] = Size(radii[NS_CORNER_BOTTOM_LEFT_X],
-                               radii[NS_CORNER_BOTTOM_LEFT_Y]);
+  (*oBorderRadii)[C_TL] = Size(radii[eCornerTopLeftX],
+                               radii[eCornerTopLeftY]);
+  (*oBorderRadii)[C_TR] = Size(radii[eCornerTopRightX],
+                               radii[eCornerTopRightY]);
+  (*oBorderRadii)[C_BR] = Size(radii[eCornerBottomRightX],
+                               radii[eCornerBottomRightY]);
+  (*oBorderRadii)[C_BL] = Size(radii[eCornerBottomLeftX],
+                               radii[eCornerBottomLeftY]);
 }
 
 DrawResult
