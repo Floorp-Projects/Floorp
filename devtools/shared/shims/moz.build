@@ -17,15 +17,9 @@ EXTRA_JS_MODULES.devtools += [
     'dbg-client.jsm',
     'event-emitter.js',
     'Loader.jsm',
-    'Simulator.jsm',
 ]
 
 # Extra compatibility layer for transitional URLs used for part of 44 cycle
 EXTRA_JS_MODULES.devtools.shared += [
-    'Console.jsm',
     'Loader.jsm',
-]
-
-EXTRA_JS_MODULES.devtools.shared.apps += [
-    'Simulator.jsm',
 ]

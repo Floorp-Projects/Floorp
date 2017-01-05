@@ -4,40 +4,38 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_gfx_NativeFontResourceMac_h
-#define mozilla_gfx_NativeFontResourceMac_h
+#ifndef mozilla_gfx_NativeFontResourceFontconfig_h
+#define mozilla_gfx_NativeFontResourceFontconfig_h
 
 #include "2D.h"
-#include "mozilla/AlreadyAddRefed.h"
-#include "ScaledFontMac.h"
+
+#include <cairo-ft.h>
 
 namespace mozilla {
 namespace gfx {
 
-class NativeFontResourceMac final : public NativeFontResource
+class NativeFontResourceFontconfig final : public NativeFontResource
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceMac)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResourceFontconfig)
 
-  static already_AddRefed<NativeFontResourceMac>
+  static already_AddRefed<NativeFontResourceFontconfig>
     Create(uint8_t *aFontData, uint32_t aDataLength);
 
   already_AddRefed<ScaledFont>
     CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
                      const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
 
-  ~NativeFontResourceMac()
-  {
-    CFRelease(mFontRef);
-  }
+  ~NativeFontResourceFontconfig();
 
 private:
-  explicit NativeFontResourceMac(CGFontRef aFontRef) : mFontRef(aFontRef) {}
+  NativeFontResourceFontconfig(UniquePtr<uint8_t[]>&& aFontData, FT_Face aFace);
 
-  CGFontRef mFontRef;
+  UniquePtr<uint8_t[]> mFontData;
+  FT_Face mFace;
 };
 
 } // gfx
 } // mozilla
 
-#endif // mozilla_gfx_NativeFontResourceMac_h
+#endif // mozilla_gfx_NativeFontResourceFontconfig_h

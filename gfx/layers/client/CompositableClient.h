@@ -181,6 +181,8 @@ protected:
   TextureFlags mTextureFlags;
   RefPtr<TextureClientRecycleAllocator> mTextureClientRecycler;
 
+  uint64_t mAsyncID;
+
   friend class CompositableChild;
 };
 

@@ -11,7 +11,6 @@
 #include "gfxUtils.h"
 #include "ImageHost.h"                  // for ImageHostBuffered, etc
 #include "TiledContentHost.h"           // for TiledContentHost
-#include "mozilla/layers/ImageContainerParent.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/TextureHost.h"  // for TextureHost, etc
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
@@ -40,27 +39,15 @@ class Compositor;
 class CompositableParent : public ParentActor<PCompositableParent>
 {
 public:
-  CompositableParent(CompositableParentManager* aMgr,
-                     const TextureInfo& aTextureInfo,
-                     uint64_t aID = 0,
-                     PImageContainerParent* aImageContainer = nullptr)
+  CompositableParent(CompositableParentManager* aMgr, const TextureInfo& aTextureInfo)
   {
     MOZ_COUNT_CTOR(CompositableParent);
     mHost = CompositableHost::Create(aTextureInfo);
-    mHost->SetAsyncID(aID);
-    if (aID) {
-      CompositableMap::Set(aID, this);
-    }
-    if (aImageContainer) {
-      mHost->SetImageContainer(
-          static_cast<ImageContainerParent*>(aImageContainer));
-    }
   }
 
   ~CompositableParent()
   {
     MOZ_COUNT_DTOR(CompositableParent);
-    CompositableMap::Erase(mHost->GetAsyncID());
   }
 
   virtual void Destroy() override
@@ -75,7 +62,6 @@ public:
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
   : mTextureInfo(aTextureInfo)
-  , mAsyncID(0)
   , mCompositorID(0)
   , mCompositor(nullptr)
   , mLayer(nullptr)
@@ -93,11 +79,9 @@ CompositableHost::~CompositableHost()
 
 PCompositableParent*
 CompositableHost::CreateIPDLActor(CompositableParentManager* aMgr,
-                                  const TextureInfo& aTextureInfo,
-                                  uint64_t aID,
-                                  PImageContainerParent* aImageContainer)
+                                  const TextureInfo& aTextureInfo)
 {
-  return new CompositableParent(aMgr, aTextureInfo, aID, aImageContainer);
+  return new CompositableParent(aMgr, aTextureInfo);
 }
 
 bool
@@ -230,63 +214,6 @@ CompositableHost::ReceivedDestroy(PCompositableParent* aActor)
 {
   static_cast<CompositableParent*>(aActor)->RecvDestroy();
 }
-
-namespace CompositableMap {
-
-typedef std::map<uint64_t, PCompositableParent*> CompositableMap_t;
-static CompositableMap_t* sCompositableMap = nullptr;
-bool IsCreated() {
-  return sCompositableMap != nullptr;
-}
-PCompositableParent* Get(uint64_t aID)
-{
-  if (!IsCreated() || aID == 0) {
-    return nullptr;
-  }
-  CompositableMap_t::iterator it = sCompositableMap->find(aID);
-  if (it == sCompositableMap->end()) {
-    return nullptr;
-  }
-  return it->second;
-}
-void Set(uint64_t aID, PCompositableParent* aParent)
-{
-  if (!IsCreated() || aID == 0) {
-    return;
-  }
-  (*sCompositableMap)[aID] = aParent;
-}
-void Erase(uint64_t aID)
-{
-  if (!IsCreated() || aID == 0) {
-    return;
-  }
-  CompositableMap_t::iterator it = sCompositableMap->find(aID);
-  if (it != sCompositableMap->end()) {
-    sCompositableMap->erase(it);
-  }
-}
-void Clear()
-{
-  if (!IsCreated()) {
-    return;
-  }
-  sCompositableMap->clear();
-}
-void Create()
-{
-  if (sCompositableMap == nullptr) {
-    sCompositableMap = new CompositableMap_t;
-  }
-}
-void Destroy()
-{
-  Clear();
-  delete sCompositableMap;
-  sCompositableMap = nullptr;
-}
-
-} // namespace CompositableMap
 
 } // namespace layers
 } // namespace mozilla

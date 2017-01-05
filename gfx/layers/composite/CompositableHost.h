@@ -40,12 +40,25 @@ namespace layers {
 class Layer;
 class LayerComposite;
 class Compositor;
-class ImageContainerParent;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
 class PCompositableParent;
 struct EffectChain;
+
+struct AsyncCompositableRef
+{
+  AsyncCompositableRef()
+   : mProcessId(mozilla::ipc::kInvalidProcessId),
+     mAsyncId(0)
+  {}
+  AsyncCompositableRef(base::ProcessId aProcessId, uint64_t aAsyncId)
+   : mProcessId(aProcessId), mAsyncId(aAsyncId)
+  {}
+  explicit operator bool() const { return !!mAsyncId; }
+  base::ProcessId mProcessId;
+  uint64_t mAsyncId;
+};
 
 /**
  * The compositor-side counterpart to CompositableClient. Responsible for
@@ -135,8 +148,6 @@ public:
   Layer* GetLayer() const { return mLayer; }
   void SetLayer(Layer* aLayer) { mLayer = aLayer; }
 
-  virtual void SetImageContainer(ImageContainerParent* aImageContainer) {}
-
   virtual TiledContentHost* AsTiledContentHost() { return nullptr; }
 
   typedef uint32_t AttachFlags;
@@ -212,9 +223,7 @@ public:
 
   static PCompositableParent*
   CreateIPDLActor(CompositableParentManager* mgr,
-                  const TextureInfo& textureInfo,
-                  uint64_t asyncID,
-                  PImageContainerParent* aImageContainer = nullptr);
+                  const TextureInfo& textureInfo);
 
   static bool DestroyIPDLActor(PCompositableParent* actor);
 
@@ -222,11 +231,10 @@ public:
 
   uint64_t GetCompositorID() const { return mCompositorID; }
 
-  uint64_t GetAsyncID() const { return mAsyncID; }
+  const AsyncCompositableRef& GetAsyncRef() const { return mAsyncRef; }
+  void SetAsyncRef(const AsyncCompositableRef& aRef) { mAsyncRef = aRef; }
 
   void SetCompositorID(uint64_t aID) { mCompositorID = aID; }
-
-  void SetAsyncID(uint64_t aID) { mAsyncID = aID; }
 
   virtual bool Lock() { return false; }
 
@@ -243,7 +251,7 @@ public:
 
 protected:
   TextureInfo mTextureInfo;
-  uint64_t mAsyncID;
+  AsyncCompositableRef mAsyncRef;
   uint64_t mCompositorID;
   RefPtr<Compositor> mCompositor;
   Layer* mLayer;
@@ -274,43 +282,6 @@ private:
   RefPtr<CompositableHost> mHost;
   bool mSucceeded;
 };
-
-/**
- * Global CompositableMap, to use in the compositor thread only.
- *
- * PCompositable and PLayer can, in the case of async textures, be managed by
- * different top level protocols. In this case they don't share the same
- * communication channel and we can't send an OpAttachCompositable (PCompositable,
- * PLayer) message.
- *
- * In order to attach a layer and the right compositable if the the compositable
- * is async, we store references to the async compositables in a CompositableMap
- * that is accessed only on the compositor thread. During a layer transaction we
- * send the message OpAttachAsyncCompositable(ID, PLayer), and on the compositor
- * side we lookup the ID in the map and attach the corresponding compositable to
- * the layer.
- *
- * CompositableMap must be global because the image bridge doesn't have any
- * reference to whatever we have created with PLayerTransaction. So, the only way to
- * actually connect these two worlds is to have something global that they can
- * both query (in the same  thread). The map is not allocated the map on the
- * stack to avoid the badness of static initialization.
- *
- * Also, we have a compositor/PLayerTransaction protocol/etc. per layer manager, and the
- * ImageBridge is used by all the existing compositors that have a video, so
- * there isn't an instance or "something" that lives outside the boudaries of a
- * given layer manager on the compositor thread except the image bridge and the
- * thread itself.
- */
-namespace CompositableMap {
-  void Create();
-  void Destroy();
-  PCompositableParent* Get(uint64_t aID);
-  void Set(uint64_t aID, PCompositableParent* aParent);
-  void Erase(uint64_t aID);
-  void Clear();
-} // namespace CompositableMap
-
 
 } // namespace layers
 } // namespace mozilla

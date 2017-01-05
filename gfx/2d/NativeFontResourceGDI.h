@@ -36,7 +36,8 @@ public:
   ~NativeFontResourceGDI();
 
   already_AddRefed<ScaledFont>
-    CreateScaledFont(uint32_t aIndex, Float aGlyphSize) final;
+    CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
+                     const uint8_t* aInstanceData, uint32_t aInstanceDataLength) final;
 
 private:
   NativeFontResourceGDI(HANDLE aFontResourceHandle,
