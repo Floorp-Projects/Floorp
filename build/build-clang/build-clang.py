@@ -204,7 +204,7 @@ def build_one_stage(cc, cxx, ld, ar, ranlib,
     # arguments, so we need to re-run it.  Make sure the cached copy of the
     # previous CMake run is cleared before running it again.
     if os.path.exists(build_dir + "/CMakeCache.txt"):
-        os.path.remove(build_dir + "/CMakeCache.txt")
+        os.remove(build_dir + "/CMakeCache.txt")
 
     # cmake doesn't deal well with backslashes in paths.
     def slashify_path(path):
