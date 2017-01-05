@@ -188,6 +188,10 @@ Optimization failed because of failing to speculate the operand is a string or a
 
 Optimization failed because of failing to speculate the operand is a simple arithmetic type. I.e. definitely not an object, string, symbol or internal magic type.
 
+### OperandNotEasilyCoercibleToString
+
+Optimization failed because of failing to speculate the operand can be easily coerced to a string. I.e. definitely not an object or symbol.
+
 ### StaticTypedArrayUint32
 
 Typed Arrays of uint32 values are not yet fully optimized.
