@@ -10603,13 +10603,30 @@ void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
 }
 
 #ifdef DEBUG
+/**
+ * Returns true iff aFrame should be wrapped in an anonymous flex/grid item,
+ * rather than being a direct child of aContainerFrame.
+ *
+ * NOTE: aContainerFrame must be a flex or grid container - this function is
+ * purely for sanity-checking the children of these container types.
+ * NOTE: See also NeedsAnonFlexOrGridItem(), for the non-debug version of this
+ * logic (which operates a bit earlier, on FCData instead of frames).
+ */
 static bool
-FrameWantsToBeInAnonymousItem(const nsIAtom* aParentType, const nsIFrame* aFrame)
+FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
+                              const nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aParentType == nsGkAtoms::flexContainerFrame ||
-             aParentType == nsGkAtoms::gridContainerFrame);
+  nsIAtom* containerType = aContainerFrame->GetType();
+  MOZ_ASSERT(containerType == nsGkAtoms::flexContainerFrame ||
+             containerType == nsGkAtoms::gridContainerFrame);
 
-  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+  // Any line-participant frames (e.g. text) definitely want to be wrapped in
+  // an anonymous flex/grid item.
+  if (aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+    return true;
+  }
+
+  return false;
 }
 #endif
 
@@ -10626,7 +10643,7 @@ VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
 
   bool prevChildWasAnonItem = false;
   for (const nsIFrame* child : aChildren) {
-    MOZ_ASSERT(!FrameWantsToBeInAnonymousItem(parentType, child),
+    MOZ_ASSERT(!FrameWantsToBeInAnonymousItem(aParentFrame, child),
                "frame wants to be inside an anonymous item, but it isn't");
     if (IsAnonymousFlexOrGridItem(child)) {
       AssertAnonymousFlexOrGridItemParent(child, aParentFrame);
