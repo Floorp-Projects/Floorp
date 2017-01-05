@@ -1318,7 +1318,7 @@ this.UITour = {
           ["score", rating],
           ["flowid", aOptions.flowId]
         ]));
-      }.bind(this));
+      });
 
       // Add it to the container.
       ratingContainer.appendChild(ratingElement);

@@ -91,7 +91,7 @@ add_task(function* webchannel_broadcast() {
         NewTabWebChannel.off("foo", test_message);
         resolve(msg.target);
       }
-    }.bind(this));
+    });
   });
 
   let countingReplyPromise = new Promise(resolve => {
@@ -102,7 +102,7 @@ add_task(function* webchannel_broadcast() {
         NewTabWebChannel.off("reply", test_message);
         resolve(msg.target);
       }
-    }.bind(this));
+    });
   });
 
   let countingUnloadPromise = new Promise(resolve => {
@@ -147,7 +147,7 @@ add_task(function* webchannel_switch() {
     return new Promise(resolve => {
       NewTabWebChannel.once("foo", function(name, msg) {
         resolve(msg.target);
-      }.bind(this));
+      });
     });
   }
 

@@ -1838,7 +1838,7 @@ this.PlacesUtils = {
           break;
       }
       return item;
-    }.bind(this);
+    };
 
     const QUERY_STR =
       `/* do not warn (bug no): cannot use an index */
@@ -2273,7 +2273,7 @@ var Keywords = {
 
         // In any case, notify about the new keyword.
         yield notifyKeywordChange(url.href, keyword, source);
-      }.bind(this))
+      })
     );
   },
 
@@ -2311,7 +2311,7 @@ var Keywords = {
 
       // Notify bookmarks about the removal.
       yield notifyKeywordChange(url.href, "", source);
-    }.bind(this))) ;
+    }));
   }
 };
 

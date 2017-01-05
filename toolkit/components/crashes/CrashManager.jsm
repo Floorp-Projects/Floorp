@@ -760,7 +760,7 @@ this.CrashManager.prototype = Object.freeze({
       entries.sort((a, b) => { return a.date - b.date; });
 
       return entries;
-    }.bind(this));
+    });
   },
 
   _getStore() {

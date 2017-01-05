@@ -1998,7 +1998,7 @@ UnifiedComplete.prototype = {
         yield SwitchToTabStorage.initDatabase(conn);
 
         return conn;
-      }.bind(this)).then(null, ex => {
+      }).then(null, ex => {
  dump("Couldn't get database handle: " + ex + "\n");
                                        Cu.reportError(ex);
 });
