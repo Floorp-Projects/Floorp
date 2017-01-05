@@ -245,10 +245,7 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
         if (gl->WorkAroundDriverBugs() &&
             mappedName.EqualsIgnoreCase("gl_", 3))
         {
-            // Catch when this is fixed, so we can remove this.
-            // Or, discover if this happens outside ANGLE.
-            MOZ_ASSERT(gl->IsANGLE() == (loc != -1));
-
+            // Bug 1328559: Appears problematic on ANGLE and OSX, but not Linux or Win+GL.
             loc = -1;
         }
 #ifdef DUMP_SHADERVAR_MAPPINGS
