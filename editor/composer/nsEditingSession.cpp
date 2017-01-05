@@ -7,7 +7,7 @@
 #include <string.h>                     // for nullptr, strcmp
 
 #include "imgIContainer.h"              // for imgIContainer, etc
-#include "mozFlushType.h"               // for mozFlushType::Flush_Frames
+#include "mozilla/FlushType.h"          // for mozFlushType::Flush_Frames
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
