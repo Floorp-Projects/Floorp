@@ -224,6 +224,7 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
                   src_dir];
     if is_windows():
         cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
+        cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
     build_package(build_dir, cmake_args)
 
     if is_linux():

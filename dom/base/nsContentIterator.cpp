@@ -374,8 +374,8 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
       // So, we shouldn't skip the empty node if the start offset is 0.
       // In other words, if the offset is 1, the node should be ignored.
       if (!startIsData && startIndx) {
-        mFirst = GetNextSibling(startNode);
-        NS_WARNING_ASSERTION(mFirst, "GetNextSibling returned null");
+        mFirst = NextNode(startNode);
+        NS_WARNING_ASSERTION(mFirst, "NextNode returned null");
 
         // Does mFirst node really intersect the range?  The range could be
         // 'degenerate', i.e., not collapsed but still contain no content.
@@ -430,8 +430,8 @@ nsContentIterator::Init(nsIDOMRange* aDOMRange)
         // the last element should be the previous node (i.e., shouldn't
         // include the end node in the range).
         if (!endIsData && !endNode->HasChildren() && !endIndx) {
-          mLast = GetPrevSibling(endNode);
-          NS_WARNING_ASSERTION(mLast, "GetPrevSibling returned null");
+          mLast = PrevNode(endNode);
+          NS_WARNING_ASSERTION(mLast, "PrevNode returned null");
           if (NS_WARN_IF(!NodeIsInTraversalRange(mLast, mPre,
                                                  startNode, startIndx,
                                                  endNode, endIndx))) {

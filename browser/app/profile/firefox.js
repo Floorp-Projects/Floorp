@@ -1156,6 +1156,9 @@ pref("browser.newtabpage.enabled", true);
 // Toggles the enhanced content of 'about:newtab'. Shows sponsored tiles.
 sticky_pref("browser.newtabpage.enhanced", true);
 
+// enables Activity Stream inspired layout
+pref("browser.newtabpage.compact", false);
+
 // number of rows of newtab grid
 pref("browser.newtabpage.rows", 3);
 

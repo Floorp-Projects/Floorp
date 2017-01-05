@@ -442,25 +442,7 @@ InternalRequest::MapChannelToRequestCredentials(nsIChannel* aChannel)
   nsCOMPtr<nsILoadInfo> loadInfo;
   MOZ_ALWAYS_SUCCEEDS(aChannel->GetLoadInfo(getter_AddRefs(loadInfo)));
 
-
-  // TODO: Remove following code after stylesheet and image support cookie policy
-  if (loadInfo->GetSecurityMode() == nsILoadInfo::SEC_NORMAL) {
-    uint32_t loadFlags;
-    aChannel->GetLoadFlags(&loadFlags);
-
-    if (loadFlags & nsIRequest::LOAD_ANONYMOUS) {
-      return RequestCredentials::Omit;
-    } else {
-      bool includeCrossOrigin;
-      nsCOMPtr<nsIHttpChannelInternal> internalChannel = do_QueryInterface(aChannel);
-
-      internalChannel->GetCorsIncludeCredentials(&includeCrossOrigin);
-      if (includeCrossOrigin) {
-        return RequestCredentials::Include;
-      }
-    }
-    return RequestCredentials::Same_origin;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(loadInfo->GetSecurityMode() != nsILoadInfo::SEC_NORMAL);
 
   uint32_t cookiePolicy = loadInfo->GetCookiePolicy();
 

@@ -9,8 +9,8 @@ include protocol PContent;
 namespace mozilla {
 namespace dom {
 
-/* This protocol bridges async access to the database thread running on the parent process
- * and caches running on the child process.
+/* This protocol bridges async access to the database thread running on the
+ * parent process and caches running on the child process.
  */
 nested(upto inside_cpow) sync protocol PStorage
 {
@@ -19,14 +19,20 @@ nested(upto inside_cpow) sync protocol PStorage
 parent:
   async __delete__();
 
-  nested(inside_cpow) sync Preload(nsCString originSuffix, nsCString originNoSuffix, uint32_t alreadyLoadedCount)
+  nested(inside_cpow) sync Preload(nsCString originSuffix,
+                                   nsCString originNoSuffix,
+                                   uint32_t alreadyLoadedCount)
     returns (nsString[] keys, nsString[] values, nsresult rv);
 
-  async AsyncPreload(nsCString originSuffix, nsCString originNoSuffix, bool priority);
+  async AsyncPreload(nsCString originSuffix, nsCString originNoSuffix,
+                     bool priority);
   async AsyncGetUsage(nsCString scope);
-  async AsyncAddItem(nsCString originSuffix, nsCString originNoSuffix, nsString key, nsString value);
-  async AsyncUpdateItem(nsCString originSuffix, nsCString originNoSuffix, nsString key, nsString value);
-  async AsyncRemoveItem(nsCString originSuffix, nsCString originNoSuffix, nsString key);
+  async AsyncAddItem(nsCString originSuffix, nsCString originNoSuffix,
+                     nsString key, nsString value);
+  async AsyncUpdateItem(nsCString originSuffix, nsCString originNoSuffix,
+                        nsString key, nsString value);
+  async AsyncRemoveItem(nsCString originSuffix, nsCString originNoSuffix,
+                        nsString key);
   async AsyncClear(nsCString originSuffix, nsCString originNoSuffix);
   async AsyncFlush();
   
@@ -35,7 +41,8 @@ child:
                 nsString originAttributesPattern,
                 nsCString originScope);
   async OriginsHavingData(nsCString[] origins);
-  async LoadItem(nsCString originSuffix, nsCString originNoSuffix, nsString key, nsString value);
+  async LoadItem(nsCString originSuffix, nsCString originNoSuffix, nsString key,
+                 nsString value);
   async LoadDone(nsCString originSuffix, nsCString originNoSuffix, nsresult rv);
   async LoadUsage(nsCString scope, int64_t usage);
   async Error(nsresult rv);

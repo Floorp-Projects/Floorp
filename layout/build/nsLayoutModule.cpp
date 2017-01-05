@@ -75,7 +75,7 @@
 #include "nsJSProtocolHandler.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIControllerContext.h"
-#include "DOMStorageManager.h"
+#include "StorageManager.h"
 #include "nsJSON.h"
 #include "nsZipArchive.h"
 #include "mozilla/Attributes.h"

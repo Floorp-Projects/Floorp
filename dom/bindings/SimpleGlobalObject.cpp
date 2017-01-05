@@ -104,7 +104,13 @@ SimpleGlobalObject::Create(GlobalType globalType, JS::Handle<JS::Value> proto)
     JSContext* cx = jsapi.cx();
 
     JS::CompartmentOptions options;
-    options.creationOptions().setInvisibleToDebugger(true);
+    options.creationOptions()
+           .setInvisibleToDebugger(true)
+           // Put our SimpleGlobalObjects in the system zone, so we won't create
+           // lots of zones for what are probably very short-lived
+           // compartments.  This should help them be GCed quicker and take up
+           // less memory before they're GCed.
+          .setZone(JS::SystemZone);
 
     if (NS_IsMainThread()) {
       nsCOMPtr<nsIPrincipal> principal = nsNullPrincipal::Create();

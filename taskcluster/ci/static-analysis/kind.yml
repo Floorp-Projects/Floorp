@@ -16,10 +16,6 @@ job-defaults:
         symbol: S
         kind: build
         tier: 1
-    worker:
-        implementation: docker-worker
-        docker-image: {in-tree: desktop-build}
-        max-run-time: 36000
 
 jobs:
     macosx64-st-an/opt:
@@ -29,6 +25,10 @@ jobs:
         treeherder:
             platform: osx-10-7/opt
         worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            max-run-time: 36000
         run:
             using: mozharness
             actions: [get-secrets build generate-build-stats update]
@@ -49,6 +49,10 @@ jobs:
         treeherder:
             platform: linux64/opt
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+        worker:
+            implementation: docker-worker
+            docker-image: {in-tree: desktop-build}
+            max-run-time: 36000
         run:
             using: mozharness
             actions: [get-secrets build generate-build-stats]
@@ -60,3 +64,79 @@ jobs:
             tooltool-downloads: public
             need-xvfb: true
             keep-artifacts: false
+
+    win32-st-an/debug:
+        description: "Win32 Static Analysis Debug (clang-cl)"
+        index:
+            product: firefox
+            job-name: win32-st-an-debug
+        treeherder:
+            platform: windows2012-32/debug
+            symbol: tc(S)
+            tier: 2
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            implementation: generic-worker
+            max-run-time: 7200
+        run:
+            using: mozharness
+            script: mozharness/scripts/fx_desktop_build.py
+            config:
+                - builds/taskcluster_firefox_win32_clang_debug.py
+
+    win32-st-an/opt:
+        description: "Win32 Static Analysis Opt (clang-cl)"
+        index:
+            product: firefox
+            job-name: win32-st-an-opt
+        treeherder:
+            platform: windows2012-32/opt
+            symbol: tc(S)
+            tier: 2
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            implementation: generic-worker
+            max-run-time: 7200
+        run:
+            using: mozharness
+            script: mozharness/scripts/fx_desktop_build.py
+            config:
+                - builds/taskcluster_firefox_win32_clang.py
+
+    win64-st-an/debug:
+        description: "Win64 Static Analysis Debug (clang-cl)"
+        index:
+            product: firefox
+            job-name: win64-st-an-debug
+        treeherder:
+            platform: windows2012-64/debug
+            symbol: tc(S)
+            tier: 2
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            implementation: generic-worker
+            max-run-time: 7200
+        run:
+            using: mozharness
+            script: mozharness/scripts/fx_desktop_build.py
+            config:
+                - builds/taskcluster_firefox_win64_clang_debug.py
+
+    win64-st-an/opt:
+        description: "Win64 Static Analysis Opt (clang-cl)"
+        index:
+            product: firefox
+            job-name: win64-st-an-opt
+        treeherder:
+            platform: windows2012-64/opt
+            symbol: tc(S)
+            tier: 2
+        worker-type: aws-provisioner-v1/gecko-{level}-b-win2012
+        worker:
+            implementation: generic-worker
+            max-run-time: 7200
+        run:
+            using: mozharness
+            script: mozharness/scripts/fx_desktop_build.py
+            config:
+                - builds/taskcluster_firefox_win64_clang.py
