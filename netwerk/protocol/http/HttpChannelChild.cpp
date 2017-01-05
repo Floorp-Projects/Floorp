@@ -1715,7 +1715,7 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   nsresult rv;
   OptionalURIParams redirectURI;
 
-  uint32_t referrerPolicy = REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE;
+  uint32_t referrerPolicy = REFERRER_POLICY_UNSET;
   OptionalURIParams referrerURI;
   SerializeURI(nullptr, referrerURI);
 

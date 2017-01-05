@@ -80,6 +80,10 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
+#define DEFAULT_USER_CONTROL_RP 3
+
+static uint32_t sUserControlRp = DEFAULT_USER_CONTROL_RP;
+
 nsresult /*NS_NewChannelWithNodeAndTriggeringPrincipal */
 NS_NewChannelWithTriggeringPrincipal(nsIChannel           **outChannel,
                                      nsIURI                *aUri,
@@ -2368,6 +2372,30 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
              "loadInfo are not the same!");
 
   return NS_OK;
+}
+
+uint32_t
+NS_GetDefaultReferrerPolicy()
+{
+  static bool preferencesInitialized = false;
+
+  if (!preferencesInitialized) {
+    mozilla::Preferences::AddUintVarCache(&sUserControlRp,
+                                          "network.http.referer.userControlPolicy",
+                                          DEFAULT_USER_CONTROL_RP);
+    preferencesInitialized = true;
+  }
+
+  switch (sUserControlRp) {
+    case 0:
+      return nsIHttpChannel::REFERRER_POLICY_NO_REFERRER;
+    case 1:
+      return nsIHttpChannel::REFERRER_POLICY_SAME_ORIGIN;
+    case 2:
+      return nsIHttpChannel::REFERRER_POLICY_STRICT_ORIGIN_WHEN_XORIGIN;
+  }
+
+  return nsIHttpChannel::REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE;
 }
 
 namespace mozilla {
