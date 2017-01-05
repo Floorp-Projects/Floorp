@@ -317,7 +317,7 @@ static void* SignalSender(void* arg) {
 
     if (!SamplerRegistry::sampler->IsPaused()) {
       ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-      std::vector<ThreadInfo*> threads =
+      const std::vector<ThreadInfo*>& threads =
         SamplerRegistry::sampler->GetRegisteredThreads();
 
       bool isFirstProfiledThread = true;

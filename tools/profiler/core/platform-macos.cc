@@ -211,7 +211,7 @@ class SamplerThread : public Thread {
       SamplerRegistry::sampler->DeleteExpiredMarkers();
       if (!SamplerRegistry::sampler->IsPaused()) {
         ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-        std::vector<ThreadInfo*> threads =
+        const std::vector<ThreadInfo*>& threads =
           SamplerRegistry::sampler->GetRegisteredThreads();
         bool isFirstProfiledThread = true;
         for (uint32_t i = 0; i < threads.size(); i++) {

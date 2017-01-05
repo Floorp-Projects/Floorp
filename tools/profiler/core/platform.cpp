@@ -878,7 +878,7 @@ void mozilla_sampler_start(int aProfileEntries, double aInterval,
   t->Start();
   if (t->ProfileJS() || t->InPrivacyMode()) {
       ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-      std::vector<ThreadInfo*> threads = t->GetRegisteredThreads();
+      const std::vector<ThreadInfo*>& threads = t->GetRegisteredThreads();
 
       for (uint32_t i = 0; i < threads.size(); i++) {
         ThreadInfo* info = threads[i];

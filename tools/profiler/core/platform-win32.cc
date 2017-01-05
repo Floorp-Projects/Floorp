@@ -129,7 +129,7 @@ class SamplerThread : public Thread {
 
       if (!sampler_->IsPaused()) {
         ::MutexAutoLock lock(*Sampler::sRegisteredThreadsMutex);
-        std::vector<ThreadInfo*> threads =
+        const std::vector<ThreadInfo*>& threads =
           sampler_->GetRegisteredThreads();
         bool isFirstProfiledThread = true;
         for (uint32_t i = 0; i < threads.size(); i++) {
