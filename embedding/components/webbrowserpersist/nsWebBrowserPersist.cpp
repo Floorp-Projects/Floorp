@@ -630,7 +630,7 @@ nsWebBrowserPersist::SerializeNextFile()
             // The Referrer Policy doesn't matter here since the referrer is
             // nullptr.
             rv = SaveURIInternal(uri, nullptr, nullptr,
-                                 mozilla::net::RP_Default, nullptr, nullptr,
+                                 mozilla::net::RP_Unset, nullptr, nullptr,
                                  fileAsURI, true, mIsPrivate);
             // If SaveURIInternal fails, then it will have called EndDownload,
             // which means that |data| is no longer valid memory. We MUST bail.

@@ -69,7 +69,7 @@ RemoteWebNavigation.prototype = {
   },
   loadURI(aURI, aLoadFlags, aReferrer, aPostData, aHeaders) {
     this.loadURIWithOptions(aURI, aLoadFlags, aReferrer,
-                            Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+                            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                             aPostData, aHeaders, null);
   },
   loadURIWithOptions(aURI, aLoadFlags, aReferrer, aReferrerPolicy,

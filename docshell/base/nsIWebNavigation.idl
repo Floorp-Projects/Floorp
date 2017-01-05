@@ -264,7 +264,7 @@ interface nsIWebNavigation : nsISupports
    *        URI will be inferred internally.
    * @param aReferrerPolicy
    *        One of the REFERRER_POLICY_* constants from nsIHttpChannel.
-   *        Normal case is REFERRER_POLICY_DEFAULT.
+   *        Normal case is REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE.
    * @param aPostData
    *        If the URI corresponds to a HTTP request, then this stream is
    *        appended directly to the HTTP request headers.  It may be prefixed

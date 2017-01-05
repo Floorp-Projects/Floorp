@@ -16,7 +16,7 @@ nsDocShellLoadInfo::nsDocShellLoadInfo()
   , mInheritPrincipal(false)
   , mPrincipalIsExplicit(false)
   , mSendReferrer(true)
-  , mReferrerPolicy(mozilla::net::RP_Default)
+  , mReferrerPolicy(mozilla::net::RP_Unset)
   , mLoadType(nsIDocShellLoadInfo::loadNormal)
   , mIsSrcdocLoad(false)
 {
