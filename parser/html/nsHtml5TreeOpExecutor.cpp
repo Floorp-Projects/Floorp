@@ -207,9 +207,9 @@ nsHtml5TreeOpExecutor::SetParser(nsParserBase* aParser)
 }
 
 void
-nsHtml5TreeOpExecutor::FlushPendingNotifications(mozFlushType aType)
+nsHtml5TreeOpExecutor::FlushPendingNotifications(FlushType aType)
 {
-  if (aType >= Flush_InterruptibleLayout) {
+  if (aType >= FlushType::InterruptibleLayout) {
     // Bug 577508 / 253951
     nsContentSink::StartLayout(true);
   }

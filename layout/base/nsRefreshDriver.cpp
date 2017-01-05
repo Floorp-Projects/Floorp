@@ -1139,7 +1139,7 @@ nsRefreshDriver::~nsRefreshDriver()
              "sRefreshDriverCount!");
 
   if (mRootRefresh) {
-    mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+    mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
     mRootRefresh = nullptr;
   }
   for (nsIPresShell* shell : mPresShellsToInvalidateIfHidden) {
@@ -1205,7 +1205,7 @@ nsRefreshDriver::MostRecentRefreshEpochTime() const
 
 bool
 nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
-                                    mozFlushType aFlushType)
+                                    FlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
   bool success = array.AppendElement(aObserver) != nullptr;
@@ -1215,7 +1215,7 @@ nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
 
 bool
 nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
-                                       mozFlushType aFlushType)
+                                       FlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
   return array.RemoveElement(aObserver);
@@ -1456,14 +1456,14 @@ nsRefreshDriver::ImageRequestCount() const
 }
 
 nsRefreshDriver::ObserverArray&
-nsRefreshDriver::ArrayFor(mozFlushType aFlushType)
+nsRefreshDriver::ArrayFor(FlushType aFlushType)
 {
   switch (aFlushType) {
-    case Flush_Style:
+    case FlushType::Style:
       return mObservers[0];
-    case Flush_Layout:
+    case FlushType::Layout:
       return mObservers[1];
-    case Flush_Display:
+    case FlushType::Display:
       return mObservers[2];
     default:
       MOZ_CRASH("We don't track refresh observers for this flush type");
@@ -1754,7 +1754,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   }
   mMostRecentTick = aNowTime;
   if (mRootRefresh) {
-    mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+    mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
     mRootRefresh = nullptr;
   }
   mSkippedPaints = false;
@@ -1809,7 +1809,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     }
 
     if (i == 0) {
-      // This is the Flush_Style case.
+      // This is the FlushType::Style case.
 
       DispatchAnimationEvents();
       DispatchPendingEvents();
@@ -1838,7 +1838,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
           RestyleManagerHandle restyleManager =
             shell->GetPresContext()->RestyleManager();
           restyleManager->SetObservingRefreshDriver(false);
-          shell->FlushPendingNotifications(ChangesToFlush(Flush_Style, false));
+          shell->FlushPendingNotifications(ChangesToFlush(FlushType::Style, false));
           // Inform the FontFaceSet that we ticked, so that it can resolve its
           // ready promise if it needs to (though it might still be waiting on
           // a layout flush).
@@ -1855,7 +1855,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         }
       }
     } else if  (i == 1) {
-      // This is the Flush_Layout case.
+      // This is the FlushType::Layout case.
       bool tracingLayoutFlush = false;
       AutoTArray<nsIPresShell*, 16> observers;
       observers.AppendElements(mLayoutFlushObservers);
@@ -1877,9 +1877,9 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         mLayoutFlushObservers.RemoveElement(shell);
         shell->mReflowScheduled = false;
         shell->mSuppressInterruptibleReflows = false;
-        mozFlushType flushType = HasPendingAnimations(shell)
-                               ? Flush_Layout
-                               : Flush_InterruptibleLayout;
+        FlushType flushType = HasPendingAnimations(shell)
+                               ? FlushType::Layout
+                               : FlushType::InterruptibleLayout;
         shell->FlushPendingNotifications(ChangesToFlush(flushType, false));
         // Inform the FontFaceSet that we ticked, so that it can resolve its
         // ready promise if it needs to.
@@ -2174,7 +2174,7 @@ nsRefreshDriver::NotifyTransactionCompleted(uint64_t aTransactionId)
 void
 nsRefreshDriver::WillRefresh(mozilla::TimeStamp aTime)
 {
-  mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+  mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
   mRootRefresh = nullptr;
   if (mSkippedPaints) {
     DoRefresh();
@@ -2211,9 +2211,9 @@ nsRefreshDriver::IsWaitingForPaint(mozilla::TimeStamp aTime)
       if (rootRefresh->IsWaitingForPaint(aTime)) {
         if (mRootRefresh != rootRefresh) {
           if (mRootRefresh) {
-            mRootRefresh->RemoveRefreshObserver(this, Flush_Style);
+            mRootRefresh->RemoveRefreshObserver(this, FlushType::Style);
           }
-          rootRefresh->AddRefreshObserver(this, Flush_Style);
+          rootRefresh->AddRefreshObserver(this, FlushType::Style);
           mRootRefresh = rootRefresh;
         }
         mSkippedPaints = true;
@@ -2266,7 +2266,7 @@ nsRefreshDriver::DoRefresh()
 #ifdef DEBUG
 bool
 nsRefreshDriver::IsRefreshObserver(nsARefreshObserver* aObserver,
-                                   mozFlushType aFlushType)
+                                   FlushType aFlushType)
 {
   ObserverArray& array = ArrayFor(aFlushType);
   return array.Contains(aObserver);

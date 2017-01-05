@@ -69,7 +69,7 @@ public:
   NS_IMETHOD WillInterrupt(void) override;
   NS_IMETHOD WillResume(void) override;
   NS_IMETHOD SetParser(nsParserBase* aParser) override;
-  virtual void FlushPendingNotifications(mozFlushType aType) override;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType) override;
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
   virtual nsISupports *GetTarget() override;
   virtual bool IsScriptExecuting() override;

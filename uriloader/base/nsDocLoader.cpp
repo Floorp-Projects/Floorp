@@ -670,13 +670,13 @@ void nsDocLoader::DocLoaderIsEmpty(bool aFlushLayout)
         // We start loads from style resolution, so we need to flush out style
         // no matter what.  If we have user fonts, we also need to flush layout,
         // since the reflow is what starts font loads.
-        mozFlushType flushType = Flush_Style;
+        mozilla::FlushType flushType = mozilla::FlushType::Style;
         nsIPresShell* shell = doc->GetShell();
         if (shell) {
           // Be safe in case this presshell is in teardown now
           nsPresContext* presContext = shell->GetPresContext();
           if (presContext && presContext->GetUserFontSet()) {
-            flushType = Flush_Layout;
+            flushType = mozilla::FlushType::Layout;
           }
         }
         mDontFlushLayout = mIsFlushingLayout = true;

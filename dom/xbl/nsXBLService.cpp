@@ -319,7 +319,7 @@ nsXBLStreamListener::HandleEvent(nsIDOMEvent* aEvent)
       nsXBLBindingRequest* req = mBindingRequests.ElementAt(0);
       nsIDocument* document = req->mBoundElement->GetUncomposedDoc();
       if (document)
-        document->FlushPendingNotifications(Flush_ContentAndNotify);
+        document->FlushPendingNotifications(FlushType::ContentAndNotify);
     }
 
     // Remove ourselves from the set of pending docs.

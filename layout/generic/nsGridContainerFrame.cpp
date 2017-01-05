@@ -7080,7 +7080,7 @@ nsGridContainerFrame::GetGridFrameWithComputedInfo(nsIFrame* aFrame)
       shell->FrameNeedsReflow(gridFrame,
                               nsIPresShell::eResize,
                               NS_FRAME_IS_DIRTY);
-      shell->FlushPendingNotifications(Flush_Layout);
+      shell->FlushPendingNotifications(FlushType::Layout);
 
       // Since the reflow may have side effects, get the grid frame again.
       gridFrame = GetGridContainerFrame(aFrame);
