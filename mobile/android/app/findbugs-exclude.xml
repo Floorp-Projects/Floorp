@@ -4,11 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <FindBugsFilter>
 
-  <!-- Bug 1315982 -->
-  <Match>
-    <Bug pattern="DE_MIGHT_IGNORE" />
-  </Match>
-
   <!-- Bug 1316008 -->
   <Match>
     <Bug pattern="DM_DEFAULT_ENCODING" />
@@ -46,6 +41,13 @@
   </Match>
     <Match>
     <Bug pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL" />
+  </Match>
+
+  <!-- We explicitly want to swallow exceptions in releaseProviders() (Bug 1315982) -->
+  <Match>
+    <Class name="org.mozilla.gecko.sync.repositories.android.FennecTabsRepository$FennecTabsRepositorySession" />
+    <Method name="releaseProviders" />
+    <Bug pattern="DE_MIGHT_IGNORE" />
   </Match>
 
   <!-- Ignore false positive in SerialRecordConsumer (Bug 1316011) -->
