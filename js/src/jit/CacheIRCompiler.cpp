@@ -41,6 +41,8 @@ CacheRegisterAllocator::useValueRegister(MacroAssembler& masm, ValOperandId op)
       case OperandLocation::PayloadReg: {
         ValueOperand reg = allocateValueRegister(masm);
         masm.tagValue(loc.payloadType(), loc.payloadReg(), reg);
+        MOZ_ASSERT(!currentOpRegs_.has(loc.payloadReg()), "Payload register shouldn't be in use");
+        availableRegs_.add(loc.payloadReg());
         loc.setValueReg(reg);
         return reg;
       }
