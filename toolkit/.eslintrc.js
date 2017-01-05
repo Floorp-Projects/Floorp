@@ -171,6 +171,9 @@ module.exports = {
     // No unreachable statements
     "no-unreachable": "error",
 
+    // Disallow control flow statements in finally blocks
+    "no-unsafe-finally": "error",
+
     // Disallow negating the left operand of relational operators
     "no-unsafe-negation": "error",
 
