@@ -3,7 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'editor.js',
     'preview-panel.js',
+    'properties-view.js',
     'security-panel.js',
     'timings-panel.js',
 )
