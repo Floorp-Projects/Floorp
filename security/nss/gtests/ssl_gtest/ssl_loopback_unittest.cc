@@ -218,6 +218,17 @@ TEST_F(TlsConnectStreamTls13, NegotiateShortHeaders) {
   Connect();
 }
 
+TEST_F(TlsConnectStreamTls13, Tls13FailedWriteSecondFlight) {
+  EnsureTlsSetup();
+  client_->StartConnect();
+  server_->StartConnect();
+  client_->Handshake();
+  server_->Handshake();  // Send first flight.
+  client_->adapter()->CloseWrites();
+  client_->Handshake();  // This will get an error, but shouldn't crash.
+  client_->CheckErrorCode(SSL_ERROR_SOCKET_WRITE_FAILURE);
+}
+
 INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
                         ::testing::Combine(TlsConnectTestBase::kTlsModesStream,
                                            TlsConnectTestBase::kTlsVAll));
