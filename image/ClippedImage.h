@@ -53,8 +53,7 @@ public:
                                uint32_t aWhichFrame,
                                gfx::SamplingFilter aSamplingFilter,
                                const Maybe<SVGImageContext>& aSVGContext,
-                               uint32_t aFlags,
-                               float aOpacity) override;
+                               uint32_t aFlags) override;
   NS_IMETHOD RequestDiscard() override;
   NS_IMETHOD_(Orientation) GetOrientation() override;
   NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect)
@@ -75,8 +74,7 @@ private:
     GetFrameInternal(const nsIntSize& aSize,
                      const Maybe<SVGImageContext>& aSVGContext,
                      uint32_t aWhichFrame,
-                     uint32_t aFlags,
-                     float aOpacity);
+                     uint32_t aFlags);
   bool ShouldClip();
   DrawResult DrawSingleTile(gfxContext* aContext,
                             const nsIntSize& aSize,
@@ -84,8 +82,7 @@ private:
                             uint32_t aWhichFrame,
                             gfx::SamplingFilter aSamplingFilter,
                             const Maybe<SVGImageContext>& aSVGContext,
-                            uint32_t aFlags,
-                            float aOpacity);
+                            uint32_t aFlags);
 
   // If we are forced to draw a temporary surface, we cache it here.
   UniquePtr<ClippedImageCachedSurface> mCachedSurface;

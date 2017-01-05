@@ -257,8 +257,7 @@ public:
   void SetRawAccessOnly();
 
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
-            SamplingFilter aSamplingFilter, uint32_t aImageFlags,
-            float aOpacity);
+            SamplingFilter aSamplingFilter, uint32_t aImageFlags);
 
   nsresult ImageUpdated(const nsIntRect& aUpdateRect);
 

@@ -1778,14 +1778,12 @@ nsCSSRendering::PaintBGParams::ForAllLayers(nsPresContext& aPresCtx,
                                             const nsRect& aDirtyRect,
                                             const nsRect& aBorderArea,
                                             nsIFrame *aFrame,
-                                            uint32_t aPaintFlags,
-                                            float aOpacity)
+                                            uint32_t aPaintFlags)
 {
   MOZ_ASSERT(aFrame);
 
-  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea,
-                       aFrame, aPaintFlags, -1, CompositionOp::OP_OVER,
-                       aOpacity);
+  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea, aFrame,
+    aPaintFlags, -1, CompositionOp::OP_OVER);
 
   return result;
 }
@@ -1799,14 +1797,12 @@ nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
                                               nsIFrame *aFrame,
                                               uint32_t aPaintFlags,
                                               int32_t aLayer,
-                                              CompositionOp aCompositionOp,
-                                              float aOpacity)
+                                              CompositionOp aCompositionOp)
 {
   MOZ_ASSERT(aFrame && (aLayer != -1));
 
-  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea,
-                       aFrame, aPaintFlags, aLayer, aCompositionOp,
-                       aOpacity);
+  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea, aFrame,
+    aPaintFlags, aLayer, aCompositionOp);
 
   return result;
 }
@@ -3457,7 +3453,7 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
                                            state.mDestArea, state.mFillArea,
                                            state.mAnchor + paintBorderArea.TopLeft(),
                                            clipState.mDirtyRect,
-                                           state.mRepeatSize, aParams.opacity);
+                                           state.mRepeatSize);
 
           if (co != CompositionOp::OP_OVER) {
             ctx->SetOp(CompositionOp::OP_OVER);
@@ -5649,8 +5645,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       const nsRect&        aFill,
                       const nsPoint&       aAnchor,
                       const nsSize&        aRepeatSize,
-                      const CSSIntRect&    aSrc,
-                      float                aOpacity)
+                      const CSSIntRect&    aSrc)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5701,7 +5696,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                                            aDest, aFill, aRepeatSize,
                                            aAnchor, aDirtyRect,
                                            ConvertImageRendererToDrawFlags(mFlags),
-                                           mExtendMode, aOpacity);
+                                           mExtendMode);
       break;
     }
     case eStyleImageType_Gradient:
@@ -5725,8 +5720,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
         nsLayoutUtils::DrawImage(*ctx,
                                  aPresContext, image,
                                  samplingFilter, aDest, aFill, aAnchor, aDirtyRect,
-                                 ConvertImageRendererToDrawFlags(mFlags),
-                                 aOpacity);
+                                 ConvertImageRendererToDrawFlags(mFlags));
       break;
     }
     case eStyleImageType_Null:
@@ -5798,8 +5792,7 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
                            const nsRect&        aFill,
                            const nsPoint&       aAnchor,
                            const nsRect&        aDirty,
-                           const nsSize&        aRepeatSize,
-                           float                aOpacity)
+                           const nsSize&        aRepeatSize)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5814,8 +5807,7 @@ nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
               aDirty, aDest, aFill, aAnchor, aRepeatSize,
               CSSIntRect(0, 0,
                          nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                         nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
-              aOpacity);
+                         nsPresContext::AppUnitsToIntCSSPixels(mSize.height)));
 }
 
 /**
@@ -6008,7 +6000,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                               tile, fillRect, repeatSize,
                                               tile.TopLeft(), aDirtyRect,
                                               drawFlags,
-                                              ExtendMode::CLAMP, 1.0);
+                                              ExtendMode::CLAMP);
   }
 
   nsSize repeatSize(aFill.Size());

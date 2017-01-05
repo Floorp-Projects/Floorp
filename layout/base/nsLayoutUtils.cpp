@@ -6462,8 +6462,7 @@ DrawImageInternal(gfxContext&            aContext,
                   const nsRect&          aDirty,
                   const SVGImageContext* aSVGContext,
                   uint32_t               aImageFlags,
-                  ExtendMode             aExtendMode = ExtendMode::CLAMP,
-                  float                  aOpacity = 1.0)
+                  ExtendMode             aExtendMode = ExtendMode::CLAMP)
 {
   DrawResult result = DrawResult::SUCCESS;
 
@@ -6504,7 +6503,7 @@ DrawImageInternal(gfxContext&            aContext,
 
     result = aImage->Draw(destCtx, params.size, params.region,
                           imgIContainer::FRAME_CURRENT, aSamplingFilter,
-                          svgContext, aImageFlags, aOpacity);
+                          svgContext, aImageFlags);
 
   }
 
@@ -6676,8 +6675,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    const nsPoint&      aAnchor,
                                    const nsRect&       aDirty,
                                    uint32_t            aImageFlags,
-                                   ExtendMode          aExtendMode,
-                                   float               aOpacity)
+                                   ExtendMode          aExtendMode)
 {
   PROFILER_LABEL("layout", "nsLayoutUtils::DrawBackgroundImage",
                  js::ProfileEntry::Category::GRAPHICS);
@@ -6688,8 +6686,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
   if (aRepeatSize.width == aDest.width && aRepeatSize.height == aDest.height) {
     return DrawImageInternal(aContext, aPresContext, aImage,
                              aSamplingFilter, aDest, aFill, aAnchor,
-                             aDirty, &svgContext, aImageFlags, aExtendMode,
-                             aOpacity);
+                             aDirty, &svgContext, aImageFlags, aExtendMode);
   }
 
   nsPoint firstTilePos = aDest.TopLeft() +
@@ -6700,8 +6697,7 @@ nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
       nsRect dest(i, j, aDest.width, aDest.height);
       DrawResult result = DrawImageInternal(aContext, aPresContext, aImage, aSamplingFilter,
                                             dest, dest, aAnchor, aDirty, &svgContext,
-                                            aImageFlags, ExtendMode::CLAMP,
-                                            aOpacity);
+                                            aImageFlags, ExtendMode::CLAMP);
       if (result != DrawResult::SUCCESS) {
         return result;
       }
@@ -6720,13 +6716,11 @@ nsLayoutUtils::DrawImage(gfxContext&         aContext,
                          const nsRect&       aFill,
                          const nsPoint&      aAnchor,
                          const nsRect&       aDirty,
-                         uint32_t            aImageFlags,
-                         float               aOpacity)
+                         uint32_t            aImageFlags)
 {
   return DrawImageInternal(aContext, aPresContext, aImage,
                            aSamplingFilter, aDest, aFill, aAnchor,
-                           aDirty, nullptr, aImageFlags, ExtendMode::CLAMP,
-                           aOpacity);
+                           aDirty, nullptr, aImageFlags);
 }
 
 /* static */ nsRect
