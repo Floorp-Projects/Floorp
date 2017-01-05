@@ -452,6 +452,9 @@ add_task(function* test_telemetryEnabledUnexpectedValue() {
   yield TelemetryController.testReset();
   Assert.equal(Telemetry.canRecordExtended, false,
                "False must disable Telemetry recording.");
+
+  // Restore the state of the pref.
+  Preferences.set(PREF_ENABLED, true);
 });
 
 add_task(function* test_telemetryCleanFHRDatabase() {
@@ -500,6 +503,15 @@ add_task(function* test_telemetryCleanFHRDatabase() {
   for (let dbFilePath of DEFAULT_DB_PATHS) {
     Assert.ok(!(yield OS.File.exists(dbFilePath)), "The DB must not be on the disk anymore: " + dbFilePath);
   }
+});
+
+// Testing shutdown and checking that pings sent afterwards are rejected.
+add_task(function* test_pingRejection() {
+  yield TelemetryController.testReset();
+  yield TelemetryController.testShutdown();
+  yield sendPing(false, false)
+    .then(() => Assert.ok(false, "Pings submitted after shutdown must be rejected."),
+          () => Assert.ok(true, "Ping submitted after shutdown correctly rejected."));
 });
 
 add_task(function* stopServer() {
