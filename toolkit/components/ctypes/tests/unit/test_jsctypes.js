@@ -2493,6 +2493,7 @@ function run_function_tests(library) {
   do_check_eq(ptr("function pointers rule!"), 23);
 
   // Test that we can call via call and apply
+  /* eslint-disable no-useless-call */
   do_check_eq(ptr.call(null, "function pointers rule!"), 23);
   do_check_eq(ptr.apply(null, ["function pointers rule!"]), 23);
 
@@ -2501,6 +2502,7 @@ function run_function_tests(library) {
   let p = p_t();
   do_check_throws(function() { p.call(null, "woo"); }, TypeError);
   do_check_throws(function() { p.apply(null, ["woo"]); }, TypeError);
+  /* eslint-enable no-useless-call */
 
   // Test the function pointers still behave as regular pointers
   do_check_false(ptr.isNull(), "PointerType methods should still be valid");

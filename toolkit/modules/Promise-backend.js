@@ -382,7 +382,7 @@ this.Promise = function Promise(aExecutor) {
                             .bind(PromiseWalker, this, STATUS_REJECTED);
 
   try {
-    aExecutor.call(undefined, resolve, reject);
+    aExecutor(resolve, reject);
   } catch (ex) {
     reject(ex);
   }

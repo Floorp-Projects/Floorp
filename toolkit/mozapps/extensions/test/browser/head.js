@@ -1418,7 +1418,7 @@ MockInstall.prototype = {
     for (let listener of this.testListeners) {
       try {
         if (aMethod in listener)
-          if (listener[aMethod].call(listener, this, this.addon) === false)
+          if (listener[aMethod](this, this.addon) === false)
             result = false;
       } catch (e) {
         ok(false, "Test listener threw exception: " + e);
