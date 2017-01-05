@@ -1521,8 +1521,8 @@ var TelemetryStorageImpl = {
             Telemetry.getHistogramById("TELEMETRY_DISCARDED_PENDING_PINGS_SIZE_MB")
                      .add(Math.floor(info.size / 1024 / 1024));
             Telemetry.getHistogramById("TELEMETRY_PING_SIZE_EXCEEDED_PENDING").add();
-            continue;
           }
+          continue;
         }
 
         let id = OS.Path.basename(file.path);
