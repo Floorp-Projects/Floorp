@@ -43,14 +43,14 @@ extern  {
 
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: PipelineId,
-    pub root_dl_builder: webrender_traits::DisplayListBuilder,
+    pub dl_builder: webrender_traits::DisplayListBuilder,
 }
 
 impl WebRenderFrameBuilder {
     pub fn new(root_pipeline_id: PipelineId) -> WebRenderFrameBuilder {
         WebRenderFrameBuilder {
             root_pipeline_id: root_pipeline_id,
-            root_dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id),
+            dl_builder: webrender_traits::DisplayListBuilder::new(root_pipeline_id),
         }
     }
 }
@@ -243,7 +243,7 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
 pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
     assert!( unsafe { is_in_compositor_thread() });
     state.size = (width, height);
-    state.frame_builder.root_dl_builder.list.clear();
+    state.frame_builder.dl_builder.list.clear();
     state.z_index = 0;
 
     if state.pipeline_id == window.root_pipeline_id {
@@ -252,7 +252,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
 
     let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0), LayoutSize::new(width as f32, height as f32));
 
-    state.frame_builder.root_dl_builder.push_stacking_context(
+    state.frame_builder.dl_builder.push_stacking_context(
         webrender_traits::ScrollPolicy::Scrollable,
         bounds,
         ClipRegion::simple(&bounds),
@@ -273,7 +273,7 @@ pub extern fn wr_push_dl_builder(state:&mut WrState, bounds: WrRect, overflow: W
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
 
-    state.frame_builder.root_dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
+    state.frame_builder.dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
                                   ClipRegion::simple(&overflow),
                                   state.z_index,
@@ -289,7 +289,7 @@ pub extern fn wr_pop_dl_builder(state: &mut WrState)
 {
     assert!( unsafe { is_in_compositor_thread() });
     // 
-    state.frame_builder.root_dl_builder.pop_stacking_context()
+    state.frame_builder.dl_builder.pop_stacking_context()
 }
 
 fn wait_for_epoch(window: &mut WrWindowState) {
@@ -352,15 +352,15 @@ pub extern fn wr_dp_end(window: &mut WrWindowState,
     if let Some(epoch) = window.pipeline_epoch_map.get_mut(&pipeline_id) {
         (*epoch).0 += 1;
 
-        state.frame_builder.root_dl_builder.pop_stacking_context();
+        state.frame_builder.dl_builder.pop_stacking_context();
 
         let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
 
-        //let (dl_builder, aux_builder) = fb.root_dl_builder.finalize();
+        //let (dl_builder, aux_builder) = fb.dl_builder.finalize();
         window.api.set_root_display_list(Some(root_background_color),
                                          *epoch,
                                          LayoutSize::new(width as f32, height as f32),
-                                         fb.root_dl_builder);
+                                         fb.dl_builder);
 
         return;
     }
@@ -402,9 +402,9 @@ pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
 #[no_mangle]
 pub extern fn wr_dp_push_rect(state: &mut WrState, rect: WrRect, clip: WrRect, r: f32, g: f32, b: f32, a: f32) {
     assert!( unsafe { is_in_compositor_thread() });
-    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
 
-    state.frame_builder.root_dl_builder.push_rect(
+    state.frame_builder.dl_builder.push_rect(
                                     rect.to_rect(),
                                     clip_region,
                                     ColorF::new(r, g, b, a));
@@ -416,12 +416,12 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
                                 top_left_radius: WrLayoutSize, top_right_radius: WrLayoutSize,
                                 bottom_left_radius: WrLayoutSize, bottom_right_radius: WrLayoutSize) {
     assert!( unsafe { is_in_compositor_thread() });
-    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
     let radius = BorderRadius { top_left: top_left_radius.to_layout_size(),
                                 top_right: top_right_radius.to_layout_size(),
                                 bottom_left: bottom_left_radius.to_layout_size(),
                                 bottom_right: bottom_right_radius.to_layout_size() };
-    state.frame_builder.root_dl_builder.push_border(
+    state.frame_builder.dl_builder.push_border(
                                     rect.to_rect(),
                                     clip_region,
                                     left.to_border_side(),
@@ -435,12 +435,12 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
 pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
     assert!( unsafe { is_in_compositor_thread() });
 
-    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip.to_rect(),
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
                                                                      Vec::new(),
                                                                      None);
     let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
     window.pipeline_sync_list.push(pipeline_id);
-    state.frame_builder.root_dl_builder.push_iframe(rect.to_rect(),
+    state.frame_builder.dl_builder.push_iframe(rect.to_rect(),
                                                                    clip_region,
                                                                    pipeline_id);
 }
@@ -528,8 +528,8 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
     // convert from the C type to the Rust type
     let mask = unsafe { mask.as_ref().map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat}) };
 
-    let clip_region = state.frame_builder.root_dl_builder.new_clip_region(&clip, Vec::new(), mask);
-    state.frame_builder.root_dl_builder.push_image(
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip, Vec::new(), mask);
+    state.frame_builder.dl_builder.push_image(
         bounds,
         clip_region,
         bounds.size,
