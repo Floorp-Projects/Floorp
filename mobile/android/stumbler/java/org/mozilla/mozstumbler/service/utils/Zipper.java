@@ -33,7 +33,7 @@ public class Zipper {
         final ByteArrayInputStream bs = new ByteArrayInputStream(data);
         GZIPInputStream gstream = new GZIPInputStream(bs);
         try {
-            InputStreamReader reader = new InputStreamReader(gstream);
+            InputStreamReader reader = new InputStreamReader(gstream, StringUtils.UTF_8);
             BufferedReader in = new BufferedReader(reader);
             String read;
             while ((read = in.readLine()) != null) {

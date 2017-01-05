@@ -65,6 +65,11 @@ class PaintCounter;
 
 static const int kVisualWarningDuration = 150; // ms
 
+struct ImageCompositeNotificationInfo {
+  base::ProcessId mImageBridgeProcessId;
+  ImageCompositeNotification mNotification;
+};
+
 // An implementation of LayerManager that acts as a pair with ClientLayerManager
 // and is mirrored across IPDL. This gets managed/updated by LayerTransactionParent.
 class HostLayerManager : public LayerManager
@@ -126,7 +131,7 @@ public:
   // layer or texture updates against the old compositor.
   virtual void ChangeCompositor(Compositor* aNewCompositor) = 0;
 
-  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotification>* aNotifications)
+  void ExtractImageCompositeNotifications(nsTArray<ImageCompositeNotificationInfo>* aNotifications)
   {
     aNotifications->AppendElements(Move(mImageCompositeNotifications));
   }
@@ -163,7 +168,7 @@ public:
 
 protected:
   bool mDebugOverlayWantsNextFrame;
-  nsTArray<ImageCompositeNotification> mImageCompositeNotifications;
+  nsTArray<ImageCompositeNotificationInfo> mImageCompositeNotifications;
   // Testing property. If hardware composer is supported, this will return
   // true if the last frame was deemed 'too complicated' to be rendered.
   float mWarningLevel;
@@ -344,7 +349,8 @@ public:
 
   bool AsyncPanZoomEnabled() const override;
 
-  void AppendImageCompositeNotification(const ImageCompositeNotification& aNotification)
+public:
+  void AppendImageCompositeNotification(const ImageCompositeNotificationInfo& aNotification)
   {
     // Only send composite notifications when we're drawing to the screen,
     // because that's what they mean.
@@ -355,6 +361,8 @@ public:
       mImageCompositeNotifications.AppendElement(aNotification);
     }
   }
+
+public:
   virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override
   {
     return mCompositor->GetTextureFactoryIdentifier();

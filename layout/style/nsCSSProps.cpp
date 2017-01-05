@@ -206,7 +206,7 @@ nsCSSProps::AddRefTable(void)
     static bool prefObserversInited = false;
     if (!prefObserversInited) {
       prefObserversInited = true;
-      
+
       #define OBSERVE_PROP(pref_, id_)                                        \
         if (pref_[0]) {                                                       \
           Preferences::AddBoolVarCache(&gPropertyEnabled[id_],                \
@@ -1479,9 +1479,9 @@ const KTableEntry nsCSSProps::kFlexWrapKTable[] = {
 };
 
 const KTableEntry nsCSSProps::kHyphensKTable[] = {
-  { eCSSKeyword_none, NS_STYLE_HYPHENS_NONE },
-  { eCSSKeyword_manual, NS_STYLE_HYPHENS_MANUAL },
-  { eCSSKeyword_auto, NS_STYLE_HYPHENS_AUTO },
+  { eCSSKeyword_none, StyleHyphens::None },
+  { eCSSKeyword_manual, StyleHyphens::Manual },
+  { eCSSKeyword_auto, StyleHyphens::Auto },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 
@@ -2873,7 +2873,7 @@ static const nsCSSPropertyID gFlexFlowSubpropTable[] = {
 
 static const nsCSSPropertyID gGridTemplateSubpropTable[] = {
   eCSSProperty_grid_template_areas,
-  eCSSProperty_grid_template_rows, 
+  eCSSProperty_grid_template_rows,
   eCSSProperty_grid_template_columns,
   eCSSProperty_UNKNOWN
 };

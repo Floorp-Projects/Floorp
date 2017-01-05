@@ -140,7 +140,6 @@ ReportCrashIfDebug(const char* aStr)
     DWORD bytesWritten;
     BOOL ret = WriteFile(GetStdHandle(STD_ERROR_HANDLE), aStr,
                          strlen(aStr) + 1, &bytesWritten, nullptr);
-    ::__debugbreak();
 # elif defined(ANDROID)
     int ret = __android_log_write(ANDROID_LOG_FATAL, "MOZ_CRASH", aStr);
 # else

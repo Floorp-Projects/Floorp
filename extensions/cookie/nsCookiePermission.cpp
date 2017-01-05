@@ -9,7 +9,6 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsICookie2.h"
 #include "nsIServiceManager.h"
-#include "nsICookiePromptService.h"
 #include "nsICookieManager2.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"

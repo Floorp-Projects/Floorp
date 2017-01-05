@@ -162,6 +162,26 @@ public:
   void AssertTreeIsClean() {}
 #endif
 
+  /**
+   * Recompute our default computed styles.  This will eagerly create a new set
+   * of default computed style structs.
+   */
+  void RecomputeDefaultComputedStyles();
+
+  /**
+   * Resolve style for the given element, and return it as a
+   * ServoComputedValues, not an nsStyleContext.
+   */
+  already_AddRefed<ServoComputedValues>
+    ResolveServoStyle(dom::Element* aElement, ConsumeStyleBehavior aConsume);
+
+  /**
+   * Restyle with added declaration, for use in animations.
+   */
+  ServoComputedValuesStrong RestyleWithAddedDeclaration(
+    RawServoDeclarationBlock* aDeclarations,
+    const ServoComputedValues* aPreviousStyle);
+
 private:
   already_AddRefed<nsStyleContext> GetContext(already_AddRefed<ServoComputedValues>,
                                               nsStyleContext* aParentContext,

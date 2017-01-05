@@ -117,7 +117,7 @@ load 382208-1.xhtml
 load 382262-1.html
 load 382396-1.xhtml
 load 382745-1.xhtml
-asserts-if(stylo,1) load 383089-1.html # bug 1324663
+asserts-if(stylo,27) load 383089-1.html # bug 1324663
 load 385265-1.xhtml
 asserts-if(stylo,2) load 385295-1.xhtml # bug 1324660
 load 385344-1.html
@@ -540,7 +540,7 @@ asserts-if(stylo,8) load 851396-1.html # bug 1324671
 load 854263-1.html
 load 862185.html
 asserts-if(stylo,1) load 862947-1.html # bug 1324704
-asserts-if(stylo,7) load 863935.html # bug 1324663
+load 863935.html
 load 866547-1.html
 needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 asserts(0-5) load 876074-1.html # bug 876749

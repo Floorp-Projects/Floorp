@@ -107,6 +107,7 @@ add_task(function* () {
   yield BrowserTestUtils.closeWindow(privateWindow);
 });
 
+/* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",
