@@ -65,6 +65,49 @@ add_task(function* () {
   yield updateServerLoggingListener(hud);
 });
 
+add_task(function* () {
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/test-console-server-logging-backtrace.sjs";
+
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  // Set logging filter and wait till it's set on the backend
+  hud.setFilterState("serverlog", true);
+  yield updateServerLoggingListener(hud);
+
+  BrowserReloadSkipCache();
+  // Note that the test is also checking out the (printf like)
+  // formatters and encoding of UTF8 characters (see the one at the end).
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: "correct 1",
+      category: CATEGORY_SERVER,
+      severity: SEVERITY_ERROR,
+      source: {url: "/some/path/to/file.py", line: 33}
+    }, {
+      text: "correct 2",
+      category: CATEGORY_SERVER,
+      severity: SEVERITY_ERROR,
+      source: {url: "/some/path/to/file.py", line: 33}
+    }, {
+      text: "wrong 1",
+      category: CATEGORY_SERVER,
+      severity: SEVERITY_ERROR,
+      source: {url: "/some/path/to/file.py:33wrong"}
+    }, {
+      text: "wrong 2",
+      category: CATEGORY_SERVER,
+      severity: SEVERITY_ERROR,
+      source: {url: "/some/path/to/file.py"}
+    }],
+  });
+  // Clean up filter
+  hud.setFilterState("serverlog", false);
+  yield updateServerLoggingListener(hud);
+});
+
 function updateServerLoggingListener(hud) {
   let deferred = promise.defer();
   hud.ui._updateServerLoggingListener(response => {

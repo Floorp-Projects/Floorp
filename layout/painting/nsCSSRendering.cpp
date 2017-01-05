@@ -537,28 +537,29 @@ GetRadii(nsIFrame* aForFrame, const nsStyleBorder& aBorder,
 }
 
 static nsRect
-JoinBoxesForVerticalSlice(nsIFrame* aFrame, const nsRect& aBorderArea)
+JoinBoxesForBlockAxisSlice(nsIFrame* aFrame, const nsRect& aBorderArea)
 {
-  // Inflate vertically as if our continuations were laid out vertically
-  // adjacent. Note that we don't touch the width.
+  // Inflate the block-axis size as if our continuations were laid out
+  // adjacent in that axis.  Note that we don't touch the inline size.
   nsRect borderArea = aBorderArea;
-  nscoord h = 0;
+  nscoord bSize = 0;
+  auto wm = aFrame->GetWritingMode();
   nsIFrame* f = aFrame->GetNextContinuation();
   for (; f; f = f->GetNextContinuation()) {
     MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT),
                "anonymous ib-split block shouldn't have border/background");
-    h += f->GetRect().height;
+    bSize += f->BSize(wm);
   }
-  borderArea.height += h;
-  h = 0;
+  (wm.IsVertical() ? borderArea.width : borderArea.height) += bSize;
+  bSize = 0;
   f = aFrame->GetPrevContinuation();
   for (; f; f = f->GetPrevContinuation()) {
     MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT),
                "anonymous ib-split block shouldn't have border/background");
-    h += f->GetRect().height;
+    bSize += f->BSize(wm);
   }
-  borderArea.y -= h;
-  borderArea.height += h;
+  (wm.IsVertical() ? borderArea.x : borderArea.y) -= bSize;
+  (wm.IsVertical() ? borderArea.width : borderArea.height) += bSize;
   return borderArea;
 }
 
@@ -579,7 +580,7 @@ JoinBoxesForSlice(nsIFrame* aFrame, const nsRect& aBorderArea,
             : gInlineBGData->GetContinuousRect(aFrame)) +
       aBorderArea.TopLeft();
   }
-  return JoinBoxesForVerticalSlice(aFrame, aBorderArea);
+  return JoinBoxesForBlockAxisSlice(aFrame, aBorderArea);
 }
 
 static bool
@@ -870,7 +871,6 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                                                    aStyleBorder,
                                                    aSkipSides,
                                                    &needsClip);
-
   if (needsClip) {
     aDrawTarget.PushClipRect(
         NSRectToSnappedRect(aBorderArea,

@@ -50,7 +50,8 @@ NativeFontResourceMac::Create(uint8_t *aFontData, uint32_t aDataLength)
 }
 
 already_AddRefed<ScaledFont>
-NativeFontResourceMac::CreateScaledFont(uint32_t aIndex, Float aGlyphSize)
+NativeFontResourceMac::CreateScaledFont(uint32_t aIndex, Float aGlyphSize,
+                                        const uint8_t* aInstanceData, uint32_t aInstanceDataLength)
 {
   RefPtr<ScaledFontBase> scaledFont = new ScaledFontMac(mFontRef, aGlyphSize);
 

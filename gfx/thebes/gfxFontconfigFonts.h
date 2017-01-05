@@ -55,6 +55,8 @@ public:
                                       const uint8_t* aFontData,
                                       uint32_t aLength);
 
+    static FT_Library GetFTLibrary();
+
 private:
 
     virtual gfxFont *GetFontAt(int32_t i, uint32_t aCh = 0x20);
@@ -116,9 +118,6 @@ private:
                                nsIAtom *aLanguage,
                                nsTArray<nsString>& aGenericFamilies);
 
-
-    friend class gfxSystemFcFontEntry;
-    static FT_Library GetFTLibrary();
 };
 
 #endif /* GFX_FONTCONFIG_FONTS_H */

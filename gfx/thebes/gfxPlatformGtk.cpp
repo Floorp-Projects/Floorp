@@ -348,6 +348,16 @@ gfxPlatformGtk::MakePlatformFont(const nsAString& aFontName,
                                            aFontData, aLength);
 }
 
+FT_Library
+gfxPlatformGtk::GetFTLibrary()
+{
+    if (sUseFcFontList) {
+        return gfxFcPlatformFontList::GetFTLibrary();
+    }
+
+    return gfxPangoFontGroup::GetFTLibrary();
+}
+
 bool
 gfxPlatformGtk::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 {

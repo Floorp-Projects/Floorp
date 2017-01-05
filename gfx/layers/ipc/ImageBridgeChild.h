@@ -39,7 +39,6 @@ namespace layers {
 class AsyncCanvasRenderer;
 class ImageClient;
 class ImageContainer;
-class ImageContainerChild;
 class ImageBridgeParent;
 class CompositableClient;
 struct CompositableTransaction;
@@ -170,7 +169,7 @@ public:
   virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
 
   PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo,
-                                              PImageContainerChild* aChild, uint64_t* aID) override;
+                                              const uint64_t& aID) override;
   bool DeallocPCompositableChild(PCompositableChild* aActor) override;
 
   virtual PTextureChild*
@@ -184,11 +183,6 @@ public:
   bool
   DeallocPMediaSystemResourceManagerChild(PMediaSystemResourceManagerChild* aActor) override;
 
-  virtual PImageContainerChild*
-  AllocPImageContainerChild() override;
-  virtual bool
-  DeallocPImageContainerChild(PImageContainerChild* actor) override;
-
   virtual mozilla::ipc::IPCResult
   RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
@@ -198,18 +192,15 @@ public:
   // Create an ImageClient from any thread.
   RefPtr<ImageClient> CreateImageClient(
     CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
+    ImageContainer* aImageContainer);
 
   // Create an ImageClient from the ImageBridge thread.
   RefPtr<ImageClient> CreateImageClientNow(
     CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
+    ImageContainer* aImageContainer);
 
   already_AddRefed<CanvasClient> CreateCanvasClient(CanvasClient::CanvasClientType aType,
                                                     TextureFlags aFlag);
-  void ReleaseImageContainer(RefPtr<ImageContainerChild> aChild);
   void UpdateAsyncCanvasRenderer(AsyncCanvasRenderer* aClient);
   void UpdateImageClient(RefPtr<ImageClient> aClient, RefPtr<ImageContainer> aContainer);
   static void DispatchReleaseTextureClient(TextureClient* aClient);
@@ -243,8 +234,7 @@ private:
     SynchronousTask* aTask,
     RefPtr<ImageClient>* result,
     CompositableType aType,
-    ImageContainer* aImageContainer,
-    ImageContainerChild* aContainerChild);
+    ImageContainer* aImageContainer);
 
   void ReleaseTextureClientNow(TextureClient* aClient);
 
@@ -279,6 +269,8 @@ public:
                                          TextureClient* aClientOnWhite) override;
 
   void Destroy(CompositableChild* aCompositable) override;
+
+  void ForgetImageContainer(uint64_t aAsyncContainerID);
 
   /**
    * Hold TextureClient ref until end of usage on host side if TextureFlags::RECYCLE is set.
@@ -392,6 +384,12 @@ private:
    * It defer calling of TextureClient recycle callback.
    */
   nsDataHashtable<nsUint64HashKey, RefPtr<TextureClient> > mTexturesWaitingRecycled;
+
+  /**
+   * Mapping from async compositable IDs to image containers.
+   */
+  Mutex mContainerMapLock;
+  nsDataHashtable<nsUint64HashKey, ImageContainer*> mImageContainers;
 };
 
 } // namespace layers

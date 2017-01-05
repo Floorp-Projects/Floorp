@@ -13,7 +13,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsIInputStream.h"
-#define gfxToolkitPlatform gfxAndroidPlatform
 
 #include "nsXULAppAPI.h"
 #include <dirent.h>
@@ -85,7 +84,8 @@ public:
 
         NS_ASSERTION(!aFontEntry->mFilename.IsEmpty(),
                      "can't use AutoFTFace for fonts without a filename");
-        FT_Library ft = gfxToolkitPlatform::GetPlatform()->GetFTLibrary();
+        FT_Library ft = gfxPlatform::GetPlatform()->GetFTLibrary();
+        MOZ_ASSERT(ft);
 
         // A relative path (no initial "/") means this is a resource in
         // omnijar, not an installed font on the device.
@@ -256,7 +256,7 @@ FT2FontEntry::CreateFontEntry(const nsAString& aFontName,
     // eventually deleted.
     FT_Face face;
     FT_Error error =
-        FT_New_Memory_Face(gfxToolkitPlatform::GetPlatform()->GetFTLibrary(),
+        FT_New_Memory_Face(gfxPlatform::GetPlatform()->GetFTLibrary(),
                            aFontData, aLength, 0, &face);
     if (error != FT_Err_Ok) {
         free((void*)aFontData);
@@ -974,7 +974,7 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
         return;
     }
 
-    FT_Library ftLibrary = gfxAndroidPlatform::GetPlatform()->GetFTLibrary();
+    FT_Library ftLibrary = gfxPlatform::GetPlatform()->GetFTLibrary();
     FT_Face dummy;
     if (FT_Err_Ok == FT_New_Face(ftLibrary, aFileName.get(), -1, &dummy)) {
         LOG(("reading font info via FreeType for %s", aFileName.get()));
@@ -1126,7 +1126,7 @@ gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
         return;
     }
 
-    FT_Library ftLibrary = gfxAndroidPlatform::GetPlatform()->GetFTLibrary();
+    FT_Library ftLibrary = gfxPlatform::GetPlatform()->GetFTLibrary();
 
     FT_Face dummy;
     if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf.get(), bufSize, 0, &dummy)) {

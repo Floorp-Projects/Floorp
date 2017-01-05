@@ -10,7 +10,6 @@
 #include "ipc/IPCMessageUtils.h"        // for null_t
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/Effects.h"     // for TexturedEffect, Effect, etc
-#include "mozilla/layers/ImageContainerParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"     // for TexturedEffect, Effect, etc
 #include "nsAString.h"
 #include "nsDebug.h"                    // for NS_WARNING, NS_ASSERTION
@@ -29,7 +28,6 @@ class ISurfaceAllocator;
 
 ImageHost::ImageHost(const TextureInfo& aTextureInfo)
   : CompositableHost(aTextureInfo)
-  , mImageContainer(nullptr)
   , mLastFrameID(-1)
   , mLastProducerID(-1)
   , mBias(BIAS_NONE)
@@ -38,7 +36,6 @@ ImageHost::ImageHost(const TextureInfo& aTextureInfo)
 
 ImageHost::~ImageHost()
 {
-  SetImageContainer(nullptr);
 }
 
 void
@@ -349,12 +346,15 @@ ImageHost::Composite(LayerComposite* aLayer,
     }
 
     if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
-      if (mImageContainer) {
+      if (mAsyncRef) {
+        ImageCompositeNotificationInfo info;
+        info.mImageBridgeProcessId = mAsyncRef.mProcessId;
+        info.mNotification = ImageCompositeNotification(
+          mAsyncRef.mAsyncId,
+          img->mTimeStamp, GetCompositor()->GetCompositionTime(),
+          img->mFrameID, img->mProducerID);
         static_cast<LayerManagerComposite*>(aLayer->GetLayerManager())->
-            AppendImageCompositeNotification(ImageCompositeNotification(
-                mImageContainer, nullptr,
-                img->mTimeStamp, GetCompositor()->GetCompositionTime(),
-                img->mFrameID, img->mProducerID));
+            AppendImageCompositeNotification(info);
       }
       mLastFrameID = img->mFrameID;
       mLastProducerID = img->mProducerID;
@@ -576,18 +576,6 @@ ImageHost::GenEffect(const gfx::SamplingFilter aSamplingFilter)
                               aSamplingFilter,
                               isAlphaPremultiplied,
                               GetRenderState());
-}
-
-void
-ImageHost::SetImageContainer(ImageContainerParent* aImageContainer)
-{
-  if (mImageContainer) {
-    mImageContainer->mImageHosts.RemoveElement(this);
-  }
-  mImageContainer = aImageContainer;
-  if (mImageContainer) {
-    mImageContainer->mImageHosts.AppendElement(this);
-  }
 }
 
 } // namespace layers

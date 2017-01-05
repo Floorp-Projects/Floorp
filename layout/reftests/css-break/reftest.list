@@ -10,3 +10,4 @@ fuzzy-if(!Android,1,62) fuzzy-if(Android,8,6627) == box-decoration-break-first-l
 == box-decoration-break-with-bidi.html box-decoration-break-with-bidi-ref.html
 == box-decoration-break-bug-1235152.html box-decoration-break-bug-1235152-ref.html
 == box-decoration-break-bug-1249913.html box-decoration-break-bug-1249913-ref.html
+== vertical-wm-001.html vertical-wm-001-ref.html

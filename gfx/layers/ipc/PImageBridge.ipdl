@@ -6,7 +6,6 @@
 include LayersSurfaces;
 include LayersMessages;
 include protocol PCompositable;
-include protocol PImageContainer;
 include protocol PTexture;
 include ProtocolTypes;
 include protocol PMediaSystemResourceManager;
@@ -31,7 +30,6 @@ sync protocol PImageBridge
   manages PCompositable;
   manages PTexture;
   manages PMediaSystemResourceManager;
-  manages PImageContainer;
 
 child:
   async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
@@ -55,11 +53,9 @@ parent:
   // before sending closing the channel.
   sync WillClose();
 
-  sync PCompositable(TextureInfo aInfo,
-                     nullable PImageContainer aImageContainer) returns (uint64_t id);
+  async PCompositable(TextureInfo aInfo, uint64_t aId);
   async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial);
   async PMediaSystemResourceManager();
-  async PImageContainer();
 
 };
 

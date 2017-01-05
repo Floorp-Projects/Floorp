@@ -114,7 +114,7 @@ load 989965-1.html
 load 992333-1.html
 skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1017798-1.html # bug 1323689
 load 1028514-1.html
-load 1066089-1.html
+asserts-if(stylo,8) load 1066089-1.html # bug 1324663
 skip-if(stylo) load 1074651-1.html # bug 1323652
 load 1135534.html
 skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1089463-1.html # bug 1323649

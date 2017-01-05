@@ -24,7 +24,7 @@ const uint32_t kMagicInt = 0xc001feed;
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
 // using an older major revision.
-const uint16_t kMajorRevision = 5;
+const uint16_t kMajorRevision = 6;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
 const uint16_t kMinorRevision = 0;
@@ -1047,7 +1047,7 @@ private:
   uint8_t *mData;
   RecordedFontDetails mFontDetails;
 
-  bool mGetFontFileDataSucceeded = false;
+  bool mGetFontFileDataSucceeded;
 
   MOZ_IMPLICIT RecordedFontData(std::istream &aStream);
 };
@@ -1055,7 +1055,7 @@ private:
 class RecordedFontDescriptor : public RecordedEvent {
 public:
 
-  static void FontDescCb(const uint8_t *aData, uint32_t aSize,
+  static void FontDescCb(const uint8_t* aData, uint32_t aSize,
                          Float aFontSize, void* aBaton)
   {
     auto recordedFontDesc = static_cast<RecordedFontDescriptor*>(aBaton);
@@ -1100,12 +1100,21 @@ private:
 class RecordedScaledFontCreation : public RecordedEvent {
 public:
 
-  RecordedScaledFontCreation(ReferencePtr aRefPtr,
-                             RecordedFontDetails aFontDetails)
-    : RecordedEvent(SCALEDFONTCREATION), mRefPtr(aRefPtr)
-    , mFontDataKey(aFontDetails.fontDataKey)
-    , mGlyphSize(aFontDetails.glyphSize) , mIndex(aFontDetails.index)
+  static void FontInstanceDataProc(const uint8_t* aData, uint32_t aSize, void* aBaton)
   {
+    auto recordedScaledFontCreation = static_cast<RecordedScaledFontCreation*>(aBaton);
+    recordedScaledFontCreation->SetFontInstanceData(aData, aSize);
+  }
+
+  RecordedScaledFontCreation(ScaledFont* aScaledFont,
+                             RecordedFontDetails aFontDetails)
+    : RecordedEvent(SCALEDFONTCREATION)
+    , mRefPtr(aScaledFont)
+    , mFontDataKey(aFontDetails.fontDataKey)
+    , mGlyphSize(aFontDetails.glyphSize)
+    , mIndex(aFontDetails.index)
+  {
+    aScaledFont->GetFontInstanceData(FontInstanceDataProc, this);
   }
 
   virtual bool PlayEvent(Translator *aTranslator) const;
@@ -1116,6 +1125,8 @@ public:
   virtual std::string GetName() const { return "ScaledFont Creation"; }
   virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
 
+  void SetFontInstanceData(const uint8_t *aData, uint32_t aSize);
+
 private:
   friend class RecordedEvent;
 
@@ -1123,6 +1134,7 @@ private:
   uint64_t mFontDataKey;
   Float mGlyphSize;
   uint32_t mIndex;
+  std::vector<uint8_t> mInstanceData;
 
   MOZ_IMPLICIT RecordedScaledFontCreation(std::istream &aStream);
 };
