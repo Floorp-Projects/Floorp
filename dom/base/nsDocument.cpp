@@ -9980,8 +9980,8 @@ nsDocument::FindImageMap(const nsAString& aUseMapValue)
     nsIContent* map = mImageMaps->Item(i);
     if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, mapName,
                          eCaseMatters) ||
-        (map->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name) &&
-         mapName.Equals(name, nsCaseInsensitiveStringComparator()))) {
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, mapName,
+                         eCaseMatters)) {
       return map->AsElement();
     }
   }
