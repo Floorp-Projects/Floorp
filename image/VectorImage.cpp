@@ -750,8 +750,7 @@ VectorImage::GetFrameAtSize(const IntSize& aSize,
   MOZ_ASSERT(context); // already checked the draw target above
 
   auto result = Draw(context, aSize, ImageRegion::Create(aSize),
-                     aWhichFrame, SamplingFilter::POINT, Nothing(), aFlags,
-                     1.0);
+                     aWhichFrame, SamplingFilter::POINT, Nothing(), aFlags);
 
   return result == DrawResult::SUCCESS ? dt->Snapshot() : nullptr;
 }
@@ -777,8 +776,7 @@ struct SVGDrawingParameters
                        SamplingFilter aSamplingFilter,
                        const Maybe<SVGImageContext>& aSVGContext,
                        float aAnimationTime,
-                       uint32_t aFlags,
-                       float aOpacity)
+                       uint32_t aFlags)
     : context(aContext)
     , size(aSize.width, aSize.height)
     , region(aRegion)
@@ -787,7 +785,7 @@ struct SVGDrawingParameters
     , viewportSize(aSize)
     , animationTime(aAnimationTime)
     , flags(aFlags)
-    , opacity(aSVGContext ? aSVGContext->GetGlobalOpacity() : aOpacity)
+    , opacity(aSVGContext ? aSVGContext->GetGlobalOpacity() : 1.0)
   {
     if (aSVGContext) {
       CSSIntSize sz = aSVGContext->GetViewportSize();
@@ -814,8 +812,7 @@ VectorImage::Draw(gfxContext* aContext,
                   uint32_t aWhichFrame,
                   SamplingFilter aSamplingFilter,
                   const Maybe<SVGImageContext>& aSVGContext,
-                  uint32_t aFlags,
-                  float aOpacity)
+                  uint32_t aFlags)
 {
   if (aWhichFrame > FRAME_MAX_VALUE) {
     return DrawResult::BAD_ARGS;
@@ -870,7 +867,7 @@ VectorImage::Draw(gfxContext* aContext,
 
 
   SVGDrawingParameters params(aContext, aSize, aRegion, aSamplingFilter,
-                              svgContext, animTime, aFlags, aOpacity);
+                              svgContext, animTime, aFlags);
 
   // If we have an prerasterized version of this image that matches the
   // drawing parameters, use that.
