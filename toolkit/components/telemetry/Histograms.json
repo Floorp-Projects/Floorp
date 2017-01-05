@@ -5110,7 +5110,7 @@
   "FX_MIGRATION_ENTRY_POINT": {
     "bug_numbers": [731025],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
@@ -5119,7 +5119,7 @@
   "FX_MIGRATION_SOURCE_BROWSER": {
     "bug_numbers": [731025],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
@@ -5128,7 +5128,7 @@
   "FX_MIGRATION_ERRORS": {
     "bug_numbers": [731025],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -5138,7 +5138,7 @@
   "FX_MIGRATION_USAGE": {
     "bug_numbers": [731025],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -5148,7 +5148,7 @@
   "FX_MIGRATION_IMPORTED_HOMEPAGE": {
     "bug_numbers": [731025, 1298208],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "boolean",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -5157,7 +5157,7 @@
   "FX_MIGRATION_BOOKMARKS_IMPORT_MS": {
     "bug_numbers": [1289436],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "54",
+    "expires_in_version": "57",
     "kind": "exponential",
     "n_buckets": 70,
     "high": 100000,
@@ -5168,7 +5168,7 @@
   "FX_MIGRATION_HISTORY_IMPORT_MS": {
     "bug_numbers": [1289436],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "54",
+    "expires_in_version": "57",
     "kind": "exponential",
     "n_buckets": 70,
     "high": 100000,
@@ -5179,7 +5179,7 @@
   "FX_MIGRATION_LOGINS_IMPORT_MS": {
     "bug_numbers": [1289436],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "54",
+    "expires_in_version": "57",
     "kind": "exponential",
     "n_buckets": 70,
     "high": 100000,
@@ -5190,7 +5190,7 @@
   "FX_MIGRATION_BOOKMARKS_QUANTITY": {
     "bug_numbers": [1279501],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "57",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 1000,
@@ -5201,7 +5201,7 @@
   "FX_MIGRATION_HISTORY_QUANTITY": {
     "bug_numbers": [1279501],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "57",
     "kind": "exponential",
     "n_buckets": 40,
     "high": 10000,
@@ -5212,7 +5212,7 @@
   "FX_MIGRATION_LOGINS_QUANTITY": {
     "bug_numbers": [1279501],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "57",
     "kind": "exponential",
     "n_buckets": 20,
     "high": 1000,
@@ -5223,7 +5223,7 @@
   "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
     "bug_numbers": [1275114],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
@@ -5232,7 +5232,7 @@
   "FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER": {
     "bug_numbers": [1275114],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
@@ -5241,7 +5241,7 @@
   "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS": {
     "bug_numbers": [1271775],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 27,
     "releaseChannelCollection": "opt-out",
@@ -5250,7 +5250,7 @@
   "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_UNDO": {
     "bug_numbers": [1283565],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 31,
     "releaseChannelCollection": "opt-out",
@@ -5259,7 +5259,7 @@
   "FX_STARTUP_MIGRATION_UNDO_REASON": {
     "bug_numbers": [1289906],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "54",
+    "expires_in_version": "57",
     "keyed": true,
     "kind": "enumerated",
     "n_values": 10,
@@ -5269,7 +5269,7 @@
   "FX_STARTUP_MIGRATION_UNDO_OFFERED": {
     "bug_numbers": [1309617],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "56",
+    "expires_in_version": "57",
     "kind": "enumerated",
     "n_values": 5,
     "releaseChannelCollection": "opt-out",
@@ -5278,7 +5278,7 @@
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "keyed": true,
     "kind": "exponential",
     "n_buckets": 50,
@@ -5289,7 +5289,7 @@
   "FX_STARTUP_MIGRATION_USED_RECENT_BROWSER": {
     "bug_numbers": [1276694],
     "alert_emails": ["gijs@mozilla.com"],
-    "expires_in_version": "53",
+    "expires_in_version": "57",
     "keyed": true,
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
