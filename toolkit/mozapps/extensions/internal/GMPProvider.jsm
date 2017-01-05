@@ -312,8 +312,8 @@ GMPWrapper.prototype = {
         throw e;
       } finally {
         this._updateTask = null;
-        return true;
       }
+      return true;
     }.bind(this));
 
     return this._updateTask;
