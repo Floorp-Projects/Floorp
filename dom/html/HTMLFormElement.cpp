@@ -587,7 +587,7 @@ HTMLFormElement::DoSubmitOrReset(WidgetEvent* aEvent,
   // Make sure the presentation is up-to-date
   nsIDocument* doc = GetComposedDoc();
   if (doc) {
-    doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    doc->FlushPendingNotifications(FlushType::ContentAndNotify);
   }
 
   // JBK Don't get form frames anymore - bug 34297

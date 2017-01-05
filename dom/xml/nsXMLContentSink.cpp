@@ -1438,7 +1438,7 @@ nsXMLContentSink::AddText(const char16_t* aText,
 }
 
 void
-nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
+nsXMLContentSink::FlushPendingNotifications(FlushType aType)
 {
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
@@ -1446,14 +1446,14 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
     if (mIsDocumentObserver) {
       // Only flush if we're still a document observer (so that our child
       // counts should be correct).
-      if (aType >= Flush_ContentAndNotify) {
+      if (aType >= FlushType::ContentAndNotify) {
         FlushTags();
       }
       else {
         FlushText(false);
       }
     }
-    if (aType >= Flush_InterruptibleLayout) {
+    if (aType >= FlushType::InterruptibleLayout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       MaybeStartLayout(true);

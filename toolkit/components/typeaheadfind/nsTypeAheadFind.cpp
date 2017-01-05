@@ -338,7 +338,7 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
 
   // There could be unflushed notifications which hide textareas or other
   // elements that we don't want to find text in.
-  presShell->FlushPendingNotifications(Flush_Layout);
+  presShell->FlushPendingNotifications(mozilla::FlushType::Layout);
 
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
 

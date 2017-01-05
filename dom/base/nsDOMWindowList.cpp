@@ -56,7 +56,7 @@ nsDOMWindowList::EnsureFresh()
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
 
     if (doc) {
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+      doc->FlushPendingNotifications(FlushType::ContentAndNotify);
     }
   }
 }
