@@ -9,6 +9,7 @@
 #include "nsStyleSheetService.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/PreloadedStyleSheet.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
@@ -262,11 +263,14 @@ nsStyleSheetService::SheetRegistered(nsIURI *sheetURI,
 }
 
 NS_IMETHODIMP
-nsStyleSheetService::PreloadSheet(nsIURI *aSheetURI, uint32_t aSheetType,
-                                  nsIDOMStyleSheet **aSheet)
+nsStyleSheetService::PreloadSheet(nsIURI* aSheetURI, uint32_t aSheetType,
+                                  nsIPreloadedStyleSheet** aSheet)
 {
   NS_PRECONDITION(aSheet, "Null out param");
   NS_ENSURE_ARG_POINTER(aSheetURI);
+
+  *aSheet = nullptr;
+
   css::SheetParsingMode parsingMode;
   switch (aSheetType) {
     case AGENT_SHEET:
@@ -286,21 +290,12 @@ nsStyleSheetService::PreloadSheet(nsIURI *aSheetURI, uint32_t aSheetType,
       return NS_ERROR_INVALID_ARG;
   }
 
-  // XXXheycam PreloadSheet can't support ServoStyleSheets until they implement
-  // nsIDOMStyleSheet.
-
-  RefPtr<css::Loader> loader = new css::Loader(StyleBackendType::Gecko);
-
-  RefPtr<StyleSheet> sheet;
-  nsresult rv = loader->LoadSheetSync(aSheetURI, parsingMode, true, &sheet);
+  RefPtr<PreloadedStyleSheet> sheet;
+  nsresult rv = PreloadedStyleSheet::Create(aSheetURI, parsingMode,
+                                            getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MOZ_ASSERT(sheet->IsGecko(),
-             "stylo: didn't expect Loader to create a ServoStyleSheet");
-
-  RefPtr<CSSStyleSheet> cssSheet = sheet->AsGecko();
-  cssSheet.forget(aSheet);
-
+  sheet.forget(aSheet);
   return NS_OK;
 }
 
