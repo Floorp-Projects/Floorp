@@ -8,7 +8,6 @@
 include LayersSurfaces;
 include LayersMessages;
 include protocol PCompositable;
-include protocol PImageContainer;
 include protocol PTexture;
 
 using WRBorderSide from "mozilla/gfx/webrender.h";
