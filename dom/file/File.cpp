@@ -921,7 +921,7 @@ BlobImplFile::GetType(nsAString& aType)
         new GetTypeRunnable(workerPrivate, this);
 
       ErrorResult rv;
-      runnable->Dispatch(rv);
+      runnable->Dispatch(Terminating, rv);
       if (NS_WARN_IF(rv.Failed())) {
         rv.SuppressException();
       }
