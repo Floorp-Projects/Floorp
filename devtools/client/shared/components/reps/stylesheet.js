@@ -28,6 +28,7 @@ define(function (require, exports, module) {
 
     propTypes: {
       object: React.PropTypes.object.isRequired,
+      objectLink: React.PropTypes.func,
     },
 
     getTitle: function (grip) {
