@@ -415,15 +415,6 @@ FileReader::ReadFileContent(Blob& aBlob,
     return;
   }
 
-  aRv = DoAsyncWait();
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  //FileReader should be in loading state here
-  mReadyState = LOADING;
-  DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
-
   if (mDataFormat == FILE_AS_ARRAYBUFFER) {
     mFileData = js_pod_malloc<char>(mTotal);
     if (!mFileData) {
@@ -431,6 +422,16 @@ FileReader::ReadFileContent(Blob& aBlob,
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     }
   }
+
+  aRv = DoAsyncWait();
+  if (NS_WARN_IF(aRv.Failed())) {
+    FreeFileData();
+    return;
+  }
+
+  //FileReader should be in loading state here
+  mReadyState = LOADING;
+  DispatchProgressEvent(NS_LITERAL_STRING(LOADSTART_STR));
 }
 
 nsresult
