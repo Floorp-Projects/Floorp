@@ -341,14 +341,6 @@ protected:
   MediaQueue<MediaData>& AudioQueue() { return mAudioQueue; }
   MediaQueue<MediaData>& VideoQueue() { return mVideoQueue; }
 
-  // True if our buffers of decoded audio are not full, and we should
-  // decode more.
-  bool NeedToDecodeAudio();
-
-  // True if our buffers of decoded video are not full, and we should
-  // decode more.
-  bool NeedToDecodeVideo();
-
   // True if we are low in decoded audio/video data.
   // May not be invoked when mReader->UseBufferingHeuristics() is false.
   bool HasLowDecodedData();
