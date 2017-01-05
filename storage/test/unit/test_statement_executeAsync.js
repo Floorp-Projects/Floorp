@@ -7,6 +7,9 @@
  * for both mozIStorageStatement and mozIStorageAsyncStatement.
  */
 
+// This file uses the internal _quit from testing/xpcshell/head.js */
+/* global _quit */
+
 const INTEGER = 1;
 const TEXT = "this is test text";
 const REAL = 3.23;
