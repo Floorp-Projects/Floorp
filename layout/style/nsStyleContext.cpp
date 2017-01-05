@@ -1169,82 +1169,18 @@ nsStyleContext::CalcStyleDifferenceInternal(StyleContextLike* aNewContext,
     // |thisVis| (including this function if we skip one of these checks
     // due to change being true already or due to the old style context
     // not having a style-if-visited), but not the other way around.
-    if (PeekStyleColor()) {
-      if (thisVis->StyleColor()->mColor !=
-          otherVis->StyleColor()->mColor) {
-        change = true;
-      }
+#define STYLE_FIELD(name_) thisVisStruct->name_ != otherVisStruct->name_ ||
+#define STYLE_STRUCT(name_, fields_)                                    \
+    if (!change && PeekStyle##name_()) {                                \
+      const nsStyle##name_* thisVisStruct = thisVis->Style##name_();    \
+      const nsStyle##name_* otherVisStruct = otherVis->Style##name_();  \
+      if (MOZ_FOR_EACH(STYLE_FIELD, (), fields_) false) {               \
+        change = true;                                                  \
+      }                                                                 \
     }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleBackground()) {
-      if (thisVis->StyleBackground()->mBackgroundColor !=
-          otherVis->StyleBackground()->mBackgroundColor) {
-        change = true;
-      }
-    }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleBorder()) {
-      const nsStyleBorder *thisVisBorder = thisVis->StyleBorder();
-      const nsStyleBorder *otherVisBorder = otherVis->StyleBorder();
-      NS_FOR_CSS_SIDES(side) {
-        if (thisVisBorder->mBorderColor[side] !=
-            otherVisBorder->mBorderColor[side]) {
-          change = true;
-          break;
-        }
-      }
-    }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleOutline()) {
-      const nsStyleOutline *thisVisOutline = thisVis->StyleOutline();
-      const nsStyleOutline *otherVisOutline = otherVis->StyleOutline();
-      if (thisVisOutline->mOutlineColor != otherVisOutline->mOutlineColor) {
-        change = true;
-      }
-    }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleColumn()) {
-      const nsStyleColumn *thisVisColumn = thisVis->StyleColumn();
-      const nsStyleColumn *otherVisColumn = otherVis->StyleColumn();
-      if (thisVisColumn->mColumnRuleColor != otherVisColumn->mColumnRuleColor) {
-        change = true;
-      }
-    }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleText()) {
-      const nsStyleText* thisVisText = thisVis->StyleText();
-      const nsStyleText* otherVisText = otherVis->StyleText();
-      if (thisVisText->mTextEmphasisColor != otherVisText->mTextEmphasisColor ||
-          thisVisText->mWebkitTextFillColor != otherVisText->mWebkitTextFillColor ||
-          thisVisText->mWebkitTextStrokeColor != otherVisText->mWebkitTextStrokeColor) {
-        change = true;
-      }
-    }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleTextReset()) {
-      const nsStyleTextReset *thisVisTextReset = thisVis->StyleTextReset();
-      const nsStyleTextReset *otherVisTextReset = otherVis->StyleTextReset();
-      if (thisVisTextReset->mTextDecorationColor !=
-          otherVisTextReset->mTextDecorationColor) {
-        change = true;
-      }
-    }
-
-    // NB: Calling Peek on |this|, not |thisVis| (see above).
-    if (!change && PeekStyleSVG()) {
-      const nsStyleSVG *thisVisSVG = thisVis->StyleSVG();
-      const nsStyleSVG *otherVisSVG = otherVis->StyleSVG();
-      if (thisVisSVG->mFill != otherVisSVG->mFill ||
-          thisVisSVG->mStroke != otherVisSVG->mStroke) {
-        change = true;
-      }
-    }
+#include "nsCSSVisitedDependentPropList.h"
+#undef STYLE_STRUCT
+#undef STYLE_FIELD
 
     if (change) {
       hint |= nsChangeHint_RepaintFrame;
