@@ -489,6 +489,15 @@ constexpr bool SideIsVertical(Side aSide)
   return aSide % 2;
 }
 
+// @param aIsSecond when true, return the clockwise second of the two
+// corners associated with aSide. For example, with aSide = eSideBottom the
+// result is eCornerBottomRight when aIsSecond is false, and
+// eCornerBottomLeft when aIsSecond is true.
+constexpr Corner SideToFullCorner(Side aSide, bool aIsSecond)
+{
+  return Corner((aSide + aIsSecond) % 4);
+}
+
 } // namespace mozilla
 
 #endif /* MOZILLA_GFX_TYPES_H_ */
