@@ -66,8 +66,6 @@ interface nsIHttpChannel : nsIChannel
          to a referrer policy definded elsewhere */
     const unsigned long REFERRER_POLICY_UNSET                      = 0;
 
-    /*   default state, a shorter name for no-referrer-when-downgrade   */
-    const unsigned long REFERRER_POLICY_DEFAULT                    = 1;
     /*   default state, doesn't send referrer from https->http          */
     const unsigned long REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE = 1;
     /*   sends no referrer                                              */
