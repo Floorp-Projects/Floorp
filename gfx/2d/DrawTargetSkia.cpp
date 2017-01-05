@@ -1587,11 +1587,11 @@ DrawTargetSkia::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
 #endif
 
 #ifdef DEBUG
-  // Check that our SkCanvas isn't backed by vector storage such as PDF.  If it
-  // is then we want similar storage to avoid losing fidelity (if and when this
-  // DrawTarget is Snapshot()'ed, drawning a raster back into this DrawTarget
-  // will lose fidelity).
-  if (mCanvas->imageInfo().colorType() == kUnknown_SkColorType) {
+  if (!IsBackedByPixels(mCanvas.get())) {
+    // If our canvas is backed by vector storage such as PDF then we want to
+    // create a new DrawTarget with similar storage to avoid losing fidelity
+    // (fidelity will be lost if the returned DT is Snapshot()'ed and drawn
+    // back onto us since a raster will be drawn instead of vector commands).
     NS_WARNING("Not backed by pixels - we need to handle PDF backed SkCanvas");
   }
 #endif
@@ -1793,9 +1793,7 @@ DrawTargetSkia::Init(SkCanvas* aCanvas)
 
   // If the canvas is backed by pixels we clear it to be on the safe side.  If
   // it's not (for example, for PDF output) we don't.
-  bool isBackedByPixels = imageInfo.colorType() != kUnknown_SkColorType;
-  if (isBackedByPixels) {
-    // Note for PDF backed SkCanvas |alphaType == kUnknown_SkAlphaType|.
+  if (IsBackedByPixels(mCanvas.get())) {
     SkColor clearColor = imageInfo.isOpaque() ? SK_ColorBLACK : SK_ColorTRANSPARENT;
     mCanvas->clear(clearColor);
   }

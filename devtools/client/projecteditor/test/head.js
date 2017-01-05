@@ -109,7 +109,7 @@ function addProjectEditorTabForTempDirectory(opts = {}) {
 }
 
 function addProjectEditorTab(opts = {}) {
-  return addTab("chrome://devtools/content/projecteditor/chrome/content/projecteditor-test.xul").then(() => {
+  return addTab("chrome://mochitests/content/browser/devtools/client/projecteditor/test/projecteditor-test.xul").then(() => {
     let iframe = content.document.getElementById("projecteditor-iframe");
     if (opts.menubar !== false) {
       opts.menubar = content.document.querySelector("menubar");

@@ -208,14 +208,7 @@ CrossProcessCompositorBridgeParent::RecvNotifyChildCreated(const uint64_t& child
 void
 CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
   LayerTransactionParent* aLayerTree,
-  const uint64_t& aTransactionId,
-  const TargetConfig& aTargetConfig,
-  const InfallibleTArray<PluginWindowData>& aPlugins,
-  bool aIsFirstPaint,
-  bool aScheduleComposite,
-  uint32_t aPaintSequenceNumber,
-  bool aIsRepeatTransaction,
-  int32_t /*aPaintSyncId: unused*/,
+  const TransactionInfo& aInfo,
   bool aHitTestUpdate)
 {
   uint64_t id = aLayerTree->GetId();
@@ -228,20 +221,27 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
     return;
   }
   MOZ_ASSERT(state->mParent);
-  state->mParent->ScheduleRotationOnCompositorThread(aTargetConfig, aIsFirstPaint);
+  state->mParent->ScheduleRotationOnCompositorThread(
+    aInfo.targetConfig(),
+    aInfo.isFirstPaint());
 
   Layer* shadowRoot = aLayerTree->GetRoot();
   if (shadowRoot) {
     CompositorBridgeParent::SetShadowProperties(shadowRoot);
   }
-  UpdateIndirectTree(id, shadowRoot, aTargetConfig);
+  UpdateIndirectTree(id, shadowRoot, aInfo.targetConfig());
 
   // Cache the plugin data for this remote layer tree
-  state->mPluginData = aPlugins;
+  state->mPluginData = aInfo.plugins();
   state->mUpdatedPluginDataAvailable = true;
 
-  state->mParent->NotifyShadowTreeTransaction(id, aIsFirstPaint, aScheduleComposite,
-      aPaintSequenceNumber, aIsRepeatTransaction, aHitTestUpdate);
+  state->mParent->NotifyShadowTreeTransaction(
+    id,
+    aInfo.isFirstPaint(),
+    aInfo.scheduleComposite(),
+    aInfo.paintSequenceNumber(),
+    aInfo.isRepeatTransaction(),
+    aHitTestUpdate);
 
   // Send the 'remote paint ready' message to the content thread if it has already asked.
   if(mNotifyAfterRemotePaint)  {
@@ -255,7 +255,7 @@ CrossProcessCompositorBridgeParent::ShadowLayersUpdated(
     Unused << state->mParent->SendObserveLayerUpdate(id, aLayerTree->GetChildEpoch(), true);
   }
 
-  aLayerTree->SetPendingTransactionId(aTransactionId);
+  aLayerTree->SetPendingTransactionId(aInfo.id());
 }
 
 void

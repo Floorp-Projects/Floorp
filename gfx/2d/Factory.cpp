@@ -32,6 +32,7 @@
 
 #ifdef MOZ_WIDGET_GTK
 #include "ScaledFontFontconfig.h"
+#include "NativeFontResourceFontconfig.h"
 #endif
 
 #ifdef WIN32
@@ -156,6 +157,10 @@ namespace gfx {
 // In Gecko, this value is managed by gfx.logging.level in gfxPrefs.
 int32_t LoggingPrefs::sGfxLogLevel = LOG_DEFAULT;
 
+#ifdef MOZ_ENABLE_FREETYPE
+FT_Library Factory::mFTLibrary = nullptr;
+#endif
+
 #ifdef WIN32
 ID3D11Device *Factory::mD3D11Device = nullptr;
 ID2D1Device *Factory::mD2D1Device = nullptr;
@@ -192,6 +197,12 @@ Factory::ShutDown()
     delete sConfig;
     sConfig = nullptr;
   }
+
+#ifdef MOZ_ENABLE_FREETYPE
+  if (mFTLibrary) {
+    mFTLibrary = nullptr;
+  }
+#endif
 }
 
 bool
@@ -514,8 +525,10 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
         return NativeFontResourceGDI::Create(aData, aSize,
                                              /* aNeedsCairo = */ true);
       }
-#elif XP_DARWIN
+#elif defined(XP_DARWIN)
       return NativeFontResourceMac::Create(aData, aSize);
+#elif defined(MOZ_WIDGET_GTK)
+      return NativeFontResourceFontconfig::Create(aData, aSize);
 #else
       gfxWarning() << "Unable to create cairo scaled font from truetype data";
       return nullptr;
@@ -523,6 +536,24 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
     }
   default:
     gfxWarning() << "Unable to create requested font resource from truetype data";
+    return nullptr;
+  }
+}
+
+already_AddRefed<ScaledFont>
+Factory::CreateScaledFontFromFontDescriptor(FontType aType, const uint8_t* aData, uint32_t aDataLength, Float aSize)
+{
+  switch (aType) {
+#ifdef WIN32
+  case FontType::GDI:
+    return ScaledFontWin::CreateFromFontDescriptor(aData, aDataLength, aSize);
+#endif
+#ifdef MOZ_WIDGET_GTK
+  case FontType::FONTCONFIG:
+    return ScaledFontFontconfig::CreateFromFontDescriptor(aData, aDataLength, aSize);
+#endif
+  default:
+    gfxWarning() << "Invalid type specified for ScaledFont font descriptor";
     return nullptr;
   }
 }
@@ -568,6 +599,21 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
   return retVal.forget();
 }
 
+
+#ifdef MOZ_ENABLE_FREETYPE
+void
+Factory::SetFTLibrary(FT_Library aFTLibrary)
+{
+  mFTLibrary = aFTLibrary;
+}
+
+FT_Library
+Factory::GetFTLibrary()
+{
+  MOZ_ASSERT(mFTLibrary);
+  return mFTLibrary;
+}
+#endif
 
 #ifdef WIN32
 already_AddRefed<DrawTarget>

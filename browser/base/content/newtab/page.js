@@ -119,13 +119,17 @@ var gPage = {
     document.getElementById("newtab-search-submit").value =
       document.body.getAttribute("dir") == "ltr" ? "\u25B6" : "\u25C0";
 
+    if (Services.prefs.getBoolPref("browser.newtabpage.compact")) {
+      document.body.classList.add("compact");
+    }
+
     // Initialize search.
     gSearch.init();
 
     if (document.hidden) {
       addEventListener("visibilitychange", this);
     } else {
-      setTimeout(_ => this.onPageFirstVisible());
+      setTimeout(() => this.onPageFirstVisible());
     }
 
     // Initialize and render the grid.

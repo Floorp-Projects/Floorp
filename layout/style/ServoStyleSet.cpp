@@ -23,7 +23,6 @@ using namespace mozilla::dom;
 
 ServoStyleSet::ServoStyleSet()
   : mPresContext(nullptr)
-  , mRawSet(Servo_StyleSet_Init())
   , mBatching(0)
 {
 }
@@ -32,6 +31,23 @@ void
 ServoStyleSet::Init(nsPresContext* aPresContext)
 {
   mPresContext = aPresContext;
+  mRawSet.reset(Servo_StyleSet_Init(aPresContext));
+
+  // Now that we have an mRawSet, go ahead and notify about whatever stylesheets
+  // we have so far.
+  for (auto& sheetArray : mSheets) {
+    for (auto& sheet : sheetArray) {
+      // There's no guarantee this will create a list on the servo side whose
+      // ordering matches the list that would have been created had all those
+      // sheets been appended/prepended/etc after we had mRawSet.  But hopefully
+      // that's OK (e.g. because servo doesn't care about the relative ordering
+      // of sheets from different cascade levels in the list?).
+      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
+    }
+  }
+
+  // No need to Servo_StyleSet_FlushStyleSheets because we just created the
+  // mRawSet, so there was nothing to flush.
 }
 
 void
@@ -117,7 +133,7 @@ ServoStyleSet::GetContext(nsIContent* aContent,
     computedValues =
       Servo_ResolveStyleLazily(element, nullptr, aConsume, mRawSet.get()).Consume();
   } else {
-    computedValues = Servo_ResolveStyle(element, aConsume).Consume();
+    computedValues = ResolveServoStyle(element, aConsume);
   }
 
   MOZ_ASSERT(computedValues);
@@ -168,7 +184,7 @@ ServoStyleSet::ResolveStyleForText(nsIContent* aTextNode,
   const ServoComputedValues* parentComputedValues =
     aParentContext->StyleSource().AsServoComputedValues();
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Inherit(parentComputedValues).Consume();
+    Servo_ComputedValues_Inherit(mRawSet.get(), parentComputedValues).Consume();
 
   return GetContext(computedValues.forget(), aParentContext,
                     nsCSSAnonBoxes::mozText, CSSPseudoElementType::AnonBox);
@@ -182,7 +198,7 @@ ServoStyleSet::ResolveStyleForOtherNonElement(nsStyleContext* aParentContext)
   const ServoComputedValues* parent =
     aParentContext ? aParentContext->StyleSource().AsServoComputedValues() : nullptr;
   RefPtr<ServoComputedValues> computedValues =
-    Servo_ComputedValues_Inherit(parent).Consume();
+    Servo_ComputedValues_Inherit(mRawSet.get(), parent).Consume();
   MOZ_ASSERT(computedValues);
 
   return GetContext(computedValues.forget(), aParentContext,
@@ -274,8 +290,10 @@ ServoStyleSet::AppendStyleSheet(SheetType aType,
   mSheets[aType].RemoveElement(aSheet);
   mSheets[aType].AppendElement(aSheet);
 
-  // Maintain a mirrored list of sheets on the servo side.
-  Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  if (mRawSet) {
+    // Maintain a mirrored list of sheets on the servo side.
+    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  }
 
   return NS_OK;
 }
@@ -291,8 +309,10 @@ ServoStyleSet::PrependStyleSheet(SheetType aType,
   mSheets[aType].RemoveElement(aSheet);
   mSheets[aType].InsertElementAt(0, aSheet);
 
-  // Maintain a mirrored list of sheets on the servo side.
-  Servo_StyleSet_PrependStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  if (mRawSet) {
+    // Maintain a mirrored list of sheets on the servo side.
+    Servo_StyleSet_PrependStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  }
 
   return NS_OK;
 }
@@ -307,8 +327,10 @@ ServoStyleSet::RemoveStyleSheet(SheetType aType,
 
   mSheets[aType].RemoveElement(aSheet);
 
-  // Maintain a mirrored list of sheets on the servo side.
-  Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  if (mRawSet) {
+    // Maintain a mirrored list of sheets on the servo side.
+    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  }
 
   return NS_OK;
 }
@@ -322,15 +344,19 @@ ServoStyleSet::ReplaceSheets(SheetType aType,
   // to express. If the need ever arises, we can easily make this more efficent,
   // probably by aligning the representations better between engines.
 
-  for (ServoStyleSheet* sheet : mSheets[aType]) {
-    Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
+  if (mRawSet) {
+    for (ServoStyleSheet* sheet : mSheets[aType]) {
+      Servo_StyleSet_RemoveStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
+    }
   }
 
   mSheets[aType].Clear();
   mSheets[aType].AppendElements(aNewSheets);
 
-  for (ServoStyleSheet* sheet : mSheets[aType]) {
-    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
+  if (mRawSet) {
+    for (ServoStyleSheet* sheet : mSheets[aType]) {
+      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), sheet->RawSheet(), false);
+    }
   }
 
   if (!mBatching) {
@@ -357,9 +383,11 @@ ServoStyleSet::InsertStyleSheetBefore(SheetType aType,
 
   mSheets[aType].InsertElementAt(idx, aNewSheet);
 
-  // Maintain a mirrored list of sheets on the servo side.
-  Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aNewSheet->RawSheet(),
-                                        aReferenceSheet->RawSheet(), !mBatching);
+  if (mRawSet) {
+    // Maintain a mirrored list of sheets on the servo side.
+    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aNewSheet->RawSheet(),
+                                          aReferenceSheet->RawSheet(), !mBatching);
+  }
 
   return NS_OK;
 }
@@ -397,14 +425,16 @@ ServoStyleSet::AddDocStyleSheet(ServoStyleSheet* aSheet,
     aDocument->FindDocStyleSheetInsertionPoint(mSheets[SheetType::Doc], aSheet);
   mSheets[SheetType::Doc].InsertElementAt(index, aSheet);
 
-  // Maintain a mirrored list of sheets on the servo side.
-  ServoStyleSheet* followingSheet =
-    mSheets[SheetType::Doc].SafeElementAt(index + 1);
-  if (followingSheet) {
-    Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet->RawSheet(),
-                                          followingSheet->RawSheet(), !mBatching);
-  } else {
-    Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+  if (mRawSet) {
+    // Maintain a mirrored list of sheets on the servo side.
+    ServoStyleSheet* followingSheet =
+      mSheets[SheetType::Doc].SafeElementAt(index + 1);
+    if (followingSheet) {
+      Servo_StyleSet_InsertStyleSheetBefore(mRawSet.get(), aSheet->RawSheet(),
+                                            followingSheet->RawSheet(), !mBatching);
+    } else {
+      Servo_StyleSet_AppendStyleSheet(mRawSet.get(), aSheet->RawSheet(), !mBatching);
+    }
   }
 
   return NS_OK;
@@ -520,3 +550,25 @@ ServoStyleSet::AssertTreeIsClean()
   }
 }
 #endif
+
+void
+ServoStyleSet::RecomputeDefaultComputedStyles()
+{
+  Servo_StyleSet_RecomputeDefaultStyles(mRawSet.get(), mPresContext);
+}
+
+ServoComputedValuesStrong
+ServoStyleSet::RestyleWithAddedDeclaration(RawServoDeclarationBlock* aDeclarations,
+                                           const ServoComputedValues* aPreviousStyle)
+{
+  return Servo_RestyleWithAddedDeclaration(mRawSet.get(), aDeclarations,
+                                           aPreviousStyle);
+}
+
+
+already_AddRefed<ServoComputedValues>
+ServoStyleSet::ResolveServoStyle(Element* aElement,
+                                 ConsumeStyleBehavior aConsume)
+{
+  return Servo_ResolveStyle(aElement, mRawSet.get(), aConsume).Consume();  
+}

@@ -28,7 +28,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
-#include "mozilla/layers/ImageContainerChild.h"
 #include "mozilla/layers/LayersMessages.h"  // for CompositableOperation
 #include "mozilla/layers/PCompositableChild.h"  // for PCompositableChild
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
@@ -331,11 +330,10 @@ void
 ImageBridgeChild::CreateImageClientSync(SynchronousTask* aTask,
                                         RefPtr<ImageClient>* result,
                                         CompositableType aType,
-                                        ImageContainer* aImageContainer,
-                                        ImageContainerChild* aContainerChild)
+                                        ImageContainer* aImageContainer)
 {
   AutoCompleteTask complete(aTask);
-  *result = CreateImageClientNow(aType, aImageContainer, aContainerChild);
+  *result = CreateImageClientNow(aType, aImageContainer);
 }
 
 // dispatched function
@@ -353,6 +351,7 @@ ImageBridgeChild::ImageBridgeChild()
   : mCanSend(false)
   , mCalledClose(false)
   , mFwdTransactionId(0)
+  , mContainerMapLock("ImageBridgeChild.mContainerMapLock")
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -380,36 +379,54 @@ ImageBridgeChild::Connect(CompositableClient* aCompositable,
   MOZ_ASSERT(InImageBridgeChildThread());
   MOZ_ASSERT(CanSend());
 
-  uint64_t id = 0;
+  // Note: this is static, rather than per-IBC, so IDs are not re-used across
+  // ImageBridgeChild instances. This is relevant for the GPU process, where
+  // we don't want old IDs to potentially leak into a recreated ImageBridge.
+  static uint64_t sNextID = 1;
+  uint64_t id = sNextID++;
 
-  PImageContainerChild* imageContainerChild = nullptr;
-  if (aImageContainer)
-    imageContainerChild = aImageContainer->GetPImageContainerChild();
+  {
+    MutexAutoLock lock(mContainerMapLock);
+    MOZ_ASSERT(!mImageContainers.Contains(id));
+    mImageContainers.Put(id, aImageContainer);
+  }
 
   PCompositableChild* child =
-    SendPCompositableConstructor(aCompositable->GetTextureInfo(),
-                                 imageContainerChild, &id);
+    SendPCompositableConstructor(aCompositable->GetTextureInfo(), id);
   if (!child) {
     return;
   }
   aCompositable->InitIPDLActor(child, id);
 }
 
+void
+ImageBridgeChild::ForgetImageContainer(uint64_t aAsyncContainerID)
+{
+  MutexAutoLock lock(mContainerMapLock);
+  mImageContainers.Remove(aAsyncContainerID);
+}
+
 PCompositableChild*
-ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo,
-                                          PImageContainerChild* aChild, uint64_t* aID)
+ImageBridgeChild::AllocPCompositableChild(const TextureInfo& aInfo, const uint64_t& aID)
 {
   MOZ_ASSERT(CanSend());
-  return AsyncCompositableChild::CreateActor();
+  return AsyncCompositableChild::CreateActor(aID);
 }
 
 bool
 ImageBridgeChild::DeallocPCompositableChild(PCompositableChild* aActor)
 {
+  AsyncCompositableChild* actor = static_cast<AsyncCompositableChild*>(aActor);
+  MOZ_ASSERT(actor->GetAsyncID());
+
+  {
+    MutexAutoLock lock(mContainerMapLock);
+    mImageContainers.Remove(actor->GetAsyncID());
+  }
+
   AsyncCompositableChild::DestroyActor(aActor);
   return true;
 }
-
 
 Thread* ImageBridgeChild::GetThread() const
 {
@@ -421,25 +438,6 @@ ImageBridgeChild::GetSingleton()
 {
   StaticMutexAutoLock lock(sImageBridgeSingletonLock);
   return sImageBridgeChildSingleton;
-}
-
-void
-ImageBridgeChild::ReleaseImageContainer(RefPtr<ImageContainerChild> aChild)
-{
-  if (!aChild) {
-    return;
-  }
-
-  if (!InImageBridgeChildThread()) {
-    RefPtr<Runnable> runnable = WrapRunnable(
-      RefPtr<ImageBridgeChild>(this),
-      &ImageBridgeChild::ReleaseImageContainer,
-      aChild);
-    GetMessageLoop()->PostTask(runnable.forget());
-    return;
-  }
-
-  aChild->SendAsyncDelete();
 }
 
 void
@@ -852,11 +850,10 @@ ImageBridgeChild::IdentifyCompositorTextureHost(const TextureFactoryIdentifier& 
 
 RefPtr<ImageClient>
 ImageBridgeChild::CreateImageClient(CompositableType aType,
-                                    ImageContainer* aImageContainer,
-                                    ImageContainerChild* aContainerChild)
+                                    ImageContainer* aImageContainer)
 {
   if (InImageBridgeChildThread()) {
-    return CreateImageClientNow(aType, aImageContainer, aContainerChild);
+    return CreateImageClientNow(aType, aImageContainer);
   }
 
   SynchronousTask task("CreateImageClient Lock");
@@ -869,8 +866,7 @@ ImageBridgeChild::CreateImageClient(CompositableType aType,
     &task,
     &result,
     aType,
-    aImageContainer,
-    aContainerChild);
+    aImageContainer);
   GetMessageLoop()->PostTask(runnable.forget());
 
   task.Wait();
@@ -880,19 +876,11 @@ ImageBridgeChild::CreateImageClient(CompositableType aType,
 
 RefPtr<ImageClient>
 ImageBridgeChild::CreateImageClientNow(CompositableType aType,
-                                       ImageContainer* aImageContainer,
-                                       ImageContainerChild* aContainerChild)
+                                       ImageContainer* aImageContainer)
 {
   MOZ_ASSERT(InImageBridgeChildThread());
   if (!CanSend()) {
     return nullptr;
-  }
-
-  if (aImageContainer) {
-    aContainerChild->RegisterWithIPDL();
-    if (!SendPImageContainerConstructor(aContainerChild)) {
-      return nullptr;
-    }
   }
 
   RefPtr<ImageClient> client = ImageClient::CreateImageClient(aType, this, TextureFlags::NO_FLAGS);
@@ -1093,21 +1081,6 @@ ImageBridgeChild::DeallocPMediaSystemResourceManagerChild(PMediaSystemResourceMa
   return true;
 }
 
-PImageContainerChild*
-ImageBridgeChild::AllocPImageContainerChild()
-{
-  // we always use the "power-user" ctor
-  MOZ_CRASH("not reached");
-  return nullptr;
-}
-
-bool
-ImageBridgeChild::DeallocPImageContainerChild(PImageContainerChild* actor)
-{
-  static_cast<ImageContainerChild*>(actor)->UnregisterFromIPDL();
-  return true;
-}
-
 mozilla::ipc::IPCResult
 ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
 {
@@ -1132,10 +1105,13 @@ mozilla::ipc::IPCResult
 ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications)
 {
   for (auto& n : aNotifications) {
-    ImageContainerChild* child =
-      static_cast<ImageContainerChild*>(n.imageContainerChild());
-    if (child) {
-      child->NotifyComposite(n);
+    RefPtr<ImageContainer> imageContainer;
+    {
+      MutexAutoLock lock(mContainerMapLock);
+      imageContainer = mImageContainers.Get(n.asyncCompositableID());
+    }
+    if (imageContainer) {
+      imageContainer->NotifyComposite(n);
     }
   }
   return IPC_OK();
