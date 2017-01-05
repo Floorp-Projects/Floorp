@@ -3875,6 +3875,7 @@ StackDump(JSContext* cx, unsigned argc, Value* vp)
     char* buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
     if (!buf) {
         fputs("Failed to format JavaScript stack for dump\n", gOutFile->fp);
+        JS_ClearPendingException(cx);
     } else {
         fputs(buf, gOutFile->fp);
         JS_smprintf_free(buf);
