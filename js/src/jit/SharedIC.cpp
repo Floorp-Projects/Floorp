@@ -2319,6 +2319,14 @@ IsCacheableGetPropCall(JSContext* cx, JSObject* obj, JSObject* holder, Shape* sh
         return false;
 
     JSFunction* func = &shape->getterObject()->as<JSFunction>();
+    if (IsWindow(obj)) {
+        if (!func->isNative())
+            return false;
+
+        if (!func->jitInfo() || func->jitInfo()->needsOuterizedThisObject())
+            return false;
+    }
+
     if (func->isNative()) {
         *isScripted = false;
         return true;
