@@ -558,7 +558,7 @@ protected:
   /** The list of controls (form.elements as well as stuff not in elements) */
   RefPtr<HTMLFormControlsCollection> mControls;
   /** The currently selected radio button of each group */
-  nsRefPtrHashtable<nsStringCaseInsensitiveHashKey, HTMLInputElement> mSelectedRadioButtons;
+  nsRefPtrHashtable<nsStringHashKey, HTMLInputElement> mSelectedRadioButtons;
   /** The number of required radio button of each group */
   nsDataHashtable<nsStringCaseInsensitiveHashKey,uint32_t> mRequiredRadioButtonCounts;
   /** The value missing state of each group */
