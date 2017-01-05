@@ -2945,20 +2945,17 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
 
   if (mState != DECODER_STATE_DECODING &&
       mState != DECODER_STATE_DECODING_FIRSTFRAME &&
-      mState != DECODER_STATE_BUFFERING &&
-      mState != DECODER_STATE_SEEKING) {
+      mState != DECODER_STATE_BUFFERING) {
     return;
   }
 
   const bool needToDecodeAudio =
     IsAudioDecoding() &&
-    mState != DECODER_STATE_SEEKING &&
     ((!mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
      (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
 
   const bool needToDecodeVideo =
     IsVideoDecoding() &&
-    mState != DECODER_STATE_SEEKING &&
     ((!mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
      (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
 
