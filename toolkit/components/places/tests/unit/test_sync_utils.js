@@ -1219,24 +1219,20 @@ add_task(function* test_insert_tag_query() {
   }
 
   do_print("Use the public tagging API to ensure we added the tag correctly");
-  {
-    yield PlacesUtils.bookmarks.insert({
-      parentGuid: PlacesUtils.bookmarks.menuGuid,
-      type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-      url: "https://mozilla.org",
-      title: "Mozilla",
-    });
-    PlacesUtils.tagging.tagURI(uri("https://mozilla.org"), ["taggy"]);
-    assertURLHasTags("https://mozilla.org/", ["taggy"],
-      "Should set tags using the tagging API");
-  }
+  yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.menuGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: "https://mozilla.org",
+    title: "Mozilla",
+  });
+  PlacesUtils.tagging.tagURI(uri("https://mozilla.org"), ["taggy"]);
+  assertURLHasTags("https://mozilla.org/", ["taggy"],
+    "Should set tags using the tagging API");
 
   do_print("Removing the tag should clean up the tag folder");
-  {
-    PlacesUtils.tagging.untagURI(uri("https://mozilla.org"), null);
-    deepEqual(PlacesUtils.tagging.allTags, [],
-      "Should remove tag folder once last item is untagged");
-  }
+  PlacesUtils.tagging.untagURI(uri("https://mozilla.org"), null);
+  deepEqual(PlacesUtils.tagging.allTags, [],
+    "Should remove tag folder once last item is untagged");
 
   yield PlacesUtils.bookmarks.eraseEverything();
   yield PlacesSyncUtils.bookmarks.reset();
@@ -1269,15 +1265,13 @@ add_task(function* test_insert_orphans() {
   }
 
   do_print("Insert the grandparent");
-  {
-    yield PlacesSyncUtils.bookmarks.insert({
-      kind: "folder",
-      parentSyncId: "menu",
-      syncId: grandParentGuid,
-    });
-    equal(PlacesUtils.annotations.getItemAnnotation(childId, SYNC_PARENT_ANNO),
-      parentGuid, "Child should still have orphan anno");
-  }
+  yield PlacesSyncUtils.bookmarks.insert({
+    kind: "folder",
+    parentSyncId: "menu",
+    syncId: grandParentGuid,
+  });
+  equal(PlacesUtils.annotations.getItemAnnotation(childId, SYNC_PARENT_ANNO),
+    parentGuid, "Child should still have orphan anno");
 
   do_print("Insert the missing parent");
   {
