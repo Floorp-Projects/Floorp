@@ -2237,12 +2237,10 @@ BufferingState::Step()
     }
   } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
     mMaster->DispatchDecodeTasksIfNeeded();
-    MOZ_ASSERT(mMaster->mMinimizePreroll ||
-               !mMaster->OutOfDecodedAudio() ||
+    MOZ_ASSERT(!mMaster->OutOfDecodedAudio() ||
                mMaster->IsRequestingAudioData() ||
                mMaster->IsWaitingAudioData());
-    MOZ_ASSERT(mMaster->mMinimizePreroll ||
-               !mMaster->OutOfDecodedVideo() ||
+    MOZ_ASSERT(!mMaster->OutOfDecodedVideo() ||
                mMaster->IsRequestingVideoData() ||
                mMaster->IsWaitingVideoData());
     SLOG("In buffering mode, waiting to be notified: outOfAudio: %d, "
