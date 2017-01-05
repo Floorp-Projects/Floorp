@@ -265,7 +265,7 @@ public:
    * The information refresh happens because the compositor will call
    * SetFirstPaintViewport on the next frame of composition.
    */
-  void ForceIsFirstPaint();
+  mozilla::ipc::IPCResult RecvForceIsFirstPaint() override;
 
   static void SetShadowProperties(Layer* aLayer);
 
@@ -441,6 +441,7 @@ public:
     return mOptions;
   }
 
+  static CompositorBridgeParent* GetCompositorBridgeParentFromLayersId(const uint64_t& aLayersId);
 private:
 
   void Initialize();
@@ -480,12 +481,16 @@ protected:
   void SetEGLSurfaceSize(int width, int height);
 
   void InitializeLayerManager(const nsTArray<LayersBackend>& aBackendHints);
+
+public:
   void PauseComposition();
   void ResumeComposition();
   void ResumeCompositionAndResize(int width, int height);
+  void Invalidate();
+
+protected:
   void ForceComposition();
   void CancelCurrentCompositeTask();
-  void Invalidate();
 
   // CompositorVsyncSchedulerOwner
   bool IsPendingComposite() override;
