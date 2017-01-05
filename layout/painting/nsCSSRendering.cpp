@@ -2786,8 +2786,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aFillArea,
                               const nsSize& aRepeatSize,
                               const CSSIntRect& aSrc,
-                              const nsSize& aIntrinsicSize,
-                              float aOpacity)
+                              const nsSize& aIntrinsicSize)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintGradient",
     js::ProfileEntry::Category::GRAPHICS);
@@ -3136,7 +3135,6 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   rawStops.SetLength(stops.Length());
   for(uint32_t i = 0; i < stops.Length(); i++) {
     rawStops[i].color = stops[i].mColor;
-    rawStops[i].color.a *= aOpacity;
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
   RefPtr<mozilla::gfx::GradientStops> gs =
@@ -3212,7 +3210,6 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR && !isRepeat &&
           RectIsBeyondLinearGradientEdge(fillRectRelativeToTile, matrix, stops,
                                          gradientStart, gradientEnd, &edgeColor)) {
-        edgeColor.a = aOpacity;
         ctx->SetColor(edgeColor);
       } else {
         ctx->SetMatrix(
@@ -5711,8 +5708,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     {
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
                                     mGradientData, aDirtyRect,
-                                    aDest, aFill, aRepeatSize, aSrc, mSize,
-                                    aOpacity);
+                                    aDest, aFill, aRepeatSize, aSrc, mSize);
       break;
     }
     case eStyleImageType_Element:

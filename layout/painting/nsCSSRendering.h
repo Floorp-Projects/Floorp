@@ -479,8 +479,7 @@ struct nsCSSRendering {
                             const nsRect& aFill,
                             const nsSize& aRepeatSize,
                             const mozilla::CSSIntRect& aSrc,
-                            const nsSize& aIntrinsiceSize,
-                            float aOpacity = 1.0);
+                            const nsSize& aIntrinsiceSize);
 
   /**
    * Find the frame whose background style should be used to draw the
