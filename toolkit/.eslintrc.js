@@ -60,6 +60,9 @@ module.exports = {
     // Use [] instead of Array()
     // "no-array-constructor": "error",
 
+    // Disallow the use of debugger
+    "no-debugger": "error",
+
     // No duplicate arguments in function declarations
     "no-dupe-args": "error",
 
