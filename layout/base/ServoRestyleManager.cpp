@@ -146,7 +146,7 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
 
   // FIXME(bholley): Once we transfer ownership of the styles to the frame, we
   // can fast-reject without the FFI call by checking mServoData for null.
-  nsChangeHint changeHint = Servo_CheckChangeHint(aElement);
+  nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
   if (changeHint) {
       aChangeListToProcess.AppendChange(primaryFrame, aElement, changeHint);
   }
@@ -165,8 +165,7 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   // attach a new style context.
   bool recreateContext = primaryFrame && changeHint;
   if (recreateContext) {
-    RefPtr<ServoComputedValues> computedValues
-      = aStyleSet->ResolveServoStyle(aElement, ConsumeStyleBehavior::Consume);
+    RefPtr<ServoComputedValues> computedValues = aStyleSet->ResolveServoStyle(aElement);
 
     // Hold the old style context alive, because it could become a dangling
     // pointer during the replacement. In practice it's not a huge deal (on

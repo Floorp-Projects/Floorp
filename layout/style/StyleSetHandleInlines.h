@@ -80,20 +80,18 @@ StyleSetHandle::Ptr::EndUpdate()
 already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
                                      nsStyleContext* aParentContext,
-                                     ConsumeStyleBehavior aConsume,
                                      LazyComputeBehavior aMayCompute)
 {
-  FORWARD(ResolveStyleFor, (aElement, aParentContext, aConsume, aMayCompute));
+  FORWARD(ResolveStyleFor, (aElement, aParentContext, aMayCompute));
 }
 
 already_AddRefed<nsStyleContext>
 StyleSetHandle::Ptr::ResolveStyleFor(dom::Element* aElement,
                                      nsStyleContext* aParentContext,
-                                     ConsumeStyleBehavior aConsume,
                                      LazyComputeBehavior aMayCompute,
                                      TreeMatchContext& aTreeMatchContext)
 {
-  FORWARD(ResolveStyleFor, (aElement, aParentContext, aConsume, aMayCompute, aTreeMatchContext));
+  FORWARD(ResolveStyleFor, (aElement, aParentContext, aMayCompute, aTreeMatchContext));
 }
 
 already_AddRefed<nsStyleContext>

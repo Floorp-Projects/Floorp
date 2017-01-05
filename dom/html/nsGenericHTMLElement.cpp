@@ -2941,9 +2941,7 @@ IsOrHasAncestorWithDisplayNone(Element* aElement, nsIPresShell* aPresShell)
   RefPtr<nsStyleContext> sc;
   for (int32_t i = elementsToCheck.Length() - 1; i >= 0; --i) {
     if (sc) {
-      sc = styleSet->ResolveStyleFor(elementsToCheck[i], sc,
-                                     ConsumeStyleBehavior::DontConsume,
-                                     LazyComputeBehavior::Assert);
+      sc = styleSet->ResolveStyleFor(elementsToCheck[i], sc, LazyComputeBehavior::Assert);
     } else {
       sc = nsComputedDOMStyle::GetStyleContextForElementNoFlush(elementsToCheck[i],
                                                                 nullptr, aPresShell);

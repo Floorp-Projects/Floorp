@@ -287,7 +287,6 @@ nsSplitterFrame::Init(nsIContent*       aContent,
         nsStyleContext* parentStyleContext = StyleContext()->GetParent();
         RefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent->AsElement(), parentStyleContext,
-                          ConsumeStyleBehavior::Consume,
                           LazyComputeBehavior::Allow);
         SetStyleContextWithoutNotification(newContext);
       }

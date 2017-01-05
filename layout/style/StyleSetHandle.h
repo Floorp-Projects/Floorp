@@ -116,12 +116,10 @@ public:
     inline already_AddRefed<nsStyleContext>
     ResolveStyleFor(dom::Element* aElement,
                     nsStyleContext* aParentContext,
-                    ConsumeStyleBehavior aConsume,
                     LazyComputeBehavior aMayCompute);
     inline already_AddRefed<nsStyleContext>
     ResolveStyleFor(dom::Element* aElement,
                     nsStyleContext* aParentContext,
-                    ConsumeStyleBehavior aConsume,
                     LazyComputeBehavior aMayCompute,
                     TreeMatchContext& aTreeMatchContext);
     inline already_AddRefed<nsStyleContext>
