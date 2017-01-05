@@ -3249,7 +3249,7 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   image::DrawResult result =
-    nsCSSRendering::PaintStyleImageLayer(params);
+    nsCSSRendering::PaintBackground(params);
 
   if (clip == StyleGeometryBox::Text) {
     ctx->PopGroupAndBlend();
