@@ -550,7 +550,8 @@ public class BrowserSearch extends HomeFragment
             domains = new LinkedHashSet<String>(500);
             BufferedReader buf = null;
             try {
-                buf = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.topdomains)));
+                buf = new BufferedReader(new InputStreamReader(
+                        getResources().openRawResource(R.raw.topdomains), StringUtils.UTF_8));
                 String res = null;
 
                 do {

@@ -17,7 +17,7 @@
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
-#include "mozilla/dom/DOMStorage.h"
+#include "mozilla/dom/Storage.h"
 #include "mozilla/dom/IdleRequest.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/StorageEvent.h"
@@ -10623,7 +10623,7 @@ nsGlobalWindow::GetComputedStyleHelper(Element& aElt,
                             aError, nullptr);
 }
 
-DOMStorage*
+Storage*
 nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
@@ -10686,7 +10686,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
       return nullptr;
     }
 
-    mSessionStorage = static_cast<DOMStorage*>(storage.get());
+    mSessionStorage = static_cast<Storage*>(storage.get());
     MOZ_ASSERT(mSessionStorage);
 
     if (MOZ_LOG_TEST(gDOMLeakPRLog, LogLevel::Debug)) {
@@ -10706,7 +10706,7 @@ nsGlobalWindow::GetSessionStorage(ErrorResult& aError)
   return mSessionStorage;
 }
 
-DOMStorage*
+Storage*
 nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
 {
   MOZ_RELEASE_ASSERT(IsInnerWindow());
@@ -10754,7 +10754,7 @@ nsGlobalWindow::GetLocalStorage(ErrorResult& aError)
       return nullptr;
     }
 
-    mLocalStorage = static_cast<DOMStorage*>(storage.get());
+    mLocalStorage = static_cast<Storage*>(storage.get());
     MOZ_ASSERT(mLocalStorage);
   }
 
@@ -11585,7 +11585,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DOMStorage> changingStorage = event->GetStorageArea();
+    RefPtr<Storage> changingStorage = event->GetStorageArea();
     if (!changingStorage) {
       return NS_ERROR_FAILURE;
     }
@@ -11611,7 +11611,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
 
     switch (changingStorage->GetType())
     {
-    case DOMStorage::SessionStorage:
+    case Storage::SessionStorage:
     {
       bool check = false;
 
@@ -11641,7 +11641,7 @@ nsGlobalWindow::Observe(nsISupports* aSubject, const char* aTopic,
       break;
     }
 
-    case DOMStorage::LocalStorage:
+    case Storage::LocalStorage:
     {
       // Allow event fire only for the same principal storages
       // XXX We have to use EqualsIgnoreDomain after bug 495337 lands
@@ -11779,14 +11779,14 @@ nsGlobalWindow::CloneStorageEvent(const nsAString& aType,
   aEvent->GetNewValue(dict.mNewValue);
   aEvent->GetUrl(dict.mUrl);
 
-  RefPtr<DOMStorage> storageArea = aEvent->GetStorageArea();
+  RefPtr<Storage> storageArea = aEvent->GetStorageArea();
   MOZ_ASSERT(storageArea);
 
-  RefPtr<DOMStorage> storage;
-  if (storageArea->GetType() == DOMStorage::LocalStorage) {
+  RefPtr<Storage> storage;
+  if (storageArea->GetType() == Storage::LocalStorage) {
     storage = GetLocalStorage(aRv);
   } else {
-    MOZ_ASSERT(storageArea->GetType() == DOMStorage::SessionStorage);
+    MOZ_ASSERT(storageArea->GetType() == Storage::SessionStorage);
     storage = GetSessionStorage(aRv);
   }
 

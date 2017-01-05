@@ -16,6 +16,7 @@ let hasContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
 const example_base = "http://example.com/browser/browser/base/content/test/general/";
 const chrome_base = "chrome://mochitests/content/browser/browser/base/content/test/general/";
 
+/* import-globals-from contextmenu_common.js */
 Services.scriptloader.loadSubScript(chrome_base + "contextmenu_common.js", this);
 
 // Below are test cases for XUL element

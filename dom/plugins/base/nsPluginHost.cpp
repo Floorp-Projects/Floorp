@@ -1579,7 +1579,7 @@ nsPluginHost::RegisterFakePlugin(JS::Handle<JS::Value> aInitDictionary,
   nsresult rv = nsFakePluginTag::Create(initDictionary, getter_AddRefs(newTag));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (auto existingTag : mFakePlugins) {
+  for (const auto& existingTag : mFakePlugins) {
     if (newTag->HandlerURIMatches(existingTag->HandlerURI())) {
       return NS_ERROR_UNEXPECTED;
     }

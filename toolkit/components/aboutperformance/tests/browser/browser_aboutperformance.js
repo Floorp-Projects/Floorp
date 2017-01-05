@@ -68,6 +68,7 @@ function frameScript() {
     try {
       let reFullname = /Full name: (.+)/;
       let reFps = /Impact on framerate: (\d+)\/10( \((\d+) alerts\))?/;
+      let reCPU = /CPU usage: (\d+)%/;
       let reCpow = /Blocking process calls: (\d+)%( \((\d+) alerts\))?/;
 
       let getContentOfSelector = function(eltContainer, selector, re) {

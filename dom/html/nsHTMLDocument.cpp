@@ -267,14 +267,6 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   SetContentTypeInternal(nsDependentCString("text/html"));
 }
 
-already_AddRefed<nsIPresShell>
-nsHTMLDocument::CreateShell(nsPresContext* aContext,
-                            nsViewManager* aViewManager,
-                            StyleSetHandle aStyleSet)
-{
-  return doCreateShell(aContext, aViewManager, aStyleSet);
-}
-
 void
 nsHTMLDocument::TryHintCharset(nsIContentViewer* aCv,
                                int32_t& aCharsetSource, nsACString& aCharset)

@@ -593,10 +593,10 @@ public:
    * its presentation context (presentation contexts <b>must not</b> be
    * shared among multiple presentation shells).
    */
-  virtual already_AddRefed<nsIPresShell> CreateShell(
-      nsPresContext* aContext,
-      nsViewManager* aViewManager,
-      mozilla::StyleSetHandle aStyleSet) override;
+  already_AddRefed<nsIPresShell> CreateShell(nsPresContext* aContext,
+                                             nsViewManager* aViewManager,
+                                             mozilla::StyleSetHandle aStyleSet)
+    final;
   virtual void DeleteShell() override;
 
   virtual nsresult GetAllowPlugins(bool* aAllowPlugins) override;
@@ -1273,10 +1273,6 @@ public:
   bool ContainsMSEContent();
 
 protected:
-  already_AddRefed<nsIPresShell> doCreateShell(nsPresContext* aContext,
-                                               nsViewManager* aViewManager,
-                                               mozilla::StyleSetHandle aStyleSet);
-
   void RemoveDocStyleSheetsFromStyleSets();
   void RemoveStyleSheetsFromStyleSets(
       const nsTArray<RefPtr<mozilla::StyleSheet>>& aSheets,

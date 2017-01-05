@@ -119,13 +119,17 @@ var gPage = {
     document.getElementById("newtab-search-submit").value =
       document.body.getAttribute("dir") == "ltr" ? "\u25B6" : "\u25C0";
 
+    if (Services.prefs.getBoolPref("browser.newtabpage.compact")) {
+      document.body.classList.add("compact");
+    }
+
     // Initialize search.
     gSearch.init();
 
     if (document.hidden) {
       addEventListener("visibilitychange", this);
     } else {
-      setTimeout(_ => this.onPageFirstVisible());
+      setTimeout(() => this.onPageFirstVisible());
     }
 
     // Initialize and render the grid.
@@ -256,6 +260,8 @@ var gPage = {
   onPageVisibleAndLoaded() {
     // Send the index of the last visible tile.
     this.reportLastVisibleTileIndex();
+    // Maybe tell the user they can undo an initial automigration
+    this.maybeShowAutoMigrationUndoNotification();
   },
 
   reportLastVisibleTileIndex() {
@@ -283,5 +289,9 @@ var gPage = {
     }
 
     DirectoryLinksProvider.reportSitesAction(sites, "view", lastIndex);
-  }
+  },
+
+  maybeShowAutoMigrationUndoNotification() {
+    sendAsyncMessage("NewTab:MaybeShowAutoMigrationUndoNotification");
+  },
 };

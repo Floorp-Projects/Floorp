@@ -695,7 +695,7 @@ nsDragService::DragMovedWithView(NSDraggingSession* aSession, NSPoint aPoint)
       [aSession enumerateDraggingItemsWithOptions:NSDraggingItemEnumerationConcurrent
                                           forView:nil
                                           classes:[NSArray arrayWithObject:[NSPasteboardItem class]]
-                                    searchOptions:nil
+                                    searchOptions:@{}
                                        usingBlock:changeImageBlock];
     }
   }

@@ -35,7 +35,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu["import"]("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
 
 var eventListenerService = Cc["@mozilla.org/eventlistenerservice;1"]
                              .getService(Ci.nsIEventListenerService);

@@ -185,7 +185,6 @@
 @RESPATH@/components/content_webrtc.xpt
 #endif
 @RESPATH@/components/content_xslt.xpt
-@RESPATH@/components/cookie.xpt
 @RESPATH@/components/directory.xpt
 @RESPATH@/components/docshell.xpt
 @RESPATH@/components/dom.xpt

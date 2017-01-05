@@ -6,6 +6,7 @@ if (jar) {
   let tmpdir = extractJarToTmp(jar);
   rootDir = "file://" + tmpdir.path + '/';
 }
+/* import-globals-from privacypane_tests_perwindow.js */
 loader.loadSubScript(rootDir + "privacypane_tests_perwindow.js", this);
 
 run_test_subset([
