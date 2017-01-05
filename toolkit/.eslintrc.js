@@ -156,6 +156,9 @@ module.exports = {
     // No declaring variables that hide things like arguments
     "no-shadow-restricted-names": "error",
 
+    // Disallow sparse arrays
+    "no-sparse-arrays": "error",
+
     // No trailing whitespace
     "no-trailing-spaces": "error",
 
