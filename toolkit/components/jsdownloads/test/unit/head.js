@@ -361,7 +361,7 @@ function promiseStartLegacyDownload(aSourceUrl, aOptions) {
     // Start the actual download process.
     persist.savePrivacyAwareURI(sourceURI, null, null, 0, null, null, targetFile,
                                 isPrivate);
-  }.bind(this)).then(null, do_report_unexpected_exception);
+  }).then(null, do_report_unexpected_exception);
 
   return deferred.promise;
 }
@@ -429,7 +429,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
                                              aOffset, aCount);
       },
     });
-  }.bind(this)).then(null, do_report_unexpected_exception);
+  }).then(null, do_report_unexpected_exception);
 
   return deferred.promise;
 }

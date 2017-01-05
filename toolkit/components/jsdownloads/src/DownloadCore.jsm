@@ -2097,7 +2097,7 @@ this.DownloadCopySaver.prototype = {
               }
             }.bind(copySaver),
 
-            onStopRequest: function(aRequest, aContext, aStatusCode) {
+            onStopRequest(aRequest, aContext, aStatusCode) {
               try {
                 backgroundFileSaver.onStopRequest(aRequest, aContext,
                                                   aStatusCode);
@@ -2109,14 +2109,14 @@ this.DownloadCopySaver.prototype = {
                   backgroundFileSaver.finish(Cr.NS_OK);
                 }
               }
-            }.bind(copySaver),
+            },
 
-            onDataAvailable: function(aRequest, aContext, aInputStream,
+            onDataAvailable(aRequest, aContext, aInputStream,
                                       aOffset, aCount) {
               backgroundFileSaver.onDataAvailable(aRequest, aContext,
                                                   aInputStream, aOffset,
                                                   aCount);
-            }.bind(copySaver),
+            },
           });
 
           // We should check if we have been canceled in the meantime, after

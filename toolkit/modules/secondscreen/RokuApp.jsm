@@ -60,7 +60,7 @@ RokuApp.prototype = {
       if (callback) {
         callback({ state: "unknown" });
       }
-    }).bind(this), false);
+    }), false);
 
     xhr.send(null);
   },
@@ -91,13 +91,13 @@ RokuApp.prototype = {
       if (callback) {
         callback(xhr.status === 200);
       }
-    }).bind(this), false);
+    }), false);
 
     xhr.addEventListener("error", (function() {
       if (callback) {
         callback(false);
       }
-    }).bind(this), false);
+    }), false);
 
     xhr.send(null);
   },
@@ -114,13 +114,13 @@ RokuApp.prototype = {
       if (callback) {
         callback(xhr.status === 200);
       }
-    }).bind(this), false);
+    }), false);
 
     xhr.addEventListener("error", (function() {
       if (callback) {
         callback(false);
       }
-    }).bind(this), false);
+    }), false);
 
     xhr.send(null);
   },

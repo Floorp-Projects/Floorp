@@ -51,7 +51,7 @@ this.ProfileAge.prototype = {
       return this.computeAndPersistCreated(times)
                  .then(function onSuccess(created) {
                          return created;
-                       }.bind(this));
+                       });
     }
 
     return this.getTimes()

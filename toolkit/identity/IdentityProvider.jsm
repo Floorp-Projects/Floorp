@@ -253,7 +253,7 @@ IdentityProviderService.prototype = {
       // sandbox.
       log("genKeyPair: generated keypair for provisioning flow with id:", aProvId);
       provFlow.caller.doGenKeyPairCallback(provFlow.kp.serializedPublicKey);
-    }.bind(this));
+    });
   },
 
   /**

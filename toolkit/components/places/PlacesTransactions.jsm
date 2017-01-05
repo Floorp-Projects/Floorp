@@ -621,7 +621,7 @@ var TransactionsManager = {
         TransactionsHistory.clearRedoEntries();
       else
         throw new Error("either aUndoEntries or aRedoEntries should be true");
-    }.bind(this));
+    });
 
     this._transactEnqueuer.alsoWaitFor(promise);
     return promise;
