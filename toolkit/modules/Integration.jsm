@@ -233,7 +233,7 @@ this.IntegrationPoint.prototype = {
       try {
         // Obtain a new set of methods from the next override function in the
         // list, specifying the current combined object as the base argument.
-        let override = overrideFn.call(null, combined);
+        let override = overrideFn(combined);
 
         // Retrieve a list of property descriptors from the returned object, and
         // use them to build a new combined object whose prototype points to the

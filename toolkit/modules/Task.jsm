@@ -163,7 +163,7 @@ this.Task = {
    *         called when the task terminates.
    */
   spawn: function Task_spawn(aTask) {
-    return createAsyncFunction(aTask).call(undefined);
+    return createAsyncFunction(aTask)();
   },
 
   /**

@@ -196,6 +196,9 @@ module.exports = {
     // No using variables before defined
     // "no-use-before-define": ["error", "nofunc"],
 
+    // Disallow unnecessary .call() and .apply()
+    "no-useless-call": "error",
+
     // No using with
     "no-with": "error",
 
