@@ -3124,6 +3124,107 @@ TEST_F(JsepSessionTest, ValidateOfferedAudioCodecParams)
   ASSERT_EQ("0-15", parsed_dtmf_params.dtmfTones);
 }
 
+TEST_F(JsepSessionTest, ValidateNoFmtpLineForRedInOfferAndAnswer)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+
+  RefPtr<JsepTrack> msta(
+      new JsepTrack(SdpMediaSection::kAudio, "offerer_stream", "a1"));
+  mSessionOff.AddTrack(msta);
+  RefPtr<JsepTrack> mstv1(
+      new JsepTrack(SdpMediaSection::kVideo, "offerer_stream", "v1"));
+  mSessionOff.AddTrack(mstv1);
+
+  std::string offer = CreateOffer();
+
+  // look for line with fmtp:122 and remove it
+  size_t start = offer.find("a=fmtp:122");
+  size_t end = offer.find("\r\n", start);
+  offer.replace(start, end+2-start, "");
+
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+
+  RefPtr<JsepTrack> msta_ans(
+      new JsepTrack(SdpMediaSection::kAudio, "answerer_stream", "a1"));
+  mSessionAns.AddTrack(msta);
+  RefPtr<JsepTrack> mstv1_ans(
+      new JsepTrack(SdpMediaSection::kVideo, "answerer_stream", "v1"));
+  mSessionAns.AddTrack(mstv1);
+
+  std::string answer = CreateAnswer();
+  // because parsing will throw out the malformed fmtp, make sure it is not
+  // in the answer sdp string
+  ASSERT_EQ(std::string::npos, answer.find("a=fmtp:122"));
+
+  UniquePtr<Sdp> outputSdp(Parse(answer));
+  ASSERT_TRUE(!!outputSdp);
+
+  ASSERT_EQ(2U, outputSdp->GetMediaSectionCount());
+  auto& video_section = outputSdp->GetMediaSection(1);
+  ASSERT_EQ(SdpMediaSection::kVideo, video_section.GetMediaType());
+  auto& video_attrs = video_section.GetAttributeList();
+  ASSERT_EQ(SdpDirectionAttribute::kSendrecv, video_attrs.GetDirection());
+
+  ASSERT_EQ(6U, video_section.GetFormats().size());
+  ASSERT_EQ("120", video_section.GetFormats()[0]);
+  ASSERT_EQ("121", video_section.GetFormats()[1]);
+  ASSERT_EQ("126", video_section.GetFormats()[2]);
+  ASSERT_EQ("97", video_section.GetFormats()[3]);
+  ASSERT_EQ("122", video_section.GetFormats()[4]);
+  ASSERT_EQ("123", video_section.GetFormats()[5]);
+
+  // Validate rtpmap
+  ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kRtpmapAttribute));
+  auto& rtpmaps = video_attrs.GetRtpmap();
+  ASSERT_TRUE(rtpmaps.HasEntry("120"));
+  ASSERT_TRUE(rtpmaps.HasEntry("121"));
+  ASSERT_TRUE(rtpmaps.HasEntry("126"));
+  ASSERT_TRUE(rtpmaps.HasEntry("97"));
+  ASSERT_TRUE(rtpmaps.HasEntry("122"));
+  ASSERT_TRUE(rtpmaps.HasEntry("123"));
+
+  // Validate fmtps
+  ASSERT_TRUE(video_attrs.HasAttribute(SdpAttribute::kFmtpAttribute));
+  auto& fmtps = video_attrs.GetFmtp().mFmtps;
+
+  ASSERT_EQ(4U, fmtps.size());
+  ASSERT_EQ("126", fmtps[0].format);
+  ASSERT_EQ("97", fmtps[1].format);
+  ASSERT_EQ("120", fmtps[2].format);
+  ASSERT_EQ("121", fmtps[3].format);
+
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  auto offerPairs = mSessionOff.GetNegotiatedTrackPairs();
+  ASSERT_EQ(2U, offerPairs.size());
+  ASSERT_TRUE(offerPairs[1].mSending);
+  ASSERT_TRUE(offerPairs[1].mReceiving);
+  ASSERT_TRUE(offerPairs[1].mSending->GetNegotiatedDetails());
+  ASSERT_TRUE(offerPairs[1].mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(6U,
+      offerPairs[1].mSending->GetNegotiatedDetails()->GetEncoding(0)
+      .GetCodecs().size());
+  ASSERT_EQ(6U,
+      offerPairs[1].mReceiving->GetNegotiatedDetails()->GetEncoding(0)
+      .GetCodecs().size());
+
+  auto answerPairs = mSessionAns.GetNegotiatedTrackPairs();
+  ASSERT_EQ(2U, answerPairs.size());
+  ASSERT_TRUE(answerPairs[1].mSending);
+  ASSERT_TRUE(answerPairs[1].mReceiving);
+  ASSERT_TRUE(answerPairs[1].mSending->GetNegotiatedDetails());
+  ASSERT_TRUE(answerPairs[1].mReceiving->GetNegotiatedDetails());
+  ASSERT_EQ(6U,
+      answerPairs[1].mSending->GetNegotiatedDetails()->GetEncoding(0)
+      .GetCodecs().size());
+  ASSERT_EQ(6U,
+      answerPairs[1].mReceiving->GetNegotiatedDetails()->GetEncoding(0)
+      .GetCodecs().size());
+}
+
 TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
 {
   // TODO(bug 1099351): Once fixed, we can allow red in this offer,
