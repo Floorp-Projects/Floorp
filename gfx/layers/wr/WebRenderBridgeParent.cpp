@@ -260,13 +260,13 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
     const WebRenderCommand& cmd = aCommands[i];
 
     switch (cmd.type()) {
-      case WebRenderCommand::TOpPushDLBuilder: {
-        const OpPushDLBuilder& op = cmd.get_OpPushDLBuilder();
-        wr_push_dl_builder(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]));
+      case WebRenderCommand::TOpDPPushStackingContext: {
+        const OpDPPushStackingContext& op = cmd.get_OpDPPushStackingContext();
+        wr_dp_push_stacking_context(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]));
         break;
       }
-      case WebRenderCommand::TOpPopDLBuilder: {
-        wr_pop_dl_builder(mWRState);
+      case WebRenderCommand::TOpDPPopStackingContext: {
+        wr_dp_pop_stacking_context(mWRState);
         break;
       }
       case WebRenderCommand::TOpDPPushRect: {

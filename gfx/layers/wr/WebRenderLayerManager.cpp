@@ -119,7 +119,7 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
     }
 
     mLayer->WRBridge()->AddWebRenderCommand(
-      OpPushDLBuilder(toWrRect(bounds), toWrRect(overflow), identity, fm.GetScrollId()));
+      OpDPPushStackingContext(toWrRect(bounds), toWrRect(overflow), identity, fm.GetScrollId()));
   }
 }
 
@@ -132,7 +132,7 @@ WRScrollFrameStackingContextGenerator::~WRScrollFrameStackingContextGenerator()
       continue;
     }
     if (gfxPrefs::LayersDump()) printf_stderr("Popping stacking context id %" PRIu64"\n", fm.GetScrollId());
-    mLayer->WRBridge()->AddWebRenderCommand(OpPopDLBuilder());
+    mLayer->WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
   }
 }
 

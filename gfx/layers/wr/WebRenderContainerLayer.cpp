@@ -24,12 +24,12 @@ WebRenderContainerLayer::RenderLayer()
   if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds/overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
   WRBridge()->AddWebRenderCommand(
-    OpPushDLBuilder(toWrRect(relBounds), toWrRect(relBounds), transform, FrameMetrics::NULL_SCROLL_ID));
+    OpDPPushStackingContext(toWrRect(relBounds), toWrRect(relBounds), transform, FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     ToWebRenderLayer(child.layer)->RenderLayer();
   }
   WRBridge()->AddWebRenderCommand(
-    OpPopDLBuilder());
+    OpDPPopStackingContext());
 }
 
 void
