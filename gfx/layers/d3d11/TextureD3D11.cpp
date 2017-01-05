@@ -1198,6 +1198,7 @@ CompositingRenderTargetD3D11::GetSize() const
 SyncObjectD3D11::SyncObjectD3D11(SyncHandle aSyncHandle)
  : mSyncHandle(aSyncHandle)
 {
+  Init();
 }
 
 bool
@@ -1208,6 +1209,10 @@ SyncObjectD3D11::Init()
   }
 
   RefPtr<ID3D11Device> device = DeviceManagerDx::Get()->GetContentDevice();
+  if (!device) {
+    return false;
+  }
+  mD3D11Device = device;
 
   HRESULT hr = device->OpenSharedResource(
     mSyncHandle,
@@ -1237,6 +1242,16 @@ void
 SyncObjectD3D11::RegisterTexture(ID3D11Texture2D* aTexture)
 {
   mD3D11SyncedTextures.push_back(aTexture);
+}
+
+bool
+SyncObjectD3D11::IsSyncObjectValid()
+{
+  RefPtr<ID3D11Device> dev = DeviceManagerDx::Get()->GetContentDevice();
+  if (!dev || (dev != mD3D11Device)) {
+    return false;
+  }
+  return true;
 }
 
 void
