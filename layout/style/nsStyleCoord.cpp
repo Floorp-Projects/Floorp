@@ -340,9 +340,10 @@ CASE(eSideBottom, false);
 CASE(eSideLeft,   true);
 #undef CASE
 
+// Validation of HalfCornerIsX.
 #define CASE(corner, result)                                                  \
-  static_assert(NS_HALF_CORNER_IS_X(corner) == result,                    \
-                "NS_HALF_CORNER_IS_X is wrong")
+  static_assert(HalfCornerIsX(corner) == result,                              \
+                "HalfCornerIsX is wrong")
 CASE(eCornerTopLeftX,     true);
 CASE(eCornerTopLeftY,     false);
 CASE(eCornerTopRightX,    true);
