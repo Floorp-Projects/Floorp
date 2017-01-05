@@ -391,7 +391,9 @@ pref("browser.search.redirectWindowsSearch", true);
 pref("browser.search.redirectWindowsSearch", false);
 #endif
 
+#ifndef RELEASE_BUILD
 pref("browser.search.reset.enabled", true);
+#endif
 
 pref("browser.sessionhistory.max_entries", 50);
 
