@@ -1821,7 +1821,6 @@ AstDecodeCodeSection(AstDecodeContext& c)
     if (sectionStart == Decoder::NotStarted) {
         if (c.env().numFuncDefs() != 0)
             return c.d.fail("expected function bodies");
-
         return true;
     }
 
@@ -1840,10 +1839,7 @@ AstDecodeCodeSection(AstDecodeContext& c)
             return false;
     }
 
-    if (!c.d.finishSection(sectionStart, sectionSize, "code"))
-        return false;
-
-    return true;
+    return c.d.finishSection(sectionStart, sectionSize, "code");
 }
 
 // Number of bytes to display in a single fragment of a data section (per line).
@@ -1883,15 +1879,15 @@ AstDecodeModuleTail(AstDecodeContext& c)
 }
 
 bool
-wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length,
-                  LifoAlloc& lifo, AstModule** module)
+wasm::BinaryToAst(JSContext* cx, const uint8_t* bytes, uint32_t length, LifoAlloc& lifo,
+                  AstModule** module)
 {
     AstModule* result = new(lifo) AstModule(lifo);
     if (!result || !result->init())
         return false;
 
     UniqueChars error;
-    Decoder d(bytes, bytes + length, &error);
+    Decoder d(bytes, bytes + length, &error, /* resilient */ true);
     AstDecodeContext c(cx, lifo, d, *result, true);
 
     if (!AstDecodeEnvironment(c) ||

@@ -610,9 +610,10 @@ WasmBinaryToText(JSContext* cx, unsigned argc, Value* vp)
     StringBuffer buffer(cx);
     bool ok;
     if (experimental)
-        ok = wasm::BinaryToExperimentalText(cx, bytes, length, buffer, wasm::ExperimentalTextFormatting());
+        ok = wasm::BinaryToExperimentalText(cx, bytes, length, buffer);
     else
         ok = wasm::BinaryToText(cx, bytes, length, buffer);
+
     if (!ok) {
         if (!cx->isExceptionPending())
             JS_ReportErrorASCII(cx, "wasm binary to text print error");
