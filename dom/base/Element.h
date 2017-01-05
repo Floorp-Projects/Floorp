@@ -1010,11 +1010,11 @@ public:
   /**
    * Get the primary frame for this content with flushing
    *
-   * @param aType the kind of flush to do, typically Flush_Frames or
-   *              Flush_Layout
+   * @param aType the kind of flush to do, typically FlushType::Frames or
+   *              FlushType::Layout
    * @return the primary frame
    */
-  nsIFrame* GetPrimaryFrame(mozFlushType aType);
+  nsIFrame* GetPrimaryFrame(FlushType aType);
   // Work around silly C++ name hiding stuff
   nsIFrame* GetPrimaryFrame() const { return nsIContent::GetPrimaryFrame(); }
 

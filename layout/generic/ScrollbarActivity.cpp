@@ -308,7 +308,7 @@ ScrollbarActivity::RegisterWithRefreshDriver()
 {
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
   if (refreshDriver) {
-    refreshDriver->AddRefreshObserver(this, Flush_Style);
+    refreshDriver->AddRefreshObserver(this, FlushType::Style);
   }
 }
 
@@ -317,7 +317,7 @@ ScrollbarActivity::UnregisterFromRefreshDriver()
 {
   nsRefreshDriver* refreshDriver = GetRefreshDriver();
   if (refreshDriver) {
-    refreshDriver->RemoveRefreshObserver(this, Flush_Style);
+    refreshDriver->RemoveRefreshObserver(this, FlushType::Style);
   }
 }
 

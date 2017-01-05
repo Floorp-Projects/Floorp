@@ -1514,15 +1514,15 @@ public:
    * Flush notifications for this document and its parent documents
    * (since those may affect the layout of this one).
    */
-  virtual void FlushPendingNotifications(mozFlushType aType) = 0;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType) = 0;
 
   /**
    * Calls FlushPendingNotifications on any external resources this document
    * has. If this document has no external resources or is an external resource
    * itself this does nothing. This should only be called with
-   * aType >= Flush_Style.
+   * aType >= FlushType::Style.
    */
-  virtual void FlushExternalResources(mozFlushType aType) = 0;
+  virtual void FlushExternalResources(mozilla::FlushType aType) = 0;
 
   nsBindingManager* BindingManager() const
   {

@@ -173,7 +173,7 @@ ListBoxObject::GetListBoxBody(bool aFlush)
   }
 
   nsIFrame* frame = aFlush ?
-                      GetFrame(false) /* does Flush_Frames */ :
+                      GetFrame(false) /* does FlushType::Frames */ :
                       mContent->GetPrimaryFrame();
   if (!frame) {
     return nullptr;

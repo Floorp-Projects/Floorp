@@ -236,7 +236,7 @@ CheckPluginStopEvent::Run()
   LOG(("OBJLC [%p]: CheckPluginStopEvent - No frame, flushing layout", this));
   nsIDocument* composedDoc = content->GetComposedDoc();
   if (composedDoc) {
-    composedDoc->FlushPendingNotifications(Flush_Layout);
+    composedDoc->FlushPendingNotifications(FlushType::Layout);
     if (objLC->mPendingCheckPluginStopEvent != this) {
       LOG(("OBJLC [%p]: CheckPluginStopEvent - superseded in layout flush",
            this));
@@ -717,7 +717,7 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
 
   // Flush layout so that the frame is created if possible and the plugin is
   // initialized with the latest information.
-  doc->FlushPendingNotifications(Flush_Layout);
+  doc->FlushPendingNotifications(FlushType::Layout);
   // Flushing layout may have re-entered and loaded something underneath us
   NS_ENSURE_TRUE(mInstantiating, NS_OK);
 
@@ -2750,7 +2750,7 @@ nsObjectLoadingContent::NotifyStateChanged(ObjectType aOldType,
     if (aSync) {
       NS_ASSERTION(InActiveDocument(thisContent), "Something is confused");
       // Make sure that frames are actually constructed immediately.
-      doc->FlushPendingNotifications(Flush_Frames);
+      doc->FlushPendingNotifications(FlushType::Frames);
     }
   } else if (aOldType != mType) {
     // If our state changed, then we already recreated frames

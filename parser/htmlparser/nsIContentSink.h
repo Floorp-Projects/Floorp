@@ -97,7 +97,7 @@ public:
    *
    * @param aType the type of flush to perform
    */
-  virtual void FlushPendingNotifications(mozFlushType aType)=0;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType)=0;
 
   /**
    * Set the document character set. This should be passed on to the

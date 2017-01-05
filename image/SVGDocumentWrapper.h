@@ -82,7 +82,7 @@ public:
 
   /**
    * Modifier to update the viewport dimensions of the wrapped document. This
-   * method performs a synchronous "Flush_Layout" on the wrapped document,
+   * method performs a synchronous "FlushType::Layout" on the wrapped document,
    * since a viewport-change affects layout.
    *
    * @param aViewportSize The new viewport dimensions.

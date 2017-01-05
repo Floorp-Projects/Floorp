@@ -700,7 +700,7 @@ RestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
 
   // We may reconstruct frames below and hence process anything that is in the
   // tree. We don't want to get notified to process those items again after.
-  presShell->GetDocument()->FlushPendingNotifications(Flush_ContentAndNotify);
+  presShell->GetDocument()->FlushPendingNotifications(FlushType::ContentAndNotify);
 
   nsAutoScriptBlocker scriptBlocker;
 

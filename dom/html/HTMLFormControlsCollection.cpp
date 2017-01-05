@@ -118,7 +118,7 @@ HTMLFormControlsCollection::FlushPendingNotifications()
   if (mForm) {
     nsIDocument* doc = mForm->GetUncomposedDoc();
     if (doc) {
-      doc->FlushPendingNotifications(Flush_Content);
+      doc->FlushPendingNotifications(FlushType::Content);
     }
   }
 }

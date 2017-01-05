@@ -939,7 +939,7 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
   // Don't use AutoRestore since we want to not touch mCheckingOverflow if we fail
   // the weakFrame.IsAlive() check below
   mCheckingOverflow = true;
-  presShell->FlushPendingNotifications(Flush_Layout);
+  presShell->FlushPendingNotifications(FlushType::Layout);
   if (!weakFrame.IsAlive()) {
     return;
   }
