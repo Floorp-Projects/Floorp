@@ -53,8 +53,8 @@ endif
 	$(MAKE) $(CONFIG_DIR)/7zSD.sfx
 	cd $(CONFIG_DIR) &&  $(CYGWIN_WRAPPER) 7z a -t7z $(ABS_CONFIG_DIR)/stub.7z setup-stub.exe -mx -m0=BCJ2 -m1=LZMA:d21 -m2=LZMA:d17 -m3=LZMA:d17 -mb0:1 -mb0s1:2 -mb0s2:3
 	cat $(CONFIG_DIR)/7zSD.sfx $(CONFIG_DIR)/stub.tag $(CONFIG_DIR)/stub.7z > "$(CONFIG_DIR)/stub.exe"
-ifdef MOZ_EXTERNAL_SIGNING_FORMAT
-	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT),-f $(f)) $(CONFIG_DIR)/stub.exe
+ifdef MOZ_EXTERNAL_SIGNING_FORMAT_STUB
+	$(MOZ_SIGN_CMD) $(foreach f,$(MOZ_EXTERNAL_SIGNING_FORMAT_STUB),-f $(f)) $(CONFIG_DIR)/stub.exe
 endif
 endif
 # Support for building the uninstaller when repackaging locales
