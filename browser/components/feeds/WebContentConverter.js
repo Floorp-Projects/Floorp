@@ -908,7 +908,7 @@ WebContentConverterRegistrarContent.prototype = {
       .sort();
 
     // now register them
-    for (num of nums) {
+    for (let num of nums) {
       let branch = ps.getBranch(PREF_CONTENTHANDLERS_BRANCH + num + ".");
       try {
         this._registerContentHandlerHavingBranch(branch);

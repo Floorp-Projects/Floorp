@@ -3,7 +3,11 @@
 
 // Test that AsyncShutdown report errors correctly
 
+// Note: these functions are evaluated in their own process, hence the need
+// to import modules into each function.
+
 function setup_crash() {
+  /* global AsyncShutdown */
   Components.utils.import("resource://gre/modules/AsyncShutdown.jsm", this);
   Components.utils.import("resource://gre/modules/Services.jsm", this);
   Components.utils.import("resource://gre/modules/Promise.jsm", this);

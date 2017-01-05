@@ -142,6 +142,11 @@ function exitPBMode() {
 
 ContentPrefTest.deleteDatabase();
 
+do_register_cleanup(function() {
+  ContentPrefTest.deleteDatabase();
+  ContentPrefTest.__dirSvc = null;
+});
+
 function inChildProcess() {
   var appInfo = Cc["@mozilla.org/xre/app-info;1"];
   if (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType ==
@@ -159,4 +164,3 @@ if (!inChildProcess()) {
                    getService(Ci.nsIPrefBranch);
   prefBranch.setBoolPref("browser.preferences.content.log", true);
 }
-

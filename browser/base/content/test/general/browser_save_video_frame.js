@@ -7,6 +7,7 @@ const VIDEO_URL = "http://mochi.test:8888/browser/browser/base/content/test/gene
  * mockTransfer.js provides a utility that lets us mock out
  * the "Save File" dialog.
  */
+/* import-globals-from ../../../../../toolkit/content/tests/browser/common/mockTransfer.js */
 Cc["@mozilla.org/moz/jssubscript-loader;1"]
   .getService(Ci.mozIJSSubScriptLoader)
   .loadSubScript("chrome://mochitests/content/browser/toolkit/content/tests/browser/common/mockTransfer.js",

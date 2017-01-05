@@ -280,7 +280,7 @@ class MachCommands(MachCommandBase):
              description='Run any flavor of mochitest (integration test).',
              parser=setup_argument_parser)
     def run_mochitest_general(self, flavor=None, test_objects=None, resolve_tests=True, **kwargs):
-        from mochitest.mochitest_options import ALL_FLAVORS
+        from mochitest_options import ALL_FLAVORS
 
         buildapp = None
         for app in SUPPORTED_APPS:

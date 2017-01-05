@@ -7,6 +7,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
   "resource://gre/modules/PromiseUtils.jsm");
 
+// Various tests in this directory may define gTestBrowser, to use as the
+// default browser under test in some of the functions below.
+/* global gTestBrowser */
+
 // The blocklist shim running in the content process does not initialize at
 // start up, so it's not active until we load content that needs to do a
 // check. This helper bypasses the delay to get the svc up and running

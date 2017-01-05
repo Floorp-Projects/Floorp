@@ -2046,10 +2046,10 @@ public class BrowserApp extends GeckoApp
 
                         try {
                             out = new ByteArrayOutputStream();
-                            out.write("data:image/png;base64,".getBytes());
+                            out.write("data:image/png;base64,".getBytes(StringUtils.UTF_8));
                             b64 = new Base64OutputStream(out, Base64.NO_WRAP);
                             response.getBitmap().compress(Bitmap.CompressFormat.PNG, 100, b64);
-                            callback.sendSuccess(new String(out.toByteArray()));
+                            callback.sendSuccess(new String(out.toByteArray(), StringUtils.UTF_8));
                         } catch (IOException e) {
                             Log.w(LOGTAG, "Failed to convert to base64 data URI");
                             callback.sendError("Failed to convert favicon to a base64 data URI");

@@ -6,17 +6,9 @@
 
 TEST_DIRS += ['test']
 
-XPIDL_SOURCES += [
-    'nsICookieAcceptDialog.idl',
-    'nsICookiePromptService.idl',
-]
-
-XPIDL_MODULE = 'cookie'
-
 UNIFIED_SOURCES += [
     'nsCookieModule.cpp',
     'nsCookiePermission.cpp',
-    'nsCookiePromptService.cpp',
     'nsPermission.cpp',
     'nsPermissionManager.cpp',
     'nsPopupWindowManager.cpp',

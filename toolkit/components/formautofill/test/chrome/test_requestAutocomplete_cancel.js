@@ -7,6 +7,8 @@
 
 "use strict";
 
+/* import-globals-from loader.js */
+
 /**
  * The requestAutocomplete UI will not be displayed during these tests.
  */

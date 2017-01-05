@@ -11,9 +11,14 @@
  * Unless you are adding new features to the framework, you shouldn't have to
  * modify this file.  Use "head_common.js" or the "head.js" file of each
  * framework for shared code.
+ *
+ * This file expects Services & XPCOMUtils to be defined in the scope it is imported
+ * into. Additionally, it expects "Output" to be defined as well.
  */
 
 "use strict";
+
+/* global XPCOMUtils, Services, Output */
 
 /*
  * --------------------

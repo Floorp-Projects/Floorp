@@ -18,6 +18,7 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 
+/* import-globals-from ../loader_common.js */
 var sharedUrl = "chrome://mochitests/content/chrome/" +
                 "toolkit/components/formautofill/test/chrome/loader_common.js";
 Services.scriptloader.loadSubScript(sharedUrl, this);
@@ -60,6 +61,7 @@ var add_task_in_both_processes = add_task_in_parent_process;
 var context = this;
 addMessageListener("start_load_in_parent", function(message) {
   Output.print("Starting loading infrastructure in parent process.");
+  /* import-globals-from ../head_common.js */
   let headUrl = "chrome://mochitests/content/chrome/" +
                 "toolkit/components/formautofill/test/chrome/head_common.js";
   Services.scriptloader.loadSubScript(headUrl, context);

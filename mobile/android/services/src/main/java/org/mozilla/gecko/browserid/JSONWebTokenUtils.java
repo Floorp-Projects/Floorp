@@ -149,8 +149,10 @@ public class JSONWebTokenUtils {
       if (parts.length != 3) {
         return null;
       }
-      String cHeader = new String(Base64.decodeBase64(parts[0]));
-      String cPayload = new String(Base64.decodeBase64(parts[1]));
+      String cHeader = new String(Base64.decodeBase64(parts[0]),
+              org.mozilla.gecko.util.StringUtils.UTF_8);
+      String cPayload = new String(Base64.decodeBase64(parts[1]),
+              org.mozilla.gecko.util.StringUtils.UTF_8);
       String cSignature = Utils.byte2Hex(Base64.decodeBase64(parts[2]));
       ExtendedJSONObject o = new ExtendedJSONObject();
       o.put("header", new ExtendedJSONObject(cHeader));
@@ -203,8 +205,10 @@ public class JSONWebTokenUtils {
       if (parts.length != 3) {
         return null;
       }
-      String aHeader = new String(Base64.decodeBase64(parts[0]));
-      String aPayload = new String(Base64.decodeBase64(parts[1]));
+      String aHeader = new String(Base64.decodeBase64(parts[0]),
+              org.mozilla.gecko.util.StringUtils.UTF_8);
+      String aPayload = new String(Base64.decodeBase64(parts[1]),
+              org.mozilla.gecko.util.StringUtils.UTF_8);
       String aSignature = Utils.byte2Hex(Base64.decodeBase64(parts[2]));
       // We do all the assertion parsing *before* dumping the certificate in
       // case there's a malformed assertion.

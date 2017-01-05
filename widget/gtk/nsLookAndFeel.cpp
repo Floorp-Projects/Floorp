@@ -75,6 +75,7 @@ ApplyColorOver(const GdkRGBA& aSource, GdkRGBA* aDest) {
         aDest->red = sourceCoef * aSource.red + destCoef * aDest->red;
         aDest->green = sourceCoef * aSource.green + destCoef * aDest->green;
         aDest->blue = sourceCoef * aSource.blue + destCoef * aDest->blue;
+        aDest->alpha = resultAlpha;
     }
 }
 

@@ -297,7 +297,7 @@ add_task(function* test_beforeSave_rejects() {
     storeForSave.saveSoon();
   });
 
-  yield rejects(promiseSave, function(ex) {
+  yield Assert.rejects(promiseSave, function(ex) {
     return ex.message == "oops";
   });
 });

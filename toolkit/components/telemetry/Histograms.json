@@ -3207,7 +3207,8 @@
     "kind": "exponential",
     "high": 3000,
     "n_buckets": 10,
-    "description": "Amount of time spent doing the work for predict (ms)"
+    "description": "Amount of time spent doing the work for predict (ms)",
+    "alert_emails": ["necko@mozilla.com"]
   },
   "PREDICTOR_LEARN_WORK_TIME": {
     "expires_in_version": "never",
@@ -3325,7 +3326,8 @@
     "kind": "exponential",
     "high": 3000,
     "n_buckets": 10,
-    "description": "How long it takes from the time Predict() is called to the time we take action"
+    "description": "How long it takes from the time Predict() is called to the time we take action",
+    "alert_emails": ["necko@mozilla.com"]
   },
   "PREDICTOR_PREDICT_TIME_TO_INACTION": {
     "expires_in_version": "never",
