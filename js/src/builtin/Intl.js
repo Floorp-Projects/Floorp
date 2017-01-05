@@ -1170,9 +1170,10 @@ function GetOption(options, property, type, values, fallback) {
  * Spec: ECMAScript Internationalization API Specification, 9.2.10.
  */
 function GetNumberOption(options, property, minimum, maximum, fallback) {
-    assert(typeof minimum === "number", "GetNumberOption");
-    assert(typeof maximum === "number", "GetNumberOption");
-    assert(fallback === undefined || (fallback >= minimum && fallback <= maximum), "GetNumberOption");
+    assert(typeof minimum === "number" && (minimum | 0) === minimum, "GetNumberOption");
+    assert(typeof maximum === "number" && (maximum | 0) === maximum, "GetNumberOption");
+    assert(typeof fallback === "number" && (fallback | 0) === fallback, "GetNumberOption");
+    assert(minimum <= fallback && fallback <= maximum, "GetNumberOption");
 
     // Step 1.
     var value = options[property];
@@ -1182,7 +1183,10 @@ function GetNumberOption(options, property, minimum, maximum, fallback) {
         value = ToNumber(value);
         if (Number_isNaN(value) || value < minimum || value > maximum)
             ThrowRangeError(JSMSG_INVALID_DIGITS_VALUE, value);
-        return std_Math_floor(value);
+
+        // Apply bitwise-or to convert -0 to +0 per ES2017, 5.2 and to ensure
+        // the result is an int32 value.
+        return std_Math_floor(value) | 0;
     }
 
     // Step 3.
@@ -1843,18 +1847,20 @@ function getNumberFormatInternals(obj, methodName) {
  *
  * Spec: ECMAScript Internationalization API Specification, 11.1.1.
  */
-function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault) {
+function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault) {
     // We skip Step 1 because we set the properties on a lazyData object.
 
     // Step 2-3.
     assert(IsObject(options), "SetNumberFormatDigitOptions");
     assert(typeof mnfdDefault === "number", "SetNumberFormatDigitOptions");
-
+    assert(typeof mxfdDefault === "number", "SetNumberFormatDigitOptions");
+    assert(mnfdDefault <= mxfdDefault, "SetNumberFormatDigitOptions");
 
     // Steps 4-6.
     const mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
     const mnfd = GetNumberOption(options, "minimumFractionDigits", 0, 20, mnfdDefault);
-    const mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20);
+    const mxfdActualDefault = std_Math_max(mnfd, mxfdDefault);
+    const mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20, mxfdActualDefault);
 
     // Steps 7-8.
     let mnsd = options.minimumSignificantDigits;
@@ -1966,7 +1972,7 @@ function InitializeNumberFormat(numberFormat, locales, options) {
         if (c === undefined)
             ThrowTypeError(JSMSG_UNDEFINED_CURRENCY);
 
-        // Steps 20.a-c.
+        // Steps 19.a-c.
         c = toASCIIUpperCase(c);
         lazyNumberFormatData.currency = c;
         cDigits = CurrencyDigits(c);
@@ -1977,19 +1983,16 @@ function InitializeNumberFormat(numberFormat, locales, options) {
     if (style === "currency")
         lazyNumberFormatData.currencyDisplay = cd;
 
-    // Steps 22-24.
-    SetNumberFormatDigitOptions(lazyNumberFormatData, options, style === "currency" ? cDigits: 0);
-
-    // Step 25.
-    if (lazyNumberFormatData.maximumFractionDigits === undefined) {
-        let mxfdDefault = style === "currency"
-                          ? cDigits
-                          : style === "percent"
-                          ? 0
-                          : 3;
-        lazyNumberFormatData.maximumFractionDigits =
-            std_Math_max(lazyNumberFormatData.minimumFractionDigits, mxfdDefault);
+    // Steps 22-25.
+    var mnfdDefault, mxfdDefault;
+    if (style === "currency") {
+        mnfdDefault = cDigits;
+        mxfdDefault = cDigits;
+    } else {
+        mnfdDefault = 0;
+        mxfdDefault = style === "percent" ? 0 : 3;
     }
+    SetNumberFormatDigitOptions(lazyNumberFormatData, options, mnfdDefault, mxfdDefault);
 
     // Steps 26.
     var g = GetOption(options, "useGrouping", "boolean", undefined, true);
@@ -3111,15 +3114,8 @@ function InitializePluralRules(pluralRules, locales, options) {
     let matcher = GetOption(options, "localeMatcher", "string", ["lookup", "best fit"], "best fit");
     opt.localeMatcher = matcher;
 
-
-    // Step 11.
-    SetNumberFormatDigitOptions(lazyPluralRulesData, options, 0);
-
-    // Step 12.
-    if (lazyPluralRulesData.maximumFractionDigits === undefined) {
-        lazyPluralRulesData.maximumFractionDigits =
-           std_Math_max(lazyPluralRulesData.minimumFractionDigits, 3);
-    }
+    // Steps 11-12.
+    SetNumberFormatDigitOptions(lazyPluralRulesData, options, 0, 3);
 
     setLazyData(internals, "PluralRules", lazyPluralRulesData)
 }
