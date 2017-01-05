@@ -1581,6 +1581,7 @@ function test_filter_transition(prop) {
 }
 
 function test_shadow_transition(prop) {
+  var origTimingFunc = div.style.getPropertyValue("transition-timing-function");
   var spreadStr = (prop == "box-shadow") ? " 0px" : "";
 
   div.style.setProperty("transition-property", "none", "");
@@ -1668,7 +1669,24 @@ function test_shadow_transition(prop) {
     isnot(vals[6], "0px",
           "shadow-valued property " + prop + " (spread): clamping of negatives");
   }
-  div.style.setProperty("transition-timing-function", "linear", "");
+
+  // A test case that timing function produces values greater than 1.0.
+  div.style.setProperty("transition-timing-function",
+                        // This function produces 1.2989961788069297 at 25%.
+                        "cubic-bezier(0, 1.5, 0, 1.5)", "");
+  div.style.setProperty("transition-property", "none", "");
+  div.style.setProperty(prop, "none", "");
+  is(cs.getPropertyValue(prop), "none",
+     "shadow-valued property " + prop + ": computed value before transition");
+  div.style.setProperty("transition-property", prop, "");
+  div.style.setProperty(prop, "0px 0px 0px rgba(100, 100, 100, 0.5)", "");
+  // The alpha value, 0.5 * 1.2989961788069297 * 255, is clamped to 166 and then
+  // converted to 0.65.
+  is(cs.getPropertyValue(prop), "rgba(100, 100, 100, 0.65) 0px 0px 0px" + spreadStr,
+     "shadow-valued property " + prop + ": interpolation of shadows with " +
+     "timing function which produces values greater than 1.0");
+
+  div.style.setProperty("transition-timing-function", origTimingFunc, "");
 }
 
 function test_dasharray_transition(prop) {
