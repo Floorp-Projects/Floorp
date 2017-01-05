@@ -191,6 +191,25 @@ function createLinkPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttribut
            </html>`;
 }
 
+function createFetchUserControlRPTestCase(aName, aSchemeFrom, aSchemeTo) {
+  var srcUrl = createTestUrl("", "test", aName, "iframe", aSchemeFrom, aSchemeTo);
+
+  return `<!DOCTYPE HTML>
+          <html>
+          <head>
+          <meta charset="utf-8">
+          <title>Test user control referrer policies</title>
+          </head>
+          <body>
+          <script>
+            fetch("${srcUrl}", {referrerPolicy: ""}).then(function (response) {
+              window.parent.postMessage("childLoadComplete", "http://mochi.test:8888");
+            });
+          </script>
+          </body>
+          </html>`;
+}
+
 function buildLinkString(aPolicy, aName, aRelString, aSchemeFrom, aSchemeTo, aTestType) {
   var result;
   var href = '';
@@ -212,6 +231,8 @@ function handleRequest(request, response) {
   var action = params.get("ACTION");
   var schemeFrom = params.get("SCHEME_FROM") || "http";
   var schemeTo = params.get("SCHEME_TO") || "http";
+
+  response.setHeader("Access-Control-Allow-Origin", "*", false);
 
   if (action === "resetState") {
     setSharedState(SHARED_KEY, "{}");
@@ -383,6 +404,11 @@ function handleRequest(request, response) {
   }
   if (action === "generate-link-policy-test-property") {
     response.write(_getLinkPage("property"));
+    return;
+  }
+
+  if (action === "generate-fetch-user-control-policy-test") {
+    response.write(createFetchUserControlRPTestCase(name, schemeFrom, schemeTo));
     return;
   }
 

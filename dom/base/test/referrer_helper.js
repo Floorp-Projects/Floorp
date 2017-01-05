@@ -76,6 +76,10 @@ var tests = (function*() {
   var iframe = document.getElementById("testframe");
 
   for (var j = 0; j < testCases.length; j++) {
+    if (testCases[j].PREFS) {
+      yield SpecialPowers.pushPrefEnv({"set": testCases[j].PREFS}, advance);
+    }
+
     var actions = testCases[j].ACTION;
     var tests = testCases[j].TESTS;
     for (var k = 0; k < actions.length; k++) {
