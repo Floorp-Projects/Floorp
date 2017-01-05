@@ -40,14 +40,16 @@ const RequestListContent = createClass({
     this.refs.contentEl.addEventListener("scroll", this.onScroll, true);
   },
 
-  componentWillUpdate() {
-    // Check if the list is scrolled to bottom, before UI update
-    this.shouldScrollBottom = this.isScrolledToBottom();
+  componentWillUpdate(nextProps) {
+    // Check if the list is scrolled to bottom before the UI update.
+    // The scroll is ever needed only if new rows are added to the list.
+    const delta = nextProps.displayedRequests.size - this.props.displayedRequests.size;
+    this.shouldScrollBottom = delta > 0 && this.isScrolledToBottom();
   },
 
   componentDidUpdate(prevProps) {
     // Update the CSS variables for waterfall scaling after props change
-    this.setScalingStyles();
+    this.setScalingStyles(prevProps);
 
     // Keep the list scrolled to bottom if a new row was added
     if (this.shouldScrollBottom) {
@@ -72,11 +74,9 @@ const RequestListContent = createClass({
    */
   setScalingStyles(prevProps) {
     const { scale } = this.props;
-    if (scale == this.currentScale) {
+    if (prevProps && prevProps.scale === scale) {
       return;
     }
-
-    this.currentScale = scale;
 
     const { style } = this.refs.contentEl;
     style.removeProperty("--timings-scale");
