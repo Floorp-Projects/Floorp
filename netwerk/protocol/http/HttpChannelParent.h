@@ -129,6 +129,7 @@ protected:
                    const nsCString&           appCacheClientID,
                    const bool&                allowSpdy,
                    const bool&                allowAltSvc,
+                   const bool&                beConservative,
                    const OptionalLoadInfoArgs& aLoadInfoArgs,
                    const OptionalHttpResponseHead& aSynthesizedResponseHead,
                    const nsCString&           aSecurityInfoSerialization,
