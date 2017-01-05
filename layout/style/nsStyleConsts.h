@@ -16,8 +16,6 @@
 
 namespace mozilla {
 
-#define NS_FOR_CSS_HALF_CORNERS(var_) for (int32_t var_ = 0; var_ < 8; ++var_)
-
 // The results of these conversion macros are exhaustively checked in
 // nsStyleCoord.cpp.
 // Arguments must not have side effects.
