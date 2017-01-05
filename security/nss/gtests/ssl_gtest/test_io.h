@@ -66,20 +66,26 @@ class DummyPrSocket {
   int32_t Read(void* data, int32_t len);
   int32_t Recv(void* buf, int32_t buflen);
   int32_t Write(const void* buf, int32_t length);
+  void CloseWrites() { writeable_ = false; }
 
   Mode mode() const { return mode_; }
   bool readable() const { return !input_.empty(); }
-  bool writable() { return true; }
 
  private:
   DummyPrSocket(const std::string& name, Mode mode)
-      : name_(name), mode_(mode), peer_(nullptr), input_(), filter_(nullptr) {}
+      : name_(name),
+        mode_(mode),
+        peer_(nullptr),
+        input_(),
+        filter_(nullptr),
+        writeable_(true) {}
 
   const std::string name_;
   Mode mode_;
   DummyPrSocket* peer_;
   std::queue<Packet*> input_;
   PacketFilter* filter_;
+  bool writeable_;
 };
 
 // Marker interface.
