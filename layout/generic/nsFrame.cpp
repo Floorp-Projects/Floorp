@@ -1306,7 +1306,7 @@ nsIFrame::ComputeBorderRadii(const nsStyleCorners& aBorderRadius,
     uint32_t hc1 = NS_SIDE_TO_HALF_CORNER(side, false, true);
     uint32_t hc2 = NS_SIDE_TO_HALF_CORNER(side, true, true);
     nscoord length =
-      NS_SIDE_IS_VERTICAL(side) ? aBorderArea.height : aBorderArea.width;
+      SideIsVertical(side) ? aBorderArea.height : aBorderArea.width;
     nscoord sum = aRadii[hc1] + aRadii[hc2];
     if (sum)
       haveRadius = true;

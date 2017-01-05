@@ -330,10 +330,10 @@ void nsStyleCorners::Reset()
   }
 }
 
-// Validation of NS_SIDE_IS_VERTICAL and NS_HALF_CORNER_IS_X.
+// Validation of SideIsVertical.
 #define CASE(side, result)                                                    \
-  static_assert(NS_SIDE_IS_VERTICAL(side) == result,                      \
-                "NS_SIDE_IS_VERTICAL is wrong")
+  static_assert(SideIsVertical(side) == result,                               \
+                "SideIsVertical is wrong")
 CASE(eSideTop,    false);
 CASE(eSideRight,  true);
 CASE(eSideBottom, false);
