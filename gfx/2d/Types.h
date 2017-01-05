@@ -474,6 +474,11 @@ constexpr bool HalfCornerIsX(HalfCorner aHalfCorner)
   return !(aHalfCorner % 2);
 }
 
+constexpr Corner HalfToFullCorner(HalfCorner aHalfCorner)
+{
+  return Corner(aHalfCorner / 2);
+}
+
 } // namespace mozilla
 
 #endif /* MOZILLA_GFX_TYPES_H_ */
