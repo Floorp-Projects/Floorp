@@ -70,11 +70,9 @@ public:
   explicit GMPServiceChild();
   virtual ~GMPServiceChild();
 
-  PGMPContentParent* AllocPGMPContentParent(Transport* aTransport,
-                                            ProcessId aOtherPid) override;
+  already_AddRefed<GMPContentParent> GetBridgedGMPContentParent(ProcessId aOtherPid,
+                                                                ipc::Endpoint<PGMPContentParent>&& endpoint);
 
-  void GetBridgedGMPContentParent(ProcessId aOtherPid,
-                                  GMPContentParent** aGMPContentParent);
   void RemoveGMPContentParent(GMPContentParent* aGMPContentParent);
 
   void GetAlreadyBridgedTo(nsTArray<ProcessId>& aAlreadyBridgedTo);
