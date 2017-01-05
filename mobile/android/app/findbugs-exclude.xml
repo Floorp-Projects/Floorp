@@ -29,11 +29,6 @@
     <Bug pattern="UL_UNRELEASED_LOCK" />
   </Match>
 
-  <!-- Bug 1316011 -->
-  <Match>
-    <Bug pattern="VO_VOLATILE_INCREMENT" />
-  </Match>
-
   <!-- Bug 1316021 -->
   <Match>
     <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" />
@@ -51,6 +46,13 @@
   </Match>
     <Match>
     <Bug pattern="NP_NULL_PARAM_DEREF_NONVIRTUAL" />
+  </Match>
+
+  <!-- Ignore false positive in SerialRecordConsumer (Bug 1316011) -->
+  <Match>
+    <Class name="org.mozilla.gecko.sync.synchronizer.SerialRecordConsumer" />
+    <Method name="stored" />
+    <Bug pattern="VO_VOLATILE_INCREMENT" />
   </Match>
 
 </FindBugsFilter>
