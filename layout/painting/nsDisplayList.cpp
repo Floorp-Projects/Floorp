@@ -7351,9 +7351,11 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
 
+  // XXX Bug 1323912. nsSVGIntegrationUtils::PaintMask can not handle opacity
+  // correctly. Turn it off before bug fixed.
   // XXX Temporary disable paint clip-path onto mask before figure out
   // performance regression(bug 1325550).
-  if (maskUsage.shouldApplyClipPath) {
+  if (maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath) {
     return false;
   }
 

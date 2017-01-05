@@ -725,25 +725,6 @@ nsSVGIntegrationUtils::IsMaskResourceReady(nsIFrame* aFrame)
   return true;
 }
 
-class AutoPopGroup
-{
-public:
-  AutoPopGroup() : mContext(nullptr) { }
-
-  ~AutoPopGroup() {
-    if (mContext) {
-      mContext->PopGroupAndBlend();
-    }
-  }
-
-  void SetContext(gfxContext* aContext) {
-    mContext = aContext;
-  }
-
-private:
-  gfxContext* mContext;
-};
-
 DrawResult
 nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 {
@@ -755,6 +736,10 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
   if (!ValidateSVGFrame(frame)) {
     return DrawResult::SUCCESS;
   }
+
+  // XXX Bug 1323912.
+  MOZ_ASSERT(maskUsage.opacity == 1.0,
+             "nsSVGIntegrationUtils::PaintMask can not handle opacity now.");
 
   gfxContext& ctx = aParams.ctx;
   nsIFrame* firstFrame =
@@ -775,15 +760,6 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
     // clip-path into it.
     maskTarget = maskTarget->CreateSimilarDrawTarget(maskTarget->GetSize(),
                                                      SurfaceFormat::A8);
-  }
-
-  nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
-  AutoPopGroup autoPop;
-  bool shouldPushOpacity = (maskUsage.opacity != 1.0) &&
-                           (maskFrames.Length() != 1);
-  if (shouldPushOpacity) {
-    ctx.PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, maskUsage.opacity);
-    autoPop.SetContext(&ctx);
   }
 
   gfxContextMatrixAutoSaveRestore matSR;
@@ -817,8 +793,9 @@ nsSVGIntegrationUtils::PaintMask(const PaintFramesParams& aParams)
 
     SetupContextMatrix(frame, aParams, offsetToBoundingBox,
                        offsetToUserSpace);
-    result = PaintMaskSurface(aParams, maskTarget,
-                              shouldPushOpacity ?  1.0 : maskUsage.opacity,
+    nsTArray<nsSVGMaskFrame *> maskFrames = effectProperties.GetMaskFrames();
+
+    result = PaintMaskSurface(aParams, maskTarget, 1.0,
                               firstFrame->StyleContext(), maskFrames,
                               ctx.CurrentMatrix(), offsetToUserSpace);
     if (result != DrawResult::SUCCESS) {
