@@ -144,12 +144,14 @@ public:
   // Called when the child process has died.
   void ChildTerminated();
 
+  bool OpenPGMPContent();
+
   void GetGMPContentParent(UniquePtr<MozPromiseHolder<GetGMPContentParentPromise>>&& aPromiseHolder);
   already_AddRefed<GMPContentParent> ForgetGMPContentParent();
 
   bool EnsureProcessLoaded(base::ProcessId* aID);
 
-  bool Bridge(GMPServiceParent* aGMPServiceParent);
+  void IncrementGMPContentChildCount();
 
   const nsTArray<GMPCapability>& GetCapabilities() const { return mCapabilities; }
 
@@ -174,9 +176,6 @@ private:
   mozilla::ipc::IPCResult RecvPGMPStorageConstructor(PGMPStorageParent* actor) override;
   PGMPStorageParent* AllocPGMPStorageParent() override;
   bool DeallocPGMPStorageParent(PGMPStorageParent* aActor) override;
-
-  PGMPContentParent* AllocPGMPContentParent(Transport* aTransport,
-                                            ProcessId aOtherPid) override;
 
   mozilla::ipc::IPCResult RecvPGMPTimerConstructor(PGMPTimerParent* actor) override;
   PGMPTimerParent* AllocPGMPTimerParent() override;

@@ -1675,6 +1675,7 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
                                 uint32_t* aOutPluginId,
                                 ProcessId* aOutProcessId,
                                 nsCString* aOutDisplayName,
+                                Endpoint<PGMPContentParent>* aOutEndpoint,
                                 nsresult* aOutRv)
 {
   if (mService->IsShuttingDown()) {
@@ -1698,10 +1699,27 @@ GMPServiceParent::RecvLaunchGMP(const nsCString& aNodeId,
 
   *aOutDisplayName = gmp->GetDisplayName();
 
-  if (!(aAlreadyBridgedTo.Contains(*aOutProcessId) || gmp->Bridge(this))) {
+  if (aAlreadyBridgedTo.Contains(*aOutProcessId)) {
+    *aOutRv = NS_OK;
+    return IPC_OK();
+  }
+
+  Endpoint<PGMPContentParent> parent;
+  Endpoint<PGMPContentChild> child;
+  if (NS_FAILED(PGMPContent::CreateEndpoints(OtherPid(), *aOutProcessId,
+                                             &parent, &child))) {
     *aOutRv = NS_ERROR_FAILURE;
     return IPC_OK();
   }
+
+  *aOutEndpoint = Move(parent);
+
+  if (!gmp->SendInitGMPContentChild(Move(child))) {
+    *aOutRv = NS_ERROR_FAILURE;
+    return IPC_OK();
+  }
+
+  gmp->IncrementGMPContentChildCount();
 
   *aOutRv = NS_OK;
   return IPC_OK();
