@@ -4,7 +4,8 @@
 /* eslint-env browser */
 "use strict";
 
-const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const React = require("devtools/client/shared/vendor/react");
+const { DOM: dom, createClass, createFactory, PropTypes } = React;
 
 const AUTO_EXPAND_DEPTH = 0;
 const NUMBER_OF_OFFSCREEN_ITEMS = 1;
@@ -630,6 +631,14 @@ module.exports = createClass({
 const ArrowExpander = createFactory(createClass({
   displayName: "ArrowExpander",
 
+  propTypes: {
+    item: PropTypes.any.isRequired,
+    visible: PropTypes.bool.isRequired,
+    expanded: PropTypes.bool.isRequired,
+    onCollapse: PropTypes.func.isRequired,
+    onExpand: PropTypes.func.isRequired,
+  },
+
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item !== nextProps.item
       || this.props.visible !== nextProps.visible
@@ -659,6 +668,23 @@ const ArrowExpander = createFactory(createClass({
 }));
 
 const TreeNode = createFactory(createClass({
+  propTypes: {
+    focused: PropTypes.bool.isRequired,
+    onFocusedNodeUnmount: PropTypes.func,
+    item: PropTypes.any.isRequired,
+    expanded: PropTypes.bool.isRequired,
+    hasChildren: PropTypes.bool.isRequired,
+    onExpand: PropTypes.func.isRequired,
+    index: PropTypes.number.isRequired,
+    first: PropTypes.bool,
+    last: PropTypes.bool,
+    onFocus: PropTypes.func,
+    onBlur: PropTypes.func,
+    onCollapse: PropTypes.func.isRequired,
+    depth: PropTypes.number.isRequired,
+    renderItem: PropTypes.func.isRequired,
+  },
+
   componentDidMount() {
     if (this.props.focused) {
       this.refs.button.focus();

@@ -26,7 +26,8 @@ define(function (require, exports, module) {
     displayName: "Date",
 
     propTypes: {
-      object: React.PropTypes.object.isRequired
+      object: React.PropTypes.object.isRequired,
+      objectLink: React.PropTypes.func,
     },
 
     getTitle: function (grip) {

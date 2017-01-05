@@ -22,6 +22,13 @@ define(function (require, exports, module) {
   const Number = React.createClass({
     displayName: "Number",
 
+    propTypes: {
+      object: React.PropTypes.oneOfType([
+        React.PropTypes.object,
+        React.PropTypes.number,
+      ]).isRequired
+    },
+
     stringify: function (object) {
       let isNegativeZero = Object.is(object, -0) ||
         (object.type && object.type == "-0");

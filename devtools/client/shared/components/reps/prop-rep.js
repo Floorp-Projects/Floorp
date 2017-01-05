@@ -37,6 +37,7 @@ define(function (require, exports, module) {
       delim: React.PropTypes.string,
       // @TODO Change this to Object.values once it's supported in Node's version of V8
       mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
+      objectLink: React.PropTypes.func,
     },
 
     render: wrapRender(function () {
