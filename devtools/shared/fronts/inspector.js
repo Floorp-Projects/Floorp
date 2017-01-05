@@ -991,11 +991,7 @@ var InspectorFront = FrontClassWithSpec(inspectorSpec, {
     if (toolbox) {
       // If the eyedropper was already started using the gcli command, hide it so we don't
       // end up with 2 instances of the eyedropper on the page.
-      let {target} = toolbox;
-      let requisition = yield CommandUtils.createRequisition(target, {
-        environment: CommandUtils.createEnvironment({target})
-      });
-      yield requisition.updateExec("eyedropper --hide");
+      CommandUtils.executeOnTarget(toolbox.target, "eyedropper --hide");
     }
 
     yield this._pickColorFromPage(options);
