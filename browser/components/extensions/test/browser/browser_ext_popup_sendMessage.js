@@ -23,7 +23,7 @@ add_task(function* test_popup_sendMessage_reply() {
       "popup.js": async function() {
         browser.runtime.onMessage.addListener(async msg => {
           if (msg == "popup-ping") {
-            return Promise.resolve("popup-pong");
+            return "popup-pong";
           }
         });
 
