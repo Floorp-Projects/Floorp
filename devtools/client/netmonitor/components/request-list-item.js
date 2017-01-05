@@ -4,11 +4,49 @@
 
 "use strict";
 
-const { createClass, PropTypes, DOM } = require("devtools/client/shared/vendor/react");
+const { createClass, createFactory, PropTypes, DOM } = require("devtools/client/shared/vendor/react");
 const { div, span, img } = DOM;
 const { L10N } = require("../l10n");
 const { getFormattedSize } = require("../utils/format-utils");
 const { getAbbreviatedMimeType } = require("../request-utils");
+
+/**
+ * Compare two objects on a subset of their properties
+ */
+function propertiesEqual(props, item1, item2) {
+  return item1 === item2 || props.every(p => item1[p] === item2[p]);
+}
+
+/**
+ * Used by shouldComponentUpdate: compare two items, and compare only properties
+ * relevant for rendering the RequestListItem. Other properties (like request and
+ * response headers, cookies, bodies) are ignored. These are very useful for the
+ * sidebar details, but not here.
+ */
+const UPDATED_REQ_ITEM_PROPS = [
+  "mimeType",
+  "eventTimings",
+  "securityState",
+  "responseContentDataUri",
+  "status",
+  "statusText",
+  "fromCache",
+  "fromServiceWorker",
+  "method",
+  "url",
+  "remoteAddress",
+  "cause",
+  "contentSize",
+  "transferredSize",
+  "startedMillis",
+  "totalTime",
+];
+
+const UPDATED_REQ_PROPS = [
+  "index",
+  "isSelected",
+  "firstRequestStartedMillis"
+];
 
 /**
  * Render one row in the request list.
@@ -33,10 +71,8 @@ const RequestListItem = createClass({
   },
 
   shouldComponentUpdate(nextProps) {
-    return !relevantPropsEqual(this.props.item, nextProps.item)
-      || this.props.index !== nextProps.index
-      || this.props.isSelected !== nextProps.isSelected
-      || this.props.firstRequestStartedMillis !== nextProps.firstRequestStartedMillis;
+    return !propertiesEqual(UPDATED_REQ_ITEM_PROPS, this.props.item, nextProps.item) ||
+           !propertiesEqual(UPDATED_REQ_PROPS, this.props, nextProps);
   },
 
   componentDidUpdate(prevProps) {
@@ -88,151 +124,171 @@ const RequestListItem = createClass({
         onContextMenu,
         onMouseDown,
       },
-      StatusColumn(item),
-      MethodColumn(item),
-      FileColumn(item),
-      DomainColumn(item, onSecurityIconClick),
-      CauseColumn(item),
-      TypeColumn(item),
-      TransferredSizeColumn(item),
-      ContentSizeColumn(item),
-      WaterfallColumn(item, firstRequestStartedMillis)
+      StatusColumn({ item }),
+      MethodColumn({ item }),
+      FileColumn({ item }),
+      DomainColumn({ item, onSecurityIconClick }),
+      CauseColumn({ item }),
+      TypeColumn({ item }),
+      TransferredSizeColumn({ item }),
+      ContentSizeColumn({ item }),
+      WaterfallColumn({ item, firstRequestStartedMillis })
     );
   }
 });
 
-/**
- * Used by shouldComponentUpdate: compare two items, and compare only properties
- * relevant for rendering the RequestListItem. Other properties (like request and
- * response headers, cookies, bodies) are ignored. These are very useful for the
- * sidebar details, but not here.
- */
-const RELEVANT_ITEM_PROPS = [
+const UPDATED_STATUS_PROPS = [
   "status",
   "statusText",
   "fromCache",
   "fromServiceWorker",
-  "method",
-  "url",
-  "responseContentDataUri",
-  "remoteAddress",
-  "securityState",
-  "cause",
-  "mimeType",
-  "contentSize",
-  "transferredSize",
-  "startedMillis",
-  "totalTime",
-  "eventTimings",
 ];
 
-function relevantPropsEqual(item1, item2) {
-  return item1 === item2 || RELEVANT_ITEM_PROPS.every(p => item1[p] === item2[p]);
-}
+const StatusColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return !propertiesEqual(UPDATED_STATUS_PROPS, this.props.item, nextProps.item);
+  },
 
-function StatusColumn(item) {
-  const { status, statusText, fromCache, fromServiceWorker } = item;
+  render() {
+    const { status, statusText, fromCache, fromServiceWorker } = this.props.item;
 
-  let code, title;
+    let code, title;
 
-  if (status) {
-    if (fromCache) {
-      code = "cached";
-    } else if (fromServiceWorker) {
-      code = "service worker";
-    } else {
-      code = status;
-    }
-
-    if (statusText) {
-      title = `${status} ${statusText}`;
+    if (status) {
       if (fromCache) {
-        title += " (cached)";
+        code = "cached";
+      } else if (fromServiceWorker) {
+        code = "service worker";
+      } else {
+        code = status;
       }
-      if (fromServiceWorker) {
-        title += " (service worker)";
+
+      if (statusText) {
+        title = `${status} ${statusText}`;
+        if (fromCache) {
+          title += " (cached)";
+        }
+        if (fromServiceWorker) {
+          title += " (service worker)";
+        }
       }
     }
+
+    return div({ className: "requests-menu-subitem requests-menu-status", title },
+      div({ className: "requests-menu-status-icon", "data-code": code }),
+      span({ className: "subitem-label requests-menu-status-code" }, status)
+    );
   }
+}));
 
-  return div({ className: "requests-menu-subitem requests-menu-status", title },
-    div({ className: "requests-menu-status-icon", "data-code": code }),
-    span({ className: "subitem-label requests-menu-status-code" }, status)
-  );
-}
+const MethodColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return this.props.item.method !== nextProps.item.method;
+  },
 
-function MethodColumn(item) {
-  const { method } = item;
-  return div({ className: "requests-menu-subitem requests-menu-method-box" },
-    span({ className: "subitem-label requests-menu-method" }, method)
-  );
-}
-
-function FileColumn(item) {
-  const { urlDetails, responseContentDataUri } = item;
-
-  return div({ className: "requests-menu-subitem requests-menu-icon-and-file" },
-    img({
-      className: "requests-menu-icon",
-      src: responseContentDataUri,
-      hidden: !responseContentDataUri,
-      "data-type": responseContentDataUri ? "thumbnail" : undefined
-    }),
-    div(
-      {
-        className: "subitem-label requests-menu-file",
-        title: urlDetails.unicodeUrl
-      },
-      urlDetails.baseNameWithQuery
-    )
-  );
-}
-
-function DomainColumn(item, onSecurityIconClick) {
-  const { urlDetails, remoteAddress, securityState } = item;
-
-  let iconClassList = [ "requests-security-state-icon" ];
-  let iconTitle;
-  if (urlDetails.isLocal) {
-    iconClassList.push("security-state-local");
-    iconTitle = L10N.getStr("netmonitor.security.state.secure");
-  } else if (securityState) {
-    iconClassList.push(`security-state-${securityState}`);
-    iconTitle = L10N.getStr(`netmonitor.security.state.${securityState}`);
+  render() {
+    const { method } = this.props.item;
+    return div({ className: "requests-menu-subitem requests-menu-method-box" },
+      span({ className: "subitem-label requests-menu-method" }, method)
+    );
   }
+}));
 
-  let title = urlDetails.host + (remoteAddress ? ` (${remoteAddress})` : "");
+const UPDATED_FILE_PROPS = [
+  "urlDetails",
+  "responseContentDataUri",
+];
 
-  return div(
-    { className: "requests-menu-subitem requests-menu-security-and-domain" },
-    div({
-      className: iconClassList.join(" "),
-      title: iconTitle,
-      onClick: onSecurityIconClick,
-    }),
-    span({ className: "subitem-label requests-menu-domain", title }, urlDetails.host)
-  );
-}
+const FileColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return !propertiesEqual(UPDATED_FILE_PROPS, this.props.item, nextProps.item);
+  },
 
-function CauseColumn(item) {
-  const { cause } = item;
+  render() {
+    const { urlDetails, responseContentDataUri } = this.props.item;
 
-  let causeType = "";
-  let causeUri = undefined;
-  let causeHasStack = false;
-
-  if (cause) {
-    causeType = cause.type;
-    causeUri = cause.loadingDocumentUri;
-    causeHasStack = cause.stacktrace && cause.stacktrace.length > 0;
+    return div({ className: "requests-menu-subitem requests-menu-icon-and-file" },
+      img({
+        className: "requests-menu-icon",
+        src: responseContentDataUri,
+        hidden: !responseContentDataUri,
+        "data-type": responseContentDataUri ? "thumbnail" : undefined
+      }),
+      div(
+        {
+          className: "subitem-label requests-menu-file",
+          title: urlDetails.unicodeUrl
+        },
+        urlDetails.baseNameWithQuery
+      )
+    );
   }
+}));
 
-  return div(
-    { className: "requests-menu-subitem requests-menu-cause", title: causeUri },
-    span({ className: "requests-menu-cause-stack", hidden: !causeHasStack }, "JS"),
-    span({ className: "subitem-label" }, causeType)
-  );
-}
+const UPDATED_DOMAIN_PROPS = [
+  "urlDetails",
+  "remoteAddress",
+  "securityState",
+];
+
+const DomainColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return !propertiesEqual(UPDATED_DOMAIN_PROPS, this.props.item, nextProps.item);
+  },
+
+  render() {
+    const { item, onSecurityIconClick } = this.props;
+    const { urlDetails, remoteAddress, securityState } = item;
+
+    let iconClassList = [ "requests-security-state-icon" ];
+    let iconTitle;
+    if (urlDetails.isLocal) {
+      iconClassList.push("security-state-local");
+      iconTitle = L10N.getStr("netmonitor.security.state.secure");
+    } else if (securityState) {
+      iconClassList.push(`security-state-${securityState}`);
+      iconTitle = L10N.getStr(`netmonitor.security.state.${securityState}`);
+    }
+
+    let title = urlDetails.host + (remoteAddress ? ` (${remoteAddress})` : "");
+
+    return div(
+      { className: "requests-menu-subitem requests-menu-security-and-domain" },
+      div({
+        className: iconClassList.join(" "),
+        title: iconTitle,
+        onClick: onSecurityIconClick,
+      }),
+      span({ className: "subitem-label requests-menu-domain", title }, urlDetails.host)
+    );
+  }
+}));
+
+const CauseColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return this.props.item.cause !== nextProps.item.cause;
+  },
+
+  render() {
+    const { cause } = this.props.item;
+
+    let causeType = "";
+    let causeUri = undefined;
+    let causeHasStack = false;
+
+    if (cause) {
+      causeType = cause.type;
+      causeUri = cause.loadingDocumentUri;
+      causeHasStack = cause.stacktrace && cause.stacktrace.length > 0;
+    }
+
+    return div(
+      { className: "requests-menu-subitem requests-menu-cause", title: causeUri },
+      span({ className: "requests-menu-cause-stack", hidden: !causeHasStack }, "JS"),
+      span({ className: "subitem-label" }, causeType)
+    );
+  }
+}));
 
 const CONTENT_MIME_TYPE_ABBREVIATIONS = {
   "ecmascript": "js",
@@ -240,56 +296,110 @@ const CONTENT_MIME_TYPE_ABBREVIATIONS = {
   "x-javascript": "js"
 };
 
-function TypeColumn(item) {
-  const { mimeType } = item;
-  let abbrevType;
-  if (mimeType) {
-    abbrevType = getAbbreviatedMimeType(mimeType);
-    abbrevType = CONTENT_MIME_TYPE_ABBREVIATIONS[abbrevType] || abbrevType;
+const TypeColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return this.props.item.mimeType !== nextProps.item.mimeType;
+  },
+
+  render() {
+    const { mimeType } = this.props.item;
+    let abbrevType;
+    if (mimeType) {
+      abbrevType = getAbbreviatedMimeType(mimeType);
+      abbrevType = CONTENT_MIME_TYPE_ABBREVIATIONS[abbrevType] || abbrevType;
+    }
+
+    return div(
+      { className: "requests-menu-subitem requests-menu-type", title: mimeType },
+      span({ className: "subitem-label" }, abbrevType)
+    );
   }
+}));
 
-  return div(
-    { className: "requests-menu-subitem requests-menu-type", title: mimeType },
-    span({ className: "subitem-label" }, abbrevType)
-  );
-}
+const UPDATED_TRANSFERRED_PROPS = [
+  "transferredSize",
+  "fromCache",
+  "fromServiceWorker",
+];
 
-function TransferredSizeColumn(item) {
-  const { transferredSize, fromCache, fromServiceWorker } = item;
+const TransferredSizeColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return !propertiesEqual(UPDATED_TRANSFERRED_PROPS, this.props.item, nextProps.item);
+  },
 
-  let text;
-  let className = "subitem-label";
-  if (fromCache) {
-    text = L10N.getStr("networkMenu.sizeCached");
-    className += " theme-comment";
-  } else if (fromServiceWorker) {
-    text = L10N.getStr("networkMenu.sizeServiceWorker");
-    className += " theme-comment";
-  } else if (typeof transferredSize == "number") {
-    text = getFormattedSize(transferredSize);
-  } else if (transferredSize === null) {
-    text = L10N.getStr("networkMenu.sizeUnavailable");
+  render() {
+    const { transferredSize, fromCache, fromServiceWorker } = this.props.item;
+
+    let text;
+    let className = "subitem-label";
+    if (fromCache) {
+      text = L10N.getStr("networkMenu.sizeCached");
+      className += " theme-comment";
+    } else if (fromServiceWorker) {
+      text = L10N.getStr("networkMenu.sizeServiceWorker");
+      className += " theme-comment";
+    } else if (typeof transferredSize == "number") {
+      text = getFormattedSize(transferredSize);
+    } else if (transferredSize === null) {
+      text = L10N.getStr("networkMenu.sizeUnavailable");
+    }
+
+    return div(
+      { className: "requests-menu-subitem requests-menu-transferred", title: text },
+      span({ className }, text)
+    );
   }
+}));
 
-  return div(
-    { className: "requests-menu-subitem requests-menu-transferred", title: text },
-    span({ className }, text)
-  );
-}
+const ContentSizeColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return this.props.item.contentSize !== nextProps.item.contentSize;
+  },
 
-function ContentSizeColumn(item) {
-  const { contentSize } = item;
+  render() {
+    const { contentSize } = this.props.item;
 
-  let text;
-  if (typeof contentSize == "number") {
-    text = getFormattedSize(contentSize);
+    let text;
+    if (typeof contentSize == "number") {
+      text = getFormattedSize(contentSize);
+    }
+
+    return div(
+      {
+        className: "requests-menu-subitem subitem-label requests-menu-size",
+        title: text
+      },
+      span({ className: "subitem-label" }, text)
+    );
   }
+}));
 
-  return div(
-    { className: "requests-menu-subitem subitem-label requests-menu-size", title: text },
-    span({ className: "subitem-label" }, text)
-  );
-}
+const UPDATED_WATERFALL_PROPS = [
+  "eventTimings",
+  "totalTime",
+  "fromCache",
+  "fromServiceWorker",
+];
+
+const WaterfallColumn = createFactory(createClass({
+  shouldComponentUpdate(nextProps) {
+    return this.props.firstRequestStartedMillis !== nextProps.firstRequestStartedMillis ||
+           !propertiesEqual(UPDATED_WATERFALL_PROPS, this.props.item, nextProps.item);
+  },
+
+  render() {
+    const { item, firstRequestStartedMillis } = this.props;
+    const startedDeltaMillis = item.startedMillis - firstRequestStartedMillis;
+    const paddingInlineStart = `${startedDeltaMillis}px`;
+
+    return div({ className: "requests-menu-subitem requests-menu-waterfall" },
+      div(
+        { className: "requests-menu-timings", style: { paddingInlineStart } },
+        timingBoxes(item)
+      )
+    );
+  }
+}));
 
 // List of properties of the timing info we want to create boxes for
 const TIMING_KEYS = ["blocked", "dns", "connect", "send", "wait", "receive"];
@@ -329,18 +439,6 @@ function timingBoxes(item) {
   }
 
   return boxes;
-}
-
-function WaterfallColumn(item, firstRequestStartedMillis) {
-  const startedDeltaMillis = item.startedMillis - firstRequestStartedMillis;
-  const paddingInlineStart = `${startedDeltaMillis}px`;
-
-  return div({ className: "requests-menu-subitem requests-menu-waterfall" },
-    div(
-      { className: "requests-menu-timings", style: { paddingInlineStart } },
-      timingBoxes(item)
-    )
-  );
 }
 
 module.exports = RequestListItem;
