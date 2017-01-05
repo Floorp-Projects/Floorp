@@ -234,6 +234,7 @@ public:
                                         uint32_t* aOutPluginId,
                                         ProcessId* aOutID,
                                         nsCString* aOutDisplayName,
+                                        Endpoint<PGMPContentParent>* aOutEndpoint,
                                         nsresult* aOutRv) override;
 
 private:

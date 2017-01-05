@@ -15,8 +15,6 @@ namespace gmp {
 
 intr protocol PGMP
 {
-  parent opens PGMPContent;
-
   manages PCrashReporter;
   manages PGMPTimer;
   manages PGMPStorage;
@@ -34,6 +32,7 @@ child:
   async SetNodeId(nsCString nodeId);
   async PreloadLibs(nsCString libs);
   async CloseActive();
+  async InitGMPContentChild(Endpoint<PGMPContentChild> endpoint);
 };
 
 } // namespace gmp
