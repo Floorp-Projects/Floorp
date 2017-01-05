@@ -2488,6 +2488,31 @@ TEST_P(NewSdpTest, CheckRedNoFmtp) {
   }
 }
 
+TEST_P(NewSdpTest, CheckRedEmptyFmtp) {
+  // if serializing and re-parsing, we expect errors
+  if (GetParam()) {
+    ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122" CRLF);
+  } else {
+    ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122" CRLF, false);
+    ASSERT_NE(0U, GetParseErrors().size());
+  }
+
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
+  ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
+    << "Wrong number of media sections";
+
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+              SdpAttribute::kFmtpAttribute));
+  auto video_format_params =
+      mSdp->GetMediaSection(0).GetAttributeList().GetFmtp().mFmtps;
+  ASSERT_EQ(3U, video_format_params.size());
+
+  // make sure we don't get a fmtp for codec 122
+  for (size_t i = 0; i < video_format_params.size(); ++i) {
+    ASSERT_NE("122", video_format_params[i].format);
+  }
+}
+
 TEST_P(NewSdpTest, CheckRedFmtpWith2Codecs) {
   ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121" CRLF);
   ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
