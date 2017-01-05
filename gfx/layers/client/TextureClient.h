@@ -111,6 +111,7 @@ public:
 
   virtual SyncType GetSyncType() = 0;
   virtual void FinalizeFrame() = 0;
+  virtual bool IsSyncObjectValid() = 0;
 
 protected:
   SyncObject() { }
