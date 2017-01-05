@@ -6,11 +6,14 @@
 #include "WebRenderBorderLayer.h"
 
 #include "LayersLogging.h"
+#include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 
 namespace mozilla {
 namespace layers {
+
+using namespace mozilla::gfx;
 
 void
 WebRenderBorderLayer::RenderLayer()
