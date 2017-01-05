@@ -66,6 +66,9 @@ module.exports = {
     // Disallow the use of debugger
     "no-debugger": "error",
 
+    // Disallow deleting variables
+    "no-delete-var": "error",
+
     // No duplicate arguments in function declarations
     "no-dupe-args": "error",
 
