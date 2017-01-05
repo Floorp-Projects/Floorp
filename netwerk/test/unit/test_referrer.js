@@ -47,6 +47,22 @@ function run_test() {
   // test that https ref is not sent to http
   do_check_null(getTestReferrer(server_uri_2, referer_uri_https));
 
+  // tests for referer.userControlPolicy
+  prefs.setIntPref("network.http.referer.userControlPolicy", 0);
+  do_check_null(getTestReferrer(server_uri, referer_uri));
+  prefs.setIntPref("network.http.referer.userControlPolicy", 1);
+  do_check_null(getTestReferrer(server_uri, referer_uri));
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), referer_uri_2);
+  prefs.setIntPref("network.http.referer.userControlPolicy", 2);
+  do_check_null(getTestReferrer(server_uri, referer_uri_https));
+  do_check_eq(getTestReferrer(server_uri_https, referer_uri_https), referer_uri_https);
+  do_check_eq(getTestReferrer(server_uri_https, referer_uri_2_https), "https://bar.examplesite.com/");
+  do_check_eq(getTestReferrer(server_uri, referer_uri_2), referer_uri_2);
+  do_check_eq(getTestReferrer(server_uri, referer_uri), "http://foo.example.com/");
+  prefs.setIntPref("network.http.referer.userControlPolicy", 3);
+  do_check_eq(getTestReferrer(server_uri, referer_uri), referer_uri);
+  do_check_null(getTestReferrer(server_uri_2, referer_uri_https));
+
   // tests for referer.spoofSource
   prefs.setBoolPref("network.http.referer.spoofSource", true);
   do_check_eq(getTestReferrer(server_uri, referer_uri), server_uri);
