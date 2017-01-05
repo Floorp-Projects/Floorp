@@ -1,3 +1,4 @@
+/* import-globals-from ../unit/head_crashreporter.js */
 load("../unit/head_crashreporter.js");
 
 function run_test() {

@@ -10,6 +10,7 @@ var gPrintSettings = null;
 var gPrintSettingsInterface  = Components.interfaces.nsIPrintSettings;
 var gPaperArray;
 var gPrefs;
+var gParamBlock;
 
 var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = true;
@@ -310,15 +311,15 @@ function onLoad() {
   initDialog();
 
   gPrintSettings = window.arguments[0].QueryInterface(gPrintSetInterface);
-  paramBlock = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
+  gParamBlock = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 
   if (doDebug) {
     if (gPrintSettings == null) alert("PrintSettings is null!");
-    if (paramBlock == null) alert("nsIDialogParam is null!");
+    if (gParamBlock == null) alert("nsIDialogParam is null!");
   }
 
   // default return value is "cancel"
-  paramBlock.SetInt(0, 0);
+  gParamBlock.SetInt(0, 0);
 
   loadDialog();
 }
@@ -368,9 +369,9 @@ function onAccept() {
     dump("************ onAccept gPrintSettings: " + gPrintSettings + "\n");
   }
 
-  if (paramBlock) {
+  if (gParamBlock) {
     // set return value to "ok"
-    paramBlock.SetInt(0, 1);
+    gParamBlock.SetInt(0, 1);
   } else {
     dump("*** FATAL ERROR: paramBlock missing\n");
   }

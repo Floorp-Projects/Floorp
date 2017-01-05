@@ -949,7 +949,7 @@ function run_float_tests(library, t, name, size) {
   // Check that values roundtrip through toSource() correctly.
   function test_roundtrip(tFn, val) {
     let f1 = tFn(val);
-    eval("var f2 = " + f1.toSource());
+    var f2 = eval(f1.toSource());
     do_check_eq(f1.value, f2.value);
   }
   vals = [Infinity, -Infinity, -0, 0, 1, -1, 1 / 3, -1 / 3, 1 / 4, -1 / 4,
@@ -1543,7 +1543,7 @@ function run_StructType_tests() {
 
   do_check_eq(s.toSource(), "s_t(4, {\"a\": 7, \"b\": 2}, 10)");
   do_check_eq(s.toSource(), s.toString());
-  eval("var s2 = " + s.toSource());
+  var s2 = eval(s.toSource());
   do_check_true(s2.constructor === s_t);
   do_check_eq(s.b.b, s2.b.b);
 
@@ -2041,7 +2041,7 @@ function run_ArrayType_tests() {
   c.value = [1, 2, 3, 4, 5, 6];
   do_check_eq(c.toSource(), "ctypes.int32_t.array(6)([1, 2, 3, 4, 5, 6])");
   do_check_eq(c.toSource(), c.toString());
-  eval("var c2 = " + c.toSource());
+  var c2 = eval(c.toSource());
   do_check_eq(c2.constructor.name, "int32_t[6]");
   do_check_eq(c2.length, 6);
   do_check_eq(c2[3], c[3]);

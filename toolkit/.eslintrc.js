@@ -207,10 +207,13 @@ module.exports = {
     "browser": true,
   },
   "globals": {
+    "ChromeWorker": false,
+    "ChromeUtils": false,
     "Components": false,
     "dump": true,
+    "KeyEvent": false,
     "openDialog": false,
     "sizeToContent": false,
-    "ChromeWorker": false,
+    "SharedArrayBuffer": false,
   }
 };

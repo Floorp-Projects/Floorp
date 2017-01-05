@@ -4223,4 +4223,879 @@ TEST_F(JsepSessionTest, TestNonDefaultProtocol)
             parsedOffer->GetMediaSection(1).GetProtocol());
 }
 
+TEST_F(JsepSessionTest, CreateOfferNoVideoStreamRecvVideo)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferNoAudioStreamRecvAudio)
+{
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferNoVideoStream)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(0U));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferNoAudioStream)
+{
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(0U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferDontReceiveAudio)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(0U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferDontReceiveVideo)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(0U));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferRemoveAudioTrack)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(0U));
+
+  RefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.front());
+  ASSERT_TRUE(removedTrack);
+  ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrack->GetStreamId(),
+                                           removedTrack->GetTrackId()));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferDontReceiveAudioRemoveAudioTrack)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(0U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  RefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.front());
+  ASSERT_TRUE(removedTrack);
+  ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrack->GetStreamId(),
+                                           removedTrack->GetTrackId()));
+
+  CreateOffer(Some(options));
+}
+
+TEST_F(JsepSessionTest, CreateOfferDontReceiveVideoRemoveVideoTrack)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(0U));
+
+  RefPtr<JsepTrack> removedTrack = GetTrackOff(0, types.back());
+  ASSERT_TRUE(removedTrack);
+  ASSERT_EQ(NS_OK, mSessionOff.RemoveTrack(removedTrack->GetStreamId(),
+                                           removedTrack->GetTrackId()));
+
+  CreateOffer(Some(options));
+}
+
+static const std::string strSampleCandidate =
+  "a=candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host\r\n";
+
+static const unsigned short nSamplelevel = 2;
+
+TEST_F(JsepSessionTest, CreateOfferAddCandidate)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  std::string mid;
+  bool skipped;
+  nsresult rv;
+  rv = mSessionOff.AddLocalIceCandidate(strSampleCandidate,
+                                        nSamplelevel, &mid, &skipped);
+  ASSERT_EQ(NS_OK, rv);
+}
+
+TEST_F(JsepSessionTest, AddIceCandidateEarly)
+{
+  std::string mid;
+  bool skipped;
+  nsresult rv;
+  rv = mSessionOff.AddLocalIceCandidate(strSampleCandidate,
+                                        nSamplelevel, &mid, &skipped);
+
+  // This can't succeed without a local description
+  ASSERT_NE(NS_OK, rv);
+}
+
+TEST_F(JsepSessionTest, OfferAnswerDontAddAudioStreamOnAnswerNoOptions)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+  AddTracks(mSessionAns, "video");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  CreateOffer(Some(options));
+  std::string offer = CreateOffer(Some(options));
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+}
+
+TEST_F(JsepSessionTest, OfferAnswerDontAddVideoStreamOnAnswerNoOptions)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+  AddTracks(mSessionAns, "audio");
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  CreateOffer(Some(options));
+  std::string offer = CreateOffer(Some(options));
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer, CHECK_SUCCESS);
+  SetRemoteAnswer(answer, CHECK_SUCCESS);
+}
+
+TEST_F(JsepSessionTest, OfferAnswerDontAddAudioVideoStreamsOnAnswerNoOptions)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+  AddTracks(mSessionAns);
+
+  JsepOfferOptions options;
+  options.mOfferToReceiveAudio = Some(static_cast<size_t>(1U));
+  options.mOfferToReceiveVideo = Some(static_cast<size_t>(1U));
+
+  OfferAnswer();
+}
+
+TEST_F(JsepSessionTest, OfferAndAnswerWithExtraCodec)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+
+  UniquePtr<Sdp> munge = Parse(answer);
+  SdpMediaSection& mediaSection = munge->GetMediaSection(0);
+  mediaSection.AddCodec("8", "PCMA", 8000, 1);
+  std::string sdpString = munge->ToString();
+
+  SetLocalAnswer(sdpString);
+  SetRemoteAnswer(answer);
+}
+
+TEST_F(JsepSessionTest, AddCandidateInHaveLocalOffer) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  nsresult rv;
+  std::string mid;
+  rv = mSessionOff.AddRemoteIceCandidate(strSampleCandidate,
+                                         mid, nSamplelevel);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED, rv);
+}
+
+TEST_F(JsepSessionTest, SetLocalWithoutCreateOffer) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+
+  std::string offer = CreateOffer();
+  nsresult rv = mSessionAns.SetLocalDescription(kJsepSdpOffer, offer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED, rv);
+}
+
+TEST_F(JsepSessionTest, SetLocalWithoutCreateAnswer) {
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+
+  std::string offer = CreateOffer();
+  SetRemoteOffer(offer);
+  nsresult rv = mSessionAns.SetLocalDescription(kJsepSdpAnswer, offer);
+  ASSERT_EQ(NS_ERROR_UNEXPECTED, rv);
+}
+
+// Test for Bug 843595
+TEST_F(JsepSessionTest, missingUfrag)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string ufrag = "ice-ufrag";
+  std::size_t pos = offer.find(ufrag);
+  ASSERT_NE(pos, std::string::npos);
+  offer.replace(pos, ufrag.length(), "ice-ufrog");
+  nsresult rv = mSessionAns.SetRemoteDescription(kJsepSdpOffer, offer);
+  ASSERT_EQ(NS_ERROR_INVALID_ARG, rv);
+}
+
+TEST_F(JsepSessionTest, AudioOnlyCalleeNoRtcpMux)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string rtcp_mux = "a=rtcp-mux\r\n";
+  std::size_t pos = offer.find(rtcp_mux);
+  ASSERT_NE(pos, std::string::npos);
+  offer.replace(pos, rtcp_mux.length(), "");
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  pos = answer.find(rtcp_mux);
+  ASSERT_EQ(pos, std::string::npos);
+}
+
+// This test comes from Bug 810220
+TEST_F(JsepSessionTest, AudioOnlyG711Call)
+{
+  std::string offer =
+    "v=0\r\n"
+    "o=- 1 1 IN IP4 148.147.200.251\r\n"
+    "s=-\r\n"
+    "b=AS:64\r\n"
+    "t=0 0\r\n"
+    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+    "m=audio 9000 UDP/TLS/RTP/SAVPF 0 8 126\r\n"
+    "c=IN IP4 148.147.200.251\r\n"
+    "b=TIAS:64000\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:126 telephone-event/8000\r\n"
+    "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+    "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+    "a=setup:active\r\n"
+    "a=sendrecv\r\n";
+
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionAns, "audio");
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer = CreateAnswer();
+
+  // They didn't offer opus, so our answer shouldn't include it.
+  ASSERT_EQ(answer.find(" opus/"), std::string::npos);
+
+  // They also didn't offer video or application
+  ASSERT_EQ(answer.find("video"), std::string::npos);
+  ASSERT_EQ(answer.find("application"), std::string::npos);
+
+  // We should answer with PCMU and telephone-event
+  ASSERT_NE(answer.find(" PCMU/8000"), std::string::npos);
+
+  // Double-check the directionality
+  ASSERT_NE(answer.find("\r\na=sendrecv"), std::string::npos);
+
+}
+
+TEST_F(JsepSessionTest, AudioOnlyG722Only)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  std::string audio = "m=audio 9 UDP/TLS/RTP/SAVPF 109 9 0 8 101\r\n";
+  std::size_t pos = offer.find(audio);
+  ASSERT_NE(pos, std::string::npos);
+  offer.replace(pos, audio.length(),
+                "m=audio 65375 UDP/TLS/RTP/SAVPF 9\r\n");
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  ASSERT_NE(mSessionAns.GetLocalDescription().find("UDP/TLS/RTP/SAVPF 9\r"),
+            std::string::npos);
+  ASSERT_NE(mSessionAns.GetLocalDescription().find("a=rtpmap:9 G722/8000"),
+            std::string::npos);
+}
+
+TEST_F(JsepSessionTest, AudioOnlyG722Rejected)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  std::string audio = "m=audio 9 UDP/TLS/RTP/SAVPF 109 9 0 8 101\r\n";
+  std::size_t pos = offer.find(audio);
+  ASSERT_NE(pos, std::string::npos);
+  offer.replace(pos, audio.length(),
+                "m=audio 65375 UDP/TLS/RTP/SAVPF 0 8\r\n");
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  // TODO(bug 814227): Use commented out code instead.
+  ASSERT_NE(mSessionAns.GetLocalDescription().find("UDP/TLS/RTP/SAVPF 0\r"),
+            std::string::npos);
+  // ASSERT_NE(mSessionAns.GetLocalDescription().find("UDP/TLS/RTP/SAVPF 0 8\r"), std::string::npos);
+  ASSERT_NE(mSessionAns.GetLocalDescription().find("a=rtpmap:0 PCMU/8000"), std::string::npos);
+  ASSERT_EQ(mSessionAns.GetLocalDescription().find("a=rtpmap:109 opus/48000/2"), std::string::npos);
+  ASSERT_EQ(mSessionAns.GetLocalDescription().find("a=rtpmap:9 G722/8000"), std::string::npos);
+}
+
+// This test doesn't make sense for bundle
+TEST_F(JsepSessionTest, DISABLED_FullCallAudioNoMuxVideoMux)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio,video");
+  AddTracks(mSessionAns, "audio,video");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  std::string rtcp_mux = "a=rtcp-mux\r\n";
+  std::size_t pos = offer.find(rtcp_mux);
+  ASSERT_NE(pos, std::string::npos);
+  offer.replace(pos, rtcp_mux.length(), "");
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+
+  size_t match = mSessionAns.GetLocalDescription().find("\r\na=rtcp-mux");
+  ASSERT_NE(match, std::string::npos);
+  match = mSessionAns.GetLocalDescription().find("\r\na=rtcp-mux", match + 1);
+  ASSERT_EQ(match, std::string::npos);
+}
+
+// Disabled pending resolution of bug 818640.
+// Actually, this test is completely broken; you can't just call
+// SetRemote/CreateAnswer over and over again.
+TEST_F(JsepSessionTest, DISABLED_OfferAllDynamicTypes)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionAns, "audio");
+
+  std::string offer;
+  for (int i = 96; i < 128; i++)
+  {
+    std::stringstream ss;
+    ss << i;
+    std::cout << "Trying dynamic pt = " << i << std::endl;
+    offer =
+      "v=0\r\n"
+      "o=- 1 1 IN IP4 148.147.200.251\r\n"
+      "s=-\r\n"
+      "b=AS:64\r\n"
+      "t=0 0\r\n"
+      "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+        "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+      "m=audio 9000 RTP/AVP " + ss.str() + "\r\n"
+      "c=IN IP4 148.147.200.251\r\n"
+      "b=TIAS:64000\r\n"
+      "a=rtpmap:" + ss.str() +" opus/48000/2\r\n"
+      "a=candidate:0 1 udp 2130706432 148.147.200.251 9000 typ host\r\n"
+      "a=candidate:0 2 udp 2130706432 148.147.200.251 9005 typ host\r\n"
+      "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+      "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+      "a=sendrecv\r\n";
+
+      SetRemoteOffer(offer, CHECK_SUCCESS);
+      std::string answer = CreateAnswer();
+      ASSERT_NE(answer.find(ss.str() + " opus/"), std::string::npos);
+  }
+}
+
+TEST_F(JsepSessionTest, ipAddrAnyOffer)
+{
+  std::string offer =
+    "v=0\r\n"
+    "o=- 1 1 IN IP4 127.0.0.1\r\n"
+    "s=-\r\n"
+    "b=AS:64\r\n"
+    "t=0 0\r\n"
+    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+    "m=audio 9000 UDP/TLS/RTP/SAVPF 99\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
+    "a=rtpmap:99 opus/48000/2\r\n"
+    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+    "a=setup:active\r\n"
+    "a=sendrecv\r\n";
+
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionAns, "audio");
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+  std::string answer = CreateAnswer();
+
+  ASSERT_NE(answer.find("a=sendrecv"), std::string::npos);
+}
+
+static void CreateSDPForBigOTests(std::string& offer, const std::string& number) {
+  offer =
+    "v=0\r\n"
+    "o=- ";
+  offer += number;
+  offer += " ";
+  offer += number;
+  offer += " IN IP4 127.0.0.1\r\n"
+    "s=-\r\n"
+    "b=AS:64\r\n"
+    "t=0 0\r\n"
+    "a=fingerprint:sha-256 F3:FA:20:C0:CD:48:C4:5F:02:5F:A5:D3:21:D0:2D:48:"
+      "7B:31:60:5C:5A:D8:0D:CD:78:78:6C:6D:CE:CC:0C:67\r\n"
+    "m=audio 9000 RTP/AVP 99\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
+    "a=rtpmap:99 opus/48000/2\r\n"
+    "a=ice-ufrag:cYuakxkEKH+RApYE\r\n"
+    "a=ice-pwd:bwtpzLZD+3jbu8vQHvEa6Xuq\r\n"
+    "a=setup:active\r\n"
+    "a=sendrecv\r\n";
+}
+
+TEST_F(JsepSessionTest, BigOValues)
+{
+  std::string offer;
+
+  CreateSDPForBigOTests(offer, "12345678901234567");
+
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionAns, "audio");
+  SetRemoteOffer(offer, CHECK_SUCCESS);
+}
+
+TEST_F(JsepSessionTest, BigOValuesExtraChars)
+{
+  std::string offer;
+
+  CreateSDPForBigOTests(offer, "12345678901234567FOOBAR");
+
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionAns, "audio");
+  // The signaling state will remain "stable" because the unparsable
+  // SDP leads to a failure in SetRemoteDescription.
+  SetRemoteOffer(offer, NO_CHECKS);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+}
+
+TEST_F(JsepSessionTest, BigOValuesTooBig)
+{
+  std::string offer;
+
+  CreateSDPForBigOTests(offer, "18446744073709551615");
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionAns, "audio");
+
+  // The signaling state will remain "stable" because the unparsable
+  // SDP leads to a failure in SetRemoteDescription.
+  SetRemoteOffer(offer, NO_CHECKS);
+  ASSERT_EQ(kJsepStateStable, mSessionAns.GetState());
+}
+
+
+TEST_F(JsepSessionTest, SetLocalAnswerInStable)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+
+  // The signaling state will remain "stable" because the
+  // SetLocalDescription call fails.
+  SetLocalAnswer(offer, NO_CHECKS);
+  ASSERT_EQ(kJsepStateStable, mSessionOff.GetState());
+}
+
+TEST_F(JsepSessionTest, SetRemoteAnswerInStable)
+{
+  const std::string answer =
+    "v=0\r\n"
+    "o=Mozilla-SIPUA 4949 0 IN IP4 10.86.255.143\r\n"
+    "s=SIP Call\r\n"
+    "t=0 0\r\n"
+    "a=ice-ufrag:qkEP\r\n"
+    "a=ice-pwd:ed6f9GuHjLcoCN6sC/Eh7fVl\r\n"
+    "m=audio 16384 RTP/AVP 0 8 9 101\r\n"
+    "c=IN IP4 10.86.255.143\r\n"
+    "a=rtpmap:0 PCMU/8000\r\n"
+    "a=rtpmap:8 PCMA/8000\r\n"
+    "a=rtpmap:9 G722/8000\r\n"
+    "a=rtpmap:101 telephone-event/8000\r\n"
+    "a=fmtp:101 0-15\r\n"
+    "a=sendrecv\r\n"
+    "a=candidate:1 1 UDP 2130706431 192.168.2.1 50005 typ host\r\n"
+    "a=candidate:2 2 UDP 2130706431 192.168.2.2 50006 typ host\r\n"
+    "m=video 1024 RTP/AVP 97\r\n"
+    "c=IN IP4 10.86.255.143\r\n"
+    "a=rtpmap:120 VP8/90000\r\n"
+    "a=fmtp:97 profile-level-id=42E00C\r\n"
+    "a=sendrecv\r\n"
+    "a=candidate:1 1 UDP 2130706431 192.168.2.3 50007 typ host\r\n"
+    "a=candidate:2 2 UDP 2130706431 192.168.2.4 50008 typ host\r\n";
+
+  // The signaling state will remain "stable" because the
+  // SetRemoteDescription call fails.
+  nsresult rv = mSessionOff.SetRemoteDescription(kJsepSdpAnswer, answer);
+  ASSERT_NE(NS_OK, rv);
+  ASSERT_EQ(kJsepStateStable, mSessionOff.GetState());
+}
+
+TEST_F(JsepSessionTest, SetLocalAnswerInHaveLocalOffer)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+
+  SetLocalOffer(offer);
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+
+  // The signaling state will remain "have-local-offer" because the
+  // SetLocalDescription call fails.
+  nsresult rv = mSessionOff.SetLocalDescription(kJsepSdpAnswer, offer);
+  ASSERT_NE(NS_OK, rv);
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+}
+
+TEST_F(JsepSessionTest, SetRemoteOfferInHaveLocalOffer)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+
+  SetLocalOffer(offer);
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+
+  // The signaling state will remain "have-local-offer" because the
+  // SetRemoteDescription call fails.
+  nsresult rv = mSessionOff.SetRemoteDescription(kJsepSdpOffer, offer);
+  ASSERT_NE(NS_OK, rv);
+  ASSERT_EQ(kJsepStateHaveLocalOffer, mSessionOff.GetState());
+}
+
+TEST_F(JsepSessionTest, SetLocalOfferInHaveRemoteOffer)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+
+  SetRemoteOffer(offer);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
+
+  // The signaling state will remain "have-remote-offer" because the
+  // SetLocalDescription call fails.
+  nsresult rv = mSessionAns.SetLocalDescription(kJsepSdpOffer, offer);
+  ASSERT_NE(NS_OK, rv);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
+}
+
+TEST_F(JsepSessionTest, SetRemoteAnswerInHaveRemoteOffer)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  std::string offer = CreateOffer();
+
+  SetRemoteOffer(offer);
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
+
+  // The signaling state will remain "have-remote-offer" because the
+  // SetRemoteDescription call fails.
+  nsresult rv = mSessionAns.SetRemoteDescription(kJsepSdpAnswer, offer);
+  ASSERT_NE(NS_OK, rv);
+
+  ASSERT_EQ(kJsepStateHaveRemoteOffer, mSessionAns.GetState());
+}
+
+TEST_F(JsepSessionTest, RtcpFbInOffer)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+  std::string offer = CreateOffer();
+
+  std::map<std::string, bool> expected;
+  expected["nack"] = false;
+  expected["nack pli"] = false;
+  expected["ccm fir"] = false;
+
+  size_t prev = 0;
+  size_t found = 0;
+  for(;;) {
+    found = offer.find('\n', found + 1);
+    if (found == std::string::npos)
+      break;
+
+    std::string line = offer.substr(prev, (found - prev));
+
+    // ensure no other rtcp-fb values are present
+    if (line.find("a=rtcp-fb:") != std::string::npos) {
+      size_t space = line.find(' ');
+      //strip trailing \r\n
+      std::string value = line.substr(space + 1, line.length() - space - 2);
+      std::map<std::string, bool>::iterator entry = expected.find(value);
+      ASSERT_NE(entry, expected.end());
+      entry->second = true;
+    }
+
+    prev = found + 1;
+  }
+
+  // ensure all values are present
+  for (std::map<std::string, bool>::iterator it = expected.begin(); it != expected.end(); ++it) {
+    ASSERT_EQ(it->second, true);
+  }
+}
+
+// In this test we will change the offer SDP's a=setup value
+// from actpass to passive.  This will make the answer do active.
+TEST_F(JsepSessionTest, AudioCallForceDtlsRoles)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string actpass = "\r\na=setup:actpass";
+  size_t match = offer.find(actpass);
+  ASSERT_NE(match, std::string::npos);
+  offer.replace(match, actpass.length(), "\r\na=setup:passive");
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  match = answer.find("\r\na=setup:active");
+  ASSERT_NE(match, std::string::npos);
+}
+
+// In this test we will change the offer SDP's a=setup value
+// from actpass to active.  This will make the answer do passive
+TEST_F(JsepSessionTest, AudioCallReverseDtlsRoles)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string actpass = "\r\na=setup:actpass";
+  size_t match = offer.find(actpass);
+  ASSERT_NE(match, std::string::npos);
+  offer.replace(match, actpass.length(), "\r\na=setup:active");
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  match = answer.find("\r\na=setup:passive");
+  ASSERT_NE(match, std::string::npos);
+}
+
+// In this test we will change the answer SDP's a=setup value
+// from active to passive.  This will make both sides do
+// active and should not connect.
+TEST_F(JsepSessionTest, AudioCallMismatchDtlsRoles)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string actpass = "\r\na=setup:actpass";
+  size_t match = offer.find(actpass);
+  ASSERT_NE(match, std::string::npos);
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  std::string active = "\r\na=setup:active";
+  match = answer.find(active);
+  ASSERT_NE(match, std::string::npos);
+  SetLocalAnswer(answer);
+  answer.replace(match, active.length(), "\r\na=setup:passive");
+  SetRemoteAnswer(answer);
+}
+
+// In this test we will change the offer SDP's a=setup value
+// from actpass to garbage.  It should ignore the garbage value
+// and respond with setup:active
+TEST_F(JsepSessionTest, AudioCallGarbageSetup)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string actpass = "\r\na=setup:actpass";
+  size_t match = offer.find(actpass);
+  ASSERT_NE(match, std::string::npos);
+  offer.replace(match, actpass.length(), "\r\na=setup:G4rb4g3V4lu3");
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  match = answer.find("\r\na=setup:active");
+  ASSERT_NE(match, std::string::npos);
+}
+
+// In this test we will change the offer SDP to remove the
+// a=setup line.  Answer should respond with a=setup:active.
+TEST_F(JsepSessionTest, AudioCallOfferNoSetupOrConnection)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  std::string actpass = "\r\na=setup:actpass";
+  size_t match = offer.find(actpass);
+  ASSERT_NE(match, std::string::npos);
+  offer.replace(match, actpass.length(), "");
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  match = answer.find("\r\na=setup:active");
+  ASSERT_NE(match, std::string::npos);
+}
+
+// In this test we will change the answer SDP to remove the
+// a=setup line. TODO: This used to be a signaling test so it also tested that
+// ICE would still connect since active would be assumed.
+TEST_F(JsepSessionTest, AudioCallAnswerNoSetupOrConnection)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+  std::string offer = CreateOffer();
+  size_t match = offer.find("\r\na=setup:actpass");
+  ASSERT_NE(match, std::string::npos);
+
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  std::string active = "\r\na=setup:active";
+  match = answer.find(active);
+  ASSERT_NE(match, std::string::npos);
+  answer.replace(match, active.length(), "");
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+}
+
+// Remove H.264 P1 and VP8 from offer, check answer negotiates H.264 P0
+TEST_F(JsepSessionTest, OfferWithOnlyH264P0)
+{
+  for (JsepCodecDescription* codec : mSessionOff.Codecs()) {
+    if (codec->mName != "H264" || codec->mDefaultPt == "126") {
+      codec->mEnabled = false;
+    }
+  }
+
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+  AddTracks(mSessionAns, "audio,video");
+  std::string offer = CreateOffer();
+
+  ASSERT_EQ(offer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_EQ(offer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+  std::string answer = CreateAnswer();
+  size_t match = answer.find("\r\na=setup:active");
+  ASSERT_NE(match, std::string::npos);
+
+  // validate answer SDP
+  ASSERT_NE(answer.find("a=rtpmap:97 H264/90000"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:97 nack"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:97 nack pli"), std::string::npos);
+  ASSERT_NE(answer.find("a=rtcp-fb:97 ccm fir"), std::string::npos);
+  // Ensure VP8 and P1 removed
+  ASSERT_EQ(answer.find("a=rtpmap:126 H264/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtpmap:120 VP8/90000"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:120"), std::string::npos);
+  ASSERT_EQ(answer.find("a=rtcp-fb:126"), std::string::npos);
+}
+
+// Test negotiating an answer which has only H.264 P1
+// Which means replace VP8 with H.264 P1 in answer
+TEST_F(JsepSessionTest, AnswerWithoutVP8)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  types.push_back(SdpMediaSection::kVideo);
+  AddTracks(mSessionOff, "audio,video");
+  AddTracks(mSessionAns, "audio,video");
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+  SetRemoteOffer(offer);
+
+  for (JsepCodecDescription* codec : mSessionOff.Codecs()) {
+    if (codec->mName != "H264" || codec->mDefaultPt == "126") {
+      codec->mEnabled = false;
+    }
+  }
+
+  std::string answer = CreateAnswer();
+
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+}
+
 } // namespace mozilla

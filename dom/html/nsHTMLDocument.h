@@ -54,11 +54,6 @@ public:
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
                           nsIPrincipal* aPrincipal) override;
 
-  virtual already_AddRefed<nsIPresShell> CreateShell(
-      nsPresContext* aContext,
-      nsViewManager* aViewManager,
-      mozilla::StyleSetHandle aStyleSet) override;
-
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,

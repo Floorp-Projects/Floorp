@@ -139,8 +139,12 @@ public:
      * sent to the compositor, which will then post a message back to APZ's
      * controller thread. Otherwise, the provided widget's SetConfirmedTargetAPZC
      * method is invoked immediately.
+     *
+     * Returns true if any displayports need to be set. (A caller may be
+     * interested to know this, because they may need to delay certain actions
+     * until after the displayport comes into effect.)
      */
-    static void SendSetTargetAPZCNotification(nsIWidget* aWidget,
+    static bool SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                               nsIDocument* aDocument,
                                               const WidgetGUIEvent& aEvent,
                                               const ScrollableLayerGuid& aGuid,

@@ -5,6 +5,8 @@
  * Initialization specific to Form Autofill mochitest-browser tests.
  */
 
+/* import-globals-from loader.js */
+
 "use strict";
 
 // We cannot start initialization from "loader.js" like we do in the xpcshell

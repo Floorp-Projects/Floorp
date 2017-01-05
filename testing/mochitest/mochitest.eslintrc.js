@@ -15,6 +15,7 @@ module.exports = {
     // $ is defined in SimpleTest.js
     "$": false,
     "add_task": false,
+    "addLoadEvent": false,
     "Assert": false,
     "EventUtils": false,
     "executeSoon": false,

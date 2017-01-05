@@ -35,6 +35,7 @@ class gfxMissingFontRecorder;
 
 namespace mozilla {
 class SVGContextPaint;
+enum class StyleHyphens : uint8_t;
 };
 
 /**
@@ -70,7 +71,7 @@ struct gfxTextRunDrawCallbacks {
  * of text. It stores runs of positioned glyph data, each run having a single
  * gfxFont. The glyphs are associated with a string of source text, and the
  * gfxTextRun APIs take parameters that are offsets into that source text.
- * 
+ *
  * gfxTextRuns are mostly immutable. The only things that can change are
  * inter-cluster spacing and line break placement. Spacing is always obtained
  * lazily by methods that need it, it is not cached. Line breaks are stored
@@ -78,7 +79,7 @@ struct gfxTextRunDrawCallbacks {
  * not actually do anything to explicitly account for line breaks). Initially
  * there are no line breaks. The textrun can record line breaks before or after
  * any given cluster. (Line breaks specified inside clusters are ignored.)
- * 
+ *
  * It is important that zero-length substrings are handled correctly. This will
  * be on the test!
  */
@@ -163,11 +164,11 @@ public:
      * Set the potential linebreaks for a substring of the textrun. These are
      * the "allow break before" points. Initially, there are no potential
      * linebreaks.
-     * 
+     *
      * This can change glyphs and/or geometry! Some textruns' shapes
      * depend on potential line breaks (e.g., title-case-converting textruns).
      * This function is virtual so that those textruns can reshape themselves.
-     * 
+     *
      * @return true if this changed the linebreaks, false if the new line
      * breaks are the same as the old
      */
@@ -179,7 +180,7 @@ public:
      * potential line break points and computation of spacing. We pass the data
      * this way to allow lazy data acquisition; for example BreakAndMeasureText
      * will want to only ask for properties of text it's actually looking at.
-     * 
+     *
      * NOTE that requested spacing may not actually be applied, if the textrun
      * is unable to apply it in some context. Exception: spacing around a
      * whitespace character MUST always be applied.
@@ -192,8 +193,8 @@ public:
 
         // Returns the provider's hyphenation setting, so callers can decide
         // whether it is necessary to call GetHyphenationBreaks.
-        // Result is an NS_STYLE_HYPHENS_* value.
-        virtual int8_t GetHyphensOption() = 0;
+        // Result is an StyleHyphens value.
+        virtual mozilla::StyleHyphens GetHyphensOption() = 0;
 
         // Returns the extra width that will be consumed by a hyphen. This should
         // be constant for a given textrun.
@@ -238,7 +239,7 @@ public:
      * Draws a substring. Uses only GetSpacing from aBreakProvider.
      * The provided point is the baseline origin on the left of the string
      * for LTR, on the right of the string for RTL.
-     * 
+     *
      * Drawing should respect advance widths in the sense that for LTR runs,
      *   Draw(Range(start, middle), pt, ...) followed by
      *   Draw(Range(middle, end), gfxPoint(pt.x + advance, pt.y), ...)
@@ -250,7 +251,7 @@ public:
      *   Draw(Range(start, middle), gfxPoint(pt.x + advance, pt.y), ...)
      * should have the same effect as
      *   Draw(Range(start, end), pt, ...)
-     * 
+     *
      * Glyphs should be drawn in logical content order, which can be significant
      * if they overlap (perhaps due to negative spacing).
      */
@@ -301,14 +302,14 @@ public:
      * Clear all stored line breaks for the given range (both before and after),
      * and then set the line-break state before aRange.start to aBreakBefore and
      * after the last cluster to aBreakAfter.
-     * 
+     *
      * We require that before and after line breaks be consistent. For clusters
      * i and i+1, we require that if there is a break after cluster i, a break
      * will be specified before cluster i+1. This may be temporarily violated
      * (e.g. after reflowing line L and before reflowing line L+1); to handle
      * these temporary violations, we say that there is a break betwen i and i+1
      * if a break is specified after i OR a break is specified before i+1.
-     * 
+     *
      * This can change textrun geometry! The existence of a linebreak can affect
      * the advance width of the cluster before the break (when kerning) or the
      * geometry of one cluster before the break or any number of clusters
@@ -316,11 +317,11 @@ public:
      * arbitrary; if some scripts require breaking it, then we need to
      * alter nsTextFrame::TrimTrailingWhitespace, perhaps drastically becase
      * it could affect the layout of frames before it...)
-     * 
+     *
      * We return true if glyphs or geometry changed, false otherwise. This
      * function is virtual so that gfxTextRun subclasses can reshape
      * properly.
-     * 
+     *
      * @param aAdvanceWidthDelta if non-null, returns the change in advance
      * width of the given range.
      */
@@ -387,7 +388,7 @@ public:
      * @param aBreakPriority in/out the priority of the break opportunity
      * saved in the line. If we are prioritizing break opportunities, we will
      * not set a break with a lower priority. @see gfxBreakPriority.
-     * 
+     *
      * Note that negative advance widths are possible especially if negative
      * spacing is provided.
      */
@@ -590,11 +591,11 @@ public:
         // when the part is at the start of the ligature, and after-spacing
         // when the part is as the end of the ligature
         gfxFloat mPartWidth;
-        
+
         bool mClipBeforePart;
         bool mClipAfterPart;
     };
-    
+
     // return storage used by this run, for memory reporter;
     // nsTransformedTextRun needs to override this as it holds additional data
     virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
@@ -675,7 +676,7 @@ protected:
     CompressedGlyph *mCharacterGlyphs;
 
 private:
-    // **** general helpers **** 
+    // **** general helpers ****
 
     // Get the total advance for a range of glyphs.
     int32_t GetAdvanceForGlyphs(Range aRange) const;

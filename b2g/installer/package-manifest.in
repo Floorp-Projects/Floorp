@@ -142,7 +142,6 @@
 @RESPATH@/components/content_geckomediaplugins.xpt
 @RESPATH@/components/content_html.xpt
 @RESPATH@/components/content_xslt.xpt
-@RESPATH@/components/cookie.xpt
 @RESPATH@/components/directory.xpt
 @RESPATH@/components/diskspacewatcher.xpt
 @RESPATH@/components/docshell.xpt
