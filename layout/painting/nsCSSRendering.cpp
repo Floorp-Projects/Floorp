@@ -1808,7 +1808,7 @@ nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
 }
 
 DrawResult
-nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams)
+nsCSSRendering::PaintBackground(const PaintBGParams& aParams)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintBackground",
     js::ProfileEntry::Category::GRAPHICS);
@@ -1835,7 +1835,7 @@ nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams)
     sc = aParams.frame->StyleContext();
   }
 
-  return PaintStyleImageLayerWithSC(aParams, sc, *aParams.frame->StyleBorder());
+  return PaintBackgroundWithSC(aParams, sc, *aParams.frame->StyleBorder());
 }
 
 static bool
@@ -3243,9 +3243,9 @@ DetermineCompositionOp(const nsCSSRendering::PaintBGParams& aParams,
 }
 
 DrawResult
-nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
-                                           nsStyleContext *aBackgroundSC,
-                                           const nsStyleBorder& aBorder)
+nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
+                                      nsStyleContext *aBackgroundSC,
+                                      const nsStyleBorder& aBorder)
 {
   NS_PRECONDITION(aParams.frame,
                   "Frame is expected to be provided to PaintBackground");
@@ -3448,12 +3448,12 @@ nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
           }
 
           result &=
-            state.mImageRenderer.DrawLayer(&aParams.presCtx,
-                                           aParams.renderingCtx,
-                                           state.mDestArea, state.mFillArea,
-                                           state.mAnchor + paintBorderArea.TopLeft(),
-                                           clipState.mDirtyRect,
-                                           state.mRepeatSize);
+            state.mImageRenderer.DrawBackground(&aParams.presCtx,
+                                                aParams.renderingCtx,
+                                                state.mDestArea, state.mFillArea,
+                                                state.mAnchor + paintBorderArea.TopLeft(),
+                                                clipState.mDirtyRect,
+                                                state.mRepeatSize);
 
           if (co != CompositionOp::OP_OVER) {
             ctx->SetOp(CompositionOp::OP_OVER);
@@ -5786,13 +5786,13 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
 }
 
 DrawResult
-nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
-                           nsRenderingContext&  aRenderingContext,
-                           const nsRect&        aDest,
-                           const nsRect&        aFill,
-                           const nsPoint&       aAnchor,
-                           const nsRect&        aDirty,
-                           const nsSize&        aRepeatSize)
+nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
+                                nsRenderingContext&  aRenderingContext,
+                                const nsRect&        aDest,
+                                const nsRect&        aFill,
+                                const nsPoint&       aAnchor,
+                                const nsRect&        aDirty,
+                                const nsSize&        aRepeatSize)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");

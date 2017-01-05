@@ -239,7 +239,7 @@ TableBackgroundPainter::PaintTableFrame(nsTableFrame*         aTableFrame,
                                                   mBGPaintFlags);
 
     result &=
-      nsCSSRendering::PaintStyleImageLayerWithSC(params,
+      nsCSSRendering::PaintBackgroundWithSC(params,
                                             tableData.mFrame->StyleContext(),
                                             tableData.StyleBorder(mZeroBorder));
   }
@@ -580,7 +580,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                                  mBGPaintFlags);
     params.bgClipRect = &aColBGRect;
     result &=
-      nsCSSRendering::PaintStyleImageLayerWithSC(params,
+      nsCSSRendering::PaintBackgroundWithSC(params,
                                             mCols[colIndex].mColGroup.mFrame->StyleContext(),
                                             mCols[colIndex].mColGroup.StyleBorder(mZeroBorder));
   }
@@ -595,7 +595,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                                   mBGPaintFlags);
     params.bgClipRect = &aColBGRect;
     result &=
-      nsCSSRendering::PaintStyleImageLayerWithSC(params,
+      nsCSSRendering::PaintBackgroundWithSC(params,
                                             mCols[colIndex].mCol.mFrame->StyleContext(),
                                             mCols[colIndex].mCol.StyleBorder(mZeroBorder));
   }
@@ -609,7 +609,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                                   aRowGroupBGData.mFrame, mBGPaintFlags);
     params.bgClipRect = &aRowGroupBGRect;
     result &=
-      nsCSSRendering::PaintStyleImageLayerWithSC(params,
+      nsCSSRendering::PaintBackgroundWithSC(params,
                                             aRowGroupBGData.mFrame->StyleContext(),
                                             aRowGroupBGData.StyleBorder(mZeroBorder));
   }
@@ -623,7 +623,7 @@ TableBackgroundPainter::PaintCell(nsTableCellFrame* aCell,
                                                   aRowBGData.mFrame, mBGPaintFlags);
     params.bgClipRect = &aRowBGRect;
     result &=
-      nsCSSRendering::PaintStyleImageLayerWithSC(params,
+      nsCSSRendering::PaintBackgroundWithSC(params,
                                             aRowBGData.mFrame->StyleContext(),
                                             aRowBGData.StyleBorder(mZeroBorder));
   }
