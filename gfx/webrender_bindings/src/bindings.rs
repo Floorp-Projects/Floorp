@@ -265,7 +265,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
 }
 
 #[no_mangle]
-pub extern fn wr_push_dl_builder(state:&mut WrState, bounds: WrRect, overflow: WrRect, transform: &LayoutTransform)
+pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, transform: &LayoutTransform)
 {
     assert!( unsafe { is_in_compositor_thread() });
     state.z_index += 1;
@@ -285,7 +285,7 @@ pub extern fn wr_push_dl_builder(state:&mut WrState, bounds: WrRect, overflow: W
 }
 
 #[no_mangle]
-pub extern fn wr_pop_dl_builder(state: &mut WrState)
+pub extern fn wr_dp_pop_stacking_context(state: &mut WrState)
 {
     assert!( unsafe { is_in_compositor_thread() });
     // 
