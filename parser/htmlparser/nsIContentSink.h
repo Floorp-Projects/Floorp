@@ -18,7 +18,7 @@
  */
 #include "nsISupports.h"
 #include "nsString.h"
-#include "mozFlushType.h"
+#include "mozilla/FlushType.h"
 #include "nsIDTD.h"
 
 class nsParserBase;

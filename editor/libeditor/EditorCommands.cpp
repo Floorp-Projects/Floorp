@@ -5,9 +5,9 @@
 
 #include "EditorCommands.h"
 
-#include "mozFlushType.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/FlushType.h"
 #include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
