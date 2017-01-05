@@ -206,7 +206,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel)) {
     mozilla::net::ReferrerPolicy referrerPolicy = parentDoc ?
-      parentDoc->GetReferrerPolicy() : mozilla::net::RP_Default;
+      parentDoc->GetReferrerPolicy() : mozilla::net::RP_Unset;
     rv = nsContentUtils::SetFetchReferrerURIWithPolicy(principal, parentDoc,
                                                        httpChannel, referrerPolicy);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1233,7 +1233,7 @@ private:
 
           // Set ReferrerPolicy, default value is set in GetReferrerPolicy
           bool hasReferrerPolicy = false;
-          uint32_t rp = mozilla::net::RP_Default;
+          uint32_t rp = mozilla::net::RP_Unset;
           rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
           NS_ENSURE_SUCCESS(rv, rv);
 
