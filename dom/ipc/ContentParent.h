@@ -710,10 +710,6 @@ private:
   AllocPBackgroundParent(Transport* aTransport, ProcessId aOtherProcess)
                          override;
 
-  PProcessHangMonitorParent*
-  AllocPProcessHangMonitorParent(Transport* aTransport,
-                                 ProcessId aOtherProcess) override;
-
   virtual mozilla::ipc::IPCResult RecvGetProcessAttributes(ContentParentId* aCpId,
                                                            bool* aIsForBrowser) override;
 
