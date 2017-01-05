@@ -16,13 +16,6 @@
 
 namespace mozilla {
 
-// The results of these conversion macros are exhaustively checked in
-// nsStyleCoord.cpp.
-// Arguments must not have side effects.
-
-#define NS_SIDE_TO_HALF_CORNER(side_, second_, parallel_) \
-  ((((side_) + !!(second_))*2 + ((side_) + !(parallel_))%2) % 8)
-
 // Basic shapes
 enum class StyleBasicShapeType : uint8_t {
   Polygon,
