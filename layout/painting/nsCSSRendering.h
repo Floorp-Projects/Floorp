@@ -219,8 +219,7 @@ public:
                        const nsRect&        aFill,
                        const nsPoint&       aAnchor,
                        const nsRect&        aDirty,
-                       const nsSize&        aRepeatSize,
-                       float                aOpacity);
+                       const nsSize&        aRepeatSize);
 
   /**
    * Draw the image to a single component of a border-image style rendering.
@@ -282,8 +281,7 @@ private:
                   const nsRect&        aFill,
                   const nsPoint&       aAnchor,
                   const nsSize&        aRepeatSize,
-                  const mozilla::CSSIntRect& aSrc,
-                  float                aOpacity = 1.0);
+                  const mozilla::CSSIntRect& aSrc);
 
   /**
    * Helper method for creating a gfxDrawable from mPaintServerFrame or
@@ -636,15 +634,13 @@ struct nsCSSRendering {
                                     // value means painting one specific
                                     // layer only.
     CompositionOp compositionOp;
-    float opacity;
 
     static PaintBGParams ForAllLayers(nsPresContext& aPresCtx,
                                       nsRenderingContext& aRenderingCtx,
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
                                       nsIFrame *aFrame,
-                                      uint32_t aPaintFlags,
-                                      float aOpacity = 1.0);
+                                      uint32_t aPaintFlags);
     static PaintBGParams ForSingleLayer(nsPresContext& aPresCtx,
                                         nsRenderingContext& aRenderingCtx,
                                         const nsRect& aDirtyRect,
@@ -652,8 +648,7 @@ struct nsCSSRendering {
                                         nsIFrame *aFrame,
                                         uint32_t aPaintFlags,
                                         int32_t aLayer,
-                                        CompositionOp aCompositionOp  = CompositionOp::OP_OVER,
-                                        float aOpacity = 1.0);
+                                        CompositionOp aCompositionOp  = CompositionOp::OP_OVER);
 
   private:
     PaintBGParams(nsPresContext& aPresCtx,
@@ -663,8 +658,7 @@ struct nsCSSRendering {
                   nsIFrame* aFrame,
                   uint32_t aPaintFlags,
                   int32_t aLayer,
-                  CompositionOp aCompositionOp,
-                  float aOpacity)
+                  CompositionOp aCompositionOp)
      : presCtx(aPresCtx),
        renderingCtx(aRenderingCtx),
        dirtyRect(aDirtyRect),
@@ -672,8 +666,7 @@ struct nsCSSRendering {
        frame(aFrame),
        paintFlags(aPaintFlags),
        layer(aLayer),
-       compositionOp(aCompositionOp),
-       opacity(aOpacity) {}
+       compositionOp(aCompositionOp) {}
   };
 
   static DrawResult PaintStyleImageLayer(const PaintBGParams& aParams);

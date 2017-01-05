@@ -209,11 +209,10 @@ ImageWrapper::Draw(gfxContext* aContext,
                    uint32_t aWhichFrame,
                    SamplingFilter aSamplingFilter,
                    const Maybe<SVGImageContext>& aSVGContext,
-                   uint32_t aFlags,
-                   float aOpacity)
+                   uint32_t aFlags)
 {
   return mInnerImage->Draw(aContext, aSize, aRegion, aWhichFrame,
-                           aSamplingFilter, aSVGContext, aFlags, aOpacity);
+                           aSamplingFilter, aSVGContext, aFlags);
 }
 
 NS_IMETHODIMP

@@ -1765,8 +1765,7 @@ public:
                                         const nsPoint&      aAnchor,
                                         const nsRect&       aDirty,
                                         uint32_t            aImageFlags,
-                                        ExtendMode          aExtendMode,
-                                        float               aOpacity);
+                                        ExtendMode          aExtendMode);
 
   /**
    * Draw an image.
@@ -1791,8 +1790,7 @@ public:
                               const nsRect&       aFill,
                               const nsPoint&      aAnchor,
                               const nsRect&       aDirty,
-                              uint32_t            aImageFlags,
-                              float               aOpacity = 1.0);
+                              uint32_t            aImageFlags);
 
   static inline void InitDashPattern(StrokeOptions& aStrokeOptions,
                                      uint8_t aBorderStyle) {

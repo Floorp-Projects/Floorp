@@ -5100,7 +5100,7 @@ CanvasRenderingContext2D::DrawDirectlyToCanvas(
   auto result = aImage.mImgContainer->
     Draw(context, scaledImageSize,
          ImageRegion::Create(gfxRect(aSrc.x, aSrc.y, aSrc.width, aSrc.height)),
-         aImage.mWhichFrame, SamplingFilter::GOOD, Some(svgContext), modifiedFlags, 1.0);
+         aImage.mWhichFrame, SamplingFilter::GOOD, Some(svgContext), modifiedFlags);
 
   if (result != DrawResult::SUCCESS) {
     NS_WARNING("imgIContainer::Draw failed");

@@ -263,13 +263,12 @@ OrientedImage::Draw(gfxContext* aContext,
                     uint32_t aWhichFrame,
                     SamplingFilter aSamplingFilter,
                     const Maybe<SVGImageContext>& aSVGContext,
-                    uint32_t aFlags,
-                    float aOpacity)
+                    uint32_t aFlags)
 {
   if (mOrientation.IsIdentity()) {
     return InnerImage()->Draw(aContext, aSize, aRegion,
                               aWhichFrame, aSamplingFilter,
-                              aSVGContext, aFlags, aOpacity);
+                              aSVGContext, aFlags);
   }
 
   // Update the image size to match the image's coordinate system. (This could
@@ -301,10 +300,8 @@ OrientedImage::Draw(gfxContext* aContext,
                            aOldContext.GetPreserveAspectRatio());
   };
 
-  return InnerImage()->Draw(aContext, size, region, aWhichFrame,
-                            aSamplingFilter,
-                            aSVGContext.map(orientViewport), aFlags,
-                            aOpacity);
+  return InnerImage()->Draw(aContext, size, region, aWhichFrame, aSamplingFilter,
+                            aSVGContext.map(orientViewport), aFlags);
 }
 
 nsIntSize

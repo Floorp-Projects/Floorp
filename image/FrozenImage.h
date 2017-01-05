@@ -52,8 +52,7 @@ public:
                                uint32_t aWhichFrame,
                                gfx::SamplingFilter aSamplingFilter,
                                const Maybe<SVGImageContext>& aSVGContext,
-                               uint32_t aFlags,
-                               float aOpacity) override;
+                               uint32_t aFlags) override;
   NS_IMETHOD_(void) RequestRefresh(const TimeStamp& aTime) override;
   NS_IMETHOD GetAnimationMode(uint16_t* aAnimationMode) override;
   NS_IMETHOD SetAnimationMode(uint16_t aAnimationMode) override;

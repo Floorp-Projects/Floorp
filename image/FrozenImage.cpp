@@ -78,11 +78,10 @@ FrozenImage::Draw(gfxContext* aContext,
                   uint32_t /* aWhichFrame - ignored */,
                   SamplingFilter aSamplingFilter,
                   const Maybe<SVGImageContext>& aSVGContext,
-                  uint32_t aFlags,
-                  float aOpacity)
+                  uint32_t aFlags)
 {
   return InnerImage()->Draw(aContext, aSize, aRegion, FRAME_FIRST,
-                            aSamplingFilter, aSVGContext, aFlags, aOpacity);
+                            aSamplingFilter, aSVGContext, aFlags);
 }
 
 NS_IMETHODIMP_(void)
