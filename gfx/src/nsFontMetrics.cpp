@@ -18,7 +18,7 @@
 #include "nsMathUtils.h"                // for NS_round
 #include "nsRenderingContext.h"         // for nsRenderingContext
 #include "nsString.h"                   // for nsString
-#include "nsStyleConsts.h"              // for NS_STYLE_HYPHENS_NONE
+#include "nsStyleConsts.h"              // for StyleHyphens::None
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT
 #include "mozilla/UniquePtr.h"          // for UniquePtr
 
@@ -87,9 +87,9 @@ public:
                                       bool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
     }
-    virtual int8_t GetHyphensOption() {
+    virtual mozilla::StyleHyphens GetHyphensOption() {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
-        return NS_STYLE_HYPHENS_NONE;
+        return mozilla::StyleHyphens::None;
     }
     virtual gfxFloat GetHyphenWidth() {
         NS_ERROR("This shouldn't be called because we never enable hyphens");

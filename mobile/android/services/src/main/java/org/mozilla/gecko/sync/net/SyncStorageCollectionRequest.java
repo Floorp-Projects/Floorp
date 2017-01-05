@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.util.StringUtils;
 
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
@@ -103,7 +104,7 @@ public class SyncStorageCollectionRequest extends SyncStorageRequest {
       BufferedReader br = null;
       try {
         content = entity.getContent();
-        br = new BufferedReader(new InputStreamReader(content), FETCH_BUFFER_SIZE);
+        br = new BufferedReader(new InputStreamReader(content, StringUtils.UTF_8), FETCH_BUFFER_SIZE);
         String line;
 
         // This relies on connection timeouts at the HTTP layer.

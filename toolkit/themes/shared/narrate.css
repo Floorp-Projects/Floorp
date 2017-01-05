@@ -22,7 +22,7 @@ body.dark .narrating {
   z-index: -1;
   border-bottom-style: solid;
   border-bottom-width: 7px;
-  transition: left 0.1s ease;
+  transition: left 0.1s ease, width 0.1s ease;
 }
 
 .narrating > .narrate-word-highlight {

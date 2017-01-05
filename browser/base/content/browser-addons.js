@@ -281,11 +281,16 @@ const gXPInstallObserver = {
           installInfo.install();
         }
       };
+      let secondaryAction = {
+        label: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow"),
+        accessKey: gNavigatorBundle.getString("xpinstallPromptMessage.dontAllow.accesskey"),
+        callback: () => {},
+      };
 
       secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED);
       let popup = PopupNotifications.show(browser, notificationID,
                                           messageString, anchorID,
-                                          action, null, options);
+                                          action, [secondaryAction], options);
       removeNotificationOnEnd(popup, installInfo.installs);
       break; }
     case "addon-install-started": {

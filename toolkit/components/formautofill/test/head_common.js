@@ -7,7 +7,13 @@
  * A copy of this file is installed in each of the framework subfolders, this
  * means it becomes a sibling of the test files in the final layout.  This is
  * determined by how manifest "support-files" installation works.
+ *
+ * This file expects the globals below to be defined in the scope it is
+ * imported into.
  */
+
+ /* global add_termination_task, add_task_in_both_processes,
+           add_task_in_parent_process, Output */
 
 "use strict";
 

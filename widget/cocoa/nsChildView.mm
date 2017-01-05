@@ -4879,6 +4879,11 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
                     forEvent:theEvent];
   }
 
+  if (!mGeckoChild) {
+    return;
+  }
+  RefPtr<nsChildView> geckoChildDeathGrip(mGeckoChild);
+
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(theEvent, [self window]);
 
   ScreenPoint position = ViewAs<ScreenPixel>(
@@ -4901,7 +4906,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
   if (usePreciseDeltas) {
     CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
     nsCocoaUtils::GetScrollingDeltas(theEvent, &pixelDeltaX, &pixelDeltaY);
-    double scale = mGeckoChild->BackingScaleFactor();
+    double scale = geckoChildDeathGrip->BackingScaleFactor();
     preciseDelta = ScreenPoint(-pixelDeltaX * scale, -pixelDeltaY * scale);
   }
 
@@ -4928,7 +4933,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
 
     bool canTriggerSwipe = [self shouldConsiderStartingSwipeFromEvent:theEvent];
     panEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection = canTriggerSwipe;
-    mGeckoChild->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
+    geckoChildDeathGrip->DispatchAPZWheelInputEvent(panEvent, canTriggerSwipe);
   } else if (usePreciseDeltas) {
     // This is on 10.6 or old touchpads that don't have any phase information.
     ScrollWheelInput wheelEvent(eventIntervalTime, eventTimeStamp, modifiers,
@@ -4941,7 +4946,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
     wheelEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
     wheelEvent.mIsMomentum = nsCocoaUtils::IsMomentumScrollEvent(theEvent);
-    mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent, false);
+    geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);
   } else {
     ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
     if (gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
@@ -4956,7 +4961,7 @@ GetIntegerDeltaForEvent(NSEvent* aEvent)
                                 false);
     wheelEvent.mLineOrPageDeltaX = lineOrPageDelta.x;
     wheelEvent.mLineOrPageDeltaY = lineOrPageDelta.y;
-    mGeckoChild->DispatchAPZWheelInputEvent(wheelEvent, false);
+    geckoChildDeathGrip->DispatchAPZWheelInputEvent(wheelEvent, false);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

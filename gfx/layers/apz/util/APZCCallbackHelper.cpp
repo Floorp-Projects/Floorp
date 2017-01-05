@@ -746,7 +746,7 @@ SendSetTargetAPZCNotificationHelper(nsIWidget* aWidget,
   }
 }
 
-void
+bool
 APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                                   nsIDocument* aDocument,
                                                   const WidgetGUIEvent& aEvent,
@@ -754,7 +754,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                                   uint64_t aInputBlockId)
 {
   if (!aWidget || !aDocument) {
-    return;
+    return false;
   }
   if (aInputBlockId == sLastTargetAPZCNotificationInputBlock) {
     // We have already confirmed the target APZC for a previous event of this
@@ -763,7 +763,7 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
     // race the original confirmation (which needs to go through a layers
     // transaction).
     APZCCH_LOG("Not resending target APZC confirmation for input block %" PRIu64 "\n", aInputBlockId);
-    return;
+    return false;
   }
   sLastTargetAPZCNotificationInputBlock = aInputBlockId;
   if (nsIPresShell* shell = aDocument->GetShell()) {
@@ -795,8 +795,11 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
           Move(targets),
           waitForRefresh);
       }
+
+      return waitForRefresh;
     }
   }
+  return false;
 }
 
 void
