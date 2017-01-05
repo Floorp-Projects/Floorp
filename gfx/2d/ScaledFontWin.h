@@ -23,6 +23,10 @@ public:
   bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
 
   virtual bool GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton) override;
+
+  static already_AddRefed<ScaledFont>
+    CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, Float aSize);
+
   virtual AntialiasMode GetDefaultAAMode() override;
 
 #ifdef USE_SKIA

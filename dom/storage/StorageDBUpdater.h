@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOMStorageDBUpdater_h___
-#define DOMStorageDBUpdater_h___
+#ifndef mozilla_dom_StorageDBUpdater_h
+#define mozilla_dom_StorageDBUpdater_h
 
 namespace mozilla {
 namespace dom {
 
-namespace DOMStorageDBUpdater {
+namespace StorageDBUpdater {
 
-nsresult Update(mozIStorageConnection *aWorkerConnection);
+nsresult Update(mozIStorageConnection* aWorkerConnection);
 
-} // DOMStorageDBUpdater
+} // StorageDBUpdater
 
 } // dom
 } // mozilla
 
-#endif
+#endif // mozilla_dom_StorageDBUpdater_h

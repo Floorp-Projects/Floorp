@@ -570,6 +570,8 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 {
   *aSent = false;
 
+  TransactionInfo info;
+
   MOZ_ASSERT(IPCOpen(), "no manager to forward to");
   if (!IPCOpen()) {
     return false;
@@ -692,12 +694,12 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     mTxn->AddEdit(OpSetLayerAttributes(Shadow(shadow), attrs));
   }
 
-  AutoTArray<Edit, 10> cset;
   size_t nCsets = mTxn->mCset.size() + mTxn->mPaints.size();
   if (nCsets == 0 && !mTxn->RotationChanged()) {
     return true;
   }
 
+  auto& cset = info.cset();
   cset.SetCapacity(nCsets);
   if (!mTxn->mCset.empty()) {
     cset.AppendElements(&mTxn->mCset.front(), mTxn->mCset.size());
@@ -710,10 +712,22 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
 
   mWindowOverlayChanged = false;
 
+  info.toDestroy() = mTxn->mDestroyedActors;
+  info.fwdTransactionId() = GetFwdTransactionId();
+  info.id() = aId;
+  info.plugins() = mPluginWindowData;
+  info.isFirstPaint() = mIsFirstPaint;
+  info.scheduleComposite() = aScheduleComposite;
+  info.paintSequenceNumber() = aPaintSequenceNumber;
+  info.isRepeatTransaction() = aIsRepeatTransaction;
+  info.transactionStart() = aTransactionStart;
+  info.paintSyncId() = mPaintSyncId;
+
   TargetConfig targetConfig(mTxn->mTargetBounds,
                             mTxn->mTargetRotation,
                             mTxn->mTargetOrientation,
                             aRegionToClear);
+  info.targetConfig() = targetConfig;
 
   if (!GetTextureForwarder()->IsSameProcess()) {
     MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
@@ -724,12 +738,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
   if (mTxn->mSwapRequired) {
     MOZ_LAYERS_LOG(("[LayersForwarder] sending transaction..."));
     RenderTraceScope rendertrace3("Forward Transaction", "000093");
-    if (!mShadowManager->SendUpdate(cset, mTxn->mDestroyedActors,
-                                    GetFwdTransactionId(),
-                                    aId, targetConfig, mPluginWindowData,
-                                    mIsFirstPaint, aScheduleComposite,
-                                    aPaintSequenceNumber, aIsRepeatTransaction,
-                                    aTransactionStart, mPaintSyncId, aReplies)) {
+    if (!mShadowManager->SendUpdate(info, aReplies)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }
@@ -738,12 +747,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     // assumes that aReplies is empty (DEBUG assertion)
     MOZ_LAYERS_LOG(("[LayersForwarder] sending no swap transaction..."));
     RenderTraceScope rendertrace3("Forward NoSwap Transaction", "000093");
-    if (!mShadowManager->SendUpdateNoSwap(cset, mTxn->mDestroyedActors,
-                                          GetFwdTransactionId(),
-                                          aId, targetConfig, mPluginWindowData,
-                                          mIsFirstPaint, aScheduleComposite,
-                                          aPaintSequenceNumber, aIsRepeatTransaction,
-                                          aTransactionStart, mPaintSyncId)) {
+    if (!mShadowManager->SendUpdateNoSwap(info)) {
       MOZ_LAYERS_LOG(("[LayersForwarder] WARNING: sending transaction failed!"));
       return false;
     }

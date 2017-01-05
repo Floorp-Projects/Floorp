@@ -5,18 +5,18 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'DOMStorage.h',
-    'DOMStorageIPC.h',
+    'Storage.h',
+    'StorageIPC.h',
 ]
 
 UNIFIED_SOURCES += [
-    'DOMStorage.cpp',
-    'DOMStorageCache.cpp',
-    'DOMStorageDBThread.cpp',
-    'DOMStorageDBUpdater.cpp',
-    'DOMStorageIPC.cpp',
-    'DOMStorageManager.cpp',
-    'DOMStorageObserver.cpp',
+    'Storage.cpp',
+    'StorageCache.cpp',
+    'StorageDBThread.cpp',
+    'StorageDBUpdater.cpp',
+    'StorageIPC.cpp',
+    'StorageManager.cpp',
+    'StorageObserver.cpp',
 ]
 
 IPDL_SOURCES += [

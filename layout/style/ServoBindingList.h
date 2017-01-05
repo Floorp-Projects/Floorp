@@ -50,7 +50,10 @@ SERVO_BINDING_FUNC(Servo_StyleSheet_HasRules, bool,
                    RawServoStyleSheetBorrowed sheet)
 SERVO_BINDING_FUNC(Servo_StyleSheet_GetRules, ServoCssRulesStrong,
                    RawServoStyleSheetBorrowed sheet)
-SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned)
+SERVO_BINDING_FUNC(Servo_StyleSet_Init, RawServoStyleSetOwned, RawGeckoPresContextBorrowed pres_context)
+SERVO_BINDING_FUNC(Servo_StyleSet_RecomputeDefaultStyles, void,
+                   RawServoStyleSetBorrowed set,
+                   RawGeckoPresContextBorrowed pres_context)
 SERVO_BINDING_FUNC(Servo_StyleSet_Drop, void, RawServoStyleSetOwned set)
 SERVO_BINDING_FUNC(Servo_StyleSet_AppendStyleSheet, void,
                    RawServoStyleSetBorrowed set, RawServoStyleSheetBorrowed sheet, bool flush)
@@ -100,6 +103,7 @@ SERVO_BINDING_FUNC(Servo_ParseProperty,
                    ThreadSafePrincipalHolder* principal)
 SERVO_BINDING_FUNC(Servo_RestyleWithAddedDeclaration,
                    ServoComputedValuesStrong,
+                   RawServoStyleSetBorrowed set,
                    RawServoDeclarationBlockBorrowed declarations,
                    ServoComputedValuesBorrowed previous_style)
 
@@ -158,6 +162,7 @@ SERVO_BINDING_FUNC(Servo_ComputedValues_GetForAnonymousBox,
                    ServoComputedValuesBorrowedOrNull parent_style_or_null,
                    nsIAtom* pseudoTag, RawServoStyleSetBorrowed set)
 SERVO_BINDING_FUNC(Servo_ComputedValues_Inherit, ServoComputedValuesStrong,
+                   RawServoStyleSetBorrowed set,
                    ServoComputedValuesBorrowedOrNull parent_style)
 
 // Initialize Servo components. Should be called exactly once at startup.
@@ -175,7 +180,9 @@ SERVO_BINDING_FUNC(Servo_NoteExplicitHints, void, RawGeckoElementBorrowed elemen
                    nsRestyleHint restyle_hint, nsChangeHint change_hint)
 SERVO_BINDING_FUNC(Servo_CheckChangeHint, nsChangeHint, RawGeckoElementBorrowed element)
 SERVO_BINDING_FUNC(Servo_ResolveStyle, ServoComputedValuesStrong,
-                   RawGeckoElementBorrowed element, mozilla::ConsumeStyleBehavior consume)
+                   RawGeckoElementBorrowed element,
+                   RawServoStyleSetBorrowed set,
+                   mozilla::ConsumeStyleBehavior consume)
 SERVO_BINDING_FUNC(Servo_ResolvePseudoStyle, ServoComputedValuesStrong,
                    RawGeckoElementBorrowed element, nsIAtom* pseudo_tag,
                    bool is_probe, RawServoStyleSetBorrowed set)

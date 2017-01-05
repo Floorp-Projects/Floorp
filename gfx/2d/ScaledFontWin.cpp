@@ -88,6 +88,23 @@ ScaledFontWin::GetFontDescriptor(FontDescriptorOutput aCb, void* aBaton)
   return true;
 }
 
+already_AddRefed<ScaledFont>
+ScaledFontWin::CreateFromFontDescriptor(const uint8_t* aData, uint32_t aDataLength, Float aSize)
+{
+  NativeFont nativeFont;
+  nativeFont.mType = NativeFontType::GDI_FONT_FACE;
+  nativeFont.mFont = (void*)aData;
+
+  RefPtr<ScaledFont> font =
+    Factory::CreateScaledFontForNativeFont(nativeFont, aSize);
+
+#ifdef USE_CAIRO_SCALED_FONT
+  static_cast<ScaledFontBase*>(font.get())->PopulateCairoScaledFont();
+#endif
+
+  return font.forget();
+}
+
 AntialiasMode
 ScaledFontWin::GetDefaultAAMode()
 {

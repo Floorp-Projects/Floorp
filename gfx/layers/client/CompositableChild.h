@@ -31,7 +31,7 @@ public:
   static PCompositableChild* CreateActor();
   static void DestroyActor(PCompositableChild* aChild);
 
-  void Init(CompositableClient* aCompositable, uint64_t aAsyncID);
+  void Init(CompositableClient* aCompositable);
   virtual void RevokeCompositableClient();
 
   virtual void ActorDestroy(ActorDestroyReason) override;
@@ -40,10 +40,6 @@ public:
 
   virtual AsyncCompositableChild* AsAsyncCompositableChild() {
     return nullptr;
-  }
-
-  uint64_t GetAsyncID() const {
-    return mAsyncID;
   }
 
   // These should only be called on the IPDL thread.
@@ -58,7 +54,6 @@ protected:
 
 protected:
   CompositableClient* mCompositableClient;
-  uint64_t mAsyncID;
   bool mCanSend;
 };
 
@@ -66,7 +61,7 @@ protected:
 class AsyncCompositableChild final : public CompositableChild
 {
 public:
-  static PCompositableChild* CreateActor();
+  static PCompositableChild* CreateActor(uint64_t aAsyncID);
 
   void RevokeCompositableClient() override;
   RefPtr<CompositableClient> GetCompositableClient() override;
@@ -77,12 +72,17 @@ public:
     return this;
   }
 
+  uint64_t GetAsyncID() const {
+    return mAsyncID;
+  }
+
 protected:
-  AsyncCompositableChild();
+  explicit AsyncCompositableChild(uint64_t aAsyncID);
   ~AsyncCompositableChild() override;
 
 private:
   Mutex mLock;
+  uint64_t mAsyncID;
 };
 
 } // namespace layers

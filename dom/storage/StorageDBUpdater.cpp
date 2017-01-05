@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DOMStorageManager.h"
+#include "StorageManager.h"
 
 #include "mozIStorageBindingParamsArray.h"
 #include "mozIStorageBindingParams.h"
@@ -62,7 +62,8 @@ nsReverseStringSQLFunction::OnFunctionCall(
 class ExtractOriginData : protected mozilla::Tokenizer
 {
 public:
-  ExtractOriginData(const nsACString& scope, nsACString& suffix, nsACString& origin)
+  ExtractOriginData(const nsACString& scope, nsACString& suffix,
+                    nsACString& origin)
     : mozilla::Tokenizer(scope)
   {
     using mozilla::OriginAttributes;
@@ -112,7 +113,8 @@ public:
     // To preserve full uniqueness we store this suffix to the scope key.
     // Schema 0 code will just ignore it while keeping the scoping unique.
     //
-    // The whole scope string is in one of the following forms (when we are here):
+    // The whole scope string is in one of the following forms (when we are
+    // here):
     //
     // "1001:f:^appId=1001&inBrowser=false&addonId=101:gro.allizom.rxd.:https:443"
     // "1001:f:gro.allizom.rxd.:https:443"
@@ -197,7 +199,7 @@ GetOriginParticular::OnFunctionCall(
 
 } // namespace
 
-namespace DOMStorageDBUpdater {
+namespace StorageDBUpdater {
 
 nsresult CreateSchema1Tables(mozIStorageConnection *aWorkerConnection)
 {
@@ -264,9 +266,11 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
                                         &moz_webappsstoreExists);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!webappsstore2Exists && !webappsstoreExists && !moz_webappsstoreExists) {
-      // The database is empty, this is the first start.  Just create the schema table
-      // and break to the next version to update to, i.e. bypass update from the old version.
+    if (!webappsstore2Exists && !webappsstoreExists &&
+        !moz_webappsstoreExists) {
+      // The database is empty, this is the first start.  Just create the schema
+      // table and break to the next version to update to, i.e. bypass update
+      // from the old version.
 
       rv = CreateSchema1Tables(aWorkerConnection);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -297,7 +301,8 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
     nsCOMPtr<mozIStorageFunction> function1(new nsReverseStringSQLFunction());
     NS_ENSURE_TRUE(function1, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("REVERSESTRING"), 1, function1);
+    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("REVERSESTRING"),
+                                           1, function1);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Check if there is storage of Gecko 1.9.0 and if so, upgrade that storage
@@ -335,10 +340,10 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
 
     aWorkerConnection->RemoveFunction(NS_LITERAL_CSTRING("REVERSESTRING"));
 
-    // Update the scoping to match the new implememntation: split to oa suffix and origin key
-    // First rename the old table, we want to remove some columns no longer needed,
-    // but even before that drop all indexes from it (CREATE IF NOT EXISTS for index on the
-    // new table would falsely find the index!)
+    // Update the scoping to match the new implememntation: split to oa suffix
+    // and origin key First rename the old table, we want to remove some columns
+    // no longer needed, but even before that drop all indexes from it (CREATE
+    // IF NOT EXISTS for index on the new table would falsely find the index!)
     rv = aWorkerConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
           "DROP INDEX IF EXISTS webappsstore2.origin_key_index"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -353,12 +358,14 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
 
     nsCOMPtr<mozIStorageFunction> oaSuffixFunc(
       new GetOriginParticular(GetOriginParticular::ORIGIN_ATTRIBUTES_SUFFIX));
-    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("GET_ORIGIN_SUFFIX"), 1, oaSuffixFunc);
+    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("GET_ORIGIN_SUFFIX"),
+                                           1, oaSuffixFunc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<mozIStorageFunction> originKeyFunc(
       new GetOriginParticular(GetOriginParticular::ORIGIN_KEY));
-    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("GET_ORIGIN_KEY"), 1, originKeyFunc);
+    rv = aWorkerConnection->CreateFunction(NS_LITERAL_CSTRING("GET_ORIGIN_KEY"),
+                                           1, originKeyFunc);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Here we ensure this schema tables when we are updating.
@@ -402,8 +409,8 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (doVacuum) {
-    // In some cases this can make the disk file of the database significantly smaller.
-    // VACUUM cannot be executed inside a transaction.
+    // In some cases this can make the disk file of the database significantly
+    // smaller.  VACUUM cannot be executed inside a transaction.
     rv = aWorkerConnection->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("VACUUM"));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -412,6 +419,6 @@ nsresult Update(mozIStorageConnection *aWorkerConnection)
   return NS_OK;
 }
 
-} // namespace DOMStorageDBUpdater
+} // namespace StorageDBUpdater
 } // namespace dom
 } // namespace mozilla
