@@ -23,10 +23,7 @@ namespace layers {
 
 BasicContainerLayer::~BasicContainerLayer()
 {
-  while (mFirstChild) {
-    ContainerLayer::RemoveChild(mFirstChild);
-  }
-
+  ContainerLayer::RemoveAllChildren();
   MOZ_COUNT_DTOR(BasicContainerLayer);
 }
 
