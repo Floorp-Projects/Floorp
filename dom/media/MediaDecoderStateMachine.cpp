@@ -2712,7 +2712,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   return NS_OK;
 }
 
-void MediaDecoderStateMachine::StopPlayback()
+void
+MediaDecoderStateMachine::StopPlayback()
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("StopPlayback()");
@@ -2723,8 +2724,6 @@ void MediaDecoderStateMachine::StopPlayback()
     mMediaSink->SetPlaying(false);
     MOZ_ASSERT(!IsPlaying());
   }
-
-  DispatchDecodeTasksIfNeeded();
 }
 
 void MediaDecoderStateMachine::MaybeStartPlayback()
