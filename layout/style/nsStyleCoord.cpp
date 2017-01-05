@@ -354,10 +354,10 @@ CASE(eCornerBottomLeftX,  true);
 CASE(eCornerBottomLeftY,  false);
 #undef CASE
 
-// Validation of NS_HALF_TO_FULL_CORNER.
+// Validation of HalfToFullCorner.
 #define CASE(corner, result)                                                  \
-  static_assert(NS_HALF_TO_FULL_CORNER(corner) == result,                 \
-                "NS_HALF_TO_FULL_CORNER is wrong")
+  static_assert(HalfToFullCorner(corner) == result,                           \
+                "HalfToFullCorner is wrong")
 CASE(eCornerTopLeftX,     eCornerTopLeft);
 CASE(eCornerTopLeftY,     eCornerTopLeft);
 CASE(eCornerTopRightX,    eCornerTopRight);
