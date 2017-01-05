@@ -125,10 +125,10 @@ AppendRoundedRectToPath(PathBuilder* aPathBuilder,
   Point pc, p0, p1, p2, p3;
 
   if (aDrawClockwise) {
-    aPathBuilder->MoveTo(Point(aRect.X() + aRadii[RectCorner::TopLeft].width,
+    aPathBuilder->MoveTo(Point(aRect.X() + aRadii[eCornerTopLeft].width,
                                aRect.Y()));
   } else {
-    aPathBuilder->MoveTo(Point(aRect.X() + aRect.Width() - aRadii[RectCorner::TopRight].width,
+    aPathBuilder->MoveTo(Point(aRect.X() + aRect.Width() - aRadii[eCornerTopRight].width,
                                aRect.Y()));
   }
 
