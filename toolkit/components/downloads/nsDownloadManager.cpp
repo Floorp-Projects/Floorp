@@ -1871,7 +1871,7 @@ nsDownloadManager::RetryDownload(nsDownload* dl)
 
   // referrer policy can be anything since referrer is nullptr
   rv = wbp->SavePrivacyAwareURI(dl->mSource, nullptr,
-                                nullptr, mozilla::net::RP_Default,
+                                nullptr, mozilla::net::RP_Unset,
                                 nullptr, nullptr,
                                 dl->mTarget, dl->mPrivate);
   if (NS_FAILED(rv)) {

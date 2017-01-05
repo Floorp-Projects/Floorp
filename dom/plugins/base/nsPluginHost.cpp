@@ -3304,7 +3304,7 @@ nsresult nsPluginHost::NewPluginURLStream(const nsString& aURL,
       // errors about malformed requests if we include it in POSTs. See
       // bug 724465.
       nsCOMPtr<nsIURI> referer;
-      net::ReferrerPolicy referrerPolicy = net::RP_Default;
+      net::ReferrerPolicy referrerPolicy = net::RP_Unset;
 
       nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(element);
       if (olc)

@@ -391,7 +391,7 @@ var ViewSourceContent = {
         docShell.QueryInterface(Ci.nsIWebNavigation)
                 .loadURIWithOptions(content.location.href,
                                     Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
-                                    null, Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+                                    null, Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                                     null, null, null);
       }
     }
@@ -770,7 +770,7 @@ var ViewSourceContent = {
 
     // all our content is held by the data:URI and URIs are internally stored as utf-8 (see nsIURI.idl)
     let loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
-    let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT;
+    let referrerPolicy = Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     webNav.loadURIWithOptions(uri, loadFlags,
                               null, referrerPolicy,  // referrer
