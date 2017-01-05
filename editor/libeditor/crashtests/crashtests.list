@@ -28,7 +28,7 @@ load 503709-1.xhtml
 skip-if(stylo) load 513375-1.xhtml # bug 1323654
 load 535632-1.xhtml
 load 574558-1.xhtml
-skip-if(stylo) load 580151-1.xhtml # bug 1323655
+load 580151-1.xhtml
 load 582138-1.xhtml
 load 612565-1.html
 load 615015-1.html
