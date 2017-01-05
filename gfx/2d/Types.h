@@ -369,21 +369,6 @@ typedef mozilla::gfx::SurfaceFormat gfxImageFormat;
 
 namespace mozilla {
 
-// We can't use MOZ_BEGIN_ENUM_CLASS here because that prevents the enum
-// values from being used for indexing. Wrapping the enum in a struct does at
-// least gives us name scoping.
-struct RectCorner {
-  enum {
-    // This order is important since Rect::AtCorner, AppendRoundedRectToPath
-    // and other code depends on it!
-    TopLeft = 0,
-    TopRight = 1,
-    BottomRight = 2,
-    BottomLeft = 3,
-    Count = 4
-  };
-};
-
 // Side constants for use in various places.
 enum Side { eSideTop, eSideRight, eSideBottom, eSideLeft };
 
@@ -423,6 +408,11 @@ enum Corner {
   eCornerBottomRight = 2,
   eCornerBottomLeft = 3
 };
+
+// RectCornerRadii::radii depends on this value. It is not being added to
+// Corner because we want to lift the responsibility to handle it in the
+// switch-case.
+constexpr int eCornerCount = 4;
 
 // Creates a for loop that walks over the four mozilla::Corner values. This
 // implementation uses the same technique as NS_FOR_CSS_SIDES.
