@@ -208,18 +208,6 @@ public:
     OwnerThread()->Dispatch(r.forget());
   }
 
-  void DispatchAudioOffloading(bool aAudioOffloading)
-  {
-    RefPtr<MediaDecoderStateMachine> self = this;
-    nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-      if (self->mAudioOffloading != aAudioOffloading) {
-        self->mAudioOffloading = aAudioOffloading;
-        self->ScheduleStateMachine();
-      }
-    });
-    OwnerThread()->Dispatch(r.forget());
-  }
-
   // Drop reference to mResource. Only called during shutdown dance.
   void BreakCycles() {
     MOZ_ASSERT(NS_IsMainThread());
@@ -737,10 +725,6 @@ private:
   MediaEventProducer<MediaResult> mOnPlaybackErrorEvent;
 
   MediaEventProducer<DecoderDoctorEvent> mOnDecoderDoctorEvent;
-
-  // True if audio is offloading.
-  // Playback will not start when audio is offloading.
-  bool mAudioOffloading;
 
   void OnCDMProxyReady(RefPtr<CDMProxy> aProxy);
   void OnCDMProxyNotReady();
