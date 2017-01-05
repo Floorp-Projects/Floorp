@@ -16,16 +16,6 @@
 
 namespace mozilla {
 
-// Indices into "half corner" arrays (nsStyleCorners e.g.)
-#define NS_CORNER_TOP_LEFT_X      0
-#define NS_CORNER_TOP_LEFT_Y      1
-#define NS_CORNER_TOP_RIGHT_X     2
-#define NS_CORNER_TOP_RIGHT_Y     3
-#define NS_CORNER_BOTTOM_RIGHT_X  4
-#define NS_CORNER_BOTTOM_RIGHT_Y  5
-#define NS_CORNER_BOTTOM_LEFT_X   6
-#define NS_CORNER_BOTTOM_LEFT_Y   7
-
 #define NS_FOR_CSS_HALF_CORNERS(var_) for (int32_t var_ = 0; var_ < 8; ++var_)
 
 // The results of these conversion macros are exhaustively checked in
