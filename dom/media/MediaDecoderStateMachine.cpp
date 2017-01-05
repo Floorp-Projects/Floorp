@@ -2514,16 +2514,8 @@ MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (VideoQueue().GetSize() == 0) {
-    return false;
-  }
-
-  if (VideoQueue().GetSize() < GetAmpleVideoFrames() * mPlaybackRate + 1) {
-    return false;
-  }
-
-  return true;
+  return VideoQueue().GetSize() > 0 &&
+         VideoQueue().GetSize() >= GetAmpleVideoFrames() * mPlaybackRate + 1;
 }
 
 bool
