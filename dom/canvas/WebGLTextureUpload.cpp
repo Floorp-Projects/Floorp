@@ -2016,6 +2016,9 @@ DoCopyTexOrSubImage(WebGLContext* webgl, const char* funcName, bool isSubImage,
     Intersect(srcTotalWidth, xWithinSrc, dstWidth, &readX, &writeX, &rwWidth);
     Intersect(srcTotalHeight, yWithinSrc, dstHeight, &readY, &writeY, &rwHeight);
 
+    writeX += xOffset;
+    writeY += yOffset;
+
     ////
 
     GLenum error = 0;
@@ -2058,7 +2061,6 @@ DoCopyTexOrSubImage(WebGLContext* webgl, const char* funcName, bool isSubImage,
         ScopedCopyTexImageSource maybeSwizzle(webgl, funcName, srcTotalWidth,
                                               srcTotalHeight, srcFormat, dstUsage);
 
-        const uint8_t zOffset = 0;
         error = DoCopyTexSubImage(gl, target, level, writeX, writeY, zOffset, readX,
                                   readY, rwWidth, rwHeight);
         if (error)
