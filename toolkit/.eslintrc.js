@@ -90,6 +90,9 @@ module.exports = {
     // No using !! where casting to boolean is already happening
     "no-extra-boolean-cast": "error",
 
+    // Disallow unnecessary labels
+    "no-extra-label": "error",
+
     // No double semicolon
     "no-extra-semi": "error",
 
@@ -101,6 +104,9 @@ module.exports = {
 
     // No odd whitespace characters
     "no-irregular-whitespace": "error",
+
+    // Disallow the use of the __iterator__ property
+    "no-iterator": "error",
 
     // No single if block inside an else block
     "no-lonely-if": "error",
@@ -129,6 +135,12 @@ module.exports = {
     // No redeclaring variables
     "no-redeclare": "error",
 
+    // Disallow multiple spaces in regular expressions
+    "no-regex-spaces": "error",
+
+    // Disallow assignments where both sides are exactly the same
+    "no-self-assign": "error",
+
     // No unnecessary comparisons
     "no-self-compare": "error",
 
@@ -149,6 +161,12 @@ module.exports = {
 
     // No unreachable statements
     "no-unreachable": "error",
+
+    // Disallow negating the left operand of relational operators
+    "no-unsafe-negation": "error",
+
+    // Disallow unused labels
+    "no-unused-labels": "error",
 
     // No declaring variables that are never used
     "no-unused-vars": ["error", {
