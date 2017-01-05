@@ -3180,14 +3180,17 @@ IonBuilder::binaryArithTryConcat(bool* emitted, JSOp op, MDefinition* left, MDef
         return Ok();
     }
 
-    // The none-string input (if present) should be atleast a numerical type.
-    // Which we can easily coerce to string.
-    if (right->type() != MIRType::String && !IsNumberType(right->type())) {
-        trackOptimizationOutcome(TrackedOutcome::OperandNotStringOrNumber);
+    // The non-string input (if present) should be atleast easily coercible to string.
+    if (right->type() != MIRType::String &&
+        (right->mightBeType(MIRType::Symbol) || right->mightBeType(MIRType::Object)))
+    {
+        trackOptimizationOutcome(TrackedOutcome::OperandNotEasilyCoercibleToString);
         return Ok();
     }
-    if (left->type() != MIRType::String && !IsNumberType(left->type())) {
-        trackOptimizationOutcome(TrackedOutcome::OperandNotStringOrNumber);
+    if (left->type() != MIRType::String &&
+        (left->mightBeType(MIRType::Symbol) || left->mightBeType(MIRType::Object)))
+    {
+        trackOptimizationOutcome(TrackedOutcome::OperandNotEasilyCoercibleToString);
         return Ok();
     }
 
