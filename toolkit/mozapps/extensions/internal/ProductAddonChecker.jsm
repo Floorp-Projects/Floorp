@@ -197,7 +197,8 @@ function parseXML(document) {
  */
 function downloadFile(url) {
   return new Promise((resolve, reject) => {
-    let xhr = new XMLHttpRequest();
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                  createInstance(Ci.nsISupports);
     xhr.onload = function(response) {
       logger.info("downloadXHR File download. status=" + xhr.status);
       if (xhr.status != 200 && xhr.status != 206) {
