@@ -3413,10 +3413,10 @@ nsComputedDOMStyle::DoGetOutlineColor()
 
 already_AddRefed<CSSValue>
 nsComputedDOMStyle::GetEllipseRadii(const nsStyleCorners& aRadius,
-                                    uint8_t aFullCorner)
+                                    Corner aFullCorner)
 {
-  nsStyleCoord radiusX = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, false));
-  nsStyleCoord radiusY = aRadius.Get(NS_FULL_TO_HALF_CORNER(aFullCorner, true));
+  nsStyleCoord radiusX = aRadius.Get(FullToHalfCorner(aFullCorner, false));
+  nsStyleCoord radiusY = aRadius.Get(FullToHalfCorner(aFullCorner, true));
 
   // for compatibility, return a single value if X and Y are equal
   if (radiusX == radiusY) {
@@ -5960,9 +5960,9 @@ nsComputedDOMStyle::BasicShapeRadiiToString(nsAString& aCssText,
   nsAutoString horizontalString, verticalString;
   NS_FOR_CSS_FULL_CORNERS(corner) {
     horizontal.AppendElement(
-      aCorners.Get(NS_FULL_TO_HALF_CORNER(corner, false)));
+      aCorners.Get(FullToHalfCorner(corner, false)));
     vertical.AppendElement(
-      aCorners.Get(NS_FULL_TO_HALF_CORNER(corner, true)));
+      aCorners.Get(FullToHalfCorner(corner, true)));
   }
   BoxValuesToString(horizontalString, horizontal);
   BoxValuesToString(verticalString, vertical);

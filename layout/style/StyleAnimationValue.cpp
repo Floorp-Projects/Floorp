@@ -4210,9 +4210,9 @@ StyleClipBasicShapeToCSSArray(const StyleClipPath& aClipPath,
       const nsStyleCorners& radii = shape->GetRadius();
       NS_FOR_CSS_FULL_CORNERS(corner) {
         auto pair = MakeUnique<nsCSSValuePair>();
-        if (!StyleCoordToCSSValue(radii.Get(NS_FULL_TO_HALF_CORNER(corner, false)),
+        if (!StyleCoordToCSSValue(radii.Get(FullToHalfCorner(corner, false)),
                                   pair->mXValue) ||
-            !StyleCoordToCSSValue(radii.Get(NS_FULL_TO_HALF_CORNER(corner, true)),
+            !StyleCoordToCSSValue(radii.Get(FullToHalfCorner(corner, true)),
                                   pair->mYValue)) {
           return false;
         }
@@ -4692,11 +4692,11 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
 
       const nsStyleCorners& corners =
         StyleDataAtOffset<nsStyleCorners>(styleStruct, ssOffset);
-      uint8_t fullCorner = animType - eStyleAnimType_Corner_TopLeft;
+      Corner fullCorner = Corner(animType - eStyleAnimType_Corner_TopLeft);
       const nsStyleCoord &horiz =
-        corners.Get(NS_FULL_TO_HALF_CORNER(fullCorner, false));
+        corners.Get(FullToHalfCorner(fullCorner, false));
       const nsStyleCoord &vert =
-        corners.Get(NS_FULL_TO_HALF_CORNER(fullCorner, true));
+        corners.Get(FullToHalfCorner(fullCorner, true));
       nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
       if (!StyleCoordToCSSValue(horiz, pair->mXValue) ||
           !StyleCoordToCSSValue(vert, pair->mYValue)) {
