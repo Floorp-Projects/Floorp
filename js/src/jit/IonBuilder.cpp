@@ -12358,7 +12358,7 @@ IonBuilder::inTryFold(bool* emitted, MDefinition* obj, MDefinition* id)
 }
 
 AbortReasonOr<bool>
-IonBuilder::hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject)
+IonBuilder::hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* onProto)
 {
     MOZ_ASSERT(protoObject);
 
@@ -12367,14 +12367,18 @@ IonBuilder::hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject)
             return abort(AbortReason::Alloc);
 
         if (!key->hasStableClassAndProto(constraints()) || !key->clasp()->isNative())
-            return abort(AbortReason::Disable, "Cannot inspect prototype chain.");
-
-        JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
-        if (!proto)
             return false;
 
-        if (proto == protoObject)
+        JSObject* proto = checkNurseryObject(key->proto().toObjectOrNull());
+        if (!proto) {
+            *onProto = false;
             return true;
+        }
+
+        if (proto == protoObject) {
+            *onProto = true;
+            return true;
+        }
 
         key = TypeSet::ObjectKey::get(proto);
     }
@@ -12410,8 +12414,11 @@ IonBuilder::tryFoldInstanceOf(bool* emitted, MDefinition* lhs, JSObject* protoOb
         if (!key)
             continue;
 
+        bool checkSucceeded;
         bool isInstance;
-        MOZ_TRY_VAR(isInstance, hasOnProtoChain(key, protoObject));
+        MOZ_TRY_VAR(checkSucceeded, hasOnProtoChain(key, protoObject, &isInstance));
+        if (!checkSucceeded)
+            return Ok();
 
         if (isFirst) {
             knownIsInstance = isInstance;
