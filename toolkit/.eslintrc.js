@@ -84,6 +84,9 @@ module.exports = {
     // No labels
     "no-labels": "error",
 
+    // Disallow unnecessary nested blocks
+    "no-lone-blocks": "error",
+
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
 
