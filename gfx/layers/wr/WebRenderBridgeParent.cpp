@@ -13,6 +13,7 @@
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
+#include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderCompositorOGL.h"
@@ -394,13 +395,15 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
   }
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
-  PCompositableParent* compositableParent = CompositableMap::Get(aAsyncContainerId);
-  if (!compositableParent) {
-    NS_ERROR("CompositableParent not found in the map");
-    return IPC_OK();
+  ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(OtherPid());
+  if (!imageBridge) {
+     return IPC_FAIL_NO_REASON(this);
   }
-
-  CompositableHost* host = CompositableHost::FromIPDLActor(compositableParent);
+  CompositableHost* host = imageBridge->FindCompositable(aAsyncContainerId);
+  if (!host) {
+    NS_ERROR("CompositableHost not found in the map!");
+    return IPC_FAIL_NO_REASON(this);
+  }
   if (host->GetType() != CompositableType::IMAGE) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
@@ -601,7 +604,7 @@ WebRenderBridgeParent::IsSameProcess() const
 PCompositableParent*
 WebRenderBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo)
 {
-  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo, 0);
+  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo);
   CompositableHost* compositable = CompositableHost::FromIPDLActor(actor);
   MOZ_ASSERT(compositable);
   compositable->SetCompositor(mCompositor);
