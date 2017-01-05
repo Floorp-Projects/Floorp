@@ -7,26 +7,21 @@ package org.mozilla.gecko.home.activitystream.stream;
 
 import android.database.Cursor;
 import android.graphics.Color;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
-import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
+import org.mozilla.gecko.home.activitystream.model.Highlight;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
@@ -44,14 +39,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
-    private String title;
-    private String url;
-    private JSONObject metadata;
-
-    private @Nullable Boolean isPinned;
-    private @Nullable Boolean isBookmarked;
-
-    private Utils.HighlightSource source;
+    private Highlight highlight;
 
     private final FaviconView vIconView;
     private final TextView vLabel;
@@ -89,13 +77,13 @@ public class HighlightItem extends StreamItem implements IconCallback {
             public void onClick(View v) {
                 ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                         .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
-                        .forHighlightSource(source);
+                        .forHighlightSource(highlight.getSource());
 
                 ActivityStreamContextMenu.show(v.getContext(),
                         menuButton,
                         extras,
                         ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
-                        title, url, isBookmarked, isPinned,
+                        highlight.getTitle(), highlight.getUrl(), highlight.isBookmarked(), highlight.isPinned(),
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
                         vIconView.getWidth(), vIconView.getHeight());
 
@@ -111,61 +99,28 @@ public class HighlightItem extends StreamItem implements IconCallback {
     }
 
     public void bind(Cursor cursor, int tilesWidth, int tilesHeight) {
-        final long time = cursor.getLong(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.DATE));
-        final String ago = DateUtils.getRelativeTimeSpanString(time, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, 0).toString();
+        highlight = Highlight.fromCursor(cursor);
 
-        title = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.History.TITLE));
-        url = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
-        source = Utils.highlightSource(cursor);
-
-        try {
-            final String rawMetadata = cursor.getString(cursor.getColumnIndexOrThrow(BrowserContract.Highlights.METADATA));
-            if (rawMetadata != null) {
-                metadata = new JSONObject(rawMetadata);
-            }
-        } catch (JSONException e) {
-            Log.w(LOGTAG, "JSONException while parsing page metadata", e);
-        }
-
-        vLabel.setText(title);
-        vTimeSince.setText(ago);
+        vLabel.setText(highlight.getTitle());
+        vTimeSince.setText(highlight.getRelativeTimeSpan());
 
         ViewGroup.LayoutParams layoutParams = vIconView.getLayoutParams();
         layoutParams.width = tilesWidth - tilesMargin;
         layoutParams.height = tilesHeight;
         vIconView.setLayoutParams(layoutParams);
 
-        updateStateForSource(source);
-        updateUiForSource(source);
-        updatePage(metadata, url);
+        updateUiForSource(highlight.getSource());
+        updatePage();
 
         if (ongoingIconLoad != null) {
             ongoingIconLoad.cancel(true);
         }
 
         ongoingIconLoad = Icons.with(itemView.getContext())
-                .pageUrl(url)
+                .pageUrl(highlight.getUrl())
                 .skipNetwork()
                 .build()
                 .execute(this);
-    }
-
-    private void updateStateForSource(Utils.HighlightSource source) {
-        // We can only be certain of bookmark state if an item is a bookmark item.
-        // Otherwise, due to the underlying highlights query, we have to look up states when
-        // menus are displayed.
-        switch (source) {
-            case BOOKMARKED:
-                isBookmarked = true;
-                isPinned = null;
-                break;
-            case VISITED:
-                isBookmarked = null;
-                isPinned = null;
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown source: " + source);
-        }
     }
 
     private void updateUiForSource(Utils.HighlightSource source) {
@@ -187,24 +142,18 @@ public class HighlightItem extends StreamItem implements IconCallback {
         }
     }
 
-    private void updatePage(final JSONObject metadata, final String url) {
+    private void updatePage() {
         // First try to set the provider name from the page's metadata.
-
-        try {
-            if (metadata != null && metadata.has("provider")) {
-                vPageView.setText(metadata.getString("provider"));
-                return;
-            }
-        } catch (JSONException e) {
-            // Broken JSON? Continue with fallback.
+        if (highlight.getMetadata().hasProvider()) {
+            vPageView.setText(highlight.getMetadata().getProvider());
+            return;
         }
 
         // If there's no provider name available then let's try to extract one from the URL.
-
-        extractLabel(itemView.getContext(), url, false, new ActivityStream.LabelCallback() {
+        extractLabel(itemView.getContext(), highlight.getUrl(), false, new ActivityStream.LabelCallback() {
             @Override
             public void onLabelExtracted(String label) {
-                vPageView.setText(TextUtils.isEmpty(label) ? url : label);
+                vPageView.setText(TextUtils.isEmpty(label) ? highlight.getUrl() : label);
             }
         });
     }
