@@ -35,6 +35,7 @@ define(function (require, exports, module) {
       mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
       isInterestingProp: React.PropTypes.func,
       title: React.PropTypes.string,
+      objectLink: React.PropTypes.func,
     },
 
     getTitle: function (object) {

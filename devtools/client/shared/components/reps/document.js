@@ -27,7 +27,8 @@ define(function (require, exports, module) {
     displayName: "Document",
 
     propTypes: {
-      object: React.PropTypes.object.isRequired
+      object: React.PropTypes.object.isRequired,
+      objectLink: React.PropTypes.func,
     },
 
     getLocation: function (grip) {
