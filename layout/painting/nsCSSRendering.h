@@ -147,7 +147,7 @@ public:
    * definitions from the CSS Image Values and Replaced Content spec. See
    * http://dev.w3.org/csswg/css-images-3/#sizing .
    */
-
+   
   /**
    * Compute the intrinsic size of the image as defined in the CSS Image Values
    * spec. The intrinsic size is the unscaled size which the image would ideally
@@ -209,17 +209,17 @@ public:
                         const nsSize& aDefaultSize);
 
   /**
-   * Draws the image to the target rendering context using
-   * {background|mask}-specific arguments.
+   * Draws the image to the target rendering context using background-specific
+   * arguments.
    * @see nsLayoutUtils::DrawImage() for parameters.
    */
-  DrawResult DrawLayer(nsPresContext*       aPresContext,
-                       nsRenderingContext&  aRenderingContext,
-                       const nsRect&        aDest,
-                       const nsRect&        aFill,
-                       const nsPoint&       aAnchor,
-                       const nsRect&        aDirty,
-                       const nsSize&        aRepeatSize);
+  DrawResult DrawBackground(nsPresContext*       aPresContext,
+                            nsRenderingContext&  aRenderingContext,
+                            const nsRect&        aDest,
+                            const nsRect&        aFill,
+                            const nsPoint&       aAnchor,
+                            const nsRect&        aDirty,
+                            const nsSize&        aRepeatSize);
 
   /**
    * Draw the image to a single component of a border-image style rendering.
@@ -669,25 +669,24 @@ struct nsCSSRendering {
        compositionOp(aCompositionOp) {}
   };
 
-  static DrawResult PaintStyleImageLayer(const PaintBGParams& aParams);
+  static DrawResult PaintBackground(const PaintBGParams& aParams);
 
 
   /**
-   * Same as |PaintStyleImageLayer|, except using the provided style structs.
+   * Same as |PaintBackground|, except using the provided style structs.
    * This short-circuits the code that ensures that the root element's
-   * {background|mask} is drawn on the canvas.
-   * The aLayer parameter allows you to paint a single layer of the
-   * {background|mask}.
+   * background is drawn on the canvas.
+   * The aLayer parameter allows you to paint a single layer of the background.
    * The default value for aLayer, -1, means that all layers will be painted.
    * The background color will only be painted if the back-most layer is also
-   * being painted and (aParams.paintFlags & PAINTBG_MASK_IMAGE) is false.
+   * being painted.
    * aCompositionOp is only respected if a single layer is specified (aLayer != -1).
    * If all layers are painted, the image layer's blend mode (or the mask
    * layer's composition mode) will be used.
    */
-  static DrawResult PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
-                                               nsStyleContext *mBackgroundSC,
-                                               const nsStyleBorder& aBorder);
+  static DrawResult PaintBackgroundWithSC(const PaintBGParams& aParams,
+                                          nsStyleContext *mBackgroundSC,
+                                          const nsStyleBorder& aBorder);
 
   /**
    * Returns the rectangle covered by the given background layer image, taking

@@ -512,7 +512,7 @@ PaintMaskSurface(const PaintFramesParams& aParams,
                                                       i, compositionOp);
 
       result =
-        nsCSSRendering::PaintStyleImageLayerWithSC(params, aSC,
+        nsCSSRendering::PaintBackgroundWithSC(params, aSC,
                                               *aParams.frame->StyleBorder());
       if (result != DrawResult::SUCCESS) {
         return result;
