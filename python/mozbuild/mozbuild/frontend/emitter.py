@@ -1374,12 +1374,12 @@ class TreeMetadataEmitter(LoggingMixin):
                            install_prefix="web-platform/")
 
 
-        for path, tests in manifest:
+        for test_type, path, tests in manifest:
             path = mozpath.join(tests_root, path)
-            for test in tests:
-                if test.item_type not in ["testharness", "reftest"]:
-                    continue
+            if test_type not in ["testharness", "reftest", "wdspec"]:
+                continue
 
+            for test in tests:
                 obj.tests.append({
                     'path': path,
                     'here': mozpath.dirname(path),
