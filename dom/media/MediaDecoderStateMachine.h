@@ -428,12 +428,6 @@ protected:
   bool IsWaitingAudioData() const { return mAudioWaitRequest.Exists(); }
   bool IsWaitingVideoData() const { return mVideoWaitRequest.Exists(); }
 
-  // Re-evaluates the state and determines whether we need to dispatch
-  // events to run the decode, or if not whether we should set the reader
-  // to idle mode. This is threadsafe, and can be called from any thread.
-  // The decoder monitor must be held.
-  void DispatchDecodeTasksIfNeeded();
-
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
   // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
