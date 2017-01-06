@@ -39,6 +39,12 @@
         "description": "The soonest that the JavaScript or CSS will be injected into the tab."
       },
       {
+        "id": "CSSOrigin",
+        "type": "string",
+        "enum": ["user", "author"],
+        "description": "The origin of the CSS to inject, this affects the cascading order (priority) of the stylesheet."
+      },
+      {
         "id": "InjectDetails",
         "type": "object",
         "description": "Details of the script or CSS to inject. Either the code or the file property must be set, but both may not be set at the same time.",
@@ -57,6 +63,11 @@
             "$ref": "RunAt",
             "optional": true,
             "description": "The soonest that the JavaScript or CSS will be injected into the tab. Defaults to \"document_idle\"."
+          },
+          "cssOrigin": {
+            "$ref": "CSSOrigin",
+            "optional": true,
+            "description": "The css origin of the stylesheet to inject. Defaults to \"author\"."
           }
         }
       },
