@@ -9,7 +9,6 @@ SUBDIRS = src util test docs win32
 EXTRA_DIST = \
 	autogen.sh \
 	harfbuzz.doap \
-	Android.mk \
 	README.python \
 	BUILD.md \
 	$(NULL)
