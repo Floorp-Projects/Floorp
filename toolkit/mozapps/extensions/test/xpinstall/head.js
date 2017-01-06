@@ -375,7 +375,7 @@ var Harness = {
   // nsIObserver
 
   observe(subject, topic, data) {
-    var installInfo = subject.QueryInterface(Components.interfaces.amIWebInstallInfo);
+    var installInfo = subject.wrappedJSObject;
     switch (topic) {
     case "addon-install-started":
       is(this.runningInstalls.length, installInfo.installs.length,

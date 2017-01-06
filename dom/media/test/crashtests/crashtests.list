@@ -8,7 +8,7 @@ asserts-if(stylo,8) HTTP load 481136-1.html # bug 1324671 # needs to be HTTP to 
 load 492286-1.xhtml
 load 493915-1.html
 load 495794-1.html
- load 576612-1.html # bug 1323890
+load 576612-1.html
 load 752784-1.html
 load 789075-1.html
 HTTP load 795892-1.html

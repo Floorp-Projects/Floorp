@@ -116,7 +116,7 @@ BoxObject::GetFrame(bool aFlushLayout)
     // flush to make sure our frame model is up to date.
     // XXXbz should flush on document, no?  Except people call this from
     // frame code, maybe?
-    shell->FlushPendingNotifications(Flush_Frames);
+    shell->FlushPendingNotifications(FlushType::Frames);
   }
 
   // The flush might have killed mContent.
@@ -140,7 +140,7 @@ BoxObject::GetPresShell(bool aFlushLayout)
   }
 
   if (aFlushLayout) {
-    doc->FlushPendingNotifications(Flush_Layout);
+    doc->FlushPendingNotifications(FlushType::Layout);
   }
 
   return doc->GetShell();

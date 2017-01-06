@@ -53,6 +53,7 @@ linux64-stylo/opt:
     build-platform: linux64-stylo/opt
     test-sets:
         - stylo-tests
+        - talos
 
 # QR builds just run a subset right now
 linux64-qr/opt:

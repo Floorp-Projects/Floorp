@@ -1271,7 +1271,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
     RefPtr<SyncStopListeningRunnable> r =
       new SyncStopListeningRunnable(mWorkerPrivate, mListener);
     ErrorResult rv;
-    r->Dispatch(rv);
+    r->Dispatch(Killing, rv);
     if (rv.Failed()) {
       NS_ERROR("Failed to dispatch stop listening runnable!");
       // And now what?

@@ -281,9 +281,10 @@ checkbox:-moz-focusring {
   content: "";
   display: block;
   position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -8px 0 0 -8px;
+  offset-inline-start: 50%;
+  offset-block-start: 50%;
+  margin-block-start: -8px;
+  margin-inline-start: -8px;
   background-size: cover;
   background-repeat: no-repeat;
   transition: opacity 0.05s ease-in-out;

@@ -27,36 +27,6 @@ struct gfxMargin : public mozilla::gfx::BaseMargin<gfxFloat, gfxMargin> {
     : Super(aTop, aRight, aBottom, aLeft) {}
 };
 
-namespace mozilla {
-    namespace css {
-        enum Corner {
-            // this order is important!
-            eCornerTopLeft = 0,
-            eCornerTopRight = 1,
-            eCornerBottomRight = 2,
-            eCornerBottomLeft = 3,
-            eNumCorners = 4
-        };
-    } // namespace css
-} // namespace mozilla
-#define NS_CORNER_TOP_LEFT mozilla::css::eCornerTopLeft
-#define NS_CORNER_TOP_RIGHT mozilla::css::eCornerTopRight
-#define NS_CORNER_BOTTOM_RIGHT mozilla::css::eCornerBottomRight
-#define NS_CORNER_BOTTOM_LEFT mozilla::css::eCornerBottomLeft
-#define NS_NUM_CORNERS mozilla::css::eNumCorners
-
-#define NS_FOR_CSS_CORNERS(var_)                         \
-    for (mozilla::css::Corner var_ = NS_CORNER_TOP_LEFT; \
-         var_ <= NS_CORNER_BOTTOM_LEFT;                  \
-         var_++)
-
-static inline mozilla::css::Corner operator++(mozilla::css::Corner& corner, int) {
-    NS_PRECONDITION(corner >= NS_CORNER_TOP_LEFT &&
-                    corner < NS_NUM_CORNERS, "Out of range corner");
-    corner = mozilla::css::Corner(corner + 1);
-    return corner;
-}
-
 struct gfxRect :
     public mozilla::gfx::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> {
     typedef mozilla::gfx::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> Super;
@@ -75,15 +45,12 @@ struct gfxRect :
      */
     bool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
-    gfxPoint AtCorner(mozilla::css::Corner corner) const {
+    gfxPoint AtCorner(mozilla::Corner corner) const {
         switch (corner) {
-            case NS_CORNER_TOP_LEFT: return TopLeft();
-            case NS_CORNER_TOP_RIGHT: return TopRight();
-            case NS_CORNER_BOTTOM_RIGHT: return BottomRight();
-            case NS_CORNER_BOTTOM_LEFT: return BottomLeft();
-            default:
-                NS_ERROR("Invalid corner!");
-                break;
+            case mozilla::eCornerTopLeft: return TopLeft();
+            case mozilla::eCornerTopRight: return TopRight();
+            case mozilla::eCornerBottomRight: return BottomRight();
+            case mozilla::eCornerBottomLeft: return BottomLeft();
         }
         return gfxPoint(0.0, 0.0);
     }

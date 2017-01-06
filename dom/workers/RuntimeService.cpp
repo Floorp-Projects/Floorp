@@ -623,7 +623,7 @@ ContentSecurityPolicyAllows(JSContext* aCx)
         new LogViolationDetailsRunnable(worker, fileName, lineNum);
 
     ErrorResult rv;
-    runnable->Dispatch(rv);
+    runnable->Dispatch(Killing, rv);
     if (NS_WARN_IF(rv.Failed())) {
       rv.SuppressException();
     }

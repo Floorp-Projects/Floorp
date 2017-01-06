@@ -231,8 +231,10 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
 
     // Set a forwarding pointer for the element buffers in case they were
     // preserved on the stack by Ion.
-    nursery.maybeSetForwardingPointer(trc, oldObj->elements(), newObj->elements(),
-                                      /* direct = */nbytes >= sizeof(uintptr_t));
+    if (nbytes > 0) {
+        nursery.maybeSetForwardingPointer(trc, oldObj->elements(), newObj->elements(),
+                                          /* direct = */nbytes >= sizeof(uintptr_t));
+    }
 
     return newObj->hasInlineElements() ? 0 : nbytes;
 }
@@ -1655,6 +1657,11 @@ DataViewObject*
 DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
                        Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, JSObject* protoArg)
 {
+    if (arrayBuffer->isDetached()) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return nullptr;
+    }
+
     MOZ_ASSERT(byteOffset <= INT32_MAX);
     MOZ_ASSERT(byteLength <= INT32_MAX);
     MOZ_ASSERT(byteOffset + byteLength < UINT32_MAX);

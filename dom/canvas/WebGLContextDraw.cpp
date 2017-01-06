@@ -1029,25 +1029,26 @@ WebGLContext::WhatDoesVertexAttrib0Need() const
 
     const auto& isAttribArray0Enabled = mBoundVertexArray->mAttribs[0].mEnabled;
 
-    // work around Mac OSX crash, see bug 631420
+    bool legacyAttrib0 = gl->IsCompatibilityProfile();
 #ifdef XP_MACOSX
-    if (gl->WorkAroundDriverBugs() &&
-        isAttribArray0Enabled &&
-        !mBufferFetch_IsAttrib0Active)
-    {
-        return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
+    if (gl->WorkAroundDriverBugs()) {
+        // Failures in conformance/attribs/gl-disabled-vertex-attrib.
+        // Even in Core profiles on NV. Sigh.
+        legacyAttrib0 |= (gl->Vendor() == gl::GLVendor::NVIDIA);
     }
 #endif
 
-    if (MOZ_LIKELY(!gl->IsCompatibilityProfile() ||
-                   isAttribArray0Enabled))
-    {
+    if (!legacyAttrib0)
         return WebGLVertexAttrib0Status::Default;
-    }
 
-    return mBufferFetch_IsAttrib0Active
-           ? WebGLVertexAttrib0Status::EmulatedInitializedArray
-           : WebGLVertexAttrib0Status::EmulatedUninitializedArray;
+    if (isAttribArray0Enabled && mBufferFetch_IsAttrib0Active)
+        return WebGLVertexAttrib0Status::Default;
+
+    if (mBufferFetch_IsAttrib0Active)
+        return WebGLVertexAttrib0Status::EmulatedInitializedArray;
+
+    // Ensure that the legacy code has enough buffer.
+    return WebGLVertexAttrib0Status::EmulatedUninitializedArray;
 }
 
 bool
@@ -1069,6 +1070,8 @@ WebGLContext::DoFakeVertexAttrib0(const char* funcName, GLuint vertexCount)
                         "to bind some always-used attribute to location 0.");
         mAlreadyWarnedAboutFakeVertexAttrib0 = true;
     }
+
+    gl->fEnableVertexAttribArray(0);
 
     if (!mFakeVertexAttrib0BufferObject) {
         gl->fGenBuffers(1, &mFakeVertexAttrib0BufferObject);

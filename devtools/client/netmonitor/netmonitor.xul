@@ -284,18 +284,17 @@
 
     <html:div id="network-statistics-view">
       <html:div id="network-statistics-toolbar"
-               class="devtools-toolbar">
+                class="devtools-toolbar">
         <html:div xmlns="http://www.w3.org/1999/xhtml"
                   id="react-statistics-back-hook"/>
       </html:div>
-      <box id="network-statistics-charts"
-           class="devtools-responsive-container"
-           flex="1">
-        <vbox id="primed-cache-chart" pack="center" flex="1"/>
-        <splitter id="network-statistics-view-splitter"
-                  class="devtools-side-splitter"/>
-        <vbox id="empty-cache-chart" pack="center" flex="1"/>
-      </box>
+      <html:div id="network-statistics-charts"
+                class="devtools-responsive-container">
+        <html:div id="primed-cache-chart"/>
+        <html:div id="network-statistics-view-splitter"
+                  class="split-box devtools-side-splitter"/>
+        <html:div id="empty-cache-chart"/>
+      </html:div>
     </html:div>
   </deck>
 

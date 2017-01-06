@@ -60,7 +60,7 @@ BrowserElementWebNavigation.prototype = {
   loadURI(uri, flags, referrer, postData, headers) {
     // No equivalent in the current BrowserElement API
     this.loadURIWithOptions(uri, flags, referrer,
-                            Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+                            Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                             postData, headers, null);
   },
 

@@ -133,7 +133,7 @@
             if (!aURI)
               aURI = "about:blank";
 
-            var aReferrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_DEFAULT;
+            var aReferrerPolicy = Components.interfaces.nsIHttpChannel.REFERRER_POLICY_UNSET;
 
             // Check for loadURIWithFlags(uri, { ... });
             var params = arguments[1];

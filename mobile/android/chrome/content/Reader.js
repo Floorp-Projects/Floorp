@@ -126,10 +126,7 @@ var Reader = {
       }
 
       case "Reader:SystemUIVisibility":
-        WindowEventDispatcher.sendRequest({
-          type: "SystemUI:Visibility",
-          visible: message.data.visible
-        });
+        this._showSystemUI(message.data.visible);
         break;
 
       case "Reader:ToolbarHidden":
@@ -189,6 +186,9 @@ var Reader = {
       return;
     }
 
+    // not in ReaderMode, to make sure System UI is visible, not dimmed.
+    this._showSystemUI(true);
+
     // Only stop a reader session if the foreground viewer is not visible.
     UITelemetry.stopSession("reader.1", "", null);
 
@@ -198,6 +198,13 @@ var Reader = {
     } else {
       UITelemetry.addEvent("show.1", "button", null, "reader_unavailable");
     }
+  },
+
+  _showSystemUI: function(visibility) {
+      WindowEventDispatcher.sendRequest({
+          type: "SystemUI:Visibility",
+          visible: visibility
+      });
   },
 
   /**

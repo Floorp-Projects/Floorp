@@ -253,6 +253,17 @@ typedef enum {
   OVR_FORMAT_D24_UNORM_S8_UINT,
   OVR_FORMAT_D32_FLOAT,
   OVR_FORMAT_D32_FLOAT_S8X24_UINT,
+  OVR_FORMAT_BC1_UNORM,
+  OVR_FORMAT_BC1_UNORM_SRGB,
+  OVR_FORMAT_BC2_UNORM,
+  OVR_FORMAT_BC2_UNORM_SRGB,
+  OVR_FORMAT_BC3_UNORM,
+  OVR_FORMAT_BC3_UNORM_SRGB,
+  OVR_FORMAT_BC6H_UF16,
+  OVR_FORMAT_BC6H_SF16,
+  OVR_FORMAT_BC7_UNORM,
+  OVR_FORMAT_BC7_UNORM_SRGB,
+  OVR_FORMAT_R11G11B10_FLOAT,
   OVR_FORMAT_ENUMSIZE = 0x7fffffff
 } ovrTextureFormat;
 
@@ -260,6 +271,7 @@ typedef enum {
   ovrTextureMisc_None,
   ovrTextureMisc_DX_Typeless = 0x0001,
   ovrTextureMisc_AllowGenerateMips = 0x0002,
+  ovrTextureMisc_ProtectedContent = 0x0004,
   ovrTextureMisc_EnumSize = 0x7fffffff
 } ovrTextureFlags;
 
@@ -276,8 +288,7 @@ typedef struct {
   unsigned int BindFlags;
 } ovrTextureSwapChainDesc;
 
-typedef struct
-{
+typedef struct {
   ovrTextureFormat Format;
   int Width;
   int Height;
@@ -286,8 +297,6 @@ typedef struct
 
 typedef void* ovrTextureSwapChain;
 typedef struct ovrMirrorTextureData* ovrMirrorTexture;
-
-
 
 typedef enum {
   ovrButton_A = 0x00000001,
@@ -317,13 +326,15 @@ typedef enum {
   ovrTouch_A = ovrButton_A,
   ovrTouch_B = ovrButton_B,
   ovrTouch_RThumb = ovrButton_RThumb,
+  ovrTouch_RThumbRest = 0x00000008,
   ovrTouch_RIndexTrigger = 0x00000010,
-  ovrTouch_RButtonMask = ovrTouch_A | ovrTouch_B | ovrTouch_RThumb | ovrTouch_RIndexTrigger,
+  ovrTouch_RButtonMask = ovrTouch_A | ovrTouch_B | ovrTouch_RThumb | ovrTouch_RThumbRest | ovrTouch_RIndexTrigger,
   ovrTouch_X = ovrButton_X,
   ovrTouch_Y = ovrButton_Y,
   ovrTouch_LThumb = ovrButton_LThumb,
+  ovrTouch_LThumbRest = 0x00000800,
   ovrTouch_LIndexTrigger = 0x00001000,
-  ovrTouch_LButtonMask = ovrTouch_X | ovrTouch_Y | ovrTouch_LThumb | ovrTouch_LIndexTrigger,
+  ovrTouch_LButtonMask = ovrTouch_X | ovrTouch_Y | ovrTouch_LThumb | ovrTouch_LThumbRest | ovrTouch_LIndexTrigger,
   ovrTouch_RIndexPointing = 0x00000020,
   ovrTouch_RThumbUp = 0x00000040,
   ovrTouch_RPoseMask = ovrTouch_RIndexPointing | ovrTouch_RThumbUp,
@@ -332,6 +343,15 @@ typedef enum {
   ovrTouch_LPoseMask = ovrTouch_LIndexPointing | ovrTouch_LThumbUp,
   ovrTouch_EnumSize = 0x7fffffff
 } ovrTouch;
+
+typedef struct OVR_ALIGNAS(OVR_PTR_SIZE) {
+  int SampleRateHz;
+  int SampleSizeInBytes;
+  int QueueMinSizeToAvoidStarvation;
+  int SubmitMinSamples;
+  int SubmitMaxSamples;
+  int SubmitOptimalSamples;
+} ovrTouchHapticsDesc;
 
 typedef enum {
   ovrControllerType_None = 0x00,
@@ -343,6 +363,29 @@ typedef enum {
   ovrControllerType_Active = 0xff,
   ovrControllerType_EnumSize = 0x7fffffff
 } ovrControllerType;
+
+typedef enum {
+  ovrHapticsBufferSubmit_Enqueue
+} ovrHapticsBufferSubmitMode;
+
+typedef struct {
+  const void* Samples;
+  int SamplesCount;
+  ovrHapticsBufferSubmitMode SubmitMode;
+} ovrHapticsBuffer;
+
+typedef struct {
+  int RemainingQueueSpace;
+  int SamplesQueued;
+} ovrHapticsPlaybackState;
+
+typedef enum {
+  ovrTrackedDevice_HMD = 0x0001,
+  ovrTrackedDevice_LTouch = 0x0002,
+  ovrTrackedDevice_RTouch = 0x0004,
+  ovrTrackedDevice_Touch = 0x0006,
+  ovrTrackedDevice_All = 0xFFFF,
+} ovrTrackedDeviceType;
 
 typedef enum {
   ovrHand_Left = 0,
@@ -359,6 +402,9 @@ typedef struct {
   float HandTrigger[ovrHand_Count];
   ovrVector2f Thumbstick[ovrHand_Count];
   ovrControllerType ControllerType;
+  float IndexTriggerNoDeadzone[ovrHand_Count];
+  float HandTriggerNoDeadzone[ovrHand_Count];
+  ovrVector2f ThumbstickNoDeadzone[ovrHand_Count];
 } ovrInputState;
 
 typedef enum {

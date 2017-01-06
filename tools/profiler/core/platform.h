@@ -379,7 +379,7 @@ class Sampler {
   static pthread_t GetProfiledThread(PlatformData*);
 #endif
 
-  static std::vector<ThreadInfo*> GetRegisteredThreads() {
+  static const std::vector<ThreadInfo*>& GetRegisteredThreads() {
     return *sRegisteredThreads;
   }
 

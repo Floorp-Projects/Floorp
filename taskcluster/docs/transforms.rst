@@ -67,13 +67,20 @@ In the item, this looks like:
         by-test-platform:
             linux64/debug: 12
             linux64/opt: 8
+            android.*: 14
             default: 10
 
 This is a simple but powerful way to encode business rules in the items
 provided as input to the transforms, rather than expressing those rules in the
 transforms themselves.  If you are implementing a new business rule, prefer
 this mode where possible.  The structure is easily resolved to a single value
-using :func:`taskgraph.transform.base.get_keyed_by`.
+using :func:`taskgraph.transform.base.resolve_keyed_by`.
+
+Exact matches are used immediately.  If no exact matches are found, each
+alternative is treated as a regular expression, matched against the whole
+value.  Thus ``android.*`` would match ``android-api-15/debug``.  If nothing
+matches as a regular expression, but there is a ``default`` alternative, it is
+used.  Otherwise, an exception is raised and graph generation stops.
 
 Organization
 -------------
