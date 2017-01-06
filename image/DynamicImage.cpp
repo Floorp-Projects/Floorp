@@ -189,7 +189,8 @@ DynamicImage::GetFrameAtSize(const IntSize& aSize,
   MOZ_ASSERT(context); // already checked the draw target above
 
   auto result = Draw(context, aSize, ImageRegion::Create(aSize),
-                     aWhichFrame, SamplingFilter::POINT, Nothing(), aFlags);
+                     aWhichFrame, SamplingFilter::POINT, Nothing(), aFlags,
+                     1.0);
 
   return result == DrawResult::SUCCESS ? dt->Snapshot() : nullptr;
 }
@@ -219,7 +220,8 @@ DynamicImage::Draw(gfxContext* aContext,
                    uint32_t aWhichFrame,
                    SamplingFilter aSamplingFilter,
                    const Maybe<SVGImageContext>& aSVGContext,
-                   uint32_t aFlags)
+                   uint32_t aFlags,
+                   float aOpacity)
 {
   MOZ_ASSERT(!aSize.IsEmpty(), "Unexpected empty size");
 
@@ -227,7 +229,8 @@ DynamicImage::Draw(gfxContext* aContext,
 
   if (aSize == drawableSize) {
     gfxUtils::DrawPixelSnapped(aContext, mDrawable, drawableSize, aRegion,
-                               SurfaceFormat::B8G8R8A8, aSamplingFilter);
+                               SurfaceFormat::B8G8R8A8, aSamplingFilter,
+                               aOpacity);
     return DrawResult::SUCCESS;
   }
 
@@ -241,7 +244,8 @@ DynamicImage::Draw(gfxContext* aContext,
   aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
 
   gfxUtils::DrawPixelSnapped(aContext, mDrawable, drawableSize, region,
-                             SurfaceFormat::B8G8R8A8, aSamplingFilter);
+                             SurfaceFormat::B8G8R8A8, aSamplingFilter,
+                             aOpacity);
   return DrawResult::SUCCESS;
 }
 

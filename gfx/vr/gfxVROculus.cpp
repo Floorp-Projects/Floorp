@@ -114,8 +114,8 @@ static pfn_ovr_GetMirrorTextureBufferGL ovr_GetMirrorTextureBufferGL = nullptr;
 #endif
 
 #define OVR_PRODUCT_VERSION 1
-#define OVR_MAJOR_VERSION   3
-#define OVR_MINOR_VERSION   1
+#define OVR_MAJOR_VERSION   1
+#define OVR_MINOR_VERSION   10
 
 static bool
 InitializeOculusCAPI()

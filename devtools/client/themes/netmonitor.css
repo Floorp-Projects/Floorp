@@ -1142,12 +1142,28 @@
 
 /*
  * FIXME: normal html block element cannot fill outer XUL element
- * This workaround should be removed after sidebar is migrated to react
+ * This workaround should be removed after netmonitor is migrated to react
  */
 #react-preview-tabpanel-hook,
 #react-security-tabpanel-hook,
-#react-timings-tabpanel-hook {
+#react-timings-tabpanel-hook,
+#network-statistics-charts,
+#primed-cache-chart,
+#empty-cache-chart {
   display: -moz-box;
-  -moz-box-orient: vertical;
   -moz-box-flex: 1;
+}
+
+/* For vbox */
+#react-preview-tabpanel-hook,
+#react-security-tabpanel-hook,
+#react-timings-tabpanel-hook,
+#primed-cache-chart,
+#empty-cache-chart {
+  -moz-box-orient: vertical;
+}
+
+#primed-cache-chart,
+#empty-cache-chart {
+  -moz-box-pack: center;
 }

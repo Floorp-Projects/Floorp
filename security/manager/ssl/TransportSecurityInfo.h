@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "certt.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"

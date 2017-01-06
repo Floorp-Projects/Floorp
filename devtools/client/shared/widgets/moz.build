@@ -12,7 +12,7 @@ DevToolsModules(
     'AbstractTreeItem.jsm',
     'BarGraphWidget.js',
     'BreadcrumbsWidget.jsm',
-    'Chart.jsm',
+    'Chart.js',
     'CubicBezierPresets.js',
     'CubicBezierWidget.js',
     'FastListWidget.js',

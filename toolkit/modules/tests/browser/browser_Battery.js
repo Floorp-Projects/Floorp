@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-var imported = Components.utils.import("resource://gre/modules/Battery.jsm", this);
+var {GetBattery, Debugging} = Components.utils.import("resource://gre/modules/Battery.jsm", {});
 Cu.import("resource://gre/modules/Services.jsm", this);
 
 function test() {
   waitForExplicitFinish();
 
-  is(imported.Debugging.fake, false, "Battery spoofing is initially false")
+  is(Debugging.fake, false, "Battery spoofing is initially false")
 
   GetBattery().then(function(battery) {
     for (let k of ["charging", "chargingTime", "dischargingTime", "level"]) {
@@ -24,7 +24,7 @@ function test() {
       is(battery[k], backup, "Setting battery " + k + " preference without spoofing enabled should fail");
     }
 
-    imported.Debugging.fake = true;
+    Debugging.fake = true;
 
     // reload again to get the fake one
     GetBattery().then(function(battery) {
@@ -44,7 +44,7 @@ function test() {
 
       // Resetting the value to make the test run successful
       // for multiple runs in same browser session.
-      imported.Debugging.fake = false;
+      Debugging.fake = false;
       finish();
     });
   });

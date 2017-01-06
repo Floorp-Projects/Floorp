@@ -21,7 +21,7 @@ const UNSUPPORTED_TYPE  = -244;
 const SUCCESS           = 0;
 
 const MSG_INSTALL_ENABLED  = "WebInstallerIsInstallEnabled";
-const MSG_INSTALL_ADDONS   = "WebInstallerInstallAddonsFromWebpage";
+const MSG_INSTALL_ADDON    = "WebInstallerInstallAddonFromWebpage";
 const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 
 const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
@@ -44,7 +44,7 @@ function amManager() {
 
   Services.mm.loadFrameScript(CHILD_SCRIPT, true);
   Services.mm.addMessageListener(MSG_INSTALL_ENABLED, this);
-  Services.mm.addMessageListener(MSG_INSTALL_ADDONS, this);
+  Services.mm.addMessageListener(MSG_INSTALL_ADDON, this);
   Services.mm.addMessageListener(MSG_PROMISE_REQUEST, this);
   Services.mm.addMessageListener(MSG_INSTALL_CLEANUP, this);
   Services.mm.addMessageListener(MSG_ADDON_EVENT_REQ, this);
@@ -80,74 +80,53 @@ amManager.prototype = {
     return !!id.value;
   },
 
-  /**
-   * @see amIWebInstaller.idl
-   */
-  isInstallEnabled(aMimetype, aReferer) {
-    return AddonManager.isInstallEnabled(aMimetype);
-  },
-
-  /**
-   * @see amIWebInstaller.idl
-   */
-  installAddonsFromWebpage(aMimetype, aBrowser, aInstallingPrincipal,
-                                     aUris, aHashes, aNames, aIcons, aCallback) {
-    if (aUris.length == 0)
-      return false;
-
+  installAddonFromWebpage(aMimetype, aBrowser, aInstallingPrincipal,
+                                    aUri, aHash, aName, aIcon, aCallback) {
     let retval = true;
     if (!AddonManager.isInstallAllowed(aMimetype, aInstallingPrincipal)) {
       aCallback = null;
       retval = false;
     }
 
-    let installs = [];
-    function buildNextInstall() {
-      if (aUris.length == 0) {
-        AddonManager.installAddonsFromWebpage(aMimetype, aBrowser, aInstallingPrincipal, installs);
+    AddonManager.getInstallForURL(aUri, function(aInstall) {
+      function callCallback(uri, status) {
+        try {
+          aCallback.onInstallEnded(uri, status);
+        } catch (e) {
+          Components.utils.reportError(e);
+        }
+      }
+
+      if (!aInstall) {
+        aCallback.onInstallEnded(aUri, UNSUPPORTED_TYPE);
         return;
       }
-      let uri = aUris.shift();
-      AddonManager.getInstallForURL(uri, function(aInstall) {
-        function callCallback(aUri, aStatus) {
-          try {
-            aCallback.onInstallEnded(aUri, aStatus);
-          } catch (e) {
-            Components.utils.reportError(e);
+
+      if (aCallback) {
+        aInstall.addListener({
+          onDownloadCancelled(aInstall) {
+            callCallback(aUri, USER_CANCELLED);
+          },
+
+          onDownloadFailed(aInstall) {
+            if (aInstall.error == AddonManager.ERROR_CORRUPT_FILE)
+              callCallback(aUri, CANT_READ_ARCHIVE);
+            else
+              callCallback(aUri, DOWNLOAD_ERROR);
+          },
+
+          onInstallFailed(aInstall) {
+            callCallback(aUri, EXECUTION_ERROR);
+          },
+
+          onInstallEnded(aInstall, aStatus) {
+            callCallback(aUri, SUCCESS);
           }
-        }
+        });
+      }
 
-        if (aInstall) {
-          installs.push(aInstall);
-          if (aCallback) {
-            aInstall.addListener({
-              onDownloadCancelled(aInstall) {
-                callCallback(uri, USER_CANCELLED);
-              },
-
-              onDownloadFailed(aInstall) {
-                if (aInstall.error == AddonManager.ERROR_CORRUPT_FILE)
-                  callCallback(uri, CANT_READ_ARCHIVE);
-                else
-                  callCallback(uri, DOWNLOAD_ERROR);
-              },
-
-              onInstallFailed(aInstall) {
-                callCallback(uri, EXECUTION_ERROR);
-              },
-
-              onInstallEnded(aInstall, aStatus) {
-                callCallback(uri, SUCCESS);
-              }
-            });
-          }
-        } else if (aCallback) {
-          aCallback.onInstallEnded(uri, UNSUPPORTED_TYPE);
-        }
-        buildNextInstall();
-      }, aMimetype, aHashes.shift(), aNames.shift(), aIcons.shift(), null, aBrowser);
-    }
-    buildNextInstall();
+      AddonManager.installAddonFromWebpage(aMimetype, aBrowser, aInstallingPrincipal, aInstall);
+    }, aMimetype, aHash, aName, aIcon, null, aBrowser);
 
     return retval;
   },
@@ -201,7 +180,7 @@ amManager.prototype = {
       case MSG_INSTALL_ENABLED:
         return AddonManager.isInstallEnabled(payload.mimetype);
 
-      case MSG_INSTALL_ADDONS: {
+      case MSG_INSTALL_ADDON: {
         let callback = null;
         if (payload.callbackID != -1) {
           let mm = aMessage.target.messageManager;
@@ -216,9 +195,9 @@ amManager.prototype = {
           };
         }
 
-        return this.installAddonsFromWebpage(payload.mimetype,
-          aMessage.target, payload.principalToInherit, payload.uris,
-          payload.hashes, payload.names, payload.icons, callback);
+        return this.installAddonFromWebpage(payload.mimetype,
+          aMessage.target, payload.principalToInherit, payload.uri,
+          payload.hash, payload.name, payload.icon, callback);
       }
 
       case MSG_PROMISE_REQUEST: {
@@ -284,7 +263,6 @@ amManager.prototype = {
     }
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.amIAddonManager,
-                                         Ci.amIWebInstaller,
                                          Ci.nsITimerCallback,
                                          Ci.nsIObserver,
                                          Ci.nsIMessageListener])

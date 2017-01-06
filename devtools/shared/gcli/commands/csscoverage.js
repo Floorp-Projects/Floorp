@@ -10,7 +10,7 @@ const l10n = csscoverage.l10n;
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 
-loader.lazyImporter(this, "Chart", "resource://devtools/client/shared/widgets/Chart.jsm");
+const { Chart } = require("devtools/client/shared/widgets/Chart");
 
 /**
  * The commands/converters for GCLI

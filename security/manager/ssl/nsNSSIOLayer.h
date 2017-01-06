@@ -8,6 +8,7 @@
 #define nsNSSIOLayer_h
 
 #include "TransportSecurityInfo.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"

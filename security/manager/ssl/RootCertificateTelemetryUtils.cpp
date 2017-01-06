@@ -26,7 +26,7 @@ public:
   explicit BinaryHashSearchArrayComparator(const uint8_t* aTarget, size_t len)
     : mTarget(aTarget)
   {
-    NS_ASSERTION(len == HASH_LEN, "Hashes should be of the same length.");
+    MOZ_ASSERT(len == HASH_LEN, "Hashes should be of the same length.");
   }
 
   int operator()(const CertAuthorityHash val) const {

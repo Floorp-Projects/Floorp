@@ -72,7 +72,7 @@ function getFileSize(aFile) {
   let size = 0;
   let entries = aFile.directoryEntries.QueryInterface(AM_Ci.nsIDirectoryEnumerator);
   let entry;
-  while (entry = entries.nextFile)
+  while ((entry = entries.nextFile))
     size += getFileSize(entry);
   entries.close();
   return size;

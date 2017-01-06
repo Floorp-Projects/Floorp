@@ -9,6 +9,7 @@
 #include <windows.h>
 #include <psapi.h>
 
+#include "mozilla/Unused.h"
 #include "nsWindowsHelpers.h"
 #include "GeckoProfiler.h"
 
@@ -24,7 +25,9 @@ struct ScopedMappedViewTraits
   }
   static void release(void* aPtr)
   {
-    UnmapViewOfFile(aPtr);
+    if (aPtr) {
+      mozilla::Unused << UnmapViewOfFile(aPtr);
+    }
   }
 };
 typedef mozilla::Scoped<ScopedMappedViewTraits> ScopedMappedView;
