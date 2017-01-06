@@ -33,6 +33,33 @@ namespace gfx {
 ScaledFontMac::CTFontDrawGlyphsFuncT* ScaledFontMac::CTFontDrawGlyphsPtr = nullptr;
 bool ScaledFontMac::sSymbolLookupDone = false;
 
+// Helper to create a CTFont from a CGFont, copying any variations that were
+// set on the original CGFont.
+static CTFontRef
+CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
+{
+    CFDictionaryRef vars = CGFontCopyVariations(aCGFont);
+    CTFontRef ctFont;
+    if (vars) {
+        CFDictionaryRef varAttr =
+            CFDictionaryCreate(nullptr,
+                               (const void**)&kCTFontVariationAttribute,
+                               (const void**)&vars, 1,
+                               &kCFTypeDictionaryKeyCallBacks,
+                               &kCFTypeDictionaryValueCallBacks);
+        CFRelease(vars);
+
+        CTFontDescriptorRef varDesc = CTFontDescriptorCreateWithAttributes(varAttr);
+        CFRelease(varAttr);
+
+        ctFont = CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, varDesc);
+        CFRelease(varDesc);
+    } else {
+        ctFont = CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, nullptr);
+    }
+    return ctFont;
+}
+
 ScaledFontMac::ScaledFontMac(CGFontRef aFont, Float aSize)
   : ScaledFontBase(aSize)
 {
@@ -46,7 +73,7 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont, Float aSize)
   mFont = CGFontRetain(aFont);
   if (CTFontDrawGlyphsPtr != nullptr) {
     // only create mCTFont if we're going to be using the CTFontDrawGlyphs API
-    mCTFont = CTFontCreateWithGraphicsFont(aFont, aSize, nullptr, nullptr);
+    mCTFont = CreateCTFontFromCGFontWithVariations(aFont, aSize);
   } else {
     mCTFont = nullptr;
   }
@@ -67,7 +94,7 @@ SkTypeface* ScaledFontMac::GetSkTypeface()
     if (mCTFont) {
       mTypeface = SkCreateTypefaceFromCTFont(mCTFont);
     } else {
-      CTFontRef fontFace = CTFontCreateWithGraphicsFont(mFont, mSize, nullptr, nullptr);
+      CTFontRef fontFace = CreateCTFontFromCGFontWithVariations(mFont, mSize);
       mTypeface = SkCreateTypefaceFromCTFont(fontFace);
       CFRelease(fontFace);
     }
