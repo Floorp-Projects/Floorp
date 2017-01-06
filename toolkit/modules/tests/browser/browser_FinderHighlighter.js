@@ -200,7 +200,7 @@ add_task(function* testModalResults() {
     ["ro", {
       rectCount: 41,
       insertCalls: [1, 4],
-      removeCalls: [1, 3]
+      removeCalls: [0, 2]
     }],
     ["new", {
       rectCount: 2,
@@ -357,7 +357,7 @@ add_task(function* testHighlightAllToggle() {
     expectedResult = {
       rectCount: 0,
       insertCalls: [0, 1],
-      removeCalls: [0, 1]
+      removeCalls: [1, 2]
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield SpecialPowers.pushPrefEnv({ "set": [[ kHighlightAllPref, false ]] });
