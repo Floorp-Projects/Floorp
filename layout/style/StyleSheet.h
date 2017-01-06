@@ -44,7 +44,7 @@ protected:
   StyleSheet(const StyleSheet& aCopy,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
-  virtual ~StyleSheet() {}
+  virtual ~StyleSheet();
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -112,6 +112,7 @@ public:
   inline void SetPrincipal(nsIPrincipal* aPrincipal);
 
   void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
+  void SetMedia(nsMediaList* aMedia);
 
   // Get this style sheet's CORS mode
   inline CORSMode GetCORSMode() const;
@@ -131,7 +132,7 @@ public:
   // GetOwnerNode is defined above.
   inline StyleSheet* GetParentStyleSheet() const;
   // The XPCOM GetTitle is fine for WebIDL.
-  virtual nsMediaList* Media() = 0;
+  nsMediaList* Media();
   bool Disabled() const { return mDisabled; }
   // The XPCOM SetDisabled is fine for WebIDL.
 
@@ -194,9 +195,14 @@ protected:
   void SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aRv);
 
+  // Drop our reference to mMedia
+  void DropMedia();
+
   nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
+
+  RefPtr<nsMediaList> mMedia;
 
   // mParsingMode controls access to nonstandard style constructs that
   // are not safe for use on the public Web but necessary in UA sheets
