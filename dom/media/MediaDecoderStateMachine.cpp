@@ -2046,21 +2046,15 @@ void
 MediaDecoderStateMachine::
 DecodingState::DispatchDecodeTasksIfNeeded()
 {
-  const bool needToDecodeAudio =
-    mMaster->IsAudioDecoding() &&
-    ((!mMaster->mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
-     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedAudio()));
-
-  const bool needToDecodeVideo =
-    mMaster->IsVideoDecoding() &&
-    ((!mMaster->mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
-     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedVideo()));
-
-  if (needToDecodeAudio) {
+  if (mMaster->IsAudioDecoding() &&
+      !mMaster->mMinimizePreroll &&
+      !mMaster->HaveEnoughDecodedAudio()) {
     mMaster->EnsureAudioDecodeTaskQueued();
   }
 
-  if (needToDecodeVideo) {
+  if (mMaster->IsVideoDecoding() &&
+      !mMaster->mMinimizePreroll &&
+      !mMaster->HaveEnoughDecodedVideo()) {
     mMaster->EnsureVideoDecodeTaskQueued();
   }
 }
