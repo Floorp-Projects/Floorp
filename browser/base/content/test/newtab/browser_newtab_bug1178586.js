@@ -29,7 +29,7 @@ add_task(function* () {
       let siteNode = cell.site.node;
       return {
         type: siteNode.getAttribute("type"),
-        thumbnail: siteNode.querySelector(".newtab-thumbnail").style.backgroundImage,
+        thumbnail: siteNode.querySelector(".newtab-thumbnail.thumbnail").style.backgroundImage,
         enhanced: siteNode.querySelector(".enhanced-content").style.backgroundImage,
         title: siteNode.querySelector(".newtab-title").textContent,
         suggested: siteNode.getAttribute("suggested"),
