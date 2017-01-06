@@ -251,7 +251,7 @@ class FormatProvider(MachCommandBase):
         try:
             if not self.locate_or_fetch(fmt):
                 return 1
-            clang_format_diff = self.locate_or_fetch(fmt_diff)
+            clang_format_diff = self.locate_or_fetch(fmt_diff, python_script=True)
             if not clang_format_diff:
                 return 1
 
@@ -285,20 +285,39 @@ class FormatProvider(MachCommandBase):
         cf_process = Popen(args, stdin=diff_process.stdout)
         return cf_process.communicate()[0]
 
-    def locate_or_fetch(self, root):
+    def locate_or_fetch(self, root, python_script=False):
         import urllib2
+        import hashlib
+        bin_sha = {
+            "Windows": "51ad909026e7adcc9342a199861ab4882d5ecbbd24ec76aee1d620ed5ee93c94079485214a7e4656180fb889ced11fc137aff9b1e08b474af5c21a2506407b7d",  # noqa: E501
+            "Linux": "3f85905248f103c7c6761e622a2a374fa26fe0b90cb78e65496596f39788621871fcf2619092975d362c2001c544fa662ebdca227042ef40369a16f564fe51a8",  # noqa: E501
+            "Darwin": "b07ed6bbb08bf71d8e9985b68e60fc8e9abda05d4b16f2123a188eb35fabb3f0b0123b9224aea7e51cae4cc59ddc25ffce55007fc841a8c30b195961841f850c",  # noqa: E501
+            "python_script": "00d6d6628c9e1af4a250bae09bef27bcb9ba9e325c7ae11de9413d247fa327c512e4a17dd82ba871532038dfd48985a01c4c21f0cb868c531b852d04160cd757",  # noqa: E501
+        }
+
         target = os.path.join(self._mach_context.state_dir, os.path.basename(root))
         if not os.path.exists(target):
-            site = "https://people.mozilla.org/~sledru/clang-format/"
-            if self.prompt and raw_input("Download clang-format executables from {0} (yN)? ".format(site)).lower() != 'y':
+            tooltool_url = "https://api.pub.build.mozilla.org/tooltool/sha512/"
+            if self.prompt and raw_input("Download clang-format executables from {0} (yN)? ".format(tooltool_url)).lower() != 'y':  # noqa: E501,F821
                 print("Download aborted.")
                 return 1
             self.prompt = False
-
-            u = site + root
+            plat = platform.system()
+            if python_script:
+                # We want to download the python script (clang-format-diff)
+                dl = bin_sha["python_script"]
+            else:
+                dl = bin_sha[plat]
+            u = tooltool_url + dl
             print("Downloading {0} to {1}".format(u, target))
             data = urllib2.urlopen(url=u).read()
             temp = target + ".tmp"
+            # Check that the checksum of the downloaded data matches the hash
+            # of the file
+            sha512Hash = hashlib.sha512(data).hexdigest()
+            if sha512Hash != dl:
+                print("Checksum verification for {0} failed: {1} found instead of {2} ".format(target, sha512Hash, dl))  # noqa: E501
+                return 1
             with open(temp, "wb") as fh:
                 fh.write(data)
                 fh.close()
