@@ -7,6 +7,8 @@ lfGlobal.evaluate(`
 `);
 var lfGlobal = newGlobal();
 lfGlobal.evaluate(`
+    if (!('gczeal' in this))
+        quit();
     var dbg = new Debugger();
     gczeal(9, 1);
     dbg.findScripts({});
