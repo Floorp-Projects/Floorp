@@ -241,7 +241,6 @@ _ContextualIdentityService.prototype = {
       }
     } catch (error) {
       this.loadError(error);
-      return;
     }
   },
 

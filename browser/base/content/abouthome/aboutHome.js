@@ -292,7 +292,6 @@ function loadSnippets() {
     } catch (ex) {
       showSnippets();
       loadCompleted();
-      return;
     }
   } else {
     showSnippets();

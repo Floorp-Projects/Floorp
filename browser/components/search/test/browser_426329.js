@@ -155,7 +155,6 @@ add_task(function* testAltReturn() {
 
 // Shift key has no effect for now, so skip it
 add_task(function* testShiftAltReturn() {
-  return;
   /*
   yield* prepareTest();
 

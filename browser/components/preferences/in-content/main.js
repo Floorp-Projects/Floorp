@@ -197,7 +197,6 @@ var gMainPane = {
           return;
         case CONFIRM_RESTART_PROMPT_RESTART_LATER:
           createOrRemoveSpecialDevEditionFile();
-          return;
       }
     }
   },

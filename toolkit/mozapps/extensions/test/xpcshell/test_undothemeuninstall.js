@@ -354,7 +354,7 @@ add_task(function* canUndoUninstallDisabled() {
 // Tests that uninstalling an enabled lightweight theme offers the option to undo
 add_task(function* uninstallLWTOffersUndo() {
   // skipped since lightweight themes don't support undoable uninstall yet
-  return;
+
   /*
   LightweightThemeManager.currentTheme = dummyLWTheme("theme1");
 

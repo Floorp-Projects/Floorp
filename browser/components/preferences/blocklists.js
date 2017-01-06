@@ -87,13 +87,6 @@ var gBlocklistManager = {
 
     document.title = params.windowTitle;
 
-    let treecols = document.getElementsByTagName("treecols")[0];
-    treecols.addEventListener("click", event => {
-      if (event.target.nodeName != "treecol" || event.button != 0) {
-        return;
-      }
-    });
-
     this._loadBlockLists();
   },
 

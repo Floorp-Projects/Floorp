@@ -63,7 +63,6 @@ function finish() {
     return;
   }
   SimpleTest.finish();
-  return;
 }
 
 function ok(condition, message) {

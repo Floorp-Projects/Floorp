@@ -121,7 +121,6 @@ gTests.push({
             break;
           default:
             ok(false, "unknown event: " + aEvent.type);
-            return;
         }
       }
     };
@@ -223,7 +222,6 @@ gTests.push({
             break;
           default:
             ok(false, "unknown event: " + aEvent.type);
-            return;
         }
       }
     };

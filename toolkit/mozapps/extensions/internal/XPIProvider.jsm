@@ -1941,7 +1941,6 @@ function removeAsync(aFile) {
       if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile)
         throw e;
       // The file has already gone away
-      return;
     }
   });
 }
