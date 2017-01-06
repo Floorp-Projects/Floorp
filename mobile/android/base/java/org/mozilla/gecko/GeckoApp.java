@@ -85,6 +85,7 @@ import android.util.AttributeSet;
 import android.util.Base64;
 import android.util.Log;
 import android.util.SparseBooleanArray;
+import android.util.SparseIntArray;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -219,14 +220,22 @@ public abstract class GeckoApp
         private boolean tabsWereSkipped;
         private boolean tabsWereProcessed;
 
+        private SparseIntArray tabIdMap;
+
         public LastSessionParser(JSONArray tabs, JSONObject windowObject, boolean isExternalURL) {
             this.tabs = tabs;
             this.windowObject = windowObject;
             this.isExternalURL = isExternalURL;
+
+            tabIdMap = new SparseIntArray();
         }
 
         public boolean allTabsSkipped() {
             return tabsWereSkipped && !tabsWereProcessed;
+        }
+
+        public int getNewTabId(int oldTabId) {
+            return tabIdMap.get(oldTabId, -1);
         }
 
         @Override
@@ -278,7 +287,12 @@ public abstract class GeckoApp
             });
 
             try {
-                tabObject.put("tabId", tab.getId());
+                int oldTabId = tabObject.optInt("tabId", -1);
+                int newTabId = tab.getId();
+                tabObject.put("tabId", newTabId);
+                if  (oldTabId >= 0) {
+                    tabIdMap.put(oldTabId, newTabId);
+                }
             } catch (JSONException e) {
                 Log.e(LOGTAG, "JSON error", e);
             }
@@ -288,6 +302,32 @@ public abstract class GeckoApp
         @Override
         public void onClosedTabsRead(final JSONArray closedTabData) throws JSONException {
             windowObject.put("closedTabs", closedTabData);
+        }
+
+        /**
+         * Updates stored parent tab IDs in the session store data to match the new tab IDs
+         * that have been allocated during startup session restore.
+         *
+         * @param tabData A JSONArray containg stored session store tabs.
+         */
+        public void updateParentId(final JSONArray tabData) {
+            if (tabData == null) {
+                return;
+            }
+
+            for (int i = 0; i < tabData.length(); i++) {
+                try {
+                    JSONObject tabObject = tabData.getJSONObject(i);
+
+                    int parentId = tabObject.getInt("parentId");
+                    int newParentId = getNewTabId(parentId);
+
+                    tabObject.put("parentId", newParentId);
+                } catch (JSONException ex) {
+                    // Tabs are not guaranteed to have a parentId,
+                    // so just skip the tab and try the next one.
+                }
+            }
         }
     };
 
@@ -1727,7 +1767,14 @@ public abstract class GeckoApp
             }
 
             if (tabs.length() > 0) {
+                // Update all parent tab IDs ...
+                parser.updateParentId(tabs);
                 windowObject.put("tabs", tabs);
+                // ... and for recently closed tabs as well (if we've got any).
+                JSONArray closedTabs = windowObject.optJSONArray("closedTabs");
+                parser.updateParentId(closedTabs);
+                windowObject.putOpt("closedTabs", closedTabs);
+
                 sessionString = new JSONObject().put("windows", new JSONArray().put(windowObject)).toString();
             } else {
                 if (parser.allTabsSkipped() || sessionDataValid) {
