@@ -1439,9 +1439,3 @@ js::detail::IsWindowSlow(JSObject* obj)
 {
     return obj->as<GlobalObject>().maybeWindowProxy();
 }
-
-JS_FRIEND_API(bool)
-js::AllowGCBarriers(JSContext* cx)
-{
-    return cx->allowGCBarriers();
-}
