@@ -34,7 +34,7 @@ printDiagnosticMessage(uint8_t bit, uint64_t seen)
         return;
 
     fprintf(stderr, "Thread %d saw ", bit);
-    for (auto i : mozilla::MakeRange(NumThreads)) {
+    for (auto i : mozilla::IntegerRange(NumThreads)) {
         if (seen & (uint64_t(1) << i))
             fprintf(stderr, "1");
         else
@@ -74,7 +74,7 @@ BEGIN_TEST(testExclusiveData)
     js::Vector<js::Thread> threads(cx);
     CHECK(threads.reserve(NumThreads));
 
-    for (auto i : mozilla::MakeRange(NumThreads)) {
+    for (auto i : mozilla::IntegerRange(NumThreads)) {
         auto counterAndBit = js_new<CounterAndBit>(i, counter);
         CHECK(counterAndBit);
         CHECK(threads.emplaceBack());

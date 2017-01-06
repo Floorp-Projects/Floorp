@@ -70,7 +70,7 @@ BEGIN_TEST(testThreadingThreadVectorMoveConstruct)
     const static size_t N = 10;
     mozilla::Atomic<int> count(0);
     mozilla::Vector<js::Thread, 0, js::SystemAllocPolicy> v;
-    for (auto i : mozilla::MakeRange(N)) {
+    for (auto i : mozilla::IntegerRange(N)) {
         CHECK(v.emplaceBack());
         CHECK(v.back().init([](mozilla::Atomic<int>* countp){(*countp)++;}, &count));
         CHECK(v.length() == i + 1);

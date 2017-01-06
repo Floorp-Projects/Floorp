@@ -2317,7 +2317,7 @@ nsRefreshDriver::ScheduleEventDispatch(nsINode* aTarget, nsIDOMEvent* aEvent)
 void
 nsRefreshDriver::CancelPendingEvents(nsIDocument* aDocument)
 {
-  for (auto i : Reversed(MakeRange(mPendingEvents.Length()))) {
+  for (auto i : Reversed(IntegerRange(mPendingEvents.Length()))) {
     if (mPendingEvents[i].mTarget->OwnerDoc() == aDocument) {
       mPendingEvents.RemoveElementAt(i);
     }

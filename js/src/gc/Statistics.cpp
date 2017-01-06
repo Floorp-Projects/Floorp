@@ -31,7 +31,7 @@ using namespace js::gc;
 using namespace js::gcstats;
 
 using mozilla::DebugOnly;
-using mozilla::MakeRange;
+using mozilla::IntegerRange;
 using mozilla::PodArrayZero;
 using mozilla::PodZero;
 using mozilla::TimeStamp;
@@ -805,8 +805,8 @@ Statistics::Statistics(JSRuntime* rt)
     PodArrayZero(phaseTotals);
     PodArrayZero(counts);
     PodArrayZero(phaseStartTimes);
-    for (auto d : MakeRange(NumTimingArrays))
-        PodArrayZero(phaseTimes[d]);
+    for (auto& phaseTime : phaseTimes)
+        PodArrayZero(phaseTime);
 
     const char* env = getenv("MOZ_GCTIMER");
     if (env) {
@@ -929,16 +929,16 @@ Statistics::getMaxGCPauseSinceClear()
 // Sum up the time for a phase, including instances of the phase with different
 // parents.
 static TimeDuration
-SumPhase(Phase phase, const Statistics::PhaseTimeTable times)
+SumPhase(Phase phase, const Statistics::PhaseTimeTable& times)
 {
     TimeDuration sum = 0;
-    for (auto i : MakeRange(Statistics::NumTimingArrays))
-        sum += times[i][phase];
+    for (const auto& phaseTimes : times)
+        sum += phaseTimes[phase];
     return sum;
 }
 
 static void
-CheckSelfTime(Phase parent, Phase child, const Statistics::PhaseTimeTable times, TimeDuration selfTimes[PHASE_LIMIT], TimeDuration childTime)
+CheckSelfTime(Phase parent, Phase child, const Statistics::PhaseTimeTable& times, TimeDuration selfTimes[PHASE_LIMIT], TimeDuration childTime)
 {
     if (selfTimes[parent] < childTime) {
         fprintf(stderr,
@@ -952,7 +952,7 @@ CheckSelfTime(Phase parent, Phase child, const Statistics::PhaseTimeTable times,
 }
 
 static Phase
-LongestPhaseSelfTime(const Statistics::PhaseTimeTable times)
+LongestPhaseSelfTime(const Statistics::PhaseTimeTable& times)
 {
     TimeDuration selfTimes[PHASE_LIMIT];
 
@@ -1024,9 +1024,10 @@ Statistics::beginGC(JSGCInvocationKind kind)
 void
 Statistics::endGC()
 {
-    for (auto j : MakeRange(NumTimingArrays))
+    for (auto j : IntegerRange(NumTimingArrays)) {
         for (int i = 0; i < PHASE_LIMIT; i++)
             phaseTotals[j][i] += phaseTimes[j][i];
+    }
 
     TimeDuration sccTotal, sccLongest;
     sccDurations(&sccTotal, &sccLongest);
