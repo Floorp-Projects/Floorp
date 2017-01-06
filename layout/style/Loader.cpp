@@ -1307,7 +1307,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
   aSheet->SetMedia(mediaList);
 
   aSheet->SetTitle(aTitle);
-  sheet->SetEnabled(!aIsAlternate);
+  aSheet->SetEnabled(!aIsAlternate);
   sheet->SetScopeElement(aScopeElement);
 }
 

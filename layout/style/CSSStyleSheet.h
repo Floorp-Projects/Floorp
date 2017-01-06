@@ -115,17 +115,6 @@ public:
 
   bool HasRules() const;
 
-  /**
-   * Set the stylesheet to be enabled.  This may or may not make it
-   * applicable.  Note that this WILL inform the sheet's document of
-   * its new applicable state if the state changes but WILL NOT call
-   * BeginUpdate() or EndUpdate() on the document -- calling those is
-   * the caller's responsibility.  This allows use of SetEnabled when
-   * batched updates are desired.  If you want updates handled for
-   * you, see nsIDOMStyleSheet::SetDisabled().
-   */
-  void SetEnabled(bool aEnabled);
-
   // style sheet owner info
   CSSStyleSheet* GetParentSheet() const;  // may be null
   void SetOwningDocument(nsIDocument* aDocument);
@@ -242,6 +231,8 @@ protected:
   uint32_t InsertRuleInternal(const nsAString& aRule,
                               uint32_t aIndex, ErrorResult& aRv);
   void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
+
+  void EnabledStateChangedInternal();
 
   RefPtr<CSSStyleSheet> mNext;
   CSSStyleSheet*        mParent;    // weak ref
