@@ -13,7 +13,8 @@ add_task(function* () {
   let { monitor } = yield initNetMonitor(SIMPLE_URL);
   info("Starting test... ");
 
-  let { document, Chart } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { Chart } = NetMonitorView.Statistics;
 
   let table = Chart.Table(document, {
     data: [],
@@ -33,13 +34,13 @@ add_task(function* () {
 
   ok(rows[0].querySelector(".table-chart-row-box.chart-colored-blob"),
     "A colored blob exists for the firt row.");
-  is(rows[0].querySelectorAll("label")[0].getAttribute("name"), "size",
+  is(rows[0].querySelectorAll("span")[0].getAttribute("name"), "size",
     "The first column of the first row exists.");
-  is(rows[0].querySelectorAll("label")[1].getAttribute("name"), "label",
+  is(rows[0].querySelectorAll("span")[1].getAttribute("name"), "label",
     "The second column of the first row exists.");
-  is(rows[0].querySelectorAll("label")[0].getAttribute("value"), "",
+  is(rows[0].querySelectorAll("span")[0].textContent, "",
     "The first column of the first row displays the correct text.");
-  is(rows[0].querySelectorAll("label")[1].getAttribute("value"),
+  is(rows[0].querySelectorAll("span")[1].textContent,
     L10N.getStr("tableChart.unavailable"),
     "The second column of the first row displays the correct text.");
 
@@ -48,14 +49,14 @@ add_task(function* () {
   is(totals.querySelectorAll(".table-chart-summary-label")[0].getAttribute("name"),
     "label1",
     "The first sum's type is correct.");
-  is(totals.querySelectorAll(".table-chart-summary-label")[0].getAttribute("value"),
+  is(totals.querySelectorAll(".table-chart-summary-label")[0].textContent,
     "Hello 0",
     "The first sum's value is correct.");
 
   is(totals.querySelectorAll(".table-chart-summary-label")[1].getAttribute("name"),
     "label2",
     "The second sum's type is correct.");
-  is(totals.querySelectorAll(".table-chart-summary-label")[1].getAttribute("value"),
+  is(totals.querySelectorAll(".table-chart-summary-label")[1].textContent,
     "World 0",
     "The second sum's value is correct.");
 

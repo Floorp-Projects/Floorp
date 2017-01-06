@@ -1410,6 +1410,22 @@ public:
     mozilla::StyleComplexColor mBorderColor[4];
   };
 
+  static mozilla::StyleComplexColor nsStyleBorder::*
+  BorderColorFieldFor(mozilla::Side aSide) {
+    switch (aSide) {
+      case mozilla::eSideTop:
+        return &nsStyleBorder::mBorderTopColor;
+      case mozilla::eSideRight:
+        return &nsStyleBorder::mBorderRightColor;
+      case mozilla::eSideBottom:
+        return &nsStyleBorder::mBorderBottomColor;
+      case mozilla::eSideLeft:
+        return &nsStyleBorder::mBorderLeftColor;
+    }
+    MOZ_ASSERT_UNREACHABLE("Unknown side");
+    return nullptr;
+  }
+
 protected:
   // mComputedBorder holds the CSS2.1 computed border-width values.
   // In particular, these widths take into account the border-style

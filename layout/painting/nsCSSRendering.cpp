@@ -671,8 +671,8 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
   nsStyleBorder newStyleBorder(*styleBorder);
 
   NS_FOR_CSS_SIDES(side) {
-    nscolor color = aStyleContext->GetVisitedDependentColor(
-      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]);
+    nscolor color = aStyleContext->
+      GetVisitedDependentColor(nsStyleBorder::BorderColorFieldFor(side));
     newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
   }
   return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
@@ -703,8 +703,8 @@ nsCSSRendering::CreateBorderRenderer(nsPresContext* aPresContext,
   nsStyleBorder newStyleBorder(*styleBorder);
 
   NS_FOR_CSS_SIDES(side) {
-    nscolor color = aStyleContext->GetVisitedDependentColor(
-      nsCSSProps::SubpropertyEntryFor(eCSSProperty_border_color)[side]);
+    nscolor color = aStyleContext->
+      GetVisitedDependentColor(nsStyleBorder::BorderColorFieldFor(side));
     newStyleBorder.mBorderColor[side] = StyleComplexColor::FromColor(color);
   }
   return CreateBorderRendererWithStyleBorder(aPresContext, aDrawTarget,
@@ -734,8 +734,8 @@ ConstructBorderRenderer(nsPresContext* aPresContext,
   bool quirks = aPresContext->CompatibilityMode() == eCompatibility_NavQuirks;
   nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame(aForFrame, quirks);
   nsStyleContext* bgContext = bgFrame->StyleContext();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
+  nscolor bgColor = bgContext->
+    GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
 
   // Compute the outermost boundary of the area that might be painted.
   // Same coordinate space as aBorderArea & aBGClipRect.
@@ -973,8 +973,8 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   nsIFrame* bgFrame = nsCSSRendering::FindNonTransparentBackgroundFrame
     (aForFrame, false);
   nsStyleContext* bgContext = bgFrame->StyleContext();
-  nscolor bgColor =
-    bgContext->GetVisitedDependentColor(eCSSProperty_background_color);
+  nscolor bgColor = bgContext->
+    GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
 
   nsRect innerRect;
   if (
@@ -1041,7 +1041,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   // This handles treating the initial color as 'currentColor'; if we
   // ever want 'invert' back we'll need to do a bit of work here too.
   nscolor outlineColor =
-    aStyleContext->GetVisitedDependentColor(eCSSProperty_outline_color);
+    aStyleContext->GetVisitedDependentColor(&nsStyleOutline::mOutlineColor);
   nscolor outlineColors[4] = { outlineColor,
                                outlineColor,
                                outlineColor,
@@ -1778,12 +1778,14 @@ nsCSSRendering::PaintBGParams::ForAllLayers(nsPresContext& aPresCtx,
                                             const nsRect& aDirtyRect,
                                             const nsRect& aBorderArea,
                                             nsIFrame *aFrame,
-                                            uint32_t aPaintFlags)
+                                            uint32_t aPaintFlags,
+                                            float aOpacity)
 {
   MOZ_ASSERT(aFrame);
 
-  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea, aFrame,
-    aPaintFlags, -1, CompositionOp::OP_OVER);
+  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea,
+                       aFrame, aPaintFlags, -1, CompositionOp::OP_OVER,
+                       aOpacity);
 
   return result;
 }
@@ -1797,18 +1799,20 @@ nsCSSRendering::PaintBGParams::ForSingleLayer(nsPresContext& aPresCtx,
                                               nsIFrame *aFrame,
                                               uint32_t aPaintFlags,
                                               int32_t aLayer,
-                                              CompositionOp aCompositionOp)
+                                              CompositionOp aCompositionOp,
+                                              float aOpacity)
 {
   MOZ_ASSERT(aFrame && (aLayer != -1));
 
-  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea, aFrame,
-    aPaintFlags, aLayer, aCompositionOp);
+  PaintBGParams result(aPresCtx, aRenderingCtx, aDirtyRect, aBorderArea,
+                       aFrame, aPaintFlags, aLayer, aCompositionOp,
+                       aOpacity);
 
   return result;
 }
 
 DrawResult
-nsCSSRendering::PaintBackground(const PaintBGParams& aParams)
+nsCSSRendering::PaintStyleImageLayer(const PaintBGParams& aParams)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintBackground",
     js::ProfileEntry::Category::GRAPHICS);
@@ -1835,7 +1839,7 @@ nsCSSRendering::PaintBackground(const PaintBGParams& aParams)
     sc = aParams.frame->StyleContext();
   }
 
-  return PaintBackgroundWithSC(aParams, sc, *aParams.frame->StyleBorder());
+  return PaintStyleImageLayerWithSC(aParams, sc, *aParams.frame->StyleBorder());
 }
 
 static bool
@@ -2240,8 +2244,8 @@ nsCSSRendering::DetermineBackgroundColor(nsPresContext* aPresContext,
   const nsStyleBackground *bg = aStyleContext->StyleBackground();
   nscolor bgColor;
   if (aDrawBackgroundColor) {
-    bgColor =
-      aStyleContext->GetVisitedDependentColor(eCSSProperty_background_color);
+    bgColor = aStyleContext->
+      GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
     if (NS_GET_A(bgColor) == 0) {
       aDrawBackgroundColor = false;
     }
@@ -2782,7 +2786,8 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aFillArea,
                               const nsSize& aRepeatSize,
                               const CSSIntRect& aSrc,
-                              const nsSize& aIntrinsicSize)
+                              const nsSize& aIntrinsicSize,
+                              float aOpacity)
 {
   PROFILER_LABEL("nsCSSRendering", "PaintGradient",
     js::ProfileEntry::Category::GRAPHICS);
@@ -3131,6 +3136,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   rawStops.SetLength(stops.Length());
   for(uint32_t i = 0; i < stops.Length(); i++) {
     rawStops[i].color = stops[i].mColor;
+    rawStops[i].color.a *= aOpacity;
     rawStops[i].offset = stopScale * (stops[i].mPosition - stopOrigin);
   }
   RefPtr<mozilla::gfx::GradientStops> gs =
@@ -3206,6 +3212,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR && !isRepeat &&
           RectIsBeyondLinearGradientEdge(fillRectRelativeToTile, matrix, stops,
                                          gradientStart, gradientEnd, &edgeColor)) {
+        edgeColor.a = aOpacity;
         ctx->SetColor(edgeColor);
       } else {
         ctx->SetMatrix(
@@ -3243,9 +3250,9 @@ DetermineCompositionOp(const nsCSSRendering::PaintBGParams& aParams,
 }
 
 DrawResult
-nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
-                                      nsStyleContext *aBackgroundSC,
-                                      const nsStyleBorder& aBorder)
+nsCSSRendering::PaintStyleImageLayerWithSC(const PaintBGParams& aParams,
+                                           nsStyleContext *aBackgroundSC,
+                                           const nsStyleBorder& aBorder)
 {
   NS_PRECONDITION(aParams.frame,
                   "Frame is expected to be provided to PaintBackground");
@@ -3448,12 +3455,12 @@ nsCSSRendering::PaintBackgroundWithSC(const PaintBGParams& aParams,
           }
 
           result &=
-            state.mImageRenderer.DrawBackground(&aParams.presCtx,
-                                                aParams.renderingCtx,
-                                                state.mDestArea, state.mFillArea,
-                                                state.mAnchor + paintBorderArea.TopLeft(),
-                                                clipState.mDirtyRect,
-                                                state.mRepeatSize);
+            state.mImageRenderer.DrawLayer(&aParams.presCtx,
+                                           aParams.renderingCtx,
+                                           state.mDestArea, state.mFillArea,
+                                           state.mAnchor + paintBorderArea.TopLeft(),
+                                           clipState.mDirtyRect,
+                                           state.mRepeatSize, aParams.opacity);
 
           if (co != CompositionOp::OP_OVER) {
             ctx->SetOp(CompositionOp::OP_OVER);
@@ -5645,7 +5652,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                       const nsRect&        aFill,
                       const nsPoint&       aAnchor,
                       const nsSize&        aRepeatSize,
-                      const CSSIntRect&    aSrc)
+                      const CSSIntRect&    aSrc,
+                      float                aOpacity)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5696,14 +5704,15 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
                                            aDest, aFill, aRepeatSize,
                                            aAnchor, aDirtyRect,
                                            ConvertImageRendererToDrawFlags(mFlags),
-                                           mExtendMode);
+                                           mExtendMode, aOpacity);
       break;
     }
     case eStyleImageType_Gradient:
     {
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
                                     mGradientData, aDirtyRect,
-                                    aDest, aFill, aRepeatSize, aSrc, mSize);
+                                    aDest, aFill, aRepeatSize, aSrc, mSize,
+                                    aOpacity);
       break;
     }
     case eStyleImageType_Element:
@@ -5720,7 +5729,8 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
         nsLayoutUtils::DrawImage(*ctx,
                                  aPresContext, image,
                                  samplingFilter, aDest, aFill, aAnchor, aDirtyRect,
-                                 ConvertImageRendererToDrawFlags(mFlags));
+                                 ConvertImageRendererToDrawFlags(mFlags),
+                                 aOpacity);
       break;
     }
     case eStyleImageType_Null:
@@ -5786,13 +5796,14 @@ nsImageRenderer::DrawableForElement(const nsRect& aImageRect,
 }
 
 DrawResult
-nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
-                                nsRenderingContext&  aRenderingContext,
-                                const nsRect&        aDest,
-                                const nsRect&        aFill,
-                                const nsPoint&       aAnchor,
-                                const nsRect&        aDirty,
-                                const nsSize&        aRepeatSize)
+nsImageRenderer::DrawLayer(nsPresContext*       aPresContext,
+                           nsRenderingContext&  aRenderingContext,
+                           const nsRect&        aDest,
+                           const nsRect&        aFill,
+                           const nsPoint&       aAnchor,
+                           const nsRect&        aDirty,
+                           const nsSize&        aRepeatSize,
+                           float                aOpacity)
 {
   if (!IsReady()) {
     NS_NOTREACHED("Ensure PrepareImage() has returned true before calling me");
@@ -5807,7 +5818,8 @@ nsImageRenderer::DrawBackground(nsPresContext*       aPresContext,
               aDirty, aDest, aFill, aAnchor, aRepeatSize,
               CSSIntRect(0, 0,
                          nsPresContext::AppUnitsToIntCSSPixels(mSize.width),
-                         nsPresContext::AppUnitsToIntCSSPixels(mSize.height)));
+                         nsPresContext::AppUnitsToIntCSSPixels(mSize.height)),
+              aOpacity);
 }
 
 /**
@@ -6000,7 +6012,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                                               tile, fillRect, repeatSize,
                                               tile.TopLeft(), aDirtyRect,
                                               drawFlags,
-                                              ExtendMode::CLAMP);
+                                              ExtendMode::CLAMP, 1.0);
   }
 
   nsSize repeatSize(aFill.Size());

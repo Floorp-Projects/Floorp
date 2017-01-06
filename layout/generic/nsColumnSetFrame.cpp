@@ -83,7 +83,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
     return;
 
   nscolor ruleColor =
-    GetVisitedDependentColor(eCSSProperty_column_rule_color);
+    GetVisitedDependentColor(&nsStyleColumn::mColumnRuleColor);
 
   // In order to re-use a large amount of code, we treat the column rule as a border.
   // We create a new border style object and fill in all the details of the column rule as

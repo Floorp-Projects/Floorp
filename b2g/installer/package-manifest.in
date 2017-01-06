@@ -449,7 +449,6 @@
 @RESPATH@/components/addonManager.js
 @RESPATH@/components/amContentHandler.js
 @RESPATH@/components/amInstallTrigger.js
-@RESPATH@/components/amWebInstallListener.js
 
 @RESPATH@/components/OopCommandLine.js
 @RESPATH@/components/CommandLine.js

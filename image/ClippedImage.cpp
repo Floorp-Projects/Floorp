@@ -98,13 +98,15 @@ public:
                          const nsIntSize& aSize,
                          const Maybe<SVGImageContext>& aSVGContext,
                          uint32_t aWhichFrame,
-                         uint32_t aFlags)
+                         uint32_t aFlags,
+                         float aOpacity)
     : mImage(aImage)
     , mSize(aSize)
     , mSVGContext(aSVGContext)
     , mWhichFrame(aWhichFrame)
     , mFlags(aFlags)
     , mDrawResult(DrawResult::NOT_READY)
+    , mOpacity(aOpacity)
   {
     MOZ_ASSERT(mImage, "Must have an image to clip");
   }
@@ -122,7 +124,8 @@ public:
     // arguments that guarantee we never tile.
     mDrawResult =
       mImage->DrawSingleTile(aContext, mSize, ImageRegion::Create(aFillRect),
-                             mWhichFrame, aSamplingFilter, mSVGContext, mFlags);
+                             mWhichFrame, aSamplingFilter, mSVGContext, mFlags,
+                             mOpacity);
 
     return true;
   }
@@ -136,6 +139,7 @@ private:
   const uint32_t                mWhichFrame;
   const uint32_t                mFlags;
   DrawResult                    mDrawResult;
+  float                         mOpacity;
 };
 
 ClippedImage::ClippedImage(Image* aImage,
@@ -258,7 +262,7 @@ ClippedImage::GetFrame(uint32_t aWhichFrame,
 {
   DrawResult result;
   RefPtr<SourceSurface> surface;
-  Tie(result, surface) = GetFrameInternal(mClip.Size(), Nothing(), aWhichFrame, aFlags);
+  Tie(result, surface) = GetFrameInternal(mClip.Size(), Nothing(), aWhichFrame, aFlags, 1.0);
   return surface.forget();
 }
 
@@ -276,7 +280,8 @@ Pair<DrawResult, RefPtr<SourceSurface>>
 ClippedImage::GetFrameInternal(const nsIntSize& aSize,
                                const Maybe<SVGImageContext>& aSVGContext,
                                uint32_t aWhichFrame,
-                               uint32_t aFlags)
+                               uint32_t aFlags,
+                               float aOpacity)
 {
   if (!ShouldClip()) {
     RefPtr<SourceSurface> surface = InnerImage()->GetFrame(aWhichFrame, aFlags);
@@ -302,7 +307,8 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
 
     // Create our callback.
     RefPtr<DrawSingleTileCallback> drawTileCallback =
-      new DrawSingleTileCallback(this, aSize, aSVGContext, aWhichFrame, aFlags);
+      new DrawSingleTileCallback(this, aSize, aSVGContext, aWhichFrame, aFlags,
+                                 aOpacity);
     RefPtr<gfxDrawable> drawable =
       new gfxCallbackDrawable(drawTileCallback, aSize);
 
@@ -371,11 +377,12 @@ ClippedImage::Draw(gfxContext* aContext,
                    uint32_t aWhichFrame,
                    SamplingFilter aSamplingFilter,
                    const Maybe<SVGImageContext>& aSVGContext,
-                   uint32_t aFlags)
+                   uint32_t aFlags,
+                   float aOpacity)
 {
   if (!ShouldClip()) {
     return InnerImage()->Draw(aContext, aSize, aRegion, aWhichFrame,
-                              aSamplingFilter, aSVGContext, aFlags);
+                              aSamplingFilter, aSVGContext, aFlags, aOpacity);
   }
 
   // Check for tiling. If we need to tile then we need to create a
@@ -386,7 +393,7 @@ ClippedImage::Draw(gfxContext* aContext,
     DrawResult result;
     RefPtr<SourceSurface> surface;
     Tie(result, surface) =
-      GetFrameInternal(aSize, aSVGContext, aWhichFrame, aFlags);
+      GetFrameInternal(aSize, aSVGContext, aWhichFrame, aFlags, aOpacity);
     if (!surface) {
       MOZ_ASSERT(result != DrawResult::SUCCESS);
       return result;
@@ -398,13 +405,14 @@ ClippedImage::Draw(gfxContext* aContext,
 
     // Draw.
     gfxUtils::DrawPixelSnapped(aContext, drawable, aSize, aRegion,
-                               SurfaceFormat::B8G8R8A8, aSamplingFilter);
+                               SurfaceFormat::B8G8R8A8, aSamplingFilter,
+                               aOpacity);
 
     return result;
   }
 
   return DrawSingleTile(aContext, aSize, aRegion, aWhichFrame,
-                        aSamplingFilter, aSVGContext, aFlags);
+                        aSamplingFilter, aSVGContext, aFlags, aOpacity);
 }
 
 DrawResult
@@ -414,7 +422,8 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
                              uint32_t aWhichFrame,
                              SamplingFilter aSamplingFilter,
                              const Maybe<SVGImageContext>& aSVGContext,
-                             uint32_t aFlags)
+                             uint32_t aFlags,
+                             float aOpacity)
 {
   MOZ_ASSERT(!MustCreateSurface(aContext, aSize, aRegion, aFlags),
              "Shouldn't need to create a surface");
@@ -470,7 +479,7 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
   return InnerImage()->Draw(aContext, size, region,
                             aWhichFrame, aSamplingFilter,
                             aSVGContext.map(unclipViewport),
-                            aFlags);
+                            aFlags, aOpacity);
 }
 
 NS_IMETHODIMP

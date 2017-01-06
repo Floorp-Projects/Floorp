@@ -1,11 +1,7 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
-
-const Cu = Components.utils;
 
 const NET_STRINGS_URI = "devtools/client/locales/netmonitor.properties";
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -16,17 +12,9 @@ const NAMED_SLICE_MIN_ANGLE = TAU / 8;
 const NAMED_SLICE_TEXT_DISTANCE_RATIO = 1.9;
 const HOVERED_SLICE_TRANSLATE_DISTANCE_RATIO = 20;
 
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { LocalizationHelper } = require("devtools/shared/l10n");
-
-this.EXPORTED_SYMBOLS = ["Chart"];
-
-/**
- * Localization convenience methods.
- */
-var L10N = new LocalizationHelper(NET_STRINGS_URI);
+const L10N = new LocalizationHelper(NET_STRINGS_URI);
 
 /**
  * A factory for creating charts.
@@ -105,7 +93,8 @@ function PieTableChart(node, pie, table) {
  *           - "mouseout", when the mouse leaves a slice or a row
  *           - "click", when the mouse enters a slice or a row
  */
-function createPieTableChart(document, { title, diameter, data, strings, totals, sorted }) {
+function createPieTableChart(document,
+                             { title, diameter, data, strings, totals, sorted }) {
   if (data && sorted) {
     data = data.slice().sort((a, b) => +(a.size < b.size));
   }
@@ -122,7 +111,7 @@ function createPieTableChart(document, { title, diameter, data, strings, totals,
     totals: totals
   });
 
-  let container = document.createElement("hbox");
+  let container = document.createElement("div");
   container.className = "pie-table-chart-container";
   container.appendChild(pie.node);
   container.appendChild(table.node);
@@ -207,11 +196,11 @@ function createPieChart(document, { data, width, height, centerX, centerY, radiu
 
   // If there's no data available, display an empty placeholder.
   if (!data) {
-    data = loadingPieChartData;
+    data = loadingPieChartData();
     isPlaceholder = true;
   }
   if (!data.length) {
-    data = emptyPieChartData;
+    data = emptyPieChartData();
     isPlaceholder = true;
   }
 
@@ -345,38 +334,40 @@ function createTableChart(document, { title, data, strings, totals }) {
 
   // If there's no data available, display an empty placeholder.
   if (!data) {
-    data = loadingTableChartData;
+    data = loadingTableChartData();
     isPlaceholder = true;
   }
   if (!data.length) {
-    data = emptyTableChartData;
+    data = emptyTableChartData();
     isPlaceholder = true;
   }
 
-  let container = document.createElement("vbox");
+  let container = document.createElement("div");
   container.className = "generic-chart-container table-chart-container";
   container.setAttribute("pack", "center");
   container.setAttribute("flex", "1");
   container.setAttribute("rows", data.length);
   container.setAttribute("placeholder", isPlaceholder);
+  container.setAttribute("style", "-moz-box-orient: vertical");
 
   let proxy = new TableChart(container);
 
-  let titleNode = document.createElement("label");
+  let titleNode = document.createElement("span");
   titleNode.className = "plain table-chart-title";
-  titleNode.setAttribute("value", title);
+  titleNode.textContent = title;
   container.appendChild(titleNode);
 
-  let tableNode = document.createElement("vbox");
+  let tableNode = document.createElement("div");
   tableNode.className = "plain table-chart-grid";
+  tableNode.setAttribute("style", "-moz-box-orient: vertical");
   container.appendChild(tableNode);
 
   for (let rowInfo of data) {
-    let rowNode = document.createElement("hbox");
+    let rowNode = document.createElement("div");
     rowNode.className = "table-chart-row";
     rowNode.setAttribute("align", "center");
 
-    let boxNode = document.createElement("hbox");
+    let boxNode = document.createElement("div");
     boxNode.className = "table-chart-row-box chart-colored-blob";
     boxNode.setAttribute("name", rowInfo.label);
     rowNode.appendChild(boxNode);
@@ -384,10 +375,10 @@ function createTableChart(document, { title, data, strings, totals }) {
     for (let [key, value] of Object.entries(rowInfo)) {
       let index = data.indexOf(rowInfo);
       let stringified = strings[key] ? strings[key](value, index) : value;
-      let labelNode = document.createElement("label");
+      let labelNode = document.createElement("span");
       labelNode.className = "plain table-chart-row-label";
       labelNode.setAttribute("name", key);
-      labelNode.setAttribute("value", stringified);
+      labelNode.textContent = stringified;
       rowNode.appendChild(labelNode);
     }
 
@@ -396,16 +387,17 @@ function createTableChart(document, { title, data, strings, totals }) {
     tableNode.appendChild(rowNode);
   }
 
-  let totalsNode = document.createElement("vbox");
+  let totalsNode = document.createElement("div");
   totalsNode.className = "table-chart-totals";
+  totalsNode.setAttribute("style", "-moz-box-orient: vertical");
 
   for (let [key, value] of Object.entries(totals)) {
     let total = data.reduce((acc, e) => acc + e[key], 0);
-    let stringified = totals[key] ? totals[key](total || 0) : total;
-    let labelNode = document.createElement("label");
+    let stringified = value ? value(total || 0) : total;
+    let labelNode = document.createElement("span");
     labelNode.className = "plain table-chart-summary-label";
     labelNode.setAttribute("name", key);
-    labelNode.setAttribute("value", stringified);
+    labelNode.textContent = stringified;
     totalsNode.appendChild(labelNode);
   }
 
@@ -414,21 +406,21 @@ function createTableChart(document, { title, data, strings, totals }) {
   return proxy;
 }
 
-XPCOMUtils.defineLazyGetter(this, "loadingPieChartData", () => {
+function loadingPieChartData() {
   return [{ size: 1, label: L10N.getStr("pieChart.loading") }];
-});
+}
 
-XPCOMUtils.defineLazyGetter(this, "emptyPieChartData", () => {
+function emptyPieChartData() {
   return [{ size: 1, label: L10N.getStr("pieChart.unavailable") }];
-});
+}
 
-XPCOMUtils.defineLazyGetter(this, "loadingTableChartData", () => {
+function loadingTableChartData() {
   return [{ size: "", label: L10N.getStr("tableChart.loading") }];
-});
+}
 
-XPCOMUtils.defineLazyGetter(this, "emptyTableChartData", () => {
+function emptyTableChartData() {
   return [{ size: "", label: L10N.getStr("tableChart.unavailable") }];
-});
+}
 
 /**
  * Delegates DOM events emitted by an nsIDOMNode to an EventEmitter proxy.
@@ -447,3 +439,5 @@ function delegate(emitter, events, node, args) {
     node.addEventListener(event, emitter.emit.bind(emitter, event, args));
   }
 }
+
+exports.Chart = Chart;
