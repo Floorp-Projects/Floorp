@@ -4382,7 +4382,7 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
     }
   }
 
-  for (uint32_t index : MakeRange(uint32_t(Client::TYPE_MAX))) {
+  for (uint32_t index : IntegerRange(uint32_t(Client::TYPE_MAX))) {
     if (origins[index]) {
       for (auto iter = origins[index]->Iter(); !iter.Done(); iter.Next()) {
         MOZ_ASSERT(mClients[index]);

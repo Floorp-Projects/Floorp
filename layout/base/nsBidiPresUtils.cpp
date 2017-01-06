@@ -409,7 +409,7 @@ struct BidiLineData {
       auto originalCount = mLogicalFrames.Length();
       nsTArray<int32_t> realFrameMap(originalCount);
       size_t count = 0;
-      for (auto i : MakeRange(originalCount)) {
+      for (auto i : IntegerRange(originalCount)) {
         if (mLogicalFrames[i] == NS_BIDI_CONTROL_FRAME) {
           realFrameMap.AppendElement(-1);
         } else {
