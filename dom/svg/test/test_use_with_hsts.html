@@ -47,12 +47,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
   const insecureURI = "http://example.com/tests/dom/svg/test/use-with-hsts-helper.html";
   const secureURI   = "https://example.com/tests/dom/svg/test/use-with-hsts-helper.html";
 
-  // Snapshots that we'll populate below:
-  var blankSnapshot;  // Snapshot of blank iframe.
-  var refSnapshot;    // Snapshot of lime reference rendering in iframe.
-  var secureSnapshot; // Snapshot of testcase using HTTPS.
-  var upgradedSnapshot; // Snapshot of testcase using HTTP-upgraded-to-HTTPS.
-
   // Bookkeeping to be sure receiveMessage is called as many times as we expect:
   var numPostMessageCalls = 0;
   const expectedNumPostMessageCalls = 2; // (We load the helper file twice.)
@@ -79,11 +73,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     // Capture a snapshot with nothing in the iframe, so we can do a
     // sanity-check not-equal comparison against our reference case, to be
     // sure we're rendering anything at all:
-    blankSnapshot = snapshotWindow(iframeWin);
+    let blankSnapshot = snapshotWindow(iframeWin);
 
     // Load & snapshot a reference case (fully lime):
     await LoadIframeAsync("data:text/html,<body style='background:lime'>");
-    refSnapshot = snapshotWindow(iframeWin);
+    let refSnapshot = snapshotWindow(iframeWin);
 
     // Ensure reference snapshot looks different from blank snapshot:
     assertSnapshots(refSnapshot, blankSnapshot,
@@ -98,7 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
 
     // Load & snapshot secure (HTTPS) version of testcase, & check against ref:
     await LoadIframeAsync(secureURI);
-    secureSnapshot = snapshotWindow(iframeWin);
+    let secureSnapshot = snapshotWindow(iframeWin);
     assertSnapshots(secureSnapshot, refSnapshot,
                     true /*equal*/, null /*no fuzz*/,
                     "secureSnapshot", "refSnapshot");
@@ -114,7 +108,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
        "test should've attempted to load insecure HTTP URI, to exercise HSTS");
 
     // Capture snapshot of iframe showing upgraded-to-HTTPS version of testcase:
-    upgradedSnapshot = snapshotWindow(iframeWin);
+    let upgradedSnapshot = snapshotWindow(iframeWin);
     assertSnapshots(upgradedSnapshot, refSnapshot,
                     true /*equal*/, null /*no fuzz*/,
                     "upgradedSnapshot", "refSnapshot");
