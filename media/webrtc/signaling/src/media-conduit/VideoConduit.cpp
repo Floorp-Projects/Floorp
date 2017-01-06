@@ -408,6 +408,7 @@ WebrtcVideoConduit::CreateRecvStream()
   std::unique_ptr<webrtc::VideoDecoder> decoder;
   webrtc::VideoDecoder::DecoderType decoder_type;
 
+  mRecvStreamConfig.decoders.clear();
   for (auto& config : mRecvCodecList) {
     decoder_type = PayloadNameToDecoderType(config->mName);
     if (decoder_type == webrtc::VideoDecoder::DecoderType::kUnsupportedCodec) {
@@ -692,6 +693,12 @@ WebrtcVideoConduit::SetRemoteSSRC(unsigned int ssrc)
   }
 
   DeleteRecvStream();
+  MediaConduitErrorCode rval = CreateRecvStream();
+  if (rval != kMediaConduitNoError) {
+    CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
+    return false;
+  }
+
   return (StartReceiving() == kMediaConduitNoError);
 }
 
@@ -1148,10 +1155,15 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     // XXX Copy over those that are the same and don't rebuild them
     mRecvCodecList.SwapElements(recv_codecs);
     recv_codecs.Clear();
-    mRecvStreamConfig.decoders.clear();
     mRecvStreamConfig.rtp.rtx.clear();
     // Rebuilds mRecvStream from mRecvStreamConfig
     DeleteRecvStream();
+    MediaConduitErrorCode rval = CreateRecvStream();
+    if (rval != kMediaConduitNoError) {
+      CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
+      return rval;
+    }
+
     return StartReceiving();
   }
   return kMediaConduitNoError;
@@ -1812,14 +1824,7 @@ WebrtcVideoConduit::StartReceiving()
   {
     // Start Receive on the video engine
     MutexAutoLock lock(mCodecMutex);
-
-    if (!mRecvStream) {
-      MediaConduitErrorCode rval = CreateRecvStream();
-      if (rval != kMediaConduitNoError) {
-        CSFLogError(logTag, "%s Start Receive Error %d ", __FUNCTION__, rval);
-        return rval;
-      }
-    }
+    MOZ_ASSERT(mRecvStream);
 
     mRecvStream->Start();
     mEngineReceiving = true;
