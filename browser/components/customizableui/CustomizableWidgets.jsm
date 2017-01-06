@@ -917,7 +917,6 @@ const CustomizableWidgets = [
       if (!gotView) {
         aEvent.preventDefault();
         aEvent.stopPropagation();
-        return;
       }
     },
     onCreated(node) {

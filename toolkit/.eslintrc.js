@@ -202,6 +202,9 @@ module.exports = {
     // Disallow unnecessary .call() and .apply()
     "no-useless-call": "error",
 
+    // Disallow redundant return statements
+    "no-useless-return": "error",
+
     // No using with
     "no-with": "error",
 

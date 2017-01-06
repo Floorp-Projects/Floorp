@@ -936,7 +936,6 @@ Blocklist.prototype = {
       }
     } catch (e) {
       LOG("Blocklist::_loadBlocklistFromFile: Error constructing blocklist " + e);
-      return;
     }
   },
 

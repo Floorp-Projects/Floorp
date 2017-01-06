@@ -256,7 +256,6 @@ this.ContentSearch = {
     }
     win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey,
                                               { selection: data.selection });
-    return;
   },
 
   getSuggestions: Task.async(function* (engineName, searchString, browser) {

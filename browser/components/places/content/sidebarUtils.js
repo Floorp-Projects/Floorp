@@ -42,7 +42,6 @@ var SidebarUtils = {
 
     if (aEvent.button == 0 && isContainer && !openInTabs) {
       tbo.view.toggleOpenState(cell.row);
-      return;
     } else if (!mouseInGutter && openInTabs &&
             aEvent.originalTarget.localName == "treechildren") {
       tbo.view.selection.select(cell.row);
