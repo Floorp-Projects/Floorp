@@ -5,9 +5,9 @@ includedir=/usr/local/include
 
 Name: harfbuzz
 Description: HarfBuzz text shaping library
-Version: 1.3.3
+Version: 1.4.1
 
 Libs: -L${libdir} -lharfbuzz
 Libs.private:    
-Requires.private: glib-2.0 >= 2.38 
+Requires.private: glib-2.0 >= 2.19.1 
 Cflags: -I${includedir}/harfbuzz
