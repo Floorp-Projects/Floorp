@@ -78,6 +78,11 @@ automation/upload: automation/buildsymbols
 automation/upload: automation/update-packaging
 automation/upload: automation/sdk
 
+# buildsymbols will modify our test binaries, which can interfere with
+# packaging them. A finer-grained dependency can help performance here
+# once bug 1329020 is fixed.
+automation/pretty-package-tests: automation/buildsymbols
+
 # automation/{pretty-}package should depend on build (which is implicit due to
 # the way client.mk invokes automation/build), but buildsymbols changes the
 # binaries/libs, and that's what we package/test.
