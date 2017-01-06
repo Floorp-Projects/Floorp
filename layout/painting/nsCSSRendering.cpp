@@ -635,14 +635,14 @@ nsCSSRendering::ComputePixelRadii(const nscoord *aAppUnitsRadii,
   NS_FOR_CSS_HALF_CORNERS(corner)
     radii[corner] = Float(aAppUnitsRadii[corner]) / aAppUnitsPerPixel;
 
-  (*oBorderRadii)[C_TL] = Size(radii[NS_CORNER_TOP_LEFT_X],
-                               radii[NS_CORNER_TOP_LEFT_Y]);
-  (*oBorderRadii)[C_TR] = Size(radii[NS_CORNER_TOP_RIGHT_X],
-                               radii[NS_CORNER_TOP_RIGHT_Y]);
-  (*oBorderRadii)[C_BR] = Size(radii[NS_CORNER_BOTTOM_RIGHT_X],
-                               radii[NS_CORNER_BOTTOM_RIGHT_Y]);
-  (*oBorderRadii)[C_BL] = Size(radii[NS_CORNER_BOTTOM_LEFT_X],
-                               radii[NS_CORNER_BOTTOM_LEFT_Y]);
+  (*oBorderRadii)[C_TL] = Size(radii[eCornerTopLeftX],
+                               radii[eCornerTopLeftY]);
+  (*oBorderRadii)[C_TR] = Size(radii[eCornerTopRightX],
+                               radii[eCornerTopRightY]);
+  (*oBorderRadii)[C_BR] = Size(radii[eCornerBottomRightX],
+                               radii[eCornerBottomRightY]);
+  (*oBorderRadii)[C_BL] = Size(radii[eCornerBottomLeftX],
+                               radii[eCornerBottomLeftY]);
 }
 
 DrawResult
@@ -4064,9 +4064,9 @@ DrawBorderImage(nsPresContext*       aPresContext,
   nsMargin border;
   NS_FOR_CSS_SIDES(s) {
     nsStyleCoord coord = aStyleBorder.mBorderImageSlice.Get(s);
-    int32_t imgDimension = NS_SIDE_IS_VERTICAL(s)
+    int32_t imgDimension = SideIsVertical(s)
                            ? imageSize.width : imageSize.height;
-    nscoord borderDimension = NS_SIDE_IS_VERTICAL(s)
+    nscoord borderDimension = SideIsVertical(s)
                            ? borderImgArea.width : borderImgArea.height;
     double value;
     switch (coord.GetUnit()) {

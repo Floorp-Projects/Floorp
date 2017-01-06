@@ -35,14 +35,6 @@ struct nsColInfo
             int32_t aNumCellsSpan);
 };
 
-enum Corner
-{
-  eBStartIStart = 0,
-  eBStartIEnd   = 1,
-  eBEndIEnd     = 2,
-  eBEndIStart   = 3
-};
-
 struct BCInfo
 {
   nsTArray<BCData> mIEndBorders;
@@ -213,7 +205,7 @@ public:
                        nscoord       aSize,
                        bool          aChanged);
 
-  void SetBCBorderCorner(::Corner    aCorner,
+  void SetBCBorderCorner(mozilla::LogicalCorner aCorner,
                          nsCellMap&  aCellMap,
                          uint32_t    aCellMapStart,
                          uint32_t    aYPos,
