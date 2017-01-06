@@ -762,6 +762,7 @@ selfhosted.inputs = [
     'builtin/Function.js',
     'builtin/Generator.js',
     'builtin/Intl.js',
+    'builtin/IntlCurrency.js',
     'builtin/IntlData.js',
     'builtin/Iterator.js',
     'builtin/Map.js',
