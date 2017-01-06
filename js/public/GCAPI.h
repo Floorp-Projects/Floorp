@@ -644,12 +644,12 @@ ExposeGCThingToActiveJS(JS::GCCellPtr thing)
     if (thing.mayBeOwnedByOtherRuntime())
         return;
 
-    JS::shadow::Runtime* rt = detail::GetGCThingRuntime(thing.unsafeAsUIntPtr());
+    JS::shadow::Runtime* rt = detail::GetCellRuntime(thing.asCell());
     MOZ_DIAGNOSTIC_ASSERT(rt->allowGCBarriers());
 
     if (IsIncrementalBarrierNeededOnTenuredGCThing(rt, thing))
         JS::IncrementalReferenceBarrier(thing);
-    else if (JS::GCThingIsMarkedGray(thing))
+    else if (!thing.mayBeOwnedByOtherRuntime() && js::gc::detail::CellIsMarkedGray(thing.asCell()))
         JS::UnmarkGrayGCThingRecursively(thing);
 }
 
