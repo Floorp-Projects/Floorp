@@ -31,7 +31,7 @@ load 515829-2.html
 load 564461.xhtml
 load 570566-1.html
 load 571428-1.html
-skip-if(stylo) load 580507-1.xhtml # bug 1323655
+load 580507-1.xhtml
 load 590387.html
 load 596785-1.html
 load 596785-2.html

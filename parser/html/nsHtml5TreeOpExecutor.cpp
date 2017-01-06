@@ -66,7 +66,7 @@ static nsITimer* gFlushTimer = nullptr;
 nsHtml5TreeOpExecutor::nsHtml5TreeOpExecutor()
   : nsHtml5DocumentBuilder(false)
   , mPreloadedURLs(23)  // Mean # of preloadable resources per page on dmoz
-  , mSpeculationReferrerPolicy(mozilla::net::RP_Default)
+  , mSpeculationReferrerPolicy(mozilla::net::RP_Unset)
 {
   // zeroing operator new for everything else
 }
@@ -1058,7 +1058,7 @@ nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP)
 
   // Record "speculated" referrer policy for preloads
   bool hasReferrerPolicy = false;
-  uint32_t referrerPolicy = mozilla::net::RP_Default;
+  uint32_t referrerPolicy = mozilla::net::RP_Unset;
   rv = preloadCsp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
   NS_ENSURE_SUCCESS_VOID(rv);
   if (hasReferrerPolicy) {

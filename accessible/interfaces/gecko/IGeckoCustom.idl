@@ -1,0 +1,25 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import "objidl.idl";
+import "oaidl.idl";
+
+[object, uuid(7510360f-cdae-4de9-88c8-d167eda62afc)]
+interface IGeckoCustom : IUnknown
+{
+  [propget] HRESULT ID([out, retval] unsigned __int64* aID);
+  [propget] HRESULT anchorCount([out, retval] long* aCount);
+}
+
+
+[
+    uuid(55769d85-f830-4d76-9e39-3670914a28f7),
+    helpstring("private custom gecko interfaces")
+]
+library IGeckoCustom
+{
+  interface IGeckoCustom;
+};
