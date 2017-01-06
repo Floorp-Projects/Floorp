@@ -172,7 +172,7 @@ webgl::UniformInfo::UniformInfo(WebGLActiveInfo* activeInfo)
 
 //////////
 
-#define DUMP_SHADERVAR_MAPPINGS
+//#define DUMP_SHADERVAR_MAPPINGS
 
 static already_AddRefed<const webgl::LinkedProgramInfo>
 QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
@@ -240,12 +240,19 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
         ///////
 
-        const GLint loc = gl->fGetAttribLocation(prog->mGLName,
-                                                 mappedName.BeginReading());
+        GLint loc = gl->fGetAttribLocation(prog->mGLName,
+                                           mappedName.BeginReading());
+        if (gl->WorkAroundDriverBugs() &&
+            mappedName.EqualsIgnoreCase("gl_", 3))
+        {
+            // Bug 1328559: Appears problematic on ANGLE and OSX, but not Linux or Win+GL.
+            loc = -1;
+        }
 #ifdef DUMP_SHADERVAR_MAPPINGS
         printf_stderr("[attrib %u/%u] @%i %s->%s\n", i, numActiveAttribs, loc,
                       userName.BeginReading(), mappedName.BeginReading());
 #endif
+        MOZ_ASSERT_IF(mappedName.EqualsIgnoreCase("gl_", 3), loc == -1);
 
         ///////
 
