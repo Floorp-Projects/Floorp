@@ -21,6 +21,10 @@ XPCOMUtils.defineLazyGetter(this, "kDebug", () => {
 
 const kContentChangeThresholdPx = 5;
 const kBrightTextSampleSize = 5;
+// This limit is arbitrary and doesn't scale for low-powered machines or
+// high-powered machines. Netbooks will probably need a much lower limit, for
+// example. Though getting something out there is better than nothing.
+const kPageIsTooBigPx = 500000;
 const kModalHighlightRepaintLoFreqMs = 100;
 const kModalHighlightRepaintHiFreqMs = 16;
 const kHighlightAllPref = "findbar.highlightAll";
@@ -171,6 +175,7 @@ FinderHighlighter.prototype = {
         detectedGeometryChange: false,
         dynamicRangesSet: new Set(),
         frames: new Map(),
+        lastWindowDimensions: { width: 0, height: 0 },
         modalHighlightRectsMap: new Map(),
         previousRangeRectsAndTexts: { rectList: [], textList: [] }
       });
@@ -371,7 +376,7 @@ FinderHighlighter.prototype = {
       window.clearTimeout(dict.modalRepaintScheduler);
       dict.modalRepaintScheduler = null;
     }
-    dict.lastWindowDimensions = null;
+    dict.lastWindowDimensions = { width: 0, height: 0 };
 
     this._removeRangeOutline(window);
     this._removeHighlightAllMask(window);
@@ -437,7 +442,7 @@ FinderHighlighter.prototype = {
     }
 
     let outlineNode = dict.modalHighlightOutline;
-    if (outlineNode) {
+    if (outlineNode && !this._isPageTooBig(dict)) {
       let animation;
       if (dict.animations) {
         for (animation of dict.animations)
@@ -1161,6 +1166,20 @@ FinderHighlighter.prototype = {
   },
 
   /**
+   * Check if the width or height of the current document is too big to handle
+   * for certain operations. This allows us to degrade gracefully when we expect
+   * the performance to be negatively impacted due to drawing-intensive operations.
+   *
+   * @param  {Object} dict Dictionary of properties belonging to the currently
+   *                       active window
+   * @return {Boolean}
+   */
+  _isPageTooBig(dict) {
+    let {height, width} = dict.lastWindowDimensions;
+    return height >= kPageIsTooBigPx || width >= kPageIsTooBigPx;
+  },
+
+  /**
    * Doing a full repaint each time a range is delivered by the highlight iterator
    * is way too costly, thus we pipe the frequency down to every
    * `kModalHighlightRepaintLoFreqMs` milliseconds. If there are dynamic ranges
@@ -1187,7 +1206,9 @@ FinderHighlighter.prototype = {
     window = window.top;
     let dict = this.getForWindow(window);
     let hasDynamicRanges = !!dict.dynamicRangesSet.size;
-    let repaintDynamicRanges = ((scrollOnly || contentChanged) && hasDynamicRanges);
+    let pageIsTooBig = this._isPageTooBig(dict);
+    let repaintDynamicRanges = ((scrollOnly || contentChanged) && hasDynamicRanges
+      && !pageIsTooBig);
 
     // When we request to repaint unconditionally, we mean to call
     // `_repaintHighlightAllMask()` right after the timeout.
@@ -1203,15 +1224,18 @@ FinderHighlighter.prototype = {
     dict.modalRepaintScheduler = window.setTimeout(() => {
       dict.modalRepaintScheduler = null;
 
-      let { width: previousWidth, height: previousHeight } = dict.lastWindowDimensions;
-      let { width, height } = dict.lastWindowDimensions = this._getWindowDimensions(window);
-      let pageContentChanged = dict.detectedGeometryChange ||
-                               (Math.abs(previousWidth - width) > kContentChangeThresholdPx ||
-                                Math.abs(previousHeight - height) > kContentChangeThresholdPx);
+      let pageContentChanged = dict.detectedGeometryChange;
+      if (!pageContentChanged && !pageIsTooBig) {
+        let { width: previousWidth, height: previousHeight } = dict.lastWindowDimensions;
+        let { width, height } = dict.lastWindowDimensions = this._getWindowDimensions(window);
+        pageContentChanged = dict.detectedGeometryChange ||
+                             (Math.abs(previousWidth - width) > kContentChangeThresholdPx ||
+                              Math.abs(previousHeight - height) > kContentChangeThresholdPx);
+      }
       dict.detectedGeometryChange = false;
       // When the page has changed significantly enough in size, we'll restart
       // the iterator with the same parameters as before to find us new ranges.
-      if (pageContentChanged)
+      if (pageContentChanged && !pageIsTooBig)
         this.iterator.restart(this.finder);
 
       if (dict.unconditionalRepaintRequested ||
