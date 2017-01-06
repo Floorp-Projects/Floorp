@@ -183,6 +183,15 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate(self.fixtures.where_is("black.png"))
         self.assertIn("black.png", self.marionette.title)
 
+    def test_focus_after_navigation(self):
+        self.marionette.quit()
+        self.marionette.start_session()
+
+        self.marionette.navigate(inline("<input autofocus>"))
+        active_el = self.marionette.execute_script("return document.activeElement")
+        focus_el = self.marionette.find_element(By.CSS_SELECTOR, ":focus")
+        self.assertEqual(active_el, focus_el)
+
 
 class TestTLSNavigation(MarionetteTestCase):
     insecure_tls = {"acceptInsecureCerts": True}

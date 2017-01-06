@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "ScopedNSSTypes.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Sprintf.h"
@@ -229,7 +230,7 @@ GetDefaultOIDFormat(SECItem *oid,
       return NS_ERROR_FAILURE;
 
     len += written;
-    NS_ASSERTION(len < sizeof(buf), "OID data to big to display in 300 chars.");
+    MOZ_ASSERT(len < sizeof(buf), "OID data too big to display in 300 chars.");
     val = 0;      
     invalid = false;
     first = false;

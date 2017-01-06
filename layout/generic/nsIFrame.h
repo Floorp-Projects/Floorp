@@ -727,8 +727,9 @@ public:
   #undef STYLE_STRUCT
 
   /** Also forward GetVisitedDependentColor to the style context */
-  nscolor GetVisitedDependentColor(nsCSSPropertyID aProperty)
-    { return mStyleContext->GetVisitedDependentColor(aProperty); }
+  template<typename T, typename S>
+  nscolor GetVisitedDependentColor(T S::* aField)
+    { return mStyleContext->GetVisitedDependentColor(aField); }
 
   /**
    * These methods are to access any additional style contexts that

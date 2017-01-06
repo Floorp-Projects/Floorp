@@ -25,8 +25,6 @@ XPCOMUtils.defineConstant(window, "EVENTS", EVENTS);
 XPCOMUtils.defineConstant(window, "ACTIVITY_TYPE", ACTIVITY_TYPE);
 XPCOMUtils.defineConstant(window, "Editor", Editor);
 XPCOMUtils.defineConstant(window, "Prefs", Prefs);
-XPCOMUtils.defineLazyModuleGetter(window, "Chart",
-  "resource://devtools/client/shared/widgets/Chart.jsm");
 
 // Initialize the global Redux store
 window.gStore = configureStore();
@@ -711,6 +709,12 @@ NetworkEventsHandler.prototype = {
    *         are available, or rejected if something goes wrong.
    */
   getString: function (stringGrip) {
+    // FIXME: this.webConsoleClient will be undefined in mochitest,
+    // so we return string instantly to skip undefined error
+    if (typeof stringGrip === "string") {
+      return Promise.resolve(stringGrip);
+    }
+
     return this.webConsoleClient.getString(stringGrip);
   }
 };

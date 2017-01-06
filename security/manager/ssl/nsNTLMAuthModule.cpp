@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "md4.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
@@ -993,14 +994,13 @@ nsNTLMAuthModule::InitTest()
 }
 
 NS_IMETHODIMP
-nsNTLMAuthModule::Init(const char      *serviceName,
-                       uint32_t         serviceFlags,
-                       const char16_t *domain,
-                       const char16_t *username,
-                       const char16_t *password)
+nsNTLMAuthModule::Init(const char* /*serviceName*/, uint32_t serviceFlags,
+                       const char16_t* domain, const char16_t* username,
+                       const char16_t* password)
 {
-  NS_ASSERTION((serviceFlags & ~nsIAuthModule::REQ_PROXY_AUTH) == nsIAuthModule::REQ_DEFAULT,
-      "unexpected service flags");
+  MOZ_ASSERT((serviceFlags & ~nsIAuthModule::REQ_PROXY_AUTH) ==
+               nsIAuthModule::REQ_DEFAULT,
+             "Unexpected service flags");
 
   mDomain = domain;
   mUsername = username;
