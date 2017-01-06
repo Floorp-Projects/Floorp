@@ -141,9 +141,8 @@ SpecializeToMemory(uint8_t* prevMemoryBase, CodeSegment& cs, const Metadata& met
 #endif
 }
 
-static bool
-SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
-                         const Metadata& metadata)
+static void
+SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata& metadata)
 {
     bool enabled = false;
 #ifdef JS_ION_PERF
@@ -153,7 +152,7 @@ SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
     enabled |= IsVTuneProfilingActive();
 #endif
     if (!enabled)
-        return true;
+        return;
 
     for (const CodeRange& codeRange : metadata.codeRanges) {
         if (!codeRange.isFunction())
@@ -163,14 +162,11 @@ SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
         uintptr_t end = uintptr_t(cs.base() + codeRange.end());
         uintptr_t size = end - start;
 
-        TwoByteName name(cx);
-        if (!metadata.getFuncName(cx, &bytecode, codeRange.funcIndex(), &name))
-            return false;
-
-        UniqueChars chars(
-            (char*)JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, name.begin(), name.length()).get());
-        if (!chars)
-            return false;
+        UTF8Bytes name;
+        if (!metadata.getFuncName(&bytecode, codeRange.funcIndex(), &name))
+            return;
+        if (!name.append('\0'))
+            return;
 
         // Avoid "unused" warnings
         (void)start;
@@ -181,17 +177,17 @@ SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
             const char* file = metadata.filename.get();
             unsigned line = codeRange.funcLineOrBytecode();
             unsigned column = 0;
-            writePerfSpewerAsmJSFunctionMap(start, size, file, line, column, chars.get());
+            writePerfSpewerAsmJSFunctionMap(start, size, file, line, column, name.begin());
         }
 #endif
 #ifdef MOZ_VTUNE
         if (IsVTuneProfilingActive()) {
             unsigned method_id = iJIT_GetNewMethodID();
             if (method_id == 0)
-                return true;
+                return;
             iJIT_Method_Load method;
             method.method_id = method_id;
-            method.method_name = chars.get();
+            method.method_name = name.begin();
             method.method_load_address = (void*)start;
             method.method_size = size;
             method.line_number_size = 0;
@@ -204,7 +200,7 @@ SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
 #endif
     }
 
-    return true;
+    return;
 }
 
 /* static */ UniqueCodeSegment
@@ -251,8 +247,7 @@ CodeSegment::create(JSContext* cx,
         return nullptr;
     }
 
-    if (!SendCodeRangesToProfiler(cx, *cs, bytecode, metadata))
-        return nullptr;
+    SendCodeRangesToProfiler(*cs, bytecode, metadata);
 
     return cs;
 }
@@ -544,8 +539,7 @@ Metadata::lookupFuncExport(uint32_t funcIndex) const
 }
 
 bool
-Metadata::getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                      TwoByteName* name) const
+Metadata::getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const
 {
     if (funcIndex < funcNames.length()) {
         MOZ_ASSERT(maybeBytecode, "NameInBytecode requires preserved bytecode");
@@ -553,40 +547,22 @@ Metadata::getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIn
         const NameInBytecode& n = funcNames[funcIndex];
         MOZ_ASSERT(n.offset + n.length < maybeBytecode->length());
 
-        if (n.length == 0)
-            goto invalid;
-
-        UTF8Chars utf8((const char*)maybeBytecode->begin() + n.offset, n.length);
-
-        // This code could be optimized by having JS::UTF8CharsToNewTwoByteCharsZ
-        // return a Vector directly.
-        size_t twoByteLength;
-        UniqueTwoByteChars chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &twoByteLength).get());
-        if (!chars)
-            goto invalid;
-
-        if (!name->growByUninitialized(twoByteLength))
-            return false;
-
-        PodCopy(name->begin(), chars.get(), twoByteLength);
-        return true;
+        if (n.length != 0)
+            return name->append((const char*)maybeBytecode->begin() + n.offset, n.length);
     }
-
-  invalid:
 
     // For names that are out of range or invalid, synthesize a name.
 
-    UniqueChars chars(JS_smprintf("wasm-function[%u]", funcIndex));
-    if (!chars) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    const char beforeFuncIndex[] = "wasm-function[";
+    const char afterFuncIndex[] = "]";
 
-    if (!name->growByUninitialized(strlen(chars.get())))
-        return false;
+    ToCStringBuf cbuf;
+    const char* funcIndexStr = NumberToCString(nullptr, &cbuf, funcIndex);
+    MOZ_ASSERT(funcIndexStr);
 
-    CopyAndInflateChars(name->begin(), chars.get(), name->length());
-    return true;
+    return name->append(beforeFuncIndex, strlen(beforeFuncIndex)) &&
+           name->append(funcIndexStr, strlen(funcIndexStr)) &&
+           name->append(afterFuncIndex, strlen(afterFuncIndex));
 }
 
 Code::Code(UniqueCodeSegment segment,
@@ -661,20 +637,20 @@ Code::lookupMemoryAccess(void* pc) const
 }
 
 bool
-Code::getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const
+Code::getFuncName(uint32_t funcIndex, UTF8Bytes* name) const
 {
     const Bytes* maybeBytecode = maybeBytecode_ ? &maybeBytecode_.get()->bytes : nullptr;
-    return metadata_->getFuncName(cx, maybeBytecode, funcIndex, name);
+    return metadata_->getFuncName(maybeBytecode, funcIndex, name);
 }
 
 JSAtom*
 Code::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
 {
-    TwoByteName name(cx);
-    if (!getFuncName(cx, funcIndex, &name))
+    UTF8Bytes name;
+    if (!getFuncName(funcIndex, &name))
         return nullptr;
 
-    return AtomizeChars(cx, name.begin(), name.length());
+    return AtomizeUTF8Chars(cx, name.begin(), name.length());
 }
 
 const char experimentalWarning[] =
@@ -776,7 +752,7 @@ Code::getLineOffsets(size_t lineno, Vector<uint32_t>& offsets) const
 }
 
 bool
-Code::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
+Code::ensureProfilingState(JSRuntime* rt, bool newProfilingEnabled)
 {
     if (profilingEnabled_ == newProfilingEnabled)
         return true;
@@ -790,27 +766,30 @@ Code::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
             if (!codeRange.isFunction())
                 continue;
 
-            TwoByteName name(cx);
-            if (!getFuncName(cx, codeRange.funcIndex(), &name))
-                return false;
-            if (!name.append('\0'))
-                return false;
+            ToCStringBuf cbuf;
+            const char* bytecodeStr = NumberToCString(nullptr, &cbuf, codeRange.funcLineOrBytecode());
+            MOZ_ASSERT(bytecodeStr);
 
-            TwoByteChars chars(name.begin(), name.length());
-            UniqueChars utf8Name(JS::CharsToNewUTF8CharsZ(nullptr, chars).c_str());
-            UniqueChars label(JS_smprintf("%s (%s:%u)",
-                                          utf8Name.get(),
-                                          metadata_->filename.get(),
-                                          codeRange.funcLineOrBytecode()));
-            if (!label) {
-                ReportOutOfMemory(cx);
+            UTF8Bytes name;
+            if (!getFuncName(codeRange.funcIndex(), &name) ||
+                !name.append(" (", 2) ||
+                !name.append(metadata_->filename.get(), strlen(metadata_->filename.get())) ||
+                !name.append(':') ||
+                !name.append(bytecodeStr, strlen(bytecodeStr)) ||
+                !name.append(")\0", 2))
+            {
                 return false;
             }
+
+            UniqueChars label(name.extractOrCopyRawBuffer());
+            if (!label)
+                return false;
 
             if (codeRange.funcIndex() >= funcLabels_.length()) {
                 if (!funcLabels_.resize(codeRange.funcIndex() + 1))
                     return false;
             }
+
             funcLabels_[codeRange.funcIndex()] = Move(label);
         }
     } else {
@@ -822,7 +801,7 @@ Code::ensureProfilingState(JSContext* cx, bool newProfilingEnabled)
     profilingEnabled_ = newProfilingEnabled;
 
     {
-        AutoWritableJitCode awjc(cx->runtime(), segment_->base(), segment_->codeLength());
+        AutoWritableJitCode awjc(segment_->base(), segment_->codeLength());
         AutoFlushICache afc("Code::ensureProfilingState");
         AutoFlushICache::setRange(uintptr_t(segment_->base()), segment_->codeLength());
 

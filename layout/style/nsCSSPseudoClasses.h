@@ -10,6 +10,7 @@
 
 #include "nsStringFwd.h"
 #include "mozilla/CSSEnabledState.h"
+#include "mozilla/Maybe.h"
 
 // The following two flags along with the pref defines where this pseudo
 // class can be used:
@@ -29,6 +30,9 @@
 class nsIAtom;
 
 namespace mozilla {
+namespace dom {
+class Element;
+} // namespace dom
 
 // The total count of CSSPseudoClassType is less than 256,
 // so use uint8_t as its underlying type.
@@ -82,6 +86,12 @@ public:
     }
     return false;
   }
+
+  // Checks whether the given pseudo class matches the element.
+  // It returns Some(result) if this function is able to check
+  // the pseudo-class, Nothing() otherwise.
+  static mozilla::Maybe<bool>
+    MatchesElement(Type aType, const mozilla::dom::Element* aElement);
 
 private:
   static const uint32_t kPseudoClassFlags[size_t(Type::Count)];

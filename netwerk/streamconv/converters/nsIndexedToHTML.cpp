@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "DateTimeFormat.h"
 #include "nsIndexedToHTML.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "nsNetUtil.h"
@@ -18,7 +19,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsIChromeRegistry.h"
-#include "nsIDateTimeFormat.h"
 #include "nsIStringBundle.h"
 #include "nsITextToSubURI.h"
 #include "nsXPIDLString.h"
@@ -68,10 +68,6 @@ nsIndexedToHTML::Init(nsIStreamListener* aListener) {
     nsresult rv = NS_OK;
 
     mListener = aListener;
-
-    mDateTime = nsIDateTimeFormat::Create();
-    if (!mDateTime)
-      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIStringBundleService> sbs =
         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
@@ -835,18 +831,16 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         pushBuffer.AppendInt(static_cast<int64_t>(t));
         pushBuffer.AppendLiteral("\">");
         nsAutoString formatted;
-        mDateTime->FormatPRTime(nullptr,
-                                kDateFormatShort,
-                                kTimeFormatNone,
-                                t,
-                                formatted);
+        mozilla::DateTimeFormat::FormatPRTime(kDateFormatShort,
+                                              kTimeFormatNone,
+                                              t,
+                                              formatted);
         AppendNonAsciiToNCR(formatted, pushBuffer);
         pushBuffer.AppendLiteral("</td>\n <td>");
-        mDateTime->FormatPRTime(nullptr,
-                                kDateFormatNone,
-                                kTimeFormatSeconds,
-                                t,
-                                formatted);
+        mozilla::DateTimeFormat::FormatPRTime(kDateFormatNone,
+                                              kTimeFormatSeconds,
+                                              t,
+                                              formatted);
         // use NCR to show date in any doc charset
         AppendNonAsciiToNCR(formatted, pushBuffer);
     }

@@ -361,25 +361,11 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     ScriptSource* maybeScriptSource() const override {
         return scriptSource.get();
     }
-    bool getFuncName(JSContext* cx, const Bytes*, uint32_t funcIndex,
-                     TwoByteName* name) const override
-    {
+    bool getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const override {
         // asm.js doesn't allow exporting imports or putting imports in tables
         MOZ_ASSERT(funcIndex >= AsmJSFirstDefFuncIndex);
-
         const char* p = asmJSFuncNames[funcIndex - AsmJSFirstDefFuncIndex].get();
-        UTF8Chars utf8(p, strlen(p));
-
-        size_t twoByteLength;
-        UniqueTwoByteChars chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &twoByteLength).get());
-        if (!chars)
-            return false;
-
-        if (!name->growByUninitialized(twoByteLength))
-            return false;
-
-        PodCopy(name->begin(), chars.get(), twoByteLength);
-        return true;
+        return name->append(p, strlen(p));
     }
 
     AsmJSMetadataCacheablePod& pod() { return *this; }

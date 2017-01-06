@@ -1601,7 +1601,7 @@ nsPrintEngine::ReconstructAndReflow(bool doSetPixelScale)
       }
     }
 
-    po->mPresShell->FlushPendingNotifications(Flush_Layout);
+    po->mPresShell->FlushPendingNotifications(FlushType::Layout);
 
     nsresult rv = UpdateSelectionAndShrinkPrintObject(po, documentIsTopLevel);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2179,7 +2179,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
   NS_ASSERTION(aPO->mPresShell, "Presshell should still be here");
 
   // Process the reflow event Initialize posted
-  aPO->mPresShell->FlushPendingNotifications(Flush_Layout);
+  aPO->mPresShell->FlushPendingNotifications(FlushType::Layout);
 
   rv = UpdateSelectionAndShrinkPrintObject(aPO, documentIsTopLevel);
   NS_ENSURE_SUCCESS(rv, rv);

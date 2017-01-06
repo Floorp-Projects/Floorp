@@ -22,8 +22,6 @@ using namespace mozilla::a11y;
 STDMETHODIMP
 ia2AccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -35,15 +33,11 @@ ia2AccessibleEditableText::copyText(long aStartOffset, long aEndOffset)
 
   textAcc->CopyText(aStartOffset, aEndOffset);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -55,15 +49,11 @@ ia2AccessibleEditableText::deleteText(long aStartOffset, long aEndOffset)
 
   textAcc->DeleteText(aStartOffset, aEndOffset);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::insertText(long aOffset, BSTR *aText)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   uint32_t length = ::SysStringLen(*aText);
   nsAutoString text(*aText, length);
   MOZ_ASSERT(!HyperTextProxyFor(this));
@@ -77,15 +67,11 @@ ia2AccessibleEditableText::insertText(long aOffset, BSTR *aText)
 
   textAcc->InsertText(text, aOffset);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -97,15 +83,11 @@ ia2AccessibleEditableText::cutText(long aStartOffset, long aEndOffset)
 
   textAcc->CutText(aStartOffset, aEndOffset);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::pasteText(long aOffset)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   MOZ_ASSERT(!HyperTextProxyFor(this));
 
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
@@ -117,16 +99,12 @@ ia2AccessibleEditableText::pasteText(long aOffset)
 
   textAcc->PasteText(aOffset);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleEditableText::replaceText(long aStartOffset, long aEndOffset,
                                        BSTR *aText)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   HyperTextAccessible* textAcc = static_cast<HyperTextAccessibleWrap*>(this);
   if (textAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -141,8 +119,6 @@ ia2AccessibleEditableText::replaceText(long aStartOffset, long aEndOffset,
   textAcc->InsertText(text, aStartOffset);
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP

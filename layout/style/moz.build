@@ -187,6 +187,7 @@ UNIFIED_SOURCES += [
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
     'nsMediaFeatures.cpp',
+    'nsMediaList.cpp',
     'nsNthIndexCache.cpp',
     'nsROCSSPrimitiveValue.cpp',
     'nsRuleData.cpp',

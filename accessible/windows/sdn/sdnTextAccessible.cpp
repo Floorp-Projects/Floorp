@@ -33,8 +33,6 @@ IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
 STDMETHODIMP
 sdnTextAccessible::get_domText(BSTR __RPC_FAR* aText)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aText)
     return E_INVALIDARG;
   *aText = nullptr;
@@ -51,8 +49,6 @@ sdnTextAccessible::get_domText(BSTR __RPC_FAR* aText)
 
   *aText = ::SysAllocStringLen(nodeValue.get(), nodeValue.Length());
   return *aText ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -63,8 +59,6 @@ sdnTextAccessible::get_clippedSubstringBounds(unsigned int aStartIndex,
                                               int __RPC_FAR* aWidth,
                                               int __RPC_FAR* aHeight)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   nscoord x = 0, y = 0, width = 0, height = 0;
   HRESULT rv = get_unclippedSubstringBounds(aStartIndex, aEndIndex,
                                             &x, &y, &width, &height);
@@ -86,8 +80,6 @@ sdnTextAccessible::get_clippedSubstringBounds(unsigned int aStartIndex,
   *aWidth = clippedRect.width;
   *aHeight = clippedRect.height;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -98,8 +90,6 @@ sdnTextAccessible::get_unclippedSubstringBounds(unsigned int aStartIndex,
                                                 int __RPC_FAR* aWidth,
                                                 int __RPC_FAR* aHeight)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aX || !aY || !aWidth || !aHeight)
     return E_INVALIDARG;
   *aX = *aY = *aWidth = *aHeight = 0;
@@ -135,16 +125,12 @@ sdnTextAccessible::get_unclippedSubstringBounds(unsigned int aStartIndex,
   *aHeight = presContext->AppUnitsToDevPixels(sum.height);
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnTextAccessible::scrollToSubstring(unsigned int aStartIndex,
                                      unsigned int aEndIndex)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (mAccessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -159,15 +145,11 @@ sdnTextAccessible::scrollToSubstring(unsigned int aStartIndex,
     nsCoreUtils::ScrollSubstringTo(mAccessible->GetFrame(), range,
                                    nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
   return GetHRESULT(rv);
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnTextAccessible::get_fontFamily(BSTR __RPC_FAR* aFontFamily)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aFontFamily)
     return E_INVALIDARG;
   *aFontFamily = nullptr;
@@ -189,8 +171,6 @@ sdnTextAccessible::get_fontFamily(BSTR __RPC_FAR* aFontFamily)
 
   *aFontFamily = ::SysAllocStringLen(name.get(), name.Length());
   return *aFontFamily ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 nsIFrame*

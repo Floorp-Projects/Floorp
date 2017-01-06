@@ -843,7 +843,7 @@ nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
 
   // Update the presentation in case the event handler modified the selection,
   // see bug 602231.
-  presShell->FlushPendingNotifications(Flush_Frames);
+  presShell->FlushPendingNotifications(FlushType::Frames);
   if (presShell->IsDestroying())
     return false;
 
