@@ -1351,7 +1351,6 @@ var gBrowserInit = {
     if (Win7Features)
       Win7Features.onOpenWindow();
 
-    PointerlockFsWarning.init();
     FullScreen.init();
     PointerLock.init();
 
