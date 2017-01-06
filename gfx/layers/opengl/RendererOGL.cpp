@@ -18,7 +18,7 @@ RendererOGL*
 RendererOGL::Create(already_AddRefed<RenderThread> aThread,
                     already_AddRefed<widget::CompositorWidget> aWidget,
                     WrRenderer* aWrRenderer,
-                    uint64_t aPipelineId,
+                    wr::WindowId aWindowId,
                     WebRenderBridgeParent* aBridge)
 {
   RefPtr<widget::CompositorWidget> widget = aWidget;
@@ -45,7 +45,7 @@ RendererOGL::Create(already_AddRefed<RenderThread> aThread,
   return new RendererOGL(thread.forget(),
                          gl.forget(),
                          widget.forget(),
-                         aPipelineId,
+                         aWindowId,
                          aWrRenderer,
                          aBridge);
 }
@@ -53,7 +53,7 @@ RendererOGL::Create(already_AddRefed<RenderThread> aThread,
 RendererOGL::RendererOGL(already_AddRefed<RenderThread> aThread,
                          already_AddRefed<gl::GLContext> aGL,
                          already_AddRefed<widget::CompositorWidget> aWidget,
-                         uint64_t aPipelineId,
+                         wr::WindowId aWindowId,
                          WrRenderer* aWrRenderer,
                          WebRenderBridgeParent* aBridge)
 : mThread(aThread)
@@ -61,7 +61,7 @@ RendererOGL::RendererOGL(already_AddRefed<RenderThread> aThread,
 , mWidget(aWidget)
 , mWrRenderer(aWrRenderer)
 , mBridge(aBridge)
-, mPipelineId(aPipelineId)
+, mWindowId(aWindowId)
 {
 }
 
@@ -79,6 +79,11 @@ RendererOGL::Update()
 bool
 RendererOGL::Render(uint64_t aTransactionId)
 {
+  // TODO: WebRender has the notion of epoch and gecko has transaction ids.
+  // They mostly mean the same thing but I'm not sure they are produced the same
+  // way. We need to merge the two or have a way to associate transaction ids with
+  // epochs to wire everything up properly.
+
   TimeStamp start = TimeStamp::Now();
 
   if (!mGL->MakeCurrent()) {
