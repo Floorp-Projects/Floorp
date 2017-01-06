@@ -7,6 +7,8 @@
 #ifndef MOZ_THREAD_INFO_H
 #define MOZ_THREAD_INFO_H
 
+#include "mozilla/UniquePtrExtensions.h"
+
 #include "platform.h"
 
 class ThreadInfo {
@@ -15,7 +17,7 @@ class ThreadInfo {
 
   virtual ~ThreadInfo();
 
-  const char* Name() const { return mName; }
+  const char* Name() const { return mName.get(); }
   int ThreadId() const { return mThreadId; }
 
   bool IsMainThread() const { return mIsMainThread; }
@@ -41,7 +43,7 @@ class ThreadInfo {
   bool CanInvokeJS() const;
 
  private:
-  char* mName;
+  mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
   const bool mIsMainThread;
   PseudoStack* mPseudoStack;
