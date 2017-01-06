@@ -13,6 +13,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Element.h"
 #include "nsString.h"
+#include "nsAttrValueInlines.h"
 #include "nsIMozBrowserFrame.h"
 
 using namespace mozilla;
