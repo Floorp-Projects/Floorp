@@ -10,6 +10,12 @@ extern "C" {
 bool is_in_compositor_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
+struct WrRenderer;
+void wr_renderer_update(WrRenderer* renderer);
+void wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height);
+void wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled);
+bool wr_renderer_current_epoch(WrRenderer* renderer, uint64_t pipeline_id, uint32_t* out_epoch);
+
 enum WRImageFormat {
     Invalid,
     A8,
