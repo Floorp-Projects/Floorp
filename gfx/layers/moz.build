@@ -384,6 +384,7 @@ UNIFIED_SOURCES += [
     'wr/WebRenderImageLayer.cpp',
     'wr/WebRenderLayerManager.cpp',
     'wr/WebRenderPaintedLayer.cpp',
+    'wr/WebRenderTextLayer.cpp',
 ]
 
 SOURCES += [

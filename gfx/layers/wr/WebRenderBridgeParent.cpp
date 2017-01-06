@@ -323,6 +323,27 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         }
         break;
       }
+      case WebRenderCommand::TOpDPPushText: {
+        const OpDPPushText& op = cmd.get_OpDPPushText();
+        const nsTArray<WRGlyphArray>& glyph_array = op.glyph_array();
+
+        for (size_t i = 0; i < glyph_array.Length(); i++) {
+          const nsTArray<WRGlyphInstance>& glyphs = glyph_array[i].glyphs;
+
+          wr_dp_push_text(mWRWindowState,
+                          mWRState,
+                          op.bounds(),
+                          op.clip(),
+                          glyph_array[i].color,
+                          glyphs.Elements(),
+                          glyphs.Length(),
+                          op.glyph_size(),
+                          op.font_buffer().mData,
+                          op.font_buffer_length());
+        }
+
+        break;
+      }
       default:
         NS_RUNTIMEABORT("not reached");
     }

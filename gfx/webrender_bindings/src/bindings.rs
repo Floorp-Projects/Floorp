@@ -7,7 +7,7 @@ use std::os::raw::{c_void, c_char};
 use gleam::gl;
 use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
-use webrender_traits::{Epoch, ColorF};
+use webrender_traits::{Epoch, ColorF, GlyphInstance};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
 use webrender_traits::{ExternalImageId};
 use webrender_traits::{DeviceUintSize};
@@ -15,6 +15,8 @@ use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender::renderer::{Renderer, RendererOptions};
 use webrender::renderer::{ExternalImage, ExternalImageHandler, ExternalImageSource};
 use std::sync::{Arc, Mutex, Condvar};
+use app_units::Au;
+
 extern crate webrender_traits;
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
@@ -572,4 +574,44 @@ pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
 {
     assert!( unsafe { is_in_compositor_thread() });
     window.renderer.set_profiler_enabled(enabled);
+}
+
+#[no_mangle]
+pub extern fn wr_dp_push_text(window: &mut WrWindowState,
+                              state: &mut WrState,
+                              bounds: WrRect,
+                              clip: WrRect,
+                              color: WrColor,
+                              glyphs: *mut GlyphInstance,
+                              glyph_count: u32,
+                              glyph_size: f32,
+                              font_buffer: *mut u8,
+                              buffer_size: usize)
+{
+    assert!( unsafe { is_in_compositor_thread() });
+
+    let font_slice = unsafe {
+        slice::from_raw_parts(font_buffer, buffer_size as usize)
+    };
+    let mut font_vector = Vec::new();
+    font_vector.extend_from_slice(font_slice);
+    let font_key = window.api.add_raw_font(font_vector);
+
+    let glyph_slice = unsafe {
+        slice::from_raw_parts(glyphs, glyph_count as usize)
+    };
+    let mut glyph_vector = Vec::new();
+    glyph_vector.extend_from_slice(&glyph_slice);
+
+    let colorf = ColorF::new(color.r, color.g, color.b, color.a);
+
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+
+    state.frame_builder.dl_builder.push_text(bounds.to_rect(),
+                                             clip_region,
+                                             glyph_vector,
+                                             font_key,
+                                             colorf,
+                                             Au::from_f32_px(glyph_size),
+                                             Au::from_px(0));
 }

@@ -6,6 +6,9 @@
 
 #ifndef WR_h
 #define WR_h
+
+#include "mozilla/layers/LayersMessages.h"
+
 extern "C" {
 bool is_in_compositor_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
@@ -36,6 +39,42 @@ struct WRColor {
   bool operator==(const WRColor& aRhs) const {
     return r == aRhs.r && g == aRhs.g &&
            b == aRhs.b && a == aRhs.a;
+  }
+};
+
+struct WRGlyphInstance {
+  uint32_t index;
+  float x;
+  float y;
+
+  bool operator==(const WRGlyphInstance& other) const {
+    return index == other.index &&
+           x == other.x &&
+           y == other.y;
+  }
+};
+
+// Note that the type is slightly different than
+// the definition in bindings.rs. WRGlyphInstance
+// versus GlyphInstance, but their layout is the same.
+// So we're really overlapping the types for the same memory.
+struct WRGlyphArray {
+  WRColor color;
+  nsTArray<WRGlyphInstance> glyphs;
+
+  bool operator==(const WRGlyphArray& other) const {
+    if (!(color == other.color) ||
+       (glyphs.Length() != other.glyphs.Length())) {
+      return false;
+    }
+
+    for (size_t i = 0; i < glyphs.Length(); i++) {
+      if (!(glyphs[i] == other.glyphs[i])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 };
 
@@ -236,6 +275,14 @@ WR_FUNC;
 
 WR_INLINE void
 wr_profiler_set_enabled(wrwindowstate* wrWindow, bool enabled)
+WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_text(wrwindowstate* wrWindow, wrstate* wrState,
+                WRRect bounds, WRRect clip,
+                WRColor color, const WRGlyphInstance* glyphs,
+                uint32_t glyph_count, float glyph_size,
+                uint8_t* font_buffer, uint32_t buffer_size)
 WR_FUNC;
 
 #undef WR_FUNC

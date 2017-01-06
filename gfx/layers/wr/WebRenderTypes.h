@@ -49,6 +49,11 @@ struct ByteBuffer
     }
   }
 
+  bool operator==(const ByteBuffer& other) const {
+    return mLength == other.mLength &&
+          !(memcmp(mData, other.mData, mLength));
+  }
+
   size_t mLength;
   uint8_t* mData;
   bool mOwned;
@@ -136,6 +141,66 @@ struct ParamTraits<WRColor>
         && ReadParam(aMsg, aIter, &aResult->g)
         && ReadParam(aMsg, aIter, &aResult->b)
         && ReadParam(aMsg, aIter, &aResult->a);
+  }
+};
+
+template<>
+struct ParamTraits<WRGlyphInstance>
+{
+  static void
+  Write(Message* aMsg, const WRGlyphInstance& aParam)
+  {
+    WriteParam(aMsg, aParam.index);
+    WriteParam(aMsg, aParam.x);
+    WriteParam(aMsg, aParam.y);
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WRGlyphInstance* aResult)
+  {
+    return ReadParam(aMsg, aIter, &aResult->index)
+        && ReadParam(aMsg, aIter, &aResult->x)
+        && ReadParam(aMsg, aIter, &aResult->y);
+  }
+};
+
+template<>
+struct ParamTraits<WRGlyphArray>
+{
+  static void
+  Write(Message* aMsg, const WRGlyphArray& aParam)
+  {
+    WriteParam(aMsg, aParam.color);
+    size_t length = aParam.glyphs.Length();
+
+    WriteParam(aMsg, length);
+
+    for (size_t i = 0; i < length; i++) {
+      WriteParam(aMsg, aParam.glyphs[i]);
+    }
+  }
+
+  static bool
+  Read(const Message* aMsg, PickleIterator* aIter, WRGlyphArray* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->color)) {
+      return false;
+    }
+
+    size_t length;
+    if (!ReadParam(aMsg, aIter, &length)) {
+      return false;
+    }
+
+    aResult->glyphs.SetLength(length);
+
+    for (size_t i = 0; i < length; i++) {
+      if (!ReadParam(aMsg, aIter, &aResult->glyphs[i])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 };
 
