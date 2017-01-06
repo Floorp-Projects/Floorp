@@ -7,7 +7,6 @@
 
 "use strict";
 
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { Filters } = require("./filter-predicates");
 const { L10N } = require("./l10n");
@@ -16,9 +15,7 @@ const { DOM } = require("devtools/client/shared/vendor/react");
 const { button } = DOM;
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Actions = require("./actions/index");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Chart",
-  "resource://devtools/client/shared/widgets/Chart.jsm");
+const { Chart } = require("devtools/client/shared/widgets/Chart");
 
 const REQUEST_TIME_DECIMALS = 2;
 const CONTENT_SIZE_DECIMALS = 2;
@@ -38,6 +35,7 @@ StatisticsView.prototype = {
    */
   initialize: function (store) {
     this.store = store;
+    this.Chart = Chart;
     this._backButton = $("#react-statistics-back-hook");
 
     let backStr = L10N.getStr("netmonitor.backButton");
@@ -149,7 +147,7 @@ StatisticsView.prototype = {
    * @param object
    *        An object containing all or some the following properties:
    *          - id: either "#primed-cache-chart" or "#empty-cache-chart"
-   *          - title/data/strings/totals/sorted: @see Chart.jsm for details
+   *          - title/data/strings/totals/sorted: @see Chart.js for details
    */
   _createChart: function ({ id, title, data, strings, totals, sorted }) {
     let container = $(id);
@@ -160,7 +158,7 @@ StatisticsView.prototype = {
     }
 
     // Create a new chart.
-    let chart = Chart.PieTable(document, {
+    let chart = this.Chart.PieTable(document, {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title: L10N.getStr(title),
       data: data,
@@ -180,7 +178,7 @@ StatisticsView.prototype = {
 
   /**
    * Sanitizes the data source used for creating charts, to follow the
-   * data format spec defined in Chart.jsm.
+   * data format spec defined in Chart.js.
    *
    * @param array items
    *        A collection of request items used as the data source for the chart.

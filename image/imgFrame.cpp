@@ -539,7 +539,8 @@ imgFrame::SurfaceForDrawing(bool               aDoPartialDecode,
 }
 
 bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
-                    SamplingFilter aSamplingFilter, uint32_t aImageFlags)
+                    SamplingFilter aSamplingFilter, uint32_t aImageFlags,
+                    float aOpacity)
 {
   PROFILER_LABEL("imgFrame", "Draw",
     js::ProfileEntry::Category::GRAPHICS);
@@ -581,7 +582,7 @@ bool imgFrame::Draw(gfxContext* aContext, const ImageRegion& aRegion,
   if (surfaceResult.IsValid()) {
     gfxUtils::DrawPixelSnapped(aContext, surfaceResult.mDrawable,
                                imageRect.Size(), region, surfaceResult.mFormat,
-                               aSamplingFilter, aImageFlags);
+                               aSamplingFilter, aImageFlags, aOpacity);
   }
   return true;
 }

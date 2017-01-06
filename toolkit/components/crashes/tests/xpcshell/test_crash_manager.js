@@ -5,7 +5,7 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-var bsp = Cu.import("resource://gre/modules/CrashManager.jsm", this);
+var {CrashStore, CrashManager} = Cu.import("resource://gre/modules/CrashManager.jsm", {});
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
@@ -362,7 +362,7 @@ add_task(function* test_high_water_mark() {
   }
 
   let count = yield m.aggregateEventsFiles();
-  Assert.equal(count, bsp.CrashStore.prototype.HIGH_WATER_DAILY_THRESHOLD + 1);
+  Assert.equal(count, CrashStore.prototype.HIGH_WATER_DAILY_THRESHOLD + 1);
 
   // Need to fetch again in case the first one was garbage collected.
   store = yield m._getStore();

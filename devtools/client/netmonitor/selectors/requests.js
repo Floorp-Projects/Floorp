@@ -93,6 +93,17 @@ const getDisplayedRequestsSummary = createSelector(
   }
 );
 
+const getSelectedRequest = createSelector(
+  state => state.requests,
+  requests => {
+    if (!requests.selectedId) {
+      return null;
+    }
+
+    return requests.requests.find(r => r.id === requests.selectedId);
+  }
+);
+
 function getRequestById(state, id) {
   return state.requests.requests.find(r => r.id === id);
 }
@@ -101,19 +112,11 @@ function getDisplayedRequestById(state, id) {
   return getDisplayedRequests(state).find(r => r.id === id);
 }
 
-function getSelectedRequest(state) {
-  if (!state.requests.selectedId) {
-    return null;
-  }
-
-  return getRequestById(state, state.requests.selectedId);
-}
-
 module.exports = {
-  getSortedRequests,
+  getDisplayedRequestById,
   getDisplayedRequests,
   getDisplayedRequestsSummary,
   getRequestById,
-  getDisplayedRequestById,
   getSelectedRequest,
+  getSortedRequests,
 };
