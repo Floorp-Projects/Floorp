@@ -12,10 +12,10 @@
 #ifndef nsRefreshDriver_h_
 #define nsRefreshDriver_h_
 
+#include "mozilla/FlushType.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Vector.h"
 #include "mozilla/WeakPtr.h"
-#include "mozFlushType.h"
 #include "nsTObserverArray.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
@@ -113,7 +113,7 @@ public:
    *     doesn't require current position data or isn't currently
    *     painting, and, correspondingly, which get notified when there
    *     is a flush during such suppression
-   * and it must be either Flush_Style, Flush_Layout, or Flush_Display.
+   * and it must be FlushType::Style, FlushType::Layout, or FlushType::Display.
    *
    * The refresh driver does NOT own a reference to these observers;
    * they must remove themselves before they are destroyed.
@@ -121,9 +121,9 @@ public:
    * The observer will be called even if there is no other activity.
    */
   bool AddRefreshObserver(nsARefreshObserver *aObserver,
-                          mozFlushType aFlushType);
+                          mozilla::FlushType aFlushType);
   bool RemoveRefreshObserver(nsARefreshObserver *aObserver,
-                             mozFlushType aFlushType);
+                             mozilla::FlushType aFlushType);
 
   /**
    * Add an observer that will be called after each refresh. The caller
@@ -288,7 +288,7 @@ public:
    * Check whether the given observer is an observer for the given flush type
    */
   bool IsRefreshObserver(nsARefreshObserver *aObserver,
-                         mozFlushType aFlushType);
+                         mozilla::FlushType aFlushType);
 #endif
 
   /**
@@ -399,7 +399,7 @@ private:
 
   uint32_t ObserverCount() const;
   uint32_t ImageRequestCount() const;
-  ObserverArray& ArrayFor(mozFlushType aFlushType);
+  ObserverArray& ArrayFor(mozilla::FlushType aFlushType);
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
 

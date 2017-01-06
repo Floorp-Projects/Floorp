@@ -24,8 +24,6 @@ IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(mAccessible)
 STDMETHODIMP
 sdnDocAccessible::get_URL(BSTR __RPC_FAR* aURL)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aURL)
     return E_INVALIDARG;
   *aURL = nullptr;
@@ -40,15 +38,11 @@ sdnDocAccessible::get_URL(BSTR __RPC_FAR* aURL)
 
   *aURL = ::SysAllocStringLen(URL.get(), URL.Length());
   return *aURL ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnDocAccessible::get_title(BSTR __RPC_FAR* aTitle)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aTitle)
     return E_INVALIDARG;
   *aTitle = nullptr;
@@ -60,15 +54,11 @@ sdnDocAccessible::get_title(BSTR __RPC_FAR* aTitle)
   mAccessible->Title(title);
   *aTitle = ::SysAllocStringLen(title.get(), title.Length());
   return *aTitle ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnDocAccessible::get_mimeType(BSTR __RPC_FAR* aMimeType)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aMimeType)
     return E_INVALIDARG;
   *aMimeType = nullptr;
@@ -83,15 +73,11 @@ sdnDocAccessible::get_mimeType(BSTR __RPC_FAR* aMimeType)
 
   *aMimeType = ::SysAllocStringLen(mimeType.get(), mimeType.Length());
   return *aMimeType ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnDocAccessible::get_docType(BSTR __RPC_FAR* aDocType)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aDocType)
     return E_INVALIDARG;
   *aDocType = nullptr;
@@ -106,16 +92,12 @@ sdnDocAccessible::get_docType(BSTR __RPC_FAR* aDocType)
 
   *aDocType = ::SysAllocStringLen(docType.get(), docType.Length());
   return *aDocType ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnDocAccessible::get_nameSpaceURIForID(short aNameSpaceID,
                                         BSTR __RPC_FAR* aNameSpaceURI)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aNameSpaceURI)
     return E_INVALIDARG;
   *aNameSpaceURI = nullptr;
@@ -138,20 +120,14 @@ sdnDocAccessible::get_nameSpaceURIForID(short aNameSpaceID,
                                        nameSpaceURI.Length());
 
   return *aNameSpaceURI ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 sdnDocAccessible::put_alternateViewMediaTypes(BSTR __RPC_FAR* aCommaSeparatedMediaTypes)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aCommaSeparatedMediaTypes)
     return E_INVALIDARG;
   *aCommaSeparatedMediaTypes = nullptr;
 
   return mAccessible->IsDefunct() ? CO_E_OBJNOTCONNECTED : E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }

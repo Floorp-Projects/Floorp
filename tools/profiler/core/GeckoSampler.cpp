@@ -41,6 +41,7 @@
 #include "PlatformMacros.h"
 #include "nsTArray.h"
 
+#include "mozilla/Preferences.h"
 #include "mozilla/ProfileGatherer.h"
 #endif
 
@@ -351,7 +352,18 @@ void GeckoSampler::StreamMetaJSCustomObject(SpliceableJSONWriter& aWriter)
   aWriter.DoubleProperty("interval", interval());
   aWriter.IntProperty("stackwalk", mUseStackWalk);
 
+#ifdef DEBUG
+  aWriter.IntProperty("debug", 1);
+#else
+  aWriter.IntProperty("debug", 0);
+#endif
+
 #ifndef SPS_STANDALONE
+  aWriter.IntProperty("gcpoison", JS::IsGCPoisoning() ? 1 : 0);
+
+  bool asyncStacks = Preferences::GetBool("javascript.options.asyncstack");
+  aWriter.IntProperty("asyncstack", asyncStacks);
+
   mozilla::TimeDuration delta = mozilla::TimeStamp::Now() - sStartTime;
   aWriter.DoubleProperty("startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
@@ -1288,7 +1300,7 @@ SyncProfile* GeckoSampler::GetBacktrace()
   TickSample sample;
   sample.threadProfile = profile;
 
-#if defined(HAVE_NATIVE_UNWIND)
+#if defined(HAVE_NATIVE_UNWIND) || defined(USE_LUL_STACKWALK)
 #if defined(XP_WIN) || defined(LINUX)
   tickcontext_t context;
   sample.PopulateContext(&context);

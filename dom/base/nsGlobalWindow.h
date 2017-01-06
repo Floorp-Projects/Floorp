@@ -35,7 +35,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "nsIPrincipal.h"
 #include "nsSize.h"
-#include "mozFlushType.h"
+#include "mozilla/FlushType.h"
 #include "prclist.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/StorageEvent.h"
@@ -1575,7 +1575,7 @@ public:
   // Inner windows only.
   nsresult FireHashchange(const nsAString &aOldURL, const nsAString &aNewURL);
 
-  void FlushPendingNotifications(mozFlushType aType);
+  void FlushPendingNotifications(mozilla::FlushType aType);
 
   // Outer windows only.
   void EnsureReflowFlushAndPaint();

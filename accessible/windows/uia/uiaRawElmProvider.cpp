@@ -28,24 +28,18 @@ STDMETHODIMP
 uiaRawElmProvider::GetObjectForChild(long aIdChild,
                                      __RPC__deref_out_opt IAccessibleEx** aAccEx)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aAccEx)
     return E_INVALIDARG;
 
   *aAccEx = nullptr;
 
   return mAcc->IsDefunct() ? CO_E_OBJNOTCONNECTED : S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
                                       __RPC__out long* aIdChild)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aAcc || !aIdChild)
     return E_INVALIDARG;
 
@@ -60,15 +54,11 @@ uiaRawElmProvider::GetIAccessiblePair(__RPC__deref_out_opt IAccessible** aAcc,
   copy.forget(aAcc);
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRuntimeIds)
     return E_INVALIDARG;
 
@@ -81,16 +71,12 @@ uiaRawElmProvider::GetRuntimeId(__RPC__deref_out_opt SAFEARRAY** aRuntimeIds)
     SafeArrayPutElement(*aRuntimeIds, &i, (void*)&(ids[i]));
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 uiaRawElmProvider::ConvertReturnedElement(__RPC__in_opt IRawElementProviderSimple* aRawElmProvider,
                                           __RPC__deref_out_opt IAccessibleEx** aAccEx)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRawElmProvider || !aAccEx)
     return E_INVALIDARG;
 
@@ -102,8 +88,6 @@ uiaRawElmProvider::ConvertReturnedElement(__RPC__in_opt IRawElementProviderSimpl
     *aAccEx = static_cast<IAccessibleEx*>(instancePtr);
 
   return hr;
-
-  A11Y_TRYBLOCK_END
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,39 +96,29 @@ uiaRawElmProvider::ConvertReturnedElement(__RPC__in_opt IRawElementProviderSimpl
 STDMETHODIMP
 uiaRawElmProvider::get_ProviderOptions(__RPC__out enum ProviderOptions* aOptions)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aOptions)
     return E_INVALIDARG;
 
   // This method is not used with IAccessibleEx implementations.
   *aOptions = ProviderOptions_ServerSideProvider;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 uiaRawElmProvider::GetPatternProvider(PATTERNID aPatternId,
                                       __RPC__deref_out_opt IUnknown** aPatternProvider)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aPatternProvider)
     return E_INVALIDARG;
 
   *aPatternProvider = nullptr;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
                                     __RPC__out VARIANT* aPropertyValue)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aPropertyValue)
     return E_INVALIDARG;
 
@@ -226,21 +200,15 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
   }
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 uiaRawElmProvider::get_HostRawElementProvider(__RPC__deref_out_opt IRawElementProviderSimple** aRawElmProvider)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRawElmProvider)
     return E_INVALIDARG;
 
   // This method is not used with IAccessibleEx implementations.
   *aRawElmProvider = nullptr;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }

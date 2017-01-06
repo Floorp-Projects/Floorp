@@ -63,8 +63,6 @@ ia2Accessible::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2Accessible::get_nRelations(long* aNRelations)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aNRelations)
     return E_INVALIDARG;
   *aNRelations = 0;
@@ -84,16 +82,12 @@ ia2Accessible::get_nRelations(long* aNRelations)
       (*aNRelations)++;
   }
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_relation(long aRelationIndex,
                             IAccessibleRelation** aRelation)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRelation || aRelationIndex < 0)
     return E_INVALIDARG;
   *aRelation = nullptr;
@@ -124,8 +118,6 @@ ia2Accessible::get_relation(long aRelationIndex,
   }
 
   return E_INVALIDARG;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -133,8 +125,6 @@ ia2Accessible::get_relations(long aMaxRelations,
                              IAccessibleRelation** aRelation,
                              long *aNRelations)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRelation || !aNRelations || aMaxRelations <= 0)
     return E_INVALIDARG;
   *aNRelations = 0;
@@ -160,15 +150,11 @@ ia2Accessible::get_relations(long aMaxRelations,
     }
   }
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::role(long* aRole)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRole)
     return E_INVALIDARG;
   *aRole = 0;
@@ -204,15 +190,11 @@ ia2Accessible::role(long* aRole)
   }
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::scrollTo(enum IA2ScrollType aScrollType)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -222,16 +204,12 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType)
                         aScrollType);
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType,
                               long aX, long aY)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
@@ -244,8 +222,6 @@ ia2Accessible::scrollToPoint(enum IA2CoordinateType aCoordType,
   acc->ScrollToPoint(geckoCoordType, aX, aY);
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -253,8 +229,6 @@ ia2Accessible::get_groupPosition(long* aGroupLevel,
                                  long* aSimilarItemsInGroup,
                                  long* aPositionInGroup)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aGroupLevel || !aSimilarItemsInGroup || !aPositionInGroup)
     return E_INVALIDARG;
 
@@ -279,15 +253,11 @@ ia2Accessible::get_groupPosition(long* aGroupLevel,
   *aPositionInGroup = groupPos.posInSet;
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_states(AccessibleStates* aStates)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aStates)
     return E_INVALIDARG;
   *aStates = 0;
@@ -347,50 +317,36 @@ ia2Accessible::get_states(AccessibleStates* aStates)
     *aStates |= IA2_STATE_PINNED;
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_extendedRole(BSTR* aExtendedRole)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aExtendedRole)
     return E_INVALIDARG;
 
   *aExtendedRole = nullptr;
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_localizedExtendedRole(BSTR* aLocalizedExtendedRole)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aLocalizedExtendedRole)
     return E_INVALIDARG;
 
   *aLocalizedExtendedRole = nullptr;
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_nExtendedStates(long* aNExtendedStates)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aNExtendedStates)
     return E_INVALIDARG;
 
   *aNExtendedStates = 0;
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -398,16 +354,12 @@ ia2Accessible::get_extendedStates(long aMaxExtendedStates,
                                   BSTR** aExtendedStates,
                                   long* aNExtendedStates)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aExtendedStates || !aNExtendedStates)
     return E_INVALIDARG;
 
   *aExtendedStates = nullptr;
   *aNExtendedStates = 0;
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -415,38 +367,28 @@ ia2Accessible::get_localizedExtendedStates(long aMaxLocalizedExtendedStates,
                                            BSTR** aLocalizedExtendedStates,
                                            long* aNLocalizedExtendedStates)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aLocalizedExtendedStates || !aNLocalizedExtendedStates)
     return E_INVALIDARG;
 
   *aLocalizedExtendedStates = nullptr;
   *aNLocalizedExtendedStates = 0;
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_uniqueID(long* aUniqueID)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aUniqueID)
     return E_INVALIDARG;
 
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   *aUniqueID = AccessibleWrap::GetChildIDFor(acc);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_windowHandle(HWND* aWindowHandle)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aWindowHandle)
     return E_INVALIDARG;
   *aWindowHandle = 0;
@@ -457,15 +399,11 @@ ia2Accessible::get_windowHandle(HWND* aWindowHandle)
 
   *aWindowHandle = AccessibleWrap::GetHWNDFor(acc);
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_indexInParent(long* aIndexInParent)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aIndexInParent)
     return E_INVALIDARG;
   *aIndexInParent = -1;
@@ -481,15 +419,11 @@ ia2Accessible::get_indexInParent(long* aIndexInParent)
     return S_FALSE;
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_locale(IA2Locale* aLocale)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aLocale)
     return E_INVALIDARG;
 
@@ -532,15 +466,11 @@ ia2Accessible::get_locale(IA2Locale* aLocale)
   // country abbreviations or if there are more than one subcode.
   aLocale->variant = ::SysAllocString(lang.get());
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_attributes(BSTR* aAttributes)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aAttributes)
     return E_INVALIDARG;
   *aAttributes = nullptr;
@@ -558,8 +488,6 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
 
   MOZ_ASSERT(!acc->IsProxy());
   return E_UNEXPECTED;
-
-  A11Y_TRYBLOCK_END
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -568,22 +496,16 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
 STDMETHODIMP
 ia2Accessible::get_attribute(BSTR name, VARIANT* aAttribute)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aAttribute)
     return E_INVALIDARG;
 
   return E_NOTIMPL;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
                                        long* aCaretOffset)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aAccessible || !aCaretOffset)
     return E_INVALIDARG;
 
@@ -611,8 +533,6 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
   (*aAccessible)->AddRef();
   *aCaretOffset = caretOffset;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
@@ -621,8 +541,6 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
                                          IUnknown*** aTargets,
                                          long* aNTargets)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aTargets || !aNTargets || aMaxTargets < 0)
     return E_INVALIDARG;
   *aNTargets = 0;
@@ -663,16 +581,12 @@ ia2Accessible::get_relationTargetsOfType(BSTR aType,
   }
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2Accessible::get_selectionRanges(IA2Range** aRanges,
                                    long *aNRanges)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aRanges || !aNRanges)
     return E_INVALIDARG;
 
@@ -714,8 +628,6 @@ ia2Accessible::get_selectionRanges(IA2Range** aRanges,
   }
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 

@@ -27,6 +27,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -48,7 +49,6 @@
 #include "prtime.h"
 #include "rdf.h"
 #include "nsContentUtils.h"
-#include "nsIDateTimeFormat.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsICollation.h"
 #include "nsCollationCID.h"
@@ -62,7 +62,6 @@ using namespace mozilla;
 //------------------------------------------------------------------------
 
 nsIRDFService* nsXULContentUtils::gRDF;
-nsIDateTimeFormat* nsXULContentUtils::gFormat;
 nsICollation *nsXULContentUtils::gCollation;
 
 extern LazyLogModule gXULTemplateLog;
@@ -102,11 +101,6 @@ nsXULContentUtils::Init()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-    gFormat = nsIDateTimeFormat::Create().take();
-    if (!gFormat) {
-        return NS_ERROR_FAILURE;
-    }
-
     return NS_OK;
 }
 
@@ -122,7 +116,6 @@ nsXULContentUtils::Finish()
 #undef XUL_RESOURCE
 #undef XUL_LITERAL
 
-    NS_IF_RELEASE(gFormat);
     NS_IF_RELEASE(gCollation);
 
     return NS_OK;
@@ -214,11 +207,11 @@ nsXULContentUtils::GetTextForNode(nsIRDFNode* aNode, nsAString& aResult)
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString str;
-        rv = gFormat->FormatPRTime(nullptr /* nsILocale* locale */,
-                                  kDateFormatShort,
-                                  kTimeFormatSeconds,
-                                  value,
-                                  str);
+        rv = DateTimeFormat::FormatPRTime(kDateFormatShort,
+                                          kTimeFormatSeconds,
+                                          value,
+                                          str);
+
         aResult.Assign(str);
 
         if (NS_FAILED(rv)) return rv;

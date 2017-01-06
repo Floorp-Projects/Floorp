@@ -935,7 +935,9 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
       MOZ_LOG(gImgLog,
               LogLevel::Error, ("imgRequest::PrepareForNewPart -- "
                                 "Content type unavailable from the channel\n"));
-      return result;
+      if (!aIsMultipart) {
+        return result;
+      }
     }
   }
 

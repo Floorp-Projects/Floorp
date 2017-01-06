@@ -165,7 +165,7 @@ gfxSVGGlyphsDocument::SetupPresentation()
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    mDocument->FlushPendingNotifications(Flush_Layout);
+    mDocument->FlushPendingNotifications(FlushType::Layout);
 
     nsSMILAnimationController* controller = mDocument->GetAnimationController();
     if (controller) {

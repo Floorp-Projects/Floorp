@@ -232,7 +232,7 @@ nsXBLResourceLoader::NotifyBoundElements()
     
       if (doc) {
         // Flush first to make sure we can get the frame for content
-        doc->FlushPendingNotifications(Flush_Frames);
+        doc->FlushPendingNotifications(FlushType::Frames);
 
         // If |content| is (in addition to having binding |mBinding|)
         // also a descendant of another element with binding |mBinding|,
@@ -259,7 +259,7 @@ nsXBLResourceLoader::NotifyBoundElements()
 
         // Flush again
         // XXXbz why is this needed?
-        doc->FlushPendingNotifications(Flush_ContentAndNotify);
+        doc->FlushPendingNotifications(FlushType::ContentAndNotify);
       }
     }
   }

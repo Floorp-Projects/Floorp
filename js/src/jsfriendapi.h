@@ -275,6 +275,14 @@ FormatStackDump(JSContext* cx, char* buf, bool showArgs, bool showLocals, bool s
 extern JS_FRIEND_API(bool)
 ForceLexicalInitialization(JSContext *cx, HandleObject obj);
 
+/**
+ * Whether we are poisoning unused/released data for error detection. Governed
+ * by the JS_GC_POISONING #ifdef as well as the $JSGC_DISABLE_POISONING
+ * environment variable.
+ */
+extern JS_FRIEND_API(int)
+IsGCPoisoning();
+
 } // namespace JS
 
 /**
