@@ -28,6 +28,7 @@ EXPORTS.harfbuzz += [
 SOURCES += [
     'hb-blob.cc', # error: use of undeclared identifier 'snprintf' (FreeBSD)
     'hb-common.cc', # error: use of undeclared identifier 'strdup'
+    'hb-ot-math.cc', # conflict with hb-ot-layout.cc
     'hb-ot-shape-complex-hangul.cc', # error: redefinition of enumerator 'NONE'
     'hb-ot-shape-complex-indic.cc', # error: redefinition of enumerator 'INIT'
     'hb-ot-shape-complex-use.cc', # error: redefinition of 'basic_features'

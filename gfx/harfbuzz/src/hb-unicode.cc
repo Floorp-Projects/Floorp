@@ -131,12 +131,12 @@ hb_unicode_funcs_get_default (void)
 #define HB_UNICODE_FUNCS_IMPLEMENT(set) \
   return hb_##set##_get_unicode_funcs ();
 
-#ifdef HAVE_GLIB
+#if defined(HAVE_UCDN)
+  HB_UNICODE_FUNCS_IMPLEMENT(ucdn)
+#elif defined(HAVE_GLIB)
   HB_UNICODE_FUNCS_IMPLEMENT(glib)
 #elif defined(HAVE_ICU) && defined(HAVE_ICU_BUILTIN)
   HB_UNICODE_FUNCS_IMPLEMENT(icu)
-#elif defined(HAVE_UCDN)
-  HB_UNICODE_FUNCS_IMPLEMENT(ucdn)
 #else
 #define HB_UNICODE_FUNCS_NIL 1
   HB_UNICODE_FUNCS_IMPLEMENT(nil)
