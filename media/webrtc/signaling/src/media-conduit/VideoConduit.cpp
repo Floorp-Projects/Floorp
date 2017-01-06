@@ -1114,8 +1114,8 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       mRecvStreamConfig.rtp.tmmbr != use_tmmbr ||
       mRecvStreamConfig.rtp.keyframe_method != kf_request_method ||
       (use_fec &&
-       mRecvStreamConfig.rtp.fec.ulpfec_payload_type != ulpfec_payload_type ||
-       mRecvStreamConfig.rtp.fec.red_payload_type != red_payload_type)) {
+       (mRecvStreamConfig.rtp.fec.ulpfec_payload_type != ulpfec_payload_type ||
+        mRecvStreamConfig.rtp.fec.red_payload_type != red_payload_type))) {
 
     condError = StopReceiving();
     if (condError != kMediaConduitNoError) {
@@ -1149,8 +1149,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
       }
     } while (ssrc == mRecvStreamConfig.rtp.remote_ssrc);
 
-    //DEBUG(pkerr)  mRecvStreamConfig.rtp.local_ssrc = ssrc;
-    mRecvStreamConfig.rtp.local_ssrc = 1;
+    mRecvStreamConfig.rtp.local_ssrc = ssrc;
 
     // XXX Copy over those that are the same and don't rebuild them
     mRecvCodecList.SwapElements(recv_codecs);
