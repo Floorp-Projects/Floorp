@@ -401,7 +401,6 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
   }
 
   JS_RequestInterruptCallback(mContext);
-  JS::RequestGCInterruptCallback(mContext);
 
   return true;
 }
@@ -1209,7 +1208,6 @@ mozilla::CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
 
   JSContext* cx = danger::GetJSContext();
   JS_AddInterruptCallback(cx, InterruptCallback);
-  JS::AddGCInterruptCallback(cx, InterruptCallback);
 
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
   HangMonitorChild* child = new HangMonitorChild(monitor);
