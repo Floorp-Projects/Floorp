@@ -173,7 +173,8 @@ var gGrid = {
     site.innerHTML =
       '<span class="newtab-sponsored">' + newTabString("sponsored.button") + '</span>' +
       '<a class="newtab-link">' +
-      '  <span class="newtab-thumbnail"/>' +
+      '  <span class="newtab-thumbnail placeholder"/>' +
+      '  <span class="newtab-thumbnail thumbnail"/>' +
       '  <span class="newtab-thumbnail enhanced-content"/>' +
       '  <span class="newtab-title"/>' +
       '</a>' +
