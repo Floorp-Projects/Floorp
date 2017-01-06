@@ -35,7 +35,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
 
 ThreadInfo::~ThreadInfo() {
   MOZ_COUNT_DTOR(ThreadInfo);
-  free(mName);
 
   if (mProfile)
     delete mProfile;
