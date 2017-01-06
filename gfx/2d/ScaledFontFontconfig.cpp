@@ -58,7 +58,7 @@ ScaledFontFontconfig::GetFontFileData(FontFileDataOutput aDataCallback, void* aB
     if (FT_Load_Sfnt_Table(face, 0, 0, nullptr, &length) == FT_Err_Ok) {
       uint8_t* fontData = new uint8_t[length];
       if (FT_Load_Sfnt_Table(face, 0, 0, fontData, &length) == FT_Err_Ok) {
-        aDataCallback(fontData, length, 0, mSize, aBaton);
+        aDataCallback(fontData, length, 0, mSize, 0, nullptr, aBaton);
         success = true;
       }
       delete[] fontData;

@@ -77,7 +77,7 @@ ScaledFontWin::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     }
   }
 
-  aDataCallback(fontData.get(), tableSize, index, mSize, aBaton);
+  aDataCallback(fontData.get(), tableSize, index, mSize, 0, nullptr, aBaton);
   return true;
 }
 
