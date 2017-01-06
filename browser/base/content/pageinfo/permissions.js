@@ -183,7 +183,9 @@ function onRadioClick(aPartId)
 function setRadioState(aPartId, aValue)
 {
   var radio = document.getElementById(aPartId + "#" + aValue);
-  radio.radioGroup.selectedItem = radio;
+  if (radio) {
+    radio.radioGroup.selectedItem = radio;
+  }
 }
 
 function initIndexedDBRow()
