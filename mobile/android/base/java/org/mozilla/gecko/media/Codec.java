@@ -198,7 +198,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         private void outputDummy(MediaCodec.BufferInfo info) {
             try {
-                if (DEBUG) { Log.d(LOGTAG, "return dummy sample"); }
+                if (DEBUG) Log.d(LOGTAG, "return dummy sample");
                 mCallbacks.onOutput(Sample.create(null, info, null));
             } catch (RemoteException e) {
                 // Dead recipient.
@@ -277,11 +277,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         if (mCodec != null) {
-            if (DEBUG) { Log.d(LOGTAG, "release existing codec: " + mCodec); }
+            if (DEBUG) Log.d(LOGTAG, "release existing codec: " + mCodec);
             releaseCodec();
         }
 
-        if (DEBUG) { Log.d(LOGTAG, "configure " + this); }
+        if (DEBUG) Log.d(LOGTAG, "configure " + this);
 
         MediaFormat fmt = format.asFormat();
         String codecName = getDecoderForFormat(fmt);
@@ -306,7 +306,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
                 mIsAdaptivePlaybackSupported = codec.isAdaptivePlaybackSupported(
                                                    fmt.getString(MediaFormat.KEY_MIME));
                 if (mIsAdaptivePlaybackSupported) {
-                    if (DEBUG) { Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported); }
+                    if (DEBUG) Log.d(LOGTAG, "codec supports adaptive playback  = " + mIsAdaptivePlaybackSupported);
                     // TODO: may need to find a way to not use hard code to decide the max w/h.
                     fmt.setInteger(MediaFormat.KEY_MAX_WIDTH, 1920);
                     fmt.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1080);
@@ -318,10 +318,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
             mInputProcessor = new InputProcessor();
             mOutputProcessor = new OutputProcessor();
             mSamplePool = new SamplePool(codecName);
-            if (DEBUG) { Log.d(LOGTAG, codec.toString() + " created"); }
+            if (DEBUG) Log.d(LOGTAG, codec.toString() + " created");
             return true;
         } catch (Exception e) {
-            if (DEBUG) { Log.d(LOGTAG, "FAIL: cannot create codec -- " + codecName); }
+            if (DEBUG) Log.d(LOGTAG, "FAIL: cannot create codec -- " + codecName);
             e.printStackTrace();
             return false;
         }
@@ -369,7 +369,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void start() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "start " + this); }
+        if (DEBUG) Log.d(LOGTAG, "start " + this);
         mFlushing = false;
         try {
             mCodec.start();
@@ -391,7 +391,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void stop() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "stop " + this); }
+        if (DEBUG) Log.d(LOGTAG, "stop " + this);
         try {
             mCodec.stop();
         } catch (Exception e) {
@@ -402,7 +402,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
     @Override
     public synchronized void flush() throws RemoteException {
         mFlushing = true;
-        if (DEBUG) { Log.d(LOGTAG, "flush " + this); }
+        if (DEBUG) Log.d(LOGTAG, "flush " + this);
         mInputProcessor.reset();
         mOutputProcessor.reset();
         try {
@@ -412,8 +412,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
         }
 
         mFlushing = false;
-        if (DEBUG) { Log.d(LOGTAG, "flushed " + this); }
-        mCodec.resumeReceivingInputs();
+        if (DEBUG) Log.d(LOGTAG, "flushed " + this);
     }
 
     @Override
@@ -433,7 +432,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
     @Override
     public synchronized void release() throws RemoteException {
-        if (DEBUG) { Log.d(LOGTAG, "release " + this); }
+        if (DEBUG) Log.d(LOGTAG, "release " + this);
         releaseCodec();
         mSamplePool.reset();
         mSamplePool = null;
