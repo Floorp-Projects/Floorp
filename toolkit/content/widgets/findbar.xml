@@ -565,18 +565,6 @@
         ]]></body>
       </method>
 
-      <method name="_maybeHighlightAll">
-        <body><![CDATA[
-          let word = this._findField.value;
-          // Bug 429723. Don't attempt to highlight ""
-          if (!this._highlightAll || !word)
-            return;
-
-          this.browser.finder.highlight(true, word,
-            this._findMode == this.FIND_LINKS);
-        ]]></body>
-      </method>
-
       <!--
         - Updates the case-sensitivity mode of the findbar and its UI.
         - @param [optional] aString
