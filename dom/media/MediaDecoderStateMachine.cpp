@@ -1503,6 +1503,8 @@ public:
   }
 
 private:
+  void DispatchDecodeTasksIfNeeded();
+
   TimeStamp mBufferingStart;
 
   // The maximum number of second we spend buffering when we are short on
@@ -2214,6 +2216,29 @@ NextFrameSeekingState::HandleVideoNotDecoded(const MediaResult& aError)
 
 void
 MediaDecoderStateMachine::
+BufferingState::DispatchDecodeTasksIfNeeded()
+{
+  const bool needToDecodeAudio =
+    mMaster->IsAudioDecoding() &&
+    ((!mMaster->mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
+     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedAudio()));
+
+  const bool needToDecodeVideo =
+    mMaster->IsVideoDecoding() &&
+    ((!mMaster->mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
+     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedVideo()));
+
+  if (needToDecodeAudio) {
+    mMaster->EnsureAudioDecodeTaskQueued();
+  }
+
+  if (needToDecodeVideo) {
+    mMaster->EnsureVideoDecodeTaskQueued();
+  }
+}
+
+void
+MediaDecoderStateMachine::
 BufferingState::Step()
 {
   TimeStamp now = TimeStamp::Now();
@@ -2232,11 +2257,11 @@ BufferingState::Step()
       SLOG("Buffering: wait %ds, timeout in %.3lfs",
            mBufferingWait, mBufferingWait - elapsed.ToSeconds());
       mMaster->ScheduleStateMachineIn(USECS_PER_S);
-      mMaster->DispatchDecodeTasksIfNeeded();
+      DispatchDecodeTasksIfNeeded();
       return;
     }
   } else if (mMaster->OutOfDecodedAudio() || mMaster->OutOfDecodedVideo()) {
-    mMaster->DispatchDecodeTasksIfNeeded();
+    DispatchDecodeTasksIfNeeded();
     MOZ_ASSERT(!mMaster->OutOfDecodedAudio() ||
                mMaster->IsRequestingAudioData() ||
                mMaster->IsWaitingAudioData());
