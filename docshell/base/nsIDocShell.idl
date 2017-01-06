@@ -1124,4 +1124,9 @@ interface nsIDocShell : nsIDocShellTreeItem
    * occuring in this docshell to be performed within a different docshell.
    */
   [infallible] readonly attribute boolean isOnlyToplevelInTabGroup;
+
+  /**
+   * Returns `true` if this docshell was created by a Large-Allocation load.
+   */
+  [infallible] readonly attribute boolean inFreshProcess;
 };

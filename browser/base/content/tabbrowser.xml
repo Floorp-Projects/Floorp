@@ -1688,7 +1688,8 @@
 
             // Abort if we're not going to change anything
             if (isRemote == aShouldBeRemote && !aOptions.newFrameloader && !aOptions.freshProcess &&
-                (!isRemote || aBrowser.getAttribute("remoteType") == aOptions.remoteType)) {
+                (!isRemote || aBrowser.getAttribute("remoteType") == aOptions.remoteType) &&
+                !aBrowser.frameLoader.isFreshProcess) {
               return false;
             }
 
@@ -1835,7 +1836,8 @@
               E10SUtils.getRemoteTypeForURI(aURL, gMultiProcessBrowser,
                                             currentRemoteType);
             if (currentRemoteType != aOptions.remoteType ||
-                aOptions.freshProcess || aOptions.newFrameloader) {
+                aOptions.freshProcess || aOptions.newFrameloader ||
+                aBrowser.frameLoader.isFreshProcess) {
               let remote = aOptions.remoteType != E10SUtils.NOT_REMOTE;
               return this.updateBrowserRemoteness(aBrowser, remote, aOptions);
             }

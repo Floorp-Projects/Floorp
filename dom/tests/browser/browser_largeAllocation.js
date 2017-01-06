@@ -153,7 +153,9 @@ add_task(function*() {
 
     let pid3 = yield getPID(aBrowser);
 
-    is(pid2, pid3);
+    // We should have been kicked out of the large-allocation process by the
+    // load, meaning we're back in the first process.
+    is(pid1, pid3); // XXX: This may be flakey in multiple content process e10s?
 
     yield ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.document.location = TEST_URI;
@@ -197,18 +199,26 @@ add_task(function*() {
 
     let pid3 = yield getPID(aBrowser);
 
-    is(pid2, pid3, "PIDs 2 and 3 should match");
+    // We should have been kicked out of the large-allocation process by the
+    // load, meaning we're back in the first process.
+    is(pid1, pid3, "PIDs 1 and 3 should match");
 
-    // Navigate back to the previous page, loading it from bfcache
+    stopExpectNoProcess();
+
+    epc = expectProcessCreated();
+
+    // Navigate back to the previous page. As the large alloation process was
+    // left, it won't be in bfcache and will have to be loaded fresh.
     yield ContentTask.spawn(aBrowser, TEST_URI, TEST_URI => {
       content.window.history.back();
     });
 
+    yield epc;
+
     let pid4 = yield getPID(aBrowser);
 
     isnot(pid1, pid4, "PID 4 shouldn't match PID 1");
-    is(pid2, pid4, "PID 4 should match PID 2");
+    isnot(pid2, pid4, "PID 4 shouldn't match PID 2");
 
-    stopExpectNoProcess();
   });
 });

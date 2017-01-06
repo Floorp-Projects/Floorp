@@ -3668,6 +3668,13 @@ nsFrameLoader::GetIsDead(bool* aIsDead)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsFrameLoader::GetIsFreshProcess(bool* aIsFreshProcess)
+{
+  *aIsFreshProcess = mFreshProcess;
+  return NS_OK;
+}
+
 nsIMessageSender*
 nsFrameLoader::GetProcessMessageManager() const
 {
