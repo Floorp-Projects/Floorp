@@ -351,10 +351,10 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
 {
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug, ("Top of VerifyCert\n"));
 
-  PR_ASSERT(cert);
-  PR_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
-  PR_ASSERT(usage == certificateUsageSSLServer || !keySizeStatus);
-  PR_ASSERT(usage == certificateUsageSSLServer || !sha1ModeResult);
+  MOZ_ASSERT(cert);
+  MOZ_ASSERT(usage == certificateUsageSSLServer || !(flags & FLAG_MUST_BE_EV));
+  MOZ_ASSERT(usage == certificateUsageSSLServer || !keySizeStatus);
+  MOZ_ASSERT(usage == certificateUsageSSLServer || !sha1ModeResult);
 
   if (evOidPolicy) {
     *evOidPolicy = SEC_OID_UNKNOWN;
@@ -834,10 +834,10 @@ CertVerifier::VerifySSLServerCert(const UniqueCERTCertificate& peerCert,
                  /*optional out*/ PinningTelemetryInfo* pinningTelemetryInfo,
                  /*optional out*/ CertificateTransparencyInfo* ctInfo)
 {
-  PR_ASSERT(peerCert);
-  // XXX: PR_ASSERT(pinarg)
-  PR_ASSERT(hostname);
-  PR_ASSERT(hostname[0]);
+  MOZ_ASSERT(peerCert);
+  // XXX: MOZ_ASSERT(pinarg);
+  MOZ_ASSERT(hostname);
+  MOZ_ASSERT(hostname[0]);
 
   if (evOidPolicy) {
     *evOidPolicy = SEC_OID_UNKNOWN;

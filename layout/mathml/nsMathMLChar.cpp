@@ -2056,7 +2056,7 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
 
   // Set color ...
   nscolor fgColor = styleContext->
-    GetVisitedDependentColor(eCSSProperty__webkit_text_fill_color);
+    GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
   if (aIsSelected) {
     // get color to use for selection from the look&feel object
     fgColor = LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForeground,

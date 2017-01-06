@@ -31,147 +31,147 @@ nsNSSCertificateFakeTransport::~nsNSSCertificateFakeTransport()
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetDbKey(nsACString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetDisplayName(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetEmailAddress(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetEmailAddresses(uint32_t*, char16_t***)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::ContainsEmailAddress(const nsAString&, bool*)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetCommonName(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetOrganization(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetIssuerCommonName(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetIssuerOrganization(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetIssuerOrganizationUnit(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetIssuer(nsIX509Cert**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetOrganizationalUnit(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetChain(nsIArray**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetSubjectName(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetIssuerName(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetSerialNumber(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetSha256Fingerprint(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetSha1Fingerprint(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetTokenName(nsAString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetRawDER(uint32_t*, uint8_t**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetValidity(nsIX509CertValidity**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -185,21 +185,21 @@ nsNSSCertificateFakeTransport::GetKeyUsages(nsAString&)
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetASN1Structure(nsIASN1Object**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::Equals(nsIX509Cert*, bool*)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetSha256SubjectPublicKeyInfoDigest(nsACString&)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -320,35 +320,35 @@ nsNSSCertificateFakeTransport::GetClassIDNoAlloc(nsCID* aClassIDNoAlloc)
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetCertType(unsigned int*)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetIsSelfSigned(bool*)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetIsBuiltInRoot(bool* aIsBuiltInRoot)
+nsNSSCertificateFakeTransport::GetIsBuiltInRoot(bool*)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetAllTokenNames(unsigned int*, char16_t***)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 CERTCertificate*
 nsNSSCertificateFakeTransport::GetCert()
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return nullptr;
 }
 
@@ -357,14 +357,14 @@ nsNSSCertificateFakeTransport::ExportAsCMS(unsigned int,
                                            unsigned int*,
                                            unsigned char**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertificateFakeTransport::MarkForPermDeletion()
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -389,35 +389,35 @@ nsNSSCertListFakeTransport::~nsNSSCertListFakeTransport()
 NS_IMETHODIMP
 nsNSSCertListFakeTransport::AddCert(nsIX509Cert* aCert)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertListFakeTransport::DeleteCert(nsIX509Cert* aCert)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 CERTCertList*
 nsNSSCertListFakeTransport::GetRawCertList()
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return nullptr;
 }
 
 NS_IMETHODIMP
 nsNSSCertListFakeTransport::GetEnumerator(nsISimpleEnumerator**)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsNSSCertListFakeTransport::Equals(nsIX509CertList*, bool*)
 {
-  NS_NOTREACHED("Unimplemented on content process");
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

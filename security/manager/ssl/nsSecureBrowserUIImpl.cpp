@@ -6,6 +6,7 @@
 #include "nsSecureBrowserUIImpl.h"
 
 #include "imgIRequest.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Logging.h"
 #include "nsCURILoader.h"
 #include "nsIAssociatedContentSecurity.h"
@@ -208,7 +209,8 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
     nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(docShell));
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    NS_ASSERTION(sameTypeRoot, "No document shell root tree item from document shell tree item!");
+    MOZ_ASSERT(sameTypeRoot,
+               "No document shell root tree item from document shell tree item!");
     docShell = do_QueryInterface(sameTypeRoot);
     if (!docShell)
       return NS_OK;
@@ -332,15 +334,11 @@ static uint32_t GetSecurityStateFromSecurityInfoAndRequest(nsISupports* info,
 
 
 //  nsIWebProgressListener
-NS_IMETHODIMP 
-nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
-                                        nsIRequest* aRequest,
-                                        int32_t aCurSelfProgress,
-                                        int32_t aMaxSelfProgress,
-                                        int32_t aCurTotalProgress,
-                                        int32_t aMaxTotalProgress)
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress*, nsIRequest*, int32_t,
+                                        int32_t, int32_t, int32_t)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("Should have been excluded in AddProgressListener()");
   return NS_OK;
 }
 
@@ -528,7 +526,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
   nsCOMPtr<mozIDOMWindowProxy> window(do_QueryReferent(mWindow));
-  NS_ASSERTION(window, "Window has gone away?!");
+  MOZ_ASSERT(window, "Window has gone away?!");
 
   if (!mIOService) {
     mIOService = do_GetService(NS_IOSERVICE_CONTRACTID);
@@ -595,11 +593,11 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
   nsCOMPtr<imgIRequest> imgRequest(do_QueryInterface(aRequest));
   if (imgRequest) {
-    NS_ASSERTION(!channel, "How did that happen, exactly?");
+    MOZ_ASSERT(!channel, "Request channel somehow not available");
     // for image requests, we get the URI from here
     imgRequest->GetURI(getter_AddRefs(uri));
   }
-  
+
   if (uri) {
     bool vs;
     if (NS_SUCCEEDED(uri->SchemeIs("javascript", &vs)) && vs) {
@@ -1080,7 +1078,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   }
   mCurrentURI = aLocation;
   window = do_QueryReferent(mWindow);
-  NS_ASSERTION(window, "Window has gone away?!");
+  MOZ_ASSERT(window, "Window has gone away?!");
 
   // When |aRequest| is null, basically we don't trust that document. But if
   // docshell insists that the document has not changed at all, we will reuse
@@ -1130,12 +1128,10 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress* aWebProgress,
-                                      nsIRequest* aRequest,
-                                      nsresult aStatus,
-                                      const char16_t* aMessage)
+nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress*, nsIRequest*, nsresult,
+                                      const char16_t*)
 {
-  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  MOZ_ASSERT_UNREACHABLE("Should have been excluded in AddProgressListener()");
   return NS_OK;
 }
 

@@ -14,17 +14,16 @@ Cu.import("resource://gre/modules/Log.jsm");
 const XPINSTALL_MIMETYPE   = "application/x-xpinstall";
 
 const MSG_INSTALL_ENABLED  = "WebInstallerIsInstallEnabled";
-const MSG_INSTALL_ADDONS   = "WebInstallerInstallAddonsFromWebpage";
+const MSG_INSTALL_ADDON    = "WebInstallerInstallAddonFromWebpage";
 const MSG_INSTALL_CALLBACK = "WebInstallerInstallCallback";
 
 
 var log = Log.repository.getLogger("AddonManager.InstallTrigger");
 log.level = Log.Level[Preferences.get("extensions.logging.enabled", false) ? "Warn" : "Trace"];
 
-function CallbackObject(id, callback, urls, mediator) {
+function CallbackObject(id, callback, mediator) {
   this.id = id;
   this.callback = callback;
-  this.urls = new Set(urls);
   this.callCallback = function(url, status) {
     try {
       this.callback(url, status);
@@ -32,9 +31,7 @@ function CallbackObject(id, callback, urls, mediator) {
       log.warn("InstallTrigger callback threw an exception: " + e);
     }
 
-    this.urls.delete(url);
-    if (this.urls.size == 0)
-      mediator._callbacks.delete(id);
+    mediator._callbacks.delete(id);
   };
 }
 
@@ -71,12 +68,12 @@ RemoteMediator.prototype = {
     return this.mm.sendSyncMessage(MSG_INSTALL_ENABLED, params)[0];
   },
 
-  install(installs, principal, callback, window) {
-    let callbackID = this._addCallback(callback, installs.uris);
+  install(install, principal, callback, window) {
+    let callbackID = this._addCallback(callback);
 
-    installs.mimetype = XPINSTALL_MIMETYPE;
-    installs.principalToInherit = principal;
-    installs.callbackID = callbackID;
+    install.mimetype = XPINSTALL_MIMETYPE;
+    install.principalToInherit = principal;
+    install.callbackID = callbackID;
 
     if (Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT) {
       // When running in the main process this might be a frame inside an
@@ -91,9 +88,9 @@ RemoteMediator.prototype = {
         let listener = Cc["@mozilla.org/addons/integration;1"].
                        getService(Ci.nsIMessageListener);
         return listener.wrappedJSObject.receiveMessage({
-          name: MSG_INSTALL_ADDONS,
+          name: MSG_INSTALL_ADDON,
           target: element,
-          data: installs,
+          data: install,
         });
       }
     }
@@ -105,15 +102,15 @@ RemoteMediator.prototype = {
                                .QueryInterface(Ci.nsIInterfaceRequestor)
                                .getInterface(Ci.nsIContentFrameMessageManager);
 
-    return messageManager.sendSyncMessage(MSG_INSTALL_ADDONS, installs)[0];
+    return messageManager.sendSyncMessage(MSG_INSTALL_ADDON, install)[0];
   },
 
-  _addCallback(callback, urls) {
+  _addCallback(callback) {
     if (!callback || typeof callback != "function")
       return -1;
 
     let callbackID = this._windowID + "-" + ++this._lastCallbackID;
-    let callbackObject = new CallbackObject(callbackID, callback, urls, this);
+    let callbackObject = new CallbackObject(callbackID, callback, this);
     this._callbacks.set(callbackID, callbackObject);
     return callbackID;
   },
@@ -161,40 +158,39 @@ InstallTrigger.prototype = {
   },
 
   install(installs, callback) {
-    let installData = {
-      uris: [],
-      hashes: [],
-      names: [],
-      icons: [],
-    };
-
-    for (let name of Object.keys(installs)) {
-      let item = installs[name];
-      if (typeof item === "string") {
-        item = { URL: item };
-      }
-      if (!item.URL) {
-        throw new this._window.Error("Missing URL property for '" + name + "'");
-      }
-
-      let url = this._resolveURL(item.URL);
-      if (!this._checkLoadURIFromScript(url)) {
-        throw new this._window.Error("Insufficient permissions to install: " + url.spec);
-      }
-
-      let iconUrl = null;
-      if (item.IconURL) {
-        iconUrl = this._resolveURL(item.IconURL);
-        if (!this._checkLoadURIFromScript(iconUrl)) {
-          iconUrl = null; // If page can't load the icon, just ignore it
-        }
-      }
-
-      installData.uris.push(url.spec);
-      installData.hashes.push(item.Hash || null);
-      installData.names.push(name);
-      installData.icons.push(iconUrl ? iconUrl.spec : null);
+    let keys = Object.keys(installs);
+    if (keys.length > 1) {
+      throw new this._window.Error("Only one XPI may be installed at a time");
     }
+
+    let item = installs[keys[0]];
+
+    if (typeof item === "string") {
+      item = { URL: item };
+    }
+    if (!item.URL) {
+      throw new this._window.Error("Missing URL property for '" + name + "'");
+    }
+
+    let url = this._resolveURL(item.URL);
+    if (!this._checkLoadURIFromScript(url)) {
+      throw new this._window.Error("Insufficient permissions to install: " + url.spec);
+    }
+
+    let iconUrl = null;
+    if (item.IconURL) {
+      iconUrl = this._resolveURL(item.IconURL);
+      if (!this._checkLoadURIFromScript(iconUrl)) {
+        iconUrl = null; // If page can't load the icon, just ignore it
+      }
+    }
+
+    let installData = {
+      uri: url.spec,
+      hash: item.Hash || null,
+      name: item.name,
+      icon: iconUrl ? iconUrl.spec : null,
+    };
 
     return this._mediator.install(installData, this._principal, callback, this._window);
   },

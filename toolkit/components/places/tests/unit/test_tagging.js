@@ -119,13 +119,13 @@ function run_test() {
   let curChildCount = tagRoot.childCount;
 
   try {
-    tagssvc.tagURI(uri1, [, "tagSparse"]);
+    tagssvc.tagURI(uri1, [undefined, "tagSparse"]);
     do_check_eq(tagRoot.childCount, curChildCount + 1);
   } catch (ex) {
     do_throw("Passing a sparse array should not throw");
   }
   try {
-    tagssvc.untagURI(uri1, [, "tagSparse"]);
+    tagssvc.untagURI(uri1, [undefined, "tagSparse"]);
     do_check_eq(tagRoot.childCount, curChildCount);
   } catch (ex) {
     do_throw("Passing a sparse array should not throw");

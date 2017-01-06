@@ -470,46 +470,6 @@ function test_restartless() {
   });
 },
 
-function test_multiple() {
-  return Task.spawn(function* () {
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
-
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Unsigned XPI": "amosigned.xpi",
-      "Restartless XPI": "restartless.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    let panel = yield progressPromise;
-    let installDialog = yield dialogPromise;
-
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    yield notificationPromise;
-
-    let notification = panel.childNodes[0];
-    is(notification.button.label, "Restart Now", "Should have seen the right button");
-    is(notification.getAttribute("label"),
-       "2 add-ons will be installed after you restart " + gApp + ".",
-       "Should have seen the right message");
-
-    let installs = yield getInstalls();
-    is(installs.length, 1, "Should be one pending install");
-    installs[0].cancel();
-
-    let addon = yield new Promise(resolve => {
-      AddonManager.getAddonByID("restartless-xpi@tests.mozilla.org", function(result) {
-        resolve(result);
-      });
-    });
-    addon.uninstall();
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    yield removeTab();
-  });
-},
-
 function test_sequential() {
   return Task.spawn(function* () {
     // This test is only relevant if using the new doorhanger UI
@@ -583,64 +543,6 @@ function test_sequential() {
     cancelInstallDialog(installDialog);
     yield closePromise;
     yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  });
-},
-
-function test_someUnverified() {
-  return Task.spawn(function* () {
-    // This test is only relevant if using the new doorhanger UI and allowing
-    // unsigned add-ons
-    if (!Preferences.get("xpinstall.customConfirmationUI", false) ||
-        Preferences.get("xpinstall.signatures.required", true) ||
-        REQUIRE_SIGNING) {
-      return;
-    }
-    let pm = Services.perms;
-    pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
-
-    let progressPromise = waitForProgressNotification();
-    let dialogPromise = waitForInstallDialog();
-    let triggers = encodeURIComponent(JSON.stringify({
-      "Extension XPI": "restartless-unsigned.xpi",
-      "Theme XPI": "theme.xpi"
-    }));
-    BrowserTestUtils.openNewForegroundTab(gBrowser, TESTROOT + "installtrigger.html?" + triggers);
-    yield progressPromise;
-    let installDialog = yield dialogPromise;
-
-    let notification = document.getElementById("addon-install-confirmation-notification");
-    let message = notification.getAttribute("label");
-    is(message, "Caution: This site would like to install 2 add-ons in " + gApp +
-       ", some of which are unverified. Proceed at your own risk.",
-       "Should see the right message");
-
-    let container = document.getElementById("addon-install-confirmation-content");
-    is(container.childNodes.length, 2, "Should be two items listed");
-    is(container.childNodes[0].firstChild.getAttribute("value"), "XPI Test", "Should have the right add-on");
-    is(container.childNodes[0].lastChild.getAttribute("class"),
-       "addon-install-confirmation-unsigned", "Should have the unverified marker");
-    is(container.childNodes[1].firstChild.getAttribute("value"), "Theme Test", "Should have the right add-on");
-    is(container.childNodes[1].childNodes.length, 1, "Shouldn't have the unverified marker");
-
-    let notificationPromise = waitForNotification("addon-install-restart");
-    acceptInstallDialog(installDialog);
-    yield notificationPromise;
-
-    let [addon, theme] = yield new Promise(resolve => {
-      AddonManager.getAddonsByIDs(["restartless-xpi@tests.mozilla.org",
-                                  "theme-xpi@tests.mozilla.org"],
-                                  function(addons) {
-        resolve(addons);
-      });
-    });
-    addon.uninstall();
-    // Installing a new theme tries to switch to it, switch back to the
-    // default theme.
-    theme.userDisabled = true;
-    theme.uninstall();
-
-    Services.perms.remove(makeURI("http://example.com/"), "install");
-    yield removeTab();
   });
 },
 

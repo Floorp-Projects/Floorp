@@ -116,7 +116,7 @@
                       preference="engine.history"/>
           </richlistitem>
           <richlistitem>
-            <checkbox label="&engine.tabs.label;"
+            <checkbox label="&engine.tabs.label2;"
                       accesskey="&engine.tabs.accesskey;"
                       preference="engine.tabs"/>
           </richlistitem>
@@ -254,8 +254,8 @@
                   </description>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="verifyFxaAccount" accesskey="&verify.accesskey;">&verify.label;</button>
-                  <button id="unverifiedUnlinkFxaAccount" accesskey="&forget.accesskey;">&forget.label;</button>
+                  <button id="verifyFxaAccount" label="&verify.label;" accesskey="&verify.accesskey;"></button>
+                  <button id="unverifiedUnlinkFxaAccount" label="&forget.label;" accesskey="&forget.accesskey;"></button>
                 </hbox>
               </vbox>
             </hbox>
@@ -275,8 +275,8 @@
                   </description>
                 </hbox>
                 <hbox class="fxaAccountBoxButtons">
-                  <button id="rejectReSignIn" accessky="&signIn.accesskey;">&signIn.label;</button>
-                  <button id="rejectUnlinkFxaAccount" accesskey="&forget.accesskey;">&forget.label;</button>
+                  <button id="rejectReSignIn" label="&signIn.label;" accesskey="&signIn.accesskey;"></button>
+                  <button id="rejectUnlinkFxaAccount" label="&forget.label;" accesskey="&forget.accesskey;"></button>
                 </hbox>
               </vbox>
             </hbox>
@@ -286,7 +286,7 @@
           <caption><label>&signedIn.engines.label;</label></caption>
           <hbox id="fxaSyncEngines">
             <vbox align="start" flex="1">
-              <checkbox label="&engine.tabs.label;"
+              <checkbox label="&engine.tabs.label2;"
                         accesskey="&engine.tabs.accesskey;"
                         preference="engine.tabs"/>
               <checkbox label="&engine.bookmarks.label;"

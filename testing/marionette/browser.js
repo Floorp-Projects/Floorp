@@ -4,16 +4,12 @@
 
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
-
-Cu.import("resource://gre/modules/Log.jsm");
+const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
 Cu.import("chrome://marionette/content/frame.js");
 
 this.EXPORTED_SYMBOLS = ["browser"];
-
-const logger = Log.repository.getLogger("Marionette");
 
 this.browser = {};
 
@@ -32,18 +28,30 @@ const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
  */
 browser.Context = class {
 
+  /**
+   * @param {<xul:browser>} win
+   *     Frame that is expected to contain the view of the web document.
+   * @param {GeckoDriver} driver
+   *     Reference to driver instance.
+   */
   constructor(win, driver) {
-    this.browser = undefined;
     this.window = win;
     this.driver = driver;
-    this.knownFrames = [];
-    this.startPage = "about:blank";
-    // used in B2G to identify the homescreen content page
-    this.mainContentId = null;
-    // used to set curFrameId upon new session
-    this.newSession = true;
-    this.seenEls = new element.Store();
+
+    // In Firefox this is <xul:tabbrowser> (not <xul:browser>!)
+    // and BrowserApp in Fennec
+    this.browser = undefined;
     this.setBrowser(win);
+
+    this.knownFrames = [];
+
+    // Used in B2G to identify the homescreen content page
+    this.mainContentId = null;
+
+    // Used to set curFrameId upon new session
+    this.newSession = true;
+
+    this.seenEls = new element.Store();
 
     // A reference to the tab corresponding to the current window handle, if any.
     // Specifically, this.tab refers to the last tab that Marionette switched
@@ -55,7 +63,8 @@ browser.Context = class {
     this.tab = null;
     this.pendingCommands = [];
 
-    // we should have one FM per BO so that we can handle modals in each Browser
+    // We should have one frame.Manager per browser.Context so that we
+    // can handle modals in each <xul:browser>.
     this.frameManager = new frame.Manager(driver);
     this.frameRegsPending = 0;
 
@@ -68,6 +77,13 @@ browser.Context = class {
     this._hasRemotenessChange = false;
   }
 
+  /**
+   * Get the <xul:browser> for the current tab in this tab browser.
+   *
+   * @return {<xul:browser>}
+   *     Browser linked to |this.tab| or the tab browser's
+   *     |selectedBrowser|.
+   */
   get browserForTab() {
     if (this.browser.getBrowserForTab) {
       return this.browser.getBrowserForTab(this.tab);

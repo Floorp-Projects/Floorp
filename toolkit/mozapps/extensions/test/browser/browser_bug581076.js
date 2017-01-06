@@ -85,7 +85,6 @@ add_test(function() {
 });
 
 add_test(function() {
-    debugger;
   info("Searching remotely - more results than cap");
   Services.prefs.setIntPref(PREF_GETADDONS_MAXRESULTS, 3);
   search(true, function() {

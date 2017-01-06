@@ -407,7 +407,8 @@ interface imgIContainer : nsISupports
        in uint32_t aWhichFrame,
        in SamplingFilter aSamplingFilter,
        [const] in MaybeSVGImageContext aSVGContext,
-       in uint32_t aFlags);
+       in uint32_t aFlags,
+       in float aOpacity);
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that

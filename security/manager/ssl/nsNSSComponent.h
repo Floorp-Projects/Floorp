@@ -9,6 +9,7 @@
 
 #include "ScopedNSSTypes.h"
 #include "SharedCertVerifier.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"

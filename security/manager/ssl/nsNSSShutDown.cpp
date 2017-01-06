@@ -49,7 +49,7 @@ nsNSSShutDownList::nsNSSShutDownList()
 
 nsNSSShutDownList::~nsNSSShutDownList()
 {
-  PR_ASSERT(this == singleton);
+  MOZ_ASSERT(this == singleton);
   singleton = nullptr;
 }
 
@@ -60,7 +60,7 @@ void nsNSSShutDownList::remember(nsNSSShutDownObject *o)
     return;
   }
 
-  PR_ASSERT(o);
+  MOZ_ASSERT(o);
   singleton->mObjects.Add(o, fallible);
 }
 
@@ -71,7 +71,7 @@ void nsNSSShutDownList::forget(nsNSSShutDownObject *o)
     return;
   }
 
-  PR_ASSERT(o);
+  MOZ_ASSERT(o);
   singleton->mObjects.Remove(o);
 }
 
@@ -82,7 +82,7 @@ void nsNSSShutDownList::remember(nsOnPK11LogoutCancelObject *o)
     return;
   }
 
-  PR_ASSERT(o);
+  MOZ_ASSERT(o);
   singleton->mPK11LogoutCancelObjects.Add(o, fallible);
 }
 
@@ -93,7 +93,7 @@ void nsNSSShutDownList::forget(nsOnPK11LogoutCancelObject *o)
     return;
   }
 
-  PR_ASSERT(o);
+  MOZ_ASSERT(o);
   singleton->mPK11LogoutCancelObjects.Remove(o);
 }
 

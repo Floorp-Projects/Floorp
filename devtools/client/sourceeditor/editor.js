@@ -257,10 +257,12 @@ Editor.prototype = {
     let cm = editors.get(this);
 
     if (!env) {
-      env = el.ownerDocument.createElementNS(XUL_NS, "iframe");
-    }
+      env = el.ownerDocument.createElementNS(el.namespaceURI, "iframe");
 
-    env.flex = 1;
+      if (el.namespaceURI === XUL_NS) {
+        env.flex = 1;
+      }
+    }
 
     if (cm) {
       throw new Error("You can append an editor only once.");
