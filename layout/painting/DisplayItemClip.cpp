@@ -203,49 +203,49 @@ DisplayItemClip::IsRectClippedByRoundedCorner(const nsRect& aRect) const
        i < iEnd; ++i) {
     const RoundedRect &rr = mRoundedClipRects[i];
     // top left
-    if (rect.x < rr.mRect.x + rr.mRadii[NS_CORNER_TOP_LEFT_X] &&
-        rect.y < rr.mRect.y + rr.mRadii[NS_CORNER_TOP_LEFT_Y]) {
-      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_TOP_LEFT_X],
-                           rr.mRect.x + rr.mRadii[NS_CORNER_TOP_LEFT_X],
+    if (rect.x < rr.mRect.x + rr.mRadii[eCornerTopLeftX] &&
+        rect.y < rr.mRect.y + rr.mRadii[eCornerTopLeftY]) {
+      if (!IsInsideEllipse(rr.mRadii[eCornerTopLeftX],
+                           rr.mRect.x + rr.mRadii[eCornerTopLeftX],
                            rect.x,
-                           rr.mRadii[NS_CORNER_TOP_LEFT_Y],
-                           rr.mRect.y + rr.mRadii[NS_CORNER_TOP_LEFT_Y],
+                           rr.mRadii[eCornerTopLeftY],
+                           rr.mRect.y + rr.mRadii[eCornerTopLeftY],
                            rect.y)) {
         return true;
       }
     }
     // top right
-    if (rect.XMost() > rr.mRect.XMost() - rr.mRadii[NS_CORNER_TOP_RIGHT_X] &&
-        rect.y < rr.mRect.y + rr.mRadii[NS_CORNER_TOP_RIGHT_Y]) {
-      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_TOP_RIGHT_X],
-                           rr.mRect.XMost() - rr.mRadii[NS_CORNER_TOP_RIGHT_X],
+    if (rect.XMost() > rr.mRect.XMost() - rr.mRadii[eCornerTopRightX] &&
+        rect.y < rr.mRect.y + rr.mRadii[eCornerTopRightY]) {
+      if (!IsInsideEllipse(rr.mRadii[eCornerTopRightX],
+                           rr.mRect.XMost() - rr.mRadii[eCornerTopRightX],
                            rect.XMost(),
-                           rr.mRadii[NS_CORNER_TOP_RIGHT_Y],
-                           rr.mRect.y + rr.mRadii[NS_CORNER_TOP_RIGHT_Y],
+                           rr.mRadii[eCornerTopRightY],
+                           rr.mRect.y + rr.mRadii[eCornerTopRightY],
                            rect.y)) {
         return true;
       }
     }
     // bottom left
-    if (rect.x < rr.mRect.x + rr.mRadii[NS_CORNER_BOTTOM_LEFT_X] &&
-        rect.YMost() > rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_LEFT_Y]) {
-      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_BOTTOM_LEFT_X],
-                           rr.mRect.x + rr.mRadii[NS_CORNER_BOTTOM_LEFT_X],
+    if (rect.x < rr.mRect.x + rr.mRadii[eCornerBottomLeftX] &&
+        rect.YMost() > rr.mRect.YMost() - rr.mRadii[eCornerBottomLeftY]) {
+      if (!IsInsideEllipse(rr.mRadii[eCornerBottomLeftX],
+                           rr.mRect.x + rr.mRadii[eCornerBottomLeftX],
                            rect.x,
-                           rr.mRadii[NS_CORNER_BOTTOM_LEFT_Y],
-                           rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_LEFT_Y],
+                           rr.mRadii[eCornerBottomLeftY],
+                           rr.mRect.YMost() - rr.mRadii[eCornerBottomLeftY],
                            rect.YMost())) {
         return true;
       }
     }
     // bottom right
-    if (rect.XMost() > rr.mRect.XMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_X] &&
-        rect.YMost() > rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_Y]) {
-      if (!IsInsideEllipse(rr.mRadii[NS_CORNER_BOTTOM_RIGHT_X],
-                           rr.mRect.XMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_X],
+    if (rect.XMost() > rr.mRect.XMost() - rr.mRadii[eCornerBottomRightX] &&
+        rect.YMost() > rr.mRect.YMost() - rr.mRadii[eCornerBottomRightY]) {
+      if (!IsInsideEllipse(rr.mRadii[eCornerBottomRightX],
+                           rr.mRect.XMost() - rr.mRadii[eCornerBottomRightX],
                            rect.XMost(),
-                           rr.mRadii[NS_CORNER_BOTTOM_RIGHT_Y],
-                           rr.mRect.YMost() - rr.mRadii[NS_CORNER_BOTTOM_RIGHT_Y],
+                           rr.mRadii[eCornerBottomRightY],
+                           rr.mRect.YMost() - rr.mRadii[eCornerBottomRightY],
                            rect.YMost())) {
         return true;
       }

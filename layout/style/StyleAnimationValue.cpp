@@ -4210,9 +4210,9 @@ StyleClipBasicShapeToCSSArray(const StyleClipPath& aClipPath,
       const nsStyleCorners& radii = shape->GetRadius();
       NS_FOR_CSS_FULL_CORNERS(corner) {
         auto pair = MakeUnique<nsCSSValuePair>();
-        if (!StyleCoordToCSSValue(radii.Get(NS_FULL_TO_HALF_CORNER(corner, false)),
+        if (!StyleCoordToCSSValue(radii.Get(FullToHalfCorner(corner, false)),
                                   pair->mXValue) ||
-            !StyleCoordToCSSValue(radii.Get(NS_FULL_TO_HALF_CORNER(corner, true)),
+            !StyleCoordToCSSValue(radii.Get(FullToHalfCorner(corner, true)),
                                   pair->mYValue)) {
           return false;
         }
@@ -4680,23 +4680,23 @@ StyleAnimationValue::ExtractComputedValue(nsCSSPropertyID aProperty,
     case eStyleAnimType_Corner_BottomRight:
     case eStyleAnimType_Corner_BottomLeft: {
       static_assert(
-       NS_CORNER_TOP_LEFT     == eStyleAnimType_Corner_TopLeft -
-                                 eStyleAnimType_Corner_TopLeft        &&
-       NS_CORNER_TOP_RIGHT    == eStyleAnimType_Corner_TopRight -
-                                 eStyleAnimType_Corner_TopLeft        &&
-       NS_CORNER_BOTTOM_RIGHT == eStyleAnimType_Corner_BottomRight -
-                                 eStyleAnimType_Corner_TopLeft        &&
-       NS_CORNER_BOTTOM_LEFT  == eStyleAnimType_Corner_BottomLeft -
-                                 eStyleAnimType_Corner_TopLeft,
+       eCornerTopLeft     == eStyleAnimType_Corner_TopLeft -
+                             eStyleAnimType_Corner_TopLeft        &&
+       eCornerTopRight    == eStyleAnimType_Corner_TopRight -
+                             eStyleAnimType_Corner_TopLeft        &&
+       eCornerBottomRight == eStyleAnimType_Corner_BottomRight -
+                             eStyleAnimType_Corner_TopLeft        &&
+       eCornerBottomLeft  == eStyleAnimType_Corner_BottomLeft -
+                             eStyleAnimType_Corner_TopLeft,
        "box corner constants out of sync with animation corner constants");
 
       const nsStyleCorners& corners =
         StyleDataAtOffset<nsStyleCorners>(styleStruct, ssOffset);
-      uint8_t fullCorner = animType - eStyleAnimType_Corner_TopLeft;
+      Corner fullCorner = Corner(animType - eStyleAnimType_Corner_TopLeft);
       const nsStyleCoord &horiz =
-        corners.Get(NS_FULL_TO_HALF_CORNER(fullCorner, false));
+        corners.Get(FullToHalfCorner(fullCorner, false));
       const nsStyleCoord &vert =
-        corners.Get(NS_FULL_TO_HALF_CORNER(fullCorner, true));
+        corners.Get(FullToHalfCorner(fullCorner, true));
       nsAutoPtr<nsCSSValuePair> pair(new nsCSSValuePair);
       if (!StyleCoordToCSSValue(horiz, pair->mXValue) ||
           !StyleCoordToCSSValue(vert, pair->mYValue)) {

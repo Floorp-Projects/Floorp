@@ -26,6 +26,10 @@
   margin-inline-end: 2em;
 }
 
+#headers:-moz-locale-dir(rtl) {
+  background-position-x: 100%;
+}
+
 #tabsListHeading {
   font-size: 140%;
   font-weight: bold;

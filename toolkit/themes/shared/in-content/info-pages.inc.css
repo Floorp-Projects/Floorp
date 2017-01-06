@@ -40,7 +40,8 @@ body {
   font-size: 2.5em;
 }
 
-.title:-moz-locale-dir(rtl) {
+.title:-moz-locale-dir(rtl),
+.title:dir(rtl) {
   background-position: right 0;
 }
 
