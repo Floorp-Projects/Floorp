@@ -4861,11 +4861,6 @@ this.XPIProvider = {
         // That will be logged below.
       }
 
-      if (!method) {
-        logger.warn("Add-on " + aAddon.id + " is missing bootstrap method " + aMethod);
-        return;
-      }
-
       // Extensions are automatically deinitialized in the correct order at shutdown.
       if (aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
         activeAddon.disable = true;
@@ -4899,12 +4894,16 @@ this.XPIProvider = {
         }
       }
 
-      logger.debug("Calling bootstrap method " + aMethod + " on " + aAddon.id + " version " +
-                   aAddon.version);
-      try {
-        method(params, aReason);
-      } catch (e) {
-        logger.warn("Exception running bootstrap method " + aMethod + " on " + aAddon.id, e);
+      if (!method) {
+        logger.warn("Add-on " + aAddon.id + " is missing bootstrap method " + aMethod);
+      } else {
+        logger.debug("Calling bootstrap method " + aMethod + " on " + aAddon.id + " version " +
+                     aAddon.version);
+        try {
+          method(params, aReason);
+        } catch (e) {
+          logger.warn("Exception running bootstrap method " + aMethod + " on " + aAddon.id, e);
+        }
       }
     } finally {
       // Extensions are automatically initialized in the correct order at startup.
