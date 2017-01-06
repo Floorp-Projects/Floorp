@@ -201,9 +201,9 @@ public:
    * aMarginRect is relative to the current translation.  The caller
    * must ensure aMarginRect.height >= 0 and aMarginRect.width >= 0.
    */
-  nsresult AddFloat(nsIFrame* aFloatFrame,
-                    const mozilla::LogicalRect& aMarginRect,
-                    mozilla::WritingMode aWM, const nsSize& aContainerSize);
+  void AddFloat(nsIFrame* aFloatFrame,
+                const mozilla::LogicalRect& aMarginRect,
+                mozilla::WritingMode aWM, const nsSize& aContainerSize);
 
   /**
    * Notify that we tried to place a float that could not fit at all and
@@ -387,7 +387,7 @@ private:
                                  const nscoord aRadiusY);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-    FloatInfo(const FloatInfo& aOther);
+    FloatInfo(FloatInfo&& aOther);
     ~FloatInfo();
 #endif
 
