@@ -592,14 +592,14 @@ public:
   void HandleAudioDecoded(MediaData* aAudio) override
   {
     mMaster->PushAudio(aAudio);
-    mMaster->DispatchDecodeTasksIfNeeded();
+    DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
   }
 
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override
   {
     mMaster->PushVideo(aVideo);
-    mMaster->DispatchDecodeTasksIfNeeded();
+    DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
     CheckSlowDecoding(aDecodeStart);
   }
@@ -633,7 +633,7 @@ public:
       // Schedule Step() to check if we can start playback.
       mMaster->ScheduleStateMachine();
       // Try to dispatch decoding tasks for mMinimizePreroll might be reset.
-      mMaster->DispatchDecodeTasksIfNeeded();
+      DispatchDecodeTasksIfNeeded();
     }
 
     if (aPlayState == MediaDecoder::PLAY_STATE_PAUSED) {
@@ -649,6 +649,7 @@ public:
   }
 
 private:
+  void DispatchDecodeTasksIfNeeded();
   void MaybeStartBuffering();
 
   void CheckSlowDecoding(TimeStamp aDecodeStart)
@@ -2020,7 +2021,7 @@ DecodingState::Enter()
   MaybeStopPrerolling();
 
   // Ensure that we've got tasks enqueued to decode data if we need to.
-  mMaster->DispatchDecodeTasksIfNeeded();
+  DispatchDecodeTasksIfNeeded();
 
   mMaster->ScheduleStateMachine();
 
@@ -2038,6 +2039,29 @@ DecodingState::HandleEndOfStream()
     SetState<CompletedState>();
   } else {
     MaybeStopPrerolling();
+  }
+}
+
+void
+MediaDecoderStateMachine::
+DecodingState::DispatchDecodeTasksIfNeeded()
+{
+  const bool needToDecodeAudio =
+    mMaster->IsAudioDecoding() &&
+    ((!mMaster->mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
+     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedAudio()));
+
+  const bool needToDecodeVideo =
+    mMaster->IsVideoDecoding() &&
+    ((!mMaster->mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
+     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedVideo()));
+
+  if (needToDecodeAudio) {
+    mMaster->EnsureAudioDecodeTaskQueued();
+  }
+
+  if (needToDecodeVideo) {
+    mMaster->EnsureVideoDecodeTaskQueued();
   }
 }
 
@@ -2942,39 +2966,6 @@ void MediaDecoderStateMachine::StopMediaSink()
     mMediaSink->Stop();
     mMediaSinkAudioPromise.DisconnectIfExists();
     mMediaSinkVideoPromise.DisconnectIfExists();
-  }
-}
-
-void
-MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
-{
-  MOZ_ASSERT(OnTaskQueue());
-
-  if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_DECODING_FIRSTFRAME &&
-      mState != DECODER_STATE_BUFFERING) {
-    return;
-  }
-
-  const bool needToDecodeAudio =
-    IsAudioDecoding() &&
-    ((!mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
-     (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
-
-  const bool needToDecodeVideo =
-    IsVideoDecoding() &&
-    ((!mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
-     (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
-
-  SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d audioStatus=%s needVideo=%d videoStatus=%s",
-             needToDecodeAudio, AudioRequestStatus(),
-             needToDecodeVideo, VideoRequestStatus());
-
-  if (needToDecodeAudio) {
-    EnsureAudioDecodeTaskQueued();
-  }
-  if (needToDecodeVideo) {
-    EnsureVideoDecodeTaskQueued();
   }
 }
 
