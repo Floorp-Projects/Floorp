@@ -31,14 +31,13 @@ public:
                                     uint32_t aDataLength);
 
   /**
-   * Creates a unique key for the given font data and variation settings.
+   * Creates a unique key for the given font data.
    *
    * @param aFontData the SFNT data
    * @param aDataLength length
    * @return unique key to be used for caching
    */
-  static uint64_t GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength,
-                               uint32_t aVarDataSize, const void* aVarData);
+  static uint64_t GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength);
 
   ~SFNTData();
 

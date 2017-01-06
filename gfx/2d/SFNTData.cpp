@@ -152,8 +152,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
 
 /* static */
 uint64_t
-SFNTData::GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength,
-                       uint32_t aVarDataSize, const void* aVarData)
+SFNTData::GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength)
 {
   uint64_t hash;
   UniquePtr<SFNTData> sfntData = SFNTData::Create(aFontData, aDataLength);
@@ -163,10 +162,6 @@ SFNTData::GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength,
   } else {
     gfxWarning() << "Failed to get name from font data hashing whole font.";
     hash = HashString(aFontData, aDataLength);
-  }
-
-  if (aVarDataSize) {
-    hash = AddToHash(hash, HashBytes(aVarData, aVarDataSize));
   }
 
   return hash << 32 | aDataLength;;
