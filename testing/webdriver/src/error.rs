@@ -12,6 +12,7 @@ use std::io::Error as IoError;
 pub enum ErrorStatus {
     ElementNotSelectable,
     ElementNotVisible,
+    InsecureCertificate,
     InvalidArgument,
     InvalidCookieDomain,
     InvalidElementCoordinates,
@@ -31,9 +32,9 @@ pub enum ErrorStatus {
     UnableToSetCookie,
     UnexpectedAlertOpen,
     UnknownError,
-    UnknownPath,
     UnknownMethod,
-    UnsupportedOperation
+    UnknownPath,
+    UnsupportedOperation,
 }
 
 impl ErrorStatus {
@@ -41,6 +42,7 @@ impl ErrorStatus {
         match self {
             &ErrorStatus::ElementNotSelectable => "element not selectable",
             &ErrorStatus::ElementNotVisible => "element not visible",
+            &ErrorStatus::InsecureCertificate => "insecure certificate",
             &ErrorStatus::InvalidArgument => "invalid argument",
             &ErrorStatus::InvalidCookieDomain => "invalid cookie domain",
             &ErrorStatus::InvalidElementCoordinates => "invalid element coordinates",
@@ -60,9 +62,9 @@ impl ErrorStatus {
             &ErrorStatus::UnableToSetCookie => "unable to set cookie",
             &ErrorStatus::UnexpectedAlertOpen => "unexpected alert open",
             &ErrorStatus::UnknownError => "unknown error",
-            &ErrorStatus::UnknownPath => "unknown command",
             &ErrorStatus::UnknownMethod => "unknown command",
-            &ErrorStatus::UnsupportedOperation => "unsupported operation"
+            &ErrorStatus::UnknownPath => "unknown command",
+            &ErrorStatus::UnsupportedOperation => "unsupported operation",
         }
     }
 
@@ -70,6 +72,7 @@ impl ErrorStatus {
         match self {
             &ErrorStatus::ElementNotSelectable => StatusCode::BadRequest,
             &ErrorStatus::ElementNotVisible => StatusCode::BadRequest,
+            &ErrorStatus::InsecureCertificate => StatusCode::BadRequest,
             &ErrorStatus::InvalidArgument => StatusCode::BadRequest,
             &ErrorStatus::InvalidCookieDomain => StatusCode::BadRequest,
             &ErrorStatus::InvalidElementCoordinates => StatusCode::BadRequest,
@@ -89,9 +92,9 @@ impl ErrorStatus {
             &ErrorStatus::UnableToSetCookie => StatusCode::InternalServerError,
             &ErrorStatus::UnexpectedAlertOpen => StatusCode::InternalServerError,
             &ErrorStatus::UnknownError => StatusCode::InternalServerError,
-            &ErrorStatus::UnknownPath => StatusCode::NotFound,
             &ErrorStatus::UnknownMethod => StatusCode::MethodNotAllowed,
-            &ErrorStatus::UnsupportedOperation => StatusCode::InternalServerError
+            &ErrorStatus::UnknownPath => StatusCode::NotFound,
+            &ErrorStatus::UnsupportedOperation => StatusCode::InternalServerError,
         }
     }
 }
