@@ -67,6 +67,17 @@ public:
   bool IsComplete() const;
   void SetComplete();
 
+  /**
+   * Set the stylesheet to be enabled.  This may or may not make it
+   * applicable.  Note that this WILL inform the sheet's document of
+   * its new applicable state if the state changes but WILL NOT call
+   * BeginUpdate() or EndUpdate() on the document -- calling those is
+   * the caller's responsibility.  This allows use of SetEnabled when
+   * batched updates are desired.  If you want updates handled for
+   * you, see nsIDOMStyleSheet::SetDisabled().
+   */
+  void SetEnabled(bool aEnabled);
+
   MOZ_DECL_STYLO_METHODS(CSSStyleSheet, ServoStyleSheet)
 
   // Whether the sheet is for an inline <style> element.
@@ -197,6 +208,9 @@ protected:
 
   // Drop our reference to mMedia
   void DropMedia();
+
+  // Called from SetEnabled when the enabled state changed.
+  void EnabledStateChanged();
 
   nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children

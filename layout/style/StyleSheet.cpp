@@ -115,6 +115,22 @@ StyleSheet::SetComplete()
   }
 }
 
+void
+StyleSheet::SetEnabled(bool aEnabled)
+{
+  // Internal method, so callers must handle BeginUpdate/EndUpdate
+  bool oldDisabled = mDisabled;
+  mDisabled = !aEnabled;
+
+  if (IsComplete() && oldDisabled != mDisabled) {
+    EnabledStateChanged();
+
+    if (mDocument) {
+      mDocument->SetStyleSheetApplicableState(this, !mDisabled);
+    }
+  }
+}
+
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                ReferrerPolicy aReferrerPolicy,
                                const dom::SRIMetadata& aIntegrity)
@@ -280,6 +296,12 @@ StyleSheet::DeleteRule(uint32_t aIndex,
     return;
   }
   FORWARD_INTERNAL(DeleteRuleInternal, (aIndex, aRv))
+}
+
+void
+StyleSheet::EnabledStateChanged()
+{
+  FORWARD_INTERNAL(EnabledStateChangedInternal, ())
 }
 
 #undef FORWARD_INTERNAL
