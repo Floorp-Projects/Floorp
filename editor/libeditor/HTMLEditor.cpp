@@ -1519,7 +1519,6 @@ HTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement,
   // hand off to the rules system, see if it has anything to say about this
   bool cancel, handled;
   TextRulesInfo ruleInfo(EditAction::insertElement);
-  ruleInfo.insertElement = aElement;
   nsresult rv = rules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   if (cancel || NS_FAILED(rv)) {
     return rv;

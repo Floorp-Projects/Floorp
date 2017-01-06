@@ -116,7 +116,7 @@ public:
   //                                      |<------->|
   //                                          aRn
   DottedCornerFinder(const Bezier& aOuterBezier, const Bezier& aInnerBezier,
-                     mozilla::css::Corner aCorner,
+                     mozilla::Corner aCorner,
                      Float aBorderRadiusX, Float aBorderRadiusY,
                      const Point& aC0, Float aR0, const Point& aCn, Float aRn,
                      const Size& aCornerDim);
@@ -150,7 +150,7 @@ private:
   Bezier mInnerBezier;
   Bezier mCenterBezier;
 
-  mozilla::css::Corner mCorner;
+  mozilla::Corner mCorner;
 
   // Sign of the normal vector used in radius calculation, flipped depends on
   // corner and start and end radii.

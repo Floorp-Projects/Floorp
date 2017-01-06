@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testcase: simple positioning of abspos children in -webkit-box</title>
+  <style>
+    .container {
+      border: 1px solid black;
+      width: 200px;
+    }
+    .box        { display: -webkit-box }
+    .inline-box { display: -webkit-inline-box }
+    .abs { position: absolute }
+    .a { border: 3px solid purple }
+    .b { border: 3px solid orange }
+</style>
+</head>
+<body>
+  <!-- Test abspos child in -webkit-box: -->
+  <div class="container box">
+    <div class="a abs">aa</div>
+    <div class="b">bbbb</div>
+  </div>
+  <div class="container box">
+    <div class="a">aa</div>
+    <div class="b abs">bbbb</div>
+  </div>
+
+  <!-- Test abspos child in -webkit-inline-box: -->
+  <div class="container inline-box">
+    <div class="a abs">aa</div>
+    <div class="b">bbbb</div>
+  </div>
+
+  <div class="container inline-box"
+       style="vertical-align: top">
+    <!-- XXXdholbert 'vertical-align' here is a hackaround for bug 1328792 -->
+    <div class="a">aa</div>
+    <div class="b abs">bbbb</div>
+  </div>
+
+</body>
+</html>

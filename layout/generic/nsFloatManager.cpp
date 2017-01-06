@@ -622,13 +622,13 @@ nsFloatManager::FloatInfo::LineLeft(WritingMode aWM,
     mozilla::Side lineLeftSide =
       aWM.PhysicalSide(aWM.LogicalSideForLineRelativeDir(eLineRelativeDirLeft));
     nscoord blockStartCornerRadiusL =
-      radii[NS_SIDE_TO_HALF_CORNER(lineLeftSide, true, false)];
+      radii[SideToHalfCorner(lineLeftSide, true, false)];
     nscoord blockStartCornerRadiusB =
-      radii[NS_SIDE_TO_HALF_CORNER(lineLeftSide, true, true)];
+      radii[SideToHalfCorner(lineLeftSide, true, true)];
     nscoord blockEndCornerRadiusL =
-      radii[NS_SIDE_TO_HALF_CORNER(lineLeftSide, false, false)];
+      radii[SideToHalfCorner(lineLeftSide, false, false)];
     nscoord blockEndCornerRadiusB =
-      radii[NS_SIDE_TO_HALF_CORNER(lineLeftSide, false, true)];
+      radii[SideToHalfCorner(lineLeftSide, false, true)];
 
     if (aWM.IsLineInverted()) {
       // This happens only when aWM is vertical-lr. Need to swap blockStart
@@ -680,13 +680,13 @@ nsFloatManager::FloatInfo::LineRight(WritingMode aWM,
     mozilla::Side lineRightSide =
       aWM.PhysicalSide(aWM.LogicalSideForLineRelativeDir(eLineRelativeDirRight));
     nscoord blockStartCornerRadiusL =
-      radii[NS_SIDE_TO_HALF_CORNER(lineRightSide, false, false)];
+      radii[SideToHalfCorner(lineRightSide, false, false)];
     nscoord blockStartCornerRadiusB =
-      radii[NS_SIDE_TO_HALF_CORNER(lineRightSide, false, true)];
+      radii[SideToHalfCorner(lineRightSide, false, true)];
     nscoord blockEndCornerRadiusL =
-      radii[NS_SIDE_TO_HALF_CORNER(lineRightSide, true, false)];
+      radii[SideToHalfCorner(lineRightSide, true, false)];
     nscoord blockEndCornerRadiusB =
-      radii[NS_SIDE_TO_HALF_CORNER(lineRightSide, true, true)];
+      radii[SideToHalfCorner(lineRightSide, true, true)];
 
     if (aWM.IsLineInverted()) {
       // This happens only when aWM is vertical-lr. Need to swap blockStart

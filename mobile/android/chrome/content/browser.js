@@ -1391,7 +1391,7 @@ var BrowserApp = {
     BrowserApp.sanitize(aClear.sanitize, function() {
       let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].getService(Ci.nsIAppStartup);
       appStartup.quit(Ci.nsIAppStartup.eForceQuit);
-    });
+    }, true);
   },
 
   saveAsPDF: function saveAsPDF(aBrowser) {
@@ -1445,7 +1445,7 @@ var BrowserApp = {
     return this.PREF_TRACKING_PROTECTION_DISABLED;
   },
 
-  sanitize: function (aItems, callback) {
+  sanitize: function (aItems, callback, aShutdown) {
     let success = true;
     var promises = [];
 
@@ -1466,19 +1466,21 @@ var BrowserApp = {
     }
 
     Promise.all(promises).then(function() {
-      Messaging.sendRequest({
+      GlobalEventDispatcher.sendRequest({
         type: "Sanitize:Finished",
-        success: true
+        success: true,
+        shutdown: aShutdown === true
       });
 
       if (callback) {
         callback();
       }
     }).catch(function(err) {
-      Messaging.sendRequest({
+      GlobalEventDispatcher.sendRequest({
         type: "Sanitize:Finished",
         error: err,
-        success: false
+        success: false,
+        shutdown: aShutdown === true
       });
 
       if (callback) {

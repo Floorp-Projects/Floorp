@@ -25,6 +25,9 @@ public:
   ServoCSSRuleList(ServoStyleSheet* aStyleSheet,
                    already_AddRefed<ServoCssRules> aRawRules);
 
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServoCSSRuleList, dom::CSSRuleList)
+
   ServoStyleSheet* GetParentObject() final { return mStyleSheet; }
 
   nsIDOMCSSRule* IndexedGetter(uint32_t aIndex, bool& aFound) final;

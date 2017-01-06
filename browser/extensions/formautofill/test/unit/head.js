@@ -2,7 +2,7 @@
  * Provides infrastructure for automated formautofill components tests.
  */
 
-/* exported getTempFile */
+/* exported loadFormAutofillContent, getTempFile */
 
 "use strict";
 
@@ -38,7 +38,9 @@ Components.manager.addBootstrappedManifestLocation(extensionDir);
 let gFileCounter = Math.floor(Math.random() * 1000000);
 
 function loadFormAutofillContent() {
-  let facGlobal = {};
+  let facGlobal = {
+    addEventListener: function() {},
+  };
   let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
                .getService(Ci.mozIJSSubScriptLoader);
   loader.loadSubScriptWithOptions("chrome://formautofill/content/FormAutofillContent.js", {
@@ -82,13 +84,12 @@ function getTempFile(leafName) {
 }
 
 add_task(function* test_common_initialize() {
-  Services.prefs.setBoolPref("browser.formautofill.enabled", true);
+  Services.prefs.setBoolPref("browser.formautofill.experimental", true);
   Services.prefs.setBoolPref("dom.forms.autocomplete.experimental", true);
-  loadFormAutofillContent();
 
   // Clean up after every test.
   do_register_cleanup(() => {
-    Services.prefs.clearUserPref("browser.formautofill.enabled");
+    Services.prefs.clearUserPref("browser.formautofill.experimental");
     Services.prefs.clearUserPref("dom.forms.autocomplete.experimental");
   });
 });
