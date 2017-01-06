@@ -93,7 +93,13 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 // Accessible: nsISupports and cycle collection
 
-NS_IMPL_CYCLE_COLLECTION(Accessible, mContent)
+NS_IMPL_CYCLE_COLLECTION_CLASS(Accessible)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Accessible)
+  tmp->Shutdown();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Accessible)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent, mDoc)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Accessible)
   if (aIID.Equals(NS_GET_IID(Accessible)))
