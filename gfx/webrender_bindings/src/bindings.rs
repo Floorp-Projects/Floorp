@@ -196,6 +196,17 @@ impl webrender_traits::RenderNotifier for CppNotifier {
     }
 }
 
+// RenderThread WIP notes:
+// In order to separate the compositor thread (or ipc receiver) and the render
+// thread, some of the logic below needs to be rewritten. In particular
+// the WrWindowState and Notifier implementations aren't designed to work with
+// a separate render thread.
+// As part of that I am moving the bindings closer to WebRender's API boundary,
+// and moving more of the logic in C++ land.
+// This work is tracked by bug 1328602.
+//
+// See RenderThread.h for some notes about how the pieces fit together.
+
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: PipelineId,
     pub dl_builder: webrender_traits::DisplayListBuilder,
@@ -210,6 +221,7 @@ impl WebRenderFrameBuilder {
     }
 }
 
+// XXX (bug 1328602) - This will be removed soon-ish.
 struct Notifier {
     render_notifier: Arc<(Mutex<bool>, Condvar)>,
 }
@@ -231,6 +243,7 @@ impl webrender_traits::RenderNotifier for Notifier {
     }
 }
 
+// XXX (bug 1328602) - This will be removed soon-ish.
 pub struct WrWindowState {
     renderer: Renderer,
     api: webrender_traits::RenderApi,

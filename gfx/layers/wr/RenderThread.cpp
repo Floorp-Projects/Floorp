@@ -157,7 +157,11 @@ RenderThread::UpdateAndRender(gfx::WindowId aWindowId)
 
   auto& renderer = it->second;
 
-  auto transactionId = 0; // TODO!
+  // TODO: WebRender has the notion of epoch and gecko has transaction ids.
+  // They mostly mean the same thing but I'm not sure they are produced the same
+  // way. We need to merge the two or have a way to associate transaction ids with
+  // epochs to wire everything up properly.
+  auto transactionId = 0;
 
   renderer->Update();
   renderer->Render(transactionId);
