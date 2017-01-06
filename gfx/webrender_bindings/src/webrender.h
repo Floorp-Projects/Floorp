@@ -8,6 +8,7 @@
 #define WR_h
 extern "C" {
 bool is_in_compositor_thread();
+bool is_in_render_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
 
 struct WrRenderer;
@@ -246,4 +247,18 @@ WR_FUNC;
 
 #undef WR_FUNC
 }
+
+namespace mozilla {
+namespace wr {
+
+struct WindowId {
+  WindowId(uint64_t aHandle) : mHandle(aHandle) {}
+  bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
+
+  uint64_t mHandle;
+};
+
+} // namespace
+} // namespace
+
 #endif
