@@ -23,7 +23,7 @@ from mozbuild.base import MachCommandBase, MozbuildObject
 @CommandProvider
 class SearchProvider(object):
     @Command('dxr', category='misc',
-        description='Search for something in DXR.')
+             description='Search for something in DXR.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def dxr(self, term):
         import webbrowser
@@ -32,7 +32,7 @@ class SearchProvider(object):
         webbrowser.open_new_tab(uri)
 
     @Command('mdn', category='misc',
-        description='Search for something on MDN.')
+             description='Search for something on MDN.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def mdn(self, term):
         import webbrowser
@@ -41,7 +41,7 @@ class SearchProvider(object):
         webbrowser.open_new_tab(uri)
 
     @Command('google', category='misc',
-        description='Search for something on Google.')
+             description='Search for something on Google.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def google(self, term):
         import webbrowser
@@ -50,9 +50,9 @@ class SearchProvider(object):
         webbrowser.open_new_tab(uri)
 
     @Command('search', category='misc',
-        description='Search for something on the Internets. '
-        'This will open 3 new browser tabs and search for the term on Google, '
-        'MDN, and DXR.')
+             description='Search for something on the Internets. '
+             'This will open 3 new browser tabs and search for the term on Google, '
+             'MDN, and DXR.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def search(self, term):
         self.google(term)
@@ -63,7 +63,7 @@ class SearchProvider(object):
 @CommandProvider
 class UUIDProvider(object):
     @Command('uuid', category='misc',
-        description='Generate a uuid.')
+             description='Generate a uuid.')
     @CommandArgument('--format', '-f', choices=['idl', 'cpp', 'c++'],
                      help='Output format for the generated uuid.')
     def uuid(self, format=None):
@@ -125,7 +125,7 @@ class RageProvider(MachCommandBase):
             except Exception:
                 pass
 
-        url = 'https://docs.google.com/a/mozilla.com/forms/d/e/1FAIpQLSeDVC3IXJu5d33Hp_ZTCOw06xEUiYH1pBjAqJ1g_y63sO2vvA/viewform'
+        url = 'https://docs.google.com/a/mozilla.com/forms/d/e/1FAIpQLSeDVC3IXJu5d33Hp_ZTCOw06xEUiYH1pBjAqJ1g_y63sO2vvA/viewform'  # noqa: E501
         if user:
             url += '?entry.1281044204=%s' % urllib.quote(user)
 
@@ -136,7 +136,7 @@ class RageProvider(MachCommandBase):
 @CommandProvider
 class PastebinProvider(object):
     @Command('pastebin', category='misc',
-        description='Command line interface to pastebin.mozilla.org.')
+             description='Command line interface to pastebin.mozilla.org.')
     @CommandArgument('--language', default=None,
                      help='Language to use for syntax highlighting')
     @CommandArgument('--poster', default='',
@@ -146,7 +146,6 @@ class PastebinProvider(object):
                      help='Keep for specified duration (default: %(default)s)')
     @CommandArgument('file', nargs='?', default=None,
                      help='Specify the file to upload to pastebin.mozilla.org')
-
     def pastebin(self, language, poster, duration, file):
         import urllib
         import urllib2
@@ -154,23 +153,23 @@ class PastebinProvider(object):
         URL = 'https://pastebin.mozilla.org/'
 
         FILE_TYPES = [{'value': 'text', 'name': 'None', 'extension': 'txt'},
-        {'value': 'bash', 'name': 'Bash', 'extension': 'sh'},
-        {'value': 'c', 'name': 'C', 'extension': 'c'},
-        {'value': 'cpp', 'name': 'C++', 'extension': 'cpp'},
-        {'value': 'html4strict', 'name': 'HTML', 'extension': 'html'},
-        {'value': 'javascript', 'name': 'Javascript', 'extension': 'js'},
-        {'value': 'javascript', 'name': 'Javascript', 'extension': 'jsm'},
-        {'value': 'lua', 'name': 'Lua', 'extension': 'lua'},
-        {'value': 'perl', 'name': 'Perl', 'extension': 'pl'},
-        {'value': 'php', 'name': 'PHP', 'extension': 'php'},
-        {'value': 'python', 'name': 'Python', 'extension': 'py'},
-        {'value': 'ruby', 'name': 'Ruby', 'extension': 'rb'},
-        {'value': 'css', 'name': 'CSS', 'extension': 'css'},
-        {'value': 'diff', 'name': 'Diff', 'extension': 'diff'},
-        {'value': 'ini', 'name': 'INI file', 'extension': 'ini'},
-        {'value': 'java', 'name': 'Java', 'extension': 'java'},
-        {'value': 'xml', 'name': 'XML', 'extension': 'xml'},
-        {'value': 'xml', 'name': 'XML', 'extension': 'xul'}]
+                      {'value': 'bash', 'name': 'Bash', 'extension': 'sh'},
+                      {'value': 'c', 'name': 'C', 'extension': 'c'},
+                      {'value': 'cpp', 'name': 'C++', 'extension': 'cpp'},
+                      {'value': 'html4strict', 'name': 'HTML', 'extension': 'html'},
+                      {'value': 'javascript', 'name': 'Javascript', 'extension': 'js'},
+                      {'value': 'javascript', 'name': 'Javascript', 'extension': 'jsm'},
+                      {'value': 'lua', 'name': 'Lua', 'extension': 'lua'},
+                      {'value': 'perl', 'name': 'Perl', 'extension': 'pl'},
+                      {'value': 'php', 'name': 'PHP', 'extension': 'php'},
+                      {'value': 'python', 'name': 'Python', 'extension': 'py'},
+                      {'value': 'ruby', 'name': 'Ruby', 'extension': 'rb'},
+                      {'value': 'css', 'name': 'CSS', 'extension': 'css'},
+                      {'value': 'diff', 'name': 'Diff', 'extension': 'diff'},
+                      {'value': 'ini', 'name': 'INI file', 'extension': 'ini'},
+                      {'value': 'java', 'name': 'Java', 'extension': 'java'},
+                      {'value': 'xml', 'name': 'XML', 'extension': 'xml'},
+                      {'value': 'xml', 'name': 'XML', 'extension': 'xul'}]
 
         lang = ''
 
@@ -195,7 +194,6 @@ class PastebinProvider(object):
         if language:
             lang = language
 
-
         params = [
             ('parent_pid', ''),
             ('format', lang),
@@ -214,7 +212,7 @@ class PastebinProvider(object):
                 print(response.geturl())
             else:
                 print('Could not upload the file, '
-                      'HTTP Response Code %s' %(http_response_code))
+                      'HTTP Response Code %s' % (http_response_code))
         except urllib2.URLError:
             print('ERROR. Could not connect to pastebin.mozilla.org.')
             return 1
@@ -224,9 +222,9 @@ class PastebinProvider(object):
 @CommandProvider
 class FormatProvider(MachCommandBase):
     @Command('clang-format', category='misc',
-        description='Run clang-format on current changes')
-    @CommandArgument('--show', '-s', action = 'store_true',
-        help = 'Show diff output on instead of applying changes')
+             description='Run clang-format on current changes')
+    @CommandArgument('--show', '-s', action='store_true',
+                     help='Show diff output on instead of applying changes')
     def clang_format(self, show=False):
         import urllib2
 
@@ -263,7 +261,8 @@ class FormatProvider(MachCommandBase):
 
         if os.path.exists(".hg"):
             diff_process = Popen(["hg", "diff", "-U0", "-r", "tip^",
-                                  "--include", "glob:**.c", "--include", "glob:**.cpp", "--include", "glob:**.h",
+                                  "--include", "glob:**.c", "--include", "glob:**.cpp",
+                                  "--include", "glob:**.h",
                                   "--exclude", "listfile:.clang-format-ignore"], stdout=PIPE)
         else:
             git_process = Popen(["git", "diff", "--no-color", "-U0", "HEAD^"], stdout=PIPE)
@@ -278,10 +277,9 @@ class FormatProvider(MachCommandBase):
                     print("OSError {0}: {1}".format(e.code, e.reason))
                 return 1
 
-
         args = [sys.executable, clang_format_diff, "-p1"]
         if not show:
-           args.append("-i")
+            args.append("-i")
         cf_process = Popen(args, stdin=diff_process.stdout)
         return cf_process.communicate()[0]
 
@@ -296,6 +294,7 @@ class FormatProvider(MachCommandBase):
         }
 
         target = os.path.join(self._mach_context.state_dir, os.path.basename(root))
+
         if not os.path.exists(target):
             tooltool_url = "https://api.pub.build.mozilla.org/tooltool/sha512/"
             if self.prompt and raw_input("Download clang-format executables from {0} (yN)? ".format(tooltool_url)).lower() != 'y':  # noqa: E501,F821
@@ -324,6 +323,7 @@ class FormatProvider(MachCommandBase):
             os.chmod(temp, os.stat(temp).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
             os.rename(temp, target)
         return target
+
 
 def mozregression_import():
     # Lazy loading of mozregression.
