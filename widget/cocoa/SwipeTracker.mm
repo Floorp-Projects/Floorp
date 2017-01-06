@@ -192,7 +192,7 @@ SwipeTracker::UnregisterFromRefreshDriver()
 {
   if (mRegisteredWithRefreshDriver) {
     MOZ_ASSERT(mRefreshDriver, "How were we able to register, then?");
-    mRefreshDriver->RemoveRefreshObserver(this, Flush_Style);
+    mRefreshDriver->RemoveRefreshObserver(this, FlushType::Style);
   }
   mRegisteredWithRefreshDriver = false;
 }
