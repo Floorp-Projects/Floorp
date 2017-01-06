@@ -71,6 +71,7 @@ jobs:
         index:
             job-name: sm-mozjs-sys-debug
         treeherder:
+            platform: linux64/debug
             symbol: SM-tc(mozjs-crate)
         run:
             using: spidermonkey-mozjs-crate
@@ -104,6 +105,7 @@ jobs:
         index:
             job-name: sm-arm-sim-debug
         treeherder:
+            platform: linux32/debug
             symbol: SM-tc(arm)
         run:
             spidermonkey-variant: arm-sim
@@ -113,6 +115,7 @@ jobs:
         index:
             job-name: sm-arm64-sim-debug
         treeherder:
+            platform: linux64/debug
             symbol: SM-tc(arm64)
         run:
             spidermonkey-variant: arm64-sim
@@ -132,6 +135,7 @@ jobs:
         index:
             job-name: sm-compacting-debug
         treeherder:
+            platform: linux64/debug
             symbol: SM-tc(cgc)
         run:
             spidermonkey-variant: compacting
@@ -163,6 +167,7 @@ jobs:
         index:
             job-name: sm-rootanalysis-debug
         treeherder:
+            platform: linux64/debug
             symbol: SM-tc(r)
         run:
             spidermonkey-variant: rootanalysis
