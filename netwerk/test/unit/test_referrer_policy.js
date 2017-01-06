@@ -3,6 +3,15 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 function test_policy(test) {
   do_print("Running test: " + test.toSource());
 
+  var prefs = Cc["@mozilla.org/preferences-service;1"]
+    .getService(Components.interfaces.nsIPrefBranch);
+  if (test.defaultReferrerPolicyPref !== undefined) {
+    prefs.setIntPref("network.http.referer.userControlPolicy",
+                     test.defaultReferrerPolicyPref);
+  } else {
+    prefs.setIntPref("network.http.referer.userControlPolicy", 3);
+  }
+
   var uri = NetUtil.newURI(test.url, "", null)
   var chan = NetUtil.newChannel({
     uri: uri,
@@ -27,21 +36,53 @@ function test_policy(test) {
 }
 
 const nsIHttpChannel = Ci.nsIHttpChannel;
+// Assuming cross origin because we have no triggering principal available
 var gTests = [
   {
     policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 0,
+    url: "https://test.example/foo",
+    referrer: "https://test.example/referrer",
+    expectedReferrerSpec: undefined
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 1,
+    url: "http://test.example/foo",
+    referrer: "http://test1.example/referrer",
+    expectedReferrerSpec: undefined
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 2,
+    url: "https://sub1.\xe4lt.example/foo",
+    referrer: "https://sub1.\xe4lt.example/referrer",
+    expectedReferrerSpec: "https://sub1.xn--lt-uia.example/"
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 2,
+    url: "https://test.example/foo",
+    referrer: "https://test1.example/referrer",
+    expectedReferrerSpec: "https://test1.example/"
+  },
+  {
+    policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 3,
     url: "https://test.example/foo",
     referrer: "https://test.example/referrer",
     expectedReferrerSpec: "https://test.example/referrer"
   },
   {
     policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 3,
     url: "https://sub1.\xe4lt.example/foo",
     referrer: "https://sub1.\xe4lt.example/referrer",
     expectedReferrerSpec: "https://sub1.xn--lt-uia.example/referrer"
   },
   {
     policy: nsIHttpChannel.REFERRER_POLICY_UNSET,
+    defaultReferrerPolicyPref: 3,
     url: "http://test.example/foo",
     referrer: "https://test.example/referrer",
     expectedReferrerSpec: undefined
