@@ -8,6 +8,7 @@
 
 #include "platform.h"
 #include "ProfileEntry.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "ThreadProfile.h"
 #include "ThreadInfo.h"
@@ -69,8 +70,7 @@ class GeckoSampler: public Sampler {
       return;
     }
 
-    ThreadProfile* profile = new ThreadProfile(aInfo, mBuffer);
-    aInfo->SetProfile(profile);
+    aInfo->SetProfile(mozilla::MakeUnique<ThreadProfile>(aInfo, mBuffer));
   }
 
   // Called within a signal. This function must be reentrant

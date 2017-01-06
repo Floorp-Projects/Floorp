@@ -266,11 +266,6 @@ GeckoSampler::~GeckoSampler()
 
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
       ThreadInfo* info = sRegisteredThreads->at(i);
-      ThreadProfile* profile = info->Profile();
-      if (profile) {
-        delete profile;
-        info->SetProfile(nullptr);
-      }
       // We've stopped profiling. We no longer need to retain
       // information for an old thread.
       if (info->IsPendingDelete()) {
