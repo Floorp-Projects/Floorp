@@ -44,6 +44,7 @@ fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
 extern  {
     fn is_in_compositor_thread() -> bool;
+    fn is_in_render_thread() -> bool;
 }
 
 #[no_mangle]
@@ -107,7 +108,7 @@ pub extern fn wr_window_new(window_id: u64,
     };
 
     let (renderer, sender) = Renderer::new(opts);
-    //renderer.set_render_notifier(Box::new(CppNotifier { window_id: window_id }));
+    renderer.set_render_notifier(Box::new(CppNotifier { window_id: window_id }));
 
     *out_api = Box::into_raw(Box::new(sender.create_api()));
     *out_renderer = Box::into_raw(Box::new(renderer));
@@ -116,7 +117,7 @@ pub extern fn wr_window_new(window_id: u64,
 // Call MakeCurrent before this.
 #[no_mangle]
 pub extern fn wr_gl_init(gl_context: *mut c_void) {
-    //assert!(unsafe { is_in_render_thread() });
+    assert!(unsafe { is_in_render_thread() });
 
     gl::load_with(|symbol| get_proc_address(gl_context, symbol));
     gl::clear_color(0.3, 0.0, 0.0, 1.0);
@@ -150,6 +151,48 @@ pub extern fn wr_state_delete(state:*mut WrState) {
 
     unsafe {
         Box::from_raw(state);
+    }
+}
+
+struct CppNotifier {
+    window_id: u64,
+}
+
+unsafe impl Send for CppNotifier {}
+
+extern {
+    fn wr_notifier_new_frame_ready(window_id: u64);
+    fn wr_notifier_new_scroll_frame_ready(window_id: u64, composite_needed: bool);
+    fn wr_notifier_pipeline_size_changed(window_id: u64, pipeline: u64, new_width: f32, new_height: f32);
+    // TODO: Waiting for PR #688
+    fn wr_notifier_external_event(window_id: u64, raw_event: usize);
+}
+
+impl webrender_traits::RenderNotifier for CppNotifier {
+    fn new_frame_ready(&mut self) {
+        unsafe {
+            wr_notifier_new_frame_ready(self.window_id);
+        }
+    }
+
+    fn new_scroll_frame_ready(&mut self, composite_needed: bool) {
+        unsafe {
+            wr_notifier_new_scroll_frame_ready(self.window_id, composite_needed);
+        }
+    }
+
+    fn pipeline_size_changed(&mut self,
+                             pipeline_id: PipelineId,
+                             new_size: Option<LayoutSize>) {
+        let (w, h) = if let Some(size) = new_size {
+            (size.width, size.height)
+        } else {
+            (0.0, 0.0)
+        };
+        unsafe {
+            let id = pipeline_id_to_u64(pipeline_id);
+            wr_notifier_pipeline_size_changed(self.window_id, id, w, h);
+        }
     }
 }
 
@@ -314,7 +357,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
             }));
     }
 
-    let pipeline_id = PipelineId((root_pipeline_id >> 32) as u32, root_pipeline_id as u32);
+    let pipeline_id = u64_to_pipeline_id(root_pipeline_id);
     api.set_root_pipeline(pipeline_id);
 
     let state = Box::new(WrWindowState {
@@ -332,7 +375,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
 #[no_mangle]
 pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, layers_id: u64) -> *mut WrState {
     assert!( unsafe { is_in_compositor_thread() });
-    let pipeline_id = PipelineId((layers_id >> 32) as u32, layers_id as u32);
+    let pipeline_id = u64_to_pipeline_id(layers_id);
 
     let builder = WebRenderFrameBuilder::new(pipeline_id);
 
@@ -450,7 +493,7 @@ fn wait_for_epoch(window: &mut WrWindowState) {
 
 #[no_mangle]
 pub fn wr_composite_window(window: &mut WrWindowState) {
-    assert!( unsafe { is_in_compositor_thread() });
+    assert!(unsafe { is_in_compositor_thread() });
 
     gl::clear(gl::COLOR_BUFFER_BIT);
 
