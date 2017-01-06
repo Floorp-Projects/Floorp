@@ -133,7 +133,6 @@ add_task(function* test_remove_single() {
   } finally {
     yield PlacesTestUtils.clearHistory();
   }
-  return;
 });
 
 // Test removing a list of pages

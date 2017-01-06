@@ -28,7 +28,6 @@ function worker_handler(worker) {
       return;
     default:
       SimpleTest.ok(false, "test_osfile.xul: wrong message " + JSON.stringify(msg.data));
-      return;
     }
   };
 }

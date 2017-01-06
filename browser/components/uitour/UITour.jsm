@@ -1951,7 +1951,6 @@ this.UITour = {
       ReaderParent.showReaderModeInfoPanel(browser);
     } else {
       log.error("startSubTour: Unknown feature option specified");
-      return;
     }
   },
 
@@ -2031,7 +2030,6 @@ this.UITour = {
           }
         }
         reject("selectSearchEngine could not find engine with given ID");
-        return;
       });
     });
   },

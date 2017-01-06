@@ -2061,7 +2061,6 @@ var gHeader = {
   onKeyPress(aEvent) {
     if (String.fromCharCode(aEvent.charCode) == "/") {
       this.focusSearchBox();
-      return;
     }
   },
 

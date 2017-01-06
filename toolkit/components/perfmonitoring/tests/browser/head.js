@@ -130,7 +130,6 @@ function AlertListener(accept, {register, unregister}) {
     }
     this.result = result;
     this.triggered = true;
-    return;
   };
   this.triggered = false;
   this.result = null;
