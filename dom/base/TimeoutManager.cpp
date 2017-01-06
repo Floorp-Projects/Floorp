@@ -716,11 +716,20 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
   }
 
   if (!aTimeout->mTimer) {
-    NS_ASSERTION(mWindow.IsFrozen() || mWindow.IsSuspended(),
-                 "How'd our timer end up null if we're not frozen or "
-                 "suspended?");
-
-    aTimeout->mTimeRemaining = delay;
+    if (mWindow.IsFrozen()) {
+      // If we are frozen simply set timeout->mTimeRemaining to be the
+      // "time remaining" in the timeout (i.e., the interval itself).  This
+      // will be used to create a new mWhen time when the window is thawed.
+      // The end effect is that time does not appear to pass for frozen windows.
+      aTimeout->mTimeRemaining = delay;
+    } else if (mWindow.IsSuspended()) {
+    // Since we are not frozen we must set a precise mWhen target wakeup
+    // time.  Even if we are suspended we want to use this target time so
+    // that it appears time passes while suspended.
+      aTimeout->mWhen = currentNow + delay;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Window should be frozen or suspended.");
+    }
     return true;
   }
 
