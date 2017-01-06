@@ -111,6 +111,8 @@ public:
    */
   inline void SetPrincipal(nsIPrincipal* aPrincipal);
 
+  void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
+
   // Get this style sheet's CORS mode
   inline CORSMode GetCORSMode() const;
   // Get this style sheet's Referrer Policy
