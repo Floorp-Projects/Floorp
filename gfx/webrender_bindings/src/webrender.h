@@ -252,7 +252,7 @@ namespace mozilla {
 namespace wr {
 
 struct WindowId {
-  WindowId(uint64_t aHandle) : mHandle(aHandle) {}
+  explicit WindowId(uint64_t aHandle) : mHandle(aHandle) {}
   bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
 
   uint64_t mHandle;
