@@ -2218,19 +2218,13 @@ void
 MediaDecoderStateMachine::
 BufferingState::DispatchDecodeTasksIfNeeded()
 {
-  const bool needToDecodeAudio =
-    mMaster->IsAudioDecoding() &&
-   !mMaster->HaveEnoughDecodedAudio();
-
-  const bool needToDecodeVideo =
-    mMaster->IsVideoDecoding() &&
-    !mMaster->HaveEnoughDecodedVideo();
-
-  if (needToDecodeAudio) {
+  if (mMaster->IsAudioDecoding() &&
+      !mMaster->HaveEnoughDecodedAudio()) {
     mMaster->EnsureAudioDecodeTaskQueued();
   }
 
-  if (needToDecodeVideo) {
+  if (mMaster->IsVideoDecoding() &&
+      !mMaster->HaveEnoughDecodedVideo()) {
     mMaster->EnsureVideoDecodeTaskQueued();
   }
 }
