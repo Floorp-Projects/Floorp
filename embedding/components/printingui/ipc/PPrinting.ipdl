@@ -29,7 +29,7 @@ parent:
             nsresult rv);
 
   async ShowPrintDialog(PPrintSettingsDialog dialog,
-                        PBrowser browser,
+                        nullable PBrowser browser,
                         PrintData settings);
 
   async PPrintProgressDialog();

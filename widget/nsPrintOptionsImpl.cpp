@@ -1030,6 +1030,12 @@ NS_IMETHODIMP
 nsPrintOptions::InitPrintSettingsFromPrinter(const char16_t *aPrinterName,
                                              nsIPrintSettings *aPrintSettings)
 {
+  // Don't get print settings from the printer in the child when printing via
+  // parent, these will be retrieved in the parent later in the print process.
+  if (XRE_IsContentProcess() && Preferences::GetBool("print.print_via_parent")) {
+    return NS_OK;
+  }
+
   NS_ENSURE_ARG_POINTER(aPrintSettings);
   NS_ENSURE_ARG_POINTER(aPrinterName);
 
