@@ -3,13 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsDeviceContextSpecWin.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/gfx/PrintTargetWindows.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/RefPtr.h"
 
-#include "nsDeviceContextSpecWin.h"
 #include "prmem.h"
 
 #include <winspool.h>
@@ -34,7 +36,6 @@
 
 #include "mozilla/gfx/Logging.h"
 
-#include "mozilla/Logging.h"
 static mozilla::LazyLogModule kWidgetPrintingLogMod("printing-widget");
 #define PR_PL(_p1)  MOZ_LOG(kWidgetPrintingLogMod, mozilla::LogLevel::Debug, _p1)
 
@@ -132,6 +133,15 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 
   nsresult rv = NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE;
   if (aPrintSettings) {
+    // If we're in the child and printing via the parent or we're printing to
+    // PDF we only need information from the print settings.
+    mPrintSettings->GetOutputFormat(&mOutputFormat);
+    if ((XRE_IsContentProcess() &&
+         Preferences::GetBool("print.print_via_parent")) ||
+        mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
+      return NS_OK;
+    }
+
     nsCOMPtr<nsIPrintSettingsWin> psWin(do_QueryInterface(aPrintSettings));
     if (psWin) {
       char16_t* deviceName;
@@ -177,7 +187,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
   char16_t * printerName = nullptr;
   if (mPrintSettings) {
     mPrintSettings->GetPrinterName(&printerName);
-    mPrintSettings->GetOutputFormat(&mOutputFormat);
   }
 
   // If there is no name then use the default printer
@@ -438,6 +447,13 @@ nsPrinterEnumeratorWin::InitPrintSettingsFromPrinter(const char16_t *aPrinterNam
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
   if (!*aPrinterName) {
+    return NS_OK;
+  }
+
+  // When printing to PDF on Windows there is no associated printer driver.
+  int16_t outputFormat;
+  aPrintSettings->GetOutputFormat(&outputFormat);
+  if (outputFormat == nsIPrintSettings::kOutputFormatPDF) {
     return NS_OK;
   }
 
