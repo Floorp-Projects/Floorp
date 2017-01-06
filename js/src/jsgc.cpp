@@ -4870,6 +4870,8 @@ MAKE_GC_SWEEP_TASK(SweepMiscTask);
 SweepAtomsTask::run()
 {
     runtime->sweepAtoms();
+    for (CompartmentsIter comp(runtime, SkipAtoms); !comp.done(); comp.next())
+        comp->sweepVarNames();
 }
 
 /* virtual */ void
