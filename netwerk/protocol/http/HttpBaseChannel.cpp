@@ -102,7 +102,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mProxyURI(nullptr)
   , mContentDispositionHint(UINT32_MAX)
   , mHttpHandler(gHttpHandler)
-  , mReferrerPolicy(REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE)
+  , mReferrerPolicy(NS_GetDefaultReferrerPolicy())
   , mRedirectCount(0)
   , mForcePending(false)
   , mCorsIncludeCredentials(false)
@@ -1304,7 +1304,7 @@ HttpBaseChannel::GetReferrer(nsIURI **referrer)
 NS_IMETHODIMP
 HttpBaseChannel::SetReferrer(nsIURI *referrer)
 {
-  return SetReferrerWithPolicy(referrer, REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE);
+  return SetReferrerWithPolicy(referrer, NS_GetDefaultReferrerPolicy());
 }
 
 NS_IMETHODIMP
@@ -1328,6 +1328,10 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI *referrer,
     return rv;
   }
   mReferrerPolicy = referrerPolicy;
+
+  if (referrerPolicy == REFERRER_POLICY_UNSET) {
+    mReferrerPolicy = NS_GetDefaultReferrerPolicy();
+  }
 
   if (!referrer) {
     return NS_OK;

@@ -71,8 +71,6 @@
 // Used for list, i.e. Array and String, iterators.
 #define ITERATOR_SLOT_NEXT_INDEX 1
 #define ITERATOR_SLOT_ITEM_KIND 2
-// Used for ListIterator.
-#define ITERATOR_SLOT_NEXT_METHOD 2
 
 #define ITEM_KIND_KEY 0
 #define ITEM_KIND_VALUE 1

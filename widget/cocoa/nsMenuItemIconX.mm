@@ -310,7 +310,7 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
   }
 
   nsresult rv = loader->LoadImage(aIconURI, nullptr, nullptr,
-                                  mozilla::net::RP_Default,
+                                  mozilla::net::RP_Unset,
                                   nullptr, loadGroup, this,
                                   nullptr, nullptr, nsIRequest::LOAD_NORMAL, nullptr,
                                   nsIContentPolicy::TYPE_INTERNAL_IMAGE, EmptyString(),

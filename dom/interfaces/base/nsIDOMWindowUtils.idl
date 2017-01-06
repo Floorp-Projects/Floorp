@@ -35,7 +35,7 @@ interface nsIDOMNodeList;
 interface nsIDOMElement;
 interface nsIDOMHTMLCanvasElement;
 interface nsIDOMEvent;
-interface nsIDOMStyleSheet;
+interface nsIPreloadedStyleSheet;
 interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
@@ -1744,7 +1744,7 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * Sheets added via this API take effect immediately on the document.
    */
-  void addSheet(in nsIDOMStyleSheet sheet, in unsigned long type);
+  void addSheet(in nsIPreloadedStyleSheet sheet, in unsigned long type);
 
   /**
    * Remove the document style sheet at |sheetURI| from the list of additional 

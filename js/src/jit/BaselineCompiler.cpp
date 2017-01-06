@@ -2183,16 +2183,19 @@ BaselineCompiler::emit_JSOP_MUTATEPROTO()
 bool
 BaselineCompiler::emit_JSOP_INITPROP()
 {
-    // Keep lhs in R0, rhs in R1.
-    frame.popRegsAndSync(2);
-
-    // Push the object to store the result of the IC.
-    frame.push(R0);
+    // Load lhs in R0, rhs in R1.
     frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
 
     // Call IC.
     ICSetProp_Fallback::Compiler compiler(cx);
-    return emitOpIC(compiler.getStub(&stubSpace_));
+    if (!emitOpIC(compiler.getStub(&stubSpace_)))
+        return false;
+
+    // Leave the object on the stack.
+    frame.pop();
+    return true;
 }
 
 bool
@@ -2418,13 +2421,15 @@ BaselineCompiler::emit_JSOP_SETPROP()
     // Keep lhs in R0, rhs in R1.
     frame.popRegsAndSync(2);
 
+    // Keep RHS on the stack.
+    frame.push(R1);
+    frame.syncStack(0);
+
     // Call IC.
     ICSetProp_Fallback::Compiler compiler(cx);
     if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
-    // The IC will return the RHS value in R0, mark it as pushed value.
-    frame.push(R0);
     return true;
 }
 
@@ -2587,8 +2592,8 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
         // this as a SETPROP.
 
         // Load rhs into R1.
-        frame.syncStack(1);
-        frame.popValue(R1);
+        frame.syncStack(0);
+        masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R1);
 
         // Load and box lhs into R0.
         getEnvironmentCoordinateObject(R2.scratchReg());
@@ -2599,8 +2604,6 @@ BaselineCompiler::emit_JSOP_SETALIASEDVAR()
         if (!emitOpIC(compiler.getStub(&stubSpace_)))
             return false;
 
-        // The IC will return the RHS value in R0, mark it as pushed value.
-        frame.push(R0);
         return true;
     }
 
