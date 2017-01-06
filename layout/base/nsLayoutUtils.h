@@ -1546,8 +1546,18 @@ public:
   static nscoord MinISizeFromInline(nsIFrame* aFrame,
                                     nsRenderingContext* aRenderingContext);
 
-  // Get a suitable foreground color for painting aProperty for aFrame.
-  static nscolor GetColor(nsIFrame* aFrame, nsCSSPropertyID aProperty);
+  // Get a suitable foreground color for painting aColor for aFrame.
+  static nscolor DarkenColorIfNeeded(nsIFrame* aFrame, nscolor aColor);
+
+  // Get a suitable foreground color for painting aField for aFrame.
+  // Type of aFrame is made a template parameter because nsIFrame is not
+  // a complete type in the header. Type-safety is not harmed given that
+  // DarkenColorIfNeeded requires an nsIFrame pointer.
+  template<typename Frame, typename T, typename S>
+  static nscolor GetColor(Frame* aFrame, T S::* aField) {
+    nscolor color = aFrame->GetVisitedDependentColor(aField);
+    return DarkenColorIfNeeded(aFrame, color);
+  }
 
   // Get a baseline y position in app units that is snapped to device pixels.
   static gfxFloat GetSnappedBaselineY(nsIFrame* aFrame, gfxContext* aContext,
@@ -1755,7 +1765,8 @@ public:
                                         const nsPoint&      aAnchor,
                                         const nsRect&       aDirty,
                                         uint32_t            aImageFlags,
-                                        ExtendMode          aExtendMode);
+                                        ExtendMode          aExtendMode,
+                                        float               aOpacity);
 
   /**
    * Draw an image.
@@ -1780,7 +1791,8 @@ public:
                               const nsRect&       aFill,
                               const nsPoint&      aAnchor,
                               const nsRect&       aDirty,
-                              uint32_t            aImageFlags);
+                              uint32_t            aImageFlags,
+                              float               aOpacity = 1.0);
 
   static inline void InitDashPattern(StrokeOptions& aStrokeOptions,
                                      uint8_t aBorderStyle) {

@@ -8,7 +8,7 @@ import unittest
 from mozunit import main
 from taskgraph.transforms.base import (
     validate_schema,
-    get_keyed_by,
+    resolve_keyed_by,
     TransformSequence
 )
 from voluptuous import Schema
@@ -59,85 +59,76 @@ class TestValidateSchema(unittest.TestCase):
             self.failUnless(str(e).startswith("pfx\n"))
 
 
-class TestKeyedBy(unittest.TestCase):
+class TestResolveKeyedBy(unittest.TestCase):
 
-    def test_simple_value(self):
-        test = {
-            'test-name': 'tname',
-            'option': 10,
-        }
-        self.assertEqual(get_keyed_by(test, 'option', 'x'), 10)
+    def test_no_by(self):
+        self.assertEqual(
+            resolve_keyed_by({'x': 10}, 'z', 'n'),
+            {'x': 10})
 
-    def test_by_value(self):
-        test = {
-            'test-name': 'tname',
-            'option': {
-                'by-other-value': {
-                    'a': 10,
-                    'b': 20,
-                },
-            },
-            'other-value': 'b',
-        }
-        self.assertEqual(get_keyed_by(test, 'option', 'x'), 20)
+    def test_no_by_dotted(self):
+        self.assertEqual(
+            resolve_keyed_by({'x': {'y': 10}}, 'x.z', 'n'),
+            {'x': {'y': 10}})
 
-    def test_by_value_regex(self):
-        test = {
-            'test-name': 'tname',
-            'option': {
-                'by-test-platform': {
-                    'macosx64/.*': 10,
-                    'linux64/debug': 20,
-                    'default': 5,
-                },
-            },
-            'test-platform': 'macosx64/debug',
-        }
-        self.assertEqual(get_keyed_by(test, 'option', 'x'), 10)
+    def test_no_by_not_dict(self):
+        self.assertEqual(
+            resolve_keyed_by({'x': 10}, 'x.y', 'n'),
+            {'x': 10})
 
-    def test_by_value_default(self):
-        test = {
-            'test-name': 'tname',
-            'option': {
-                'by-other-value': {
-                    'a': 10,
-                    'default': 30,
-                },
-            },
-            'other-value': 'xxx',
-        }
-        self.assertEqual(get_keyed_by(test, 'option', 'x'), 30)
+    def test_no_by_not_by(self):
+        self.assertEqual(
+            resolve_keyed_by({'x': {'a': 10}}, 'x', 'n'),
+            {'x': {'a': 10}})
 
-    def test_by_value_dict(self):
-        test = {
-            'test-name': 'tname',
-            'option': {
-                'by-something-else': {},
-                'by-other-value': {},
-            },
-        }
-        self.assertEqual(get_keyed_by(test, 'option', 'x'), test['option'])
+    def test_no_by_empty_dict(self):
+        self.assertEqual(
+            resolve_keyed_by({'x': {}}, 'x', 'n'),
+            {'x': {}})
 
-    def test_by_value_invalid_no_default(self):
-        test = {
-            'test-name': 'tname',
-            'option': {
-                'by-other-value': {
-                    'a': 10,
-                },
-            },
-            'other-value': 'b',
-        }
-        self.assertRaises(Exception, get_keyed_by, test, 'option', 'x')
+    def test_no_by_not_only_by(self):
+        self.assertEqual(
+            resolve_keyed_by({'x': {'by-y': True, 'a': 10}}, 'x', 'n'),
+            {'x': {'by-y': True, 'a': 10}})
 
-    def test_by_value_no_by(self):
-        test = {
-            'test-name': 'tname',
-            'option': {
-                'other-value': {},
-            },
-        }
-        self.assertEqual(get_keyed_by(test, 'option', 'x'), test['option'])
+    def test_match_nested_exact(self):
+        self.assertEqual(
+            resolve_keyed_by(
+                {'f': 'shoes', 'x': {'y': {'by-f': {'shoes': 'feet', 'gloves': 'hands'}}}},
+                'x.y', 'n'),
+            {'f': 'shoes', 'x': {'y': 'feet'}})
+
+    def test_match_regexp(self):
+        self.assertEqual(
+            resolve_keyed_by(
+                {'f': 'shoes', 'x': {'by-f': {'s?[hH]oes?': 'feet', 'gloves': 'hands'}}},
+                'x', 'n'),
+            {'f': 'shoes', 'x': 'feet'})
+
+    def test_match_partial_regexp(self):
+        self.assertEqual(
+            resolve_keyed_by(
+                {'f': 'shoes', 'x': {'by-f': {'sh': 'feet', 'default': 'hands'}}},
+                'x', 'n'),
+            {'f': 'shoes', 'x': 'hands'})
+
+    def test_match_default(self):
+        self.assertEqual(
+            resolve_keyed_by(
+                {'f': 'shoes', 'x': {'by-f': {'hat': 'head', 'default': 'anywhere'}}},
+                'x', 'n'),
+            {'f': 'shoes', 'x': 'anywhere'})
+
+    def test_no_match(self):
+        self.assertRaises(
+            Exception, resolve_keyed_by,
+            {'f': 'shoes', 'x': {'by-f': {'hat': 'head'}}}, 'x', 'n')
+
+    def test_multiple_matches(self):
+        self.assertRaises(
+            Exception, resolve_keyed_by,
+            {'f': 'hats', 'x': {'by-f': {'hat.*': 'head', 'ha.*': 'hair'}}}, 'x', 'n')
+
 
 if __name__ == '__main__':
     main()

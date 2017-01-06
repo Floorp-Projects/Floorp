@@ -381,7 +381,7 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   // OCSP_STAPLING_NONE unless/until we implement multi-stapling.
   Result stapledOCSPResponseResult = Success;
   if (stapledOCSPResponse) {
-    PR_ASSERT(endEntityOrCA == EndEntityOrCA::MustBeEndEntity);
+    MOZ_ASSERT(endEntityOrCA == EndEntityOrCA::MustBeEndEntity);
     bool expired;
     stapledOCSPResponseResult =
       VerifyAndMaybeCacheEncodedOCSPResponse(certID, time,
@@ -459,8 +459,8 @@ NSSCertDBTrustDomain::CheckRevocation(EndEntityOrCA endEntityOrCA,
   }
   // At this point, if and only if cachedErrorResult is Success, there was no
   // cached response.
-  PR_ASSERT((!cachedResponsePresent && cachedResponseResult == Success) ||
-            (cachedResponsePresent && cachedResponseResult != Success));
+  MOZ_ASSERT((!cachedResponsePresent && cachedResponseResult == Success) ||
+             (cachedResponsePresent && cachedResponseResult != Success));
 
   // If we have a fresh OneCRL Blocklist we can skip OCSP for CA certs
   bool blocklistIsFresh;
@@ -669,7 +669,7 @@ NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   // If a response was stapled and expired, we don't want to cache it. Return
   // early to simplify the logic here.
   if (responseSource == ResponseWasStapled && expired) {
-    PR_ASSERT(rv != Success);
+    MOZ_ASSERT(rv != Success);
     return rv;
   }
   // validThrough is only trustworthy if the response successfully verifies
@@ -1156,7 +1156,7 @@ LoadLoadableRoots(const nsCString& dir, const nsCString& modNameUTF8)
 void
 UnloadLoadableRoots(const char* modNameUTF8)
 {
-  PR_ASSERT(modNameUTF8);
+  MOZ_ASSERT(modNameUTF8);
   UniqueSECMODModule rootsModule(SECMOD_FindModule(modNameUTF8));
 
   if (rootsModule) {

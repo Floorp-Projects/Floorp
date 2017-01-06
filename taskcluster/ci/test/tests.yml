@@ -259,7 +259,7 @@ marionette:
             default: 1
     mozharness:
         by-test-platform:
-            android:
+            android.*:
                 script: android_emulator_unittest.py
                 no-read-buildbot-config: true
                 config:
@@ -553,7 +553,7 @@ mochitest-devtools-chrome:
                 linux64-ccov/opt:
                     - --mochitest-suite=mochitest-devtools-chrome-chunked
                     - --code-coverage
-                linux64-jsdcov:
+                linux64-jsdcov/opt:
                     - --mochitest-suite=mochitest-devtools-chrome-coverage
                 default:
                     - --mochitest-suite=mochitest-devtools-chrome-chunked

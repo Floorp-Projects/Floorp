@@ -13,6 +13,7 @@
 #include "cert.h"
 #include "certdb.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PublicSSL.h"
@@ -167,13 +168,13 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
     return true;
 
   case nssInitSucceeded:
-    NS_ASSERTION(loading, "Bad call to EnsureNSSInitialized(nssInitSucceeded)");
+    MOZ_ASSERT(loading, "Bad call to EnsureNSSInitialized(nssInitSucceeded)");
     loading = false;
     PR_AtomicSet(&haveLoaded, 1);
     return true;
 
   case nssInitFailed:
-    NS_ASSERTION(loading, "Bad call to EnsureNSSInitialized(nssInitFailed)");
+    MOZ_ASSERT(loading, "Bad call to EnsureNSSInitialized(nssInitFailed)");
     loading = false;
     MOZ_FALLTHROUGH;
 
@@ -206,7 +207,7 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
     }
 
   default:
-    NS_ASSERTION(false, "Bad operator to EnsureNSSInitialized");
+    MOZ_ASSERT_UNREACHABLE("Bad operator to EnsureNSSInitialized");
     return false;
   }
 }
@@ -263,7 +264,8 @@ nsNSSComponent::nsNSSComponent()
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("nsNSSComponent::ctor\n"));
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  NS_ASSERTION( (0 == mInstanceCount), "nsNSSComponent is a singleton, but instantiated multiple times!");
+  MOZ_ASSERT(mInstanceCount == 0,
+             "nsNSSComponent is a singleton, but instantiated multiple times!");
   ++mInstanceCount;
 }
 
@@ -1440,7 +1442,9 @@ StaticRefPtr<CipherSuiteChangeObserver> CipherSuiteChangeObserver::sObserver;
 nsresult
 CipherSuiteChangeObserver::StartObserve()
 {
-  NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::StartObserve() can only be accessed in main thread");
+  MOZ_ASSERT(NS_IsMainThread(),
+             "CipherSuiteChangeObserver::StartObserve() can only be accessed "
+             "on the main thread");
   if (!sObserver) {
     RefPtr<CipherSuiteChangeObserver> observer = new CipherSuiteChangeObserver();
     nsresult rv = Preferences::AddStrongObserver(observer.get(), "security.");
@@ -1460,11 +1464,13 @@ CipherSuiteChangeObserver::StartObserve()
 }
 
 nsresult
-CipherSuiteChangeObserver::Observe(nsISupports* aSubject,
+CipherSuiteChangeObserver::Observe(nsISupports* /*aSubject*/,
                                    const char* aTopic,
                                    const char16_t* someData)
 {
-  NS_ASSERTION(NS_IsMainThread(), "CipherSuiteChangeObserver::Observe can only be accessed in main thread");
+  MOZ_ASSERT(NS_IsMainThread(),
+             "CipherSuiteChangeObserver::Observe can only be accessed on main "
+             "thread");
   if (nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     NS_ConvertUTF16toUTF8  prefName(someData);
     // Look through the cipher table and set according to pref setting
@@ -2350,7 +2356,8 @@ namespace psm {
 nsresult
 InitializeCipherSuite()
 {
-  NS_ASSERTION(NS_IsMainThread(), "InitializeCipherSuite() can only be accessed in main thread");
+  MOZ_ASSERT(NS_IsMainThread(),
+             "InitializeCipherSuite() can only be accessed on the main thread");
 
   if (NSS_SetDomesticPolicy() != SECSuccess) {
     return NS_ERROR_FAILURE;

@@ -5,6 +5,7 @@
 #include "nsPKCS12Blob.h"
 
 #include "ScopedNSSTypes.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"
@@ -272,7 +273,7 @@ nsPKCS12Blob::ExportToFile(nsIFile *file,
   nsAutoString filePath;
   int i;
   nsCOMPtr<nsIFile> localFileRef;
-  NS_ASSERTION(mToken, "Need to set the token before exporting");
+  MOZ_ASSERT(mToken, "Need to set the token before exporting");
   // init slot
 
   bool InformedUserNoSmartcardBackup = false;

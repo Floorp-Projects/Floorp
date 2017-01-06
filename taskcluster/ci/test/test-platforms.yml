@@ -53,6 +53,7 @@ linux64-stylo/opt:
     build-platform: linux64-stylo/opt
     test-sets:
         - stylo-tests
+        - talos
 
 linux64-ccov/opt:
     build-platform: linux64-ccov/opt

@@ -29,6 +29,8 @@ def mock_runner(runner, mock_marionette, monkeypatch):
     for attr in ['run_test_set', '_capabilities']:
         setattr(runner, attr, Mock())
     runner._appName = 'fake_app'
+    # simulate that browser runs with e10s by default
+    runner._appinfo = {'browserTabsRemoteAutostart': True}
     monkeypatch.setattr('marionette_harness.runner.base.mozversion', Mock())
     return runner
 
@@ -125,6 +127,9 @@ def test_build_kwargs_basic_args(build_kwargs_using):
 
     basic_args = ['socket_timeout', 'prefs',
                   'startup_timeout', 'verbose', 'symbols_path']
+    args_dict = {a: getattr(sentinel, a) for a in basic_args}
+    # Mock an update method to work with calls to MarionetteTestRunner()
+    args_dict['prefs'].update = Mock(return_value={})
     built_kwargs = build_kwargs_using([(a, getattr(sentinel, a)) for a in basic_args])
     for arg in basic_args:
         assert built_kwargs[arg] is getattr(sentinel, arg)
@@ -410,6 +415,25 @@ def test_catch_invalid_test_names(runner):
     for good_name in good_tests:
         assert good_name not in msg
 
+@pytest.mark.parametrize('e10s', (True, False))
+def test_e10s_option_sets_prefs(mach_parsed_kwargs, e10s):
+    mach_parsed_kwargs['e10s'] = e10s
+    runner = MarionetteTestRunner(**mach_parsed_kwargs)
+    e10s_prefs = {
+        'browser.tabs.remote.autostart': True,
+        'browser.tabs.remote.force-enable': True,
+        'extensions.e10sBlocksEnabling': False
+    }
+    for k,v in e10s_prefs.iteritems():
+        if k == 'extensions.e10sBlocksEnabling' and not e10s:
+            continue
+        assert runner.prefs.get(k, False) == (v and e10s)
+
+def test_e10s_option_clash_raises(mock_runner):
+    mock_runner.e10s = False
+    with pytest.raises(AssertionError) as e:
+        mock_runner.run_tests([u'test_fake_thing.py'])
+        assert "configuration (self.e10s) does not match browser appinfo" in e.value.message
 
 if __name__ == '__main__':
     import sys

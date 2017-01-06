@@ -254,6 +254,30 @@ add_task(function* ctrl_d_edit_bookmark_remove_bookmark() {
   });
 });
 
+add_task(function* enter_on_remove_bookmark_should_remove_bookmark() {
+  if (AppConstants.platform == "macosx") {
+    // "Full Keyboard Access" is disabled by default, and thus doesn't allow
+    // keyboard navigation to the "Remove Bookmarks" button by default.
+    return;
+  }
+
+  yield test_bookmarks_popup({
+    isNewBookmark: true,
+    popupShowFn(browser) {
+      EventUtils.synthesizeKey("D", {accelKey: true}, window);
+    },
+    shouldAutoClose: true,
+    popupHideFn() {
+      while (!document.activeElement ||
+             document.activeElement.id != "editBookmarkPanelRemoveButton") {
+        EventUtils.sendChar("VK_TAB", window);
+      }
+      EventUtils.sendChar("VK_RETURN", window);
+    },
+    isBookmarkRemoved: true,
+  });
+});
+
 registerCleanupFunction(function() {
   delete StarUI._closePanelQuickForTesting;
 })

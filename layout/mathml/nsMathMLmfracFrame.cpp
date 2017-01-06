@@ -629,7 +629,7 @@ void nsDisplayMathMLSlash::Paint(nsDisplayListBuilder* aBuilder,
                            presContext->AppUnitsPerDevPixel());
 
   ColorPattern color(ToDeviceColor(
-    mFrame->GetVisitedDependentColor(eCSSProperty__webkit_text_fill_color)));
+    mFrame->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor)));
 
   // draw the slash as a parallelogram
   Point delta = Point(presContext->AppUnitsToGfxUnits(mThickness), 0);

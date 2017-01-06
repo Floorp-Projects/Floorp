@@ -4,30 +4,31 @@
 
 #include "nsSiteSecurityService.h"
 
-#include "mozilla/LinkedList.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Base64.h"
-#include "base64.h"
 #include "CertVerifier.h"
+#include "PublicKeyPinningService.h"
+#include "ScopedNSSTypes.h"
+#include "SharedCertVerifier.h"
+#include "base64.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/Base64.h"
+#include "mozilla/LinkedList.h"
+#include "mozilla/Logging.h"
+#include "mozilla/Preferences.h"
 #include "nsCRTGlue.h"
 #include "nsISSLStatus.h"
 #include "nsISocketProvider.h"
 #include "nsIURI.h"
 #include "nsIX509Cert.h"
-#include "nsNetUtil.h"
 #include "nsNSSComponent.h"
+#include "nsNetUtil.h"
 #include "nsSecurityHeaderParser.h"
 #include "nsString.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "pkix/pkixtypes.h"
 #include "plstr.h"
-#include "mozilla/Logging.h"
 #include "prnetdb.h"
 #include "prprf.h"
-#include "PublicKeyPinningService.h"
-#include "ScopedNSSTypes.h"
-#include "SharedCertVerifier.h"
 
 // A note about the preload list:
 // When a site specifically disables HSTS by sending a header with
@@ -227,7 +228,7 @@ nsSiteSecurityService::Init()
 {
   // Don't access Preferences off the main thread.
   if (!NS_IsMainThread()) {
-    NS_NOTREACHED("nsSiteSecurityService initialized off main thread");
+    MOZ_ASSERT_UNREACHABLE("nsSiteSecurityService initialized off main thread");
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
@@ -305,7 +306,7 @@ SetStorageKey(nsAutoCString& storageKey, const nsACString& hostname, uint32_t aT
       storageKey.AppendLiteral(":HPKP");
       break;
     default:
-      NS_ASSERTION(false, "SSS:SetStorageKey got invalid type");
+      MOZ_ASSERT_UNREACHABLE("SSS:SetStorageKey got invalid type");
   }
 }
 
@@ -1363,13 +1364,12 @@ nsSiteSecurityService::SetHPKPState(const char* aHost, SiteHPKPState& entry,
 //------------------------------------------------------------
 
 NS_IMETHODIMP
-nsSiteSecurityService::Observe(nsISupports *subject,
-                               const char *topic,
-                               const char16_t *data)
+nsSiteSecurityService::Observe(nsISupports* /*subject*/, const char* topic,
+                               const char16_t* /*data*/)
 {
   // Don't access Preferences off the main thread.
   if (!NS_IsMainThread()) {
-    NS_NOTREACHED("Preferences accessed off main thread");
+    MOZ_ASSERT_UNREACHABLE("Preferences accessed off main thread");
     return NS_ERROR_NOT_SAME_THREAD;
   }
 

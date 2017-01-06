@@ -84,7 +84,7 @@ var WindowsRegistry = {
     } catch (ex) {
     } finally {
       registry.close();
-      return result;
     }
+    return result;
   }
 };

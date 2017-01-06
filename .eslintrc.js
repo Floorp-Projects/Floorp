@@ -7,6 +7,7 @@ module.exports = {
   ],
   "rules": {
     "mozilla/import-globals": "warn",
+    "mozilla/no-import-into-var-and-global": "error",
 
     // No (!foo in bar) or (!object instanceof Class)
     "no-unsafe-negation": "error",

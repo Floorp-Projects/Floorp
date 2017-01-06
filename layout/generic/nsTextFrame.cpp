@@ -3752,14 +3752,14 @@ nsTextPaintStyle::GetTextColor()
       case eStyleSVGPaintType_None:
         return NS_RGBA(0, 0, 0, 0);
       case eStyleSVGPaintType_Color:
-        return nsLayoutUtils::GetColor(mFrame, eCSSProperty_fill);
+        return nsLayoutUtils::GetColor(mFrame, &nsStyleSVG::mFill);
       default:
         NS_ERROR("cannot resolve SVG paint to nscolor");
         return NS_RGBA(0, 0, 0, 255);
     }
   }
 
-  return nsLayoutUtils::GetColor(mFrame, eCSSProperty__webkit_text_fill_color);
+  return nsLayoutUtils::GetColor(mFrame, &nsStyleText::mWebkitTextFillColor);
 }
 
 bool
@@ -3853,8 +3853,8 @@ nsTextPaintStyle::InitCommonColors()
   nsIFrame* bgFrame =
     nsCSSRendering::FindNonTransparentBackgroundFrame(mFrame);
   NS_ASSERTION(bgFrame, "Cannot find NonTransparentBackgroundFrame.");
-  nscolor bgColor =
-    bgFrame->GetVisitedDependentColor(eCSSProperty_background_color);
+  nscolor bgColor = bgFrame->
+    GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
 
   nscolor defaultBgColor = mPresContext->DefaultBackgroundColor();
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
@@ -3951,9 +3951,9 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
     // Use -moz-selection pseudo class.
     if (sc) {
       mSelectionBGColor =
-        sc->GetVisitedDependentColor(eCSSProperty_background_color);
+        sc->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
       mSelectionTextColor =
-        sc->GetVisitedDependentColor(eCSSProperty__webkit_text_fill_color);
+        sc->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
       mHasSelectionShadow =
         nsRuleNode::HasAuthorSpecifiedRules(sc,
                                             NS_AUTHOR_SPECIFIED_TEXT_SHADOW,
@@ -3989,16 +3989,14 @@ nsTextPaintStyle::InitSelectionColorsAndShadow()
   if (mResolveColors) {
     // On MacOS X, we don't exchange text color and BG color.
     if (mSelectionTextColor == NS_DONT_CHANGE_COLOR) {
-      nsCSSPropertyID property = mFrame->IsSVGText()
-                               ? eCSSProperty_fill
-                               : eCSSProperty__webkit_text_fill_color;
-      nscoord frameColor = mFrame->GetVisitedDependentColor(property);
+      nscolor frameColor = mFrame->IsSVGText()
+        ? mFrame->GetVisitedDependentColor(&nsStyleSVG::mFill)
+        : mFrame->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
       mSelectionTextColor = EnsureDifferentColors(frameColor, mSelectionBGColor);
     } else if (mSelectionTextColor == NS_CHANGE_COLOR_IF_SAME_AS_BG) {
-      nsCSSPropertyID property = mFrame->IsSVGText()
-                               ? eCSSProperty_fill
-                               : eCSSProperty__webkit_text_fill_color;
-      nscolor frameColor = mFrame->GetVisitedDependentColor(property);
+      nscolor frameColor = mFrame->IsSVGText()
+        ? mFrame->GetVisitedDependentColor(&nsStyleSVG::mFill)
+        : mFrame->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
       if (frameColor == mSelectionBGColor) {
         mSelectionTextColor =
           LookAndFeel::GetColor(LookAndFeel::eColorID_TextSelectForegroundCustom);
@@ -5313,7 +5311,7 @@ nsTextFrame::GetTextDecorations(
       // la la</font></a> case. The link underline should be green.
       useOverride = true;
       overrideColor =
-        nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
+        nsLayoutUtils::GetColor(f, &nsStyleTextReset::mTextDecorationColor);
     }
 
     nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
@@ -5367,10 +5365,11 @@ nsTextFrame::GetTextDecorations(
         //     for SVG text, and have e.g. text-decoration-color:red to
         //     override the fill paint of the decoration.
         color = aColorResolution == eResolvedColors ?
-                  nsLayoutUtils::GetColor(f, eCSSProperty_fill) :
+                  nsLayoutUtils::GetColor(f, &nsStyleSVG::mFill) :
                   NS_SAME_AS_FOREGROUND_COLOR;
       } else {
-        color = nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
+        color = nsLayoutUtils::
+          GetColor(f, &nsStyleTextReset::mTextDecorationColor);
       }
 
       bool swapUnderlineAndOverline = vertical && IsUnderlineRight(f);
@@ -6561,7 +6560,7 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
 
   bool isTextCombined = StyleContext()->IsTextCombined();
   nscolor color = aDecorationOverrideColor ? *aDecorationOverrideColor :
-    nsLayoutUtils::GetColor(this, eCSSProperty_text_emphasis_color);
+    nsLayoutUtils::GetColor(this, &nsStyleText::mTextEmphasisColor);
   aContext->SetColor(Color::FromABGR(color));
   gfxPoint pt;
   if (!isTextCombined) {

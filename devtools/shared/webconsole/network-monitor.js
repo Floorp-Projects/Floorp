@@ -37,6 +37,8 @@ const HTTP_TEMPORARY_REDIRECT = 307;
 
 // The maximum number of bytes a NetworkResponseListener can hold: 1 MB
 const RESPONSE_BODY_LIMIT = 1048576;
+// Exported for testing.
+exports.RESPONSE_BODY_LIMIT = RESPONSE_BODY_LIMIT;
 
 /**
  * Check if a given network request should be logged by a network monitor
@@ -598,7 +600,7 @@ NetworkResponseListener.prototype = {
       text: data || "",
     };
 
-    response.size = response.text.length;
+    response.size = this.bodySize;
     response.transferredSize = this.transferredSize;
 
     try {

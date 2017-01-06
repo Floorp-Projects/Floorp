@@ -215,10 +215,6 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(self.start_window)
 
-    @skip("Bug 1213875")
-    def test_capture_scroll_element_into_view(self):
-        pass
-
     def test_capture_window_already_closed(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -397,3 +393,30 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
                                                                     highlights=[paragraph])
         self.assertNotEqual(screenshot_element, screenshot_highlight_paragraph)
         self.assertNotEqual(screenshot_highlight, screenshot_highlight_paragraph)
+
+    def test_scroll_default(self):
+        self.marionette.navigate(long)
+        before = self.page_y_offset
+        el = self.marionette.find_element(By.TAG_NAME, "p")
+        self.marionette.screenshot(element=el, format="hash")
+        self.assertNotEqual(before, self.page_y_offset)
+
+    def test_scroll(self):
+        self.marionette.navigate(long)
+        before = self.page_y_offset
+        el = self.marionette.find_element(By.TAG_NAME, "p")
+        self.marionette.screenshot(element=el, format="hash", scroll=True)
+        self.assertNotEqual(before, self.page_y_offset)
+
+    def test_scroll_off(self):
+        self.marionette.navigate(long)
+        el = self.marionette.find_element(By.TAG_NAME, "p")
+        before = self.page_y_offset
+        self.marionette.screenshot(element=el, format="hash", scroll=False)
+        self.assertEqual(before, self.page_y_offset)
+
+    def test_scroll_no_element(self):
+        self.marionette.navigate(long)
+        before = self.page_y_offset
+        self.marionette.screenshot(format="hash", scroll=True)
+        self.assertEqual(before, self.page_y_offset)

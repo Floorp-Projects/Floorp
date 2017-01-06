@@ -303,7 +303,6 @@
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amInstallTrigger.js
 @BINPATH@/components/amWebAPI.js
-@BINPATH@/components/amWebInstallListener.js
 @BINPATH@/components/nsBlocklistService.js
 #ifndef RELEASE_OR_BETA
 @BINPATH@/components/TabSource.js
