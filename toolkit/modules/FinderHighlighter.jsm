@@ -230,10 +230,8 @@ FinderHighlighter.prototype = {
       if (!this._modal)
         dict.visible = true;
       yield this.iterator.start(params);
-      if (this._found) {
+      if (this._found)
         this.finder._outlineLink(true);
-        dict.updateAllRanges = true;
-      }
     } else {
       this.hide(window);
 
@@ -431,9 +429,6 @@ FinderHighlighter.prototype = {
     if (foundRange !== dict.currentFoundRange || data.findAgain) {
       dict.previousFoundRange = dict.currentFoundRange;
       dict.currentFoundRange = foundRange;
-
-      if (data.findAgain)
-        dict.updateAllRanges = true;
 
       if (!dict.visible)
         this.show(window);
