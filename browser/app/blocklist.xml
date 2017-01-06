@@ -814,10 +814,6 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
     </emItem>
-    <emItem blockID="i1012" id="wxtui502n2xce9j@no14">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="3"/>
-    </emItem>
     <emItem blockID="i83" id="flash@adobee.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
@@ -929,6 +925,10 @@
     <emItem blockID="i1077" id="helper@vidscrab.com">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="i1492" id="googlotim@gmail.com">
+      <prefs/>
+      <versionRange minVersion="1.3.2" maxVersion="1.3.2" severity="1"/>
     </emItem>
     <emItem blockID="i93" id="{68b8676b-99a5-46d1-b390-22411d8bcd61}">
       <prefs/>
@@ -2008,6 +2008,10 @@
       <versionRange minVersion="0" maxVersion="1.0.1-signed" severity="1"/>
     </emItem>
     <emItem blockID="i90" id="videoplugin@player.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="i1012" id="wxtui502n2xce9j@no14">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
