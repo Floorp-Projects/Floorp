@@ -168,8 +168,6 @@ SimpleTest.waitForFocus(function() {
   is(editor.innerHTML, "<p>before</p><p><strike><i><b>test</b></i></strike>after</p>",
      "#02-03-2 Typing Enter after setting style to selected text should keep the styles");
 
-  // TODO: Following tests should pass with next patch.
-
   // #03-01 Replacing in <b style="font-weight: normal;"> shouldn't cause new <b>.
   editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
   selection.collapse(editor.firstChild.firstChild, "before".length);
@@ -179,8 +177,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<b style=\"font-weight: normal;\">beforetestafter</b>",
-          "#03-01 Replacing text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<b style=\"font-weight: normal;\">beforetestafter</b>",
+     "#03-01 Replacing text in styled inline elements should respect the styles");
 
   // #03-02 Typing something after removing selected text in <b style="font-weight: normal;"> shouldn't cause new <b>.
   editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
@@ -192,8 +190,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<b style=\"font-weight: normal;\">beforetestafter</b>",
-          "#03-02 Inserting text after removing text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<b style=\"font-weight: normal;\">beforetestafter</b>",
+     "#03-02 Inserting text after removing text in styled inline elements should respect the styles");
 
   // #03-03 Typing something after typing Enter at selected text in <b style="font-weight: normal;"> shouldn't cause new <b>.
   editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
@@ -205,8 +203,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<b style=\"font-weight: normal;\">before<br>testafter</b>",
-          "#03-03-1 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<b style=\"font-weight: normal;\">before<br>testafter</b>",
+     "#03-03-1 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
 
   editor.innerHTML = "<p><b style=\"font-weight: normal;\">beforeselectionafter</b></p>";
   selection.collapse(editor.firstChild.firstChild.firstChild, "before".length);
@@ -217,8 +215,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<p><b style=\"font-weight: normal;\">before</b></p><p><b style=\"font-weight: normal;\">testafter</b></p>",
-          "#03-03-2 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<p><b style=\"font-weight: normal;\">before</b></p><p><b style=\"font-weight: normal;\">testafter</b></p>",
+     "#03-03-2 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
 
   // #04-01 Replacing in some styled inline elements shouldn't cause new same elements.
   editor.innerHTML = "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b></i></strike>";
@@ -229,8 +227,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforetestafter</b></i></strike>",
-          "#04-01 Replacing text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforetestafter</b></i></strike>",
+     "#04-01 Replacing text in styled inline elements should respect the styles");
 
   // #04-02 Typing something after removing selected text in some styled inline elements shouldn't cause new same elements.
   editor.innerHTML = "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b>";
@@ -242,8 +240,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforetestafter</b></i></strike>",
-          "#04-02 Inserting text after removing text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforetestafter</b></i></strike>",
+     "#04-02 Inserting text after removing text in styled inline elements should respect the styles");
 
   // #04-03 Typing something after typing Enter at selected text in some styled inline elements shouldn't cause new same elements.
   editor.innerHTML = "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b>";
@@ -255,8 +253,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">before<br>testafter</b></i></strike>",
-          "#04-03-1 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">before<br>testafter</b></i></strike>",
+     "#04-03-1 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
 
   editor.innerHTML = "<p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b></p>";
   selection.collapse(editor.firstChild.firstChild.firstChild.firstChild.firstChild, "before".length);
@@ -267,8 +265,8 @@ SimpleTest.waitForFocus(function() {
   synthesizeKey("s", { code: "KeyS" });
   synthesizeKey("t", { code: "KeyT" });
 
-  todo_is(editor.innerHTML, "<p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">before</b></i></strike></p><p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">testafter</b></i></strike></p>",
-          "#04-03-2 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+  is(editor.innerHTML, "<p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">before</b></i></strike></p><p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">testafter</b></i></strike></p>",
+     "#04-03-2 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
 
   SimpleTest.finish();
 });
