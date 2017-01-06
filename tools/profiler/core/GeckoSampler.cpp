@@ -178,7 +178,6 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
                          const char** aFeatures, uint32_t aFeatureCount,
                          const char** aThreadNameFilters, uint32_t aFilterCount)
   : Sampler(aInterval, true, aEntrySize)
-  , mPrimaryThreadProfile(nullptr)
   , mBuffer(new ProfileBuffer(aEntrySize))
   , mSaveRequested(false)
 #if defined(XP_WIN)
