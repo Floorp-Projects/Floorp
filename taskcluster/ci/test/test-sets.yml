@@ -70,7 +70,11 @@ stylo-tests:
     - mochitest-stylo
 
 qr-tests:
+    - cppunit
+    - gtest
+    - jittest
     - reftest
+    - reftest-no-accel
 
 ccov-code-coverage-tests:
     - mochitest
