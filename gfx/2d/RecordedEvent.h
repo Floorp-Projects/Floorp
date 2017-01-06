@@ -24,7 +24,7 @@ const uint32_t kMagicInt = 0xc001feed;
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
 // using an older major revision.
-const uint16_t kMajorRevision = 7;
+const uint16_t kMajorRevision = 6;
 // A change in minor revision means additions of new events. New streams will
 // not play in older players.
 const uint16_t kMinorRevision = 0;
@@ -67,7 +67,6 @@ struct RecordedFontDetails
   uint64_t fontDataKey;
   uint32_t size;
   uint32_t index;
-  uint32_t variationCount;
   Float glyphSize;
 };
 
@@ -1015,18 +1014,14 @@ class RecordedFontData : public RecordedEvent {
 public:
 
   static void FontDataProc(const uint8_t *aData, uint32_t aSize,
-                           uint32_t aIndex, Float aGlyphSize,
-                           uint32_t aVariationCount,
-                           const ScaledFont::VariationSetting* aVariations,
-                           void* aBaton)
+                           uint32_t aIndex, Float aGlyphSize, void* aBaton)
   {
     auto recordedFontData = static_cast<RecordedFontData*>(aBaton);
-    recordedFontData->SetFontData(aData, aSize, aIndex, aGlyphSize,
-                                  aVariationCount, aVariations);
+    recordedFontData->SetFontData(aData, aSize, aIndex, aGlyphSize);
   }
 
   explicit RecordedFontData(ScaledFont *aScaledFont)
-    : RecordedEvent(FONTDATA), mData(nullptr), mVariations(nullptr)
+    : RecordedEvent(FONTDATA), mData(nullptr)
   {
     mGetFontFileDataSucceeded = aScaledFont->GetFontFileData(&FontDataProc, this);
   }
@@ -1042,16 +1037,14 @@ public:
   virtual ReferencePtr GetObjectRef() const { return nullptr; };
 
   void SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex,
-                   Float aGlyphSize, uint32_t aVariationCount,
-                   const ScaledFont::VariationSetting* aVariations);
+                   Float aGlyphSize);
 
   bool GetFontDetails(RecordedFontDetails& fontDetails);
 
 private:
   friend class RecordedEvent;
 
-  uint8_t* mData;
-  ScaledFont::VariationSetting* mVariations;
+  uint8_t *mData;
   RecordedFontDetails mFontDetails;
 
   bool mGetFontFileDataSucceeded;

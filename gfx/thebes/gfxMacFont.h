@@ -42,8 +42,7 @@ public:
     // with embedded color bitmaps (Apple Color Emoji), as Core Text renders
     // the glyphs with non-linear scaling at small pixel sizes.
     virtual bool ProvidesGlyphWidths() const override {
-        return mVariationFont ||
-               mFontEntry->HasFontTable(TRUETYPE_TAG('s','b','i','x'));
+        return mFontEntry->HasFontTable(TRUETYPE_TAG('s','b','i','x'));
     }
 
     virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
@@ -61,14 +60,6 @@ public:
                                         FontCacheSizes* aSizes) const override;
 
     virtual FontType GetType() const override { return FONT_TYPE_MAC; }
-
-    // Helper to create a CTFont from a CGFont, with optional font descriptor
-    // (for features), and copying any variations that were set on the CGFont.
-    // This is public so that gfxCoreTextShaper can also use it.
-    static CTFontRef
-    CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
-                                         CGFloat aSize,
-                                         CTFontDescriptorRef aFontDesc = nullptr);
 
 protected:
     virtual const Metrics& GetHorizontalMetrics() override {
@@ -92,7 +83,8 @@ protected:
     gfxFloat GetCharWidth(CFDataRef aCmap, char16_t aUniChar,
                           uint32_t *aGlyphID, gfxFloat aConvFactor);
 
-    // a strong reference to the CoreGraphics font
+    // a weak reference to the CoreGraphics font: this is owned by the
+    // MacOSFontEntry, it is not retained or released by gfxMacFont
     CGFontRef             mCGFont;
 
     // a Core Text font reference, created only if we're using CT to measure
@@ -105,8 +97,6 @@ protected:
 
     Metrics               mMetrics;
     uint32_t              mSpaceGlyph;
-
-    bool                  mVariationFont; // true if variations are in effect
 };
 
 #endif /* GFX_MACFONT_H */
