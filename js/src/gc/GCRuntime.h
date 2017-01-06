@@ -816,9 +816,6 @@ class GCRuntime
     bool isFullGc() const { return isFull; }
     bool isCompactingGc() const { return isCompacting; }
 
-    bool areGrayBitsValid() const { return grayBitsValid; }
-    void setGrayBitsInvalid() { grayBitsValid = false; }
-
     bool minorGCRequested() const { return minorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool majorGCRequested() const { return majorGCTriggerReason != JS::gcreason::NO_REASON; }
     bool isGcNeeded() { return minorGCRequested() || majorGCRequested(); }
@@ -1129,12 +1126,6 @@ class GCRuntime
         grayBufferState = GrayBufferState::Unused;
         resetBufferedGrayRoots();
     }
-
-    /*
-     * The gray bits can become invalid if UnmarkGray overflows the stack. A
-     * full GC will reset this bit, since it fills in all the gray bits.
-     */
-    bool grayBitsValid;
 
     mozilla::Atomic<JS::gcreason::Reason, mozilla::Relaxed> majorGCTriggerReason;
 

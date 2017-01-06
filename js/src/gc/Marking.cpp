@@ -2917,7 +2917,7 @@ UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing)
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
          */
-        runtime()->gc.setGrayBitsInvalid();
+        runtime()->setGCGrayBitsValid(false);
         return;
     }
 
