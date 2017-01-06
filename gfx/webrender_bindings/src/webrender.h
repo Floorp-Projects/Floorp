@@ -8,14 +8,7 @@
 #define WR_h
 extern "C" {
 bool is_in_compositor_thread();
-bool is_in_render_thread();
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname);
-
-struct WrRenderer;
-void wr_renderer_update(WrRenderer* renderer);
-void wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height);
-void wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled);
-bool wr_renderer_current_epoch(WrRenderer* renderer, uint64_t pipeline_id, uint32_t* out_epoch);
 
 enum WRImageFormat {
     Invalid,
@@ -247,18 +240,4 @@ WR_FUNC;
 
 #undef WR_FUNC
 }
-
-namespace mozilla {
-namespace wr {
-
-struct WindowId {
-  explicit WindowId(uint64_t aHandle) : mHandle(aHandle) {}
-  bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
-
-  uint64_t mHandle;
-};
-
-} // namespace
-} // namespace
-
 #endif

@@ -7,7 +7,6 @@
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
-#include "mozilla/layers/RenderThread.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/GraphicsMessages.h"
@@ -940,9 +939,6 @@ gfxPlatform::InitLayersIPC()
 
     if (XRE_IsParentProcess())
     {
-        if (gfxPrefs::WebRenderEnabled()) {
-            layers::RenderThread::Start();
-        }
         layers::CompositorThreadHolder::Start();
     }
 }
@@ -969,7 +965,6 @@ gfxPlatform::ShutdownLayersIPC()
 
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
-        layers::RenderThread::ShutDown();
     } else {
       // TODO: There are other kind of processes and we should make sure gfx
       // stuff is either not created there or shut down properly.
