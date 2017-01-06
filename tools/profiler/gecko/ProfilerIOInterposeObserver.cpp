@@ -14,7 +14,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
     return;
   }
 
-  ProfilerBacktrace* stack = profiler_get_backtrace();
+  UniqueProfilerBacktrace stack = profiler_get_backtrace();
 
   nsCString filename;
   if (aObservation.Filename()) {
@@ -25,6 +25,6 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation)
                                                        filename.get(),
                                                        aObservation.Start(),
                                                        aObservation.End(),
-                                                       stack);
+                                                       Move(stack));
   PROFILER_MARKER_PAYLOAD(aObservation.ObservedOperationString(), markerPayload);
 }
