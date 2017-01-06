@@ -15,6 +15,7 @@
 #include "mozilla/layers/CompositorVsyncScheduler.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/RenderThread.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderCompositorOGL.h"
 #include "mozilla/widget/CompositorWidget.h"
@@ -22,6 +23,11 @@
 bool is_in_compositor_thread()
 {
   return mozilla::layers::CompositorThreadHolder::IsInCompositorThread();
+}
+
+bool is_in_render_thread()
+{
+  return mozilla::layers::RenderThread::IsInRenderThread();
 }
 
 void* get_proc_address_from_glcontext(void* glcontext_ptr, const char* procname)
@@ -530,6 +536,12 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   // Calls for TextureHosts recycling
   mCompositor->EndFrame();
   mCompositor->FlushPendingNotifyNotUsed();
+}
+
+void
+WebRenderBridgeParent::DidComposite(uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd)
+{
+  mCompositorBridge->NotifyDidComposite(aTransactionId, aStart, aEnd);
 }
 
 WebRenderBridgeParent::~WebRenderBridgeParent()
