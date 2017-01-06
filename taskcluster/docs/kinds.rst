@@ -36,6 +36,12 @@ The l10n kind takes the last published nightly build, and generates localized bu
 from it. You can read more about how to trigger these on the `wiki
 <https://wiki.mozilla.org/ReleaseEngineering/TryServer#Desktop_l10n_jobs_.28on_Taskcluster.29>`_.
 
+nightly-l10n
+------------
+
+The nightly l10n kind repacks a specific nightly build (from the same source code)
+in order to provide localized versions of the same source.
+
 source-check
 ------------
 
