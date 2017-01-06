@@ -138,7 +138,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
         private synchronized void reset() {
             for (Sample s : mInputSamples) {
-                mSamplePool.recycleInput(s);
+                if (!s.isEOS()) {
+                    mSamplePool.recycleInput(s);
+                }
             }
             mInputSamples.clear();
 
