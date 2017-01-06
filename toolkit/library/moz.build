@@ -47,6 +47,9 @@ def Libxul(name):
             'api-ms-win-core-winrt-string-l1-1-0.dll',
         ]
 
+    if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['ACCESSIBILITY']:
+        LOCAL_INCLUDES += ['!/accessible/interfaces/gecko/']
+
     if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
         LOCAL_INCLUDES += [
             '/widget/windows',

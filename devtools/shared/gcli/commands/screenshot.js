@@ -559,8 +559,7 @@ var saveToFile = Task.async(function* (context, reply) {
   persist.savePrivacyAwareURI(sourceURI,
                               null,
                               document.documentURIObject,
-                              Ci.nsIHttpChannel
-                                .REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+                              Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                               null,
                               null,
                               targetFileURI,

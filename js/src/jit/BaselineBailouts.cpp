@@ -907,9 +907,7 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 // We would love to just save all the arguments and leave them
                 // in the stub frame pushed below, but we will lose the inital
                 // argument which the function was called with, which we must
-                // return to the caller, even if the setter internally modifies
-                // its arguments. Stash the initial argument on the stack, to be
-                // later retrieved by the SetProp_Fallback stub.
+                // leave on the stack. It's pushed as the result of the SETPROP.
                 Value initialArg = savedCallerArgs[inlined_args - 1];
                 JitSpew(JitSpew_BaselineBailouts, "     pushing setter's initial argument");
                 if (!builder.writeValue(initialArg, "StackValue"))

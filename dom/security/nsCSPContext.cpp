@@ -346,9 +346,9 @@ NS_IMETHODIMP
 nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
 {
   *outIsSet = false;
-  *outPolicy = mozilla::net::RP_Default;
+  *outPolicy = mozilla::net::RP_Unset;
   nsAutoString refpol;
-  mozilla::net::ReferrerPolicy previousPolicy = mozilla::net::RP_Default;
+  mozilla::net::ReferrerPolicy previousPolicy = mozilla::net::RP_Unset;
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     mPolicies[i]->getReferrerPolicy(refpol);
     // only set the referrer policy if not delievered through a CSPRO and
