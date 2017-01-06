@@ -1069,7 +1069,7 @@ TX_XSLTFunctionAvailable(nsIAtom* aName, int32_t aNameSpaceID)
 {
     RefPtr<txStylesheetCompiler> compiler =
         new txStylesheetCompiler(EmptyString(),
-                                 mozilla::net::RP_Default, nullptr);
+                                 mozilla::net::RP_Unset, nullptr);
     NS_ENSURE_TRUE(compiler, false);
 
     nsAutoPtr<FunctionCall> fnCall;

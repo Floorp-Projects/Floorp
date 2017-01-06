@@ -137,7 +137,7 @@ public:
   NS_IMETHOD WillInterrupt(void) override;
   NS_IMETHOD WillResume(void) override;
   NS_IMETHOD SetParser(nsParserBase* aParser) override;
-  virtual void FlushPendingNotifications(mozFlushType aType) override;
+  virtual void FlushPendingNotifications(FlushType aType) override;
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
   virtual nsISupports *GetTarget() override;
   virtual bool IsScriptExecuting() override;
@@ -1053,7 +1053,7 @@ HTMLContentSink::UpdateChildCounts()
 }
 
 void
-HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
+HTMLContentSink::FlushPendingNotifications(FlushType aType)
 {
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
@@ -1061,11 +1061,11 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
     // Only flush if we're still a document observer (so that our child counts
     // should be correct).
     if (mIsDocumentObserver) {
-      if (aType >= Flush_ContentAndNotify) {
+      if (aType >= FlushType::ContentAndNotify) {
         FlushTags();
       }
     }
-    if (aType >= Flush_InterruptibleLayout) {
+    if (aType >= FlushType::InterruptibleLayout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       StartLayout(true);

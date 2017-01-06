@@ -25,11 +25,11 @@
 #include "SplitNodeTransaction.h"       // for SplitNodeTransaction
 #include "StyleSheetTransactions.h"     // for AddStyleSheetTransaction, etc.
 #include "TextEditUtils.h"              // for TextEditUtils
-#include "mozFlushType.h"               // for mozFlushType::Flush_Frames
 #include "mozInlineSpellChecker.h"      // for mozInlineSpellChecker
 #include "mozilla/CheckedInt.h"         // for CheckedInt
 #include "mozilla/EditorUtils.h"        // for AutoRules, etc.
 #include "mozilla/EditTransactionBase.h" // for EditTransactionBase
+#include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/IMEStateManager.h"    // for IMEStateManager
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/dom/Selection.h"      // for Selection, etc.
@@ -2788,7 +2788,7 @@ EditorBase::SplitNodeImpl(nsIContent& aExistingRightNode,
   // Handle selection
   nsCOMPtr<nsIPresShell> ps = GetPresShell();
   if (ps) {
-    ps->FlushPendingNotifications(Flush_Frames);
+    ps->FlushPendingNotifications(FlushType::Frames);
   }
 
   bool shouldSetSelection = GetShouldTxnSetSelection();

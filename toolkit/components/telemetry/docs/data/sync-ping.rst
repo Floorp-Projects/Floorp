@@ -19,13 +19,13 @@ Structure:
       payload: {
         version: 1,
         discarded: <integer count> // Number of syncs discarded -- left out if zero.
-        why: <string>, // Why did we submit the ping? Either "shutdown" or "schedule".
+        why: <string>, // Why did we submit the ping? Either "shutdown", "schedule", or "idchanged".
+        uid: <string>, // Hashed FxA unique ID, or string of 32 zeros. If this changes between syncs, the payload is submitted.
+        deviceID: <string>, // Hashed FxA Device ID, hex string of 64 characters, not included if the user is not logged in. If this changes between syncs, the payload is submitted.
         // Array of recorded syncs. The ping is not submitted if this would be empty
         syncs: [{
           when: <integer milliseconds since epoch>,
           took: <integer duration in milliseconds>,
-          uid: <string>, // Hashed FxA unique ID, or string of 32 zeros.
-          deviceID: <string>, // Hashed FxA Device ID, hex string of 64 characters, not included if the user is not logged in.
           didLogin: <bool>, // Optional, is this the first sync after login? Excluded if we don't know.
           why: <string>, // Optional, why the sync occured, excluded if we don't know.
 
@@ -114,7 +114,7 @@ syncs.took
 
 These values should be monotonic.  If we can't get a monotonic timestamp, -1 will be reported on the payload, and the values will be omitted from the engines. Additionally, the value will be omitted from an engine if it would be 0 (either due to timer inaccuracy or finishing instantaneously).
 
-syncs.uid
+uid
 ~~~~~~~~~
 
 This property containing a hash of the FxA account identifier, which is a 32 character hexidecimal string.  In the case that we are unable to authenticate with FxA and have never authenticated in the past, it will be a placeholder string consisting of 32 repeated ``0`` characters.

@@ -41,7 +41,7 @@ public class ViewUtil {
      * @param isLayoutRtl
      */
     public static void setMarginStart(ViewGroup.MarginLayoutParams layoutParams, int marginStart, boolean isLayoutRtl) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        if (AppConstants.Versions.feature17Plus && AppConstants.Versions.preN) {
             if (isLayoutRtl) {
                 layoutParams.rightMargin = marginStart;
             } else {

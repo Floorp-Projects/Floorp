@@ -21,8 +21,6 @@ STDMETHODIMP
 ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
                           ULONG FAR* aCountFetched)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aItems || !aCountFetched)
     return E_INVALIDARG;
 
@@ -55,15 +53,11 @@ ChildrenEnumVariant::Next(ULONG aCount, VARIANT FAR* aItems,
   (*aCountFetched) = countFetched;
 
   return countFetched < aCount ? S_FALSE : S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Skip(ULONG aCount)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (mAnchorAcc->IsDefunct() || mAnchorAcc->GetChildAt(mCurIndex) != mCurAcc)
     return CO_E_OBJNOTCONNECTED;
 
@@ -71,15 +65,11 @@ ChildrenEnumVariant::Skip(ULONG aCount)
   mCurAcc = mAnchorAcc->GetChildAt(mCurIndex);
 
   return mCurAcc ? S_OK : S_FALSE;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Reset()
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (mAnchorAcc->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
@@ -87,15 +77,11 @@ ChildrenEnumVariant::Reset()
   mCurAcc = mAnchorAcc->GetChildAt(0);
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ChildrenEnumVariant::Clone(IEnumVARIANT** aEnumVariant)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aEnumVariant)
     return E_INVALIDARG;
 
@@ -103,6 +89,4 @@ ChildrenEnumVariant::Clone(IEnumVARIANT** aEnumVariant)
   (*aEnumVariant)->AddRef();
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }

@@ -79,7 +79,6 @@ virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);              \
 STDMETHODIMP                                                                   \
 Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
 {                                                                              \
-  A11Y_TRYBLOCK_BEGIN                                                          \
   if (!aInstancePtr)                                                           \
     return E_INVALIDARG;                                                       \
   *aInstancePtr = nullptr;                                                     \
@@ -88,17 +87,14 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
 
 #define IMPL_IUNKNOWN_QUERY_TAIL                                               \
   return hr;                                                                   \
-  A11Y_TRYBLOCK_END                                                            \
 }
 
 #define IMPL_IUNKNOWN_QUERY_TAIL_AGGREGATED(Member)                            \
   return Member->QueryInterface(aIID, aInstancePtr);                           \
-  A11Y_TRYBLOCK_END                                                            \
 }
 
 #define IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(BaseClass)                          \
   return BaseClass::QueryInterface(aIID, aInstancePtr);                        \
-  A11Y_TRYBLOCK_END                                                            \
 }
 
 #define IMPL_IUNKNOWN_QUERY_IFACE(Iface)                                       \
@@ -158,21 +154,6 @@ Class::QueryInterface(REFIID aIID, void** aInstancePtr)                        \
   IMPL_IUNKNOWN_QUERY_CLASS(Super2);                                           \
   IMPL_IUNKNOWN_QUERY_TAIL_INHERITED(Super0)
 
-
-/**
- * Wrap every method body by these macroses to pass exception to the crash
- * reporter.
- */
-#define A11Y_TRYBLOCK_BEGIN                                                    \
-  MOZ_SEH_TRY {
-
-#define A11Y_TRYBLOCK_END                                                      \
-  } MOZ_SEH_EXCEPT(mozilla::a11y::FilterExceptions(::GetExceptionCode(),       \
-                                                   GetExceptionInformation())) \
-  { }                                                                          \
-  return E_FAIL;
-
-
 namespace mozilla {
 namespace a11y {
 
@@ -180,11 +161,6 @@ namespace a11y {
  * Converts nsresult to HRESULT.
  */
 HRESULT GetHRESULT(nsresult aResult);
-
-/**
- * Used to pass an exception to the crash reporter.
- */
-int FilterExceptions(unsigned int aCode, EXCEPTION_POINTERS* aExceptionInfo);
 
 } // namespace a11y;
 } //namespace mozilla;

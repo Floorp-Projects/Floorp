@@ -387,7 +387,9 @@ pref("browser.search.context.loadInBackground", false);
 // comma seperated list of of engines to hide in the search panel.
 pref("browser.search.hiddenOneOffs", "");
 
+#ifndef RELEASE_OR_BETA
 pref("browser.search.reset.enabled", true);
+#endif
 
 pref("browser.sessionhistory.max_entries", 50);
 
@@ -1558,4 +1560,4 @@ pref("services.sync.validation.enabled", true);
 #endif
 
 // Preferences for the form autofill system extension
-pref("browser.formautofill.enabled", false);
+pref("browser.formautofill.experimental", false);

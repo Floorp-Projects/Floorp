@@ -3,11 +3,19 @@
   "description": "schema for Sync pings, documentation avaliable in toolkit/components/telemetry/docs/sync-ping.rst",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "syncs", "why"],
+  "required": ["version", "syncs", "why", "uid"],
   "properties": {
     "version": { "type": "integer", "minimum": 0 },
     "discarded": { "type": "integer", "minimum": 1 },
-    "why": { "enum": ["shutdown", "schedule"] },
+    "why": { "enum": ["shutdown", "schedule", "idchange"] },
+    "uid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{32}$"
+    },
+    "deviceID": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "syncs": {
       "type": "array",
       "minItems": 1,
@@ -18,21 +26,13 @@
     "payload": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["when", "uid", "took"],
+      "required": ["when", "took"],
       "properties": {
         "didLogin": { "type": "boolean" },
         "when": { "type": "integer" },
-        "uid": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{32}$"
-        },
         "devices": {
           "type": "array",
           "items": { "$ref": "#/definitions/device" }
-        },
-        "deviceID": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
         },
         "status": {
           "type": "object",

@@ -11,4 +11,5 @@ transforms:
 
 jobs-from:
    - linux.yml
+   - macosx.yml
    - windows.yml

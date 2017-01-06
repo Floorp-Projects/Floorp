@@ -49,7 +49,8 @@ public:
                                uint32_t aWhichFrame,
                                gfx::SamplingFilter aSamplingFilter,
                                const Maybe<SVGImageContext>& aSVGContext,
-                               uint32_t aFlags) override;
+                               uint32_t aFlags,
+                               float aOpacity) override;
   NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(
                                            const nsIntRect& aRect) override;
   nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,

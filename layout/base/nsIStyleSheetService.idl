@@ -7,8 +7,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIPreloadedStyleSheet;
 interface nsIURI;
-interface nsIDOMStyleSheet;
 
 /*
  * nsIStyleSheetService allows extensions or embeddors to add to the
@@ -51,7 +51,8 @@ interface nsIStyleSheetService : nsISupports
    * Synchronously loads a style sheet from |sheetURI| and returns the
    * new style sheet object. Can be used with nsIDOMWindowUtils.addSheet.
    */
-  nsIDOMStyleSheet preloadSheet(in nsIURI sheetURI, in unsigned long type);
+  nsIPreloadedStyleSheet preloadSheet(in nsIURI sheetURI,
+                                      in unsigned long type);
 
   /**
    * Remove the style sheet at |sheetURI| from the list of style sheets

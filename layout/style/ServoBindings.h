@@ -14,6 +14,7 @@
 #include "mozilla/ServoElementSnapshot.h"
 #include "mozilla/css/SheetParsingMode.h"
 #include "nsChangeHint.h"
+#include "nsCSSPseudoClasses.h"
 #include "nsStyleStruct.h"
 
 /*
@@ -115,13 +116,14 @@ void Gecko_DropStyleChildrenIterator(StyleChildrenIteratorOwned it);
 RawGeckoNodeBorrowedOrNull Gecko_GetNextStyleChild(StyleChildrenIteratorBorrowedMut it);
 
 // Selector Matching.
-uint8_t Gecko_ElementState(RawGeckoElementBorrowed element);
+uint16_t Gecko_ElementState(RawGeckoElementBorrowed element);
 bool Gecko_IsHTMLElementInHTMLDocument(RawGeckoElementBorrowed element);
 bool Gecko_IsLink(RawGeckoElementBorrowed element);
 bool Gecko_IsTextNode(RawGeckoNodeBorrowed node);
 bool Gecko_IsVisitedLink(RawGeckoElementBorrowed element);
 bool Gecko_IsUnvisitedLink(RawGeckoElementBorrowed element);
 bool Gecko_IsRootElement(RawGeckoElementBorrowed element);
+bool Gecko_MatchesElement(mozilla::CSSPseudoClassType type, RawGeckoElementBorrowed element);
 nsIAtom* Gecko_LocalName(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_Namespace(RawGeckoElementBorrowed element);
 nsIAtom* Gecko_GetElementId(RawGeckoElementBorrowed element);

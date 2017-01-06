@@ -146,7 +146,7 @@ MediaQueryList::RecomputeMatches()
   if (mDocument->GetParentDocument()) {
     // Flush frames on the parent so our prescontext will get
     // recreated as needed.
-    mDocument->GetParentDocument()->FlushPendingNotifications(Flush_Frames);
+    mDocument->GetParentDocument()->FlushPendingNotifications(FlushType::Frames);
     // That might have killed our document, so recheck that.
     if (!mDocument) {
       return;

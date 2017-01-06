@@ -89,7 +89,7 @@ body {
 }
 
 #aboutLinks > li > a {
-  padding-left: 25px;
+  padding-inline-start: 25px;
   display: block;
 }
 

@@ -66,6 +66,7 @@ class CentOSFedoraBootstrapper(BaseBootstrapper):
 
             self.packages += [
                 'python2-devel',
+                'redhat-rpm-config',
             ]
 
             self.browser_packages += [

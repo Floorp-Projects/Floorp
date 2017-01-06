@@ -101,7 +101,7 @@ XPathResult::IterateNext(ErrorResult& aRv)
     }
 
     if (mDocument) {
-        mDocument->FlushPendingNotifications(Flush_Content);
+        mDocument->FlushPendingNotifications(FlushType::Content);
     }
 
     if (mInvalidIteratorState) {

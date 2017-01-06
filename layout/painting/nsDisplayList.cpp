@@ -3250,7 +3250,7 @@ nsDisplayBackgroundImage::PaintInternal(nsDisplayListBuilder* aBuilder,
                                                   CompositionOp::OP_OVER);
   params.bgClipRect = aClipRect;
   image::DrawResult result =
-    nsCSSRendering::PaintBackground(params);
+    nsCSSRendering::PaintStyleImageLayer(params);
 
   if (clip == StyleGeometryBox::Text) {
     ctx->PopGroupAndBlend();
@@ -4257,19 +4257,19 @@ nsDisplayBorder::CalculateBounds(const nsStyleBorder& aStyleBorder)
     nscoord radii[8];
     if (mFrame->GetBorderRadii(radii)) {
       if (border.left > 0 || border.top > 0) {
-        nsSize cornerSize(radii[NS_CORNER_TOP_LEFT_X], radii[NS_CORNER_TOP_LEFT_Y]);
+        nsSize cornerSize(radii[eCornerTopLeftX], radii[eCornerTopLeftY]);
         result.OrWith(nsRect(borderBounds.TopLeft(), cornerSize));
       }
       if (border.top > 0 || border.right > 0) {
-        nsSize cornerSize(radii[NS_CORNER_TOP_RIGHT_X], radii[NS_CORNER_TOP_RIGHT_Y]);
+        nsSize cornerSize(radii[eCornerTopRightX], radii[eCornerTopRightY]);
         result.OrWith(nsRect(borderBounds.TopRight() - nsPoint(cornerSize.width, 0), cornerSize));
       }
       if (border.right > 0 || border.bottom > 0) {
-        nsSize cornerSize(radii[NS_CORNER_BOTTOM_RIGHT_X], radii[NS_CORNER_BOTTOM_RIGHT_Y]);
+        nsSize cornerSize(radii[eCornerBottomRightX], radii[eCornerBottomRightY]);
         result.OrWith(nsRect(borderBounds.BottomRight() - nsPoint(cornerSize.width, cornerSize.height), cornerSize));
       }
       if (border.bottom > 0 || border.left > 0) {
-        nsSize cornerSize(radii[NS_CORNER_BOTTOM_LEFT_X], radii[NS_CORNER_BOTTOM_LEFT_Y]);
+        nsSize cornerSize(radii[eCornerBottomLeftX], radii[eCornerBottomLeftY]);
         result.OrWith(nsRect(borderBounds.BottomLeft() - nsPoint(0, cornerSize.height), cornerSize));
       }
     }
@@ -7352,11 +7352,9 @@ bool nsDisplayMask::ShouldPaintOnMaskLayer(LayerManager* aManager)
   nsSVGUtils::MaskUsage maskUsage;
   nsSVGUtils::DetermineMaskUsage(mFrame, mHandleOpacity, maskUsage);
 
-  // XXX Bug 1323912. nsSVGIntegrationUtils::PaintMask can not handle opacity
-  // correctly. Turn it off before bug fixed.
   // XXX Temporary disable paint clip-path onto mask before figure out
   // performance regression(bug 1325550).
-  if (maskUsage.opacity != 1.0 || maskUsage.shouldApplyClipPath) {
+  if (maskUsage.shouldApplyClipPath) {
     return false;
   }
 

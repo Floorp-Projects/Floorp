@@ -140,7 +140,7 @@ DocumentTimeline::NotifyAnimationUpdated(Animation& aAnimation)
       MOZ_ASSERT(isInList(),
                 "We should not register with the refresh driver if we are not"
                 " in the document's list of timelines");
-      refreshDriver->AddRefreshObserver(this, Flush_Style);
+      refreshDriver->AddRefreshObserver(this, FlushType::Style);
       mIsObservingRefreshDriver = true;
     }
   }
@@ -207,7 +207,7 @@ DocumentTimeline::NotifyRefreshDriverCreated(nsRefreshDriver* aDriver)
     MOZ_ASSERT(isInList(),
                "We should not register with the refresh driver if we are not"
                " in the document's list of timelines");
-    aDriver->AddRefreshObserver(this, Flush_Style);
+    aDriver->AddRefreshObserver(this, FlushType::Style);
     mIsObservingRefreshDriver = true;
   }
 }
@@ -219,7 +219,7 @@ DocumentTimeline::NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver)
     return;
   }
 
-  aDriver->RemoveRefreshObserver(this, Flush_Style);
+  aDriver->RemoveRefreshObserver(this, FlushType::Style);
   mIsObservingRefreshDriver = false;
 }
 
@@ -275,7 +275,7 @@ DocumentTimeline::UnregisterFromRefreshDriver()
     return;
   }
 
-  refreshDriver->RemoveRefreshObserver(this, Flush_Style);
+  refreshDriver->RemoveRefreshObserver(this, FlushType::Style);
   mIsObservingRefreshDriver = false;
 }
 

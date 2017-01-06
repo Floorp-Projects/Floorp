@@ -23,7 +23,7 @@ add_task(function* () {
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "data:text/html,a" }, function* (browser1) {
     // Set up the grouped SHEntry setup
     let tab2 = gBrowser.loadOneTab("data:text/html,b", {
-      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
       allowThirdPartyFixup: true,
       relatedToCurrent: true,
       isPrerendered: true,

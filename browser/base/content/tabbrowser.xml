@@ -4846,7 +4846,7 @@
 
               let newTab = this.loadOneTab(data.href, {
                 referrerURI: (data.referrer ? makeURI(data.referrer) : null),
-                referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+                referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
                 postData: null,
                 allowThirdPartyFixup: true,
                 relatedToCurrent: true,
