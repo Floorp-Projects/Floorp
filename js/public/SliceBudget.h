@@ -7,8 +7,6 @@
 #ifndef js_SliceBudget_h
 #define js_SliceBudget_h
 
-#include "mozilla/Atomics.h"
-
 #include <stdint.h>
 
 namespace js {
@@ -38,7 +36,7 @@ class JS_PUBLIC_API(SliceBudget)
     static const int64_t unlimitedDeadline = INT64_MAX;
     static const intptr_t unlimitedStartCounter = INTPTR_MAX;
 
-    bool checkOverBudget(JSContext* maybeCx);
+    bool checkOverBudget();
 
     SliceBudget();
 
@@ -50,7 +48,7 @@ class JS_PUBLIC_API(SliceBudget)
     WorkBudget workBudget;
 
     int64_t deadline; /* in microseconds */
-    mozilla::Atomic<intptr_t, mozilla::Relaxed> counter;
+    intptr_t counter;
 
     static const intptr_t CounterReset = 1000;
 
@@ -66,44 +64,19 @@ class JS_PUBLIC_API(SliceBudget)
     /* Instantiate as SliceBudget(WorkBudget(n)). */
     explicit SliceBudget(WorkBudget work);
 
-    // Need an explicit copy constructor because Atomic fails to provide one.
-    SliceBudget(const SliceBudget& other)
-        : timeBudget(other.timeBudget),
-          workBudget(other.workBudget),
-          deadline(other.deadline),
-          counter(other.counter)
-    {}
-
-    // Need an explicit operator= because Atomic fails to provide one.
-    SliceBudget& operator=(const SliceBudget& other) {
-        timeBudget = other.timeBudget;
-        workBudget = other.workBudget;
-        deadline = other.deadline;
-        counter = intptr_t(other.counter);
-        return *this;
-    }
-
     void makeUnlimited() {
         deadline = unlimitedDeadline;
         counter = unlimitedStartCounter;
-    }
-
-    // Request that checkOverBudget be called the next time isOverBudget is
-    // called.
-    void requestFullCheck() {
-        counter = 0;
     }
 
     void step(intptr_t amt = 1) {
         counter -= amt;
     }
 
-    // Only need to pass maybeCx if the GC interrupt callback should be checked
-    // (and possibly invoked).
-    bool isOverBudget(JSContext* maybeCx = nullptr) {
+    bool isOverBudget() {
         if (counter > 0)
             return false;
-        return checkOverBudget(maybeCx);
+        return checkOverBudget();
     }
 
     bool isWorkBudget() const { return deadline == 0; }
