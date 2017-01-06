@@ -44,8 +44,9 @@ static const unsigned GENERATOR_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
-ModuleGenerator::ModuleGenerator()
+ModuleGenerator::ModuleGenerator(UniqueChars* error)
   : alwaysBaseline_(false),
+    error_(error),
     numSigs_(0),
     numTables_(0),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
@@ -242,8 +243,13 @@ ModuleGenerator::finishOutstandingTask()
         while (true) {
             MOZ_ASSERT(outstanding_ > 0);
 
-            if (HelperThreadState().wasmFailed(lock))
+            if (HelperThreadState().wasmFailed(lock)) {
+                if (error_) {
+                  MOZ_ASSERT(!*error_, "Should have stopped earlier");
+                  *error_ = Move(HelperThreadState().harvestWasmError(lock));
+                }
                 return false;
+            }
 
             if (!HelperThreadState().wasmFinishedList(lock).empty()) {
                 outstanding_--;
@@ -917,7 +923,7 @@ ModuleGenerator::launchBatchCompile()
             return false;
         outstanding_++;
     } else {
-        if (!CompileFunction(currentTask_))
+        if (!CompileFunction(currentTask_, error_))
             return false;
         if (!finishTask(currentTask_))
             return false;
@@ -1165,7 +1171,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
 }
 
 bool
-wasm::CompileFunction(CompileTask* task)
+wasm::CompileFunction(CompileTask* task, UniqueChars* error)
 {
     TraceLoggerThread* logger = TraceLoggerForCurrentThread();
     AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
@@ -1173,11 +1179,11 @@ wasm::CompileFunction(CompileTask* task)
     for (FuncCompileUnit& unit : task->units()) {
         switch (unit.mode()) {
           case CompileMode::Ion:
-            if (!IonCompileFunction(task, &unit))
+            if (!IonCompileFunction(task, &unit, error))
                 return false;
             break;
           case CompileMode::Baseline:
-            if (!BaselineCompileFunction(task, &unit))
+            if (!BaselineCompileFunction(task, &unit, error))
                 return false;
             break;
         }

@@ -117,7 +117,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeModuleEnvironment(d, env.get()))
         return nullptr;
 
-    ModuleGenerator mg;
+    ModuleGenerator mg(error);
     if (!mg.init(Move(env), args))
         return nullptr;
 

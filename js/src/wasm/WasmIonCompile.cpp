@@ -3655,14 +3655,14 @@ EmitExpr(FunctionCompiler& f)
 }
 
 bool
-wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit)
+wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* error)
 {
     MOZ_ASSERT(unit->mode() == CompileMode::Ion);
 
     const FuncBytes& func = unit->func();
     const ModuleEnvironment& env = task->env();
 
-    Decoder d(func.bytes());
+    Decoder d(func.bytes(), error);
 
     // Build the local types vector.
 
