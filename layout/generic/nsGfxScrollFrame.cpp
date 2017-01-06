@@ -5727,26 +5727,26 @@ ScrollFrameHelper::GetBorderRadii(const nsSize& aFrameSize,
 
   if (sb.left > 0 || sb.top > 0) {
     ReduceRadii(border.left, border.top,
-                aRadii[NS_CORNER_TOP_LEFT_X],
-                aRadii[NS_CORNER_TOP_LEFT_Y]);
+                aRadii[eCornerTopLeftX],
+                aRadii[eCornerTopLeftY]);
   }
 
   if (sb.top > 0 || sb.right > 0) {
     ReduceRadii(border.right, border.top,
-                aRadii[NS_CORNER_TOP_RIGHT_X],
-                aRadii[NS_CORNER_TOP_RIGHT_Y]);
+                aRadii[eCornerTopRightX],
+                aRadii[eCornerTopRightY]);
   }
 
   if (sb.right > 0 || sb.bottom > 0) {
     ReduceRadii(border.right, border.bottom,
-                aRadii[NS_CORNER_BOTTOM_RIGHT_X],
-                aRadii[NS_CORNER_BOTTOM_RIGHT_Y]);
+                aRadii[eCornerBottomRightX],
+                aRadii[eCornerBottomRightY]);
   }
 
   if (sb.bottom > 0 || sb.left > 0) {
     ReduceRadii(border.left, border.bottom,
-                aRadii[NS_CORNER_BOTTOM_LEFT_X],
-                aRadii[NS_CORNER_BOTTOM_LEFT_Y]);
+                aRadii[eCornerBottomLeftX],
+                aRadii[eCornerBottomLeftY]);
   }
 
   return true;

@@ -117,23 +117,27 @@ add_task(async function test_processIncoming_error() {
     engine.lastSync = Date.now() / 1000 - 60;
     engine.toFetch = [BOGUS_GUID];
 
-    let error, ping;
+    let error, pingPayload, fullPing;
     try {
-      await sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
+      await sync_engine_and_validate_telem(engine, true, (errPing, fullErrPing) => {
+        pingPayload = errPing;
+        fullPing = fullErrPing;
+      });
     } catch(ex) {
       error = ex;
     }
     ok(!!error);
-    ok(!!ping);
-    equal(ping.uid, "f".repeat(32)); // as setup by SyncTestingInfrastructure
-    deepEqual(ping.failureReason, {
+    ok(!!pingPayload);
+
+    equal(fullPing.uid, "f".repeat(32)); // as setup by SyncTestingInfrastructure
+    deepEqual(pingPayload.failureReason, {
       name: "othererror",
       error: "error.engine.reason.record_download_fail"
     });
 
-    equal(ping.engines.length, 1);
-    equal(ping.engines[0].name, "bookmarks");
-    deepEqual(ping.engines[0].failureReason, {
+    equal(pingPayload.engines.length, 1);
+    equal(pingPayload.engines[0].name, "bookmarks");
+    deepEqual(pingPayload.engines[0].failureReason, {
       name: "othererror",
       error: "error.engine.reason.record_download_fail"
     });

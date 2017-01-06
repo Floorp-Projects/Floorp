@@ -1055,7 +1055,7 @@ nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
 // (aRowIndex, aColIndex). For eBStartIEnd, store it in the entry to the iEnd-wards where
 // it would be BStartIStart. For eBEndIEnd, store it in the entry to the bEnd-wards. etc.
 void
-nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
+nsTableCellMap::SetBCBorderCorner(LogicalCorner aCorner,
                                   nsCellMap&  aCellMap,
                                   uint32_t    aCellMapStart,
                                   uint32_t    aRowIndex,
@@ -1076,15 +1076,15 @@ nsTableCellMap::SetBCBorderCorner(Corner      aCorner,
   int32_t yPos = aRowIndex;
   int32_t rgYPos = aRowIndex - aCellMapStart;
 
-  if (eBStartIEnd == aCorner) {
+  if (eLogicalCornerBStartIEnd == aCorner) {
     xPos++;
   }
-  else if (eBEndIEnd == aCorner) {
+  else if (eLogicalCornerBEndIEnd == aCorner) {
     xPos++;
     rgYPos++;
     yPos++;
   }
-  else if (eBEndIStart == aCorner) {
+  else if (eLogicalCornerBEndIStart == aCorner) {
     rgYPos++;
     yPos++;
   }

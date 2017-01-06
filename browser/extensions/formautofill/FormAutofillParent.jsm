@@ -8,7 +8,7 @@
  * A "fields" array is used to communicate with FormAutofillContent. Each item
  * represents a single input field in the content page as well as its
  * @autocomplete properties. The schema is as below. Please refer to
- * FormAutofillContent.jsm for more details.
+ * FormAutofillContent.js for more details.
  *
  * [
  *   {

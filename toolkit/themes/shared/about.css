@@ -39,6 +39,7 @@ img {
   font-weight: bold;
   color: #909090;
   margin: -24px 0 9px 17px;
+  text-align: left; /* Override direction alignment on RTL to make sure that the version will fit well on the background. bug 1325232 */
 }
 
 ul {

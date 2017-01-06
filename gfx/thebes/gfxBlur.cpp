@@ -430,7 +430,7 @@ ComputeMinSizeForShadowShape(const RectCornerRadii* aCornerRadii,
   Size cornerSize(0, 0);
   if (aCornerRadii) {
     const RectCornerRadii& corners = *aCornerRadii;
-    for (size_t i = 0; i < RectCorner::Count; i++) {
+    NS_FOR_CSS_FULL_CORNERS(i) {
       cornerSize.width = std::max(cornerSize.width, corners[i].width);
       cornerSize.height = std::max(cornerSize.height, corners[i].height);
     }
@@ -1163,7 +1163,7 @@ static void GetBlurMargins(const RectCornerRadii* aInnerClipRadii,
   Size cornerSize(0, 0);
   if (aInnerClipRadii) {
     const RectCornerRadii& corners = *aInnerClipRadii;
-    for (size_t i = 0; i < RectCorner::Count; i++) {
+    NS_FOR_CSS_FULL_CORNERS(i) {
       cornerSize.width = std::max(cornerSize.width, corners[i].width);
       cornerSize.height = std::max(cornerSize.height, corners[i].height);
     }

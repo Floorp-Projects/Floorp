@@ -173,30 +173,28 @@ this.IsolationTestTools = {
    *    The testing task which will be run in different settings.
    */
   _add_task(aTask) {
-    add_task(function* addTaskForIsolationTests() {
-      let testSettings = [
-        { mode: TEST_MODE_FIRSTPARTY,
-          skip: false,
-          prefs: [["privacy.firstparty.isolate", true]]
-        },
-        { mode: TEST_MODE_NO_ISOLATION,
-          skip: false,
-          prefs: [["privacy.firstparty.isolate", false]]
-        },
-        { mode: TEST_MODE_CONTAINERS,
-          skip: false,
-          prefs: [["privacy.userContext.enabled", true]]
-        },
-      ];
+    let testSettings = [
+      { mode: TEST_MODE_FIRSTPARTY,
+        skip: false,
+        prefs: [["privacy.firstparty.isolate", true]]
+      },
+      { mode: TEST_MODE_NO_ISOLATION,
+        skip: false,
+        prefs: [["privacy.firstparty.isolate", false]]
+      },
+      { mode: TEST_MODE_CONTAINERS,
+        skip: false,
+        prefs: [["privacy.userContext.enabled", true]]
+      },
+    ];
 
-      // Add test tasks.
-      for (let testSetting of testSettings) {
-        IsolationTestTools._addTaskForMode(testSetting.mode,
-                                           testSetting.prefs,
-                                           testSetting.skip,
-                                           aTask);
-      }
-    });
+    // Add test tasks.
+    for (let testSetting of testSettings) {
+      IsolationTestTools._addTaskForMode(testSetting.mode,
+                                         testSetting.prefs,
+                                         testSetting.skip,
+                                         aTask);
+    }
   },
 
   _addTaskForMode(aMode, aPref, aSkip, aTask) {
