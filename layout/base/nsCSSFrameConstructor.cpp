@@ -10603,13 +10603,38 @@ void nsCSSFrameConstructor::CreateNeededPseudoSiblings(
 }
 
 #ifdef DEBUG
+/**
+ * Returns true iff aFrame should be wrapped in an anonymous flex/grid item,
+ * rather than being a direct child of aContainerFrame.
+ *
+ * NOTE: aContainerFrame must be a flex or grid container - this function is
+ * purely for sanity-checking the children of these container types.
+ * NOTE: See also NeedsAnonFlexOrGridItem(), for the non-debug version of this
+ * logic (which operates a bit earlier, on FCData instead of frames).
+ */
 static bool
-FrameWantsToBeInAnonymousItem(const nsIAtom* aParentType, const nsIFrame* aFrame)
+FrameWantsToBeInAnonymousItem(const nsIFrame* aContainerFrame,
+                              const nsIFrame* aFrame)
 {
-  MOZ_ASSERT(aParentType == nsGkAtoms::flexContainerFrame ||
-             aParentType == nsGkAtoms::gridContainerFrame);
+  nsIAtom* containerType = aContainerFrame->GetType();
+  MOZ_ASSERT(containerType == nsGkAtoms::flexContainerFrame ||
+             containerType == nsGkAtoms::gridContainerFrame);
 
-  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+  // Any line-participant frames (e.g. text) definitely want to be wrapped in
+  // an anonymous flex/grid item.
+  if (aFrame->IsFrameOfType(nsIFrame::eLineParticipant)) {
+    return true;
+  }
+
+  // If the container is a -webkit-box/-webkit-inline-box, then placeholders
+  // also need to be wrapped, for compatibility.
+  if (containerType == nsGkAtoms::flexContainerFrame &&
+      aContainerFrame->HasAnyStateBits(NS_STATE_FLEX_IS_LEGACY_WEBKIT_BOX) &&
+      aFrame->GetType() == nsGkAtoms::placeholderFrame) {
+    return true;
+  }
+
+  return false;
 }
 #endif
 
@@ -10626,7 +10651,7 @@ VerifyGridFlexContainerChildren(nsIFrame* aParentFrame,
 
   bool prevChildWasAnonItem = false;
   for (const nsIFrame* child : aChildren) {
-    MOZ_ASSERT(!FrameWantsToBeInAnonymousItem(parentType, child),
+    MOZ_ASSERT(!FrameWantsToBeInAnonymousItem(aParentFrame, child),
                "frame wants to be inside an anonymous item, but it isn't");
     if (IsAnonymousFlexOrGridItem(child)) {
       AssertAnonymousFlexOrGridItemParent(child, aParentFrame);
@@ -12755,10 +12780,20 @@ nsCSSFrameConstructor::FrameConstructionItem::
     return true;
   }
 
-  if (aIsWebkitBox &&
-      mStyleContext->StyleDisplay()->IsInlineOutsideStyle()) {
-    // In a -webkit-box, all inline-level content gets wrapped in an anon item.
-    return true;
+  if (aIsWebkitBox) {
+    if (mStyleContext->StyleDisplay()->IsInlineOutsideStyle()) {
+      // In a -webkit-box, all inline-level content gets wrapped in anon item.
+      return true;
+    }
+    if (!(mFCData->mBits & FCDATA_DISALLOW_OUT_OF_FLOW) &&
+        aState.GetGeometricParent(mStyleContext->StyleDisplay(), nullptr)) {
+      // We're abspos or fixedpos, which means we'll spawn a placeholder which
+      // (because our container is a -webkit-box) we'll need to wrap in an
+      // anonymous flex item.  So, we just treat _this_ frame as if _it_ needs
+      // to be wrapped in an anonymous flex item, and then when we spawn the
+      // placeholder, it'll end up in the right spot.
+      return true;
+    }
   }
 
   return false;

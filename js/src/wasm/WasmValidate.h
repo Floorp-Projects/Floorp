@@ -303,6 +303,7 @@ class Decoder
     const uint8_t* const end_;
     const uint8_t* cur_;
     UniqueChars* error_;
+    bool resilientMode_;
 
     template <class T>
     MOZ_MUST_USE bool read(T* out) {
@@ -383,11 +384,13 @@ class Decoder
     }
 
   public:
-    Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error)
+    Decoder(const uint8_t* begin, const uint8_t* end, UniqueChars* error,
+            bool resilientMode = false)
       : beg_(begin),
         end_(end),
         cur_(begin),
-        error_(error)
+        error_(error),
+        resilientMode_(resilientMode)
     {
         MOZ_ASSERT(begin <= end);
     }
@@ -395,7 +398,8 @@ class Decoder
       : beg_(bytes.begin()),
         end_(bytes.end()),
         cur_(bytes.begin()),
-        error_(error)
+        error_(error),
+        resilientMode_(false)
     {}
 
     bool fail(const char* msg, ...) MOZ_FORMAT_PRINTF(2, 3);
@@ -408,6 +412,9 @@ class Decoder
     bool done() const {
         MOZ_ASSERT(cur_ <= end_);
         return cur_ == end_;
+    }
+    bool resilientMode() const {
+        return resilientMode_;
     }
 
     size_t bytesRemain() const {

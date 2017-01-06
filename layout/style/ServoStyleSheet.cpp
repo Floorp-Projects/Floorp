@@ -30,10 +30,23 @@ ServoStyleSheet::ServoStyleSheet(css::SheetParsingMode aParsingMode,
 ServoStyleSheet::~ServoStyleSheet()
 {
   DropSheet();
-  if (mRuleList) {
-    mRuleList->DropReference();
-  }
 }
+
+// QueryInterface implementation for ServoStyleSheet
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleSheet)
+NS_INTERFACE_MAP_END_INHERITING(StyleSheet)
+
+NS_IMPL_ADDREF_INHERITED(ServoStyleSheet, StyleSheet)
+NS_IMPL_RELEASE_INHERITED(ServoStyleSheet, StyleSheet)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(ServoStyleSheet)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ServoStyleSheet)
+  tmp->DropRuleList();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(StyleSheet)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoStyleSheet, StyleSheet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRuleList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 bool
 ServoStyleSheet::HasRules() const
@@ -106,6 +119,16 @@ void
 ServoStyleSheet::DropSheet()
 {
   mSheet = nullptr;
+  DropRuleList();
+}
+
+void
+ServoStyleSheet::DropRuleList()
+{
+  if (mRuleList) {
+    mRuleList->DropReference();
+    mRuleList = nullptr;
+  }
 }
 
 size_t
@@ -121,12 +144,6 @@ ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
   MOZ_CRASH("stylo: not implemented");
 }
 #endif
-
-nsMediaList*
-ServoStyleSheet::Media()
-{
-  return nullptr;
-}
 
 nsIDOMCSSRule*
 ServoStyleSheet::GetDOMOwnerRule() const

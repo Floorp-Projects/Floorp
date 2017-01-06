@@ -1998,11 +1998,15 @@ DecodingState::Enter()
 
   mOnAudioPopped = AudioQueue().PopEvent().Connect(
     OwnerThread(), [this] () {
-    mMaster->DispatchAudioDecodeTaskIfNeeded();
+    if (mMaster->IsAudioDecoding() && !mMaster->HaveEnoughDecodedAudio()) {
+      mMaster->EnsureAudioDecodeTaskQueued();
+    }
   });
   mOnVideoPopped = VideoQueue().PopEvent().Connect(
     OwnerThread(), [this] () {
-    mMaster->DispatchVideoDecodeTaskIfNeeded();
+    if (mMaster->IsVideoDecoding() && !mMaster->HaveEnoughDecodedVideo()) {
+      mMaster->EnsureVideoDecodeTaskQueued();
+    }
   });
 
   mMaster->UpdateNextFrameStatus(MediaDecoderOwner::NEXT_FRAME_AVAILABLE);
@@ -2362,7 +2366,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVideoDecodeSuspendTimer(mTaskQueue),
   mOutputStreamManager(new OutputStreamManager()),
   mResource(aDecoder->GetResource()),
-  mAudioOffloading(false),
   INIT_MIRROR(mBuffered, TimeIntervals()),
   INIT_MIRROR(mEstimatedDuration, NullableTimeUnit()),
   INIT_MIRROR(mExplicitDuration, Maybe<double>()),
@@ -2499,19 +2502,13 @@ MediaDecoderStateMachine::GetDecodedAudioDuration()
   return AudioQueue().Duration();
 }
 
-bool MediaDecoderStateMachine::HaveEnoughDecodedAudio()
+bool
+MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  int64_t ampleAudioUSecs = mAmpleAudioThresholdUsecs * mPlaybackRate;
-  if (AudioQueue().GetSize() == 0 ||
-      GetDecodedAudioDuration() < ampleAudioUSecs) {
-    return false;
-  }
-
-  // MDSM will ensure buffering level is high enough for playback speed at 1x
-  // at which the DecodedStream is playing.
-  return true;
+  auto ampleAudioUSecs = mAmpleAudioThresholdUsecs * mPlaybackRate;
+  return AudioQueue().GetSize() > 0 &&
+         GetDecodedAudioDuration() >= ampleAudioUSecs;
 }
 
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
@@ -2743,11 +2740,8 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
     return;
   }
 
-  bool playStatePermits = mPlayState == MediaDecoder::PLAY_STATE_PLAYING;
-  if (!playStatePermits || mAudioOffloading) {
-    DECODER_LOG("Not starting playback [playStatePermits: %d, "
-                "mAudioOffloading: %d]",
-                playStatePermits, mAudioOffloading);
+  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+    DECODER_LOG("Not starting playback [mPlayState=%d]", mPlayState.Ref());
     return;
   }
 
@@ -2759,8 +2753,6 @@ void MediaDecoderStateMachine::MaybeStartPlayback()
     mMediaSink->SetPlaying(true);
     MOZ_ASSERT(IsPlaying());
   }
-
-  DispatchDecodeTasksIfNeeded();
 }
 
 void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
@@ -3017,15 +3009,6 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
 }
 
 void
-MediaDecoderStateMachine::DispatchAudioDecodeTaskIfNeeded()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  if (!IsShutdown() && NeedToDecodeAudio()) {
-    EnsureAudioDecodeTaskQueued();
-  }
-}
-
-void
 MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -3076,15 +3059,6 @@ MediaDecoderStateMachine::RequestAudioData()
         mStateObj->HandleAudioNotDecoded(aError);
       })
   );
-}
-
-void
-MediaDecoderStateMachine::DispatchVideoDecodeTaskIfNeeded()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  if (!IsShutdown() && NeedToDecodeVideo()) {
-    EnsureVideoDecodeTaskQueued();
-  }
 }
 
 void

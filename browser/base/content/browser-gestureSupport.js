@@ -1151,8 +1151,8 @@ var gHistorySwipeAnimation = {
       };
     } finally {
       img.src = url;
-      return img;
     }
+    return img;
   },
 
   /**

@@ -68,7 +68,10 @@ class MarionetteHarness(object):
         self.process_args()
         tests = self.args.pop('tests')
         runner = self._runner_class(**self.args)
-        runner.run_tests(tests)
+        try:
+            runner.run_tests(tests)
+        finally:
+            runner.cleanup()
         return runner.failed + runner.crashed
 
 

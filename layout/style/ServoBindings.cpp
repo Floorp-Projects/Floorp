@@ -199,6 +199,13 @@ Gecko_IsRootElement(RawGeckoElementBorrowed aElement)
   return aElement->OwnerDoc()->GetRootElement() == aElement;
 }
 
+bool
+Gecko_MatchesElement(CSSPseudoClassType aType,
+                     RawGeckoElementBorrowed aElement)
+{
+  return nsCSSPseudoClasses::MatchesElement(aType, aElement).value();
+}
+
 nsIAtom*
 Gecko_LocalName(RawGeckoElementBorrowed aElement)
 {
@@ -279,15 +286,23 @@ Gecko_CalcStyleDifference(nsStyleContext* aOldStyleContext,
 ServoElementSnapshotOwned
 Gecko_CreateElementSnapshot(RawGeckoElementBorrowed aElement)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   return new ServoElementSnapshot(aElement);
 }
 
 void
 Gecko_DropElementSnapshot(ServoElementSnapshotOwned aSnapshot)
 {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "ServoAttrSnapshots can only be dropped on the main thread");
-  delete aSnapshot;
+  // Proxy deletes have a lot of overhead, so Servo tries hard to only drop
+  // snapshots on the main thread. However, there are certain cases where
+  // it's unavoidable (i.e. synchronously dropping the style data for the
+  // descendants of a new display:none root).
+  if (MOZ_UNLIKELY(!NS_IsMainThread())) {
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction([=]() { delete aSnapshot; });
+    NS_DispatchToMainThread(task.forget());
+  } else {
+    delete aSnapshot;
+  }
 }
 
 RawServoDeclarationBlockStrongBorrowedOrNull

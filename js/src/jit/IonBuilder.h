@@ -482,7 +482,7 @@ class IonBuilder
     MDefinition* convertToBoolean(MDefinition* input);
 
     AbortReasonOr<Ok> tryFoldInstanceOf(bool* emitted, MDefinition* lhs, JSObject* protoObject);
-    AbortReasonOr<bool> hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject);
+    AbortReasonOr<bool> hasOnProtoChain(TypeSet::ObjectKey* key, JSObject* protoObject, bool* onProto);
 
     AbortReasonOr<Ok> jsop_add(MDefinition* left, MDefinition* right);
     AbortReasonOr<Ok> jsop_bitnot();

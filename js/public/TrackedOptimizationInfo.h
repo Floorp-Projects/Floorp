@@ -107,6 +107,7 @@ namespace JS {
     _(OperandNotNumber)                                                 \
     _(OperandNotStringOrNumber)                                         \
     _(OperandNotSimpleArith)                                            \
+    _(OperandNotEasilyCoercibleToString)                                \
     _(StaticTypedArrayUint32)                                           \
     _(StaticTypedArrayCantComputeMask)                                  \
     _(OutOfBounds)                                                      \

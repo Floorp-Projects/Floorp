@@ -158,8 +158,6 @@ class FunctionCompiler
     const CompileInfo&         info_;
     MIRGenerator&              mirGen_;
 
-    MInstruction*              dummyIns_;
-
     MBasicBlock*               curBlock_;
     CallCompileStateVector     callStack_;
     uint32_t                   maxStackArgBytes_;
@@ -186,7 +184,6 @@ class FunctionCompiler
         graph_(mirGen.graph()),
         info_(mirGen.info()),
         mirGen_(mirGen),
-        dummyIns_(nullptr),
         curBlock_(nullptr),
         maxStackArgBytes_(0),
         loopDepth_(0),
@@ -277,9 +274,6 @@ class FunctionCompiler
             if (!mirGen_.ensureBallast())
                 return false;
         }
-
-        dummyIns_ = MConstant::New(alloc(), Int32Value(0), MIRType::Int32);
-        curBlock_->add(dummyIns_);
 
         addInterruptCheck();
 
@@ -1162,45 +1156,13 @@ class FunctionCompiler
             curBlock_->push(def);
     }
 
-    MDefinition* popDefIfPushed(bool shouldReturn = true)
+    MDefinition* popDefIfPushed()
     {
         if (!hasPushed(curBlock_))
             return nullptr;
         MDefinition* def = curBlock_->pop();
-        MOZ_ASSERT_IF(def->type() == MIRType::Value, !shouldReturn);
-        return shouldReturn ? def : nullptr;
-    }
-
-    template <typename GetBlock>
-    bool ensurePushInvariants(const GetBlock& getBlock, size_t numBlocks)
-    {
-        // Preserve the invariant that, for every iterated MBasicBlock, either:
-        // every MBasicBlock has a pushed expression with the same type (to
-        // prevent creating used phis with type Value) OR no MBasicBlock has any
-        // pushed expression. This is required by MBasicBlock::addPredecessor.
-        if (numBlocks < 2)
-            return true;
-
-        MBasicBlock* block = getBlock(0);
-
-        bool allPushed = hasPushed(block);
-        if (allPushed) {
-            MIRType type = peekPushedDef(block)->type();
-            for (size_t i = 1; allPushed && i < numBlocks; i++) {
-                block = getBlock(i);
-                allPushed = hasPushed(block) && peekPushedDef(block)->type() == type;
-            }
-        }
-
-        if (!allPushed) {
-            for (size_t i = 0; i < numBlocks; i++) {
-                block = getBlock(i);
-                if (!hasPushed(block))
-                    block->push(dummyIns_);
-            }
-        }
-
-        return allPushed;
+        MOZ_ASSERT(def->type() != MIRType::Value);
+        return def;
     }
 
   private:
@@ -1270,9 +1232,6 @@ class FunctionCompiler
             if (elseJoinPred)
                 blocks[numJoinPreds++] = elseJoinPred;
 
-            auto getBlock = [&](size_t i) -> MBasicBlock* { return blocks[i]; };
-            bool yieldsValue = ensurePushInvariants(getBlock, numJoinPreds);
-
             if (numJoinPreds == 0) {
                 *def = nullptr;
                 return true;
@@ -1287,7 +1246,7 @@ class FunctionCompiler
             }
 
             curBlock_ = join;
-            *def = popDefIfPushed(yieldsValue);
+            *def = popDefIfPushed();
         }
 
         return true;
@@ -1591,18 +1550,10 @@ class FunctionCompiler
         }
 
         ControlFlowPatchVector& patches = blockPatches_[absolute];
-
-        auto getBlock = [&](size_t i) -> MBasicBlock* {
-            if (i < patches.length())
-                return patches[i].ins->block();
-            return curBlock_;
-        };
-
-        bool yieldsValue = ensurePushInvariants(getBlock, patches.length() + !!curBlock_);
-
-        MBasicBlock* join = nullptr;
         MControlInstruction* ins = patches[0].ins;
         MBasicBlock* pred = ins->block();
+
+        MBasicBlock* join = nullptr;
         if (!newBlock(pred, &join))
             return false;
 
@@ -1631,7 +1582,7 @@ class FunctionCompiler
 
         curBlock_ = join;
 
-        *def = popDefIfPushed(yieldsValue);
+        *def = popDefIfPushed();
 
         patches.clear();
         return true;
@@ -1830,23 +1781,35 @@ EmitBrTable(FunctionCompiler& f)
     if (!depths.reserve(tableLength))
         return false;
 
-    uint32_t depth;
     for (size_t i = 0; i < tableLength; ++i) {
+        uint32_t depth;
         if (!f.iter().readBrTableEntry(&type, &value, &depth))
             return false;
         depths.infallibleAppend(depth);
     }
 
     // Read the default label.
-    if (!f.iter().readBrTableDefault(&type, &value, &depth))
+    uint32_t defaultDepth;
+    if (!f.iter().readBrTableDefault(&type, &value, &defaultDepth))
         return false;
 
     MDefinition* maybeValue = IsVoid(type) ? nullptr : value;
 
-    if (tableLength == 0)
-        return f.br(depth, maybeValue);
+    // If all the targets are the same, or there are no targets, we can just
+    // use a goto. This is not just an optimization: MaybeFoldConditionBlock
+    // assumes that tables have more than one successor.
+    bool allSameDepth = true;
+    for (uint32_t depth : depths) {
+        if (depth != defaultDepth) {
+            allSameDepth = false;
+            break;
+        }
+    }
 
-    return f.brTable(index, depth, depths, maybeValue);
+    if (allSameDepth)
+        return f.br(defaultDepth, maybeValue);
+
+    return f.brTable(index, defaultDepth, depths, maybeValue);
 }
 
 static bool

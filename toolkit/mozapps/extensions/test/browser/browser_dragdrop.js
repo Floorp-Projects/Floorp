@@ -16,78 +16,78 @@ this._scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
                      getService(Ci.mozIJSSubScriptLoader);
 this._scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
-// This listens for the next opened window and checks it is of the right url.
-// opencallback is called when the new window is fully loaded
-// closecallback is called when the window is closed
-function WindowOpenListener(url, opencallback, closecallback) {
-  this.url = url;
-  this.opencallback = opencallback;
-  this.closecallback = closecallback;
+function checkInstallConfirmation(...urls) {
+  let nurls = urls.length;
 
-  var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                     .getService(Components.interfaces.nsIWindowMediator);
-  wm.addListener(this);
+  let notificationCount = 0;
+  let observer = {
+    observe(aSubject, aTopic, aData) {
+      var installInfo = aSubject.wrappedJSObject;
+      if (gTestInWindow)
+        is(installInfo.browser, null, "Notification should have a null browser");
+      else
+        isnot(installInfo.browser, null, "Notification should have non-null browser");
+      notificationCount++;
+    }
+  };
+  Services.obs.addObserver(observer, "addon-install-started", false);
+
+  let windows = new Set();
+
+  function handleDialog(window) {
+    let list = window.document.getElementById("itemList");
+    is(list.childNodes.length, 1, "Should be 1 install");
+    let idx = urls.indexOf(list.children[0].url);
+    isnot(idx, -1, "Install target is an expected url");
+    urls.splice(idx, 1);
+
+    window.document.documentElement.cancelDialog();
+  }
+
+  let listener = {
+    handleEvent(event) {
+      let window = event.currentTarget;
+      is(window.document.location.href, INSTALL_URI, "Should have opened the correct window");
+
+      executeSoon(() => handleDialog(window));
+    },
+
+    onWindowTitleChange() { },
+
+    onOpenWindow(window) {
+      windows.add(window);
+      let domwindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                            .getInterface(Ci.nsIDOMWindow);
+      domwindow.addEventListener("load", this, false, {once: true});
+    },
+
+    onCloseWindow(window) {
+      if (!windows.has(window)) {
+        return;
+      }
+      windows.delete(window);
+
+      if (windows.size > 0) {
+        return;
+      }
+
+      is(urls.length, 0, "Saw install dialogs for all expected urls");
+
+      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+                           .getService(Ci.nsIWindowMediator);
+      wm.removeListener(listener);
+
+      is(notificationCount, nurls, `Saw ${nurls} addon-install-started notifications`);
+      Services.obs.removeObserver(observer, "addon-install-started");
+
+      executeSoon(run_next_test);
+    }
+  };
+
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Ci.nsIWindowMediator);
+  wm.addListener(listener);
 }
-
-WindowOpenListener.prototype = {
-  url: null,
-  opencallback: null,
-  closecallback: null,
-  window: null,
-  domwindow: null,
-
-  handleEvent(event) {
-    is(this.domwindow.document.location.href, this.url, "Should have opened the correct window");
-
-    this.domwindow.removeEventListener("load", this, false);
-    // Allow any other load handlers to execute
-    var self = this;
-    executeSoon(function() { self.opencallback(self.domwindow); } );
-  },
-
-  onWindowTitleChange(window, title) {
-  },
-
-  onOpenWindow(window) {
-    if (this.window)
-      return;
-
-    this.window = window;
-    this.domwindow = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                           .getInterface(Components.interfaces.nsIDOMWindow);
-    this.domwindow.addEventListener("load", this, false);
-  },
-
-  onCloseWindow(window) {
-    if (this.window != window)
-      return;
-
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
-    wm.removeListener(this);
-    this.opencallback = null;
-    this.window = null;
-    this.domwindow = null;
-
-    // Let the window close complete
-    executeSoon(this.closecallback);
-    this.closecallback = null;
-  }
-};
-
-var gSawInstallNotification = false;
-var gInstallNotificationObserver = {
-  observe(aSubject, aTopic, aData) {
-    var installInfo = aSubject.QueryInterface(Ci.amIWebInstallInfo);
-    if (gTestInWindow)
-      is(installInfo.browser, null, "Notification should have a null browser");
-    else
-      isnot(installInfo.browser, null, "Notification should have non-null browser");
-    gSawInstallNotification = true;
-    Services.obs.removeObserver(this, "addon-install-started");
-  }
-};
-
 
 function test() {
   waitForExplicitFinish();
@@ -104,37 +104,11 @@ function end_test() {
   });
 }
 
-function test_confirmation(aWindow, aExpectedURLs) {
-  var list = aWindow.document.getElementById("itemList");
-  is(list.childNodes.length, aExpectedURLs.length, "Should be the right number of installs");
-
-  for (let url of aExpectedURLs) {
-    let found = false;
-    for (let node of list.children) {
-      if (node.url == url) {
-        found = true;
-        break;
-      }
-    }
-    ok(found, "Should have seen " + url + " in the list");
-  }
-
-  aWindow.document.documentElement.cancelDialog();
-}
-
 // Simulates dropping a URL onto the manager
 add_test(function() {
   var url = TESTROOT + "addons/browser_dragdrop1.xpi";
 
-  Services.obs.addObserver(gInstallNotificationObserver,
-                           "addon-install-started", false);
-
-  new WindowOpenListener(INSTALL_URI, function(aWindow) {
-    test_confirmation(aWindow, [url]);
-  }, function() {
-    is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
-    run_next_test();
-  });
+  checkInstallConfirmation(url);
 
   var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
@@ -147,15 +121,7 @@ add_test(function() {
 add_test(function() {
   var fileurl = get_addon_file_url("browser_dragdrop1.xpi");
 
-  Services.obs.addObserver(gInstallNotificationObserver,
-                           "addon-install-started", false);
-
-  new WindowOpenListener(INSTALL_URI, function(aWindow) {
-    test_confirmation(aWindow, [fileurl.spec]);
-  }, function() {
-    is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
-    run_next_test();
-  });
+  checkInstallConfirmation(fileurl.spec);
 
   var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
@@ -169,15 +135,7 @@ add_test(function() {
   var url1 = TESTROOT + "addons/browser_dragdrop1.xpi";
   var url2 = TESTROOT2 + "addons/browser_dragdrop2.xpi";
 
-  Services.obs.addObserver(gInstallNotificationObserver,
-                           "addon-install-started", false);
-
-  new WindowOpenListener(INSTALL_URI, function(aWindow) {
-    test_confirmation(aWindow, [url1, url2]);
-  }, function() {
-    is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
-    run_next_test();
-  });
+  checkInstallConfirmation(url1, url2);
 
   var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
@@ -192,15 +150,7 @@ add_test(function() {
   var fileurl1 = get_addon_file_url("browser_dragdrop1.xpi");
   var fileurl2 = get_addon_file_url("browser_dragdrop2.xpi");
 
-  Services.obs.addObserver(gInstallNotificationObserver,
-                           "addon-install-started", false);
-
-  new WindowOpenListener(INSTALL_URI, function(aWindow) {
-    test_confirmation(aWindow, [fileurl1.spec, fileurl2.spec]);
-  }, function() {
-    is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
-    run_next_test();
-  });
+  checkInstallConfirmation(fileurl1.spec, fileurl2.spec);
 
   var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,
@@ -215,15 +165,7 @@ add_test(function() {
   var url = TESTROOT + "addons/browser_dragdrop1.xpi";
   var fileurl = get_addon_file_url("browser_dragdrop2.xpi");
 
-  Services.obs.addObserver(gInstallNotificationObserver,
-                           "addon-install-started", false);
-
-  new WindowOpenListener(INSTALL_URI, function(aWindow) {
-    test_confirmation(aWindow, [url, fileurl.spec]);
-  }, function() {
-    is(gSawInstallNotification, true, "Should have seen addon-install-started notification.");
-    run_next_test();
-  });
+  checkInstallConfirmation(url, fileurl.spec);
 
   var viewContainer = gManagerWindow.document.getElementById("view-port");
   var effect = EventUtils.synthesizeDrop(viewContainer, viewContainer,

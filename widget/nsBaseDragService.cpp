@@ -518,7 +518,7 @@ GetPresShellForContent(nsIDOMNode* aDOMNode)
 
   nsCOMPtr<nsIDocument> document = content->GetUncomposedDoc();
   if (document) {
-    document->FlushPendingNotifications(Flush_Display);
+    document->FlushPendingNotifications(FlushType::Display);
 
     return document->GetShell();
   }
@@ -757,7 +757,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
       imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
                          imgIContainer::FRAME_CURRENT,
                          SamplingFilter::GOOD, /* no SVGImageContext */ Nothing(),
-                         imgIContainer::FLAG_SYNC_DECODE);
+                         imgIContainer::FLAG_SYNC_DECODE, 1.0);
     if (res == DrawResult::BAD_IMAGE || res == DrawResult::BAD_ARGS) {
       return NS_ERROR_FAILURE;
     }

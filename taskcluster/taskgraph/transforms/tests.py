@@ -19,7 +19,7 @@ for example - use `all_tests.py` instead.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from taskgraph.transforms.base import TransformSequence, get_keyed_by
+from taskgraph.transforms.base import TransformSequence, resolve_keyed_by
 from taskgraph.util.treeherder import split_symbol, join_symbol
 from taskgraph.transforms.job.common import (
     docker_worker_support_vcs_checkout,
@@ -63,6 +63,7 @@ BUILDER_NAME_PREFIX = {
     'linux64-asan': 'Ubuntu ASAN VM 12.04 x64',
     'linux64-ccov': 'Ubuntu Code Coverage VM 12.04 x64',
     'linux64-jsdcov': 'Ubuntu Code Coverage VM 12.04 x64',
+    'linux64-stylo': 'Ubuntu VM 12.04 x64',
     'macosx64': 'Rev7 MacOSX Yosemite 10.10.5',
     'android-4.3-arm7-api-15': 'Android 4.3 armv7 API 15+',
     'android-4.2-x86': 'Android 4.2 x86 Emulator',
@@ -295,12 +296,10 @@ def validate(config, tests):
 
 
 @transforms.add
-def resolve_keyed_by_mozharness(config, tests):
+def handle_keyed_by_mozharness(config, tests):
     """Resolve a mozharness field if it is keyed by something"""
     for test in tests:
-        test['mozharness'] = get_keyed_by(
-            item=test, field='mozharness',
-            item_name=test['test-name'])
+        resolve_keyed_by(test, 'mozharness', item_name=test['test-name'])
         yield test
 
 
@@ -407,7 +406,7 @@ def set_tier(config, tests):
     specify a tier otherwise."""
     for test in tests:
         if 'tier' in test:
-            test['tier'] = get_keyed_by(item=test, field='tier', item_name=test['test-name'])
+            resolve_keyed_by(test, 'tier', item_name=test['test-name'])
 
         # only override if not set for the test
         if 'tier' not in test or test['tier'] == 'default':
@@ -453,7 +452,7 @@ def set_download_symbols(config, tests):
 
 
 @transforms.add
-def resolve_keyed_by(config, tests):
+def handle_keyed_by(config, tests):
     """Resolve fields that can be keyed by platform, etc."""
     fields = [
         'instance-size',
@@ -464,17 +463,12 @@ def resolve_keyed_by(config, tests):
         'suite',
         'run-on-projects',
         'os-groups',
-    ]
-    mozharness_fields = [
-        'config',
-        'extra-options',
+        'mozharness.config',
+        'mozharness.extra-options',
     ]
     for test in tests:
         for field in fields:
-            test[field] = get_keyed_by(item=test, field=field, item_name=test['test-name'])
-        for subfield in mozharness_fields:
-            test['mozharness'][subfield] = get_keyed_by(
-                item=test, field='mozharness', subfield=subfield, item_name=test['test-name'])
+            resolve_keyed_by(test, field, item_name=test['test-name'])
         yield test
 
 
@@ -498,10 +492,6 @@ def split_e10s(config, tests):
             if group != '?':
                 group += '-e10s'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            test['mozharness']['extra-options'] = get_keyed_by(item=test,
-                                                               field='mozharness',
-                                                               subfield='extra-options',
-                                                               item_name=test['test-name'])
             test['mozharness']['extra-options'].append('--e10s')
         yield test
 

@@ -7,6 +7,7 @@
 #include "Accessible2.h"
 #include "ProxyAccessible.h"
 #include "ia2AccessibleValue.h"
+#include "IGeckoCustom.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "DocAccessible.h"
 #include "mozilla/a11y/DocManager.h"
@@ -67,6 +68,18 @@ struct InterfaceIID<IAccessibleText>
   static REFIID Value() { return IID_IAccessibleText; }
 };
 
+template<>
+struct InterfaceIID<IAccessibleHyperlink>
+{
+  static REFIID Value() { return IID_IAccessibleHyperlink; }
+};
+
+template<>
+struct InterfaceIID<IGeckoCustom>
+{
+  static REFIID Value() { return IID_IGeckoCustom; }
+};
+
 /**
  * Get the COM proxy for this proxy accessible and QueryInterface it with the
  * correct IID
@@ -87,6 +100,23 @@ QueryInterface(const ProxyAccessible* aProxy)
   }
 
   return acc2.forget();
+}
+
+static ProxyAccessible*
+GetProxyFor(DocAccessibleParent* aDoc, IUnknown* aCOMProxy)
+{
+  RefPtr<IGeckoCustom> custom;
+  if (FAILED(aCOMProxy->QueryInterface(IID_IGeckoCustom,
+                                       (void**) getter_AddRefs(custom)))) {
+    return nullptr;
+  }
+
+  uint64_t id;
+  if (FAILED(custom->get_ID(&id))) {
+    return nullptr;
+  }
+
+  return aDoc->GetAccessible(id);
 }
 
 void
@@ -593,6 +623,87 @@ ProxyAccessible::ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset
                               coordType,
                               static_cast<long>(aX),
                               static_cast<long>(aY));
+}
+
+uint32_t
+ProxyAccessible::StartOffset(bool* aOk)
+{
+  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
+  if (!acc) {
+    *aOk = false;
+    return 0;
+  }
+
+  long startOffset;
+  *aOk = SUCCEEDED(acc->get_startIndex(&startOffset));
+  return static_cast<uint32_t>(startOffset);
+}
+
+uint32_t
+ProxyAccessible::EndOffset(bool* aOk)
+{
+  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
+  if (!acc) {
+    *aOk = false;
+    return 0;
+  }
+
+  long endOffset;
+  *aOk = SUCCEEDED(acc->get_endIndex(&endOffset));
+  return static_cast<uint32_t>(endOffset);
+}
+
+bool
+ProxyAccessible::IsLinkValid()
+{
+  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
+  if (!acc) {
+    return false;
+  }
+
+  boolean valid;
+  if (FAILED(acc->get_valid(&valid))) {
+    return false;
+  }
+
+  return valid;
+}
+
+uint32_t
+ProxyAccessible::AnchorCount(bool* aOk)
+{
+  *aOk = false;
+  RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
+  if (!custom) {
+    return 0;
+  }
+
+  long count;
+  if (FAILED(custom->get_anchorCount(&count))) {
+    return 0;
+  }
+
+  *aOk = true;
+  return count;
+}
+
+ProxyAccessible*
+ProxyAccessible::AnchorAt(uint32_t aIdx)
+{
+  RefPtr<IAccessibleHyperlink> link = QueryInterface<IAccessibleHyperlink>(this);
+  if (!link) {
+    return nullptr;
+  }
+
+  VARIANT anchor;
+  if (FAILED(link->get_anchor(aIdx, &anchor))) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(anchor.vt == VT_UNKNOWN);
+  ProxyAccessible* proxyAnchor = GetProxyFor(Document(), anchor.punkVal);
+  anchor.punkVal->Release();
+  return proxyAnchor;
 }
 
 } // namespace a11y

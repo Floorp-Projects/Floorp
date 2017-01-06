@@ -108,6 +108,8 @@ FetchDriver::Fetch(FetchDriverObserver* aObserver)
 nsresult
 FetchDriver::HttpFetch()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Step 1. "Let response be null."
   mResponse = nullptr;
   nsresult rv;
@@ -277,7 +279,9 @@ FetchDriver::HttpFetch()
     // If request’s referrer policy is the empty string,
     // then set request’s referrer policy to "no-referrer-when-downgrade".
     if (mRequest->ReferrerPolicy_() == ReferrerPolicy::_empty) {
-      mRequest->SetReferrerPolicy(net::RP_No_Referrer_When_Downgrade);
+      net::ReferrerPolicy referrerPolicy =
+        static_cast<net::ReferrerPolicy>(NS_GetDefaultReferrerPolicy());
+      mRequest->SetReferrerPolicy(referrerPolicy);
     }
 
     rv = FetchUtil::SetRequestReferrer(mPrincipal,

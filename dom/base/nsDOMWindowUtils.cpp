@@ -113,6 +113,7 @@
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/TimeoutManager.h"
+#include "mozilla/PreloadedStyleSheet.h"
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -329,7 +330,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::UpdateLayerTree()
 {
   if (nsIPresShell* presShell = GetPresShell()) {
-    presShell->FlushPendingNotifications(Flush_Display);
+    presShell->FlushPendingNotifications(FlushType::Display);
     RefPtr<nsViewManager> vm = presShell->GetViewManager();
     nsView* view = vm->GetRootView();
     if (view) {
@@ -1674,7 +1675,7 @@ getScrollXYAppUnits(const nsWeakPtr& aWindow, bool aFlushLayout, nsPoint& aScrol
   NS_ENSURE_STATE(doc);
 
   if (aFlushLayout) {
-    doc->FlushPendingNotifications(Flush_Layout);
+    doc->FlushPendingNotifications(FlushType::Layout);
   }
 
   nsIPresShell *presShell = doc->GetShell();
@@ -1722,7 +1723,7 @@ nsDOMWindowUtils::GetScrollbarSize(bool aFlushLayout, int32_t* aWidth,
   NS_ENSURE_STATE(doc);
 
   if (aFlushLayout) {
-    doc->FlushPendingNotifications(Flush_Layout);
+    doc->FlushPendingNotifications(FlushType::Layout);
   }
 
   nsIPresShell* presShell = doc->GetShell();
@@ -1898,7 +1899,7 @@ nsDOMWindowUtils::DispatchDOMEventViaPresShell(nsIDOMNode* aTarget,
   RefPtr<nsIPresShell> targetShell = targetDoc->GetShell();
   NS_ENSURE_STATE(targetShell);
 
-  targetDoc->FlushPendingNotifications(Flush_Layout);
+  targetDoc->FlushPendingNotifications(FlushType::Layout);
 
   nsEventStatus status = nsEventStatus_eIgnore;
   targetShell->HandleEventWithTarget(internalEvent, nullptr, content, &status);
@@ -3450,7 +3451,7 @@ nsDOMWindowUtils::LoadSheetUsingURIString(const nsACString& aSheetURI, uint32_t 
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::AddSheet(nsIDOMStyleSheet *aSheet, uint32_t aSheetType)
+nsDOMWindowUtils::AddSheet(nsIPreloadedStyleSheet* aSheet, uint32_t aSheetType)
 {
   NS_ENSURE_ARG_POINTER(aSheet);
   NS_ENSURE_ARG(aSheetType == AGENT_SHEET ||
@@ -3460,12 +3461,17 @@ nsDOMWindowUtils::AddSheet(nsIDOMStyleSheet *aSheet, uint32_t aSheetType)
   nsCOMPtr<nsIDocument> doc = GetDocument();
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
-  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
-  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
+  StyleSheet* sheet = nullptr;
+  auto preloadedSheet = static_cast<PreloadedStyleSheet*>(aSheet);
+  nsresult rv = preloadedSheet->GetSheet(doc->GetStyleBackendType(), &sheet);
+  NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
+
   if (sheet->GetOwningDocument()) {
     return NS_ERROR_INVALID_ARG;
   }
+
+  nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
   return doc->AddAdditionalStyleSheet(type, sheet);
 }
 
