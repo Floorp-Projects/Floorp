@@ -556,7 +556,9 @@ public abstract class GeckoApp
             }
 
             GeckoAppShell.notifyObservers("Browser:Quit", res.toString());
-            doShutdown();
+            // We don't call doShutdown() here because this creates a race condition which can
+            // cause the clearing of private data to fail. Instead, we shut down the UI only after
+            // we're done sanitizing.
             return true;
         }
 
@@ -634,9 +636,16 @@ public abstract class GeckoApp
 
             ((GeckoApplication) getApplicationContext()).onDelayedStartup();
 
-        } else if (event.equals("Gecko:Exited")) {
+        } else if ("Gecko:Exited".equals(event)) {
             // Gecko thread exited first; let GeckoApp die too.
             doShutdown();
+
+        } else if ("Sanitize:Finished".equals(event)) {
+            if (message.getBoolean("shutdown", false)) {
+                // Gecko is shutting down and has called our sanitize handlers,
+                // so we can start exiting, too.
+                doShutdown();
+            }
 
         } else if ("Accessibility:Ready".equals(event)) {
             GeckoAccessibility.updateAccessibilitySettings(this);
@@ -1188,6 +1197,10 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Gecko:Exited",
             "Gecko:Ready",
+            null);
+
+        EventDispatcher.getInstance().registerUiThreadListener(this,
+            "Sanitize:Finished",
             null);
 
         GeckoThread.launch();
@@ -2247,6 +2260,10 @@ public abstract class GeckoApp
             "Accessibility:Ready",
             "Gecko:Exited",
             "Gecko:Ready",
+            null);
+
+        EventDispatcher.getInstance().unregisterUiThreadListener(this,
+            "Sanitize:Finished",
             null);
 
         getAppEventDispatcher().unregisterGeckoThreadListener(this,

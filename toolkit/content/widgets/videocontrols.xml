@@ -151,15 +151,16 @@
           <button anonid="playButton"
                   class="playButton"
                   playlabel="&playButton.playLabel;"
-                  pauselabel="&playButton.pauseLabel;"/>
+                  pauselabel="&playButton.pauseLabel;"
+                  tabindex="-1"/>
           <div anonid="scrubberStack" class="scrubberStack progressContainer" role="none">
             <div class="progressBackgroundBar stackItem" role="none">
               <div class="progressStack" role="none">
-                <progress anonid="bufferBar" class="bufferBar" value="0" max="100"></progress>
-                <progress anonid="progressBar" class="progressBar" value="0" max="100"></progress>
+                <progress anonid="bufferBar" class="bufferBar" value="0" max="100" tabindex="-1"></progress>
+                <progress anonid="progressBar" class="progressBar" value="0" max="100" tabindex="-1"></progress>
               </div>
             </div>
-            <input type="range" anonid="scrubber" class="scrubber"/>
+            <input type="range" anonid="scrubber" class="scrubber" tabindex="-1"/>
           </div>
           <span anonid="positionLabel" class="positionLabel" role="presentation"></span>
           <span anonid="durationLabel" class="durationLabel" role="presentation"></span>
@@ -170,9 +171,10 @@
           <button anonid="muteButton"
                   class="muteButton"
                   mutelabel="&muteButton.muteLabel;"
-                  unmutelabel="&muteButton.unmuteLabel;"/>
+                  unmutelabel="&muteButton.unmuteLabel;"
+                  tabindex="-1"/>
           <div anonid="volumeStack" class="volumeStack progressContainer" role="none">
-            <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1"/>
+            <input type="range" anonid="volumeControl" class="volumeControl" min="0" max="100" step="1" tabindex="-1"/>
           </div>
           <button anonid="closedCaptionButton" class="closedCaptionButton"/>
           <button anonid="fullscreenButton"

@@ -15,8 +15,6 @@ const TESTCASES = [
     fieldDetails: [],
     profileData: [],
     expectedResult: {
-      "given-name": "",
-      "family-name": "",
       "street-addr": "",
       "city": "",
       "country": "",
@@ -52,8 +50,6 @@ const TESTCASES = [
       {"section": "", "addressType": "", "fieldName": "tel", "contactType": "", "index": 6, "value": "1234567"},
     ],
     expectedResult: {
-      "given-name": "foo",
-      "family-name": "bar",
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
       "country": "US",
@@ -89,8 +85,6 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "fieldName": "tel", "contactType": "", "index": 6, "value": "1234567"},
     ],
     expectedResult: {
-      "given-name": "foo",
-      "family-name": "bar",
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
       "country": "US",
@@ -126,8 +120,6 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "fieldName": "tel", "contactType": "", "index": 6},
     ],
     expectedResult: {
-      "given-name": "foo",
-      "family-name": "bar",
       "street-addr": "2 Harrison St",
       "city": "San Francisco",
       "country": "US",
@@ -163,8 +155,6 @@ const TESTCASES = [
       {"section": "", "addressType": "shipping", "fieldName": "tel", "contactType": "", "index": 6, "value": "1234567"},
     ],
     expectedResult: {
-      "given-name": "foo",
-      "family-name": "bar",
       "street-addr": "",
       "city": "",
       "country": "",

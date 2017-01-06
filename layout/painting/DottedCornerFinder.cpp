@@ -45,7 +45,7 @@ nsDataHashtable<FourFloatsHashKey, BestOverlap> DottedCornerCache;
 
 DottedCornerFinder::DottedCornerFinder(const Bezier& aOuterBezier,
                                        const Bezier& aInnerBezier,
-                                       mozilla::css::Corner aCorner,
+                                       Corner aCorner,
                                        Float aBorderRadiusX,
                                        Float aBorderRadiusY,
                                        const Point& aC0, Float aR0,

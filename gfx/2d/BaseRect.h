@@ -319,12 +319,12 @@ struct BaseRect {
   Point TopRight() const { return Point(XMost(), y); }
   Point BottomLeft() const { return Point(x, YMost()); }
   Point BottomRight() const { return Point(XMost(), YMost()); }
-  Point AtCorner(int aCorner) const {
+  Point AtCorner(Corner aCorner) const {
     switch (aCorner) {
-      case RectCorner::TopLeft: return TopLeft();
-      case RectCorner::TopRight: return TopRight();
-      case RectCorner::BottomRight: return BottomRight();
-      case RectCorner::BottomLeft: return BottomLeft();
+      case eCornerTopLeft: return TopLeft();
+      case eCornerTopRight: return TopRight();
+      case eCornerBottomRight: return BottomRight();
+      case eCornerBottomLeft: return BottomLeft();
     }
     MOZ_CRASH("GFX: Incomplete switch");
   }

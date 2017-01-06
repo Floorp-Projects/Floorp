@@ -242,7 +242,7 @@ FindBezierNearestPoint(const Bezier& aBezier, const Point& aTarget,
 }
 
 void
-GetBezierPointsForCorner(Bezier* aBezier, mozilla::css::Corner aCorner,
+GetBezierPointsForCorner(Bezier* aBezier, Corner aCorner,
                          const Point& aCornerPoint, const Size& aCornerSize)
 {
   // Calculate bezier control points for elliptic arc.

@@ -330,3 +330,9 @@ div[opType="needs-disable"] .hide-on-disable {
 #addons-list, #addons-details {
   display: none;
 }
+
+#browse-title:dir(rtl) {
+  background-position: left;
+  background-image: url("chrome://browser/skin/images/chevron-rtl.png");
+}
+

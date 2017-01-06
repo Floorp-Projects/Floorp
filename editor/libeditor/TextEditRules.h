@@ -269,32 +269,30 @@ public:
     , bulletType(nullptr)
     , alignType(nullptr)
     , blockType(nullptr)
-    , insertElement(nullptr)
   {}
 
-  // kInsertText
+  // EditAction::insertText / EditAction::insertIMEText
   const nsAString* inString;
   nsAString* outString;
   const nsAString* outputFormat;
   int32_t maxLength;
 
-  // kDeleteSelection
+  // EditAction::deleteSelection
   nsIEditor::EDirection collapsedAction;
   nsIEditor::EStripWrappers stripWrappers;
 
-  // kMakeList
+  // EditAction::removeList
   bool bOrdered;
+
+  // EditAction::makeList
   bool entireList;
   const nsAString* bulletType;
 
-  // kAlign
+  // EditAction::align
   const nsAString* alignType;
 
-  // kMakeBasicBlock
+  // EditAction::makeBasicBlock
   const nsAString* blockType;
-
-  // kInsertElement
-  const nsIDOMElement* insertElement;
 };
 
 /**
