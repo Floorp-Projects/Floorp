@@ -63,25 +63,29 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     numPostMessageCalls++;
   }
 
-  // TEST CODE BEGINS HERE.
-  // Execution basically proceeds top-to-bottom through the functions
-  // from this point on, via a chain of iframe onload-callbacks.
-  function runTest() {
+  // Convenience helper which makes |iframe| load the given |uri|. Returns
+  // a promise that resolves when the load completes. This makes it handy to
+  // use with 'await', to avoid onload callback hell.
+  async function LoadIframeAsync(uri) {
+    return new Promise(resolve => {
+      iframe.addEventListener('load', resolve, {once: true});
+      // Kick off the requested load:
+      iframe.src = uri;
+    });
+  }
+
+  // MAIN TEST CODE BEGINS HERE.
+  async function runTest() {
     // Capture a snapshot with nothing in the iframe, so we can do a
     // sanity-check not-equal comparison against our reference case, to be
     // sure we're rendering anything at all:
     blankSnapshot = snapshotWindow(iframeWin);
 
-    // Point iframe at a reference case:
-    iframe.onload = captureRefSnapshot;
-    iframe.src = "data:text/html,<body style='background:lime'>";
-  }
-
-  function captureRefSnapshot() {
-    // Capture the reference screenshot:
+    // Load & snapshot a reference case (fully lime):
+    await LoadIframeAsync("data:text/html,<body style='background:lime'>");
     refSnapshot = snapshotWindow(iframeWin);
 
-    // Ensure reference-case looks different from blank snapshot:
+    // Ensure reference snapshot looks different from blank snapshot:
     assertSnapshots(refSnapshot, blankSnapshot,
                     false /*not equal*/, null /*no fuzz*/,
                     "refSnapshot", "blankSnapshot");
@@ -92,26 +96,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     // Register a postMessage handler, so that iframe can report its location:
     window.addEventListener("message", receiveMessage, false);
 
-    // Point iframe at secure (HTTPS) version of testcase, & wait for callback:
-    iframe.onload = captureSecureSnapshot;
-    iframe.src = secureURI;
-  }
-
-  function captureSecureSnapshot() {
-    // Capture snapshot of iframe showing always-HTTPS version of testcase:
+    // Load & snapshot secure (HTTPS) version of testcase, & check against ref:
+    await LoadIframeAsync(secureURI);
     secureSnapshot = snapshotWindow(iframeWin);
     assertSnapshots(secureSnapshot, refSnapshot,
                     true /*equal*/, null /*no fuzz*/,
                     "secureSnapshot", "refSnapshot");
 
-    // Point iframe at insecure (HTTP) version of testcase (which should get
-    // automatically upgraded to secure (HTTPS) under the hood), & wait for
-    // callback:
-    iframe.onload = captureUpgradedSnapshot;
-    iframe.src = insecureURI;
-  }
+    // Load insecure (HTTP) version of testcase (which should get
+    // automatically upgraded to secure (HTTPS) under the hood):
+    await LoadIframeAsync(insecureURI);
 
-  function captureUpgradedSnapshot() {
     // Double-check that iframe is really pointed at insecure URI, to be sure
     // we're actually exercising HSTS. (Note that receiveMessage() will make
     // sure it's been upgraded to a secure HTTPS URI under the hood.)
@@ -123,12 +118,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1247733
     assertSnapshots(upgradedSnapshot, refSnapshot,
                     true /*equal*/, null /*no fuzz*/,
                     "upgradedSnapshot", "refSnapshot");
-    cleanupAndFinish();
-  }
 
-  function cleanupAndFinish() {
+    // Check that the iframe did actually invoke our postMessage handler (which
+    // is where we verify that the HSTS upgrade actually happened):
     is(numPostMessageCalls, expectedNumPostMessageCalls,
       "didn't receive as many messages from child iframe as expected");
+
+    // We're done! Clear the STS headers that we set, and finish.
     SpecialPowers.cleanUpSTSData("http://example.com");
     SimpleTest.finish();
   }
