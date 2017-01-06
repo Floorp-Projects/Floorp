@@ -1,0 +1,30 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+macosx64-clang-tidy/opt:
+    description: "Clang-tidy build"
+    index:
+        product: static-analysis
+        job-name: macosx64-clang-tidy
+    treeherder:
+        kind: build
+        platform: osx-10-10/opt
+        symbol: Cc(Clang-Tidy)
+        tier: 1
+    run:
+        using: toolchain-script
+        script: build-clang-tidy-macosx.sh
+        tooltool-downloads: internal
+    worker-type: aws-provisioner-v1/gecko-{level}-b-macosx64
+    worker:
+        implementation: docker-worker
+        docker-image: {in-tree: desktop-build}
+        max-run-time: 36000
+    when:
+        files-changed:
+            - 'build/clang-plugin/**'
+            - 'build/build-clang/**'
+            - 'taskcluster/scripts/misc/build-clang-tidy-macosx.sh'
+            - 'taskcluster/taskgraph/transforms/job/toolchain.py'
+

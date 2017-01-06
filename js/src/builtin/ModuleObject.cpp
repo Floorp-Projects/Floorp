@@ -289,14 +289,6 @@ ModuleNamespaceObject::create(JSContext* cx, HandleModuleObject module)
     if (!object)
         return nullptr;
 
-    RootedId funName(cx, INTERNED_STRING_TO_JSID(cx, cx->names().Symbol_iterator_fun));
-    RootedFunction enumerateFun(cx);
-    enumerateFun = JS::GetSelfHostedFunction(cx, "ModuleNamespaceEnumerate", funName, 0);
-    if (!enumerateFun)
-        return nullptr;
-
-    SetProxyExtra(object, ProxyHandler::EnumerateFunctionSlot, ObjectValue(*enumerateFun));
-
     return &object->as<ModuleNamespaceObject>();
 }
 
@@ -341,11 +333,6 @@ ModuleNamespaceObject::ProxyHandler::ProxyHandler()
   : BaseProxyHandler(&family, true)
 {}
 
-JS::Value ModuleNamespaceObject::ProxyHandler::getEnumerateFunction(HandleObject proxy) const
-{
-    return GetProxyExtra(proxy, EnumerateFunctionSlot);
-}
-
 bool
 ModuleNamespaceObject::ProxyHandler::getPrototype(JSContext* cx, HandleObject proxy,
                                                   MutableHandleObject protop) const
@@ -358,6 +345,8 @@ bool
 ModuleNamespaceObject::ProxyHandler::setPrototype(JSContext* cx, HandleObject proxy,
                                                   HandleObject proto, ObjectOpResult& result) const
 {
+    if (!proto)
+        return result.succeed();
     return result.failCantSetProto();
 }
 
@@ -402,21 +391,12 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().iterator) {
-            RootedValue enumerateFun(cx, getEnumerateFunction(proxy));
-            desc.object().set(proxy);
-            desc.setConfigurable(false);
-            desc.setEnumerable(false);
-            desc.setValue(enumerateFun);
-            return true;
-        }
-
         if (symbol == cx->wellKnownSymbols().toStringTag) {
             RootedValue value(cx, StringValue(cx->names().Module));
             desc.object().set(proxy);
             desc.setWritable(false);
             desc.setEnumerable(false);
-            desc.setConfigurable(true);
+            desc.setConfigurable(false);
             desc.setValue(value);
             return true;
         }
@@ -458,8 +438,7 @@ ModuleNamespaceObject::ProxyHandler::has(JSContext* cx, HandleObject proxy, Hand
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        return symbol == cx->wellKnownSymbols().iterator ||
-               symbol == cx->wellKnownSymbols().toStringTag;
+        return symbol == cx->wellKnownSymbols().toStringTag;
     }
 
     *bp = ns->bindings().has(id);
@@ -473,11 +452,6 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     if (JSID_IS_SYMBOL(id)) {
         Rooted<JS::Symbol*> symbol(cx, JSID_TO_SYMBOL(id));
-        if (symbol == cx->wellKnownSymbols().iterator) {
-            vp.set(getEnumerateFunction(proxy));
-            return true;
-        }
-
         if (symbol == cx->wellKnownSymbols().toStringTag) {
             vp.setString(cx->names().Module);
             return true;
@@ -526,7 +500,7 @@ ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject
     Rooted<ModuleNamespaceObject*> ns(cx, &proxy->as<ModuleNamespaceObject>());
     RootedObject exports(cx, &ns->exports());
     uint32_t count;
-    if (!GetLengthProperty(cx, exports, &count) || !props.reserve(props.length() + count))
+    if (!GetLengthProperty(cx, exports, &count) || !props.reserve(props.length() + count + 1))
         return false;
 
     Rooted<ValueVector> names(cx, ValueVector(cx));
@@ -535,6 +509,8 @@ ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject
 
     for (uint32_t i = 0; i < count; i++)
         props.infallibleAppend(AtomToId(&names[i].toString()->asAtom()));
+
+    props.infallibleAppend(SYMBOL_TO_JSID(cx->wellKnownSymbols().toStringTag));
 
     return true;
 }

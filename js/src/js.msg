@@ -503,7 +503,7 @@ MSG_DEF(JSMSG_RANGE_WITH_CLASS_ESCAPE, 0, JSEXN_SYNTAXERR, "character class esca
 MSG_DEF(JSMSG_RAW_BRACE_IN_REGEP,      0, JSEXN_SYNTAXERR, "raw brace is not allowed in regular expression with unicode flag")
 MSG_DEF(JSMSG_RAW_BRACKET_IN_REGEP,    0, JSEXN_SYNTAXERR, "raw bracket is not allowed in regular expression with unicode flag")
 MSG_DEF(JSMSG_TOO_MANY_PARENS,         0, JSEXN_INTERNALERR, "too many parentheses in regular expression")
-MSG_DEF(JSMSG_UNICODE_OVERFLOW,        0, JSEXN_SYNTAXERR, "unicode codepoint should not be greater than 0x10FFFF in regular expression")
+MSG_DEF(JSMSG_UNICODE_OVERFLOW,        1, JSEXN_SYNTAXERR, "Unicode codepoint must not be greater than 0x10FFFF in {0}")
 MSG_DEF(JSMSG_UNMATCHED_RIGHT_PAREN,   0, JSEXN_SYNTAXERR, "unmatched ) in regular expression")
 MSG_DEF(JSMSG_UNTERM_CLASS,            0, JSEXN_SYNTAXERR, "unterminated character class")
 

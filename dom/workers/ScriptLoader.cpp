@@ -206,7 +206,7 @@ ChannelFromScriptURL(nsIPrincipal* principal,
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel)) {
     mozilla::net::ReferrerPolicy referrerPolicy = parentDoc ?
-      parentDoc->GetReferrerPolicy() : mozilla::net::RP_Default;
+      parentDoc->GetReferrerPolicy() : mozilla::net::RP_Unset;
     rv = nsContentUtils::SetFetchReferrerURIWithPolicy(principal, parentDoc,
                                                        httpChannel, referrerPolicy);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -1233,7 +1233,7 @@ private:
 
           // Set ReferrerPolicy, default value is set in GetReferrerPolicy
           bool hasReferrerPolicy = false;
-          uint32_t rp = mozilla::net::RP_Default;
+          uint32_t rp = mozilla::net::RP_Unset;
           rv = csp->GetReferrerPolicy(&rp, &hasReferrerPolicy);
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2111,12 +2111,16 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   aWorkerPrivate->AssertIsOnWorkerThread();
   NS_ASSERTION(!aLoadInfos.IsEmpty(), "Bad arguments!");
 
-  AutoSyncLoopHolder syncLoop(aWorkerPrivate);
+  AutoSyncLoopHolder syncLoop(aWorkerPrivate, Terminating);
+  nsCOMPtr<nsIEventTarget> syncLoopTarget = syncLoop.GetEventTarget();
+  if (!syncLoopTarget) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
 
   RefPtr<ScriptLoaderRunnable> loader =
-    new ScriptLoaderRunnable(aWorkerPrivate, syncLoop.EventTarget(),
-                             aLoadInfos, aIsMainScript, aWorkerScriptType,
-                             aRv);
+    new ScriptLoaderRunnable(aWorkerPrivate, syncLoopTarget, aLoadInfos,
+                             aIsMainScript, aWorkerScriptType, aRv);
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
@@ -2177,7 +2181,7 @@ ChannelFromScriptURLWorkerThread(JSContext* aCx,
     new ChannelGetterRunnable(aParent, aScriptURL, aChannel);
 
   ErrorResult rv;
-  getter->Dispatch(rv);
+  getter->Dispatch(Terminating, rv);
   if (rv.Failed()) {
     NS_ERROR("Failed to dispatch!");
     return rv.StealNSResult();

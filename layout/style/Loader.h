@@ -372,7 +372,7 @@ public:
                      const nsCString& aCharset,
                      nsICSSLoaderObserver* aObserver,
                      CORSMode aCORSMode = CORS_NONE,
-                     ReferrerPolicy aReferrerPolicy = mozilla::net::RP_Default,
+                     ReferrerPolicy aReferrerPolicy = mozilla::net::RP_Unset,
                      const nsAString& aIntegrity = EmptyString());
 
   /**
@@ -500,7 +500,7 @@ private:
                                         RefPtr<StyleSheet>* aSheet,
                                         nsICSSLoaderObserver* aObserver,
                                         CORSMode aCORSMode = CORS_NONE,
-                                        ReferrerPolicy aReferrerPolicy = mozilla::net::RP_Default,
+                                        ReferrerPolicy aReferrerPolicy = mozilla::net::RP_Unset,
                                         const nsAString& aIntegrity = EmptyString());
 
   // Post a load event for aObserver to be notified about aSheet.  The

@@ -142,14 +142,7 @@ class ModuleNamespaceObject : public ProxyObject
   private:
     struct ProxyHandler : public BaseProxyHandler
     {
-        enum
-        {
-            EnumerateFunctionSlot = 0
-        };
-
         ProxyHandler();
-
-        JS::Value getEnumerateFunction(HandleObject proxy) const;
 
         bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
                                       MutableHandle<PropertyDescriptor> desc) const override;

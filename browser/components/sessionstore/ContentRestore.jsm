@@ -201,7 +201,7 @@ ContentRestoreInternal.prototype = {
                        Utils.makeURI(loadArguments.referrer) : null;
         let referrerPolicy = ('referrerPolicy' in loadArguments
             ? loadArguments.referrerPolicy
-            : Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
+            : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET);
         let postData = loadArguments.postData ?
                        Utils.makeInputStream(loadArguments.postData) : null;
 

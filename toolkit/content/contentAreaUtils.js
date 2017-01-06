@@ -559,7 +559,7 @@ function internalPersist(persistArgs) {
     persist.savePrivacyAwareURI(persistArgs.sourceURI,
                                 persistArgs.sourceCacheKey,
                                 persistArgs.sourceReferrer,
-                                Components.interfaces.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+                                Components.interfaces.nsIHttpChannel.REFERRER_POLICY_UNSET,
                                 persistArgs.sourcePostData,
                                 null,
                                 targetFileURL,
