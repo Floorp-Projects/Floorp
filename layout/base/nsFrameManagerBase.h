@@ -45,8 +45,6 @@ public:
     mRootFrame = aRootFrame;
   }
 
-  static uint32_t GetGlobalGenerationNumber() { return sGlobalGenerationNumber; }
-
 protected:
   class UndisplayedMap;
 
@@ -57,16 +55,6 @@ protected:
   UndisplayedMap*                 mUndisplayedMap;
   UndisplayedMap*                 mDisplayContentsMap;
   bool                            mIsDestroyingFrames;  // The frame manager is destroying some frame(s).
-
-  // The frame tree generation number
-  // We use this to avoid unnecessary screenshotting
-  // on Android. Unfortunately, this is static to match
-  // the single consumer which is also static. Keeping
-  // this the same greatly simplifies lifetime issues and
-  // makes sure we always using the correct number.
-  // A per PresContext generation number is available
-  // via nsPresContext::GetDOMGeneration
-  static uint32_t                 sGlobalGenerationNumber;
 };
 
 #endif
