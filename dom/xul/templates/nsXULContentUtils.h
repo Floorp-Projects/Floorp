@@ -21,7 +21,6 @@ class nsIRDFNode;
 class nsIRDFResource;
 class nsIRDFLiteral;
 class nsIRDFService;
-class nsIDateTimeFormat;
 class nsICollation;
 
 // errors to pass to LogTemplateError
@@ -86,7 +85,6 @@ class nsXULContentUtils
 {
 protected:
     static nsIRDFService* gRDF;
-    static nsIDateTimeFormat* gFormat;
     static nsICollation *gCollation;
 
     static bool gDisableXULCache;

@@ -555,7 +555,7 @@ nsXULPopupManager::GetPopupFrameForContent(nsIContent* aContent, bool aShouldFlu
     if (document) {
       nsCOMPtr<nsIPresShell> presShell = document->GetShell();
       if (presShell)
-        presShell->FlushPendingNotifications(Flush_Layout);
+        presShell->FlushPendingNotifications(FlushType::Layout);
     }
   }
 
@@ -1597,7 +1597,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
 
         if (!animate.EqualsLiteral("false") &&
             (!animate.EqualsLiteral("cancel") || aIsCancel)) {
-          presShell->FlushPendingNotifications(Flush_Layout);
+          presShell->FlushPendingNotifications(FlushType::Layout);
 
           // Get the frame again in case the flush caused it to go away
           popupFrame = do_QueryFrame(aPopup->GetPrimaryFrame());

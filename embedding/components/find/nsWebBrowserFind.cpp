@@ -723,7 +723,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
 
   // Now make sure the content (for actual finding) and frame (for
   // selection) models are up to date.
-  theDoc->FlushPendingNotifications(Flush_Frames);
+  theDoc->FlushPendingNotifications(FlushType::Frames);
 
   nsCOMPtr<nsISelection> sel = GetFrameSelection(aWindow);
   NS_ENSURE_ARG_POINTER(sel);

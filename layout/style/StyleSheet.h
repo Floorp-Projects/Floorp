@@ -44,7 +44,7 @@ protected:
   StyleSheet(const StyleSheet& aCopy,
              nsIDocument* aDocumentToUse,
              nsINode* aOwningNodeToUse);
-  virtual ~StyleSheet() {}
+  virtual ~StyleSheet();
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -66,6 +66,17 @@ public:
    */
   bool IsComplete() const;
   void SetComplete();
+
+  /**
+   * Set the stylesheet to be enabled.  This may or may not make it
+   * applicable.  Note that this WILL inform the sheet's document of
+   * its new applicable state if the state changes but WILL NOT call
+   * BeginUpdate() or EndUpdate() on the document -- calling those is
+   * the caller's responsibility.  This allows use of SetEnabled when
+   * batched updates are desired.  If you want updates handled for
+   * you, see nsIDOMStyleSheet::SetDisabled().
+   */
+  void SetEnabled(bool aEnabled);
 
   MOZ_DECL_STYLO_METHODS(CSSStyleSheet, ServoStyleSheet)
 
@@ -111,6 +122,9 @@ public:
    */
   inline void SetPrincipal(nsIPrincipal* aPrincipal);
 
+  void SetTitle(const nsAString& aTitle) { mTitle = aTitle; }
+  void SetMedia(nsMediaList* aMedia);
+
   // Get this style sheet's CORS mode
   inline CORSMode GetCORSMode() const;
   // Get this style sheet's Referrer Policy
@@ -129,7 +143,7 @@ public:
   // GetOwnerNode is defined above.
   inline StyleSheet* GetParentStyleSheet() const;
   // The XPCOM GetTitle is fine for WebIDL.
-  virtual nsMediaList* Media() = 0;
+  nsMediaList* Media();
   bool Disabled() const { return mDisabled; }
   // The XPCOM SetDisabled is fine for WebIDL.
 
@@ -192,9 +206,17 @@ protected:
   void SubjectSubsumesInnerPrincipal(nsIPrincipal& aSubjectPrincipal,
                                      ErrorResult& aRv);
 
+  // Drop our reference to mMedia
+  void DropMedia();
+
+  // Called from SetEnabled when the enabled state changed.
+  void EnabledStateChanged();
+
   nsString              mTitle;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
+
+  RefPtr<nsMediaList> mMedia;
 
   // mParsingMode controls access to nonstandard style constructs that
   // are not safe for use on the public Web but necessary in UA sheets

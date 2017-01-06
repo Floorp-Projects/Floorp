@@ -490,7 +490,7 @@ nsContentList::Item(uint32_t aIndex, bool aDoFlush)
     nsIDocument* doc = mRootNode->GetUncomposedDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+      doc->FlushPendingNotifications(FlushType::ContentAndNotify);
     }
   }
 
@@ -984,7 +984,7 @@ nsContentList::BringSelfUpToDate(bool aDoFlush)
     nsIDocument* doc = mRootNode->GetUncomposedDoc();
     if (doc) {
       // Flush pending content changes Bug 4891.
-      doc->FlushPendingNotifications(Flush_ContentAndNotify);
+      doc->FlushPendingNotifications(FlushType::ContentAndNotify);
     }
   }
 

@@ -422,7 +422,7 @@ SVGDocumentWrapper::FlushLayout()
   nsCOMPtr<nsIPresShell> presShell;
   mViewer->GetPresShell(getter_AddRefs(presShell));
   if (presShell) {
-    presShell->FlushPendingNotifications(Flush_Layout);
+    presShell->FlushPendingNotifications(FlushType::Layout);
   }
 }
 

@@ -145,12 +145,6 @@ ServoStyleSheet::List(FILE* aOut, int32_t aIndex) const
 }
 #endif
 
-nsMediaList*
-ServoStyleSheet::Media()
-{
-  return nullptr;
-}
-
 nsIDOMCSSRule*
 ServoStyleSheet::GetDOMOwnerRule() const
 {

@@ -128,7 +128,7 @@ public:
   virtual void FrameNeedsToContinueReflow(nsIFrame *aFrame) override;
   virtual void CancelAllPendingReflows() override;
   virtual bool IsSafeToFlush() const override;
-  virtual void FlushPendingNotifications(mozFlushType aType) override;
+  virtual void FlushPendingNotifications(mozilla::FlushType aType) override;
   virtual void FlushPendingNotifications(mozilla::ChangesToFlush aType) override;
   virtual void DestroyFramesFor(nsIContent*  aContent,
                                 nsIContent** aDestroyedFramesFor) override;
@@ -648,7 +648,7 @@ protected:
     void Revoke() {
       if (mPresShell) {
         mPresShell->GetPresContext()->RefreshDriver()->
-          RemoveRefreshObserver(this, Flush_Display);
+          RemoveRefreshObserver(this, FlushType::Display);
         mPresShell = nullptr;
       }
     }

@@ -103,7 +103,7 @@ public:
    * This class handles the dispatching of scroll events to content.
    *
    * nsRefreshDriver maintains three lists of refresh observers, one for each
-   * flush type: Flush_Style, Flush_Layout, and Flush_Display.
+   * flush type: FlushType::Style, FlushType::Layout, and FlushType::Display.
    *
    * During a tick, it runs through each list of observers, in order, and runs
    * them. To iterate over each list, it uses an EndLimitedIterator, which is
@@ -113,10 +113,10 @@ public:
    * observer of that flush type, will not run until the next tick.
    *
    * During main-thread animation-driven scrolling, ScrollEvents are *posted*
-   * by AsyncScroll::WillRefresh(). AsyncScroll registers itself as a Flush_Style
+   * by AsyncScroll::WillRefresh(). AsyncScroll registers itself as a FlushType::Style
    * refresh observer.
    *
-   * Posting a scroll event, as of bug 1250550, registers a Flush_Layout
+   * Posting a scroll event, as of bug 1250550, registers a FlushType::Layout
    * refresh observer, which *fires* the event when run. This allows the event
    * to be fired to content in the same refresh driver tick as it is posted.
    * This is an important invariant to maintain to reduce scroll event latency

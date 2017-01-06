@@ -1028,15 +1028,10 @@ Statistics::endGC()
         for (int i = 0; i < PHASE_LIMIT; i++)
             phaseTotals[j][i] += phaseTimes[j][i];
 
-    TimeDuration total, longest;
-    gcDuration(&total, &longest);
-
     TimeDuration sccTotal, sccLongest;
     sccDurations(&sccTotal, &sccLongest);
 
     runtime->addTelemetry(JS_TELEMETRY_GC_IS_ZONE_GC, !zoneStats.isCollectingAllZones());
-    runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
-    runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
     TimeDuration markTotal = SumPhase(PHASE_MARK, phaseTimes);
     TimeDuration markRootsTotal = SumPhase(PHASE_MARK_ROOTS, phaseTimes);
     runtime->addTelemetry(JS_TELEMETRY_GC_MARK_MS, t(markTotal));
@@ -1055,6 +1050,12 @@ Statistics::endGC()
     runtime->addTelemetry(JS_TELEMETRY_GC_SCC_SWEEP_MAX_PAUSE_MS, t(sccLongest));
 
     if (!aborted) {
+        TimeDuration total, longest;
+        gcDuration(&total, &longest);
+
+        runtime->addTelemetry(JS_TELEMETRY_GC_MS, t(total));
+        runtime->addTelemetry(JS_TELEMETRY_GC_MAX_PAUSE_MS, t(longest));
+
         const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
         runtime->addTelemetry(JS_TELEMETRY_GC_MMU_50, mmu50 * 100);
     }

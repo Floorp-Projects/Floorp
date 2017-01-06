@@ -34,7 +34,7 @@ static nsIFrame*
 GetFrameForNode(nsINode* aNode, GeometryNodeType aType)
 {
   nsIDocument* doc = aNode->OwnerDoc();
-  doc->FlushPendingNotifications(Flush_Layout);
+  doc->FlushPendingNotifications(FlushType::Layout);
   switch (aType) {
   case GEOMETRY_NODE_ELEMENT:
     return aNode->AsContent()->GetPrimaryFrame();

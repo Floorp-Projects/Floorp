@@ -5,9 +5,9 @@
 
 #include "EditorCommands.h"
 
-#include "mozFlushType.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/FlushType.h"
 #include "mozilla/TextEditor.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
@@ -867,7 +867,7 @@ SelectionMoveCommands::DoCommand(const char* aCommandName,
   if (doc) {
     // Most of the commands below (possibly all of them) need layout to
     // be up to date.
-    doc->FlushPendingNotifications(Flush_Layout);
+    doc->FlushPendingNotifications(FlushType::Layout);
   }
 
   nsCOMPtr<nsISelectionController> selCont;

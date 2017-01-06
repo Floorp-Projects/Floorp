@@ -1744,7 +1744,8 @@ RenderModule(WasmRenderContext& c, AstModule& module)
 // Top-level functions
 
 bool
-wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer, GeneratedSourceMap* sourceMap)
+wasm::BinaryToText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
+                   GeneratedSourceMap* sourceMap /* = nullptr */)
 {
     LifoAlloc lifo(AST_LIFO_DEFAULT_CHUNK_SIZE);
 

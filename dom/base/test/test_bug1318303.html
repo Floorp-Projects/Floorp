@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1318303
+     -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1318303</title>
+    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script>
+     var _createIterator = function (root) {
+       return document.createNodeIterator.call(root.ownerDocument || root,
+                                               root,
+                                               NodeFilter.SHOW_ELEMENT
+                                             | NodeFilter.SHOW_COMMENT
+                                             | NodeFilter.SHOW_TEXT,
+                                               function () {
+                                                 return NodeFilter.FILTER_ACCEPT;
+                                               },
+                                               false
+       );
+     };
+
+     evil = "<body><object data=''><p></p></object></body>";
+     doc = new DOMParser().parseFromString(evil, 'text/html');
+     body = doc.getElementsByTagName("body")[0];
+     nodeIterator = _createIterator(body);
+     try {
+       while ((currentNode = nodeIterator.nextNode())) {
+         currentNode.removeAttribute("data");
+       }
+       ok(true, "Removing data attributes did not throw error");
+     } catch(err) {
+       ok(false, "Removing data attribute threw error!");
+     }
+     obj = doc.getElementsByTagName("object")[0];
+     const objLC = SpecialPowers.Ci.nsIObjectLoadingContent;
+
+     obj instanceof objLC;
+     obj = SpecialPowers.wrap(obj);
+
+     ok(obj.pluginFallbackType == objLC.PLUGIN_ALTERNATE,
+        "expected alternate fallback mode");
+
+    </script>
+  </head>
+</html>
+
