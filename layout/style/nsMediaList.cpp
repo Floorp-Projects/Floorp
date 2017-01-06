@@ -166,7 +166,7 @@ nsMediaExpression::Matches(nsPresContext *aPresContext,
         NS_ASSERTION(required.GetUnit() == eCSSUnit_Ident,
                      "bad required value");
         NS_ASSERTION(mFeature->mRangeType == nsMediaFeature::eMinMaxNotAllowed,
-                     "bad range"); 
+                     "bad range");
         cmp = !(actual == required); // string comparison
       }
       break;
@@ -611,12 +611,12 @@ nsMediaList::SetMediaText(const nsAString& aMediaText)
   BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
 
   SetText(aMediaText);
-  
+
   END_MEDIA_CHANGE(mStyleSheet, doc)
 
   return NS_OK;
 }
-                               
+
 NS_IMETHODIMP
 nsMediaList::GetLength(uint32_t* aLength)
 {
@@ -654,13 +654,13 @@ nsMediaList::DeleteMedium(const nsAString& aOldMedium)
   nsCOMPtr<nsIDocument> doc;
 
   BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-  
+
   rv = Delete(aOldMedium);
   if (NS_FAILED(rv))
     return rv;
 
   END_MEDIA_CHANGE(mStyleSheet, doc)
-  
+
   return rv;
 }
 
@@ -671,13 +671,13 @@ nsMediaList::AppendMedium(const nsAString& aNewMedium)
   nsCOMPtr<nsIDocument> doc;
 
   BEGIN_MEDIA_CHANGE(mStyleSheet, doc)
-  
+
   rv = Append(aNewMedium);
   if (NS_FAILED(rv))
     return rv;
 
   END_MEDIA_CHANGE(mStyleSheet, doc)
-  
+
   return rv;
 }
 
