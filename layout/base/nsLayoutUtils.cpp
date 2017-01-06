@@ -22,6 +22,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Unused.h"
 #include "nsCharTraits.h"
+#include "nsDocument.h"
 #include "nsFontMetrics.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
