@@ -1398,6 +1398,23 @@ impl ToJson for KeyAction {
     }
 }
 
+fn validate_key_value(value_str: &str) -> WebDriverResult<char> {
+    let mut chars = value_str.chars();
+    let value = if let Some(c) = chars.next() {
+        c
+    } else {
+        return Err(WebDriverError::new(
+            ErrorStatus::InvalidArgument,
+            "Parameter 'value' was an empty string"))
+    };
+    if chars.next().is_some() {
+        return Err(WebDriverError::new(
+            ErrorStatus::InvalidArgument,
+            "Parameter 'value' contained multiple characters"))
+    };
+    Ok(value)
+}
+
 #[derive(PartialEq)]
 pub struct KeyUpAction {
     pub value: char
@@ -1411,13 +1428,8 @@ impl Parameters for KeyUpAction {
                          "Missing value parameter").as_string(),
                 ErrorStatus::InvalidArgument,
             "Parameter 'value' was not a string");
-        if value_str.len() != 1 {
-            return Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "Key code was not a single char"))
-        }
 
-        let value = value_str.chars().next().unwrap();
+        let value = try!(validate_key_value(value_str));
         Ok(KeyUpAction {
             value: value
         })
@@ -1448,13 +1460,7 @@ impl Parameters for KeyDownAction {
                          "Missing value parameter").as_string(),
                 ErrorStatus::InvalidArgument,
             "Parameter 'value' was not a string");
-        if value_str.len() != 1 {
-            return Err(WebDriverError::new(
-                ErrorStatus::InvalidArgument,
-                "Key code was not a single char"))
-        }
-
-        let value = value_str.chars().next().unwrap();
+        let value = try!(validate_key_value(value_str));
         Ok(KeyDownAction {
             value: value
         })
