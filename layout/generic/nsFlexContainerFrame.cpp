@@ -33,6 +33,8 @@ typedef nsFlexContainerFrame::FlexItem FlexItem;
 typedef nsFlexContainerFrame::FlexLine FlexLine;
 typedef nsFlexContainerFrame::FlexboxAxisTracker FlexboxAxisTracker;
 typedef nsFlexContainerFrame::StrutInfo StrutInfo;
+typedef nsFlexContainerFrame::CachedMeasuringReflowResult
+          CachedMeasuringReflowResult;
 
 static mozilla::LazyLogModule gFlexContainerLog("nsFlexContainerFrame");
 
@@ -1767,6 +1769,91 @@ nsFlexContainerFrame::
   }
 }
 
+/**
+ * A cached result for a measuring reflow.
+ *
+ * Right now we only need to cache the available size, the height and the
+ * ascent. This can be extended later if needed.
+ *
+ * The assumption here is that a given flex item measurement won't change until
+ * either the available size changes, or the flex container intrinsic size is
+ * marked as dirty (due to a style or DOM change).
+ *
+ * Caching it prevents us from doing exponential reflows in cases of deeply
+ * nested flex and scroll frames.
+ *
+ * We store them in the frame property table for simplicity.
+ */
+struct nsFlexContainerFrame::CachedMeasuringReflowResult
+{
+  LogicalSize mAvailableSize;
+  const nscoord mHeight;
+  const nscoord mAscent;
+
+  CachedMeasuringReflowResult(const LogicalSize& aAvailableSize,
+                              nscoord aHeight,
+                              nscoord aAscent)
+    : mAvailableSize(aAvailableSize)
+    , mHeight(aHeight)
+    , mAscent(aAscent)
+  {}
+};
+
+NS_DECLARE_FRAME_PROPERTY_DELETABLE(CachedFlexMeasuringReflow,
+                                    CachedMeasuringReflowResult);
+
+const CachedMeasuringReflowResult&
+nsFlexContainerFrame::MeasureAscentAndHeightForFlexItem(
+  FlexItem& aItem,
+  nsPresContext* aPresContext,
+  ReflowInput& aChildReflowInput)
+{
+  const auto availableSize = aChildReflowInput.AvailableSize();
+  const FrameProperties props = aItem.Frame()->Properties();
+  if (const auto* cachedResult = props.Get(CachedFlexMeasuringReflow())) {
+    if (cachedResult->mAvailableSize == availableSize) {
+      return *cachedResult;
+    }
+  }
+
+  ReflowOutput childDesiredSize(aChildReflowInput);
+  nsReflowStatus childReflowStatus;
+
+  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
+  ReflowChild(aItem.Frame(), aPresContext,
+              childDesiredSize, aChildReflowInput,
+              0, 0, flags, childReflowStatus);
+  aItem.SetHadMeasuringReflow();
+
+  // XXXdholbert Once we do pagination / splitting, we'll need to actually
+  // handle incomplete childReflowStatuses. But for now, we give our kids
+  // unconstrained available height, which means they should always complete.
+  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
+             "We gave flex item unconstrained available height, so it "
+             "should be complete");
+
+  // Tell the child we're done with its initial reflow.
+  // (Necessary for e.g. GetBaseline() to work below w/out asserting)
+  FinishReflowChild(aItem.Frame(), aPresContext,
+                    childDesiredSize, &aChildReflowInput, 0, 0, flags);
+
+  auto result =
+    new CachedMeasuringReflowResult(availableSize,
+                                    childDesiredSize.Height(),
+                                    childDesiredSize.BlockStartAscent());
+
+  props.Set(CachedFlexMeasuringReflow(), result);
+  return *result;
+}
+
+/* virtual */ void
+nsFlexContainerFrame::MarkIntrinsicISizesDirty()
+{
+  for (nsIFrame* childFrame : mFrames) {
+    childFrame->Properties().Delete(CachedFlexMeasuringReflow());
+  }
+}
+
 nscoord
 nsFlexContainerFrame::
   MeasureFlexItemContentHeight(nsPresContext* aPresContext,
@@ -1794,27 +1881,15 @@ nsFlexContainerFrame::
     childRIForMeasuringHeight.SetVResize(true);
   }
 
-  ReflowOutput childDesiredSize(childRIForMeasuringHeight);
-  nsReflowStatus childReflowStatus;
-  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
-  ReflowChild(aFlexItem.Frame(), aPresContext,
-              childDesiredSize, childRIForMeasuringHeight,
-              0, 0, flags, childReflowStatus);
+  const CachedMeasuringReflowResult& reflowResult =
+    MeasureAscentAndHeightForFlexItem(aFlexItem, aPresContext,
+                                      childRIForMeasuringHeight);
 
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
-             "We gave flex item unconstrained available height, so it "
-             "should be complete");
-
-  FinishReflowChild(aFlexItem.Frame(), aPresContext,
-                    childDesiredSize, &childRIForMeasuringHeight,
-                    0, 0, flags);
-
-  aFlexItem.SetHadMeasuringReflow();
-  aFlexItem.SetAscent(childDesiredSize.BlockStartAscent());
+  aFlexItem.SetAscent(reflowResult.mAscent);
 
   // Subtract border/padding in vertical axis, to get _just_
   // the effective computed value of the "height" property.
-  nscoord childDesiredHeight = childDesiredSize.Height() -
+  nscoord childDesiredHeight = reflowResult.mHeight -
     childRIForMeasuringHeight.ComputedPhysicalBorderPadding().TopBottom();
 
   return std::max(0, childDesiredHeight);
@@ -3970,25 +4045,10 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     // whether any of its ancestors are being resized).
     aChildReflowInput.SetVResize(true);
   }
-  ReflowOutput childDesiredSize(aChildReflowInput);
-  nsReflowStatus childReflowStatus;
-  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
-  ReflowChild(aItem.Frame(), aPresContext,
-              childDesiredSize, aChildReflowInput,
-              0, 0, flags, childReflowStatus);
-  aItem.SetHadMeasuringReflow();
 
-  // XXXdholbert Once we do pagination / splitting, we'll need to actually
-  // handle incomplete childReflowStatuses. But for now, we give our kids
-  // unconstrained available height, which means they should always complete.
-  MOZ_ASSERT(NS_FRAME_IS_COMPLETE(childReflowStatus),
-             "We gave flex item unconstrained available height, so it "
-             "should be complete");
-
-  // Tell the child we're done with its initial reflow.
-  // (Necessary for e.g. GetBaseline() to work below w/out asserting)
-  FinishReflowChild(aItem.Frame(), aPresContext,
-                    childDesiredSize, &aChildReflowInput, 0, 0, flags);
+  // Potentially reflow the item, and get the sizing info.
+  const CachedMeasuringReflowResult& reflowResult =
+    MeasureAscentAndHeightForFlexItem(aItem, aPresContext, aChildReflowInput);
 
   // Save the sizing info that we learned from this reflow
   // -----------------------------------------------------
@@ -4000,7 +4060,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // so we don't bother with making aAxisTracker pick the cross-axis component
   // for us.)
   nscoord crossAxisBorderPadding = aItem.GetBorderPadding().TopBottom();
-  if (childDesiredSize.Height() < crossAxisBorderPadding) {
+  if (reflowResult.mHeight < crossAxisBorderPadding) {
     // Child's requested size isn't large enough for its border/padding!
     // This is OK for the trivial nsFrame::Reflow() impl, but other frame
     // classes should know better. So, if we get here, the child had better be
@@ -4013,10 +4073,10 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
     aItem.SetCrossSize(0);
   } else {
     // (normal case)
-    aItem.SetCrossSize(childDesiredSize.Height() - crossAxisBorderPadding);
+    aItem.SetCrossSize(reflowResult.mHeight - crossAxisBorderPadding);
   }
 
-  aItem.SetAscent(childDesiredSize.BlockStartAscent());
+  aItem.SetAscent(reflowResult.mAscent);
 }
 
 void
@@ -4306,7 +4366,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         LogicalSize availSize = aReflowInput.ComputedSize(wm);
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
         ReflowInput childReflowInput(aPresContext, aReflowInput,
-                                           item->Frame(), availSize);
+                                     item->Frame(), availSize);
         if (!sizeOverride) {
           // Directly override the computed main-size, by tweaking reflow state:
           if (aAxisTracker.IsMainAxisHorizontal()) {
