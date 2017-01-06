@@ -1576,29 +1576,24 @@ struct MaskLayerUserData : public LayerUserData
 struct CSSMaskLayerUserData : public LayerUserData
 {
   CSSMaskLayerUserData()
-    : mFrame(nullptr)
+    : mMaskStyle(nsStyleImageLayers::LayerType::Mask)
   { }
 
   CSSMaskLayerUserData(nsIFrame* aFrame, const nsIntSize& aMaskSize)
-    : mFrame(aFrame),
-      mMaskSize(aMaskSize)
-  { }
-
-  CSSMaskLayerUserData& operator=(const CSSMaskLayerUserData& aOther)
+    : mMaskSize(aMaskSize),
+      mMaskStyle(aFrame->StyleSVGReset()->mMask)
   {
-    mFrame = aOther.mFrame;
-    mMaskSize = aOther.mMaskSize;
+  }
 
-    return *this;
+  void operator=(CSSMaskLayerUserData&& aOther)
+  {
+    mMaskSize = aOther.mMaskSize;
+    mMaskStyle = Move(aOther.mMaskStyle);
   }
 
   bool
   operator==(const CSSMaskLayerUserData& aOther) const
   {
-    if (mFrame != aOther.mFrame) {
-      return false;
-    }
-
     // Even if the frame is valid, check the size of the display item's
     // boundary is still necessary. For example, if we scale the masked frame
     // by adding a transform property on it, the masked frame is valid itself
@@ -1608,12 +1603,12 @@ struct CSSMaskLayerUserData : public LayerUserData
       return false;
     }
 
-    return true;
+    return mMaskStyle == aOther.mMaskStyle;
   }
 
 private:
-  nsIFrame* mFrame;
   nsIntSize mMaskSize;
+  nsStyleImageLayers mMaskStyle;
 };
 
 /*
@@ -3933,7 +3928,7 @@ ContainerState::SetupMaskLayerForCSSMask(Layer* aLayer,
   }
   maskLayer->SetContainer(imgContainer);
 
-  *oldUserData = newUserData;
+  *oldUserData = Move(newUserData);
   aLayer->SetMaskLayer(maskLayer);
 }
 
