@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "mozilla/ReflowInput.h"
+#include "mozilla/ShapeUtils.h"
 #include "nsBlockFrame.h"
 #include "nsError.h"
 #include "nsIPresShell.h"
@@ -187,7 +188,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
       // There aren't any more floats that could intersect this band.
       break;
     }
-    if (fi.IsEmpty()) {
+    if (fi.IsEmpty(aShapeType)) {
       // For compatibility, ignore floats with empty rects, even though it
       // disagrees with the spec.  (We might want to fix this in the
       // future, though.)
@@ -613,6 +614,60 @@ nsFloatManager::BoxShapeInfo::LineRight(WritingMode aWM,
 }
 
 /////////////////////////////////////////////////////////////////////////////
+// CircleShapeInfo
+
+nsFloatManager::CircleShapeInfo::CircleShapeInfo(
+  StyleBasicShape* const aBasicShape,
+  nscoord aLineLeft,
+  nscoord aBlockStart,
+  const LogicalRect& aShapeBoxRect,
+  WritingMode aWM,
+  const nsSize& aContainerSize)
+{
+  // Use physical coordinates to compute the center of the circle() since
+  // the <position> keywords such as 'left', 'top', etc. are physical.
+  // https://drafts.csswg.org/css-shapes-1/#funcdef-circle
+  nsRect physicalShapeBoxRect =
+    aShapeBoxRect.GetPhysicalRect(aWM, aContainerSize);
+  nsPoint physicalCenter =
+    ShapeUtils::ComputeCircleOrEllipseCenter(aBasicShape, physicalShapeBoxRect);
+  mRadius =
+    ShapeUtils::ComputeCircleRadius(aBasicShape, physicalCenter,
+                                    physicalShapeBoxRect);
+
+  // Convert the coordinate space back to the same as FloatInfo::mRect.
+  // mCenter.x is in the line-axis of the frame manager and mCenter.y are in
+  // the frame manager's real block-axis.
+  LogicalPoint logicalCenter(aWM, physicalCenter, aContainerSize);
+  mCenter = nsPoint(logicalCenter.LineRelative(aWM, aContainerSize) + aLineLeft,
+                    logicalCenter.B(aWM) + aBlockStart);
+}
+
+nscoord
+nsFloatManager::CircleShapeInfo::LineLeft(WritingMode aWM,
+                                          const nscoord aBStart,
+                                          const nscoord aBEnd) const
+{
+  nscoord lineLeftDiff =
+    ComputeEllipseLineInterceptDiff(mCenter.y - mRadius, mCenter.y + mRadius,
+                                    mRadius, mRadius, mRadius, mRadius,
+                                    aBStart, aBEnd);
+  return mCenter.x - mRadius + lineLeftDiff;
+}
+
+nscoord
+nsFloatManager::CircleShapeInfo::LineRight(WritingMode aWM,
+                                           const nscoord aBStart,
+                                           const nscoord aBEnd) const
+{
+  nscoord lineRightDiff =
+    ComputeEllipseLineInterceptDiff(mCenter.y - mRadius, mCenter.y + mRadius,
+                                    mRadius, mRadius, mRadius, mRadius,
+                                    aBStart, aBEnd);
+  return mCenter.x + mRadius - lineRightDiff;
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // FloatInfo
 
 nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
@@ -651,7 +706,8 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
       // Do nothing. rect is already a margin rect.
       break;
     case StyleShapeOutsideShapeBox::NoBox:
-      MOZ_ASSERT_UNREACHABLE("Why don't we have a shape-box?");
+      MOZ_ASSERT(shapeOutside.GetType() != StyleShapeSourceType::Box,
+                 "Box source type must have <shape-box> specified!");
       break;
   }
 
@@ -660,6 +716,17 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
                         rect.BStart(aWM) + aBlockStart,
                         rect.ISize(aWM), rect.BSize(aWM));
     mShapeInfo = MakeUnique<BoxShapeInfo>(shapeBoxRect, mFrame);
+  } else if (shapeOutside.GetType() == StyleShapeSourceType::Shape) {
+    StyleBasicShape* const basicShape = shapeOutside.GetBasicShape();
+
+    if (basicShape->GetShapeType() == StyleBasicShapeType::Circle) {
+      mShapeInfo = MakeUnique<CircleShapeInfo>(basicShape, aLineLeft, aBlockStart,
+                                               rect, aWM, aContainerSize);
+    }
+  } else if (shapeOutside.GetType() == StyleShapeSourceType::URL) {
+    // Bug 1265343: Implement 'shape-image-threshold'.
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unknown StyleShapeSourceType!");
   }
 }
 
@@ -694,7 +761,11 @@ nsFloatManager::FloatInfo::LineLeft(WritingMode aWM,
   if (!mShapeInfo) {
     return LineLeft();
   }
-  return mShapeInfo->LineLeft(aWM, aBStart, aBEnd);
+  // Clip the flow area to the margin-box because
+  // https://drafts.csswg.org/css-shapes-1/#relation-to-box-model-and-float-behavior
+  // says "When a shape is used to define a float area, the shape is clipped
+  // to the float’s margin box."
+  return std::max(LineLeft(), mShapeInfo->LineLeft(aWM, aBStart, aBEnd));
 }
 
 nscoord
@@ -711,7 +782,8 @@ nsFloatManager::FloatInfo::LineRight(WritingMode aWM,
   if (!mShapeInfo) {
     return LineRight();
   }
-  return mShapeInfo->LineRight(aWM, aBStart, aBEnd);
+  // Clip the flow area to the margin-box. See LineLeft().
+  return std::min(LineRight(), mShapeInfo->LineRight(aWM, aBStart, aBEnd));
 }
 
 nscoord
@@ -725,7 +797,8 @@ nsFloatManager::FloatInfo::BStart(ShapeType aShapeType) const
   if (!mShapeInfo) {
     return BStart();
   }
-  return mShapeInfo->BStart();
+  // Clip the flow area to the margin-box. See LineLeft().
+  return std::max(BStart(), mShapeInfo->BStart());
 }
 
 nscoord
@@ -739,7 +812,22 @@ nsFloatManager::FloatInfo::BEnd(ShapeType aShapeType) const
   if (!mShapeInfo) {
     return BEnd();
   }
-  return mShapeInfo->BEnd();
+  // Clip the flow area to the margin-box. See LineLeft().
+  return std::min(BEnd(), mShapeInfo->BEnd());
+}
+
+bool
+nsFloatManager::FloatInfo::IsEmpty(ShapeType aShapeType) const
+{
+  if (aShapeType == ShapeType::Margin) {
+    return IsEmpty();
+  }
+
+  MOZ_ASSERT(aShapeType == ShapeType::ShapeOutside);
+  if (!mShapeInfo) {
+    return IsEmpty();
+  }
+  return mShapeInfo->IsEmpty();
 }
 
 /* static */ nscoord
