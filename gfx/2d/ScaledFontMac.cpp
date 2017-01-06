@@ -33,33 +33,6 @@ namespace gfx {
 ScaledFontMac::CTFontDrawGlyphsFuncT* ScaledFontMac::CTFontDrawGlyphsPtr = nullptr;
 bool ScaledFontMac::sSymbolLookupDone = false;
 
-// Helper to create a CTFont from a CGFont, copying any variations that were
-// set on the original CGFont.
-static CTFontRef
-CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize)
-{
-    CFDictionaryRef vars = CGFontCopyVariations(aCGFont);
-    CTFontRef ctFont;
-    if (vars) {
-        CFDictionaryRef varAttr =
-            CFDictionaryCreate(nullptr,
-                               (const void**)&kCTFontVariationAttribute,
-                               (const void**)&vars, 1,
-                               &kCFTypeDictionaryKeyCallBacks,
-                               &kCFTypeDictionaryValueCallBacks);
-        CFRelease(vars);
-
-        CTFontDescriptorRef varDesc = CTFontDescriptorCreateWithAttributes(varAttr);
-        CFRelease(varAttr);
-
-        ctFont = CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, varDesc);
-        CFRelease(varDesc);
-    } else {
-        ctFont = CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, nullptr);
-    }
-    return ctFont;
-}
-
 ScaledFontMac::ScaledFontMac(CGFontRef aFont, Float aSize)
   : ScaledFontBase(aSize)
 {
@@ -73,7 +46,7 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont, Float aSize)
   mFont = CGFontRetain(aFont);
   if (CTFontDrawGlyphsPtr != nullptr) {
     // only create mCTFont if we're going to be using the CTFontDrawGlyphs API
-    mCTFont = CreateCTFontFromCGFontWithVariations(aFont, aSize);
+    mCTFont = CTFontCreateWithGraphicsFont(aFont, aSize, nullptr, nullptr);
   } else {
     mCTFont = nullptr;
   }
@@ -94,7 +67,7 @@ SkTypeface* ScaledFontMac::GetSkTypeface()
     if (mCTFont) {
       mTypeface = SkCreateTypefaceFromCTFont(mCTFont);
     } else {
-      CTFontRef fontFace = CreateCTFontFromCGFontWithVariations(mFont, mSize);
+      CTFontRef fontFace = CTFontCreateWithGraphicsFont(mFont, mSize, nullptr, nullptr);
       mTypeface = SkCreateTypefaceFromCTFont(fontFace);
       CFRelease(fontFace);
     }
@@ -186,24 +159,6 @@ struct writeBuf
     int offset;
 };
 
-static void CollectVariationSetting(const void *key, const void *value, void *context)
-{
-  auto keyPtr = static_cast<const CFTypeRef>(key);
-  auto valuePtr = static_cast<const CFTypeRef>(value);
-  auto vpp = static_cast<ScaledFont::VariationSetting**>(context);
-  if (CFGetTypeID(keyPtr) == CFNumberGetTypeID() &&
-      CFGetTypeID(valuePtr) == CFNumberGetTypeID()) {
-    uint64_t t;
-    double v;
-    if (CFNumberGetValue(static_cast<CFNumberRef>(keyPtr), kCFNumberSInt64Type, &t) &&
-        CFNumberGetValue(static_cast<CFNumberRef>(valuePtr), kCFNumberDoubleType, &v)) {
-      (*vpp)->mTag = t;
-      (*vpp)->mValue = v;
-      (*vpp)++;
-    }
-  }
-}
-
 bool
 ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
 {
@@ -272,26 +227,8 @@ ScaledFontMac::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton)
     // set checkSumAdjust to the computed checksum
     memcpy(&buf.data[checkSumAdjustmentOffset], &fontChecksum, sizeof(fontChecksum));
 
-    // Collect any variation settings that were incorporated into the CTFont.
-    uint32_t variationCount = 0;
-    VariationSetting* variations = nullptr;
-    if (mCTFont) {
-      CFDictionaryRef dict = CTFontCopyVariation(mCTFont);
-      if (dict) {
-        CFIndex count = CFDictionaryGetCount(dict);
-        if (count > 0) {
-          variations = new VariationSetting[count];
-          VariationSetting* vPtr = variations;
-          CFDictionaryApplyFunction(dict, CollectVariationSetting, &vPtr);
-          variationCount = vPtr - variations;
-        }
-        CFRelease(dict);
-      }
-    }
-
     // we always use an index of 0
-    aDataCallback(buf.data, buf.offset, 0, mSize, variationCount, variations, aBaton);
-    delete[] variations;
+    aDataCallback(buf.data, buf.offset, 0, mSize, aBaton);
 
     return true;
 

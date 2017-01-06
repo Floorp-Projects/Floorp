@@ -800,25 +800,6 @@ static CTFontRef ctfont_create_exact_copy(CTFontRef baseFont, CGFloat textSize,
     // Because we cannot setup the CTFont descriptor to match, the same restriction applies here
     // as other uses of CTFontCreateWithGraphicsFont which is that such CTFonts should not escape
     // the scaler context, since they aren't 'normal'.
-
-    // Not AutoCFRelease<> because CGFontCopyVariations can return null!
-    CFDictionaryRef variations = CGFontCopyVariations(baseCGFont);
-    if (variations) {
-        AutoCFRelease<CFDictionaryRef>
-            varAttr(CFDictionaryCreate(nullptr,
-                                       (const void**)&kCTFontVariationAttribute,
-                                       (const void**)&variations,
-                                       1,
-                                       &kCFTypeDictionaryKeyCallBacks,
-                                       &kCFTypeDictionaryValueCallBacks));
-        CFRelease(variations);
-
-        AutoCFRelease<CTFontDescriptorRef>
-            varDesc(CTFontDescriptorCreateWithAttributes(varAttr));
-
-        return CTFontCreateWithGraphicsFont(baseCGFont, textSize, transform, varDesc);
-    }
-
     return CTFontCreateWithGraphicsFont(baseCGFont, textSize, transform, nullptr);
 }
 

@@ -502,8 +502,6 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
 
 already_AddRefed<NativeFontResource>
 Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
-                                  uint32_t aVariationCount,
-                                  const ScaledFont::VariationSetting* aVariations,
                                   FontType aType)
 {
   switch (aType) {
@@ -528,8 +526,7 @@ Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
                                              /* aNeedsCairo = */ true);
       }
 #elif defined(XP_DARWIN)
-      return NativeFontResourceMac::Create(aData, aSize,
-                                           aVariationCount, aVariations);
+      return NativeFontResourceMac::Create(aData, aSize);
 #elif defined(MOZ_WIDGET_GTK)
       return NativeFontResourceFontconfig::Create(aData, aSize);
 #else
