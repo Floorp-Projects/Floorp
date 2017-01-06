@@ -257,6 +257,8 @@ void Gecko_CopyStyleContentsFrom(nsStyleContent* content, const nsStyleContent* 
 void Gecko_EnsureImageLayersLength(nsStyleImageLayers* layers, size_t len,
                                    nsStyleImageLayers::LayerType layer_type);
 
+void Gecko_EnsureStyleAnimationArrayLength(void* array, size_t len);
+
 // Clean up pointer-based coordinates
 void Gecko_ResetStyleCoord(nsStyleUnit* unit, nsStyleUnion* value);
 
