@@ -267,7 +267,6 @@ protected:
   AutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
   nsTArray<nsStyleSet*> mStyleSets;
 
-  friend class ::nsMediaList;
   friend class ::nsCSSRuleProcessor;
   friend class mozilla::StyleSheet;
   friend struct mozilla::ChildSheetListBuilder;
