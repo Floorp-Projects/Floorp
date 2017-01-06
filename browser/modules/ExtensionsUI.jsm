@@ -21,6 +21,15 @@ this.ExtensionsUI = {
   observe(subject, topic, data) {
     if (topic == "webextension-permission-prompt") {
       let {target, info} = subject.wrappedJSObject;
+
+      // Dismiss the progress notification.  Note that this is bad if
+      // there are multiple simultaneous installs happening, see
+      // bug 1329884 for a longer explanation.
+      let progressNotification = target.ownerGlobal.PopupNotifications.getNotification("addon-progress", target);
+      if (progressNotification) {
+        progressNotification.remove();
+      }
+
       this.showPermissionsPrompt(target, info).then(answer => {
         Services.obs.notifyObservers(subject, "webextension-permission-response",
                                      JSON.stringify(answer));
