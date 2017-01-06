@@ -209,6 +209,10 @@ class MutableGCHashMapOperations
     bool putNew(KeyInput&& k, ValueInput&& v) {
         return map().putNew(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
     }
+
+    void trace(JSTracer* trc) {
+        map().trace(trc);
+    }
 };
 
 template <typename A, typename B, typename C, typename D, typename E>
@@ -367,6 +371,10 @@ class MutableGCHashSetOperations
     template<typename TInput>
     bool putNew(const Lookup& l, TInput&& t) {
         return set().putNew(l, mozilla::Forward<TInput>(t));
+    }
+
+    void trace(JSTracer* trc) {
+        set().trace(trc);
     }
 };
 

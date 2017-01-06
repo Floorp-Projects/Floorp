@@ -64,6 +64,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     performanceMonitoring(runtime_),
     data(nullptr),
     allocationMetadataBuilder(nullptr),
+    varNames_(zone, VarNameSet()),
     lastAnimationTime(0),
     regExps(runtime_),
     globalWriteBarriered(0),
