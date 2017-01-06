@@ -11,7 +11,7 @@ const {StorageFront} = require("devtools/shared/fronts/storage");
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/server/tests/browser/storage-helpers.js", this);
 
 const TESTDATA = {
-  "test1.example.org": [
+  "http://test1.example.org": [
     {
       name: "name",
       value: "value1",

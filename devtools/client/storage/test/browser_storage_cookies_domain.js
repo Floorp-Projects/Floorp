@@ -14,7 +14,7 @@ add_task(function* () {
 
   yield checkState([
     [
-      ["cookies", "test1.example.org"],
+      ["cookies", "http://test1.example.org"],
       [
         getCookieId("test1", ".test1.example.org", "/browser"),
         getCookieId("test2", "test1.example.org", "/browser"),
