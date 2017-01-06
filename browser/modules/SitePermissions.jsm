@@ -186,7 +186,7 @@ this.SitePermissions = {
       case this.BLOCK:
         return gStringBundle.GetStringFromName("block");
       default:
-        throw new Error("unknown permission state");
+        return null;
     }
   }
 };
