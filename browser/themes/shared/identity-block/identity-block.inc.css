@@ -115,10 +115,11 @@
 
 #identity-box[sharing] > #identity-icon,
 #sharing-icon {
-  animation: 3s linear pulse infinite;
+  animation: 3s linear identity-box-sharing-icon-pulse infinite;
 }
 
-@keyframes pulse {
+/* This should remain identical to tab-sharing-icon-pulse in tabs.inc.css */
+@keyframes identity-box-sharing-icon-pulse {
   0%, 16.66%, 83.33%, 100% {
     opacity: 0;
   }
