@@ -13,6 +13,7 @@
 #include "mozilla/SizePrintfMacros.h"   // for PRIuSIZE
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsMathUtils.h"                // for NS_hypot
+#include "InputBlockState.h"
 
 #define GEL_LOG(...)
 // #define GEL_LOG(...) printf_stderr("GEL: " __VA_ARGS__)

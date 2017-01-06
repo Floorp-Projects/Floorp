@@ -59,6 +59,13 @@ struct ByteBuffer
   bool mOwned;
 };
 
+struct WindowId {
+  explicit WindowId(uint64_t aHandle) : mHandle(aHandle) {}
+  bool operator<(const WindowId& aOther) const { return mHandle < aOther.mHandle; }
+
+  uint64_t mHandle;
+};
+
 } // namespace gfx
 } // namespace mozilla
 
