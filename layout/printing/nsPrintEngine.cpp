@@ -562,7 +562,11 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   }
 
   nsScriptSuppressor scriptSuppressor(this);
-  if (!aIsPrintPreview) {
+  // If printing via parent we still call ShowPrintDialog even for print preview
+  // because we use that to retrieve the print settings from the printer.
+  // The dialog is not shown, but this means we don't need to access the printer
+  // driver from the child, which causes sandboxing issues.
+  if (!aIsPrintPreview || printingViaParent) {
 #ifdef DEBUG
     mPrt->mDebugFilePtr = mDebugFile;
 #endif
@@ -583,8 +587,12 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
     if (!printSilently || printingViaParent) {
       nsCOMPtr<nsIPrintingPromptService> printPromptService(do_GetService(kPrintingPromptService));
       if (printPromptService) {
-        nsPIDOMWindowOuter* domWin = mDocument->GetWindow(); 
-        NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
+        nsPIDOMWindowOuter* domWin = nullptr;
+        // We leave domWin as nullptr to indicate a call for print preview.
+        if (!aIsPrintPreview) {
+          domWin = mDocument->GetWindow();
+          NS_ENSURE_TRUE(domWin, NS_ERROR_FAILURE);
+        }
 
         // Platforms not implementing a given dialog for the service may
         // return NS_ERROR_NOT_IMPLEMENTED or an error code.
@@ -608,7 +616,7 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
           // are telling GFX we want to print silent
           printSilently = true;
 
-          if (mPrt->mPrintSettings) {
+          if (mPrt->mPrintSettings && !aIsPrintPreview) {
             // The user might have changed shrink-to-fit in the print dialog, so update our copy of its state
             mPrt->mPrintSettings->GetShrinkToFit(&mPrt->mShrinkToFit);
 
