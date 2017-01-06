@@ -2,6 +2,17 @@
 
 All notable changes to this program is documented in this file.
 
+## 0.13.0 (2017-01-06)
+
+### Changed
+- When navigating to a document with an insecure- or otherwise invalid TLS certificate, an [insecure certificate](https://w3c.github.io/webdriver/webdriver-spec.html#dfn-insecure-certificate) error will be returned
+- On macOS, deducing Firefox’ location on the system will look for _firefox-bin_ on the system path (`PATH` environmental variable) before looking in the applications folder
+- Window position coordinates are allowed to be negative numbers, to cater for maximised window positioning on Windows
+- WebDriver library updated to version 0.18.0
+
+### Fixed
+- Check for single-character key codes in action sequences now counts characters instead of bytes
+
 ## 0.12.0 (2017-01-03)
 
 ### Added
