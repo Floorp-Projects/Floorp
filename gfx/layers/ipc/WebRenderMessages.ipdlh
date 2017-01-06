@@ -15,8 +15,10 @@ using WRColor from "mozilla/gfx/webrender.h";
 using WRImageKey from "mozilla/gfx/webrender.h";
 using WRLayoutSize from "mozilla/gfx/webrender.h";
 using WRRect from "mozilla/gfx/webrender.h";
+using WRGlyphArray from "mozilla/gfx/webrender.h";
 using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
+using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -72,6 +74,16 @@ struct OpDPPushIframe {
   uint64_t layersid;
 };
 
+struct OpDPPushText {
+  WRRect bounds;
+  WRRect clip;
+  WRGlyphArray[] glyph_array;
+  uint32_t font_index;
+  float glyph_size;
+  ByteBuffer font_buffer;
+  uint32_t font_buffer_length;
+};
+
 union WebRenderCommand {
   OpDPPushStackingContext;
   OpDPPopStackingContext;
@@ -80,6 +92,7 @@ union WebRenderCommand {
   OpDPPushImage;
   OpDPPushExternalImageId;
   OpDPPushIframe;
+  OpDPPushText;
   CompositableOperation;
 };
 

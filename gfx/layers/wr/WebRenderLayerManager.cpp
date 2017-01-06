@@ -22,6 +22,7 @@
 #include "WebRenderContainerLayer.h"
 #include "WebRenderImageLayer.h"
 #include "WebRenderPaintedLayer.h"
+#include "WebRenderTextLayer.h"
 
 namespace mozilla {
 
@@ -472,7 +473,7 @@ WebRenderLayerManager::CreateRefLayer()
 already_AddRefed<TextLayer>
 WebRenderLayerManager::CreateTextLayer()
 {
-  return nullptr;
+  return MakeAndAddRef<WebRenderTextLayer>(this);
 }
 
 already_AddRefed<BorderLayer>
