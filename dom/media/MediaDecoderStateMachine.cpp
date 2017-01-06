@@ -2220,13 +2220,11 @@ BufferingState::DispatchDecodeTasksIfNeeded()
 {
   const bool needToDecodeAudio =
     mMaster->IsAudioDecoding() &&
-    ((!mMaster->mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
-     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedAudio()));
+   !mMaster->HaveEnoughDecodedAudio();
 
   const bool needToDecodeVideo =
     mMaster->IsVideoDecoding() &&
-    ((!mMaster->mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
-     (!mMaster->mMinimizePreroll && !mMaster->HaveEnoughDecodedVideo()));
+    !mMaster->HaveEnoughDecodedVideo();
 
   if (needToDecodeAudio) {
     mMaster->EnsureAudioDecodeTaskQueued();
