@@ -22,19 +22,170 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
+// Simple helper class to automatically release a CFObject when it goes out
+// of scope.
+template<class T>
+class AutoRelease
+{
+public:
+    explicit AutoRelease(T aObject)
+        : mObject(aObject)
+    {
+    }
+
+    ~AutoRelease()
+    {
+        if (mObject) {
+            CFRelease(mObject);
+        }
+    }
+
+    operator T()
+    {
+        return mObject;
+    }
+
+    T forget()
+    {
+        T obj = mObject;
+        mObject = nullptr;
+        return obj;
+    }
+
+private:
+    T mObject;
+};
+
+static CFDictionaryRef
+CreateVariationDictionaryOrNull(CGFontRef aCGFont,
+                                const nsTArray<gfxFontVariation>& aVariations)
+{
+    AutoRelease<CTFontRef>
+      ctFont(CTFontCreateWithGraphicsFont(aCGFont, 0, nullptr, nullptr));
+    AutoRelease<CFArrayRef> axes(CTFontCopyVariationAxes(ctFont));
+    if (!axes) {
+        return nullptr;
+    }
+
+    CFIndex axisCount = CFArrayGetCount(axes);
+    AutoRelease<CFMutableDictionaryRef>
+        dict(CFDictionaryCreateMutable(kCFAllocatorDefault, axisCount,
+                                       &kCFTypeDictionaryKeyCallBacks,
+                                       &kCFTypeDictionaryValueCallBacks));
+
+    // Number of variation settings passed in the aVariations parameter.
+    // This will typically be a very low value, so we just linear-search them.
+    uint32_t numVars = aVariations.Length();
+    bool allDefaultValues = true;
+
+    for (CFIndex i = 0; i < axisCount; ++i) {
+        // We sanity-check the axis info found in the CTFont, and bail out
+        // (returning null) if it doesn't have the expected types.
+        CFTypeRef axisInfo = CFArrayGetValueAtIndex(axes, i);
+        if (CFDictionaryGetTypeID() != CFGetTypeID(axisInfo)) {
+            return nullptr;
+        }
+        CFDictionaryRef axis = static_cast<CFDictionaryRef>(axisInfo);
+
+        CFTypeRef axisTag =
+            CFDictionaryGetValue(axis, kCTFontVariationAxisIdentifierKey);
+        if (!axisTag || CFGetTypeID(axisTag) != CFNumberGetTypeID()) {
+            return nullptr;
+        }
+        int64_t tagLong;
+        if (!CFNumberGetValue(static_cast<CFNumberRef>(axisTag),
+                              kCFNumberSInt64Type, &tagLong)) {
+            return nullptr;
+        }
+
+        CFTypeRef axisName =
+            CFDictionaryGetValue(axis, kCTFontVariationAxisNameKey);
+        if (!axisName || CFGetTypeID(axisName) != CFStringGetTypeID()) {
+            return nullptr;
+        }
+
+        // Clamp axis values to the supported range.
+        CFTypeRef min = CFDictionaryGetValue(axis, kCTFontVariationAxisMinimumValueKey);
+        CFTypeRef max = CFDictionaryGetValue(axis, kCTFontVariationAxisMaximumValueKey);
+        CFTypeRef def = CFDictionaryGetValue(axis, kCTFontVariationAxisDefaultValueKey);
+        if (!min || CFGetTypeID(min) != CFNumberGetTypeID() ||
+            !max || CFGetTypeID(max) != CFNumberGetTypeID() ||
+            !def || CFGetTypeID(def) != CFNumberGetTypeID()) {
+            return nullptr;
+        }
+        double minDouble;
+        double maxDouble;
+        double defDouble;
+        if (!CFNumberGetValue(static_cast<CFNumberRef>(min), kCFNumberDoubleType,
+                              &minDouble) ||
+            !CFNumberGetValue(static_cast<CFNumberRef>(max), kCFNumberDoubleType,
+                              &maxDouble) ||
+            !CFNumberGetValue(static_cast<CFNumberRef>(def), kCFNumberDoubleType,
+                              &defDouble)) {
+            return nullptr;
+        }
+
+        double value = defDouble;
+        for (uint32_t j = 0; j < numVars; ++j) {
+            if (aVariations[j].mTag == tagLong) {
+                value = std::min(std::max<double>(aVariations[j].mValue,
+                                                  minDouble),
+                                 maxDouble);
+                if (value != defDouble) {
+                    allDefaultValues = false;
+                }
+                break;
+            }
+        }
+        AutoRelease<CFNumberRef> valueNumber(CFNumberCreate(kCFAllocatorDefault,
+                                                            kCFNumberDoubleType,
+                                                            &value));
+        CFDictionaryAddValue(dict, axisName, valueNumber);
+    }
+
+    if (allDefaultValues) {
+        // We didn't actually set any non-default values, so throw away the
+        // variations dictionary and just use the default rendering.
+        return nullptr;
+    }
+
+    return dict.forget();
+}
+
 gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyle,
                        bool aNeedsBold)
     : gfxFont(aFontEntry, aFontStyle),
       mCGFont(nullptr),
       mCTFont(nullptr),
-      mFontFace(nullptr)
+      mFontFace(nullptr),
+      mVariationFont(false)
 {
     mApplySyntheticBold = aNeedsBold;
 
-    mCGFont = aFontEntry->GetFontRef();
-    if (!mCGFont) {
-        mIsValid = false;
-        return;
+    auto varCount = aFontStyle->variationSettings.Length();
+    if (varCount > 0) {
+        CGFontRef baseFont = aFontEntry->GetFontRef();
+        if (!baseFont) {
+            mIsValid = false;
+            return;
+        }
+        CFDictionaryRef variations =
+            CreateVariationDictionaryOrNull(baseFont, aFontStyle->variationSettings);
+        if (variations) {
+            mCGFont = ::CGFontCreateCopyWithVariations(baseFont, variations);
+            ::CFRelease(variations);
+            mVariationFont = true;
+        } else {
+            ::CFRetain(baseFont);
+            mCGFont = baseFont;
+        }
+    } else {
+        mCGFont = aFontEntry->GetFontRef();
+        if (!mCGFont) {
+            mIsValid = false;
+            return;
+        }
+        ::CFRetain(mCGFont);
     }
 
     // InitMetrics will handle the sizeAdjust factor and set mAdjustedSize
@@ -110,6 +261,9 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
 
 gfxMacFont::~gfxMacFont()
 {
+    if (mCGFont) {
+        ::CFRelease(mCGFont);
+    }
     if (mCTFont) {
         ::CFRelease(mCTFont);
     }
@@ -371,12 +525,41 @@ gfxMacFont::GetCharWidth(CFDataRef aCmap, char16_t aUniChar,
     return 0;
 }
 
+/* static */
+CTFontRef
+gfxMacFont::CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont,
+                                                 CGFloat aSize,
+                                                 CTFontDescriptorRef aFontDesc)
+{
+    CFDictionaryRef variations = ::CGFontCopyVariations(aCGFont);
+    CTFontRef ctFont;
+    if (variations) {
+        CFDictionaryRef varAttr =
+            ::CFDictionaryCreate(nullptr,
+                                 (const void**)&kCTFontVariationAttribute,
+                                 (const void**)&variations, 1,
+                                 &kCFTypeDictionaryKeyCallBacks,
+                                 &kCFTypeDictionaryValueCallBacks);
+        ::CFRelease(variations);
+
+        CTFontDescriptorRef varDesc = aFontDesc
+            ? ::CTFontDescriptorCreateCopyWithAttributes(aFontDesc, varAttr)
+            : ::CTFontDescriptorCreateWithAttributes(varAttr);
+        ::CFRelease(varAttr);
+
+        ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, varDesc);
+        ::CFRelease(varDesc);
+    } else {
+        ctFont = ::CTFontCreateWithGraphicsFont(aCGFont, aSize, nullptr, nullptr);
+    }
+    return ctFont;
+}
+
 int32_t
 gfxMacFont::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 {
     if (!mCTFont) {
-        mCTFont = ::CTFontCreateWithGraphicsFont(mCGFont, mAdjustedSize,
-                                                 nullptr, nullptr);
+        mCTFont = CreateCTFontFromCGFontWithVariations(mCGFont, mAdjustedSize);
         if (!mCTFont) { // shouldn't happen, but let's be safe
             NS_WARNING("failed to create CTFontRef to measure glyph width");
             return 0;
