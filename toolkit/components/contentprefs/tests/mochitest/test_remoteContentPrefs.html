@@ -20,17 +20,21 @@
     function childFrameScript(isFramePrivate) {
       "use strict";
 
-      function Tester(resultArray) {
-        this.results = [];
+      function Tester(message) {
+        this.message = message;
       }
 
       Tester.prototype.is =
         function(a, b, note) {
-          this.results.push([a === b, note + " (" + a + ", " + b + ")"]);
+          this.message.target.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [a === b, note + " (" + a + ", " + b + ")"] });
         };
       Tester.prototype.ok =
         function(b, note) {
-          this.results.push([b != false, note]);
+          this.message.target.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [b != false, note] });
+        };
+      Tester.prototype.info =
+        function(note) {
+          this.message.target.sendAsyncMessage("testRemoteContentPrefs:info", { note });
         };
 
       var cps = Components.classes["@mozilla.org/content-pref/service;1"]
@@ -38,7 +42,7 @@
 
       let test = null;
       function* test1(message) {
-        let tester = new Tester();
+        let tester = new Tester(message);
 
         tester.ok(cps !== null, "got the content pref service");
 
@@ -64,7 +68,7 @@
             tester.is(numResults, 1, "got the right number of prefs");
             tester.is(test.next().done, true, "done with test1");
             message.target.sendAsyncMessage("testRemoteContentPrefs:test1Finished",
-                                            { results: tester.results });
+                                            {});
           }
         });
 
@@ -72,12 +76,13 @@
       }
 
       function* test2(message) {
-        let tester = new Tester();
+        let tester = new Tester(message);
 
         let observer;
         let removed = false;
         cps.addObserverForName("testName", observer = {
           onContentPrefSet: function(group, name, value, isPrivate) {
+            tester.info("received prefSet notification");
             if (removed) {
               message.target.sendAsyncMessage("testRemoteContentPrefs:fail",
                                               { reason: "unexpected notification" });
@@ -91,6 +96,7 @@
           },
 
           onContentPrefRemoved: function(group, name, isPrivate) {
+            tester.info("received prefRemoved notification");
             tester.is(group, null, "group should be null");
             tester.is(name, "testName");
             tester.is(isPrivate, isFramePrivate, "privacy should match");
@@ -100,7 +106,7 @@
             removed = true;
 
             message.target.sendAsyncMessage("testRemoteContentPrefs:test2Finished",
-                                            { results: tester.results });
+                                            {});
           }
         });
 
@@ -109,7 +115,7 @@
       }
 
       function* test3(message) {
-        let tester = new Tester();
+        let tester = new Tester(message);
 
         cps.setGlobal("testName", 42, null, {
           handleCompletion: function(reason) {
@@ -143,11 +149,11 @@
         yield;
 
         message.target.sendAsyncMessage("testRemoteContentPrefs:test3Finished",
-                                        { results: tester.results });
+                                        {});
       }
 
       function* test4(message) {
-        let tester = new Tester();
+        let tester = new Tester(message);
 
         let prefObserver = {
           onContentPrefSet: function(group, name, value, isPrivate) {
@@ -176,7 +182,7 @@
         tester.is(results.length, 0, "should not have seen the pb pref");
 
         message.target.sendAsyncMessage("testRemoteContentPrefs:test4Finished",
-                                        { results: tester.results });
+                                        {});
       }
 
       addMessageListener("testRemoteContentPrefs:test1", function(message) {
@@ -197,17 +203,10 @@
       });
     }
 
-    function processResults(results) {
-      for (let i of results) {
-        ok(...i);
-      }
-    }
-
     let test;
     function* testStructure(mm, isPrivate, callback) {
-      let lastResult;
-
       function testDone(msg) {
+        info(`in testDone ${msg.name}`);
         test.next(msg.data);
       }
 
@@ -220,26 +219,32 @@
         ok(false, msg.data.reason);
       });
 
+      mm.addMessageListener("testRemoteContentPrefs:ok", (msg) => {
+        let test = msg.data.test;
+        ok(...test);
+      });
+      mm.addMessageListener("testRemoteContentPrefs:info", (msg) => {
+        info(msg.data.note);
+      });
+
       mm.sendAsyncMessage("testRemoteContentPrefs:test1", {});
-      lastResult = yield;
-      processResults(lastResult.results);
+      yield;
 
       var cps = SpecialPowers.Cc["@mozilla.org/content-pref/service;1"]
                              .getService(SpecialPowers.Ci.nsIContentPrefService2);
       mm.sendAsyncMessage("testRemoteContentPrefs:test2", {});
       mm.addMessageListener("testRemoteContentPrefs:test2poke", function() {
+        info(`received test2poke isPrivate: ${isPrivate}`);
         cps.setGlobal("testName", 42, {usePrivateBrowsing: isPrivate});
       });
       mm.addMessageListener("testRemoteContentPrefs:test2poke2", function() {
+        info(`received test2poke2 isPrivate: ${isPrivate}`);
         cps.removeGlobal("testName", {usePrivateBrowsing: isPrivate});
       });
-
-      lastResult = yield;
-      processResults(lastResult.results);
+      yield;
 
       mm.sendAsyncMessage("testRemoteContentPrefs:test3", {});
-      lastResult = yield;
-      processResults(lastResult.results);
+      yield;
 
       mm.addMessageListener("testRemoteContentPrefs:getPref", function(msg) {
         let results = [];
@@ -255,8 +260,7 @@
       });
 
       mm.sendAsyncMessage("testRemoteContentPrefs:test4", {});
-      lastResult = yield;
-      processResults(lastResult.results);
+      yield;
 
       document.getElementById('iframe').remove();
       setTimeout(callback, 0);
