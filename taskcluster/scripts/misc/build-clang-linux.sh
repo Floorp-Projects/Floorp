@@ -7,14 +7,10 @@ WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
 UPLOAD_DIR=$WORKSPACE/artifacts
 
-# Fetch our toolchain from tooltool
-cd $HOME_DIR
-wget -O tooltool.py https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py
-chmod +x tooltool.py
-: TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/home/worker/tooltool-cache}
-export TOOLTOOL_CACHE
-cd src
-$HOME_DIR/tooltool.py -m browser/config/tooltool-manifests/linux64/releng.manifest fetch
+cd $HOME_DIR/src
+
+TOOLTOOL_MANIFEST=browser/config/tooltool-manifests/linux64/releng.manifest
+. taskcluster/scripts/misc/tooltool-download.sh
 
 # gets a bit too verbose here
 set +x

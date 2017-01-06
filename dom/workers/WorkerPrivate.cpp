@@ -1611,7 +1611,7 @@ NS_IMPL_ISUPPORTS(TimerThreadEventTarget, nsIEventTarget)
 WorkerLoadInfo::WorkerLoadInfo()
   : mWindowID(UINT64_MAX)
   , mServiceWorkerID(0)
-  , mReferrerPolicy(net::RP_Default)
+  , mReferrerPolicy(net::RP_Unset)
   , mFromWindow(false)
   , mEvalAllowed(false)
   , mReportCSPViolations(false)
@@ -3501,7 +3501,7 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
                                   &mLoadInfo.mEvalAllowed);
     // Set ReferrerPolicy
     bool hasReferrerPolicy = false;
-    uint32_t rp = mozilla::net::RP_Default;
+    uint32_t rp = mozilla::net::RP_Unset;
 
     nsresult rv = mLoadInfo.mCSP->GetReferrerPolicy(&rp, &hasReferrerPolicy);
     NS_ENSURE_SUCCESS_VOID(rv);
@@ -5308,9 +5308,17 @@ WorkerPrivate::CancelAllTimeouts()
 }
 
 already_AddRefed<nsIEventTarget>
-WorkerPrivate::CreateNewSyncLoop()
+WorkerPrivate::CreateNewSyncLoop(Status aFailStatus)
 {
   AssertIsOnWorkerThread();
+
+  {
+    MutexAutoLock lock(mMutex);
+
+    if (mStatus >= aFailStatus) {
+      return nullptr;
+    }
+  }
 
   nsCOMPtr<nsIThreadInternal> thread = do_QueryInterface(NS_GetCurrentThread());
   MOZ_ASSERT(thread);
