@@ -1278,17 +1278,9 @@ Loader::PrepareSheet(StyleSheet* aSheet,
                      const nsSubstring& aMediaString,
                      nsMediaList* aMediaList,
                      Element* aScopeElement,
-                     bool isAlternate)
+                     bool aIsAlternate)
 {
   NS_PRECONDITION(aSheet, "Must have a sheet!");
-
-  // XXXheycam Need to set media, title, etc. on ServoStyleSheets.
-  if (aSheet->IsServo()) {
-    NS_WARNING("stylo: should set metadata on ServoStyleSheets. See bug 1290209.");
-    return;
-  }
-
-  CSSStyleSheet* sheet = aSheet->AsGecko();
 
   RefPtr<nsMediaList> mediaList(aMediaList);
 
@@ -1304,11 +1296,18 @@ Loader::PrepareSheet(StyleSheet* aSheet,
     mediumParser.ParseMediaList(aMediaString, nullptr, 0, mediaList);
   }
 
-  sheet->SetMedia(mediaList);
+  aSheet->SetMedia(mediaList);
 
-  sheet->SetTitle(aTitle);
-  sheet->SetEnabled(!isAlternate);
-  sheet->SetScopeElement(aScopeElement);
+  aSheet->SetTitle(aTitle);
+  aSheet->SetEnabled(!aIsAlternate);
+
+  if (aSheet->IsGecko()) {
+    aSheet->AsGecko()->SetScopeElement(aScopeElement);
+  } else {
+    if (aScopeElement) {
+      NS_WARNING("stylo: scoped style sheets not supported");
+    }
+  }
 }
 
 /**

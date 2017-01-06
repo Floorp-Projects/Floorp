@@ -1847,9 +1847,9 @@ bool nsCocoaWindow::DragEvent(unsigned int aMessage, mozilla::gfx::Point aMouseG
 NS_IMETHODIMP nsCocoaWindow::SendSetZLevelEvent()
 {
   nsWindowZ placement = nsWindowZTop;
-  nsIWidget* actualBelow;
+  nsCOMPtr<nsIWidget> actualBelow;
   if (mWidgetListener)
-    mWidgetListener->ZLevelChanged(true, &placement, nullptr, &actualBelow);
+    mWidgetListener->ZLevelChanged(true, &placement, nullptr, getter_AddRefs(actualBelow));
   return NS_OK;
 }
 

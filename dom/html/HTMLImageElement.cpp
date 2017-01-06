@@ -227,7 +227,7 @@ HTMLImageElement::GetComplete(bool* aComplete)
 CSSIntPoint
 HTMLImageElement::GetXY()
 {
-  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
+  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
   if (!frame) {
     return CSSIntPoint(0, 0);
   }

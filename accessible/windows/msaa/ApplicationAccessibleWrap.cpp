@@ -69,8 +69,6 @@ ApplicationAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ApplicationAccessibleWrap::get_appName(BSTR* aName)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aName)
     return E_INVALIDARG;
 
@@ -86,15 +84,11 @@ ApplicationAccessibleWrap::get_appName(BSTR* aName)
 
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aVersion)
     return E_INVALIDARG;
 
@@ -110,15 +104,11 @@ ApplicationAccessibleWrap::get_appVersion(BSTR* aVersion)
 
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
   return *aVersion ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ApplicationAccessibleWrap::get_toolkitName(BSTR* aName)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aName)
     return E_INVALIDARG;
 
@@ -132,15 +122,11 @@ ApplicationAccessibleWrap::get_toolkitName(BSTR* aName)
 
   *aName = ::SysAllocStringLen(name.get(), name.Length());
   return *aName ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aVersion)
     return E_INVALIDARG;
 
@@ -156,7 +142,5 @@ ApplicationAccessibleWrap::get_toolkitVersion(BSTR* aVersion)
 
   *aVersion = ::SysAllocStringLen(version.get(), version.Length());
   return *aVersion ? S_OK : E_OUTOFMEMORY;
-
-  A11Y_TRYBLOCK_END
 }
 

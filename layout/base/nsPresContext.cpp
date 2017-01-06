@@ -77,6 +77,7 @@
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/ServoRestyleManagerInlines.h"
+#include "mozilla/Telemetry.h"
 
 #if defined(MOZ_WIDGET_GTK)
 #include "gfxPlatformGtk.h" // xxx - for UseFcFontList
@@ -259,6 +260,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   NS_ASSERTION(mDocument, "Null document");
 
   mCounterStylesDirty = true;
+
+  mInteractionTimeEnabled = true;
 
   // if text perf logging enabled, init stats struct
   if (MOZ_LOG_TEST(gfxPlatform::GetLog(eGfxLog_textperf), LogLevel::Warning)) {
@@ -1599,6 +1602,71 @@ nsPresContext::IsTopLevelWindowInactive()
   return domWindow && !domWindow->IsActive();
 }
 
+void
+nsPresContext::RecordInteractionTime(InteractionType aType)
+{
+  if (!mInteractionTimeEnabled) {
+    return;
+  }
+
+  // Array of references to the member variable of each time stamp
+  // for the different interaction types, keyed by InteractionType.
+  TimeStamp nsPresContext::*interactionTimes[] = {
+    &nsPresContext::mFirstClickTime,
+    &nsPresContext::mFirstKeyTime,
+    &nsPresContext::mFirstMouseMoveTime,
+    &nsPresContext::mFirstScrollTime
+  };
+
+  // Array of histogram IDs for the different interaction types,
+  // keyed by InteractionType.
+  Telemetry::ID histogramIds[] = {
+    Telemetry::TIME_TO_FIRST_CLICK,
+    Telemetry::TIME_TO_FIRST_KEY_INPUT,
+    Telemetry::TIME_TO_FIRST_MOUSE_MOVE,
+    Telemetry::TIME_TO_FIRST_SCROLL
+  };
+
+  TimeStamp& interactionTime = this->*(
+    interactionTimes[static_cast<uint32_t>(aType)]);
+  if (!interactionTime.IsNull()) {
+    // We have already recorded an interaction time.
+    return;
+  }
+
+  // Record the interaction time if it occurs after the first paint
+  // of the top level content document.
+  nsPresContext* topContentPresContext =
+    GetToplevelContentDocumentPresContext();
+
+  if (!topContentPresContext) {
+    // There is no top content pres context so we don't care
+    // about the interaction time. Record a value anyways to avoid
+    // trying to find the top content pres context in future interactions.
+    interactionTime = TimeStamp::Now();
+    return;
+  }
+
+  if (topContentPresContext->mFirstPaintTime.IsNull()) {
+    // Top content pres context has not painted yet, so don't record
+    // interaction time.
+    return;
+  }
+
+  interactionTime = TimeStamp::Now();
+  // Only the top level content pres context reports first interaction
+  // time to telemetry (if it hasn't already done so).
+  if (this == topContentPresContext) {
+    if (Telemetry::CanRecordExtended()) {
+       double millis = (interactionTime - mFirstPaintTime).ToMilliseconds();
+       Telemetry::Accumulate(histogramIds[static_cast<uint32_t>(aType)],
+                             millis);
+    }
+  } else {
+    topContentPresContext->RecordInteractionTime(aType);
+  }
+}
+
 nsITheme*
 nsPresContext::GetTheme()
 {
@@ -2487,6 +2555,10 @@ nsPresContext::NotifyDidPaintForSubtree(uint32_t aFlags, uint64_t aTransactionId
       new DelayedFireDOMPaintEvent(this, &mUndeliveredInvalidateRequestsBeforeLastPaint,
                                    aTransactionId);
     nsContentUtils::AddScriptRunner(ev);
+
+    if (mFirstPaintTime.IsNull()) {
+      mFirstPaintTime = TimeStamp::Now();
+    }
   }
 
   NotifyDidPaintSubdocumentCallbackClosure closure = { aFlags, aTransactionId, false };

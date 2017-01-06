@@ -69,9 +69,6 @@ public:
     mSheet = aSheet;
   }
 
-  // WebIDL StyleSheet API
-  nsMediaList* Media() final;
-
   // WebIDL CSSStyleSheet API
   // Can't be inline because we can't include ImportRule here.  And can't be
   // called GetOwnerRule because that would be ambiguous with the ImportRule
@@ -89,6 +86,8 @@ protected:
   uint32_t InsertRuleInternal(const nsAString& aRule,
                               uint32_t aIndex, ErrorResult& aRv);
   void DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv);
+
+  void EnabledStateChangedInternal() {}
 
 private:
   void DropSheet();

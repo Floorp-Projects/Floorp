@@ -41,8 +41,6 @@ ia2AccessibleComponent::QueryInterface(REFIID iid, void** ppv)
 STDMETHODIMP
 ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aX || !aY)
     return E_INVALIDARG;
 
@@ -75,15 +73,11 @@ ia2AccessibleComponent::get_locationInParent(long* aX, long* aY)
   *aX = rect.x - parentRect.x;
   *aY = rect.y - parentRect.y;
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aForeground)
     return E_INVALIDARG;
 
@@ -98,15 +92,11 @@ ia2AccessibleComponent::get_foreground(IA2Color* aForeground)
     *aForeground = frame->StyleColor()->mColor;
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 
 STDMETHODIMP
 ia2AccessibleComponent::get_background(IA2Color* aBackground)
 {
-  A11Y_TRYBLOCK_BEGIN
-
   if (!aBackground)
     return E_INVALIDARG;
 
@@ -122,7 +112,5 @@ ia2AccessibleComponent::get_background(IA2Color* aBackground)
   }
 
   return S_OK;
-
-  A11Y_TRYBLOCK_END
 }
 

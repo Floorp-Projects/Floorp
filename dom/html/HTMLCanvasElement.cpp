@@ -157,7 +157,7 @@ public:
 
     MOZ_ASSERT(mRefreshDriver);
     if (mRefreshDriver) {
-      mRefreshDriver->AddRefreshObserver(this, Flush_Display);
+      mRefreshDriver->AddRefreshObserver(this, FlushType::Display);
       mRegistered = true;
     }
   }
@@ -170,7 +170,7 @@ public:
 
     MOZ_ASSERT(mRefreshDriver);
     if (mRefreshDriver) {
-      mRefreshDriver->RemoveRefreshObserver(this, Flush_Display);
+      mRefreshDriver->RemoveRefreshObserver(this, FlushType::Display);
       mRegistered = false;
     }
   }

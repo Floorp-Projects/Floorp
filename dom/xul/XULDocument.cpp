@@ -1337,7 +1337,7 @@ XULDocument::GetViewportSize(int32_t* aWidth,
 {
     *aWidth = *aHeight = 0;
 
-    FlushPendingNotifications(Flush_Layout);
+    FlushPendingNotifications(FlushType::Layout);
 
     nsIPresShell *shell = GetShell();
     NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);

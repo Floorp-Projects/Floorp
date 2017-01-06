@@ -1033,7 +1033,7 @@ Event::GetOffsetCoords(nsPresContext* aPresContext,
   if (!shell) {
     return CSSIntPoint(0, 0);
   }
-  shell->FlushPendingNotifications(Flush_Layout);
+  shell->FlushPendingNotifications(FlushType::Layout);
   nsIFrame* frame = content->GetPrimaryFrame();
   if (!frame) {
     return CSSIntPoint(0, 0);

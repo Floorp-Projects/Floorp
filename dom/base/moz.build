@@ -43,7 +43,6 @@ EXPORTS += [
     'HTMLSplitOnSpacesTokenizer.h',
     'IframeSandboxKeywordList.h',
     'mozAutoDocUpdate.h',
-    'mozFlushType.h',
     'nsAtomListUtils.h',
     'nsAttrAndChildArray.h',
     'nsAttrName.h',
@@ -137,6 +136,7 @@ if CONFIG['MOZ_WEBRTC']:
 EXPORTS.mozilla += [
     'CORSMode.h',
     'FeedWriterEnabled.h',
+    'FlushType.h',
     'TextInputProcessor.h',
     'UseCounter.h',
 ]

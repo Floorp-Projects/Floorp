@@ -403,7 +403,6 @@ struct NameInBytecode
 };
 
 typedef Vector<NameInBytecode, 0, SystemAllocPolicy> NameInBytecodeVector;
-typedef Vector<char16_t, 64> TwoByteName;
 
 // CustomSection represents a custom section in the bytecode which can be
 // extracted via Module.customSections. The (offset, length) pair does not
@@ -494,8 +493,7 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     virtual ScriptSource* maybeScriptSource() const {
         return nullptr;
     }
-    virtual bool getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                             TwoByteName* name) const;
+    virtual bool getFuncName(const Bytes* maybeBytecode, uint32_t funcIndex, UTF8Bytes* name) const;
 
     WASM_DECLARE_SERIALIZABLE_VIRTUAL(Metadata);
 };
@@ -593,7 +591,7 @@ class Code
     // Return the name associated with a given function index, or generate one
     // if none was given by the module.
 
-    bool getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const;
+    bool getFuncName(uint32_t funcIndex, UTF8Bytes* name) const;
     JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
     // If the source bytecode was saved when this Code was constructed, this
@@ -609,7 +607,7 @@ class Code
     // asynchronously walk the stack. Otherwise, the ProfilingFrameIterator will
     // skip any activations of this code.
 
-    MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
+    MOZ_MUST_USE bool ensureProfilingState(JSRuntime* rt, bool enabled);
     bool profilingEnabled() const { return profilingEnabled_; }
     const char* profilingLabel(uint32_t funcIndex) const { return funcLabels_[funcIndex].get(); }
 

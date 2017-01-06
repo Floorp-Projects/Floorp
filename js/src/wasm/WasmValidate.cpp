@@ -116,6 +116,8 @@ Decoder::startSection(SectionId id, ModuleEnvironment* env, uint32_t* sectionSta
 bool
 Decoder::finishSection(uint32_t sectionStart, uint32_t sectionSize, const char* sectionName)
 {
+    if (resilientMode_)
+        return true;
     if (sectionSize != (cur_ - beg_) - sectionStart)
         return fail("byte size mismatch in %s section", sectionName);
     return true;
@@ -1651,8 +1653,13 @@ wasm::DecodeModuleTail(Decoder& d, ModuleEnvironment* env)
         return false;
 
     while (!d.done()) {
-        if (!d.skipCustomSection(env))
+        if (!d.skipCustomSection(env)) {
+            if (d.resilientMode()) {
+                d.clearError();
+                return true;
+            }
             return false;
+        }
     }
 
     return true;

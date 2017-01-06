@@ -60,7 +60,7 @@ public:
     return NS_OK;
   }
   
-  virtual void FlushPendingNotifications(mozFlushType aType) override
+  virtual void FlushPendingNotifications(mozilla::FlushType aType) override
   {
   }
   
