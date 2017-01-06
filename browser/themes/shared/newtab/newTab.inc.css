@@ -167,6 +167,16 @@ body.compact .newtab-thumbnail {
   outline-offset: -1px;
 }
 
+.newtab-thumbnail.placeholder {
+  color: white;
+  font-size: 85px;
+  line-height: 200%;
+}
+
+body.compact .newtab-thumbnail.placeholder {
+  font-size: 45px;
+}
+
 .newtab-cell:not([ignorehover]) .newtab-site:hover .newtab-thumbnail.enhanced-content {
   opacity: 0;
 }
