@@ -559,14 +559,14 @@ impl MarionetteSession {
                 let x = try_opt!(
                     try_opt!(resp.result.find("x"),
                              ErrorStatus::UnknownError,
-                             "Failed to find x field").as_u64(),
+                             "Failed to find x field").as_i64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret x as integer");
 
                 let y = try_opt!(
                     try_opt!(resp.result.find("y"),
                              ErrorStatus::UnknownError,
-                             "Failed to find y field").as_u64(),
+                             "Failed to find y field").as_i64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as integer");
 
