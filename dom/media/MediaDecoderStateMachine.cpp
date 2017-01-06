@@ -203,6 +203,12 @@ public:
   virtual void HandleWaitingForData() {}
   virtual void HandleAudioCaptured() {}
 
+  virtual void HandleWaitingForAudio()
+  {
+    mMaster->WaitForData(MediaData::AUDIO_DATA);
+    HandleWaitingForData();
+  }
+
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget);
 
   virtual RefPtr<ShutdownPromise> HandleShutdown();
@@ -496,6 +502,11 @@ public:
   {
     mMaster->PushVideo(aVideo);
     MaybeFinishDecodeFirstFrame();
+  }
+
+  void HandleWaitingForAudio() override
+  {
+    mMaster->WaitForData(MediaData::AUDIO_DATA);
   }
 
   void HandleAudioNotDecoded(const MediaResult& aError) override;
@@ -934,6 +945,14 @@ public:
     MaybeFinishSeek();
   }
 
+  void HandleWaitingForAudio() override
+  {
+    if (!mSeekJob.mTarget->IsVideoOnly()) {
+      MOZ_ASSERT(!mDoneAudioSeeking);
+      mMaster->WaitForData(MediaData::AUDIO_DATA);
+    }
+  }
+
   void HandleAudioNotDecoded(const MediaResult& aError) override;
   void HandleVideoNotDecoded(const MediaResult& aError) override;
 
@@ -1348,6 +1367,14 @@ private:
     }
   }
 
+  void HandleWaitingForAudio() override
+  {
+    MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
+    MOZ_ASSERT(NeedMoreVideo());
+    // We don't care about audio decode errors in this state which will be
+    // handled by other states after seeking.
+  }
+
   void HandleAudioNotDecoded(const MediaResult& aError) override;
   void HandleVideoNotDecoded(const MediaResult& aError) override;
 
@@ -1695,8 +1722,7 @@ StateObject::HandleAudioNotDecoded(const MediaResult& aError)
 {
   switch (aError.Code()) {
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      mMaster->WaitForData(MediaData::AUDIO_DATA);
-      HandleWaitingForData();
+      MOZ_ASSERT(false);
       break;
     case NS_ERROR_DOM_MEDIA_CANCELED:
       mMaster->EnsureAudioDecodeTaskQueued();
@@ -1933,7 +1959,7 @@ DecodingFirstFrameState::HandleAudioNotDecoded(const MediaResult& aError)
 {
   switch (aError.Code()) {
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      mMaster->WaitForData(MediaData::AUDIO_DATA);
+      MOZ_ASSERT(false);
       break;
     case NS_ERROR_DOM_MEDIA_CANCELED:
       mMaster->RequestAudioData();
@@ -2156,7 +2182,7 @@ AccurateSeekingState::HandleAudioNotDecoded(const MediaResult& aError)
   MOZ_ASSERT(!mDoneAudioSeeking);
   switch (aError.Code()) {
     case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      mMaster->WaitForData(MediaData::AUDIO_DATA);
+      MOZ_ASSERT(false);
       break;
     case NS_ERROR_DOM_MEDIA_CANCELED:
       RequestAudioData();
@@ -3011,7 +3037,13 @@ MediaDecoderStateMachine::RequestAudioData()
       [this] (const MediaResult& aError) {
         SAMPLE_LOG("OnAudioNotDecoded aError=%u", aError.Code());
         mAudioDataRequest.Complete();
-        mStateObj->HandleAudioNotDecoded(aError);
+        switch (aError.Code()) {
+          case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+            mStateObj->HandleWaitingForAudio();
+            break;
+          default:
+            mStateObj->HandleAudioNotDecoded(aError);
+        }
       })
   );
 }
