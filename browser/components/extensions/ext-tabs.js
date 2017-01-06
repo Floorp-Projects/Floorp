@@ -844,6 +844,11 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
         } else {
           options.run_at = "document_idle";
         }
+        if (details.cssOrigin !== null) {
+          options.css_origin = details.cssOrigin;
+        } else {
+          options.css_origin = "author";
+        }
 
         return tabListener.awaitTabReady(tab).then(() => {
           let browser = tab.linkedBrowser;

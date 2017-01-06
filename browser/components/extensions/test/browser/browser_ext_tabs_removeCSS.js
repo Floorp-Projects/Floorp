@@ -47,6 +47,28 @@ add_task(function* testExecuteScript() {
           });
         },
       },
+      // Insert CSS code.
+      {
+        background: "rgb(42, 42, 42)",
+        foreground: "rgb(0, 0, 0)",
+        promise: () => {
+          return browser.tabs.insertCSS({
+            code: "* { background: rgb(42, 42, 42) }",
+            cssOrigin: "user",
+          });
+        },
+      },
+      // Remove CSS code again.
+      {
+        background: "transparent",
+        foreground: "rgb(0, 0, 0)",
+        promise: () => {
+          return browser.tabs.removeCSS({
+            code: "* { background: rgb(42, 42, 42) }",
+            cssOrigin: "user",
+          });
+        },
+      },
     ];
 
     function checkCSS() {
