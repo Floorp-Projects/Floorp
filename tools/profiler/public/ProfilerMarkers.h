@@ -9,6 +9,8 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Attributes.h"
 
+#include "GeckoProfiler.h"
+
 namespace mozilla {
 namespace layers {
 class Layer;
@@ -33,13 +35,10 @@ class UniqueStacks;
 class ProfilerMarkerPayload
 {
 public:
-  /**
-   * ProfilerMarkerPayload takes ownership of aStack
-   */
-  explicit ProfilerMarkerPayload(ProfilerBacktrace* aStack = nullptr);
+  explicit ProfilerMarkerPayload(UniqueProfilerBacktrace aStack = nullptr);
   ProfilerMarkerPayload(const mozilla::TimeStamp& aStartTime,
                         const mozilla::TimeStamp& aEndTime,
-                        ProfilerBacktrace* aStack = nullptr);
+                        UniqueProfilerBacktrace aStack = nullptr);
 
   /**
    * Called from the main thread
@@ -61,19 +60,20 @@ protected:
   void streamCommonProps(const char* aMarkerType, SpliceableJSONWriter& aWriter,
                          UniqueStacks& aUniqueStacks);
 
-  void SetStack(ProfilerBacktrace* aStack) { mStack = aStack; }
+  void SetStack(UniqueProfilerBacktrace aStack) { mStack = mozilla::Move(aStack); }
 
 private:
   mozilla::TimeStamp  mStartTime;
   mozilla::TimeStamp  mEndTime;
-  ProfilerBacktrace*  mStack;
+  UniqueProfilerBacktrace  mStack;
 };
 
 class ProfilerMarkerTracing : public ProfilerMarkerPayload
 {
 public:
   ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData);
-  ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData, ProfilerBacktrace* aCause);
+  ProfilerMarkerTracing(const char* aCategory, TracingMetadata aMetaData,
+                        UniqueProfilerBacktrace aCause);
 
   const char *GetCategory() const { return mCategory; }
   TracingMetadata GetMetaData() const { return mMetaData; }
@@ -106,7 +106,7 @@ class IOMarkerPayload : public ProfilerMarkerPayload
 public:
   IOMarkerPayload(const char* aSource, const char* aFilename, const mozilla::TimeStamp& aStartTime,
                   const mozilla::TimeStamp& aEndTime,
-                  ProfilerBacktrace* aStack);
+                  UniqueProfilerBacktrace aStack);
   ~IOMarkerPayload();
 
   virtual void StreamPayload(SpliceableJSONWriter& aWriter,

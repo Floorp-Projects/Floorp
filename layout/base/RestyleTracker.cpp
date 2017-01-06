@@ -62,7 +62,7 @@ RestyleTracker::Document() const {
 struct RestyleEnumerateData : RestyleTracker::Hints {
   RefPtr<dom::Element> mElement;
 #if defined(MOZ_ENABLE_PROFILER_SPS)
-  UniquePtr<ProfilerBacktrace> mBacktrace;
+  UniqueProfilerBacktrace mBacktrace;
 #endif
 };
 
