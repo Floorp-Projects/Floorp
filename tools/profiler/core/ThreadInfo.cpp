@@ -34,8 +34,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
 
 ThreadInfo::~ThreadInfo() {
   MOZ_COUNT_DTOR(ThreadInfo);
-
-  Sampler::FreePlatformData(mPlatformData);
 }
 
 void

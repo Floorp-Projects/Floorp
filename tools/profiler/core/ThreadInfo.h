@@ -29,7 +29,7 @@ class ThreadInfo {
   }
   ThreadProfile* Profile() const { return mProfile.get(); }
 
-  PlatformData* GetPlatformData() const { return mPlatformData; }
+  PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
 
   virtual void SetPendingDelete();
@@ -50,7 +50,7 @@ class ThreadInfo {
   int mThreadId;
   const bool mIsMainThread;
   PseudoStack* mPseudoStack;
-  PlatformData* mPlatformData;
+  Sampler::UniquePlatformData mPlatformData;
   mozilla::UniquePtr<ThreadProfile> mProfile;
   void* mStackTop;
 #ifndef SPS_STANDALONE
