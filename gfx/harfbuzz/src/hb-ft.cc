@@ -36,6 +36,7 @@
 #include "hb-cache-private.hh" // Maybe use in the future?
 
 #include FT_ADVANCES_H
+#include FT_MULTIPLE_MASTERS_H
 #include FT_TRUETYPE_TABLES_H
 
 
@@ -614,6 +615,23 @@ hb_ft_font_create (FT_Face           ft_face,
   hb_font_set_ppem (font,
 		    ft_face->size->metrics.x_ppem,
 		    ft_face->size->metrics.y_ppem);
+#endif
+
+#ifdef HAVE_FT_GET_VAR_BLEND_COORDINATES
+  FT_MM_Var *mm_var = NULL;
+  if (!FT_Get_MM_Var (ft_face, &mm_var))
+  {
+    FT_Fixed coords[mm_var->num_axis];
+    int hbCoords[mm_var->num_axis];
+    if (!FT_Get_Var_Blend_Coordinates (ft_face, mm_var->num_axis, coords))
+    {
+      for (int i = 0; i < mm_var->num_axis; ++i)
+	hbCoords[i] = coords[i] >> 2;
+
+      hb_font_set_var_coords_normalized (font, hbCoords, mm_var->num_axis);
+    }
+  }
+  free (mm_var);
 #endif
 
   return font;
