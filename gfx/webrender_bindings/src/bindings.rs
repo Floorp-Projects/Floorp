@@ -43,6 +43,37 @@ extern  {
     fn is_in_compositor_thread() -> bool;
 }
 
+#[no_mangle]
+pub extern fn wr_renderer_update(renderer: &mut Renderer) {
+    renderer.update();
+}
+
+#[no_mangle]
+pub extern fn wr_renderer_render(renderer: &mut Renderer, width: u32, height: u32) {
+    renderer.render(DeviceUintSize::new(width, height));
+}
+
+#[no_mangle]
+pub extern fn wr_renderer_set_profiler_enabled(renderer: &mut Renderer, enabled: bool) {
+    renderer.set_profiler_enabled(enabled);
+}
+
+#[no_mangle]
+pub extern fn wr_renderer_current_epoch(renderer: &mut Renderer,
+                                        pipeline_id: PipelineId,
+                                        out_epoch: &mut Epoch) -> bool {
+    if let Some(epoch) = renderer.current_epoch(pipeline_id) {
+        *out_epoch = epoch;
+        return true;
+    }
+    return false;
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_renderer_delete(renderer: *mut Renderer) {
+    let _ = Box::from_raw(renderer);
+}
+
 pub struct WebRenderFrameBuilder {
     pub root_pipeline_id: PipelineId,
     pub dl_builder: webrender_traits::DisplayListBuilder,
