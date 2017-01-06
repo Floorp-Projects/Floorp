@@ -152,6 +152,13 @@ this.E10SUtils = {
     if (aDocShell.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeParent)
       return true;
 
+    // If we are in a fresh process, and it wouldn't be content visible to
+    // change processes, we want to load into a new process so that we can throw
+    // this one out.
+    if (aDocShell.inFreshProcess && aDocShell.isOnlyToplevelInTabGroup) {
+      return false;
+    }
+
     // If the URI can be loaded in the current process then continue
     return this.shouldLoadURIInThisProcess(aURI);
   },
