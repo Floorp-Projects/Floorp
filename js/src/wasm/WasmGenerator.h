@@ -206,6 +206,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Constant parameters
     bool                            alwaysBaseline_;
+    UniqueChars*                    error_;
 
     // Data that is moved into the result of finish()
     Assumptions                     assumptions_;
@@ -260,7 +261,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool initWasm();
 
   public:
-    explicit ModuleGenerator();
+    explicit ModuleGenerator(UniqueChars* error);
     ~ModuleGenerator();
 
     MOZ_MUST_USE bool init(UniqueModuleEnvironment env, const CompileArgs& args,
