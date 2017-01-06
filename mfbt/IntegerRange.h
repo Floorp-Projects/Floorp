@@ -156,7 +156,7 @@ struct GeqZero<T, true>
 
 template<typename IntType>
 detail::IntegerRange<IntType>
-MakeRange(IntType aEnd)
+IntegerRange(IntType aEnd)
 {
   static_assert(IsIntegral<IntType>::value, "value must be integral");
   MOZ_ASSERT(detail::GeqZero<IntType>::check(aEnd),
@@ -166,7 +166,7 @@ MakeRange(IntType aEnd)
 
 template<typename IntType1, typename IntType2>
 detail::IntegerRange<IntType2>
-MakeRange(IntType1 aBegin, IntType2 aEnd)
+IntegerRange(IntType1 aBegin, IntType2 aEnd)
 {
   static_assert(IsIntegral<IntType1>::value && IsIntegral<IntType2>::value,
                 "values must both be integral");
