@@ -19,7 +19,7 @@ RendererOGL*
 RendererOGL::Create(already_AddRefed<RenderThread> aThread,
                     already_AddRefed<widget::CompositorWidget> aWidget,
                     WrRenderer* aWrRenderer,
-                    uint64_t aPipelineId,
+                    gfx::WindowId aWindowId,
                     WebRenderBridgeParent* aBridge)
 {
   RefPtr<widget::CompositorWidget> widget = aWidget;
@@ -46,7 +46,7 @@ RendererOGL::Create(already_AddRefed<RenderThread> aThread,
   return new RendererOGL(thread.forget(),
                          gl.forget(),
                          widget.forget(),
-                         aPipelineId,
+                         aWindowId,
                          aWrRenderer,
                          aBridge);
 }
@@ -54,7 +54,7 @@ RendererOGL::Create(already_AddRefed<RenderThread> aThread,
 RendererOGL::RendererOGL(already_AddRefed<RenderThread> aThread,
                          already_AddRefed<gl::GLContext> aGL,
                          already_AddRefed<widget::CompositorWidget> aWidget,
-                         uint64_t aPipelineId,
+                         gfx::WindowId aWindowId,
                          WrRenderer* aWrRenderer,
                          WebRenderBridgeParent* aBridge)
 : mThread(aThread)
@@ -62,7 +62,7 @@ RendererOGL::RendererOGL(already_AddRefed<RenderThread> aThread,
 , mWidget(aWidget)
 , mWrRenderer(aWrRenderer)
 , mBridge(aBridge)
-, mPipelineId(aPipelineId)
+, mWindowId(aWindowId)
 {
 }
 
