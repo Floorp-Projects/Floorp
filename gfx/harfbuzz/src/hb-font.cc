@@ -1165,6 +1165,8 @@ hb_font_create_sub_font (hb_font_t *parent)
   font->x_ppem = parent->x_ppem;
   font->y_ppem = parent->y_ppem;
 
+  /* TODO: copy variation coordinates. */
+
   return font;
 }
 
@@ -1193,6 +1195,9 @@ hb_font_get_empty (void)
 
     0, /* x_ppem */
     0, /* y_ppem */
+
+    0, /* num_coords */
+    NULL, /* coords */
 
     const_cast<hb_font_funcs_t *> (&_hb_font_funcs_nil), /* klass */
     NULL, /* user_data */
@@ -1247,6 +1252,8 @@ hb_font_destroy (hb_font_t *font)
   hb_font_destroy (font->parent);
   hb_face_destroy (font->face);
   hb_font_funcs_destroy (font->klass);
+
+  free (font->coords);
 
   free (font);
 }
@@ -1534,6 +1541,32 @@ hb_font_get_ppem (hb_font_t *font,
 {
   if (x_ppem) *x_ppem = font->x_ppem;
   if (y_ppem) *y_ppem = font->y_ppem;
+}
+
+
+void
+hb_font_set_var_coords_normalized (hb_font_t *font,
+				   int *coords, /* XXX 2.14 normalized */
+				   unsigned int coords_length)
+{
+  if (font->immutable)
+    return;
+
+  /* Skip tail zero entries. */
+  while (coords_length && !coords[coords_length - 1])
+    coords_length--;
+
+  int *copy = coords_length ? (int *) calloc (coords_length, sizeof (coords[0])) : NULL;
+  if (unlikely (coords_length && !copy))
+    return;
+
+  free (font->coords);
+
+  if (coords_length)
+    memcpy (copy, coords, coords_length * sizeof (coords[0]));
+
+  font->coords = copy;
+  font->num_coords = coords_length;
 }
 
 
