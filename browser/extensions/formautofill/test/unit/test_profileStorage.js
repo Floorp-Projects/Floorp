@@ -109,6 +109,38 @@ add_task(function* test_get() {
     /No matching profile\./);
 });
 
+add_task(function* test_getByFilter() {
+  let path = getTempFile(TEST_STORE_FILE_NAME).path;
+  yield prepareTestProfiles(path);
+
+  let profileStorage = new ProfileStorage(path);
+  yield profileStorage.initialize();
+
+  let filter = {info: {fieldName: "streetAddress"}, searchString: "Some"};
+  let profiles = profileStorage.getByFilter(filter);
+  do_check_eq(profiles.length, 1);
+  do_check_profile_matches(profiles[0], TEST_PROFILE_2);
+
+  filter = {info: {fieldName: "country"}, searchString: "u"};
+  profiles = profileStorage.getByFilter(filter);
+  do_check_eq(profiles.length, 2);
+  do_check_profile_matches(profiles[0], TEST_PROFILE_1);
+  do_check_profile_matches(profiles[1], TEST_PROFILE_2);
+
+  filter = {info: {fieldName: "streetAddress"}, searchString: "test"};
+  profiles = profileStorage.getByFilter(filter);
+  do_check_eq(profiles.length, 0);
+
+  filter = {info: {fieldName: "streetAddress"}, searchString: ""};
+  profiles = profileStorage.getByFilter(filter);
+  do_check_eq(profiles.length, 2);
+
+  // Check if the filtering logic is free from searching special chars.
+  filter = {info: {fieldName: "streetAddress"}, searchString: ".*"};
+  profiles = profileStorage.getByFilter(filter);
+  do_check_eq(profiles.length, 0);
+});
+
 add_task(function* test_add() {
   let path = getTempFile(TEST_STORE_FILE_NAME).path;
   yield prepareTestProfiles(path);

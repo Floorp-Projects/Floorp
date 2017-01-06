@@ -135,19 +135,13 @@ let FormAutofillParent = {
    *         Content's message manager.
    */
   _getProfiles({searchString, info}, target) {
-    // TODO: These mock data should be replaced by form autofill API
-    // let profiles = this._profileStore.getAll();
-    let profiles = [{
-      guid: "test-guid-1",
-      organization: "Sesame Street",
-      streetAddress: "123 Sesame Street.",
-      tel: "1-345-345-3456",
-    }, {
-      guid: "test-guid-2",
-      organization: "Mozilla",
-      streetAddress: "331 E. Evelyn Avenue",
-      tel: "1-650-903-0800",
-    }];
+    let profiles = [];
+
+    if (info && info.fieldName) {
+      profiles = this._profileStore.getByFilter({searchString, info});
+    } else {
+      profiles = this._profileStore.getAll();
+    }
 
     target.messageManager.sendAsyncMessage("FormAutofill:Profiles", profiles);
   },
