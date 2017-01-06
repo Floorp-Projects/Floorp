@@ -19,9 +19,19 @@ function testHasNames(names, expected) {
     });
 }
 
+function testEqualArrays(actual, expected) {
+	assertEq(Array.isArray(actual), true);
+	assertEq(Array.isArray(expected), true);
+    assertEq(actual.length, expected.length);
+    for (let i = 0; i < expected.length; i++) {
+    	assertEq(actual[i], expected[i]);
+    }
+}
+
 let a = moduleRepo['a'] = parseModule(
-    `export var a = 1;
-     export var b = 2;`
+    `// Reflection methods should return these exports alphabetically sorted.
+     export var b = 2;
+     export var a = 1;`
 );
 
 let b = moduleRepo['b'] = parseModule(
@@ -39,7 +49,9 @@ assertEq(getModuleEnvironmentValue(b, "x"), 3);
 
 // Test module namespace internal methods as defined in 9.4.6
 assertEq(Object.getPrototypeOf(ns), null);
-assertThrowsInstanceOf(() => Object.setPrototypeOf(ns, null), TypeError);
+assertEq(Reflect.setPrototypeOf(ns, null), true);
+assertEq(Reflect.setPrototypeOf(ns, Object.prototype), false);
+assertThrowsInstanceOf(() => Object.setPrototypeOf(ns, {}), TypeError);
 assertThrowsInstanceOf(function() { ns.foo = 1; }, TypeError);
 assertEq(Object.isExtensible(ns), false);
 Object.preventExtensions(ns);
@@ -59,29 +71,15 @@ desc = Object.getOwnPropertyDescriptor(ns, Symbol.toStringTag);
 assertEq(desc.value, "Module");
 assertEq(desc.writable, false);
 assertEq(desc.enumerable, false);
-assertEq(desc.configurable, true);
+assertEq(desc.configurable, false);
 assertEq(typeof desc.get, "undefined");
 assertEq(typeof desc.set, "undefined");
 assertEq(Object.prototype.toString.call(ns), "[object Module]");
 
-// Test @@iterator method.
-let iteratorFun = ns[Symbol.iterator];
-assertEq(iteratorFun.name, "[Symbol.iterator]");
-
-let iterator = ns[Symbol.iterator]();
-assertEq(iterator[Symbol.iterator](), iterator);
-assertIteratorNext(iterator, "a");
-assertIteratorNext(iterator, "b");
-assertIteratorDone(iterator);
-
-// The iterator's next method can only be called on the object it was originally
-// associated with.
-iterator = ns[Symbol.iterator]();
-let iterator2 = ns[Symbol.iterator]();
-assertThrowsInstanceOf(() => iterator.next.call({}), TypeError);
-assertThrowsInstanceOf(() => iterator.next.call(iterator2), TypeError);
-assertEq(iterator.next.call(iterator).value, "a");
-assertEq(iterator2.next.call(iterator2).value, "a");
+// Test [[OwnPropertyKeys]] internal method.
+testEqualArrays(Reflect.ownKeys(ns), ["a", "b", Symbol.toStringTag]);
+testEqualArrays(Object.getOwnPropertyNames(ns), ["a", "b"]);
+testEqualArrays(Object.getOwnPropertySymbols(ns), [Symbol.toStringTag]);
 
 // Test cyclic namespace import and access in module evaluation.
 let c = moduleRepo['c'] =

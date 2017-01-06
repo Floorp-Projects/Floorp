@@ -64,7 +64,7 @@ add_task(function* () {
 
     // Create a new hidden prerendered tab to swap to.
     let tab2 = gBrowser.loadOneTab(URIs[2], {
-      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
       allowThirdPartyFixup: true,
       relatedToCurrent: true,
       isPrerendered: true,
@@ -106,7 +106,7 @@ add_task(function* () {
 
     // Create a new hidden prerendered tab to swap to
     let tab3 = gBrowser.loadOneTab(URIs[4], {
-      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT,
+      referrerPolicy: Ci.nsIHttpChannel.REFERRER_POLICY_UNSET,
       allowThirdPartyFixup: true,
       relatedToCurrent: true,
       isPrerendered: true,

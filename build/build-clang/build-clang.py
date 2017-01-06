@@ -190,8 +190,10 @@ def is_windows():
     return platform.system() == "Windows"
 
 
-def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
-                    build_type, assertions, python_path, gcc_dir):
+def build_one_stage(cc, cxx, ld, ar, ranlib,
+                    src_dir, stage_dir, build_libcxx,
+                    osx_cross_compile, build_type, assertions,
+                    python_path, gcc_dir):
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -202,7 +204,7 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
     # arguments, so we need to re-run it.  Make sure the cached copy of the
     # previous CMake run is cleared before running it again.
     if os.path.exists(build_dir + "/CMakeCache.txt"):
-        os.path.remove(build_dir + "/CMakeCache.txt")
+        os.remove(build_dir + "/CMakeCache.txt")
 
     # cmake doesn't deal well with backslashes in paths.
     def slashify_path(path):
@@ -212,8 +214,12 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
                   "-DCMAKE_C_COMPILER=%s" % slashify_path(cc[0]),
                   "-DCMAKE_CXX_COMPILER=%s" % slashify_path(cxx[0]),
                   "-DCMAKE_ASM_COMPILER=%s" % slashify_path(cc[0]),
+                  "-DCMAKE_LINKER=%s" % slashify_path(ld[0]),
+                  "-DCMAKE_AR=%s" % slashify_path(ar),
                   "-DCMAKE_C_FLAGS=%s" % ' '.join(cc[1:]),
                   "-DCMAKE_CXX_FLAGS=%s" % ' '.join(cxx[1:]),
+                  "-DCMAKE_EXE_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
+                  "-DCMAKE_SHARED_LINKER_FLAGS=%s" % ' '.join(ld[1:]),
                   "-DCMAKE_BUILD_TYPE=%s" % build_type,
                   "-DLLVM_TARGETS_TO_BUILD=X86;ARM",
                   "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
@@ -225,6 +231,22 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
     if is_windows():
         cmake_args.insert(-1, "-DLLVM_EXPORT_SYMBOLS_FOR_PLUGINS=ON")
         cmake_args.insert(-1, "-DLLVM_USE_CRT_RELEASE=MT")
+    if ranlib is not None:
+        cmake_args += ["-DCMAKE_RANLIB=%s" % slashify_path(ranlib)]
+    if osx_cross_compile:
+        cmake_args += ["-DCMAKE_SYSTEM_NAME=Darwin",
+                       "-DCMAKE_SYSTEM_VERSION=10.10",
+                       "-DLLVM_ENABLE_THREADS=OFF",
+                       "-DLIBCXXABI_LIBCXX_INCLUDES=%s" % slashify_path(os.getenv("LIBCXX_INCLUDE_PATH")),
+                       "-DCMAKE_OSX_SYSROOT=%s" % slashify_path(os.getenv("CROSS_SYSROOT")),
+                       "-DCMAKE_FIND_ROOT_PATH=%s" % slashify_path(os.getenv("CROSS_CCTOOLS_PATH")),
+                       "-DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER",
+                       "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY",
+                       "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY",
+                       "-DCMAKE_MACOSX_RPATH=@executable_path",
+                       "-DCMAKE_OSX_ARCHITECTURES=x86_64",
+                       "-DDARWIN_osx_ARCHS=x86_64",
+                       "-DLLVM_DEFAULT_TARGET_TRIPLE=x86_64-apple-darwin10"]
     build_package(build_dir, cmake_args)
 
     if is_linux():
@@ -234,19 +256,26 @@ def build_one_stage(cc, cxx, src_dir, stage_dir, build_libcxx,
     if is_windows():
         install_import_library(build_dir, inst_dir)
 
-def get_compiler(config, key):
-    if key not in config:
-        raise ValueError("Config file needs to set %s" % key)
-
-    f = config[key]
-    if os.path.isabs(f):
-        if not os.path.exists(f):
-            raise ValueError("%s must point to an existing path" % key)
-        return f
+# Return the absolute path of a build tool.  We first look to see if the
+# variable is defined in the config file, and if so we make sure it's an
+# absolute path to an existing tool, otherwise we look for a program in
+# $PATH named "key".
+#
+# This expects the name of the key in the config file to match the name of
+# the tool in the default toolchain on the system (for example, "ld" on Unix
+# and "link" on Windows).
+def get_tool(config, key):
+    f = None
+    if key in config:
+        f = config[key]
+        if os.path.isabs(f):
+            if not os.path.exists(f):
+                raise ValueError("%s must point to an existing path" % key)
+            return f
 
     # Assume that we have the name of some program that should be on PATH.
     try:
-        return which.which(f)
+        return which.which(f) if f else which.which(key)
     except which.WhichError:
         raise ValueError("%s not found on PATH" % f)
 
@@ -332,6 +361,13 @@ if __name__ == "__main__":
         import_clang_tidy = config["import_clang_tidy"]
         if import_clang_tidy not in (True, False):
             raise ValueError("Only boolean values are accepted for import_clang_tidy.")
+    osx_cross_compile = False
+    if "osx_cross_compile" in config:
+        osx_cross_compile = config["osx_cross_compile"]
+        if osx_cross_compile not in (True, False):
+            raise ValueError("Only boolean values are accepted for osx_cross_compile.")
+        if osx_cross_compile and not is_linux():
+            raise ValueError("osx_cross_compile can only be used on Linux.")
     assertions = False
     if "assertions" in config:
         assertions = config["assertions"]
@@ -348,8 +384,11 @@ if __name__ == "__main__":
             raise ValueError("gcc_dir must point to an existing path")
     if is_linux() and gcc_dir is None:
         raise ValueError("Config file needs to set gcc_dir")
-    cc = get_compiler(config, "cc")
-    cxx = get_compiler(config, "cxx")
+    cc = get_tool(config, "cc")
+    cxx = get_tool(config, "cxx")
+    ld = get_tool(config, "link" if is_windows() else "ld")
+    ar = get_tool(config, "lib" if is_windows() else "ar")
+    ranlib = None if is_windows() else get_tool(config, "ranlib")
 
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
@@ -419,11 +458,13 @@ if __name__ == "__main__":
         extra_cxxflags = ["-stdlib=libc++"]
         extra_cflags2 = []
         extra_cxxflags2 = ["-stdlib=libc++"]
+        extra_ldflags = []
     elif is_linux():
         extra_cflags = ["-static-libgcc"]
         extra_cxxflags = ["-static-libgcc", "-static-libstdc++"]
         extra_cflags2 = ["-fPIC"]
         extra_cxxflags2 = ["-fPIC", "-static-libstdc++"]
+        extra_ldflags = []
 
         if os.environ.has_key('LD_LIBRARY_PATH'):
             os.environ['LD_LIBRARY_PATH'] = '%s/lib64/:%s' % (gcc_dir, os.environ['LD_LIBRARY_PATH']);
@@ -437,11 +478,35 @@ if __name__ == "__main__":
         # Force things on.
         extra_cflags2 = []
         extra_cxxflags2 = ['-fms-compatibility-version=19.00.24213', '-Xclang', '-std=c++14']
+        extra_ldflags = []
+
+    if osx_cross_compile:
+        # undo the damage done in the is_linux() block above, and also simulate
+        # the is_darwin() block above.
+        extra_cflags = []
+        extra_cxxflags = ["-stdlib=libc++"]
+        extra_cxxflags2 = ["-stdlib=libc++"]
+
+        extra_flags = ["-target", "x86_64-apple-darwin10", "-mlinker-version=136",
+                       "-B", "%s/bin" %  os.getenv("CROSS_CCTOOLS_PATH"),
+                       "-isysroot", os.getenv("CROSS_SYSROOT"),
+                       # technically the sysroot flag there should be enough to deduce this,
+                       # but clang needs some help to figure this out.
+                       "-I%s/usr/include" % os.getenv("CROSS_SYSROOT"),
+                       "-iframework", "%s/System/Library/Frameworks" % os.getenv("CROSS_SYSROOT")]
+        extra_cflags += extra_flags
+        extra_cxxflags += extra_flags
+        extra_cflags2 += extra_flags
+        extra_cxxflags2 += extra_flags
+        extra_ldflags = ["-Wl,-syslibroot,%s" % os.getenv("CROSS_SYSROOT"),
+                         "-Wl,-dead_strip"]
 
     build_one_stage(
         [cc] + extra_cflags,
         [cxx] + extra_cxxflags,
-        llvm_source_dir, stage1_dir, build_libcxx,
+        [ld] + extra_ldflags,
+        ar, ranlib,
+        llvm_source_dir, stage1_dir, build_libcxx, osx_cross_compile,
         build_type, assertions, python_path, gcc_dir)
 
     if stages > 1:
@@ -453,7 +518,9 @@ if __name__ == "__main__":
                 (cc_name, exe_ext)] + extra_cflags2,
             [stage1_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
-            llvm_source_dir, stage2_dir, build_libcxx,
+            [ld] + extra_ldflags,
+            ar, ranlib,
+            llvm_source_dir, stage2_dir, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir)
 
     if stages > 2:
@@ -464,7 +531,9 @@ if __name__ == "__main__":
                 (cc_name, exe_ext)] + extra_cflags2,
             [stage2_inst_dir + "/bin/%s%s" %
                 (cxx_name, exe_ext)] + extra_cxxflags2,
-            llvm_source_dir, stage3_dir, build_libcxx,
+            [ld] + extra_ldflags,
+            ar, ranlib,
+            llvm_source_dir, stage3_dir, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir)
 
     if is_darwin() or is_windows():

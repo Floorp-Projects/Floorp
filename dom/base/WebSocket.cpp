@@ -337,7 +337,7 @@ WebSocketImpl::PrintErrorOnConsole(const char *aBundleURI,
       new PrintErrorOnConsoleRunnable(this, aBundleURI, aError, aFormatStrings,
                                       aFormatStringsLen);
     ErrorResult rv;
-    runnable->Dispatch(rv);
+    runnable->Dispatch(Killing, rv);
     // XXXbz this seems totally broken.  We should be propagating this out, but
     // none of our callers really propagate anything usefully.  Come to think of
     // it, why is this a syncrunnable anyway?  Can't this be a fire-and-forget
@@ -622,7 +622,7 @@ WebSocketImpl::Disconnect()
     RefPtr<DisconnectInternalRunnable> runnable =
       new DisconnectInternalRunnable(this);
     ErrorResult rv;
-    runnable->Dispatch(rv);
+    runnable->Dispatch(Killing, rv);
     // XXXbz this seems totally broken.  We should be propagating this out, but
     // where to, exactly?
     rv.SuppressException();
@@ -1304,7 +1304,7 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
       new InitRunnable(webSocketImpl, !!aTransportProvider, aUrl,
                        protocolArray, nsDependentCString(file.get()), lineno,
                        column, &connectionFailed);
-    runnable->Dispatch(aRv);
+    runnable->Dispatch(Terminating, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -1393,7 +1393,7 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
                "not yet implemented");
     RefPtr<AsyncOpenRunnable> runnable =
       new AsyncOpenRunnable(webSocket->mImpl);
-    runnable->Dispatch(aRv);
+    runnable->Dispatch(Terminating, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -2022,10 +2022,11 @@ WebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
                                        uint16_t aCode,
                                        const nsAString& aReason)
 {
-  MOZ_ASSERT(mImpl);
   AssertIsOnTargetThread();
 
-  if (mImpl->mChannel) {
+  // This method is called by a runnable and it can happen that, in the
+  // meantime, GC unlinked this object, so mImpl could be null.
+  if (mImpl && mImpl->mChannel) {
     mImpl->mService->WebSocketClosed(mImpl->mChannel->Serial(),
                                      mImpl->mInnerWindowID,
                                      aWasClean, aCode, aReason);

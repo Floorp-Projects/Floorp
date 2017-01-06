@@ -364,13 +364,21 @@ class MOZ_STACK_CLASS TokenStream
     // TokenStream-specific error reporters.
     bool reportError(unsigned errorNumber, ...);
     bool reportErrorNoOffset(unsigned errorNumber, ...);
-    bool reportWarning(unsigned errorNumber, ...);
+
+    // Report the given error at the current offset.
+    void error(unsigned errorNumber, ...);
+
+    // Report the given error at the given offset.
+    void errorAt(uint32_t offset, unsigned errorNumber, ...);
+
+    // Warn at the current offset.
+    MOZ_MUST_USE bool warning(unsigned errorNumber, ...);
 
     static const uint32_t NoOffset = UINT32_MAX;
 
     // General-purpose error reporters.  You should avoid calling these
-    // directly, and instead use the more succinct alternatives (e.g.
-    // reportError()) in TokenStream, Parser, and BytecodeEmitter.
+    // directly, and instead use the more succinct alternatives (error(),
+    // warning(), &c.) in TokenStream, Parser, and BytecodeEmitter.
     bool reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigned errorNumber,
                                     va_list args);
     bool reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, unsigned errorNumber,
@@ -947,7 +955,7 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getTokenInternal(TokenKind* ttp, Modifier modifier);
 
-    MOZ_MUST_USE bool getBracedUnicode(uint32_t* code);
+    MOZ_MUST_USE bool matchBracedUnicode(bool* matched, uint32_t* code);
     MOZ_MUST_USE bool getStringOrTemplateToken(int untilChar, Token** tp);
 
     int32_t getChar();
@@ -964,7 +972,7 @@ class MOZ_STACK_CLASS TokenStream
 
     MOZ_MUST_USE bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
     MOZ_MUST_USE bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
-                                   const char* directive, int directiveLength,
+                                   const char* directive, uint8_t directiveLength,
                                    const char* errorMsgPragma,
                                    UniquePtr<char16_t[], JS::FreePolicy>* destination);
     MOZ_MUST_USE bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
@@ -982,20 +990,25 @@ class MOZ_STACK_CLASS TokenStream
         MOZ_ASSERT(c == expect);
     }
 
-    int32_t peekChar() {
-        int32_t c = getChar();
-        ungetChar(c);
-        return c;
+    MOZ_MUST_USE bool peekChar(int32_t* c) {
+        *c = getChar();
+        ungetChar(*c);
+        return true;
     }
 
-    void skipChars(int n) {
-        while (--n >= 0)
-            getChar();
+    void skipChars(uint8_t n) {
+        while (n-- > 0) {
+            MOZ_ASSERT(userbuf.hasRawChars());
+            mozilla::DebugOnly<int32_t> c = getCharIgnoreEOL();
+            MOZ_ASSERT(c != '\n');
+        }
     }
 
-    void skipCharsIgnoreEOL(int n) {
-        while (--n >= 0)
+    void skipCharsIgnoreEOL(uint8_t n) {
+        while (n-- > 0) {
+            MOZ_ASSERT(userbuf.hasRawChars());
             getCharIgnoreEOL();
+        }
     }
 
     void updateLineInfoForEOL();

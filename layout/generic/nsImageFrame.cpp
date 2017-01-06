@@ -2210,7 +2210,7 @@ nsImageFrame::LoadIcon(const nsAString& aSpec,
                                        relevant for cookies, so does not
                                        apply to icons. */
                        nullptr,      /* referrer (not relevant for icons) */
-                       mozilla::net::RP_Default,
+                       mozilla::net::RP_Unset,
                        nullptr,      /* principal (not relevant for icons) */
                        loadGroup,
                        gIconLoad,
