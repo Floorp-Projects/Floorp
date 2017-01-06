@@ -347,6 +347,10 @@ class MOZ_STACK_CLASS FunctionGenerator
         usesAtomics_ = true;
     }
 
+    bool isAsmJS() const {
+      return m_->isAsmJS();
+    }
+
     Bytes& bytes() {
         return funcBytes_->bytes();
     }
