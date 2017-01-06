@@ -30,5 +30,13 @@
 "algorithm": "sha512",
 "filename": "vs2015u3.zip",
 "unpack": true
+},
+{
+"algorithm": "sha512",
+"visibility": "public",
+"filename": "makecab.tar.bz2",
+"unpack": true,
+"digest": "da1f7685e5bc49a5ffbe5b4a3678ac7a58a0e125031726d30e2bacbbffa53d6efb9fd9f00d6dff5b54cff9412a103efa564c2af6f8fccc63082f6939181769f8",
+"size": 296777
 }
 ]
