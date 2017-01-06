@@ -173,8 +173,12 @@ class SuggestMgr {
                   const std::vector<mapentry>&,
                   int*,
                   clock_t*);
+  int ngram(int n, const std::vector<w_char>& su1,
+            const std::vector<w_char>& su2, int opt);
   int ngram(int n, const std::string& s1, const std::string& s2, int opt);
   int mystrlen(const char* word);
+  int leftcommonsubstring(const std::vector<w_char>& su1,
+                          const std::vector<w_char>& su2);
   int leftcommonsubstring(const char* s1, const char* s2);
   int commoncharacterpositions(const char* s1, const char* s2, int* is_swap);
   void bubblesort(char** rwd, char** rwd2, int* rsc, int n);
