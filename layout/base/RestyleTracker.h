@@ -129,7 +129,7 @@ public:
     // the RestyleData for as its nearest restyle root.
     nsTArray<RefPtr<Element>> mDescendants;
 #if defined(MOZ_ENABLE_PROFILER_SPS)
-    UniquePtr<ProfilerBacktrace> mBacktrace;
+    UniqueProfilerBacktrace mBacktrace;
 #endif
   };
 
@@ -267,7 +267,7 @@ RestyleTracker::AddPendingRestyleToTable(Element* aElement,
       new RestyleData(aRestyleHint, aMinChangeHint, aRestyleHintData);
 #if defined(MOZ_ENABLE_PROFILER_SPS)
     if (profiler_feature_active("restyle")) {
-      rd->mBacktrace.reset(profiler_get_backtrace());
+      rd->mBacktrace = profiler_get_backtrace();
     }
 #endif
     mPendingRestyles.Put(aElement, rd);
