@@ -17,7 +17,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
   , mIsMainThread(aIsMainThread)
   , mPseudoStack(aPseudoStack)
   , mPlatformData(Sampler::AllocPlatformData(aThreadId))
-  , mProfile(nullptr)
   , mStackTop(aStackTop)
   , mPendingDelete(false)
 {
@@ -35,9 +34,6 @@ ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
 
 ThreadInfo::~ThreadInfo() {
   MOZ_COUNT_DTOR(ThreadInfo);
-
-  if (mProfile)
-    delete mProfile;
 
   Sampler::FreePlatformData(mPlatformData);
 }
