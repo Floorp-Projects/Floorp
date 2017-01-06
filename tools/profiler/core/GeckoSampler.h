@@ -88,23 +88,6 @@ class GeckoSampler: public Sampler {
   virtual void HandleSaveRequest() override;
   virtual void DeleteExpiredMarkers() override;
 
-  ThreadProfile* GetPrimaryThreadProfile()
-  {
-    if (!mPrimaryThreadProfile) {
-      ::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        if (info->IsMainThread() && !info->IsPendingDelete()) {
-          mPrimaryThreadProfile = info->Profile();
-          break;
-        }
-      }
-    }
-
-    return mPrimaryThreadProfile;
-  }
-
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
 #ifndef SPS_STANDALONE
   virtual JSObject *ToJSObject(JSContext *aCx, double aSinceTime = 0);
@@ -142,8 +125,6 @@ protected:
 
   void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
 
-  // This represent the application's main thread (SAMPLER_INIT)
-  ThreadProfile* mPrimaryThreadProfile;
   RefPtr<ProfileBuffer> mBuffer;
   bool mSaveRequested;
   bool mAddLeafAddresses;
