@@ -447,9 +447,10 @@ struct JSCompartment
     // VariableDeclaration declarations in global code in this compartment.
     // Names are only removed from this list by a |delete IdentifierReference|
     // that successfully removes that global property.
-    JS::GCHashSet<JSAtom*,
-                  js::DefaultHasher<JSAtom*>,
-                  js::SystemAllocPolicy> varNames_;
+    using VarNameSet = JS::GCHashSet<JSAtom*,
+                                     js::DefaultHasher<JSAtom*>,
+                                     js::SystemAllocPolicy>;
+    JS::WeakCache<VarNameSet> varNames_;
 
   public:
     /* Last time at which an animation was played for a global in this compartment. */
@@ -683,7 +684,7 @@ struct JSCompartment
     MOZ_MUST_USE bool addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name);
 
     void removeFromVarNames(JS::Handle<JSAtom*> name) {
-        varNames_.remove(name);
+        varNames_.get().remove(name);
     }
 
     // Whether the given name is in [[VarNames]].
