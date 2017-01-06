@@ -10602,6 +10602,42 @@
     "n_values": 4,
     "description": "Counts the number of asm.js vs WebAssembly modules instanciations, at the time modules are getting instanciated."
   },
+  "TIME_TO_FIRST_CLICK": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "bug_numbers": [1307675],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "description": "Time in milliseconds from first paint to first click per top-level content browsing context."
+  },
+  "TIME_TO_FIRST_KEY_INPUT": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "bug_numbers": [1307675],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "description": "Time in milliseconds from first paint to first key input per top-level content browsing context."
+  },
+  "TIME_TO_FIRST_MOUSE_MOVE": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "bug_numbers": [1307675],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "description": "Time in milliseconds from first paint to first mouse move per top-level content browsing context."
+  },
+  "TIME_TO_FIRST_SCROLL": {
+    "alert_emails": ["hkirschner@mozilla.com"],
+    "bug_numbers": [1307675],
+    "expires_in_version": "58",
+    "kind": "exponential",
+    "high": 100000,
+    "n_buckets": 30,
+    "description": "Time in milliseconds from first paint to first scroll per top-level content browsing context."
+  },
   "DOCUMENT_WITH_EXPANDED_PRINCIPAL": {
     "alert_emails": ["dev-platform@lists.mozilla.org"],
     "bug_numbers": [1301123],

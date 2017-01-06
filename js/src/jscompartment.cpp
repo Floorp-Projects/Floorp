@@ -77,6 +77,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     nonSyntacticLexicalEnvironments_(nullptr),
     gcIncomingGrayPointers(nullptr),
     debugModeBits(0),
+    randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
     watchpointMap(nullptr),
     scriptCountsMap(nullptr),
     debugScriptMap(nullptr),
@@ -1275,6 +1276,13 @@ JSCompartment::addTelemetry(const char* filename, DeprecatedLanguageExtension e)
         return;
 
     sawDeprecatedLanguageExtension[e] = true;
+}
+
+mozilla::HashCodeScrambler
+JSCompartment::randomHashCodeScrambler()
+{
+    return mozilla::HashCodeScrambler(randomKeyGenerator_.next(),
+                                      randomKeyGenerator_.next());
 }
 
 AutoSetNewObjectMetadata::AutoSetNewObjectMetadata(ExclusiveContext* ecx

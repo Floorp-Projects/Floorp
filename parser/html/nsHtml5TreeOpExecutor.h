@@ -136,7 +136,7 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
     /**
      * No-op for backwards compat.
      */
-    virtual void FlushPendingNotifications(mozFlushType aType) override;
+    virtual void FlushPendingNotifications(mozilla::FlushType aType) override;
 
     /**
      * Don't call. For interface compat only.

@@ -1061,6 +1061,17 @@ JS::ForceLexicalInitialization(JSContext *cx, HandleObject obj)
     return initializedAny;
 }
 
+extern JS_FRIEND_API(int)
+JS::IsGCPoisoning()
+{
+#ifdef JS_GC_POISONING
+    static bool disablePoison = bool(getenv("JSGC_DISABLE_POISONING"));
+    return !disablePoison;
+#else
+    return false;
+#endif
+}
+
 struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer
 {
     const char* prefix;
