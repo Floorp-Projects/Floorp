@@ -19,6 +19,9 @@ use app_units::Au;
 
 extern crate webrender_traits;
 
+fn pipeline_id_to_u64(id: PipelineId) -> u64 { (id.0 as u64) << 32 + id.1 as u64 }
+fn u64_to_pipeline_id(id: u64) -> PipelineId { PipelineId((id >> 32) as u32, id as u32) }
+
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
     extern  {
@@ -71,7 +74,83 @@ pub extern fn wr_renderer_current_epoch(renderer: &mut Renderer,
 
 #[no_mangle]
 pub unsafe extern fn wr_renderer_delete(renderer: *mut Renderer) {
-    let _ = Box::from_raw(renderer);
+    Box::from_raw(renderer);
+}
+
+#[no_mangle]
+pub unsafe extern fn wr_api_delete(api: *mut webrender_traits::RenderApi) {
+    Box::from_raw(api);
+}
+
+#[no_mangle]
+pub extern fn wr_window_new(window_id: u64,
+                            enable_profiler: bool,
+                            out_api: &mut *mut webrender_traits::RenderApi,
+                            out_renderer: &mut *mut Renderer) {
+    assert!(unsafe { is_in_compositor_thread() });
+
+    let opts = RendererOptions {
+        device_pixel_ratio: 1.0,
+        resource_override_path: None,
+        enable_aa: false,
+        enable_subpixel_aa: false,
+        enable_msaa: false,
+        enable_profiler: enable_profiler,
+        enable_recording: false,
+        enable_scrollbars: false,
+        precache_shaders: false,
+        renderer_kind: RendererKind::Native,
+        debug: false,
+        clear_framebuffer: true,
+        clear_empty_tiles: false,
+        clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
+    };
+
+    let (renderer, sender) = Renderer::new(opts);
+    //renderer.set_render_notifier(Box::new(CppNotifier { window_id: window_id }));
+
+    *out_api = Box::into_raw(Box::new(sender.create_api()));
+    *out_renderer = Box::into_raw(Box::new(renderer));
+}
+
+// Call MakeCurrent before this.
+#[no_mangle]
+pub extern fn wr_gl_init(gl_context: *mut c_void) {
+    //assert!(unsafe { is_in_render_thread() });
+
+    gl::load_with(|symbol| get_proc_address(gl_context, symbol));
+    gl::clear_color(0.3, 0.0, 0.0, 1.0);
+
+    let version = unsafe {
+        let data = CStr::from_ptr(gl::GetString(gl::VERSION) as *const _).to_bytes().to_vec();
+        String::from_utf8(data).unwrap()
+    };
+
+    println!("WebRender - OpenGL version new {}", version);
+}
+
+#[no_mangle]
+pub extern fn wr_state_new(width: u32, height: u32, pipeline: u64) -> *mut WrState {
+    assert!(unsafe { is_in_compositor_thread() });
+    let pipeline_id = u64_to_pipeline_id(pipeline);
+
+    let state = Box::new(WrState {
+        size: (width, height),
+        pipeline_id: pipeline_id,
+        z_index: 0,
+        frame_builder: WebRenderFrameBuilder::new(pipeline_id),
+    });
+
+    Box::into_raw(state)
+}
+
+#[no_mangle]
+pub extern fn wr_state_delete(state:*mut WrState) {
+    assert!(unsafe { is_in_compositor_thread() });
+
+    unsafe {
+        Box::from_raw(state);
+    }
 }
 
 pub struct WebRenderFrameBuilder {
