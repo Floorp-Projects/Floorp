@@ -181,6 +181,20 @@ struct wrstate;
 #  define WR_FUNC { MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("WebRender disabled"); }
 #endif
 
+struct WrRenderer;
+
+WR_INLINE void
+wr_renderer_update(WrRenderer* renderer) WR_FUNC;
+
+WR_INLINE void
+wr_renderer_render(WrRenderer* renderer, uint32_t width, uint32_t height) WR_FUNC;
+
+WR_INLINE void
+wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled) WR_FUNC;
+
+WR_INLINE bool
+wr_renderer_current_epoch(WrRenderer* renderer, uint64_t pipeline_id, uint32_t* out_epoch) WR_FUNC;
+
 WR_INLINE wrwindowstate*
 wr_init_window(uint64_t root_pipeline_id,
                void* webrender_bridge_ptr,
