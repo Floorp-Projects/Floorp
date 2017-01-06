@@ -34,9 +34,7 @@ body {
 }
 
 #filter-container {
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
-    margin-right: 0.5em;
+    margin: 0.5em;
     height: 2em;
     border: 1px solid transparent;
     border-image-source: url("chrome://browser/skin/images/textfield.png");
@@ -45,6 +43,7 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: row;
+    float: inline-end;
 }
 
 #filter-input {
@@ -80,6 +79,7 @@ body {
     width: 48px;
     display: inline-block;
     outline-style: none;
+    float: inline-start;
 }
 
 #filter-search-button {
