@@ -385,10 +385,18 @@ extern JS_PUBLIC_API(void)
 UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* edgep, const char* name);
 
 namespace gc {
+
 // Return true if the given edge is not live and is about to be swept.
 template <typename T>
 extern JS_PUBLIC_API(bool)
 EdgeNeedsSweep(JS::Heap<T>* edgep);
+
+// Not part of the public API, but declared here so we can use it in GCPolicy
+// which is.
+template <typename T>
+bool
+IsAboutToBeFinalizedUnbarriered(T* thingp);
+
 } // namespace gc
 } // namespace js
 

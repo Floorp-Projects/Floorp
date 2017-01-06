@@ -119,6 +119,11 @@ struct GCPointerPolicy
         if (*vp)
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
     }
+    static bool needsSweep(T* vp) {
+        if (*vp)
+            return js::gc::IsAboutToBeFinalizedUnbarriered(vp);
+        return false;
+    }
 };
 template <> struct GCPolicy<JS::Symbol*> : public GCPointerPolicy<JS::Symbol*> {};
 template <> struct GCPolicy<JSAtom*> : public GCPointerPolicy<JSAtom*> {};

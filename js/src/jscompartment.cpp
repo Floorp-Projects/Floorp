@@ -569,7 +569,10 @@ JSCompartment::getNonSyntacticLexicalEnvironment(JSObject* enclosing) const
 bool
 JSCompartment::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
 {
-    if (varNames_.put(name.get()))
+    MOZ_ASSERT(name);
+    MOZ_ASSERT(!isAtomsCompartment());
+
+    if (varNames_.put(name))
         return true;
 
     ReportOutOfMemory(cx);
@@ -799,6 +802,12 @@ void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
     crossCompartmentWrappers.sweep();
+}
+
+void
+JSCompartment::sweepVarNames()
+{
+    varNames_.sweep();
 }
 
 namespace {
