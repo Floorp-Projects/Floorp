@@ -1191,7 +1191,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
 NS_IMETHODIMP
 Selection::ToString(nsAString& aReturn)
 {
-  // We need FlushType::Style here to make sure frames have been created for
+  // We need FlushType::Frames here to make sure frames have been created for
   // the selected content.  Use mFrameSelection->GetShell() which returns
   // null if the Selection has been disconnected (the shell is Destroyed).
   nsCOMPtr<nsIPresShell> shell =
@@ -1200,7 +1200,7 @@ Selection::ToString(nsAString& aReturn)
     aReturn.Truncate();
     return NS_OK;
   }
-  shell->FlushPendingNotifications(FlushType::Style);
+  shell->FlushPendingNotifications(FlushType::Frames);
 
   return ToStringWithFormat("text/plain",
                             nsIDocumentEncoder::SkipInvisibleContent,
