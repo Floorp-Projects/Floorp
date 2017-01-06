@@ -23,8 +23,11 @@ class ThreadInfo {
   bool IsMainThread() const { return mIsMainThread; }
   PseudoStack* Stack() const { return mPseudoStack; }
 
-  void SetProfile(ThreadProfile* aProfile) { mProfile = aProfile; }
-  ThreadProfile* Profile() const { return mProfile; }
+  void SetProfile(mozilla::UniquePtr<ThreadProfile> aProfile)
+  {
+    mProfile = mozilla::Move(aProfile);
+  }
+  ThreadProfile* Profile() const { return mProfile.get(); }
 
   PlatformData* GetPlatformData() const { return mPlatformData; }
   void* StackTop() const { return mStackTop; }
@@ -48,7 +51,7 @@ class ThreadInfo {
   const bool mIsMainThread;
   PseudoStack* mPseudoStack;
   PlatformData* mPlatformData;
-  ThreadProfile* mProfile;
+  mozilla::UniquePtr<ThreadProfile> mProfile;
   void* mStackTop;
 #ifndef SPS_STANDALONE
   nsCOMPtr<nsIThread> mThread;
