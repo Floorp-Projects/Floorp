@@ -7,7 +7,7 @@
 #include <string.h>                     // for nullptr, strcmp
 
 #include "imgIContainer.h"              // for imgIContainer, etc
-#include "mozFlushType.h"               // for mozFlushType::Flush_Frames
+#include "mozilla/FlushType.h"          // for FlushType::Frames
 #include "mozilla/mozalloc.h"           // for operator new
 #include "nsAString.h"
 #include "nsComponentManagerUtils.h"    // for do_CreateInstance
@@ -334,7 +334,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow)
     // presshell is set up if it needs to be.
     nsCOMPtr<nsIDocument> document = do_QueryInterface(doc);
     if (document) {
-      document->FlushPendingNotifications(Flush_Frames);
+      document->FlushPendingNotifications(mozilla::FlushType::Frames);
       if (mMakeWholeDocumentEditable) {
         document->SetEditableFlag(true);
         nsCOMPtr<nsIHTMLDocument> htmlDocument = do_QueryInterface(document);

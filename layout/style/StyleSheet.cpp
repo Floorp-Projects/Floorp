@@ -37,6 +37,16 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy,
   , mType(aCopy.mType)
   , mDisabled(aCopy.mDisabled)
 {
+  if (aCopy.mMedia) {
+    // XXX This is wrong; we should be keeping @import rules and
+    // sheets in sync!
+    mMedia = aCopy.mMedia->Clone();
+  }
+}
+
+StyleSheet::~StyleSheet()
+{
+  DropMedia();
 }
 
 // QueryInterface implementation for StyleSheet
@@ -49,7 +59,18 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(StyleSheet)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(StyleSheet)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(StyleSheet)
+NS_IMPL_CYCLE_COLLECTION_CLASS(StyleSheet)
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(StyleSheet)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMedia)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(StyleSheet)
+  tmp->DropMedia();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(StyleSheet)
 
 mozilla::dom::CSSStyleSheetParsingMode
 StyleSheet::ParsingModeDOM()
@@ -91,6 +112,22 @@ StyleSheet::SetComplete()
       mOwningNode->IsContent()) {
     dom::ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
     shadowRoot->StyleSheetChanged();
+  }
+}
+
+void
+StyleSheet::SetEnabled(bool aEnabled)
+{
+  // Internal method, so callers must handle BeginUpdate/EndUpdate
+  bool oldDisabled = mDisabled;
+  mDisabled = !aEnabled;
+
+  if (IsComplete() && oldDisabled != mDisabled) {
+    EnabledStateChanged();
+
+    if (mDocument) {
+      mDocument->SetStyleSheetApplicableState(this, !mDisabled);
+    }
   }
 }
 
@@ -261,6 +298,12 @@ StyleSheet::DeleteRule(uint32_t aIndex,
   FORWARD_INTERNAL(DeleteRuleInternal, (aIndex, aRv))
 }
 
+void
+StyleSheet::EnabledStateChanged()
+{
+  FORWARD_INTERNAL(EnabledStateChangedInternal, ())
+}
+
 #undef FORWARD_INTERNAL
 
 void
@@ -318,6 +361,32 @@ StyleSheet::AreRulesAvailable(nsIPrincipal& aSubjectPrincipal,
     return false;
   }
   return true;
+}
+
+void
+StyleSheet::SetMedia(nsMediaList* aMedia)
+{
+  mMedia = aMedia;
+}
+
+void
+StyleSheet::DropMedia()
+{
+  if (mMedia) {
+    mMedia->SetStyleSheet(nullptr);
+    mMedia = nullptr;
+  }
+}
+
+nsMediaList*
+StyleSheet::Media()
+{
+  if (!mMedia) {
+    mMedia = new nsMediaList();
+    mMedia->SetStyleSheet(this);
+  }
+
+  return mMedia;
 }
 
 // nsWrapperCache

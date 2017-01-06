@@ -31,7 +31,7 @@ nsSVGElement::LengthInfo SVGTextContentElement::sLengthInfo[1] =
 SVGTextFrame*
 SVGTextContentElement::GetSVGTextFrame()
 {
-  nsIFrame* frame = GetPrimaryFrame(Flush_Layout);
+  nsIFrame* frame = GetPrimaryFrame(FlushType::Layout);
   while (frame) {
     SVGTextFrame* textFrame = do_QueryFrame(frame);
     if (textFrame) {
