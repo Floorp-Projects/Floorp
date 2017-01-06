@@ -8,46 +8,35 @@ var PointerlockFsWarning = {
   _element: null,
   _origin: null,
 
-  init() {
-    this.Timeout.prototype = {
-      start() {
-        this.cancel();
-        this._id = setTimeout(() => this._handle(), this._delay);
-      },
-      cancel() {
-        if (this._id) {
-          clearTimeout(this._id);
-          this._id = 0;
-        }
-      },
-      _handle() {
-        this._id = 0;
-        this._func();
-      },
-      get delay() {
-        return this._delay;
-      }
-    };
-  },
-
-  /* eslint-disable object-shorthand */
-  /* The object-shorthand rule must be disabled for this constructor
-   * because the ES6 method syntax causes "this.Timeout is not a
-   * constructor" exception. Further, using the {ignoreConstructors: true}
-   * option causes "TypeError: Cannot read property 'charAt' of undefined"
-   * in eslint.
-   */
   /**
    * Timeout object for managing timeout request. If it is started when
    * the previous call hasn't finished, it would automatically cancelled
    * the previous one.
    */
-  Timeout: function(func, delay) {
-    this._id = 0;
-    this._func = func;
-    this._delay = delay;
+  Timeout: class {
+    constructor(func, delay) {
+      this._id = 0;
+      this._func = func;
+      this._delay = delay;
+    }
+    start() {
+      this.cancel();
+      this._id = setTimeout(() => this._handle(), this._delay);
+    }
+    cancel() {
+      if (this._id) {
+        clearTimeout(this._id);
+        this._id = 0;
+      }
+    }
+    _handle() {
+      this._id = 0;
+      this._func();
+    }
+    get delay() {
+      return this._delay;
+    }
   },
-  /* eslint-enable object-shorthand */
 
   showPointerLock(aOrigin) {
     if (!document.fullscreen) {
