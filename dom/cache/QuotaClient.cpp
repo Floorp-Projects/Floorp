@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/cache/QuotaClient.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -17,7 +16,6 @@
 
 namespace {
 
-using mozilla::DebugOnly;
 using mozilla::dom::ContentParentId;
 using mozilla::dom::cache::Manager;
 using mozilla::dom::quota::Client;
@@ -55,7 +53,7 @@ GetBodyUsage(nsIFile* aDir, UsageInfo* aUsageInfo)
     int64_t fileSize;
     rv = file->GetFileSize(&fileSize);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-    MOZ_ASSERT(fileSize >= 0);
+    MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
     aUsageInfo->AppendToFileUsage(fileSize);
   }
@@ -90,10 +88,10 @@ public:
                     const nsACString& aOrigin,
                     UsageInfo* aUsageInfo) override
   {
-    MOZ_ASSERT(aUsageInfo);
+    MOZ_DIAGNOSTIC_ASSERT(aUsageInfo);
 
     QuotaManager* qm = QuotaManager::Get();
-    MOZ_ASSERT(qm);
+    MOZ_DIAGNOSTIC_ASSERT(qm);
 
     nsCOMPtr<nsIFile> dir;
     nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
@@ -148,7 +146,7 @@ public:
         int64_t fileSize;
         rv = file->GetFileSize(&fileSize);
         if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-        MOZ_ASSERT(fileSize >= 0);
+        MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
         aUsageInfo->AppendToDatabaseUsage(fileSize);
         continue;

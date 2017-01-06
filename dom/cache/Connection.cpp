@@ -22,7 +22,7 @@ Connection::Connection(mozIStorageConnection* aBase)
   : mBase(aBase)
   , mClosed(false)
 {
-  MOZ_ASSERT(mBase);
+  MOZ_DIAGNOSTIC_ASSERT(mBase);
 }
 
 Connection::~Connection()

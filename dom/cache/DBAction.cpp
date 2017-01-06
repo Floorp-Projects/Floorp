@@ -40,8 +40,8 @@ DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
                       Data* aOptionalData)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aResolver);
-  MOZ_ASSERT(aQuotaInfo.mDir);
+  MOZ_DIAGNOSTIC_ASSERT(aResolver);
+  MOZ_DIAGNOSTIC_ASSERT(aQuotaInfo.mDir);
 
   if (IsCanceled()) {
     aResolver->Resolve(NS_ERROR_ABORT);
@@ -75,7 +75,7 @@ DBAction::RunOnTarget(Resolver* aResolver, const QuotaInfo& aQuotaInfo,
       aResolver->Resolve(rv);
       return;
     }
-    MOZ_ASSERT(conn);
+    MOZ_DIAGNOSTIC_ASSERT(conn);
 
     // Save this connection in the shared Data object so later Actions can
     // use it.  This avoids opening a new connection for every Action.
@@ -97,8 +97,8 @@ DBAction::OpenConnection(const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
                          mozIStorageConnection** aConnOut)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aDBDir);
-  MOZ_ASSERT(aConnOut);
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConnOut);
 
   nsCOMPtr<mozIStorageConnection> conn;
 
@@ -218,9 +218,9 @@ SyncDBAction::RunWithDBOnTarget(Resolver* aResolver,
                                 mozIStorageConnection* aConn)
 {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aResolver);
-  MOZ_ASSERT(aDBDir);
-  MOZ_ASSERT(aConn);
+  MOZ_DIAGNOSTIC_ASSERT(aResolver);
+  MOZ_DIAGNOSTIC_ASSERT(aDBDir);
+  MOZ_DIAGNOSTIC_ASSERT(aConn);
 
   nsresult rv = RunSyncWithDBOnTarget(aQuotaInfo, aDBDir, aConn);
   aResolver->Resolve(rv);
