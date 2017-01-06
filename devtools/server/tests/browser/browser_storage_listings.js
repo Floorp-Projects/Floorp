@@ -9,7 +9,7 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 
 const storeMap = {
   cookies: {
-    "test1.example.org": [
+    "http://test1.example.org": [
       {
         name: "c1",
         value: "foobar",
@@ -38,7 +38,29 @@ const storeMap = {
         isSecure: true,
       }
     ],
-    "sectest1.example.org": [
+
+    "http://sectest1.example.org": [
+      {
+        name: "cs2",
+        value: "sessionCookie",
+        path: "/",
+        host: ".example.org",
+        expires: 0,
+        isDomain: true,
+        isSecure: false,
+      },
+      {
+        name: "sc1",
+        value: "foobar",
+        path: "/browser/devtools/server/tests/browser/",
+        host: "sectest1.example.org",
+        expires: 0,
+        isDomain: false,
+        isSecure: false,
+      }
+    ],
+
+    "https://sectest1.example.org": [
       {
         name: "uc1",
         value: "foobar",
@@ -328,7 +350,7 @@ function* testStores(data) {
 }
 
 function testCookies(cookiesActor) {
-  is(Object.keys(cookiesActor.hosts).length, 2,
+  is(Object.keys(cookiesActor.hosts).length, 3,
                  "Correct number of host entries for cookies");
   return testCookiesObjects(0, cookiesActor.hosts, cookiesActor);
 }
