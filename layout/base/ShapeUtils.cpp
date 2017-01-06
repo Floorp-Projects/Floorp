@@ -8,6 +8,9 @@
 
 #include <cstdlib>
 
+#include "nsCSSRendering.h"
+#include "nsStyleStruct.h"
+
 namespace mozilla {
 
 nscoord
@@ -28,6 +31,18 @@ ShapeUtils::ComputeShapeRadius(const StyleShapeRadius aType,
       break;
   }
   return length;
+}
+
+nsPoint
+ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
+                                         const nsRect& aRefBox)
+{
+  nsPoint topLeft, anchor;
+  nsSize size(aRefBox.Size());
+  nsImageRenderer::ComputeObjectAnchorPoint(aBasicShape->GetPosition(),
+                                            size, size,
+                                            &topLeft, &anchor);
+  return nsPoint(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
 }
 
 } // namespace mozilla
