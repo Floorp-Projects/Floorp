@@ -1304,7 +1304,7 @@ Loader::PrepareSheet(StyleSheet* aSheet,
     mediumParser.ParseMediaList(aMediaString, nullptr, 0, mediaList);
   }
 
-  sheet->SetMedia(mediaList);
+  aSheet->SetMedia(mediaList);
 
   aSheet->SetTitle(aTitle);
   sheet->SetEnabled(!isAlternate);
