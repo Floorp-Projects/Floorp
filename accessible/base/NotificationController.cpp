@@ -848,8 +848,9 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
 
       Accessible* parent = childDoc->Parent();
       DocAccessibleChild* parentIPCDoc = mDocument->IPCDoc();
+      MOZ_DIAGNOSTIC_ASSERT(parentIPCDoc);
       uint64_t id = reinterpret_cast<uintptr_t>(parent->UniqueID());
-      MOZ_ASSERT(id);
+      MOZ_DIAGNOSTIC_ASSERT(id);
       DocAccessibleChild* ipcDoc = childDoc->IPCDoc();
       if (ipcDoc) {
         parentIPCDoc->SendBindChildDoc(ipcDoc, id);
@@ -860,14 +861,12 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       childDoc->SetIPCDoc(ipcDoc);
 
 #if defined(XP_WIN)
-      MOZ_ASSERT(parentIPCDoc);
       parentIPCDoc->ConstructChildDocInParentProcess(ipcDoc, id,
                                                      AccessibleWrap::GetChildIDFor(childDoc));
 #else
       nsCOMPtr<nsITabChild> tabChild =
         do_GetInterface(mDocument->DocumentNode()->GetDocShell());
       if (tabChild) {
-        MOZ_ASSERT(parentIPCDoc);
         static_cast<TabChild*>(tabChild.get())->
           SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id, 0, 0);
       }
