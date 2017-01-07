@@ -28,8 +28,5 @@
     <!-- Front End MetaData -->
     <em:name>Web Compat</em:name>
     <em:description>Urgent post-release fixes for web compatibility.</em:description>
-
-    <!-- Embed WebExtension -->
-    <em:hasEmbeddedWebExtension>true</em:hasEmbeddedWebExtension>
   </Description>
 </RDF>
