@@ -155,7 +155,11 @@
       yield testToggleEntireWord();
     }
 
-    function testFindButtonsState(enabled = true) {
+    function testFindButtonsState(enabled = null) {
+      // If `enabled` is not explicitly passed in, we set it to its most logical
+      // value.
+      if (enabled === null)
+        enabled = !!gFindBar._findField.value;
       is(gFindBar.getElement("find-next").disabled, !enabled,
         `Expected the 'next' button to be ${enabled ? 'enabled' : 'disabled'}`);
       is(gFindBar.getElement("find-previous").disabled, !enabled,
