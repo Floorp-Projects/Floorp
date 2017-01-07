@@ -1321,6 +1321,33 @@ CacheIRCompiler::emitLoadDOMExpandoValue()
 }
 
 bool
+CacheIRCompiler::emitLoadDOMExpandoValueIgnoreGeneration()
+{
+    Register obj = allocator.useRegister(masm, reader.objOperandId());
+    ValueOperand output = allocator.defineValueRegister(masm, reader.valOperandId());
+
+    // Determine the expando's Address.
+    Register scratch = output.scratchReg();
+    masm.loadPtr(Address(obj, ProxyObject::offsetOfValues()), scratch);
+    Address expandoAddr(scratch, ProxyObject::offsetOfExtraSlotInValues(GetDOMProxyExpandoSlot()));
+
+#ifdef DEBUG
+    // Private values are stored as doubles, so assert we have a double.
+    Label ok;
+    masm.branchTestDouble(Assembler::Equal, expandoAddr, &ok);
+    masm.assumeUnreachable("DOM expando is not a PrivateValue!");
+    masm.bind(&ok);
+#endif
+
+    // Load the ExpandoAndGeneration* from the PrivateValue.
+    masm.loadPrivate(expandoAddr, scratch);
+
+    // Load expandoAndGeneration->expando into the output Value register.
+    masm.loadValue(Address(scratch, ExpandoAndGeneration::offsetOfExpando()), output);
+    return true;
+}
+
+bool
 CacheIRCompiler::emitLoadUndefinedResult()
 {
     AutoOutputRegister output(*this);
