@@ -361,7 +361,7 @@ SVGDocumentWrapper::SetupViewer(nsIRequest* aRequest,
   // automatically. Since there is no DocShell for this wrapped SVG document,
   // we must set it up manually.
   RefPtr<nsDOMNavigationTiming> timing = new nsDOMNavigationTiming();
-  timing->NotifyNavigationStart(nsDOMNavigationTiming::DocShellState::eInactive);
+  timing->NotifyNavigationStart();
   viewer->SetNavigationTiming(timing);
 
   nsCOMPtr<nsIParser> parser = do_QueryInterface(listener);
