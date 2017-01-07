@@ -132,11 +132,8 @@ interface GlobalEventHandlers {
            attribute EventHandler onanimationiteration;
            attribute EventHandler onanimationstart;
            attribute EventHandler ontransitionend;
-           attribute EventHandler ontransitionend;
-           // We will ship transitionrun and transitionstart events
-           // on Firefox 53. (For detail, see bug 1324985)
-//           attribute EventHandler ontransitionrun;
-//           attribute EventHandler ontransitionstart;
+           attribute EventHandler ontransitionrun;
+           attribute EventHandler ontransitionstart;
 
            // CSS-Animation and CSS-Transition legacy handlers.
            // This handler isn't standard.

@@ -211,6 +211,7 @@ CSSTransition::QueueEvents()
   // perhaps even with different timelines.
   // The zero timestamp is for transitionrun events where we ignore the delay
   // for the purpose of ordering events.
+  TimeStamp zeroTimeStamp  = AnimationTimeToTimeStamp(zeroDuration);
   TimeStamp startTimeStamp = ElapsedTimeToTimeStamp(intervalStartTime);
   TimeStamp endTimeStamp   = ElapsedTimeToTimeStamp(intervalEndTime);
 
@@ -227,7 +228,25 @@ CSSTransition::QueueEvents()
   AutoTArray<TransitionEventParams, 3> events;
   switch (mPreviousTransitionPhase) {
     case TransitionPhase::Idle:
-      if (currentPhase == TransitionPhase::After) {
+      if (currentPhase == TransitionPhase::Pending ||
+          currentPhase == TransitionPhase::Before) {
+        events.AppendElement(TransitionEventParams{ eTransitionRun,
+                                                   intervalStartTime,
+                                                   zeroTimeStamp });
+      } else if (currentPhase == TransitionPhase::Active) {
+        events.AppendElement(TransitionEventParams{ eTransitionRun,
+                                                   intervalStartTime,
+                                                   zeroTimeStamp });
+        events.AppendElement(TransitionEventParams{ eTransitionStart,
+                                                   intervalStartTime,
+                                                   startTimeStamp });
+      } else if (currentPhase == TransitionPhase::After) {
+        events.AppendElement(TransitionEventParams{ eTransitionRun,
+                                                   intervalStartTime,
+                                                   zeroTimeStamp });
+        events.AppendElement(TransitionEventParams{ eTransitionStart,
+                                                   intervalStartTime,
+                                                   startTimeStamp });
         events.AppendElement(TransitionEventParams{ eTransitionEnd,
                                                    intervalEndTime,
                                                    endTimeStamp });
@@ -236,7 +255,14 @@ CSSTransition::QueueEvents()
 
     case TransitionPhase::Pending:
     case TransitionPhase::Before:
-      if (currentPhase == TransitionPhase::After) {
+      if (currentPhase == TransitionPhase::Active) {
+        events.AppendElement(TransitionEventParams{ eTransitionStart,
+                                                   intervalStartTime,
+                                                   startTimeStamp });
+      } else if (currentPhase == TransitionPhase::After) {
+        events.AppendElement(TransitionEventParams{ eTransitionStart,
+                                                   intervalStartTime,
+                                                   startTimeStamp });
         events.AppendElement(TransitionEventParams{ eTransitionEnd,
                                                    intervalEndTime,
                                                    endTimeStamp });
@@ -256,7 +282,14 @@ CSSTransition::QueueEvents()
       break;
 
     case TransitionPhase::After:
-      if (currentPhase == TransitionPhase::Before) {
+      if (currentPhase == TransitionPhase::Active) {
+        events.AppendElement(TransitionEventParams{ eTransitionStart,
+                                                   intervalEndTime,
+                                                   startTimeStamp });
+      } else if (currentPhase == TransitionPhase::Before) {
+        events.AppendElement(TransitionEventParams{ eTransitionStart,
+                                                   intervalEndTime,
+                                                   startTimeStamp });
         events.AppendElement(TransitionEventParams{ eTransitionEnd,
                                                    intervalStartTime,
                                                    endTimeStamp });
