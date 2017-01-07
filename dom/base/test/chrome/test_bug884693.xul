@@ -55,8 +55,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
     }
 
     SimpleTest.waitForExplicitFinish();
-    runTest(204, "No content", "", "", []).
-      then(() => { return runTest(204, "No content", INVALID_XML, "", []); }).
+    runTest(201, "Created", "", "", []).
+      then(() => { return runTest(201, "Created", INVALID_XML, INVALID_XML, []); }).
+      then(() => { return runTest(202, "Accepted", "", "", []); }).
+      then(() => { return runTest(202, "Accepted", INVALID_XML, INVALID_XML, []); }).
+      then(() => { return runTest(204, "No Content", "", "", []); }).
+      then(() => { return runTest(204, "No Content", INVALID_XML, "", []); }).
+      then(() => { return runTest(205, "Reset Content", "", "", []); }).
+      then(() => { return runTest(205, "Reset Content", INVALID_XML, "", []); }).
       then(() => { return runTest(304, "Not modified", "", "", []); }).
       then(() => { return runTest(304, "Not modified", INVALID_XML, "", []); }).
       then(() => { return runTest(200, "OK", "", "", ["no root element found"]); }).
