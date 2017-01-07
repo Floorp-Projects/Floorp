@@ -378,6 +378,28 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
             masm_.patchCall(callerOffset, *existingTrapFarJumps[cs.trap()]);
             break;
           }
+          case CallSiteDesc::EnterFrame:
+          case CallSiteDesc::LeaveFrame: {
+            Uint32Vector& jumps = metadata_->debugTrapFarJumpOffsets;
+            if (jumps.empty() ||
+                uint32_t(abs(int32_t(jumps.back()) - int32_t(callerOffset))) >= JumpRange())
+            {
+                Offsets offsets;
+                offsets.begin = masm_.currentOffset();
+                uint32_t jumpOffset = masm_.farJumpWithPatch().offset();
+                offsets.end = masm_.currentOffset();
+                if (masm_.oom())
+                    return false;
+
+                if (!metadata_->codeRanges.emplaceBack(CodeRange::FarJumpIsland, offsets))
+                    return false;
+                if (!debugTrapFarJumps_.emplaceBack(jumpOffset))
+                    return false;
+                if (!jumps.emplaceBack(offsets.begin))
+                    return false;
+            }
+            break;
+          }
         }
     }
 
@@ -385,7 +407,7 @@ ModuleGenerator::patchCallSites(TrapExitOffsetArray* maybeTrapExits)
 }
 
 bool
-ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits)
+ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits, const Offsets& debugTrapStub)
 {
     for (CallThunk& callThunk : metadata_->callThunks) {
         uint32_t funcIndex = callThunk.u.funcIndex;
@@ -396,6 +418,9 @@ ModuleGenerator::patchFarJumps(const TrapExitOffsetArray& trapExits)
 
     for (const TrapFarJump& farJump : masm_.trapFarJumps())
         masm_.patchFarJump(farJump.jump, trapExits[farJump.trap].begin);
+
+    for (uint32_t debugTrapFarJump : debugTrapFarJumps_)
+        masm_.patchFarJump(CodeOffset(debugTrapFarJump), debugTrapStub.begin);
 
     return true;
 }
@@ -512,6 +537,7 @@ ModuleGenerator::finishCodegen()
     Offsets unalignedAccessExit;
     Offsets interruptExit;
     Offsets throwStub;
+    Offsets debugTrapStub;
 
     {
         TempAllocator alloc(&lifo_);
@@ -539,6 +565,7 @@ ModuleGenerator::finishCodegen()
         unalignedAccessExit = GenerateUnalignedExit(masm, &throwLabel);
         interruptExit = GenerateInterruptExit(masm, &throwLabel);
         throwStub = GenerateThrowStub(masm, &throwLabel);
+        debugTrapStub = GenerateDebugTrapStub(masm, &throwLabel);
 
         if (masm.oom() || !masm_.asmMergeWith(masm))
             return false;
@@ -588,6 +615,10 @@ ModuleGenerator::finishCodegen()
     if (!metadata_->codeRanges.emplaceBack(CodeRange::Inline, throwStub))
         return false;
 
+    debugTrapStub.offsetBy(offsetInWhole);
+    if (!metadata_->codeRanges.emplaceBack(CodeRange::DebugTrap, debugTrapStub))
+        return false;
+
     // Fill in LinkData with the offsets of these stubs.
 
     linkData_.outOfBoundsOffset = outOfBoundsExit.begin;
@@ -600,7 +631,7 @@ ModuleGenerator::finishCodegen()
     if (!patchCallSites(&trapExits))
         return false;
 
-    if (!patchFarJumps(trapExits))
+    if (!patchFarJumps(trapExits, debugTrapStub))
         return false;
 
     // Code-generation is complete!
@@ -1151,6 +1182,7 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
     metadata_->callThunks.podResizeToFit();
+    metadata_->debugTrapFarJumpOffsets.podResizeToFit();
 
     // For asm.js, the tables vector is over-allocated (to avoid resize during
     // parallel copilation). Shrink it back down to fit.
@@ -1165,6 +1197,15 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     for (const CodeRange& codeRange : metadata_->codeRanges) {
         MOZ_ASSERT(codeRange.begin() >= lastEnd);
         lastEnd = codeRange.end();
+    }
+#endif
+
+    // Assert debugTrapFarJumpOffsets are sorted.
+#ifdef DEBUG
+    uint32_t lastOffset = 0;
+    for (uint32_t debugTrapFarJumpOffset : metadata_->debugTrapFarJumpOffsets) {
+        MOZ_ASSERT(debugTrapFarJumpOffset >= lastOffset);
+        lastOffset = debugTrapFarJumpOffset;
     }
 #endif
 
