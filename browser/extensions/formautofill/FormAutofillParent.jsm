@@ -112,10 +112,8 @@ FormAutofillParent.prototype = {
    */
   _onStatusChanged() {
     if (this._enabled) {
-      Services.ppmm.addMessageListener("FormAutofill:PopulateFieldValues", this);
       Services.ppmm.addMessageListener("FormAutofill:GetProfiles", this);
     } else {
-      Services.ppmm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
       Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     }
 
@@ -141,9 +139,6 @@ FormAutofillParent.prototype = {
    */
   receiveMessage({name, data, target}) {
     switch (name) {
-      case "FormAutofill:PopulateFieldValues":
-        this._populateFieldValues(data, target);
-        break;
       case "FormAutofill:GetProfiles":
         this._getProfiles(data, target);
         break;
@@ -176,28 +171,9 @@ FormAutofillParent.prototype = {
       this._profileStore = null;
     }
 
-    Services.ppmm.removeMessageListener("FormAutofill:PopulateFieldValues", this);
     Services.ppmm.removeMessageListener("FormAutofill:GetProfiles", this);
     Services.obs.removeObserver(this, "advanced-pane-loaded");
     Services.prefs.removeObserver(ENABLED_PREF, this);
-  },
-
-  /**
-   * Populates the field values and notifies content to fill in. Exception will
-   * be thrown if there's no matching profile.
-   *
-   * @private
-   * @param  {string} data.guid
-   *         Indicates which profile to populate
-   * @param  {Fields} data.fields
-   *         The "fields" array collected from content.
-   * @param  {nsIFrameMessageManager} target
-   *         Content's message manager.
-   */
-  _populateFieldValues({guid, fields}, target) {
-    this._profileStore.notifyUsed(guid);
-    this._fillInFields(this._profileStore.get(guid), fields);
-    target.sendAsyncMessage("FormAutofill:fillForm", {fields});
   },
 
   /**
@@ -221,42 +197,6 @@ FormAutofillParent.prototype = {
     }
 
     target.sendAsyncMessage("FormAutofill:Profiles", profiles);
-  },
-
-  /**
-   * Get the corresponding value from the specified profile according to a valid
-   * @autocomplete field name.
-   *
-   * Note that the field name doesn't need to match the property name defined in
-   * Profile object. This method can transform the raw data to fulfill it. (e.g.
-   * inputting "country-name" as "fieldName" will get a full name transformed
-   * from the country code that is recorded in "country" field.)
-   *
-   * @private
-   * @param   {Profile} profile   The specified profile.
-   * @param   {string}  fieldName A valid @autocomplete field name.
-   * @returns {string}  The corresponding value. Returns "undefined" if there's
-   *                    no matching field.
-   */
-  _getDataByFieldName(profile, fieldName) {
-    // TODO: Transform the raw profile data to fulfill "fieldName" here.
-    return profile[fieldName];
-  },
-
-  /**
-   * Fills in the "fields" array by the specified profile.
-   *
-   * @private
-   * @param   {Profile} profile The specified profile to fill in.
-   * @param   {Fields}  fields  The "fields" array collected from content.
-   */
-  _fillInFields(profile, fields) {
-    for (let field of fields) {
-      let value = this._getDataByFieldName(profile, field.fieldName);
-      if (value !== undefined) {
-        field.value = value;
-      }
-    }
   },
 };
 

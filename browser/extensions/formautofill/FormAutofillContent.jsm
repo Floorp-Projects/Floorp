@@ -87,19 +87,24 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * @param {Object} listener the listener to notify when the search is complete
    */
   startSearch(searchString, searchParam, previousResult, listener) {
+    let focusedInput = formFillController.focusedInput;
     this.forceStop = false;
-    let info = this.getInputDetails();
+    let info = this._serializeInfo(FormAutofillContent.getInputDetails(focusedInput));
 
-    this.getProfiles({info, searchString}).then((profiles) => {
+    this._getProfiles({info, searchString}).then((profiles) => {
       if (this.forceStop) {
         return;
       }
 
-      // TODO: Set formInfo for ProfileAutoCompleteResult
-      // let formInfo = this.getFormDetails();
-      let result = new ProfileAutoCompleteResult(searchString, info, profiles, {});
+      let allFieldNames = FormAutofillContent.getAllFieldNames(focusedInput);
+      let result = new ProfileAutoCompleteResult(searchString,
+                                                 info.fieldName,
+                                                 allFieldNames,
+                                                 profiles,
+                                                 {});
 
       listener.onSearchResult(this, result);
+      ProfileAutocomplete.setProfileAutoCompleteResult(result);
     });
   },
 
@@ -107,6 +112,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * Stops an asynchronous search that is in progress
    */
   stopSearch() {
+    ProfileAutocomplete.setProfileAutoCompleteResult(null);
     this.forceStop = true;
   },
 
@@ -123,7 +129,7 @@ AutofillProfileAutoCompleteSearch.prototype = {
    * @returns {Promise}
    *          Promise that resolves when profiles returned from parent process.
    */
-  getProfiles(data) {
+  _getProfiles(data) {
     return new Promise((resolve) => {
       Services.cpmm.addMessageListener("FormAutofill:Profiles", function getResult(result) {
         Services.cpmm.removeMessageListener("FormAutofill:Profiles", getResult);
@@ -134,33 +140,19 @@ AutofillProfileAutoCompleteSearch.prototype = {
     });
   },
 
-
-  /**
-   * Get the input's information from FormAutofillContent's cache.
-   *
-   * @returns {Object}
-   *          Target input's information that cached in FormAutofillContent.
-   */
-  getInputDetails() {
-    // TODO: Maybe we'll need to wait for cache ready if detail is empty.
-    return FormAutofillContent.getInputDetails(formFillController.focusedInput);
-  },
-
-  /**
-   * Get the form's information from FormAutofillContent's cache.
-   *
-   * @returns {Array<Object>}
-   *          Array of the inputs' information for the target form.
-   */
-  getFormDetails() {
-    // TODO: Maybe we'll need to wait for cache ready if details is empty.
-    return FormAutofillContent.getFormDetails(formFillController.focusedInput);
+  _serializeInfo(detail) {
+    let info = Object.assign({}, detail);
+    delete info.element;
+    return info;
   },
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([AutofillProfileAutoCompleteSearch]);
 
 let ProfileAutocomplete = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver]),
+
+  _lastAutoCompleteResult: null,
   _registered: false,
   _factory: null,
 
@@ -172,6 +164,8 @@ let ProfileAutocomplete = {
     this._factory = new AutocompleteFactory();
     this._factory.register(AutofillProfileAutoCompleteSearch);
     this._registered = true;
+
+    Services.obs.addObserver(this, "autocomplete-will-enter-text", false);
   },
 
   ensureUnregistered() {
@@ -182,6 +176,70 @@ let ProfileAutocomplete = {
     this._factory.unregister();
     this._factory = null;
     this._registered = false;
+    this._lastAutoCompleteResult = null;
+
+    Services.obs.removeObserver(this, "autocomplete-will-enter-text");
+  },
+
+  setProfileAutoCompleteResult(result) {
+    this._lastAutoCompleteResult = result;
+  },
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "autocomplete-will-enter-text": {
+        if (!formFillController.focusedInput) {
+          // The observer notification is for autocomplete in a different process.
+          break;
+        }
+        this._fillFromAutocompleteRow(formFillController.focusedInput);
+        break;
+      }
+    }
+  },
+
+  _frameMMFromWindow(contentWindow) {
+    return contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIDocShell)
+                        .QueryInterface(Ci.nsIInterfaceRequestor)
+                        .getInterface(Ci.nsIContentFrameMessageManager);
+  },
+
+  _fillFromAutocompleteRow(focusedInput) {
+    let formDetails = FormAutofillContent.getFormDetails(focusedInput);
+    if (!formDetails) {
+      // The observer notification is for a different frame.
+      return;
+    }
+
+    let mm = this._frameMMFromWindow(focusedInput.ownerGlobal);
+    let selectedIndexResult = mm.sendSyncMessage("FormAutoComplete:GetSelectedIndex", {});
+    if (selectedIndexResult.length != 1 || !Number.isInteger(selectedIndexResult[0])) {
+      throw new Error("Invalid autocomplete selectedIndex");
+    }
+    let selectedIndex = selectedIndexResult[0];
+
+    if (selectedIndex == -1 ||
+        !this._lastAutoCompleteResult ||
+        this._lastAutoCompleteResult.getStyleAt(selectedIndex) != "autofill-profile") {
+      return;
+    }
+
+    let profile = JSON.parse(this._lastAutoCompleteResult.getCommentAt(selectedIndex));
+
+    // TODO: FormAutofillHandler.autofillFormFields will be used for filling
+    // fields logic eventually.
+    for (let inputInfo of formDetails) {
+      // Skip filling the value of focused input which is filled in
+      // FormFillController.
+      if (inputInfo.element === focusedInput) {
+        continue;
+      }
+      let value = profile[inputInfo.fieldName];
+      if (value) {
+        inputInfo.element.setUserInput(value);
+      }
+    }
   },
 };
 
@@ -218,7 +276,7 @@ var FormAutofillContent = {
     for (let formDetails of this._formsDetails) {
       for (let detail of formDetails) {
         if (element == detail.element) {
-          return this._serializeInfo(detail);
+          return detail;
         }
       }
     }
@@ -237,24 +295,15 @@ var FormAutofillContent = {
   getFormDetails(element) {
     for (let formDetails of this._formsDetails) {
       if (formDetails.some((detail) => detail.element == element)) {
-        return formDetails.map((detail) => this._serializeInfo(detail));
+        return formDetails;
       }
     }
     return null;
   },
 
-  /**
-   * Create a clone the information object without element reference.
-   *
-   * @param {Object} detail Profile autofill information for specific input.
-   * @returns {Object}
-   *          Return a copy of cached information object without element reference
-   *          since it's not needed for creating result.
-   */
-  _serializeInfo(detail) {
-    let info = Object.assign({}, detail);
-    delete info.element;
-    return info;
+  getAllFieldNames(element) {
+    let formDetails = this.getFormDetails(element);
+    return formDetails.map(record => record.fieldName);
   },
 
   _identifyAutofillFields(doc) {
