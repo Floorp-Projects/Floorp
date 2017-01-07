@@ -122,8 +122,8 @@ public:
     , mPromise(aPromise)
   {
     MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
-    MOZ_ASSERT(mCache);
-    MOZ_ASSERT(mPromise);
+    MOZ_DIAGNOSTIC_ASSERT(mCache);
+    MOZ_DIAGNOSTIC_ASSERT(mPromise);
   }
 
   virtual void
@@ -198,7 +198,7 @@ public:
       responseList.AppendElement(Move(response));
     }
 
-    MOZ_ASSERT(mRequestList.Length() == responseList.Length());
+    MOZ_DIAGNOSTIC_ASSERT(mRequestList.Length() == responseList.Length());
 
     // Now store the unwrapped Response list in the Cache.
     ErrorResult result;
@@ -257,8 +257,8 @@ Cache::Cache(nsIGlobalObject* aGlobal, CacheChild* aActor)
   : mGlobal(aGlobal)
   , mActor(aActor)
 {
-  MOZ_ASSERT(mGlobal);
-  MOZ_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
   mActor->SetListener(this);
 }
 
@@ -339,7 +339,7 @@ Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
   }
 
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
-  MOZ_ASSERT(!global.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
   nsTArray<RefPtr<Request>> requestList(1);
   RefPtr<Request> request = Request::Constructor(global, aRequest,
@@ -371,7 +371,7 @@ Cache::AddAll(JSContext* aContext,
   CacheChild::AutoLock actorLock(mActor);
 
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
-  MOZ_ASSERT(!global.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
   nsTArray<RefPtr<Request>> requestList(aRequestList.Length());
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
@@ -541,8 +541,8 @@ Cache::WrapObject(JSContext* aContext, JS::Handle<JSObject*> aGivenProto)
 void
 Cache::DestroyInternal(CacheChild* aActor)
 {
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mActor == aActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
   mActor->ClearListener();
   mActor = nullptr;
 }
@@ -565,7 +565,7 @@ PBackgroundChild*
 Cache::GetIPCManager()
 {
   NS_ASSERT_OWNINGTHREAD(Cache);
-  MOZ_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
   return mActor->Manager();
 }
 
@@ -576,14 +576,14 @@ Cache::~Cache()
     mActor->StartDestroyFromListener();
     // DestroyInternal() is called synchronously by StartDestroyFromListener().
     // So we should have already cleared the mActor.
-    MOZ_ASSERT(!mActor);
+    MOZ_DIAGNOSTIC_ASSERT(!mActor);
   }
 }
 
 already_AddRefed<Promise>
 Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
 
   RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(!promise)) {
@@ -598,7 +598,7 @@ already_AddRefed<Promise>
 Cache::AddAll(const GlobalObject& aGlobal,
               nsTArray<RefPtr<Request>>&& aRequestList, ErrorResult& aRv)
 {
-  MOZ_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
 
   // If there is no work to do, then resolve immediately
   if (aRequestList.IsEmpty()) {
@@ -653,7 +653,7 @@ Cache::PutAll(const nsTArray<RefPtr<Request>>& aRequestList,
               const nsTArray<RefPtr<Response>>& aResponseList,
               ErrorResult& aRv)
 {
-  MOZ_ASSERT(aRequestList.Length() == aResponseList.Length());
+  MOZ_DIAGNOSTIC_ASSERT(aRequestList.Length() == aResponseList.Length());
 
   if (NS_WARN_IF(!mActor)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

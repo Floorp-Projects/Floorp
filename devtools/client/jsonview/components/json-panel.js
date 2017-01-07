@@ -59,8 +59,8 @@ define(function (require, exports, module) {
         return true;
       }
 
-      let json = JSON.stringify(object).toLowerCase();
-      return json.indexOf(this.props.searchFilter.toLowerCase()) >= 0;
+      let json = object.name + JSON.stringify(object.value);
+      return json.toLowerCase().indexOf(this.props.searchFilter.toLowerCase()) >= 0;
     },
 
     getExpandedNodes: function (object, path = "", level = 0) {

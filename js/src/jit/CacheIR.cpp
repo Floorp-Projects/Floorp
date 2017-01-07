@@ -53,8 +53,33 @@ EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderOp, NativeObject* h
     }
 }
 
+// DOM proxies
+// -----------
+//
+// DOM proxies are proxies that are used to implement various DOM objects like
+// HTMLDocument and NodeList. DOM proxies may have an expando object - a native
+// object that stores extra properties added to the object. The following
+// CacheIR instructions are only used with DOM proxies:
+//
+// * LoadDOMExpandoValue: returns the Value in the proxy's expando slot. This
+//   returns either an UndefinedValue (no expando), ObjectValue (the expando
+//   object), or PrivateValue(ExpandoAndGeneration*).
+//
+// * LoadDOMExpandoValueGuardGeneration: guards the Value in the proxy's expando
+//   slot is the same PrivateValue(ExpandoAndGeneration*), then guards on its
+//   generation, then returns expandoAndGeneration->expando. This Value is
+//   either an UndefinedValue or ObjectValue.
+//
+// * LoadDOMExpandoValueIgnoreGeneration: assumes the Value in the proxy's
+//   expando slot is a PrivateValue(ExpandoAndGeneration*), unboxes it, and
+//   returns the expandoAndGeneration->expando Value.
+//
+// * GuardDOMExpandoMissingOrGuardShape: takes an expando Value as input, then
+//   guards it's either UndefinedValue or an object with the expected shape.
+
 enum class ProxyStubType {
     None,
+    DOMExpando,
     DOMShadowed,
     DOMUnshadowed,
     Generic
@@ -75,8 +100,11 @@ GetProxyStubType(JSContext* cx, HandleObject obj, HandleId id)
         return ProxyStubType::None;
     }
 
-    if (DOMProxyIsShadowing(shadows))
+    if (DOMProxyIsShadowing(shadows)) {
+        if (shadows == ShadowsViaDirectExpando || shadows == ShadowsViaIndirectExpando)
+            return ProxyStubType::DOMExpando;
         return ProxyStubType::DOMShadowed;
+    }
 
     MOZ_ASSERT(shadows == DoesntShadow || shadows == DoesntShadowUnique);
     return ProxyStubType::DOMUnshadowed;
@@ -537,6 +565,66 @@ GetPropIRGenerator::tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, 
 }
 
 bool
+GetPropIRGenerator::tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId, HandleId id)
+{
+    MOZ_ASSERT(IsCacheableDOMProxy(obj));
+
+    RootedValue expandoVal(cx_, GetProxyExtra(obj, GetDOMProxyExpandoSlot()));
+    RootedObject expandoObj(cx_);
+    ExpandoAndGeneration* expandoAndGeneration = nullptr;
+    if (expandoVal.isObject()) {
+        expandoObj = &expandoVal.toObject();
+    } else {
+        MOZ_ASSERT(!expandoVal.isUndefined(),
+                   "How did a missing expando manage to shadow things?");
+        expandoAndGeneration = static_cast<ExpandoAndGeneration*>(expandoVal.toPrivate());
+        MOZ_ASSERT(expandoAndGeneration);
+        expandoObj = &expandoAndGeneration->expando.toObject();
+    }
+
+    // Try to do the lookup on the expando object.
+    RootedNativeObject holder(cx_);
+    RootedShape propShape(cx_);
+    NativeGetPropCacheability canCache =
+        CanAttachNativeGetProp(cx_, expandoObj, id, &holder, &propShape, pc_, engine_,
+                               canAttachGetter_, isTemporarilyUnoptimizable_);
+    if (canCache != CanAttachReadSlot && canCache != CanAttachCallGetter)
+        return false;
+    if (!holder)
+        return false;
+
+    MOZ_ASSERT(holder == expandoObj);
+
+    maybeEmitIdGuard(id);
+    writer.guardShape(objId, obj->maybeShape());
+
+    // Shape determines Class, so now it must be a DOM proxy.
+    ValOperandId expandoValId;
+    if (expandoVal.isObject()) {
+        expandoValId = writer.loadDOMExpandoValue(objId);
+    } else {
+        MOZ_ASSERT(expandoAndGeneration);
+        expandoValId = writer.loadDOMExpandoValueIgnoreGeneration(objId);
+    }
+
+    // Guard the expando is an object and shape guard.
+    ObjOperandId expandoObjId = writer.guardIsObject(expandoValId);
+    writer.guardShape(expandoObjId, expandoObj->as<NativeObject>().shape());
+
+    if (canCache == CanAttachReadSlot) {
+        // Load from the expando's slots.
+        EmitLoadSlotResult(writer, expandoObjId, &expandoObj->as<NativeObject>(), propShape);
+        writer.typeMonitorResult();
+    } else {
+        // Call the getter. Note that we pass objId, the DOM proxy, as |this|
+        // and not the expando object.
+        MOZ_ASSERT(canCache == CanAttachCallGetter);
+        EmitCallGetterResultNoGuards(writer, expandoObj, expandoObj, propShape, objId);
+    }
+    return true;
+}
+
+bool
 GetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id)
 {
     MOZ_ASSERT(IsCacheableDOMProxy(obj));
@@ -564,9 +652,8 @@ CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer, JSObject* obj, jsid id,
 
     ValOperandId expandoId;
     if (!expandoVal.isObject() && !expandoVal.isUndefined()) {
-        ExpandoAndGeneration* expandoAndGeneration = (ExpandoAndGeneration*)expandoVal.toPrivate();
-        expandoId = writer.guardDOMExpandoGeneration(objId, expandoAndGeneration,
-                                                     expandoAndGeneration->generation);
+        auto expandoAndGeneration = static_cast<ExpandoAndGeneration*>(expandoVal.toPrivate());
+        expandoId = writer.loadDOMExpandoValueGuardGeneration(objId, expandoAndGeneration);
         expandoVal = expandoAndGeneration->expando;
     } else {
         expandoId = writer.loadDOMExpandoValue(objId);
@@ -580,7 +667,7 @@ CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer, JSObject* obj, jsid id,
         // the shape matches the current expando object.
         NativeObject& expandoObj = expandoVal.toObject().as<NativeObject>();
         MOZ_ASSERT(!expandoObj.containsPure(id));
-        writer.guardDOMExpandoObject(expandoId, expandoObj.lastProperty());
+        writer.guardDOMExpandoMissingOrGuardShape(expandoId, expandoObj.lastProperty());
     } else {
         MOZ_CRASH("Invalid expando value");
     }
@@ -645,6 +732,14 @@ GetPropIRGenerator::tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleI
     switch (GetProxyStubType(cx_, obj, id)) {
       case ProxyStubType::None:
         return false;
+      case ProxyStubType::DOMExpando:
+        if (tryAttachDOMProxyExpando(obj, objId, id))
+            return true;
+        if (*isTemporarilyUnoptimizable_) {
+            // Scripted getter without JIT code. Just wait.
+            return false;
+        }
+        MOZ_FALLTHROUGH; // Fall through to the generic shadowed case.
       case ProxyStubType::DOMShadowed:
         return tryAttachDOMProxyShadowed(obj, objId, id);
       case ProxyStubType::DOMUnshadowed:

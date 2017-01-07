@@ -34,3 +34,6 @@ BROWSER_CHROME_MANIFESTS += [
   'tests/browser/browser.ini',
   'tests/browser/e10s/browser.ini'
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Disability Access APIs")

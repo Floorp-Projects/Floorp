@@ -389,6 +389,7 @@ class RemoteAutomation(Automation):
             while (top == self.procName):
                 # Get log updates on each interval, but if it is taking
                 # too long, only do it every 60 seconds
+                hasOutput = False
                 if (not slowLog) or (timer % 60 == 0):
                     startRead = datetime.datetime.now()
                     hasOutput = self.read_stdout()
@@ -405,7 +406,8 @@ class RemoteAutomation(Automation):
                 if (noOutputTimeout and noOutputTimer > noOutputTimeout):
                     status = 2
                     break
-                top = self.dm.getTopActivity()
+                if not hasOutput:
+                    top = self.dm.getTopActivity()
             # Flush anything added to stdout during the sleep
             self.read_stdout()
             return status

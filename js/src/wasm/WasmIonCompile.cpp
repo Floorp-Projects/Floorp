@@ -3655,14 +3655,22 @@ EmitExpr(FunctionCompiler& f)
 }
 
 bool
-wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit)
+wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* error)
 {
     MOZ_ASSERT(unit->mode() == CompileMode::Ion);
 
     const FuncBytes& func = unit->func();
     const ModuleEnvironment& env = task->env();
+    uint32_t bodySize = func.bytes().length();
 
-    Decoder d(func.bytes());
+    Decoder d(func.bytes(), error);
+
+    if (!env.isAsmJS()) {
+        if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
+          return false;
+
+        d.rollbackPosition(d.begin());
+    }
 
     // Build the local types vector.
 

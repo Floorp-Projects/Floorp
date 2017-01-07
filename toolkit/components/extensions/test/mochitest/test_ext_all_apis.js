@@ -65,6 +65,7 @@ let expectedBackgroundApis = [
   "extension.isAllowedFileSchemeAccess",
   "extension.isAllowedIncognitoAccess",
   // Note: extensionTypes is not visible in Chrome.
+  "extensionTypes.CSSOrigin",
   "extensionTypes.ImageFormat",
   "extensionTypes.RunAt",
   "management.ExtensionDisabledReason",

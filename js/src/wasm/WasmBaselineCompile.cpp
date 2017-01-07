@@ -7881,10 +7881,10 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 #endif
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_ARM)
-    if (fg->usesAtomics())
-        return false;
-
-    if (fg->usesSimd())
+    // AsmJS code may use SIMD or atomics, which Baseline doesn't currently
+    // handle. Since we haven't yet validated the function, we don't know
+    // whether it actually uses those features. Assume the worst.
+    if (fg->isAsmJS())
         return false;
 
     return true;
@@ -7894,13 +7894,19 @@ js::wasm::BaselineCanCompile(const FunctionGenerator* fg)
 }
 
 bool
-js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit)
+js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars *error)
 {
     MOZ_ASSERT(unit->mode() == CompileMode::Baseline);
 
     const FuncBytes& func = unit->func();
+    uint32_t bodySize = func.bytes().length();
 
-    Decoder d(func.bytes());
+    Decoder d(func.bytes(), error);
+
+    if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
+        return false;
+
+    d.rollbackPosition(d.begin());
 
     // Build the local types vector.
 

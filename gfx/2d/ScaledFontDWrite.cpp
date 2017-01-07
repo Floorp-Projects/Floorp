@@ -257,7 +257,8 @@ ScaledFontDWrite::GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton
   void *context;
   stream->ReadFileFragment(&fragmentStart, 0, fileSize, &context);
 
-  aDataCallback((uint8_t*)fragmentStart, fileSize, mFontFace->GetIndex(), mSize, aBaton);
+  aDataCallback((uint8_t*)fragmentStart, fileSize, mFontFace->GetIndex(), mSize,
+                0, nullptr, aBaton);
 
   stream->ReleaseFileFragment(context);
 

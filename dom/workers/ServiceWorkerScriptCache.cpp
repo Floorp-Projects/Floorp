@@ -313,6 +313,12 @@ public:
   }
 
   void
+  SaveLoadFlags(nsLoadFlags aLoadFlags)
+  {
+    mCallback->SaveLoadFlags(aLoadFlags);
+  }
+
+  void
   NetworkFinished(nsresult aStatus)
   {
     AssertIsOnMainThread();
@@ -626,9 +632,13 @@ CompareNetwork::Initialize(nsIPrincipal* aPrincipal, const nsAString& aURL, nsIL
   nsLoadFlags flags = nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     mManager->GetRegistration();
+  flags |= registration->GetLoadFlags();
   if (registration->IsLastUpdateCheckTimeOverOneDay()) {
     flags |= nsIRequest::LOAD_BYPASS_CACHE;
   }
+
+  // Save the load flags for propagating to ServiceWorkerInfo.
+  mManager->SaveLoadFlags(flags);
 
   // Note that because there is no "serviceworker" RequestContext type, we can
   // use the TYPE_INTERNAL_SCRIPT content policy types when loading a service

@@ -7,6 +7,8 @@
 #ifndef MOZ_THREAD_INFO_H
 #define MOZ_THREAD_INFO_H
 
+#include "mozilla/UniquePtrExtensions.h"
+
 #include "platform.h"
 
 class ThreadInfo {
@@ -15,16 +17,19 @@ class ThreadInfo {
 
   virtual ~ThreadInfo();
 
-  const char* Name() const { return mName; }
+  const char* Name() const { return mName.get(); }
   int ThreadId() const { return mThreadId; }
 
   bool IsMainThread() const { return mIsMainThread; }
   PseudoStack* Stack() const { return mPseudoStack; }
 
-  void SetProfile(ThreadProfile* aProfile) { mProfile = aProfile; }
-  ThreadProfile* Profile() const { return mProfile; }
+  void SetProfile(mozilla::UniquePtr<ThreadProfile> aProfile)
+  {
+    mProfile = mozilla::Move(aProfile);
+  }
+  ThreadProfile* Profile() const { return mProfile.get(); }
 
-  PlatformData* GetPlatformData() const { return mPlatformData; }
+  PlatformData* GetPlatformData() const { return mPlatformData.get(); }
   void* StackTop() const { return mStackTop; }
 
   virtual void SetPendingDelete();
@@ -41,12 +46,12 @@ class ThreadInfo {
   bool CanInvokeJS() const;
 
  private:
-  char* mName;
+  mozilla::UniqueFreePtr<char> mName;
   int mThreadId;
   const bool mIsMainThread;
   PseudoStack* mPseudoStack;
-  PlatformData* mPlatformData;
-  ThreadProfile* mProfile;
+  Sampler::UniquePlatformData mPlatformData;
+  mozilla::UniquePtr<ThreadProfile> mProfile;
   void* mStackTop;
 #ifndef SPS_STANDALONE
   nsCOMPtr<nsIThread> mThread;

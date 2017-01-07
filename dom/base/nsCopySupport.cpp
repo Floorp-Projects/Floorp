@@ -731,7 +731,7 @@ IsSelectionInsideRuby(nsISelection* aSelection)
   if (NS_FAILED(rv)) {
     return false;
   }
-  for (auto i : MakeRange(rangeCount)) {
+  for (auto i : IntegerRange(rangeCount)) {
     nsCOMPtr<nsIDOMRange> range;
     aSelection->GetRangeAt(i, getter_AddRefs(range));
     nsCOMPtr<nsIDOMNode> node;

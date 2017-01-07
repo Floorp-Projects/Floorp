@@ -3809,6 +3809,8 @@ nsDocumentViewer::Print(nsIPrintSettings*       aPrintSettings,
   }
 
   // Dispatch 'beforeprint' event and ensure 'afterprint' will be dispatched:
+  MOZ_ASSERT(!mAutoBeforeAndAfterPrint,
+             "We don't want to dispatch nested beforeprint/afterprint");
   nsAutoPtr<AutoPrintEventDispatcher> autoBeforeAndAfterPrint(
     new AutoPrintEventDispatcher(mDocument));
   NS_ENSURE_STATE(!GetIsPrinting());
@@ -3891,8 +3893,17 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
   NS_ENSURE_STATE(doc);
 
   // Dispatch 'beforeprint' event and ensure 'afterprint' will be dispatched:
-  nsAutoPtr<AutoPrintEventDispatcher> autoBeforeAndAfterPrint(
-    new AutoPrintEventDispatcher(doc));
+  // XXX Currently[1] when the user switches between portrait and landscape
+  // mode in print preview, we re-enter this function before
+  // mAutoBeforeAndAfterPrint (if set) is cleared to dispatch the 'afterprint'
+  // event.  To avoid sending multiple 'beforeprint'/'afterprint' events we
+  // must avoid creating a new AutoPrintEventDispatcher object here if we
+  // already have one saved in mAutoBeforeAndAfterPrint.
+  // [1] Until PDF.js is removed (though, maybe after that as well).
+  nsAutoPtr<AutoPrintEventDispatcher> autoBeforeAndAfterPrint;
+  if (!mAutoBeforeAndAfterPrint) {
+    autoBeforeAndAfterPrint = new AutoPrintEventDispatcher(doc);
+  }
   NS_ENSURE_STATE(!GetIsPrinting());
   // beforeprint event may have caused ContentViewer to be shutdown.
   NS_ENSURE_STATE(mContainer);
@@ -3916,7 +3927,8 @@ nsDocumentViewer::PrintPreview(nsIPrintSettings* aPrintSettings,
       return rv;
     }
   }
-  if (mPrintEngine->HasPrintCallbackCanvas()) {
+  if (autoBeforeAndAfterPrint &&
+      mPrintEngine->HasPrintCallbackCanvas()) {
     // Postpone the 'afterprint' event until after the mozPrintCallback
     // callbacks have been called:
     mAutoBeforeAndAfterPrint = autoBeforeAndAfterPrint;

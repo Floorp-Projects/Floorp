@@ -66,7 +66,7 @@ AutoChildOpArgs::AutoChildOpArgs(TypeUtils* aTypeUtils,
   , mOpArgs(aOpArgs)
   , mSent(false)
 {
-  MOZ_ASSERT(mTypeUtils);
+  MOZ_DIAGNOSTIC_ASSERT(mTypeUtils);
   MOZ_RELEASE_ASSERT(aEntryCount != 0);
   // We are using AutoIPCStream objects to cleanup target IPCStream
   // structures embedded in our CacheOpArgs.  These IPCStream structs
@@ -78,7 +78,7 @@ AutoChildOpArgs::AutoChildOpArgs(TypeUtils* aTypeUtils,
     CachePutAllArgs& args = mOpArgs.get_CachePutAllArgs();
     args.requestResponseList().SetCapacity(aEntryCount);
   } else {
-    MOZ_ASSERT(aEntryCount == 1);
+    MOZ_DIAGNOSTIC_ASSERT(aEntryCount == 1);
   }
 }
 
@@ -145,7 +145,7 @@ void
 AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
                      SchemeAction aSchemeAction, ErrorResult& aRv)
 {
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch(mOpArgs.type()) {
     case CacheOpArgs::TCacheMatchArgs:
@@ -158,7 +158,7 @@ AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
     case CacheOpArgs::TCacheMatchAllArgs:
     {
       CacheMatchAllArgs& args = mOpArgs.get_CacheMatchAllArgs();
-      MOZ_ASSERT(args.requestOrVoid().type() == CacheRequestOrVoid::Tvoid_t);
+      MOZ_DIAGNOSTIC_ASSERT(args.requestOrVoid().type() == CacheRequestOrVoid::Tvoid_t);
       args.requestOrVoid() = CacheRequest();
       mTypeUtils->ToCacheRequest(args.requestOrVoid().get_CacheRequest(),
                                  aRequest, aBodyAction, aSchemeAction,
@@ -175,7 +175,7 @@ AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
     case CacheOpArgs::TCacheKeysArgs:
     {
       CacheKeysArgs& args = mOpArgs.get_CacheKeysArgs();
-      MOZ_ASSERT(args.requestOrVoid().type() == CacheRequestOrVoid::Tvoid_t);
+      MOZ_DIAGNOSTIC_ASSERT(args.requestOrVoid().type() == CacheRequestOrVoid::Tvoid_t);
       args.requestOrVoid() = CacheRequest();
       mTypeUtils->ToCacheRequest(args.requestOrVoid().get_CacheRequest(),
                                   aRequest, aBodyAction, aSchemeAction,
@@ -200,7 +200,7 @@ bool
 MatchInPutList(InternalRequest* aRequest,
                const nsTArray<CacheRequestResponse>& aPutList)
 {
-  MOZ_ASSERT(aRequest);
+  MOZ_DIAGNOSTIC_ASSERT(aRequest);
 
   // This method implements the SW spec QueryCache algorithm against an
   // in memory array of Request/Response objects.  This essentially the
@@ -253,23 +253,23 @@ MatchInPutList(InternalRequest* aRequest,
     for (; token;
          token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
       nsDependentCString header(token);
-      MOZ_ASSERT(!header.EqualsLiteral("*"),
-                 "We should have already caught this in "
-                 "TypeUtils::ToPCacheResponseWithoutBody()");
+      MOZ_DIAGNOSTIC_ASSERT(!header.EqualsLiteral("*"),
+                            "We should have already caught this in "
+                            "TypeUtils::ToPCacheResponseWithoutBody()");
 
       ErrorResult headerRv;
       nsAutoCString value;
       requestHeaders->Get(header, value, headerRv);
       if (NS_WARN_IF(headerRv.Failed())) {
         headerRv.SuppressException();
-        MOZ_ASSERT(value.IsEmpty());
+        MOZ_DIAGNOSTIC_ASSERT(value.IsEmpty());
       }
 
       nsAutoCString cachedValue;
       cachedRequestHeaders->Get(header, cachedValue, headerRv);
       if (NS_WARN_IF(headerRv.Failed())) {
         headerRv.SuppressException();
-        MOZ_ASSERT(cachedValue.IsEmpty());
+        MOZ_DIAGNOSTIC_ASSERT(cachedValue.IsEmpty());
       }
 
       if (value != cachedValue) {
@@ -294,7 +294,7 @@ AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
                      SchemeAction aSchemeAction, Response& aResponse,
                      ErrorResult& aRv)
 {
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch(mOpArgs.type()) {
     case CacheOpArgs::TCachePutAllArgs:
@@ -350,7 +350,7 @@ AutoChildOpArgs::Add(InternalRequest* aRequest, BodyAction aBodyAction,
 const CacheOpArgs&
 AutoChildOpArgs::SendAsOpArgs()
 {
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
   mSent = true;
   for (UniquePtr<AutoIPCStream>& autoStream : mStreamCleanupList) {
     autoStream->TakeValue();
@@ -368,7 +368,7 @@ AutoParentOpResult::AutoParentOpResult(mozilla::ipc::PBackgroundParent* aManager
   , mStreamControl(nullptr)
   , mSent(false)
 {
-  MOZ_ASSERT(mManager);
+  MOZ_DIAGNOSTIC_ASSERT(mManager);
   MOZ_RELEASE_ASSERT(aEntryCount != 0);
   // We are using AutoIPCStream objects to cleanup target IPCStream
   // structures embedded in our CacheOpArgs.  These IPCStream structs
@@ -383,7 +383,7 @@ AutoParentOpResult::AutoParentOpResult(mozilla::ipc::PBackgroundParent* aManager
     CacheKeysResult& result = mOpResult.get_CacheKeysResult();
     result.requestList().SetCapacity(aEntryCount);
   } else {
-    MOZ_ASSERT(aEntryCount == 1);
+    MOZ_DIAGNOSTIC_ASSERT(aEntryCount == 1);
   }
 }
 
@@ -416,8 +416,8 @@ AutoParentOpResult::~AutoParentOpResult()
 void
 AutoParentOpResult::Add(CacheId aOpenedCacheId, Manager* aManager)
 {
-  MOZ_ASSERT(mOpResult.type() == CacheOpResult::TStorageOpenResult);
-  MOZ_ASSERT(mOpResult.get_StorageOpenResult().actorParent() == nullptr);
+  MOZ_DIAGNOSTIC_ASSERT(mOpResult.type() == CacheOpResult::TStorageOpenResult);
+  MOZ_DIAGNOSTIC_ASSERT(mOpResult.get_StorageOpenResult().actorParent() == nullptr);
   mOpResult.get_StorageOpenResult().actorParent() =
     mManager->SendPCacheConstructor(new CacheParent(aManager, aOpenedCacheId));
 }
@@ -426,13 +426,13 @@ void
 AutoParentOpResult::Add(const SavedResponse& aSavedResponse,
                         StreamList* aStreamList)
 {
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch (mOpResult.type()) {
     case CacheOpResult::TCacheMatchResult:
     {
       CacheMatchResult& result = mOpResult.get_CacheMatchResult();
-      MOZ_ASSERT(result.responseOrVoid().type() == CacheResponseOrVoid::Tvoid_t);
+      MOZ_DIAGNOSTIC_ASSERT(result.responseOrVoid().type() == CacheResponseOrVoid::Tvoid_t);
       result.responseOrVoid() = aSavedResponse.mValue;
       SerializeResponseBody(aSavedResponse, aStreamList,
                             &result.responseOrVoid().get_CacheResponse());
@@ -455,7 +455,7 @@ AutoParentOpResult::Add(const SavedResponse& aSavedResponse,
     case CacheOpResult::TStorageMatchResult:
     {
       StorageMatchResult& result = mOpResult.get_StorageMatchResult();
-      MOZ_ASSERT(result.responseOrVoid().type() == CacheResponseOrVoid::Tvoid_t);
+      MOZ_DIAGNOSTIC_ASSERT(result.responseOrVoid().type() == CacheResponseOrVoid::Tvoid_t);
       result.responseOrVoid() = aSavedResponse.mValue;
       SerializeResponseBody(aSavedResponse, aStreamList,
                             &result.responseOrVoid().get_CacheResponse());
@@ -470,7 +470,7 @@ void
 AutoParentOpResult::Add(const SavedRequest& aSavedRequest,
                         StreamList* aStreamList)
 {
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   switch (mOpResult.type()) {
     case CacheOpResult::TCacheKeysResult:
@@ -503,7 +503,7 @@ AutoParentOpResult::Add(const SavedRequest& aSavedRequest,
 const CacheOpResult&
 AutoParentOpResult::SendAsOpResult()
 {
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
   mSent = true;
   for (UniquePtr<AutoIPCStream>& autoStream : mStreamCleanupList) {
     autoStream->TakeValue();
@@ -516,7 +516,7 @@ AutoParentOpResult::SerializeResponseBody(const SavedResponse& aSavedResponse,
                                           StreamList* aStreamList,
                                           CacheResponse* aResponseOut)
 {
-  MOZ_ASSERT(aResponseOut);
+  MOZ_DIAGNOSTIC_ASSERT(aResponseOut);
 
   if (!aSavedResponse.mHasBodyId) {
     aResponseOut->body() = void_t();
@@ -532,12 +532,12 @@ void
 AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList,
                                         CacheReadStream* aReadStreamOut)
 {
-  MOZ_ASSERT(aStreamList);
-  MOZ_ASSERT(aReadStreamOut);
-  MOZ_ASSERT(!mSent);
+  MOZ_DIAGNOSTIC_ASSERT(aStreamList);
+  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
+  MOZ_DIAGNOSTIC_ASSERT(!mSent);
 
   nsCOMPtr<nsIInputStream> stream = aStreamList->Extract(aId);
-  MOZ_ASSERT(stream);
+  MOZ_DIAGNOSTIC_ASSERT(stream);
 
   if (!mStreamControl) {
     mStreamControl = static_cast<CacheStreamControlParent*>(
@@ -557,7 +557,7 @@ AutoParentOpResult::SerializeReadStream(const nsID& aId, StreamList* aStreamList
                                                      aId, stream);
   ErrorResult rv;
   readStream->Serialize(aReadStreamOut, mStreamCleanupList, rv);
-  MOZ_ASSERT(!rv.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!rv.Failed());
 }
 
 } // namespace cache

@@ -27,6 +27,8 @@ class ServiceWorkerRegistrationInfo final
 
   uint64_t mLastUpdateCheckTime;
 
+  nsLoadFlags mLoadFlags;
+
   RefPtr<ServiceWorkerInfo> mEvaluatingWorker;
   RefPtr<ServiceWorkerInfo> mActiveWorker;
   RefPtr<ServiceWorkerInfo> mWaitingWorker;
@@ -50,7 +52,8 @@ public:
   bool mPendingUninstall;
 
   ServiceWorkerRegistrationInfo(const nsACString& aScope,
-                                nsIPrincipal* aPrincipal);
+                                nsIPrincipal* aPrincipal,
+                                nsLoadFlags aLoadFlags);
 
   already_AddRefed<ServiceWorkerInfo>
   Newest() const
@@ -172,6 +175,12 @@ public:
   // Determine if the registration is actively performing work.
   bool
   IsIdle() const;
+
+  nsLoadFlags
+  GetLoadFlags() const;
+
+  void
+  SetLoadFlags(nsLoadFlags aLoadFlags);
 
 private:
   enum TransitionType {

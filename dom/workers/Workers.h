@@ -258,6 +258,7 @@ struct WorkerLoadInfo
   nsString mServiceWorkerCacheName;
 
   ChannelInfo mChannelInfo;
+  nsLoadFlags mLoadFlags;
 
   uint64_t mWindowID;
   uint64_t mServiceWorkerID;

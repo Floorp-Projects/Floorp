@@ -36,21 +36,16 @@ DecodeFunctionBody(Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
     if (!d.readVarU32(&bodySize))
         return d.fail("expected number of function body bytes");
 
-    if (d.bytesRemain() < bodySize)
-        return d.fail("function body length too big");
-
-    const uint8_t* bodyBegin = d.currentPosition();
     const size_t offsetInModule = d.currentOffset();
+
+    // Skip over the function body; we'll validate it later.
+    const uint8_t* bodyBegin;
+    if (!d.readBytes(bodySize, &bodyBegin))
+        return d.fail("function body length too big");
 
     FunctionGenerator fg;
     if (!mg.startFuncDef(offsetInModule, &fg))
         return false;
-
-    if (!ValidateFunctionBody(mg.env(), funcIndex, d))
-        return false;
-
-    if (d.currentPosition() != bodyBegin + bodySize)
-        return d.fail("function body length mismatch");
 
     if (!fg.bytes().resize(bodySize))
         return false;
@@ -117,7 +112,7 @@ wasm::Compile(const ShareableBytes& bytecode, const CompileArgs& args, UniqueCha
     if (!DecodeModuleEnvironment(d, env.get()))
         return nullptr;
 
-    ModuleGenerator mg;
+    ModuleGenerator mg(error);
     if (!mg.init(Move(env), args))
         return nullptr;
 

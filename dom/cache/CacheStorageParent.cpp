@@ -43,18 +43,18 @@ CacheStorageParent::CacheStorageParent(PBackgroundParent* aManagingActor,
   , mVerifiedStatus(NS_OK)
 {
   MOZ_COUNT_CTOR(cache::CacheStorageParent);
-  MOZ_ASSERT(aManagingActor);
+  MOZ_DIAGNOSTIC_ASSERT(aManagingActor);
 
   // Start the async principal verification process immediately.
   mVerifier = PrincipalVerifier::CreateAndDispatch(this, aManagingActor,
                                                    aPrincipalInfo);
-  MOZ_ASSERT(mVerifier);
+  MOZ_DIAGNOSTIC_ASSERT(mVerifier);
 }
 
 CacheStorageParent::~CacheStorageParent()
 {
   MOZ_COUNT_DTOR(cache::CacheStorageParent);
-  MOZ_ASSERT(!mVerifier);
+  MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 }
 
 void
@@ -95,7 +95,7 @@ CacheStorageParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
   auto actor = static_cast<CacheOpParent*>(aActor);
 
   if (mVerifier) {
-    MOZ_ASSERT(!mManagerId);
+    MOZ_DIAGNOSTIC_ASSERT(!mManagerId);
     actor->WaitForVerification(mVerifier);
     return IPC_OK();
   }
@@ -107,7 +107,7 @@ CacheStorageParent::RecvPCacheOpConstructor(PCacheOpParent* aActor,
     return IPC_OK();
   }
 
-  MOZ_ASSERT(mManagerId);
+  MOZ_DIAGNOSTIC_ASSERT(mManagerId);
   actor->Execute(mManagerId);
   return IPC_OK();
 }
@@ -125,9 +125,9 @@ CacheStorageParent::RecvTeardown()
 void
 CacheStorageParent::OnPrincipalVerified(nsresult aRv, ManagerId* aManagerId)
 {
-  MOZ_ASSERT(mVerifier);
-  MOZ_ASSERT(!mManagerId);
-  MOZ_ASSERT(NS_SUCCEEDED(mVerifiedStatus));
+  MOZ_DIAGNOSTIC_ASSERT(mVerifier);
+  MOZ_DIAGNOSTIC_ASSERT(!mManagerId);
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(mVerifiedStatus));
 
   if (NS_WARN_IF(NS_FAILED(aRv))) {
     mVerifiedStatus = aRv;

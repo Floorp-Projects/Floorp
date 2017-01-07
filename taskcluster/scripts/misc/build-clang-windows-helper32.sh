@@ -56,4 +56,4 @@ set -x
 # Put a tarball in the artifacts dir
 UPLOAD_PATH=public/build
 mkdir -p ${UPLOAD_PATH}
-cp clang.tar.* ${UPLOAD_PATH}
+cp clang*.tar.* ${UPLOAD_PATH}
