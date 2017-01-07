@@ -688,6 +688,7 @@ BaselineCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape()
     Label done;
     masm.branchTestUndefined(Assembler::Equal, val, &done);
 
+    masm.debugAssertIsObject(val);
     masm.loadPtr(shapeAddr, shapeScratch);
     masm.unboxObject(val, objScratch);
     masm.branchTestObjShape(Assembler::NotEqual, objScratch, shapeScratch, failure->label());
