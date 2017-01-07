@@ -180,8 +180,6 @@ DEFINES['NSS_ENABLE_ECC'] = 'True'
 for var in ('DLL_PREFIX', 'DLL_SUFFIX'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
-DEFINES['CERT_AddTempCertToPerm'] = '__CERT_AddTempCertToPerm'
-
 if not CONFIG['MOZ_SYSTEM_NSS']:
     USE_LIBS += [
         'crmf',
