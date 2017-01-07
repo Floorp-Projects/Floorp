@@ -170,7 +170,9 @@ VRManager::NotifyVsync(const TimeStamp& aVsyncTimestamp)
 
   for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
     VRManagerParent *vmp = iter.Get()->GetKey();
-    Unused << vmp->SendNotifyVSync();
+    if (mVRDisplays.Count()) {
+      Unused << vmp->SendNotifyVSync();
+    }
     bHaveEventListener |= vmp->HaveEventListener();
   }
 
