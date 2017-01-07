@@ -422,6 +422,8 @@ AbstractFramePtr::returnValue() const
 {
     if (isInterpreterFrame())
         return asInterpreterFrame()->returnValue();
+    if (isWasmDebugFrame())
+        return UndefinedHandleValue;
     return asBaselineFrame()->returnValue();
 }
 
@@ -434,6 +436,12 @@ AbstractFramePtr::setReturnValue(const Value& rval) const
     }
     if (isBaselineFrame()) {
         asBaselineFrame()->setReturnValue(rval);
+        return;
+    }
+    if (isWasmDebugFrame()) {
+        // TODO handle wasm function return value
+        // The function is called from Debugger::slowPathOnLeaveFrame --
+        // ignoring value for wasm.
         return;
     }
     asRematerializedFrame()->setReturnValue(rval);
@@ -889,6 +897,8 @@ AbstractFramePtr::newTarget() const
 inline bool
 AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const
 {
+    if (isWasmDebugFrame())
+        return false;
     return script()->isDerivedClassConstructor();
 }
 
