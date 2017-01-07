@@ -1053,12 +1053,6 @@ public:
 
   bool IsRootContentDocument() const;
 
-  bool HadNonBlankPaint() const {
-    return mHadNonBlankPaint;
-  }
-
-  void NotifyNonBlankPaint();
-
   bool IsGlyph() const {
     return mIsGlyph;
   }
@@ -1400,9 +1394,6 @@ protected:
 
   // Is there a pref update to process once we have a container?
   unsigned              mNeedsPrefUpdate : 1;
-
-  // Has NotifyNonBlankPaint been called on this PresContext?
-  unsigned              mHadNonBlankPaint : 1;
 
 #ifdef RESTYLE_LOGGING
   // Should we output debug information about restyling for this document?
