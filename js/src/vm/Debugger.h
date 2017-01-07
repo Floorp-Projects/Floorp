@@ -917,6 +917,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     bool observesFrame(AbstractFramePtr frame) const;
     bool observesFrame(const FrameIter& iter) const;
     bool observesScript(JSScript* script) const;
+    bool observesWasm(wasm::Instance* instance) const;
 
     /*
      * If env is nullptr, call vp->setNull() and return true. Otherwise, find
