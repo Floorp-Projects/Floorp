@@ -426,6 +426,17 @@ typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
 typedef Handle<ModuleEnvironmentObject*> HandleModuleEnvironmentObject;
 typedef MutableHandle<ModuleEnvironmentObject*> MutableHandleModuleEnvironmentObject;
 
+class WasmFunctionCallObject : public EnvironmentObject
+{
+  public:
+    static const Class class_;
+
+    static const uint32_t RESERVED_SLOTS = 1;
+
+    static WasmFunctionCallObject* createHollowForDebug(JSContext* cx,
+                                                        WasmFunctionScope* scope);
+};
+
 class LexicalEnvironmentObject : public EnvironmentObject
 {
     // Global and non-syntactic lexical environments need to store a 'this'
@@ -984,6 +995,7 @@ JSObject::is<js::EnvironmentObject>() const
     return is<js::CallObject>() ||
            is<js::VarEnvironmentObject>() ||
            is<js::ModuleEnvironmentObject>() ||
+           is<js::WasmFunctionCallObject>() ||
            is<js::LexicalEnvironmentObject>() ||
            is<js::WithEnvironmentObject>() ||
            is<js::NonSyntacticVariablesObject>() ||

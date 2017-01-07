@@ -628,6 +628,37 @@ ModuleEnvironmentObject::enumerate(JSContext* cx, HandleObject obj, AutoIdVector
 
 /*****************************************************************************/
 
+const Class WasmFunctionCallObject::class_ = {
+    "WasmCall",
+    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(WasmFunctionCallObject::RESERVED_SLOTS)
+};
+
+/* static */ WasmFunctionCallObject*
+WasmFunctionCallObject::createHollowForDebug(JSContext* cx, WasmFunctionScope* scope)
+{
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape shape(cx, scope->getEmptyEnvironmentShape(cx));
+    if (!shape)
+        return nullptr;
+
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
+    kind = gc::GetBackgroundAllocKind(kind);
+
+    JSObject* obj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, JSObject::create(cx, kind, gc::DefaultHeap, shape, group));
+
+    Rooted<WasmFunctionCallObject*> callobj(cx, &obj->as<WasmFunctionCallObject>());
+    callobj->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
+
+    return callobj;
+}
+
+/*****************************************************************************/
+
 WithEnvironmentObject*
 WithEnvironmentObject::create(JSContext* cx, HandleObject object, HandleObject enclosing,
                               Handle<WithScope*> scope)
@@ -2226,6 +2257,7 @@ DebugEnvironmentProxy::isForDeclarative() const
     return e.is<CallObject>() ||
            e.is<VarEnvironmentObject>() ||
            e.is<ModuleEnvironmentObject>() ||
+           e.is<WasmFunctionCallObject>() ||
            e.is<LexicalEnvironmentObject>();
 }
 
@@ -2854,6 +2886,7 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
     MOZ_ASSERT(!ei.hasSyntacticEnvironment() &&
                (ei.scope().is<FunctionScope>() ||
                 ei.scope().is<LexicalScope>() ||
+                ei.scope().is<WasmFunctionScope>() ||
                 ei.scope().is<VarScope>()));
 
     if (DebugEnvironmentProxy* debugEnv = DebugEnvironments::hasDebugEnvironment(cx, ei))
@@ -2896,6 +2929,13 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
             return nullptr;
 
         debugEnv = DebugEnvironmentProxy::create(cx, *env, enclosingDebug);
+    } else if (ei.scope().is<WasmFunctionScope>()) {
+        Rooted<WasmFunctionScope*> wasmFunctionScope(cx, &ei.scope().as<WasmFunctionScope>());
+        Rooted<WasmFunctionCallObject*> callobj(cx, WasmFunctionCallObject::createHollowForDebug(cx, wasmFunctionScope));
+        if (!callobj)
+            return nullptr;
+
+        debugEnv = DebugEnvironmentProxy::create(cx, *callobj, enclosingDebug);
     } else {
         Rooted<VarScope*> varScope(cx, &ei.scope().as<VarScope>());
         Rooted<VarEnvironmentObject*> env(cx,
@@ -2940,6 +2980,7 @@ GetDebugEnvironment(JSContext* cx, const EnvironmentIter& ei)
 
     if (ei.scope().is<FunctionScope>() ||
         ei.scope().is<LexicalScope>() ||
+        ei.scope().is<WasmFunctionScope>() ||
         ei.scope().is<VarScope>())
     {
         return GetDebugEnvironmentForMissing(cx, ei);

@@ -156,6 +156,10 @@ AssertScopeMatchesEnvironment(Scope* scope, JSObject* originalEnv)
                            si.scope()->as<ModuleScope>().script());
                 env = &env->as<ModuleEnvironmentObject>().enclosingEnvironment();
                 break;
+
+              case ScopeKind::WasmFunction:
+                env = &env->as<WasmFunctionCallObject>().enclosingEnvironment();
+                break;
             }
         }
     }
