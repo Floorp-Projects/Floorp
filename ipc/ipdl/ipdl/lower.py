@@ -4457,12 +4457,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                self.profilerLabel(md) ]
             + self.transition(md, actor)
             + [ Whitespace.NL,
-                StmtDecl(
-                    Decl(Type.BOOL, sendok.name),
-                    init=ExprCall(ExprSelect(self.protocol.callGetChannel(actor),
-                                             '->',
-                                             _sendPrefix(md.decl.type)),
-                                  args=[ msgexpr, ExprAddrOf(replyexpr) ]))
+                StmtDecl(Decl(Type.BOOL, sendok.name)),
+                StmtBlock([
+                    StmtDecl(Decl(Type('GeckoProfilerTracingRAII'),
+                                  'syncIPCTracer'),
+                             initargs=[ ExprLiteral.String("IPC"),
+                                        ExprLiteral.String(self.protocol.name + "::" + md.prettyMsgName()) ]),
+                    StmtExpr(ExprAssn(sendok,
+                                      ExprCall(ExprSelect(self.protocol.callGetChannel(actor),
+                                                          '->',
+                                                          _sendPrefix(md.decl.type)),
+                                               args=[ msgexpr, ExprAddrOf(replyexpr) ]))),
+                ])
             ])
         )
 
