@@ -18,6 +18,7 @@
 
 #include "wasm/WasmFrameIterator.h"
 
+#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmInstance.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -42,6 +43,13 @@ static uint8_t*
 CallerFPFromFP(void* fp)
 {
     return reinterpret_cast<Frame*>(fp)->callerFP;
+}
+
+static TlsData*
+TlsDataFromFP(void *fp)
+{
+    void* debugFrame = (uint8_t*)fp - DebugFrame::offsetOfFrame();
+    return reinterpret_cast<DebugFrame*>(debugFrame)->tlsData();
 }
 
 FrameIterator::FrameIterator()
@@ -206,6 +214,30 @@ FrameIterator::lineOrBytecode() const
     MOZ_ASSERT(!done());
     return callsite_ ? callsite_->lineOrBytecode()
                      : (codeRange_ ? codeRange_->funcLineOrBytecode() : 0);
+}
+
+Instance*
+FrameIterator::instance() const
+{
+    MOZ_ASSERT(!done() && debugEnabled());
+    return TlsDataFromFP(fp_ + callsite_->stackDepth())->instance;
+}
+
+bool
+FrameIterator::debugEnabled() const
+{
+    MOZ_ASSERT(!done() && code_);
+    MOZ_ASSERT_IF(!missingFrameMessage_, codeRange_->kind() == CodeRange::Function);
+    return code_->metadata().debugEnabled;
+}
+
+DebugFrame*
+FrameIterator::debugFrame() const
+{
+    MOZ_ASSERT(!done() && debugEnabled());
+    // The fp() points to wasm::Frame.
+    void* buf = static_cast<uint8_t*>(fp_ + callsite_->stackDepth()) - DebugFrame::offsetOfFrame();
+    return static_cast<DebugFrame*>(buf);
 }
 
 /*****************************************************************************/

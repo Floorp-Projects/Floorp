@@ -157,8 +157,8 @@ struct SavedFrame::Lookup {
         activation(activation)
     {
         MOZ_ASSERT(source);
-        MOZ_ASSERT_IF(framePtr.isSome(), pc);
         MOZ_ASSERT_IF(framePtr.isSome(), activation);
+        MOZ_ASSERT_IF(framePtr.isSome() && !activation->isWasm(), pc);
 
 #ifdef JS_MORE_DETERMINISTIC
         column = 0;
@@ -1324,7 +1324,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
             parentIsInCache = iter.hasCachedSavedFrame();
 
         auto principals = iter.compartment()->principals();
-        auto displayAtom = iter.isFunctionFrame() ? iter.functionDisplayAtom() : nullptr;
+        auto displayAtom = (iter.isWasm() || iter.isFunctionFrame()) ? iter.functionDisplayAtom() : nullptr;
         if (!stackChain->emplaceBack(location.source(),
                                      location.line(),
                                      location.column(),
