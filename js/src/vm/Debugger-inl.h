@@ -15,7 +15,7 @@
 js::Debugger::onLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc, bool ok)
 {
     MOZ_ASSERT_IF(frame.isInterpreterFrame(), frame.asInterpreterFrame() == cx->interpreterFrame());
-    MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
+    MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(), frame.isDebuggee());
     /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
     mozilla::DebugOnly<bool> evalTraps = frame.isEvalFrame() &&
                                          frame.script()->hasAnyBreakpointsOrStepMode();
@@ -44,7 +44,7 @@ js::Debugger::checkNoExecute(JSContext* cx, HandleScript script)
 /* static */ JSTrapStatus
 js::Debugger::onEnterFrame(JSContext* cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT_IF(frame.script()->isDebuggee(), frame.isDebuggee());
+    MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(), frame.isDebuggee());
     if (!frame.isDebuggee())
         return JSTRAP_CONTINUE;
     return slowPathOnEnterFrame(cx, frame);
@@ -74,7 +74,7 @@ js::Debugger::onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmI
 }
 
 inline bool
-js::Debugger::getScriptFrame(JSContext* cx, const ScriptFrameIter& iter,
+js::Debugger::getScriptFrame(JSContext* cx, const FrameIter& iter,
                              MutableHandle<DebuggerFrame*> result)
 {
     return getScriptFrameWithIter(cx, iter.abstractFramePtr(), &iter, result);

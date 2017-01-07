@@ -32,6 +32,7 @@
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmSignalHandlers.h"
 
+#include "vm/Debugger-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -115,13 +116,21 @@ WasmHandleDebugTrap()
         frame->setIsDebuggee();
         frame->observeFrame(cx);
         // TODO call onEnterFrame
-        return true;
+        JSTrapStatus status = Debugger::onEnterFrame(cx, frame);
+        if (status == JSTRAP_RETURN) {
+            // Ignoring forced return (JSTRAP_RETURN) -- changing code execution
+            // order is not yet implemented in the wasm baseline.
+            // TODO properly handle JSTRAP_RETURN and resume wasm execution.
+            JS_ReportErrorASCII(cx, "Unexpected resumption value from onEnterFrame");
+            return false;
+        }
+        return status == JSTRAP_CONTINUE;
     }
     if (site->kind() == CallSite::LeaveFrame) {
         DebugFrame* frame = iter.debugFrame();
-        // TODO call onLeaveFrame
+        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, true);
         frame->leaveFrame(cx);
-        return true;
+        return ok;
     }
     // TODO baseline debug traps
     MOZ_CRASH();
@@ -139,7 +148,22 @@ WasmHandleDebugThrow()
             continue;
 
         DebugFrame* frame = iter.debugFrame();
-        // TODO call onExceptionUnwind and onLeaveFrame
+
+        JSTrapStatus status = Debugger::onExceptionUnwind(cx, frame);
+        if (status == JSTRAP_RETURN) {
+            // Unexpected trap return -- raising error since throw recovery
+            // is not yet implemented in the wasm baseline.
+            // TODO properly handle JSTRAP_RETURN and resume wasm execution.
+            JS_ReportErrorASCII(cx, "Unexpected resumption value from onExceptionUnwind");
+        }
+
+        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, false);
+        if (ok) {
+            // Unexpected success from the handler onLeaveFrame -- raising error
+            // since throw recovery is not yet implemented in the wasm baseline.
+            // TODO properly handle success and resume wasm execution.
+            JS_ReportErrorASCII(cx, "Unexpected success from onLeaveFrame");
+        }
         frame->leaveFrame(cx);
      }
 }
