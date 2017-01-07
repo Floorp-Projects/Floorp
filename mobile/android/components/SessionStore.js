@@ -1631,44 +1631,24 @@ SessionStore.prototype = {
     }
 
     let window = Services.wm.getMostRecentWindow("navigator:browser");
-
     let tabs = state.windows[0].tabs;
-    let selected = state.windows[0].selected;
-    log("_restoreWindow() selected tab in aData is " + selected + " of " + tabs.length)
-    if (selected == null || selected > tabs.length) { // Clamp the selected index if it's bogus
-      log("_restoreWindow() resetting selected tab");
-      selected = 1;
-    }
-    log("restoreWindow() window.BrowserApp.selectedTab is " + window.BrowserApp.selectedTab.id);
 
     for (let i = 0; i < tabs.length; i++) {
       let tabData = tabs[i];
       let entry = tabData.entries[tabData.index - 1];
 
-      // Use stubbed tab if we've already created it; otherwise, make a new tab
-      let tab;
-      let parentId = tabData.parentId;
-      if (tabData.tabId == null) {
-        let params = {
-          selected: (selected == i+1),
-          delayLoad: true,
-          title: entry.title,
-          desktopMode: (tabData.desktopMode == true),
-          isPrivate: (tabData.isPrivate == true),
-          parentId: parentId
-        };
-        tab = window.BrowserApp.addTab(entry.url, params);
-      } else {
-        tab = window.BrowserApp.getTabForId(tabData.tabId);
+      // Get the stubbed tab
+      let tab = window.BrowserApp.getTabForId(tabData.tabId);
 
-        // Don't restore tab if user has closed it
-        if (tab == null) {
-          delete tabData.tabId;
-          continue;
-        }
-        if (parentId > -1) {
-          tab.setParentId(parentId);
-        }
+      // Don't restore tab if user has already closed it
+      if (tab == null) {
+        delete tabData.tabId;
+        continue;
+      }
+
+      let parentId = tabData.parentId;
+      if (parentId > -1) {
+        tab.setParentId(parentId);
       }
 
       tab.browser.__SS_data = tabData;
