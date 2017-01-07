@@ -35264,8 +35264,10 @@ var Debugger =
 	    var sourceTree = _state.sourceTree;
 	    var parentMap = _state.parentMap;
 	
+        const isEmpty = sourceTree.contents.length === 0;
 	
 	    var tree = ManagedTree({
+          key: isEmpty ? "empty" : "full",
 	      getParent: item => {
 	        return parentMap.get(item);
 	      },
@@ -37355,8 +37357,10 @@ var Debugger =
 	  displayName: "ManagedTree",
 	
 	  getInitialState() {
-	    return { expanded: new Set(),
-	      focusedItem: null };
+	    return {
+          expanded: new Set(),
+	      focusedItem: null
+        };
 	  },
 	
 	  setExpanded(item, isExpanded) {
