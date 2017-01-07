@@ -21,7 +21,7 @@ from mozboot.base import BaseBootstrapper
 HOMEBREW_BOOTSTRAP = 'https://raw.githubusercontent.com/Homebrew/install/master/install'
 XCODE_APP_STORE = 'macappstore://itunes.apple.com/app/id497799835?mt=12'
 XCODE_LEGACY = 'https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_3.2.6_and_ios_sdk_4.3__final/xcode_3.2.6_and_ios_sdk_4.3.dmg'
-HOMEBREW_AUTOCONF213 = 'https://raw.github.com/Homebrew/homebrew-versions/master/autoconf213.rb'
+HOMEBREW_AUTOCONF213 = 'https://raw.githubusercontent.com/Homebrew/homebrew-core/master/Formula/autoconf@2.13.rb'
 
 MACPORTS_URL = {'11': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.11-ElCapitan.pkg',
                 '10': 'https://distfiles.macports.org/MacPorts/MacPorts-2.3.4-10.10-Yosemite.pkg',
