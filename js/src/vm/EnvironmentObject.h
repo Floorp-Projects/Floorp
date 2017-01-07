@@ -672,6 +672,12 @@ class MOZ_RAII EnvironmentIter
     EnvironmentIter(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
+    // Constructing from an environment, scope and frame. The frame is given
+    // to initialize to proper enclosing environment/scope.
+    EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope, AbstractFramePtr frame
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+
     bool done() const {
         return si_.done();
     }
@@ -1119,6 +1125,10 @@ InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame);
 
 MOZ_MUST_USE bool
 PushVarEnvironmentObject(JSContext* cx, HandleScope scope, AbstractFramePtr frame);
+
+MOZ_MUST_USE bool
+GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                            MutableHandleObject env, MutableHandleScope scope);
 
 #ifdef DEBUG
 bool

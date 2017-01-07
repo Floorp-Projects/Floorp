@@ -33,6 +33,8 @@ namespace wasm {
 class CallSite;
 class Code;
 class CodeRange;
+class DebugFrame;
+class Instance;
 class SigIdDesc;
 struct CallThunk;
 struct FuncOffsets;
@@ -69,8 +71,10 @@ class FrameIterator
     bool mutedErrors() const;
     JSAtom* functionDisplayAtom() const;
     unsigned lineOrBytecode() const;
-    inline void* fp() const { return fp_; }
-    inline uint8_t* pc() const { return pc_; }
+    const CodeRange* codeRange() const { return codeRange_; }
+    Instance* instance() const;
+    bool debugEnabled() const;
+    DebugFrame* debugFrame() const;
 };
 
 // An ExitReason describes the possible reasons for leaving compiled wasm code
