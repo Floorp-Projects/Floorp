@@ -165,6 +165,7 @@ enum class CacheKind : uint8_t
     /* See CacheIR.cpp 'DOM proxies' comment. */ \
     _(LoadDOMExpandoValue)                \
     _(LoadDOMExpandoValueGuardGeneration) \
+    _(LoadDOMExpandoValueIgnoreGeneration)\
     _(GuardDOMExpandoMissingOrGuardShape) \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
@@ -528,13 +529,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         addStubField(uintptr_t(shape), StubField::Type::Shape);
     }
     ValOperandId loadDOMExpandoValueGuardGeneration(ObjOperandId obj,
-                                                    ExpandoAndGeneration* expandoAndGeneration,
-                                                    uint64_t generation)
+                                                    ExpandoAndGeneration* expandoAndGeneration)
     {
         ValOperandId res(nextOperandId_++);
         writeOpWithOperandId(CacheOp::LoadDOMExpandoValueGuardGeneration, obj);
         addStubField(uintptr_t(expandoAndGeneration), StubField::Type::RawWord);
-        addStubField(generation, StubField::Type::RawInt64);
+        addStubField(expandoAndGeneration->generation, StubField::Type::RawInt64);
+        writeOperandId(res);
+        return res;
+    }
+    ValOperandId loadDOMExpandoValueIgnoreGeneration(ObjOperandId obj) {
+        ValOperandId res(nextOperandId_++);
+        writeOpWithOperandId(CacheOp::LoadDOMExpandoValueIgnoreGeneration, obj);
         writeOperandId(res);
         return res;
     }
@@ -744,6 +750,7 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator
     bool tryAttachWindowProxy(HandleObject obj, ObjOperandId objId, HandleId id);
 
     bool tryAttachGenericProxy(HandleObject obj, ObjOperandId objId, HandleId id);
+    bool tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId, HandleId id);
     bool tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId, HandleId id);
     bool tryAttachDOMProxyUnshadowed(HandleObject obj, ObjOperandId objId, HandleId id);
     bool tryAttachProxy(HandleObject obj, ObjOperandId objId, HandleId id);
