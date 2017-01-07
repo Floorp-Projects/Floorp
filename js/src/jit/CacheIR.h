@@ -162,9 +162,10 @@ enum class CacheKind : uint8_t
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
                                           \
+    /* See CacheIR.cpp 'DOM proxies' comment. */ \
     _(LoadDOMExpandoValue)                \
-    _(GuardDOMExpandoObject)              \
-    _(GuardDOMExpandoGeneration)          \
+    _(LoadDOMExpandoValueGuardGeneration) \
+    _(GuardDOMExpandoMissingOrGuardShape) \
                                           \
     /* The *Result ops load a value into the cache's result register. */ \
     _(LoadFixedSlotResult)                \
@@ -522,16 +523,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter
         writeOperandId(res);
         return res;
     }
-    void guardDOMExpandoObject(ValOperandId expando, Shape* shape) {
-        writeOpWithOperandId(CacheOp::GuardDOMExpandoObject, expando);
+    void guardDOMExpandoMissingOrGuardShape(ValOperandId expando, Shape* shape) {
+        writeOpWithOperandId(CacheOp::GuardDOMExpandoMissingOrGuardShape, expando);
         addStubField(uintptr_t(shape), StubField::Type::Shape);
     }
-    ValOperandId guardDOMExpandoGeneration(ObjOperandId obj,
-                                           ExpandoAndGeneration* expandoAndGeneration,
-                                           uint64_t generation)
+    ValOperandId loadDOMExpandoValueGuardGeneration(ObjOperandId obj,
+                                                    ExpandoAndGeneration* expandoAndGeneration,
+                                                    uint64_t generation)
     {
         ValOperandId res(nextOperandId_++);
-        writeOpWithOperandId(CacheOp::GuardDOMExpandoGeneration, obj);
+        writeOpWithOperandId(CacheOp::LoadDOMExpandoValueGuardGeneration, obj);
         addStubField(uintptr_t(expandoAndGeneration), StubField::Type::RawWord);
         addStubField(generation, StubField::Type::RawInt64);
         writeOperandId(res);

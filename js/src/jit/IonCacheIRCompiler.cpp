@@ -868,7 +868,7 @@ IonCacheIRCompiler::emitLoadObject()
 }
 
 bool
-IonCacheIRCompiler::emitGuardDOMExpandoObject()
+IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape()
 {
     ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
     Shape* shape = shapeStubField(reader.stubOffset());
@@ -890,7 +890,7 @@ IonCacheIRCompiler::emitGuardDOMExpandoObject()
 }
 
 bool
-IonCacheIRCompiler::emitGuardDOMExpandoGeneration()
+IonCacheIRCompiler::emitLoadDOMExpandoValueGuardGeneration()
 {
     Register obj = allocator.useRegister(masm, reader.objOperandId());
     ExpandoAndGeneration* expandoAndGeneration =
