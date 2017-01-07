@@ -467,6 +467,9 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     CustomSectionVector   customSections;
     CacheableChars        filename;
 
+    // Debug-enabled code is not serialized.
+    bool                  debugEnabled;
+
     bool usesMemory() const { return UsesMemory(memoryUsage); }
     bool hasSharedMemory() const { return memoryUsage == MemoryUsage::Shared; }
 

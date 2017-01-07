@@ -46,6 +46,7 @@ static const uint32_t BAD_CODE_RANGE = UINT32_MAX;
 
 ModuleGenerator::ModuleGenerator(UniqueChars* error)
   : alwaysBaseline_(false),
+    debugEnabled_(false),
     error_(error),
     numSigs_(0),
     numTables_(0),
@@ -202,6 +203,7 @@ ModuleGenerator::init(UniqueModuleEnvironment env, const CompileArgs& args,
     linkData_.globalDataLength = AlignBytes(InitialGlobalDataBytes, sizeof(void*));
 
     alwaysBaseline_ = args.alwaysBaseline;
+    debugEnabled_ = args.debugEnabled;
 
     if (!funcToCodeRange_.appendN(BAD_CODE_RANGE, env_->funcSigs.length()))
         return false;
@@ -915,6 +917,8 @@ ModuleGenerator::launchBatchCompile()
 {
     MOZ_ASSERT(currentTask_);
 
+    currentTask_->setDebugEnabled(debugEnabled_);
+
     size_t numBatchedFuncs = currentTask_->units().length();
     MOZ_ASSERT(numBatchedFuncs);
 
@@ -945,9 +949,15 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
 
     func->setFunc(funcIndex, &funcSig(funcIndex));
 
-    auto mode = alwaysBaseline_ && BaselineCanCompile(fg)
-                ? CompileMode::Baseline
-                : CompileMode::Ion;
+    CompileMode mode;
+    if ((alwaysBaseline_ || debugEnabled_) && BaselineCanCompile(fg)) {
+      mode = CompileMode::Baseline;
+    } else {
+      mode = CompileMode::Ion;
+      // Ion does not support debugging -- reset debugEnabled_ flags to avoid
+      // turning debugging for wasm::Code.
+      debugEnabled_ = false;
+    }
 
     CheckedInt<uint32_t> newBatched = func->bytes().length();
     if (mode == CompileMode::Ion)
@@ -1146,6 +1156,8 @@ ModuleGenerator::finish(const ShareableBytes& bytecode)
     // parallel copilation). Shrink it back down to fit.
     if (isAsmJS() && !metadata_->tables.resize(numTables_))
         return nullptr;
+
+    metadata_->debugEnabled = debugEnabled_;
 
     // Assert CodeRanges are sorted.
 #ifdef DEBUG

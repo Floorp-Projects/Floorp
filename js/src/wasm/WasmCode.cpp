@@ -458,6 +458,7 @@ Metadata::serializedSize() const
 uint8_t*
 Metadata::serialize(uint8_t* cursor) const
 {
+    MOZ_ASSERT(!debugEnabled);
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializeVector(cursor, funcImports);
     cursor = SerializeVector(cursor, funcExports);
@@ -494,6 +495,7 @@ Metadata::deserialize(const uint8_t* cursor)
     (cursor = DeserializePodVector(cursor, &funcNames)) &&
     (cursor = DeserializePodVector(cursor, &customSections)) &&
     (cursor = filename.deserialize(cursor));
+    debugEnabled = false;
     return cursor;
 }
 
@@ -572,7 +574,9 @@ Code::Code(UniqueCodeSegment segment,
     metadata_(&metadata),
     maybeBytecode_(maybeBytecode),
     profilingEnabled_(false)
-{}
+{
+    MOZ_ASSERT_IF(metadata_->debugEnabled, maybeBytecode);
+}
 
 struct CallSiteRetAddrOffset
 {
