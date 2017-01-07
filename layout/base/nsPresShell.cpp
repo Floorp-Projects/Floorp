@@ -4899,7 +4899,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
 
   nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList, range);
 
-  info->mBuilder.LeavePresShell(ancestorFrame, &info->mList);
+  info->mBuilder.LeavePresShell(ancestorFrame);
 
 #ifdef DEBUG
   if (gDumpRangePaintList) {
@@ -6012,10 +6012,10 @@ PresShell::DoUpdateApproximateFrameVisibility(bool aRemoveOnly)
     }
   }
   builder.IgnorePaintSuppression();
-  builder.EnterPresShell(rootFrame);
+  builder.EnterPresShell(rootFrame, updateRect);
   nsDisplayList list;
   rootFrame->BuildDisplayListForStackingContext(&builder, updateRect, &list);
-  builder.LeavePresShell(rootFrame, &list);
+  builder.LeavePresShell(rootFrame, updateRect);
 
   RebuildApproximateFrameVisibilityDisplayList(list);
 
