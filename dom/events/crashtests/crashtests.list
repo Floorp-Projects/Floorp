@@ -5,7 +5,7 @@ load 422009-1.xhtml
 load 457776-1.html
 load 496308-1.html
 load 682637-1.html
-skip-if(stylo) load 938341.html # bug 1323649
+load 938341.html
 load 1033343.html
 load 1035654-1.html
 load 1035654-2.html
