@@ -419,8 +419,8 @@ private:
   mozilla::RefreshDriverTimer* ChooseTimer() const;
   mozilla::RefreshDriverTimer* mActiveTimer;
 
-  ProfilerBacktrace* mReflowCause;
-  ProfilerBacktrace* mStyleCause;
+  UniqueProfilerBacktrace mReflowCause;
+  UniqueProfilerBacktrace mStyleCause;
 
   // nsPresContext passed in constructor and unset in Disconnect.
   mozilla::WeakPtr<nsPresContext> mPresContext;

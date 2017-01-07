@@ -1354,25 +1354,6 @@ BaselineGetFunctionThis(JSContext* cx, BaselineFrame* frame, MutableHandleValue 
 }
 
 bool
-ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-{
-    RootedValue receiver(cx, ObjectValue(*proxy));
-    return Proxy::get(cx, proxy, receiver, id, vp);
-}
-
-bool
-ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal,
-                        MutableHandleValue vp)
-{
-    RootedId id(cx);
-    if (!ValueToId<CanGC>(cx, idVal, &id))
-        return false;
-
-    RootedValue receiver(cx, ObjectValue(*proxy));
-    return Proxy::get(cx, proxy, receiver, id, vp);
-}
-
-bool
 CallNativeGetter(JSContext* cx, HandleFunction callee, HandleObject obj,
                  MutableHandleValue result)
 {

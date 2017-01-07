@@ -365,9 +365,15 @@ class Sampler {
   int EntrySize() { return entrySize_; }
 
   // We can't new/delete the type safely without defining it
-  // (-Wdelete-incomplete). Use these Alloc/Free functions instead.
-  static PlatformData* AllocPlatformData(int aThreadId);
-  static void FreePlatformData(PlatformData*);
+  // (-Wdelete-incomplete).  Use these to hide the details from
+  // clients.
+  struct PlatformDataDestructor {
+    void operator()(PlatformData*);
+  };
+
+  typedef mozilla::UniquePtr<PlatformData, PlatformDataDestructor>
+    UniquePlatformData;
+  static UniquePlatformData AllocPlatformData(int aThreadId);
 
   // If we move the backtracing code into the platform files we won't
   // need to have these hacks

@@ -983,6 +983,12 @@ static const JSFunctionSpec collator_methods[] = {
     JS_FS_END
 };
 
+static const JSPropertySpec collator_properties[] = {
+    JS_SELF_HOSTED_GET("compare", "Intl_Collator_compare_get", 0),
+    JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY),
+    JS_PS_END
+};
+
 /**
  * 10.1.2 Intl.Collator([ locales [, options]])
  *
@@ -1103,24 +1109,13 @@ CreateCollatorPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     if (!JS_DefineFunctions(cx, ctor, collator_static_methods))
         return nullptr;
 
-    // 10.3.2 and 10.3.3
+    // 10.3.5
     if (!JS_DefineFunctions(cx, proto, collator_methods))
         return nullptr;
 
-    /*
-     * Install the getter for Collator.prototype.compare, which returns a bound
-     * comparison function for the specified Collator object (suitable for
-     * passing to methods like Array.prototype.sort).
-     */
-    RootedValue getter(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().CollatorCompareGet, &getter))
+    // 10.3.2 and 10.3.3
+    if (!JS_DefineProperties(cx, proto, collator_properties))
         return nullptr;
-    if (!DefineProperty(cx, proto, cx->names().compare, UndefinedHandleValue,
-                        JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
-                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
-    {
-        return nullptr;
-    }
 
     RootedValue options(cx);
     if (!CreateDefaultOptions(cx, &options))
@@ -1488,6 +1483,12 @@ static const JSFunctionSpec numberFormat_methods[] = {
     JS_FS_END
 };
 
+static const JSPropertySpec numberFormat_properties[] = {
+    JS_SELF_HOSTED_GET("format", "Intl_NumberFormat_format_get", 0),
+    JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY),
+    JS_PS_END
+};
+
 /**
  * 11.2.1 Intl.NumberFormat([ locales [, options]])
  *
@@ -1606,31 +1607,17 @@ CreateNumberFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObjec
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
-    // 11.2.2
+    // 11.3.2
     if (!JS_DefineFunctions(cx, ctor, numberFormat_static_methods))
         return nullptr;
 
-    // 11.3.2 and 11.3.3
+    // 11.4.4
     if (!JS_DefineFunctions(cx, proto, numberFormat_methods))
         return nullptr;
 
-    /*
-     * Install the getter for NumberFormat.prototype.format, which returns a
-     * bound formatting function for the specified NumberFormat object (suitable
-     * for passing to methods like Array.prototype.map).
-     */
-    RootedValue getter(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().NumberFormatFormatGet,
-                                         &getter))
-    {
+    // 11.4.2 and 11.4.3
+    if (!JS_DefineProperties(cx, proto, numberFormat_properties))
         return nullptr;
-    }
-    if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                        JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
-                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
-    {
-        return nullptr;
-    }
 
 #if defined(ICU_UNUM_HAS_FORMATDOUBLEFORFIELDS)
     // If the still-experimental NumberFormat.prototype.formatToParts method is
@@ -2507,6 +2494,12 @@ static const JSFunctionSpec dateTimeFormat_methods[] = {
     JS_FS_END
 };
 
+static const JSPropertySpec dateTimeFormat_properties[] = {
+    JS_SELF_HOSTED_GET("format", "Intl_DateTimeFormat_format_get", 0),
+    JS_STRING_SYM_PS(toStringTag, "Object", JSPROP_READONLY),
+    JS_PS_END
+};
+
 /**
  * 12.2.1 Intl.DateTimeFormat([ locales [, options]])
  *
@@ -2625,29 +2618,17 @@ CreateDateTimeFormatPrototype(JSContext* cx, HandleObject Intl, Handle<GlobalObj
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
-    // 12.2.2
+    // 12.3.2
     if (!JS_DefineFunctions(cx, ctor, dateTimeFormat_static_methods))
         return nullptr;
 
-    // 12.3.2 and 12.3.3
+    // 12.4.4 and 12.4.5
     if (!JS_DefineFunctions(cx, proto, dateTimeFormat_methods))
         return nullptr;
 
-    // Install a getter for DateTimeFormat.prototype.format that returns a
-    // formatting function bound to a specified DateTimeFormat object (suitable
-    // for passing to methods like Array.prototype.map).
-    RootedValue getter(cx);
-    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet,
-                                         &getter))
-    {
+    // 12.4.2 and 12.4.3
+    if (!JS_DefineProperties(cx, proto, dateTimeFormat_properties))
         return nullptr;
-    }
-    if (!DefineProperty(cx, proto, cx->names().format, UndefinedHandleValue,
-                        JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
-                        nullptr, JSPROP_GETTER | JSPROP_SHARED))
-    {
-        return nullptr;
-    }
 
     RootedValue options(cx);
     if (!CreateDefaultOptions(cx, &options))

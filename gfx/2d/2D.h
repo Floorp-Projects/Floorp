@@ -679,7 +679,14 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFont)
   virtual ~ScaledFont() {}
 
-  typedef void (*FontFileDataOutput)(const uint8_t* aData, uint32_t aLength, uint32_t aIndex, Float aGlyphSize, void* aBaton);
+  typedef struct {
+    uint32_t mTag;
+    Float    mValue;
+  } VariationSetting;
+
+  typedef void (*FontFileDataOutput)(const uint8_t *aData, uint32_t aLength, uint32_t aIndex, Float aGlyphSize,
+                                     uint32_t aVariationCount, const VariationSetting* aVariations,
+                                     void *aBaton);
   typedef void (*FontInstanceDataOutput)(const uint8_t* aData, uint32_t aLength, void* aBaton);
   typedef void (*FontDescriptorOutput)(const uint8_t* aData, uint32_t aLength, Float aFontSize, void* aBaton);
 
@@ -1398,11 +1405,16 @@ public:
    *
    * @param aData Pointer to the data
    * @param aSize Size of the TrueType data
+   * @param aVariationCount Number of VariationSetting records provided.
+   * @param aVariations Pointer to VariationSetting records.
    * @param aType Type of NativeFontResource that should be created.
    * @return a NativeFontResource of nullptr if failed.
    */
   static already_AddRefed<NativeFontResource>
-    CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType);
+    CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
+                             uint32_t aVariationCount,
+                             const ScaledFont::VariationSetting* aVariations,
+                             FontType aType);
 
   /**
    * This creates a scaled font of the given type based on font descriptor

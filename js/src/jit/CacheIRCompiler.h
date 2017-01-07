@@ -32,6 +32,7 @@ namespace jit {
     _(LoadProto)                          \
     _(LoadEnclosingEnvironment)           \
     _(LoadDOMExpandoValue)                \
+    _(LoadDOMExpandoValueIgnoreGeneration)\
     _(LoadUndefinedResult)                \
     _(LoadInt32ArrayLengthResult)         \
     _(LoadUnboxedArrayLengthResult)       \

@@ -646,7 +646,8 @@ MOZ_MUST_USE bool
 DecodeModuleEnvironment(Decoder& d, ModuleEnvironment* env);
 
 MOZ_MUST_USE bool
-ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, Decoder& d);
+ValidateFunctionBody(const ModuleEnvironment& env, uint32_t funcIndex, uint32_t bodySize,
+                     Decoder& d);
 
 MOZ_MUST_USE bool
 DecodeModuleTail(Decoder& d, ModuleEnvironment* env);

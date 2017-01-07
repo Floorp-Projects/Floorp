@@ -44,4 +44,12 @@ assertEq(format.format(0), "๐.๐%");
 assertEq(format.format(-0.01), "-๑.๐%");
 assertEq(format.format(1.10), "๑๑๐%");
 
+
+// Test the .name property of the "format" getter.
+var desc = Object.getOwnPropertyDescriptor(Intl.NumberFormat.prototype, "format");
+assertEq(desc !== undefined, true);
+assertEq(typeof desc.get, "function");
+assertEq(desc.get.name, "get format");
+
+
 reportCompare(0, 0, 'ok');

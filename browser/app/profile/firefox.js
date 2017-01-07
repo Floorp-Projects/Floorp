@@ -1161,6 +1161,9 @@ sticky_pref("browser.newtabpage.enhanced", true);
 // enables Activity Stream inspired layout
 pref("browser.newtabpage.compact", false);
 
+// enables showing basic placeholders for missing thumbnails
+pref("browser.newtabpage.thumbnailPlaceholder", false);
+
 // number of rows of newtab grid
 pref("browser.newtabpage.rows", 3);
 

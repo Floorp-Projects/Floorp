@@ -41,6 +41,15 @@ public:
                    const nsAString& aNewCacheName,
                    const nsACString& aMaxScope) = 0;
 
+  /*
+   * Right before fetching the main script from the network, we check whether
+   * the script expiration timer has expired. Via this method, we can save the
+   * result of the check, and propogate it to the new ServiceWorkerInfo if there
+   * is one, so the imported scripts can be affected by the result as well.
+   */
+  virtual void
+  SaveLoadFlags(nsLoadFlags aLoadFlags) = 0;
+
   NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
   NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 };
