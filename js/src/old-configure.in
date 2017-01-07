@@ -1359,15 +1359,6 @@ if test "$ac_cv_thread_keyword" = yes; then
   esac
 fi
 
-dnl See if compiler supports some gcc-style attributes
-
-AC_CACHE_CHECK(for __attribute__((always_inline)),
-               ac_cv_attribute_always_inline,
-               [AC_TRY_COMPILE([inline void f(void) __attribute__((always_inline));],
-                               [],
-                               ac_cv_attribute_always_inline=yes,
-                               ac_cv_attribute_always_inline=no)])
-
 dnl End of C++ language/feature checks
 AC_LANG_C
 
