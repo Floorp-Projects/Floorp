@@ -5128,6 +5128,34 @@ MacroAssembler::patchNearJumpToNop(uint8_t* jump)
     new (jump) InstNOP();
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
+{
+    CodeOffset offset(currentOffset());
+    ma_nop();
+    append(desc, CodeOffset(currentOffset()), framePushed());
+    return offset;
+}
+
+void
+MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target)
+{
+    uint8_t* inst = call - 4;
+    MOZ_ASSERT(reinterpret_cast<Instruction*>(inst)->is<InstBLImm>() ||
+               reinterpret_cast<Instruction*>(inst)->is<InstNOP>());
+
+    new (inst) InstBLImm(BOffImm(target - inst), Assembler::Always);
+}
+
+void
+MacroAssembler::patchCallToNop(uint8_t* call)
+{
+    uint8_t* inst = call - 4;
+    MOZ_ASSERT(reinterpret_cast<Instruction*>(inst)->is<InstBLImm>() ||
+               reinterpret_cast<Instruction*>(inst)->is<InstNOP>());
+    new (inst) InstNOP();
+}
+
 void
 MacroAssembler::pushReturnAddress()
 {

@@ -98,6 +98,52 @@ WasmHandleExecutionInterrupt()
     return success;
 }
 
+static bool
+WasmHandleDebugTrap()
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    FrameIterator iter(*activation);
+    MOZ_ASSERT(iter.debugEnabled());
+    const CallSite* site = iter.debugTrapCallsite();
+    MOZ_ASSERT(site);
+    if (site->kind() == CallSite::EnterFrame) {
+        if (!iter.instance()->enterFrameTrapsEnabled())
+            return true;
+        DebugFrame* frame = iter.debugFrame();
+        frame->setIsDebuggee();
+        frame->observeFrame(cx);
+        // TODO call onEnterFrame
+        return true;
+    }
+    if (site->kind() == CallSite::LeaveFrame) {
+        DebugFrame* frame = iter.debugFrame();
+        // TODO call onLeaveFrame
+        frame->leaveFrame(cx);
+        return true;
+    }
+    // TODO baseline debug traps
+    MOZ_CRASH();
+    return true;
+}
+
+static void
+WasmHandleDebugThrow()
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    for (FrameIterator iter(*activation); !iter.done(); ++iter) {
+        if (!iter.debugEnabled())
+            continue;
+
+        DebugFrame* frame = iter.debugFrame();
+        // TODO call onExceptionUnwind and onLeaveFrame
+        frame->leaveFrame(cx);
+     }
+}
+
 static void
 WasmReportTrap(int32_t trapIndex)
 {
@@ -277,6 +323,10 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
+      case SymbolicAddress::HandleDebugTrap:
+        return FuncCast(WasmHandleDebugTrap, Args_General0);
+      case SymbolicAddress::HandleDebugThrow:
+        return FuncCast(WasmHandleDebugThrow, Args_General0);
       case SymbolicAddress::ReportTrap:
         return FuncCast(WasmReportTrap, Args_General1);
       case SymbolicAddress::ReportOutOfBounds:

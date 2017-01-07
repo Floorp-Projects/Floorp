@@ -116,6 +116,40 @@ public:
         jump[1] = OP_NOP;
     }
 
+    static void patchFiveByteNopToCall(uint8_t* callsite, uint8_t* target)
+    {
+        // Note: the offset is relative to the address of the instruction after
+        // the call which is five bytes.
+        uint8_t* inst = callsite - sizeof(int32_t) - 1;
+        // The nop can be already patched as call, overriding the call.
+        // See also nop_five.
+        MOZ_ASSERT(inst[0] == OP_NOP_0F || inst[0] == OP_CALL_rel32);
+        MOZ_ASSERT_IF(inst[0] == OP_NOP_0F, inst[1] == OP_NOP_1F ||
+                                            inst[2] == OP_NOP_44 ||
+                                            inst[3] == OP_NOP_00 ||
+                                            inst[4] == OP_NOP_00);
+        inst[0] = OP_CALL_rel32;
+        SetRel32(callsite, target);
+    }
+
+    static void patchCallToFiveByteNop(uint8_t* callsite)
+    {
+        // See also patchFiveByteNopToCall and nop_five.
+        uint8_t* inst = callsite - sizeof(int32_t) - 1;
+        // The call can be already patched as nop.
+        if (inst[0] == OP_NOP_0F) {
+            MOZ_ASSERT(inst[1] == OP_NOP_1F || inst[2] == OP_NOP_44 ||
+                       inst[3] == OP_NOP_00 || inst[4] == OP_NOP_00);
+            return;
+        }
+        MOZ_ASSERT(inst[0] == OP_CALL_rel32);
+        inst[0] = OP_NOP_0F;
+        inst[1] = OP_NOP_1F;
+        inst[2] = OP_NOP_44;
+        inst[3] = OP_NOP_00;
+        inst[4] = OP_NOP_00;
+    }
+
     /*
      * The nop multibytes sequences are directly taken from the Intel's
      * architecture software developer manual.
