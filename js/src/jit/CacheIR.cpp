@@ -53,6 +53,26 @@ EmitLoadSlotResult(CacheIRWriter& writer, ObjOperandId holderOp, NativeObject* h
     }
 }
 
+// DOM proxies
+// -----------
+//
+// DOM proxies are proxies that are used to implement various DOM objects like
+// HTMLDocument and NodeList. DOM proxies may have an expando object - a native
+// object that stores extra properties added to the object. The following
+// CacheIR instructions are only used with DOM proxies:
+//
+// * LoadDOMExpandoValue: returns the Value in the proxy's expando slot. This
+//   returns either an UndefinedValue (no expando), ObjectValue (the expando
+//   object), or PrivateValue(ExpandoAndGeneration*).
+//
+// * LoadDOMExpandoValueGuardGeneration: guards the Value in the proxy's expando
+//   slot is the same PrivateValue(ExpandoAndGeneration*), then guards on its
+//   generation, then returns expandoAndGeneration->expando. This Value is
+//   either an UndefinedValue or ObjectValue.
+//
+// * GuardDOMExpandoMissingOrGuardShape: takes an expando Value as input, then
+//   guards it's either UndefinedValue or an object with the expected shape.
+
 enum class ProxyStubType {
     None,
     DOMShadowed,
@@ -565,8 +585,8 @@ CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer, JSObject* obj, jsid id,
     ValOperandId expandoId;
     if (!expandoVal.isObject() && !expandoVal.isUndefined()) {
         ExpandoAndGeneration* expandoAndGeneration = (ExpandoAndGeneration*)expandoVal.toPrivate();
-        expandoId = writer.guardDOMExpandoGeneration(objId, expandoAndGeneration,
-                                                     expandoAndGeneration->generation);
+        expandoId = writer.loadDOMExpandoValueGuardGeneration(objId, expandoAndGeneration,
+                                                              expandoAndGeneration->generation);
         expandoVal = expandoAndGeneration->expando;
     } else {
         expandoId = writer.loadDOMExpandoValue(objId);
@@ -580,7 +600,7 @@ CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer, JSObject* obj, jsid id,
         // the shape matches the current expando object.
         NativeObject& expandoObj = expandoVal.toObject().as<NativeObject>();
         MOZ_ASSERT(!expandoObj.containsPure(id));
-        writer.guardDOMExpandoObject(expandoId, expandoObj.lastProperty());
+        writer.guardDOMExpandoMissingOrGuardShape(expandoId, expandoObj.lastProperty());
     } else {
         MOZ_CRASH("Invalid expando value");
     }
