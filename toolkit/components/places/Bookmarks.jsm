@@ -1380,7 +1380,7 @@ function reorderChildren(parent, orderedChildrenGuids, options) {
         { orphanAnno: PlacesSyncUtils.bookmarks.SYNC_PARENT_ANNO });
 
       return children;
-    }.bind(this))
+    })
   );
 }
 

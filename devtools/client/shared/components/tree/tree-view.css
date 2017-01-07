@@ -34,6 +34,25 @@
   overflow: hidden;
 }
 
+.treeTable .treeValueCell.inputEnabled {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.treeTable .treeValueCell input {
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  margin-inline-end: 2px;
+}
+
+.treeTable .treeValueCell input:focus {
+  outline: none;
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out;
+}
+
 .treeTable .treeLabel {
   cursor: default;
   overflow: hidden;

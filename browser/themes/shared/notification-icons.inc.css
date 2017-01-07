@@ -39,18 +39,6 @@
   }
 }
 
-#notification-popup > .panel-arrowcontainer > .panel-arrowcontent {
-  /* In order to display the action buttons near the edge of the arrow panel we
-   * have to reset its default padding and specify the padding in the individual
-   * "popupnotification" elements instead. To keep the rounded borders of the
-   * panel, we also have to ensure the contents are clipped to the border box
-   * by hiding the overflow, and we have to override the "display" property so
-   * that the height of the contents is computed correctly in that case. */
-  padding: 0;
-  overflow: hidden;
-  display: block;
-}
-
 .notification-anchor-icon:not(.plugin-blocked):-moz-lwtheme,
 #blocked-permissions-container > .blocked-permission-icon:-moz-lwtheme {
   filter: url(chrome://global/skin/filters.svg#fill);

@@ -1102,7 +1102,7 @@
   display: flex;
 }
 
-.security-info-value .textbox-input {
+.treeTable .textbox-input {
   text-overflow: ellipsis;
   border: none;
   background: none;
@@ -1111,7 +1111,7 @@
   margin-inline-end: 2px;
 }
 
-.security-info-value .textbox-input:focus {
+.treeTable .textbox-input:focus {
   outline: 0;
   box-shadow: var(--theme-focus-box-shadow-textbox);
 }

@@ -328,7 +328,7 @@ SearchStrings.prototype = {
             FormHistory.update(changes);
           }
         }
-      }.bind(this), aCallback));
+      }, aCallback));
   }
 };
 

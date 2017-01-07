@@ -1911,7 +1911,7 @@ var Impl = {
         // TODO: We are keeping this behaviour for now but it will be removed as soon as
         // bug 1127907 lands.
         Services.obs.notifyObservers(null, "gather-telemetry", null);
-      }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+      }), Ci.nsIThread.DISPATCH_NORMAL);
       break;
 
     case "application-background":
