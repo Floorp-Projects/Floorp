@@ -8,13 +8,13 @@ Index: LICENSE
  
 +This modified version of libpng code adds animated PNG support and is
 +released under the libpng license described below. The modifications are
-+Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2016 Max Stepin,
++Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2017 Max Stepin,
 +and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
 +surrounding them in the modified libpng source files.
 +
  This code is released under the libpng license.
  
- libpng versions 1.0.7, July 1, 2000 through 1.6.27, December 29, 2016 are
+ libpng versions 1.0.7, July 1, 2000 through 1.6.28, January 5, 2017 are
 Index: pngread.c
 ===================================================================
 --- pngread.c
@@ -299,25 +299,25 @@ Index: png.c
  #else
  #  ifdef __STDC__
     return PNG_STRING_NEWLINE \
--      "libpng version 1.6.27 - December 29, 2016" PNG_STRING_NEWLINE \
-+      "libpng version 1.6.27+apng - December 29, 2016" PNG_STRING_NEWLINE \
-       "Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson" \
+-      "libpng version 1.6.28 - January 5, 2017" PNG_STRING_NEWLINE \
++      "libpng version 1.6.28+apng - January 5, 2017" PNG_STRING_NEWLINE \
+       "Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson" \
        PNG_STRING_NEWLINE \
        "Copyright (c) 1996-1997 Andreas Dilger" PNG_STRING_NEWLINE \
        "Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc." \
 -      PNG_STRING_NEWLINE;
 +      PNG_STRING_NEWLINE \
 +      "Portions Copyright (c) 2006-2007 Andrew Smith" PNG_STRING_NEWLINE \
-+      "Portions Copyright (c) 2008-2016 Max Stepin" PNG_STRING_NEWLINE ;
++      "Portions Copyright (c) 2008-2017 Max Stepin" PNG_STRING_NEWLINE ;
  #  else
--   return "libpng version 1.6.27 - December 29, 2016\
-+   return "libpng version 1.6.27+apng - December 29, 2016\
-       Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson\
+-   return "libpng version 1.6.28 - January 5, 2017\
++   return "libpng version 1.6.28+apng - January 5, 2017\
+       Copyright (c) 1998-2002,2004,2006-2017 Glenn Randers-Pehrson\
        Copyright (c) 1996-1997 Andreas Dilger\
 -      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.";
 +      Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.\
 +      Portions Copyright (c) 2006-2007 Andrew Smith\
-+      Portions Copyright (c) 2008-2016 Max Stepin";
++      Portions Copyright (c) 2008-2017 Max Stepin";
  #  endif
  #endif
  }
@@ -331,26 +331,26 @@ Index: png.h
   *
 + * This modified version of libpng code adds animated PNG support and is
 + * released under the libpng license described below. The modifications are
-+ * Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2016 Max Stepin,
++ * Copyright (c) 2006-2007 Andrew Smith, Copyright (c) 2008-2017 Max Stepin,
 + * and are delimited by "#ifdef PNG_APNG_SUPPORTED / #endif" directives
 + * surrounding them in the modified libpng source files.
 + *
   * This code is released under the libpng license.
   *
-  * Some files in the "contrib" directory and some configure-generated
-@@ -314,8 +320,9 @@
+  * libpng versions 1.0.7, July 1, 2000 through 1.6.28, January 5, 2017 are
+@@ -307,8 +313,9 @@
   */
  
  /* Version information for png.h - this should match the version in png.c */
--#define PNG_LIBPNG_VER_STRING "1.6.27"
--#define PNG_HEADER_VERSION_STRING " libpng version 1.6.27 - December 29, 2016\n"
-+#define PNG_LIBPNG_VER_STRING "1.6.27+apng"
+-#define PNG_LIBPNG_VER_STRING "1.6.28"
+-#define PNG_HEADER_VERSION_STRING " libpng version 1.6.28 - January 5, 2017\n"
++#define PNG_LIBPNG_VER_STRING "1.6.28+apng"
 +#define PNG_HEADER_VERSION_STRING \
-+     " libpng version 1.6.27+apng - December 29, 2016\n"
++     " libpng version 1.6.28+apng - January 5, 2017\n"
  
  #define PNG_LIBPNG_VER_SONUM   16
  #define PNG_LIBPNG_VER_DLLNUM  16
-@@ -366,6 +373,10 @@
+@@ -359,6 +366,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -361,7 +361,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
  /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -461,6 +472,17 @@
+@@ -454,6 +465,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -379,7 +379,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -781,6 +803,10 @@
+@@ -774,6 +796,10 @@
  #define PNG_INFO_sPLT 0x2000U  /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000U  /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000U  /* ESR, 1.0.6 */
@@ -390,7 +390,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -818,6 +844,10 @@
+@@ -811,6 +837,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -401,7 +401,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3247,6 +3277,75 @@
+@@ -3240,6 +3270,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -477,7 +477,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3255,7 +3354,11 @@
+@@ -3248,7 +3347,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
