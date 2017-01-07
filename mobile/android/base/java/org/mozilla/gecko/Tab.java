@@ -64,7 +64,7 @@ public class Tab {
     private final SiteIdentity mSiteIdentity;
     private SiteLogins mSiteLogins;
     private BitmapDrawable mThumbnail;
-    private final int mParentId;
+    private volatile int mParentId;
     // Indicates the url was loaded from a source external to the app. This will be cleared
     // when the user explicitly loads a new url (e.g. clicking a link is not explicit).
     private final boolean mExternal;
@@ -166,6 +166,17 @@ public class Tab {
 
     public int getParentId() {
         return mParentId;
+    }
+
+    /**
+     * Updates the stored parent tab ID to a new value.
+     * Note: Calling this directly from Java currently won't update the parent ID value
+     * held by Gecko and the session store.
+     *
+     * @param parentId The ID of the tab to be set as new parent, or -1 for no parent.
+     */
+    public void setParentId(int parentId) {
+        mParentId = parentId;
     }
 
     // may be null if user-entered query hasn't yet been resolved to a URI

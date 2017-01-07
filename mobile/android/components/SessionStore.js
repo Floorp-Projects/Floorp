@@ -1484,7 +1484,8 @@ SessionStore.prototype = {
         selected: isSelectedTab,
         isPrivate: tabData.isPrivate,
         desktopMode: tabData.desktopMode,
-        cancelEditMode: isSelectedTab
+        cancelEditMode: isSelectedTab,
+        parentId: tabData.parentId
       };
 
       let tab = window.BrowserApp.addTab(tabData.entries[tabData.index - 1].url, params);
@@ -1636,13 +1637,15 @@ SessionStore.prototype = {
 
       // Use stubbed tab if we've already created it; otherwise, make a new tab
       let tab;
+      let parentId = tabData.parentId;
       if (tabData.tabId == null) {
         let params = {
           selected: (selected == i+1),
           delayLoad: true,
           title: entry.title,
           desktopMode: (tabData.desktopMode == true),
-          isPrivate: (tabData.isPrivate == true)
+          isPrivate: (tabData.isPrivate == true),
+          parentId: parentId
         };
         tab = window.BrowserApp.addTab(entry.url, params);
       } else {
@@ -1652,6 +1655,9 @@ SessionStore.prototype = {
         if (tab == null) {
           delete tabData.tabId;
           continue;
+        }
+        if (parentId > -1) {
+          tab.setParentId(parentId);
         }
       }
 
@@ -1723,7 +1729,8 @@ SessionStore.prototype = {
       selected: true,
       isPrivate: aCloseTabData.isPrivate,
       desktopMode: aCloseTabData.desktopMode,
-      tabIndex: this._lastClosedTabIndex
+      tabIndex: this._lastClosedTabIndex,
+      parentId: aCloseTabData.parentId
     };
     let tab = aWindow.BrowserApp.addTab(aCloseTabData.entries[aCloseTabData.index - 1].url, params);
     tab.browser.__SS_data = aCloseTabData;
