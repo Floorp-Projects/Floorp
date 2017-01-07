@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=965992
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 965992</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=965992">Mozilla Bug 965992</a>
+<p id="display"></p>
+<form id="theform"></form>
+<pre id="test">
+<script type="application/javascript">
+
+// Ensure we are in JIT code and attach IC stubs.
+const iterations = 50;
+
+function testFoo(obj, expected, kind) {
+  for (var i = 0; i < iterations; i++) {
+    is(obj.foo, expected, "Looking up an expando should work - " + kind);
+  }
+}
+
+function getPropTests(obj) {
+  // Start with a plain data property.
+  obj.foo = "bar";
+  testFoo(obj, "bar", "plain");
+
+  // Now change it to a scripted getter.
+  var count = 0;
+  Object.defineProperty(obj, "foo", {get:function() {
+    is(this, obj, "Getter should have the proxy as |this|");
+    is(arguments.length, 0, "Shouldn't pass arguments to getters");
+    count++;
+    return 123;
+  }, configurable: true});
+  testFoo(obj, 123, "scripted getter");
+  is(count, iterations, "Should have called the getter enough times");
+
+  // Now try a native getter.
+  Object.defineProperty(obj, "foo", {get: Object.prototype.valueOf, configurable: true});
+  testFoo(obj, obj, "native getter");
+}
+
+function getElemTests(obj) {
+  // Define two expando properties, then test inline caches for obj[prop]
+  // correctly guard on prop being the same.
+  var count = 0;
+  obj.elem1 = 1;
+  Object.defineProperty(obj, "elem2", {get: function() { count++; return 2; }});
+
+  for (var i = 0; i < iterations; i++) {
+    var prop = ((i & 1) == 0) ? "elem1" : "elem2";
+    is(obj[prop], (i & 1) + 1, "Should return correct property value");
+  }
+  is(count, iterations / 2, "Should have called the getter enough times");
+}
+
+var directExpando = document.getElementsByTagName("*");
+var indirectExpando = document.getElementById("theform");
+
+getPropTests(directExpando);
+getPropTests(indirectExpando);
+
+getElemTests(indirectExpando);
+getElemTests(directExpando);
+
+</script>
+</pre>
+</body>
+</html>
