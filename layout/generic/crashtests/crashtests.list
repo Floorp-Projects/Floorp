@@ -548,7 +548,7 @@ load 876155.html
 load 885009-1.html
 load 893496-1.html
 load 893523.html
-skip-if(stylo) asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows # bug 1323662
+asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows
 asserts(0-3) load 914501.html # bug 1144852 - all platforms
 load 914891.html
 asserts-if(stylo,2) load 915475.xhtml # bug 1324669
