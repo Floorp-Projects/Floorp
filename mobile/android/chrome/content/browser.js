@@ -3835,6 +3835,16 @@ Tab.prototype = {
     }
   },
 
+  setParentId: function(aParentId) {
+    let newParentId = (typeof aParentId == "number") ? aParentId : -1;
+    this.parentId = newParentId;
+    Messaging.sendRequest({
+      type: "Tab:SetParentId",
+      tabID: this.id,
+      parentID: newParentId
+    });
+  },
+
   handleEvent: function(aEvent) {
     switch (aEvent.type) {
       case "DOMContentLoaded": {

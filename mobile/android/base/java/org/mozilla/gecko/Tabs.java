@@ -129,7 +129,9 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             "Tab:StreamStart",
             "Tab:StreamStop",
             "Tab:AudioPlayingChange",
-            "Tab:MediaPlaybackChange");
+            "Tab:MediaPlaybackChange",
+            "Tab:SetParentId",
+            null);
 
         mPrivateClearColor = Color.RED;
 
@@ -605,6 +607,9 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
                     tab.setIsMediaPlaying(status.equals("start"));
                     notifyListeners(tab, TabEvents.MEDIA_PLAYING_CHANGE);
                 }
+            } else if (event.equals("Tab:SetParentId")) {
+                int newParentId = message.getInt("parentID");
+                tab.setParentId(newParentId);
             }
 
         } catch (Exception e) {
