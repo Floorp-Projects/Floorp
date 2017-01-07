@@ -28,6 +28,7 @@
 
 #include "HRTFDatabaseLoader.h"
 #include "HRTFDatabase.h"
+#include "GeckoProfiler.h"
 
 using namespace mozilla;
 
@@ -151,6 +152,7 @@ void HRTFDatabaseLoader::MainThreadRelease()
 // Asynchronously load the database in this thread.
 static void databaseLoaderEntry(void* threadData)
 {
+    AutoProfilerRegister registerThread("HRTFDatabaseLdr");
     PR_SetCurrentThreadName("HRTFDatabaseLdr");
 
     HRTFDatabaseLoader* loader = reinterpret_cast<HRTFDatabaseLoader*>(threadData);

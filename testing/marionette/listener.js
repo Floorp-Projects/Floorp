@@ -26,6 +26,7 @@ Cu.import("chrome://marionette/content/legacyaction.js");
 Cu.import("chrome://marionette/content/logging.js");
 Cu.import("chrome://marionette/content/navigate.js");
 Cu.import("chrome://marionette/content/proxy.js");
+Cu.import("chrome://marionette/content/session.js");
 Cu.import("chrome://marionette/content/simpletest.js");
 
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -58,7 +59,7 @@ var SUPPORTED_STRATEGIES = new Set([
   element.Strategy.XPath,
 ]);
 
-var capabilities = {};
+var capabilities;
 
 var legacyactions = new legacyaction.Chain(checkForInterrupted);
 
@@ -123,7 +124,7 @@ function registerSelf() {
 
   if (register[0]) {
     let {id, remotenessChange} = register[0][0];
-    capabilities = register[0][2];
+    capabilities = session.Capabilities.fromJSON(register[0][2]);
     listenerId = id;
     if (typeof id != "undefined") {
       // check if we're the main process
@@ -321,8 +322,8 @@ function waitForReady() {
  * current environment, and resets all values
  */
 function newSession(msg) {
-  capabilities = msg.json;
-  isB2G = capabilities.platformName == "B2G";
+  capabilities = session.Capabilities.fromJSON(msg.json);
+  isB2G = capabilities.get("platformName") === "B2G";
   resetValues();
   if (isB2G) {
     readyStateTimer.initWithCallback(waitForReady, 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -646,7 +647,7 @@ function singleTap(id, corx, cory) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
 
-  let a11y = accessibility.get(capabilities["moz:accessibilityChecks"]);
+  let a11y = accessibility.get(capabilities.get("moz:accessibilityChecks"));
   return a11y.getAccessible(el, true).then(acc => {
     a11y.assertVisible(acc, el, visible);
     a11y.assertActionable(acc, el);
@@ -1206,8 +1207,8 @@ function clickElement(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.clickElement(
       el,
-      !!capabilities["moz:accessibilityChecks"],
-      capabilities.specificationLevel >= 1);
+      capabilities.get("moz:accessibilityChecks"),
+      capabilities.get("specificationLevel") >= 1);
 }
 
 function getElementAttribute(id, name) {
@@ -1265,7 +1266,7 @@ function getElementTagName(id) {
 function isElementDisplayed(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.isElementDisplayed(
-      el, capabilities["moz:accessibilityChecks"]);
+      el, capabilities.get("moz:accessibilityChecks"));
 }
 
 /**
@@ -1318,7 +1319,7 @@ function getElementRect(id) {
 function isElementEnabled(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.isElementEnabled(
-      el, capabilities["moz:accessibilityChecks"]);
+      el, capabilities.get("moz:accessibilityChecks"));
 }
 
 /**
@@ -1330,7 +1331,7 @@ function isElementEnabled(id) {
 function isElementSelected(id) {
   let el = seenEls.get(id, curContainer);
   return interaction.isElementSelected(
-      el, capabilities["moz:accessibilityChecks"]);
+      el, capabilities.get("moz:accessibilityChecks"));
 }
 
 function* sendKeysToElement(id, val) {
@@ -1340,7 +1341,7 @@ function* sendKeysToElement(id, val) {
     yield interaction.uploadFile(el, path);
   } else {
     yield interaction.sendKeysToElement(
-        el, val, false, capabilities["moz:accessibilityChecks"]);
+        el, val, false, capabilities.get("moz:accessibilityChecks"));
   }
 }
 

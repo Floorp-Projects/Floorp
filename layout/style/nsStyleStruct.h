@@ -625,6 +625,13 @@ public:
     return !(*this == aOther);
   }
 
+  nsStyleAutoArray& operator=(nsStyleAutoArray&& aOther) {
+    mFirstElement = aOther.mFirstElement;
+    mOtherElements.SwapElements(aOther.mOtherElements);
+
+    return *this;
+  }
+
   size_t Length() const {
     return mOtherElements.Length() + 1;
   }
@@ -899,6 +906,8 @@ struct nsStyleImageLayers {
 
   bool HasLayerWithImage() const;
   nsStyleImageLayers& operator=(const nsStyleImageLayers& aOther);
+  nsStyleImageLayers& operator=(nsStyleImageLayers&& aOther);
+  bool operator==(const nsStyleImageLayers& aOther) const;
 
   static const nsCSSPropertyID kBackgroundLayerTable[];
   static const nsCSSPropertyID kMaskLayerTable[];

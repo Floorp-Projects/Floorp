@@ -565,18 +565,6 @@
         ]]></body>
       </method>
 
-      <method name="_maybeHighlightAll">
-        <body><![CDATA[
-          let word = this._findField.value;
-          // Bug 429723. Don't attempt to highlight ""
-          if (!this._highlightAll || !word)
-            return;
-
-          this.browser.finder.highlight(true, word,
-            this._findMode == this.FIND_LINKS);
-        ]]></body>
-      </method>
-
       <!--
         - Updates the case-sensitivity mode of the findbar and its UI.
         - @param [optional] aString
@@ -1097,7 +1085,8 @@
         <parameter name="aFindPrevious"/>
         <body><![CDATA[
           this._updateStatusUI(aResult, aFindPrevious);
-          this._enableFindButtons(aResult !== this.nsITypeAheadFind.FIND_NOTFOUND);
+          this._enableFindButtons(aResult !== this.nsITypeAheadFind.FIND_NOTFOUND &&
+            !!this._findField.value);
         ]]></body>
       </method>
 
@@ -1346,6 +1335,7 @@
             this._findField.value = aSelectionString;
 
           if (aIsInitialSelection) {
+            this._enableFindButtons(!!this._findField.value);
             this._findField.select();
             this._findField.focus();
 

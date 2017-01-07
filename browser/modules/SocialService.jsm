@@ -450,7 +450,7 @@ this.SocialService = {
   getProvider: function getProvider(origin, onDone) {
     schedule((function() {
       onDone(SocialServiceInternal.providers[origin] || null);
-    }).bind(this));
+    }));
   },
 
   // Returns an unordered array of installed providers

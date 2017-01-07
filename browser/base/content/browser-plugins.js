@@ -72,7 +72,7 @@ var gPluginHandler = {
           case "managePlugins":
           case "openHelpPage":
           case "openPluginUpdatePage":
-            this[msg.data.name].call(this, msg.data.pluginTag);
+            this[msg.data.name](msg.data.pluginTag);
             break;
         }
         break;

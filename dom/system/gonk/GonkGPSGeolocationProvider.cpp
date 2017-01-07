@@ -556,7 +556,7 @@ GonkGPSGeolocationProvider::Startup()
   }
 
   if (!mInitThread) {
-    nsresult rv = NS_NewThread(getter_AddRefs(mInitThread));
+    nsresult rv = NS_NewNamedThread("Gonk GPS", getter_AddRefs(mInitThread));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

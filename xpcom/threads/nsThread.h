@@ -48,8 +48,8 @@ public:
 
   nsThread(MainThreadFlag aMainThread, uint32_t aStackSize);
 
-  // Initialize this as a wrapper for a new PRThread.
-  nsresult Init();
+  // Initialize this as a wrapper for a new PRThread, and optionally give it a name.
+  nsresult Init(const nsACString& aName = NS_LITERAL_CSTRING(""));
 
   // Initialize this as a wrapper for the current PRThread.
   nsresult InitCurrentThread();

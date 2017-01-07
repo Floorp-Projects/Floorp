@@ -4,12 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "PSMRunnable.h"
+#include "nsKeygenThread.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/DebugOnly.h"
+
+#include "GeckoProfiler.h"
+#include "PSMRunnable.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsKeygenThread.h"
 #include "nsNSSShutDown.h"
 #include "nsThreadUtils.h"
 #include "pk11func.h"
@@ -115,6 +118,7 @@ nsresult nsKeygenThread::ConsumeResult(
 
 static void nsKeygenThreadRunner(void *arg)
 {
+  AutoProfilerRegister registerThread("Keygen");
   PR_SetCurrentThreadName("Keygen");
   nsKeygenThread *self = static_cast<nsKeygenThread *>(arg);
   self->Run();

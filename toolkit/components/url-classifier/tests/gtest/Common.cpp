@@ -14,7 +14,8 @@ template<typename Function>
 void RunTestInNewThread(Function&& aFunction) {
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(mozilla::Forward<Function>(aFunction));
   nsCOMPtr<nsIThread> testingThread;
-  nsresult rv = NS_NewThread(getter_AddRefs(testingThread), r);
+  nsresult rv =
+    NS_NewNamedThread("Testing Thread", getter_AddRefs(testingThread), r);
   ASSERT_EQ(rv, NS_OK);
   testingThread->Shutdown();
 }
