@@ -30,7 +30,7 @@ module.exports = function(context) {
         return;
       }
 
-      context.report(node, "use .ownerGlobal of .ownerDocument.defaultView");
+      context.report(node, "use .ownerGlobal instead of .ownerDocument.defaultView");
     }
   };
 };

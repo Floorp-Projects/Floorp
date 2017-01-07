@@ -111,6 +111,9 @@ FormAutofillHandler.prototype = {
    */
   autofillFormFields(autofillResult) {
     for (let field of autofillResult) {
+      // TODO: Skip filling the value of focused input which is filled in
+      // FormFillController.
+
       // Get the field details, if it was processed by the user interface.
       let fieldDetail = this.fieldDetails[field.index];
 
