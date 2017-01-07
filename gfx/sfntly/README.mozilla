@@ -1,0 +1,5 @@
+This directory contains the C++ port of SFNTLY,
+from https://github.com/googlei18n/sfntly/tree/master/cpp.
+
+SFNTLY is distributed under the Apache license v2.0
+(see cpp/COPYING.txt).
