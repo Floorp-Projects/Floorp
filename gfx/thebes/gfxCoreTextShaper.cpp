@@ -773,9 +773,9 @@ CTFontRef
 gfxCoreTextShaper::CreateCTFontWithFeatures(CGFloat aSize,
                                             CTFontDescriptorRef aDescriptor)
 {
-    gfxMacFont *f = static_cast<gfxMacFont*>(mFont);
-    return ::CTFontCreateWithGraphicsFont(f->GetCGFontRef(), aSize, nullptr,
-                                          aDescriptor);
+    CGFontRef cgFont = static_cast<gfxMacFont*>(mFont)->GetCGFontRef();
+    return gfxMacFont::CreateCTFontFromCGFontWithVariations(cgFont, aSize,
+                                                            aDescriptor);
 }
 
 void

@@ -1609,7 +1609,8 @@ TimerThreadEventTarget::IsOnCurrentThread(bool* aIsOnCurrentThread)
 NS_IMPL_ISUPPORTS(TimerThreadEventTarget, nsIEventTarget)
 
 WorkerLoadInfo::WorkerLoadInfo()
-  : mWindowID(UINT64_MAX)
+  : mLoadFlags(nsIRequest::LOAD_NORMAL)
+  , mWindowID(UINT64_MAX)
   , mServiceWorkerID(0)
   , mReferrerPolicy(net::RP_Unset)
   , mFromWindow(false)
@@ -1666,6 +1667,7 @@ WorkerLoadInfo::StealFrom(WorkerLoadInfo& aOther)
 
   mDomain = aOther.mDomain;
   mServiceWorkerCacheName = aOther.mServiceWorkerCacheName;
+  mLoadFlags = aOther.mLoadFlags;
   mWindowID = aOther.mWindowID;
   mServiceWorkerID = aOther.mServiceWorkerID;
   mReferrerPolicy = aOther.mReferrerPolicy;

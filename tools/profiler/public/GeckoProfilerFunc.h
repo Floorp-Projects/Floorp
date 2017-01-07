@@ -12,6 +12,7 @@
 #include "js/ProfilingStack.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
+#include "GeckoProfilerTypes.h"
 #include <stdint.h>
 
 class nsISupports;
@@ -49,8 +50,7 @@ bool mozilla_sampler_is_paused();
 void mozilla_sampler_pause();
 void mozilla_sampler_resume();
 
-ProfilerBacktrace* mozilla_sampler_get_backtrace();
-void mozilla_sampler_free_backtrace(ProfilerBacktrace* aBacktrace);
+UniqueProfilerBacktrace mozilla_sampler_get_backtrace();
 void mozilla_sampler_get_backtrace_noalloc(char *output, size_t outputSize);
 
 bool mozilla_sampler_is_active();
@@ -119,7 +119,7 @@ void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
                              TracingMetadata aMetaData);
 
 void mozilla_sampler_tracing(const char* aCategory, const char* aInfo,
-                             ProfilerBacktrace* aCause,
+                             UniqueProfilerBacktrace aCause,
                              TracingMetadata aMetaData);
 
 void mozilla_sampler_log(const char *fmt, va_list args);

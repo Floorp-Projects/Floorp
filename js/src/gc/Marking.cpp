@@ -46,9 +46,9 @@ using JS::MapTypeToTraceKind;
 
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
+using mozilla::IntegerRange;
 using mozilla::IsBaseOf;
 using mozilla::IsSame;
-using mozilla::MakeRange;
 using mozilla::PodCopy;
 
 // Tracing Overview
@@ -515,7 +515,7 @@ void
 js::TraceRange(JSTracer* trc, size_t len, WriteBarrieredBase<T>* vec, const char* name)
 {
     JS::AutoTracingIndex index(trc);
-    for (auto i : MakeRange(len)) {
+    for (auto i : IntegerRange(len)) {
         if (InternalBarrierMethods<T>::isMarkable(vec[i].get()))
             DispatchToTracer(trc, ConvertToBase(vec[i].unsafeUnbarrieredForTracing()), name);
         ++index;
@@ -528,7 +528,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
 {
     AssertRootMarkingPhase(trc);
     JS::AutoTracingIndex index(trc);
-    for (auto i : MakeRange(len)) {
+    for (auto i : IntegerRange(len)) {
         if (InternalBarrierMethods<T>::isMarkable(vec[i]))
             DispatchToTracer(trc, ConvertToBase(&vec[i]), name);
         ++index;
@@ -996,13 +996,13 @@ LazyScript::traceChildren(JSTracer* trc)
 
     // We rely on the fact that atoms are always tenured.
     JSAtom** closedOverBindings = this->closedOverBindings();
-    for (auto i : MakeRange(numClosedOverBindings())) {
+    for (auto i : IntegerRange(numClosedOverBindings())) {
         if (closedOverBindings[i])
             TraceManuallyBarrieredEdge(trc, &closedOverBindings[i], "closedOverBinding");
     }
 
     GCPtrFunction* innerFunctions = this->innerFunctions();
-    for (auto i : MakeRange(numInnerFunctions()))
+    for (auto i : IntegerRange(numInnerFunctions()))
         TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
 }
 inline void
@@ -1022,13 +1022,13 @@ js::GCMarker::eagerlyMarkChildren(LazyScript *thing)
 
     // We rely on the fact that atoms are always tenured.
     JSAtom** closedOverBindings = thing->closedOverBindings();
-    for (auto i : MakeRange(thing->numClosedOverBindings())) {
+    for (auto i : IntegerRange(thing->numClosedOverBindings())) {
         if (closedOverBindings[i])
             traverseEdge(thing, static_cast<JSString*>(closedOverBindings[i]));
     }
 
     GCPtrFunction* innerFunctions = thing->innerFunctions();
-    for (auto i : MakeRange(thing->numInnerFunctions()))
+    for (auto i : IntegerRange(thing->numInnerFunctions()))
         traverseEdge(thing, static_cast<JSObject*>(innerFunctions[i]));
 }
 

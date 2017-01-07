@@ -23,6 +23,7 @@
 #endif
 #include "jit/VMFunctions.h"
 #include "js/Proxy.h"
+#include "proxy/Proxy.h"
 #include "vm/Shape.h"
 #include "vm/Stack.h"
 

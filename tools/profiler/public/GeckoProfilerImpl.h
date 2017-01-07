@@ -94,15 +94,9 @@ void profiler_resume()
 }
 
 static inline
-ProfilerBacktrace* profiler_get_backtrace()
+UniqueProfilerBacktrace profiler_get_backtrace()
 {
   return mozilla_sampler_get_backtrace();
-}
-
-static inline
-void profiler_free_backtrace(ProfilerBacktrace* aBacktrace)
-{
-  mozilla_sampler_free_backtrace(aBacktrace);
 }
 
 static inline
@@ -269,17 +263,16 @@ bool profiler_in_privacy_mode()
 }
 
 static inline void profiler_tracing(const char* aCategory, const char* aInfo,
-                                    ProfilerBacktrace* aCause,
+                                    UniqueProfilerBacktrace aCause,
                                     TracingMetadata aMetaData = TRACING_DEFAULT)
 {
   // Don't insert a marker if we're not profiling to avoid
   // the heap copy (malloc).
   if (!stack_key_initialized || !profiler_is_active()) {
-    delete aCause;
     return;
   }
 
-  mozilla_sampler_tracing(aCategory, aInfo, aCause, aMetaData);
+  mozilla_sampler_tracing(aCategory, aInfo, mozilla::Move(aCause), aMetaData);
 }
 
 static inline void profiler_tracing(const char* aCategory, const char* aInfo,
@@ -392,13 +385,13 @@ namespace mozilla {
 class MOZ_RAII GeckoProfilerTracingRAII {
 public:
   GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo,
-                           mozilla::UniquePtr<ProfilerBacktrace> aBacktrace
+                           UniqueProfilerBacktrace aBacktrace
                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mCategory(aCategory)
     , mInfo(aInfo)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mInfo, aBacktrace.release(), TRACING_INTERVAL_START);
+    profiler_tracing(mCategory, mInfo, Move(aBacktrace), TRACING_INTERVAL_START);
   }
 
   ~GeckoProfilerTracingRAII() {

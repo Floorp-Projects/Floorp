@@ -12,7 +12,7 @@ task:
   tags:
     createdForUser: '{{owner}}'
 
-  workerType: taskcluster-images
+  workerType: gecko-images
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 

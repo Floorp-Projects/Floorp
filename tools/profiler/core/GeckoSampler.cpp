@@ -178,7 +178,6 @@ GeckoSampler::GeckoSampler(double aInterval, int aEntrySize,
                          const char** aFeatures, uint32_t aFeatureCount,
                          const char** aThreadNameFilters, uint32_t aFilterCount)
   : Sampler(aInterval, true, aEntrySize)
-  , mPrimaryThreadProfile(nullptr)
   , mBuffer(new ProfileBuffer(aEntrySize))
   , mSaveRequested(false)
 #if defined(XP_WIN)
@@ -266,11 +265,6 @@ GeckoSampler::~GeckoSampler()
 
     for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
       ThreadInfo* info = sRegisteredThreads->at(i);
-      ThreadProfile* profile = info->Profile();
-      if (profile) {
-        delete profile;
-        info->SetProfile(nullptr);
-      }
       // We've stopped profiling. We no longer need to retain
       // information for an old thread.
       if (info->IsPendingDelete()) {
