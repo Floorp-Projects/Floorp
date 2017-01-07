@@ -4288,7 +4288,7 @@ pref("font.name.serif.he", "Droid Serif");
 pref("font.name.sans-serif.he", "Clear Sans");
 pref("font.name.monospace.he", "Droid Sans Mono");
 pref("font.name-list.serif.he", "Noto Serif");
-pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Clear Sans, Droid Sans");
+pref("font.name-list.sans-serif.he", "Droid Sans Hebrew, Clear Sans, Droid Sans, Arial");
 
 pref("font.name.serif.ja", "Charis SIL Compact");
 pref("font.name.sans-serif.ja", "Clear Sans");

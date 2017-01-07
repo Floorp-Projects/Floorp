@@ -2,9 +2,7 @@
 .downloadProgress {
   height: 8px;
   border-radius: 1px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-  margin-inline-start: 6px;
+  margin: 4px 0 0;
   margin-inline-end: 12px;
 
   /* for overriding rules in progressmeter.css */

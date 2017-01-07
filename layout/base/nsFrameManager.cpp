@@ -831,5 +831,3 @@ nsFrameManagerBase::UndisplayedMap::Clear(void)
   mLastLookup = nullptr;
   PL_HashTableEnumerateEntries(mTable, RemoveUndisplayedEntry, 0);
 }
-
-uint32_t nsFrameManagerBase::sGlobalGenerationNumber;

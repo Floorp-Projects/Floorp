@@ -22,9 +22,10 @@ nsresult FileBlockCache::Open(PRFileDesc* aFD)
   }
   {
     MonitorAutoLock mon(mDataMonitor);
-    nsresult res = NS_NewThread(getter_AddRefs(mThread),
-                                nullptr,
-                                SharedThreadPool::kStackSize);
+    nsresult res = NS_NewNamedThread("FileBlockCache",
+                                     getter_AddRefs(mThread),
+                                     nullptr,
+                                     SharedThreadPool::kStackSize);
     mIsOpen = NS_SUCCEEDED(res);
     return res;
   }

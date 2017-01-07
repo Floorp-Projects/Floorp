@@ -218,6 +218,7 @@ this.PopupNotifications = function PopupNotifications(tabbrowser, panel, iconBox
   this.buttonDelay = Services.prefs.getIntPref(PREF_SECURITY_DELAY);
 
   this.panel.addEventListener("popuphidden", this, true);
+  this.panel.classList.add("popup-notification-panel");
 
   // This listener will be attached to the chrome window whenever a notification
   // is showing, to allow the user to dismiss notifications using the escape key.

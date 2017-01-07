@@ -12,9 +12,6 @@
  */
 #undef CPP_THROW_NEW
 
-/* Define if the c++ compiler can resolve ambiguity with |using| */
-#undef HAVE_CPP_AMBIGUITY_RESOLVING_USING
-
 /* Define if a dyanmic_cast to void* gives the most derived object */
 #undef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
 

@@ -4,26 +4,11 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
-const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
-
-var tokenName;
-
-function onLoad()
-{
-  if ("arguments" in window) {
-    var params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-    tokenName = params.GetString(1);
-  } else {
-    tokenName = self.name;
-  }
-}
-
 function resetPassword()
 {
-  var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
-  var token = pk11db.findTokenByName(tokenName);
+  var pk11db = Components.classes["@mozilla.org/security/pk11tokendb;1"]
+                                 .getService(Components.interfaces.nsIPK11TokenDB);
+  var token = pk11db.getInternalKeyToken();
   token.reset();
 
   try {
@@ -44,4 +29,3 @@ function resetPassword()
 
   return true;
 }
-

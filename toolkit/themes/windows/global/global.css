@@ -297,6 +297,8 @@ popupnotificationcontent {
   margin-top: .5em;
 }
 
+%include ../../shared/notification-popup.inc.css
+
 /* :::::: autoscroll popup ::::: */
 
 .autoscroller {

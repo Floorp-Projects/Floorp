@@ -2514,28 +2514,7 @@ MediaDecoderStateMachine::HaveEnoughDecodedAudio()
 bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   MOZ_ASSERT(OnTaskQueue());
-
-  if (VideoQueue().GetSize() == 0) {
-    return false;
-  }
-
-  if (VideoQueue().GetSize() - 1 < GetAmpleVideoFrames() * mPlaybackRate) {
-    return false;
-  }
-
-  return true;
-}
-
-bool
-MediaDecoderStateMachine::NeedToDecodeVideo()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("NeedToDecodeVideo() isDec=%d minPrl=%d enufVid=%d",
-             IsVideoDecoding(), mMinimizePreroll, HaveEnoughDecodedVideo());
-  return IsVideoDecoding() &&
-         mState != DECODER_STATE_SEEKING &&
-         ((!mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
-          (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
+  return VideoQueue().GetSize() >= GetAmpleVideoFrames() * mPlaybackRate + 1;
 }
 
 bool
@@ -2592,19 +2571,6 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
   }
 
   return false;
-}
-
-bool
-MediaDecoderStateMachine::NeedToDecodeAudio()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  SAMPLE_LOG("NeedToDecodeAudio() isDec=%d minPrl=%d enufAud=%d",
-             IsAudioDecoding(), mMinimizePreroll, HaveEnoughDecodedAudio());
-
-  return IsAudioDecoding() &&
-         mState != DECODER_STATE_SEEKING &&
-         ((!mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
-          (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
 }
 
 void
@@ -2712,7 +2678,8 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
   return NS_OK;
 }
 
-void MediaDecoderStateMachine::StopPlayback()
+void
+MediaDecoderStateMachine::StopPlayback()
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("StopPlayback()");
@@ -2723,8 +2690,6 @@ void MediaDecoderStateMachine::StopPlayback()
     mMediaSink->SetPlaying(false);
     MOZ_ASSERT(!IsPlaying());
   }
-
-  DispatchDecodeTasksIfNeeded();
 }
 
 void MediaDecoderStateMachine::MaybeStartPlayback()
@@ -2971,30 +2936,19 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
 
   if (mState != DECODER_STATE_DECODING &&
       mState != DECODER_STATE_DECODING_FIRSTFRAME &&
-      mState != DECODER_STATE_BUFFERING &&
-      mState != DECODER_STATE_SEEKING) {
+      mState != DECODER_STATE_BUFFERING) {
     return;
   }
 
-  // NeedToDecodeAudio() can go from false to true while we hold the
-  // monitor, but it can't go from true to false. This can happen because
-  // NeedToDecodeAudio() takes into account the amount of decoded audio
-  // that's been written to the AudioStream but not played yet. So if we
-  // were calling NeedToDecodeAudio() twice and we thread-context switch
-  // between the calls, audio can play, which can affect the return value
-  // of NeedToDecodeAudio() giving inconsistent results. So we cache the
-  // value returned by NeedToDecodeAudio(), and make decisions
-  // based on the cached value. If NeedToDecodeAudio() has
-  // returned false, and then subsequently returns true and we're not
-  // playing, it will probably be OK since we don't need to consume data
-  // anyway.
+  const bool needToDecodeAudio =
+    IsAudioDecoding() &&
+    ((!mSentFirstFrameLoadedEvent && AudioQueue().GetSize() == 0) ||
+     (!mMinimizePreroll && !HaveEnoughDecodedAudio()));
 
-  const bool needToDecodeAudio = NeedToDecodeAudio();
-  const bool needToDecodeVideo = NeedToDecodeVideo();
-
-  // If we're in completed state, we should not need to decode anything else.
-  MOZ_ASSERT(mState != DECODER_STATE_COMPLETED ||
-             (!needToDecodeAudio && !needToDecodeVideo));
+  const bool needToDecodeVideo =
+    IsVideoDecoding() &&
+    ((!mSentFirstFrameLoadedEvent && VideoQueue().GetSize() == 0) ||
+     (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
 
   SAMPLE_LOG("DispatchDecodeTasksIfNeeded needAudio=%d audioStatus=%s needVideo=%d videoStatus=%s",
              needToDecodeAudio, AudioRequestStatus(),
