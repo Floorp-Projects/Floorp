@@ -173,7 +173,7 @@ asserts-if(stylo,2) load 830098.html # bug 1324669
 load 831287.html
 load 832644.html
 load 836890.html
-skip-if(stylo) load 838489-1.html # bug 1323649
+load 838489-1.html
 load 838489-2.html
 load 841205.html
 load 844404.html
