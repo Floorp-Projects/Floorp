@@ -153,8 +153,6 @@
               'sources': [
                 'sndio/audio_device_sndio.cc',
                 'sndio/audio_device_sndio.h',
-                'sndio/audio_device_utility_sndio.cc',
-                'sndio/audio_device_utility_sndio.h',
               ],
             }],
             ['include_alsa_audio==1', {

@@ -7,6 +7,7 @@
 const { DOM: dom, createClass, createFactory, PropTypes, addons } =
   require("devtools/client/shared/vendor/react");
 
+const { getStr } = require("../utils/l10n");
 const Types = require("../types");
 const DeviceSelector = createFactory(require("./device-selector"));
 
@@ -48,6 +49,7 @@ module.exports = createClass({
       dom.button({
         className: "viewport-rotate-button toolbar-button devtools-button",
         onClick: onRotateViewport,
+        title: getStr("responsive.rotate"),
       })
     );
   },
