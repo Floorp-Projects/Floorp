@@ -47,6 +47,7 @@
 .variables-view-container {
   overflow-x: hidden;
   overflow-y: auto;
+  direction: ltr;
 }
 
 .variables-view-element-details:not([open]) {
