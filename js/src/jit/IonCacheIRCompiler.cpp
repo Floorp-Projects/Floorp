@@ -882,6 +882,7 @@ IonCacheIRCompiler::emitGuardDOMExpandoMissingOrGuardShape()
     Label done;
     masm.branchTestUndefined(Assembler::Equal, val, &done);
 
+    masm.debugAssertIsObject(val);
     masm.unboxObject(val, objScratch);
     masm.branchTestObjShape(Assembler::NotEqual, objScratch, shape, failure->label());
 
