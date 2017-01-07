@@ -50,7 +50,7 @@ DebugFrame::observeFrame(JSContext* cx)
    if (observing_)
        return;
 
-   // TODO make sure wasm::Code onLeaveFrame traps are on
+   instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ true);
    observing_ = true;
 }
 
@@ -60,6 +60,6 @@ DebugFrame::leaveFrame(JSContext* cx)
    if (!observing_)
        return;
 
-   // TODO make sure wasm::Code onLeaveFrame traps are off
+   instance()->code().adjustEnterAndLeaveFrameTrapsState(cx, /* enabled = */ false);
    observing_ = false;
 }

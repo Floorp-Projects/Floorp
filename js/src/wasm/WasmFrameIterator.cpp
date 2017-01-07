@@ -151,6 +151,7 @@ FrameIterator::settle()
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::TrapExit:
+      case CodeRange::DebugTrap:
       case CodeRange::Inline:
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Should not encounter an exit during iteration");
@@ -238,6 +239,14 @@ FrameIterator::debugFrame() const
     // The fp() points to wasm::Frame.
     void* buf = static_cast<uint8_t*>(fp_ + callsite_->stackDepth()) - DebugFrame::offsetOfFrame();
     return static_cast<DebugFrame*>(buf);
+}
+
+const CallSite*
+FrameIterator::debugTrapCallsite() const
+{
+    MOZ_ASSERT(!done() && debugEnabled());
+    MOZ_ASSERT(callsite_->kind() == CallSite::EnterFrame || callsite_->kind() == CallSite::LeaveFrame);
+    return callsite_;
 }
 
 /*****************************************************************************/
@@ -593,6 +602,7 @@ ProfilingFrameIterator::initFromFP()
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::TrapExit:
+      case CodeRange::DebugTrap:
       case CodeRange::Inline:
       case CodeRange::FarJumpIsland:
         MOZ_CRASH("Unexpected CodeRange kind");
@@ -721,6 +731,7 @@ ProfilingFrameIterator::ProfilingFrameIterator(const WasmActivation& activation,
         callerFP_ = nullptr;
         break;
       }
+      case CodeRange::DebugTrap:
       case CodeRange::Inline: {
         // The throw stub clears WasmActivation::fp on it's way out.
         if (!fp) {
@@ -777,6 +788,7 @@ ProfilingFrameIterator::operator++()
       case CodeRange::ImportJitExit:
       case CodeRange::ImportInterpExit:
       case CodeRange::TrapExit:
+      case CodeRange::DebugTrap:
       case CodeRange::Inline:
       case CodeRange::FarJumpIsland:
         stackAddress_ = callerFP_;
@@ -803,6 +815,7 @@ ProfilingFrameIterator::label() const
     const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
     const char* nativeDescription = "native call (in asm.js)";
     const char* trapDescription = "trap handling (in asm.js)";
+    const char* debugTrapDescription = "debug trap handling (in asm.js)";
 
     switch (exitReason_) {
       case ExitReason::None:
@@ -815,6 +828,8 @@ ProfilingFrameIterator::label() const
         return nativeDescription;
       case ExitReason::Trap:
         return trapDescription;
+      case ExitReason::DebugTrap:
+        return debugTrapDescription;
     }
 
     switch (codeRange_->kind()) {
@@ -823,6 +838,7 @@ ProfilingFrameIterator::label() const
       case CodeRange::ImportJitExit:    return importJitDescription;
       case CodeRange::ImportInterpExit: return importInterpDescription;
       case CodeRange::TrapExit:         return trapDescription;
+      case CodeRange::DebugTrap:        return debugTrapDescription;
       case CodeRange::Inline:           return "inline stub (in asm.js)";
       case CodeRange::FarJumpIsland:    return "interstitial (in asm.js)";
     }

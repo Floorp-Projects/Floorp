@@ -741,6 +741,28 @@ MacroAssembler::patchNearJumpToNop(uint8_t* jump)
     Assembler::patchJumpToTwoByteNop(jump);
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
+{
+    CodeOffset offset(currentOffset());
+    masm.nop_five();
+    append(desc, CodeOffset(currentOffset()), framePushed());
+    MOZ_ASSERT_IF(!oom(), size() - offset.offset() == ToggledCallSize(nullptr));
+    return offset;
+}
+
+void
+MacroAssembler::patchNopToCall(uint8_t* callsite, uint8_t* target)
+{
+    Assembler::patchFiveByteNopToCall(callsite, target);
+}
+
+void
+MacroAssembler::patchCallToNop(uint8_t* callsite)
+{
+    Assembler::patchCallToFiveByteNop(callsite);
+}
+
 // ===============================================================
 // Jit Frames.
 

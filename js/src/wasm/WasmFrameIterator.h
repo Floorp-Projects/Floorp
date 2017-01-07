@@ -75,6 +75,7 @@ class FrameIterator
     Instance* instance() const;
     bool debugEnabled() const;
     DebugFrame* debugFrame() const;
+    const CallSite* debugTrapCallsite() const;
 };
 
 // An ExitReason describes the possible reasons for leaving compiled wasm code
@@ -85,7 +86,8 @@ enum class ExitReason : uint32_t
     ImportJit,     // fast-path call directly into JIT code
     ImportInterp,  // slow-path call into C++ Invoke()
     Native,        // call to native C++ code (e.g., Math.sin, ToInt32(), interrupt)
-    Trap           // call to trap handler for the trap in WasmActivation::trap
+    Trap,          // call to trap handler for the trap in WasmActivation::trap
+    DebugTrap      // call to debug trap handler
 };
 
 // Iterates over the frames of a single WasmActivation, given an

@@ -2080,6 +2080,11 @@ class BaseCompiler
         labelPool_.free(label);
     }
 
+    void insertBreakablePoint(CallSiteDesc::Kind kind) {
+        const uint32_t offset = iter_.currentOffset();
+        masm.nopPatchableToCall(CallSiteDesc(offset, kind));
+    }
+
     //////////////////////////////////////////////////////////////////////
     //
     // Function prologue and epilogue.
@@ -2167,6 +2172,58 @@ class BaseCompiler
             for (int32_t i = varLow_ ; i < varHigh_ ; i += 4)
                 storeToFrameI32(scratch, i + 4);
         }
+
+        if (debugEnabled_)
+            insertBreakablePoint(CallSiteDesc::EnterFrame);
+    }
+
+    void saveResult() {
+        MOZ_ASSERT(debugEnabled_);
+        size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
+        Address resultsAddress(StackPointer, debugFrameOffset + DebugFrame::offsetOfResults());
+        switch (func_.sig().ret()) {
+          case ExprType::Void:
+            break;
+          case ExprType::I32:
+            masm.store32(RegI32(ReturnReg), resultsAddress);
+            break;
+
+          case ExprType::I64:
+            masm.store64(RegI64(ReturnReg64), resultsAddress);
+            break;
+          case ExprType::F64:
+            masm.storeDouble(RegF64(ReturnDoubleReg), resultsAddress);
+            break;
+          case ExprType::F32:
+            masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
+            break;
+          default:
+            MOZ_CRASH("Function return type");
+        }
+    }
+
+    void restoreResult() {
+        MOZ_ASSERT(debugEnabled_);
+        size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
+        Address resultsAddress(StackPointer, debugFrameOffset + DebugFrame::offsetOfResults());
+        switch (func_.sig().ret()) {
+          case ExprType::Void:
+            break;
+          case ExprType::I32:
+            masm.load32(resultsAddress, RegI32(ReturnReg));
+            break;
+          case ExprType::I64:
+            masm.load64(resultsAddress, RegI64(ReturnReg64));
+            break;
+          case ExprType::F64:
+            masm.loadDouble(resultsAddress, RegF64(ReturnDoubleReg));
+            break;
+          case ExprType::F32:
+            masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
+            break;
+          default:
+            MOZ_CRASH("Function return type");
+        }
     }
 
     bool endFunction() {
@@ -2187,6 +2244,14 @@ class BaseCompiler
         masm.jump(TrapDesc(prologueTrapOffset_, Trap::StackOverflow, /* framePushed = */ 0));
 
         masm.bind(&returnLabel_);
+
+        if (debugEnabled_) {
+            // Store and reload the return value from DebugFrame::return so that
+            // it can be clobbered, and/or modified by the debug trap.
+            saveResult();
+            insertBreakablePoint(CallSiteDesc::LeaveFrame);
+            restoreResult();
+        }
 
         // Restore the TLS register in case it was overwritten by the function.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
