@@ -752,6 +752,9 @@ js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope, HandleScrip
               case ScopeKind::Module:
                 MOZ_CRASH("NYI");
                 break;
+              case ScopeKind::WasmFunction:
+                MOZ_CRASH("wasm functions cannot be nested in JSScripts");
+                break;
             }
 
             if (mode == XDR_DECODE)
