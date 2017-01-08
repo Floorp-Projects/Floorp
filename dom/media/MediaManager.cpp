@@ -2115,19 +2115,11 @@ if (privileged) {
       case MediaSourceEnum::Application:
       case MediaSourceEnum::Window:
         // Deny screensharing request if support is disabled, or
-        // the requesting document is not from a host on the whitelist, or
-        // we're on WinXP until proved that it works
+        // the requesting document is not from a host on the whitelist.
         if (!Preferences::GetBool(((videoType == MediaSourceEnum::Browser)?
                                    "media.getusermedia.browser.enabled" :
                                    "media.getusermedia.screensharing.enabled"),
                                   false) ||
-#if defined(XP_WIN)
-            (
-              // Allow tab sharing for all platforms including XP
-              (videoType != MediaSourceEnum::Browser) &&
-              !Preferences::GetBool("media.getusermedia.screensharing.allow_on_old_platforms",
-                                    false) && !IsVistaOrLater()) ||
-#endif
             (!privileged && !HostIsHttps(*docURI))) {
           RefPtr<MediaStreamError> error =
               new MediaStreamError(aWindow,
