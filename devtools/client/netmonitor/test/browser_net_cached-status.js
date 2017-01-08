@@ -15,7 +15,6 @@ add_task(function* () {
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
-  NetworkDetails._params.lazyEmpty = false;
 
   const REQUEST_DATA = [
     {
