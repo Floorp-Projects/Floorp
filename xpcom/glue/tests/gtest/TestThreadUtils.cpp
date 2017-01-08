@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "nsThreadUtils.h"
+#include "mozilla/UniquePtr.h"
 #include "gtest/gtest.h"
 
 // {9e70a320-be02-11d1-8031-006008159b5a}
@@ -37,6 +38,10 @@ TEST(ThreadUtils, TypeTraits)
 
   static_assert(mozilla::IsSame<int, mozilla::RemoveSmartPointer<int>::Type>::value,
                 "RemoveSmartPointer<int>::Type should be int");
+  static_assert(mozilla::IsSame<int*, mozilla::RemoveSmartPointer<int*>::Type>::value,
+                "RemoveSmartPointer<int*>::Type should be int*");
+  static_assert(mozilla::IsSame<UniquePtr<int>, mozilla::RemoveSmartPointer<UniquePtr<int>>::Type>::value,
+                "RemoveSmartPointer<UniquePtr<int>>::Type should be UniquePtr<int>");
   static_assert(mozilla::IsSame<int, mozilla::RemoveSmartPointer<RefPtr<int>>::Type>::value,
                 "RemoveSmartPointer<RefPtr<int>>::Type should be int");
   static_assert(mozilla::IsSame<int, mozilla::RemoveSmartPointer<const RefPtr<int>>::Type>::value,
@@ -53,6 +58,35 @@ TEST(ThreadUtils, TypeTraits)
                 "RemoveSmartPointer<volatile nsCOMPtr<int>>::Type should be int");
   static_assert(mozilla::IsSame<int, mozilla::RemoveSmartPointer<const volatile nsCOMPtr<int>>::Type>::value,
                 "RemoveSmartPointer<const volatile nsCOMPtr<int>>::Type should be int");
+
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<int>::Type>::value,
+                "RemoveRawOrSmartPointer<int>::Type should be int");
+  static_assert(mozilla::IsSame<UniquePtr<int>, mozilla::RemoveRawOrSmartPointer<UniquePtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<UniquePtr<int>>::Type should be UniquePtr<int>");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<int*>::Type>::value,
+                "RemoveRawOrSmartPointer<int*>::Type should be int");
+  static_assert(mozilla::IsSame<const int, mozilla::RemoveRawOrSmartPointer<const int*>::Type>::value,
+                "RemoveRawOrSmartPointer<const int*>::Type should be const int");
+  static_assert(mozilla::IsSame<volatile int, mozilla::RemoveRawOrSmartPointer<volatile int*>::Type>::value,
+                "RemoveRawOrSmartPointer<volatile int*>::Type should be volatile int");
+  static_assert(mozilla::IsSame<const volatile int, mozilla::RemoveRawOrSmartPointer<const volatile int*>::Type>::value,
+                "RemoveRawOrSmartPointer<const volatile int*>::Type should be const volatile int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<RefPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<RefPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<const RefPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<const RefPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<volatile RefPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<volatile RefPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<const volatile RefPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<const volatile RefPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<nsCOMPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<nsCOMPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<const nsCOMPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<const nsCOMPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<volatile nsCOMPtr<int>>::Type should be int");
+  static_assert(mozilla::IsSame<int, mozilla::RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>>::Type>::value,
+                "RemoveRawOrSmartPointer<const volatile nsCOMPtr<int>>::Type should be int");
 }
 
 namespace TestThreadUtils {
