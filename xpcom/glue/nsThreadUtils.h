@@ -540,17 +540,17 @@ struct IsParameterStorageClass<StoreConstRefPassByConstLRef<S>>
   : public mozilla::TrueType {};
 
 template<typename T>
-struct StorensRefPtrPassByPtr
+struct StoreRefPtrPassByPtr
 {
   typedef RefPtr<T> stored_type;
   typedef T* passed_type;
   stored_type m;
   template <typename A>
-  MOZ_IMPLICIT StorensRefPtrPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
+  MOZ_IMPLICIT StoreRefPtrPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return m.get(); }
 };
 template<typename S>
-struct IsParameterStorageClass<StorensRefPtrPassByPtr<S>>
+struct IsParameterStorageClass<StoreRefPtrPassByPtr<S>>
   : public mozilla::TrueType {};
 
 template<typename T>
@@ -671,7 +671,7 @@ struct NonnsISupportsPointerStorageClass
 template<typename TWithoutPointer>
 struct PointerStorageClass
   : mozilla::Conditional<HasRefCountMethods<TWithoutPointer>::value,
-                         StorensRefPtrPassByPtr<TWithoutPointer>,
+                         StoreRefPtrPassByPtr<TWithoutPointer>,
                          typename NonnsISupportsPointerStorageClass<
                            TWithoutPointer
                          >::Type>
@@ -688,7 +688,7 @@ struct LValueReferenceStorageClass
 template<typename T>
 struct SmartPointerStorageClass
   : mozilla::Conditional<mozilla::IsRefcountedSmartPointer<T>::value,
-                         StorensRefPtrPassByPtr<
+                         StoreRefPtrPassByPtr<
                            typename mozilla::RemoveSmartPointer<T>::Type>,
                          StoreCopyPassByConstLRef<T>>
 {};
@@ -721,7 +721,7 @@ struct NonParameterStorageClass
 
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
-// - RC*       -> StorensRefPtrPassByPtr<RC>     : Store RefPtr<RC>, pass RC*
+// - RC*       -> StoreRefPtrPassByPtr<RC>       : Store RefPtr<RC>, pass RC*
 //   ^^ RC quacks like a ref-counted type (i.e., has AddRef and Release methods)
 // - const T*  -> StoreConstPtrPassByConstPtr<T> : Store const T*, pass const T*
 // - T*        -> StorePtrPassByPtr<T>           : Store T*, pass T*.
@@ -729,7 +729,7 @@ struct NonParameterStorageClass
 // - T&        -> StoreRefPassByLRef<T>          : Store T&, pass T&.
 // - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass Move(T).
 // - RefPtr<T>, nsCOMPtr<T>
-//             -> StorensRefPtrPassByPtr<T>      : Store RefPtr<T>, pass T*
+//             -> StoreRefPtrPassByPtr<T>        : Store RefPtr<T>, pass T*
 // - Other T   -> StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
 // Other available explicit options:
 // -              StoreCopyPassByValue<T>        : Store T, pass T.

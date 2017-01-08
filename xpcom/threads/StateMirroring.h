@@ -325,7 +325,7 @@ private:
       MOZ_ASSERT(!IsConnected());
       MOZ_ASSERT(OwnerThread()->RequiresTailDispatch(aCanonical->OwnerThread()), "Can't get coherency without tail dispatch");
 
-      nsCOMPtr<nsIRunnable> r = NewRunnableMethod<StorensRefPtrPassByPtr<AbstractMirror<T>>>
+      nsCOMPtr<nsIRunnable> r = NewRunnableMethod<StoreRefPtrPassByPtr<AbstractMirror<T>>>
                                   (aCanonical, &AbstractCanonical<T>::AddMirror, this);
       aCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
       mCanonical = aCanonical;
@@ -340,7 +340,7 @@ private:
       }
 
       MIRROR_LOG("%s [%p] Disconnecting from %p", mName, this, mCanonical.get());
-      nsCOMPtr<nsIRunnable> r = NewRunnableMethod<StorensRefPtrPassByPtr<AbstractMirror<T>>>
+      nsCOMPtr<nsIRunnable> r = NewRunnableMethod<StoreRefPtrPassByPtr<AbstractMirror<T>>>
                                   (mCanonical, &AbstractCanonical<T>::RemoveMirror, this);
       mCanonical->OwnerThread()->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
       mCanonical = nullptr;
