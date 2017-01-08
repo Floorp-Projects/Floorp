@@ -298,12 +298,10 @@ GMPChild::RecvPreloadLibs(const nsCString& aLibs)
   // Pre-load DLLs that need to be used by the EME plugin but that can't be
   // loaded after the sandbox has started
   // Items in this must be lowercase!
-  static const char* whitelist[] = {
+  static const char *const whitelist[] = {
     "d3d9.dll", // Create an `IDirect3D9` to get adapter information
     "dxva2.dll", // Get monitor information
     "evr.dll", // MFGetStrideForBitmapInfoHeader
-    "mfh264dec.dll", // H.264 decoder (on Windows Vista)
-    "mfheaacdec.dll", // AAC decoder (on Windows Vista)
     "mfplat.dll", // MFCreateSample, MFCreateAlignedMemoryBuffer, MFCreateMediaType
     "msauddecmft.dll", // AAC decoder (on Windows 8)
     "msmpeg2adec.dll", // AAC decoder (on Windows 7)
