@@ -125,7 +125,7 @@ DecoderCallbackFuzzingWrapper::Output(MediaData* aData)
 {
   if (!mTaskQueue->IsCurrentThreadIn()) {
     nsCOMPtr<nsIRunnable> task =
-      NewRunnableMethod<StorensRefPtrPassByPtr<MediaData>>(
+      NewRunnableMethod<StoreRefPtrPassByPtr<MediaData>>(
         this, &DecoderCallbackFuzzingWrapper::Output, aData);
     mTaskQueue->Dispatch(task.forget());
     return;
