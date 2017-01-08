@@ -307,9 +307,9 @@ nsLayoutStatics::Initialize()
 
   mozilla::dom::WebCryptoThreadPool::Initialize();
 
-  // NB: We initialize servo in nsAppRunner.cpp, because we need to do it after
-  // creating the hidden DOM window to support some current stylo hacks. We
-  // should move initialization back here once those go away.
+#ifdef MOZ_STYLO
+  Servo_Initialize();
+#endif
 
 #ifndef MOZ_WIDGET_ANDROID
   // On Android, we instantiate it when constructing AndroidBridge.
@@ -324,6 +324,10 @@ nsLayoutStatics::Shutdown()
 {
   // Don't need to shutdown nsWindowMemoryReporter, that will be done by the
   // memory reporter manager.
+
+#ifdef MOZ_STYLO
+  Servo_Shutdown();
+#endif
 
   nsMessageManagerScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
