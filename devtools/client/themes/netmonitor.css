@@ -1108,16 +1108,11 @@
   background: none;
   color: inherit;
   width: 100%;
-  margin-inline-end: 2px;
 }
 
 .treeTable .textbox-input:focus {
   outline: 0;
   box-shadow: var(--theme-focus-box-shadow-textbox);
-}
-
-.treeTable .treeLabel {
-  font-weight: 600;
 }
 
 .properties-view {
@@ -1162,6 +1157,11 @@
   background-color: var(--theme-toolbar-background);
 }
 
+.properties-view .devtools-searchbox,
+.tree-container .treeTable tr:not(:last-child) td:not([class=""]) {
+  border-bottom: 1px solid var(--theme-splitter-color);
+}
+
 .tree-container .treeTable .tree-section > * {
   vertical-align: middle;
 }
@@ -1181,6 +1181,11 @@
   white-space: nowrap;
 }
 
+.empty-notice {
+  color: var(--theme-body-color-alt);
+  padding: 3px 8px;
+}
+
 .editor-container,
 .editor-mount,
 .editor-mount iframe {
@@ -1193,6 +1198,7 @@
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after netmonitor is migrated to react
  */
+#react-params-tabpanel-hook,
 #react-preview-tabpanel-hook,
 #react-security-tabpanel-hook,
 #react-timings-tabpanel-hook,
@@ -1204,6 +1210,7 @@
 }
 
 /* For vbox */
+#react-params-tabpanel-hook,
 #react-preview-tabpanel-hook,
 #react-security-tabpanel-hook,
 #react-timings-tabpanel-hook,

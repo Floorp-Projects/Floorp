@@ -19,7 +19,6 @@ add_task(function* () {
   let requestItems = [];
 
   RequestsMenu.lazyUpdate = false;
-  NetworkDetails._params.lazyEmpty = false;
 
   const REQUEST_DATA = [
     {
@@ -173,33 +172,32 @@ add_task(function* () {
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[2];
     let statusParamValue = data.uri.split("=").pop();
     let statusParamShownValue = "\"" + statusParamValue + "\"";
+    let treeSections = tabpanel.querySelectorAll(".tree-section");
 
-    is(tabpanel.querySelectorAll(".variables-view-scope").length, 1,
-      "There should be 1 param scope displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variable-or-property").length, 1,
-      "There should be 1 param value displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
+    is(treeSections.length, 1,
+      "There should be 1 param section displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll("tr:not(.tree-section).treeRow").length, 1,
+      "There should be 1 param row displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this tabpanel.");
 
-    let paramsScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
+    let labels = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
+    let values = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
-    is(paramsScope.querySelector(".name").getAttribute("value"),
+    is(treeSections[0].querySelector(".treeLabel").textContent,
       L10N.getStr("paramsQueryString"),
       "The params scope doesn't have the correct title.");
 
-    is(paramsScope.querySelectorAll(".variables-view-variable .name")[0]
-      .getAttribute("value"),
-      "sts", "The param name was incorrect.");
-    is(paramsScope.querySelectorAll(".variables-view-variable .value")[0]
-      .getAttribute("value"),
-      statusParamShownValue, "The param value was incorrect.");
+    is(labels[0].textContent, "sts", "The param name was incorrect.");
+    is(values[0].textContent, statusParamShownValue, "The param value was incorrect.");
 
-    is(tabpanel.querySelector("#request-params-box")
-      .hasAttribute("hidden"), false,
-      "The request params box should not be hidden.");
-    is(tabpanel.querySelector("#request-post-data-textarea-box")
-      .hasAttribute("hidden"), true,
-      "The request post data textarea box should be hidden.");
+    ok(tabpanel.querySelector(".treeTable"),
+      "The request params tree view should be displayed.");
+    is(tabpanel.querySelector(".editor-mount") === null,
+      true,
+      "The request post data editor should be hidden.");
   }
 
   /**
