@@ -49,6 +49,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
                                  public nsISelectControlFrame
 {
 public:
+  typedef mozilla::dom::HTMLOptionElement HTMLOptionElement;
+
   friend nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
                                                   nsStyleContext* aContext);
 
@@ -118,7 +120,7 @@ public:
     // nsIListControlFrame
   virtual void SetComboboxFrame(nsIFrame* aComboboxFrame) override;
   virtual int32_t GetSelectedIndex() override;
-  virtual mozilla::dom::HTMLOptionElement* GetCurrentOption() override;
+  virtual HTMLOptionElement* GetCurrentOption() override;
 
   /**
    * Gets the text of the currently selected item.
@@ -180,7 +182,7 @@ public:
   /**
    * Returns the HTMLOptionElement for a given index in mContent's collection.
    */
-  mozilla::dom::HTMLOptionElement* GetOption(uint32_t aIndex) const;
+  HTMLOptionElement* GetOption(uint32_t aIndex) const;
 
   static void ComboboxFocusSet();
 
@@ -258,6 +260,13 @@ public:
 
 protected:
   /**
+   * Return the first non-disabled option starting at aFromIndex (inclusive).
+   * @param aFoundIndex if non-null, set to the index of the returned option 
+   */
+  HTMLOptionElement* GetNonDisabledOptionFrom(int32_t aFromIndex,
+                                              int32_t* aFoundIndex = nullptr);
+
+  /**
    * Updates the selected text in a combobox and then calls FireOnChange().
    * @note This method might destroy the frame, pres shell and other objects.
    * Returns false if calling it destroyed |this|.
@@ -282,7 +291,7 @@ protected:
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollToFrame(mozilla::dom::HTMLOptionElement& aOptElement);
+  void ScrollToFrame(HTMLOptionElement& aOptElement);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
