@@ -358,6 +358,39 @@ struct RemoveSmartPointer
   : detail::RemoveSmartPointerHelper<T, typename RemoveCV<T>::Type>
 {};
 
+namespace detail {
+
+template<typename T, typename CVRemoved>
+struct RemoveRawOrSmartPointerHelper
+{
+  typedef T Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveRawOrSmartPointerHelper<T, Pointee*>
+{
+  typedef Pointee Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveRawOrSmartPointerHelper<T, RefPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveRawOrSmartPointerHelper<T, nsCOMPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+} // namespace detail
+
+template<typename T>
+struct RemoveRawOrSmartPointer
+  : detail::RemoveRawOrSmartPointerHelper<T, typename RemoveCV<T>::Type>
+{};
+
 } // namespace mozilla
 
 inline nsISupports*
