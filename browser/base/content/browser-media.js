@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var gEMEHandler = {
   get uiEnabled() {
     let emeUIEnabled = Services.prefs.getBoolPref("browser.eme.ui.enabled");
@@ -209,9 +211,6 @@ let gDecoderDoctorHandler = {
     }
     if (type == "adobe-cdm-not-activated" &&
         AppConstants.platform == "win") {
-      if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-        return gNavigatorBundle.getString("decoder.noCodecsXP.message");
-      }
       if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.1")) {
         return gNavigatorBundle.getString("decoder.noCodecsVista.message");
       }
