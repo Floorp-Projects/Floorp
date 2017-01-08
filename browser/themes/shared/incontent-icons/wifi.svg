@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg"
+     width="64"
+     height="64"
+     viewBox="0 0 64 64">
+
+  <style>
+    .gray {
+      fill: #797c80;
+    }
+  </style>
+
+  <defs>
+    <clipPath id="clip-path">
+      <polygon points="32 52.35 78.88 6.06 -14.88 6.06 32 52.35"/>
+    </clipPath>
+  </defs>
+
+  <circle class="gray" cx="32" cy="52" r="6"/>
+
+  <g clip-path="url('#clip-path')">
+    <path class="gray" d="M71.63,52A39.63,39.63,0,1,1,32,12.38,39.63,39.63,0,0,1,71.63,52ZM32,7.63A44.38,44.38,0,1,0,76.38,52,44.38,44.38,0,0,0,32,7.63Z"/>
+    <path class="gray" d="M47.75,52A15.75,15.75,0,1,1,32,36.25,15.75,15.75,0,0,1,47.75,52ZM32,31.65A20.35,20.35,0,1,0,52.35,52,20.35,20.35,0,0,0,32,31.65Z"/>
+    <path class="gray" d="M59.58,52A27.58,27.58,0,1,1,32,24.42,27.58,27.58,0,0,1,59.58,52ZM32,19.38A32.63,32.63,0,1,0,64.63,52,32.63,32.63,0,0,0,32,19.38Z"/>
+  </g>
+</svg>
