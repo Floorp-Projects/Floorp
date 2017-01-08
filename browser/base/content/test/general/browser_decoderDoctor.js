@@ -52,13 +52,7 @@ add_task(function* test_adobe_cdm_not_found() {
     return;
   }
 
-  let message;
-  if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-    message = gNavigatorBundle.getFormattedString("emeNotifications.drmContentDisabled.message", [""]);
-  } else {
-    message = gNavigatorBundle.getString("decoder.noCodecs.message");
-  }
-
+  let message = gNavigatorBundle.getString("decoder.noCodecs.message");
   yield test_decoder_doctor_notification("adobe-cdm-not-found", message);
 });
 
