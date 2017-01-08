@@ -52,6 +52,19 @@ add_task(function* checkCaptivePortalCertErrorUI() {
   let portalTab = yield portalTabPromise;
   is(gBrowser.selectedTab, portalTab, "Login page should be open in a new foreground tab.");
 
+  // Make sure clicking the "Open Login Page" button again focuses the existing portal tab.
+  yield BrowserTestUtils.switchTab(gBrowser, errorTab);
+  // Passing an empty function to BrowserTestUtils.switchTab lets us wait for an arbitrary
+  // tab switch.
+  portalTabPromise = BrowserTestUtils.switchTab(gBrowser, () => {});
+  yield ContentTask.spawn(browser, null, () => {
+    info("Clicking the Open Login Page button.");
+    content.document.getElementById("openPortalLoginPageButton").click();
+  });
+
+  let portalTab2 = yield portalTabPromise;
+  is(portalTab2, portalTab, "The existing portal tab should be focused.");
+
   let portalTabRemoved = BrowserTestUtils.removeTab(portalTab, {dontRemove: true});
   let errorTabReloaded = waitForCertErrorLoad(browser);
 
