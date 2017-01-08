@@ -29,7 +29,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "AlertsService", "@mozilla.org/alerts-s
   ["BookmarkJSONUtils", "resource://gre/modules/BookmarkJSONUtils.jsm"],
   ["BrowserUITelemetry", "resource:///modules/BrowserUITelemetry.jsm"],
   ["BrowserUsageTelemetry", "resource:///modules/BrowserUsageTelemetry.jsm"],
-  ["CaptivePortalWatcher", "resource:///modules/CaptivePortalWatcher.jsm"],
   ["ContentClick", "resource:///modules/ContentClick.jsm"],
   ["ContentPrefServiceParent", "resource://gre/modules/ContentPrefServiceParent.jsm"],
   ["ContentSearch", "resource:///modules/ContentSearch.jsm"],
@@ -996,8 +995,6 @@ BrowserGlue.prototype = {
 
     this._checkForOldBuildUpdates();
 
-    CaptivePortalWatcher.init();
-
     AutoCompletePopup.init();
     DateTimePickerHelper.init();
 
@@ -1032,7 +1029,6 @@ BrowserGlue.prototype = {
     SelfSupportBackend.uninit();
     PageThumbs.uninit();
     NewTabMessages.uninit();
-    CaptivePortalWatcher.uninit();
     AboutNewTab.uninit();
     webrtcUI.uninit();
     FormValidationHandler.uninit();

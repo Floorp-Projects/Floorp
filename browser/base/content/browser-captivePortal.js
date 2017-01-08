@@ -2,28 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-this.EXPORTED_SYMBOLS = [ "CaptivePortalWatcher" ];
-
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource:///modules/RecentWindow.jsm");
-
 XPCOMUtils.defineLazyServiceGetter(this, "cps",
                                    "@mozilla.org/network/captive-portal-service;1",
                                    "nsICaptivePortalService");
 
-this.CaptivePortalWatcher = {
+var CaptivePortalWatcher = {
   /**
    * This constant is chosen to be large enough for a portal recheck to complete,
    * and small enough that the delay in opening a tab isn't too noticeable.
    * Please see comments for _delayedCaptivePortalDetected for more details.
    */
-  PORTAL_RECHECK_DELAY_MS: 150,
+  PORTAL_RECHECK_DELAY_MS: Preferences.get("captivedetect.portalRecheckDelayMS", 500),
 
   // This is the value used to identify the captive portal notification.
   PORTAL_NOTIFICATION_VALUE: "captive-portal-detected",
@@ -31,11 +20,6 @@ this.CaptivePortalWatcher = {
   // This holds a weak reference to the captive portal tab so that we
   // don't leak it if the user closes it.
   _captivePortalTab: null,
-
-  // This holds a weak reference to the captive portal notification.
-  _captivePortalNotification: null,
-
-  _initialized: false,
 
   /**
    * If a portal is detected when we don't have focus, we first wait for focus
@@ -49,36 +33,53 @@ this.CaptivePortalWatcher = {
   // This flag exists so that tests can appropriately simulate a recheck.
   _waitingForRecheck: false,
 
+  get _captivePortalNotification() {
+    let nb = document.getElementById("high-priority-global-notificationbox");
+    return nb.getNotificationWithValue(this.PORTAL_NOTIFICATION_VALUE);
+  },
+
   get canonicalURL() {
     return Services.prefs.getCharPref("captivedetect.canonicalURL");
+  },
+
+  get _browserBundle() {
+    delete this._browserBundle;
+    return this._browserBundle =
+      Services.strings.createBundle("chrome://browser/locale/browser.properties");
   },
 
   init() {
     Services.obs.addObserver(this, "captive-portal-login", false);
     Services.obs.addObserver(this, "captive-portal-login-abort", false);
     Services.obs.addObserver(this, "captive-portal-login-success", false);
-    this._initialized = true;
 
     if (cps.state == cps.LOCKED_PORTAL) {
       // A captive portal has already been detected.
       this._captivePortalDetected();
-      return;
+
+      // Automatically open a captive portal tab if there's no other browser window.
+      let windows = Services.wm.getEnumerator("navigator:browser");
+      if (windows.getNext() == window && !windows.hasMoreElements()) {
+        this.ensureCaptivePortalTab();
+      }
     }
 
     cps.recheckCaptivePortal();
   },
 
   uninit() {
-    if (!this._initialized) {
-      return;
-    }
     Services.obs.removeObserver(this, "captive-portal-login");
     Services.obs.removeObserver(this, "captive-portal-login-abort");
     Services.obs.removeObserver(this, "captive-portal-login-success");
+
+
+    if (this._delayedCaptivePortalDetectedInProgress) {
+      Services.obs.removeObserver(this, "xul-window-visible");
+    }
   },
 
-  observe(subject, topic, data) {
-    switch (topic) {
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
       case "captive-portal-login":
         this._captivePortalDetected();
         break;
@@ -98,33 +99,17 @@ this.CaptivePortalWatcher = {
     }
 
     let win = RecentWindow.getMostRecentBrowserWindow();
-    // If there's no browser window or none have focus, open and show the
-    // tab when we regain focus. This is so that if a different application was
-    // focused, when the user (re-)focuses a browser window, we open the tab
-    // immediately in that window so they can login before continuing to browse.
-    if (!win || win != Services.ww.activeWindow) {
+    // If no browser window has focus, open and show the tab when we regain focus.
+    // This is so that if a different application was focused, when the user
+    // (re-)focuses a browser window, we open the tab immediately in that window
+    // so they can log in before continuing to browse.
+    if (win != Services.ww.activeWindow) {
       this._delayedCaptivePortalDetectedInProgress = true;
       Services.obs.addObserver(this, "xul-window-visible", false);
       return;
     }
 
-    this._showNotification(win);
-  },
-
-  _ensureCaptivePortalTab(win) {
-    let tab;
-    if (this._captivePortalTab) {
-      tab = this._captivePortalTab.get();
-    }
-
-    // If the tab is gone or going, we need to open a new one.
-    if (!tab || tab.closing || !tab.parentNode) {
-      tab = win.gBrowser.addTab(this.canonicalURL);
-    }
-
-    this._captivePortalTab = Cu.getWeakReference(tab);
-    win.gBrowser.selectedTab = tab;
-    return tab;
+    this._showNotification();
   },
 
   /**
@@ -143,7 +128,12 @@ this.CaptivePortalWatcher = {
       return;
     }
     Services.obs.removeObserver(this, "xul-window-visible");
+    this._delayedCaptivePortalDetectedInProgress = false;
 
+    if (win != window) {
+      // Some other browser window got focus, we don't have to do anything.
+      return;
+    }
     // Trigger a portal recheck. The user may have logged into the portal via
     // another client, or changed networks.
     cps.recheckCaptivePortal();
@@ -155,18 +145,17 @@ this.CaptivePortalWatcher = {
       let time = Date.now() - requestTime;
       Services.obs.removeObserver(observer, "captive-portal-check-complete");
       self._waitingForRecheck = false;
-      self._delayedCaptivePortalDetectedInProgress = false;
       if (cps.state != cps.LOCKED_PORTAL) {
         // We're free of the portal!
         return;
       }
 
-      self._showNotification(win);
+      self._showNotification();
       if (time <= self.PORTAL_RECHECK_DELAY_MS) {
         // The amount of time elapsed since we requested a recheck (i.e. since
         // the browser window was focused) was small enough that we can add and
         // focus a tab with the login page with no noticeable delay.
-        self._ensureCaptivePortalTab(win);
+        self.ensureCaptivePortalTab();
       }
     }, "captive-portal-check-complete", false);
   },
@@ -178,39 +167,6 @@ this.CaptivePortalWatcher = {
     }
 
     this._removeNotification();
-
-    if (!this._captivePortalTab) {
-      return;
-    }
-
-    let tab = this._captivePortalTab.get();
-    // In all the cases below, we want to stop treating the tab as a
-    // captive portal tab.
-    this._captivePortalTab = null;
-
-    // Check parentNode in case the object hasn't been gc'd yet.
-    if (!tab || tab.closing || !tab.parentNode) {
-      // User has closed the tab already.
-      return;
-    }
-
-    let tabbrowser = tab.ownerGlobal.gBrowser;
-
-    // If after the login, the captive portal has redirected to some other page,
-    // leave it open if the tab has focus.
-    if (tab.linkedBrowser.currentURI.spec != this.canonicalURL &&
-        tabbrowser.selectedTab == tab) {
-      return;
-    }
-
-    // Remove the tab.
-    tabbrowser.removeTab(tab);
-  },
-
-  get _browserBundle() {
-    delete this._browserBundle;
-    return this._browserBundle =
-      Services.strings.createBundle("chrome://browser/locale/browser.properties");
   },
 
   handleEvent(aEvent) {
@@ -219,7 +175,7 @@ this.CaptivePortalWatcher = {
     }
 
     let tab = this._captivePortalTab.get();
-    let n = this._captivePortalNotification.get();
+    let n = this._captivePortalNotification;
     if (!tab || !n) {
       return;
     }
@@ -233,12 +189,12 @@ this.CaptivePortalWatcher = {
     }
   },
 
-  _showNotification(win) {
+  _showNotification() {
     let buttons = [
       {
         label: this._browserBundle.GetStringFromName("captivePortal.showLoginPage"),
         callback: () => {
-          this._ensureCaptivePortalTab(win);
+          this.ensureCaptivePortalTab();
 
           // Returning true prevents the notification from closing.
           return true;
@@ -253,26 +209,51 @@ this.CaptivePortalWatcher = {
       if (aEventName != "removed") {
         return;
       }
-      win.gBrowser.tabContainer.removeEventListener("TabSelect", this);
+      gBrowser.tabContainer.removeEventListener("TabSelect", this);
     };
 
-    let nb = win.document.getElementById("high-priority-global-notificationbox");
-    let n = nb.appendNotification(message, this.PORTAL_NOTIFICATION_VALUE, "",
-                                  nb.PRIORITY_INFO_MEDIUM, buttons, closeHandler);
+    let nb = document.getElementById("high-priority-global-notificationbox");
+    nb.appendNotification(message, this.PORTAL_NOTIFICATION_VALUE, "",
+                          nb.PRIORITY_INFO_MEDIUM, buttons, closeHandler);
 
-    this._captivePortalNotification = Cu.getWeakReference(n);
-
-    win.gBrowser.tabContainer.addEventListener("TabSelect", this);
+    gBrowser.tabContainer.addEventListener("TabSelect", this);
   },
 
   _removeNotification() {
-    if (!this._captivePortalNotification)
-      return;
-    let n = this._captivePortalNotification.get();
-    this._captivePortalNotification = null;
+    let n = this._captivePortalNotification;
     if (!n || !n.parentNode) {
       return;
     }
     n.close();
+  },
+
+  ensureCaptivePortalTab() {
+    let tab;
+    if (this._captivePortalTab) {
+      tab = this._captivePortalTab.get();
+    }
+
+    // If the tab is gone or going, we need to open a new one.
+    if (!tab || tab.closing || !tab.parentNode) {
+      tab = gBrowser.addTab(this.canonicalURL, { ownerTab: gBrowser.selectedTab });
+      this._captivePortalTab = Cu.getWeakReference(tab);
+    }
+
+    gBrowser.selectedTab = tab;
+
+    let canonicalURI = makeURI(this.canonicalURL);
+
+    // When we are no longer captive, close the tab if it's at the canonical URL.
+    let tabCloser = () => {
+      Services.obs.removeObserver(tabCloser, "captive-portal-login-abort");
+      Services.obs.removeObserver(tabCloser, "captive-portal-login-success");
+      if (!tab || tab.closing || !tab.parentNode || !tab.linkedBrowser ||
+          !tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)) {
+        return;
+      }
+      gBrowser.removeTab(tab);
+    }
+    Services.obs.addObserver(tabCloser, "captive-portal-login-abort", false);
+    Services.obs.addObserver(tabCloser, "captive-portal-login-success", false);
   },
 };
