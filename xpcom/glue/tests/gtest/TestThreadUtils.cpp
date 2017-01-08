@@ -273,8 +273,8 @@ TEST(ThreadUtils, main)
                 "StoreRefPassByLRef<int> should be recognized as Storage Class");
   static_assert(IsParameterStorageClass<StoreConstRefPassByConstLRef<int>>::value,
                 "StoreConstRefPassByConstLRef<int> should be recognized as Storage Class");
-  static_assert(IsParameterStorageClass<StorensRefPtrPassByPtr<int>>::value,
-                "StorensRefPtrPassByPtr<int> should be recognized as Storage Class");
+  static_assert(IsParameterStorageClass<StoreRefPtrPassByPtr<int>>::value,
+                "StoreRefPtrPassByPtr<int> should be recognized as Storage Class");
   static_assert(IsParameterStorageClass<StorePtrPassByPtr<int>>::value,
                 "StorePtrPassByPtr<int> should be recognized as Storage Class");
   static_assert(IsParameterStorageClass<StoreConstPtrPassByConstPtr<int>>::value,
@@ -439,42 +439,42 @@ TEST(ThreadUtils, main)
   }
 
   // nsRefPtr to pointer.
-  static_assert(mozilla::IsSame< ::detail::ParameterStorage<StorensRefPtrPassByPtr<SpyWithISupports>>::Type,
-                                StorensRefPtrPassByPtr<SpyWithISupports>>::value,
-                "ParameterStorage<StorensRefPtrPassByPtr<SpyWithISupports>>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
+  static_assert(mozilla::IsSame< ::detail::ParameterStorage<StoreRefPtrPassByPtr<SpyWithISupports>>::Type,
+                                StoreRefPtrPassByPtr<SpyWithISupports>>::value,
+                "ParameterStorage<StoreRefPtrPassByPtr<SpyWithISupports>>::Type should be StoreRefPtrPassByPtr<SpyWithISupports>");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<SpyWithISupports*>::Type,
-                                StorensRefPtrPassByPtr<SpyWithISupports>>::value,
-                "ParameterStorage<SpyWithISupports*>::Type should be StorensRefPtrPassByPtr<SpyWithISupports>");
-  static_assert(mozilla::IsSame<StorensRefPtrPassByPtr<SpyWithISupports>::stored_type,
+                                StoreRefPtrPassByPtr<SpyWithISupports>>::value,
+                "ParameterStorage<SpyWithISupports*>::Type should be StoreRefPtrPassByPtr<SpyWithISupports>");
+  static_assert(mozilla::IsSame<StoreRefPtrPassByPtr<SpyWithISupports>::stored_type,
                                 RefPtr<SpyWithISupports>>::value,
-                "StorensRefPtrPassByPtr<SpyWithISupports>::stored_type should be RefPtr<SpyWithISupports>");
-  static_assert(mozilla::IsSame<StorensRefPtrPassByPtr<SpyWithISupports>::passed_type,
+                "StoreRefPtrPassByPtr<SpyWithISupports>::stored_type should be RefPtr<SpyWithISupports>");
+  static_assert(mozilla::IsSame<StoreRefPtrPassByPtr<SpyWithISupports>::passed_type,
                                 SpyWithISupports*>::value,
-                "StorensRefPtrPassByPtr<SpyWithISupports>::passed_type should be SpyWithISupports*");
+                "StoreRefPtrPassByPtr<SpyWithISupports>::passed_type should be SpyWithISupports*");
   // (more nsRefPtr tests below)
 
   // nsRefPtr for ref-countable classes that do not derive from ISupports.
   static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedFinal>::value,
                 "ThreadUtilsRefCountedFinal has AddRef() and Release()");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsRefCountedFinal*>::Type,
-                                StorensRefPtrPassByPtr<ThreadUtilsRefCountedFinal>>::value,
-                "ParameterStorage<ThreadUtilsRefCountedFinal*>::Type should be StorensRefPtrPassByPtr<ThreadUtilsRefCountedFinal>");
+                                StoreRefPtrPassByPtr<ThreadUtilsRefCountedFinal>>::value,
+                "ParameterStorage<ThreadUtilsRefCountedFinal*>::Type should be StoreRefPtrPassByPtr<ThreadUtilsRefCountedFinal>");
   static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedBase>::value,
                 "ThreadUtilsRefCountedBase has AddRef() and Release()");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsRefCountedBase*>::Type,
-                                StorensRefPtrPassByPtr<ThreadUtilsRefCountedBase>>::value,
-                "ParameterStorage<ThreadUtilsRefCountedBase*>::Type should be StorensRefPtrPassByPtr<ThreadUtilsRefCountedBase>");
+                                StoreRefPtrPassByPtr<ThreadUtilsRefCountedBase>>::value,
+                "ParameterStorage<ThreadUtilsRefCountedBase*>::Type should be StoreRefPtrPassByPtr<ThreadUtilsRefCountedBase>");
   static_assert(::detail::HasRefCountMethods<ThreadUtilsRefCountedDerived>::value,
                 "ThreadUtilsRefCountedDerived has AddRef() and Release()");
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsRefCountedDerived*>::Type,
-                                StorensRefPtrPassByPtr<ThreadUtilsRefCountedDerived>>::value,
-                "ParameterStorage<ThreadUtilsRefCountedDerived*>::Type should be StorensRefPtrPassByPtr<ThreadUtilsRefCountedDerived>");
+                                StoreRefPtrPassByPtr<ThreadUtilsRefCountedDerived>>::value,
+                "ParameterStorage<ThreadUtilsRefCountedDerived*>::Type should be StoreRefPtrPassByPtr<ThreadUtilsRefCountedDerived>");
 
   static_assert(!::detail::HasRefCountMethods<ThreadUtilsNonRefCounted>::value,
                 "ThreadUtilsNonRefCounted doesn't have AddRef() and Release()");
   static_assert(!mozilla::IsSame< ::detail::ParameterStorage<ThreadUtilsNonRefCounted*>::Type,
-                                 StorensRefPtrPassByPtr<ThreadUtilsNonRefCounted>>::value,
-                "ParameterStorage<ThreadUtilsNonRefCounted*>::Type should NOT be StorensRefPtrPassByPtr<ThreadUtilsNonRefCounted>");
+                                 StoreRefPtrPassByPtr<ThreadUtilsNonRefCounted>>::value,
+                "ParameterStorage<ThreadUtilsNonRefCounted*>::Type should NOT be StoreRefPtrPassByPtr<ThreadUtilsNonRefCounted>");
 
   // Lvalue reference.
   static_assert(mozilla::IsSame< ::detail::ParameterStorage<int&>::Type,
@@ -849,8 +849,8 @@ TEST(ThreadUtils, main)
       ptr = s.get();
       EXPECT_EQ(1, gConstructions);
       EXPECT_EQ(1, gAlive);
-      if (gDebug) { printf("%d - r10 = NewRunnableMethod<StorensRefPtrPassByPtr<Spy>>(&TestByRRef, s.get())\n", __LINE__); }
-      r10 = NewRunnableMethod<StorensRefPtrPassByPtr<SpyWithISupports>>(
+      if (gDebug) { printf("%d - r10 = NewRunnableMethod<StoreRefPtrPassByPtr<Spy>>(&TestByRRef, s.get())\n", __LINE__); }
+      r10 = NewRunnableMethod<StoreRefPtrPassByPtr<SpyWithISupports>>(
             rpt, &ThreadUtilsObject::TestByPointer, s.get());
       EXPECT_LE(0, gAllConstructions);
       EXPECT_EQ(1, gAlive);
