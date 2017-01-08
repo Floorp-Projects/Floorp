@@ -1009,6 +1009,7 @@ var gBrowserInit = {
     AboutPrivateBrowsingListener.init();
     TrackingProtection.init();
     RefreshBlocker.init();
+    CaptivePortalWatcher.init();
 
     let mm = window.getGroupMessageManager("browsers");
     mm.loadFrameScript("chrome://browser/content/tab-content.js", true);
@@ -1535,6 +1536,8 @@ var gBrowserInit = {
     TrackingProtection.uninit();
 
     RefreshBlocker.uninit();
+
+    CaptivePortalWatcher.uninit();
 
     gMenuButtonUpdateBadge.uninit();
 
@@ -2852,7 +2855,7 @@ var BrowserOnClick = {
                          msg.data.securityInfoAsString);
       break;
       case "Browser:OpenCaptivePortalPage":
-        this.onOpenCaptivePortalPage();
+        CaptivePortalWatcher.ensureCaptivePortalTab();
       break;
       case "Browser:SiteBlockedError":
         this.onAboutBlocked(msg.data.elementId, msg.data.reason,
@@ -2986,28 +2989,6 @@ var BrowserOnClick = {
         break;
 
     }
-  },
-
-  onOpenCaptivePortalPage() {
-    // Open a new tab with the canonical URL that we use to check for a captive portal.
-    // It will be redirected to the login page.
-    let canonicalURL = Services.prefs.getCharPref("captivedetect.canonicalURL");
-    let tab = gBrowser.addTab(canonicalURL);
-    let canonicalURI = makeURI(canonicalURL);
-    gBrowser.selectedTab = tab;
-
-    // When we are no longer captive, close the tab if it's at the canonical URL.
-    let tabCloser = () => {
-      Services.obs.removeObserver(tabCloser, "captive-portal-login-abort");
-      Services.obs.removeObserver(tabCloser, "captive-portal-login-success");
-      if (!tab || tab.closing || !tab.parentNode || !tab.linkedBrowser ||
-          !tab.linkedBrowser.currentURI.equalsExceptRef(canonicalURI)) {
-        return;
-      }
-      gBrowser.removeTab(tab);
-    }
-    Services.obs.addObserver(tabCloser, "captive-portal-login-abort", false);
-    Services.obs.addObserver(tabCloser, "captive-portal-login-success", false);
   },
 
   onAboutBlocked(elementId, reason, isTopFrame, location) {
