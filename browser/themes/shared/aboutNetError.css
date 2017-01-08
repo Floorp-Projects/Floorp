@@ -16,6 +16,10 @@ body.certerror {
                                             #f0d000 66%, #f0d000);
 }
 
+body.captiveportal .title {
+  background-image: url("wifi.svg");
+}
+
 body.certerror .title {
   background-image: url("cert-error.svg");
 }
