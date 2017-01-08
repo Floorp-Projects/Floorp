@@ -13,7 +13,6 @@
 #include "MP4Decoder.h"
 #endif
 #ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
 #include "WMFDecoderModule.h"
 #endif
 #include "nsContentCID.h"
@@ -39,6 +38,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 #include "FennecJNIWrappers.h"
 #endif
+
 namespace mozilla {
 namespace dom {
 
@@ -140,26 +140,12 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
         aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
         return MediaKeySystemStatus::Cdm_disabled;
       }
-#ifdef XP_WIN
-      // Win Vista and later only.
-      if (!IsVistaOrLater()) {
-        aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Adobe EME");
-        return MediaKeySystemStatus::Cdm_not_supported;
-      }
-#endif
       return EnsureCDMInstalled(aKeySystem, aOutMessage);
     }
   }
 
   if (IsWidevineKeySystem(aKeySystem)) {
     if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
-#ifdef XP_WIN
-      // Win Vista and later only.
-      if (!IsVistaOrLater()) {
-        aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Widevine EME");
-        return MediaKeySystemStatus::Cdm_not_supported;
-      }
-#endif
       if (!Preferences::GetBool("media.gmp-widevinecdm.enabled", false)) {
         aOutMessage = NS_LITERAL_CSTRING("Widevine EME disabled");
         return MediaKeySystemStatus::Cdm_disabled;
