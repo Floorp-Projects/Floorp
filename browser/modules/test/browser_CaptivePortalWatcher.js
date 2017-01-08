@@ -205,15 +205,20 @@ let testCasesForBothSuccessAndAbort = [
 
   /**
    * A portal is detected when a browser window has focus. No portal tab should
-   * be opened. A notification bar should be displayed in the focused window.
+   * be opened. A notification bar should be displayed in all browser windows.
    */
   function* test_detectedWithFocus(aSuccess) {
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win1 = RecentWindow.getMostRecentBrowserWindow();
+    let win2 = yield BrowserTestUtils.openNewBrowserWindow();
     yield portalDetected();
-    ensureNoPortalTab(win);
-    ensurePortalNotification(win);
+    ensureNoPortalTab(win1);
+    ensureNoPortalTab(win2);
+    ensurePortalNotification(win1);
+    ensurePortalNotification(win2);
     yield freePortal(aSuccess);
-    ensureNoPortalNotification(win);
+    ensureNoPortalNotification(win1);
+    ensureNoPortalNotification(win2);
+    yield closeWindowAndWaitForXulWindowVisible(win2);
   },
 ];
 
