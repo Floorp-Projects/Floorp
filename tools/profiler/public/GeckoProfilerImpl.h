@@ -394,6 +394,14 @@ public:
     profiler_tracing(mCategory, mInfo, Move(aBacktrace), TRACING_INTERVAL_START);
   }
 
+  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mCategory(aCategory)
+    , mInfo(aInfo)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+
   ~GeckoProfilerTracingRAII() {
     profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_END);
   }
