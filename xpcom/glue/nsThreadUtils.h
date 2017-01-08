@@ -313,35 +313,50 @@ private:
 
 } // namespace detail
 
-template<typename T>
-struct IsRefcountedSmartPointer : public mozilla::FalseType
-{};
+namespace detail {
+
+template<typename CVRemoved>
+struct IsRefcountedSmartPointerHelper : FalseType {};
+
+template<typename Pointee>
+struct IsRefcountedSmartPointerHelper<RefPtr<Pointee>> : TrueType {};
+
+template<typename Pointee>
+struct IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> : TrueType {};
+
+} // namespace detail
 
 template<typename T>
-struct IsRefcountedSmartPointer<RefPtr<T>> : public mozilla::TrueType
+struct IsRefcountedSmartPointer
+  : detail::IsRefcountedSmartPointerHelper<typename RemoveCV<T>::Type>
 {};
 
-template<typename T>
-struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
-{};
+namespace detail {
+
+template<typename T, typename CVRemoved>
+struct RemoveSmartPointerHelper
+{
+  typedef T Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveSmartPointerHelper<T, RefPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveSmartPointerHelper<T, nsCOMPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+} // namespace detail
 
 template<typename T>
 struct RemoveSmartPointer
-{
-  typedef void Type;
-};
-
-template<typename T>
-struct RemoveSmartPointer<RefPtr<T>>
-{
-  typedef T Type;
-};
-
-template<typename T>
-struct RemoveSmartPointer<nsCOMPtr<T>>
-{
-  typedef T Type;
-};
+  : detail::RemoveSmartPointerHelper<T, typename RemoveCV<T>::Type>
+{};
 
 } // namespace mozilla
 
