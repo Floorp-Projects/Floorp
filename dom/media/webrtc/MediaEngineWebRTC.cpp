@@ -11,9 +11,6 @@
 #include "prenv.h"
 
 #include "mozilla/Logging.h"
-#ifdef XP_WIN
-#include "mozilla/WindowsVersion.h"
-#endif
 
 static mozilla::LazyLogModule sGetUserMediaLog("GetUserMedia");
 
@@ -269,11 +266,7 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
 bool
 MediaEngineWebRTC::SupportsDuplex()
 {
-#ifndef XP_WIN
   return mFullDuplex;
-#else
-  return IsVistaOrLater() && mFullDuplex;
-#endif
 }
 
 void
