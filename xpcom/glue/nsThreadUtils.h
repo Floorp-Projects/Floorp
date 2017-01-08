@@ -313,6 +313,36 @@ private:
 
 } // namespace detail
 
+template<typename T>
+struct IsRefcountedSmartPointer : public mozilla::FalseType
+{};
+
+template<typename T>
+struct IsRefcountedSmartPointer<RefPtr<T>> : public mozilla::TrueType
+{};
+
+template<typename T>
+struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
+{};
+
+template<typename T>
+struct RemoveSmartPointer
+{
+  typedef void Type;
+};
+
+template<typename T>
+struct RemoveSmartPointer<RefPtr<T>>
+{
+  typedef T Type;
+};
+
+template<typename T>
+struct RemoveSmartPointer<nsCOMPtr<T>>
+{
+  typedef T Type;
+};
+
 } // namespace mozilla
 
 inline nsISupports*
@@ -608,40 +638,6 @@ struct StoreCopyPassByPtr
 template<typename S>
 struct IsParameterStorageClass<StoreCopyPassByPtr<S>>
   : public mozilla::TrueType {};
-
-namespace mozilla {
-
-template<typename T>
-struct IsRefcountedSmartPointer : public mozilla::FalseType
-{};
-
-template<typename T>
-struct IsRefcountedSmartPointer<RefPtr<T>> : public mozilla::TrueType
-{};
-
-template<typename T>
-struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
-{};
-
-template<typename T>
-struct RemoveSmartPointer
-{
-  typedef void Type;
-};
-
-template<typename T>
-struct RemoveSmartPointer<RefPtr<T>>
-{
-  typedef T Type;
-};
-
-template<typename T>
-struct RemoveSmartPointer<nsCOMPtr<T>>
-{
-  typedef T Type;
-};
-
-} // namespace mozilla
 
 namespace detail {
 
