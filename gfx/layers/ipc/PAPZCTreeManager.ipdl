@@ -5,6 +5,7 @@
 
 include "mozilla/GfxMessageUtils.h";
 include "ipc/nsGUIEventIPC.h";
+include "mozilla/dom/TabMessageUtils.h"; // Needed for IPC::ParamTraits<nsEventStatus>.
 
 include protocol PCompositorBridge;
 
