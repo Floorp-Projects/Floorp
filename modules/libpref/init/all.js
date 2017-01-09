@@ -4680,10 +4680,15 @@ pref("layers.allow-d3d9-fallback", false);
 #endif
 
 // Copy-on-write canvas
+pref("layers.shared-buffer-provider.enabled", true);
+
 #ifdef XP_WIN
 pref("layers.shared-buffer-provider.enabled", false);
-#else
-pref("layers.shared-buffer-provider.enabled", true);
+#endif
+
+#ifdef XP_MACOSX
+// cf. Bug 1324908
+pref("layers.shared-buffer-provider.enabled", false);
 #endif
 
 // Force all possible layers to be always active layers
