@@ -53,7 +53,8 @@ android-x86-nightly/opt:
         nightly: true
     index:
         product: mobile
-        job-name: android-x86-nightly-opt
+        job-name: android-x86-opt
+        type: nightly
     treeherder:
         platform: android-4-2-x86/opt
         symbol: tc(N)
@@ -107,7 +108,8 @@ android-api-15-nightly/opt:
         nightly: true
     index:
         product: mobile
-        job-name: android-api-15-nightly-opt
+        job-name: android-api-15-opt
+        type: nightly
     treeherder:
         platform: android-4-0-armv7-api15/opt
         symbol: tc(N)
