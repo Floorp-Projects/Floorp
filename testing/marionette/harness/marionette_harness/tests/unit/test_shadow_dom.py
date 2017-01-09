@@ -15,13 +15,17 @@ from marionette_harness import MarionetteTestCase
 class TestShadowDom(MarionetteTestCase):
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.enforce_gecko_prefs({"dom.webcomponents.enabled": True})
+        super(TestShadowDom, self).setUp()
+        self.marionette.set_pref("dom.webcomponents.enabled", True)
         self.marionette.navigate(self.marionette.absolute_url("test_shadow_dom.html"))
 
         self.host = self.marionette.find_element(By.ID, "host")
         self.marionette.switch_to_shadow_root(self.host)
         self.button = self.marionette.find_element(By.ID, "button")
+
+    def tearDown(self):
+        self.marionette.clear_pref("dom.webcomponents.enabled")
+        super(TestShadowDom, self).tearDown()
 
     def test_chrome_error(self):
         with self.marionette.using_context("chrome"):

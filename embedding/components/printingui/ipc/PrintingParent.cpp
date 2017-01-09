@@ -84,9 +84,15 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
                                 const PrintData& aData,
                                 PrintData* aResult)
 {
-  nsCOMPtr<nsPIDOMWindowOuter> parentWin = DOMWindowFromBrowserParent(aParent);
-  if (!parentWin) {
-    return NS_ERROR_FAILURE;
+  // If aParent is null this call is just being used to get print settings from
+  // the printer for print preview.
+  bool isPrintPreview = !aParent;
+  nsCOMPtr<nsPIDOMWindowOuter> parentWin;
+  if (aParent) {
+    parentWin = DOMWindowFromBrowserParent(aParent);
+    if (!parentWin) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   nsCOMPtr<nsIPrintingPromptService> pps(do_GetService("@mozilla.org/embedcomp/printingprompt-service;1"));
@@ -123,9 +129,9 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   rv = settings->SetPrintSilent(printSilently);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If we are printing silently then we just need to initialize the print
-  // settings with anything specific from the printer.
-  if (printSilently ||
+  // If this is for print preview or we are printing silently then we just need
+  // to initialize the print settings with anything specific from the printer.
+  if (isPrintPreview || printSilently ||
       Preferences::GetBool("print.always_print_silent", printSilently)) {
     nsXPIDLString printerName;
     rv = settings->GetPrinterName(getter_Copies(printerName));
@@ -138,8 +144,13 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = SerializeAndEnsureRemotePrintJob(settings, nullptr, remotePrintJob,
-                                        aResult);
+  if (isPrintPreview) {
+    // For print preview we don't want a RemotePrintJob just the settings.
+    rv = mPrintSettingsSvc->SerializeToPrintData(settings, nullptr, aResult);
+  } else {
+    rv = SerializeAndEnsureRemotePrintJob(settings, nullptr, remotePrintJob,
+                                          aResult);
+  }
 
   return rv;
 }

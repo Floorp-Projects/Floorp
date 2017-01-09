@@ -214,7 +214,6 @@ private:
   void PostProcessPendingQ();
   void PostCancelPendingQ(nsresult);
   bool ProcessPending();
-  void NamePACThread();
 
 private:
   ProxyAutoConfig mPAC;

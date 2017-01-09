@@ -196,8 +196,6 @@ function setPasswordStrength() {
 
   var mymeter = document.getElementById('pwmeter');
   mymeter.value = pwstrength;
-
-  return;
 }
 
 function checkPasswords() {

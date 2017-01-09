@@ -185,26 +185,32 @@ HTMLEditRules::InitFields()
   mJoinOffset = 0;
   mNewBlock = nullptr;
   mRangeItem = new RangeItem();
-  // populate mCachedStyles
-  mCachedStyles[0] = StyleCache(nsGkAtoms::b, EmptyString(), EmptyString());
-  mCachedStyles[1] = StyleCache(nsGkAtoms::i, EmptyString(), EmptyString());
-  mCachedStyles[2] = StyleCache(nsGkAtoms::u, EmptyString(), EmptyString());
-  mCachedStyles[3] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("face"), EmptyString());
-  mCachedStyles[4] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("size"), EmptyString());
-  mCachedStyles[5] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("color"), EmptyString());
-  mCachedStyles[6] = StyleCache(nsGkAtoms::tt, EmptyString(), EmptyString());
-  mCachedStyles[7] = StyleCache(nsGkAtoms::em, EmptyString(), EmptyString());
-  mCachedStyles[8] = StyleCache(nsGkAtoms::strong, EmptyString(), EmptyString());
-  mCachedStyles[9] = StyleCache(nsGkAtoms::dfn, EmptyString(), EmptyString());
-  mCachedStyles[10] = StyleCache(nsGkAtoms::code, EmptyString(), EmptyString());
-  mCachedStyles[11] = StyleCache(nsGkAtoms::samp, EmptyString(), EmptyString());
-  mCachedStyles[12] = StyleCache(nsGkAtoms::var, EmptyString(), EmptyString());
-  mCachedStyles[13] = StyleCache(nsGkAtoms::cite, EmptyString(), EmptyString());
-  mCachedStyles[14] = StyleCache(nsGkAtoms::abbr, EmptyString(), EmptyString());
-  mCachedStyles[15] = StyleCache(nsGkAtoms::acronym, EmptyString(), EmptyString());
-  mCachedStyles[16] = StyleCache(nsGkAtoms::backgroundColor, EmptyString(), EmptyString());
-  mCachedStyles[17] = StyleCache(nsGkAtoms::sub, EmptyString(), EmptyString());
-  mCachedStyles[18] = StyleCache(nsGkAtoms::sup, EmptyString(), EmptyString());
+
+  InitStyleCacheArray(mCachedStyles);
+}
+
+void
+HTMLEditRules::InitStyleCacheArray(StyleCache aStyleCache[SIZE_STYLE_TABLE])
+{
+  aStyleCache[0] = StyleCache(nsGkAtoms::b, EmptyString());
+  aStyleCache[1] = StyleCache(nsGkAtoms::i, EmptyString());
+  aStyleCache[2] = StyleCache(nsGkAtoms::u, EmptyString());
+  aStyleCache[3] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("face"));
+  aStyleCache[4] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("size"));
+  aStyleCache[5] = StyleCache(nsGkAtoms::font, NS_LITERAL_STRING("color"));
+  aStyleCache[6] = StyleCache(nsGkAtoms::tt, EmptyString());
+  aStyleCache[7] = StyleCache(nsGkAtoms::em, EmptyString());
+  aStyleCache[8] = StyleCache(nsGkAtoms::strong, EmptyString());
+  aStyleCache[9] = StyleCache(nsGkAtoms::dfn, EmptyString());
+  aStyleCache[10] = StyleCache(nsGkAtoms::code, EmptyString());
+  aStyleCache[11] = StyleCache(nsGkAtoms::samp, EmptyString());
+  aStyleCache[12] = StyleCache(nsGkAtoms::var, EmptyString());
+  aStyleCache[13] = StyleCache(nsGkAtoms::cite, EmptyString());
+  aStyleCache[14] = StyleCache(nsGkAtoms::abbr, EmptyString());
+  aStyleCache[15] = StyleCache(nsGkAtoms::acronym, EmptyString());
+  aStyleCache[16] = StyleCache(nsGkAtoms::backgroundColor, EmptyString());
+  aStyleCache[17] = StyleCache(nsGkAtoms::sub, EmptyString());
+  aStyleCache[18] = StyleCache(nsGkAtoms::sup, EmptyString());
 }
 
 HTMLEditRules::~HTMLEditRules()
@@ -7064,16 +7070,31 @@ HTMLEditRules::CacheInlineStyles(nsIDOMNode* aNode)
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
   NS_ENSURE_STATE(mHTMLEditor);
+
+  nsresult rv = GetInlineStyles(aNode, mCachedStyles);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
+}
+
+nsresult
+HTMLEditRules::GetInlineStyles(nsIDOMNode* aNode,
+                               StyleCache aStyleCache[SIZE_STYLE_TABLE])
+{
+  MOZ_ASSERT(aNode);
+  MOZ_ASSERT(mHTMLEditor);
+
   bool useCSS = mHTMLEditor->IsCSSEnabled();
 
-  for (int32_t j = 0; j < SIZE_STYLE_TABLE; ++j) {
+  for (size_t j = 0; j < SIZE_STYLE_TABLE; ++j) {
     // If type-in state is set, don't intervene
     bool typeInSet, unused;
     if (NS_WARN_IF(!mHTMLEditor)) {
       return NS_ERROR_UNEXPECTED;
     }
     mHTMLEditor->mTypeInState->GetTypingState(typeInSet, unused,
-      mCachedStyles[j].tag, mCachedStyles[j].attr, nullptr);
+      aStyleCache[j].tag, aStyleCache[j].attr, nullptr);
     if (typeInSet) {
       continue;
     }
@@ -7081,21 +7102,21 @@ HTMLEditRules::CacheInlineStyles(nsIDOMNode* aNode)
     bool isSet = false;
     nsAutoString outValue;
     // Don't use CSS for <font size>, we don't support it usefully (bug 780035)
-    if (!useCSS || (mCachedStyles[j].tag == nsGkAtoms::font &&
-                    mCachedStyles[j].attr.EqualsLiteral("size"))) {
+    if (!useCSS || (aStyleCache[j].tag == nsGkAtoms::font &&
+                    aStyleCache[j].attr.EqualsLiteral("size"))) {
       NS_ENSURE_STATE(mHTMLEditor);
-      mHTMLEditor->IsTextPropertySetByContent(aNode, mCachedStyles[j].tag,
-                                              &(mCachedStyles[j].attr), nullptr,
+      mHTMLEditor->IsTextPropertySetByContent(aNode, aStyleCache[j].tag,
+                                              &(aStyleCache[j].attr), nullptr,
                                               isSet, &outValue);
     } else {
       NS_ENSURE_STATE(mHTMLEditor);
       isSet = mHTMLEditor->mCSSEditUtils->IsCSSEquivalentToHTMLInlineStyleSet(
-                aNode, mCachedStyles[j].tag, &(mCachedStyles[j].attr), outValue,
+                aNode, aStyleCache[j].tag, &(aStyleCache[j].attr), outValue,
                 CSSEditUtils::eComputed);
     }
     if (isSet) {
-      mCachedStyles[j].mPresent = true;
-      mCachedStyles[j].value.Assign(outValue);
+      aStyleCache[j].mPresent = true;
+      aStyleCache[j].value.Assign(outValue);
     }
   }
   return NS_OK;
@@ -7132,7 +7153,16 @@ HTMLEditRules::ReapplyCachedStyles()
     return NS_OK;
   }
 
-  for (int32_t i = 0; i < SIZE_STYLE_TABLE; ++i) {
+  StyleCache styleAtInsertionPoint[SIZE_STYLE_TABLE];
+  InitStyleCacheArray(styleAtInsertionPoint);
+  nsCOMPtr<nsIDOMNode> selDOMNode = do_QueryInterface(selNode);
+  MOZ_ASSERT(selDOMNode);
+  nsresult rv = GetInlineStyles(selDOMNode, styleAtInsertionPoint);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return NS_OK;
+  }
+
+  for (size_t i = 0; i < SIZE_STYLE_TABLE; ++i) {
     if (mCachedStyles[i].mPresent) {
       bool bFirst, bAny, bAll;
       bFirst = bAny = bAll = false;
@@ -7156,8 +7186,11 @@ HTMLEditRules::ReapplyCachedStyles()
                                              &curValue, false);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      // this style has disappeared through deletion.  Add to our typeinstate:
-      if (!bAny || IsStyleCachePreservingAction(mTheAction)) {
+      // This style has disappeared through deletion.  Let's add the styles to
+      // mTypeInState when same style isn't applied to the node already.
+      if ((!bAny || IsStyleCachePreservingAction(mTheAction)) &&
+           (!styleAtInsertionPoint[i].mPresent ||
+            styleAtInsertionPoint[i].value != mCachedStyles[i].value)) {
         NS_ENSURE_STATE(mHTMLEditor);
         mHTMLEditor->mTypeInState->SetProp(mCachedStyles[i].tag,
                                            mCachedStyles[i].attr,
@@ -7173,7 +7206,7 @@ void
 HTMLEditRules::ClearCachedStyles()
 {
   // clear the mPresent bits in mCachedStyles array
-  for (uint32_t j = 0; j < SIZE_STYLE_TABLE; j++) {
+  for (size_t j = 0; j < SIZE_STYLE_TABLE; j++) {
     mCachedStyles[j].mPresent = false;
     mCachedStyles[j].value.Truncate();
   }

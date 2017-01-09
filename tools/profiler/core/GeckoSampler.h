@@ -8,6 +8,7 @@
 
 #include "platform.h"
 #include "ProfileEntry.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "ThreadProfile.h"
 #include "ThreadInfo.h"
@@ -69,8 +70,7 @@ class GeckoSampler: public Sampler {
       return;
     }
 
-    ThreadProfile* profile = new ThreadProfile(aInfo, mBuffer);
-    aInfo->SetProfile(profile);
+    aInfo->SetProfile(mozilla::MakeUnique<ThreadProfile>(aInfo, mBuffer));
   }
 
   // Called within a signal. This function must be reentrant
@@ -87,23 +87,6 @@ class GeckoSampler: public Sampler {
 
   virtual void HandleSaveRequest() override;
   virtual void DeleteExpiredMarkers() override;
-
-  ThreadProfile* GetPrimaryThreadProfile()
-  {
-    if (!mPrimaryThreadProfile) {
-      ::MutexAutoLock lock(*sRegisteredThreadsMutex);
-
-      for (uint32_t i = 0; i < sRegisteredThreads->size(); i++) {
-        ThreadInfo* info = sRegisteredThreads->at(i);
-        if (info->IsMainThread() && !info->IsPendingDelete()) {
-          mPrimaryThreadProfile = info->Profile();
-          break;
-        }
-      }
-    }
-
-    return mPrimaryThreadProfile;
-  }
 
   void ToStreamAsJSON(std::ostream& stream, double aSinceTime = 0);
 #ifndef SPS_STANDALONE
@@ -142,8 +125,6 @@ protected:
 
   void StreamJSON(SpliceableJSONWriter& aWriter, double aSinceTime);
 
-  // This represent the application's main thread (SAMPLER_INIT)
-  ThreadProfile* mPrimaryThreadProfile;
   RefPtr<ProfileBuffer> mBuffer;
   bool mSaveRequested;
   bool mAddLeafAddresses;

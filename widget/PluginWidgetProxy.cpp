@@ -181,7 +181,7 @@ PluginWidgetProxy::SetNativeData(uint32_t aDataType, uintptr_t aVal)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 PluginWidgetProxy::SetFocus(bool aRaise)
 {
   ENSURE_CHANNEL;

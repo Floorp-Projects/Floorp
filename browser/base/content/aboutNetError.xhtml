@@ -308,7 +308,7 @@
           if (getErrorCode() == "weakCryptoUsed" || getErrorCode() == "sslv3Used") {
             setupAdvancedButton(getErrorCode() == "weakCryptoUsed");
           }
-        }.bind(this), true, true);
+        }, true, true);
 
         var event = new CustomEvent("AboutNetErrorLoad", {bubbles:true});
         document.dispatchEvent(event);

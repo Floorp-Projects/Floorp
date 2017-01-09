@@ -680,10 +680,17 @@ nsSimplePageSequenceFrame::ResetPrintCanvasList()
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::PrintNextPage()
 {
-  // Print each specified page
-  // pageNum keeps track of the current page and what pages are printing
+  // This method would be very straightforward except that the
+  // "Print Selection Only" functionality (which is a broken mess) is
+  // integrated here.  The thing to understand is that if we're printing a
+  // selection (which may contain multiple ranges) then we only enter this
+  // function once since the content to print is laid out as one arbitrarily
+  // long nsPageFrame instead of multiple nsPageFrames that are sized to fit
+  // the printer paper size(!).  Each of the "pages" between the start and end
+  // of the selection are printed by offsetting the nsPageContentFrame by the
+  // index of the page being printed and then drawing the nsPageContentFrame.
+  // This does not work for IFrames.
   //
-  // printedPageNum keeps track of the current page number to be printed
   // Note: When print al the pages or a page range the printed page shows the
   // actual page number, when printing selection it prints the page number starting
   // with the first page of the selection. For example if the user has a 
@@ -691,8 +698,8 @@ nsSimplePageSequenceFrame::PrintNextPage()
   // print are 1 and then two (which is different than printing a page range, where
   // the page numbers would have been 2 and then 3)
 
-  nsIFrame* currentPage = GetCurrentPageFrame();
-  if (!currentPage) {
+  nsIFrame* currentPageFrame = GetCurrentPageFrame();
+  if (!currentPageFrame) {
     return NS_ERROR_FAILURE;
   }
 
@@ -701,44 +708,50 @@ nsSimplePageSequenceFrame::PrintNextPage()
   DetermineWhetherToPrintPage();
 
   if (mPrintThisPage) {
-    // Begin printing of the document
     nsDeviceContext* dc = PresContext()->DeviceContext();
 
-    // XXX This is temporary fix for printing more than one page of a selection
-    // This does a poor man's "dump" pagination (see Bug 89353)
-    // It has laid out as one long page and now we are just moving or view up/down 
-    // one page at a time and printing the contents of what is exposed by the rect.
-    // currently this does not work for IFrames
-    // I will soon improve this to work with IFrames 
-    bool    continuePrinting = true;
-    nscoord width, height;
-    width = PresContext()->GetPageSize().width;
-    height = PresContext()->GetPageSize().height;
-    height -= mMargin.top + mMargin.bottom;
-    width  -= mMargin.left + mMargin.right;
-    nscoord selectionY = height;
-    nsIFrame* conFrame = currentPage->PrincipalChildList().FirstChild();
-    if (mSelectionHeight >= 0) {
-      conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -mYSelOffset));
-      nsContainerFrame::PositionChildViews(conFrame);
-    }
-
-    // cast the frame to be a page frame
-    nsPageFrame * pf = static_cast<nsPageFrame*>(currentPage);
+    nsPageFrame * pf = static_cast<nsPageFrame*>(currentPageFrame);
     pf->SetPageNumInfo(mPageNum, mTotalPages);
     pf->SetSharedPageData(mPageData);
 
-    int32_t printedPageNum = 1;
-    while (continuePrinting) {
+    // Only used if we're printing a selection:
+    nsIFrame* selectionContentFrame = nullptr;
+    nscoord pageContentHeight =
+      PresContext()->GetPageSize().height - (mMargin.top + mMargin.bottom);
+    nscoord selectionY = pageContentHeight;
+    int32_t selectionCurrentPageNum = 1;
+    bool haveUnfinishedSelectionToPrint = false;
+
+    if (mSelectionHeight >= 0) {
+      selectionContentFrame = currentPageFrame->PrincipalChildList().FirstChild();
+      MOZ_ASSERT(selectionContentFrame->GetType() == nsGkAtoms::pageContentFrame &&
+                 !selectionContentFrame->GetNextSibling(),
+                 "Unexpected frame tree");
+      // To print a selection we reposition the page content frame for each
+      // page.  We can do this (and not have to bother resetting the position
+      // after we're done) because we are printing from a static clone document
+      // that is thrown away after we finish printing.
+      selectionContentFrame->SetPosition(selectionContentFrame->GetPosition() +
+                                         nsPoint(0, -mYSelOffset));
+      nsContainerFrame::PositionChildViews(selectionContentFrame);
+    }
+
+    do {
       if (PresContext()->IsRootPaginatedDocument()) {
         if (!mCalledBeginPage) {
+          // We must make sure BeginPage() has been called since some printing
+          // backends can't give us a valid rendering context for a [physical]
+          // page otherwise.
           PR_PL(("\n"));
           PR_PL(("***************** BeginPage *****************\n"));
           rv = dc->BeginPage();
           NS_ENSURE_SUCCESS(rv, rv);
-        } else {
-          mCalledBeginPage = false;
         }
+
+        // Reset this flag. We reset it early here because if we loop around to
+        // print another page's worth of selection we need to call BeginPage
+        // again:
+        mCalledBeginPage = false;
       }
 
       PR_PL(("SeqFr::PrintNextPage -> %p PageNo: %d", pf, mPageNum));
@@ -749,27 +762,32 @@ nsSimplePageSequenceFrame::PrintNextPage()
 
       nsRenderingContext renderingContext(gCtx);
 
-      nsRect drawingRect(nsPoint(0, 0), currentPage->GetSize());
+      nsRect drawingRect(nsPoint(0, 0), currentPageFrame->GetSize());
       nsRegion drawingRegion(drawingRect);
-      nsLayoutUtils::PaintFrame(&renderingContext, currentPage,
+      nsLayoutUtils::PaintFrame(&renderingContext, currentPageFrame,
                                 drawingRegion, NS_RGBA(0,0,0,0),
                                 nsDisplayListBuilderMode::PAINTING,
                                 nsLayoutUtils::PaintFrameFlags::PAINT_SYNC_DECODE_IMAGES);
 
-      if (mSelectionHeight >= 0 && selectionY < mSelectionHeight) {
-        selectionY += height;
-        printedPageNum++;
-        pf->SetPageNumInfo(printedPageNum, mTotalPages);
-        conFrame->SetPosition(conFrame->GetPosition() + nsPoint(0, -height));
-        nsContainerFrame::PositionChildViews(conFrame);
+      if (mSelectionHeight >= 0) {
+        haveUnfinishedSelectionToPrint = (selectionY < mSelectionHeight);
+        if (haveUnfinishedSelectionToPrint) {
+          selectionY += pageContentHeight;
+          selectionCurrentPageNum++;
+          pf->SetPageNumInfo(selectionCurrentPageNum, mTotalPages);
+          selectionContentFrame->SetPosition(selectionContentFrame->GetPosition() +
+                                             nsPoint(0, -pageContentHeight));
+          nsContainerFrame::PositionChildViews(selectionContentFrame);
 
-        PR_PL(("***************** End Page (PrintNextPage) *****************\n"));
-        rv = dc->EndPage();
-        NS_ENSURE_SUCCESS(rv, rv);
-      } else {
-        continuePrinting = false;
+          // We're going to loop and call BeginPage to print another page's worth
+          // of selection so we need to call EndPage first.  (Otherwise, EndPage
+          // is called in DoEndPage.)
+          PR_PL(("***************** End Page (PrintNextPage) *****************\n"));
+          rv = dc->EndPage();
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       }
-    }
+    } while (haveUnfinishedSelectionToPrint);
   }
   return rv;
 }

@@ -25,20 +25,20 @@ CacheParent::CacheParent(cache::Manager* aManager, CacheId aCacheId)
   , mCacheId(aCacheId)
 {
   MOZ_COUNT_CTOR(cache::CacheParent);
-  MOZ_ASSERT(mManager);
+  MOZ_DIAGNOSTIC_ASSERT(mManager);
   mManager->AddRefCacheId(mCacheId);
 }
 
 CacheParent::~CacheParent()
 {
   MOZ_COUNT_DTOR(cache::CacheParent);
-  MOZ_ASSERT(!mManager);
+  MOZ_DIAGNOSTIC_ASSERT(!mManager);
 }
 
 void
 CacheParent::ActorDestroy(ActorDestroyReason aReason)
 {
-  MOZ_ASSERT(mManager);
+  MOZ_DIAGNOSTIC_ASSERT(mManager);
   mManager->ReleaseCacheId(mCacheId);
   mManager = nullptr;
 }

@@ -449,9 +449,19 @@ function parseDeclarations(isCssPropertyKnown, inputString,
 }
 
 /**
+ * Like @see parseDeclarations, but removes properties that do not
+ * have a name.
+ */
+function parseNamedDeclarations(isCssPropertyKnown, inputString,
+                                parseComments = false) {
+  return parseDeclarations(isCssPropertyKnown, inputString, parseComments)
+         .filter(item => !!item.name);
+}
+
+/**
  * Return an object that can be used to rewrite declarations in some
  * source text.  The source text and parsing are handled in the same
- * way as @see parseDeclarations, with |parseComments| being true.
+ * way as @see parseNamedDeclarations, with |parseComments| being true.
  * Rewriting is done by calling one of the modification functions like
  * setPropertyEnabled.  The returned object has the same interface
  * as @see RuleModificationList.
@@ -519,8 +529,8 @@ RuleRewriter.prototype = {
     // Whether there are any newlines in the input text.
     this.hasNewLine = /[\r\n]/.test(this.inputString);
     // The declarations.
-    this.declarations = parseDeclarations(this.isCssPropertyKnown, this.inputString,
-                                          true);
+    this.declarations = parseNamedDeclarations(this.isCssPropertyKnown, this.inputString,
+                                               true);
     this.decl = null;
     this.result = null;
   },
@@ -1163,6 +1173,7 @@ exports.escapeCSSComment = escapeCSSComment;
 // unescapeCSSComment is exported for testing.
 exports._unescapeCSSComment = unescapeCSSComment;
 exports.parseDeclarations = parseDeclarations;
+exports.parseNamedDeclarations = parseNamedDeclarations;
 // parseCommentDeclarations is exported for testing.
 exports._parseCommentDeclarations = parseCommentDeclarations;
 exports.RuleRewriter = RuleRewriter;

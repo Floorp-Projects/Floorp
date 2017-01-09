@@ -387,11 +387,13 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
       }).api(),
 
       onUpdated: new EventManager(context, "tabs.onUpdated", fire => {
+        const restricted = ["url", "favIconUrl", "title"];
+
         function sanitize(extension, changeInfo) {
           let result = {};
           let nonempty = false;
           for (let prop in changeInfo) {
-            if ((prop != "favIconUrl" && prop != "url") || extension.hasPermission("tabs")) {
+            if (extension.hasPermission("tabs") || !restricted.includes(prop)) {
               nonempty = true;
               result[prop] = changeInfo[prop];
             }
@@ -423,6 +425,9 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             if (changed.includes("soundplaying")) {
               needed.push("audible");
             }
+            if (changed.includes("label")) {
+              needed.push("title");
+            }
           } else if (event.type == "TabPinned") {
             needed.push("pinned");
           } else if (event.type == "TabUnpinned") {
@@ -430,7 +435,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           }
 
           if (needed.length && !extension.hasPermission("tabs")) {
-            needed = needed.filter(attr => attr != "url" && attr != "favIconUrl");
+            needed = needed.filter(attr => !restricted.includes(attr));
           }
 
           if (needed.length) {
@@ -843,6 +848,11 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
           options.run_at = details.runAt;
         } else {
           options.run_at = "document_idle";
+        }
+        if (details.cssOrigin !== null) {
+          options.css_origin = details.cssOrigin;
+        } else {
+          options.css_origin = "author";
         }
 
         return tabListener.awaitTabReady(tab).then(() => {

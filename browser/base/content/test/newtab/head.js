@@ -491,7 +491,6 @@ function whenSearchInitDone() {
             // Wait for the search controller to receive the event, then resolve.
             if (content.gSearch._contentSearchController.defaultEngine) {
               resolve();
-              return;
             }
           }
           content.setTimeout(resolver, 0);

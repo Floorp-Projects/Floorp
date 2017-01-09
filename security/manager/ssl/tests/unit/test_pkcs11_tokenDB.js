@@ -42,4 +42,7 @@ function run_test() {
 
   notEqual(tokenDB.findTokenByName("Test PKCS11 Tokeñ 2 Label"), null,
            "Test token 2 should be findable by name after loading test module");
+
+  throws(() => tokenDB.findTokenByName(""), /NS_ERROR_ILLEGAL_VALUE/,
+         "nsIPK11TokenDB.findTokenByName should throw given an empty name");
 }

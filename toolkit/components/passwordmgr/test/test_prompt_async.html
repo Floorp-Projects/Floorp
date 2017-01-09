@@ -51,11 +51,8 @@
                 if (topic === "domwindowopened") {
                     this.windowsOpen++;
                     this.windowsRegistered++;
-                    return;
-                }
-                if (topic === "domwindowclosed") {
+                } else if (topic === "domwindowclosed") {
                     this.windowsOpen--;
-                    return;
                 }
             },
 

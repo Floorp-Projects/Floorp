@@ -2061,7 +2061,6 @@ var gHeader = {
   onKeyPress(aEvent) {
     if (String.fromCharCode(aEvent.charCode) == "/") {
       this.focusSearchBox();
-      return;
     }
   },
 
@@ -3491,7 +3490,7 @@ var gDetailView = {
 
           if (aCallback)
             aCallback();
-        }).bind(this);
+        });
         xhr.onerror = function(aEvent) {
           Cu.reportError("Error " + aEvent.target.status +
                          " occurred while receiving " + this._addon.optionsURL);

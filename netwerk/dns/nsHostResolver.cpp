@@ -29,6 +29,7 @@
 #include "nsURLHelper.h"
 #include "nsThreadUtils.h"
 #include "GetAddrInfo.h"
+#include "GeckoProfiler.h"
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/TimeStamp.h"
@@ -1435,10 +1436,15 @@ nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const
 void
 nsHostResolver::ThreadFunc(void *arg)
 {
+    char stackTop;
+
     LOG(("DNS lookup thread - starting execution.\n"));
 
     static nsThreadPoolNaming naming;
-    naming.SetThreadPoolName(NS_LITERAL_CSTRING("DNS Resolver"));
+    nsCString name = naming.GetNextThreadName("DNS Resolver");
+
+    PR_SetCurrentThreadName(name.BeginReading());
+    profiler_register_thread(name.BeginReading(), &stackTop);
 
 #if defined(RES_RETRY_ON_FAILURE)
     nsResState rs;
@@ -1509,6 +1515,8 @@ nsHostResolver::ThreadFunc(void *arg)
     resolver->mThreadCount--;
     NS_RELEASE(resolver);
     LOG(("DNS lookup thread - queue empty, thread finished.\n"));
+
+    profiler_unregister_thread();
 }
 
 nsresult

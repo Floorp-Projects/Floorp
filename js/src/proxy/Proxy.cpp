@@ -6,6 +6,8 @@
 
 #include "js/Proxy.h"
 
+#include "mozilla/Attributes.h"
+
 #include <string.h>
 
 #include "jsapi.h"
@@ -277,7 +279,7 @@ ValueToWindowProxyIfWindow(const Value& v)
     return v;
 }
 
-bool
+MOZ_ALWAYS_INLINE bool
 Proxy::get(JSContext* cx, HandleObject proxy, HandleValue receiver_, HandleId id,
            MutableHandleValue vp)
 {
@@ -307,6 +309,25 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleValue receiver_, HandleId id
     }
 
     return handler->get(cx, proxy, receiver, id, vp);
+}
+
+bool
+js::ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
+{
+    RootedValue receiver(cx, ObjectValue(*proxy));
+    return Proxy::get(cx, proxy, receiver, id, vp);
+}
+
+bool
+js::ProxyGetPropertyByValue(JSContext* cx, HandleObject proxy, HandleValue idVal,
+                            MutableHandleValue vp)
+{
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, idVal, &id))
+        return false;
+
+    RootedValue receiver(cx, ObjectValue(*proxy));
+    return Proxy::get(cx, proxy, receiver, id, vp);
 }
 
 bool

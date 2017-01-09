@@ -8972,9 +8972,7 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     MOZ_ASSERT(contentValue->GetIntValue() == NS_STYLE_CONTENT_ALT_CONTENT,
                "unrecognized solitary content keyword");
     content->AllocateContents(1);
-    nsStyleContentData& data = content->ContentAt(0);
-    data.mType = eStyleContentType_AltContent;
-    data.mContent.mString = nullptr;
+    content->ContentAt(0).SetKeyword(eStyleContentType_AltContent);
     break;
   }
 
@@ -8993,44 +8991,50 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
     while (contentValueList) {
       const nsCSSValue& value = contentValueList->mValue;
       nsCSSUnit unit = value.GetUnit();
-      nsStyleContentType type;
-      nsStyleContentData &data = content->ContentAt(count++);
+      nsStyleContentData& data = content->ContentAt(count++);
       switch (unit) {
-      case eCSSUnit_String:   type = eStyleContentType_String;    break;
-      case eCSSUnit_Image:    type = eStyleContentType_Image;     break;
-      case eCSSUnit_Attr:     type = eStyleContentType_Attr;      break;
-      case eCSSUnit_Counter:  type = eStyleContentType_Counter;   break;
-      case eCSSUnit_Counters: type = eStyleContentType_Counters;  break;
-      case eCSSUnit_Enumerated:
-        switch (value.GetIntValue()) {
-        case NS_STYLE_CONTENT_OPEN_QUOTE:
-          type = eStyleContentType_OpenQuote;     break;
-        case NS_STYLE_CONTENT_CLOSE_QUOTE:
-          type = eStyleContentType_CloseQuote;    break;
-        case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
-          type = eStyleContentType_NoOpenQuote;   break;
-        case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
-          type = eStyleContentType_NoCloseQuote;  break;
-        default:
-          NS_ERROR("bad content value");
-          type = eStyleContentType_Uninitialized;
+        case eCSSUnit_Image:
+          data.SetImageRequest(CreateStyleImageRequest(mPresContext, value));
+          break;
+        case eCSSUnit_String:
+        case eCSSUnit_Attr: {
+          nsStyleContentType type =
+            unit == eCSSUnit_String ? eStyleContentType_String
+                                    : eStyleContentType_Attr;
+          value.GetStringValue(buffer);
+          data.SetString(type, buffer.get());
+          break;
         }
-        break;
-      default:
-        NS_ERROR("bad content type");
-        type = eStyleContentType_Uninitialized;
-      }
-      data.mType = type;
-      if (type == eStyleContentType_Image) {
-        data.SetImage(CreateImageRequest(mPresContext, value));
-      } else if (type <= eStyleContentType_Attr) {
-        value.GetStringValue(buffer);
-        data.mContent.mString = NS_strdup(buffer.get());
-      } else if (type <= eStyleContentType_Counters) {
-        data.mContent.mCounters = value.GetArrayValue();
-        data.mContent.mCounters->AddRef();
-      } else {
-        data.mContent.mString = nullptr;
+        case eCSSUnit_Counter:
+        case eCSSUnit_Counters: {
+          nsStyleContentType type =
+            unit == eCSSUnit_Counter ? eStyleContentType_Counter
+                                     : eStyleContentType_Counters;
+          data.SetCounters(type, value.GetArrayValue());
+          break;
+        }
+        case eCSSUnit_Enumerated:
+          switch (value.GetIntValue()) {
+            case NS_STYLE_CONTENT_OPEN_QUOTE:
+              data.SetKeyword(eStyleContentType_OpenQuote);
+              break;
+            case NS_STYLE_CONTENT_CLOSE_QUOTE:
+              data.SetKeyword(eStyleContentType_CloseQuote);
+              break;
+            case NS_STYLE_CONTENT_NO_OPEN_QUOTE:
+              data.SetKeyword(eStyleContentType_NoOpenQuote);
+              break;
+            case NS_STYLE_CONTENT_NO_CLOSE_QUOTE:
+              data.SetKeyword(eStyleContentType_NoCloseQuote);
+              break;
+            default:
+              NS_ERROR("bad content value");
+              break;
+          }
+          break;
+        default:
+          NS_ERROR("bad content type");
+          break;
       }
       contentValueList = contentValueList->mNext;
     }
@@ -9137,15 +9141,6 @@ nsRuleNode::ComputeContentData(void* aStartStruct,
 
   default:
     MOZ_ASSERT(false, "unexpected value unit");
-  }
-
-  // If we ended up with an image, track it.
-  for (uint32_t i = 0; i < content->ContentCount(); ++i) {
-    if ((content->ContentAt(i).mType == eStyleContentType_Image) &&
-        content->ContentAt(i).mContent.mImage) {
-      content->ContentAt(i).TrackImage(
-          aContext->PresContext()->Document()->ImageTracker());
-    }
   }
 
   COMPUTE_END_RESET(Content, content)

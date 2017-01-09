@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<title>mask-position animation in delay phase</title>
+<style>
+  @keyframes holdMaskPosition {
+    from,to { mask-position: left top; }
+  }
+  #test {
+    height: 100px;
+    width: 100px;
+    mask-repeat: no-repeat;
+    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"><rect x="0" y="0" width="25" height="25" fill="blue"/></svg>');
+    animation: holdMaskPosition 100s 100s infinite;
+    mask-position: center center;
+  }
+
+  #inner {
+    height: 100px;
+    width: 100px;
+    background-color: blue;
+    box-sizing: border-box;
+    /* Apply will-change property to force paint mask on mask layer */
+    border: 1px solid transparent;
+    will-change: transform;
+  }
+</style>
+<div id="test"><div id="inner"></div></div>

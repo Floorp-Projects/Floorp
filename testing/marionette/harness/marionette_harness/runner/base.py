@@ -946,6 +946,7 @@ class BaseMarionetteTestRunner(object):
             values = {
                 "appname": self.appName,
                 "e10s": self.e10s,
+                "manage_instance": self.marionette.instance is not None,
             }
             values.update(mozinfo.info)
 

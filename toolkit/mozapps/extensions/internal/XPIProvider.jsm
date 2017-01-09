@@ -1941,7 +1941,6 @@ function removeAsync(aFile) {
       if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile)
         throw e;
       // The file has already gone away
-      return;
     }
   });
 }
@@ -4088,7 +4087,7 @@ this.XPIProvider = {
     AddonManagerPrivate.callAddonListeners("onInstalling", addon.wrapper,
                                            false);
     XPIProvider.callBootstrapMethod(addon, file, "startup",
-                                    BOOTSTRAP_REASONS.ADDON_ENABLE);
+                                    BOOTSTRAP_REASONS.ADDON_INSTALL);
     AddonManagerPrivate.callInstallListeners("onExternalInstall",
                                              null, addon.wrapper,
                                              oldAddon ? oldAddon.wrapper : null,

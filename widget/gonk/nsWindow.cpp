@@ -345,20 +345,23 @@ nsWindow::Destroy()
     nsBaseWidget::OnDestroy();
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
     if (mWindowType == eWindowType_invisible) {
-        return NS_OK;
+        return;
     }
 
     if (mVisible == aState) {
-        return NS_OK;
+        return;
     }
 
     mVisible = aState;
     if (!IS_TOPLEVEL()) {
-        return mParent ? mParent->Show(aState) : NS_OK;
+        if (mParent) {
+            mParent->Show(aState);
+        }
+        return;
     }
 
     if (aState) {
@@ -375,8 +378,6 @@ nsWindow::Show(bool aState)
             break;
         }
     }
-
-    return NS_OK;
 }
 
 bool
@@ -428,7 +429,7 @@ nsWindow::IsEnabled() const
     return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetFocus(bool aRaise)
 {
     if (aRaise) {
@@ -443,13 +444,13 @@ nsWindow::SetFocus(bool aRaise)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>&)
 {
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     nsWindow *top = mParent;
@@ -458,12 +459,11 @@ nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
     }
     const nsTArray<nsWindow*>& windows = mScreen->GetTopWindows();
     if (top != windows[0] && this != windows[0]) {
-        return NS_OK;
+        return;
     }
 
     gDrawRequest = true;
     mozilla::NotifyEvent();
-    return NS_OK;
 }
 
 LayoutDeviceIntPoint
@@ -523,7 +523,7 @@ nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
     }
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
 {
     if (mWidgetListener) {
@@ -532,14 +532,14 @@ nsWindow::DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus)
     return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
     mInputContext = aContext;
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsWindow::GetInputContext()
 {
     return mInputContext;

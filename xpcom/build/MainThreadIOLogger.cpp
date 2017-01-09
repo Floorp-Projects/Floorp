@@ -114,6 +114,7 @@ MainThreadIOLoggerImpl::Init()
 /* static */ void
 MainThreadIOLoggerImpl::sIOThreadFunc(void* aArg)
 {
+  AutoProfilerRegister registerThread("MainThreadIOLogger");
   PR_SetCurrentThreadName("MainThreadIOLogger");
   MainThreadIOLoggerImpl* obj = static_cast<MainThreadIOLoggerImpl*>(aArg);
   obj->IOThreadFunc();
@@ -172,12 +173,8 @@ MainThreadIOLoggerImpl::IOThreadFunc()
                        (i->mObservation.Start() - mLogStartTime).ToMilliseconds(),
                        i->mObservation.ObservedOperationString(), durationMs,
                        i->mObservation.Reference(), nativeFilename.get()) > 0) {
-          ProfilerBacktrace* stack = i->mStack;
-          if (stack) {
-            // TODO: Write out the callstack
-            //       (This will be added in a later bug)
-            profiler_free_backtrace(stack);
-          }
+          // TODO: Write out the callstack
+          i->mStack = nullptr;
         }
       }
     }

@@ -33,7 +33,6 @@
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
 #include "webrtc/modules/audio_device/android/opensles_player.h"
 #elif defined(WEBRTC_AUDIO_SNDIO)
-#include "audio_device_utility_sndio.h"
 #include "audio_device_sndio.h"
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
  #if defined(LINUX_ALSA)
@@ -297,8 +296,6 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
     {
       WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "attempting to use the Sndio audio API...");
       _platformAudioLayer = kSndioAudio;
-      // Create the sndio implementation of the Device Utility.
-      ptrAudioDeviceUtility = new AudioDeviceUtilitySndio(Id());
     }
 #elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
     // Create the *Linux* implementation of the Audio Device
