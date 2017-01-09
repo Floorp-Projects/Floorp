@@ -292,7 +292,7 @@ WebExtensionActor.prototype._docShellsToWindows = function (docshells) {
  */
 WebExtensionActor.prototype._allowSource = function (source) {
   try {
-    let uri = Services.io.newURI(source.url, null, null);
+    let uri = Services.io.newURI(source.url);
     let addonID = mapURIToAddonID(uri);
 
     return addonID == this.id;

@@ -15,7 +15,7 @@ const TEST_URI_AUTHOR = TEST_URL_ROOT + "doc_author-sheet.html";
 const TEST_URI_XUL = TEST_URL_ROOT + "doc_content_stylesheet.xul";
 const XUL_URI = Cc["@mozilla.org/network/io-service;1"]
                 .getService(Ci.nsIIOService)
-                .newURI(TEST_URI_XUL, null, null);
+                .newURI(TEST_URI_XUL);
 var ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                             .getService(Ci.nsIScriptSecurityManager);
 const XUL_PRINCIPAL = ssm.createCodebasePrincipal(XUL_URI, {});

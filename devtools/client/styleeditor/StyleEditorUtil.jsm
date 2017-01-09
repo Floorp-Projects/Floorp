@@ -185,7 +185,7 @@ function showFilePicker(path, toSave, parentWindow, callback,
   if (typeof path == "string") {
     try {
       if (Services.io.extractScheme(path) == "file") {
-        let uri = Services.io.newURI(path, null, null);
+        let uri = Services.io.newURI(path);
         let file = uri.QueryInterface(Ci.nsIFileURL).file;
         callback(file);
         return;
