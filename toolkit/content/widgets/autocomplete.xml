@@ -2140,7 +2140,7 @@ extends="chrome://global/content/bindings/popup.xml#popup">
             title = displayUrl;
             titleLooksLikeUrl = true;
             try {
-              let uri = Services.io.newURI(originalUrl, null, null);
+              let uri = Services.io.newURI(originalUrl);
               // Not all valid URLs have a domain.
               if (uri.host)
                 title = uri.host;
