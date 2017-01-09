@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var scope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
+var scope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
 const XPIProvider = scope.XPIProvider;
 const ID = "experiment1@tests.mozilla.org";
 

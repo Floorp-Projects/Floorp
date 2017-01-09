@@ -4,7 +4,9 @@
 var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu, manager: Cm} = Components;
 const URL_HOST = "http://localhost";
 
-var GMPScope = Cu.import("resource://gre/modules/GMPInstallManager.jsm");
+var GMPScope = Cu.import("resource://gre/modules/GMPInstallManager.jsm", {});
+var GMPInstallManager = GMPScope.GMPInstallManager;
+
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
@@ -13,8 +15,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm")
 Cu.import("resource://gre/modules/UpdateUtils.jsm");
 
-var { computeHash } = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
-var ProductAddonCheckerScope = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm");
+var ProductAddonCheckerScope = Cu.import("resource://gre/modules/addons/ProductAddonChecker.jsm", {});
 
 do_get_profile();
 
@@ -418,7 +419,7 @@ function* test_checkForAddons_installAddon(id, includeSize, wantInstallReject) {
   let data = "e~=0.5772156649";
   let zipFile = createNewZipFile(zipFileName, data);
   let hashFunc = "sha256";
-  let expectedDigest = yield computeHash(hashFunc, zipFile.path);
+  let expectedDigest = yield ProductAddonCheckerScope.computeHash(hashFunc, zipFile.path);
   let fileSize = zipFile.fileSize;
   if (wantInstallReject) {
     fileSize = 1;

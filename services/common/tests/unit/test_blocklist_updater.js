@@ -51,7 +51,7 @@ add_task(function* test_check_maybeSync(){
 
   let startTime = Date.now();
 
-  let updater = Cu.import("resource://services-common/blocklist-updater.js");
+  let updater = Cu.import("resource://services-common/blocklist-updater.js", {});
 
   let syncPromise = new Promise(function(resolve, reject) {
     // add a test kinto client that will respond to lastModified information

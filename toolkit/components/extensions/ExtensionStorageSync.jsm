@@ -36,7 +36,7 @@ const KINTO_REQUEST_TIMEOUT = 30000;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const {
   runSafeSyncWithoutClone,
-} = Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+} = Cu.import("resource://gre/modules/ExtensionUtils.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
