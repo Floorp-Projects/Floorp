@@ -791,8 +791,7 @@ class Dumper_Win32(Dumper):
         def compress(path):
             compressed_file = path[:-1] + '_'
             # ignore makecab's output
-            makecab = buildconfig.substs['MAKECAB']
-            success = subprocess.call([makecab, "-D",
+            success = subprocess.call(["makecab.exe", "/D",
                                        "CompressionType=MSZIP",
                                        path, compressed_file],
                                       stdout=open(os.devnull, 'w'),
