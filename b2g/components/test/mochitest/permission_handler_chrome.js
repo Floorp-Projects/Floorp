@@ -12,8 +12,8 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm");
-const { SystemAppProxy } = Cu.import("resource://gre/modules/SystemAppProxy.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+const { SystemAppProxy } = Cu.import("resource://gre/modules/SystemAppProxy.jsm", {});
 
 var eventHandler = function(evt) {
   if (!evt.detail || evt.detail.type !== "permission-prompt") {
@@ -33,4 +33,3 @@ addMessageListener("teardown", function() {
 addMessageListener("permission-response", function(detail) {
   SystemAppProxy._sendCustomEvent('mozContentEvent', detail);
 });
-

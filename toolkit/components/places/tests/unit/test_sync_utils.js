@@ -4,7 +4,7 @@ const {
   // `fetchGuidsWithAnno` isn't exported, but we can still access it here via a
   // backstage pass.
   fetchGuidsWithAnno,
-} = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+} = Cu.import("resource://gre/modules/PlacesSyncUtils.jsm", {});
 Cu.import("resource://testing-common/httpd.js");
 Cu.importGlobalProperties(["crypto", "URLSearchParams"]);
 

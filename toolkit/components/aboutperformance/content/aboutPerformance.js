@@ -14,8 +14,8 @@ const { PerformanceStats } = Cu.import("resource://gre/modules/PerformanceStats.
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { ObjectUtils } = Cu.import("resource://gre/modules/ObjectUtils.jsm", {});
-const { Memory } = Cu.import("resource://gre/modules/Memory.jsm");
-const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm");
+const { Memory } = Cu.import("resource://gre/modules/Memory.jsm", {});
+const { DownloadUtils } = Cu.import("resource://gre/modules/DownloadUtils.jsm", {});
 
 // about:performance observes notifications on this topic.
 // if a notification is sent, this causes the page to be updated immediately,

@@ -5,7 +5,7 @@
 Cu.import("resource://gre/modules/Extension.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const {LegacyExtensionContext} = Cu.import("resource://gre/modules/LegacyExtensionsUtils.jsm");
+const {LegacyExtensionContext} = Cu.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
 
 /**
  * This test case ensures that LegacyExtensionContext instances:

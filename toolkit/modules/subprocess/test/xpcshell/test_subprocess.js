@@ -460,7 +460,7 @@ add_task(function* test_subprocess_invalid_json() {
 
 if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
   add_task(function* test_subprocess_inherited_descriptors() {
-    let {ctypes, libc, win32} = Cu.import("resource://gre/modules/subprocess/subprocess_win.jsm");
+    let {ctypes, libc, win32} = Cu.import("resource://gre/modules/subprocess/subprocess_win.jsm", {});
 
     let secAttr = new win32.SECURITY_ATTRIBUTES();
     secAttr.nLength = win32.SECURITY_ATTRIBUTES.size;
@@ -753,7 +753,7 @@ add_task(function* test_bad_executable() {
 
 
 add_task(function* test_cleanup() {
-  let {SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
+  let {SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm", {});
 
   let worker = SubprocessImpl.Process.getWorker();
 

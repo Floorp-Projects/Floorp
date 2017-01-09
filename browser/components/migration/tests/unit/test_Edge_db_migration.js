@@ -2,7 +2,7 @@
 
 Cu.import("resource://gre/modules/ctypes.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-let eseBackStage = Cu.import("resource:///modules/ESEDBReader.jsm");
+let eseBackStage = Cu.import("resource:///modules/ESEDBReader.jsm", {});
 let ESE = eseBackStage.ESE;
 let KERNEL = eseBackStage.KERNEL;
 let gLibs = eseBackStage.gLibs;
@@ -468,4 +468,3 @@ add_task(function*() {
     }
   }
 });
-

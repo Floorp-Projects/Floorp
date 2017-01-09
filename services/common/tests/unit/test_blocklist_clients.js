@@ -5,12 +5,12 @@ const KEY_PROFILEDIR = "ProfD";
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Timer.jsm");
-const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
-const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
+const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 
-const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
-const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
-const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
+const BlocklistClients = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
