@@ -36,18 +36,42 @@ const mockOfflineAppCacheHelper = {
 const mockSiteDataManager = {
   sites: new Map([
     [
+      "https://account.xyz.com/",
+      {
+        usage: 1024 * 200,
+        host: "account.xyz.com",
+        status: Ci.nsIPermissionManager.ALLOW_ACTION
+      }
+    ],
+    [
       "https://shopping.xyz.com/",
       {
-        usage: 102400,
+        usage: 1024 * 100,
         host: "shopping.xyz.com",
+        status: Ci.nsIPermissionManager.DENY_ACTION
+      }
+    ],
+    [
+      "https://video.bar.com/",
+      {
+        usage: 1024 * 20,
+        host: "video.bar.com",
         status: Ci.nsIPermissionManager.ALLOW_ACTION
       }
     ],
     [
       "https://music.bar.com/",
       {
-        usage: 10240,
+        usage: 1024 * 10,
         host: "music.bar.com",
+        status: Ci.nsIPermissionManager.DENY_ACTION
+      }
+    ],
+    [
+      "https://books.foo.com/",
+      {
+        usage: 1024 * 2,
+        host: "books.foo.com",
         status: Ci.nsIPermissionManager.ALLOW_ACTION
       }
     ],
@@ -304,3 +328,49 @@ add_task(function* () {
   }
 });
 
+add_task(function* () {
+  yield SpecialPowers.pushPrefEnv({set: [["browser.storageManager.enabled", true]]});
+
+  mockSiteDataManager.register();
+  let updatePromise = promiseSitesUpdated();
+  yield openPreferencesViaOpenPreferencesAPI("advanced", "networkTab", { leaveOpen: true });
+  yield updatePromise;
+
+  // Open the siteDataSettings subdialog
+  let doc = gBrowser.selectedBrowser.contentDocument;
+  let settingsBtn = doc.getElementById("siteDataSettings");
+  let dialogOverlay = doc.getElementById("dialogOverlay");
+  let dialogPromise = promiseLoadSubDialog("chrome://browser/content/preferences/siteDataSettings.xul");
+  settingsBtn.doCommand();
+  yield dialogPromise;
+  is(dialogOverlay.style.visibility, "visible", "The dialog should be visible");
+
+  let frameDoc = doc.getElementById("dialogFrame").contentDocument;
+  let searchBox = frameDoc.getElementById("searchBox");
+  let mockOrigins = Array.from(mockSiteDataManager.sites.keys());
+
+  searchBox.value = "xyz";
+  searchBox.doCommand();
+  assertSitesListed(mockOrigins.filter(o => o.includes("xyz")));
+
+  searchBox.value = "bar";
+  searchBox.doCommand();
+  assertSitesListed(mockOrigins.filter(o => o.includes("bar")));
+
+  searchBox.value = "";
+  searchBox.doCommand();
+  assertSitesListed(mockOrigins);
+
+  mockSiteDataManager.unregister();
+  yield BrowserTestUtils.removeTab(gBrowser.selectedTab);
+
+  function assertSitesListed(origins) {
+    let sitesList = frameDoc.getElementById("sitesList");
+    let totalSitesNumber = sitesList.getElementsByTagName("richlistitem").length;
+    is(totalSitesNumber, origins.length, "Should list the right sites number");
+    origins.forEach(origin => {
+      let site = sitesList.querySelector(`richlistitem[data-origin="${origin}"]`);
+      ok(site instanceof XULElement, `Should list the site of ${origin}`);
+    });
+  }
+});

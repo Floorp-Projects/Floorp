@@ -26,6 +26,12 @@
     <description>&settings.description;</description>
     <separator class="thin"/>
 
+    <hbox id="searchBoxContainer">
+      <label accesskey="&search.accesskey;" control="searchBox">&search.label;</label>
+      <textbox id="searchBox" type="search" flex="1"/>
+    </hbox>
+    <separator class="thin"/>
+
     <richlistbox id="sitesList" orient="vertical" flex="1">
       <listheader>
         <treecol flex="4" width="50" label="&hostCol.label;" id="hostCol"/>
