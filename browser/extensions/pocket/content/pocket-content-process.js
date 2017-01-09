@@ -45,8 +45,6 @@ AboutPocketChildListener.prototype = {
       default:
         break;
     }
-
-    return;
   }
 };
 

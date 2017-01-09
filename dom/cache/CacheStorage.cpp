@@ -141,8 +141,8 @@ CacheStorage::CreateOnMainThread(Namespace aNamespace, nsIGlobalObject* aGlobal,
                                  nsIPrincipal* aPrincipal, bool aStorageDisabled,
                                  bool aForceTrustedOrigin, ErrorResult& aRv)
 {
-  MOZ_ASSERT(aGlobal);
-  MOZ_ASSERT(aPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(aGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(aPrincipal);
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aStorageDisabled) {
@@ -178,8 +178,8 @@ already_AddRefed<CacheStorage>
 CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
                              WorkerPrivate* aWorkerPrivate, ErrorResult& aRv)
 {
-  MOZ_ASSERT(aGlobal);
-  MOZ_ASSERT(aWorkerPrivate);
+  MOZ_DIAGNOSTIC_ASSERT(aGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!aWorkerPrivate->IsStorageAllowed()) {
@@ -238,8 +238,8 @@ bool
 CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
-             "Passed object is not a global object!");
+  MOZ_DIAGNOSTIC_ASSERT(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL,
+                                           "Passed object is not a global object!");
   js::AssertSameCompartment(aCx, aGlobal);
 
   if (NS_WARN_IF(!CacheStorageBinding::GetConstructorObject(aCx) ||
@@ -248,7 +248,7 @@ CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
   }
 
   nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal);
-  MOZ_ASSERT(principal);
+  MOZ_DIAGNOSTIC_ASSERT(principal);
 
   ErrorResult rv;
   RefPtr<CacheStorage> storage =
@@ -278,7 +278,7 @@ CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
   , mActor(nullptr)
   , mStatus(NS_OK)
 {
-  MOZ_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
 
   // If the PBackground actor is already initialized then we can
   // immediately use it
@@ -302,7 +302,7 @@ CacheStorage::CacheStorage(nsresult aFailureResult)
   , mActor(nullptr)
   , mStatus(aFailureResult)
 {
-  MOZ_ASSERT(NS_FAILED(mStatus));
+  MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mStatus));
 }
 
 already_AddRefed<Promise>
@@ -501,7 +501,7 @@ void
 CacheStorage::ActorCreated(PBackgroundChild* aActor)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
 
   if (NS_WARN_IF(mWorkerHolder && mWorkerHolder->Notified())) {
     ActorFailed();
@@ -522,18 +522,18 @@ CacheStorage::ActorCreated(PBackgroundChild* aActor)
 
   mWorkerHolder = nullptr;
 
-  MOZ_ASSERT(constructedActor == newActor);
+  MOZ_DIAGNOSTIC_ASSERT(constructedActor == newActor);
   mActor = newActor;
 
   MaybeRunPendingRequests();
-  MOZ_ASSERT(mPendingRequests.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(mPendingRequests.IsEmpty());
 }
 
 void
 CacheStorage::ActorFailed()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(!NS_FAILED(mStatus));
+  MOZ_DIAGNOSTIC_ASSERT(!NS_FAILED(mStatus));
 
   mStatus = NS_ERROR_UNEXPECTED;
   mWorkerHolder = nullptr;
@@ -549,8 +549,8 @@ void
 CacheStorage::DestroyInternal(CacheStorageChild* aActor)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_ASSERT(mActor);
-  MOZ_ASSERT(mActor == aActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor == aActor);
   mActor->ClearListener();
   mActor = nullptr;
 
@@ -589,7 +589,7 @@ CacheStorage::~CacheStorage()
     mActor->StartDestroyFromListener();
     // DestroyInternal() is called synchronously by StartDestroyFromListener().
     // So we should have already cleared the mActor.
-    MOZ_ASSERT(!mActor);
+    MOZ_DIAGNOSTIC_ASSERT(!mActor);
   }
 }
 

@@ -2960,6 +2960,17 @@ MacroAssembler::BranchGCPtr::emit(MacroAssembler& masm)
     masm.branchPtr(cond(), reg(), ptr_, jump());
 }
 
+void
+MacroAssembler::debugAssertIsObject(const ValueOperand& val)
+{
+#ifdef DEBUG
+    Label ok;
+    branchTestObject(Assembler::Equal, val, &ok);
+    assumeUnreachable("Expected an object!");
+    bind(&ok);
+#endif
+}
+
 namespace js {
 namespace jit {
 

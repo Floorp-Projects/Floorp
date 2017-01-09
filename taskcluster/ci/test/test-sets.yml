@@ -67,7 +67,7 @@ stylo-tests:
     - cppunit
     - crashtest
     - reftest-stylo
-    - mochitest-stylo
+    - mochitest-style
 
 qr-tests:
     - cppunit

@@ -31,7 +31,7 @@ class AutoTestThread
 public:
   AutoTestThread() {
     nsCOMPtr<nsIThread> newThread;
-    nsresult rv = NS_NewThread(getter_AddRefs(newThread));
+    nsresult rv = NS_NewNamedThread("AutoTestThread", getter_AddRefs(newThread));
     if (NS_FAILED(rv))
       return;
 

@@ -13,7 +13,7 @@ add_task(function* tabsSendMessageReply() {
       } else if (msg == "respond-promise") {
         return Promise.resolve(msg);
       } else if (msg == "respond-never") {
-        return;
+        return undefined;
       } else if (msg == "respond-error") {
         return Promise.reject(new Error(msg));
       } else if (msg == "throw-error") {

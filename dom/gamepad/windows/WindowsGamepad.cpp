@@ -1073,7 +1073,7 @@ StartGamepadMonitoring()
     return;
   }
   sIsShutdown = false;
-  NS_NewThread(getter_AddRefs(gMonitorThread));
+  NS_NewNamedThread("Gamepad", getter_AddRefs(gMonitorThread));
   gMonitorThread->Dispatch(new StartWindowsGamepadServiceRunnable(),
                            NS_DISPATCH_NORMAL);
 }

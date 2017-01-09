@@ -116,7 +116,7 @@ public:
     virtual void       SetSizeConstraints(const SizeConstraints& aConstraints) override;
     virtual void       Move(double aX,
                             double aY) override;
-    NS_IMETHOD         Show             (bool aState) override;
+    virtual void       Show             (bool aState) override;
     virtual void       Resize           (double aWidth,
                                          double aHeight,
                                          bool   aRepaint) override;
@@ -130,18 +130,18 @@ public:
     void               SetZIndex(int32_t aZIndex) override;
     virtual void       SetSizeMode(nsSizeMode aMode) override;
     virtual void       Enable(bool aState) override;
-    NS_IMETHOD         SetFocus(bool aRaise = false) override;
+    virtual nsresult   SetFocus(bool aRaise = false) override;
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     virtual LayoutDeviceIntRect GetClientBounds() override;
     virtual LayoutDeviceIntSize GetClientSize() override;
     virtual LayoutDeviceIntPoint GetClientOffset() override;
-    NS_IMETHOD         SetCursor(nsCursor aCursor) override;
-    NS_IMETHOD         SetCursor(imgIContainer* aCursor,
+    virtual void       SetCursor(nsCursor aCursor) override;
+    virtual nsresult   SetCursor(imgIContainer* aCursor,
                                  uint32_t aHotspotX, uint32_t aHotspotY) override;
-    NS_IMETHOD         Invalidate(const LayoutDeviceIntRect& aRect) override;
+    virtual void       Invalidate(const LayoutDeviceIntRect& aRect) override;
     virtual void*      GetNativeData(uint32_t aDataType) override;
     void               SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
-    NS_IMETHOD         SetTitle(const nsAString& aTitle) override;
+    virtual nsresult   SetTitle(const nsAString& aTitle) override;
     virtual void       SetIcon(const nsAString& aIconSpec) override;
     virtual void       SetWindowClass(const nsAString& xulWinType) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
@@ -285,11 +285,11 @@ public:
     mozilla::TimeStamp GetEventTimeStamp(guint32 aEventTime);
     mozilla::CurrentX11TimeGetter* GetCurrentTimeGetter();
 
-    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                      const InputContextAction& aAction) override;
-    NS_IMETHOD_(InputContext) GetInputContext() override;
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction) override;
+    virtual InputContext GetInputContext() override;
     virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
-    NS_IMETHOD_(TextEventDispatcherListener*)
+    virtual TextEventDispatcherListener*
         GetNativeTextEventDispatcherListener() override;
     bool ExecuteNativeKeyBindingRemapped(
                         NativeKeyBindingsType aType,
@@ -298,7 +298,7 @@ public:
                         void* aCallbackData,
                         uint32_t aGeckoKeyCode,
                         uint32_t aNativeKeyCode);
-    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+    virtual bool ExecuteNativeKeyBinding(
                         NativeKeyBindingsType aType,
                         const mozilla::WidgetKeyboardEvent& aEvent,
                         DoCommandCallback aCallback,

@@ -292,7 +292,7 @@ struct Statistics
             start(start),
             startFaults(startFaults)
         {
-            for (auto i : mozilla::MakeRange(NumTimingArrays))
+            for (auto i : mozilla::IntegerRange(NumTimingArrays))
                 mozilla::PodArrayZero(phaseTimes[i]);
         }
 

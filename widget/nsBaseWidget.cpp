@@ -743,14 +743,15 @@ nsCursor nsBaseWidget::GetCursor()
   return mCursor;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetCursor(nsCursor aCursor)
+void
+nsBaseWidget::SetCursor(nsCursor aCursor)
 {
   mCursor = aCursor;
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsBaseWidget::SetCursor(imgIContainer* aCursor,
-                                      uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsBaseWidget::SetCursor(imgIContainer* aCursor,
+                        uint32_t aHotspotX, uint32_t aHotspotY)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1584,7 +1585,7 @@ nsBaseWidget::GetClientOffset()
   return LayoutDeviceIntPoint(0, 0);
 }
 
-NS_IMETHODIMP
+nsresult
 nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -1770,7 +1771,7 @@ nsBaseWidget::NotifyUIStateChanged(UIStateChangeType aShowAccelerators,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsBaseWidget::NotifyIME(const IMENotification& aIMENotification)
 {
   switch (aIMENotification.mMessage) {
@@ -1814,7 +1815,7 @@ nsBaseWidget::EnsureTextEventDispatcher()
   mTextEventDispatcher = new TextEventDispatcher(this);
 }
 
-NS_IMETHODIMP_(nsIWidget::TextEventDispatcher*)
+nsIWidget::TextEventDispatcher*
 nsBaseWidget::GetTextEventDispatcher()
 {
   EnsureTextEventDispatcher();
@@ -1831,7 +1832,7 @@ nsBaseWidget::GetPseudoIMEContext()
   return dispatcher->GetPseudoIMEContext();
 }
 
-NS_IMETHODIMP_(TextEventDispatcherListener*)
+TextEventDispatcherListener*
 nsBaseWidget::GetNativeTextEventDispatcherListener()
 {
   // TODO: If all platforms supported use of TextEventDispatcher for handling
@@ -2259,7 +2260,7 @@ nsBaseWidget::DefaultFillScrollCapture(DrawTarget* aSnapshotDrawTarget)
 }
 #endif
 
-NS_IMETHODIMP_(nsIWidget::NativeIMEContext)
+nsIWidget::NativeIMEContext
 nsIWidget::GetNativeIMEContext()
 {
   return NativeIMEContext(this);

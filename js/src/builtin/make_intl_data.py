@@ -8,6 +8,7 @@
 """ Usage:
     make_intl_data.py langtags [language-subtag-registry.txt]
     make_intl_data.py tzdata
+    make_intl_data.py currency
 
     Target "langtags":
     This script extracts information about mappings between deprecated and
@@ -25,6 +26,10 @@
     This script computes which time zone informations are not up-to-date in ICU
     and provides the necessary mappings to workaround this problem.
     https://ssl.icu-project.org/trac/ticket/12044
+
+
+    Target "currency":
+    Generates the mapping from currency codes to decimal digits used for them.
 """
 
 from __future__ import print_function
@@ -39,7 +44,7 @@ import urllib2
 import urlparse
 from contextlib import closing
 from functools import partial
-from itertools import chain, ifilter, ifilterfalse, imap, tee
+from itertools import chain, groupby, ifilter, ifilterfalse, imap, tee
 from operator import attrgetter, itemgetter
 
 def readRegistryRecord(registry):
@@ -863,15 +868,8 @@ def generateTzDataTests(tzdataDir, version, ignoreBackzone, testDir):
     generateTzDataTestBackzone(tzdataDir, version, ignoreBackzone, testDir)
     generateTzDataTestBackzoneLinks(tzdataDir, version, ignoreBackzone, testDir)
 
-def updateTzdata(args):
+def updateTzdata(topsrcdir, args):
     """ Update the time zone cpp file. """
-
-    # This script must reside in js/src/builtin to work correctly.
-    (thisDir, thisFile) = os.path.split(os.path.abspath(sys.argv[0]))
-    thisDir = os.path.normpath(thisDir)
-    if "/".join(thisDir.split(os.sep)[-3:]) != "js/src/builtin":
-        raise RuntimeError("%s must reside in js/src/builtin" % sys.argv[0])
-    topsrcdir = "/".join(thisDir.split(os.sep)[:-3])
 
     icuDir = os.path.join(topsrcdir, "intl/icu/source")
     if not os.path.isdir(icuDir):
@@ -929,8 +927,98 @@ def updateTzdata(args):
     else:
         updateFrom(tzDir)
 
+def readCurrencyFile(tree):
+    reCurrency = re.compile(r"^[A-Z]{3}$")
+    reIntMinorUnits = re.compile(r"^\d+$")
+
+    for country in tree.iterfind(".//CcyNtry"):
+        # Skip entry if no currency information is available.
+        currency = country.findtext("Ccy")
+        if currency is None:
+            continue
+        assert reCurrency.match(currency)
+
+        minorUnits = country.findtext("CcyMnrUnts")
+        assert minorUnits is not None
+
+        # Skip all entries without minorUnits or which use the default minorUnits.
+        if reIntMinorUnits.match(minorUnits) and int(minorUnits) != 2:
+            currencyName = country.findtext("CcyNm")
+            countryName = country.findtext("CtryNm")
+            yield (currency, int(minorUnits), currencyName, countryName)
+
+def writeCurrencyFile(published, currencies, out):
+    with io.open(out, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(generatedFileWarning)
+        println(u"// Version: {}".format(published))
+
+        println(u"""
+/**
+ * Mapping from currency codes to the number of decimal digits used for them.
+ * Default is 2 digits.
+ *
+ * Spec: ISO 4217 Currency and Funds Code List.
+ * http://www.currency-iso.org/en/home/tables/table-a1.html
+ */""")
+        println(u"var currencyDigits = {")
+        for (currency, entries) in groupby(sorted(currencies, key=itemgetter(0)), itemgetter(0)):
+            for (_, minorUnits, currencyName, countryName) in entries:
+                println(u"    // {} ({})".format(currencyName, countryName))
+            println(u"    {}: {},".format(currency, minorUnits))
+        println(u"};")
+
+def updateCurrency(topsrcdir, args):
+    """ Update the IntlCurrency.js file. """
+    import xml.etree.ElementTree as ET
+    from random import randint
+
+    url = args.url
+    out = args.out
+    filename = args.file
+
+    print("Arguments:")
+    print("\tDownload url: %s" % url)
+    print("\tLocal currency file: %s" % filename)
+    print("\tOutput file: %s" % out)
+    print("")
+
+    def updateFrom(currencyFile):
+        print("Processing currency code list file...")
+        tree = ET.parse(currencyFile)
+        published = tree.getroot().attrib["Pblshd"]
+        currencies = readCurrencyFile(tree)
+
+        print("Writing IntlCurrency file...")
+        writeCurrencyFile(published, currencies, out)
+
+    if filename is not None:
+        print("Always make sure you have the newest currency code list file!")
+        updateFrom(filename)
+    else:
+        print("Downloading currency & funds code list...")
+        request = urllib2.Request(url)
+        # Fake a random user agent string to circumvent the bot detection from
+        # currency-iso.org...
+        request.add_header("User-agent", "Mozilla/5.0 (Mobile; rv:{0}.0) Gecko/{0}.0 Firefox/{0}.0".format(randint(1, 999)))
+        with closing(urllib2.urlopen(request)) as currencyFile:
+            fname = urlparse.urlsplit(currencyFile.geturl()).path.split("/")[-1]
+            with tempfile.NamedTemporaryFile(suffix=fname) as currencyTmpFile:
+                print("File stored in %s" % currencyTmpFile.name)
+                currencyTmpFile.write(currencyFile.read())
+                currencyTmpFile.flush()
+                updateFrom(currencyTmpFile.name)
+
 if __name__ == "__main__":
     import argparse
+
+    # This script must reside in js/src/builtin to work correctly.
+    (thisDir, thisFile) = os.path.split(os.path.abspath(sys.argv[0]))
+    dirPaths = os.path.normpath(thisDir).split(os.sep)
+    if "/".join(dirPaths[-3:]) != "js/src/builtin":
+        raise RuntimeError("%s must reside in js/src/builtin" % sys.argv[0])
+    topsrcdir = "/".join(dirPaths[:-3])
 
     def EnsureHttps(v):
         if not v.startswith("https:"):
@@ -971,7 +1059,23 @@ if __name__ == "__main__":
     parser_tz.add_argument("--out",
                            default="IntlTimeZoneData.h",
                            help="Output file (default: %(default)s)")
-    parser_tz.set_defaults(func=updateTzdata)
+    parser_tz.set_defaults(func=partial(updateTzdata, topsrcdir))
+
+
+    parser_currency = subparsers.add_parser("currency", help="Update currency digits mapping")
+    parser_currency.add_argument("--url",
+                                 metavar="URL",
+                                 default="https://www.currency-iso.org/dam/downloads/lists/list_one.xml",
+                                 type=EnsureHttps,
+                                 help="Download url for the currency & funds code list (default: "
+                                      "%(default)s)")
+    parser_currency.add_argument("--out",
+                                 default="IntlCurrency.js",
+                                 help="Output file (default: %(default)s)")
+    parser_currency.add_argument("file",
+                                 nargs="?",
+                                 help="Local currency code list file, if omitted uses <URL>")
+    parser_currency.set_defaults(func=partial(updateCurrency, topsrcdir))
 
     args = parser.parse_args()
     args.func(args)

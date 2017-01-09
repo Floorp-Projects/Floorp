@@ -99,6 +99,9 @@ add_task(function*() {
   equal(install.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
   BootstrapMonitor.checkAddonStarted(ID, "1.0");
 
+  let info = BootstrapMonitor.started.get(ID);
+  do_check_eq(info.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
+
   let addon = yield promiseAddonByID(ID);
 
   do_check_neq(addon, null);
@@ -533,6 +536,9 @@ add_task(function*() {
   const initialInstall = yield onInitialInstall;
   equal(initialInstall.data.version, "1.0");
   equal(initialInstall.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
+
+  let info = BootstrapMonitor.started.get(ID);
+  do_check_eq(info.reason, BOOTSTRAP_REASONS.ADDON_INSTALL);
 
   // Install it again.
   const onUninstall = waitForBootstrapEvent("uninstall", ID);

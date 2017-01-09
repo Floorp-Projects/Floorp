@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tests for inline style cache</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none;">
+
+</div>
+
+<div id="editor" contenteditable></div>
+<pre id="test">
+
+<script class="testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  var editor = document.getElementById("editor");
+  editor.focus();
+
+  var selection = window.getSelection();
+
+  // #01-01 Typing something after setting some styles should insert some nodes to insert text.
+  editor.innerHTML = "beforeafter";
+  selection.collapse(editor.firstChild, "before".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "before<strike><i><b>test</b></i></strike>after",
+     "#01-01 At typing something after setting some styles, should cause inserting some nodes to apply the style");
+
+  // #01-02 Typing something after removing some characters after setting some styles should work as without removing some character.
+  // XXX This behavior is different from Chromium.
+  editor.innerHTML = "beforeafter";
+  selection.collapse(editor.firstChild, "before".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Delete", { code: "Delete" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "before<strike><i><b>test</b></i></strike>fter",
+     "#01-02-1 At typing something after Delete after setting style, should cause inserting some nodes to apply the style");
+
+  editor.innerHTML = "beforeafter";
+  selection.collapse(editor.firstChild, "before".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "befor<strike><i><b>test</b></i></strike>after",
+     "#01-02-2 At typing something after Backspace after setting style, should cause inserting some nodes to apply the style");
+
+  // #01-03 Typing Enter after setting some styles should not ignore the styles.
+  editor.innerHTML = "beforeafter";
+  selection.collapse(editor.firstChild, "before".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "before<br><strike><i><b>test</b></i></strike>after",
+     "#01-03-1 Typing Enter after setting style should not ignore the styles");
+
+  editor.innerHTML = "<p>beforeafter</p>";
+  selection.collapse(editor.firstChild.firstChild, "before".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<p>before</p><p><strike><i><b>test</b></i></strike>after</p>",
+     "#01-03-2 Typing Enter after setting style should not ignore the styles");
+
+  // #02-01 Replacing text with typing some text after setting some styles should work as just inserting text.
+  // XXX Chromium works as expected.
+  editor.innerHTML = "beforeselectionafter";
+  selection.collapse(editor.firstChild, "before".length);
+  selection.extend(editor.firstChild, "beforeselection".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  // XXX <strike> is not handled correctly in this case.
+  todo_is(editor.innerHTML, "before<strike><i><b>test</b></i></strike>after",
+          "#02-01 At replacing \"selection\" after setting some styles, should keep the styles at inserting text");
+  // XXX For testing current (buggy) behavior for now.
+  is(editor.innerHTML, "before<i><b>test</b></i><strike><i><b></b></i></strike>after",
+     "#02-01 At replacing \"selection\" after setting some styles, should keep the styles");
+
+  // #02-02 Inserting text after removing selected text after setting some styles should not keep the styles.
+  // XXX Chromium keeps the style.
+  editor.innerHTML = "beforeselectionafter";
+  selection.collapse(editor.firstChild, "before".length);
+  selection.extend(editor.firstChild, "beforeselection".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "beforetestafter",
+     "#02-02 After removing \"selection\" after setting some styles, should not keep the styles");
+
+  // #02-03 Inserting text after replacing selected text after setting some styles should keep the styles.
+  editor.innerHTML = "beforeselectionafter";
+  selection.collapse(editor.firstChild, "before".length);
+  selection.extend(editor.firstChild, "beforeselection".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  // XXX <strike> is not handled correctly in this case.
+  todo_is(editor.innerHTML, "before<br><strike><i><b>test</b></i></strike>after",
+          "#02-03-1 Typing Enter after setting style to selected text should keep the styles");
+  // XXX For testing current (buggy) behavior for now.
+  is(editor.innerHTML, "before<br><i><b>test</b></i><strike><i><b></b></i></strike>after",
+     "#02-03-1 Typing Enter after setting style to selected text should keep the styles");
+
+  editor.innerHTML = "<p>beforeselectionafter</p>";
+  selection.collapse(editor.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild, "beforeselection".length);
+  document.execCommand("bold");
+  document.execCommand("italic");
+  document.execCommand("strikethrough");
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<p>before</p><p><strike><i><b>test</b></i></strike>after</p>",
+     "#02-03-2 Typing Enter after setting style to selected text should keep the styles");
+
+  // #03-01 Replacing in <b style="font-weight: normal;"> shouldn't cause new <b>.
+  editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
+  selection.collapse(editor.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<b style=\"font-weight: normal;\">beforetestafter</b>",
+     "#03-01 Replacing text in styled inline elements should respect the styles");
+
+  // #03-02 Typing something after removing selected text in <b style="font-weight: normal;"> shouldn't cause new <b>.
+  editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
+  selection.collapse(editor.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<b style=\"font-weight: normal;\">beforetestafter</b>",
+     "#03-02 Inserting text after removing text in styled inline elements should respect the styles");
+
+  // #03-03 Typing something after typing Enter at selected text in <b style="font-weight: normal;"> shouldn't cause new <b>.
+  editor.innerHTML = "<b style=\"font-weight: normal;\">beforeselectionafter</b>";
+  selection.collapse(editor.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<b style=\"font-weight: normal;\">before<br>testafter</b>",
+     "#03-03-1 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+
+  editor.innerHTML = "<p><b style=\"font-weight: normal;\">beforeselectionafter</b></p>";
+  selection.collapse(editor.firstChild.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<p><b style=\"font-weight: normal;\">before</b></p><p><b style=\"font-weight: normal;\">testafter</b></p>",
+     "#03-03-2 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+
+  // #04-01 Replacing in some styled inline elements shouldn't cause new same elements.
+  editor.innerHTML = "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b></i></strike>";
+  selection.collapse(editor.firstChild.firstChild.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforetestafter</b></i></strike>",
+     "#04-01 Replacing text in styled inline elements should respect the styles");
+
+  // #04-02 Typing something after removing selected text in some styled inline elements shouldn't cause new same elements.
+  editor.innerHTML = "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b>";
+  selection.collapse(editor.firstChild.firstChild.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("KEY_Backspace", { code: "Backspace" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforetestafter</b></i></strike>",
+     "#04-02 Inserting text after removing text in styled inline elements should respect the styles");
+
+  // #04-03 Typing something after typing Enter at selected text in some styled inline elements shouldn't cause new same elements.
+  editor.innerHTML = "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b>";
+  selection.collapse(editor.firstChild.firstChild.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">before<br>testafter</b></i></strike>",
+     "#04-03-1 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+
+  editor.innerHTML = "<p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">beforeselectionafter</b></p>";
+  selection.collapse(editor.firstChild.firstChild.firstChild.firstChild.firstChild, "before".length);
+  selection.extend(editor.firstChild.firstChild.firstChild.firstChild.firstChild, "beforeselection".length);
+  synthesizeKey("KEY_Enter", { code: "Enter" });
+  synthesizeKey("t", { code: "KeyT" });
+  synthesizeKey("e", { code: "KeyE" });
+  synthesizeKey("s", { code: "KeyS" });
+  synthesizeKey("t", { code: "KeyT" });
+
+  is(editor.innerHTML, "<p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">before</b></i></strike></p><p><strike style=\"text-decoration: none;\"><i style=\"font-style: normal;\"><b style=\"font-weight: normal;\">testafter</b></i></strike></p>",
+     "#04-03-2 Inserting text after typing Enter at selected text in styled inline elements should respect the styles");
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>

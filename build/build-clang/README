@@ -45,7 +45,7 @@ build-clang.py accepts a JSON config format with the following fields:
 * patches: Optional list of patches to apply per platform.  Supported platforms: macosx64, linux32, linux64.  The default is Release.
 * build_type: The type of build to make.  Supported types: Release, Debug, RelWithDebInfo or MinSizeRel.
 * build_libcxx: Whether to build with libcxx.  The default is false.
-* import_clang_tidy: Whether to import Mozilla checks into clang-tidy before building.  The default is false.
+* build_clang_tidy: Whether to build clang-tidy with the Mozilla checks imported.  The default is false.
 * osx_cross_compile: Whether to invoke CMake for OS X cross compile builds.
 * assertions: Whether to enable LLVM assertions.  The default is false.
 

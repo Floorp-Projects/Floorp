@@ -4,31 +4,18 @@
 
 %include ../../shared/downloads/downloads.inc.css
 
-/*** Panel and outer controls ***/
-
-@keyfocus@ #downloadsSummary:focus,
-@keyfocus@ .downloadsPanelFooterButton:focus {
-  outline: 1px -moz-dialogtext dotted;
-  outline-offset: -5px;
-}
-
 /*** List items and similar elements in the summary ***/
 
 :root {
-  --downloads-item-height: 6em;
+  --downloads-item-height: 5.5em;
   --downloads-item-font-size-factor: 0.9;
-  --downloads-item-target-margin-bottom: 7px;
-  --downloads-item-details-margin-top: 1px;
   --downloads-item-details-opacity: 0.6;
 }
 
-.downloadButton:focus > .button-box {
-  outline: 1px -moz-dialogtext dotted;
-}
-
-/*** Highlighted list items ***/
-
-@keyfocus@ @itemFocused@ {
+@keyfocus@ @itemFocused@,
+@keyfocus@ #downloadsSummary:focus,
+@keyfocus@ .downloadsPanelFooterButton:focus,
+.downloadButton:focus {
   outline: 1px -moz-dialogtext dotted;
   outline-offset: -1px;
 }

@@ -64,7 +64,6 @@ let LaterRun = {
     if (this.hoursSinceInstall > kSelfDestructHoursLimit ||
         this.sessionCount > kSelfDestructSessionLimit) {
       this.selfDestruct();
-      return;
     }
   },
 

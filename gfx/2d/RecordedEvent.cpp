@@ -1513,6 +1513,7 @@ RecordedSnapshot::OutputSimpleEventInfo(stringstream &aStringStream) const
 RecordedFontData::~RecordedFontData()
 {
   delete[] mData;
+  delete[] mVariations;
 }
 
 bool
@@ -1520,6 +1521,7 @@ RecordedFontData::PlayEvent(Translator *aTranslator) const
 {
   RefPtr<NativeFontResource> fontResource =
     Factory::CreateNativeFontResource(mData, mFontDetails.size,
+                                      mFontDetails.variationCount, mVariations,
                                       aTranslator->GetDesiredFontType());
   if (!fontResource) {
     return false;
@@ -1537,6 +1539,8 @@ RecordedFontData::RecordToStream(std::ostream &aStream) const
   WriteElement(aStream, mFontDetails.fontDataKey);
   WriteElement(aStream, mFontDetails.size);
   aStream.write((const char*)mData, mFontDetails.size);
+  WriteElement(aStream, mFontDetails.variationCount);
+  aStream.write((const char*)mVariations, mFontDetails.variationCount * sizeof(ScaledFont::VariationSetting));
 }
 
 void
@@ -1546,14 +1550,23 @@ RecordedFontData::OutputSimpleEventInfo(stringstream &aStringStream) const
 }
 
 void
-RecordedFontData::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize)
+RecordedFontData::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex,
+                              Float aGlyphSize, uint32_t aVariationCount,
+                              const ScaledFont::VariationSetting* aVariations)
 {
   mData = new uint8_t[aSize];
   memcpy(mData, aData, aSize);
-  mFontDetails.fontDataKey = SFNTData::GetUniqueKey(aData, aSize);
+  uint32_t varDataSize = aVariationCount * sizeof(ScaledFont::VariationSetting);
+  mFontDetails.fontDataKey =
+    SFNTData::GetUniqueKey(aData, aSize, varDataSize, aVariations);
   mFontDetails.size = aSize;
   mFontDetails.index = aIndex;
   mFontDetails.glyphSize = aGlyphSize;
+  mFontDetails.variationCount = aVariationCount;
+  if (aVariationCount > 0) {
+    mVariations = new ScaledFont::VariationSetting[aVariationCount];
+    memcpy(mVariations, aVariations, varDataSize);
+  }
 }
 
 bool
@@ -1567,16 +1580,26 @@ RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails)
   fontDetails.size = mFontDetails.size;
   fontDetails.glyphSize = mFontDetails.glyphSize;
   fontDetails.index = mFontDetails.index;
+  fontDetails.variationCount = mFontDetails.variationCount;
   return true;
 }
 
 RecordedFontData::RecordedFontData(istream &aStream)
   : RecordedEvent(FONTDATA)
+  , mData(nullptr)
+  , mVariations(nullptr)
 {
   ReadElement(aStream, mFontDetails.fontDataKey);
   ReadElement(aStream, mFontDetails.size);
   mData = new uint8_t[mFontDetails.size];
   aStream.read((char*)mData, mFontDetails.size);
+  ReadElement(aStream, mFontDetails.variationCount);
+  if (mFontDetails.variationCount > 0) {
+    mVariations = new ScaledFont::VariationSetting[mFontDetails.variationCount];
+    aStream.read((char*)mVariations, mFontDetails.variationCount * sizeof(ScaledFont::VariationSetting));
+  } else {
+    mVariations = nullptr;
+  }
 }
 
 RecordedFontDescriptor::~RecordedFontDescriptor()

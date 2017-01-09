@@ -389,6 +389,7 @@ add_test(function test_send_command() {
   equal(command.command, action);
   equal(command.args.length, 2);
   deepEqual(command.args, args);
+  ok(command.flowID);
 
   notEqual(tracker.changedIDs[remoteId], undefined);
 
@@ -632,12 +633,12 @@ add_task(async function test_filter_duplicate_names() {
 
     let collection = server.getCollection("foo", "clients");
     let recentPayload = JSON.parse(JSON.parse(collection.payload(recentID)).ciphertext);
-    deepEqual(recentPayload.commands, [{ command: "logout", args: [] }],
-              "Should send commands to the recent client");
+    compareCommands(recentPayload.commands, [{ command: "logout", args: [] }],
+                    "Should send commands to the recent client");
 
     let oldPayload = JSON.parse(JSON.parse(collection.payload(oldID)).ciphertext);
-    deepEqual(oldPayload.commands, [{ command: "logout", args: [] }],
-              "Should send commands to the week-old client");
+    compareCommands(oldPayload.commands, [{ command: "logout", args: [] }],
+                    "Should send commands to the week-old client");
 
     let dupePayload = JSON.parse(JSON.parse(collection.payload(dupeID)).ciphertext);
     deepEqual(dupePayload.commands, [],
@@ -914,6 +915,7 @@ add_task(async function test_merge_commands() {
     commands: [{
       command: "displayURI",
       args: ["https://example.com", engine.localID, "Yak Herders Anonymous"],
+      flowID: Utils.makeGUID(),
     }],
     version: "48",
     protocols: ["1.5"],
@@ -927,6 +929,7 @@ add_task(async function test_merge_commands() {
     commands: [{
       command: "logout",
       args: [],
+      flowID: Utils.makeGUID(),
     }],
     version: "48",
     protocols: ["1.5"],
@@ -945,7 +948,7 @@ add_task(async function test_merge_commands() {
 
     let collection = server.getCollection("foo", "clients");
     let desktopPayload = JSON.parse(JSON.parse(collection.payload(desktopID)).ciphertext);
-    deepEqual(desktopPayload.commands, [{
+    compareCommands(desktopPayload.commands, [{
       command: "displayURI",
       args: ["https://example.com", engine.localID, "Yak Herders Anonymous"],
     }, {
@@ -954,8 +957,8 @@ add_task(async function test_merge_commands() {
     }], "Should send the logout command to the desktop client");
 
     let mobilePayload = JSON.parse(JSON.parse(collection.payload(mobileID)).ciphertext);
-    deepEqual(mobilePayload.commands, [{ command: "logout", args: [] }],
-      "Should not send a duplicate logout to the mobile client");
+    compareCommands(mobilePayload.commands, [{ command: "logout", args: [] }],
+                    "Should not send a duplicate logout to the mobile client");
   } finally {
     Svc.Prefs.resetBranch("");
     Service.recordManager.clearCache();
@@ -1022,7 +1025,7 @@ add_task(async function test_duplicate_remote_commands() {
 
     let collection = server.getCollection("foo", "clients");
     let desktopPayload = JSON.parse(JSON.parse(collection.payload(desktopID)).ciphertext);
-    deepEqual(desktopPayload.commands, [{
+    compareCommands(desktopPayload.commands, [{
       command: "displayURI",
       args: ["https://foobar.com", engine.localID, "Foo bar!"],
     }], "Should only send the second command to the desktop client");
@@ -1062,7 +1065,9 @@ add_task(async function test_upload_after_reboot() {
     name: "Device B",
     type: "desktop",
     commands: [{
-      command: "displayURI", args: ["https://deviceclink.com", deviceCID, "Device C link"]
+      command: "displayURI",
+      args: ["https://deviceclink.com", deviceCID, "Device C link"],
+      flowID: Utils.makeGUID(),
     }],
     version: "48",
     protocols: ["1.5"],
@@ -1092,7 +1097,7 @@ add_task(async function test_upload_after_reboot() {
 
     let collection = server.getCollection("foo", "clients");
     let deviceBPayload = JSON.parse(JSON.parse(collection.payload(deviceBID)).ciphertext);
-    deepEqual(deviceBPayload.commands, [{
+    compareCommands(deviceBPayload.commands, [{
       command: "displayURI", args: ["https://deviceclink.com", deviceCID, "Device C link"]
     }], "Should be the same because the upload failed");
 
@@ -1113,7 +1118,7 @@ add_task(async function test_upload_after_reboot() {
     engine._sync();
 
     deviceBPayload = JSON.parse(JSON.parse(collection.payload(deviceBID)).ciphertext);
-    deepEqual(deviceBPayload.commands, [{
+    compareCommands(deviceBPayload.commands, [{
       command: "displayURI",
       args: ["https://example.com", engine.localID, "Yak Herders Anonymous"],
     }], "Should only had written our outgoing command");
@@ -1153,10 +1158,14 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     name: "Device A",
     type: "desktop",
     commands: [{
-      command: "displayURI", args: ["https://deviceblink.com", deviceBID, "Device B link"]
+      command: "displayURI",
+      args: ["https://deviceblink.com", deviceBID, "Device B link"],
+      flowID: Utils.makeGUID(),
     },
     {
-      command: "displayURI", args: ["https://deviceclink.com", deviceCID, "Device C link"]
+      command: "displayURI",
+      args: ["https://deviceclink.com", deviceCID, "Device C link"],
+      flowID: Utils.makeGUID(),
     }],
     version: "48",
     protocols: ["1.5"],
@@ -1195,7 +1204,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     equal(commandsProcessed, 2, "We processed 2 commands");
 
     let localRemoteRecord = JSON.parse(JSON.parse(collection.payload(engine.localID)).ciphertext);
-    deepEqual(localRemoteRecord.commands, [{
+    compareCommands(localRemoteRecord.commands, [{
       command: "displayURI", args: ["https://deviceblink.com", deviceBID, "Device B link"]
     },
     {
@@ -1208,13 +1217,19 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
       name: "Device A",
       type: "desktop",
       commands: [{
-        command: "displayURI", args: ["https://deviceblink.com", deviceBID, "Device B link"]
+        command: "displayURI",
+        args: ["https://deviceblink.com", deviceBID, "Device B link"],
+        flowID: Utils.makeGUID(),
       },
       {
-        command: "displayURI", args: ["https://deviceclink.com", deviceCID, "Device C link"]
+        command: "displayURI",
+        args: ["https://deviceclink.com", deviceCID, "Device C link"],
+        flowID: Utils.makeGUID(),
       },
       {
-        command: "displayURI", args: ["https://deviceclink2.com", deviceCID, "Device C link 2"]
+        command: "displayURI",
+        args: ["https://deviceclink2.com", deviceCID, "Device C link 2"],
+        flowID: Utils.makeGUID(),
       }],
       version: "48",
       protocols: ["1.5"],
@@ -1302,7 +1317,7 @@ add_task(async function test_deleted_commands() {
       "Should not reupload deleted clients");
 
     let activePayload = JSON.parse(JSON.parse(collection.payload(activeID)).ciphertext);
-    deepEqual(activePayload.commands, [{ command: "logout", args: [] }],
+    compareCommands(activePayload.commands, [{ command: "logout", args: [] }],
       "Should send the command to the active client");
   } finally {
     Svc.Prefs.resetBranch("");
@@ -1346,18 +1361,19 @@ add_task(async function test_send_uri_ack() {
     ourPayload.commands = [{
       command: "displayURI",
       args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
+      flowID: Utils.makeGUID(),
     }];
     server.insertWBO("foo", "clients", new ServerWBO(engine.localID, encryptPayload(ourPayload), now));
 
     _("Sync again");
     engine._sync();
-    deepEqual(engine.localCommands, [{
+    compareCommands(engine.localCommands, [{
       command: "displayURI",
       args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
     }], "Should receive incoming URI");
     ok(engine.processIncomingCommands(), "Should process incoming commands");
     const clearedCommands = engine._readCommands()[engine.localID];
-    deepEqual(clearedCommands, [{
+    compareCommands(clearedCommands, [{
       command: "displayURI",
       args: ["https://example.com", fakeSenderID, "Yak Herders Anonymous"],
     }], "Should mark the commands as cleared after processing");

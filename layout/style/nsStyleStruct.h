@@ -625,6 +625,13 @@ public:
     return !(*this == aOther);
   }
 
+  nsStyleAutoArray& operator=(nsStyleAutoArray&& aOther) {
+    mFirstElement = aOther.mFirstElement;
+    mOtherElements.SwapElements(aOther.mOtherElements);
+
+    return *this;
+  }
+
   size_t Length() const {
     return mOtherElements.Length() + 1;
   }
@@ -899,6 +906,8 @@ struct nsStyleImageLayers {
 
   bool HasLayerWithImage() const;
   nsStyleImageLayers& operator=(const nsStyleImageLayers& aOther);
+  nsStyleImageLayers& operator=(nsStyleImageLayers&& aOther);
+  bool operator==(const nsStyleImageLayers& aOther) const;
 
   static const nsCSSPropertyID kBackgroundLayerTable[];
   static const nsCSSPropertyID kMaskLayerTable[];
@@ -3181,23 +3190,11 @@ enum nsStyleContentType {
   eStyleContentType_Uninitialized
 };
 
-struct nsStyleContentData
+class nsStyleContentData
 {
-  nsStyleContentType  mType;
-  union {
-    char16_t *mString;
-    imgRequestProxy *mImage;
-    nsCSSValue::Array* mCounters;
-  } mContent;
-#ifdef DEBUG
-  bool mImageTracked;
-#endif
-
+public:
   nsStyleContentData()
     : mType(eStyleContentType_Uninitialized)
-#ifdef DEBUG
-    , mImageTracked(false)
-#endif
   {
     MOZ_COUNT_CTOR(nsStyleContentData);
     mContent.mString = nullptr;
@@ -3212,16 +3209,84 @@ struct nsStyleContentData
     return !(*this == aOther);
   }
 
-  void TrackImage(mozilla::dom::ImageTracker* aImageTracker);
-  void UntrackImage(mozilla::dom::ImageTracker* aImageTracker);
+  nsStyleContentType GetType() const { return mType; }
 
-  void SetImage(already_AddRefed<imgRequestProxy> aRequest)
+  char16_t* GetString() const
   {
-    MOZ_ASSERT(!mImageTracked,
-               "Setting a new image without untracking the old one!");
-    MOZ_ASSERT(mType == eStyleContentType_Image, "Wrong type!");
-    mContent.mImage = aRequest.take();
+    MOZ_ASSERT(mType == eStyleContentType_String ||
+               mType == eStyleContentType_Attr);
+    return mContent.mString;
   }
+
+  nsCSSValue::Array* GetCounters() const
+  {
+    MOZ_ASSERT(mType == eStyleContentType_Counter ||
+               mType == eStyleContentType_Counters);
+    return mContent.mCounters;
+  }
+
+  nsStyleImageRequest* GetImageRequest() const
+  {
+    MOZ_ASSERT(mType == eStyleContentType_Image);
+    return mContent.mImage;
+  }
+
+  imgRequestProxy* GetImage() const
+  {
+    return GetImageRequest()->get();
+  }
+
+  void SetKeyword(nsStyleContentType aType)
+  {
+    MOZ_ASSERT(aType == eStyleContentType_OpenQuote ||
+               aType == eStyleContentType_CloseQuote ||
+               aType == eStyleContentType_NoOpenQuote ||
+               aType == eStyleContentType_NoCloseQuote ||
+               aType == eStyleContentType_AltContent);
+    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+               "should only initialize nsStyleContentData once");
+    mType = aType;
+  }
+
+  void SetString(nsStyleContentType aType, const char16_t* aString)
+  {
+    MOZ_ASSERT(aType == eStyleContentType_String ||
+               aType == eStyleContentType_Attr);
+    MOZ_ASSERT(aString);
+    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+               "should only initialize nsStyleContentData once");
+    mType = aType;
+    mContent.mString = NS_strdup(aString);
+  }
+
+  void SetCounters(nsStyleContentType aType, nsCSSValue::Array* aCounters)
+  {
+    MOZ_ASSERT(aType == eStyleContentType_Counter ||
+               aType == eStyleContentType_Counters);
+    MOZ_ASSERT(aCounters);
+    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+               "should only initialize nsStyleContentData once");
+    mType = aType;
+    mContent.mCounters = aCounters;
+    mContent.mCounters->AddRef();
+  }
+
+  void SetImageRequest(already_AddRefed<nsStyleImageRequest> aRequest)
+  {
+    MOZ_ASSERT(mType == eStyleContentType_Uninitialized,
+               "should only initialize nsStyleContentData once");
+    mType = eStyleContentType_Image;
+    mContent.mImage = aRequest.take();
+    MOZ_ASSERT(mContent.mImage);
+  }
+
+private:
+  nsStyleContentType mType;
+  union {
+    char16_t *mString;
+    nsStyleImageRequest* mImage;
+    nsCSSValue::Array* mCounters;
+  } mContent;
 };
 
 struct nsStyleCounterData

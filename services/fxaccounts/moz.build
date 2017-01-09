@@ -8,6 +8,8 @@ DIRS += ['interfaces']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/mochitest/chrome.ini']
 
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+
 XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
 
 EXTRA_COMPONENTS += [

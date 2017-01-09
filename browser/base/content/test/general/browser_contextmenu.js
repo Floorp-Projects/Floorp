@@ -374,7 +374,6 @@ add_task(function* test_textarea() {
   // Disabled since this is seeing spell-check-enabled
   // instead of spell-add-dictionaries-main
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-textarea",
@@ -398,7 +397,6 @@ add_task(function* test_textarea() {
 
 add_task(function* test_textarea_spellcheck() {
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-textarea",
@@ -438,7 +436,6 @@ add_task(function* test_plaintext2() {
 
 add_task(function* test_undo_add_to_dictionary() {
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-textarea",
@@ -472,7 +469,6 @@ add_task(function* test_undo_add_to_dictionary() {
 
 add_task(function* test_contenteditable() {
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-contenteditable",
@@ -726,7 +722,6 @@ add_task(function* test_imagelink() {
 
 add_task(function* test_select_input_text() {
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-select-input-text",
@@ -759,7 +754,6 @@ add_task(function* test_select_input_text() {
 
 add_task(function* test_select_input_text_password() {
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-select-input-text-type-password",
@@ -878,7 +872,6 @@ add_task(function* test_srcdoc() {
 
 add_task(function* test_input_spell_false() {
   todo(false, "spell checker tests are failing, bug 1246296");
-  return;
 
   /*
   yield test_contextmenu("#test-contenteditable-spellcheck-false",

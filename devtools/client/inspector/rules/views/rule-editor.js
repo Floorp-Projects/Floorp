@@ -17,7 +17,7 @@ const {
   promiseWarn
 } = require("devtools/client/inspector/shared/utils");
 const {
-  parseDeclarations,
+  parseNamedDeclarations,
   parsePseudoClassesAndAttributes,
   SELECTOR_ATTRIBUTE,
   SELECTOR_ELEMENT,
@@ -473,8 +473,7 @@ RuleEditor.prototype = {
     // case, we're creating a new declaration, it doesn't make sense to accept
     // these entries
     this.multipleAddedProperties =
-      parseDeclarations(this.rule.cssProperties.isKnown, value, true)
-      .filter(d => d.name);
+      parseNamedDeclarations(this.rule.cssProperties.isKnown, value, true);
 
     // Blur the editor field now and deal with adding declarations later when
     // the field gets destroyed (see _newPropertyDestroy)

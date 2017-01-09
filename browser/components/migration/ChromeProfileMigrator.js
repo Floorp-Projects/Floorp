@@ -293,8 +293,8 @@ function GetBookmarksResource(aProfileFolder) {
         if (gotErrors) {
           throw new Error("The migration included errors.");
         }
-      }.bind(this)).then(() => aCallback(true),
-                         () => aCallback(false));
+      }).then(() => aCallback(true),
+              () => aCallback(false));
     }
   };
 }

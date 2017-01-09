@@ -540,3 +540,6 @@ EXTRA_JS_MODULES.commonjs.toolkit += [
     'source/lib/toolkit/loader.js',
     'source/lib/toolkit/require.js',
 ]
+
+with Files("**"):
+    BUG_COMPONENT = ("Add-on SDK", "General")

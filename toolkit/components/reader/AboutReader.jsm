@@ -911,7 +911,7 @@ AboutReader.prototype = {
 
         item.classList.add("selected");
         callback(option.value);
-      }.bind(this), true);
+      }, true);
 
       if (option.value === initialValue)
         item.classList.add("selected");

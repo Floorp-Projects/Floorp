@@ -2082,7 +2082,6 @@ UpdateService.prototype = {
       let prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
       prompter.showUpdateElevationRequired();
-      return;
     } else {
       // If there was an I/O error it is assumed that the patch is not invalid
       // and it is set to pending so an attempt to apply it again will happen

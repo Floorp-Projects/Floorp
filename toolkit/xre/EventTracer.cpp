@@ -122,6 +122,7 @@ class EventLoopLagDispatcher : public Runnable
  */
 void TracerThread(void *arg)
 {
+  AutoProfilerRegister registerThread("Event Tracer");
   PR_SetCurrentThreadName("Event Tracer");
 
   TracerStartClosure* threadArgs = static_cast<TracerStartClosure*>(arg);

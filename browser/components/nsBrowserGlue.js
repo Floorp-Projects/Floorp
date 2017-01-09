@@ -251,6 +251,9 @@ BrowserGlue.prototype = {
       case "fxaccounts:onverified":
         this._showSyncStartedDoorhanger();
         break;
+      case "fxaccounts:device_connected":
+        this._onDeviceConnected(data);
+        break;
       case "fxaccounts:device_disconnected":
         this._onDeviceDisconnected();
         break;
@@ -408,6 +411,7 @@ BrowserGlue.prototype = {
     }
     os.addObserver(this, "weave:service:ready", false);
     os.addObserver(this, "fxaccounts:onverified", false);
+    os.addObserver(this, "fxaccounts:device_connected", false);
     os.addObserver(this, "fxaccounts:device_disconnected", false);
     os.addObserver(this, "weave:engine:clients:display-uris", false);
     os.addObserver(this, "session-save", false);
@@ -460,6 +464,7 @@ BrowserGlue.prototype = {
     }
     os.removeObserver(this, "weave:service:ready");
     os.removeObserver(this, "fxaccounts:onverified");
+    os.removeObserver(this, "fxaccounts:device_connected");
     os.removeObserver(this, "fxaccounts:device_disconnected");
     os.removeObserver(this, "weave:engine:clients:display-uris");
     os.removeObserver(this, "session-save");
@@ -1161,7 +1166,7 @@ BrowserGlue.prototype = {
       if (willPrompt) {
         Services.tm.mainThread.dispatch(function() {
           DefaultBrowserCheck.prompt(RecentWindow.getMostRecentBrowserWindow());
-        }.bind(this), Ci.nsIThread.DISPATCH_NORMAL);
+        }, Ci.nsIThread.DISPATCH_NORMAL);
       }
     }
 
@@ -2327,6 +2332,32 @@ BrowserGlue.prototype = {
       AlertsService.showAlertNotification(imageURL, title, body, true, null, clickCallback);
     } catch (ex) {
       Cu.reportError("Error displaying tab(s) received by Sync: " + ex);
+    }
+  },
+
+  _onDeviceConnected(deviceName) {
+    let accountsBundle = Services.strings.createBundle(
+      "chrome://browser/locale/accounts.properties"
+    );
+    let title = accountsBundle.GetStringFromName("deviceConnectedTitle");
+    let body = accountsBundle.formatStringFromName("deviceConnectedBody", [deviceName], 1);
+    let url = Services.urlFormatter.formatURLPref("identity.fxaccounts.settings.devices.uri");
+
+    function clickCallback(subject, topic, data) {
+      if (topic != "alertclickcallback")
+        return;
+      let win = RecentWindow.getMostRecentBrowserWindow({private: false});
+      if (!win) {
+        Services.appShell.hiddenDOMWindow.open(url);
+      } else {
+        win.gBrowser.addTab(url);
+      }
+    }
+
+    try {
+      AlertsService.showAlertNotification(null, title, body, true, url, clickCallback);
+    } catch (ex) {
+      Cu.reportError("Error notifying of a new Sync device: " + ex);
     }
   },
 

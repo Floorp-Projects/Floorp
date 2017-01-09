@@ -164,6 +164,9 @@ FxAccountsPushService.prototype = {
     let payload = message.data.json();
     this.log.debug(`push command: ${payload.command}`);
     switch (payload.command) {
+      case ON_DEVICE_CONNECTED_NOTIFICATION:
+        Services.obs.notifyObservers(null, ON_DEVICE_CONNECTED_NOTIFICATION, payload.data.deviceName);
+        break;
       case ON_DEVICE_DISCONNECTED_NOTIFICATION:
         return this.fxAccounts.handleDeviceDisconnection(payload.data.id);
         break;
