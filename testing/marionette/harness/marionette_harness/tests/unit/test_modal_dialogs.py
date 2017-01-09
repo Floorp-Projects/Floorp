@@ -13,9 +13,16 @@ from marionette_harness import MarionetteTestCase, skip_if_e10s
 class TestTabModals(MarionetteTestCase):
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.enforce_gecko_prefs({"prompts.tab_modal.enabled": True})
+        super(TestTabModals, self).setUp()
+        self.marionette.set_pref("prompts.tab_modal.enabled", True)
         self.marionette.navigate(self.marionette.absolute_url('modal_dialogs.html'))
+
+    def tearDown(self):
+        # Ensure an alert is absent before proceeding past this test.
+        Wait(self.marionette).until(lambda _: not self.alert_present())
+        self.marionette.execute_script("window.onbeforeunload = null;")
+        self.marionette.clear_pref("prompts.tab_modal.enabled")
+        super(TestTabModals, self).tearDown()
 
     def alert_present(self):
         try:
@@ -23,11 +30,6 @@ class TestTabModals(MarionetteTestCase):
             return True
         except NoAlertPresentException:
             return False
-
-    def tearDown(self):
-        # Ensure an alert is absent before proceeding past this test.
-        Wait(self.marionette).until(lambda _: not self.alert_present())
-        self.marionette.execute_script("window.onbeforeunload = null;")
 
     def wait_for_alert(self):
         Wait(self.marionette).until(lambda _: self.alert_present())
@@ -187,9 +189,8 @@ class TestTabModals(MarionetteTestCase):
 class TestGlobalModals(TestTabModals):
 
     def setUp(self):
-        MarionetteTestCase.setUp(self)
-        self.marionette.enforce_gecko_prefs({"prompts.tab_modal.enabled": False})
-        self.marionette.navigate(self.marionette.absolute_url('modal_dialogs.html'))
+        super(TestGlobalModals, self).setUp()
+        self.marionette.set_pref("prompts.tab_modal.enabled", False)
 
     def test_unrelated_command_when_alert_present(self):
         # The assumptions in this test do not hold on certain platforms, and not when
