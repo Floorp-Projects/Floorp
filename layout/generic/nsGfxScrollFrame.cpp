@@ -2081,23 +2081,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
 
 ScrollFrameHelper::~ScrollFrameHelper()
 {
-  if (mActivityExpirationState.IsTracked()) {
-    gScrollFrameActivityTracker->RemoveObject(this);
-  }
-  if (gScrollFrameActivityTracker &&
-      gScrollFrameActivityTracker->IsEmpty()) {
-    delete gScrollFrameActivityTracker;
-    gScrollFrameActivityTracker = nullptr;
-  }
-
-  if (mScrollActivityTimer) {
-    mScrollActivityTimer->Cancel();
-    mScrollActivityTimer = nullptr;
-  }
-  if (mDisplayPortExpiryTimer) {
-    mDisplayPortExpiryTimer->Cancel();
-    mDisplayPortExpiryTimer = nullptr;
-  }
 }
 
 /*
@@ -4587,6 +4570,24 @@ ScrollFrameHelper::Destroy()
   if (mPostedReflowCallback) {
     mOuter->PresContext()->PresShell()->CancelReflowCallback(this);
     mPostedReflowCallback = false;
+  }
+
+  if (mDisplayPortExpiryTimer) {
+    mDisplayPortExpiryTimer->Cancel();
+    mDisplayPortExpiryTimer = nullptr;
+  }
+  if (mActivityExpirationState.IsTracked()) {
+    gScrollFrameActivityTracker->RemoveObject(this);
+  }
+  if (gScrollFrameActivityTracker &&
+      gScrollFrameActivityTracker->IsEmpty()) {
+    delete gScrollFrameActivityTracker;
+    gScrollFrameActivityTracker = nullptr;
+  }
+
+  if (mScrollActivityTimer) {
+    mScrollActivityTimer->Cancel();
+    mScrollActivityTimer = nullptr;
   }
 }
 
