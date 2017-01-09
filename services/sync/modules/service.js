@@ -1750,6 +1750,10 @@ Sync11Service.prototype = {
       return callback(null, result);
     });
   },
+
+  recordTelemetryEvent(object, method, value, extra = undefined) {
+    Svc.Obs.notify("weave:telemetry:event", { object, method, value, extra });
+  },
 };
 
 this.Service = new Sync11Service();

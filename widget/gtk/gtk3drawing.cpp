@@ -1813,12 +1813,18 @@ moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state, GtkTextDirection direction)
 {
     gint x, y, w, h;
-
+    guint minorVersion = gtk_get_minor_version();
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
+
+    // GTK versions prior to 3.8 render the background and frame only when not
+    // a separator and in hover prelight.
+    if (minorVersion < 8 && (widget == MOZ_GTK_MENUSEPARATOR ||
+                             !(state_flags & GTK_STATE_FLAG_PRELIGHT)))
+        return MOZ_GTK_SUCCESS;
+
     GtkStyleContext* style = ClaimStyleContext(widget, direction, state_flags);
 
-    bool pre_3_6 = gtk_check_version(3, 6, 0) != nullptr;
-    if (pre_3_6) {
+    if (minorVersion < 6) {
         // GTK+ 3.4 saves the style context and adds the menubar class to
         // menubar children, but does each of these only when drawing, not
         // during layout.
@@ -1836,7 +1842,7 @@ moz_gtk_menu_item_paint(WidgetNodeType widget, cairo_t *cr, GdkRectangle* rect,
     gtk_render_background(style, cr, x, y, w, h);
     gtk_render_frame(style, cr, x, y, w, h);
 
-    if (pre_3_6) {
+    if (minorVersion < 6) {
         gtk_style_context_restore(style);
     }
     ReleaseStyleContext(style);
