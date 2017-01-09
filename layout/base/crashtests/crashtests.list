@@ -83,7 +83,7 @@ load 331204-1.html
 load 331679-1.xhtml
 load 331679-2.xml
 load 331679-3.xml
-asserts-if(stylo,186) load 331883-1.html # bug 1324673
+asserts-if(stylo,10) load 331883-1.html # bug 1324663
 load 335140-1.html
 load 336291-1.html
 load 336999-1.xul
@@ -103,7 +103,7 @@ asserts-if(stylo,3) load 343293-2.xhtml # bug 1324663
 load 343540-1.html
 load 344057-1.xhtml
 load 344064-1.html
-asserts-if(stylo,1-9) load 344300-1.html # bug 1324673
+asserts-if(stylo,1-9) load 344300-1.html # bug 1324663
 load 344300-2.html
 load 344340-1.xul
 load 347898-1.html
