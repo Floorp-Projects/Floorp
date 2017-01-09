@@ -2243,10 +2243,7 @@ toolbar#nav-bar {
             # known regressions exist. At least this way we can prevent further damage while
             # they get fixed.
 
-            info = mozinfo.info
-            skip_leak_conditions = [
-                (info['debug'] and options.flavor == 'plain' and d == 'toolkit/components/prompts/test' and info['os'] == 'mac', 'bug 1325275'),  # noqa
-            ]
+            skip_leak_conditions = []
 
             for condition, reason in skip_leak_conditions:
                 if condition:
