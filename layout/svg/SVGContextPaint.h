@@ -32,8 +32,17 @@ namespace mozilla {
  * computed style for the text that is being drawn, for example, or for color
  * in an SVG embedded by an <img> element to come from the embedding <img>
  * element.
+ *
+ * This class is reference counted so that it can be shared among many similar
+ * SVGImageContext objects. (SVGImageContext objects are frequently
+ * copy-constructed with small modifications, and we'd like for those copies to
+ * be able to share their context-paint data cheaply.)  However, in most cases,
+ * SVGContextPaint instances are stored in a local RefPtr and only last for the
+ * duration of a function call.
+ * XXX Note: SVGImageContext doesn't actually have a SVGContextPaint member yet,
+ * but it will in a later patch in the patch series that added this comment.
  */
-class SVGContextPaint
+class SVGContextPaint : public RefCounted<SVGContextPaint>
 {
 protected:
   typedef mozilla::gfx::DrawTarget DrawTarget;
@@ -41,6 +50,8 @@ protected:
   SVGContextPaint() {}
 
 public:
+  MOZ_DECLARE_REFCOUNTED_TYPENAME(SVGContextPaint)
+
   virtual ~SVGContextPaint() {}
 
   virtual already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
