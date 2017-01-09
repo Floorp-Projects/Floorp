@@ -104,7 +104,6 @@ var gDataNotificationInfoBar = {
           this._displayDataPolicyInfoBar(request);
         } catch (ex) {
           request.onUserNotifyFailed(ex);
-          return;
         }
         break;
 

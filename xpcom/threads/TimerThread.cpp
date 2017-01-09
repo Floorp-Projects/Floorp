@@ -323,7 +323,8 @@ TimerThread::Init()
 
   if (mInitInProgress.exchange(true) == false) {
     // We hold on to mThread to keep the thread alive.
-    nsresult rv = NS_NewThread(getter_AddRefs(mThread), this);
+    nsresult rv =
+      NS_NewNamedThread("Timer Thread", getter_AddRefs(mThread), this);
     if (NS_FAILED(rv)) {
       mThread = nullptr;
     } else {

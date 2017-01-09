@@ -1,9 +1,0 @@
-# Test
-diff --git a/tests/test2.cpp b/tests/test2.cpp
-new file mode 100644
---- /dev/null
-+++ b/tests/test2.cpp
-@@ -0,0 +1,3 @@
-+int main() {
-+  return 0;
-+}

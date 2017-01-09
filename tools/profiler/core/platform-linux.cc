@@ -287,14 +287,14 @@ class PlatformData {
   }
 };
 
-/* static */ PlatformData*
-Sampler::AllocPlatformData(int aThreadId)
+/* static */ auto
+Sampler::AllocPlatformData(int aThreadId) -> UniquePlatformData
 {
-  return new PlatformData;
+  return UniquePlatformData(new PlatformData);
 }
 
-/* static */ void
-Sampler::FreePlatformData(PlatformData* aData)
+void
+Sampler::PlatformDataDestructor::operator()(PlatformData* aData)
 {
   delete aData;
 }

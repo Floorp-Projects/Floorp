@@ -56,7 +56,6 @@
     macro(class_, class_, "class") \
     macro(close, close, "close") \
     macro(Collator, Collator, "Collator") \
-    macro(CollatorCompareGet, CollatorCompareGet, "Intl_Collator_compare_get") \
     macro(collections, collections, "collections") \
     macro(columnNumber, columnNumber, "columnNumber") \
     macro(comma, comma, ",") \
@@ -72,7 +71,6 @@
     macro(currency, currency, "currency") \
     macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
-    macro(DateTimeFormatFormatGet, DateTimeFormatFormatGet, "Intl_DateTimeFormat_format_get") \
     macro(day, day, "day") \
     macro(dayPeriod, dayPeriod, "dayPeriod") \
     macro(decimal, decimal, "decimal") \
@@ -224,7 +222,6 @@
     macro(nonincrementalReason, nonincrementalReason, "nonincrementalReason") \
     macro(noStack, noStack, "noStack") \
     macro(NumberFormat, NumberFormat, "NumberFormat") \
-    macro(NumberFormatFormatGet, NumberFormatFormatGet, "Intl_NumberFormat_format_get") \
     macro(NumberFormatFormatToParts, NumberFormatFormatToParts, "Intl_NumberFormat_formatToParts") \
     macro(numeric, numeric, "numeric") \
     macro(objectArguments, objectArguments, "[object Arguments]") \

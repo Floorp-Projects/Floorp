@@ -78,8 +78,14 @@ module.exports = {
     // No duplicate cases in switch statements
     "no-duplicate-case": "error",
 
+    // Disallow unnecessary calls to .bind()
+    "no-extra-bind": "error",
+
     // No labels
     "no-labels": "error",
+
+    // Disallow unnecessary nested blocks
+    "no-lone-blocks": "error",
 
     // If an if block ends with a return no need for an else block
     "no-else-return": "error",
@@ -192,6 +198,12 @@ module.exports = {
 
     // No using variables before defined
     // "no-use-before-define": ["error", "nofunc"],
+
+    // Disallow unnecessary .call() and .apply()
+    "no-useless-call": "error",
+
+    // Disallow redundant return statements
+    "no-useless-return": "error",
 
     // No using with
     "no-with": "error",

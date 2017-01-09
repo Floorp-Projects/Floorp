@@ -39,7 +39,7 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
     return rv;
   }
 
-  mRealDeviceContextSpec->Init(nullptr, aPrintSettings, false);
+  mRealDeviceContextSpec->Init(nullptr, aPrintSettings, aIsPrintPreview);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mRealDeviceContextSpec = nullptr;
     return rv;

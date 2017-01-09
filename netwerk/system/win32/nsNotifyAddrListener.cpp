@@ -323,8 +323,6 @@ nsNotifyAddrListener::nextCoalesceWaitTime()
 NS_IMETHODIMP
 nsNotifyAddrListener::Run()
 {
-    PR_SetCurrentThreadName("Link Monitor");
-
     mStartTime = TimeStamp::Now();
 
     calculateNetworkId();
@@ -421,7 +419,7 @@ nsNotifyAddrListener::Init(void)
     mCheckEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     NS_ENSURE_TRUE(mCheckEvent, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = NS_NewThread(getter_AddRefs(mThread), this);
+    rv = NS_NewNamedThread("Link Monitor", getter_AddRefs(mThread), this);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;

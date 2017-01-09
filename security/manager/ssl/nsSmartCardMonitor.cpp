@@ -10,6 +10,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "GeckoProfiler.h"
 #include "nspr.h"
 #include "pk11func.h"
 
@@ -390,6 +391,7 @@ const SECMODModule* SmartCardMonitoringThread::GetModule()
 // C-like calling sequence to glue into PR_CreateThread.
 void SmartCardMonitoringThread::LaunchExecute(void* arg)
 {
+  AutoProfilerRegister registerThread("SmartCard");
   PR_SetCurrentThreadName("SmartCard");
 
   ((SmartCardMonitoringThread*)arg)->Execute();

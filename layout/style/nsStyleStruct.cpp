@@ -2603,6 +2603,79 @@ nsStyleImageLayers::operator=(const nsStyleImageLayers& aOther)
   return *this;
 }
 
+nsStyleImageLayers&
+nsStyleImageLayers::operator=(nsStyleImageLayers&& aOther)
+{
+  mAttachmentCount = aOther.mAttachmentCount;
+  mClipCount = aOther.mClipCount;
+  mOriginCount = aOther.mOriginCount;
+  mRepeatCount = aOther.mRepeatCount;
+  mPositionXCount = aOther.mPositionXCount;
+  mPositionYCount = aOther.mPositionYCount;
+  mImageCount = aOther.mImageCount;
+  mSizeCount = aOther.mSizeCount;
+  mMaskModeCount = aOther.mMaskModeCount;
+  mBlendModeCount = aOther.mBlendModeCount;
+  mCompositeCount = aOther.mCompositeCount;
+  mLayers = Move(aOther.mLayers);
+
+  uint32_t count = mLayers.Length();
+  if (count != aOther.mLayers.Length()) {
+    NS_WARNING("truncating counts due to out-of-memory");
+    mAttachmentCount = std::max(mAttachmentCount, count);
+    mClipCount = std::max(mClipCount, count);
+    mOriginCount = std::max(mOriginCount, count);
+    mRepeatCount = std::max(mRepeatCount, count);
+    mPositionXCount = std::max(mPositionXCount, count);
+    mPositionYCount = std::max(mPositionYCount, count);
+    mImageCount = std::max(mImageCount, count);
+    mSizeCount = std::max(mSizeCount, count);
+    mMaskModeCount = std::max(mMaskModeCount, count);
+    mBlendModeCount = std::max(mBlendModeCount, count);
+    mCompositeCount = std::max(mCompositeCount, count);
+  }
+
+  return *this;
+}
+
+bool nsStyleImageLayers::operator==(const nsStyleImageLayers& aOther) const
+{
+  if (mAttachmentCount != aOther.mAttachmentCount ||
+      mClipCount != aOther.mClipCount ||
+      mOriginCount != aOther.mOriginCount ||
+      mRepeatCount != aOther.mRepeatCount ||
+      mPositionXCount != aOther.mPositionXCount ||
+      mPositionYCount != aOther.mPositionYCount ||
+      mImageCount != aOther.mImageCount ||
+      mSizeCount != aOther.mSizeCount ||
+      mMaskModeCount != aOther.mMaskModeCount ||
+      mBlendModeCount != aOther.mBlendModeCount) {
+    return false;
+  }
+
+  if (mLayers.Length() != aOther.mLayers.Length()) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < mLayers.Length(); i++) {
+    if (mLayers[i].mPosition != aOther.mLayers[i].mPosition ||
+        !DefinitelyEqualURIs(mLayers[i].mSourceURI, aOther.mLayers[i].mSourceURI) ||
+        mLayers[i].mImage != aOther.mLayers[i].mImage ||
+        mLayers[i].mSize != aOther.mLayers[i].mSize ||
+        mLayers[i].mClip != aOther.mLayers[i].mClip ||
+        mLayers[i].mOrigin != aOther.mLayers[i].mOrigin ||
+        mLayers[i].mAttachment != aOther.mLayers[i].mAttachment ||
+        mLayers[i].mBlendMode != aOther.mLayers[i].mBlendMode ||
+        mLayers[i].mComposite != aOther.mLayers[i].mComposite ||
+        mLayers[i].mMaskMode != aOther.mLayers[i].mMaskMode ||
+        mLayers[i].mRepeat != aOther.mLayers[i].mRepeat) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool
 nsStyleImageLayers::IsInitialPositionForLayerType(Position aPosition, LayerType aType)
 {
@@ -3508,10 +3581,9 @@ nsStyleVisibility::CalcDifference(const nsStyleVisibility& aNewData) const
 nsStyleContentData::~nsStyleContentData()
 {
   MOZ_COUNT_DTOR(nsStyleContentData);
-  MOZ_ASSERT(!mImageTracked,
-             "nsStyleContentData being destroyed while still tracking image!");
+
   if (mType == eStyleContentType_Image) {
-    NS_IF_RELEASE(mContent.mImage);
+    mContent.mImage->Release();
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
     mContent.mCounters->Release();
@@ -3522,14 +3594,11 @@ nsStyleContentData::~nsStyleContentData()
 
 nsStyleContentData::nsStyleContentData(const nsStyleContentData& aOther)
   : mType(aOther.mType)
-#ifdef DEBUG
-  , mImageTracked(false)
-#endif
 {
   MOZ_COUNT_CTOR(nsStyleContentData);
   if (mType == eStyleContentType_Image) {
     mContent.mImage = aOther.mContent.mImage;
-    NS_IF_ADDREF(mContent.mImage);
+    mContent.mImage->AddRef();
   } else if (mType == eStyleContentType_Counter ||
              mType == eStyleContentType_Counters) {
     mContent.mCounters = aOther.mContent.mCounters;
@@ -3560,59 +3629,13 @@ nsStyleContentData::operator==(const nsStyleContentData& aOther) const
     return false;
   }
   if (mType == eStyleContentType_Image) {
-    if (!mContent.mImage || !aOther.mContent.mImage) {
-      return mContent.mImage == aOther.mContent.mImage;
-    }
-    bool eq;
-    nsCOMPtr<nsIURI> thisURI, otherURI;
-    mContent.mImage->GetURI(getter_AddRefs(thisURI));
-    aOther.mContent.mImage->GetURI(getter_AddRefs(otherURI));
-    return thisURI == otherURI ||  // handles null==null
-           (thisURI && otherURI &&
-            NS_SUCCEEDED(thisURI->Equals(otherURI, &eq)) &&
-            eq);
+    return DefinitelyEqualImages(mContent.mImage, aOther.mContent.mImage);
   }
   if (mType == eStyleContentType_Counter ||
       mType == eStyleContentType_Counters) {
     return *mContent.mCounters == *aOther.mContent.mCounters;
   }
   return safe_strcmp(mContent.mString, aOther.mContent.mString) == 0;
-}
-
-void
-nsStyleContentData::TrackImage(ImageTracker* aImageTracker)
-{
-  // Sanity
-  MOZ_ASSERT(!mImageTracked, "Already tracking image!");
-  MOZ_ASSERT(mType == eStyleContentType_Image,
-             "Trying to do image tracking on non-image!");
-  MOZ_ASSERT(mContent.mImage,
-             "Can't track image when there isn't one!");
-
-  aImageTracker->Add(mContent.mImage);
-
-  // Mark state
-#ifdef DEBUG
-  mImageTracked = true;
-#endif
-}
-
-void
-nsStyleContentData::UntrackImage(ImageTracker* aImageTracker)
-{
-  // Sanity
-  MOZ_ASSERT(mImageTracked, "Image not tracked!");
-  MOZ_ASSERT(mType == eStyleContentType_Image,
-             "Trying to do image tracking on non-image!");
-  MOZ_ASSERT(mContent.mImage,
-             "Can't untrack image when there isn't one!");
-
-  aImageTracker->Remove(mContent.mImage);
-
-  // Mark state
-#ifdef DEBUG
-  mImageTracked = false;
-#endif
 }
 
 
@@ -3633,13 +3656,6 @@ nsStyleContent::~nsStyleContent()
 void
 nsStyleContent::Destroy(nsPresContext* aContext)
 {
-  // Unregister any images we might have with the document.
-  for (auto& content : mContents) {
-    if (content.mType == eStyleContentType_Image && content.mContent.mImage) {
-      content.UntrackImage(aContext->Document()->ImageTracker());
-    }
-  }
-
   this->~nsStyleContent();
   aContext->PresShell()->FreeByObjectID(eArenaObjectID_nsStyleContent, this);
 }

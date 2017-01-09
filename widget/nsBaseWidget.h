@@ -169,8 +169,8 @@ public:
   }
 
   virtual nsCursor        GetCursor() override;
-  NS_IMETHOD              SetCursor(nsCursor aCursor) override;
-  NS_IMETHOD              SetCursor(imgIContainer* aCursor,
+  virtual void            SetCursor(nsCursor aCursor) override;
+  virtual nsresult        SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY) override;
   virtual void            ClearCachedCursor() override { mUpdateCursor = true; }
   virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
@@ -240,7 +240,7 @@ public:
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
-  NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  virtual nsresult        SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   virtual void            EnableDragDrop(bool aEnable) override {};
   virtual MOZ_MUST_USE nsresult
@@ -263,7 +263,8 @@ public:
                           { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ActivateNativeMenuItemAt(const nsAString& indexString) override { return NS_ERROR_NOT_IMPLEMENTED; }
   virtual nsresult        ForceUpdateNativeMenuAt(const nsAString& indexString) override { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD              NotifyIME(const IMENotification& aIMENotification) override final;
+  virtual nsresult        NotifyIME(const IMENotification& aIMENotification)
+                            override final;
   virtual MOZ_MUST_USE nsresult
                           StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                                          int32_t aPanelX, int32_t aPanelY,
@@ -278,7 +279,7 @@ public:
                             const mozilla::WidgetPluginEvent& aEvent) override
                           { }
   virtual MOZ_MUST_USE nsresult AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD_(bool)       ExecuteNativeKeyBinding(
+  virtual bool            ExecuteNativeKeyBinding(
                             NativeKeyBindingsType aType,
                             const mozilla::WidgetKeyboardEvent& aEvent,
                             DoCommandCallback aCallback,
@@ -296,8 +297,8 @@ public:
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
   virtual nsIWidgetListener* GetPreviouslyAttachedWidgetListener() override;
   virtual void               SetPreviouslyAttachedWidgetListener(nsIWidgetListener* aListener) override;
-  NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() override final;
-  NS_IMETHOD_(TextEventDispatcherListener*)
+  virtual TextEventDispatcher* GetTextEventDispatcher() override final;
+  virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
   virtual void ZoomToRect(const uint32_t& aPresShellId,
                           const FrameMetrics::ViewID& aViewId,

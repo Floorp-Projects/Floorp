@@ -629,7 +629,7 @@ asserts-if(stylo,5) load text-overflow-form-elements.html # bug 1324671
 asserts-if(stylo,9) load text-overflow-iframe.html # bug 1324671
 asserts-if(Android,2-4) asserts-if(!Android,4) asserts-if(stylo,0) load 1225005.html # bug 682647 and bug 448083
 load 1233191.html
-asserts-if(stylo,16) load 1271765.html # bug 1324684
+asserts-if(stylo,1-16) load 1271765.html # bug 1324684
 asserts(2) load 1272983-1.html # bug 1324654 # bug 586628
 asserts(2) load 1272983-2.html # bug 1324654 # bug 586628
 load 1275059.html
@@ -641,7 +641,7 @@ load large-border-radius-dotted.html
 load large-border-radius-dotted2.html
 load 1278461-1.html
 load 1278461-2.html
-asserts-if(stylo,11) load 1281102.html # bug 1324661
+asserts-if(stylo,11-22) load 1281102.html # bug 1324661
 load 1297427-non-equal-centers.html
 load 1304441.html
 load 1316649.html

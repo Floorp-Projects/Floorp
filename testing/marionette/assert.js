@@ -209,7 +209,31 @@ assert.string = function (obj, msg = "") {
  */
 assert.object = function (obj, msg = "") {
   msg = msg || error.pprint`Expected ${obj} to be an object`;
-  return assert.that(o => typeof o == "object", msg)(obj);
+  return assert.that(o =>
+      Object.prototype.toString.call(o) == "[object Object]", msg)(obj);
+};
+
+/**
+ * Asserts that |prop| is in |obj|.
+ *
+ * @param {?} prop
+ *     Own property to test if is in |obj|.
+ * @param {?} obj
+ *     Object.
+ * @param {string=} msg
+ *     Custom error message.
+ *
+ * @return {?}
+ *     Value of |obj|'s own property |prop|.
+ *
+ * @throws {InvalidArgumentError}
+ *     If |prop| is not in |obj|, or |obj| is not an object.
+ */
+assert.in = function (prop, obj, msg = "") {
+  assert.object(obj, msg);
+  msg = msg || error.pprint`Expected ${prop} in ${obj}`;
+  assert.that(p => obj.hasOwnProperty(p), msg)(prop);
+  return obj[prop];
 };
 
 /**

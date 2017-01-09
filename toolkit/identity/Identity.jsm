@@ -199,7 +199,6 @@ IDService.prototype = {
             }
             self.RP._doLogin(rp, rpLoginOptions, assertion);
             self.RP._cleanUpProvisionFlow(aRPId, aProvId);
-            return;
           });
         });
       });

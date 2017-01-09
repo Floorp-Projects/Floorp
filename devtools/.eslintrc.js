@@ -328,6 +328,8 @@ module.exports = {
     // Disallow global and local variables that aren't used, but allow unused
     // function arguments.
     "no-unused-vars": ["error", {"vars": "all", "args": "none"}],
+    // Disallow flow control that escapes from "finally".
+    "no-unsafe-finally": "error",
     // Allow using variables before they are defined.
     "no-use-before-define": "off",
     // We use var-only-at-top-level instead of no-var as we allow top level

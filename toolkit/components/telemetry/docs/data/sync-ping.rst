@@ -97,7 +97,10 @@ Structure:
               }
             }
           ]
-        }]
+        }],
+        events: [
+          event_array // See events below,
+        ]
       }
     }
 
@@ -180,3 +183,42 @@ syncs.devices
 ~~~~~~~~~~~~~
 
 The list of remote devices associated with this account, as reported by the clients collection. The ID of each device is hashed using the same algorithm as the local id.
+
+
+Events in the "sync" ping
+=========================
+
+The sync ping includes events in the same format as they are included in the
+main ping. The documentation for these events will land in bug 1302666.
+
+Every event recorded in this ping will have a category of ``sync``. The following
+events are defined, categorized by the event method.
+
+sendcommand
+-----------
+
+Records that Sync wrote a remote "command" to another client. These commands
+cause that other client to take some action, such as resetting Sync on that
+client, or opening a new URL.
+
+- object: The specific command being written.
+- value: Not used (ie, ``undefined``)
+- extra: An object with the following attributes:
+
+  - deviceID: A GUID which identifies the device the command is being sent to.
+  - flowID: A GUID which uniquely identifies this command invocation.
+
+processcommand
+--------------
+
+Records that Sync processed a remote "command" previously sent by another
+client. This is logically the "other end" of ``sendcommand``.
+
+- object: The specific command being processed.
+- value: Not used (ie, ``undefined``)
+- extra: An object with the following attributes:
+
+  - deviceID: A GUID which identifies the device the command is being sent to.
+  - flowID: A GUID which uniquely identifies this command invocation. The value
+            for this GUID will be the same as the flowID sent to the client via
+            ``sendcommand``.

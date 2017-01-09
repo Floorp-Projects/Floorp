@@ -335,7 +335,6 @@ var gViewSourceUtils = {
       // we failed loading it with the external editor.
       Components.utils.reportError(ex);
       this.handleCallBack(aCallBack, false, data);
-      return;
     }
   },
 

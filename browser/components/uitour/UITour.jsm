@@ -1318,7 +1318,7 @@ this.UITour = {
           ["score", rating],
           ["flowid", aOptions.flowId]
         ]));
-      }.bind(this));
+      });
 
       // Add it to the container.
       ratingContainer.appendChild(ratingElement);
@@ -1951,7 +1951,6 @@ this.UITour = {
       ReaderParent.showReaderModeInfoPanel(browser);
     } else {
       log.error("startSubTour: Unknown feature option specified");
-      return;
     }
   },
 
@@ -2031,7 +2030,6 @@ this.UITour = {
           }
         }
         reject("selectSearchEngine could not find engine with given ID");
-        return;
       });
     });
   },

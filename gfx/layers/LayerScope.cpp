@@ -1569,7 +1569,7 @@ LayerScopeWebSocketManager::SocketHandler::CloseConnection()
 LayerScopeWebSocketManager::LayerScopeWebSocketManager()
     : mHandlerMutex("LayerScopeWebSocketManager::mHandlerMutex")
 {
-    NS_NewThread(getter_AddRefs(mDebugSenderThread));
+    NS_NewNamedThread("LayerScope", getter_AddRefs(mDebugSenderThread));
 
     mServerSocket = do_CreateInstance(NS_SERVERSOCKET_CONTRACTID);
     int port = gfxPrefs::LayerScopePort();

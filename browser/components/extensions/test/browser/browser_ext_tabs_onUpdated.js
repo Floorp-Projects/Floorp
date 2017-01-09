@@ -94,7 +94,7 @@ function* do_test_update(background, withPermissions = true) {
 
   let manifest = {};
   if (withPermissions) {
-    manifest.permissions = ["tabs"];
+    manifest.permissions = ["tabs", "http://mochi.test/"];
   }
   let extension = ExtensionTestUtils.loadExtension({manifest, background});
 
@@ -122,7 +122,6 @@ add_task(function* test_pinned() {
           // Remove created tab.
           browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
-          return;
         }
       });
       browser.tabs.update(tab.id, {pinned: true});
@@ -144,7 +143,6 @@ add_task(function* test_unpinned() {
           // Remove created tab.
           browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
-          return;
         }
       });
       browser.tabs.update(tab.id, {pinned: false});
@@ -167,7 +165,6 @@ add_task(function* test_url() {
           // Remove created tab.
           browser.tabs.remove(tabId);
           browser.test.notifyPass("finish");
-          return;
         }
       });
       browser.tabs.update(tab.id, {url: "about:blank"});
@@ -175,23 +172,52 @@ add_task(function* test_url() {
   });
 });
 
-add_task(function* test_without_tabs_permission() {
-  yield do_test_update(function background() {
-    browser.tabs.create({url: "about:blank"}, function(tab) {
-      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
-        if (tabId == tab.id) {
-          browser.test.assertFalse("url" in changeInfo, "url should not be included without tabs permission");
-          browser.test.assertFalse("favIconUrl" in changeInfo, "favIconUrl should not be included without tabs permission");
+add_task(function* test_title() {
+  yield do_test_update(async function background() {
+    const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+    const tab = await browser.tabs.create({url});
 
-          if (changeInfo.status == "complete") {
-            browser.tabs.onUpdated.removeListener(onUpdated);
-            browser.tabs.remove(tabId);
-            browser.test.notifyPass("finish");
-          }
-        }
-      });
-      browser.tabs.reload(tab.id);
+    browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+      browser.test.assertEq(tabId, tab.id, "Check tab id");
+      browser.test.log(`onUpdated: ${JSON.stringify(changeInfo)}`);
+      if ("title" in changeInfo && changeInfo.title === "New Message (1)") {
+        browser.test.log("changeInfo.title is correct");
+        browser.tabs.onUpdated.removeListener(onUpdated);
+        browser.tabs.remove(tabId);
+        browser.test.notifyPass("finish");
+      }
     });
+
+    browser.tabs.executeScript(tab.id, {code: "document.title = 'New Message (1)'"});
+  });
+});
+
+add_task(function* test_without_tabs_permission() {
+  yield do_test_update(async function background() {
+    const url = "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context_tabs_onUpdated_page.html";
+    const tab = await browser.tabs.create({url});
+    let count = 0;
+
+    browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+      browser.test.assertEq(tabId, tab.id, "Check tab id");
+      browser.test.log(`onUpdated: ${JSON.stringify(changeInfo)}`);
+
+      browser.test.assertFalse("url" in changeInfo, "url should not be included without tabs permission");
+      browser.test.assertFalse("favIconUrl" in changeInfo, "favIconUrl should not be included without tabs permission");
+      browser.test.assertFalse("title" in changeInfo, "title should not be included without tabs permission");
+
+      if (changeInfo.status == "complete") {
+        count++;
+        if (count === 2) {
+          browser.test.log("Reload complete");
+          browser.tabs.onUpdated.removeListener(onUpdated);
+          browser.tabs.remove(tabId);
+          browser.test.notifyPass("finish");
+        }
+      }
+    });
+
+    browser.tabs.reload(tab.id);
   }, false /* withPermissions */);
 });
 

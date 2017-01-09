@@ -207,9 +207,14 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     }
   }
 
+  bool useCache = aOptions.mUseCache.WasPassed() && aOptions.mUseCache.Value();
+  nsLoadFlags loadFlags = useCache ? nsIRequest::LOAD_NORMAL
+                                   : nsIRequest::VALIDATE_ALWAYS;
+
   // The spec says that the "client" passed to Register() must be the global
   // where the ServiceWorkerContainer was retrieved from.
-  aRv = swm->Register(GetOwner(), scopeURI, scriptURI, getter_AddRefs(promise));
+  aRv = swm->Register(GetOwner(), scopeURI, scriptURI, loadFlags,
+                      getter_AddRefs(promise));
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
