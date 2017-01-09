@@ -637,12 +637,6 @@ pref("media.mediasource.enabled", true);
 
 pref("media.mediadrm-widevinecdm.visible", true);
 
-#ifdef NIGHTLY_BUILD
-// Enable EME(Encrypted media extensions)
-pref("media.eme.enabled", true);
-pref("media.eme.apiVisible", true);
-#endif
-
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 
