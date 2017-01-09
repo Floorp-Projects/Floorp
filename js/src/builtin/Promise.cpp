@@ -336,15 +336,27 @@ static MOZ_MUST_USE bool EnqueuePromiseResolveThenableJob(JSContext* cx,
                                                           HandleValue thenable,
                                                           HandleValue thenVal);
 
-// ES2016, 25.4.1.3.2, steps 7-13.
+// ES2016, 25.4.1.3.2, steps 6-13.
 static MOZ_MUST_USE bool
 ResolvePromiseInternal(JSContext* cx, HandleObject promise, HandleValue resolutionVal)
 {
-    // Step 7.
+    // Step 7 (reordered).
     if (!resolutionVal.isObject())
         return FulfillMaybeWrappedPromise(cx, promise, resolutionVal);
 
     RootedObject resolution(cx, &resolutionVal.toObject());
+
+    // Step 6.
+    if (resolution == promise) {
+        // Step 6.a.
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                  JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF);
+        RootedValue selfResolutionError(cx);
+        MOZ_ALWAYS_TRUE(GetAndClearException(cx, &selfResolutionError));
+
+        // Step 6.b.
+        return RejectMaybeWrappedPromise(cx, promise, selfResolutionError);
+    }
 
     // Step 8.
     RootedValue thenVal(cx);
@@ -410,22 +422,6 @@ ResolvePromiseFunction(JSContext* cx, unsigned argc, Value* vp)
     // Here, we only remove the Promise reference from the resolution
     // functions. Actually marking it as fulfilled/rejected happens later.
     ClearResolutionFunctionSlots(resolve);
-
-    // Step 6.
-    if (resolutionVal == promiseVal) {
-        // Step 6.a.
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_CANNOT_RESOLVE_PROMISE_WITH_ITSELF);
-        RootedValue selfResolutionError(cx);
-        bool status = GetAndClearException(cx, &selfResolutionError);
-        MOZ_ASSERT(status);
-
-        // Step 6.b.
-        status = RejectMaybeWrappedPromise(cx, promise, selfResolutionError);
-        if (status)
-            args.rval().setUndefined();
-        return status;
-    }
 
     bool status = ResolvePromiseInternal(cx, promise, resolutionVal);
     if (status)
