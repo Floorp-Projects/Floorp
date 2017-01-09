@@ -2279,8 +2279,7 @@ BufferingState::EnsureVideoDecodeTaskQueued()
       mMaster->IsWaitingVideoData()) {
     return;
   }
-  mMaster->RequestVideoData(mMaster->NeedToSkipToNextKeyframe(),
-                            media::TimeUnit::FromMicroseconds(mMaster->GetMediaTime()));
+  mMaster->RequestVideoData(false, media::TimeUnit());
 }
 
 void
