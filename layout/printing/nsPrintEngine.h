@@ -13,6 +13,7 @@
 #include "nsPrintObject.h"
 #include "nsPrintData.h"
 #include "nsFrameList.h"
+#include "nsIFrame.h"
 #include "nsIWebProgress.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsIWebProgressListener.h"
@@ -262,7 +263,7 @@ protected:
   
   mozilla::UniquePtr<nsPrintData> mPrt;
   nsPagePrintTimer*       mPagePrintTimer;
-  nsIPageSequenceFrame*   mPageSeqFrame;
+  nsWeakFrame             mPageSeqFrame;
 
   // Print Preview
   mozilla::UniquePtr<nsPrintData> mPrtPreview;
