@@ -206,7 +206,7 @@ public abstract class GeckoApp
     protected boolean mShouldRestore;
     private boolean mSessionRestoreParsingFinished = false;
 
-    private int lastSelectedTabId = -1;
+    protected int lastSelectedTabId = -1;
 
     private boolean foregrounded = false;
 
