@@ -10,11 +10,12 @@ import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.db.BrowserContract;
 
-public class TopSite {
+public class TopSite implements Item {
     private final long id;
     private final String url;
     private final String title;
-    private @Nullable final Boolean isBookmarked;
+    private @Nullable Boolean isBookmarked;
+    private final @Nullable boolean isPinned;
     private @BrowserContract.TopSites.TopSiteType final int type;
 
     public static TopSite fromCursor(Cursor cursor) {
@@ -39,6 +40,7 @@ public class TopSite {
         this.url = url;
         this.title = title;
         this.isBookmarked = isBookmarked;
+        this.isPinned = type == BrowserContract.TopSites.TYPE_PINNED;
         this.type = type;
     }
 
@@ -64,7 +66,18 @@ public class TopSite {
         return type;
     }
 
-    public boolean isPinned() {
-        return type == BrowserContract.TopSites.TYPE_PINNED;
+    public Boolean isPinned() {
+        return isPinned;
+    }
+
+    @Override
+    public void updateBookmarked(boolean bookmarked) {
+        this.isBookmarked = bookmarked;
+    }
+
+    @Override
+    public void updatePinned(boolean pinned) {
+        throw new UnsupportedOperationException(
+                "Pinned state of a top site should be known at the time of querying the database already");
     }
 }
