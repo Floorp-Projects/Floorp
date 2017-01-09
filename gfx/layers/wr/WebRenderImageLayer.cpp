@@ -142,7 +142,7 @@ WebRenderImageLayer::RenderLayer()
   Rect overflow(0, 0, relBounds.width, relBounds.height);
   Matrix4x4 transform;// = GetTransform();
   WRBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(toWrRect(relBounds), toWrRect(overflow), transform, FrameMetrics::NULL_SCROLL_ID));
+    OpDPPushStackingContext(toWrRect(relBounds), toWrRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
 
   WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(toWrRect(rect), toWrRect(clip), Nothing(), mExternalImageId));
 

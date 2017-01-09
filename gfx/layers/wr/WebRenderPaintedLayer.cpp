@@ -72,7 +72,7 @@ WebRenderPaintedLayer::RenderLayer()
   Matrix4x4 transform;// = GetTransform();
 
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(toWrRect(relBounds), toWrRect(overflow), transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(toWrRect(relBounds), toWrRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
   WRBridge()->AddWebRenderCommand(OpDPPushImage(toWrRect(rect), toWrRect(clip), Nothing(), key));
   Manager()->AddImageKeyForDiscard(key);
 
