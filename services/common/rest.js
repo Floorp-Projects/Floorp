@@ -83,7 +83,7 @@ this.RESTRequest = function RESTRequest(uri) {
   // If we don't have an nsIURI object yet, make one. This will throw if
   // 'uri' isn't a valid URI string.
   if (!(uri instanceof Ci.nsIURI)) {
-    uri = Services.io.newURI(uri, null, null);
+    uri = Services.io.newURI(uri);
   }
   this.uri = uri;
 

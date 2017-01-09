@@ -500,7 +500,7 @@ Bookmark.prototype = {
    */
   SetUri: function(uri) {
     if (uri) {
-      let newURI = Services.io.newURI(uri, null, null);
+      let newURI = Services.io.newURI(uri);
       PlacesUtils.bookmarks.changeBookmarkURI(this.props.item_id, newURI);
     }
   },
@@ -518,7 +518,7 @@ Bookmark.prototype = {
    */
   SetTags: function(tags) {
     if (tags != null) {
-      let URI = Services.io.newURI(this.props.uri, null, null);
+      let URI = Services.io.newURI(this.props.uri);
       PlacesUtils.tagging.untagURI(URI, null);
       if (tags.length > 0)
         PlacesUtils.tagging.tagURI(URI, tags);
@@ -536,7 +536,7 @@ Bookmark.prototype = {
     this.props.folder_id = this.GetOrCreateFolder(this.props.location);
     Logger.AssertTrue(this.props.folder_id != -1, "Unable to create " +
       "bookmark, error creating folder " + this.props.location);
-    let bookmarkURI = Services.io.newURI(this.props.uri, null, null);
+    let bookmarkURI = Services.io.newURI(this.props.uri);
     this.props.item_id = PlacesUtils.bookmarks.insertBookmark(this.props.folder_id,
                                                         bookmarkURI,
                                                         -1,
@@ -620,7 +620,7 @@ Bookmark.prototype = {
     }
     if (this.props.tags != null) {
       try {
-        let URI = Services.io.newURI(this.props.uri, null, null);
+        let URI = Services.io.newURI(this.props.uri);
         let tags = PlacesUtils.tagging.getTagsForURI(URI, {});
         tags.sort();
         this.props.tags.sort();
@@ -777,11 +777,11 @@ Livemark.prototype = {
       "folder, error creating parent folder " + this.props.location);
     let siteURI = null;
     if (this.props.siteUri != null)
-      siteURI = Services.io.newURI(this.props.siteUri, null, null);
+      siteURI = Services.io.newURI(this.props.siteUri);
     let livemarkObj = {parentId: this.props.folder_id,
                        title: this.props.livemark,
                        siteURI: siteURI,
-                       feedURI: Services.io.newURI(this.props.feedUri, null, null),
+                       feedURI: Services.io.newURI(this.props.feedUri),
                        index: PlacesUtils.bookmarks.DEFAULT_INDEX};
 
     // Until this can handle asynchronous creation, we need to spin.
@@ -826,7 +826,7 @@ Livemark.prototype = {
       this.props.item_id = -1;
       return -1;
     }
-    let feedURI = Services.io.newURI(this.props.feedUri, null, null);
+    let feedURI = Services.io.newURI(this.props.feedUri);
     let lmFeedURISpec =
       PlacesUtils.annotations.getItemAnnotation(this.props.item_id,
                                                 PlacesUtils.LMANNO_FEEDURI);
@@ -837,7 +837,7 @@ Livemark.prototype = {
       return -1;
     }
     if (this.props.siteUri != null) {
-      let siteURI = Services.io.newURI(this.props.siteUri, null, null);
+      let siteURI = Services.io.newURI(this.props.siteUri);
       let lmSiteURISpec =
         PlacesUtils.annotations.getItemAnnotation(this.props.item_id,
                                                   PlacesUtils.LMANNO_SITEURI);

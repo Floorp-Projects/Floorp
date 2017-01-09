@@ -15,7 +15,7 @@ function setPermissions() {
               .getService(Ci.nsIPermissionManager);
   let ioService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
-  let uri = ioService.newURI("http://" + serverAddr + ":" + serverPort, null, null);
+  let uri = ioService.newURI("http://" + serverAddr + ":" + serverPort);
   perms.add(uri, "allowXULXBL", Ci.nsIPermissionManager.ALLOW_ACTION);
 }
 

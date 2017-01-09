@@ -64,7 +64,7 @@ function do_run_test()
         break;
     };
     try {
-      sourceURI = ios.newURI(sourceURI, null, null);
+      sourceURI = ios.newURI(sourceURI);
       let uri;
       if (type == "resource") {
         // resources go about a slightly different way than everything else

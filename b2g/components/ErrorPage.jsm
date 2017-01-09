@@ -138,7 +138,7 @@ var ErrorPage = {
     let win = frameLoaderOwner.ownerDocument.defaultView;
     let mm = frameLoaderOwner.frameLoader.messageManager;
 
-    let uri = Services.io.newURI(aMessage.data.url, null, null);
+    let uri = Services.io.newURI(aMessage.data.url);
     let sslExceptions = new SSLExceptions((function() {
       mm.sendAsyncMessage('ErrorPage:ReloadPage');
     }).bind(this), uri, win);

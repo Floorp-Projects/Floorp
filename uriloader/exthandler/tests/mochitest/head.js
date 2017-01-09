@@ -57,7 +57,7 @@ function createMockedObjects(createHandlerApp) {
   // Mock the launcher:
   let mockedLauncher = {
     MIMEInfo: mockedMIME,
-    source: Services.io.newURI("http://www.mozilla.org/", null, null),
+    source: Services.io.newURI("http://www.mozilla.org/"),
     suggestedFileName: "test_download_dialog.abc",
     targetFileIsExecutable: false,
     saveToDisk() {},

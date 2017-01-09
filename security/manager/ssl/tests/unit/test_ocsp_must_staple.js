@@ -30,8 +30,7 @@ function add_tests() {
   add_test(() => {
     Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
     Services.prefs.setBoolPref("security.cert_pinning.process_headers_from_non_builtin_roots", true);
-    let uri = Services.io.newURI("https://ocsp-stapling-must-staple-ee-with-must-staple-int.example.com",
-                                 null, null);
+    let uri = Services.io.newURI("https://ocsp-stapling-must-staple-ee-with-must-staple-int.example.com");
     let keyHash = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
     let backupKeyHash = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";
     let header = `max-age=1000; pin-sha256="${keyHash}"; pin-sha256="${backupKeyHash}"`;

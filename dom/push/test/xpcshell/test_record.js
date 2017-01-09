@@ -64,7 +64,7 @@ function testPermissionCheck(props) {
   }
   ok(!record.hasPermission(), `Record ${
     JSON.stringify(props)} should not have permission yet`);
-  let permURI = Services.io.newURI(props.scope, null, null);
+  let permURI = Services.io.newURI(props.scope);
   Services.perms.add(permURI, 'desktop-notification',
                      Ci.nsIPermissionManager.ALLOW_ACTION);
   try {

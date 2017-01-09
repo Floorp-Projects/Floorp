@@ -280,7 +280,7 @@ function getPotentialLeaks() {
 
   let ioService = Cc["@mozilla.org/network/io-service;1"].
                  getService(Ci.nsIIOService);
-  let uri = ioService.newURI("chrome://global/content/", "UTF-8", null);
+  let uri = ioService.newURI("chrome://global/content/", "UTF-8");
   let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
                   getService(Ci.nsIChromeRegistry);
   uri = chromeReg.convertChromeURL(uri);

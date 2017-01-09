@@ -14,7 +14,7 @@ function _evalURI(uri, sandbox) {
                          .createInstance();
 
   let baseURI = SpecialPowers.Services.io
-                             .newURI(window.document.baseURI, window.document.characterSet, null);
+                             .newURI(window.document.baseURI, window.document.characterSet);
   let theURI = SpecialPowers.Services.io
                             .newURI(uri, window.document.characterSet, baseURI);
 

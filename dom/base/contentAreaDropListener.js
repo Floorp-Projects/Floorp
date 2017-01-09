@@ -109,7 +109,7 @@ ContentAreaDropListener.prototype =
     try {
       // Check that the uri is valid first and return an empty string if not.
       // It may just be plain text and should be ignored here
-      uri = ioService.newURI(uriString, null, null);
+      uri = ioService.newURI(uriString);
     } catch (ex) { }
     if (!uri)
       return uriString;
@@ -124,7 +124,7 @@ ContentAreaDropListener.prototype =
 
     // Use file:/// as the default uri so that drops of file URIs are always allowed
     let principal = sourceNode ? sourceNode.nodePrincipal
-                               : secMan.createCodebasePrincipal(ioService.newURI("file:///", null, null), {});
+                               : secMan.createCodebasePrincipal(ioService.newURI("file:///"), {});
 
     secMan.checkLoadURIStrWithPrincipal(principal, uriString, flags);
 
