@@ -50,8 +50,8 @@ interface nsIIOService : nsISupports
      * @see nsIProtocolHandler::newURI
      */
     nsIURI newURI(in AUTF8String aSpec,
-                  in string aOriginCharset,
-                  in nsIURI aBaseURI);
+                  [optional] in string aOriginCharset,
+                  [optional] in nsIURI aBaseURI);
 
     /**
      * This method constructs a new URI from a nsIFile.
