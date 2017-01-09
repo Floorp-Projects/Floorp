@@ -27,19 +27,30 @@ module.exports = function(context) {
 
   return {
     "CallExpression": function(node) {
+      // We're looking for forms of `var = ...`. We also know the arguments
+      // should be 1 or 2.
       if (node.callee.type === "MemberExpression" &&
           node.parent.type === "VariableDeclarator" &&
-          node.arguments.length === 2) {
+          node.arguments.length <= 2) {
         let memexp = node.callee;
-        if (((memexp.object.type === "Identifier" &&
-              memexp.object.name === "Cu") ||
-             (memexp.object.type === "MemberExpression" &&
-              memexp.object.object && memexp.object.property &&
-              memexp.object.object.name === "Components" &&
-              memexp.object.property.name === "utils")) &&
+
+        // Is the expression starting with `Cu` or `Components.utils`?
+        let isACu =
+          ((memexp.object.type === "Identifier" &&
+            memexp.object.name === "Cu") ||
+           (memexp.object.type === "MemberExpression" &&
+            memexp.object.object && memexp.object.property &&
+            memexp.object.object.name === "Components" &&
+            memexp.object.property.name === "utils"));
+
+        if (isACu &&
+            // Now check its `Cu.import` (or `Components.utils.import`).
             memexp.property.type === "Identifier" &&
             memexp.property.name === "import" &&
-            node.arguments[1].type === "ThisExpression") {
+            // Finally, we're looking for no additional arguments (i.e. just the
+            // resource uri), or one additional argument which is `this`.
+            (node.arguments.length == 1 ||
+              node.arguments[1].type === "ThisExpression")) {
           context.report(node, "Cu.import imports into variables and into " +
                          "global scope.");
         }

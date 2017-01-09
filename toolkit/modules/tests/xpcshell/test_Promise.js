@@ -87,7 +87,7 @@ var tests = [];
 // not returned.
 var observe_failures = function observe_failures(promise) {
   promise.catch(function onReject(reason) {
-    test.do_throw("Observed failure in test " + test + ": " + reason);
+    do_throw("Observed failure in test: " + reason);
   });
 };
 

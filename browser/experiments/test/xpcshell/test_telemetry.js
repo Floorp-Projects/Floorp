@@ -5,7 +5,7 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/TelemetryLog.jsm");
-var bsp = Cu.import("resource:///modules/experiments/Experiments.jsm");
+var {TELEMETRY_LOG, Experiments} = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
 
 
 const MANIFEST_HANDLER         = "manifests/handler";
@@ -21,7 +21,7 @@ var gPolicy              = null;
 var gManifestObject      = null;
 var gManifestHandlerURI  = null;
 
-const TLOG = bsp.TELEMETRY_LOG;
+const TLOG = TELEMETRY_LOG;
 
 function checkEvent(event, id, data) {
   do_print("Checking message " + id);

@@ -8,7 +8,7 @@
 Components.utils.import("resource://gre/modules/Promise.jsm");
 
 // Load XPI Provider to get schema version ID
-var XPIScope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
+var XPIScope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
 const DB_SCHEMA = XPIScope.DB_SCHEMA;
 
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
@@ -93,4 +93,3 @@ add_task(function upgrade_schema_version() {
   do_check_eq(Services.prefs.getIntPref("extensions.databaseSchema"), DB_SCHEMA);
   check_empty_state();
 });
-

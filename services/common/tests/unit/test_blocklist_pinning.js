@@ -4,8 +4,8 @@ const { Constructor: CC } = Components;
 
 Cu.import("resource://testing-common/httpd.js");
 
-const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
-const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -55,7 +55,7 @@ add_task(function* test_something(){
   Services.prefs.setCharPref(PREF_BLOCKLIST_PINNING_COLLECTION,
                              COLLECTION_NAME);
 
-  const { PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js");
+  const { PinningPreloadClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/pinning/collections/pins/records";

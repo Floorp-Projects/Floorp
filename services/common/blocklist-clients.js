@@ -16,14 +16,14 @@ this.EXPORTED_SYMBOLS = ["AddonBlocklistClient",
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
-const { Task } = Cu.import("resource://gre/modules/Task.jsm");
-const { OS } = Cu.import("resource://gre/modules/osfile.jsm");
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
+const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 Cu.importGlobalProperties(["fetch"]);
 
-const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
-const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js");
-const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
-const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
+const { KintoHttpClient } = Cu.import("resource://services-common/kinto-http-client.js", {});
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
+const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm", {});
 
 const PREF_SETTINGS_SERVER                   = "services.settings.server";
 const PREF_BLOCKLIST_BUCKET                  = "services.blocklist.bucket";

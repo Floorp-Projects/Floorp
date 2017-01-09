@@ -3,10 +3,10 @@
 Cu.import("resource://services-common/blocklist-updater.js");
 Cu.import("resource://testing-common/httpd.js");
 
-const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js");
-const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js");
+const { Kinto } = Cu.import("resource://services-common/kinto-offline-client.js", {});
+const { FirefoxAdapter } = Cu.import("resource://services-common/kinto-storage-adapter.js", {});
 const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js");
+const { OneCRLBlocklistClient } = Cu.import("resource://services-common/blocklist-clients.js", {});
 
 let server;
 
@@ -504,5 +504,3 @@ function run_test() {
     server.stop(function() { });
   });
 }
-
-
