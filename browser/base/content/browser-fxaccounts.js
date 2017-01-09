@@ -83,6 +83,28 @@ var gFxAccounts = {
     return Services.prefs.getBoolPref("services.sync.sendTabToDevice.enabled");
   },
 
+  isSendableURI(aURISpec) {
+    if (!aURISpec) {
+      return false;
+    }
+    // Disallow sending tabs with more than 65535 characters.
+    if (aURISpec.length > 65535) {
+      return false;
+    }
+    try {
+      // Filter out un-sendable URIs -- things like local files, object urls, etc.
+      const unsendableRegexp = new RegExp(
+        Services.prefs.getCharPref("services.sync.engine.tabs.filteredUrls"), "i");
+      return !unsendableRegexp.test(aURISpec);
+    } catch (e) {
+      // The preference has been removed, or is an invalid regexp, so we log an
+      // error and treat it as a valid URI -- and the more problematic case is
+      // the length, which we've already addressed.
+      Cu.reportError(`Failed to build url filter regexp for send tab: ${e}`);
+      return true;
+    }
+  },
+
   get remoteClients() {
     return Weave.Service.clientsEngine.remoteClients
            .sort((a, b) => a.name.localeCompare(b.name));
@@ -410,14 +432,16 @@ var gFxAccounts = {
     devicesPopup.appendChild(fragment);
   },
 
-  updateTabContextMenu(aPopupMenu) {
+  updateTabContextMenu(aPopupMenu, aTargetTab) {
     if (!this.sendTabToDeviceEnabled) {
       return;
     }
 
-    const remoteClientPresent = this.remoteClients.length > 0;
+    const targetURI = aTargetTab.linkedBrowser.currentURI.spec;
+    const showSendTab = this.remoteClients.length > 0 && this.isSendableURI(targetURI);
+
     ["context_sendTabToDevice", "context_sendTabToDevice_separator"]
-    .forEach(id => { document.getElementById(id).hidden = !remoteClientPresent });
+    .forEach(id => { document.getElementById(id).hidden = !showSendTab });
   },
 
   initPageContextMenu(contextMenu) {
@@ -427,13 +451,20 @@ var gFxAccounts = {
 
     const remoteClientPresent = this.remoteClients.length > 0;
     // showSendLink and showSendPage are mutually exclusive
-    const showSendLink = remoteClientPresent
-                         && (contextMenu.onSaveableLink || contextMenu.onPlainTextLink);
+    let showSendLink = remoteClientPresent
+                       && (contextMenu.onSaveableLink || contextMenu.onPlainTextLink);
     const showSendPage = !showSendLink && remoteClientPresent
                          && !(contextMenu.isContentSelected ||
                               contextMenu.onImage || contextMenu.onCanvas ||
                               contextMenu.onVideo || contextMenu.onAudio ||
-                              contextMenu.onLink || contextMenu.onTextInput);
+                              contextMenu.onLink || contextMenu.onTextInput)
+                         && this.isSendableURI(contextMenu.browser.currentURI.spec);
+
+    if (showSendLink) {
+      // This isn't part of the condition above since we don't want to try and
+      // send the page if a link is clicked on or selected but is not sendable.
+      showSendLink = this.isSendableURI(contextMenu.linkURL);
+    }
 
     ["context-sendpagetodevice", "context-sep-sendpagetodevice"]
     .forEach(id => contextMenu.showItem(id, showSendPage));
