@@ -12,35 +12,17 @@ if (typeof define === "undefined") {
   require("amd-loader");
 }
 
-const Services = require("Services");
-
 // React
 const {
   createFactory,
   PropTypes
 } = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("devtools/client/shared/components/reps/rep-utils");
-    const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
-
-
-let Rep;
-let StringRep;
-let Grip;
-let MODE;
-
-// Start using the bundle
-if (!Services.prefs.getBoolPref("devtools.webconsole.use-reps-bundle")) {
-    Rep = createFactories(require("devtools/client/shared/components/reps/rep")).Rep;
-    StringRep = createFactories(require("devtools/client/shared/components/reps/string").StringRep).rep;
-    Grip = require("devtools/client/shared/components/reps/grip").Grip;
-    MODE = require("devtools/client/shared/components/reps/constants").MODE;
-} else {
-    const bundle = require("devtools/client/shared/components/reps");
-    Rep = createFactory(bundle.Rep);
-    StringRep = createFactory(bundle.StringRep);
-    Grip = createFactory(bundle.Grip);
-    MODE = bundle.MODE;
-}
+const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
+const StringRep = createFactories(require("devtools/client/shared/components/reps/string").StringRep).rep;
+const VariablesViewLink = createFactory(require("devtools/client/webconsole/new-console-output/components/variables-view-link"));
+const { Grip } = require("devtools/client/shared/components/reps/grip");
+const { MODE } = require("devtools/client/shared/components/reps/constants");
 
 GripMessageBody.displayName = "GripMessageBody";
 
