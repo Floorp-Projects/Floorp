@@ -68,7 +68,7 @@ load 580685.html
 load 585185-1.html
 load 588627-1.html
 load 592698-1.html
-skip-if(stylo) load 601437-1.html # bug 1323706
+asserts-if(stylo,2) load 601437-1.html # bug 1324634
 load 601439-1.html
 load 605689-1.html
 load 611922-1.html
