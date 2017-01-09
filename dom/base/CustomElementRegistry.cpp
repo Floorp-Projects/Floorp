@@ -864,7 +864,7 @@ void
 CustomElementReactionsStack::CreateAndPushElementQueue()
 {
   // Push a new element queue onto the custom element reactions stack.
-  mReactionsStack.AppendElement();
+  mReactionsStack.AppendElement(MakeUnique<ElementQueue>());
 }
 
 void
@@ -875,15 +875,19 @@ CustomElementReactionsStack::PopAndInvokeElementQueue()
   MOZ_ASSERT(!mReactionsStack.IsEmpty(),
              "Reaction stack shouldn't be empty");
 
-  ElementQueue& elementQueue = mReactionsStack.LastElement();
+  const uint32_t lastIndex = mReactionsStack.Length() - 1;
+  ElementQueue* elementQueue = mReactionsStack.ElementAt(lastIndex).get();
   // Check element queue size in order to reduce function call overhead.
-  if (!elementQueue.IsEmpty()) {
+  if (!elementQueue->IsEmpty()) {
     InvokeReactions(elementQueue);
   }
 
-  DebugOnly<bool> isRemovedElement = mReactionsStack.RemoveElement(elementQueue);
-  MOZ_ASSERT(isRemovedElement,
-             "Reaction stack should have an element queue to remove");
+  // InvokeReactions() might create other custom element reactions, but those
+  // new reactions should be already consumed and removed at this point.
+  MOZ_ASSERT(lastIndex == mReactionsStack.Length() - 1,
+             "reactions created by InvokeReactions() should be consumed and removed");
+
+  mReactionsStack.RemoveElementAt(lastIndex);
 }
 
 void
@@ -913,7 +917,7 @@ CustomElementReactionsStack::Enqueue(Element* aElement,
 
   // Add element to the current element queue.
   if (!mReactionsStack.IsEmpty()) {
-    mReactionsStack.LastElement().AppendElement(do_GetWeakReference(aElement));
+    mReactionsStack.LastElement()->AppendElement(do_GetWeakReference(aElement));
     elementData->mReactionQueue.AppendElement(aReaction);
     return;
   }
@@ -938,16 +942,16 @@ CustomElementReactionsStack::InvokeBackupQueue()
 {
   // Check backup queue size in order to reduce function call overhead.
   if (!mBackupQueue.IsEmpty()) {
-    InvokeReactions(mBackupQueue);
+    InvokeReactions(&mBackupQueue);
   }
 }
 
 void
-CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
+CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue)
 {
   // Note: It's possible to re-enter this method.
-  for (uint32_t i = 0; i < aElementQueue.Length(); ++i) {
-    nsCOMPtr<Element> element = do_QueryReferent(aElementQueue[i]);
+  for (uint32_t i = 0; i < aElementQueue->Length(); ++i) {
+    nsCOMPtr<Element> element = do_QueryReferent(aElementQueue->ElementAt(i));
 
     if (!element) {
       continue;
@@ -967,7 +971,7 @@ CustomElementReactionsStack::InvokeReactions(ElementQueue& aElementQueue)
     }
     reactions.Clear();
   }
-  aElementQueue.Clear();
+  aElementQueue->Clear();
 }
 
 //-----------------------------------------------------
