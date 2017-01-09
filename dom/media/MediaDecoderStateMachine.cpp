@@ -206,7 +206,7 @@ public:
 
   virtual void HandleAudioCanceled()
   {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    Crash("Unexpected event!", __func__);
   }
 
   virtual void HandleEndOfAudio()
@@ -221,7 +221,7 @@ public:
 
   virtual void HandleVideoCanceled()
   {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    Crash("Unexpected event!", __func__);
   }
 
   virtual void HandleEndOfVideo()
@@ -244,6 +244,14 @@ public:
 private:
   template <class S, typename R, typename... As>
   auto ReturnTypeHelper(R(S::*)(As...)) -> R;
+
+  void Crash(const char* aReason, const char* aSite)
+  {
+    char buf[1024];
+    SprintfLiteral(buf, "%s state=%s callsite=%s", aReason, ToStateStr(GetState()), aSite);
+    MOZ_ReportAssertionFailure(buf, __FILE__, __LINE__);
+    MOZ_CRASH();
+  }
 
 protected:
   enum class EventVisibility : int8_t
@@ -657,6 +665,16 @@ public:
     DispatchDecodeTasksIfNeeded();
     MaybeStopPrerolling();
     CheckSlowDecoding(aDecodeStart);
+  }
+
+  void HandleAudioCanceled() override
+  {
+    mMaster->EnsureAudioDecodeTaskQueued();
+  }
+
+  void HandleVideoCanceled() override
+  {
+    mMaster->EnsureVideoDecodeTaskQueued();
   }
 
   void HandleEndOfAudio() override;
@@ -1642,6 +1660,16 @@ public:
     // Schedule Step() to check it.
     mMaster->PushVideo(aVideo);
     mMaster->ScheduleStateMachine();
+  }
+
+  void HandleAudioCanceled() override
+  {
+    mMaster->EnsureAudioDecodeTaskQueued();
+  }
+
+  void HandleVideoCanceled() override
+  {
+    mMaster->EnsureVideoDecodeTaskQueued();
   }
 
   void HandleEndOfAudio() override;
