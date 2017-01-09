@@ -3657,10 +3657,10 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
     // when they use context-fill etc.
     aContext.SetMatrix(initialMatrix);
 
-    SVGContextPaintImpl contextPaint;
-    DrawMode drawMode = contextPaint.Init(&aDrawTarget,
-                                          aContext.CurrentMatrix(),
-                                          frame, outerContextPaint);
+    RefPtr<SVGContextPaintImpl> contextPaint = new SVGContextPaintImpl();
+    DrawMode drawMode = contextPaint->Init(&aDrawTarget,
+                                           aContext.CurrentMatrix(),
+                                           frame, outerContextPaint);
 
     if (drawMode & DrawMode::GLYPH_STROKE) {
       // This may change the gfxContext's transform (for non-scaling stroke),
@@ -3681,7 +3681,7 @@ SVGTextFrame::PaintSVG(gfxContext& aContext,
       params.framePt = gfxPoint();
       params.dirtyRect = LayoutDevicePixel::
         FromAppUnits(frame->GetVisualOverflowRect(), auPerDevPx);
-      params.contextPaint = &contextPaint;
+      params.contextPaint = contextPaint;
       if (ShouldRenderAsPath(frame, paintSVGGlyphs)) {
         SVGTextDrawPathCallbacks callbacks(&rendCtx, frame,
                                            matrixForPaintServers,
