@@ -2187,19 +2187,10 @@ bool
 MediaDecoderStateMachine::
 DecodingState::NeedToSkipToNextKeyframe()
 {
-  // Don't skip when we're still decoding first frames.
-  if (!mMaster->mSentFirstFrameLoadedEvent) {
-    return false;
-  }
-
   // Since GetClock() can only be called after starting MediaSink, we return
   // false quickly if it is not started because we won't fall behind playback
   // when not consuming media data.
   if (!mMaster->mMediaSink->IsStarted()) {
-    return false;
-  }
-
-  if (!mMaster->IsVideoDecoding()) {
     return false;
   }
 
