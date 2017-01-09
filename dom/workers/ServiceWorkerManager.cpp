@@ -940,6 +940,7 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(serviceWorker->GetPrincipal(), aScope);
+  MOZ_DIAGNOSTIC_ASSERT(registration);
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
                                                        registration);
