@@ -248,7 +248,7 @@ private:
   ~CustomElementReactionsStack() {};
 
   // The choice of 8 for the auto size here is based on gut feeling.
-  AutoTArray<ElementQueue, 8> mReactionsStack;
+  AutoTArray<UniquePtr<ElementQueue>, 8> mReactionsStack;
   ElementQueue mBackupQueue;
   // https://html.spec.whatwg.org/#enqueue-an-element-on-the-appropriate-element-queue
   bool mIsBackupQueueProcessing;
@@ -259,7 +259,7 @@ private:
    * Invoke custom element reactions
    * https://html.spec.whatwg.org/multipage/scripting.html#invoke-custom-element-reactions
    */
-  void InvokeReactions(ElementQueue& aElementQueue);
+  void InvokeReactions(ElementQueue* aElementQueue);
 
   void Enqueue(Element* aElement, CustomElementReaction* aReaction);
 
