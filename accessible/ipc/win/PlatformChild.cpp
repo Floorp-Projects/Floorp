@@ -50,6 +50,13 @@ PlatformChild::PlatformChild()
   mozilla::mscom::InterceptorLog::Init();
   mozilla::mscom::RegisterArrayData(sPlatformChildArrayData);
 
+
+  UniquePtr<mozilla::mscom::RegisteredProxy> customProxy;
+  mozilla::mscom::EnsureMTA([&customProxy]() -> void {
+    customProxy = Move(mozilla::mscom::RegisterProxy());
+  });
+  mCustomProxy = Move(customProxy);
+
   UniquePtr<mozilla::mscom::RegisteredProxy> ia2Proxy;
   mozilla::mscom::EnsureMTA([&ia2Proxy]() -> void {
     ia2Proxy = Move(mozilla::mscom::RegisterProxy(L"ia2marshal.dll"));

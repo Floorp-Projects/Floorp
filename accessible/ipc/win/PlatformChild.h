@@ -23,6 +23,7 @@ public:
   PlatformChild& operator=(PlatformChild&&) = delete;
 
 private:
+  UniquePtr<mozilla::mscom::RegisteredProxy> mCustomProxy;
   UniquePtr<mozilla::mscom::RegisteredProxy> mIA2Proxy;
   UniquePtr<mozilla::mscom::RegisteredProxy> mAccTypelib;
   UniquePtr<mozilla::mscom::RegisteredProxy> mMiscTypelib;
