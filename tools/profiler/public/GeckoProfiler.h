@@ -267,6 +267,8 @@ private:
 
 #endif
 
+namespace mozilla {
+
 class MOZ_RAII GeckoProfilerInitRAII {
 public:
   explicit GeckoProfilerInitRAII(void* stackTop) {
@@ -309,8 +311,6 @@ public:
 private:
   bool mIssuedWake;
 };
-
-namespace mozilla {
 
 class MOZ_RAII GeckoProfilerTracingRAII {
 public:
