@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- NOTE: This reference case uses the same markup as the testcase, except:
+      (1) This reference case uses modern flexbox CSS instead of -webkit-box.
+      (2) In the 2nd and 4th containers here (where the testcase makes the
+          *2nd* flex item abspos), this reference case simply uses no absolute
+          positioning at all, to produce the correct expected rendering
+          (with the 2nd flex item being positioned after the 1st, rather than
+          being superimposed on top of it).
+-->
+<html>
+<head>
+  <title>Reference: simple positioning of abspos children in -webkit-box</title>
+  <style>
+    .container {
+      border: 1px solid black;
+      width: 200px;
+    }
+    .box        { display: flex }
+    .inline-box { display: inline-flex }
+    .abs { position: absolute }
+    .a { border: 3px solid purple }
+    .b { border: 3px solid orange }
+</style>
+</head>
+<body>
+  <!-- Test abspos child in -webkit-box: -->
+  <div class="container box">
+    <div class="a abs">aa</div>
+    <div class="b">bbbb</div>
+  </div>
+  <div class="container box">
+    <div class="a">aa</div>
+    <div class="b">bbbb</div>
+  </div>
+
+  <!-- Test abspos child in -webkit-inline-box: -->
+  <div class="container inline-box">
+    <div class="a abs">aa</div>
+    <div class="b">bbbb</div>
+  </div>
+  <div class="container inline-box">
+    <div class="a">aa</div>
+    <div class="b">bbbb</div>
+  </div>
+
+</body>
+</html>
