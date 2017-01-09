@@ -38,7 +38,7 @@ skip-if(stylo) load 456196.html # bug 132652
 load 460209-1.html
 load 460217-1.html
 asserts-if(stylo,2) load 460323-1.html # bug 1324634
-asserts-if(stylo,2) load 466845-1.html # bug 1324705
+load 466845-1.html
 skip-if(stylo) load 469432-1.xhtml # bug 1323649
 load 472195-1.html
 load 472237-1.html # will fail, test for leak (474704)

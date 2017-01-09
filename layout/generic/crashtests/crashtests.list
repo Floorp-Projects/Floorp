@@ -392,8 +392,8 @@ load 526217.html
 load 533379-1.html
 load 533379-2.html
 load 534082-1.html
-asserts-if(stylo,2) load 534366-1.html # bug 1324705
-asserts-if(stylo,2) load 534366-2.html # bug 1324705
+load 534366-1.html
+load 534366-2.html
 load 536692-1.xhtml
 load 537645.xhtml
 load 541277-1.html
