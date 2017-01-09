@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/WebChannel.jsm");
 
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";
-const VALID_WEB_CHANNEL_ORIGIN = Services.io.newURI(URL_STRING, null, null);
+const VALID_WEB_CHANNEL_ORIGIN = Services.io.newURI(URL_STRING);
 
 function run_test() {
   run_next_test();

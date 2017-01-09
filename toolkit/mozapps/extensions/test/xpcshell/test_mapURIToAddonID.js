@@ -25,7 +25,7 @@ function TestProvider(result) {
   this.result = result;
 }
 TestProvider.prototype = {
-  uri: Services.io.newURI("hellow://world", null, null),
+  uri: Services.io.newURI("hellow://world"),
   id: "valid@id",
   startup() {},
   shutdown() {},

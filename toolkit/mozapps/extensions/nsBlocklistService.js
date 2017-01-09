@@ -193,7 +193,7 @@ function getPref(func, preference, defaultValue) {
 function newURI(spec) {
   var ioServ = Cc["@mozilla.org/network/io-service;1"].
                getService(Ci.nsIIOService);
-  return ioServ.newURI(spec, null, null);
+  return ioServ.newURI(spec);
 }
 
 // Restarts the application checking in with observers first

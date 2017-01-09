@@ -196,7 +196,7 @@ InstallTrigger.prototype = {
   },
 
   startSoftwareUpdate(url, flags) {
-    let filename = Services.io.newURI(url, null, null)
+    let filename = Services.io.newURI(url)
                               .QueryInterface(Ci.nsIURL)
                               .filename;
     let args = {};

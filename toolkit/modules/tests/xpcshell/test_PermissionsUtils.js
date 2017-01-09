@@ -54,7 +54,7 @@ function test_importfromPrefs() {
                    "https://blacklist2-2.example.com:8080"];
   let unknown = whitelisted.concat(blacklisted).concat(untouched);
   for (let url of unknown) {
-    let uri = Services.io.newURI(url, null, null);
+    let uri = Services.io.newURI(url);
     do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.UNKNOWN_ACTION);
   }
 
@@ -71,15 +71,15 @@ function test_importfromPrefs() {
 
   // Check they were imported into the permissions manager
   for (let url of whitelisted) {
-    let uri = Services.io.newURI(url, null, null);
+    let uri = Services.io.newURI(url);
     do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.ALLOW_ACTION);
   }
   for (let url of blacklisted) {
-    let uri = Services.io.newURI(url, null, null);
+    let uri = Services.io.newURI(url);
     do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.DENY_ACTION);
   }
   for (let url of untouched) {
-    let uri = Services.io.newURI(url, null, null);
+    let uri = Services.io.newURI(url);
     do_check_eq(Services.perms.testPermission(uri, TEST_PERM), Services.perms.UNKNOWN_ACTION);
   }
 }

@@ -524,7 +524,7 @@ LoginManagerPrompter.prototype = {
     if (httpRealm.test(aRealmString))
       return [null, null, null];
 
-    var uri = Services.io.newURI(aRealmString, null, null);
+    var uri = Services.io.newURI(aRealmString);
     var pathname = "";
 
     if (uri.path != "/")
@@ -1548,7 +1548,7 @@ LoginManagerPrompter.prototype = {
     if (aURI instanceof Ci.nsIURI) {
       uri = aURI;
     } else {
-      uri = Services.io.newURI(aURI, null, null);
+      uri = Services.io.newURI(aURI);
     }
 
     return uri.scheme + "://" + uri.hostPort;
@@ -1568,7 +1568,7 @@ LoginManagerPrompter.prototype = {
     var idnService = Cc["@mozilla.org/network/idn-service;1"].
                      getService(Ci.nsIIDNService);
     try {
-      var uri = Services.io.newURI(aURIString, null, null);
+      var uri = Services.io.newURI(aURIString);
       var baseDomain = eTLDService.getBaseDomain(uri);
       displayHost = idnService.convertToDisplayIDN(baseDomain, {});
     } catch (e) {
