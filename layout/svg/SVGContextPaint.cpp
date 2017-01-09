@@ -142,6 +142,17 @@ SVGContextPaint::GetContextPaint(nsIContent* aContent)
     return nullptr;
   }
 
+  // XXX The SVGContextPaint that was passed to SetProperty was const. Ideally
+  // we could and should re-apply that constness to the SVGContextPaint that
+  // we get here (SVGImageContext is never changed after it is initialized).
+  // Unfortunately lazy initialization of SVGContextPaint (which is a member of
+  // SVGImageContext, and also conceptually never changes after construction)
+  // prevents some of SVGContextPaint's conceptually const methods from being
+  // const.  Trying to fix SVGContextPaint (perhaps by using |mutable|) is a
+  // bit of a headache so for now we punt on that, don't reapply the constness
+  // to the SVGContextPaint here, and trust that no one will add code that
+  // actually modifies the object.
+
   return static_cast<SVGContextPaint*>(
            ownerDoc->GetProperty(nsGkAtoms::svgContextPaint));
 }
@@ -229,7 +240,7 @@ SVGContextPaintImpl::Paint::GetPattern(const DrawTarget* aDrawTarget,
 }
 
 AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
-                                 SVGContextPaint* aContextPaint,
+                                 const SVGContextPaint* aContextPaint,
                                  nsIDocument* aSVGDocument)
   : mSVGDocument(aSVGDocument)
   , mOuterContextPaint(aSVGDocument->GetProperty(nsGkAtoms::svgContextPaint))
@@ -247,7 +258,8 @@ AutoSetRestoreSVGContextPaint::AutoSetRestoreSVGContextPaint(
   }
 
   DebugOnly<nsresult> res =
-    mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint, aContextPaint);
+    mSVGDocument->SetProperty(nsGkAtoms::svgContextPaint,
+                              const_cast<SVGContextPaint*>(aContextPaint));
 
   NS_WARNING_ASSERTION(NS_SUCCEEDED(res), "Failed to set context paint");
 }

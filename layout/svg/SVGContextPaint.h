@@ -109,7 +109,7 @@ private:
 class MOZ_RAII AutoSetRestoreSVGContextPaint
 {
 public:
-  AutoSetRestoreSVGContextPaint(SVGContextPaint* aContextPaint,
+  AutoSetRestoreSVGContextPaint(const SVGContextPaint* aContextPaint,
                                 nsIDocument* aSVGDocument);
   ~AutoSetRestoreSVGContextPaint();
 private:
