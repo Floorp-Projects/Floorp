@@ -1693,8 +1693,6 @@ public:
 
 private:
   void DispatchDecodeTasksIfNeeded();
-  void EnsureAudioDecodeTaskQueued();
-  void EnsureVideoDecodeTaskQueued();
 
   TimeStamp mBufferingStart;
 
@@ -2248,38 +2246,18 @@ MediaDecoderStateMachine::
 BufferingState::DispatchDecodeTasksIfNeeded()
 {
   if (mMaster->IsAudioDecoding() &&
-      !mMaster->HaveEnoughDecodedAudio()) {
-    EnsureAudioDecodeTaskQueued();
+      !mMaster->HaveEnoughDecodedAudio() &&
+      !mMaster->IsRequestingAudioData() &&
+      !mMaster->IsWaitingAudioData()) {
+    mMaster->RequestAudioData();
   }
 
   if (mMaster->IsVideoDecoding() &&
-      !mMaster->HaveEnoughDecodedVideo()) {
-    EnsureVideoDecodeTaskQueued();
+      !mMaster->HaveEnoughDecodedVideo() &&
+      !mMaster->IsRequestingVideoData() &&
+      !mMaster->IsWaitingVideoData()) {
+    mMaster->RequestVideoData(false, media::TimeUnit());
   }
-}
-
-void
-MediaDecoderStateMachine::
-BufferingState::EnsureAudioDecodeTaskQueued()
-{
-  if (!mMaster->IsAudioDecoding() ||
-      mMaster->IsRequestingAudioData() ||
-      mMaster->IsWaitingAudioData()) {
-    return;
-  }
-  mMaster->RequestAudioData();
-}
-
-void
-MediaDecoderStateMachine::
-BufferingState::EnsureVideoDecodeTaskQueued()
-{
-  if (!mMaster->IsVideoDecoding() ||
-      mMaster->IsRequestingVideoData() ||
-      mMaster->IsWaitingVideoData()) {
-    return;
-  }
-  mMaster->RequestVideoData(false, media::TimeUnit());
 }
 
 void
