@@ -31,7 +31,7 @@ public:
 
     static void UpdateClearTypeUsage();
 
-    virtual gfxFont*
+    mozilla::UniquePtr<gfxFont>
     CopyWithAntialiasOption(AntialiasOption anAAOption) override;
 
     virtual uint32_t GetSpaceGlyph() override;

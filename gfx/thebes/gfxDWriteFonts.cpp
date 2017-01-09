@@ -126,11 +126,11 @@ gfxDWriteFont::UpdateClearTypeUsage()
   mUseClearType = UsingClearType();
 }
 
-gfxFont*
+UniquePtr<gfxFont>
 gfxDWriteFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
-    return new gfxDWriteFont(static_cast<gfxDWriteFontEntry*>(mFontEntry.get()),
-                             &mStyle, mNeedsBold, anAAOption);
+    auto entry = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
+    return MakeUnique<gfxDWriteFont>(entry, &mStyle, mNeedsBold, anAAOption);
 }
 
 const gfxFont::Metrics&
