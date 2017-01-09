@@ -19,6 +19,7 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.home.HomePager;
+import org.mozilla.gecko.home.activitystream.model.Item;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
@@ -37,8 +38,7 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
     public BottomSheetContextMenu(final Context context,
                                   final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                                   final MenuMode mode,
-                                  final String title, @NonNull final String url,
-                                  @Nullable final Boolean isBookmarked, @Nullable final Boolean isPinned,
+                                  final Item item,
                                   HomePager.OnUrlOpenListener onUrlOpenListener,
                                   HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener,
                                   final int tilesWidth, final int tilesHeight) {
@@ -46,10 +46,7 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
         super(context,
                 telemetryExtraBuilder,
                 mode,
-                title,
-                url,
-                isBookmarked,
-                isPinned,
+                item,
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
 
@@ -59,9 +56,9 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
         bottomSheetDialog = new BottomSheetDialog(context);
         bottomSheetDialog.setContentView(content);
 
-        ((TextView) content.findViewById(R.id.title)).setText(title);
+        ((TextView) content.findViewById(R.id.title)).setText(item.getTitle());
 
-        extractLabel(context, url, false, new ActivityStream.LabelCallback() {
+        extractLabel(context, item.getUrl(), false, new ActivityStream.LabelCallback() {
                 public void onLabelExtracted(String label) {
                     ((TextView) content.findViewById(R.id.url)).setText(label);
                 }
@@ -75,7 +72,7 @@ import static org.mozilla.gecko.activitystream.ActivityStream.extractLabel;
         faviconView.setLayoutParams(layoutParams);
 
         Icons.with(context)
-                .pageUrl(url)
+                .pageUrl(item.getUrl())
                 .skipNetwork()
                 .build()
                 .execute(new IconCallback() {
