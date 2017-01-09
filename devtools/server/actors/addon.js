@@ -221,7 +221,7 @@ BrowserAddonActor.prototype = {
     if (uridescriptor && "value" in uridescriptor && uridescriptor.value) {
       let uri;
       try {
-        uri = Services.io.newURI(uridescriptor.value, null, null);
+        uri = Services.io.newURI(uridescriptor.value);
       }
       catch (e) {
         DevToolsUtils.reportException(

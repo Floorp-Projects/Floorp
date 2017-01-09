@@ -803,7 +803,7 @@ var NetworkHelper = {
       return store.get(url);
     }
 
-    let uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+    let uri = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
     store.set(url, uri);
     return uri;
   }
