@@ -426,18 +426,10 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
         *aWidgetFlags = 0;
     break;
   case NS_THEME_SCROLLBARTRACK_HORIZONTAL:
-    if (gtk_check_version(3,20,0) == nullptr) {
-      aGtkWidgetType = MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL;
-    } else {
-      return false;
-    }
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL;
     break;
   case NS_THEME_SCROLLBARTRACK_VERTICAL:
-    if (gtk_check_version(3,20,0) == nullptr) {
-      aGtkWidgetType = MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL;
-    } else {
-      return false;
-    }
+    aGtkWidgetType = MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL;
     break;
   case NS_THEME_SCROLLBARTHUMB_VERTICAL:
     aGtkWidgetType = MOZ_GTK_SCROLLBAR_THUMB_VERTICAL;
