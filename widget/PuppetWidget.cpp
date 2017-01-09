@@ -190,7 +190,7 @@ PuppetWidget::Destroy()
   mTabChild = nullptr;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::Show(bool aState)
 {
   NS_ASSERTION(mEnabled,
@@ -216,8 +216,6 @@ PuppetWidget::Show(bool aState)
     Resize(mBounds.width, mBounds.height, false);
     Invalidate(mBounds);
   }
-
-  return NS_OK;
 }
 
 void
@@ -276,7 +274,7 @@ PuppetWidget::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 PuppetWidget::SetFocus(bool aRaise)
 {
   if (aRaise && mTabChild) {
@@ -286,7 +284,7 @@ PuppetWidget::SetFocus(bool aRaise)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 {
 #ifdef DEBUG
@@ -294,17 +292,17 @@ PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect)
 #endif
 
   if (mChild) {
-    return mChild->Invalidate(aRect);
+    mChild->Invalidate(aRect);
+    return;
   }
 
   mDirtyRegion.Or(mDirtyRegion, aRect);
 
   if (!mDirtyRegion.IsEmpty() && !mPaintTask.IsPending()) {
     mPaintTask = new PaintTask(this);
-    return NS_DispatchToCurrentThread(mPaintTask.get());
+    NS_DispatchToCurrentThread(mPaintTask.get());
+    return;
   }
-
-  return NS_OK;
 }
 
 void
@@ -319,7 +317,7 @@ PuppetWidget::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
   event.mTime = PR_Now() / 1000;
 }
 
-NS_IMETHODIMP
+nsresult
 PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef DEBUG
@@ -531,7 +529,7 @@ PuppetWidget::AsyncPanZoomEnabled() const
   return mTabChild && mTabChild->AsyncPanZoomEnabled();
 }
 
-NS_IMETHODIMP_(bool)
+bool
 PuppetWidget::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                       const mozilla::WidgetKeyboardEvent& aEvent,
                                       DoCommandCallback aCallback,
@@ -710,7 +708,7 @@ PuppetWidget::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
   mTabChild->SendDefaultProcOfPluginEvent(aEvent);
 }
 
-NS_IMETHODIMP_(void)
+void
 PuppetWidget::SetInputContext(const InputContext& aContext,
                               const InputContextAction& aAction)
 {
@@ -737,7 +735,7 @@ PuppetWidget::SetInputContext(const InputContext& aContext,
     static_cast<int32_t>(aAction.mFocusChange));
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 PuppetWidget::GetInputContext()
 {
 #ifndef MOZ_CROSS_PROCESS_IME
@@ -770,7 +768,7 @@ PuppetWidget::GetInputContext()
   return context;
 }
 
-NS_IMETHODIMP_(NativeIMEContext)
+NativeIMEContext
 PuppetWidget::GetNativeIMEContext()
 {
   return mNativeIMEContext;
@@ -977,13 +975,13 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 PuppetWidget::SetCursor(nsCursor aCursor)
 {
   // Don't cache on windows, Windowless flash breaks this via async cursor updates.
 #if !defined(XP_WIN)
   if (mCursor == aCursor && !mCustomCursor && !mUpdateCursor) {
-    return NS_OK;
+    return;
   }
 #endif
 
@@ -991,16 +989,14 @@ PuppetWidget::SetCursor(nsCursor aCursor)
 
   if (mTabChild &&
       !mTabChild->SendSetCursor(aCursor, mUpdateCursor)) {
-    return NS_ERROR_FAILURE;
+    return;
   }
 
   mCursor = aCursor;
   mUpdateCursor = false;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 PuppetWidget::SetCursor(imgIContainer* aCursor,
                         uint32_t aHotspotX, uint32_t aHotspotY)
 {
