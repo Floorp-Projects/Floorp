@@ -443,9 +443,6 @@ protected:
 
   void FinishDecodeFirstFrame();
 
-  // Queries our state to see whether the decode has finished for all streams.
-  bool CheckIfDecodeComplete();
-
   // Performs one "cycle" of the state machine.
   void RunStateMachine();
 
