@@ -5,6 +5,8 @@
 
 #include "WebRenderTextLayer.h"
 
+#include "mozilla/gfx/2D.h"
+
 namespace mozilla {
 namespace layers {
 
@@ -12,7 +14,8 @@ using namespace mozilla::gfx;
 
 static void
 DWriteFontFileData(const uint8_t* aData, uint32_t aLength, uint32_t aIndex,
-                   float aGlyphSize, void* aBaton)
+                   float aGlyphSize, uint32_t aVariationCount,
+                   const ScaledFont::VariationSetting* aVariations, void* aBaton)
 {
     WebRenderTextLayer* layer = static_cast<WebRenderTextLayer*>(aBaton);
 
