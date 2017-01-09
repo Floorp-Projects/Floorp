@@ -566,3 +566,91 @@ add_task(async function test_no_foreign_engines_in_success_ping() {
     await cleanAndGo(engine, server);
   }
 });
+
+add_task(async function test_events() {
+  Service.engineManager.register(BogusEngine);
+  let engine = Service.engineManager.get("bogus");
+  engine.enabled = true;
+  let server = serverForUsers({"foo": "password"}, {
+    meta: {global: {engines: {bogus: {version: engine.version, syncID: engine.syncID}}}},
+    steam: {}
+  });
+
+  await SyncTestingInfrastructure(server);
+  try {
+    Service.recordTelemetryEvent("object", "method", "value", { foo: "bar" });
+    let ping = await wait_for_ping(() => Service.sync(), true, true);
+    equal(ping.events.length, 1);
+    let [timestamp, category, method, object, value, extra] = ping.events[0];
+    ok((typeof timestamp == "number") && timestamp > 0); // timestamp.
+    equal(category, "sync");
+    equal(method, "method");
+    equal(object, "object");
+    equal(value, "value");
+    deepEqual(extra, { foo: "bar" });
+    // Test with optional values.
+    Service.recordTelemetryEvent("object", "method");
+    ping = await wait_for_ping(() => Service.sync(), false, true);
+    equal(ping.events.length, 1);
+    equal(ping.events[0].length, 4);
+
+    Service.recordTelemetryEvent("object", "method", "extra");
+    ping = await wait_for_ping(() => Service.sync(), false, true);
+    equal(ping.events.length, 1);
+    equal(ping.events[0].length, 5);
+
+    Service.recordTelemetryEvent("object", "method", undefined, { foo: "bar" });
+    ping = await wait_for_ping(() => Service.sync(), false, true);
+    equal(ping.events.length, 1);
+    equal(ping.events[0].length, 6);
+    [timestamp, category, method, object, value, extra] = ping.events[0];
+    equal(value, null);
+  } finally {
+    Service.engineManager.unregister(engine);
+    await cleanAndGo(engine, server);
+  }
+});
+
+add_task(async function test_invalid_events() {
+  Service.engineManager.register(BogusEngine);
+  let engine = Service.engineManager.get("bogus");
+  engine.enabled = true;
+  let server = serverForUsers({"foo": "password"}, {
+    meta: {global: {engines: {bogus: {version: engine.version, syncID: engine.syncID}}}},
+    steam: {}
+  });
+
+  async function checkNotRecorded(...args) {
+    Service.recordTelemetryEvent.call(args);
+    let ping = await wait_for_ping(() => Service.sync(), false, true);
+    equal(ping.events, undefined);
+  }
+
+  await SyncTestingInfrastructure(server);
+  try {
+    let long21 = "l".repeat(21);
+    let long81 = "l".repeat(81);
+    let long86 = "l".repeat(86);
+    await checkNotRecorded("object");
+    await checkNotRecorded("object", 2);
+    await checkNotRecorded(2, "method");
+    await checkNotRecorded("object", "method", 2);
+    await checkNotRecorded("object", "method", "value", 2);
+    await checkNotRecorded("object", "method", "value", { foo: 2 });
+    await checkNotRecorded(long21, "method", "value");
+    await checkNotRecorded("object", long21, "value");
+    await checkNotRecorded("object", "method", long81);
+    let badextra = {};
+    badextra[long21] = "x";
+    await checkNotRecorded("object", "method", "value", badextra);
+    badextra = { "x": long86 };
+    await checkNotRecorded("object", "method", "value", badextra);
+    for (let i = 0; i < 10; i++) {
+      badextra["name" + i] = "x";
+    }
+    await checkNotRecorded("object", "method", "value", badextra);
+  } finally {
+    Service.engineManager.unregister(engine);
+    await cleanAndGo(engine, server);
+  }
+});

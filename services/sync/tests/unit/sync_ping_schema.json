@@ -20,6 +20,11 @@
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/definitions/payload" }
+    },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/event" }
     }
   },
   "definitions": {
@@ -127,6 +132,11 @@
         "sent": { "type": "integer", "minimum": 1 },
         "failed": { "type": "integer", "minimum": 1 }
       }
+    },
+    "event": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 6
     },
     "error": {
       "oneOf": [
