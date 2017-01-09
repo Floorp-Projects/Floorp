@@ -6,18 +6,25 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 // - Other content strips unescaped spaces
 // - Base64 content strips escaped and unescaped spaces
 var urls = [
+  ["data:,",                                        "text/plain",               ""],
   ["data:,foo",                                     "text/plain",               "foo"],
   ["data:application/octet-stream,foo bar",         "application/octet-stream", "foobar"],
   ["data:application/octet-stream,foo%20bar",       "application/octet-stream", "foo bar"],
   ["data:application/xhtml+xml,foo bar",            "application/xhtml+xml",    "foo bar"],
   ["data:application/xhtml+xml,foo%20bar",          "application/xhtml+xml",    "foo bar"],
   ["data:text/plain,foo%00 bar",                    "text/plain",               "foo\x00 bar"],
+  ["data:text/plain;x=y,foo%00 bar",                "text/plain",               "foo\x00 bar"],
+  ["data:;x=y,foo%00 bar",                          "text/plain",               "foo\x00 bar"],
   ["data:text/plain;base64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"],
   ["DATA:TEXT/PLAIN;BASE64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"],
+  ["DaTa:;BaSe64,Zm9 vI%20GJ%0Dhc%0Ag==",           "text/plain",               "foo bar"],
+  ["data:;x=y;base64,Zm9 vI%20GJ%0Dhc%0Ag==",       "text/plain",               "foo bar"],
   // Bug 774240
   ["data:application/octet-stream;base64=y,foobar", "application/octet-stream", "foobar"],
   // Bug 781693
-  ["data:text/plain;base64;x=y,dGVzdA==",           "text/plain",               "test"]
+  ["data:text/plain;base64;x=y,dGVzdA==",           "text/plain",               "test"],
+  ["data:text/plain;x=y;base64,dGVzdA==",           "text/plain",               "test"],
+  ["data:text/plain;x=y;base64,",                   "text/plain",               ""]
 ];
 
 function run_test() {
