@@ -115,7 +115,7 @@ function processStsHeader(host, header, status, securityInfo) {
   var error = ERROR_NONE;
   if (header != null && securityInfo != null) {
     try {
-      var uri = Services.io.newURI("https://" + host.name, null, null);
+      var uri = Services.io.newURI("https://" + host.name);
       var sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider)
                                   .SSLStatus;
       gSSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS,

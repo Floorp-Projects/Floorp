@@ -178,7 +178,7 @@ SettingsDB.prototype = {
     // data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA...
     if (typeof aValue == "string" && aValue.startsWith("data:")) {
       try {
-        let uri = Services.io.newURI(aValue, null, null);
+        let uri = Services.io.newURI(aValue);
         // XXX: that would be nice to reuse the c++ bits of the data:
         // protocol handler instead.
         let mimeType = "application/octet-stream";

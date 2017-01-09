@@ -62,7 +62,7 @@ function run_test() {
 
   // Now let's simulate overriding the entry by setting an entry from a header
   // with max-age set to 0
-  let uri = Services.io.newURI("https://" + unlikelyHost, null, null);
+  let uri = Services.io.newURI("https://" + unlikelyHost);
   SSService.processHeader(Ci.nsISiteSecurityService.HEADER_HSTS, uri,
                           "max-age=0", sslStatus, 0);
 

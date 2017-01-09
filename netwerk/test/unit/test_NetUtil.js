@@ -226,7 +226,7 @@ function test_newURI()
   // Check that we get the same URI back from the IO service and the utility
   // method.
   const TEST_URI = "http://mozilla.org";
-  let iosURI = ios.newURI(TEST_URI, null, null);
+  let iosURI = ios.newURI(TEST_URI);
   let NetUtilURI = NetUtil.newURI(TEST_URI);
   do_check_true(iosURI.equals(NetUtilURI));
 

@@ -39,7 +39,7 @@ function createURI(urispec)
 {
   var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
                          .getService(Components.interfaces.nsIIOService);
-  return ioServ.newURI(urispec, null, null);
+  return ioServ.newURI(urispec);
 }
 
 function getCacheStorage(where, lci, appcache)

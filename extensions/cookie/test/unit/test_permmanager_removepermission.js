@@ -9,8 +9,8 @@ function run_test() {
   do_check_eq(perm_count(), 0);
 
   // add some permissions
-  let uri = NetUtil.newURI("http://amazon.com:8080/foobarbaz", null, null);
-  let uri2 = NetUtil.newURI("http://google.com:2048/quxx", null, null);
+  let uri = NetUtil.newURI("http://amazon.com:8080/foobarbaz");
+  let uri2 = NetUtil.newURI("http://google.com:2048/quxx");
 
   pm.add(uri, "apple", 0);
   pm.add(uri, "apple", 3);

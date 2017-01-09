@@ -34,7 +34,7 @@ function make_channel(url, cache_control)
 function make_uri(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newURI(url, null, null);
+  return ios.newURI(url);
 }
 
 function resource_age_100_handler(metadata, response)

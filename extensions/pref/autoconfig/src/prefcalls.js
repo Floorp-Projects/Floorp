@@ -160,7 +160,7 @@ function getLDAPAttributes(host, base, filter, attribs, isSecure) {
 
         var url = Components.classes["@mozilla.org/network/io-service;1"]
                             .getService(Components.interfaces.nsIIOService)
-                            .newURI(urlSpec, null, null)
+                            .newURI(urlSpec)
                             .QueryInterface(Components.interfaces.nsILDAPURL);
 
         var ldapquery = Components.classes[LDAPSyncQueryContractID]

@@ -83,7 +83,7 @@ function loadImage(isPrivate, callback) {
   var listener = new ImageListener(null, callback);
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
-  var uri = gIoService.newURI(gImgPath, null, null);
+  var uri = gIoService.newURI(gImgPath);
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;

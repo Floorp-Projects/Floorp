@@ -14,7 +14,7 @@ function check_ip(s, v, ip) {
   }
   str += "/";
 
-  let uri = Services.io.newURI(str, null, null);
+  let uri = Services.io.newURI(str);
 
   let parsedMaxAge = {};
   let parsedIncludeSubdomains = {};

@@ -48,9 +48,9 @@ function run_test() {
 function* test_path_prefix() {
     Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
 
-    const BASE_URI = Services.io.newURI("http://example.org/", null, null);
-    const BASE_BAR = Services.io.newURI("http://example.org/bar/", null, null);
-    const BASE_BARBAR = Services.io.newURI("http://example.org/barbar/", null, null);
+    const BASE_URI = Services.io.newURI("http://example.org/");
+    const BASE_BAR = Services.io.newURI("http://example.org/bar/");
+    const BASE_BARBAR = Services.io.newURI("http://example.org/barbar/");
 
     yield setCookie("session_first", null, null, null, BASE_URI);
     yield setCookie("session_second", null, "/bar", null, BASE_BAR);
@@ -65,10 +65,10 @@ function* test_path_prefix() {
 function* test_localdomain() {
     Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
 
-    const BASE_URI = Services.io.newURI("http://localhost", null, null);
-    const BASE_BAR = Services.io.newURI("http://localhost/bar", null, null);
-    const OTHER_URI = Services.io.newURI("http://other.localhost", null, null);
-    const OTHER_BAR = Services.io.newURI("http://other.localhost/bar", null, null);
+    const BASE_URI = Services.io.newURI("http://localhost");
+    const BASE_BAR = Services.io.newURI("http://localhost/bar");
+    const OTHER_URI = Services.io.newURI("http://other.localhost");
+    const OTHER_BAR = Services.io.newURI("http://other.localhost/bar");
     
     yield setCookie("session_no_path", null, null, null, BASE_URI);
     yield setCookie("session_bar_path", null, "/bar", null, BASE_BAR);
@@ -98,12 +98,12 @@ function* test_domain_or_path_matches_not_both(base_host,
                                                another_subdomain_host) {
     Services.prefs.setIntPref("network.cookie.maxPerHost", 2);
 
-    const BASE_URI = Services.io.newURI("http://" + base_host, null, null);
-    const PUB_FOO_PATH = Services.io.newURI("http://" + subdomain_host + "/foo/", null, null);
-    const WWW_BAR_PATH = Services.io.newURI("http://" + other_subdomain_host + "/bar/", null, null);
-    const OTHER_BAR_PATH = Services.io.newURI("http://" + another_subdomain_host + "/bar/", null, null);
-    const PUB_BAR_PATH = Services.io.newURI("http://" + subdomain_host + "/bar/", null, null);
-    const WWW_FOO_PATH = Services.io.newURI("http://" + other_subdomain_host + "/foo/", null, null);
+    const BASE_URI = Services.io.newURI("http://" + base_host);
+    const PUB_FOO_PATH = Services.io.newURI("http://" + subdomain_host + "/foo/");
+    const WWW_BAR_PATH = Services.io.newURI("http://" + other_subdomain_host + "/bar/");
+    const OTHER_BAR_PATH = Services.io.newURI("http://" + another_subdomain_host + "/bar/");
+    const PUB_BAR_PATH = Services.io.newURI("http://" + subdomain_host + "/bar/");
+    const WWW_FOO_PATH = Services.io.newURI("http://" + other_subdomain_host + "/foo/");
 
     yield setCookie("session_pub_with_foo_path", subdomain_host, "/foo", null, PUB_FOO_PATH);
     yield setCookie("session_www_with_bar_path", other_subdomain_host, "/bar", null, WWW_BAR_PATH);
@@ -122,11 +122,11 @@ function* test_domain_or_path_matches_not_both(base_host,
 function* test_basic_eviction(base_host, subdomain_host, other_subdomain_host) {
     Services.prefs.setIntPref("network.cookie.maxPerHost", 5);
 
-    const BASE_URI = Services.io.newURI("http://" + base_host, null, null);
-    const SUBDOMAIN_URI = Services.io.newURI("http://" + subdomain_host, null, null);
-    const OTHER_SUBDOMAIN_URI = Services.io.newURI("http://" + other_subdomain_host, null, null);
-    const FOO_PATH = Services.io.newURI("http://" + base_host + "/foo/", null, null);
-    const BAR_PATH = Services.io.newURI("http://" + base_host + "/bar/", null, null);
+    const BASE_URI = Services.io.newURI("http://" + base_host);
+    const SUBDOMAIN_URI = Services.io.newURI("http://" + subdomain_host);
+    const OTHER_SUBDOMAIN_URI = Services.io.newURI("http://" + other_subdomain_host);
+    const FOO_PATH = Services.io.newURI("http://" + base_host + "/foo/");
+    const BAR_PATH = Services.io.newURI("http://" + base_host + "/bar/");
     const ALL_SUBDOMAINS = '.' + base_host;
     const OTHER_SUBDOMAIN = other_subdomain_host;
 

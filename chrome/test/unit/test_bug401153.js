@@ -30,7 +30,7 @@ function test_succeeded_mapping(namespace, target)
 {
   try {
     do_check_true(rph.hasSubstitution(namespace));
-    var uri = gIOS.newURI("resource://" + namespace, null, null);
+    var uri = gIOS.newURI("resource://" + namespace);
     dump("### checking for " + target + ", getting " + rph.resolveURI(uri) + "\n");
     do_check_eq(rph.resolveURI(uri), target);
   }

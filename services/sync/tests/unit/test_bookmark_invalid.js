@@ -16,7 +16,7 @@ add_task(async function test_ignore_invalid_uri() {
 
   // First create a valid bookmark.
   let bmid = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                  Services.io.newURI("http://example.com/", null, null),
+                                                  Services.io.newURI("http://example.com/"),
                                                   PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                   "the title");
 
@@ -39,7 +39,7 @@ add_task(async function test_ignore_missing_uri() {
 
   // First create a valid bookmark.
   let bmid = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                                  Services.io.newURI("http://example.com/", null, null),
+                                                  Services.io.newURI("http://example.com/"),
                                                   PlacesUtils.bookmarks.DEFAULT_INDEX,
                                                   "the title");
 

@@ -59,7 +59,7 @@ var healthReportWrapper = {
   _getReportURI: function () {
     let url = Services.urlFormatter.formatURLPref(PREF_REPORTURL);
     // This handles URLs that already have query parameters.
-    let uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
+    let uri = Services.io.newURI(url).QueryInterface(Ci.nsIURL);
     uri.query += ((uri.query != "") ? "&v=" : "v=") + WRAPPER_VERSION;
     return uri;
   },

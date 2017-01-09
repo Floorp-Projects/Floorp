@@ -231,7 +231,7 @@ add_test(function test_unsubscribe_error() {
 
 add_test(function test_subscribe_app_principal() {
   let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
-    Services.io.newURI('https://example.net/app/1', null, null),
+    Services.io.newURI('https://example.net/app/1'),
     1, /* appId */
     true /* browserOnly */
   );

@@ -26,7 +26,7 @@ var observer = {
       subject.QueryInterface(Components.interfaces.nsIHttpChannel);
       currentReferrer = subject.getRequestHeader("Referer");
       do_check_eq(currentReferrer, "http://site1.com/");
-      var uri = ios.newURI("http://site2.com", null, null);
+      var uri = ios.newURI("http://site2.com");
       subject.referrer = uri;
     } catch (ex) {
       do_throw("Exception: " + ex);
@@ -47,7 +47,7 @@ var listener = {
       request.QueryInterface(Components.interfaces.nsIHttpChannel);
       currentReferrer = request.getRequestHeader("Referer");
       do_check_eq(currentReferrer, "http://site2.com/");
-      var uri = ios.newURI("http://site3.com/", null, null);
+      var uri = ios.newURI("http://site3.com/");
 
       // Need to set NECKO_ERRORS_ARE_FATAL=0 else we'll abort process
       var env = Components.classes["@mozilla.org/process/environment;1"].
@@ -77,7 +77,7 @@ function makeChan(url) {
                     .QueryInterface(Components.interfaces.nsIHttpChannel);
 
   // ENSURE_CALLED_BEFORE_CONNECT: set original value
-  var uri = ios.newURI("http://site1.com", null, null);
+  var uri = ios.newURI("http://site1.com");
   chan.referrer = uri;
 
   return chan;

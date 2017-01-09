@@ -27,7 +27,7 @@ const registerSDKURI = () => {
                                    .QueryInterface(Ci.nsIResProtocolHandler);
 
   const uri = module.uri.replace("dev/toolbox.js", "");
-  resourceHandler.setSubstitution("sdk", ioService.newURI(uri, null, null));
+  resourceHandler.setSubstitution("sdk", ioService.newURI(uri));
 };
 
 registerSDKURI();

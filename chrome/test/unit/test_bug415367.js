@@ -12,7 +12,7 @@ function test_uri(obj)
   var failed = false;
   var message = "";
   try {
-    uri = gIOS.newURI(obj.uri, null, null);
+    uri = gIOS.newURI(obj.uri);
     if (!obj.result) {
       failed = true;
       message = obj.uri + " should not be accepted as a valid URI";

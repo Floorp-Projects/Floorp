@@ -20,7 +20,7 @@ var remoteShell = {
   _started: false,
 
   get homeURL() {
-    let systemAppManifestURL = Services.io.newURI(this.systemAppManifestURL, null, null);
+    let systemAppManifestURL = Services.io.newURI(this.systemAppManifestURL);
     let shellRemoteURL = Services.prefs.getCharPref("b2g.multiscreen.system_remote_url");
     shellRemoteURL = Services.io.newURI(shellRemoteURL, null, systemAppManifestURL);
     return shellRemoteURL.spec;

@@ -164,7 +164,7 @@ function reset_predictor() {
 }
 
 function newURI(s) {
-  return Services.io.newURI(s, null, null);
+  return Services.io.newURI(s);
 }
 
 var prepListener = {
