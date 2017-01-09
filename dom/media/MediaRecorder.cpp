@@ -515,6 +515,10 @@ public:
       // End the Session directly if there is no ExtractRunnable.
       DoSessionEndTask(NS_OK);
     }
+    // If we don't do this, the Session will be purged only when the navigator exit
+    // by the ShutdownObserver and the memory and number of threads will quickly
+    // grows with each couple stop/start.
+    nsContentUtils::UnregisterShutdownObserver(this);
   }
 
   nsresult Pause()
@@ -592,6 +596,7 @@ private:
       mReadThread = nullptr;
       // Inside the if() so that if we delete after xpcom-shutdown's Observe(), we
       // won't try to remove it after the observer service is shut down.
+      // Unregistering for safety in case Stop() was never called
       nsContentUtils::UnregisterShutdownObserver(this);
     }
   }
@@ -824,6 +829,17 @@ private:
     mInputPorts.Clear();
 
     if (mTrackUnionStream) {
+      if (mEncoder) {
+        nsTArray<RefPtr<mozilla::dom::VideoStreamTrack>> videoTracks;
+        DOMMediaStream* domStream = mRecorder->Stream();
+        if (domStream) {
+          domStream->GetVideoTracks(videoTracks);
+          if (!videoTracks.IsEmpty()) {
+            videoTracks[0]->RemoveDirectListener(mEncoder->GetVideoSink());
+          }
+        }
+      }
+
       // Sometimes the MediaEncoder might be initialized fail and go to
       // |CleanupStreams|. So the mEncoder might be a nullptr in this case.
       if (mEncoder && mSelectedVideoTrackID != TRACK_NONE) {
