@@ -94,7 +94,7 @@ function resolveURIToLocalPath(aURI) {
     case "resource":
       resolved = Cc["@mozilla.org/network/protocol;1?name=resource"].
                  getService(Ci.nsIResProtocolHandler).resolveURI(aURI);
-      aURI = Services.io.newURI(resolved, null, null);
+      aURI = Services.io.newURI(resolved);
       return resolveURIToLocalPath(aURI);
 
     default:
@@ -234,7 +234,7 @@ let SourceActor = ActorClassWithSpec(sourceSpec, {
 
   _mapSourceToAddon: function () {
     try {
-      var nsuri = Services.io.newURI(this.url.split(" -> ").pop(), null, null);
+      var nsuri = Services.io.newURI(this.url.split(" -> ").pop());
     }
     catch (e) {
       // We can't do anything with an invalid URI

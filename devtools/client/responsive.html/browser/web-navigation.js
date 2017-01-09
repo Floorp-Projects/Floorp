@@ -106,7 +106,7 @@ BrowserElementWebNavigation.prototype = {
   _currentURI: null,
   get currentURI() {
     if (!this._currentURI) {
-      this._currentURI = Services.io.newURI("about:blank", null, null);
+      this._currentURI = Services.io.newURI("about:blank");
     }
     return this._currentURI;
   },

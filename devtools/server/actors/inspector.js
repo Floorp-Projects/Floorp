@@ -2790,7 +2790,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
       return url;
     }
 
-    let baseURI = Services.io.newURI(document.location.href, null, null);
+    let baseURI = Services.io.newURI(document.location.href);
     return Services.io.newURI(url, null, baseURI).spec;
   },
 
