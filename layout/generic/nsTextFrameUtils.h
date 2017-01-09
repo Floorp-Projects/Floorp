@@ -100,7 +100,7 @@ public:
    * compressed. A preformatted tab is sent to the text run as a single space.
    * (Tab spacing must be performed by textframe later.) Certain other
    * characters are discarded.
-   * 
+   *
    * @param aCompression control what is compressed to a
    * single space character: no compression, compress spaces (not followed
    * by combining mark) and tabs, compress those plus newlines, or
