@@ -444,11 +444,11 @@ class RTCPeerConnection {
 
     // Warn just once per PeerConnection about deprecated getStats usage.
     this._warnDeprecatedStatsAccessNullable = { warn: () =>
-      this.logWarning("non-maplike pc.getStats access is deprecated! " +
+      this.logWarning("non-maplike pc.getStats access is deprecated, and will be removed in the near future! " +
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     this._warnDeprecatedStatsCallbacksNullable = { warn: () =>
-      this.logWarning("Callback-based pc.getStats is deprecated! Use promise-version! " +
+      this.logWarning("Callback-based pc.getStats is deprecated, and will be removed in the near future! Use promise-version! " +
                       "See http://w3c.github.io/webrtc-pc/#getstats-example for usage.") };
 
     // Add a reference to the PeerConnection to global list (before init).
