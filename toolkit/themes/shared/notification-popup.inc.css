@@ -7,5 +7,7 @@
    * that the height of the contents is computed correctly in that case. */
   padding: 0;
   overflow: hidden;
-  display: block;
+  display: flex;
+  /* Make multiple popupnotifications stack vertically. */
+  flex-direction: column;
 }
