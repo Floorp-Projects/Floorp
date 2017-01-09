@@ -2243,6 +2243,11 @@ public:
 
   CORSMode GetCORSMode() const override
   {
+    if (!mCapturedTrackSource) {
+      // This could happen during shutdown.
+      return CORS_NONE;
+    }
+
     return mCapturedTrackSource->GetCORSMode();
   }
 
@@ -2265,6 +2270,11 @@ public:
 
   void PrincipalChanged() override
   {
+    if (!mCapturedTrackSource) {
+      // This could happen during shutdown.
+      return;
+    }
+
     mPrincipal = mCapturedTrackSource->GetPrincipal();
     MediaStreamTrackSource::PrincipalChanged();
   }
@@ -2306,10 +2316,12 @@ public:
 
   void Destroy() override
   {
-    MOZ_ASSERT(mElement);
-    DebugOnly<bool> res = mElement->RemoveDecoderPrincipalChangeObserver(this);
-    NS_ASSERTION(res, "Removing decoder principal changed observer failed. "
-                      "Had it already been removed?");
+    if (mElement) {
+      DebugOnly<bool> res = mElement->RemoveDecoderPrincipalChangeObserver(this);
+      NS_ASSERTION(res, "Removing decoder principal changed observer failed. "
+                        "Had it already been removed?");
+      mElement = nullptr;
+    }
   }
 
   MediaSourceEnum GetMediaSource() const override
@@ -2319,6 +2331,11 @@ public:
 
   CORSMode GetCORSMode() const override
   {
+    if (!mElement) {
+      MOZ_ASSERT(false, "Should always have an element if in use");
+      return CORS_NONE;
+    }
+
     return mElement->GetCORSMode();
   }
 
