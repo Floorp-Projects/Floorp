@@ -67,6 +67,9 @@
       img.src = testPNG50;
       is(img.currentSrc, testPNG50, "Should have synchronously selected source");
 
+      // Assigning a wrong URL should not trigger error event (bug 1321300).
+      img.src = '//:0'; // Wrong URL
+
       img.src = "non_existent_image.404";
       ok(img.currentSrc.endsWith("non_existent_image.404"), "Should have synchronously selected source");
 
