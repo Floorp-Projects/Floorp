@@ -198,13 +198,11 @@ public:
   virtual void HandleVideoWaited(MediaData::Type aType);
   virtual void HandleNotWaited(const WaitForDataRejectValue& aRejection);
   virtual void HandleEndOfStream() {}
-  virtual void HandleWaitingForData() {}
   virtual void HandleAudioCaptured() {}
 
   virtual void HandleWaitingForAudio()
   {
     mMaster->WaitForData(MediaData::AUDIO_DATA);
-    HandleWaitingForData();
   }
 
   virtual void HandleAudioCanceled()
@@ -221,7 +219,6 @@ public:
   virtual void HandleWaitingForVideo()
   {
     mMaster->WaitForData(MediaData::VIDEO_DATA);
-    HandleWaitingForData();
   }
 
   virtual void HandleVideoCanceled()
@@ -667,8 +664,15 @@ public:
 
   void HandleEndOfStream() override;
 
-  void HandleWaitingForData() override
+  void HandleWaitingForAudio() override
   {
+    mMaster->WaitForData(MediaData::AUDIO_DATA);
+    MaybeStopPrerolling();
+  }
+
+  void HandleWaitingForVideo() override
+  {
+    mMaster->WaitForData(MediaData::VIDEO_DATA);
     MaybeStopPrerolling();
   }
 
