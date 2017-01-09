@@ -98,6 +98,9 @@ private:
                    nsTArray<CryptoBuffer>& aAllowList,
                    const WebAuthnExtensions& aExtensions);
 
+  nsresult
+  RelaxSameOrigin(const nsAString& aInputRpId, nsACString& aRelaxedRpId);
+
   nsCOMPtr<nsPIDOMWindowInner> mParent;
   nsString mOrigin;
   Sequence<Authenticator> mAuthenticators;
