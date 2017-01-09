@@ -501,7 +501,7 @@ function openCacheEntry(key, cb) {
       cb(entry);
     }
   };
-  diskStorage.asyncOpenURI(Services.io.newURI(key, null, null), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
+  diskStorage.asyncOpenURI(Services.io.newURI(key), "", nsICacheStorage.OPEN_READONLY, checkCacheListener);
 }
 
 function makeGeneralTab(metaViewRows, docInfo) {

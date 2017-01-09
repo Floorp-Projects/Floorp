@@ -23,7 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "gPrincipal", function() {
-  let uri = Services.io.newURI("about:newtab", null, null);
+  let uri = Services.io.newURI("about:newtab");
   return Services.scriptSecurityManager.getNoAppCodebasePrincipal(uri);
 });
 

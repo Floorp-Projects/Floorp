@@ -210,7 +210,7 @@ add_task(function* checkUndoRemoval() {
 
   // Insert 2 history visits
   let now_uSec = Date.now() * 1000;
-  let visitedURI = Services.io.newURI("http://www.example.com/", null, null);
+  let visitedURI = Services.io.newURI("http://www.example.com/");
   let frecencyUpdatePromise = new Promise(resolve => {
     let expectedChanges = 2;
     let observer = {

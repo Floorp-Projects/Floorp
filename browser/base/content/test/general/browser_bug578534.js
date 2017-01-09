@@ -5,7 +5,7 @@
 function test() {
   let uriString = "http://example.com/";
   let cookieBehavior = "network.cookie.cookieBehavior";
-  let uriObj = Services.io.newURI(uriString, null, null)
+  let uriObj = Services.io.newURI(uriString)
   let cp = Components.classes["@mozilla.org/cookie/permission;1"]
                      .getService(Components.interfaces.nsICookiePermission);
 

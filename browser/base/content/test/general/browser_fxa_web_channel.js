@@ -86,7 +86,7 @@ var gTests = [
 
       let promiseEcho = new Promise((resolve, reject) => {
 
-        let webChannelOrigin = Services.io.newURI(properUrl, null, null);
+        let webChannelOrigin = Services.io.newURI(properUrl);
         // responses sent to content are echoed back over the
         // `fxaccounts_webchannel_response_echo` channel. Ensure the
         // fxaccounts:can_link_account message is responded to.

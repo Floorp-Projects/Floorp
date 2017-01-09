@@ -16,10 +16,10 @@ add_task(function* testPermissionsListing() {
 add_task(function* testGetAllByURI() {
   // check that it returns an empty array on an invalid URI
   // like a file URI, which doesn't support site permissions
-  let wrongURI = Services.io.newURI("file:///example.js", null, null)
+  let wrongURI = Services.io.newURI("file:///example.js")
   Assert.deepEqual(SitePermissions.getAllByURI(wrongURI), []);
 
-  let uri = Services.io.newURI("https://example.com", null, null)
+  let uri = Services.io.newURI("https://example.com")
   Assert.deepEqual(SitePermissions.getAllByURI(uri), []);
 
   SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
@@ -55,10 +55,10 @@ add_task(function* testGetAllByURI() {
 add_task(function* testGetPermissionDetailsByURI() {
   // check that it returns an empty array on an invalid URI
   // like a file URI, which doesn't support site permissions
-  let wrongURI = Services.io.newURI("file:///example.js", null, null)
+  let wrongURI = Services.io.newURI("file:///example.js")
   Assert.deepEqual(SitePermissions.getPermissionDetailsByURI(wrongURI), []);
 
-  let uri = Services.io.newURI("https://example.com", null, null)
+  let uri = Services.io.newURI("https://example.com")
 
   SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
   SitePermissions.set(uri, "cookie", SitePermissions.SESSION);

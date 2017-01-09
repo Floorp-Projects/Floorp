@@ -83,7 +83,7 @@ this.ControlCenter = {
 
     singlePermission: {
       applyConfig: Task.async(function* () {
-        let uri = Services.io.newURI(PERMISSIONS_PAGE, null, null)
+        let uri = Services.io.newURI(PERMISSIONS_PAGE)
         SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
 
         yield loadPage(PERMISSIONS_PAGE);
@@ -95,7 +95,7 @@ this.ControlCenter = {
       applyConfig: Task.async(function* () {
         // there are 3 possible non-default permission states, so we alternate between them
         let states = [SitePermissions.ALLOW, SitePermissions.BLOCK, SitePermissions.SESSION];
-        let uri = Services.io.newURI(PERMISSIONS_PAGE, null, null)
+        let uri = Services.io.newURI(PERMISSIONS_PAGE)
         SitePermissions.listPermissions().forEach(function(permission, index) {
           SitePermissions.set(uri, permission, states[index % 3]);
         });

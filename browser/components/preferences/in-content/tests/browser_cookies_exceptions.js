@@ -65,7 +65,7 @@ var testRunner = {
       {
         expectPermObservancesDuringTestFunction: true,
         test(params) {
-          let uri = params.ioService.newURI("http://test.com", null, null);
+          let uri = params.ioService.newURI("http://test.com");
           params.pm.add(uri, "popup", Ci.nsIPermissionManager.DENY_ACTION);
           is(params.tree.view.rowCount, 0, "adding unrelated permission should not change display");
           params.btnApplyChanges.doCommand();
@@ -73,7 +73,7 @@ var testRunner = {
         observances: [{ type: "popup", origin: "http://test.com", data: "added",
                         capability: Ci.nsIPermissionManager.DENY_ACTION }],
         cleanUp(params) {
-          let uri = params.ioService.newURI("http://test.com", null, null);
+          let uri = params.ioService.newURI("http://test.com");
           params.pm.remove(uri, "popup");
         },
       },
@@ -179,7 +179,7 @@ var testRunner = {
         expectPermObservancesDuringTestFunction: true,
         test(params) {
           for (let URL of ["http://a", "http://z", "http://b"]) {
-            let URI = params.ioService.newURI(URL, null, null);
+            let URI = params.ioService.newURI(URL);
             params.pm.add(URI, "cookie", Ci.nsIPermissionManager.ALLOW_ACTION);
           }
 
@@ -211,7 +211,7 @@ var testRunner = {
              "site should be sorted. 'a' should be third");
 
           for (let URL of ["http://a", "http://z", "http://b"]) {
-            let uri = params.ioService.newURI(URL, null, null);
+            let uri = params.ioService.newURI(URL);
             params.pm.remove(uri, "cookie");
           }
         },

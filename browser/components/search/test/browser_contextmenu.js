@@ -21,7 +21,7 @@ add_task(function* () {
                         .QueryInterface(Ci.nsIResProtocolHandler);
   let originalSubstitution = resProt.getSubstitution("search-plugins");
   resProt.setSubstitution("search-plugins",
-                          Services.io.newURI(url, null, null));
+                          Services.io.newURI(url));
 
   let searchDonePromise;
   yield new Promise(resolve => {
