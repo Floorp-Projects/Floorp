@@ -23,6 +23,7 @@
 #include "nsProxyRelease.h"
 #include "nsWrapperCache.h"
 
+#include "U2FAuthenticator.h"
 #include "USBToken.h"
 
 namespace mozilla {
@@ -53,19 +54,6 @@ struct LocalRegisteredKey
   // Nullable<nsTArray<Transport>> mTransports;
 };
 
-// These enumerations are defined in the FIDO U2F Javascript API under the
-// interface "ErrorCode" as constant integers, and thus in the U2F.webidl file.
-// Any changes to these must occur in both locations.
-enum class ErrorCode {
-  OK = 0,
-  OTHER_ERROR = 1,
-  BAD_REQUEST = 2,
-  CONFIGURATION_UNSUPPORTED = 3,
-  DEVICE_INELIGIBLE = 4,
-  TIMEOUT = 5
-};
-
-typedef nsCOMPtr<nsIU2FToken> Authenticator;
 typedef MozPromise<nsString, ErrorCode, false> U2FPromise;
 typedef MozPromise<Authenticator, ErrorCode, false> U2FPrepPromise;
 
