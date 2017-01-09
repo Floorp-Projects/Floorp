@@ -5,8 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+    'CTDiversityPolicyTest.cpp',
     'CTLogVerifierTest.cpp',
     'CTObjectsExtractorTest.cpp',
+    'CTPolicyEnforcerTest.cpp',
     'CTSerializationTest.cpp',
     'CTTestUtils.cpp',
     'MultiLogCTVerifierTest.cpp',
