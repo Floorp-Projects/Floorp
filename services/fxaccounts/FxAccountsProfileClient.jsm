@@ -75,19 +75,21 @@ this.FxAccountsProfileClient.prototype = {
    *        Profile server path, i.e "/profile".
    * @param {String} [method]
    *        Type of request, i.e "GET".
+   * @param {String} [etag]
+   *        Optional ETag used for caching purposes.
    * @return Promise
-   *         Resolves: {Object} Successful response from the Profile server.
+   *         Resolves: {body: Object, etag: Object} Successful response from the Profile server.
    *         Rejects: {FxAccountsProfileClientError} Profile client error.
    * @private
    */
-  _createRequest: Task.async(function* (path, method = "GET") {
+  _createRequest: Task.async(function* (path, method = "GET", etag = null) {
     let token = this.token;
     if (!token) {
       // tokens are cached, so getting them each request is cheap.
       token = yield this.fxa.getOAuthToken(this.oauthOptions);
     }
     try {
-      return (yield this._rawRequest(path, method, token));
+      return (yield this._rawRequest(path, method, token, etag));
     } catch (ex) {
       if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
         throw ex;
@@ -103,7 +105,7 @@ this.FxAccountsProfileClient.prototype = {
       // and try with the new token - if that also fails then we fail after
       // revoking the token.
       try {
-        return (yield this._rawRequest(path, method, token));
+        return (yield this._rawRequest(path, method, token, etag));
       } catch (ex) {
         if (!(ex instanceof FxAccountsProfileClientError) || ex.code != 401) {
           throw ex;
@@ -123,12 +125,13 @@ this.FxAccountsProfileClient.prototype = {
    * @param {String} method
    *        Type of request, i.e "GET".
    * @param {String} token
+   * @param {String} etag
    * @return Promise
-   *         Resolves: {Object} Successful response from the Profile server.
+   *         Resolves: {body: Object, etag: Object} Successful response from the Profile server.
    *         Rejects: {FxAccountsProfileClientError} Profile client error.
    * @private
    */
-  _rawRequest(path, method, token) {
+  _rawRequest(path, method, token, etag) {
     return new Promise((resolve, reject) => {
       let profileDataUrl = this.serverURL + path;
       let request = new this._Request(profileDataUrl);
@@ -136,6 +139,9 @@ this.FxAccountsProfileClient.prototype = {
 
       request.setHeader("Authorization", "Bearer " + token);
       request.setHeader("Accept", "application/json");
+      if (etag) {
+        request.setHeader("If-None-Match", etag);
+      }
 
       request.onComplete = function(error) {
         if (error) {
@@ -160,7 +166,10 @@ this.FxAccountsProfileClient.prototype = {
 
         // "response.success" means status code is 200
         if (request.response.success) {
-          return resolve(body);
+          return resolve({
+            body,
+            etag: request.response.headers["etag"]
+          });
         } else {
           return reject(new FxAccountsProfileClientError({
             error: body.error || ERROR_UNKNOWN,
@@ -188,25 +197,15 @@ this.FxAccountsProfileClient.prototype = {
   /**
    * Retrieve user's profile from the server
    *
+   * @param {String} [etag]
+   *        Optional ETag used for caching purposes. (may generate a 304 exception)
    * @return Promise
-   *         Resolves: {Object} Successful response from the '/profile' endpoint.
+   *         Resolves: {body: Object, etag: Object} Successful response from the '/profile' endpoint.
    *         Rejects: {FxAccountsProfileClientError} profile client error.
    */
-  fetchProfile() {
+  fetchProfile(etag) {
     log.debug("FxAccountsProfileClient: Requested profile");
-    return this._createRequest("/profile", "GET");
-  },
-
-  /**
-   * Retrieve user's profile from the server
-   *
-   * @return Promise
-   *         Resolves: {Object} Successful response from the '/avatar' endpoint.
-   *         Rejects: {FxAccountsProfileClientError} profile client error.
-   */
-  fetchProfileImage() {
-    log.debug("FxAccountsProfileClient: Requested avatar");
-    return this._createRequest("/avatar", "GET");
+    return this._createRequest("/profile", "GET", etag);
   }
 };
 
