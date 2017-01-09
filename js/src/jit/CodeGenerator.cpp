@@ -5191,6 +5191,7 @@ DumpTrackedSite(const BytecodeSite* site)
     if (!JitSpewEnabled(JitSpew_OptimizationTracking))
         return;
 
+#ifdef JS_JITSPEW
     unsigned column = 0;
     unsigned lineNumber = PCToLineNumber(site->script(), site->pc(), &column);
     JitSpew(JitSpew_OptimizationTracking, "Types for %s at %s:%u:%u",
@@ -5198,6 +5199,7 @@ DumpTrackedSite(const BytecodeSite* site)
             site->script()->filename(),
             lineNumber,
             column);
+#endif
 }
 
 static void
