@@ -78,6 +78,11 @@ module.exports = createClass({
       {
         className: "viewport",
       },
+      ViewportDimension({
+        viewport,
+        onChangeViewportDevice,
+        onResizeViewport,
+      }),
       ResizableViewport({
         devices,
         location,
@@ -90,11 +95,6 @@ module.exports = createClass({
         onResizeViewport,
         onRotateViewport,
         onUpdateDeviceModalOpen,
-      }),
-      ViewportDimension({
-        viewport,
-        onChangeViewportDevice,
-        onResizeViewport,
       })
     );
   },

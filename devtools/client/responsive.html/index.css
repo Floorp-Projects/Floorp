@@ -350,7 +350,7 @@ select > option.divider {
   display: flex;
   justify-content: center;
   font: 10px sans-serif;
-  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .viewport-dimension-editable {
