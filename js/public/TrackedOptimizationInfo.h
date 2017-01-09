@@ -60,6 +60,14 @@ namespace JS {
                                                         \
     _(InlineCache_OptimizedStub)                        \
                                                         \
+    _(NewArray_TemplateObject)                          \
+    _(NewArray_SharedCache)                             \
+    _(NewArray_Call)                                    \
+                                                        \
+    _(NewObject_TemplateObject)                         \
+    _(NewObject_SharedCache)                            \
+    _(NewObject_Call)                                   \
+                                                        \
     _(Call_Inline)
 
 
@@ -120,6 +128,10 @@ namespace JS {
     _(UnknownSimdProperty)                                              \
     _(NotModuleNamespace)                                               \
     _(UnknownProperty)                                                  \
+    _(NoTemplateObject)                                                 \
+    _(TemplateObjectIsUnboxedWithoutInlineElements)                     \
+    _(TemplateObjectIsPlainObjectWithDynamicSlots)                      \
+    _(LengthTooBig)                                                     \
                                                                         \
     _(ICOptStub_GenericSuccess)                                         \
                                                                         \
