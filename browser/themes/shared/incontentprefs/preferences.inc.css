@@ -421,9 +421,6 @@ description > html|a {
 }
 
 #noFxaAccount {
-  /* Overriding the margins from the base preferences.css theme file.
-     These overrides can be simplified by fixing bug 1027174 */
-  margin: 0;
   padding-top: 15px;
 }
 
