@@ -12,6 +12,7 @@
 #include "jit/CompactBuffer.h"
 #include "jit/CompileInfo.h"
 #include "jit/JitAllocPolicy.h"
+#include "jit/JitSpewer.h"
 #include "js/TrackedOptimizationInfo.h"
 #include "vm/TypeInference.h"
 
