@@ -5,6 +5,7 @@
 
 #include "nsWindowsShellService.h"
 
+#include "city.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "mozilla/gfx/2D.h"
@@ -96,24 +97,29 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 // The setting of these values are made by an external binary since writing
 // these values may require elevation.
 //
+// To allow multiple installations to coexist, identifiers written to the
+// registry include a hash of the installation path. This is referred to as
+// <PathHash> in the tables below.
+//
 // - File Extension Mappings
 //   -----------------------
 //   The following file extensions:
-//    .htm .html .shtml .xht .xhtml 
+//    .htm .html .shtml .xht .xhtml
 //   are mapped like so:
 //
-//   HKCU\SOFTWARE\Classes\.<ext>\      (default)         REG_SZ     FirefoxHTML
+//   HKCU\SOFTWARE\Classes\.<ext>\      (default)         REG_SZ     FirefoxHTML-<PathHash>
 //
 //   as aliases to the class:
 //
-//   HKCU\SOFTWARE\Classes\FirefoxHTML\
+//   HKCU\SOFTWARE\Classes\FirefoxHTML-<PathHash>\
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
 //     shell\open\command               (default)         REG_SZ     <apppath> -osint -url "%1"
 //     shell\open\ddeexec               (default)         REG_SZ     <empty string>
 //
 // - Windows Vista and above Protocol Handler
 //
-//   HKCU\SOFTWARE\Classes\FirefoxURL\  (default)         REG_SZ     <appname> URL
+//   HKCU\SOFTWARE\Classes\FirefoxURL-<PathHash>\
+//                                      (default)         REG_SZ     <appname> URL
 //                                      EditFlags         REG_DWORD  2
 //                                      FriendlyTypeName  REG_SZ     <appname> URL
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,1
@@ -135,8 +141,8 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 //   -------------------------------------------------
 //   The following keys are set to make Firefox appear in the Start Menu as the
 //   browser:
-//   
-//   HKCU\SOFTWARE\Clients\StartMenuInternet\FIREFOX.EXE\
+//
+//   HKCU\SOFTWARE\Clients\StartMenuInternet\<appname>-<PathHash>\
 //                                      (default)         REG_SZ     <appname>
 //     DefaultIcon                      (default)         REG_SZ     <apppath>,0
 //     InstallInfo                      HideIconsCommand  REG_SZ     <uninstpath> /HideShortcuts
@@ -149,6 +155,26 @@ OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 //     shell\safemode                   (default)         REG_SZ     <appname> &Safe Mode
 //     shell\safemode\command           (default)         REG_SZ     <apppath> -safe-mode
 //
+// - RegisteredApplications
+//   -------------------------------------------------
+//   This entry creates the listing in Default Apps for Windows 8 and up and in
+//   Set Program Access and Defaults (SPAD) on older versions.
+//
+//   HKCU\Software\RegisteredApplications\
+//     Firefox-<PathHash>  REG_SZ "Software\Clients\StartMenuInternet\<appname>-<PathHash>\Capabilities"
+//   HKCU\Software\Clients\StartMenuInternet\<appname>-<PathHash>\Capabilities\
+//                                      ApplicationDescription  REG_SZ  <branding description>
+//                                      ApplicationIcon         REG_SZ  <apppath>,0
+//                                      ApplicationName         REG_SZ  <appname>
+//     FileAssociations                 .htm                    REG_SZ  FirefoxHTML-<PathHash>
+//     FileAssociations                 .html                   REG_SZ  FirefoxHTML-<PathHash>
+//     FileAssociations                 .shtml                  REG_SZ  FirefoxHTML-<PathHash>
+//     FileAssociations                 .xht                    REG_SZ  FirefoxHTML-<PathHash>
+//     FileAssociations                 .xhtml                  REG_SZ  FirefoxHTML-<PathHash>
+//     StartMenu                        StartMenuInternet       REG_SZ  <appname>-<PathHash>
+//     URLAssociations                  ftp                     REG_SZ  FirefoxURL-<PathHash>
+//     URLAssociations                  http                    REG_SZ  FirefoxURL-<PathHash>
+//     URLAssociations                  https                   REG_SZ  FirefoxURL-<PathHash>
 
 // The values checked are all default values so the value name is not needed.
 typedef struct {
@@ -157,7 +183,7 @@ typedef struct {
   const char* oldValueData;
 } SETTING;
 
-#define APP_REG_NAME L"Firefox"
+#define APP_REG_NAME_BASE L"Firefox-"
 #define VAL_FILE_ICON "%APPPATH%,1"
 #define VAL_OPEN "\"%APPPATH%\" -osint -url \"%1\""
 #define OLD_VAL_OPEN "\"%APPPATH%\" -requestPending -osint -url \"%1\""
@@ -215,7 +241,7 @@ nsresult
 GetHelperPath(nsAutoString& aPath)
 {
   nsresult rv;
-  nsCOMPtr<nsIProperties> directoryService = 
+  nsCOMPtr<nsIProperties> directoryService =
     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -341,7 +367,7 @@ IsAARDefault(const RefPtr<IApplicationAssociationRegistration>& pAAR,
   }
 
   LPCWSTR progID = isProtocol ? L"FirefoxURL" : L"FirefoxHTML";
-  bool isDefault = !wcsicmp(registeredApp, progID);
+  bool isDefault = !wcsnicmp(registeredApp, progID, wcslen(progID));
   CoTaskMemFree(registeredApp);
 
   return isDefault;
@@ -370,6 +396,38 @@ IsDefaultBrowserWin8(bool aCheckAllTypes, bool* aIsDefaultBrowser)
   }
 }
 
+static nsresult
+GetAppRegName(nsAutoString &aAppRegName)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirSvc =
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> exeFile;
+  rv = dirSvc->Get(XRE_EXECUTABLE_FILE,
+                   NS_GET_IID(nsIFile),
+                   getter_AddRefs(exeFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> appDir;
+  rv = exeFile->GetParent(getter_AddRefs(appDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString path;
+  rv = appDir->GetPath(path);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint64_t hash = CityHash64(static_cast<const char *>(path.get()),
+                             path.Length() * sizeof(nsAutoString::char_type));
+
+  aAppRegName = APP_REG_NAME_BASE;
+  aAppRegName.AppendInt((int)hash, 16);
+  aAppRegName.AppendInt((int)(hash >> 32), 16);
+
+  return rv;
+}
+
 /*
  * Query's the AAR for the default status.
  * This only checks for FirefoxURL and if aCheckAllTypes is set, then
@@ -392,8 +450,10 @@ nsWindowsShellService::IsDefaultBrowserVista(bool aCheckAllTypes,
 
   if (aCheckAllTypes) {
     BOOL res;
+    nsAutoString appRegName;
+    GetAppRegName(appRegName);
     hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
-                                    APP_REG_NAME,
+                                    appRegName.get(),
                                     &res);
     *aIsDefaultBrowser = res;
   } else if (!IsWin8OrLater()) {
@@ -637,7 +697,9 @@ nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI()
                                 IID_IApplicationAssociationRegistrationUI,
                                 (void**)&pAARUI);
   if (SUCCEEDED(hr)) {
-    hr = pAARUI->LaunchAdvancedAssociationUI(APP_REG_NAME);
+    nsAutoString appRegName;
+    GetAppRegName(appRegName);
+    hr = pAARUI->LaunchAdvancedAssociationUI(appRegName.get());
     pAARUI->Release();
   }
   return SUCCEEDED(hr) ? NS_OK : NS_ERROR_FAILURE;
@@ -659,14 +721,17 @@ nsWindowsShellService::LaunchControlPanelDefaultPrograms()
     return NS_ERROR_FAILURE;
   }
 
-  WCHAR params[] = L"control.exe /name Microsoft.DefaultPrograms /page "
-    "pageDefaultProgram\\pageAdvancedSettings?pszAppName=" APP_REG_NAME;
+  nsAutoString params(NS_LITERAL_STRING("control.exe /name Microsoft.DefaultPrograms "
+    "/page pageDefaultProgram\\pageAdvancedSettings?pszAppName="));
+  nsAutoString appRegName;
+  GetAppRegName(appRegName);
+  params.Append(appRegName);
   STARTUPINFOW si = {sizeof(si), 0};
   si.dwFlags = STARTF_USESHOWWINDOW;
   si.wShowWindow = SW_SHOWDEFAULT;
   PROCESS_INFORMATION pi = {0};
-  if (!CreateProcessW(controlEXEPath, params, nullptr, nullptr, FALSE,
-                      0, nullptr, nullptr, &si, &pi)) {
+  if (!CreateProcessW(controlEXEPath, static_cast<LPWSTR>(params.get()), nullptr,
+                      nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
     return NS_ERROR_FAILURE;
   }
   CloseHandle(pi.hProcess);
@@ -795,7 +860,7 @@ nsWindowsShellService::LaunchHTTPHandlerPane()
   OPENASINFO info;
   info.pcszFile = L"http";
   info.pcszClass = nullptr;
-  info.oaifInFlags = OAIF_FORCE_REGISTRATION | 
+  info.oaifInFlags = OAIF_FORCE_REGISTRATION |
                      OAIF_URL_PROTOCOL |
                      OAIF_REGISTER_EXT;
   return DynSHOpenWithDialog(nullptr, &info);
@@ -949,7 +1014,7 @@ WriteBitmap(nsIFile* aFile, imgIContainer* aImage)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement, 
+nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
                                             int32_t aPosition)
 {
   nsresult rv;
@@ -959,7 +1024,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   if (!imgElement) {
     // XXX write background loading stuff!
     return NS_ERROR_NOT_AVAILABLE;
-  } 
+  }
   else {
     nsCOMPtr<nsIImageLoadingContent> imageContent =
       do_QueryInterface(aElement, &rv);
@@ -986,7 +1051,7 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES,
                                    getter_AddRefs(shellBundle));
   NS_ENSURE_SUCCESS(rv, rv);
- 
+
   // e.g. "Desktop Background.bmp"
   nsString fileLeafName;
   rv = shellBundle->GetStringFromName
@@ -1074,12 +1139,12 @@ nsWindowsShellService::OpenApplication(int32_t aApplication)
   }
 
   // The Default Client section of the Windows Registry looks like this:
-  // 
+  //
   // Clients\aClient\
   //  e.g. aClient = "Mail"...
   //        \Mail\(default) = Client Subkey Name
   //             \Client Subkey Name
-  //             \Client Subkey Name\shell\open\command\ 
+  //             \Client Subkey Name\shell\open\command\
   //             \Client Subkey Name\shell\open\command\(default) = path to exe
   //
 
@@ -1119,7 +1184,7 @@ nsWindowsShellService::OpenApplication(int32_t aApplication)
   // Close the key we opened.
   ::RegCloseKey(theKey);
 
-  // Look for any embedded environment variables and substitute their 
+  // Look for any embedded environment variables and substitute their
   // values, as |::CreateProcessW| is unable to do this.
   nsAutoString path(buf);
   int32_t end = path.Length();
@@ -1127,7 +1192,7 @@ nsWindowsShellService::OpenApplication(int32_t aApplication)
   ::ZeroMemory(buf, sizeof(buf));
   do {
     cursor = path.FindChar('%', cursor);
-    if (cursor < 0) 
+    if (cursor < 0)
       break;
 
     temp = path.FindChar('%', cursor + 1);
@@ -1137,7 +1202,7 @@ nsWindowsShellService::OpenApplication(int32_t aApplication)
 
     ::GetEnvironmentVariableW(nsAutoString(Substring(path, cursor, temp - cursor)).get(),
                               buf, sizeof(buf));
-    
+
     // "+ 2" is to subtract the extra characters used to delimit the environment
     // variable ('%').
     path.Replace((cursor - 1), temp - cursor + 2, nsDependentString(buf));
@@ -1213,15 +1278,15 @@ nsWindowsShellService::OpenApplicationWithURI(nsIFile* aApplication,
                                               const nsACString& aURI)
 {
   nsresult rv;
-  nsCOMPtr<nsIProcess> process = 
+  nsCOMPtr<nsIProcess> process =
     do_CreateInstance("@mozilla.org/process/util;1", &rv);
   if (NS_FAILED(rv))
     return rv;
-  
+
   rv = process->Init(aApplication);
   if (NS_FAILED(rv))
     return rv;
-  
+
   const nsCString spec(aURI);
   const char* specStr = spec.get();
   return process->Run(false, &specStr, 1);
