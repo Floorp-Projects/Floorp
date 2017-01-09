@@ -618,13 +618,6 @@ XPCWrappedNative::Destroy()
 }
 
 void
-XPCWrappedNative::UpdateScriptableInfo(XPCNativeScriptableInfo* si)
-{
-    MOZ_ASSERT(mScriptableInfo, "UpdateScriptableInfo expects an existing scriptable info");
-    mScriptableInfo = si;
-}
-
-void
 XPCWrappedNative::SetProto(XPCWrappedNativeProto* p)
 {
     MOZ_ASSERT(!IsWrapperExpired(), "bad ptr!");

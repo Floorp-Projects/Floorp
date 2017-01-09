@@ -1420,7 +1420,8 @@ nsWindow::GetFallbackScrollSnapshot(const RECT& aRequiredClip)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::Show(bool bState)
+void
+nsWindow::Show(bool bState)
 {
   if (mWindowType == eWindowType_popup) {
     // See bug 603793. When we try to draw D3D9/10 windows with a drop shadow
@@ -1535,7 +1536,7 @@ NS_IMETHODIMP nsWindow::Show(bool bState)
       }
     }
   }
-  
+
 #ifdef MOZ_XUL
   if (!wasVisible && bState) {
     Invalidate();
@@ -1544,8 +1545,6 @@ NS_IMETHODIMP nsWindow::Show(bool bState)
     }
   }
 #endif
-
-  return NS_OK;
 }
 
 /**************************************************************
@@ -2138,7 +2137,8 @@ bool nsWindow::IsEnabled() const
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::SetFocus(bool aRaise)
+nsresult
+nsWindow::SetFocus(bool aRaise)
 {
   if (mWnd) {
 #ifdef WINSTATE_DEBUG_OUTPUT
@@ -2600,7 +2600,7 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   if (!mIsTopWidgetWindow ||
@@ -2731,7 +2731,8 @@ void nsWindow::SetBackgroundColor(const nscolor &aColor)
  **************************************************************/
 
 // Set this component cursor
-NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
+void
+nsWindow::SetCursor(nsCursor aCursor)
 {
   // Only change cursor if it's changing
 
@@ -2882,13 +2883,12 @@ NS_IMETHODIMP nsWindow::SetCursor(nsCursor aCursor)
       sHCursor = nullptr;
     }
   }
-
-  return NS_OK;
 }
 
 // Setting the actual cursor
-NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
-                                  uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsWindow::SetCursor(imgIContainer* aCursor,
+                    uint32_t aHotspotX, uint32_t aHotspotY)
 {
   if (sCursorImgContainer == aCursor && sHCursor) {
     ::SetCursor(sHCursor);
@@ -3112,12 +3112,13 @@ nsWindow::HideWindowChrome(bool aShouldHide)
  **************************************************************/
 
 // Invalidate this component visible area
-NS_IMETHODIMP nsWindow::Invalidate(bool aEraseBackground,
-                                   bool aUpdateNCArea,
-                                   bool aIncludeChildren)
+void
+nsWindow::Invalidate(bool aEraseBackground,
+                     bool aUpdateNCArea,
+                     bool aIncludeChildren)
 {
   if (!mWnd) {
-    return NS_OK;
+    return;
   }
 
 #ifdef WIDGET_DEBUG_OUTPUT
@@ -3140,11 +3141,11 @@ NS_IMETHODIMP nsWindow::Invalidate(bool aEraseBackground,
   }
 
   VERIFY(::RedrawWindow(mWnd, nullptr, nullptr, flags));
-  return NS_OK;
 }
 
 // Invalidate this component visible area
-NS_IMETHODIMP nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
+void
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   if (mWnd) {
 #ifdef WIDGET_DEBUG_OUTPUT
@@ -3164,7 +3165,6 @@ NS_IMETHODIMP nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 
     VERIFY(::InvalidateRect(mWnd, &rect, FALSE));
   }
-  return NS_OK;
 }
 
 static LRESULT CALLBACK
@@ -3529,7 +3529,8 @@ void nsWindow::FreeNativeData(void * data, uint32_t aDataType)
  *
  **************************************************************/
 
-NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
+nsresult
+nsWindow::SetTitle(const nsAString& aTitle)
 {
   const nsString& strTitle = PromiseFlatString(aTitle);
   AutoRestore<bool> sendingText(mSendingSetText);
@@ -4001,8 +4002,8 @@ nsWindow::CurrentMessageWidgetEventTime() const
 
 // Main event dispatch. Invokes callback and ProcessEvent method on
 // Event Listener object. Part of nsIWidget.
-NS_IMETHODIMP nsWindow::DispatchEvent(WidgetGUIEvent* event,
-                                      nsEventStatus& aStatus)
+nsresult
+nsWindow::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
 #ifdef WIDGET_DEBUG_OUTPUT
   debug_DumpEvent(stdout,
@@ -7141,7 +7142,7 @@ nsWindow::OnDPIChanged(int32_t x, int32_t y, int32_t width, int32_t height)
  **************************************************************
  **************************************************************/
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -7150,7 +7151,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
   mInputContext = newInputContext;
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsWindow::GetInputContext()
 {
   mInputContext.mIMEState.mOpen = IMEState::CLOSED;
@@ -7168,7 +7169,7 @@ nsWindow::GetIMEUpdatePreference()
   return IMEHandler::GetUpdatePreference();
 }
 
-NS_IMETHODIMP_(TextEventDispatcherListener*)
+TextEventDispatcherListener*
 nsWindow::GetNativeTextEventDispatcherListener()
 {
   return IMEHandler::GetNativeTextEventDispatcherListener();

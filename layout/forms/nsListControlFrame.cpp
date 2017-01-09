@@ -1122,21 +1122,30 @@ nsListControlFrame::GetCurrentOption()
     return GetOption(AssertedCast<uint32_t>(focusedIndex));
   }
 
-  // There is no selected item. Return the first non-disabled item.
+  // There is no selected option. Return the first non-disabled option, if any.
+  return GetNonDisabledOptionFrom(0);
+}
+
+HTMLOptionElement*
+nsListControlFrame::GetNonDisabledOptionFrom(int32_t aFromIndex,
+                                             int32_t* aFoundIndex)
+{
   RefPtr<dom::HTMLSelectElement> selectElement =
     dom::HTMLSelectElement::FromContent(mContent);
 
-  for (uint32_t i = 0, length = selectElement->Length(); i < length; ++i) {
-    dom::HTMLOptionElement* node = selectElement->Item(i);
+  const uint32_t length = selectElement->Length();
+  for (uint32_t i = std::max(aFromIndex, 0); i < length; ++i) {
+    HTMLOptionElement* node = selectElement->Item(i);
     if (!node) {
-      return nullptr;
+      break;
     }
-
     if (!selectElement->IsOptionDisabled(node)) {
+      if (aFoundIndex) {
+        *aFoundIndex = i;
+      }
       return node;
     }
   }
-
   return nullptr;
 }
 
@@ -2479,7 +2488,17 @@ nsListControlFrame::PostHandleKeyEvent(int32_t aNewIndex,
                                        bool aIsControlOrMeta)
 {
   if (aNewIndex == kNothingSelected) {
-    return;
+    int32_t focusedIndex = mEndSelectionIndex == kNothingSelected ?
+      GetSelectedIndex() : mEndSelectionIndex;
+    if (focusedIndex != kNothingSelected) {
+      return;
+    }
+    // No options are selected.  In this case the focus ring is on the first
+    // non-disabled option (if any), so we should behave as if that's the option
+    // the user acted on.
+    if (!GetNonDisabledOptionFrom(0, &aNewIndex)) {
+      return;
+    }
   }
 
   // If you hold control, but not shift, no key will actually do anything

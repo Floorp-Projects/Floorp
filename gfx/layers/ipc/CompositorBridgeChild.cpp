@@ -477,8 +477,7 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
       widget->Enable(isVisible);
 
       // visible state - updated after clipping, prior to invalidating
-      rv = widget->Show(isVisible);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
+      widget->Show(isVisible);
 
       // Handle invalidation, this can be costly, avoid if it is not needed.
       if (isVisible) {
@@ -490,8 +489,7 @@ CompositorBridgeChild::RecvUpdatePluginConfigurations(const LayoutDeviceIntPoint
         mozilla::widget::WinUtils::InvalidatePluginAsWorkaround(
           widget, visibleBounds);
 #else
-        rv = widget->Invalidate(visibleBounds);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "widget call failure");
+        widget->Invalidate(visibleBounds);
 #endif
         visiblePluginIds.AppendElement(aPlugins[pluginsIdx].windowId());
       }

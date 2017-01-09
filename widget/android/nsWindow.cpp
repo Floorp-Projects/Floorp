@@ -1607,7 +1607,7 @@ nsWindow::Destroy()
 #endif
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 {
     for (uint32_t i = 0; i < config.Length(); ++i) {
@@ -1677,18 +1677,18 @@ nsWindow::GetDefaultScaleInternal()
     return screenAndroid->GetDensity();
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
     ALOG("nsWindow[%p]::Show %d", (void*)this, aState);
 
     if (mWindowType == eWindowType_invisible) {
         ALOG("trying to show invisible window! ignoring..");
-        return NS_ERROR_FAILURE;
+        return;
     }
 
     if (aState == mIsVisible)
-        return NS_OK;
+        return;
 
     mIsVisible = aState;
 
@@ -1724,8 +1724,6 @@ nsWindow::Show(bool aState)
 #ifdef DEBUG_ANDROID_WIDGET
     DumpWindows();
 #endif
-
-    return NS_OK;
 }
 
 bool
@@ -1838,10 +1836,9 @@ nsWindow::IsEnabled() const
     return true;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
-    return NS_OK;
 }
 
 nsWindow*
@@ -1859,7 +1856,7 @@ nsWindow::FindTopLevel()
     return this;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetFocus(bool aRaise)
 {
     nsWindow *top = FindTopLevel();
@@ -1932,7 +1929,7 @@ nsWindow::WidgetToScreenOffset()
     return p;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent,
                         nsEventStatus& aStatus)
 {
@@ -3352,7 +3349,7 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -3371,7 +3368,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     top->mGeckoViewSupport->SetInputContext(aContext, aAction);
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsWindow::GetInputContext()
 {
     nsWindow* top = FindTopLevel();

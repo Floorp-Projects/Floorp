@@ -15,6 +15,10 @@
 #error "Must #define XPC_MAP_QUOTED_CLASSNAME before #including xpc_map_end.h"
 #endif
 
+#ifndef XPC_MAP_FLAGS
+#error "Must #define XPC_MAP_FLAGS before #including xpc_map_end.h"
+#endif
+
 #include "js/Id.h"
 
 /**************************************************************/
@@ -181,6 +185,4 @@ NS_IMETHODIMP XPC_MAP_CLASSNAME::PostCreatePrototype(JSContext* cx, JSObject* pr
 #undef XPC_MAP_WANT_HASINSTANCE
 #endif
 
-#ifdef XPC_MAP_FLAGS
 #undef XPC_MAP_FLAGS
-#endif
