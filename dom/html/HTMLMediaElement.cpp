@@ -2355,6 +2355,10 @@ public:
     , mOwningStream(aOwningStream)
     , mDestinationTrackID(aDestinationTrackID)
   {
+    MOZ_ASSERT(mElement);
+    MOZ_ASSERT(mCapturedTrackSource);
+    MOZ_ASSERT(mOwningStream);
+    MOZ_ASSERT(IsTrackIDExplicit(mDestinationTrackID));
   }
 
   void Destroy() override
