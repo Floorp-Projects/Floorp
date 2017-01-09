@@ -8,6 +8,7 @@ from .marionette_test import (
     CommonTestCase,
     expectedFailure,
     MarionetteTestCase,
+    parameterized,
     run_if_e10s,
     run_if_manage_instance,
     skip,

@@ -96,7 +96,7 @@ class WindowManagerMixin(object):
         current_windows = self.marionette.chrome_window_handles
 
         def loaded(handle):
-            with self.marionette.using_context('chrome'):
+            with self.marionette.using_context("chrome"):
                 return self.marionette.execute_script("""
                   Components.utils.import("resource://gre/modules/Services.jsm");
 
