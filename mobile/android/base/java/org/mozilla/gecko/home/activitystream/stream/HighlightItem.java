@@ -83,7 +83,7 @@ public class HighlightItem extends StreamItem implements IconCallback {
                         menuButton,
                         extras,
                         ActivityStreamContextMenu.MenuMode.HIGHLIGHT,
-                        highlight.getTitle(), highlight.getUrl(), highlight.isBookmarked(), highlight.isPinned(),
+                        highlight,
                         onUrlOpenListener, onUrlOpenInBackgroundListener,
                         vIconView.getWidth(), vIconView.getHeight());
 
