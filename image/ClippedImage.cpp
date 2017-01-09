@@ -472,8 +472,9 @@ ClippedImage::DrawSingleTile(gfxContext* aContext,
     vSize.height =
       ceil(vSize.height * double(innerSize.height) / mClip.height);
 
-    return SVGImageContext(vSize,
-                           aOldContext.GetPreserveAspectRatio());
+    SVGImageContext context(aOldContext);
+    context.SetViewportSize(vSize);
+    return context;
   };
 
   return InnerImage()->Draw(aContext, size, region,
