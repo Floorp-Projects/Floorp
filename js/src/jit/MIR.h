@@ -7212,9 +7212,6 @@ class MConcat
     MConcat(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(left, right)
     {
-        // At least one input should be definitely string
-        MOZ_ASSERT(left->type() == MIRType::String || right->type() == MIRType::String);
-
         setMovable();
         setResultType(MIRType::String);
     }

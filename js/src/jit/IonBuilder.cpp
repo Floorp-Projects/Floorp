@@ -3313,9 +3313,16 @@ IonBuilder::binaryArithTrySpecializedOnBaselineInspector(bool* emitted, JSOp op,
         return Ok();
     }
 
-    MDefinition::Opcode def_op = JSOpToMDefinition(op);
-    MBinaryArithInstruction* ins = MBinaryArithInstruction::New(alloc(), def_op, left, right);
-    ins->setSpecialization(specialization);
+    MInstruction* ins;
+    if (specialization == MIRType::String) {
+        MOZ_ASSERT(op == JSOP_ADD);
+        ins = MConcat::New(alloc(), left, right);
+    } else {
+        MDefinition::Opcode def_op = JSOpToMDefinition(op);
+        MBinaryArithInstruction* arith = MBinaryArithInstruction::New(alloc(), def_op, left, right);
+        arith->setSpecialization(specialization);
+        ins = arith;
+    }
 
     current->add(ins);
     current->push(ins);
