@@ -224,7 +224,8 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_stacking_context(wrstate *wrState, WRRect bounds,
-                         WRRect overflow, const float* matrix)
+                            WRRect overflow, const WRImageMask *mask,
+                            const float* matrix)
 WR_FUNC;
 
 //XXX: matrix should use a proper type
