@@ -587,7 +587,7 @@ var DirectoryLinksProvider = {
     let scheme = "", base = "";
     try {
       // A malformed url will not be allowed
-      let uri = Services.io.newURI(url, null, null);
+      let uri = Services.io.newURI(url);
       scheme = uri.scheme;
 
       // URIs without base domains will be allowed

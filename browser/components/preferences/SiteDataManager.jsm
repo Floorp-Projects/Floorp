@@ -107,7 +107,7 @@ this.SiteDataManager = {
     let groups = this._appCache.getGroups();
     for (let site of this._sites.values()) {
       for (let group of groups) {
-        let uri = Services.io.newURI(group, null, null);
+        let uri = Services.io.newURI(group);
         if (site.perm.matchesURI(uri, true)) {
           let cache = this._appCache.getActiveCache(group);
           site.appCacheList.push(cache);

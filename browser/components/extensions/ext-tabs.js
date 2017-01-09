@@ -703,7 +703,7 @@ extensions.registerSchemaAPI("tabs", "addon_parent", context => {
             return false;
           }
 
-          if (pattern && !pattern.matches(Services.io.newURI(tab.url, null, null))) {
+          if (pattern && !pattern.matches(Services.io.newURI(tab.url))) {
             return false;
           }
 

@@ -12,7 +12,7 @@ function test() {
     Cu.import("resource://gre/modules/DownloadLastDir.jsm", {}).DownloadLastDir;
   let MockFilePicker = SpecialPowers.MockFilePicker;
   let launcher = {
-    source: Services.io.newURI("http://test1.com/file", null, null)
+    source: Services.io.newURI("http://test1.com/file")
   };
 
   MockFilePicker.init(window);

@@ -32,7 +32,7 @@ var UITourListener = {
     // Add any testing origins (comma-seperated) to the whitelist for the session.
     for (let origin of Services.prefs.getCharPref(PREF_TEST_WHITELIST).split(",")) {
       try {
-        let testingURI = Services.io.newURI(origin, null, null);
+        let testingURI = Services.io.newURI(origin);
         if (aURI.prePath == testingURI.prePath) {
           return true;
         }

@@ -28,7 +28,7 @@ var healthReportWrapper = {
 
   _getReportURI() {
     let url = Services.urlFormatter.formatURLPref(PREF_REPORTING_URL);
-    return Services.io.newURI(url, null, null);
+    return Services.io.newURI(url);
   },
 
   setDataSubmission(enabled) {

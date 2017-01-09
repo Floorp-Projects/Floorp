@@ -119,15 +119,15 @@ function* testIsSameOrigin(manifests, next) {
   let provider = providers[0];
   // provider.origin is a string.
   do_check_true(provider.isSameOrigin(provider.origin));
-  do_check_true(provider.isSameOrigin(Services.io.newURI(provider.origin, null, null)));
+  do_check_true(provider.isSameOrigin(Services.io.newURI(provider.origin)));
   do_check_true(provider.isSameOrigin(provider.origin + "/some-sub-page"));
-  do_check_true(provider.isSameOrigin(Services.io.newURI(provider.origin + "/some-sub-page", null, null)));
+  do_check_true(provider.isSameOrigin(Services.io.newURI(provider.origin + "/some-sub-page")));
   do_check_false(provider.isSameOrigin("http://something.com"));
-  do_check_false(provider.isSameOrigin(Services.io.newURI("http://something.com", null, null)));
+  do_check_false(provider.isSameOrigin(Services.io.newURI("http://something.com")));
   do_check_false(provider.isSameOrigin("data:text/html,<p>hi"));
   do_check_true(provider.isSameOrigin("data:text/html,<p>hi", true));
-  do_check_false(provider.isSameOrigin(Services.io.newURI("data:text/html,<p>hi", null, null)));
-  do_check_true(provider.isSameOrigin(Services.io.newURI("data:text/html,<p>hi", null, null), true));
+  do_check_false(provider.isSameOrigin(Services.io.newURI("data:text/html,<p>hi")));
+  do_check_true(provider.isSameOrigin(Services.io.newURI("data:text/html,<p>hi"), true));
   // we explicitly handle null and return false
   do_check_false(provider.isSameOrigin(null));
 }
@@ -150,7 +150,7 @@ function* testOrderedProviders(manifests, next) {
   let startDate = Date.now() * 1000;
   for (let i = 0; i < 10; i++) {
     visits.push({
-      uri: Services.io.newURI(providers[1].shareURL + i, null, null),
+      uri: Services.io.newURI(providers[1].shareURL + i),
       visitDate: startDate + i
     });
   }

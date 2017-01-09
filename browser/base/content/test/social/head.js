@@ -24,7 +24,7 @@ function promiseObserverNotified(aTopic) {
 // in history, will not appear in about:newtab or auto-complete, etc.)
 function promiseSocialUrlNotRemembered(url) {
   return new Promise(resolve => {
-    let uri = Services.io.newURI(url, null, null);
+    let uri = Services.io.newURI(url);
     PlacesUtils.asyncHistory.isURIVisited(uri, function(aURI, aIsVisited) {
       ok(!aIsVisited, "social URL " + url + " should not be in global history");
       resolve();
@@ -211,7 +211,7 @@ function setManifestPref(name, manifest) {
 
 function getManifestPrefname(aManifest) {
   // is same as the generated name in SocialServiceInternal.getManifestPrefname
-  let originUri = Services.io.newURI(aManifest.origin, null, null);
+  let originUri = Services.io.newURI(aManifest.origin);
   return "social.manifest." + originUri.hostPort.replace('.', '-');
 }
 

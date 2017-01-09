@@ -283,7 +283,7 @@ function getFirstResourceOfType(type) {
 }
 
 function makeURI(aURL) {
-  return Services.io.newURI(aURL, null, null);
+  return Services.io.newURI(aURL);
 }
 
 add_task(function* setup() {
