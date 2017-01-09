@@ -675,12 +675,12 @@ public:
 
   void HandleAudioCanceled() override
   {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    EnsureAudioDecodeTaskQueued();
   }
 
   void HandleVideoCanceled() override
   {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    EnsureVideoDecodeTaskQueued();
   }
 
   void HandleEndOfAudio() override;
@@ -700,12 +700,12 @@ public:
 
   void HandleAudioWaited(MediaData::Type aType) override
   {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    EnsureAudioDecodeTaskQueued();
   }
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    EnsureVideoDecodeTaskQueued();
   }
 
   void HandleAudioCaptured() override
@@ -747,6 +747,8 @@ public:
 
 private:
   void DispatchDecodeTasksIfNeeded();
+  void EnsureAudioDecodeTaskQueued();
+  void EnsureVideoDecodeTaskQueued();
   void MaybeStartBuffering();
 
   void CheckSlowDecoding(TimeStamp aDecodeStart)
@@ -2087,13 +2089,13 @@ DecodingState::Enter()
   mOnAudioPopped = AudioQueue().PopEvent().Connect(
     OwnerThread(), [this] () {
     if (mMaster->IsAudioDecoding() && !mMaster->HaveEnoughDecodedAudio()) {
-      mMaster->EnsureAudioDecodeTaskQueued();
+      EnsureAudioDecodeTaskQueued();
     }
   });
   mOnVideoPopped = VideoQueue().PopEvent().Connect(
     OwnerThread(), [this] () {
     if (mMaster->IsVideoDecoding() && !mMaster->HaveEnoughDecodedVideo()) {
-      mMaster->EnsureVideoDecodeTaskQueued();
+      EnsureVideoDecodeTaskQueued();
     }
   });
 
@@ -2145,15 +2147,41 @@ DecodingState::DispatchDecodeTasksIfNeeded()
   if (mMaster->IsAudioDecoding() &&
       !mMaster->mMinimizePreroll &&
       !mMaster->HaveEnoughDecodedAudio()) {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    EnsureAudioDecodeTaskQueued();
   }
 
   if (mMaster->IsVideoDecoding() &&
       !mMaster->mMinimizePreroll &&
       !mMaster->HaveEnoughDecodedVideo()) {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    EnsureVideoDecodeTaskQueued();
   }
 }
+
+void
+MediaDecoderStateMachine::
+DecodingState::EnsureAudioDecodeTaskQueued()
+{
+  if (!mMaster->IsAudioDecoding() ||
+      mMaster->IsRequestingAudioData() ||
+      mMaster->IsWaitingAudioData()) {
+    return;
+  }
+  mMaster->RequestAudioData();
+}
+
+void
+MediaDecoderStateMachine::
+DecodingState::EnsureVideoDecodeTaskQueued()
+{
+  if (!mMaster->IsVideoDecoding() ||
+      mMaster->IsRequestingVideoData() ||
+      mMaster->IsWaitingVideoData()) {
+    return;
+  }
+  mMaster->RequestVideoData(mMaster->NeedToSkipToNextKeyframe(),
+                            media::TimeUnit::FromMicroseconds(mMaster->GetMediaTime()));
+}
+
 
 void
 MediaDecoderStateMachine::
@@ -2992,30 +3020,6 @@ void MediaDecoderStateMachine::StopMediaSink()
 }
 
 void
-MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
-  MOZ_ASSERT(mState != DECODER_STATE_DECODING_FIRSTFRAME);
-
-  SAMPLE_LOG("EnsureAudioDecodeTaskQueued isDecoding=%d status=%s",
-              IsAudioDecoding(), AudioRequestStatus());
-
-  if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_BUFFERING) {
-    return;
-  }
-
-  if (!IsAudioDecoding() ||
-      IsRequestingAudioData() ||
-      IsWaitingAudioData()) {
-    return;
-  }
-
-  RequestAudioData();
-}
-
-void
 MediaDecoderStateMachine::RequestAudioData()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -3054,31 +3058,6 @@ MediaDecoderStateMachine::RequestAudioData()
         }
       })
   );
-}
-
-void
-MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(mState != DECODER_STATE_SEEKING);
-  MOZ_ASSERT(mState != DECODER_STATE_DECODING_FIRSTFRAME);
-
-  SAMPLE_LOG("EnsureVideoDecodeTaskQueued isDecoding=%d status=%s",
-             IsVideoDecoding(), VideoRequestStatus());
-
-  if (mState != DECODER_STATE_DECODING &&
-      mState != DECODER_STATE_BUFFERING) {
-    return;
-  }
-
-  if (!IsVideoDecoding() ||
-      IsRequestingVideoData() ||
-      IsWaitingVideoData()) {
-    return;
-  }
-
-  RequestVideoData(NeedToSkipToNextKeyframe(),
-                   media::TimeUnit::FromMicroseconds(GetMediaTime()));
 }
 
 void
