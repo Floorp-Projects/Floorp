@@ -388,7 +388,7 @@ this.SessionStore = {
       let win = aState.windows[i];
       for (let j = win.tabs.length - 1; j >= 0; j--) {
         let tab = win.tabs[j];
-        if (!SessionStoreInternal._shouldSaveTabState(tab)) {
+        if (!SessionStoreInternal._shouldSaveTab(tab)) {
           win.tabs.splice(j, 1);
           if (win.selected > j) {
             win.selected--;
@@ -4196,8 +4196,27 @@ var SessionStoreInternal = {
            !(aTabState.entries.length == 1 &&
                 (aTabState.entries[0].url == "about:blank" ||
                  aTabState.entries[0].url == "about:newtab" ||
+                 aTabState.entries[0].url == "about:printpreview" ||
                  aTabState.entries[0].url == "about:privatebrowsing") &&
                  !aTabState.userTypedValue);
+  },
+
+  /**
+   * Determine if the tab state we're passed is something we should keep to be
+   * reopened at session restore. This is used when we are saving the current
+   * session state to disk. This method is very similar to _shouldSaveTabState,
+   * however, "about:blank" and "about:newtab" tabs will still be saved to disk.
+   *
+   * @param aTabState
+   *        The current tab state
+   * @returns boolean
+   */
+  _shouldSaveTab: function ssi_shouldSaveTab(aTabState) {
+    // If the tab has one of the following transient about: history entry,
+    // then we don't actually want to write this tab's data to disk.
+    return aTabState.entries.length &&
+           !(aTabState.entries[0].url == "about:printpreview" ||
+             aTabState.entries[0].url == "about:privatebrowsing");
   },
 
   /**
