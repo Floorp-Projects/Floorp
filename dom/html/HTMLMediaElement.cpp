@@ -1447,6 +1447,12 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack)
     }
   }
 
+  if (mReadyState == HAVE_NOTHING) {
+    // No MediaStreamTracks are captured until we have metadata, and code
+    // below doesn't do anything for captured decoders.
+    return;
+  }
+
   for (OutputMediaStream& ms : mOutputStreams) {
     if (ms.mCapturingDecoder) {
       MOZ_ASSERT(!ms.mCapturingMediaStream);
