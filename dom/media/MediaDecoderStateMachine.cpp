@@ -1651,12 +1651,12 @@ public:
 
   void HandleAudioCanceled() override
   {
-    EnsureAudioDecodeTaskQueued();
+    mMaster->RequestAudioData();
   }
 
   void HandleVideoCanceled() override
   {
-    EnsureVideoDecodeTaskQueued();
+    mMaster->RequestVideoData(false, media::TimeUnit());
   }
 
   void HandleWaitingForAudio() override
@@ -1671,12 +1671,12 @@ public:
 
   void HandleAudioWaited(MediaData::Type aType) override
   {
-    EnsureAudioDecodeTaskQueued();
+    mMaster->RequestAudioData();
   }
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    EnsureVideoDecodeTaskQueued();
+    mMaster->RequestVideoData(false, media::TimeUnit());
   }
 
   void HandleEndOfAudio() override;
