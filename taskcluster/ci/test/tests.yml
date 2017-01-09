@@ -770,9 +770,9 @@ mochitest-webgl:
                 extra-options:
                     - --mochitest-suite=mochitest-gl
 
-mochitest-stylo:
-    description: "Mochitest run for Stylo"
-    suite: mochitest/mochitest-stylo
+mochitest-style:
+    description: "Mochitest plain run for style system"
+    suite: mochitest/mochitest-style
     treeherder-symbol: tc-M(s)
     loopback-video: true
     e10s: false
@@ -785,7 +785,7 @@ mochitest-stylo:
                     - unittests/linux_unittest.py
                     - remove_executables.py
         extra-options:
-            - --mochitest-suite=mochitest-stylo
+            - --mochitest-suite=mochitest-style
 
 reftest:
     description: "Reftest run"
