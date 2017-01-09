@@ -26,6 +26,7 @@ namespace layers {
 struct OpDPPushStackingContext {
   WRRect bounds;
   WRRect overflow;
+  MaybeImageMask mask;
   Matrix4x4 matrix;
   uint64_t scrollid;
 };

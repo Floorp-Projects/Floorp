@@ -262,7 +262,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
     switch (cmd.type()) {
       case WebRenderCommand::TOpDPPushStackingContext: {
         const OpDPPushStackingContext& op = cmd.get_OpDPPushStackingContext();
-        wr_dp_push_stacking_context(mWRState, op.bounds(), op.overflow(), &(op.matrix().components[0]));
+        wr_dp_push_stacking_context(mWRState, op.bounds(), op.overflow(), op.mask().ptrOr(nullptr), &(op.matrix().components[0]));
         break;
       }
       case WebRenderCommand::TOpDPPopStackingContext: {

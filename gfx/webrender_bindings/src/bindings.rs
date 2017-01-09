@@ -267,7 +267,7 @@ pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, transform: &LayoutTransform)
+pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, overflow: WrRect, mask: *const WrImageMask, transform: &LayoutTransform)
 {
     assert!( unsafe { is_in_compositor_thread() });
     state.z_index += 1;
@@ -275,7 +275,10 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
 
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], None);
+    // convert from the C type to the Rust type
+    let mask = unsafe { mask.as_ref().map(|&WrImageMask{image, ref rect,repeat}| ImageMask{image: image, rect: rect.to_rect(), repeat: repeat}) };
+
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], mask);
 
     state.frame_builder.dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
