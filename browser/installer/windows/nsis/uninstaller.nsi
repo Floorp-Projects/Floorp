@@ -167,7 +167,7 @@ ChangeUI IDD_VERIFY "${NSISDIR}\Contrib\UIs\default.exe"
 # Helper Functions
 
 ; This function is used to uninstall the maintenance service if the
-; application currently being uninstalled is the last application to use the 
+; application currently being uninstalled is the last application to use the
 ; maintenance service.
 Function un.UninstallServiceIfNotUsed
   ; $0 will store if a subkey exists
@@ -195,6 +195,7 @@ Function un.UninstallServiceIfNotUsed
   ${If} ${RunningX64}
     SetRegView lastUsed
   ${EndIf}
+
   ${If} $0 == 0
     ; Get the path of the maintenance service uninstaller
     ReadRegStr $1 HKLM ${MaintUninstallKey} "UninstallString"
@@ -274,28 +275,21 @@ Section "Uninstall"
     ${un.SetAppLSPCategories}
   ${EndIf}
 
-  ${un.RegCleanAppHandler} "FirefoxURL"
-  ${un.RegCleanAppHandler} "FirefoxHTML"
+  ${un.RegCleanAppHandler} "FirefoxURL-$AppUserModelID"
+  ${un.RegCleanAppHandler} "FirefoxHTML-$AppUserModelID"
   ${un.RegCleanProtocolHandler} "ftp"
   ${un.RegCleanProtocolHandler} "http"
   ${un.RegCleanProtocolHandler} "https"
-
-  ClearErrors
-  ReadRegStr $R9 HKCR "FirefoxHTML" ""
-  ; Don't clean up the file handlers if the FirefoxHTML key still exists since
-  ; there should be a second installation that may be the default file handler
-  ${If} ${Errors}
-    ${un.RegCleanFileHandler}  ".htm"   "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".html"  "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".shtml" "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".xht"   "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".xhtml" "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".oga"  "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".ogg"  "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".ogv"  "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".pdf"  "FirefoxHTML"
-    ${un.RegCleanFileHandler}  ".webm"  "FirefoxHTML"
-  ${EndIf}
+  ${un.RegCleanFileHandler}  ".htm"   "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".html"  "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".shtml" "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".xht"   "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".xhtml" "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".oga"  "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".ogg"  "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".ogv"  "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".pdf"  "FirefoxHTML-$AppUserModelID"
+  ${un.RegCleanFileHandler}  ".webm"  "FirefoxHTML-$AppUserModelID"
 
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${un.GetSecondInstallPath} "Software\Mozilla" $R9
@@ -304,36 +298,30 @@ Section "Uninstall"
     ${un.GetSecondInstallPath} "Software\Mozilla" $R9
   ${EndIf}
 
-  StrCpy $0 "Software\Clients\StartMenuInternet\${FileMainEXE}\shell\open\command"
-  ReadRegStr $R1 HKLM "$0" ""
-  ${un.RemoveQuotesFromPath} "$R1" $R1
-  ${un.GetParent} "$R1" $R1
+  DeleteRegKey HKLM "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID"
+  DeleteRegValue HKLM "Software\RegisteredApplications" "${AppRegName}-$AppUserModelID"
 
-  ; Only remove the StartMenuInternet key if it refers to this install location.
-  ; The StartMenuInternet registry key is independent of the default browser
-  ; settings. The XPInstall base un-installer always removes this key if it is
-  ; uninstalling the default browser and it will always replace the keys when
-  ; installing even if there is another install of Firefox that is set as the
-  ; default browser. Now the key is always updated on install but it is only
-  ; removed if it refers to this install location.
-  ${If} "$INSTDIR" == "$R1"
-    DeleteRegKey HKLM "Software\Clients\StartMenuInternet\${FileMainEXE}"
+  DeleteRegKey HKCU "Software\Clients\StartMenuInternet\${AppRegName}-$AppUserModelID"
+  DeleteRegValue HKCU "Software\RegisteredApplications" "${AppRegName}-$AppUserModelID"
+
+  ; Remove old protocol handler and StartMenuInternet keys without install path
+  ; hashes, but only if they're for this installation.
+  ReadRegStr $0 HKLM "Software\Classes\FirefoxHTML\DefaultIcon" ""
+  StrCpy $0 $0 -2
+  ${If} $0 == "$INSTDIR\${FileMainEXE}"
+    DeleteRegKey HKLM "Software\Classes\FirefoxHTML"
+    DeleteRegKey HKLM "Software\Classes\FirefoxURL"
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    DeleteRegKey HKLM "Software\Clients\StartMenuInternet\$R9"
     DeleteRegValue HKLM "Software\RegisteredApplications" "${AppRegName}"
   ${EndIf}
-
-  ReadRegStr $R1 HKCU "$0" ""
-  ${un.RemoveQuotesFromPath} "$R1" $R1
-  ${un.GetParent} "$R1" $R1
-
-  ; Only remove the StartMenuInternet key if it refers to this install location.
-  ; The StartMenuInternet registry key is independent of the default browser
-  ; settings. The XPInstall base un-installer always removes this key if it is
-  ; uninstalling the default browser and it will always replace the keys when
-  ; installing even if there is another install of Firefox that is set as the
-  ; default browser. Now the key is always updated on install but it is only
-  ; removed if it refers to this install location.
-  ${If} "$INSTDIR" == "$R1"
-    DeleteRegKey HKCU "Software\Clients\StartMenuInternet\${FileMainEXE}"
+  ReadRegStr $0 HKCU "Software\Classes\FirefoxHTML\DefaultIcon" ""
+  StrCpy $0 $0 -2
+  ${If} $0 == "$INSTDIR\${FileMainEXE}"
+    DeleteRegKey HKCU "Software\Classes\FirefoxHTML"
+    DeleteRegKey HKCU "Software\Classes\FirefoxURL"
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    DeleteRegKey HKCU "Software\Clients\StartMenuInternet\$R9"
     DeleteRegValue HKCU "Software\RegisteredApplications" "${AppRegName}"
   ${EndIf}
 
