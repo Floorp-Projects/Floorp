@@ -124,7 +124,7 @@ class TrackedOptimizations : public TempObject
     bool matchTypes(const TempOptimizationTypeInfoVector& other) const;
     bool matchAttempts(const TempOptimizationAttemptsVector& other) const;
 
-    void spew() const;
+    void spew(JitSpewChannel channel) const;
 };
 
 // Assigns each unique sequence of optimization attempts an index; outputs a
