@@ -275,9 +275,11 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
     let bounds = bounds.to_rect();
     let overflow = overflow.to_rect();
 
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&overflow, vec![], None);
+
     state.frame_builder.dl_builder.push_stacking_context(webrender_traits::ScrollPolicy::Scrollable,
                                   bounds,
-                                  ClipRegion::simple(&overflow),
+                                  clip_region,
                                   state.z_index,
                                   transform,
                                   &LayoutTransform::identity(),
