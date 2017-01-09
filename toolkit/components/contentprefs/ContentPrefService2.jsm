@@ -776,7 +776,7 @@ ContentPrefService2.prototype = {
     if (!groupStr)
       return null;
     try {
-      var groupURI = Services.io.newURI(groupStr, null, null);
+      var groupURI = Services.io.newURI(groupStr);
     } catch (err) {
       return groupStr;
     }

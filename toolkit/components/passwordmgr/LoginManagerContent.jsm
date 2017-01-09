@@ -1205,7 +1205,7 @@ var LoginUtils = {
   _getPasswordOrigin(uriString, allowJS) {
     var realm = "";
     try {
-      var uri = Services.io.newURI(uriString, null, null);
+      var uri = Services.io.newURI(uriString);
 
       if (allowJS && uri.scheme == "javascript")
         return "javascript:";

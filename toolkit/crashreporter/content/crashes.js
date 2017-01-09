@@ -104,7 +104,7 @@ function populateReportList() {
   }
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  var reportURI = ios.newURI(reportURL, null, null);
+  var reportURI = ios.newURI(reportURL);
   // resolving this URI relative to /report/index
   var aboutThrottling = ios.newURI("../../about/throttling", null, reportURI);
 

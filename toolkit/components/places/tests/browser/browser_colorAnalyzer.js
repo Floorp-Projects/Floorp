@@ -24,7 +24,7 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  */
 function frcTest(uri, expected, message) {
   return new Promise(resolve => {
-    CA.findRepresentativeColor(Services.io.newURI(uri, "", null),
+    CA.findRepresentativeColor(Services.io.newURI(uri, ""),
       function(success, color) {
         if (expected == null) {
           ok(!success, message);

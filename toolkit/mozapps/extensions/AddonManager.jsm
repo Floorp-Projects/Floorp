@@ -2995,7 +2995,7 @@ var AddonManagerInternal = {
       // Throw an appropriate error if the given URL is not valid
       // as an installation source.  Return silently if it is okay.
       function checkInstallUrl(url) {
-        let host = Services.io.newURI(options.url, null, null).host;
+        let host = Services.io.newURI(options.url).host;
         if (WEBAPI_INSTALL_HOSTS.includes(host)) {
           return;
         }

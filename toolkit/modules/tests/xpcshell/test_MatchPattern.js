@@ -7,7 +7,7 @@ Components.utils.import("resource://gre/modules/MatchPattern.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 function test(url, pattern) {
-  let uri = Services.io.newURI(url, null, null);
+  let uri = Services.io.newURI(url);
   let m = new MatchPattern(pattern);
   return m.matches(uri);
 }
