@@ -27,7 +27,7 @@ asserts-if(stylo,13) load 191272-1.html # bug 1324636
 load 199696-1.html
 load 217903-1.html
 load 223064-1.html
-skip-if(stylo) load 234851-1.html # bug 1323665
+load 234851-1.html
 load 234851-2.html
 load 241300-1.html
 load 243159-1.html
@@ -172,7 +172,7 @@ load 384649-1.xhtml
 load 385354.html
 load 385866-1.xhtml
 load 385880-1.xhtml
-skip-if(stylo) load 386266-1.html # bug 1323665
+load 386266-1.html
 load 386476.html
 load 387195-1.html
 load 387195-2.xhtml
@@ -276,7 +276,7 @@ load 455171-4.html
 skip-if(stylo) load 455623-1.html # bug 1323652
 load 457362-1.xhtml
 load 457514.html
-skip-if(stylo) asserts(0-1) load 460389-1.html # Bug 1323665, bug 780985
+asserts(0-1) load 460389-1.html # bug 780985
 asserts-if(stylo,1) load 462392.html # bug 1324683
 load 466763-1.html
 load 467881-1.html
@@ -313,7 +313,7 @@ asserts-if(stylo,4) load 490747.html # bug 1324663
 load 491547-1.xul
 load 491547-2.xul
 load 492014.xhtml
-skip-if(stylo) load 492112-1.xhtml # bug 1323665
+load 492112-1.xhtml
 asserts-if(stylo,1) load 492163-1.xhtml # bug 1324663
 load 495350-1.html
 skip-if(stylo) load 496011-1.xhtml # bug 1323649
