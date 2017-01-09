@@ -13,6 +13,7 @@
   background-image: none;
   z-index: 2147483647;
   padding: 2px;
+  pointer-events: auto;
 }
 
 *|*:root[platform="mac"] > scrollbar,
