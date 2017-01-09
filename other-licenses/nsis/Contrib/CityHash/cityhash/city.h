@@ -46,15 +46,26 @@
 #include "../CityHash.h" // added by moz, specific to nsis project
 
 #include <stdlib.h>  // for size_t.
-#include <utility>
 
 typedef unsigned __int8 uint8;
 typedef unsigned __int32 uint32;
 typedef unsigned __int64 uint64;
-typedef std::pair<uint64, uint64> uint128;
 
+// The standard <utility> header doesn't compile, apparently it conflicts
+// with... some Mozilla something or other. But all that's used from it
+// is std::pair, so we can just replace that with mozilla::Pair.
+#ifndef MOZILLA_CLIENT
+#include <utility>
+typedef std::pair<uint64, uint64> uint128;
 inline uint64 Uint128Low64(const uint128& x) { return x.first; }
 inline uint64 Uint128High64(const uint128& x) { return x.second; }
+#else
+#include "mozilla/Pair.h"
+typedef mozilla::Pair<uint64, uint64> uint128;
+inline uint64 Uint128Low64(const uint128& x) { return x.first(); }
+inline uint64 Uint128High64(const uint128& x) { return x.second(); }
+#endif
+
 
 // Hash function for a byte array.
 uint64 CityHash64(const char *buf, size_t len);

@@ -669,35 +669,25 @@ Function SendPing
     ${EndIf}
 
     ${If} "$R2" == "0"
-      ; Check to see if this install location is currently set as the default
-      ; browser by Default Programs.
-      ClearErrors
-      ReadRegStr $R3 HKLM "Software\RegisteredApplications" "${AppRegName}"
-      ${Unless} ${Errors}
-        AppAssocReg::QueryAppIsDefaultAll "${AppRegName}" "effective"
-        Pop $R3
-        ${If} $R3 == "1"
-          StrCpy $R3 ""
-          ReadRegStr $R2 HKLM "Software\Classes\http\shell\open\command" ""
-          ${If} $R2 != ""
-            ${GetPathFromString} "$R2" $R2
-            ${GetParent} "$R2" $R3
-            ${GetLongPath} "$R3" $R3
-            ${If} $R3 == $INSTDIR
-              StrCpy $R2 "1" ; This Firefox install is set as default.
-            ${Else}
-              StrCpy $R2 "$R2" "" -11 # length of firefox.exe
-              ${If} "$R2" == "${FileMainEXE}"
-                StrCpy $R2 "2" ; Another Firefox install is set as default.
-              ${Else}
-                StrCpy $R2 "0"
-              ${EndIf}
-            ${EndIf}
+      StrCpy $R3 ""
+      ReadRegStr $R2 HKLM "Software\Classes\http\shell\open\command" ""
+      ${If} $R2 != ""
+        ${GetPathFromString} "$R2" $R2
+        ${GetParent} "$R2" $R3
+        ${GetLongPath} "$R3" $R3
+        ${If} $R3 == $INSTDIR
+          StrCpy $R2 "1" ; This Firefox install is set as default.
+        ${Else}
+          StrCpy $R2 "$R2" "" -11 # length of firefox.exe
+          ${If} "$R2" == "${FileMainEXE}"
+            StrCpy $R2 "2" ; Another Firefox install is set as default.
           ${Else}
-            StrCpy $R2 "0" ; Firefox is not set as default.
+            StrCpy $R2 "0"
           ${EndIf}
         ${EndIf}
-      ${EndUnless}
+      ${Else}
+        StrCpy $R2 "0" ; Firefox is not set as default.
+      ${EndIf}
     ${EndIf}
 
     ${If} $CanSetAsDefault == "true"
