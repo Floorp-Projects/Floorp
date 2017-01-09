@@ -225,6 +225,9 @@ int main()
       TestHook("user32.dll", "GetKeyState") &&
 #endif
       MaybeTestHook(ShouldTestTipTsf(), "tiptsf.dll", "ProcessCaretEvents") &&
+#ifdef _M_IX86
+      TestHook("user32.dll", "SendMessageTimeoutW") &&
+#endif
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
