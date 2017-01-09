@@ -12,6 +12,7 @@
 
 #include "ds/MemoryProtectionExceptionHandler.h"
 #include "gc/Memory.h"
+#include "js/Utility.h"
 
 namespace js {
 
@@ -535,6 +536,66 @@ PageProtectingVector<T, N, A, P, Q, G, D, I, X>::lockSlow() const
 {
     MOZ_CRASH("Cannot access PageProtectingVector from more than one thread at a time!");
 }
+
+class ProtectedReallocPolicy
+{
+    /* We hardcode the page size here to minimize administrative overhead. */
+    static const size_t pageShift = 12;
+    static const size_t pageSize = 1 << pageShift;
+    static const size_t pageMask = pageSize - 1;
+
+  public:
+    template <typename T> T* maybe_pod_malloc(size_t numElems) {
+        return js_pod_malloc<T>(numElems);
+    }
+    template <typename T> T* maybe_pod_calloc(size_t numElems) {
+        return js_pod_calloc<T>(numElems);
+    }
+    template <typename T> T* maybe_pod_realloc(T* oldAddr, size_t oldSize, size_t newSize) {
+        MOZ_ASSERT_IF(oldAddr, oldSize);
+        MOZ_ASSERT(gc::SystemPageSize() == pageSize);
+        if (MOZ_UNLIKELY(!newSize))
+            return nullptr;
+        if (MOZ_UNLIKELY(!oldAddr))
+            return js_pod_malloc<T>(newSize);
+
+        T* newAddr = nullptr;
+        size_t initPage = (uintptr_t(oldAddr - 1) >> pageShift) + 1;
+        size_t lastPage = (uintptr_t(oldAddr + oldSize) >> pageShift) - 1;
+        size_t toCopy = (newSize >= oldSize ? oldSize : newSize) * sizeof(T);
+        if (MOZ_UNLIKELY(oldSize >= 32 * 1024 && lastPage >= initPage)) {
+            T* protectAddr = reinterpret_cast<T*>(initPage << pageShift);
+            size_t protectSize = (lastPage - initPage + 1) << pageShift;
+            MemoryProtectionExceptionHandler::addRegion(protectAddr, protectSize);
+            gc::MakePagesReadOnly(protectAddr, protectSize);
+            newAddr = js_pod_malloc<T>(newSize);
+            if (MOZ_LIKELY(newAddr))
+                memcpy(newAddr, oldAddr, toCopy);
+            gc::UnprotectPages(protectAddr, protectSize);
+            MemoryProtectionExceptionHandler::removeRegion(protectAddr);
+            if (MOZ_LIKELY(newAddr))
+                js_free(oldAddr);
+        } else {
+            newAddr = js_pod_malloc<T>(newSize);
+            if (MOZ_LIKELY(newAddr)) {
+                memcpy(newAddr, oldAddr, toCopy);
+                js_free(oldAddr);
+            }
+        }
+        return newAddr;
+    }
+
+    template <typename T> T* pod_malloc(size_t numElems) { return maybe_pod_malloc<T>(numElems); }
+    template <typename T> T* pod_calloc(size_t numElems) { return maybe_pod_calloc<T>(numElems); }
+    template <typename T> T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
+        return maybe_pod_realloc<T>(p, oldSize, newSize);
+    }
+    void free_(void* p) { js_free(p); }
+    void reportAllocOverflow() const {}
+    bool checkSimulatedOOM() const {
+        return !js::oom::ShouldFailWithOOM();
+    }
+};
 
 } /* namespace js */
 
