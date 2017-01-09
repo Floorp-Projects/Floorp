@@ -7,6 +7,7 @@ import webdriver
 
 import contextlib
 import httplib
+import urlparse
 
 
 """pytest fixtures for use in Python-based WPT tests.
@@ -130,6 +131,21 @@ class HTTPRequest(object):
         finally:
             conn.close()
 
+class Server(object):
+    """Fixture to allow access to wptrunner's base server url.
+
+    :param url_getter: Function to get server url from test environment, given
+        a protocol.
+    """
+    def __init__(self, url_getter):
+        self.server_url = url_getter
+
+    def where_is(self, uri, protocol="http"):
+        return urlparse.urljoin(self.server_url(protocol), uri)
+
+    @pytest.fixture
+    def server(self, request):
+        return self
 
 @pytest.fixture(scope="module")
 def http(session):
