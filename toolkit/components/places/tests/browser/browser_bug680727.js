@@ -6,8 +6,7 @@
 /* TEST_PATH=toolkit/components/places/tests/browser/browser_bug680727.js make -C $(OBJDIR) mochitest-browser-chrome */
 
 
-const kUniqueURI = Services.io.newURI("http://mochi.test:8888/#bug_680727",
-                                      null, null);
+const kUniqueURI = Services.io.newURI("http://mochi.test:8888/#bug_680727");
 var gAsyncHistory =
   Cc["@mozilla.org/browser/history;1"].getService(Ci.mozIAsyncHistory);
 

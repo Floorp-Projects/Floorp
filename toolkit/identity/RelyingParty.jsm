@@ -216,7 +216,7 @@ IdentityRelyingParty.prototype = {
     objectCopy(aOptions, options);
 
     // Append URLs after resolving
-    let baseURI = Services.io.newURI(rp.origin, null, null);
+    let baseURI = Services.io.newURI(rp.origin);
     for (let optionName of ["privacyPolicy", "termsOfService"]) {
       if (aOptions[optionName]) {
         options[optionName] = baseURI.resolve(aOptions[optionName]);

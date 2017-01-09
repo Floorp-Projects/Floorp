@@ -91,7 +91,7 @@ function run_test() {
 function createURI(s) {
   let service = Cc["@mozilla.org/network/io-service;1"]
     .getService(Ci.nsIIOService);
-  return service.newURI(s, null, null);
+  return service.newURI(s);
 }
 
 // Just throw if we ever get an update or download error.

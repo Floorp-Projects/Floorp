@@ -18,7 +18,7 @@ function test() {
     name: "updated 6 hours ago",
     version: "1.0",
     updateDate: new Date(Date.now() - (1000 * 60 * 60 * 6)),
-    releaseNotesURI: Services.io.newURI(TESTROOT + "releaseNotes.xhtml", null, null)
+    releaseNotesURI: Services.io.newURI(TESTROOT + "releaseNotes.xhtml")
   }, {
     id: "addon2@tests.mozilla.org",
     name: "updated 5 seconds ago",

@@ -61,7 +61,7 @@ function configureToLoadJarEngines() {
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-plugins",
-                          Services.io.newURI(url, null, null));
+                          Services.io.newURI(url));
 
   // Ensure a test engine exists in the app dir anyway.
   let dir = Services.dirsvc.get(NS_APP_SEARCH_DIR, Ci.nsIFile);
