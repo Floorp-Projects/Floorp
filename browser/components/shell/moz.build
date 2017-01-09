@@ -30,7 +30,11 @@ XPIDL_MODULE = 'shellservice'
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
+        '../../../other-licenses/nsis/Contrib/CityHash/cityhash/city.cpp',
         'nsWindowsShellService.cpp',
+    ]
+    LOCAL_INCLUDES += [
+        '../../../other-licenses/nsis/Contrib/CityHash/cityhash',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     SOURCES += [
