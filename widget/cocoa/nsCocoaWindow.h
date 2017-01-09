@@ -237,7 +237,7 @@ public:
 
     virtual void            Destroy() override;
 
-    NS_IMETHOD              Show(bool aState) override;
+    virtual void            Show(bool aState) override;
     virtual nsIWidget*      GetSheetWindowParent(void) override;
     virtual void            Enable(bool aState) override;
     virtual bool            IsEnabled() const override;
@@ -245,7 +245,7 @@ public:
     virtual void            SetFakeModal(bool aState) override;
     virtual bool            IsRunningAppModal() override;
     virtual bool            IsVisible() const override;
-    NS_IMETHOD              SetFocus(bool aState=false) override;
+    virtual nsresult        SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
     virtual LayoutDeviceIntPoint GetClientOffset() override;
     virtual LayoutDeviceIntSize
@@ -268,7 +268,7 @@ public:
                                              nsIRunnable* aCallback) override;
     virtual nsresult MakeFullScreen(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
-    NS_IMETHOD MakeFullScreenWithNativeTransition(
+    virtual nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) override final;
     NSAnimation* FullscreenTransitionAnimation() const { return mFullscreenTransitionAnimation; }
     void ReleaseFullscreenTransitionAnimation()
@@ -285,8 +285,10 @@ public:
     virtual LayoutDeviceIntRect GetScreenBounds() override;
     void                    ReportMoveEvent();
     void                    ReportSizeEvent();
-    NS_IMETHOD              SetCursor(nsCursor aCursor) override;
-    NS_IMETHOD              SetCursor(imgIContainer* aCursor, uint32_t aHotspotX, uint32_t aHotspotY) override;
+    virtual void            SetCursor(nsCursor aCursor) override;
+    virtual nsresult        SetCursor(imgIContainer* aCursor,
+                                      uint32_t aHotspotX, uint32_t aHotspotY)
+                                      override;
 
     CGFloat                 BackingScaleFactor();
     void                    BackingScaleFactorChanged();
@@ -297,15 +299,15 @@ public:
       return mozilla::DesktopToLayoutDeviceScale(BackingScaleFactor());
     }
 
-    NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
+    virtual nsresult        SetTitle(const nsAString& aTitle) override;
 
-    NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
+    virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
     virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
     virtual LayerManager* GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT) override;
-    NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                             nsEventStatus& aStatus) override;
+    virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+                                   nsEventStatus& aStatus) override;
     virtual void CaptureRollupEvents(nsIRollupListener * aListener,
                                      bool aDoCapture) override;
     virtual MOZ_MUST_USE nsresult GetAttention(int32_t aCycleCount) override;
@@ -318,7 +320,7 @@ public:
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
     virtual void SetDrawsTitle(bool aDrawTitle) override;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
-    NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+    virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
     virtual void SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
     virtual void SetDrawsInTitlebar(bool aState) override;
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;
@@ -338,14 +340,13 @@ public:
     void SetMenuBar(nsMenuBarX* aMenuBar);
     nsMenuBarX *GetMenuBar();
 
-    NS_IMETHOD_(void) SetInputContext(
-                        const InputContext& aContext,
-                        const InputContextAction& aAction) override;
-    NS_IMETHOD_(InputContext) GetInputContext() override
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction) override;
+    virtual InputContext GetInputContext() override
     {
       return mInputContext;
     }
-    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+    virtual bool ExecuteNativeKeyBinding(
                         NativeKeyBindingsType aType,
                         const mozilla::WidgetKeyboardEvent& aEvent,
                         DoCommandCallback aCallback,

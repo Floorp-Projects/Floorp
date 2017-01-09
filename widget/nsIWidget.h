@@ -636,7 +636,7 @@ class nsIWidget : public nsISupports
      * @param aState true to show the Widget, false to hide it
      *
      */
-    NS_IMETHOD Show(bool aState) = 0;
+    virtual void Show(bool aState) = 0;
 
     /**
      * Make the window modal.
@@ -859,7 +859,7 @@ class nsIWidget : public nsISupports
      *               the case of popups may not be this widget's toplevel
      *               window) is already active.
      */
-    NS_IMETHOD SetFocus(bool aRaise = false) = 0;
+    virtual nsresult SetFocus(bool aRaise = false) = 0;
 
     /**
      * Get this widget's outside dimensions relative to its parent widget. For
@@ -913,9 +913,8 @@ class nsIWidget : public nsISupports
      *  Windows: shrinking top non-client height will remove application
      *  icon and window title text. Glass desktops will refuse to set
      *  dimensions between zero and size < system default.
-     *
      */
-    NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
+    virtual nsresult SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
 
     /**
      * Get the client offset from the window origin.
@@ -955,8 +954,7 @@ class nsIWidget : public nsISupports
      *
      * @param aCursor the new cursor for this widget
      */
-
-    NS_IMETHOD SetCursor(nsCursor aCursor) = 0;
+    virtual void SetCursor(nsCursor aCursor) = 0;
 
     /**
      * If a cursor type is currently cached locally for this widget, clear the
@@ -974,8 +972,8 @@ class nsIWidget : public nsISupports
      * @retval NS_ERROR_NOT_IMPLEMENTED if setting images as cursors is not
      *         supported
      */
-    NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                         uint32_t aHotspotX, uint32_t aHotspotY) = 0;
+    virtual nsresult SetCursor(imgIContainer* aCursor,
+                               uint32_t aHotspotX, uint32_t aHotspotY) = 0;
 
     /**
      * Get the window type of this widget.
@@ -1221,7 +1219,7 @@ class nsIWidget : public nsISupports
      * Invalidate a specified rect for a widget so that it will be repainted
      * later.
      */
-    NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) = 0;
+    virtual void Invalidate(const LayoutDeviceIntRect& aRect) = 0;
 
     enum LayerManagerPersistence
     {
@@ -1313,7 +1311,7 @@ class nsIWidget : public nsISupports
      *
      * @param aTitle string displayed as the title of the widget
      */
-    NS_IMETHOD SetTitle(const nsAString& aTitle) = 0;
+    virtual nsresult SetTitle(const nsAString& aTitle) = 0;
 
     /**
      * Set the widget's icon.
@@ -1342,10 +1340,9 @@ class nsIWidget : public nsISupports
 
     /**
      * Dispatches an event to the widget
-     *
      */
-    NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* event,
-                             nsEventStatus & aStatus) = 0;
+    virtual nsresult DispatchEvent(mozilla::WidgetGUIEvent* event,
+                                   nsEventStatus & aStatus) = 0;
 
     /**
      * Dispatches an event to APZ only.
@@ -1726,7 +1723,7 @@ public:
      * @param aResult - the current text selection. Is empty if no selection.
      * @return nsresult - whether or not aResult was assigned the selected text.
      */
-    NS_IMETHOD
+    virtual MOZ_MUST_USE nsresult
     GetSelectionAsPlaintext(nsAString& aResult)
     {
       return NS_ERROR_NOT_IMPLEMENTED;
@@ -1738,7 +1735,7 @@ public:
      * @return If the notification is mouse button event and it's consumed by
      *         IME, this returns NS_SUCCESS_EVENT_CONSUMED.
      */
-    NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) = 0;
+    virtual nsresult NotifyIME(const IMENotification& aIMENotification) = 0;
 
     /**
      * Start plugin IME.  If this results in a string getting committed, the
@@ -1786,20 +1783,20 @@ public:
     /*
      * Notifies the input context changes.
      */
-    NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                      const InputContextAction& aAction) = 0;
+    virtual void SetInputContext(const InputContext& aContext,
+                                 const InputContextAction& aAction) = 0;
 
     /*
      * Get current input context.
      */
-    NS_IMETHOD_(InputContext) GetInputContext() = 0;
+    virtual InputContext GetInputContext() = 0;
 
     /**
      * Get native IME context.  This is different from GetNativeData() with
      * NS_RAW_NATIVE_IME_CONTEXT, the result is unique even if in a remote
      * process.
      */
-    NS_IMETHOD_(NativeIMEContext) GetNativeIMEContext();
+    virtual NativeIMEContext GetNativeIMEContext();
 
     /*
      * Given a WidgetKeyboardEvent, this method synthesizes a corresponding
@@ -1820,7 +1817,7 @@ public:
       NativeKeyBindingsForMultiLineEditor,
       NativeKeyBindingsForRichTextEditor
     };
-    NS_IMETHOD_(bool) ExecuteNativeKeyBinding(
+    virtual bool ExecuteNativeKeyBinding(
                         NativeKeyBindingsType aType,
                         const mozilla::WidgetKeyboardEvent& aEvent,
                         DoCommandCallback aCallback,
@@ -1960,14 +1957,14 @@ public:
      * GetTextEventDispatcher() returns TextEventDispatcher belonging to the
      * widget.  Note that this never returns nullptr.
      */
-    NS_IMETHOD_(TextEventDispatcher*) GetTextEventDispatcher() = 0;
+    virtual TextEventDispatcher* GetTextEventDispatcher() = 0;
 
     /**
      * GetNativeTextEventDispatcherListener() returns a
      * TextEventDispatcherListener instance which is used when the widget
      * instance handles native IME and/or keyboard events.
      */
-    NS_IMETHOD_(TextEventDispatcherListener*)
+    virtual TextEventDispatcherListener*
       GetNativeTextEventDispatcherListener() = 0;
 
     virtual void ZoomToRect(const uint32_t& aPresShellId,
