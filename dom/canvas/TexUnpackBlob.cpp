@@ -297,7 +297,6 @@ TexUnpackBlob::ConvertIfNeeded(WebGLContext* webgl, const char* funcName,
                                WebGLTexelFormat srcFormat,
                                const uint8_t* const srcBegin, const ptrdiff_t srcStride,
                                WebGLTexelFormat dstFormat, const ptrdiff_t dstStride,
-
                                const uint8_t** const out_begin,
                                UniqueBuffer* const out_anchoredBuffer) const
 {
@@ -573,7 +572,7 @@ TexUnpackImage::Validate(WebGLContext* webgl, const char* funcName,
     if (!ValidatePIForDOM(webgl, funcName, pi))
         return false;
 
-    const auto& fullRows = mImage->GetSize().height;
+    const auto fullRows = mImage->GetSize().height;
     return ValidateUnpackPixels(webgl, funcName, fullRows, 0, this);
 }
 
@@ -739,7 +738,7 @@ TexUnpackSurface::Validate(WebGLContext* webgl, const char* funcName,
     if (!ValidatePIForDOM(webgl, funcName, pi))
         return false;
 
-    const auto& fullRows = mSurf->GetSize().height;
+    const auto fullRows = mSurf->GetSize().height;
     return ValidateUnpackPixels(webgl, funcName, fullRows, 0, this);
 }
 
@@ -754,8 +753,8 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
 
     ////
 
-    const auto& rowLength = mSurf->GetSize().width;
-    const auto& rowCount = mSurf->GetSize().height;
+    const auto rowLength = mSurf->GetSize().width;
+    const auto rowCount = mSurf->GetSize().height;
 
     const auto& dstPI = dstDUI->ToPacking();
     const auto& dstBPP = webgl::BytesPerPixel(dstPI);
