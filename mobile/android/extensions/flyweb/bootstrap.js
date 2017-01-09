@@ -35,7 +35,7 @@ AboutFlyWeb.prototype = Object.freeze({
   },
 
   newChannel: function(aURI, aLoadInfo) {
-    let uri = Services.io.newURI("chrome://flyweb/content/aboutFlyWeb.xhtml", null, null);
+    let uri = Services.io.newURI("chrome://flyweb/content/aboutFlyWeb.xhtml");
     let channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.originalURI = aURI;
     return channel;

@@ -141,8 +141,7 @@ function testRegister(assert, text) {
         var ios = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
 
-        var uri = ios.newURI("data:text/plain;charset=utf-8," + text,
-                             null, null);
+        var uri = ios.newURI("data:text/plain;charset=utf-8," + text);
         var channel = ios.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
 
         channel.originalURI = aURI;
@@ -164,7 +163,7 @@ function testRegister(assert, text) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   assert.equal(
-    about.getURIFlags(ios.newURI("http://foo.com", null, null)),
+    about.getURIFlags(ios.newURI("http://foo.com")),
     Ci.nsIAboutModule.ALLOW_SCRIPT
   );
 

@@ -1,8 +1,8 @@
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function run_test() {
-  var base = NetUtil.newURI("http://www.example.com", null, null);
-  var about1 = NetUtil.newURI("about:blank", null, null);
+  var base = NetUtil.newURI("http://www.example.com");
+  var about1 = NetUtil.newURI("about:blank");
   var about2 = NetUtil.newURI("about:blank", null, base);
 
   var chan1 = NetUtil.newChannel({

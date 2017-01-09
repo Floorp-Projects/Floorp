@@ -116,14 +116,14 @@ function* test_domainPolicy() {
   yield currentTask;
   activateDomainPolicy();
   var bl = policy.blacklist;
-  bl.add(Services.io.newURI('http://example.com', null, null));
+  bl.add(Services.io.newURI('http://example.com'));
   currentTask = runTest(testDomain("http://example.com"));
   checkAndCleanup(yield currentTask);
 
   info("Activating domainPolicy first, creating child process after");
   activateDomainPolicy();
   var bl = policy.blacklist;
-  bl.add(Services.io.newURI('http://example.com', null, null));
+  bl.add(Services.io.newURI('http://example.com'));
   currentTask = initProcess();
   yield currentTask;
   currentTask = runTest(testDomain("http://example.com"));

@@ -296,7 +296,7 @@ Object.defineProperties(PushRecord.prototype, {
       }
       let principal = principals.get(this);
       if (!principal) {
-        let uri = Services.io.newURI(this.scope, null, null);
+        let uri = Services.io.newURI(this.scope);
         // Allow tests to omit origin attributes.
         let originSuffix = this.originAttributes || "";
         let originAttributes =

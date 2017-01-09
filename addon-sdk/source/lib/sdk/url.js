@@ -27,7 +27,7 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm");
 
 function newURI(uriStr, base) {
   try {
-    let baseURI = base ? ios.newURI(base, null, null) : null;
+    let baseURI = base ? ios.newURI(base) : null;
     return ios.newURI(uriStr, null, baseURI);
   }
   catch (e) {

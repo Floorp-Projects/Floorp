@@ -1748,7 +1748,7 @@ RequestReader.prototype =
       {
         var uri = Cc["@mozilla.org/network/io-service;1"]
                     .getService(Ci.nsIIOService)
-                    .newURI(fullPath, null, null);
+                    .newURI(fullPath);
         fullPath = uri.path;
         scheme = uri.scheme;
         host = metadata._host = uri.asciiHost;

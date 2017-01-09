@@ -692,7 +692,7 @@ BrowserElementParent.prototype = {
       return null;
     }
 
-    let uri = Services.io.newURI(_url, null, null);
+    let uri = Services.io.newURI(_url);
     let url = uri.QueryInterface(Ci.nsIURL);
 
     debug('original _options = ' + uneval(_options));
@@ -781,7 +781,7 @@ BrowserElementParent.prototype = {
                                              Ci.nsIRequestObserver])
     };
 
-    let referrer = Services.io.newURI(_options.referrer, null, null);
+    let referrer = Services.io.newURI(_options.referrer);
     let principal =
       Services.scriptSecurityManager.createCodebasePrincipal(
         referrer, this._frameLoader.loadContext.originAttributes);

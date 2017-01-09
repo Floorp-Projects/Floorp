@@ -74,7 +74,7 @@ function run_test()
   // Set a cookie on one of the URIs.  It doesn't matter which one, since
   // they're both from the same host, which is enough for the cookie service
   // to send the cookie with both requests.
-  var postRedirectURI = ioService.newURI(postRedirectURL, "", null);
+  var postRedirectURI = ioService.newURI(postRedirectURL, "");
   Cc["@mozilla.org/cookieService;1"].getService(Ci.nsICookieService).
     setCookieString(postRedirectURI, null, sentCookieVal, chan);
 

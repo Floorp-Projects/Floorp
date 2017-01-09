@@ -14,7 +14,7 @@ var httpServer = null;
 function make_uri(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
-  return ios.newURI(url, null, null);
+  return ios.newURI(url);
 }
 
 // ensure the cache service is prepped when running the test

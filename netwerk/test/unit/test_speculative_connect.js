@@ -143,7 +143,7 @@ TestFailedStreamCallback.prototype = {
  */
 function test_speculative_connect() {
     serv = new TestServer();
-    var URI = ios.newURI("http://localhost:" + serv.listener.port + "/just/a/test", null, null);
+    var URI = ios.newURI("http://localhost:" + serv.listener.port + "/just/a/test");
     ios.QueryInterface(Ci.nsISpeculativeConnect)
         .speculativeConnect(URI, null);
 }

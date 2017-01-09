@@ -13,7 +13,7 @@ function debug(msg) {
 
 function netErrorURL() {
   let systemManifestURL = Services.prefs.getCharPref("b2g.system_manifest_url");
-  systemManifestURL = Services.io.newURI(systemManifestURL, null, null);
+  systemManifestURL = Services.io.newURI(systemManifestURL);
   let netErrorURL = Services.prefs.getCharPref("b2g.neterror.url");
   netErrorURL = Services.io.newURI(netErrorURL, null, systemManifestURL);
   return netErrorURL.spec;
@@ -58,7 +58,7 @@ B2GAboutRedirector.prototype = {
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
 
-    var newURI = ios.newURI(moduleInfo.uri, null, null);
+    var newURI = ios.newURI(moduleInfo.uri);
 
     var channel = ios.newChannelFromURIWithLoadInfo(newURI, aLoadInfo);
 

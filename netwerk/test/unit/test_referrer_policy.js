@@ -12,13 +12,13 @@ function test_policy(test) {
     prefs.setIntPref("network.http.referer.userControlPolicy", 3);
   }
 
-  var uri = NetUtil.newURI(test.url, "", null)
+  var uri = NetUtil.newURI(test.url, "")
   var chan = NetUtil.newChannel({
     uri: uri,
     loadUsingSystemPrincipal: true
   });
 
-  var referrer = NetUtil.newURI(test.referrer, "", null);
+  var referrer = NetUtil.newURI(test.referrer, "");
   chan.QueryInterface(Components.interfaces.nsIHttpChannel);
   chan.setReferrerWithPolicy(referrer, test.policy);
   if (test.expectedReferrerSpec === undefined) {

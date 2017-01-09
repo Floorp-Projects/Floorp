@@ -192,7 +192,7 @@ function open(uri, options) {
   if (!uri)
     throw new Error('browser.chromeURL is undefined, please provide an explicit uri');
 
-  if (['chrome', 'resource', 'data'].indexOf(io.newURI(uri, null, null).scheme) < 0)
+  if (['chrome', 'resource', 'data'].indexOf(io.newURI(uri).scheme) < 0)
     throw new Error('only chrome, resource and data uris are allowed');
 
   let newWindow = windowWatcher.

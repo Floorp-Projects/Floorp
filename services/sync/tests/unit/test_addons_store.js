@@ -258,7 +258,7 @@ add_test(function test_addon_syncability() {
   function createURI(s) {
     let service = Components.classes["@mozilla.org/network/io-service;1"]
                   .getService(Components.interfaces.nsIIOService);
-    return service.newURI(s, null, null);
+    return service.newURI(s);
   }
 
   let trusted = [

@@ -132,7 +132,7 @@ function hiddenDataCheck(bytes, uri, path)
   var ios = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService);
 
-  var top = ios.newURI(uri, null, null);
+  var top = ios.newURI(uri);
 
   // N.B. No ERROR_IF_SEE_THIS.txt^ file!
   var dirEntries = [{name: "file.txt", isDirectory: false},
@@ -216,7 +216,7 @@ function dataCheck(bytes, uri, path, dirEntries)
   var ios = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService);
 
-  var dirURI = ios.newURI(uri, null, null);
+  var dirURI = ios.newURI(uri);
 
   for (var i = 0; i < items.length; i++)
   {

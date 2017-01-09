@@ -71,7 +71,7 @@ this.SafeMode = {
     let document = SafeMode.window.document;
     SafeMode.window.screen.mozLockOrientation("portrait");
 
-    let url = Services.io.newURI(shell.homeURL, null, null)
+    let url = Services.io.newURI(shell.homeURL)
                          .resolve(kSafeModePage);
     debug("Registry is ready, loading " + url);
     let frame = document.createElementNS("http://www.w3.org/1999/xhtml", "html:iframe");

@@ -58,7 +58,7 @@ var Feedback = {
 
   _isAllowed: function(node) {
     let uri = node.ownerDocument.documentURIObject;
-    let feedbackURI = Services.io.newURI(this._feedbackURL, null, null);
+    let feedbackURI = Services.io.newURI(this._feedbackURL);
     return uri.prePath === feedbackURI.prePath;
   }
 };

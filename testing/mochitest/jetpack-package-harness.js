@@ -129,7 +129,7 @@ function testInit() {
 
       // The SDK assumes it is being run from resource URIs
       let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIChromeRegistry);
-      let realPath = chromeReg.convertChromeURL(Services.io.newURI(TEST_PACKAGE, null, null));
+      let realPath = chromeReg.convertChromeURL(Services.io.newURI(TEST_PACKAGE));
       let resProtocol = Cc["@mozilla.org/network/protocol;1?name=resource"].getService(Ci.nsIResProtocolHandler);
       resProtocol.setSubstitution("jetpack-package-tests", realPath);
 

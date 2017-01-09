@@ -395,7 +395,7 @@ this.PushService = {
     }
 
     try {
-      uri = Services.io.newURI(serverURL, null, null);
+      uri = Services.io.newURI(serverURL);
     } catch (e) {
       console.warn("findService: Error creating valid URI from",
         "dom.push.serverURL", serverURL);

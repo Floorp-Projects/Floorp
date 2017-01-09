@@ -159,7 +159,7 @@ function testAuthJarNoInterfere(e) {
                .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
   var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
                   .getService(SpecialPowers.Ci.nsIIOService);
-  var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs", null, null);
+  var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs");
 
   // Set a bunch of auth data that should not conflict with the correct auth data already
   // stored in the cache.
@@ -200,7 +200,7 @@ function testAuthJarInterfere(e) {
                .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
   var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
                   .getService(SpecialPowers.Ci.nsIIOService);
-  var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs", null, null);
+  var uri = ioService.newURI("http://test/tests/dom/browser-element/mochitest/file_http_401_response.sjs");
 
   // Set some auth data that should overwrite the successful stored details.
   var principal = secMan.createCodebasePrincipal(uri, {inIsolatedMozBrowser: true});

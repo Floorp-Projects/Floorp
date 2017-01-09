@@ -261,7 +261,7 @@ function add_simple_tests() {
     // is still valid. Do some additional tests relating to IDN handling.
     let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
                                 .getService(Ci.nsICertOverrideService);
-    let uri = Services.io.newURI("https://bug413909.xn--hxajbheg2az3al.xn--jxalpdlp", null, null);
+    let uri = Services.io.newURI("https://bug413909.xn--hxajbheg2az3al.xn--jxalpdlp");
     let cert = constructCertFromFile("bad_certs/idn-certificate.pem");
     Assert.ok(certOverrideService.hasMatchingOverride(uri.asciiHost, 8443, cert, {}, {}),
               "IDN certificate should have matching override using ascii host");

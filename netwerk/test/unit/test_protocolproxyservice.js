@@ -266,7 +266,7 @@ function filter_test0_5(pi)
 function run_filter_test_uri() {
   var cb = new resolveCallback();
   cb.nextFunction = filter_test_uri0_1;
-  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  var uri = ios.newURI("http://www.mozilla.org/");
   pps.asyncResolve(uri, 0, cb);
 }
 
@@ -282,7 +282,7 @@ function filter_test_uri0_1(pi) {
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test_uri0_2;
-  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  var uri = ios.newURI("http://www.mozilla.org/");
   pps.asyncResolve(uri, 0, cb);
 }
 
@@ -295,7 +295,7 @@ function filter_test_uri0_2(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test_uri0_3;
-  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  var uri = ios.newURI("http://www.mozilla.org/");
   pps.asyncResolve(uri, 0, cb);
 }
 
@@ -310,7 +310,7 @@ function filter_test_uri0_3(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test_uri0_4;
-  var uri = ios.newURI("http://www.mozilla.org/", null, null);
+  var uri = ios.newURI("http://www.mozilla.org/");
   pps.asyncResolve(uri, 0, cb);
 }
 
