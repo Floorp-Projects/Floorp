@@ -146,6 +146,18 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         outState.putString(SAVED_TOOLBAR_TITLE, toolbarTitle);
     }
 
+    @Override
+    public void onResume() {
+        if (lastSelectedTabId >= 0) {
+            final Tabs tabs = Tabs.getInstance();
+            final Tab tab =  tabs.getTab(lastSelectedTabId);
+            if (tab == null) {
+                finish();
+            }
+        }
+        super.onResume();
+    }
+
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
