@@ -524,16 +524,16 @@ class Element(object):
     @property
     @command
     def text(self):
-        return self.session.send_command("GET", self.url("text"))
+        return self.session.send_command("GET", self.url("text"), key="value")
 
     @property
     @command
     def name(self):
-        return self.session.send_command("GET", self.url("name"))
+        return self.session.send_command("GET", self.url("name"), key="value")
 
     @command
     def style(self, property_name):
-        return self.session.send_command("GET", self.url("css/%s" % property_name))
+        return self.session.send_command("GET", self.url("css/%s" % property_name), key="value")
 
     @property
     @command
@@ -541,5 +541,9 @@ class Element(object):
         return self.session.send_command("GET", self.url("rect"))
 
     @command
+    def property(self, name):
+        return self.session.send_command("GET", self.url("property/%s" % name), key="value")
+
+    @command
     def attribute(self, name):
-        return self.session.send_command("GET", self.url("attribute/%s" % name))
+        return self.session.send_command("GET", self.url("attribute/%s" % name), key="value")
