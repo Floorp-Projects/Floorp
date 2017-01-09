@@ -46,6 +46,7 @@ var publicProperties = [
   "getDeviceId",
   "getKeys",
   "getOAuthToken",
+  "getProfileCache",
   "getSignedInUser",
   "getSignedInUserProfile",
   "handleDeviceDisconnection",
@@ -64,6 +65,7 @@ var publicProperties = [
   "resendVerificationEmail",
   "resetCredentials",
   "sessionStatus",
+  "setProfileCache",
   "setSignedInUser",
   "signOut",
   "updateDeviceRegistration",
@@ -1575,6 +1577,17 @@ FxAccountsInternal.prototype = {
 
     let currentState = this.currentAccountState;
     return currentState.updateUserAccountData(updateData);
+  },
+
+  getProfileCache() {
+    return this.currentAccountState.getUserAccountData(["profileCache"])
+      .then(data => data ? data.profileCache : null);
+  },
+
+  setProfileCache(profileCache) {
+    return this.currentAccountState.updateUserAccountData({
+      profileCache
+    });
   },
 
   // If you change what we send to the FxA servers during device registration,
