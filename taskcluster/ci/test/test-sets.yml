@@ -166,7 +166,6 @@ linux32-tests:
     - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-clipboard
-    - mochitest-devtools-chrome
     - mochitest-gpu
     - mochitest-jetpack
     - mochitest-media
@@ -174,6 +173,10 @@ linux32-tests:
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell
+
+linux32-opt-tests:
+    # mochitest-dt is too slow on linux32/debug
+    - mochitest-devtools-chrome
 
 android-common-tests:
     - cppunit
