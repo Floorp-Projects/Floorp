@@ -73,6 +73,7 @@ class TypeChecker:
                                       (key,
                                        nice_type_name(self._args[0]),
                                        nice_type_name(type(x)))
+
         # Check types of keys and values in dictionaries.
         elif self._kind is dict:
             if len(value.keys()) < 1:
@@ -94,13 +95,13 @@ class TypeChecker:
 def type_check_event_fields(category, definition):
     """Perform a type/schema check on the event definition."""
     REQUIRED_FIELDS = {
-        'methods': TypeChecker(list, basestring),
         'objects': TypeChecker(list, basestring),
         'bug_numbers': TypeChecker(list, int),
         'notification_emails': TypeChecker(list, basestring),
         'description': TypeChecker(basestring),
     }
     OPTIONAL_FIELDS = {
+        'methods': TypeChecker(list, basestring),
         'release_channel_collection': TypeChecker(basestring),
         'expiry_date': TypeChecker(OneOf, basestring, datetime.date),
         'expiry_version': TypeChecker(basestring),
@@ -136,11 +137,18 @@ def string_check(category, field_name, value, min_length, max_length, regex=None
 class EventData:
     """A class representing one event."""
 
-    def __init__(self, category, definition):
+    def __init__(self, category, name, definition):
         type_check_event_fields(category, definition)
 
-        string_check(category, 'methods', definition.get('methods')[0], 1, MAX_METHOD_NAME_LENGTH, regex=IDENTIFIER_PATTERN)
-        string_check(category, 'objects', definition.get('objects')[0], 1, MAX_OBJECT_NAME_LENGTH, regex=IDENTIFIER_PATTERN)
+        self._category = category
+        self._name = name
+        self._definition = definition
+
+        # Check method & object string patterns.
+        for method in self.methods:
+            string_check(category, 'methods', method, 1, MAX_METHOD_NAME_LENGTH, regex=IDENTIFIER_PATTERN)
+        for obj in self.objects:
+            string_check(category, 'objects', obj, 1, MAX_OBJECT_NAME_LENGTH, regex=IDENTIFIER_PATTERN)
 
         # Check release_channel_collection
         rcc_key = 'release_channel_collection'
@@ -171,8 +179,6 @@ class EventData:
             definition['expiry_date'] = datetime.datetime.strptime(expiry_date, '%Y-%m-%d')
 
         # Finish setup.
-        self._category = category
-        self._definition = definition
         definition['expiry_version'] = add_expiration_postfix(definition.get('expiry_version', 'never'))
 
     @property
@@ -185,8 +191,12 @@ class EventData:
         return convert_to_cpp_identifier(self._category, ".")
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def methods(self):
-        return self._definition.get('methods')
+        return self._definition.get('methods', [self.name])
 
     @property
     def objects(self):
@@ -256,8 +266,13 @@ def load_events(filename):
     event_list = []
 
     # Events are defined in a fixed two-level hierarchy within the definition file.
-    # The first level contains the category (group name), while the second level contains the
-    # event definitions (e.g. "category.name: [<event definition>, ...], ...").
+    # The first level contains the category (group name), while the second level contains
+    # the event names and definitions, e.g.:
+    #   category.name:
+    #     event_name:
+    #       <event definition>
+    #      ...
+    #   ...
     for category_name,category in events.iteritems():
         string_check('', 'category', category_name, 1, MAX_CATEGORY_NAME_LENGTH, regex=IDENTIFIER_PATTERN)
 
@@ -265,7 +280,8 @@ def load_events(filename):
         if not category or len(category) == 0:
             raise ValueError(category_name + ' must contain at least one entry')
 
-        for entry in category:
-            event_list.append(EventData(category_name, entry))
+        for name,entry in category.iteritems():
+            string_check(category, 'name', name, 1, MAX_METHOD_NAME_LENGTH, regex=IDENTIFIER_PATTERN)
+            event_list.append(EventData(category_name, name, entry))
 
     return event_list
