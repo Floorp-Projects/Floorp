@@ -466,10 +466,6 @@ private:
   void OnMediaSinkAudioError(nsresult aResult);
   void OnMediaSinkVideoError();
 
-  // Return true if the video decoder's decode speed can not catch up the
-  // play time.
-  bool NeedToSkipToNextKeyframe();
-
   void* const mDecoderID;
   const RefPtr<FrameStatistics> mFrameStats;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
