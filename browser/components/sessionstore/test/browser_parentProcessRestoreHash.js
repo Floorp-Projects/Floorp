@@ -22,7 +22,7 @@ let TestAboutPage = {
 
   newChannel: function(aURI, aLoadInfo) {
     // about: page inception!
-    let newURI = Services.io.newURI(SELFCHROMEURL, null, null);
+    let newURI = Services.io.newURI(SELFCHROMEURL);
     let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
                                                             aLoadInfo);
     channel.originalURI = aURI;

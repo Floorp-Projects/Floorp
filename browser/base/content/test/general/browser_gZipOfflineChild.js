@@ -7,7 +7,7 @@ const URL = "http://mochi.test:8888/browser/browser/base/content/test/general/te
 
 registerCleanupFunction(function() {
   // Clean up after ourself
-  let uri = Services.io.newURI(URL, null, null);
+  let uri = Services.io.newURI(URL);
   let principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
   Services.perms.removeFromPrincipal(principal, "offline-app");
   Services.prefs.clearUserPref("offline-apps.allow_by_default");

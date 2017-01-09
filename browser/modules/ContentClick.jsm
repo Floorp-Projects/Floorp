@@ -49,7 +49,7 @@ var ContentClick = {
       // the title that should be used for the sidebar panel.
       PlacesUIUtils.showBookmarkDialog({ action: "add"
                                        , type: "bookmark"
-                                       , uri: Services.io.newURI(json.href, null, null)
+                                       , uri: Services.io.newURI(json.href)
                                        , title: json.title
                                        , loadBookmarkInSidebar: true
                                        , hiddenRows: [ "description"

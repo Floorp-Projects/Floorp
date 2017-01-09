@@ -70,7 +70,7 @@ var gTests = [
     yield checkSharingUI({video: true, audio: true});
 
     let Perms = Services.perms;
-    let uri = Services.io.newURI("https://example.com/", null, null);
+    let uri = Services.io.newURI("https://example.com/");
     is(Perms.testExactPermission(uri, "microphone"), Perms.ALLOW_ACTION,
                                  "microphone persistently allowed");
     is(Perms.testExactPermission(uri, "camera"), Perms.ALLOW_ACTION,

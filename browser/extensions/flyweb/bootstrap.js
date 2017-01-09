@@ -224,7 +224,7 @@ let FlyWebView = {
 
         aDocument.getElementById("PanelUI-multiView").appendChild(panel);
 
-        this._sheetURI = Services.io.newURI("chrome://flyweb/skin/flyweb.css", null, null);
+        this._sheetURI = Services.io.newURI("chrome://flyweb/skin/flyweb.css");
         aDocument.defaultView.QueryInterface(Ci.nsIInterfaceRequestor).
             getInterface(Ci.nsIDOMWindowUtils).loadSheet(this._sheetURI, 1);
       },

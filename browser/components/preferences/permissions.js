@@ -92,12 +92,12 @@ var gPermissionManager = {
       // permissions from being entered by the user.
       let uri;
       try {
-        uri = Services.io.newURI(input_url, null, null);
+        uri = Services.io.newURI(input_url);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
         // If we have ended up with an unknown scheme, the following will throw.
         principal.origin;
       } catch (ex) {
-        uri = Services.io.newURI("http://" + input_url, null, null);
+        uri = Services.io.newURI("http://" + input_url);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
         // If we have ended up with an unknown scheme, the following will throw.
         principal.origin;
