@@ -2586,6 +2586,12 @@ HTMLMediaElement::AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
   }
   aOutputStream.mCapturingMediaStream = true;
 
+  if (aOutputStream.mStream == mSrcStream) {
+    // Cycle detected. This can happen since tracks are added async.
+    // We avoid forwarding it to the output here or we'd get into an infloop.
+    return;
+  }
+
   MediaStream* outputSource = aOutputStream.mStream->GetInputStream();
   if (!outputSource) {
     NS_ERROR("No output source stream");
