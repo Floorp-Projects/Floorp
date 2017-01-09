@@ -416,9 +416,14 @@ DocAccessibleParent::RecvShutdown()
 void
 DocAccessibleParent::Destroy()
 {
+  // If we are already shutdown that is because our containing tab parent is
+  // shutting down in which case we don't need to do anything.
+  if (mShutdown) {
+    return;
+  }
+
   NS_ASSERTION(mChildDocs.IsEmpty(),
                "why weren't the child docs destroyed already?");
-  MOZ_ASSERT(!mShutdown);
   mShutdown = true;
 
   uint32_t childDocCount = mChildDocs.Length();
