@@ -2,6 +2,9 @@
 # CSS properties. These tests require webkit prefix support to be enabled.
 default-preferences pref(layout.css.prefixes.webkit,true)
 
+# Tests for abspos children inside of a -webkit-box:
+== webkit-box-abspos-children-1.html webkit-box-abspos-children-1-ref.html
+
 # Tests for anonymous flex item formation inside of a "-webkit-box":
 # Note: some of these tests are marked as failing, because we don't match
 # WebKit/Blink on them.  (The reference case represents the WebKit/Blink
