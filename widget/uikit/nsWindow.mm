@@ -543,7 +543,7 @@ nsWindow::Destroy()
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
 {
     for (uint32_t i = 0; i < config.Length(); ++i) {
@@ -558,7 +558,7 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& config)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
   if (aState != mVisible) {
@@ -570,7 +570,6 @@ nsWindow::Show(bool aState)
       }
       mVisible = aState;
   }
-  return NS_OK;
 }
 
 void
@@ -656,11 +655,11 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
     ReportSizeModeEvent(aMode);
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   if (!mNativeView || !mVisible)
-    return NS_OK;
+    return;
 
   MOZ_RELEASE_ASSERT(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                      "Shouldn't need to invalidate with accelerated OMTC layers!");
@@ -668,11 +667,9 @@ nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 
   [mNativeView setNeedsLayout];
   [mNativeView setNeedsDisplayInRect:DevPixelsToUIKitPoints(mBounds, BackingScaleFactor())];
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetFocus(bool aRaise)
 {
   [[mNativeView window] makeKeyWindow];
@@ -760,7 +757,7 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset()
     return offset;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                         nsEventStatus& aStatus)
 {
@@ -773,7 +770,7 @@ nsWindow::DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -781,7 +778,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     mInputContext = aContext;
 }
 
-NS_IMETHODIMP_(mozilla::widget::InputContext)
+mozilla::widget::InputContext
 nsWindow::GetInputContext()
 {
     return mInputContext;

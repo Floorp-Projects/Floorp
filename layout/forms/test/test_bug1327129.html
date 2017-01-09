@@ -1,0 +1,385 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=935876
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1327129</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1327129">Mozilla Bug 1327129</a>
+<p id="display"></p>
+<div>
+<select size="3" firstNonDisabledIndex="0">
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" firstNonDisabledIndex="1">
+  <option disabled>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" firstNonDisabledIndex="0">
+  <optgroup><option>1</option></optgroup>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" firstNonDisabledIndex="1">
+  <option disabled>1</option>
+  <optgroup><option>2</option></optgroup>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" firstNonDisabledIndex="2">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" firstNonDisabledIndex="-1">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option disabled>3</option>
+  <option disabled>4</option>
+  <option disabled>5</option>
+</select>
+<select size="3" multiple firstNonDisabledIndex="0">
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" multiple firstNonDisabledIndex="0">
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" multiple firstNonDisabledIndex="0">
+  <optgroup><option>1</option></optgroup>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" multiple firstNonDisabledIndex="1">
+  <option disabled>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" multiple firstNonDisabledIndex="3">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option disabled>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="3" multiple firstNonDisabledIndex="-1">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option disabled>3</option>
+  <option disabled>4</option>
+  <option disabled>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="0">
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="0">
+  <optgroup><option>1</option></optgroup>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="1">
+  <optgroup disabled><option>1</option></optgroup>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="1">
+  <option disabled>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="1">
+  <option disabled>1</option>
+  <optgroup><option>2</option></optgroup>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="2">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="3">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option disabled>3</option>
+  <option>4</option>
+  <option>5</option>
+</select>
+<select size="1" firstNonDisabledIndex="-1">
+  <option disabled>1</option>
+  <optgroup><option disabled>2</option></optgroup>
+  <option disabled>3</option>
+  <option disabled>4</option>
+  <option disabled>5</option>
+</select>
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const kIsMac = navigator.platform.indexOf("Mac") == 0;
+
+function runTests()
+{
+  const all = Array.from(document.querySelectorAll('select'));
+  let i = 0;
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    ++i;
+    if (!elem.id)
+      elem.id = "element " + i;
+  });
+
+  //
+  // Test DOWN key on a <select> with no selected options.
+  //
+  const listboxes = Array.from(document.querySelectorAll('select[size="3"]'));
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey("VK_DOWN", {});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": DOWN selected first non-disabled option");
+  });
+
+  const comboboxes = Array.from(document.querySelectorAll('select[size="1"]'));
+  // Mac shows the drop-down menu for DOWN, so skip this test there.
+  if (!kIsMac) {
+    comboboxes.forEach((elem) => {
+      elem.focus();
+      synthesizeKey("VK_DOWN", {});
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": DOWN selected first non-disabled option");
+    });
+  }
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test SHIFT+DOWN on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey("VK_DOWN", {shiftKey:true});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": SHIFT+DOWN selected first non-disabled option");
+  });
+
+  // Mac shows the drop-down menu for SHIFT+DOWN, so skip this test there.
+  if (!kIsMac) {
+    comboboxes.forEach((elem) => {
+      elem.focus();
+      synthesizeKey("VK_DOWN", {shiftKey:true});
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": SHIFT+DOWN selected first non-disabled option");
+    });
+  }
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test CTRL+DOWN on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey("VK_DOWN", {ctrlKey:true});
+    if (!elem.multiple)
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": CTRL+DOWN selected first non-disabled option");
+    else
+      is(elem.selectedIndex, -1, elem.id + ": CTRL+DOWN did NOT select first any option");
+  });
+
+  // Mac shows the drop-down menu for CTRL+DOWN, so skip this test there.
+  if (!kIsMac) {
+    comboboxes.forEach((elem) => {
+      elem.focus();
+      synthesizeKey("VK_DOWN", {ctrlKey:true});
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": CTRL+DOWN selected first non-disabled option");
+    });
+  }
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test SPACE on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey(" ", {});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": SPACE selected first non-disabled option");
+  });
+
+  // All platforms shows the drop-down menu for SPACE so skip testing that
+  // on the comboboxes.
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test CTRL+SPACE on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey(" ", {ctrlKey:true});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": CTRL+SPACE selected first non-disabled option");
+  });
+
+  // non-Mac shows the drop-down menu for CTRL+SPACE, so skip this test there.
+  if (kIsMac) {
+    comboboxes.forEach((elem) => {
+      elem.focus();
+      synthesizeKey(" ", {ctrlKey:true});
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": CTRL+SPACE selected first non-disabled option");
+    });
+  }
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test SHIFT+SPACE on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey(" ", {shiftKey:true});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": SHIFT+SPACE selected first non-disabled option");
+  });
+
+  // All platforms shows the drop-down menu for SHIFT+SPACE so skip testing that
+  // on the comboboxes.
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test CTRL+SHIFT+DOWN on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey("VK_DOWN", {ctrlKey:true, shiftKey:true});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": CTRL+SHIFT+DOWN selected first non-disabled option");
+  });
+
+  // Mac shows the drop-down menu for CTRL+SHIFT+DOWN, so skip this test there.
+  if (!kIsMac) {
+    comboboxes.forEach((elem) => {
+      elem.focus();
+      synthesizeKey("VK_DOWN", {ctrlKey:true, shiftKey:true});
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": CTRL+SHIFT+DOWN selected first non-disabled option");
+    });
+  }
+
+  all.forEach((elem) => {
+    elem.selectedIndex = -1;
+    elem.blur();
+  });
+
+  //
+  // Test CTRL+SHIFT+SPACE on a <select> with no selected options.
+  //
+  listboxes.forEach((elem) => {
+    elem.focus();
+    synthesizeKey(" ", {ctrlKey:true, shiftKey:true});
+    is(""+elem.selectedIndex,
+       elem.getAttribute('firstNonDisabledIndex'),
+       elem.id + ": CTRL+SHIFT+SPACE selected first non-disabled option");
+  });
+
+  // non-Mac shows the drop-down menu for CTRL+SHIFT+SPACE, so skip this test there.
+  if (kIsMac) {
+    comboboxes.forEach((elem) => {
+      elem.focus();
+      synthesizeKey(" ", {ctrlKey:true, shiftKey:true});
+      is(""+elem.selectedIndex,
+         elem.getAttribute('firstNonDisabledIndex'),
+         elem.id + ": CTRL+SHIFT+SPACE selected first non-disabled option");
+    });
+  }
+
+  SimpleTest.finish();
+}
+
+
+SimpleTest.waitForFocus(runTests);
+</script>
+</body>
+</html>

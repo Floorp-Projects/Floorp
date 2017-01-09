@@ -66,7 +66,7 @@ public:
                                  nsNativeWidget aNativeParent,
                                  const DesktopIntRect& aRect,
                                  nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
-  NS_IMETHOD              Show(bool aState) override { return NS_OK; }
+  virtual void            Show(bool aState) override {}
   virtual bool            IsVisible() const override { return true; }
   virtual void            Move(double aX, double aY) override {}
   virtual void            Resize(double aWidth, double aHeight, bool aRepaint) override {}
@@ -75,16 +75,16 @@ public:
 
   virtual void            Enable(bool aState) override {}
   virtual bool            IsEnabled() const override { return true; }
-  NS_IMETHOD              SetFocus(bool aRaise) override { return NS_OK; }
+  virtual nsresult        SetFocus(bool aRaise) override { return NS_OK; }
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override { return NS_OK; }
-  NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect) override { return NS_OK; }
-  NS_IMETHOD              SetTitle(const nsAString& title) override { return NS_OK; }
+  virtual void            Invalidate(const LayoutDeviceIntRect& aRect) override {}
+  virtual nsresult        SetTitle(const nsAString& title) override { return NS_OK; }
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
-  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+  virtual nsresult        DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override { return NS_OK; }
-  NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
+  virtual void            SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction) override {}
-  NS_IMETHOD_(InputContext) GetInputContext() override { abort(); }
+  virtual InputContext    GetInputContext() override { abort(); }
 
 private:
   ~MockWidget() {}

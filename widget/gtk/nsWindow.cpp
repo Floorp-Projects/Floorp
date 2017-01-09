@@ -1062,11 +1062,11 @@ void nsWindow::SetSizeConstraints(const SizeConstraints& aConstraints)
     }
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Show(bool aState)
 {
     if (aState == mIsShown)
-        return NS_OK;
+        return;
 
     // Clear our cached resources when the window is hidden.
     if (mIsShown && !aState) {
@@ -1089,7 +1089,7 @@ nsWindow::Show(bool aState)
     if ((aState && !AreBoundsSane()) || !mCreated) {
         LOG(("\tbounds are insane or window hasn't been created yet\n"));
         mNeedsShow = true;
-        return NS_OK;
+        return;
     }
 
     // If someone is hiding this widget, clear any needing show flag.
@@ -1102,8 +1102,6 @@ nsWindow::Show(bool aState)
 #endif
 
     NativeShow(aState);
-
-    return NS_OK;
 }
 
 void
@@ -1393,7 +1391,7 @@ nsWindow::GetLastUserInputTime()
     return timestamp;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetFocus(bool aRaise)
 {
     // Make sure that our owning widget has focus.  If it doesn't try to
@@ -1592,7 +1590,7 @@ nsWindow::OnPropertyNotifyEvent(GtkWidget* aWidget, GdkEventProperty* aEvent)
   return FALSE;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::SetCursor(nsCursor aCursor)
 {
     // if we're not the toplevel window pass up the cursor request to
@@ -1600,9 +1598,10 @@ nsWindow::SetCursor(nsCursor aCursor)
     if (!mContainer && mGdkWindow) {
         nsWindow *window = GetContainerWindow();
         if (!window)
-            return NS_ERROR_FAILURE;
+            return;
 
-        return window->SetCursor(aCursor);
+        window->SetCursor(aCursor);
+        return;
     }
 
     // Only change cursor if it's actually been changed
@@ -1616,16 +1615,14 @@ nsWindow::SetCursor(nsCursor aCursor)
             mCursor = aCursor;
 
             if (!mContainer)
-                return NS_OK;
+                return;
 
             gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), newCursor);
         }
     }
-
-    return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetCursor(imgIContainer* aCursor,
                     uint32_t aHotspotX, uint32_t aHotspotY)
 {
@@ -1689,19 +1686,17 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     return rv;
 }
 
-NS_IMETHODIMP
+void
 nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     if (!mGdkWindow)
-        return NS_OK;
+        return;
 
     GdkRectangle rect = DevicePixelsToGdkRectRoundOut(aRect);
     gdk_window_invalidate_rect(mGdkWindow, &rect, FALSE);
 
     LOGDRAW(("Invalidate (rect) [%p]: %d %d %d %d\n", (void *)this,
              rect.x, rect.y, rect.width, rect.height));
-
-    return NS_OK;
 }
 
 void*
@@ -1777,7 +1772,7 @@ nsWindow::SetNativeData(uint32_t aDataType, uintptr_t aVal)
     mPluginNativeWindow = (nsPluginNativeWindowGtk*)aVal;
 }
 
-NS_IMETHODIMP
+nsresult
 nsWindow::SetTitle(const nsAString& aTitle)
 {
     if (!mShell)
@@ -6393,7 +6388,7 @@ nsChildWindow::nsChildWindow() = default;
 
 nsChildWindow::~nsChildWindow() = default;
 
-NS_IMETHODIMP_(void)
+void
 nsWindow::SetInputContext(const InputContext& aContext,
                           const InputContextAction& aAction)
 {
@@ -6403,7 +6398,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     mIMContext->SetInputContext(this, &aContext, &aAction);
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsWindow::GetInputContext()
 {
   InputContext context;
@@ -6425,7 +6420,7 @@ nsWindow::GetIMEUpdatePreference()
     return mIMContext->GetIMEUpdatePreference();
 }
 
-NS_IMETHODIMP_(TextEventDispatcherListener*)
+TextEventDispatcherListener*
 nsWindow::GetNativeTextEventDispatcherListener()
 {
     if (NS_WARN_IF(!mIMContext)) {
@@ -6451,7 +6446,7 @@ nsWindow::ExecuteNativeKeyBindingRemapped(NativeKeyBindingsType aType,
     return keyBindings->Execute(modifiedEvent, aCallback, aCallbackData);
 }
 
-NS_IMETHODIMP_(bool)
+bool
 nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                   const WidgetKeyboardEvent& aEvent,
                                   DoCommandCallback aCallback,

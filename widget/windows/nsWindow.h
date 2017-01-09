@@ -119,7 +119,7 @@ public:
     }
   }
 
-  NS_IMETHOD              Show(bool bState) override;
+  virtual void            Show(bool aState) override;
   virtual bool            IsVisible() const override;
   virtual void            ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
   virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
@@ -135,16 +135,16 @@ public:
   virtual void            SetSizeMode(nsSizeMode aMode) override;
   virtual void            Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
-  NS_IMETHOD              SetFocus(bool aRaise) override;
+  virtual nsresult        SetFocus(bool aRaise) override;
   virtual LayoutDeviceIntRect GetBounds() override;
   virtual LayoutDeviceIntRect GetScreenBounds() override;
   virtual MOZ_MUST_USE nsresult GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   virtual LayoutDeviceIntRect GetClientBounds() override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
   void                    SetBackgroundColor(const nscolor& aColor) override;
-  NS_IMETHOD              SetCursor(imgIContainer* aCursor,
+  virtual nsresult        SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY) override;
-  NS_IMETHOD              SetCursor(nsCursor aCursor) override;
+  virtual void            SetCursor(nsCursor aCursor) override;
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
@@ -154,18 +154,18 @@ public:
   virtual nsresult        MakeFullScreen(bool aFullScreen,
                                          nsIScreen* aScreen = nullptr) override;
   virtual void            HideWindowChrome(bool aShouldHide) override;
-  NS_IMETHOD              Invalidate(bool aEraseBackground = false,
+  virtual void            Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
-  NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect);
+  virtual void            Invalidate(const LayoutDeviceIntRect& aRect);
   virtual void*           GetNativeData(uint32_t aDataType) override;
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType) override;
-  NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
+  virtual nsresult        SetTitle(const nsAString& aTitle) override;
   virtual void            SetIcon(const nsAString& aIconSpec) override;
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
-  NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
+  virtual nsresult        DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus) override;
   virtual void            EnableDragDrop(bool aEnable) override;
   virtual void            CaptureMouse(bool aCapture) override;
@@ -200,10 +200,10 @@ public:
                                                            uint32_t aModifierFlags,
                                                            uint32_t aAdditionalFlags,
                                                            nsIObserver* aObserver) override;
-  NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
+  virtual void            SetInputContext(const InputContext& aContext,
                                           const InputContextAction& aAction) override;
-  NS_IMETHOD_(InputContext) GetInputContext() override;
-  NS_IMETHOD_(TextEventDispatcherListener*)
+  virtual InputContext    GetInputContext() override;
+  virtual TextEventDispatcherListener*
     GetNativeTextEventDispatcherListener() override;
 #ifdef MOZ_XUL
   virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
@@ -211,7 +211,7 @@ public:
   virtual void            UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
 #endif // MOZ_XUL
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
-  NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
+  virtual nsresult        SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   void                    SetDrawsInTitlebar(bool aState) override;
   virtual void            UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
 
