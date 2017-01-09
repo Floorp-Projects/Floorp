@@ -1850,6 +1850,7 @@ nsPrintEngine::AfterNetworkPrint(bool aHandleError)
 
   /* cleaup on failure + notify user */
   if (aHandleError && NS_FAILED(rv)) {
+    NS_WARNING("nsPrintEngine::AfterNetworkPrint failed");
     CleanupOnFailure(rv, !mIsDoingPrinting);
   }
 
