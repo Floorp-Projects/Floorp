@@ -40,8 +40,16 @@ public:
     return mViewportSize;
   }
 
+  void SetViewportSize(const CSSIntSize& aSize) {
+    mViewportSize = aSize;
+  }
+
   const Maybe<SVGPreserveAspectRatio>& GetPreserveAspectRatio() const {
     return mPreserveAspectRatio;
+  }
+
+  void SetPreserveAspectRatio(const Maybe<SVGPreserveAspectRatio>& aPAR) {
+    mPreserveAspectRatio = aPAR;
   }
 
   gfxFloat GetGlobalOpacity() const {
