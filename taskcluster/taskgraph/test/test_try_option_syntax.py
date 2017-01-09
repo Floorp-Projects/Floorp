@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
-import itertools
 
 from ..try_option_syntax import TryOptionSyntax
 from ..try_option_syntax import RIDEALONG_BUILDS
@@ -137,12 +136,9 @@ class TestTryOptionSyntax(unittest.TestCase):
     def test_p_expands_ridealongs(self):
         "-p linux,linux64 includes the RIDEALONG_BUILDS"
         tos = TryOptionSyntax('try: -p linux,linux64', empty_graph)
-        ridealongs = list(task
-                          for task in itertools.chain.from_iterable(
-                                RIDEALONG_BUILDS.itervalues()
-                          )
-                          if 'android' not in task)  # Don't include android-l10n
-        self.assertEqual(sorted(tos.platforms), sorted(['linux', 'linux64'] + ridealongs))
+        platforms = set(['linux'] + RIDEALONG_BUILDS['linux'])
+        platforms |= set(['linux64'] + RIDEALONG_BUILDS['linux64'])
+        self.assertEqual(sorted(tos.platforms), sorted(platforms))
 
     def test_u_none(self):
         "-u none sets unittests=[]"
