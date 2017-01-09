@@ -27,12 +27,14 @@ def do_delayed_imports():
     import pytest
 
 
-def run(path, session, timeout=0):
+def run(path, session, url_getter, timeout=0):
     """Run Python test at ``path`` in pytest.  The provided ``session``
     is exposed as a fixture available in the scope of the test functions.
 
     :param path: Path to the test file.
     :param session: WebDriver session to expose.
+    :param url_getter: Function to get server url from test environment, given
+        a protocol.
     :param timeout: Duration before interrupting potentially hanging
         tests.  If 0, there is no timeout.
 
@@ -46,7 +48,8 @@ def run(path, session, timeout=0):
     recorder = SubtestResultRecorder()
     plugins = [recorder,
                fixtures,
-               fixtures.Session(session)]
+               fixtures.Session(session),
+               fixtures.Server(url_getter)]
 
     # TODO(ato): Deal with timeouts
 
