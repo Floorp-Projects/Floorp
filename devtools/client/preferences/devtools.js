@@ -324,6 +324,9 @@ pref("devtools.webconsole.new-frontend-enabled", true);
 pref("devtools.webconsole.new-frontend-enabled", false);
 #endif
 
+// Enable loading reps from a bundle
+pref("devtools.webconsole.use-reps-bundle", false);
+
 // Enable the experimental support for source maps in console (work in progress)
 pref("devtools.sourcemap.locations.enabled", false);
 
