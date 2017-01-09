@@ -1651,12 +1651,12 @@ public:
 
   void HandleAudioCanceled() override
   {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    EnsureAudioDecodeTaskQueued();
   }
 
   void HandleVideoCanceled() override
   {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    EnsureVideoDecodeTaskQueued();
   }
 
   void HandleWaitingForAudio() override
@@ -1671,12 +1671,12 @@ public:
 
   void HandleAudioWaited(MediaData::Type aType) override
   {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    EnsureAudioDecodeTaskQueued();
   }
 
   void HandleVideoWaited(MediaData::Type aType) override
   {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    EnsureVideoDecodeTaskQueued();
   }
 
   void HandleEndOfAudio() override;
@@ -1693,6 +1693,8 @@ public:
 
 private:
   void DispatchDecodeTasksIfNeeded();
+  void EnsureAudioDecodeTaskQueued();
+  void EnsureVideoDecodeTaskQueued();
 
   TimeStamp mBufferingStart;
 
@@ -2247,13 +2249,38 @@ BufferingState::DispatchDecodeTasksIfNeeded()
 {
   if (mMaster->IsAudioDecoding() &&
       !mMaster->HaveEnoughDecodedAudio()) {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    EnsureAudioDecodeTaskQueued();
   }
 
   if (mMaster->IsVideoDecoding() &&
       !mMaster->HaveEnoughDecodedVideo()) {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    EnsureVideoDecodeTaskQueued();
   }
+}
+
+void
+MediaDecoderStateMachine::
+BufferingState::EnsureAudioDecodeTaskQueued()
+{
+  if (!mMaster->IsAudioDecoding() ||
+      mMaster->IsRequestingAudioData() ||
+      mMaster->IsWaitingAudioData()) {
+    return;
+  }
+  mMaster->RequestAudioData();
+}
+
+void
+MediaDecoderStateMachine::
+BufferingState::EnsureVideoDecodeTaskQueued()
+{
+  if (!mMaster->IsVideoDecoding() ||
+      mMaster->IsRequestingVideoData() ||
+      mMaster->IsWaitingVideoData()) {
+    return;
+  }
+  mMaster->RequestVideoData(mMaster->NeedToSkipToNextKeyframe(),
+                            media::TimeUnit::FromMicroseconds(mMaster->GetMediaTime()));
 }
 
 void
