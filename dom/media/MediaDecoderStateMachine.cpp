@@ -194,7 +194,6 @@ public:
   virtual void HandleCDMProxyReady() {}
   virtual void HandleAudioDecoded(MediaData* aAudio) {}
   virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
-  virtual void HandleAudioNotDecoded(const MediaResult& aError);
   virtual void HandleVideoNotDecoded(const MediaResult& aError);
   virtual void HandleAudioWaited(MediaData::Type aType);
   virtual void HandleVideoWaited(MediaData::Type aType);
@@ -531,7 +530,6 @@ public:
     MaybeFinishDecodeFirstFrame();
   }
 
-  void HandleAudioNotDecoded(const MediaResult& aError) override;
   void HandleVideoNotDecoded(const MediaResult& aError) override;
 
   void HandleAudioWaited(MediaData::Type aType) override
@@ -852,7 +850,6 @@ public:
 
   void HandleAudioDecoded(MediaData* aAudio) override = 0;
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override = 0;
-  void HandleAudioNotDecoded(const MediaResult& aError) override = 0;
   void HandleVideoNotDecoded(const MediaResult& aError) override = 0;
   void HandleAudioWaited(MediaData::Type aType) override = 0;
   void HandleVideoWaited(MediaData::Type aType) override = 0;
@@ -993,7 +990,6 @@ public:
     }
   }
 
-  void HandleAudioNotDecoded(const MediaResult& aError) override;
   void HandleVideoNotDecoded(const MediaResult& aError) override;
 
   void HandleAudioWaited(MediaData::Type aType) override
@@ -1431,7 +1427,6 @@ private:
     // handled by other states after seeking.
   }
 
-  void HandleAudioNotDecoded(const MediaResult& aError) override;
   void HandleVideoNotDecoded(const MediaResult& aError) override;
 
   void HandleAudioWaited(MediaData::Type aType) override
@@ -1725,7 +1720,6 @@ public:
     return DECODER_STATE_SHUTDOWN;
   }
 
-  void HandleAudioNotDecoded(const MediaResult& aError) override {}
   void HandleVideoNotDecoded(const MediaResult& aError) override {}
 
   RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget) override
@@ -1770,25 +1764,6 @@ MediaDecoderStateMachine::
 StateObject::HandleNotWaited(const WaitForDataRejectValue& aRejection)
 {
 
-}
-
-void
-MediaDecoderStateMachine::
-StateObject::HandleAudioNotDecoded(const MediaResult& aError)
-{
-  switch (aError.Code()) {
-    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      MOZ_ASSERT(false);
-      break;
-    case NS_ERROR_DOM_MEDIA_CANCELED:
-      MOZ_ASSERT(false);
-      break;
-    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      MOZ_ASSERT(false);
-      break;
-    default:
-      mMaster->DecodeError(aError);
-  }
 }
 
 void
@@ -2010,25 +1985,6 @@ DecodingFirstFrameState::Enter()
 
 void
 MediaDecoderStateMachine::
-DecodingFirstFrameState::HandleAudioNotDecoded(const MediaResult& aError)
-{
-  switch (aError.Code()) {
-    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      MOZ_ASSERT(false);
-      break;
-    case NS_ERROR_DOM_MEDIA_CANCELED:
-      MOZ_ASSERT(false);
-      break;
-    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      MOZ_ASSERT(false);
-      break;
-    default:
-      mMaster->DecodeError(aError);
-  }
-}
-
-void
-MediaDecoderStateMachine::
 DecodingFirstFrameState::HandleVideoNotDecoded(const MediaResult& aError)
 {
   switch (aError.Code()) {
@@ -2228,29 +2184,6 @@ SeekingState::SeekCompleted()
 
 void
 MediaDecoderStateMachine::
-AccurateSeekingState::HandleAudioNotDecoded(const MediaResult& aError)
-{
-  if (mSeekJob.mTarget->IsVideoOnly()) {
-    return;
-  }
-  MOZ_ASSERT(!mDoneAudioSeeking);
-  switch (aError.Code()) {
-    case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-      MOZ_ASSERT(false);
-      break;
-    case NS_ERROR_DOM_MEDIA_CANCELED:
-      MOZ_ASSERT(false);
-      break;
-    case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-      MOZ_ASSERT(false);
-      break;
-    default:
-      mMaster->DecodeError(aError);
-  }
-}
-
-void
-MediaDecoderStateMachine::
 AccurateSeekingState::HandleVideoNotDecoded(const MediaResult& aError)
 {
   MOZ_ASSERT(!mDoneVideoSeeking);
@@ -2274,16 +2207,6 @@ AccurateSeekingState::HandleVideoNotDecoded(const MediaResult& aError)
     default:
       mMaster->DecodeError(aError);
   }
-}
-
-void
-MediaDecoderStateMachine::
-NextFrameSeekingState::HandleAudioNotDecoded(const MediaResult& aError)
-{
-  MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-  MOZ_ASSERT(NeedMoreVideo());
-  // We don't care about audio decode errors in this state which will be
-  // handled by other states after seeking.
 }
 
 void
@@ -3100,7 +3023,7 @@ MediaDecoderStateMachine::RequestAudioData()
             mStateObj->HandleEndOfAudio();
             break;
           default:
-            mStateObj->HandleAudioNotDecoded(aError);
+            DecodeError(aError);
         }
       })
   );
