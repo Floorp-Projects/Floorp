@@ -42,8 +42,8 @@ skip-if(Android) load 394751.xhtml # bug 922976
 load 395335-1.xhtml
 load 395458-1.html
 load 396321-1.svg
-skip-if(stylo) load 398042-1.xhtml # bug 1323665
-skip-if(stylo) load 398042-2.xhtml # bug 1323665
+load 398042-1.xhtml
+load 398042-2.xhtml
 load 402307-1.html
 load 403464-1.html
 load 404112-1.html

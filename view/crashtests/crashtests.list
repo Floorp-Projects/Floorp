@@ -1,6 +1,6 @@
 load 38589-1.xul
 load 64049-1.html
-skip-if(stylo) load 281743-1.html # bug 1323665
+load 281743-1.html
 load 323497-1.html
 load 382756-1.xul
 load 387745-1.svg
