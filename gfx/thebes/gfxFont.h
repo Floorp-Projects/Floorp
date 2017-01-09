@@ -1430,7 +1430,8 @@ public:
 
     virtual cairo_scaled_font_t* GetCairoScaledFont() { return mScaledFont; }
 
-    virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption) {
+    virtual mozilla::UniquePtr<gfxFont>
+    CopyWithAntialiasOption(AntialiasOption anAAOption) {
         // platforms where this actually matters should override
         return nullptr;
     }
