@@ -498,7 +498,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP
+nsresult
 nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
@@ -733,21 +733,22 @@ nsCocoaWindow::IsRunningAppModal()
 }
 
 // Hide or show this window
-NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
+void
+nsCocoaWindow::Show(bool bState)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mWindow)
-    return NS_OK;
+    return;
 
   // We need to re-execute sometimes in order to bring already-visible
   // windows forward.
   if (!mSheetNeedsShow && !bState && ![mWindow isVisible])
-    return NS_OK;
+    return;
 
   // Protect against re-entering.
   if (bState && [mWindow isBeingShown])
-    return NS_OK;
+    return;
 
   [mWindow setBeingShown:bState];
 
@@ -760,7 +761,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     // Don't try to show a popup when the parent isn't visible or is minimized.
     if (mWindowType == eWindowType_popup && nativeParentWindow) {
       if (![nativeParentWindow isVisible] || [nativeParentWindow isMiniaturized]) {
-        return NS_OK;
+        return;
       }
     }
 
@@ -772,7 +773,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
     if (mWindowType == eWindowType_sheet) {
       // bail if no parent window (its basically what we do in Carbon)
       if (!nativeParentWindow || !piParentWidget)
-        return NS_ERROR_FAILURE;
+        return;
 
       NSWindow* topNonSheetWindow = nativeParentWindow;
       
@@ -983,9 +984,7 @@ NS_IMETHODIMP nsCocoaWindow::Show(bool bState)
 
   [mWindow setBeingShown:NO];
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 struct ShadowParams {
@@ -1338,9 +1337,8 @@ nsCocoaWindow::HideWindowChrome(bool aShouldHide)
   if (isVisible) {
     bool wasAnimationSuppressed = mIsAnimationSuppressed;
     mIsAnimationSuppressed = true;
-    rv = Show(true);
+    Show(true);
     mIsAnimationSuppressed = wasAnimationSuppressed;
-    NS_ENSURE_SUCCESS_VOID(rv);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -1491,7 +1489,7 @@ nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
   return DoMakeFullScreen(aFullScreen, false);
 }
 
-NS_IMETHODIMP
+nsresult
 nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
                                                   nsIScreen* aTargetScreen)
 {
@@ -1781,16 +1779,17 @@ nsCocoaWindow::RoundsWidgetCoordinatesTo()
   return 1;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetCursor(nsCursor aCursor)
+void
+nsCocoaWindow::SetCursor(nsCursor aCursor)
 {
-  if (mPopupContentView)
-    return mPopupContentView->SetCursor(aCursor);
-
-  return NS_OK;
+  if (mPopupContentView) {
+    mPopupContentView->SetCursor(aCursor);
+  }
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetCursor(imgIContainer* aCursor,
-                                       uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsCocoaWindow::SetCursor(imgIContainer* aCursor,
+                         uint32_t aHotspotX, uint32_t aHotspotY)
 {
   if (mPopupContentView)
     return mPopupContentView->SetCursor(aCursor, aHotspotX, aHotspotY);
@@ -1798,7 +1797,8 @@ NS_IMETHODIMP nsCocoaWindow::SetCursor(imgIContainer* aCursor,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
+nsresult
+nsCocoaWindow::SetTitle(const nsAString& aTitle)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1823,13 +1823,12 @@ NS_IMETHODIMP nsCocoaWindow::SetTitle(const nsAString& aTitle)
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::Invalidate(const LayoutDeviceIntRect& aRect)
+void
+nsCocoaWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   if (mPopupContentView) {
-    return mPopupContentView->Invalidate(aRect);
+    mPopupContentView->Invalidate(aRect);
   }
-
-  return NS_OK;
 }
 
 // Pass notification of some drag event to Gecko
@@ -1896,7 +1895,7 @@ NS_IMETHODIMP nsCocoaWindow::GetSheetWindowParent(NSWindow** sheetWindowParent)
 }
 
 // Invokes callback and ProcessEvent methods on Event Listener object
-NS_IMETHODIMP 
+nsresult
 nsCocoaWindow::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
@@ -2006,7 +2005,8 @@ void nsCocoaWindow::SetMenuBar(nsMenuBarX *aMenuBar)
     mMenuBar->Paint();
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetFocus(bool aState)
+nsresult
+nsCocoaWindow::SetFocus(bool aState)
 {
   if (!mWindow)
     return NS_OK;
@@ -2230,7 +2230,8 @@ nsCocoaWindow::SetUseBrightTitlebarForeground(bool aBrightForeground)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin &margins)
+nsresult
+nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -2335,7 +2336,7 @@ void nsCocoaWindow::SetPopupWindowLevel()
   }
 }
 
-NS_IMETHODIMP_(void)
+void
 nsCocoaWindow::SetInputContext(const InputContext& aContext,
                                const InputContextAction& aAction)
 {
@@ -2346,7 +2347,7 @@ nsCocoaWindow::SetInputContext(const InputContext& aContext,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP_(bool)
+bool
 nsCocoaWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                        const WidgetKeyboardEvent& aEvent,
                                        DoCommandCallback aCallback,

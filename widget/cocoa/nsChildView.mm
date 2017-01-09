@@ -717,9 +717,10 @@ ManipulateViewWithoutNeedingDisplay(NSView* aView, void (^aCallback)())
 }
 
 // Hide or show this component
-NS_IMETHODIMP nsChildView::Show(bool aState)
+void
+nsChildView::Show(bool aState)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (aState != mVisible) {
     // Provide an autorelease pool because this gets called during startup
@@ -733,9 +734,8 @@ NS_IMETHODIMP nsChildView::Show(bool aState)
 
     mVisible = aState;
   }
-  return NS_OK;
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // Change the parent of this widget
@@ -829,7 +829,8 @@ bool nsChildView::IsEnabled() const
   return true;
 }
 
-NS_IMETHODIMP nsChildView::SetFocus(bool aRaise)
+nsresult
+nsChildView::SetFocus(bool aRaise)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -842,22 +843,24 @@ NS_IMETHODIMP nsChildView::SetFocus(bool aRaise)
 }
 
 // Override to set the cursor on the mac
-NS_IMETHODIMP nsChildView::SetCursor(nsCursor aCursor)
+void
+nsChildView::SetCursor(nsCursor aCursor)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if ([mView isDragInProgress])
-    return NS_OK; // Don't change the cursor during dragging.
+    return; // Don't change the cursor during dragging.
 
   nsBaseWidget::SetCursor(aCursor);
-  return [[nsCursorManager sharedInstance] setCursor:aCursor];
+  [[nsCursorManager sharedInstance] setCursor:aCursor];
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 // implement to fix "hidden virtual function" warning
-NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
-                                      uint32_t aHotspotX, uint32_t aHotspotY)
+nsresult
+nsChildView::SetCursor(imgIContainer* aCursor,
+                       uint32_t aHotspotX, uint32_t aHotspotY)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1242,7 +1245,8 @@ static NSMenuItem* NativeMenuItemWithLocation(NSMenu* menubar, NSString* locatio
 }
 
 // Used for testing native menu system structure and event handling.
-NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
+nsresult
+nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1266,7 +1270,8 @@ NS_IMETHODIMP nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString
 }
 
 // Used for testing native menu system structure and event handling.
-NS_IMETHODIMP nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
+nsresult
+nsChildView::ForceUpdateNativeMenuAt(const nsAString& indexString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1336,12 +1341,13 @@ static void blinkRgn(RgnHandle rgn)
 #endif
 
 // Invalidate this component's visible area
-NS_IMETHODIMP nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
+void
+nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (!mView || !mVisible)
-    return NS_OK;
+    return;
 
   NS_ASSERTION(GetLayerManager()->GetBackendType() != LayersBackend::LAYERS_CLIENT,
                "Shouldn't need to invalidate with accelerated OMTC layers!");
@@ -1355,9 +1361,7 @@ NS_IMETHODIMP nsChildView::Invalidate(const LayoutDeviceIntRect& aRect)
     [mView setNeedsDisplayInRect:DevPixelsToCocoaPoints(aRect)];
   }
 
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+  NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 bool
@@ -1393,8 +1397,8 @@ nsresult nsChildView::ConfigureChildren(const nsTArray<Configuration>& aConfigur
 }
 
 // Invokes callback and ProcessEvent methods on Event Listener object
-NS_IMETHODIMP nsChildView::DispatchEvent(WidgetGUIEvent* event,
-                                         nsEventStatus& aStatus)
+nsresult
+nsChildView::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
 {
   RefPtr<nsChildView> kungFuDeathGrip(this);
 
@@ -1608,7 +1612,8 @@ LayoutDeviceIntPoint nsChildView::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
 
-NS_IMETHODIMP nsChildView::SetTitle(const nsAString& title)
+nsresult
+nsChildView::SetTitle(const nsAString& title)
 {
   // child views don't have titles
   return NS_OK;
@@ -1717,7 +1722,7 @@ nsChildView::SetPluginFocused(bool& aFocused)
   mPluginFocused = aFocused;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsChildView::SetInputContext(const InputContext& aContext,
                              const InputContextAction& aAction)
 {
@@ -1755,7 +1760,7 @@ nsChildView::SetInputContext(const InputContext& aContext,
   }
 }
 
-NS_IMETHODIMP_(InputContext)
+InputContext
 nsChildView::GetInputContext()
 {
   switch (mInputContext.mIMEState.mEnabled) {
@@ -1775,7 +1780,7 @@ nsChildView::GetInputContext()
   return mInputContext;
 }
 
-NS_IMETHODIMP_(TextEventDispatcherListener*)
+TextEventDispatcherListener*
 nsChildView::GetNativeTextEventDispatcherListener()
 {
   if (NS_WARN_IF(!mTextInputHandler)) {
@@ -1824,7 +1829,7 @@ nsChildView::ExecuteNativeKeyBindingRemapped(NativeKeyBindingsType aType,
   return keyBindings->Execute(modifiedEvent, aCallback, aCallbackData);
 }
 
-NS_IMETHODIMP_(bool)
+bool
 nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                                      const WidgetKeyboardEvent& aEvent,
                                      DoCommandCallback aCallback,
@@ -6172,7 +6177,7 @@ provideDataForType:(NSString*)aType
   return command.mSucceeded && command.mIsEnabled;
 }
 
-NS_IMETHODIMP
+nsresult
 nsChildView::GetSelectionAsPlaintext(nsAString& aResult)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;

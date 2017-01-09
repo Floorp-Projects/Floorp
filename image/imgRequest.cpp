@@ -798,6 +798,12 @@ imgRequest::OnStopRequest(nsIRequest* aRequest,
 
   RefPtr<Image> image = GetImage();
 
+  RefPtr<imgRequest> strongThis = this;
+
+  if (mIsMultiPartChannel && mNewPartPending) {
+    OnDataAvailable(aRequest, ctxt, nullptr, 0, 0);
+  }
+
   // XXXldb What if this is a non-last part of a multipart request?
   // xxx before we release our reference to mRequest, lets
   // save the last status that we saw so that the
@@ -919,13 +925,15 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
 {
   NewPartResult result(aExistingImage);
 
-  mimetype_closure closure;
-  closure.newType = &result.mContentType;
+  if (aInStr) {
+    mimetype_closure closure;
+    closure.newType = &result.mContentType;
 
-  // Look at the first few bytes and see if we can tell what the data is from
-  // that since servers tend to lie. :(
-  uint32_t out;
-  aInStr->ReadSegments(sniff_mimetype_callback, &closure, aCount, &out);
+    // Look at the first few bytes and see if we can tell what the data is from
+    // that since servers tend to lie. :(
+    uint32_t out;
+    aInStr->ReadSegments(sniff_mimetype_callback, &closure, aCount, &out);
+  }
 
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
   if (result.mContentType.IsEmpty()) {
@@ -1108,15 +1116,17 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
   }
 
   // Notify the image that it has new data.
-  nsresult rv =
-    image->OnImageDataAvailable(aRequest, aContext, aInStr, aOffset, aCount);
+  if (aInStr) {
+    nsresult rv =
+      image->OnImageDataAvailable(aRequest, aContext, aInStr, aOffset, aCount);
 
-  if (NS_FAILED(rv)) {
-    MOZ_LOG(gImgLog, LogLevel::Warning,
-           ("[this=%p] imgRequest::OnDataAvailable -- "
-            "copy to RasterImage failed\n", this));
-    Cancel(NS_IMAGELIB_ERROR_FAILURE);
-    return NS_BINDING_ABORTED;
+    if (NS_FAILED(rv)) {
+      MOZ_LOG(gImgLog, LogLevel::Warning,
+             ("[this=%p] imgRequest::OnDataAvailable -- "
+              "copy to RasterImage failed\n", this));
+      Cancel(NS_IMAGELIB_ERROR_FAILURE);
+      return NS_BINDING_ABORTED;
+    }
   }
 
   return NS_OK;

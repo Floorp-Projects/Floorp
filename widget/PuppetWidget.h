@@ -78,7 +78,7 @@ public:
 
   virtual void Destroy() override;
 
-  NS_IMETHOD Show(bool aState) override;
+  virtual void Show(bool aState) override;
 
   virtual bool IsVisible() const override
   { return mVisible; }
@@ -115,11 +115,11 @@ public:
   virtual bool IsEnabled() const override
   { return mEnabled; }
 
-  NS_IMETHOD SetFocus(bool aRaise = false) override;
+  virtual nsresult SetFocus(bool aRaise = false) override;
 
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
 
-  NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
+  virtual void Invalidate(const LayoutDeviceIntRect& aRect) override;
 
   // PuppetWidgets don't have native data, as they're purely nonnative.
   virtual void* GetNativeData(uint32_t aDataType) override;
@@ -128,7 +128,7 @@ public:
 #endif
 
   // PuppetWidgets don't have any concept of titles.
-  NS_IMETHOD SetTitle(const nsAString& aTitle) override
+  virtual nsresult SetTitle(const nsAString& aTitle) override
   { return NS_ERROR_UNEXPECTED; }
 
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override
@@ -139,7 +139,8 @@ public:
   void InitEvent(WidgetGUIEvent& aEvent,
                  LayoutDeviceIntPoint* aPoint = nullptr);
 
-  NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
+  virtual nsresult DispatchEvent(WidgetGUIEvent* aEvent,
+                                 nsEventStatus& aStatus) override;
   nsEventStatus DispatchInputEvent(WidgetInputEvent* aEvent) override;
   void SetConfirmedTargetAPZC(uint64_t aInputBlockId,
                               const nsTArray<ScrollableLayerGuid>& aTargets) const override;
@@ -148,7 +149,7 @@ public:
                              const mozilla::Maybe<ZoomConstraints>& aConstraints) override;
   bool AsyncPanZoomEnabled() const override;
 
-  NS_IMETHOD_(bool)
+  virtual bool
   ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
                           const mozilla::WidgetKeyboardEvent& aEvent,
                           DoCommandCallback aCallback,
@@ -177,15 +178,15 @@ public:
   // This is used after a compositor reset.
   LayerManager* RecreateLayerManager(PLayerTransactionChild* aShadowManager);
 
-  NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
-                                    const InputContextAction& aAction) override;
-  NS_IMETHOD_(InputContext) GetInputContext() override;
-  NS_IMETHOD_(NativeIMEContext) GetNativeIMEContext() override;
+  virtual void SetInputContext(const InputContext& aContext,
+                               const InputContextAction& aAction) override;
+  virtual InputContext GetInputContext() override;
+  virtual NativeIMEContext GetNativeIMEContext() override;
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
 
-  NS_IMETHOD SetCursor(nsCursor aCursor) override;
-  NS_IMETHOD SetCursor(imgIContainer* aCursor,
-                       uint32_t aHotspotX, uint32_t aHotspotY) override;
+  virtual void SetCursor(nsCursor aCursor) override;
+  virtual nsresult SetCursor(imgIContainer* aCursor,
+                             uint32_t aHotspotX, uint32_t aHotspotY) override;
 
   virtual void ClearCachedCursor() override;
 
