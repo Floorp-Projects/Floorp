@@ -180,7 +180,13 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(IThreadUtilsObject, NS_IFOO_IID)
 
+struct ThreadUtilsObjectNonRefCountedBase
+{
+  virtual void MethodFromNonRefCountedBase() {}
+};
+
 struct ThreadUtilsObject : public IThreadUtilsObject
+                         , public ThreadUtilsObjectNonRefCountedBase
 {
   // nsISupports implementation
   NS_DECL_ISUPPORTS
@@ -373,6 +379,12 @@ TEST(ThreadUtils, main)
   r1->Run();
   EXPECT_EQ(count += 2, rpt->mCount);
   EXPECT_EQ(11, rpt->mA0);
+
+  // Test calling a method from a non-ref-counted base.
+
+  r1 = NewRunnableMethod(rpt, &ThreadUtilsObject::MethodFromNonRefCountedBase);
+  r1->Run();
+  EXPECT_EQ(count, rpt->mCount);
 
   // Test variadic function with simple POD arguments.
 
