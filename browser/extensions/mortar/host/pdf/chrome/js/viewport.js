@@ -6,15 +6,14 @@
 
 class Viewport {
   constructor() {
+    this._viewerContainer = document.getElementById('viewerContainer');
+    this._fullscreenWrapper = document.getElementById('fullscreenWrapper');
     this._canvasContainer = document.getElementById('canvasContainer');
     this._viewportController = document.getElementById('viewportController');
     this._sizer = document.getElementById('sizer');
 
+    this._fullscreenStatus = 'none';
     this._scrollbarWidth = this._getScrollbarWidth();
-    this._hasVisibleScrollbars = {
-      horizontal: false,
-      vertical: false
-    };
 
     this._page = 0;
     this._zoom = 1;
@@ -97,6 +96,32 @@ class Viewport {
     this._refresh();
   }
 
+  get fullscreen() {
+    return this._fullscreenStatus != 'none';
+  }
+
+  set fullscreen(enable) {
+    if (this._fullscreenStatus == 'changing' ||
+        this._fullscreenStatus == (enable ? 'fullscreen' : 'none')) {
+      return;
+    }
+
+    // The next step after sending "setFullscreen" will happen in the function
+    // "_handleFullscreenChange" triggered by "fullscreenChange" event. The
+    // "_fullscreenStatus" will also be reset there. Note that the viewport
+    // stops refreshing while in the "changing" status to avoid flickers.
+    //
+    // XXX: Since we rely on "fullscreenChange" event to reset the status, the
+    //      viewport might freeze if, for some reason, the event isn't sent back
+    //      and we get stuck in the "changing" status. Not sure if it's the case
+    //      we need to worry about though.
+    this._fullscreenStatus = 'changing';
+    this._doAction({
+      type: 'setFullscreen',
+      fullscreen: enable
+    });
+  }
+
   _getScrollbarWidth() {
     var div = document.createElement('div');
     div.style.visibility = 'hidden';
@@ -149,19 +174,25 @@ class Viewport {
     this._refresh();
   }
 
-  _computeFittingZoom() {
+  _computeFittingZoom(pageIndex) {
     let newZoom = this._zoom;
     let fitting = this._fitting;
 
-    if (fitting == 'none') {
+    if (pageIndex === undefined) {
+      pageIndex = this._page;
+    }
+
+    if (fitting == 'none' || pageIndex < 0 || pageIndex >= this.pageCount) {
       return newZoom;
     }
 
     let FITTING_PADDING = 40;
     let MAX_AUTO_ZOOM = 1.25;
 
-    let page = this._pageDimensions[this._page];
-    let viewportRect = this.getBoundingClientRect();
+    let page = this._pageDimensions[pageIndex];
+    let viewportRect = this.fullscreen ?
+      this._viewerContainer.getBoundingClientRect() :
+      this.getBoundingClientRect();
 
     let pageWidthZoom = (viewportRect.width - FITTING_PADDING) / page.width;
     let pageHeightZoom = viewportRect.height / page.height;
@@ -289,6 +320,22 @@ class Viewport {
     if (newPage < 0 || newPage >= this.pageCount) {
       return;
     }
+
+    if (this.fullscreen) {
+      let pageDimension = this._pageDimensions[newPage];
+      let newZoom = this._computeFittingZoom(newPage);
+
+      this._fullscreenWrapper.style.width =
+        (pageDimension.width * newZoom) + 'px';
+      this._fullscreenWrapper.style.height =
+        (pageDimension.height * newZoom) + 'px';
+
+      if (newZoom != this._zoom) {
+        this._setZoom(newZoom);
+      }
+      this._notifyRuntimeOfResized();
+    }
+
     this._setPosition(
       this._pageDimensions[newPage].x * this._zoom,
       this._pageDimensions[newPage].y * this._zoom
@@ -297,11 +344,6 @@ class Viewport {
 
   _updateCanvasSize() {
     let hasScrollbars = this._documentHasVisibleScrollbars(this._zoom);
-    if (hasScrollbars.horizontal == this._hasVisibleScrollbars.horizontal &&
-        hasScrollbars.vertical == this._hasVisibleScrollbars.vertical) {
-      return;
-    }
-    this._hasVisibleScrollbars = hasScrollbars;
     this._canvasContainer.style.bottom =
       hasScrollbars.horizontal ? this._scrollbarWidth + 'px' : 0;
     this._canvasContainer.style.right =
@@ -349,6 +391,39 @@ class Viewport {
     });
   }
 
+  _handleFullscreenChange(fullscreen) {
+    // Set status to "changing" again in case it isn't triggered by setter.
+    this._fullscreenStatus = 'changing';
+    this._viewerContainer.classList.toggle('pdfPresentationMode', fullscreen);
+
+    // XXX: DOM elements' size changing hasn't taken place when fullscreenChange
+    //      event is triggered in our setup, so "setTimeout" is necessary to get
+    //      the exact size. The 100ms delay is set based on try-and-error. We
+    //      might need to find a proper way to know when exactly the resizing is
+    //      done.
+    setTimeout(() => {
+      let currentPage = this._page;
+
+      if (fullscreen) {
+        this._previousZoom = this._zoom;
+        this._previousFitting = this._fitting;
+        this._fitting = 'page-fit';
+        // No need to call "_setZoom" here because we will deal with zooming
+        // case in the "_setPage" below.
+      } else {
+        this._zoom = this._previousZoom;
+        this._fitting = this._previousFitting;
+        this._setZoom(this._computeFittingZoom());
+      }
+
+      this._fullscreenStatus = fullscreen ? 'fullscreen' : 'none';
+
+      // Reset position to the beginning of the current page.
+      this._setPage(currentPage);
+      this._refresh();
+    }, 100);
+  }
+
   _getEventTarget(type) {
     switch(type) {
       case 'keydown':
@@ -366,6 +441,10 @@ class Viewport {
   }
 
   _refresh() {
+    if (this._fullscreenStatus == 'changing') {
+      return;
+    }
+
     if (this._nextPosition) {
       this._viewportController.scrollTo(
         this._nextPosition.x, this._nextPosition.y);
@@ -392,9 +471,7 @@ class Viewport {
   handleEvent(evt) {
     switch(evt.type) {
       case 'resize':
-        this._resize();
-        this._notifyRuntimeOfResized();
-        this._refresh();
+        this.invokeResize();
         break;
       case 'scroll':
         this._nextPosition = null;
@@ -405,6 +482,15 @@ class Viewport {
         }
         break;
     }
+  }
+
+  invokeResize() {
+    if (this._fullscreenStatus == 'changing') {
+      return;
+    }
+    this._resize();
+    this._notifyRuntimeOfResized();
+    this._refresh();
   }
 
   rotateClockwise() {
@@ -501,6 +587,9 @@ class Viewport {
         break;
       case 'documentDimensions':
         this._setDocumentDimensions(message);
+        break;
+      case 'fullscreenChange':
+        this._handleFullscreenChange(message.fullscreen);
         break;
     }
   }

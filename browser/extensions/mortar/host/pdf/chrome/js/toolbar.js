@@ -204,6 +204,10 @@ class Toolbar {
       case 'pageRotateCcw':
         this._viewport.rotateCounterClockwise();
         break;
+      case 'presentationMode':
+      case 'secondaryPresentationMode':
+        this._viewport.fullscreen = true;
+        break;
       case 'secondaryToolbarToggle':
         this._secondaryToolbar.toggle();
         break;
