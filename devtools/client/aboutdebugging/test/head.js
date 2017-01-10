@@ -72,7 +72,7 @@ function closeAboutDebugging(tab) {
 function getSupportsFile(path) {
   let cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Ci.nsIChromeRegistry);
-  let uri = Services.io.newURI(CHROME_URL_ROOT + path, null, null);
+  let uri = Services.io.newURI(CHROME_URL_ROOT + path);
   let fileurl = cr.convertChromeURL(uri);
   return fileurl.QueryInterface(Ci.nsIFileURL);
 }

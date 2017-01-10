@@ -16,7 +16,6 @@
 
 #include "nsHTMLTokenizer.h"
 #include "nsIParser.h"
-#include "nsParserConstants.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -56,5 +55,5 @@ nsHTMLTokenizer::WillTokenize(bool aIsFinalChunk)
 nsresult
 nsHTMLTokenizer::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens)
 {
-  return kEOF;
+  return NS_ERROR_HTMLPARSER_EOF;
 }

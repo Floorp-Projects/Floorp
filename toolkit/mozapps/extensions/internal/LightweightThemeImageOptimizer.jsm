@@ -60,7 +60,7 @@ var ImageCropper = {
 
     // Generate the cropped image's file name using its
     // base name and the current screen size.
-    let uri = Services.io.newURI(aImageURL, null, null);
+    let uri = Services.io.newURI(aImageURL);
     let file = uri.QueryInterface(Ci.nsIFileURL).file;
 
     // Make sure the source file exists.

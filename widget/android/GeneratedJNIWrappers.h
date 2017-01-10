@@ -5025,25 +5025,6 @@ public:
 
     explicit VsyncSource(const Context& ctx) : ObjectBase<VsyncSource>(ctx) {}
 
-    struct GetInstance_t {
-        typedef VsyncSource Owner;
-        typedef VsyncSource::LocalRef ReturnType;
-        typedef VsyncSource::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "getInstance";
-        static constexpr char signature[] =
-                "()Lorg/mozilla/gecko/gfx/VsyncSource;";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto GetInstance() -> VsyncSource::LocalRef;
-
     struct GetRefreshRate_t {
         typedef VsyncSource Owner;
         typedef float ReturnType;
@@ -5062,25 +5043,6 @@ public:
     };
 
     auto GetRefreshRate() const -> float;
-
-    struct IsVsyncSupported_t {
-        typedef VsyncSource Owner;
-        typedef bool ReturnType;
-        typedef bool SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "isVsyncSupported";
-        static constexpr char signature[] =
-                "()Z";
-        static const bool isStatic = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-        static const mozilla::jni::CallingThread callingThread =
-                mozilla::jni::CallingThread::ANY;
-        static const mozilla::jni::DispatchTarget dispatchTarget =
-                mozilla::jni::DispatchTarget::CURRENT;
-    };
-
-    static auto IsVsyncSupported() -> bool;
 
     struct NotifyVsync_t {
         typedef VsyncSource Owner;
@@ -5118,6 +5080,25 @@ public:
     };
 
     auto ObserveVsync(bool) const -> bool;
+
+    struct INSTANCE_t {
+        typedef VsyncSource Owner;
+        typedef VsyncSource::LocalRef ReturnType;
+        typedef VsyncSource::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "INSTANCE";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/gfx/VsyncSource;";
+        static const bool isStatic = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+        static const mozilla::jni::CallingThread callingThread =
+                mozilla::jni::CallingThread::ANY;
+        static const mozilla::jni::DispatchTarget dispatchTarget =
+                mozilla::jni::DispatchTarget::CURRENT;
+    };
+
+    static auto INSTANCE() -> VsyncSource::LocalRef;
 
     static const mozilla::jni::CallingThread callingThread =
             mozilla::jni::CallingThread::ANY;

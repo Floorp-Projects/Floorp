@@ -281,7 +281,7 @@ TaggingService.prototype = {
     try {
       while (stmt.executeStep()) {
         try {
-          uris.push(Services.io.newURI(stmt.row.url, null, null));
+          uris.push(Services.io.newURI(stmt.row.url));
         } catch (ex) {}
       }
     } finally {

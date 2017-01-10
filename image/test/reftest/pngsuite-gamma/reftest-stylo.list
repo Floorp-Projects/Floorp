@@ -10,7 +10,7 @@ fails == g03n3p04.png g03n3p04.png
 # g04n0g16 - grayscale, file-gamma = 0.45
 fails == g04n0g16.png g04n0g16.png
 # g04n2c08 - color, file-gamma = 0.45
-skip == g04n2c08.png g04n2c08.png
+fails == g04n2c08.png g04n2c08.png
 # g04n3p04 - paletted, file-gamma = 0.45
 fails == g04n3p04.png g04n3p04.png
 # g05n0g16 - grayscale, file-gamma = 0.55

@@ -13,7 +13,7 @@ function testSteps()
   let ios = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
                          .getService(SpecialPowers.Ci.nsIIOService);
 
-  let uri = ios.newURI(url, null, null);
+  let uri = ios.newURI(url);
 
   let ssm = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                          .getService(SpecialPowers.Ci.nsIScriptSecurityManager);

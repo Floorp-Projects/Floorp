@@ -7,5 +7,5 @@
 # produce unexpected failures.
 
 script scripttest-pass.html
-skip script scripttest-fail.html
+fails script scripttest-fail.html
 fails script scripttest-pass-fail.html

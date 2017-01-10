@@ -14,7 +14,7 @@ fails == pal1p1.bmp pal1p1.bmp
 # "A paletted image with 2 bits/pixel. Usually only 1, 4, and 8 are allowed,
 # but 2 is legal on Windows CE."
 # [We reject it. So does Chromium.]
-skip == wrapper.html?pal2.bmp wrapper.html?pal2.bmp
+== wrapper.html?pal2.bmp wrapper.html?pal2.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=4, compression=2, colors=13
 # "An RLE-compressed image that used 'delta' codes to skip over some pixels,
@@ -22,12 +22,12 @@ skip == wrapper.html?pal2.bmp wrapper.html?pal2.bmp
 # others make them black, and others assign them palette color 0 (purple, in
 # this case)."
 # [We make the undefined pixels transparent. So does Chromium.]
-== pal4rletrns.bmp pal4rletrns.bmp
+fails == pal4rletrns.bmp pal4rletrns.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=1, colors=253
 # "8-bit version of q/pal4rletrns.bmp."
 # [Ditto.]
-== pal8rletrns.bmp pal8rletrns.bmp
+fails == pal8rletrns.bmp pal8rletrns.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=252
 # "A file with some unused bytes between the palette and the image. This is
@@ -48,7 +48,7 @@ fails == pal8oversizepal.bmp pal8oversizepal.bmp
 # [We reject it. Chromium accepts it but draws nothing. Rejecting seems
 # preferable given that the color and pixel data must overlap, which can only
 # lead to rubbish results.]
-skip == wrapper.html?pal8os2sp.bmp wrapper.html?pal8os2sp.bmp
+== wrapper.html?pal8os2sp.bmp wrapper.html?pal8os2sp.bmp
 
 # BMP: bihsize=64, 127 x 64, bpp=8, compression=0, colors=252
 # "My attempt to make an OS/2v2 bitmap."
@@ -72,7 +72,7 @@ fails == rgb16-231.bmp rgb16-231.bmp
 # "A 16-bit image with an alpha channel. There are 4 bits for each color
 # channel, and 4 bits for the alpha channel. It’s not clear if this is valid,
 # but I can’t find anything that suggests it isn’t."
-== rgba16-4444.bmp rgba16-4444.bmp
+fails == rgba16-4444.bmp rgba16-4444.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=300
 # "A 24-bit image, with a palette containing 300 colors. The fact that the
@@ -99,8 +99,8 @@ fails == rgb24lprof.bmp rgb24lprof.bmp
 # not likely to be supported by much of anything (they’re intended for 
 # printers)."
 # [We reject them. So does Chromium.]
-skip == wrapper.html?rgb24jpeg.bmp wrapper.html?rgb24jpeg.bmp
-skip == wrapper.html?rgb24png.bmp wrapper.html?rgb24png.bmp
+== wrapper.html?rgb24jpeg.bmp wrapper.html?rgb24jpeg.bmp
+== wrapper.html?rgb24png.bmp wrapper.html?rgb24png.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=0, colors=0
 # "Same as g/rgb32.bmp, except that the unused bits are set to something other
@@ -120,12 +120,12 @@ fails == rgb32-111110.bmp rgb32-111110.bmp
 # possible that this file is not correctly formed. The color channels are in an
 # unusual order, to prevent viewers from passing this test by making a lucky
 # guess."
-== rgba32.bmp rgba32.bmp
+fails == rgba32.bmp rgba32.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=6, colors=0
 # "An image of type BI_ALPHABITFIELDS. Supposedly, this was used on Windows CE.
 # I don’t know whether it is constructed correctly."
 # [We reject it. So does Chromium.]
-skip == wrapper.html?rgba32abf.bmp wrapper.html?rgba32abf.bmp
+== wrapper.html?rgba32abf.bmp wrapper.html?rgba32abf.bmp
 
 

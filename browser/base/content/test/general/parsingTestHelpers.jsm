@@ -68,7 +68,7 @@ function iterateOverPath(path, extensions) {
       // returned as part of the directory iterator, but don't actually exist:
       if (file.exists()) {
         let uriSpec = getURLForFile(file);
-        files.push(Services.io.newURI(uriSpec, null, null));
+        files.push(Services.io.newURI(uriSpec));
       }
     } else if (entry.name.endsWith(".ja") || entry.name.endsWith(".jar") ||
                entry.name.endsWith(".zip") || entry.name.endsWith(".xpi")) {
@@ -123,7 +123,7 @@ function* generateEntriesFromJarFile(jarFile, extension) {
       continue;
     }
     let entryURISpec = "jar:" + kURIStart + "!/" + entry;
-    yield Services.io.newURI(entryURISpec, null, null);
+    yield Services.io.newURI(entryURISpec);
   }
   zr.close();
 }

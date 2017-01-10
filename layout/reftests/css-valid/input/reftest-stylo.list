@@ -1,37 +1,33 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== input-valid.html input-valid.html
-== input-customerror.html input-customerror.html
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) == input-disabled.html input-disabled.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) == input-dyn-disabled.html input-dyn-disabled.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(skiaContent,1,3) == input-dyn-not-disabled.html input-dyn-not-disabled.html
-fuzzy-if(skiaContent,1,3) == input-readonly.html input-readonly.html
-fuzzy-if(skiaContent,1,3) == input-dyn-readonly.html input-dyn-readonly.html
-fuzzy-if(skiaContent,1,3) == input-dyn-not-readonly.html input-dyn-not-readonly.html
-skip == input-maxlength-valid.html input-maxlength-valid.html
-skip == input-maxlength-invalid.html input-maxlength-invalid.html
-== input-required-valid.html input-required-valid.html
-fuzzy-if(skiaContent,1,3) == input-required-invalid.html input-required-invalid.html
-fuzzy-if(skiaContent,2,5) == input-button.html input-button.html
-skip fuzzy-if(skiaContent,2,5) == input-reset.html input-reset.html
-== input-email-invalid.html input-email-invalid.html
-fuzzy-if(skiaContent,2,5) == input-email-valid.html input-email-valid.html
-== input-url-invalid.html input-url-invalid.html
-== input-url-valid.html input-url-valid.html
-== input-pattern-valid.html input-pattern-valid.html
-== input-pattern-invalid.html input-pattern-invalid.html
-fuzzy-if(skiaContent,2,5) == input-type-barred.html input-type-barred.html
-== input-type-invalid.html input-type-invalid.html
-== input-disabled-fieldset-1.html input-disabled-fieldset-1.html
-fuzzy-if(skiaContent,1,3) == input-disabled-fieldset-2.html input-disabled-fieldset-2.html
-skip == input-fieldset-legend.html input-fieldset-legend.html
-== input-radio-required.html input-radio-required.html
-== input-radio-customerror.html input-radio-customerror.html
-== input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
-== input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
-== input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
-== input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
-== input-submit.html input-submit.html
-== input-image.html input-image.html
+fails == input-valid.html input-valid.html
+fails == input-customerror.html input-customerror.html
+fails == input-disabled.html input-disabled.html
+fails == input-dyn-disabled.html input-dyn-disabled.html
+fails == input-dyn-not-disabled.html input-dyn-not-disabled.html
+fails == input-readonly.html input-readonly.html
+fails == input-dyn-readonly.html input-dyn-readonly.html
+fails == input-dyn-not-readonly.html input-dyn-not-readonly.html
+fails == input-required-valid.html input-required-valid.html
+fails == input-required-invalid.html input-required-invalid.html
+fails == input-button.html input-button.html
+fails == input-reset.html input-reset.html
+fails == input-email-invalid.html input-email-invalid.html
+fails == input-email-valid.html input-email-valid.html
+fails == input-url-invalid.html input-url-invalid.html
+fails == input-url-valid.html input-url-valid.html
+fails == input-pattern-valid.html input-pattern-valid.html
+fails == input-pattern-invalid.html input-pattern-invalid.html
+fails == input-type-barred.html input-type-barred.html
+fails == input-type-invalid.html input-type-invalid.html
+fails == input-disabled-fieldset-1.html input-disabled-fieldset-1.html
+fails == input-disabled-fieldset-2.html input-disabled-fieldset-2.html
+fails == input-fieldset-legend.html input-fieldset-legend.html
+fails == input-radio-required.html input-radio-required.html
+fails == input-radio-customerror.html input-radio-customerror.html
+fails == input-radio-dyn-valid-1.html input-radio-dyn-valid-1.html
+fails == input-radio-dyn-valid-2.html input-radio-dyn-valid-2.html
+fails == input-radio-nogroup-required-valid.html input-radio-nogroup-required-valid.html
+fails == input-radio-nogroup-required-invalid.html input-radio-nogroup-required-invalid.html
+fails == input-submit.html input-submit.html
+fails == input-image.html input-image.html
 # input type='hidden' shouldn't show

@@ -73,7 +73,7 @@ add_test(function() {
       name: "manually updating addon (new and improved!)",
       existingAddon: gProvider.addons[1],
       version: "1.1",
-      releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml", null, null)
+      releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml")
     }]);
 
     var item = get_addon_element(gManagerWindow, "addon2@tests.mozilla.org");
@@ -133,7 +133,7 @@ add_test(function() {
         item.removeEventListener("RelNotesToggle", arguments.callee, false);
         info("Release notes now closed");
         info("Setting Release notes URI to something that should load");
-        gProvider.installs[0].releaseNotesURI = Services.io.newURI(TESTROOT + "releaseNotes.xhtml", null, null)
+        gProvider.installs[0].releaseNotesURI = Services.io.newURI(TESTROOT + "releaseNotes.xhtml")
 
         info("Re-opening release notes");
         item.addEventListener("RelNotesToggle", function() {
@@ -241,6 +241,6 @@ add_test(function() {
     name: "manually updating addon (new and even more improved!)",
     existingAddon: gProvider.addons[1],
     version: "1.2",
-    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml", null, null)
+    releaseNotesURI: Services.io.newURI(TESTROOT + "thereIsNoFileHere.xhtml")
   }]);
 });

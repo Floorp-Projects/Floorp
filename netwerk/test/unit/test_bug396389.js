@@ -29,7 +29,7 @@ function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
 
-  var uri1 = ios.newURI("file:///", null, null);
+  var uri1 = ios.newURI("file:///");
   do_check_true(uri1 instanceof Ci.nsIFileURL);
 
   var uri2 = uri1.clone();
@@ -54,7 +54,7 @@ function run_test() {
   try {
     // URI stolen from
     // http://lists.w3.org/Archives/Public/public-iri/2004Mar/0012.html
-    var uri4 = ios.newURI("http://xn--jos-dma.example.net.ch/", null, null);
+    var uri4 = ios.newURI("http://xn--jos-dma.example.net.ch/");
     do_check_eq(uri4.asciiHost, "xn--jos-dma.example.net.ch");
     do_check_eq(uri4.host, "jos\u00e9.example.net.ch");
     

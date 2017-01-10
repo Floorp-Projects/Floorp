@@ -22,7 +22,7 @@ exports.ActorActorFront = ActorActorFront;
 function request(uri) {
   return new Promise((resolve, reject) => {
     try {
-      uri = Services.io.newURI(uri, null, null);
+      uri = Services.io.newURI(uri);
     } catch (e) {
       reject(e);
     }

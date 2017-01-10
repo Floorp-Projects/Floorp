@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "serializationHelper",
 
 this.Utils = Object.freeze({
   makeURI(url) {
-    return Services.io.newURI(url, null, null);
+    return Services.io.newURI(url);
   },
 
   makeInputStream(aString) {

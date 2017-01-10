@@ -314,7 +314,7 @@ function getHost(uri, href) {
   let host;
   try {
     if (!uri) {
-      uri = Services.io.newURI(href, null, null);
+      uri = Services.io.newURI(href);
     }
     host = uri.host;
   } catch (ex) {}
@@ -336,7 +336,7 @@ function prompt(aBrowser, aRequest) {
   let {audioDevices: audioDevices, videoDevices: videoDevices,
        sharingScreen: sharingScreen, sharingAudio: sharingAudio,
        requestTypes: requestTypes} = aRequest;
-  let uri = Services.io.newURI(aRequest.documentURI, null, null);
+  let uri = Services.io.newURI(aRequest.documentURI);
   let host = getHost(uri);
   let chromeDoc = aBrowser.ownerDocument;
   let stringBundle = chromeDoc.defaultView.gNavigatorBundle;
@@ -590,7 +590,7 @@ function prompt(aBrowser, aRequest) {
           }
 
           let perms = Services.perms;
-          let chromeUri = Services.io.newURI(doc.documentURI, null, null);
+          let chromeUri = Services.io.newURI(doc.documentURI);
           perms.add(chromeUri, "MediaManagerVideo", perms.ALLOW_ACTION,
                     perms.EXPIRE_SESSION);
 

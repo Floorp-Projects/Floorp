@@ -1498,8 +1498,8 @@ WebConsoleFrame.prototype = {
     // it makes sense to only display the protcol, host and port (prePath).
     // This also means messages are grouped for a single origin.
     if (scriptError.category && scriptError.category == "SHA-1 Signature") {
-      let sourceURI = Services.io.newURI(scriptError.sourceName, null, null)
-                      .QueryInterface(Ci.nsIURL);
+      let sourceURI = Services.io.newURI(scriptError.sourceName)
+                                 .QueryInterface(Ci.nsIURL);
       displayOrigin = sourceURI.prePath;
     }
 

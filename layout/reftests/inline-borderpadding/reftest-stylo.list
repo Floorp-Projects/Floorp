@@ -1,9 +1,9 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip == ltr-basic.html ltr-basic.html
-skip == rtl-basic.html rtl-basic.html
-skip == rtl-span-only.html rtl-span-only.html
-skip == ltr-span-only.html ltr-span-only.html
-skip == ltr-ib.html ltr-ib.html
-skip == rtl-ib.html rtl-ib.html
-skip == rtl-span-only-ib.html rtl-span-only-ib.html
-skip == ltr-span-only-ib.html ltr-span-only-ib.html
+fails == ltr-basic.html ltr-basic.html
+fails == rtl-basic.html rtl-basic.html
+fails == rtl-span-only.html rtl-span-only.html
+fails == ltr-span-only.html ltr-span-only.html
+fails == ltr-ib.html ltr-ib.html
+fails == rtl-ib.html rtl-ib.html
+fails == rtl-span-only-ib.html rtl-span-only-ib.html
+fails == ltr-span-only-ib.html ltr-span-only-ib.html

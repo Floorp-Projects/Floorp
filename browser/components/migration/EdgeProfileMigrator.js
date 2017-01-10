@@ -113,7 +113,7 @@ EdgeTypedURLMigrator.prototype = {
     for (let [urlString, time] of typedURLs) {
       let uri;
       try {
-        uri = Services.io.newURI(urlString, null, null);
+        uri = Services.io.newURI(urlString);
         if (["http", "https", "ftp"].indexOf(uri.scheme) == -1) {
           continue;
         }

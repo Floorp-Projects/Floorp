@@ -15,6 +15,16 @@
 ##
 # Linux platforms (matching /linux.*/)
 
+linux32/debug:
+    build-platform: linux/debug
+    test-sets:
+        - linux32-tests
+linux32/opt:
+    build-platform: linux/opt
+    test-sets:
+        -  linux32-tests
+        -  linux32-opt-tests
+
 linux64/debug:
     build-platform: linux64/debug
     test-sets:

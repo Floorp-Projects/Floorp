@@ -1215,7 +1215,7 @@ DownloadsPlacesView.prototype = {
       let [url, name] = data.value.QueryInterface(Ci.nsISupportsString)
                             .data.split("\n");
       if (url) {
-        return [NetUtil.newURI(url, null, null).spec, name];
+        return [NetUtil.newURI(url).spec, name];
       }
     } catch (ex) {}
 

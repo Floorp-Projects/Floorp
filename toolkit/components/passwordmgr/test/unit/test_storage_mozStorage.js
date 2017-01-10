@@ -81,7 +81,7 @@ function getAllDisabledHostsFromPermissionManager() {
 }
 
 function setLoginSavingEnabled(origin, enabled) {
-  let uri = Services.io.newURI(origin, null, null);
+  let uri = Services.io.newURI(origin);
 
   if (enabled) {
     Services.perms.remove(uri, PERMISSION_SAVE_LOGINS);

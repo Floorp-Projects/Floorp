@@ -31,7 +31,7 @@ var callback = {
 };
 
 function createFakeAddonWindow({addonId} = {}) {
-  let baseURI = Services.io.newURI("about:blank", null, null);
+  let baseURI = Services.io.newURI("about:blank");
   let originAttributes = {addonId};
   let principal = Services.scriptSecurityManager
         .createCodebasePrincipal(baseURI, originAttributes);

@@ -125,7 +125,7 @@ LoginStore.prototype._dataPostProcessor = function(data) {
 LoginStore.prototype._migrateDisabledHosts = function(data) {
   for (let host of data.disabledHosts) {
     try {
-      let uri = Services.io.newURI(host, null, null);
+      let uri = Services.io.newURI(host);
       Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
     } catch (e) {
       Cu.reportError(e);

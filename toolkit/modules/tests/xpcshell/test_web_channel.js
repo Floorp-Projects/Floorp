@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/WebChannel.jsm");
 const ERROR_ID_ORIGIN_REQUIRED = "WebChannel id and originOrPermission are required.";
 const VALID_WEB_CHANNEL_ID = "id";
 const URL_STRING = "http://example.com";
-const VALID_WEB_CHANNEL_ORIGIN = Services.io.newURI(URL_STRING, null, null);
+const VALID_WEB_CHANNEL_ORIGIN = Services.io.newURI(URL_STRING);
 const TEST_PERMISSION_NAME = "test-webchannel-permissions";
 
 var MockWebChannelBroker = {
