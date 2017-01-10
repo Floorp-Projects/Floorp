@@ -9,11 +9,7 @@ DIRS += ['build']
 XPIDL_SOURCES += [
     'nsCWebBrowser.idl',
     'nsICommandHandler.idl',
-    'nsIContextMenuListener.idl',
-    'nsIContextMenuListener2.idl',
     'nsIEmbeddingSiteWindow.idl',
-    'nsITooltipListener.idl',
-    'nsITooltipTextProvider.idl',
     'nsIWebBrowser.idl',
     'nsIWebBrowserChrome.idl',
     'nsIWebBrowserChrome2.idl',
@@ -32,14 +28,8 @@ if CONFIG['NS_PRINTING']:
 
 XPIDL_MODULE = 'webBrowser_core'
 
-EXPORTS += [
-    'nsCTooltipTextProvider.h',
-]
-
 UNIFIED_SOURCES += [
     'nsCommandHandler.cpp',
-    'nsContextMenuInfo.cpp',
-    'nsDocShellTreeOwner.cpp',
     'nsEmbedStream.cpp',
     'nsWebBrowser.cpp',
     'nsWebBrowserContentPolicy.cpp',
@@ -55,3 +45,7 @@ LOCAL_INCLUDES += [
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+EXPORTS += [
+    'nsEmbedCID.h',
+]

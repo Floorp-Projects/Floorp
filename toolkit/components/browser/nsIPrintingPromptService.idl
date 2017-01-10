@@ -49,7 +49,7 @@ interface nsIPrintingPromptService : nsISupports
    *  
    *             Note: The Windows version Mozilla implements this service which is 
    *                   automatically built and registered for you. You can use it as an example.
-   *                   It is located at "mozilla/embedding/components/printingui/win". That service
+   *                   It is located at "mozilla/toolkit/components/printingui/win". That service
    *                   is capable of displaying a native print dialog and a XUL progress dialog.
    *
    *             To fly your own dialog you may:
