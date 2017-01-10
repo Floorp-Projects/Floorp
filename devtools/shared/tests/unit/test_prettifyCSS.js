@@ -49,6 +49,19 @@ const TESTS = [
       "}"
     ]
   },
+
+  { name: "CSS with extra closing brace",
+    input: "body{margin:0}} div{color:red}",
+    expected: [
+      "body {",
+      "\tmargin:0",
+      "}",
+      "}",
+      "div {",
+      "\tcolor:red",
+      "}",
+    ]
+  },
 ];
 
 function run_test() {
