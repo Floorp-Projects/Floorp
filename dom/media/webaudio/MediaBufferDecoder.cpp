@@ -491,7 +491,7 @@ WebAudioDecodeJob::AllocateBuffer()
   // Now create the AudioBuffer
   ErrorResult rv;
   uint32_t channelCount = mBuffer->GetChannels();
-  mOutput = AudioBuffer::Create(mContext, channelCount,
+  mOutput = AudioBuffer::Create(mContext->GetOwner(), channelCount,
                                 mWriteIndex, mContext->SampleRate(),
                                 mBuffer.forget(), rv);
   return !rv.Failed();
