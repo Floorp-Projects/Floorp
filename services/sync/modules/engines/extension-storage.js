@@ -12,7 +12,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/async.js");
-XPCOMUtils.defineLazyModuleGetter(this, "ExtensionStorageSync",
+XPCOMUtils.defineLazyModuleGetter(this, "extensionStorageSync",
                                   "resource://gre/modules/ExtensionStorageSync.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
                                   "resource://gre/modules/FxAccounts.jsm");
@@ -41,7 +41,7 @@ ExtensionStorageEngine.prototype = {
   allowSkippedRecord: false,
 
   _sync() {
-    return Async.promiseSpinningly(ExtensionStorageSync.syncAll());
+    return Async.promiseSpinningly(extensionStorageSync.syncAll());
   },
 
   get enabled() {
