@@ -19,16 +19,21 @@
 #include "shared-libraries.h"
 #include "js/Value.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/Promise.h"
 
 using mozilla::ErrorResult;
+using mozilla::Preferences;
 using mozilla::dom::Promise;
 using std::string;
+
+static const char* kAsyncStacksPrefName = "javascript.options.asyncstack";
 
 NS_IMPL_ISUPPORTS(nsProfiler, nsIProfiler)
 
 nsProfiler::nsProfiler()
   : mLockedForPrivateBrowsing(false)
+  , mAsyncStacksWereEnabled(false)
 {
 }
 
@@ -87,6 +92,11 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  mAsyncStacksWereEnabled = Preferences::GetBool(kAsyncStacksPrefName);
+  if (mAsyncStacksWereEnabled) {
+    Preferences::SetBool(kAsyncStacksPrefName, false);
+  }
+
   profiler_start(aEntries, aInterval,
                  aFeatures, aFeatureCount,
                  aThreadNameFilters, aFilterCount);
@@ -96,6 +106,8 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
 NS_IMETHODIMP
 nsProfiler::StopProfiler()
 {
+  Preferences::SetBool(kAsyncStacksPrefName, mAsyncStacksWereEnabled);
+
   profiler_stop();
   return NS_OK;
 }
