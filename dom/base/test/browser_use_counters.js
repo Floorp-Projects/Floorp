@@ -298,10 +298,12 @@ var check_use_counter_direct = async function(file, use_counter_middlefix, xfail
   let [histogram_page_after, histogram_document_after,
        histogram_docs_after, histogram_toplevel_docs_after] =
       await grabHistogramsFromContent(use_counter_middlefix, histogram_page_before);
-  (xfail ? todo_is : is)(histogram_page_after, histogram_page_before + 1,
-                         "page counts for " + use_counter_middlefix + " after are correct");
-  (xfail ? todo_is : is)(histogram_document_after, histogram_document_before + 1,
-                         "document counts for " + use_counter_middlefix + " after are correct");
+  if (!xfail) {
+    is(histogram_page_after, histogram_page_before + 1,
+       "page counts for " + use_counter_middlefix + " after are correct");
+    is(histogram_document_after, histogram_document_before + 1,
+       "document counts for " + use_counter_middlefix + " after are correct");
+  }
   ok(histogram_toplevel_docs_after >= histogram_toplevel_docs_before + 1,
      "top level document counts are correct");
   ok(histogram_docs_after >= histogram_docs_before + 1,
