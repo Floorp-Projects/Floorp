@@ -53,7 +53,9 @@ include ruby/reftest.list
 include selectors4/reftest.list
 
 # Shapes Level 1
-include shapes1/reftest.list
+# Bug 1300355: Skip shapes reftests to prevent frequent intermittent failures
+# on Win7 debug.
+skip-if(winWidget&&isDebugBuild) include shapes1/reftest.list
 
 # Text Level 3
 # After Bug 1316482, we've added a large number of tests in this folder, which
