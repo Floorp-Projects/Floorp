@@ -36,9 +36,7 @@ endif
 endif
 
 # These are defaulted to be compatible with the files the wget-en-US target
-# pulls. You may override them if you provide your own files. You _must_
-# override them when MOZ_PKG_PRETTYNAMES is defined - the defaults will not
-# work in that case.
+# pulls. You may override them if you provide your own files.
 ZIP_IN ?= $(ABS_DIST)/$(PACKAGE)
 WIN32_INSTALLER_IN ?= $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
@@ -142,7 +140,6 @@ endif
 	  $(MAKE_PACKAGE)
 ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
-	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
 	  PACKAGE_BASE_DIR='$(ABS_DIST)/l10n-stage'
 endif
 # packaging done, undo l10n stuff
