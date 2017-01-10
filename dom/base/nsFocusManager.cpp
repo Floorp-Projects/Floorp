@@ -1900,14 +1900,15 @@ nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow,
 
     aWindow->SetFocusedNode(aContent, focusMethod);
 
+    // if the focused element changed, scroll it into view
+    if (aContent && aFocusChanged) {
+      ScrollIntoView(presShell, aContent, aFlags);
+    }
+
     bool sendFocusEvent =
       aContent && aContent->IsInComposedDoc() && !IsNonFocusableRoot(aContent);
     nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
-      // if the focused element changed, scroll it into view
-      if (aFocusChanged)
-        ScrollIntoView(presShell, aContent, aFlags);
-
       NotifyFocusStateChange(aContent, aWindow->ShouldShowFocusRing(), true);
 
       // if this is an object/plug-in/remote browser, focus its widget.  Note that we might
