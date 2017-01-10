@@ -27,7 +27,7 @@ asserts-if(stylo,13) load 191272-1.html # bug 1324636
 load 199696-1.html
 load 217903-1.html
 load 223064-1.html
-skip-if(stylo) load 234851-1.html # bug 1323665
+load 234851-1.html
 load 234851-2.html
 load 241300-1.html
 load 243159-1.html
@@ -83,7 +83,7 @@ load 331204-1.html
 load 331679-1.xhtml
 load 331679-2.xml
 load 331679-3.xml
-asserts-if(stylo,186) load 331883-1.html # bug 1324673
+asserts-if(stylo,10) load 331883-1.html # bug 1324663
 load 335140-1.html
 load 336291-1.html
 load 336999-1.xul
@@ -103,7 +103,7 @@ asserts-if(stylo,3) load 343293-2.xhtml # bug 1324663
 load 343540-1.html
 load 344057-1.xhtml
 load 344064-1.html
-asserts-if(stylo,1-9) load 344300-1.html # bug 1324673
+asserts-if(stylo,1-9) load 344300-1.html # bug 1324663
 load 344300-2.html
 load 344340-1.xul
 load 347898-1.html
@@ -172,7 +172,7 @@ load 384649-1.xhtml
 load 385354.html
 load 385866-1.xhtml
 load 385880-1.xhtml
-skip-if(stylo) load 386266-1.html # bug 1323665
+load 386266-1.html
 load 386476.html
 load 387195-1.html
 load 387195-2.xhtml
@@ -276,7 +276,7 @@ load 455171-4.html
 skip-if(stylo) load 455623-1.html # bug 1323652
 load 457362-1.xhtml
 load 457514.html
-skip-if(stylo) asserts(0-1) load 460389-1.html # Bug 1323665, bug 780985
+asserts(0-1) load 460389-1.html # bug 780985
 asserts-if(stylo,1) load 462392.html # bug 1324683
 load 466763-1.html
 load 467881-1.html
@@ -313,7 +313,7 @@ asserts-if(stylo,4) load 490747.html # bug 1324663
 load 491547-1.xul
 load 491547-2.xul
 load 492014.xhtml
-skip-if(stylo) load 492112-1.xhtml # bug 1323665
+load 492112-1.xhtml
 asserts-if(stylo,1) load 492163-1.xhtml # bug 1324663
 load 495350-1.html
 skip-if(stylo) load 496011-1.xhtml # bug 1323649
@@ -443,7 +443,7 @@ pref(layers.progressive-paint,false) pref(layers.low-precision-buffer,false) loa
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
 load 860579-1.html
-asserts-if(stylo,2) load 866588.html # bug 1324705
+load 866588.html
 load 876092.html
 load 876221.html
 load 897852.html
@@ -456,7 +456,7 @@ load 931460-1.html
 load 931464.html
 load 935765-1.html
 load 936988-1.html
-asserts-if(stylo,2) load 942690.html # bug 1324705
+load 942690.html
 load 973390-1.html
 load 1001237.html
 load 1009036.html

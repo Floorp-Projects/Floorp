@@ -1,0 +1,34 @@
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Make sure that gradient masks are painted correctly with translucent end-color</title>
+<!-- See https://bugzilla.mozilla.org/show_bug.cgi?id=1329411 -->
+
+<style>
+
+html {
+  background: white;
+  overflow: hidden;
+}
+
+div {
+  height: 5000px;
+  background-color: red;
+  mask-image: linear-gradient(transparent 0px, rgba(255, 0, 0, 0.5) 2000px);
+}
+
+</style>
+<body style="margin: 0px;">
+  <div></div>
+
+  <script>
+    window.addEventListener("MozReftestInvalidate", function () {
+      document.documentElement.scrollTop = 3000; // > 2000
+      document.documentElement.removeAttribute("class");
+    });
+  </script>
+</body>

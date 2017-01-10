@@ -8,7 +8,11 @@
 define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
-  const { sanitizeString, isGrip } = require("./rep-utils");
+  const {
+    sanitizeString,
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   // Shortcuts
   const { span } = React.DOM;
 
@@ -29,7 +33,7 @@ define(function (require, exports, module) {
       };
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {
         cropLimit,
         member,
@@ -53,7 +57,7 @@ define(function (require, exports, module) {
       }
       let formattedString = useQuotes ? `"${string}"` : string;
       return span(config, sanitizeString(formattedString));
-    },
+    }),
   });
 
   function supportsObject(object, type) {
