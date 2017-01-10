@@ -23,7 +23,28 @@ extern "C" NS_EXPORT
 void GeckoStart(JNIEnv* aEnv, char** argv, int argc, const mozilla::StaticXREAppData& aAppData);
 #endif
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+namespace sandbox {
+class BrokerServices;
+}
+#endif
+
 namespace mozilla {
+
+struct BootstrapConfig
+{
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  /* Chromium sandbox BrokerServices. */
+  sandbox::BrokerServices* sandboxBrokerServices;
+#endif
+  /* Pointer to static XRE AppData from application.ini.h */
+  const StaticXREAppData* appData;
+  /* When the pointer above is null, points to the (string) path of an
+   * application.ini file to open and parse.
+   * When the pointer above is non-null, may indicate the directory where
+   * application files are, relative to the XRE. */
+  const char* appDataPath;
+};
 
 /**
  * This class is virtual abstract so that using it does not require linking
@@ -64,15 +85,11 @@ public:
 
   virtual void NS_LogTerm() = 0;
 
-  virtual nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult) = 0;
-
-  virtual nsresult XRE_ParseAppData(nsIFile* aINIFile, mozilla::XREAppData& aAppData) = 0;
-
   virtual void XRE_TelemetryAccumulate(int aID, uint32_t aSample) = 0;
 
   virtual void XRE_StartupTimelineRecord(int aEvent, mozilla::TimeStamp aWhen) = 0;
 
-  virtual int XRE_main(int argc, char* argv[], const mozilla::XREAppData& aAppData) = 0;
+  virtual int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) = 0;
 
   virtual void XRE_StopLateWriteChecks() = 0;
 

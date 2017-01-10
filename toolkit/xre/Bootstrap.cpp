@@ -33,14 +33,6 @@ public:
     ::NS_LogTerm();
   }
 
-  virtual nsresult XRE_GetFileFromPath(const char* aPath, nsIFile** aResult) override {
-    return ::XRE_GetFileFromPath(aPath, aResult);
-  }
-
-  virtual nsresult XRE_ParseAppData(nsIFile* aINIFile, mozilla::XREAppData& aAppData) override {
-    return ::XRE_ParseAppData(aINIFile, aAppData);
-  }
-
   virtual void XRE_TelemetryAccumulate(int aID, uint32_t aSample) override {
     ::XRE_TelemetryAccumulate(aID, aSample);
   }
@@ -49,8 +41,8 @@ public:
     ::XRE_StartupTimelineRecord(aEvent, aWhen);
   }
 
-  virtual int XRE_main(int argc, char* argv[], const mozilla::XREAppData& aAppData) override {
-    return ::XRE_main(argc, argv, aAppData);
+  virtual int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig) override {
+    return ::XRE_main(argc, argv, aConfig);
   }
 
   virtual void XRE_StopLateWriteChecks() override {
