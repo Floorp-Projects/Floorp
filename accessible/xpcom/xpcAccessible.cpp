@@ -195,9 +195,6 @@ xpcAccessible::GetDOMNode(nsIDOMNode** aDOMNode)
 NS_IMETHODIMP
 xpcAccessible::GetId(nsAString& aID)
 {
-#if defined(XP_WIN)
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
   ProxyAccessible* proxy = IntlGeneric().AsProxy();
   if (!proxy) {
     return NS_ERROR_FAILURE;
@@ -208,7 +205,6 @@ xpcAccessible::GetId(nsAString& aID)
   aID.Assign(id);
 
   return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP

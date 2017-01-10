@@ -62,7 +62,6 @@ fuzzy-if(skiaContent,1,210) == anim-css-fillopacity-1-from-by.svg anim-css-fillo
 fuzzy-if(skiaContent,1,550) == anim-css-fillopacity-1-to.svg anim-css-fillopacity-1-to.svg
 == anim-css-fillopacity-2-paced.svg anim-css-fillopacity-2-paced.svg
 == anim-css-fillopacity-3-clamp-big.svg anim-css-fillopacity-3-clamp-big.svg
-# bug 501188
 fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg anim-css-fillopacity-3-clamp-small.svg
 
 # 'font' shorthand property
@@ -78,9 +77,9 @@ fuzzy-if(skiaContent,1,365) == anim-css-fillopacity-3-clamp-small.svg anim-css-f
 == anim-css-fontsize-1-from-to-px-no.svg anim-css-fontsize-1-from-to-px-no.svg
 
 # 'font-size' mapped attribute (accepts unitless values)
-skip == anim-mapped-fontsize-1-from-to-no-no.svg anim-mapped-fontsize-1-from-to-no-no.svg
-skip == anim-mapped-fontsize-1-from-to-no-px.svg anim-mapped-fontsize-1-from-to-no-px.svg
-skip == anim-mapped-fontsize-1-from-to-px-no.svg anim-mapped-fontsize-1-from-to-px-no.svg
+== anim-mapped-fontsize-1-from-to-no-no.svg anim-mapped-fontsize-1-from-to-no-no.svg
+== anim-mapped-fontsize-1-from-to-no-px.svg anim-mapped-fontsize-1-from-to-no-px.svg
+== anim-mapped-fontsize-1-from-to-px-no.svg anim-mapped-fontsize-1-from-to-px-no.svg
 
 # 'font-size' property, from/by/to with percent values
 == anim-css-fontsize-1-from-by-pct-pct.svg anim-css-fontsize-1-from-by-pct-pct.svg

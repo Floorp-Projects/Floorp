@@ -1,90 +1,71 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if((B2G&&browserIsRemote)||Mulet) == menuitem-key.xul menuitem-key.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
+== menuitem-key.xul menuitem-key.xul
 # these random-if(Android) are due to differences between Android Native & Xul, see bug 732569
-random-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(Android||B2G) fails-if(winWidget) skip-if((B2G&&browserIsRemote)||Mulet) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == textbox-overflow-1.xul textbox-overflow-1.xul
-# for bug 749658
-# Initial mulet triage: parity with B2G/B2G Desktop
+random-if(Android) == menulist-shrinkwrap-1.xul menulist-shrinkwrap-1.xul
+random-if(Android) fails-if(winWidget) == menulist-shrinkwrap-2.xul menulist-shrinkwrap-2.xul
+== textbox-overflow-1.xul textbox-overflow-1.xul
 # accesskeys are not normally displayed on Mac, so skip this test
-skip-if(cocoaWidget) skip-if((B2G&&browserIsRemote)||Mulet) == accesskey.xul accesskey.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(cocoaWidget) fails-if(browserIsRemote&&d2d) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) skip-if((B2G&&browserIsRemote)||Mulet) == tree-row-outline-1.xul tree-row-outline-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop, win8: bug 1254832
-skip-if((B2G&&browserIsRemote)||Mulet) == tree-row-outline-1.xul tree-row-outline-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == text-small-caps-1.xul text-small-caps-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630.xul
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525.xul
+skip-if(cocoaWidget) == accesskey.xul accesskey.xul
+fails-if(cocoaWidget) fails-if(browserIsRemote&&dwrite) fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,11) == tree-row-outline-1.xul tree-row-outline-1.xul
+== tree-row-outline-1.xul tree-row-outline-1.xul
+== text-crop.xul text-crop.xul
+== text-small-caps-1.xul text-small-caps-1.xul
+fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1205630.xul inactive-fixed-bg-bug1205630.xul
+fuzzy-if(skiaContent,1,60) fuzzy-if(cocoaWidget&&browserIsRemote&&!skiaContent,1,31) fuzzy-if(winWidget&&browserIsRemote&&layersGPUAccelerated,1,50) == inactive-fixed-bg-bug1272525.xul inactive-fixed-bg-bug1272525.xul
 
 # Tests for XUL <image> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3
 # reftest directory. They live here because they use XUL, and it
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on XUL.
-# NOTE: These are marked "skip-if(Mulet)" for now, because they seem to impact
-# the reftest-chunking in a way that makes later tests fail (likely through no
-# fault of these tests here, aside from their impact on chunking). See:
-#   https://bugzilla.mozilla.org/show_bug.cgi?id=1170052#c25
-# And they're skipped on B2G Emulator (like everything else in this file)
-# because XUL reftests trigger error pages on that platform.
 default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-png-001.xul object-fit-contain-png-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-png-002.xul object-fit-contain-png-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-001.xul object-fit-contain-svg-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-002.xul object-fit-contain-svg-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-003.xul object-fit-contain-svg-003.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-004.xul object-fit-contain-svg-004.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-005.xul object-fit-contain-svg-005.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-contain-svg-006.xul object-fit-contain-svg-006.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-png-001.xul object-fit-cover-png-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-png-002.xul object-fit-cover-png-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-001.xul object-fit-cover-svg-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-002.xul object-fit-cover-svg-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-003.xul object-fit-cover-svg-003.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-004.xul object-fit-cover-svg-004.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-005.xul object-fit-cover-svg-005.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-cover-svg-006.xul object-fit-cover-svg-006.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-png-001.xul object-fit-fill-png-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-png-002.xul object-fit-fill-png-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-001.xul object-fit-fill-svg-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-002.xul object-fit-fill-svg-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-003.xul object-fit-fill-svg-003.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-004.xul object-fit-fill-svg-004.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-005.xul object-fit-fill-svg-005.xul
-# bug 1092436
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-fill-svg-006.xul object-fit-fill-svg-006.xul
-# bug 1092436
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-png-001.xul object-fit-none-png-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-png-002.xul object-fit-none-png-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-001.xul object-fit-none-svg-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-002.xul object-fit-none-svg-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-003.xul object-fit-none-svg-003.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-004.xul object-fit-none-svg-004.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-005.xul object-fit-none-svg-005.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-none-svg-006.xul object-fit-none-svg-006.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-png-001.xul object-fit-scale-down-png-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-png-002.xul object-fit-scale-down-png-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-001.xul object-fit-scale-down-svg-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-002.xul object-fit-scale-down-svg-002.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-003.xul object-fit-scale-down-svg-003.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-position-png-001.xul object-position-png-001.xul
-skip-if((B2G&&browserIsRemote)||Mulet) == object-position-png-002.xul object-position-png-002.xul
+== object-fit-contain-png-001.xul object-fit-contain-png-001.xul
+== object-fit-contain-png-002.xul object-fit-contain-png-002.xul
+== object-fit-contain-svg-001.xul object-fit-contain-svg-001.xul
+== object-fit-contain-svg-002.xul object-fit-contain-svg-002.xul
+== object-fit-contain-svg-003.xul object-fit-contain-svg-003.xul
+== object-fit-contain-svg-004.xul object-fit-contain-svg-004.xul
+== object-fit-contain-svg-005.xul object-fit-contain-svg-005.xul
+== object-fit-contain-svg-006.xul object-fit-contain-svg-006.xul
+== object-fit-cover-png-001.xul object-fit-cover-png-001.xul
+== object-fit-cover-png-002.xul object-fit-cover-png-002.xul
+== object-fit-cover-svg-001.xul object-fit-cover-svg-001.xul
+== object-fit-cover-svg-002.xul object-fit-cover-svg-002.xul
+== object-fit-cover-svg-003.xul object-fit-cover-svg-003.xul
+== object-fit-cover-svg-004.xul object-fit-cover-svg-004.xul
+== object-fit-cover-svg-005.xul object-fit-cover-svg-005.xul
+== object-fit-cover-svg-006.xul object-fit-cover-svg-006.xul
+== object-fit-fill-png-001.xul object-fit-fill-png-001.xul
+== object-fit-fill-png-002.xul object-fit-fill-png-002.xul
+== object-fit-fill-svg-001.xul object-fit-fill-svg-001.xul
+== object-fit-fill-svg-002.xul object-fit-fill-svg-002.xul
+== object-fit-fill-svg-003.xul object-fit-fill-svg-003.xul
+== object-fit-fill-svg-004.xul object-fit-fill-svg-004.xul
+== object-fit-fill-svg-005.xul object-fit-fill-svg-005.xul
+== object-fit-fill-svg-006.xul object-fit-fill-svg-006.xul
+== object-fit-none-png-001.xul object-fit-none-png-001.xul
+== object-fit-none-png-002.xul object-fit-none-png-002.xul
+== object-fit-none-svg-001.xul object-fit-none-svg-001.xul
+== object-fit-none-svg-002.xul object-fit-none-svg-002.xul
+== object-fit-none-svg-003.xul object-fit-none-svg-003.xul
+== object-fit-none-svg-004.xul object-fit-none-svg-004.xul
+== object-fit-none-svg-005.xul object-fit-none-svg-005.xul
+== object-fit-none-svg-006.xul object-fit-none-svg-006.xul
+== object-fit-scale-down-png-001.xul object-fit-scale-down-png-001.xul
+== object-fit-scale-down-png-002.xul object-fit-scale-down-png-002.xul
+== object-fit-scale-down-svg-001.xul object-fit-scale-down-svg-001.xul
+== object-fit-scale-down-svg-002.xul object-fit-scale-down-svg-002.xul
+== object-fit-scale-down-svg-003.xul object-fit-scale-down-svg-003.xul
+== object-fit-scale-down-svg-004.xul object-fit-scale-down-svg-004.xul
+== object-fit-scale-down-svg-005.xul object-fit-scale-down-svg-005.xul
+== object-fit-scale-down-svg-006.xul object-fit-scale-down-svg-006.xul
+== object-position-png-001.xul object-position-png-001.xul
+== object-position-png-002.xul object-position-png-002.xul
 
 # Tests for rendering SVG images in a XUL <treecell>:
 # XXXdholbert: These are marked as "random" right now, since they might not
 # render the images they trying to test in time for the reftest snapshot, per
-# bug 1218954. Once that bug is fixed, we should replace the "random"
-# annotation with "skip-if((B2G&&browserIsRemote)||Mulet)", like above tests.
-skip == treecell-image-svg-1a.xul treecell-image-svg-1a.xul
-# bug 1218954
-skip == treecell-image-svg-1b.xul treecell-image-svg-1b.xul
-# bug 1218954
+# bug 1218954.
+== treecell-image-svg-1a.xul treecell-image-svg-1a.xul
+== treecell-image-svg-1b.xul treecell-image-svg-1b.xul
 
-skip-if((B2G&&browserIsRemote)||Mulet) == treechildren-padding-percent-1.xul treechildren-padding-percent-1.xul
+== treechildren-padding-percent-1.xul treechildren-padding-percent-1.xul

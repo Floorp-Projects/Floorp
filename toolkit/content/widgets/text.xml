@@ -310,7 +310,7 @@
                      Components.classes["@mozilla.org/network/io-service;1"]
                                .getService(Components.interfaces.nsIIOService);
 
-            uri = ioService.newURI(href, null, null);
+            uri = ioService.newURI(href);
 
             let principal;
             if (this.getAttribute("useoriginprincipal") == "true") {

@@ -72,11 +72,11 @@ gfxGDIFont::~gfxGDIFont()
     delete mMetrics;
 }
 
-gfxFont*
+UniquePtr<gfxFont>
 gfxGDIFont::CopyWithAntialiasOption(AntialiasOption anAAOption)
 {
-    return new gfxGDIFont(static_cast<GDIFontEntry*>(mFontEntry.get()),
-                          &mStyle, mNeedsBold, anAAOption);
+    auto entry = static_cast<GDIFontEntry*>(mFontEntry.get());
+    return MakeUnique<gfxGDIFont>(entry, &mStyle, mNeedsBold, anAAOption);
 }
 
 bool

@@ -66,7 +66,7 @@ function testSteps()
   function openDatabase(params) {
     let request;
     if ("url" in params) {
-      let uri = ios.newURI(params.url, null, null);
+      let uri = ios.newURI(params.url);
       let principal = ssm.createCodebasePrincipal(uri, {});
       request = indexedDB.openForPrincipal(principal, params.dbName,
                                            params.dbOptions);

@@ -179,7 +179,7 @@ SpecialPowersObserverAPI.prototype = {
   },
 
   _getURI: function (url) {
-    return Services.io.newURI(url, null, null);
+    return Services.io.newURI(url);
   },
 
   _readUrlAsString: function(aUrl) {
@@ -508,7 +508,7 @@ SpecialPowersObserverAPI.prototype = {
       case "SPCleanUpSTSData": {
         let origin = aMessage.data.origin;
         let flags = aMessage.data.flags;
-        let uri = Services.io.newURI(origin, null, null);
+        let uri = Services.io.newURI(origin);
         let sss = Cc["@mozilla.org/ssservice;1"].
                   getService(Ci.nsISiteSecurityService);
         sss.removeState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);

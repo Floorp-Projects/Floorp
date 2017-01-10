@@ -147,7 +147,7 @@ exports["test handle nsIObserverService notifications"] = function(assert) {
   let ios = Cc['@mozilla.org/network/io-service;1']
             .getService(Ci.nsIIOService);
 
-  let uri = ios.newURI("http://www.foo.com", null, null);
+  let uri = ios.newURI("http://www.foo.com");
 
   let type = Date.now().toString(32);
   let timesCalled = 0;
@@ -211,7 +211,7 @@ exports["test emit to nsIObserverService observers"] = function(assert) {
   let ios = Cc['@mozilla.org/network/io-service;1']
             .getService(Ci.nsIIOService);
 
-  let uri = ios.newURI("http://www.foo.com", null, null);
+  let uri = ios.newURI("http://www.foo.com");
   let timesCalled = 0;
   let lastSubject = null;
   let lastData = null;

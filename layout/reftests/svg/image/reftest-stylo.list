@@ -4,10 +4,8 @@
 == image-fill-01.svg image-fill-01.svg
 == image-filter-01.svg image-filter-01.svg
 == image-load-01.svg image-load-01.svg
-skip fuzzy-if(Android&&!browserIsRemote,4,32) == image-opacity-01.svg image-opacity-01.svg
-# Bug 779514 for Android
+fuzzy-if(Android&&!browserIsRemote,4,32) == image-opacity-01.svg image-opacity-01.svg
 fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02.svg
-# Bug 776039 for Android
 == image-rotate-01.svg image-rotate-01.svg
 == image-rotate-02a.svg image-rotate-02a.svg
 == image-rotate-02b.svg image-rotate-02b.svg
@@ -18,14 +16,14 @@ fuzzy-if(Android,4,34) == image-opacity-02.svg image-opacity-02.svg
 == image-svg-inline-zoom-in-01b.html image-svg-inline-zoom-in-01b.html
 == image-svg-inline-zoom-in-01c.html image-svg-inline-zoom-in-01c.html
 == image-svg-inline-zoom-in-01d.html image-svg-inline-zoom-in-01d.html
-== image-svg-inline-zoom-out-01a.html image-svg-inline-zoom-out-01a.html
-== image-svg-inline-zoom-out-01b.html image-svg-inline-zoom-out-01b.html
-== image-svg-inline-zoom-out-01c.html image-svg-inline-zoom-out-01c.html
-== image-svg-inline-zoom-out-01d.html image-svg-inline-zoom-out-01d.html
-== image-svg-inline-sprite-zoom-in-01a.html image-svg-inline-sprite-zoom-in-01a.html
-== image-svg-inline-sprite-zoom-in-01b.html image-svg-inline-sprite-zoom-in-01b.html
-== image-svg-inline-sprite-zoom-out-01a.html image-svg-inline-sprite-zoom-out-01a.html
-== image-svg-inline-sprite-zoom-out-01b.html image-svg-inline-sprite-zoom-out-01b.html
+fails == image-svg-inline-zoom-out-01a.html image-svg-inline-zoom-out-01a.html
+fails == image-svg-inline-zoom-out-01b.html image-svg-inline-zoom-out-01b.html
+fails == image-svg-inline-zoom-out-01c.html image-svg-inline-zoom-out-01c.html
+fails == image-svg-inline-zoom-out-01d.html image-svg-inline-zoom-out-01d.html
+fails == image-svg-inline-sprite-zoom-in-01a.html image-svg-inline-sprite-zoom-in-01a.html
+fails == image-svg-inline-sprite-zoom-in-01b.html image-svg-inline-sprite-zoom-in-01b.html
+fails == image-svg-inline-sprite-zoom-out-01a.html image-svg-inline-sprite-zoom-out-01a.html
+fails == image-svg-inline-sprite-zoom-out-01b.html image-svg-inline-sprite-zoom-out-01b.html
 == image-translate-01.svg image-translate-01.svg
 == image-x-01.svg image-x-01.svg
 == image-xy-01.svg image-xy-01.svg

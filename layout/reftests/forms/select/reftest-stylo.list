@@ -1,15 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fuzzy-if(Android,2,2) skip-if(B2G||Mulet) == out-of-bounds-selectedindex.html out-of-bounds-selectedindex.html
-# test for bug 471741
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == multiple.html multiple.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== boguskids.html boguskids.html
-== dynamic-boguskids.html dynamic-boguskids.html
-== option-children.html option-children.html
+# == out-of-bounds-selectedindex.html out-of-bounds-selectedindex.html
+# == multiple.html multiple.html
+fails == boguskids.html boguskids.html
+# == dynamic-boguskids.html dynamic-boguskids.html
+# == option-children.html option-children.html
 fuzzy(1,4) == padding-button-placement.html padding-button-placement.html
-HTTP(../..) == vertical-centering.html vertical-centering.html
-== 997709-2.html 997709-2.html
-needs-focus == focusring-1.html focusring-1.html
-needs-focus == focusring-2.html focusring-2.html
-needs-focus == focusring-3.html focusring-3.html
+# HTTP(../..) == vertical-centering.html vertical-centering.html
+fails == 997709-2.html 997709-2.html
+fails needs-focus == focusring-1.html focusring-1.html
+fails needs-focus == focusring-2.html focusring-2.html
+# needs-focus == focusring-3.html focusring-3.html

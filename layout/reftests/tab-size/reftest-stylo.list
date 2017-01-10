@@ -1,12 +1,13 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== tab-size-8.html tab-size-8.html
-== tab-size-8.html tab-size-8.html
-== tab-size-4.html tab-size-4.html
-== tab-size-4-span.html tab-size-4-span.html
-== tab-size-4-spanoffset.html tab-size-4-spanoffset.html
-== tab-size-4-multiple.html tab-size-4-multiple.html
-== tab-size-1.html tab-size-1.html
-== tab-size-0.html tab-size-0.html
-== tab-size-negative.html tab-size-negative.html
-== tab-size-change-1a.html tab-size-change-1a.html
-== tab-size-change-1b.html tab-size-change-1b.html
+# == tab-size-8.html tab-size-8.html
+# == tab-size-8.html tab-size-8.html
+fails == tab-size-4.html tab-size-4.html
+fails == tab-size-4-span.html tab-size-4-span.html
+fails == tab-size-4-spanoffset.html tab-size-4-spanoffset.html
+# == tab-size-4-multiple.html tab-size-4-multiple.html
+fails == tab-size-1.html tab-size-1.html
+fails == tab-size-0.html tab-size-0.html
+fails == tab-size-negative.html tab-size-negative.html
+fails == tab-size-change-1a.html tab-size-change-1a.html
+fails == tab-size-change-1b.html tab-size-change-1b.html
+fails == tab-size-length.html tab-size-length.html

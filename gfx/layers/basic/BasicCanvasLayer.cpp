@@ -110,8 +110,8 @@ BasicCanvasLayer::Paint(DrawTarget* aDT,
   if (needsYFlip) {
     oldTM = aDT->GetTransform();
     aDT->SetTransform(Matrix(oldTM).
-                        PreTranslate(0.0f, mBounds.height).
-                        PreScale(1.0f, -1.0f));
+                      PreTranslate(0.0f, mBounds.height).
+                      PreScale(1.0f, -1.0f));
   }
 
   FillRectWithMask(aDT, aDeviceOffset,

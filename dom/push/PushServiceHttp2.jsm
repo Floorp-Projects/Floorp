@@ -312,7 +312,7 @@ SubscriptionListener.prototype = {
       return;
     }
     try {
-      let uriTry = Services.io.newURI(subscriptionUri, null, null);
+      let uriTry = Services.io.newURI(subscriptionUri);
     } catch (e) {
       console.error("onStopRequest: Invalid subscription URI",
         subscriptionUri);

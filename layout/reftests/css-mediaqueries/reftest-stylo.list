@@ -1,50 +1,20 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fuzzy-if(Android,8,454) skip-if(B2G||Mulet) == mq_print_height.xhtml mq_print_height.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop, bug 1178697
-skip-if(B2G||Mulet) == mq_print_deviceheight.xhtml mq_print_deviceheight.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_width.xhtml mq_print_width.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_minwidth.xhtml mq_print_minwidth.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_minheight.xhtml mq_print_minheight.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_aspectratio.xhtml mq_print_aspectratio.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_deviceaspectratio.xhtml mq_print_deviceaspectratio.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_devicewidth.xhtml mq_print_devicewidth.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android,8,454) skip-if(B2G||Mulet) == mq_print_orientation.xhtml mq_print_orientation.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android,8,454) skip-if(B2G||Mulet) == mq_print_maxheight.xhtml mq_print_maxheight.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_maxwidth.xhtml mq_print_maxwidth.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == mq_print_height.xhtml mq_print_height.xhtml
+fails == mq_print_deviceheight.xhtml mq_print_deviceheight.xhtml
+fails == mq_print_width.xhtml mq_print_width.xhtml
+fails == mq_print_minwidth.xhtml mq_print_minwidth.xhtml
+fails == mq_print_minheight.xhtml mq_print_minheight.xhtml
+fails == mq_print_aspectratio.xhtml mq_print_aspectratio.xhtml
+fails == mq_print_deviceaspectratio.xhtml mq_print_deviceaspectratio.xhtml
+fails == mq_print_devicewidth.xhtml mq_print_devicewidth.xhtml
+fails == mq_print_orientation.xhtml mq_print_orientation.xhtml
+fails == mq_print_maxheight.xhtml mq_print_maxheight.xhtml
+fails == mq_print_maxwidth.xhtml mq_print_maxwidth.xhtml
 
-skip-if(B2G||Mulet) == mq_print_maxwidth_updown.xhtml mq_print_maxwidth_updown.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_maxheight_updown.xhtml mq_print_maxheight_updown.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_minheight_updown.xhtml mq_print_minheight_updown.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == mq_print_minwidth_updown.xhtml mq_print_minwidth_updown.xhtml
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == mq_print_maxwidth_updown.xhtml mq_print_maxwidth_updown.xhtml
+fails == mq_print_maxheight_updown.xhtml mq_print_maxheight_updown.xhtml
+fails == mq_print_minheight_updown.xhtml mq_print_minheight_updown.xhtml
+fails == mq_print_minwidth_updown.xhtml mq_print_minwidth_updown.xhtml
 
-skip == scoped-mq-update.html scoped-mq-update.html
-== system-metrics-1.html system-metrics-1.html
+fails == scoped-mq-update.html scoped-mq-update.html
+fails == system-metrics-1.html system-metrics-1.html

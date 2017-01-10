@@ -1,48 +1,41 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== 723669.html 723669.html
+fails == 723669.html 723669.html
 
-skip-if((B2G&&browserIsRemote)||Mulet) == basic.xul basic.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(Android) skip-if((B2G&&browserIsRemote)||Mulet) == basic-negcoord.xul basic-negcoord.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == blur.xul blur.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == color-inherit.xul color-inherit.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == multiple-noblur.xul multiple-noblur.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == blur-opacity.html blur-opacity.html
+== basic.xul basic.xul
+random-if(Android) == basic-negcoord.xul basic-negcoord.xul
+== blur.xul blur.xul
+== color-inherit.xul color-inherit.xul
+== multiple-noblur.xul multiple-noblur.xul
+fails HTTP(..) == blur-opacity.html blur-opacity.html
 
 == basic.html basic.html
 == basic-negcoord.html basic-negcoord.html
 == basic-opacity.html basic-opacity.html
-== blur.html blur.html
-== color-inherit.html color-inherit.html
-== color-parserorder.html color-parserorder.html
+fails == blur.html blur.html
+# == color-inherit.html color-inherit.html
+fails == color-parserorder.html color-parserorder.html
 == decorations-multiple-zorder.html decorations-multiple-zorder.html
 == multiple-noblur.html multiple-noblur.html
 == quirks-decor-noblur.html quirks-decor-noblur.html
 == standards-decor-noblur.html standards-decor-noblur.html
 == padding-decoration.html padding-decoration.html
-== textindent.html textindent.html
-== lineoverflow.html lineoverflow.html
+fails == textindent.html textindent.html
+fails == lineoverflow.html lineoverflow.html
 
-== overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-== overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-== overflow-not-scrollable-2.html overflow-not-scrollable-2.html
+# == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
+# == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
+fails == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
 
 needs-focus == text-shadow-selected-1.html text-shadow-selected-1.html
-fails-if(Android||B2G) fuzzy-if(skiaContent,1,1000) needs-focus == text-shadow-selected-1.html text-shadow-selected-1.html
-# different foreground selection color on Android/B2G
+== text-shadow-selected-1.html text-shadow-selected-1.html
 needs-focus == text-shadow-selected-2.html text-shadow-selected-2.html
-fails-if(Android||B2G) fuzzy-if(skiaContent,1,1400) needs-focus == text-shadow-selected-2.html text-shadow-selected-2.html
-# different foreground selection color on Android/B2G
+== text-shadow-selected-2.html text-shadow-selected-2.html
 
 # bug 692744
-== text-shadow-on-space-1.html text-shadow-on-space-1.html
+fails == text-shadow-on-space-1.html text-shadow-on-space-1.html
 
 # bug 721750
-skip needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1.html
-skip needs-focus == text-shadow-on-selection-2.html text-shadow-on-selection-2.html
+needs-focus == text-shadow-on-selection-1.html text-shadow-on-selection-1.html
+needs-focus == text-shadow-on-selection-2.html text-shadow-on-selection-2.html
 
-== overflow-decoration.html overflow-decoration.html
+fails == overflow-decoration.html overflow-decoration.html

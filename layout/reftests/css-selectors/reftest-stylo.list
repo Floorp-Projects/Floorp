@@ -1,9 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== state-dependent-in-any.html state-dependent-in-any.html
-== attr-case-insensitive-1.html attr-case-insensitive-1.html
-skip == sibling-combinators-on-anon-content-1.xhtml sibling-combinators-on-anon-content-1.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == sibling-combinators-on-anon-content-2.xhtml sibling-combinators-on-anon-content-2.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-== nth-child-1.html nth-child-1.html
-== nth-child-2.html nth-child-2.html
+fails == state-dependent-in-any.html state-dependent-in-any.html
+fails == attr-case-insensitive-1.html attr-case-insensitive-1.html
+== sibling-combinators-on-anon-content-1.xhtml sibling-combinators-on-anon-content-1.xhtml
+fails == sibling-combinators-on-anon-content-2.xhtml sibling-combinators-on-anon-content-2.xhtml
+fails == nth-child-1.html nth-child-1.html
+fails == nth-child-2.html nth-child-2.html

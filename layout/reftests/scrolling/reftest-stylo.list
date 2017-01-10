@@ -1,69 +1,89 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip HTTP == deferred-anchor.xhtml#d deferred-anchor.xhtml#d
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == deferred-anchor2.xhtml deferred-anchor2.xhtml
-# bug 1182632
-HTTP == fixed-1.html fixed-1.html
-random HTTP == fixed-table-1.html fixed-table-1.html
-HTTP == fixed-opacity-1.html fixed-opacity-1.html
-skip-if(B2G||Mulet) HTTP == fixed-opacity-2.html fixed-opacity-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-random HTTP == fixed-text-1.html fixed-text-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP == fixed-text-2.html fixed-text-2.html
-random-if(Android) skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),1,12) == iframe-border-radius.html iframe-border-radius.html
-# bug 760269
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(Android) HTTP == image-1.html image-1.html
-skip == opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html
-# bug 760269
-skip == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html
-# see bug 625357
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-1.html scroll-behavior-1.html
-# see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-2.html scroll-behavior-2.html
-# see bug 1041833
-skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-3.html scroll-behavior-3.html
-# see bug 1041833
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-4.html scroll-behavior-4.html
-# see bug 1041833
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Mulet) skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-5.html scroll-behavior-5.html
-# see bug 1041833
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-6.html scroll-behavior-6.html
-# see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-7.html scroll-behavior-7.html
-# see bug 1041833
-skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-8.html scroll-behavior-8.html
-# see bug 1041833
-skip == scroll-behavior-9.html scroll-behavior-9.html
-# see bug 1041833
+# HTTP == deferred-anchor.xhtml#d deferred-anchor.xhtml#d
+fuzzy-if(xulRuntime.widgetToolkit=="gtk3",1,23) == deferred-anchor2.xhtml deferred-anchor2.xhtml
+fails HTTP == fixed-1.html fixed-1.html
+fails == fixed-table-1.html fixed-table-1.html
+fails HTTP == fixed-opacity-1.html fixed-opacity-1.html
+fails HTTP == fixed-opacity-2.html fixed-opacity-2.html
+fails == fixed-text-1.html fixed-text-1.html
+fails HTTP == fixed-text-2.html fixed-text-2.html
+fails == iframe-border-radius.html iframe-border-radius.html
+== image-1.html image-1.html
+== opacity-mixed-scrolling-1.html opacity-mixed-scrolling-1.html
+fails == opacity-mixed-scrolling-2.html opacity-mixed-scrolling-2.html
+fails == scroll-behavior-1.html scroll-behavior-1.html
+fails == scroll-behavior-2.html scroll-behavior-2.html
+fails == scroll-behavior-3.html scroll-behavior-3.html
+fails == scroll-behavior-4.html scroll-behavior-4.html
+fails == scroll-behavior-5.html scroll-behavior-5.html
+fails == scroll-behavior-6.html scroll-behavior-6.html
+fails == scroll-behavior-7.html scroll-behavior-7.html
+fails == scroll-behavior-8.html scroll-behavior-8.html
+fails == scroll-behavior-9.html scroll-behavior-9.html
 skip-if(Android) pref(layout.css.scroll-behavior.enabled,true) pref(layout.css.scroll-behavior.property-enabled,true) == scroll-behavior-10.html scroll-behavior-10.html
-# see bug 1041833
-skip-if((B2G&&browserIsRemote)||Mulet) HTTP == simple-1.html simple-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip skip-if(B2G||Mulet) HTTP == subpixel-1.html#d subpixel-1.html#d
-# Initial mulet triage: parity with B2G/B2G Desktop
-random HTTP == text-1.html text-1.html
-fuzzy-if(Android,4,120) HTTP == text-2.html?up text-2.html?up
-skip-if(B2G||Mulet) fuzzy-if(d2d,1,4) HTTP == transformed-1.html transformed-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP == transformed-1.html?up transformed-1.html?up
-fuzzy-if(Android,5,20000) == uncovering-1.html uncovering-1.html
-fuzzy-if(Android,5,20000) == uncovering-2.html uncovering-2.html
-skip-if(B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,121,3721) == less-than-scrollbar-height.html less-than-scrollbar-height.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == huge-horizontal-overflow.html huge-horizontal-overflow.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == huge-vertical-overflow.html huge-vertical-overflow.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,6818) == iframe-scrolling-attr-1.html iframe-scrolling-attr-1.html
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,6818) == iframe-scrolling-attr-2.html iframe-scrolling-attr-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== frame-scrolling-attr-1.html frame-scrolling-attr-1.html
-fuzzy-if(asyncPan&&!layersGPUAccelerated,102,2420) == frame-scrolling-attr-2.html frame-scrolling-attr-2.html
-== move-item.html move-item.html
-# bug 1125750
+fails == scroll-behavior-textarea.html scroll-behavior-textarea.html
+fails HTTP == simple-1.html simple-1.html
+# HTTP == subpixel-1.html#d subpixel-1.html#d
+fails == text-1.html text-1.html
+fails == text-2.html?up text-2.html?up
+fails == transformed-1.html transformed-1.html
+fails HTTP == transformed-1.html?up transformed-1.html?up
+== uncovering-1.html uncovering-1.html
+== uncovering-2.html uncovering-2.html
+fails == less-than-scrollbar-height.html less-than-scrollbar-height.html
+fails == huge-horizontal-overflow.html huge-horizontal-overflow.html
+fails == huge-vertical-overflow.html huge-vertical-overflow.html
+fails == iframe-scrolling-attr-1.html iframe-scrolling-attr-1.html
+fails == iframe-scrolling-attr-2.html iframe-scrolling-attr-2.html
+fails == frame-scrolling-attr-1.html frame-scrolling-attr-1.html
+fails == frame-scrolling-attr-2.html frame-scrolling-attr-2.html
+fails == move-item.html move-item.html
+== fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200 fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200
+== fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200 fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200
+== fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200 fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200
+== fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200 fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200
+== fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200 fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200
+== fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200
+== fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200
+== fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200
+== fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=199.6 fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=199.6
+== fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=199.6 fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=199.6
+== fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=199.6 fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=199.6
+== fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=199.6 fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=199.6
+== fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=199.6 fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=199.6
+== fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=199.6 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=199.6
+== fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=199.6 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=199.6
+== fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=199.6 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=199.6
+== fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200.4 fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200.4
+== fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200.4 fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200.4
+== fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200.4 fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200.4
+== fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200.4 fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200.4
+== fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200.4 fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200.4
+== fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200.4 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200.4
+== fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4
+== fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4
+== fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=199.6&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=199.6&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=99.6&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0&outerBottom=100.4&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=-0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=99.6&innerBottom=200.4&scrollBefore=999
+== fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999 fractional-scroll-area.html?top=0.4&outerBottom=100.4&innerBottom=200.4&scrollBefore=999
+fails == fractional-scroll-area-invalidation.html fractional-scroll-area-invalidation.html

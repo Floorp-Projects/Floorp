@@ -97,7 +97,7 @@ DistributionCustomizer.prototype = {
   },
 
   _makeURI: function DIST__makeURI(spec) {
-    return this._ioSvc.newURI(spec, null, null);
+    return this._ioSvc.newURI(spec);
   },
 
   _parseBookmarksSection: Task.async(function* (parentGuid, section) {

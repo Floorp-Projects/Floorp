@@ -323,7 +323,7 @@ function openLinkIn(url, where, params) {
     loadInBackground = false;
 
     try {
-      uriObj = Services.io.newURI(url, null, null);
+      uriObj = Services.io.newURI(url);
     } catch (e) {}
 
     if (w.gBrowser.getTabForBrowser(targetBrowser).pinned &&

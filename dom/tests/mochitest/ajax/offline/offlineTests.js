@@ -301,7 +301,7 @@ manifestURL: function(overload)
   var ios = Cc["@mozilla.org/network/io-service;1"]
             .getService(Ci.nsIIOService)
 
-  var baseURI = ios.newURI(window.location.href, null, null);
+  var baseURI = ios.newURI(window.location.href);
   return ios.newURI(manifestURLspec, null, baseURI);
 },
 

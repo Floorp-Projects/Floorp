@@ -1,6 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,10) HTTP(..) == text-control-baseline-1.html text-control-baseline-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == text-control-baseline-1.html text-control-baseline-1.html
 
 # button element
 include button/reftest-stylo.list

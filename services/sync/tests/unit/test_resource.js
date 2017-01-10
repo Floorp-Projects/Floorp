@@ -426,7 +426,7 @@ function run_test() {
   let res18 = new Resource(server.baseURI + "/json");
   let onProgress = function(rec) {
     // Provoke an XPC exception without a Javascript wrapper.
-    Services.io.newURI("::::::::", null, null);
+    Services.io.newURI("::::::::");
   };
   res18._onProgress = onProgress;
   let oldWarn = res18._log.warn;

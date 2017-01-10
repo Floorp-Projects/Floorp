@@ -1,33 +1,25 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== move-to-background-1.html move-to-background-1.html
-fuzzy-if(cocoaWidget,2,6) random-if(Android) == component-alpha-exit-1.html component-alpha-exit-1.html
-# bug 760275
-== pull-background-1.html pull-background-1.html
-== pull-background-2.html pull-background-2.html
-== pull-background-3.html pull-background-3.html
-== pull-background-4.html pull-background-4.html
-== pull-background-5.html pull-background-5.html
-== pull-background-6.html pull-background-6.html
+fails == move-to-background-1.html move-to-background-1.html
+fails == component-alpha-exit-1.html component-alpha-exit-1.html
+fails == pull-background-1.html pull-background-1.html
+fails == pull-background-2.html pull-background-2.html
+fails == pull-background-3.html pull-background-3.html
+fails == pull-background-4.html pull-background-4.html
+fails == pull-background-5.html pull-background-5.html
+fails == pull-background-6.html pull-background-6.html
 # The animated-position tests are disabled for intermittent failures / passes, bug 1150941
-skip == pull-background-animated-position-1.html pull-background-animated-position-1.html
-# Fails with event regions
-skip == pull-background-animated-position-2.html pull-background-animated-position-2.html
-skip == pull-background-animated-position-3.html pull-background-animated-position-3.html
-# Fails because PaintedLayer item assignment doesn't recognize overflow:hidden clips
-skip == pull-background-animated-position-4.html pull-background-animated-position-4.html
-# Fails because PaintedLayer item assignment and background pulling don't recognize overflow:hidden clips
-skip == pull-background-animated-position-5.html pull-background-animated-position-5.html
-# Fails because ownLayer bounds don't anticipate changes of animated contents, but doesn't fail with event regions
-skip-if(!asyncPan) == pull-background-displayport-1.html pull-background-displayport-1.html
-skip-if(!asyncPan) == pull-background-displayport-2.html pull-background-displayport-2.html
+fails == pull-background-animated-position-1.html pull-background-animated-position-1.html
+fails == pull-background-animated-position-2.html pull-background-animated-position-2.html
+fails == pull-background-animated-position-3.html pull-background-animated-position-3.html
+fails == pull-background-animated-position-4.html pull-background-animated-position-4.html
+fails == pull-background-animated-position-5.html pull-background-animated-position-5.html
+fails == pull-background-displayport-1.html pull-background-displayport-1.html
+fails == pull-background-displayport-2.html pull-background-displayport-2.html
 skip-if(!asyncPan) == pull-background-displayport-3.html pull-background-displayport-3.html
-# fails with non-overlay scrollbars and event regions due to bug 1148515
 skip-if(!asyncPan) == pull-background-displayport-4.html pull-background-displayport-4.html
-# fails with non-overlay scrollbars and event regions due to bug 1148515
 skip-if(!asyncPan) == pull-background-displayport-5.html pull-background-displayport-5.html
 skip-if(!asyncPan) == pull-background-displayport-6.html pull-background-displayport-6.html
-# fails with non-overlay scrollbars and event regions due to bug 1148515
 fuzzy(2,30150) == opacity-blending.html opacity-blending.html
-== mask-layer-transform.html mask-layer-transform.html
-fails fuzzy-if(gtkWidget,1,17) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region.html
-== layerize-over-fixed-bg-1.html layerize-over-fixed-bg-1.html
+fuzzy(16,5) == mask-layer-transform.html mask-layer-transform.html
+fails == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region.html
+fails == layerize-over-fixed-bg-1.html layerize-over-fixed-bg-1.html

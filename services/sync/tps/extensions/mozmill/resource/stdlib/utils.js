@@ -386,7 +386,7 @@ function saveDataURL(aDataURL, aFilename) {
                  .createInstance(Ci.nsIFileOutputStream);
   foStream.init(file, 0x02 | 0x08 | 0x10, FILE_PERMISSIONS, foStream.DEFER_OPEN);
 
-  let dataURI = NetUtil.newURI(aDataURL, "UTF8", null);
+  let dataURI = NetUtil.newURI(aDataURL, "UTF8");
   if (!dataURI.schemeIs("data")) {
     throw TypeError("aDataURL parameter has to have 'data'" +
                     " scheme instead of '" + dataURI.scheme + "'");

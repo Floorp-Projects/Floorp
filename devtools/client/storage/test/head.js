@@ -888,7 +888,7 @@ function setPermission(url, permission) {
 
   let uri = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService)
-                      .newURI(url, null, null);
+                      .newURI(url);
   let ssm = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
                       .getService(Ci.nsIScriptSecurityManager);
   let principal = ssm.createCodebasePrincipal(uri, {});

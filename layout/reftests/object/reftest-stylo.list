@@ -1,45 +1,43 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== no-attrs.html no-attrs.html
-random HTTP == 404-data.html 404-data.html
-random HTTP == 404-data-with-type.html 404-data-with-type.html
-random == page-as-data.html page-as-data.html
-random == page-as-data-with-type.html page-as-data-with-type.html
-random == connection-refused.html connection-refused.html
+fails == no-attrs.html no-attrs.html
+fails HTTP == 404-data.html 404-data.html
+fails HTTP == 404-data-with-type.html 404-data-with-type.html
+fails == page-as-data.html page-as-data.html
+fails == page-as-data-with-type.html page-as-data-with-type.html
+fails == connection-refused.html connection-refused.html
 == image.html image.html
 == image-with-type.html image-with-type.html
-random == image-no-useful-extension-typesniff.html image-no-useful-extension-typesniff.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails == image-no-useful-extension-with-type.html image-no-useful-extension-with-type.html
+fails-if(Android) == image-no-useful-extension-typesniff.html image-no-useful-extension-typesniff.html
+== image-no-useful-extension-with-type.html image-no-useful-extension-with-type.html
 #
 # This test must be run on an HTTP server because it relies on the HTTP
 # Content-Type overriding the type specified by the attribute on the object,
 # but when run from a local file the type attribute will override the
 # content-sniffed assumed type (text/html based entirely on the extension).
 #
-random HTTP == type-overridden-by-server.html type-overridden-by-server.html
+fails HTTP == type-overridden-by-server.html type-overridden-by-server.html
 #
 # XXX missing tests 012-015 from http://biesi.damowmow.com/object/ here; need
 #     a controllable HTTP server (or preferably one run on the test machine)
 #     to add them
 #
-== malformed-should-fallback.html malformed-should-fallback.html
-== malformed-with-type.html malformed-with-type.html
+fails == malformed-should-fallback.html malformed-should-fallback.html
+fails == malformed-with-type.html malformed-with-type.html
 #
 # XXX missing tests 018-021 from http://biesi.damowmow.com/object/ here; need
 #     a controllable HTTP server (or preferably one run on the test machine)
 #     to add them
 #
-== unknown-type.html unknown-type.html
+fails == unknown-type.html unknown-type.html
 == malformed-xml.html malformed-xml.html
-== malformed-xml-with-type.html malformed-xml-with-type.html
+fails == malformed-xml-with-type.html malformed-xml-with-type.html
 #
 # XXX missing tests 025-28 from http://biesi.damowmow.com/object/ here; would
 #     need to require Flash on the test machine to run them
 #
 # XXX need to support <img src="foo.svg"> for these to pass
-random  == svg.html svg.html
-== svg-with-type.html svg-with-type.html
+fails == svg.html svg.html
+fails == svg-with-type.html svg-with-type.html
 #
 # XXX missing test 031 from http://biesi.damowmow.com/object/ here; need to
 #     first support the standby attribute on objects, then need to figure out
@@ -57,4 +55,4 @@ random  == svg.html svg.html
 # XXX missing test 034 from http://biesi.damowmow.com/object/ here; would
 #     need to require Flash on the test machine to run them
 #
-== malformed-uri.html malformed-uri.html
+fails == malformed-uri.html malformed-uri.html

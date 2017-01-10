@@ -15,7 +15,7 @@ function run_test() {
     getService(Ci.nsIIOService);
 
   for (var i = 0; i < testURLs.length; i++) {
-    var uri = ioServ.newURI(testURLs[i][0], null, null);
+    var uri = ioServ.newURI(testURLs[i][0]);
     do_check_eq(uri.spec, testURLs[i][1]);
   }
 }

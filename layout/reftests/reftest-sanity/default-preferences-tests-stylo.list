@@ -3,27 +3,28 @@
 
 # test default-preferences with a pref()
 default-preferences pref(font.size.variable.x-western,24)
-skip == font-default.html font-default.html
-skip == font-default.html font-default.html
+# == font-default.html font-default.html
+# == font-default.html font-default.html
 
 # test that a default preference can be overridden
-skip pref(font.size.variable.x-western,16) == font-default.html font-default.html
-skip pref(font.size.variable.x-western,16) == font-default.html font-default.html
+# pref(font.size.variable.x-western,16) == font-default.html font-default.html
+# pref(font.size.variable.x-western,16) == font-default.html font-default.html
 
 # test that default preferences are kept when other test-specific preferences are set
-skip pref(font.size.variable.zh-HK,36) == font-default.html font-default.html
-skip pref(font.size.variable.zh-HK,36) == font-default.html font-default.html
+# pref(font.size.variable.zh-HK,36) == font-default.html font-default.html
+# pref(font.size.variable.zh-HK,36) == font-default.html font-default.html
 
 # test default-preferences with test-pref() and ref-pref()
 default-preferences test-pref(font.size.variable.x-western,16) ref-pref(font.size.variable.x-western,24)
-skip == font-default.html font-default.html
-skip == font-default.html font-default.html
-== font-size-24.html font-size-24.html
+# == font-default.html font-default.html
+# == font-default.html font-default.html
+fails == font-size-24.html font-size-24.html
 
 # test that default-preferences does not apply to include commands
-include default-preferences-include.list
+#
+# include default-preferences-include.list
 
 # test resetting default-preferences
 default-preferences
-skip == font-default.html font-default.html
+# == font-default.html font-default.html
 

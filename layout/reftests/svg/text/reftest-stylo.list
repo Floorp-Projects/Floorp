@@ -2,11 +2,11 @@
 == simple.svg simple.svg
 == simple-2.svg simple-2.svg
 == simple-underline.svg simple-underline.svg
-skip == simple-underline-scaled.svg simple-underline-scaled.svg
+== simple-underline-scaled.svg simple-underline-scaled.svg
 == simple-anchor-end-bidi.svg simple-anchor-end-bidi.svg
 == simple-anchor-end-rtl.svg simple-anchor-end-rtl.svg
 == simple-anchor-end.svg simple-anchor-end.svg
-== simple-anchor-middle-bidi.svg simple-anchor-middle-bidi.svg
+fuzzy-if(skiaContent&&dwrite,103,131) == simple-anchor-middle-bidi.svg simple-anchor-middle-bidi.svg
 == simple-anchor-middle-rtl.svg simple-anchor-middle-rtl.svg
 fuzzy-if(skiaContent,111,81) == simple-anchor-middle.svg simple-anchor-middle.svg
 == simple-bidi.svg simple-bidi.svg
@@ -123,7 +123,7 @@ fuzzy-if(skiaContent,1,15) == textpath.svg textpath.svg
 
 == textLength.svg textLength.svg
 fuzzy-if(skiaContent,1,200) == textLength-2.svg textLength-2.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,1,100) == textLength-3.svg textLength-3.svg
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),4,17) fuzzy-if(skiaContent,4,100) == textLength-3.svg textLength-3.svg
 == textLength-4.svg textLength-4.svg
 == textLength-5.svg textLength-5.svg
 == textLength-6.svg textLength-6.svg
@@ -159,7 +159,7 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == ignore-invalid-child-2.svg ignore-invalid-child-2.svg
 
 # text inside a link
-# == link-surrounding.svg link-surrounding.svg
+== link-surrounding.svg link-surrounding.svg
 
 # dynamic document changes
 == dynamic-font-size.svg dynamic-font-size.svg
@@ -168,24 +168,24 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == dynamic-font-size-4.svg dynamic-font-size-4.svg
 == dynamic-dominant-baseline.svg dynamic-dominant-baseline.svg
 == dynamic-multiple-x.svg dynamic-multiple-x.svg
-fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke-ref.svg #Bug #Bug
+fuzzy-if(!d2d,14,2) fuzzy-if(azureQuartz,1,6) fuzzy-if(skiaContent,1,200) == dynamic-non-scaling-stroke.svg dynamic-non-scaling-stroke.svg
 == dynamic-text-shadow.svg dynamic-text-shadow.svg
 
 # text and masks
-skip fuzzy-if(skiaContent&&winWidget,39,224) HTTP(../..) == mask-applied.svg mask-applied.svg
+fuzzy-if(skiaContent&&winWidget,50,224) HTTP(../..) == mask-applied.svg mask-applied.svg
 fuzzy-if(skiaContent&&winWidget,77,56) HTTP(../..) == mask-content.svg mask-content.svg
-fuzzy-if(skiaContent&&winWidget,39,112) HTTP(../..) == mask-content-2.svg mask-content-2.svg
+fuzzy-if(skiaContent&&winWidget,50,112) HTTP(../..) == mask-content-2.svg mask-content-2.svg
 
 # text and clipPaths
-skip HTTP(../..) == clipPath-applied.svg clipPath-applied.svg
+HTTP(../..) == clipPath-applied.svg clipPath-applied.svg
 fuzzy-if(skiaContent&&winWidget,77,56) HTTP(../..) == clipPath-content.svg clipPath-content.svg
-fuzzy-if(skiaContent&&winWidget,39,112) HTTP(../..) == clipPath-content-2.svg clipPath-content-2.svg
+fuzzy-if(skiaContent&&winWidget,50,112) HTTP(../..) == clipPath-content-2.svg clipPath-content-2.svg
 
 # text and patterns
 fuzzy-if(cocoaWidget,1,6) == pattern-content.svg pattern-content.svg
 
 # text and filters
-skip fuzzy-if(skiaContent&&winWidget,109,336) HTTP(../..) == filter-applied.svg filter-applied.svg
+fuzzy-if(skiaContent&&winWidget,122,336) HTTP(../..) == filter-applied.svg filter-applied.svg
 
 # vertical text
 fuzzy-if(skiaContent,1,80) == textpath-vertical-dx.svg textpath-vertical-dx.svg

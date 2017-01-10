@@ -1,14 +1,10 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== select-fieldset-1.html select-fieldset-1.html
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,9) == select-fieldset-2.html select-fieldset-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) == select-fieldset-3.html select-fieldset-3.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails fuzzy-if(skiaContent,1,9) == select-fieldset-4.html select-fieldset-4.html
-== select-fieldset-legend-1.html select-fieldset-legend-1.html
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,2,4) == select-fieldset-legend-2.html select-fieldset-legend-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) == select-fieldset-legend-3.html select-fieldset-legend-3.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(skiaContent,2,9) == select-fieldset-legend-4.html select-fieldset-legend-4.html
-fuzzy-if(skiaContent,2,5) == select-fieldset-legend-5.html select-fieldset-legend-5.html
+fails == select-fieldset-1.html select-fieldset-1.html
+fails == select-fieldset-2.html select-fieldset-2.html
+fails == select-fieldset-3.html select-fieldset-3.html
+fails == select-fieldset-4.html select-fieldset-4.html
+fails == select-fieldset-legend-1.html select-fieldset-legend-1.html
+fails == select-fieldset-legend-2.html select-fieldset-legend-2.html
+fails == select-fieldset-legend-3.html select-fieldset-legend-3.html
+fails == select-fieldset-legend-4.html select-fieldset-legend-4.html
+fails == select-fieldset-legend-5.html select-fieldset-legend-5.html

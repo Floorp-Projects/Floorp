@@ -94,7 +94,7 @@ UrlClassifierTableDomain.inherits(UrlClassifierTable);
  */
 UrlClassifierTableDomain.prototype.exists = function(url, callback) {
   var canonicalized = this.enchashDecrypter_.getCanonicalUrl(url);
-  var urlObj = this.ioService_.newURI(canonicalized, null, null);
+  var urlObj = this.ioService_.newURI(canonicalized);
   var host = '';
   try {
     host = urlObj.host;

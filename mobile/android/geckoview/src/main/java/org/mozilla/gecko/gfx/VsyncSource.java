@@ -12,64 +12,45 @@ import android.os.Process;
 import android.util.Log;
 import android.view.Choreographer;
 import android.view.Display;
-import java.util.concurrent.CountDownLatch;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.mozglue.JNIObject;
 
 /**
  * This class receives HW vsync events through a {@link Choreographer}.
  */
-public final class VsyncSource extends JNIObject implements Choreographer.FrameCallback {
+public final class VsyncSource implements Choreographer.FrameCallback {
     private static final String LOGTAG = "GeckoVsyncSource";
 
-    // Vsync was introduced since JB (API 16~18) but inaccurate. Enable only for KK and later.
-    public static final boolean SUPPORT_VSYNC =
-        android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT;
+    @WrapForJNI
+    private static final VsyncSource INSTANCE = new VsyncSource();
 
-    private static VsyncSource sInstance;
-
-    private Choreographer mChoreographer;
-    private CountDownLatch mInitLatch = new CountDownLatch(1);
-
+    /* package */ Choreographer mChoreographer;
     private volatile boolean mObservingVsync;
 
-    @WrapForJNI
-    public static boolean isVsyncSupported() { return SUPPORT_VSYNC; }
+    private VsyncSource() {
+        final Thread thread = new HandlerThread(LOGTAG, Process.THREAD_PRIORITY_DISPLAY) {
+            @Override
+            protected synchronized void onLooperPrepared() {
+                mChoreographer = Choreographer.getInstance();
+                notifyAll();
+            }
+        };
 
-    @WrapForJNI
-    public static synchronized VsyncSource getInstance() {
-        if (!SUPPORT_VSYNC) {
-            Log.w(LOGTAG, "HW vsync avaiable only for KK and later.");
-            return null;
-        }
-         if (sInstance == null) {
-           sInstance = new VsyncSource();
-
-            HandlerThread thread = new HandlerThread(LOGTAG, Process.THREAD_PRIORITY_DISPLAY) {
-                protected void onLooperPrepared() {
-                    sInstance.mChoreographer = Choreographer.getInstance();
-                    sInstance.mInitLatch.countDown();
-                }
-            };
+        synchronized (thread) {
             thread.start();
 
-            // Wait until the choreographer singleton is created in its thread.
-            try {
-                sInstance.mInitLatch.await();
-            } catch (InterruptedException e) { /* do nothing */ }
+            while (mChoreographer == null) {
+                try {
+                    thread.wait();
+                } catch (final InterruptedException e) {
+                    // Ignore
+                }
+            }
         }
-
-        return sInstance;
     }
-
-    private VsyncSource() {}
 
     @WrapForJNI(stubName = "NotifyVsync")
     private static native void nativeNotifyVsync();
-
-    @Override // JNIObject
-    protected native void disposeNative();
 
     // Choreographer callback implementation.
     public void doFrame(long frameTimeNanos) {

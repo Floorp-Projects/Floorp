@@ -168,7 +168,7 @@ var SourceUtils = {
 
     try {
       // Use an nsIURL to parse all the url path parts.
-      var uri = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
+      var uri = Services.io.newURI(aUrl).QueryInterface(Ci.nsIURL);
     } catch (e) {
       // This doesn't look like a url, or nsIURL can't handle it.
       return "";
@@ -257,7 +257,7 @@ var SourceUtils = {
     if (!(aUrl instanceof Ci.nsIURL)) {
       try {
         // Use an nsIURL to parse all the url path parts.
-        aUrl = Services.io.newURI(aUrl, null, null).QueryInterface(Ci.nsIURL);
+        aUrl = Services.io.newURI(aUrl).QueryInterface(Ci.nsIURL);
       } catch (e) {
         // This doesn't look like a url, or nsIURL can't handle it.
         return aUrl;

@@ -80,7 +80,7 @@ add_test(function test_ignore_untrusted_source_uris() {
   const good = ["https://example.com/foo.xpi"];
 
   for (let s of bad) {
-    let sourceURI = ioService.newURI(s, null, null);
+    let sourceURI = ioService.newURI(s);
     let addon = {sourceURI: sourceURI, name: "bad", id: "bad"};
 
     let canInstall = AddonUtils.canInstallAddon(addon);
@@ -88,7 +88,7 @@ add_test(function test_ignore_untrusted_source_uris() {
   }
 
   for (let s of good) {
-    let sourceURI = ioService.newURI(s, null, null);
+    let sourceURI = ioService.newURI(s);
     let addon = {sourceURI: sourceURI, name: "good", id: "good"};
 
     let canInstall = AddonUtils.canInstallAddon(addon);

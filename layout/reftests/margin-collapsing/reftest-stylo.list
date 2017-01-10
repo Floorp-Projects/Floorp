@@ -10,18 +10,14 @@
 # "Horizontal margins never collapse."
 # Horizontal margins of inline boxes do not collapse.
 # The norefs for these tests depict margins that incorrectly collapsed.
-== inline-horizontal-1.html inline-horizontal-1.html
-== inline-horizontal-1.html inline-horizontal-1.html
-== inline-horizontal-2.html inline-horizontal-2.html
-== inline-horizontal-2.html inline-horizontal-2.html
-skip-if(B2G||Mulet) == inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
-skip-if(B2G||Mulet) == inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
+# == inline-horizontal-1.html inline-horizontal-1.html
+# == inline-horizontal-1.html inline-horizontal-1.html
+# == inline-horizontal-2.html inline-horizontal-2.html
+# == inline-horizontal-2.html inline-horizontal-2.html
+# == inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
+# == inline-horizontal-1-dyn.html inline-horizontal-1-dyn.html
+# == inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
+# == inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
 # Horizontal margins of block boxes do not collapse.
 # These block boxes are actually floats - in CSS 2.1 there is no other
 # method to create horizontally adjacent block boxes.
@@ -33,42 +29,28 @@ skip-if(B2G||Mulet) == inline-horizontal-2-dyn.html inline-horizontal-2-dyn.html
 == block-horizontal-3.html block-horizontal-3.html
 == block-horizontal-4.html block-horizontal-4.html
 == block-horizontal-4.html block-horizontal-4.html
-skip-if(B2G||Mulet) == block-horizontal-1-dyn.html block-horizontal-1-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
 == block-horizontal-1-dyn.html block-horizontal-1-dyn.html
-skip-if(B2G||Mulet) == block-horizontal-2-dyn.html block-horizontal-2-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-1-dyn.html block-horizontal-1-dyn.html
 == block-horizontal-2-dyn.html block-horizontal-2-dyn.html
-skip-if(B2G||Mulet) == block-horizontal-3-dyn.html block-horizontal-3-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-2-dyn.html block-horizontal-2-dyn.html
 == block-horizontal-3-dyn.html block-horizontal-3-dyn.html
-skip-if(B2G||Mulet) == block-horizontal-4-dyn.html block-horizontal-4-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== block-horizontal-3-dyn.html block-horizontal-3-dyn.html
+== block-horizontal-4-dyn.html block-horizontal-4-dyn.html
 == block-horizontal-4-dyn.html block-horizontal-4-dyn.html
 # Horizontal margins of inline-block boxes do not collapse.
-== inline-block-horizontal-1.html inline-block-horizontal-1.html
-== inline-block-horizontal-1.html inline-block-horizontal-1.html
-== inline-block-horizontal-2.html inline-block-horizontal-2.html
-== inline-block-horizontal-2.html inline-block-horizontal-2.html
-skip-if(B2G||Mulet) == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
-skip-if(B2G||Mulet) == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
+# == inline-block-horizontal-1.html inline-block-horizontal-1.html
+# == inline-block-horizontal-1.html inline-block-horizontal-1.html
+# == inline-block-horizontal-2.html inline-block-horizontal-2.html
+# == inline-block-horizontal-2.html inline-block-horizontal-2.html
+# == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
+# == inline-block-horizontal-1-dyn.html inline-block-horizontal-1-dyn.html
+# == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
+# == inline-block-horizontal-2-dyn.html inline-block-horizontal-2-dyn.html
 # Horizontal margins of inline-tables do not collapse.
-skip == inline-table-horizontal-1.html inline-table-horizontal-1.html
-skip == inline-table-horizontal-1.html inline-table-horizontal-1.html
-skip-if(B2G||Mulet) == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
+# == inline-table-horizontal-1.html inline-table-horizontal-1.html
+# == inline-table-horizontal-1.html inline-table-horizontal-1.html
+# == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
+# == inline-table-horizontal-1-dyn.html inline-table-horizontal-1-dyn.html
 # "In CSS, the adjoining margins of two or more boxes
 #  (which might or might not be siblings) can combine to form a single margin.
 #  Margins that combine this way are said to collapse,
@@ -106,9 +88,7 @@ skip-if(B2G||Mulet) == inline-table-horizontal-1-dyn.html inline-table-horizonta
 == block-sibling-1c-dyn.html block-sibling-1c-dyn.html
 == block-sibling-1c-dyn.html block-sibling-1c-dyn.html
 == block-sibling-1c-dyn.html block-sibling-1c-dyn.html
-skip-if(B2G||Mulet) == block-sibling-2-dyn.html block-sibling-2-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== block-sibling-2-dyn.html block-sibling-2-dyn.html
 == block-sibling-2-dyn.html block-sibling-2-dyn.html
 == block-sibling-2-dyn.html block-sibling-2-dyn.html
 == block-sibling-3-dyn.html block-sibling-3-dyn.html
@@ -235,8 +215,8 @@ skip-if(B2G||Mulet) == block-sibling-2-dyn.html block-sibling-2-dyn.html
 == block-non-sibling-1b.html block-non-sibling-1b.html
 == block-non-sibling-1c.html block-non-sibling-1c.html
 == block-non-sibling-1c.html block-non-sibling-1c.html
-skip == block-non-sibling-1d.html block-non-sibling-1d.html
-skip == block-non-sibling-1d.html block-non-sibling-1d.html
+== block-non-sibling-1d.html block-non-sibling-1d.html
+== block-non-sibling-1d.html block-non-sibling-1d.html
 == block-non-sibling-1e.html block-non-sibling-1e.html
 == block-non-sibling-1e.html block-non-sibling-1e.html
 == block-non-sibling-1f.html block-non-sibling-1f.html
@@ -257,8 +237,8 @@ skip == block-non-sibling-1d.html block-non-sibling-1d.html
 == block-non-sibling-3a.html block-non-sibling-3a.html
 == block-non-sibling-3b.html block-non-sibling-3b.html
 == block-non-sibling-3b.html block-non-sibling-3b.html
-skip == block-non-sibling-3c.html block-non-sibling-3c.html
-skip == block-non-sibling-3c.html block-non-sibling-3c.html
+== block-non-sibling-3c.html block-non-sibling-3c.html
+== block-non-sibling-3c.html block-non-sibling-3c.html
 == block-non-sibling-3d.html block-non-sibling-3d.html
 == block-non-sibling-3d.html block-non-sibling-3d.html
 == block-non-sibling-4.html block-non-sibling-4.html
@@ -298,7 +278,7 @@ skip == block-non-sibling-3c.html block-non-sibling-3c.html
 == block-first-child-8c.html block-first-child-8c.html
 == block-first-child-1a-dyn.html block-first-child-1a-dyn.html
 == block-first-child-1b-dyn.html block-first-child-1b-dyn.html
-# == block-first-child-1c-dyn.html block-first-child-1c-dyn.html
+== block-first-child-1c-dyn.html block-first-child-1c-dyn.html
 == block-first-child-2-dyn.html block-first-child-2-dyn.html
 == block-first-child-3-dyn.html block-first-child-3-dyn.html
 == block-first-child-4-dyn.html block-first-child-4-dyn.html
@@ -316,7 +296,7 @@ skip == block-non-sibling-3c.html block-non-sibling-3c.html
 == block-auto-height-last-child-1a.html block-auto-height-last-child-1a.html
 == block-auto-height-last-child-1b.html block-auto-height-last-child-1b.html
 == block-auto-height-last-child-1c.html block-auto-height-last-child-1c.html
-skip == block-auto-height-last-child-2.html block-auto-height-last-child-2.html
+== block-auto-height-last-child-2.html block-auto-height-last-child-2.html
 == block-auto-height-last-child-3.html block-auto-height-last-child-3.html
 == block-auto-height-last-child-4.html block-auto-height-last-child-4.html
 == block-auto-height-last-child-5.html block-auto-height-last-child-5.html
@@ -390,15 +370,11 @@ skip == block-auto-height-last-child-2.html block-auto-height-last-child-2.html
 # This is true even if the two margins do not actually touch each other,
 # as they are still considered 'adjoining'.
 == block-min-height-last-child-1a.html block-min-height-last-child-1a.html
-# Bug 616339
 == block-min-height-last-child-1b.html block-min-height-last-child-1b.html
 == block-min-height-last-child-1c.html block-min-height-last-child-1c.html
 == block-min-height-last-child-2a.html block-min-height-last-child-2a.html
-# Bug 616339
 == block-min-height-last-child-2b.html block-min-height-last-child-2b.html
-# Bug 616339
 == block-min-height-last-child-3a.html block-min-height-last-child-3a.html
-# Bug 616339
 == block-min-height-last-child-3b.html block-min-height-last-child-3b.html
 == block-min-height-last-child-3c.html block-min-height-last-child-3c.html
 == block-min-height-last-child-4a.html block-min-height-last-child-4a.html
@@ -418,15 +394,11 @@ skip == block-auto-height-last-child-2.html block-auto-height-last-child-2.html
 == block-min-height-last-child-9b.html block-min-height-last-child-9b.html
 == block-min-height-last-child-9c.html block-min-height-last-child-9c.html
 == block-min-height-last-child-1a-dyn.html block-min-height-last-child-1a-dyn.html
-# Bug 616339
 == block-min-height-last-child-1b-dyn.html block-min-height-last-child-1b-dyn.html
 == block-min-height-last-child-1c-dyn.html block-min-height-last-child-1c-dyn.html
 == block-min-height-last-child-2a-dyn.html block-min-height-last-child-2a-dyn.html
-# Bug 616339
 == block-min-height-last-child-2b-dyn.html block-min-height-last-child-2b-dyn.html
-# Bug 616339
 == block-min-height-last-child-3a-dyn.html block-min-height-last-child-3a-dyn.html
-# Bug 616339
 == block-min-height-last-child-3b-dyn.html block-min-height-last-child-3b-dyn.html
 == block-min-height-last-child-3c-dyn.html block-min-height-last-child-3c-dyn.html
 == block-min-height-last-child-4a-dyn.html block-min-height-last-child-4a-dyn.html
@@ -466,15 +438,11 @@ skip == block-auto-height-last-child-2.html block-auto-height-last-child-2.html
 == block-max-height-last-child-6b.html block-max-height-last-child-6b.html
 == block-max-height-last-child-6c.html block-max-height-last-child-6c.html
 == block-max-height-last-child-7a.html block-max-height-last-child-7a.html
-# Bug 616339
 == block-max-height-last-child-7b.html block-max-height-last-child-7b.html
 == block-max-height-last-child-7c.html block-max-height-last-child-7c.html
 == block-max-height-last-child-8a.html block-max-height-last-child-8a.html
-# Bug 616339
 == block-max-height-last-child-8b.html block-max-height-last-child-8b.html
-# Bug 616339
 == block-max-height-last-child-9a.html block-max-height-last-child-9a.html
-# Bug 616339
 == block-max-height-last-child-9b.html block-max-height-last-child-9b.html
 == block-max-height-last-child-9c.html block-max-height-last-child-9c.html
 == block-max-height-last-child-1a-dyn.html block-max-height-last-child-1a-dyn.html
@@ -494,15 +462,11 @@ skip == block-auto-height-last-child-2.html block-auto-height-last-child-2.html
 == block-max-height-last-child-6b-dyn.html block-max-height-last-child-6b-dyn.html
 == block-max-height-last-child-6c-dyn.html block-max-height-last-child-6c-dyn.html
 == block-max-height-last-child-7a-dyn.html block-max-height-last-child-7a-dyn.html
-# Bug 616339
 == block-max-height-last-child-7b-dyn.html block-max-height-last-child-7b-dyn.html
 == block-max-height-last-child-7c-dyn.html block-max-height-last-child-7c-dyn.html
 == block-max-height-last-child-8a-dyn.html block-max-height-last-child-8a-dyn.html
-# Bug 616339
 == block-max-height-last-child-8b-dyn.html block-max-height-last-child-8b-dyn.html
-# Bug 616339
 == block-max-height-last-child-9a-dyn.html block-max-height-last-child-9a-dyn.html
-# Bug 616339
 == block-max-height-last-child-9b-dyn.html block-max-height-last-child-9b-dyn.html
 == block-max-height-last-child-9c-dyn.html block-max-height-last-child-9c-dyn.html
 # If a parent box's height is not 'auto' then its bottom margin
@@ -514,7 +478,7 @@ skip == block-auto-height-last-child-2.html block-auto-height-last-child-2.html
 == block-fix-height-last-child-1b.html block-fix-height-last-child-1b.html
 == block-fix-height-last-child-2a.html block-fix-height-last-child-2a.html
 == block-fix-height-last-child-2b.html block-fix-height-last-child-2b.html
-skip == block-fix-height-last-child-3a.html block-fix-height-last-child-3a.html
+== block-fix-height-last-child-3a.html block-fix-height-last-child-3a.html
 == block-fix-height-last-child-3b.html block-fix-height-last-child-3b.html
 == block-fix-height-last-child-4a.html block-fix-height-last-child-4a.html
 == block-fix-height-last-child-4b.html block-fix-height-last-child-4b.html
@@ -573,7 +537,7 @@ skip == block-fix-height-last-child-3a.html block-fix-height-last-child-3a.html
 #  bottom margin."
 == block-no-content-8.html block-no-content-8.html
 == block-no-content-1a-dyn.html block-no-content-1a-dyn.html
-skip == block-no-content-1b-dyn.html block-no-content-1b-dyn.html
+== block-no-content-1b-dyn.html block-no-content-1b-dyn.html
 == block-no-content-1c-dyn.html block-no-content-1c-dyn.html
 == block-no-content-1d-dyn.html block-no-content-1d-dyn.html
 == block-no-content-2a-dyn.html block-no-content-2a-dyn.html
@@ -589,12 +553,12 @@ skip == block-no-content-1b-dyn.html block-no-content-1b-dyn.html
 == block-no-content-4c-dyn.html block-no-content-4c-dyn.html
 == block-no-content-5a-dyn.html block-no-content-5a-dyn.html
 == block-no-content-5b-dyn.html block-no-content-5b-dyn.html
-skip == block-no-content-6-dyn.html block-no-content-6-dyn.html
+== block-no-content-6-dyn.html block-no-content-6-dyn.html
 == block-no-content-7-dyn.html block-no-content-7-dyn.html
 == block-no-content-8-dyn.html block-no-content-8-dyn.html
 # These tests are similar to the no-content ones, except that some boxes
 # have height: 0; declared on them.
-skip == block-zero-height-1a.html block-zero-height-1a.html
+== block-zero-height-1a.html block-zero-height-1a.html
 == block-zero-height-1b.html block-zero-height-1b.html
 == block-zero-height-2a.html block-zero-height-2a.html
 == block-zero-height-2b.html block-zero-height-2b.html
@@ -612,33 +576,25 @@ skip == block-zero-height-1a.html block-zero-height-1a.html
 == block-overflow-1.html block-overflow-1.html
 == block-overflow-2.html block-overflow-2.html
 == block-overflow-2.html block-overflow-2.html
-skip-if(B2G||Mulet) == block-overflow-3.html block-overflow-3.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-3.html block-overflow-3.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-4.html block-overflow-4.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-4.html block-overflow-4.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+# == block-overflow-3.html block-overflow-3.html
+# == block-overflow-3.html block-overflow-3.html
+# == block-overflow-4.html block-overflow-4.html
+# == block-overflow-4.html block-overflow-4.html
 == block-overflow-5a.html block-overflow-5a.html
 == block-overflow-5a.html block-overflow-5a.html
 == block-overflow-5b.html block-overflow-5b.html
 == block-overflow-5b.html block-overflow-5b.html
-== block-overflow-5c.html block-overflow-5c.html
-== block-overflow-5c.html block-overflow-5c.html
+# == block-overflow-5c.html block-overflow-5c.html
+# == block-overflow-5c.html block-overflow-5c.html
 == block-overflow-5d.html block-overflow-5d.html
 == block-overflow-5d.html block-overflow-5d.html
 == block-overflow-1-dyn.html block-overflow-1-dyn.html
 == block-overflow-2-dyn.html block-overflow-2-dyn.html
-skip-if(B2G||Mulet) == block-overflow-3-dyn.html block-overflow-3-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == block-overflow-4-dyn.html block-overflow-4-dyn.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == block-overflow-3-dyn.html block-overflow-3-dyn.html
+fails == block-overflow-4-dyn.html block-overflow-4-dyn.html
 == block-overflow-5a-dyn.html block-overflow-5a-dyn.html
 == block-overflow-5b-dyn.html block-overflow-5b-dyn.html
-== block-overflow-5c-dyn.html block-overflow-5c-dyn.html
+fails == block-overflow-5c-dyn.html block-overflow-5c-dyn.html
 == block-overflow-5d-dyn.html block-overflow-5d-dyn.html
 # * 'fieldset' elements, per HTML5 (Candidate Recommendation 6 August 2013):
 # §10.3.13 (The fieldset and legend elements): "The fieldset element is
@@ -675,33 +631,19 @@ skip-if(B2G||Mulet) == block-overflow-4-dyn.html block-overflow-4-dyn.html
 == table-sibling-2b.html table-sibling-2b.html
 == table-sibling-2c.html table-sibling-2c.html
 == table-sibling-2c.html table-sibling-2c.html
-skip-if(B2G||Mulet) == table-sibling-1a-dyn.html table-sibling-1a-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
 == table-sibling-1a-dyn.html table-sibling-1a-dyn.html
-skip-if(B2G||Mulet) == table-sibling-1b-dyn.html table-sibling-1b-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-1a-dyn.html table-sibling-1a-dyn.html
 == table-sibling-1b-dyn.html table-sibling-1b-dyn.html
-skip-if(B2G||Mulet) == table-sibling-1c-dyn.html table-sibling-1c-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-1b-dyn.html table-sibling-1b-dyn.html
 == table-sibling-1c-dyn.html table-sibling-1c-dyn.html
-skip-if(B2G||Mulet) == table-sibling-2a-dyn.html table-sibling-2a-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-1c-dyn.html table-sibling-1c-dyn.html
 == table-sibling-2a-dyn.html table-sibling-2a-dyn.html
-skip-if(B2G||Mulet) == table-sibling-2b-dyn.html table-sibling-2b-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-2a-dyn.html table-sibling-2a-dyn.html
 == table-sibling-2b-dyn.html table-sibling-2b-dyn.html
-skip-if(B2G||Mulet) == table-sibling-2c-dyn.html table-sibling-2c-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-2b-dyn.html table-sibling-2b-dyn.html
 == table-sibling-2c-dyn.html table-sibling-2c-dyn.html
-skip-if(B2G||Mulet) == table-sibling-3-dyn.html table-sibling-3-dyn.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== table-sibling-2c-dyn.html table-sibling-2c-dyn.html
+== table-sibling-3-dyn.html table-sibling-3-dyn.html
 == table-sibling-3-dyn.html table-sibling-3-dyn.html
 # * table-caption boxes, per CSS 2.1 §9.4.1 (Block formatting contexts):
 # "[...] block containers (such as [...] table-captions) [...]
@@ -724,13 +666,13 @@ skip-if(B2G||Mulet) == table-sibling-3-dyn.html table-sibling-3-dyn.html
 # Note: CSS 2.1 suggests that the 'caption-side' values 'top-outside' and
 # 'bottom-outside' will be used in a future CSS Module to restore the
 # CSS 2 definition of 'top' and 'bottom' (which is different from CSS 2.1's).
-# Since Bug #659828 was fixed, 'top-outside' and 'bottom-outside' act as an 
+# Since Bug
 # alias for the CSS 2.1 values 'top' and 'bottom' respectively.
-== table-caption-top-1.html table-caption-top-1.html
+# == table-caption-top-1.html table-caption-top-1.html
 == table-caption-top-2.html table-caption-top-2.html
 == table-caption-top-outside-1.html table-caption-top-outside-1.html
 == table-caption-top-outside-2.html table-caption-top-outside-2.html
-skip == table-caption-bottom-1.html table-caption-bottom-1.html
+# == table-caption-bottom-1.html table-caption-bottom-1.html
 == table-caption-bottom-2.html table-caption-bottom-2.html
 == table-caption-bottom-outside-1.html table-caption-bottom-outside-1.html
 == table-caption-bottom-outside-2.html table-caption-bottom-outside-2.html
@@ -743,25 +685,18 @@ skip == table-caption-bottom-1.html table-caption-bottom-1.html
 == table-caption-bottom-outside-1-dyn.html table-caption-bottom-outside-1-dyn.html
 == table-caption-bottom-outside-2-dyn.html table-caption-bottom-outside-2-dyn.html
 == caption-sibling-1a.html caption-sibling-1a.html
-# Bug 144517
 == caption-sibling-1a.html caption-sibling-1a.html
 == caption-sibling-1b.html caption-sibling-1b.html
-# Bug 144517
 == caption-sibling-1b.html caption-sibling-1b.html
 == caption-sibling-1c.html caption-sibling-1c.html
-# Bug 144517
 == caption-sibling-1c.html caption-sibling-1c.html
 == caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html
-# Bug 144517
 == caption-sibling-1a-dyn.html caption-sibling-1a-dyn.html
-skip == caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
-# Bug 144517
-skip == caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
+== caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
+== caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
 == caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html
-# Bug 144517
 == caption-sibling-1c-dyn.html caption-sibling-1c-dyn.html
 == caption-sibling-2-dyn.html caption-sibling-2-dyn.html
-# Bug 144517
 == caption-sibling-2-dyn.html caption-sibling-2-dyn.html
 == caption-child-1.html caption-child-1.html
 == caption-child-1-dyn.html caption-child-1-dyn.html
@@ -795,12 +730,12 @@ skip == caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
 == inline-block-sibling-1c-dyn.html inline-block-sibling-1c-dyn.html
 == inline-block-sibling-2-dyn.html inline-block-sibling-2-dyn.html
 == inline-block-child-1.html inline-block-child-1.html
-== inline-block-child-2.html inline-block-child-2.html
-== inline-block-child-2.html inline-block-child-2.html
-== inline-block-child-3.html inline-block-child-3.html
+# == inline-block-child-2.html inline-block-child-2.html
+# == inline-block-child-2.html inline-block-child-2.html
+fails == inline-block-child-3.html inline-block-child-3.html
 == inline-block-child-1-dyn.html inline-block-child-1-dyn.html
-== inline-block-child-2-dyn.html inline-block-child-2-dyn.html
-== inline-block-child-3-dyn.html inline-block-child-3-dyn.html
+fails == inline-block-child-2-dyn.html inline-block-child-2-dyn.html
+fails == inline-block-child-3-dyn.html inline-block-child-3-dyn.html
 # * absolutely positioned elements
 # "Margins of absolutely positioned boxes do not collapse
 #  (not even with their in-flow children)."
@@ -812,9 +747,9 @@ skip == caption-sibling-1b-dyn.html caption-sibling-1b-dyn.html
 # * Floats
 # "Margins between a floated box and any other box do not collapse
 #  (not even between a float and its in-flow children)."
-skip == block-float-1a.html block-float-1a.html
-skip == block-float-1a.html block-float-1a.html
-skip == block-float-1a.html block-float-1a.html
+== block-float-1a.html block-float-1a.html
+== block-float-1a.html block-float-1a.html
+== block-float-1a.html block-float-1a.html
 == block-float-1b.html block-float-1b.html
 == block-float-1b.html block-float-1b.html
 == block-float-1b.html block-float-1b.html
@@ -842,7 +777,7 @@ skip == block-float-1a.html block-float-1a.html
 == block-clear-3d.html block-clear-3d.html
 == block-clear-3e.html block-clear-3e.html
 == block-clear-3f.html block-clear-3f.html
-skip == block-clear-4a.html block-clear-4a.html
+== block-clear-4a.html block-clear-4a.html
 == block-clear-4b.html block-clear-4b.html
 == block-clear-4c.html block-clear-4c.html
 == block-clear-4d.html block-clear-4d.html
@@ -857,36 +792,24 @@ skip == block-clear-4a.html block-clear-4a.html
 == block-clear-5g.html block-clear-5g.html
 == block-clear-5h.html block-clear-5h.html
 == block-clear-6a-left.html block-clear-6a-left.html
-# Bug 493380
 == block-clear-6b-left.html block-clear-6b-left.html
 == block-clear-6c-left.html block-clear-6c-left.html
 == block-clear-6d-left.html block-clear-6d-left.html
-# Bug 493380
 == block-clear-6d-left.html block-clear-6d-left.html
-# Bug 493380
-skip == block-clear-6e-left.html block-clear-6e-left.html
-skip == block-clear-6e-left.html block-clear-6e-left.html
+== block-clear-6e-left.html block-clear-6e-left.html
+== block-clear-6e-left.html block-clear-6e-left.html
 == block-clear-6f-left.html block-clear-6f-left.html
 == block-clear-6f-left.html block-clear-6f-left.html
 == block-clear-7a-left.html block-clear-7a-left.html
-# Bug 493380
 == block-clear-7b-left.html block-clear-7b-left.html
-# Bug 493380
 == block-clear-7c-left.html block-clear-7c-left.html
-# Bug 493380
 == block-clear-7d-left.html block-clear-7d-left.html
 == block-clear-7e-left.html block-clear-7e-left.html
-# Bug 493380
 == block-clear-7e-left.html block-clear-7e-left.html
-# Bug 493380
 == block-clear-7f-left.html block-clear-7f-left.html
-# Bug 493380
 == block-clear-7f-left.html block-clear-7f-left.html
-# Bug 493380
 == block-clear-7g-left.html block-clear-7g-left.html
-# Bug 493380
 == block-clear-7g-left.html block-clear-7g-left.html
-# Bug 493380
 == block-clear-7h-left.html block-clear-7h-left.html
 == block-clear-7h-left.html block-clear-7h-left.html
 # "Margins of the root element's box do not collapse."
@@ -895,10 +818,10 @@ skip == block-clear-6e-left.html block-clear-6e-left.html
 # In XML and XHTML, the html element is not necessarily the root element of
 # a document. In that case, the margins of the html element collapse
 # like the margins of any other block boxes.
-skip == block-xhtml-root-1a.xhtml block-xhtml-root-1a.xhtml
-skip == block-xhtml-root-1b.xhtml block-xhtml-root-1b.xhtml
-skip == block-xhtml-root-2.xhtml block-xhtml-root-2.xhtml
-skip == block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
+fails == block-xhtml-root-1a.xhtml block-xhtml-root-1a.xhtml
+fails == block-xhtml-root-1b.xhtml block-xhtml-root-1b.xhtml
+fails == block-xhtml-root-2.xhtml block-xhtml-root-2.xhtml
+fails == block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
 # When the html element is the root element of the document, its margins
 # do not collapse.
 == block-xhtml-html-1a.xhtml block-xhtml-html-1a.xhtml
@@ -937,7 +860,6 @@ skip == block-xhtml-root-3.xhtml block-xhtml-root-3.xhtml
 == block-em-length-1.html block-em-length-1.html
 == block-em-length-1-dyn.html block-em-length-1-dyn.html
 # Other tests.
-== dynamic-add-text-1.html dynamic-add-text-1.html
-# Bug 467321
+fails == dynamic-add-text-1.html dynamic-add-text-1.html
 == scrollable-vertical-margin.html scrollable-vertical-margin.html
 == scrollable-horizontal-margin.html scrollable-horizontal-margin.html

@@ -14,4 +14,4 @@
 == intrinsic-1m.html intrinsic-1m.html
 == intrinsic-1n.html intrinsic-1n.html
 == intrinsic-1o.html intrinsic-1o.html
-== computed-size-reporting.html computed-size-reporting.html
+fails == computed-size-reporting.html computed-size-reporting.html

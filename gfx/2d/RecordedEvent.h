@@ -699,12 +699,12 @@ public:
   virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
   
   virtual std::string GetName() const { return "SetTransform"; }
+
+  Matrix mTransform;
 private:
   friend class RecordedEvent;
 
    MOZ_IMPLICIT RecordedSetTransform(std::istream &aStream);
-
-  Matrix mTransform;
 };
 
 class RecordedDrawSurface : public RecordedDrawingEvent {

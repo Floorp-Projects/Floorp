@@ -915,7 +915,9 @@ ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
 bool
 ExtendableEvent::WaitOnPromise(Promise& aPromise)
 {
-  MOZ_ASSERT(mExtensionsHandler);
+  if (!mExtensionsHandler) {
+    return false;
+  }
   return mExtensionsHandler->WaitOnPromise(aPromise);
 }
 

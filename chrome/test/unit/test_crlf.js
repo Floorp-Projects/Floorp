@@ -7,7 +7,7 @@ function run_test()
 
   let ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
-  let sourceURI = ios.newURI("chrome://test_crlf/content/", null, null);
+  let sourceURI = ios.newURI("chrome://test_crlf/content/");
   // this throws for packages that are not registered
   let file = cr.convertChromeURL(sourceURI).QueryInterface(Ci.nsIFileURL).file;
   

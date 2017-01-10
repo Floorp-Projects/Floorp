@@ -16,10 +16,9 @@
 == toauto-leftA-widthN-rightA.html?padding_parent toauto-leftA-widthN-rightA.html?padding_parent
 == toauto-leftN-widthN-rightA.html?padding_parent toauto-leftN-widthN-rightA.html?padding_parent
 == toauto-leftA-widthN-rightN.html?padding_parent toauto-leftA-widthN-rightN.html?padding_parent
-skip == toauto-leftA-widthA-rightN.html?padding_parent toauto-leftA-widthA-rightN.html?padding_parent
+== toauto-leftA-widthA-rightN.html?padding_parent toauto-leftA-widthA-rightN.html?padding_parent
 == fromauto-leftN-widthA-rightA.html?padding_parent fromauto-leftN-widthA-rightA.html?padding_parent
-random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?padding_parent fromauto-leftN-widthA-rightA-2.html?padding_parent
-# Bug 688545
+== fromauto-leftN-widthA-rightA-2.html?padding_parent fromauto-leftN-widthA-rightA-2.html?padding_parent
 == fromauto-leftN-widthA-rightN.html?padding_parent fromauto-leftN-widthA-rightN.html?padding_parent
 == fromauto-leftN-widthA-rightN-2.html?padding_parent fromauto-leftN-widthA-rightN-2.html?padding_parent
 == fromauto-leftA-widthN-rightA.html?padding_parent fromauto-leftA-widthN-rightA.html?padding_parent

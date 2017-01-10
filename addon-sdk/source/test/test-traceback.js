@@ -10,7 +10,7 @@ const { on, off } = require("sdk/system/events");
 function throwNsIException() {
   var ios = Cc['@mozilla.org/network/io-service;1']
             .getService(Ci.nsIIOService);
-  ios.newURI("i'm a malformed URI", null, null);
+  ios.newURI("i'm a malformed URI");
 }
 
 function throwError() {

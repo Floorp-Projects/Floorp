@@ -53,7 +53,7 @@ SecurityReporter.prototype = {
     // server (otherwise we'll get loops when this fails)
     let endpoint =
       Services.prefs.getCharPref("security.ssl.errorReporting.url");
-    let reportURI = Services.io.newURI(endpoint, null, null);
+    let reportURI = Services.io.newURI(endpoint);
 
     if (reportURI.host == hostname) {
       return;

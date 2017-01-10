@@ -23,7 +23,7 @@
 == new-interval-doubly-dependent-2.svg new-interval-doubly-dependent-2.svg
 == new-interval-doubly-dependent-3.svg new-interval-doubly-dependent-3.svg
 == new-interval-triply-dependent-1.svg new-interval-triply-dependent-1.svg
-skip == new-interval-triply-dependent-2.svg new-interval-triply-dependent-2.svg
+== new-interval-triply-dependent-2.svg new-interval-triply-dependent-2.svg
 == new-interval-end-negative-1.svg new-interval-end-negative-1.svg
 == new-interval-end-negative-2.svg new-interval-end-negative-2.svg
 == new-interval-end-dep-1.svg new-interval-end-dep-1.svg
@@ -73,7 +73,7 @@ skip == new-interval-triply-dependent-2.svg new-interval-triply-dependent-2.svg
 == cycle-invalid-4.svg cycle-invalid-4.svg
 == cycle-change-1.svg cycle-change-1.svg
 == cycle-change-2.svg cycle-change-2.svg
-skip == cycle-delete-1.svg cycle-delete-1.svg
+== cycle-delete-1.svg cycle-delete-1.svg
 == cycle-recursion-1.svg cycle-recursion-1.svg
 == cycle-recursion-2.svg cycle-recursion-2.svg
 
@@ -92,9 +92,9 @@ skip == cycle-delete-1.svg cycle-delete-1.svg
 == sandwich-priority-12.svg sandwich-priority-12.svg
 
 # Cross-time container dependencies
-skip == cross-container-1.xhtml cross-container-1.xhtml
-== cross-container-2.xhtml cross-container-2.xhtml
-skip == cross-container-3.xhtml cross-container-3.xhtml
+fails == cross-container-1.xhtml cross-container-1.xhtml
+fails == cross-container-2.xhtml cross-container-2.xhtml
+fails == cross-container-3.xhtml cross-container-3.xhtml
 
 # Filtering
 == filtered-interval-1.svg filtered-interval-1.svg

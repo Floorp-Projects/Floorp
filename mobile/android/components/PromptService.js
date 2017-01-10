@@ -584,7 +584,7 @@ var PromptUtils = {
     if (httpRealm.test(aRealmString))
       return [null, null, null];
 
-    let uri = Services.io.newURI(aRealmString, null, null);
+    let uri = Services.io.newURI(aRealmString);
     let pathname = "";
 
     if (uri.path != "/")

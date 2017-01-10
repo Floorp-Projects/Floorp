@@ -112,7 +112,7 @@ function run_test() {
   // Now tell it where we want the file.
   envSvc.set("WRITE_ARGUMENT_FILE", outFile.path);
 
-  var uri = ioService.newURI(kTestURI, null, null);
+  var uri = ioService.newURI(kTestURI);
 
   // Just check we've got these matching, if we haven't there's a problem
   // with ascii spec or our test case.

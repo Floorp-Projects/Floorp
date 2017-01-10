@@ -35,14 +35,6 @@ struct ServoCell {
   ServoCell() : value() {};
 };
 
-// Indicates whether a style resolution should be considered to consume the style
-// for the construction of a layout frame, or whether the caller is just
-// peeking.
-enum class ConsumeStyleBehavior {
-  Consume,
-  DontConsume,
-};
-
 // Indicates whether the Servo style system should expect the style on an element
 // to have already been resolved (i.e. via a parallel traversal), or whether it
 // may be lazily computed.

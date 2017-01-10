@@ -73,6 +73,9 @@ async_test(msg_event_test.bind(this, 'current-extension-expired-same-microtask-t
 async_test(msg_event_test.bind(this, 'current-extension-expired-different-task'),
   'Test calling waitUntil after the current extension expired in a different task fails');
 
+async_test(msg_event_test.bind(this, 'script-extendable-event'),
+  'Test calling waitUntil on a script constructed ExtendableEvent throws exception');
+
 async_test(function(t) {
     var testBody = function(worker) {
       return with_iframe('./resources/pending-respondwith-async-waituntil/dummy.html');

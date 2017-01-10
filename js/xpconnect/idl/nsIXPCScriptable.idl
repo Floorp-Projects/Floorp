@@ -42,40 +42,27 @@ interface nsIXPCScriptable : nsISupports
     /* bitflags used for 'flags' (only 32 bits available!) */
 
     const uint32_t WANT_PRECREATE                   = 1 <<  0;
-    // unused bit here
-    // unused bit here
-    // unused bit here
-    // unused bit here
-    const uint32_t WANT_GETPROPERTY                 = 1 <<  5;
-    const uint32_t WANT_SETPROPERTY                 = 1 <<  6;
-    const uint32_t WANT_ENUMERATE                   = 1 <<  7;
-    const uint32_t WANT_NEWENUMERATE                = 1 <<  8;
-    const uint32_t WANT_RESOLVE                     = 1 <<  9;
-    // unused bit here
-    const uint32_t WANT_FINALIZE                    = 1 << 11;
-    // unused bit here!
-    const uint32_t WANT_CALL                        = 1 << 13;
-    const uint32_t WANT_CONSTRUCT                   = 1 << 14;
-    const uint32_t WANT_HASINSTANCE                 = 1 << 15;
-    // Unused bit here!
-    const uint32_t USE_JSSTUB_FOR_ADDPROPERTY       = 1 << 17;
-    const uint32_t USE_JSSTUB_FOR_DELPROPERTY       = 1 << 18;
-    const uint32_t USE_JSSTUB_FOR_SETPROPERTY       = 1 << 19;
-    // Unused bit here!
-    const uint32_t DONT_ENUM_QUERY_INTERFACE        = 1 << 21;
-    const uint32_t DONT_ASK_INSTANCE_FOR_SCRIPTABLE = 1 << 22;
-    const uint32_t CLASSINFO_INTERFACES_ONLY        = 1 << 23;
-    const uint32_t ALLOW_PROP_MODS_DURING_RESOLVE   = 1 << 24;
-    const uint32_t ALLOW_PROP_MODS_TO_PROTOTYPE     = 1 << 25;
-    const uint32_t IS_GLOBAL_OBJECT                 = 1 << 26;
-    const uint32_t DONT_REFLECT_INTERFACE_NAMES     = 1 << 27;
+    const uint32_t WANT_GETPROPERTY                 = 1 <<  1;
+    const uint32_t WANT_SETPROPERTY                 = 1 <<  2;
+    const uint32_t WANT_ENUMERATE                   = 1 <<  3;
+    const uint32_t WANT_NEWENUMERATE                = 1 <<  4;
+    const uint32_t WANT_RESOLVE                     = 1 <<  5;
+    const uint32_t WANT_FINALIZE                    = 1 <<  6;
+    const uint32_t WANT_CALL                        = 1 <<  7;
+    const uint32_t WANT_CONSTRUCT                   = 1 <<  8;
+    const uint32_t WANT_HASINSTANCE                 = 1 <<  9;
+    const uint32_t USE_JSSTUB_FOR_ADDPROPERTY       = 1 << 10;
+    const uint32_t USE_JSSTUB_FOR_DELPROPERTY       = 1 << 11;
+    const uint32_t USE_JSSTUB_FOR_SETPROPERTY       = 1 << 12;
+    const uint32_t DONT_ENUM_QUERY_INTERFACE        = 1 << 13;
+    const uint32_t DONT_ASK_INSTANCE_FOR_SCRIPTABLE = 1 << 14;
+    const uint32_t CLASSINFO_INTERFACES_ONLY        = 1 << 15;
+    const uint32_t ALLOW_PROP_MODS_DURING_RESOLVE   = 1 << 16;
+    const uint32_t ALLOW_PROP_MODS_TO_PROTOTYPE     = 1 << 17;
+    const uint32_t IS_GLOBAL_OBJECT                 = 1 << 18;
+    const uint32_t DONT_REFLECT_INTERFACE_NAMES     = 1 << 19;
 
-    // The high order bit is RESERVED for consumers of these flags. 
-    // No implementor of this interface should ever return flags 
-    // with this bit set.
-    const uint32_t RESERVED                         = 1 << 31;
-
-    readonly attribute string   className;
+    readonly attribute string className;
     [notxpcom,nostdcall] uint32_t getScriptableFlags();
     [notxpcom,nostdcall] jsClassPtr getClass();
 
@@ -117,6 +104,36 @@ interface nsIXPCScriptable : nsISupports
                        in jsval val, out boolean bp);
 
     void postCreatePrototype(in JSContextPtr cx, in JSObjectPtr proto);
+
+%{ C++
+    #define GET_IT(f_) \
+    { \
+        return 0 != (GetScriptableFlags() & nsIXPCScriptable::f_); \
+    }
+
+    bool WantPreCreate()                GET_IT(WANT_PRECREATE)
+    bool WantGetProperty()              GET_IT(WANT_GETPROPERTY)
+    bool WantSetProperty()              GET_IT(WANT_SETPROPERTY)
+    bool WantEnumerate()                GET_IT(WANT_ENUMERATE)
+    bool WantNewEnumerate()             GET_IT(WANT_NEWENUMERATE)
+    bool WantResolve()                  GET_IT(WANT_RESOLVE)
+    bool WantFinalize()                 GET_IT(WANT_FINALIZE)
+    bool WantCall()                     GET_IT(WANT_CALL)
+    bool WantConstruct()                GET_IT(WANT_CONSTRUCT)
+    bool WantHasInstance()              GET_IT(WANT_HASINSTANCE)
+    bool UseJSStubForAddProperty()      GET_IT(USE_JSSTUB_FOR_ADDPROPERTY)
+    bool UseJSStubForDelProperty()      GET_IT(USE_JSSTUB_FOR_DELPROPERTY)
+    bool UseJSStubForSetProperty()      GET_IT(USE_JSSTUB_FOR_SETPROPERTY)
+    bool DontEnumQueryInterface()       GET_IT(DONT_ENUM_QUERY_INTERFACE)
+    bool DontAskInstanceForScriptable() GET_IT(DONT_ASK_INSTANCE_FOR_SCRIPTABLE)
+    bool ClassInfoInterfacesOnly()      GET_IT(CLASSINFO_INTERFACES_ONLY)
+    bool AllowPropModsDuringResolve()   GET_IT(ALLOW_PROP_MODS_DURING_RESOLVE)
+    bool AllowPropModsToPrototype()     GET_IT(ALLOW_PROP_MODS_TO_PROTOTYPE)
+    bool IsGlobalObject()               GET_IT(IS_GLOBAL_OBJECT)
+    bool DontReflectInterfaceNames()    GET_IT(DONT_REFLECT_INTERFACE_NAMES)
+
+#undef GET_IT
+%}
 };
 
 %{ C++

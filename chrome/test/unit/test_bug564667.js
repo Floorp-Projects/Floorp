@@ -17,7 +17,7 @@ var gCR = Cc["@mozilla.org/chrome/chrome-registry;1"].
  * Checks that a mapping was added
  */
 function test_mapping(chromeURL, target) {
-  var uri = gIOS.newURI(chromeURL, null, null);
+  var uri = gIOS.newURI(chromeURL);
 
   try {
     var result = gCR.convertChromeURL(uri);
@@ -32,7 +32,7 @@ function test_mapping(chromeURL, target) {
  * Checks that a mapping was removed
  */
 function test_removed_mapping(chromeURL, target) {
-  var uri = gIOS.newURI(chromeURL, null, null);
+  var uri = gIOS.newURI(chromeURL);
   try {
     var result = gCR.convertChromeURL(uri);
     do_throw(chromeURL + " not removed");
@@ -50,7 +50,7 @@ function test_removed_mapping(chromeURL, target) {
  */
 function test_no_overlays(chromeURL, target, type) {
   var type = type || "overlay";
-  var uri = gIOS.newURI(chromeURL, null, null);
+  var uri = gIOS.newURI(chromeURL);
   var present = false, elem;
 
   var overlays = (type == "overlay") ?

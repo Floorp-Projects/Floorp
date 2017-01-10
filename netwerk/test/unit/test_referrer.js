@@ -2,8 +2,8 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 function getTestReferrer(server_uri, referer_uri) {
-  var uri = NetUtil.newURI(server_uri, "", null)
-  let referrer = NetUtil.newURI(referer_uri, null, null);
+  var uri = NetUtil.newURI(server_uri, "")
+  let referrer = NetUtil.newURI(referer_uri);
   let triggeringPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(referrer, {});
   var chan = NetUtil.newChannel({
     uri: uri,

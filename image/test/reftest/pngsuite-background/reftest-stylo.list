@@ -6,18 +6,18 @@
 # identically and thus share common reference HTML files.
 
 # bgai4a08 - 8 bit grayscale, alpha, no background chunk, interlaced
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgai4a08.png wrapper.html?bgai4a08.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgai4a08.png wrapper.html?bgai4a08.png
 # bgai4a16 - 16 bit grayscale, alpha, no background chunk, interlaced
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgai4a16.png wrapper.html?bgai4a16.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgai4a16.png wrapper.html?bgai4a16.png
 # bgan6a08 - 3x8 bits rgb color, alpha, no background chunk
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgan6a08.png wrapper.html?bgan6a08.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgan6a08.png wrapper.html?bgan6a08.png
 # bgan6a16 - 3x16 bits rgb color, alpha, no background chunk
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgan6a16.png wrapper.html?bgan6a16.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgan6a16.png wrapper.html?bgan6a16.png
 # bgbn4a08 - 8 bit grayscale, alpha, black background chunk
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgbn4a08.png wrapper.html?bgbn4a08.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgbn4a08.png wrapper.html?bgbn4a08.png
 # bggn4a16 - 16 bit grayscale, alpha, gray background chunk
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bggn4a16.png wrapper.html?bggn4a16.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bggn4a16.png wrapper.html?bggn4a16.png
 # bgwn6a08 - 3x8 bits rgb color, alpha, white background chunk
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgwn6a08.png wrapper.html?bgwn6a08.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgwn6a08.png wrapper.html?bgwn6a08.png
 # bgyn6a16 - 3x16 bits rgb color, alpha, yellow background chunk 
-skip fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgyn6a16.png wrapper.html?bgyn6a16.png
+fuzzy-if(cocoaWidget||skiaContent,1,1024) == wrapper.html?bgyn6a16.png wrapper.html?bgyn6a16.png

@@ -3,15 +3,15 @@ fuzzy-if(Android,105,482) == toblob-quality-0.html toblob-quality-0.html
 fuzzy-if(Android,38,2024) == toblob-quality-25.html toblob-quality-25.html
 fuzzy-if(Android,29,2336) == toblob-quality-50.html toblob-quality-50.html
 fuzzy-if(Android,23,3533) == toblob-quality-75.html toblob-quality-75.html
-fuzzy-if(Android,16,4199) == toblob-quality-92.html toblob-quality-92.html
+== toblob-quality-92.html toblob-quality-92.html
 fuzzy-if(Android,8,2461) == toblob-quality-100.html toblob-quality-100.html
 fuzzy-if(Android,16,4199) == toblob-quality-undefined.html toblob-quality-undefined.html
-fuzzy-if(Android,16,4199) == toblob-quality-default.html toblob-quality-default.html
+== toblob-quality-default.html toblob-quality-default.html
 fuzzy-if(Android,105,482) == todataurl-quality-0.html todataurl-quality-0.html
-fails fuzzy-if(Android,38,2024) == todataurl-quality-25.html todataurl-quality-25.html
+fuzzy-if(Android,38,2024) == todataurl-quality-25.html todataurl-quality-25.html
 fuzzy-if(Android,29,2336) == todataurl-quality-50.html todataurl-quality-50.html
 fuzzy-if(Android,23,3533) == todataurl-quality-75.html todataurl-quality-75.html
-fails fuzzy-if(Android,16,4199) == todataurl-quality-92.html todataurl-quality-92.html
+== todataurl-quality-92.html todataurl-quality-92.html
 fuzzy-if(Android,8,2461) == todataurl-quality-100.html todataurl-quality-100.html
 fuzzy-if(Android,16,4199) == todataurl-quality-undefined.html todataurl-quality-undefined.html
-fuzzy-if(Android,16,4199) == todataurl-quality-default.html todataurl-quality-default.html
+== todataurl-quality-default.html todataurl-quality-default.html

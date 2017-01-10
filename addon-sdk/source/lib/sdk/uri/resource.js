@@ -17,7 +17,7 @@ const URI = (uri, base=null) =>
   ioService.newURI(uri, null, base && URI(base))
 
 const mount = (domain, uri) =>
-  resourceHandler.setSubstitution(domain, ioService.newURI(uri, null, null));
+  resourceHandler.setSubstitution(domain, ioService.newURI(uri));
 exports.mount = mount;
 
 const unmount = (domain, uri) =>

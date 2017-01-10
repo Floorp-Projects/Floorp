@@ -8,10 +8,10 @@ function run_test()
   const ios = Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService);
   const str = "javascript:10";
-  var uri = ios.newURI(str, null, null);
-  var uri2 = ios.newURI(str, null, null);
+  var uri = ios.newURI(str);
+  var uri2 = ios.newURI(str);
   const str2 = "http://example.org";
-  var uri3 = ios.newURI(str2, null, null);
+  var uri3 = ios.newURI(str2);
   do_check_true(uri.equals(uri));
   do_check_true(uri.equals(uri2));
   do_check_true(uri2.equals(uri));

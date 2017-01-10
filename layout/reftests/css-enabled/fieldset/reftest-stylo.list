@@ -1,12 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== fieldset-enabled.html fieldset-enabled.html
-== fieldset-disabled.html fieldset-disabled.html
-== fieldset-fieldset-1.html fieldset-fieldset-1.html
-== fieldset-fieldset-2.html fieldset-fieldset-2.html
-fuzzy-if(skiaContent,1,11) == fieldset-fieldset-3.html fieldset-fieldset-3.html
-fails fuzzy-if(skiaContent,1,11) == fieldset-fieldset-4.html fieldset-fieldset-4.html
-== fieldset-legend-1.html fieldset-legend-1.html
-fuzzy-if(skiaContent,1,2) == fieldset-legend-2.html fieldset-legend-2.html
-fuzzy-if(skiaContent,2,5) == fieldset-legend-3.html fieldset-legend-3.html
-fuzzy-if(skiaContent,2,9) == fieldset-legend-4.html fieldset-legend-4.html
-fuzzy-if(skiaContent,2,5) == fieldset-legend-5.html fieldset-legend-5.html
+fails == fieldset-enabled.html fieldset-enabled.html
+fails == fieldset-disabled.html fieldset-disabled.html
+fails == fieldset-fieldset-1.html fieldset-fieldset-1.html
+fails == fieldset-fieldset-2.html fieldset-fieldset-2.html
+fails == fieldset-fieldset-3.html fieldset-fieldset-3.html
+fails == fieldset-fieldset-4.html fieldset-fieldset-4.html
+fails == fieldset-legend-1.html fieldset-legend-1.html
+fails == fieldset-legend-2.html fieldset-legend-2.html
+fails == fieldset-legend-3.html fieldset-legend-3.html
+fails == fieldset-legend-4.html fieldset-legend-4.html
+fails == fieldset-legend-5.html fieldset-legend-5.html

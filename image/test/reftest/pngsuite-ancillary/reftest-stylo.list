@@ -4,9 +4,9 @@
 # cHRM chunks
 #
 # ccwn2c08 - gamma 1.0000 chunk, chroma chunk w:0.3127,0.3290 r:0.64,0.33 g:0.30,0.60 b:0.15,0.06
-fails fails-if(prefs.getIntPref("gfx.color_management.mode")!=2) fuzzy-if(winWidget,8,569) == ccwn2c08.png ccwn2c08.png
+fails == ccwn2c08.png ccwn2c08.png
 # ccwn3p08 - gamma 1.0000 chunk, chroma chunk w:0.3127,0.3290 r:0.64,0.33 g:0.30,0.60 b:0.15,0.06
-fails fails-if(prefs.getIntPref("gfx.color_management.mode")!=2) fuzzy-if(winWidget,8,577) == ccwn3p08.png ccwn3p08.png
+fails == ccwn3p08.png ccwn3p08.png
 
 # pHYs chunks
 #

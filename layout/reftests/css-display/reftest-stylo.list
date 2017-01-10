@@ -2,36 +2,28 @@
 # Tests for CSS Display spec features.
 # http://dev.w3.org/csswg/css-display
 
-fuzzy-if(Android,8,604) == display-contents-acid.html display-contents-acid.html
-random == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
-random == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
-random == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
-== display-contents-generated-content.html display-contents-generated-content.html
-== display-contents-generated-content-2.html display-contents-generated-content-2.html
-== display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
-skip == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-stylechange.html
-skip fuzzy-if(winWidget,12,100) == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-dom-mutations.html
+fails == display-contents-acid.html display-contents-acid.html
+# fuzzy-if(Android,8,604) == display-contents-acid-dyn-1.html display-contents-acid-dyn-1.html
+fails == display-contents-acid-dyn-2.html display-contents-acid-dyn-2.html
+fails == display-contents-acid-dyn-3.html display-contents-acid-dyn-3.html
+# == display-contents-generated-content.html display-contents-generated-content.html
+# == display-contents-generated-content-2.html display-contents-generated-content-2.html
+fails == display-contents-style-inheritance-1.html display-contents-style-inheritance-1.html
+fails == display-contents-style-inheritance-1-stylechange.html display-contents-style-inheritance-1-stylechange.html
+# == display-contents-style-inheritance-1-dom-mutations.html display-contents-style-inheritance-1-dom-mutations.html
 == display-contents-tables.xhtml display-contents-tables.xhtml
 == display-contents-tables-2.xhtml display-contents-tables-2.xhtml
 == display-contents-tables-3.xhtml display-contents-tables-3.xhtml
 == display-contents-visibility-hidden.html display-contents-visibility-hidden.html
 == display-contents-visibility-hidden-2.html display-contents-visibility-hidden-2.html
-random == display-contents-495385-2d.html display-contents-495385-2d.html
-skip-if(B2G||Mulet) fuzzy-if(Android,7,3935) == display-contents-xbl.xhtml display-contents-xbl.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == display-contents-495385-2d.html display-contents-495385-2d.html
+fails == display-contents-xbl.xhtml display-contents-xbl.xhtml
 # fuzzy-if(Android,7,1186) pref(dom.webcomponents.enabled,true) == display-contents-shadow-dom-1.html display-contents-shadow-dom-1.html
-skip-if(B2G||Mulet) == display-contents-xbl-2.xul display-contents-xbl-2.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) asserts(1) == display-contents-xbl-3.xul display-contents-xbl-3.xul
-# bug 1089223
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == display-contents-xbl-4.xul display-contents-xbl-4.xul
-# fails (not just asserts) due to bug 1089223
-asserts(0-1) fuzzy-if(Android,8,3216) == display-contents-fieldset.html display-contents-fieldset.html
-# bug 1089223
-skip-if(B2G||Mulet) asserts(1) == display-contents-xbl-5.xul display-contents-xbl-5.xul
-# bug 1089223
-# Initial mulet triage: parity with B2G/B2G Desktop
+== display-contents-xbl-2.xul display-contents-xbl-2.xul
+asserts(1) == display-contents-xbl-3.xul display-contents-xbl-3.xul
+# == display-contents-xbl-4.xul display-contents-xbl-4.xul
+# == display-contents-fieldset.html display-contents-fieldset.html
+asserts(1) == display-contents-xbl-5.xul display-contents-xbl-5.xul
 == display-contents-list-item-child.html display-contents-list-item-child.html
-== display-contents-writing-mode-1.html display-contents-writing-mode-1.html
-== display-contents-writing-mode-2.html display-contents-writing-mode-2.html
+fails == display-contents-writing-mode-1.html display-contents-writing-mode-1.html
+fails == display-contents-writing-mode-2.html display-contents-writing-mode-2.html

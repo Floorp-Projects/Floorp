@@ -363,10 +363,11 @@ XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
 
     mozilla::Maybe<JSAutoCompartment> ac;
 
-    if (sciWrapper.GetFlags().WantPreCreate()) {
+    nsCOMPtr<nsIXPCScriptable> scrWrapper = sciWrapper.GetCallback();
+    if (scrWrapper && scrWrapper->WantPreCreate()) {
         RootedObject plannedParent(cx, parent);
-        nsresult rv = sciWrapper.GetCallback()->PreCreate(identity, cx,
-                                                          parent, parent.address());
+        nsresult rv =
+            scrWrapper->PreCreate(identity, cx, parent, parent.address());
         if (NS_FAILED(rv))
             return rv;
         rv = NS_OK;
@@ -645,9 +646,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
     if (classInfoHelper) {
         nsCOMPtr<nsIXPCScriptable> helper =
           dont_AddRef(static_cast<nsIXPCScriptable*>(classInfoHelper));
-        uint32_t flags = classInfoHelper->GetScriptableFlags();
         sciProto.SetCallback(helper.forget());
-        sciProto.SetFlags(XPCNativeScriptableFlags(flags));
 
         return;
     }
@@ -655,9 +654,7 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
     nsCOMPtr<nsIXPCScriptable> helper;
     nsresult rv = classInfo->GetScriptableHelper(getter_AddRefs(helper));
     if (NS_SUCCEEDED(rv) && helper) {
-        uint32_t flags = helper->GetScriptableFlags();
         sciProto.SetCallback(helper.forget());
-        sciProto.SetFlags(XPCNativeScriptableFlags(flags));
     }
 }
 
@@ -674,54 +671,54 @@ XPCWrappedNative::GatherScriptableCreateInfo(nsISupports* obj,
     if (classInfo) {
         GatherProtoScriptableCreateInfo(classInfo, sciProto);
 
-        if (sciProto.GetFlags().DontAskInstanceForScriptable())
+        nsCOMPtr<nsIXPCScriptable> scrProto = sciProto.GetCallback();
+        if (scrProto && scrProto->DontAskInstanceForScriptable())
             return sciProto;
     }
 
     // Do the same for the wrapper specific scriptable
-    nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(obj));
-    if (helper) {
-        uint32_t flags = helper->GetScriptableFlags();
-        sciWrapper.SetCallback(helper.forget());
-        sciWrapper.SetFlags(XPCNativeScriptableFlags(flags));
-
+    nsCOMPtr<nsIXPCScriptable> scrWrapper(do_QueryInterface(obj));
+    if (scrWrapper) {
         // A whole series of assertions to catch bad uses of scriptable flags on
         // the siWrapper...
 
-        MOZ_ASSERT(!(sciWrapper.GetFlags().WantPreCreate() &&
-                     !sciProto.GetFlags().WantPreCreate()),
-                   "Can't set WANT_PRECREATE on an instance scriptable "
-                   "without also setting it on the class scriptable");
+        // Can't set WANT_PRECREATE on an instance scriptable without also
+        // setting it on the class scriptable.
+        MOZ_ASSERT_IF(scrWrapper->WantPreCreate(),
+                      sciProto.GetCallback() &&
+                      sciProto.GetCallback()->WantPreCreate());
 
-        MOZ_ASSERT(!(sciWrapper.GetFlags().DontEnumQueryInterface() &&
-                     !sciProto.GetFlags().DontEnumQueryInterface() &&
-                     sciProto.GetCallback()),
-                   "Can't set DONT_ENUM_QUERY_INTERFACE on an instance scriptable "
-                   "without also setting it on the class scriptable (if present and shared)");
+        // Can't set DONT_ENUM_QUERY_INTERFACE on an instance scriptable
+        // without also setting it on the class scriptable (if present).
+        MOZ_ASSERT_IF(scrWrapper->DontEnumQueryInterface() &&
+                      sciProto.GetCallback(),
+                      sciProto.GetCallback()->DontEnumQueryInterface());
 
-        MOZ_ASSERT(!(sciWrapper.GetFlags().DontAskInstanceForScriptable() &&
-                     !sciProto.GetFlags().DontAskInstanceForScriptable()),
-                   "Can't set DONT_ASK_INSTANCE_FOR_SCRIPTABLE on an instance scriptable "
-                   "without also setting it on the class scriptable");
+        // Can't set DONT_ASK_INSTANCE_FOR_SCRIPTABLE on an instance scriptable
+        // without also setting it on the class scriptable.
+        MOZ_ASSERT_IF(scrWrapper->DontAskInstanceForScriptable(),
+                      sciProto.GetCallback() &&
+                      sciProto.GetCallback()->DontAskInstanceForScriptable());
 
-        MOZ_ASSERT(!(sciWrapper.GetFlags().ClassInfoInterfacesOnly() &&
-                     !sciProto.GetFlags().ClassInfoInterfacesOnly() &&
-                     sciProto.GetCallback()),
-                   "Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable "
-                   "without also setting it on the class scriptable (if present and shared)");
+        // Can't set CLASSINFO_INTERFACES_ONLY on an instance scriptable
+        // without also setting it on the class scriptable (if present).
+        MOZ_ASSERT_IF(scrWrapper->ClassInfoInterfacesOnly() &&
+                      sciProto.GetCallback(),
+                      sciProto.GetCallback()->ClassInfoInterfacesOnly());
 
-        MOZ_ASSERT(!(sciWrapper.GetFlags().AllowPropModsDuringResolve() &&
-                     !sciProto.GetFlags().AllowPropModsDuringResolve() &&
-                     sciProto.GetCallback()),
-                   "Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable "
-                   "without also setting it on the class scriptable (if present and shared)");
+        // Can't set ALLOW_PROP_MODS_DURING_RESOLVE on an instance scriptable
+        // without also setting it on the class scriptable (if present).
+        MOZ_ASSERT_IF(scrWrapper->AllowPropModsDuringResolve() &&
+                      sciProto.GetCallback(),
+                      sciProto.GetCallback()->AllowPropModsDuringResolve());
 
-        MOZ_ASSERT(!(sciWrapper.GetFlags().AllowPropModsToPrototype() &&
-                     !sciProto.GetFlags().AllowPropModsToPrototype() &&
-                     sciProto.GetCallback()),
-                   "Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable "
-                   "without also setting it on the class scriptable (if present and shared)");
+        // Can't set ALLOW_PROP_MODS_TO_PROTOTYPE on an instance scriptable
+        // without also setting it on the class scriptable (if present).
+        MOZ_ASSERT_IF(scrWrapper->AllowPropModsToPrototype() &&
+                      sciProto.GetCallback(),
+                      sciProto.GetCallback()->AllowPropModsToPrototype());
 
+        sciWrapper.SetCallback(scrWrapper.forget());
         return sciWrapper;
     }
 
@@ -754,7 +751,8 @@ XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
     const JSClass* jsclazz = si ? si->GetJSClass() : Jsvalify(&XPC_WN_NoHelper_JSClass);
 
     // We should have the global jsclass flag if and only if we're a global.
-    MOZ_ASSERT_IF(si, !!si->GetFlags().IsGlobalObject() == !!(jsclazz->flags & JSCLASS_IS_GLOBAL));
+    MOZ_ASSERT_IF(si, !!si->GetCallback()->IsGlobalObject() ==
+                      !!(jsclazz->flags & JSCLASS_IS_GLOBAL));
 
     MOZ_ASSERT(jsclazz &&
                jsclazz->name &&
@@ -1098,7 +1096,7 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
     // If the scriptable helper forbids us from reflecting additional
     // interfaces, then don't even try the QI, just fail.
     if (mScriptableInfo &&
-        mScriptableInfo->GetFlags().ClassInfoInterfacesOnly() &&
+        mScriptableInfo->GetCallback()->ClassInfoInterfacesOnly() &&
         !mSet->HasInterface(aInterface) &&
         !mSet->HasInterfaceWithAncestor(aInterface)) {
         return NS_ERROR_NO_INTERFACE;
@@ -2157,9 +2155,10 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
 
         if (depth && mScriptableInfo) {
+            nsCOMPtr<nsIXPCScriptable> scr = mScriptableInfo->GetCallback();
             XPC_LOG_INDENT();
-            XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptableInfo->GetCallback()));
-            XPC_LOG_ALWAYS(("mFlags of %x", (uint32_t)mScriptableInfo->GetFlags()));
+            XPC_LOG_ALWAYS(("mScriptable @ %x", scr.get()));
+            XPC_LOG_ALWAYS(("mFlags of %x", scr->GetScriptableFlags()));
             XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptableInfo->GetJSClass()));
             XPC_LOG_OUTDENT();
         }

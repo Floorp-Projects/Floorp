@@ -95,7 +95,7 @@ this.CommonUtils = {
     if (!URIString)
       return null;
     try {
-      return Services.io.newURI(URIString, null, null);
+      return Services.io.newURI(URIString);
     } catch (e) {
       let log = Log.repository.getLogger("Common.Utils");
       log.debug("Could not create URI", e);

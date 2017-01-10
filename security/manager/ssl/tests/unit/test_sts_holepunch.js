@@ -27,8 +27,8 @@ function run_test() {
   ok(SSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
                             "SUB.EXAMPLE.APIS.GOOGLE.COM", 0));
   // also check isSecureURI
-  let chartURI = Services.io.newURI("http://chart.apis.google.com", null, null);
+  let chartURI = Services.io.newURI("http://chart.apis.google.com");
   ok(!SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, chartURI, 0));
-  let otherURI = Services.io.newURI("http://other.apis.google.com", null, null);
+  let otherURI = Services.io.newURI("http://other.apis.google.com");
   ok(SSService.isSecureURI(Ci.nsISiteSecurityService.HEADER_HSTS, otherURI, 0));
 }
