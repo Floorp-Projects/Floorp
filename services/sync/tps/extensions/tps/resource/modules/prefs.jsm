@@ -23,7 +23,7 @@ Cu.import("resource://tps/logger.jsm");
  *
  * Initializes instance properties.
  */
-function Preference (props) {
+function Preference(props) {
   Logger.AssertTrue("name" in props && "value" in props,
     "Preference must have both name and value");
 
@@ -43,15 +43,14 @@ Preference.prototype = {
    *
    * @return nothing
    */
-  Modify: function() {
+  Modify() {
     // Determine if this pref is actually something Weave even looks at.
     let weavepref = WEAVE_PREF_PREFIX + this.name;
     try {
       let syncPref = prefs.getBoolPref(weavepref);
       if (!syncPref)
         prefs.setBoolPref(weavepref, true);
-    }
-    catch(e) {
+    } catch (e) {
       Logger.AssertTrue(false, "Weave doesn't sync pref " + this.name);
     }
 
@@ -86,12 +85,12 @@ Preference.prototype = {
    *
    * @return nothing
    */
-  Find: function() {
+  Find() {
     // Read the pref value.
     let value;
     try {
       let prefType = prefs.getPrefType(this.name);
-      switch(prefType) {
+      switch (prefType) {
         case Ci.nsIPrefBranch.PREF_INT:
           value = prefs.getIntPref(this.name);
           break;
@@ -102,8 +101,7 @@ Preference.prototype = {
           value = prefs.getBoolPref(this.name);
           break;
       }
-    }
-    catch (e) {
+    } catch (e) {
       Logger.AssertTrue(false, "Error accessing pref " + this.name);
     }
 

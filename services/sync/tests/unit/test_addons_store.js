@@ -55,9 +55,9 @@ var reconciler = engine._reconciler;
  */
 function createRecordForThisApp(id, addonId, enabled, deleted) {
   return {
-    id:            id,
+    id,
     addonID:       addonId,
-    enabled:       enabled,
+    enabled,
     deleted:       !!deleted,
     applicationID: Services.appinfo.ID,
     source:        "amo"
@@ -443,7 +443,7 @@ add_test(function test_create_bad_install() {
   // to be tricky to distinguish a 404 from other transient network errors
   // where we do want the addon to end up in |failed|.
   // This is being tracked in bug 1284778.
-  //do_check_eq(0, failed.length);
+  // do_check_eq(0, failed.length);
 
   let addon = getAddonFromAddonManagerByID(id);
   do_check_eq(null, addon);

@@ -22,7 +22,7 @@ function MockedPlainStorage(accountData) {
   if (accountData) {
     data = {
       version: DATA_FORMAT_VERSION,
-      accountData: accountData,
+      accountData,
     }
   }
   this.data = data;
@@ -45,7 +45,7 @@ function MockedSecureStorage(accountData) {
   if (accountData) {
     data = {
       version: DATA_FORMAT_VERSION,
-      accountData: accountData,
+      accountData,
     }
   }
   this.data = data;
@@ -55,7 +55,7 @@ function MockedSecureStorage(accountData) {
 MockedSecureStorage.prototype = {
   fetchCount: 0,
   locked: false,
-  STORAGE_LOCKED: function() {},
+  STORAGE_LOCKED() {},
   get: Task.async(function* (uid, email) {
     this.fetchCount++;
     if (this.locked) {
