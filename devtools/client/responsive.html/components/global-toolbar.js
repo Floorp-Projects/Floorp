@@ -17,11 +17,11 @@ module.exports = createClass({
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
-    displayPixelRatio: PropTypes.number.isRequired,
+    displayPixelRatio: Types.pixelRatio.value.isRequired,
     networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
     selectedDevice: PropTypes.string.isRequired,
-    selectedPixelRatio: PropTypes.number.isRequired,
+    selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
     touchSimulation: PropTypes.shape(Types.touchSimulation).isRequired,
     onChangeNetworkThrottling: PropTypes.func.isRequired,
     onChangeViewportPixelRatio: PropTypes.func.isRequired,

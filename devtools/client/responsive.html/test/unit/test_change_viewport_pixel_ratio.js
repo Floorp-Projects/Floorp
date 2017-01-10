@@ -17,6 +17,6 @@ add_task(function* () {
   dispatch(changeViewportPixelRatio(0, NEW_PIXEL_RATIO));
 
   let viewport = getState().viewports[0];
-  equal(viewport.pixelRatio, NEW_PIXEL_RATIO,
+  equal(viewport.pixelRatio.value, NEW_PIXEL_RATIO,
     `Viewport's pixel ratio changed to ${NEW_PIXEL_RATIO}`);
 });
