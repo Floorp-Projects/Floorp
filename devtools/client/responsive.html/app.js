@@ -35,7 +35,7 @@ let App = createClass({
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
     dispatch: PropTypes.func.isRequired,
-    displayPixelRatio: PropTypes.number.isRequired,
+    displayPixelRatio: Types.pixelRatio.value.isRequired,
     location: Types.location.isRequired,
     networkThrottling: PropTypes.shape(Types.networkThrottling).isRequired,
     screenshot: PropTypes.shape(Types.screenshot).isRequired,
@@ -148,7 +148,7 @@ let App = createClass({
     } = this;
 
     let selectedDevice = "";
-    let selectedPixelRatio = 0;
+    let selectedPixelRatio = { value: 0 };
 
     if (viewports.length) {
       selectedDevice = viewports[0].device;
