@@ -172,6 +172,12 @@ void Clear();
 void Disable();
 
 /**
+ * This function re-enables IOInterposer functionality in a fast, thread-safe
+ * manner.  Primarily for use by the crash reporter.
+ */
+void Enable();
+
+/**
  * Report IO to registered observers.
  * Notice that the reported operation must be either OpRead, OpWrite or
  * OpFSync. You are not allowed to report an observation with OpWriteFSync or
