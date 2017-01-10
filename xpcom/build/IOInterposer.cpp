@@ -186,6 +186,7 @@ public:
   }
 
   inline void Disable() { mIsEnabled = false; }
+  inline void Enable() { mIsEnabled = true; }
 
   void Register(IOInterposeObserver::Operation aOp,
                 IOInterposeObserver* aObserver)
@@ -479,6 +480,15 @@ IOInterposer::Disable()
     return;
   }
   sMasterList->Disable();
+}
+
+void
+IOInterposer::Enable()
+{
+  if (!sMasterList) {
+    return;
+  }
+  sMasterList->Enable();
 }
 
 void
