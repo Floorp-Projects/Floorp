@@ -401,10 +401,6 @@ gfxWindowsPlatform::CanUseHardwareVideoDecoding()
 bool
 gfxWindowsPlatform::InitDWriteSupport()
 {
-  if (!IsVistaOrLater()) {
-    return false;
-  }
-
   // DWrite is only supported on Windows 7 with the platform update and higher.
   // We check this by seeing if D2D1 support is available.
   if (!Factory::SupportsD2D1()) {
@@ -1382,17 +1378,13 @@ gfxWindowsPlatform::InitializeD3D9Config()
     return;
   }
 
-  if (!IsVistaOrLater()) {
-    d3d9.EnableByDefault();
-  } else {
-    d3d9.SetDefaultFromPref(
-      gfxPrefs::GetLayersAllowD3D9FallbackPrefName(),
-      true,
-      gfxPrefs::GetLayersAllowD3D9FallbackPrefDefault());
+  d3d9.SetDefaultFromPref(
+    gfxPrefs::GetLayersAllowD3D9FallbackPrefName(),
+    true,
+    gfxPrefs::GetLayersAllowD3D9FallbackPrefDefault());
 
-    if (!d3d9.IsEnabled() && gfxPrefs::LayersPreferD3D9()) {
-      d3d9.UserEnable("Direct3D9 enabled via layers.prefer-d3d9");
-    }
+  if (!d3d9.IsEnabled() && gfxPrefs::LayersPreferD3D9()) {
+    d3d9.UserEnable("Direct3D9 enabled via layers.prefer-d3d9");
   }
 
   nsCString message;
@@ -1540,11 +1532,6 @@ gfxWindowsPlatform::InitializeD2DConfig()
                           NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
     return;
   }
-  if (!IsVistaOrLater()) {
-    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not available on Windows XP",
-                          NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_XP"));
-    return;
-  }
 
   d2d1.SetDefaultFromPref(
     gfxPrefs::GetDirect2DDisabledPrefName(),
@@ -1666,10 +1653,6 @@ gfxWindowsPlatform::InitGPUProcessSupport()
 bool
 gfxWindowsPlatform::DwmCompositionEnabled()
 {
-  if (!IsVistaOrLater()) {
-    return false;
-  }
-
   MOZ_ASSERT(WinUtils::dwmIsCompositionEnabledPtr);
   BOOL dwmEnabled = false;
 
