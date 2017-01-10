@@ -1990,6 +1990,12 @@ pref("network.auth.subresource-http-auth-allow", 2);
 // in that case default credentials will always be used.
 pref("network.auth.private-browsing-sso", false);
 
+// Control how the throttling service works - number of ms that each
+// suspend and resume period lasts (prefs named appropriately)
+pref("network.throttle.suspend-for", 2000);
+pref("network.throttle.resume-for", 2000);
+pref("network.throttle.enable", true);
+
 pref("permissions.default.image",           1); // 1-Accept, 2-Deny, 3-dontAcceptForeign
 
 pref("network.proxy.type",                  5);
