@@ -460,7 +460,7 @@ def write_interface(iface, fd):
     fd.write(iface_epilog % names)
 
     def writeDeclaration(fd, iface, virtual):
-        declType = "NS_IMETHOD" if virtual else "NS_METHOD"
+        declType = "NS_IMETHOD" if virtual else "nsresult"
         suffix = " override" if virtual else ""
         for member in iface.members:
             if isinstance(member, xpidl.Attribute):
