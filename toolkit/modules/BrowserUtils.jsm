@@ -138,7 +138,7 @@ this.BrowserUtils = {
   },
 
   makeURIFromCPOW(aCPOWURI) {
-    return Services.io.newURI(aCPOWURI.spec, aCPOWURI.originCharset, null);
+    return Services.io.newURI(aCPOWURI.spec, aCPOWURI.originCharset);
   },
 
   /**

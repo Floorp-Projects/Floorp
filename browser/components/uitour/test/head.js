@@ -354,8 +354,8 @@ function* setup_UITourTest() {
 // Use `add_task(setup_UITourTest);` instead as we will fold this into `setup_UITourTest` once all tests are using `add_UITour_task`.
 function UITourTest(usingAddTask = false) {
   Services.prefs.setBoolPref("browser.uitour.enabled", true);
-  let testHttpsUri = Services.io.newURI("https://example.org", null, null);
-  let testHttpUri = Services.io.newURI("http://example.org", null, null);
+  let testHttpsUri = Services.io.newURI("https://example.org");
+  let testHttpUri = Services.io.newURI("http://example.org");
   Services.perms.add(testHttpsUri, "uitour", Services.perms.ALLOW_ACTION);
   Services.perms.add(testHttpUri, "uitour", Services.perms.ALLOW_ACTION);
 

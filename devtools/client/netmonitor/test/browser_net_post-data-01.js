@@ -13,11 +13,10 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(POST_DATA_URL);
   info("Starting test... ");
 
-  let { document, EVENTS, Editor, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu, NetworkDetails } = NetMonitorView;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
-  NetworkDetails._params.lazyEmpty = false;
 
   let wait = waitForNetworkEvents(monitor, 0, 2);
   yield ContentTask.spawn(tab.linkedBrowser, {}, function* () {
@@ -44,17 +43,22 @@ add_task(function* () {
       time: true
     });
 
-  let onEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
+  // Wait for all tree sections updated by react
+  wait = waitForDOM(document, "#params-tabpanel .tree-section", 2);
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll("#details-pane tab")[2]);
-  yield onEvent;
+  yield wait;
   yield testParamsTab("urlencoded");
 
-  onEvent = monitor.panelWin.once(EVENTS.TAB_UPDATED);
+  // Wait for all tree sections and editor updated by react
+  let waitForSections = waitForDOM(document, "#params-tabpanel .tree-section", 2);
+  let waitForEditor = waitForDOM(document, "#params-tabpanel .editor-mount iframe");
   RequestsMenu.selectedIndex = 1;
-  yield onEvent;
+  let [, editorFrames] = yield Promise.all([waitForSections, waitForEditor]);
+  yield once(editorFrames[0], "DOMContentLoaded");
+  yield waitForDOM(editorFrames[0].contentDocument, ".CodeMirror-code");
   yield testParamsTab("multipart");
 
   return teardown(monitor);
@@ -67,83 +71,51 @@ add_task(function* () {
       "The params tab in the network details pane should be selected.");
 
     function checkVisibility(box) {
-      is(tabpanel.querySelector("#request-params-box")
-        .hasAttribute("hidden"), !box.includes("params"),
-        "The request params box doesn't have the indended visibility.");
-      is(tabpanel.querySelector("#request-post-data-textarea-box")
-        .hasAttribute("hidden"), !box.includes("textarea"),
-        "The request post data textarea box doesn't have the indended visibility.");
+      is(!tabpanel.querySelector(".treeTable"), !box.includes("params"),
+        "The request params doesn't have the indended visibility.");
+      is(tabpanel.querySelector(".editor-mount") === null,
+        !box.includes("editor"),
+        "The request post data doesn't have the indended visibility.");
     }
 
-    is(tabpanel.querySelectorAll(".variables-view-scope").length, 2,
-      "There should be 2 param scopes displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
+    is(tabpanel.querySelectorAll(".tree-section").length, 2,
+      "There should be 2 tree sections displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this tabpanel.");
 
-    let queryScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
-    let postScope = tabpanel.querySelectorAll(".variables-view-scope")[1];
+    let treeSections = tabpanel.querySelectorAll(".tree-section");
 
-    is(queryScope.querySelector(".name").getAttribute("value"),
+    is(treeSections[0].querySelector(".treeLabel").textContent,
       L10N.getStr("paramsQueryString"),
-      "The query scope doesn't have the correct title.");
+      "The query section doesn't have the correct title.");
 
-    is(postScope.querySelector(".name").getAttribute("value"),
+    is(treeSections[1].querySelector(".treeLabel").textContent,
       L10N.getStr(type == "urlencoded" ? "paramsFormData" : "paramsPostPayload"),
-      "The post scope doesn't have the correct title.");
+      "The post section doesn't have the correct title.");
 
-    is(queryScope.querySelectorAll(".variables-view-variable .name")[0]
-      .getAttribute("value"),
-      "foo", "The first query param name was incorrect.");
-    is(queryScope.querySelectorAll(".variables-view-variable .value")[0]
-      .getAttribute("value"),
-      "\"bar\"", "The first query param value was incorrect.");
-    is(queryScope.querySelectorAll(".variables-view-variable .name")[1]
-      .getAttribute("value"),
-      "baz", "The second query param name was incorrect.");
-    is(queryScope.querySelectorAll(".variables-view-variable .value")[1]
-      .getAttribute("value"),
-      "\"42\"", "The second query param value was incorrect.");
-    is(queryScope.querySelectorAll(".variables-view-variable .name")[2]
-      .getAttribute("value"),
-      "type", "The third query param name was incorrect.");
-    is(queryScope.querySelectorAll(".variables-view-variable .value")[2]
-      .getAttribute("value"),
-      "\"" + type + "\"", "The third query param value was incorrect.");
+    let labels = tabpanel.querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
+    let values = tabpanel.querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+
+    is(labels[0].textContent, "foo", "The first query param name was incorrect.");
+    is(values[0].textContent, "\"bar\"", "The first query param value was incorrect.");
+    is(labels[1].textContent, "baz", "The second query param name was incorrect.");
+    is(values[1].textContent, "\"42\"", "The second query param value was incorrect.");
+    is(labels[2].textContent, "type", "The third query param name was incorrect.");
+    is(values[2].textContent, "\"" + type + "\"", "The third query param value was incorrect.");
 
     if (type == "urlencoded") {
       checkVisibility("params");
-
-      is(tabpanel.querySelectorAll(".variables-view-variable").length, 5,
-        "There should be 5 param values displayed in this tabpanel.");
-      is(queryScope.querySelectorAll(".variables-view-variable").length, 3,
-        "There should be 3 param values displayed in the query scope.");
-      is(postScope.querySelectorAll(".variables-view-variable").length, 2,
-        "There should be 2 param values displayed in the post scope.");
-
-      is(postScope.querySelectorAll(".variables-view-variable .name")[0]
-        .getAttribute("value"),
-        "foo", "The first post param name was incorrect.");
-      is(postScope.querySelectorAll(".variables-view-variable .value")[0]
-        .getAttribute("value"),
-        "\"bar\"", "The first post param value was incorrect.");
-      is(postScope.querySelectorAll(".variables-view-variable .name")[1]
-        .getAttribute("value"),
-        "baz", "The second post param name was incorrect.");
-      is(postScope.querySelectorAll(".variables-view-variable .value")[1]
-        .getAttribute("value"),
-        "\"123\"", "The second post param value was incorrect.");
+      is(labels.length, 5, "There should be 5 param values displayed in this tabpanel.");
+      is(labels[3].textContent, "foo", "The first post param name was incorrect.");
+      is(values[3].textContent, "\"bar\"", "The first post param value was incorrect.");
+      is(labels[4].textContent, "baz", "The second post param name was incorrect.");
+      is(values[4].textContent, "\"123\"", "The second post param value was incorrect.");
     } else {
-      checkVisibility("params textarea");
+      checkVisibility("params editor");
 
-      is(tabpanel.querySelectorAll(".variables-view-variable").length, 3,
-        "There should be 3 param values displayed in this tabpanel.");
-      is(queryScope.querySelectorAll(".variables-view-variable").length, 3,
-        "There should be 3 param values displayed in the query scope.");
-      is(postScope.querySelectorAll(".variables-view-variable").length, 0,
-        "There should be 0 param values displayed in the post scope.");
+      is(labels.length, 3, "There should be 3 param values displayed in this tabpanel.");
 
-      let editor = yield NetMonitorView.editor("#request-post-data-textarea");
-      let text = editor.getText();
+      let text = editorFrames[0].contentDocument.querySelector(".CodeMirror-code").textContent;
 
       ok(text.includes("Content-Disposition: form-data; name=\"text\""),
         "The text shown in the source editor is incorrect (1.1).");
@@ -159,8 +131,6 @@ add_task(function* () {
         "The text shown in the source editor is incorrect (3.2).");
       ok(text.includes("Extra data"),
         "The text shown in the source editor is incorrect (4.2).");
-      is(editor.getMode(), Editor.modes.text,
-        "The mode active in the source editor is incorrect.");
     }
   }
 });

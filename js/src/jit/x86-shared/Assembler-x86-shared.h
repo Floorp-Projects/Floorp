@@ -1106,6 +1106,13 @@ class AssemblerX86Shared : public AssemblerShared
         X86Encoding::BaseAssembler::patchJumpToTwoByteNop(jump);
     }
 
+    static void patchFiveByteNopToCall(uint8_t* callsite, uint8_t* target) {
+        X86Encoding::BaseAssembler::patchFiveByteNopToCall(callsite, target);
+    }
+    static void patchCallToFiveByteNop(uint8_t* callsite) {
+        X86Encoding::BaseAssembler::patchCallToFiveByteNop(callsite);
+    }
+
     void breakpoint() {
         masm.int3();
     }

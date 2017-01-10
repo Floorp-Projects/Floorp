@@ -64,7 +64,7 @@ var HelperApps =  {
   _getHandlers: function(url, options) {
     let values = {};
 
-    let handlers = this.getAppsForUri(Services.io.newURI(url, null, null), options);
+    let handlers = this.getAppsForUri(Services.io.newURI(url), options);
     handlers.forEach(function(app) {
       values[app.name] = app;
     }, this);

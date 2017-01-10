@@ -1,5 +1,7 @@
 import os
 
+EN_US_BINARY_URL = "%(en_us_binary_url)s"
+
 config = {
     "locales_file": "src/browser/locales/all-locales",
     "tools_repo": "https://hg.mozilla.org/build/tools",
@@ -7,7 +9,7 @@ config = {
     "bootstrap_env": {
         "NO_MERCURIAL_SETUP_CHECK": "1",
         "MOZ_OBJDIR": "obj-l10n",
-        "EN_US_BINARY_URL": "%(en_us_binary_url)s",
+        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": "%(update_channel)s",
         "DIST": "%(abs_objdir)s",
@@ -21,4 +23,5 @@ config = {
         'UPLOAD_PATH': '/home/worker/artifacts/',
     },
     "mozilla_dir": "src/",
+    "simple_name_move": True,
 }

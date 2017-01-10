@@ -94,6 +94,13 @@ bool
 CompileArgs::initFromContext(ExclusiveContext* cx, ScriptedCaller&& scriptedCaller)
 {
     alwaysBaseline = cx->options().wasmAlwaysBaseline();
+
+    // Debug information such as source view or debug traps will require
+    // additional memory and permanently stay in baseline code, so we try to
+    // only enable it when a developer actually cares: when the debugger tab
+    // is open.
+    debugEnabled = cx->compartment()->debuggerObservesAsmJS();
+
     this->scriptedCaller = Move(scriptedCaller);
     return assumptions.initBuildIdFromContext(cx);
 }

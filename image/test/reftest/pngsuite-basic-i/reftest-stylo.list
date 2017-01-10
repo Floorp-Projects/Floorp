@@ -23,7 +23,7 @@ fails == basi3p02.png basi3p02.png
 # basi3p04 - 4 bit (16 color) paletted
 fails == basi3p04.png basi3p04.png
 # basi3p08 - 8 bit (256 color) paletted
-# fails == basi3p08.png basi3p08.png
+fails == basi3p08.png basi3p08.png
 # basi4a08 - 8 bit grayscale + 8 bit alpha-channel
 #== basi4a08.png basi4a08.png
 # basi4a16 - 16 bit grayscale + 16 bit alpha-channel

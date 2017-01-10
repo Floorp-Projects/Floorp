@@ -232,7 +232,7 @@ checkUrls: function(urls, expected, cb, useMoz = false)
     if (urls.length > 0) {
       var tables = useMoz ? mozTables : allTables;
       var fragment = urls.shift();
-      var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + fragment, null, null), {});
+      var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + fragment), {});
       dbservice.lookup(principal, tables,
                                 function(arg) {
                                   do_check_eq(expected, arg);
@@ -247,7 +247,7 @@ checkUrls: function(urls, expected, cb, useMoz = false)
 
 checkTables: function(url, expected, cb)
 {
-  var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + url, null, null), {});
+  var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + url), {});
   dbservice.lookup(principal, allTables, function(tables) {
     // Rebuild tables in a predictable order.
     var parts = tables.split(",");

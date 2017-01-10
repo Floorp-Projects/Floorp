@@ -105,11 +105,11 @@ function run_test() {
                        new Date().getTime() + 1000000, 1,
                        [NON_ISSUED_KEY_HASH]);
 
-  let uris = [ Services.io.newURI("http://bugzilla.mozilla.org", null, null),
-               Services.io.newURI("http://a.example.com", null, null),
-               Services.io.newURI("http://b.example.com", null, null),
-               Services.io.newURI("http://c.c.example.com", null, null),
-               Services.io.newURI("http://d.example.com", null, null) ];
+  let uris = [ Services.io.newURI("http://bugzilla.mozilla.org"),
+               Services.io.newURI("http://a.example.com"),
+               Services.io.newURI("http://b.example.com"),
+               Services.io.newURI("http://c.c.example.com"),
+               Services.io.newURI("http://d.example.com") ];
 
   for (let i = 0; i < 1000; i++) {
     let uriIndex = i % uris.length;

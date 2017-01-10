@@ -21,14 +21,12 @@ const { Filters } = require("./filter-predicates");
 const {
   decodeUnicodeUrl,
   formDataURI,
-  getFormDataSections,
   getUrlBaseName,
-  getUrlQuery,
-  parseQueryString,
 } = require("./request-utils");
 const { createFactory } = require("devtools/client/shared/vendor/react");
 const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const ParamsPanel = createFactory(require("./shared/components/params-panel"));
 const PreviewPanel = createFactory(require("./shared/components/preview-panel"));
 const SecurityPanel = createFactory(require("./shared/components/security-panel"));
 const TimingsPanel = createFactory(require("./shared/components/timings-panel"));
@@ -94,6 +92,13 @@ DetailsView.prototype = {
   initialize: function (store) {
     dumpn("Initializing the DetailsView");
 
+    this._paramsPanelNode = $("#react-params-tabpanel-hook");
+
+    ReactDOM.render(Provider(
+      { store },
+      ParamsPanel()
+    ), this._paramsPanelNode);
+
     this._previewPanelNode = $("#react-preview-tabpanel-hook");
 
     ReactDOM.render(Provider(
@@ -131,11 +136,6 @@ DetailsView.prototype = {
         emptyText: L10N.getStr("cookiesEmptyText"),
         searchPlaceholder: L10N.getStr("cookiesFilterText")
       }));
-    this._params = new VariablesView($("#request-params"),
-      Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        emptyText: L10N.getStr("paramsEmptyText"),
-        searchPlaceholder: L10N.getStr("paramsFilterText")
-      }));
     this._json = new VariablesView($("#response-content-json"),
       Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
         onlyEnumVisible: true,
@@ -143,9 +143,6 @@ DetailsView.prototype = {
       }));
     VariablesViewController.attach(this._json);
 
-    this._paramsQueryString = L10N.getStr("paramsQueryString");
-    this._paramsFormData = L10N.getStr("paramsFormData");
-    this._paramsPostPayload = L10N.getStr("paramsPostPayload");
     this._requestHeaders = L10N.getStr("requestHeaders");
     this._requestHeadersFromUpload = L10N.getStr("requestHeadersFromUpload");
     this._responseHeaders = L10N.getStr("responseHeaders");
@@ -160,6 +157,7 @@ DetailsView.prototype = {
    */
   destroy: function () {
     dumpn("Destroying the DetailsView");
+    ReactDOM.unmountComponentAtNode(this._paramsPanelNode);
     ReactDOM.unmountComponentAtNode(this._previewPanelNode);
     ReactDOM.unmountComponentAtNode(this._securityPanelNode);
     ReactDOM.unmountComponentAtNode(this._timingsPanelNode);
@@ -177,9 +175,6 @@ DetailsView.prototype = {
    *        Returns a promise that resolves upon population the view.
    */
   populate: function (data) {
-    $("#request-params-box").setAttribute("flex", "1");
-    $("#request-params-box").hidden = false;
-    $("#request-post-data-textarea-box").hidden = true;
     $("#response-content-info-header").hidden = true;
     $("#response-content-json-box").hidden = true;
     $("#response-content-textarea-box").hidden = true;
@@ -210,7 +205,6 @@ DetailsView.prototype = {
 
     this._headers.empty();
     this._cookies.empty();
-    this._params.empty();
     this._json.empty();
 
     this._dataSrc = { src: data, populated: [] };
@@ -259,14 +253,6 @@ DetailsView.prototype = {
         case 1:
           yield view._setResponseCookies(src.responseCookies);
           yield view._setRequestCookies(src.requestCookies);
-          break;
-        // "Params"
-        case 2:
-          yield view._setRequestGetParams(src.url);
-          yield view._setRequestPostParams(
-            src.requestHeaders,
-            src.requestHeadersFromUploadStream,
-            src.requestPostData);
           break;
         // "Response"
         case 3:
@@ -486,108 +472,6 @@ DetailsView.prototype = {
   }),
 
   /**
-   * Sets the network request get params shown in this view.
-   *
-   * @param string url
-   *        The request's url.
-   */
-  _setRequestGetParams: function (url) {
-    let query = getUrlQuery(url);
-    if (query) {
-      this._addParams(this._paramsQueryString, query);
-    }
-  },
-
-  /**
-   * Sets the network request post params shown in this view.
-   *
-   * @param object headers
-   *        The "requestHeaders" message received from the server.
-   * @param object uploadHeaders
-   *        The "requestHeadersFromUploadStream" inferred from the POST payload.
-   * @param object postData
-   *        The "requestPostData" message received from the server.
-   * @return object
-   *        A promise that is resolved when the request post params are set.
-   */
-  _setRequestPostParams: Task.async(function* (headers, uploadHeaders,
-    postData) {
-    if (!headers || !uploadHeaders || !postData) {
-      return;
-    }
-
-    let formDataSections = yield getFormDataSections(
-      headers,
-      uploadHeaders,
-      postData,
-      gNetwork.getString.bind(gNetwork));
-
-    this._params.onlyEnumVisible = false;
-
-    // Handle urlencoded form data sections (e.g. "?foo=bar&baz=42").
-    if (formDataSections.length > 0) {
-      formDataSections.forEach(section => {
-        this._addParams(this._paramsFormData, section);
-      });
-    } else {
-      // Handle JSON and actual forms ("multipart/form-data" content type).
-      let postDataLongString = postData.postData.text;
-      let text = yield gNetwork.getString(postDataLongString);
-      let jsonVal = null;
-      try {
-        jsonVal = JSON.parse(text);
-      } catch (ex) { // eslint-disable-line
-      }
-
-      if (jsonVal) {
-        this._params.onlyEnumVisible = true;
-        let jsonScopeName = L10N.getStr("jsonScopeName");
-        let jsonScope = this._params.addScope(jsonScopeName);
-        jsonScope.expanded = true;
-        let jsonItem = jsonScope.addItem(undefined, { enumerable: true });
-        jsonItem.populate(jsonVal, { sorted: true });
-      } else {
-        // This is really awkward, but hey, it works. Let's show an empty
-        // scope in the params view and place the source editor containing
-        // the raw post data directly underneath.
-        $("#request-params-box").removeAttribute("flex");
-        let paramsScope = this._params.addScope(this._paramsPostPayload);
-        paramsScope.expanded = true;
-        paramsScope.locked = true;
-
-        $("#request-post-data-textarea-box").hidden = false;
-        let editor = yield NetMonitorView.editor("#request-post-data-textarea");
-        editor.setMode(Editor.modes.text);
-        editor.setText(text);
-      }
-    }
-
-    window.emit(EVENTS.REQUEST_POST_PARAMS_DISPLAYED);
-  }),
-
-  /**
-   * Populates the params container in this view with the specified data.
-   *
-   * @param string name
-   *        The type of params to populate (get or post).
-   * @param string queryString
-   *        A query string of params (e.g. "?foo=bar&baz=42").
-   */
-  _addParams: function (name, queryString) {
-    let paramsArray = parseQueryString(queryString);
-    if (!paramsArray) {
-      return;
-    }
-    let paramsScope = this._params.addScope(name);
-    paramsScope.expanded = true;
-
-    for (let param of paramsArray) {
-      let paramVar = paramsScope.addItem(param.name, {}, {relaxed: true});
-      paramVar.setGrip(param.value);
-    }
-  },
-
-  /**
    * Sets the network response body shown in this view.
    *
    * @param string url
@@ -705,11 +589,7 @@ DetailsView.prototype = {
   _dataSrc: null,
   _headers: null,
   _cookies: null,
-  _params: null,
   _json: null,
-  _paramsQueryString: "",
-  _paramsFormData: "",
-  _paramsPostPayload: "",
   _requestHeaders: "",
   _responseHeaders: "",
   _requestCookies: "",

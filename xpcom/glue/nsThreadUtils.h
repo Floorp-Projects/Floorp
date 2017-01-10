@@ -313,6 +313,84 @@ private:
 
 } // namespace detail
 
+namespace detail {
+
+template<typename CVRemoved>
+struct IsRefcountedSmartPointerHelper : FalseType {};
+
+template<typename Pointee>
+struct IsRefcountedSmartPointerHelper<RefPtr<Pointee>> : TrueType {};
+
+template<typename Pointee>
+struct IsRefcountedSmartPointerHelper<nsCOMPtr<Pointee>> : TrueType {};
+
+} // namespace detail
+
+template<typename T>
+struct IsRefcountedSmartPointer
+  : detail::IsRefcountedSmartPointerHelper<typename RemoveCV<T>::Type>
+{};
+
+namespace detail {
+
+template<typename T, typename CVRemoved>
+struct RemoveSmartPointerHelper
+{
+  typedef T Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveSmartPointerHelper<T, RefPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveSmartPointerHelper<T, nsCOMPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+} // namespace detail
+
+template<typename T>
+struct RemoveSmartPointer
+  : detail::RemoveSmartPointerHelper<T, typename RemoveCV<T>::Type>
+{};
+
+namespace detail {
+
+template<typename T, typename CVRemoved>
+struct RemoveRawOrSmartPointerHelper
+{
+  typedef T Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveRawOrSmartPointerHelper<T, Pointee*>
+{
+  typedef Pointee Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveRawOrSmartPointerHelper<T, RefPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+template<typename T, typename Pointee>
+struct RemoveRawOrSmartPointerHelper<T, nsCOMPtr<Pointee>>
+{
+  typedef Pointee Type;
+};
+
+} // namespace detail
+
+template<typename T>
+struct RemoveRawOrSmartPointer
+  : detail::RemoveRawOrSmartPointerHelper<T, typename RemoveCV<T>::Type>
+{};
+
 } // namespace mozilla
 
 inline nsISupports*
@@ -385,57 +463,70 @@ struct nsRunnableMethodReceiver<ClassType, false>
   void Revoke() { mObj = nullptr; }
 };
 
-template<typename Method, bool Owning, bool Cancelable> struct nsRunnableMethodTraits;
+template<typename PtrType, typename Method, bool Owning, bool Cancelable>
+struct nsRunnableMethodTraits;
 
-template<class C, typename R, bool Owning, bool Cancelable, typename... As>
-struct nsRunnableMethodTraits<R(C::*)(As...), Owning, Cancelable>
+template<typename PtrType, class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<PtrType, R(C::*)(As...), Owning, Cancelable>
 {
-  typedef C class_type;
+  typedef typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  static_assert(mozilla::IsBaseOf<C, class_type>::value,
+                "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
 };
 
-template<class C, typename R, bool Owning, bool Cancelable, typename... As>
-struct nsRunnableMethodTraits<R(C::*)(As...) const, Owning, Cancelable>
+template<typename PtrType, class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<PtrType, R(C::*)(As...) const, Owning, Cancelable>
 {
-  typedef const C class_type;
+  typedef const typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  static_assert(mozilla::IsBaseOf<C, class_type>::value,
+                "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
 };
 
 #ifdef NS_HAVE_STDCALL
-template<class C, typename R, bool Owning, bool Cancelable, typename... As>
-struct nsRunnableMethodTraits<R(__stdcall C::*)(As...), Owning, Cancelable>
+template<typename PtrType, class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<PtrType, R(__stdcall C::*)(As...), Owning, Cancelable>
 {
-  typedef C class_type;
+  typedef typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  static_assert(mozilla::IsBaseOf<C, class_type>::value,
+                "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
 };
 
-template<class C, typename R, bool Owning, bool Cancelable>
-struct nsRunnableMethodTraits<R(NS_STDCALL C::*)(), Owning, Cancelable>
+template<typename PtrType, class C, typename R, bool Owning, bool Cancelable>
+struct nsRunnableMethodTraits<PtrType, R(NS_STDCALL C::*)(), Owning, Cancelable>
 {
-  typedef C class_type;
+  typedef typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  static_assert(mozilla::IsBaseOf<C, class_type>::value,
+                "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
 };
-template<class C, typename R, bool Owning, bool Cancelable, typename... As>
-struct nsRunnableMethodTraits<R(__stdcall C::*)(As...) const, Owning, Cancelable>
+template<typename PtrType, class C, typename R, bool Owning, bool Cancelable, typename... As>
+struct nsRunnableMethodTraits<PtrType, R(__stdcall C::*)(As...) const, Owning, Cancelable>
 {
-  typedef const C class_type;
+  typedef const typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  static_assert(mozilla::IsBaseOf<C, class_type>::value,
+                "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
 };
 
-template<class C, typename R, bool Owning, bool Cancelable>
-struct nsRunnableMethodTraits<R(NS_STDCALL C::*)() const, Owning, Cancelable>
+template<typename PtrType, class C, typename R, bool Owning, bool Cancelable>
+struct nsRunnableMethodTraits<PtrType, R(NS_STDCALL C::*)() const, Owning, Cancelable>
 {
-  typedef const C class_type;
+  typedef const typename mozilla::RemoveRawOrSmartPointer<PtrType>::Type class_type;
+  static_assert(mozilla::IsBaseOf<C, class_type>::value,
+                "Stored class must inherit from method's class");
   typedef R return_type;
   typedef nsRunnableMethod<C, R, Owning, Cancelable> base_type;
   static const bool can_cancel = Cancelable;
@@ -540,17 +631,17 @@ struct IsParameterStorageClass<StoreConstRefPassByConstLRef<S>>
   : public mozilla::TrueType {};
 
 template<typename T>
-struct StorensRefPtrPassByPtr
+struct StoreRefPtrPassByPtr
 {
   typedef RefPtr<T> stored_type;
   typedef T* passed_type;
   stored_type m;
   template <typename A>
-  MOZ_IMPLICIT StorensRefPtrPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
+  MOZ_IMPLICIT StoreRefPtrPassByPtr(A&& a) : m(mozilla::Forward<A>(a)) {}
   passed_type PassAsParameter() { return m.get(); }
 };
 template<typename S>
-struct IsParameterStorageClass<StorensRefPtrPassByPtr<S>>
+struct IsParameterStorageClass<StoreRefPtrPassByPtr<S>>
   : public mozilla::TrueType {};
 
 template<typename T>
@@ -609,40 +700,6 @@ template<typename S>
 struct IsParameterStorageClass<StoreCopyPassByPtr<S>>
   : public mozilla::TrueType {};
 
-namespace mozilla {
-
-template<typename T>
-struct IsRefcountedSmartPointer : public mozilla::FalseType
-{};
-
-template<typename T>
-struct IsRefcountedSmartPointer<RefPtr<T>> : public mozilla::TrueType
-{};
-
-template<typename T>
-struct IsRefcountedSmartPointer<nsCOMPtr<T>> : public mozilla::TrueType
-{};
-
-template<typename T>
-struct RemoveSmartPointer
-{
-  typedef void Type;
-};
-
-template<typename T>
-struct RemoveSmartPointer<RefPtr<T>>
-{
-  typedef T Type;
-};
-
-template<typename T>
-struct RemoveSmartPointer<nsCOMPtr<T>>
-{
-  typedef T Type;
-};
-
-} // namespace mozilla
-
 namespace detail {
 
 template<typename>
@@ -671,7 +728,7 @@ struct NonnsISupportsPointerStorageClass
 template<typename TWithoutPointer>
 struct PointerStorageClass
   : mozilla::Conditional<HasRefCountMethods<TWithoutPointer>::value,
-                         StorensRefPtrPassByPtr<TWithoutPointer>,
+                         StoreRefPtrPassByPtr<TWithoutPointer>,
                          typename NonnsISupportsPointerStorageClass<
                            TWithoutPointer
                          >::Type>
@@ -688,7 +745,7 @@ struct LValueReferenceStorageClass
 template<typename T>
 struct SmartPointerStorageClass
   : mozilla::Conditional<mozilla::IsRefcountedSmartPointer<T>::value,
-                         StorensRefPtrPassByPtr<
+                         StoreRefPtrPassByPtr<
                            typename mozilla::RemoveSmartPointer<T>::Type>,
                          StoreCopyPassByConstLRef<T>>
 {};
@@ -721,7 +778,7 @@ struct NonParameterStorageClass
 
 // Choose storage&passing strategy based on preferred storage type:
 // - If IsParameterStorageClass<T>::value is true, use as-is.
-// - RC*       -> StorensRefPtrPassByPtr<RC>     : Store RefPtr<RC>, pass RC*
+// - RC*       -> StoreRefPtrPassByPtr<RC>       : Store RefPtr<RC>, pass RC*
 //   ^^ RC quacks like a ref-counted type (i.e., has AddRef and Release methods)
 // - const T*  -> StoreConstPtrPassByConstPtr<T> : Store const T*, pass const T*
 // - T*        -> StorePtrPassByPtr<T>           : Store T*, pass T*.
@@ -729,7 +786,7 @@ struct NonParameterStorageClass
 // - T&        -> StoreRefPassByLRef<T>          : Store T&, pass T&.
 // - T&&       -> StoreCopyPassByRRef<T>         : Store T, pass Move(T).
 // - RefPtr<T>, nsCOMPtr<T>
-//             -> StorensRefPtrPassByPtr<T>      : Store RefPtr<T>, pass T*
+//             -> StoreRefPtrPassByPtr<T>        : Store RefPtr<T>, pass T*
 // - Other T   -> StoreCopyPassByConstLRef<T>    : Store T, pass const T&.
 // Other available explicit options:
 // -              StoreCopyPassByValue<T>        : Store T, pass T.
@@ -776,11 +833,11 @@ struct RunnableMethodArguments final
   }
 };
 
-template<typename Method, bool Owning, bool Cancelable, typename... Storages>
+template<typename PtrType, typename Method, bool Owning, bool Cancelable, typename... Storages>
 class RunnableMethodImpl final
-  : public ::nsRunnableMethodTraits<Method, Owning, Cancelable>::base_type
+  : public ::nsRunnableMethodTraits<PtrType, Method, Owning, Cancelable>::base_type
 {
-  typedef typename ::nsRunnableMethodTraits<Method, Owning, Cancelable>::class_type
+  typedef typename ::nsRunnableMethodTraits<PtrType, Method, Owning, Cancelable>::class_type
       ClassType;
   ::nsRunnableMethodReceiver<ClassType, Owning> mReceiver;
   Method mMethod;
@@ -788,10 +845,10 @@ class RunnableMethodImpl final
 private:
   virtual ~RunnableMethodImpl() { Revoke(); };
 public:
-  template<typename... Args>
-  explicit RunnableMethodImpl(ClassType* aObj, Method aMethod,
+  template<typename ForwardedPtrType, typename... Args>
+  explicit RunnableMethodImpl(ForwardedPtrType&& aObj, Method aMethod,
                               Args&&... aArgs)
-    : mReceiver(aObj)
+    : mReceiver(Forward<ForwardedPtrType>(aObj))
     , mMethod(aMethod)
     , mArgs(Forward<Args>(aArgs)...)
   {
@@ -826,76 +883,112 @@ public:
 //
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, false>::base_type>
-NewRunnableMethod(PtrType aPtr, Method aMethod)
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, true, false>::base_type>
+NewRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return do_AddRef(new detail::RunnableMethodImpl<Method, true, false>(aPtr, aMethod));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, true, false>
+      (Forward<PtrType>(aPtr), aMethod));
 }
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, true>::base_type>
-NewCancelableRunnableMethod(PtrType aPtr, Method aMethod)
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, true, true>::base_type>
+NewCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return do_AddRef(new detail::RunnableMethodImpl<Method, true, true>(aPtr, aMethod));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, true, true>
+      (Forward<PtrType>(aPtr), aMethod));
 }
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, false>::base_type>
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, false, false>::base_type>
 NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return do_AddRef(new detail::RunnableMethodImpl<Method, false, false>(aPtr, aMethod));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, false, false>
+      (Forward<PtrType>(aPtr), aMethod));
 }
 
 template<typename PtrType, typename Method>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, true>::base_type>
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, false, true>::base_type>
 NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod)
 {
-  return do_AddRef(new detail::RunnableMethodImpl<Method, false, true>(aPtr, aMethod));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, false, true>
+      (Forward<PtrType>(aPtr), aMethod));
 }
 
 // Similar to NewRunnableMethod. Call like so:
 // nsCOMPtr<nsIRunnable> event =
 //   NewRunnableMethod<Types,...>(myObject, &MyClass::HandleEvent, myArg1,...);
 // 'Types' are the stored type for each argument, see ParameterStorage for details.
-template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, false>::base_type>
+template<typename... Storages, typename PtrType, typename Method, typename... Args>
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, true, false>::base_type>
 NewRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new detail::RunnableMethodImpl<Method, true, false, Storages...>(
-      aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, true, false, Storages...>
+      (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
-template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, false>::base_type>
+template<typename... Storages, typename PtrType, typename Method, typename... Args>
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, false, false>::base_type>
 NewNonOwningRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new detail::RunnableMethodImpl<Method, false, false, Storages...>(
-      aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, false, false, Storages...>
+      (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
-template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, true, true>::base_type>
+template<typename... Storages, typename PtrType, typename Method, typename... Args>
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, true, true>::base_type>
 NewCancelableRunnableMethod(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new detail::RunnableMethodImpl<Method, true, true, Storages...>(
-      aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, true, true, Storages...>
+      (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
-template<typename... Storages, typename Method, typename PtrType, typename... Args>
-already_AddRefed<typename ::nsRunnableMethodTraits<Method, false, true>::base_type>
+template<typename... Storages, typename PtrType, typename Method, typename... Args>
+already_AddRefed<
+  typename ::nsRunnableMethodTraits<
+    typename RemoveReference<PtrType>::Type, Method, false, true>::base_type>
 NewNonOwningCancelableRunnableMethod(PtrType&& aPtr, Method aMethod,
                                                 Args&&... aArgs)
 {
   static_assert(sizeof...(Storages) == sizeof...(Args),
                 "<Storages...> size should be equal to number of arguments");
-  return do_AddRef(new detail::RunnableMethodImpl<Method, false, true, Storages...>(
-      aPtr, aMethod, mozilla::Forward<Args>(aArgs)...));
+  return do_AddRef(
+    new detail::RunnableMethodImpl
+      <typename RemoveReference<PtrType>::Type, Method, false, true, Storages...>
+      (Forward<PtrType>(aPtr), aMethod, mozilla::Forward<Args>(aArgs)...));
 }
 
 } // namespace mozilla

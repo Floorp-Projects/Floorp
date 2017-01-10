@@ -136,6 +136,7 @@ CaptivePortalService::Start()
     return NS_OK;
   }
 
+  MOZ_ASSERT(mState == UNKNOWN, "Initial state should be UNKNOWN");
   mStarted = true;
   mEverBeenCaptive = false;
 
@@ -180,6 +181,9 @@ CaptivePortalService::Stop()
     mCaptivePortalDetector->Abort(kInterfaceName);
   }
   mCaptivePortalDetector = nullptr;
+
+  // Clear the state in case anyone queries the state while detection is off.
+  mState = UNKNOWN;
   return NS_OK;
 }
 

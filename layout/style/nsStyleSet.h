@@ -116,7 +116,6 @@ class nsStyleSet final
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(mozilla::dom::Element* aElement,
                   nsStyleContext* aParentContext,
-                  mozilla::ConsumeStyleBehavior,
                   mozilla::LazyComputeBehavior)
   {
     return ResolveStyleFor(aElement, aParentContext);
@@ -130,7 +129,6 @@ class nsStyleSet final
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(mozilla::dom::Element* aElement,
                   nsStyleContext* aParentContext,
-                  mozilla::ConsumeStyleBehavior aConsume,
                   mozilla::LazyComputeBehavior aMayCompute,
                   TreeMatchContext& aTreeMatchContext)
   {

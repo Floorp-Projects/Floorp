@@ -26,6 +26,7 @@
 namespace js {
 
 class TypedArrayObject;
+class WasmFunctionScope;
 
 namespace wasm {
 
@@ -148,13 +149,14 @@ class WasmInstanceObject : public NativeObject
 {
     static const unsigned INSTANCE_SLOT = 0;
     static const unsigned EXPORTS_SLOT = 1;
+    static const unsigned SCOPES_SLOT = 2;
     static const ClassOps classOps_;
     bool isNewborn() const;
     static void finalize(FreeOp* fop, JSObject* obj);
     static void trace(JSTracer* trc, JSObject* obj);
 
-    // ExportMap maps from function definition index to exported function
-    // object. This allows the instance to lazily create exported function
+    // ExportMap maps from function index to exported function object.
+    // This allows the instance to lazily create exported function
     // objects on demand (instead up-front for all table elements) while
     // correctly preserving observable function object identity.
     using ExportMap = GCHashMap<uint32_t,
@@ -163,8 +165,18 @@ class WasmInstanceObject : public NativeObject
                                 SystemAllocPolicy>;
     ExportMap& exports() const;
 
+    // WeakScopeMap maps from function index to js::Scope. This maps is weak
+    // to avoid holding scope objects alive. The scopes are normally created
+    // during debugging.
+    using ScopeMap = GCHashMap<uint32_t,
+                               ReadBarriered<WasmFunctionScope*>,
+                               DefaultHasher<uint32_t>,
+                               SystemAllocPolicy>;
+    using WeakScopeMap = JS::WeakCache<ScopeMap>;
+    WeakScopeMap& scopes() const;
+
   public:
-    static const unsigned RESERVED_SLOTS = 2;
+    static const unsigned RESERVED_SLOTS = 3;
     static const Class class_;
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
@@ -186,6 +198,10 @@ class WasmInstanceObject : public NativeObject
                                     MutableHandleFunction fun);
 
     const wasm::CodeRange& getExportedFunctionCodeRange(HandleFunction fun);
+
+    static WasmFunctionScope* getFunctionScope(JSContext* cx,
+                                               HandleWasmInstanceObject instanceObj,
+                                               uint32_t funcIndex);
 };
 
 // The class of WebAssembly.Memory. A WasmMemoryObject references an ArrayBuffer

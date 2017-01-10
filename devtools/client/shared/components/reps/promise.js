@@ -10,7 +10,12 @@ define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
   // Dependencies
-  const { createFactories, isGrip } = require("./rep-utils");
+  const {
+    createFactories,
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
+
   const { PropRep } = createFactories(require("./prop-rep"));
   const { MODE } = require("./constants");
   // Shortcuts
@@ -55,7 +60,7 @@ define(function (require, exports, module) {
       });
     },
 
-    render: function () {
+    render: wrapRender(function () {
       const object = this.props.object;
       const {promiseState} = object;
       let objectLink = this.props.objectLink || span;
@@ -94,7 +99,7 @@ define(function (require, exports, module) {
           }, " }")
         )
       );
-    },
+    }),
   });
 
   // Registration

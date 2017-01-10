@@ -4,8 +4,8 @@
 # Note: these are corrupt files, and so no image should be rendered.
 
 # x00n0g01 - empty 0x0 grayscale file
-skip == wrapper.html?x00n0g01.png wrapper.html?x00n0g01.png
+== wrapper.html?x00n0g01.png wrapper.html?x00n0g01.png
 # xcrn0g04 - added cr bytes
-skip == wrapper.html?xcrn0g04.png wrapper.html?xcrn0g04.png
+== wrapper.html?xcrn0g04.png wrapper.html?xcrn0g04.png
 # xlfn0g04 - added lf bytes 
-skip == wrapper.html?xlfn0g04.png wrapper.html?xlfn0g04.png
+== wrapper.html?xlfn0g04.png wrapper.html?xlfn0g04.png

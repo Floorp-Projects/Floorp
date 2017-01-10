@@ -195,8 +195,8 @@ this.LoginHelper = {
 
     if (aOptions.schemeUpgrades) {
       try {
-        let loginURI = Services.io.newURI(aLoginOrigin, null, null);
-        let searchURI = Services.io.newURI(aSearchOrigin, null, null);
+        let loginURI = Services.io.newURI(aLoginOrigin);
+        let searchURI = Services.io.newURI(aSearchOrigin);
         if (loginURI.scheme == "http" && searchURI.scheme == "https" &&
             loginURI.hostPort == searchURI.hostPort) {
           return true;
@@ -222,14 +222,14 @@ this.LoginHelper = {
       return false;
 
     if (ignoreSchemes) {
-      let hostname1URI = Services.io.newURI(aLogin1.hostname, null, null);
-      let hostname2URI = Services.io.newURI(aLogin2.hostname, null, null);
+      let hostname1URI = Services.io.newURI(aLogin1.hostname);
+      let hostname2URI = Services.io.newURI(aLogin2.hostname);
       if (hostname1URI.hostPort != hostname2URI.hostPort)
         return false;
 
       if (aLogin1.formSubmitURL != "" && aLogin2.formSubmitURL != "" &&
-          Services.io.newURI(aLogin1.formSubmitURL, null, null).hostPort !=
-          Services.io.newURI(aLogin2.formSubmitURL, null, null).hostPort)
+          Services.io.newURI(aLogin1.formSubmitURL).hostPort !=
+          Services.io.newURI(aLogin2.formSubmitURL).hostPort)
         return false;
     } else {
       if (aLogin1.hostname != aLogin2.hostname)
@@ -404,7 +404,7 @@ this.LoginHelper = {
     let preferredOriginScheme;
     if (preferredOrigin) {
       try {
-        preferredOriginScheme = Services.io.newURI(preferredOrigin, null, null).scheme;
+        preferredOriginScheme = Services.io.newURI(preferredOrigin).scheme;
       } catch (ex) {
         // Handle strings that aren't valid URIs e.g. chrome://FirefoxAccounts
       }
@@ -445,8 +445,8 @@ this.LoginHelper = {
 
             try {
               // Only `hostname` is currently considered
-              let existingLoginURI = Services.io.newURI(existingLogin.hostname, null, null);
-              let loginURI = Services.io.newURI(login.hostname, null, null);
+              let existingLoginURI = Services.io.newURI(existingLogin.hostname);
+              let loginURI = Services.io.newURI(login.hostname);
               // If the schemes of the two logins are the same or neither match the
               // preferredOriginScheme then we have no preference and look at the next resolveBy.
               if (loginURI.scheme == existingLoginURI.scheme ||

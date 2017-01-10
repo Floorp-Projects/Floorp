@@ -10,7 +10,11 @@ define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
   // Dependencies
-  const { createFactories, isGrip } = require("./rep-utils");
+  const {
+    createFactories,
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   const { Caption } = createFactories(require("./caption"));
   const { PropRep } = createFactories(require("./prop-rep"));
   const { MODE } = require("./constants");
@@ -198,7 +202,7 @@ define(function (require, exports, module) {
       return value;
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let object = this.props.object;
       let props = this.safePropIterator(object,
         (this.props.mode === MODE.LONG) ? 10 : 3);
@@ -230,7 +234,7 @@ define(function (require, exports, module) {
           }, " }")
         )
       );
-    },
+    }),
   });
 
   // Registration

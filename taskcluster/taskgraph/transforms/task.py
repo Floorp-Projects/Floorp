@@ -22,6 +22,7 @@ from voluptuous import Schema, Any, Required, Optional, Extra
 
 from .gecko_v2_whitelist import JOB_NAME_WHITELIST, JOB_NAME_WHITELIST_ERROR
 
+
 # shortcut for a string where task references are allowed
 taskref_or_string = Any(
     basestring,
@@ -264,6 +265,26 @@ task_description_schema = Schema({
             # type=directory)
             Required('name'): basestring,
         }],
+    }, {
+        Required('implementation'): 'scriptworker-signing',
+
+        # the maximum time to spend signing, in seconds
+        Required('max-run-time', default=600): int,
+
+        # list of artifact URLs for the artifacts that should be signed
+        Required('upstream-artifacts'): [{
+            # taskId of the task with the artifact
+            Required('taskId'): taskref_or_string,
+
+            # type of signing task (for CoT)
+            Required('taskType'): basestring,
+
+            # Paths to the artifacts to sign
+            Required('paths'): [basestring],
+
+            # Signing formats to use on each of the paths
+            Required('formats'): [basestring],
+        }],
     }),
 
     # The "when" section contains descriptions of the circumstances
@@ -296,6 +317,7 @@ GROUP_NAMES = {
     'tc-W-e10s': 'Web platform tests executed by TaskCluster with e10s',
     'tc-X': 'Xpcshell tests executed by TaskCluster',
     'tc-X-e10s': 'Xpcshell tests executed by TaskCluster with e10s',
+    'tc-L10n': 'Localised Repacks executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
     'Cc': 'Toolchain builds',
@@ -450,6 +472,16 @@ def build_generic_worker_payload(config, task, task_def):
 
     if 'retry-exit-status' in worker:
         raise Exception("retry-exit-status not supported in generic-worker")
+
+
+@payload_builder('scriptworker-signing')
+def build_scriptworker_signing_payload(config, task, task_def):
+    worker = task['worker']
+
+    task_def['payload'] = {
+        'maxRunTime': worker['max-run-time'],
+        'upstreamArtifacts':  worker['upstream-artifacts']
+    }
 
 
 @payload_builder('macosx-engine')

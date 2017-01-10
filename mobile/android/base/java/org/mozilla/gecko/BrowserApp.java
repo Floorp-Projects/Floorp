@@ -918,6 +918,11 @@ public class BrowserApp extends GeckoApp
      * @param intent Intent that launched this activity
      */
     private void checkFirstrun(Context context, SafeIntent intent) {
+        if (getProfile().inGuestMode()) {
+            // We do not want to show any first run tour for guest profiles.
+            return;
+        }
+
         if (intent.getBooleanExtra(EXTRA_SKIP_STARTPANE, false)) {
             // Note that we don't set the pref, so subsequent launches can result
             // in the firstrun pane being shown.

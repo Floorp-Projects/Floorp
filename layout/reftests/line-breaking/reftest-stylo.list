@@ -1,41 +1,40 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== between-whitespaces.html between-whitespaces.html
-== chemical-1.html chemical-1.html
-== currency-1.html currency-1.html
-== currency-2.html currency-2.html
-== datetime-1.html datetime-1.html
-== emoji-1.html emoji-1.html
-== emoji-2.html emoji-2.html
-== hyphens-1.html hyphens-1.html
-== hyphens-2.html hyphens-2.html
+fails == between-whitespaces.html between-whitespaces.html
+fails == chemical-1.html chemical-1.html
+fails == currency-1.html currency-1.html
+fails == currency-2.html currency-2.html
+fails == datetime-1.html datetime-1.html
+fails == emoji-1.html emoji-1.html
+fails == emoji-2.html emoji-2.html
+fails == hyphens-1.html hyphens-1.html
+fails == hyphens-2.html hyphens-2.html
 # The following three tests may fail if rendering with Core Text (see bug 389074)
 # due to subpixel glyph positioning differences between the reference cases with <br>
 # and the automatically-wrapped lines in the test file
-random-if(cocoaWidget) == ja-1.html ja-1.html
-random-if(cocoaWidget) == ja-2.html ja-2.html
-random-if(cocoaWidget) == ja-3.html ja-3.html
-== khmer-1.html khmer-1.html
-== leaders-1.html leaders-1.html
-== markup-src-1.html markup-src-1.html
-== non-breakable-1.html non-breakable-1.html
-== non-breakable-2.html non-breakable-2.html
-== numerics-1.html numerics-1.html
-skip == parentheses-1.html parentheses-1.html
-== punctuation-open-1.html punctuation-open-1.html
-== punctuation-open-2.html punctuation-open-2.html
-== punctuation-open-3.html punctuation-open-3.html
-== punctuation-open-4.html punctuation-open-4.html
-== quotationmarks-1.html quotationmarks-1.html
+fails == ja-1.html ja-1.html
+fails == ja-2.html ja-2.html
+fails == ja-3.html ja-3.html
+fails == khmer-1.html khmer-1.html
+fails == leaders-1.html leaders-1.html
+fails == markup-src-1.html markup-src-1.html
+fails == non-breakable-1.html non-breakable-1.html
+fails == non-breakable-2.html non-breakable-2.html
+fails == numerics-1.html numerics-1.html
+fails == parentheses-1.html parentheses-1.html
+fails == punctuation-open-1.html punctuation-open-1.html
+fails == punctuation-open-2.html punctuation-open-2.html
+fails == punctuation-open-3.html punctuation-open-3.html
+fails == punctuation-open-4.html punctuation-open-4.html
+fails == quotationmarks-1.html quotationmarks-1.html
 # The following is currently disabled on Linux because of a rendering issue with missing-glyph
-# representations on the test boxes. See bug #450088 for discussion.
-skip-if(B2G||Mulet) skip-if(gtkWidget) == quotationmarks-cjk-1.html quotationmarks-cjk-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== smileys-1.html smileys-1.html
-== smileys-2.html smileys-2.html
-== url-1.html url-1.html
-== url-2.html url-2.html
-== url-3.html url-3.html
-== winpath-1.html winpath-1.html
-skip-if(Mulet) == zwnbsp-1.html zwnbsp-1.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+# representations on the test boxes. See bug
+fails == quotationmarks-cjk-1.html quotationmarks-cjk-1.html
+fails == smileys-1.html smileys-1.html
+fails == smileys-2.html smileys-2.html
+fails == space-cluster-1.html space-cluster-1.html
+fails == space-cluster-2.html space-cluster-2.html
+fails == url-1.html url-1.html
+fails == url-2.html url-2.html
+fails == url-3.html url-3.html
+fails == winpath-1.html winpath-1.html
+fails == zwnbsp-1.html zwnbsp-1.html

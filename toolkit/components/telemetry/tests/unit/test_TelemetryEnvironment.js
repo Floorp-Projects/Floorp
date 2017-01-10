@@ -1331,7 +1331,7 @@ add_task(function* test_defaultSearchEngine() {
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-plugins",
-                          Services.io.newURI(url, null, null));
+                          Services.io.newURI(url));
 
   // Initialize the search service.
   yield new Promise(resolve => Services.search.init(resolve));

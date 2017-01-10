@@ -155,8 +155,8 @@ add_task(function test() {
   let found = expected.map((it) => 0);
 
   // Add some places to the places database
-  yield PlacesTestUtils.addVisits(Services.io.newURI("https://foo.com/some/other/subdirectory", null, null));
-  yield PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory", null, null));
+  yield PlacesTestUtils.addVisits(Services.io.newURI("https://foo.com/some/other/subdirectory"));
+  yield PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory"));
 
   // Force initialization of the nsPermissionManager
   let enumerator = Services.perms.enumerator;

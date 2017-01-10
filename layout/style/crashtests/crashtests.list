@@ -38,7 +38,7 @@ skip-if(stylo) load 456196.html # bug 132652
 load 460209-1.html
 load 460217-1.html
 asserts-if(stylo,2) load 460323-1.html # bug 1324634
-asserts-if(stylo,2) load 466845-1.html # bug 1324705
+load 466845-1.html
 skip-if(stylo) load 469432-1.xhtml # bug 1323649
 load 472195-1.html
 load 472237-1.html # will fail, test for leak (474704)
@@ -68,7 +68,7 @@ load 580685.html
 load 585185-1.html
 load 588627-1.html
 load 592698-1.html
-skip-if(stylo) load 601437-1.html # bug 1323706
+asserts-if(stylo,2) load 601437-1.html # bug 1324634
 load 601439-1.html
 load 605689-1.html
 load 611922-1.html
@@ -117,7 +117,7 @@ load 1028514-1.html
 asserts-if(stylo,8) load 1066089-1.html # bug 1324663
 skip-if(stylo) load 1074651-1.html # bug 1323652
 load 1135534.html
-skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1089463-1.html # bug 1323649
+pref(dom.webcomponents.enabled,true) load 1089463-1.html
 pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1136010-1.html
 asserts-if(stylo,0-2) pref(layout.css.expensive-style-struct-assertions.enabled,true) load 1146101-1.html # bug 1324677
 load 1153693-1.html

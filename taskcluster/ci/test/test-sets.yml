@@ -158,6 +158,33 @@ macosx64-tests-talos:
     - talos-svgr
     - talos-tp5o
 
+linux32-tests:
+    - cppunit
+    - crashtest
+    - external-media-tests
+    - firefox-ui-functional-local
+    - firefox-ui-functional-remote
+    - gtest
+    - jittest
+    - jsreftest
+    - marionette
+    - mochitest
+    - mochitest-a11y
+    - mochitest-browser-chrome
+    - mochitest-chrome
+    - mochitest-clipboard
+    - mochitest-gpu
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-webgl
+    - web-platform-tests
+    - web-platform-tests-reftests
+    - xpcshell
+
+linux32-opt-tests:
+    # mochitest-dt is too slow on linux32/debug
+    - mochitest-devtools-chrome
+
 android-common-tests:
     - cppunit
     - crashtest

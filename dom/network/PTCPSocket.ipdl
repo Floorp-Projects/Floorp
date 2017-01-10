@@ -45,7 +45,8 @@ parent:
   // address specified in |localAddr| and |localPort|.
   async OpenBind(nsCString host, uint16_t port,
                  nsCString localAddr, uint16_t localPort,
-                 bool useSSL, bool aUseArrayBuffers, nsCString aFilter);
+                 bool useSSL, bool reuseAddrPort,
+                 bool aUseArrayBuffers, nsCString aFilter);
 
   // When child's send() is called, this message requrests parent to send
   // data and update it's trackingNumber.

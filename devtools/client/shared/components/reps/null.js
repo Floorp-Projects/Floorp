@@ -11,6 +11,8 @@ define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
 
+  const { wrapRender } = require("./rep-utils");
+
   // Shortcuts
   const { span } = React.DOM;
 
@@ -20,13 +22,13 @@ define(function (require, exports, module) {
   const Null = React.createClass({
     displayName: "NullRep",
 
-    render: function () {
+    render: wrapRender(function () {
       return (
         span({className: "objectBox objectBox-null"},
           "null"
         )
       );
-    },
+    }),
   });
 
   function supportsObject(object, type) {

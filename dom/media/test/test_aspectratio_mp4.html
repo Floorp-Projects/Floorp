@@ -15,12 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=975978
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-function IsWindows7OrLater() {
-  var re = /Windows NT (\d.\d)/;
-  var winver = navigator.userAgent.match(re);
-  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.1;
-}
-
 SimpleTest.waitForExplicitFinish();
 
 // MP4 video with display size is difference to decode frame size.

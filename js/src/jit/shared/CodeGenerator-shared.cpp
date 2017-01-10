@@ -924,10 +924,10 @@ CodeGeneratorShared::generateCompactTrackedOptimizationsMap(JSContext* cx, JitCo
 
     verifyCompactTrackedOptimizationsMap(code, numRegions, unique, allTypes);
 
-    JitSpew(JitSpew_OptimizationTracking,
+    JitSpew(JitSpew_OptimizationTrackingExtended,
             "== Compact Native To Optimizations Map [%p-%p] size %u",
             data, data + trackedOptimizationsMapSize_, trackedOptimizationsMapSize_);
-    JitSpew(JitSpew_OptimizationTracking,
+    JitSpew(JitSpew_OptimizationTrackingExtended,
             "     with type list of length %" PRIuSIZE ", size %" PRIuSIZE,
             allTypes->length(), allTypes->length() * sizeof(IonTrackedTypeWithAddendum));
 

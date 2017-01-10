@@ -344,6 +344,7 @@
     macro(variable, variable, "variable") \
     macro(void0, void0, "(void 0)") \
     macro(wasm, wasm, "wasm") \
+    macro(wasmcall, wasmcall, "wasmcall") \
     macro(watch, watch, "watch") \
     macro(WeakMapConstructorInit, WeakMapConstructorInit, "WeakMapConstructorInit") \
     macro(WeakSetConstructorInit, WeakSetConstructorInit, "WeakSetConstructorInit") \

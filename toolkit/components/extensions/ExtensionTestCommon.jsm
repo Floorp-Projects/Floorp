@@ -318,7 +318,7 @@ class ExtensionTestCommon {
     Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
 
     let fileURI = Services.io.newFileURI(file);
-    let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
+    let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/");
 
     // This may be "temporary" or "permanent".
     if (data.useAddonManager) {

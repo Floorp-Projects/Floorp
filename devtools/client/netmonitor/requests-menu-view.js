@@ -23,7 +23,8 @@ const { Prefs } = require("./prefs");
 const {
   formDataURI,
   writeHeaderText,
-  loadCauseString
+  loadCauseString,
+  getFormDataSections,
 } = require("./request-utils");
 
 const {
@@ -31,7 +32,7 @@ const {
   getSortedRequests,
   getDisplayedRequests,
   getRequestById,
-  getSelectedRequest
+  getSelectedRequest,
 } = require("./selectors/index");
 
 // ms
@@ -86,6 +87,57 @@ RequestsMenuView.prototype = {
       false,
       () => this.store.getState().ui.sidebarOpen,
       () => this.onResize()
+    ));
+
+    // Watch the requestHeaders, requestHeadersFromUploadStream and requestPostData
+    // in order to update formDataSections for composing form data
+    this.store.subscribe(storeWatcher(
+      false,
+      (currentRequest) => {
+        const request = getSelectedRequest(this.store.getState());
+        if (!request) {
+          return {};
+        }
+
+        const isChanged = request.requestHeaders !== currentRequest.requestHeaders ||
+        request.requestHeadersFromUploadStream !==
+        currentRequest.requestHeadersFromUploadStream ||
+        request.requestPostData !== currentRequest.requestPostData;
+
+        if (isChanged) {
+          return {
+            id: request.id,
+            requestHeaders: request.requestHeaders,
+            requestHeadersFromUploadStream: request.requestHeadersFromUploadStream,
+            requestPostData: request.requestPostData,
+          };
+        }
+
+        return currentRequest;
+      },
+      (newRequest) => {
+        const {
+          id,
+          requestHeaders,
+          requestHeadersFromUploadStream,
+          requestPostData,
+        } = newRequest;
+
+        if (requestHeaders && requestHeadersFromUploadStream && requestPostData) {
+          getFormDataSections(
+            requestHeaders,
+            requestHeadersFromUploadStream,
+            requestPostData,
+            gNetwork.getString.bind(gNetwork),
+          ).then((formDataSections) => {
+            this.store.dispatch(Actions.updateRequest(
+              id,
+              { formDataSections },
+              true,
+            ));
+          });
+        }
+      },
     ));
 
     this.sendCustomRequestEvent = this.sendCustomRequest.bind(this);

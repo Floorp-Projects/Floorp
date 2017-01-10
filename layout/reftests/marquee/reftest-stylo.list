@@ -1,16 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-random-if((B2G&&browserIsRemote)||Mulet) == 166591-dynamic-1.html 166591-dynamic-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G) fuzzy-if(Android,8,50) == 336736-1a.html 336736-1a.html
-# Bug 1168747 for random b2g timeouts
-skip-if(B2G) fuzzy-if(Android,8,50) == 336736-1b.html 336736-1b.html
-# Bug 1168747 for random b2g timeouts
-== 406073-1.html 406073-1.html
-== 407016-2.html 407016-2.html
-fuzzy-if(Android,8,220) == 413027-4.html 413027-4.html
-fuzzy-if(Android,8,30) == 425247-1.html 425247-1.html
-fuzzy-if(Android,8,30) == 425247-2.html 425247-2.html
-random == 429849-1.html 429849-1.html
-# bug 432288
-== 1160342-1.html 1160342-1.html
-== 1160342-2.html 1160342-2.html
+fails == 166591-dynamic-1.html 166591-dynamic-1.html
+fails == 336736-1a.html 336736-1a.html
+fuzzy-if(Android,8,50) == 336736-1b.html 336736-1b.html
+fails == 406073-1.html 406073-1.html
+fails == 407016-2.html 407016-2.html
+fails == 413027-4.html 413027-4.html
+fails == 425247-1.html 425247-1.html
+fails == 425247-2.html 425247-2.html
+fails random == 429849-1.html 429849-1.html
+fails == 1160342-1.html 1160342-1.html
+fails == 1160342-2.html 1160342-2.html

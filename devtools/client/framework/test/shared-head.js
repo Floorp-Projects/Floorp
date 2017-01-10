@@ -256,6 +256,41 @@ function waitForNEvents(target, eventName, numTimes, useCapture = false) {
 }
 
 /**
+ * Wait for DOM change on target.
+ *
+ * @param {Object} target
+ *        The Node on which to observe DOM mutations.
+ * @param {String} selector
+ *        Given a selector to watch whether the expected element is changed
+ *        on target.
+ * @param {Number} expectedLength
+ *        Optional, default set to 1
+ *        There may be more than one element match an array match the selector,
+ *        give an expected length to wait for more elements.
+ * @return A promise that resolves when the event has been handled
+ */
+function waitForDOM(target, selector, expectedLength = 1) {
+  return new Promise((resolve) => {
+    let observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        let elements = mutation.target.querySelectorAll(selector);
+
+        if (elements.length === expectedLength) {
+          observer.disconnect();
+          resolve(elements);
+        }
+      });
+    });
+
+    observer.observe(target, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+  });
+}
+
+/**
  * Wait for eventName on target.
  *
  * @param {Object} target
@@ -464,11 +499,14 @@ function waitForContextMenu(popup, button, onShown, onHidden) {
   popup.addEventListener("popupshown", onPopupShown);
 
   info("wait for the context menu to open");
-  button.scrollIntoView();
-  let eventDetails = {type: "contextmenu", button: 2};
-  EventUtils.synthesizeMouse(button, 5, 2, eventDetails,
-                             button.ownerDocument.defaultView);
+  synthesizeContextMenuEvent(button);
   return deferred.promise;
+}
+
+function synthesizeContextMenuEvent(el) {
+  el.scrollIntoView();
+  let eventDetails = {type: "contextmenu", button: 2};
+  EventUtils.synthesizeMouse(el, 5, 2, eventDetails, el.ownerDocument.defaultView);
 }
 
 /**

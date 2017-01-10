@@ -9,18 +9,19 @@
 # ::value (bug 648643), depending of the ::value behaviour (it could change the
 # caret colour and the text colour or just the text colour).
 
-== placeholder-simple.html placeholder-simple.html
+# == placeholder-simple.html placeholder-simple.html
 # needs-focus == placeholder-focus.html placeholder-focus.html
-needs-focus == placeholder-blur.html placeholder-blur.html
-== placeholder-value.html placeholder-value.html
-== placeholder-empty-string.html placeholder-empty-string.html
-== placeholder-add.html placeholder-add.html
-== placeholder-removal.html placeholder-removal.html
-== placeholder-value-set.html placeholder-value-set.html
-== placeholder-value-unset.html placeholder-value-unset.html
-== placeholder-value-reset.html placeholder-value-reset.html
-== css-resize.html css-resize.html
-== css-display.html css-display.html
+fails needs-focus == placeholder-blur.html placeholder-blur.html
+fails == placeholder-value.html placeholder-value.html
+fails == placeholder-empty-string.html placeholder-empty-string.html
+fails == placeholder-add.html placeholder-add.html
+fails == placeholder-removal.html placeholder-removal.html
+fails == placeholder-value-set.html placeholder-value-set.html
+fails == placeholder-value-unset.html placeholder-value-unset.html
+fails == placeholder-value-reset.html placeholder-value-reset.html
+fails == placeholdershown.html placeholdershown.html
+# fails == css-resize.html css-resize.html
+fails == css-display.html css-display.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.
-== css-opacity.html css-opacity.html
+fails == css-opacity.html css-opacity.html

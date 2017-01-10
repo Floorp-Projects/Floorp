@@ -1,45 +1,45 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip == appendCells1.html appendCells1.html
-skip == appendCellsRebuild1.html appendCellsRebuild1.html
-skip == appendCellsZeroColspan.html appendCellsZeroColspan.html
-skip == appendCol1.html appendCol1.html
-skip == appendCol2.html appendCol2.html
-skip == appendColGroup1.html appendColGroup1.html
-skip == appendRowsExpand1.html appendRowsExpand1.html
-skip == appendTbodyExpand1.html appendTbodyExpand1.html
-== deleteCellsRebuild1.html deleteCellsRebuild1.html
-== deleteCellsShrink1.html deleteCellsShrink1.html
-== deleteCellsShrink2.html deleteCellsShrink2.html
-== deleteCellsExpandZeroColspan.html deleteCellsExpandZeroColspan.html
-== deleteCol1.html deleteCol1.html
-== deleteCol2.html deleteCol2.html
-== deleteCol3.html deleteCol3.html
-== deleteColGroup1.html deleteColGroup1.html
-== deleteColGroup2.html deleteColGroup2.html
-== deleteRowsRebuild1.html deleteRowsRebuild1.html
-== deleteRowsRebuild1a.html deleteRowsRebuild1a.html
-== deleteRowsShrink1.html deleteRowsShrink1.html
-== deleteTbodyExpand1.html deleteTbodyExpand1.html
-== deleteTbodyRebuild1.html deleteTbodyRebuild1.html
-== insertCaptionsAndRows1.html insertCaptionsAndRows1.html
-== insertCaptionsAndRows2.html insertCaptionsAndRows2.html
-== insertCaptionsAndRows3.html insertCaptionsAndRows3.html
-== insertCaptionsAndRows4.html insertCaptionsAndRows4.html
-== insertCellsExpand1.html insertCellsExpand1.html
-== insertCellsExpand2.html insertCellsExpand2.html
-== insertCellsExpandZeroRowspan.html insertCellsExpandZeroRowspan.html
-== insertCellsRebuild1.html insertCellsRebuild1.html
-== insertCellsRebuild2.html insertCellsRebuild2.html
-== insertCellsZeroColspan.html insertCellsZeroColspan.html
-== insertColGroups1.html insertColGroups1.html
-== insertColGroups2.html insertColGroups2.html
-== insertColgroupAndRowgroup.html insertColgroupAndRowgroup.html
-== insertCols1.html insertCols1.html
-== insertCols2.html insertCols2.html
-== insertCols3.html insertCols3.html
-== insertCols4.html insertCols4.html
-== insertCols5.html insertCols5.html
-== insertRowsExpand1.html insertRowsExpand1.html
-== insertRowsRebuild1.html insertRowsRebuild1.html
-== insertTbodyExpand1.html insertTbodyExpand1.html
-== insertTbodyRebuild1.html insertTbodyRebuild1.html
+fails == appendCells1.html appendCells1.html
+fails == appendCellsRebuild1.html appendCellsRebuild1.html
+fails == appendCellsZeroColspan.html appendCellsZeroColspan.html
+fails == appendCol1.html appendCol1.html
+fails == appendCol2.html appendCol2.html
+fails == appendColGroup1.html appendColGroup1.html
+fails == appendRowsExpand1.html appendRowsExpand1.html
+fails == appendTbodyExpand1.html appendTbodyExpand1.html
+fails == deleteCellsRebuild1.html deleteCellsRebuild1.html
+fails == deleteCellsShrink1.html deleteCellsShrink1.html
+fails == deleteCellsShrink2.html deleteCellsShrink2.html
+fails == deleteCellsExpandZeroColspan.html deleteCellsExpandZeroColspan.html
+fails == deleteCol1.html deleteCol1.html
+fails == deleteCol2.html deleteCol2.html
+fails == deleteCol3.html deleteCol3.html
+fails == deleteColGroup1.html deleteColGroup1.html
+fails == deleteColGroup2.html deleteColGroup2.html
+fails == deleteRowsRebuild1.html deleteRowsRebuild1.html
+fails == deleteRowsRebuild1a.html deleteRowsRebuild1a.html
+fails == deleteRowsShrink1.html deleteRowsShrink1.html
+fails == deleteTbodyExpand1.html deleteTbodyExpand1.html
+fails == deleteTbodyRebuild1.html deleteTbodyRebuild1.html
+fails == insertCaptionsAndRows1.html insertCaptionsAndRows1.html
+fails == insertCaptionsAndRows2.html insertCaptionsAndRows2.html
+fails == insertCaptionsAndRows3.html insertCaptionsAndRows3.html
+fails == insertCaptionsAndRows4.html insertCaptionsAndRows4.html
+fails == insertCellsExpand1.html insertCellsExpand1.html
+fails == insertCellsExpand2.html insertCellsExpand2.html
+fails == insertCellsExpandZeroRowspan.html insertCellsExpandZeroRowspan.html
+fails == insertCellsRebuild1.html insertCellsRebuild1.html
+fails == insertCellsRebuild2.html insertCellsRebuild2.html
+fails == insertCellsZeroColspan.html insertCellsZeroColspan.html
+fails == insertColGroups1.html insertColGroups1.html
+fails == insertColGroups2.html insertColGroups2.html
+fails == insertColgroupAndRowgroup.html insertColgroupAndRowgroup.html
+fails == insertCols1.html insertCols1.html
+fails == insertCols2.html insertCols2.html
+fails == insertCols3.html insertCols3.html
+fails == insertCols4.html insertCols4.html
+fails == insertCols5.html insertCols5.html
+fails == insertRowsExpand1.html insertRowsExpand1.html
+fails == insertRowsRebuild1.html insertRowsRebuild1.html
+fails == insertTbodyExpand1.html insertTbodyExpand1.html
+fails == insertTbodyRebuild1.html insertTbodyRebuild1.html

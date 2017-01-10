@@ -294,7 +294,7 @@ function MergeSort(array, len, comparefn) {
 function Partition(array, from, to, comparefn) {
     assert(to - from >= 3, "Partition will not work with less than three elements");
 
-    var medianIndex = (from + to) >> 1;
+    var medianIndex = from + ((to - from) >> 1);
 
     var i = from + 1;
     var j = to;
@@ -328,6 +328,8 @@ function Partition(array, from, to, comparefn) {
 
 // In-place QuickSort.
 function QuickSort(array, len, comparefn) {
+    assert(0 <= len && len <= 0x7FFFFFFF, "length is a positive int32 value");
+
     // Managing the stack ourselves seems to provide a small performance boost.
     var stack = new List();
     var top = 0;
