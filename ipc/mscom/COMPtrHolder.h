@@ -7,6 +7,7 @@
 #ifndef mozilla_mscom_COMPtrHolder_h
 #define mozilla_mscom_COMPtrHolder_h
 
+#include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Move.h"
 #include "mozilla/mscom/ProxyStream.h"
@@ -125,13 +126,16 @@ struct ParamTraits<mozilla::mscom::COMPtrHolder<Interface, _IID>>
     }
 
     mozilla::mscom::ProxyStream proxyStream(buf.get(), length);
+    MOZ_DIAGNOSTIC_ASSERT(proxyStream.IsValid());
     if (!proxyStream.IsValid()) {
       return false;
     }
+
     Interface* rawInterface = nullptr;
     if (!proxyStream.GetInterface(_IID, (void**)&rawInterface)) {
       return false;
     }
+
     typename paramType::COMPtrType ptr(rawInterface);
     aResult->Set(mozilla::Move(ptr));
     return true;
