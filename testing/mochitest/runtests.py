@@ -2224,7 +2224,6 @@ toolbar#nav-bar {
             # known regressions exist. At least this way we can prevent further damage while
             # they get fixed.
 
-            info = mozinfo.info
             skip_leak_conditions = [
                 (options.flavor in ('browser', 'chrome', 'plain') and d.startswith('toolkit/components/extensions/test/mochitest'), 'bug 1325158'),  # noqa
             ]
