@@ -10,6 +10,7 @@
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include "mozilla/layers/TextureWrapperImage.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
+#include "mozilla/layers/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {

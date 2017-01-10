@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WebRenderTextLayer.h"
+#include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 
 #include "mozilla/gfx/2D.h"
 
