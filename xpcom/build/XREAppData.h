@@ -199,13 +199,6 @@ public:
 #define NS_XRE_ENABLE_PROFILE_MIGRATOR (1 << 1)
 
 /**
- * Indicates the Windows DLL Blocklist initialized properly. For testing
- * purposes only. Set in nsBrowserApp on startup, automated tests then
- * check the result.
- */
-#define NS_XRE_DLL_BLOCKLIST_ENABLED (1 << 2)
-
-/**
  * Indicates whether or not to use Breakpad crash reporting.
  */
 #define NS_XRE_ENABLE_CRASH_REPORTER (1 << 3)
