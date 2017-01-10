@@ -32,6 +32,7 @@ function dumpAccessibleNode(aNode, level) {
 
 
 function dumpAccessibleTree(aNode, level) {
+netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 	level = level || 0;
 
 	dumpAccessibleNode(aNode, level);
@@ -47,12 +48,14 @@ function dumpAccessibleTree(aNode, level) {
 }
 
 function A(o) { 
-  var acc = SpecialPowers.Cc['@mozilla.org/accessibilityService;1']
-                         .getService(SpecialPowers.Ci.nsIAccessibilityService);
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var acc = Components.classes['@mozilla.org/accessibilityService;1']
+                         .getService(Components.interfaces.nsIAccessibilityService);
   return acc.getAccessibleFor(o);
 }
 
 function beginAccessible() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   dumpAccessibleTree(A(document),0);
 }
 setTimeout(beginAccessible, 100);

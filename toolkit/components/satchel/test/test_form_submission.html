@@ -256,16 +256,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 /* import-globals-from satchel_common.js */
-var iframeOrigin = "https://example.com";
-window.addEventListener("message", receiveMessage, false);
-function receiveMessage(event) {
-  is(event.origin, iframeOrigin, "checking origin");
-  if (event.data.error) {
-    ok(false, event.data.error);
-  }
-  checkSubmit(+event.data.num);
-}
-
 var numSubmittedForms = 0;
 
 var ccNumbers = {
@@ -375,6 +365,7 @@ function startTest() {
 
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
+  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
@@ -510,7 +501,7 @@ function submitForm(formNum) {
       // from an HTTPS domain in an iframe.
       if (nextFormNum == 21 || nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
-        document.getElementById("iframe").contentWindow.postMessage(nextFormNum, iframeOrigin);
+        document.getElementById("iframe").contentWindow.clickButton(nextFormNum);
       } else {
         var button = getFormSubmitButton(nextFormNum);
         button.click();
