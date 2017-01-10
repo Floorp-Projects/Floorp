@@ -1573,7 +1573,7 @@ XPCWrappedNativeXrayTraits::call(JSContext* cx, HandleObject wrapper,
 {
     // Run the call hook of the wrapped native.
     XPCWrappedNative* wn = getWN(wrapper);
-    if (NATIVE_HAS_FLAG(wn, WantCall)) {
+    if (wn->GetScriptable() && wn->GetScriptable()->WantCall()) {
         XPCCallContext ccx(cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
                            args.array(), args.rval().address());
         if (!ccx.IsValid())
@@ -1598,7 +1598,7 @@ XPCWrappedNativeXrayTraits::construct(JSContext* cx, HandleObject wrapper,
 {
     // Run the construct hook of the wrapped native.
     XPCWrappedNative* wn = getWN(wrapper);
-    if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
+    if (wn->GetScriptable() && wn->GetScriptable()->WantConstruct()) {
         XPCCallContext ccx(cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
                            args.array(), args.rval().address());
         if (!ccx.IsValid())
