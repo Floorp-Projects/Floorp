@@ -194,15 +194,18 @@
  *                  Windows, these should be in UTF8. On unix-like platforms
  *                  these are in the "native" character set.
  *
- * @param aAppData  Information about the application to be run.
+ * @param aConfig  Information about the application to be run.
  *
  * @return         A native result code suitable for returning from main().
  *
  * @note           If the binary is linked against the standalone XPCOM glue,
  *                 XPCOMGlueStartup() should be called before this method.
  */
+namespace mozilla {
+struct BootstrapConfig;
+}
 XRE_API(int,
-        XRE_main, (int argc, char* argv[], const mozilla::XREAppData& aAppData))
+        XRE_main, (int argc, char* argv[], const mozilla::BootstrapConfig& aConfig))
 
 /**
  * Given a path relative to the current working directory (or an absolute
