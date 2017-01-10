@@ -67,7 +67,7 @@ XPInstallConfirm.init = function() {
     }
     installItem.signed = install.certName ? "true" : "false";
 
-    installMap.set(install.wrapped, installItem);
+    installMap.set(install, installItem);
     install.addListener(installListener);
   }
 

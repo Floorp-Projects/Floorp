@@ -21,12 +21,6 @@ this.ExtensionsUI = {
   observe(subject, topic, data) {
     if (topic == "webextension-permission-prompt") {
       let {target, info} = subject.wrappedJSObject;
-
-      let progressNotification = target.ownerGlobal.PopupNotifications.getNotification("addon-progress", target);
-      if (progressNotification) {
-        progressNotification.remove();
-      }
-
       this.showPermissionsPrompt(target, info).then(answer => {
         Services.obs.notifyObservers(subject, "webextension-permission-response",
                                      JSON.stringify(answer));
