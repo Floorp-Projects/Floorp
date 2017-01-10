@@ -4694,46 +4694,6 @@ fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl =
-dnl = Build depencency options
-dnl =
-dnl ========================================================
-MOZ_ARG_HEADER(Build dependencies)
-
-if test "$GNU_CC" -a "$GNU_CXX"; then
-  _DEPEND_CFLAGS='-MD -MP -MF $(MDDEPDIR)/$(@F).pp'
-else
-  dnl Don't override this for MSVC
-  if test -z "$_WIN32_MSVC"; then
-    _USE_CPP_INCLUDE_FLAG=
-    _DEFINES_CFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-    _DEFINES_CXXFLAGS='$(ACDEFINES) -D_MOZILLA_CONFIG_H_ -DMOZILLA_CLIENT'
-  else
-    echo '#include <stdio.h>' > dummy-hello.c
-    changequote(,)
-    dnl This output is localized, split at the first double space or colon and space.
-    _CL_PREFIX_REGEX="^\([^:]*:.*[ :] \)\(.*\\\stdio.h\)$"
-    CL_INCLUDES_PREFIX=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/'"$_CL_PREFIX_REGEX"'/\1/p'`
-    _CL_STDIO_PATH=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/'"$_CL_PREFIX_REGEX"'/\2/p'`
-    changequote([,])
-    if ! test -e "$_CL_STDIO_PATH"; then
-        AC_MSG_ERROR([Unable to parse cl -showIncludes prefix. This compiler's locale has an unsupported formatting.])
-    fi
-    if test -z "$CL_INCLUDES_PREFIX"; then
-        AC_MSG_ERROR([Cannot find cl -showIncludes prefix.])
-    fi
-    AC_SUBST(CL_INCLUDES_PREFIX)
-    rm -f dummy-hello.c
-
-    dnl Make sure that the build system can handle non-ASCII characters
-    dnl in environment variables to prevent it from breaking silently on
-    dnl non-English systems.
-    NONASCII=$'\241\241'
-    AC_SUBST(NONASCII)
-  fi
-fi
-
-dnl ========================================================
-dnl =
 dnl = Static Build Options
 dnl =
 dnl ========================================================
@@ -5350,7 +5310,6 @@ HOST_CFLAGS=`echo \
 HOST_CXXFLAGS=`echo \
     $HOST_CXXFLAGS`
 
-AC_SUBST(_DEPEND_CFLAGS)
 AC_SUBST(MOZ_SYSTEM_JPEG)
 AC_SUBST(MOZ_SYSTEM_PNG)
 AC_SUBST(MOZ_SYSTEM_BZ2)
