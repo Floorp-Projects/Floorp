@@ -238,7 +238,7 @@ this.configureFxAccountIdentity = function(authService,
   fxa.internal._fxAccountsClient = mockFxAClient;
 
   let mockTSC = { // TokenServerClient
-    getTokenFromBrowserIDAssertion: function(uri, assertion, cb) {
+    getTokenFromBrowserIDAssertion(uri, assertion, cb) {
       config.fxaccount.token.uid = config.username;
       cb(null, config.fxaccount.token);
     },
@@ -293,7 +293,7 @@ this.configureIdentity = async function(identityOverrides, server) {
   setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
 }
 
-this.SyncTestingInfrastructure = async function (server, username, password) {
+this.SyncTestingInfrastructure = async function(server, username, password) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 

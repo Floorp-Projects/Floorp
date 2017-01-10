@@ -13,7 +13,7 @@ add_test(function test_simple() {
     "<>?": "PD4_",
   };
 
-  for (let [k,v] of Object.entries(expected)) {
+  for (let [k, v] of Object.entries(expected)) {
     do_check_eq(CommonUtils.encodeBase64URL(k), v);
   }
 

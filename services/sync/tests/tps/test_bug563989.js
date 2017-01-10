@@ -82,7 +82,7 @@ Phase('phase1', [
   [Sync],
 ]);
 
-// Sync to profile2 and verify that the bookmarks are present.  Delete 
+// Sync to profile2 and verify that the bookmarks are present.  Delete
 // some bookmarks, and verify that they're not present, but don't sync again.
 Phase('phase2', [
   [Sync],

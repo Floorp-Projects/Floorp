@@ -63,7 +63,7 @@ add_identity_test(this, async function test_successful_sync_adjustSyncInterval()
   function onSyncFinish() {
     _("Sync success.");
     syncSuccesses++;
-  };
+  }
   Svc.Obs.add("weave:service:sync:finish", onSyncFinish);
 
   let server = sync_httpd_setup();
@@ -148,7 +148,7 @@ add_identity_test(this, async function test_successful_sync_adjustSyncInterval()
   do_check_eq(syncSuccesses, 8);
   do_check_false(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
-  do_check_false(scheduler.hasIncomingItems); //gets reset to false
+  do_check_false(scheduler.hasIncomingItems); // gets reset to false
   do_check_eq(scheduler.syncInterval, scheduler.immediateInterval);
 
   Svc.Obs.remove("weave:service:sync:finish", onSyncFinish);
@@ -253,7 +253,7 @@ add_identity_test(this, async function test_unsuccessful_sync_adjustSyncInterval
   do_check_eq(syncFailures, 8);
   do_check_false(scheduler.idle);
   do_check_true(scheduler.numClients > 1);
-  do_check_false(scheduler.hasIncomingItems); //gets reset to false
+  do_check_false(scheduler.hasIncomingItems); // gets reset to false
   do_check_eq(scheduler.syncInterval, scheduler.immediateInterval);
 
   Service.startOver();
@@ -334,7 +334,7 @@ add_identity_test(this, async function test_bug671378_scenario() {
   function onSyncFinish() {
     _("Sync success.");
     syncSuccesses++;
-  };
+  }
   Svc.Obs.add("weave:service:sync:finish", onSyncFinish);
 
   // After first sync call, syncInterval & syncTimer are singleDeviceInterval.
@@ -410,7 +410,7 @@ add_test(function test_adjust_timer_larger_syncInterval() {
   do_check_neq(scheduler.nextSync, 0);
   do_check_true(scheduler.syncTimer.delay <= scheduler.activeInterval);
 
-  //SyncSchedule.
+  // SyncSchedule.
   Service.startOver();
   run_next_test();
 });
@@ -434,7 +434,7 @@ add_test(function test_adjust_timer_smaller_syncInterval() {
   do_check_neq(scheduler.nextSync, 0);
   do_check_true(scheduler.syncTimer.delay <= scheduler.activeInterval);
 
-  //SyncSchedule.
+  // SyncSchedule.
   Service.startOver();
   run_next_test();
 });

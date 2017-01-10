@@ -80,7 +80,7 @@ function prepareServer(cbAfterTokenFetch) {
   let numReassigns = 0;
   return configureIdentity(config).then(() => {
     Service.identity._tokenServerClient = {
-      getTokenFromBrowserIDAssertion: function(uri, assertion, cb) {
+      getTokenFromBrowserIDAssertion(uri, assertion, cb) {
         // Build a new URL with trailing zeros for the SYNC_VERSION part - this
         // will still be seen as equivalent by the test server, but different
         // by sync itself.
@@ -144,7 +144,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
 
       // Make absolutely sure that any event listeners are done with their work
       // before we proceed.
-      waitForZeroTimer(function () {
+      waitForZeroTimer(function() {
         _("Second sync nextTick.");
         do_check_eq(numTokenRequests, numTokenRequestsBefore + 1, "fetched a new token");
         Service.startOver();
@@ -161,7 +161,7 @@ async function syncAndExpectNodeReassignment(server, firstNotification, between,
   if (Service.isLoggedIn) {
     _("Making request to " + url + " which should 401");
     let request = new RESTRequest(url);
-    request.get(function () {
+    request.get(function() {
       do_check_eq(request.response.status, 401);
       Utils.nextTick(onwards);
     });

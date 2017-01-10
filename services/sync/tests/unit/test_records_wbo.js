@@ -24,9 +24,9 @@ function test_toJSON() {
   do_check_false("ttl" in json);
 
   _("Set a TTL, make sure it's present in the JSON representation.");
-  wbo.ttl = 30*60;
+  wbo.ttl = 30 * 60;
   json = JSON.parse(JSON.stringify(wbo));
-  do_check_eq(json.ttl, 30*60);
+  do_check_eq(json.ttl, 30 * 60);
 }
 
 

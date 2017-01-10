@@ -329,7 +329,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
       yield connection.executeTransaction(function* doImport() {
         for (let record of records) {
           const params = {
-            collection_name: collection_name,
+            collection_name,
             record_id: record.id,
             record: JSON.stringify(record),
           };
@@ -337,7 +337,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
         }
         const lastModified = Math.max(...records.map(record => record.last_modified));
         const params = {
-          collection_name: collection_name,
+          collection_name,
         };
         const previousLastModified = yield connection.execute(
           statements.getLastModified, params).then(result => {
@@ -347,7 +347,7 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
           });
         if (lastModified > previousLastModified) {
           const params = {
-            collection_name: collection_name,
+            collection_name,
             last_modified: lastModified,
           };
           yield connection.execute(statements.saveLastModified, params);
@@ -393,15 +393,14 @@ class FirefoxAdapter extends Kinto.adapters.BaseAdapter {
 
     return this._connection.executeTransaction(function* (conn) {
       const promises = [];
-      yield conn.execute(statements.scanAllRecords, null, function (row) {
+      yield conn.execute(statements.scanAllRecords, null, function(row) {
         const record = JSON.parse(row.getResultByName("record"));
         const record_id = row.getResultByName("record_id");
         const collection_name = row.getResultByName("collection_name");
         if (record._status === "deleted") {
           // Garbage collect deleted records.
           promises.push(conn.execute(statements.deleteData, { collection_name, record_id }));
-        }
-        else {
+        } else {
           const newRecord = Object.assign({}, record, {
             _status: "created",
             last_modified: undefined,

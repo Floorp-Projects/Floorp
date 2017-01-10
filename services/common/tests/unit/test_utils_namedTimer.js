@@ -13,7 +13,7 @@ add_test(function test_required_args() {
       do_throw("Shouldn't fire.");
     }, 0);
     do_throw("Should have thrown!");
-  } catch(ex) {
+  } catch (ex) {
     run_next_test();
   }
 });

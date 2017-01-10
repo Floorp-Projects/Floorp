@@ -598,12 +598,10 @@ class SyncTelemetryImpl {
       if (extra) {
         event.push(extra);
       }
-    } else {
-      if (extra) {
+    } else if (extra) {
         event.push(null); // a null for the empty value.
         event.push(extra);
       }
-    }
     this.events.push(event);
   }
 

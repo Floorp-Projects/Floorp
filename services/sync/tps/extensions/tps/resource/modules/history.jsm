@@ -101,13 +101,13 @@ var HistoryEntry = {
    *        the time the current Crossweave run was started
    * @return nothing
    */
-  Add: function(item, usSinceEpoch) {
+  Add(item, usSinceEpoch) {
     Logger.AssertTrue("visits" in item && "uri" in item,
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
     let uri = Services.io.newURI(item.uri);
     let place = {
-      uri: uri,
+      uri,
       visits: []
     };
     for (let visit of item.visits) {
@@ -145,7 +145,7 @@ var HistoryEntry = {
    *        the time the current Crossweave run was started
    * @return true if all the visits for the uri are found, otherwise false
    */
-  Find: function(item, usSinceEpoch) {
+  Find(item, usSinceEpoch) {
     Logger.AssertTrue("visits" in item && "uri" in item,
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
@@ -180,15 +180,13 @@ var HistoryEntry = {
    *        the time the current Crossweave run was started
    * @return nothing
    */
-  Delete: function(item, usSinceEpoch) {
+  Delete(item, usSinceEpoch) {
     if ("uri" in item) {
       let uri = Services.io.newURI(item.uri);
       PlacesUtils.history.removePage(uri);
-    }
-    else if ("host" in item) {
+    } else if ("host" in item) {
       PlacesUtils.history.removePagesFromHost(item.host, false);
-    }
-    else if ("begin" in item && "end" in item) {
+    } else if ("begin" in item && "end" in item) {
       let cb = Async.makeSpinningCallback();
       let msSinceEpoch = parseInt(usSinceEpoch / 1000);
       let filter = {
@@ -197,10 +195,9 @@ var HistoryEntry = {
       };
       PlacesUtils.history.removeVisitsByFilter(filter)
       .catch(ex => Logger.AssertTrue(false, "An error occurred while deleting history: " + ex))
-      .then(result => {cb(null, result)}, err => {cb(err)});
+      .then(result => { cb(null, result) }, err => { cb(err) });
       Async.waitForSyncCallback(cb);
-    }
-    else {
+    } else {
       Logger.AssertTrue(false, "invalid entry in delete history");
     }
   },

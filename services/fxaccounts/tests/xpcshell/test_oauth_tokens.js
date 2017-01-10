@@ -89,7 +89,7 @@ function MockFxAccounts(mockGrantClient) {
       storage.initialize(credentials);
       return new AccountState(storage);
     },
-    _destroyOAuthToken: function(tokenData) {
+    _destroyOAuthToken(tokenData) {
       // somewhat sad duplication of _destroyOAuthToken, but hard to avoid.
       return mockGrantClient.destroyToken(tokenData.token).then( () => {
         Services.obs.notifyObservers(null, "testhelper-fxa-revoke-complete", null);
@@ -156,7 +156,7 @@ MockFxAccountsOAuthGrantClient.prototype = {
 
 add_task(function* testRevoke() {
   let client = new MockFxAccountsOAuthGrantClient();
-  let tokenOptions = { scope: "test-scope", client: client };
+  let tokenOptions = { scope: "test-scope", client };
   let fxa = yield createMockFxA(client);
 
   // get our first token and check we hit the mock.
@@ -186,13 +186,13 @@ add_task(function* testSignOutDestroysTokens() {
   let fxa = yield createMockFxA(client);
 
   // get our first token and check we hit the mock.
-  let token1 = yield fxa.getOAuthToken({ scope: "test-scope", client: client });
+  let token1 = yield fxa.getOAuthToken({ scope: "test-scope", client });
   equal(client.numTokenFetches, 1);
   equal(client.activeTokens.size, 1);
   ok(token1, "got a token");
 
   // get another
-  let token2 = yield fxa.getOAuthToken({ scope: "test-scope-2", client: client });
+  let token2 = yield fxa.getOAuthToken({ scope: "test-scope-2", client });
   equal(client.numTokenFetches, 2);
   equal(client.activeTokens.size, 2);
   ok(token2, "got a token");
@@ -222,10 +222,10 @@ add_task(function* testTokenRaces() {
     promiseNotification("testhelper-fxa-revoke-complete"),
   ]);
   let results = yield Promise.all([
-    fxa.getOAuthToken({scope: "test-scope", client: client}),
-    fxa.getOAuthToken({scope: "test-scope", client: client}),
-    fxa.getOAuthToken({scope: "test-scope-2", client: client}),
-    fxa.getOAuthToken({scope: "test-scope-2", client: client}),
+    fxa.getOAuthToken({scope: "test-scope", client}),
+    fxa.getOAuthToken({scope: "test-scope", client}),
+    fxa.getOAuthToken({scope: "test-scope-2", client}),
+    fxa.getOAuthToken({scope: "test-scope-2", client}),
   ]);
 
   equal(client.numTokenFetches, 4, "should have fetched 4 tokens.");

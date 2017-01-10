@@ -240,4 +240,4 @@ const components = [FxAccountsPushService];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
 // The following registration below helps with testing this service.
-this.EXPORTED_SYMBOLS=["FxAccountsPushService"];
+this.EXPORTED_SYMBOLS = ["FxAccountsPushService"];

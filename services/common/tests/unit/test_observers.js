@@ -36,7 +36,7 @@ add_test(function test_function_observer() {
 add_test(function test_method_observer() {
   let obj = {
     foo: false,
-    onFoo: function(subject, data) {
+    onFoo(subject, data) {
       this.foo = !this.foo;
       do_check_eq(subject, gSubject);
       do_check_eq(data, "some data");
@@ -59,7 +59,7 @@ add_test(function test_method_observer() {
 add_test(function test_object_observer() {
   let obj = {
     foo: false,
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       this.foo = !this.foo;
 
       do_check_eq(subject, gSubject);

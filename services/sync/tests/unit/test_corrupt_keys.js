@@ -99,11 +99,11 @@ add_task(async function test_locally_changed_keys() {
     let history   = johndoe.createCollection("history");
     for (let i = 0; i < 5; i++) {
       let id = 'record-no--' + i;
-      let modified = Date.now()/1000 - 60*(i+10);
+      let modified = Date.now() / 1000 - 60 * (i + 10);
 
       let w = new CryptoWrapper("history", "id");
       w.cleartext = {
-        id: id,
+        id,
         histUri: "http://foo/bar?" + id,
         title: id,
         sortindex: i,
@@ -160,7 +160,7 @@ add_task(async function test_locally_changed_keys() {
 
       let w = new CryptoWrapper("history", "id");
       w.cleartext = {
-        id: id,
+        id,
         histUri: "http://foo/bar?" + id,
         title: id,
         sortindex: i,

@@ -24,7 +24,7 @@ add_test(function test_authenticated_request() {
 
   let nonce = btoa(CryptoUtils.generateRandomBytes(16));
   let ts = Math.floor(Date.now() / 1000);
-  let extra = {ts: ts, nonce: nonce};
+  let extra = {ts, nonce};
 
   let auth;
 
@@ -40,7 +40,7 @@ add_test(function test_authenticated_request() {
   let sig = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri, extra);
   auth = sig.getHeader();
 
-  let req = new TokenAuthenticatedRESTRequest(uri, {id: id, key: key}, extra);
+  let req = new TokenAuthenticatedRESTRequest(uri, {id, key}, extra);
   let cb = Async.makeSpinningCallback();
   req.get(cb);
   let result = cb.wait();

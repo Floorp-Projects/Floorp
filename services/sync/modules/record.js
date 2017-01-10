@@ -65,7 +65,7 @@ WBORecord.prototype = {
 
   // Take a base URI string, with trailing slash, and return the URI of this
   // WBO based on collection and ID.
-  uri: function(base) {
+  uri(base) {
     if (this.collection && this.id) {
       let url = Utils.makeURI(base + this.collection + "/" + this.id);
       url.QueryInterface(Ci.nsIURL);
@@ -80,7 +80,7 @@ WBORecord.prototype = {
     try {
       // The payload is likely to be JSON, but if not, keep it as a string
       this.payload = JSON.parse(this.payload);
-    } catch(ex) {}
+    } catch (ex) {}
   },
 
   toJSON: function toJSON() {
@@ -95,11 +95,11 @@ WBORecord.prototype = {
 
   toString: function toString() {
     return "{ " +
-      "id: "       + this.id        + "  " +
-      "index: "    + this.sortindex + "  " +
-      "modified: " + this.modified  + "  " +
-      "ttl: "      + this.ttl       + "  " +
-      "payload: "  + JSON.stringify(this.payload) +
+      "id: " + this.id + "  " +
+      "index: " + this.sortindex + "  " +
+      "modified: " + this.modified + "  " +
+      "ttl: " + this.ttl + "  " +
+      "payload: " + JSON.stringify(this.payload) +
       " }";
   }
 };
@@ -186,11 +186,11 @@ CryptoWrapper.prototype = {
     let payload = this.deleted ? "DELETED" : JSON.stringify(this.cleartext);
 
     return "{ " +
-      "id: "         + this.id          + "  " +
-      "index: "      + this.sortindex   + "  " +
-      "modified: "   + this.modified    + "  " +
-      "ttl: "        + this.ttl         + "  " +
-      "payload: "    + payload          + "  " +
+      "id: " + this.id + "  " +
+      "index: " + this.sortindex + "  " +
+      "modified: " + this.modified + "  " +
+      "ttl: " + this.ttl + "  " +
+      "payload: " + payload + "  " +
       "collection: " + (this.collection || "undefined") +
       " }";
   },
@@ -330,7 +330,7 @@ CollectionKeyManager.prototype = {
     let last;
     changed = changed.filter(x => (x != last) && (last = x));
     return {same: changed.length == 0,
-            changed: changed};
+            changed};
   },
 
   get isClear() {
@@ -344,7 +344,7 @@ CollectionKeyManager.prototype = {
     this._default = null;
   },
 
-  keyForCollection: function(collection) {
+  keyForCollection(collection) {
     if (collection && this._collections[collection])
       return this._collections[collection];
 
@@ -356,7 +356,7 @@ CollectionKeyManager.prototype = {
    * over it and generate random keys for each collection.
    * Create a WBO for the given data.
    */
-  _makeWBO: function(collections, defaultBundle) {
+  _makeWBO(collections, defaultBundle) {
     let wbo = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
     let c = {};
     for (let k in collections) {
@@ -374,19 +374,19 @@ CollectionKeyManager.prototype = {
   /**
    * Create a WBO for the current keys.
    */
-  asWBO: function(collection, id) {
+  asWBO(collection, id) {
     return this._makeWBO(this._collections, this._default);
   },
 
   /**
    * Compute a new default key, and new keys for any specified collections.
    */
-  newKeys: function(collections) {
+  newKeys(collections) {
     let newDefaultKeyBundle = this.newDefaultKeyBundle();
 
     let newColls = {};
     if (collections) {
-      collections.forEach(function (c) {
+      collections.forEach(function(c) {
         let b = new BulkKeyBundle(c);
         b.generateRandom();
         newColls[c] = b;
@@ -399,7 +399,7 @@ CollectionKeyManager.prototype = {
    * Generates new keys, but does not replace our local copy. Use this to
    * verify an upload before storing.
    */
-  generateNewKeysWBO: function(collections) {
+  generateNewKeysWBO(collections) {
     let newDefaultKey, newColls;
     [newDefaultKey, newColls] = this.newKeys(collections);
 
@@ -459,7 +459,7 @@ CollectionKeyManager.prototype = {
 
   // Take the fetched info/collections WBO, checking the change
   // time of the crypto collection.
-  updateNeeded: function(info_collections) {
+  updateNeeded(info_collections) {
 
     this._log.info("Testing for updateNeeded. Last modified: " + this.lastModified);
 
@@ -630,7 +630,7 @@ Collection.prototype = {
     if (this._offset)
       args.push("offset=" + encodeURIComponent(this._offset));
 
-    this.uri.query = (args.length > 0)? '?' + args.join('&') : '';
+    this.uri.query = (args.length > 0) ? '?' + args.join('&') : '';
   },
 
   // get full items
@@ -975,7 +975,7 @@ PostQueue.prototype = {
 
     headers.push(["x-if-unmodified-since", this.lastModified]);
 
-    this.log.info(`Posting ${this.numQueued} records of ${this.queued.length+1} bytes with batch=${batch}`);
+    this.log.info(`Posting ${this.numQueued} records of ${this.queued.length + 1} bytes with batch=${batch}`);
     let queued = this.queued + "]";
     if (finalBatchPost) {
       this.bytesAlreadyBatched = 0;

@@ -27,9 +27,9 @@ function FakeLoginManager(fakeLogins) {
   // Use a fake nsILoginManager object.
   delete Services.logins;
   Services.logins = {
-      removeAllLogins: function() { self.fakeLogins = []; },
-      getAllLogins: function() { return self.fakeLogins; },
-      addLogin: function(login) {
+      removeAllLogins() { self.fakeLogins = []; },
+      getAllLogins() { return self.fakeLogins; },
+      addLogin(login) {
         getTestLogger().info("nsILoginManager.addLogin() called " +
                              "with hostname '" + login.hostname + "'.");
         self.fakeLogins.push(login);
