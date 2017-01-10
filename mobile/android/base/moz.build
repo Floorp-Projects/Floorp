@@ -283,7 +283,6 @@ gvjar.sources += [geckoview_source_dir + 'java/org/mozilla/gecko/' + x
     'gfx/PanZoomController.java',
     'gfx/PanZoomTarget.java',
     'gfx/PointUtils.java',
-    'gfx/ProgressiveUpdateData.java',
     'gfx/RectUtils.java',
     'gfx/RenderTask.java',
     'gfx/StackScroller.java',
