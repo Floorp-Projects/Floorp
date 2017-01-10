@@ -48,6 +48,7 @@ th.column {
 
 td {
   border-color: var(--in-content-table-border-dark-color);
+  unicode-bidi: plaintext; /* Make sure file paths will be LTR */
 }
 
 #action-box {
