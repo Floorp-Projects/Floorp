@@ -4691,7 +4691,7 @@ XRE_StopLateWriteChecks(void) {
 }
 
 int
-XRE_main(int argc, char* argv[], const XREAppData& aAppData, uint32_t aFlags)
+XRE_main(int argc, char* argv[], const XREAppData& aAppData)
 {
   XREMain main;
 
