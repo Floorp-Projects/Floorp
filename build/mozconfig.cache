@@ -123,16 +123,6 @@ else
     mk_add_options MOZ_PREFLIGHT_ALL+=build/sccache.mk
     mk_add_options MOZ_POSTFLIGHT_ALL+=build/sccache.mk
     mk_add_options "UPLOAD_EXTRA_FILES+=sccache.log.gz"
-    case "$platform" in
-    win*)
-        # sccache supports a special flag to create depfiles.
-        #TODO: bug 1318370 - move this all into toolchain.configure
-        export _DEPEND_CFLAGS='-deps$(MDDEPDIR)/$(@F).pp'
-        # Windows builds have a default wrapper that needs to be overridden
-        mk_add_options "export CC_WRAPPER="
-        mk_add_options "export CXX_WRAPPER="
-        ;;
-    esac
 fi
 
 fi
