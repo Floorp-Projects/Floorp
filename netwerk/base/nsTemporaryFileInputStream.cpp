@@ -5,7 +5,12 @@
 
 #include "nsTemporaryFileInputStream.h"
 #include "nsStreamUtils.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+#include "private/pprio.h"
 #include <algorithm>
+
+using namespace mozilla;
+using namespace mozilla::ipc;
 
 typedef mozilla::ipc::FileDescriptor::PlatformHandleType FileHandleType;
 
