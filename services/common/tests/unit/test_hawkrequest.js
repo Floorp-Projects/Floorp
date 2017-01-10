@@ -75,7 +75,6 @@ add_test(function test_intl_accept_language() {
       do_print("Checked " + testCount + " languages. Removing checkLanguagePref as pref observer.");
       Services.prefs.removeObserver("intl.accept_languages", checkLanguagePref);
       run_next_test();
-
     });
   }
 });
