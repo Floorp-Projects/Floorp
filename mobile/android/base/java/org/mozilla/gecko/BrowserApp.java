@@ -98,6 +98,7 @@ import org.mozilla.gecko.updater.PostUpdateHandler;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
@@ -1853,6 +1854,9 @@ public class BrowserApp extends GeckoApp
                 if (Versions.feature16Plus) {
                     Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT", (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
                 }
+
+                Telemetry.addToHistogram("FENNEC_ORBOT_INSTALLED",
+                    ContextUtils.isPackageInstalled(getContext(), "org.torproject.android") ? 1 : 0);
                 break;
 
             case "Updater:Launch":
