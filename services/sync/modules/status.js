@@ -52,7 +52,6 @@ this.Status = {
     this._login = code;
 
     if (code == LOGIN_FAILED_NO_USERNAME ||
-        code == LOGIN_FAILED_NO_PASSWORD ||
         code == LOGIN_FAILED_NO_PASSPHRASE) {
       this.service = CLIENT_NOT_CONFIGURED;
     } else if (code != LOGIN_SUCCEEDED) {
