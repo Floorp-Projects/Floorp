@@ -1,0 +1,120 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: taskgraph.task.repacks:RepackTask
+
+transforms:
+   - taskgraph.transforms.l10n:transforms
+   - taskgraph.transforms.job:transforms
+   - taskgraph.transforms.task:transforms
+
+kind-dependencies:
+   - build
+
+only-for-build-platforms:
+   - linux64-nightly/opt
+   - linux-nightly/opt
+   - android-api-15-nightly/opt
+   - macosx64-nightly/opt
+
+job-template:
+   description:
+      by-build-platform:
+         default: Localization
+         android-api-15-nightly: Single Locale Repack
+   locales-file:
+      by-build-platform:
+         default: browser/locales/all-locales
+         android-api-15-nightly: mobile/android/locales/all-locales
+   chunks: 6
+   run-time:
+      by-build-platform:
+         default: 36000
+         android-api-15-nightly: 18000
+   tooltool:
+      by-build-platform:
+         default: public
+         android-api-15-nightly: internal
+#   index:
+#      product:
+#         by-build-platform:
+#            default: firefox
+#            android-api-15-nightly: mobile
+#      job-name:
+#         by-build-platform:
+#            linux-nightly: linux32-nightly-l10n-opt
+#            linux64-nightly: linux64-nightly-l10n-opt
+#            macosx64-nightly: macosx64-nightly-l10n-opt
+#            android-api-15-nightly: android-nightly-l10n-opt
+   worker-type:
+      by-build-platform:
+         default: aws-provisioner-v1/gecko-{level}-b-linux
+         android-api-15-nightly: aws-provisioner-v1/gecko-{level}-b-android
+   treeherder:
+      symbol: tc-L10n(N)
+      tier:
+         by-build-platform:
+            default: 2
+      platform:
+         by-build-platform:
+            linux64-nightly: linux64/opt
+            linux-nightly: linux32/opt
+            macosx64-nightly: macosx64/opt
+            android-api-15-nightly: android-4-0-armv7-api15/opt
+   env:
+      by-build-platform:
+         linux.*:   # linux64 and 32 get same treatment here
+            EN_US_PACKAGE_NAME: target.tar.bz2
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build
+         macosx64-nightly:
+            EN_US_PACKAGE_NAME: target.dmg
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build
+         android-api-15-nightly:
+            EN_US_PACKAGE_NAME: target.apk
+            EN_US_BINARY_URL:
+               task-reference: https://queue.taskcluster.net/v1/task/<unsigned-build>/artifacts/public/build/en-US
+   mozharness:
+      config:
+         by-build-platform:
+            linux-nightly:
+               - single_locale/tc_linux32.py
+               - taskcluster_nightly.py
+            linux64-nightly:
+               - single_locale/tc_linux64.py
+               - taskcluster_nightly.py
+            macosx64-nightly:
+               - single_locale/tc_macosx64.py
+               - taskcluster_nightly.py
+            android-api-15-nightly:
+               - taskcluster_nightly.py
+               - single_locale/{project}_android-api-15.py
+               - single_locale/tc_android-api-15.py
+            # no default, so we fail on new entries
+      options:
+         by-build-platform:
+            linux-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/linux32.py
+            linux64-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/linux64.py
+            macosx64-nightly:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/macosx64.py
+            default: [ ]
+      actions:
+         by-build-platform:
+            default: [clone-locales list-locales setup repack
+                      submit-to-balrog summary]
+            android-api-15-nightly: [clone-locales list-locales setup repack
+                                     upload-repacks submit-to-balrog summary]
+      script:
+         by-build-platform:
+            default: mozharness/scripts/desktop_l10n.py
+            android-api-15-nightly: mozharness/scripts/mobile_l10n.py

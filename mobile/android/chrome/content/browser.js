@@ -300,10 +300,10 @@ function resolveGeckoURI(aURI) {
 
   if (aURI.startsWith("chrome://")) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
-    return registry.convertChromeURL(Services.io.newURI(aURI, null, null)).spec;
+    return registry.convertChromeURL(Services.io.newURI(aURI)).spec;
   } else if (aURI.startsWith("resource://")) {
     let handler = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
-    return handler.resolveURI(Services.io.newURI(aURI, null, null));
+    return handler.resolveURI(Services.io.newURI(aURI));
   }
   return aURI;
 }
@@ -1317,7 +1317,7 @@ var BrowserApp = {
    */
   getTabWithURL: function getTabWithURL(aURL, aOptions) {
     aOptions = aOptions || {};
-    let uri = Services.io.newURI(aURL, null, null);
+    let uri = Services.io.newURI(aURL);
     for (let i = 0; i < this._tabs.length; ++i) {
       let tab = this._tabs[i];
       if (aOptions.startsWith) {
@@ -1643,7 +1643,7 @@ var BrowserApp = {
             // Convert document URI into the format used by
             // nsChannelClassifier::ShouldEnableTrackingProtection
             // (any scheme turned into https is correct)
-            let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort, null, null);
+            let normalizedUrl = Services.io.newURI("https://" + browser.currentURI.hostPort);
             if (data.allowContent) {
               // Add the current host in the 'trackingprotection' consumer of
               // the permission manager using a normalized URI. This effectively
@@ -2946,7 +2946,7 @@ var NativeWindow = {
           aElement.getAttributeNS(kXLinkNamespace, "type") == "simple")) {
         try {
           let url = this._getLinkURL(aElement);
-          return Services.io.newURI(url, null, null);
+          return Services.io.newURI(url);
         } catch (e) {}
       }
       return null;
@@ -3271,7 +3271,7 @@ nsBrowserAccess.prototype = {
     if (aOpener) {
       try {
         let location = aOpener.location;
-        referrer = Services.io.newURI(location, null, null);
+        referrer = Services.io.newURI(location);
       } catch(e) { }
     }
 
@@ -3457,7 +3457,7 @@ Tab.prototype = {
     let uri = null;
     let title = aParams.title || aURL;
     try {
-      uri = Services.io.newURI(aURL, null, null).spec;
+      uri = Services.io.newURI(aURL).spec;
     } catch (e) {}
 
     // When the tab is stubbed from Java, there's a window between the stub
@@ -4264,7 +4264,7 @@ Tab.prototype = {
     if (appOrigin) {
       let originHost = "";
       try {
-        originHost = Services.io.newURI(appOrigin, null, null).host;
+        originHost = Services.io.newURI(appOrigin).host;
       } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
         // NS_ERROR_FAILURE can be thrown by nsIURI.host if the URI scheme does not possess a host - in this case
         // we just act as if we have an empty host.
@@ -4574,7 +4574,7 @@ var BrowserEventHandler = {
         ((aElement instanceof Ci.nsIDOMHTMLAnchorElement && aElement.href) ||
         (aElement instanceof Ci.nsIDOMHTMLAreaElement && aElement.href))) {
       try {
-        return Services.io.newURI(aElement.href, null, null);
+        return Services.io.newURI(aElement.href);
       } catch (e) {}
     }
     return null;
@@ -4712,7 +4712,7 @@ var ErrorPageEventHandler = {
             // Handle setting an cert exception and reloading the page
             try {
               // Add a new SSL exception for this URL
-              let uri = Services.io.newURI(errorDoc.location.href, null, null);
+              let uri = Services.io.newURI(errorDoc.location.href);
               let sslExceptions = new SSLExceptions();
 
               if (target == perm)
@@ -6208,7 +6208,7 @@ var SearchEngines = {
     let method = form.method.toUpperCase();
 
     let charset = element.ownerDocument.characterSet;
-    let docURI = Services.io.newURI(element.ownerDocument.URL, charset, null);
+    let docURI = Services.io.newURI(element.ownerDocument.URL, charset);
     let formURL = Services.io.newURI(form.getAttribute("action"), charset, docURI).spec;
 
     return Services.search.hasEngineWithURL(method, formURL, formData);
@@ -6223,7 +6223,7 @@ var SearchEngines = {
   addEngine: function addEngine(aElement, resultCallback) {
     let form = aElement.form;
     let charset = aElement.ownerDocument.characterSet;
-    let docURI = Services.io.newURI(aElement.ownerDocument.URL, charset, null);
+    let docURI = Services.io.newURI(aElement.ownerDocument.URL, charset);
     let formURL = Services.io.newURI(form.getAttribute("action"), charset, docURI).spec;
     let method = form.method.toUpperCase();
     let formData = this._getSortedFormData(aElement);
@@ -6785,7 +6785,7 @@ var Tabs = {
       case "Session:Prefetch":
         if (aData) {
           try {
-            let uri = Services.io.newURI(aData, null, null);
+            let uri = Services.io.newURI(aData);
             if (uri && !this._domains.has(uri.host)) {
               Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
               this._domains.add(uri.host);

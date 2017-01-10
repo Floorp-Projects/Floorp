@@ -1,0 +1,24 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Tests for for-of loops</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body onload="doTest()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<script>
+function doTest() {
+  document.getElementById("button").focus();
+  is(window.scrollY, 0, "Scrolled position initially 0");
+  synthesizeKey("VK_TAB", { }),
+  ok(window.scrollY > 200, "Scrolled child frame into view");
+  SimpleTest.finish();
+}
+SimpleTest.waitForExplicitFinish();
+</script>
+<button id="button">B</button><br><iframe style="margin-top:10000px;height:400px"></iframe>
+</body>
+</html>

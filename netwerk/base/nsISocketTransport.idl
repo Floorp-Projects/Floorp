@@ -130,6 +130,11 @@ interface nsISocketTransport : nsITransport
     void          setTimeout(in unsigned long aType, in unsigned long aValue);
 
     /**
+     * True to set addr and port reuse socket options.
+     */
+    void setReuseAddrPort(in bool reuseAddrPort);
+
+    /**
      * Values for the aType parameter passed to get/setTimeout.
      */
     const unsigned long TIMEOUT_CONNECT    = 0;

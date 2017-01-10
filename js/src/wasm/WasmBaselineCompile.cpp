@@ -104,6 +104,7 @@
 #endif
 
 #include "wasm/WasmBinaryIterator.h"
+#include "wasm/WasmDebugFrame.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmSignalHandlers.h"
 #include "wasm/WasmValidate.h"
@@ -497,6 +498,7 @@ class BaseCompiler
     int32_t                     varHigh_;        // High byte offset + 1 of local area for true locals
     int32_t                     maxFramePushed_; // Max value of masm.framePushed() observed
     bool                        deadCode_;       // Flag indicating we should decode & discard the opcode
+    bool                        debugEnabled_;
     ValTypeVector               SigI64I64_;
     ValTypeVector               SigDD_;
     ValTypeVector               SigD_;
@@ -568,6 +570,7 @@ class BaseCompiler
                  Decoder& decoder,
                  const FuncBytes& func,
                  const ValTypeVector& locals,
+                 bool debugEnabled,
                  TempAllocator* alloc,
                  MacroAssembler* masm);
 
@@ -1088,6 +1091,10 @@ class BaseCompiler
 
     void loadConstI32(Register r, Stk& src) {
         masm.mov(ImmWord((uint32_t)src.i32val() & 0xFFFFFFFFU), r);
+    }
+
+    void loadConstI32(Register r, int32_t v) {
+        masm.mov(ImmWord(v), r);
     }
 
     void loadMemI32(Register r, Stk& src) {
@@ -2077,6 +2084,11 @@ class BaseCompiler
         labelPool_.free(label);
     }
 
+    void insertBreakablePoint(CallSiteDesc::Kind kind) {
+        const uint32_t offset = iter_.currentOffset();
+        masm.nopPatchableToCall(CallSiteDesc(offset, kind));
+    }
+
     //////////////////////////////////////////////////////////////////////
     //
     // Function prologue and epilogue.
@@ -2135,6 +2147,14 @@ class BaseCompiler
         // The TLS pointer is always passed as a hidden argument in WasmTlsReg.
         // Save it into its assigned local slot.
         storeToFramePtr(WasmTlsReg, localInfo_[tlsSlot_].offs());
+        if (debugEnabled_) {
+            // Initialize funcIndex and flag fields of DebugFrame.
+            size_t debugFrame = masm.framePushed() - DebugFrame::offsetOfFrame();
+            masm.store32(Imm32(func_.index()),
+                         Address(masm.getStackPointer(), debugFrame + DebugFrame::offsetOfFuncIndex()));
+            masm.storePtr(ImmWord(0),
+                          Address(masm.getStackPointer(), debugFrame + DebugFrame::offsetOfFlagsWord()));
+        }
 
         // Initialize the stack locals to zero.
         //
@@ -2156,6 +2176,58 @@ class BaseCompiler
             for (int32_t i = varLow_ ; i < varHigh_ ; i += 4)
                 storeToFrameI32(scratch, i + 4);
         }
+
+        if (debugEnabled_)
+            insertBreakablePoint(CallSiteDesc::EnterFrame);
+    }
+
+    void saveResult() {
+        MOZ_ASSERT(debugEnabled_);
+        size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
+        Address resultsAddress(StackPointer, debugFrameOffset + DebugFrame::offsetOfResults());
+        switch (func_.sig().ret()) {
+          case ExprType::Void:
+            break;
+          case ExprType::I32:
+            masm.store32(RegI32(ReturnReg), resultsAddress);
+            break;
+
+          case ExprType::I64:
+            masm.store64(RegI64(ReturnReg64), resultsAddress);
+            break;
+          case ExprType::F64:
+            masm.storeDouble(RegF64(ReturnDoubleReg), resultsAddress);
+            break;
+          case ExprType::F32:
+            masm.storeFloat32(RegF32(ReturnFloat32Reg), resultsAddress);
+            break;
+          default:
+            MOZ_CRASH("Function return type");
+        }
+    }
+
+    void restoreResult() {
+        MOZ_ASSERT(debugEnabled_);
+        size_t debugFrameOffset = masm.framePushed() - DebugFrame::offsetOfFrame();
+        Address resultsAddress(StackPointer, debugFrameOffset + DebugFrame::offsetOfResults());
+        switch (func_.sig().ret()) {
+          case ExprType::Void:
+            break;
+          case ExprType::I32:
+            masm.load32(resultsAddress, RegI32(ReturnReg));
+            break;
+          case ExprType::I64:
+            masm.load64(resultsAddress, RegI64(ReturnReg64));
+            break;
+          case ExprType::F64:
+            masm.loadDouble(resultsAddress, RegF64(ReturnDoubleReg));
+            break;
+          case ExprType::F32:
+            masm.loadFloat32(resultsAddress, RegF32(ReturnFloat32Reg));
+            break;
+          default:
+            MOZ_CRASH("Function return type");
+        }
     }
 
     bool endFunction() {
@@ -2176,6 +2248,14 @@ class BaseCompiler
         masm.jump(TrapDesc(prologueTrapOffset_, Trap::StackOverflow, /* framePushed = */ 0));
 
         masm.bind(&returnLabel_);
+
+        if (debugEnabled_) {
+            // Store and reload the return value from DebugFrame::return so that
+            // it can be clobbered, and/or modified by the debug trap.
+            saveResult();
+            insertBreakablePoint(CallSiteDesc::LeaveFrame);
+            restoreResult();
+        }
 
         // Restore the TLS register in case it was overwritten by the function.
         loadFromFramePtr(WasmTlsReg, frameOffsetFromSlot(tlsSlot_, MIRType::Pointer));
@@ -3358,21 +3438,23 @@ class BaseCompiler
 
     // ptr and dest may be the same iff dest is I32.
     // This may destroy ptr even if ptr and dest are not the same.
-    MOZ_MUST_USE bool load(MemoryAccessDesc& access, RegI32 ptr, AnyReg dest, RegI32 tmp1,
-                           RegI32 tmp2)
+    MOZ_MUST_USE bool load(MemoryAccessDesc& access, RegI32 ptr, bool omitBoundsCheck,
+                           AnyReg dest, RegI32 tmp1, RegI32 tmp2)
     {
         checkOffset(&access, ptr);
 
         OutOfLineCode* ool = nullptr;
 #ifndef WASM_HUGE_MEMORY
-        if (access.isPlainAsmJS()) {
-            ool = new (alloc_) AsmJSLoadOOB(access.type(), dest.any());
-            if (!addOutOfLineCode(ool))
-                return false;
+        if (!omitBoundsCheck) {
+            if (access.isPlainAsmJS()) {
+                ool = new (alloc_) AsmJSLoadOOB(access.type(), dest.any());
+                if (!addOutOfLineCode(ool))
+                    return false;
 
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, ool->entry());
-        } else {
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
+                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, ool->entry());
+            } else {
+                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
+            }
         }
 #endif
 
@@ -3445,17 +3527,19 @@ class BaseCompiler
 
     // ptr and src must not be the same register.
     // This may destroy ptr.
-    MOZ_MUST_USE bool store(MemoryAccessDesc access, RegI32 ptr, AnyReg src, RegI32 tmp1,
-                            RegI32 tmp2)
+    MOZ_MUST_USE bool store(MemoryAccessDesc access, RegI32 ptr, bool omitBoundsCheck,
+                            AnyReg src, RegI32 tmp1, RegI32 tmp2)
     {
         checkOffset(&access, ptr);
 
         Label rejoin;
 #ifndef WASM_HUGE_MEMORY
-        if (access.isPlainAsmJS())
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, &rejoin);
-        else
-            masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
+        if (!omitBoundsCheck) {
+            if (access.isPlainAsmJS())
+                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, &rejoin);
+            else
+                masm.wasmBoundsCheck(Assembler::AboveOrEqual, ptr, trap(Trap::OutOfBounds));
+        }
 #endif
 
         // Emit the store
@@ -3695,6 +3779,8 @@ class BaseCompiler
         *r1 = popF64();
         *r0 = popF64();
     }
+
+    RegI32 popMemoryAccess(MemoryAccessDesc* access, bool* omitBoundsCheck);
 
     template<bool freeIt> void freeOrPushI32(RegI32 r) {
         if (freeIt)
@@ -6526,6 +6612,49 @@ BaseCompiler::emitTeeGlobal()
     return emitSetOrTeeGlobal<false>(id);
 }
 
+// See EffectiveAddressAnalysis::analyzeAsmJSHeapAccess() for comparable Ion code.
+//
+// TODO / OPTIMIZE (bug 1329576): There are opportunities to generate better
+// code by not moving a constant address with a zero offset into a register.
+
+BaseCompiler::RegI32
+BaseCompiler::popMemoryAccess(MemoryAccessDesc* access, bool* omitBoundsCheck)
+{
+    // Caller must initialize.
+    MOZ_ASSERT(!*omitBoundsCheck);
+
+    if (isCompilingAsmJS())
+        return popI32();
+
+    int32_t addrTmp;
+    if (popConstI32(addrTmp)) {
+        uint32_t addr = addrTmp;
+
+        // We can eliminate the bounds check if the sum of the constant address
+        // and the known offset are below the sum of the minimum memory length
+        // and the offset guard length.
+
+        uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
+        uint64_t limit = uint64_t(env_.minMemoryLength) + uint64_t(wasm::OffsetGuardLimit);
+
+        *omitBoundsCheck = ea < limit;
+
+        // Fold the offset into the pointer if we can, as this is always
+        // beneficial.
+
+        if (ea <= UINT32_MAX) {
+            addr = uint32_t(ea);
+            access->clearOffset();
+        }
+
+        RegI32 r = needI32();
+        loadConstI32(r, int32_t(addr));
+        return r;
+    }
+
+    return popI32();
+}
+
 bool
 BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
 {
@@ -6536,9 +6665,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
     if (deadCode_)
         return true;
 
-    // TODO / OPTIMIZE (bug 1316831): Disable bounds checking on constant
-    // accesses below the minimum heap length.
-
+    bool omitBoundsCheck = false;
     MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     size_t temps = loadStoreTemps(access);
@@ -6547,13 +6674,13 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
 
     switch (type) {
       case ValType::I32: {
-        RegI32 rp = popI32();
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
 #ifdef JS_CODEGEN_ARM
         RegI32 rv = access.isUnaligned() ? needI32() : rp;
 #else
         RegI32 rv = rp;
 #endif
-        if (!load(access, rp, AnyReg(rv), tmp1, tmp2))
+        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         pushI32(rv);
         if (rp != rv)
@@ -6566,30 +6693,30 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
 #ifdef JS_CODEGEN_X86
         rv = abiReturnRegI64;
         needI64(rv);
-        rp = popI32();
+        rp = popMemoryAccess(&access, &omitBoundsCheck);
 #else
-        rp = popI32();
+        rp = popMemoryAccess(&access, &omitBoundsCheck);
         rv = needI64();
 #endif
-        if (!load(access, rp, AnyReg(rv), tmp1, tmp2))
+        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         pushI64(rv);
         freeI32(rp);
         break;
       }
       case ValType::F32: {
-        RegI32 rp = popI32();
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
         RegF32 rv = needF32();
-        if (!load(access, rp, AnyReg(rv), tmp1, tmp2))
+        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         pushF32(rv);
         freeI32(rp);
         break;
       }
       case ValType::F64: {
-        RegI32 rp = popI32();
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
         RegF64 rv = needF64();
-        if (!load(access, rp, AnyReg(rv), tmp1, tmp2))
+        if (!load(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         pushF64(rv);
         freeI32(rp);
@@ -6616,9 +6743,7 @@ BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
     if (deadCode_)
         return true;
 
-    // TODO / OPTIMIZE (bug 1316831): Disable bounds checking on constant
-    // accesses below the minimum heap length.
-
+    bool omitBoundsCheck = false;
     MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     size_t temps = loadStoreTemps(access);
@@ -6627,9 +6752,9 @@ BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
 
     switch (resultType) {
       case ValType::I32: {
-        RegI32 rp, rv;
-        pop2xI32(&rp, &rv);
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
+        RegI32 rv = popI32();
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
+        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
         freeOrPushI32<isStore>(rv);
@@ -6637,8 +6762,8 @@ BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
       }
       case ValType::I64: {
         RegI64 rv = popI64();
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
+        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
         freeOrPushI64<isStore>(rv);
@@ -6646,8 +6771,8 @@ BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
       }
       case ValType::F32: {
         RegF32 rv = popF32();
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
+        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
         freeOrPushF32<isStore>(rv);
@@ -6655,8 +6780,8 @@ BaseCompiler::emitStoreOrTeeStore(ValType resultType, Scalar::Type viewType,
       }
       case ValType::F64: {
         RegF64 rv = popF64();
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rv), tmp1, tmp2))
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
+        if (!store(access, rp, omitBoundsCheck, AnyReg(rv), tmp1, tmp2))
             return false;
         freeI32(rp);
         freeOrPushF64<isStore>(rv);
@@ -6862,6 +6987,7 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
     // TODO / OPTIMIZE (bug 1316831): Disable bounds checking on constant
     // accesses below the minimum heap length.
 
+    bool omitBoundsCheck = false;
     MemoryAccessDesc access(viewType, addr.align, addr.offset, trapIfNotAsmJS());
 
     size_t temps = loadStoreTemps(access);
@@ -6872,8 +6998,8 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
         RegF32 rv = popF32();
         RegF64 rw = needF64();
         masm.convertFloat32ToDouble(rv, rw);
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rw), tmp1, tmp2))
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
+        if (!store(access, rp, omitBoundsCheck, AnyReg(rw), tmp1, tmp2))
             return false;
         pushF32(rv);
         freeI32(rp);
@@ -6883,8 +7009,8 @@ BaseCompiler::emitTeeStoreWithCoercion(ValType resultType, Scalar::Type viewType
         RegF64 rv = popF64();
         RegF32 rw = needF32();
         masm.convertDoubleToFloat32(rv, rw);
-        RegI32 rp = popI32();
-        if (!store(access, rp, AnyReg(rw), tmp1, tmp2))
+        RegI32 rp = popMemoryAccess(&access, &omitBoundsCheck);
+        if (!store(access, rp, omitBoundsCheck, AnyReg(rw), tmp1, tmp2))
             return false;
         pushF64(rv);
         freeI32(rp);
@@ -7676,6 +7802,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
                            Decoder& decoder,
                            const FuncBytes& func,
                            const ValTypeVector& locals,
+                           bool debugEnabled,
                            TempAllocator* alloc,
                            MacroAssembler* masm)
     : env_(env),
@@ -7689,6 +7816,7 @@ BaseCompiler::BaseCompiler(const ModuleEnvironment& env,
       varHigh_(0),
       maxFramePushed_(0),
       deadCode_(false),
+      debugEnabled_(debugEnabled),
       prologueTrapOffset_(trapOffset()),
       stackAddOffset_(0),
       latentOp_(LatentOp::None),
@@ -7771,6 +7899,17 @@ BaseCompiler::init()
 
     localSize_ = 0;
 
+    // Reserve a stack slot for the TLS pointer outside the varLow..varHigh
+    // range so it isn't zero-filled like the normal locals.
+    localInfo_[tlsSlot_].init(MIRType::Pointer, pushLocal(sizeof(void*)));
+    if (debugEnabled_) {
+        // If debug information is generated, constructing DebugFrame record:
+        // reserving some data before TLS pointer. The TLS pointer allocated
+        // above and regular wasm::Frame data starts after locals.
+        localSize_ += DebugFrame::offsetOfTlsData();
+        MOZ_ASSERT(DebugFrame::offsetOfFrame() == localSize_);
+    }
+
     for (ABIArgIter<const ValTypeVector> i(args); !i.done(); i++) {
         Local& l = localInfo_[i.index()];
         switch (i.mirType()) {
@@ -7802,10 +7941,6 @@ BaseCompiler::init()
             MOZ_CRASH("Argument type");
         }
     }
-
-    // Reserve a stack slot for the TLS pointer outside the varLow..varHigh
-    // range so it isn't zero-filled like the normal locals.
-    localInfo_[tlsSlot_].init(MIRType::Pointer, pushLocal(sizeof(void*)));
 
     varLow_ = localSize_;
 
@@ -7922,7 +8057,7 @@ js::wasm::BaselineCompileFunction(CompileTask* task, FuncCompileUnit* unit, Uniq
 
     // One-pass baseline compilation.
 
-    BaseCompiler f(task->env(), d, func, locals, &task->alloc(), &task->masm());
+    BaseCompiler f(task->env(), d, func, locals, task->debugEnabled(), &task->alloc(), &task->masm());
     if (!f.init())
         return false;
 

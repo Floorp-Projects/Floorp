@@ -908,6 +908,7 @@ WasmInstanceObject::isNewborn() const
 WasmInstanceObject::finalize(FreeOp* fop, JSObject* obj)
 {
     fop->delete_(&obj->as<WasmInstanceObject>().exports());
+    fop->delete_(&obj->as<WasmInstanceObject>().scopes());
     if (!obj->as<WasmInstanceObject>().isNewborn())
         fop->delete_(&obj->as<WasmInstanceObject>().instance());
 }
@@ -936,12 +937,19 @@ WasmInstanceObject::create(JSContext* cx,
         return nullptr;
     }
 
+    UniquePtr<WeakScopeMap> scopes = js::MakeUnique<WeakScopeMap>(cx->zone(), ScopeMap());
+    if (!scopes || !scopes->init()) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     AutoSetNewObjectMetadata metadata(cx);
     RootedWasmInstanceObject obj(cx, NewObjectWithGivenProto<WasmInstanceObject>(cx, proto));
     if (!obj)
         return nullptr;
 
     obj->setReservedSlot(EXPORTS_SLOT, PrivateValue(exports.release()));
+    obj->setReservedSlot(SCOPES_SLOT, PrivateValue(scopes.release()));
     MOZ_ASSERT(obj->isNewborn());
 
     MOZ_ASSERT(obj->isTenured(), "assumed by WasmTableObject write barriers");
@@ -1035,6 +1043,12 @@ WasmInstanceObject::exports() const
     return *(ExportMap*)getReservedSlot(EXPORTS_SLOT).toPrivate();
 }
 
+WasmInstanceObject::WeakScopeMap&
+WasmInstanceObject::scopes() const
+{
+    return *(WeakScopeMap*)getReservedSlot(SCOPES_SLOT).toPrivate();
+}
+
 static bool
 WasmCall(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1097,6 +1111,25 @@ WasmInstanceObject::getExportedFunctionCodeRange(HandleFunction fun)
     MOZ_ASSERT(exports().lookup(funcIndex)->value() == fun);
     const Metadata& metadata = instance().metadata();
     return metadata.codeRanges[metadata.lookupFuncExport(funcIndex).codeRangeIndex()];
+}
+
+/* static */ WasmFunctionScope*
+WasmInstanceObject::getFunctionScope(JSContext* cx, HandleWasmInstanceObject instanceObj,
+                                     uint32_t funcIndex)
+{
+    if (ScopeMap::Ptr p = instanceObj->scopes().lookup(funcIndex))
+        return p->value();
+
+    Rooted<WasmFunctionScope*> funcScope(cx, WasmFunctionScope::create(cx, instanceObj, funcIndex));
+    if (!funcScope)
+        return nullptr;
+
+    if (!instanceObj->scopes().putNew(funcIndex, funcScope)) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    return funcScope;
 }
 
 bool

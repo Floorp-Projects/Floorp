@@ -174,7 +174,8 @@ function DatePicker(context) {
      */
     _attachEventListeners() {
       window.addEventListener("message", this);
-      document.addEventListener("click", this);
+      document.addEventListener("mouseup", this, { passive: true });
+      document.addEventListener("mousedown", this);
     },
 
     /**
@@ -188,15 +189,27 @@ function DatePicker(context) {
           this.handleMessage(event);
           break;
         }
-        case "click": {
+        case "mousedown": {
+          // Use preventDefault to keep focus on input boxes
+          event.preventDefault();
+          event.target.setCapture();
+
           if (event.target == this.context.buttonLeft) {
+            event.target.classList.add("active");
             this.state.dateKeeper.setMonthByOffset(-1);
             this._update();
           } else if (event.target == this.context.buttonRight) {
+            event.target.classList.add("active");
             this.state.dateKeeper.setMonthByOffset(1);
             this._update();
           }
           break;
+        }
+        case "mouseup": {
+          if (event.target == this.context.buttonLeft || event.target == this.context.buttonRight) {
+            event.target.classList.remove("active");
+          }
+
         }
       }
     },
@@ -307,6 +320,7 @@ function DatePicker(context) {
       this.context.monthYear.textContent = this.state.dateFormat(props.dateObj);
 
       if (props.isVisible) {
+        this.context.monthYear.classList.add("active");
         this.components.month.setState({
           value: props.month,
           items: props.months,
@@ -323,6 +337,7 @@ function DatePicker(context) {
         });
         this.state.firstOpened = false;
       } else {
+        this.context.monthYear.classList.remove("active");
         this.state.isMonthSet = false;
         this.state.isYearSet = false;
         this.state.firstOpened = true;

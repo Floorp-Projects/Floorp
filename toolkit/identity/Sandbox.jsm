@@ -33,7 +33,7 @@ XPCOMUtils.defineLazyModuleGetter(this,
  */
 this.Sandbox = function Sandbox(aURL, aCallback) {
   // Normalize the URL so the comparison in _makeSandboxContentLoaded works
-  this._url = Services.io.newURI(aURL, null, null).spec;
+  this._url = Services.io.newURI(aURL).spec;
   this._log("Creating sandbox for:", this._url);
   this._createFrame();
   this._createSandbox(aCallback);

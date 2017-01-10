@@ -3,6 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 var gEMEHandler = {
   get uiEnabled() {
     let emeUIEnabled = Services.prefs.getBoolPref("browser.eme.ui.enabled");
@@ -201,17 +203,10 @@ let gDecoderDoctorHandler = {
   getLabelForNotificationBox(type) {
     if (type == "adobe-cdm-not-found" &&
         AppConstants.platform == "win") {
-      if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-        // We supply our own Learn More button so we don't need to populate the message here.
-        return gNavigatorBundle.getFormattedString("emeNotifications.drmContentDisabled.message", [""]);
-      }
       return gNavigatorBundle.getString("decoder.noCodecs.message");
     }
     if (type == "adobe-cdm-not-activated" &&
         AppConstants.platform == "win") {
-      if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-        return gNavigatorBundle.getString("decoder.noCodecsXP.message");
-      }
       if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.1")) {
         return gNavigatorBundle.getString("decoder.noCodecsVista.message");
       }

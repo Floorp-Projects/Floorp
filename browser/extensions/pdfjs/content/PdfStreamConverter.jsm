@@ -1017,7 +1017,7 @@ PdfStreamConverter.prototype = {
     // from the request channel to keep isolation consistent.
     var ssm = Cc['@mozilla.org/scriptsecuritymanager;1']
                 .getService(Ci.nsIScriptSecurityManager);
-    var uri = NetUtil.newURI(PDF_VIEWER_WEB_PAGE, null, null);
+    var uri = NetUtil.newURI(PDF_VIEWER_WEB_PAGE);
     var resourcePrincipal;
     resourcePrincipal =
       ssm.createCodebasePrincipal(uri, aRequest.loadInfo.originAttributes);

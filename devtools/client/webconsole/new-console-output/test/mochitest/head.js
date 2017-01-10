@@ -3,7 +3,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from ../../../../framework/test/shared-head.js */
-/* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage */
+/* exported WCUL10n, openNewTabAndConsole, waitForMessages, waitFor, findMessage,
+   openContextMenu, hideContextMenu */
 
 "use strict";
 
@@ -40,7 +41,7 @@ registerCleanupFunction(function* () {
  *         Resolves to the toolbox.
  */
 var openNewTabAndConsole = Task.async(function* (url) {
-  let toolbox = yield openNewTabAndToolbox(TEST_URI, "webconsole");
+  let toolbox = yield openNewTabAndToolbox(url, "webconsole");
   let hud = toolbox.getCurrentPanel().hud;
   hud.jsterm._lazyVariablesView = false;
   return hud;
@@ -139,4 +140,40 @@ function findMessages(hud, text, selector = ".message") {
     (el) => el.textContent.includes(text)
   );
   return elements;
+}
+
+/**
+ * Simulate a context menu event on the provided element, and wait for the console context
+ * menu to open. Returns a promise that resolves the menu popup element.
+ *
+ * @param object hud
+ *        The web console.
+ * @param element element
+ *        The dom element on which the context menu event should be synthesized.
+ * @return promise
+ */
+function* openContextMenu(hud, element) {
+  let onConsoleMenuOpened = hud.ui.newConsoleOutput.once("menu-open");
+  synthesizeContextMenuEvent(element);
+  yield onConsoleMenuOpened;
+  return hud.ui.newConsoleOutput.toolbox.doc.getElementById("webconsole-menu");
+}
+
+/**
+ * Hide the webconsole context menu popup. Returns a promise that will resolve when the
+ * context menu popup is hidden or immediately if the popup can't be found.
+ *
+ * @param object hud
+ *        The web console.
+ * @return promise
+ */
+function hideContextMenu(hud) {
+  let popup = hud.ui.newConsoleOutput.toolbox.doc.getElementById("webconsole-menu");
+  if (!popup) {
+    return Promise.resolve();
+  }
+
+  let onPopupHidden = once(popup, "popuphidden");
+  popup.hidePopup();
+  return onPopupHidden;
 }

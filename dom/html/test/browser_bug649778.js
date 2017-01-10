@@ -35,7 +35,7 @@ function checkCache(url, inMemory, shouldExist, cb)
     };
   };
 
-  storage.asyncOpenURI(Services.io.newURI(url, null, null), "",
+  storage.asyncOpenURI(Services.io.newURI(url), "",
                        Components.interfaces.nsICacheStorage.OPEN_READONLY,
                        new CheckCacheListener(inMemory, shouldExist));
 }

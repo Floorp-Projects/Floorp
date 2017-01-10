@@ -90,12 +90,12 @@ function checkTrackStats(pc, rtpSenderOrReceiver, outbound) {
       (audio ? "audio" : "video") + " rtp track id " + track.id;
   return pc.getStats(track).then(stats => {
     ok(pc.hasStat(stats, {
-      type: outbound ? "outboundrtp" : "inboundrtp",
+      type: outbound ? "outbound-rtp" : "inbound-rtp",
       isRemote: false,
       mediaType: audio ? "audio" : "video"
     }), msg + " - found expected stats");
     ok(!pc.hasStat(stats, {
-      type: outbound ? "inboundrtp" : "outboundrtp",
+      type: outbound ? "inbound-rtp" : "outbound-rtp",
       isRemote: false
     }), msg + " - did not find extra stats with wrong direction");
     ok(!pc.hasStat(stats, {
@@ -408,6 +408,8 @@ var commandsPeerConnectionOfferAnswer = [
   function PC_LOCAL_CHECK_STATS(test) {
     return test.pcLocal.getStats().then(stats => {
       test.pcLocal.checkStats(stats, test.testOptions.steeplechase);
+    }).then(() => {
+      test.pcLocal.getStatsLegacy(null, test.pcLocal.checkLegacyStatTypeNames, e => {});
     });
   },
 

@@ -1,4 +1,4 @@
-var WeaveCryptoModule = Cu.import("resource://services-crypto/WeaveCrypto.js");
+Cu.import("resource://services-crypto/WeaveCrypto.js", this);
 
 var cryptoSvc = new WeaveCrypto();
 
@@ -38,14 +38,6 @@ function run_test() {
   // Test random key generation
   var keydata, keydata2, iv;
 
-  keydata  = cryptoSvc.generateRandomKey();
-  do_check_eq(keydata.length, 44);
-  keydata2 = cryptoSvc.generateRandomKey();
-  do_check_neq(keydata, keydata2); // sanity check for randomness
-  iv = cryptoSvc.generateRandomIV();
-  do_check_eq(iv.length, 24);
-
-  cryptoSvc.algorithm = WeaveCryptoModule.AES_256_CBC;
   keydata  = cryptoSvc.generateRandomKey();
   do_check_eq(keydata.length, 44);
   keydata2 = cryptoSvc.generateRandomKey();

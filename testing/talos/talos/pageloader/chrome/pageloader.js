@@ -169,7 +169,7 @@ function plInit() {
       .getService(Ci.nsIIOService);
     if (args.offline)
       gIOS.offline = true;
-    var fileURI = gIOS.newURI(manifestURI, null, null);
+    var fileURI = gIOS.newURI(manifestURI);
     pages = plLoadURLsFromURI(fileURI);
 
     if (!pages) {

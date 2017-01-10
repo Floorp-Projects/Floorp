@@ -280,14 +280,6 @@ GetGCThingMarkBitmap(const uintptr_t addr)
     return reinterpret_cast<uintptr_t*>(bmap_addr);
 }
 
-static MOZ_ALWAYS_INLINE JS::shadow::Runtime*
-GetGCThingRuntime(const uintptr_t addr)
-{
-    MOZ_ASSERT(addr);
-    const uintptr_t rt_addr = (addr & ~ChunkMask) | ChunkRuntimeOffset;
-    return *reinterpret_cast<JS::shadow::Runtime**>(rt_addr);
-}
-
 static MOZ_ALWAYS_INLINE void
 GetGCThingMarkWordAndMask(const uintptr_t addr, uint32_t color,
                           uintptr_t** wordp, uintptr_t* maskp)
@@ -310,14 +302,33 @@ GetGCThingZone(const uintptr_t addr)
 
 }
 
+static MOZ_ALWAYS_INLINE JS::shadow::Runtime*
+GetCellRuntime(const Cell* cell)
+{
+    MOZ_ASSERT(cell);
+    const uintptr_t addr = uintptr_t(cell);
+    const uintptr_t rt_addr = (addr & ~ChunkMask) | ChunkRuntimeOffset;
+    return *reinterpret_cast<JS::shadow::Runtime**>(rt_addr);
+}
+
 static MOZ_ALWAYS_INLINE bool
 CellIsMarkedGray(const Cell* cell)
 {
     MOZ_ASSERT(cell);
-    MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
+    if (js::gc::IsInsideNursery(cell))
+        return false;
+
     uintptr_t* word, mask;
     js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::GRAY, &word, &mask);
     return *word & mask;
+}
+
+static MOZ_ALWAYS_INLINE bool
+CellIsMarkedGrayIfKnown(const Cell* cell)
+{
+    MOZ_ASSERT(cell);
+    auto rt = js::gc::detail::GetCellRuntime(cell);
+    return rt->areGCGrayBitsValid() && CellIsMarkedGray(cell);
 }
 
 } /* namespace detail */
@@ -359,11 +370,9 @@ GetObjectZone(JSObject* obj);
 static MOZ_ALWAYS_INLINE bool
 GCThingIsMarkedGray(GCCellPtr thing)
 {
-    if (js::gc::IsInsideNursery(thing.asCell()))
-        return false;
     if (thing.mayBeOwnedByOtherRuntime())
         return false;
-    return js::gc::detail::CellIsMarkedGray(thing.asCell());
+    return js::gc::detail::CellIsMarkedGrayIfKnown(thing.asCell());
 }
 
 extern JS_PUBLIC_API(JS::TraceKind)

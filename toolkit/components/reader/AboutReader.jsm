@@ -803,7 +803,7 @@ AboutReader.prototype = {
     this._article = article;
 
     this._domainElement.href = article.url;
-    let articleUri = Services.io.newURI(article.url, null, null);
+    let articleUri = Services.io.newURI(article.url);
     this._domainElement.textContent = this._stripHost(articleUri.host);
     this._creditsElement.textContent = article.byline;
 

@@ -990,7 +990,7 @@ exports.StyleSheetsActor = StyleSheetsActor;
  * Normalize multiple relative paths towards the base paths on the right.
  */
 function normalize(...aURLs) {
-  let base = Services.io.newURI(aURLs.pop(), null, null);
+  let base = Services.io.newURI(aURLs.pop());
   let url;
   while ((url = aURLs.pop())) {
     base = Services.io.newURI(url, null, base);
@@ -1000,5 +1000,5 @@ function normalize(...aURLs) {
 
 function dirname(aPath) {
   return Services.io.newURI(
-    ".", null, Services.io.newURI(aPath, null, null)).spec;
+    ".", null, Services.io.newURI(aPath)).spec;
 }

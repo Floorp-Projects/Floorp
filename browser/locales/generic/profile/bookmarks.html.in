@@ -33,7 +33,7 @@
         </dl>
     <p><dt><h3>@firefox_heading@</h3></dt>
         <dl><p>
-            <dt><a href="https://www.mozilla.org/@AB_CD@/firefox/help/" icon="@mozilla_icon@">@firefox_help@</a>
+            <dt><a href="https://support.mozilla.org/@AB_CD@/products/firefox" icon="@mozilla_icon@">@firefox_help@</a>
             <dt><a href="https://www.mozilla.org/@AB_CD@/firefox/customize/" icon="@mozilla_icon@">@firefox_customize@</a>
             <dt><a href="https://www.mozilla.org/@AB_CD@/contribute/" icon="@mozilla_icon@">@firefox_community@</a>
             <dt><a href="https://www.mozilla.org/@AB_CD@/about/" icon="@mozilla_icon@">@firefox_about@</a>

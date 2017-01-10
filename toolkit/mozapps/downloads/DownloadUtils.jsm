@@ -76,18 +76,18 @@ var gStr = {
   transferSameUnits: "transferSameUnits2",
   transferDiffUnits: "transferDiffUnits2",
   transferNoTotal: "transferNoTotal2",
-  timePair: "timePair2",
-  timeLeftSingle: "timeLeftSingle2",
-  timeLeftDouble: "timeLeftDouble2",
-  timeFewSeconds: "timeFewSeconds",
-  timeUnknown: "timeUnknown",
+  timePair: "timePair3",
+  timeLeftSingle: "timeLeftSingle3",
+  timeLeftDouble: "timeLeftDouble3",
+  timeFewSeconds: "timeFewSeconds2",
+  timeUnknown: "timeUnknown2",
   monthDate: "monthDate2",
   yesterday: "yesterday",
   doneScheme: "doneScheme2",
   doneFileScheme: "doneFileScheme",
   units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
   // Update timeSize in convertTimeUnits if changing the length of this array
-  timeUnits: ["seconds", "minutes", "hours", "days"],
+  timeUnits: ["shortSeconds", "shortMinutes", "shortHours", "shortDays"],
   infiniteRate: "infiniteRate",
 };
 
@@ -414,7 +414,7 @@ this.DownloadUtils = {
     // Get a URI that knows about its components
     let uri;
     try {
-      uri = ioService.newURI(aURIString, null, null);
+      uri = ioService.newURI(aURIString);
     } catch (ex) {
       return ["", ""];
     }

@@ -1423,14 +1423,14 @@ PeerConnectionWrapper.prototype = {
       info("Checking for stats in " + JSON.stringify(stats) + " for " + track.kind
         + " track " + track.id + ", retry number " + retries);
       var rtp = stats.get([...Object.keys(stats)].find(key =>
-        !stats.get(key).isRemote && stats.get(key).type.endsWith("boundrtp")));
+        !stats.get(key).isRemote && stats.get(key).type.endsWith("bound-rtp")));
       if (!rtp) {
 
         return false;
       }
       info("Should have RTP stats for track " + track.id);
       info("RTP stats: "+JSON.stringify(rtp));
-      var nrPackets = rtp[rtp.type == "outboundrtp" ? "packetsSent"
+      var nrPackets = rtp[rtp.type == "outbound-rtp" ? "packetsSent"
                                                     : "packetsReceived"];
       info("Track " + track.id + " has " + nrPackets + " " +
            rtp.type + " RTP packets.");
@@ -1548,6 +1548,28 @@ PeerConnectionWrapper.prototype = {
   },
 
   /**
+   * Get stats from the "legacy" getStats callback interface
+   */
+  getStatsLegacy : function(selector, onSuccess, onFail) {
+    let wrapper = stats => {
+      info(this + ": Got legacy stats: " + JSON.stringify(stats));
+      onSuccess(stats);
+    };
+    return this._pc.getStats(selector, wrapper, onFail);
+  },
+
+  /**
+   * Check that the stats returned from the "legacy" getStats callback
+   * interface have unhyphenated names.
+   */
+  checkLegacyStatTypeNames: function(stats) {
+    let types = [];
+    stats.forEach(stat => types.push(stat.type));
+    ok(types.filter(type => type.includes("-")).length == 0,
+       "legacy getStats API is not returning stats with hyphenated types.");
+  },
+
+  /**
    * Check that stats are present by checking for known stats.
    */
   getStats : function(selector) {
@@ -1601,15 +1623,15 @@ PeerConnectionWrapper.prototype = {
       counters[res.type] = (counters[res.type] || 0) + 1;
 
       switch (res.type) {
-        case "inboundrtp":
-        case "outboundrtp": {
+        case "inbound-rtp":
+        case "outbound-rtp": {
           // ssrc is a 32 bit number returned as a string by spec
           ok(res.ssrc.length > 0, "Ssrc has length");
           ok(res.ssrc.length < 11, "Ssrc not lengthy");
           ok(!/[^0-9]/.test(res.ssrc), "Ssrc numeric");
           ok(parseInt(res.ssrc) < Math.pow(2,32), "Ssrc within limits");
 
-          if (res.type == "outboundrtp") {
+          if (res.type == "outbound-rtp") {
             ok(res.packetsSent !== undefined, "Rtp packetsSent");
             // We assume minimum payload to be 1 byte (guess from RFC 3550)
             ok(res.bytesSent >= res.packetsSent, "Rtp bytesSent");
@@ -1618,11 +1640,11 @@ PeerConnectionWrapper.prototype = {
             ok(res.bytesReceived >= res.packetsReceived, "Rtp bytesReceived");
           }
           if (res.remoteId) {
-            var rem = stats[res.remoteId];
+            var rem = stats.get(res.remoteId);
             ok(rem.isRemote, "Remote is rtcp");
             ok(rem.remoteId == res.id, "Remote backlink match");
-            if(res.type == "outboundrtp") {
-              ok(rem.type == "inboundrtp", "Rtcp is inbound");
+            if(res.type == "outbound-rtp") {
+              ok(rem.type == "inbound-rtp", "Rtcp is inbound");
               ok(rem.packetsReceived !== undefined, "Rtcp packetsReceived");
               ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
               ok(rem.bytesReceived >= rem.packetsReceived, "Rtcp bytesReceived");
@@ -1644,7 +1666,7 @@ PeerConnectionWrapper.prototype = {
               ok(rem.mozRtt >= 0, "Rtcp rtt " + rem.mozRtt + " >= 0");
               ok(rem.mozRtt < 60000, "Rtcp rtt " + rem.mozRtt + " < 1 min");
             } else {
-              ok(rem.type == "outboundrtp", "Rtcp is outbound");
+              ok(rem.type == "outbound-rtp", "Rtcp is outbound");
               ok(rem.packetsSent !== undefined, "Rtcp packetsSent");
               // We may have received more than outdated Rtcp packetsSent
               ok(rem.bytesSent >= rem.packetsSent, "Rtcp bytesSent");
@@ -1658,6 +1680,13 @@ PeerConnectionWrapper.prototype = {
       }
     }
 
+    var legacyToSpecMapping = {
+      'inboundrtp':'inbound-rtp',
+      'outboundrtp':'outbound-rtp',
+      'candidatepair':'candidate-pair',
+      'localcandidate':'local-candidate',
+      'remotecandidate':'remote-candidate'
+    };
     // Use legacy way of enumerating stats
     var counters2 = {};
     for (let key in stats) {
@@ -1665,8 +1694,9 @@ PeerConnectionWrapper.prototype = {
         continue;
       }
       var res = stats[key];
+      var type = legacyToSpecMapping[res.type] || res.type;
       if (!res.isRemote) {
-        counters2[res.type] = (counters2[res.type] || 0) + 1;
+        counters2[type] = (counters2[type] || 0) + 1;
       }
     }
     is(JSON.stringify(counters), JSON.stringify(counters2),
@@ -1675,21 +1705,21 @@ PeerConnectionWrapper.prototype = {
     var nout = Object.keys(this.expectedLocalTrackInfoById).length;
     var ndata = this.dataChannels.length;
 
-    // TODO(Bug 957145): Restore stronger inboundrtp test once Bug 948249 is fixed
-    //is((counters["inboundrtp"] || 0), nin, "Have " + nin + " inboundrtp stat(s)");
-    ok((counters.inboundrtp || 0) >= nin, "Have at least " + nin + " inboundrtp stat(s) *");
+    // TODO(Bug 957145): Restore stronger inbound-rtp test once Bug 948249 is fixed
+    //is((counters["inbound-rtp"] || 0), nin, "Have " + nin + " inbound-rtp stat(s)");
+    ok((counters["inbound-rtp"] || 0) >= nin, "Have at least " + nin + " inbound-rtp stat(s) *");
 
-    is(counters.outboundrtp || 0, nout, "Have " + nout + " outboundrtp stat(s)");
+    is(counters["outbound-rtp"] || 0, nout, "Have " + nout + " outbound-rtp stat(s)");
 
-    var numLocalCandidates  = counters.localcandidate || 0;
-    var numRemoteCandidates = counters.remotecandidate || 0;
+    var numLocalCandidates  = counters["local-candidate"] || 0;
+    var numRemoteCandidates = counters["remote-candidate"] || 0;
     // If there are no tracks, there will be no stats either.
     if (nin + nout + ndata > 0) {
-      ok(numLocalCandidates, "Have localcandidate stat(s)");
-      ok(numRemoteCandidates, "Have remotecandidate stat(s)");
+      ok(numLocalCandidates, "Have local-candidate stat(s)");
+      ok(numRemoteCandidates, "Have remote-candidate stat(s)");
     } else {
-      is(numLocalCandidates, 0, "Have no localcandidate stats");
-      is(numRemoteCandidates, 0, "Have no remotecandidate stats");
+      is(numLocalCandidates, 0, "Have no local-candidate stats");
+      is(numRemoteCandidates, 0, "Have no remote-candidate stats");
     }
   },
 
@@ -1704,7 +1734,7 @@ PeerConnectionWrapper.prototype = {
     let lId;
     let rId;
     for (let stat of stats.values()) {
-      if (stat.type == "candidatepair" && stat.selected) {
+      if (stat.type == "candidate-pair" && stat.selected) {
         lId = stat.localCandidateId;
         rId = stat.remoteCandidateId;
         break;
@@ -1755,8 +1785,8 @@ PeerConnectionWrapper.prototype = {
   checkStatsIceConnections : function(stats,
       offerConstraintsList, offerOptions, testOptions) {
     var numIceConnections = 0;
-    Object.keys(stats).forEach(key => {
-      if ((stats[key].type === "candidatepair") && stats[key].selected) {
+    stats.forEach(stat => {
+      if ((stat.type === "candidate-pair") && stat.selected) {
         numIceConnections += 1;
       }
     });

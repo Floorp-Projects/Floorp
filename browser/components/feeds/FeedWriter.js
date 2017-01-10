@@ -39,7 +39,7 @@ function makeURI(aURLSpec, aCharset) {
   let ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   try {
-    return ios.newURI(aURLSpec, aCharset, null);
+    return ios.newURI(aURLSpec, aCharset);
   } catch (ex) { }
 
   return null;

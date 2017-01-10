@@ -52,13 +52,7 @@ add_task(function* test_adobe_cdm_not_found() {
     return;
   }
 
-  let message;
-  if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-    message = gNavigatorBundle.getFormattedString("emeNotifications.drmContentDisabled.message", [""]);
-  } else {
-    message = gNavigatorBundle.getString("decoder.noCodecs.message");
-  }
-
+  let message = gNavigatorBundle.getString("decoder.noCodecs.message");
   yield test_decoder_doctor_notification("adobe-cdm-not-found", message);
 });
 
@@ -68,22 +62,11 @@ add_task(function* test_adobe_cdm_not_activated() {
     return;
   }
 
-  let message;
-  if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-    message = gNavigatorBundle.getString("decoder.noCodecsXP.message");
-  } else {
-    message = gNavigatorBundle.getString("decoder.noCodecs.message");
-  }
-
+  let message = gNavigatorBundle.getString("decoder.noCodecs.message");
   yield test_decoder_doctor_notification("adobe-cdm-not-activated", message);
 });
 
 add_task(function* test_platform_decoder_not_found() {
-  // Not sent on Windows XP.
-  if (AppConstants.isPlatformAndVersionAtMost("win", "5.9")) {
-    return;
-  }
-
   let message;
   let isLinux = AppConstants.platform == "linux";
   if (isLinux) {

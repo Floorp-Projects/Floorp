@@ -169,11 +169,7 @@ StyleSheet::SetDisabled(bool aDisabled)
 {
   // DOM method, so handle BeginUpdate/EndUpdate
   MOZ_AUTO_DOC_UPDATE(mDocument, UPDATE_STYLE, true);
-  if (IsGecko()) {
-    AsGecko()->SetEnabled(!aDisabled);
-  } else {
-    MOZ_CRASH("stylo: unimplemented SetEnabled");
-  }
+  SetEnabled(!aDisabled);
   return NS_OK;
 }
 

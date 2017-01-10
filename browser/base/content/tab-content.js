@@ -539,7 +539,7 @@ var PageStyleHandler = {
         if (!currentStyleSheet.ownerNode ||
             // special-case style nodes, which have no href
             currentStyleSheet.ownerNode.nodeName.toLowerCase() != "style") {
-          URI = Services.io.newURI(currentStyleSheet.href, null, null);
+          URI = Services.io.newURI(currentStyleSheet.href);
         }
       } catch (e) {
         if (e.result != Cr.NS_ERROR_MALFORMED_URI) {

@@ -274,6 +274,13 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 {
   MOZ_ASSERT(aStyleContext);
 
+  // Skip updating properties when we are composing style.
+  // FIXME: Bug 1324966. Drop this check once we have a function to get
+  // nsStyleContext without resolving animating style.
+  if (mIsComposingStyle) {
+    return;
+  }
+
   nsTArray<AnimationProperty> properties = BuildProperties(aStyleContext);
 
   if (mProperties == properties) {

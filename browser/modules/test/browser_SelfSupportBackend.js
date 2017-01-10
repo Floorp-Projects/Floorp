@@ -114,7 +114,7 @@ add_task(function* setupEnvironment() {
   Preferences.set(PREF_SELFSUPPORT_URL, TEST_PAGE_URL_HTTPS);
 
   // Whitelist the HTTPS page to use UITour.
-  let pageURI = Services.io.newURI(TEST_PAGE_URL_HTTPS, null, null);
+  let pageURI = Services.io.newURI(TEST_PAGE_URL_HTTPS);
   Services.perms.add(pageURI, "uitour", Services.perms.ALLOW_ACTION);
 
   registerCleanupFunction(() => {

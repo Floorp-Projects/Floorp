@@ -111,6 +111,8 @@ its prototype:
 
     * `"module"`: a frame running code at the top level of a module.
 
+    * `"wasmcall"`: a frame running a WebAssembly function call.
+
     * `"debugger"`: a frame for a call to user code invoked by the debugger
       (see the `eval` method below).
 
@@ -124,8 +126,11 @@ its prototype:
 
     * `"ion"`: a frame running in the optimizing JIT.
 
+    * `"wasm"`: a frame running in WebAssembly baseline JIT.
+
 `this`
-:   The value of `this` for this frame (a debuggee value).
+:   The value of `this` for this frame (a debuggee value). For a `wasmcall`
+    frame, this property throws a `TypeError`.
 
 `older`
 :   The next-older visible frame, in which control will resume when this
@@ -149,6 +154,7 @@ its prototype:
 `offset`
 :   The offset of the bytecode instruction currently being executed in
     `script`, or `undefined` if the frame's `script` property is `null`.
+    For a `wasmcall` frame, this property throws a `TypeError`.
 
 `environment`
 :   The lexical environment within which evaluation is taking place (a
@@ -268,9 +274,9 @@ methods of other kinds of objects.
 <code id="eval">eval(<i>code</i>, [<i>options</i>])</code>
 :   Evaluate <i>code</i> in the execution context of this frame, and return
     a [completion value][cv] describing how it completed. <i>Code</i> is a
-    string. If this frame's `environment` property is `null`, throw a
-    `TypeError`. All extant handler methods, breakpoints, and
-    so on remain active during the call. This function follows the
+    string. If this frame's `environment` property is `null` or `type` property
+    is `wasmcall`, throw a `TypeError`. All extant handler methods, breakpoints,
+    and so on remain active during the call. This function follows the
     [invocation function conventions][inv fr].
 
     <i>Code</i> is interpreted as strict mode code when it contains a Use
@@ -326,3 +332,5 @@ methods of other kinds of objects.
 
     The <i>options</i> argument is as for
     [`Debugger.Frame.prototype.eval`][fr eval], described above.
+    Also like `eval`, if this frame's `environment` property is `null` or
+    `type` property is `wasmcall`, throw a `TypeError`.

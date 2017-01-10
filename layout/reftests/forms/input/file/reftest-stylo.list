@@ -1,20 +1,8 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-# B2G failures: bug 855352.
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,152) skip-if((B2G&&browserIsRemote)||Mulet) == simple.html simple.html
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,76) skip-if((B2G&&browserIsRemote)||Mulet) == rtl.html rtl.html
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,152) skip-if((B2G&&browserIsRemote)||Mulet) == size.html size.html
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,76) skip-if((B2G&&browserIsRemote)||Mulet) == background.html background.html
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) skip-if((B2G&&browserIsRemote)||Mulet) == style.html style.html
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-== width-clip.html width-clip.html
-fails-if(B2G||Mulet||Android) == color-inherit.html color-inherit.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+# == simple.html simple.html
+# fails == rtl.html rtl.html
+# == size.html size.html
+# == background.html background.html
+# == style.html style.html
+fails == width-clip.html width-clip.html
+# == color-inherit.html color-inherit.html

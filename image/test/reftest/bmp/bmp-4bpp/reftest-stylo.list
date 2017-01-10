@@ -12,7 +12,7 @@ fails == bmp-size-7x7-4bpp.bmp bmp-size-7x7-4bpp.bmp
 fails == bmp-size-8x8-4bpp.bmp bmp-size-8x8-4bpp.bmp
 fails == bmp-size-9x9-4bpp.bmp bmp-size-9x9-4bpp.bmp
 fails == bmp-size-15x15-4bpp.bmp bmp-size-15x15-4bpp.bmp
-skip == bmp-size-16x16-4bpp.bmp bmp-size-16x16-4bpp.bmp
+fails == bmp-size-16x16-4bpp.bmp bmp-size-16x16-4bpp.bmp
 fails == bmp-size-17x17-4bpp.bmp bmp-size-17x17-4bpp.bmp
 fails == bmp-size-31x31-4bpp.bmp bmp-size-31x31-4bpp.bmp
 fails == bmp-size-32x32-4bpp.bmp bmp-size-32x32-4bpp.bmp
@@ -22,4 +22,4 @@ fails == os2bmp-size-32x32-4bpp.bmp os2bmp-size-32x32-4bpp.bmp
 fails == top-to-bottom-16x16-4bpp.bmp top-to-bottom-16x16-4bpp.bmp
 # test that delta skips are drawn as transparent
 # taken from http://bmptestsuite.sourceforge.net/
-== rle4-delta-320x240.bmp rle4-delta-320x240.bmp
+fails == rle4-delta-320x240.bmp rle4-delta-320x240.bmp

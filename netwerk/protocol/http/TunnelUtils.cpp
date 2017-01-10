@@ -1652,6 +1652,12 @@ SocketTransportShim::SetTimeout(uint32_t aType, uint32_t aValue)
 }
 
 NS_IMETHODIMP
+SocketTransportShim::SetReuseAddrPort(bool aReuseAddrPort)
+{
+  return mWrapped->SetReuseAddrPort(aReuseAddrPort);
+}
+
+NS_IMETHODIMP
 SocketTransportShim::GetQoSBits(uint8_t *aQoSBits)
 {
   return mWrapped->GetQoSBits(aQoSBits);

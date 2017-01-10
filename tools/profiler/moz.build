@@ -13,7 +13,6 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
     EXPORTS += [
         'public/GeckoProfilerFunc.h',
         'public/GeckoProfilerImpl.h',
-        'public/GeckoProfilerTypes.h',
         'public/ProfilerBacktrace.h',
         'public/ProfilerMarkers.h',
         'public/PseudoStack.h',
@@ -130,6 +129,7 @@ include('/ipc/chromium/chromium-config.mozbuild')
 
 EXPORTS += [
     'public/GeckoProfiler.h',
+    'public/GeckoProfilerTypes.h',
 ]
 
 if CONFIG['MOZ_TASK_TRACER']:

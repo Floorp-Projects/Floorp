@@ -2579,12 +2579,11 @@ this.XPIProvider = {
         return this._resolveURIToFile(aURI);
 
       case "resource":
-        aURI = Services.io.newURI(ResProtocolHandler.resolveURI(aURI), null,
-                                  null);
+        aURI = Services.io.newURI(ResProtocolHandler.resolveURI(aURI));
         return this._resolveURIToFile(aURI);
 
       case "view-source":
-        aURI = Services.io.newURI(aURI.path, null, null);
+        aURI = Services.io.newURI(aURI.path);
         return this._resolveURIToFile(aURI);
 
       case "about":

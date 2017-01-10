@@ -216,6 +216,7 @@ function TimePicker(context) {
     },
     _attachEventListeners() {
       window.addEventListener("message", this);
+      document.addEventListener("mousedown", this);
     },
 
     /**
@@ -227,6 +228,12 @@ function TimePicker(context) {
       switch (event.type) {
         case "message": {
           this.handleMessage(event);
+          break;
+        }
+        case "mousedown": {
+          // Use preventDefault to keep focus on input boxes
+          event.preventDefault();
+          event.target.setCapture();
           break;
         }
       }

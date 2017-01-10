@@ -290,7 +290,7 @@ function makeChan(url, loadingUrl) {
               getService(Ci.nsIIOService);
   var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
               .getService(Ci.nsIScriptSecurityManager);
-  var principal = ssm.createCodebasePrincipal(ios.newURI(loadingUrl, null, null), {});
+  var principal = ssm.createCodebasePrincipal(ios.newURI(loadingUrl), {});
   return NetUtil.newChannel(
     { uri: url, loadingPrincipal: principal,
       securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,

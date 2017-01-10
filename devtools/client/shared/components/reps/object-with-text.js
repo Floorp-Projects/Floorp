@@ -11,7 +11,10 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip } = require("./rep-utils");
+  const {
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
 
   // Shortcuts
   const { span } = React.DOM;
@@ -45,7 +48,7 @@ define(function (require, exports, module) {
       return "\"" + grip.preview.text + "\"";
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let grip = this.props.object;
       return (
         span({className: "objectBox objectBox-" + this.getType(grip)},
@@ -55,7 +58,7 @@ define(function (require, exports, module) {
           )
         )
       );
-    },
+    }),
   });
 
   // Registration

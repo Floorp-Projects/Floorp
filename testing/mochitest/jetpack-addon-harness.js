@@ -32,7 +32,7 @@ const chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
 
 // Installs a single add-on returning a promise for when install is completed
 function installAddon(url) {
-  let chromeURL = Services.io.newURI(url, null, null);
+  let chromeURL = Services.io.newURI(url);
   let file = chromeRegistry.convertChromeURL(chromeURL)
       .QueryInterface(Ci.nsIFileURL).file;
 

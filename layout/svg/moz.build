@@ -7,6 +7,14 @@
 with Files('**'):
     BUG_COMPONENT = ('Core', 'SVG')
 
+if CONFIG['ENABLE_TESTS']:
+    MOCHITEST_MANIFESTS += [
+        'tests/mochitest.ini',
+]
+    MOCHITEST_CHROME_MANIFESTS += [
+        'tests/chrome.ini',
+]
+
 EXPORTS += [
     'nsFilterInstance.h',
     'nsSVGEffects.h',

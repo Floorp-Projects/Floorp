@@ -22,7 +22,7 @@ include svg-filter-chains/reftest-stylo.list
 fuzzy(1,42500) == feBlend-1.svg feBlend-1.svg
 == feBlend-2.svg feBlend-2.svg
 
-skip fuzzy-if(d2d||skiaContent,1,6400) == feColorMatrix-1.svg feColorMatrix-1.svg
+fuzzy-if(d2d||skiaContent,1,6400) == feColorMatrix-1.svg feColorMatrix-1.svg
 fuzzy-if(d2d,1,10000) == feColorMatrix-2.svg feColorMatrix-2.svg
 
 == feComponentTransfer-1.svg feComponentTransfer-1.svg
@@ -35,7 +35,7 @@ fuzzy-if(d2d||skiaContent,1,10000) == feComposite-2.svg feComposite-2.svg
 == feConvolveMatrix-2.svg feConvolveMatrix-2.svg
 
 == feDisplacementMap-1.svg feDisplacementMap-1.svg
-skip == feDisplacementMap-2.svg feDisplacementMap-2.svg
+== feDisplacementMap-2.svg feDisplacementMap-2.svg
 
 fuzzy-if(d2d,1,6400) fuzzy-if(skiaContent,1,1600) == feFlood-1.svg feFlood-1.svg
 skip-if(d2d) fuzzy-if(skiaContent,1,6400) == feFlood-2.svg feFlood-2.svg
@@ -46,12 +46,11 @@ fuzzy(1,6400) fuzzy-if(skiaContent,1,6404) == feGaussianBlur-1.svg feGaussianBlu
 == feGaussianBlur-4.svg feGaussianBlur-4.svg
 == feGaussianBlur-5.svg feGaussianBlur-5.svg
 == feGaussianBlur-6.svg feGaussianBlur-6.svg
-skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software.html
+fails == feGaussianBlur-cap-large-directional-radius-on-software.html feGaussianBlur-cap-large-directional-radius-on-software.html
 
 == feImage-1.svg feImage-1.svg
-# (Make sure our image renders at all)
 == feImage-1.svg feImage-1.svg
-== feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion.html
+fails == feImage-scale-to-primitive-subregion.html feImage-scale-to-primitive-subregion.html
 
 == feMerge-1.svg feMerge-1.svg
 == feMerge-2.svg feMerge-2.svg
@@ -72,7 +71,6 @@ skip-if(d2d) == feGaussianBlur-cap-large-directional-radius-on-software.html feG
 == filter-inner-svg-02.svg filter-inner-svg-02.svg
 == filter-inner-svg-03.svg filter-inner-svg-03.svg
 == filter-marked-line-01.svg filter-marked-line-01.svg
-# bug 477704
 == filter-kernelUnitLength-01.svg filter-kernelUnitLength-01.svg
 == filter-marked-line-02.svg filter-marked-line-02.svg
 == filter-marked-line-03.svg filter-marked-line-03.svg

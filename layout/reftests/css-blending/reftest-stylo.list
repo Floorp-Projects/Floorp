@@ -3,15 +3,15 @@ pref(layout.css.mix-blend-mode.enabled,true) == blend-canvas.html blend-canvas.h
 pref(layout.css.mix-blend-mode.enabled,true) == blend-constant-background-color.html blend-constant-background-color.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-gradient-background-color.html blend-gradient-background-color.html
 pref(layout.css.mix-blend-mode.enabled,true) == blend-image.html blend-image.html
-pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking.html
+fails pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking.html
 
-fails fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha.html
+fuzzy-if(skiaContent,1,30000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-alpha.html background-blending-alpha.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-color.html background-blending-gradient-color.html
-fails fuzzy-if(azureSkiaGL,3,7597) fuzzy-if(cocoaWidget,3,7597) fuzzy-if(d2d,1,3800) fuzzy-if(d3d11,1,4200) fuzzy-if(skiaContent,2,9450) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-gradient.html background-blending-gradient-gradient.html
+fuzzy-if(azureSkiaGL,3,7597) fuzzy-if(cocoaWidget,3,7597) fuzzy-if(d2d,1,3800) fuzzy-if(d3d11,1,4200) fuzzy-if(skiaContent,2,9450) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-gradient.html background-blending-gradient-gradient.html
 fuzzy-if(azureSkiaGL,2,7174) fuzzy-if(azureQuartz,2,7174) pref(layout.css.background-blend-mode.enabled,true) == background-blending-gradient-image.html background-blending-gradient-image.html
-fails fuzzy-if(azureQuartz,2,10000) fuzzy-if(azureSkia||d2d||gtkWidget,1,10000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-jpg.html background-blending-image-color-jpg.html
+fuzzy-if(azureQuartz,2,10000) fuzzy-if(azureSkia||d2d||gtkWidget,1,10000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-jpg.html background-blending-image-color-jpg.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-png.html background-blending-image-color-png.html
-skip == background-blending-image-color-svg.html background-blending-image-color-svg.html
+pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-svg.html background-blending-image-color-svg.html
 fuzzy-if(azureSkiaGL,2,7174) fuzzy-if(azureQuartz,2,7174) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-gradient.html background-blending-image-gradient.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-image.html background-blending-image-image.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-isolation.html background-blending-isolation.html
@@ -21,30 +21,30 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-multi
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-color-burn.html background-blending-color-burn.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-color-dodge.html background-blending-color-dodge.html
 # need to investigate why these tests are fuzzy - first suspect is a possible color space conversion on some platforms; same for mix-blend-mode tests
-fails fuzzy-if(azureQuartz,2,8000) fuzzy-if(azureSkia||gtkWidget,2,9600) fuzzy-if(d2d,1,8000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-color.html background-blending-color.html
+fuzzy-if(azureQuartz,2,8000) fuzzy-if(azureSkia||gtkWidget,2,9600) fuzzy-if(d2d,1,8000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-color.html background-blending-color.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-darken.html background-blending-darken.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-difference.html background-blending-difference.html
-fails fuzzy-if(skiaContent,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-exclusion.html background-blending-exclusion.html
+fuzzy-if(skiaContent,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-exclusion.html background-blending-exclusion.html
 fuzzy-if(cocoaWidget||d2d,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hard-light.html background-blending-hard-light.html
-fails fuzzy-if(azureQuartz,2,8000) fuzzy-if(d2d,1,9600) fuzzy-if(azureSkia||gtkWidget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue.html
+fuzzy-if(azureQuartz,2,8000) fuzzy-if(d2d,1,9600) fuzzy-if(azureSkia||gtkWidget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-hue.html background-blending-hue.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-lighten.html background-blending-lighten.html
-fails fuzzy-if(azureQuartz,2,8000) fuzzy-if(d2d,1,8000) fuzzy-if(azureSkia||gtkWidget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-luminosity.html background-blending-luminosity.html
+fuzzy-if(azureQuartz,2,8000) fuzzy-if(d2d,1,8000) fuzzy-if(azureSkia||gtkWidget,2,9600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-luminosity.html background-blending-luminosity.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-multiply.html background-blending-multiply.html
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-normal.html background-blending-normal.html
-fails fuzzy-if(azureSkia||gtkWidget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-overlay.html background-blending-overlay.html
-fails fuzzy-if(d2d,1,1600) fuzzy-if(azureSkia||gtkWidget,2,12800) fuzzy-if(OSX==1006,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-saturation.html background-blending-saturation.html
-fails fuzzy-if(d2d||azureSkia||gtkWidget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-screen.html background-blending-screen.html
-fails fuzzy-if(azureQuartz,1,1600) fuzzy-if(d2d||azureSkia||gtkWidget,10,4800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-soft-light.html background-blending-soft-light.html
+fuzzy-if(azureSkia||gtkWidget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-overlay.html background-blending-overlay.html
+fuzzy-if(d2d,1,1600) fuzzy-if(azureSkia||gtkWidget,2,12800) fuzzy-if(OSX==1006,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-saturation.html background-blending-saturation.html
+fuzzy-if(d2d||azureSkia||gtkWidget,1,1600) pref(layout.css.background-blend-mode.enabled,true) == background-blending-screen.html background-blending-screen.html
+fuzzy-if(azureQuartz,1,1600) fuzzy-if(d2d||azureSkia||gtkWidget,10,4800) pref(layout.css.background-blend-mode.enabled,true) == background-blending-soft-light.html background-blending-soft-light.html
 
-fails fuzzy-if(azureQuartz,2,40000) fuzzy-if(azureSkia||d2d||gtkWidget,1,40000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-959674.html background-blending-image-color-959674.html
+fuzzy-if(azureQuartz,2,40000) fuzzy-if(azureSkia||d2d||gtkWidget,1,40000) pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-959674.html background-blending-image-color-959674.html
 
 #fuzzy due to inconsistencies in rounded rect cliping between parent and child; may be related to antialiasing. Between platforms, the max difference is the same, and the number of different pixels is either 36 or 37. (Win, Mac and Lin)
-pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-952051.html mix-blend-mode-952051.html
+== mix-blend-mode-952051.html mix-blend-mode-952051.html
 
 fuzzy-if(d3d11,49,200) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter.html
 fuzzy-if(d3d11,1,3) pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter.svg
 
-pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity.html
+== mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity.html
 
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041.html
@@ -57,7 +57,7 @@ fuzzy(1,6800) == clipped-opacity-containing-unclipped-mixblendmode.html clipped-
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-svg-as-data-uri.html background-blending-image-color-svg-as-data-uri.html
 # Test 10
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-gif.html background-blending-image-color-gif.html
-pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-transform3d.html background-blending-image-color-transform3d.html
+fails pref(layout.css.background-blend-mode.enabled,true) == background-blending-image-color-transform3d.html background-blending-image-color-transform3d.html
 
 # Test plan 5.3.2 Background layers do not blend with content outside the background (or behind the element) - tests 2 and 3
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-isolation-parent-child-color.html background-blending-isolation-parent-child-color.html
@@ -86,12 +86,12 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-backg
 
 # Test plan 5.3.11 background-blend-mode for an element with background-attachement
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed.html background-blending-background-attachement-fixed.html
-pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll.html
+fails pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll.html
 
-pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image.html
-fuzzy-if(Android,4,768) fuzzy-if(gtkWidget,1,132) fuzzy-if(skiaContent,1,800) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image.html
+fails pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image.html
+fails == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image.html
 
-pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element.html
+fails pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element.html
 
 fuzzy(1,40000) pref(layout.css.background-blend-mode.enabled,true) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light.html
 

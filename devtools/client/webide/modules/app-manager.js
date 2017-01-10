@@ -662,8 +662,8 @@ var AppManager = exports.AppManager = {
       }
 
       if (project.type == "hosted") {
-        let manifestURLObject = Services.io.newURI(project.location, null, null);
-        let origin = Services.io.newURI(manifestURLObject.prePath, null, null);
+        let manifestURLObject = Services.io.newURI(project.location);
+        let origin = Services.io.newURI(manifestURLObject.prePath);
         let appId = origin.host;
         let metadata = {
           origin: origin.spec,
@@ -733,8 +733,8 @@ var AppManager = exports.AppManager = {
           project.icon = AppManager.DEFAULT_PROJECT_ICON;
         } else {
           if (project.type == "hosted") {
-            let manifestURL = Services.io.newURI(project.location, null, null);
-            let origin = Services.io.newURI(manifestURL.prePath, null, null);
+            let manifestURL = Services.io.newURI(project.location);
+            let origin = Services.io.newURI(manifestURL.prePath);
             project.icon = Services.io.newURI(iconPath, null, origin).spec;
           } else if (project.type == "packaged") {
             let projectFolder = FileUtils.File(packageDir);

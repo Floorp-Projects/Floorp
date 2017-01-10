@@ -1150,6 +1150,15 @@ nsIOService::SetConnectivityInternal(bool aConnectivity)
     // we have statistic about network change event even if we are offline.
     mLastConnectivityChange = PR_IntervalNow();
 
+    if (mCaptivePortalService) {
+        if (aConnectivity && !xpc::AreNonLocalConnectionsDisabled()) {
+            // This will also trigger a captive portal check for the new network
+            static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Start();
+        } else {
+            static_cast<CaptivePortalService*>(mCaptivePortalService.get())->Stop();
+        }
+    }
+
     nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
     if (!observerService) {
         return NS_OK;
@@ -1617,8 +1626,6 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {
         isUp = false;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UP)) {
-        // Interface is up. Triggering a captive portal recheck.
-        RecheckCaptivePortal();
         isUp = true;
     } else if (!strcmp(data, NS_NETWORK_LINK_DATA_UNKNOWN)) {
         nsresult rv = mNetworkLinkService->GetIsLinkUp(&isUp);

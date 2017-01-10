@@ -4,11 +4,13 @@ include email/reftest-stylo.list
 include tel/reftest-stylo.list
 include search/reftest-stylo.list
 include url/reftest-stylo.list
-include number/reftest-stylo.list
+# Too many crashes in number
+#include number/reftest-stylo.list
 include file/reftest-stylo.list
 include radio/reftest-stylo.list
-include range/reftest-stylo.list
+#include range/reftest-stylo.list
 include text/reftest-stylo.list
 include percentage/reftest-stylo.list
 include hidden/reftest-stylo.list
 include color/reftest-stylo.list
+include datetime/reftest-stylo.list

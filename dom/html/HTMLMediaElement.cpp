@@ -885,9 +885,12 @@ private:
     }
 
     SetSuspended(nsISuspendedTypes::NONE_SUSPENDED);
-    nsresult rv = mOwner->Play();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return;
+    IgnoredErrorResult rv;
+    RefPtr<Promise> toBeIgnored = mOwner->Play(rv);
+    MOZ_ASSERT_IF(toBeIgnored && toBeIgnored->State() == Promise::PromiseState::Rejected,
+                  rv.Failed());
+    if (rv.Failed()) {
+      NS_WARNING("Not able to resume from AudioChannel.");
     }
   }
 
@@ -2020,6 +2023,12 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack)
     }
   }
 
+  if (mReadyState == HAVE_NOTHING) {
+    // No MediaStreamTracks are captured until we have metadata, and code
+    // below doesn't do anything for captured decoders.
+    return;
+  }
+
   for (OutputMediaStream& ms : mOutputStreams) {
     if (ms.mCapturingDecoder) {
       MOZ_ASSERT(!ms.mCapturingMediaStream);
@@ -2910,6 +2919,10 @@ public:
     , mOwningStream(aOwningStream)
     , mDestinationTrackID(aDestinationTrackID)
   {
+    MOZ_ASSERT(mElement);
+    MOZ_ASSERT(mCapturedTrackSource);
+    MOZ_ASSERT(mOwningStream);
+    MOZ_ASSERT(IsTrackIDExplicit(mDestinationTrackID));
   }
 
   void Destroy() override
@@ -2927,6 +2940,11 @@ public:
 
   CORSMode GetCORSMode() const override
   {
+    if (!mCapturedTrackSource) {
+      // This could happen during shutdown.
+      return CORS_NONE;
+    }
+
     return mCapturedTrackSource->GetCORSMode();
   }
 
@@ -2945,6 +2963,11 @@ public:
 
   void PrincipalChanged() override
   {
+    if (!mCapturedTrackSource) {
+      // This could happen during shutdown.
+      return;
+    }
+
     mPrincipal = mCapturedTrackSource->GetPrincipal();
     MediaStreamTrackSource::PrincipalChanged();
   }
@@ -2990,10 +3013,12 @@ public:
 
   void Destroy() override
   {
-    MOZ_ASSERT(mElement);
-    DebugOnly<bool> res = mElement->RemoveDecoderPrincipalChangeObserver(this);
-    NS_ASSERTION(res, "Removing decoder principal changed observer failed. "
-                      "Had it already been removed?");
+    if (mElement) {
+      DebugOnly<bool> res = mElement->RemoveDecoderPrincipalChangeObserver(this);
+      NS_ASSERTION(res, "Removing decoder principal changed observer failed. "
+                        "Had it already been removed?");
+      mElement = nullptr;
+    }
   }
 
   MediaSourceEnum GetMediaSource() const override
@@ -3003,6 +3028,11 @@ public:
 
   CORSMode GetCORSMode() const override
   {
+    if (!mElement) {
+      MOZ_ASSERT(false, "Should always have an element if in use");
+      return CORS_NONE;
+    }
+
     return mElement->GetCORSMode();
   }
 
@@ -3120,6 +3150,12 @@ HTMLMediaElement::AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
   }
   aOutputStream.mCapturingMediaStream = true;
 
+  if (aOutputStream.mStream == mSrcStream) {
+    // Cycle detected. This can happen since tracks are added async.
+    // We avoid forwarding it to the output here or we'd get into an infloop.
+    return;
+  }
+
   MediaStream* outputSource = aOutputStream.mStream->GetInputStream();
   if (!outputSource) {
     NS_ERROR("No output source stream");
@@ -3168,7 +3204,7 @@ HTMLMediaElement::AddCaptureMediaTrackToOutputStream(MediaTrack* aTrack,
 
   if (aAsyncAddtrack) {
     NS_DispatchToMainThread(
-      NewRunnableMethod<StorensRefPtrPassByPtr<MediaStreamTrack>>(
+      NewRunnableMethod<StoreRefPtrPassByPtr<MediaStreamTrack>>(
         aOutputStream.mStream, &DOMMediaStream::AddTrackInternal, track));
   } else {
     aOutputStream.mStream->AddTrackInternal(track);
@@ -3865,23 +3901,6 @@ HTMLMediaElement::MaybeDoLoad()
   if (mNetworkState == nsIDOMHTMLMediaElement::NETWORK_EMPTY) {
     DoLoad();
   }
-}
-
-NS_IMETHODIMP HTMLMediaElement::Play()
-{
-  if (mAudioChannelWrapper && mAudioChannelWrapper->IsPlaybackBlocked()) {
-    MaybeDoLoad();
-    return NS_OK;
-  }
-
-  ErrorResult rv;
-  RefPtr<Promise> toBeIgnored = PlayInternal(rv);
-  if (rv.Failed()) {
-    return rv.StealNSResult();
-  }
-
-  UpdateCustomPolicyAfterPlayed();
-  return NS_OK;
 }
 
 HTMLMediaElement::WakeLockBoolWrapper&

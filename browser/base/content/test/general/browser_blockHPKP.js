@@ -41,7 +41,7 @@ function test() {
   registerCleanupFunction(function() {
     Services.prefs.clearUserPref(kpkpEnforcementPref);
     Services.prefs.clearUserPref(khpkpPinninEnablePref);
-    let uri = gIOService.newURI("https://" + kPinningDomain, null, null);
+    let uri = gIOService.newURI("https://" + kPinningDomain);
     gSSService.removeState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
   });
   whenNewTabLoaded(window, loadPinningPage);

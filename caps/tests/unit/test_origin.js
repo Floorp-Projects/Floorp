@@ -4,7 +4,7 @@ var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
 var ssm = Services.scriptSecurityManager;
-function makeURI(uri) { return Services.io.newURI(uri, null, null); }
+function makeURI(uri) { return Services.io.newURI(uri); }
 
 function checkThrows(f) {
   var threw = false;

@@ -43,11 +43,14 @@ const Message = createClass({
     messageId: PropTypes.string,
     scrollToMessage: PropTypes.bool,
     exceptionDocURL: PropTypes.string,
+    parameters: PropTypes.object,
+    request: PropTypes.object,
     serviceContainer: PropTypes.shape({
       emitNewMessage: PropTypes.func.isRequired,
       onViewSourceInDebugger: PropTypes.func.isRequired,
       onViewSourceInScratchpad: PropTypes.func.isRequired,
       onViewSourceInStyleEditor: PropTypes.func.isRequired,
+      openContextMenu: PropTypes.func.isRequired,
       sourceMapService: PropTypes.any,
     }),
   },
@@ -75,6 +78,17 @@ const Message = createClass({
   onLearnMoreClick: function () {
     let {exceptionDocURL} = this.props;
     this.props.serviceContainer.openLink(exceptionDocURL);
+  },
+
+  onContextMenu(e) {
+    let { serviceContainer, source, request } = this.props;
+    let messageInfo = {
+      source,
+      request,
+    };
+    serviceContainer.openContextMenu(e, messageInfo);
+    e.stopPropagation();
+    e.preventDefault();
   },
 
   render() {
@@ -173,6 +187,7 @@ const Message = createClass({
 
     return dom.div({
       className: topLevelClasses.join(" "),
+      onContextMenu: this.onContextMenu,
       ref: node => {
         this.messageNode = node;
       }

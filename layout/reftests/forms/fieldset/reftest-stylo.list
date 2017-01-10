@@ -1,19 +1,28 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fuzzy-if(skiaContent,2,13) == dynamic-legend-scroll-1.html dynamic-legend-scroll-1.html
-== fieldset-hidden-1.html fieldset-hidden-1.html
-== fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1.html
-== fieldset-percentage-padding-1.html fieldset-percentage-padding-1.html
-== fieldset-scroll-1.html fieldset-scroll-1.html
-== fieldset-scrolled-1.html fieldset-scrolled-1.html
-random-if(B2G||Mulet) == fieldset-overflow-auto-1.html fieldset-overflow-auto-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(winWidget&&!layersGPUAccelerated,121,221) == positioned-container-1.html positioned-container-1.html
-== relpos-legend-1.html relpos-legend-1.html
-== relpos-legend-2.html relpos-legend-2.html
-skip-if((B2G&&browserIsRemote)||Mulet) == sticky-legend-1.html sticky-legend-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing.html
-== overflow-hidden.html overflow-hidden.html
-== legend-rtl.html legend-rtl.html
-== fieldset-grid-001.html fieldset-grid-001.html
-== fieldset-flexbox-001.html fieldset-flexbox-001.html
+fails == dynamic-legend-scroll-1.html dynamic-legend-scroll-1.html
+fails == fieldset-hidden-1.html fieldset-hidden-1.html
+fails == fieldset-intrinsic-width-1.html fieldset-intrinsic-width-1.html
+fails == fieldset-percentage-padding-1.html fieldset-percentage-padding-1.html
+fails == fieldset-scroll-1.html fieldset-scroll-1.html
+fails == fieldset-scrolled-1.html fieldset-scrolled-1.html
+fails == fieldset-overflow-auto-1.html fieldset-overflow-auto-1.html
+fails == positioned-container-1.html positioned-container-1.html
+fails == relpos-legend-1.html relpos-legend-1.html
+fails == relpos-legend-2.html relpos-legend-2.html
+fails == relpos-legend-3.html relpos-legend-3.html
+fails == relpos-legend-4.html relpos-legend-4.html
+fails == sticky-legend-1.html sticky-legend-1.html
+fuzzy-if(skiaContent,1,40768) == abs-pos-child-sizing.html abs-pos-child-sizing.html
+fails == overflow-hidden.html overflow-hidden.html
+# fails == legend-rtl.html legend-rtl.html
+fails == fieldset-grid-001.html fieldset-grid-001.html
+fails == fieldset-flexbox-001.html fieldset-flexbox-001.html
+fails == fieldset-min-width-1a.html fieldset-min-width-1a.html
+fails == fieldset-min-width-1b.html fieldset-min-width-1b.html
+fails == fieldset-min-width-2a.html fieldset-min-width-2a.html
+fails == fieldset-min-width-2b.html fieldset-min-width-2b.html
+fails == legend-overlapping-right-border-1.html legend-overlapping-right-border-1.html
+fails == fieldset-border-image-1a.html fieldset-border-image-1a.html
+fails == fieldset-border-image-1b.html fieldset-border-image-1b.html
+fails == fieldset-border-image-2a.html fieldset-border-image-2a.html
+fails == fieldset-border-image-2b.html fieldset-border-image-2b.html

@@ -141,5 +141,19 @@ def target_tasks_nightly(full_task_graph, parameters):
     nightly build process involves a pipeline of builds, signing,
     and, eventually, uploading the tasks to balrog."""
     def filter(task):
-        return task.attributes.get('nightly', False)
+        platform = task.attributes.get('build_platform')
+        if platform in ('android-api-15-nightly', 'android-x86-nightly'):
+            return task.attributes.get('nightly', False)
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
+
+
+@_target_task('nightly_linux')
+def target_tasks_nightly_linux(full_task_graph, parameters):
+    """Select the set of tasks required for a nightly build of linux. The
+    nightly build process involves a pipeline of builds, signing,
+    and, eventually, uploading the tasks to balrog."""
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        if platform in ('linux64-nightly', 'linux-nightly'):
+            return task.attributes.get('nightly', False)
     return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]
