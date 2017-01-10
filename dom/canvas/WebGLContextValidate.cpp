@@ -569,6 +569,8 @@ WebGLContext::InitAndValidateGL(FailureReason* const out_failReason)
     mBound2DArrayTextures.SetLength(mGLMaxTextureUnits);
     mBoundSamplers.SetLength(mGLMaxTextureUnits);
 
+    gl->fGetIntegerv(LOCAL_GL_MAX_VIEWPORT_DIMS, (GLint*)mImplMaxViewportDims);
+
     ////////////////
 
     if (MinCapabilityMode()) {
