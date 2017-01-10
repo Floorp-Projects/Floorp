@@ -112,7 +112,5 @@ content_process_main(int argc, char* argv[])
     }
 #endif
     nsresult rv = XRE_InitChildProcess(argc, argv, &childData);
-    NS_ENSURE_SUCCESS(rv, 1);
-
-    return 0;
+    return NS_FAILED(rv);
 }
