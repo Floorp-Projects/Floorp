@@ -539,13 +539,16 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path.full_path)
 
         elif isinstance(obj, RustProgram):
-            # Note that for these and host Rust programs, we don't need to
-            # bother with linked libraries, because Cargo will take care of
-            # all of that for us.
             self._process_rust_program(obj, backend_file)
+            # Hook the program into the compile graph.
+            build_target = self._build_target_for_obj(obj)
+            self._compile_graph[build_target]
 
         elif isinstance(obj, HostRustProgram):
             self._process_host_rust_program(obj, backend_file)
+            # Hook the program into the compile graph.
+            build_target = self._build_target_for_obj(obj)
+            self._compile_graph[build_target]
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
