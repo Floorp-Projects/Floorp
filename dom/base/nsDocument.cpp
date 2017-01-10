@@ -12304,17 +12304,8 @@ MightBeAboutOrChromeScheme(nsIURI* aURI)
   return isAbout || isChrome;
 }
 
-static bool
-ReportExternalResourceUseCounters(nsIDocument* aDocument, void* aData)
-{
-  const auto reportKind
-    = nsDocument::UseCounterReportKind::eIncludeExternalResources;
-  static_cast<nsDocument*>(aDocument)->ReportUseCounters(reportKind);
-  return true;
-}
-
 void
-nsDocument::ReportUseCounters(UseCounterReportKind aKind)
+nsDocument::ReportUseCounters()
 {
   static const bool sDebugUseCounters = false;
   if (mReportedUseCounters) {
@@ -12322,10 +12313,6 @@ nsDocument::ReportUseCounters(UseCounterReportKind aKind)
   }
 
   mReportedUseCounters = true;
-
-  if (aKind == UseCounterReportKind::eIncludeExternalResources) {
-    EnumerateExternalResources(ReportExternalResourceUseCounters, nullptr);
-  }
 
   if (Telemetry::HistogramUseCounterCount > 0 &&
       (IsContentDocument() || IsResourceDoc())) {
