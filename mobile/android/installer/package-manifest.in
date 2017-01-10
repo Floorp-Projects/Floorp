@@ -150,13 +150,11 @@
 @BINPATH@/components/dom_presentation.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt
-@BINPATH@/components/embed_base.xpt
 @BINPATH@/components/extensions.xpt
 @BINPATH@/components/exthandler.xpt
 @BINPATH@/components/exthelper.xpt
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
-@BINPATH@/components/find.xpt
 @BINPATH@/components/gfx.xpt
 @BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
@@ -242,6 +240,7 @@
 @BINPATH@/components/webbrowserpersist.xpt
 @BINPATH@/components/widget.xpt
 @BINPATH@/components/widget_android.xpt
+@BINPATH@/components/windowcreator.xpt
 @BINPATH@/components/windowds.xpt
 @BINPATH@/components/windowwatcher.xpt
 @BINPATH@/components/xpcom_base.xpt

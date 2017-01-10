@@ -197,6 +197,8 @@ toolkit/modules/tests/xpcshell/test_task.js
 
 # Not yet updated
 toolkit/components/osfile/**
+toolkit/components/windowcreator/**
+toolkit/components/windowwatcher/**
 
 # External code:
 toolkit/components/microformats/test/**
