@@ -394,7 +394,7 @@ public:
    * Adds a MediaStreamTrackListener to the MediaStreamGraph representation of
    * this track.
    */
-  void AddListener(MediaStreamTrackListener* aListener);
+  virtual void AddListener(MediaStreamTrackListener* aListener);
 
   /**
    * Removes a MediaStreamTrackListener from the MediaStreamGraph representation
@@ -408,7 +408,7 @@ public:
    * the listener succeeded (tracks originating from SourceMediaStreams) or
    * failed (e.g., WebAudio originated tracks).
    */
-  void AddDirectListener(DirectMediaStreamTrackListener *aListener);
+  virtual void AddDirectListener(DirectMediaStreamTrackListener *aListener);
   void RemoveDirectListener(DirectMediaStreamTrackListener  *aListener);
 
   /**
