@@ -21,8 +21,7 @@ function addResourceAlias() {
 
   let modules = ["common", "crypto"];
   for (let module of modules) {
-    let uri = Services.io.newURI("resource://gre/modules/services-" + module + "/",
-                                 null, null);
+    let uri = Services.io.newURI("resource://gre/modules/services-" + module + "/");
     handler.setSubstitution("services-" + module, uri);
   }
 }

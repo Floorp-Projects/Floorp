@@ -19,142 +19,142 @@
 #             &options=escape(-moz-parse-options:bpp=24;format=png)
 
 # PNG
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
 
 # BMP using default parse options
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
 
 # BMP using image/bmp mime type and 32bpp parse options
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
 
 # BMP using image/bmp mime type and 24bpp parse options
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
 
 # ICO using default parse options
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
-# skip HTTP == size-256x256.png size-256x256.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-256x256.png size-256x256.png
 
 # ICO using image/vnd.microsoft.icon mime type and 32bpp parse options with bmp 
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
-# skip HTTP == size-256x256.png size-256x256.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-256x256.png size-256x256.png
 
 # ICO using image/vnd.microsoft.icon mime type and 24bpp parse options with bmp 
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
-# skip HTTP == size-256x256.png size-256x256.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-256x256.png size-256x256.png
 
 # ICO using image/vnd.microsoft.icon mime type png
-skip HTTP == size-1x1.png size-1x1.png
-HTTP == size-2x2.png size-2x2.png
-skip HTTP == size-3x3.png size-3x3.png
-skip HTTP == size-4x4.png size-4x4.png
-skip HTTP == size-5x5.png size-5x5.png
-skip HTTP == size-6x6.png size-6x6.png
-HTTP == size-7x7.png size-7x7.png
-fails skip HTTP == size-8x8.png size-8x8.png
-skip HTTP == size-9x9.png size-9x9.png
-skip HTTP == size-15x15.png size-15x15.png
-skip HTTP == size-16x16.png size-16x16.png
-skip HTTP == size-17x17.png size-17x17.png
-skip HTTP == size-31x31.png size-31x31.png
-skip HTTP == size-32x32.png size-32x32.png
-skip HTTP == size-33x33.png size-33x33.png
-# skip HTTP == size-256x256.png size-256x256.png
+fails HTTP == size-1x1.png size-1x1.png
+fails HTTP == size-2x2.png size-2x2.png
+fails HTTP == size-3x3.png size-3x3.png
+fails HTTP == size-4x4.png size-4x4.png
+fails HTTP == size-5x5.png size-5x5.png
+fails HTTP == size-6x6.png size-6x6.png
+fails HTTP == size-7x7.png size-7x7.png
+fails HTTP == size-8x8.png size-8x8.png
+fails HTTP == size-9x9.png size-9x9.png
+fails HTTP == size-15x15.png size-15x15.png
+fails HTTP == size-16x16.png size-16x16.png
+fails HTTP == size-17x17.png size-17x17.png
+fails HTTP == size-31x31.png size-31x31.png
+fails HTTP == size-32x32.png size-32x32.png
+fails HTTP == size-33x33.png size-33x33.png
+fails HTTP == size-256x256.png size-256x256.png
 

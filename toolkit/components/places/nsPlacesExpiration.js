@@ -661,7 +661,7 @@ nsPlacesExpiration.prototype = {
         }
       }
 
-      let uri = Services.io.newURI(row.getResultByName("url"), null, null);
+      let uri = Services.io.newURI(row.getResultByName("url"));
       let guid = row.getResultByName("guid");
       let visitDate = row.getResultByName("visit_date");
       let wholeEntry = row.getResultByName("whole_entry");

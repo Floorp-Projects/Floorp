@@ -18,10 +18,10 @@ function resolveGeckoURI(uri) {
   }
   if (uri.startsWith("chrome://")) {
     let registry = Cc['@mozilla.org/chrome/chrome-registry;1'].getService(Ci["nsIChromeRegistry"]);
-    return registry.convertChromeURL(Services.io.newURI(uri, null, null)).spec;
+    return registry.convertChromeURL(Services.io.newURI(uri)).spec;
   } else if (uri.startsWith("resource://")) {
     let handler = Services.io.getProtocolHandler("resource").QueryInterface(Ci.nsIResProtocolHandler);
-    return handler.resolveURI(Services.io.newURI(uri, null, null));
+    return handler.resolveURI(Services.io.newURI(uri));
   }
   return uri;
 }

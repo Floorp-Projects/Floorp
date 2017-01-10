@@ -15,10 +15,10 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-declaration-12.html variable-declaration-12.html
 == variable-declaration-13.html variable-declaration-13.html
 == variable-declaration-14.html variable-declaration-14.html
-== variable-declaration-15.html variable-declaration-15.html
-== variable-declaration-16.html variable-declaration-16.html
-== variable-declaration-17.html variable-declaration-17.html
-== variable-declaration-18.html variable-declaration-18.html
+fails == variable-declaration-15.html variable-declaration-15.html
+fails == variable-declaration-16.html variable-declaration-16.html
+fails == variable-declaration-17.html variable-declaration-17.html
+fails == variable-declaration-18.html variable-declaration-18.html
 == variable-declaration-19.html variable-declaration-19.html
 == variable-declaration-20.html variable-declaration-20.html
 == variable-declaration-21.html variable-declaration-21.html
@@ -61,11 +61,11 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-declaration-59.html variable-declaration-59.html
 == variable-declaration-60.html variable-declaration-60.html
 == variable-external-declaration-01.html variable-external-declaration-01.html
-== variable-external-font-face-01.html variable-external-font-face-01.html
+fails == variable-external-font-face-01.html variable-external-font-face-01.html
 == variable-external-reference-01.html variable-external-reference-01.html
-== variable-external-supports-01.html variable-external-supports-01.html
-== variable-font-face-01.html variable-font-face-01.html
-== variable-font-face-02.html variable-font-face-02.html
+fails == variable-external-supports-01.html variable-external-supports-01.html
+fails == variable-font-face-01.html variable-font-face-01.html
+fails == variable-font-face-02.html variable-font-face-02.html
 == variable-reference-01.html variable-reference-01.html
 == variable-reference-02.html variable-reference-02.html
 == variable-reference-03.html variable-reference-03.html
@@ -77,7 +77,7 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-reference-09.html variable-reference-09.html
 == variable-reference-10.html variable-reference-10.html
 == variable-reference-11.html variable-reference-11.html
-== variable-reference-12.html variable-reference-12.html
+fails == variable-reference-12.html variable-reference-12.html
 == variable-reference-13.html variable-reference-13.html
 == variable-reference-14.html variable-reference-14.html
 == variable-reference-15.html variable-reference-15.html
@@ -101,75 +101,75 @@ default-preferences pref(layout.css.variables.enabled,true)
 == variable-reference-33.html variable-reference-33.html
 == variable-reference-34.html variable-reference-34.html
 == variable-reference-35.html variable-reference-35.html
-== variable-reference-36.html variable-reference-36.html
+fails == variable-reference-36.html variable-reference-36.html
 == variable-reference-37.html variable-reference-37.html
-== variable-reference-38.html variable-reference-38.html
+fails == variable-reference-38.html variable-reference-38.html
 == variable-reference-39.html variable-reference-39.html
-== variable-reference-40.html variable-reference-40.html
-== variable-supports-01.html variable-supports-01.html
-== variable-supports-02.html variable-supports-02.html
-== variable-supports-03.html variable-supports-03.html
-== variable-supports-04.html variable-supports-04.html
-== variable-supports-05.html variable-supports-05.html
-== variable-supports-06.html variable-supports-06.html
-== variable-supports-07.html variable-supports-07.html
-== variable-supports-08.html variable-supports-08.html
-== variable-supports-09.html variable-supports-09.html
-== variable-supports-10.html variable-supports-10.html
-== variable-supports-11.html variable-supports-11.html
-== variable-supports-12.html variable-supports-12.html
-== variable-supports-13.html variable-supports-13.html
-== variable-supports-14.html variable-supports-14.html
-== variable-supports-15.html variable-supports-15.html
-== variable-supports-16.html variable-supports-16.html
-== variable-supports-17.html variable-supports-17.html
-== variable-supports-18.html variable-supports-18.html
-== variable-supports-19.html variable-supports-19.html
-== variable-supports-20.html variable-supports-20.html
-== variable-supports-21.html variable-supports-21.html
-== variable-supports-22.html variable-supports-22.html
-== variable-supports-23.html variable-supports-23.html
-== variable-supports-24.html variable-supports-24.html
-== variable-supports-25.html variable-supports-25.html
-== variable-supports-26.html variable-supports-26.html
-== variable-supports-27.html variable-supports-27.html
-== variable-supports-28.html variable-supports-28.html
-== variable-supports-29.html variable-supports-29.html
-== variable-supports-30.html variable-supports-30.html
-== variable-supports-31.html variable-supports-31.html
-== variable-supports-32.html variable-supports-32.html
-== variable-supports-33.html variable-supports-33.html
-== variable-supports-34.html variable-supports-34.html
-== variable-supports-35.html variable-supports-35.html
-== variable-supports-36.html variable-supports-36.html
-== variable-supports-37.html variable-supports-37.html
-== variable-supports-38.html variable-supports-38.html
-== variable-supports-39.html variable-supports-39.html
-== variable-supports-40.html variable-supports-40.html
-== variable-supports-41.html variable-supports-41.html
-== variable-supports-42.html variable-supports-42.html
-== variable-supports-43.html variable-supports-43.html
-== variable-supports-44.html variable-supports-44.html
-== variable-supports-45.html variable-supports-45.html
-== variable-supports-46.html variable-supports-46.html
-== variable-supports-47.html variable-supports-47.html
-== variable-supports-48.html variable-supports-48.html
-== variable-supports-49.html variable-supports-49.html
-== variable-supports-50.html variable-supports-50.html
-== variable-supports-51.html variable-supports-51.html
-== variable-supports-52.html variable-supports-52.html
-== variable-supports-53.html variable-supports-53.html
-== variable-supports-54.html variable-supports-54.html
-== variable-supports-55.html variable-supports-55.html
-== variable-supports-56.html variable-supports-56.html
-== variable-supports-57.html variable-supports-57.html
-== variable-supports-58.html variable-supports-58.html
-== variable-supports-59.html variable-supports-59.html
-== variable-supports-60.html variable-supports-60.html
-== variable-supports-61.html variable-supports-61.html
-== variable-supports-62.html variable-supports-62.html
-== variable-supports-63.html variable-supports-63.html
-== variable-supports-64.html variable-supports-64.html
-== variable-supports-65.html variable-supports-65.html
-== variable-supports-66.html variable-supports-66.html
-== variable-supports-67.html variable-supports-67.html
+fails == variable-reference-40.html variable-reference-40.html
+fails == variable-supports-01.html variable-supports-01.html
+fails == variable-supports-02.html variable-supports-02.html
+fails == variable-supports-03.html variable-supports-03.html
+fails == variable-supports-04.html variable-supports-04.html
+fails == variable-supports-05.html variable-supports-05.html
+fails == variable-supports-06.html variable-supports-06.html
+fails == variable-supports-07.html variable-supports-07.html
+fails == variable-supports-08.html variable-supports-08.html
+fails == variable-supports-09.html variable-supports-09.html
+fails == variable-supports-10.html variable-supports-10.html
+fails == variable-supports-11.html variable-supports-11.html
+fails == variable-supports-12.html variable-supports-12.html
+fails == variable-supports-13.html variable-supports-13.html
+fails == variable-supports-14.html variable-supports-14.html
+fails == variable-supports-15.html variable-supports-15.html
+fails == variable-supports-16.html variable-supports-16.html
+fails == variable-supports-17.html variable-supports-17.html
+fails == variable-supports-18.html variable-supports-18.html
+fails == variable-supports-19.html variable-supports-19.html
+fails == variable-supports-20.html variable-supports-20.html
+fails == variable-supports-21.html variable-supports-21.html
+fails == variable-supports-22.html variable-supports-22.html
+fails == variable-supports-23.html variable-supports-23.html
+fails == variable-supports-24.html variable-supports-24.html
+fails == variable-supports-25.html variable-supports-25.html
+fails == variable-supports-26.html variable-supports-26.html
+fails == variable-supports-27.html variable-supports-27.html
+fails == variable-supports-28.html variable-supports-28.html
+fails == variable-supports-29.html variable-supports-29.html
+fails == variable-supports-30.html variable-supports-30.html
+fails == variable-supports-31.html variable-supports-31.html
+fails == variable-supports-32.html variable-supports-32.html
+fails == variable-supports-33.html variable-supports-33.html
+fails == variable-supports-34.html variable-supports-34.html
+fails == variable-supports-35.html variable-supports-35.html
+fails == variable-supports-36.html variable-supports-36.html
+fails == variable-supports-37.html variable-supports-37.html
+fails == variable-supports-38.html variable-supports-38.html
+fails == variable-supports-39.html variable-supports-39.html
+fails == variable-supports-40.html variable-supports-40.html
+fails == variable-supports-41.html variable-supports-41.html
+fails == variable-supports-42.html variable-supports-42.html
+fails == variable-supports-43.html variable-supports-43.html
+fails == variable-supports-44.html variable-supports-44.html
+fails == variable-supports-45.html variable-supports-45.html
+fails == variable-supports-46.html variable-supports-46.html
+fails == variable-supports-47.html variable-supports-47.html
+fails == variable-supports-48.html variable-supports-48.html
+fails == variable-supports-49.html variable-supports-49.html
+fails == variable-supports-50.html variable-supports-50.html
+fails == variable-supports-51.html variable-supports-51.html
+fails == variable-supports-52.html variable-supports-52.html
+fails == variable-supports-53.html variable-supports-53.html
+fails == variable-supports-54.html variable-supports-54.html
+fails == variable-supports-55.html variable-supports-55.html
+fails == variable-supports-56.html variable-supports-56.html
+fails == variable-supports-57.html variable-supports-57.html
+fails == variable-supports-58.html variable-supports-58.html
+fails == variable-supports-59.html variable-supports-59.html
+fails == variable-supports-60.html variable-supports-60.html
+fails == variable-supports-61.html variable-supports-61.html
+fails == variable-supports-62.html variable-supports-62.html
+fails == variable-supports-63.html variable-supports-63.html
+fails == variable-supports-64.html variable-supports-64.html
+fails == variable-supports-65.html variable-supports-65.html
+fails == variable-supports-66.html variable-supports-66.html
+fails == variable-supports-67.html variable-supports-67.html

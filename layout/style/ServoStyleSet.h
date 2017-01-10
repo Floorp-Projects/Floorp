@@ -57,13 +57,11 @@ public:
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   nsStyleContext* aParentContext,
-                  ConsumeStyleBehavior aConsume,
                   LazyComputeBehavior aMayCompute);
 
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(dom::Element* aElement,
                   nsStyleContext* aParentContext,
-                  ConsumeStyleBehavior aConsume,
                   LazyComputeBehavior aMayCompute,
                   TreeMatchContext& aTreeMatchContext);
 
@@ -172,8 +170,7 @@ public:
    * Resolve style for the given element, and return it as a
    * ServoComputedValues, not an nsStyleContext.
    */
-  already_AddRefed<ServoComputedValues>
-    ResolveServoStyle(dom::Element* aElement, ConsumeStyleBehavior aConsume);
+  already_AddRefed<ServoComputedValues> ResolveServoStyle(dom::Element* aElement);
 
   /**
    * Restyle with added declaration, for use in animations.
@@ -192,7 +189,6 @@ private:
                                               nsStyleContext* aParentContext,
                                               nsIAtom* aPseudoTag,
                                               CSSPseudoElementType aPseudoType,
-                                              ConsumeStyleBehavior aConsume,
                                               LazyComputeBehavior aMayCompute);
 
   nsPresContext* mPresContext;

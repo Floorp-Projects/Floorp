@@ -257,7 +257,7 @@ jclass GetClassRef(JNIEnv* aEnv, const char* aClassName)
     // First try the default class loader.
     auto classRef = Class::LocalRef::Adopt(aEnv, aEnv->FindClass(aClassName));
 
-    if (!classRef && sClassLoader) {
+    if ((!classRef || aEnv->ExceptionCheck()) && sClassLoader) {
         // If the default class loader failed but we have an app class loader, try that.
         // Clear the pending exception from failed FindClass call above.
         aEnv->ExceptionClear();
@@ -266,14 +266,15 @@ jclass GetClassRef(JNIEnv* aEnv, const char* aClassName)
                                        StringParam(aClassName, aEnv).Get())));
     }
 
-    if (classRef) {
+    if (classRef && !aEnv->ExceptionCheck()) {
         return classRef.Forget();
     }
 
     __android_log_print(
             ANDROID_LOG_ERROR, "Gecko",
-            ">>> FATAL JNI ERROR! FindClass(className=\"%s\") failed. "
-            "Did ProGuard optimize away something it shouldn't have?",
+            ">>> FATAL JNI ERROR! FindClass(\"%s\") failed. "
+            "Does the class require a newer API version? "
+            "Or did ProGuard optimize away something it shouldn't have?",
             aClassName);
     aEnv->ExceptionDescribe();
     MOZ_CRASH("Cannot find JNI class");

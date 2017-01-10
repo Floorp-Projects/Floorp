@@ -56,7 +56,7 @@ add_task(function* test_windowless_UITour() {
 
   // Allow the URL to use the UITour.
   info("Adding UITour permission to the test page.");
-  let pageURI = Services.io.newURI(pageURL, null, null);
+  let pageURI = Services.io.newURI(pageURL);
   Services.perms.add(pageURI, "uitour", Services.perms.ALLOW_ACTION);
 
   // UITour's ping will resolve this promise.

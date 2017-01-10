@@ -98,7 +98,7 @@ function run_test() {
 
   for (let uri of uris) {
     // convert URIs to paths with nsIFileURI, which fromFileURI is trying to model
-    let path = Services.io.newURI(uri, null, null).QueryInterface(Components.interfaces.nsIFileURL).file.path;
+    let path = Services.io.newURI(uri).QueryInterface(Components.interfaces.nsIFileURL).file.path;
     do_check_eq(path, OS.Path.fromFileURI(uri));
   }
 

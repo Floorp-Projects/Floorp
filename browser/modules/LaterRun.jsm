@@ -129,7 +129,7 @@ let LaterRun = {
         let uri = null;
         try {
           let urlString = Services.urlFormatter.formatURL(pageData.url.trim());
-          uri = Services.io.newURI(urlString, null, null);
+          uri = Services.io.newURI(urlString);
         } catch (ex) {
           Cu.reportError("Invalid LaterRun page URL " + pageData.url + " ignored.");
           continue;

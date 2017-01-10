@@ -35,7 +35,7 @@ function run_test() {
   // try on a new object using the resolved URL
   var res = Components.classes["@mozilla.org/network/protocol;1?name=resource"]
                       .getService(Components.interfaces.nsIResProtocolHandler);
-  var resURI = res.newURI("resource://gre/modules/XPCOMUtils.jsm", null, null);
+  var resURI = res.newURI("resource://gre/modules/XPCOMUtils.jsm");
   dump("resURI: " + resURI + "\n");
   var filePath = res.resolveURI(resURI);
   var scope3 = {};

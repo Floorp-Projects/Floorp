@@ -465,7 +465,7 @@ LoginManagerStorage_mozStorage.prototype = {
             params[field] = value;
             let valueURI;
             try {
-              if (aOptions.schemeUpgrades && (valueURI = Services.io.newURI(value, null, null)) &&
+              if (aOptions.schemeUpgrades && (valueURI = Services.io.newURI(value)) &&
                   valueURI.scheme == "https") {
                 condition += ` OR ${field} = :http${field}`;
                 params["http" + field] = "http://" + valueURI.hostPort;
@@ -1136,7 +1136,7 @@ LoginManagerStorage_mozStorage.prototype = {
 
       for (let host of disabledHosts) {
         try {
-          let uri = Services.io.newURI(host, null, null);
+          let uri = Services.io.newURI(host);
           Services.perms.add(uri, PERMISSION_SAVE_LOGINS, Services.perms.DENY_ACTION);
         } catch (e) {
           Cu.reportError(e);

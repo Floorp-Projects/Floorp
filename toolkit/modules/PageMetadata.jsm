@@ -283,8 +283,8 @@ this.PageMetadata = {
    * @return {string} Result URL.
    */
   _validateURL(document, url) {
-    let docURI = Services.io.newURI(document.documentURI, null, null);
-    let uri = Services.io.newURI(docURI.resolve(url), null, null);
+    let docURI = Services.io.newURI(document.documentURI);
+    let uri = Services.io.newURI(docURI.resolve(url));
 
     if (["http", "https"].indexOf(uri.scheme) < 0) {
       return null;

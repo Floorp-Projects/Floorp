@@ -592,7 +592,7 @@ public:
     : ExtendableEventWorkerRunnable(aWorkerPrivate, aKeepAliveToken)
     , mRegistration(aRegistration)
   {
-    MOZ_ASSERT(aRegistration);
+    MOZ_DIAGNOSTIC_ASSERT(aRegistration);
   }
 
   void
@@ -1711,6 +1711,16 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     swm->GetRegistration(mInfo->GetPrincipal(), mInfo->Scope());
+
+  // Its possible the registration is removed between starting the interception
+  // and actually dispatching the fetch event.  In these cases we simply
+  // want to restart the original network request.  Since this is a normal
+  // condition we handle the reset here instead of returning an error which
+  // would in turn trigger a console report.
+  if (!registration) {
+    aChannel->ResetInterception();
+    return NS_OK;
+  }
 
   // Handle Fetch algorithm - step 16. If the service worker didn't register
   // any fetch event handlers, then abort the interception and maybe trigger

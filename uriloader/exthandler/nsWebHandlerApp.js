@@ -76,7 +76,7 @@ nsWebHandlerApp.prototype = {
     var uriSpecToSend = this.uriTemplate.replace("%s", escapedUriSpecToHandle);
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
-    var uriToSend = ioService.newURI(uriSpecToSend, null, null);
+    var uriToSend = ioService.newURI(uriSpecToSend);
     
     // if we have a window context, use the URI loader to load there
     if (aWindowContext) {

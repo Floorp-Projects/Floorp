@@ -14,7 +14,7 @@ function run_test() {
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-plugins",
-                          Services.io.newURI(url, null, null));
+                          Services.io.newURI(url));
 
   run_next_test();
 }

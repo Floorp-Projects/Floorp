@@ -1,16 +1,14 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== textarea-valid.html textarea-valid.html
-== textarea-customerror.html textarea-customerror.html
-== textarea-disabled.html textarea-disabled.html
-== textarea-dyn-disabled.html textarea-dyn-disabled.html
-== textarea-dyn-not-disabled.html textarea-dyn-not-disabled.html
-== textarea-readonly.html textarea-readonly.html
-== textarea-dyn-readonly.html textarea-dyn-readonly.html
-== textarea-dyn-not-readonly.html textarea-dyn-not-readonly.html
-skip == textarea-maxlength-valid.html textarea-maxlength-valid.html
-skip == textarea-maxlength-invalid.html textarea-maxlength-invalid.html
-== textarea-required-valid.html textarea-required-valid.html
-== textarea-required-invalid.html textarea-required-invalid.html
-== textarea-disabled-fieldset-1.html textarea-disabled-fieldset-1.html
-== textarea-disabled-fieldset-2.html textarea-disabled-fieldset-2.html
-== textarea-fieldset-legend.html textarea-fieldset-legend.html
+fails == textarea-valid.html textarea-valid.html
+fails == textarea-customerror.html textarea-customerror.html
+fails == textarea-disabled.html textarea-disabled.html
+fails == textarea-dyn-disabled.html textarea-dyn-disabled.html
+fails == textarea-dyn-not-disabled.html textarea-dyn-not-disabled.html
+fails == textarea-readonly.html textarea-readonly.html
+fails == textarea-dyn-readonly.html textarea-dyn-readonly.html
+fails == textarea-dyn-not-readonly.html textarea-dyn-not-readonly.html
+fails == textarea-required-valid.html textarea-required-valid.html
+fails == textarea-required-invalid.html textarea-required-invalid.html
+fails == textarea-disabled-fieldset-1.html textarea-disabled-fieldset-1.html
+fails == textarea-disabled-fieldset-2.html textarea-disabled-fieldset-2.html
+fails == textarea-fieldset-legend.html textarea-fieldset-legend.html

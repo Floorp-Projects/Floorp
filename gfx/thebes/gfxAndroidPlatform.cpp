@@ -348,7 +348,7 @@ public:
     class Display final : public VsyncSource::Display {
     public:
         Display()
-            : mJavaVsync(java::VsyncSource::GetInstance())
+            : mJavaVsync(java::VsyncSource::INSTANCE())
             , mObservingVsync(false)
         {
             JavaVsyncSupport::Init(); // To register native methods.
@@ -421,7 +421,10 @@ private:
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxAndroidPlatform::CreateHardwareVsyncSource()
 {
-    if (jni::IsAvailable() && java::VsyncSource::IsVsyncSupported()) {
+    // Vsync was introduced since JB (API 16~18) but inaccurate. Enable only for
+    // KK (API 19) and later.
+    if (AndroidBridge::Bridge() &&
+            AndroidBridge::Bridge()->GetAPIVersion() >= 19) {
         RefPtr<AndroidVsyncSource> vsyncSource = new AndroidVsyncSource();
         return vsyncSource.forget();
     }

@@ -20,7 +20,7 @@ function test() {
   // set up the uri to test with
   var ioService = Cc["@mozilla.org/network/io-service;1"].
     getService(SpecialPowers.Ci.nsIIOService);
-  var uri = ioService.newURI(testURI, null, null);
+  var uri = ioService.newURI(testURI);
 
   // create a window, and launch the handler in it
   var newWindow = window.open("", "handlerWindow", "height=300,width=300");
@@ -83,7 +83,7 @@ function test() {
   }
 
   localHandler.executable = exe;
-  localHandler.launchWithURI(ioService.newURI(testURI, null, null));
+  localHandler.launchWithURI(ioService.newURI(testURI));
 
   // if we get this far without an exception, we've passed
   ok(true, "localHandler launchWithURI test");

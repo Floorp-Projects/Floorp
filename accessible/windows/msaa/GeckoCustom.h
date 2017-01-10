@@ -27,6 +27,7 @@ public:
   DECL_IUNKNOWN
 
   virtual STDMETHODIMP get_anchorCount(long* aCount);
+  virtual STDMETHODIMP get_DOMNodeID(BSTR* aID);
   virtual STDMETHODIMP get_ID(uint64_t* aID);
 
 private:

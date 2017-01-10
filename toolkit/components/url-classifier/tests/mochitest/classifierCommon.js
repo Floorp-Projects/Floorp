@@ -78,7 +78,7 @@ function waitForInit() {
               .getService(Ci.nsIIOService);
 
   let principal = secMan.createCodebasePrincipal(
-    iosvc.newURI(url, null, null), {});
+    iosvc.newURI(url), {});
 
   let listener = {
     QueryInterface: function(iid)

@@ -1,18 +1,15 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== default-size.html default-size.html
-skip-if(B2G||Mulet) fuzzy-if(Android,8,1000) == size-1.html size-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+# == default-size.html default-size.html
+fails == size-1.html size-1.html
 
 == empty-transaction-1.html empty-transaction-1.html
 
-== image-rendering-test.html image-rendering-test.html
+fails == image-rendering-test.html image-rendering-test.html
 == image-shadow.html image-shadow.html
 
-skip-if(B2G||Mulet) asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == size-change-1.html size-change-1.html
 
-random-if(cocoaWidget) == subpixel-1.html subpixel-1.html
-# see bug 1192616, re-enable once we're off the pandaboards
+== subpixel-1.html subpixel-1.html
 
 == text-ltr-left.html text-ltr-left.html
 == text-ltr-right.html text-ltr-right.html
@@ -28,39 +25,35 @@ random-if(cocoaWidget) == subpixel-1.html subpixel-1.html
 
 == text-ltr-left.html text-ltr-left.html
 
-== text-ltr-alignment-test.html text-ltr-alignment-test.html
-== text-rtl-alignment-test.html text-rtl-alignment-test.html
+fails == text-ltr-alignment-test.html text-ltr-alignment-test.html
+fails == text-rtl-alignment-test.html text-rtl-alignment-test.html
 
-fuzzy-if((B2G||Mulet)&&azureSkiaGL,1,256) == text-horzline-with-bottom.html text-horzline-with-bottom.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if((B2G||Mulet)&&azureSkiaGL,1,256) fails-if(azureSkia&&OSX>=1008) == text-horzline-with-top.html text-horzline-with-top.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+== text-horzline-with-bottom.html text-horzline-with-bottom.html
+fails-if(azureSkia&&OSX>=1008) == text-horzline-with-top.html text-horzline-with-top.html
 
-== text-big-stroke.html text-big-stroke.html
-== text-big-stroke.html text-big-stroke.html
+# == text-big-stroke.html text-big-stroke.html
+# == text-big-stroke.html text-big-stroke.html
 
-== text-context-state-test.html text-context-state-test.html
-== text-font-inherit.html text-font-inherit.html
-== text-space-replace-test.html text-space-replace-test.html
+fails == text-context-state-test.html text-context-state-test.html
+fails == text-font-inherit.html text-font-inherit.html
+fails == text-space-replace-test.html text-space-replace-test.html
 
-== text-no-frame-test.html text-no-frame-test.html
-== text-no-frame-2-test.html text-no-frame-2-test.html
-fuzzy-if(azureSkiaGL,10,400) == text-not-in-doc-test.html text-not-in-doc-test.html
+fails == text-no-frame-test.html text-no-frame-test.html
+fails == text-no-frame-2-test.html text-no-frame-2-test.html
+fails == text-not-in-doc-test.html text-not-in-doc-test.html
 
-== text-bidi-ltr-test.html text-bidi-ltr-test.html
-== text-bidi-ltr-test.html text-bidi-ltr-test.html
-# for bug 698185
-== text-bidi-rtl-test.html text-bidi-rtl-test.html
+# == text-bidi-ltr-test.html text-bidi-ltr-test.html
+# == text-bidi-ltr-test.html text-bidi-ltr-test.html
+fails == text-bidi-rtl-test.html text-bidi-rtl-test.html
 
-skip-if(B2G||Mulet) == text-font-lang.html text-font-lang.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == text-font-lang.html text-font-lang.html
 
-== text-measure.html text-measure.html
-== text-small-caps-1.html text-small-caps-1.html
+fails == text-measure.html text-measure.html
+fails == text-small-caps-1.html text-small-caps-1.html
 
-random-if(!d2d) == text-subpixel-1.html text-subpixel-1.html
+fails == text-subpixel-1.html text-subpixel-1.html
 
-== strokeText-path.html strokeText-path.html
+fails == strokeText-path.html strokeText-path.html
 
 # check that emoji character renders as something non-blank (for Apple Color Emoji font, bug 715798)
 # apparently fails on some 10.7 systems for unknown reasons, bug 804522.
@@ -74,33 +67,27 @@ random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
 # test
-skip == linear-gradient-1a.html linear-gradient-1a.html
+# fails-if((azureSkia&&!azureSkiaGL)||azureQuartz||(azureSkiaGL&&Android)) == linear-gradient-1a.html linear-gradient-1a.html
 
 # this passes with cairo on 10.7 and 10.8 but not with azure for reasons unknown
-skip == linear-gradient-1b.html linear-gradient-1b.html
+# fails-if((azureSkia&&!azureSkiaGL)||azureQuartz||(azureSkiaGL&&Android)) == linear-gradient-1b.html linear-gradient-1b.html
 
 == zero-dimensions.html zero-dimensions.html
 
-== evenodd-fill-sanity.html evenodd-fill-sanity.html
 == evenodd-fill-1.html evenodd-fill-1.html
 == evenodd-fill-1.html evenodd-fill-1.html
-random-if(azureSkiaGL) == evenodd-fill-2.html evenodd-fill-2.html
-== evenodd-fill-3.html evenodd-fill-3.html
 
-== dash-sanity.html dash-sanity.html
-fuzzy-if(azureSkia||skiaContent,9,470) random-if(Android) == dash-1.html dash-1.html
-# Bug 668412 (really is android-specific, not IPC-specific)
+fails == dash-sanity.html dash-sanity.html
+== dash-1.html dash-1.html
 
-== ctm-sanity.html ctm-sanity.html
-== ctm-singular-sanity.html ctm-singular-sanity.html
+fails == ctm-sanity.html ctm-sanity.html
+fails == ctm-singular-sanity.html ctm-singular-sanity.html
 == ctm-1.html ctm-1.html
 
 fails-if(azureQuartz&&OSX==1006) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient.html
-# Bug 673333
-== 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum.html
+fails == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum.html
 
-== 693610-1.html 693610-1.html
-# bug 693610: multiple glyph runs should not be overprinted
+fails == 693610-1.html 693610-1.html
 
 == 726951-shadow-clips.html 726951-shadow-clips.html
 
@@ -111,12 +98,17 @@ fuzzy-if(azureSkia,1,15) fuzzy-if(skiaContent,1,20) == transformed-gradient.html
 == 749467-1.html 749467-1.html
 
 # You get a little bit of rounding fuzz on OSX from transforming the paths between user space and device space
-fuzzy-if(azureQuartz,2,128) fuzzy-if(d2d,12,21) fuzzy-if(skiaContent,12,7) fuzzy-if(d2d&&/^Windows\x20NT\x2010\.0/.test(http.oscpu),2,141) == 784573-1.html 784573-1.html
+== 784573-1.html 784573-1.html
 
-== 802658-1.html 802658-1.html
+fails == 802658-1.html 802658-1.html
 == 1074733-1.html 1074733-1.html
-fuzzy-if(Mulet,45,2) == 1107096-invisibles.html 1107096-invisibles.html
+fails == 1107096-invisibles.html 1107096-invisibles.html
 == 1151821-1.html 1151821-1.html
 == 1201272-1.html 1201272-1.html
 == 1224976-1.html 1224976-1.html
 == 1238795-1.html 1238795-1.html
+== 1303534-1.html 1303534-1.html
+
+fails == 1304353-text-global-alpha-1.html 1304353-text-global-alpha-1.html
+fails == 1304353-text-global-alpha-2.html 1304353-text-global-alpha-2.html
+fails == 1304353-text-global-composite-op-1.html 1304353-text-global-composite-op-1.html

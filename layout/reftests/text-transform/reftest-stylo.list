@@ -1,46 +1,39 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== capitalize-1.html capitalize-1.html
-== capitalize-2.html capitalize-2.html
-== capitalize-3.html capitalize-3.html
-== capitalize-4.html capitalize-4.html
-== capitalize-5.html capitalize-5.html
-== capitalize-6.html capitalize-6.html
-== capitalize-7.html capitalize-7.html
-== capitalize-7a.html capitalize-7a.html
-== lowercase-1.html lowercase-1.html
-== lowercase-sigma-1.html lowercase-sigma-1.html
-fails-if(B2G||Mulet) random-if(winWidget) == small-caps-1.html small-caps-1.html
-# fails if default font supports 'smcp'
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == fake-small-caps-1.html fake-small-caps-1.html
-HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1.html
-HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1.html
-HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
-HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
-== uppercase-1.html uppercase-1.html
-== uppercase-szlig-1.html uppercase-szlig-1.html
+fails == capitalize-1.html capitalize-1.html
+fails == capitalize-2.html capitalize-2.html
+fails == capitalize-3.html capitalize-3.html
+fails == capitalize-4.html capitalize-4.html
+fails == capitalize-5.html capitalize-5.html
+fails == capitalize-6.html capitalize-6.html
+fails == capitalize-7.html capitalize-7.html
+fails == capitalize-7a.html capitalize-7a.html
+fails == capitalize-8.html capitalize-8.html
+fails == lowercase-1.html lowercase-1.html
+fails == lowercase-sigma-1.html lowercase-sigma-1.html
+fails == small-caps-1.html small-caps-1.html
+fails HTTP(..) == fake-small-caps-1.html fake-small-caps-1.html
+fails HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1.html
+fails HTTP(..) == opentype-small-caps-1.html opentype-small-caps-1.html
+fails HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
+fails HTTP(..) == graphite-small-caps-1.html graphite-small-caps-1.html
+fails == uppercase-1.html uppercase-1.html
+fails == uppercase-szlig-1.html uppercase-szlig-1.html
 # these use DejaVu Sans via @font-face for consistency of results
-skip skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,250,15) HTTP(..) == all-upper.html all-upper.html
-# bug 773482, 1140292
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(cocoaWidget,250,15) fuzzy-if(skiaContent,1,1800) HTTP(..) == all-lower.html all-lower.html
-# bug 773482, 1140292
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,80) HTTP(..) == all-title.html all-title.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == smtp-upper.html smtp-upper.html
-== smtp-lower.html smtp-lower.html
-== smtp-title.html smtp-title.html
-== turkish-casing-1.html turkish-casing-1.html
-HTTP(..) == small-caps-turkish-1.html small-caps-turkish-1.html
-== greek-uppercase-1a.html greek-uppercase-1a.html
-== greek-uppercase-1b.html greek-uppercase-1b.html
-== greek-uppercase-2.html greek-uppercase-2.html
-HTTP(..) == greek-small-caps-1.html greek-small-caps-1.html
-== irish-uppercase-1.html irish-uppercase-1.html
-== irish-lowercase-1a.html irish-lowercase-1a.html
-== irish-lowercase-1b.html irish-lowercase-1b.html
-== fullwidth-1.html fullwidth-1.html
-== fullwidth-2.html fullwidth-2.html
-== fullwidth-all.html fullwidth-all.html
+fails == all-upper.html all-upper.html
+fails == all-lower.html all-lower.html
+fails == all-title.html all-title.html
+fails == smtp-upper.html smtp-upper.html
+fails == smtp-lower.html smtp-lower.html
+fails == smtp-title.html smtp-title.html
+fails == turkish-casing-1.html turkish-casing-1.html
+fails HTTP(..) == small-caps-turkish-1.html small-caps-turkish-1.html
+fails == greek-uppercase-1a.html greek-uppercase-1a.html
+fails == greek-uppercase-1b.html greek-uppercase-1b.html
+fails == greek-uppercase-2.html greek-uppercase-2.html
+fails HTTP(..) == greek-small-caps-1.html greek-small-caps-1.html
+fails == irish-uppercase-1.html irish-uppercase-1.html
+fails == irish-lowercase-1a.html irish-lowercase-1a.html
+fails == irish-lowercase-1b.html irish-lowercase-1b.html
+fails == fullwidth-1.html fullwidth-1.html
+fails == fullwidth-2.html fullwidth-2.html
+fails == fullwidth-all.html fullwidth-all.html
