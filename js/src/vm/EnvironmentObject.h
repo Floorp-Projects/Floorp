@@ -426,6 +426,17 @@ typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
 typedef Handle<ModuleEnvironmentObject*> HandleModuleEnvironmentObject;
 typedef MutableHandle<ModuleEnvironmentObject*> MutableHandleModuleEnvironmentObject;
 
+class WasmFunctionCallObject : public EnvironmentObject
+{
+  public:
+    static const Class class_;
+
+    static const uint32_t RESERVED_SLOTS = 1;
+
+    static WasmFunctionCallObject* createHollowForDebug(JSContext* cx,
+                                                        WasmFunctionScope* scope);
+};
+
 class LexicalEnvironmentObject : public EnvironmentObject
 {
     // Global and non-syntactic lexical environments need to store a 'this'
@@ -660,6 +671,12 @@ class MOZ_RAII EnvironmentIter
     // environment at pc.
     EnvironmentIter(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
+    // Constructing from an environment, scope and frame. The frame is given
+    // to initialize to proper enclosing environment/scope.
+    EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope, AbstractFramePtr frame
+                    MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+
 
     bool done() const {
         return si_.done();
@@ -984,6 +1001,7 @@ JSObject::is<js::EnvironmentObject>() const
     return is<js::CallObject>() ||
            is<js::VarEnvironmentObject>() ||
            is<js::ModuleEnvironmentObject>() ||
+           is<js::WasmFunctionCallObject>() ||
            is<js::LexicalEnvironmentObject>() ||
            is<js::WithEnvironmentObject>() ||
            is<js::NonSyntacticVariablesObject>() ||
@@ -1107,6 +1125,10 @@ InitFunctionEnvironmentObjects(JSContext* cx, AbstractFramePtr frame);
 
 MOZ_MUST_USE bool
 PushVarEnvironmentObject(JSContext* cx, HandleScope scope, AbstractFramePtr frame);
+
+MOZ_MUST_USE bool
+GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                            MutableHandleObject env, MutableHandleScope scope);
 
 #ifdef DEBUG
 bool

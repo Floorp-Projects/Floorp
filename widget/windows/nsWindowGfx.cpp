@@ -188,8 +188,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     return false;
   }
 
-  gfxDWriteFont::UpdateClearTypeUsage();
-
   // After we CallUpdateWindow to the child, occasionally a WM_PAINT message
   // is posted to the parent event loop with an empty update rect. Do a
   // dummy paint so that Windows stops dispatching WM_PAINT in an inifinite

@@ -149,6 +149,35 @@ linux/pgo:
         tooltool-downloads: public
         need-xvfb: true
 
+linux-nightly/opt:
+    description: "Linux32 Nightly"
+    attributes:
+        nightly: true
+    index:
+        product: firefox
+        job-name: linux32-nightly-opt
+    treeherder:
+        platform: linux32/opt
+        symbol: tc(N)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_32_builds.py
+            - disable_signing.py
+            - taskcluster_nightly.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+    run-on-projects: []
+
+
 linux64-asan/opt:
     description: "Linux64 Opt ASAN"
     index:
@@ -196,6 +225,34 @@ linux64-asan/debug:
         custom-build-variant-cfg: asan-tc-and-debug
         tooltool-downloads: public
         need-xvfb: true
+
+linux64-nightly/opt:
+    description: "Linux64 Nightly"
+    attributes:
+        nightly: true
+    index:
+        product: firefox
+        job-name: linux64-nightly-opt
+    treeherder:
+        platform: linux64/opt
+        symbol: tc(N)
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
+    worker:
+        implementation: docker-worker
+        max-run-time: 36000
+    run:
+        using: mozharness
+        actions: [get-secrets build check-test generate-build-stats update]
+        config:
+            - builds/releng_base_linux_64_builds.py
+            - disable_signing.py
+            - taskcluster_nightly.py
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        tooltool-downloads: public
+        need-xvfb: true
+    run-on-projects: [ ]
 
 linux64-stylo/opt:
     description: "Linux64 Opt Stylo"

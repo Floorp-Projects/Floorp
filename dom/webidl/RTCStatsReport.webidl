@@ -9,14 +9,14 @@
  */
 
 enum RTCStatsType {
-  "inboundrtp",
-  "outboundrtp",
+  "inbound-rtp",
+  "outbound-rtp",
   "session",
   "track",
   "transport",
-  "candidatepair",
-  "localcandidate",
-  "remotecandidate"
+  "candidate-pair",
+  "local-candidate",
+  "remote-candidate"
 };
 
 dictionary RTCStats {

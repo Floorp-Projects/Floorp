@@ -58,6 +58,10 @@ GenerateInterruptExit(jit::MacroAssembler& masm, jit::Label* throwLabel);
 extern Offsets
 GenerateThrowStub(jit::MacroAssembler& masm, jit::Label* throwLabel);
 
+extern Offsets
+GenerateDebugTrapStub(jit::MacroAssembler& masm, jit::Label* throwLabel);
+
+
 } // namespace wasm
 } // namespace js
 

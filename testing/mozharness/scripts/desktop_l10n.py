@@ -9,6 +9,7 @@
 This script manages Desktop repacks for nightly builds.
 """
 import os
+import glob
 import re
 import sys
 import time
@@ -801,6 +802,38 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         else:
             self.error('failed to upload %s' % locale)
             ret = FAILURE
+
+        if ret == FAILURE:
+            # If we failed above, we shouldn't even attempt a SIMPLE_NAME move
+            # even if we are configured to do so
+            return ret
+
+        # XXX Move the files to a SIMPLE_NAME format until we can enable
+        #     Simple names in the build system
+        if self.config.get("simple_name_move"):
+            # Assume an UPLOAD PATH
+            upload_target = self.config["upload_env"]["UPLOAD_PATH"]
+            target_path = os.path.join(upload_target, locale)
+            self.mkdir_p(target_path)
+            glob_name = "*.%s.*" % locale
+            matches = (glob.glob(os.path.join(upload_target, glob_name)) +
+                       glob.glob(os.path.join(upload_target, 'update', glob_name)) +
+                       glob.glob(os.path.join(upload_target, '*', 'xpi', glob_name)))
+            targets_exts = ["tar.bz2", "langpack.xpi", "complete.mar", "checksums"]
+            targets = ["target.%s" % ext for ext in targets_exts]
+            for f in matches:
+                target_file = next(target_file for target_file in targets
+                                    if f.endswith(target_file[6:]))
+                if target_file:
+                    # Remove from list of available options for this locale
+                    targets.remove(target_file)
+                else:
+                    # wasn't valid (or already matched)
+                    raise RuntimeError("Unexpected matching file name encountered: %s"
+                                       % f)
+                self.move(os.path.join(f),
+                          os.path.join(target_path, target_file))
+            self.log("Converted uploads for %s to simple names" % locale)
         return ret
 
     def set_upload_files(self, locale):

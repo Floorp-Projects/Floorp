@@ -19,6 +19,8 @@
 #include "js/Debug.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorObject.h"
+#include "wasm/WasmDebugFrame.h"
+#include "wasm/WasmInstance.h"
 
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
@@ -420,6 +422,8 @@ AbstractFramePtr::returnValue() const
 {
     if (isInterpreterFrame())
         return asInterpreterFrame()->returnValue();
+    if (isWasmDebugFrame())
+        return UndefinedHandleValue;
     return asBaselineFrame()->returnValue();
 }
 
@@ -434,6 +438,12 @@ AbstractFramePtr::setReturnValue(const Value& rval) const
         asBaselineFrame()->setReturnValue(rval);
         return;
     }
+    if (isWasmDebugFrame()) {
+        // TODO handle wasm function return value
+        // The function is called from Debugger::slowPathOnLeaveFrame --
+        // ignoring value for wasm.
+        return;
+    }
     asRematerializedFrame()->setReturnValue(rval);
 }
 
@@ -444,6 +454,8 @@ AbstractFramePtr::environmentChain() const
         return asInterpreterFrame()->environmentChain();
     if (isBaselineFrame())
         return asBaselineFrame()->environmentChain();
+    if (isWasmDebugFrame())
+        return asWasmDebugFrame()->environmentChain();
     return asRematerializedFrame()->environmentChain();
 }
 
@@ -580,6 +592,8 @@ AbstractFramePtr::isGlobalFrame() const
         return asInterpreterFrame()->isGlobalFrame();
     if (isBaselineFrame())
         return asBaselineFrame()->isGlobalFrame();
+    if (isWasmDebugFrame())
+        return false;
     return asRematerializedFrame()->isGlobalFrame();
 }
 
@@ -590,6 +604,8 @@ AbstractFramePtr::isModuleFrame() const
         return asInterpreterFrame()->isModuleFrame();
     if (isBaselineFrame())
         return asBaselineFrame()->isModuleFrame();
+    if (isWasmDebugFrame())
+        return false;
     return asRematerializedFrame()->isModuleFrame();
 }
 
@@ -600,6 +616,8 @@ AbstractFramePtr::isEvalFrame() const
         return asInterpreterFrame()->isEvalFrame();
     if (isBaselineFrame())
         return asBaselineFrame()->isEvalFrame();
+    if (isWasmDebugFrame())
+        return false;
     MOZ_ASSERT(isRematerializedFrame());
     return false;
 }
@@ -622,6 +640,8 @@ AbstractFramePtr::hasCachedSavedFrame() const
         return asInterpreterFrame()->hasCachedSavedFrame();
     if (isBaselineFrame())
         return asBaselineFrame()->hasCachedSavedFrame();
+    if (isWasmDebugFrame())
+        return asWasmDebugFrame()->hasCachedSavedFrame();
     return asRematerializedFrame()->hasCachedSavedFrame();
 }
 
@@ -632,6 +652,8 @@ AbstractFramePtr::setHasCachedSavedFrame()
         asInterpreterFrame()->setHasCachedSavedFrame();
     else if (isBaselineFrame())
         asBaselineFrame()->setHasCachedSavedFrame();
+    else if (isWasmDebugFrame())
+        asWasmDebugFrame()->setHasCachedSavedFrame();
     else
         asRematerializedFrame()->setHasCachedSavedFrame();
 }
@@ -643,6 +665,8 @@ AbstractFramePtr::isDebuggee() const
         return asInterpreterFrame()->isDebuggee();
     if (isBaselineFrame())
         return asBaselineFrame()->isDebuggee();
+    if (isWasmDebugFrame())
+        return asWasmDebugFrame()->isDebuggee();
     return asRematerializedFrame()->isDebuggee();
 }
 
@@ -653,6 +677,8 @@ AbstractFramePtr::setIsDebuggee()
         asInterpreterFrame()->setIsDebuggee();
     else if (isBaselineFrame())
         asBaselineFrame()->setIsDebuggee();
+    else if (isWasmDebugFrame())
+        asWasmDebugFrame()->setIsDebuggee();
     else
         asRematerializedFrame()->setIsDebuggee();
 }
@@ -664,13 +690,22 @@ AbstractFramePtr::unsetIsDebuggee()
         asInterpreterFrame()->unsetIsDebuggee();
     else if (isBaselineFrame())
         asBaselineFrame()->unsetIsDebuggee();
+    else if (isWasmDebugFrame())
+        asWasmDebugFrame()->unsetIsDebuggee();
     else
         asRematerializedFrame()->unsetIsDebuggee();
 }
 
 inline bool
-AbstractFramePtr::hasArgs() const {
+AbstractFramePtr::hasArgs() const
+{
     return isFunctionFrame();
+}
+
+inline bool
+AbstractFramePtr::hasScript() const
+{
+    return !isWasmDebugFrame();
 }
 
 inline JSScript*
@@ -681,6 +716,20 @@ AbstractFramePtr::script() const
     if (isBaselineFrame())
         return asBaselineFrame()->script();
     return asRematerializedFrame()->script();
+}
+
+inline wasm::Instance*
+AbstractFramePtr::wasmInstance() const
+{
+    return asWasmDebugFrame()->instance();
+}
+
+inline GlobalObject*
+AbstractFramePtr::global() const
+{
+    if (isWasmDebugFrame())
+        return &wasmInstance()->object()->global();
+    return &script()->global();
 }
 
 inline JSFunction*
@@ -710,6 +759,8 @@ AbstractFramePtr::isFunctionFrame() const
         return asInterpreterFrame()->isFunctionFrame();
     if (isBaselineFrame())
         return asBaselineFrame()->isFunctionFrame();
+    if (isWasmDebugFrame())
+        return false;
     return asRematerializedFrame()->isFunctionFrame();
 }
 
@@ -782,6 +833,8 @@ AbstractFramePtr::prevUpToDate() const
         return asInterpreterFrame()->prevUpToDate();
     if (isBaselineFrame())
         return asBaselineFrame()->prevUpToDate();
+    if (isWasmDebugFrame())
+        return asWasmDebugFrame()->prevUpToDate();
     return asRematerializedFrame()->prevUpToDate();
 }
 
@@ -796,6 +849,10 @@ AbstractFramePtr::setPrevUpToDate() const
         asBaselineFrame()->setPrevUpToDate();
         return;
     }
+    if (isWasmDebugFrame()) {
+        asWasmDebugFrame()->setPrevUpToDate();
+        return;
+    }
     asRematerializedFrame()->setPrevUpToDate();
 }
 
@@ -808,6 +865,10 @@ AbstractFramePtr::unsetPrevUpToDate() const
     }
     if (isBaselineFrame()) {
         asBaselineFrame()->unsetPrevUpToDate();
+        return;
+    }
+    if (isWasmDebugFrame()) {
+        asWasmDebugFrame()->unsetPrevUpToDate();
         return;
     }
     asRematerializedFrame()->unsetPrevUpToDate();
@@ -836,6 +897,8 @@ AbstractFramePtr::newTarget() const
 inline bool
 AbstractFramePtr::debuggerNeedsCheckPrimitiveReturn() const
 {
+    if (isWasmDebugFrame())
+        return false;
     return script()->isDerivedClassConstructor();
 }
 

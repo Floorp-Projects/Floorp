@@ -67,9 +67,9 @@ class LocalesMixin(ChunkingMixin):
             locales = os.environ["MOZ_LOCALES"].split()
 
         # Command line or config
-        if not locales and c.get("locales", None):
+        if not locales and c.get("locales", []):
             locales = c["locales"]
-            self.debug("Using locales from config/CLI: %s" % locales)
+            self.debug("Using locales from config/CLI: %s" % ", ".join(locales))
 
         # parse locale:revision if set
         if locales:

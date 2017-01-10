@@ -9,6 +9,7 @@ import urllib
 from marionette_driver import errors, By, Wait
 from marionette_harness import (
     MarionetteTestCase,
+    run_if_manage_instance,
     skip,
     skip_if_mobile,
     WindowManagerMixin,
@@ -183,6 +184,8 @@ class TestNavigate(WindowManagerMixin, MarionetteTestCase):
         self.marionette.navigate(self.fixtures.where_is("black.png"))
         self.assertIn("black.png", self.marionette.title)
 
+    @run_if_manage_instance("Only runnable if Marionette manages the instance")
+    @skip_if_mobile("Bug 1322993 - Missing temporary folder")
     def test_focus_after_navigation(self):
         self.marionette.quit()
         self.marionette.start_session()

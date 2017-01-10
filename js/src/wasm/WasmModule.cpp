@@ -143,7 +143,13 @@ Module::serializedSize(size_t* maybeBytecodeSize, size_t* maybeCompiledSize) con
     if (maybeBytecodeSize)
         *maybeBytecodeSize = bytecode_->bytes.length();
 
-    if (maybeCompiledSize) {
+    // The compiled debug code must not be saved, set compiled size to 0,
+    // so Module::assumptionsMatch will return false during assumptions
+    // deserialization.
+    if (maybeCompiledSize && metadata_->debugEnabled)
+        *maybeCompiledSize = 0;
+
+    if (maybeCompiledSize && !metadata_->debugEnabled) {
         *maybeCompiledSize = assumptions_.serializedSize() +
                              SerializedPodVectorSize(code_) +
                              linkData_.serializedSize() +
@@ -174,7 +180,9 @@ Module::serialize(uint8_t* maybeBytecodeBegin, size_t maybeBytecodeSize,
         MOZ_RELEASE_ASSERT(bytecodeEnd == maybeBytecodeBegin + maybeBytecodeSize);
     }
 
-    if (maybeCompiledBegin) {
+    MOZ_ASSERT_IF(maybeCompiledBegin && metadata_->debugEnabled, maybeCompiledSize == 0);
+
+    if (maybeCompiledBegin && !metadata_->debugEnabled) {
         // Assumption must be serialized at the beginning of the compiled bytes so
         // that compiledAssumptionsMatch can detect a build-id mismatch before any
         // other decoding occurs.
