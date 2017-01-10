@@ -163,7 +163,7 @@ class CollectionValidator {
       if (combined) {
         combined.client = record;
       } else {
-        allRecords.set(id,  { client: record, server: null });
+        allRecords.set(id, { client: record, server: null });
       }
     }
 

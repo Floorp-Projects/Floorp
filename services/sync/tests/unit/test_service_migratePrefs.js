@@ -18,7 +18,7 @@ function test_migrate_logging() {
   do_check_true(Svc.Prefs.get("log.appender.file.logOnSuccess"));
   do_check_eq(Svc.Prefs.get("log.appender.debugLog"), undefined);
   do_check_eq(Svc.Prefs.get("log.appender.debugLog.enabled"), undefined);
-};
+}
 
 function run_test() {
   _("Set some prefs on the old branch");

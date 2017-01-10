@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "Session", "@mozilla.org/browser/sessio
 
 const DATA_VERSION = 1;
 
-var ClientRecord = function (params) {
+var ClientRecord = function(params) {
   this.id = params.id;
   this.name = params.name || "?";
   this.tabs = new Set();
@@ -28,7 +28,7 @@ var ClientRecord = function (params) {
 ClientRecord.prototype = {
   version: DATA_VERSION,
 
-  update: function (params) {
+  update(params) {
     if (this.id !== params.id) {
       throw new Error("expected " + this.id + " to equal " + params.id);
     }
@@ -37,7 +37,7 @@ ClientRecord.prototype = {
   }
 };
 
-var TabRecord = function (params) {
+var TabRecord = function(params) {
   this.url = params.url || "";
   this.update(params);
 };
@@ -45,7 +45,7 @@ var TabRecord = function (params) {
 TabRecord.prototype = {
   version: DATA_VERSION,
 
-  update: function (params) {
+  update(params) {
     if (this.url && this.url !== params.url) {
       throw new Error("expected " + this.url + " to equal " + params.url);
     }
@@ -60,13 +60,13 @@ TabRecord.prototype = {
   },
 };
 
-var TabCache = function () {
+var TabCache = function() {
   this.tabs = new Map();
   this.clients = new Map();
 };
 
 TabCache.prototype = {
-  merge: function (client, tabs) {
+  merge(client, tabs) {
     if (!client || !client.id) {
       return;
     }
@@ -113,7 +113,7 @@ TabCache.prototype = {
     }
   },
 
-  clear: function (client) {
+  clear(client) {
     if (client) {
       this.clients.delete(client.id);
     } else {
@@ -122,7 +122,7 @@ TabCache.prototype = {
     }
   },
 
-  get: function () {
+  get() {
     let results = [];
     for (let client of this.clients.values()) {
       results.push(client);
@@ -130,13 +130,13 @@ TabCache.prototype = {
     return results;
   },
 
-  isEmpty: function () {
+  isEmpty() {
     return 0 == this.clients.size;
   },
 
 };
 
-this.Tabs = function () {
+this.Tabs = function() {
   let suspended = true;
 
   let topics = [
@@ -146,7 +146,7 @@ this.Tabs = function () {
     "TabSelect",
   ];
 
-  let update = function (event) {
+  let update = function(event) {
     if (event.originalTarget.linkedBrowser) {
       if (PrivateBrowsingUtils.isBrowserPrivate(event.originalTarget.linkedBrowser) &&
           !PrivateBrowsingUtils.permanentPrivateBrowsing) {
@@ -157,26 +157,26 @@ this.Tabs = function () {
     eventSource.emit("change");
   };
 
-  let registerListenersForWindow = function (window) {
+  let registerListenersForWindow = function(window) {
     for (let topic of topics) {
       window.addEventListener(topic, update, false);
     }
     window.addEventListener("unload", unregisterListeners, false);
   };
 
-  let unregisterListenersForWindow = function (window) {
+  let unregisterListenersForWindow = function(window) {
     window.removeEventListener("unload", unregisterListeners, false);
     for (let topic of topics) {
       window.removeEventListener(topic, update, false);
     }
   };
 
-  let unregisterListeners = function (event) {
+  let unregisterListeners = function(event) {
     unregisterListenersForWindow(event.target);
   };
 
   let observer = {
-    observe: function (subject, topic, data) {
+    observe(subject, topic, data) {
       switch (topic) {
         case "domwindowopened":
           let onLoad = () => {
@@ -192,7 +192,7 @@ this.Tabs = function () {
     }
   };
 
-  let resume = function () {
+  let resume = function() {
     if (suspended) {
       Observers.add("domwindowopened", observer);
       let wins = Services.wm.getEnumerator("navigator:browser");
@@ -200,9 +200,9 @@ this.Tabs = function () {
         registerListenersForWindow(wins.getNext());
       }
     }
-  }.bind(this);
+  };
 
-  let suspend = function () {
+  let suspend = function() {
     if (!suspended) {
       Observers.remove("domwindowopened", observer);
       let wins = Services.wm.getEnumerator("navigator:browser");
@@ -210,7 +210,7 @@ this.Tabs = function () {
         unregisterListenersForWindow(wins.getNext());
       }
     }
-  }.bind(this);
+  };
 
   let eventTypes = [
     "change",
@@ -220,20 +220,20 @@ this.Tabs = function () {
 
   let tabCache = new TabCache();
 
-  let getWindowEnumerator = function () {
+  let getWindowEnumerator = function() {
     return Services.wm.getEnumerator("navigator:browser");
   };
 
-  let shouldSkipWindow = function (win) {
+  let shouldSkipWindow = function(win) {
     return win.closed ||
            PrivateBrowsingUtils.isWindowPrivate(win);
   };
 
-  let getTabState = function (tab) {
+  let getTabState = function(tab) {
     return JSON.parse(Session.getTabState(tab));
   };
 
-  let getLocalTabs = function (filter) {
+  let getLocalTabs = function(filter) {
     let deferred = Promise.defer();
 
     filter = (undefined === filter) ? true : filter;
@@ -242,11 +242,11 @@ this.Tabs = function () {
     let allTabs = [];
 
     let currentState = JSON.parse(Session.getBrowserState());
-    currentState.windows.forEach(function (window) {
+    currentState.windows.forEach(function(window) {
       if (window.isPrivate) {
         return;
       }
-      window.tabs.forEach(function (tab) {
+      window.tabs.forEach(function(tab) {
         if (!tab.entries.length) {
           return;
         }
@@ -273,7 +273,7 @@ this.Tabs = function () {
     return deferred.promise;
   };
 
-  let mergeRemoteTabs = function (client, tabs) {
+  let mergeRemoteTabs = function(client, tabs) {
     let deferred = Promise.defer();
 
     deferred.resolve(tabCache.merge(client, tabs));
@@ -282,7 +282,7 @@ this.Tabs = function () {
     return deferred.promise;
   };
 
-  let clearRemoteTabs = function (client) {
+  let clearRemoteTabs = function(client) {
     let deferred = Promise.defer();
 
     deferred.resolve(tabCache.clear(client));
@@ -291,7 +291,7 @@ this.Tabs = function () {
     return deferred.promise;
   };
 
-  let getRemoteTabs = function () {
+  let getRemoteTabs = function() {
     let deferred = Promise.defer();
 
     deferred.resolve(tabCache.get());
@@ -299,7 +299,7 @@ this.Tabs = function () {
     return deferred.promise;
   };
 
-  let hasRemoteTabs = function () {
+  let hasRemoteTabs = function() {
     return !tabCache.isEmpty();
   };
 

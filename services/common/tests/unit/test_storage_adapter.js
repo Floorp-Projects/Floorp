@@ -23,7 +23,7 @@ function do_get_kinto_db() {
 }
 
 function cleanup_kinto() {
-  add_test(function cleanup_kinto_files(){
+  add_test(function cleanup_kinto_files() {
     let kintoDB = do_get_kinto_db();
     // clean up the db
     kintoDB.remove(false);
@@ -251,7 +251,7 @@ add_test(function test_creation_from_empty_db() {
     let kintoDB = do_get_kinto_db();
 
     let emptyDB = do_get_file("test_storage_adapter/empty.sqlite");
-    emptyDB.copyTo(profile,kintoFilename);
+    emptyDB.copyTo(profile, kintoFilename);
 
     run_next_test();
   });

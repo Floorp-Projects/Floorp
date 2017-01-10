@@ -116,7 +116,7 @@ this.FxAccountsOAuthClient.prototype = {
    * Opens a tab at "this._fxaOAuthStartUrl".
    * Registers a WebChannel listener and sets up a callback if needed.
    */
-  launchWebFlow: function () {
+  launchWebFlow() {
     if (!this._channelCallback) {
       this._registerChannel();
     }
@@ -132,7 +132,7 @@ this.FxAccountsOAuthClient.prototype = {
   /**
    * Release all resources that are in use.
    */
-  tearDown: function() {
+  tearDown() {
     this.onComplete = null;
     this.onError = null;
     this._complete = true;
@@ -145,7 +145,7 @@ this.FxAccountsOAuthClient.prototype = {
    *
    * @private
    */
-  _configureChannel: function() {
+  _configureChannel() {
     this._webChannelId = "oauth_" + this.parameters.client_id;
 
     // if this.parameters.content_uri is present but not a valid URI, then this will throw an error.
@@ -160,7 +160,7 @@ this.FxAccountsOAuthClient.prototype = {
    * Create a new channel with the WebChannelBroker, setup a callback listener
    * @private
    */
-  _registerChannel: function() {
+  _registerChannel() {
     /**
      * Processes messages that are called back from the FxAccountsChannel
      *
@@ -172,7 +172,7 @@ this.FxAccountsOAuthClient.prototype = {
      *        Channel message event sendingContext
      * @private
      */
-    let listener = function (webChannelId, message, sendingContext) {
+    let listener = function(webChannelId, message, sendingContext) {
       if (message) {
         let command = message.command;
         let data = message.data;
@@ -251,7 +251,7 @@ this.FxAccountsOAuthClient.prototype = {
    *        OAuth client options
    * @private
    */
-  _validateOptions: function (options) {
+  _validateOptions(options) {
     if (!options || !options.parameters) {
       throw new Error("Missing 'parameters' configuration option");
     }

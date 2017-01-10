@@ -58,10 +58,10 @@ var history2 = [
   { uri: "http://www.google.com/language_tools?hl=en",
     title: "Language Tools",
     visits: [
-      { type: 1, 
+      { type: 1,
         date: 0
       },
-      { type: 2, 
+      { type: 2,
         date: -40
       }
     ]

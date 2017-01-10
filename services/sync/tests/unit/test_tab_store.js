@@ -95,7 +95,7 @@ function test_createRecord() {
 
   let tabs = store.getAllTabs();
   let tabsize = JSON.stringify(tabs[0]).length;
-  let numtabs = Math.ceil(20000./77.);
+  let numtabs = Math.ceil(20000. / 77.);
 
   store.getWindowEnumerator = mockGetWindowEnumerator.bind(this, "http://foo.com", 1, 1);
   record = store.createRecord("fake-guid");

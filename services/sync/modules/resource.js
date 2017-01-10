@@ -229,7 +229,7 @@ AsyncResource.prototype = {
     let action = channel.requestMethod;
 
     this._log.trace("Channel: " + channel);
-    this._log.trace("Action: "  + action);
+    this._log.trace("Action: " + action);
 
     // Process status and success first. This way a problem with headers
     // doesn't fail to include accurate status information.
@@ -256,7 +256,7 @@ AsyncResource.prototype = {
       if (this._log.level <= Log.Level.Trace)
         this._log.trace(action + " body: " + data);
 
-    } catch(ex) {
+    } catch (ex) {
       // Got a response, but an exception occurred during processing.
       // This shouldn't occur.
       this._log.warn("Caught unexpected exception in _oncomplete", ex);
@@ -464,8 +464,7 @@ ChannelListener.prototype = {
     // Save the latest server timestamp when possible.
     try {
       AsyncResource.serverTime = channel.getResponseHeader("X-Weave-Timestamp") - 0;
-    }
-    catch(ex) {}
+    } catch (ex) {}
 
     this._log.trace("onStartRequest: " + channel.requestMethod + " " +
                     channel.URI.spec);
@@ -598,11 +597,11 @@ function ChannelNotificationListener(headersToCopy) {
 ChannelNotificationListener.prototype = {
   _logName: "Sync.Resource",
 
-  getInterface: function(aIID) {
+  getInterface(aIID) {
     return this.QueryInterface(aIID);
   },
 
-  QueryInterface: function(aIID) {
+  QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIBadCertListener2) ||
         aIID.equals(Ci.nsIInterfaceRequestor) ||
         aIID.equals(Ci.nsISupports) ||

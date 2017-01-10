@@ -15,7 +15,7 @@ add_test(function test_creation() {
     __proto__: SyncServerCallback,
   });
   do_check_true(!!server);       // Just so we have a check.
-  server.start(null, function () {
+  server.start(null, function() {
     _("Started on " + server.port);
     server.stop(run_next_test);
   });
@@ -77,14 +77,14 @@ add_test(function test_basic_http() {
   let server = new SyncServer();
   server.registerUser("john", "password");
   do_check_true(server.userExists("john"));
-  server.start(null, function () {
+  server.start(null, function() {
     _("Started on " + server.port);
-    Utils.nextTick(function () {
+    Utils.nextTick(function() {
       let req = localRequest(server, "/1.1/john/storage/crypto/keys");
       _("req is " + req);
-      req.get(function (err) {
+      req.get(function(err) {
         do_check_eq(null, err);
-        Utils.nextTick(function () {
+        Utils.nextTick(function() {
           server.stop(run_next_test);
         });
       });
@@ -103,16 +103,16 @@ add_test(function test_info_collections() {
   }
 
   server.registerUser("john", "password");
-  server.start(null, function () {
-    Utils.nextTick(function () {
+  server.start(null, function() {
+    Utils.nextTick(function() {
       let req = localRequest(server, "/1.1/john/info/collections");
-      req.get(function (err) {
+      req.get(function(err) {
         // Initial info/collections fetch is empty.
         do_check_eq(null, err);
         responseHasCorrectHeaders(this.response);
 
         do_check_eq(this.response.body, "{}");
-        Utils.nextTick(function () {
+        Utils.nextTick(function() {
           // When we PUT something to crypto/keys, "crypto" appears in the response.
           function cb(err) {
             do_check_eq(null, err);
@@ -121,7 +121,7 @@ add_test(function test_info_collections() {
             _("PUT response body: " + JSON.stringify(putResponseBody));
 
             req = localRequest(server, "/1.1/john/info/collections");
-            req.get(function (err) {
+            req.get(function(err) {
               do_check_eq(null, err);
               responseHasCorrectHeaders(this.response);
               let expectedColl = server.getCollection("john", "crypto");
@@ -130,7 +130,7 @@ add_test(function test_info_collections() {
               do_check_true(modified > 0);
               do_check_eq(putResponseBody, modified);
               do_check_eq(JSON.parse(this.response.body).crypto, modified);
-              Utils.nextTick(function () {
+              Utils.nextTick(function() {
                 server.stop(run_next_test);
               });
             });
@@ -163,7 +163,7 @@ add_test(function test_storage_request() {
 
   function retrieveWBONotExists(next) {
     let req = localRequest(server, keysURL);
-    req.get(function (err) {
+    req.get(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       do_check_eq(null, err);
@@ -174,7 +174,7 @@ add_test(function test_storage_request() {
   }
   function retrieveWBOExists(next) {
     let req = localRequest(server, foosURL);
-    req.get(function (err) {
+    req.get(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       let parsedBody = JSON.parse(this.response.body);
@@ -186,11 +186,11 @@ add_test(function test_storage_request() {
   }
   function deleteWBONotExists(next) {
     let req = localRequest(server, keysURL);
-    server.callback.onItemDeleted = function (username, collection, wboID) {
+    server.callback.onItemDeleted = function(username, collection, wboID) {
       do_throw("onItemDeleted should not have been called.");
     };
 
-    req.delete(function (err) {
+    req.delete(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       do_check_eq(this.response.status, 200);
@@ -200,7 +200,7 @@ add_test(function test_storage_request() {
   }
   function deleteWBOExists(next) {
     let req = localRequest(server, foosURL);
-    server.callback.onItemDeleted = function (username, collection, wboID) {
+    server.callback.onItemDeleted = function(username, collection, wboID) {
       _("onItemDeleted called for " + collection + "/" + wboID);
       delete server.callback.onItemDeleted;
       do_check_eq(username, "john");
@@ -209,7 +209,7 @@ add_test(function test_storage_request() {
       Utils.nextTick(next);
     };
 
-    req.delete(function (err) {
+    req.delete(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       do_check_eq(this.response.status, 200);
@@ -220,7 +220,7 @@ add_test(function test_storage_request() {
     let now = server.timestamp();
     _("Timestamp: " + now);
     let req = localRequest(server, storageURL);
-    req.delete(function (err) {
+    req.delete(function(err) {
       _("Body is " + this.response.body);
       _("Modified is " + this.response.newModified);
       let parsedBody = JSON.parse(this.response.body);
@@ -232,7 +232,7 @@ add_test(function test_storage_request() {
   function getStorageFails(next) {
     _("Testing that GET on /storage fails.");
     let req = localRequest(server, storageURL);
-    req.get(function (err) {
+    req.get(function(err) {
       do_check_eq(this.response.status, 405);
       do_check_eq(this.response.headers["allow"], "DELETE");
       Utils.nextTick(next);
@@ -241,7 +241,7 @@ add_test(function test_storage_request() {
   function getMissingCollectionWBO(next) {
     _("Testing that fetching a WBO from an on-existent collection 404s.");
     let req = localRequest(server, storageURL + "/foobar/baz");
-    req.get(function (err) {
+    req.get(function(err) {
       do_check_eq(this.response.status, 404);
       Utils.nextTick(next);
     });
@@ -269,13 +269,13 @@ add_test(function test_x_weave_records() {
     crypto: {foos: {foo: "bar"},
              bars: {foo: "baz"}}
   });
-  server.start(null, function () {
+  server.start(null, function() {
     let wbo = localRequest(server, "/1.1/john/storage/crypto/foos");
-    wbo.get(function (err) {
+    wbo.get(function(err) {
       // WBO fetches don't have one.
       do_check_false("x-weave-records" in this.response.headers);
       let col = localRequest(server, "/1.1/john/storage/crypto");
-      col.get(function (err) {
+      col.get(function(err) {
         // Collection fetches do.
         do_check_eq(this.response.headers["x-weave-records"], "2");
         server.stop(run_next_test);

@@ -503,7 +503,7 @@ AddonsStore.prototype = {
     }
   },
 
-  /***************************************************************************
+  /** *************************************************************************
    * Functions below are unique to this store and not part of the Store API  *
    ***************************************************************************/
 
@@ -732,7 +732,7 @@ AddonsTracker.prototype = {
     this.score += SCORE_INCREMENT_XLARGE;
   },
 
-  startTracking: function() {
+  startTracking() {
     if (this.engine.enabled) {
       this.reconciler.startListening();
     }
@@ -740,7 +740,7 @@ AddonsTracker.prototype = {
     this.reconciler.addChangeListener(this);
   },
 
-  stopTracking: function() {
+  stopTracking() {
     this.reconciler.removeChangeListener(this);
     this.reconciler.stopListening();
   },

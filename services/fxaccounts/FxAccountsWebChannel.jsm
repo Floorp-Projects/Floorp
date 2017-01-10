@@ -157,7 +157,7 @@ this.FxAccountsWebChannel.prototype = {
         let canLinkAccount = this._helpers.shouldAllowRelink(data.email);
 
         let response = {
-          command: command,
+          command,
           messageId: message.messageId,
           data: { ok: canLinkAccount }
         };

@@ -346,7 +346,7 @@ add_task(async function test_processIncoming_error_orderChildren() {
     let error;
     try {
       await sync_engine_and_validate_telem(engine, true)
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
     }
     ok(!!error);
@@ -419,7 +419,7 @@ add_task(async function test_restorePromptsReupload() {
     let error;
     try {
       await sync_engine_and_validate_telem(engine, false);
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
       _("Got error: " + Log.exceptionStr(ex));
     }
@@ -427,7 +427,7 @@ add_task(async function test_restorePromptsReupload() {
 
     _("Verify that there's only one bookmark on the server, and it's Thunderbird.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
-    let wbos = collection.keys(function (id) {
+    let wbos = collection.keys(function(id) {
       return ["menu", "toolbar", "mobile", "unfiled", folder1_guid].indexOf(id) == -1;
     });
     do_check_eq(wbos.length, 1);
@@ -463,7 +463,7 @@ add_task(async function test_restorePromptsReupload() {
     _("Sync again. This'll wipe bookmarks from the server.");
     try {
       await sync_engine_and_validate_telem(engine, false);
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
       _("Got error: " + Log.exceptionStr(ex));
     }
@@ -472,15 +472,15 @@ add_task(async function test_restorePromptsReupload() {
     _("Verify that there's only one bookmark on the server, and it's Firefox.");
     // Of course, there's also the Bookmarks Toolbar and Bookmarks Menu...
     let payloads     = server.user("foo").collection("bookmarks").payloads();
-    let bookmarkWBOs = payloads.filter(function (wbo) {
+    let bookmarkWBOs = payloads.filter(function(wbo) {
                          return wbo.type == "bookmark";
                        });
-    let folderWBOs   = payloads.filter(function (wbo) {
+    let folderWBOs   = payloads.filter(function(wbo) {
                          return ((wbo.type == "folder") &&
-                                 (wbo.id   != "menu") &&
-                                 (wbo.id   != "toolbar") &&
-                                 (wbo.id   != "unfiled") &&
-                                 (wbo.id   != "mobile"));
+                                 (wbo.id != "menu") &&
+                                 (wbo.id != "toolbar") &&
+                                 (wbo.id != "unfiled") &&
+                                 (wbo.id != "mobile"));
                        });
 
     do_check_eq(bookmarkWBOs.length, 1);
@@ -716,7 +716,7 @@ add_task(async function test_misreconciled_root() {
 
   let rec = new FakeRecord(BookmarkFolder, to_apply);
   let encrypted = encryptPayload(rec.cleartext);
-  encrypted.decrypt = function () {
+  encrypted.decrypt = function() {
     for (let x in rec) {
       encrypted[x] = rec[x];
     }
@@ -727,7 +727,7 @@ add_task(async function test_misreconciled_root() {
     getBatched() {
       return this.get();
     },
-    get: function () {
+    get() {
       this.recordHandler(encrypted);
       return {success: true}
     },

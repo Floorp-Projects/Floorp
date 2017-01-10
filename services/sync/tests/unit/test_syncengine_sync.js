@@ -342,9 +342,9 @@ add_task(async function test_processIncoming_reconcile() {
                          long_original: "Long Original Entry",
                          nukeme: "Nuke me!"};
   // Make this record 1 min old, thus older than the one on the server
-  engine._tracker.addChangedID('newerserver', Date.now()/1000 - 60);
+  engine._tracker.addChangedID('newerserver', Date.now() / 1000 - 60);
   // This record has been changed 2 mins later than the one on the server
-  engine._tracker.addChangedID('olderidentical', Date.now()/1000);
+  engine._tracker.addChangedID('olderidentical', Date.now() / 1000);
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
@@ -614,7 +614,7 @@ add_task(async function test_processIncoming_mobile_batchSize() {
   let collection = new ServerCollection();
   collection.get_log = [];
   collection._get = collection.get;
-  collection.get = function (options) {
+  collection.get = function(options) {
     this.get_log.push(options);
     return this._get(options);
   };
@@ -623,9 +623,9 @@ add_task(async function test_processIncoming_mobile_batchSize() {
   // 10 minutes old.
   for (let i = 0; i < 234; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + i});
+    let payload = encryptPayload({id, denomination: "Record No. " + i});
     let wbo = new ServerWBO(id, payload);
-    wbo.modified = Date.now()/1000 - 60*(i+10);
+    wbo.modified = Date.now() / 1000 - 60 * (i + 10);
     collection.insertWBO(wbo);
   }
 
@@ -661,12 +661,12 @@ add_task(async function test_processIncoming_mobile_batchSize() {
     do_check_eq(collection.get_log[1].full, undefined);
     do_check_eq(collection.get_log[1].limit, undefined);
     for (let i = 1; i <= Math.floor(234 / MOBILE_BATCH_SIZE); i++) {
-      do_check_eq(collection.get_log[i+1].full, 1);
-      do_check_eq(collection.get_log[i+1].limit, undefined);
+      do_check_eq(collection.get_log[i + 1].full, 1);
+      do_check_eq(collection.get_log[i + 1].limit, undefined);
       if (i < Math.floor(234 / MOBILE_BATCH_SIZE))
-        do_check_eq(collection.get_log[i+1].ids.length, MOBILE_BATCH_SIZE);
+        do_check_eq(collection.get_log[i + 1].ids.length, MOBILE_BATCH_SIZE);
       else
-        do_check_eq(collection.get_log[i+1].ids.length, 234 % MOBILE_BATCH_SIZE);
+        do_check_eq(collection.get_log[i + 1].ids.length, 234 % MOBILE_BATCH_SIZE);
     }
 
   } finally {
@@ -695,9 +695,9 @@ add_task(async function test_processIncoming_store_toFetch() {
   // Let's create three batches worth of server side records.
   for (var i = 0; i < MOBILE_BATCH_SIZE * 3; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
     let wbo = new ServerWBO(id, payload);
-    wbo.modified = Date.now()/1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
+    wbo.modified = Date.now() / 1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
     collection.insertWBO(wbo);
   }
 
@@ -761,7 +761,7 @@ add_task(async function test_processIncoming_resume_toFetch() {
                                     denomination: "Rekonstruktionslokomotive"}));
   for (let i = 0; i < 3; i++) {
     let id = 'failed' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + i});
+    let payload = encryptPayload({id, denomination: "Record No. " + i});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = LASTSYNC - 10;
     collection.insertWBO(wbo);
@@ -820,7 +820,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
   let engine = makeRotaryEngine();
   engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = function (records) {
+  engine._store.applyIncomingBatch = function(records) {
     let failed1 = records.shift();
     let failed2 = records.pop();
     this._applyIncomingBatch(records);
@@ -831,7 +831,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
   let collection = new ServerCollection();
   for (let i = 0; i < APPLY_BATCH_SIZE - 1; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
     collection.insert(id, payload);
   }
 
@@ -877,7 +877,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
   engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   let batchCalls = 0;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = function (records) {
+  engine._store.applyIncomingBatch = function(records) {
     batchCalls += 1;
     do_check_eq(records.length, APPLY_BATCH_SIZE);
     this._applyIncomingBatch.apply(this, arguments);
@@ -887,7 +887,7 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
   let collection = new ServerCollection();
   for (let i = 0; i < APPLY_BATCH_SIZE * 3; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
     collection.insert(id, payload);
   }
 
@@ -930,7 +930,7 @@ add_task(async function test_processIncoming_notify_count() {
   let engine = makeRotaryEngine();
   engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = function (records) {
+  engine._store.applyIncomingBatch = function(records) {
     engine._store._applyIncomingBatch(records.slice(1));
     return [records[0].id];
   };
@@ -939,7 +939,7 @@ add_task(async function test_processIncoming_notify_count() {
   let collection = new ServerCollection();
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
     collection.insert(id, payload);
   }
 
@@ -1020,7 +1020,7 @@ add_task(async function test_processIncoming_previousFailed() {
   let engine = makeRotaryEngine();
   engine.mobileGUIDFetchBatchSize = engine.applyIncomingBatchSize = APPLY_BATCH_SIZE;
   engine._store._applyIncomingBatch = engine._store.applyIncomingBatch;
-  engine._store.applyIncomingBatch = function (records) {
+  engine._store.applyIncomingBatch = function(records) {
     engine._store._applyIncomingBatch(records.slice(2));
     return [records[0].id, records[1].id];
   };
@@ -1029,7 +1029,7 @@ add_task(async function test_processIncoming_previousFailed() {
   let collection = new ServerCollection();
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + i});
+    let payload = encryptPayload({id, denomination: "Record No. " + i});
     collection.insert(id, payload);
   }
 
@@ -1103,9 +1103,9 @@ add_task(async function test_processIncoming_failed_records() {
   const NUMBER_OF_RECORDS = MOBILE_BATCH_SIZE * 3 + 5;
   for (let i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
     let wbo = new ServerWBO(id, payload);
-    wbo.modified = Date.now()/1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
+    wbo.modified = Date.now() / 1000 + 60 * (i - MOBILE_BATCH_SIZE * 3);
     collection.insertWBO(wbo);
   }
 
@@ -1131,7 +1131,7 @@ add_task(async function test_processIncoming_failed_records() {
     return this.__reconcile.apply(this, arguments);
   };
   engine._store._applyIncoming = engine._store.applyIncoming;
-  engine._store.applyIncoming = function (record) {
+  engine._store.applyIncoming = function(record) {
     if (BOGUS_RECORDS.indexOf(record.id) % 2 == 1) {
       throw "I don't like this record! Baaaaaah!";
     }
@@ -1249,7 +1249,7 @@ add_task(async function test_processIncoming_decrypt_failed() {
 
   // Patch the fake crypto service to throw on the record above.
   Svc.Crypto._decrypt = Svc.Crypto.decrypt;
-  Svc.Crypto.decrypt = function (ciphertext) {
+  Svc.Crypto.decrypt = function(ciphertext) {
     if (ciphertext == "Decrypt this!") {
       throw "Derp! Cipher finalized failed. Im ur crypto destroyin ur recordz.";
     }
@@ -1539,7 +1539,7 @@ add_task(async function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
     }
 
     // Ensure that the uploads were performed in batches of MAX_UPLOAD_RECORDS.
-    do_check_eq(noOfUploads, Math.ceil(234/MAX_UPLOAD_RECORDS));
+    do_check_eq(noOfUploads, Math.ceil(234 / MAX_UPLOAD_RECORDS));
 
   } finally {
     await cleanAndGo(engine, server);
@@ -1554,7 +1554,7 @@ add_task(async function test_uploadOutgoing_largeRecords() {
 
   let engine = makeRotaryEngine();
   engine.allowSkippedRecord = false;
-  engine._store.items["large-item"] = "Y".repeat(MAX_UPLOAD_BYTES*2);
+  engine._store.items["large-item"] = "Y".repeat(MAX_UPLOAD_BYTES * 2);
   engine._tracker.addChangedID("large-item", 0);
   collection.insert("large-item");
 
@@ -1661,7 +1661,7 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
   let now = Date.now();
   for (var i = 0; i < 234; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + i});
+    let payload = encryptPayload({id, denomination: "Record No. " + i});
     let wbo = new ServerWBO(id, payload);
     wbo.modified = now / 1000 - 60 * (i + 110);
     collection.insertWBO(wbo);
@@ -1853,7 +1853,7 @@ add_task(async function test_syncapplied_observer() {
   let collection = new ServerCollection();
   for (var i = 0; i < NUMBER_OF_RECORDS; i++) {
     let id = 'record-no-' + i;
-    let payload = encryptPayload({id: id, denomination: "Record No. " + id});
+    let payload = encryptPayload({id, denomination: "Record No. " + id});
     collection.insert(id, payload);
   }
 

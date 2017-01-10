@@ -35,9 +35,9 @@ function contentHandler(metadata, response) {
 
 // Set a proxy function to cause an internal redirect.
 function triggerRedirect() {
-  const PROXY_FUNCTION = "function FindProxyForURL(url, host) {"                +
+  const PROXY_FUNCTION = "function FindProxyForURL(url, host) {" +
                          "  return 'PROXY a_non_existent_domain_x7x6c572v:80; " +
-                                   "PROXY localhost:" + HTTP_PORT + "';"        +
+                                   "PROXY localhost:" + HTTP_PORT + "';" +
                          "}";
 
   let prefsService = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);

@@ -22,7 +22,7 @@ function MockedPlainStorage(accountData) {
   if (accountData) {
     data = {
       version: DATA_FORMAT_VERSION,
-      accountData: accountData,
+      accountData,
     }
   }
   this.data = data;
@@ -45,7 +45,7 @@ function MockedSecureStorage(accountData) {
   if (accountData) {
     data = {
       version: DATA_FORMAT_VERSION,
-      accountData: accountData,
+      accountData,
     }
   }
   this.data = data;
@@ -55,7 +55,12 @@ function MockedSecureStorage(accountData) {
 MockedSecureStorage.prototype = {
   fetchCount: 0,
   locked: false,
+  /* eslint-disable object-shorthand */
+  // This constructor must be declared without
+  // object shorthand or we get an exception of
+  // "TypeError: this.STORAGE_LOCKED is not a constructor"
   STORAGE_LOCKED: function() {},
+  /* eslint-enable object-shorthand */
   get: Task.async(function* (uid, email) {
     this.fetchCount++;
     if (this.locked) {

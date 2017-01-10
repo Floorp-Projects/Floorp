@@ -29,9 +29,9 @@ function makeGUID() {
   return CommonUtils.encodeBase64URL(CryptoUtils.generateRandomBytes(9));
 }
 
-this.Local = function () {
+this.Local = function() {
   let prefs = new Preferences("services.cloudsync.");
-  this.__defineGetter__("prefs", function () {
+  this.__defineGetter__("prefs", function() {
     return prefs;
   });
 };
@@ -39,7 +39,7 @@ this.Local = function () {
 Local.prototype = {
   get id() {
     let clientId = this.prefs.get("client.GUID", "");
-    return clientId == "" ? this.id = makeGUID(): clientId;
+    return clientId == "" ? this.id = makeGUID() : clientId;
   },
 
   set id(value) {

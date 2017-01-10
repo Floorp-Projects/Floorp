@@ -42,13 +42,13 @@ function sync_httpd_setup() {
   let keysWBO     = new ServerWBO("keys");
   let globalWBO   = new ServerWBO("global", {storageVersion: STORAGE_VERSION,
                                              syncID: Utils.makeGUID(),
-                                             engines: engines});
+                                             engines});
 
   let handlers = {
     "/1.1/johndoe/info/collections":    collectionsHelper.handler,
-    "/1.1/johndoe/storage/meta/global": upd("meta",    globalWBO.handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", globalWBO.handler()),
     "/1.1/johndoe/storage/clients":     upd("clients", clientsColl.handler()),
-    "/1.1/johndoe/storage/crypto/keys": upd("crypto",  keysWBO.handler())
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler())
   };
   return httpd_setup(handlers);
 }
@@ -106,7 +106,7 @@ add_identity_test(this, async function test_backoff503() {
                       headers: {"retry-after": BACKOFF}};
 
   let backoffInterval;
-  Svc.Obs.add("weave:service:backoff:interval", function (subject) {
+  Svc.Obs.add("weave:service:backoff:interval", function(subject) {
     backoffInterval = subject;
   });
 

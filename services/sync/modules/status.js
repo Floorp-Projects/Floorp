@@ -98,9 +98,9 @@ this.Status = {
   // value, so we can't trivially debug-print Status as JSON.
   toString: function toString() {
     return "<Status" +
-           ": login: "   + Status.login +
+           ": login: " + Status.login +
            ", service: " + Status.service +
-           ", sync: "    + Status.sync + ">";
+           ", sync: " + Status.sync + ">";
   },
 
   checkSetup: function checkSetup() {

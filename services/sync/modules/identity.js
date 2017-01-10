@@ -87,18 +87,18 @@ IdentityManager.prototype = {
   /**
    * Initialize the identity provider.
    */
-  initialize: function() {
+  initialize() {
     // Nothing to do for this identity provider.
   },
 
-  finalize: function() {
+  finalize() {
     // Nothing to do for this identity provider.
   },
 
   /**
    * Called whenever Service.logout() is called.
    */
-  logout: function() {
+  logout() {
     // nothing to do for this identity provider.
   },
 
@@ -106,7 +106,7 @@ IdentityManager.prototype = {
    * Ensure the user is logged in.  Returns a promise that resolves when
    * the user is logged in, or is rejected if the login attempt has failed.
    */
-  ensureLoggedIn: function() {
+  ensureLoggedIn() {
     // nothing to do for this identity provider
     return Promise.resolve();
   },
@@ -169,7 +169,7 @@ IdentityManager.prototype = {
   /**
    * Resets/Drops all credentials we hold for the current user.
    */
-  resetCredentials: function() {
+  resetCredentials() {
     this.basicPassword = null;
     this.resetSyncKey();
   },
@@ -177,7 +177,7 @@ IdentityManager.prototype = {
   /**
    * Resets/Drops the sync key we hold for the current user.
    */
-  resetSyncKey: function() {
+  resetSyncKey() {
     this.syncKey = null;
     // syncKeyBundle cleared as a result of setting syncKey.
   },
@@ -372,7 +372,7 @@ IdentityManager.prototype = {
    * Returns a promise that resolves with the current auth state after
    * attempting to unlock.
    */
-  unlockAndVerifyAuthState: function() {
+  unlockAndVerifyAuthState() {
     // Try to fetch the passphrase - this will prompt for MP unlock as a
     // side-effect...
     try {
@@ -441,7 +441,7 @@ IdentityManager.prototype = {
    * allows us to avoid a network request for when we actually need the
    * migration info.
    */
-  prefetchMigrationSentinel: function(service) {
+  prefetchMigrationSentinel(service) {
     // Try and fetch the migration sentinel - it will end up in the recordManager
     // cache.
     try {
@@ -495,7 +495,7 @@ IdentityManager.prototype = {
   /**
     * Return credentials hosts for this identity only.
     */
-  _getSyncCredentialsHosts: function() {
+  _getSyncCredentialsHosts() {
     return Utils.getSyncCredentialsHostsLegacy();
   },
 
@@ -584,12 +584,12 @@ IdentityManager.prototype = {
     request.setHeader("authorization", "Basic " + btoa(up));
   },
 
-  createClusterManager: function(service) {
+  createClusterManager(service) {
     Cu.import("resource://services-sync/stages/cluster.js");
     return new ClusterManager(service);
   },
 
-  offerSyncOptions: function () {
+  offerSyncOptions() {
     // Do nothing for Sync 1.1.
     return {accepted: true};
   },

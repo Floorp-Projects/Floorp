@@ -23,7 +23,7 @@ var BrowserTabs = {
    * @param uri The uri to load in the new tab
    * @return nothing
    */
-  Add: function(uri, fn) {
+  Add(uri, fn) {
     // Open the uri in a new tab in the current browser window, and calls
     // the callback fn from the tab's onload handler.
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
@@ -46,7 +46,7 @@ var BrowserTabs = {
    * @param profile The profile to search for tabs
    * @return true if the specified tab could be found, otherwise false
    */
-  Find: function(uri, title, profile) {
+  Find(uri, title, profile) {
     // Find the uri in Weave's list of tabs for the given profile.
     let engine = Weave.Service.engineManager.get("tabs");
     for (let [guid, client] of Object.entries(engine.getAllClients())) {

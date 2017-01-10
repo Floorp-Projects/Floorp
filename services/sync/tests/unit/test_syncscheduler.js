@@ -208,13 +208,13 @@ add_identity_test(this, async function test_masterpassword_locked_retry_interval
   let rescheduleInterval = false;
 
   let oldScheduleAtInterval = SyncScheduler.prototype.scheduleAtInterval;
-  SyncScheduler.prototype.scheduleAtInterval = function (interval) {
+  SyncScheduler.prototype.scheduleAtInterval = function(interval) {
     rescheduleInterval = true;
     do_check_eq(interval, MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
   };
 
   let oldVerifyLogin = Service.verifyLogin;
-  Service.verifyLogin = function () {
+  Service.verifyLogin = function() {
     Status.login = MASTER_PASSWORD_LOCKED;
     return false;
   };

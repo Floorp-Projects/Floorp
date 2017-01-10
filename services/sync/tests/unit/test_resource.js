@@ -98,7 +98,7 @@ const TIMESTAMP = 1274380461;
 
 function server_timestamp(metadata, response) {
   let body = "Thank you for your request";
-  response.setHeader("X-Weave-Timestamp", ''+TIMESTAMP, false);
+  response.setHeader("X-Weave-Timestamp", '' + TIMESTAMP, false);
   response.setStatusLine(metadata.httpVersion, 200, "OK");
   response.bodyOutputStream.write(body, body.length);
 }
@@ -209,7 +209,7 @@ function run_test() {
   logger = res._log;
   let dbg    = logger.debug;
   let debugMessages = [];
-  logger.debug = function (msg) {
+  logger.debug = function(msg) {
     debugMessages.push(msg);
     dbg.call(this, msg);
   }
@@ -415,7 +415,7 @@ function run_test() {
   let res11 = new Resource("http://localhost:12345/does/not/exist");
   try {
     content = res11.get();
-  } catch(ex) {
+  } catch (ex) {
     error = ex;
   }
   do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
