@@ -29,8 +29,8 @@ add_test(function test_hawk() {
   let uri_http = CommonUtils.makeURI("http://example.net/somewhere/over/the/rainbow");
   let sha1_opts = { credentials: credentials_sha1,
                     ext: "Bazinga!",
-                    ts: ts,
-                    nonce: nonce,
+                    ts,
+                    nonce,
                     payload: "something to write about",
                   };
   result = compute(uri_http, method, sha1_opts);
@@ -60,8 +60,8 @@ add_test(function test_hawk() {
   let uri_https = CommonUtils.makeURI("https://example.net/somewhere/over/the/rainbow");
   let sha256_opts = { credentials: credentials_sha256,
                       ext: "Bazinga!",
-                      ts: ts,
-                      nonce: nonce,
+                      ts,
+                      nonce,
                       payload: "something to write about",
                       contentType: "text/plain",
                     };
@@ -83,8 +83,8 @@ add_test(function test_hawk() {
   do_check_eq(result.artifacts.ext, "Bazinga!");
 
   let sha256_opts_noext = { credentials: credentials_sha256,
-                            ts: ts,
-                            nonce: nonce,
+                            ts,
+                            nonce,
                             payload: "something to write about",
                             contentType: "text/plain",
                           };
@@ -116,8 +116,8 @@ add_test(function test_hawk() {
   /* The HAWK spec calls for seconds-since-epoch, not ms-since-epoch.
    * Warning: this test will fail in the year 33658, and for time travellers
    * who journey earlier than 2001. Please plan accordingly. */
-  do_check_true(result.artifacts.ts > 1000*1000*1000);
-  do_check_true(result.artifacts.ts < 1000*1000*1000*1000);
+  do_check_true(result.artifacts.ts > 1000 * 1000 * 1000);
+  do_check_true(result.artifacts.ts < 1000 * 1000 * 1000 * 1000);
   do_check_true(fields[3].startsWith('nonce="'));
   do_check_eq(fields[3].length, ('nonce="12345678901=",').length);
   do_check_eq(result.artifacts.nonce.length, ("12345678901=").length);
@@ -159,7 +159,7 @@ add_test(function test_hawk() {
 
   result = compute(uri_https, method, { credentials: credentials_sha256,
                                         now: 1378848968650,
-                                        localtimeOffsetMsec: 1000*1000,
+                                        localtimeOffsetMsec: 1000 * 1000,
                                       });
   do_check_eq(result.artifacts.ts, 1378848968 + 1000);
 

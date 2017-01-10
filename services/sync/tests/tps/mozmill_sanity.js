@@ -21,7 +21,7 @@ var testTestStep = function() {
   TPS.Sync(ACTIONS.ACTION_SYNC_WIPE_CLIENT);
 }
 
-var teardownTest = function () {
+var teardownTest = function() {
   assert.ok(true, "teardownTest passes");
 }
 

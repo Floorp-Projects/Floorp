@@ -16,7 +16,7 @@ var Logger = {
   _converter: null,
   _potentialError: null,
 
-  init: function (path) {
+  init(path) {
     if (this._converter != null) {
       // we're already open!
       return;
@@ -26,8 +26,7 @@ var Logger = {
                 .getService(Ci.nsIPrefBranch);
     if (path) {
       prefs.setCharPref("tps.logfile", path);
-    }
-    else {
+    } else {
       path = prefs.getCharPref("tps.logfile");
     }
 
@@ -48,7 +47,7 @@ var Logger = {
     this._converter.init(this._foStream, "UTF-8", 0, 0);
   },
 
-  write: function (data) {
+  write(data) {
     if (this._converter == null) {
       Cu.reportError(
           "TPS Logger.write called with _converter == null!");
@@ -57,7 +56,7 @@ var Logger = {
     this._converter.writeString(data);
   },
 
-  close: function () {
+  close() {
     if (this._converter != null) {
       this._converter.close();
       this._converter = null;
@@ -65,7 +64,7 @@ var Logger = {
     }
   },
 
-  AssertTrue: function(bool, msg, showPotentialError) {
+  AssertTrue(bool, msg, showPotentialError) {
     if (bool) {
       return;
     }
@@ -77,34 +76,33 @@ var Logger = {
     throw new Error("ASSERTION FAILED! " + msg);
   },
 
-  AssertFalse: function(bool, msg, showPotentialError) {
+  AssertFalse(bool, msg, showPotentialError) {
     return this.AssertTrue(!bool, msg, showPotentialError);
   },
 
-  AssertEqual: function(val1, val2, msg) {
+  AssertEqual(val1, val2, msg) {
     if (val1 != val2)
       throw new Error("ASSERTION FAILED! " + msg + "; expected " +
             JSON.stringify(val2) + ", got " + JSON.stringify(val1));
   },
 
-  log: function (msg, withoutPrefix) {
+  log(msg, withoutPrefix) {
     dump(msg + "\n");
     if (withoutPrefix) {
       this.write(msg + "\n");
-    }
-    else {
+    } else {
       function pad(n, len) {
         let s = "0000" + n;
         return s.slice(-len);
       }
 
       let now = new Date();
-      let year    = pad(now.getFullYear(),     4);
-      let month   = pad(now.getMonth() + 1,    2);
-      let day     = pad(now.getDate(),         2);
-      let hour    = pad(now.getHours(),        2);
-      let minutes = pad(now.getMinutes(),      2);
-      let seconds = pad(now.getSeconds(),      2);
+      let year    = pad(now.getFullYear(), 4);
+      let month   = pad(now.getMonth() + 1, 2);
+      let day     = pad(now.getDate(), 2);
+      let hour    = pad(now.getHours(), 2);
+      let minutes = pad(now.getMinutes(), 2);
+      let seconds = pad(now.getSeconds(), 2);
       let ms      = pad(now.getMilliseconds(), 3);
 
       this.write(year + "-" + month + "-" + day + " " +
@@ -113,15 +111,15 @@ var Logger = {
     }
   },
 
-  clearPotentialError: function() {
+  clearPotentialError() {
     this._potentialError = null;
   },
 
-  logPotentialError: function(msg) {
+  logPotentialError(msg) {
     this._potentialError = msg;
   },
 
-  logLastPotentialError: function(msg) {
+  logLastPotentialError(msg) {
     var message = msg;
     if (this._potentialError) {
       message = this._poentialError;
@@ -130,18 +128,18 @@ var Logger = {
     this.log("CROSSWEAVE ERROR: " + message);
   },
 
-  logError: function (msg) {
+  logError(msg) {
     this.log("CROSSWEAVE ERROR: " + msg);
   },
 
-  logInfo: function (msg, withoutPrefix) {
+  logInfo(msg, withoutPrefix) {
     if (withoutPrefix)
       this.log(msg, true);
     else
       this.log("CROSSWEAVE INFO: " + msg);
   },
 
-  logPass: function (msg) {
+  logPass(msg) {
     this.log("CROSSWEAVE TEST PASS: " + msg);
   },
 };

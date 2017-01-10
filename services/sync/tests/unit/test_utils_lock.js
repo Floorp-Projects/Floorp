@@ -13,7 +13,7 @@ function run_test() {
   let state, lockState, lockedState, unlockState;
   let obj = {
     _lock: Utils.lock,
-    lock: function() {
+    lock() {
       lockState = ++state;
       if (this._locked) {
         lockedState = ++state;
@@ -22,12 +22,12 @@ function run_test() {
       this._locked = true;
       return true;
     },
-    unlock: function() {
+    unlock() {
       unlockState = ++state;
       this._locked = false;
     },
 
-    func: function() {
+    func() {
       return this._lock("Test utils lock",
                         function() {
                           rightThis = this == obj;
@@ -36,7 +36,7 @@ function run_test() {
                         })();
     },
 
-    throwy: function() {
+    throwy() {
       return this._lock("Test utils lock throwy",
                         function() {
                           rightThis = this == obj;
@@ -63,8 +63,7 @@ function run_test() {
   try {
     ret = obj.throwy();
     do_throw("throwy internal call should have thrown!");
-  }
-  catch(ex) {
+  } catch (ex) {
     // Should throw an Error, not a string.
     do_check_begins(ex, "Could not acquire lock");
   }

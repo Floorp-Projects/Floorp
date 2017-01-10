@@ -12,7 +12,7 @@ const DEFAULT_PASSWORD = "password";
 /**
  * Helper function to prepare a RESTRequest against the server.
  */
-function localRequest(server, path, user=DEFAULT_USER, password=DEFAULT_PASSWORD) {
+function localRequest(server, path, user = DEFAULT_USER, password = DEFAULT_PASSWORD) {
   _("localRequest: " + path);
   let identity = server.server.identity;
   let url = identity.primaryScheme + "://" + identity.primaryHost + ":" +
@@ -121,7 +121,7 @@ add_test(function test_creation() {
   });
   do_check_true(!!server);
 
-  server.start(-1, function () {
+  server.start(-1, function() {
     _("Started on " + server.port);
     server.stop(run_next_test);
   });
@@ -191,7 +191,7 @@ add_test(function test_basic_http() {
   do_check_eq(server.requestCount, 0);
   let req = localRequest(server, "/2.0/storage/crypto/keys");
   _("req is " + req);
-  req.get(function (err) {
+  req.get(function(err) {
     do_check_eq(null, err);
     do_check_eq(server.requestCount, 1);
     server.stop(run_next_test);
@@ -593,11 +593,11 @@ add_test(function test_x_num_records() {
   });
   server.startSynchronous();
   let bso = localRequest(server, "/2.0/123/storage/crypto/foos");
-  bso.get(function (err) {
+  bso.get(function(err) {
     // BSO fetches don't have one.
     do_check_false("x-num-records" in this.response.headers);
     let col = localRequest(server, "/2.0/123/storage/crypto");
-    col.get(function (err) {
+    col.get(function(err) {
       // Collection fetches do.
       do_check_eq(this.response.headers["x-num-records"], "2");
       server.stop(run_next_test);
