@@ -123,7 +123,6 @@ gfxDWriteFont::~gfxDWriteFont()
 void
 gfxDWriteFont::UpdateClearTypeUsage()
 {
-  Factory::UpdateSystemTextQuality();
   mUseClearType = UsingClearType();
 }
 
