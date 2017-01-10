@@ -554,7 +554,9 @@ public abstract class GeckoApp
             }
 
             GeckoAppShell.notifyObservers("Browser:Quit", res.toString());
-            doShutdown();
+            // We don't call doShutdown() here because this creates a race condition which can
+            // cause the clearing of private data to fail. Instead, we shut down the UI only after
+            // we're done sanitizing.
             return true;
         }
 
@@ -692,6 +694,13 @@ public abstract class GeckoApp
 
         } else if ("Session:StatePurged".equals(event)) {
             onStatePurged();
+
+        } else if ("Sanitize:Finished".equals(event)) {
+            if (message.getBoolean("shutdown")) {
+                // Gecko is shutting down and has called our sanitize handlers,
+                // so we can start exiting, too.
+                doShutdown();
+            }
 
         } else if ("Share:Text".equals(event)) {
             final String text = message.getString("text");
@@ -1214,6 +1223,7 @@ public abstract class GeckoApp
             "Permissions:Data",
             "PrivateBrowsing:Data",
             "RuntimePermissions:Prompt",
+            "Sanitize:Finished",
             "Session:StatePurged",
             "Share:Text",
             "Snackbar:Show",
@@ -2247,6 +2257,7 @@ public abstract class GeckoApp
             "Permissions:Data",
             "PrivateBrowsing:Data",
             "RuntimePermissions:Prompt",
+            "Sanitize:Finished",
             "Session:StatePurged",
             "Share:Text",
             "Snackbar:Show",
