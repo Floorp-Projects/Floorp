@@ -54,8 +54,8 @@ pref("security.OCSP.GET.enabled", false);
 pref("security.pki.cert_short_lifetime_in_days", 10);
 // NB: Changes to this pref affect CERT_CHAIN_SHA1_POLICY_STATUS telemetry.
 // See the comment in CertVerifier.cpp.
-// 4 = allow SHA-1 for certificates issued before 2016 or by an imported root.
-pref("security.pki.sha1_enforcement_level", 4);
+// 3 = only allow SHA-1 for certificates issued by an imported root.
+pref("security.pki.sha1_enforcement_level", 3);
 
 // security.pki.name_matching_mode controls how the platform matches hostnames
 // to name information in TLS certificates. The possible values are:
