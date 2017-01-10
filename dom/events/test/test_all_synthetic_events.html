@@ -292,7 +292,7 @@ const kEventConstructors = {
   OfflineAudioCompletionEvent:               { create: "AudioContext" in self
                                                         ? function (aName, aProps) {
                                                             var ac = new AudioContext();
-                                                            var ab = new AudioBuffer(ac, { length: 42 });
+                                                            var ab = new AudioBuffer({ length: 42, sampleRate: ac.sampleRate });
                                                             aProps.renderedBuffer = ab;
                                                             return new OfflineAudioCompletionEvent(aName, aProps);
                                                           }
