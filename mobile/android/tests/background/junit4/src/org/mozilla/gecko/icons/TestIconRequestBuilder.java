@@ -95,6 +95,27 @@ public class TestIconRequestBuilder {
     }
 
     @Test
+    public void testSkipNetworkIf() {
+        IconRequest request = Icons.with(RuntimeEnvironment.application)
+                .pageUrl(TEST_PAGE_URL_1)
+                .build();
+
+        Assert.assertFalse(request.shouldSkipNetwork());
+
+        request.modify()
+                .skipNetworkIf(true)
+                .deferBuild();
+
+        Assert.assertTrue(request.shouldSkipNetwork());
+
+        request.modify()
+                .skipNetworkIf(false)
+                .deferBuild();
+
+        Assert.assertFalse(request.shouldSkipNetwork());
+    }
+
+    @Test
     public void testSkipDisk() {
         IconRequest request = Icons.with(RuntimeEnvironment.application)
                 .pageUrl(TEST_PAGE_URL_1)
