@@ -13,11 +13,11 @@
 dictionary AudioBufferOptions {
              unsigned long numberOfChannels = 1;
     required unsigned long length;
-             float         sampleRate;
+    required float         sampleRate;
 };
 
 [Pref="dom.webaudio.enabled",
- Constructor(BaseAudioContext context, AudioBufferOptions options)]
+ Constructor(AudioBufferOptions options)]
 interface AudioBuffer {
 
     readonly attribute float sampleRate;

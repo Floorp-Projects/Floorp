@@ -70,11 +70,12 @@ function sine(t) {
 
 // A couple mono and stereo buffers: the StereoPannerNode equation is different
 // if the input is mono or stereo
-var stereoBuffer = new AudioBuffer(context, { numberOfChannels: 2,
-                                              length: BUF_SIZE });
-var monoBuffer = new AudioBuffer(context, { numberOfChannels: 1,
-                                            length: BUF_SIZE,
-                                            sampleRate: context.sampleRate });
+var stereoBuffer = new AudioBuffer({ numberOfChannels: 2,
+                                     length: BUF_SIZE,
+                                     sampleRate: context.sampleRate });
+var monoBuffer = new AudioBuffer({ numberOfChannels: 1,
+                                   length: BUF_SIZE,
+                                   sampleRate: context.sampleRate });
 for (var i = 0; i < BUF_SIZE; ++i) {
   monoBuffer.getChannelData(0)[i]   =
   stereoBuffer.getChannelData(0)[i] =
@@ -84,9 +85,9 @@ for (var i = 0; i < BUF_SIZE; ++i) {
 // Expected test vectors
 function expectedBufferNoop(gain) {
   gain = gain || 1.0;
-  var expectedBuffer = new AudioBuffer(context, { numberOfChannels: 2,
-                                                  length: BUF_SIZE,
-                                                  sampleRate: SR });
+  var expectedBuffer = new AudioBuffer({ numberOfChannels: 2,
+                                         length: BUF_SIZE,
+                                         sampleRate: SR });
   for (var i = 0; i < BUF_SIZE; i++) {
     expectedBuffer.getChannelData(0)[i] = gain * sine(i);
     expectedBuffer.getChannelData(1)[i] = gain * sine(i);
@@ -96,9 +97,9 @@ function expectedBufferNoop(gain) {
 
 function expectedBufferForStereo(gain) {
   gain = gain || 1.0;
-  var expectedBuffer = new AudioBuffer(context, { numberOfChannels: 2,
-                                                  length: BUF_SIZE,
-                                                  sampleRate: SR });
+  var expectedBuffer = new AudioBuffer({ numberOfChannels: 2,
+                                         length: BUF_SIZE,
+                                         sampleRate: SR });
   var gainPanning = gainForPanningStereoToStereo(PANNING);
   gainPanning[0] *= gain;
   gainPanning[1] *= gain;
@@ -113,9 +114,9 @@ function expectedBufferForStereo(gain) {
 
 function expectedBufferForMono(gain) {
   gain = gain || 1.0;
-  var expectedBuffer = new AudioBuffer(context, { numberOfChannels: 2,
-                                                  length: BUF_SIZE,
-                                                  sampleRate: SR });
+  var expectedBuffer = new AudioBuffer({ numberOfChannels: 2,
+                                         length: BUF_SIZE,
+                                         sampleRate: SR });
   var gainPanning = gainForPanningMonoToStereo(PANNING);
   gainPanning[0] *= gain;
   gainPanning[1] *= gain;
