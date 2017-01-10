@@ -73,6 +73,7 @@ from ..frontend.data import (
 from ..util import (
     ensureParentDir,
     FileAvoidWrite,
+    OrderedDefaultDict,
 )
 from ..makeutil import Makefile
 from mozbuild.shellutil import quote as shell_quote
@@ -396,7 +397,7 @@ class RecursiveMakeBackend(CommonBackend):
         self._install_manifests['dist_sdk']
 
         self._traversal = RecursiveMakeTraversal()
-        self._compile_graph = defaultdict(set)
+        self._compile_graph = OrderedDefaultDict(set)
 
         self._no_skip = {
             'export': set(),
