@@ -17,7 +17,6 @@ const modules = [
   "engines/tabs.js",
   "engines.js",
   "identity.js",
-  "jpakeclient.js",
   "keys.js",
   "main.js",
   "policies.js",
