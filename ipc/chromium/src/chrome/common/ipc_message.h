@@ -232,11 +232,24 @@ class Message : public Pickle {
   static void Log(const Message* msg, std::wstring* l) {
   }
 
+  static int HeaderSizeFromData(const char* range_start,
+                                const char* range_end) {
+#ifdef MOZ_TASK_TRACER
+    return ((static_cast<unsigned int>(range_end - range_start) >= sizeof(Header)) &&
+            (reinterpret_cast<const Header*>(range_start)->flags &
+             TASKTRACER_BIT)) ?
+      sizeof(HeaderTaskTracer) : sizeof(Header);
+#else
+    return sizeof(Header);
+#endif
+  }
+
   // Figure out how big the message starting at range_start is. Returns 0 if
   // there's no enough data to determine (i.e., if [range_start, range_end) does
   // not contain enough of the message header to know the size).
   static uint32_t MessageSize(const char* range_start, const char* range_end) {
-    return Pickle::MessageSize(sizeof(Header), range_start, range_end);
+    return Pickle::MessageSize(HeaderSizeFromData(range_start, range_end),
+                               range_start, range_end);
   }
 
 #if defined(OS_POSIX)
@@ -300,6 +313,9 @@ class Message : public Pickle {
     COMPRESS_BIT    = 0x0080,
     COMPRESSALL_BIT = 0x0100,
     CONSTRUCTOR_BIT = 0x0200,
+#ifdef MOZ_TASK_TRACER
+    TASKTRACER_BIT  = 0x0400,
+#endif
   };
 
   struct Header : Pickle::Header {
@@ -323,20 +339,42 @@ class Message : public Pickle {
     uint32_t interrupt_local_stack_depth;
     // Sequence number
     int32_t seqno;
+  };
+
 #ifdef MOZ_TASK_TRACER
+  /**
+   * The type is used as headers of Messages only if TaskTracer is
+   * enabled, or type |Header| would be used instead.
+   */
+  struct HeaderTaskTracer : public Header {
     uint64_t task_id;
     uint64_t source_event_id;
     uint64_t parent_task_id;
     mozilla::tasktracer::SourceEventType source_event_type;
-#endif
   };
+#endif
 
+#ifdef MOZ_TASK_TRACER
+  bool UseTaskTracerHeader() const {
+    return sizeof(HeaderTaskTracer) == (size() - payload_size());
+  }
+
+  Header* header() {
+    return UseTaskTracerHeader() ?
+      headerT<HeaderTaskTracer>() : headerT<Header>();
+  }
+  const Header* header() const {
+    return UseTaskTracerHeader() ?
+      headerT<HeaderTaskTracer>() : headerT<Header>();
+  }
+#else
   Header* header() {
     return headerT<Header>();
   }
   const Header* header() const {
     return headerT<Header>();
   }
+#endif
 
   void InitLoggingVariables(const char* const name="???");
 
