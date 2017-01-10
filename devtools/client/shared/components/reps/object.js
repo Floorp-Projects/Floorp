@@ -65,41 +65,41 @@ define(function (require, exports, module) {
 
       // Object members with non-empty values are preferred since it gives the
       // user a better overview of the object.
-      let props = this.getProps(object, max, isInterestingProp);
+      let propsArray = this.getPropsArray(object, max, isInterestingProp);
 
-      if (props.length <= max) {
+      if (propsArray.length <= max) {
         // There are not enough props yet (or at least, not enough props to
         // be able to know whether we should print "more…" or not).
         // Let's display also empty members and functions.
-        props = props.concat(this.getProps(object, max, (t, value) => {
+        propsArray = propsArray.concat(this.getPropsArray(object, max, (t, value) => {
           return !isInterestingProp(t, value);
         }));
       }
 
-      if (props.length > max) {
-        props.pop();
+      if (propsArray.length > max) {
+        propsArray.pop();
         let objectLink = this.props.objectLink || span;
 
-        props.push(Caption({
+        propsArray.push(Caption({
           object: objectLink({
             object: object
           }, (Object.keys(object).length - max) + " more…")
         }));
-      } else if (props.length > 0) {
+      } else if (propsArray.length > 0) {
         // Remove the last comma.
-        props[props.length - 1] = React.cloneElement(
-          props[props.length - 1], { delim: "" });
+        propsArray[propsArray.length - 1] = React.cloneElement(
+          propsArray[propsArray.length - 1], { delim: "" });
       }
 
-      return props;
+      return propsArray;
     },
 
-    getProps: function (object, max, filter) {
-      let props = [];
+    getPropsArray: function (object, max, filter) {
+      let propsArray = [];
 
       max = max || 3;
       if (!object) {
-        return props;
+        return propsArray;
       }
 
       // Hardcode tiny mode to avoid recursive handling.
@@ -107,8 +107,8 @@ define(function (require, exports, module) {
 
       try {
         for (let name in object) {
-          if (props.length > max) {
-            return props;
+          if (propsArray.length > max) {
+            return propsArray;
           }
 
           let value;
@@ -120,7 +120,7 @@ define(function (require, exports, module) {
 
           let t = typeof value;
           if (filter(t, value)) {
-            props.push(PropRep({
+            propsArray.push(PropRep({
               mode: mode,
               name: name,
               object: value,
@@ -133,15 +133,15 @@ define(function (require, exports, module) {
         console.error(err);
       }
 
-      return props;
+      return propsArray;
     },
 
     render: wrapRender(function () {
       let object = this.props.object;
-      let props = this.safePropIterator(object);
+      let propsArray = this.safePropIterator(object);
       let objectLink = this.props.objectLink || span;
 
-      if (this.props.mode === MODE.TINY || !props.length) {
+      if (this.props.mode === MODE.TINY || !propsArray.length) {
         return (
           span({className: "objectBox objectBox-object"},
             objectLink({className: "objectTitle"}, this.getTitle(object))
@@ -156,7 +156,7 @@ define(function (require, exports, module) {
             className: "objectLeftBrace",
             object: object
           }, " { "),
-          ...props,
+          ...propsArray,
           objectLink({
             className: "objectRightBrace",
             object: object
