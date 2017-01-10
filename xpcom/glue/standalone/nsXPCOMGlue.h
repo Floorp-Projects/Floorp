@@ -13,34 +13,7 @@
 
 #include "mozilla/Bootstrap.h"
 
-/**
- * The following functions are only available in the standalone glue.
- */
-
-/**
- * Initialize the XPCOM glue by dynamically linking against the XPCOM
- * shared library indicated by xpcomFile.
- */
-extern "C" NS_HIDDEN_(nsresult) XPCOMGlueStartup(const char* aXPCOMFile);
-
 typedef void (*NSFuncPtr)();
-
-struct nsDynamicFunctionLoad
-{
-  const char* functionName;
-  NSFuncPtr* function;
-};
-
-/**
- * Dynamically load functions from libxul.
- *
- * @throws NS_ERROR_NOT_INITIALIZED if XPCOMGlueStartup() was not called or
- *         if the libxul DLL was not found.
- * @throws NS_ERROR_LOSS_OF_SIGNIFICANT_DATA if only some of the required
- *         functions were found.
- */
-extern "C" NS_HIDDEN_(nsresult)
-XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* aSymbols);
 
 namespace mozilla {
 

@@ -21,8 +21,6 @@ using namespace mozilla;
 
 #define XPCOM_DEPENDENT_LIBS_LIST "dependentlibs.list"
 
-static XPCOMFunctions xpcomFunctions;
-
 #if defined(XP_WIN)
 #define READ_TEXTMODE L"rt"
 #else
@@ -115,11 +113,13 @@ GetSymbol(LibHandleType aLibHandle, const char* aSymbol)
   return (NSFuncPtr)dlsym(aLibHandle, aSymbol);
 }
 
+#ifndef MOZ_LINKER
 static void
 CloseLibHandle(LibHandleType aLibHandle)
 {
   dlclose(aLibHandle);
 }
+#endif
 #endif
 
 struct DependentLib
@@ -197,6 +197,7 @@ struct ScopedCloseFileTraits
 };
 typedef Scoped<ScopedCloseFileTraits> ScopedCloseFile;
 
+#ifndef MOZ_LINKER
 static void
 XPCOMGlueUnload()
 {
@@ -209,6 +210,7 @@ XPCOMGlueUnload()
     delete temp;
   }
 }
+#endif
 
 #if defined(XP_WIN)
 // like strpbrk but finds the *last* char, not the first
@@ -230,12 +232,12 @@ ns_strrpbrk(const char* string, const char* strCharSet)
 }
 #endif
 
-static GetFrozenFunctionsFunc
+static nsresult
 XPCOMGlueLoad(const char* aXPCOMFile)
 {
 #ifdef MOZ_LINKER
   if (!ReadDependentCB(aXPCOMFile)) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 #else
   char xpcomDir[MAXPATHLEN];
@@ -249,7 +251,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
   const char *tempSlash = strrchr(aXPCOMFile, '/');
   size_t tempLen = size_t(tempSlash - aXPCOMFile);
   if (tempLen > MAXPATHLEN) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
   char tempBuffer[MAXPATHLEN];
   memcpy(tempBuffer, aXPCOMFile, tempLen);
@@ -270,7 +272,7 @@ XPCOMGlueLoad(const char* aXPCOMFile)
                                   XPCOM_FILE_PATH_SEPARATOR
 #endif
                                   XPCOM_DEPENDENT_LIBS_LIST)) {
-      return nullptr;
+      return NS_ERROR_FAILURE;
     }
     memcpy(xpcomDir, aXPCOMFile, len);
     strcpy(xpcomDir + len, XPCOM_FILE_PATH_SEPARATOR
@@ -292,13 +294,13 @@ XPCOMGlueLoad(const char* aXPCOMFile)
   ScopedCloseFile flist;
   flist = TS_tfopen(xpcomDir, READ_TEXTMODE);
   if (!flist) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
 #ifdef XP_MACOSX
   tempLen = size_t(cursor - xpcomDir);
   if (tempLen > MAXPATHLEN - sizeof("MacOS" XPCOM_FILE_PATH_SEPARATOR) - 1) {
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
   strcpy(cursor, "MacOS" XPCOM_FILE_PATH_SEPARATOR);
   cursor += strlen(cursor);
@@ -321,48 +323,17 @@ XPCOMGlueLoad(const char* aXPCOMFile)
     }
 
     if (l + size_t(cursor - xpcomDir) > MAXPATHLEN) {
-      return nullptr;
+      return NS_ERROR_FAILURE;
     }
 
     strcpy(cursor, buffer);
     if (!ReadDependentCB(xpcomDir)) {
       XPCOMGlueUnload();
-      return nullptr;
+      return NS_ERROR_FAILURE;
     }
   }
 #endif
-
-  GetFrozenFunctionsFunc sym =
-    (GetFrozenFunctionsFunc)GetSymbol(sTop->libHandle,
-                                      "NS_GetFrozenFunctions");
-
-  if (!sym) { // No symbol found.
-    XPCOMGlueUnload();
-    return nullptr;
-  }
-
-  return sym;
-}
-
-nsresult
-XPCOMGlueLoadXULFunctions(const nsDynamicFunctionLoad* aSymbols)
-{
-  // We don't null-check sXULLibHandle because this might work even
-  // if it is null (same as RTLD_DEFAULT)
-
-  nsresult rv = NS_OK;
-  while (aSymbols->functionName) {
-    char buffer[512];
-    SprintfLiteral(buffer, "%s", aSymbols->functionName);
-
-    *aSymbols->function = (NSFuncPtr)GetSymbol(sTop->libHandle, buffer);
-    if (!*aSymbols->function) {
-      rv = NS_ERROR_LOSS_OF_SIGNIFICANT_DATA;
-    }
-
-    ++aSymbols;
-  }
-  return rv;
+  return NS_OK;
 }
 
 #if defined(MOZ_WIDGET_GTK) && (defined(MOZ_MEMORY) || defined(__FreeBSD__) || defined(__NetBSD__))
@@ -408,39 +379,20 @@ private:
 };
 #endif
 
-nsresult
-XPCOMGlueStartup(const char* aXPCOMFile)
-{
-#ifdef MOZ_GSLICE_INIT
-  GSliceInit gSliceInit;
-#endif
-  xpcomFunctions.version = XPCOM_GLUE_VERSION;
-  xpcomFunctions.size    = sizeof(XPCOMFunctions);
-
-  if (!aXPCOMFile) {
-    aXPCOMFile = XPCOM_DLL;
-  }
-
-  GetFrozenFunctionsFunc func = XPCOMGlueLoad(aXPCOMFile);
-  if (!func) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsresult rv = (*func)(&xpcomFunctions, nullptr);
-  if (NS_FAILED(rv)) {
-    XPCOMGlueUnload();
-    return rv;
-  }
-
-  return NS_OK;
-}
-
 namespace mozilla {
 
 Bootstrap::UniquePtr
 GetBootstrap(const char* aXPCOMFile)
 {
-  if (NS_FAILED(XPCOMGlueStartup(aXPCOMFile))) {
+#ifdef MOZ_GSLICE_INIT
+  GSliceInit gSliceInit;
+#endif
+
+  if (!aXPCOMFile) {
+    aXPCOMFile = XPCOM_DLL;
+  }
+
+  if (NS_FAILED(XPCOMGlueLoad(aXPCOMFile))) {
     return nullptr;
   }
 
@@ -456,494 +408,3 @@ GetBootstrap(const char* aXPCOMFile)
 }
 
 } // namespace mozilla
-
-XPCOM_API(nsresult)
-NS_InitXPCOM2(nsIServiceManager** aResult,
-              nsIFile* aBinDirectory,
-              nsIDirectoryServiceProvider* aAppFileLocationProvider)
-{
-  if (!xpcomFunctions.init) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.init(aResult, aBinDirectory, aAppFileLocationProvider);
-}
-
-XPCOM_API(nsresult)
-NS_ShutdownXPCOM(nsIServiceManager* aServMgr)
-{
-  if (!xpcomFunctions.shutdown) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.shutdown(aServMgr);
-}
-
-XPCOM_API(nsresult)
-NS_GetServiceManager(nsIServiceManager** aResult)
-{
-  if (!xpcomFunctions.getServiceManager) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.getServiceManager(aResult);
-}
-
-XPCOM_API(nsresult)
-NS_GetComponentManager(nsIComponentManager** aResult)
-{
-  if (!xpcomFunctions.getComponentManager) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.getComponentManager(aResult);
-}
-
-XPCOM_API(nsresult)
-NS_GetComponentRegistrar(nsIComponentRegistrar** aResult)
-{
-  if (!xpcomFunctions.getComponentRegistrar) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.getComponentRegistrar(aResult);
-}
-
-XPCOM_API(nsresult)
-NS_GetMemoryManager(nsIMemory** aResult)
-{
-  if (!xpcomFunctions.getMemoryManager) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.getMemoryManager(aResult);
-}
-
-XPCOM_API(nsresult)
-NS_NewLocalFile(const nsAString& aPath, bool aFollowLinks, nsIFile** aResult)
-{
-  if (!xpcomFunctions.newLocalFile) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.newLocalFile(aPath, aFollowLinks, aResult);
-}
-
-XPCOM_API(nsresult)
-NS_NewNativeLocalFile(const nsACString& aPath, bool aFollowLinks,
-                      nsIFile** aResult)
-{
-  if (!xpcomFunctions.newNativeLocalFile) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.newNativeLocalFile(aPath, aFollowLinks, aResult);
-}
-
-XPCOM_API(nsresult)
-NS_GetDebug(nsIDebug2** aResult)
-{
-  if (!xpcomFunctions.getDebug) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.getDebug(aResult);
-}
-
-
-XPCOM_API(nsresult)
-NS_StringContainerInit(nsStringContainer& aStr)
-{
-  if (!xpcomFunctions.stringContainerInit) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.stringContainerInit(aStr);
-}
-
-XPCOM_API(nsresult)
-NS_StringContainerInit2(nsStringContainer& aStr, const char16_t* aData,
-                        uint32_t aDataLength, uint32_t aFlags)
-{
-  if (!xpcomFunctions.stringContainerInit2) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.stringContainerInit2(aStr, aData, aDataLength, aFlags);
-}
-
-XPCOM_API(void)
-NS_StringContainerFinish(nsStringContainer& aStr)
-{
-  if (xpcomFunctions.stringContainerFinish) {
-    xpcomFunctions.stringContainerFinish(aStr);
-  }
-}
-
-XPCOM_API(uint32_t)
-NS_StringGetData(const nsAString& aStr, const char16_t** aBuf, bool* aTerm)
-{
-  if (!xpcomFunctions.stringGetData) {
-    *aBuf = nullptr;
-    return 0;
-  }
-  return xpcomFunctions.stringGetData(aStr, aBuf, aTerm);
-}
-
-XPCOM_API(uint32_t)
-NS_StringGetMutableData(nsAString& aStr, uint32_t aLen, char16_t** aBuf)
-{
-  if (!xpcomFunctions.stringGetMutableData) {
-    *aBuf = nullptr;
-    return 0;
-  }
-  return xpcomFunctions.stringGetMutableData(aStr, aLen, aBuf);
-}
-
-XPCOM_API(char16_t*)
-NS_StringCloneData(const nsAString& aStr)
-{
-  if (!xpcomFunctions.stringCloneData) {
-    return nullptr;
-  }
-  return xpcomFunctions.stringCloneData(aStr);
-}
-
-XPCOM_API(nsresult)
-NS_StringSetData(nsAString& aStr, const char16_t* aBuf, uint32_t aCount)
-{
-  if (!xpcomFunctions.stringSetData) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  return xpcomFunctions.stringSetData(aStr, aBuf, aCount);
-}
-
-XPCOM_API(nsresult)
-NS_StringSetDataRange(nsAString& aStr, uint32_t aCutStart, uint32_t aCutLength,
-                      const char16_t* aBuf, uint32_t aCount)
-{
-  if (!xpcomFunctions.stringSetDataRange) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.stringSetDataRange(aStr, aCutStart, aCutLength, aBuf,
-                                           aCount);
-}
-
-XPCOM_API(nsresult)
-NS_StringCopy(nsAString& aDest, const nsAString& aSrc)
-{
-  if (!xpcomFunctions.stringCopy) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.stringCopy(aDest, aSrc);
-}
-
-XPCOM_API(void)
-NS_StringSetIsVoid(nsAString& aStr, const bool aIsVoid)
-{
-  if (xpcomFunctions.stringSetIsVoid) {
-    xpcomFunctions.stringSetIsVoid(aStr, aIsVoid);
-  }
-}
-
-XPCOM_API(bool)
-NS_StringGetIsVoid(const nsAString& aStr)
-{
-  if (!xpcomFunctions.stringGetIsVoid) {
-    return false;
-  }
-  return xpcomFunctions.stringGetIsVoid(aStr);
-}
-
-XPCOM_API(nsresult)
-NS_CStringContainerInit(nsCStringContainer& aStr)
-{
-  if (!xpcomFunctions.cstringContainerInit) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.cstringContainerInit(aStr);
-}
-
-XPCOM_API(nsresult)
-NS_CStringContainerInit2(nsCStringContainer& aStr, const char* aData,
-                         uint32_t aDataLength, uint32_t aFlags)
-{
-  if (!xpcomFunctions.cstringContainerInit2) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.cstringContainerInit2(aStr, aData, aDataLength, aFlags);
-}
-
-XPCOM_API(void)
-NS_CStringContainerFinish(nsCStringContainer& aStr)
-{
-  if (xpcomFunctions.cstringContainerFinish) {
-    xpcomFunctions.cstringContainerFinish(aStr);
-  }
-}
-
-XPCOM_API(uint32_t)
-NS_CStringGetData(const nsACString& aStr, const char** aBuf, bool* aTerm)
-{
-  if (!xpcomFunctions.cstringGetData) {
-    *aBuf = nullptr;
-    return 0;
-  }
-  return xpcomFunctions.cstringGetData(aStr, aBuf, aTerm);
-}
-
-XPCOM_API(uint32_t)
-NS_CStringGetMutableData(nsACString& aStr, uint32_t aLen, char** aBuf)
-{
-  if (!xpcomFunctions.cstringGetMutableData) {
-    *aBuf = nullptr;
-    return 0;
-  }
-  return xpcomFunctions.cstringGetMutableData(aStr, aLen, aBuf);
-}
-
-XPCOM_API(char*)
-NS_CStringCloneData(const nsACString& aStr)
-{
-  if (!xpcomFunctions.cstringCloneData) {
-    return nullptr;
-  }
-  return xpcomFunctions.cstringCloneData(aStr);
-}
-
-XPCOM_API(nsresult)
-NS_CStringSetData(nsACString& aStr, const char* aBuf, uint32_t aCount)
-{
-  if (!xpcomFunctions.cstringSetData) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.cstringSetData(aStr, aBuf, aCount);
-}
-
-XPCOM_API(nsresult)
-NS_CStringSetDataRange(nsACString& aStr, uint32_t aCutStart,
-                       uint32_t aCutLength, const char* aBuf, uint32_t aCount)
-{
-  if (!xpcomFunctions.cstringSetDataRange) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.cstringSetDataRange(aStr, aCutStart, aCutLength, aBuf,
-                                            aCount);
-}
-
-XPCOM_API(nsresult)
-NS_CStringCopy(nsACString& aDest, const nsACString& aSrc)
-{
-  if (!xpcomFunctions.cstringCopy) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.cstringCopy(aDest, aSrc);
-}
-
-XPCOM_API(void)
-NS_CStringSetIsVoid(nsACString& aStr, const bool aIsVoid)
-{
-  if (xpcomFunctions.cstringSetIsVoid) {
-    xpcomFunctions.cstringSetIsVoid(aStr, aIsVoid);
-  }
-}
-
-XPCOM_API(bool)
-NS_CStringGetIsVoid(const nsACString& aStr)
-{
-  if (!xpcomFunctions.cstringGetIsVoid) {
-    return false;
-  }
-  return xpcomFunctions.cstringGetIsVoid(aStr);
-}
-
-XPCOM_API(nsresult)
-NS_CStringToUTF16(const nsACString& aSrc, nsCStringEncoding aSrcEncoding,
-                  nsAString& aDest)
-{
-  if (!xpcomFunctions.cstringToUTF16) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.cstringToUTF16(aSrc, aSrcEncoding, aDest);
-}
-
-XPCOM_API(nsresult)
-NS_UTF16ToCString(const nsAString& aSrc, nsCStringEncoding aDestEncoding,
-                  nsACString& aDest)
-{
-  if (!xpcomFunctions.utf16ToCString) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-  return xpcomFunctions.utf16ToCString(aSrc, aDestEncoding, aDest);
-}
-
-XPCOM_API(void*)
-NS_Alloc(size_t aSize)
-{
-  if (!xpcomFunctions.allocFunc) {
-    return nullptr;
-  }
-  return xpcomFunctions.allocFunc(aSize);
-}
-
-XPCOM_API(void*)
-NS_Realloc(void* aPtr, size_t aSize)
-{
-  if (!xpcomFunctions.reallocFunc) {
-    return nullptr;
-  }
-  return xpcomFunctions.reallocFunc(aPtr, aSize);
-}
-
-XPCOM_API(void)
-NS_Free(void* aPtr)
-{
-  if (xpcomFunctions.freeFunc) {
-    xpcomFunctions.freeFunc(aPtr);
-  }
-}
-
-XPCOM_API(void)
-NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
-              const char* aFile, int32_t aLine)
-{
-  if (xpcomFunctions.debugBreakFunc) {
-    xpcomFunctions.debugBreakFunc(aSeverity, aStr, aExpr, aFile, aLine);
-  }
-}
-
-XPCOM_API(void)
-NS_LogInit()
-{
-  if (xpcomFunctions.logInitFunc) {
-    xpcomFunctions.logInitFunc();
-  }
-}
-
-XPCOM_API(void)
-NS_LogTerm()
-{
-  if (xpcomFunctions.logTermFunc) {
-    xpcomFunctions.logTermFunc();
-  }
-}
-
-XPCOM_API(void)
-NS_LogAddRef(void* aPtr, nsrefcnt aNewRefCnt,
-             const char* aTypeName, uint32_t aInstanceSize)
-{
-  if (xpcomFunctions.logAddRefFunc)
-    xpcomFunctions.logAddRefFunc(aPtr, aNewRefCnt,
-                                 aTypeName, aInstanceSize);
-}
-
-XPCOM_API(void)
-NS_LogRelease(void* aPtr, nsrefcnt aNewRefCnt, const char* aTypeName)
-{
-  if (xpcomFunctions.logReleaseFunc) {
-    xpcomFunctions.logReleaseFunc(aPtr, aNewRefCnt, aTypeName);
-  }
-}
-
-XPCOM_API(void)
-NS_LogCtor(void* aPtr, const char* aTypeName, uint32_t aInstanceSize)
-{
-  if (xpcomFunctions.logCtorFunc) {
-    xpcomFunctions.logCtorFunc(aPtr, aTypeName, aInstanceSize);
-  }
-}
-
-XPCOM_API(void)
-NS_LogDtor(void* aPtr, const char* aTypeName, uint32_t aInstanceSize)
-{
-  if (xpcomFunctions.logDtorFunc) {
-    xpcomFunctions.logDtorFunc(aPtr, aTypeName, aInstanceSize);
-  }
-}
-
-XPCOM_API(void)
-NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
-{
-  if (xpcomFunctions.logCOMPtrAddRefFunc) {
-    xpcomFunctions.logCOMPtrAddRefFunc(aCOMPtr, aObject);
-  }
-}
-
-XPCOM_API(void)
-NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
-{
-  if (xpcomFunctions.logCOMPtrReleaseFunc) {
-    xpcomFunctions.logCOMPtrReleaseFunc(aCOMPtr, aObject);
-  }
-}
-
-XPCOM_API(nsresult)
-NS_GetXPTCallStub(REFNSIID aIID, nsIXPTCProxy* aOuter,
-                  nsISomeInterface** aStub)
-{
-  if (!xpcomFunctions.getXPTCallStubFunc) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  return xpcomFunctions.getXPTCallStubFunc(aIID, aOuter, aStub);
-}
-
-XPCOM_API(void)
-NS_DestroyXPTCallStub(nsISomeInterface* aStub)
-{
-  if (xpcomFunctions.destroyXPTCallStubFunc) {
-    xpcomFunctions.destroyXPTCallStubFunc(aStub);
-  }
-}
-
-XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports* aThat, uint32_t aMethodIndex,
-                 uint32_t aParamCount, nsXPTCVariant* aParams)
-{
-  if (!xpcomFunctions.invokeByIndexFunc) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  return xpcomFunctions.invokeByIndexFunc(aThat, aMethodIndex,
-                                          aParamCount, aParams);
-}
-
-XPCOM_API(bool)
-NS_CycleCollectorSuspect(nsISupports* aObj)
-{
-  if (!xpcomFunctions.cycleSuspectFunc) {
-    return false;
-  }
-
-  return xpcomFunctions.cycleSuspectFunc(aObj);
-}
-
-XPCOM_API(bool)
-NS_CycleCollectorForget(nsISupports* aObj)
-{
-  if (!xpcomFunctions.cycleForgetFunc) {
-    return false;
-  }
-
-  return xpcomFunctions.cycleForgetFunc(aObj);
-}
-
-XPCOM_API(nsPurpleBufferEntry*)
-NS_CycleCollectorSuspect2(void* aObj, nsCycleCollectionParticipant* aCp)
-{
-  if (!xpcomFunctions.cycleSuspect2Func) {
-    return nullptr;
-  }
-
-  return xpcomFunctions.cycleSuspect2Func(aObj, aCp);
-}
-
-XPCOM_API(void)
-NS_CycleCollectorSuspect3(void* aObj, nsCycleCollectionParticipant* aCp,
-                          nsCycleCollectingAutoRefCnt* aRefCnt,
-                          bool* aShouldDelete)
-{
-  if (xpcomFunctions.cycleSuspect3Func) {
-    xpcomFunctions.cycleSuspect3Func(aObj, aCp, aRefCnt, aShouldDelete);
-  }
-}
-
-XPCOM_API(bool)
-NS_CycleCollectorForget2(nsPurpleBufferEntry* aEntry)
-{
-  if (!xpcomFunctions.cycleForget2Func) {
-    return false;
-  }
-
-  return xpcomFunctions.cycleForget2Func(aEntry);
-}
