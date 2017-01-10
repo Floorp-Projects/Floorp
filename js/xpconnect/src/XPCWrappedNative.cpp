@@ -50,9 +50,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(XPCWrappedNative)
 
     if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
         char name[72];
-        XPCNativeScriptableInfo* si = tmp->GetScriptableInfo();
-        if (si)
-            SprintfLiteral(name, "XPCWrappedNative (%s)", si->GetJSClass()->name);
+        nsCOMPtr<nsIXPCScriptable> scr = tmp->GetScriptable();
+        if (scr)
+            SprintfLiteral(name, "XPCWrappedNative (%s)",
+                           scr->GetJSClass()->name);
         else
             SprintfLiteral(name, "XPCWrappedNative");
 
@@ -170,13 +171,13 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
         GatherScriptableCreateInfo(identity, nativeHelper.GetClassInfo(),
                                    sciProto, sciMaybe);
 
-    // ...and then ScriptableInfo. We need all this stuff now because it's going
-    // to tell us the JSClass of the object we're going to create.
-    XPCNativeScriptableInfo* si = XPCNativeScriptableInfo::Construct(&sciWrapper);
-    MOZ_ASSERT(si);
+    // ...and then get the nsIXPCScriptable. This will tell us the JSClass of
+    // the object we're going to create.
+    nsCOMPtr<nsIXPCScriptable> scr = sciWrapper.GetCallback();
+    MOZ_ASSERT(scr);
 
     // Finally, we get to the JSClass.
-    const JSClass* clasp = si->GetJSClass();
+    const JSClass* clasp = scr->GetJSClass();
     MOZ_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
 
     // Create the global.
@@ -221,23 +222,7 @@ XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
     // are different for globals. We do our setup inline here, instead.
     //
 
-    // Share mScriptableInfo with the proto.
-    //
-    // This is probably more trouble than it's worth, since we've already
-    // created an XPCNativeScriptableInfo for ourselves. Nevertheless, this is
-    // what ::Init() does, and we want to be as consistent as possible with
-    // that code.
-    XPCNativeScriptableInfo* siProto = proto->GetScriptableInfo();
-    if (siProto && siProto->GetCallback() == sciWrapper.GetCallback()) {
-        wrapper->mScriptableInfo = siProto;
-        // XPCNativeScriptableInfo uses manual memory management. If we're
-        // switching over to that of the proto, we need to destroy the one
-        // we've allocated.
-        delete si;
-        si = nullptr;
-    } else {
-        wrapper->mScriptableInfo = si;
-    }
+    wrapper->mScriptable = scr;
 
     // Set the JS object to the global we already created.
     wrapper->mFlatJSObject = global;
@@ -550,8 +535,7 @@ XPCWrappedNative::GetUsedOnly(nsISupports* Object,
 XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    XPCWrappedNativeProto* aProto)
     : mMaybeProto(aProto),
-      mSet(aProto->GetSet()),
-      mScriptableInfo(nullptr)
+      mSet(aProto->GetSet())
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -568,8 +552,7 @@ XPCWrappedNative::XPCWrappedNative(already_AddRefed<nsISupports>&& aIdentity,
                                    already_AddRefed<XPCNativeSet>&& aSet)
 
     : mMaybeScope(TagScope(aScope)),
-      mSet(aSet),
-      mScriptableInfo(nullptr)
+      mSet(aSet)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -588,14 +571,7 @@ XPCWrappedNative::~XPCWrappedNative()
 void
 XPCWrappedNative::Destroy()
 {
-    XPCWrappedNativeProto* proto = GetProto();
-
-    if (mScriptableInfo &&
-        (!HasProto() ||
-         (proto && proto->GetScriptableInfo() != mScriptableInfo))) {
-        delete mScriptableInfo;
-        mScriptableInfo = nullptr;
-    }
+    mScriptable = nullptr;
 
     XPCWrappedNativeScope* scope = GetScope();
     if (scope) {
@@ -729,30 +705,20 @@ bool
 XPCWrappedNative::Init(const XPCNativeScriptableCreateInfo* sci)
 {
     AutoJSContext cx;
-    // setup our scriptable info...
 
-    if (sci->GetCallback()) {
-        if (HasProto()) {
-            XPCNativeScriptableInfo* siProto = GetProto()->GetScriptableInfo();
-            if (siProto && siProto->GetCallback() == sci->GetCallback())
-                mScriptableInfo = siProto;
-        }
-        if (!mScriptableInfo) {
-            mScriptableInfo = XPCNativeScriptableInfo::Construct(sci);
-
-            if (!mScriptableInfo)
-                return false;
-        }
-    }
-    XPCNativeScriptableInfo* si = mScriptableInfo;
+    // Setup our scriptable...
+    MOZ_ASSERT(!mScriptable);
+    mScriptable = sci->GetCallback();
 
     // create our flatJSObject
 
-    const JSClass* jsclazz = si ? si->GetJSClass() : Jsvalify(&XPC_WN_NoHelper_JSClass);
+    const JSClass* jsclazz = mScriptable
+                           ? mScriptable->GetJSClass()
+                           : Jsvalify(&XPC_WN_NoHelper_JSClass);
 
     // We should have the global jsclass flag if and only if we're a global.
-    MOZ_ASSERT_IF(si, !!si->GetCallback()->IsGlobalObject() ==
-                      !!(jsclazz->flags & JSCLASS_IS_GLOBAL));
+    MOZ_ASSERT_IF(mScriptable, !!mScriptable->IsGlobalObject() ==
+                               !!(jsclazz->flags & JSCLASS_IS_GLOBAL));
 
     MOZ_ASSERT(jsclazz &&
                jsclazz->name &&
@@ -959,7 +925,7 @@ XPCWrappedNative::SystemIsBeingShutDown()
     if (HasProto())
         proto->SystemIsBeingShutDown();
 
-    // We don't destroy mScriptableInfo here. The destructor will do it.
+    // We don't clear mScriptable here. The destructor will do it.
 
     // Cleanup the tearoffs.
     for (XPCWrappedNativeTearOff* to = &mFirstTearOff; to; to = to->GetNextTearOff()) {
@@ -1095,8 +1061,8 @@ XPCWrappedNative::InitTearOff(XPCWrappedNativeTearOff* aTearOff,
 
     // If the scriptable helper forbids us from reflecting additional
     // interfaces, then don't even try the QI, just fail.
-    if (mScriptableInfo &&
-        mScriptableInfo->GetCallback()->ClassInfoInterfacesOnly() &&
+    if (mScriptable &&
+        mScriptable->ClassInfoInterfacesOnly() &&
         !mSet->HasInterface(aInterface) &&
         !mSet->HasInterfaceWithAncestor(aInterface)) {
         return NS_ERROR_NO_INTERFACE;
@@ -2152,14 +2118,12 @@ NS_IMETHODIMP XPCWrappedNative::DebugDump(int16_t depth)
 
         XPC_LOG_ALWAYS(("mFlatJSObject of %x", mFlatJSObject.unbarrieredGetPtr()));
         XPC_LOG_ALWAYS(("mIdentity of %x", mIdentity.get()));
-        XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
+        XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptable.get()));
 
-        if (depth && mScriptableInfo) {
-            nsCOMPtr<nsIXPCScriptable> scr = mScriptableInfo->GetCallback();
+        if (depth && mScriptable) {
             XPC_LOG_INDENT();
-            XPC_LOG_ALWAYS(("mScriptable @ %x", scr.get()));
-            XPC_LOG_ALWAYS(("mFlags of %x", scr->GetScriptableFlags()));
-            XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptableInfo->GetJSClass()));
+            XPC_LOG_ALWAYS(("mFlags of %x", mScriptable->GetScriptableFlags()));
+            XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptable->GetJSClass()));
             XPC_LOG_OUTDENT();
         }
     XPC_LOG_OUTDENT();
@@ -2185,9 +2149,9 @@ XPCWrappedNative::ToString(XPCWrappedNativeTearOff* to /* = nullptr */ ) const
     char* sz = nullptr;
     char* name = nullptr;
 
-    XPCNativeScriptableInfo* si = GetScriptableInfo();
-    if (si)
-        name = JS_smprintf("%s", si->GetJSClass()->name);
+    nsCOMPtr<nsIXPCScriptable> scr = GetScriptable();
+    if (scr)
+        name = JS_smprintf("%s", scr->GetJSClass()->name);
     if (to) {
         const char* fmt = name ? " (%s)" : "%s";
         name = JS_sprintf_append(name, fmt,
@@ -2218,7 +2182,7 @@ XPCWrappedNative::ToString(XPCWrappedNativeTearOff* to /* = nullptr */ ) const
     }
     const char* fmt = "[xpconnect wrapped %s" FMT_ADDR FMT_STR(" (native")
         FMT_ADDR FMT_STR(")") "]";
-    if (si) {
+    if (scr) {
         fmt = "[object %s" FMT_ADDR FMT_STR(" (native") FMT_ADDR FMT_STR(")") "]";
     }
     sz = JS_smprintf(fmt, name PARAM_ADDR(this) PARAM_ADDR(mIdentity.get()));
@@ -2267,11 +2231,9 @@ static void DEBUG_CheckClassInfoClaims(XPCWrappedNative* wrapper)
 
         info->GetNameShared(&interfaceName);
         clsInfo->GetContractID(&contractID);
-        if (wrapper->GetScriptableInfo()) {
-            wrapper->GetScriptableInfo()->GetCallback()->
-                GetClassName(&className);
+        if (wrapper->GetScriptable()) {
+            wrapper->GetScriptable()->GetClassName(&className);
         }
-
 
         printf("\n!!! Object's nsIClassInfo lies about its interfaces!!!\n"
                "   classname: %s \n"
