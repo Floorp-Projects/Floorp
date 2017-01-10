@@ -95,8 +95,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 
   // if the load is sandboxed, we can not also inherit the principal
   if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
-    mSecurityFlags ^= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-    mForceInheritPrincipalDropped = true;
+    mForceInheritPrincipalDropped =
+      (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
+    mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
   if (aLoadingContext) {
@@ -245,8 +246,9 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
 
   // if the load is sandboxed, we can not also inherit the principal
   if (mSecurityFlags & nsILoadInfo::SEC_SANDBOXED) {
-    mSecurityFlags ^= nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
-    mForceInheritPrincipalDropped = true;
+    mForceInheritPrincipalDropped =
+      (mSecurityFlags & nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL);
+    mSecurityFlags &= ~nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
   // NB: Ignore the current inner window since we're navigating away from it.
