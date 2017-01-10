@@ -5,11 +5,11 @@
 
 Cu.import("resource://gre/modules/CloudSync.jsm");
 
-function run_test () {
+function run_test() {
   run_next_test();
 }
 
-add_task(function test_module_load () {
+add_task(function test_module_load() {
   ok(CloudSync);
   let cloudSync = CloudSync();
   ok(cloudSync.adapters);

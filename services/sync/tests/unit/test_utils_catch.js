@@ -7,15 +7,15 @@ function run_test() {
   let obj = {
     catch: Utils.catch,
     _log: {
-      debug: function(str) {
+      debug(str) {
         didThrow = str.search(/^Exception/) == 0;
       },
-      info: function(str) {
+      info(str) {
         wasLocked = str.indexOf("Cannot start sync: already syncing?") == 0;
       }
     },
 
-    func: function() {
+    func() {
       return this.catch(function() {
         rightThis = this == obj;
         didCall = true;
@@ -23,7 +23,7 @@ function run_test() {
       })();
     },
 
-    throwy: function() {
+    throwy() {
       return this.catch(function() {
         rightThis = this == obj;
         didCall = true;
@@ -31,7 +31,7 @@ function run_test() {
       })();
     },
 
-    callbacky: function() {
+    callbacky() {
       return this.catch(function() {
         rightThis = this == obj;
         didCall = true;
@@ -41,11 +41,11 @@ function run_test() {
       })();
     },
 
-    lockedy: function() {
+    lockedy() {
       return this.catch(function() {
         rightThis = this == obj;
         didCall = true;
-        throw("Could not acquire lock.");
+        throw ("Could not acquire lock.");
       })();
     }
   };

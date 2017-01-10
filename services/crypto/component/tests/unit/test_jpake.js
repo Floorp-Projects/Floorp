@@ -8,7 +8,7 @@ function do_check_throws(func) {
   let have_error = false;
   try {
     func();
-  } catch(ex) {
+  } catch (ex) {
     dump("Was expecting an exception. Caught: " + ex + "\n");
     have_error = true;
   }
@@ -199,7 +199,7 @@ function test_x4_zero() {
                     a_gx2.value, a_gv2.value, a_r2.value, b_A, b_gva, b_ra);
     });
   };
-  
+
   // g^x is NIST 3072's p + 1, (p + 1) mod p == 1, x == 0
   test("90066455B5CFC38F9CAA4A48B4281F292C260FEEF01FD61037E56258A7795A1C"
          + "7AD46076982CE6BB956936C6AB4DCFE05E6784586940CA544B9B2140E1EB523F"
@@ -246,7 +246,7 @@ function test_x4_zero() {
 }
 
 function test_invalid_input_round2() {
-  let a = Cc["@mozilla.org/services-crypto/sync-jpake;1"]   
+  let a = Cc["@mozilla.org/services-crypto/sync-jpake;1"]
             .createInstance(Ci.nsISyncJPAKE);
 
   a.round1("alice", {}, {}, {}, {}, {}, {});

@@ -17,7 +17,7 @@ function checkRecord(name, record, expectedCount, timeCreated,
                                           record.formSubmitURL, null);
 
   _("Record" + name + ":" + JSON.stringify(logins));
-  _("Count" + name + ":" +  count.value);
+  _("Count" + name + ":" + count.value);
 
   do_check_eq(count.value, expectedCount);
 
@@ -50,10 +50,10 @@ function changePassword(name, hostname, password, expectedCount, timeCreated,
   const BOGUS_GUID = "zzzzzz" + hostname;
 
   let record = {id: BOGUS_GUID,
-                  hostname: hostname,
+                  hostname,
                   formSubmitURL: hostname,
                   username: "john",
-                  password: password,
+                  password,
                   usernameField: "username",
                   passwordField: "password"};
 
@@ -129,7 +129,7 @@ function test_apply_same_record_with_different_times() {
                                        100, 800, timePasswordChanged, true,
                                        true);
   timePasswordChanged = changePassword("A", "http://a.tn", "password2", 1, 500,
-                                       100,  1536213005222, timePasswordChanged,
+                                       100, 1536213005222, timePasswordChanged,
                                        true, true);
   timePasswordChanged = changePassword("A", "http://a.tn", "password2", 1, 500,
                                        100, 800, timePasswordChanged, true, true);

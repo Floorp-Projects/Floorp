@@ -82,8 +82,7 @@ add_test(function v4_upgrade() {
       Service.recordManager.set(Service.metaURL, meta_global);
       try {
         Service.sync();
-      }
-      catch (ex) {
+      } catch (ex) {
       }
       do_check_eq(Service.status.sync, VERSION_OUT_OF_DATE);
     }
@@ -175,7 +174,7 @@ add_test(function v4_upgrade() {
     _("Tabs: " + oldTabsModified + " < " + collections.tabs);
     _("Clients: " + oldClientsModified + " < " + collections.clients);
     do_check_true(collections.clients > oldClientsModified);
-    do_check_true(collections.tabs    > oldTabsModified);
+    do_check_true(collections.tabs > oldTabsModified);
 
     _("... and keys will now match.");
     retrieve_and_compare_default(true);
@@ -272,8 +271,7 @@ add_test(function v5_upgrade() {
     _("Logging in.");
     try {
       Service.login("johndoe", "ilovejane", passphrase);
-    }
-    catch (e) {
+    } catch (e) {
       _("Exception: " + e);
     }
     _("Status: " + Service.status);

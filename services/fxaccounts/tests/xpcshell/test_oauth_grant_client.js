@@ -20,11 +20,11 @@ const STATUS_SUCCESS = 200;
  *        Mocked raw response from the server
  * @returns {Function}
  */
-var mockResponse = function (response) {
-  return function () {
+var mockResponse = function(response) {
+  return function() {
     return {
-      setHeader: function () {},
-      post: function () {
+      setHeader() {},
+      post() {
         this.response = response;
         this.onComplete();
       }
@@ -38,18 +38,18 @@ var mockResponse = function (response) {
  *        Error object
  * @returns {Function}
  */
-var mockResponseError = function (error) {
-  return function () {
+var mockResponseError = function(error) {
+  return function() {
     return {
-      setHeader: function () {},
-      post: function () {
+      setHeader() {},
+      post() {
         this.onComplete(error);
       }
     };
   };
 };
 
-add_test(function missingParams () {
+add_test(function missingParams() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   try {
     client.getTokenFromAssertion()
@@ -66,7 +66,7 @@ add_test(function missingParams () {
   run_next_test();
 });
 
-add_test(function successfulResponse () {
+add_test(function successfulResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     success: true,
@@ -77,14 +77,14 @@ add_test(function successfulResponse () {
   client._Request = new mockResponse(response);
   client.getTokenFromAssertion("assertion", "scope")
     .then(
-      function (result) {
+      function(result) {
         do_check_eq(result.access_token, "http://example.com/image.jpeg");
         run_next_test();
       }
     );
 });
 
-add_test(function successfulDestroy () {
+add_test(function successfulDestroy() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     success: true,
@@ -96,7 +96,7 @@ add_test(function successfulDestroy () {
   client.destroyToken("deadbeef").then(run_next_test);
 });
 
-add_test(function parseErrorResponse () {
+add_test(function parseErrorResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     success: true,
@@ -108,7 +108,7 @@ add_test(function parseErrorResponse () {
   client.getTokenFromAssertion("assertion", "scope")
     .then(
       null,
-      function (e) {
+      function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, STATUS_SUCCESS);
         do_check_eq(e.errno, ERRNO_PARSE);
@@ -119,7 +119,7 @@ add_test(function parseErrorResponse () {
     );
 });
 
-add_test(function serverErrorResponse () {
+add_test(function serverErrorResponse() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   let response = {
     status: 400,
@@ -130,7 +130,7 @@ add_test(function serverErrorResponse () {
   client.getTokenFromAssertion("blah", "scope")
     .then(
     null,
-    function (e) {
+    function(e) {
       do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
       do_check_eq(e.code, 400);
       do_check_eq(e.errno, ERRNO_INVALID_FXA_ASSERTION);
@@ -141,7 +141,7 @@ add_test(function serverErrorResponse () {
   );
 });
 
-add_test(function networkErrorResponse () {
+add_test(function networkErrorResponse() {
   let client = new FxAccountsOAuthGrantClient({
     serverURL: "http://",
     client_id: "abc123"
@@ -150,7 +150,7 @@ add_test(function networkErrorResponse () {
   client.getTokenFromAssertion("assertion", "scope")
     .then(
       null,
-      function (e) {
+      function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -161,13 +161,13 @@ add_test(function networkErrorResponse () {
       Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
 });
 
-add_test(function unsupportedMethod () {
+add_test(function unsupportedMethod() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
 
   return client._createRequest("/", "PUT")
     .then(
       null,
-      function (e) {
+      function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, ERROR_CODE_METHOD_NOT_ALLOWED);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -178,13 +178,13 @@ add_test(function unsupportedMethod () {
     );
 });
 
-add_test(function onCompleteRequestError () {
+add_test(function onCompleteRequestError() {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
   client._Request = new mockResponseError(new Error("onComplete error"));
   client.getTokenFromAssertion("assertion", "scope")
     .then(
       null,
-      function (e) {
+      function(e) {
         do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
         do_check_eq(e.code, null);
         do_check_eq(e.errno, ERRNO_NETWORK);
@@ -206,7 +206,7 @@ add_test(function incorrectErrno() {
   client.getTokenFromAssertion("blah", "scope")
     .then(
     null,
-    function (e) {
+    function(e) {
       do_check_eq(e.name, "FxAccountsOAuthGrantClientError");
       do_check_eq(e.code, 400);
       do_check_eq(e.errno, ERRNO_UNKNOWN_ERROR);

@@ -80,7 +80,7 @@ Phase('phase2', [
 Phase('phase3', [
   [Sync],
   [Formdata.delete, formdata_delete],
-//[Formdata.verifyNot, formdata_delete],
+// [Formdata.verifyNot, formdata_delete],
   [Formdata.verify, formdata2],
   // add new data after the first Sync, ensuring the tracker works.
   [Formdata.add, formdata_new],

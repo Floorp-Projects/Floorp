@@ -17,30 +17,30 @@ function test() {
   let testURL = "chrome://mochitests/content/browser/services/cloudsync/tests/mochitest/other_window.html";
   let expected = [
     testURL,
-    testURL+"?x=1",
-    testURL+"?x=%20a",
+    testURL + "?x=1",
+    testURL + "?x=%20a",
     // testURL+"?x=å",
   ];
 
   let nevents = 0;
   let nflushed = 0;
-  function handleTabChangeEvent () {
+  function handleTabChangeEvent() {
     cloudSync.tabs.removeEventListener("change", handleTabChangeEvent);
-    ++ nevents;
+    ++nevents;
     info("tab change event " + nevents);
     next();
   }
 
   function getLocalTabs() {
     cloudSync.tabs.getLocalTabs().then(
-      function (tabs) {
+      function(tabs) {
         for (let tab of tabs) {
           ok(expected.indexOf(tab.url) >= 0, "found an expected tab");
         }
 
         is(tabs.length, expected.length, "found the right number of tabs");
 
-        opentabs.forEach(function (tab) {
+        opentabs.forEach(function(tab) {
           gBrowser.removeTab(tab);
         });
 
@@ -59,7 +59,7 @@ function test() {
     function flush() {
       tab.linkedBrowser.removeEventListener("load", flush, true);
       local.TabStateFlusher.flush(tab.linkedBrowser).then(() => {
-        ++ nflushed;
+        ++nflushed;
         info("flushed " + nflushed);
         next();
       });

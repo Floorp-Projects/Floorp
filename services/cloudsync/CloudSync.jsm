@@ -19,13 +19,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tabs",
 
 var API_VERSION = 1;
 
-var _CloudSync = function () {
+var _CloudSync = function() {
 };
 
 _CloudSync.prototype = {
   _adapters: null,
 
-  get adapters () {
+  get adapters() {
     if (!this._adapters) {
       this._adapters = new Adapters();
     }
@@ -34,7 +34,7 @@ _CloudSync.prototype = {
 
   _bookmarks: null,
 
-  get bookmarks () {
+  get bookmarks() {
     if (!this._bookmarks) {
       this._bookmarks = new Bookmarks();
     }
@@ -43,7 +43,7 @@ _CloudSync.prototype = {
 
   _local: null,
 
-  get local () {
+  get local() {
     if (!this._local) {
       this._local = new Local();
     }
@@ -52,28 +52,28 @@ _CloudSync.prototype = {
 
   _tabs: null,
 
-  get tabs () {
+  get tabs() {
     if (!this._tabs) {
       this._tabs = new Tabs();
     }
     return this._tabs;
   },
 
-  get tabsReady () {
-    return this._tabs ? true: false;
+  get tabsReady() {
+    return this._tabs ? true : false;
   },
 
-  get version () {
+  get version() {
     return API_VERSION;
   },
 };
 
-this.CloudSync = function CloudSync () {
+this.CloudSync = function CloudSync() {
   return _cloudSyncInternal.instance;
 };
 
 Object.defineProperty(CloudSync, "ready", {
-  get: function () {
+  get() {
     return _cloudSyncInternal.ready;
   }
 });
@@ -83,7 +83,7 @@ var _cloudSyncInternal = {
   ready: false,
 };
 
-XPCOMUtils.defineLazyGetter(_cloudSyncInternal, "instance", function () {
+XPCOMUtils.defineLazyGetter(_cloudSyncInternal, "instance", function() {
   _cloudSyncInternal.ready = true;
   return new _CloudSync();
-}.bind(this));
+});

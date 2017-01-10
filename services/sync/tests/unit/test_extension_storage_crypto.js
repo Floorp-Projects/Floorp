@@ -20,8 +20,7 @@ function* throwsGen(constraint, f) {
   let exception;
   try {
     yield* f();
-  }
-  catch (e) {
+  } catch (e) {
     threw = true;
     exception = e;
   }
@@ -57,7 +56,7 @@ class StaticKeyEncryptionRemoteTransformer extends EncryptionRemoteTransformer {
   }
 }
 const BORING_KB = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-const STRETCHED_KEY = CryptoUtils.hkdf(BORING_KB, undefined, `testing storage.sync encryption`, 2*32);
+const STRETCHED_KEY = CryptoUtils.hkdf(BORING_KB, undefined, `testing storage.sync encryption`, 2 * 32);
 const KEY_BUNDLE = {
   sha256HMACHasher: Utils.makeHMACHasher(Ci.nsICryptoHMAC.SHA256, Utils.makeHMACKey(STRETCHED_KEY.slice(0, 32))),
   encryptionKeyB64: btoa(STRETCHED_KEY.slice(32, 64)),
@@ -73,7 +72,7 @@ add_task(function* test_encryption_transformer_roundtrip() {
   ];
 
   for (let data of POSSIBLE_DATAS) {
-    const record = {data: data, id: "key-some_2D_key", key: "some-key"};
+    const record = {data, id: "key-some_2D_key", key: "some-key"};
 
     deepEqual(record, yield transformer.decode(yield transformer.encode(record)));
   }

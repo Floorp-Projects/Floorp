@@ -21,14 +21,14 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 
 
-this.DeclinedEngines = function (service) {
+this.DeclinedEngines = function(service) {
   this._log = Log.repository.getLogger("Sync.Declined");
   this._log.level = Log.Level[new Preferences(PREFS_BRANCH).get("log.logger.declined")];
 
   this.service = service;
 }
 this.DeclinedEngines.prototype = {
-  updateDeclined: function (meta, engineManager=this.service.engineManager) {
+  updateDeclined(meta, engineManager = this.service.engineManager) {
     let enabled = new Set(engineManager.getEnabled().map(e => e.name));
     let known = new Set(engineManager.getAll().map(e => e.name));
     let remoteDeclined = new Set(meta.payload.declined || []);
@@ -62,9 +62,9 @@ this.DeclinedEngines.prototype = {
     if (undecided.size) {
       let subject = {
         declined: newDeclined,
-        enabled: enabled,
-        known: known,
-        undecided: undecided,
+        enabled,
+        known,
+        undecided,
       };
       CommonUtils.nextTick(() => {
         Observers.notify("weave:engines:notdeclined", subject);

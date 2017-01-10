@@ -15,8 +15,7 @@ function run_test() {
     _("Try calling the sync that should throw right away");
     engine._sync();
     do_throw("Should have failed sync!");
-  }
-  catch(ex) {
+  } catch (ex) {
     _("Making sure what we threw ended up as the exception:", ex);
     do_check_eq(ex, "FAIL!");
   }

@@ -17,10 +17,10 @@ function run_test() {
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   function addEntry(name, value) {
-    engine._store.create({name: name, value: value});
+    engine._store.create({name, value});
   }
   function removeEntry(name, value) {
-    guid = engine._findDupe({name: name, value: value});
+    guid = engine._findDupe({name, value});
     engine._store.remove({id: guid});
   }
 

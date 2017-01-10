@@ -8,7 +8,7 @@ initTestLogging("Trace");
 function makeRecord(nbytes) {
   // make a string 2-bytes less - the added quotes will make it correct.
   return {
-    toJSON: () => "x".repeat(nbytes-2),
+    toJSON: () => "x".repeat(nbytes - 2),
   }
 }
 
@@ -85,7 +85,7 @@ add_test(function test_max_post_bytes_no_batch() {
       commit: false,
       headers: [["x-if-unmodified-since", time]],
       batch: "true",
-    },{
+    }, {
       nbytes: 22,
       commit: false, // we know we aren't in a batch, so never commit.
       headers: [["x-if-unmodified-since", time + 100]],
@@ -125,7 +125,7 @@ add_test(function test_max_post_records_no_batch() {
       commit: false,
       batch: "true",
       headers: [["x-if-unmodified-since", time]],
-    },{
+    }, {
       nbytes: 22,
       commit: false, // we know we aren't in a batch, so never commit.
       batch: null,
@@ -202,7 +202,7 @@ add_test(function test_max_post_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time]],
-    },{
+    }, {
       nbytes: 22,
       commit: true,
       batch: 1234,
@@ -259,7 +259,7 @@ add_test(function test_max_post_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time0]],
-    },{
+    }, {
       // second post of 22 bytes in the first batch, committing it.
       nbytes: 22,
       commit: true,
@@ -271,7 +271,7 @@ add_test(function test_max_post_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time1]],
-    },{
+    }, {
       // 4th post of 22 bytes in second batch, committing it.
       nbytes: 22,
       commit: true,
@@ -317,7 +317,7 @@ add_test(function test_max_post_bytes_batch() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time]],
-    },{
+    }, {
       nbytes: 22,
       commit: true,
       batch: 1234,
@@ -369,7 +369,7 @@ add_test(function test_huge_record() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time]],
-    },{
+    }, {
       nbytes: 22,
       commit: true,
       batch: 1234,
@@ -431,7 +431,7 @@ add_test(function test_max_records_batch() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time0]],
-    },{ // 2 records -- end batch1
+    }, { // 2 records -- end batch1
       nbytes: 43,
       commit: true,
       batch: 1234,
@@ -441,7 +441,7 @@ add_test(function test_max_records_batch() {
       commit: false,
       batch: "true",
       headers: [['x-if-unmodified-since', time1]],
-    },{ // 1 record -- end batch2
+    }, { // 1 record -- end batch2
       nbytes: 22,
       commit: true,
       batch: 5678,

@@ -8,7 +8,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
-  return function (request, response) {
+  return function(request, response) {
     if (request.hasHeader("Authorization") &&
         request.getHeader("Authorization").includes('Hawk id="id"')) {
       handler(request, response);
@@ -30,7 +30,7 @@ add_task(async function run_test() {
 
   let server = httpd_setup({
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": upd("meta",   new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler()),
     "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler)
   });
 
@@ -44,7 +44,7 @@ add_task(async function run_test() {
     Svc.Prefs.set("lastPing", Math.floor(Date.now() / 1000));
 
     let threw = false;
-    Svc.Obs.add("weave:service:sync:error", function (subject, data) {
+    Svc.Obs.add("weave:service:sync:error", function(subject, data) {
       threw = true;
     });
 

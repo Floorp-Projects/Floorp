@@ -22,7 +22,7 @@ function lazyImport(module, dest, props) {
       return dest[prop] = ns[prop];
     };
   }
-  props.forEach(function (prop) { dest.__defineGetter__(prop, getter(prop)); });
+  props.forEach(function(prop) { dest.__defineGetter__(prop, getter(prop)); });
 }
 
 for (let mod in lazies) {

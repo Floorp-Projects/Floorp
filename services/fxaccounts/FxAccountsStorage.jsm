@@ -274,7 +274,7 @@ this.FxAccountsStorageManager.prototype = {
     let got;
     try {
       got = yield this.plainStorage.get();
-    } catch(err) {
+    } catch (err) {
       // File hasn't been created yet.  That will be done
       // when write is called.
       if (!(err instanceof OS.File.Error) || !err.becauseNoSuchFile) {
@@ -444,25 +444,25 @@ this.FxAccountsStorageManager.prototype = {
 function JSONStorage(options) {
   this.baseDir = options.baseDir;
   this.path = OS.Path.join(options.baseDir, options.filename);
-};
+}
 
 JSONStorage.prototype = {
-  set: function(contents) {
+  set(contents) {
     log.trace("starting write of json user data", contents ? Object.keys(contents.accountData) : "null");
     let start = Date.now();
     return OS.File.makeDir(this.baseDir, {ignoreExisting: true})
       .then(CommonUtils.writeJSON.bind(null, contents, this.path))
       .then(result => {
-        log.trace("finished write of json user data - took", Date.now()-start);
+        log.trace("finished write of json user data - took", Date.now() - start);
         return result;
       });
   },
 
-  get: function() {
+  get() {
     log.trace("starting fetch of json user data");
     let start = Date.now();
     return CommonUtils.readJSON(this.path).then(result => {
-      log.trace("finished fetch of json user data - took", Date.now()-start);
+      log.trace("finished fetch of json user data - took", Date.now() - start);
       return result;
     });
   },

@@ -5,6 +5,6 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 "use strict";
 
-(function initCloudSyncTestingInfrastructure () {
+(function initCloudSyncTestingInfrastructure() {
   do_get_profile();
 }).call(this);

@@ -71,7 +71,7 @@ WeaveService.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
 
-  ensureLoaded: function () {
+  ensureLoaded() {
     // If we are loaded and not using FxA, load the migration module.
     if (!this.fxAccountsEnabled) {
       Cu.import("resource://services-sync/FxaMigrator.jsm");
@@ -83,7 +83,7 @@ WeaveService.prototype = {
     Weave.Service;
   },
 
-  whenLoaded: function() {
+  whenLoaded() {
     if (this.ready) {
       return Promise.resolve();
     }
@@ -127,7 +127,7 @@ WeaveService.prototype = {
     return prefs.prefHasUserValue("username");
   },
 
-  observe: function (subject, topic, data) {
+  observe(subject, topic, data) {
     switch (topic) {
     case "app-startup":
       let os = Cc["@mozilla.org/observer-service;1"].
@@ -172,11 +172,11 @@ AboutWeaveLog.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule,
                                          Ci.nsISupportsWeakReference]),
 
-  getURIFlags: function(aURI) {
+  getURIFlags(aURI) {
     return 0;
   },
 
-  newChannel: function(aURI, aLoadInfo) {
+  newChannel(aURI, aLoadInfo) {
     let dir = FileUtils.getDir("ProfD", ["weave", "logs"], true);
     let uri = Services.io.newFileURI(dir);
     let channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);

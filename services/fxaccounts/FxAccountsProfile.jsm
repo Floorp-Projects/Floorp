@@ -71,7 +71,7 @@ function hasChanged(oldData, newData) {
   return !deepEqual(oldData, newData);
 }
 
-this.FxAccountsProfile = function (options = {}) {
+this.FxAccountsProfile = function(options = {}) {
   this._cachedProfile = null;
   this._cachedAt = 0; // when we saved the cached version.
   this._currentFetchPromise = null;
@@ -106,20 +106,20 @@ this.FxAccountsProfile.prototype = {
     }
   },
 
-  tearDown: function () {
+  tearDown() {
     this.fxa = null;
     this.client = null;
     this._cachedProfile = null;
     Services.obs.removeObserver(this, ON_PROFILE_CHANGE_NOTIFICATION);
   },
 
-  _getCachedProfile: function () {
+  _getCachedProfile() {
     // The cached profile will end up back in the generic accountData
     // once bug 1157529 is fixed.
     return Promise.resolve(this._cachedProfile);
   },
 
-  _notifyProfileChange: function (uid) {
+  _notifyProfileChange(uid) {
     this._isNotifying = true;
     Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, uid);
     this._isNotifying = false;
@@ -127,7 +127,7 @@ this.FxAccountsProfile.prototype = {
 
   // Cache fetched data if it is different from what's in the cache.
   // Send out a notification if it has changed so that UI can update.
-  _cacheProfile: function (profileData) {
+  _cacheProfile(profileData) {
     if (!hasChanged(this._cachedProfile, profileData)) {
       log.debug("fetched profile matches cached copy");
       return Promise.resolve(null); // indicates no change (but only tests care)
@@ -142,7 +142,7 @@ this.FxAccountsProfile.prototype = {
       });
   },
 
-  _fetchAndCacheProfile: function () {
+  _fetchAndCacheProfile() {
     if (!this._currentFetchPromise) {
       this._currentFetchPromise = this.client.fetchProfile().then(profile => {
         return this._cacheProfile(profile).then(() => {
@@ -162,7 +162,7 @@ this.FxAccountsProfile.prototype = {
   // Returns cached data right away if available, then fetches the latest profile
   // data in the background. After data is fetched a notification will be sent
   // out if the profile has changed.
-  getProfile: function () {
+  getProfile() {
     return this._getCachedProfile()
       .then(cachedProfile => {
         if (cachedProfile) {

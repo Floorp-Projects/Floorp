@@ -9,43 +9,43 @@ this.EXPORTED_SYMBOLS = ["Adapters"];
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/CloudSyncEventSource.jsm");
 
-this.Adapters = function () {
+this.Adapters = function() {
   let eventTypes = [
     "sync",
   ];
 
   let suspended = true;
 
-  let suspend = function () {
+  let suspend = function() {
     if (!suspended) {
       Services.obs.removeObserver(observer, "cloudsync:user-sync");
       suspended = true;
     }
-  }.bind(this);
+  };
 
-  let resume = function () {
+  let resume = function() {
     if (suspended) {
       Services.obs.addObserver(observer, "cloudsync:user-sync", false);
       suspended = false;
     }
-  }.bind(this);
+  };
 
   let eventSource = new EventSource(eventTypes, suspend, resume);
   let registeredAdapters = new Map();
 
-  function register (name, opts) {
+  function register(name, opts) {
     opts = opts || {};
     registeredAdapters.set(name, opts);
   }
 
-  function unregister (name) {
+  function unregister(name) {
     if (!registeredAdapters.has(name)) {
       throw new Error("adapter is not registered: " + name)
     }
     registeredAdapters.delete(name);
   }
 
-  function getAdapterNames () {
+  function getAdapterNames() {
     let result = [];
     for (let name of registeredAdapters.keys()) {
       result.push(name);
@@ -53,19 +53,19 @@ this.Adapters = function () {
     return result;
   }
 
-  function getAdapter (name) {
+  function getAdapter(name) {
     if (!registeredAdapters.has(name)) {
       throw new Error("adapter is not registered: " + name)
     }
     return registeredAdapters.get(name);
   }
 
-  function countAdapters () {
+  function countAdapters() {
     return registeredAdapters.size;
   }
 
   let observer = {
-    observe: function (subject, topic, data) {
+    observe(subject, topic, data) {
       switch (topic) {
         case "cloudsync:user-sync":
           eventSource.emit("sync");

@@ -15,7 +15,7 @@ function run_test() {
     // For the purposes of this test we don't need to do full formatting
     // of the 2nd param, as the ones we care about are always strings.
     old.debug = function(m, p) { debug.push(p ? m + ": " + p : m); d.call(old, m, p); }
-    old.info  = function(m, p) { info.push(p ? m + ": " + p : m);  i.call(old, m, p); }
+    old.info  = function(m, p) { info.push(p ? m + ": " + p : m); i.call(old, m, p); }
     return old;
   }
 

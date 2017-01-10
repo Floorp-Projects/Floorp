@@ -22,7 +22,7 @@ add_test(function test_sha1() {
   let uri = CommonUtils.makeURI("http://10.250.2.176/alias/");
 
   let result = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
-                                              {ts: ts, nonce: nonce});
+                                              {ts, nonce});
 
   do_check_eq(btoa(result.mac), "jzh5chjQc2zFEvLbyHnPdX11Yck=");
 
@@ -33,7 +33,7 @@ add_test(function test_sha1() {
   let ext = "EXTRA DATA; foo,bar=1";
 
   result = CryptoUtils.computeHTTPMACSHA1(id, key, method, uri,
-                                              {ts: ts, nonce: nonce, ext: ext});
+                                              {ts, nonce, ext});
   do_check_eq(btoa(result.mac), "bNf4Fnt5k6DnhmyipLPkuZroH68=");
   do_check_eq(result.getHeader(),
               'MAC id="vmo1txkttblmn51u2p3zk2xiy16hgvm5ok8qiv1yyi86ffjzy9zj0ez9x6wnvbx7", ' +
