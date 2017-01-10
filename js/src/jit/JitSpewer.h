@@ -62,6 +62,7 @@ namespace jit {
     _(Profiling)                            \
     /* Information of tracked opt strats */ \
     _(OptimizationTracking)                 \
+    _(OptimizationTrackingExtended)         \
     /* Debug info about the I$ */           \
     _(CacheFlush)                           \
     /* Output a list of MIR expressions */  \

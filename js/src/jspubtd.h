@@ -187,11 +187,16 @@ struct Runtime
 
     js::gc::StoreBuffer* gcStoreBufferPtr_;
 
+    // The gray bits can become invalid if UnmarkGray overflows the stack. A
+    // full GC will reset this bit, since it fills in all the gray bits.
+    bool gcGrayBitsValid_;
+
   public:
     Runtime()
       : heapState_(JS::HeapState::Idle)
       , allowGCBarriers_(true)
       , gcStoreBufferPtr_(nullptr)
+      , gcGrayBitsValid_(false)
     {}
 
     bool isHeapBusy() const { return heapState() != JS::HeapState::Idle; }
@@ -206,6 +211,9 @@ struct Runtime
     bool allowGCBarriers() const { return allowGCBarriers_; }
 
     js::gc::StoreBuffer* gcStoreBufferPtr() { return gcStoreBufferPtr_; }
+
+    bool areGCGrayBitsValid() const { return gcGrayBitsValid_; }
+    void setGCGrayBitsValid(bool valid) { gcGrayBitsValid_ = valid; }
 
     const JSRuntime* asRuntime() const {
         return reinterpret_cast<const JSRuntime*>(this);
