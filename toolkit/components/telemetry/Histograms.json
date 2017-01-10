@@ -4400,6 +4400,14 @@
     "alert_emails": ["mobile-frontend@mozilla.com"],
     "bug_numbers": [1244704]
   },
+  "FENNEC_ORBOT_INSTALLED": {
+    "expires_in_version": "60",
+    "kind": "flag",
+    "cpp_guard": "ANDROID",
+    "description": "Whether or not users have Orbot installed",
+    "alert_emails": ["seceng@mozilla.org"],
+    "bug_numbers": [1314784]
+  },
   "FENNEC_READING_LIST_COUNT": {
     "expires_in_version": "50",
     "kind": "exponential",
