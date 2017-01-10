@@ -203,7 +203,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
     RootedObject wrapScope(cx, scope);
 
     {
-        if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
+        if (ccx.GetScriptable() && ccx.GetScriptable()->WantPreCreate()) {
             // We have a precreate hook. This object might enforce that we only
             // ever create JS object for it.
 
