@@ -46,7 +46,8 @@ int ARGBCopy(const uint8* src_argb, int src_stride_argb,
 }
 
 // Convert I422 to ARGB with matrix
-static int I420ToARGBMatrix(const uint8* src_y, int src_stride_y,
+LIBYUV_API
+int I420ToARGBMatrix(const uint8* src_y, int src_stride_y,
                             const uint8* src_u, int src_stride_u,
                             const uint8* src_v, int src_stride_v,
                             uint8* dst_argb, int dst_stride_argb,
@@ -206,7 +207,8 @@ int H420ToABGR(const uint8* src_y, int src_stride_y,
 }
 
 // Convert I422 to ARGB with matrix
-static int I422ToARGBMatrix(const uint8* src_y, int src_stride_y,
+LIBYUV_API
+int I422ToARGBMatrix(const uint8* src_y, int src_stride_y,
                             const uint8* src_u, int src_stride_u,
                             const uint8* src_v, int src_stride_v,
                             uint8* dst_argb, int dst_stride_argb,
@@ -374,7 +376,8 @@ int H422ToABGR(const uint8* src_y, int src_stride_y,
 }
 
 // Convert I444 to ARGB with matrix
-static int I444ToARGBMatrix(const uint8* src_y, int src_stride_y,
+LIBYUV_API
+int I444ToARGBMatrix(const uint8* src_y, int src_stride_y,
                             const uint8* src_u, int src_stride_u,
                             const uint8* src_v, int src_stride_v,
                             uint8* dst_argb, int dst_stride_argb,
