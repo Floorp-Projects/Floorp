@@ -231,10 +231,8 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
 
     // Set a forwarding pointer for the element buffers in case they were
     // preserved on the stack by Ion.
-    if (nbytes > 0) {
-        nursery.maybeSetForwardingPointer(trc, oldObj->elements(), newObj->elements(),
-                                          /* direct = */nbytes >= sizeof(uintptr_t));
-    }
+    nursery.maybeSetForwardingPointer(trc, oldObj->elements(), newObj->elements(),
+                                      /* direct = */nbytes >= sizeof(uintptr_t));
 
     return newObj->hasInlineElements() ? 0 : nbytes;
 }
