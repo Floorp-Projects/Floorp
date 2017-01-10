@@ -196,16 +196,13 @@
  *
  * @param aAppData  Information about the application to be run.
  *
- * @param aFlags    Platform specific flags.
- *
  * @return         A native result code suitable for returning from main().
  *
  * @note           If the binary is linked against the standalone XPCOM glue,
  *                 XPCOMGlueStartup() should be called before this method.
  */
 XRE_API(int,
-        XRE_main, (int argc, char* argv[], const mozilla::XREAppData& aAppData,
-                   uint32_t aFlags))
+        XRE_main, (int argc, char* argv[], const mozilla::XREAppData& aAppData))
 
 /**
  * Given a path relative to the current working directory (or an absolute

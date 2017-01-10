@@ -146,12 +146,12 @@ static int do_main(int argc, char* argv[])
       Output("Couldn't read application.ini");
       return 255;
     }
-    int result = XRE_main(argc, argv, appData, 0);
+    int result = XRE_main(argc, argv, appData);
     XRE_FreeAppData(appData);
     return result;
   }
 
-  return XRE_main(argc, argv, &sAppData, 0);
+  return XRE_main(argc, argv, &sAppData);
 }
 
 int main(int argc, char* argv[])
