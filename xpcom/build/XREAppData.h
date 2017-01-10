@@ -36,6 +36,11 @@ public:
     *this = aOther;
   }
 
+  explicit XREAppData(const StaticXREAppData& aOther)
+  {
+    *this = aOther;
+  }
+
   XREAppData& operator=(const StaticXREAppData& aOther);
   XREAppData& operator=(const XREAppData& aOther);
   XREAppData& operator=(XREAppData&& aOther) = default;

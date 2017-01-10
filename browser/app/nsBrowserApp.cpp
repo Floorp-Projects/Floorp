@@ -176,30 +176,16 @@ void libFuzzerGetFuncs(const char* moduleName, LibFuzzerInitFunc* initFunc,
 
 static int do_main(int argc, char* argv[], char* envp[])
 {
-  nsCOMPtr<nsIFile> appini;
-  nsresult rv;
-
   // Allow firefox.exe to launch XULRunner apps via -app <application.ini>
   // Note that -app must be the *first* argument.
   const char *appDataFile = getenv("XUL_APP_FILE");
-  if (appDataFile && *appDataFile) {
-    rv = gBootstrap->XRE_GetFileFromPath(appDataFile, getter_AddRefs(appini));
-    if (NS_FAILED(rv)) {
-      Output("Invalid path found: '%s'", appDataFile);
-      return 255;
-    }
-  }
-  else if (argc > 1 && IsArg(argv[1], "app")) {
+  if ((!appDataFile || !*appDataFile) &&
+      (argc > 1 && IsArg(argv[1], "app"))) {
     if (argc == 2) {
       Output("Incorrect number of arguments passed to -app");
       return 255;
     }
-
-    rv = gBootstrap->XRE_GetFileFromPath(argv[2], getter_AddRefs(appini));
-    if (NS_FAILED(rv)) {
-      Output("application.ini path not recognized: '%s'", argv[2]);
-      return 255;
-    }
+    appDataFile = argv[2];
 
     char appEnv[MAXPATHLEN];
     SprintfLiteral(appEnv, "XUL_APP_FILE=%s", argv[2]);
@@ -224,36 +210,15 @@ static int do_main(int argc, char* argv[], char* envp[])
     return gBootstrap->XRE_XPCShellMain(--argc, argv, envp, &shellData);
   }
 
-  XREAppData appData;
+  BootstrapConfig config;
 
-  if (appini) {
-    rv = gBootstrap->XRE_ParseAppData(appini, appData);
-    if (NS_FAILED(rv)) {
-      Output("Couldn't read application.ini");
-      return 255;
-    }
-
-    appini->GetParent(getter_AddRefs(appData.directory));
+  if (appDataFile && *appDataFile) {
+    config.appData = nullptr;
+    config.appDataPath = appDataFile;
   } else {
     // no -app flag so we use the compiled-in app data
-    appData = sAppData;
-
-    nsCOMPtr<nsIFile> exeFile;
-    rv = mozilla::BinaryPath::GetFile(argv[0], getter_AddRefs(exeFile));
-    if (NS_FAILED(rv)) {
-      Output("Couldn't find the application directory.\n");
-      return 255;
-    }
-
-    nsCOMPtr<nsIFile> greDir;
-    exeFile->GetParent(getter_AddRefs(greDir));
-#ifdef XP_MACOSX
-    greDir->SetNativeLeafName(NS_LITERAL_CSTRING(kOSXResourcesFolder));
-#endif
-    nsCOMPtr<nsIFile> appSubdir;
-    greDir->Clone(getter_AddRefs(appSubdir));
-    appSubdir->Append(NS_LITERAL_STRING(kDesktopFolder));
-    appData.directory = appSubdir;
+    config.appData = &sAppData;
+    config.appDataPath = kDesktopFolder;
   }
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
@@ -265,7 +230,7 @@ static int do_main(int argc, char* argv[], char* envp[])
     return 255;
   }
 #endif
-  appData.sandboxBrokerServices = brokerServices;
+  config.sandboxBrokerServices = brokerServices;
 #endif
 
 #ifdef LIBFUZZER
@@ -273,7 +238,7 @@ static int do_main(int argc, char* argv[], char* envp[])
     gBootstrap->XRE_LibFuzzerSetMain(argc, argv, libfuzzer_main);
 #endif
 
-  return gBootstrap->XRE_main(argc, argv, appData);
+  return gBootstrap->XRE_main(argc, argv, config);
 }
 
 static bool

@@ -21,6 +21,7 @@
 
 #include "nsAppRunner.h"
 #include "mozilla/XREAppData.h"
+#include "mozilla/Bootstrap.h"
 #if defined(MOZ_UPDATER) && !defined(MOZ_WIDGET_ANDROID)
 #include "nsUpdateDriver.h"
 #endif
@@ -3024,7 +3025,7 @@ public:
     mAppData = nullptr;
   }
 
-  int XRE_main(int argc, char* argv[], const XREAppData& aAppData);
+  int XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig);
   int XRE_mainInit(bool* aExitFlag);
   int XRE_mainStartup(bool* aExitFlag);
   nsresult XRE_mainRun();
@@ -3183,31 +3184,6 @@ XREMain::XRE_mainInit(bool* aExitFlag)
 
   // XXX Originally ScopedLogging was here? Now it's in XRE_main above
   // XRE_mainInit.
-
-  if (!mAppData->xreDirectory) {
-    nsCOMPtr<nsIFile> lf;
-    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
-    if (NS_FAILED(rv))
-      return 2;
-
-    nsCOMPtr<nsIFile> greDir;
-    rv = lf->GetParent(getter_AddRefs(greDir));
-    if (NS_FAILED(rv))
-      return 2;
-
-#ifdef XP_MACOSX
-    nsCOMPtr<nsIFile> parent;
-    greDir->GetParent(getter_AddRefs(parent));
-    greDir = parent.forget();
-    greDir->AppendNative(NS_LITERAL_CSTRING("Resources"));
-#endif
-
-    mAppData->xreDirectory = greDir;
-  }
-
-  if (!mAppData->directory) {
-    mAppData->directory = mAppData->xreDirectory;
-  }
 
   if (!mAppData->minVersion) {
     Output(true, "Error: Gecko:MinVersion not specified in application.ini\n");
@@ -4526,7 +4502,7 @@ XRE_CreateStatsObject()
  *            .app/Contents/Resources.
  */
 int
-XREMain::XRE_main(int argc, char* argv[], const XREAppData& aAppData)
+XREMain::XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 {
   ScopedLogging log;
 
@@ -4555,7 +4531,27 @@ XREMain::XRE_main(int argc, char* argv[], const XREAppData& aAppData)
   gArgc = argc;
   gArgv = argv;
 
-  mAppData = MakeUnique<XREAppData>(aAppData);
+  if (aConfig.appData) {
+      mAppData = MakeUnique<XREAppData>(*aConfig.appData);
+  } else {
+    MOZ_RELEASE_ASSERT(aConfig.appDataPath);
+    nsCOMPtr<nsIFile> appini;
+    rv = XRE_GetFileFromPath(aConfig.appDataPath, getter_AddRefs(appini));
+    if (NS_FAILED(rv)) {
+      Output(true, "Error: unrecognized path: %s\n", aConfig.appDataPath);
+      return 1;
+    }
+
+    mAppData = MakeUnique<XREAppData>();
+    rv = XRE_ParseAppData(appini, *mAppData);
+    if (NS_FAILED(rv)) {
+      Output(true, "Couldn't read application.ini");
+      return 1;
+    }
+
+    appini->GetParent(getter_AddRefs(mAppData->directory));
+  }
+
   if (!mAppData->remotingName) {
     mAppData->remotingName = mAppData->name;
   }
@@ -4568,6 +4564,40 @@ XREMain::XRE_main(int argc, char* argv[], const XREAppData& aAppData)
 
   rv = binFile->GetPath(gAbsoluteArgv0Path);
   NS_ENSURE_SUCCESS(rv, 1);
+
+  if (!mAppData->xreDirectory) {
+    nsCOMPtr<nsIFile> lf;
+    rv = XRE_GetBinaryPath(gArgv[0], getter_AddRefs(lf));
+    if (NS_FAILED(rv))
+      return 2;
+
+    nsCOMPtr<nsIFile> greDir;
+    rv = lf->GetParent(getter_AddRefs(greDir));
+    if (NS_FAILED(rv))
+      return 2;
+
+#ifdef XP_MACOSX
+    nsCOMPtr<nsIFile> parent;
+    greDir->GetParent(getter_AddRefs(parent));
+    greDir = parent.forget();
+    greDir->AppendNative(NS_LITERAL_CSTRING("Resources"));
+#endif
+
+    mAppData->xreDirectory = greDir;
+  }
+
+  if (aConfig.appData && aConfig.appDataPath) {
+    mAppData->xreDirectory->Clone(getter_AddRefs(mAppData->directory));
+    mAppData->directory->AppendNative(nsDependentCString(aConfig.appDataPath));
+  }
+
+  if (!mAppData->directory) {
+    mAppData->directory = mAppData->xreDirectory;
+  }
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+  mAppData->sandboxBrokerServices = aConfig.sandboxBrokerServices;
+#endif
 
   mozilla::IOInterposerInit ioInterposerGuard;
 
@@ -4692,11 +4722,11 @@ XRE_StopLateWriteChecks(void) {
 }
 
 int
-XRE_main(int argc, char* argv[], const XREAppData& aAppData)
+XRE_main(int argc, char* argv[], const BootstrapConfig& aConfig)
 {
   XREMain main;
 
-  int result = main.XRE_main(argc, argv, aAppData);
+  int result = main.XRE_main(argc, argv, aConfig);
   mozilla::RecordShutdownEndTimeStamp();
   return result;
 }
