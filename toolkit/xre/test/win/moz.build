@@ -24,6 +24,7 @@ USE_STATIC_LIBS = True
 
 OS_LIBS += [
     'comctl32',
-    'ws2_32',
+    'ole32',
     'shell32',
+    'ws2_32',
 ]
