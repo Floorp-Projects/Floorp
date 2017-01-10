@@ -38,16 +38,15 @@ function DatePicker(context) {
       const { year = now.getFullYear(),
               month = now.getMonth(),
               day = now.getDate(),
+              firstDayOfWeek,
+              weekends,
               locale } = this.props;
-
-      // TODO: Use calendar info API to get first day of week & weekends
-      //       (Bug 1287503)
       const dateKeeper = new DateKeeper({
         year, month, day
       }, {
-        calViewSize: CAL_VIEW_SIZE,
-        firstDayOfWeek: 0,
-        weekends: [0]
+        firstDayOfWeek,
+        weekends,
+        calViewSize: CAL_VIEW_SIZE
       });
 
       this.state = {
