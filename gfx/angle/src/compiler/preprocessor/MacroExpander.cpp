@@ -51,8 +51,38 @@ class TokenLexer : public Lexer
 
 }  // anonymous namespace
 
+class MacroExpander::ScopedMacroReenabler final : angle::NonCopyable
+{
+  public:
+    ScopedMacroReenabler(MacroExpander *expander);
+    ~ScopedMacroReenabler();
+
+  private:
+    MacroExpander *mExpander;
+};
+
+MacroExpander::ScopedMacroReenabler::ScopedMacroReenabler(MacroExpander *expander)
+    : mExpander(expander)
+{
+    mExpander->mDeferReenablingMacros = true;
+}
+
+MacroExpander::ScopedMacroReenabler::~ScopedMacroReenabler()
+{
+    mExpander->mDeferReenablingMacros = false;
+    for (auto *macro : mExpander->mMacrosToReenable)
+    {
+        macro->disabled = false;
+    }
+    mExpander->mMacrosToReenable.clear();
+}
+
 MacroExpander::MacroExpander(Lexer *lexer, MacroSet *macroSet, Diagnostics *diagnostics)
-    : mLexer(lexer), mMacroSet(macroSet), mDiagnostics(diagnostics), mTotalTokensInContexts(0)
+    : mLexer(lexer),
+      mMacroSet(macroSet),
+      mDiagnostics(diagnostics),
+      mTotalTokensInContexts(0),
+      mDeferReenablingMacros(false)
 {
 }
 
@@ -187,7 +217,14 @@ void MacroExpander::popMacro()
     ASSERT(context->empty());
     ASSERT(context->macro->disabled);
     ASSERT(context->macro->expansionCount > 0);
-    context->macro->disabled = false;
+    if (mDeferReenablingMacros)
+    {
+        mMacrosToReenable.push_back(context->macro);
+    }
+    else
+    {
+        context->macro->disabled = false;
+    }
     context->macro->expansionCount--;
     mTotalTokensInContexts -= context->replacements.size();
     delete context;
@@ -262,6 +299,11 @@ bool MacroExpander::collectMacroArgs(const Macro &macro,
     ASSERT(token.type == '(');
 
     args->push_back(MacroArg());
+
+    // Defer reenabling macros until args collection is finished to avoid the possibility of
+    // infinite recursion. Otherwise infinite recursion might happen when expanding the args after
+    // macros have been popped from the context stack when parsing the args.
+    ScopedMacroReenabler deferReenablingMacros(this);
 
     int openParens = 1;
     while (openParens != 0)
