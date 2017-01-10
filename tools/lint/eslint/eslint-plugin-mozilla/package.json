@@ -25,5 +25,8 @@
   "engines": {
     "node": ">=0.10.0"
   },
+  "scripts": {
+    "test": "node tests/test-run-all.js"
+  },
   "license": "MPL-2.0"
 }
