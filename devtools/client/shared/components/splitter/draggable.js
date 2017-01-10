@@ -29,9 +29,9 @@ const Draggable = React.createClass({
 
   onMove(ev) {
     ev.preventDefault();
-    // Use screen coordinates so, moving mouse over iframes
+    // Use viewport coordinates so, moving mouse over iframes
     // doesn't mangle (relative) coordinates.
-    this.props.onMove(ev.screenX, ev.screenY);
+    this.props.onMove(ev.clientX, ev.clientY);
   },
 
   onUp(ev) {
