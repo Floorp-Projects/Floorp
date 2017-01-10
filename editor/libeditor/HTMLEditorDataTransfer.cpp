@@ -1775,6 +1775,13 @@ HTMLEditor::InsertTextWithQuotations(const nsAString& aStringToInsert)
       // the quoted block.
       if (curHunkIsQuoted) {
         lineStart = firstNewline;
+
+        // 'firstNewline' points to the first '\n'. We want to
+        // ensure that this first newline goes into the hunk
+        // since quoted hunks can be displayed as blocks
+        // (and the newline should become invisible in this case).
+        // So the next line needs to start at the next character.
+        lineStart++;
       }
     }
 
