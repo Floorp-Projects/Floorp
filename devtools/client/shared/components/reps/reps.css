@@ -96,6 +96,15 @@
   color: var(--source-link-color);
 }
 
+.objectBox-failure {
+  color: var(--string-color);
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 2px;
+  font-size: 0.8em;
+  padding: 0 2px;
+}
+
 /******************************************************************************/
 
 .objectLink-event,

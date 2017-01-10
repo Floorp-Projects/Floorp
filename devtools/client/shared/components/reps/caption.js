@@ -12,6 +12,8 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
   const DOM = React.DOM;
 
+  const { wrapRender } = require("./rep-utils");
+
   /**
    * Renders a caption. This template is used by other components
    * that needs to distinguish between a simple text/value and a label.
@@ -19,11 +21,11 @@ define(function (require, exports, module) {
   const Caption = React.createClass({
     displayName: "Caption",
 
-    render: function () {
+    render: wrapRender(function () {
       return (
         DOM.span({"className": "caption"}, this.props.object)
       );
-    },
+    }),
   });
 
   // Exports from this module

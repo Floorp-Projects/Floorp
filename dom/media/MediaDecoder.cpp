@@ -633,9 +633,6 @@ void
 MediaDecoder::SetStateMachineParameters()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (mMinimizePreroll) {
-    mDecoderStateMachine->DispatchMinimizePrerollUntilPlaybackStarts();
-  }
   if (mPlaybackRate != 1 && mPlaybackRate != 0) {
     mDecoderStateMachine->DispatchSetPlaybackRate(mPlaybackRate);
   }
