@@ -359,10 +359,6 @@ TabParent::DestroyInternal()
 
   RemoveWindowListeners();
 
-  if (DocAccessibleParent* tabDoc = GetTopLevelDocAccessible()) {
-    tabDoc->Destroy();
-  }
-
   // If this fails, it's most likely due to a content-process crash,
   // and auto-cleanup will kick in.  Otherwise, the child side will
   // destroy itself and send back __delete__().
