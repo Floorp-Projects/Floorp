@@ -3016,7 +3016,7 @@ var AddonManagerInternal = {
       return AddonManagerInternal.getInstallForURL(options.url, "application/x-xpinstall",
                                                    options.hash).then(install => {
         if (Preferences.get(PREF_WEBEXT_PREF_PROMPTS, false)) {
-          install.promptHandler = info => new Promise((resolve, reject) => {
+          install._permHandler = info => new Promise((resolve, reject) => {
             const observer = {
               observe(subject, topic, data) {
                 if (topic == "webextension-permission-response" &&
@@ -3308,10 +3308,10 @@ this.AddonManager = {
     ["STATE_DOWNLOADED", 3],
     // The download failed.
     ["STATE_DOWNLOAD_FAILED", 4],
-    // The install may not proceed until the user accepts a prompt
-    ["STATE_AWAITING_PROMPT", 5],
-    // Any prompts are done
-    ["STATE_PROMPTS_DONE", 6],
+    // The install may not proceed until the user accepts permissions
+    ["STATE_AWAITING_PERMISSIONS", 5],
+    // Any permission prompts are done
+    ["STATE_PERMISSION_GRANTED", 6],
     // The install has been postponed.
     ["STATE_POSTPONED", 7],
     // The install is ready to be applied.
