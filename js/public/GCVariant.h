@@ -124,13 +124,13 @@ struct GCPolicy<mozilla::Variant<Ts...>>
 
 namespace js {
 
-template <typename Outer, typename... Ts>
-class GCVariantOperations
+template <typename Wrapper, typename... Ts>
+class WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper>
 {
     using Impl = JS::detail::GCVariantImplementation<Ts...>;
     using Variant = mozilla::Variant<Ts...>;
 
-    const Variant& variant() const { return static_cast<const Outer*>(this)->get(); }
+    const Variant& variant() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     template <typename T>
@@ -150,15 +150,15 @@ class GCVariantOperations
     }
 };
 
-template <typename Outer, typename... Ts>
-class MutableGCVariantOperations
-  : public GCVariantOperations<Outer, Ts...>
+template <typename Wrapper, typename... Ts>
+class MutableWrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper>
+  : public WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper>
 {
     using Impl = JS::detail::GCVariantImplementation<Ts...>;
     using Variant = mozilla::Variant<Ts...>;
 
-    const Variant& variant() const { return static_cast<const Outer*>(this)->get(); }
-    Variant& variant() { return static_cast<Outer*>(this)->get(); }
+    const Variant& variant() const { return static_cast<const Wrapper*>(this)->get(); }
+    Variant& variant() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     template <typename T>
@@ -172,26 +172,6 @@ class MutableGCVariantOperations
         return Impl::match(matcher, JS::MutableHandle<Variant>::fromMarkedLocation(&variant()));
     }
 };
-
-template <typename... Ts>
-class RootedBase<mozilla::Variant<Ts...>>
-  : public MutableGCVariantOperations<JS::Rooted<mozilla::Variant<Ts...>>, Ts...>
-{ };
-
-template <typename... Ts>
-class MutableHandleBase<mozilla::Variant<Ts...>>
-  : public MutableGCVariantOperations<JS::MutableHandle<mozilla::Variant<Ts...>>, Ts...>
-{ };
-
-template <typename... Ts>
-class HandleBase<mozilla::Variant<Ts...>>
-  : public GCVariantOperations<JS::Handle<mozilla::Variant<Ts...>>, Ts...>
-{ };
-
-template <typename... Ts>
-class PersistentRootedBase<mozilla::Variant<Ts...>>
-  : public MutableGCVariantOperations<JS::PersistentRooted<mozilla::Variant<Ts...>>, Ts...>
-{ };
 
 } // namespace js
 

@@ -78,11 +78,11 @@ struct InternalBarrierMethods<TaggedProto>
     }
 };
 
-template<class Outer>
-class TaggedProtoOperations
+template <class Wrapper>
+class WrappedPtrOperations<TaggedProto, Wrapper>
 {
     const TaggedProto& value() const {
-        return static_cast<const Outer*>(this)->get();
+        return static_cast<const Wrapper*>(this)->get();
     }
 
   public:
@@ -95,18 +95,6 @@ class TaggedProtoOperations
     HashNumber hashCode() const { return value().hashCode(); }
     uint64_t uniqueId() const { return value().uniqueId(); }
 };
-
-template <>
-class HandleBase<TaggedProto> : public TaggedProtoOperations<Handle<TaggedProto>>
-{};
-
-template <>
-class RootedBase<TaggedProto> : public TaggedProtoOperations<Rooted<TaggedProto>>
-{};
-
-template <>
-class BarrieredBaseMixins<TaggedProto> : public TaggedProtoOperations<GCPtr<TaggedProto>>
-{};
 
 // If the TaggedProto is a JSObject pointer, convert to that type and call |f|
 // with the pointer. If the TaggedProto is lazy, calls F::defaultValue.
