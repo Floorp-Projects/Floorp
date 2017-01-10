@@ -210,14 +210,8 @@ FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block)
         if (MResumePoint* rp = ins->resumePoint()) {
             // Note: no need to iterate over the caller's of the resume point as
             // this is the same as the entry resume point.
-            for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
-                if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses inner loop"))
-                    return false;
-
-                if (!rp->isObservableOperand(i))
-                    continue;
+            for (size_t i = 0, e = rp->numOperands(); i < e; i++)
                 rp->getOperand(i)->setUseRemovedUnchecked();
-            }
         }
     }
 
@@ -227,11 +221,9 @@ FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir, MBasicBlock* block)
         if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 2"))
             return false;
 
-        for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
-            if (!rp->isObservableOperand(i))
-                continue;
+        for (size_t i = 0, e = rp->numOperands(); i < e; i++)
             rp->getOperand(i)->setUseRemovedUnchecked();
-        }
+
         rp = rp->caller();
     }
 
