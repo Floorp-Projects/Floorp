@@ -2,22 +2,22 @@
 # ICO BMP 32BPP tests
 
 # Images of various sizes
-== ico-size-1x1-32bpp.ico ico-size-1x1-32bpp.ico
-== ico-size-2x2-32bpp.ico ico-size-2x2-32bpp.ico
-== ico-size-3x3-32bpp.ico ico-size-3x3-32bpp.ico
-== ico-size-4x4-32bpp.ico ico-size-4x4-32bpp.ico
-== ico-size-5x5-32bpp.ico ico-size-5x5-32bpp.ico
-== ico-size-6x6-32bpp.ico ico-size-6x6-32bpp.ico
-== ico-size-7x7-32bpp.ico ico-size-7x7-32bpp.ico
-== ico-size-8x8-32bpp.ico ico-size-8x8-32bpp.ico
-== ico-size-9x9-32bpp.ico ico-size-9x9-32bpp.ico
-== ico-size-15x15-32bpp.ico ico-size-15x15-32bpp.ico
-== ico-size-16x16-32bpp.ico ico-size-16x16-32bpp.ico
-== ico-size-17x17-32bpp.ico ico-size-17x17-32bpp.ico
-== ico-size-31x31-32bpp.ico ico-size-31x31-32bpp.ico
-== ico-size-32x32-32bpp.ico ico-size-32x32-32bpp.ico
-== ico-size-33x33-32bpp.ico ico-size-33x33-32bpp.ico
-== ico-size-256x256-32bpp.ico ico-size-256x256-32bpp.ico
-== ico-partial-transparent-32bpp.ico ico-partial-transparent-32bpp.ico
-== ico-transparent-32bpp.ico ico-transparent-32bpp.ico
-== ico-not-square-transparent-32bpp.ico ico-not-square-transparent-32bpp.ico
+fails == ico-size-1x1-32bpp.ico ico-size-1x1-32bpp.ico
+fails == ico-size-2x2-32bpp.ico ico-size-2x2-32bpp.ico
+fails == ico-size-3x3-32bpp.ico ico-size-3x3-32bpp.ico
+fails == ico-size-4x4-32bpp.ico ico-size-4x4-32bpp.ico
+fails == ico-size-5x5-32bpp.ico ico-size-5x5-32bpp.ico
+fails == ico-size-6x6-32bpp.ico ico-size-6x6-32bpp.ico
+fails == ico-size-7x7-32bpp.ico ico-size-7x7-32bpp.ico
+fails == ico-size-8x8-32bpp.ico ico-size-8x8-32bpp.ico
+fails == ico-size-9x9-32bpp.ico ico-size-9x9-32bpp.ico
+fails == ico-size-15x15-32bpp.ico ico-size-15x15-32bpp.ico
+fails == ico-size-16x16-32bpp.ico ico-size-16x16-32bpp.ico
+fails == ico-size-17x17-32bpp.ico ico-size-17x17-32bpp.ico
+fails == ico-size-31x31-32bpp.ico ico-size-31x31-32bpp.ico
+fails == ico-size-32x32-32bpp.ico ico-size-32x32-32bpp.ico
+fails == ico-size-33x33-32bpp.ico ico-size-33x33-32bpp.ico
+fails == ico-size-256x256-32bpp.ico ico-size-256x256-32bpp.ico
+fails == ico-partial-transparent-32bpp.ico ico-partial-transparent-32bpp.ico
+fails == ico-transparent-32bpp.ico ico-transparent-32bpp.ico
+fails == ico-not-square-transparent-32bpp.ico ico-not-square-transparent-32bpp.ico

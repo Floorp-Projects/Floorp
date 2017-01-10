@@ -5,8 +5,8 @@
 url-prefix absolute
 
 == data:text/html,<body> data:text/html,<body>
-skip == data:text/plain, data:text/plain,
-skip == data:text/plain,HELLO data:text/plain,HELLO
+== data:text/plain, data:text/plain,
+# == data:text/plain,HELLO data:text/plain,HELLO
 
 # test that url-prefix is applied to test items.
 url-prefix prefix-

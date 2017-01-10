@@ -1,3 +1,2 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-random == view-source-image.html view-source-image.html
-# security checks prevent loading view-source:
+fails == view-source-image.html view-source-image.html

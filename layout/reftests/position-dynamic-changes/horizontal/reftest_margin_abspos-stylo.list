@@ -18,8 +18,7 @@
 == toauto-leftA-widthN-rightN.html?margin_abspos toauto-leftA-widthN-rightN.html?margin_abspos
 == toauto-leftA-widthA-rightN.html?margin_abspos toauto-leftA-widthA-rightN.html?margin_abspos
 == fromauto-leftN-widthA-rightA.html?margin_abspos fromauto-leftN-widthA-rightA.html?margin_abspos
-random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html?margin_abspos fromauto-leftN-widthA-rightA-2.html?margin_abspos
-# Bug 688545
+== fromauto-leftN-widthA-rightA-2.html?margin_abspos fromauto-leftN-widthA-rightA-2.html?margin_abspos
 == fromauto-leftN-widthA-rightN.html?margin_abspos fromauto-leftN-widthA-rightN.html?margin_abspos
 == fromauto-leftN-widthA-rightN-2.html?margin_abspos fromauto-leftN-widthA-rightN-2.html?margin_abspos
 == fromauto-leftA-widthN-rightA.html?margin_abspos fromauto-leftA-widthN-rightA.html?margin_abspos

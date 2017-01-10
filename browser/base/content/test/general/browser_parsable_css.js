@@ -132,7 +132,7 @@ var gChromeMap = new Map();
 
 function getBaseUriForChromeUri(chromeUri) {
   let chromeFile = chromeUri + "gobbledygooknonexistentfile.reallynothere";
-  let uri = Services.io.newURI(chromeFile, null, null);
+  let uri = Services.io.newURI(chromeFile);
   let fileUri = gChromeReg.convertChromeURL(uri);
   return fileUri.resolve(".");
 }
@@ -168,7 +168,7 @@ function convertToChromeUri(fileUri) {
     if (gChromeMap.has(baseUri)) {
       let chromeBaseUri = gChromeMap.get(baseUri);
       let chromeUri = `${chromeBaseUri}${path}`;
-      return Services.io.newURI(chromeUri, null, null);
+      return Services.io.newURI(chromeUri);
     }
   }
 }
@@ -215,7 +215,7 @@ function processCSSRules(sheet) {
         continue;
 
       // Make the url absolute and remove the ref.
-      let baseURI = Services.io.newURI(rule.parentStyleSheet.href, null, null);
+      let baseURI = Services.io.newURI(rule.parentStyleSheet.href);
       url = Services.io.newURI(url, null, baseURI).specIgnoringRef;
 
       // Store the image url along with the css file referencing it.

@@ -313,7 +313,7 @@ var WebNavigation =  {
     if (AppConstants.MOZ_CRASHREPORTER && CrashReporter.enabled) {
       let annotation = uri;
       try {
-        let url = Services.io.newURI(uri, null, null);
+        let url = Services.io.newURI(uri);
         // If the current URI contains a username/password, remove it.
         url.userPass = "";
         annotation = url.spec;
@@ -322,13 +322,13 @@ var WebNavigation =  {
       CrashReporter.annotateCrashReport("URL", annotation);
     }
     if (referrer)
-      referrer = Services.io.newURI(referrer, null, null);
+      referrer = Services.io.newURI(referrer);
     if (postData)
       postData = makeInputStream(postData);
     if (headers)
       headers = makeInputStream(headers);
     if (baseURI)
-      baseURI = Services.io.newURI(baseURI, null, null);
+      baseURI = Services.io.newURI(baseURI);
     this._wrapURIChangeCall(() => {
       return this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
                                                    postData, headers, baseURI);

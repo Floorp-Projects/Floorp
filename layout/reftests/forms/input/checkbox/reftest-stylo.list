@@ -1,18 +1,15 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== label-dynamic.html label-dynamic.html
-skip-if(B2G||Mulet) fails-if(Android) == radio-stretched.html radio-stretched.html
-# test for bug 464589
-# Initial mulet triage: parity with B2G/B2G Desktop
-== checked.html checked.html
+fails == label-dynamic.html label-dynamic.html
+fails-if(Android) == radio-stretched.html radio-stretched.html
+# == checked.html checked.html
 == checked-native.html checked-native.html
-== checked.html checked.html
-== checked-notref.html checked-notref.html
+# == checked.html checked.html
+fails == checked-notref.html checked-notref.html
 == checked-native.html checked-native.html
 == checked-native-notref.html checked-native-notref.html
-== indeterminate-checked.html indeterminate-checked.html
-== indeterminate-unchecked.html indeterminate-unchecked.html
-== indeterminate-native-checked.html indeterminate-native-checked.html
-== indeterminate-native-unchecked.html indeterminate-native-unchecked.html
+# == indeterminate-checked.html indeterminate-checked.html
+# == indeterminate-unchecked.html indeterminate-unchecked.html
+# == indeterminate-native-checked.html indeterminate-native-checked.html
+# == indeterminate-native-unchecked.html indeterminate-native-unchecked.html
 == indeterminate-selector.html indeterminate-selector.html
-skip-if(!gtkWidget||Mulet) == gtk-theme-width-height.html gtk-theme-width-height.html
-# bug 1141511: Disable some gtkWidget-dependant reftests on Mulet
+skip-if(!gtkWidget) == gtk-theme-width-height.html gtk-theme-width-height.html

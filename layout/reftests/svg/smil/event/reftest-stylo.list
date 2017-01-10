@@ -26,8 +26,8 @@ random-if(Android) == event-begin-timeevent-3.svg event-begin-timeevent-3.svg
 == event-target-xlink-change-3.svg event-target-xlink-change-3.svg
 == event-target-xlink-change-4.svg event-target-xlink-change-4.svg
 == event-target-surgery-1.svg event-target-surgery-1.svg
-skip == event-target-surgery-2.svg event-target-surgery-2.svg
+== event-target-surgery-2.svg event-target-surgery-2.svg
 == event-target-surgery-3.svg event-target-surgery-3.svg
-skip == event-target-non-svg-1.xhtml event-target-non-svg-1.xhtml
+fails == event-target-non-svg-1.xhtml event-target-non-svg-1.xhtml
 == accesskey-entity-1.svg accesskey-entity-1.svg
 == accesskey-entity-2.svg accesskey-entity-2.svg

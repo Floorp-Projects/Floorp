@@ -446,7 +446,7 @@ LoginManager.prototype = {
       return false;
     }
 
-    let uri = Services.io.newURI(origin, null, null);
+    let uri = Services.io.newURI(origin);
     return Services.perms.testPermission(uri, PERMISSION_SAVE_LOGINS) != Services.perms.DENY_ACTION;
   },
 
@@ -458,7 +458,7 @@ LoginManager.prototype = {
     // Throws if there are bogus values.
     LoginHelper.checkHostnameValue(origin);
 
-    let uri = Services.io.newURI(origin, null, null);
+    let uri = Services.io.newURI(origin);
     if (enabled) {
       Services.perms.remove(uri, PERMISSION_SAVE_LOGINS);
     } else {

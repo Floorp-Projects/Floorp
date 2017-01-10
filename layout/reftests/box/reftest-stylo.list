@@ -4,11 +4,9 @@
 == flexbox-abspos-container-1c.html flexbox-abspos-container-1c.html
 == flexbox-abspos-container-1d.html flexbox-abspos-container-1d.html
 == flexbox-abspos-container-2.html flexbox-abspos-container-2.html
-== flexbox-attributes-no-box-horizontal.xhtml flexbox-attributes-no-box-horizontal.xhtml
-== flexbox-attributes-no-box-vertical.xhtml flexbox-attributes-no-box-vertical.xhtml
-skip-if(B2G||Mulet) == flexbox-attributes-no-input-horizontal.xhtml flexbox-attributes-no-input-horizontal.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == flexbox-attributes-no-input-vertical.xhtml flexbox-attributes-no-input-vertical.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == flexbox-attributes-no-box-horizontal.xhtml flexbox-attributes-no-box-horizontal.xhtml
+fails == flexbox-attributes-no-box-vertical.xhtml flexbox-attributes-no-box-vertical.xhtml
+fails == flexbox-attributes-no-input-horizontal.xhtml flexbox-attributes-no-input-horizontal.xhtml
+fails == flexbox-attributes-no-input-vertical.xhtml flexbox-attributes-no-input-vertical.xhtml
 == flexbox-child-is-abspos-container-1.html flexbox-child-is-abspos-container-1.html
 == flexbox-child-is-abspos-container-2.html flexbox-child-is-abspos-container-2.html

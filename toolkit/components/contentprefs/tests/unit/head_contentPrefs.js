@@ -72,7 +72,7 @@ var ContentPrefTest = {
   // Utilities
 
   getURI: function ContentPrefTest_getURI(spec) {
-    return this._ioSvc.newURI(spec, null, null);
+    return this._ioSvc.newURI(spec);
   },
 
   /**

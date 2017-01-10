@@ -11,7 +11,7 @@ class TabSwitchAboutModule {
   }
 
   newChannel(aURI, aLoadInfo) {
-    let uri = Services.io.newURI(CHROME_URI, null, null);
+    let uri = Services.io.newURI(CHROME_URI);
     let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     chan.originalURI = aURI;
     return chan;

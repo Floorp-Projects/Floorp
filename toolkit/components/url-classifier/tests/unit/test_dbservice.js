@@ -110,7 +110,7 @@ function checkNoHost()
   // Looking up a no-host uri such as a data: uri should throw an exception.
   var exception;
   try {
-    var principal = secMan.createCodebasePrincipal(iosvc.newURI("data:text/html,<b>test</b>", null, null), {});
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("data:text/html,<b>test</b>"), {});
     dbservice.lookup(principal, allTables);
 
     exception = false;
@@ -223,31 +223,31 @@ function checkState()
 
 
   for (var key in phishExpected) {
-    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, phishExists, true);
     numExpecting++;
   }
 
   for (var key in phishUnexpected) {
-    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, phishDoesntExist, true);
     numExpecting++;
   }
 
   for (var key in malwareExpected) {
-    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, malwareExists, true);
     numExpecting++;
   }
 
   for (var key in unwantedExpected) {
-    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, unwantedExists, true);
     numExpecting++;
   }
 
   for (var key in blockedExpected) {
-    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key, null, null), {});
+    var principal = secMan.createCodebasePrincipal(iosvc.newURI("http://" + key), {});
     dbservice.lookup(principal, allTables, blockedExists, true);
     numExpecting++;
   }

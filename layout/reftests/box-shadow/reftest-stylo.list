@@ -1,57 +1,46 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== boxshadow-basic.html boxshadow-basic.html
-== boxshadow-blur.html boxshadow-blur.html
-== boxshadow-blur.html boxshadow-blur.html
-random == boxshadow-blur-2.html boxshadow-blur-2.html
-# fixedpoint division in blur code makes this fail
-random == boxshadow-blur-2.html boxshadow-blur-2.html
-# fixedpoint division in blur code makes this fail
-== boxshadow-multiple.html boxshadow-multiple.html
+fails == boxshadow-basic.html boxshadow-basic.html
+# == boxshadow-blur.html boxshadow-blur.html
+# == boxshadow-blur.html boxshadow-blur.html
+fails random == boxshadow-blur-2.html boxshadow-blur-2.html
+fails random == boxshadow-blur-2.html boxshadow-blur-2.html
+# == boxshadow-multiple.html boxshadow-multiple.html
 == boxshadow-spread.html boxshadow-spread.html
-== tableboxshadow-basic.html tableboxshadow-basic.html
-== tableboxshadow-trshadow.html tableboxshadow-trshadow.html
-== tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
-== boxshadow-rounding.html boxshadow-rounding.html
-fails-if(Android||B2G||Mulet) == boxshadow-button.html boxshadow-button.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android||B2G||Mulet) == boxshadow-fileupload.html boxshadow-fileupload.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == tableboxshadow-basic.html tableboxshadow-basic.html
+fails == tableboxshadow-trshadow.html tableboxshadow-trshadow.html
+fails == tableboxshadow-tdshadow.html tableboxshadow-tdshadow.html
+fails == boxshadow-rounding.html boxshadow-rounding.html
+fails == boxshadow-button.html boxshadow-button.html
+fails == boxshadow-fileupload.html boxshadow-fileupload.html
 == boxshadow-inner-basic.html boxshadow-inner-basic.html
 random-if(layersGPUAccelerated) == boxshadow-mixed.html boxshadow-mixed.html
-random-if(d2d) fuzzy-if(B2G,12,18) == boxshadow-rounded-spread.html boxshadow-rounded-spread.html
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(d2d) == boxshadow-onecorner.html boxshadow-onecorner.html
-skip random-if(d2d) == boxshadow-twocorners.html boxshadow-twocorners.html
-random-if(d2d) == boxshadow-threecorners.html boxshadow-threecorners.html
-skip == boxshadow-skiprect.html boxshadow-skiprect.html
+fails == boxshadow-rounded-spread.html boxshadow-rounded-spread.html
+fuzzy-if(skiaContent,1,50) HTTP(..) == boxshadow-dynamic.xul boxshadow-dynamic.xul
+fails == boxshadow-onecorner.html boxshadow-onecorner.html
+fails == boxshadow-twocorners.html boxshadow-twocorners.html
+fails == boxshadow-threecorners.html boxshadow-threecorners.html
+fuzzy(2,440) == boxshadow-skiprect.html boxshadow-skiprect.html
 == boxshadow-opacity.html boxshadow-opacity.html
 == boxshadow-color-rounding.html boxshadow-color-rounding.html
 == boxshadow-color-rounding-middle.html boxshadow-color-rounding-middle.html
-fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,568) == boxshadow-large-border-radius.html boxshadow-large-border-radius.html
-# Bug 1209649
-fuzzy-if(d2d,2,1080) == boxshadow-border-radius-int.html boxshadow-border-radius-int.html
+fuzzy-if(OSX==1010,1,24) fuzzy-if(d2d,16,908) == boxshadow-large-border-radius.html boxshadow-large-border-radius.html
+fails == boxshadow-border-radius-int.html boxshadow-border-radius-int.html
 == boxshadow-inset-neg-spread.html boxshadow-inset-neg-spread.html
 == boxshadow-inset-neg-spread2.html boxshadow-inset-neg-spread2.html
-== boxshadow-rotated.html boxshadow-rotated.html
-# Bug 1211264
+fails == boxshadow-rotated.html boxshadow-rotated.html
 == boxshadow-inset-large-border-radius.html boxshadow-inset-large-border-radius.html
 
 # fuzzy due to blur going inside, but as long as it's essentially black instead of a light gray its ok.
-== boxshadow-inset-large-offset.html boxshadow-inset-large-offset.html
+fuzzy(12,9445) fuzzy-if(d2d,13,10926) == boxshadow-inset-large-offset.html boxshadow-inset-large-offset.html
 
-== overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-== overflow-not-scrollable-1.html overflow-not-scrollable-1.html
-== overflow-not-scrollable-2.html overflow-not-scrollable-2.html
-fails-if(B2G||Mulet) == 611574-1.html 611574-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip fails-if(B2G||Mulet) == 611574-2.html 611574-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset.html fieldset.html
-# minor anti-aliasing problem on Windows
-fails fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset.html
-# minor anti-aliasing problem on Windows
+# == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
+# == overflow-not-scrollable-1.html overflow-not-scrollable-1.html
+fails == overflow-not-scrollable-2.html overflow-not-scrollable-2.html
+fails == 611574-1.html 611574-1.html
+fails == 611574-2.html 611574-2.html
+# == fieldset.html fieldset.html
+fuzzy-if(winWidget,5,30) fuzzy-if(skiaContent,16,10) == fieldset-inset.html fieldset-inset.html
 == 1178575.html 1178575.html
 == 1178575-2.html 1178575-2.html
-== 1212823-1.html 1212823-1.html
-== boxshadow-large-offset.html boxshadow-large-offset.html
+fails == 1212823-1.html 1212823-1.html
+fails == boxshadow-large-offset.html boxshadow-large-offset.html

@@ -3821,7 +3821,7 @@ Downloader.prototype = {
     let interval = this.background ? update.getProperty("backgroundInterval")
                                    : DOWNLOAD_FOREGROUND_INTERVAL;
 
-    var uri = Services.io.newURI(this._patch.URL, null, null);
+    var uri = Services.io.newURI(this._patch.URL);
     LOG("Downloader:downloadUpdate - url: " + uri.spec + ", path: " +
         patchFile.path + ", interval: " + interval);
 

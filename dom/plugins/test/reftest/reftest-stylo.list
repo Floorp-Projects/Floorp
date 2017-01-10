@@ -1,33 +1,27 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # basic sanity checking
-# fails random-if(!haveTestPlugin) == plugin-sanity.html plugin-sanity.html
-# fails-if(!haveTestPlugin) == plugin-sanity.html plugin-sanity.html
-skip fails-if(!haveTestPlugin) fuzzy-if(skiaContent,1,160000) == plugin-alpha-zindex.html plugin-alpha-zindex.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent,1,164000) == plugin-alpha-opacity.html plugin-alpha-opacity.html
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == windowless-clipping-1.html windowless-clipping-1.html
-# bug 631832
+# == plugin-sanity.html plugin-sanity.html
+# == plugin-sanity.html plugin-sanity.html
+fails == plugin-alpha-zindex.html plugin-alpha-zindex.html
+== plugin-alpha-opacity.html plugin-alpha-opacity.html
+== windowless-clipping-1.html windowless-clipping-1.html
 # fuzzy because of anti-aliasing in dashed border
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-1.html border-padding-1.html
-# bug 629430
-skip random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(!haveTestPlugin) == border-padding-2.html border-padding-2.html
-# bug 629430
-skip random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) skip-if(!haveTestPlugin) skip-if(Android||B2G) == border-padding-3.html border-padding-3.html
-# bug 629430
-# bug 773482
+== border-padding-1.html border-padding-1.html
+== border-padding-2.html border-padding-2.html
+== border-padding-3.html border-padding-3.html
 # The following two "pluginproblemui-direction" tests are unreliable on all platforms. They should be re-written or replaced.
 #random-if(cocoaWidget||d2d||/^Windows\x20NT\x205\.1/.test(http.oscpu)) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-1.html pluginproblemui-direction-1.html
-# bug 567367
 #random-if(cocoaWidget) fails-if(!haveTestPlugin&&!Android) == pluginproblemui-direction-2.html pluginproblemui-direction-2.html
-fails-if(!haveTestPlugin) fuzzy-if(skiaContent,1,160000) == plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
-fails fails-if(!haveTestPlugin) fuzzy-if(skiaContent,1,160000) == plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
-skip == plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
-skip == plugin-background.html plugin-background.html
-skip == plugin-background-1-step.html plugin-background-1-step.html
-skip == plugin-background-2-step.html plugin-background-2-step.html
-skip == plugin-background-5-step.html plugin-background-5-step.html
-skip == plugin-background-10-step.html plugin-background-10-step.html
-skip == plugin-transform-1.html plugin-transform-1.html
-skip == plugin-transform-2.html plugin-transform-2.html
-skip == shrink-1.html shrink-1.html
-skip skip-if(!haveTestPlugin) == update-1.html update-1.html
-skip skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers.html
+fails == plugin-canvas-alpha-zindex.html plugin-canvas-alpha-zindex.html
+fails == plugin-transform-alpha-zindex.html plugin-transform-alpha-zindex.html
+fails == plugin-busy-alpha-zindex.html plugin-busy-alpha-zindex.html
+# == plugin-background.html plugin-background.html
+fails == plugin-background-1-step.html plugin-background-1-step.html
+fails == plugin-background-2-step.html plugin-background-2-step.html
+fails == plugin-background-5-step.html plugin-background-5-step.html
+fails == plugin-background-10-step.html plugin-background-10-step.html
+== plugin-transform-1.html plugin-transform-1.html
+fails == plugin-transform-2.html plugin-transform-2.html
+fails == shrink-1.html shrink-1.html
+fails == update-1.html update-1.html
+skip-if(!haveTestPlugin) == windowless-layers.html windowless-layers.html

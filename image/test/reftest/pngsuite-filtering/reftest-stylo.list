@@ -8,7 +8,7 @@ fails == f00n2c08.png f00n2c08.png
 # f01n0g08 - grayscale, no interlacing, filter-type 1
 fails == f01n0g08.png f01n0g08.png
 # f01n2c08 - color, no interlacing, filter-type 1
-skip == f01n2c08.png f01n2c08.png
+fails == f01n2c08.png f01n2c08.png
 # f02n0g08 - grayscale, no interlacing, filter-type 2
 fails == f02n0g08.png f02n0g08.png
 # f02n2c08 - color, no interlacing, filter-type 2
@@ -20,4 +20,4 @@ fails == f03n2c08.png f03n2c08.png
 # f04n0g08 - grayscale, no interlacing, filter-type 4
 fails == f04n0g08.png f04n0g08.png
 # f04n2c08 - color, no interlacing, filter-type 4 
-skip == f04n2c08.png f04n2c08.png
+fails == f04n2c08.png f04n2c08.png

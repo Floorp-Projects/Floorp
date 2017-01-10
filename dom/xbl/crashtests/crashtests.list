@@ -2,13 +2,13 @@ load 205735-1.xhtml
 load 223799-1.xul
 load 226744-1.xhtml
 load 232095-1.xul
-skip-if(stylo) load 277523-1.xhtml # bug 1323649
+load 277523-1.xhtml
 load 277950-1.xhtml
 skip-if(Android) load 336744-1.html # bug 1268050
 load 336960-1.html
 load 342954-1.xhtml
 load 342954-2.xhtml
-skip-if(stylo) load 368276-1.xhtml # bug 1323649
+load 368276-1.xhtml
 load 368641-1.xhtml
 load 378521-1.xhtml
 load 382376-1.xhtml

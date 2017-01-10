@@ -7,43 +7,30 @@ skip-if(Android) == colordepth.html colordepth.html
 #
 # http://www.schaik.com/pngsuite/pngsuite.html
 # http://www.libpng.org/pub/png/pngsuite.html
-skip-if(B2G) include pngsuite-basic-n/reftest-stylo.list     
-# bug 783632
-skip-if(B2G) include pngsuite-basic-i/reftest-stylo.list     
-# bug 783632
-skip-if(B2G) include pngsuite-ancillary/reftest-stylo.list   
-# bug 783632
-skip-if(B2G) include pngsuite-background/reftest-stylo.list  
-# bug 783632
-skip-if(B2G) include pngsuite-chunkorder/reftest-stylo.list  
-# bug 783632
-skip-if(B2G) include pngsuite-corrupted/reftest-stylo.list   
-# bug 783632
-skip-if(B2G) include pngsuite-filtering/reftest-stylo.list   
-# bug 783632
-skip-if(B2G) include pngsuite-gamma/reftest-stylo.list       
-# bug 783632
-skip-if(B2G) include pngsuite-oddsizes/reftest-stylo.list    
-# bug 783632
-skip-if(B2G) include pngsuite-palettes/reftest-stylo.list    
-# bug 783632
-skip-if(B2G) include pngsuite-transparency/reftest-stylo.list
-# bug 783632
-skip-if(B2G) include pngsuite-zlib/reftest-stylo.list        
-# bug 783632
+include pngsuite-basic-n/reftest-stylo.list
+include pngsuite-basic-i/reftest-stylo.list
+include pngsuite-ancillary/reftest-stylo.list
+include pngsuite-background/reftest-stylo.list
+include pngsuite-chunkorder/reftest-stylo.list
+include pngsuite-corrupted/reftest-stylo.list
+include pngsuite-filtering/reftest-stylo.list
+include pngsuite-gamma/reftest-stylo.list
+include pngsuite-oddsizes/reftest-stylo.list
+include pngsuite-palettes/reftest-stylo.list
+include pngsuite-transparency/reftest-stylo.list
+include pngsuite-zlib/reftest-stylo.list
 
-# Disabled, lots of intermittents here
 # BMP tests
-#skip-if(Android) include bmp/reftest-stylo.list
+skip-if(Android) include bmp/reftest-stylo.list
 
 # ICO tests
-#skip-if(Android) include ico/reftest-stylo.list
+skip-if(Android) include ico/reftest-stylo.list
 
 # JPEG tests
-# include jpeg/reftest-stylo.list
+include jpeg/reftest-stylo.list
 
 # GIF tests
-# include gif/reftest-stylo.list
+include gif/reftest-stylo.list
 
 # APNG tests
 include apng/reftest-stylo.list
@@ -55,8 +42,7 @@ include generic/reftest-stylo.list
 include color-management/reftest-stylo.list
 
 # Downscaling tests
-# include downscaling/reftest-stylo.list
+include downscaling/reftest-stylo.list
 
 # Lossless encoders
-# skip-if(Android||B2G) include encoders-lossless/reftest-stylo.list
-# bug 783621
+skip-if(Android) include encoders-lossless/reftest-stylo.list

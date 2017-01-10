@@ -414,7 +414,7 @@ this.DownloadUtils = {
     // Get a URI that knows about its components
     let uri;
     try {
-      uri = ioService.newURI(aURIString, null, null);
+      uri = ioService.newURI(aURIString);
     } catch (ex) {
       return ["", ""];
     }

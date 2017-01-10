@@ -85,7 +85,7 @@ this.E10SUtils = {
         return aPreferredRemoteType;
       }
 
-      let url = Services.io.newURI(aURL, null, null);
+      let url = Services.io.newURI(aURL);
       let module = getAboutModule(url);
       // If the module doesn't exist then an error page will be loading, that
       // should be ok to load in any process
@@ -111,7 +111,7 @@ this.E10SUtils = {
       try {
         // This can fail for invalid Chrome URIs, in which case we will end up
         // not loading anything anyway.
-        url = Services.io.newURI(aURL, null, null);
+        url = Services.io.newURI(aURL);
       } catch (ex) {
         return aPreferredRemoteType;
       }

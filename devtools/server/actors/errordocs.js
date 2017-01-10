@@ -48,6 +48,7 @@ const ErrorDocs = {
   JSMSG_NOT_CONSTRUCTOR: "Not_a_constructor",
   JSMSG_CURLY_AFTER_LIST: "Missing_curly_after_property_list",
   JSMSG_DEPRECATED_FOR_EACH: "For-each-in_loops_are_deprecated",
+  JSMSG_STRICT_NON_SIMPLE_PARAMS: "Strict_Non_Simple_Params",
 };
 
 const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";

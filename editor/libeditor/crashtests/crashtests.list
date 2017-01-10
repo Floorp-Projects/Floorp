@@ -1,6 +1,6 @@
 load 336081-1.xhtml
 asserts-if(stylo,2-3) load 336104.html # bug 1324669
-skip-if(stylo) load 382527-1.html # bug 1323649
+load 382527-1.html
 load 382778-1.html
 asserts-if(stylo,1) load 402172-1.html # bug 1324663
 load 403965-1.xhtml
@@ -10,7 +10,7 @@ load 407256-1.html
 load 407277-1.html
 load 414178-1.html
 load 418923-1.html
-skip-if(stylo) load 420439.html # bug 1323649
+load 420439.html
 load 428489-1.html
 load 429586-1.html
 load 430624-1.html
@@ -21,7 +21,7 @@ load 448329-3.html
 load 456727-1.html
 load 456727-2.html
 load 459613.html
-skip-if(stylo) needs-focus load 467647-1.html # bug 1323649
+needs-focus load 467647-1.html
 load 475132-1.xhtml
 load 499844-1.html
 load 503709-1.xhtml
@@ -41,7 +41,7 @@ load 650572-1.html
 load 667321-1.html
 load 682650-1.html
 load 713427-1.html
-skip-if(stylo) load 713427-2.xhtml # bug 1323649
+load 713427-2.xhtml
 load 716456-1.html
 load 759748.html
 load 761861.html
@@ -49,18 +49,18 @@ load 762183.html
 load 766305.html
 load 766360.html
 load 766387.html
-skip-if(stylo) load 766413.html # bug 1323662
+load 766413.html
 load 766795.html
 load 766845.xhtml
 load 767169.html
 load 768748.html
-skip-if(stylo) load 768765.html # bug 1323662
+load 768765.html
 load 769008-1.html
 load 769967.xhtml
 needs-focus load 771749.html
 load 772282.html
 load 776323.html
-skip-if(stylo) needs-focus load 793866.html # bug 1323662
+needs-focus load 793866.html
 load 1057677.html
 asserts-if(stylo,1) needs-focus load 1128787.html # bug 1324663
 load 1134545.html

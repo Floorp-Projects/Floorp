@@ -23,7 +23,7 @@ fails == s04n3p01.png s04n3p01.png
 # s05i3p02 - 5x5 paletted file, interlaced
 fails == s05i3p02.png s05i3p02.png
 # s05n3p02 - 5x5 paletted file, no interlacing
-skip == s05n3p02.png s05n3p02.png
+fails == s05n3p02.png s05n3p02.png
 # s06i3p02 - 6x6 paletted file, interlaced
 fails == s06i3p02.png s06i3p02.png
 # s06n3p02 - 6x6 paletted file, no interlacing

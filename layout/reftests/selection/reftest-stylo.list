@@ -1,18 +1,18 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails fuzzy-if(skiaContent,1,30) == dynamic-text-1a.html dynamic-text-1a.html
-fails fuzzy-if(skiaContent,1,40) == dynamic-text-1b.html dynamic-text-1b.html
-== extend-1-sanity.html extend-1-sanity.html
-fails fuzzy-if(skiaContent,1,1000) == extend-1a.html extend-1a.html
-fails fuzzy-if(skiaContent,1,10) == extend-1b.html extend-1b.html
-fails fuzzy-if(skiaContent,1,1000) == extend-1c.html extend-1c.html
-fails fuzzy-if(skiaContent,1,1000) == extend-1d.html extend-1d.html
-skip fuzzy-if(skiaContent,1,1000) == extend-1e.html extend-1e.html
-fails fuzzy-if(skiaContent,1,1000) == extend-1f.html extend-1f.html
-fails fuzzy-if(skiaContent,1,1000) == extend-1g.html extend-1g.html
-fails fuzzy-if(skiaContent,1,1000) == extend-1h.html extend-1h.html
-fails fuzzy-if(skiaContent,1,10) == extend-1i.html extend-1i.html
-== extend-2a.html extend-2a.html
-== extend-2b.html extend-2b.html
+fails == dynamic-text-1a.html dynamic-text-1a.html
+fails == dynamic-text-1b.html dynamic-text-1b.html
+fails == extend-1-sanity.html extend-1-sanity.html
+fails == extend-1a.html extend-1a.html
+fails == extend-1b.html extend-1b.html
+fails == extend-1c.html extend-1c.html
+fails == extend-1d.html extend-1d.html
+fails == extend-1e.html extend-1e.html
+fails == extend-1f.html extend-1f.html
+fails == extend-1g.html extend-1g.html
+fails == extend-1h.html extend-1h.html
+fails == extend-1i.html extend-1i.html
+fails == extend-2a.html extend-2a.html
+fails == extend-2b.html extend-2b.html
 == extend-3-sanity.html extend-3-sanity.html
 fuzzy-if(skiaContent,1,700) == extend-3a.html extend-3a.html
 fuzzy-if(skiaContent,1,700) == extend-3b.html extend-3b.html
@@ -26,18 +26,13 @@ fuzzy-if(skiaContent,1,700) == extend-3i.html extend-3i.html
 == extend-4a.html extend-4a.html
 == extend-4b.html extend-4b.html
 # these 3 random-if(Android) are a difference of Native & Xul, see bug 739714
-skip random-if(Android||B2G||Mulet) needs-focus == pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous.html
-# bug 676641
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == pseudo-element-of-native-anonymous.html pseudo-element-of-native-anonymous.html
 # These tests uses Highlight and HighlightText color keywords, they are not same as text selection color on Mac.
-random-if(Android||B2G||Mulet) fails-if(cocoaWidget) needs-focus == non-themed-widget.html non-themed-widget.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(Android||B2G||Mulet) fails-if(cocoaWidget) needs-focus == themed-widget.html themed-widget.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== addrange-1.html addrange-1.html
-fuzzy-if(skiaContent,1,1200) == addrange-2.html addrange-2.html
-skip == splitText-normalize.html splitText-normalize.html
-skip == modify-range.html modify-range.html
-skip == dom-mutations.html dom-mutations.html
-fuzzy-if(OSX==1010,9,1) fuzzy-if(OSX&&skiaContent,6,1) fuzzy-if(skiaContent&&!OSX,1,2138) == trailing-space-1.html trailing-space-1.html
+fails == non-themed-widget.html non-themed-widget.html
+fails == themed-widget.html themed-widget.html
+fails == addrange-1.html addrange-1.html
+fails == addrange-2.html addrange-2.html
+fails == splitText-normalize.html splitText-normalize.html
+fails == modify-range.html modify-range.html
+fails == dom-mutations.html dom-mutations.html
+fails == trailing-space-1.html trailing-space-1.html

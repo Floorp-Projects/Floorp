@@ -67,7 +67,7 @@ exports.items = [
 
       try {
         // Check if URI is valid
-        Services.io.newURI(src, null, null);
+        Services.io.newURI(src);
       } catch (e) {
         return l10n.lookupFormat("injectFailed", [name]);
       }

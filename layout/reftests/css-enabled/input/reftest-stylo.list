@@ -1,10 +1,10 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== input-fieldset-1.html input-fieldset-1.html
-== input-fieldset-2.html input-fieldset-2.html
-fuzzy-if(skiaContent,1,7) == input-fieldset-3.html input-fieldset-3.html
-fails fuzzy-if(skiaContent,1,7) == input-fieldset-4.html input-fieldset-4.html
-== input-fieldset-legend-1.html input-fieldset-legend-1.html
-fuzzy-if(skiaContent,2,4) == input-fieldset-legend-2.html input-fieldset-legend-2.html
-fuzzy-if(skiaContent,2,5) == input-fieldset-legend-3.html input-fieldset-legend-3.html
-fuzzy-if(skiaContent,2,9) == input-fieldset-legend-4.html input-fieldset-legend-4.html
-fuzzy-if(skiaContent,2,5) == input-fieldset-legend-5.html input-fieldset-legend-5.html
+fails == input-fieldset-1.html input-fieldset-1.html
+fails == input-fieldset-2.html input-fieldset-2.html
+fails == input-fieldset-3.html input-fieldset-3.html
+fails == input-fieldset-4.html input-fieldset-4.html
+fails == input-fieldset-legend-1.html input-fieldset-legend-1.html
+fails == input-fieldset-legend-2.html input-fieldset-legend-2.html
+fails == input-fieldset-legend-3.html input-fieldset-legend-3.html
+fails == input-fieldset-legend-4.html input-fieldset-legend-4.html
+fails == input-fieldset-legend-5.html input-fieldset-legend-5.html

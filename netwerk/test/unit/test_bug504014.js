@@ -52,7 +52,7 @@ function run_test() {
 
   for (var i=0 ; i<valid_URIs.length ; i++) {
     try {
-      var uri = ios.newURI(valid_URIs[i], null, null);
+      var uri = ios.newURI(valid_URIs[i]);
     } catch (e) {
       do_throw("cannot create URI:" + valid_URIs[i]);
     }
@@ -60,7 +60,7 @@ function run_test() {
 
   for (var i=0 ; i<invalid_URIs.length ; i++) {
     try {
-      var uri = ios.newURI(invalid_URIs[i], null, null);
+      var uri = ios.newURI(invalid_URIs[i]);
       do_throw("should throw: " + invalid_URIs[i]);
     } catch (e) {
       do_check_eq(e.result, Cr.NS_ERROR_MALFORMED_URI);

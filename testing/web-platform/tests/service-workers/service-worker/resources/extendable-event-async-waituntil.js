@@ -42,6 +42,9 @@ self.addEventListener('message', function(event) {
         event.waitUntil(Promise.resolve());
         async_task_waituntil(event).then(reportResultExpecting('InvalidStateError'));
         break;
+      case 'script-extendable-event':
+        new_event_waituntil().then(reportResultExpecting('InvalidStateError'));
+        break;
     }
     event.source.postMessage('ACK');
   });
@@ -70,6 +73,18 @@ function sync_waituntil(event) {
       } catch (error) {
         res(error.name);
       }
+  });
+}
+
+function new_event_waituntil() {
+  return new Promise((res, rej) => {
+    try {
+      let e = new ExtendableEvent('foo');
+      e.waitUntil(new Promise(() => {}));
+      res('OK');
+    } catch (error) {
+      res(error.name);
+    }
   });
 }
 

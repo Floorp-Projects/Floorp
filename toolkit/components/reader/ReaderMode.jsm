@@ -146,7 +146,7 @@ this.ReaderMode = {
 
     let outerHash = "";
     try {
-      let uriObj = Services.io.newURI(url, null, null);
+      let uriObj = Services.io.newURI(url);
       url = uriObj.specIgnoringRef;
       outerHash = uriObj.ref;
     } catch (ex) { /* ignore, use the raw string */ }
@@ -158,7 +158,7 @@ this.ReaderMode = {
     let originalUrl = searchParams.get("url");
     if (outerHash) {
       try {
-        let uriObj = Services.io.newURI(originalUrl, null, null);
+        let uriObj = Services.io.newURI(originalUrl);
         uriObj = Services.io.newURI('#' + outerHash, null, uriObj);
         originalUrl = uriObj.spec;
       } catch (ex) {}
@@ -178,7 +178,7 @@ this.ReaderMode = {
       return false;
     }
 
-    let uri = Services.io.newURI(doc.location.href, null, null);
+    let uri = Services.io.newURI(doc.location.href);
     if (!this._shouldCheckUri(uri)) {
       return false;
     }
@@ -208,8 +208,8 @@ this.ReaderMode = {
    * @resolves JS object representing the article, or null if no article is found.
    */
   parseDocument: Task.async(function* (doc) {
-    let documentURI = Services.io.newURI(doc.documentURI, null, null);
-    let baseURI = Services.io.newURI(doc.baseURI, null, null);
+    let documentURI = Services.io.newURI(doc.documentURI);
+    let baseURI = Services.io.newURI(doc.baseURI);
     if (!this._shouldCheckUri(documentURI) || !this._shouldCheckUri(baseURI, true)) {
       this.log("Reader mode disabled for URI");
       return null;
@@ -227,7 +227,7 @@ this.ReaderMode = {
    */
   downloadAndParseDocument: Task.async(function* (url) {
     let doc = yield this._downloadDocument(url);
-    let uri = Services.io.newURI(doc.baseURI, null, null);
+    let uri = Services.io.newURI(doc.baseURI);
     if (!this._shouldCheckUri(uri, true)) {
       this.log("Reader mode disabled for URI");
       return null;
@@ -264,7 +264,7 @@ this.ReaderMode = {
           if (content) {
             let urlIndex = content.toUpperCase().indexOf("URL=");
             if (urlIndex > -1) {
-              let baseURI = Services.io.newURI(url, null, null);
+              let baseURI = Services.io.newURI(url);
               let newURI = Services.io.newURI(content.substring(urlIndex + 4), null, baseURI);
               let newURL = newURI.spec;
               let ssm = Services.scriptSecurityManager;
@@ -293,10 +293,10 @@ this.ReaderMode = {
         // Convert these to real URIs to make sure the escaping (or lack
         // thereof) is identical:
         try {
-          responseURL = Services.io.newURI(responseURL, null, null).specIgnoringRef;
+          responseURL = Services.io.newURI(responseURL).specIgnoringRef;
         } catch (ex) { /* Ignore errors - we'll use what we had before */ }
         try {
-          givenURL = Services.io.newURI(givenURL, null, null).specIgnoringRef;
+          givenURL = Services.io.newURI(givenURL).specIgnoringRef;
         } catch (ex) { /* Ignore errors - we'll use what we had before */ }
 
         if (responseURL != givenURL) {

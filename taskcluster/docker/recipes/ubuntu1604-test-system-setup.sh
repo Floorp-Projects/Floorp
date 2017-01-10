@@ -159,6 +159,15 @@ apt-get -q -y -f install \
     libgl1-mesa-glx \
     mesa-common-dev
 
+# additional packages for linux32 tests
+sudo dpkg --add-architecture i386
+apt-get update
+apt-get -q -y -f install \
+    libavcodec-ffmpeg-extra56:i386 \
+    libgtk-3-0:i386 \
+    libdbus-glib-1-2:i386 \
+    openjdk-8-jdk:i386
+
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
 apt-get update

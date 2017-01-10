@@ -1,14 +1,10 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== button-fieldset-1.html button-fieldset-1.html
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,7) == button-fieldset-2.html button-fieldset-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,1,7) == button-fieldset-3.html button-fieldset-3.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails fuzzy-if(skiaContent,1,7) == button-fieldset-4.html button-fieldset-4.html
-== button-fieldset-legend-1.html button-fieldset-legend-1.html
-fails-if(B2G||Mulet) == button-fieldset-legend-2.html button-fieldset-legend-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet) == button-fieldset-legend-3.html button-fieldset-legend-3.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== button-fieldset-legend-4.html button-fieldset-legend-4.html
-== button-fieldset-legend-5.html button-fieldset-legend-5.html
+fails == button-fieldset-1.html button-fieldset-1.html
+fails == button-fieldset-2.html button-fieldset-2.html
+fails == button-fieldset-3.html button-fieldset-3.html
+fails == button-fieldset-4.html button-fieldset-4.html
+fails == button-fieldset-legend-1.html button-fieldset-legend-1.html
+fails == button-fieldset-legend-2.html button-fieldset-legend-2.html
+fails == button-fieldset-legend-3.html button-fieldset-legend-3.html
+fails == button-fieldset-legend-4.html button-fieldset-legend-4.html
+fails == button-fieldset-legend-5.html button-fieldset-legend-5.html

@@ -14,7 +14,7 @@ var gCR;
 
 function check_accessibility(spec, desired)
 {
-  var uri = gIOS.newURI(spec, null, null);
+  var uri = gIOS.newURI(spec);
   var actual = gCR.allowContentToAccess(uri);
   do_check_eq(desired, actual);
 }

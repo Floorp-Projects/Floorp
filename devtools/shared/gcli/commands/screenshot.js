@@ -525,7 +525,7 @@ var saveToFile = Task.async(function* (context, reply) {
     reply.filename = OS.Path.join(downloadsDir, reply.filename);
   }
 
-  let sourceURI = Services.io.newURI(reply.data, null, null);
+  let sourceURI = Services.io.newURI(reply.data);
   let targetFile = new FileUtils.File(reply.filename);
   let targetFileURI = Services.io.newFileURI(targetFile);
 

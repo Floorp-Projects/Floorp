@@ -1,25 +1,25 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== form-static-valid.html form-static-valid.html
-== form-dynamic-valid.html form-dynamic-valid.html
+fails == form-static-valid.html form-static-valid.html
+fails == form-dynamic-valid.html form-dynamic-valid.html
 == form-remove-invalid-element.html form-remove-invalid-element.html
 == form-static-invalid.html form-static-invalid.html
 == form-dynamic-invalid.html form-dynamic-invalid.html
 == form-add-control.html form-add-control.html
 == form-dynamic-invalid-not-barred.html form-dynamic-invalid-not-barred.html
 == form-remove-invalid-element.html form-remove-invalid-element.html
-== form-dynamic-invalid-barred.html form-dynamic-invalid-barred.html
-== form-static-invalid-barred.html form-static-invalid-barred.html
-== form-add-invalid-element.html form-add-invalid-element.html
-== form-add-valid-with-invalid-element.html form-add-valid-with-invalid-element.html
-== form-invalid-barred.html form-invalid-barred.html
-== form-add-valid-element.html form-add-valid-element.html
-== form-add-valid-with-no-element.html form-add-valid-with-no-element.html
-== form-add-invalid-with-valid-element.html form-add-invalid-with-valid-element.html
-== form-with-valid-and-invalid.html form-with-valid-and-invalid.html
+fails == form-dynamic-invalid-barred.html form-dynamic-invalid-barred.html
+fails == form-static-invalid-barred.html form-static-invalid-barred.html
+fails == form-add-invalid-element.html form-add-invalid-element.html
+fails == form-add-valid-with-invalid-element.html form-add-valid-with-invalid-element.html
+fails == form-invalid-barred.html form-invalid-barred.html
+fails == form-add-valid-element.html form-add-valid-element.html
+fails == form-add-valid-with-no-element.html form-add-valid-with-no-element.html
+fails == form-add-invalid-with-valid-element.html form-add-invalid-with-valid-element.html
+fails == form-with-valid-and-invalid.html form-with-valid-and-invalid.html
 == form-add-invalid-element-dynamic.html form-add-invalid-element-dynamic.html
-== form-invalid-and-barred.html form-invalid-and-barred.html
+fails == form-invalid-and-barred.html form-invalid-and-barred.html
 == form-invalid-and-barred-remove-barred.html form-invalid-and-barred-remove-barred.html
-== form-valid-and-barred.html form-valid-and-barred.html
-== form-valid-and-barred-remove-barred.html form-valid-and-barred-remove-barred.html
-== form-with-invalid-element-add-barred-dynamic.html form-with-invalid-element-add-barred-dynamic.html
-== form-with-valid-element-add-barred-dynamic.html form-with-valid-element-add-barred-dynamic.html
+fails == form-valid-and-barred.html form-valid-and-barred.html
+fails == form-valid-and-barred-remove-barred.html form-valid-and-barred-remove-barred.html
+fails == form-with-invalid-element-add-barred-dynamic.html form-with-invalid-element-add-barred-dynamic.html
+fails == form-with-valid-element-add-barred-dynamic.html form-with-valid-element-add-barred-dynamic.html

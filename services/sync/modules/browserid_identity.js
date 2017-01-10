@@ -623,7 +623,7 @@ this.BrowserIDManager.prototype = {
 
     let getAssertion = () => {
       log.info("Getting an assertion from", tokenServerURI);
-      let audience = Services.io.newURI(tokenServerURI, null, null).prePath;
+      let audience = Services.io.newURI(tokenServerURI).prePath;
       return fxa.getAssertion(audience);
     };
 

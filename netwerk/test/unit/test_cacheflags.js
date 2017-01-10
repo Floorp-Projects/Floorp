@@ -48,7 +48,7 @@ var PrivateBrowsingLoadContext = new LoadContext(true);
 function make_channel(url, flags, usePrivateBrowsing) {
   var securityFlags = Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL;
 
-  var uri = Services.io.newURI(url, null, null);
+  var uri = Services.io.newURI(url);
   var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri,
     { privateBrowsingId : usePrivateBrowsing ? 1 : 0 });
 

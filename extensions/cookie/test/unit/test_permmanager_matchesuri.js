@@ -55,18 +55,18 @@ function run_test() {
   }
 
   // Add some permissions
-  let uri0 = NetUtil.newURI("http://google.com:9091/just/a/path", null, null);
-  let uri1 = NetUtil.newURI("http://hangouts.google.com:9091/some/path", null, null);
-  let uri2 = NetUtil.newURI("http://google.com:9091/", null, null);
-  let uri3 = NetUtil.newURI("http://google.org:9091/", null, null);
-  let uri4 = NetUtil.newURI("http://deeper.hangouts.google.com:9091/", null, null);
-  let uri5 = NetUtil.newURI("https://google.com/just/a/path", null, null);
-  let uri6 = NetUtil.newURI("https://hangouts.google.com", null, null);
-  let uri7 = NetUtil.newURI("https://google.com/", null, null);
+  let uri0 = NetUtil.newURI("http://google.com:9091/just/a/path");
+  let uri1 = NetUtil.newURI("http://hangouts.google.com:9091/some/path");
+  let uri2 = NetUtil.newURI("http://google.com:9091/");
+  let uri3 = NetUtil.newURI("http://google.org:9091/");
+  let uri4 = NetUtil.newURI("http://deeper.hangouts.google.com:9091/");
+  let uri5 = NetUtil.newURI("https://google.com/just/a/path");
+  let uri6 = NetUtil.newURI("https://hangouts.google.com");
+  let uri7 = NetUtil.newURI("https://google.com/");
 
-  let fileuri1 = NetUtil.newURI(fileprefix + "a/file/path", null, null);
-  let fileuri2 = NetUtil.newURI(fileprefix + "a/file/path/deeper", null, null);
-  let fileuri3 = NetUtil.newURI(fileprefix + "a/file/otherpath", null, null);
+  let fileuri1 = NetUtil.newURI(fileprefix + "a/file/path");
+  let fileuri2 = NetUtil.newURI(fileprefix + "a/file/path/deeper");
+  let fileuri3 = NetUtil.newURI(fileprefix + "a/file/otherpath");
 
   {
     let perm = mk_permission(uri0);

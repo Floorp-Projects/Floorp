@@ -123,7 +123,7 @@ IdentityProviderService.prototype = {
    */
   _provisionIdentity: function _provisionIdentity(aIdentity, aIDPParams, aProvId, aCallback) {
     let provPath = aIDPParams.idpParams.provisioning;
-    let url = Services.io.newURI("https://" + aIDPParams.domain, null, null).resolve(provPath);
+    let url = Services.io.newURI("https://" + aIDPParams.domain).resolve(provPath);
     log("_provisionIdentity: identity:", aIdentity, "url:", url);
 
     // If aProvId is not null, then we already have a flow
@@ -315,7 +315,7 @@ IdentityProviderService.prototype = {
 
     // extract authentication URL from idpParams
     let authPath = aIDPParams.idpParams.authentication;
-    let authURI = Services.io.newURI("https://" + aIDPParams.domain, null, null).resolve(authPath);
+    let authURI = Services.io.newURI("https://" + aIDPParams.domain).resolve(authPath);
 
     // beginAuthenticationFlow causes the "identity-auth" topic to be
     // observed.  Since it's sending a notification to the DOM, there's

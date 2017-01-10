@@ -77,7 +77,7 @@ function createLoginsFragment(url, content, elementQuery) {
     ownerDocument: document
   };
 
-  let URI = Services.io.newURI(url, null, null);
+  let URI = Services.io.newURI(url);
   return {
     document,
     fragment: LoginManagerContextMenu.addLoginsToMenu(inputElement, browser, URI),

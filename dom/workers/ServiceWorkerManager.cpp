@@ -940,6 +940,7 @@ ServiceWorkerManager::SendPushEvent(const nsACString& aOriginAttributes,
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     GetRegistration(serviceWorker->GetPrincipal(), aScope);
+  MOZ_DIAGNOSTIC_ASSERT(registration);
 
   return serviceWorker->WorkerPrivate()->SendPushEvent(aMessageId, aData,
                                                        registration);
@@ -2355,7 +2356,13 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
 
   if (aIsSubresourceLoad) {
     MOZ_ASSERT(aDoc);
+
     serviceWorker = GetActiveWorkerInfoForDocument(aDoc);
+    if (!serviceWorker) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+
     loadGroup = aDoc->GetDocumentLoadGroup();
     nsresult rv = aDoc->GetOrCreateId(documentId);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2391,16 +2398,24 @@ ServiceWorkerManager::DispatchFetchEvent(const PrincipalOriginAttributes& aOrigi
       return;
     }
 
-    // This should only happen if IsAvailable() returned true.
-    MOZ_ASSERT(registration->GetActive());
+    // While we only enter this method if IsAvailable() previously saw
+    // an active worker, it is possible for that worker to be removed
+    // before we get to this point.  Therefore we must handle a nullptr
+    // active worker here.
     serviceWorker = registration->GetActive();
+    if (!serviceWorker) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
 
     AddNavigationInterception(serviceWorker->Scope(), aChannel);
   }
 
-  if (NS_WARN_IF(aRv.Failed()) || !serviceWorker) {
+  if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
+
+  MOZ_DIAGNOSTIC_ASSERT(serviceWorker);
 
   nsCOMPtr<nsIRunnable> continueRunnable =
     new ContinueDispatchFetchEventRunnable(serviceWorker->WorkerPrivate(),

@@ -37,7 +37,7 @@ function initTest() {
     // inject cookies
     for (v in vals) {
         let [host, name, value] = vals[v];
-        var cookieUri = ios.newURI("http://" + host, null, null);
+        var cookieUri = ios.newURI("http://" + host);
         cookieSvc.setCookieString(cookieUri, null, name + "=" + value + ";", null);
     }
 

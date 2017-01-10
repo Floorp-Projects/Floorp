@@ -83,8 +83,7 @@ function run_test() {
 
   gHttpServer.start(-1);
 
-  let uri = ioService.newURI("http://localhost:" + gHttpServer.identity.primaryPort,
-                             null, null);
+  let uri = ioService.newURI("http://localhost:" + gHttpServer.identity.primaryPort);
   let channel = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
 
   channel.open2();

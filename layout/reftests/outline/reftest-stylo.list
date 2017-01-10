@@ -1,15 +1,13 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == outline-and-box-shadow.html outline-and-box-shadow.html
-== outline-and-3d-transform-1a.html outline-and-3d-transform-1a.html
-== outline-and-3d-transform-1b.html outline-and-3d-transform-1b.html
-fuzzy-if(Mulet||gtkWidget,136,120) fuzzy-if(Android,255,356) fuzzy-if(d2d,16,96) fuzzy-if(cocoaWidget,255,120) fuzzy-if(B2G,128,60) fuzzy-if(winWidget,255,216) == outline-and-3d-transform-2.html outline-and-3d-transform-2.html
+fails == outline-and-3d-transform-1a.html outline-and-3d-transform-1a.html
+fails == outline-and-3d-transform-1b.html outline-and-3d-transform-1b.html
+fails == outline-and-3d-transform-2.html outline-and-3d-transform-2.html
 == outline-overflow-block-abspos.html outline-overflow-block-abspos.html
 == outline-overflow-block-float.html outline-overflow-block-float.html
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-abspos.html
 == outline-overflow-inlineblock-float.html outline-overflow-inlineblock-float.html
-pref(layout.css.outline-style-auto.enabled,true) skip-if((!gtkWidget&&!winWidget&&!cocoaWidget)||Mulet) == outline-auto-001.html outline-auto-001.html
-# only works on platforms that supports NS_THEME_FOCUS_OUTLINE
-# bug 1141511:  Disable some gtkWidget-dependant reftests on Mulet
-pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001.html
+fails == outline-auto-001.html outline-auto-001.html
+fails pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001.html
 == outline-initial-1a.html outline-initial-1a.html
 == outline-initial-1b.html outline-initial-1b.html

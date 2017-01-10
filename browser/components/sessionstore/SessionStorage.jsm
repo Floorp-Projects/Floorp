@@ -109,7 +109,7 @@ var SessionStorageInternal = {
 
       try {
         let attrs = aDocShell.getOriginAttributes();
-        let originURI = Services.io.newURI(origin, null, null);
+        let originURI = Services.io.newURI(origin);
         principal = Services.scriptSecurityManager.createCodebasePrincipal(originURI, attrs);
       } catch (e) {
         console.error(e);

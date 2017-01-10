@@ -60,7 +60,7 @@ add_task(function* test_embedded_webextension_utils() {
   });
 
   let fileURI = Services.io.newFileURI(fakeHybridAddonFile);
-  let resourceURI = Services.io.newURI(`jar:${fileURI.spec}!/`, null, null);
+  let resourceURI = Services.io.newURI(`jar:${fileURI.spec}!/`);
 
   let embeddedExtension = LegacyExtensionsUtils.getEmbeddedExtensionFor({
     id, resourceURI,
@@ -122,7 +122,7 @@ function* createManifestErrorTestCase(id, xpi, expectedError) {
   });
 
   let fileURI = Services.io.newFileURI(xpi);
-  let resourceURI = Services.io.newURI(`jar:${fileURI.spec}!/`, null, null);
+  let resourceURI = Services.io.newURI(`jar:${fileURI.spec}!/`);
 
   let embeddedExtension = LegacyExtensionsUtils.getEmbeddedExtensionFor({
     id, resourceURI,

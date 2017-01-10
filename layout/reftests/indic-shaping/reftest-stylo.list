@@ -1,32 +1,28 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet) HTTP(..) == devanagari-1a.html devanagari-1a.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == devanagari-1b.html devanagari-1b.html
-HTTP(..) == devanagari-2.html devanagari-2.html
-HTTP(..) == devanagari-3a.html devanagari-3a.html
-HTTP(..) == devanagari-3b.html devanagari-3b.html
-HTTP(..) == devanagari-4.html devanagari-4.html
+fails HTTP(..) == devanagari-1a.html devanagari-1a.html
+fails HTTP(..) == devanagari-1b.html devanagari-1b.html
+fails HTTP(..) == devanagari-2.html devanagari-2.html
+fails HTTP(..) == devanagari-3a.html devanagari-3a.html
+fails HTTP(..) == devanagari-3b.html devanagari-3b.html
+fails HTTP(..) == devanagari-4.html devanagari-4.html
 
-HTTP(..) == gujarati-1a.html gujarati-1a.html
-HTTP(..) == gujarati-1b.html gujarati-1b.html
-HTTP(..) == gujarati-2.html gujarati-2.html
-HTTP(..) == gujarati-3a.html gujarati-3a.html
-skip-if(B2G||Mulet) HTTP(..) == gujarati-3b.html gujarati-3b.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == gujarati-4.html gujarati-4.html
+fails HTTP(..) == gujarati-1a.html gujarati-1a.html
+fails HTTP(..) == gujarati-1b.html gujarati-1b.html
+fails HTTP(..) == gujarati-2.html gujarati-2.html
+fails HTTP(..) == gujarati-3a.html gujarati-3a.html
+fails HTTP(..) == gujarati-3b.html gujarati-3b.html
+fails HTTP(..) == gujarati-4.html gujarati-4.html
 
-skip-if(B2G||Mulet) HTTP(..) == bengali-1a.html bengali-1a.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == bengali-1b.html bengali-1b.html
-HTTP(..) == bengali-2a.html bengali-2a.html
-HTTP(..) == bengali-2b.html bengali-2b.html
-skip-if(B2G||Mulet) HTTP(..) == bengali-3a.html bengali-3a.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == bengali-3b.html bengali-3b.html
-HTTP(..) == bengali-3c.html bengali-3c.html
-HTTP(..) == bengali-3c.html bengali-3c.html
+fails HTTP(..) == bengali-1a.html bengali-1a.html
+fails HTTP(..) == bengali-1b.html bengali-1b.html
+fails HTTP(..) == bengali-2a.html bengali-2a.html
+fails HTTP(..) == bengali-2b.html bengali-2b.html
+fails HTTP(..) == bengali-3a.html bengali-3a.html
+fails HTTP(..) == bengali-3b.html bengali-3b.html
+fails HTTP(..) == bengali-3c.html bengali-3c.html
+fails HTTP(..) == bengali-3c.html bengali-3c.html
 
-== 686225-1-bangla-aat.html 686225-1-bangla-aat.html
-skip == 686225-2-kannada-aat.html 686225-2-kannada-aat.html
+fails == 686225-1-bangla-aat.html 686225-1-bangla-aat.html
+fails == 686225-2-kannada-aat.html 686225-2-kannada-aat.html
 
-HTTP(..) == balinese-1.html balinese-1.html
+fails HTTP(..) == balinese-1.html balinese-1.html

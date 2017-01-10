@@ -1,121 +1,114 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == border-box-wrap-around-float.html border-box-wrap-around-float.html
 == other-float-outside-rule-3-left.html other-float-outside-rule-3-left.html
-skip == other-float-outside-rule-3-right.html other-float-outside-rule-3-right.html
+== other-float-outside-rule-3-right.html other-float-outside-rule-3-right.html
 == other-float-outside-rule-3-left-2.html other-float-outside-rule-3-left-2.html
-# bug 616334
 == other-float-outside-rule-3-right-2.html other-float-outside-rule-3-right-2.html
-# bug 616334
 == other-float-outside-rule-7-left.html other-float-outside-rule-7-left.html
-# bug 616334
 == other-float-outside-rule-7-right.html other-float-outside-rule-7-right.html
-# bug 616334
-fails fuzzy-if(gtkWidget,1,10) == float-outside-block-push.html float-outside-block-push.html
-# bug 815612
+fails == float-outside-block-push.html float-outside-block-push.html
 == relative-float-1.html relative-float-1.html
-== relative-float-2.html relative-float-2.html
+fails == relative-float-2.html relative-float-2.html
 == zero-height-float-base.html zero-height-float-base.html
 == zero-height-float.html zero-height-float.html
-# bug 81710
 == 345369-1.html 345369-1.html
 == 345369-2.html 345369-2.html
 == 345369-3.html 345369-3.html
 == 345369-4.html 345369-4.html
 == 345369-5.html 345369-5.html
 == 429974-1.html 429974-1.html
-== 478834-1.html 478834-1.html
-== 546048-1.html 546048-1.html
+fails == 478834-1.html 478834-1.html
+fails == 546048-1.html 546048-1.html
 == 775350-1.html 775350-1.html
-== 1114329.html 1114329.html
+fails == 1114329.html 1114329.html
 == 1236745-1.html 1236745-1.html
-== float-in-rtl-1a.html float-in-rtl-1a.html
-fails fuzzy-if(skiaContent,1,27000) == float-in-rtl-1b.html float-in-rtl-1b.html
-fails fuzzy-if(skiaContent,1,27000) == float-in-rtl-1c.html float-in-rtl-1c.html
-fails fuzzy-if(skiaContent,1,27000) == float-in-rtl-1d.html float-in-rtl-1d.html
-== float-in-rtl-2a.html float-in-rtl-2a.html
-fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-2b.html float-in-rtl-2b.html
-fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-2c.html float-in-rtl-2c.html
-fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-2d.html float-in-rtl-2d.html
-== float-in-rtl-3a.html float-in-rtl-3a.html
-fails fuzzy-if(skiaContent,1,27000) == float-in-rtl-3b.html float-in-rtl-3b.html
-fails fuzzy-if(skiaContent,1,27000) == float-in-rtl-3c.html float-in-rtl-3c.html
-fails fuzzy-if(skiaContent,1,27000) == float-in-rtl-3d.html float-in-rtl-3d.html
-skip == float-in-rtl-4a.html float-in-rtl-4a.html
-fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-4b.html float-in-rtl-4b.html
-fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-4c.html float-in-rtl-4c.html
-fails fuzzy-if(skiaContent,1,12000) == float-in-rtl-4d.html float-in-rtl-4d.html
+fails == 1260031-1.html?display:table 1260031-1.html?display:table
+fails == 1260031-1.html?display:table-cell 1260031-1.html?display:table-cell
+fails == 1260031-1.html?overflow:hidden 1260031-1.html?overflow:hidden
+fails == 1291110-1.html 1291110-1.html
+fails == 1291110-2.html 1291110-2.html
+fails == float-in-rtl-1a.html float-in-rtl-1a.html
+fails == float-in-rtl-1b.html float-in-rtl-1b.html
+fails == float-in-rtl-1c.html float-in-rtl-1c.html
+fails == float-in-rtl-1d.html float-in-rtl-1d.html
+fails == float-in-rtl-2a.html float-in-rtl-2a.html
+fails == float-in-rtl-2b.html float-in-rtl-2b.html
+fails == float-in-rtl-2c.html float-in-rtl-2c.html
+fails == float-in-rtl-2d.html float-in-rtl-2d.html
+fails == float-in-rtl-3a.html float-in-rtl-3a.html
+fails == float-in-rtl-3b.html float-in-rtl-3b.html
+fails == float-in-rtl-3c.html float-in-rtl-3c.html
+fails == float-in-rtl-3d.html float-in-rtl-3d.html
+fails == float-in-rtl-4a.html float-in-rtl-4a.html
+fails == float-in-rtl-4b.html float-in-rtl-4b.html
+fails == float-in-rtl-4c.html float-in-rtl-4c.html
+fails == float-in-rtl-4d.html float-in-rtl-4d.html
 
-== bfc-displace-1a.html bfc-displace-1a.html
-== bfc-displace-1b.html bfc-displace-1b.html
-== bfc-displace-2a.html bfc-displace-2a.html
-== bfc-displace-2b.html bfc-displace-2b.html
-== bfc-displace-3a.html bfc-displace-3a.html
-== bfc-displace-3b.html bfc-displace-3b.html
-== bfc-displace-4.html bfc-displace-4.html
-== bfc-shrink-1.html bfc-shrink-1.html
+fails == bfc-displace-1a.html bfc-displace-1a.html
+fails == bfc-displace-1b.html bfc-displace-1b.html
+fails == bfc-displace-2a.html bfc-displace-2a.html
+fails == bfc-displace-2b.html bfc-displace-2b.html
+fails == bfc-displace-3a.html bfc-displace-3a.html
+fails == bfc-displace-3b.html bfc-displace-3b.html
+fails == bfc-displace-4.html bfc-displace-4.html
+fails == bfc-shrink-1.html bfc-shrink-1.html
 
 # Testcases that involve vertical writing mode.
-#
-# XXX The default-preferences setting here can be removed after the
-#     pref has been made true by default for all channels (bug 1138384).
+fails == float-in-rtl-vlr-1a.html float-in-rtl-vlr-1a.html
+fails == float-in-rtl-vlr-1b.html float-in-rtl-vlr-1b.html
+fails == float-in-rtl-vlr-1c.html float-in-rtl-vlr-1c.html
+fails == float-in-rtl-vlr-1d.html float-in-rtl-vlr-1d.html
+fails == float-in-rtl-vlr-2a.html float-in-rtl-vlr-2a.html
+fails == float-in-rtl-vlr-2b.html float-in-rtl-vlr-2b.html
+fails == float-in-rtl-vlr-2c.html float-in-rtl-vlr-2c.html
+fails == float-in-rtl-vlr-2d.html float-in-rtl-vlr-2d.html
+fails == float-in-rtl-vlr-3a.html float-in-rtl-vlr-3a.html
+fails == float-in-rtl-vlr-3b.html float-in-rtl-vlr-3b.html
+fails == float-in-rtl-vlr-3c.html float-in-rtl-vlr-3c.html
+fails == float-in-rtl-vlr-3d.html float-in-rtl-vlr-3d.html
+fails == float-in-rtl-vlr-4a.html float-in-rtl-vlr-4a.html
+fails == float-in-rtl-vlr-4b.html float-in-rtl-vlr-4b.html
+fails == float-in-rtl-vlr-4c.html float-in-rtl-vlr-4c.html
+fails == float-in-rtl-vlr-4d.html float-in-rtl-vlr-4d.html
+fails == float-in-rtl-vrl-1a.html float-in-rtl-vrl-1a.html
+fails == float-in-rtl-vrl-1b.html float-in-rtl-vrl-1b.html
+fails == float-in-rtl-vrl-1c.html float-in-rtl-vrl-1c.html
+fails == float-in-rtl-vrl-1d.html float-in-rtl-vrl-1d.html
+fails == float-in-rtl-vrl-2a.html float-in-rtl-vrl-2a.html
+fails == float-in-rtl-vrl-2b.html float-in-rtl-vrl-2b.html
+fails == float-in-rtl-vrl-2c.html float-in-rtl-vrl-2c.html
+fails == float-in-rtl-vrl-2d.html float-in-rtl-vrl-2d.html
+fails == float-in-rtl-vrl-3a.html float-in-rtl-vrl-3a.html
+fails == float-in-rtl-vrl-3b.html float-in-rtl-vrl-3b.html
+fails == float-in-rtl-vrl-3c.html float-in-rtl-vrl-3c.html
+fails == float-in-rtl-vrl-3d.html float-in-rtl-vrl-3d.html
+fails == float-in-rtl-vrl-4a.html float-in-rtl-vrl-4a.html
+fails == float-in-rtl-vrl-4b.html float-in-rtl-vrl-4b.html
+fails == float-in-rtl-vrl-4c.html float-in-rtl-vrl-4c.html
+fails == float-in-rtl-vrl-4d.html float-in-rtl-vrl-4d.html
+fails == orthogonal-floats-1a.html orthogonal-floats-1a.html
+fails == orthogonal-floats-1b.html orthogonal-floats-1b.html
+fails == orthogonal-floats-1c.html orthogonal-floats-1c.html
+fails == orthogonal-floats-1d.html orthogonal-floats-1d.html
 
+fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1.html
+fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2.html
+fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-3.html logical-float-side-3.html
+fails pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html logical-float-side-4.html
 
-
-== float-in-rtl-vlr-1a.html float-in-rtl-vlr-1a.html
-== float-in-rtl-vlr-1b.html float-in-rtl-vlr-1b.html
-== float-in-rtl-vlr-1c.html float-in-rtl-vlr-1c.html
-== float-in-rtl-vlr-1d.html float-in-rtl-vlr-1d.html
-== float-in-rtl-vlr-2a.html float-in-rtl-vlr-2a.html
-== float-in-rtl-vlr-2b.html float-in-rtl-vlr-2b.html
-== float-in-rtl-vlr-2c.html float-in-rtl-vlr-2c.html
-== float-in-rtl-vlr-2d.html float-in-rtl-vlr-2d.html
-== float-in-rtl-vlr-3a.html float-in-rtl-vlr-3a.html
-== float-in-rtl-vlr-3b.html float-in-rtl-vlr-3b.html
-== float-in-rtl-vlr-3c.html float-in-rtl-vlr-3c.html
-== float-in-rtl-vlr-3d.html float-in-rtl-vlr-3d.html
-== float-in-rtl-vlr-4a.html float-in-rtl-vlr-4a.html
-== float-in-rtl-vlr-4b.html float-in-rtl-vlr-4b.html
-== float-in-rtl-vlr-4c.html float-in-rtl-vlr-4c.html
-== float-in-rtl-vlr-4d.html float-in-rtl-vlr-4d.html
-== float-in-rtl-vrl-1a.html float-in-rtl-vrl-1a.html
-== float-in-rtl-vrl-1b.html float-in-rtl-vrl-1b.html
-== float-in-rtl-vrl-1c.html float-in-rtl-vrl-1c.html
-== float-in-rtl-vrl-1d.html float-in-rtl-vrl-1d.html
-== float-in-rtl-vrl-2a.html float-in-rtl-vrl-2a.html
-== float-in-rtl-vrl-2b.html float-in-rtl-vrl-2b.html
-== float-in-rtl-vrl-2c.html float-in-rtl-vrl-2c.html
-== float-in-rtl-vrl-2d.html float-in-rtl-vrl-2d.html
-== float-in-rtl-vrl-3a.html float-in-rtl-vrl-3a.html
-== float-in-rtl-vrl-3b.html float-in-rtl-vrl-3b.html
-== float-in-rtl-vrl-3c.html float-in-rtl-vrl-3c.html
-== float-in-rtl-vrl-3d.html float-in-rtl-vrl-3d.html
-== float-in-rtl-vrl-4a.html float-in-rtl-vrl-4a.html
-== float-in-rtl-vrl-4b.html float-in-rtl-vrl-4b.html
-== float-in-rtl-vrl-4c.html float-in-rtl-vrl-4c.html
-== float-in-rtl-vrl-4d.html float-in-rtl-vrl-4d.html
-fuzzy-if(OSX==1010,28,7) fuzzy-if(Android,16,2) == orthogonal-floats-1a.html orthogonal-floats-1a.html
-fuzzy-if(OSX==1010,28,7) == orthogonal-floats-1b.html orthogonal-floats-1b.html
-fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1c.html orthogonal-floats-1c.html
-fuzzy-if(OSX==1010,103,802) fuzzy-if(winWidget,116,700) HTTP(..) == orthogonal-floats-1d.html orthogonal-floats-1d.html
-
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-1.html logical-float-side-1.html
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-2.html logical-float-side-2.html
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-3.html logical-float-side-3.html
-pref(layout.css.float-logical-values.enabled,true) == logical-float-side-4.html logical-float-side-4.html
-
-== float-in-rtl-slr-1a.html float-in-rtl-slr-1a.html
-== float-in-rtl-slr-1b.html float-in-rtl-slr-1b.html
-== float-in-rtl-slr-1c.html float-in-rtl-slr-1c.html
-== float-in-rtl-slr-1d.html float-in-rtl-slr-1d.html
-== float-in-rtl-slr-2a.html float-in-rtl-slr-2a.html
-== float-in-rtl-slr-2b.html float-in-rtl-slr-2b.html
-== float-in-rtl-slr-2c.html float-in-rtl-slr-2c.html
-== float-in-rtl-slr-2d.html float-in-rtl-slr-2d.html
-== float-in-rtl-slr-3a.html float-in-rtl-slr-3a.html
-== float-in-rtl-slr-3b.html float-in-rtl-slr-3b.html
-== float-in-rtl-slr-3c.html float-in-rtl-slr-3c.html
-== float-in-rtl-slr-3d.html float-in-rtl-slr-3d.html
-== float-in-rtl-slr-4a.html float-in-rtl-slr-4a.html
-== float-in-rtl-slr-4b.html float-in-rtl-slr-4b.html
-== float-in-rtl-slr-4c.html float-in-rtl-slr-4c.html
-== float-in-rtl-slr-4d.html float-in-rtl-slr-4d.html
+fails == float-in-rtl-slr-1a.html float-in-rtl-slr-1a.html
+fails == float-in-rtl-slr-1b.html float-in-rtl-slr-1b.html
+fails == float-in-rtl-slr-1c.html float-in-rtl-slr-1c.html
+fails == float-in-rtl-slr-1d.html float-in-rtl-slr-1d.html
+fails == float-in-rtl-slr-2a.html float-in-rtl-slr-2a.html
+fails == float-in-rtl-slr-2b.html float-in-rtl-slr-2b.html
+fails == float-in-rtl-slr-2c.html float-in-rtl-slr-2c.html
+fails == float-in-rtl-slr-2d.html float-in-rtl-slr-2d.html
+fails == float-in-rtl-slr-3a.html float-in-rtl-slr-3a.html
+fails == float-in-rtl-slr-3b.html float-in-rtl-slr-3b.html
+fails == float-in-rtl-slr-3c.html float-in-rtl-slr-3c.html
+fails == float-in-rtl-slr-3d.html float-in-rtl-slr-3d.html
+fails == float-in-rtl-slr-4a.html float-in-rtl-slr-4a.html
+fails == float-in-rtl-slr-4b.html float-in-rtl-slr-4b.html
+fails == float-in-rtl-slr-4c.html float-in-rtl-slr-4c.html
+fails == float-in-rtl-slr-4d.html float-in-rtl-slr-4d.html

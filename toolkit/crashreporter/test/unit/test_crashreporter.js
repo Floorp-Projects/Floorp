@@ -21,13 +21,13 @@ function run_test() {
   var testspecs = ["http://example.com/submit",
                    "https://example.org/anothersubmit"];
   for (var i = 0; i < testspecs.length; ++i) {
-    cr.serverURL = ios.newURI(testspecs[i], null, null);
+    cr.serverURL = ios.newURI(testspecs[i]);
     do_check_eq(cr.serverURL.spec, testspecs[i]);
   }
 
   // should not allow setting non-http/https URLs
   try {
-    cr.serverURL = ios.newURI("ftp://example.com/submit", null, null);
+    cr.serverURL = ios.newURI("ftp://example.com/submit");
     do_throw("Setting serverURL to a non-http(s) URL should have thrown!");
   } catch (ex) {
     do_check_eq(ex.result, Components.results.NS_ERROR_INVALID_ARG);

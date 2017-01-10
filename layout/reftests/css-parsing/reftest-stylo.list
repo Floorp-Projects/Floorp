@@ -1,10 +1,10 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == at-rule-013.html at-rule-013.html
-== invalid-url-handling.xhtml invalid-url-handling.xhtml
+fails == invalid-url-handling.xhtml invalid-url-handling.xhtml
 == pseudo-elements-1.html pseudo-elements-1.html
 == invalid-attr-1.html invalid-attr-1.html
 == at-rule-error-handling-import-1.html at-rule-error-handling-import-1.html
 == at-rule-error-handling-media-1.html at-rule-error-handling-media-1.html
 == invalid-font-face-descriptor-1.html invalid-font-face-descriptor-1.html
 == two-dash-identifiers.html two-dash-identifiers.html
-== supports-moz-bool-pref.html supports-moz-bool-pref.html
+fails == supports-moz-bool-pref.html supports-moz-bool-pref.html

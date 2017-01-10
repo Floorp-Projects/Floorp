@@ -87,8 +87,8 @@ interface nsIProtocolHandler : nsISupports
      *                         URI aBaseURI will simply be ignored.
      */
     nsIURI newURI(in AUTF8String aSpec,
-                  in string aOriginCharset,
-                  in nsIURI aBaseURI);
+                  [optional] in string aOriginCharset,
+                  [optional] in nsIURI aBaseURI);
 
     /**
      * Constructs a new channel from the given URI for this protocol handler and

@@ -1,8 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 skip-if(!cocoaWidget) == 507947.html 507947.html
-== progressbar-fallback-default-style.html progressbar-fallback-default-style.html
-fuzzy-if(Android,17,1120) == meter-native-style.html meter-native-style.html
-fails skip-if(!cocoaWidget) == meter-vertical-native-style.html meter-vertical-native-style.html
-# dithering
-== meter-fallback-default-style.html meter-fallback-default-style.html
+# fails == progressbar-fallback-default-style.html progressbar-fallback-default-style.html
+# == meter-native-style.html meter-native-style.html
+# == meter-vertical-native-style.html meter-vertical-native-style.html
+# fails == meter-fallback-default-style.html meter-fallback-default-style.html
 load 664925.xhtml

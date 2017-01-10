@@ -6,101 +6,87 @@
 
 # check that Turkish language causes a change in rendering (no fi ligature)
 # (also works via Pango)
-skip-if(B2G||Mulet) HTTP(..) == font-features-turkish.html font-features-turkish.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails HTTP(..) == font-features-turkish.html font-features-turkish.html
 
 # check that disabling ligatures causes a change
-HTTP(..) == font-features-noliga.html font-features-noliga.html
+fails HTTP(..) == font-features-noliga.html font-features-noliga.html
 
 # check that enabling optional ligatures causes a change
-HTTP(..) == font-features-hlig.html font-features-hlig.html
+fails HTTP(..) == font-features-hlig.html font-features-hlig.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
-HTTP(..) == font-features-turkish.html font-features-turkish.html
+fails HTTP(..) == font-features-turkish.html font-features-turkish.html
 
 # compare Turkish rendering with explicitly disabled ligatures
-HTTP(..) == font-features-turkish.html font-features-turkish.html
+fails HTTP(..) == font-features-turkish.html font-features-turkish.html
 
 # The following should pass even if feature support isn't available,
 # because both testcase and reference will have the default rendering,
 # though they're not really meaningful unless the tests above passed already.
 
 # compare feature specified within @font-face to same feature in style rule
-HTTP(..) == font-features-hlig-2.html font-features-hlig-2.html
-HTTP(..) == font-features-hlig-4.html font-features-hlig-4.html
-HTTP(..) == font-features-hlig-5.html font-features-hlig-5.html
-HTTP(..) == font-features-ligatures-none.html font-features-ligatures-none.html
+fails HTTP(..) == font-features-hlig-2.html font-features-hlig-2.html
+fails HTTP(..) == font-features-hlig-4.html font-features-hlig-4.html
+fails HTTP(..) == font-features-hlig-5.html font-features-hlig-5.html
+fails HTTP(..) == font-features-ligatures-none.html font-features-ligatures-none.html
 
 # check that feature in style rule overrides @font-face
-skip-if(B2G||Mulet) HTTP(..) == font-features-hlig-3.html font-features-hlig-3.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails HTTP(..) == font-features-hlig-3.html font-features-hlig-3.html
 
 # compare font-language-override rendering to lang-tagged rendering
-skip-if(B2G||Mulet) HTTP(..) == font-features-turkish-override-1.html font-features-turkish-override-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == font-features-turkish-override-2.html font-features-turkish-override-2.html
+fails HTTP(..) == font-features-turkish-override-1.html font-features-turkish-override-1.html
+fails HTTP(..) == font-features-turkish-override-2.html font-features-turkish-override-2.html
 
 # check use of font-language-override to override explicit lang tag
-HTTP(..) == font-features-turkish-override-3.html font-features-turkish-override-3.html
-HTTP(..) == font-features-turkish-override-4.html font-features-turkish-override-4.html
-skip-if(B2G||Mulet) HTTP(..) == font-features-turkish-override-5.html font-features-turkish-override-5.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails HTTP(..) == font-features-turkish-override-3.html font-features-turkish-override-3.html
+fails HTTP(..) == font-features-turkish-override-4.html font-features-turkish-override-4.html
+fails HTTP(..) == font-features-turkish-override-5.html font-features-turkish-override-5.html
 
 # check that last value wins if a feature is repeated
-HTTP(..) == font-features-order-1.html font-features-order-1.html
-HTTP(..) == font-features-order-2.html font-features-order-2.html
+fails HTTP(..) == font-features-order-1.html font-features-order-1.html
+fails HTTP(..) == font-features-order-2.html font-features-order-2.html
 
 # check priority of feature settings vs. font-variant subproperty
-HTTP(..) == font-features-order-3.html font-features-order-3.html
-HTTP(..) == font-features-order-4.html font-features-order-4.html
-HTTP(..) == font-features-order-5.html font-features-order-5.html
+fails HTTP(..) == font-features-order-3.html font-features-order-3.html
+fails HTTP(..) == font-features-order-4.html font-features-order-4.html
+fails HTTP(..) == font-features-order-5.html font-features-order-5.html
 
 # check priority involving feature settings and font-variant-alternates
-HTTP(..) == alternates-order.html alternates-order.html
+fails HTTP(..) == alternates-order.html alternates-order.html
 
 # check that font-specific values line up with @font-face feature settings
-HTTP(..) == annotations.html annotations.html
+fails HTTP(..) == annotations.html annotations.html
 
 # font-variant subproperties
 # test for specific features being on and others off, based on prop values
 # (debug problems with font-variant-debug.html which displays all props)
-skip == font-variant-alternates.html font-variant-alternates.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip == font-variant-caps.html font-variant-caps.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip == font-variant-east-asian.html font-variant-east-asian.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip == font-variant-ligatures.html font-variant-ligatures.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip == font-variant-numeric.html font-variant-numeric.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip == font-variant-position.html font-variant-position.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+fails HTTP(..) == font-variant-alternates.html font-variant-alternates.html
+fails HTTP(..) == font-variant-caps.html font-variant-caps.html
+fails HTTP(..) == font-variant-east-asian.html font-variant-east-asian.html
+fails HTTP(..) == font-variant-ligatures.html font-variant-ligatures.html
+fails HTTP(..) == font-variant-numeric.html font-variant-numeric.html
+fails HTTP(..) == font-variant-position.html font-variant-position.html
 
 # font-kerning
-HTTP(..) == font-kerning-normal.html font-kerning-normal.html
-HTTP(..) == font-kerning-auto.html font-kerning-auto.html
-HTTP(..) == font-kerning-auto.html font-kerning-auto.html
-HTTP(..) == font-kerning-normal.html font-kerning-normal.html
-HTTP(..) == font-kerning-none.html font-kerning-none.html
-HTTP(..) == font-kerning-1.html font-kerning-1.html
-HTTP(..) == font-kerning-2.html font-kerning-2.html
-HTTP(..) == font-kerning-3.html font-kerning-3.html
-HTTP(..) == font-kerning-table-none.html font-kerning-table-none.html
+fails HTTP(..) == font-kerning-normal.html font-kerning-normal.html
+fails HTTP(..) == font-kerning-auto.html font-kerning-auto.html
+fails HTTP(..) == font-kerning-auto.html font-kerning-auto.html
+fails HTTP(..) == font-kerning-normal.html font-kerning-normal.html
+fails HTTP(..) == font-kerning-none.html font-kerning-none.html
+fails HTTP(..) == font-kerning-1.html font-kerning-1.html
+fails HTTP(..) == font-kerning-2.html font-kerning-2.html
+fails HTTP(..) == font-kerning-3.html font-kerning-3.html
+fails HTTP(..) == font-kerning-table-none.html font-kerning-table-none.html
 
 # sanity check for kerning - with no spaces, kerning should occur
-HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-kern.html
-HTTP(..) == kerning-sanity-check-nokern.html kerning-sanity-check-nokern.html
+fails HTTP(..) == kerning-sanity-check-kern.html kerning-sanity-check-kern.html
+fails HTTP(..) == kerning-sanity-check-nokern.html kerning-sanity-check-nokern.html
 
 # OpenType features should work across inter-word spaces
-HTTP(..) == font-features-across-space-1.html font-features-across-space-1.html
-HTTP(..) == spacelookups.html spacelookups.html
+fails HTTP(..) == font-features-across-space-1.html font-features-across-space-1.html
+fails HTTP(..) == spacelookups.html spacelookups.html
 # tests whether word cache is in use by testing for ignored space kerns
-HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache.html
+fails HTTP(..) == spacelookups-wordcache.html spacelookups-wordcache.html
 # requires Japanese font with feature support, WinXP lacks one
 random-if(!winWidget&&!cocoaWidget) fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) HTTP(..) == fwid-spaces.html fwid-spaces.html
 # Arial/Times New Roman on Win7+/OSX 10.6+ have kerning pairs that include spaces
@@ -111,27 +97,25 @@ random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) random-if(/
 
 # font-variant-caps fallback
 # -- sanity check - none of these should look like the default rendering
-HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
-HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smallcaps2.html
-HTTP(..) == caps-fallback-petitecaps.html caps-fallback-petitecaps.html
-HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-allsmallcaps.html
-HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-allpetitecaps.html
+fails HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
+fails HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smallcaps2.html
+fails HTTP(..) == caps-fallback-petitecaps.html caps-fallback-petitecaps.html
+fails HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-allsmallcaps.html
+fails HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-allpetitecaps.html
 # -- normal or fallback rendering
-HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
-HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smallcaps2.html
-HTTP(..) == caps-fallback-petitecaps.html caps-fallback-petitecaps.html
-HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-allsmallcaps.html
-HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-allpetitecaps.html
+fails HTTP(..) == caps-fallback-smallcaps1.html caps-fallback-smallcaps1.html
+fails HTTP(..) == caps-fallback-smallcaps2.html caps-fallback-smallcaps2.html
+fails HTTP(..) == caps-fallback-petitecaps.html caps-fallback-petitecaps.html
+fails HTTP(..) == caps-fallback-allsmallcaps.html caps-fallback-allsmallcaps.html
+fails HTTP(..) == caps-fallback-allpetitecaps.html caps-fallback-allpetitecaps.html
 
 # font-variant-position fallback
-random-if(cocoaWidget||Android) HTTP(..) == subsuper-fallback.html subsuper-fallback.html
-# bug 1139269
-HTTP(..) == subsuper-fallback.html subsuper-fallback.html
-HTTP(..) == subsuper-fallback.html subsuper-fallback.html
-HTTP(..) == subsuper-fallback.html subsuper-fallback.html
-HTTP(..) == subsuper-fallback-omega.html subsuper-fallback-omega.html
-HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
-random-if(cocoaWidget) HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
-# bug 1139269
-HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
-HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size.html
+fails == subsuper-fallback.html subsuper-fallback.html
+fails HTTP(..) == subsuper-fallback.html subsuper-fallback.html
+fails HTTP(..) == subsuper-fallback.html subsuper-fallback.html
+fails HTTP(..) == subsuper-fallback.html subsuper-fallback.html
+fails HTTP(..) == subsuper-fallback-omega.html subsuper-fallback-omega.html
+fails HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
+fails == subsuper-nofallback.html subsuper-nofallback.html
+fails HTTP(..) == subsuper-nofallback.html subsuper-nofallback.html
+# HTTP(..) == subsuper-fallback-size.html subsuper-fallback-size.html

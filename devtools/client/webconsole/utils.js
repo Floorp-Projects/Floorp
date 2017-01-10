@@ -161,8 +161,8 @@ var WebConsoleUtils = {
    */
   isMixedHTTPSRequest: function (request, location) {
     try {
-      let requestURI = Services.io.newURI(request, null, null);
-      let contentURI = Services.io.newURI(location, null, null);
+      let requestURI = Services.io.newURI(request);
+      let contentURI = Services.io.newURI(location);
       return (contentURI.scheme == "https" && requestURI.scheme != "https");
     } catch (ex) {
       return false;

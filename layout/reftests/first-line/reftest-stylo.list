@@ -1,49 +1,38 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # basic functionality
-== basic-1.html basic-1.html
+# == basic-1.html basic-1.html
 
 # handling of out-of-flows when ::first-line happens
 == out-of-flow-1a.html out-of-flow-1a.html
-== out-of-flow-1b.html out-of-flow-1b.html
+fails == out-of-flow-1b.html out-of-flow-1b.html
 == out-of-flow-1c.html out-of-flow-1c.html
-== out-of-flow-1d.html out-of-flow-1d.html
-# bug 396645
+fails == out-of-flow-1d.html out-of-flow-1d.html
 
 # parent style context correct
-== parent-style-1.html parent-style-1.html
-== parent-style-2.html parent-style-2.html
-== parent-style-3.html parent-style-3.html
+fails == parent-style-1.html parent-style-1.html
+fails == parent-style-2.html parent-style-2.html
+fails == parent-style-3.html parent-style-3.html
 
 # stress-tests
 skip load stress-1.html
-# assertion test
-skip == stress-2.html stress-2.html
-# assertion + rendering test
-skip load stress-3.html
-# assertion test
+fails == stress-2.html stress-2.html
+# load stress-3.html
 load stress-4.html
-# assertion/crash test.
 load stress-5.html
-# assertion/crash test
 load stress-6.html
-# assertion/crash test
 load stress-7.html
-# assertion/crash test
-== stress-8.html stress-8.html
-# assertion/crash test
-== stress-9.html stress-9.html
-# assertion/crash test
+fails == stress-8.html stress-8.html
+fails == stress-9.html stress-9.html
 load stress-10.html
-# crash test
-== stress-11.xhtml stress-11.xhtml
+fails == stress-11.xhtml stress-11.xhtml
 
-skip == border-not-apply.html border-not-apply.html
-skip == 287088-1.html 287088-1.html
-skip == 287088-2.html 287088-2.html
-== 403177-1.html 403177-1.html
-== 469227-2.html 469227-2.html
-== 469227-3.html 469227-3.html
+fails == border-not-apply.html border-not-apply.html
+fails == 287088-1.html 287088-1.html
+fails == 287088-2.html 287088-2.html
+fails == 403177-1.html 403177-1.html
+fails == 469227-2.html 469227-2.html
+fails == 469227-3.html 469227-3.html
 
-== restyle-inside-first-line.html restyle-inside-first-line.html
-== font-styles.html font-styles.html
-fuzzy-if(OSX==1010,1,2) == font-styles-nooverflow.html font-styles-nooverflow.html
+fails == restyle-inside-first-line.html restyle-inside-first-line.html
+fails == font-styles.html font-styles.html
+fails == font-styles-nooverflow.html font-styles-nooverflow.html
