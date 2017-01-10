@@ -279,26 +279,22 @@ add_task(function* test_signIn() {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.bodyOutputStream.write(sessionMessage_noKey,
                                         sessionMessage_noKey.length);
-
       } else if (jsonBody.email == "you@example.com") {
         do_check_eq("keys=true", request._queryString);
         do_check_eq(jsonBody.authPW, "93d20ec50304d496d0707ec20d7e8c89459b6396ec5dd5b9e92809c5e42856c7");
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.bodyOutputStream.write(sessionMessage_withKey,
                                         sessionMessage_withKey.length);
-
       } else if (jsonBody.email == "You@example.com") {
         // Error trying to sign in with a wrong capitalization
         response.setStatusLine(request.httpVersion, 400, "Bad request");
         response.bodyOutputStream.write(errorMessage_wrongCap,
                                         errorMessage_wrongCap.length);
-
       } else {
         // Error trying to sign in to nonexistent account
         response.setStatusLine(request.httpVersion, 400, "Bad request");
         response.bodyOutputStream.write(errorMessage_notExistent,
                                         errorMessage_notExistent.length);
-
       }
     },
   });
@@ -354,7 +350,6 @@ add_task(function* test_signOut() {
       // Error trying to sign out of nonexistent account
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-
     },
   });
 
@@ -393,7 +388,6 @@ add_task(function* test_recoveryEmailStatus() {
       // Second call gets an error trying to query a nonexistent account
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-
     },
   });
 
@@ -422,7 +416,6 @@ add_task(function* test_recoveryEmailStatusWithReason() {
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(emailStatus, emailStatus.length);
-
     },
   });
 
@@ -452,7 +445,6 @@ add_task(function* test_resendVerificationEmail() {
       // Second call gets an error trying to query a nonexistent account
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-
     },
   });
 
@@ -575,7 +567,6 @@ add_task(function* test_signCertificate() {
       // Second attempt, trigger error
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-
     },
   });
 
