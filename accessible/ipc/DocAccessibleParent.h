@@ -87,12 +87,9 @@ public:
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
-    if (mShutdown) {
-      return;
-    }
-
     MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
-    Destroy();
+    if (!mShutdown)
+      Destroy();
   }
 
   /*
@@ -180,10 +177,8 @@ private:
   uint32_t AddSubtree(ProxyAccessible* aParent,
                       const nsTArray<AccessibleData>& aNewTree, uint32_t aIdx,
                       uint32_t aIdxInParent);
-  xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
   MOZ_MUST_USE bool CheckDocTree() const;
-  MOZ_MUST_USE bool CheckDocTreeInternal() const;
-  const DocAccessibleParent* CheckTopDoc() const;
+  xpcAccessibleGeneric* GetXPCAccessible(ProxyAccessible* aProxy);
 
   nsTArray<DocAccessibleParent*> mChildDocs;
   DocAccessibleParent* mParentDoc;
