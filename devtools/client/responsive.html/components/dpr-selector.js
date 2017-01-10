@@ -34,9 +34,9 @@ module.exports = createClass({
 
   propTypes: {
     devices: PropTypes.shape(Types.devices).isRequired,
-    displayPixelRatio: PropTypes.number.isRequired,
+    displayPixelRatio: Types.pixelRatio.value.isRequired,
     selectedDevice: PropTypes.string.isRequired,
-    selectedPixelRatio: PropTypes.number.isRequired,
+    selectedPixelRatio: PropTypes.shape(Types.pixelRatio).isRequired,
     onChangeViewportPixelRatio: PropTypes.func.isRequired,
   },
 
@@ -93,7 +93,7 @@ module.exports = createClass({
     } else {
       title = getStr("responsive.devicePixelRatio");
 
-      if (selectedPixelRatio) {
+      if (selectedPixelRatio.value) {
         selectorClass += " selected";
       }
     }
@@ -117,7 +117,7 @@ module.exports = createClass({
       "DPR",
       dom.select(
         {
-          value: selectedPixelRatio || displayPixelRatio,
+          value: selectedPixelRatio.value || displayPixelRatio,
           disabled: isDisabled,
           onChange: this.onSelectChange,
           onFocus: this.onFocusChange,
