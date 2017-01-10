@@ -45,7 +45,7 @@ GeckoStart(JNIEnv* env, char** argv, int argc, const StaticXREAppData& aAppData)
     XREAppData appData;
     appData = aAppData;
 
-    int result = XRE_main(argc, argv, appData, 0);
+    int result = XRE_main(argc, argv, appData);
 
     if (result)
         LOG("XRE_main returned %d", result);

@@ -91,6 +91,6 @@ int main(int argc, char * argv[]) {
   mozilla::SetStrongPtr(appData.directory, static_cast<nsIFile*>(appSubdir.get()));
   greDir.forget(&appData.xreDirectory);
 
-  int result = XRE_main(argc, argv, &appData, 0);
+  int result = XRE_main(argc, argv, &appData);
   return result;
 }
