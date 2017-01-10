@@ -39,11 +39,11 @@ class RendererOGL
 public:
 
   /// Render thread only.
-  static RendererOGL* Create(already_AddRefed<RenderThread> aThread,
-                             already_AddRefed<widget::CompositorWidget> aWidget,
-                             WrRenderer* aWrRenderer,
-                             gfx::WindowId aWindowId,
-                             WebRenderBridgeParent* aBridge);
+  static UniquePtr<RendererOGL> Create(already_AddRefed<RenderThread> aThread,
+                                       already_AddRefed<widget::CompositorWidget> aWidget,
+                                       WrRenderer* aWrRenderer,
+                                       gfx::WindowId aWindowId,
+                                       WebRenderBridgeParent* aBridge);
 
   /// Render thread only.
   void Update();
