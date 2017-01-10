@@ -127,15 +127,15 @@ struct IsHeapConstructibleType<nsXBLMaybeCompiled<T>>
   static constexpr bool value = true;
 };
 
-template <class UncompiledT>
-class HeapBase<nsXBLMaybeCompiled<UncompiledT>>
+template <class UncompiledT, class Wrapper>
+class HeapBase<nsXBLMaybeCompiled<UncompiledT>, Wrapper>
 {
-  const JS::Heap<nsXBLMaybeCompiled<UncompiledT>>& wrapper() const {
-    return *static_cast<const JS::Heap<nsXBLMaybeCompiled<UncompiledT>>*>(this);
+  const Wrapper& wrapper() const {
+    return *static_cast<const Wrapper*>(this);
   }
 
-  JS::Heap<nsXBLMaybeCompiled<UncompiledT>>& wrapper() {
-    return *static_cast<JS::Heap<nsXBLMaybeCompiled<UncompiledT>>*>(this);
+  Wrapper& wrapper() {
+    return *static_cast<Wrapper*>(this);
   }
 
   const nsXBLMaybeCompiled<UncompiledT>* extract() const {

@@ -9,11 +9,6 @@
 
 #include "js/HeapAPI.h"
 
-namespace js {
-template <typename T>
-class WeakCacheBase {};
-} // namespace js
-
 namespace JS {
 template <typename T> class WeakCache;
 
@@ -25,7 +20,7 @@ RegisterWeakCache(JS::Zone* zone, JS::WeakCache<void*>* cachep);
 // A WeakCache stores the given Sweepable container and links itself into a
 // list of such caches that are swept during each GC.
 template <typename T>
-class WeakCache : public js::WeakCacheBase<T>,
+class WeakCache : public js::MutableWrappedPtrOperations<T, WeakCache<T>>,
                   private mozilla::LinkedListElement<WeakCache<T>>
 {
     friend class mozilla::LinkedListElement<WeakCache<T>>;
