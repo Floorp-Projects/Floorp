@@ -115,6 +115,9 @@
             }
             case "date": {
               const { year, month, day } = detail.value;
+              const { firstDayOfWeek, weekends } =
+                this.getCalendarInfo(locale);
+
               this.postMessageToPicker({
                 name: "PickerInit",
                 detail: {
@@ -122,6 +125,8 @@
                   // Month value from input box starts from 1 instead of 0
                   month: month == undefined ? undefined : month - 1,
                   day,
+                  firstDayOfWeek,
+                  weekends,
                   locale
                 }
               });
@@ -181,6 +186,41 @@
               }));
               break;
             }
+          }
+        ]]></body>
+      </method>
+      <method name="getCalendarInfo">
+        <parameter name="locale"/>
+        <body><![CDATA[
+          const l10n = {};
+          const mozIntl = Components.classes["@mozilla.org/mozintl;1"]
+                            .getService(Components.interfaces.mozIMozIntl);
+          mozIntl.addGetCalendarInfo(l10n);
+          const calendarInfo = l10n.getCalendarInfo(locale);
+
+          // Day of week from calendarInfo starts from 1 as Sunday to 7 as Saturday,
+          // so they need to be mapped to JavaScript convention with 0 as Sunday
+          // and 6 as Saturday
+          let firstDayOfWeek = calendarInfo.firstDayOfWeek - 1,
+              weekendStart = calendarInfo.weekendStart - 1,
+              weekendEnd = calendarInfo.weekendEnd - 1;
+
+          let weekends = [];
+
+          // Make sure weekendEnd is greater than weekendStart
+          if (weekendEnd < weekendStart) {
+            weekendEnd += 7;
+          }
+
+          // We get the weekends by incrementing weekendStart up to weekendEnd.
+          // If the start and end is the same day, then weekends only has one day.
+          for (let day = weekendStart; day <= weekendEnd; day++) {
+            weekends.push(day % 7);
+          }
+
+          return {
+            firstDayOfWeek,
+            weekends
           }
         ]]></body>
       </method>
