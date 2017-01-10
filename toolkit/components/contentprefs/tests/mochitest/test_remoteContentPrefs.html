@@ -5,6 +5,7 @@
   <script type="application/javascript"
           src="/tests/SimpleTest/SimpleTest.js">
   </script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -20,42 +21,55 @@
     function childFrameScript(isFramePrivate) {
       "use strict";
 
-      function Tester(message) {
-        this.message = message;
+      function Defer() {
+        let d = {};
+        d.promise = new Promise((resolve, reject) => {
+          d.resolve = resolve;
+          d.reject = reject;
+        });
+
+        return d;
+      }
+
+      function Tester(mm) {
+        this.mm = mm;
       }
 
       Tester.prototype.is =
         function(a, b, note) {
-          this.message.target.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [a === b, note + " (" + a + ", " + b + ")"] });
+          this.mm.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [a === b, note + " (" + a + ", " + b + ")"] });
         };
       Tester.prototype.ok =
         function(b, note) {
-          this.message.target.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [b != false, note] });
+          this.mm.sendAsyncMessage("testRemoteContentPrefs:ok", { test: [b != false, note] });
         };
       Tester.prototype.info =
         function(note) {
-          this.message.target.sendAsyncMessage("testRemoteContentPrefs:info", { note });
+          this.mm.sendAsyncMessage("testRemoteContentPrefs:info", { note });
         };
 
-      var cps = Components.classes["@mozilla.org/content-pref/service;1"]
-                          .getService(Components.interfaces.nsIContentPrefService2);
+      var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+      Cu.import("resource://gre/modules/Task.jsm");
+      var cps = Cc["@mozilla.org/content-pref/service;1"]
+                  .getService(Ci.nsIContentPrefService2);
 
-      let test = null;
-      function* test1(message) {
-        let tester = new Tester(message);
+      function* test1(mm) {
+        let tester = new Tester(mm);
 
         tester.ok(cps !== null, "got the content pref service");
 
+        let setPref = Defer();
         cps.setGlobal("testing", 42, null, {
           handleCompletion: function(reason) {
             tester.is(reason, 0, "set a pref?");
-            test.next();
+            setPref.resolve();
           }
         });
 
-        yield;
+        yield setPref.promise;
 
         let numResults = 0;
+        let gotGlobal = Defer();
         cps.getGlobal("testing", null, {
           handleResult: function(pref) {
             numResults++;
@@ -66,148 +80,158 @@
           handleCompletion: function(reason) {
             tester.is(reason, 0, "get a pref?");
             tester.is(numResults, 1, "got the right number of prefs");
-            tester.is(test.next().done, true, "done with test1");
-            message.target.sendAsyncMessage("testRemoteContentPrefs:test1Finished",
-                                            {});
+            gotGlobal.resolve();
           }
         });
 
-        yield;
+        yield gotGlobal.promise;
       }
 
-      function* test2(message) {
-        let tester = new Tester(message);
+      function* test2(mm) {
+        let tester = new Tester(mm);
 
         let observer;
         let removed = false;
+        let gotSet = Defer();
+        let gotRemoved = Defer();
         cps.addObserverForName("testName", observer = {
           onContentPrefSet: function(group, name, value, isPrivate) {
             tester.info("received prefSet notification");
             if (removed) {
-              message.target.sendAsyncMessage("testRemoteContentPrefs:fail",
-                                              { reason: "unexpected notification" });
+              mm.sendAsyncMessage("testRemoteContentPrefs:fail",
+                                  { reason: "unexpected notification" });
             }
             tester.is(group, null, "group should be null");
             tester.is(name, "testName", "should only see testName");
             tester.is(value, 42, "value should be correct");
             tester.is(isPrivate, isFramePrivate, "privacy should match");
 
-            message.target.sendAsyncMessage("testRemoteContentPrefs:test2poke2", {})
+            gotSet.resolve();
           },
 
           onContentPrefRemoved: function(group, name, isPrivate) {
             tester.info("received prefRemoved notification");
             tester.is(group, null, "group should be null");
-            tester.is(name, "testName");
+            tester.is(name, "testName", "name should match");
             tester.is(isPrivate, isFramePrivate, "privacy should match");
-            tester.is(test.next().done, true, "should be done with test2");
 
             cps.removeObserverForName("testName", observer);
             removed = true;
 
-            message.target.sendAsyncMessage("testRemoteContentPrefs:test2Finished",
-                                            {});
+            gotRemoved.resolve();
           }
         });
 
-        message.target.sendAsyncMessage("testRemoteContentPrefs:test2poke", {});
-        yield;
+        mm.sendAsyncMessage("testRemoteContentPrefs:test2poke", {});
+        yield gotSet.promise;
+
+        mm.sendAsyncMessage("testRemoteContentPrefs:test2poke2", {});
+        yield gotRemoved.promise;
       }
 
-      function* test3(message) {
-        let tester = new Tester(message);
+      function* test3(mm) {
+        let tester = new Tester(mm);
 
+        let setGlobalDone = Defer();
         cps.setGlobal("testName", 42, null, {
           handleCompletion: function(reason) {
             tester.is(reason, 0, "set a pref");
             cps.set("http://mochi.test", "testpref", "str", null, {
               handleCompletion: function(reason) {
                 tester.is(reason, 0, "set a pref");
-                test.next();
+                setGlobalDone.resolve();
               }
             });
           }
         });
 
-        yield;
+        yield setGlobalDone.promise;
 
+        let removeDone = Defer();
         cps.removeByDomain("http://mochi.test", null, {
           handleCompletion: function(reason) {
             tester.is(reason, 0, "remove succeeded");
             cps.getByDomainAndName("http://mochi.test", "testpref", null, {
               handleResult: function() {
-                message.target.sendAsyncMessage("testRemoteContentPrefs:fail",
-                                                { reason: "got removed pref in test3" });
+                mm.sendAsyncMessage("testRemoteContentPrefs:fail",
+                                    { reason: "got removed pref in test3" });
               },
               handleCompletion: function() {
-                test.next();
+                removeDone.resolve();
+              },
+              handleError: function(rv) {
+                mm.sendAsyncMessage("testRemoteContentPrefs:fail",
+                                    { reason: `got a pref error ${rv}` });
               }
             });
           }
         });
 
-        yield;
-
-        message.target.sendAsyncMessage("testRemoteContentPrefs:test3Finished",
-                                        {});
+        yield removeDone.promise;
       }
 
-      function* test4(message) {
-        let tester = new Tester(message);
+      function* test4(mm) {
+        let tester = new Tester(mm);
 
+        let observed = Defer();
         let prefObserver = {
           onContentPrefSet: function(group, name, value, isPrivate) {
-            test.next({ group: group, name: name, value: value, isPrivate: isPrivate });
+            observed.resolve({ group, name, value, isPrivate });
           },
           onContentPrefRemoved: function(group, name, isPrivate) {
-            test.next({ group: group, name: name, isPrivate: isPrivate });
+            observed.reject("got unexpected notification");
           }
         };
-
-        addMessageListener("testRemoteContentPrefs:prefResults", (msg) => {
-          test.next(msg.data.results);
-        });
 
         cps.addObserverForName("test", prefObserver);
 
         cps.set("http://mochi.test", "test", 42, { usePrivateBrowsing: true });
-        let event = yield;
-        tester.is(event.name, "test");
-        tester.is(event.isPrivate, true);
+        let event = yield observed.promise;
+        tester.is(event.name, "test", "got the right event");
+        tester.is(event.isPrivate, true, "the event was for an isPrivate pref");
 
-        message.target.sendAsyncMessage("testRemoteContentPrefs:getPref",
-                                        { group: "http://mochi.test", name: "test" });
+        mm.sendAsyncMessage("testRemoteContentPrefs:getPref",
+                            { group: "http://mochi.test", name: "test" });
 
-        let results = yield;
+        let results = yield new Promise(resolve => {
+          addMessageListener("testRemoteContentPrefs:prefResults",
+                             (msg) => { resolve(msg.data.results); });
+        });
         tester.is(results.length, 0, "should not have seen the pb pref");
-
-        message.target.sendAsyncMessage("testRemoteContentPrefs:test4Finished",
-                                        {});
       }
 
-      addMessageListener("testRemoteContentPrefs:test1", function(message) {
-        test = test1(message);
-        test.next();
-      });
-      addMessageListener("testRemoteContentPrefs:test2", function(message) {
-        test = test2(message);
-        test.next();
-      });
-      addMessageListener("testRemoteContentPrefs:test3", function(message) {
-        test = test3(message);
-        test.next();
-      });
-      addMessageListener("testRemoteContentPrefs:test4", function(message) {
-        test = test4(message);
-        test.next();
-      });
+      var tests = { test1, test2, test3, test4 };
+      function testHandler(mm, testName) {
+        let test = tests[testName];
+        Task.spawn(test(mm)).then(() => {
+          mm.sendAsyncMessage(`testRemoteContentPrefs:${testName}Finished`, {});
+        }).catch((e) => {
+          mm.sendAsyncMessage("testRemoteContentPrefs:fail", { reason: e });
+        });
+      }
+
+      for (let test of Object.getOwnPropertyNames(tests)) {
+        addMessageListener(`testRemoteContentPrefs:${test}`, function(message) {
+          let mm = message.target.QueryInterface(Ci.nsIMessageSender);
+          testHandler(mm, test);
+        });
+      }
     }
 
-    let test;
-    function* testStructure(mm, isPrivate, callback) {
+    function Defer() {
+      var d = {};
+      d.promise = new Promise((resolve, reject) => {
+        d.resolve = resolve;
+        d.reject = reject;
+      });
+      return d;
+    }
+
+    function* testStructure(mm, isPrivate) {
+      var curTest;
       function testDone(msg) {
         info(`in testDone ${msg.name}`);
-        test.next(msg.data);
+        curTest.resolve();
       }
 
       mm.addMessageListener("testRemoteContentPrefs:test1Finished", testDone);
@@ -217,6 +241,7 @@
 
       mm.addMessageListener("testRemoteContentPrefs:fail", function(msg) {
         ok(false, msg.data.reason);
+        SimpleTest.finish();
       });
 
       mm.addMessageListener("testRemoteContentPrefs:ok", (msg) => {
@@ -227,12 +252,13 @@
         info(msg.data.note);
       });
 
+      curTest = Defer();
       mm.sendAsyncMessage("testRemoteContentPrefs:test1", {});
-      yield;
+      yield curTest.promise;
 
+      curTest = Defer();
       var cps = SpecialPowers.Cc["@mozilla.org/content-pref/service;1"]
                              .getService(SpecialPowers.Ci.nsIContentPrefService2);
-      mm.sendAsyncMessage("testRemoteContentPrefs:test2", {});
       mm.addMessageListener("testRemoteContentPrefs:test2poke", function() {
         info(`received test2poke isPrivate: ${isPrivate}`);
         cps.setGlobal("testName", 42, {usePrivateBrowsing: isPrivate});
@@ -241,32 +267,39 @@
         info(`received test2poke2 isPrivate: ${isPrivate}`);
         cps.removeGlobal("testName", {usePrivateBrowsing: isPrivate});
       });
-      yield;
+      mm.sendAsyncMessage("testRemoteContentPrefs:test2", {});
+      yield curTest.promise;
 
+      curTest = Defer();
       mm.sendAsyncMessage("testRemoteContentPrefs:test3", {});
-      yield;
+      yield curTest.promise;
 
+      curTest = Defer();
       mm.addMessageListener("testRemoteContentPrefs:getPref", function(msg) {
         let results = [];
         cps.getByDomainAndName(msg.data.group, msg.data.name, null, {
           handleResult: function(pref) {
+            info("received handleResult");
             results.push(pref);
           },
           handleCompletion: function(reason) {
             mm.sendAsyncMessage("testRemoteContentPrefs:prefResults",
-                                { results: results });
+                                { results });
+          },
+          handleError: function(rv) {
+            ok(false, `failed to get pref ${rv}`);
+            curTest.reject("got unexpected error");
           }
         });
       });
 
       mm.sendAsyncMessage("testRemoteContentPrefs:test4", {});
-      yield;
+      yield curTest.promise;
 
       document.getElementById('iframe').remove();
-      setTimeout(callback, 0);
     }
 
-    function runTest(isPrivate, callback) {
+    function runTest(isPrivate) {
       info("testing with isPrivate=" + isPrivate);
       let iframe = document.createElement("iframe");
       SpecialPowers.wrap(iframe).mozbrowser = true;
@@ -276,26 +309,26 @@
       iframe.id = "iframe";
       iframe.src = childFrameURL;
 
+      let deferred = Defer();
       iframe.addEventListener("mozbrowserloadend", function() {
         info("Got iframe load event.");
         let mm = SpecialPowers.getBrowserFrameMessageManager(iframe);
         mm.loadFrameScript("data:,(" + childFrameScript.toString() + ")(" + isPrivate + ");",
                            false);
 
-        test = testStructure(mm, isPrivate, callback);
-        test.next();
+        // Chain testStructure to runTests's promise.
+        spawn_task(testStructure(mm, isPrivate)).then(deferred.resolve)
+                                                .catch((e) => { info(`caught failing test ${e}`); });
       });
 
       document.body.appendChild(iframe);
+      return deferred.promise;
     }
 
     function runTests() {
       info("Browser prefs set.");
-      runTest(false, function() {
-        runTest(true, function() {
-          SimpleTest.finish();
-        });
-      });
+      add_task(() => { return runTest(false); });
+      add_task(() => { return runTest(true); });
     }
 
     addEventListener("load", function() {
