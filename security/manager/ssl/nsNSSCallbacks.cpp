@@ -61,7 +61,7 @@ public:
 
   NS_IMETHOD Run();
 
-  nsNSSHttpRequestSession *mRequestSession;
+  RefPtr<nsNSSHttpRequestSession> mRequestSession;
   
   RefPtr<nsHTTPListener> mListener;
   bool mResponsibleForDoneSignal;
@@ -77,8 +77,6 @@ nsHTTPDownloadEvent::~nsHTTPDownloadEvent()
 {
   if (mResponsibleForDoneSignal && mListener)
     mListener->send_done_signal();
-
-  mRequestSession->Release();
 }
 
 NS_IMETHODIMP
@@ -411,7 +409,6 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(bool &retryable_error,
   }
 
   event->mListener = mListener;
-  this->AddRef();
   event->mRequestSession = this;
 
   nsresult rv = NS_DispatchToMainThread(event);
