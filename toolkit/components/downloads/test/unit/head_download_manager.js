@@ -23,5 +23,5 @@ function createURI(aObj) {
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
   return (aObj instanceof Ci.nsIFile) ? ios.newFileURI(aObj) :
-                                        ios.newURI(aObj, null, null);
+                                        ios.newURI(aObj);
 }

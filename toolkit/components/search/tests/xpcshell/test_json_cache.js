@@ -26,7 +26,7 @@ function getDir(aKey, aIFace) {
 }
 
 function makeURI(uri) {
-  return Services.io.newURI(uri, null, null);
+  return Services.io.newURI(uri);
 }
 
 var cacheTemplate, appPluginsPath, profPlugins;

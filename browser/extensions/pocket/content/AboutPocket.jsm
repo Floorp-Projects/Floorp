@@ -36,7 +36,7 @@ AboutPage.prototype = {
   },
 
   newChannel(aURI, aLoadInfo) {
-    let newURI = Services.io.newURI(this.chromeURL, null, null);
+    let newURI = Services.io.newURI(this.chromeURL);
     let channel = Services.io.newChannelFromURIWithLoadInfo(newURI,
                                                             aLoadInfo);
     channel.originalURI = aURI;

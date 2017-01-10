@@ -2,7 +2,7 @@ function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
 
-  var newURI = ios.newURI("http://foo.com", null, null);
+  var newURI = ios.newURI("http://foo.com");
 
   var success = false;
   try {

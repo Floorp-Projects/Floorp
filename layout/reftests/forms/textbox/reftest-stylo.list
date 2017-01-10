@@ -1,28 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # access-key tests are no use on OS X because access keys are not indicated visually
 # no real XUL theme on Android so we just skip
-skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-1.xul accesskey-1.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-2.xul accesskey-2.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(cocoaWidget||Android) == accesskey-1.xul accesskey-1.xul
+skip-if(cocoaWidget||Android) == accesskey-2.xul accesskey-2.xul
 # accesskey-3 fails because of defects in XUL bidi support
-skip == accesskey-3.xul accesskey-3.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-3.xul accesskey-3.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-4.xul accesskey-4.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(cocoaWidget||((B2G&&browserIsRemote)||Mulet)||Android) == accesskey-4.xul accesskey-4.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet||Android) == align-baseline-1.xul align-baseline-1.xul
-# test for bug 494901
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet||Android) == setsize.xul setsize.xul
-# bug 974780
-# Initial mulet triage: parity with B2G/B2G Desktop
+# fails-if(!cocoaWidget) skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3.xul
+# skip-if(cocoaWidget||Android) == accesskey-3.xul accesskey-3.xul
+skip-if(cocoaWidget||Android) == accesskey-4.xul accesskey-4.xul
+skip-if(cocoaWidget||Android) == accesskey-4.xul accesskey-4.xul
+skip-if(Android) == align-baseline-1.xul align-baseline-1.xul
+skip-if(Android) == setsize.xul setsize.xul

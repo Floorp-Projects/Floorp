@@ -21,7 +21,7 @@ function visitURI(uri, timestamp) {
 }
 
 var putRecord = Task.async(function* ({scope, perm, quota, lastPush, lastVisit}) {
-  let uri = Services.io.newURI(scope, null, null);
+  let uri = Services.io.newURI(scope);
 
   Services.perms.add(uri, 'desktop-notification',
     Ci.nsIPermissionManager[perm]);

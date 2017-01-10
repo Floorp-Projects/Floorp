@@ -3,8 +3,7 @@ const SPACEY_COOKIE = "Spacey Cookie=Major Tom";
 
 function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var cookieURI = ios.newURI("http://mozilla.org/test_cookie_blacklist.js",
-                             null, null);
+  var cookieURI = ios.newURI("http://mozilla.org/test_cookie_blacklist.js");
 
   var cookieService = Cc["@mozilla.org/cookieService;1"]
                         .getService(Ci.nsICookieService);

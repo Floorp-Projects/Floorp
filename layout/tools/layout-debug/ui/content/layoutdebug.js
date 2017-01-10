@@ -365,7 +365,7 @@ RTestURLList.prototype = {
       
         var item = dirURL.resolve(str);
         if (item.match(/\/rtest.lst$/)) {
-          var itemurl = ios.newURI(item, null, null);
+          var itemurl = ios.newURI(item);
           itemurl = itemurl.QueryInterface(nsIFileURL);
           this.readFileList(itemurl.file);
         } else {

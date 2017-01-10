@@ -56,7 +56,7 @@ add_task(function* skip_writing_cache_without_engines() {
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("search-plugins",
-                          Services.io.newURI("about:blank", null, null));
+                          Services.io.newURI("about:blank"));
 
   // Let the async-reInit happen.
   yield reInitPromise;

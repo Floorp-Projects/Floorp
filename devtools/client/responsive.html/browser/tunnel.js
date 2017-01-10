@@ -238,7 +238,7 @@ function tunnelToInnerBrowser(outer, inner) {
       // outside the main focus of RDM.
       let { detail } = event;
       event.preventDefault();
-      let uri = Services.io.newURI(detail.url, null, null);
+      let uri = Services.io.newURI(detail.url);
       // This API is used mainly because it's near the path used for <a target/> with
       // regular browser tabs (which calls `openURIInFrame`).  The more elaborate APIs
       // that support openers, window features, etc. didn't seem callable from JS and / or

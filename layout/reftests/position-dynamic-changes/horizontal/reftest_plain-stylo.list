@@ -18,8 +18,7 @@
 == toauto-leftA-widthN-rightN.html toauto-leftA-widthN-rightN.html
 == toauto-leftA-widthA-rightN.html toauto-leftA-widthA-rightN.html
 == fromauto-leftN-widthA-rightA.html fromauto-leftN-widthA-rightA.html
-random-if(cocoaWidget) == fromauto-leftN-widthA-rightA-2.html fromauto-leftN-widthA-rightA-2.html
-# Bug 688545
+== fromauto-leftN-widthA-rightA-2.html fromauto-leftN-widthA-rightA-2.html
 == fromauto-leftN-widthA-rightN.html fromauto-leftN-widthA-rightN.html
 == fromauto-leftN-widthA-rightN-2.html fromauto-leftN-widthA-rightN-2.html
 == fromauto-leftA-widthN-rightA.html fromauto-leftA-widthN-rightA.html

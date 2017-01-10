@@ -1,40 +1,24 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 
 # XBL tests
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-basic-01.svg xbl-basic-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-basic-02.svg xbl-basic-02.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == xbl-basic-03.svg xbl-basic-03.svg
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == xbl-grad-ref--grad-in-binding-01.svg xbl-grad-ref--grad-in-binding-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-grad-ref--grad-in-binding-02.svg xbl-grad-ref--grad-in-binding-02.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-grad-ref--grad-in-bound-01.svg xbl-grad-ref--grad-in-bound-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
+== xbl-basic-01.svg xbl-basic-01.svg
+== xbl-basic-02.svg xbl-basic-02.svg
+== xbl-basic-03.svg xbl-basic-03.svg
+== xbl-grad-ref--grad-in-binding-01.svg xbl-grad-ref--grad-in-binding-01.svg
+== xbl-grad-ref--grad-in-binding-02.svg xbl-grad-ref--grad-in-binding-02.svg
+== xbl-grad-ref--grad-in-bound-01.svg xbl-grad-ref--grad-in-bound-01.svg
 == xbl-grad-ref--grad-in-bound-02.svg xbl-grad-ref--grad-in-bound-02.svg
 == xbl-grad-ref--grad-in-resources-01.svg xbl-grad-ref--grad-in-resources-01.svg
 == xbl-grad-ref--grad-in-resources-02.svg xbl-grad-ref--grad-in-resources-02.svg
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-grad-ref--grad-in-binding-03.svg xbl-grad-ref--grad-in-binding-03.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-grad-ref--grad-in-bound-03.svg xbl-grad-ref--grad-in-bound-03.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-grad-ref--grad-in-binding-04.svg xbl-grad-ref--grad-in-binding-04.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == xbl-grad-ref--grad-in-bound-04.svg xbl-grad-ref--grad-in-bound-04.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
+== xbl-grad-ref--grad-in-binding-03.svg xbl-grad-ref--grad-in-binding-03.svg
+== xbl-grad-ref--grad-in-bound-03.svg xbl-grad-ref--grad-in-bound-03.svg
+== xbl-grad-ref--grad-in-binding-04.svg xbl-grad-ref--grad-in-binding-04.svg
+== xbl-grad-ref--grad-in-bound-04.svg xbl-grad-ref--grad-in-bound-04.svg
 
 # Tests for zooming with the full page zoom UI
-skip-if(B2G||Mulet) random-if(d2d) == feImage-zoom-01a.svg feImage-zoom-01a.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(d2d) == feImage-zoom-01b.svg feImage-zoom-01b.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == foreignObject-zoom-01.svg foreignObject-zoom-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == zoom-invalidation-01.svg zoom-invalidation-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == replaced-element-zoom-01.html replaced-element-zoom-01.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+random-if(d2d) == feImage-zoom-01a.svg feImage-zoom-01a.svg
+random-if(d2d) == feImage-zoom-01b.svg feImage-zoom-01b.svg
+== foreignObject-zoom-01.svg foreignObject-zoom-01.svg
+== zoom-invalidation-01.svg zoom-invalidation-01.svg
+== replaced-element-zoom-01.html replaced-element-zoom-01.html
 fuzzy-if(winWidget,12,7) == zoomed-svg-with-viewBox-01.svg zoomed-svg-with-viewBox-01.svg

@@ -287,7 +287,7 @@ add_task(function* checkAdvancedDetailsForHSTS() {
     };
   });
 
-  const badStsUri = Services.io.newURI(BAD_STS_CERT, null, null);
+  const badStsUri = Services.io.newURI(BAD_STS_CERT);
   is(message.ecTextContent, "SSL_ERROR_BAD_CERT_DOMAIN",
      "Correct error message found");
   is(message.ecTagName, "a", "Error message is a link");

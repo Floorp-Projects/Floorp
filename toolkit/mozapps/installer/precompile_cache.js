@@ -78,8 +78,8 @@ function load_modules_under(spec, uri) {
 }
 
 function resolveResource(spec) {
-  var uri = Services.io.newURI(spec, null, null);
-  return Services.io.newURI(rph.resolveURI(uri), null, null);
+  var uri = Services.io.newURI(spec);
+  return Services.io.newURI(rph.resolveURI(uri));
 }
 
 function precompile_startupcache(uri) {

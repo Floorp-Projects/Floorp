@@ -7,7 +7,7 @@ function run_test() {
   let pm = Services.perms;
 
   function mkPrin(uri, appId, inIsolatedMozBrowser) {
-    return ssm.createCodebasePrincipal(Services.io.newURI(uri, null, null),
+    return ssm.createCodebasePrincipal(Services.io.newURI(uri),
                                        {appId: appId, inIsolatedMozBrowser: inIsolatedMozBrowser});
   }
 

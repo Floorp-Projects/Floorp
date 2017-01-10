@@ -5,7 +5,7 @@
  */
 
 const TEST_PAGE = "http://example.net";
-const uri = Services.io.newURI(TEST_PAGE, null, null);
+const uri = Services.io.newURI(TEST_PAGE);
 
 function disableCookies() {
   Services.cookies.removeAll();

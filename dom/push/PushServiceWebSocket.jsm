@@ -622,7 +622,7 @@ this.PushServiceWebSocket = {
 
     if (reply.status == 200) {
       try {
-        Services.io.newURI(reply.pushEndpoint, null, null);
+        Services.io.newURI(reply.pushEndpoint);
       }
       catch (e) {
         tmp.reject(new Error("Invalid push endpoint: " + reply.pushEndpoint));
