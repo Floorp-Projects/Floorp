@@ -1,6 +1,6 @@
 "use strict";
 
-const ORIGIN_URI = Services.io.newURI("http://mochi.test:8888", null, null);
+const ORIGIN_URI = Services.io.newURI("http://mochi.test:8888");
 const PERMISSION_NAME = "desktop-notification";
 const PROMPT_ALLOW_BUTTON = -1;
 const PROMPT_BLOCK_BUTTON = 0;

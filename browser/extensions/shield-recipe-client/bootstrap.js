@@ -19,7 +19,7 @@ const REASONS = {
 };
 
 const PREF_BRANCH = "extensions.shield-recipe-client.";
-const PREFS = {
+const DEFAULT_PREFS = {
   api_url: "https://self-repair.mozilla.org/api/v1",
   dev_mode: false,
   enabled: true,
@@ -35,7 +35,7 @@ this.install = function() {
   // next startup to run, unless the dev_mode preference is set.
   if (Preferences.get(PREF_SELF_SUPPORT_ENABLED, true)) {
     Preferences.set(PREF_SELF_SUPPORT_ENABLED, false);
-    if (!Services.prefs.getBoolPref(PREF_DEV_MODE, false)) {
+    if (!Preferences.get(PREF_DEV_MODE, false)) {
       shouldRun = false;
     }
   }
@@ -82,21 +82,11 @@ this.uninstall = function() {
 };
 
 function setDefaultPrefs() {
-  const branch = Services.prefs.getDefaultBranch(PREF_BRANCH);
-  for (const [key, val] of Object.entries(PREFS)) {
+  for (const [key, val] of Object.entries(DEFAULT_PREFS)) {
+    const fullKey = PREF_BRANCH + key;
     // If someone beat us to setting a default, don't overwrite it.
-    if (branch.getPrefType(key) !== branch.PREF_INVALID)
-      continue;
-    switch (typeof val) {
-      case "boolean":
-        branch.setBoolPref(key, val);
-        break;
-      case "number":
-        branch.setIntPref(key, val);
-        break;
-      case "string":
-        branch.setCharPref(key, val);
-        break;
+    if (!Preferences.isSet(fullKey)) {
+      Preferences.set(fullKey, val);
     }
   }
 }

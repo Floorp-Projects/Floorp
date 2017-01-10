@@ -24,6 +24,7 @@ static const int32_t kNameSpaceID_None = 0;
 #define kNameSpaceID_XUL      9
 #define kNameSpaceID_SVG      10
 #define kNameSpaceID_disabled_MathML      11
-#define kNameSpaceID_LastBuiltin          11 // last 'built-in' namespace
+#define kNameSpaceID_disabled_SVG         12
+#define kNameSpaceID_LastBuiltin          12 // last 'built-in' namespace
 
 #endif // mozilla_dom_NameSpaceConstants_h__

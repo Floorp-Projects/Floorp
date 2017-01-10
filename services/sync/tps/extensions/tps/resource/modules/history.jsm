@@ -105,7 +105,7 @@ var HistoryEntry = {
     Logger.AssertTrue("visits" in item && "uri" in item,
       "History entry in test file must have both 'visits' " +
       "and 'uri' properties");
-    let uri = Services.io.newURI(item.uri, null, null);
+    let uri = Services.io.newURI(item.uri);
     let place = {
       uri: uri,
       visits: []
@@ -182,7 +182,7 @@ var HistoryEntry = {
    */
   Delete: function(item, usSinceEpoch) {
     if ("uri" in item) {
-      let uri = Services.io.newURI(item.uri, null, null);
+      let uri = Services.io.newURI(item.uri);
       PlacesUtils.history.removePage(uri);
     }
     else if ("host" in item) {

@@ -16,8 +16,7 @@ const { nsIAboutModule } = Ci;
 function AboutURL() {}
 
 AboutURL.prototype = {
-  uri: Services.io.newURI("chrome://devtools/content/framework/toolbox.xul",
-                          null, null),
+  uri: Services.io.newURI("chrome://devtools/content/framework/toolbox.xul"),
   classDescription: "about:devtools-toolbox",
   classID: components.ID("11342911-3135-45a8-8d71-737a2b0ad469"),
   contractID: "@mozilla.org/network/protocol/about;1?what=devtools-toolbox",

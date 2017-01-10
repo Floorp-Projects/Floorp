@@ -33,7 +33,6 @@
 #include "nsIScriptElement.h"
 #include "nsStubMutationObserver.h"
 #include "nsAttrName.h"
-#include "nsParserConstants.h"
 #include "nsComputedDOMStyle.h"
 #include "mozilla/dom/Element.h"
 

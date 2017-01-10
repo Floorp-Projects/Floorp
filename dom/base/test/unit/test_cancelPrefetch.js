@@ -34,7 +34,7 @@ function run_test() {
 
 add_test(function test_cancel1() {
 
-  var uri = ios.newURI("http://localhost/1", null, null);
+  var uri = ios.newURI("http://localhost/1");
   prefetch.prefetchURI(uri, uri, node1, true);
 
   do_check_true(prefetch.hasMoreElements(), 'There is a request in the queue');
@@ -65,7 +65,7 @@ add_test(function test_cancel2() {
   // Prefetch a uri with 2 different nodes. There should be 2 request
   // in the queue and canceling one will not cancel the other.
 
-  var uri = ios.newURI("http://localhost/1", null, null);
+  var uri = ios.newURI("http://localhost/1");
   prefetch.prefetchURI(uri, uri, node1, true);
   prefetch.prefetchURI(uri, uri, node2, true);
 
@@ -85,7 +85,7 @@ add_test(function test_cancel2() {
 add_test(function test_cancel3() {
   // Request a prefetch of a uri. Trying to cancel a prefetch for the same uri
   // with a different node will fail.
-  var uri = ios.newURI("http://localhost/1", null, null);
+  var uri = ios.newURI("http://localhost/1");
   prefetch.prefetchURI(uri, uri, node1, true);
 
   do_check_true(prefetch.hasMoreElements(), 'There is a request in the queue');
@@ -110,8 +110,8 @@ add_test(function test_cancel3() {
 add_test(function test_cancel4() {
   // Request a prefetch of a uri. Trying to cancel a prefetch for a different uri
   // with the same node will fail.
-  var uri1 = ios.newURI("http://localhost/1", null, null);
-  var uri2 = ios.newURI("http://localhost/2", null, null);
+  var uri1 = ios.newURI("http://localhost/1");
+  var uri2 = ios.newURI("http://localhost/2");
   prefetch.prefetchURI(uri1, uri1, node1, true);
 
   do_check_true(prefetch.hasMoreElements(), 'There is a request in the queue');

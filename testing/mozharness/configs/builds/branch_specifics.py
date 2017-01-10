@@ -289,61 +289,8 @@ config = {
         "graph_server_branch_name": "UX",
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
-    # When build promotion goes live the mozconfig changes are probably better
-    # expressed once in files like configs/builds/releng_base_windows_32_builds.py
     'date': {
-        'update_channel': 'beta-dev',
-        'enable_release_promotion': 1,
-        'platform_overrides': {
-            'linux': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux32/beta',
-            },
-            'linux-debug': {
-                'update_channel': 'default',
-            },
-            'linux64': {
-                'src_mozconfig': 'browser/config/mozconfigs/linux64/beta',
-            },
-            'linux64-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-asan': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'linux64-st-an': {
-                'update_channel': 'default',
-            },
-            'macosx64': {
-                'src_mozconfig': 'browser/config/mozconfigs/macosx-universal/beta',
-            },
-            'macosx64-debug': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an': {
-                'update_channel': 'default',
-            },
-            'macosx64-st-an-debug': {
-                'update_channel': 'default',
-            },
-            'win32': {
-                'src_mozconfig': 'browser/config/mozconfigs/win32/beta',
-            },
-            'win32-debug': {
-                'update_channel': 'default',
-            },
-            'win64': {
-                'src_mozconfig': 'browser/config/mozconfigs/win64/beta',
-            },
-            'win64-debug': {
-                'update_channel': 'default',
-            },
-        },
+        'update_channel': 'nightly-date',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
     },
     'cypress': {

@@ -11,7 +11,10 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip } = require("./rep-utils");
+  const {
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
 
   // Shortcuts
   const { span } = React.DOM;
@@ -30,7 +33,7 @@ define(function (require, exports, module) {
       return grip.displayString;
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let grip = this.props.object;
       let objectLink = this.props.objectLink || span;
 
@@ -42,7 +45,7 @@ define(function (require, exports, module) {
           }, this.getSource(grip))
         )
       );
-    },
+    }),
   });
 
   // Registration

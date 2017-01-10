@@ -1,36 +1,15 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-default-preferences pref(dom.forms.number,true)
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == input-load.html input-load.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == input-create.html input-create.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-# skip skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == input-number.html input-number.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,3) needs-focus == button-load.html button-load.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-random needs-focus == button-create.html button-create.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-random needs-focus == textarea-load.html textarea-load.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-random needs-focus == textarea-create.html textarea-create.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,4) needs-focus == select-load.html select-load.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(skiaContent,2,4) needs-focus == select-create.html select-create.html
-# B2G timed out waiting for reftest-wait to be removed
-# Initial mulet triage: parity with B2G/B2G Desktop
-needs-focus == autofocus-after-load.html autofocus-after-load.html
-fails-if(B2G||Mulet) fuzzy-if(skiaContent,2,5) needs-focus == autofocus-leaves-iframe.html autofocus-leaves-iframe.html
-# B2G focus difference between test and reference
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == autofocus-after-body-focus.html autofocus-after-body-focus.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+default-preferences pref(dom.forms.number,true) pref(dom.forms.datetime,true)
+fails == input-load.html input-load.html
+fails == input-create.html input-create.html
+# fuzzy-if(skiaContent,1,3) needs-focus == input-number.html input-number.html
+fails == input-time.html input-time.html
+fails == button-load.html button-load.html
+fails == button-create.html button-create.html
+fails == textarea-load.html textarea-load.html
+fails == textarea-create.html textarea-create.html
+fails == select-load.html select-load.html
+fails == select-create.html select-create.html
+fails needs-focus == autofocus-after-load.html autofocus-after-load.html
+fails == autofocus-leaves-iframe.html autofocus-leaves-iframe.html
+fails == autofocus-after-body-focus.html autofocus-after-body-focus.html

@@ -152,3 +152,5 @@ fuzzy(1,800000) == large-gradient-3.html large-gradient-3-ref.html
 == large-gradient-4.html large-gradient-4-ref.html
 fuzzy(2,800000) == large-gradient-5.html large-gradient-5-ref.html
 == 1224761-1.html 1224761-1-ref.html
+
+fuzzy(1,800000) == mask-gradient-translucent-end-color-1.html mask-gradient-translucent-end-color-1-ref.html

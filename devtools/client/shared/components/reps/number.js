@@ -11,6 +11,8 @@ define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
 
+  const { wrapRender } = require("./rep-utils");
+
   // Shortcuts
   const { span } = React.DOM;
 
@@ -27,7 +29,7 @@ define(function (require, exports, module) {
       return (isNegativeZero ? "-0" : String(object));
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let value = this.props.object;
 
       return (
@@ -35,7 +37,7 @@ define(function (require, exports, module) {
           this.stringify(value)
         )
       );
-    }
+    })
   });
 
   function supportsObject(object, type) {

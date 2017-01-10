@@ -66,6 +66,7 @@ public:
 
   static nsNameSpaceManager* GetInstance();
   bool mMathMLDisabled;
+  bool mSVGDisabled;
 
 private:
   bool Init();

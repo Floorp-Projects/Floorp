@@ -1,54 +1,37 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet) == ellipsis-font-fallback.html ellipsis-font-fallback.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== line-clipping.html line-clipping.html
-skip HTTP(..) == marker-basic.html marker-basic.html
-# Bug 1128229
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) HTTP(..) == marker-string.html marker-string.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G) HTTP(..) == bidi-simple.html bidi-simple.html
-# Fails on Android due to anti-aliasing
-fails skip-if(!gtkWidget) fuzzy-if(gtkWidget,2,289) HTTP(..) == bidi-simple-scrolled.html bidi-simple-scrolled.html
-# Fails on Windows and OSX due to anti-aliasing
-skip-if(B2G||Mulet) fuzzy-if(Android,24,4000) fuzzy-if(cocoaWidget,1,40) fuzzy-if(asyncPan&&!layersGPUAccelerated,121,1770) HTTP(..) == scroll-rounding.html scroll-rounding.html
-# bug 760264
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails fuzzy-if(skiaContent,9,1800) HTTP(..) == anonymous-block.html anonymous-block.html
-skip-if(B2G||Mulet) HTTP(..) == false-marker-overlap.html false-marker-overlap.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == visibility-hidden.html visibility-hidden.html
-skip-if(B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,1724) fuzzy-if(gtkWidget,10,8) HTTP(..) == block-padding.html block-padding.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == quirks-decorations.html quirks-decorations.html
-HTTP(..) == quirks-line-height.html quirks-line-height.html
-HTTP(..) == standards-decorations.html standards-decorations.html
-HTTP(..) == standards-line-height.html standards-line-height.html
-fails skip-if(B2G||Mulet) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,4200) HTTP(..) == selection.html selection.html
-# bug 668849
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == marker-shadow.html marker-shadow.html
-== aligned-baseline.html aligned-baseline.html
-fails skip-if(Android||B2G) fuzzy-if(skiaContent,1,5) == clipped-elements.html clipped-elements.html
-HTTP(..) == theme-overflow.html theme-overflow.html
-skip-if(B2G||Mulet) HTTP(..) == table-cell.html table-cell.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(Mulet) fuzzy-if(gtkWidget,10,32) HTTP(..) == two-value-syntax.html two-value-syntax.html
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-skip-if(B2G||Mulet) HTTP(..) == single-value.html single-value.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-fails skip-if(B2G||Mulet) fuzzy-if(gtkWidget,10,2) HTTP(..) == atomic-under-marker.html atomic-under-marker.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(Android||B2G||Mulet) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) HTTP(..) == xulscroll.html xulscroll.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-HTTP(..) == combobox-zoom.html combobox-zoom.html
+fails == ellipsis-font-fallback.html ellipsis-font-fallback.html
+fails == line-clipping.html line-clipping.html
+fails == marker-basic.html marker-basic.html
+fails HTTP(..) == marker-string.html marker-string.html
+# == bidi-simple.html bidi-simple.html
+fails == bidi-simple-scrolled.html bidi-simple-scrolled.html
+fails == scroll-rounding.html scroll-rounding.html
+fuzzy(2,453) fuzzy-if(skiaContent,9,2100) fails-if(gtkWidget) HTTP(..) == anonymous-block.html anonymous-block.html
+fails HTTP(..) == false-marker-overlap.html false-marker-overlap.html
+fails HTTP(..) == visibility-hidden.html visibility-hidden.html
+# == block-padding.html block-padding.html
+fails HTTP(..) == quirks-decorations.html quirks-decorations.html
+fails HTTP(..) == quirks-line-height.html quirks-line-height.html
+fails HTTP(..) == standards-decorations.html standards-decorations.html
+fails HTTP(..) == standards-line-height.html standards-line-height.html
+fails == selection.html selection.html
+fails HTTP(..) == marker-shadow.html marker-shadow.html
+fails == aligned-baseline.html aligned-baseline.html
+fails == clipped-elements.html clipped-elements.html
+fails HTTP(..) == theme-overflow.html theme-overflow.html
+fails HTTP(..) == table-cell.html table-cell.html
+fails == two-value-syntax.html two-value-syntax.html
+fails HTTP(..) == single-value.html single-value.html
+fails == atomic-under-marker.html atomic-under-marker.html
+fuzzy(1,2616) skip-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,102,12352) fails-if(http.oscpu=="Linux\u0020x86_64") HTTP(..) == xulscroll.html xulscroll.html
+fails HTTP(..) == combobox-zoom.html combobox-zoom.html
 
 # The vertical-text pref setting can be removed after bug 1138384 lands
-== vertical-decorations-1.html vertical-decorations-1.html
-== vertical-decorations-2.html vertical-decorations-2.html
-== vertical-decorations-1.html vertical-decorations-1.html
-== vertical-decorations-2.html vertical-decorations-2.html
-== vertical-decorations-3.html vertical-decorations-3.html
-== vertical-decorations-4.html vertical-decorations-4.html
-== vertical-decorations-3.html vertical-decorations-3.html
-== vertical-decorations-4.html vertical-decorations-4.html
+# == vertical-decorations-1.html vertical-decorations-1.html
+# == vertical-decorations-2.html vertical-decorations-2.html
+# == vertical-decorations-1.html vertical-decorations-1.html
+# == vertical-decorations-2.html vertical-decorations-2.html
+# == vertical-decorations-3.html vertical-decorations-3.html
+# == vertical-decorations-4.html vertical-decorations-4.html
+# == vertical-decorations-3.html vertical-decorations-3.html
+# == vertical-decorations-4.html vertical-decorations-4.html

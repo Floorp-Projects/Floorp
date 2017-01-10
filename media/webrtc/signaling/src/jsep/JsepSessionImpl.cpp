@@ -666,8 +666,6 @@ JsepSessionImpl::SetupBundle(Sdp* sdp) const
       if (useBundleOnly) {
         attrs.SetAttribute(
             new SdpFlagAttribute(SdpAttribute::kBundleOnlyAttribute));
-        // Set port to 0 for sections with bundle-only attribute. (mjf)
-        sdp->GetMediaSection(i).SetPort(0);
       }
 
       mids.push_back(attrs.GetMid());

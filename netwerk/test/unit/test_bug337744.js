@@ -27,15 +27,15 @@ const error_specs = [
 
 // Create some fake principal that has not enough
 // privileges to access any resource: uri.
-var uri = NetUtil.newURI("http://www.example.com", null, null);
+var uri = NetUtil.newURI("http://www.example.com");
 var principal = Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
 
 function get_channel(spec)
 {
-  var channelURI = NetUtil.newURI(spec, null, null);
+  var channelURI = NetUtil.newURI(spec);
 
   var channel = NetUtil.newChannel({
-    uri: NetUtil.newURI(spec, null, null),
+    uri: NetUtil.newURI(spec),
     loadingPrincipal: principal,
     securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
     contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
@@ -99,8 +99,8 @@ function run_test() {
     resProto.setSubstitution("res-test", null);
   });
 
-  let baseRoot = resProto.resolveURI(Services.io.newURI("resource:///", null, null));
-  let greRoot = resProto.resolveURI(Services.io.newURI("resource://gre/", null, null));
+  let baseRoot = resProto.resolveURI(Services.io.newURI("resource:///"));
+  let greRoot = resProto.resolveURI(Services.io.newURI("resource://gre/"));
 
   for (var spec of specs) {
     check_safe_resolution(spec, rootURI.spec);

@@ -706,5 +706,23 @@ ProxyAccessible::AnchorAt(uint32_t aIdx)
   return proxyAnchor;
 }
 
+void
+ProxyAccessible::DOMNodeID(nsString& aID)
+{
+  aID.Truncate();
+  RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
+  if (!custom) {
+    return;
+  }
+
+  BSTR result;
+  HRESULT hr = custom->get_DOMNodeID(&result);
+  _bstr_t resultWrap(result, false);
+  if (FAILED(hr)) {
+    return;
+  }
+  aID = (wchar_t*)resultWrap;
+}
+
 } // namespace a11y
 } // namespace mozilla

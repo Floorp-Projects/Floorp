@@ -22,6 +22,7 @@
 #include "vm/ProxyObject.h"
 #include "vm/Shape.h"
 #include "vm/Xdr.h"
+#include "wasm/WasmInstance.h"
 
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
@@ -628,6 +629,37 @@ ModuleEnvironmentObject::enumerate(JSContext* cx, HandleObject obj, AutoIdVector
 
 /*****************************************************************************/
 
+const Class WasmFunctionCallObject::class_ = {
+    "WasmCall",
+    JSCLASS_IS_ANONYMOUS | JSCLASS_HAS_RESERVED_SLOTS(WasmFunctionCallObject::RESERVED_SLOTS)
+};
+
+/* static */ WasmFunctionCallObject*
+WasmFunctionCallObject::createHollowForDebug(JSContext* cx, WasmFunctionScope* scope)
+{
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    if (!group)
+        return nullptr;
+
+    RootedShape shape(cx, scope->getEmptyEnvironmentShape(cx));
+    if (!shape)
+        return nullptr;
+
+    gc::AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
+    MOZ_ASSERT(CanBeFinalizedInBackground(kind, &class_));
+    kind = gc::GetBackgroundAllocKind(kind);
+
+    JSObject* obj;
+    JS_TRY_VAR_OR_RETURN_NULL(cx, obj, JSObject::create(cx, kind, gc::DefaultHeap, shape, group));
+
+    Rooted<WasmFunctionCallObject*> callobj(cx, &obj->as<WasmFunctionCallObject>());
+    callobj->initEnclosingEnvironment(&cx->global()->lexicalEnvironment());
+
+    return callobj;
+}
+
+/*****************************************************************************/
+
 WithEnvironmentObject*
 WithEnvironmentObject::create(JSContext* cx, HandleObject object, HandleObject enclosing,
                               Handle<WithScope*> scope)
@@ -1202,6 +1234,17 @@ EnvironmentIter::EnvironmentIter(JSContext* cx, AbstractFramePtr frame, jsbyteco
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
+EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope, AbstractFramePtr frame
+                                 MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+  : si_(cx, ScopeIter(scope)),
+    env_(cx, env),
+    frame_(frame)
+{
+    assertSameCompartment(cx, frame);
+    settle();
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+}
+
 void
 EnvironmentIter::incrementScopeIter()
 {
@@ -1222,7 +1265,9 @@ EnvironmentIter::settle()
 {
     // Check for trying to iterate a function or eval frame before the prologue has
     // created the CallObject, in which case we have to skip.
-    if (frame_ && frame_.script()->initialEnvironmentShape() && !frame_.hasInitialEnvironment()) {
+    if (frame_ && frame_.hasScript() &&
+        frame_.script()->initialEnvironmentShape() && !frame_.hasInitialEnvironment())
+    {
         // Skip until we're at the enclosing scope of the script.
         while (si_.scope() != frame_.script()->enclosingScope()) {
             if (env_->is<LexicalEnvironmentObject>() &&
@@ -1239,8 +1284,11 @@ EnvironmentIter::settle()
 
     // Check if we have left the extent of the initial frame after we've
     // settled on a static scope.
-    if (frame_ && (!si_ || si_.scope() == frame_.script()->enclosingScope()))
+    if (frame_ && (frame_.isWasmDebugFrame() ||
+                   (!si_ || si_.scope() == frame_.script()->enclosingScope())))
+    {
         frame_ = NullFramePtr();
+    }
 
 #ifdef DEBUG
     if (si_) {
@@ -2226,6 +2274,7 @@ DebugEnvironmentProxy::isForDeclarative() const
     return e.is<CallObject>() ||
            e.is<VarEnvironmentObject>() ||
            e.is<ModuleEnvironmentObject>() ||
+           e.is<WasmFunctionCallObject>() ||
            e.is<LexicalEnvironmentObject>();
 }
 
@@ -2730,7 +2779,12 @@ DebugEnvironments::updateLiveEnvironments(JSContext* cx)
         if (!frame.isDebuggee())
             continue;
 
-        for (EnvironmentIter ei(cx, frame, i.pc()); ei.withinInitialFrame(); ei++) {
+        RootedObject env(cx);
+        RootedScope scope(cx);
+        if (!GetFrameEnvironmentAndScope(cx, frame, i.pc(), &env, &scope))
+            return false;
+
+        for (EnvironmentIter ei(cx, env, scope, frame); ei.withinInitialFrame(); ei++) {
             if (ei.hasSyntacticEnvironment() && !ei.scope().is<GlobalScope>()) {
                 MOZ_ASSERT(ei.environment().compartment() == cx->compartment());
                 DebugEnvironments* envs = ensureCompartmentData(cx);
@@ -2854,6 +2908,7 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
     MOZ_ASSERT(!ei.hasSyntacticEnvironment() &&
                (ei.scope().is<FunctionScope>() ||
                 ei.scope().is<LexicalScope>() ||
+                ei.scope().is<WasmFunctionScope>() ||
                 ei.scope().is<VarScope>()));
 
     if (DebugEnvironmentProxy* debugEnv = DebugEnvironments::hasDebugEnvironment(cx, ei))
@@ -2896,6 +2951,13 @@ GetDebugEnvironmentForMissing(JSContext* cx, const EnvironmentIter& ei)
             return nullptr;
 
         debugEnv = DebugEnvironmentProxy::create(cx, *env, enclosingDebug);
+    } else if (ei.scope().is<WasmFunctionScope>()) {
+        Rooted<WasmFunctionScope*> wasmFunctionScope(cx, &ei.scope().as<WasmFunctionScope>());
+        Rooted<WasmFunctionCallObject*> callobj(cx, WasmFunctionCallObject::createHollowForDebug(cx, wasmFunctionScope));
+        if (!callobj)
+            return nullptr;
+
+        debugEnv = DebugEnvironmentProxy::create(cx, *callobj, enclosingDebug);
     } else {
         Rooted<VarScope*> varScope(cx, &ei.scope().as<VarScope>());
         Rooted<VarEnvironmentObject*> env(cx,
@@ -2940,6 +3002,7 @@ GetDebugEnvironment(JSContext* cx, const EnvironmentIter& ei)
 
     if (ei.scope().is<FunctionScope>() ||
         ei.scope().is<LexicalScope>() ||
+        ei.scope().is<WasmFunctionScope>() ||
         ei.scope().is<VarScope>())
     {
         return GetDebugEnvironmentForMissing(cx, ei);
@@ -2970,7 +3033,12 @@ js::GetDebugEnvironmentForFrame(JSContext* cx, AbstractFramePtr frame, jsbytecod
     if (CanUseDebugEnvironmentMaps(cx) && !DebugEnvironments::updateLiveEnvironments(cx))
         return nullptr;
 
-    EnvironmentIter ei(cx, frame, pc);
+    RootedObject env(cx);
+    RootedScope scope(cx);
+    if (!GetFrameEnvironmentAndScope(cx, frame, pc, &env, &scope))
+        return nullptr;
+
+    EnvironmentIter ei(cx, env, scope, frame);
     return GetDebugEnvironment(cx, ei);
 }
 
@@ -3065,7 +3133,12 @@ bool
 js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
                                              MutableHandleValue res)
 {
-    for (EnvironmentIter ei(cx, frame, pc); ei; ei++) {
+    RootedObject scopeChain(cx);
+    RootedScope scope(cx);
+    if (!GetFrameEnvironmentAndScope(cx, frame, pc, &scopeChain, &scope))
+        return false;
+
+    for (EnvironmentIter ei(cx, scopeChain, scope, frame); ei; ei++) {
         if (ei.scope().kind() == ScopeKind::Module) {
             res.setUndefined();
             return true;
@@ -3139,7 +3212,6 @@ js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr fra
         MOZ_CRASH("'this' binding must be found");
     }
 
-    RootedObject scopeChain(cx, frame.environmentChain());
     return GetNonSyntacticGlobalThis(cx, scopeChain, res);
 }
 
@@ -3407,6 +3479,25 @@ js::PushVarEnvironmentObject(JSContext* cx, HandleScope scope, AbstractFramePtr 
     frame.pushOnEnvironmentChain(*env);
     return true;
 }
+
+bool
+js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc,
+                                MutableHandleObject env, MutableHandleScope scope)
+{
+    env.set(frame.environmentChain());
+
+    if (frame.isWasmDebugFrame()) {
+        RootedWasmInstanceObject instance(cx, frame.wasmInstance()->object());
+        uint32_t funcIndex = frame.asWasmDebugFrame()->funcIndex();
+        scope.set(WasmInstanceObject::getFunctionScope(cx, instance, funcIndex));
+        if (!scope)
+            return false;
+    } else {
+        scope.set(frame.script()->innermostScope(pc));
+    }
+    return true;
+}
+
 
 #ifdef DEBUG
 

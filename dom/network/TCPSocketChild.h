@@ -56,7 +56,7 @@ public:
   void SendWindowlessOpenBind(nsITCPSocketCallback* aSocket,
                               const nsACString& aRemoteHost, uint16_t aRemotePort,
                               const nsACString& aLocalHost, uint16_t aLocalPort,
-                              bool aUseSSL);
+                              bool aUseSSL, bool aUseRealtimeOptions);
   NS_IMETHOD SendSendArray(nsTArray<uint8_t>& aArray,
                            uint32_t aTrackingNumber);
   void SendSend(const nsACString& aData, uint32_t aTrackingNumber);

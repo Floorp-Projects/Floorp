@@ -302,6 +302,7 @@ private:
     bool mProxyTransparentResolvesHost;
     bool mHttpsProxy;
     uint32_t     mConnectionFlags;
+    bool mReuseAddrPort;
 
     // The origin attributes are used to create sockets.  The first party domain
     // will eventually be used to isolate OCSP cache and is only non-empty when

@@ -52,7 +52,7 @@ load 348510-1.html
 load 348510-2.html
 load 348887-1.html
 load 348991-1.xhtml
-asserts-if(stylo,7-8) load 350370.html # bug 1324673
+asserts-if(stylo,7) load 350370.html # bug 1324663
 load 354458-1.html
 load 354458-2.html
 load 355426-1.html
@@ -107,7 +107,7 @@ load 377522.html
 load 379217-1.xhtml
 load 379217-2.xhtml
 load 379917-1.xhtml
-asserts-if(stylo,0-3) load 380012-1.html # bug 1324663
+asserts-if(stylo,0-5) load 380012-1.html # bug 1324663
 load 381152-1.html
 load 381786-1.html
 load 382129-1.xhtml
@@ -125,7 +125,7 @@ load 385344-2.html
 load 385414-1.html
 load 385414-2.html
 load 385426-1.html
-asserts-if(stylo,350) load 385526.html # bug 1324673
+asserts-if(stylo,4) load 385526.html # bug 1324663
 load 385681.html
 load 385885-1.xul
 load 386799-1.html
@@ -170,7 +170,7 @@ load 397007-1.html
 load 397187-1.html
 skip-if(stylo) load 397844-1.xhtml # bug 1323652
 skip-if(stylo) load 397844-2.xhtml # bug 1323652
-load 397852-1.xhtml
+asserts-if(stylo,1) load 397852-1.xhtml # bug 1324660
 load 398181-1.html
 load 398181-2.html
 load 398322-1.html
@@ -233,7 +233,7 @@ load 413085-1.html
 load 413085-2.html
 load 413582-1.xhtml
 load 413582-2.html
-skip-if(stylo) load 413712-1.xhtml # bug 1323649
+skip-if(stylo) load 413712-1.xhtml # bug 1323680
 load 414061-1.html
 load 414180-1.xul
 load 414719-1.html
@@ -262,7 +262,7 @@ load 424629.html
 load 425253-1.html
 load 426040-1.html
 load 426272-1.html
-skip-if(stylo) load 428263-1.html # bug 1323649
+skip-if(stylo) load 428263-1.html # bug 1323671
 load 429458.xhtml
 load 429960-1.html
 load 429960-2.html
@@ -298,7 +298,7 @@ load 445288.html
 load 448903-1.html
 skip-if(stylo) load 448996-1.html # bug 1323652
 asserts-if(stylo,5) load 451315-1.html # bug 1324672
-asserts-if(stylo,8) load 451317-1.html # bug 1324665
+asserts-if(stylo,7) load 451317-1.html # bug 1324665
 load 451334-1.html
 load 452157-1.html
 load 452157-2.html
@@ -360,7 +360,7 @@ load 494300-1.xul
 load 494332-1.html
 load 495875-1.html
 load 495875-2.html
-asserts-if(stylo,4-14) load 496742.html # bug 1324633
+asserts-if(stylo,4-16) load 496742.html # bug 1324633
 load 499138.html
 load 499857-1.html
 load 499862-1.html
@@ -392,8 +392,8 @@ load 526217.html
 load 533379-1.html
 load 533379-2.html
 load 534082-1.html
-asserts-if(stylo,2) load 534366-1.html # bug 1324705
-asserts-if(stylo,2) load 534366-2.html # bug 1324705
+load 534366-1.html
+load 534366-2.html
 load 536692-1.xhtml
 load 537645.xhtml
 load 541277-1.html
@@ -416,7 +416,7 @@ asserts(1) asserts-if(stylo,0-1) load 571975-1.html # bug 574889
 asserts-if(stylo,1) load 571995.xhtml # bug 1324663
 skip-if(stylo) load 574958.xhtml # bug 1323696
 asserts(0-4) load 578977.html # bug 757305
-skip-if(stylo) load 580504-1.xhtml # bug 1323649
+load 580504-1.xhtml
 load 585598-1.xhtml
 load 586806-1.html
 load 586806-2.html
@@ -443,7 +443,7 @@ asserts-if(stylo,4) load 613629-1.xhtml # bug 1324660
 load 616052-1.html
 load 619021.html
 load 621424-1.html
-load 621841-1.html
+asserts-if(stylo,0-2) load 621841-1.html # bug 1324660
 load 622596.html
 load 641724.html
 load 645072-1.html
@@ -548,7 +548,7 @@ load 876155.html
 load 885009-1.html
 load 893496-1.html
 load 893523.html
-skip-if(stylo) asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows # bug 1323662
+asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows
 asserts(0-3) load 914501.html # bug 1144852 - all platforms
 load 914891.html
 asserts-if(stylo,2) load 915475.xhtml # bug 1324669

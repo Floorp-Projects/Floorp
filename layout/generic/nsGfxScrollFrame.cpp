@@ -2081,23 +2081,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
 
 ScrollFrameHelper::~ScrollFrameHelper()
 {
-  if (mActivityExpirationState.IsTracked()) {
-    gScrollFrameActivityTracker->RemoveObject(this);
-  }
-  if (gScrollFrameActivityTracker &&
-      gScrollFrameActivityTracker->IsEmpty()) {
-    delete gScrollFrameActivityTracker;
-    gScrollFrameActivityTracker = nullptr;
-  }
-
-  if (mScrollActivityTimer) {
-    mScrollActivityTimer->Cancel();
-    mScrollActivityTimer = nullptr;
-  }
-  if (mDisplayPortExpiryTimer) {
-    mDisplayPortExpiryTimer->Cancel();
-    mDisplayPortExpiryTimer = nullptr;
-  }
 }
 
 /*
@@ -3685,6 +3668,30 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
               rootCompBounds += CSSPoint::ToAppUnits(
                   nsLayoutUtils::GetCumulativeApzCallbackTransform(mOuter));
 
+              // We want to limit displayportBase to be no larger than rootCompBounds on
+              // either axis, but we don't want to just blindly intersect the two, because
+              // rootCompBounds might be offset from where displayportBase is (see bug
+              // 1327095 comment 8). Instead, we translate rootCompBounds so as to
+              // maximize the overlap with displayportBase, and *then* do the intersection.
+              if (rootCompBounds.x > displayportBase.x && rootCompBounds.XMost() > displayportBase.XMost()) {
+                // rootCompBounds is at a greater x-position for both left and right, so translate it such
+                // that the XMost() values are the same. This will line up the right edge of the two rects,
+                // and might mean that rootCompbounds.x is smaller than displayportBase.x. We can avoid that
+                // by taking the min of the x delta and XMost() delta, but it doesn't really matter because
+                // the intersection between the two rects below will end up the same.
+                rootCompBounds.x -= (rootCompBounds.XMost() - displayportBase.XMost());
+              } else if (rootCompBounds.x < displayportBase.x && rootCompBounds.XMost() < displayportBase.XMost()) {
+                // Analaogous code for when the rootCompBounds is at a smaller x-position.
+                rootCompBounds.x = displayportBase.x;
+              }
+              // Do the same for y-axis
+              if (rootCompBounds.y > displayportBase.y && rootCompBounds.YMost() > displayportBase.YMost()) {
+                rootCompBounds.y -= (rootCompBounds.YMost() - displayportBase.YMost());
+              } else if (rootCompBounds.y < displayportBase.y && rootCompBounds.YMost() < displayportBase.YMost()) {
+                rootCompBounds.y = displayportBase.y;
+              }
+
+              // Now we can do the intersection
               displayportBase = displayportBase.Intersect(rootCompBounds);
             }
           }
@@ -4587,6 +4594,24 @@ ScrollFrameHelper::Destroy()
   if (mPostedReflowCallback) {
     mOuter->PresContext()->PresShell()->CancelReflowCallback(this);
     mPostedReflowCallback = false;
+  }
+
+  if (mDisplayPortExpiryTimer) {
+    mDisplayPortExpiryTimer->Cancel();
+    mDisplayPortExpiryTimer = nullptr;
+  }
+  if (mActivityExpirationState.IsTracked()) {
+    gScrollFrameActivityTracker->RemoveObject(this);
+  }
+  if (gScrollFrameActivityTracker &&
+      gScrollFrameActivityTracker->IsEmpty()) {
+    delete gScrollFrameActivityTracker;
+    gScrollFrameActivityTracker = nullptr;
+  }
+
+  if (mScrollActivityTimer) {
+    mScrollActivityTimer->Cancel();
+    mScrollActivityTimer = nullptr;
   }
 }
 

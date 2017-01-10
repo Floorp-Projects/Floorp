@@ -257,6 +257,14 @@ apt-get -q -y --force-yes install \
 mesa_version=$(dpkg-query -s libgl1-mesa-dri-lts-saucy | grep ^Version | awk '{ print $2 }')
 [ "$mesa_version" = "9.2.1-1ubuntu3~precise1mozilla2" ] || exit 1
 
+# additional packages for linux32 tests
+apt-get -q -y --force-yes install \
+    libcanberra-gtk3-module:i386 \
+    libcanberra-gtk-module:i386 \
+    libdbus-glib-1-2:i386 \
+    libgtk-3-0:i386 \
+    openjdk-7-jdk:i386
+
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
 apt-get update

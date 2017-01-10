@@ -49,8 +49,7 @@ function addResourceAlias() {
   const resProt = Services.io.getProtocolHandler("resource")
                           .QueryInterface(Ci.nsIResProtocolHandler);
   for (let s of ["common", "sync", "crypto"]) {
-    let uri = Services.io.newURI("resource://gre/modules/services-" + s + "/", null,
-                                 null);
+    let uri = Services.io.newURI("resource://gre/modules/services-" + s + "/");
     resProt.setSubstitution("services-" + s, uri);
   }
 }

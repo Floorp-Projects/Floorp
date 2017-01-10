@@ -1295,7 +1295,7 @@ SessionStore.prototype = {
   _deserializeHistoryEntry: function _deserializeHistoryEntry(aEntry, aIdMap, aDocIdentMap) {
     let shEntry = Cc["@mozilla.org/browser/session-history-entry;1"].createInstance(Ci.nsISHEntry);
 
-    shEntry.setURI(Services.io.newURI(aEntry.url, null, null));
+    shEntry.setURI(Services.io.newURI(aEntry.url));
     shEntry.setTitle(aEntry.title || aEntry.url);
     if (aEntry.subframe) {
       shEntry.setIsSubFrame(aEntry.subframe || false);
@@ -1305,11 +1305,11 @@ SessionStore.prototype = {
       shEntry.contentType = aEntry.contentType;
     }
     if (aEntry.referrer) {
-      shEntry.referrerURI = Services.io.newURI(aEntry.referrer, null, null);
+      shEntry.referrerURI = Services.io.newURI(aEntry.referrer);
     }
 
     if (aEntry.originalURI) {
-      shEntry.originalURI =  Services.io.newURI(aEntry.originalURI, null, null);
+      shEntry.originalURI =  Services.io.newURI(aEntry.originalURI);
     }
 
     if (aEntry.loadReplace) {

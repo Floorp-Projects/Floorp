@@ -63,7 +63,7 @@ protected:
   virtual ~HTMLLIAccessible() { }
 
 private:
-  RefPtr<HTMLListBulletAccessible> mBullet;
+  HTMLListBulletAccessible* mBullet;
 };
 
 

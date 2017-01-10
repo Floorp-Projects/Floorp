@@ -107,7 +107,7 @@ AppValidator.checkManifest = function (manifestURL) {
 };
 
 AppValidator.findManifestAtOrigin = function (manifestURL) {
-  let fixedManifest = Services.io.newURI(manifestURL, null, null).prePath + "/manifest.webapp";
+  let fixedManifest = Services.io.newURI(manifestURL).prePath + "/manifest.webapp";
   return AppValidator.checkManifest(fixedManifest);
 };
 
@@ -167,7 +167,7 @@ AppValidator.prototype._getManifest = function () {
   } else if (this.type == "hosted") {
     manifestURL = this.location;
     try {
-      Services.io.newURI(manifestURL, null, null);
+      Services.io.newURI(manifestURL);
     } catch (e) {
       this.error(strings.formatStringFromName("validator.invalidHostedManifestURL", [manifestURL, e.message], 2));
       return promise.resolve(null);
@@ -193,10 +193,10 @@ AppValidator.prototype.validateManifest = function (manifest) {
 
 AppValidator.prototype._getOriginURL = function () {
   if (this.type == "packaged") {
-    let manifestURL = Services.io.newURI(this.manifestURL, null, null);
+    let manifestURL = Services.io.newURI(this.manifestURL);
     return Services.io.newURI(".", null, manifestURL).spec;
   } else if (this.type == "hosted") {
-    return Services.io.newURI(this.location, null, null).prePath;
+    return Services.io.newURI(this.location).prePath;
   }
 };
 
@@ -217,7 +217,7 @@ AppValidator.prototype.validateLaunchPath = function (manifest) {
   }
   let indexURL;
   try {
-    indexURL = Services.io.newURI(path, null, Services.io.newURI(origin, null, null)).spec;
+    indexURL = Services.io.newURI(path, null, Services.io.newURI(origin)).spec;
   } catch (e) {
     this.error(strings.formatStringFromName("validator.accessFailedLaunchPath", [origin + path], 1));
     deferred.resolve();

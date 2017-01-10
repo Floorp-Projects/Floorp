@@ -441,6 +441,7 @@ jit::CheckLogging()
             "  profiling     Profiling-related information\n"
             "  trackopts     Optimization tracking information gathered by SPS. "
                             "(Note: call enableSPSProfiling() in your script to enable it).\n"
+            "  trackopts-ext Encoding information about optimization tracking"
             "  dump-mir-expr Dump the MIR expressions\n"
             "  cfg           Control flow graph generation\n"
             "  all           Everything\n"
@@ -517,6 +518,8 @@ jit::CheckLogging()
         EnableChannel(JitSpew_Profiling);
     if (ContainsFlag(env, "trackopts"))
         EnableChannel(JitSpew_OptimizationTracking);
+    if (ContainsFlag(env, "trackopts-ext"))
+        EnableChannel(JitSpew_OptimizationTrackingExtended);
     if (ContainsFlag(env, "dump-mir-expr"))
         EnableChannel(JitSpew_MIRExpressions);
     if (ContainsFlag(env, "cfg"))

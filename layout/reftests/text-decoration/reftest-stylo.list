@@ -1,119 +1,113 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet) == complex-decoration-style-quirks.html complex-decoration-style-quirks.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == complex-decoration-style-standards.html complex-decoration-style-standards.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== decoration-color-quirks.html decoration-color-quirks.html
-== decoration-color-standards.html decoration-color-standards.html
-== decoration-style-quirks.html decoration-style-quirks.html
-== decoration-style-standards.html decoration-style-standards.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-quirks-1.html dynamic-underline-vertical-align-quirks-1.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-quirks-2.html dynamic-underline-vertical-align-quirks-2.html
-fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2.html
-== line-through-style-block-solid-quirks.html line-through-style-block-solid-quirks.html
-== line-through-style-block-dotted-quirks.html line-through-style-block-dotted-quirks.html
-== line-through-style-block-dashed-quirks.html line-through-style-block-dashed-quirks.html
-skip == line-through-style-block-double-quirks.html line-through-style-block-double-quirks.html
-== line-through-style-block-wavy-quirks.html line-through-style-block-wavy-quirks.html
-== line-through-style-inline-solid-quirks.html line-through-style-inline-solid-quirks.html
-== line-through-style-inline-dotted-quirks.html line-through-style-inline-dotted-quirks.html
-== line-through-style-inline-dashed-quirks.html line-through-style-inline-dashed-quirks.html
-== line-through-style-inline-double-quirks.html line-through-style-inline-double-quirks.html
-== line-through-style-inline-wavy-quirks.html line-through-style-inline-wavy-quirks.html
-== line-through-style-block-solid-standards.html line-through-style-block-solid-standards.html
-== line-through-style-block-dotted-standards.html line-through-style-block-dotted-standards.html
-== line-through-style-block-dashed-standards.html line-through-style-block-dashed-standards.html
-== line-through-style-block-double-standards.html line-through-style-block-double-standards.html
-== line-through-style-block-wavy-standards.html line-through-style-block-wavy-standards.html
-== line-through-style-inline-solid-standards.html line-through-style-inline-solid-standards.html
-== line-through-style-inline-dotted-standards.html line-through-style-inline-dotted-standards.html
-skip == line-through-style-inline-dashed-standards.html line-through-style-inline-dashed-standards.html
-== line-through-style-inline-double-standards.html line-through-style-inline-double-standards.html
-== line-through-style-inline-wavy-standards.html line-through-style-inline-wavy-standards.html
-== overline-style-block-solid-quirks.html overline-style-block-solid-quirks.html
-== overline-style-block-dotted-quirks.html overline-style-block-dotted-quirks.html
-== overline-style-block-dashed-quirks.html overline-style-block-dashed-quirks.html
-== overline-style-block-double-quirks.html overline-style-block-double-quirks.html
-== overline-style-block-wavy-quirks.html overline-style-block-wavy-quirks.html
-== overline-style-inline-solid-quirks.html overline-style-inline-solid-quirks.html
-== overline-style-inline-dotted-quirks.html overline-style-inline-dotted-quirks.html
-== overline-style-inline-dashed-quirks.html overline-style-inline-dashed-quirks.html
-== overline-style-inline-double-quirks.html overline-style-inline-double-quirks.html
-== overline-style-inline-wavy-quirks.html overline-style-inline-wavy-quirks.html
-== overline-style-block-solid-standards.html overline-style-block-solid-standards.html
-== overline-style-block-dotted-standards.html overline-style-block-dotted-standards.html
-== overline-style-block-dashed-standards.html overline-style-block-dashed-standards.html
-== overline-style-block-double-standards.html overline-style-block-double-standards.html
-== overline-style-block-wavy-standards.html overline-style-block-wavy-standards.html
-== overline-style-inline-solid-standards.html overline-style-inline-solid-standards.html
-== overline-style-inline-dotted-standards.html overline-style-inline-dotted-standards.html
-== overline-style-inline-dashed-standards.html overline-style-inline-dashed-standards.html
-== overline-style-inline-double-standards.html overline-style-inline-double-standards.html
-== overline-style-inline-wavy-standards.html overline-style-inline-wavy-standards.html
-skip == underline-style-block-solid-quirks.html underline-style-block-solid-quirks.html
-== underline-style-block-dotted-quirks.html underline-style-block-dotted-quirks.html
-== underline-style-block-dashed-quirks.html underline-style-block-dashed-quirks.html
-== underline-style-block-double-quirks.html underline-style-block-double-quirks.html
-== underline-style-block-wavy-quirks.html underline-style-block-wavy-quirks.html
-== underline-style-inline-solid-quirks.html underline-style-inline-solid-quirks.html
-== underline-style-inline-dotted-quirks.html underline-style-inline-dotted-quirks.html
-== underline-style-inline-dashed-quirks.html underline-style-inline-dashed-quirks.html
-== underline-style-inline-double-quirks.html underline-style-inline-double-quirks.html
-== underline-style-inline-wavy-quirks.html underline-style-inline-wavy-quirks.html
-== underline-style-block-solid-standards.html underline-style-block-solid-standards.html
-== underline-style-block-dotted-standards.html underline-style-block-dotted-standards.html
-== underline-style-block-dashed-standards.html underline-style-block-dashed-standards.html
-== underline-style-block-double-standards.html underline-style-block-double-standards.html
-== underline-style-block-wavy-standards.html underline-style-block-wavy-standards.html
-== underline-style-inline-solid-standards.html underline-style-inline-solid-standards.html
-== underline-style-inline-dotted-standards.html underline-style-inline-dotted-standards.html
-== underline-style-inline-dashed-standards.html underline-style-inline-dashed-standards.html
-== underline-style-inline-double-standards.html underline-style-inline-double-standards.html
-== underline-style-inline-wavy-standards.html underline-style-inline-wavy-standards.html
-== underline-block-quirks.html underline-block-quirks.html
-== underline-block-quirks.html underline-block-quirks.html
-== underline-inline-block-quirks.html underline-inline-block-quirks.html
-== underline-inline-block-quirks.html underline-inline-block-quirks.html
-== underline-table-caption-quirks.html underline-table-caption-quirks.html
-== underline-table-caption-quirks.html underline-table-caption-quirks.html
-== underline-table-cell-quirks.html underline-table-cell-quirks.html
-== underline-table-cell-quirks.html underline-table-cell-quirks.html
-skip == underline-block-propagation-quirks.html underline-block-propagation-quirks.html
-== underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks.html
-== underline-block-standards.html underline-block-standards.html
-== underline-block-standards.html underline-block-standards.html
-skip == underline-inline-block-standards.html underline-inline-block-standards.html
-skip == underline-inline-block-standards.html underline-inline-block-standards.html
-skip == underline-table-caption-standards.html underline-table-caption-standards.html
-skip == underline-table-caption-standards.html underline-table-caption-standards.html
-== underline-table-cell-standards.html underline-table-cell-standards.html
-== underline-table-cell-standards.html underline-table-cell-standards.html
-== underline-block-propagation-standards.html underline-block-propagation-standards.html
-skip == underline-block-propagation-2-standards.html underline-block-propagation-2-standards.html
+fails == complex-decoration-style-quirks.html complex-decoration-style-quirks.html
+fails == complex-decoration-style-standards.html complex-decoration-style-standards.html
+fails == decoration-color-quirks.html decoration-color-quirks.html
+fails == decoration-color-standards.html decoration-color-standards.html
+fails == decoration-style-quirks.html decoration-style-quirks.html
+fails == decoration-style-standards.html decoration-style-standards.html
+fails == dynamic-underline-vertical-align-quirks-1.html dynamic-underline-vertical-align-quirks-1.html
+fails == dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1.html
+fails == dynamic-underline-vertical-align-quirks-2.html dynamic-underline-vertical-align-quirks-2.html
+fails == dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2.html
+fails == line-through-style-block-solid-quirks.html line-through-style-block-solid-quirks.html
+fails == line-through-style-block-dotted-quirks.html line-through-style-block-dotted-quirks.html
+fails == line-through-style-block-dashed-quirks.html line-through-style-block-dashed-quirks.html
+fails == line-through-style-block-double-quirks.html line-through-style-block-double-quirks.html
+fails == line-through-style-block-wavy-quirks.html line-through-style-block-wavy-quirks.html
+fails == line-through-style-inline-solid-quirks.html line-through-style-inline-solid-quirks.html
+fails == line-through-style-inline-dotted-quirks.html line-through-style-inline-dotted-quirks.html
+fails == line-through-style-inline-dashed-quirks.html line-through-style-inline-dashed-quirks.html
+fails == line-through-style-inline-double-quirks.html line-through-style-inline-double-quirks.html
+fails == line-through-style-inline-wavy-quirks.html line-through-style-inline-wavy-quirks.html
+fails == line-through-style-block-solid-standards.html line-through-style-block-solid-standards.html
+fails == line-through-style-block-dotted-standards.html line-through-style-block-dotted-standards.html
+fails == line-through-style-block-dashed-standards.html line-through-style-block-dashed-standards.html
+fails == line-through-style-block-double-standards.html line-through-style-block-double-standards.html
+fails == line-through-style-block-wavy-standards.html line-through-style-block-wavy-standards.html
+fails == line-through-style-inline-solid-standards.html line-through-style-inline-solid-standards.html
+fails == line-through-style-inline-dotted-standards.html line-through-style-inline-dotted-standards.html
+fails == line-through-style-inline-dashed-standards.html line-through-style-inline-dashed-standards.html
+fails == line-through-style-inline-double-standards.html line-through-style-inline-double-standards.html
+fails == line-through-style-inline-wavy-standards.html line-through-style-inline-wavy-standards.html
+fails == overline-style-block-solid-quirks.html overline-style-block-solid-quirks.html
+fails == overline-style-block-dotted-quirks.html overline-style-block-dotted-quirks.html
+fails == overline-style-block-dashed-quirks.html overline-style-block-dashed-quirks.html
+fails == overline-style-block-double-quirks.html overline-style-block-double-quirks.html
+fails == overline-style-block-wavy-quirks.html overline-style-block-wavy-quirks.html
+fails == overline-style-inline-solid-quirks.html overline-style-inline-solid-quirks.html
+fails == overline-style-inline-dotted-quirks.html overline-style-inline-dotted-quirks.html
+fails == overline-style-inline-dashed-quirks.html overline-style-inline-dashed-quirks.html
+fails == overline-style-inline-double-quirks.html overline-style-inline-double-quirks.html
+fails == overline-style-inline-wavy-quirks.html overline-style-inline-wavy-quirks.html
+fails == overline-style-block-solid-standards.html overline-style-block-solid-standards.html
+fails == overline-style-block-dotted-standards.html overline-style-block-dotted-standards.html
+fails == overline-style-block-dashed-standards.html overline-style-block-dashed-standards.html
+fails == overline-style-block-double-standards.html overline-style-block-double-standards.html
+fails == overline-style-block-wavy-standards.html overline-style-block-wavy-standards.html
+fails == overline-style-inline-solid-standards.html overline-style-inline-solid-standards.html
+fails == overline-style-inline-dotted-standards.html overline-style-inline-dotted-standards.html
+fails == overline-style-inline-dashed-standards.html overline-style-inline-dashed-standards.html
+fails == overline-style-inline-double-standards.html overline-style-inline-double-standards.html
+fails == overline-style-inline-wavy-standards.html overline-style-inline-wavy-standards.html
+fails == underline-style-block-solid-quirks.html underline-style-block-solid-quirks.html
+fails == underline-style-block-dotted-quirks.html underline-style-block-dotted-quirks.html
+fails == underline-style-block-dashed-quirks.html underline-style-block-dashed-quirks.html
+fails == underline-style-block-double-quirks.html underline-style-block-double-quirks.html
+fails == underline-style-block-wavy-quirks.html underline-style-block-wavy-quirks.html
+fails == underline-style-inline-solid-quirks.html underline-style-inline-solid-quirks.html
+fails == underline-style-inline-dotted-quirks.html underline-style-inline-dotted-quirks.html
+fails == underline-style-inline-dashed-quirks.html underline-style-inline-dashed-quirks.html
+fails == underline-style-inline-double-quirks.html underline-style-inline-double-quirks.html
+fails == underline-style-inline-wavy-quirks.html underline-style-inline-wavy-quirks.html
+fails == underline-style-block-solid-standards.html underline-style-block-solid-standards.html
+fails == underline-style-block-dotted-standards.html underline-style-block-dotted-standards.html
+fails == underline-style-block-dashed-standards.html underline-style-block-dashed-standards.html
+fails == underline-style-block-double-standards.html underline-style-block-double-standards.html
+fails == underline-style-block-wavy-standards.html underline-style-block-wavy-standards.html
+fails == underline-style-inline-solid-standards.html underline-style-inline-solid-standards.html
+fails == underline-style-inline-dotted-standards.html underline-style-inline-dotted-standards.html
+fails == underline-style-inline-dashed-standards.html underline-style-inline-dashed-standards.html
+fails == underline-style-inline-double-standards.html underline-style-inline-double-standards.html
+fails == underline-style-inline-wavy-standards.html underline-style-inline-wavy-standards.html
+# == underline-block-quirks.html underline-block-quirks.html
+# == underline-block-quirks.html underline-block-quirks.html
+# == underline-inline-block-quirks.html underline-inline-block-quirks.html
+# == underline-inline-block-quirks.html underline-inline-block-quirks.html
+# == underline-table-caption-quirks.html underline-table-caption-quirks.html
+# == underline-table-caption-quirks.html underline-table-caption-quirks.html
+# == underline-table-cell-quirks.html underline-table-cell-quirks.html
+# == underline-table-cell-quirks.html underline-table-cell-quirks.html
+fails == underline-block-propagation-quirks.html underline-block-propagation-quirks.html
+fails == underline-block-propagation-2-quirks.html underline-block-propagation-2-quirks.html
+# == underline-block-standards.html underline-block-standards.html
+# == underline-block-standards.html underline-block-standards.html
+# == underline-inline-block-standards.html underline-inline-block-standards.html
+# == underline-inline-block-standards.html underline-inline-block-standards.html
+# == underline-table-caption-standards.html underline-table-caption-standards.html
+# == underline-table-caption-standards.html underline-table-caption-standards.html
+# == underline-table-cell-standards.html underline-table-cell-standards.html
+# == underline-table-cell-standards.html underline-table-cell-standards.html
+fails == underline-block-propagation-standards.html underline-block-propagation-standards.html
+fails == underline-block-propagation-2-standards.html underline-block-propagation-2-standards.html
 == text-decoration-zorder-1-standards.html text-decoration-zorder-1-standards.html
 == text-decoration-zorder-1-quirks.html text-decoration-zorder-1-quirks.html
-== table-quirk-1.html table-quirk-1.html
-== table-quirk-2.html table-quirk-2.html
-skip == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks.html
-== text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards.html
-skip-if(B2G||Mulet) == 641444-1.html 641444-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== decoration-css21.html decoration-css21.html
-fuzzy-if(cocoaWidget,1,5) == decoration-color-override-quirks.html decoration-color-override-quirks.html
-# == decoration-color-override-standards.html decoration-color-override-standards.html
-== decoration-color-override-standards-ref.html decoration-color-override-standards-ref.html
-== decoration-css21-block.html decoration-css21-block.html
-== inline-baseline-almost-standards.html inline-baseline-almost-standards.html
-== inline-baseline-quirks.html inline-baseline-quirks.html
-== 676538-1.html 676538-1.html
-fuzzy-if(OSX==1010,1,4) == underline-button-1.html underline-button-1.html
-fuzzy-if(OSX==1010,1,2) == underline-button-2.html underline-button-2.html
-== underline-select-1.html underline-select-1.html
-== underline-select-2.html underline-select-2.html
-== 1133392.html 1133392.html
-== 1159729-offset-adjustment.html 1159729-offset-adjustment.html
-== emphasis-style-dynamic.html emphasis-style-dynamic.html
+fails == table-quirk-1.html table-quirk-1.html
+fails == table-quirk-2.html table-quirk-2.html
+fails == text-decoration-propagation-1-quirks.html text-decoration-propagation-1-quirks.html
+fails == text-decoration-propagation-1-standards.html text-decoration-propagation-1-standards.html
+fails == 641444-1.html 641444-1.html
+fails == decoration-css21.html decoration-css21.html
+fails == decoration-color-override-quirks.html decoration-color-override-quirks.html
+fails == decoration-color-override-standards.html decoration-color-override-standards.html
+fails == decoration-color-override-standards-ref.html decoration-color-override-standards-ref.html
+fails == decoration-css21-block.html decoration-css21-block.html
+fails == inline-baseline-almost-standards.html inline-baseline-almost-standards.html
+fails == inline-baseline-quirks.html inline-baseline-quirks.html
+fails == 676538-1.html 676538-1.html
+fails == underline-button-1.html underline-button-1.html
+fails == underline-button-2.html underline-button-2.html
+fails == underline-select-1.html underline-select-1.html
+fails == underline-select-2.html underline-select-2.html
+fails == 1133392.html 1133392.html
+fails == 1159729-offset-adjustment.html 1159729-offset-adjustment.html
+fails == emphasis-style-dynamic.html emphasis-style-dynamic.html

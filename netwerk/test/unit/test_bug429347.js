@@ -2,8 +2,8 @@ function run_test() {
   var ios = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
 
-  var uri1 = ios.newURI("http://example.com#bar", null, null);
-  var uri2 = ios.newURI("http://example.com/#bar", null, null);
+  var uri1 = ios.newURI("http://example.com#bar");
+  var uri2 = ios.newURI("http://example.com/#bar");
   do_check_true(uri1.equals(uri2));
 
   uri1.spec = "http://example.com?bar";

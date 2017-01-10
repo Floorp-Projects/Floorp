@@ -12,7 +12,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 var unsafeAboutModule = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
   newChannel: function (aURI, aLoadInfo) {
-    var uri = Services.io.newURI("about:blank", null, null);
+    var uri = Services.io.newURI("about:blank");
     let chan = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     chan.owner = Services.scriptSecurityManager.getSystemPrincipal();
     return chan;
