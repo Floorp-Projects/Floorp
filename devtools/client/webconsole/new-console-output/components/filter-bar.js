@@ -25,11 +25,12 @@ const FilterBar = createClass({
   displayName: "FilterBar",
 
   propTypes: {
+    dispatch: PropTypes.func.isRequired,
     filter: PropTypes.object.isRequired,
     serviceContainer: PropTypes.shape({
       attachRefToHud: PropTypes.func.isRequired,
     }).isRequired,
-    ui: PropTypes.object.isRequired
+    ui: PropTypes.object.isRequired,
   },
 
   componentDidMount() {

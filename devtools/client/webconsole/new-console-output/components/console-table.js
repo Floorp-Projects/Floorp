@@ -29,6 +29,7 @@ const ConsoleTable = createClass({
       hudProxyClient: PropTypes.object.isRequired,
     }),
     id: PropTypes.string.isRequired,
+    tableData: PropTypes.object,
   },
 
   componentWillMount: function () {
