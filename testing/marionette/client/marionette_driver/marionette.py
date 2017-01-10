@@ -1455,7 +1455,7 @@ class Marionette(object):
         Each window handle is assigned by the server, and the list of
         strings returned does not have a guaranteed ordering.
 
-        :returns: unordered list of unique window handles as strings
+        :returns: Unordered list of unique window handles as strings
         """
         return self._send_message(
             "getWindowHandles", key="value" if self.protocol == 1 else None)
@@ -1467,7 +1467,7 @@ class Marionette(object):
         Each window handle is assigned by the server, and the list of
         strings returned does not have a guaranteed ordering.
 
-        :returns: unordered list of unique window handles as strings
+        :returns: Unordered list of unique chrome window handles as strings
         """
         return self._send_message(
             "getChromeWindowHandles", key="value" if self.protocol == 1 else None)
@@ -1481,15 +1481,17 @@ class Marionette(object):
         """Close the current window, ending the session if it's the last
         window currently open.
 
+        :returns: Unordered list of remaining unique window handles as strings
         """
-        self._send_message("close")
+        return self._send_message("close")
 
     def close_chrome_window(self):
         """Close the currently selected chrome window, ending the session
         if it's the last window open.
 
+        :returns: Unordered list of remaining unique chrome window handles as strings
         """
-        self._send_message("closeChromeWindow")
+        return self._send_message("closeChromeWindow")
 
     def set_context(self, context):
         """Sets the context that Marionette commands are running in.
