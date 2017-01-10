@@ -213,7 +213,6 @@
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
-@BINPATH@/components/services-crypto-component.xpt
 @BINPATH@/components/captivedetect.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt

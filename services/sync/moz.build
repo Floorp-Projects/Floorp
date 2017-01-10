@@ -25,7 +25,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/engines.js',
     'modules/FxaMigrator.jsm',
     'modules/identity.js',
-    'modules/jpakeclient.js',
     'modules/keys.js',
     'modules/main.js',
     'modules/policies.js',

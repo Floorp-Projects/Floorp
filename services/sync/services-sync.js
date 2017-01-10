@@ -32,12 +32,6 @@ pref("services.sync.engine.prefs", true);
 pref("services.sync.engine.tabs", true);
 pref("services.sync.engine.tabs.filteredUrls", "^(about:.*|resource:.*|chrome:.*|wyciwyg:.*|file:.*|blob:.*)$");
 
-pref("services.sync.jpake.serverURL", "https://setup.services.mozilla.com/");
-pref("services.sync.jpake.pollInterval", 1000);
-pref("services.sync.jpake.firstMsgMaxTries", 300); // 5 minutes
-pref("services.sync.jpake.lastMsgMaxTries", 300);  // 5 minutes
-pref("services.sync.jpake.maxTries", 10);
-
 // If true, add-on sync ignores changes to the user-enabled flag. This
 // allows people to have the same set of add-ons installed across all
 // profiles while maintaining different enabled states.
@@ -59,7 +53,6 @@ pref("services.sync.log.logger.service.main", "Debug");
 pref("services.sync.log.logger.status", "Debug");
 pref("services.sync.log.logger.authenticator", "Debug");
 pref("services.sync.log.logger.network.resources", "Debug");
-pref("services.sync.log.logger.service.jpakeclient", "Debug");
 pref("services.sync.log.logger.engine.bookmarks", "Debug");
 pref("services.sync.log.logger.engine.clients", "Debug");
 pref("services.sync.log.logger.engine.forms", "Debug");
