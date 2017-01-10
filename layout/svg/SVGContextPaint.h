@@ -11,7 +11,9 @@
 #include "gfxPattern.h"
 #include "gfxTypes.h"
 #include "mozilla/AlreadyAddRefed.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/gfx/2D.h"
+#include "nsColor.h"
 #include "nsStyleStruct.h"
 #include "nsTArray.h"
 
@@ -90,6 +92,13 @@ public:
 
   gfxFloat GetStrokeWidth() {
     return mStrokeWidth;
+  }
+
+  virtual uint32_t Hash() const {
+    MOZ_ASSERT_UNREACHABLE("Only VectorImage needs to hash, and that should "
+                           "only be operating on our SVGEmbeddingContextPaint "
+                           "subclass");
+    return 0;
   }
 
 private:
@@ -200,6 +209,50 @@ public:
 
   float mFillOpacity;
   float mStrokeOpacity;
+};
+
+/**
+ * This class is used to pass context paint to an SVG image when an element
+ * references that image (e.g. via HTML <img> or SVG <image>, or by referencing
+ * it from a CSS property such as 'background-image').  In this case we only
+ * support context colors and not paint servers.
+ */
+class SVGEmbeddingContextPaint : public SVGContextPaint
+{
+public:
+  SVGEmbeddingContextPaint() {}
+
+  void SetFill(nscolor aFill);
+  void SetStroke(nscolor aStroke);
+
+  already_AddRefed<gfxPattern> GetFillPattern(const DrawTarget* aDrawTarget,
+                                              float aOpacity,
+                                              const gfxMatrix& aCTM) override {
+    return do_AddRef(mFill);
+  }
+
+  already_AddRefed<gfxPattern> GetStrokePattern(const DrawTarget* aDrawTarget,
+                                                float aOpacity,
+                                                const gfxMatrix& aCTM) override {
+    return do_AddRef(mStroke);
+  }
+
+  float GetFillOpacity() const override {
+    // Always 1.0f since we don't currently allow 'context-fill-opacity'
+    return 1.0f;
+  };
+
+  float GetStrokeOpacity() const override {
+    // Always 1.0f since we don't currently allow 'context-stroke-opacity'
+    return 1.0f;
+  };
+
+  uint32_t Hash() const override;
+
+private:
+  // Note: if these are set at all, they'll have type PatternType::COLOR.
+  RefPtr<gfxPattern> mFill;
+  RefPtr<gfxPattern> mStroke;
 };
 
 } // namespace mozilla

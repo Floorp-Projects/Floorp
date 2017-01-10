@@ -5,6 +5,7 @@
 #include "SVGContextPaint.h"
 
 #include "gfxContext.h"
+#include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "nsIDocument.h"
 #include "nsSVGPaintServerFrame.h"
@@ -273,6 +274,38 @@ AutoSetRestoreSVGContextPaint::~AutoSetRestoreSVGContextPaint()
 
     NS_WARNING_ASSERTION(NS_SUCCEEDED(res), "Failed to restore context paint");
   }
+}
+
+
+// SVGEmbeddingContextPaint
+
+void
+SVGEmbeddingContextPaint::SetFill(nscolor aFill)
+{
+  mFill = new gfxPattern(ToDeviceColor(aFill));
+}
+
+void
+SVGEmbeddingContextPaint::SetStroke(nscolor aStroke)
+{
+  mStroke = new gfxPattern(ToDeviceColor(aStroke));
+}
+
+uint32_t
+SVGEmbeddingContextPaint::Hash() const
+{
+  uint32_t hash = 0;
+
+  Color color;
+
+  if (mFill && mFill->GetSolidColor(color)) {
+    hash = HashGeneric(hash, color.ToABGR());
+  }
+  if (mStroke && mStroke->GetSolidColor(color)) {
+    hash = HashGeneric(hash, color.ToABGR());
+  }
+
+  return hash;
 }
 
 } // namespace mozilla
