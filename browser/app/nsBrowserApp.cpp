@@ -289,14 +289,6 @@ static int do_main(int argc, char* argv[], char* envp[])
     appData.directory = appSubdir;
   }
 
-#if defined(HAS_DLL_BLOCKLIST)
-  // The dll blocklist operates in the exe vs. xullib. Pass a flag to
-  // xullib so automated tests can check the result once the browser
-  // is up and running.
-  appData.flags |=
-    DllBlocklist_CheckStatus() ? NS_XRE_DLL_BLOCKLIST_ENABLED : 0;
-#endif
-
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   sandbox::BrokerServices* brokerServices =
     sandboxing::GetInitializedBrokerServices();

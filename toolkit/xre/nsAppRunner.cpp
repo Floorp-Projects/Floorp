@@ -98,6 +98,7 @@
 #include <math.h>
 #include "cairo/cairo-features.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/WindowsDllBlocklist.h"
 #include "mozilla/mscom/MainThreadRuntime.h"
 #include "mozilla/widget/AudioSession.h"
 
@@ -1075,8 +1076,8 @@ nsXULAppInfo::GetIsOfficial(bool* aResult)
 NS_IMETHODIMP
 nsXULAppInfo::GetWindowsDLLBlocklistStatus(bool* aResult)
 {
-#if defined(XP_WIN)
-  *aResult = gAppData->flags & NS_XRE_DLL_BLOCKLIST_ENABLED;
+#if defined(HAS_DLL_BLOCKLIST)
+  *aResult = DllBlocklist_CheckStatus();
 #else
   *aResult = false;
 #endif
