@@ -11,8 +11,9 @@
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, manager: Cm} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/nsFormAutoCompleteResult.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "ProfileAutoCompleteResult",
+                                  "resource://formautofill/ProfileAutoCompleteResult.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FormLikeFactory",
                                   "resource://gre/modules/FormLikeFactory.jsm");
 
@@ -227,13 +228,19 @@ AutofillProfileAutoCompleteSearch.prototype = {
    */
   startSearch(searchString, searchParam, previousResult, listener) {
     // TODO: These mock data should be replaced by form autofill API
-    let labels = ["Mary", "John"];
-    let values = ["Mary S.", "John S."];
-    let comments = ["123 Sesame Street.", "331 E. Evelyn Avenue"];
-    let result = new FormAutoCompleteResult(searchString,
-                                            Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-                                            0, "", values, labels,
-                                            comments);
+    let fieldName = "name";
+    let profiles = [{
+      guid: "test-guid-1",
+      organization: "Sesame Street",
+      streetAddress: "123 Sesame Street.",
+      tel: "1-345-345-3456.",
+    }, {
+      guid: "test-guid-2",
+      organization: "Mozilla",
+      streetAddress: "331 E. Evelyn Avenue",
+      tel: "1-650-903-0800",
+    }];
+    let result = new ProfileAutoCompleteResult(searchString, fieldName, profiles, {});
 
     listener.onSearchResult(this, result);
   },

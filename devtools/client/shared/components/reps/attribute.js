@@ -11,7 +11,11 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { createFactories, isGrip } = require("./rep-utils");
+  const {
+    createFactories,
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   const { StringRep } = require("./string");
 
   // Shortcuts
@@ -32,7 +36,7 @@ define(function (require, exports, module) {
       return grip.preview.nodeName;
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let object = this.props.object;
       let value = object.preview.value;
       let objectLink = this.props.objectLink || span;
@@ -50,7 +54,7 @@ define(function (require, exports, module) {
           )
         )
       );
-    },
+    }),
   });
 
   // Registration
