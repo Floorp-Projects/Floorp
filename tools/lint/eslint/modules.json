@@ -110,7 +110,6 @@
   "import_sub_module.jsm": ["SUBMODULE_IMPORTED", "test_obj"],
   "InlineSpellChecker.jsm": ["InlineSpellChecker", "SpellCheckHelper"],
   "JNI.jsm": ["JNI", "android_log"],
-  "jpakeclient.js": ["JPAKEClient", "SendCredentialsController"],
   "Jsbeautify.jsm": ["jsBeautify"],
   "jsdebugger.jsm": ["addDebuggerToGlobal"],
   "json2.js": ["JSON"],

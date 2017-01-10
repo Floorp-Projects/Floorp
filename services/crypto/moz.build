@@ -7,8 +7,6 @@
 with Files('**'):
     BUG_COMPONENT = ('Mozilla Services', 'Firefox Sync: Crypto')
 
-DIRS += ['component']
-
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 EXTRA_JS_MODULES['services-crypto'] += [

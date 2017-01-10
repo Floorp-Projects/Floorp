@@ -36,7 +36,6 @@ SyncScheduler.prototype = {
   _log: Log.repository.getLogger("Sync.SyncScheduler"),
 
   _fatalLoginStatus: [LOGIN_FAILED_NO_USERNAME,
-                      LOGIN_FAILED_NO_PASSWORD,
                       LOGIN_FAILED_NO_PASSPHRASE,
                       LOGIN_FAILED_INVALID_PASSPHRASE,
                       LOGIN_FAILED_LOGIN_REJECTED],

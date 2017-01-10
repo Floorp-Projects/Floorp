@@ -268,7 +268,6 @@
 @RESPATH@/components/satchel.xpt
 @RESPATH@/components/saxparser.xpt
 @RESPATH@/components/sessionstore.xpt
-@RESPATH@/components/services-crypto-component.xpt
 @RESPATH@/components/captivedetect.xpt
 @RESPATH@/components/shellservice.xpt
 @RESPATH@/components/shistory.xpt
