@@ -1727,7 +1727,14 @@ NotifyQueuedChanges(MediaStreamGraph* graph,
     return;
   }
 
-  NewData(queued_media, graph->GraphRate());
+  size_t rate;
+  if (graph) {
+    rate = graph->GraphRate();
+  } else {
+    // When running tests, graph may be null. In that case use a default.
+    rate = 16000;
+  }
+  NewData(queued_media, rate);
 }
 
 void MediaPipelineTransmit::PipelineListener::
@@ -1826,7 +1833,9 @@ static void AddListener(MediaStream* source, MediaStreamListener* listener) {
 
   MOZ_ASSERT(listener);
 
-  source->GraphImpl()->AppendMessage(MakeUnique<Message>(source, listener));
+  if (source->GraphImpl()) {
+    source->GraphImpl()->AppendMessage(MakeUnique<Message>(source, listener));
+  }
 }
 
 class GenericReceiveListener : public MediaStreamListener
@@ -2047,7 +2056,10 @@ void MediaPipelineReceiveAudio::DetachMedia()
   ASSERT_ON_THREAD(main_thread_);
   if (stream_ && listener_) {
     listener_->EndTrack();
-    stream_->RemoveListener(listener_);
+
+    if (stream_->GraphImpl()) {
+      stream_->RemoveListener(listener_);
+    }
     stream_ = nullptr;
   }
 }
