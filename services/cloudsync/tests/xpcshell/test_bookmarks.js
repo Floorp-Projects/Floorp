@@ -5,22 +5,22 @@
 
 Cu.import("resource://gre/modules/CloudSync.jsm");
 
-function run_test () {
+function run_test() {
   run_next_test();
 }
 
-function cleanup () {
+function cleanup() {
 
 }
 
-add_task(function* test_merge_bookmarks_flat () {
+add_task(function* test_merge_bookmarks_flat() {
   try {
 	  let rootFolder = yield CloudSync().bookmarks.getRootFolder("TEST");
 	  ok(rootFolder.id, "root folder id is ok");
 
 	  let items = [
-		{"id":"G_UL4ZhOyX8m","type":rootFolder.BOOKMARK,"title":"reddit: the front page of the internet 1","uri":"http://www.reddit.com",index:2},
-		{"id":"G_UL4ZhOyX8n","type":rootFolder.BOOKMARK,"title":"reddit: the front page of the internet 2","uri":"http://www.reddit.com?1",index:1},
+		{"id":"G_UL4ZhOyX8m", "type":rootFolder.BOOKMARK, "title":"reddit: the front page of the internet 1", "uri":"http://www.reddit.com", index:2},
+		{"id":"G_UL4ZhOyX8n", "type":rootFolder.BOOKMARK, "title":"reddit: the front page of the internet 2", "uri":"http://www.reddit.com?1", index:1},
 	  ];
 	  yield rootFolder.mergeRemoteItems(items);
 
@@ -31,15 +31,15 @@ add_task(function* test_merge_bookmarks_flat () {
   }
 });
 
-add_task(function* test_merge_bookmarks_in_folders () {
+add_task(function* test_merge_bookmarks_in_folders() {
   try {
 	  let rootFolder = yield CloudSync().bookmarks.getRootFolder("TEST");
 	  ok(rootFolder.id, "root folder id is ok");
 
 	  let items = [
-	  	{"id":"G_UL4ZhOyX8m","type":rootFolder.BOOKMARK,"title":"reddit: the front page of the internet 1","uri":"http://www.reddit.com",index:2},
-	    {"id":"G_UL4ZhOyX8n","type":rootFolder.BOOKMARK,parent:"G_UL4ZhOyX8x","title":"reddit: the front page of the internet 2","uri":"http://www.reddit.com/?a=å%20ä%20ö",index:1},
-	    {"id":"G_UL4ZhOyX8x","type":rootFolder.FOLDER},
+	  	{"id":"G_UL4ZhOyX8m", "type":rootFolder.BOOKMARK, "title":"reddit: the front page of the internet 1", "uri":"http://www.reddit.com", index:2},
+	    {"id":"G_UL4ZhOyX8n", "type":rootFolder.BOOKMARK, parent:"G_UL4ZhOyX8x", "title":"reddit: the front page of the internet 2", "uri":"http://www.reddit.com/?a=å%20ä%20ö", index:1},
+	    {"id":"G_UL4ZhOyX8x", "type":rootFolder.FOLDER},
 	  ];
 	  yield rootFolder.mergeRemoteItems(items);
 

@@ -337,12 +337,10 @@ class BookmarkValidator {
       }
       if (record.deleted) {
         deletedItemIds.add(record.id);
-      } else {
-        if (idToRecord.has(record.id)) {
+      } else if (idToRecord.has(record.id)) {
           problemData.duplicates.push(record.id);
           continue;
         }
-      }
       idToRecord.set(record.id, record);
 
       if (record.children) {
@@ -768,7 +766,7 @@ class BookmarkValidator {
       let serverRecordCount = serverState.length;
       let result = self.compareServerWithClient(serverState, clientTree);
       let end = Date.now();
-      let duration = end-start;
+      let duration = end - start;
       return {
         duration,
         version: self.version,
@@ -778,7 +776,7 @@ class BookmarkValidator {
     });
   }
 
-};
+}
 
 BookmarkValidator.prototype.version = BOOKMARK_VALIDATOR_VERSION;
 

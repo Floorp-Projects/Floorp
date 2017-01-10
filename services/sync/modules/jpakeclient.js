@@ -24,8 +24,8 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
 /**
  * Client to exchange encrypted data using the J-PAKE algorithm.
  * The exchange between two clients of this type looks like this:
- * 
- * 
+ *
+ *
  *  Mobile                        Server                        Desktop
  *  ===================================================================
  *                                   |
@@ -59,26 +59,26 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
  *  decrypt credentials              |
  *  delete session ----------------->|
  *  start syncing                    |
- * 
- * 
+ *
+ *
  * Create a client object like so:
- * 
+ *
  *   let client = new JPAKEClient(controller);
- * 
+ *
  * The 'controller' object must implement the following methods:
- * 
+ *
  *   displayPIN(pin) -- Called when a PIN has been generated and is ready to
  *     be displayed to the user. Only called on the client where the pairing
  *     was initiated with 'receiveNoPIN()'.
- * 
+ *
  *   onPairingStart() -- Called when the pairing has started and messages are
  *     being sent back and forth over the channel. Only called on the client
  *     where the pairing was initiated with 'receiveNoPIN()'.
- * 
+ *
  *   onPaired() -- Called when the device pairing has been established and
  *     we're ready to send the credentials over. To do that, the controller
  *     must call 'sendAndComplete()' while the channel is active.
- * 
+ *
  *   onComplete(data) -- Called after transfer has been completed. On
  *     the sending side this is called with no parameter and as soon as the
  *     data has been uploaded. This does not mean the receiving side has
@@ -86,28 +86,28 @@ const JPAKE_VERIFY_VALUE      = "0123456789ABCDEF";
  *
  *   onAbort(error) -- Called whenever an error is encountered. All errors lead
  *     to an abort and the process has to be started again on both sides.
- * 
+ *
  * To start the data transfer on the receiving side, call
- * 
+ *
  *   client.receiveNoPIN();
- * 
+ *
  * This will allocate a new channel on the server, generate a PIN, have it
  * displayed and then do the transfer once the protocol has been completed
  * with the sending side.
- * 
+ *
  * To initiate the transfer from the sending side, call
- * 
+ *
  *   client.pairWithPIN(pin, true);
- * 
+ *
  * Once the pairing has been established, the controller's 'onPaired()' method
  * will be called. To then transmit the data, call
- * 
+ *
  *   client.sendAndComplete(data);
- * 
+ *
  * To abort the process, call
- * 
+ *
  *   client.abort();
- * 
+ *
  * Note that after completion or abort, the 'client' instance may not be reused.
  * You will have to create a new one in case you'd like to restart the process.
  */
@@ -141,7 +141,7 @@ JPAKEClient.prototype = {
   /**
    * Initiate pairing and receive data without providing a PIN. The PIN will
    * be generated and passed on to the controller to be displayed to the user.
-   * 
+   *
    * This is typically called on mobile devices where typing is tedious.
    */
   receiveNoPIN: function receiveNoPIN() {
@@ -185,10 +185,10 @@ JPAKEClient.prototype = {
 
   /**
    * Initiate pairing based on the PIN entered by the user.
-   * 
+   *
    * This is typically called on desktop devices where typing is easier than
    * on mobile.
-   * 
+   *
    * @param pin
    *        12 character string (in human-friendly base32) containing the PIN
    *        entered by the user.
@@ -208,7 +208,7 @@ JPAKEClient.prototype = {
 
     this._chain(this._computeStepOne,
                 this._getStep,
-                function (callback) {
+                function(callback) {
                   // Ensure that the other client can deal with a delay for
                   // the last message if that's requested by the caller.
                   if (!expectDelay) {
@@ -230,7 +230,7 @@ JPAKEClient.prototype = {
 
   /**
    * Send data after a successful pairing.
-   * 
+   *
    * @param obj
    *        Object containing the data to send. It will be serialized as JSON.
    */
@@ -249,7 +249,7 @@ JPAKEClient.prototype = {
    * Abort the current pairing. The channel on the server will be deleted
    * if the abort wasn't due to a network or server error. The controller's
    * 'onAbort()' method is notified in all cases.
-   * 
+   *
    * @param error [optional]
    *        Error constant indicating the reason for the abort. Defaults to
    *        user abort.
@@ -350,7 +350,7 @@ JPAKEClient.prototype = {
     } else {
       request.setHeader("If-None-Match", "*");
     }
-    request.put(this._outgoing, Utils.bind2(this, function (error) {
+    request.put(this._outgoing, Utils.bind2(this, function(error) {
       if (this._finished) {
         return;
       }
@@ -369,7 +369,7 @@ JPAKEClient.prototype = {
       // There's no point in returning early here since the next step will
       // always be a GET so let's pause for twice the poll interval.
       this._my_etag = request.response.headers["etag"];
-      Utils.namedTimer(function () { callback(); }, this._pollInterval * 2,
+      Utils.namedTimer(function() { callback(); }, this._pollInterval * 2,
                        this, "_pollTimer");
     }));
   },
@@ -383,7 +383,7 @@ JPAKEClient.prototype = {
       request.setHeader("If-None-Match", this._my_etag);
     }
 
-    request.get(Utils.bind2(this, function (error) {
+    request.get(Utils.bind2(this, function(error) {
       if (this._finished) {
         return;
       }
@@ -445,7 +445,7 @@ JPAKEClient.prototype = {
     let request = this._newRequest(this._serverURL + "report");
     request.setHeader("X-KeyExchange-Cid", this._channel);
     request.setHeader("X-KeyExchange-Log", reason);
-    request.post("", Utils.bind2(this, function (error) {
+    request.post("", Utils.bind2(this, function(error) {
       if (error) {
         this._log.warn("Report failed: " + error);
       } else if (request.response.status != 200) {
@@ -572,7 +572,7 @@ JPAKEClient.prototype = {
     }
     this._outgoing = {type: this._my_signerid + "3",
                       version: KEYEXCHANGE_VERSION,
-                      payload: {ciphertext: ciphertext, IV: iv}};
+                      payload: {ciphertext, IV: iv}};
     this._log.trace("Generated message " + this._outgoing.type);
     callback();
   },
@@ -601,7 +601,7 @@ JPAKEClient.prototype = {
 
     this._log.debug("Verified pairing!");
     this._paired = true;
-    Utils.nextTick(function () { this.controller.onPaired(); }, this);
+    Utils.nextTick(function() { this.controller.onPaired(); }, this);
     callback();
   },
 
@@ -619,7 +619,7 @@ JPAKEClient.prototype = {
     }
     this._outgoing = {type: this._my_signerid + "3",
                       version: KEYEXCHANGE_VERSION,
-                      payload: {ciphertext: ciphertext, IV: iv, hmac: hmac}};
+                      payload: {ciphertext, IV: iv, hmac}};
     this._log.trace("Generated message " + this._outgoing.type);
     callback();
   },
@@ -647,7 +647,7 @@ JPAKEClient.prototype = {
 
     this._log.trace("Decrypting data.");
     let cleartext;
-    try {      
+    try {
       cleartext = Svc.Crypto.decrypt(step3.ciphertext, this._crypto_key,
                                      step3.IV);
     } catch (ex) {
@@ -671,7 +671,7 @@ JPAKEClient.prototype = {
   _complete: function _complete() {
     this._log.debug("Exchange completed.");
     this._finished = true;
-    Utils.nextTick(function () { this.controller.onComplete(this._newData); },
+    Utils.nextTick(function() { this.controller.onComplete(this._newData); },
                    this);
   }
 
@@ -710,8 +710,8 @@ this.SendCredentialsController =
   // this device's sync configuration, in case that happens while we
   // haven't finished the first sync yet.
   Services.obs.addObserver(this, "weave:service:sync:finish", false);
-  Services.obs.addObserver(this, "weave:service:sync:error",  false);
-  Services.obs.addObserver(this, "weave:service:start-over",  false);
+  Services.obs.addObserver(this, "weave:service:sync:error", false);
+  Services.obs.addObserver(this, "weave:service:start-over", false);
 }
 SendCredentialsController.prototype = {
 

@@ -59,7 +59,7 @@ this.FxAccountsOAuthGrantClient.prototype = {
    * @return Promise
    *        Resolves: {Object} Object with access_token property
    */
-  getTokenFromAssertion: function (assertion, scope) {
+  getTokenFromAssertion(assertion, scope) {
     if (!assertion) {
       throw new Error("Missing 'assertion' parameter");
     }
@@ -67,9 +67,9 @@ this.FxAccountsOAuthGrantClient.prototype = {
       throw new Error("Missing 'scope' parameter");
     }
     let params = {
-      scope: scope,
+      scope,
       client_id: this.parameters.client_id,
-      assertion: assertion,
+      assertion,
       response_type: "token"
     };
 
@@ -84,12 +84,12 @@ this.FxAccountsOAuthGrantClient.prototype = {
    *        Resolves: {Object} with the server response, which is typically
    *        ignored.
    */
-  destroyToken: function (token) {
+  destroyToken(token) {
     if (!token) {
       throw new Error("Missing 'token' parameter");
     }
     let params = {
-      token: token,
+      token,
     };
 
     return this._createRequest(DESTROY_ENDPOINT, "POST", params);
@@ -102,7 +102,7 @@ this.FxAccountsOAuthGrantClient.prototype = {
    *        OAuth client options
    * @private
    */
-  _validateOptions: function (options) {
+  _validateOptions(options) {
     if (!options) {
       throw new Error("Missing configuration options");
     }
@@ -131,7 +131,7 @@ this.FxAccountsOAuthGrantClient.prototype = {
    *         Rejects: {FxAccountsOAuthGrantClientError} Profile client error.
    * @private
    */
-  _createRequest: function(path, method = "POST", params) {
+  _createRequest(path, method = "POST", params) {
     return new Promise((resolve, reject) => {
       let profileDataUrl = this.serverURL + path;
       let request = new this._Request(profileDataUrl);
@@ -140,7 +140,7 @@ this.FxAccountsOAuthGrantClient.prototype = {
       request.setHeader("Accept", "application/json");
       request.setHeader("Content-Type", "application/json");
 
-      request.onComplete = function (error) {
+      request.onComplete = function(error) {
         if (error) {
           return reject(new FxAccountsOAuthGrantClientError({
             error: ERROR_NETWORK,

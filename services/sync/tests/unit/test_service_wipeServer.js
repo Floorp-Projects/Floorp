@@ -14,7 +14,7 @@ function FakeCollection() {
   this.deleted = false;
 }
 FakeCollection.prototype = {
-  handler: function() {
+  handler() {
     let self = this;
     return function(request, response) {
       let body = "";
@@ -105,7 +105,7 @@ add_identity_test(this, async function test_wipeServer_list_503() {
     try {
       Service.wipeServer(["non-existent", "steam", "petrol", "diesel"]);
       do_throw("Should have thrown!");
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
     }
     _("wipeServer() threw this exception: " + error);

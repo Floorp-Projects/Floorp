@@ -77,7 +77,7 @@ add_identity_test(this, async function test_basic() {
   let handlers = {
     "/1.1/johndoe/info/collections": helper.handler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-    "/1.1/johndoe/storage/meta/global": upd("meta",  new ServerWBO("global").handler())
+    "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler())
   };
 
   let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];
@@ -123,7 +123,7 @@ add_task(async function test_processIncoming_error() {
         pingPayload = errPing;
         fullPing = fullErrPing;
       });
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
     }
     ok(!!error);
@@ -485,7 +485,7 @@ add_identity_test(this, async function test_discarding() {
     let handlers = {
       "/1.1/johndoe/info/collections": helper.handler,
       "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
-      "/1.1/johndoe/storage/meta/global": upd("meta",  new ServerWBO("global").handler())
+      "/1.1/johndoe/storage/meta/global": upd("meta", new ServerWBO("global").handler())
     };
 
     let collections = ["clients", "bookmarks", "forms", "history", "passwords", "prefs", "tabs"];
