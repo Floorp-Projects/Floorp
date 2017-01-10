@@ -196,6 +196,24 @@ wr_renderer_set_profiler_enabled(WrRenderer* renderer, bool enabled) WR_FUNC;
 WR_INLINE bool
 wr_renderer_current_epoch(WrRenderer* renderer, uint64_t pipeline_id, uint32_t* out_epoch) WR_FUNC;
 
+WR_INLINE bool
+wr_renderer_delete(WrRenderer* renderer) WR_FUNC;
+
+WR_INLINE void
+wr_gl_init(void* aGLContext) WR_FUNC;
+
+struct WrAPI;
+
+WR_INLINE void
+wr_window_new(uint64_t window_id,
+              bool enable_profiler,
+              WrAPI** out_api,
+              WrRenderer** out_renderer) WR_FUNC;
+
+WR_INLINE void
+wr_api_delete(WrAPI* api) WR_FUNC;
+
+
 WR_INLINE wrwindowstate*
 wr_init_window(uint64_t root_pipeline_id,
                void* webrender_bridge_ptr,
