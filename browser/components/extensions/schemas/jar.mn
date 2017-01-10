@@ -17,4 +17,5 @@ browser.jar:
     content/browser/schemas/sessions.json
     content/browser/schemas/tabs.json
     content/browser/schemas/theme.json
+    content/browser/schemas/url_overrides.json
     content/browser/schemas/windows.json
