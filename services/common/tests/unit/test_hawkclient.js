@@ -312,7 +312,6 @@ add_task(function* test_retry_request_on_fail() {
       let message = "i love you!!!";
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(message, message.length);
-
     }
   });
 
@@ -461,7 +460,6 @@ add_task(function* test_401_then_500() {
       let message = "Cannot get ye flask.";
       response.setStatusLine(request.httpVersion, 500, "Internal server error");
       response.bodyOutputStream.write(message, message.length);
-
     }
   });
 

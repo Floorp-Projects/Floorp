@@ -572,10 +572,8 @@ var TPS = {
     Logger.logInfo("mozmill endTest: " + JSON.stringify(obj));
     if (obj.failed > 0) {
       this.DumpError('mozmill test failed, name: ' + obj.name + ', reason: ' + JSON.stringify(obj.fails));
-
     } else if ('skipped' in obj && obj.skipped) {
       this.DumpError('mozmill test failed, name: ' + obj.name + ', reason: ' + obj.skipped_reason);
-
     } else {
       Utils.namedTimer(function() {
         this.FinishAsyncOperation();
@@ -885,7 +883,6 @@ var TPS = {
       Utils.nextTick(this._executeTestPhase.bind(this, file, phase, settings));
     } catch (e) {
       this.DumpError("RunTestPhase failed", e);
-
     }
   },
 
@@ -948,7 +945,6 @@ var TPS = {
       this._currentAction = 0;
     } catch (e) {
       this.DumpError("_executeTestPhase failed", e);
-
     }
   },
 
