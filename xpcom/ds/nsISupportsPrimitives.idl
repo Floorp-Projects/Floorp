@@ -32,7 +32,7 @@ interface nsISupportsPrimitive : nsISupports
     const unsigned short TYPE_PRINT64           = 13;
     const unsigned short TYPE_FLOAT             = 14;
     const unsigned short TYPE_DOUBLE            = 15;
-    const unsigned short TYPE_VOID              = 16;
+    // 16 was for TYPE_VOID
     const unsigned short TYPE_INTERFACE_POINTER = 17;
 
     readonly attribute unsigned short type;
@@ -205,17 +205,6 @@ interface nsISupportsFloat : nsISupportsPrimitive
 interface nsISupportsDouble : nsISupportsPrimitive
 {
     attribute double data;
-    string toString();
-};
-
-/**
- * Scriptable storage for generic pointers
- */
-
-[scriptable, uuid(464484f0-568d-11d3-baf8-00805f8a5dd7)]
-interface nsISupportsVoid : nsISupportsPrimitive
-{
-    [noscript] attribute voidPtr data;
     string toString();
 };
 
