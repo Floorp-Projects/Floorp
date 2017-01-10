@@ -20,6 +20,7 @@ const CollapseButton = createClass({
   displayName: "CollapseButton",
 
   propTypes: {
+    onClick: PropTypes.func.isRequired,
     open: PropTypes.bool.isRequired,
     title: PropTypes.string,
   },
