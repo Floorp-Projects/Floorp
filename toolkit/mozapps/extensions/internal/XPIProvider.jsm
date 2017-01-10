@@ -5295,8 +5295,8 @@ class AddonInstall {
    *         Optional icons for the add-on
    * @param  options.version
    *         An optional version for the add-on
-   * @param  options.promptHandler
-   *         A callback to prompt the user before installing.
+   * @param  options.permHandler
+   *         A callback to present permissions to the user before installing.
    */
   constructor(installLocation, url, options = {}) {
     this.wrapper = new AddonInstallWrapper(this);
@@ -5312,7 +5312,7 @@ class AddonInstall {
     }
     this.hash = this.originalHash;
     this.existingAddon = options.existingAddon || null;
-    this.promptHandler = options.promptHandler || (() => Promise.resolve());
+    this.permHandler = options.permHandler || (() => Promise.resolve());
     this.releaseNotesURI = null;
 
     this.listeners = [];
@@ -5352,9 +5352,9 @@ class AddonInstall {
   install() {
     switch (this.state) {
     case AddonManager.STATE_DOWNLOADED:
-      this.checkPrompt();
+      this.checkPermissions();
       break;
-    case AddonManager.STATE_PROMPTS_DONE:
+    case AddonManager.STATE_PERMISSION_GRANTED:
       this.checkForBlockers();
       break;
     case AddonManager.STATE_READY:
@@ -5620,9 +5620,9 @@ class AddonInstall {
    * STATE_DOWNLOADED (which actually means that the file is available
    * and has been verified).
    */
-  checkPrompt() {
+  checkPermissions() {
     Task.spawn((function*() {
-      if (this.promptHandler) {
+      if (this.permHandler) {
         let info = {
           existingAddon: this.existingAddon ? this.existingAddon.wrapper : null,
           addon: this.addon.wrapper,
@@ -5630,9 +5630,9 @@ class AddonInstall {
         };
 
         try {
-          yield this.promptHandler(info);
+          yield this.permHandler(info);
         } catch (err) {
-          logger.info(`Install of ${this.addon.id} cancelled by user`);
+          logger.info(`Install of ${this.addon.id} cancelled since user declined permissions`);
           this.state = AddonManager.STATE_CANCELLED;
           XPIProvider.removeActiveInstall(this);
           AddonManagerPrivate.callInstallListeners("onInstallCancelled",
@@ -5640,7 +5640,7 @@ class AddonInstall {
           return;
         }
       }
-      this.state = AddonManager.STATE_PROMPTS_DONE;
+      this.state = AddonManager.STATE_PERMISSION_GRANTED;
       this.install();
     }).bind(this));
   }
@@ -6092,8 +6092,8 @@ class DownloadAddonInstall extends AddonInstall {
    *         Optional icons for the add-on
    * @param  options.version
    *         An optional version for the add-on
-   * @param  options.promptHandler
-   *         A callback to prompt the user before installing.
+   * @param  options.permHandler
+   *         A callback to present permissions to the user before installing.
    */
   constructor(installLocation, url, options = {}) {
     super(installLocation, url, options);
@@ -6608,8 +6608,8 @@ AddonInstallWrapper.prototype = {
     return installFor(this).sourceURI;
   },
 
-  set promptHandler(handler) {
-    installFor(this).promptHandler = handler;
+  set _permHandler(handler) {
+    installFor(this).permHandler = handler;
   },
 
   install() {
