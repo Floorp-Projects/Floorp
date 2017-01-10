@@ -2,6 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+Current version of react-redux: 5.0.1 (last upgrade in bug 1326137)
+
+How to upgrade:
+1. git clone https://github.com/reactjs/react-redux - clone the repo
+2. git checkout v5.0.1 - checkout the right version tag
+3. npm install - compile the sources to a JS module file
+4. cp dist/react-redux.js devtools/client/shared/vendor - copy the unminified JS file
+5. update the import path in the react-redux.js file - see below
+6. update the current version in this file
+
+UPDATING THE IMPORT PATHS
 
 "react-redux" uses UMD style loading to work in many different environments.
 It assumes that "react" and "redux" are both included via `require("react")`
