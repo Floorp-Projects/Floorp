@@ -151,7 +151,7 @@ if CONFIG['OS_ARCH'] == 'NetBSD':
             'xptcstubs_netbsd_m68k.cpp'
         ]
 
-if CONFIG['OS_ARCH'] == 'Linux':
+if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD', 'OpenBSD'):
     if CONFIG['OS_TEST'] == 'aarch64':
         SOURCES += [
             'xptcinvoke_aarch64.cpp',
