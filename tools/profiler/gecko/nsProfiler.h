@@ -23,6 +23,7 @@ public:
 private:
     ~nsProfiler();
     bool mLockedForPrivateBrowsing;
+    bool mAsyncStacksWereEnabled;
 };
 
 #endif /* _NSPROFILER_H_ */
