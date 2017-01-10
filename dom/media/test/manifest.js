@@ -538,15 +538,9 @@ var gErrorTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
-function IsWindowsVistaOrLater() {
-  var re = /Windows NT (\d+.\d)/;
-  var winver = manifestNavigator().userAgent.match(re);
-  return winver && winver.length == 2 && parseFloat(winver[1]) >= 6.0;
-}
-
 // Windows' H.264 decoder cannot handle H.264 streams with resolution
 // less than 48x48 pixels. We refuse to play and error on such streams.
-if (IsWindowsVistaOrLater() &&
+if (manifestNavigator().userAgent.includes("Windows") &&
     manifestVideo().canPlayType('video/mp4; codecs="avc1.42E01E"')) {
   gErrorTests = gErrorTests.concat({name: "red-46x48.mp4", type:"video/mp4"},
                                    {name: "red-48x46.mp4", type:"video/mp4"});

@@ -605,7 +605,7 @@ TimeoutManager::MaybeApplyBackPressure()
   // do this first in order to verify we can dispatch successfully before
   // entering the back pressure state.
   nsCOMPtr<nsIRunnable> r =
-    NewNonOwningRunnableMethod<StorensRefPtrPassByPtr<nsGlobalWindow>>(this,
+    NewNonOwningRunnableMethod<StoreRefPtrPassByPtr<nsGlobalWindow>>(this,
       &TimeoutManager::CancelOrUpdateBackPressure, &mWindow);
   nsresult rv = queue->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   NS_ENSURE_SUCCESS_VOID(rv);
@@ -668,7 +668,7 @@ TimeoutManager::CancelOrUpdateBackPressure(nsGlobalWindow* aWindow)
   // has been processed.  The next update will only keep back pressure if
   // more runnables continue to be dispatched to the queue.
   nsCOMPtr<nsIRunnable> r =
-    NewNonOwningRunnableMethod<StorensRefPtrPassByPtr<nsGlobalWindow>>(this,
+    NewNonOwningRunnableMethod<StoreRefPtrPassByPtr<nsGlobalWindow>>(this,
       &TimeoutManager::CancelOrUpdateBackPressure, &mWindow);
   MOZ_ALWAYS_SUCCEEDS(queue->Dispatch(r.forget(), NS_DISPATCH_NORMAL));
 }

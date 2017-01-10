@@ -206,7 +206,7 @@ AudioNode::Connect(AudioNode& aDestination, uint32_t aOutput,
   }
 
   if (Context() != aDestination.Context()) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return nullptr;
   }
 
@@ -257,7 +257,7 @@ AudioNode::Connect(AudioParam& aDestination, uint32_t aOutput,
   }
 
   if (Context() != aDestination.GetParentObject()) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
+    aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return;
   }
 

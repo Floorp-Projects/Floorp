@@ -41,6 +41,7 @@ class Instance
     GCPtrWasmMemoryObject           memory_;
     SharedTableVector               tables_;
     TlsData                         tlsData_;
+    bool                            enterFrameTrapsEnabled_;
 
     // Internal helpers:
     const void** addressOfSigId(const SigIdDesc& sigId) const;
@@ -123,6 +124,11 @@ class Instance
     // See Code::ensureProfilingState comment.
 
     MOZ_MUST_USE bool ensureProfilingState(JSContext* cx, bool enabled);
+
+    // Debug support:
+    bool debugEnabled() const { return code_->metadata().debugEnabled; }
+    bool enterFrameTrapsEnabled() const { return enterFrameTrapsEnabled_; }
+    void ensureEnterFrameTrapsState(JSContext* cx, bool enabled);
 
     // about:memory reporting:
 

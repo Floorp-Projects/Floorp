@@ -960,7 +960,7 @@ TrackBuffersManager::OnDemuxerInitDone(nsresult)
   // 1. Update the duration attribute if it currently equals NaN.
   // Those steps are performed by the MediaSourceDecoder::SetInitialDuration
   AbstractThread::MainThread()->Dispatch(NewRunnableMethod<int64_t>
-                                         (mParentDecoder,
+                                         (mParentDecoder.get(),
                                           &MediaSourceDecoder::SetInitialDuration,
                                           duration ? duration : -1));
 

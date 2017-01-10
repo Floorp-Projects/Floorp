@@ -123,6 +123,7 @@
   skin/classic/browser/warning.svg                             (../shared/warning.svg)
   skin/classic/browser/warning-white.svg                       (../shared/warning-white.svg)
   skin/classic/browser/cert-error.svg                          (../shared/incontent-icons/cert-error.svg)
+  skin/classic/browser/wifi.svg                                (../shared/incontent-icons/wifi.svg)
   skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/favicon-search-16.svg                   (../shared/favicon-search-16.svg)

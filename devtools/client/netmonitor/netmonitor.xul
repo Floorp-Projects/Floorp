@@ -212,14 +212,8 @@
               </tabpanel>
               <tabpanel id="params-tabpanel"
                         class="tabpanel-content">
-                <vbox flex="1">
-                  <vbox id="request-params-box" flex="1" hidden="true">
-                    <vbox id="request-params" flex="1"/>
-                  </vbox>
-                  <vbox id="request-post-data-textarea-box" flex="1" hidden="true">
-                    <vbox id="request-post-data-textarea" flex="1"/>
-                  </vbox>
-                </vbox>
+                <html:div xmlns="http://www.w3.org/1999/xhtml"
+                          id="react-params-tabpanel-hook"/>
               </tabpanel>
               <tabpanel id="response-tabpanel"
                         class="tabpanel-content">

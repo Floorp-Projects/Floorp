@@ -4,61 +4,25 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import logging
-import os
-
-from . import base
-from taskgraph.util.templates import Templates
+from . import transform
 
 
-logger = logging.getLogger(__name__)
-GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
-ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
-INDEX_URL = 'https://index.taskcluster.net/v1/task/{}'
-
-
-class SigningTask(base.Task):
-
-    def __init__(self, kind, name, task, attributes):
-        self.unsigned_artifact_label = task['unsigned-task']['label']
-        super(SigningTask, self).__init__(kind, name, task=task['task'],
-                                          attributes=attributes)
+class SigningTask(transform.TransformTask):
+    """
+    A task implementing a signing job.  These depend on nightly build jobs and
+    sign the artifacts after a build has completed.
+    """
 
     @classmethod
-    def load_tasks(cls, kind, path, config, params, loaded_tasks):
-        root = os.path.abspath(path)
+    def get_inputs(cls, kind, path, config, params, loaded_tasks):
+        if (config.get('kind-dependencies', []) != ["build"] and
+                config.get('kind-dependencies', []) != ["nightly-l10n"]):
+            raise Exception("Signing kinds must depend on builds or l10n repacks")
+        for task in loaded_tasks:
+            if task.kind not in config.get('kind-dependencies'):
+                continue
+            if not task.attributes.get('nightly'):
+                continue
+            signing_task = {'dependent-task': task}
 
-        tasks = []
-        for filename in config.get('jobs-from', []):
-            templates = Templates(root)
-            jobs = templates.load(filename, {})
-
-            for name, job in jobs.iteritems():
-                for artifact in job['unsigned-task']['artifacts']:
-                    url = ARTIFACT_URL.format('<{}>'.format('unsigned-artifact'), artifact)
-                    job['task']['payload']['unsignedArtifacts'].append({
-                        'task-reference': url
-                    })
-                attributes = job.setdefault('attributes', {})
-                attributes.update({'kind': 'signing'})
-                tasks.append(cls(kind, name, job, attributes=attributes))
-
-        return tasks
-
-    def get_dependencies(self, taskgraph):
-        return [(self.unsigned_artifact_label, 'unsigned-artifact')]
-
-    def optimize(self, params):
-        return False, None
-
-    @classmethod
-    def from_json(cls, task_dict):
-        unsigned_task_label = task_dict['dependencies']['unsigned-artifact']
-        task_dict['unsigned-task'] = {
-            'label': unsigned_task_label
-        }
-        signing_task = cls(kind='build-signing',
-                           name=task_dict['label'],
-                           attributes=task_dict['attributes'],
-                           task=task_dict)
-        return signing_task
+            yield signing_task

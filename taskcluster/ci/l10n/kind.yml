@@ -2,109 +2,117 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# NOTE: please write a description of this kind in taskcluster/docs/kinds.rst
+implementation: taskgraph.task.repacks:RepackTask
 
-implementation: taskgraph.task.transform:TransformTask
 
 transforms:
    - taskgraph.transforms.l10n:transforms
-   - taskgraph.transforms.build_attrs:transforms
    - taskgraph.transforms.job:transforms
    - taskgraph.transforms.task:transforms
 
-job-defaults:
-    index:
-        product: firefox
-    treeherder:
-        kind: build
-        tier: 2
-    worker-type: aws-provisioner-v1/gecko-{level}-b-linux
-    worker:
-        implementation: docker-worker
-        docker-image: {in-tree: desktop-build}
-        max-run-time: 36000
+kind-dependencies:
+   - build
 
-    # don't run anywhere by default, but still available via try
-    run-on-projects: []
-    run:
-        # NOTE: this should really be a different "using" since it's using
-        # build-l10n.sh instead of build-linux.sh.  Preferably, build-linux.sh
-        # and the mozharness run implementation should be modified to support
-        # the functionality that l10n needs
-        using: mozharness
-        job-script: taskcluster/scripts/builder/build-l10n.sh
-    when:
-        files-changed:
-            - browser/locales/all-locales
-            - python/compare-locales/**
-            - testing/mozharness/configs/single_locale/**
-            - testing/mozharness/mozharness/mozilla/l10n/locales.py
-            - testing/mozharness/scripts/desktop_l10n.py
-            - toolkit/locales/**
-            - toolkit/mozapps/installer/**
+only-for-build-platforms:
+   - linux64/opt
+   - linux/opt
+   - android-api-15/opt
+   #- macosx64/opt
 
-jobs:
-    linux-l10n/opt:
-        description: "Localization"
-        index:
-            job-name: linux32-l10n-opt
-        treeherder:
-            platform: linux32/opt
-            symbol: tc(L10n)
-        run:
-            script: mozharness/scripts/desktop_l10n.py
-            actions: [clone-locales list-locales setup repack summary]
-            config:
-                - single_locale/tc_linux32.py
-            options:
-                - environment-config=single_locale/production.py
-                - branch-config=single_locale/{project}.py
-                - platform-config=single_locale/linux32.py
-                - total-chunks=1
-                - this-chunk=1
-            tooltool-downloads: public
-            need-xvfb: true
-
-    linux64-l10n/opt:
-        description: "Localization"
-        index:
-            job-name: linux64-l10n-opt
-        treeherder:
-            platform: linux64/opt
-            symbol: tc(L10n)
-        run:
-            script: mozharness/scripts/desktop_l10n.py
-            actions: [clone-locales list-locales setup repack summary]
-            config:
-                - single_locale/tc_linux64.py
-            options:
-                - environment-config=single_locale/production.py
-                - branch-config=single_locale/{project}.py
-                - platform-config=single_locale/linux64.py
-                - total-chunks=1
-                - this-chunk=1
-            tooltool-downloads: public
-            need-xvfb: true
-
-    android-api-15-l10n/opt:
-        description: "Single Locale Repack"
-        index:
-            product: mobile
-            job-name: android-l10n-opt
-        treeherder:
-            platform: android-4-0-armv7-api15/opt
-            symbol: tc(L10n)
-        worker-type: aws-provisioner-v1/gecko-{level}-b-android
-        worker:
-            max-run-time: 18000
-        run:
-            script: mozharness/scripts/mobile_l10n.py
-            actions: [clone-locales list-locales setup repack upload-repacks summary]
-            config:
-                - single_locale/{project}_android-api-15.py
-                - single_locale/tc_android-api-15.py
-            options:
-                - total-chunks=1
-                - this-chunk=1
-            tooltool-downloads: internal
-            need-xvfb: true
+job-template:
+   description:
+      by-build-platform:
+         default: Localization
+         android-api-15-l10n: Single Locale Repack
+   locales-file:
+      by-build-platform:
+         default: browser/locales/all-locales
+         android-api-15-l10n: mobile/android/locales/all-locales
+   run-time:
+      by-build-platform:
+         default: 36000
+         android-api-15-l10n: 18000
+   tooltool:
+      by-build-platform:
+         default: public
+         android-api-15-l10n: internal
+   index:
+      product:
+         by-build-platform:
+            default: firefox
+            android-api-15-l10n: mobile
+      job-name:
+         by-build-platform:
+            linux-l10n: linux32-l10n-opt
+            linux64-l10n: linux64-l10n-opt
+            macosx64: macosx64-l10n-opt
+            android-api-15-l10n: android-l10n-opt
+   worker-type:
+      by-build-platform:
+         default: aws-provisioner-v1/gecko-{level}-b-linux
+         android: aws-provisioner-v1/gecko-{level}-b-android
+   treeherder:
+      symbol: tc(L10n)
+      tier:
+         by-build-platform:
+            default: 2
+      platform:
+         by-build-platform:
+            linux64-l10n: linux64/opt
+            linux-l10n: linux32/opt
+            macosx64: macosx64/opt
+            android-api-15-l10n: android-4-0-armv7-api15/opt
+   mozharness:
+      config:
+         by-build-platform:
+            linux-l10n:
+               - single_locale/tc_linux32.py
+            linux64-l10n:
+               - single_locale/tc_linux64.py
+            macosx64:
+               - single_locale/tc_macosx64.py
+            android-api-15-l10n:
+               - single_locale/{project}_android-api-15.py
+               - single_locale/tc_android-api-15.py
+            # no default, so we fail on new entries
+      options:
+         by-build-platform:
+            linux-l10n:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/linux32.py
+               - total-chunks=1
+               - this-chunk=1
+            linux64-l10n:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/linux64.py
+               - total-chunks=1
+               - this-chunk=1
+            macosx64:
+               - environment-config=single_locale/production.py
+               - branch-config=single_locale/{project}.py
+               - platform-config=single_locale/macosx64.py
+               - total-chunks=1
+               - this-chunk=1
+            default:
+               - total-chunks=1
+               - this-chunk=1
+      actions:
+         by-build-platform:
+            default: [clone-locales list-locales setup repack summary]
+            android-api-15-l10n: [clone-locales list-locales setup repack
+                                  upload-repacks summary]
+      script:
+         by-build-platform:
+            default: mozharness/scripts/desktop_l10n.py
+            android-api-15-l10n: mozharness/scripts/mobile_l10n.py
+   when:
+      files-changed:
+         - browser/locales/all-locales
+         - python/compare-locales/**
+         - testing/mozharness/configs/single_locale/**
+         - testing/mozharness/mozharness/mozilla/l10n/locales.py
+         - testing/mozharness/scripts/desktop_l10n.py
+         - toolkit/locales/**
+         - toolkit/mozapps/installer/**

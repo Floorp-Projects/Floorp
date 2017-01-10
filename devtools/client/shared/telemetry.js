@@ -145,7 +145,6 @@ Telemetry.prototype = {
     },
     "scratchpad-window": {
       histogram: "DEVTOOLS_SCRATCHPAD_WINDOW_OPENED_COUNT",
-      timerHistogram: "DEVTOOLS_SCRATCHPAD_WINDOW_TIME_ACTIVE_SECONDS"
     },
     responsive: {
       histogram: "DEVTOOLS_RESPONSIVE_OPENED_COUNT",

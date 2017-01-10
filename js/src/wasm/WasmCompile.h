@@ -40,11 +40,13 @@ struct CompileArgs
     Assumptions assumptions;
     ScriptedCaller scriptedCaller;
     bool alwaysBaseline;
+    bool debugEnabled;
 
     CompileArgs(Assumptions&& assumptions, ScriptedCaller&& scriptedCaller)
       : assumptions(Move(assumptions)),
         scriptedCaller(Move(scriptedCaller)),
-        alwaysBaseline(false)
+        alwaysBaseline(false),
+        debugEnabled(false)
     {}
 
     // If CompileArgs is constructed without arguments, initFromContext() must
