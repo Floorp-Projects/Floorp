@@ -11,7 +11,11 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Reps
-  const { isGrip, cropString } = require("./rep-utils");
+  const {
+    isGrip,
+    cropString,
+    wrapRender,
+  } = require("./rep-utils");
   const { MODE } = require("./constants");
 
   // Shortcuts
@@ -43,7 +47,7 @@ define(function (require, exports, module) {
       return title;
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {
         object: grip,
         mode = MODE.SHORT,
@@ -75,7 +79,7 @@ define(function (require, exports, module) {
           )
         )
       );
-    },
+    }),
   });
 
   // Registration

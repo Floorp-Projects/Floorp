@@ -8,7 +8,10 @@ define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
   // Utils
-  const { isGrip } = require("./rep-utils");
+  const {
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   const { MODE } = require("./constants");
   // Shortcuts
   const { span } = React.DOM;
@@ -25,7 +28,7 @@ define(function (require, exports, module) {
       mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let object = this.props.object;
       let preview = object.preview;
       let name = preview && preview.name
@@ -51,7 +54,7 @@ define(function (require, exports, module) {
           span({}, content)
         )
       );
-    },
+    }),
   });
 
   // Registration

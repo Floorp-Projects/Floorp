@@ -11,7 +11,10 @@ define(function (require, exports, module) {
   const React = require("devtools/client/shared/vendor/react");
 
   // Utils
-  const { isGrip } = require("./rep-utils");
+  const {
+    isGrip,
+    wrapRender,
+  } = require("./rep-utils");
   const { MODE } = require("./constants");
   const nodeConstants = require("devtools/shared/dom-node-constants");
 
@@ -88,7 +91,7 @@ define(function (require, exports, module) {
       ];
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {
         object,
         mode,
@@ -114,7 +117,7 @@ define(function (require, exports, module) {
       return objectLink({object},
         span(baseConfig, ...elements)
       );
-    },
+    }),
   });
 
   // Registration

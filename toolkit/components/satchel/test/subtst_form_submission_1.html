@@ -17,9 +17,18 @@
 </form>
 
 <script>
+  var parentOrigin = "http://mochi.test:8888";
+  window.addEventListener("message", receiveMessage, false);
+  function receiveMessage(event) {
+    if (event.origin !== parentOrigin) {
+      parent.postMessage({error: "unexpected origin " + event.origin}, parentOrigin);
+      return;
+    }
+    clickButton(+event.data);
+  }
+
   function checkSubmit(num) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    return parent.checkSubmit(num);
+    return parent.postMessage({num}, parentOrigin);
   }
 
   function clickButton(num) {

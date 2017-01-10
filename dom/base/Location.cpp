@@ -576,9 +576,10 @@ Location::GetPathname(nsAString& aPathname)
   aPathname.Truncate();
 
   nsCOMPtr<nsIURI> uri;
-  nsresult result = NS_OK;
-
-  result = GetURI(getter_AddRefs(uri));
+  nsresult result = GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(result) || !uri) {
+    return result;
+  }
 
   nsAutoCString file;
 

@@ -10,7 +10,10 @@
 define(function (require, exports, module) {
   // Dependencies
   const React = require("devtools/client/shared/vendor/react");
-  const { createFactories } = require("./rep-utils");
+  const {
+    createFactories,
+    wrapRender,
+  } = require("./rep-utils");
   const { Caption } = createFactories(require("./caption"));
   const { MODE } = require("./constants");
 
@@ -116,7 +119,7 @@ define(function (require, exports, module) {
     onClickBracket: function (event) {
     },
 
-    render: function () {
+    render: wrapRender(function () {
       let {
         object,
         mode = MODE.SHORT,
@@ -158,7 +161,7 @@ define(function (require, exports, module) {
           )
         )
       );
-    },
+    }),
   });
 
   /**
@@ -167,7 +170,7 @@ define(function (require, exports, module) {
   let ItemRep = React.createFactory(React.createClass({
     displayName: "ItemRep",
 
-    render: function () {
+    render: wrapRender(function () {
       const { Rep } = createFactories(require("./rep"));
 
       let object = this.props.object;
@@ -179,7 +182,7 @@ define(function (require, exports, module) {
           delim
         )
       );
-    }
+    })
   }));
 
   function supportsObject(object, type) {

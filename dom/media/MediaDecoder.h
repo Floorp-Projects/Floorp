@@ -192,6 +192,8 @@ public:
   // not be played. Note that seeking also doesn't cause us start prerolling.
   void SetMinimizePrerollUntilPlaybackStarts();
 
+  bool GetMinimizePreroll() const { return mMinimizePreroll; }
+
   // All MediaStream-related data is protected by mReentrantMonitor.
   // We have at most one DecodedStreamData per MediaDecoder. Its stream
   // is used as the input for each ProcessedMediaStream created by calls to
