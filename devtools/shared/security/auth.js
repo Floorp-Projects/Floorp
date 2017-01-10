@@ -380,7 +380,7 @@ OOBCert.Client.prototype = {
             break;
           default:
             transport.close(new Error("Invalid auth result: " + authResult));
-            return;
+            break;
         }
       }.bind(this)),
       onClosed(reason) {

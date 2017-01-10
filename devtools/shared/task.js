@@ -158,7 +158,7 @@ var Task = {
    *         called when the task terminates.
    */
   spawn: function (task) {
-    return createAsyncFunction(task).call(undefined);
+    return createAsyncFunction(task)();
   },
 
   /**
