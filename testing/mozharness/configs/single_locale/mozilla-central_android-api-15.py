@@ -1,3 +1,5 @@
+import os
+
 BRANCH = "mozilla-central"
 MOZ_UPDATE_CHANNEL = "nightly"
 MOZILLA_DIR = BRANCH
@@ -27,17 +29,19 @@ config = {
         'tooltool.py': '/builds/tooltool.py',
     },
     "repos": [{
-        "repo": "https://hg.mozilla.org/mozilla-central",
+        "vcs": "hg",
+        "repo": "https://hg.mozilla.org/build/tools",
         "branch": "default",
+        "dest": "tools",
+    }, {
+        "vcs": "hg",
+        "repo": "https://hg.mozilla.org/mozilla-central",
+        "revision": "%(revision)s",
         "dest": MOZILLA_DIR,
     }, {
         "repo": "https://hg.mozilla.org/build/buildbot-configs",
         "branch": "default",
         "dest": "buildbot-configs"
-    }, {
-        "repo": "https://hg.mozilla.org/build/tools",
-        "branch": "default",
-        "dest": "tools"
     }],
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",
@@ -48,7 +52,7 @@ config = {
         # so ugly, bug 951238
         "LD_LIBRARY_PATH": "/lib:/tools/gcc-4.7.2-0moz1/lib:/tools/gcc-4.7.2-0moz1/lib64",
         "MOZ_OBJDIR": OBJDIR,
-        "EN_US_BINARY_URL": EN_US_BINARY_URL,
+        "EN_US_BINARY_URL": os.environ.get("EN_US_BINARY_URL", EN_US_BINARY_URL),
         "LOCALE_MERGEDIR": "%(abs_merge_dir)s/",
         "MOZ_UPDATE_CHANNEL": MOZ_UPDATE_CHANNEL,
     },

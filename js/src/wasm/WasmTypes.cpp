@@ -32,6 +32,7 @@
 #include "wasm/WasmSerialize.h"
 #include "wasm/WasmSignalHandlers.h"
 
+#include "vm/Debugger-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -96,6 +97,75 @@ WasmHandleExecutionInterrupt()
     activation->setResumePC(nullptr);
 
     return success;
+}
+
+static bool
+WasmHandleDebugTrap()
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    FrameIterator iter(*activation);
+    MOZ_ASSERT(iter.debugEnabled());
+    const CallSite* site = iter.debugTrapCallsite();
+    MOZ_ASSERT(site);
+    if (site->kind() == CallSite::EnterFrame) {
+        if (!iter.instance()->enterFrameTrapsEnabled())
+            return true;
+        DebugFrame* frame = iter.debugFrame();
+        frame->setIsDebuggee();
+        frame->observeFrame(cx);
+        // TODO call onEnterFrame
+        JSTrapStatus status = Debugger::onEnterFrame(cx, frame);
+        if (status == JSTRAP_RETURN) {
+            // Ignoring forced return (JSTRAP_RETURN) -- changing code execution
+            // order is not yet implemented in the wasm baseline.
+            // TODO properly handle JSTRAP_RETURN and resume wasm execution.
+            JS_ReportErrorASCII(cx, "Unexpected resumption value from onEnterFrame");
+            return false;
+        }
+        return status == JSTRAP_CONTINUE;
+    }
+    if (site->kind() == CallSite::LeaveFrame) {
+        DebugFrame* frame = iter.debugFrame();
+        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, true);
+        frame->leaveFrame(cx);
+        return ok;
+    }
+    // TODO baseline debug traps
+    MOZ_CRASH();
+    return true;
+}
+
+static void
+WasmHandleDebugThrow()
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    for (FrameIterator iter(*activation); !iter.done(); ++iter) {
+        if (!iter.debugEnabled())
+            continue;
+
+        DebugFrame* frame = iter.debugFrame();
+
+        JSTrapStatus status = Debugger::onExceptionUnwind(cx, frame);
+        if (status == JSTRAP_RETURN) {
+            // Unexpected trap return -- raising error since throw recovery
+            // is not yet implemented in the wasm baseline.
+            // TODO properly handle JSTRAP_RETURN and resume wasm execution.
+            JS_ReportErrorASCII(cx, "Unexpected resumption value from onExceptionUnwind");
+        }
+
+        bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, false);
+        if (ok) {
+            // Unexpected success from the handler onLeaveFrame -- raising error
+            // since throw recovery is not yet implemented in the wasm baseline.
+            // TODO properly handle success and resume wasm execution.
+            JS_ReportErrorASCII(cx, "Unexpected success from onLeaveFrame");
+        }
+        frame->leaveFrame(cx);
+     }
 }
 
 static void
@@ -277,6 +347,10 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
+      case SymbolicAddress::HandleDebugTrap:
+        return FuncCast(WasmHandleDebugTrap, Args_General0);
+      case SymbolicAddress::HandleDebugThrow:
+        return FuncCast(WasmHandleDebugThrow, Args_General0);
       case SymbolicAddress::ReportTrap:
         return FuncCast(WasmReportTrap, Args_General1);
       case SymbolicAddress::ReportOutOfBounds:

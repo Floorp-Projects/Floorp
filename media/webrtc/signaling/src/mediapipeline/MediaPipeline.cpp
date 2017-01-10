@@ -199,7 +199,7 @@ public:
     ++mLength; // Atomic
 
     nsCOMPtr<nsIRunnable> runnable =
-      NewRunnableMethod<StorensRefPtrPassByPtr<Image>, bool>(
+      NewRunnableMethod<StoreRefPtrPassByPtr<Image>, bool>(
         this, &VideoFrameConverter::ProcessVideoFrame,
         aChunk.mFrame.GetImage(), forceBlack);
     mTaskQueue->Dispatch(runnable.forget());

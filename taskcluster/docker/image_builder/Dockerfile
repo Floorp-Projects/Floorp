@@ -9,8 +9,8 @@ ADD topsrcdir/taskcluster/docker/recipes/common.sh /setup/common.sh
 # %include taskcluster/docker/recipes/install-mercurial.sh
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
-# %include taskcluster/mozharness/external_tools/robustcheckout.py
-ADD topsrcdir/taskcluster/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
+# %include testing/mozharness/external_tools/robustcheckout.py
+ADD topsrcdir/testing/mozharness/external_tools/robustcheckout.py /usr/local/mercurial/robustcheckout.py
 
 # %include taskcluster/docker/recipes/run-task
 ADD topsrcdir/taskcluster/docker/recipes/run-task /usr/local/bin/run-task

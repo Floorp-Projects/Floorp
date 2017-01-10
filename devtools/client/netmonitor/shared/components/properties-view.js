@@ -22,6 +22,8 @@ const TreeRow = createFactory(require("devtools/client/shared/components/tree/tr
 const { Rep } = createFactories(require("devtools/client/shared/components/reps/rep"));
 
 const { div, tr, td } = DOM;
+const AUTO_EXPAND_MAX_LEVEL = 7;
+const EDITOR_CONFIG_ID = "EDITOR_CONFIG";
 
 /*
  * Properties View component
@@ -30,7 +32,7 @@ const { div, tr, td } = DOM;
  *
  * Search filter - Set enableFilter to enable / disable SearchBox feature.
  * Tree view - Default enabled.
- * Source editor - Enable by specifying object level 1 property name to "editorText".
+ * Source editor - Enable by specifying object level 1 property name to EDITOR_CONFIG_ID.
  * Rep - Default enabled.
  */
 const PropertiesView = createClass({
@@ -76,16 +78,22 @@ const PropertiesView = createClass({
   },
 
   renderRowWithEditor(props) {
-    const { level, name, value } = props.member;
-    // Display source editor when prop name specify to editorText
-    if (level === 1 && name === "editorText") {
+    const { level, name, value, path } = props.member;
+
+    // Display source editor when specifying to EDITOR_CONFIG_ID along with config
+    if (level === 1 && name === EDITOR_CONFIG_ID) {
       return (
         tr({},
           td({ colSpan: 2 },
-            Editor({ text: value })
+            Editor(value)
           )
         )
       );
+    }
+
+    // Skip for editor config
+    if (level >= 1 && path.includes(EDITOR_CONFIG_ID)) {
+      return null;
     }
 
     return TreeRow(props);
@@ -106,10 +114,37 @@ const PropertiesView = createClass({
     }));
   },
 
+  shouldRenderSearchBox(object) {
+    return this.props.enableFilter && object && Object.keys(object)
+      .filter((section) => !object[section][EDITOR_CONFIG_ID]).length > 0;
+  },
+
   updateFilterText(filterText) {
     this.setState({
       filterText,
     });
+  },
+
+  getExpandedNodes: function (object, path = "", level = 0) {
+    if (typeof object != "object") {
+      return null;
+    }
+
+    if (level > AUTO_EXPAND_MAX_LEVEL) {
+      return null;
+    }
+
+    let expandedNodes = new Set();
+    for (let prop in object) {
+      let nodePath = path + "/" + prop;
+      expandedNodes.add(nodePath);
+
+      let nodes = this.getExpandedNodes(object[prop], nodePath, level + 1);
+      if (nodes) {
+        expandedNodes = new Set([...expandedNodes, ...nodes]);
+      }
+    }
+    return expandedNodes;
   },
 
   render() {
@@ -117,7 +152,6 @@ const PropertiesView = createClass({
       object,
       decorator,
       enableInput,
-      enableFilter,
       expandableStrings,
       filterPlaceHolder,
       renderRow,
@@ -127,14 +161,15 @@ const PropertiesView = createClass({
 
     return (
       div({ className: "properties-view" },
-        enableFilter && div({ className: "searchbox-section" },
-          SearchBox({
-            delay: FILTER_SEARCH_DELAY,
-            type: "filter",
-            onChange: this.updateFilterText,
-            placeholder: filterPlaceHolder,
-          }),
-        ),
+        this.shouldRenderSearchBox(object) &&
+          div({ className: "searchbox-section" },
+            SearchBox({
+              delay: FILTER_SEARCH_DELAY,
+              type: "filter",
+              onChange: this.updateFilterText,
+              placeholder: filterPlaceHolder,
+            }),
+          ),
         div({ className: "tree-container" },
           TreeView({
             object,
@@ -147,7 +182,7 @@ const PropertiesView = createClass({
             },
             enableInput,
             expandableStrings,
-            expandedNodes: new Set(sectionNames.map((sec) => "/" + sec)),
+            expandedNodes: this.getExpandedNodes(object),
             onFilter: (props) => this.onFilter(props, sectionNames),
             renderRow: renderRow || this.renderRowWithEditor,
             renderValue: renderValue || this.renderValueWithRep,

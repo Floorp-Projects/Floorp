@@ -55,6 +55,7 @@ public:
                                                const nsCString& aLocalAddr,
                                                const uint16_t& aLocalPort,
                                                const bool&     aUseSSL,
+                                               const bool&     aReuseAddrPort,
                                                const bool& aUseArrayBuffers,
                                                const nsCString& aFilter) override;
 

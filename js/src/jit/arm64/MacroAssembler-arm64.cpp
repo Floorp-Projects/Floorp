@@ -587,6 +587,25 @@ MacroAssembler::patchNearJumpToNop(uint8_t* jump)
     MOZ_CRASH("NYI");
 }
 
+CodeOffset
+MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc)
+{
+    MOZ_CRASH("NYI");
+    return CodeOffset();
+}
+
+void
+MacroAssembler::patchNopToCall(uint8_t* call, uint8_t* target)
+{
+    MOZ_CRASH("NYI");
+}
+
+void
+MacroAssembler::patchCallToNop(uint8_t* call)
+{
+    MOZ_CRASH("NYI");
+}
+
 void
 MacroAssembler::pushReturnAddress()
 {

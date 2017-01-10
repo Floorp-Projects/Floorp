@@ -144,6 +144,7 @@ class CompileTask
     Maybe<jit::TempAllocator>  alloc_;
     Maybe<jit::MacroAssembler> masm_;
     FuncCompileUnitVector      units_;
+    bool                       debugEnabled_;
 
     CompileTask(const CompileTask&) = delete;
     CompileTask& operator=(const CompileTask&) = delete;
@@ -151,6 +152,7 @@ class CompileTask
     void init() {
         alloc_.emplace(&lifo_);
         masm_.emplace(jit::MacroAssembler::WasmToken(), *alloc_);
+        debugEnabled_ = false;
     }
 
   public:
@@ -174,6 +176,12 @@ class CompileTask
     }
     FuncCompileUnitVector& units() {
         return units_;
+    }
+    bool debugEnabled() const {
+        return debugEnabled_;
+    }
+    void setDebugEnabled(bool enabled) {
+        debugEnabled_ = enabled;
     }
     bool reset(UniqueFuncBytesVector* freeFuncBytes) {
         for (FuncCompileUnit& unit : units_) {
@@ -206,6 +214,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Constant parameters
     bool                            alwaysBaseline_;
+    bool                            debugEnabled_;
     UniqueChars*                    error_;
 
     // Data that is moved into the result of finish()
@@ -225,6 +234,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     Uint32Set                       exportedFuncs_;
     uint32_t                        lastPatchedCallsite_;
     uint32_t                        startOfUnpatchedCallsites_;
+    Uint32Vector                    debugTrapFarJumps_;
 
     // Parallel compilation
     bool                            parallel_;
@@ -245,7 +255,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     const CodeRange& funcCodeRange(uint32_t funcIndex) const;
     uint32_t numFuncImports() const;
     MOZ_MUST_USE bool patchCallSites(TrapExitOffsetArray* maybeTrapExits = nullptr);
-    MOZ_MUST_USE bool patchFarJumps(const TrapExitOffsetArray& trapExits);
+    MOZ_MUST_USE bool patchFarJumps(const TrapExitOffsetArray& trapExits, const Offsets& debugTrapStub);
     MOZ_MUST_USE bool finishTask(CompileTask* task);
     MOZ_MUST_USE bool finishOutstandingTask();
     MOZ_MUST_USE bool finishFuncExports();

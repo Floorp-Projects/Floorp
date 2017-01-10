@@ -16,6 +16,7 @@ class InterpreterTypeCache(object):
         self.tInterpreterFrame = gdb.lookup_type('js::InterpreterFrame')
         self.tBaselineFrame = gdb.lookup_type('js::jit::BaselineFrame')
         self.tRematerializedFrame = gdb.lookup_type('js::jit::RematerializedFrame')
+        self.tDebugFrame = gdb.lookup_type('js::wasm::DebugFrame')
 
 @pretty_printer('js::InterpreterRegs')
 class InterpreterRegs(object):
@@ -47,7 +48,8 @@ class AbstractFramePtr(object):
     Tag_InterpreterFrame = 0x1
     Tag_BaselineFrame = 0x2
     Tag_RematerializedFrame = 0x3
-    TagMask = 0x3
+    Tag_WasmDebugFrame = 0x4
+    TagMask = 0x7
 
     def __init__(self, value, cache):
         self.value = value
@@ -72,6 +74,9 @@ class AbstractFramePtr(object):
         if tag == AbstractFramePtr.Tag_RematerializedFrame:
             label = 'js::jit::RematerializedFrame'
             ptr = ptr.cast(self.itc.tRematerializedFrame.pointer())
+        if tag == AbstractFramePtr.Tag_WasmDebugFrame:
+            label = 'js::wasm::DebugFrame'
+            ptr = ptr.cast(self.itc.tDebugFrame.pointer())
         return 'AbstractFramePtr (({} *) {})'.format(label, ptr)
 
     # Provide the ptr_ field as a child, so it prints after the pretty string
