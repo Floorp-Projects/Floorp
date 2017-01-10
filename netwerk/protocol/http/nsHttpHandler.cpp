@@ -53,6 +53,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsIOService.h"
 #include "nsIUUIDGenerator.h"
+#include "nsIThrottlingService.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
@@ -587,6 +588,17 @@ nsHttpHandler::GetIOService(nsIIOService** result)
 
     NS_ADDREF(*result = mIOService);
     return NS_OK;
+}
+
+nsIThrottlingService *
+nsHttpHandler::GetThrottlingService()
+{
+    if (!mThrottlingService) {
+        nsCOMPtr<nsIThrottlingService> service = do_GetService(NS_THROTTLINGSERVICE_CONTRACTID);
+        mThrottlingService = new nsMainThreadPtrHolder<nsIThrottlingService>(service);
+    }
+
+    return mThrottlingService;
 }
 
 uint32_t
