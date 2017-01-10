@@ -287,6 +287,14 @@ WebGLFBAttachPoint::IsComplete(WebGLContext* webgl, nsCString* const out_info) c
         return false;
     }
 
+    if (webgl->IsWebGL2() && Texture() &&
+        Texture()->IsCubeMap() && !Texture()->IsCubeComplete())
+    {
+        AttachmentName(out_info);
+        out_info->AppendLiteral(" is not cube complete");
+        return false;
+    }
+
     const auto format = formatUsage->format;
 
     bool hasRequiredBits;
