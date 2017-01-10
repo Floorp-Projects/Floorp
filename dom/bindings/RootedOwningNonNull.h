@@ -51,21 +51,12 @@ struct GCPolicy<mozilla::OwningNonNull<T>>
 } // namespace JS
 
 namespace js {
-template<typename T>
-struct RootedBase<mozilla::OwningNonNull<T>>
+template<typename T, typename Wrapper>
+struct WrappedPtrOperations<mozilla::OwningNonNull<T>, Wrapper>
 {
-  typedef mozilla::OwningNonNull<T> SmartPtrType;
-
-  operator SmartPtrType& () const
-  {
-    auto& self = *static_cast<const JS::Rooted<SmartPtrType>*>(this);
-    return self.get();
-  }
-
   operator T& () const
   {
-    auto& self = *static_cast<const JS::Rooted<SmartPtrType>*>(this);
-    return self.get();
+    return static_cast<const Wrapper*>(this)->get();
   }
 };
 } // namespace js
