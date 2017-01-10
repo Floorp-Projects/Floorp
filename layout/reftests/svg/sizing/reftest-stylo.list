@@ -12,10 +12,8 @@
 #   http://www.w3.org/TR/SVGMobile12/coords.html#IntrinsicSizing
 #   http://www.w3.org/TR/CSS21/visudet.html
 
-skip-if(B2G||Mulet||Android) == scrollbars-01.svg scrollbars-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet||Android) == scrollbars-02.svg scrollbars-02.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(Android) == scrollbars-01.svg scrollbars-01.svg
+skip-if(Android) == scrollbars-02.svg scrollbars-02.svg
 
 # Standalone tests
 #
@@ -89,7 +87,7 @@ skip-if(B2G||Mulet||Android) == scrollbars-02.svg scrollbars-02.svg
 == standalone--auto-0--px-px.svg standalone--auto-0--px-px.svg
 
 == standalone--auto-auto--0-0.svg standalone--auto-auto--0-0.svg
-skip == standalone--auto-auto--0-pct.svg standalone--auto-auto--0-pct.svg
+== standalone--auto-auto--0-pct.svg standalone--auto-auto--0-pct.svg
 == standalone--auto-auto--0-px.svg standalone--auto-auto--0-px.svg
 == standalone--auto-auto--pct-0.svg standalone--auto-auto--pct-0.svg
 fuzzy-if(d2d,1,400) == standalone--auto-auto--pct-pct.svg standalone--auto-auto--pct-pct.svg
@@ -107,7 +105,6 @@ fuzzy-if(d2d,1,400) == standalone--auto-pct--pct-px.svg standalone--auto-pct--pc
 == standalone--auto-pct--px-0.svg standalone--auto-pct--px-0.svg
 == standalone--auto-pct--px-pct.svg standalone--auto-pct--px-pct.svg
 fuzzy-if(d2d,1,1000) == standalone--auto-pct--px-px.svg standalone--auto-pct--px-px.svg
-# intrinsic ratio!
 
 == standalone--auto-px--0-0.svg standalone--auto-px--0-0.svg
 == standalone--auto-px--0-pct.svg standalone--auto-px--0-pct.svg
@@ -118,7 +115,6 @@ fuzzy-if(d2d,1,1000) == standalone--auto-pct--px-px.svg standalone--auto-pct--px
 == standalone--auto-px--px-0.svg standalone--auto-px--px-0.svg
 == standalone--auto-px--px-pct.svg standalone--auto-px--px-pct.svg
 == standalone--auto-px--px-px.svg standalone--auto-px--px-px.svg
-# intrinsic ratio!
 
 == standalone--pct-0--0-0.svg standalone--pct-0--0-0.svg
 == standalone--pct-0--0-pct.svg standalone--pct-0--0-pct.svg
@@ -139,7 +135,6 @@ fuzzy-if(d2d,1,400) == standalone--pct-auto--pct-pct.svg standalone--pct-auto--p
 == standalone--pct-auto--px-0.svg standalone--pct-auto--px-0.svg
 fuzzy-if(d2d,1,400) == standalone--pct-auto--px-pct.svg standalone--pct-auto--px-pct.svg
 == standalone--pct-auto--px-px.svg standalone--pct-auto--px-px.svg
-# intrinsic ratio!
 
 fuzzy-if(d2d,1,400) == standalone--pct-pct--0-0.svg standalone--pct-pct--0-0.svg
 fuzzy-if(d2d,1,400) == standalone--pct-pct--0-pct.svg standalone--pct-pct--0-pct.svg
@@ -180,7 +175,6 @@ fuzzy-if(d2d,1,400) == standalone--pct-pct--px-px.svg standalone--pct-pct--px-px
 == standalone--px-auto--px-0.svg standalone--px-auto--px-0.svg
 == standalone--px-auto--px-pct.svg standalone--px-auto--px-pct.svg
 == standalone--px-auto--px-px.svg standalone--px-auto--px-px.svg
-# intrinsic ratio!
 
 == standalone--px-pct--0-0.svg standalone--px-pct--0-0.svg
 == standalone--px-pct--0-pct.svg standalone--px-pct--0-pct.svg
@@ -266,14 +260,14 @@ fuzzy-if(d2d,1,400) == standalone--pct-pct--px-px.svg standalone--pct-pct--px-px
 # We could certainly expand on these tests, but they provide reasonable base
 # coverage.
 
-HTTP(../..) == inline--display-block--01.xhtml inline--display-block--01.xhtml
-fuzzy-if(OSX,1,10) HTTP(../..) == inline--display-inline--01.xhtml inline--display-inline--01.xhtml
-HTTP(../..) == inline--display-inline-block--01.xhtml inline--display-inline-block--01.xhtml
-== inline--float-left--01.xhtml inline--float-left--01.xhtml
-skip == inline--float-right--01.xhtml inline--float-right--01.xhtml
-== inline--position-absolute--01.xhtml inline--position-absolute--01.xhtml
-== inline--position-absolute--02.xhtml inline--position-absolute--02.xhtml
-HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01.xhtml
+fails HTTP(../..) == inline--display-block--01.xhtml inline--display-block--01.xhtml
+fails == inline--display-inline--01.xhtml inline--display-inline--01.xhtml
+fails HTTP(../..) == inline--display-inline-block--01.xhtml inline--display-inline-block--01.xhtml
+fails == inline--float-left--01.xhtml inline--float-left--01.xhtml
+fails == inline--float-right--01.xhtml inline--float-right--01.xhtml
+fails == inline--position-absolute--01.xhtml inline--position-absolute--01.xhtml
+fails == inline--position-absolute--02.xhtml inline--position-absolute--02.xhtml
+fails HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01.xhtml
 
 
 # Embedded by reference tests
@@ -291,17 +285,16 @@ HTTP(../..) == inline--position-relative--01.xhtml inline--position-relative--01
 # tests do not have any width or height on the <object> element so they should
 # be sized purely by the embedded SVG's intrinsic size.
 
-skip == object--auto-auto--0-0.html object--auto-auto--0-0.html
-# XXX add border
-skip == object--auto-auto--0-pct.html object--auto-auto--0-pct.html
-skip == object--auto-auto--0-px.html object--auto-auto--0-px.html
-skip == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
+random-if(Android) == object--auto-auto--0-0.html object--auto-auto--0-0.html
+random-if(Android) == object--auto-auto--0-pct.html object--auto-auto--0-pct.html
+random-if(Android) == object--auto-auto--0-px.html object--auto-auto--0-px.html
+random-if(Android) == object--auto-auto--pct-0.html object--auto-auto--pct-0.html
 # The following four commented out tests fail post bug 428023:
 #== object--auto-auto--pct-pct.html object--auto-auto--pct-pct.html
 #== object--auto-auto--pct-px.html object--auto-auto--pct-px.html
-skip == object--auto-auto--px-0.html object--auto-auto--px-0.html
+random-if(Android) == object--auto-auto--px-0.html object--auto-auto--px-0.html
 #== object--auto-auto--px-pct.html object--auto-auto--px-pct.html
-skip == object--auto-auto--px-px.html object--auto-auto--px-px.html
+random-if(Android) == object--auto-auto--px-px.html object--auto-auto--px-px.html
 #== object--pct-pct--0-0.html object--pct-pct--0-0.html
 
 
@@ -311,12 +304,10 @@ skip == object--auto-auto--px-px.html object--auto-auto--px-px.html
 # correctly when changes are made that should result in a change in the size
 # or position of the SVG.
 
-skip == dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
-skip == dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
-skip == dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window-height.xhtml
-# XXX breaks the reftest run as the window height somehow is not restored
-skip == dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
-# Fails way too much
-skip == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
+fails == dynamic--inline-css-height.xhtml dynamic--inline-css-height.xhtml
+fails == dynamic--inline-css-width.xhtml dynamic--inline-css-width.xhtml
+fails == dynamic--inline-resize-window-height.xhtml dynamic--inline-resize-window-height.xhtml
+fails == dynamic--inline-resize-window-width.xhtml dynamic--inline-resize-window-width.xhtml
+random-if(Android) == dynamic--object-svg-unloaded.xhtml dynamic--object-svg-unloaded.xhtml
 # == ==
 

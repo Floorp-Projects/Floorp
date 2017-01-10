@@ -394,7 +394,7 @@ SocialShare = {
     // define at least url. If it is undefined, we're sharing the current url in
     // the browser tab.
     let pageData = graphData ? graphData : this.currentShare;
-    let sharedURI = pageData ? Services.io.newURI(pageData.url, null, null) :
+    let sharedURI = pageData ? Services.io.newURI(pageData.url) :
                                 gBrowser.currentURI;
     if (!SocialUI.canSharePage(sharedURI))
       return;
@@ -474,7 +474,7 @@ SocialShare = {
     iframe.purgeSessionHistory();
 
     // always ensure that origin belongs to the endpoint
-    let uri = Services.io.newURI(shareEndpoint, null, null);
+    let uri = Services.io.newURI(shareEndpoint);
     iframe.setAttribute("origin", provider.origin);
     iframe.setAttribute("src", shareEndpoint);
     this._openPanel(anchor);

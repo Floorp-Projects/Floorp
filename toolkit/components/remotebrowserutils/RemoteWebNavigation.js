@@ -13,7 +13,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 
 function makeURI(url) {
-  return Services.io.newURI(url, null, null);
+  return Services.io.newURI(url);
 }
 
 function readInputStreamToString(aStream) {

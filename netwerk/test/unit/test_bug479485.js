@@ -7,7 +7,7 @@ function run_test() {
     dump((port || "no port provided") + "\n");
     var exception_threw = false;
     try {
-      var newURI = ios.newURI("http://foo.com"+port, null, null);
+      var newURI = ios.newURI("http://foo.com"+port);
     }
     catch (e) {
       exception_threw = e.result == Cr.NS_ERROR_MALFORMED_URI;
@@ -17,7 +17,7 @@ function run_test() {
     do_check_eq(exception_threw, exception_expected);
   
     exception_threw = false;
-    newURI = ios.newURI("http://foo.com", null, null);
+    newURI = ios.newURI("http://foo.com");
     try {
       newURI.spec = "http://foo.com"+port;
     }

@@ -12,9 +12,9 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var systemAppOrigin = (function () {
   let systemOrigin = "_";
   try {
-    systemOrigin = Services.io.newURI(
-      Services.prefs.getCharPref("b2g.system_manifest_url"), null, null)
-      .prePath;
+    systemOrigin =
+      Services.io.newURI(Services.prefs.getCharPref("b2g.system_manifest_url"))
+                 .prePath;
   } catch (e) {
     // Fall back to default value
   }

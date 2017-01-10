@@ -1,43 +1,39 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 
 # sanity checks:
-skip == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
-skip == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
-skip == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+# == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+# == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
+# == not-other-type-unthemed-1.html not-other-type-unthemed-1.html
 
 # dynamic type changes:
-fuzzy-if(skiaContent,1,40) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1.html
-== from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1.html
+fails == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1.html
+fails == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1.html
 
 # for different values:
-== different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1.html
-== same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1.html
+fails == different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1.html
+fails == same-fraction-of-range-unthemed-1.html same-fraction-of-range-unthemed-1.html
 
 # dynamic value changes:
-fails fuzzy-if(skiaContent,1,40) == value-prop-unthemed.html value-prop-unthemed.html
+fuzzy-if(skiaContent,1,40) == value-prop-unthemed.html value-prop-unthemed.html
 == value-prop.html value-prop.html
-fails fuzzy-if(skiaContent,1,40) == valueAsNumber-prop-unthemed.html valueAsNumber-prop-unthemed.html
+fuzzy-if(skiaContent,1,40) == valueAsNumber-prop-unthemed.html valueAsNumber-prop-unthemed.html
 == valueAsNumber-prop.html valueAsNumber-prop.html
-fails fuzzy-if(B2G,2,1) fuzzy-if(skiaContent,1,40) == stepDown-unthemed.html stepDown-unthemed.html
-fuzzy-if(B2G,2,1) == stepDown.html stepDown.html
-fails fuzzy-if(skiaContent,1,40) == stepUp-unthemed.html stepUp-unthemed.html
+fuzzy-if(skiaContent,1,40) == stepDown-unthemed.html stepDown-unthemed.html
+== stepDown.html stepDown.html
+fuzzy-if(skiaContent,1,40) == stepUp-unthemed.html stepUp-unthemed.html
 == stepUp.html stepUp.html
-fuzzy-if(B2G,2,1) == max-prop.html max-prop.html
-skip == reset-value.html reset-value.html
+== max-prop.html max-prop.html
+== reset-value.html reset-value.html
 
 # 'direction' property:
-== direction-unthemed-1.html direction-unthemed-1.html
+fails == direction-unthemed-1.html direction-unthemed-1.html
 
 # ::-moz-range-progress pseudo-element:
-fails-if(B2G||Mulet||Android) == moz-range-progress-1.html moz-range-progress-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== moz-range-progress-2.html moz-range-progress-2.html
+fails == moz-range-progress-1.html moz-range-progress-1.html
+fails == moz-range-progress-2.html moz-range-progress-2.html
 == moz-range-progress-3.html moz-range-progress-3.html
 
 # Tests for block and inline orientation in combination with writing-mode
-# XXX Remove default-preferences setting here after bug 1138384 makes
-#     it the default for all channels
-
 == range-orient-horizontal.html range-orient-horizontal.html
 == range-orient-horizontal.html range-orient-horizontal.html
 == range-orient-block.html range-orient-block.html

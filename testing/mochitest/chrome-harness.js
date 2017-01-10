@@ -17,7 +17,7 @@ Components.utils.import("resource://gre/modules/NetUtil.jsm");
 function getChromeURI(url) {
   var ios = Components.classes["@mozilla.org/network/io-service;1"].
               getService(Components.interfaces.nsIIOService);
-  return ios.newURI(url, null, null);
+  return ios.newURI(url);
 }
 
 /*

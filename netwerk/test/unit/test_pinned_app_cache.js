@@ -167,8 +167,8 @@ function start_and_watch_app_cache(manifestURL,
                                  cacheAvailHandler) {
   let ioService = Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService);
-  let update = do_app_cache(ioService.newURI(manifestURL, null, null),
-                            ioService.newURI(pageURL, null, null),
+  let update = do_app_cache(ioService.newURI(manifestURL),
+                            ioService.newURI(pageURL),
                             pinned);
   watch_update(update, stateChangeHandler, cacheAvailHandler);
   return update;

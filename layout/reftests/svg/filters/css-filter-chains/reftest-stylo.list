@@ -5,7 +5,6 @@
 default-preferences pref(layout.css.filters.enabled,true)
 
 # Some platforms render this complex filter chain a little differently, and that's ok.
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&layersGPUAccelerated,35,13057) == long-chain.html long-chain.html
-# Win10: Bug 1258241
-== moz-element.html moz-element.html
-== same-filter.html same-filter.html
+fails == long-chain.html long-chain.html
+fails == moz-element.html moz-element.html
+fails == same-filter.html same-filter.html

@@ -30,17 +30,11 @@
 { 0x2c4ad90a, 0x740e, 0x4212, \
   { 0xba, 0x3f, 0xfe, 0xac, 0xda, 0x4b, 0x92, 0x9e } }
 
-// {41421C60-310A-11d4-816F-000064657374}
-#define NS_IDEBUG_DUMP_CONTENT_IID \
-{ 0x41421c60, 0x310a, 0x11d4, \
-{ 0x81, 0x6f, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-
 class nsIContentSink;
 class nsIRequestObserver;
 class nsString;
 class nsIURI;
 class nsIChannel;
-class nsIContent;
 
 enum eParserCommands {
   eViewNormal,
@@ -242,32 +236,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIParser, NS_IPARSER_IID)
   Some useful constants...
  * ===========================================================*/
 
-#include "nsError.h"
-
-const nsresult  kEOF              = NS_ERROR_HTMLPARSER_EOF;
-const nsresult  kUnknownError     = NS_ERROR_HTMLPARSER_UNKNOWN;
-const nsresult  kCantPropagate    = NS_ERROR_HTMLPARSER_CANTPROPAGATE;
-const nsresult  kContextMismatch  = NS_ERROR_HTMLPARSER_CONTEXTMISMATCH;
-const nsresult  kBadFilename      = NS_ERROR_HTMLPARSER_BADFILENAME;
-const nsresult  kBadURL           = NS_ERROR_HTMLPARSER_BADURL;
-const nsresult  kInvalidParserContext = NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT;
-const nsresult  kBlocked          = NS_ERROR_HTMLPARSER_BLOCK;
-const nsresult  kBadStringLiteral = NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL;
-const nsresult  kHierarchyTooDeep = NS_ERROR_HTMLPARSER_HIERARCHYTOODEEP;
-const nsresult  kFakeEndTag       = NS_ERROR_HTMLPARSER_FAKE_ENDTAG;
-const nsresult  kNotAComment      = NS_ERROR_HTMLPARSER_INVALID_COMMENT;
-
-#define NS_IPARSER_FLAG_UNKNOWN_MODE         0x00000000
-#define NS_IPARSER_FLAG_QUIRKS_MODE          0x00000002
-#define NS_IPARSER_FLAG_STRICT_MODE          0x00000004
-#define NS_IPARSER_FLAG_AUTO_DETECT_MODE     0x00000010
-#define NS_IPARSER_FLAG_VIEW_NORMAL          0x00000020
-#define NS_IPARSER_FLAG_VIEW_SOURCE          0x00000040
-#define NS_IPARSER_FLAG_VIEW_ERRORS          0x00000080
-#define NS_IPARSER_FLAG_PLAIN_TEXT           0x00000100
 #define NS_IPARSER_FLAG_XML                  0x00000200
 #define NS_IPARSER_FLAG_HTML                 0x00000400
-#define NS_IPARSER_FLAG_SCRIPT_ENABLED       0x00000800
-#define NS_IPARSER_FLAG_FRAMES_ENABLED       0x00001000
 
-#endif 
+#endif

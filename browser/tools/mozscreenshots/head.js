@@ -17,7 +17,7 @@ function* setup() {
   requestLongerTimeout(10);
 
   info("installing extension temporarily");
-  let chromeURL = Services.io.newURI(EXTENSION_DIR, null, null);
+  let chromeURL = Services.io.newURI(EXTENSION_DIR);
   let dir = chromeRegistry.convertChromeURL(chromeURL).QueryInterface(Ci.nsIFileURL).file;
   yield AddonManager.installTemporaryAddon(dir);
 

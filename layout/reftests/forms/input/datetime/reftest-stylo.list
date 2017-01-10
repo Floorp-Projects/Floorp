@@ -1,0 +1,14 @@
+# DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
+default-preferences pref(dom.forms.datetime,true)
+
+# not valid on Android/B2G where type=time looks like type=text
+# == time-simple-unthemed.html time-simple-unthemed.html
+# == time-large-font.html time-large-font.html
+# == time-width-height.html time-width-height.html
+# == time-border.html time-border.html
+# only valid on Android/B2G where type=number looks the same as type=text
+# == time-simple-unthemed.html time-simple-unthemed.html
+
+# type change
+# == to-time-from-other-type-unthemed.html to-time-from-other-type-unthemed.html
+# == from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed.html

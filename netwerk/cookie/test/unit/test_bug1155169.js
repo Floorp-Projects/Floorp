@@ -2,7 +2,7 @@ var {utils: Cu, interfaces: Ci, classes: Cc} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-const URI = Services.io.newURI("http://example.org/", null, null);
+const URI = Services.io.newURI("http://example.org/");
 
 const cs = Cc["@mozilla.org/cookieService;1"]
              .getService(Ci.nsICookieService);

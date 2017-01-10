@@ -4,66 +4,66 @@
 
 default-preferences pref(layout.css.filters.enabled,true)
 
-== blur.html blur.html
+fails == blur.html blur.html
 == blur.svg blur.svg
-== blur-calc.html blur-calc.html
-== blur-calc-negative.html blur-calc-negative.html
-skip-if(d2d) == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software.html
-== blur-em-radius.html blur-em-radius.html
-== blur-invalid-radius.html blur-invalid-radius.html
-== blur-rem-radius.html blur-rem-radius.html
-== blur-zero-radius.html blur-zero-radius.html
+fails == blur-calc.html blur-calc.html
+fails == blur-calc-negative.html blur-calc-negative.html
+fails == blur-cap-large-radius-on-software.html blur-cap-large-radius-on-software.html
+fails == blur-em-radius.html blur-em-radius.html
+fails == blur-invalid-radius.html blur-invalid-radius.html
+fails == blur-rem-radius.html blur-rem-radius.html
+fails == blur-zero-radius.html blur-zero-radius.html
 == blur-zoomed-page.html blur-zoomed-page.html
-== brightness.html brightness.html
-== brightness-darken.html brightness-darken.html
-== brightness-extreme.html brightness-extreme.html
-== brightness-one.html brightness-one.html
-== brightness-percent.html brightness-percent.html
-== brightness-zero.html brightness-zero.html
+fails == brightness.html brightness.html
+fails == brightness-darken.html brightness-darken.html
+fails == brightness-extreme.html brightness-extreme.html
+fails == brightness-one.html brightness-one.html
+fails == brightness-percent.html brightness-percent.html
+fails == brightness-zero.html brightness-zero.html
 == containing-block-1.html containing-block-1.html
-== contrast.html contrast.html
-== contrast-extreme.html contrast-extreme.html
-== contrast-one.html contrast-one.html
-== contrast-percent.html contrast-percent.html
-== contrast-reduce.html contrast-reduce.html
-== contrast-zero.html contrast-zero.html
-== drop-shadow.html drop-shadow.html
-== drop-shadow-default-color.html drop-shadow-default-color.html
-== drop-shadow-negative-offset.html drop-shadow-negative-offset.html
-fuzzy-if(d2d,1,10000) == grayscale.html grayscale.html
-fuzzy-if(d2d,1,10000) == grayscale-one.html grayscale-one.html
-fuzzy-if(d2d,1,10000) == grayscale-over-one.html grayscale-over-one.html
-fuzzy-if(d2d,1,10000) == grayscale-percent.html grayscale-percent.html
-== grayscale-zero.html grayscale-zero.html
-== hue-rotate.html hue-rotate.html
-== hue-rotate-360.html hue-rotate-360.html
-skip == hue-rotate-grad.html hue-rotate-grad.html
-fuzzy-if(d2d,2,7500) == hue-rotate-multichannel.html hue-rotate-multichannel.html
-== hue-rotate-negative.html hue-rotate-negative.html
-== hue-rotate-over-360.html hue-rotate-over-360.html
-== hue-rotate-rad.html hue-rotate-rad.html
-== hue-rotate-turn.html hue-rotate-turn.html
-== hue-rotate-zero.html hue-rotate-zero.html
-fuzzy-if(d2d,1,10000) == invert.html invert.html
-== invert-half.html invert-half.html
-== invert-one.html invert-one.html
-== invert-over-one.html invert-over-one.html
-fuzzy-if(d2d,1,10000) == invert-percent.html invert-percent.html
-== invert-zero.html invert-zero.html
-fuzzy-if(d2d,1,10000) == opacity.html opacity.html
-== opacity-one.html opacity-one.html
-== opacity-over-one.html opacity-over-one.html
-fails fuzzy-if(skiaContent,1,10000) == opacity-over-one-translucent-source.html opacity-over-one-translucent-source.html
-fuzzy-if(d2d,1,10000) == opacity-percent.html opacity-percent.html
-== opacity-zero.html opacity-zero.html
-== saturate.html saturate.html
-fuzzy-if(d2d,1,10000) == saturate-desaturate.html saturate-desaturate.html
-== saturate-extreme.html saturate-extreme.html
-== saturate-one.html saturate-one.html
-== saturate-percent.html saturate-percent.html
-fuzzy-if(d2d,1,10000) == saturate-zero.html saturate-zero.html
-fuzzy-if(d2d,1,10000) == sepia.html sepia.html
-fuzzy-if(d2d,1,10000) == sepia-one.html sepia-one.html
-fuzzy-if(d2d,1,10000) == sepia-over-one.html sepia-over-one.html
-fuzzy-if(d2d,1,10000) == sepia-percent.html sepia-percent.html
-== sepia-zero.html sepia-zero.html
+fails == contrast.html contrast.html
+fails == contrast-extreme.html contrast-extreme.html
+fails == contrast-one.html contrast-one.html
+fails == contrast-percent.html contrast-percent.html
+fails == contrast-reduce.html contrast-reduce.html
+fails == contrast-zero.html contrast-zero.html
+fails == drop-shadow.html drop-shadow.html
+fails == drop-shadow-default-color.html drop-shadow-default-color.html
+fails == drop-shadow-negative-offset.html drop-shadow-negative-offset.html
+fails == grayscale.html grayscale.html
+fails == grayscale-one.html grayscale-one.html
+fails == grayscale-over-one.html grayscale-over-one.html
+fails == grayscale-percent.html grayscale-percent.html
+fails == grayscale-zero.html grayscale-zero.html
+fails == hue-rotate.html hue-rotate.html
+fails == hue-rotate-360.html hue-rotate-360.html
+fails == hue-rotate-grad.html hue-rotate-grad.html
+fails == hue-rotate-multichannel.html hue-rotate-multichannel.html
+fails == hue-rotate-negative.html hue-rotate-negative.html
+fails == hue-rotate-over-360.html hue-rotate-over-360.html
+fails == hue-rotate-rad.html hue-rotate-rad.html
+fails == hue-rotate-turn.html hue-rotate-turn.html
+fails == hue-rotate-zero.html hue-rotate-zero.html
+fails == invert.html invert.html
+fails == invert-half.html invert-half.html
+fails == invert-one.html invert-one.html
+fails == invert-over-one.html invert-over-one.html
+fails == invert-percent.html invert-percent.html
+fails == invert-zero.html invert-zero.html
+fails == opacity.html opacity.html
+fails == opacity-one.html opacity-one.html
+fails == opacity-over-one.html opacity-over-one.html
+fails == opacity-over-one-translucent-source.html opacity-over-one-translucent-source.html
+fails == opacity-percent.html opacity-percent.html
+fails == opacity-zero.html opacity-zero.html
+fails == saturate.html saturate.html
+fails == saturate-desaturate.html saturate-desaturate.html
+fails == saturate-extreme.html saturate-extreme.html
+fails == saturate-one.html saturate-one.html
+fails == saturate-percent.html saturate-percent.html
+fails == saturate-zero.html saturate-zero.html
+fails == sepia.html sepia.html
+fails == sepia-one.html sepia-one.html
+fails == sepia-over-one.html sepia-over-one.html
+fails == sepia-percent.html sepia-percent.html
+fails == sepia-zero.html sepia-zero.html

@@ -1,107 +1,107 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== bc_dyn_cell1.html bc_dyn_cell1.html
-== bc_dyn_cell2.html bc_dyn_cell2.html
-== bc_dyn_cell3.html bc_dyn_cell3.html
-== bc_dyn_cell4.html bc_dyn_cell4.html
-== bc_dyn_cell5.html bc_dyn_cell5.html
-== bc_dyn_row1.html bc_dyn_row1.html
-== bc_dyn_row2.html bc_dyn_row2.html
-== bc_dyn_row3.html bc_dyn_row3.html
-== bc_dyn_rg1.html bc_dyn_rg1.html
-== bc_dyn_rg2.html bc_dyn_rg2.html
-== bc_dyn_rg3.html bc_dyn_rg3.html
-== bc_dyn_col1.html bc_dyn_col1.html
-== bc_dyn_col2.html bc_dyn_col2.html
-== bc_dyn_col3.html bc_dyn_col3.html
-== bc_dyn_cg1.html bc_dyn_cg1.html
-== bc_dyn_cg2.html bc_dyn_cg2.html
-== bc_dyn_cg3.html bc_dyn_cg3.html
-== bc_dyn_table1.html bc_dyn_table1.html
-== bc_dyn_table2.html bc_dyn_table2.html
-== bc_dyn_table3.html bc_dyn_table3.html
-== bc_borderoffset1.html bc_borderoffset1.html
-== bc_borderoffset2.html bc_borderoffset2.html
-== frame_above_rules_all.html frame_above_rules_all.html
-== frame_above_rules_cols.html frame_above_rules_cols.html
-== frame_above_rules_groups.html frame_above_rules_groups.html
-== frame_above_rules_none.html frame_above_rules_none.html
-== frame_above_rules_rows.html frame_above_rules_rows.html
-== frame_below_rules_all.html frame_below_rules_all.html
-== frame_below_rules_cols.html frame_below_rules_cols.html
-== frame_below_rules_groups.html frame_below_rules_groups.html
-== frame_below_rules_none.html frame_below_rules_none.html
-== frame_below_rules_rows.html frame_below_rules_rows.html
-== frame_border_rules_all.html frame_border_rules_all.html
-== frame_border_rules_cols.html frame_border_rules_cols.html
-== frame_border_rules_groups.html frame_border_rules_groups.html
-== frame_border_rules_none.html frame_border_rules_none.html
-== frame_border_rules_rows.html frame_border_rules_rows.html
-== frame_box_rules_all.html frame_box_rules_all.html
-== frame_box_rules_cols.html frame_box_rules_cols.html
-== frame_box_rules_groups.html frame_box_rules_groups.html
-== frame_box_rules_none.html frame_box_rules_none.html
-== frame_box_rules_none-collapse.html frame_box_rules_none-collapse.html
-== frame_box_rules_rows.html frame_box_rules_rows.html
-== frame_hsides_rules_all.html frame_hsides_rules_all.html
-== frame_hsides_rules_cols.html frame_hsides_rules_cols.html
-== frame_hsides_rules_groups.html frame_hsides_rules_groups.html
-== frame_hsides_rules_none.html frame_hsides_rules_none.html
-skip == frame_hsides_rules_rows.html frame_hsides_rules_rows.html
-== frame_lhs_rules_all.html frame_lhs_rules_all.html
-== frame_lhs_rules_cols.html frame_lhs_rules_cols.html
-== frame_lhs_rules_groups.html frame_lhs_rules_groups.html
-== frame_lhs_rules_none.html frame_lhs_rules_none.html
-== frame_lhs_rules_rows.html frame_lhs_rules_rows.html
-== frame_rhs_rules_all.html frame_rhs_rules_all.html
-== frame_rhs_rules_cols.html frame_rhs_rules_cols.html
-== frame_rhs_rules_groups.html frame_rhs_rules_groups.html
-== frame_rhs_rules_none.html frame_rhs_rules_none.html
-== frame_rhs_rules_rows.html frame_rhs_rules_rows.html
-== frame_void_rules_all.html frame_void_rules_all.html
-== frame_void_rules_cols.html frame_void_rules_cols.html
-== frame_void_rules_groups.html frame_void_rules_groups.html
-== frame_void_rules_none.html frame_void_rules_none.html
-== frame_void_rules_rows.html frame_void_rules_rows.html
-== frame_vsides_rules_all.html frame_vsides_rules_all.html
-== frame_vsides_rules_cols.html frame_vsides_rules_cols.html
-== frame_vsides_rules_groups.html frame_vsides_rules_groups.html
-== frame_vsides_rules_none.html frame_vsides_rules_none.html
-== frame_vsides_rules_rows.html frame_vsides_rules_rows.html
-== borderhandling-1.html borderhandling-1.html
-== borderhandling-2.html borderhandling-2.html
-== borderhandling-3.html borderhandling-3.html
-== borderhandling-4.html borderhandling-4.html
-== borderhandling-5.xhtml borderhandling-5.xhtml
-== borderhandling-6.xhtml borderhandling-6.xhtml
-== borderhandling-7.xhtml borderhandling-7.xhtml
+fails == bc_dyn_cell1.html bc_dyn_cell1.html
+fails == bc_dyn_cell2.html bc_dyn_cell2.html
+fails == bc_dyn_cell3.html bc_dyn_cell3.html
+fails == bc_dyn_cell4.html bc_dyn_cell4.html
+fails == bc_dyn_cell5.html bc_dyn_cell5.html
+fails == bc_dyn_row1.html bc_dyn_row1.html
+fails == bc_dyn_row2.html bc_dyn_row2.html
+fails == bc_dyn_row3.html bc_dyn_row3.html
+fails == bc_dyn_rg1.html bc_dyn_rg1.html
+fails == bc_dyn_rg2.html bc_dyn_rg2.html
+fails == bc_dyn_rg3.html bc_dyn_rg3.html
+fails == bc_dyn_col1.html bc_dyn_col1.html
+fails == bc_dyn_col2.html bc_dyn_col2.html
+fails == bc_dyn_col3.html bc_dyn_col3.html
+fails == bc_dyn_cg1.html bc_dyn_cg1.html
+fails == bc_dyn_cg2.html bc_dyn_cg2.html
+fails == bc_dyn_cg3.html bc_dyn_cg3.html
+fails == bc_dyn_table1.html bc_dyn_table1.html
+fails == bc_dyn_table2.html bc_dyn_table2.html
+fails == bc_dyn_table3.html bc_dyn_table3.html
+fails == bc_borderoffset1.html bc_borderoffset1.html
+fails == bc_borderoffset2.html bc_borderoffset2.html
+fails == frame_above_rules_all.html frame_above_rules_all.html
+fails == frame_above_rules_cols.html frame_above_rules_cols.html
+fails == frame_above_rules_groups.html frame_above_rules_groups.html
+fails == frame_above_rules_none.html frame_above_rules_none.html
+fails == frame_above_rules_rows.html frame_above_rules_rows.html
+fails == frame_below_rules_all.html frame_below_rules_all.html
+fails == frame_below_rules_cols.html frame_below_rules_cols.html
+fails == frame_below_rules_groups.html frame_below_rules_groups.html
+fails == frame_below_rules_none.html frame_below_rules_none.html
+fails == frame_below_rules_rows.html frame_below_rules_rows.html
+fails == frame_border_rules_all.html frame_border_rules_all.html
+fails == frame_border_rules_cols.html frame_border_rules_cols.html
+fails == frame_border_rules_groups.html frame_border_rules_groups.html
+fails == frame_border_rules_none.html frame_border_rules_none.html
+fails == frame_border_rules_rows.html frame_border_rules_rows.html
+fails == frame_box_rules_all.html frame_box_rules_all.html
+fails == frame_box_rules_cols.html frame_box_rules_cols.html
+fails == frame_box_rules_groups.html frame_box_rules_groups.html
+fails == frame_box_rules_none.html frame_box_rules_none.html
+fails == frame_box_rules_none-collapse.html frame_box_rules_none-collapse.html
+fails == frame_box_rules_rows.html frame_box_rules_rows.html
+fails == frame_hsides_rules_all.html frame_hsides_rules_all.html
+fails == frame_hsides_rules_cols.html frame_hsides_rules_cols.html
+fails == frame_hsides_rules_groups.html frame_hsides_rules_groups.html
+fails == frame_hsides_rules_none.html frame_hsides_rules_none.html
+fails == frame_hsides_rules_rows.html frame_hsides_rules_rows.html
+fails == frame_lhs_rules_all.html frame_lhs_rules_all.html
+fails == frame_lhs_rules_cols.html frame_lhs_rules_cols.html
+fails == frame_lhs_rules_groups.html frame_lhs_rules_groups.html
+fails == frame_lhs_rules_none.html frame_lhs_rules_none.html
+fails == frame_lhs_rules_rows.html frame_lhs_rules_rows.html
+fails == frame_rhs_rules_all.html frame_rhs_rules_all.html
+fails == frame_rhs_rules_cols.html frame_rhs_rules_cols.html
+fails == frame_rhs_rules_groups.html frame_rhs_rules_groups.html
+fails == frame_rhs_rules_none.html frame_rhs_rules_none.html
+fails == frame_rhs_rules_rows.html frame_rhs_rules_rows.html
+fails == frame_void_rules_all.html frame_void_rules_all.html
+fails == frame_void_rules_cols.html frame_void_rules_cols.html
+fails == frame_void_rules_groups.html frame_void_rules_groups.html
+fails == frame_void_rules_none.html frame_void_rules_none.html
+fails == frame_void_rules_rows.html frame_void_rules_rows.html
+fails == frame_vsides_rules_all.html frame_vsides_rules_all.html
+fails == frame_vsides_rules_cols.html frame_vsides_rules_cols.html
+fails == frame_vsides_rules_groups.html frame_vsides_rules_groups.html
+fails == frame_vsides_rules_none.html frame_vsides_rules_none.html
+fails == frame_vsides_rules_rows.html frame_vsides_rules_rows.html
+fails == borderhandling-1.html borderhandling-1.html
+fails == borderhandling-2.html borderhandling-2.html
+fails == borderhandling-3.html borderhandling-3.html
+fails == borderhandling-4.html borderhandling-4.html
+fails == borderhandling-5.xhtml borderhandling-5.xhtml
+fails == borderhandling-6.xhtml borderhandling-6.xhtml
+fails == borderhandling-7.xhtml borderhandling-7.xhtml
 == borderhandling-8.html borderhandling-8.html
-== borderhandling-frame-border.html borderhandling-frame-border.html
-== borderhandling-rules-border-empty-quirks.html borderhandling-rules-border-empty-quirks.html
-== borderhandling-rules-border-rules-quirks.html borderhandling-rules-border-rules-quirks.html
-== borderhandling-rules-border-none-quirks.html borderhandling-rules-border-none-quirks.html
-== borderhandling-rules-border-groups-quirks.html borderhandling-rules-border-groups-quirks.html
-== borderhandling-rules-border-rows-quirks.html borderhandling-rules-border-rows-quirks.html
-skip == borderhandling-rules-border-cols-quirks.html borderhandling-rules-border-cols-quirks.html
-== borderhandling-rules-border-all-quirks.html borderhandling-rules-border-all-quirks.html
-== borderhandling-rules-border-empty-strict.html borderhandling-rules-border-empty-strict.html
-== borderhandling-rules-border-rules-strict.html borderhandling-rules-border-rules-strict.html
-== borderhandling-rules-border-none-strict.html borderhandling-rules-border-none-strict.html
-== borderhandling-rules-border-groups-strict.html borderhandling-rules-border-groups-strict.html
-== borderhandling-rules-border-rows-strict.html borderhandling-rules-border-rows-strict.html
-== borderhandling-rules-border-cols-strict.html borderhandling-rules-border-cols-strict.html
-== borderhandling-rules-border-all-strict.html borderhandling-rules-border-all-strict.html
-== bordercolor-1.html bordercolor-1.html
-== bordercolor-2.html bordercolor-2.html
-== bordercolor-3.html bordercolor-3.html
-== bordercolor-4.html bordercolor-4.html
-== empty-toprow.html empty-toprow.html
-== double_borders.html double_borders.html
-== border-collapse-rtl.html border-collapse-rtl.html
+fails == borderhandling-frame-border.html borderhandling-frame-border.html
+fails == borderhandling-rules-border-empty-quirks.html borderhandling-rules-border-empty-quirks.html
+fails == borderhandling-rules-border-rules-quirks.html borderhandling-rules-border-rules-quirks.html
+fails == borderhandling-rules-border-none-quirks.html borderhandling-rules-border-none-quirks.html
+fails == borderhandling-rules-border-groups-quirks.html borderhandling-rules-border-groups-quirks.html
+fails == borderhandling-rules-border-rows-quirks.html borderhandling-rules-border-rows-quirks.html
+fails == borderhandling-rules-border-cols-quirks.html borderhandling-rules-border-cols-quirks.html
+fails == borderhandling-rules-border-all-quirks.html borderhandling-rules-border-all-quirks.html
+fails == borderhandling-rules-border-empty-strict.html borderhandling-rules-border-empty-strict.html
+fails == borderhandling-rules-border-rules-strict.html borderhandling-rules-border-rules-strict.html
+fails == borderhandling-rules-border-none-strict.html borderhandling-rules-border-none-strict.html
+fails == borderhandling-rules-border-groups-strict.html borderhandling-rules-border-groups-strict.html
+fails == borderhandling-rules-border-rows-strict.html borderhandling-rules-border-rows-strict.html
+fails == borderhandling-rules-border-cols-strict.html borderhandling-rules-border-cols-strict.html
+fails == borderhandling-rules-border-all-strict.html borderhandling-rules-border-all-strict.html
+fails == bordercolor-1.html bordercolor-1.html
+fails == bordercolor-2.html bordercolor-2.html
+fails == bordercolor-3.html bordercolor-3.html
+fails == bordercolor-4.html bordercolor-4.html
+fails == empty-toprow.html empty-toprow.html
+fails == double_borders.html double_borders.html
+# fails == border-collapse-rtl.html border-collapse-rtl.html
 # Fuzzy because for some reason the corner beveling is antialiased differently.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-== border-style-outset-becomes-groove.html border-style-outset-becomes-groove.html
+fails == border-style-outset-becomes-groove.html border-style-outset-becomes-groove.html
 # Fuzzy because for some reason the corner beveling is antialiased differently.
 # So get 40 pixels of fuzz, 20 at each beveled corner (because the border width
 # is 20px).
-== border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge.html
+fails == border-style-inset-becomes-ridge.html border-style-inset-becomes-ridge.html

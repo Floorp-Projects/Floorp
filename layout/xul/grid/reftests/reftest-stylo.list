@@ -1,38 +1,19 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if((B2G&&browserIsRemote)||Mulet) == row-sizing-1.xul row-sizing-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == column-sizing-1.xul column-sizing-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == row-or-column-sizing-1.xul row-or-column-sizing-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == row-or-column-sizing-1.xul row-or-column-sizing-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == row-or-column-sizing-1.xul row-or-column-sizing-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == z-order-1.xul z-order-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == z-order-2.xul z-order-2.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == not-full-basic.xul not-full-basic.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,110000) == not-full-grid-pack-align.xul not-full-grid-pack-align.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,30000) == not-full-row-group-align.xul not-full-row-group-align.xul
-# does anyone want/need this behavior?
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,10000) == not-full-row-group-pack.xul not-full-row-group-pack.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,50000) == not-full-row-group-direction.xul not-full-row-group-direction.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,60000) == not-full-row-leaf-align.xul not-full-row-leaf-align.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,50000) == not-full-row-leaf-pack.xul not-full-row-leaf-pack.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) fuzzy-if(skiaContent,1,80000) == not-full-row-leaf-direction.xul not-full-row-leaf-direction.xul
-skip-if(B2G||Mulet) random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns.xul
-# bug 650597
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == scrollable-rows.xul scrollable-rows.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == sizing-2d.xul sizing-2d.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
+== row-sizing-1.xul row-sizing-1.xul
+== column-sizing-1.xul column-sizing-1.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-1.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-1.xul
+== row-or-column-sizing-1.xul row-or-column-sizing-1.xul
+fuzzy-if(skiaContent,1,60000) == z-order-1.xul z-order-1.xul
+fuzzy-if(skiaContent,1,60000) == z-order-2.xul z-order-2.xul
+fuzzy-if(skiaContent,1,60000) == not-full-basic.xul not-full-basic.xul
+fuzzy-if(skiaContent,1,110000) == not-full-grid-pack-align.xul not-full-grid-pack-align.xul
+fuzzy-if(skiaContent,1,30000) == not-full-row-group-align.xul not-full-row-group-align.xul
+fuzzy-if(skiaContent,1,10000) == not-full-row-group-pack.xul not-full-row-group-pack.xul
+fuzzy-if(skiaContent,1,50000) == not-full-row-group-direction.xul not-full-row-group-direction.xul
+fuzzy-if(skiaContent,1,60000) == not-full-row-leaf-align.xul not-full-row-leaf-align.xul
+fuzzy-if(skiaContent,1,50000) == not-full-row-leaf-pack.xul not-full-row-leaf-pack.xul
+fuzzy-if(skiaContent,1,80000) == not-full-row-leaf-direction.xul not-full-row-leaf-direction.xul
+random-if(transparentScrollbars) fuzzy-if(OSX==1010,1,565) == scrollable-columns.xul scrollable-columns.xul
+== scrollable-rows.xul scrollable-rows.xul
+== sizing-2d.xul sizing-2d.xul

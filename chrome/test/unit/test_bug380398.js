@@ -29,8 +29,7 @@ target = target.spec + "test/test.xul";
 
 function test_succeeded_mapping(namespace)
 {
-  var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul",
-                        null, null);
+  var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul");
   try {
     var result = chromeReg.convertChromeURL(uri);
     do_check_eq(result.spec, target);
@@ -42,8 +41,7 @@ function test_succeeded_mapping(namespace)
 
 function test_failed_mapping(namespace)
 {
-  var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul",
-                        null, null);
+  var uri = gIOS.newURI("chrome://" + namespace + "/content/test.xul");
   try {
     var result = chromeReg.convertChromeURL(uri);
     do_throw(namespace);

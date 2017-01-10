@@ -7,7 +7,7 @@ fails == jpg-size-2x2.jpg jpg-size-2x2.jpg
 fails == jpg-size-3x3.jpg jpg-size-3x3.jpg
 fails == jpg-size-4x4.jpg jpg-size-4x4.jpg
 fails == jpg-size-5x5.jpg jpg-size-5x5.jpg
-== jpg-size-6x6.jpg jpg-size-6x6.jpg
+fails == jpg-size-6x6.jpg jpg-size-6x6.jpg
 fails == jpg-size-7x7.jpg jpg-size-7x7.jpg
 fails == jpg-size-8x8.jpg jpg-size-8x8.jpg
 fails == jpg-size-9x9.jpg jpg-size-9x9.jpg
@@ -24,11 +24,11 @@ fails == jpg-gray.jpg jpg-gray.jpg
 # CMYK colorspace
 fails == jpg-cmyk-1.jpg jpg-cmyk-1.jpg
 fails == jpg-cmyk-2.jpg jpg-cmyk-2.jpg
-# This intermittently fails on Android due to async image decoding (bug #685516)
+# This intermittently fails on Android due to async image decoding (bug
 # Sometimes the image decodes in time and the test passes, other times the image
 # appears blank and the test fails. This only seems to be triggered since the
-# switch to 24-bit colour (bug #803299).
-fails random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.jpg
+# switch to 24-bit colour (bug
+fails == jpg-srgb-icc.jpg jpg-srgb-icc.jpg
 
 # webcam-simulacrum.mjpg is a hand-edited file containing red.jpg and blue.jpg,
 # concatenated together with the relevant headers for
@@ -52,4 +52,4 @@ fails random-if(Android) == jpg-srgb-icc.jpg jpg-srgb-icc.jpg
 # won't be in the text of the contents themselves. --$(boundary)\r\n means
 # "Here is the beginning of a boundary," and --$(boundary)-- means "All done
 # sending you parts.")
-skip HTTP == webcam-simulacrum.mjpg webcam-simulacrum.mjpg
+fails HTTP == webcam-simulacrum.mjpg webcam-simulacrum.mjpg

@@ -1,10 +1,10 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fuzzy-if(skiaContent,1,5) == textarea-fieldset-1.html textarea-fieldset-1.html
-fuzzy-if(skiaContent,1,5) == textarea-fieldset-2.html textarea-fieldset-2.html
-== textarea-fieldset-3.html textarea-fieldset-3.html
-== textarea-fieldset-4.html textarea-fieldset-4.html
-fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-1.html textarea-fieldset-legend-1.html
-fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-2.html textarea-fieldset-legend-2.html
-fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-3.html textarea-fieldset-legend-3.html
-fuzzy-if(skiaContent,1,5) == textarea-fieldset-legend-4.html textarea-fieldset-legend-4.html
-fuzzy-if(skiaContent,1,10) == textarea-fieldset-legend-5.html textarea-fieldset-legend-5.html
+fails == textarea-fieldset-1.html textarea-fieldset-1.html
+fails == textarea-fieldset-2.html textarea-fieldset-2.html
+fails == textarea-fieldset-3.html textarea-fieldset-3.html
+fails == textarea-fieldset-4.html textarea-fieldset-4.html
+fails == textarea-fieldset-legend-1.html textarea-fieldset-legend-1.html
+fails == textarea-fieldset-legend-2.html textarea-fieldset-legend-2.html
+fails == textarea-fieldset-legend-3.html textarea-fieldset-legend-3.html
+fails == textarea-fieldset-legend-4.html textarea-fieldset-legend-4.html
+fails == textarea-fieldset-legend-5.html textarea-fieldset-legend-5.html

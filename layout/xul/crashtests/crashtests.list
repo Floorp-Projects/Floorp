@@ -55,7 +55,7 @@ load 391974-1.html
 load 394120-1.xhtml
 skip-if(stylo) load 397293.xhtml # bug 1323652
 load 397304-1.html
-skip-if(stylo) load 398326-1.xhtml # bug 1323649
+asserts-if(stylo,0-2) load 398326-1.xhtml # bug 1324660
 load 399013.xul
 load 400779-1.xhtml
 load 402912-1.xhtml
@@ -84,12 +84,12 @@ load 470063-1.html
 load 470272.html
 load 472189.xul
 load 475133.html
-skip-if(stylo) load 488210-1.xhtml # bug 1323649
+load 488210-1.xhtml
 load 495728-1.xul
 load 508927-1.xul
 load 508927-2.xul
 load 514300-1.xul
-skip-if(stylo) load 536931-1.xhtml # bug 1323649
+load 536931-1.xhtml
 asserts(1) load 538308-1.xul
 load 557174-1.xml
 load 564705-1.xul 

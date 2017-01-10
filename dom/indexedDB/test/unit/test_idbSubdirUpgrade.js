@@ -23,7 +23,7 @@ function testSteps()
                          .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
 
   function openDatabase(params) {
-    let uri = ios.newURI(params.url, null, null);
+    let uri = ios.newURI(params.url);
     let principal =
       ssm.createCodebasePrincipal(uri,
                                   {appId: params.appId || ssm.NO_APPID,

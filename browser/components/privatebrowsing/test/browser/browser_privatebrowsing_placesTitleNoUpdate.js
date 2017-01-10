@@ -11,7 +11,7 @@ Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 add_task(function* test() {
   const TEST_URL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_placesTitleNoUpdate.html"
-  const TEST_URI = Services.io.newURI(TEST_URL, null, null);
+  const TEST_URI = Services.io.newURI(TEST_URL);
   const TITLE_1 = "Title 1";
   const TITLE_2 = "Title 2";
 

@@ -1,59 +1,52 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== spacing-invariance-quirks-min.html spacing-invariance-quirks-min.html
-== spacing-invariance-quirks-pref.html spacing-invariance-quirks-pref.html
-== spacing-invariance-standards-min.html spacing-invariance-standards-min.html
-== spacing-invariance-standards-pref.html spacing-invariance-standards-pref.html
-== min-width.html min-width.html
-== pref-width.html pref-width.html
-skip == min-width-ref.html min-width-ref.html
-== percent-large.html percent-large.html
+fails == spacing-invariance-quirks-min.html spacing-invariance-quirks-min.html
+fails == spacing-invariance-quirks-pref.html spacing-invariance-quirks-pref.html
+fails == spacing-invariance-standards-min.html spacing-invariance-standards-min.html
+fails == spacing-invariance-standards-pref.html spacing-invariance-standards-pref.html
+# == min-width.html min-width.html
+fails == pref-width.html pref-width.html
+fails == min-width-ref.html min-width-ref.html
+fails == percent-large.html percent-large.html
 == percent-large-min.html percent-large-min.html
-== percent-large-nested.html percent-large-nested.html
-== percent-small.html percent-small.html
+fails == percent-large-nested.html percent-large-nested.html
+fails == percent-small.html percent-small.html
 == percent-small-min.html percent-small-min.html
-== percent-small-nested.html percent-small-nested.html
-== percent-small-2.html percent-small-2.html
-== percent-zero.html percent-zero.html
+fails == percent-small-nested.html percent-small-nested.html
+fails == percent-small-2.html percent-small-2.html
+fails == percent-zero.html percent-zero.html
 == shrink-wrap-pref.html shrink-wrap-pref.html
 == shrink-wrap-avail.html shrink-wrap-avail.html
 == shrink-wrap-min.html shrink-wrap-min.html
 == shrink-wrap-min-ref.html shrink-wrap-min-ref.html
 == shrink-wrap-pref-ref.html shrink-wrap-pref-ref.html
 == shrink-wrap-avail-ref.html shrink-wrap-avail-ref.html
-== conflicting-widths-1.html conflicting-widths-1.html
-== conflicting-widths-2.html conflicting-widths-2.html
-== conflicting-widths-3.html conflicting-widths-3.html
-== conflicting-widths-4.html conflicting-widths-4.html
-fuzzy-if(B2G,9,1) == conflicting-widths-5.html conflicting-widths-5.html
-# can't see the difference
-== conflicting-widths-6.html conflicting-widths-6.html
-fuzzy-if(B2G,9,1) == conflicting-widths-7.html conflicting-widths-7.html
-# can't see the difference
-fuzzy-if(B2G,9,1) == conflicting-widths-8.html conflicting-widths-8.html
-# can't see the difference
-== conflicting-widths-9.html conflicting-widths-9.html
-== conflicting-widths-10.html conflicting-widths-10.html
-== conflicting-percent-widths-1.html conflicting-percent-widths-1.html
-== conflicting-percent-widths-2.html conflicting-percent-widths-2.html
-== conflicting-percent-widths-3.html conflicting-percent-widths-3.html
-== percent-truncation-1.html percent-truncation-1.html
-== percent-truncation-2.html percent-truncation-2.html
-== percent-truncation-3.html percent-truncation-3.html
-skip-if(B2G||Mulet) == balancing-1.html balancing-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== balancing-2.html balancing-2.html
-== cellpadding.html cellpadding.html
-== cellspacing.html cellspacing.html
-== percent-basis.html percent-basis.html
-== default-box-sizing-separate-standards.html default-box-sizing-separate-standards.html
-== default-box-sizing-separate-quirks.html default-box-sizing-separate-quirks.html
-== default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards.html
-# bug 371180
-== default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks.html
-# bug 371180
-== colspan-percent-distribution-1.html colspan-percent-distribution-1.html
-== colspan-percent-distribution-2.html colspan-percent-distribution-2.html
+fails == conflicting-widths-1.html conflicting-widths-1.html
+fails == conflicting-widths-2.html conflicting-widths-2.html
+fails == conflicting-widths-3.html conflicting-widths-3.html
+fails == conflicting-widths-4.html conflicting-widths-4.html
+fails == conflicting-widths-5.html conflicting-widths-5.html
+fails == conflicting-widths-6.html conflicting-widths-6.html
+fails == conflicting-widths-7.html conflicting-widths-7.html
+fails == conflicting-widths-8.html conflicting-widths-8.html
+fails == conflicting-widths-9.html conflicting-widths-9.html
+fails == conflicting-widths-10.html conflicting-widths-10.html
+fails == conflicting-percent-widths-1.html conflicting-percent-widths-1.html
+fails == conflicting-percent-widths-2.html conflicting-percent-widths-2.html
+fails == conflicting-percent-widths-3.html conflicting-percent-widths-3.html
+fails == percent-truncation-1.html percent-truncation-1.html
+fails == percent-truncation-2.html percent-truncation-2.html
+fails == percent-truncation-3.html percent-truncation-3.html
+fails == balancing-1.html balancing-1.html
+fails == balancing-2.html balancing-2.html
+# == cellpadding.html cellpadding.html
+fails == cellspacing.html cellspacing.html
+fails == percent-basis.html percent-basis.html
+fails == default-box-sizing-separate-standards.html default-box-sizing-separate-standards.html
+fails == default-box-sizing-separate-quirks.html default-box-sizing-separate-quirks.html
+fails == default-box-sizing-collapse-standards.html default-box-sizing-collapse-standards.html
+fails == default-box-sizing-collapse-quirks.html default-box-sizing-collapse-quirks.html
+fails == colspan-percent-distribution-1.html colspan-percent-distribution-1.html
+fails == colspan-percent-distribution-2.html colspan-percent-distribution-2.html
 == spanning-cell-sort-1-small.html spanning-cell-sort-1-small.html
 == spanning-cell-sort-1-large.html spanning-cell-sort-1-large.html
 == spanning-cell-sort-1-small-fixed.html spanning-cell-sort-1-small-fixed.html
@@ -61,14 +54,14 @@ skip-if(B2G||Mulet) == balancing-1.html balancing-1.html
 == spanning-cell-sort-2-small.html spanning-cell-sort-2-small.html
 == spanning-cell-sort-2-large.html spanning-cell-sort-2-large.html
 == spanning-cell-sort-2-small-fixed.html spanning-cell-sort-2-small-fixed.html
-skip == spanning-cell-sort-2-large-fixed.html spanning-cell-sort-2-large-fixed.html
-== colgroup-vs-column-1.html colgroup-vs-column-1.html
-== colgroup-vs-column-2.html colgroup-vs-column-2.html
-== colgroup-vs-column-3.html colgroup-vs-column-3.html
-== colgroup-vs-column-4.html colgroup-vs-column-4.html
-== dynamic-fixed-layout-1.html dynamic-fixed-layout-1.html
-== cell-pref-width-border-box.html cell-pref-width-border-box.html
-== colspan-distribute-to-empty-1a.html colspan-distribute-to-empty-1a.html
-== colspan-distribute-to-empty-1b.html colspan-distribute-to-empty-1b.html
-== colspan-distribute-to-empty-2.html colspan-distribute-to-empty-2.html
-== distribute-percent-nonoriginating.html distribute-percent-nonoriginating.html
+== spanning-cell-sort-2-large-fixed.html spanning-cell-sort-2-large-fixed.html
+fails == colgroup-vs-column-1.html colgroup-vs-column-1.html
+fails == colgroup-vs-column-2.html colgroup-vs-column-2.html
+fails == colgroup-vs-column-3.html colgroup-vs-column-3.html
+fails == colgroup-vs-column-4.html colgroup-vs-column-4.html
+fails == dynamic-fixed-layout-1.html dynamic-fixed-layout-1.html
+fails == cell-pref-width-border-box.html cell-pref-width-border-box.html
+fails == colspan-distribute-to-empty-1a.html colspan-distribute-to-empty-1a.html
+fails == colspan-distribute-to-empty-1b.html colspan-distribute-to-empty-1b.html
+fails == colspan-distribute-to-empty-2.html colspan-distribute-to-empty-2.html
+fails == distribute-percent-nonoriginating.html distribute-percent-nonoriginating.html

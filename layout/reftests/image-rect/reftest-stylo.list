@@ -1,23 +1,17 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet) == background-common-usage-floating-point.html background-common-usage-floating-point.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== background-common-usage-percent.html background-common-usage-percent.html
-== background-common-usage-pixel.html background-common-usage-pixel.html
+fails == background-common-usage-floating-point.html background-common-usage-floating-point.html
+fails == background-common-usage-percent.html background-common-usage-percent.html
+fails == background-common-usage-pixel.html background-common-usage-pixel.html
 == background-draw-nothing-empty-rect.html background-draw-nothing-empty-rect.html
 == background-draw-nothing-invalid-syntax.html background-draw-nothing-invalid-syntax.html
 asserts(0-6) == background-draw-nothing-malformed-images.html background-draw-nothing-malformed-images.html
-# Bug 576419
-== background-monster-rect.html background-monster-rect.html
-skip == background-over-size-rect.html background-over-size-rect.html
-== background-test-parser.html background-test-parser.html
-fuzzy-if(Android||B2G,113,124) == background-with-other-properties.html background-with-other-properties.html
-fuzzy-if(Android||B2G||Mulet,16,22) == background-zoom-1.html background-zoom-1.html
-# Bug 1128229
-# Bug 1153574
-fuzzy-if(Mulet,2,11) == background-zoom-2.html background-zoom-2.html
-# Bug 1153574
-== background-zoom-3.html background-zoom-3.html
-== background-zoom-4.html background-zoom-4.html
-== dom-api-computed-style.html dom-api-computed-style.html
-== dom-api.html dom-api.html
+fails == background-monster-rect.html background-monster-rect.html
+fails == background-over-size-rect.html background-over-size-rect.html
+fails == background-test-parser.html background-test-parser.html
+fails == background-with-other-properties.html background-with-other-properties.html
+fails == background-zoom-1.html background-zoom-1.html
+fails == background-zoom-2.html background-zoom-2.html
+fails == background-zoom-3.html background-zoom-3.html
+fails == background-zoom-4.html background-zoom-4.html
+# == dom-api-computed-style.html dom-api-computed-style.html
+fails == dom-api.html dom-api.html

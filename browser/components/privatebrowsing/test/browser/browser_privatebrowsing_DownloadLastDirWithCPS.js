@@ -64,10 +64,10 @@ function runTest() {
   let dir2 = newDirectory();
   let dir3 = newDirectory();
 
-  let uri1 = Services.io.newURI("http://test1.com/", null, null);
-  let uri2 = Services.io.newURI("http://test2.com/", null, null);
-  let uri3 = Services.io.newURI("http://test3.com/", null, null);
-  let uri4 = Services.io.newURI("http://test4.com/", null, null);
+  let uri1 = Services.io.newURI("http://test1.com/");
+  let uri2 = Services.io.newURI("http://test2.com/");
+  let uri3 = Services.io.newURI("http://test3.com/");
+  let uri4 = Services.io.newURI("http://test4.com/");
 
   // cleanup functions registration
   registerCleanupFunction(function () {

@@ -1,16 +1,11 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== box-sizing-border-box-001.xht box-sizing-border-box-001.xht
-== box-sizing-border-box-002.xht box-sizing-border-box-002.xht
-== box-sizing-border-box-003.xht box-sizing-border-box-003.xht
-== box-sizing-border-box-004.xht box-sizing-border-box-004.xht
-== box-sizing-content-box-001.xht box-sizing-content-box-001.xht
-== box-sizing-content-box-002.xht box-sizing-content-box-002.xht
-== box-sizing-content-box-003.xht box-sizing-content-box-003.xht
-fails == box-sizing-replaced-001.xht box-sizing-replaced-001-ref.xht #bug #bug
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android,27,874) random-if((B2G&&browserIsRemote)||Mulet) == box-sizing-replaced-002.xht box-sizing-replaced-002.xht
-# Bug 1128229
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(Android,27,925) random-if((B2G&&browserIsRemote)||Mulet) == box-sizing-replaced-003.xht box-sizing-replaced-003.xht
-# Bug 1128229
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == box-sizing-border-box-001.xht box-sizing-border-box-001.xht
+fails == box-sizing-border-box-002.xht box-sizing-border-box-002.xht
+fails == box-sizing-border-box-003.xht box-sizing-border-box-003.xht
+fails == box-sizing-border-box-004.xht box-sizing-border-box-004.xht
+fails == box-sizing-content-box-001.xht box-sizing-content-box-001.xht
+fails == box-sizing-content-box-002.xht box-sizing-content-box-002.xht
+fails == box-sizing-content-box-003.xht box-sizing-content-box-003.xht
+fails == box-sizing-replaced-001.xht box-sizing-replaced-001.xht
+fails == box-sizing-replaced-002.xht box-sizing-replaced-002.xht
+fails == box-sizing-replaced-003.xht box-sizing-replaced-003.xht

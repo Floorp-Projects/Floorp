@@ -564,7 +564,7 @@ function getPrincipal(url)
 {
   let uri = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService)
-              .newURI(url, null, null);
+              .newURI(url);
   let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
               .getService(Ci.nsIScriptSecurityManager);
   return ssm.createCodebasePrincipal(uri, {});

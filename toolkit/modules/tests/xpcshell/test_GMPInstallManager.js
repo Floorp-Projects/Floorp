@@ -650,7 +650,7 @@ xhr.prototype = {
   status: null,
   channel: { set notificationCallbacks(aVal) { } },
   open(aMethod, aUrl) {
-    this.channel.originalURI = Services.io.newURI(aUrl, null, null);
+    this.channel.originalURI = Services.io.newURI(aUrl);
     this._method = aMethod; this._url = aUrl;
   },
   abort() {

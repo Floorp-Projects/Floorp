@@ -16,7 +16,7 @@ add_task(function* () {
   yield promiseBrowserLoaded(browser);
 
   // Load a new URI with a specific referrer.
-  let referrerURI = Services.io.newURI(REFERRER1, null, null);
+  let referrerURI = Services.io.newURI(REFERRER1);
   browser.loadURI("http://example.org", referrerURI, null);
   yield promiseBrowserLoaded(browser);
 

@@ -502,7 +502,7 @@ MenuItem.prototype = {
     }
 
     let docPattern = this.documentUrlMatchPattern;
-    let pageURI = Services.io.newURI(contextData.pageUrl, null, null);
+    let pageURI = Services.io.newURI(contextData.pageUrl);
     if (docPattern && !docPattern.matches(pageURI)) {
       return false;
     }

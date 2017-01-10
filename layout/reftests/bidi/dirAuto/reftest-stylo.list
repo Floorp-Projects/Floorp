@@ -1,120 +1,120 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-== bdi-auto-dir-default.html bdi-auto-dir-default.html
-== dir_auto-set-contained-dir-L.html dir_auto-set-contained-dir-L.html
-== dir_auto-set-contained-dir-R.html dir_auto-set-contained-dir-R.html
-== dir_auto-set-contained-invalid-dir-L.html dir_auto-set-contained-invalid-dir-L.html
-== dir_auto-set-contained-invalid-dir-R.html dir_auto-set-contained-invalid-dir-R.html
-== dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L.html
-== dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-dir-R.html
-== dynamicDirAuto-setLTR-Auto1.html dynamicDirAuto-setLTR-Auto1.html
-== dynamicDirAuto-setLTR-Auto2.html dynamicDirAuto-setLTR-Auto2.html
-== dynamicDirAuto-setLTR-Auto3.html dynamicDirAuto-setLTR-Auto3.html
-== dynamicDirAuto-setLTR-Auto4.html dynamicDirAuto-setLTR-Auto4.html
-== dynamicDirAuto-setLTR-Auto5.html dynamicDirAuto-setLTR-Auto5.html
-== dynamicDirAuto-setLTR-Auto6.html dynamicDirAuto-setLTR-Auto6.html
-== dynamicDirAuto-setLTR-LTR1.html dynamicDirAuto-setLTR-LTR1.html
-== dynamicDirAuto-setLTR-LTR2.html dynamicDirAuto-setLTR-LTR2.html
-== dynamicDirAuto-setLTR-LTR3.html dynamicDirAuto-setLTR-LTR3.html
-== dynamicDirAuto-setLTR-LTR4.html dynamicDirAuto-setLTR-LTR4.html
-== dynamicDirAuto-setLTR-LTR5.html dynamicDirAuto-setLTR-LTR5.html
-== dynamicDirAuto-setLTR-LTR6.html dynamicDirAuto-setLTR-LTR6.html
-== dynamicDirAuto-setLTR-LTR7.html dynamicDirAuto-setLTR-LTR7.html
-== dynamicDirAuto-setLTR-LTR8.html dynamicDirAuto-setLTR-LTR8.html
-== dynamicDirAuto-setLTR-RTL1.html dynamicDirAuto-setLTR-RTL1.html
-== dynamicDirAuto-setLTR-RTL2.html dynamicDirAuto-setLTR-RTL2.html
-== dynamicDirAuto-setLTR-RTL3.html dynamicDirAuto-setLTR-RTL3.html
-== dynamicDirAuto-setLTR-RTL4.html dynamicDirAuto-setLTR-RTL4.html
-== dynamicDirAuto-setLTR-RTL5.html dynamicDirAuto-setLTR-RTL5.html
-== dynamicDirAuto-setLTR-RTL6.html dynamicDirAuto-setLTR-RTL6.html
-== dynamicDirAuto-setLTR-RTL7.html dynamicDirAuto-setLTR-RTL7.html
-== dynamicDirAuto-setLTR-RTL8.html dynamicDirAuto-setLTR-RTL8.html
-== dynamicDirAuto-setLTR-NoDir1.html dynamicDirAuto-setLTR-NoDir1.html
-== dynamicDirAuto-setLTR-NoDir2.html dynamicDirAuto-setLTR-NoDir2.html
-== dynamicDirAuto-setLTR-NoDir3.html dynamicDirAuto-setLTR-NoDir3.html
-== dynamicDirAuto-setLTR-NoDir4.html dynamicDirAuto-setLTR-NoDir4.html
-== dynamicDirAuto-setLTR-NoDir5.html dynamicDirAuto-setLTR-NoDir5.html
-== dynamicDirAuto-setLTR-NoDir6.html dynamicDirAuto-setLTR-NoDir6.html
-== dynamicDirAuto-setLTR-NoDir7.html dynamicDirAuto-setLTR-NoDir7.html
-== dynamicDirAuto-setLTR-NoDir8.html dynamicDirAuto-setLTR-NoDir8.html
-== dynamicDirAuto-setLTR-InvalidDir1.html dynamicDirAuto-setLTR-InvalidDir1.html
-== dynamicDirAuto-setLTR-InvalidDir2.html dynamicDirAuto-setLTR-InvalidDir2.html
-== dynamicDirAuto-setLTR-InvalidDir3.html dynamicDirAuto-setLTR-InvalidDir3.html
-== dynamicDirAuto-setLTR-InvalidDir4.html dynamicDirAuto-setLTR-InvalidDir4.html
-== dynamicDirAuto-setLTR-InvalidDir5.html dynamicDirAuto-setLTR-InvalidDir5.html
-== dynamicDirAuto-setLTR-InvalidDir6.html dynamicDirAuto-setLTR-InvalidDir6.html
-== dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html
-== dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html
-== dynamicDirAuto-setRTL-Auto1.html dynamicDirAuto-setRTL-Auto1.html
-== dynamicDirAuto-setRTL-Auto2.html dynamicDirAuto-setRTL-Auto2.html
-== dynamicDirAuto-setRTL-Auto3.html dynamicDirAuto-setRTL-Auto3.html
-== dynamicDirAuto-setRTL-Auto4.html dynamicDirAuto-setRTL-Auto4.html
-== dynamicDirAuto-setRTL-Auto5.html dynamicDirAuto-setRTL-Auto5.html
-== dynamicDirAuto-setRTL-Auto6.html dynamicDirAuto-setRTL-Auto6.html
-== dynamicDirAuto-setRTL-LTR1.html dynamicDirAuto-setRTL-LTR1.html
-== dynamicDirAuto-setRTL-LTR2.html dynamicDirAuto-setRTL-LTR2.html
-== dynamicDirAuto-setRTL-LTR3.html dynamicDirAuto-setRTL-LTR3.html
-== dynamicDirAuto-setRTL-LTR4.html dynamicDirAuto-setRTL-LTR4.html
-== dynamicDirAuto-setRTL-LTR5.html dynamicDirAuto-setRTL-LTR5.html
-== dynamicDirAuto-setRTL-LTR6.html dynamicDirAuto-setRTL-LTR6.html
-== dynamicDirAuto-setRTL-LTR7.html dynamicDirAuto-setRTL-LTR7.html
-== dynamicDirAuto-setRTL-LTR8.html dynamicDirAuto-setRTL-LTR8.html
-== dynamicDirAuto-setRTL-RTL1.html dynamicDirAuto-setRTL-RTL1.html
-== dynamicDirAuto-setRTL-RTL2.html dynamicDirAuto-setRTL-RTL2.html
-== dynamicDirAuto-setRTL-RTL3.html dynamicDirAuto-setRTL-RTL3.html
-== dynamicDirAuto-setRTL-RTL4.html dynamicDirAuto-setRTL-RTL4.html
-== dynamicDirAuto-setRTL-RTL5.html dynamicDirAuto-setRTL-RTL5.html
-== dynamicDirAuto-setRTL-RTL6.html dynamicDirAuto-setRTL-RTL6.html
-== dynamicDirAuto-setRTL-RTL7.html dynamicDirAuto-setRTL-RTL7.html
-== dynamicDirAuto-setRTL-RTL8.html dynamicDirAuto-setRTL-RTL8.html
-== dynamicDirAuto-setRTL-NoDir1.html dynamicDirAuto-setRTL-NoDir1.html
-== dynamicDirAuto-setRTL-NoDir2.html dynamicDirAuto-setRTL-NoDir2.html
-== dynamicDirAuto-setRTL-NoDir3.html dynamicDirAuto-setRTL-NoDir3.html
-== dynamicDirAuto-setRTL-NoDir4.html dynamicDirAuto-setRTL-NoDir4.html
-== dynamicDirAuto-setRTL-NoDir5.html dynamicDirAuto-setRTL-NoDir5.html
-== dynamicDirAuto-setRTL-NoDir6.html dynamicDirAuto-setRTL-NoDir6.html
-== dynamicDirAuto-setRTL-NoDir7.html dynamicDirAuto-setRTL-NoDir7.html
-== dynamicDirAuto-setRTL-NoDir8.html dynamicDirAuto-setRTL-NoDir8.html
-== dynamicDirAuto-setRTL-InvalidDir1.html dynamicDirAuto-setRTL-InvalidDir1.html
-== dynamicDirAuto-setRTL-InvalidDir2.html dynamicDirAuto-setRTL-InvalidDir2.html
-== dynamicDirAuto-setRTL-InvalidDir3.html dynamicDirAuto-setRTL-InvalidDir3.html
-== dynamicDirAuto-setRTL-InvalidDir4.html dynamicDirAuto-setRTL-InvalidDir4.html
-== dynamicDirAuto-setRTL-InvalidDir5.html dynamicDirAuto-setRTL-InvalidDir5.html
-== dynamicDirAuto-setRTL-InvalidDir6.html dynamicDirAuto-setRTL-InvalidDir6.html
-== dynamicDirAuto-setRTL-InvalidDir7.html dynamicDirAuto-setRTL-InvalidDir7.html
-== dynamicDirAuto-setRTL-InvalidDir8.html dynamicDirAuto-setRTL-InvalidDir8.html
-== dynamicDirAuto-addLTR-Auto.html dynamicDirAuto-addLTR-Auto.html
-== dynamicDirAuto-addRTL-Auto.html dynamicDirAuto-addRTL-Auto.html
-== dynamicDirAuto-ChangeText-LTR1.html dynamicDirAuto-ChangeText-LTR1.html
-== dynamicDirAuto-ChangeText-LTR2.html dynamicDirAuto-ChangeText-LTR2.html
-== dynamicDirAuto-ChangeText-LTR3.html dynamicDirAuto-ChangeText-LTR3.html
-== dynamicDirAuto-ChangeText-LTR4.html dynamicDirAuto-ChangeText-LTR4.html
-== dynamicDirAuto-ChangeText-LTR5.html dynamicDirAuto-ChangeText-LTR5.html
-== dynamicDirAuto-ChangeText-LTR6.html dynamicDirAuto-ChangeText-LTR6.html
-== dynamicDirAuto-ChangeText-LTR7.html dynamicDirAuto-ChangeText-LTR7.html
-== dynamicDirAuto-ChangeText-LTR8.html dynamicDirAuto-ChangeText-LTR8.html
-== dynamicDirAuto-ChangeText-LTR9.html dynamicDirAuto-ChangeText-LTR9.html
-== dynamicDirAuto-ChangeText-LTR10.html dynamicDirAuto-ChangeText-LTR10.html
-== dynamicDirAuto-ChangeText-RTL1.html dynamicDirAuto-ChangeText-RTL1.html
-== dynamicDirAuto-ChangeText-RTL2.html dynamicDirAuto-ChangeText-RTL2.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL3.html dynamicDirAuto-ChangeText-RTL3.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL4.html dynamicDirAuto-ChangeText-RTL4.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL5.html dynamicDirAuto-ChangeText-RTL5.html
-fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)&&!layersGPUAccelerated&&!azureSkia,30,1) == dynamicDirAuto-ChangeText-RTL6.html dynamicDirAuto-ChangeText-RTL6.html
-== dynamicDirAuto-ChangeText-RTL7.html dynamicDirAuto-ChangeText-RTL7.html
-== dynamicDirAuto-ChangeText-RTL8.html dynamicDirAuto-ChangeText-RTL8.html
-== dynamicDirAuto-ChangeText-RTL9.html dynamicDirAuto-ChangeText-RTL9.html
-== dynamicDirAuto-ChangeText-RTL10.html dynamicDirAuto-ChangeText-RTL10.html
-== dynamicDirAuto-DeleteText-LTR1.html dynamicDirAuto-DeleteText-LTR1.html
-== dynamicDirAuto-DeleteText-LTR2.html dynamicDirAuto-DeleteText-LTR2.html
-== dynamicDirAuto-DeleteText-LTR3.html dynamicDirAuto-DeleteText-LTR3.html
-== dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-DeleteText-RTL1.html
-== dynamicDirAuto-DeleteText-RTL2.html dynamicDirAuto-DeleteText-RTL2.html
-== dynamicDirAuto-DeleteText-RTL3.html dynamicDirAuto-DeleteText-RTL3.html
-== 839886-1.html 839886-1.html
-== 859093-1.html 859093-1.html
-== 889742-1.html 889742-1.html
-== 1103348-1.html 1103348-1.html
-== 1169267-delete-add-1a.html 1169267-delete-add-1a.html
-== 1169267-delete-add-1b.html 1169267-delete-add-1b.html
-== 1169267-delete-add-2a.html 1169267-delete-add-2a.html
-== 1169267-delete-add-2b.html 1169267-delete-add-2b.html
+fails == bdi-auto-dir-default.html bdi-auto-dir-default.html
+fails == dir_auto-set-contained-dir-L.html dir_auto-set-contained-dir-L.html
+fails == dir_auto-set-contained-dir-R.html dir_auto-set-contained-dir-R.html
+fails == dir_auto-set-contained-invalid-dir-L.html dir_auto-set-contained-invalid-dir-L.html
+fails == dir_auto-set-contained-invalid-dir-R.html dir_auto-set-contained-invalid-dir-R.html
+fails == dir_auto-unset-contained-dir-L.html dir_auto-unset-contained-dir-L.html
+fails == dir_auto-unset-contained-dir-R.html dir_auto-unset-contained-dir-R.html
+fails == dynamicDirAuto-setLTR-Auto1.html dynamicDirAuto-setLTR-Auto1.html
+fails == dynamicDirAuto-setLTR-Auto2.html dynamicDirAuto-setLTR-Auto2.html
+fails == dynamicDirAuto-setLTR-Auto3.html dynamicDirAuto-setLTR-Auto3.html
+fails == dynamicDirAuto-setLTR-Auto4.html dynamicDirAuto-setLTR-Auto4.html
+fails == dynamicDirAuto-setLTR-Auto5.html dynamicDirAuto-setLTR-Auto5.html
+fails == dynamicDirAuto-setLTR-Auto6.html dynamicDirAuto-setLTR-Auto6.html
+fails == dynamicDirAuto-setLTR-LTR1.html dynamicDirAuto-setLTR-LTR1.html
+fails == dynamicDirAuto-setLTR-LTR2.html dynamicDirAuto-setLTR-LTR2.html
+fails == dynamicDirAuto-setLTR-LTR3.html dynamicDirAuto-setLTR-LTR3.html
+fails == dynamicDirAuto-setLTR-LTR4.html dynamicDirAuto-setLTR-LTR4.html
+fails == dynamicDirAuto-setLTR-LTR5.html dynamicDirAuto-setLTR-LTR5.html
+fails == dynamicDirAuto-setLTR-LTR6.html dynamicDirAuto-setLTR-LTR6.html
+fails == dynamicDirAuto-setLTR-LTR7.html dynamicDirAuto-setLTR-LTR7.html
+fails == dynamicDirAuto-setLTR-LTR8.html dynamicDirAuto-setLTR-LTR8.html
+fails == dynamicDirAuto-setLTR-RTL1.html dynamicDirAuto-setLTR-RTL1.html
+fails == dynamicDirAuto-setLTR-RTL2.html dynamicDirAuto-setLTR-RTL2.html
+fails == dynamicDirAuto-setLTR-RTL3.html dynamicDirAuto-setLTR-RTL3.html
+fails == dynamicDirAuto-setLTR-RTL4.html dynamicDirAuto-setLTR-RTL4.html
+fails == dynamicDirAuto-setLTR-RTL5.html dynamicDirAuto-setLTR-RTL5.html
+fails == dynamicDirAuto-setLTR-RTL6.html dynamicDirAuto-setLTR-RTL6.html
+fails == dynamicDirAuto-setLTR-RTL7.html dynamicDirAuto-setLTR-RTL7.html
+fails == dynamicDirAuto-setLTR-RTL8.html dynamicDirAuto-setLTR-RTL8.html
+fails == dynamicDirAuto-setLTR-NoDir1.html dynamicDirAuto-setLTR-NoDir1.html
+fails == dynamicDirAuto-setLTR-NoDir2.html dynamicDirAuto-setLTR-NoDir2.html
+fails == dynamicDirAuto-setLTR-NoDir3.html dynamicDirAuto-setLTR-NoDir3.html
+fails == dynamicDirAuto-setLTR-NoDir4.html dynamicDirAuto-setLTR-NoDir4.html
+fails == dynamicDirAuto-setLTR-NoDir5.html dynamicDirAuto-setLTR-NoDir5.html
+fails == dynamicDirAuto-setLTR-NoDir6.html dynamicDirAuto-setLTR-NoDir6.html
+fails == dynamicDirAuto-setLTR-NoDir7.html dynamicDirAuto-setLTR-NoDir7.html
+fails == dynamicDirAuto-setLTR-NoDir8.html dynamicDirAuto-setLTR-NoDir8.html
+fails == dynamicDirAuto-setLTR-InvalidDir1.html dynamicDirAuto-setLTR-InvalidDir1.html
+fails == dynamicDirAuto-setLTR-InvalidDir2.html dynamicDirAuto-setLTR-InvalidDir2.html
+fails == dynamicDirAuto-setLTR-InvalidDir3.html dynamicDirAuto-setLTR-InvalidDir3.html
+fails == dynamicDirAuto-setLTR-InvalidDir4.html dynamicDirAuto-setLTR-InvalidDir4.html
+fails == dynamicDirAuto-setLTR-InvalidDir5.html dynamicDirAuto-setLTR-InvalidDir5.html
+fails == dynamicDirAuto-setLTR-InvalidDir6.html dynamicDirAuto-setLTR-InvalidDir6.html
+# == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html
+# == dynamicDirAuto-setLTR-InvalidDir7.html dynamicDirAuto-setLTR-InvalidDir7.html
+fails == dynamicDirAuto-setRTL-Auto1.html dynamicDirAuto-setRTL-Auto1.html
+fails == dynamicDirAuto-setRTL-Auto2.html dynamicDirAuto-setRTL-Auto2.html
+fails == dynamicDirAuto-setRTL-Auto3.html dynamicDirAuto-setRTL-Auto3.html
+fails == dynamicDirAuto-setRTL-Auto4.html dynamicDirAuto-setRTL-Auto4.html
+fails == dynamicDirAuto-setRTL-Auto5.html dynamicDirAuto-setRTL-Auto5.html
+fails == dynamicDirAuto-setRTL-Auto6.html dynamicDirAuto-setRTL-Auto6.html
+fails == dynamicDirAuto-setRTL-LTR1.html dynamicDirAuto-setRTL-LTR1.html
+fails == dynamicDirAuto-setRTL-LTR2.html dynamicDirAuto-setRTL-LTR2.html
+fails == dynamicDirAuto-setRTL-LTR3.html dynamicDirAuto-setRTL-LTR3.html
+fails == dynamicDirAuto-setRTL-LTR4.html dynamicDirAuto-setRTL-LTR4.html
+fails == dynamicDirAuto-setRTL-LTR5.html dynamicDirAuto-setRTL-LTR5.html
+fails == dynamicDirAuto-setRTL-LTR6.html dynamicDirAuto-setRTL-LTR6.html
+fails == dynamicDirAuto-setRTL-LTR7.html dynamicDirAuto-setRTL-LTR7.html
+fails == dynamicDirAuto-setRTL-LTR8.html dynamicDirAuto-setRTL-LTR8.html
+fails == dynamicDirAuto-setRTL-RTL1.html dynamicDirAuto-setRTL-RTL1.html
+fails == dynamicDirAuto-setRTL-RTL2.html dynamicDirAuto-setRTL-RTL2.html
+fails == dynamicDirAuto-setRTL-RTL3.html dynamicDirAuto-setRTL-RTL3.html
+fails == dynamicDirAuto-setRTL-RTL4.html dynamicDirAuto-setRTL-RTL4.html
+fails == dynamicDirAuto-setRTL-RTL5.html dynamicDirAuto-setRTL-RTL5.html
+fails == dynamicDirAuto-setRTL-RTL6.html dynamicDirAuto-setRTL-RTL6.html
+fails == dynamicDirAuto-setRTL-RTL7.html dynamicDirAuto-setRTL-RTL7.html
+fails == dynamicDirAuto-setRTL-RTL8.html dynamicDirAuto-setRTL-RTL8.html
+fails == dynamicDirAuto-setRTL-NoDir1.html dynamicDirAuto-setRTL-NoDir1.html
+fails == dynamicDirAuto-setRTL-NoDir2.html dynamicDirAuto-setRTL-NoDir2.html
+fails == dynamicDirAuto-setRTL-NoDir3.html dynamicDirAuto-setRTL-NoDir3.html
+fails == dynamicDirAuto-setRTL-NoDir4.html dynamicDirAuto-setRTL-NoDir4.html
+fails == dynamicDirAuto-setRTL-NoDir5.html dynamicDirAuto-setRTL-NoDir5.html
+fails == dynamicDirAuto-setRTL-NoDir6.html dynamicDirAuto-setRTL-NoDir6.html
+fails == dynamicDirAuto-setRTL-NoDir7.html dynamicDirAuto-setRTL-NoDir7.html
+fails == dynamicDirAuto-setRTL-NoDir8.html dynamicDirAuto-setRTL-NoDir8.html
+fails == dynamicDirAuto-setRTL-InvalidDir1.html dynamicDirAuto-setRTL-InvalidDir1.html
+fails == dynamicDirAuto-setRTL-InvalidDir2.html dynamicDirAuto-setRTL-InvalidDir2.html
+fails == dynamicDirAuto-setRTL-InvalidDir3.html dynamicDirAuto-setRTL-InvalidDir3.html
+fails == dynamicDirAuto-setRTL-InvalidDir4.html dynamicDirAuto-setRTL-InvalidDir4.html
+fails == dynamicDirAuto-setRTL-InvalidDir5.html dynamicDirAuto-setRTL-InvalidDir5.html
+fails == dynamicDirAuto-setRTL-InvalidDir6.html dynamicDirAuto-setRTL-InvalidDir6.html
+fails == dynamicDirAuto-setRTL-InvalidDir7.html dynamicDirAuto-setRTL-InvalidDir7.html
+fails == dynamicDirAuto-setRTL-InvalidDir8.html dynamicDirAuto-setRTL-InvalidDir8.html
+fails == dynamicDirAuto-addLTR-Auto.html dynamicDirAuto-addLTR-Auto.html
+fails == dynamicDirAuto-addRTL-Auto.html dynamicDirAuto-addRTL-Auto.html
+fails == dynamicDirAuto-ChangeText-LTR1.html dynamicDirAuto-ChangeText-LTR1.html
+fails == dynamicDirAuto-ChangeText-LTR2.html dynamicDirAuto-ChangeText-LTR2.html
+fails == dynamicDirAuto-ChangeText-LTR3.html dynamicDirAuto-ChangeText-LTR3.html
+fails == dynamicDirAuto-ChangeText-LTR4.html dynamicDirAuto-ChangeText-LTR4.html
+fails == dynamicDirAuto-ChangeText-LTR5.html dynamicDirAuto-ChangeText-LTR5.html
+fails == dynamicDirAuto-ChangeText-LTR6.html dynamicDirAuto-ChangeText-LTR6.html
+fails == dynamicDirAuto-ChangeText-LTR7.html dynamicDirAuto-ChangeText-LTR7.html
+fails == dynamicDirAuto-ChangeText-LTR8.html dynamicDirAuto-ChangeText-LTR8.html
+fails == dynamicDirAuto-ChangeText-LTR9.html dynamicDirAuto-ChangeText-LTR9.html
+fails == dynamicDirAuto-ChangeText-LTR10.html dynamicDirAuto-ChangeText-LTR10.html
+fails == dynamicDirAuto-ChangeText-RTL1.html dynamicDirAuto-ChangeText-RTL1.html
+fails == dynamicDirAuto-ChangeText-RTL2.html dynamicDirAuto-ChangeText-RTL2.html
+fails == dynamicDirAuto-ChangeText-RTL3.html dynamicDirAuto-ChangeText-RTL3.html
+fails == dynamicDirAuto-ChangeText-RTL4.html dynamicDirAuto-ChangeText-RTL4.html
+fails == dynamicDirAuto-ChangeText-RTL5.html dynamicDirAuto-ChangeText-RTL5.html
+fails == dynamicDirAuto-ChangeText-RTL6.html dynamicDirAuto-ChangeText-RTL6.html
+fails == dynamicDirAuto-ChangeText-RTL7.html dynamicDirAuto-ChangeText-RTL7.html
+fails == dynamicDirAuto-ChangeText-RTL8.html dynamicDirAuto-ChangeText-RTL8.html
+fails == dynamicDirAuto-ChangeText-RTL9.html dynamicDirAuto-ChangeText-RTL9.html
+fails == dynamicDirAuto-ChangeText-RTL10.html dynamicDirAuto-ChangeText-RTL10.html
+fails == dynamicDirAuto-DeleteText-LTR1.html dynamicDirAuto-DeleteText-LTR1.html
+fails == dynamicDirAuto-DeleteText-LTR2.html dynamicDirAuto-DeleteText-LTR2.html
+fails == dynamicDirAuto-DeleteText-LTR3.html dynamicDirAuto-DeleteText-LTR3.html
+fails == dynamicDirAuto-DeleteText-RTL1.html dynamicDirAuto-DeleteText-RTL1.html
+fails == dynamicDirAuto-DeleteText-RTL2.html dynamicDirAuto-DeleteText-RTL2.html
+fails == dynamicDirAuto-DeleteText-RTL3.html dynamicDirAuto-DeleteText-RTL3.html
+fails == 839886-1.html 839886-1.html
+fails == 859093-1.html 859093-1.html
+fails == 889742-1.html 889742-1.html
+fails == 1103348-1.html 1103348-1.html
+fails == 1169267-delete-add-1a.html 1169267-delete-add-1a.html
+fails == 1169267-delete-add-1b.html 1169267-delete-add-1b.html
+fails == 1169267-delete-add-2a.html 1169267-delete-add-2a.html
+fails == 1169267-delete-add-2b.html 1169267-delete-add-2b.html

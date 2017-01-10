@@ -6,7 +6,7 @@
 # BMP: bihsize=40, 127 x 64, bpp=30000, compression=0, colors=2
 # "Header indicates an absurdly large number of bits/pixel."
 # [We reject it. So does Chromium.]
-skip == wrapper.html?badbitcount.bmp wrapper.html?badbitcount.bmp
+== wrapper.html?badbitcount.bmp wrapper.html?badbitcount.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "Header incorrectly indicates that the bitmap is several GB in size."
@@ -30,14 +30,14 @@ fails == badfilesize.bmp badfilesize.bmp
 # "Header size is 66 bytes, which is not a valid size for any known BMP
 # version."
 # [We reject it. So does Chromium.]
-skip == wrapper.html?badheadersize.bmp wrapper.html?badheadersize.bmp
+== wrapper.html?badheadersize.bmp wrapper.html?badheadersize.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=305402420
 # "Header incorrectly indicates that the palette contains an absurdly large
 # number of colors."
 # [We reject it. Chromium accepts it but draws nothing. Rejecting seems
 # preferable give that the data is clearly untrustworthy.]
-skip == wrapper.html?badpalettesize.bmp wrapper.html?badpalettesize.bmp
+== wrapper.html?badpalettesize.bmp wrapper.html?badpalettesize.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "The 'planes' setting, which is required to be 1, is not 1."
@@ -50,12 +50,12 @@ fails == badplanes.bmp badplanes.bmp
 # Chromium accepts it, drawing the valid first part and leaving the rest
 # transparent. Using black for the invalid part is arguably better because it
 # makes the image edges more obvious.]
-== badrle.bmp badrle.bmp
+fails == badrle.bmp badrle.bmp
 
 # BMP: bihsize=40, -127 x 64, bpp=1, compression=0, colors=2
 # "The image claims to be a negative number of pixels in width."
 # [We reject it. So does Chromium.]
-skip == wrapper.html?badwidth.bmp wrapper.html?badwidth.bmp
+== wrapper.html?badwidth.bmp wrapper.html?badwidth.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=8, compression=0, colors=101
 # "Many of the palette indices used in the image are not present in the
@@ -66,14 +66,14 @@ fails == pal8badindex.bmp pal8badindex.bmp
 # BMP: bihsize=40, 3000000 x 2000000, bpp=24, compression=0, colors=0
 # "An image with a very large reported width and height."
 # [We reject it. So does Chromium.]
-skip == wrapper.html?reallybig.bmp wrapper.html?reallybig.bmp
+== wrapper.html?reallybig.bmp wrapper.html?reallybig.bmp
 
 # BMP: bihsize=40, 127 x -64, bpp=8, compression=1, colors=252
 # "An RLE-compressed image that tries to use top-down orientation, which isn’t
 # allowed."
 # [We accept it. Chromium rejects it. Accepting seems better given that we can
 # decode it perfectly well.]
-== rletopdown.bmp rletopdown.bmp
+fails == rletopdown.bmp rletopdown.bmp
 
 # BMP: bihsize=40, 127 x 64, bpp=1, compression=0, colors=2
 # "A file that has been truncated in the middle of the bitmap."

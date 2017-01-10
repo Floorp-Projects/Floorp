@@ -24,10 +24,12 @@ EXPORTS.mozilla.gfx += [
     'CriticalSection.h',
     'DataSurfaceHelpers.h',
     'DrawEventRecorder.h',
+    'DrawTargetRecording.h',
     'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
     'HelpersCairo.h',
+    'InlineTranslator.h',
     'IterableArena.h',
     'JobScheduler.h',
     'JobScheduler_posix.h',
@@ -179,6 +181,7 @@ UNIFIED_SOURCES += [
 
 SOURCES += [
     'Factory.cpp', # Need to suppress warnings in Skia header files.
+    'InlineTranslator.cpp',
 ]
 
 if CONFIG['CLANG_CXX']:

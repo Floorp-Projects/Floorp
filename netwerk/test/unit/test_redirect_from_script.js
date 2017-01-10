@@ -153,7 +153,7 @@ Redirector.prototype = {
       if (channel.URI.spec == bait4URI) target = baitURI;
        // if we have a target, redirect there
       if (target) {
-        var tURI = ioservice.newURI(target, null, null);
+        var tURI = ioservice.newURI(target);
         try {
           channel.redirectTo(tURI);
         } catch (e) {

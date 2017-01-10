@@ -1,90 +1,82 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fuzzy-if(Android,8,30) == background-image-zoom-1.html background-image-zoom-1.html
-fails-if(usesRepeatResampling) == background-image-zoom-2.html background-image-zoom-2.html
-== image-seam-1a.html image-seam-1a.html
-== image-seam-1b.html image-seam-1b.html
-fuzzy-if(Android,255,154) == image-seam-2.html image-seam-2.html
-# Bug 1128229
-skip-if((B2G&&browserIsRemote)||Mulet) == image-zoom-1.html image-zoom-1.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == image-zoom-2.html image-zoom-2.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== invalid-url-image-1.html invalid-url-image-1.html
+fails == background-image-zoom-1.html background-image-zoom-1.html
+== background-image-zoom-2.html background-image-zoom-2.html
+fails == image-seam-1a.html image-seam-1a.html
+fails == image-seam-1b.html image-seam-1b.html
+fails == image-seam-2.html image-seam-2.html
+fails == image-zoom-1.html image-zoom-1.html
+fails == image-zoom-2.html image-zoom-2.html
+fails == invalid-url-image-1.html invalid-url-image-1.html
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1a.html sync-image-switch-1a.html
-# bug 855050 for WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1b.html sync-image-switch-1b.html
-# bug 855050 for WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1c.html sync-image-switch-1c.html
-# bug 855050 for WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == sync-image-switch-1d.html sync-image-switch-1d.html
-# bug 855050 for WinXP
 
 # Tests for "object-fit" & "object-position"
-skip == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
-skip == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
-skip == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
-skip == image-object-position-dyn-1.html image-object-position-dyn-1.html
-skip == image-object-position-with-background-1.html image-object-position-with-background-1.html
-skip == image-object-position-with-background-2.html image-object-position-with-background-2.html
-# Bug 1128229
+test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-dyn-1.html image-object-fit-dyn-1.html
+fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-1.html image-object-fit-with-background-1.html
+fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-fit-with-background-2.html image-object-fit-with-background-2.html
+# test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-dyn-1.html image-object-position-dyn-1.html
+fails test-pref(layout.css.object-fit-and-position.enabled,true) == image-object-position-with-background-1.html image-object-position-with-background-1.html
+fails == image-object-position-with-background-2.html image-object-position-with-background-2.html
 
 # Tests for image-orientation used with 'from-image' (note that all
 # image-orientation tests are fuzzy because the JPEG images do not perfectly
 # reproduce blocks of solid color, even at maximum quality):
-== image-orientation-from-image.html?none image-orientation-from-image.html?none
-== image-orientation-from-image.html?0 image-orientation-from-image.html?0
-== image-orientation-from-image.html?90 image-orientation-from-image.html?90
-== image-orientation-from-image.html?180 image-orientation-from-image.html?180
-== image-orientation-from-image.html?270 image-orientation-from-image.html?270
-== image-orientation-from-image.html?0&flip image-orientation-from-image.html?0&flip
-== image-orientation-from-image.html?90&flip image-orientation-from-image.html?90&flip
-== image-orientation-from-image.html?180&flip image-orientation-from-image.html?180&flip
-== image-orientation-from-image.html?270&flip image-orientation-from-image.html?270&flip
+fuzzy(2,5) == image-orientation-from-image.html?none image-orientation-from-image.html?none
+fuzzy(1,1) == image-orientation-from-image.html?0 image-orientation-from-image.html?0
+fails == image-orientation-from-image.html?90 image-orientation-from-image.html?90
+fails == image-orientation-from-image.html?180 image-orientation-from-image.html?180
+fails == image-orientation-from-image.html?270 image-orientation-from-image.html?270
+fails == image-orientation-from-image.html?0&flip image-orientation-from-image.html?0&flip
+fails == image-orientation-from-image.html?90&flip image-orientation-from-image.html?90&flip
+fails == image-orientation-from-image.html?180&flip image-orientation-from-image.html?180&flip
+fails == image-orientation-from-image.html?270&flip image-orientation-from-image.html?270&flip
 
 # Tests for image-orientation used with an explicit orientation:
 fuzzy(1,1) == image-orientation-explicit.html?0 image-orientation-explicit.html?0
-== image-orientation-explicit.html?90 image-orientation-explicit.html?90
-== image-orientation-explicit.html?180 image-orientation-explicit.html?180
-== image-orientation-explicit.html?270 image-orientation-explicit.html?270
-== image-orientation-explicit.html?0&flip image-orientation-explicit.html?0&flip
-== image-orientation-explicit.html?90&flip image-orientation-explicit.html?90&flip
-== image-orientation-explicit.html?180&flip image-orientation-explicit.html?180&flip
-== image-orientation-explicit.html?270&flip image-orientation-explicit.html?270&flip
+fails == image-orientation-explicit.html?90 image-orientation-explicit.html?90
+fails == image-orientation-explicit.html?180 image-orientation-explicit.html?180
+fails == image-orientation-explicit.html?270 image-orientation-explicit.html?270
+fails == image-orientation-explicit.html?0&flip image-orientation-explicit.html?0&flip
+fails == image-orientation-explicit.html?90&flip image-orientation-explicit.html?90&flip
+fails == image-orientation-explicit.html?180&flip image-orientation-explicit.html?180&flip
+fails == image-orientation-explicit.html?270&flip image-orientation-explicit.html?270&flip
 
 # Tests for image-orientation used with non-axis-aligned angles:
 fuzzy(1,1) == image-orientation-explicit.html?-45 image-orientation-explicit.html?-45
 fuzzy(1,1) == image-orientation-explicit.html?-15 image-orientation-explicit.html?-15
 fuzzy(1,1) == image-orientation-explicit.html?15 image-orientation-explicit.html?15
-== image-orientation-explicit.html?45 image-orientation-explicit.html?45
-== image-orientation-explicit.html?75 image-orientation-explicit.html?75
-== image-orientation-explicit.html?105 image-orientation-explicit.html?105
-== image-orientation-explicit.html?135 image-orientation-explicit.html?135
-== image-orientation-explicit.html?165 image-orientation-explicit.html?165
-== image-orientation-explicit.html?195 image-orientation-explicit.html?195
-== image-orientation-explicit.html?225 image-orientation-explicit.html?225
-== image-orientation-explicit.html?255 image-orientation-explicit.html?255
-== image-orientation-explicit.html?285 image-orientation-explicit.html?285
+fails == image-orientation-explicit.html?45 image-orientation-explicit.html?45
+fails == image-orientation-explicit.html?75 image-orientation-explicit.html?75
+fails == image-orientation-explicit.html?105 image-orientation-explicit.html?105
+fails == image-orientation-explicit.html?135 image-orientation-explicit.html?135
+fails == image-orientation-explicit.html?165 image-orientation-explicit.html?165
+fails == image-orientation-explicit.html?195 image-orientation-explicit.html?195
+fails == image-orientation-explicit.html?225 image-orientation-explicit.html?225
+fails == image-orientation-explicit.html?255 image-orientation-explicit.html?255
+fails == image-orientation-explicit.html?285 image-orientation-explicit.html?285
 fuzzy(1,1) == image-orientation-explicit.html?315 image-orientation-explicit.html?315
 fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.html?345
 
 # Tests for image-orientation used on generated content:
-== image-orientation-generated-content.html?from-image image-orientation-generated-content.html?from-image
-== image-orientation-generated-content.html?0 image-orientation-generated-content.html?0
-== image-orientation-generated-content.html?90 image-orientation-generated-content.html?90
-== image-orientation-generated-content.html?180 image-orientation-generated-content.html?180
-== image-orientation-generated-content.html?270 image-orientation-generated-content.html?270
-== image-orientation-generated-content.html?0&flip image-orientation-generated-content.html?0&flip
-== image-orientation-generated-content.html?90&flip image-orientation-generated-content.html?90&flip
-== image-orientation-generated-content.html?180&flip image-orientation-generated-content.html?180&flip
-== image-orientation-generated-content.html?270&flip image-orientation-generated-content.html?270&flip
+fails == image-orientation-generated-content.html?from-image image-orientation-generated-content.html?from-image
+fails == image-orientation-generated-content.html?0 image-orientation-generated-content.html?0
+fails == image-orientation-generated-content.html?90 image-orientation-generated-content.html?90
+fails == image-orientation-generated-content.html?180 image-orientation-generated-content.html?180
+fails == image-orientation-generated-content.html?270 image-orientation-generated-content.html?270
+fails == image-orientation-generated-content.html?0&flip image-orientation-generated-content.html?0&flip
+fails == image-orientation-generated-content.html?90&flip image-orientation-generated-content.html?90&flip
+fails == image-orientation-generated-content.html?180&flip image-orientation-generated-content.html?180&flip
+fails == image-orientation-generated-content.html?270&flip image-orientation-generated-content.html?270&flip
 
 # Tests that image-orientation does not apply to decorative images:
-== image-orientation-background.html?from-image image-orientation-background.html?from-image
-== image-orientation-background.html?90&flip image-orientation-background.html?90&flip
-== image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
-== image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
-== image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
-== image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
+# == image-orientation-background.html?from-image image-orientation-background.html?from-image
+# == image-orientation-background.html?90&flip image-orientation-background.html?90&flip
+fails == image-orientation-border-image.html?from-image image-orientation-border-image.html?from-image
+fails == image-orientation-border-image.html?90&flip image-orientation-border-image.html?90&flip
+fails == image-orientation-list-style-image.html?from-image image-orientation-list-style-image.html?from-image
+fails == image-orientation-list-style-image.html?90&flip image-orientation-list-style-image.html?90&flip
 
 # Sanity checks for the image-orientation tests. Ensures that the various
 # combinations of rotations and flips actually look different from each other.
@@ -108,30 +100,30 @@ fuzzy(1,1) == image-orientation-explicit.html?345 image-orientation-explicit.htm
 == image-orientation-generated-content-ref.html?90 image-orientation-generated-content-ref.html?90
 == image-orientation-generated-content-ref.html?180 image-orientation-generated-content-ref.html?180
 == image-orientation-generated-content-ref.html?270 image-orientation-generated-content-ref.html?270
-== image-orientation-dynamic.html image-orientation-dynamic.html
+# == image-orientation-dynamic.html image-orientation-dynamic.html
 
 # <img srcset> tests
-skip == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x.html
-skip == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x.html
-skip == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x.html
-skip == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x.html
-skip == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x.html
-skip == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x.html
-skip == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x.html
-skip == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x.html
-skip == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x.html
-skip == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x.html
-== image-srcset-default-2x.html image-srcset-default-2x.html
-== image-srcset-default-1x.html image-srcset-default-1x.html
-== image-srcset-default-src-2x.html image-srcset-default-src-2x.html
-== image-srcset-default-src-1x.html image-srcset-default-src-1x.html
-== image-srcset-orientation-2x.html image-srcset-orientation-2x.html
-== image-srcset-orientation-1x.html image-srcset-orientation-1x.html
-== image-srcset-svg-3x.html image-srcset-svg-3x.html
-== image-srcset-svg-2x.html image-srcset-svg-2x.html
-== image-srcset-svg-1x.html image-srcset-svg-1x.html
-== image-srcset-svg-default-2x.html image-srcset-svg-default-2x.html
-== image-srcset-svg-default-1x.html image-srcset-svg-default-1x.html
+fails == image-srcset-basic-selection-0.1x.html image-srcset-basic-selection-0.1x.html
+fails == image-srcset-basic-selection-2x.html image-srcset-basic-selection-2x.html
+fails == image-srcset-basic-selection-0.5x.html image-srcset-basic-selection-0.5x.html
+fails == image-srcset-basic-selection-0.6x.html image-srcset-basic-selection-0.6x.html
+fails == image-srcset-basic-selection-1.5x.html image-srcset-basic-selection-1.5x.html
+fails == image-srcset-basic-selection-1x.html image-srcset-basic-selection-1x.html
+fails == image-srcset-basic-selection-width-0.5x.html image-srcset-basic-selection-width-0.5x.html
+fails == image-srcset-basic-selection-width-10x.html image-srcset-basic-selection-width-10x.html
+fails == image-srcset-basic-selection-width-2x.html image-srcset-basic-selection-width-2x.html
+fails == image-srcset-basic-selection-width-1x.html image-srcset-basic-selection-width-1x.html
+fails == image-srcset-default-2x.html image-srcset-default-2x.html
+fails == image-srcset-default-1x.html image-srcset-default-1x.html
+fails == image-srcset-default-src-2x.html image-srcset-default-src-2x.html
+fails == image-srcset-default-src-1x.html image-srcset-default-src-1x.html
+fails == image-srcset-orientation-2x.html image-srcset-orientation-2x.html
+fails == image-srcset-orientation-1x.html image-srcset-orientation-1x.html
+fails == image-srcset-svg-3x.html image-srcset-svg-3x.html
+fails == image-srcset-svg-2x.html image-srcset-svg-2x.html
+fails == image-srcset-svg-1x.html image-srcset-svg-1x.html
+fails == image-srcset-svg-default-2x.html image-srcset-svg-default-2x.html
+fails == image-srcset-svg-default-1x.html image-srcset-svg-default-1x.html
 
 == image-resize-percent-height.html image-resize-percent-height.html
-== image-resize-percent-width.html image-resize-percent-width.html
+fails == image-resize-percent-width.html image-resize-percent-width.html

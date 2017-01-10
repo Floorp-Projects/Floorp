@@ -17,7 +17,7 @@ const { method } = require("../../method/core");
 function newURI (uri) {
   if (!isValidURI(uri))
     throw new Error("malformed URI: " + uri);
-  return IOService.newURI(uri, null, null);
+  return IOService.newURI(uri);
 }
 exports.newURI = newURI;
 

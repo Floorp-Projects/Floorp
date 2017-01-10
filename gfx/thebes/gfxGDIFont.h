@@ -45,7 +45,7 @@ public:
                                uint16_t aOrientation) override;
 
     /* required for MathML to suppress effects of ClearType "padding" */
-    virtual gfxFont*
+    mozilla::UniquePtr<gfxFont>
     CopyWithAntialiasOption(AntialiasOption anAAOption) override;
 
     // If the font has a cmap table, we handle it purely with harfbuzz;

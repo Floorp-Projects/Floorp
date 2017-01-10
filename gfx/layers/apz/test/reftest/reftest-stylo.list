@@ -1,20 +1,20 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # The following tests test the async positioning of the scrollbars.
 # Basic root-frame scrollbar with async scrolling
-skip-if(!asyncPan) fuzzy-if(Android,6,8) == async-scrollbar-1-v.html async-scrollbar-1-v.html
-skip-if(!asyncPan) fuzzy-if(Android,6,8) == async-scrollbar-1-h.html async-scrollbar-1-h.html
-skip-if(!asyncPan) fuzzy-if(Android,6,8) == async-scrollbar-1-vh.html async-scrollbar-1-vh.html
-skip-if(!asyncPan) fuzzy-if(Android,6,8) == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl.html
-skip-if(!asyncPan) fuzzy-if(Android,13,8) == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl.html
-skip-if(!asyncPan) fuzzy-if(Android,8,10) == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl.html
+fuzzy-if(Android,1,2) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-v.html async-scrollbar-1-v.html
+fuzzy-if(Android,4,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-h.html async-scrollbar-1-h.html
+fuzzy-if(Android,3,5) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-1-vh.html async-scrollbar-1-vh.html
+# fails == async-scrollbar-1-v-rtl.html async-scrollbar-1-v-rtl.html
+# fails == async-scrollbar-1-h-rtl.html async-scrollbar-1-h-rtl.html
+# fails == async-scrollbar-1-vh-rtl.html async-scrollbar-1-vh-rtl.html
 
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
-skip-if(!asyncZoom) fuzzy-if(B2G,98,82) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1.html
-skip-if(!asyncZoom) fuzzy-if(B2G,94,146) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2.html
+fails == async-scrollbar-zoom-1.html async-scrollbar-zoom-1.html
+fails == async-scrollbar-zoom-2.html async-scrollbar-zoom-2.html
 
 # Meta-viewport tag support
-skip-if(!asyncZoom) == initial-scale-1.html initial-scale-1.html
+fails == initial-scale-1.html initial-scale-1.html
 
 skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruction-scroll-clamping.html

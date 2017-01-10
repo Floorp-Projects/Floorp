@@ -605,7 +605,7 @@ var Printing = {
       readerContent.setAttribute("id", "moz-reader-content");
       contentElement.appendChild(readerContent);
 
-      let articleUri = Services.io.newURI(article.url, null, null);
+      let articleUri = Services.io.newURI(article.url);
       let parserUtils = Cc["@mozilla.org/parserutils;1"].getService(Ci.nsIParserUtils);
       let contentFragment = parserUtils.parseFragment(article.content,
         Ci.nsIParserUtils.SanitizerDropForms | Ci.nsIParserUtils.SanitizerAllowStyle,

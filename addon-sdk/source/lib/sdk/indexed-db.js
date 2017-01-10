@@ -28,9 +28,8 @@ var sanitizeId = function(id){
 const PSEUDOURI = "indexeddb://" + sanitizeId(id) // https://bugzilla.mozilla.org/show_bug.cgi?id=779197
 
 // Use XPCOM because `require("./url").URL` doesn't expose the raw uri object.
-var principaluri = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService).
-              newURI(PSEUDOURI, null, null);
+var principaluri = Cc["@mozilla.org/network/io-service;1"]
+                     .getService(Ci.nsIIOService).newURI(PSEUDOURI);
 
 var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
             .getService(Ci.nsIScriptSecurityManager);

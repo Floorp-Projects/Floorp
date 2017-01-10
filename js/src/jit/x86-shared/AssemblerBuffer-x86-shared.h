@@ -186,9 +186,9 @@ namespace jit {
         }
 
 #ifndef RELEASE_OR_BETA
-        PageProtectingVector<unsigned char, 256, SystemAllocPolicy,
+        PageProtectingVector<unsigned char, 256, ProtectedReallocPolicy,
                              /* ProtectUsed = */ false, /* ProtectUnused = */ false,
-                             /* GuardAgainstReentrancy = */ true,
+                             /* GuardAgainstReentrancy = */ true, /* DetectPoison = */ true,
                              /* InitialLowerBound = */ 32 * 1024> m_buffer;
 #else
         mozilla::Vector<unsigned char, 256, SystemAllocPolicy> m_buffer;

@@ -1,20 +1,18 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 # All tests in this file have fuzz on OS X 10.10 due to bug 1220052.
 
-skip-if(B2G||Mulet) fuzzy-if(OSX==1010,1,10) == display-types-01.html display-types-01.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(OSX==1010,1,10) == dynamic-attr-01.html dynamic-attr-01.html
-fuzzy-if(OSX==1010,1,10) == dynamic-button-01a.html dynamic-button-01a.html
-fuzzy-if(OSX==1010,1,10) == dynamic-button-01b.html dynamic-button-01b.html
-fuzzy-if(OSX==1010,1,10) == dynamic-fieldset-01a.html dynamic-fieldset-01a.html
-fuzzy-if(OSX==1010,1,10) == dynamic-fieldset-01b.html dynamic-fieldset-01b.html
-fuzzy-if(OSX==1010,1,10) == dynamic-restyle-01.html dynamic-restyle-01.html
-fuzzy-if(OSX==1010,1,10) == dynamic-table-cell-01a.html dynamic-table-cell-01a.html
-fuzzy-if(OSX==1010,1,10) == dynamic-table-cell-01b.html dynamic-table-cell-01b.html
-fuzzy-if(OSX==1010,1,10) == floated-01.html floated-01.html
-fuzzy-if(OSX==1010,1,10) == images-01.html images-01.html
-fuzzy-if(OSX==1010,1,10) == positioned-01.html positioned-01.html
+fails == display-types-01.html display-types-01.html
+fails == dynamic-attr-01.html dynamic-attr-01.html
+fails == dynamic-button-01a.html dynamic-button-01a.html
+fails == dynamic-button-01b.html dynamic-button-01b.html
+fails == dynamic-fieldset-01a.html dynamic-fieldset-01a.html
+fails == dynamic-fieldset-01b.html dynamic-fieldset-01b.html
+fails == dynamic-restyle-01.html dynamic-restyle-01.html
+fails == dynamic-table-cell-01a.html dynamic-table-cell-01a.html
+fails == dynamic-table-cell-01b.html dynamic-table-cell-01b.html
+fails == floated-01.html floated-01.html
+fails == images-01.html images-01.html
+fails == positioned-01.html positioned-01.html
 fuzzy-if(OSX==1010,1,10) == quotes-001.xml quotes-001.xml
-fuzzy-if(OSX==1010,1,10) == table-ignoring-whitespace-01.html table-ignoring-whitespace-01.html
-fuzzy-if(OSX==1010,1,10) == table-parts-01.html table-parts-01.html
+fails == table-ignoring-whitespace-01.html table-ignoring-whitespace-01.html
+fails == table-parts-01.html table-parts-01.html

@@ -15,7 +15,7 @@ function run_test() {
             getService(Ci.nsIIOService);
 
   for (var spec of specs) {
-    var uri = ios.newURI(spec, null, null);
+    var uri = ios.newURI(spec);
     if (uri.spec.indexOf("..") != -1)
       do_throw("resource: traversal remains: '"+spec+"' ==> '"+uri.spec+"'");
   }

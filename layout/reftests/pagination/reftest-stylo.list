@@ -3,107 +3,73 @@
 #   and layout/reftests/w3c-css/submitted/multicol3/
 # Pagination tests
 # asserts(3) == abspos-breaking-000.xhtml abspos-breaking-000.xhtml
-# bug 1067755, 1135556
-== abspos-breaking-001.xhtml abspos-breaking-001.xhtml
-== abspos-breaking-002.xhtml abspos-breaking-002.xhtml
-== abspos-breaking-003.html abspos-breaking-003.html
-== abspos-breaking-004.html abspos-breaking-004.html
-== abspos-breaking-005.html abspos-breaking-005.html
-== abspos-breaking-006.html abspos-breaking-006.html
-pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007.html
-skip-if(B2G||Mulet) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== abspos-breaking-011.html abspos-breaking-011.html
-== abspos-overflow-01.xhtml abspos-overflow-01.xhtml
-== abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.xhtml
-skip == border-breaking-000-cols.xhtml border-breaking-000-cols.xhtml
-== border-breaking-001-cols.xhtml border-breaking-001-cols.xhtml
-== border-breaking-002-cols.xhtml border-breaking-002-cols.xhtml
-== border-breaking-003-cols.xhtml border-breaking-003-cols.xhtml
-== border-breaking-004-cols.xhtml border-breaking-004-cols.xhtml
-== content-inserted-000.xhtml content-inserted-000.xhtml
-== content-inserted-001.xhtml content-inserted-001.xhtml
-== content-inserted-002.xhtml content-inserted-002.xhtml
-== content-inserted-003.xhtml content-inserted-003.xhtml
-== content-inserted-004.xhtml content-inserted-004.xhtml
-== content-inserted-005.xhtml content-inserted-005.xhtml
-== content-inserted-006.xhtml content-inserted-006.xhtml
-== content-inserted-007.xhtml content-inserted-007.xhtml
-skip == content-inserted-008.xhtml content-inserted-008.xhtml
-== content-inserted-009.xhtml content-inserted-009.xhtml
-== dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.xhtml
-== float-clear-000.html float-clear-000.html
-== float-clear-000.html float-clear-000.html
-== float-clear-001.html float-clear-001.html
-skip == float-clear-002.html float-clear-002.html
-skip == float-clear-002.html float-clear-002.html
-== float-clear-003.html float-clear-003.html
-== float-clear-000-print.html float-clear-000-print.html
-== float-clear-001-print.html float-clear-001-print.html
-== float-clear-002-print.html float-clear-002-print.html
-== float-clear-003-print.html float-clear-003-print.html
-== float-continuations-000.html float-continuations-000.html
-fails fuzzy-if(skiaContent,1,21) == resize-reflow-000.html resize-reflow-000.html
-fuzzy-if(skiaContent,1,23) == resize-reflow-001.html resize-reflow-001.html
+fails == abspos-breaking-001.xhtml abspos-breaking-001.xhtml
+fails == abspos-breaking-002.xhtml abspos-breaking-002.xhtml
+fails == abspos-breaking-003.html abspos-breaking-003.html
+fails == abspos-breaking-004.html abspos-breaking-004.html
+fails == abspos-breaking-005.html abspos-breaking-005.html
+fails == abspos-breaking-006.html abspos-breaking-006.html
+fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.html abspos-breaking-007.html
+fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008.html
+fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009.html
+fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010.html
+fails == abspos-breaking-011.html abspos-breaking-011.html
+fails == abspos-overflow-01.xhtml abspos-overflow-01.xhtml
+fails == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.xhtml
+fails == border-breaking-000-cols.xhtml border-breaking-000-cols.xhtml
+fails == border-breaking-001-cols.xhtml border-breaking-001-cols.xhtml
+fails == border-breaking-002-cols.xhtml border-breaking-002-cols.xhtml
+fails == border-breaking-003-cols.xhtml border-breaking-003-cols.xhtml
+fails == border-breaking-004-cols.xhtml border-breaking-004-cols.xhtml
+fails == content-inserted-000.xhtml content-inserted-000.xhtml
+fails == content-inserted-001.xhtml content-inserted-001.xhtml
+fails == content-inserted-002.xhtml content-inserted-002.xhtml
+fails == content-inserted-003.xhtml content-inserted-003.xhtml
+fails == content-inserted-004.xhtml content-inserted-004.xhtml
+fails == content-inserted-005.xhtml content-inserted-005.xhtml
+fails == content-inserted-006.xhtml content-inserted-006.xhtml
+fails == content-inserted-007.xhtml content-inserted-007.xhtml
+fails == content-inserted-008.xhtml content-inserted-008.xhtml
+fails == content-inserted-009.xhtml content-inserted-009.xhtml
+fails == dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.xhtml
+fails test-pref(layout.float-fragments-inside-column.enabled,false) fails == float-clear-000.html float-clear-000.html
+fails test-pref(layout.float-fragments-inside-column.enabled,true) == float-clear-000.html float-clear-000.html
+fails == float-clear-001.html float-clear-001.html
+fails test-pref(layout.float-fragments-inside-column.enabled,false) fails == float-clear-002.html float-clear-002.html
+fails test-pref(layout.float-fragments-inside-column.enabled,true) == float-clear-002.html float-clear-002.html
+fails == float-clear-003.html float-clear-003.html
+fails == float-clear-000-print.html float-clear-000-print.html
+fails == float-clear-001-print.html float-clear-001-print.html
+fails == float-clear-002-print.html float-clear-002-print.html
+fails == float-clear-003-print.html float-clear-003-print.html
+fails == float-continuations-000.html float-continuations-000.html
+fails == resize-reflow-000.html resize-reflow-000.html
+fails == resize-reflow-001.html resize-reflow-001.html
 == table-page-break-before-auto-1.html table-page-break-before-auto-1.html
 #== table-page-break-before-auto-2.html table-page-break-before-auto-2-ref.html bug bug
 == table-page-break-before-always-1.html table-page-break-before-always-1.html
 == table-page-break-before-left-1.html table-page-break-before-left-1.html
 == table-page-break-before-right-1.html table-page-break-before-right-1.html
-== table-page-break-after-always-1.html table-page-break-after-always-1.html
-== table-page-break-after-left-1.html table-page-break-after-left-1.html
-== table-page-break-after-right-1.html table-page-break-after-right-1.html
-skip-if(B2G||Mulet) == rowgroup-page-break-after-always-1.html rowgroup-page-break-after-always-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == row-page-break-after-always-1.html row-page-break-after-always-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == row-page-break-after-always-2.html row-page-break-after-always-2.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == rowgroup-thead-page-break-after-always-1.html rowgroup-thead-page-break-after-always-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == rowgroup-tfoot-page-break-after-always-1.html rowgroup-tfoot-page-break-after-always-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-tfoot-thead-1.html table-tfoot-thead-1.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== table-caption-splitrowgroup-1.html table-caption-splitrowgroup-1.html
-== table-caption-splitaftercaption-1.html table-caption-splitaftercaption-1.html
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-2.html table-caption-splitaftercaption-2.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-3.html table-caption-splitaftercaption-3.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-4.html table-caption-splitaftercaption-4.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == table-page-break-after-always-1.html table-page-break-after-always-1.html
+fails == table-page-break-after-left-1.html table-page-break-after-left-1.html
+fails == table-page-break-after-right-1.html table-page-break-after-right-1.html
+fails == rowgroup-page-break-after-always-1.html rowgroup-page-break-after-always-1.html
+fails == row-page-break-after-always-1.html row-page-break-after-always-1.html
+fails == row-page-break-after-always-2.html row-page-break-after-always-2.html
+fails == rowgroup-thead-page-break-after-always-1.html rowgroup-thead-page-break-after-always-1.html
+fails == rowgroup-tfoot-page-break-after-always-1.html rowgroup-tfoot-page-break-after-always-1.html
+fails == table-tfoot-thead-1.html table-tfoot-thead-1.html
+fails == table-caption-splitrowgroup-1.html table-caption-splitrowgroup-1.html
+fails == table-caption-splitaftercaption-1.html table-caption-splitaftercaption-1.html
+fails == table-caption-splitaftercaption-2.html table-caption-splitaftercaption-2.html
+fails == table-caption-splitaftercaption-3.html table-caption-splitaftercaption-3.html
+fails == table-caption-splitaftercaption-4.html table-caption-splitaftercaption-4.html
+fails == table-caption-splitaftercaption-5.html table-caption-splitaftercaption-5.html
+fails == table-caption-splitaftercaption-6.html table-caption-splitaftercaption-6.html
+fails == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-7.html
 # == table-caption-splitaftercaption-8.html table-caption-splitaftercaption-8.html
-# bug 672654
 # == table-caption-splitaftercaption-9.html table-caption-splitaftercaption-9.html
-# bug 672654
 # == table-caption-splitaftercaption-10.html table-caption-splitaftercaption-10.html
-# bug 672654
 # == table-caption-splitaftercaption-11.html table-caption-splitaftercaption-11.html
-# bug 672654
-== column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2.html
-fails-if(B2G||Mulet) == combobox-page-break-inside.html combobox-page-break-inside.html
-# reftest-print doesn't work on B2G
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2.html
+fails == combobox-page-break-inside.html combobox-page-break-inside.html

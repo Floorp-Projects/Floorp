@@ -111,7 +111,7 @@ AboutRedirector.prototype = {
     var ios = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService);
 
-    var newURI = ios.newURI(moduleInfo.uri, null, null);
+    var newURI = ios.newURI(moduleInfo.uri);
 
     var channel = ios.newChannelFromURIWithLoadInfo(newURI, aLoadInfo);
 

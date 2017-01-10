@@ -6,51 +6,34 @@ include empty/reftest-stylo.list
 # avoid viewBox-directed scaling to make the scaled height less than the wide-
 # tests height):
 #
-# for ORIENTATION in tall wide; do for SIZE in 32px-auto auto-32px auto contain cover; do for VIMAGE in *.svg; do cat template.html | sed -e "s/SIZE/$(echo $SIZE | sed -e 's/-/ /')/g" | sed -e "s/VIMAGE/$VIMAGE/g" | sed -e "s/TALLWIDE/$ORIENTATION/g" | sed -e "s/ORIENTATION/$(if [ "$ORIENTATION" = "tall" ]; then echo 'width: 256px; height: 768px'; else echo 'width: 768px; height: 256px'; fi)/g" > $ORIENTATION--$SIZE--$(echo $VIMAGE | sed -e 's/.svg//').html; echo "== $ORIENTATION--$SIZE--$(echo $VIMAGE | sed -e 's/.svg//').html ###" >> reftest-stylo.list; done; echo >> reftest-stylo.list; done; done;
+# for ORIENTATION in tall wide; do for SIZE in 32px-auto auto-32px auto contain cover; do for VIMAGE in *.svg; do cat template.html | sed -e "s/SIZE/$(echo $SIZE | sed -e 's/-/ /')/g" | sed -e "s/VIMAGE/$VIMAGE/g" | sed -e "s/TALLWIDE/$ORIENTATION/g" | sed -e "s/ORIENTATION/$(if [ "$ORIENTATION" = "tall" ]; then echo 'width: 256px; height: 768px'; else echo 'width: 768px; height: 256px'; fi)/g" > $ORIENTATION--$SIZE--$(echo $VIMAGE | sed -e 's/.svg//').html; echo "== $ORIENTATION--$SIZE--$(echo $VIMAGE | sed -e -e
 #
 ################################################################################
 
 == tall--32px-auto--nonpercent-width-nonpercent-height.html tall--32px-auto--nonpercent-width-nonpercent-height.html
 == tall--32px-auto--nonpercent-width-nonpercent-height-viewbox.html tall--32px-auto--nonpercent-width-nonpercent-height-viewbox.html
 == tall--32px-auto--nonpercent-width-omitted-height.html tall--32px-auto--nonpercent-width-omitted-height.html
-skip-if(B2G||Mulet) == tall--32px-auto--nonpercent-width-omitted-height-viewbox.html tall--32px-auto--nonpercent-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == tall--32px-auto--nonpercent-width-percent-height.html tall--32px-auto--nonpercent-width-percent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--32px-auto--nonpercent-width-omitted-height-viewbox.html tall--32px-auto--nonpercent-width-omitted-height-viewbox.html
+== tall--32px-auto--nonpercent-width-percent-height.html tall--32px-auto--nonpercent-width-percent-height.html
 == tall--32px-auto--nonpercent-width-percent-height-viewbox.html tall--32px-auto--nonpercent-width-percent-height-viewbox.html
-skip-if(B2G||Mulet) == tall--32px-auto--omitted-width-nonpercent-height.html tall--32px-auto--omitted-width-nonpercent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--32px-auto--omitted-width-nonpercent-height.html tall--32px-auto--omitted-width-nonpercent-height.html
 == tall--32px-auto--omitted-width-nonpercent-height-viewbox.html tall--32px-auto--omitted-width-nonpercent-height-viewbox.html
 == tall--32px-auto--omitted-width-omitted-height.html tall--32px-auto--omitted-width-omitted-height.html
 == tall--32px-auto--omitted-width-omitted-height-viewbox.html tall--32px-auto--omitted-width-omitted-height-viewbox.html
-skip-if(B2G||Mulet) == tall--32px-auto--omitted-width-percent-height.html tall--32px-auto--omitted-width-percent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == tall--32px-auto--omitted-width-percent-height-viewbox.html tall--32px-auto--omitted-width-percent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--32px-auto--omitted-width-percent-height.html tall--32px-auto--omitted-width-percent-height.html
+== tall--32px-auto--omitted-width-percent-height-viewbox.html tall--32px-auto--omitted-width-percent-height-viewbox.html
 == tall--32px-auto--percent-width-nonpercent-height.html tall--32px-auto--percent-width-nonpercent-height.html
 == tall--32px-auto--percent-width-nonpercent-height-viewbox.html tall--32px-auto--percent-width-nonpercent-height-viewbox.html
 == tall--32px-auto--percent-width-omitted-height.html tall--32px-auto--percent-width-omitted-height.html
-skip-if(B2G||Mulet) == tall--32px-auto--percent-width-omitted-height-viewbox.html tall--32px-auto--percent-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--32px-auto--percent-width-omitted-height-viewbox.html tall--32px-auto--percent-width-omitted-height-viewbox.html
 == tall--32px-auto--percent-width-percent-height.html tall--32px-auto--percent-width-percent-height.html
-skip-if(B2G||Mulet) == tall--32px-auto--percent-width-percent-height-viewbox.html tall--32px-auto--percent-width-percent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--32px-auto--percent-width-percent-height-viewbox.html tall--32px-auto--percent-width-percent-height-viewbox.html
 
 == tall--auto-32px--nonpercent-width-nonpercent-height.html tall--auto-32px--nonpercent-width-nonpercent-height.html
 == tall--auto-32px--nonpercent-width-nonpercent-height-viewbox.html tall--auto-32px--nonpercent-width-nonpercent-height-viewbox.html
-skip-if(B2G||Mulet) == tall--auto-32px--nonpercent-width-omitted-height.html tall--auto-32px--nonpercent-width-omitted-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--auto-32px--nonpercent-width-omitted-height.html tall--auto-32px--nonpercent-width-omitted-height.html
 == tall--auto-32px--nonpercent-width-omitted-height-viewbox.html tall--auto-32px--nonpercent-width-omitted-height-viewbox.html
-skip-if(B2G||Mulet) == tall--auto-32px--nonpercent-width-percent-height.html tall--auto-32px--nonpercent-width-percent-height.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--auto-32px--nonpercent-width-percent-height.html tall--auto-32px--nonpercent-width-percent-height.html
 == tall--auto-32px--nonpercent-width-percent-height-viewbox.html tall--auto-32px--nonpercent-width-percent-height-viewbox.html
 == tall--auto-32px--omitted-width-nonpercent-height.html tall--auto-32px--omitted-width-nonpercent-height.html
 == tall--auto-32px--omitted-width-nonpercent-height-viewbox.html tall--auto-32px--omitted-width-nonpercent-height-viewbox.html
@@ -65,9 +48,7 @@ skip-if(B2G||Mulet) == tall--auto-32px--nonpercent-width-percent-height.html tal
 == tall--auto-32px--percent-width-percent-height.html tall--auto-32px--percent-width-percent-height.html
 == tall--auto-32px--percent-width-percent-height-viewbox.html tall--auto-32px--percent-width-percent-height-viewbox.html
 
-skip-if(B2G||Mulet) == tall--auto--nonpercent-width-nonpercent-height.html tall--auto--nonpercent-width-nonpercent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--auto--nonpercent-width-nonpercent-height.html tall--auto--nonpercent-width-nonpercent-height.html
 == tall--auto--nonpercent-width-nonpercent-height-viewbox.html tall--auto--nonpercent-width-nonpercent-height-viewbox.html
 == tall--auto--nonpercent-width-omitted-height.html tall--auto--nonpercent-width-omitted-height.html
 == tall--auto--nonpercent-width-omitted-height-viewbox.html tall--auto--nonpercent-width-omitted-height-viewbox.html
@@ -76,9 +57,7 @@ skip-if(B2G||Mulet) == tall--auto--nonpercent-width-nonpercent-height.html tall-
 == tall--auto--omitted-width-nonpercent-height.html tall--auto--omitted-width-nonpercent-height.html
 == tall--auto--omitted-width-nonpercent-height-viewbox.html tall--auto--omitted-width-nonpercent-height-viewbox.html
 == tall--auto--omitted-width-omitted-height.html tall--auto--omitted-width-omitted-height.html
-skip-if(B2G||Mulet) == tall--auto--omitted-width-omitted-height-viewbox.html tall--auto--omitted-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--auto--omitted-width-omitted-height-viewbox.html tall--auto--omitted-width-omitted-height-viewbox.html
 == tall--auto--omitted-width-percent-height.html tall--auto--omitted-width-percent-height.html
 == tall--auto--omitted-width-percent-height-viewbox.html tall--auto--omitted-width-percent-height-viewbox.html
 == tall--auto--percent-width-nonpercent-height.html tall--auto--percent-width-nonpercent-height.html
@@ -90,12 +69,8 @@ skip-if(B2G||Mulet) == tall--auto--omitted-width-omitted-height-viewbox.html tal
 
 == tall--contain--nonpercent-width-nonpercent-height.html tall--contain--nonpercent-width-nonpercent-height.html
 == tall--contain--nonpercent-width-nonpercent-height-viewbox.html tall--contain--nonpercent-width-nonpercent-height-viewbox.html
-skip-if(B2G||Mulet) == tall--contain--nonpercent-width-omitted-height.html tall--contain--nonpercent-width-omitted-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == tall--contain--nonpercent-width-omitted-height-viewbox.html tall--contain--nonpercent-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== tall--contain--nonpercent-width-omitted-height.html tall--contain--nonpercent-width-omitted-height.html
+== tall--contain--nonpercent-width-omitted-height-viewbox.html tall--contain--nonpercent-width-omitted-height-viewbox.html
 == tall--contain--nonpercent-width-percent-height.html tall--contain--nonpercent-width-percent-height.html
 == tall--contain--nonpercent-width-percent-height-viewbox.html tall--contain--nonpercent-width-percent-height-viewbox.html
 == tall--contain--omitted-width-nonpercent-height.html tall--contain--omitted-width-nonpercent-height.html
@@ -133,19 +108,12 @@ skip-if(B2G||Mulet) == tall--contain--nonpercent-width-omitted-height-viewbox.ht
 
 == wide--12px-auto--nonpercent-width-nonpercent-height.html wide--12px-auto--nonpercent-width-nonpercent-height.html
 == wide--12px-auto--nonpercent-width-nonpercent-height-viewbox.html wide--12px-auto--nonpercent-width-nonpercent-height-viewbox.html
-skip-if(B2G||Mulet) == wide--12px-auto--nonpercent-width-omitted-height.html wide--12px-auto--nonpercent-width-omitted-height.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == wide--12px-auto--nonpercent-width-omitted-height-viewbox.html wide--12px-auto--nonpercent-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--12px-auto--nonpercent-width-omitted-height.html wide--12px-auto--nonpercent-width-omitted-height.html
+== wide--12px-auto--nonpercent-width-omitted-height-viewbox.html wide--12px-auto--nonpercent-width-omitted-height-viewbox.html
 == wide--12px-auto--nonpercent-width-percent-height.html wide--12px-auto--nonpercent-width-percent-height.html
 == wide--12px-auto--nonpercent-width-percent-height-viewbox.html wide--12px-auto--nonpercent-width-percent-height-viewbox.html
-skip-if(B2G||Mulet) == wide--12px-auto--omitted-width-nonpercent-height.html wide--12px-auto--omitted-width-nonpercent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == wide--12px-auto--omitted-width-nonpercent-height-viewbox.html wide--12px-auto--omitted-width-nonpercent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--12px-auto--omitted-width-nonpercent-height.html wide--12px-auto--omitted-width-nonpercent-height.html
+== wide--12px-auto--omitted-width-nonpercent-height-viewbox.html wide--12px-auto--omitted-width-nonpercent-height-viewbox.html
 == wide--12px-auto--omitted-width-omitted-height.html wide--12px-auto--omitted-width-omitted-height.html
 == wide--12px-auto--omitted-width-omitted-height-viewbox.html wide--12px-auto--omitted-width-omitted-height-viewbox.html
 == wide--12px-auto--omitted-width-percent-height.html wide--12px-auto--omitted-width-percent-height.html
@@ -153,21 +121,15 @@ skip-if(B2G||Mulet) == wide--12px-auto--omitted-width-nonpercent-height-viewbox.
 == wide--12px-auto--percent-width-nonpercent-height.html wide--12px-auto--percent-width-nonpercent-height.html
 == wide--12px-auto--percent-width-nonpercent-height-viewbox.html wide--12px-auto--percent-width-nonpercent-height-viewbox.html
 == wide--12px-auto--percent-width-omitted-height.html wide--12px-auto--percent-width-omitted-height.html
-skip-if(B2G||Mulet) == wide--12px-auto--percent-width-omitted-height-viewbox.html wide--12px-auto--percent-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == wide--12px-auto--percent-width-percent-height.html wide--12px-auto--percent-width-percent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--12px-auto--percent-width-omitted-height-viewbox.html wide--12px-auto--percent-width-omitted-height-viewbox.html
+== wide--12px-auto--percent-width-percent-height.html wide--12px-auto--percent-width-percent-height.html
 == wide--12px-auto--percent-width-percent-height-viewbox.html wide--12px-auto--percent-width-percent-height-viewbox.html
 
 == wide--auto-32px--nonpercent-width-nonpercent-height.html wide--auto-32px--nonpercent-width-nonpercent-height.html
 == wide--auto-32px--nonpercent-width-nonpercent-height-viewbox.html wide--auto-32px--nonpercent-width-nonpercent-height-viewbox.html
 == wide--auto-32px--nonpercent-width-omitted-height.html wide--auto-32px--nonpercent-width-omitted-height.html
 == wide--auto-32px--nonpercent-width-omitted-height-viewbox.html wide--auto-32px--nonpercent-width-omitted-height-viewbox.html
-skip-if(B2G||Mulet) == wide--auto-32px--nonpercent-width-percent-height.html wide--auto-32px--nonpercent-width-percent-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--auto-32px--nonpercent-width-percent-height.html wide--auto-32px--nonpercent-width-percent-height.html
 == wide--auto-32px--nonpercent-width-percent-height-viewbox.html wide--auto-32px--nonpercent-width-percent-height-viewbox.html
 == wide--auto-32px--omitted-width-nonpercent-height.html wide--auto-32px--omitted-width-nonpercent-height.html
 == wide--auto-32px--omitted-width-nonpercent-height-viewbox.html wide--auto-32px--omitted-width-nonpercent-height-viewbox.html
@@ -182,23 +144,16 @@ skip-if(B2G||Mulet) == wide--auto-32px--nonpercent-width-percent-height.html wid
 == wide--auto-32px--percent-width-percent-height.html wide--auto-32px--percent-width-percent-height.html
 == wide--auto-32px--percent-width-percent-height-viewbox.html wide--auto-32px--percent-width-percent-height-viewbox.html
 
-skip-if(B2G||Mulet) == wide--auto--nonpercent-width-nonpercent-height.html wide--auto--nonpercent-width-nonpercent-height.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == wide--auto--nonpercent-width-nonpercent-height-viewbox.html wide--auto--nonpercent-width-nonpercent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--auto--nonpercent-width-nonpercent-height.html wide--auto--nonpercent-width-nonpercent-height.html
+== wide--auto--nonpercent-width-nonpercent-height-viewbox.html wide--auto--nonpercent-width-nonpercent-height-viewbox.html
 == wide--auto--nonpercent-width-omitted-height.html wide--auto--nonpercent-width-omitted-height.html
 == wide--auto--nonpercent-width-omitted-height-viewbox.html wide--auto--nonpercent-width-omitted-height-viewbox.html
 == wide--auto--nonpercent-width-percent-height.html wide--auto--nonpercent-width-percent-height.html
-skip-if(B2G||Mulet) == wide--auto--nonpercent-width-percent-height-viewbox.html wide--auto--nonpercent-width-percent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--auto--nonpercent-width-percent-height-viewbox.html wide--auto--nonpercent-width-percent-height-viewbox.html
 == wide--auto--omitted-width-nonpercent-height.html wide--auto--omitted-width-nonpercent-height.html
 == wide--auto--omitted-width-nonpercent-height-viewbox.html wide--auto--omitted-width-nonpercent-height-viewbox.html
 == wide--auto--omitted-width-omitted-height.html wide--auto--omitted-width-omitted-height.html
-skip-if(B2G||Mulet) == wide--auto--omitted-width-omitted-height-viewbox.html wide--auto--omitted-width-omitted-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--auto--omitted-width-omitted-height-viewbox.html wide--auto--omitted-width-omitted-height-viewbox.html
 == wide--auto--omitted-width-percent-height.html wide--auto--omitted-width-percent-height.html
 == wide--auto--omitted-width-percent-height-viewbox.html wide--auto--omitted-width-percent-height-viewbox.html
 == wide--auto--percent-width-nonpercent-height.html wide--auto--percent-width-nonpercent-height.html
@@ -210,9 +165,7 @@ skip-if(B2G||Mulet) == wide--auto--omitted-width-omitted-height-viewbox.html wid
 
 == wide--contain--nonpercent-width-nonpercent-height.html wide--contain--nonpercent-width-nonpercent-height.html
 == wide--contain--nonpercent-width-nonpercent-height-viewbox.html wide--contain--nonpercent-width-nonpercent-height-viewbox.html
-skip-if(B2G||Mulet) == wide--contain--nonpercent-width-omitted-height.html wide--contain--nonpercent-width-omitted-height.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--contain--nonpercent-width-omitted-height.html wide--contain--nonpercent-width-omitted-height.html
 == wide--contain--nonpercent-width-omitted-height-viewbox.html wide--contain--nonpercent-width-omitted-height-viewbox.html
 == wide--contain--nonpercent-width-percent-height.html wide--contain--nonpercent-width-percent-height.html
 == wide--contain--nonpercent-width-percent-height-viewbox.html wide--contain--nonpercent-width-percent-height-viewbox.html
@@ -230,17 +183,13 @@ skip-if(B2G||Mulet) == wide--contain--nonpercent-width-omitted-height.html wide-
 == wide--contain--percent-width-percent-height-viewbox.html wide--contain--percent-width-percent-height-viewbox.html
 
 == wide--cover--nonpercent-width-nonpercent-height.html wide--cover--nonpercent-width-nonpercent-height.html
-skip-if(B2G||Mulet) == wide--cover--nonpercent-width-nonpercent-height-viewbox.html wide--cover--nonpercent-width-nonpercent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--cover--nonpercent-width-nonpercent-height-viewbox.html wide--cover--nonpercent-width-nonpercent-height-viewbox.html
 == wide--cover--nonpercent-width-omitted-height.html wide--cover--nonpercent-width-omitted-height.html
 == wide--cover--nonpercent-width-omitted-height-viewbox.html wide--cover--nonpercent-width-omitted-height-viewbox.html
 == wide--cover--nonpercent-width-percent-height.html wide--cover--nonpercent-width-percent-height.html
 == wide--cover--nonpercent-width-percent-height-viewbox.html wide--cover--nonpercent-width-percent-height-viewbox.html
 == wide--cover--omitted-width-nonpercent-height.html wide--cover--omitted-width-nonpercent-height.html
-skip-if(B2G||Mulet) == wide--cover--omitted-width-nonpercent-height-viewbox.html wide--cover--omitted-width-nonpercent-height-viewbox.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+== wide--cover--omitted-width-nonpercent-height-viewbox.html wide--cover--omitted-width-nonpercent-height-viewbox.html
 == wide--cover--omitted-width-omitted-height.html wide--cover--omitted-width-omitted-height.html
 == wide--cover--omitted-width-omitted-height-viewbox.html wide--cover--omitted-width-omitted-height-viewbox.html
 == wide--cover--omitted-width-percent-height.html wide--cover--omitted-width-percent-height.html
@@ -252,5 +201,5 @@ skip-if(B2G||Mulet) == wide--cover--omitted-width-nonpercent-height-viewbox.html
 == wide--cover--percent-width-percent-height.html wide--cover--percent-width-percent-height.html
 == wide--cover--percent-width-percent-height-viewbox.html wide--cover--percent-width-percent-height-viewbox.html
 
-== diagonal-percentage-vector-background.html diagonal-percentage-vector-background.html
+# == diagonal-percentage-vector-background.html diagonal-percentage-vector-background.html
 == no-aspect-ratio-wide.html no-aspect-ratio-wide.html

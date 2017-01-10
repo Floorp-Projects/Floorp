@@ -150,7 +150,7 @@ this.FxAccountsOAuthClient.prototype = {
 
     // if this.parameters.content_uri is present but not a valid URI, then this will throw an error.
     try {
-      this._webChannelOrigin = Services.io.newURI(this.parameters.content_uri, null, null);
+      this._webChannelOrigin = Services.io.newURI(this.parameters.content_uri);
     } catch (e) {
       throw e;
     }

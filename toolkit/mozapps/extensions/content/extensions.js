@@ -2142,7 +2142,7 @@ var gDiscoverView = {
 
     let setURL = (aURL) => {
       try {
-        this.homepageURL = Services.io.newURI(aURL, null, null);
+        this.homepageURL = Services.io.newURI(aURL);
       } catch (e) {
         this.showError();
         notifyInitialized();

@@ -27,14 +27,13 @@ include moz-only/reftest-stylo.list
 include svg-integration/reftest-stylo.list
 
 == baseline-middle-01.svg baseline-middle-01.svg
-== border-radius-01.html border-radius-01.html
+fails == border-radius-01.html border-radius-01.html
 == cssComment-in-attribute-01.svg cssComment-in-attribute-01.svg
 == clip-01.svg clip-01.svg
 == clip-02a.svg clip-02a.svg
 == clip-02b.svg clip-02b.svg
 == clipPath-advanced-01.svg clipPath-advanced-01.svg
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) fuzzy-if(OSX,1,6) fuzzy-if(skiaContent,1,300) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01.svg
-# bug 614840
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/.test(http.oscpu),1,5) fuzzy-if(azureQuartz,1,6) fuzzy-if(OSX,1,6) fuzzy-if(skiaContent,1,630) == clipPath-and-shape-rendering-01.svg clipPath-and-shape-rendering-01.svg
 == clipPath-and-transform-01.svg clipPath-and-transform-01.svg
 == clipPath-basic-01.svg clipPath-basic-01.svg
 == clipPath-basic-02.svg clipPath-basic-02.svg
@@ -49,18 +48,16 @@ fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.[12]/
 == conditions-02.svg conditions-02.svg
 == conditions-03.svg conditions-03.svg
 == conditions-04.svg conditions-04.svg
-random-if(Mulet) == conditions-05.svg conditions-05.svg
-# bug 1178062
-skip == conditions-06.svg conditions-06.svg
+== conditions-05.svg conditions-05.svg
 == conditions-07.svg conditions-07.svg
 fuzzy-if(skiaContent,1,320) == conditions-08.svg conditions-08.svg
 == conditions-09.svg conditions-09.svg
 == currentColor-01.svg currentColor-01.svg
 == currentColor-02.svg currentColor-02.svg
 == currentColor-03.svg currentColor-03.svg
-random == data-uri-with-filter-01.xhtml data-uri-with-filter-01.xhtml
-random == data-uri-with-gradient-01.xhtml data-uri-with-gradient-01.xhtml
-random == data-uri-with-pattern-01.xhtml data-uri-with-pattern-01.xhtml
+== data-uri-with-filter-01.xhtml data-uri-with-filter-01.xhtml
+== data-uri-with-gradient-01.xhtml data-uri-with-gradient-01.xhtml
+== data-uri-with-pattern-01.xhtml data-uri-with-pattern-01.xhtml
 == dynamic-attr-removal-1.svg dynamic-attr-removal-1.svg
 == dynamic-attr-removal-2.svg dynamic-attr-removal-2.svg
 == dynamic-attr-change-1.svg dynamic-attr-change-1.svg
@@ -70,27 +67,20 @@ fuzzy-if(Android,4,87) == dynamic-clipPath-01.svg dynamic-clipPath-01.svg
 == dynamic-clipPath-02.svg dynamic-clipPath-02.svg
 == dynamic-clipPath-clip-rule-01.svg dynamic-clipPath-clip-rule-01.svg
 == dynamic-conditions-01.svg dynamic-conditions-01.svg
-random-if(Mulet) == dynamic-conditions-02.svg dynamic-conditions-02.svg
-# bug 1178062
+== dynamic-conditions-02.svg dynamic-conditions-02.svg
 == dynamic-conditions-03.svg dynamic-conditions-03.svg
-random-if(Mulet) == dynamic-conditions-04.svg dynamic-conditions-04.svg
-# bug 1178062
+== dynamic-conditions-04.svg dynamic-conditions-04.svg
 == dynamic-conditions-05.svg dynamic-conditions-05.svg
-random-if(Mulet) == dynamic-conditions-06.svg dynamic-conditions-06.svg
-# bug 1178062
+== dynamic-conditions-06.svg dynamic-conditions-06.svg
 == dynamic-conditions-07.svg dynamic-conditions-07.svg
 == dynamic-conditions-08.svg dynamic-conditions-08.svg
-random-if(Mulet) == dynamic-conditions-09.svg dynamic-conditions-09.svg
-# bug 1178062
-random-if(Mulet) == dynamic-conditions-10.svg dynamic-conditions-10.svg
-# bug 1178062
+== dynamic-conditions-09.svg dynamic-conditions-09.svg
+== dynamic-conditions-10.svg dynamic-conditions-10.svg
 == dynamic-conditions-11.svg dynamic-conditions-11.svg
 == dynamic-conditions-12.svg dynamic-conditions-12.svg
-random-if(Mulet) == dynamic-conditions-13.svg dynamic-conditions-13.svg
-# bug 1178062
+== dynamic-conditions-13.svg dynamic-conditions-13.svg
 == dynamic-feFlood-01.svg dynamic-feFlood-01.svg
 asserts(0-1) == dynamic-feImage-01.svg dynamic-feImage-01.svg
-# intermittent assertions (bug 886080)
 == dynamic-fill-01.svg dynamic-fill-01.svg
 == dynamic-fill-rule-01.svg dynamic-fill-rule-01.svg
 fuzzy-if(d2d||skiaContent,1,10000) == dynamic-filter-contents-01a.svg dynamic-filter-contents-01a.svg
@@ -104,7 +94,7 @@ fuzzy-if(d2d||skiaContent,1,10000) == dynamic-filter-contents-01b.svg dynamic-fi
 == dynamic-marker-03.svg dynamic-marker-03.svg
 == dynamic-mask-01.svg dynamic-mask-01.svg
 == dynamic-mask-contents-01.svg dynamic-mask-contents-01.svg
-== dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox.html
+fails == dynamic-mask-pre-effects-bbox.html dynamic-mask-pre-effects-bbox.html
 == dynamic-opacity-property-01.svg dynamic-opacity-property-01.svg
 == dynamic-pattern-01.svg dynamic-pattern-01.svg
 == dynamic-pattern-02.svg dynamic-pattern-02.svg
@@ -112,9 +102,8 @@ fuzzy-if(d2d||skiaContent,1,10000) == dynamic-filter-contents-01b.svg dynamic-fi
 == dynamic-pattern-contents-02.svg dynamic-pattern-contents-02.svg
 == dynamic-rect-01.svg dynamic-rect-01.svg
 fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-02.svg
-# bug 776038 for Win7, Win8
 == dynamic-rect-03.svg dynamic-rect-03.svg
-== dynamic-rect-04.xhtml dynamic-rect-04.xhtml
+fails == dynamic-rect-04.xhtml dynamic-rect-04.xhtml
 == dynamic-rect-05.svg dynamic-rect-05.svg
 == dynamic-reflow-01.svg dynamic-reflow-01.svg
 == dynamic-small-object-scaled-up-01.svg dynamic-small-object-scaled-up-01.svg
@@ -125,11 +114,8 @@ fuzzy-if(d2d&&layersGPUAccelerated,3,1200) == dynamic-rect-02.svg dynamic-rect-0
 == dynamic-switch-01.svg dynamic-switch-01.svg
 == dynamic-text-01.svg dynamic-text-01.svg
 fuzzy-if(d2d&&layersGPUAccelerated,3,12739) == dynamic-text-02.svg dynamic-text-02.svg
-# bug 776038 for Win7, Win8
 fuzzy-if(d2d&&layersGPUAccelerated,2,10539) == dynamic-text-03.svg dynamic-text-03.svg
-# bug 776038 for Win7
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(/^Windows\x20NT\x206\.1/.test(http.oscpu),47,89) == dynamic-text-04.svg dynamic-text-04.svg
-# bug 421587 for WinXP, bug 776038 for Win7
 == dynamic-text-05.svg dynamic-text-05.svg
 == dynamic-text-06.svg dynamic-text-06.svg
 == dynamic-text-07.svg dynamic-text-07.svg
@@ -151,7 +137,7 @@ random == dynamic-use-nested-01b.svg dynamic-use-nested-01b.svg
 == dynamic-viewBox-change-01.svg dynamic-viewBox-change-01.svg
 == dynamic-viewBox-change-02.svg dynamic-viewBox-change-02.svg
 == dynamic-viewBox-change-03.svg dynamic-viewBox-change-03.svg
-random == fragmentIdentifier-01.xhtml fragmentIdentifier-01.xhtml
+== fragmentIdentifier-01.xhtml fragmentIdentifier-01.xhtml
 == linked-filter-01.svg linked-filter-01.svg
 == linked-pattern-01.svg linked-pattern-01.svg
 == use-01.svg use-01.svg
@@ -173,16 +159,15 @@ fuzzy-if(skiaContent,1,2) == fallback-color-04.svg fallback-color-04.svg
 # This pref is normally on by default, but we turn it off in reftest runs to
 # disable an unnecessary security-check. This reftest is actually testing that
 # the security check works, though, so it needs the pref to be turned on:
-fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg filter-extref-differentOrigin-01.svg
-# Bug 695385
+fails-if(Android) pref(security.fileuri.strict_origin_policy,true) == filter-extref-differentOrigin-01.svg filter-extref-differentOrigin-01.svg
 == filter-foreignObject-01.svg filter-foreignObject-01.svg
 == filter-in-mask-01.svg filter-in-mask-01.svg
 == filter-invalidation-01.svg filter-invalidation-01.svg
 == filter-result-01.svg filter-result-01.svg
 == filter-scaled-01.svg filter-scaled-01.svg
-fuzzy-if(skiaContent,1,500) == filter-scaled-02.html filter-scaled-02.html
+fails == filter-scaled-02.html filter-scaled-02.html
 == filter-translated-01.svg filter-translated-01.svg
-fuzzy-if(skiaContent,1,2500) == filters-and-group-opacity-01.svg filters-and-group-opacity-01.svg
+fuzzy-if(skiaContent,1,800000) == filters-and-group-opacity-01.svg filters-and-group-opacity-01.svg
 == foreignObject-01.svg foreignObject-01.svg
 == foreignObject-02.svg foreignObject-02.svg
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01.svg
@@ -193,30 +178,21 @@ fuzzy-if(skiaContent,1,2500) == filters-and-group-opacity-01.svg filters-and-gro
 == foreignObject-move-repaint-01.svg foreignObject-move-repaint-01.svg
 == foreignObject-overflow-01.svg foreignObject-overflow-01.svg
 == foreignObject-start-hidden-01.svg foreignObject-start-hidden-01.svg
-# followup from Bug 596765
 == foreignObject-start-hidden-02.svg foreignObject-start-hidden-02.svg
 == foreignObject-style-change-01.svg foreignObject-style-change-01.svg
-== foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01.html
-fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-fixedpos-01.html
+fails == foreignObject-dynamic-abspos-01.html foreignObject-dynamic-abspos-01.html
+fails == foreignObject-fixedpos-01.html foreignObject-fixedpos-01.html
 == foreignObject-fixedpos-02.html foreignObject-fixedpos-02.html
-== foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-fixedpos-01.html
+fails == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-fixedpos-01.html
 == foreignObject-vertical-01.svg foreignObject-vertical-01.svg
 == g-transform-01.svg g-transform-01.svg
 == getElementById-a-element-01.svg getElementById-a-element-01.svg
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01a.svg gradient-live-01a.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01b.svg gradient-live-01b.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01c.svg gradient-live-01c.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
-fuzzy-if(Android||B2G,9,980) skip-if(Mulet) fuzzy-if(skiaContent,3,32000) == gradient-live-01d.svg gradient-live-01d.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
-# MULET: Bug 1144079: Re-enable Mulet mochitests and reftests taskcluster-specific disables
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01a.svg gradient-live-01a.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01b.svg gradient-live-01b.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01c.svg gradient-live-01c.svg
+fuzzy-if(Android,9,980) fuzzy-if(skiaContent,3,32000) == gradient-live-01d.svg gradient-live-01d.svg
 == gradient-transform-01.svg gradient-transform-01.svg
-fuzzy-if(skiaContent,1,550) == import-svg-01.html import-svg-01.html
+fails == import-svg-01.html import-svg-01.html
 == invalid-text-01.svg invalid-text-01.svg
 == lang-attribute-01.svg lang-attribute-01.svg
 == lang-attribute-02.svg lang-attribute-02.svg
@@ -225,7 +201,7 @@ fuzzy-if(skiaContent,1,550) == import-svg-01.html import-svg-01.html
 == linearGradient-basic-02.svg linearGradient-basic-02.svg
 # off-by-one fuzziness expected. OS X is broken with bad aliasing though (bug 1023640).
 fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&&!winWidget,1,4000) fuzzy-if(skiaContent,1,5000) == linearGradient-basic-03.svg linearGradient-basic-03.svg
-fuzzy-if(skiaContent,1,20000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01.svg
+fuzzy-if(skiaContent,1,800000) == markers-and-group-opacity-01.svg markers-and-group-opacity-01.svg
 == marker-attribute-01.svg marker-attribute-01.svg
 == marker-effects-01.svg marker-effects-01.svg
 fuzzy-if(skiaContent,1,100) == marker-viewBox-01.svg marker-viewBox-01.svg
@@ -234,7 +210,7 @@ fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-o
 == marker-orientation-03.svg marker-orientation-03.svg
 == marker-orientation-04.svg marker-orientation-04.svg
 == mask-basic-01.svg mask-basic-01.svg
-== mask-basic-02.svg mask-basic-02.svg
+fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02.svg
 == mask-basic-03.svg mask-basic-03.svg
 == mask-basic-04.svg mask-basic-04.svg
 == mask-extref-dataURI-01.svg mask-extref-dataURI-01.svg
@@ -243,7 +219,7 @@ fuzzy-if(skiaContent,1,5) pref(svg.marker-improvements.enabled,true) == marker-o
 == mask-transformed-02.svg mask-transformed-02.svg
 == mask-transformed-child-01.svg mask-transformed-child-01.svg
 # fuzzy because of the differences between clipPath and mask clipping
-== mask-and-clipPath.html mask-and-clipPath.html
+fails == mask-and-clipPath.html mask-and-clipPath.html
 == mask-and-clipPath-2.svg mask-and-clipPath-2.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-02.svg
@@ -252,8 +228,7 @@ fuzzy-if(d2d||skiaContent,1,6400) == mask-type-04.svg mask-type-04.svg
 == nested-viewBox-01.svg nested-viewBox-01.svg
 fuzzy-if(skiaContent,3,448000) == nesting-invalid-01.svg nesting-invalid-01.svg
 fuzzy-if(d2d&&/^Windows\x20NT\x20(6\.1|10\.0)/.test(http.oscpu),63,168) fuzzy-if(cocoaWidget,1,122) fuzzy-if(skiaContent,2,1000) == non-scaling-stroke-01.svg non-scaling-stroke-01.svg
-# bug 1074161 for Win7 and OSX 10.8
-fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android||B2G,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02.svg
+fuzzy-if(gtkWidget,1,99) fuzzy-if(!contentSameGfxBackendAsCanvas,9,99) fuzzy-if(Android,9,586) == non-scaling-stroke-02.svg non-scaling-stroke-02.svg
 == non-scaling-stroke-03.svg non-scaling-stroke-03.svg
 == objectBoundingBox-and-clipPath.svg objectBoundingBox-and-clipPath.svg
 # Bug 588684
@@ -270,15 +245,15 @@ random-if(gtkWidget) == objectBoundingBox-and-fePointLight-02.svg objectBounding
 skip-if(d2d) fuzzy-if(cocoaWidget,1,99974) fuzzy-if(skiaContent,1,200000) == opacity-and-gradient-02.svg opacity-and-gradient-02.svg
 == opacity-and-pattern-01.svg opacity-and-pattern-01.svg
 fuzzy-if(skiaContent,1,10000) == opacity-and-transform-01.svg opacity-and-transform-01.svg
-fuzzy-if(Android,8,200) random-if((B2G&&browserIsRemote)||Mulet) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(Android,8,200) == outer-svg-border-and-padding-01.svg outer-svg-border-and-padding-01.svg
+fails == outline.html outline.html
 == overflow-on-outer-svg-01.svg overflow-on-outer-svg-01.svg
-== overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02a.xhtml
-== overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02b.xhtml
-== overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02c.xhtml
-== overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02d.xhtml
-== overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03a.xhtml
-== overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03b.xhtml
+fails == overflow-on-outer-svg-02a.xhtml overflow-on-outer-svg-02a.xhtml
+fails == overflow-on-outer-svg-02b.xhtml overflow-on-outer-svg-02b.xhtml
+fails == overflow-on-outer-svg-02c.xhtml overflow-on-outer-svg-02c.xhtml
+fails == overflow-on-outer-svg-02d.xhtml overflow-on-outer-svg-02d.xhtml
+fails == overflow-on-outer-svg-03a.xhtml overflow-on-outer-svg-03a.xhtml
+fails == overflow-on-outer-svg-03b.xhtml overflow-on-outer-svg-03b.xhtml
 pref(svg.paint-order.enabled,true) == paint-order-01.svg paint-order-01.svg
 pref(svg.paint-order.enabled,true) == paint-order-02.svg paint-order-02.svg
 pref(svg.paint-order.enabled,true) == paint-order-03.svg paint-order-03.svg
@@ -321,7 +296,7 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg rect-01.svg
 == rect-04.svg rect-04.svg
 == rect-with-rx-and-ry-01.svg rect-with-rx-and-ry-01.svg
 == rect-with-rx-or-ry-01.svg rect-with-rx-or-ry-01.svg
-== rootElement-null-01.svg rootElement-null-01.svg
+# == rootElement-null-01.svg rootElement-null-01.svg
 == script-empty-01.svg script-empty-01.svg
 == selector-01.svg selector-01.svg
 == stroke-linecap-circle-ellipse-01.svg stroke-linecap-circle-ellipse-01.svg
@@ -332,9 +307,8 @@ fuzzy-if(skiaContent,1,3600) == rect-01.svg rect-01.svg
 == stroke-width-percentage-03.xhtml stroke-width-percentage-03.xhtml
 == style-property-on-script-element-01.svg style-property-on-script-element-01.svg
 == style-without-type-attribute.svg style-without-type-attribute.svg
-== svg-in-foreignObject-01.xhtml svg-in-foreignObject-01.xhtml
-fails fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-foreignObject-02.xhtml
-# reuse -01-ref.xhtml
+fails == svg-in-foreignObject-01.xhtml svg-in-foreignObject-01.xhtml
+fails == svg-in-foreignObject-02.xhtml svg-in-foreignObject-02.xhtml
 == switch-01.svg switch-01.svg
 == suspend-01.svg suspend-01.svg
 == suspend-02.svg suspend-02.svg
@@ -349,21 +323,16 @@ fails fuzzy-if(skiaContent,1,2600) == svg-in-foreignObject-02.xhtml svg-in-forei
 == symbol-01.svg symbol-01.svg
 == text-font-size-01.svg text-font-size-01.svg
 random-if(gtkWidget) == text-font-weight-01.svg text-font-weight-01.svg
-# bug 386713
 == text-gradient-01.svg text-gradient-01.svg
 random-if(winWidget) == text-gradient-02.svg text-gradient-02.svg
-# see bug 590101
 fuzzy-if(skiaContent,1,5500) == text-gradient-03.svg text-gradient-03.svg
 HTTP(..) == text-gradient-04.svg text-gradient-04.svg
 == text-in-link-01.svg text-in-link-01.svg
 == text-in-link-02.svg text-in-link-02.svg
 == text-in-link-03.svg text-in-link-03.svg
 # Tests for bug 546813: sanity-check using HTML text, then test SVG behavior.
-skip-if(B2G||Mulet) == text-language-00.xhtml text-language-00.xhtml
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(gtkWidget) == text-language-01.xhtml text-language-01.xhtml
-# Fails on Linux tryserver due to lack of CJK fonts.
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == text-language-00.xhtml text-language-00.xhtml
+random-if(gtkWidget) == text-language-01.xhtml text-language-01.xhtml
 fuzzy-if(OSX==1007,6,2) fuzzy-if(OSX==1008,46,26) == text-layout-01.svg text-layout-01.svg
 == text-layout-02.svg text-layout-02.svg
 == text-layout-03.svg text-layout-03.svg
@@ -391,7 +360,7 @@ fuzzy-if(skiaContent,1,340) == stroke-dasharray-03.svg stroke-dasharray-03.svg
 == textPath-02.svg textPath-02.svg
 fuzzy-if(skiaContent,1,610) == textPath-03.svg textPath-03.svg
 == textPath-04.svg textPath-04.svg
-== textPath-05.html textPath-05.html
+fails == textPath-05.html textPath-05.html
 == text-style-01a.svg text-style-01a.svg
 == text-style-01b.svg text-style-01b.svg
 == text-style-01c.svg text-style-01c.svg
@@ -408,46 +377,23 @@ fuzzy-if(skiaContent,1,610) == textPath-03.svg textPath-03.svg
 == tspan-dxdy-06.svg tspan-dxdy-06.svg
 == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01.svg
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-01.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-02.svg tspan-rotate-02.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-03.svg tspan-rotate-03.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-04.svg tspan-rotate-04.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-05.svg tspan-rotate-05.svg
-# Bug 629718 for random failure on WinXP
 random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,550) == tspan-rotate-06.svg tspan-rotate-06.svg
-# Bug 629718 for random failure on WinXP
-# bug 773482
 == tspan-rotate-07.svg tspan-rotate-07.svg
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01.svg
 fuzzy-if(skiaContent,1,100) == tspan-xy-01.svg tspan-xy-01.svg
-# bug 773482
 == tspan-xy-02.svg tspan-xy-02.svg
-# bug 773482
 fuzzy-if(skiaContent,1,300) == tspan-xy-03.svg tspan-xy-03.svg
-# bug 773482
 fuzzy-if(skiaContent,1,300) == tspan-xy-04.svg tspan-xy-04.svg
-# bug 773482
 fuzzy-if(skiaContent,1,300) == tspan-xy-05.svg tspan-xy-05.svg
-# bug 773482
 fuzzy-if(skiaContent,1,300) == tspan-xy-06.svg tspan-xy-06.svg
-# bug 773482
 fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-middle-01.svg tspan-xy-anchor-middle-01.svg
-# bug 773482
 fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-01.svg
-# bug 773482
 == userSpaceOnUse-and-pattern-01.svg userSpaceOnUse-and-pattern-01.svg
 == viewBox-and-pattern-01.svg viewBox-and-pattern-01.svg
 == viewBox-and-pattern-02.svg viewBox-and-pattern-02.svg
@@ -456,15 +402,15 @@ fuzzy-if(skiaContent,1,100) == tspan-xy-anchor-end-01.svg tspan-xy-anchor-end-01
 == viewBox-invalid-01.svg viewBox-invalid-01.svg
 == viewBox-invalid-02.svg viewBox-invalid-02.svg
 == viewBox-valid-01.svg viewBox-valid-01.svg
-== viewBox-valid-02.xhtml viewBox-valid-02.xhtml
+fails == viewBox-valid-02.xhtml viewBox-valid-02.xhtml
 == viewport-percent-graphic-user-01.svg viewport-percent-graphic-user-01.svg
 == winding-01.svg winding-01.svg
 
 == svg-effects-area-unzoomed.xhtml svg-effects-area-unzoomed.xhtml
 == svg-effects-area-zoomed-in.xhtml svg-effects-area-zoomed-in.xhtml
-== svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out.xhtml
+fails == svg-effects-area-zoomed-out.xhtml svg-effects-area-zoomed-out.xhtml
 == href-attr-change-restyles.svg href-attr-change-restyles.svg
-== mask-img.html mask-img.html
+fails == mask-img.html mask-img.html
 
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-burn.svg blend-color-burn.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-color-dodge.svg blend-color-dodge.svg
@@ -480,20 +426,39 @@ skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-mas
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-layer-opacity.svg blend-layer-opacity.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-lighten.svg blend-lighten.svg
 # pref(layout.css.mix-blend-mode.enabled,true) == blend-luminosity.svg blend-luminosity.svg
-#skip-if(B2G||Mulet||Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha.svg
-# Initial mulet triage: parity with B2G/B2G Desktop
+#skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply-alpha.svg blend-multiply-alpha.svg
 skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-multiply.svg blend-multiply.svg
 pref(layout.css.mix-blend-mode.enabled,true) == blend-normal.svg blend-normal.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-overlay.svg blend-overlay.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-saturation.svg blend-saturation.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-screen.svg blend-screen.svg
 #skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-soft-light.svg blend-soft-light.svg
-skip-if(Android) pref(layout.css.mix-blend-mode.enabled,true) == blend-difference-stacking.html blend-difference-stacking.html
+fails == blend-difference-stacking.html blend-difference-stacking.html
 
 # test case for Fragment URLs
 # https://drafts.csswg.org/css-values/#local-urls
 == use-localRef-marker-01.svg use-localRef-marker-01.svg
 == use-localRef-clipPath-01.svg use-localRef-clipPath-01.svg
 == use-localRef-filter-01.svg use-localRef-filter-01.svg
-skip == use-localRef-fill-01.svg use-localRef-fill-01.svg
+== use-localRef-fill-01.svg use-localRef-fill-01.svg
 == use-localRef-stroke-01.svg use-localRef-stroke-01.svg
+== use-localRef-mask-01.svg use-localRef-mask-01.svg
+
+fuzzy(1,5000) == mask-opacity-01.svg mask-opacity-01.svg
+
+fails == clipPath-on-outflowElement-01a.html clipPath-on-outflowElement-01a.html
+fails == clipPath-on-outflowElement-01b.html clipPath-on-outflowElement-01b.html
+
+default-preferences pref(layout.css.clip-path-shapes.enabled,true)
+fuzzy(1,32400) == clipPath-on-outflowElement-02a.html clipPath-on-outflowElement-02a.html
+fuzzy(1,32400) == clipPath-on-outflowElement-02b.html clipPath-on-outflowElement-02b.html
+default-preferences
+
+fails == mask-on-outflowElement-01a.html mask-on-outflowElement-01a.html
+fails == mask-on-outflowElement-01b.html mask-on-outflowElement-01b.html
+
+fails == clipPath-and-mask-on-outflowElement-01a.html clipPath-and-mask-on-outflowElement-01a.html
+fails == clipPath-and-mask-on-outflowElement-01b.html clipPath-and-mask-on-outflowElement-01b.html
+
+== nested-mask-mode.svg nested-mask-mode.svg
+== mask-empty-size.svg mask-empty-size.svg

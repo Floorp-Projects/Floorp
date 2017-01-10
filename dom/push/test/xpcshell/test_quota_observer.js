@@ -18,7 +18,7 @@ function run_test() {
 }
 
 let putRecord = Task.async(function* (perm, record) {
-  let uri = Services.io.newURI(record.scope, null, null);
+  let uri = Services.io.newURI(record.scope);
 
   Services.perms.add(uri, 'desktop-notification',
     Ci.nsIPermissionManager[perm]);

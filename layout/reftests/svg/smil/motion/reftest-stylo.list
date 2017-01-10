@@ -5,7 +5,6 @@
 == animateMotion-by-1.svg animateMotion-by-1.svg
 == animateMotion-by-2.svg animateMotion-by-2.svg
 fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),1,800) == animateMotion-flattening-1.svg animateMotion-flattening-1.svg
-# bug 951541
 == animateMotion-from-to-1.svg animateMotion-from-to-1.svg
 == animateMotion-indefinite-to-1.svg animateMotion-indefinite-to-1.svg
 == animateMotion-indefinite-to-2.svg animateMotion-indefinite-to-2.svg

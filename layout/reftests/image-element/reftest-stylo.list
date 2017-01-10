@@ -1,67 +1,48 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 random == bug-364968.html bug-364968.html
-== bug-463204.html bug-463204.html
-== canvas-outside-document.html canvas-outside-document.html
-== mozsetimageelement-01.html mozsetimageelement-01.html
-skip-if(B2G||Mulet) == mozsetimageelement-02.html mozsetimageelement-02.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == image-outside-document-invalidate.html image-outside-document-invalidate.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == canvas-outside-document-invalidate-01.html canvas-outside-document-invalidate-01.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip == canvas-outside-document-invalidate-02.html canvas-outside-document-invalidate-02.html
-# See bug 666800
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == bug-463204.html bug-463204.html
+fails == canvas-outside-document.html canvas-outside-document.html
+fails == mozsetimageelement-01.html mozsetimageelement-01.html
+== mozsetimageelement-02.html mozsetimageelement-02.html
+== image-outside-document-invalidate.html image-outside-document-invalidate.html
+== canvas-outside-document-invalidate-01.html canvas-outside-document-invalidate-01.html
+# == canvas-outside-document-invalidate-02.html canvas-outside-document-invalidate-02.html
 #fails with Skia due to Skia bug http://code.google.com/p/skia/issues/detail?id=568
-== element-paint-simple.html element-paint-simple.html
-== element-paint-repeated.html element-paint-repeated.html
-== element-paint-recursion.html element-paint-recursion.html
-skip-if(B2G||Mulet) HTTP(..) == element-paint-continuation.html element-paint-continuation.html
-# Initial mulet triage: parity with B2G/B2G Desktop
-== element-paint-transform-01.html element-paint-transform-01.html
-random-if(d2d) == element-paint-transform-02.html element-paint-transform-02.html
-# bug 587133
-fuzzy-if(d2d&&/^Windows\x20NT\x206\.1/.test(http.oscpu),16,90) == element-paint-background-size-01.html element-paint-background-size-01.html
-== element-paint-background-size-02.html element-paint-background-size-02.html
-== element-paint-transform-repeated.html element-paint-transform-repeated.html
-fuzzy-if(d2d,255,24) == element-paint-transform-03.html element-paint-transform-03.html
-fails fuzzy-if(asyncPan,2,140) fuzzy-if(skiaContent,2,106) == element-paint-native-widget.html element-paint-native-widget.html
-# in -ref the scrollframe is active and layerized differently with APZ
-skip fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html element-paint-subimage-sampling-restriction.html
-== element-paint-clippath.html element-paint-clippath.html
-== element-paint-sharpness-01a.html element-paint-sharpness-01a.html
+# == element-paint-simple.html element-paint-simple.html
+fails == element-paint-repeated.html element-paint-repeated.html
+fails == element-paint-recursion.html element-paint-recursion.html
+fails HTTP(..) == element-paint-continuation.html element-paint-continuation.html
+fails == element-paint-transform-01.html element-paint-transform-01.html
+fails == element-paint-transform-02.html element-paint-transform-02.html
+fails == element-paint-background-size-01.html element-paint-background-size-01.html
+fails == element-paint-background-size-02.html element-paint-background-size-02.html
+fails == element-paint-transform-repeated.html element-paint-transform-repeated.html
+fails == element-paint-transform-03.html element-paint-transform-03.html
+fails == element-paint-native-widget.html element-paint-native-widget.html
+fails-if(usesRepeatResampling) == element-paint-subimage-sampling-restriction.html element-paint-subimage-sampling-restriction.html
+fails == element-paint-clippath.html element-paint-clippath.html
+fails == element-paint-sharpness-01a.html element-paint-sharpness-01a.html
 fuzzy-if(skiaContent,1,326) == element-paint-sharpness-01b.html element-paint-sharpness-01b.html
 == element-paint-sharpness-01c.html element-paint-sharpness-01c.html
-== element-paint-sharpness-02a.html element-paint-sharpness-02a.html
-fuzzy-if(B2G,11,4) == element-paint-sharpness-02b.html element-paint-sharpness-02b.html
-== element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01.html
-fuzzy-if(!isDebugBuild&&gtkWidget&&/^Linux\x20i686/.test(http.oscpu),79,1191) == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02.html
-# Linux32 from GCC update
-== element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01a.html
-skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01b.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01c.html
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-== gradient-html-01.html gradient-html-01.html
-== gradient-html-02.html gradient-html-02.html
+fails == element-paint-sharpness-02a.html element-paint-sharpness-02a.html
+fails == element-paint-sharpness-02b.html element-paint-sharpness-02b.html
+fails == element-paint-paintserversize-rounding-01.html element-paint-paintserversize-rounding-01.html
+fails == element-paint-paintserversize-rounding-02.html element-paint-paintserversize-rounding-02.html
+fails == element-paint-multiple-backgrounds-01a.html element-paint-multiple-backgrounds-01a.html
+fails == element-paint-multiple-backgrounds-01b.html element-paint-multiple-backgrounds-01b.html
+fails == element-paint-multiple-backgrounds-01c.html element-paint-multiple-backgrounds-01c.html
+fails == gradient-html-01.html gradient-html-01.html
+fails == gradient-html-02.html gradient-html-02.html
 random-if(!cocoaWidget) == gradient-html-03.html gradient-html-03.html
-== gradient-html-04.html gradient-html-04.html
-== gradient-html-05.html gradient-html-05.html
+fails == gradient-html-04.html gradient-html-04.html
+fails == gradient-html-05.html gradient-html-05.html
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06a.html gradient-html-06a.html
 fuzzy(1,9674) random-if(!cocoaWidget) == gradient-html-06b.html gradient-html-06b.html
-== gradient-html-06c.html gradient-html-06c.html
-== gradient-html-06d.html gradient-html-06d.html
+fails == gradient-html-06c.html gradient-html-06c.html
+fails == gradient-html-06d.html gradient-html-06d.html
 random-if(!cocoaWidget) fuzzy-if(cocoaWidget,2,42305) == gradient-html-07a.html gradient-html-07a.html
-== gradient-html-07c.html gradient-html-07c.html
-HTTP == invalidate-1.html invalidate-1.html
-== pattern-html-01.html pattern-html-01.html
-== pattern-html-02.html pattern-html-02.html
-# skip XBL test case on B2G
-skip-if(B2G||Mulet) == referenced-from-binding-01.html referenced-from-binding-01.html
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails == gradient-html-07c.html gradient-html-07c.html
+fails HTTP == invalidate-1.html invalidate-1.html
+fails == pattern-html-01.html pattern-html-01.html
+fails == pattern-html-02.html pattern-html-02.html
+fails == referenced-from-binding-01.html referenced-from-binding-01.html

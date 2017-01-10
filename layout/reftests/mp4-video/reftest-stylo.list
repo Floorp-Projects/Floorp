@@ -1,2 +1,2 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-skip-if(B2G||Mulet||winWidget) == canvas-1.xhtml canvas-1.xhtml
+skip-if(winWidget) == canvas-1.xhtml canvas-1.xhtml

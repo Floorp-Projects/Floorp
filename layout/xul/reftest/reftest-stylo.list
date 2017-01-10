@@ -1,14 +1,7 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails-if(Android||B2G) skip-if((B2G&&browserIsRemote)||Mulet) == textbox-multiline-noresize.xul textbox-multiline-noresize.xul
-# reference is blank on Android (due to no native theme support?)
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == textbox-multiline-resize.xul textbox-multiline-resize.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == popup-explicit-size.xul popup-explicit-size.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(Android) skip-if((B2G&&browserIsRemote)||Mulet) == image-size.xul image-size.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == image-scaling-min-height-1.xul image-scaling-min-height-1.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if((B2G&&browserIsRemote)||Mulet) == textbox-text-transform.xul textbox-text-transform.xul
-# Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android) == textbox-multiline-noresize.xul textbox-multiline-noresize.xul
+== textbox-multiline-resize.xul textbox-multiline-resize.xul
+== popup-explicit-size.xul popup-explicit-size.xul
+random-if(Android) == image-size.xul image-size.xul
+== image-scaling-min-height-1.xul image-scaling-min-height-1.xul
+== textbox-text-transform.xul textbox-text-transform.xul

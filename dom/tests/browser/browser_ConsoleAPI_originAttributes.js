@@ -51,7 +51,7 @@ function test()
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
   let uuid = uuidGenerator.generateUUID().number;
   uuid = uuid.slice(1, -1); // Strip { and } off the UUID.
-  let baseURI = Services.io.newURI("about:blank", null, null);
+  let baseURI = Services.io.newURI("about:blank");
   let originAttributes = {addonId: FAKE_ADDON_ID};
   let principal = Services.scriptSecurityManager
         .createCodebasePrincipal(baseURI, originAttributes);

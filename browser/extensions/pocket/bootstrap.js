@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
 });
 XPCOMUtils.defineLazyGetter(this, "gPocketStyleURI", function() {
-  return Services.io.newURI("chrome://pocket/skin/pocket.css", null, null);
+  return Services.io.newURI("chrome://pocket/skin/pocket.css");
 });
 
 // Due to bug 1051238 frame scripts are cached forever, so we can't update them
@@ -183,7 +183,7 @@ var PocketContextMenu = {
                                         subject.isContentSelected || subject.onImage ||
                                         subject.onCanvas || subject.onVideo || subject.onAudio);
     let targetUrl = subject.onLink ? subject.linkUrl : subject.pageUrl;
-    let targetURI = Services.io.newURI(targetUrl, null, null);
+    let targetURI = Services.io.newURI(targetUrl);
     let canPocket = pocketEnabled && (targetURI.schemeIs("http") || targetURI.schemeIs("https") ||
                     (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetUrl)));
 

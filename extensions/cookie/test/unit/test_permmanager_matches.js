@@ -31,12 +31,12 @@ function run_test() {
         .getService(Ci.nsIScriptSecurityManager);
 
   // Add some permissions
-  let uri0 = NetUtil.newURI("http://google.com/search?q=foo#hashtag", null, null);
-  let uri1 = NetUtil.newURI("http://hangouts.google.com/subdir", null, null);
-  let uri2 = NetUtil.newURI("http://google.org/", null, null);
-  let uri3 = NetUtil.newURI("https://google.com/some/random/subdirectory", null, null);
-  let uri4 = NetUtil.newURI("https://hangouts.google.com/#!/hangout", null, null);
-  let uri5 = NetUtil.newURI("http://google.com:8096/", null, null);
+  let uri0 = NetUtil.newURI("http://google.com/search?q=foo#hashtag");
+  let uri1 = NetUtil.newURI("http://hangouts.google.com/subdir");
+  let uri2 = NetUtil.newURI("http://google.org/");
+  let uri3 = NetUtil.newURI("https://google.com/some/random/subdirectory");
+  let uri4 = NetUtil.newURI("https://hangouts.google.com/#!/hangout");
+  let uri5 = NetUtil.newURI("http://google.com:8096/");
 
   let uri0_n_n = secMan.createCodebasePrincipal(uri0, {});
   let uri1_n_n = secMan.createCodebasePrincipal(uri1, {});

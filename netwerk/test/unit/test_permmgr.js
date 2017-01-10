@@ -45,7 +45,7 @@ function run_test() {
 
   // put a few hosts in
   for (var i = 0; i < hosts.length; ++i) {
-    let uri = ioService.newURI(hosts[i][0], null, null);
+    let uri = ioService.newURI(hosts[i][0]);
     let principal = secMan.createCodebasePrincipal(uri, {});
 
     pm.addFromPrincipal(principal, hosts[i][1], hosts[i][2]);
@@ -53,7 +53,7 @@ function run_test() {
 
   // test the result
   for (var i = 0; i < results.length; ++i) {
-    let uri = ioService.newURI(results[i][0], null, null);
+    let uri = ioService.newURI(results[i][0]);
     let principal = secMan.createCodebasePrincipal(uri, {});
 
     do_check_eq(pm.testPermissionFromPrincipal(principal, results[i][1]), results[i][2]);
@@ -78,7 +78,7 @@ function run_test() {
   // ... ensure each and every element is equal ...
   for (var i = 0; i < hosts.length; ++i) {
     for (var j = 0; j < perms.length; ++j) {
-      if (perms[j].matchesURI(ioService.newURI(hosts[i][0], null, null), true) &&
+      if (perms[j].matchesURI(ioService.newURI(hosts[i][0]), true) &&
           hosts[i][1] == perms[j].type &&
           hosts[i][2] == perms[j].capability) {
         perms.splice(j, 1);
@@ -94,7 +94,7 @@ function run_test() {
   // test UTF8 normalization behavior: expect ASCII/ACE host encodings
   var utf8 = "b\u00FCcher.dolske.org"; // "bücher.dolske.org"
   var aceref = "xn--bcher-kva.dolske.org";
-  var uri = ioService.newURI("http://" + utf8, null, null);
+  var uri = ioService.newURI("http://" + utf8);
   pm.add(uri, "utf8", 1);
   var enumerator = pm.enumerator;
   do_check_eq(enumerator.hasMoreElements(), true);
@@ -106,7 +106,7 @@ function run_test() {
   pm.removeAll();
   do_check_eq(pm.enumerator.hasMoreElements(), false);
 
-  uri = ioService.newURI("https://www.example.com", null, null);
+  uri = ioService.newURI("https://www.example.com");
   pm.add(uri, "offline-app", pm.ALLOW_ACTION);
   principal = secMan.createCodebasePrincipalFromOrigin("https://www.example.com");
   // Remove existing entry.

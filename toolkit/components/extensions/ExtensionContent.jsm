@@ -805,7 +805,7 @@ class BrowserExtensionContent extends EventEmitter {
     this.localeData = new LocaleData(data.localeData);
 
     this.manifest = data.manifest;
-    this.baseURI = Services.io.newURI(data.baseURL, null, null);
+    this.baseURI = Services.io.newURI(data.baseURL);
 
     // Only used in addon processes.
     this.views = new Set();
@@ -813,7 +813,7 @@ class BrowserExtensionContent extends EventEmitter {
     // Only used for devtools views.
     this.devtoolsViews = new Set();
 
-    let uri = Services.io.newURI(data.resourceURL, null, null);
+    let uri = Services.io.newURI(data.resourceURL);
 
     if (Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT) {
       // Extension.jsm takes care of this in the parent.

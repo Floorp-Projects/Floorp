@@ -1,76 +1,27 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 == simpleHeight100.html simpleHeight100.html
 == simpleAbsHeight.html simpleAbsHeight.html
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeight.html hScrollSimpleHeight.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-1.html hScrollSimpleHeightQuirks-1.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-2.html hScrollSimpleHeightQuirks-2.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-3.html hScrollSimpleHeightQuirks-3.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollAbsHeight.html hScrollAbsHeight.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollAbsHeightQuirks.html hScrollAbsHeightQuirks.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+random-if(transparentScrollbars) == hScrollSimpleHeight.html hScrollSimpleHeight.html
+fails == hScrollSimpleHeightQuirks-1.html hScrollSimpleHeightQuirks-1.html
+fails == hScrollSimpleHeightQuirks-2.html hScrollSimpleHeightQuirks-2.html
+random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-3.html hScrollSimpleHeightQuirks-3.html
+random-if(transparentScrollbars) == hScrollAbsHeight.html hScrollAbsHeight.html
+random-if(transparentScrollbars) == hScrollAbsHeightQuirks.html hScrollAbsHeightQuirks.html
 == simpleHeight100D.html simpleHeight100D.html
 == simpleAbsHeightD.html simpleAbsHeightD.html
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeightD.html hScrollSimpleHeightD.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-1D.html hScrollSimpleHeightQuirks-1D.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-2D.html hScrollSimpleHeightQuirks-2D.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-random-if(transparentScrollbars) fuzzy-if(B2G,1,11) == hScrollSimpleHeightQuirks-3D.html hScrollSimpleHeightQuirks-3D.html
-# bug 650591, 1136304
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollAbsHeightD.html hScrollAbsHeightD.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollAbsHeightQuirksD.html hScrollAbsHeightQuirksD.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+random-if(transparentScrollbars) == hScrollSimpleHeightD.html hScrollSimpleHeightD.html
+random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-1D.html hScrollSimpleHeightQuirks-1D.html
+random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-2D.html hScrollSimpleHeightQuirks-2D.html
+random-if(transparentScrollbars) == hScrollSimpleHeightQuirks-3D.html hScrollSimpleHeightQuirks-3D.html
+random-if(transparentScrollbars) == hScrollAbsHeightD.html hScrollAbsHeightD.html
+random-if(transparentScrollbars) == hScrollAbsHeightQuirksD.html hScrollAbsHeightQuirksD.html
 == simpleMinHeight100D.html simpleMinHeight100D.html
 == simpleAbsMinHeightD.html simpleAbsMinHeightD.html
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleMinHeightD.html hScrollSimpleMinHeightD.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleMinHeightQuirks-1D.html hScrollSimpleMinHeightQuirks-1D.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollSimpleMinHeightQuirks-3D.html hScrollSimpleMinHeightQuirks-3D.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollAbsMinHeightD.html hScrollAbsMinHeightD.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(transparentScrollbars) == hScrollAbsMinHeightQuirksD.html hScrollAbsMinHeightQuirksD.html
-# bug 650591
-# bug 773482
-# Initial mulet triage: parity with B2G/B2G Desktop
+random-if(transparentScrollbars) == hScrollSimpleMinHeightD.html hScrollSimpleMinHeightD.html
+random-if(transparentScrollbars) == hScrollSimpleMinHeightQuirks-1D.html hScrollSimpleMinHeightQuirks-1D.html
+random-if(transparentScrollbars) == hScrollSimpleMinHeightQuirks-3D.html hScrollSimpleMinHeightQuirks-3D.html
+random-if(transparentScrollbars) == hScrollAbsMinHeightD.html hScrollAbsMinHeightD.html
+random-if(transparentScrollbars) == hScrollAbsMinHeightQuirksD.html hScrollAbsMinHeightQuirksD.html
 == dynamicHeight100.html dynamicHeight100.html
 == nestedHeight.html nestedHeight.html
 == nestedHeightQuirks.html nestedHeightQuirks.html
