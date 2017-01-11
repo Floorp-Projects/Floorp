@@ -117,16 +117,16 @@ body.compact .newtab-cell {
 }
 
 /* SITES */
-body:not(.compact) .newtab-site {
+.newtab-site {
   border-radius: var(--cell-corner-radius);
   box-shadow: 0 1px 3px #c1c1c1;
   text-decoration: none;
   transition-property: top, left, opacity, box-shadow, background-color;
 }
 
-body:not(.compact) .newtab-cell:not([ignorehover]) .newtab-control:hover ~ .newtab-link,
-body:not(.compact) .newtab-cell:not([ignorehover]) .newtab-link:hover,
-body:not(.compact) .newtab-site[dragged] {
+.newtab-cell:not([ignorehover]) .newtab-control:hover ~ .newtab-link,
+.newtab-cell:not([ignorehover]) .newtab-link:hover,
+.newtab-site[dragged] {
   border: 2px solid white;
   box-shadow: 0 0 6px 1px #add6ff;
   margin: -2px;
