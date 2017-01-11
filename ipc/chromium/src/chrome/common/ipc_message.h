@@ -272,6 +272,19 @@ class Message : public Pickle {
     header()->flags |= INTERRUPT_BIT;
   }
 
+#ifdef MOZ_TASK_TRACER
+  void TaskTracerDispatch();
+  class AutoTaskTracerRun
+    : public mozilla::tasktracer::AutoSaveCurTraceInfo {
+    Message& mMsg;
+    uint64_t mTaskId;
+    uint64_t mSourceEventId;
+  public:
+    explicit AutoTaskTracerRun(Message& aMsg);
+    ~AutoTaskTracerRun();
+  };
+#endif
+
 #if !defined(OS_MACOSX)
  protected:
 #endif
@@ -311,6 +324,7 @@ class Message : public Pickle {
     // Sequence number
     int32_t seqno;
 #ifdef MOZ_TASK_TRACER
+    uint64_t task_id;
     uint64_t source_event_id;
     uint64_t parent_task_id;
     mozilla::tasktracer::SourceEventType source_event_type;

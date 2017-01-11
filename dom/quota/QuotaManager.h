@@ -455,11 +455,11 @@ private:
   MaybeRemoveOldDirectories();
 
   nsresult
-  UpgradeStorageFrom0ToCurrent(mozIStorageConnection* aConnection);
+  UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection);
 
 #if 0
   nsresult
-  UpgradeStorageFrom1To2(mozIStorageConnection* aConnection);
+  UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection);
 #endif
 
   nsresult

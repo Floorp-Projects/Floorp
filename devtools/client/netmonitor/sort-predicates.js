@@ -6,8 +6,6 @@
 
 const {
   getAbbreviatedMimeType,
-  getUrlBaseNameWithQuery,
-  getUrlHost,
 } = require("./request-utils");
 
 /**
@@ -23,65 +21,64 @@ const {
  *         >0 to sort second to a lower index than first
  */
 
+function compareValues(first, second) {
+  if (first === second) {
+    return 0;
+  }
+  return first > second ? 1 : -1;
+}
+
 function waterfall(first, second) {
-  return first.startedMillis - second.startedMillis;
+  const result = compareValues(first.startedMillis, second.startedMillis);
+  return result || compareValues(first.id, second.id);
 }
 
 function status(first, second) {
-  return first.status == second.status
-         ? first.startedMillis - second.startedMillis
-         : first.status - second.status;
+  const result = compareValues(first.status, second.status);
+  return result || waterfall(first, second);
 }
 
 function method(first, second) {
-  if (first.method == second.method) {
-    return first.startedMillis - second.startedMillis;
-  }
-  return first.method > second.method ? 1 : -1;
+  const result = compareValues(first.method, second.method);
+  return result || waterfall(first, second);
 }
 
 function file(first, second) {
-  let firstUrl = getUrlBaseNameWithQuery(first.url).toLowerCase();
-  let secondUrl = getUrlBaseNameWithQuery(second.url).toLowerCase();
-  if (firstUrl == secondUrl) {
-    return first.startedMillis - second.startedMillis;
-  }
-  return firstUrl > secondUrl ? 1 : -1;
+  const firstUrl = first.urlDetails.baseNameWithQuery.toLowerCase();
+  const secondUrl = second.urlDetails.baseNameWithQuery.toLowerCase();
+  const result = compareValues(firstUrl, secondUrl);
+  return result || waterfall(first, second);
 }
 
 function domain(first, second) {
-  let firstDomain = getUrlHost(first.url).toLowerCase();
-  let secondDomain = getUrlHost(second.url).toLowerCase();
-  if (firstDomain == secondDomain) {
-    return first.startedMillis - second.startedMillis;
-  }
-  return firstDomain > secondDomain ? 1 : -1;
+  const firstDomain = first.urlDetails.host.toLowerCase();
+  const secondDomain = second.urlDetails.host.toLowerCase();
+  const result = compareValues(firstDomain, secondDomain);
+  return result || waterfall(first, second);
 }
 
 function cause(first, second) {
-  let firstCause = first.cause.type;
-  let secondCause = second.cause.type;
-  if (firstCause == secondCause) {
-    return first.startedMillis - second.startedMillis;
-  }
-  return firstCause > secondCause ? 1 : -1;
+  const firstCause = first.cause.type;
+  const secondCause = second.cause.type;
+  const result = compareValues(firstCause, secondCause);
+  return result || waterfall(first, second);
 }
 
 function type(first, second) {
-  let firstType = getAbbreviatedMimeType(first.mimeType).toLowerCase();
-  let secondType = getAbbreviatedMimeType(second.mimeType).toLowerCase();
-  if (firstType == secondType) {
-    return first.startedMillis - second.startedMillis;
-  }
-  return firstType > secondType ? 1 : -1;
+  const firstType = getAbbreviatedMimeType(first.mimeType).toLowerCase();
+  const secondType = getAbbreviatedMimeType(second.mimeType).toLowerCase();
+  const result = compareValues(firstType, secondType);
+  return result || waterfall(first, second);
 }
 
 function transferred(first, second) {
-  return first.transferredSize - second.transferredSize;
+  const result = compareValues(first.transferredSize, second.transferredSize);
+  return result || waterfall(first, second);
 }
 
 function size(first, second) {
-  return first.contentSize - second.contentSize;
+  const result = compareValues(first.contentSize, second.contentSize);
+  return result || waterfall(first, second);
 }
 
 exports.Sorters = {

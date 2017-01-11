@@ -14,7 +14,7 @@ const {
 const UI = I.Record({
   sidebarOpen: false,
   statisticsOpen: false,
-  waterfallWidth: 300,
+  waterfallWidth: null,
 });
 
 // Safe bounds for waterfall width (px)

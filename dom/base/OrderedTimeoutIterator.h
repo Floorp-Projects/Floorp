@@ -78,8 +78,8 @@ public:
       if (mNormalIter && mTrackingIter &&
           mNormalIter != mNormalStopAt &&
           mTrackingIter != mTrackingStopAt &&
-          (mTrackingIter->mWhen < mNormalIter->mWhen ||
-           (mTrackingIter->mWhen == mNormalIter->mWhen &&
+          (mTrackingIter->When() < mNormalIter->When() ||
+           (mTrackingIter->When() == mNormalIter->When() &&
             mTrackingIter->mTimeoutId < mNormalIter->mTimeoutId))) {
         timeout = mTrackingIter;
         mKind = Kind::Tracking;

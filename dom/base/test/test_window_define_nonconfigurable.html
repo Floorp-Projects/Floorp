@@ -10,31 +10,78 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107443
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
-  /** Test for Bug 1107443 **/
-  try {
-    Object.defineProperty(window, "nosuchprop", { value: 5, configurable: false });
-    throw "didn't throw";
-  } catch (e) {
-    is(e instanceof TypeError, true,
-       "defineProperty(window) with a non-configurable property should " +
-       "throw a TypeError, instead got: " + e);
-    is(Object.getOwnPropertyDescriptor(window, "nosuchprop"), undefined,
-       'Window should not have property after an attempt to define it failed');
-  }
-
-  Object.defineProperty(window, "nosuchprop", { value: 6 });
+  /**
+   * Test for Bug 1107443, modified when it was backed out in bug 1329323.
+   * This is now testing the _current_ behavior, not the desired one; expect
+   * failures in this test and needing to update it when bug 1329324 is
+   * fixed.
+   */
+  var retval = Object.defineProperty(window, "nosuchprop",
+                                     { value: 5, configurable: false });
+  todo_is(retval, false,
+          "Should return false when 'failing' to define non-configurable property via Object.defineProperty.")
   var desc = Object.getOwnPropertyDescriptor(window, "nosuchprop");
-  is(typeof(desc), "object", "Should have a property now");
-  todo_is(desc.configurable, true, "Property should be configurable");
-  is(desc.writable, false, "Property should be readonly");
-  is(desc.value, 6, "Property should have the right value");
+  is(typeof(desc), "object", "Should have a property 'nosuchprop' now");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop' should be configurable");
+  is(desc.writable, false, "Property 'nosuchprop' should be readonly");
+  is(desc.value, 5, "Property 'nosuchprop' should have the right value");
 
-  Object.defineProperty(window, "nosuchprop2", { value: 7, configurable: true });
+  retval = Object.defineProperty(window, "nosuchprop2", { value: 6 });
+  is(retval, window,
+     "Should return object when succesfully defining 'nosuchprop2'");
   desc = Object.getOwnPropertyDescriptor(window, "nosuchprop2");
-  is(typeof(desc), "object", "Should have a property now");
-  is(desc.configurable, true, "Property should be configurable");
-  is(desc.writable, false, "Property should be readonly");
-  is(desc.value, 7, "Property should have the right value");
+  is(typeof(desc), "object", "Should have a property 'nosuchprop2' now");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop2' should be configurable");
+  is(desc.writable, false, "Property 'nosuchprop2' should be readonly");
+  is(desc.value, 6, "Property 'nosuchprop2' should have the right value");
+
+  retval = Object.defineProperty(window, "nosuchprop3",
+                                 { value: 7, configurable: true });
+  is(retval, window,
+     "Should return object when succesfully defining 'nosuchprop3'");
+  desc = Object.getOwnPropertyDescriptor(window, "nosuchprop3");
+  is(typeof(desc), "object", "Should have a property 'nosuchprop3' now");
+  is(desc.configurable, true,
+          "Property 'nosuchprop3' should be configurable");
+  is(desc.writable, false, "Property 'nosuchprop3' should be readonly");
+  is(desc.value, 7, "Property 'nosuchprop3' should have the right value");
+
+  // XXXbz it's not actually entirely clear what behavior the
+  // Reflect.defineProperty bits should have.  Check it carefully once there's a
+  // spec.
+  retval = Reflect.defineProperty(window, "nosuchprop4",
+                                  { value: 8, configurable: false });
+  todo_is(retval, false,
+          "Should not be able to Reflect.defineProperty if non-configurable");
+  desc = Object.getOwnPropertyDescriptor(window, "nosuchprop4");
+  is(typeof(desc), "object", "Should have a property 'nosuchprop4' now");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop4' should be configurable");
+  is(desc.writable, false, "Property 'nosuchprop4' should be readonly");
+  is(desc.value, 8, "Property 'nosuchprop4' should have the right value");
+
+  retval = Reflect.defineProperty(window, "nosuchprop5",
+                                  { value: 9 });
+  is(retval, true,
+     "Should be able to Reflect.defineProperty with default configurability");
+  desc = Object.getOwnPropertyDescriptor(window, "nosuchprop5");
+  is(typeof(desc), "object", "Should have a property 'nosuchprop5' now");
+  todo_is(desc.configurable, true,
+          "Property 'nosuchprop5' should be configurable");
+  is(desc.writable, false, "Property 'nosuchprop5' should be readonly");
+  is(desc.value, 9, "Property 'nosuchprop5' should have the right value");
+
+  retval = Reflect.defineProperty(window, "nosuchprop6",
+                                  { value: 10, configurable: true });
+  is(retval, true,
+     "Should be able to Reflect.defineProperty if configurable");
+  desc = Object.getOwnPropertyDescriptor(window, "nosuchprop6");
+  is(typeof(desc), "object", "Should have a property 'nosuchprop6' now");
+  is(desc.configurable, true, "Property 'nosuchprop6' should be configurable");
+  is(desc.writable, false, "Property 'nosuchprop6' should be readonly");
+  is(desc.value, 10, "Property 'nosuchprop6' should have the right value");
   </script>
 </head>
 <body>
