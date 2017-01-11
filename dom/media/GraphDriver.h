@@ -467,9 +467,9 @@ private:
    * This is called when the output device used by the cubeb stream changes. */
   void DeviceChangedCallback();
   /* Start the cubeb stream */
-  void StartStream();
+  bool StartStream();
   friend class AsyncCubebTask;
-  void Init();
+  bool Init();
   /* MediaStreamGraphs are always down/up mixed to stereo for now. */
   static const uint32_t ChannelCount = 2;
   /* The size of this buffer comes from the fact that some audio backends can
