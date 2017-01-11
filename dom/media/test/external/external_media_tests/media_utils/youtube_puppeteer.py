@@ -308,7 +308,7 @@ class YouTubePuppeteer(VideoPuppeteer):
         For more information on the above keys and their values see
         `_yt_state_named_tuple`.
 
-        :return: A named tuple 'yt_state_info', derived from arguments and
+        :return: A named tuple 'player_state_info', derived from arguments and
         state information from the puppeteer.
         """
         player_state_info_kwargs['player_remaining_time'] = (
@@ -369,7 +369,7 @@ class YouTubePuppeteer(VideoPuppeteer):
     def _refresh_state(self):
         """
         Refresh the snapshot of the underlying video and player state. We do
-        this allin one so that the state doesn't change in between queries.
+        this all in one so that the state doesn't change in between queries.
 
         We also store information that can be derived from the snapshotted
         information, such as lag. This is stored in the last seen state to
@@ -472,8 +472,8 @@ class YouTubePuppeteer(VideoPuppeteer):
                 sleep(rest)
             else:
                 sleep(rest / 2)
-            # TODO during an ad, remaining_time will be based on ad's current_time
-            # rather than current_time of target video
+            # TODO during an ad, remaining_time will be based on ad's
+            # current_time rather than current_time of target video
             remaining_time = self._last_seen_player_state.player_remaining_time
         return remaining_time
 
@@ -489,8 +489,8 @@ class YouTubePuppeteer(VideoPuppeteer):
         for field in self._last_seen_player_state._fields:
             # For compatibility with different test environments we force ascii
             field_ascii = (
-                unicode(getattr(self._last_seen_player_state, field))
-                        .encode('ascii', 'replace'))
+                unicode(getattr(self._last_seen_player_state, field)).encode(
+                    'ascii', 'replace'))
             messages += [('\t{}: {}'.format(field, field_ascii))]
         messages += '}'
         return '\n'.join(messages)
