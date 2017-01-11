@@ -284,8 +284,7 @@ public:
    * |aReplies| are directions from the LayerManagerComposite to the
    * caller of EndTransaction().
    */
-  bool EndTransaction(InfallibleTArray<EditReply>* aReplies,
-                      const nsIntRegion& aRegionToClear,
+  bool EndTransaction(const nsIntRegion& aRegionToClear,
                       uint64_t aId,
                       bool aScheduleComposite,
                       uint32_t aPaintSequenceNumber,
@@ -419,6 +418,8 @@ protected:
 #else
   void CheckSurfaceDescriptor(const SurfaceDescriptor* aDescriptor) const {}
 #endif
+
+  void ProcessReplies(const nsTArray<EditReply>& aReplies);
 
   bool InWorkerThread();
 
