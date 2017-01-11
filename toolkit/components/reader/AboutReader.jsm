@@ -290,7 +290,7 @@ AboutReader.prototype = {
       return;
     }
 
-    Services.obs.removeObserver(this, "inner-window-destroyed", false);
+    Services.obs.removeObserver(this, "inner-window-destroyed");
 
     this._mm.removeMessageListener("Reader:CloseDropdown", this);
     this._mm.removeMessageListener("Reader:AddButton", this);

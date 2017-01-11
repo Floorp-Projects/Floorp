@@ -60,7 +60,7 @@ exports.asyncWindowLeakTest = function*(assert, asyncTestFunc) {
 
   // Stop tracking new windows and attempt to GC any resources allocated
   // by the test body.
-  Services.obs.removeObserver(windowObserver, "domwindowopened", false);
+  Services.obs.removeObserver(windowObserver, "domwindowopened");
   yield gc();
 
   // Check to see if any of the windows we saw survived the GC.  We consider

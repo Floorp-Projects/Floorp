@@ -98,7 +98,7 @@ PrefsProvider.prototype = {
 
   uninit() {
     for (let pref of gPrefsMap.keys()) {
-      Services.prefs.removeObserver(pref, this, false);
+      Services.prefs.removeObserver(pref, this);
     }
   }
 };
