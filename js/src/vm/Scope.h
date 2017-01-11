@@ -22,6 +22,7 @@
 namespace js {
 
 class ModuleObject;
+class Scope;
 
 enum class BindingKind : uint8_t
 {
@@ -182,6 +183,21 @@ class BindingLocation
     uint16_t argumentSlot() const {
         MOZ_ASSERT(kind_ == Kind::Argument);
         return mozilla::AssertedCast<uint16_t>(slot_);
+    }
+};
+
+//
+// Allow using is<T> and as<T> on Rooted<Scope*> and Handle<Scope*>.
+//
+template <typename Wrapper>
+class WrappedPtrOperations<Scope*, Wrapper>
+{
+  public:
+    template <class U>
+    JS::Handle<U*> as() const {
+        const Wrapper& self = *static_cast<const Wrapper*>(this);
+        MOZ_ASSERT_IF(self, self->template is<U>());
+        return Handle<U*>::fromMarkedLocation(reinterpret_cast<U* const*>(self.address()));
     }
 };
 
@@ -1328,10 +1344,10 @@ class MOZ_STACK_CLASS ScopeIter
 // Specializations of Rooted containers for the iterators.
 //
 
-template <typename Outer>
-class BindingIterOperations
+template <typename Wrapper>
+class WrappedPtrOperations<BindingIter, Wrapper>
 {
-    const BindingIter& iter() const { return static_cast<const Outer*>(this)->get(); }
+    const BindingIter& iter() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     bool done() const { return iter().done(); }
@@ -1351,19 +1367,20 @@ class BindingIterOperations
     uint32_t nextEnvironmentSlot() const { return iter().nextEnvironmentSlot(); }
 };
 
-template <typename Outer>
-class MutableBindingIterOperations : public BindingIterOperations<Outer>
+template <typename Wrapper>
+class MutableWrappedPtrOperations<BindingIter, Wrapper>
+  : public WrappedPtrOperations<BindingIter, Wrapper>
 {
-    BindingIter& iter() { return static_cast<Outer*>(this)->get(); }
+    BindingIter& iter() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     void operator++(int) { iter().operator++(1); }
 };
 
-template <typename Outer>
-class ScopeIterOperations
+template <typename Wrapper>
+class WrappedPtrOperations<ScopeIter, Wrapper>
 {
-    const ScopeIter& iter() const { return static_cast<const Outer*>(this)->get(); }
+    const ScopeIter& iter() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     bool done() const { return iter().done(); }
@@ -1374,68 +1391,15 @@ class ScopeIterOperations
     bool hasSyntacticEnvironment() const { return iter().hasSyntacticEnvironment(); }
 };
 
-template <typename Outer>
-class MutableScopeIterOperations : public ScopeIterOperations<Outer>
+template <typename Wrapper>
+class MutableWrappedPtrOperations<ScopeIter, Wrapper>
+  : public WrappedPtrOperations<ScopeIter, Wrapper>
 {
-    ScopeIter& iter() { return static_cast<Outer*>(this)->get(); }
+    ScopeIter& iter() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     void operator++(int) { iter().operator++(1); }
 };
-
-#define SPECIALIZE_ROOTING_CONTAINERS(Iter, BaseIter)                    \
-    template <>                                                          \
-    class RootedBase<Iter>                                               \
-      : public Mutable##BaseIter##Operations<JS::Rooted<Iter>>           \
-    { };                                                                 \
-                                                                         \
-    template <>                                                          \
-    class MutableHandleBase<Iter>                                        \
-      : public Mutable##BaseIter##Operations<JS::MutableHandle<Iter>>    \
-    { };                                                                 \
-                                                                         \
-    template <>                                                          \
-    class HandleBase<Iter>                                               \
-      : public BaseIter##Operations<JS::Handle<Iter>>                    \
-    { };                                                                 \
-                                                                         \
-    template <>                                                          \
-    class PersistentRootedBase<Iter>                                     \
-      : public Mutable##BaseIter##Operations<JS::PersistentRooted<Iter>> \
-    { }
-
-SPECIALIZE_ROOTING_CONTAINERS(BindingIter, BindingIter);
-SPECIALIZE_ROOTING_CONTAINERS(PositionalFormalParameterIter, BindingIter);
-SPECIALIZE_ROOTING_CONTAINERS(ScopeIter, ScopeIter);
-
-#undef SPECIALIZE_ROOTING_CONTAINERS
-
-//
-// Allow using is<T> and as<T> on Rooted<Scope*> and Handle<Scope*>.
-//
-
-template <typename Outer>
-struct ScopeCastOperation
-{
-    template <class U>
-    JS::Handle<U*> as() const {
-        const Outer& self = *static_cast<const Outer*>(this);
-        MOZ_ASSERT_IF(self, self->template is<U>());
-        return Handle<U*>::fromMarkedLocation(reinterpret_cast<U* const*>(self.address()));
-    }
-};
-
-template <>
-class RootedBase<Scope*> : public ScopeCastOperation<JS::Rooted<Scope*>>
-{ };
-
-template <>
-class HandleBase<Scope*> : public ScopeCastOperation<JS::Handle<Scope*>>
-{ };
-
-template <>
-class MutableHandleBase<Scope*> : public ScopeCastOperation<JS::MutableHandle<Scope*>>
-{ };
 
 } // namespace js
 
