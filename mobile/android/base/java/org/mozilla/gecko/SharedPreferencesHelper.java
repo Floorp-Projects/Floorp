@@ -6,10 +6,9 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.util.GeckoEventListener;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -23,7 +22,7 @@ import java.util.HashMap;
  * Helper class to get, set, and observe Android Shared Preferences.
  */
 public final class SharedPreferencesHelper
-             implements GeckoEventListener
+             implements BundleEventListener
 {
     public static final String LOGTAG = "GeckoAndSharedPrefs";
 
@@ -77,20 +76,20 @@ public final class SharedPreferencesHelper
             "SharedPreferences:Observe");
     }
 
-    private SharedPreferences getSharedPreferences(JSONObject message) throws JSONException {
+    private SharedPreferences getSharedPreferences(final GeckoBundle message) {
         final Scope scope = Scope.forKey(message.getString("scope"));
         switch (scope) {
             case APP:
                 return GeckoSharedPrefs.forApp(mContext);
             case PROFILE:
-                final String profileName = message.optString("profileName", null);
+                final String profileName = message.getString("profileName", null);
                 if (profileName == null) {
                     return GeckoSharedPrefs.forProfile(mContext);
                 } else {
                     return GeckoSharedPrefs.forProfileName(mContext, profileName);
                 }
             case GLOBAL:
-                final String branch = message.optString("branch", null);
+                final String branch = message.getString("branch", null);
                 if (branch == null) {
                     return PreferenceManager.getDefaultSharedPreferences(mContext);
                 } else {
@@ -127,15 +126,15 @@ public final class SharedPreferencesHelper
      * must include a String name, a String type in ["bool", "int", "string"],
      * and an Object value.
      */
-    private void handleSet(JSONObject message) throws JSONException {
+    private void handleSet(final GeckoBundle message) {
         SharedPreferences.Editor editor = getSharedPreferences(message).edit();
 
-        JSONArray jsonPrefs = message.getJSONArray("preferences");
+        final GeckoBundle[] bundlePrefs = message.getBundleArray("preferences");
 
-        for (int i = 0; i < jsonPrefs.length(); i++) {
-            JSONObject pref = jsonPrefs.getJSONObject(i);
-            String name = pref.getString("name");
-            String type = pref.getString("type");
+        for (int i = 0; i < bundlePrefs.length; i++) {
+            final GeckoBundle pref = bundlePrefs[i];
+            final String name = pref.getString("name");
+            final String type = pref.getString("type");
             if ("bool".equals(type)) {
                 editor.putBoolean(name, pref.getBoolean("value"));
             } else if ("int".equals(type)) {
@@ -145,8 +144,8 @@ public final class SharedPreferencesHelper
             } else {
                 Log.w(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
             }
-            editor.apply();
         }
+        editor.apply();
     }
 
     /**
@@ -158,40 +157,37 @@ public final class SharedPreferencesHelper
      * must include a String name, and a String type in ["bool", "int",
      * "string"].
      */
-    private JSONArray handleGet(JSONObject message) throws JSONException {
-        SharedPreferences prefs = getSharedPreferences(message);
-        JSONArray jsonPrefs = message.getJSONArray("preferences");
-        JSONArray jsonValues = new JSONArray();
+    private GeckoBundle[] handleGet(final GeckoBundle message) {
+        final SharedPreferences prefs = getSharedPreferences(message);
+        final GeckoBundle[] bundlePrefs = message.getBundleArray("preferences");
+        final GeckoBundle[] bundleValues = new GeckoBundle[bundlePrefs.length];
 
-        for (int i = 0; i < jsonPrefs.length(); i++) {
-            JSONObject pref = jsonPrefs.getJSONObject(i);
-            String name = pref.getString("name");
-            String type = pref.getString("type");
-            JSONObject jsonValue = new JSONObject();
-            jsonValue.put("name", name);
-            jsonValue.put("type", type);
+        for (int i = 0; i < bundlePrefs.length; i++) {
+            final GeckoBundle pref = bundlePrefs[i];
+            final String name = pref.getString("name");
+            final String type = pref.getString("type");
+            final GeckoBundle bundleValue = new GeckoBundle(3);
+            bundleValue.put("name", name);
+            bundleValue.put("type", type);
             try {
                 if ("bool".equals(type)) {
-                    boolean value = prefs.getBoolean(name, false);
-                    jsonValue.put("value", value);
+                    bundleValue.put("value", prefs.getBoolean(name, false));
                 } else if ("int".equals(type)) {
-                    int value = prefs.getInt(name, 0);
-                    jsonValue.put("value", value);
+                    bundleValue.put("value", prefs.getInt(name, 0));
                 } else if ("string".equals(type)) {
-                    String value = prefs.getString(name, "");
-                    jsonValue.put("value", value);
+                    bundleValue.put("value", prefs.getString(name, ""));
                 } else {
                     Log.w(LOGTAG, "Unknown pref value type [" + type + "] for pref [" + name + "]");
                 }
-            } catch (ClassCastException e) {
+            } catch (final ClassCastException e) {
                 // Thrown if there is a preference with the given name that is
                 // not the right type.
-                Log.w(LOGTAG, "Wrong pref value type [" + type + "] for pref [" + name + "]");
+                Log.w(LOGTAG, "Wrong pref value type [" + type + "] for pref [" + name + "]", e);
             }
-            jsonValues.put(jsonValue);
+            bundleValues[i] = bundleValue;
         }
 
-        return jsonValues;
+        return bundleValues;
     }
 
     private static class ChangeListener
@@ -206,28 +202,46 @@ public final class SharedPreferencesHelper
             this.profileName = profileName;
         }
 
+        private static void putSharedPreference(final GeckoBundle msg,
+                                                final SharedPreferences sharedPreferences,
+                                                final String key) {
+            // Truly, this is awful, but the API impedance is strong: there is no way to
+            // get a single untyped value from a SharedPreferences instance.
+
+            try {
+                msg.putBoolean("value", sharedPreferences.getBoolean(key, false));
+                return;
+            } catch (final ClassCastException e) {
+            }
+
+            try {
+                msg.putInt("value", sharedPreferences.getInt(key, 0));
+                return;
+            } catch (final ClassCastException e) {
+            }
+
+            try {
+                msg.putString("value", sharedPreferences.getString(key, ""));
+                return;
+            } catch (final ClassCastException e) {
+            }
+        }
+
         @Override
-        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences,
+                                              final String key) {
             if (logVerbose) {
                 Log.v(LOGTAG, "Got onSharedPreferenceChanged");
             }
-            try {
-                final JSONObject msg = new JSONObject();
-                msg.put("scope", this.scope.key);
-                msg.put("branch", this.branch);
-                msg.put("profileName", this.profileName);
-                msg.put("key", key);
 
-                // Truly, this is awful, but the API impedance is strong: there
-                // is no way to get a single untyped value from a
-                // SharedPreferences instance.
-                msg.put("value", sharedPreferences.getAll().get(key));
+            final GeckoBundle msg = new GeckoBundle(5);
+            msg.putString("scope", scope.key);
+            msg.putString("branch", branch);
+            msg.putString("profileName", profileName);
+            msg.putString("key", key);
+            putSharedPreference(msg, sharedPreferences, key);
 
-                GeckoAppShell.notifyObservers("SharedPreferences:Changed", msg.toString());
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Got exception creating JSON object", e);
-                return;
-            }
+            EventDispatcher.getInstance().dispatch("SharedPreferences:Changed", msg);
         }
     }
 
@@ -239,13 +253,13 @@ public final class SharedPreferencesHelper
      * message.enable should be a boolean: true to enable listening, false to
      * disable listening.
      */
-    private void handleObserve(JSONObject message) throws JSONException {
+    private void handleObserve(final GeckoBundle message) {
         final SharedPreferences prefs = getSharedPreferences(message);
         final boolean enable = message.getBoolean("enable");
 
         final Scope scope = Scope.forKey(message.getString("scope"));
-        final String profileName = message.optString("profileName", null);
-        final String branch = getBranch(scope, profileName, message.optString("branch", null));
+        final String profileName = message.getString("profileName", null);
+        final String branch = getBranch(scope, profileName, message.getString("branch", null));
 
         if (branch == null) {
             Log.e(LOGTAG, "No branch specified for SharedPreference:Observe; aborting.");
@@ -267,34 +281,28 @@ public final class SharedPreferencesHelper
         }
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject message) {
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
         // Everything here is synchronous and serial, so we need not worry about
         // overwriting an in-progress response.
-        try {
-            if (event.equals("SharedPreferences:Set")) {
-                if (logVerbose) {
-                    Log.v(LOGTAG, "Got SharedPreferences:Set message.");
-                }
-                handleSet(message);
-            } else if (event.equals("SharedPreferences:Get")) {
-                if (logVerbose) {
-                    Log.v(LOGTAG, "Got SharedPreferences:Get message.");
-                }
-                JSONObject obj = new JSONObject();
-                obj.put("values", handleGet(message));
-                EventDispatcher.sendResponse(message, obj);
-            } else if (event.equals("SharedPreferences:Observe")) {
-                if (logVerbose) {
-                    Log.v(LOGTAG, "Got SharedPreferences:Observe message.");
-                }
-                handleObserve(message);
-            } else {
-                Log.e(LOGTAG, "SharedPreferencesHelper got unexpected message " + event);
-                return;
+        if (event.equals("SharedPreferences:Set")) {
+            if (logVerbose) {
+                Log.v(LOGTAG, "Got SharedPreferences:Set message.");
             }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Got exception in handleMessage handling event " + event, e);
+            handleSet(message);
+        } else if (event.equals("SharedPreferences:Get")) {
+            if (logVerbose) {
+                Log.v(LOGTAG, "Got SharedPreferences:Get message.");
+            }
+            callback.sendSuccess(handleGet(message));
+        } else if (event.equals("SharedPreferences:Observe")) {
+            if (logVerbose) {
+                Log.v(LOGTAG, "Got SharedPreferences:Observe message.");
+            }
+            handleObserve(message);
+        } else {
+            Log.e(LOGTAG, "SharedPreferencesHelper got unexpected message " + event);
             return;
         }
     }
