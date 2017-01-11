@@ -1272,7 +1272,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
         return nullptr;
 
     // Step 18.d-g or 24.1.1.4 step 11.
-    if (!TypedArrayMethods<TypedArrayObject>::setFromTypedArray(cx, obj, srcArray))
+    if (!TypedArrayMethods::setFromTypedArray(cx, obj, srcArray))
         return nullptr;
 
     // Step 23.
@@ -1329,7 +1329,7 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
             return nullptr;
 
         // Steps 6.d-e.
-        if (!TypedArrayMethods<TypedArrayObject>::initFromIterablePackedArray(cx, obj, array))
+        if (!TypedArrayMethods::initFromIterablePackedArray(cx, obj, array))
             return nullptr;
 
         // Step 6.f (The assertion isn't applicable for the fast path).
@@ -1395,7 +1395,7 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
         return nullptr;
 
     // Steps 11-12.
-    if (!TypedArrayMethods<TypedArrayObject>::setFromNonTypedArray(cx, obj, arrayLike, len))
+    if (!TypedArrayMethods::setFromNonTypedArray(cx, obj, arrayLike, len))
         return nullptr;
 
     // Step 13.
@@ -1494,8 +1494,7 @@ TypedArrayObject::protoAccessors[] = {
 TypedArrayObject::set(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<TypedArrayObject::is,
-                                TypedArrayMethods<TypedArrayObject>::set>(cx, args);
+    return CallNonGenericMethod<TypedArrayObject::is, TypedArrayMethods::set>(cx, args);
 }
 
 /* static */ const JSFunctionSpec
