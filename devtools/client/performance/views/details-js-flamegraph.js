@@ -57,7 +57,7 @@ var JsFlameGraphView = Heritage.extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render(interval = {}) {
+  render: function (interval = {}) {
     let recording = PerformanceController.getCurrentRecording();
     let duration = recording.getDuration();
     let profile = recording.getProfile();
@@ -90,7 +90,7 @@ var JsFlameGraphView = Heritage.extend(DetailsSubview, {
   /**
    * Fired when a range is selected or cleared in the FlameGraph.
    */
-  _onRangeChangeInGraph() {
+  _onRangeChangeInGraph: function () {
     let interval = this.graph.getViewRange();
 
     // Squelch rerendering this view when we update the range here
@@ -104,7 +104,7 @@ var JsFlameGraphView = Heritage.extend(DetailsSubview, {
   /**
    * Called whenever a pref is changed and this view needs to be rerendered.
    */
-  _onRerenderPrefChanged() {
+  _onRerenderPrefChanged: function () {
     let recording = PerformanceController.getCurrentRecording();
     let profile = recording.getProfile();
     let thread = profile.threads[0];
@@ -114,7 +114,7 @@ var JsFlameGraphView = Heritage.extend(DetailsSubview, {
   /**
    * Called when `devtools.theme` changes.
    */
-  _onThemeChanged(_, theme) {
+  _onThemeChanged: function (_, theme) {
     this.graph.setTheme(theme);
     this.graph.refresh({ force: true });
   },

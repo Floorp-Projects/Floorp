@@ -44,10 +44,10 @@ function PrefBranch(parent, name, fullName) {
 }
 
 PrefBranch.prototype = {
-  PREF_INVALID,
-  PREF_STRING,
-  PREF_INT,
-  PREF_BOOL,
+  PREF_INVALID: PREF_INVALID,
+  PREF_STRING: PREF_STRING,
+  PREF_INT: PREF_INT,
+  PREF_BOOL: PREF_BOOL,
 
   /** @see nsIPrefBranch.root.  */
   get root() {
@@ -55,12 +55,12 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.getPrefType.  */
-  getPrefType(prefName) {
+  getPrefType: function (prefName) {
     return this._findPref(prefName)._type;
   },
 
   /** @see nsIPrefBranch.getBoolPref.  */
-  getBoolPref(prefName) {
+  getBoolPref: function (prefName) {
     let thePref = this._findPref(prefName);
     if (thePref._type !== PREF_BOOL) {
       throw new Error(`${prefName} does not have bool type`);
@@ -69,7 +69,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.setBoolPref.  */
-  setBoolPref(prefName, value) {
+  setBoolPref: function (prefName, value) {
     if (typeof value !== "boolean") {
       throw new Error("non-bool passed to setBoolPref");
     }
@@ -81,7 +81,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.getCharPref.  */
-  getCharPref(prefName) {
+  getCharPref: function (prefName) {
     let thePref = this._findPref(prefName);
     if (thePref._type !== PREF_STRING) {
       throw new Error(`${prefName} does not have string type`);
@@ -90,7 +90,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.setCharPref.  */
-  setCharPref(prefName, value) {
+  setCharPref: function (prefName, value) {
     if (typeof value !== "string") {
       throw new Error("non-string passed to setCharPref");
     }
@@ -102,7 +102,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.getIntPref.  */
-  getIntPref(prefName) {
+  getIntPref: function (prefName) {
     let thePref = this._findPref(prefName);
     if (thePref._type !== PREF_INT) {
       throw new Error(`${prefName} does not have int type`);
@@ -111,7 +111,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.setIntPref.  */
-  setIntPref(prefName, value) {
+  setIntPref: function (prefName, value) {
     if (typeof value !== "number") {
       throw new Error("non-number passed to setIntPref");
     }
@@ -123,19 +123,19 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.clearUserPref */
-  clearUserPref(prefName) {
+  clearUserPref: function (prefName) {
     let thePref = this._findPref(prefName);
     thePref._clearUserValue();
   },
 
   /** @see nsIPrefBranch.prefHasUserValue */
-  prefHasUserValue(prefName) {
+  prefHasUserValue: function (prefName) {
     let thePref = this._findPref(prefName);
     return thePref._hasUserValue;
   },
 
   /** @see nsIPrefBranch.addObserver */
-  addObserver(domain, observer, holdWeak) {
+  addObserver: function (domain, observer, holdWeak) {
     if (holdWeak) {
       throw new Error("shim prefs only supports strong observers");
     }
@@ -147,7 +147,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefBranch.removeObserver */
-  removeObserver(domain, observer) {
+  removeObserver: function (domain, observer) {
     if (!(domain in this._observers)) {
       return;
     }
@@ -158,7 +158,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefService.savePrefFile */
-  savePrefFile(file) {
+  savePrefFile: function (file) {
     if (file) {
       throw new Error("shim prefs only supports null file in savePrefFile");
     }
@@ -166,7 +166,7 @@ PrefBranch.prototype = {
   },
 
   /** @see nsIPrefService.getBranch */
-  getBranch(prefRoot) {
+  getBranch: function (prefRoot) {
     if (!prefRoot) {
       return this;
     }
@@ -185,7 +185,7 @@ PrefBranch.prototype = {
    *         return a string, a number, or a boolean depending on the
    *         preference's type.
    */
-  _get() {
+  _get: function () {
     if (this._hasUserValue) {
       return this._userValue;
     }
@@ -199,7 +199,7 @@ PrefBranch.prototype = {
    *
    * @param {Any} value the new value
    */
-  _set(value) {
+  _set: function (value) {
     if (!this._hasUserValue || value !== this._userValue) {
       this._userValue = value;
       this._hasUserValue = true;
@@ -213,7 +213,7 @@ PrefBranch.prototype = {
    *
    * @param {Any} value the new default value
    */
-  _setDefault(value) {
+  _setDefault: function (value) {
     if (this._defaultValue !== value) {
       this._defaultValue = value;
       if (!this._hasUserValue) {
@@ -226,7 +226,7 @@ PrefBranch.prototype = {
    * If this preference has a user value, clear it.  If a change was
    * made, emit a change notification.
    */
-  _clearUserValue() {
+  _clearUserValue: function () {
     if (this._hasUserValue) {
       this._userValue = null;
       this._hasUserValue = false;
@@ -238,7 +238,7 @@ PrefBranch.prototype = {
    * Helper function to write the preference's value to local storage
    * and then emit a change notification.
    */
-  _saveAndNotify() {
+  _saveAndNotify: function () {
     let store = {
       type: this._type,
       defaultValue: this._defaultValue,
@@ -268,7 +268,7 @@ PrefBranch.prototype = {
    *        and |hasUserValue| is a boolean indicating whether the user value
    *        is valid
    */
-  _storageUpdated(type, userValue, hasUserValue, defaultValue) {
+  _storageUpdated: function (type, userValue, hasUserValue, defaultValue) {
     this._type = type;
     this._defaultValue = defaultValue;
     this._hasUserValue = hasUserValue;
@@ -285,7 +285,7 @@ PrefBranch.prototype = {
    * @param {String} prefName the fully-qualified preference name
    * @return {Object} Either a Preference or PrefBranch object
    */
-  _findPref(prefName) {
+  _findPref: function (prefName) {
     let branchNames = prefName.split(".");
     let branch = this;
 
@@ -307,7 +307,7 @@ PrefBranch.prototype = {
    * @param {String} relativeName the name of the updated pref,
    *        relative to this branch
    */
-  _notify(relativeName) {
+  _notify: function (relativeName) {
     for (let domain in this._observers) {
       if (relativeName === domain || domain === "" ||
           (domain.endsWith(".") && relativeName.startsWith(domain))) {
@@ -343,7 +343,7 @@ PrefBranch.prototype = {
    *        of the branch to be created
    * @return {PrefBranch} the new branch
    */
-  _createBranch(branchList) {
+  _createBranch: function (branchList) {
     let parent = this;
     for (let branch of branchList) {
       if (!parent._children[branch]) {
@@ -371,7 +371,7 @@ PrefBranch.prototype = {
    * @param {Boolean} init if true, then this call is initialization
    *        from local storage and should override the default prefs
    */
-  _findOrCreatePref(keyName, userValue, hasUserValue, defaultValue,
+  _findOrCreatePref: function (keyName, userValue, hasUserValue, defaultValue,
                                init = false) {
     let branch = this._createBranch(keyName.split("."));
 
@@ -410,7 +410,7 @@ PrefBranch.prototype = {
    * @param {StorageEvent} event the event representing the local
    *        storage change
    */
-  _onStorageChange(event) {
+  _onStorageChange: function (event) {
     if (event.storageArea !== localStorage) {
       return;
     }
@@ -432,7 +432,7 @@ PrefBranch.prototype = {
   /**
    * Helper function to initialize the root PrefBranch.
    */
-  _initializeRoot() {
+  _initializeRoot: function () {
     if (Services._defaultPrefsEnabled) {
       /* eslint-disable no-eval */
       let devtools = require("raw!prefs!devtools/client/preferences/devtools");
@@ -522,13 +522,13 @@ const Services = {
    * the subset of Services.telemetry that is used by devtools.
    */
   telemetry: {
-    getHistogramById(name) {
+    getHistogramById: function (name) {
       return {
         add: () => {}
       };
     },
 
-    getKeyedHistogramById(name) {
+    getKeyedHistogramById: function (name) {
       return {
         add: () => {}
       };
@@ -553,7 +553,7 @@ const Services = {
       return document.activeElement;
     },
 
-    moveFocus(window, startElement, type, flags) {
+    moveFocus: function (window, startElement, type, flags) {
       if (flags !== 0) {
         throw new Error("shim Services.focus.moveFocus only accepts flags===0");
       }
@@ -568,7 +568,7 @@ const Services = {
       }
 
       let iter = document.createTreeWalker(document, NodeFilter.SHOW_ELEMENT, {
-        acceptNode(node) {
+        acceptNode: function (node) {
           let tabIndex = node.getAttribute("tabindex");
           if (tabIndex === "-1") {
             return NodeFilter.FILTER_SKIP;
@@ -597,11 +597,11 @@ const Services = {
    * getMostRecentWindow.
    */
   wm: {
-    getMostRecentWindow() {
+    getMostRecentWindow: function () {
       // Having the returned object implement openUILinkIn is
       // sufficient for our purposes.
       return {
-        openUILinkIn(url) {
+        openUILinkIn: function (url) {
           window.open(url, "_blank");
         },
       };

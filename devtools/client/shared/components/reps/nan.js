@@ -38,6 +38,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.NaNRep = {
     rep: NaNRep,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

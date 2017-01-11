@@ -30,7 +30,7 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired,
     },
 
-    getDefaultProps() {
+    getDefaultProps: function () {
       return {
         useQuotes: true,
       };
@@ -73,6 +73,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.LongStringRep = {
     rep: LongStringRep,
-    supportsObject,
+    supportsObject: supportsObject,
   };
 });

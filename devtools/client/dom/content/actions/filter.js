@@ -12,7 +12,7 @@ const constants = require("../constants");
  */
 function setVisibilityFilter(filter) {
   return {
-    filter,
+    filter: filter,
     type: constants.SET_VISIBILITY_FILTER,
   };
 }

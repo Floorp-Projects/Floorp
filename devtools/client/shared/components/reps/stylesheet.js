@@ -31,7 +31,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle(grip) {
+    getTitle: function (grip) {
       let title = "StyleSheet ";
       if (this.props.objectLink) {
         return DOM.span({className: "objectBox"},
@@ -43,7 +43,7 @@ define(function (require, exports, module) {
       return title;
     },
 
-    getLocation(grip) {
+    getLocation: function (grip) {
       // Embedded stylesheets don't have URL and so, no preview.
       let url = grip.preview ? grip.preview.url : "";
       return url ? getURLDisplayString(url) : "";
@@ -77,6 +77,6 @@ define(function (require, exports, module) {
 
   exports.StyleSheet = {
     rep: StyleSheet,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

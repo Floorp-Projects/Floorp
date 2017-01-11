@@ -22,7 +22,7 @@ const MessageIndent = createClass({
     indent: PropTypes.number.isRequired,
   },
 
-  render() {
+  render: function () {
     const { indent } = this.props;
     return dom.span({
       className: "indent",

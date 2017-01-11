@@ -23,12 +23,12 @@ add_task(function* () {
     isShown: false,
     nodeFront: null,
     options: null,
-    show(nodeFront, options) {
+    show: function (nodeFront, options) {
       this.nodeFront = nodeFront;
       this.options = options;
       this.isShown = true;
     },
-    hide() {
+    hide: function () {
       this.nodeFront = null;
       this.options = null;
       this.isShown = false;

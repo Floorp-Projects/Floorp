@@ -135,7 +135,7 @@ Rule.prototype = {
    *         Promise which resolves with location as an object containing
    *         both the full and short version of the source string.
    */
-  getOriginalSourceStrings() {
+  getOriginalSourceStrings: function () {
     return this.domRule.getOriginalLocation().then(({href,
                                                      line, mediaText}) => {
       let mediaString = mediaText ? " @" + mediaText : "";
@@ -144,7 +144,7 @@ Rule.prototype = {
       let sourceStrings = {
         full: (href || CssLogic.l10n("rule.sourceInline")) + linePart +
           mediaString,
-        short: CssLogic.shortSource({href}) + linePart + mediaString
+        short: CssLogic.shortSource({href: href}) + linePart + mediaString
       };
 
       return sourceStrings;
@@ -158,7 +158,7 @@ Rule.prototype = {
    * @param {Object} options
    *        Creation options. See the Rule constructor for documentation.
    */
-  matches(options) {
+  matches: function (options) {
     return this.style === options.rule;
   },
 
@@ -176,7 +176,7 @@ Rule.prototype = {
    * @param {TextProperty} siblingProp
    *        Optional, property next to which the new property will be added.
    */
-  createProperty(name, value, priority, enabled, siblingProp) {
+  createProperty: function (name, value, priority, enabled, siblingProp) {
     let prop = new TextProperty(this, name, value, priority, enabled);
 
     let ind;
@@ -203,7 +203,7 @@ Rule.prototype = {
    * does not support as-authored styles.  Store disabled properties
    * in the element style's store.
    */
-  _applyPropertiesNoAuthored(modifications) {
+  _applyPropertiesNoAuthored: function (modifications) {
     this.elementStyle.markOverriddenAll();
 
     let disabledProps = [];
@@ -271,7 +271,7 @@ Rule.prototype = {
    * authored" case; that is, when the StyleRuleActor supports
    * setRuleText.
    */
-  _applyPropertiesAuthored(modifications) {
+  _applyPropertiesAuthored: function (modifications) {
     return modifications.apply().then(() => {
       // The rewriting may have required some other property values to
       // change, e.g., to insert some needed terminators.  Update the
@@ -302,7 +302,7 @@ Rule.prototype = {
    * @return {Promise} a promise which will resolve when the edit
    *        is complete
    */
-  applyProperties(modifier) {
+  applyProperties: function (modifier) {
     // If there is already a pending modification, we have to wait
     // until it settles before applying the next modification.
     let resultPromise =
@@ -335,7 +335,7 @@ Rule.prototype = {
    * @param {String} name
    *        The new property name (such as "background" or "border-top").
    */
-  setPropertyName(property, name) {
+  setPropertyName: function (property, name) {
     if (name === property.name) {
       return;
     }
@@ -358,7 +358,7 @@ Rule.prototype = {
    * @param {String} priority
    *        The property's priority (either "important" or an empty string).
    */
-  setPropertyValue(property, value, priority) {
+  setPropertyValue: function (property, value, priority) {
     if (value === property.value && priority === property.priority) {
       return;
     }
@@ -383,7 +383,7 @@ Rule.prototype = {
    * @param {String} priority
    *        The property's priority (either "important" or an empty string).
    */
-  previewPropertyValue(property, value, priority) {
+  previewPropertyValue: function (property, value, priority) {
     let modifications = this.style.startModifyingProperties(this.cssProperties);
     modifications.setProperty(this.textProps.indexOf(property),
                               property.name, value, priority);
@@ -401,7 +401,7 @@ Rule.prototype = {
    *        The property to enable/disable
    * @param {Boolean} value
    */
-  setPropertyEnabled(property, value) {
+  setPropertyEnabled: function (property, value) {
     if (property.enabled === !!value) {
       return;
     }
@@ -419,7 +419,7 @@ Rule.prototype = {
    * @param {TextProperty} property
    *        The property to be removed
    */
-  removeProperty(property) {
+  removeProperty: function (property) {
     let index = this.textProps.indexOf(property);
     this.textProps.splice(index, 1);
     // Need to re-apply properties in case removing this TextProperty
@@ -433,7 +433,7 @@ Rule.prototype = {
    * Get the list of TextProperties from the style. Needs
    * to parse the style's authoredText.
    */
-  _getTextProperties() {
+  _getTextProperties: function () {
     let textProps = [];
     let store = this.elementStyle.store;
 
@@ -468,7 +468,7 @@ Rule.prototype = {
   /**
    * Return the list of disabled properties from the store for this rule.
    */
-  _getDisabledProperties() {
+  _getDisabledProperties: function () {
     let store = this.elementStyle.store;
 
     // Include properties from the disabled property store, if any.
@@ -494,7 +494,7 @@ Rule.prototype = {
    * Reread the current state of the rules and rebuild text
    * properties as needed.
    */
-  refresh(options) {
+  refresh: function (options) {
     this.matchedSelectors = options.matchedSelectors || [];
     let newTextProps = this._getTextProperties();
 
@@ -555,7 +555,7 @@ Rule.prototype = {
    * @return {Boolean} true if a property was updated, false if no properties
    *         were updated.
    */
-  _updateTextProperty(newProp) {
+  _updateTextProperty: function (newProp) {
     let match = { rank: 0, prop: null };
 
     for (let prop of this.textProps) {
@@ -620,7 +620,7 @@ Rule.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  editClosestTextProperty(textProperty, direction) {
+  editClosestTextProperty: function (textProperty, direction) {
     let index = this.textProps.indexOf(textProperty);
 
     if (direction === Services.focus.MOVEFOCUS_FORWARD) {
@@ -651,7 +651,7 @@ Rule.prototype = {
   /**
    * Return a string representation of the rule.
    */
-  stringifyRule() {
+  stringifyRule: function () {
     let selectorText = this.selectorText;
     let cssText = "";
     let terminator = Services.appinfo.OS === "WINNT" ? "\r\n" : "\n";
@@ -670,7 +670,7 @@ Rule.prototype = {
    * @return {Boolean} true if there is any visible property, or false
    *         if all properties are invisible
    */
-  hasAnyVisibleProperties() {
+  hasAnyVisibleProperties: function () {
     for (let prop of this.textProps) {
       if (!prop.invisible) {
         return true;

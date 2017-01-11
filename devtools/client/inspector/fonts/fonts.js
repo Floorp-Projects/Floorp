@@ -22,7 +22,7 @@ function FontInspector(inspector, window) {
 }
 
 FontInspector.prototype = {
-  init() {
+  init: function () {
     this.update = this.update.bind(this);
     this.onNewNode = this.onNewNode.bind(this);
     this.onThemeChanged = this.onThemeChanged.bind(this);
@@ -46,7 +46,7 @@ FontInspector.prototype = {
   /**
    * Is the fontinspector visible in the sidebar?
    */
-  isActive() {
+  isActive: function () {
     return this.inspector.sidebar &&
            this.inspector.sidebar.getCurrentTabID() == "fontinspector";
   },
@@ -54,7 +54,7 @@ FontInspector.prototype = {
   /**
    * Remove listeners.
    */
-  destroy() {
+  destroy: function () {
     this.chromeDoc = null;
     this.inspector.sidebar.off("fontinspector-selected", this.onNewNode);
     this.inspector.selection.off("new-node-front", this.onNewNode);
@@ -73,7 +73,7 @@ FontInspector.prototype = {
   /**
    * Selection 'new-node' event handler.
    */
-  onNewNode() {
+  onNewNode: function () {
     if (this.isActive() &&
         this.inspector.selection.isConnected() &&
         this.inspector.selection.isElementNode()) {
@@ -89,7 +89,7 @@ FontInspector.prototype = {
    * the preview input or DEFAULT_PREVIEW_TEXT if the input is empty or contains
    * only whitespace.
    */
-  getPreviewText() {
+  getPreviewText: function () {
     let inputText = this.previewInput.value.trim();
     if (inputText === "") {
       return DEFAULT_PREVIEW_TEXT;
@@ -101,7 +101,7 @@ FontInspector.prototype = {
   /**
    * Preview input 'input' event handler.
    */
-  previewTextChanged() {
+  previewTextChanged: function () {
     if (this._previewUpdateTimeout) {
       clearTimeout(this._previewUpdateTimeout);
     }
@@ -114,7 +114,7 @@ FontInspector.prototype = {
   /**
    * Callback for the theme-switched event.
    */
-  onThemeChanged(event, frame) {
+  onThemeChanged: function (event, frame) {
     if (frame === this.chromeDoc.defaultView) {
       this.update(this._lastUpdateShowedAllFonts);
     }
@@ -123,7 +123,7 @@ FontInspector.prototype = {
   /**
    * Hide the font list. No node are selected.
    */
-  dim() {
+  dim: function () {
     let panel = this.chromeDoc.getElementById("sidebar-panel-fontinspector");
     panel.classList.add("dim");
     this.clear();
@@ -132,7 +132,7 @@ FontInspector.prototype = {
   /**
    * Show the font list. A node is selected.
    */
-  undim() {
+  undim: function () {
     let panel = this.chromeDoc.getElementById("sidebar-panel-fontinspector");
     panel.classList.remove("dim");
   },
@@ -140,7 +140,7 @@ FontInspector.prototype = {
   /**
    * Clears the font list.
    */
-  clear() {
+  clear: function () {
     this.chromeDoc.querySelector("#all-fonts").innerHTML = "";
   },
 
@@ -204,7 +204,7 @@ FontInspector.prototype = {
   /**
    * Display the information of one font.
    */
-  render(font) {
+  render: function (font) {
     let s = this.chromeDoc.querySelector("#font-template > section");
     s = s.cloneNode(true);
 
@@ -242,7 +242,7 @@ FontInspector.prototype = {
   /**
    * Show all fonts for the document (including iframes)
    */
-  showAll() {
+  showAll: function () {
     this.update(true);
   },
 };

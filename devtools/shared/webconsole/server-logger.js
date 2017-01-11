@@ -17,7 +17,7 @@ loader.lazyGetter(this, "NetworkHelper", () => require("devtools/shared/webconso
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log() {
+  log: function () {
   }
 };
 
@@ -47,7 +47,7 @@ var ServerLoggingListener = Class({
    * @param {Object} owner
    *        The {@WebConsoleActor} instance
    */
-  initialize(win, owner) {
+  initialize: function (win, owner) {
     trace.log("ServerLoggingListener.initialize; ", owner.actorID,
       ", child process: ", DebuggerServer.isInChildProcess);
 
@@ -64,7 +64,7 @@ var ServerLoggingListener = Class({
   /**
    * The destroy is called by the parent WebConsoleActor actor.
    */
-  destroy() {
+  destroy: function () {
     trace.log("ServerLoggingListener.destroy; ", this.owner.actorID,
       ", child process: ", DebuggerServer.isInChildProcess);
 
@@ -107,7 +107,7 @@ var ServerLoggingListener = Class({
 
   // Parent Child Relationship
 
-  attachParentProcess() {
+  attachParentProcess: function () {
     trace.log("ServerLoggingListener.attachParentProcess;");
 
     this.owner.conn.setupInParent({
@@ -162,7 +162,7 @@ var ServerLoggingListener = Class({
 
   // HTTP Observer
 
-  onExamineHeaders(event) {
+  onExamineHeaders: function (event) {
     let headers = event.data.headers;
 
     trace.log("ServerLoggingListener.onExamineHeaders;", headers);
@@ -204,13 +204,13 @@ var ServerLoggingListener = Class({
     httpChannel.visitResponseHeaders((header, value) => {
       header = header.toLowerCase();
       if (acceptableHeaders.indexOf(header) !== -1) {
-        headers.push({header, value});
+        headers.push({header: header, value: value});
       }
     });
 
     this.onExamineHeaders({
       data: {
-        headers,
+        headers: headers,
       }
     });
   }),
@@ -225,7 +225,7 @@ var ServerLoggingListener = Class({
    * @return boolean
    *         True if the network request should be logged, false otherwise.
    */
-  _matchRequest(channel) {
+  _matchRequest: function (channel) {
     trace.log("_matchRequest ", this.window, ", ", this.topFrame);
 
     // Log everything if the window is null (it's null in the browser context)
@@ -265,7 +265,7 @@ var ServerLoggingListener = Class({
    * Learn more about the data structure:
    * https://craig.is/writing/chrome-logger/techspecs
    */
-  parse(header, value) {
+  parse: function (header, value) {
     let data;
 
     try {
@@ -314,15 +314,15 @@ var ServerLoggingListener = Class({
 
       parsedMessage.push({
         logs: rawLogs,
-        location,
-        type
+        location: location,
+        type: type
       });
     }
 
     return parsedMessage;
   },
 
-  getColumnMap(data) {
+  getColumnMap: function (data) {
     let columnMap = new Map();
     let columnName;
 
@@ -334,7 +334,7 @@ var ServerLoggingListener = Class({
     return columnMap;
   },
 
-  sendMessage(msg) {
+  sendMessage: function (msg) {
     trace.log("ServerLoggingListener.sendMessage; message", msg);
 
     let formatted = format(msg);
@@ -346,7 +346,7 @@ var ServerLoggingListener = Class({
 
     let message = {
       category: "server",
-      innerID,
+      innerID: innerID,
       level: msg.type,
       filename: location ? location.url : null,
       lineNumber: location ? location.line : null,

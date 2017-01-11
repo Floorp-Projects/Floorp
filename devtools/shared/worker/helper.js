@@ -129,5 +129,5 @@
     };
   }
 
-  return { createTask };
+  return { createTask: createTask };
 }));

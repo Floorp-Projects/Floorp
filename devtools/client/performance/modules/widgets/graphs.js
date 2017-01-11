@@ -76,7 +76,7 @@ PerformanceGraph.prototype = Heritage.extend(LineGraphWidget.prototype, {
   /**
    * Disables selection and empties this graph.
    */
-  clearView() {
+  clearView: function () {
     this.selectionEnabled = false;
     this.dropSelection();
     this.setData([]);
@@ -87,7 +87,7 @@ PerformanceGraph.prototype = Heritage.extend(LineGraphWidget.prototype, {
    * and updates the internal styling to match. Requires a redraw
    * to see the effects.
    */
-  setTheme(theme) {
+  setTheme: function (theme) {
     theme = theme || "light";
     let mainColor = getColor(this.mainColor || "graphs-blue", theme);
     this.backgroundColor = getColor("body-background", theme);
@@ -115,7 +115,7 @@ function FramerateGraph(parent) {
 
 FramerateGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
   mainColor: FRAMERATE_GRAPH_COLOR_NAME,
-  setPerformanceData({ duration, ticks }, resolution) {
+  setPerformanceData: function ({ duration, ticks }, resolution) {
     this.dataDuration = duration;
     return this.setDataFromTimestamps(ticks, resolution, duration);
   }
@@ -133,7 +133,7 @@ function MemoryGraph(parent) {
 
 MemoryGraph.prototype = Heritage.extend(PerformanceGraph.prototype, {
   mainColor: MEMORY_GRAPH_COLOR_NAME,
-  setPerformanceData({ duration, memory }) {
+  setPerformanceData: function ({ duration, memory }) {
     this.dataDuration = duration;
     return this.setData(memory);
   }
@@ -200,7 +200,7 @@ GraphsController.prototype = {
   /**
    * Returns the corresponding graph by `graphName`.
    */
-  get(graphName) {
+  get: function (graphName) {
     return this._graphs[graphName];
   },
 
@@ -259,7 +259,7 @@ GraphsController.prototype = {
    * Applies the theme to the underlying graphs. Optionally takes
    * a `redraw` boolean in the options to force redraw.
    */
-  setTheme(options = {}) {
+  setTheme: function (options = {}) {
     let theme = options.theme || this._getTheme();
     for (let graph of this.getWidgets()) {
       graph.setTheme(theme);
@@ -291,7 +291,7 @@ GraphsController.prototype = {
    * Enable or disable a subgraph controlled by GraphsController.
    * This determines what graphs are visible and get rendered.
    */
-  enable(graphName, isEnabled) {
+  enable: function (graphName, isEnabled) {
     let el = this.$(this._definition[graphName].selector);
     el.classList[isEnabled ? "remove" : "add"]("hidden");
 
@@ -314,7 +314,7 @@ GraphsController.prototype = {
    * also hides the root element. This is a one way switch, and used
    * when older platforms do not have any timeline data.
    */
-  disableAll() {
+  disableAll: function () {
     this._root.classList.add("hidden");
     // Hide all the subelements
     Object.keys(this._definition).forEach(graphName => this.enable(graphName, false));
@@ -324,7 +324,7 @@ GraphsController.prototype = {
    * Sets a mapped selection on the graph that is the main controller
    * for keeping the graphs' selections in sync.
    */
-  setMappedSelection(selection, { mapStart, mapEnd }) {
+  setMappedSelection: function (selection, { mapStart, mapEnd }) {
     return this._getPrimaryLink().setMappedSelection(selection, { mapStart, mapEnd });
   },
 
@@ -332,7 +332,7 @@ GraphsController.prototype = {
    * Fetches the currently mapped selection. If graphs are not yet rendered,
    * (which throws in Graphs.js), return null.
    */
-  getMappedSelection({ mapStart, mapEnd }) {
+  getMappedSelection: function ({ mapStart, mapEnd }) {
     let primary = this._getPrimaryLink();
     if (primary && primary.hasData()) {
       return primary.getMappedSelection({ mapStart, mapEnd });
@@ -344,14 +344,14 @@ GraphsController.prototype = {
    * Returns an array of graphs that have been created, not necessarily
    * enabled currently.
    */
-  getWidgets() {
+  getWidgets: function () {
     return Object.keys(this._graphs).map(name => this._graphs[name]);
   },
 
   /**
    * Drops the selection.
    */
-  dropSelection() {
+  dropSelection: function () {
     if (this._getPrimaryLink()) {
       return this._getPrimaryLink().dropSelection();
     }
@@ -398,14 +398,14 @@ GraphsController.prototype = {
    * Returns the main graph for this collection, that all graphs
    * are bound to for syncing and selection.
    */
-  _getPrimaryLink() {
+  _getPrimaryLink: function () {
     return this.get(this._primaryLink);
   },
 
   /**
    * Emitted when a selection occurs.
    */
-  _onSelecting() {
+  _onSelecting: function () {
     this.emit("selecting");
   },
 
@@ -490,7 +490,7 @@ OptimizationsGraph.prototype = Heritage.extend(MountainGraphWidget.prototype, {
    * and updates the internal styling to match. Requires a redraw
    * to see the effects.
    */
-  setTheme(theme) {
+  setTheme: function (theme) {
     theme = theme || "light";
 
     let interpreterColor = getColor("graphs-red", theme);

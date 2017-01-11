@@ -11,7 +11,7 @@ var seenMessages = 0;
 var seenTypes = 0;
 
 var callback = {
-  onConsoleAPICall(message) {
+  onConsoleAPICall: function (message) {
     if (message.consoleID && message.consoleID == "addon/foo") {
       do_check_eq(message.level, "warn");
       do_check_eq(message.arguments[0], "Warning from foo");

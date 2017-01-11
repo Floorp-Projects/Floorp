@@ -345,8 +345,10 @@ module.exports = {
     "no-warning-comments": "off",
     // Disallow use of the with statement.
     "no-with": "error",
-    // Enforce method and property shorthand syntax for object literals.
-    "object-shorthand": "error",
+    // Don't require method and property shorthand syntax for object literals.
+    // We use this in the code a lot, but not consistently, and this seems more
+    // like something to check at code review time.
+    "object-shorthand": "off",
     // Allow more than one variable declaration per function.
     "one-var": "off",
     // Disallow padding within blocks.

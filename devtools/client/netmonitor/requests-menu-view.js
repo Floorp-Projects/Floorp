@@ -64,7 +64,7 @@ RequestsMenuView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize(store) {
+  initialize: function (store) {
     dumpn("Initializing the RequestsMenuView");
 
     this.store = store;
@@ -382,7 +382,7 @@ RequestsMenuView.prototype = {
   /**
    * Shows raw request/response headers in textboxes.
    */
-  toggleRawHeaders() {
+  toggleRawHeaders: function () {
     let requestTextarea = $("#raw-request-headers-textarea");
     let responseTextarea = $("#raw-response-headers-textarea");
     let rawHeadersHidden = $("#raw-headers").getAttribute("hidden");
@@ -404,7 +404,7 @@ RequestsMenuView.prototype = {
   /**
    * Send a new HTTP request using the data in the custom request form.
    */
-  sendCustomRequest() {
+  sendCustomRequest: function () {
     let selected = getSelectedRequest(this.store.getState());
 
     let data = {

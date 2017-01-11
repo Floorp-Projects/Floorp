@@ -10,7 +10,7 @@ const { gcliSpec } = require("devtools/shared/specs/gcli");
  *
  */
 const GcliFront = exports.GcliFront = FrontClassWithSpec(gcliSpec, {
-  initialize(client, tabForm) {
+  initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.gcliActor;
 

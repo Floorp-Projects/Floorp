@@ -30,7 +30,7 @@ UndoStack.prototype = {
   // The current batch depth (see startBatch() for details)
   _batchDepth: 0,
 
-  destroy() {
+  destroy: function () {
     this.uninstallController();
     delete this._stack;
   },
@@ -44,7 +44,7 @@ UndoStack.prototype = {
    * actions made up of a collection of smaller actions to be
    * undone as a single action.
    */
-  startBatch() {
+  startBatch: function () {
     if (this._batchDepth++ === 0) {
       this._batch = [];
     }
@@ -54,7 +54,7 @@ UndoStack.prototype = {
    * End a batch of related changes, performing its action and adding
    * it to the undo stack.
    */
-  endBatch() {
+  endBatch: function () {
     if (--this._batchDepth > 0) {
       return;
     }
@@ -67,12 +67,12 @@ UndoStack.prototype = {
     let batch = this._batch;
     delete this._batch;
     let entry = {
-      do() {
+      do: function () {
         for (let item of batch) {
           item.do();
         }
       },
-      undo() {
+      undo: function () {
         for (let i = batch.length - 1; i >= 0; i--) {
           batch[i].undo();
         }
@@ -90,7 +90,7 @@ UndoStack.prototype = {
    * @param function toDo Called to perform the action.
    * @param function undo Called to reverse the action.
    */
-  do(toDo, undo) {
+  do: function (toDo, undo) {
     this.startBatch();
     this._batch.push({ do: toDo, undo });
     this.endBatch();
@@ -99,7 +99,7 @@ UndoStack.prototype = {
   /*
    * Returns true if undo() will do anything.
    */
-  canUndo() {
+  canUndo: function () {
     return this._index > 0;
   },
 
@@ -108,7 +108,7 @@ UndoStack.prototype = {
    *
    * @return true if an action was undone.
    */
-  undo() {
+  undo: function () {
     if (!this.canUndo()) {
       return false;
     }
@@ -120,7 +120,7 @@ UndoStack.prototype = {
   /**
    * Returns true if redo() will do anything.
    */
-  canRedo() {
+  canRedo: function () {
     return this._stack.length > this._index;
   },
 
@@ -129,7 +129,7 @@ UndoStack.prototype = {
    *
    * @return true if an action was redone.
    */
-  redo() {
+  redo: function () {
     if (!this.canRedo()) {
       return false;
     }
@@ -138,7 +138,7 @@ UndoStack.prototype = {
     return true;
   },
 
-  _change() {
+  _change: function () {
     if (this._controllerWindow) {
       this._controllerWindow.goUpdateCommand("cmd_undo");
       this._controllerWindow.goUpdateCommand("cmd_redo");
@@ -152,7 +152,7 @@ UndoStack.prototype = {
   /**
    * Install this object as a command controller.
    */
-  installController(controllerWindow) {
+  installController: function (controllerWindow) {
     let controllers = controllerWindow.controllers;
     // Only available when running in a Firefox panel.
     if (!controllers || !controllers.appendController) {
@@ -166,19 +166,19 @@ UndoStack.prototype = {
   /**
    * Uninstall this object from the command controller.
    */
-  uninstallController() {
+  uninstallController: function () {
     if (!this._controllerWindow) {
       return;
     }
     this._controllerWindow.controllers.removeController(this);
   },
 
-  supportsCommand(command) {
+  supportsCommand: function (command) {
     return (command == "cmd_undo" ||
             command == "cmd_redo");
   },
 
-  isCommandEnabled(command) {
+  isCommandEnabled: function (command) {
     switch (command) {
       case "cmd_undo": return this.canUndo();
       case "cmd_redo": return this.canRedo();
@@ -186,7 +186,7 @@ UndoStack.prototype = {
     return false;
   },
 
-  doCommand(command) {
+  doCommand: function (command) {
     switch (command) {
       case "cmd_undo": return this.undo();
       case "cmd_redo": return this.redo();
@@ -194,5 +194,5 @@ UndoStack.prototype = {
     }
   },
 
-  onEvent(event) {},
+  onEvent: function (event) {},
 };

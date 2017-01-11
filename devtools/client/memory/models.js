@@ -485,7 +485,7 @@ exports.app = {
   individuals: individualsModel,
 
   // The current type of view.
-  view(app) {
+  view: function (app) {
     viewModel.isRequired(app, "view");
 
     catchAndIgnore(function (app) {

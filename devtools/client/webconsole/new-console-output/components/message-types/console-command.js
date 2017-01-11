@@ -49,7 +49,7 @@ function ConsoleCommand(props) {
     messageBody,
     scrollToMessage: autoscroll,
     serviceContainer,
-    indent,
+    indent: indent,
   };
   return Message(childProps);
 }

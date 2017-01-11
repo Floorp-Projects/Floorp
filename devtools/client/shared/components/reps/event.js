@@ -28,7 +28,7 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired
     },
 
-    getTitle(props) {
+    getTitle: function (props) {
       let preview = props.object.preview;
       let title = preview.type;
 
@@ -100,6 +100,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.Event = {
     rep: Event,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

@@ -42,18 +42,18 @@ CssDocsTooltip.prototype = {
    * Load CSS docs for the given property,
    * then display the tooltip.
    */
-  show(anchor, propertyName) {
+  show: function (anchor, propertyName) {
     this.tooltip.once("shown", () => {
       this.widget.loadCssDocs(propertyName);
     });
     this.tooltip.show(anchor);
   },
 
-  hide() {
+  hide: function () {
     this.tooltip.hide();
   },
 
-  _onShortcut(shortcut, event) {
+  _onShortcut: function (shortcut, event) {
     if (!this.tooltip.isVisible()) {
       return;
     }
@@ -62,7 +62,7 @@ CssDocsTooltip.prototype = {
     this.hide();
   },
 
-  _onVisitLink() {
+  _onVisitLink: function () {
     this.hide();
   },
 
@@ -74,14 +74,14 @@ CssDocsTooltip.prototype = {
    *
    * @return {MdnDocsWidget} the created MdnDocsWidget instance.
    */
-  setMdnDocsContent() {
+  setMdnDocsContent: function () {
     let container = this.tooltip.doc.createElementNS(XHTML_NS, "div");
     container.setAttribute("class", "mdn-container theme-body");
     this.tooltip.setContent(container, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
     return new MdnDocsWidget(container);
   },
 
-  destroy() {
+  destroy: function () {
     this.widget.off("visitlink", this._onVisitLink);
     this.widget.destroy();
 

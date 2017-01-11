@@ -12,14 +12,14 @@ const { Class } = require("sdk/core/heritage");
  * can be found at devtools/server/actors/framerate.js
  */
 exports.Framerate = Class({
-  initialize(tabActor) {
+  initialize: function (tabActor) {
     this.tabActor = tabActor;
     this._contentWin = tabActor.window;
     this._onRefreshDriverTick = this._onRefreshDriverTick.bind(this);
     this._onGlobalCreated = this._onGlobalCreated.bind(this);
     on(this.tabActor, "window-ready", this._onGlobalCreated);
   },
-  destroy(conn) {
+  destroy: function (conn) {
     off(this.tabActor, "window-ready", this._onGlobalCreated);
     this.stopRecording();
   },
@@ -27,7 +27,7 @@ exports.Framerate = Class({
   /**
    * Starts monitoring framerate, storing the frames per second.
    */
-  startRecording() {
+  startRecording: function () {
     if (this._recording) {
       return;
     }
@@ -40,7 +40,7 @@ exports.Framerate = Class({
   /**
    * Stops monitoring framerate, returning the recorded values.
    */
-  stopRecording(beginAt = 0, endAt = Number.MAX_SAFE_INTEGER) {
+  stopRecording: function (beginAt = 0, endAt = Number.MAX_SAFE_INTEGER) {
     if (!this._recording) {
       return [];
     }
@@ -52,7 +52,7 @@ exports.Framerate = Class({
   /**
    * Stops monitoring framerate, without returning the recorded values.
    */
-  cancelRecording() {
+  cancelRecording: function () {
     this._contentWin.cancelAnimationFrame(this._rafID);
     this._recording = false;
     this._ticks = null;
@@ -62,14 +62,14 @@ exports.Framerate = Class({
   /**
    * Returns whether this instance is currently recording.
    */
-  isRecording() {
+  isRecording: function () {
     return !!this._recording;
   },
 
   /**
    * Gets the refresh driver ticks recorded so far.
    */
-  getPendingTicks(beginAt = 0, endAt = Number.MAX_SAFE_INTEGER) {
+  getPendingTicks: function (beginAt = 0, endAt = Number.MAX_SAFE_INTEGER) {
     if (!this._ticks) {
       return [];
     }
@@ -79,7 +79,7 @@ exports.Framerate = Class({
   /**
    * Function invoked along with the refresh driver.
    */
-  _onRefreshDriverTick() {
+  _onRefreshDriverTick: function () {
     if (!this._recording) {
       return;
     }
@@ -90,7 +90,7 @@ exports.Framerate = Class({
   /**
    * When the content window for the tab actor is created.
    */
-  _onGlobalCreated(win) {
+  _onGlobalCreated: function (win) {
     if (this._recording) {
       this._contentWin.cancelAnimationFrame(this._rafID);
       this._rafID = this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);

@@ -29,8 +29,8 @@ function testNonTrimmed(doc) {
   createInplaceEditorAndClick({
     trimOutput: false,
     multiline: true,
-    initial,
-    start(editor) {
+    initial: initial,
+    start: function (editor) {
       is(editor.input.value, initial, "Explicit initial value should be used.");
       editor.input.value = changed;
       EventUtils.sendKey("return");
@@ -48,9 +48,9 @@ function testTrimmed(doc) {
   let initial = "\nMultiple\nLines\n";
   let changed = " \nMultiple\nLines\n with more whitespace ";
   createInplaceEditorAndClick({
-    initial,
+    initial: initial,
     multiline: true,
-    start(editor) {
+    start: function (editor) {
       is(editor.input.value, initial, "Explicit initial value should be used.");
       editor.input.value = changed;
       EventUtils.sendKey("return");

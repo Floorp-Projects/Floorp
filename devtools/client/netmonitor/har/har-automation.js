@@ -19,7 +19,7 @@ const prefDomain = "devtools.netmonitor.har.";
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log(...args) {
+  log: function (...args) {
   }
 };
 
@@ -40,7 +40,7 @@ const trace = {
 var HarAutomation = Class({
   // Initialization
 
-  initialize(toolbox) {
+  initialize: function (toolbox) {
     this.toolbox = toolbox;
 
     let target = toolbox.target;
@@ -49,7 +49,7 @@ var HarAutomation = Class({
     });
   },
 
-  destroy() {
+  destroy: function () {
     if (this.collector) {
       this.collector.stop();
     }
@@ -61,7 +61,7 @@ var HarAutomation = Class({
 
   // Automation
 
-  startMonitoring(client, tabGrip, callback) {
+  startMonitoring: function (client, tabGrip, callback) {
     if (!client) {
       return;
     }
@@ -78,11 +78,11 @@ var HarAutomation = Class({
     this.tabWatcher.connect();
   },
 
-  pageLoadBegin(response) {
+  pageLoadBegin: function (response) {
     this.resetCollector();
   },
 
-  resetCollector() {
+  resetCollector: function () {
     if (this.collector) {
       this.collector.stop();
     }
@@ -107,7 +107,7 @@ var HarAutomation = Class({
    * The additional traffic can be exported by executing
    * triggerExport on this object.
    */
-  pageLoadDone(response) {
+  pageLoadDone: function (response) {
     trace.log("HarAutomation.pageLoadDone; ", response);
 
     if (this.collector) {
@@ -117,7 +117,7 @@ var HarAutomation = Class({
     }
   },
 
-  autoExport() {
+  autoExport: function () {
     let autoExport = Services.prefs.getBoolPref(prefDomain +
       "enableAutoExportToFile");
 
@@ -139,7 +139,7 @@ var HarAutomation = Class({
   /**
    * Export all what is currently collected.
    */
-  triggerExport(data) {
+  triggerExport: function (data) {
     if (!data.fileName) {
       data.fileName = Services.prefs.getCharPref(prefDomain +
         "defaultFileName");
@@ -151,7 +151,7 @@ var HarAutomation = Class({
   /**
    * Clear currently collected data.
    */
-  clear() {
+  clear: function () {
     this.resetCollector();
   },
 
@@ -161,7 +161,7 @@ var HarAutomation = Class({
    * Execute HAR export. This method fetches all data from the
    * Network panel (asynchronously) and saves it into a file.
    */
-  executeExport(data) {
+  executeExport: function (data) {
     let items = this.collector.getItems();
     let form = this.toolbox.target.form;
     let title = form.title || form.url;
@@ -169,7 +169,7 @@ var HarAutomation = Class({
     let options = {
       getString: this.getString.bind(this),
       view: this,
-      items,
+      items: items,
     };
 
     options.defaultFileName = data.fileName;
@@ -199,7 +199,7 @@ var HarAutomation = Class({
   /**
    * Fetches the full text of a string.
    */
-  getString(stringGrip) {
+  getString: function (stringGrip) {
     return this.webConsoleClient.getString(stringGrip);
   },
 });
@@ -216,12 +216,12 @@ function TabWatcher(toolbox, listener) {
 TabWatcher.prototype = {
   // Connection
 
-  connect() {
+  connect: function () {
     this.target.on("navigate", this.onTabNavigated);
     this.target.on("will-navigate", this.onTabNavigated);
   },
 
-  disconnect() {
+  disconnect: function () {
     if (!this.target) {
       return;
     }
@@ -240,7 +240,7 @@ TabWatcher.prototype = {
    * @param object aPacket
    *        Packet received from the server.
    */
-  onTabNavigated(type, packet) {
+  onTabNavigated: function (type, packet) {
     switch (type) {
       case "will-navigate": {
         this.listener.pageLoadBegin(packet);

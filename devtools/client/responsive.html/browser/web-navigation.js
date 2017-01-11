@@ -71,7 +71,7 @@ BrowserElementWebNavigation.prototype = {
       uri,
       flags,
       referrer: referrer ? referrer.spec : null,
-      referrerPolicy,
+      referrerPolicy: referrerPolicy,
       postData: postData ? readInputStreamToString(postData) : null,
       headers: headers ? readInputStreamToString(headers) : null,
       baseURI: baseURI ? baseURI.spec : null,

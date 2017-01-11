@@ -27,13 +27,13 @@ let Tabbar = createClass({
     toolbox: PropTypes.object,
   },
 
-  getDefaultProps() {
+  getDefaultProps: function () {
     return {
       showAllTabsMenu: false,
     };
   },
 
-  getInitialState() {
+  getInitialState: function () {
     return {
       tabs: [],
       activeTab: 0
@@ -42,12 +42,12 @@ let Tabbar = createClass({
 
   // Public API
 
-  addTab(id, title, selected = false, panel, url) {
+  addTab: function (id, title, selected = false, panel, url) {
     let tabs = this.state.tabs.slice();
     tabs.push({id, title, panel, url});
 
     let newState = Object.assign({}, this.state, {
-      tabs,
+      tabs: tabs,
     });
 
     if (selected) {
@@ -61,7 +61,7 @@ let Tabbar = createClass({
     });
   },
 
-  toggleTab(tabId, isVisible) {
+  toggleTab: function (tabId, isVisible) {
     let index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -69,15 +69,15 @@ let Tabbar = createClass({
 
     let tabs = this.state.tabs.slice();
     tabs[index] = Object.assign({}, tabs[index], {
-      isVisible
+      isVisible: isVisible
     });
 
     this.setState(Object.assign({}, this.state, {
-      tabs,
+      tabs: tabs,
     }));
   },
 
-  removeTab(tabId) {
+  removeTab: function (tabId) {
     let index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -87,11 +87,11 @@ let Tabbar = createClass({
     tabs.splice(index, 1);
 
     this.setState(Object.assign({}, this.state, {
-      tabs,
+      tabs: tabs,
     }));
   },
 
-  select(tabId) {
+  select: function (tabId) {
     let index = this.getTabIndex(tabId);
     if (index < 0) {
       return;
@@ -110,7 +110,7 @@ let Tabbar = createClass({
 
   // Helpers
 
-  getTabIndex(tabId) {
+  getTabIndex: function (tabId) {
     let tabIndex = -1;
     this.state.tabs.forEach((tab, index) => {
       if (tab.id == tabId) {
@@ -120,17 +120,17 @@ let Tabbar = createClass({
     return tabIndex;
   },
 
-  getTabId(index) {
+  getTabId: function (index) {
     return this.state.tabs[index].id;
   },
 
-  getCurrentTabId() {
+  getCurrentTabId: function () {
     return this.state.tabs[this.state.activeTab].id;
   },
 
   // Event Handlers
 
-  onTabChanged(index) {
+  onTabChanged: function (index) {
     this.setState({
       activeTab: index
     });
@@ -140,7 +140,7 @@ let Tabbar = createClass({
     }
   },
 
-  onAllTabsMenuClick(event) {
+  onAllTabsMenuClick: function (event) {
     let menu = new Menu();
     let target = event.target;
 
@@ -169,7 +169,7 @@ let Tabbar = createClass({
 
   // Rendering
 
-  renderTab(tab) {
+  renderTab: function (tab) {
     if (typeof tab.panel === "function") {
       return tab.panel({
         key: tab.id,
@@ -182,7 +182,7 @@ let Tabbar = createClass({
     return tab.panel;
   },
 
-  render() {
+  render: function () {
     let tabs = this.state.tabs.map(tab => {
       return this.renderTab(tab);
     });

@@ -46,7 +46,7 @@ exports.items = [
       }
     ],
     returnType: "string",
-    exec(args, context) {
+    exec: function (args, context) {
       let dirName = args.path;
 
       // replaces ~ with the home directory path in unix and windows
@@ -66,7 +66,7 @@ exports.items = [
     name: "folder openprofile",
     description: l10n.lookup("folderOpenProfileDesc"),
     returnType: "string",
-    exec(args, context) {
+    exec: function (args, context) {
       // Get the profile directory.
       let currProfD = Services.dirsvc.get("ProfD", Ci.nsIFile);
       let profileDir = currProfD.path;

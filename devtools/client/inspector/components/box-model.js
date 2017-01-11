@@ -46,7 +46,7 @@ EditingSession.prototype = {
    * @param {String} property The name of the property.
    * @return {String} The value.
    */
-  getPropertyFromRule(rule, property) {
+  getPropertyFromRule: function (rule, property) {
     // Use the parsed declarations in the StyleRuleFront object if available.
     let index = this.getPropertyIndex(property, rule);
     if (index !== -1) {
@@ -65,7 +65,7 @@ EditingSession.prototype = {
    *
    * @param property  The name of the property as a string
    */
-  getProperty(property) {
+  getProperty: function (property) {
     // Create a hidden element for getPropertyFromRule to use
     let div = this._doc.createElement("div");
     div.setAttribute("style", "display: none");
@@ -93,7 +93,7 @@ EditingSession.prototype = {
    * @param {StyleRuleFront} rule Optional, defaults to the element style rule.
    * @return {Number} The property index in the rule.
    */
-  getPropertyIndex(name, rule = this._rules[0]) {
+  getPropertyIndex: function (name, rule = this._rules[0]) {
     let elementStyleRule = this._rules[0];
     if (!elementStyleRule.declarations.length) {
       return -1;
@@ -175,7 +175,7 @@ EditingSession.prototype = {
     }
   }),
 
-  destroy() {
+  destroy: function () {
     this._doc = null;
     this._rules = null;
     this._modifications.clear();
@@ -204,7 +204,7 @@ function BoxModelView(inspector, document) {
 }
 
 BoxModelView.prototype = {
-  init() {
+  init: function () {
     this.update = this.update.bind(this);
 
     this.onNewSelection = this.onNewSelection.bind(this);
@@ -325,7 +325,7 @@ BoxModelView.prototype = {
     nodeGeometry.addEventListener("click", this.onGeometryButtonClick);
   },
 
-  initBoxModelHighlighter() {
+  initBoxModelHighlighter: function () {
     let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
     this.onHighlightMouseOver = this.onHighlightMouseOver.bind(this);
     this.onHighlightMouseOut = this.onHighlightMouseOut.bind(this);
@@ -339,7 +339,7 @@ BoxModelView.prototype = {
   /**
    * Start listening to reflows in the current tab.
    */
-  trackReflows() {
+  trackReflows: function () {
     if (!this.reflowFront) {
       let { target } = this.inspector;
       if (target.form.reflowActor) {
@@ -357,7 +357,7 @@ BoxModelView.prototype = {
   /**
    * Stop listening to reflows in the current tab.
    */
-  untrackReflows() {
+  untrackReflows: function () {
     if (!this.reflowFront) {
       return;
     }
@@ -369,13 +369,13 @@ BoxModelView.prototype = {
   /**
    * Called when the user clicks on one of the editable values in the box model view
    */
-  initEditor(element, event, dimension) {
+  initEditor: function (element, event, dimension) {
     let { property } = dimension;
     let session = new EditingSession(this);
     let initialValue = session.getProperty(property);
 
     let editor = new InplaceEditor({
-      element,
+      element: element,
       initial: initialValue,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
       property: {
@@ -390,7 +390,7 @@ BoxModelView.prototype = {
         }
 
         let properties = [
-          { name: property, value }
+          { name: property, value: value }
         ];
 
         if (property.substring(0, 7) == "border-") {
@@ -420,7 +420,7 @@ BoxModelView.prototype = {
    * Is the BoxModelView visible in the sidebar.
    * @return {Boolean}
    */
-  isViewVisible() {
+  isViewVisible: function () {
     return this.inspector &&
            this.inspector.sidebar.getCurrentTabID() == "computedview";
   },
@@ -430,7 +430,7 @@ BoxModelView.prototype = {
    * be displayed in the view.
    * @return {Boolean}
    */
-  isViewVisibleAndNodeValid() {
+  isViewVisibleAndNodeValid: function () {
     return this.isViewVisible() &&
            this.inspector.selection.isConnected() &&
            this.inspector.selection.isElementNode();
@@ -439,7 +439,7 @@ BoxModelView.prototype = {
   /**
    * Destroy the nodes. Remove listeners.
    */
-  destroy() {
+  destroy: function () {
     let highlightElts = this.doc.querySelectorAll("#boxmodel-container *[title]");
 
     for (let element of highlightElts) {
@@ -485,14 +485,14 @@ BoxModelView.prototype = {
     }
   },
 
-  onSidebarSelect(e, sidebar) {
+  onSidebarSelect: function (e, sidebar) {
     this.setActive(sidebar === "computedview");
   },
 
   /**
    * Selection 'new-node-front' event handler.
    */
-  onNewSelection() {
+  onNewSelection: function () {
     let done = this.inspector.updating("computed-view");
     this.onNewNode()
       .then(() => this.hideGeometryEditor())
@@ -505,12 +505,12 @@ BoxModelView.prototype = {
   /**
    * @return a promise that resolves when the view has been updated
    */
-  onNewNode() {
+  onNewNode: function () {
     this.setActive(this.isViewVisibleAndNodeValid());
     return this.update();
   },
 
-  onHighlightMouseOver(e) {
+  onHighlightMouseOver: function (e) {
     let region = e.target.getAttribute("data-box");
     if (!region) {
       return;
@@ -523,11 +523,11 @@ BoxModelView.prototype = {
     });
   },
 
-  onHighlightMouseOut() {
+  onHighlightMouseOut: function () {
     this.hideBoxModel();
   },
 
-  onGeometryButtonClick({target}) {
+  onGeometryButtonClick: function ({target}) {
     if (target.hasAttribute("checked")) {
       target.removeAttribute("checked");
       this.hideGeometryEditor();
@@ -537,11 +537,11 @@ BoxModelView.prototype = {
     }
   },
 
-  onPickerStarted() {
+  onPickerStarted: function () {
     this.hideGeometryEditor();
   },
 
-  onToggleExpander() {
+  onToggleExpander: function () {
     let isOpen = this.expander.hasAttribute("open");
 
     if (isOpen) {
@@ -553,15 +553,15 @@ BoxModelView.prototype = {
     }
   },
 
-  onMarkupViewLeave() {
+  onMarkupViewLeave: function () {
     this.showGeometryEditor(true);
   },
 
-  onMarkupViewNodeHover() {
+  onMarkupViewNodeHover: function () {
     this.hideGeometryEditor(false);
   },
 
-  onWillNavigate() {
+  onWillNavigate: function () {
     this._geometryEditorHighlighter.release().catch(console.error);
     this._geometryEditorHighlighter = null;
   },
@@ -572,7 +572,7 @@ BoxModelView.prototype = {
    * @param {Boolean} hidden
    *        Whether or not to hide the box model wrapper
    */
-  onFilterComputedView(reason, hidden) {
+  onFilterComputedView: function (reason, hidden) {
     this.wrapper.hidden = hidden;
   },
 
@@ -581,7 +581,7 @@ BoxModelView.prototype = {
    * box model view is hidden, otherwise track reflows and show values.
    * @param {Boolean} isActive
    */
-  setActive(isActive) {
+  setActive: function (isActive) {
     if (isActive === this.isActive) {
       return;
     }
@@ -599,7 +599,7 @@ BoxModelView.prototype = {
    * the inspector.xul document.
    * @return a promise that will be resolved when complete.
    */
-  update() {
+  update: function () {
     let lastRequest = Task.spawn((function* () {
       if (!this.isViewVisibleAndNodeValid()) {
         this.wrapper.hidden = true;
@@ -704,7 +704,7 @@ BoxModelView.prototype = {
    * @param {Array} rules An array of applied rules retrieved by
    * styleActor.getApplied.
    */
-  updateSourceRuleTooltip(el, property, rules) {
+  updateSourceRuleTooltip: function (el, property, rules) {
     // Dummy element used to parse the cssText of applied rules.
     let dummyEl = this.doc.createElement("div");
 
@@ -740,7 +740,7 @@ BoxModelView.prototype = {
    * Show the box-model highlighter on the currently selected element
    * @param {Object} options Options passed to the highlighter actor
    */
-  showBoxModel(options = {}) {
+  showBoxModel: function (options = {}) {
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
 
@@ -750,7 +750,7 @@ BoxModelView.prototype = {
   /**
    * Hide the box-model highlighter on the currently selected element
    */
-  hideBoxModel() {
+  hideBoxModel: function () {
     let toolbox = this.inspector.toolbox;
 
     toolbox.highlighterUtils.unhighlight();
@@ -762,7 +762,7 @@ BoxModelView.prototype = {
    *   Indicates if the Geometry Editor should be shown only if it's active but
    *   hidden.
    */
-  showGeometryEditor(showOnlyIfActive = false) {
+  showGeometryEditor: function (showOnlyIfActive = false) {
     let toolbox = this.inspector.toolbox;
     let nodeFront = this.inspector.selection.nodeFront;
     let nodeGeometry = this.doc.getElementById("layout-geometry-editor");
@@ -800,7 +800,7 @@ BoxModelView.prototype = {
    * @param {Boolean} [updateButton=true]
    *   Indicates if the Geometry Editor's button needs to be unchecked too
    */
-  hideGeometryEditor(updateButton = true) {
+  hideGeometryEditor: function (updateButton = true) {
     if (this._geometryEditorHighlighter) {
       this._geometryEditorHighlighter.hide().catch(console.error);
     }
@@ -827,7 +827,7 @@ BoxModelView.prototype = {
     nodeGeometry.style.visibility = isEditable ? "visible" : "hidden";
   }),
 
-  manageOverflowingText(span) {
+  manageOverflowingText: function (span) {
     let classList = span.parentNode.classList;
 
     if (classList.contains("boxmodel-left") ||

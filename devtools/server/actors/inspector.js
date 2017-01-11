@@ -190,7 +190,7 @@ exports.getNodeDisplayName = getNodeDisplayName;
  * Server side of the node actor.
  */
 var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
-  initialize(walker, node) {
+  initialize: function (walker, node) {
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
     this.rawNode = node;
@@ -201,7 +201,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     this.wasDisplayed = this.isDisplayed;
   },
 
-  toString() {
+  toString: function () {
     return "[NodeActor " + this.actorID + " for " +
       this.rawNode.toString() + "]";
   },
@@ -214,12 +214,12 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return this.walker.conn;
   },
 
-  isDocumentElement() {
+  isDocumentElement: function () {
     return this.rawNode.ownerDocument &&
            this.rawNode.ownerDocument.documentElement === this.rawNode;
   },
 
-  destroy() {
+  destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
 
     if (this.mutationObserver) {
@@ -233,7 +233,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   },
 
   // Returns the JSON representation of this object over the wire.
-  form(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -300,7 +300,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Watch the given document node for mutations using the DOM observer
    * API.
    */
-  watchDocument(callback) {
+  watchDocument: function (callback) {
     let node = this.rawNode;
     // Create the observer on the node's actor.  The node will make sure
     // the observer is cleaned up when the actor is released.
@@ -399,7 +399,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     return false;
   },
 
-  writeAttrs() {
+  writeAttrs: function () {
     if (!this.rawNode.attributes) {
       return undefined;
     }
@@ -409,7 +409,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     });
   },
 
-  writePseudoClassLocks() {
+  writePseudoClassLocks: function () {
     if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
       return undefined;
     }
@@ -429,7 +429,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * @param  {Node} node
    *         Node for which we are to get listeners.
    */
-  getEventListeners(node) {
+  getEventListeners: function (node) {
     let parsers = this._eventParsers;
     let dbg = this.parent().tabActor.makeDebugger();
     let listenerArray = [];
@@ -492,7 +492,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    *             native: false
    *           }
    */
-  processHandlerForEvent(node, listenerArray, dbg, listener) {
+  processHandlerForEvent: function (node, listenerArray, dbg, listener) {
     let { handler } = listener;
     let global = Cu.getGlobalForObject(handler);
     let globalDO = dbg.addDebuggee(global);
@@ -624,21 +624,21 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   /**
    * Returns a LongStringActor with the node's value.
    */
-  getNodeValue() {
+  getNodeValue: function () {
     return new LongStringActor(this.conn, this.rawNode.nodeValue || "");
   },
 
   /**
    * Set the node's value to a given string.
    */
-  setNodeValue(value) {
+  setNodeValue: function (value) {
     this.rawNode.nodeValue = value;
   },
 
   /**
    * Get a unique selector string for this node.
    */
-  getUniqueSelector() {
+  getUniqueSelector: function () {
     if (Cu.isDeadWrapper(this.rawNode)) {
       return "";
     }
@@ -648,7 +648,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   /**
    * Scroll the selected node into view.
    */
-  scrollIntoView() {
+  scrollIntoView: function () {
     this.rawNode.scrollIntoView(true);
   },
 
@@ -663,7 +663,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * is important as the resizing occurs server-side so that image-data being
    * transfered in the longstring back to the client will be that much smaller
    */
-  getImageData(maxDim) {
+  getImageData: function (maxDim) {
     return imageToImageData(this.rawNode, maxDim).then(imageData => {
       return {
         data: LongStringActor(this.conn, imageData.data),
@@ -675,7 +675,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
   /**
    * Get all event listeners that are listening on this node.
    */
-  getEventListenerInfo() {
+  getEventListenerInfo: function () {
     let node = this.rawNode;
 
     if (this.rawNode.nodeName.toLowerCase() === "html") {
@@ -701,7 +701,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * Returns when the modifications have been made.  Mutations will
    * be queued for any changes made.
    */
-  modifyAttributes(modifications) {
+  modifyAttributes: function (modifications) {
     let rawNode = this.rawNode;
     for (let change of modifications) {
       if (change.newValue == null) {
@@ -727,16 +727,16 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * and the width of the text as a string.
    * The image data is transmitted as a base64 encoded png data-uri.
    */
-  getFontFamilyDataURL(font, fillStyle = "black") {
+  getFontFamilyDataURL: function (font, fillStyle = "black") {
     let doc = this.rawNode.ownerDocument;
     let options = {
       previewText: FONT_FAMILY_PREVIEW_TEXT,
       previewFontSize: FONT_FAMILY_PREVIEW_TEXT_SIZE,
-      fillStyle
+      fillStyle: fillStyle
     };
     let { dataURL, size } = getFontPreviewData(font, doc, options);
 
-    return { data: LongStringActor(this.conn, dataURL), size };
+    return { data: LongStringActor(this.conn, dataURL), size: size };
   }
 });
 
@@ -746,13 +746,13 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 var NodeListActor = exports.NodeListActor = protocol.ActorClassWithSpec(nodeListSpec, {
   typeName: "domnodelist",
 
-  initialize(walker, nodeList) {
+  initialize: function (walker, nodeList) {
     protocol.Actor.prototype.initialize.call(this);
     this.walker = walker;
     this.nodeList = nodeList || [];
   },
 
-  destroy() {
+  destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
   },
 
@@ -767,12 +767,12 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClassWithSpec(nodeList
   /**
    * Items returned by this actor should belong to the parent walker.
    */
-  marshallPool() {
+  marshallPool: function () {
     return this.walker;
   },
 
   // Returns the JSON representation of this object over the wire.
-  form() {
+  form: function () {
     return {
       actor: this.actorID,
       length: this.nodeList ? this.nodeList.length : 0
@@ -782,20 +782,20 @@ var NodeListActor = exports.NodeListActor = protocol.ActorClassWithSpec(nodeList
   /**
    * Get a single node from the node list.
    */
-  item(index) {
+  item: function (index) {
     return this.walker.attachElement(this.nodeList[index]);
   },
 
   /**
    * Get a range of the items from the node list.
    */
-  items(start = 0, end = this.nodeList.length) {
+  items: function (start = 0, end = this.nodeList.length) {
     let items = Array.prototype.slice.call(this.nodeList, start, end)
       .map(item => this.walker._ref(item));
     return this.walker.attachElements(items);
   },
 
-  release() {}
+  release: function () {}
 });
 
 /**
@@ -807,7 +807,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param DebuggerServerConnection conn
    *    The server connection.
    */
-  initialize(conn, tabActor, options) {
+  initialize: function (conn, tabActor, options) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
     this.rootWin = tabActor.window;
@@ -855,7 +855,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param nsISimpleEnumerator changesEnum
    *    enumerator of nsIEventListenerChange
    */
-  _onEventListenerChange(changesEnum) {
+  _onEventListenerChange: function (changesEnum) {
     let changes = changesEnum.enumerate();
     while (changes.hasMoreElements()) {
       let current = changes.getNext().QueryInterface(Ci.nsIEventListenerChange);
@@ -874,7 +874,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   // Returns the JSON representation of this object over the wire.
-  form() {
+  form: function () {
     return {
       actor: this.actorID,
       root: this.rootNode.form(),
@@ -893,11 +893,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     };
   },
 
-  toString() {
+  toString: function () {
     return "[WalkerActor " + this.actorID + "]";
   },
 
-  getDocumentWalker(node, whatToShow) {
+  getDocumentWalker: function (node, whatToShow) {
     // Allow native anon content (like <video> controls) if preffed on
     let nodeFilter = this.showAllAnonymousContent
                         ? allAnonymousContentTreeWalkerFilter
@@ -905,7 +905,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return new DocumentWalker(node, this.rootWin, whatToShow, nodeFilter);
   },
 
-  destroy() {
+  destroy: function () {
     if (this._destroyed) {
       return;
     }
@@ -951,9 +951,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
   },
 
-  release() {},
+  release: function () {},
 
-  unmanage(actor) {
+  unmanage: function (actor) {
     if (actor instanceof NodeActor) {
       if (this._activePseudoClassLocks &&
           this._activePseudoClassLocks.has(actor)) {
@@ -969,7 +969,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {DOMNode} rawNode
    * @return {Boolean}
    */
-  hasNode(rawNode) {
+  hasNode: function (rawNode) {
     return this._refMap.has(rawNode);
   },
 
@@ -979,11 +979,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {DOMNode} rawNode
    * @return {NodeActor}
    */
-  getNode(rawNode) {
+  getNode: function (rawNode) {
     return this._refMap.get(rawNode);
   },
 
-  _ref(node) {
+  _ref: function (node) {
     let actor = this.getNode(node);
     if (actor) {
       return actor;
@@ -1002,7 +1002,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return actor;
   },
 
-  _onReflows(reflows) {
+  _onReflows: function (reflows) {
     // Going through the nodes the walker knows about, see which ones have
     // had their display changed and send a display-change event if any
     let changes = [];
@@ -1027,7 +1027,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * When the browser window gets resized, relay the event to the front.
    */
-  _onResize() {
+  _onResize: function () {
     events.emit(this, "resize");
   },
 
@@ -1049,9 +1049,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Keeping these actor methods for now allows newer client-side debuggers to
    * inspect fxos 1.2 remote targets or older firefox desktop remote targets.
    */
-  pick() {},
-  cancelPick() {},
-  highlight(node) {},
+  pick: function () {},
+  cancelPick: function () {},
+  highlight: function (node) {},
 
   /**
    * Ensures that the node is attached and it can be accessed from the root.
@@ -1059,11 +1059,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {(Node|NodeActor)} nodes The nodes
    * @return {Object} An object compatible with the disconnectedNode type.
    */
-  attachElement(node) {
+  attachElement: function (node) {
     let { nodes, newParents } = this.attachElements([node]);
     return {
       node: nodes[0],
-      newParents
+      newParents: newParents
     };
   },
 
@@ -1073,7 +1073,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {(Node[]|NodeActor[])} nodes The nodes
    * @return {Object} An object compatible with the disconnectedNodeArray type.
    */
-  attachElements(nodes) {
+  attachElements: function (nodes) {
     let nodeActors = [];
     let newParents = new Set();
     for (let node of nodes) {
@@ -1107,7 +1107,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *        The node whose document is needed, or null to
    *        return the root.
    */
-  document(node) {
+  document: function (node) {
     let doc = isNodeDead(node) ? this.rootDoc : nodeDocument(node.rawNode);
     return this._ref(doc);
   },
@@ -1119,7 +1119,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *        The node whose documentElement is requested, or null
    *        to use the root document.
    */
-  documentElement(node) {
+  documentElement: function (node) {
     let elt = isNodeDead(node)
               ? this.rootDoc.documentElement
               : nodeDocument(node.rawNode).documentElement;
@@ -1138,7 +1138,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    `sameTypeRootTreeItem`: If true, this will not traverse across
    *     different types of docshells.
    */
-  parents(node, options = {}) {
+  parents: function (node, options = {}) {
     if (isNodeDead(node)) {
       return [];
     }
@@ -1163,7 +1163,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return parents;
   },
 
-  parentNode(node) {
+  parentNode: function (node) {
     let walker = this.getDocumentWalker(node.rawNode);
     let parent = walker.parentNode();
     if (parent) {
@@ -1178,7 +1178,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param NodeActor node
    */
-  inlineTextChild(node) {
+  inlineTextChild: function (node) {
     // Quick checks to prevent creating a new walker if possible.
     if (node.isBeforePseudoElement ||
         node.isAfterPseudoElement ||
@@ -1222,7 +1222,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Retaining a node makes no promise about its children;  They can
    * still be removed by normal means.
    */
-  retainNode(node) {
+  retainNode: function (node) {
     node.retained = true;
   },
 
@@ -1230,7 +1230,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Remove the 'retained' mark from a node.  If the node was a
    * retained orphan, release it.
    */
-  unretainNode(node) {
+  unretainNode: function (node) {
     node.retained = false;
     if (this._retainedOrphans.has(node)) {
       this._retainedOrphans.delete(node);
@@ -1241,7 +1241,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * Release actors for a node and all child nodes.
    */
-  releaseNode(node, options = {}) {
+  releaseNode: function (node, options = {}) {
     if (isNodeDead(node)) {
       return;
     }
@@ -1274,7 +1274,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Add any nodes between `node` and the walker's root node that have not
    * yet been seen by the client.
    */
-  ensurePathToRoot(node, newParents = new Set()) {
+  ensurePathToRoot: function (node, newParents = new Set()) {
     if (!node) {
       return newParents;
     }
@@ -1317,7 +1317,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    hasLast: true if the last child of the node is included in the list.
    *    nodes: Child nodes returned by the request.
    */
-  children(node, options = {}) {
+  children: function (node, options = {}) {
     if (isNodeDead(node)) {
       return { hasFirst: true, hasLast: true, nodes: [] };
     }
@@ -1384,7 +1384,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return {
       hasFirst: nodes[0].rawNode == firstChild,
       hasLast: nodes[nodes.length - 1].rawNode == lastChild,
-      nodes
+      nodes: nodes
     };
   },
 
@@ -1415,7 +1415,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    hasLast: true if the last child of the node is included in the list.
    *    nodes: Child nodes returned by the request.
    */
-  siblings(node, options = {}) {
+  siblings: function (node, options = {}) {
     if (isNodeDead(node)) {
       return { hasFirst: true, hasLast: true, nodes: [] };
     }
@@ -1446,7 +1446,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    `whatToShow`: A bitmask of node types that should be included.  See
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
-  nextSibling(node, options = {}) {
+  nextSibling: function (node, options = {}) {
     if (isNodeDead(node)) {
       return null;
     }
@@ -1465,7 +1465,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    `whatToShow`: A bitmask of node types that should be included.  See
    *       https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter.
    */
-  previousSibling(node, options = {}) {
+  previousSibling: function (node, options = {}) {
     if (isNodeDead(node)) {
       return null;
     }
@@ -1479,7 +1479,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Helper function for the `children` method: Read forward in the sibling
    * list into an array with `count` items, including the current node.
    */
-  _readForward(walker, count) {
+  _readForward: function (walker, count) {
     let ret = [];
     let node = walker.currentNode;
     do {
@@ -1493,7 +1493,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Helper function for the `children` method: Read backward in the sibling
    * list into an array with `count` items, including the current node.
    */
-  _readBackward(walker, count) {
+  _readBackward: function (walker, count) {
     let ret = [];
     let node = walker.currentNode;
     do {
@@ -1511,7 +1511,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param NodeActor baseNode
    * @param string selector
    */
-  querySelector(baseNode, selector) {
+  querySelector: function (baseNode, selector) {
     if (isNodeDead(baseNode)) {
       return {};
     }
@@ -1531,7 +1531,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param NodeActor baseNode
    * @param string selector
    */
-  querySelectorAll(baseNode, selector) {
+  querySelectorAll: function (baseNode, selector) {
     let nodeList = null;
 
     try {
@@ -1549,7 +1549,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {String} selector.
    * @return {Array}
    */
-  _multiFrameQuerySelectorAll(selector) {
+  _multiFrameQuerySelectorAll: function (selector) {
     let nodes = [];
 
     for (let {document} of this.tabActor.windows) {
@@ -1568,7 +1568,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * frames of the current content page.
    * @param {String} selector
    */
-  multiFrameQuerySelectorAll(selector) {
+  multiFrameQuerySelectorAll: function (selector) {
     return new NodeListActor(this, this._multiFrameQuerySelectorAll(selector));
   },
 
@@ -1582,7 +1582,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *            - {Array<Object>} metadata. Extra information with indices that
    *                              match up with node list.
    */
-  search(query) {
+  search: function (query) {
     let results = this.walkerSearch.search(query);
     let nodeList = new NodeListActor(this, results.map(r => r.node));
 
@@ -1602,7 +1602,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param string selectorState
    *        One of "pseudo", "id", "tag", "class", "null"
    */
-  getSuggestionsForQuery(query, completing, selectorState) {
+  getSuggestionsForQuery: function (query, completing, selectorState) {
     let sugs = {
       classes: new Map(),
       tags: new Map(),
@@ -1740,7 +1740,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     result.slice(0, 25);
 
     return {
-      query,
+      query: query,
       suggestions: result
     };
   },
@@ -1759,7 +1759,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @returns An empty packet.  A "pseudoClassLock" mutation will
    *    be queued for any changed nodes.
    */
-  addPseudoClassLock(node, pseudo, options = {}) {
+  addPseudoClassLock: function (node, pseudo, options = {}) {
     if (isNodeDead(node)) {
       return;
     }
@@ -1786,7 +1786,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
   },
 
-  _queuePseudoClassMutation(node) {
+  _queuePseudoClassMutation: function (node) {
     this.queueMutation({
       target: node.actorID,
       type: "pseudoClassLock",
@@ -1794,7 +1794,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     });
   },
 
-  _addPseudoClassLock(node, pseudo) {
+  _addPseudoClassLock: function (node, pseudo) {
     if (node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
       return false;
     }
@@ -1804,7 +1804,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return true;
   },
 
-  _installHelperSheet(node) {
+  _installHelperSheet: function (node) {
     if (!this.installedHelpers) {
       this.installedHelpers = new WeakMap();
     }
@@ -1818,7 +1818,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
   },
 
-  hideNode(node) {
+  hideNode: function (node) {
     if (isNodeDead(node)) {
       return;
     }
@@ -1827,7 +1827,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     node.rawNode.classList.add(HIDDEN_CLASS);
   },
 
-  unhideNode(node) {
+  unhideNode: function (node) {
     if (isNodeDead(node)) {
       return;
     }
@@ -1849,7 +1849,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @returns An empty response.  "pseudoClassLock" mutations
    *    will be emitted for any changed nodes.
    */
-  removePseudoClassLock(node, pseudo, options = {}) {
+  removePseudoClassLock: function (node, pseudo, options = {}) {
     if (isNodeDead(node)) {
       return;
     }
@@ -1877,7 +1877,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     }
   },
 
-  _removePseudoClassLock(node, pseudo) {
+  _removePseudoClassLock: function (node, pseudo) {
     if (node.rawNode.nodeType != Ci.nsIDOMNode.ELEMENT_NODE) {
       return false;
     }
@@ -1894,7 +1894,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Clear all the pseudo-classes on a given node or all nodes.
    * @param {NodeActor} node Optional node to clear pseudo-classes on
    */
-  clearPseudoClassLocks(node) {
+  clearPseudoClassLocks: function (node) {
     if (node && isNodeDead(node)) {
       return;
     }
@@ -1915,7 +1915,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * Get a node's innerHTML property.
    */
-  innerHTML(node) {
+  innerHTML: function (node) {
     let html = "";
     if (!isNodeDead(node)) {
       html = node.rawNode.innerHTML;
@@ -1929,7 +1929,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {NodeActor} node The node.
    * @param {string} value The piece of HTML content.
    */
-  setInnerHTML(node, value) {
+  setInnerHTML: function (node, value) {
     if (isNodeDead(node)) {
       return;
     }
@@ -1946,7 +1946,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param {NodeActor} node The node.
    */
-  outerHTML(node) {
+  outerHTML: function (node) {
     let outerHTML = "";
     if (!isNodeDead(node)) {
       outerHTML = node.rawNode.outerHTML;
@@ -1960,7 +1960,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {NodeActor} node The node.
    * @param {string} value The piece of HTML content.
    */
-  setOuterHTML(node, value) {
+  setOuterHTML: function (node, value) {
     if (isNodeDead(node)) {
       return;
     }
@@ -2018,7 +2018,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *                          "afterEnd" (see Element.insertAdjacentHTML).
    * @param {string} value The HTML content.
    */
-  insertAdjacentHTML(node, position, value) {
+  insertAdjacentHTML: function (node, position, value) {
     if (isNodeDead(node)) {
       return {node: [], newParents: []};
     }
@@ -2076,7 +2076,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param {NodeActor} node The node to duplicate.
    */
-  duplicateNode({rawNode}) {
+  duplicateNode: function ({rawNode}) {
     let clonedNode = rawNode.cloneNode(true);
     rawNode.parentNode.insertBefore(clonedNode, rawNode.nextSibling);
   },
@@ -2087,7 +2087,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {NodeActor} node The node to remove.
    * @return {boolean} True if the node is a document or a document element.
    */
-  isDocumentOrDocumentElementNode(node) {
+  isDocumentOrDocumentElementNode: function (node) {
     return ((node.rawNode.ownerDocument &&
       node.rawNode.ownerDocument.documentElement === this.rawNode) ||
       node.rawNode.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE);
@@ -2099,7 +2099,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {NodeActor} node The node to remove.
    * @returns The node's nextSibling before it was removed.
    */
-  removeNode(node) {
+  removeNode: function (node) {
     if (isNodeDead(node) || this.isDocumentOrDocumentElementNode(node)) {
       throw Error("Cannot remove document, document elements or dead nodes.");
     }
@@ -2115,7 +2115,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @param {NodeActor[]} nodes The nodes to remove.
    */
-  removeNodes(nodes) {
+  removeNodes: function (nodes) {
     // Check that all nodes are valid before processing the removals.
     for (let node of nodes) {
       if (isNodeDead(node) || this.isDocumentOrDocumentElementNode(node)) {
@@ -2132,7 +2132,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * Insert a node into the DOM.
    */
-  insertBefore(node, parent, sibling) {
+  insertBefore: function (node, parent, sibling) {
     if (isNodeDead(node) ||
         isNodeDead(parent) ||
         (sibling && isNodeDead(sibling))) {
@@ -2164,7 +2164,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * This method does not return anything as mutation events are taking care of
    * informing the consumers about changes.
    */
-  editTagName(node, tagName) {
+  editTagName: function (node, tagName) {
     if (isNodeDead(node)) {
       return null;
     }
@@ -2241,7 +2241,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * removedNodes and addedNodes list, so if the client is interested
    * in the new set of children it needs to issue a `children` request.
    */
-  getMutations(options = {}) {
+  getMutations: function (options = {}) {
     let pending = this._pendingMutations || [];
     this._pendingMutations = [];
 
@@ -2257,7 +2257,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return pending;
   },
 
-  queueMutation(mutation) {
+  queueMutation: function (mutation) {
     if (!this.actorID || this._destroyed) {
       // We've been destroyed, don't bother queueing this mutation.
       return;
@@ -2279,7 +2279,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param array[MutationRecord] mutations
    *    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationRecord
    */
-  onMutations(mutations) {
+  onMutations: function (mutations) {
     // Notify any observers that want *all* mutations (even on nodes that aren't
     // referenced).  This is not sent over the protocol so can only be used by
     // scripts running in the server process.
@@ -2293,7 +2293,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       let targetNode = change.target;
       let type = change.type;
       let mutation = {
-        type,
+        type: type,
         target: targetActor.actorID,
       };
 
@@ -2358,7 +2358,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @param {MutationRecord} mutation
    *        A characterData type mutation
    */
-  _maybeQueueInlineTextChildMutation(mutation) {
+  _maybeQueueInlineTextChildMutation: function (mutation) {
     let {oldValue, target} = mutation;
     let newValue = target.nodeValue;
     let limit = gValueSummaryLength;
@@ -2385,7 +2385,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     });
   },
 
-  onFrameLoad({ window, isTopLevel }) {
+  onFrameLoad: function ({ window, isTopLevel }) {
     let { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
       window.addEventListener("DOMContentLoaded",
@@ -2429,7 +2429,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   // Returns true if domNode is in window or a subframe.
-  _childOfWindow(window, domNode) {
+  _childOfWindow: function (window, domNode) {
     let win = nodeDocument(domNode).defaultView;
     while (win) {
       if (win === window) {
@@ -2440,7 +2440,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     return false;
   },
 
-  onFrameUnload({ window }) {
+  onFrameUnload: function ({ window }) {
     // Any retained orphans that belong to this document
     // or its children need to be released, and a mutation sent
     // to notify of that.
@@ -2503,7 +2503,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @return {Boolean} false if the node is removed from the tree or within a
    * document fragment
    */
-  _isInDOMTree(rawNode) {
+  _isInDOMTree: function (rawNode) {
     let walker = this.getDocumentWalker(rawNode);
     let current = walker.currentNode;
 
@@ -2526,7 +2526,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   /**
    * @see _isInDomTree
    */
-  isInDOMTree(node) {
+  isInDOMTree: function (node) {
     if (isNodeDead(node)) {
       return false;
     }
@@ -2538,7 +2538,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * webconsole and variablesView, return the corresponding inspector's
    * NodeActor
    */
-  getNodeActorFromObjectActor(objectActorID) {
+  getNodeActorFromObjectActor: function (objectActorID) {
     let actor = this.conn.getActor(objectActorID);
     if (!actor) {
       return null;
@@ -2566,7 +2566,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * NodeActor.
    * Note that getNodeFromActor was added later and can now be used instead.
    */
-  getStyleSheetOwnerNode(styleSheetActorID) {
+  getStyleSheetOwnerNode: function (styleSheetActorID) {
     return this.getNodeFromActor(styleSheetActorID, ["ownerNode"]);
   },
 
@@ -2600,7 +2600,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * @return {NodeActor} The attached NodeActor, or null if it couldn't be
    * found.
    */
-  getNodeFromActor(actorID, path) {
+  getNodeFromActor: function (actorID, path) {
     let actor = this.conn.getActor(actorID);
     if (!actor) {
       return null;
@@ -2623,7 +2623,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *
    * @return {LayoutActor}
    */
-  getLayoutInspector() {
+  getLayoutInspector: function () {
     if (!this.layoutActor) {
       this.layoutActor = new LayoutActor(this.conn, this.tabActor, this);
     }
@@ -2637,7 +2637,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
  * inspector-related actors, including the walker.
  */
 exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
-  initialize(conn, tabActor) {
+  initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
 
@@ -2646,7 +2646,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     this.destroyEyeDropper = this.destroyEyeDropper.bind(this);
   },
 
-  destroy() {
+  destroy: function () {
     protocol.Actor.prototype.destroy.call(this);
 
     this.destroyEyeDropper();
@@ -2662,7 +2662,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     return this.tabActor.window;
   },
 
-  getWalker(options = {}) {
+  getWalker: function (options = {}) {
     if (this._walkerPromise) {
       return this._walkerPromise;
     }
@@ -2692,7 +2692,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     return this._walkerPromise;
   },
 
-  getPageStyle() {
+  getPageStyle: function () {
     if (this._pageStylePromise) {
       return this._pageStylePromise;
     }
@@ -2718,7 +2718,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * element has been picked
    * @return {HighlighterActor}
    */
-  getHighlighter(autohide) {
+  getHighlighter: function (autohide) {
     if (this._highlighterPromise) {
       return this._highlighterPromise;
     }
@@ -2742,7 +2742,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * @return {Highlighter} The highlighter actor instance or null if the
    * typeName passed doesn't match any available highlighter
    */
-  getHighlighterByType(typeName) {
+  getHighlighterByType: function (typeName) {
     if (isTypeRegistered(typeName)) {
       return CustomHighlighterActor(this, typeName);
     }
@@ -2760,7 +2760,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * is important as the resizing occurs server-side so that image-data being
    * transfered in the longstring back to the client will be that much smaller
    */
-  getImageDataFromURL(url, maxDim) {
+  getImageDataFromURL: function (url, maxDim) {
     let img = new this.window.Image();
     img.src = url;
 
@@ -2781,7 +2781,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * used instead.
    * @return {String} url.
    */
-  resolveRelativeURL(url, node) {
+  resolveRelativeURL: function (url, node) {
     let document = isNodeDead(node)
                    ? this.window.document
                    : nodeDocument(node.rawNode);
@@ -2798,7 +2798,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * Create an instance of the eye-dropper highlighter and store it on this._eyeDropper.
    * Note that for now, a new instance is created every time to deal with page navigation.
    */
-  createEyeDropper() {
+  createEyeDropper: function () {
     this.destroyEyeDropper();
     this._highlighterEnv = new HighlighterEnvironment();
     this._highlighterEnv.initFromTabActor(this.tabActor);
@@ -2808,7 +2808,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   /**
    * Destroy the current eye-dropper highlighter instance.
    */
-  destroyEyeDropper() {
+  destroyEyeDropper: function () {
     if (this._eyeDropper) {
       this.cancelPickColorFromPage();
       this._eyeDropper.destroy();
@@ -2824,7 +2824,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * cancels the picker.
    * @param {Object} options
    */
-  pickColorFromPage(options) {
+  pickColorFromPage: function (options) {
     this.createEyeDropper();
     this._eyeDropper.show(this.window.document.documentElement, options);
     this._eyeDropper.once("selected", this._onColorPicked);
@@ -2837,7 +2837,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * highlighter is for the user to click in the page and select a color. If you need to
    * dismiss the eye-dropper programatically instead, use this method.
    */
-  cancelPickColorFromPage() {
+  cancelPickColorFromPage: function () {
     if (this._eyeDropper) {
       this._eyeDropper.hide();
       this._eyeDropper.off("selected", this._onColorPicked);
@@ -2852,7 +2852,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
    * It is impossible to detect the feature programmatically as some document types simply
    * don't render the canvasFrame without throwing any error.
    */
-  supportsHighlighters() {
+  supportsHighlighters: function () {
     let doc = this.tabActor.window.document;
     let ns = doc.documentElement.namespaceURI;
 
@@ -2869,11 +2869,11 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
     return true;
   },
 
-  _onColorPicked(e, color) {
+  _onColorPicked: function (e, color) {
     events.emit(this, "color-picked", color);
   },
 
-  _onColorPickCanceled() {
+  _onColorPickCanceled: function () {
     events.emit(this, "color-pick-canceled");
   }
 });
@@ -2953,11 +2953,11 @@ DocumentWalker.prototype = {
     this.walker.currentNode = val;
   },
 
-  parentNode() {
+  parentNode: function () {
     return this.walker.parentNode();
   },
 
-  nextNode() {
+  nextNode: function () {
     let node = this.walker.currentNode;
     if (!node) {
       return null;
@@ -2972,7 +2972,7 @@ DocumentWalker.prototype = {
     return nextNode;
   },
 
-  firstChild() {
+  firstChild: function () {
     let node = this.walker.currentNode;
     if (!node) {
       return null;
@@ -2987,7 +2987,7 @@ DocumentWalker.prototype = {
     return firstChild;
   },
 
-  lastChild() {
+  lastChild: function () {
     let node = this.walker.currentNode;
     if (!node) {
       return null;
@@ -3002,7 +3002,7 @@ DocumentWalker.prototype = {
     return lastChild;
   },
 
-  previousSibling() {
+  previousSibling: function () {
     let node = this.walker.previousSibling();
     while (node && this.filter(node) === nodeFilterConstants.FILTER_SKIP) {
       node = this.walker.previousSibling();
@@ -3010,7 +3010,7 @@ DocumentWalker.prototype = {
     return node;
   },
 
-  nextSibling() {
+  nextSibling: function () {
     let node = this.walker.nextSibling();
     while (node && this.filter(node) === nodeFilterConstants.FILTER_SKIP) {
       node = this.walker.nextSibling();

@@ -347,10 +347,10 @@ var DebuggerServer = {
       }
       let name = prefix + "Actor";
       let mod = {
-        id,
-        prefix,
+        id: id,
+        prefix: prefix,
         constructorName: constructor,
-        type,
+        type: type,
         globalActor: type.global,
         tabActor: type.tab
       };
@@ -773,7 +773,7 @@ var DebuggerServer = {
     });
 
     mm.sendAsyncMessage("DevTools:InitDebuggerServer", {
-      prefix
+      prefix: prefix
     });
 
     function onClose() {
@@ -936,7 +936,7 @@ var DebuggerServer = {
           resolve({
             threadActor: message.threadActor,
             consoleActor: message.consoleActor,
-            transport
+            transport: transport
           });
         }
       };
@@ -993,10 +993,10 @@ var DebuggerServer = {
         mm.addMessageListener("debug:setup-in-child-response", evalListener);
       }
       mm.sendAsyncMessage("debug:setup-in-child", {
-        module,
-        setupChild,
-        args,
-        id,
+        module: module,
+        setupChild: setupChild,
+        args: args,
+        id: id,
       });
     });
 
@@ -1644,7 +1644,7 @@ DebuggerServerConnection.prototype = {
     };
   },
 
-  _queueResponse(from, type, responseOrPromise) {
+  _queueResponse: function (from, type, responseOrPromise) {
     let pendingResponse = this._actorResponses.get(from) || SyncPromise.resolve(null);
     let responsePromise = pendingResponse.then(() => {
       return responseOrPromise;
@@ -1846,7 +1846,7 @@ DebuggerServerConnection.prototype = {
       let message = "Actor " + actorKey +
                     " does not recognize the bulk packet type " + type;
       ret = { error: "unrecognizedPacketType",
-              message };
+              message: message };
       packet.done.reject(new Error(message));
     }
 
@@ -1928,8 +1928,8 @@ DebuggerServerConnection.prototype = {
 
     return sendSyncMessage("debug:setup-in-parent", {
       prefix: this.prefix,
-      module,
-      setupParent
+      module: module,
+      setupParent: setupParent
     });
   },
 };

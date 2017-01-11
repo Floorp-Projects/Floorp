@@ -140,7 +140,7 @@ exports.items = [
     get hidden() {
       return !prefBranch.prefHasUserValue(PREF_DIR);
     },
-    exec(args, context) {
+    exec: function (args, context) {
       gcli.load();
 
       let dirName = prefBranch.getComplexValue(PREF_DIR,
@@ -171,7 +171,7 @@ exports.items = [
       // !prefBranch.prefHasUserValue(PREF_DIR);
       return true;
     },
-    exec(args, context) {
+    exec: function (args, context) {
       supportsString.data = args.directory;
       prefBranch.setComplexValue(PREF_DIR, Ci.nsISupportsString, supportsString);
 

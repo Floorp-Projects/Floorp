@@ -69,7 +69,7 @@ module.exports = {
   // This function is only exported for testing purposes
   _loadPreferredDevices: loadPreferredDevices,
 
-  updatePreferredDevices,
+  updatePreferredDevices: updatePreferredDevices,
 
   addDevice(device, deviceType) {
     return {

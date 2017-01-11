@@ -52,14 +52,14 @@ define(function (require, exports, module) {
       onAllTabsMenuClick: React.PropTypes.func,
     },
 
-    getDefaultProps() {
+    getDefaultProps: function () {
       return {
         tabActive: 0,
         showAllTabsMenu: false,
       };
     },
 
-    getInitialState() {
+    getInitialState: function () {
       return {
         tabActive: this.props.tabActive,
 
@@ -78,7 +78,7 @@ define(function (require, exports, module) {
       };
     },
 
-    componentDidMount() {
+    componentDidMount: function () {
       let node = findDOMNode(this);
       node.addEventListener("keydown", this.onKeyDown, false);
 
@@ -97,7 +97,7 @@ define(function (require, exports, module) {
       }
     },
 
-    componentWillReceiveProps(newProps) {
+    componentWillReceiveProps: function (newProps) {
       // Check type of 'tabActive' props to see if it's valid
       // (it's 0-based index).
       if (typeof newProps.tabActive == "number") {
@@ -106,12 +106,12 @@ define(function (require, exports, module) {
 
         this.setState(Object.assign({}, this.state, {
           tabActive: newProps.tabActive,
-          created,
+          created: created,
         }));
       }
     },
 
-    componentWillUnmount() {
+    componentWillUnmount: function () {
       let node = findDOMNode(this);
       node.removeEventListener("keydown", this.onKeyDown, false);
 
@@ -123,7 +123,7 @@ define(function (require, exports, module) {
 
     // DOM Events
 
-    onOverflow(event) {
+    onOverflow: function (event) {
       if (event.target.classList.contains("tabs-menu")) {
         this.setState({
           overflow: true
@@ -131,7 +131,7 @@ define(function (require, exports, module) {
       }
     },
 
-    onUnderflow(event) {
+    onUnderflow: function (event) {
       if (event.target.classList.contains("tabs-menu")) {
         this.setState({
           overflow: false
@@ -139,7 +139,7 @@ define(function (require, exports, module) {
       }
     },
 
-    onKeyDown(event) {
+    onKeyDown: function (event) {
       // Bail out if the focus isn't on a tab.
       if (!event.target.closest(".tabs-menu-item")) {
         return;
@@ -162,12 +162,12 @@ define(function (require, exports, module) {
       }
     },
 
-    onClickTab(index, event) {
+    onClickTab: function (index, event) {
       this.setActive(index);
       event.preventDefault();
     },
 
-    onAllTabsMenuClick(event) {
+    onAllTabsMenuClick: function (event) {
       if (this.props.onAllTabsMenuClick) {
         this.props.onAllTabsMenuClick(event);
       }
@@ -175,7 +175,7 @@ define(function (require, exports, module) {
 
     // API
 
-    setActive(index) {
+    setActive: function (index) {
       let onAfterChange = this.props.onAfterChange;
       let onBeforeChange = this.props.onBeforeChange;
 
@@ -191,7 +191,7 @@ define(function (require, exports, module) {
 
       let newState = Object.assign({}, this.state, {
         tabActive: index,
-        created
+        created: created
       });
 
       this.setState(newState, () => {
@@ -210,7 +210,7 @@ define(function (require, exports, module) {
 
     // Rendering
 
-    renderMenuItems() {
+    renderMenuItems: function () {
       if (!this.props.children) {
         throw new Error("There must be at least one Tab");
       }
@@ -243,7 +243,7 @@ define(function (require, exports, module) {
           // See also `onKeyDown()` event handler.
           return (
             DOM.li({
-              ref,
+              ref: ref,
               key: index,
               id: "tab-" + index,
               className: classes,
@@ -281,7 +281,7 @@ define(function (require, exports, module) {
       );
     },
 
-    renderPanels() {
+    renderPanels: function () {
       if (!this.props.children) {
         throw new Error("There must be at least one Tab");
       }
@@ -313,7 +313,7 @@ define(function (require, exports, module) {
             DOM.div({
               key: index,
               id: "panel-" + index,
-              style,
+              style: style,
               className: "tab-panel-box",
               role: "tabpanel",
               "aria-labelledby": "tab-" + index,
@@ -330,7 +330,7 @@ define(function (require, exports, module) {
       );
     },
 
-    render() {
+    render: function () {
       let classNames = ["tabs", this.props.className].join(" ");
 
       return (
@@ -356,7 +356,7 @@ define(function (require, exports, module) {
       ]).isRequired
     },
 
-    render() {
+    render: function () {
       return DOM.div({className: "tab-panel"},
         this.props.children
       );

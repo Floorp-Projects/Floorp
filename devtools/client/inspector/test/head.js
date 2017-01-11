@@ -161,7 +161,7 @@ var clickOnInspectMenuItem = Task.async(function* (testActor, selector) {
   let contextOpened = once(contentAreaContextMenu, "popupshown");
 
   yield testActor.synthesizeMouse({
-    selector,
+    selector: selector,
     center: true,
     options: {type: "contextmenu", button: 2}
   });
@@ -432,38 +432,38 @@ const getHighlighterHelperFor = (type) => Task.async(
         }
 
         return {
-          * getComputedStyle(options = {}) {
+          getComputedStyle: function* (options = {}) {
             return yield inspector.pageStyle.getComputed(
               highlightedNode, options);
           }
         };
       },
 
-      * show(selector = ":root", options) {
+      show: function* (selector = ":root", options) {
         highlightedNode = yield getNodeFront(selector, inspector);
         return yield highlighter.show(highlightedNode, options);
       },
 
-      * hide() {
+      hide: function* () {
         yield highlighter.hide();
       },
 
-      * isElementHidden(id) {
+      isElementHidden: function* (id) {
         return (yield testActor.getHighlighterNodeAttribute(
           prefix + id, "hidden", highlighter)) === "true";
       },
 
-      * getElementTextContent(id) {
+      getElementTextContent: function* (id) {
         return yield testActor.getHighlighterNodeTextContent(
           prefix + id, highlighter);
       },
 
-      * getElementAttribute(id, name) {
+      getElementAttribute: function* (id, name) {
         return yield testActor.getHighlighterNodeAttribute(
           prefix + id, name, highlighter);
       },
 
-      * waitForElementAttributeSet(id, name) {
+      waitForElementAttributeSet: function* (id, name) {
         yield poll(function* () {
           let value = yield testActor.getHighlighterNodeAttribute(
             prefix + id, name, highlighter);
@@ -471,7 +471,7 @@ const getHighlighterHelperFor = (type) => Task.async(
         }, `Waiting for element ${id} to have attribute ${name} set`);
       },
 
-      * waitForElementAttributeRemoved(id, name) {
+      waitForElementAttributeRemoved: function* (id, name) {
         yield poll(function* () {
           let value = yield testActor.getHighlighterNodeAttribute(
             prefix + id, name, highlighter);
@@ -479,7 +479,7 @@ const getHighlighterHelperFor = (type) => Task.async(
         }, `Waiting for element ${id} to have attribute ${name} removed`);
       },
 
-      * synthesizeMouse(options) {
+      synthesizeMouse: function* (options) {
         options = Object.assign({selector: ":root"}, options);
         yield testActor.synthesizeMouse(options);
       },
@@ -503,11 +503,11 @@ const getHighlighterHelperFor = (type) => Task.async(
           }
       }),
 
-      * reflow() {
+      reflow: function* () {
         yield testActor.reflow();
       },
 
-      * finalize() {
+      finalize: function* () {
         highlightedNode = null;
         yield highlighter.finalize();
       }

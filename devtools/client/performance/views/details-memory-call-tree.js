@@ -21,7 +21,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
   /**
    * Sets up the view with event binding.
    */
-  initialize() {
+  initialize: function () {
     DetailsSubview.initialize.call(this);
 
     this._onLink = this._onLink.bind(this);
@@ -32,7 +32,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
   /**
    * Unbinds events.
    */
-  destroy() {
+  destroy: function () {
     DetailsSubview.destroy.call(this);
   },
 
@@ -42,7 +42,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
    */
-  render(interval = {}) {
+  render: function (interval = {}) {
     let options = {
       invertTree: PerformanceController.getOption("invert-call-tree")
     };
@@ -56,7 +56,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
   /**
    * Fired on the "link" event for the call tree in this container.
    */
-  _onLink(_, treeItem) {
+  _onLink: function (_, treeItem) {
     let { url, line } = treeItem.frame.getInfo();
     gToolbox.viewSourceInDebugger(url, line).then(success => {
       if (success) {
@@ -71,7 +71,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
    * Called when the recording is stopped and prepares data to
    * populate the call tree.
    */
-  _prepareCallTree(allocations, { startTime, endTime }, options) {
+  _prepareCallTree: function (allocations, { startTime, endTime }, options) {
     let thread = RecordingUtils.getProfileThreadFromAllocations(allocations);
     let { invertTree } = options;
 
@@ -81,7 +81,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
   /**
    * Renders the call tree.
    */
-  _populateCallTree(frameNode, options = {}) {
+  _populateCallTree: function (frameNode, options = {}) {
     // If we have an empty profile (no samples), then don't invert the tree, as
     // it would hide the root node and a completely blank call tree space can be
     // mis-interpreted as an error.
@@ -89,7 +89,7 @@ var MemoryCallTreeView = Heritage.extend(DetailsSubview, {
 
     let root = new CallView({
       frame: frameNode,
-      inverted,
+      inverted: inverted,
       // Root nodes are hidden in inverted call trees.
       hidden: inverted,
       // Call trees should only auto-expand when not inverted. Passing undefined

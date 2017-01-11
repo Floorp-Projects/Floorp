@@ -55,7 +55,7 @@ const Message = createClass({
     }),
   },
 
-  getDefaultProps() {
+  getDefaultProps: function () {
     return {
       indent: 0
     };
@@ -75,7 +75,7 @@ const Message = createClass({
     }
   },
 
-  onLearnMoreClick() {
+  onLearnMoreClick: function () {
     let {exceptionDocURL} = this.props;
     this.props.serviceContainer.openLink(exceptionDocURL);
   },
@@ -128,7 +128,7 @@ const Message = createClass({
       attachment = this.props.attachment;
     } else if (stacktrace) {
       const child = open ? StackTrace({
-        stacktrace,
+        stacktrace: stacktrace,
         onViewSourceInDebugger: serviceContainer.onViewSourceInDebugger,
         onViewSourceInScratchpad: serviceContainer.onViewSourceInScratchpad,
       }) : null;
@@ -141,7 +141,7 @@ const Message = createClass({
       collapse = CollapseButton({
         open,
         title: collapseTitle,
-        onClick() {
+        onClick: function () {
           if (open) {
             dispatch(actions.messageClose(messageId));
           } else {

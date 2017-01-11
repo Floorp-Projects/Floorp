@@ -11,7 +11,7 @@ const {
 
 const HighlighterFront = FrontClassWithSpec(highlighterSpec, {
   // Update the object given a form representation off the wire.
-  form(json) {
+  form: function (json) {
     this.actorID = json.actor;
     // FF42+ HighlighterActors starts exposing custom form, with traits object
     this.traits = json.traits || {};

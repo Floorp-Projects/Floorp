@@ -68,7 +68,7 @@ exports.items = [
         description: l10n.lookup("listenProtocolDesc"),
       },
     ],
-    exec(args, context) {
+    exec: function (args, context) {
       let listener = debuggerServer.createListener();
       if (!listener) {
         throw new Error(l10n.lookup("listenDisabledOutput"));
@@ -98,7 +98,7 @@ exports.items = [
     name: "unlisten",
     description: l10n.lookup("unlistenDesc"),
     manual: l10n.lookup("unlistenManual"),
-    exec(args, context) {
+    exec: function (args, context) {
       debuggerServer.closeAllListeners();
       return l10n.lookup("unlistenOutput");
     }

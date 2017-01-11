@@ -31,7 +31,7 @@ function RateSelector() {
 exports.RateSelector = RateSelector;
 
 RateSelector.prototype = {
-  init(containerEl) {
+  init: function (containerEl) {
     this.selectEl = createNode({
       parent: containerEl,
       nodeType: "select",
@@ -44,17 +44,17 @@ RateSelector.prototype = {
     this.selectEl.addEventListener("change", this.onRateChanged);
   },
 
-  destroy() {
+  destroy: function () {
     this.selectEl.removeEventListener("change", this.onRateChanged);
     this.selectEl.remove();
     this.selectEl = null;
   },
 
-  getAnimationsRates(animations) {
+  getAnimationsRates: function (animations) {
     return sortedUnique(animations.map(a => a.state.playbackRate));
   },
 
-  getAllRates(animations) {
+  getAllRates: function (animations) {
     let animationsRates = this.getAnimationsRates(animations);
     if (animationsRates.length > 1) {
       return PLAYBACK_RATES;
@@ -63,7 +63,7 @@ RateSelector.prototype = {
     return sortedUnique(PLAYBACK_RATES.concat(animationsRates));
   },
 
-  render(animations) {
+  render: function (animations) {
     let allRates = this.getAnimationsRates(animations);
     let hasOneRate = allRates.length === 1;
 
@@ -94,7 +94,7 @@ RateSelector.prototype = {
     }
   },
 
-  onRateChanged() {
+  onRateChanged: function () {
     let rate = parseFloat(this.selectEl.value);
     if (!isNaN(rate)) {
       this.emit("rate-changed", rate);

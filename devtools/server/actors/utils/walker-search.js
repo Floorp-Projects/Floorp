@@ -33,11 +33,11 @@ WalkerIndex.prototype = {
   /**
    * Destroy this instance, releasing all data and references
    */
-  destroy() {
+  destroy: function () {
     this.walker.off("any-mutation", this.clearIndex);
   },
 
-  clearIndex() {
+  clearIndex: function () {
     if (!this.currentlyIndexing) {
       this._data = null;
     }
@@ -66,7 +66,7 @@ WalkerIndex.prototype = {
     return this._data;
   },
 
-  _addToIndex(type, node, value) {
+  _addToIndex: function (type, node, value) {
     // Add an entry for this value if there isn't one
     let entry = this._data.get(value);
     if (!entry) {
@@ -75,12 +75,12 @@ WalkerIndex.prototype = {
 
     // Add the type/node to the list
     this._data.get(value).push({
-      type,
-      node
+      type: type,
+      node: node
     });
   },
 
-  index() {
+  index: function () {
     // Handle case where iterating nextNode() with the deepTreeWalker triggers
     // a mutation (Bug 1222558)
     this.currentlyIndexing = true;
@@ -142,12 +142,12 @@ function WalkerSearch(walker) {
 }
 
 WalkerSearch.prototype = {
-  destroy() {
+  destroy: function () {
     this.index.destroy();
     this.walker = null;
   },
 
-  _addResult(node, type, results) {
+  _addResult: function (node, type, results) {
     if (!results.has(node)) {
       results.set(node, []);
     }
@@ -168,7 +168,7 @@ WalkerSearch.prototype = {
     }
   },
 
-  _searchIndex(query, options, results) {
+  _searchIndex: function (query, options, results) {
     for (let [matched, res] of this.index.data) {
       if (!options.searchMethod(query, matched)) {
         continue;
@@ -183,7 +183,7 @@ WalkerSearch.prototype = {
     }
   },
 
-  _searchSelectors(query, options, results) {
+  _searchSelectors: function (query, options, results) {
     // If the query is just one "word", no need to search because _searchIndex
     // will lead the same results since it has access to tagnames anyway
     let isSelector = query && query.match(/[ >~.#\[\]]/);
@@ -212,7 +212,7 @@ WalkerSearch.prototype = {
    *   type: <the type of match: one of WalkerSearch.ALL_RESULTS_TYPES>
    * }
    */
-  search(query, options = {}) {
+  search: function (query, options = {}) {
     options.searchMethod = options.searchMethod || WalkerSearch.SEARCH_METHOD_CONTAINS;
     options.types = options.types || WalkerSearch.ALL_RESULTS_TYPES;
 
@@ -235,8 +235,8 @@ WalkerSearch.prototype = {
     for (let [node, matches] of results) {
       for (let {type} of matches) {
         resultList.push({
-          node,
-          type,
+          node: node,
+          type: type,
         });
 
         // For now, just do one result per node since the frontend

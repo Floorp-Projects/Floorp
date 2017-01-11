@@ -23,11 +23,11 @@ define(function (require, exports, module) {
       data: PropTypes.object,
     },
 
-    getInitialState() {
+    getInitialState: function () {
       return {};
     },
 
-    render() {
+    render: function () {
       let data = this.props.data;
 
       return (
@@ -67,13 +67,13 @@ define(function (require, exports, module) {
       }))
     },
 
-    getInitialState() {
+    getInitialState: function () {
       return {
         headers: []
       };
     },
 
-    render() {
+    render: function () {
       let headers = this.props.headers;
 
       headers.sort(function (a, b) {

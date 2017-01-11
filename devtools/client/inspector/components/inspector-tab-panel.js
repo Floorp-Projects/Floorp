@@ -28,13 +28,13 @@ var InspectorTabPanel = createClass({
     onMount: PropTypes.func,
   },
 
-  getDefaultProps() {
+  getDefaultProps: function () {
     return {
       idPrefix: "",
     };
   },
 
-  componentDidMount() {
+  componentDidMount: function () {
     let doc = this.refs.content.ownerDocument;
     let panel = doc.getElementById(this.props.idPrefix + this.props.id);
 
@@ -46,7 +46,7 @@ var InspectorTabPanel = createClass({
     }
   },
 
-  componentWillUnmount() {
+  componentWillUnmount: function () {
     let doc = this.refs.content.ownerDocument;
     let panels = doc.getElementById("tabpanels");
 
@@ -54,7 +54,7 @@ var InspectorTabPanel = createClass({
     panels.appendChild(this.refs.content.firstChild);
   },
 
-  render() {
+  render: function () {
     return (
       div({
         ref: "content",

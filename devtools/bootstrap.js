@@ -42,7 +42,7 @@ function MultiWindowKeyListener({ keyCode, ctrlKey, altKey, callback }) {
   };
 
   return {
-    start() {
+    start: function () {
       // Automatically process already opened windows
       let e = Services.ww.getWindowEnumerator();
       while (e.hasMoreElements()) {
@@ -53,7 +53,7 @@ function MultiWindowKeyListener({ keyCode, ctrlKey, altKey, callback }) {
       Services.ww.registerNotification(observer);
     },
 
-    stop() {
+    stop: function () {
       Services.ww.unregisterNotification(observer);
       let e = Services.ww.getWindowEnumerator();
       while (e.hasMoreElements()) {

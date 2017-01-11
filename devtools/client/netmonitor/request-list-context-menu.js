@@ -41,7 +41,7 @@ RequestListContextMenu.prototype = {
   /**
    * Initialization function, called when the RequestsMenu is initialized.
    */
-  initialize(store) {
+  initialize: function (store) {
     this.store = store;
   },
 
@@ -270,7 +270,7 @@ RequestListContextMenu.prototype = {
     // Fetch header values.
     for (let { name, value } of selected.requestHeaders.headers) {
       let text = yield gNetwork.getString(value);
-      data.headers.push({ name, value: text });
+      data.headers.push({ name: name, value: text });
     }
 
     // Fetch the request payload.
@@ -350,7 +350,7 @@ RequestListContextMenu.prototype = {
     return {
       getString: gNetwork.getString.bind(gNetwork),
       items: this.items,
-      title
+      title: title
     };
   }
 };

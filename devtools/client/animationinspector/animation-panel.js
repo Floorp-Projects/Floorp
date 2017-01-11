@@ -120,7 +120,7 @@ var AnimationsPanel = {
     resolver();
   }),
 
-  startListeners() {
+  startListeners: function () {
     AnimationsController.on(AnimationsController.PLAYERS_UPDATED_EVENT,
       this.refreshAnimationsUI);
 
@@ -146,7 +146,7 @@ var AnimationsPanel = {
     }
   },
 
-  stopListeners() {
+  stopListeners: function () {
     AnimationsController.off(AnimationsController.PLAYERS_UPDATED_EVENT,
       this.refreshAnimationsUI);
 
@@ -173,7 +173,7 @@ var AnimationsPanel = {
     }
   },
 
-  onKeyDown(event) {
+  onKeyDown: function (event) {
     // If the space key is pressed, it should toggle the play state of
     // the animations displayed in the panel, or of all the animations on
     // the page if the selected node does not have any animation on it.
@@ -187,7 +187,7 @@ var AnimationsPanel = {
     }
   },
 
-  togglePlayers(isVisible) {
+  togglePlayers: function (isVisible) {
     if (isVisible) {
       document.body.removeAttribute("empty");
       document.body.setAttribute("timeline", "true");
@@ -199,15 +199,15 @@ var AnimationsPanel = {
     }
   },
 
-  onPickerStarted() {
+  onPickerStarted: function () {
     this.pickerButtonEl.setAttribute("checked", "true");
   },
 
-  onPickerStopped() {
+  onPickerStopped: function () {
     this.pickerButtonEl.removeAttribute("checked");
   },
 
-  onToggleAllClicked() {
+  onToggleAllClicked: function () {
     this.toggleAll().catch(ex => console.error(ex));
   },
 
@@ -220,7 +220,7 @@ var AnimationsPanel = {
     yield AnimationsController.toggleAll();
   }),
 
-  onTimelinePlayClicked() {
+  onTimelinePlayClicked: function () {
     this.playPauseTimeline().catch(ex => console.error(ex));
   },
 
@@ -234,13 +234,13 @@ var AnimationsPanel = {
    * @return {Promise} Resolves when the playState is changed and the UI
    * is refreshed
    */
-  playPauseTimeline() {
+  playPauseTimeline: function () {
     return AnimationsController
       .toggleCurrentAnimations(this.timelineData.isMoving)
       .then(() => this.refreshAnimationsStateAndUI());
   },
 
-  onTimelineRewindClicked() {
+  onTimelineRewindClicked: function () {
     this.rewindTimeline().catch(ex => console.error(ex));
   },
 
@@ -250,7 +250,7 @@ var AnimationsPanel = {
    *
    * @return {Promise} Resolves when currentTime is set and the UI is refreshed
    */
-  rewindTimeline() {
+  rewindTimeline: function () {
     return AnimationsController
       .setCurrentTimeAll(0, true)
       .then(() => this.refreshAnimationsStateAndUI());
@@ -260,17 +260,17 @@ var AnimationsPanel = {
    * Set the playback rate of all current animations shown in the timeline to
    * the value of this.rateSelectorEl.
    */
-  onRateChanged(e, rate) {
+  onRateChanged: function (e, rate) {
     AnimationsController.setPlaybackRateAll(rate)
                         .then(() => this.refreshAnimationsStateAndUI())
                         .catch(ex => console.error(ex));
   },
 
-  onTabNavigated() {
+  onTabNavigated: function () {
     this.toggleAllButtonEl.classList.remove("paused");
   },
 
-  onTimelineDataChanged(e, data) {
+  onTimelineDataChanged: function (e, data) {
     this.timelineData = data;
     let {isMoving, isUserDrag, time} = data;
 
@@ -298,7 +298,7 @@ var AnimationsPanel = {
     this.displayTimelineCurrentTime();
   },
 
-  displayTimelineCurrentTime() {
+  displayTimelineCurrentTime: function () {
     let {time} = this.timelineData;
     this.timelineCurrentTimeEl.textContent = formatStopwatchTime(time);
   },

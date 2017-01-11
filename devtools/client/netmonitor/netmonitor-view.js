@@ -37,7 +37,7 @@ var NetMonitorView = {
   /**
    * Initializes the network monitor view.
    */
-  initialize() {
+  initialize: function () {
     this._initializePanes();
 
     this.Toolbar.initialize(gStore);
@@ -58,7 +58,7 @@ var NetMonitorView = {
   /**
    * Destroys the network monitor view.
    */
-  destroy() {
+  destroy: function () {
     this._isDestroyed = true;
     this.Toolbar.destroy();
     this.RequestsMenu.destroy();
@@ -73,7 +73,7 @@ var NetMonitorView = {
   /**
    * Initializes the UI for all the displayed panes.
    */
-  _initializePanes() {
+  _initializePanes: function () {
     dumpn("Initializing the NetMonitorView panes");
 
     this._body = $("#body");
@@ -116,7 +116,7 @@ var NetMonitorView = {
    * @param number tabIndex [optional]
    *        The index of the intended selected tab in the details pane.
    */
-  toggleDetailsPane(flags, tabIndex) {
+  toggleDetailsPane: function (flags, tabIndex) {
     ViewHelpers.togglePane(flags, this._detailsPane);
 
     if (flags.visible) {
@@ -147,7 +147,7 @@ var NetMonitorView = {
   /**
    * Toggles between the frontend view modes ("Inspector" vs. "Statistics").
    */
-  toggleFrontendMode() {
+  toggleFrontendMode: function () {
     if (gStore.getState().ui.statisticsOpen) {
       this.showNetworkStatisticsView();
     } else {
@@ -158,14 +158,14 @@ var NetMonitorView = {
   /**
    * Switches to the "Inspector" frontend view mode.
    */
-  showNetworkInspectorView() {
+  showNetworkInspectorView: function () {
     this._body.selectedPanel = $("#network-inspector-view");
   },
 
   /**
    * Switches to the "Statistics" frontend view mode.
    */
-  showNetworkStatisticsView() {
+  showNetworkStatisticsView: function () {
     this._body.selectedPanel = $("#network-statistics-view");
 
     let controller = NetMonitorController;
@@ -196,7 +196,7 @@ var NetMonitorView = {
     });
   },
 
-  reloadPage() {
+  reloadPage: function () {
     NetMonitorController.triggerActivity(
       ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT);
   },

@@ -12,7 +12,7 @@ const ADDON_NAME = "test-devtools";
 function promiseAddonEvent(event) {
   return new Promise(resolve => {
     let listener = {
-      [event](...args) {
+      [event]: function (...args) {
         AddonManager.removeAddonListener(listener);
         resolve(args);
       }

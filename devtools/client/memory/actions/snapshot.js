@@ -139,7 +139,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  * task(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert([states.SAVED, states.IMPORTING].includes(snapshot.state),
            `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`);
@@ -191,7 +191,7 @@ function makeTakeCensusTask({ getDisplay, getFilter, getCensus, beginAction,
       return `take-census-task-${thisTakeCensusTaskId}-${id}`;
     },
 
-    * task(heapWorker, id, removeFromCache, dispatch, getState) {
+    task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
       const snapshot = getSnapshot(getState(), id);
       if (!snapshot) {
         removeFromCache();
@@ -516,7 +516,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  * task(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(!(snapshot.dominatorTree && snapshot.dominatorTree.dominatorTreeId),
            "Should not re-compute dominator trees");
@@ -554,7 +554,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  * task(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(dominatorTreeIsComputed(snapshot),
            "Should have dominator tree model and it should be computed");
@@ -603,7 +603,7 @@ exports.fetchImmediatelyDominated = TaskCache.declareCacheableTask({
     return `${id}-${lazyChildren.key()}`;
   },
 
-  * task(heapWorker, id, lazyChildren, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, lazyChildren, removeFromCache, dispatch, getState) {
     const snapshot = getSnapshot(getState(), id);
     assert(snapshot.dominatorTree, "Should have dominator tree model");
     assert(snapshot.dominatorTree.state === dominatorTreeState.LOADED ||
@@ -662,7 +662,7 @@ TaskCache.declareCacheableTask({
     return id;
   },
 
-  * task(heapWorker, id, removeFromCache, dispatch, getState) {
+  task: function* (heapWorker, id, removeFromCache, dispatch, getState) {
     const dominatorTreeId = yield dispatch(computeDominatorTree(heapWorker, id));
     if (dominatorTreeId === null) {
       removeFromCache();

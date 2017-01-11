@@ -61,7 +61,7 @@ function setup(cb, additionalOpts = {}) {
         .then(() => {
           def.resolve({
             ed: editor,
-            win,
+            win: win,
             edWin: editor.container.contentWindow.wrappedJSObject
           });
           cb(editor, win);

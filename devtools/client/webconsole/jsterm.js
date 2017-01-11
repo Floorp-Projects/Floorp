@@ -78,7 +78,7 @@ JSTerm.prototype = {
    * Load the console history from previous sessions.
    * @private
    */
-  _loadHistory() {
+  _loadHistory: function () {
     this.history = [];
     this.historyIndex = this.historyPlaceHolder = 0;
 
@@ -108,7 +108,7 @@ JSTerm.prototype = {
    * @returns Promise
    *          Resolves once the changes have been persisted.
    */
-  clearHistory() {
+  clearHistory: function () {
     this.history = [];
     this.historyIndex = this.historyPlaceHolder = 0;
     return this.storeHistory();
@@ -119,7 +119,7 @@ JSTerm.prototype = {
    * @returns Promise
    *          Resolves once the changes have been persisted.
    */
-  storeHistory() {
+  storeHistory: function () {
     return asyncStorage.setItem("webConsoleHistory", this.history);
   },
 
@@ -241,7 +241,7 @@ JSTerm.prototype = {
   /**
    * Initialize the JSTerminal UI.
    */
-  init() {
+  init: function () {
     let autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
@@ -283,7 +283,7 @@ JSTerm.prototype = {
     this.lastInputValue && this.setInputValue(this.lastInputValue);
   },
 
-  focus() {
+  focus: function () {
     if (!this.inputNode.getAttribute("focused")) {
       this.inputNode.focus();
     }
@@ -299,7 +299,7 @@ JSTerm.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _executeResultCallback(callback, response) {
+  _executeResultCallback: function (callback, response) {
     if (!this.hud) {
       return;
     }
@@ -418,7 +418,7 @@ JSTerm.prototype = {
    * @returns Promise
    *          Resolves with the message once the result is displayed.
    */
-  execute(executeString, callback) {
+  execute: function (executeString, callback) {
     let deferred = promise.defer();
     let resultCallback;
     if (this.hud.NEW_CONSOLE_OUTPUT_ENABLED) {
@@ -461,7 +461,7 @@ JSTerm.prototype = {
 
     let options = {
       frame: this.SELECTED_FRAME,
-      selectedNodeActor,
+      selectedNodeActor: selectedNodeActor,
     };
 
     this.requestEvaluation(executeString, options).then(onResult, onResult);
@@ -507,7 +507,7 @@ JSTerm.prototype = {
    *         A promise object that is resolved when the server response is
    *         received.
    */
-  requestEvaluation(str, options = {}) {
+  requestEvaluation: function (str, options = {}) {
     let deferred = promise.defer();
 
     function onResult(response) {
@@ -525,7 +525,7 @@ JSTerm.prototype = {
 
     let evalOptions = {
       bindObjectActor: options.bindObjectActor,
-      frameActor,
+      frameActor: frameActor,
       selectedNodeActor: options.selectedNodeActor,
       selectedObjectActor: options.selectedObjectActor,
     };
@@ -542,7 +542,7 @@ JSTerm.prototype = {
    * @return string|null
    *         The FrameActor ID for the given frame depth.
    */
-  getFrameActor(frame) {
+  getFrameActor: function (frame) {
     let state = this.hud.owner.getDebuggerFrames();
     if (!state) {
       return null;
@@ -579,13 +579,13 @@ JSTerm.prototype = {
    *         A promise object that is resolved when the variables view has
    *         opened. The new variables view instance is given to the callbacks.
    */
-  openVariablesView(options) {
+  openVariablesView: function (options) {
     let onContainerReady = (window) => {
       let container = window.document.querySelector("#variables");
       let view = this._variablesView;
       if (!view || options.targetElement) {
         let viewOptions = {
-          container,
+          container: container,
           hideFilterInput: options.hideFilterInput,
         };
         view = this._createVariablesView(viewOptions);
@@ -638,7 +638,7 @@ JSTerm.prototype = {
    * @see devtools/framework/sidebar.js
    * @private
    */
-  _createSidebar() {
+  _createSidebar: function () {
     let tabbox = this.hud.document.querySelector("#webconsole-sidebar");
     this.sidebar = new ToolSidebar(tabbox, this, "webconsole");
     this.sidebar.show();
@@ -652,7 +652,7 @@ JSTerm.prototype = {
    * @return object
    *         A promise object for the adding of the new tab.
    */
-  _addVariablesViewSidebarTab() {
+  _addVariablesViewSidebarTab: function () {
     let deferred = promise.defer();
 
     let onTabReady = () => {
@@ -684,7 +684,7 @@ JSTerm.prototype = {
    * @param nsIDOMEvent event
    *        The keypress DOM event object.
    */
-  _onKeypressInVariablesView(event) {
+  _onKeypressInVariablesView: function (event) {
     let tag = event.target.nodeName;
     if (event.keyCode != KeyCodes.DOM_VK_ESCAPE || event.shiftKey ||
         event.altKey || event.ctrlKey || event.metaKey ||
@@ -709,7 +709,7 @@ JSTerm.prototype = {
    * @return object
    *         The new Variables View instance.
    */
-  _createVariablesView(options) {
+  _createVariablesView: function (options) {
     let view = new VariablesView(options.container);
     view.toolbox = gDevTools.getToolbox(this.hud.owner.target);
     view.searchPlaceholder = l10n.getStr("propertiesFilterPlaceholder");
@@ -730,9 +730,9 @@ JSTerm.prototype = {
       releaseActor: actor => {
         this.hud._releaseObject(actor);
       },
-      simpleValueEvalMacro,
-      overrideValueEvalMacro,
-      getterOrSetterEvalMacro,
+      simpleValueEvalMacro: simpleValueEvalMacro,
+      overrideValueEvalMacro: overrideValueEvalMacro,
+      getterOrSetterEvalMacro: getterOrSetterEvalMacro,
     });
 
     // Relay events from the VariablesView.
@@ -755,7 +755,7 @@ JSTerm.prototype = {
    *        - rawObject: the new raw object you want to show.
    *        - label: the new label for the inspected object.
    */
-  _updateVariablesView(options) {
+  _updateVariablesView: function (options) {
     let view = options.view;
     view.empty();
 
@@ -807,7 +807,7 @@ JSTerm.prototype = {
    * @param string value
    *        The value the edited property was changed to.
    */
-  _variablesViewEvaluate(options, variableObject, value) {
+  _variablesViewEvaluate: function (options, variableObject, value) {
     let updater = this._updateVariablesView.bind(this, options);
     let onEval = this._silentEvalCallback.bind(this, updater);
     let string = variableObject.evaluationMacro(variableObject, value);
@@ -830,7 +830,7 @@ JSTerm.prototype = {
    * @param object variableObject
    *        The Variable object instance for the deleted property.
    */
-  _variablesViewDelete(options, variableObject) {
+  _variablesViewDelete: function (options, variableObject) {
     let onEval = this._silentEvalCallback.bind(this, null);
 
     let evalOptions = {
@@ -854,7 +854,7 @@ JSTerm.prototype = {
    * @param string newName
    *        The new name for the property.
    */
-  _variablesViewSwitch(options, variableObject, newName) {
+  _variablesViewSwitch: function (options, variableObject, newName) {
     let updater = this._updateVariablesView.bind(this, options);
     let onEval = this._silentEvalCallback.bind(this, updater);
 
@@ -890,7 +890,7 @@ JSTerm.prototype = {
    * @param object response
    *        The response packet received from the server.
    */
-  _silentEvalCallback(callback, response) {
+  _silentEvalCallback: function (callback, response) {
     if (response.error) {
       console.error("Web Console evaluation failed. " + response.error + ":" +
                     response.message);
@@ -937,7 +937,7 @@ JSTerm.prototype = {
    *        True if you want to clear the console messages storage associated to
    *        this Web Console.
    */
-  clearOutput(clearStorage) {
+  clearOutput: function (clearStorage) {
     let hud = this.hud;
     let outputNode = hud.outputNode;
     let node;
@@ -969,7 +969,7 @@ JSTerm.prototype = {
    *
    * This method emits the "private-messages-cleared" notification.
    */
-  clearPrivateMessages() {
+  clearPrivateMessages: function () {
     let nodes = this.hud.outputNode.querySelectorAll(".message[private]");
     for (let node of nodes) {
       this.hud.removeOutputMessage(node);
@@ -982,7 +982,7 @@ JSTerm.prototype = {
    *
    * @returns void
    */
-  resizeInput() {
+  resizeInput: function () {
     let inputNode = this.inputNode;
 
     // Reset the height so that scrollHeight will reflect the natural height of
@@ -1005,7 +1005,7 @@ JSTerm.prototype = {
    *        The new value to set.
    * @returns void
    */
-  setInputValue(newValue) {
+  setInputValue: function (newValue) {
     this.inputNode.value = newValue;
     this.lastInputValue = newValue;
     this.completeNode.value = "";
@@ -1018,7 +1018,7 @@ JSTerm.prototype = {
    * Gets the value from the input field
    * @returns string
    */
-  getInputValue() {
+  getInputValue: function () {
     return this.inputNode.value || "";
   },
 
@@ -1026,7 +1026,7 @@ JSTerm.prototype = {
    * The inputNode "input" and "keyup" event handler.
    * @private
    */
-  _inputEventHandler() {
+  _inputEventHandler: function () {
     if (this.lastInputValue != this.getInputValue()) {
       this.resizeInput();
       this.complete(this.COMPLETE_HINT_ONLY);
@@ -1039,7 +1039,7 @@ JSTerm.prototype = {
    * The window "blur" event handler.
    * @private
    */
-  _blurEventHandler() {
+  _blurEventHandler: function () {
     if (this.autocompletePopup) {
       this.clearCompletion();
     }
@@ -1052,7 +1052,7 @@ JSTerm.prototype = {
    * @private
    * @param nsIDOMEvent event
    */
-  _keyPress(event) {
+  _keyPress: function (event) {
     let inputNode = this.inputNode;
     let inputValue = this.getInputValue();
     let inputUpdated = false;
@@ -1277,7 +1277,7 @@ JSTerm.prototype = {
    * The inputNode "focus" event handler.
    * @private
    */
-  _focusEventHandler() {
+  _focusEventHandler: function () {
     this._inputChanged = false;
   },
 
@@ -1290,7 +1290,7 @@ JSTerm.prototype = {
    * @returns boolean
    *          True if the input value changed, false otherwise.
    */
-  historyPeruse(direction) {
+  historyPeruse: function (direction) {
     if (!this.history.length) {
       return false;
     }
@@ -1332,7 +1332,7 @@ JSTerm.prototype = {
    * @return boolean
    *         True if CR or LF found in node value; else false.
    */
-  hasMultilineInput() {
+  hasMultilineInput: function () {
     return /[\r\n]/.test(this.getInputValue());
   },
 
@@ -1345,7 +1345,7 @@ JSTerm.prototype = {
    *         previous item in history when the user presses the Up arrow key,
    *         otherwise false.
    */
-  canCaretGoPrevious() {
+  canCaretGoPrevious: function () {
     let node = this.inputNode;
     if (node.selectionStart != node.selectionEnd) {
       return false;
@@ -1365,7 +1365,7 @@ JSTerm.prototype = {
    *         item in history when the user presses the Down arrow key, otherwise
    *         false.
    */
-  canCaretGoNext() {
+  canCaretGoNext: function () {
     let node = this.inputNode;
     if (node.selectionStart != node.selectionEnd) {
       return false;
@@ -1410,7 +1410,7 @@ JSTerm.prototype = {
    * @returns boolean true if there existed a completion for the current input,
    *          or false otherwise.
    */
-  complete(type, callback) {
+  complete: function (type, callback) {
     let inputNode = this.inputNode;
     let inputValue = this.getInputValue();
     let frameActor = this.getFrameActor(this.SELECTED_FRAME);
@@ -1469,7 +1469,7 @@ JSTerm.prototype = {
    * @param function [callback]
    *        Optional, function to invoke when completion results are received.
    */
-  _updateCompletionResult(type, callback) {
+  _updateCompletionResult: function (type, callback) {
     let frameActor = this.getFrameActor(this.SELECTED_FRAME);
     if (this.lastCompletion.value == this.getInputValue() &&
         frameActor == this._lastFrameActorId) {
@@ -1520,7 +1520,7 @@ JSTerm.prototype = {
     this._lastFrameActorId = frameActor;
 
     this.lastCompletion = {
-      requestId,
+      requestId: requestId,
       completionType: type,
       value: null,
     };
@@ -1545,7 +1545,7 @@ JSTerm.prototype = {
    *        The JSON message which holds the completion results received from
    *        the content process.
    */
-  _receiveAutocompleteProperties(requestId, callback, message) {
+  _receiveAutocompleteProperties: function (requestId, callback, message) {
     let inputNode = this.inputNode;
     let inputValue = this.getInputValue();
     if (this.lastCompletion.value == inputValue ||
@@ -1613,7 +1613,7 @@ JSTerm.prototype = {
     this.emit("autocomplete-updated");
   },
 
-  onAutocompleteSelect() {
+  onAutocompleteSelect: function () {
     // Render the suggestion only if the cursor is at the end of the input.
     if (this.inputNode.selectionStart != this.getInputValue().length) {
       return;
@@ -1633,7 +1633,7 @@ JSTerm.prototype = {
    * Clear the current completion information and close the autocomplete popup,
    * if needed.
    */
-  clearCompletion() {
+  clearCompletion: function () {
     this.autocompletePopup.clearItems();
     this.lastCompletion = { value: null };
     this.updateCompleteNode("");
@@ -1650,7 +1650,7 @@ JSTerm.prototype = {
    *         True if there was a selected completion item and the input value
    *         was updated, false otherwise.
    */
-  acceptProposedCompletion() {
+  acceptProposedCompletion: function () {
     let updated = false;
 
     let currentItem = this.autocompletePopup.selectedItem;
@@ -1677,7 +1677,7 @@ JSTerm.prototype = {
    * @param string suffix
    *        The proposed suffix for the inputNode value.
    */
-  updateCompleteNode(suffix) {
+  updateCompleteNode: function (suffix) {
     // completion prefix = input, with non-control chars replaced by spaces
     let prefix = suffix ? this.getInputValue().replace(/[\S]/g, " ") : "";
     this.completeNode.value = prefix + suffix;
@@ -1687,7 +1687,7 @@ JSTerm.prototype = {
    * Destroy the sidebar.
    * @private
    */
-  _sidebarDestroy() {
+  _sidebarDestroy: function () {
     if (this._variablesView) {
       this._variablesView.controller.releaseActors();
       this._variablesView = null;
@@ -1705,7 +1705,7 @@ JSTerm.prototype = {
   /**
    * Destroy the JSTerm object. Call this method to avoid memory leaks.
    */
-  destroy() {
+  destroy: function () {
     this._sidebarDestroy();
 
     this.clearCompletion();

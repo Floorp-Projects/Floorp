@@ -7,7 +7,7 @@ const {preferenceSpec} = require("devtools/shared/specs/preference");
 const protocol = require("devtools/shared/protocol");
 
 const PreferenceFront = protocol.FrontClassWithSpec(preferenceSpec, {
-  initialize(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.preferenceActor;
     this.manage(this);

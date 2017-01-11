@@ -465,7 +465,7 @@ function registerTabActor(client, options) {
     let registry = ActorRegistryFront(client, response);
     return registry.registerActor(moduleUrl, config).then(registrar => {
       return client.getTab().then(tabResponse => ({
-        registrar,
+        registrar: registrar,
         form: tabResponse.tab
       }));
     });
