@@ -631,21 +631,16 @@ class ElementSpecific
     }
 };
 
-template<typename SomeTypedArray>
 class TypedArrayMethods
 {
-    static_assert(mozilla::IsSame<SomeTypedArray, TypedArrayObject>::value,
-                  "methods must be shared/unshared-specific, not "
-                  "element-type-specific");
-
   public:
     /* set(array[, offset]) */
     static bool
     set(JSContext* cx, const CallArgs& args)
     {
-        MOZ_ASSERT(SomeTypedArray::is(args.thisv()));
+        MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
 
-        Rooted<SomeTypedArray*> target(cx, &args.thisv().toObject().as<SomeTypedArray>());
+        Rooted<TypedArrayObject*> target(cx, &args.thisv().toObject().as<TypedArrayObject>());
 
         // The first argument must be either a typed array or arraylike.
         if (args.length() == 0 || !args[0].isObject()) {
@@ -693,7 +688,7 @@ class TypedArrayMethods
     }
 
      static bool
-     setFromTypedArray(JSContext* cx, Handle<SomeTypedArray*> target, HandleObject source,
+     setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
                        uint32_t offset = 0)
      {
          MOZ_ASSERT(source->is<TypedArrayObject>(), "use setFromNonTypedArray");
@@ -750,7 +745,7 @@ class TypedArrayMethods
      }
 
     static bool
-    setFromNonTypedArray(JSContext* cx, Handle<SomeTypedArray*> target, HandleObject source,
+    setFromNonTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
                          uint32_t len, uint32_t offset = 0)
     {
         MOZ_ASSERT(!source->is<TypedArrayObject>(), "use setFromTypedArray");
@@ -806,7 +801,7 @@ class TypedArrayMethods
     }
 
     static bool
-    initFromIterablePackedArray(JSContext* cx, Handle<SomeTypedArray*> target,
+    initFromIterablePackedArray(JSContext* cx, Handle<TypedArrayObject*> target,
                                 HandleArrayObject source)
     {
         bool isShared = target->isSharedMemory();
