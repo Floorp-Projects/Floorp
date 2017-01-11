@@ -40,8 +40,8 @@ window.addEventListener("message", function(event) {
                getService(SpecialPowers.Ci.nsIPermissionManager);
       var ioService = Cc["@mozilla.org/network/io-service;1"]
                         .getService(SpecialPowers.Ci.nsIIOService);
-      var uri1 = ioService.newURI(frames.testFrame.location, null, null);
-      var uri2 = ioService.newURI(frames.testFrame3.location, null, null);
+      var uri1 = ioService.newURI(frames.testFrame.location);
+      var uri2 = ioService.newURI(frames.testFrame3.location);
 
       var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
                   .getService(SpecialPowers.Ci.nsIScriptSecurityManager);

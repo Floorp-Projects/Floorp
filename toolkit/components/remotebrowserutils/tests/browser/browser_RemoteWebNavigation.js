@@ -24,7 +24,7 @@ function waitForPageShow(browser = gBrowser.selectedBrowser) {
 function makeURI(url) {
   return Cc["@mozilla.org/network/io-service;1"].
          getService(Ci.nsIIOService).
-         newURI(url, null, null);
+         newURI(url);
 }
 
 // Tests that loadURI accepts a referrer and it is included in the load.
