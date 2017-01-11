@@ -168,10 +168,6 @@ public:
 
   virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
 
-  PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo,
-                                              const uint64_t& aID) override;
-  bool DeallocPCompositableChild(PCompositableChild* aActor) override;
-
   virtual PTextureChild*
   AllocPTextureChild(const SurfaceDescriptor& aSharedData, const LayersBackend& aLayersBackend, const TextureFlags& aFlags, const uint64_t& aSerial) override;
 
@@ -268,7 +264,7 @@ public:
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) override;
 
-  void Destroy(CompositableChild* aCompositable) override;
+  void ReleaseCompositable(const CompositableHandle& aHandle) override;
 
   void ForgetImageContainer(const CompositableHandle& aHandle);
 
@@ -287,7 +283,7 @@ public:
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
   virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
-  virtual bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
+  bool DestroyInTransaction(const CompositableHandle& aHandle);
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
