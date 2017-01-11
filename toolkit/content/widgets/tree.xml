@@ -384,14 +384,11 @@
             }
             setTimeout(selectText, 0);
 
-            // Clear the text because we don't want the text appearing underneath the input.
-            this.view.setCellText(row, column, "");
-            // Save the original text so we can restore it after stoping editing.
-            input.setAttribute("data-original-text", input.value);
-
             this._editingRow = row;
             this._editingColumn = column;
             this.setAttribute("editing", "true");
+
+            box.invalidateCell(row, column);
             return true;
           ]]>
         </body>
@@ -407,15 +404,16 @@
             var input = this.inputField;
             var editingRow = this._editingRow;
             var editingColumn = this._editingColumn;
-            var value = accept ? input.value : input.getAttribute("data-original-text");
             this._editingRow = -1;
             this._editingColumn = null;
-            this.view.setCellText(editingRow, editingColumn, value);
 
+            if (accept) {
+              var value = input.value;
+              this.view.setCellText(editingRow, editingColumn, value);
+            }
             input.hidden = true;
             input.value = "";
             this.removeAttribute("editing");
-            input.removeAttribute("data-original-text");
           ]]>
         </body>
       </method>
@@ -1237,8 +1235,10 @@
 
         var cell = tbo.getCellAt(event.clientX, event.clientY);
 
-        if (cell.childElt != "twisty")
+        if (cell.childElt != "twisty") {
+          view.selection.currentColumn = cell.col;
           this.parentNode.startEditing(row, cell.col);
+        }
 
         if (this.parentNode._editingColumn || !view.isContainer(row))
           return;
