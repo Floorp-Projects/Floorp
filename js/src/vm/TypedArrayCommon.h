@@ -626,63 +626,18 @@ class ElementSpecific
     }
 };
 
+template<typename T>
 class TypedArrayMethods
 {
   public:
-     static bool
-     setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
-                       Handle<TypedArrayObject*> source, uint32_t offset = 0)
-     {
-         bool isShared = target->isSharedMemory() || source->isSharedMemory();
-
-         switch (target->type()) {
-           case Scalar::Int8:
-             if (isShared)
-                 return ElementSpecific<int8_t, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<int8_t, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Uint8:
-             if (isShared)
-                 return ElementSpecific<uint8_t, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<uint8_t, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Int16:
-             if (isShared)
-                 return ElementSpecific<int16_t, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<int16_t, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Uint16:
-             if (isShared)
-                 return ElementSpecific<uint16_t, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<uint16_t, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Int32:
-             if (isShared)
-                 return ElementSpecific<int32_t, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<int32_t, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Uint32:
-             if (isShared)
-                 return ElementSpecific<uint32_t, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<uint32_t, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Float32:
-             if (isShared)
-                 return ElementSpecific<float, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<float, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Float64:
-             if (isShared)
-                 return ElementSpecific<double, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<double, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Uint8Clamped:
-             if (isShared)
-                 return ElementSpecific<uint8_clamped, SharedOps>::setFromTypedArray(cx, target, source, offset);
-             return ElementSpecific<uint8_clamped, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
-           case Scalar::Int64:
-           case Scalar::Float32x4:
-           case Scalar::Int8x16:
-           case Scalar::Int16x8:
-           case Scalar::Int32x4:
-           case Scalar::MaxTypedArrayViewType:
-             break;
-         }
-
-         MOZ_CRASH("nonsense target element type");
-     }
+    static bool
+    setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
+                      Handle<TypedArrayObject*> source, uint32_t offset = 0)
+    {
+        if (target->isSharedMemory() || source->isSharedMemory())
+            return ElementSpecific<T, SharedOps>::setFromTypedArray(cx, target, source, offset);
+        return ElementSpecific<T, UnsharedOps>::setFromTypedArray(cx, target, source, offset);
+    }
 
     static bool
     setFromNonTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
@@ -690,108 +645,18 @@ class TypedArrayMethods
     {
         MOZ_ASSERT(!source->is<TypedArrayObject>(), "use setFromTypedArray");
 
-        bool isShared = target->isSharedMemory();
-
-        switch (target->type()) {
-          case Scalar::Int8:
-            if (isShared)
-                return ElementSpecific<int8_t, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<int8_t, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Uint8:
-            if (isShared)
-                return ElementSpecific<uint8_t, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<uint8_t, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Int16:
-            if (isShared)
-                return ElementSpecific<int16_t, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<int16_t, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Uint16:
-            if (isShared)
-                return ElementSpecific<uint16_t, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<uint16_t, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Int32:
-            if (isShared)
-                return ElementSpecific<int32_t, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<int32_t, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Uint32:
-            if (isShared)
-                return ElementSpecific<uint32_t, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<uint32_t, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Float32:
-            if (isShared)
-                return ElementSpecific<float, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<float, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Float64:
-            if (isShared)
-                return ElementSpecific<double, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<double, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Uint8Clamped:
-            if (isShared)
-                return ElementSpecific<uint8_clamped, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-            return ElementSpecific<uint8_clamped, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
-          case Scalar::Int64:
-          case Scalar::Float32x4:
-          case Scalar::Int8x16:
-          case Scalar::Int16x8:
-          case Scalar::Int32x4:
-          case Scalar::MaxTypedArrayViewType:
-            break;
-        }
-        MOZ_CRASH("bad target array type");
+        if (target->isSharedMemory())
+            return ElementSpecific<T, SharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
+        return ElementSpecific<T, UnsharedOps>::setFromNonTypedArray(cx, target, source, len, offset);
     }
 
     static bool
     initFromIterablePackedArray(JSContext* cx, Handle<TypedArrayObject*> target,
                                 HandleArrayObject source)
     {
-        bool isShared = target->isSharedMemory();
-
-        switch (target->type()) {
-          case Scalar::Int8:
-            if (isShared)
-                return ElementSpecific<int8_t, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<int8_t, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Uint8:
-            if (isShared)
-                return ElementSpecific<uint8_t, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<uint8_t, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Int16:
-            if (isShared)
-                return ElementSpecific<int16_t, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<int16_t, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Uint16:
-            if (isShared)
-                return ElementSpecific<uint16_t, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<uint16_t, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Int32:
-            if (isShared)
-                return ElementSpecific<int32_t, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<int32_t, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Uint32:
-            if (isShared)
-                return ElementSpecific<uint32_t, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<uint32_t, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Float32:
-            if (isShared)
-                return ElementSpecific<float, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<float, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Float64:
-            if (isShared)
-                return ElementSpecific<double, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<double, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Uint8Clamped:
-            if (isShared)
-                return ElementSpecific<uint8_clamped, SharedOps>::initFromIterablePackedArray(cx, target, source);
-            return ElementSpecific<uint8_clamped, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
-          case Scalar::Int64:
-          case Scalar::Float32x4:
-          case Scalar::Int8x16:
-          case Scalar::Int16x8:
-          case Scalar::Int32x4:
-          case Scalar::MaxTypedArrayViewType:
-            break;
-        }
-        MOZ_CRASH("bad target array type");
+        if (target->isSharedMemory())
+            return ElementSpecific<T, SharedOps>::initFromIterablePackedArray(cx, target, source);
+        return ElementSpecific<T, UnsharedOps>::initFromIterablePackedArray(cx, target, source);
     }
 };
 
