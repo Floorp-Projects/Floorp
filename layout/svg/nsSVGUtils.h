@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "DrawMode.h"
+#include "DrawResult.h"
 #include "gfx2DGlue.h"
 #include "gfxMatrix.h"
 #include "gfxPoint.h"
