@@ -21,7 +21,7 @@ using mozilla::dom::workers::WorkerPrivate;
 already_AddRefed<CacheWorkerHolder>
 CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate)
 {
-  MOZ_ASSERT(aWorkerPrivate);
+  MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
 
   RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder();
   if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate, Terminating))) {
@@ -35,7 +35,7 @@ void
 CacheWorkerHolder::AddActor(ActorChild* aActor)
 {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
-  MOZ_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
   MOZ_ASSERT(!mActorList.Contains(aActor));
 
   mActorList.AppendElement(aActor);
@@ -53,11 +53,14 @@ void
 CacheWorkerHolder::RemoveActor(ActorChild* aActor)
 {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
-  MOZ_ASSERT(aActor);
+  MOZ_DIAGNOSTIC_ASSERT(aActor);
 
-  DebugOnly<bool> removed = mActorList.RemoveElement(aActor);
+#if defined(RELEASE_OR_BETA)
+  mActorList.RemoveElement(aActor);
+#else
+  MOZ_DIAGNOSTIC_ASSERT(mActorList.RemoveElement(aActor));
+#endif
 
-  MOZ_ASSERT(removed);
   MOZ_ASSERT(!mActorList.Contains(aActor));
 }
 
@@ -83,6 +86,7 @@ CacheWorkerHolder::Notify(Status aStatus)
   // Start the asynchronous destruction of our actors.  These will call back
   // into RemoveActor() once the actor is destroyed.
   for (uint32_t i = 0; i < mActorList.Length(); ++i) {
+    MOZ_DIAGNOSTIC_ASSERT(mActorList[i]);
     mActorList[i]->StartDestroy();
   }
 
@@ -97,7 +101,7 @@ CacheWorkerHolder::CacheWorkerHolder()
 CacheWorkerHolder::~CacheWorkerHolder()
 {
   NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
-  MOZ_ASSERT(mActorList.IsEmpty());
+  MOZ_DIAGNOSTIC_ASSERT(mActorList.IsEmpty());
 }
 
 } // namespace cache

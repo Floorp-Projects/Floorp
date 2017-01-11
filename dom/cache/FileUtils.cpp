@@ -43,7 +43,7 @@ BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
 nsresult
 BodyCreateDir(nsIFile* aBaseDir)
 {
-  MOZ_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
   nsCOMPtr<nsIFile> aBodyDir;
   nsresult rv = aBaseDir->Clone(getter_AddRefs(aBodyDir));
@@ -65,7 +65,7 @@ BodyCreateDir(nsIFile* aBaseDir)
 nsresult
 BodyDeleteDir(nsIFile* aBaseDir)
 {
-  MOZ_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
   nsCOMPtr<nsIFile> aBodyDir;
   nsresult rv = aBaseDir->Clone(getter_AddRefs(aBodyDir));
@@ -88,14 +88,14 @@ BodyDeleteDir(nsIFile* aBaseDir)
 nsresult
 BodyGetCacheDir(nsIFile* aBaseDir, const nsID& aId, nsIFile** aCacheDirOut)
 {
-  MOZ_ASSERT(aBaseDir);
-  MOZ_ASSERT(aCacheDirOut);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aCacheDirOut);
 
   *aCacheDirOut = nullptr;
 
   nsresult rv = aBaseDir->Clone(aCacheDirOut);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-  MOZ_ASSERT(*aCacheDirOut);
+  MOZ_DIAGNOSTIC_ASSERT(*aCacheDirOut);
 
   rv = (*aCacheDirOut)->Append(NS_LITERAL_STRING("morgue"));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -126,12 +126,12 @@ BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
                      nsAsyncCopyCallbackFun aCallback, nsID* aIdOut,
                      nsISupports** aCopyContextOut)
 {
-  MOZ_ASSERT(aBaseDir);
-  MOZ_ASSERT(aSource);
-  MOZ_ASSERT(aClosure);
-  MOZ_ASSERT(aCallback);
-  MOZ_ASSERT(aIdOut);
-  MOZ_ASSERT(aCopyContextOut);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aSource);
+  MOZ_DIAGNOSTIC_ASSERT(aClosure);
+  MOZ_DIAGNOSTIC_ASSERT(aCallback);
+  MOZ_DIAGNOSTIC_ASSERT(aIdOut);
+  MOZ_DIAGNOSTIC_ASSERT(aCopyContextOut);
 
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> idGen =
@@ -183,8 +183,8 @@ BodyStartWriteStream(const QuotaInfo& aQuotaInfo,
 void
 BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext)
 {
-  MOZ_ASSERT(aBaseDir);
-  MOZ_ASSERT(aCopyContext);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aCopyContext);
 
   nsresult rv = NS_CancelAsyncCopy(aCopyContext, NS_ERROR_ABORT);
   Unused << NS_WARN_IF(NS_FAILED(rv));
@@ -197,7 +197,7 @@ BodyCancelWrite(nsIFile* aBaseDir, nsISupports* aCopyContext)
 nsresult
 BodyFinalizeWrite(nsIFile* aBaseDir, const nsID& aId)
 {
-  MOZ_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
   nsCOMPtr<nsIFile> tmpFile;
   nsresult rv = BodyIdToFile(aBaseDir, aId, BODY_FILE_TMP, getter_AddRefs(tmpFile));
@@ -222,8 +222,8 @@ nsresult
 BodyOpen(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir, const nsID& aId,
          nsIInputStream** aStreamOut)
 {
-  MOZ_ASSERT(aBaseDir);
-  MOZ_ASSERT(aStreamOut);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aStreamOut);
 
   nsCOMPtr<nsIFile> finalFile;
   nsresult rv = BodyIdToFile(aBaseDir, aId, BODY_FILE_FINAL,
@@ -292,14 +292,14 @@ nsresult
 BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
              nsIFile** aBodyFileOut)
 {
-  MOZ_ASSERT(aBaseDir);
-  MOZ_ASSERT(aBodyFileOut);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aBodyFileOut);
 
   *aBodyFileOut = nullptr;
 
   nsresult rv = BodyGetCacheDir(aBaseDir, aId, aBodyFileOut);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
-  MOZ_ASSERT(*aBodyFileOut);
+  MOZ_DIAGNOSTIC_ASSERT(*aBodyFileOut);
 
   char idString[NSID_LENGTH];
   aId.ToProvidedString(idString);
@@ -323,7 +323,7 @@ BodyIdToFile(nsIFile* aBaseDir, const nsID& aId, BodyFileType aType,
 nsresult
 BodyDeleteOrphanedFiles(nsIFile* aBaseDir, nsTArray<nsID>& aKnownBodyIdList)
 {
-  MOZ_ASSERT(aBaseDir);
+  MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
   // body files are stored in a directory structure like:
   //
@@ -421,7 +421,7 @@ namespace {
 nsresult
 GetMarkerFileHandle(const QuotaInfo& aQuotaInfo, nsIFile** aFileOut)
 {
-  MOZ_ASSERT(aFileOut);
+  MOZ_DIAGNOSTIC_ASSERT(aFileOut);
 
   nsCOMPtr<nsIFile> marker;
   nsresult rv = aQuotaInfo.mDir->Clone(getter_AddRefs(marker));
