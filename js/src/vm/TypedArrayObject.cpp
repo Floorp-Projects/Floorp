@@ -139,6 +139,17 @@ TypedArrayObject::ensureHasBuffer(JSContext* cx, Handle<TypedArrayObject*> tarra
     return true;
 }
 
+#ifdef DEBUG
+void
+TypedArrayObject::assertZeroLengthArrayData() const
+{
+    if (length() == 0 && !hasBuffer()) {
+        uint8_t* end = fixedData(TypedArrayObject::FIXED_DATA_START);
+        MOZ_ASSERT(end[0] == ZeroLengthArrayData);
+    }
+}
+#endif
+
 /* static */ void
 TypedArrayObject::trace(JSTracer* trc, JSObject* objArg)
 {
@@ -151,6 +162,8 @@ TypedArrayObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(!IsInsideNursery(obj));
     TypedArrayObject* curObj = &obj->as<TypedArrayObject>();
+
+    curObj->assertZeroLengthArrayData();
 
     // Typed arrays with a buffer object do not need to be free'd
     if (curObj->hasBuffer())
@@ -182,7 +195,7 @@ TypedArrayObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* obj, const J
 {
     TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
     const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
-    MOZ_ASSERT(newObj->elements() == oldObj->elements());
+    MOZ_ASSERT(newObj->elementsRaw() == oldObj->elementsRaw());
     MOZ_ASSERT(obj->isTenured());
 
     // Typed arrays with a buffer object do not need an update.
@@ -213,8 +226,18 @@ JS_FOR_EACH_TYPED_ARRAY(OBJECT_MOVED_TYPED_ARRAY)
     }
 
     size_t headerSize = dataOffset() + sizeof(HeapSlot);
+
+    // See AllocKindForLazyBuffer.
+    MOZ_ASSERT_IF(nbytes == 0, headerSize + sizeof(uint8_t) <= GetGCKindBytes(newAllocKind));
+
     if (headerSize + nbytes <= GetGCKindBytes(newAllocKind)) {
         MOZ_ASSERT(oldObj->hasInlineElements());
+#ifdef DEBUG
+        if (nbytes == 0) {
+            uint8_t* output = newObj->fixedData(TypedArrayObject::FIXED_DATA_START);
+            output[0] = ZeroLengthArrayData;
+        }
+#endif
         newObj->setInlineElements();
     } else {
         MOZ_ASSERT(!oldObj->hasInlineElements());
@@ -509,6 +532,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             void* data = obj->fixedData(FIXED_DATA_START);
             obj->initPrivate(data);
             memset(data, 0, len * sizeof(NativeType));
+#ifdef DEBUG
+            if (len == 0) {
+                uint8_t* elements = static_cast<uint8_t*>(data);
+                elements[0] = ZeroLengthArrayData;
+            }
+#endif
         }
 
         obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(len));
@@ -600,6 +629,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
 
         // Verify that the private slot is at the expected place.
         MOZ_ASSERT(tarray->numFixedSlots() == TypedArrayObject::DATA_SLOT);
+
+#ifdef DEBUG
+        if (len == 0) {
+            uint8_t* output = tarray->fixedData(TypedArrayObject::FIXED_DATA_START);
+            output[0] = TypedArrayObject::ZeroLengthArrayData;
+        }
+#endif
     }
 
     static void

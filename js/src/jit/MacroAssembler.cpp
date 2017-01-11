@@ -1037,14 +1037,9 @@ AllocateObjectBufferWithInit(JSContext* cx, TypedArrayObject* obj, int32_t count
 
     obj->initPrivate(nullptr);
 
-    // Typed arrays with a non-compile-time known size that have a count of zero
-    // eventually are essentially typed arrays with inline elements. The bounds
-    // check will make sure that no elements are read or written to that memory.
-    // Negative numbers will bail out to the slow path, which in turn will raise
-    // an invalid argument exception.
+    // Negative numbers or zero will bail out to the slow path, which in turn will raise
+    // an invalid argument exception or create a correct object with zero elements.
     if (count <= 0) {
-        if (count == 0)
-            obj->setInlineElements();
         obj->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(0));
         return;
     }
@@ -1112,6 +1107,10 @@ MacroAssembler::initTypedArraySlots(Register obj, Register temp, Register length
         size_t numZeroPointers = ((nbytes + 7) & ~0x7) / sizeof(char *);
         for (size_t i = 0; i < numZeroPointers; i++)
             storePtr(ImmWord(0), Address(obj, dataOffset + i * sizeof(char *)));
+#ifdef DEBUG
+        if (nbytes == 0)
+            store8(Imm32(TypedArrayObject::ZeroLengthArrayData), Address(obj, dataSlotOffset));
+#endif
     } else {
         if (lengthKind == TypedArrayLength::Fixed)
             move32(Imm32(length), lengthReg);

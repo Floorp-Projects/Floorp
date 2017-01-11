@@ -2325,7 +2325,7 @@ IonBuilder::inlineTypedArray(CallInfo& callInfo, Native native)
         // might have previously thrown, when determining whether to inline, so we
         // have to deal with this error case when inlining.)
         int32_t providedLen = arg->maybeConstantValue()->toInt32();
-        if (providedLen < 0)
+        if (providedLen <= 0)
             return InliningStatus_NotInlined;
 
         uint32_t len = AssertedCast<uint32_t>(providedLen);
