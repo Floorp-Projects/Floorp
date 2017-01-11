@@ -117,9 +117,8 @@ set_config('L10NBASEDIR', l10n_base)
 # `choices` depending on the target, but that doesn't pan out for the same
 # reason.
 option('--enable-default-toolkit', nargs=1,
-       choices=('cairo-windows', 'cairo-gtk2', 'cairo-gtk2-x11', 'cairo-gtk3',
-                'cairo-cocoa', 'cairo-uikit', 'cairo-android',
-                'cairo-gonk'),
+       choices=('cairo-windows', 'cairo-gtk3', 'cairo-cocoa', 'cairo-uikit',
+                'cairo-android', 'cairo-gonk'),
        help='Select default toolkit')
 
 @depends('--enable-default-toolkit', target)
@@ -141,7 +140,7 @@ def toolkit(value, target):
         else:
             platform_choices = ('cairo-android',)
     else:
-        platform_choices = ('cairo-gtk3', 'cairo-gtk2', 'cairo-gtk2-x11')
+        platform_choices = ('cairo-gtk3',)
 
     if value:
         if value[0] not in platform_choices:
