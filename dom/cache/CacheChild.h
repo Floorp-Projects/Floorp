@@ -35,7 +35,7 @@ public:
     explicit AutoLock(CacheChild* aActor)
       : mActor(aActor)
     {
-      MOZ_ASSERT(mActor);
+      MOZ_DIAGNOSTIC_ASSERT(mActor);
       mActor->Lock();
     }
 

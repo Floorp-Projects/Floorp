@@ -52,7 +52,7 @@ ManagerId::ManagerId(nsIPrincipal* aPrincipal, const nsACString& aQuotaOrigin)
     : mPrincipal(aPrincipal)
     , mQuotaOrigin(aQuotaOrigin)
 {
-  MOZ_ASSERT(mPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(mPrincipal);
 }
 
 ManagerId::~ManagerId()

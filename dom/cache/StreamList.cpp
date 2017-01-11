@@ -22,7 +22,7 @@ StreamList::StreamList(Manager* aManager, Context* aContext)
   , mStreamControl(nullptr)
   , mActivated(false)
 {
-  MOZ_ASSERT(mManager);
+  MOZ_DIAGNOSTIC_ASSERT(mManager);
   mContext->AddActivity(this);
 }
 
@@ -30,13 +30,13 @@ void
 StreamList::SetStreamControl(CacheStreamControlParent* aStreamControl)
 {
   NS_ASSERT_OWNINGTHREAD(StreamList);
-  MOZ_ASSERT(aStreamControl);
+  MOZ_DIAGNOSTIC_ASSERT(aStreamControl);
 
   // For cases where multiple streams are serialized for a single list
   // then the control will get passed multiple times.  This is ok, but
   // it should be the same control each time.
   if (mStreamControl) {
-    MOZ_ASSERT(aStreamControl == mStreamControl);
+    MOZ_DIAGNOSTIC_ASSERT(aStreamControl == mStreamControl);
     return;
   }
 
@@ -48,8 +48,8 @@ void
 StreamList::RemoveStreamControl(CacheStreamControlParent* aStreamControl)
 {
   NS_ASSERT_OWNINGTHREAD(StreamList);
-  MOZ_ASSERT(mStreamControl);
-  MOZ_ASSERT(mStreamControl == aStreamControl);
+  MOZ_DIAGNOSTIC_ASSERT(mStreamControl);
+  MOZ_DIAGNOSTIC_ASSERT(mStreamControl == aStreamControl);
   mStreamControl = nullptr;
 }
 
@@ -57,8 +57,8 @@ void
 StreamList::Activate(CacheId aCacheId)
 {
   NS_ASSERT_OWNINGTHREAD(StreamList);
-  MOZ_ASSERT(!mActivated);
-  MOZ_ASSERT(mCacheId == INVALID_CACHE_ID);
+  MOZ_DIAGNOSTIC_ASSERT(!mActivated);
+  MOZ_DIAGNOSTIC_ASSERT(mCacheId == INVALID_CACHE_ID);
   mActivated = true;
   mCacheId = aCacheId;
   mManager->AddRefCacheId(mCacheId);
@@ -74,8 +74,8 @@ StreamList::Add(const nsID& aId, nsIInputStream* aStream)
 {
   // All streams should be added on IO thread before we set the stream
   // control on the owning IPC thread.
-  MOZ_ASSERT(!mStreamControl);
-  MOZ_ASSERT(aStream);
+  MOZ_DIAGNOSTIC_ASSERT(!mStreamControl);
+  MOZ_DIAGNOSTIC_ASSERT(aStream);
   Entry* entry = mList.AppendElement();
   entry->mId = aId;
   entry->mStream = aStream;
@@ -159,7 +159,7 @@ StreamList::MatchesCacheId(CacheId aCacheId) const
 StreamList::~StreamList()
 {
   NS_ASSERT_OWNINGTHREAD(StreamList);
-  MOZ_ASSERT(!mStreamControl);
+  MOZ_DIAGNOSTIC_ASSERT(!mStreamControl);
   if (mActivated) {
     mManager->RemoveStreamList(this);
     for (uint32_t i = 0; i < mList.Length(); ++i) {

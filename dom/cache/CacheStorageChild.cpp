@@ -29,7 +29,7 @@ CacheStorageChild::CacheStorageChild(CacheStorage* aListener,
   , mDelayedDestroy(false)
 {
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
-  MOZ_ASSERT(mListener);
+  MOZ_DIAGNOSTIC_ASSERT(mListener);
 
   SetWorkerHolder(aWorkerHolder);
 }
@@ -38,14 +38,14 @@ CacheStorageChild::~CacheStorageChild()
 {
   MOZ_COUNT_DTOR(cache::CacheStorageChild);
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
-  MOZ_ASSERT(!mListener);
+  MOZ_DIAGNOSTIC_ASSERT(!mListener);
 }
 
 void
 CacheStorageChild::ClearListener()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorageChild);
-  MOZ_ASSERT(mListener);
+  MOZ_DIAGNOSTIC_ASSERT(mListener);
   mListener = nullptr;
 }
 
@@ -66,7 +66,7 @@ CacheStorageChild::StartDestroyFromListener()
   // The listener should be held alive by any async operations, so if it
   // is going away then there must not be any child actors.  This in turn
   // ensures that StartDestroy() will not trigger the delayed path.
-  MOZ_ASSERT(!mNumChildActors);
+  MOZ_DIAGNOSTIC_ASSERT(!mNumChildActors);
 
   StartDestroy();
 }
@@ -98,7 +98,7 @@ CacheStorageChild::StartDestroy()
   listener->DestroyInternal(this);
 
   // CacheStorage listener should call ClearListener() in DestroyInternal()
-  MOZ_ASSERT(!mListener);
+  MOZ_DIAGNOSTIC_ASSERT(!mListener);
 
   // Start actor destruction from parent process
   Unused << SendTeardown();
@@ -112,7 +112,7 @@ CacheStorageChild::ActorDestroy(ActorDestroyReason aReason)
   if (listener) {
     listener->DestroyInternal(this);
     // CacheStorage listener should call ClearListener() in DestroyInternal()
-    MOZ_ASSERT(!mListener);
+    MOZ_DIAGNOSTIC_ASSERT(!mListener);
   }
 
   RemoveWorkerHolder();
@@ -136,7 +136,7 @@ CacheStorageChild::DeallocPCacheOpChild(PCacheOpChild* aActor)
 void
 CacheStorageChild::NoteDeletedActor()
 {
-  MOZ_ASSERT(mNumChildActors);
+  MOZ_DIAGNOSTIC_ASSERT(mNumChildActors);
   mNumChildActors -= 1;
   if (!mNumChildActors && mDelayedDestroy) {
     StartDestroy();

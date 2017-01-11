@@ -29,7 +29,7 @@ CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager, CacheId aCacheId,
   , mNamespace(INVALID_NAMESPACE)
   , mOpArgs(aOpArgs)
 {
-  MOZ_ASSERT(mIpcManager);
+  MOZ_DIAGNOSTIC_ASSERT(mIpcManager);
 }
 
 CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager,
@@ -39,7 +39,7 @@ CacheOpParent::CacheOpParent(PBackgroundParent* aIpcManager,
   , mNamespace(aNamespace)
   , mOpArgs(aOpArgs)
 {
-  MOZ_ASSERT(mIpcManager);
+  MOZ_DIAGNOSTIC_ASSERT(mIpcManager);
 }
 
 CacheOpParent::~CacheOpParent()
@@ -51,8 +51,8 @@ void
 CacheOpParent::Execute(ManagerId* aManagerId)
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
-  MOZ_ASSERT(!mManager);
-  MOZ_ASSERT(!mVerifier);
+  MOZ_DIAGNOSTIC_ASSERT(!mManager);
+  MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 
   RefPtr<cache::Manager> manager;
   nsresult rv = cache::Manager::GetOrCreate(aManagerId, getter_AddRefs(manager));
@@ -70,14 +70,14 @@ void
 CacheOpParent::Execute(cache::Manager* aManager)
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
-  MOZ_ASSERT(!mManager);
-  MOZ_ASSERT(!mVerifier);
+  MOZ_DIAGNOSTIC_ASSERT(!mManager);
+  MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 
   mManager = aManager;
 
   // Handle put op
   if (mOpArgs.type() == CacheOpArgs::TCachePutAllArgs) {
-    MOZ_ASSERT(mCacheId != INVALID_CACHE_ID);
+    MOZ_DIAGNOSTIC_ASSERT(mCacheId != INVALID_CACHE_ID);
 
     const CachePutAllArgs& args = mOpArgs.get_CachePutAllArgs();
     const nsTArray<CacheRequestResponse>& list = args.requestResponseList();
@@ -99,13 +99,13 @@ CacheOpParent::Execute(cache::Manager* aManager)
 
   // Handle all other cache ops
   if (mCacheId != INVALID_CACHE_ID) {
-    MOZ_ASSERT(mNamespace == INVALID_NAMESPACE);
+    MOZ_DIAGNOSTIC_ASSERT(mNamespace == INVALID_NAMESPACE);
     mManager->ExecuteCacheOp(this, mCacheId, mOpArgs);
     return;
   }
 
   // Handle all storage ops
-  MOZ_ASSERT(mNamespace != INVALID_NAMESPACE);
+  MOZ_DIAGNOSTIC_ASSERT(mNamespace != INVALID_NAMESPACE);
   mManager->ExecuteStorageOp(this, mNamespace, mOpArgs);
 }
 
@@ -113,8 +113,8 @@ void
 CacheOpParent::WaitForVerification(PrincipalVerifier* aVerifier)
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
-  MOZ_ASSERT(!mManager);
-  MOZ_ASSERT(!mVerifier);
+  MOZ_DIAGNOSTIC_ASSERT(!mManager);
+  MOZ_DIAGNOSTIC_ASSERT(!mVerifier);
 
   mVerifier = aVerifier;
   mVerifier->AddListener(this);
@@ -164,8 +164,8 @@ CacheOpParent::OnOpComplete(ErrorResult&& aRv, const CacheOpResult& aResult,
                             StreamList* aStreamList)
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpParent);
-  MOZ_ASSERT(mIpcManager);
-  MOZ_ASSERT(mManager);
+  MOZ_DIAGNOSTIC_ASSERT(mIpcManager);
+  MOZ_DIAGNOSTIC_ASSERT(mManager);
 
   // Never send an op-specific result if we have an error.  Instead, send
   // void_t() to ensure that we don't leak actors on the child side.

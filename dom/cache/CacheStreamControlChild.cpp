@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/cache/CacheStreamControlChild.h"
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/cache/CacheTypes.h"
@@ -89,6 +88,7 @@ void
 CacheStreamControlChild::SerializeControl(CacheReadStream* aReadStreamOut)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
+  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
   aReadStreamOut->controlParent() = nullptr;
   aReadStreamOut->controlChild() = this;
 }
@@ -99,8 +99,8 @@ CacheStreamControlChild::SerializeStream(CacheReadStream* aReadStreamOut,
                                          nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
-  MOZ_ASSERT(aReadStreamOut);
-  MOZ_ASSERT(aStream);
+  MOZ_DIAGNOSTIC_ASSERT(aReadStreamOut);
+  MOZ_DIAGNOSTIC_ASSERT(aStream);
   UniquePtr<AutoIPCStream> autoStream(new AutoIPCStream(aReadStreamOut->stream()));
   autoStream->Serialize(aStream, Manager());
   aStreamCleanupList.AppendElement(Move(autoStream));
