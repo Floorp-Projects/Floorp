@@ -71,7 +71,6 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
     public static final int LOADURL_EXTERNAL     = 1 << 7;
     /** Indicates the tab is the first shown after Firefox is hidden and restored. */
     public static final int LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN = 1 << 8;
-    public static final int LOADURL_CUSTOMTAB    = 1 << 9;
 
     private static final long PERSIST_TABS_AFTER_MILLISECONDS = 1000 * 2;
 
@@ -887,7 +886,6 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
             boolean external = (flags & LOADURL_EXTERNAL) != 0;
             final boolean isFirstShownAfterActivityUnhidden = (flags & LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN) != 0;
-            final boolean customTab = (flags & LOADURL_CUSTOMTAB) != 0;
 
             args.put("url", url);
             args.put("engine", searchEngine);
@@ -896,7 +894,6 @@ public class Tabs implements BundleEventListener, GeckoEventListener {
             args.put("isPrivate", isPrivate);
             args.put("pinned", (flags & LOADURL_PINNED) != 0);
             args.put("desktopMode", desktopMode);
-            args.put("customTab", customTab);
 
             final boolean needsNewTab;
             final String applicationId = (intent == null) ? null :

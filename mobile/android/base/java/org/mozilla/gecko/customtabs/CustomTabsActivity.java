@@ -92,11 +92,6 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
     }
 
     @Override
-    protected int getNewTabFlags() {
-        return Tabs.LOADURL_CUSTOMTAB | super.getNewTabFlags();
-    }
-
-    @Override
     public void onDestroy() {
         super.onDestroy();
         Tabs.unregisterOnTabsChangedListener(this);
