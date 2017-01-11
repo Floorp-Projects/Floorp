@@ -55,18 +55,9 @@ GCM delivery queue.
 
 The Fennec Push implementation is designed to address the following technical
 challenge: **GCM events, including incoming push messages, can occur when Gecko
-is not running**.
-
-In the future, Fennec will be able to start Gecko (more accurately, a particular
-Gecko profile) in order to service incoming push messages.  Right now, if a push
-message is received and Gecko is not running (with the correct profile) to
-service the message, it will be dropped on the floor (with
-helpful-but-unsatisfying diagnostic messages).  In particular, **neither the
-sending application server nor the receiving web application are informed of the
-failed delivery at any time!** (We may, at some point, choose to queue messages
-on the device until Gecko can service them; and we may add support for
-*receipts* to allow web applications to acknowledge successful message
-delivery.)
+is not running**. In case of an incoming push message, if Gecko is not running
+Fennec will request startup of necessary Gecko services and queue incoming
+push messages in the meantime. Once services are running, messages are sent over.
 
 It's worth noting that Fennec uses push to implement internal functionality like
 Sync and Firefox Accounts, and that these background services are *not* tied to
@@ -89,10 +80,8 @@ valuable and difficult.  Therefore, we add the following requirement:
 
 4) Gecko must own the push configuration details where appropriate and possible.
 
-We explicitly do not care to support push messages across multiple processes.
-This means that we **do not support the Push API in APK-based Web Apps that run
-in a separate process**.  (Such Web Apps are scheduled to be removed from Fennec
-in the Nightly 46 development cycle.)
+We explicitly do not care to support push messages across multiple processes. This
+will matter more in a post-e10s-on-Android world.
 
 Push component architecture
 ===========================
@@ -122,7 +111,7 @@ The second mapping is a one-to-many mapping from push registrations to
 message channel from the autopush server to Fennec.  Each `PushSubscription`
 includes:
 
-* a Fennec service identifier, like "webpush" or "Sync" or "Firefox Accounts";
+* a Fennec service identifier, one of "webpush" or "fxa";
 * an associated Gecko profile;
 * a unique channel identifier.
 
