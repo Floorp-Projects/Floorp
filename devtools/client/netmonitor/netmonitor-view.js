@@ -203,7 +203,7 @@ var NetMonitorView = {
         console.error(ex);
       }
 
-      const requests = requestsView.store.getState().requests.requests;
+      const requests = requestsView.store.getState().requests.requests.valueSeq();
       statisticsView.createPrimedCacheChart(requests);
       statisticsView.createEmptyCacheChart(requests);
     });
