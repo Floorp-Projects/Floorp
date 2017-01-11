@@ -17,8 +17,8 @@ import android.util.Log;
 
 import java.io.File;
 
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.EventCallback;
 
 public class GeckoService extends Service {
@@ -35,10 +35,10 @@ public class GeckoService extends Service {
     private static final String INTENT_SERVICE_CATEGORY = "category";
     private static final String INTENT_SERVICE_DATA = "data";
 
-    private static class EventListener implements NativeEventListener {
-        @Override // NativeEventListener
+    private static class EventListener implements BundleEventListener {
+        @Override // BundleEventListener
         public void handleMessage(final String event,
-                                  final NativeJSObject message,
+                                  final GeckoBundle message,
                                   final EventCallback callback) {
             final Context context = GeckoAppShell.getApplicationContext();
             switch (event) {
