@@ -61,6 +61,7 @@ var policy = {
          "content policy type should TYPESUBDOCUMENT");
       categoryManager.deleteCategoryEntry("content-policy", POLICYNAME, false);
       SimpleTest.finish();
+      return Ci.nsIContentPolicy.REJECT_REQUEST;
     }
     return Ci.nsIContentPolicy.ACCEPT;
   },
