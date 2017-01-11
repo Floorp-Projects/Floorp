@@ -31,7 +31,7 @@ const PREF_ACCEPTED_POLICY_VERSION = PREF_POLICY_BRANCH + "dataSubmissionPolicyA
 const PREF_ACCEPTED_POLICY_DATE = PREF_POLICY_BRANCH + "dataSubmissionPolicyNotifiedTime";
 
 function fakeShowPolicyTimeout(set, clear) {
-  let reportingPolicy = Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm");
+  let reportingPolicy = Cu.import("resource://gre/modules/TelemetryReportingPolicy.jsm", {});
   reportingPolicy.Policy.setShowInfobarTimeout = set;
   reportingPolicy.Policy.clearShowInfobarTimeout = clear;
 }
