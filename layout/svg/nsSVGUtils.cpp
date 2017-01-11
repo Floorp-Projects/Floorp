@@ -58,6 +58,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
+using namespace mozilla::image;
 
 static bool sSVGPathCachingEnabled;
 static bool sSVGDisplayListHitTestingEnabled;

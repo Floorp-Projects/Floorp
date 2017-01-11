@@ -7,8 +7,11 @@
 #define MOZILLA_SVGCONTEXT_H_
 
 #include "mozilla/Maybe.h"
+#include "mozilla/SVGContextPaint.h"
 #include "SVGPreserveAspectRatio.h"
 #include "Units.h"
+
+class nsIFrame;
 
 namespace mozilla {
 
@@ -36,6 +39,8 @@ public:
     , mIsPaintingSVGImageElement(aIsPaintingSVGImageElement)
   { }
 
+  bool MaybeStoreContextPaint(nsIFrame* aFromFrame);
+
   const CSSIntSize& GetViewportSize() const {
     return mViewportSize;
   }
@@ -56,6 +61,10 @@ public:
     return mGlobalOpacity;
   }
 
+  const SVGContextPaint* GetContextPaint() const {
+    return mContextPaint.get();
+  }
+
   bool IsPaintingForSVGImageElement() const {
     return mIsPaintingSVGImageElement;
   }
@@ -72,10 +81,15 @@ public:
   }
 
   uint32_t Hash() const {
-    return HashGeneric(mViewportSize.width,
+    uint32_t hash = 0;
+    if (mContextPaint) {
+      hash = HashGeneric(hash, mContextPaint->Hash());
+    }
+    return HashGeneric(hash,
+                       mViewportSize.width,
                        mViewportSize.height,
                        mPreserveAspectRatio.map(HashPAR).valueOr(0),
-                       HashBytes(&mGlobalOpacity, sizeof(gfxFloat)),
+                       HashBytes(&mGlobalOpacity, sizeof(mGlobalOpacity)),
                        mIsPaintingSVGImageElement);
   }
 
@@ -85,6 +99,7 @@ private:
   }
 
   // NOTE: When adding new member-vars, remember to update Hash() & operator==.
+  RefPtr<SVGContextPaint>       mContextPaint;
   CSSIntSize                    mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
   gfxFloat                      mGlobalOpacity;
