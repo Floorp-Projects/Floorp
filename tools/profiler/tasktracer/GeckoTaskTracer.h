@@ -93,6 +93,14 @@ const char* GetJSLabelPrefix();
 void GetCurTraceInfo(uint64_t* aOutSourceEventId, uint64_t* aOutParentTaskId,
                      SourceEventType* aOutSourceEventType);
 
+class AutoScopedLabel
+{
+  char* mLabel;
+public:
+  explicit AutoScopedLabel(const char* aFormat, ...);
+  ~AutoScopedLabel();
+};
+
 } // namespace tasktracer
 } // namespace mozilla.
 

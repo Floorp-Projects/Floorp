@@ -768,11 +768,11 @@ class TestRecursiveMakeBackend(BackendTester):
         """Test that {HOST_,}RUST_PROGRAMS are written to backend.mk correctly."""
         env = self._consume('rust-programs', RecursiveMakeBackend)
 
-        backend_path = mozpath.join(env.topobjdir, 'backend.mk')
+        backend_path = mozpath.join(env.topobjdir, 'code/backend.mk')
         lines = [l.strip() for l in open(backend_path, 'rt').readlines()[2:]]
 
         expected = [
-            'CARGO_FILE := %s/Cargo.toml' % env.topsrcdir,
+            'CARGO_FILE := %s/code/Cargo.toml' % env.topsrcdir,
             'RUST_PROGRAMS += i686-pc-windows-msvc/release/target.exe',
             'RUST_CARGO_PROGRAMS += target',
             'HOST_RUST_PROGRAMS += i686-pc-windows-msvc/release/host.exe',
@@ -780,6 +780,11 @@ class TestRecursiveMakeBackend(BackendTester):
         ]
 
         self.assertEqual(lines, expected)
+
+        root_deps_path = mozpath.join(env.topobjdir, 'root-deps.mk')
+        lines = [l.strip() for l in open(root_deps_path, 'rt').readlines()]
+
+        self.assertTrue(any(l == 'recurse_compile: code/host code/target' for l in lines))
 
     def test_final_target(self):
         """Test that FINAL_TARGET is written to backend.mk correctly."""

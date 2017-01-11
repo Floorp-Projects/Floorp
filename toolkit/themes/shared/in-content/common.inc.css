@@ -110,7 +110,7 @@ xul|groupbox {
   font-size: 1.25rem;
 }
 
-xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.indent),
+xul|groupbox xul|label:not(.menu-accel):not(.menu-text):not(.indent):not(.learnMore),
 xul|groupbox xul|description {
   /* !important needed to override toolkit !important rule */
   margin-inline-start: 0 !important;

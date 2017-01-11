@@ -119,7 +119,6 @@ public:
   VideoFrameConverter()
     : mLength(0)
     , last_img_(-1) // -1 is not a guaranteed invalid serial. See bug 1262134.
-    , disabled_frame_sent_(false)
 #ifdef DEBUG
     , mThrottleCount(0)
     , mThrottleRecord(0)
@@ -183,17 +182,22 @@ public:
       // -1 is not a guaranteed invalid serial. See bug 1262134.
       last_img_ = -1;
 
-      if (disabled_frame_sent_) {
-        // After disabling we just pass one black frame to the encoder.
-        // Allocating and setting it to black steals some performance
-        // that can be avoided. We don't handle resolution changes while
-        // disabled for now.
+      // After disabling, we still want *some* frames to flow to the other side.
+      // It could happen that we drop the packet that carried the first disabled
+      // frame, for instance. Note that this still requires the application to
+      // send a frame, or it doesn't trigger at all.
+      const double disabledMinFps = 1.0;
+      TimeStamp t = aChunk.mTimeStamp;
+      MOZ_ASSERT(!t.IsNull());
+      if (!disabled_frame_sent_.IsNull() &&
+          (t - disabled_frame_sent_).ToSeconds() < (1.0 / disabledMinFps)) {
         return;
       }
 
-      disabled_frame_sent_ = true;
+      disabled_frame_sent_ = t;
     } else {
-      disabled_frame_sent_ = false;
+      // This sets it to the Null time.
+      disabled_frame_sent_ = TimeStamp();
     }
 
     ++mLength; // Atomic
@@ -452,7 +456,7 @@ protected:
 
   // Written and read from the queueing thread (normally MSG).
   int32_t last_img_; // serial number of last Image
-  bool disabled_frame_sent_; // If a black frame has been sent after disabling.
+  TimeStamp disabled_frame_sent_; // The time we sent the last disabled frame.
 #ifdef DEBUG
   uint32_t mThrottleCount;
   uint32_t mThrottleRecord;

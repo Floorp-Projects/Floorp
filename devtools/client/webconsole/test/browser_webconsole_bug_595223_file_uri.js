@@ -21,9 +21,11 @@ add_task(function* () {
   dir.append(TEST_FILE);
   let uri = Services.io.newFileURI(dir);
 
-  // We need a file remote type to make sure we don't switch processes when we
-  // load the file:// URI.
-  let { browser } = yield loadTab("about:blank", E10SUtils.FILE_REMOTE_TYPE);
+  // Open tab with correct remote type so we don't switch processes when we load
+  // the file:// URI, otherwise we won't get the same web console.
+  let remoteType = E10SUtils.getRemoteTypeForURI(uri.spec,
+                                                 gMultiProcessBrowser);
+  let { browser } = yield loadTab("about:blank", remoteType);
 
   hud = yield openConsole();
   hud.jsterm.clearOutput();
