@@ -13,9 +13,9 @@ mode data) to absolute mode data, before it is blindly 'memset' in
 lfi->lvl[seg][0], which was where the out-of-bound filter_value was read in
 subsequent vp8_loop_filter_row_simple.
 
-diff --git a/media/libvpx/vp8/common/loopfilter.c b/media/libvpx/vp8/common/loopfilter.c
---- a/media/libvpx/vp8/common/loopfilter.c
-+++ b/media/libvpx/vp8/common/loopfilter.c
+diff --git a/media/libvpx/libvpx/vp8/common/loopfilter.c b/media/libvpx/libvpx/vp8/common/loopfilter.c
+--- a/media/libvpx/libvpx/vp8/common/loopfilter.c
++++ b/media/libvpx/libvpx/vp8/common/loopfilter.c
 @@ -136,18 +136,18 @@ void vp8_loop_filter_frame_init(VP8_COMM
              /* Abs value */
              if (mbd->mb_segement_abs_delta == SEGMENT_ABSDATA)

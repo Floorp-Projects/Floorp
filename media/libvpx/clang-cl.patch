@@ -1,9 +1,9 @@
 Bug 1233983 - Make libvpx build with clang-cl
 
-diff --git a/media/libvpx/vp8/common/generic/systemdependent.c b/media/libvpx/vp8/common/generic/systemdependent.c
+diff --git a/media/libvpx/libvpx/vp8/common/generic/systemdependent.c b/media/libvpx/libvpx/vp8/common/generic/systemdependent.c
 index 4393ced..8ee7e02 100644
---- a/media/libvpx/vp8/common/generic/systemdependent.c
-+++ b/media/libvpx/vp8/common/generic/systemdependent.c
+--- a/media/libvpx/libvpx/vp8/common/generic/systemdependent.c
++++ b/media/libvpx/libvpx/vp8/common/generic/systemdependent.c
 @@ -24,6 +24,7 @@
  #include <unistd.h>
  #elif defined(_WIN32)
@@ -12,10 +12,10 @@ index 4393ced..8ee7e02 100644
  typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
  #elif defined(__OS2__)
  #define INCL_DOS
-diff --git a/media/libvpx/vp8/common/rtcd.c b/media/libvpx/vp8/common/rtcd.c
+diff --git a/media/libvpx/libvpx/vp8/common/rtcd.c b/media/libvpx/libvpx/vp8/common/rtcd.c
 index ab0e9b4..98c2ecd 100644
---- a/media/libvpx/vp8/common/rtcd.c
-+++ b/media/libvpx/vp8/common/rtcd.c
+--- a/media/libvpx/libvpx/vp8/common/rtcd.c
++++ b/media/libvpx/libvpx/vp8/common/rtcd.c
 @@ -11,6 +11,9 @@
  #define RTCD_C
  #include "./vp8_rtcd.h"
@@ -26,10 +26,10 @@ index ab0e9b4..98c2ecd 100644
  
  
  void vp8_rtcd()
-diff --git a/media/libvpx/vp8/decoder/threading.c b/media/libvpx/vp8/decoder/threading.c
+diff --git a/media/libvpx/libvpx/vp8/decoder/threading.c b/media/libvpx/libvpx/vp8/decoder/threading.c
 index 6801532..a76672f 100644
---- a/media/libvpx/vp8/decoder/threading.c
-+++ b/media/libvpx/vp8/decoder/threading.c
+--- a/media/libvpx/libvpx/vp8/decoder/threading.c
++++ b/media/libvpx/libvpx/vp8/decoder/threading.c
 @@ -28,6 +28,9 @@
  #if CONFIG_ERROR_CONCEALMENT
  #include "error_concealment.h"
@@ -40,10 +40,10 @@ index 6801532..a76672f 100644
  
  #define CALLOC_ARRAY(p, n) CHECK_MEM_ERROR((p), vpx_calloc(sizeof(*(p)), (n)))
  #define CALLOC_ARRAY_ALIGNED(p, n, algn) do {                      \
-diff --git a/media/libvpx/vp8/encoder/encodeframe.c b/media/libvpx/vp8/encoder/encodeframe.c
+diff --git a/media/libvpx/libvpx/vp8/encoder/encodeframe.c b/media/libvpx/libvpx/vp8/encoder/encodeframe.c
 index d381d8d..5e84fb4 100644
---- a/media/libvpx/vp8/encoder/encodeframe.c
-+++ b/media/libvpx/vp8/encoder/encodeframe.c
+--- a/media/libvpx/libvpx/vp8/encoder/encodeframe.c
++++ b/media/libvpx/libvpx/vp8/encoder/encodeframe.c
 @@ -34,6 +34,9 @@
  #include "bitstream.h"
  #endif
@@ -54,10 +54,10 @@ index d381d8d..5e84fb4 100644
  
  extern void vp8_stuff_mb(VP8_COMP *cpi, MACROBLOCK *x, TOKENEXTRA **t) ;
  extern void vp8_calc_ref_frame_costs(int *ref_frame_cost,
-diff --git a/media/libvpx/vp8/encoder/ethreading.c b/media/libvpx/vp8/encoder/ethreading.c
+diff --git a/media/libvpx/libvpx/vp8/encoder/ethreading.c b/media/libvpx/libvpx/vp8/encoder/ethreading.c
 index 4e234cc..519ae73b 100644
---- a/media/libvpx/vp8/encoder/ethreading.c
-+++ b/media/libvpx/vp8/encoder/ethreading.c
+--- a/media/libvpx/libvpx/vp8/encoder/ethreading.c
++++ b/media/libvpx/libvpx/vp8/encoder/ethreading.c
 @@ -14,6 +14,9 @@
  #include "vp8/common/extend.h"
  #include "bitstream.h"
@@ -68,10 +68,10 @@ index 4e234cc..519ae73b 100644
  
  #if CONFIG_MULTITHREAD
  
-diff --git a/media/libvpx/vpx_dsp/vpx_dsp_rtcd.c b/media/libvpx/vpx_dsp/vpx_dsp_rtcd.c
+diff --git a/media/libvpx/libvpx/vpx_dsp/vpx_dsp_rtcd.c b/media/libvpx/libvpx/vpx_dsp/vpx_dsp_rtcd.c
 index 5fe27b6..d247603 100644
---- a/media/libvpx/vpx_dsp/vpx_dsp_rtcd.c
-+++ b/media/libvpx/vpx_dsp/vpx_dsp_rtcd.c
+--- a/media/libvpx/libvpx/vpx_dsp/vpx_dsp_rtcd.c
++++ b/media/libvpx/libvpx/vpx_dsp/vpx_dsp_rtcd.c
 @@ -11,6 +11,9 @@
  #define RTCD_C
  #include "./vpx_dsp_rtcd.h"
@@ -82,10 +82,10 @@ index 5fe27b6..d247603 100644
  
  void vpx_dsp_rtcd() {
    once(setup_rtcd_internal);
-diff --git a/media/libvpx/vpx_scale/vpx_scale_rtcd.c b/media/libvpx/vpx_scale/vpx_scale_rtcd.c
+diff --git a/media/libvpx/libvpx/vpx_scale/vpx_scale_rtcd.c b/media/libvpx/libvpx/vpx_scale/vpx_scale_rtcd.c
 index bea603f..65532ba 100644
---- a/media/libvpx/vpx_scale/vpx_scale_rtcd.c
-+++ b/media/libvpx/vpx_scale/vpx_scale_rtcd.c
+--- a/media/libvpx/libvpx/vpx_scale/vpx_scale_rtcd.c
++++ b/media/libvpx/libvpx/vpx_scale/vpx_scale_rtcd.c
 @@ -11,6 +11,9 @@
  #define RTCD_C
  #include "./vpx_scale_rtcd.h"
