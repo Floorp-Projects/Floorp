@@ -1,6 +1,6 @@
 "use strict";
 
-let AutoMigrateBackstage = Cu.import("resource:///modules/AutoMigrate.jsm"); /* globals AutoMigrate */
+Cu.import("resource:///modules/AutoMigrate.jsm", this);
 
 let gShimmedMigratorKeyPicker = null;
 let gShimmedMigrator = null;
@@ -11,6 +11,8 @@ const kUsecPerMin = 60 * 1000000;
 // we get in trouble because the object itself is frozen, and Proxies can't
 // return a different value to an object when directly proxying a frozen
 // object.
+let AutoMigrateBackstage = Cu.import("resource:///modules/AutoMigrate.jsm", {});
+
 AutoMigrateBackstage.MigrationUtils = new Proxy({}, {
   get(target, name) {
     if (name == "getMigratorKeyForDefaultBrowser" && gShimmedMigratorKeyPicker) {
@@ -608,4 +610,3 @@ add_task(function* checkUndoVisitsState() {
                "1 unrelated.org visits should have persisted as it's not involved in the import.");
   yield PlacesTestUtils.clearHistory();
 });
-

@@ -1,4 +1,4 @@
-const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm");
+const { CanonicalJSON } = Components.utils.import("resource://gre/modules/CanonicalJSON.jsm", {});
 
 function stringRepresentation(obj) {
   const clone = JSON.parse(JSON.stringify(obj));

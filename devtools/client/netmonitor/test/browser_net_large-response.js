@@ -17,7 +17,7 @@ add_task(function* () {
   // is going to be requested and displayed in the source editor.
   requestLongerTimeout(2);
 
-  let { document, EVENTS, Editor, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -34,18 +34,19 @@ add_task(function* () {
       statusText: "OK"
     });
 
-  let onEvent = monitor.panelWin.once(EVENTS.RESPONSE_BODY_DISPLAYED);
+  let waitDOM = waitForDOM(document, "#response-tabpanel .editor-mount iframe");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll("#details-pane tab")[3]);
-  yield onEvent;
+  let [editor] = yield waitDOM;
+  yield once(editor, "DOMContentLoaded");
+  yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
 
-  let editor = yield NetMonitorView.editor("#response-content-textarea");
-  ok(editor.getText().match(/^<p>/),
-    "The text shown in the source editor is incorrect.");
-  is(editor.getMode(), Editor.modes.text,
-    "The mode active in the source editor is incorrect.");
+  let text = editor.contentDocument
+        .querySelector(".CodeMirror-line").textContent;
+
+  ok(text.match(/^<p>/), "The text shown in the source editor is incorrect.");
 
   yield teardown(monitor);
 

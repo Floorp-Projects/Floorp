@@ -98,14 +98,17 @@ AC_SUBST(USE_ICU)
 AC_SUBST(ICU_DATA_FILE)
 AC_SUBST(MOZ_ICU_DATA_ARCHIVE)
 
-if test -n "$USE_ICU" -a -z "$MOZ_SYSTEM_ICU"; then
-    if test -z "$YASM" -a -z "$GNU_AS" -a "$COMPILE_ENVIRONMENT"; then
-      AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
-    fi
-    dnl We build ICU as a static library.
-    AC_DEFINE(U_STATIC_IMPLEMENTATION)
+if test -n "$USE_ICU"; then
     dnl Source files that use ICU should have control over which parts of the ICU
     dnl namespace they want to use.
     AC_DEFINE(U_USING_ICU_NAMESPACE,0)
+
+    if test -z "$MOZ_SYSTEM_ICU"; then
+        if test -z "$YASM" -a -z "$GNU_AS" -a "$COMPILE_ENVIRONMENT"; then
+            AC_MSG_ERROR([Building ICU requires either yasm or a GNU assembler. If you do not have either of those available for this platform you must use --without-intl-api])
+        fi
+        dnl We build ICU as a static library.
+        AC_DEFINE(U_STATIC_IMPLEMENTATION)
+    fi
 fi
 ])

@@ -98,13 +98,13 @@ function sendPing() {
 }
 
 function fakeGenerateUUID(sessionFunc, subsessionFunc) {
-  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
   session.Policy.generateSessionUUID = sessionFunc;
   session.Policy.generateSubsessionUUID = subsessionFunc;
 }
 
 function fakeIdleNotification(topic) {
-  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
   return session.TelemetryScheduler.observe(null, topic, null);
 }
 

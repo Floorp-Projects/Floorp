@@ -87,7 +87,9 @@
     <style name="GeckoActionBar.Button" parent="android:style/Widget.Holo.Light.ActionButton">
         <item name="android:padding">8dip</item>
         <!-- The default implementation doesn't do any image scaling. Our custom menus mean we can't just use the same image
-             in both menus and the actionbar without doing some scaling though. -->
+             in both menus and the actionbar without doing some scaling though. Users may also want to set
+             layout_height="match_parent" to make sure buttons are scaled to full action bar height - setting it here
+             doesn't work. -->
         <item name="android:scaleType">centerInside</item>
     </style>
 

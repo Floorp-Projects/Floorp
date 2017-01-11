@@ -5,8 +5,8 @@
 'use strict';
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-const { XPCOMUtils } = Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-const { SystemAppProxy } = Cu.import('resource://gre/modules/SystemAppProxy.jsm');
+const { XPCOMUtils } = Cu.import('resource://gre/modules/XPCOMUtils.jsm', {});
+const { SystemAppProxy } = Cu.import('resource://gre/modules/SystemAppProxy.jsm', {});
 
 const glue = Cc["@mozilla.org/presentation/requestuiglue;1"]
              .createInstance(Ci.nsIPresentationRequestUIGlue);

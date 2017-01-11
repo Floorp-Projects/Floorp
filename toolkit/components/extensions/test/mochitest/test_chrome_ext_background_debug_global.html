@@ -19,7 +19,7 @@ Cu.import("resource://gre/modules/AddonManager.jsm");
 
 const {
   XPIProvider,
-} = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
+} = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
 
 /**
  * This test is asserting that ext-backgroundPage.js successfully sets its

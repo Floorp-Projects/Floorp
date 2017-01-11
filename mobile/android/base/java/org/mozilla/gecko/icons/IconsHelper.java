@@ -5,15 +5,22 @@
 
 package org.mozilla.gecko.icons;
 
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Base64OutputStream;
 import android.util.Log;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.StringUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashSet;
 
 /**
@@ -136,5 +143,31 @@ public class IconsHelper {
      */
     public static boolean canDecodeType(@NonNull String imgType) {
         return sDecodableMimeTypes.contains(imgType);
+    }
+
+    /**
+     * Create an icon callback that encodes the icon as base64 image URI and returns it via the
+     * EventCallback to JavaScript.
+     */
+    public static IconCallback createBase64EventCallback(final EventCallback callback) {
+        return new IconCallback() {
+            @Override
+            public void onIconResponse(IconResponse response) {
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+                try {
+                    response.getBitmap().compress(
+                            Bitmap.CompressFormat.PNG,
+                            100, // PNG which is lossless will ignore the quality setting
+                            stream);
+
+                    callback.sendSuccess(
+                            "data:image/x-icon;base64,"
+                            + Base64.encodeToString(stream.toByteArray(), Base64.NO_WRAP));
+                } finally {
+                    IOUtils.safeStreamClose(stream);
+                }
+            }
+        };
     }
 }
