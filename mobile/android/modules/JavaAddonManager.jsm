@@ -37,7 +37,7 @@ var JavaAddonManager = Object.freeze({
     if (!filename) {
       throw new Error("filename cannot be null");
     }
-    return Messaging.sendRequestForResult({
+    return EventDispatcher.instance.sendRequestForResult({
       type: "JavaAddonManagerV1:Load",
       classname: classname,
       filename: resolveGeckoURI(filename)
@@ -73,7 +73,7 @@ JavaAddonV1.prototype = Object.freeze({
       return;
     }
 
-    Messaging.sendRequestForResult({
+    EventDispatcher.instance.sendRequestForResult({
       type: "JavaAddonManagerV1:Unload",
       guid: this._guid
     })
