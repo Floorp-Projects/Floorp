@@ -37,19 +37,19 @@ const FilterBar = createClass({
       this.wrapperNode.querySelector(".text-filter"));
   },
 
-  onClickMessagesClear: function () {
+  onClickMessagesClear() {
     this.props.dispatch(messagesClear());
   },
 
-  onClickFilterBarToggle: function () {
+  onClickFilterBarToggle() {
     this.props.dispatch(uiActions.filterBarToggle());
   },
 
-  onClickFiltersClear: function () {
+  onClickFiltersClear() {
     this.props.dispatch(filtersClear());
   },
 
-  onSearchInput: function (e) {
+  onSearchInput(e) {
     this.props.dispatch(filterTextSet(e.target.value));
   },
 

@@ -33,7 +33,7 @@ define(function (require, exports, module) {
       cropLimit: React.PropTypes.number,
     },
 
-    getDefaultProps: function () {
+    getDefaultProps() {
       return {
         useQuotes: true,
       };
@@ -71,6 +71,6 @@ define(function (require, exports, module) {
 
   exports.StringRep = {
     rep: StringRep,
-    supportsObject: supportsObject,
+    supportsObject,
   };
 });

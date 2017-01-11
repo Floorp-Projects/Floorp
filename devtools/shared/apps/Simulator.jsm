@@ -21,22 +21,22 @@ this.EXPORTED_SYMBOLS = ["Simulator"];
 let Simulator = this.Simulator = {
   _simulators: {},
 
-  register: function (name, simulator) {
+  register(name, simulator) {
     // simulators register themselves as "Firefox OS X.Y"
     this._simulators[name] = simulator;
     this.emit("register", name);
   },
 
-  unregister: function (name) {
+  unregister(name) {
     delete this._simulators[name];
     this.emit("unregister", name);
   },
 
-  availableNames: function () {
+  availableNames() {
     return Object.keys(this._simulators).sort();
   },
 
-  getByName: function (name) {
+  getByName(name) {
     return this._simulators[name];
   },
 };

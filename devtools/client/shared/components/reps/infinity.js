@@ -42,6 +42,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.InfinityRep = {
     rep: InfinityRep,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

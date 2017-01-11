@@ -182,7 +182,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * @param nsIDOMNode arrowNode
    * @return nsIDOMNode
    */
-  _displaySelf: function (document, arrowNode) {
+  _displaySelf(document, arrowNode) {
     let frameInfo = this.getDisplayedData();
     let cells = [];
 
@@ -222,7 +222,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * These are defined in the `frame` data source for this call view.
    * @param array:AbstractTreeItem children
    */
-  _populateSelf: function (children) {
+  _populateSelf(children) {
     let newLevel = this.level + 1;
 
     for (let newFrame of this.frame.calls) {
@@ -243,7 +243,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * Functions creating each cell in this call view.
    * Invoked by `_displaySelf`.
    */
-  _createCell: function (doc, value, type) {
+  _createCell(doc, value, type) {
     let cell = doc.createElement("description");
     cell.className = "plain call-tree-cell";
     cell.setAttribute("type", type);
@@ -253,7 +253,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     return cell;
   },
 
-  _createFunctionCell: function (doc, arrowNode, frameName, frameInfo, frameLevel) {
+  _createFunctionCell(doc, arrowNode, frameName, frameInfo, frameLevel) {
     let cell = doc.createElement("hbox");
     cell.className = "call-tree-cell";
     cell.style.marginInlineStart = (frameLevel * CALL_TREE_INDENTATION) + "px";
@@ -303,7 +303,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
     return cell;
   },
 
-  _appendFunctionDetailsCells: function (doc, cell, frameInfo) {
+  _appendFunctionDetailsCells(doc, cell, frameInfo) {
     if (frameInfo.fileName) {
       let urlNode = doc.createElement("description");
       urlNode.className = "plain call-tree-url";
@@ -349,7 +349,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    *
    * @return object
    */
-  getDisplayedData: function () {
+  getDisplayedData() {
     if (this._cachedDisplayedData) {
       return this._cachedDisplayedData;
     }
@@ -382,7 +382,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
    * Toggles the category information hidden or visible.
    * @param boolean visible
    */
-  toggleCategories: function (visible) {
+  toggleCategories(visible) {
     if (!visible) {
       this.container.setAttribute("categories-hidden", "");
     } else {
@@ -393,7 +393,7 @@ CallView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   /**
    * Handler for the "click" event on the url node of this call view.
    */
-  _onUrlClick: function (e) {
+  _onUrlClick(e) {
     e.preventDefault();
     e.stopPropagation();
     // Only emit for left click events

@@ -67,7 +67,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Display the style inspector context menu
    */
-  show: function (event) {
+  show(event) {
     try {
       this._openMenu({
         target: event.explicitOriginalTarget,
@@ -79,7 +79,7 @@ StyleInspectorMenu.prototype = {
     }
   },
 
-  _openMenu: function ({ target, screenX = 0, screenY = 0 } = { }) {
+  _openMenu({ target, screenX = 0, screenY = 0 } = { }) {
     // In the sidebar we do not have this.styleDocument.popupNode
     // so we need to save the node ourselves.
     this.styleDocument.popupNode = target;
@@ -260,7 +260,7 @@ StyleInspectorMenu.prototype = {
     return menu;
   },
 
-  _hasTextSelected: function () {
+  _hasTextSelected() {
     let hasTextSelected;
     let selection = this.styleWindow.getSelection();
 
@@ -279,7 +279,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Get the type of the currently clicked node
    */
-  _getClickedNodeInfo: function () {
+  _getClickedNodeInfo() {
     let node = this._getClickedNode();
     return this.view.getNodeInfo(node);
   },
@@ -291,7 +291,7 @@ StyleInspectorMenu.prototype = {
    * @return {Boolean}
    *         true if click on color opened the popup, false otherwise.
    */
-  _isColorPopup: function () {
+  _isColorPopup() {
     this._colorToCopy = "";
 
     let container = this._getClickedNode();
@@ -312,7 +312,7 @@ StyleInspectorMenu.prototype = {
     return true;
   },
 
-  _isPropertyName: function () {
+  _isPropertyName() {
     let nodeInfo = this._getClickedNodeInfo();
     if (!nodeInfo) {
       return false;
@@ -325,7 +325,7 @@ StyleInspectorMenu.prototype = {
    *
    * @return {Boolean} true if the node is an image url
    */
-  _isImageUrl: function () {
+  _isImageUrl() {
     let nodeInfo = this._getClickedNodeInfo();
     if (!nodeInfo) {
       return false;
@@ -340,7 +340,7 @@ StyleInspectorMenu.prototype = {
    *
    * @return {DOMNode}
    */
-  _getClickedNode: function () {
+  _getClickedNode() {
     let container = null;
     let node = this.styleDocument.popupNode;
 
@@ -355,7 +355,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Select all text.
    */
-  _onSelectAll: function () {
+  _onSelectAll() {
     let selection = this.styleWindow.getSelection();
     selection.selectAllChildren(this.view.element);
   },
@@ -363,21 +363,21 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the most recently selected color value to clipboard.
    */
-  _onCopy: function () {
+  _onCopy() {
     this.view.copySelection(this.styleDocument.popupNode);
   },
 
   /**
    * Copy the most recently selected color value to clipboard.
    */
-  _onCopyColor: function () {
+  _onCopyColor() {
     clipboardHelper.copyString(this._colorToCopy);
   },
 
   /*
    * Retrieve the url for the selected image and copy it to the clipboard
    */
-  _onCopyUrl: function () {
+  _onCopyUrl() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -411,7 +411,7 @@ StyleInspectorMenu.prototype = {
   /**
    *  Show docs from MDN for a CSS property.
    */
-  _onShowMdnDocs: function () {
+  _onShowMdnDocs() {
     let cssPropertyName = this.styleDocument.popupNode.textContent;
     let anchor = this.styleDocument.popupNode.parentNode;
     let cssDocsTooltip = this.view.tooltips.cssDocs;
@@ -421,14 +421,14 @@ StyleInspectorMenu.prototype = {
   /**
    * Add a new rule to the current element.
    */
-  _onAddNewRule: function () {
+  _onAddNewRule() {
     this.view._onAddRule();
   },
 
   /**
    * Copy the rule source location of the current clicked node.
    */
-  _onCopyLocation: function () {
+  _onCopyLocation() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -439,7 +439,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule property declaration of the current clicked node.
    */
-  _onCopyPropertyDeclaration: function () {
+  _onCopyPropertyDeclaration() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -451,7 +451,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule property name of the current clicked node.
    */
-  _onCopyPropertyName: function () {
+  _onCopyPropertyName() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -462,7 +462,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule property value of the current clicked node.
    */
-  _onCopyPropertyValue: function () {
+  _onCopyPropertyValue() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -473,7 +473,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule of the current clicked node.
    */
-  _onCopyRule: function () {
+  _onCopyRule() {
     let ruleEditor =
       this.styleDocument.popupNode.parentNode.offsetParent._ruleEditor;
     let rule = ruleEditor.rule;
@@ -483,7 +483,7 @@ StyleInspectorMenu.prototype = {
   /**
    * Copy the rule selector of the current clicked node.
    */
-  _onCopySelector: function () {
+  _onCopySelector() {
     if (!this._clickedNodeInfo) {
       return;
     }
@@ -494,12 +494,12 @@ StyleInspectorMenu.prototype = {
   /**
    *  Toggle the original sources pref.
    */
-  _onToggleOrigSources: function () {
+  _onToggleOrigSources() {
     let isEnabled = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
     Services.prefs.setBoolPref(PREF_ORIG_SOURCES, !isEnabled);
   },
 
-  destroy: function () {
+  destroy() {
     this.popupNode = null;
     this.styleDocument.popupNode = null;
     this.view = null;

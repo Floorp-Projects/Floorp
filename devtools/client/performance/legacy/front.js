@@ -41,7 +41,7 @@ const LegacyPerformanceFront = Class({
     },
   },
 
-  initialize: function (target) {
+  initialize(target) {
     let { form, client } = target;
     this._target = target;
     this._form = form;
@@ -128,7 +128,7 @@ const LegacyPerformanceFront = Class({
    * Registers listeners on events from the underlying
    * actors, so the connection can handle them.
    */
-  _registerListeners: function () {
+  _registerListeners() {
     this._timeline.on("timeline-data", this._onTimelineData);
     this._profiler.on("console-profile-start", this._onConsoleProfileStart);
     this._profiler.on("console-profile-stop", this._onConsoleProfileStop);
@@ -139,7 +139,7 @@ const LegacyPerformanceFront = Class({
   /**
    * Unregisters listeners on events on the underlying actors.
    */
-  _unregisterListeners: function () {
+  _unregisterListeners() {
     this._timeline.off("timeline-data", this._onTimelineData);
     this._profiler.off("console-profile-start", this._onConsoleProfileStart);
     this._profiler.off("console-profile-stop", this._onConsoleProfileStop);
@@ -229,7 +229,7 @@ const LegacyPerformanceFront = Class({
  /**
   * TODO handle bug 1144438
   */
-  _onProfilerUnexpectedlyStopped: function () {
+  _onProfilerUnexpectedlyStopped() {
     console.error("Profiler unexpectedly stopped.", arguments);
   },
 
@@ -241,7 +241,7 @@ const LegacyPerformanceFront = Class({
    *
    * Populate our internal store of recordings for all currently recording sessions.
    */
-  _onTimelineData: function (_, ...data) {
+  _onTimelineData(_, ...data) {
     this._recordings.forEach(e => e._addTimelineData.apply(e, data));
     events.emit(this, "timeline-data", ...data);
   },
@@ -249,7 +249,7 @@ const LegacyPerformanceFront = Class({
   /**
    * Called whenever the underlying profiler polls its current status.
    */
-  _onProfilerStatus: function (_, data) {
+  _onProfilerStatus(_, data) {
     // If no data emitted (whether from an older actor being destroyed
     // from a previous test, or the server does not support it), just ignore.
     if (!data || data.position === void 0) {
@@ -358,7 +358,7 @@ const LegacyPerformanceFront = Class({
 
       // End times for all the actors.
       profilerEndTime: profilerData.currentTime,
-      timelineEndTime: timelineEndTime,
+      timelineEndTime,
       systemHost,
       systemClient,
     });
@@ -374,7 +374,7 @@ const LegacyPerformanceFront = Class({
    *        The file to import the data from.
    * @return {Promise<LegacyPerformanceRecording>}
    */
-  importRecording: function (file) {
+  importRecording(file) {
     return importRecording(file);
   },
 
@@ -384,7 +384,7 @@ const LegacyPerformanceFront = Class({
    *
    * @return Boolean
    */
-  isRecording: function () {
+  isRecording() {
     return this._recordings.some(recording => recording.isRecording());
   },
 
@@ -395,7 +395,7 @@ const LegacyPerformanceFront = Class({
    * @param {PerformanceRecording} recording
    * @return {number?}
    */
-  getBufferUsageForRecording: function (recording) {
+  getBufferUsageForRecording(recording) {
     if (!recording.isRecording() || !this._currentBufferStatus) {
       return null;
     }
@@ -431,7 +431,7 @@ const LegacyPerformanceFront = Class({
    * An event from an underlying actor that we just want
    * to pipe to the front itself.
    */
-  _pipeToFront: function (eventName, ...args) {
+  _pipeToFront(eventName, ...args) {
     events.emit(this, eventName, ...args);
   },
 
@@ -439,7 +439,7 @@ const LegacyPerformanceFront = Class({
    * Helper method to interface with the underlying actors directly.
    * Used only in tests.
    */
-  _request: function (actorName, method, ...args) {
+  _request(actorName, method, ...args) {
     if (!flags.testing) {
       throw new Error("LegacyPerformanceFront._request may only be used in tests.");
     }
@@ -451,7 +451,7 @@ const LegacyPerformanceFront = Class({
    * Sets how often the "profiler-status" event should be emitted.
    * Used in tests.
    */
-  setProfilerStatusInterval: function (n) {
+  setProfilerStatusInterval(n) {
     if (this._profiler._poller) {
       this._profiler._poller._wait = n;
     }

@@ -78,7 +78,7 @@ add_task(function* () {
       start: runAutocompletionTest,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
       done: resolve,
-      popup: popup
+      popup
     }, doc);
   });
 

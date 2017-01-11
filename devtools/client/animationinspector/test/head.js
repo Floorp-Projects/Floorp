@@ -160,8 +160,8 @@ var openAnimationInspector = Task.async(function* () {
   yield waitForAllAnimationTargets(AnimationsPanel);
 
   return {
-    toolbox: toolbox,
-    inspector: inspector,
+    toolbox,
+    inspector,
     controller: AnimationsController,
     panel: AnimationsPanel,
     window: win

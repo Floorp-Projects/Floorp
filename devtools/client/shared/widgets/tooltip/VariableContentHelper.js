@@ -80,7 +80,7 @@ function setTooltipVariableContent(tooltip, objectActor,
   // Use the object actor's grip to display it as a variable in the widget.
   // The controller options are allowed to change between uses.
   widget.controller.setSingleVariable(
-    { objectActor: objectActor }, controllerOptions);
+    { objectActor }, controllerOptions);
 
   tooltip.content = vbox;
   tooltip.panel.setAttribute("clamped-dimensions", "");

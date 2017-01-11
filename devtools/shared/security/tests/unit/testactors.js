@@ -47,7 +47,7 @@ function TestTabList(connection) {
 
 TestTabList.prototype = {
   constructor: TestTabList,
-  getList: function () {
+  getList() {
     return promise.resolve([...this._tabActors]);
   }
 };
@@ -82,7 +82,7 @@ TestTabActor.prototype = {
     return this._global.__name;
   },
 
-  form: function () {
+  form() {
     let response = { actor: this.actorID, title: this._global.__name };
 
     // Walk over tab actors added by extensions and add them to a new ActorPool.
@@ -98,7 +98,7 @@ TestTabActor.prototype = {
     return response;
   },
 
-  onAttach: function (request) {
+  onAttach(request) {
     this._attached = true;
 
     let response = { type: "tabAttached", threadActor: this._threadActor.actorID };
@@ -107,7 +107,7 @@ TestTabActor.prototype = {
     return response;
   },
 
-  onDetach: function (request) {
+  onDetach(request) {
     if (!this._attached) {
       return { "error": "wrongState" };
     }

@@ -32,7 +32,7 @@ exports.items = [
         }
       ]
     }],
-    exec: function (args, context) {
+    exec(args, context) {
       let utils;
       let deferred = context.defer();
 
@@ -53,7 +53,7 @@ exports.items = [
     item: "converter",
     from: "appcacheerrors",
     to: "view",
-    exec: function ([errors, manifestURI], context) {
+    exec([errors, manifestURI], context) {
       if (errors.length == 0) {
         return context.createView({
           html: "<span>" + l10n.lookup("appCacheValidatedSuccessfully") + "</span>"
@@ -69,8 +69,8 @@ exports.items = [
           "  </ol>" +
           "</div>",
         data: {
-          errors: errors,
-          manifestURI: manifestURI
+          errors,
+          manifestURI
         }
       });
     }
@@ -81,7 +81,7 @@ exports.items = [
     name: "appcache clear",
     description: l10n.lookup("appCacheClearDesc"),
     manual: l10n.lookup("appCacheClearManual"),
-    exec: function (args, context) {
+    exec(args, context) {
       let utils = new AppCacheUtils(args.uri);
       utils.clearAll();
 
@@ -106,7 +106,7 @@ exports.items = [
         },
       ]
     }],
-    exec: function (args, context) {
+    exec(args, context) {
       let utils = new AppCacheUtils();
       return utils.listEntries(args.search);
     }
@@ -115,7 +115,7 @@ exports.items = [
     item: "converter",
     from: "appcacheentries",
     to: "view",
-    exec: function (entries, context) {
+    exec(entries, context) {
       return context.createView({
         html: "" +
           "<ul class='gcli-appcache-list'>" +
@@ -157,7 +157,7 @@ exports.items = [
           "  </li>" +
           "</ul>",
         data: {
-          entries: entries,
+          entries,
           onclick: context.update,
           ondblclick: context.updateExec
         }
@@ -178,7 +178,7 @@ exports.items = [
         defaultValue: null,
       }
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       let utils = new AppCacheUtils();
       return utils.viewEntry(args.key);
     }

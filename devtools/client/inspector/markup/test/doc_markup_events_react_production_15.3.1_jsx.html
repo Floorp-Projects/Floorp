@@ -20,11 +20,11 @@
       /* exported ClickMe */
 
       var ClickMe = React.createClass({
-        inlineFunction: function () {
+        inlineFunction() {
           alert("inlineFunction");
         },
 
-        render: function () {
+        render() {
           return (
             <div>
               <h3 id="inlinejsx" onClick={this.inlineFunction}>Click for inlineFunction</h3>

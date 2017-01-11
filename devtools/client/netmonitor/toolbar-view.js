@@ -22,7 +22,7 @@ ToolbarView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function (store) {
+  initialize(store) {
     dumpn("Initializing the ToolbarView");
 
     this._toolbarNode = $("#react-toolbar-hook");
@@ -36,7 +36,7 @@ ToolbarView.prototype = {
   /**
    * Destruction function, called when the network monitor is closed.
    */
-  destroy: function () {
+  destroy() {
     dumpn("Destroying the ToolbarView");
 
     ReactDOM.unmountComponentAtNode(this._toolbarNode);

@@ -28,21 +28,21 @@ const Devices = {
     this.emit("addon-status-updated", v);
   },
 
-  register: function (name, device) {
+  register(name, device) {
     this._devices[name] = device;
     this.emit("register");
   },
 
-  unregister: function (name) {
+  unregister(name) {
     delete this._devices[name];
     this.emit("unregister");
   },
 
-  available: function () {
+  available() {
     return Object.keys(this._devices).sort();
   },
 
-  getByName: function (name) {
+  getByName(name) {
     return this._devices[name];
   }
 };

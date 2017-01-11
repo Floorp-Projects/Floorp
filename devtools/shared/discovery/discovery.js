@@ -95,7 +95,7 @@ Transport.prototype = {
    * @param port integer
    *        UDP port to send the message to
    */
-  send: function (object, port) {
+  send(object, port) {
     if (logging) {
       log("Send to " + port + ":\n" + JSON.stringify(object, null, 2));
     }
@@ -108,13 +108,13 @@ Transport.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy() {
     this.socket.close();
   },
 
   // nsIUDPSocketListener
 
-  onPacketReceived: function (socket, message) {
+  onPacketReceived(socket, message) {
     let messageData = message.data;
     let object = JSON.parse(messageData);
     object.from = message.fromAddr.address;
@@ -130,7 +130,7 @@ Transport.prototype = {
     this.emit("message", object);
   },
 
-  onStopListening: function () {}
+  onStopListening() {}
 
 };
 
@@ -156,7 +156,7 @@ LocalDevice.UNKNOWN = "unknown";
 
 LocalDevice.prototype = {
 
-  _get: function () {
+  _get() {
     if (!this._settings) {
       // Without Settings API, just generate a name and stop, since the value
       // can't be persisted.
@@ -182,7 +182,7 @@ LocalDevice.prototype = {
    * Generate a new device name from various platform-specific properties.
    * Triggers the |name| setter to persist if needed.
    */
-  _generate: function () {
+  _generate() {
     if (Services.appinfo.widgetToolkit == "gonk") {
       // For Firefox OS devices, create one from the device name plus a little
       // randomness.  The goal is just to distinguish devices in an office
@@ -206,7 +206,7 @@ LocalDevice.prototype = {
   /**
    * Observe any changes that might be made via the Settings app
    */
-  observe: function (subject, topic, data) {
+  observe(subject, topic, data) {
     if (topic !== "mozsettings-changed") {
       return;
     }
@@ -249,7 +249,7 @@ function Discovery() {
   this.replyTimeout = REPLY_TIMEOUT;
 
   // Defaulted to Transport, but can be altered by tests
-  this._factories = { Transport: Transport };
+  this._factories = { Transport };
 
   this._transports = {
     scan: null,
@@ -273,7 +273,7 @@ Discovery.prototype = {
    * @param info object
    *        Arbitrary data about the service to announce to scanning devices
    */
-  addService: function (service, info) {
+  addService(service, info) {
     log("ADDING LOCAL SERVICE");
     if (Object.keys(this.localServices).length === 0) {
       this._startListeningForScan();
@@ -286,7 +286,7 @@ Discovery.prototype = {
    * @param service string
    *        Name of the service
    */
-  removeService: function (service) {
+  removeService(service) {
     delete this.localServices[service];
     if (Object.keys(this.localServices).length === 0) {
       this._stopListeningForScan();
@@ -296,7 +296,7 @@ Discovery.prototype = {
   /**
    * Scan for service updates from other devices.
    */
-  scan: function () {
+  scan() {
     this._startListeningForUpdate();
     this._waitForReplies();
     // TODO Bug 1027457: Use timer to debounce
@@ -306,7 +306,7 @@ Discovery.prototype = {
   /**
    * Get a list of all remote devices currently offering some service.:w
    */
-  getRemoteDevices: function () {
+  getRemoteDevices() {
     let devices = new Set();
     for (let service in this.remoteServices) {
       for (let device in this.remoteServices[service]) {
@@ -319,7 +319,7 @@ Discovery.prototype = {
   /**
    * Get a list of all remote devices currently offering a particular service.
    */
-  getRemoteDevicesWithService: function (service) {
+  getRemoteDevicesWithService(service) {
     let devicesWithService = this.remoteServices[service] || {};
     return Object.keys(devicesWithService);
   },
@@ -328,12 +328,12 @@ Discovery.prototype = {
    * Get service info (any details registered by the remote device) for a given
    * service on a device.
    */
-  getRemoteService: function (service, device) {
+  getRemoteService(service, device) {
     let devicesWithService = this.remoteServices[service] || {};
     return devicesWithService[device];
   },
 
-  _waitForReplies: function () {
+  _waitForReplies() {
     clearTimeout(this._expectingReplies.timer);
     this._expectingReplies.from = new Set(this.getRemoteDevices());
     this._expectingReplies.timer =
@@ -344,7 +344,7 @@ Discovery.prototype = {
     return this._factories.Transport;
   },
 
-  _startListeningForScan: function () {
+  _startListeningForScan() {
     if (this._transports.scan) {
       // Already listening
       return;
@@ -354,7 +354,7 @@ Discovery.prototype = {
     this._transports.scan.on("message", this._onRemoteScan);
   },
 
-  _stopListeningForScan: function () {
+  _stopListeningForScan() {
     if (!this._transports.scan) {
       // Not listening
       return;
@@ -364,7 +364,7 @@ Discovery.prototype = {
     this._transports.scan = null;
   },
 
-  _startListeningForUpdate: function () {
+  _startListeningForUpdate() {
     if (this._transports.update) {
       // Already listening
       return;
@@ -374,7 +374,7 @@ Discovery.prototype = {
     this._transports.update.on("message", this._onRemoteUpdate);
   },
 
-  _stopListeningForUpdate: function () {
+  _stopListeningForUpdate() {
     if (!this._transports.update) {
       // Not listening
       return;
@@ -384,7 +384,7 @@ Discovery.prototype = {
     this._transports.update = null;
   },
 
-  _restartListening: function () {
+  _restartListening() {
     if (this._transports.scan) {
       this._stopListeningForScan();
       this._startListeningForScan();
@@ -409,7 +409,7 @@ Discovery.prototype = {
     return null;
   },
 
-  _sendStatusTo: function (port) {
+  _sendStatusTo(port) {
     let status = {
       device: this.device.name,
       services: this.localServices
@@ -417,13 +417,13 @@ Discovery.prototype = {
     this._outgoingTransport.send(status, port);
   },
 
-  _onRemoteScan: function () {
+  _onRemoteScan() {
     // Send my own status in response
     log("GOT SCAN REQUEST");
     this._sendStatusTo(UPDATE_PORT);
   },
 
-  _onRemoteUpdate: function (e, update) {
+  _onRemoteUpdate(e, update) {
     log("GOT REMOTE UPDATE");
 
     let remoteDevice = update.device;
@@ -479,7 +479,7 @@ Discovery.prototype = {
     }
   },
 
-  _purgeMissingDevices: function () {
+  _purgeMissingDevices() {
     log("PURGING MISSING DEVICES");
     for (let service in this.remoteServices) {
       let devicesWithService = this.remoteServices[service];

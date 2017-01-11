@@ -31,7 +31,7 @@ define(function (require, exports, module) {
       columns: PropTypes.array
     },
 
-    getDefaultProps: function () {
+    getDefaultProps() {
       return {
         columns: [{
           id: "default"
@@ -39,7 +39,7 @@ define(function (require, exports, module) {
       };
     },
 
-    getHeaderClass: function (colId) {
+    getHeaderClass(colId) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getHeaderClass) {
         return [];
@@ -58,7 +58,7 @@ define(function (require, exports, module) {
       return classNames;
     },
 
-    render: function () {
+    render() {
       let cells = [];
       let visible = this.props.header;
 

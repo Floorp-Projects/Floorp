@@ -72,7 +72,7 @@ var items = [
     parent: "selection",
     stringifyProperty: "name",
     cacheable: true,
-    constructor: function () {
+    constructor() {
       // Tell GCLI to clear the cache of addons when one is added or removed
       let listener = {
         onInstalled: addon => {
@@ -84,12 +84,12 @@ var items = [
       };
       AddonManager.addAddonListener(listener);
     },
-    lookup: function () {
+    lookup() {
       return getAllAddons().then(addons => {
         return addons.map(addon => {
           let name = addon.name + " " + addon.version;
           name = name.trim().replace(/\s/g, "_");
-          return { name: name, value: addon };
+          return { name, value: addon };
         });
       });
     }
@@ -111,7 +111,7 @@ var items = [
       defaultValue: "all",
       description: l10n.lookup("addonListTypeDesc")
     }],
-    exec: function (args, context) {
+    exec(args, context) {
       let types = (args.type === "all") ? null : [ args.type ];
       return getAddonsByTypes(types).then(addons => {
         addons = addons.map(function (addon) {
@@ -122,7 +122,7 @@ var items = [
             pendingOperations: pendingOperations(addon)
           };
         });
-        return { addons: addons, type: args.type };
+        return { addons, type: args.type };
       });
     }
   },
@@ -130,7 +130,7 @@ var items = [
     item: "converter",
     from: "addonsInfo",
     to: "view",
-    exec: function (addonsInfo, context) {
+    exec(addonsInfo, context) {
       if (!addonsInfo.addons.length) {
         return context.createView({
           html: "<p>${message}</p>",
@@ -204,7 +204,7 @@ var items = [
           " </tbody>" +
           "</table>",
         data: {
-          header: header,
+          header,
           addons: arrangeAddons(addonsInfo.addons).map(function (addon) {
             return {
               name: addon.name,
@@ -241,7 +241,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.userDisabled) {
         args.addon.userDisabled = false;
@@ -263,7 +263,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       // If the addon is not disabled or is set to "click to play" then
       // disable it. Otherwise display the message "Add-on is already
       // disabled."
@@ -289,7 +289,7 @@ var items = [
         description: l10n.lookup("addonNameDesc")
       }
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       let name = (args.addon.name + " " + args.addon.version).trim();
       if (args.addon.type !== "plugin") {
         return l10n.lookupFormat("addonCantCtp", [ name ]);

@@ -23,12 +23,12 @@ const { RuleRewriter } = require("devtools/shared/css/parsing-utils");
  * PageStyleFront, the front object for the PageStyleActor
  */
 const PageStyleFront = FrontClassWithSpec(pageStyleSpec, {
-  initialize: function (conn, form, ctx, detail) {
+  initialize(conn, form, ctx, detail) {
     Front.prototype.initialize.call(this, conn, form, ctx, detail);
     this.inspector = this.parent();
   },
 
-  form: function (form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -36,7 +36,7 @@ const PageStyleFront = FrontClassWithSpec(pageStyleSpec, {
     this._form = form;
   },
 
-  destroy: function () {
+  destroy() {
     Front.prototype.destroy.call(this);
   },
 
@@ -91,15 +91,15 @@ exports.PageStyleFront = PageStyleFront;
  * StyleRuleFront, the front for the StyleRule actor.
  */
 const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
-  initialize: function (client, form, ctx, detail) {
+  initialize(client, form, ctx, detail) {
     Front.prototype.initialize.call(this, client, form, ctx, detail);
   },
 
-  destroy: function () {
+  destroy() {
     Front.prototype.destroy.call(this);
   },
 
-  form: function (form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -130,7 +130,7 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
    *                             This is needed by the RuleRewriter.
    * @return {RuleModificationList}
    */
-  startModifyingProperties: function (cssProperties) {
+  startModifyingProperties(cssProperties) {
     if (this.canSetRuleText) {
       return new RuleRewriter(cssProperties.isKnown, this, this.authoredText);
     }
@@ -220,11 +220,11 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
     };
   },
 
-  _clearOriginalLocation: function () {
+  _clearOriginalLocation() {
     this._originalLocation = null;
   },
 
-  getOriginalLocation: function () {
+  getOriginalLocation() {
     if (this._originalLocation) {
       return promise.resolve(this._originalLocation);
     }
@@ -238,8 +238,8 @@ const StyleRuleFront = FrontClassWithSpec(styleRuleSpec, {
       .then(({ fromSourceMap, source, line, column }) => {
         let location = {
           href: source,
-          line: line,
-          column: column,
+          line,
+          column,
           mediaText: this.mediaText
         };
         if (fromSourceMap === false) {
@@ -300,7 +300,7 @@ var RuleModificationList = Class({
    * Initialize a RuleModificationList.
    * @param {StyleRuleFront} rule the associated rule
    */
-  initialize: function (rule) {
+  initialize(rule) {
     this.rule = rule;
     this.modifications = [];
   },
@@ -311,7 +311,7 @@ var RuleModificationList = Class({
    * @return {Promise} A promise which will be resolved when the modifications
    *         are complete; @see StyleRuleActor.modifyProperties.
    */
-  apply: function () {
+  apply() {
     return this.rule.modifyProperties(this.modifications);
   },
 
@@ -328,12 +328,12 @@ var RuleModificationList = Class({
    * @param {String} priority the property's priority, either the empty
    *                          string or "important"
    */
-  setProperty: function (index, name, value, priority) {
+  setProperty(index, name, value, priority) {
     this.modifications.push({
       type: "set",
-      name: name,
-      value: value,
-      priority: priority
+      name,
+      value,
+      priority
     });
   },
 
@@ -347,10 +347,10 @@ var RuleModificationList = Class({
    *                       on an element's style.
    * @param {String} name the name of the property to remove
    */
-  removeProperty: function (index, name) {
+  removeProperty(index, name) {
     this.modifications.push({
       type: "remove",
-      name: name
+      name
     });
   },
 
@@ -370,7 +370,7 @@ var RuleModificationList = Class({
    * code also defined the interface implemented by @see RuleRewriter.
    * @param {String} newName new name of the property
    */
-  renameProperty: function (index, name) {
+  renameProperty(index, name) {
     this.removeProperty(index, name);
   },
 
@@ -388,7 +388,7 @@ var RuleModificationList = Class({
    * @param {Boolean} isEnabled true if the property should be enabled;
    *                        false if it should be disabled
    */
-  setPropertyEnabled: function (index, name, isEnabled) {
+  setPropertyEnabled(index, name, isEnabled) {
     if (!isEnabled) {
       this.removeProperty(index, name);
     }
@@ -415,7 +415,7 @@ var RuleModificationList = Class({
    * @param {Boolean} enabled True if the new property should be
    *                          enabled, false if disabled
    */
-  createProperty: function () {
+  createProperty() {
     // Nothing.
   },
 });

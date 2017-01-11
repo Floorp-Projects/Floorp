@@ -26,55 +26,55 @@ var GeoProp = {
   SIDES: ["top", "right", "bottom", "left"],
   SIZES: ["width", "height"],
 
-  allProps: function () {
+  allProps() {
     return [...this.SIDES, ...this.SIZES];
   },
 
-  isSide: function (name) {
+  isSide(name) {
     return this.SIDES.indexOf(name) !== -1;
   },
 
-  isSize: function (name) {
+  isSize(name) {
     return this.SIZES.indexOf(name) !== -1;
   },
 
-  containsSide: function (names) {
+  containsSide(names) {
     return names.some(name => this.SIDES.indexOf(name) !== -1);
   },
 
-  containsSize: function (names) {
+  containsSize(names) {
     return names.some(name => this.SIZES.indexOf(name) !== -1);
   },
 
-  isHorizontal: function (name) {
+  isHorizontal(name) {
     return name === "left" || name === "right" || name === "width";
   },
 
-  isInverted: function (name) {
+  isInverted(name) {
     return name === "right" || name === "bottom";
   },
 
-  mainAxisStart: function (name) {
+  mainAxisStart(name) {
     return this.isHorizontal(name) ? "left" : "top";
   },
 
-  crossAxisStart: function (name) {
+  crossAxisStart(name) {
     return this.isHorizontal(name) ? "top" : "left";
   },
 
-  mainAxisSize: function (name) {
+  mainAxisSize(name) {
     return this.isHorizontal(name) ? "width" : "height";
   },
 
-  crossAxisSize: function (name) {
+  crossAxisSize(name) {
     return this.isHorizontal(name) ? "height" : "width";
   },
 
-  axis: function (name) {
+  axis(name) {
     return this.isHorizontal(name) ? "x" : "y";
   },
 
-  crossAxis: function (name) {
+  crossAxis(name) {
     return this.isHorizontal(name) ? "y" : "x";
   }
 };
@@ -231,7 +231,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
 
   ID_CLASS_PREFIX: "geometry-editor-",
 
-  _buildMarkup: function () {
+  _buildMarkup() {
     let container = createNode(this.win, {
       attributes: {"class": "highlighter-container"}
     });
@@ -359,7 +359,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     return container;
   },
 
-  destroy: function () {
+  destroy() {
     // Avoiding exceptions if `destroy` is called multiple times; and / or the
     // highlighter environment was already destroyed.
     if (!this.highlighterEnv) {
@@ -379,7 +379,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     this.offsetParent = null;
   },
 
-  handleEvent: function (event, id) {
+  handleEvent(event, id) {
     // No event handling if the highlighter is hidden
     if (this.getElement("root").hasAttribute("hidden")) {
       return;
@@ -467,11 +467,11 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     }
   },
 
-  getElement: function (id) {
+  getElement(id) {
     return this.markup.getElement(this.ID_CLASS_PREFIX + id);
   },
 
-  _show: function () {
+  _show() {
     this.computedStyle = getComputedStyle(this.currentNode);
     let pos = this.computedStyle.position;
     // XXX: sticky positioning is ignored for now. To be implemented next.
@@ -491,7 +491,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     return true;
   },
 
-  _update: function () {
+  _update() {
     // At each update, the position or/and size may have changed, so get the
     // list of defined properties, and re-position the arrows and highlighters.
     this.definedProperties = getDefinedGeometryProperties(this.currentNode);
@@ -528,7 +528,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
    * - the node has no offset parent at all: the offsetParent rectangle is
    *   hidden.
    */
-  updateOffsetParent: function () {
+  updateOffsetParent() {
     // Get the offsetParent, if any.
     this.offsetParent = getOffsetParent(this.currentNode);
     // And the offsetParent quads.
@@ -571,7 +571,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     }
   },
 
-  updateCurrentNode: function () {
+  updateCurrentNode() {
     let box = this.getElement("current-node");
     let {p1, p2, p3, p4} = this.currentQuads.margin[0];
     let attr = p1.x + "," + p1.y + " " +
@@ -582,7 +582,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     box.removeAttribute("hidden");
   },
 
-  _hide: function () {
+  _hide() {
     setIgnoreLayoutChanges(true);
 
     this.getElement("root").setAttribute("hidden", "true");
@@ -596,7 +596,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
       this.currentNode.ownerDocument.documentElement);
   },
 
-  hideArrows: function () {
+  hideArrows() {
     for (let side of GeoProp.SIDES) {
       this.getElement("arrow-" + side).setAttribute("hidden", "true");
       this.getElement("label-" + side).setAttribute("hidden", "true");
@@ -604,7 +604,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     }
   },
 
-  updateArrows: function () {
+  updateArrows() {
     this.hideArrows();
 
     // Position arrows always end at the node's margin box.
@@ -663,7 +663,7 @@ GeometryEditorHighlighter.prototype = extend(AutoRefreshHighlighter.prototype, {
     }
   },
 
-  updateArrow: function (side, mainStart, mainEnd, crossPos, labelValue) {
+  updateArrow(side, mainStart, mainEnd, crossPos, labelValue) {
     let arrowEl = this.getElement("arrow-" + side);
     let labelEl = this.getElement("label-" + side);
     let labelTextEl = this.getElement("label-text-" + side);

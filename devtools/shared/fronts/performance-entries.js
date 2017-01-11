@@ -7,7 +7,7 @@ const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const performanceSpec = require("devtools/shared/specs/performance-entries");
 
 var PerformanceEntriesFront = FrontClassWithSpec(performanceSpec, {
-  initialize: function (client, form) {
+  initialize(client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.performanceEntriesActor;
     this.manage(this);

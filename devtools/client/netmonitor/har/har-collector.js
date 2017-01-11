@@ -10,7 +10,7 @@ const Services = require("Services");
 
 // Helper tracer. Should be generic sharable by other modules (bug 1171927)
 const trace = {
-  log: function (...args) {
+  log(...args) {
   }
 };
 
@@ -40,19 +40,19 @@ function HarCollector(options) {
 HarCollector.prototype = {
   // Connection
 
-  start: function () {
+  start() {
     this.debuggerClient.addListener("networkEvent", this.onNetworkEvent);
     this.debuggerClient.addListener("networkEventUpdate",
       this.onNetworkEventUpdate);
   },
 
-  stop: function () {
+  stop() {
     this.debuggerClient.removeListener("networkEvent", this.onNetworkEvent);
     this.debuggerClient.removeListener("networkEventUpdate",
       this.onNetworkEventUpdate);
   },
 
-  clear: function () {
+  clear() {
     // Any pending requests events will be ignored (they turn
     // into zombies, since not present in the files array).
     this.files = new Map();
@@ -62,7 +62,7 @@ HarCollector.prototype = {
     this.requests = [];
   },
 
-  waitForHarLoad: function () {
+  waitForHarLoad() {
     // There should be yet another timeout e.g.:
     // 'devtools.netmonitor.har.pageLoadTimeout'
     // that should force export even if page isn't fully loaded.
@@ -75,7 +75,7 @@ HarCollector.prototype = {
     return deferred.promise;
   },
 
-  waitForResponses: function () {
+  waitForResponses() {
     trace.log("HarCollector.waitForResponses; " + this.requests.length);
 
     // All requests for additional data must be received to have complete
@@ -108,7 +108,7 @@ HarCollector.prototype = {
    * of time. The time is set in preferences:
    * 'devtools.netmonitor.har.pageLoadedTimeout'
    */
-  waitForTimeout: function () {
+  waitForTimeout() {
     // The auto-export is not done if the timeout is set to zero (or less).
     // This is useful in cases where the export is done manually through
     // API exposed to the content.
@@ -129,14 +129,14 @@ HarCollector.prototype = {
     return this.pageLoadDeferred.promise;
   },
 
-  onPageLoadTimeout: function () {
+  onPageLoadTimeout() {
     trace.log("HarCollector.onPageLoadTimeout;");
 
     // Ha, page has been loaded. Resolve the final timeout promise.
     this.pageLoadDeferred.resolve();
   },
 
-  resetPageLoadTimeout: function () {
+  resetPageLoadTimeout() {
     // Remove the current timeout.
     if (this.pageLoadTimeout) {
       trace.log("HarCollector.resetPageLoadTimeout;");
@@ -154,17 +154,17 @@ HarCollector.prototype = {
 
   // Collected Data
 
-  getFile: function (actorId) {
+  getFile(actorId) {
     return this.files.get(actorId);
   },
 
-  getItems: function () {
+  getItems() {
     return this.items;
   },
 
   // Event Handlers
 
-  onNetworkEvent: function (type, packet) {
+  onNetworkEvent(type, packet) {
     // Skip events from different console actors.
     if (packet.from != this.webConsoleClient.actor) {
       return;
@@ -193,9 +193,9 @@ HarCollector.prototype = {
     file = {
       startedDeltaMillis: startTime - this.firstRequestStart,
       startedMillis: startTime,
-      method: method,
-      url: url,
-      isXHR: isXHR
+      method,
+      url,
+      isXHR
     };
 
     this.files.set(actor, file);
@@ -204,7 +204,7 @@ HarCollector.prototype = {
     this.items.push(file);
   },
 
-  onNetworkEventUpdate: function (type, packet) {
+  onNetworkEventUpdate(type, packet) {
     let actor = packet.from;
 
     // Skip events from unknown actors (not in the list).
@@ -272,7 +272,7 @@ HarCollector.prototype = {
     this.resetPageLoadTimeout();
   },
 
-  getData: function (actor, method, callback) {
+  getData(actor, method, callback) {
     let deferred = defer();
 
     if (!this.webConsoleClient[method]) {
@@ -303,7 +303,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onRequestHeaders: function (response) {
+  onRequestHeaders(response) {
     let file = this.getFile(response.from);
     file.requestHeaders = response;
 
@@ -316,7 +316,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onRequestCookies: function (response) {
+  onRequestCookies(response) {
     let file = this.getFile(response.from);
     file.requestCookies = response;
 
@@ -329,7 +329,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onRequestPostData: function (response) {
+  onRequestPostData(response) {
     trace.log("HarCollector.onRequestPostData;", response);
 
     let file = this.getFile(response.from);
@@ -350,7 +350,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onResponseHeaders: function (response) {
+  onResponseHeaders(response) {
     let file = this.getFile(response.from);
     file.responseHeaders = response;
 
@@ -363,7 +363,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onResponseCookies: function (response) {
+  onResponseCookies(response) {
     let file = this.getFile(response.from);
     file.responseCookies = response;
 
@@ -376,7 +376,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onResponseContent: function (response) {
+  onResponseContent(response) {
     let file = this.getFile(response.from);
     file.responseContent = response;
 
@@ -395,7 +395,7 @@ HarCollector.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  onEventTimings: function (response) {
+  onEventTimings(response) {
     let file = this.getFile(response.from);
     file.eventTimings = response;
 
@@ -427,7 +427,7 @@ HarCollector.prototype = {
    *         A promise that is resolved when the full string contents
    *         are available, or rejected if something goes wrong.
    */
-  getString: function (stringGrip) {
+  getString(stringGrip) {
     let promise = this.webConsoleClient.getString(stringGrip);
     this.requests.push(promise);
     return promise;

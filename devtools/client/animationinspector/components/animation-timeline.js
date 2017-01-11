@@ -61,7 +61,7 @@ function AnimationsTimeline(inspector, serverTraits) {
 exports.AnimationsTimeline = AnimationsTimeline;
 
 AnimationsTimeline.prototype = {
-  init: function (containerEl) {
+  init(containerEl) {
     this.win = containerEl.ownerDocument.defaultView;
 
     this.rootWrapperEl = createNode({
@@ -128,7 +128,7 @@ AnimationsTimeline.prototype = {
       this.onWindowResize);
   },
 
-  destroy: function () {
+  destroy() {
     this.stopAnimatingScrubber();
     this.unrender();
 
@@ -158,7 +158,7 @@ AnimationsTimeline.prototype = {
    * @param {Array} handlers An option list of event handlers information that
    * should be used to remove these handlers.
    */
-  destroySubComponents: function (name, handlers = []) {
+  destroySubComponents(name, handlers = []) {
     for (let component of this[name]) {
       for (let {event, fn} of handlers) {
         component.off(event, fn);
@@ -168,7 +168,7 @@ AnimationsTimeline.prototype = {
     this[name] = [];
   },
 
-  unrender: function () {
+  unrender() {
     for (let animation of this.animations) {
       animation.off("changed", this.onAnimationStateChanged);
     }
@@ -183,7 +183,7 @@ AnimationsTimeline.prototype = {
     this.animationsEl.innerHTML = "";
   },
 
-  onWindowResize: function () {
+  onWindowResize() {
     // Don't do anything if the root element has a width of 0
     if (this.rootWrapperEl.offsetWidth === 0) {
       return;
@@ -198,7 +198,7 @@ AnimationsTimeline.prototype = {
     }, TIMELINE_BACKGROUND_RESIZE_DEBOUNCE_TIMER);
   },
 
-  onAnimationSelected: function (e, animation) {
+  onAnimationSelected(e, animation) {
     let index = this.animations.indexOf(animation);
     if (index === -1) {
       return;
@@ -224,11 +224,11 @@ AnimationsTimeline.prototype = {
   /**
    * When a frame gets selected, move the scrubber to the corresponding position
    */
-  onFrameSelected: function (e, {x}) {
+  onFrameSelected(e, {x}) {
     this.moveScrubberTo(x, true);
   },
 
-  onScrubberMouseDown: function (e) {
+  onScrubberMouseDown(e) {
     this.moveScrubberTo(e.pageX);
     this.win.addEventListener("mouseup", this.onScrubberMouseUp);
     this.win.addEventListener("mouseout", this.onScrubberMouseOut);
@@ -238,11 +238,11 @@ AnimationsTimeline.prototype = {
     e.preventDefault();
   },
 
-  onScrubberMouseUp: function () {
+  onScrubberMouseUp() {
     this.cancelTimeHeaderDragging();
   },
 
-  onScrubberMouseOut: function (e) {
+  onScrubberMouseOut(e) {
     // Check that mouseout happened on the window itself, and if yes, cancel
     // the dragging.
     if (!this.win.document.contains(e.relatedTarget)) {
@@ -250,17 +250,17 @@ AnimationsTimeline.prototype = {
     }
   },
 
-  cancelTimeHeaderDragging: function () {
+  cancelTimeHeaderDragging() {
     this.win.removeEventListener("mouseup", this.onScrubberMouseUp);
     this.win.removeEventListener("mouseout", this.onScrubberMouseOut);
     this.win.removeEventListener("mousemove", this.onScrubberMouseMove);
   },
 
-  onScrubberMouseMove: function (e) {
+  onScrubberMouseMove(e) {
     this.moveScrubberTo(e.pageX);
   },
 
-  moveScrubberTo: function (pageX, noOffset) {
+  moveScrubberTo(pageX, noOffset) {
     this.stopAnimatingScrubber();
 
     // The offset needs to be in % and relative to the timeline's area (so we
@@ -283,11 +283,11 @@ AnimationsTimeline.prototype = {
       isPaused: true,
       isMoving: false,
       isUserDrag: true,
-      time: time
+      time
     });
   },
 
-  getCompositorStatusClassName: function (state) {
+  getCompositorStatusClassName(state) {
     let className = state.isRunningOnCompositor
                     ? " fast-track"
                     : "";
@@ -302,7 +302,7 @@ AnimationsTimeline.prototype = {
     return className;
   },
 
-  render: function (animations, documentCurrentTime) {
+  render(animations, documentCurrentTime) {
     this.unrender();
 
     this.animations = animations;
@@ -391,20 +391,20 @@ AnimationsTimeline.prototype = {
     }
   },
 
-  isAtLeastOneAnimationPlaying: function () {
+  isAtLeastOneAnimationPlaying() {
     return this.animations.some(({state}) => state.playState === "running");
   },
 
-  wasRewound: function () {
+  wasRewound() {
     return !this.isAtLeastOneAnimationPlaying() &&
            this.animations.every(({state}) => state.currentTime === 0);
   },
 
-  hasInfiniteAnimations: function () {
+  hasInfiniteAnimations() {
     return this.animations.some(({state}) => !state.iterationCount);
   },
 
-  startAnimatingScrubber: function (time) {
+  startAnimatingScrubber(time) {
     let isOutOfBounds = time < TimeScale.minStartTime ||
                         time > TimeScale.maxEndTime;
     let isAllPaused = !this.isAtLeastOneAnimationPlaying();
@@ -446,20 +446,20 @@ AnimationsTimeline.prototype = {
     });
   },
 
-  stopAnimatingScrubber: function () {
+  stopAnimatingScrubber() {
     if (this.rafID) {
       this.win.cancelAnimationFrame(this.rafID);
       this.rafID = null;
     }
   },
 
-  onAnimationStateChanged: function () {
+  onAnimationStateChanged() {
     // For now, simply re-render the component. The animation front's state has
     // already been updated.
     this.render(this.animations);
   },
 
-  drawHeaderAndBackground: function () {
+  drawHeaderAndBackground() {
     let width = this.timeHeaderEl.offsetWidth;
     let animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
     let minTimeInterval = TIME_GRADUATION_MIN_SPACING *

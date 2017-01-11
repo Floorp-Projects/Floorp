@@ -38,7 +38,7 @@ function TestTransport(port) {
 
 TestTransport.prototype = {
 
-  send: function (object, port) {
+  send(object, port) {
     log("Send to " + port + ":\n" + JSON.stringify(object, null, 2));
     if (!gTestTransports[port]) {
       log("No listener on port " + port);
@@ -48,20 +48,20 @@ TestTransport.prototype = {
     gTestTransports[port].onPacketReceived(null, message);
   },
 
-  destroy: function () {
+  destroy() {
     delete gTestTransports[this.port];
   },
 
   // nsIUDPSocketListener
 
-  onPacketReceived: function (socket, message) {
+  onPacketReceived(socket, message) {
     let object = JSON.parse(message);
     object.from = "localhost";
     log("Recv on " + this.port + ":\n" + JSON.stringify(object, null, 2));
     this.emit("message", object);
   },
 
-  onStopListening: function (socket, status) {}
+  onStopListening(socket, status) {}
 
 };
 
@@ -70,7 +70,7 @@ discovery._factories.Transport = TestTransport;
 
 // Ignore name generation on b2g and force a fixed value
 Object.defineProperty(discovery.device, "name", {
-  get: function () {
+  get() {
     return "test-device";
   }
 });

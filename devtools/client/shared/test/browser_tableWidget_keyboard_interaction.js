@@ -129,7 +129,7 @@ function click(node, button = 0) {
                                                          doc.defaultView));
   } else {
     executeSoon(() => EventUtils.synthesizeMouseAtCenter(node, {
-      button: button,
+      button,
       type: "contextmenu"
     }, doc.defaultView));
   }

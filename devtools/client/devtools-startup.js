@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Serv
 function DevToolsStartup() {}
 
 DevToolsStartup.prototype = {
-  handle: function (cmdLine) {
+  handle(cmdLine) {
     let consoleFlag = cmdLine.handleFlag("jsconsole", false);
     let debuggerFlag = cmdLine.handleFlag("jsdebugger", false);
     let devtoolsFlag = cmdLine.handleFlag("devtools", false);
@@ -62,14 +62,14 @@ DevToolsStartup.prototype = {
                              false);
   },
 
-  initDevTools: function () {
+  initDevTools() {
     let { loader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
     // Ensure loading main devtools module that hooks up into browser UI
     // and initialize all devtools machinery.
     loader.require("devtools/client/framework/devtools-browser");
   },
 
-  handleConsoleFlag: function (cmdLine) {
+  handleConsoleFlag(cmdLine) {
     let window = Services.wm.getMostRecentWindow("devtools:webconsole");
     if (!window) {
       this.initDevTools();
@@ -89,7 +89,7 @@ DevToolsStartup.prototype = {
   },
 
   // Open the toolbox on the selected tab once the browser starts up.
-  handleDevToolsFlag: function (window) {
+  handleDevToolsFlag(window) {
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
     const {gDevTools} = require("devtools/client/framework/devtools");
     const {TargetFactory} = require("devtools/client/framework/target");
@@ -118,7 +118,7 @@ DevToolsStartup.prototype = {
     return remoteDebuggingEnabled;
   },
 
-  handleDebuggerFlag: function (cmdLine) {
+  handleDebuggerFlag(cmdLine) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
@@ -149,7 +149,7 @@ DevToolsStartup.prototype = {
    * --start-debugger-server ws:
    *   Start the WebSocket server on the default port (taken from d.d.remote-port)
    */
-  handleDebuggerServerFlag: function (cmdLine, portOrPath) {
+  handleDebuggerServerFlag(cmdLine, portOrPath) {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }

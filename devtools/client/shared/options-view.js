@@ -38,7 +38,7 @@ OptionsView.prototype = {
   /**
    * Binds the events and observers for the OptionsView.
    */
-  initialize: function () {
+  initialize() {
     let { MutationObserver } = this.window;
     this._onPrefChange = this._onPrefChange.bind(this);
     this._onOptionChange = this._onOptionChange.bind(this);
@@ -76,7 +76,7 @@ OptionsView.prototype = {
    * Removes event handlers for all of the option buttons and
    * preference observer.
    */
-  destroy: function () {
+  destroy() {
     this.mutationObserver.disconnect();
     this.prefObserver.off(PREF_CHANGE_EVENT, this._onPrefChange);
     this.menupopup.removeEventListener("popupshown", this._onPopupShown);
@@ -86,7 +86,7 @@ OptionsView.prototype = {
   /**
    * Returns the value for the specified `prefName`
    */
-  getPref: function (prefName) {
+  getPref(prefName) {
     return this.prefObserver.get(prefName);
   },
 
@@ -95,7 +95,7 @@ OptionsView.prototype = {
    * button or by changing it in about:config). Updates the checked status
    * of the corresponding button.
    */
-  _onPrefChange: function (_, prefName) {
+  _onPrefChange(_, prefName) {
     let $el = this.$(`menuitem[data-pref="${prefName}"]`, this.menupopup);
     let value = this.prefObserver.get(prefName);
 
@@ -119,7 +119,7 @@ OptionsView.prototype = {
    * Mutation handler for handling a change on an options button.
    * Sets the preference accordingly.
    */
-  _onOptionChange: function (mutations) {
+  _onOptionChange(mutations) {
     let { target } = mutations[0];
     let prefName = target.getAttribute("data-pref");
     let value = target.getAttribute("checked") === "true";
@@ -131,7 +131,7 @@ OptionsView.prototype = {
    * Fired when the `menupopup` is opened, bound via XUL.
    * Fires an event used in tests.
    */
-  _onPopupShown: function () {
+  _onPopupShown() {
     this.button.setAttribute("open", true);
     this.emit(OPTIONS_SHOWN_EVENT);
   },
@@ -140,7 +140,7 @@ OptionsView.prototype = {
    * Fired when the `menupopup` is closed, bound via XUL.
    * Fires an event used in tests.
    */
-  _onPopupHidden: function () {
+  _onPopupHidden() {
     this.button.removeAttribute("open");
     this.emit(OPTIONS_HIDDEN_EVENT);
   }
@@ -163,24 +163,24 @@ PrefObserver.prototype = {
   /**
    * Returns `prefName`'s value. Does not require the branch name.
    */
-  get: function (prefName) {
+  get(prefName) {
     let fullName = this.branchName + prefName;
     return Preferences.get(fullName);
   },
   /**
    * Sets `prefName`'s `value`. Does not require the branch name.
    */
-  set: function (prefName, value) {
+  set(prefName, value) {
     let fullName = this.branchName + prefName;
     Preferences.set(fullName, value);
   },
-  register: function () {
+  register() {
     this.branch.addObserver("", this, false);
   },
-  unregister: function () {
+  unregister() {
     this.branch.removeObserver("", this);
   },
-  observe: function (subject, topic, prefName) {
+  observe(subject, topic, prefName) {
     this.emit(PREF_CHANGE_EVENT, prefName);
   }
 };

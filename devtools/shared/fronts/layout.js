@@ -8,7 +8,7 @@ const { FrontClassWithSpec } = require("devtools/shared/protocol");
 const { gridSpec, layoutSpec } = require("devtools/shared/specs/layout");
 
 const GridFront = FrontClassWithSpec(gridSpec, {
-  form: function (form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;

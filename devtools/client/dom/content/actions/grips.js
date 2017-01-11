@@ -13,7 +13,7 @@ const constants = require("../constants");
  */
 function requestProperties(grip) {
   return {
-    grip: grip,
+    grip,
     type: constants.FETCH_PROPERTIES,
     status: "start",
     error: false
@@ -25,11 +25,11 @@ function requestProperties(grip) {
  */
 function receiveProperties(grip, response, error) {
   return {
-    grip: grip,
+    grip,
     type: constants.FETCH_PROPERTIES,
     status: "end",
-    response: response,
-    error: error
+    response,
+    error
   };
 }
 

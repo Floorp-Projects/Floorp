@@ -13,13 +13,13 @@ const { promisesSpec } = require("devtools/shared/specs/promises");
  * PromisesFront, the front for the PromisesActor.
  */
 const PromisesFront = FrontClassWithSpec(promisesSpec, {
-  initialize: function (client, form) {
+  initialize(client, form) {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.promisesActor;
     this.manage(this);
   },
 
-  destroy: function () {
+  destroy() {
     Front.prototype.destroy.call(this);
   }
 });

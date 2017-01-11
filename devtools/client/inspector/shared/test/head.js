@@ -306,7 +306,7 @@ function getRuleViewProperty(view, selectorText, propertyName) {
       let valueSpan = p.querySelector(".ruleview-propertyvalue");
 
       if (nameSpan.textContent === propertyName) {
-        prop = {nameSpan: nameSpan, valueSpan: valueSpan};
+        prop = {nameSpan, valueSpan};
         break;
       }
     }
@@ -518,7 +518,7 @@ function getComputedViewProperty(view, name) {
     let valueSpan = property.querySelector(".property-value");
 
     if (nameSpan.textContent === name) {
-      prop = {nameSpan: nameSpan, valueSpan: valueSpan};
+      prop = {nameSpan, valueSpan};
       break;
     }
   }
@@ -547,7 +547,7 @@ function getComputedViewPropertyValue(view, name, propertyName) {
  * @return An array of MenuItems
  */
 function openStyleContextMenuAndGetAllItems(view, target) {
-  let menu = view._contextmenu._openMenu({target: target});
+  let menu = view._contextmenu._openMenu({target});
 
   // Flatten all menu items into a single array to make searching through it easier
   let allItems = [].concat.apply([], menu.items.map(function addItem(item) {

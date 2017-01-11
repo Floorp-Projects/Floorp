@@ -53,7 +53,7 @@ exports.items = [
       },
       description: l10n.lookup("injectLibraryDesc")
     }],
-    exec: function* (args, context) {
+    * exec(args, context) {
       let document = context.environment.document;
       let library = args.library;
       let name = (library.type === "selection") ?

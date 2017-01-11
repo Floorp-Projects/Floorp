@@ -40,8 +40,8 @@ function initializeAutoCompletion(ctx, options = {}) {
     CM_TERN_SCRIPTS.forEach(ed.loadScript, ed);
     win.tern = require("./tern/tern");
     cm.tern = new CodeMirror.TernServer({
-      defs: defs,
-      typeTip: function (data) {
+      defs,
+      typeTip(data) {
         let tip = document.createElement("span");
         tip.className = "CodeMirror-Tern-information";
         let tipType = document.createElement("strong");
@@ -177,10 +177,10 @@ function initializeAutoCompletion(ctx, options = {}) {
   }
 
   autocompleteMap.set(ed, {
-    popup: popup,
-    completer: completer,
-    keyMap: keyMap,
-    destroy: destroy,
+    popup,
+    completer,
+    keyMap,
+    destroy,
     insertingSuggestion: false,
     suggestionInsertedOnce: false
   });

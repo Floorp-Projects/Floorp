@@ -119,8 +119,8 @@ function dispatchEvent(graph, x, y, type) {
     cancelable: true,
     buttons: 1,
     view: window,
-    screenX: screenX,
-    screenY: screenY,
+    screenX,
+    screenY,
   }));
 }
 

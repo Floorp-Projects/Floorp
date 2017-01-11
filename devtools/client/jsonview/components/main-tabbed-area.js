@@ -34,7 +34,7 @@ define(function (require, exports, module) {
       ])
     },
 
-    getInitialState: function () {
+    getInitialState() {
       return {
         json: {},
         headers: {},
@@ -43,11 +43,11 @@ define(function (require, exports, module) {
       };
     },
 
-    onTabChanged: function (index) {
+    onTabChanged(index) {
       this.setState({tabActive: index});
     },
 
-    render: function () {
+    render() {
       return (
         Tabs({
           tabActive: this.state.tabActive,
