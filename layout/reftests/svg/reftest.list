@@ -218,7 +218,7 @@ fuzzy-if(skiaContent,1,10000) == mask-basic-02.svg mask-basic-02-ref.svg
 == mask-transformed-02.svg pass.svg
 == mask-transformed-child-01.svg mask-transformed-child-01-ref.svg
 # fuzzy because of the differences between clipPath and mask clipping
-fuzzy(27,28) == mask-and-clipPath.html mask-and-clipPath-ref.html
+fuzzy(28,28) == mask-and-clipPath.html mask-and-clipPath-ref.html
 == mask-and-clipPath-2.svg pass.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-01.svg mask-type-01-ref.svg
 fuzzy-if(d2d||skiaContent,1,6400) == mask-type-02.svg mask-type-01-ref.svg
