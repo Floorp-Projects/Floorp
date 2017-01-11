@@ -629,59 +629,6 @@ class ElementSpecific
 class TypedArrayMethods
 {
   public:
-    /* set(array[, offset]) */
-    static bool
-    set(JSContext* cx, const CallArgs& args)
-    {
-        MOZ_ASSERT(TypedArrayObject::is(args.thisv()));
-
-        Rooted<TypedArrayObject*> target(cx, &args.thisv().toObject().as<TypedArrayObject>());
-
-        // The first argument must be either a typed array or arraylike.
-        if (args.length() == 0 || !args[0].isObject()) {
-            JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
-        }
-
-        int32_t offset = 0;
-        if (args.length() > 1) {
-            if (!ToInt32(cx, args[1], &offset))
-                return false;
-
-            if (offset < 0 || uint32_t(offset) > target->length()) {
-                // the given offset is bogus
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
-                return false;
-            }
-        }
-
-        RootedObject arg0(cx, &args[0].toObject());
-        if (arg0->is<TypedArrayObject>()) {
-            if (arg0->as<TypedArrayObject>().length() > target->length() - offset) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
-                return false;
-            }
-
-            if (!setFromTypedArray(cx, target, arg0.as<TypedArrayObject>(), offset))
-                return false;
-        } else {
-            uint32_t len;
-            if (!GetLengthProperty(cx, arg0, &len))
-                return false;
-
-            if (uint32_t(offset) > target->length() || len > target->length() - offset) {
-                JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
-                return false;
-            }
-
-            if (!setFromNonTypedArray(cx, target, arg0, len, offset))
-                return false;
-        }
-
-        args.rval().setUndefined();
-        return true;
-    }
-
      static bool
      setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
                        Handle<TypedArrayObject*> source, uint32_t offset = 0)
