@@ -44,7 +44,7 @@ public:
   }
 
   nsresult FromJwkBase64(const nsString& aBase64);
-  nsresult ToJwkBase64(nsString& aBase64);
+  nsresult ToJwkBase64(nsString& aBase64) const;
   bool ToSECItem(PLArenaPool* aArena, SECItem* aItem) const;
   JSObject* ToUint8Array(JSContext* aCx) const;
   bool ToNewUnsignedBuffer(uint8_t** aBuf, uint32_t* aBufLen) const;

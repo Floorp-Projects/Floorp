@@ -956,6 +956,12 @@
             this.messageManager.addMessageListener("AudioPlayback:Start", this);
             this.messageManager.addMessageListener("AudioPlayback:Stop", this);
             this.messageManager.addMessageListener("AudioPlayback:Block", this);
+
+            if (this.hasAttribute("selectmenulist")) {
+              this.messageManager.addMessageListener("Forms:ShowDropDown", this);
+              this.messageManager.addMessageListener("Forms:HideDropDown", this);
+            }
+
           }
         ]]>
       </constructor>
@@ -974,6 +980,11 @@
       <method name="destroy">
         <body>
           <![CDATA[
+          // Make sure that any open select is closed.
+          if (this._selectParentHelper) {
+            let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+            this._selectParentHelper.hide(menulist, this);
+          }
           if (this.mDestroyed)
             return;
           this.mDestroyed = true;
@@ -1045,6 +1056,27 @@
             case "AudioPlayback:Block":
               this.audioPlaybackBlocked();
               break;
+            case "Forms:ShowDropDown": {
+              if (!this._selectParentHelper) {
+                this._selectParentHelper =
+                  Cu.import("resource://gre/modules/SelectParentHelper.jsm", {}).SelectParentHelper;
+              }
+
+              let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+              menulist.menupopup.style.direction = data.direction;
+              this._selectParentHelper.populate(menulist, data.options, data.selectedIndex, this._fullZoom);
+              this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
+              break;
+            }
+
+            case "Forms:HideDropDown": {
+              if (this._selectParentHelper) {
+                let menulist = document.getElementById(this.getAttribute("selectmenulist"));
+                this._selectParentHelper.hide(menulist, this);
+              }
+              break;
+            }
+
           }
           return undefined;
         ]]></body>

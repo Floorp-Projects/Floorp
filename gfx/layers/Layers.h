@@ -2257,6 +2257,12 @@ public:
 protected:
   friend class ReadbackProcessor;
 
+  // Note that this is not virtual, and is based on the implementation of
+  // ContainerLayer::RemoveChild, so it should only be called where you would
+  // want to explicitly call the base class implementation of RemoveChild;
+  // e.g., while (mFirstChild) ContainerLayer::RemoveChild(mFirstChild);
+  void RemoveAllChildren();
+
   void DidInsertChild(Layer* aLayer);
   void DidRemoveChild(Layer* aLayer);
 

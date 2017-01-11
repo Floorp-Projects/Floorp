@@ -21,12 +21,5 @@ export MOZ_TELEMETRY_REPORTING=1
 
 . $topsrcdir/build/win32/mozconfig.vs-latest
 
-# Enable Adobe Primetime CDM on 32-bit Windows in Mozilla builds.
-# Enabled here on the assumption that downstream vendors will not be using
-# these build configs.
-# Note: Widevine is automatically enabled by the build, and can be
-# disabled with -widevine.
-ac_add_options --enable-eme=+adobe
-
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
