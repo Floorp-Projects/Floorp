@@ -226,6 +226,8 @@ add_task(async function test_upload_failed() {
   meta_global.payload.engines = { rotary: { version: engine.version, syncID: engine.syncID } };
 
   try {
+    _(`test_upload_failed: Rotary tracker contents at first sync: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     engine.enabled = true;
     let ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
@@ -235,6 +237,8 @@ add_task(async function test_upload_failed() {
     engine.lastSync = 123;
     engine.lastSyncLocal = 456;
 
+    _(`test_upload_failed: Rotary tracker contents at second sync: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     ping = await sync_engine_and_validate_telem(engine, true);
     ok(!!ping);
     equal(ping.engines.length, 1);
@@ -278,6 +282,8 @@ add_task(async function test_sync_partialUpload() {
                                           syncID: engine.syncID}};
 
   try {
+    _(`test_sync_partialUpload: Rotary tracker contents at first sync: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     engine.enabled = true;
     let ping = await sync_engine_and_validate_telem(engine, true);
 
@@ -299,6 +305,8 @@ add_task(async function test_sync_partialUpload() {
     engine.lastSyncLocal = 456;
     ping = null;
 
+    _(`test_sync_partialUpload: Rotary tracker contents at second sync: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     try {
       // should throw
       await sync_engine_and_validate_telem(engine, true, errPing => ping = errPing);
@@ -341,6 +349,8 @@ add_task(async function test_generic_engine_fail() {
   engine._errToThrow = e;
 
   try {
+    _(`test_generic_engine_fail: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     deepEqual(ping.engines.find(e => e.name === "steam").failureReason, {
@@ -376,6 +386,8 @@ add_task(async function test_engine_fail_ioerror() {
   ok(engine._errToThrow, "expecting exception");
 
   try {
+    _(`test_engine_fail_ioerror: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await sync_and_validate_telem(true);
     equal(ping.status.service, SYNC_FAILED_PARTIAL);
     let failureReason = ping.engines.find(e => e.name === "steam").failureReason;
@@ -405,6 +417,8 @@ add_task(async function test_initial_sync_engines() {
   let server = serverForUsers({"foo": "password"}, conf);
   await SyncTestingInfrastructure(server);
   try {
+    _(`test_initial_sync_engines: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await wait_for_ping(() => Service.sync(), true);
 
     equal(ping.engines.find(e => e.name === "clients").outgoing[0].sent, 1);
@@ -439,6 +453,8 @@ add_task(async function test_nserror() {
   await SyncTestingInfrastructure(server);
   engine._errToThrow = Components.Exception("NS_ERROR_UNKNOWN_HOST", Cr.NS_ERROR_UNKNOWN_HOST);
   try {
+    _(`test_nserror: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await sync_and_validate_telem(true);
     deepEqual(ping.status, {
       service: SYNC_FAILED_PARTIAL,
@@ -538,6 +554,8 @@ add_task(async function test_sql_error() {
     Async.querySpinningly(db.createAsyncStatement("select bar from foo"));
   };
   try {
+    _(`test_sql_error: Steam tracker contents: ${
+      JSON.stringify(engine._tracker.changedIDs)}`);
     let ping = await sync_and_validate_telem(true);
     let enginePing = ping.engines.find(e => e.name === "steam");
     deepEqual(enginePing.failureReason, { name: "sqlerror", code: 1 });
