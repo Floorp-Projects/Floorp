@@ -215,18 +215,6 @@
         ]]></body>
       </method>
 
-      <method name="updateWindowResizers">
-        <body><![CDATA[
-          if (!window.gShowPageResizers)
-            return;
-
-          var show = window.windowState == window.STATE_NORMAL;
-          for (let i = 0; i < this.browsers.length; i++) {
-            this.browsers[i].showWindowResizer = show;
-          }
-        ]]></body>
-      </method>
-
       <method name="_setCloseKeyState">
         <parameter name="aEnabled"/>
         <body><![CDATA[
@@ -1970,10 +1958,6 @@
                 throw new Exception("Cannot set opener window on a remote browser!");
               }
               b.QueryInterface(Ci.nsIFrameLoaderOwner).presetOpenerWindow(aParams.opener);
-            }
-
-            if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
-              b.setAttribute("showresizer", "true");
             }
 
             if (!aParams.isPreloadBrowser && this.hasAttribute("autocompletepopup")) {
@@ -4969,7 +4953,6 @@
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
           this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
-          this.updateWindowResizers();
 
           // Hook up the event listeners to the first browser
           var tabListener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
@@ -6013,8 +5996,6 @@
                 this._handleTabSelect();
                 this.mTabstripWidth = width;
               }
-
-              this.tabbrowser.updateWindowResizers();
               break;
             case "mouseout":
               // If the "related target" (the node to which the pointer went) is not

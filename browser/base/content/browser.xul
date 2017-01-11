@@ -545,9 +545,7 @@
 #ifdef MENUBAR_CAN_AUTOHIDE
              toolbarname="&menubarCmd.label;"
              accesskey="&menubarCmd.accesskey;"
-#if defined(MOZ_WIDGET_GTK)
              autohide="true"
-#endif
 #endif
              context="toolbar-context-menu">
       <toolbaritem id="menubar-items" align="center">
