@@ -10,7 +10,6 @@ This currently supports nightly and release single locale repacks for
 Android.  This also creates nightly updates.
 """
 
-from copy import deepcopy
 import glob
 import os
 import re
@@ -251,18 +250,51 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         return self.buildid
 
     def query_revision(self):
-        """Get revision from the objdir.
-        Only valid after setup is run.
+        """ Get the gecko revision in this order of precedence
+              * cached value
+              * command line arg --revision   (development, taskcluster)
+              * buildbot properties           (try with buildbot forced build)
+              * buildbot change               (try with buildbot scheduler)
+              * from the en-US build          (m-c & m-a)
+
+        This will fail the last case if the build hasn't been pulled yet.
         """
         if self.revision:
             return self.revision
-        r = re.compile(r"gecko_revision ([0-9a-f]+\+?)")
+
+        self.read_buildbot_config()
+        config = self.config
+        revision = None
+        if config.get("revision"):
+            revision = config["revision"]
+        elif 'revision' in self.buildbot_properties:
+            revision = self.buildbot_properties['revision']
+        elif (self.buildbot_config and
+                  self.buildbot_config.get('sourcestamp', {}).get('revision')):
+            revision = self.buildbot_config['sourcestamp']['revision']
+        elif self.buildbot_config and self.buildbot_config.get('revision'):
+            revision = self.buildbot_config['revision']
+        elif config.get("update_gecko_source_to_enUS", True):
+            revision = self._query_enUS_revision()
+
+        if not revision:
+            self.fatal("Can't determine revision!")
+        self.revision = str(revision)
+        return self.revision
+
+    def _query_enUS_revision(self):
+        """Get revision from the objdir.
+        Only valid after setup is run.
+       """
+        if self.enUS_revision:
+            return self.enUS_revision
+        r = re.compile(r"^gecko_revision ([0-9a-f]+\+?)$")
         output = self._query_make_ident_output()
         for line in output.splitlines():
-            m = r.match(line)
-            if m:
-                self.revision = m.groups()[0]
-        return self.revision
+            match = r.match(line)
+            if match:
+                self.enUS_revision = match.groups()[0]
+        return self.enUS_revision
 
     def _query_make_variable(self, variable, make_args=None):
         make = self.query_exe('make')
@@ -364,12 +396,23 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         replace_dict = {}
         if c.get("user_repo_override"):
             replace_dict['user_repo_override'] = c['user_repo_override']
-            # deepcopy() needed because of self.config lock bug :(
-            for repo_dict in deepcopy(c['repos']):
-                repo_dict['repo'] = repo_dict['repo'] % replace_dict
-                repos.append(repo_dict)
-        else:
-            repos = c['repos']
+        # this is OK so early because we get it from buildbot, or
+        # the command line for local dev
+        replace_dict['revision'] = self.query_revision()
+
+        for repository in c['repos']:
+            current_repo = {}
+            for key, value in repository.iteritems():
+                try:
+                    current_repo[key] = value % replace_dict
+                except TypeError:
+                    # pass through non-interpolables, like booleans
+                    current_repo[key] = value
+                except KeyError:
+                    self.error('not all the values in "{0}" can be replaced. Check your configuration'.format(value))
+                    raise
+            repos.append(current_repo)
+        self.info("repositories: %s" % repos)
         self.vcs_checkout_repos(repos, parent_dir=dirs['abs_work_dir'],
                                 tag_override=c.get('tag_override'))
 
@@ -437,7 +480,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         # on try we want the source we already have, otherwise update to the
         # same as the en-US binary
         if self.config.get("update_gecko_source_to_enUS", True):
-            revision = self.query_revision()
+            revision = self.query_enUS_revision()
             if not revision:
                 self.fatal("Can't determine revision!")
             hg = self.query_exe("hg")
