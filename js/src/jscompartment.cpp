@@ -571,7 +571,10 @@ JSCompartment::getNonSyntacticLexicalEnvironment(JSObject* enclosing) const
 bool
 JSCompartment::addToVarNames(JSContext* cx, JS::Handle<JSAtom*> name)
 {
-    if (varNames_.put(name.get()))
+    MOZ_ASSERT(name);
+    MOZ_ASSERT(!isAtomsCompartment());
+
+    if (varNames_.put(name))
         return true;
 
     ReportOutOfMemory(cx);
@@ -720,8 +723,9 @@ JSCompartment::sweepAfterMinorGC(JSTracer* trc)
 {
     globalWriteBarriered = 0;
 
-    if (innerViews.needsSweepAfterMinorGC())
-        innerViews.sweepAfterMinorGC();
+    InnerViewTable& table = innerViews.get();
+    if (table.needsSweepAfterMinorGC())
+        table.sweepAfterMinorGC();
 
     crossCompartmentWrappers.sweepAfterMinorGC(trc);
 }
@@ -801,6 +805,12 @@ void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
     crossCompartmentWrappers.sweep();
+}
+
+void
+JSCompartment::sweepVarNames()
+{
+    varNames_.sweep();
 }
 
 namespace {

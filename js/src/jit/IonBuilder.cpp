@@ -4729,6 +4729,9 @@ IonBuilder::getSingletonPrototype(JSFunction* target)
 MDefinition*
 IonBuilder::createThisScriptedSingleton(JSFunction* target, MDefinition* callee)
 {
+    if (!target->hasScript())
+        return nullptr;
+
     // Get the singleton prototype (if exists)
     JSObject* proto = getSingletonPrototype(target);
     if (!proto)

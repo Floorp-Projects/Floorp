@@ -1538,11 +1538,7 @@ GetSuperEnvFunction(JSContext* cx, InterpreterRegs& regs)
  */
 
 template<typename T>
-class ReservedRootedBase {
-};
-
-template<typename T>
-class ReservedRooted : public ReservedRootedBase<T>
+class ReservedRooted : public RootedBase<T, ReservedRooted<T>>
 {
     Rooted<T>* savedRoot;
 
@@ -1569,14 +1565,6 @@ class ReservedRooted : public ReservedRootedBase<T>
     DECLARE_POINTER_CONSTREF_OPS(T)
     DECLARE_POINTER_ASSIGN_OPS(ReservedRooted, T)
 };
-
-template <>
-class ReservedRootedBase<Value> : public ValueOperations<ReservedRooted<Value>>
-{};
-
-template <>
-class ReservedRootedBase<Scope*> : public ScopeCastOperation<ReservedRooted<Scope*>>
-{};
 
 static MOZ_NEVER_INLINE bool
 Interpret(JSContext* cx, RunState& state)

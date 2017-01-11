@@ -14,7 +14,7 @@ const l10n = new LocalizationHelper("devtools/client/locales/webconsole.properti
 const AsyncFrame = createFactory(createClass({
   displayName: "AsyncFrame",
 
-  PropTypes: {
+  propTypes: {
     asyncCause: PropTypes.string.isRequired
   },
 
@@ -31,10 +31,10 @@ const AsyncFrame = createFactory(createClass({
 const StackTrace = createClass({
   displayName: "StackTrace",
 
-  PropTypes: {
+  propTypes: {
     stacktrace: PropTypes.array.isRequired,
     onViewSourceInDebugger: PropTypes.func.isRequired,
-    onViewSourceInScratchpad: PropTypes.func.isRequired,
+    onViewSourceInScratchpad: PropTypes.func,
   },
 
   render() {

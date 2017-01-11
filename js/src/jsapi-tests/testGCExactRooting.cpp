@@ -57,19 +57,10 @@ struct MyContainer
 };
 
 namespace js {
-template <>
-struct RootedBase<MyContainer> {
-    HeapPtr<JSObject*>& obj() { return static_cast<Rooted<MyContainer>*>(this)->get().obj; }
-    HeapPtr<JSString*>& str() { return static_cast<Rooted<MyContainer>*>(this)->get().str; }
-};
-template <>
-struct PersistentRootedBase<MyContainer> {
-    HeapPtr<JSObject*>& obj() {
-        return static_cast<PersistentRooted<MyContainer>*>(this)->get().obj;
-    }
-    HeapPtr<JSString*>& str() {
-        return static_cast<PersistentRooted<MyContainer>*>(this)->get().str;
-    }
+template <typename Wrapper>
+struct MutableWrappedPtrOperations<MyContainer, Wrapper> {
+    HeapPtr<JSObject*>& obj() { return static_cast<Wrapper*>(this)->get().obj; }
+    HeapPtr<JSString*>& str() { return static_cast<Wrapper*>(this)->get().str; }
 };
 } // namespace js
 
