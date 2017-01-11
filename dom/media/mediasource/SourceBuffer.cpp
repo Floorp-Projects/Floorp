@@ -258,7 +258,6 @@ SourceBuffer::RangeRemoval(double aStart, double aEnd)
   StartUpdating();
 
   RefPtr<SourceBuffer> self = this;
-  mPendingRemoval.Begin(
     mTrackBuffersManager->RangeRemoval(TimeUnit::FromSeconds(aStart),
                                        TimeUnit::FromSeconds(aEnd))
       ->Then(AbstractThread::MainThread(), __func__,
@@ -266,7 +265,8 @@ SourceBuffer::RangeRemoval(double aStart, double aEnd)
                self->mPendingRemoval.Complete();
                self->StopUpdating();
              },
-             []() { MOZ_ASSERT(false); }));
+             []() { MOZ_ASSERT(false); })
+      ->Track(mPendingRemoval);
 }
 
 void
@@ -415,10 +415,11 @@ SourceBuffer::AppendData(const uint8_t* aData, uint32_t aLength, ErrorResult& aR
   }
   StartUpdating();
 
-  mPendingAppend.Begin(mTrackBuffersManager->AppendData(data, mCurrentAttributes)
-                       ->Then(AbstractThread::MainThread(), __func__, this,
-                              &SourceBuffer::AppendDataCompletedWithSuccess,
-                              &SourceBuffer::AppendDataErrored));
+  mTrackBuffersManager->AppendData(data, mCurrentAttributes)
+    ->Then(AbstractThread::MainThread(), __func__, this,
+           &SourceBuffer::AppendDataCompletedWithSuccess,
+           &SourceBuffer::AppendDataErrored)
+    ->Track(mPendingAppend);
 }
 
 void
