@@ -42,8 +42,8 @@ random-if(smallScreen&&Android) fuzzy(255,200) == mirror-op-1.html mirror-op-1-r
 != mfenced-8.html mfenced-8-ref.html
 == mfenced-9.html mfenced-9-ref.html
 fails-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == mfenced-10.html mfenced-10-ref.html # Windows versions without Cambria Math, see bug 670592
-fails-if(http.oscpu=="Linux\u0020x86_64") == mfenced-11.html mfenced-11-ref.html # bug 670592
-fails-if(http.oscpu=="Linux\u0020x86_64") == mfenced-12.html mfenced-12-ref.html # bug 670592
+fails-if(gtkWidget) == mfenced-11.html mfenced-11-ref.html # bug 670592, bug 1328771
+fails-if(gtkWidget) == mfenced-12.html mfenced-12-ref.html # bug 670592, bug 1328771
 == mi-mathvariant-1.xhtml mi-mathvariant-1-ref.xhtml
 == mi-mathvariant-2.xhtml mi-mathvariant-2-ref.xhtml
 != mi-mathvariant-3.html mi-mathvariant-3-ref.html
@@ -114,7 +114,7 @@ fails == stretchy-mover-2a.html stretchy-mover-2-ref.html
 == embellished-op-4-3.html embellished-op-4-3-ref.html
 == embellished-op-5-1.html embellished-op-5-ref.html
 == embellished-op-5-2.html embellished-op-5-ref.html
-fails-if(http.oscpu=="Linux\u0020x86_64") random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1-ref.xhtml # Windows versions with Cambria Math, Linux x86_64:bug 1309429
+fails-if(gtkWidget) random-if(winWidget&&!/^Windows\x20NT\x205\.1/.test(http.oscpu)) == semantics-1.xhtml semantics-1-ref.xhtml # Windows versions with Cambria Math, gtkWidget:bug 1309429, bug 1328771
 == semantics-2.html semantics-2-ref.html
 == semantics-3.html semantics-3-ref.html
 == semantics-4.html semantics-4-ref.html
