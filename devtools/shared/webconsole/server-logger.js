@@ -101,7 +101,7 @@ var ServerLoggingListener = Class({
       this.detachParentProcess();
     } else {
       Services.obs.removeObserver(this.onExamineResponse,
-        "http-on-examine-response", false);
+        "http-on-examine-response");
     }
   }),
 

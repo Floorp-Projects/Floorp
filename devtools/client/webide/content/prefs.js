@@ -34,7 +34,7 @@ window.addEventListener("unload", function onUnload() {
   for (let i of inputs) {
     let pref = i.dataset.pref;
     i.removeEventListener("change", SaveForm, false);
-    Services.prefs.removeObserver(pref, FillForm, false);
+    Services.prefs.removeObserver(pref, FillForm);
   }
 }, true);
 

@@ -4399,7 +4399,7 @@ this.XPIProvider = {
       }
       return;
     } else if (aTopic == NOTIFICATION_TOOLBOXPROCESS_LOADED) {
-      Services.obs.removeObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+      Services.obs.removeObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED);
       this._toolboxProcessLoaded = true;
       BrowserToolboxProcess.on("connectionchange",
                                this.onDebugConnectionChange.bind(this));
