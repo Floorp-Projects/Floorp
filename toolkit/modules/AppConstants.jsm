@@ -295,6 +295,13 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_STACKWALKING:
+#ifdef MOZ_STACKWALKING
+  true,
+#else
+  false,
+#endif
+
   MOZ_ANDROID_ACTIVITY_STREAM:
 #ifdef MOZ_ANDROID_ACTIVITY_STREAM
   true,
