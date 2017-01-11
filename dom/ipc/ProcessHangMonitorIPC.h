@@ -20,14 +20,8 @@ namespace dom {
 class ContentParent;
 } // namespace dom
 
-PProcessHangMonitorParent*
-CreateHangMonitorParent(mozilla::dom::ContentParent* aContentParent,
-                        mozilla::ipc::Transport* aTransport,
-                        base::ProcessId aOtherProcess);
-
-PProcessHangMonitorChild*
-CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
-                       base::ProcessId aOtherProcess);
+void
+CreateHangMonitorChild(ipc::Endpoint<PProcessHangMonitorChild>&& aEndpoint);
 
 } // namespace mozilla
 

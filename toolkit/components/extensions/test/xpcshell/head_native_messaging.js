@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
 
-let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
+let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm", {});
 
 
 let tmpDir = FileUtils.getDir("TmpD", ["NativeMessaging"]);

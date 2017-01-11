@@ -7,19 +7,13 @@
 <body>
 <script type="text/javascript">
 function installMozAM(url) {
-  return navigator.mozAddonManager.createInstall({url}).then(install => new Promise(resolve => {
-    const EVENTS = [
-      "onDownloadCancelled",
-      "onDownloadFailed",
-      "onInstallCancelled",
-      "onInstallEnded",
-      "onInstallFailed",
-    ];
-    for (let event of EVENTS) {
-      install.addEventListener(event, () => { resolve(event); });
-    }
+  return navigator.mozAddonManager.createInstall({url}).then(install => {
     install.install();
-  }));
+  });
+}
+
+function installTrigger(url) {
+  InstallTrigger.install({extension: url});
 }
 </script>
 </body>

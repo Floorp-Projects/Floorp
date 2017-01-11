@@ -92,7 +92,6 @@ function persistDocument(aDoc) {
 SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     var srcDoc = document.getElementById('source').contentDocument;
     persistDocument(srcDoc);
 });

@@ -68,6 +68,15 @@ public class IconRequestBuilder {
     }
 
     /**
+     * If shouldSkipNetwork is true then do not load icon from a network connection.
+     */
+    @CheckResult
+    public IconRequestBuilder skipNetworkIf(boolean shouldSkipNetwork) {
+        request.skipNetwork = shouldSkipNetwork;
+        return this;
+    }
+
+    /**
      * Skip the disk cache and do not load an icon from disk.
      */
     @CheckResult

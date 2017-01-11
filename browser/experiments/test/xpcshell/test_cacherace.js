@@ -47,7 +47,7 @@ add_task(function* test_setup() {
   Services.prefs.setCharPref(PREF_MANIFEST_URI, gManifestHandlerURI);
   Services.prefs.setIntPref(PREF_FETCHINTERVAL, 0);
 
-  let ExperimentsScope = Cu.import("resource:///modules/experiments/Experiments.jsm");
+  let ExperimentsScope = Cu.import("resource:///modules/experiments/Experiments.jsm", {});
   let Experiments = ExperimentsScope.Experiments;
 
   gPolicy = new Experiments.Policy();
