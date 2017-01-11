@@ -758,7 +758,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         <body><![CDATA[
           // Grab the actual input field's value, not our value, which could include moz-action:
           var inputVal = this.inputField.value;
-          var selectedVal = inputVal.substring(this.selectionStart, this.selectionEnd);
+          let selection = this.editor.selection;
+          var selectedVal = selection.toString();
+
+          // Handle multiple-range selection as a string for simplicity.
+          if (selection.rangeCount > 1) {
+             return selectedVal;
+          }
 
           // If the selection doesn't start at the beginning or doesn't span the full domain or
           // the URL bar is modified or there is no text at all, nothing else to do here.

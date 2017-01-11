@@ -8,6 +8,7 @@
 #define mozilla_IOInterposer_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/TimeStamp.h"
 
 namespace mozilla {
@@ -172,6 +173,12 @@ void Clear();
 void Disable();
 
 /**
+ * This function re-enables IOInterposer functionality in a fast, thread-safe
+ * manner.  Primarily for use by the crash reporter.
+ */
+void Enable();
+
+/**
  * Report IO to registered observers.
  * Notice that the reported operation must be either OpRead, OpWrite or
  * OpFSync. You are not allowed to report an observation with OpWriteFSync or
@@ -264,6 +271,23 @@ public:
     IOInterposer::Clear();
 #endif
   }
+};
+
+class MOZ_RAII AutoIOInterposerDisable final
+{
+public:
+  explicit AutoIOInterposerDisable(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    IOInterposer::Disable();
+  }
+  ~AutoIOInterposerDisable()
+  {
+    IOInterposer::Enable();
+  }
+
+private:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 } // namespace mozilla
