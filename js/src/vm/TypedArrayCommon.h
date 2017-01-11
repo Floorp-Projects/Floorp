@@ -262,7 +262,6 @@ template<class SpecificArray, typename Ops>
 class ElementSpecific
 {
     typedef typename SpecificArray::ElementType T;
-    typedef typename SpecificArray::SomeTypedArray SomeTypedArray;
 
   public:
     /*
@@ -272,7 +271,7 @@ class ElementSpecific
      */
     static bool
     setFromTypedArray(JSContext* cx,
-                      Handle<SomeTypedArray*> target, HandleObject source,
+                      Handle<TypedArrayObject*> target, HandleObject source,
                       uint32_t offset)
     {
         MOZ_ASSERT(SpecificArray::ArrayTypeID() == target->type(),
@@ -281,14 +280,13 @@ class ElementSpecific
         MOZ_ASSERT(offset <= target->length());
         MOZ_ASSERT(source->as<TypedArrayObject>().length() <= target->length() - offset);
 
-        if (source->is<SomeTypedArray>()) {
-            Rooted<SomeTypedArray*> src(cx, source.as<SomeTypedArray>());
-            if (SomeTypedArray::sameBuffer(target, src))
+        if (source->is<TypedArrayObject>()) {
+            Rooted<TypedArrayObject*> src(cx, source.as<TypedArrayObject>());
+            if (TypedArrayObject::sameBuffer(target, src))
                 return setFromOverlappingTypedArray(cx, target, src, offset);
         }
 
-        SharedMem<T*> dest =
-            target->template as<TypedArrayObject>().viewDataEither().template cast<T*>() + offset;
+        SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
         uint32_t count = source->as<TypedArrayObject>().length();
 
         if (source->as<TypedArrayObject>().type() == target->type()) {
@@ -370,7 +368,7 @@ class ElementSpecific
      * typed array.
      */
     static bool
-    setFromNonTypedArray(JSContext* cx, Handle<SomeTypedArray*> target, HandleObject source,
+    setFromNonTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
                          uint32_t len, uint32_t offset = 0)
     {
         MOZ_ASSERT(target->type() == SpecificArray::ArrayTypeID(),
@@ -384,8 +382,7 @@ class ElementSpecific
             // the first potentially side-effectful lookup or conversion.
             uint32_t bound = Min(source->as<NativeObject>().getDenseInitializedLength(), len);
 
-            SharedMem<T*> dest =
-                target->template as<TypedArrayObject>().viewDataEither().template cast<T*>() + offset;
+            SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
 
             MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
                        "the following loop must abort on holes");
@@ -415,9 +412,7 @@ class ElementSpecific
                 break;
 
             // Compute every iteration in case getElement/valueToNative is wacky.
-            SharedMem<T*> dest =
-                target->template as<TypedArrayObject>().viewDataEither().template cast<T*>() +
-                offset + i;
+            SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset + i;
             Ops::store(dest, n);
         }
 
@@ -428,7 +423,7 @@ class ElementSpecific
      * Copy |source| into the typed array |target|.
      */
     static bool
-    initFromIterablePackedArray(JSContext* cx, Handle<SomeTypedArray*> target,
+    initFromIterablePackedArray(JSContext* cx, Handle<TypedArrayObject*> target,
                                 HandleArrayObject source)
     {
         MOZ_ASSERT(target->type() == SpecificArray::ArrayTypeID(),
@@ -442,8 +437,7 @@ class ElementSpecific
         // Attempt fast-path infallible conversion of dense elements up to the
         // first potentially side-effectful conversion.
 
-        SharedMem<T*> dest =
-            target->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+        SharedMem<T*> dest = target->viewDataEither().template cast<T*>();
 
         const Value* srcValues = source->getDenseElements();
         for (; i < len; i++) {
@@ -474,8 +468,7 @@ class ElementSpecific
             MOZ_ASSERT(i < target->length());
 
             // Compute every iteration in case GC moves the data.
-            SharedMem<T*> newDest =
-                target->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+            SharedMem<T*> newDest = target->viewDataEither().template cast<T*>();
             Ops::store(newDest + i, n);
         }
 
@@ -485,26 +478,25 @@ class ElementSpecific
   private:
     static bool
     setFromOverlappingTypedArray(JSContext* cx,
-                                 Handle<SomeTypedArray*> target,
-                                 Handle<SomeTypedArray*> source,
+                                 Handle<TypedArrayObject*> target,
+                                 Handle<TypedArrayObject*> source,
                                  uint32_t offset)
     {
         MOZ_ASSERT(SpecificArray::ArrayTypeID() == target->type(),
                    "calling wrong setFromTypedArray specialization");
-        MOZ_ASSERT(SomeTypedArray::sameBuffer(target, source),
+        MOZ_ASSERT(TypedArrayObject::sameBuffer(target, source),
                    "the provided arrays don't actually overlap, so it's "
                    "undesirable to use this method");
 
         MOZ_ASSERT(offset <= target->length());
         MOZ_ASSERT(source->length() <= target->length() - offset);
 
-        SharedMem<T*> dest =
-            target->template as<TypedArrayObject>().viewDataEither().template cast<T*>() + offset;
+        SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
         uint32_t len = source->length();
 
         if (source->type() == target->type()) {
             SharedMem<T*> src =
-                source->template as<TypedArrayObject>().viewDataEither().template cast<T*>();
+                source->as<TypedArrayObject>().viewDataEither().template cast<T*>();
             Ops::podMove(dest, src, len);
             return true;
         }
@@ -515,7 +507,7 @@ class ElementSpecific
         if (!data)
             return false;
         Ops::memcpy(SharedMem<void*>::unshared(data),
-                    source->template as<TypedArrayObject>().viewDataEither(),
+                    source->as<TypedArrayObject>().viewDataEither(),
                     sourceByteLen);
 
         switch (source->type()) {
@@ -647,8 +639,6 @@ class TypedArrayMethods
     static_assert(mozilla::IsSame<SomeTypedArray, TypedArrayObject>::value,
                   "methods must be shared/unshared-specific, not "
                   "element-type-specific");
-
-    typedef typename SomeTypedArray::BufferType BufferType;
 
     typedef typename SomeTypedArray::template OfType<int8_t>::Type Int8ArrayType;
     typedef typename SomeTypedArray::template OfType<uint8_t>::Type Uint8ArrayType;
