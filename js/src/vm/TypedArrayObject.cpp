@@ -346,8 +346,6 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     friend class TypedArrayObject;
 
   public:
-    typedef NativeType ElementType;
-
     static constexpr Scalar::Type ArrayTypeID() { return TypeIDOfType<NativeType>::id; }
     static bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
@@ -1027,12 +1025,6 @@ JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
         MOZ_CRASH("Unsupported TypedArray type");
     }
 }
-
-template<typename T>
-struct TypedArrayObject::OfType
-{
-    typedef TypedArrayObjectTemplate<T> Type;
-};
 
 // ES 2016 draft Mar 25, 2016 24.1.1.1.
 // byteLength = count * unit
