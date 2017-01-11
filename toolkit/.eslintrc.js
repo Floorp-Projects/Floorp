@@ -105,9 +105,6 @@ module.exports = {
     // No using !! where casting to boolean is already happening
     "no-extra-boolean-cast": "error",
 
-    // Disallow unnecessary labels
-    "no-extra-label": "error",
-
     // No double semicolon
     "no-extra-semi": "error",
 
@@ -182,12 +179,6 @@ module.exports = {
 
     // Disallow control flow statements in finally blocks
     "no-unsafe-finally": "error",
-
-    // Disallow negating the left operand of relational operators
-    "no-unsafe-negation": "error",
-
-    // Disallow unused labels
-    "no-unused-labels": "error",
 
     // No declaring variables that are never used
     "no-unused-vars": ["error", {

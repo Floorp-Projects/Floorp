@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -24,6 +24,9 @@
   },
   "engines": {
     "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "node tests/test-run-all.js"
   },
   "license": "MPL-2.0"
 }

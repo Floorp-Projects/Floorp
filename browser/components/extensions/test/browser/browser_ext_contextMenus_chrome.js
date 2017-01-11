@@ -14,8 +14,8 @@ add_task(function* test_actionContextMenus() {
     const contexts = ["page_action", "browser_action"];
 
     const parentId = browser.contextMenus.create({contexts, title: "parent"});
-    await browser.contextMenus.create({contexts, parentId, title: "click A"});
-    await browser.contextMenus.create({contexts, parentId, title: "click B"});
+    await browser.contextMenus.create({parentId, title: "click A"});
+    await browser.contextMenus.create({parentId, title: "click B"});
 
     for (let i = 1; i < 9; i++) {
       await browser.contextMenus.create({contexts, title: `click ${i}`});
@@ -69,8 +69,11 @@ add_task(function* test_tabContextMenu() {
       permissions: ["contextMenus"],
     },
     async background() {
-      await browser.contextMenus.create({title: "alpha", contexts: ["tab"]});
-      await browser.contextMenus.create({title: "beta", contexts: ["tab"]});
+      await browser.contextMenus.create({
+        id: "alpha-beta-parent", title: "alpha-beta parent", contexts: ["tab"],
+      });
+      await browser.contextMenus.create({parentId: "alpha-beta-parent", title: "alpha"});
+      await browser.contextMenus.create({parentId: "alpha-beta-parent", title: "beta"});
 
       browser.contextMenus.onClicked.addListener((info, tab) => {
         browser.test.sendMessage("click", {info, tab});
@@ -103,7 +106,7 @@ add_task(function* test_tabContextMenu() {
   is(separator.tagName, "menuseparator", "Separator before first extension item");
 
   is(submenu.tagName, "menu", "Correct submenu type");
-  is(submenu.label, "Generated extension", "Correct submenu title");
+  is(submenu.label, "alpha-beta parent", "Correct submenu title");
 
   is(gamma.tagName, "menuitem", "Third menu item type is correct");
   is(gamma.label, "gamma", "Third menu item label is correct");

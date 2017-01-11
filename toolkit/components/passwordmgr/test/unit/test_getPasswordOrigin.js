@@ -4,7 +4,7 @@
 
 "use strict";
 
-const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm");
+const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm", {});
 const TESTCASES = [
   ["javascript:void(0);", null],
   ["javascript:void(0);", "javascript:", true],

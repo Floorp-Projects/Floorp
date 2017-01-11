@@ -192,41 +192,46 @@ public:
 
   // Event handlers for various events.
   virtual void HandleCDMProxyReady() {}
-  virtual void HandleAudioDecoded(MediaData* aAudio) {}
-  virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) {}
-  virtual void HandleAudioWaited(MediaData::Type aType);
-  virtual void HandleVideoWaited(MediaData::Type aType);
-  virtual void HandleNotWaited(const WaitForDataRejectValue& aRejection);
   virtual void HandleAudioCaptured() {}
-
+  virtual void HandleAudioDecoded(MediaData* aAudio)
+  {
+    Crash("Unexpected event!", __func__);
+  }
+  virtual void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart)
+  {
+    Crash("Unexpected event!", __func__);
+  }
+  virtual void HandleAudioWaited(MediaData::Type aType)
+  {
+    Crash("Unexpected event!", __func__);
+  }
+  virtual void HandleVideoWaited(MediaData::Type aType)
+  {
+    Crash("Unexpected event!", __func__);
+  }
   virtual void HandleWaitingForAudio()
   {
-    mMaster->WaitForData(MediaData::AUDIO_DATA);
+    Crash("Unexpected event!", __func__);
   }
-
   virtual void HandleAudioCanceled()
   {
-    mMaster->EnsureAudioDecodeTaskQueued();
+    Crash("Unexpected event!", __func__);
   }
-
   virtual void HandleEndOfAudio()
   {
-    AudioQueue().Finish();
+    Crash("Unexpected event!", __func__);
   }
-
   virtual void HandleWaitingForVideo()
   {
-    mMaster->WaitForData(MediaData::VIDEO_DATA);
+    Crash("Unexpected event!", __func__);
   }
-
   virtual void HandleVideoCanceled()
   {
-    mMaster->EnsureVideoDecodeTaskQueued();
+    Crash("Unexpected event!", __func__);
   }
-
   virtual void HandleEndOfVideo()
   {
-    VideoQueue().Finish();
+    Crash("Unexpected event!", __func__);
   }
 
   virtual RefPtr<MediaDecoder::SeekPromise> HandleSeek(SeekTarget aTarget);
@@ -244,6 +249,14 @@ public:
 private:
   template <class S, typename R, typename... As>
   auto ReturnTypeHelper(R(S::*)(As...)) -> R;
+
+  void Crash(const char* aReason, const char* aSite)
+  {
+    char buf[1024];
+    SprintfLiteral(buf, "%s state=%s callsite=%s", aReason, ToStateStr(GetState()), aSite);
+    MOZ_ReportAssertionFailure(buf, __FILE__, __LINE__);
+    MOZ_CRASH();
+  }
 
 protected:
   enum class EventVisibility : int8_t
@@ -659,6 +672,16 @@ public:
     CheckSlowDecoding(aDecodeStart);
   }
 
+  void HandleAudioCanceled() override
+  {
+    mMaster->EnsureAudioDecodeTaskQueued();
+  }
+
+  void HandleVideoCanceled() override
+  {
+    mMaster->EnsureVideoDecodeTaskQueued();
+  }
+
   void HandleEndOfAudio() override;
   void HandleEndOfVideo() override;
 
@@ -672,6 +695,16 @@ public:
   {
     mMaster->WaitForData(MediaData::VIDEO_DATA);
     MaybeStopPrerolling();
+  }
+
+  void HandleAudioWaited(MediaData::Type aType) override
+  {
+    mMaster->EnsureAudioDecodeTaskQueued();
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override
+  {
+    mMaster->EnsureVideoDecodeTaskQueued();
   }
 
   void HandleAudioCaptured() override
@@ -884,7 +917,6 @@ public:
   void HandleVideoDecoded(MediaData* aVideo, TimeStamp aDecodeStart) override = 0;
   void HandleAudioWaited(MediaData::Type aType) override = 0;
   void HandleVideoWaited(MediaData::Type aType) override = 0;
-  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override = 0;
 
   void HandleVideoSuspendTimeout() override
   {
@@ -1062,11 +1094,6 @@ public:
     MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
 
     RequestVideoData();
-  }
-
-  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
-  {
-    MOZ_ASSERT(!mDoneAudioSeeking || !mDoneVideoSeeking, "Seek shouldn't be finished");
   }
 
 private:
@@ -1515,28 +1542,6 @@ private:
     RequestVideoData();
   }
 
-  void HandleNotWaited(const WaitForDataRejectValue& aRejection) override
-  {
-    MOZ_ASSERT(!mSeekJob.mPromise.IsEmpty(), "Seek shouldn't be finished");
-    MOZ_ASSERT(NeedMoreVideo());
-
-    switch(aRejection.mType) {
-    case MediaData::AUDIO_DATA:
-    {
-      // We don't care about audio in this state.
-      break;
-    }
-    case MediaData::VIDEO_DATA:
-    {
-      // Error out if we can't finish video seeking.
-      mMaster->DecodeError(NS_ERROR_DOM_MEDIA_CANCELED);
-      break;
-    }
-    default:
-      MOZ_ASSERT_UNREACHABLE("We cannot handle RAW_DATA or NULL_DATA here.");
-    }
-  }
-
   int64_t CalculateNewCurrentTime() const override
   {
     // The HTMLMediaElement.currentTime should be updated to the seek target
@@ -1642,6 +1647,36 @@ public:
     // Schedule Step() to check it.
     mMaster->PushVideo(aVideo);
     mMaster->ScheduleStateMachine();
+  }
+
+  void HandleAudioCanceled() override
+  {
+    mMaster->RequestAudioData();
+  }
+
+  void HandleVideoCanceled() override
+  {
+    mMaster->RequestVideoData(false, media::TimeUnit());
+  }
+
+  void HandleWaitingForAudio() override
+  {
+    mMaster->WaitForData(MediaData::AUDIO_DATA);
+  }
+
+  void HandleWaitingForVideo() override
+  {
+    mMaster->WaitForData(MediaData::VIDEO_DATA);
+  }
+
+  void HandleAudioWaited(MediaData::Type aType) override
+  {
+    mMaster->RequestAudioData();
+  }
+
+  void HandleVideoWaited(MediaData::Type aType) override
+  {
+    mMaster->RequestVideoData(false, media::TimeUnit());
   }
 
   void HandleEndOfAudio() override;
@@ -1817,27 +1852,6 @@ public:
     MOZ_DIAGNOSTIC_ASSERT(false, "Already shutting down.");
   }
 };
-
-void
-MediaDecoderStateMachine::
-StateObject::HandleAudioWaited(MediaData::Type aType)
-{
-  mMaster->EnsureAudioDecodeTaskQueued();
-}
-
-void
-MediaDecoderStateMachine::
-StateObject::HandleVideoWaited(MediaData::Type aType)
-{
-  mMaster->EnsureVideoDecodeTaskQueued();
-}
-
-void
-MediaDecoderStateMachine::
-StateObject::HandleNotWaited(const WaitForDataRejectValue& aRejection)
-{
-
-}
 
 RefPtr<MediaDecoder::SeekPromise>
 MediaDecoderStateMachine::
@@ -2232,13 +2246,17 @@ MediaDecoderStateMachine::
 BufferingState::DispatchDecodeTasksIfNeeded()
 {
   if (mMaster->IsAudioDecoding() &&
-      !mMaster->HaveEnoughDecodedAudio()) {
-    mMaster->EnsureAudioDecodeTaskQueued();
+      !mMaster->HaveEnoughDecodedAudio() &&
+      !mMaster->IsRequestingAudioData() &&
+      !mMaster->IsWaitingAudioData()) {
+    mMaster->RequestAudioData();
   }
 
   if (mMaster->IsVideoDecoding() &&
-      !mMaster->HaveEnoughDecodedVideo()) {
-    mMaster->EnsureVideoDecodeTaskQueued();
+      !mMaster->HaveEnoughDecodedVideo() &&
+      !mMaster->IsRequestingVideoData() &&
+      !mMaster->IsWaitingVideoData()) {
+    mMaster->RequestVideoData(false, media::TimeUnit());
   }
 }
 
@@ -3122,7 +3140,7 @@ MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
         },
         [this] (const WaitForDataRejectValue& aRejection) {
           mAudioWaitRequest.Complete();
-          mStateObj->HandleNotWaited(aRejection);
+          DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
         })
     );
   } else {
@@ -3136,7 +3154,7 @@ MediaDecoderStateMachine::WaitForData(MediaData::Type aType)
         },
         [this] (const WaitForDataRejectValue& aRejection) {
           mVideoWaitRequest.Complete();
-          mStateObj->HandleNotWaited(aRejection);
+          DecodeError(NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA);
         })
     );
   }

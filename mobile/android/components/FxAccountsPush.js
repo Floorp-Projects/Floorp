@@ -13,7 +13,7 @@ Cu.import("resource://gre/modules/Messaging.jsm");
 const {
   PushCrypto,
   getCryptoParams,
-} = Cu.import("resource://gre/modules/PushCrypto.jsm");
+} = Cu.import("resource://gre/modules/PushCrypto.jsm", {});
 
 XPCOMUtils.defineLazyServiceGetter(this, "PushService",
   "@mozilla.org/push/Service;1", "nsIPushService");
