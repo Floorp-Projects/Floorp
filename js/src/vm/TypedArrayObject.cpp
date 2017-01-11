@@ -1272,7 +1272,7 @@ TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other, b
         return nullptr;
 
     // Step 18.d-g or 24.1.1.4 step 11.
-    if (!TypedArrayMethods::setFromTypedArray(cx, obj, srcArray))
+    if (!TypedArrayMethods<T>::setFromTypedArray(cx, obj, srcArray))
         return nullptr;
 
     // Step 23.
@@ -1329,7 +1329,7 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
             return nullptr;
 
         // Steps 6.d-e.
-        if (!TypedArrayMethods::initFromIterablePackedArray(cx, obj, array))
+        if (!TypedArrayMethods<T>::initFromIterablePackedArray(cx, obj, array))
             return nullptr;
 
         // Step 6.f (The assertion isn't applicable for the fast path).
@@ -1395,7 +1395,7 @@ TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, Handl
         return nullptr;
 
     // Steps 11-12.
-    if (!TypedArrayMethods::setFromNonTypedArray(cx, obj, arrayLike, len))
+    if (!TypedArrayMethods<T>::setFromNonTypedArray(cx, obj, arrayLike, len))
         return nullptr;
 
     // Step 13.
@@ -1447,7 +1447,7 @@ JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
 static bool
 TypedArray_lengthGetter(JSContext* cx, unsigned argc, Value* vp)
 {
-    return TypedArrayObject::Getter<TypedArrayObject::lengthValue>(cx, argc, vp); \
+    return TypedArrayObject::Getter<TypedArrayObject::lengthValue>(cx, argc, vp);
 }
 
 static bool
@@ -1518,13 +1518,23 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
 
     RootedObject arg0(cx, &args[0].toObject());
     if (arg0->is<TypedArrayObject>()) {
-        if (arg0->as<TypedArrayObject>().length() > target->length() - offset) {
+        Handle<TypedArrayObject*> source = arg0.as<TypedArrayObject>();
+        if (source->length() > target->length() - offset) {
             JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
             return false;
         }
 
-        if (!TypedArrayMethods::setFromTypedArray(cx, target, arg0.as<TypedArrayObject>(), offset))
-            return false;
+        switch (target->type()) {
+#define SET_FROM_TYPED_ARRAY(T, N) \
+          case Scalar::N: \
+            if (!TypedArrayMethods<T>::setFromTypedArray(cx, target, source, offset)) \
+                return false; \
+            break;
+JS_FOR_EACH_TYPED_ARRAY(SET_FROM_TYPED_ARRAY)
+#undef SET_FROM_TYPED_ARRAY
+          default:
+            MOZ_CRASH("Unsupported TypedArray type");
+        }
     } else {
         uint32_t len;
         if (!GetLengthProperty(cx, arg0, &len))
@@ -1535,8 +1545,17 @@ TypedArrayObject::set_impl(JSContext* cx, const CallArgs& args)
             return false;
         }
 
-        if (!TypedArrayMethods::setFromNonTypedArray(cx, target, arg0, len, offset))
-            return false;
+        switch (target->type()) {
+#define SET_FROM_NON_TYPED_ARRAY(T, N) \
+          case Scalar::N: \
+            if (!TypedArrayMethods<T>::setFromNonTypedArray(cx, target, arg0, len, offset)) \
+                return false; \
+            break;
+JS_FOR_EACH_TYPED_ARRAY(SET_FROM_NON_TYPED_ARRAY)
+#undef SET_FROM_NON_TYPED_ARRAY
+          default:
+            MOZ_CRASH("Unsupported TypedArray type");
+        }
     }
 
     args.rval().setUndefined();
