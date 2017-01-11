@@ -76,8 +76,8 @@ class TestPreferences(MarionetteTestCase):
 
     def test_get_pref_value_type(self):
         # Without a given value type the properties URL will be returned only
-        pref_complex = "browser.startup.homepage"
-        properties_file = "chrome://branding/locale/browserconfig.properties"
+        pref_complex = "browser.menu.showCharacterEncoding"
+        properties_file = "chrome://browser/locale/browser.properties"
         self.assertEqual(self.marionette.get_pref(pref_complex, default_branch=True),
                          properties_file)
 
