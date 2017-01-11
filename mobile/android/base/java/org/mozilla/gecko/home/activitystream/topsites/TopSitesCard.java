@@ -118,7 +118,10 @@ class TopSitesCard extends RecyclerView.ViewHolder
                     menuButton,
                     extras,
                     ActivityStreamContextMenu.MenuMode.TOPSITE,
-                    topSite,
+                    title.getText().toString(), topSite.getUrl(),
+
+                    topSite.isBookmarked(), topSite.isPinned(),
+
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     faviconView.getWidth(), faviconView.getHeight());
 

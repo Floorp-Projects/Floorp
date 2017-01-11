@@ -12,7 +12,7 @@ import android.text.format.DateUtils;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.db.BrowserContract;
 
-public class Highlight implements Item {
+public class Highlight {
     private final String title;
     private final String url;
     private final Utils.HighlightSource source;
@@ -74,16 +74,6 @@ public class Highlight implements Item {
 
     public Boolean isPinned() {
         return isPinned;
-    }
-
-    @Override
-    public void updateBookmarked(boolean bookmarked) {
-        this.isBookmarked = bookmarked;
-    }
-
-    @Override
-    public void updatePinned(boolean pinned) {
-        this.isPinned = pinned;
     }
 
     public String getRelativeTimeSpan() {
