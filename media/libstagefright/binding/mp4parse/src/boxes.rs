@@ -1,10 +1,11 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
+use std::fmt;
 
 macro_rules! box_database {
     ($($boxenum:ident $boxtype:expr),*,) => {
-        #[derive(Debug, Clone, Copy, PartialEq)]
+        #[derive(Clone, Copy, PartialEq)]
         pub enum BoxType {
             $($boxenum),*,
             UnknownBox(u32),
@@ -19,6 +20,75 @@ macro_rules! box_database {
                 }
             }
         }
+
+        impl Into<u32> for BoxType {
+            fn into(self) -> u32 {
+                use self::BoxType::*;
+                match self {
+                    $($boxenum => $boxtype),*,
+                    UnknownBox(t) => t,
+                }
+            }
+        }
+
+        impl fmt::Debug for BoxType {
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                let fourcc: FourCC = From::from(self.clone());
+                write!(f, "{}", fourcc)
+            }
+        }
+    }
+}
+
+#[derive(Default, PartialEq)]
+pub struct FourCC {
+    pub value: String
+}
+
+impl From<u32> for FourCC {
+    fn from(number: u32) -> FourCC {
+        let mut box_chars = Vec::new();
+        for x in 0..4 {
+            let c = (number >> x * 8 & 0x000000FF) as u8;
+            box_chars.push(c);
+        }
+        box_chars.reverse();
+
+        let box_string = match String::from_utf8(box_chars) {
+            Ok(t) => t,
+            _ => String::from("null"), // error to retrieve fourcc
+        };
+
+        FourCC {
+            value: box_string
+        }
+    }
+}
+
+impl From<BoxType> for FourCC {
+    fn from(t: BoxType) -> FourCC {
+        let box_num: u32 = Into::into(t);
+        From::from(box_num)
+    }
+}
+
+impl<'a> From<&'a str> for FourCC {
+    fn from(v: &'a str) -> FourCC {
+        FourCC {
+            value: v.to_owned()
+        }
+    }
+}
+
+impl fmt::Debug for FourCC {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.value)
+    }
+}
+
+impl fmt::Display for FourCC {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.value)
     }
 }
 

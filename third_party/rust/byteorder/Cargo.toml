@@ -1,9 +1,9 @@
 [package]
 name = "byteorder"
-version = "0.5.3"  #:version
+version = "1.0.0"  #:version
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
 description = "Library for reading/writing numbers in big-endian and little-endian."
-documentation = "http://burntsushi.net/rustdoc/byteorder/"
+documentation = "https://docs.rs/byteorder"
 homepage = "https://github.com/BurntSushi/byteorder"
 repository = "https://github.com/BurntSushi/byteorder"
 readme = "README.md"
@@ -12,9 +12,10 @@ license = "Unlicense/MIT"
 
 [lib]
 name = "byteorder"
+bench = false
 
 [dev-dependencies]
-quickcheck = "0.2"
+quickcheck = "0.4"
 rand = "0.3"
 
 [features]
