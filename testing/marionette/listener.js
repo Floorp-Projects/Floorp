@@ -685,9 +685,9 @@ function createATouch(el, corx, cory, touchId) {
  *      Object with an |actions| attribute that is an Array of objects
  *      each of which represents an action sequence.
  */
-function performActions(msg) {
+function* performActions(msg) {
   let chain = action.Chain.fromJson(msg.actions);
-  action.dispatch(chain, seenEls, curContainer);
+  yield action.dispatch(chain, seenEls, curContainer);
 }
 
 /**
@@ -696,8 +696,8 @@ function performActions(msg) {
  * the state was released by an explicit series of actions. It also clears all
  * the internal state of the virtual devices.
  */
-function releaseActions() {
-  action.dispatchTickActions(action.inputsToCancel.reverse(), 0, seenEls, curContainer);
+function* releaseActions() {
+  yield action.dispatchTickActions(action.inputsToCancel.reverse(), 0, seenEls, curContainer);
   action.inputsToCancel.length = 0;
   action.inputStateMap.clear();
 }
