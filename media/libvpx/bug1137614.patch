@@ -1,6 +1,6 @@
-diff --git a/media/libvpx/vp8/encoder/block.h b/media/libvpx/vp8/encoder/block.h
---- a/media/libvpx/vp8/encoder/block.h
-+++ b/media/libvpx/vp8/encoder/block.h
+diff --git a/media/libvpx/libvpx/vp8/encoder/block.h b/media/libvpx/libvpx/vp8/encoder/block.h
+--- a/media/libvpx/libvpx/vp8/encoder/block.h
++++ b/media/libvpx/libvpx/vp8/encoder/block.h
 @@ -93,17 +93,18 @@ typedef struct macroblock
      int rddiv;
      int rdmult;
