@@ -1,5 +1,7 @@
 var manager = new MediaTestManager;
 
+gTestPrefs = gTestPrefs.concat([['media.test.crashOnDumpDebugInfo', true]]);
+
 function createTestArray() {
   var tests = [];
   var tmpVid = document.createElement("video");
