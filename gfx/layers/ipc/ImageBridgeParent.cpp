@@ -232,34 +232,23 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose()
   return IPC_OK();
 }
 
-PCompositableParent*
-ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo, const uint64_t& aID)
+mozilla::ipc::IPCResult
+ImageBridgeParent::RecvNewCompositable(const CompositableHandle& aHandle, const TextureInfo& aInfo)
 {
-  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo);
-  if (mCompositables.find(aID) != mCompositables.end()) {
-    NS_ERROR("Async compositable ID already exists");
-    return actor;
-  }
-  if (!aID) {
-    NS_ERROR("Expected non-zero async compositable ID");
-    return actor;
+  RefPtr<CompositableHost> host = AddCompositable(aHandle, aInfo);
+  if (!host) {
+    return IPC_FAIL_NO_REASON(this);
   }
 
-  CompositableHost* host = CompositableHost::FromIPDLActor(actor);
-
-  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), CompositableHandle(aID)));
-  mCompositables[aID] = host;
-
-  return actor;
+  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), aHandle));
+  return IPC_OK();
 }
 
-bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
+mozilla::ipc::IPCResult
+ImageBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle)
 {
-  if (CompositableHost* host = CompositableHost::FromIPDLActor(aActor)) {
-    const AsyncCompositableRef& ref = host->GetAsyncRef();
-    mCompositables.erase(ref.mHandle.Value());
-  }
-  return CompositableHost::DestroyIPDLActor(aActor);
+  ReleaseCompositable(aHandle);
+  return IPC_OK();
 }
 
 PTextureParent*
@@ -436,16 +425,6 @@ ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransaction
   if (!IsAboutToSendAsyncMessages()) {
     SendPendingAsyncMessages();
   }
-}
-
-CompositableHost*
-ImageBridgeParent::FindCompositable(const CompositableHandle& aHandle)
-{
-  auto iter = mCompositables.find(aHandle.Value());
-  if (iter == mCompositables.end()) {
-    return nullptr;
-  }
-  return iter->second;
 }
 
 } // namespace layers

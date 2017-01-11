@@ -251,8 +251,9 @@ public:
   void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
+  void ReleaseCompositable(const CompositableHandle& aHandle) override;
   bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
-  bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
+  bool DestroyInTransaction(const CompositableHandle& aHandle);
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
@@ -421,6 +422,8 @@ protected:
 
   void ProcessReplies(const nsTArray<EditReply>& aReplies);
 
+  RefPtr<CompositableClient> FindCompositable(const CompositableHandle& aHandle);
+
   bool InWorkerThread();
 
   CompositorBridgeChild* GetCompositorBridgeChild();
@@ -440,6 +443,7 @@ private:
   InfallibleTArray<PluginWindowData> mPluginWindowData;
   UniquePtr<ActiveResourceTracker> mActiveResourceTracker;
   uint64_t mNextLayerHandle;
+  nsDataHashtable<nsUint64HashKey, CompositableClient*> mCompositables;
 };
 
 class CompositableClient;

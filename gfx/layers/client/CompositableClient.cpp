@@ -28,15 +28,14 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-CompositableClient::InitIPDLActor(PCompositableChild* aActor, const CompositableHandle& aAsyncHandle)
+CompositableClient::InitIPDL(const CompositableHandle& aHandle)
 {
-  MOZ_ASSERT(aActor);
+  MOZ_ASSERT(aHandle);
 
   mForwarder->AssertInForwarderThread();
 
-  mAsyncHandle = aAsyncHandle;
-  mCompositableChild = static_cast<CompositableChild*>(aActor);
-  mCompositableChild->Init(this);
+  mHandle = aHandle;
+  mIsAsync = !NS_IsMainThread();
 }
 
 /* static */ RefPtr<CompositableClient>
@@ -57,6 +56,7 @@ CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
                                        TextureFlags aTextureFlags)
 : mForwarder(aForwarder)
 , mTextureFlags(aTextureFlags)
+, mIsAsync(false)
 {
 }
 
@@ -71,17 +71,11 @@ CompositableClient::GetCompositorBackendType() const
   return mForwarder->GetCompositorBackendType();
 }
 
-PCompositableChild*
-CompositableClient::GetIPDLActor() const
-{
-  return mCompositableChild;
-}
-
 bool
 CompositableClient::Connect(ImageContainer* aImageContainer)
 {
-  MOZ_ASSERT(!mCompositableChild);
-  if (!GetForwarder() || GetIPDLActor()) {
+  MOZ_ASSERT(!mHandle);
+  if (!GetForwarder() || mHandle) {
     return false;
   }
 
@@ -95,33 +89,27 @@ CompositableClient::IsConnected() const
 {
   // CanSend() is only reliable in the same thread as the IPDL channel.
   mForwarder->AssertInForwarderThread();
-  return mCompositableChild && mCompositableChild->IsConnected();
+  return !!mHandle;
 }
 
 void
 CompositableClient::Destroy()
 {
-  if (!mCompositableChild) {
-    return;
-  }
-
   if (mTextureClientRecycler) {
     mTextureClientRecycler->Destroy();
   }
 
-  // Take away our IPDL's actor reference back to us.
-  mCompositableChild->RevokeCompositableClient();
-
-  // Schedule the IPDL actor to be destroyed on the forwarder's thread.
-  mForwarder->Destroy(mCompositableChild);
-  mCompositableChild = nullptr;
+  if (mHandle) {
+    mForwarder->ReleaseCompositable(mHandle);
+    mHandle = CompositableHandle();
+  }
 }
 
 CompositableHandle
 CompositableClient::GetAsyncHandle() const
 {
-  if (mCompositableChild) {
-    return mAsyncHandle;
+  if (mIsAsync) {
+    return mHandle;
   }
   return CompositableHandle();
 }
