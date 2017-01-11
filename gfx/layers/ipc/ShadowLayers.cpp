@@ -864,7 +864,7 @@ void ShadowLayerForwarder::AttachAsyncCompositable(const CompositableHandle& aHa
 {
   MOZ_ASSERT(aLayer);
   MOZ_ASSERT(aHandle);
-  mTxn->AddEdit(OpAttachAsyncCompositable(Shadow(aLayer), aHandle.Value()));
+  mTxn->AddEdit(OpAttachAsyncCompositable(Shadow(aLayer), aHandle));
 }
 
 void ShadowLayerForwarder::SetShadowManager(PLayerTransactionChild* aShadowManager)
