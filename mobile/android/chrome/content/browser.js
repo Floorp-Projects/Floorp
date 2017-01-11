@@ -2140,7 +2140,7 @@ var NativeWindow = {
   },
 
   loadDex: function(zipFile, implClass) {
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Dex:Load",
       zipfile: zipFile,
       impl: implClass || "Main"
@@ -2148,7 +2148,7 @@ var NativeWindow = {
   },
 
   unloadDex: function(zipFile) {
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Dex:Unload",
       zipfile: zipFile
     });
