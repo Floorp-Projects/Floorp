@@ -169,7 +169,7 @@ skip-if(!asyncPan||!browserIsRemote) == async-scroll-1b.html async-scroll-1b.htm
 default-preferences
 
 fails == async-zoom-1.html async-zoom-1.html
-skip-if(!asyncZoom) == async-zoom-2.html async-zoom-2.html
+fails == async-zoom-2.html async-zoom-2.html
 
 # reftest-opaque-layer
 # == reftest-opaque-layer-pass.html reftest-opaque-layer-pass.html
