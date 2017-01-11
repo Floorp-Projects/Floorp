@@ -26,7 +26,7 @@ enum Transport {
     "usb"
 };
 
-dictionary ClientData {
+dictionary U2FClientData {
     DOMString             typ; // Spelling is from the specification
     DOMString             challenge;
     DOMString             origin;

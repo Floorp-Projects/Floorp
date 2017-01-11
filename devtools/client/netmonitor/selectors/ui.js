@@ -19,6 +19,10 @@ function getWaterfallScale(state) {
     return null;
   }
 
+  if (ui.waterfallWidth == null) {
+    return null;
+  }
+
   const lastEventMillis = Math.max(requests.lastEndedMillis,
                                    timingMarkers.firstDocumentDOMContentLoadedTimestamp,
                                    timingMarkers.firstDocumentLoadTimestamp);

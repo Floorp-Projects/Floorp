@@ -7,6 +7,7 @@
 #define DXVA2Manager_h_
 
 #include "WMF.h"
+#include "MediaInfo.h"
 #include "nsAutoPtr.h"
 #include "mozilla/Mutex.h"
 #include "nsRect.h"
@@ -24,8 +25,10 @@ public:
 
   // Creates and initializes a DXVA2Manager. We can use DXVA2 via either
   // D3D9Ex or D3D11.
-  static DXVA2Manager* CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor, nsACString& aFailureReason);
-  static DXVA2Manager* CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor, nsACString& aFailureReason);
+  static DXVA2Manager* CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
+                                      nsACString& aFailureReason);
+  static DXVA2Manager* CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
+                                       nsACString& aFailureReason);
 
   // Returns a pointer to the D3D device manager responsible for managing the
   // device we're using for hardware accelerated video decoding. If we're using
@@ -46,9 +49,21 @@ public:
 
   virtual bool SupportsConfig(IMFMediaType* aType, float aFramerate) = 0;
 
+  // When we want to decode with DXVA2 directly instead of using it by MFT, we
+  // need to take responsibility for creating a decoder and handle the related
+  // decoding operations by ourself.
+  virtual bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
+                                  nsACString& aFailureReason) = 0;
+
 protected:
   Mutex mLock;
   DXVA2Manager();
+
+  bool IsUnsupportedResolution(const uint32_t& aWidth,
+                               const uint32_t& aHeight,
+                               const float& aFramerate) const;
+
+  bool mIsAMDPreUVD4;
 };
 
 } // namespace mozilla

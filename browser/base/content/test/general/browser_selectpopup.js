@@ -195,6 +195,14 @@ function* doSelectTests(contentType, dtd) {
   yield BrowserTestUtils.removeTab(tab);
 }
 
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({
+    "set": [
+      ["dom.select_popup_in_parent.enabled", true],
+    ]
+  });
+});
+
 add_task(function*() {
   yield doSelectTests("text/html", "");
 });
@@ -439,9 +447,14 @@ function* performLargePopupTests(win) {
       let cs = win.getComputedStyle(selectPopup);
       let bpBottom = parseFloat(cs.paddingBottom) + parseFloat(cs.borderBottomWidth);
 
-      is(selectPopup.childNodes[60].getBoundingClientRect().bottom,
-         selectPopup.getBoundingClientRect().bottom - bpBottom,
-         "Popup scroll at correct position " + bpBottom);
+      // Some of the styles applied to the menuitems are percentages, meaning
+      // that the final layout calculations returned by getBoundingClientRect()
+      // might return floating point values. We don't care about sub-pixel
+      // accuracy, and only care about the final pixel value, so we add a
+      // fuzz-factor of 1.
+      SimpleTest.isfuzzy(selectPopup.childNodes[60].getBoundingClientRect().bottom,
+                         selectPopup.getBoundingClientRect().bottom - bpBottom,
+                         1, "Popup scroll at correct position " + bpBottom);
     }
 
     yield hideSelectPopup(selectPopup, "enter", win);

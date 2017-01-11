@@ -45,7 +45,7 @@ WaterfallBackground.prototype = {
 
     this.prevState = state;
 
-    if (state.scale == null) {
+    if (state.waterfallWidth == null || state.scale == null) {
       this.document.mozSetImageElement("waterfall-background", null);
       return;
     }

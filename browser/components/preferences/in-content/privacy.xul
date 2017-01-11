@@ -92,7 +92,7 @@
     <hbox align="start">
       <vbox>
         <caption><label>&trackingProtectionHeader.label;
-          <label id="trackingProtectionLearnMore" class="text-link"
+          <label id="trackingProtectionLearnMore" class="learnMore text-link"
                  value="&trackingProtectionLearnMore.label;"/>
         </label></caption>
         <radiogroup id="trackingProtectionRadioGroup">
@@ -128,7 +128,7 @@
                 accesskey="&trackingProtectionPBM5.accesskey;"
                 label="&trackingProtectionPBM5.label;" />
       <label id="trackingProtectionPBMLearnMore"
-             class="text-link"
+             class="learnMore text-link"
              value="&trackingProtectionPBMLearnMore.label;"/>
       <spacer flex="1" />
       <button id="changeBlockListPBM"
@@ -289,7 +289,7 @@
 <groupbox id="browserContainersGroup" data-category="panePrivacy" hidden="true">
   <vbox id="browserContainersbox" hidden="true">
     <caption><label>&browserContainersHeader.label;
-      <label id="browserContainersLearnMore" class="text-link"
+      <label id="browserContainersLearnMore" class="learnMore text-link"
              value="&browserContainersLearnMore.label;"/>
     </label></caption>
     <hbox align="start">

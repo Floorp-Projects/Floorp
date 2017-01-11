@@ -562,6 +562,7 @@ WEBIDL_FILES = [
     'VTTCue.webidl',
     'VTTRegion.webidl',
     'WaveShaperNode.webidl',
+    'WebAuthentication.webidl',
     'WebComponents.webidl',
     'WebGL2RenderingContext.webidl',
     'WebGLRenderingContext.webidl',

@@ -9,16 +9,30 @@ const { Filters, isFreetextMatch } = require("../filter-predicates");
 const { Sorters } = require("../sort-predicates");
 
 /**
- * Check if the given requests is a clone, find and return the original request if it is.
- * Cloned requests are sorted by comparing the original ones.
+ * Take clones into account when sorting.
+ * If a request is a clone, use the original request for comparison.
+ * If one of the compared request is a clone of the other, sort them next to each other.
  */
-function getOrigRequest(requests, req) {
-  if (!req.id.endsWith("-clone")) {
-    return req;
+function sortWithClones(requests, sorter, a, b) {
+  const aId = a.id, bId = b.id;
+
+  if (aId.endsWith("-clone")) {
+    const aOrigId = aId.replace(/-clone$/, "");
+    if (aOrigId === bId) {
+      return +1;
+    }
+    a = requests.get(aOrigId);
   }
 
-  const origId = req.id.replace(/-clone$/, "");
-  return requests.find(r => r.id === origId);
+  if (bId.endsWith("-clone")) {
+    const bOrigId = bId.replace(/-clone$/, "");
+    if (bOrigId === aId) {
+      return -1;
+    }
+    b = requests.get(bOrigId);
+  }
+
+  return sorter(a, b);
 }
 
 const getFilterFn = createSelector(
@@ -35,39 +49,24 @@ const getSortFn = createSelector(
   state => state.requests.requests,
   state => state.sort,
   (requests, sort) => {
-    let dataSorter = Sorters[sort.type || "waterfall"];
-
-    function sortWithClones(a, b) {
-      // If one request is a clone of the other, sort them next to each other
-      if (a.id == b.id + "-clone") {
-        return +1;
-      } else if (a.id + "-clone" == b.id) {
-        return -1;
-      }
-
-      // Otherwise, get the original requests and compare them
-      return dataSorter(
-        getOrigRequest(requests, a),
-        getOrigRequest(requests, b)
-      );
-    }
-
+    const sorter = Sorters[sort.type || "waterfall"];
     const ascending = sort.ascending ? +1 : -1;
-    return (a, b) => ascending * sortWithClones(a, b, dataSorter);
+    return (a, b) => ascending * sortWithClones(requests, sorter, a, b);
   }
 );
 
 const getSortedRequests = createSelector(
   state => state.requests.requests,
   getSortFn,
-  (requests, sortFn) => requests.sort(sortFn)
+  (requests, sortFn) => requests.valueSeq().sort(sortFn).toList()
 );
 
 const getDisplayedRequests = createSelector(
   state => state.requests.requests,
   getFilterFn,
   getSortFn,
-  (requests, filterFn, sortFn) => requests.filter(filterFn).sort(sortFn)
+  (requests, filterFn, sortFn) => requests.valueSeq()
+    .filter(filterFn).sort(sortFn).toList()
 );
 
 const getDisplayedRequestsSummary = createSelector(
@@ -95,17 +94,11 @@ const getDisplayedRequestsSummary = createSelector(
 
 const getSelectedRequest = createSelector(
   state => state.requests,
-  requests => {
-    if (!requests.selectedId) {
-      return null;
-    }
-
-    return requests.requests.find(r => r.id === requests.selectedId);
-  }
+  ({ selectedId, requests }) => selectedId ? requests.get(selectedId) : null
 );
 
 function getRequestById(state, id) {
-  return state.requests.requests.find(r => r.id === id);
+  return state.requests.requests.get(id);
 }
 
 function getDisplayedRequestById(state, id) {

@@ -195,6 +195,8 @@ function verifySignature(key, data, derSig) {
   let R = sanitizeSigArray(sigR);
   let S = sanitizeSigArray(sigS);
 
+  console.log("Verifying these bytes: " + bytesToBase64UrlSafe(data));
+
   let sigData = new Uint8Array(R.length + S.length);
   sigData.set(R);
   sigData.set(S, R.length);

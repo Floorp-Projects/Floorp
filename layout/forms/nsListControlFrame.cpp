@@ -118,6 +118,12 @@ nsListControlFrame::~nsListControlFrame()
   mComboboxFrame = nullptr;
 }
 
+static bool ShouldFireDropDownEvent() {
+  return (XRE_IsContentProcess() &&
+          Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) ||
+         Preferences::GetBool("dom.select_popup_in_parent.enabled", false);
+}
+
 // for Bug 47302 (remove this comment later)
 void
 nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
@@ -141,8 +147,7 @@ nsListControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mContent->RemoveSystemEventListener(NS_LITERAL_STRING("mousemove"),
                                       mEventListener, false);
 
-  if (XRE_IsContentProcess() &&
-      Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
+  if (ShouldFireDropDownEvent()) {
     nsContentUtils::AddScriptRunner(
       new AsyncEventDispatcher(mContent,
                                NS_LITERAL_STRING("mozhidedropdown"), true,
@@ -1789,8 +1794,7 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
 static bool
 FireShowDropDownEvent(nsIContent* aContent, bool aShow, bool aIsSourceTouchEvent)
 {
-  if (XRE_IsContentProcess() &&
-      Preferences::GetBool("browser.tabs.remote.desktopbehavior", false)) {
+  if (ShouldFireDropDownEvent()) {
     nsString eventName;
     if (aShow) {
       eventName = aIsSourceTouchEvent ? NS_LITERAL_STRING("mozshowdropdown-sourcetouch") :

@@ -104,17 +104,26 @@ public:
 
   bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
 
+  bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
+                          nsACString& aFailureReason) override;
+
 private:
+  bool CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
+                        const float aFramerate) const;
+
+  already_AddRefed<IDirectXVideoDecoder>
+  CreateDecoder(const DXVA2_VideoDesc& aDesc) const;
+
   RefPtr<IDirect3D9Ex> mD3D9;
   RefPtr<IDirect3DDevice9Ex> mDevice;
   RefPtr<IDirect3DDeviceManager9> mDeviceManager;
   RefPtr<D3D9RecycleAllocator> mTextureClientAllocator;
   RefPtr<IDirectXVideoDecoderService> mDecoderService;
   RefPtr<IDirect3DSurface9> mSyncSurface;
+  RefPtr<IDirectXVideoDecoder> mDecoder;
   GUID mDecoderGUID;
   UINT32 mResetToken;
   bool mFirstFrame;
-  bool mIsAMDPreUVD4;
 };
 
 void GetDXVA2ExtendedFormatFromMFMediaType(IMFMediaType *pType,
@@ -194,56 +203,15 @@ bool
 D3D9DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  gfx::D3D9VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D9 crash detected");
-    return false;
-  }
-
   DXVA2_VideoDesc desc;
   HRESULT hr = ConvertMFTypeToDXVAType(aType, &desc);
   NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
-  // AMD cards with UVD3 or earlier perform poorly trying to decode 1080p60 in hardware,
-  // so use software instead. Pick 45 as an arbitrary upper bound for the framerate we can
-  // handle.
-  if (mIsAMDPreUVD4 &&
-      (desc.SampleWidth >= 1920 || desc.SampleHeight >= 1088) &&
-      aFramerate > 45) {
-    return false;
-  }
-
-  UINT configCount;
-  DXVA2_ConfigPictureDecode* configs = nullptr;
-  hr = mDecoderService->GetDecoderConfigurations(mDecoderGUID, &desc, nullptr, &configCount, &configs);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
-  RefPtr<IDirect3DSurface9> surface;
-  hr = mDecoderService->CreateSurface(desc.SampleWidth, desc.SampleHeight, 0, (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'),
-                                      D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
-                                      surface.StartAssignment(), NULL);
-  if (!SUCCEEDED(hr)) {
-    CoTaskMemFree(configs);
-    return false;
-  }
-
-  for (UINT i = 0; i < configCount; i++) {
-    RefPtr<IDirectXVideoDecoder> decoder;
-    IDirect3DSurface9* surfaces = surface;
-    hr = mDecoderService->CreateVideoDecoder(mDecoderGUID, &desc, &configs[i], &surfaces, 1, decoder.StartAssignment());
-    if (SUCCEEDED(hr) && decoder) {
-      CoTaskMemFree(configs);
-      return true;
-    }
-  }
-  CoTaskMemFree(configs);
-  return false;
+  return CanCreateDecoder(desc, aFramerate);
 }
 
 D3D9DXVA2Manager::D3D9DXVA2Manager()
   : mResetToken(0)
   , mFirstFrame(true)
-  , mIsAMDPreUVD4(false)
 {
   MOZ_COUNT_CTOR(D3D9DXVA2Manager);
   MOZ_ASSERT(NS_IsMainThread());
@@ -520,6 +488,78 @@ DXVA2Manager::CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
   return nullptr;
 }
 
+bool
+D3D9DXVA2Manager::CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
+                                     nsACString& aFailureReason)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  DXVA2_VideoDesc desc;
+  desc.SampleWidth = aVideoInfo.mImage.width;
+  desc.SampleHeight = aVideoInfo.mImage.height;
+  desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
+
+  // Assume the current duration is representative for the entire video.
+  float framerate = 1000000.0 / aVideoInfo.mDuration;
+  if (IsUnsupportedResolution(desc.SampleWidth, desc.SampleHeight , framerate)) {
+    return false;
+  }
+
+  mDecoder = CreateDecoder(desc);
+  if (!mDecoder) {
+    aFailureReason = nsPrintfCString("Fail to create video decoder in D3D9DXVA2Manager.");
+    return false;
+  }
+  return true;
+}
+
+bool
+D3D9DXVA2Manager::CanCreateDecoder(const DXVA2_VideoDesc& aDesc,
+                                   const float aFramerate) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (IsUnsupportedResolution(aDesc.SampleWidth, aDesc.SampleHeight, aFramerate)) {
+    return false;
+  }
+  RefPtr<IDirectXVideoDecoder> decoder = CreateDecoder(aDesc);
+  return decoder.get() != nullptr;
+}
+
+already_AddRefed<IDirectXVideoDecoder>
+D3D9DXVA2Manager::CreateDecoder(const DXVA2_VideoDesc& aDesc) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  gfx::D3D9VideoCrashGuard crashGuard;
+  if (crashGuard.Crashed()) {
+    NS_WARNING("DXVA2D3D9 crash detected");
+    return nullptr;
+  }
+
+  UINT configCount;
+  DXVA2_ConfigPictureDecode* configs = nullptr;
+  HRESULT hr = mDecoderService->GetDecoderConfigurations(mDecoderGUID, &aDesc, nullptr, &configCount, &configs);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  RefPtr<IDirect3DSurface9> surface;
+  hr = mDecoderService->CreateSurface(aDesc.SampleWidth, aDesc.SampleHeight, 0, (D3DFORMAT)MAKEFOURCC('N', 'V', '1', '2'),
+                                      D3DPOOL_DEFAULT, 0, DXVA2_VideoDecoderRenderTarget,
+                                      surface.StartAssignment(), NULL);
+  if (!SUCCEEDED(hr)) {
+    CoTaskMemFree(configs);
+    return nullptr;
+  }
+
+  for (UINT i = 0; i < configCount; i++) {
+    RefPtr<IDirectXVideoDecoder> decoder;
+    IDirect3DSurface9* surfaces = surface;
+    hr = mDecoderService->CreateVideoDecoder(mDecoderGUID, &aDesc, &configs[i], &surfaces, 1, decoder.StartAssignment());
+    CoTaskMemFree(configs);
+    return decoder.forget();
+  }
+
+  CoTaskMemFree(configs);
+  return nullptr;
+}
+
 class D3D11DXVA2Manager : public DXVA2Manager
 {
 public:
@@ -543,11 +583,20 @@ public:
 
   bool SupportsConfig(IMFMediaType* aType, float aFramerate) override;
 
+  bool CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
+                          nsACString& aFailureReason) override;
+
 private:
   HRESULT CreateFormatConverter();
 
   HRESULT CreateOutputSample(RefPtr<IMFSample>& aSample,
                              ID3D11Texture2D* aTexture);
+
+  bool CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc,
+                        const float aFramerate) const;
+
+  already_AddRefed<ID3D11VideoDecoder>
+  CreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc) const;
 
   RefPtr<ID3D11Device> mDevice;
   RefPtr<ID3D11DeviceContext> mContext;
@@ -555,71 +604,29 @@ private:
   RefPtr<MFTDecoder> mTransform;
   RefPtr<D3D11RecycleAllocator> mTextureClientAllocator;
   RefPtr<ID3D11Texture2D> mSyncSurface;
+  RefPtr<ID3D11VideoDecoder> mDecoder;
   GUID mDecoderGUID;
   uint32_t mWidth;
   uint32_t mHeight;
   UINT mDeviceManagerToken;
-  bool mIsAMDPreUVD4;
 };
 
 bool
 D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  gfx::D3D11VideoCrashGuard crashGuard;
-  if (crashGuard.Crashed()) {
-    NS_WARNING("DXVA2D3D9 crash detected");
-    return false;
-  }
-
-  RefPtr<ID3D11VideoDevice> videoDevice;
-  HRESULT hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
   D3D11_VIDEO_DECODER_DESC desc;
   desc.Guid = mDecoderGUID;
-
-  UINT32 width = 0;
-  UINT32 height = 0;
-  hr = MFGetAttributeSize(aType, MF_MT_FRAME_SIZE, &width, &height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-  desc.SampleWidth = width;
-  desc.SampleHeight = height;
-
   desc.OutputFormat = DXGI_FORMAT_NV12;
-
-  // AMD cards with UVD3 or earlier perform poorly trying to decode 1080p60 in hardware,
-  // so use software instead. Pick 45 as an arbitrary upper bound for the framerate we can
-  // handle.
-  if (mIsAMDPreUVD4 &&
-    (desc.SampleWidth >= 1920 || desc.SampleHeight >= 1088) &&
-    aFramerate > 45) {
-    return false;
-  }
-
-  UINT configCount = 0;
-  hr = videoDevice->GetVideoDecoderConfigCount(&desc, &configCount);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), false);
-
-  for (UINT i = 0; i < configCount; i++) {
-    D3D11_VIDEO_DECODER_CONFIG config;
-    hr = videoDevice->GetVideoDecoderConfig(&desc, i, &config);
-    if (SUCCEEDED(hr)) {
-      RefPtr<ID3D11VideoDecoder> decoder;
-      hr = videoDevice->CreateVideoDecoder(&desc, &config, decoder.StartAssignment());
-      if (SUCCEEDED(hr) && decoder) {
-        return true;
-      }
-    }
-  }
-  return false;
+  HRESULT hr = MFGetAttributeSize(aType, MF_MT_FRAME_SIZE, &desc.SampleWidth, &desc.SampleHeight);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
+  return CanCreateDecoder(desc, aFramerate);
 }
 
 D3D11DXVA2Manager::D3D11DXVA2Manager()
   : mWidth(0)
   , mHeight(0)
   , mDeviceManagerToken(0)
-  , mIsAMDPreUVD4(false)
 {
 }
 
@@ -913,6 +920,73 @@ D3D11DXVA2Manager::ConfigureForSize(uint32_t aWidth, uint32_t aHeight)
   return S_OK;
 }
 
+bool
+D3D11DXVA2Manager::CreateDXVA2Decoder(const VideoInfo& aVideoInfo,
+                                      nsACString& aFailureReason)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  D3D11_VIDEO_DECODER_DESC desc;
+  desc.Guid = mDecoderGUID;
+  desc.OutputFormat = DXGI_FORMAT_NV12;
+  desc.SampleWidth = aVideoInfo.mImage.width;
+  desc.SampleHeight = aVideoInfo.mImage.height;
+
+  // Assume the current duration is representative for the entire video.
+  float framerate = 1000000.0 / aVideoInfo.mDuration;
+  if (IsUnsupportedResolution(desc.SampleWidth, desc.SampleHeight , framerate)) {
+    return false;
+  }
+
+  mDecoder = CreateDecoder(desc);
+  if (!mDecoder) {
+    aFailureReason = nsPrintfCString("Fail to create video decoder in D3D11DXVA2Manager.");
+    return false;
+  }
+  return true;
+}
+
+bool
+D3D11DXVA2Manager::CanCreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc,
+                                    const float aFramerate) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (IsUnsupportedResolution(aDesc.SampleWidth, aDesc.SampleHeight, aFramerate)) {
+    return false;
+  }
+  RefPtr<ID3D11VideoDecoder> decoder = CreateDecoder(aDesc);
+  return decoder.get() != nullptr;
+}
+
+already_AddRefed<ID3D11VideoDecoder>
+D3D11DXVA2Manager::CreateDecoder(const D3D11_VIDEO_DECODER_DESC& aDesc) const
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  gfx::D3D11VideoCrashGuard crashGuard;
+  if (crashGuard.Crashed()) {
+    NS_WARNING("DXVA2D3D9 crash detected");
+    return nullptr;
+  }
+
+  RefPtr<ID3D11VideoDevice> videoDevice;
+  HRESULT hr = mDevice->QueryInterface(static_cast<ID3D11VideoDevice**>(getter_AddRefs(videoDevice)));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  UINT configCount = 0;
+  hr = videoDevice->GetVideoDecoderConfigCount(&aDesc, &configCount);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), nullptr);
+
+  for (UINT i = 0; i < configCount; i++) {
+    D3D11_VIDEO_DECODER_CONFIG config;
+    hr = videoDevice->GetVideoDecoderConfig(&aDesc, i, &config);
+    if (SUCCEEDED(hr)) {
+      RefPtr<ID3D11VideoDecoder> decoder;
+      hr = videoDevice->CreateVideoDecoder(&aDesc, &config, decoder.StartAssignment());
+      return decoder.forget();
+    }
+  }
+  return nullptr;
+}
+
 /* static */
 DXVA2Manager*
 DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
@@ -936,6 +1010,7 @@ DXVA2Manager::CreateD3D11DXVA(layers::KnowsCompositor* aKnowsCompositor,
 
 DXVA2Manager::DXVA2Manager()
   : mLock("DXVA2Manager")
+  , mIsAMDPreUVD4(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
   ++sDXVAVideosCount;
@@ -945,6 +1020,19 @@ DXVA2Manager::~DXVA2Manager()
 {
   MOZ_ASSERT(NS_IsMainThread());
   --sDXVAVideosCount;
+}
+
+bool
+DXVA2Manager::IsUnsupportedResolution(const uint32_t& aWidth,
+                                      const uint32_t& aHeight,
+                                      const float& aFramerate) const
+{
+  // AMD cards with UVD3 or earlier perform poorly trying to decode 1080p60 in
+  // hardware, so use software instead. Pick 45 as an arbitrary upper bound for
+  // the framerate we can handle.
+  return (mIsAMDPreUVD4 &&
+          (aWidth >= 1920 || aHeight >= 1088) &&
+          aFramerate > 45);
 }
 
 } // namespace mozilla
