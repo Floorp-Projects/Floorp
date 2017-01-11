@@ -43,6 +43,12 @@ treecol {
   min-width: 26px;
 }
 
+/* For the "learn more" links, line up after text */
+.learnMore {
+  margin-inline-start: 1.5em;
+  font-weight: normal;
+}
+
 /* Category List */
 
 #categories {
@@ -174,15 +180,6 @@ treecol {
 }
 
 /* Content pane */
-#playDRMContentLink {
-  /* Line up with the buttons in the other grid bits: */
-  margin-left: 4px !important;
-  margin-right: 4px !important;
-}
-
-#notificationsPolicyLearnMore {
-  margin-inline-start: 1.5em !important;
-}
 
 #defaultFontSizeLabel {
   /* !important needed to override common !important rule */
@@ -231,14 +228,6 @@ treecol {
 
 /* Privacy pane */
 
-#trackingProtectionPBMLearnMore,
-#trackingProtectionLearnMore,
-#browserContainersLearnMore {
-  margin-inline-start: 1.5em !important;
-  margin-top: 0;
-  font-weight: normal;
-}
-
 .doNotTrackLearnMore {
   margin-inline-start: calc(1em + 30px);
   margin-bottom: 1em;
@@ -282,17 +271,6 @@ description > html|a {
 
 #tabsElement {
   margin-inline-end: 4px; /* add the 4px end-margin of other elements */
-}
-
-#telemetryLearnMore,
-#FHRLearnMore,
-#crashReporterLearnMore {
-  /* provide some margin between the links and the label text */
-  /* !important is needed to override the rules defined in common.css */
-  margin-inline-start: 20px !important;
-  /* center the links */
-  margin-top: 8px;
-  margin-bottom: 8px;
 }
 
 .indent {

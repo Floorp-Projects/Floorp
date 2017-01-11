@@ -6,14 +6,26 @@
 
 EXPORTS.mozilla.dom += [
     'NSSU2FTokenRemote.h',
+    'ScopedCredential.h',
+    'ScopedCredentialInfo.h',
     'U2F.h',
+    'U2FAuthenticator.h',
     'USBToken.h',
+    'WebAuthentication.h',
+    'WebAuthnAssertion.h',
+    'WebAuthnAttestation.h',
+    'WebAuthnRequest.h',
 ]
 
 UNIFIED_SOURCES += [
     'NSSU2FTokenRemote.cpp',
+    'ScopedCredential.cpp',
+    'ScopedCredentialInfo.cpp',
     'U2F.cpp',
     'USBToken.cpp',
+    'WebAuthentication.cpp',
+    'WebAuthnAssertion.cpp',
+    'WebAuthnAttestation.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
@@ -25,6 +37,7 @@ LOCAL_INCLUDES += [
     '/dom/crypto',
     '/security/manager/ssl',
     '/security/pkix/include',
+    '/security/pkix/lib',
 ]
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']

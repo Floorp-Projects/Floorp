@@ -49,7 +49,7 @@ AssembleClientData(const nsAString& aOrigin, const nsAString& aTyp,
                    const nsAString& aChallenge, CryptoBuffer& aClientData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  ClientData clientDataObject;
+  U2FClientData clientDataObject;
   clientDataObject.mTyp.Construct(aTyp); // "Typ" from the U2F specification
   clientDataObject.mChallenge.Construct(aChallenge);
   clientDataObject.mOrigin.Construct(aOrigin);
