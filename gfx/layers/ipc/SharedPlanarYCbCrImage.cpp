@@ -73,7 +73,7 @@ SharedPlanarYCbCrImage::GetBuffer()
 already_AddRefed<gfx::SourceSurface>
 SharedPlanarYCbCrImage::GetAsSourceSurface()
 {
-  if (!mTextureClient) {
+  if (!IsValid()) {
     NS_WARNING("Can't get as surface");
     return nullptr;
   }
@@ -173,7 +173,7 @@ SharedPlanarYCbCrImage::AdoptData(const Data &aData)
 
 bool
 SharedPlanarYCbCrImage::IsValid() {
-  return !!mTextureClient;
+  return mTextureClient && mTextureClient->IsValid();
 }
 
 bool
