@@ -227,8 +227,11 @@ nsXMLFragmentContentSink::CloseElement(nsIContent* aContent)
       (aContent->IsHTMLElement(nsGkAtoms::script),
        aContent->IsSVGElement(nsGkAtoms::script))) {
     nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(aContent);
-    NS_ASSERTION(sele, "script did QI correctly!");
-    sele->PreventExecution();
+    if (sele) {
+      sele->PreventExecution();
+    } else {
+      NS_ASSERTION(nsNameSpaceManager::GetInstance()->mSVGDisabled, "Script did QI correctly, but wasn't a disabled SVG!");
+    }
   }
   return NS_OK;
 }

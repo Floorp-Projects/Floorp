@@ -34,6 +34,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=744830
     `;
     is(t.firstChild.tagName.toLowerCase(), 'svg');
 
+    // This test crashes if the script tags are not handled correctly
+    t.innerHTML = `<svg version="1.1">
+      <scri` + `pt>
+        throw "badment, should never fire.";
+      </scri` + `pt>
+      <g><circle cx="25.8" cy="9.3" r="1.5"/></g>
+    </svg>`;
+    is(t.firstChild.tagName.toLowerCase(), 'svg');
+
     t.innerHTML = null;
     t.appendChild(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
     is(t.firstChild.namespaceURI, "http://www.w3.org/2000/svg");

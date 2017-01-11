@@ -1,0 +1,7 @@
+<svg version="1.1">
+  <script>
+    document.documentElement.style.backgroundColor = 'rebeccapurple';
+    throw "badment, should never fire.";
+  </script>
+  <g><circle cx="25.8" cy="9.3" r="1.5"/></g>
+</svg>
