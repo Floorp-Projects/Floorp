@@ -7,7 +7,6 @@
 function run_test() {
   do_print("Setting up test");
 
-  updateAppInfo();
   useHttpServer();
 
   do_print("Test starting");

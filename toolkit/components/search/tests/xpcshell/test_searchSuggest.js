@@ -25,7 +25,6 @@ function run_test() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
   removeMetadata();
-  updateAppInfo();
 
   let server = useHttpServer();
   server.registerContentType("sjs", "sjs");

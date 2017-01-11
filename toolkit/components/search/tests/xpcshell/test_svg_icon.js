@@ -14,7 +14,6 @@ const icon =
   '</svg>';
 
 function run_test() {
-  updateAppInfo();
   useHttpServer(); // Unused, but required to call addTestEngines.
 
   requestHandled = new Promise(resolve => {

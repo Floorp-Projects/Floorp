@@ -16,8 +16,6 @@ function run_test() {
 
   configureToLoadJarEngines();
 
-  updateAppInfo();
-
   run_next_test();
 }
 
