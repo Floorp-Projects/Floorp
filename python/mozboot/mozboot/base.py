@@ -568,6 +568,9 @@ class BaseBootstrapper(object):
 
         if modern:
             print('Your version of Rust (%s) is new enough.' % version)
+            rustup = self.which('rustup')
+            if rustup:
+                self.ensure_rust_targets(rustup)
             return
 
         if not version:
@@ -601,6 +604,19 @@ class BaseBootstrapper(object):
             # No rustup. Download and run the installer.
             print('Will try to install Rust.')
             self.install_rust()
+
+    def ensure_rust_targets(self, rustup):
+        """Make sure appropriate cross target libraries are installed."""
+        target_list =  subprocess.check_output([rustup, 'target', 'list'])
+        targets = [line.split()[0] for line in target_list.splitlines()
+                if 'installed' in line or 'default' in line]
+        print('Rust supports %s targets.' % ', '.join(targets))
+
+        # Support 32-bit Windows on 64-bit Windows.
+        win32 = 'i686-pc-windows-msvc'
+        win64 = 'x86_64-pc-windows-msvc'
+        if rust.platform() == win64 and not win32 in targets:
+            subprocess.check_call([rustup, 'target', 'add', win32])
 
     def upgrade_rust(self, rustup):
         """Upgrade Rust.
