@@ -5556,7 +5556,6 @@ pref("dom.storageManager.enabled", true);
 pref("dom.storageManager.enabled", false);
 #endif
 
-pref("dom.IntersectionObserver.enabled", true);
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
 // be blocked (automatically canceled) for that page. The counter resets
