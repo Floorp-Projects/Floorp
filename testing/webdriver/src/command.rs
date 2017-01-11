@@ -166,7 +166,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::FindElementElement(element, parameters)
             },
@@ -174,7 +174,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 let parameters: LocatorParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::FindElementElements(element, parameters)
             },
@@ -183,100 +183,100 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::IsDisplayed(element)
             },
             Route::IsSelected => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::IsSelected(element)
             },
             Route::GetElementAttribute => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 let attr = try_opt!(params.name("name"),
                                     ErrorStatus::InvalidArgument,
-                                    "Missing name parameter").to_string();
-                WebDriverCommand::GetElementAttribute(element, attr)
+                                    "Missing name parameter").as_str();
+                WebDriverCommand::GetElementAttribute(element, attr.into())
             },
             Route::GetElementProperty => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 let property = try_opt!(params.name("name"),
                                         ErrorStatus::InvalidArgument,
-                                        "Missing name parameter").to_string();
-                WebDriverCommand::GetElementProperty(element, property)
+                                        "Missing name parameter").as_str();
+                WebDriverCommand::GetElementProperty(element, property.into())
             },
             Route::GetCSSValue => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 let property = try_opt!(params.name("propertyName"),
                                         ErrorStatus::InvalidArgument,
-                                        "Missing propertyName parameter").to_string();
-                WebDriverCommand::GetCSSValue(element, property)
+                                        "Missing propertyName parameter").as_str();
+                WebDriverCommand::GetCSSValue(element, property.into())
             },
             Route::GetElementText => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::GetElementText(element)
             },
             Route::GetElementTagName => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::GetElementTagName(element)
             },
             Route::GetElementRect => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::GetElementRect(element)
             },
             Route::IsEnabled => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::IsEnabled(element)
             },
             Route::ElementClick => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementClick(element)
             },
             Route::ElementTap => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementTap(element)
             },
             Route::ElementClear => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::ElementClear(element)
             },
             Route::ElementSendKeys => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 let parameters: SendKeysParameters = try!(Parameters::from_json(&body_data));
                 WebDriverCommand::ElementSendKeys(element, parameters)
             },
@@ -294,7 +294,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::GetCookie => {
                 let name = try_opt!(params.name("name"),
                                     ErrorStatus::InvalidArgument,
-                                    "Missing name parameter").to_string();
+                                    "Missing name parameter").as_str().into();
                 WebDriverCommand::GetCookie(name)
             },
             Route::AddCookie => {
@@ -307,7 +307,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::DeleteCookie => {
                 let name = try_opt!(params.name("name"),
                                     ErrorStatus::InvalidArgument,
-                                    "Missing name parameter").to_string();
+                                    "Missing name parameter").as_str().into();
                 WebDriverCommand::DeleteCookie(name)
             },
             Route::PerformActions => {
@@ -335,7 +335,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
                                           "Missing elementId parameter");
-                let element = WebElement::new(element_id.to_string());
+                let element = WebElement::new(element_id.as_str().into());
                 WebDriverCommand::TakeElementScreenshot(element)
             },
             Route::Status => WebDriverCommand::Status,
@@ -347,7 +347,7 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
     }
 
     fn get_session_id(params: &Captures) -> Option<String> {
-        params.name("sessionId").map(|x| x.to_string())
+        params.name("sessionId").map(|x| x.as_str().into())
     }
 }
 
