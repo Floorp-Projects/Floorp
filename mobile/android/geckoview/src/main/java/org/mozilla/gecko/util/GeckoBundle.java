@@ -7,17 +7,20 @@ package org.mozilla.gecko.util;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.AppConstants;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.util.SimpleArrayMap;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 /**
  * A lighter-weight version of Bundle that adds support for type coercion (e.g.
@@ -667,6 +670,124 @@ public final class GeckoBundle {
         return mMap.toString();
     }
 
+    public JSONObject toJSONObject() throws JSONException {
+        final JSONObject out = new JSONObject();
+        for (int i = 0; i < mMap.size(); i++) {
+            final Object value = mMap.valueAt(i);
+            final Object jsonValue;
+
+            if (value instanceof GeckoBundle) {
+                jsonValue = ((GeckoBundle) value).toJSONObject();
+            } else if (value instanceof GeckoBundle[]) {
+                final GeckoBundle[] array = (GeckoBundle[]) value;
+                final JSONArray jsonArray = new JSONArray();
+                for (int j = 0; j < array.length; j++) {
+                    jsonArray.put(array[j] == null ? JSONObject.NULL : array[j].toJSONObject());
+                }
+                jsonValue = jsonArray;
+            } else if (AppConstants.Versions.feature19Plus) {
+                final Object wrapped = JSONObject.wrap(value);
+                jsonValue = wrapped != null ? wrapped : value.toString();
+            } else if (value == null) {
+                jsonValue = JSONObject.NULL;
+            } else if (value.getClass().isArray()) {
+                final JSONArray jsonArray = new JSONArray();
+                for (int j = 0; j < Array.getLength(value); j++) {
+                    jsonArray.put(Array.get(value, j));
+                }
+                jsonValue = jsonArray;
+            } else {
+                jsonValue = value;
+            }
+            out.put(mMap.keyAt(i), jsonValue);
+        }
+        return out;
+    }
+
+    public Bundle toBundle() {
+        final Bundle out = new Bundle(mMap.size());
+        for (int i = 0; i < mMap.size(); i++) {
+            final String key = mMap.keyAt(i);
+            final Object val = mMap.valueAt(i);
+
+            if (val == null) {
+                out.putString(key, null);
+            } else if (val instanceof GeckoBundle) {
+                out.putBundle(key, ((GeckoBundle) val).toBundle());
+            } else if (val instanceof GeckoBundle[]) {
+                final GeckoBundle[] array = (GeckoBundle[]) val;
+                final Parcelable[] parcelables = new Parcelable[array.length];
+                for (int j = 0; j < array.length; j++) {
+                    if (array[j] != null) {
+                        parcelables[j] = array[j].toBundle();
+                    }
+                }
+                out.putParcelableArray(key, parcelables);
+            } else if (val instanceof Boolean) {
+                out.putBoolean(key, (Boolean) val);
+            } else if (val instanceof boolean[]) {
+                out.putBooleanArray(key, (boolean[]) val);
+            } else if (val instanceof Byte || val instanceof Short || val instanceof Integer) {
+                out.putInt(key, ((Number) val).intValue());
+            } else if (val instanceof int[]) {
+                out.putIntArray(key, (int[]) val);
+            } else if (val instanceof Float || val instanceof Double || val instanceof Long) {
+                out.putDouble(key, ((Number) val).doubleValue());
+            } else if (val instanceof double[]) {
+                out.putDoubleArray(key, (double[]) val);
+            } else if (val instanceof CharSequence || val instanceof Character) {
+                out.putString(key, val.toString());
+            } else if (val instanceof String[]) {
+                out.putStringArray(key, (String[]) val);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+        return out;
+    }
+
+    public static GeckoBundle fromBundle(final Bundle bundle) {
+        if (bundle == null) {
+            return null;
+        }
+
+        final String[] keys = new String[bundle.size()];
+        final Object[] values = new Object[bundle.size()];
+        int i = 0;
+
+        for (final String key : bundle.keySet()) {
+            final Object value = bundle.get(key);
+            keys[i] = key;
+
+            if (value instanceof Bundle || value == null) {
+                values[i] = fromBundle((Bundle) value);
+            } else if (value instanceof Parcelable[]) {
+                final Parcelable[] array = (Parcelable[]) value;
+                final GeckoBundle[] out = new GeckoBundle[array.length];
+                for (int j = 0; j < array.length; j++) {
+                    out[j] = fromBundle((Bundle) array[j]);
+                }
+                values[i] = out;
+            } else if (value instanceof Boolean || value instanceof Integer ||
+                    value instanceof Double || value instanceof String ||
+                    value instanceof boolean[] || value instanceof int[] ||
+                    value instanceof double[] || value instanceof String[]) {
+                values[i] = value;
+            } else if (value instanceof Byte || value instanceof Short) {
+                values[i] = ((Number) value).intValue();
+            } else if (value instanceof Float || value instanceof Long) {
+                values[i] = ((Number) value).doubleValue();
+            } else if (value instanceof CharSequence || value instanceof Character) {
+                values[i] = value.toString();
+            } else {
+                throw new UnsupportedOperationException();
+            }
+
+            i++;
+        }
+        return new GeckoBundle(keys, values);
+    }
+
     private static Object fromJSONValue(Object value) throws JSONException {
         if (value instanceof JSONObject || value == JSONObject.NULL) {
             return fromJSONObject((JSONObject) value);
@@ -702,13 +823,14 @@ public final class GeckoBundle {
             }
             return out;
         }
-        if (value instanceof Boolean) {
+        if (value instanceof Boolean || value instanceof Integer ||
+                value instanceof Double || value instanceof String) {
             return value;
         }
-        if (value instanceof Byte || value instanceof Short || value instanceof Integer) {
+        if (value instanceof Byte || value instanceof Short) {
             return ((Number) value).intValue();
         }
-        if (value instanceof Float || value instanceof Double || value instanceof Long) {
+        if (value instanceof Float || value instanceof Long) {
             return ((Number) value).doubleValue();
         }
         return value != null ? value.toString() : null;

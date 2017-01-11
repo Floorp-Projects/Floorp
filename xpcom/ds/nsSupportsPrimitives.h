@@ -268,23 +268,6 @@ private:
 
 /***************************************************************************/
 
-class nsSupportsVoid final : public nsISupportsVoid
-{
-public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSISUPPORTSPRIMITIVE
-  NS_DECL_NSISUPPORTSVOID
-
-  nsSupportsVoid();
-
-private:
-  ~nsSupportsVoid() {}
-
-  void* mData;
-};
-
-/***************************************************************************/
-
 class nsSupportsInterfacePointer final : public nsISupportsInterfacePointer
 {
 public:

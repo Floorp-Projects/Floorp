@@ -215,18 +215,6 @@
         ]]></body>
       </method>
 
-      <method name="updateWindowResizers">
-        <body><![CDATA[
-          if (!window.gShowPageResizers)
-            return;
-
-          var show = window.windowState == window.STATE_NORMAL;
-          for (let i = 0; i < this.browsers.length; i++) {
-            this.browsers[i].showWindowResizer = show;
-          }
-        ]]></body>
-      </method>
-
       <method name="_setCloseKeyState">
         <parameter name="aEnabled"/>
         <body><![CDATA[
@@ -538,9 +526,10 @@
         <parameter name="aBrowser"/>
         <parameter name="aStartsBlank"/>
         <parameter name="aWasPreloadedBrowser"/>
+        <parameter name="aOrigStateFlags"/>
         <body>
         <![CDATA[
-          let stateFlags = 0;
+          let stateFlags = aOrigStateFlags || 0;
           // Initialize mStateFlags to non-zero e.g. when creating a progress
           // listener for preloaded browsers as there was no progress listener
           // around when the content started loading. If the content didn't
@@ -1971,10 +1960,6 @@
               b.QueryInterface(Ci.nsIFrameLoaderOwner).presetOpenerWindow(aParams.opener);
             }
 
-            if (window.gShowPageResizers && window.windowState == window.STATE_NORMAL) {
-              b.setAttribute("showresizer", "true");
-            }
-
             if (!aParams.isPreloadBrowser && this.hasAttribute("autocompletepopup")) {
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
             }
@@ -2839,6 +2824,9 @@
             var remoteBrowser = aOtherTab.ownerDocument.defaultView.gBrowser;
             var isPending = aOtherTab.hasAttribute("pending");
 
+            let otherTabListener = remoteBrowser._tabListeners.get(aOtherTab);
+            let stateFlags = otherTabListener.mStateFlags;
+
             // Expedite the removal of the icon if it was already scheduled.
             if (aOtherTab._soundPlayingAttrRemovalTimer) {
               clearTimeout(aOtherTab._soundPlayingAttrRemovalTimer);
@@ -2896,7 +2884,7 @@
                   this.mIsBusy = true;
               }
 
-              this._swapBrowserDocShells(aOurTab, otherBrowser, Ci.nsIBrowser.SWAP_DEFAULT);
+              this._swapBrowserDocShells(aOurTab, otherBrowser, Ci.nsIBrowser.SWAP_DEFAULT, stateFlags);
             }
 
             // Unregister the previously opened URI
@@ -2969,6 +2957,7 @@
         <parameter name="aOurTab"/>
         <parameter name="aOtherBrowser"/>
         <parameter name="aFlags"/>
+        <parameter name="aStateFlags"/>
         <body>
           <![CDATA[
             // Unhook our progress listener
@@ -3025,7 +3014,8 @@
             }
 
             // Restore the progress listener
-            tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false);
+            tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false,
+                                                    aStateFlags);
             this._tabListeners.set(aOurTab, tabListener);
 
             const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
@@ -4963,7 +4953,6 @@
           this.appendChild(this._autoScrollPopup);
           this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
           this.mCurrentBrowser.droppedLinkHandler = handleDroppedLink;
-          this.updateWindowResizers();
 
           // Hook up the event listeners to the first browser
           var tabListener = this.mTabProgressListener(this.mCurrentTab, this.mCurrentBrowser, true, false);
@@ -6007,8 +5996,6 @@
                 this._handleTabSelect();
                 this.mTabstripWidth = width;
               }
-
-              this.tabbrowser.updateWindowResizers();
               break;
             case "mouseout":
               // If the "related target" (the node to which the pointer went) is not

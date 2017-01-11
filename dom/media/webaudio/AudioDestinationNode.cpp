@@ -158,8 +158,8 @@ public:
     // Create the input buffer
     ErrorResult rv;
     RefPtr<AudioBuffer> renderedBuffer =
-      AudioBuffer::Create(context, mNumberOfChannels, mLength, mSampleRate,
-                          mBuffer.forget(), rv);
+      AudioBuffer::Create(context->GetOwner(), mNumberOfChannels, mLength,
+                          mSampleRate, mBuffer.forget(), rv);
     if (rv.Failed()) {
       rv.SuppressException();
       return;
