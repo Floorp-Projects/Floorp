@@ -402,9 +402,10 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
       // come from width/height *attributes* in SVG). They influence the region
       // of the SVG image's internal document that is visible, in combination
       // with preserveAspectRatio and viewBox.
-      SVGImageContext context(CSSIntSize::Truncate(width, height),
-                              Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
-                              1.0, true);
+      const Maybe<const SVGImageContext> context(
+        Some(SVGImageContext(CSSIntSize::Truncate(width, height),
+                             Some(imgElem->mPreserveAspectRatio.GetAnimValue()),
+                             1.0, /* aIsPaintingSVGImageElement */ true)));
 
       // For the actual draw operation to draw crisply (and at the right size),
       // our destination rect needs to be |width|x|height|, *in dev pixels*.
@@ -423,7 +424,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
         nsLayoutUtils::GetSamplingFilterForFrame(this),
         destRect,
         aDirtyRect ? dirtyRect : destRect,
-        &context,
+        context,
         drawFlags);
     } else { // mImageContainer->GetType() == TYPE_RASTER
       result = nsLayoutUtils::DrawSingleUnscaledImage(
