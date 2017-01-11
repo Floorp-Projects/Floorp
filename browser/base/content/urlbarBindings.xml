@@ -761,8 +761,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           var selectedVal = inputVal.substring(this.selectionStart, this.selectionEnd);
 
           // If the selection doesn't start at the beginning or doesn't span the full domain or
-          // the URL bar is modified, nothing else to do here.
-          if (this.selectionStart > 0 || this.valueIsTyped)
+          // the URL bar is modified or there is no text at all, nothing else to do here.
+          if (this.selectionStart > 0 || this.valueIsTyped || selectedVal == "")
             return selectedVal;
           // The selection doesn't span the full domain if it doesn't contain a slash and is
           // followed by some character other than a slash.
