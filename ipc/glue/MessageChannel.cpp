@@ -22,6 +22,11 @@
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"
 
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracer.h"
+using namespace mozilla::tasktracer;
+#endif
+
 using mozilla::Move;
 
 // Undo the damage done by mozzconf.h
@@ -979,6 +984,9 @@ MessageChannel::OnMessageReceivedFromLink(Message&& aMsg)
     // blocked. This is okay, since we always check for pending events before
     // blocking again.
 
+#ifdef MOZ_TASK_TRACER
+    aMsg.TaskTracerDispatch();
+#endif
     RefPtr<MessageTask> task = new MessageTask(this, Move(aMsg));
     mPending.insertBack(task);
 
@@ -1078,6 +1086,9 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 #ifdef OS_WIN
     SyncStackFrame frame(this, false);
     NeuteredWindowRegion neuteredRgn(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+#endif
+#ifdef MOZ_TASK_TRACER
+    AutoScopedLabel autolabel("sync message %s", aMsg->name());
 #endif
 
     CxxStackFrame f(*this, OUT_MESSAGE, msg);
@@ -1271,6 +1282,9 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 #ifdef OS_WIN
     SyncStackFrame frame(this, true);
 #endif
+#ifdef MOZ_TASK_TRACER
+    AutoScopedLabel autolabel("sync message %s", aMsg->name());
+#endif
 
     // This must come before MonitorAutoLock, as its destructor acquires the
     // monitor lock.
@@ -1416,6 +1430,9 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
         // own the monitor.
         size_t stackDepth = InterruptStackDepth();
         {
+#ifdef MOZ_TASK_TRACER
+            Message::AutoTaskTracerRun tasktracerRun(recvd);
+#endif
             MonitorAutoUnlock unlock(*mMonitor);
 
             CxxStackFrame frame(*this, IN_MESSAGE, &recvd);
@@ -1675,6 +1692,9 @@ MessageChannel::DispatchMessage(Message &&aMsg)
         MOZ_RELEASE_ASSERT(!aMsg.is_sync() || id == transaction.TransactionID());
 
         {
+#ifdef MOZ_TASK_TRACER
+            Message::AutoTaskTracerRun tasktracerRun(aMsg);
+#endif
             MonitorAutoUnlock unlock(*mMonitor);
             CxxStackFrame frame(*this, IN_MESSAGE, &aMsg);
 
@@ -1711,6 +1731,9 @@ MessageChannel::DispatchSyncMessage(const Message& aMsg, Message*& aReply)
     int nestedLevel = aMsg.nested_level();
 
     MOZ_RELEASE_ASSERT(nestedLevel == IPC::Message::NOT_NESTED || NS_IsMainThread());
+#ifdef MOZ_TASK_TRACER
+    AutoScopedLabel autolabel("sync message %s", aMsg.name());
+#endif
 
     MessageChannel* dummy;
     MessageChannel*& blockingVar = mSide == ChildSide && NS_IsMainThread() ? gParentProcessBlocker : dummy;
