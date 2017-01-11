@@ -238,7 +238,16 @@ public:
 
     // -------------------------------------------------------------------------
     // Uniforms and attributes - WebGL2ContextUniforms.cpp
-    void VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, GLintptr offset);
+
+    void VertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride,
+                              WebGLintptr byteOffset)
+    {
+        const char funcName[] = "vertexAttribIPointer";
+        const bool isFuncInt = true;
+        const bool normalized = false;
+        VertexAttribAnyPointer(funcName, isFuncInt, index, size, type, normalized, stride,
+                               byteOffset);
+    }
 
     ////////////////
 
@@ -422,9 +431,6 @@ private:
 
     // CreateVertexArrayImpl is assumed to be infallible.
     virtual WebGLVertexArray* CreateVertexArrayImpl() override;
-    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
-                                           uint32_t* alignment,
-                                           const char* info) override;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 
