@@ -10,7 +10,7 @@ var ruleTester = new RuleTester();
 
 fs.readdir(__dirname, (err, files) => {
   files.forEach(file => {
-    if (file != "test-run-all.js") {
+    if (file != "test-run-all.js" && !file.endsWith("~")) {
       console.log(`Running ${file}`);
       require("./" + file).runTest(ruleTester);
     }
