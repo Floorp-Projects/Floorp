@@ -168,8 +168,6 @@ public:
 
   virtual ContentClientRemote* AsContentClientRemote() { return nullptr; }
 
-  static RefPtr<CompositableClient> FromIPDLActor(PCompositableChild* aActor);
-
   void InitIPDL(const CompositableHandle& aHandle);
 
   TextureFlags GetTextureFlags() const { return mTextureFlags; }
