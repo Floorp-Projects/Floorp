@@ -78,7 +78,7 @@ protected:
   virtual ~CompositableHost();
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(CompositableHost)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableHost)
   explicit CompositableHost(const TextureInfo& aTextureInfo);
 
   static already_AddRefed<CompositableHost> Create(const TextureInfo& aTextureInfo);
