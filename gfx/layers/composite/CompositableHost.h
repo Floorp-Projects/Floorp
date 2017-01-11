@@ -43,7 +43,6 @@ class Compositor;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
-class PCompositableParent;
 struct EffectChain;
 
 struct AsyncCompositableRef
@@ -216,8 +215,6 @@ public:
     mFlashCounter = mFlashCounter >= DIAGNOSTIC_FLASH_COUNTER_MAX
                   ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
   }
-
-  static bool DestroyIPDLActor(PCompositableParent* actor);
 
   uint64_t GetCompositorID() const { return mCompositorID; }
 

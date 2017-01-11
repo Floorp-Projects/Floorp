@@ -6,13 +6,11 @@
 #include "mozilla/layers/CompositableClient.h"
 #include <stdint.h>                     // for uint64_t, uint32_t
 #include "gfxPlatform.h"                // for gfxPlatform
-#include "mozilla/layers/CompositableChild.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/mozalloc.h"           // for operator delete, etc
-#include "mozilla/layers/PCompositableChild.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"         // for gfxWindowsPlatform
@@ -36,20 +34,6 @@ CompositableClient::InitIPDL(const CompositableHandle& aHandle)
 
   mHandle = aHandle;
   mIsAsync = !NS_IsMainThread();
-}
-
-/* static */ RefPtr<CompositableClient>
-CompositableClient::FromIPDLActor(PCompositableChild* aActor)
-{
-  MOZ_ASSERT(aActor);
-
-  RefPtr<CompositableClient> client = static_cast<CompositableChild*>(aActor)->GetCompositableClient();
-  if (!client) {
-    return nullptr;
-  }
-
-  client->mForwarder->AssertInForwarderThread();
-  return client;
 }
 
 CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
