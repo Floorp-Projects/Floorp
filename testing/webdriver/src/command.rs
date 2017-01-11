@@ -47,7 +47,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     ExecuteScript(JavascriptCommandParameters),
     ExecuteAsyncScript(JavascriptCommandParameters),
     GetCookies,
-    GetCookie(String),
+    GetNamedCookie(String),
     AddCookie(AddCookieParameters),
     DeleteCookies,
     DeleteCookie(String),
@@ -291,11 +291,11 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
             Route::GetCookies => {
                 WebDriverCommand::GetCookies
             },
-            Route::GetCookie => {
+            Route::GetNamedCookie => {
                 let name = try_opt!(params.name("name"),
                                     ErrorStatus::InvalidArgument,
-                                    "Missing name parameter").as_str().into();
-                WebDriverCommand::GetCookie(name)
+                                    "Missing 'name' parameter").as_str().into();
+                WebDriverCommand::GetNamedCookie(name)
             },
             Route::AddCookie => {
                 let parameters: AddCookieParameters = try!(Parameters::from_json(&body_data));
@@ -366,7 +366,7 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::ElementTap(_) |
             WebDriverCommand::GetActiveElement |
             WebDriverCommand::GetAlertText |
-            WebDriverCommand::GetCookie(_) |
+            WebDriverCommand::GetNamedCookie(_) |
             WebDriverCommand::GetCookies |
             WebDriverCommand::GetCSSValue(_, _) |
             WebDriverCommand::GetCurrentUrl |
@@ -819,31 +819,29 @@ impl ToJson for JavascriptCommandParameters {
 }
 
 #[derive(PartialEq)]
-pub struct GetCookieParameters {
-    pub name: Nullable<String>
+pub struct GetNamedCookieParameters {
+    pub name: Nullable<String>,
 }
 
-impl Parameters for GetCookieParameters {
-    fn from_json(body: &Json) -> WebDriverResult<GetCookieParameters> {
-        let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
+impl Parameters for GetNamedCookieParameters {
+    fn from_json(body: &Json) -> WebDriverResult<GetNamedCookieParameters> {
+        let data = try_opt!(body.as_object(),
+                            ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let name_json = try_opt!(data.get("name"),
                                  ErrorStatus::InvalidArgument,
                                  "Missing 'name' parameter");
-        let name = try!(Nullable::from_json(
-            name_json,
-            |x| {
-                Ok(try_opt!(x.as_string(),
-                            ErrorStatus::InvalidArgument,
-                            "Failed to convert name to String").to_string())
-            }));
-        return Ok(GetCookieParameters {
-            name: name
-        })
+        let name = try!(Nullable::from_json(name_json, |x| {
+            Ok(try_opt!(x.as_string(),
+                        ErrorStatus::InvalidArgument,
+                        "Failed to convert name to string")
+                .to_string())
+        }));
+        return Ok(GetNamedCookieParameters { name: name });
     }
 }
 
-impl ToJson for GetCookieParameters {
+impl ToJson for GetNamedCookieParameters {
     fn to_json(&self) -> Json {
         let mut data = BTreeMap::new();
         data.insert("name".to_string(), self.name.to_json());

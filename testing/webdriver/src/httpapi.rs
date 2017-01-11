@@ -46,7 +46,7 @@ fn standard_routes<U:WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Ro
                 (Post, "/session/{sessionId}/execute/sync", Route::ExecuteScript),
                 (Post, "/session/{sessionId}/execute/async", Route::ExecuteAsyncScript),
                 (Get, "/session/{sessionId}/cookie", Route::GetCookies),
-                (Get, "/session/{sessionId}/cookie/{name}", Route::GetCookie),
+                (Get, "/session/{sessionId}/cookie/{name}", Route::GetNamedCookie),
                 (Post, "/session/{sessionId}/cookie", Route::AddCookie),
                 (Delete, "/session/{sessionId}/cookie", Route::DeleteCookies),
                 (Delete, "/session/{sessionId}/cookie/{name}", Route::DeleteCookie),
@@ -118,7 +118,7 @@ pub enum Route<U:WebDriverExtensionRoute> {
     ExecuteScript,
     ExecuteAsyncScript,
     GetCookies,
-    GetCookie,
+    GetNamedCookie,
     AddCookie,
     DeleteCookies,
     DeleteCookie,
@@ -137,7 +137,7 @@ pub enum Route<U:WebDriverExtensionRoute> {
     TakeScreenshot,
     TakeElementScreenshot,
     Status,
-    Extension(U)
+    Extension(U),
 }
 
 pub trait WebDriverExtensionRoute : Clone + Send + PartialEq {
