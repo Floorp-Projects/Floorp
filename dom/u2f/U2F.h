@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/CryptoBuffer.h"
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/U2FBinding.h"
 #include "mozilla/ErrorResult.h"
@@ -24,7 +25,6 @@
 #include "nsWrapperCache.h"
 
 #include "U2FAuthenticator.h"
-#include "USBToken.h"
 
 namespace mozilla {
 namespace dom {
