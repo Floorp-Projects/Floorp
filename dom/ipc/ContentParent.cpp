@@ -3397,10 +3397,12 @@ ContentParent::AllocPExternalHelperAppParent(const OptionalURIParams& uri,
                                              const nsString& aContentDispositionFilename,
                                              const bool& aForceSave,
                                              const int64_t& aContentLength,
+                                             const bool& aWasFileChannel,
                                              const OptionalURIParams& aReferrer,
                                              PBrowserParent* aBrowser)
 {
-  ExternalHelperAppParent *parent = new ExternalHelperAppParent(uri, aContentLength);
+  ExternalHelperAppParent *parent =
+    new ExternalHelperAppParent(uri, aContentLength, aWasFileChannel);
   parent->AddRef();
   parent->Init(this,
                aMimeContentType,

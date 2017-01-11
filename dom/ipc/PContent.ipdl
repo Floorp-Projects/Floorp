@@ -869,6 +869,7 @@ parent:
                              nsString aContentDispositionFilename,
                              bool aForceSave,
                              int64_t aContentLength,
+                             bool aWasFileChannel,
                              OptionalURIParams aReferrer,
                              nullable PBrowser aBrowser);
 

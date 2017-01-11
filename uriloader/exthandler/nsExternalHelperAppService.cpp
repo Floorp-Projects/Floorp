@@ -702,6 +702,7 @@ nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMim
   nsCString disp;
   nsCOMPtr<nsIURI> uri;
   int64_t contentLength = -1;
+  bool wasFileChannel = false;
   uint32_t contentDisposition = -1;
   nsAutoString fileName;
 
@@ -712,7 +713,11 @@ nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMim
     channel->GetContentDisposition(&contentDisposition);
     channel->GetContentDispositionFilename(fileName);
     channel->GetContentDispositionHeader(disp);
+
+    nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(aRequest));
+    wasFileChannel = fileChan != nullptr;
   }
+
 
   nsCOMPtr<nsIURI> referrer;
   NS_GetReferrerFromChannel(channel, getter_AddRefs(referrer));
@@ -729,8 +734,9 @@ nsExternalHelperAppService::DoContentContentProcessHelper(const nsACString& aMim
     child->SendPExternalHelperAppConstructor(uriParams,
                                               nsCString(aMimeContentType),
                                               disp, contentDisposition,
-                                              fileName, aForceSave, 
-                                              contentLength, referrerParams,
+                                              fileName, aForceSave,
+                                              contentLength, wasFileChannel,
+                                              referrerParams,
                                               mozilla::dom::TabChild::GetFrom(window));
   ExternalHelperAppChild *childListener = static_cast<ExternalHelperAppChild *>(pc);
 
@@ -1624,11 +1630,18 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   mRequest = request;
 
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  
+
   nsresult rv;
-  
+
   nsCOMPtr<nsIFileChannel> fileChan(do_QueryInterface(request));
   mIsFileChannel = fileChan != nullptr;
+  if (!mIsFileChannel) {
+    // It's possible that this request came from the child process and the
+    // file channel actually lives there. If this returns true, then our
+    // mSourceUrl will be an nsIFileURL anyway.
+    nsCOMPtr<dom::nsIExternalHelperAppParent> parent(do_QueryInterface(request));
+    mIsFileChannel = parent && parent->WasFileChannel();
+  }
 
   // Get content length
   if (aChannel) {

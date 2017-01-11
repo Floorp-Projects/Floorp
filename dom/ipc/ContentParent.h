@@ -813,6 +813,7 @@ private:
                                 const nsString& aContentDispositionFilename,
                                 const bool& aForceSave,
                                 const int64_t& aContentLength,
+                                const bool& aWasFileChannel,
                                 const OptionalURIParams& aReferrer,
                                 PBrowserParent* aBrowser) override;
 
