@@ -378,6 +378,12 @@ VerifyStyleTree(nsIFrame* aFrame)
 void
 RestyleManagerBase::DebugVerifyStyleTree(nsIFrame* aFrame)
 {
+  if (IsServo()) {
+    // XXXheycam For now, we know that we don't use the same inheritance
+    // hierarchy for certain cases, so just skip these assertions until
+    // we work out what we want to assert (bug 1322570).
+    return;
+  }
   if (aFrame) {
     VerifyStyleTree(aFrame);
   }
