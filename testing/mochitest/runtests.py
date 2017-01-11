@@ -1483,14 +1483,6 @@ toolbar#nav-bar {
         # via the commandline at your own risk.
         browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
 
-        # When creating child processes on Windows pre-Vista (e.g. Windows XP) we
-        # don't normally inherit stdout/err handles, because you can only do it by
-        # inheriting all other inheritable handles as well.
-        # We need to inherit them for plain mochitests for test logging purposes, so
-        # we do so on the basis of a specific environment variable.
-        if options.flavor == 'plain':
-            browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"] = "1"
-
         # interpolate environment passed with options
         try:
             browserEnv.update(
