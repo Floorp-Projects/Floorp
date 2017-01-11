@@ -34,11 +34,13 @@ NS_IMPL_ISUPPORTS_INHERITED(ExternalHelperAppParent,
                             nsIMultiPartChannel,
                             nsIPrivateBrowsingChannel,
                             nsIResumableChannel,
-                            nsIStreamListener)
+                            nsIStreamListener,
+                            nsIExternalHelperAppParent)
 
 ExternalHelperAppParent::ExternalHelperAppParent(
     const OptionalURIParams& uri,
-    const int64_t& aContentLength)
+    const int64_t& aContentLength,
+    const bool& aWasFileChannel)
   : mURI(DeserializeURI(uri))
   , mPending(false)
 #ifdef DEBUG
@@ -48,6 +50,7 @@ ExternalHelperAppParent::ExternalHelperAppParent(
   , mLoadFlags(0)
   , mStatus(NS_OK)
   , mContentLength(aContentLength)
+  , mWasFileChannel(aWasFileChannel)
 {
 }
 
