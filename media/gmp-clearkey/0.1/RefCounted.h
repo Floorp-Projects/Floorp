@@ -87,21 +87,35 @@ protected:
 template<class T>
 class RefPtr {
 public:
-  explicit RefPtr(T* aPtr) : mPtr(nullptr) {
-    Assign(aPtr);
+  RefPtr(const RefPtr& src) {
+    Set(src.mPtr);
   }
+
+  explicit RefPtr(T* aPtr) {
+    Set(aPtr);
+  }
+  RefPtr() { Set(nullptr); }
+
   ~RefPtr() {
-    Assign(nullptr);
+    Set(nullptr);
   }
   T* operator->() const { return mPtr; }
+  T** operator&() { return &mPtr; }
+  T* operator->() { return mPtr; }
+  operator T*() { return mPtr; }
+
+  T* Get() const { return mPtr; }
 
   RefPtr& operator=(T* aVal) {
-    Assign(aVal);
+    Set(aVal);
     return *this;
   }
 
 private:
-  void Assign(T* aPtr) {
+  T* Set(T* aPtr) {
+    if (mPtr == aPtr) {
+      return aPtr;
+    }
     if (mPtr) {
       mPtr->Release();
     }
@@ -109,8 +123,10 @@ private:
     if (mPtr) {
       aPtr->AddRef();
     }
+    return mPtr;
   }
-  T* mPtr;
+
+  T* mPtr = nullptr;
 };
 
 #endif // __RefCount_h__
