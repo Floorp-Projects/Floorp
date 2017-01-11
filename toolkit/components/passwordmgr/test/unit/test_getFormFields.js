@@ -8,7 +8,7 @@
 
 Cu.importGlobalProperties(["URL"]);
 
-const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm");
+const LMCBackstagePass = Cu.import("resource://gre/modules/LoginManagerContent.jsm", {});
 const { LoginManagerContent, LoginFormFactory } = LMCBackstagePass;
 const TESTCASES = [
   {

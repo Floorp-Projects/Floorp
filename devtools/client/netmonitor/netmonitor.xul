@@ -217,42 +217,8 @@
               </tabpanel>
               <tabpanel id="response-tabpanel"
                         class="tabpanel-content">
-                <vbox flex="1">
-                  <label id="response-content-info-header"/>
-                  <vbox id="response-content-json-box" flex="1" hidden="true">
-                    <vbox id="response-content-json" flex="1" context="network-response-popup" />
-                  </vbox>
-                  <vbox id="response-content-textarea-box" flex="1" hidden="true">
-                    <vbox id="response-content-textarea" flex="1"/>
-                  </vbox>
-                  <vbox id="response-content-image-box" flex="1" hidden="true">
-                    <image id="response-content-image"/>
-                    <hbox>
-                      <label class="plain tabpanel-summary-label"
-                             data-localization="content=netmonitor.response.name"/>
-                      <label id="response-content-image-name-value"
-                             class="plain tabpanel-summary-value devtools-monospace"
-                             crop="end"
-                             flex="1"/>
-                    </hbox>
-                    <hbox>
-                      <label class="plain tabpanel-summary-label"
-                             data-localization="content=netmonitor.response.dimensions"/>
-                      <label id="response-content-image-dimensions-value"
-                             class="plain tabpanel-summary-value devtools-monospace"
-                             crop="end"
-                             flex="1"/>
-                    </hbox>
-                    <hbox>
-                      <label class="plain tabpanel-summary-label"
-                             data-localization="content=netmonitor.response.mime"/>
-                      <label id="response-content-image-mime-value"
-                             class="plain tabpanel-summary-value devtools-monospace"
-                             crop="end"
-                             flex="1"/>
-                    </hbox>
-                  </vbox>
-                </vbox>
+                <html:div xmlns="http://www.w3.org/1999/xhtml"
+                          id="react-response-tabpanel-hook"/>
               </tabpanel>
               <tabpanel id="timings-tabpanel"
                         class="tabpanel-content">

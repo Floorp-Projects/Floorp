@@ -17,7 +17,7 @@ add_task(function* () {
   // in a variables view instance. Debug builds are slow.
   requestLongerTimeout(4);
 
-  let { document, EVENTS, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -39,60 +39,54 @@ add_task(function* () {
       time: true
     });
 
-  let onEvent = monitor.panelWin.once(EVENTS.RESPONSE_BODY_DISPLAYED);
+  wait = waitForDOM(document, "#response-tabpanel");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll("#details-pane tab")[3]);
-  yield onEvent;
+  yield wait;
 
   testResponseTab();
 
   yield teardown(monitor);
 
   function testResponseTab() {
-    let tabEl = document.querySelectorAll("#details-pane tab")[3];
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
 
-    is(tabEl.getAttribute("selected"), "true",
-      "The response tab in the network details pane should be selected.");
+    is(tabpanel.querySelector(".response-error-header") === null, true,
+      "The response error header doesn't have the intended visibility.");
+    let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
+    is(jsonView.textContent === L10N.getStr("jsonScopeName"), true,
+      "The response json view has the intended visibility.");
+    is(tabpanel.querySelector(".editor-mount iframe") === null, true,
+      "The response editor doesn't have the intended visibility.");
+    is(tabpanel.querySelector(".response-image-box") === null, true,
+      "The response image box doesn't have the intended visibility.");
 
-    is(tabpanel.querySelector("#response-content-info-header")
-      .hasAttribute("hidden"), true,
-      "The response info header doesn't have the intended visibility.");
-    is(tabpanel.querySelector("#response-content-json-box")
-      .hasAttribute("hidden"), false,
-      "The response content json box doesn't have the intended visibility.");
-    is(tabpanel.querySelector("#response-content-textarea-box")
-      .hasAttribute("hidden"), true,
-      "The response content textarea box doesn't have the intended visibility.");
-    is(tabpanel.querySelector("#response-content-image-box")
-      .hasAttribute("hidden"), true,
-      "The response content image box doesn't have the intended visibility.");
-
-    is(tabpanel.querySelectorAll(".variables-view-scope").length, 1,
-      "There should be 1 json scope displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variables-view-property").length, 6143,
-      "There should be 6143 json properties displayed in this tabpanel.");
-    is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
+    is(tabpanel.querySelectorAll(".tree-section").length, 1,
+      "There should be 1 tree sections displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(".treeRow:not(.tree-section)").length, 4094,
+      "There should be 4094 json properties displayed in this tabpanel.");
+    is(tabpanel.querySelectorAll(".empty-notice").length, 0,
       "The empty notice should not be displayed in this tabpanel.");
 
-    let jsonScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
-    let names = ".variables-view-property > .title > .name";
-    let values = ".variables-view-property > .title > .value";
-
-    is(jsonScope.querySelector(".name").getAttribute("value"),
+    is(tabpanel.querySelector(".tree-section .treeLabel").textContent,
       L10N.getStr("jsonScopeName"),
-      "The json scope doesn't have the correct title.");
+      "The json view section doesn't have the correct title.");
 
-    is(jsonScope.querySelectorAll(names)[0].getAttribute("value"),
-      "0", "The first json property name was incorrect.");
-    is(jsonScope.querySelectorAll(values)[0].getAttribute("value"),
-      "Object", "The first json property value was incorrect.");
+    let labels = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
+    let values = tabpanel
+      .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
 
-    is(jsonScope.querySelectorAll(names)[1].getAttribute("value"),
-      "greeting", "The second json property name was incorrect.");
-    is(jsonScope.querySelectorAll(values)[1].getAttribute("value"),
-      "\"Hello long string JSON!\"", "The second json property value was incorrect.");
+    is(labels[0].textContent, "0",
+      "The first json property name was incorrect.");
+    is(values[0].textContent, "Object",
+      "The first json property value was incorrect.");
+
+    is(labels[1].textContent, "greeting",
+      "The second json property name was incorrect.");
+    is(values[1].textContent, "\"Hello long string JSON!\"",
+      "The second json property value was incorrect.");
   }
 });

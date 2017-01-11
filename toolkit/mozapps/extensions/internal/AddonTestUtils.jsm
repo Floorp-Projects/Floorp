@@ -559,7 +559,7 @@ var AddonTestUtils = {
 
         // Force the XPIProvider provider to reload to better
         // simulate real-world usage.
-        let XPIscope = Cu.import("resource://gre/modules/addons/XPIProvider.jsm");
+        let XPIscope = Cu.import("resource://gre/modules/addons/XPIProvider.jsm", {});
         // This would be cleaner if I could get it as the rejection reason from
         // the AddonManagerInternal.shutdown() promise
         let shutdownError = XPIscope.XPIProvider._shutdownError;

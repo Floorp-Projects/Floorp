@@ -418,8 +418,9 @@ var Logins = {
   _loadFavicon: function (aImg, aHostname) {
     // Load favicon from cache.
     EventDispatcher.instance.sendRequestForResult({
-      type: "Favicon:CacheLoad",
+      type: "Favicon:Request",
       url: aHostname,
+      skipNetwork: true
     }).then(function(faviconUrl) {
       aImg.style.backgroundImage= "url('" + faviconUrl + "')";
       aImg.style.visibility = "visible";

@@ -10,15 +10,23 @@ const ID = "permissions@test.mozilla.org";
 
 const DEFAULT_EXTENSION_ICON = "chrome://browser/content/extension.svg";
 
+Services.perms.add(makeURI("https://example.com/"), "install",
+                   Services.perms.ALLOW_ACTION);
+
 function promisePopupNotificationShown(name) {
   return new Promise(resolve => {
-    PopupNotifications.panel.addEventListener("popupshown", () => {
+    function popupshown() {
       let notification = PopupNotifications.getNotification(name);
+      if (!notification) { return; }
+
       ok(notification, `${name} notification shown`);
       ok(PopupNotifications.isPanelOpen, "notification panel open");
 
+      PopupNotifications.panel.removeEventListener("popupshown", popupshown);
       resolve(PopupNotifications.panel.firstChild);
-    }, {once: true});
+    }
+
+    PopupNotifications.panel.addEventListener("popupshown", popupshown);
   });
 }
 
@@ -60,8 +68,14 @@ function checkNotification(panel, url) {
 
 const INSTALL_FUNCTIONS = [
   function installMozAM(url) {
-    return ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
-      return content.wrappedJSObject.installMozAM(cUrl);
+    ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
+      content.wrappedJSObject.installMozAM(cUrl);
+    });
+  },
+
+  function installTrigger(url) {
+    ContentTask.spawn(gBrowser.selectedBrowser, url, function*(cUrl) {
+      content.wrappedJSObject.installTrigger(cUrl);
     });
   },
 ];
@@ -78,7 +92,37 @@ add_task(function* () {
   function* runOnce(installFn, url, cancel) {
     let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, PAGE);
 
-    let installPromise = installFn(url);
+    let installPromise = new Promise(resolve => {
+      let listener = {
+        onDownloadCancelled() {
+          AddonManager.removeInstallListener(listener);
+          resolve(false);
+        },
+
+        onDownloadFailed() {
+          AddonManager.removeInstallListener(listener);
+          resolve(false);
+        },
+
+        onInstallCancelled() {
+          AddonManager.removeInstallListener(listener);
+          resolve(false);
+        },
+
+        onInstallEnded() {
+          AddonManager.removeInstallListener(listener);
+          resolve(true);
+        },
+
+        onInstallFailed() {
+          AddonManager.removeInstallListener(listener);
+          resolve(false);
+        },
+      };
+      AddonManager.addInstallListener(listener);
+    });
+
+    installFn(url);
 
     let panel = yield promisePopupNotificationShown("addon-webext-permissions");
     checkNotification(panel, url);
@@ -92,10 +136,10 @@ add_task(function* () {
     let result = yield installPromise;
     let addon = yield promiseGetAddonByID(ID);
     if (cancel) {
-      is(result, "onInstallCancelled", "Installation was cancelled");
+      ok(!result, "Installation was cancelled");
       is(addon, null, "Extension is not installed");
     } else {
-      is(result, "onInstallEnded", "Installation completed");
+      ok(result, "Installation completed");
       isnot(addon, null, "Extension is installed");
       addon.uninstall();
     }

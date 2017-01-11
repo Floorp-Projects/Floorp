@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function closeWindow(aClose, aPromptFunction) {
-  let { AppConstants } = Components.utils.import("resource://gre/modules/AppConstants.jsm");
+  let { AppConstants } = Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
 
   // Closing the last window doesn't quit the application on OS X.
   if (AppConstants.platform != "macosx") {

@@ -122,9 +122,6 @@ add_task(function* () {
   EventUtils.sendKey("DOWN", window);
   check(19, true);
 
-  EventUtils.sendMouseEvent({ type: "mousedown" }, $("#details-pane-toggle"));
-  check(-1, false);
-
   EventUtils.sendMouseEvent({ type: "mousedown" }, $(".request-list-item"));
   check(0, true);
 

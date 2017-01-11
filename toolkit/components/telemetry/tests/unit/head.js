@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonTestUtils",
                                   "resource://testing-common/AddonTestUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetrySend",
+                                  "resource://gre/modules/TelemetrySend.jsm");
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -189,7 +191,7 @@ function createAppInfo(ID = "xpcshell@tests.mozilla.org", name = "XPCShell",
 
 // Fake the timeout functions for the TelemetryScheduler.
 function fakeSchedulerTimer(set, clear) {
-  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
   session.Policy.setSchedulerTickTimeout = set;
   session.Policy.clearSchedulerTickTimeout = clear;
 }
@@ -224,31 +226,31 @@ function fakeNow(...args) {
 }
 
 function fakeMonotonicNow(ms) {
-  const m = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  const m = Cu.import("resource://gre/modules/TelemetrySession.jsm", {});
   m.Policy.monotonicNow = () => ms;
   return ms;
 }
 
 // Fake the timeout functions for TelemetryController sending.
 function fakePingSendTimer(set, clear) {
-  let module = Cu.import("resource://gre/modules/TelemetrySend.jsm");
+  let module = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
   let obj = Cu.cloneInto({set, clear}, module, {cloneFunctions:true});
   module.Policy.setSchedulerTickTimeout = obj.set;
   module.Policy.clearSchedulerTickTimeout = obj.clear;
 }
 
 function fakeMidnightPingFuzzingDelay(delayMs) {
-  let module = Cu.import("resource://gre/modules/TelemetrySend.jsm");
+  let module = Cu.import("resource://gre/modules/TelemetrySend.jsm", {});
   module.Policy.midnightPingFuzzingDelay = () => delayMs;
 }
 
 function fakeGeneratePingId(func) {
-  let module = Cu.import("resource://gre/modules/TelemetryController.jsm");
+  let module = Cu.import("resource://gre/modules/TelemetryController.jsm", {});
   module.Policy.generatePingId = func;
 }
 
 function fakeCachedClientId(uuid) {
-  let module = Cu.import("resource://gre/modules/TelemetryController.jsm");
+  let module = Cu.import("resource://gre/modules/TelemetryController.jsm", {});
   module.Policy.getCachedClientID = () => uuid;
 }
 

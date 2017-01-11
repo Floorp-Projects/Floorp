@@ -9,8 +9,9 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { $, $all, EVENTS, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu, NetworkDetails } = NetMonitorView;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
+
   RequestsMenu.lazyUpdate = false;
 
   info("Performing a secure request.");
@@ -21,27 +22,20 @@ add_task(function* () {
   });
   yield wait;
 
-  info("Selecting the request.");
-  RequestsMenu.selectedIndex = 0;
+  wait = waitForDOM(document, "#security-tabpanel");
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.getElementById("details-pane-toggle"));
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelectorAll("#details-pane tab")[5]);
+  yield wait;
 
-  info("Waiting for details pane to be updated.");
-  yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
+  is(document.querySelector("#security-error"), null, "Error box is hidden.");
+  ok(document.querySelector("#security-information"), "Information box visible.");
 
-  info("Selecting security tab.");
-  NetworkDetails.widget.selectedIndex = 5;
+  let tabpanel = document.querySelector("#security-tabpanel");
+  let textboxes = tabpanel.querySelectorAll(".textbox-input");
 
-  info("Waiting for security tab to be updated.");
-  yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
-
-  let errorbox = $("#security-error");
-  let infobox = $("#security-information");
-
-  is(errorbox, null, "Error box is hidden.");
-  ok(infobox, "Information box visible.");
-
-  let textboxes = $all(".textbox-input");
   // Connection
-
   // The protocol will be TLS but the exact version depends on which protocol
   // the test server example.com supports.
   let protocol = textboxes[0].value;
@@ -54,8 +48,9 @@ add_task(function* () {
   ok(suite.startsWith("TLS_"), "The suite " + suite + " seems valid.");
 
   // Host
-  let hostLabel = $all(".treeLabel.objectLabel")[1];
-  is(hostLabel.textContent, "Host example.com:", "Label has the expected value.");
+  is(tabpanel.querySelectorAll(".treeLabel.objectLabel")[1].textContent,
+    "Host example.com:",
+    "Label has the expected value.");
   is(textboxes[2].value, "Disabled", "Label has the expected value.");
   is(textboxes[3].value, "Disabled", "Label has the expected value.");
 

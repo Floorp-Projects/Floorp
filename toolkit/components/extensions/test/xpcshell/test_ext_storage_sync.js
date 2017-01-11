@@ -14,7 +14,7 @@ const {
   idToKey,
   extensionIdToCollectionId,
   keyToId,
-} = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm");
+} = Cu.import("resource://gre/modules/ExtensionStorageSync.jsm", {});
 Cu.import("resource://services-sync/engines/extension-storage.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/util.js");

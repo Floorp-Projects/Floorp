@@ -127,7 +127,8 @@ class ArtifactJob(object):
         ('bin/pk12util', ('bin', 'bin')),
         ('bin/ssltunnel', ('bin', 'bin')),
         ('bin/xpcshell', ('bin', 'bin')),
-        ('bin/plugins/*', ('bin/plugins', 'plugins'))
+        ('bin/plugins/*', ('bin/plugins', 'plugins')),
+        ('bin/components/*', ('bin/components', 'bin/components')),
     }
 
     # We can tell our input is a test archive by this suffix, which happens to
@@ -222,7 +223,7 @@ class AndroidArtifactJob(ArtifactJob):
         '**/interfaces.xpt',
     }
 
-    def process_artifact(self, filename, processed_filename):
+    def process_package_artifact(self, filename, processed_filename):
         # Extract all .so files into the root, which will get copied into dist/bin.
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
             for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
@@ -407,7 +408,8 @@ class WinArtifactJob(ArtifactJob):
         ('bin/pk12util.exe', ('bin', 'bin')),
         ('bin/ssltunnel.exe', ('bin', 'bin')),
         ('bin/xpcshell.exe', ('bin', 'bin')),
-        ('bin/plugins/*', ('bin/plugins', 'plugins'))
+        ('bin/plugins/*', ('bin/plugins', 'plugins')),
+        ('bin/components/*', ('bin/components', 'bin/components')),
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -436,32 +438,32 @@ class WinArtifactJob(ArtifactJob):
 # https://tools.taskcluster.net/index/artifacts/#gecko.v2.mozilla-central.latest/gecko.v2.mozilla-central.latest
 # The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
-    'android-api-15-opt': (AndroidArtifactJob, ('(public/build/fennec-(.*)\.android-arm.apk|public/build/target.apk)',
-                                                None)),
-    'android-api-15-debug': (AndroidArtifactJob, ('public/build/target.apk',
-                                                  None)),
-    'android-x86-opt': (AndroidArtifactJob, ('public/build/target.apk',
-                                         None)),
-    'linux-opt': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
-                                     'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'linux-debug': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
-                                 'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'linux64-opt': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2',
-                                       'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'linux64-debug': (LinuxArtifactJob, ('public/build/target\.tar\.bz2',
-                                         'public/build/target\.common\.tests\.zip')),
-    'macosx64-opt': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
-                                      'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'macosx64-debug': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
-                                  'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win32-opt': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
-                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win32-debug': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
-                               'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win64-opt': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
-                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win64-debug': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
-                               'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'android-api-15-opt': (AndroidArtifactJob, (r'(public/build/fennec-(.*)\.android-arm.apk|public/build/target\.apk)',
+                                                r'public/build/fennec-(.*)\.common\.tests\.zip|public/build/target-(.*)\.common\.tests\.zip')),
+    'android-api-15-debug': (AndroidArtifactJob, (r'public/build/target\.apk',
+                                                  r'public/build/target\.common\.tests\.zip')),
+    'android-x86-opt': (AndroidArtifactJob, (r'public/build/target\.apk',
+                                             r'public/build/target\.common\.tests\.zip')),
+    'linux-opt': (LinuxArtifactJob, (r'public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
+                                     r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'linux-debug': (LinuxArtifactJob, (r'public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
+                                       r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'linux64-opt': (LinuxArtifactJob, (r'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2',
+                                       r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'linux64-debug': (LinuxArtifactJob, (r'public/build/target\.tar\.bz2',
+                                         r'public/build/target\.common\.tests\.zip')),
+    'macosx64-opt': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg',
+                                      r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'macosx64-debug': (MacArtifactJob, (r'public/build/firefox-(.*)\.mac\.dmg',
+                                        r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win32-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32.zip',
+                                   r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win32-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win32.zip',
+                                     r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win64-opt': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64.zip',
+                                   r'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win64-debug': (WinArtifactJob, (r'public/build/firefox-(.*)\.win64.zip',
+                                     r'public/build/firefox-(.*)\.common\.tests\.zip')),
 }
 
 

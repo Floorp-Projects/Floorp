@@ -10,7 +10,7 @@ const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts
 const PROGRESS_NOTIFICATION = "addon-progress";
 
 const { REQUIRE_SIGNING } = Cu.import("resource://gre/modules/addons/AddonConstants.jsm", {});
-const { Task } = Cu.import("resource://gre/modules/Task.jsm");
+const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 
 var rootDir = getRootDirectory(gTestPath);
 var rootPath = rootDir.split('/');
