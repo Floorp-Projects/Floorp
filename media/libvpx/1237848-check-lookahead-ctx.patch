@@ -5,9 +5,9 @@ Bug 1237848 - Check lookahead ctx - r=rillian
 
 Copied from https://chromium-review.googlesource.com/324510
 
-diff --git a/media/libvpx/vp8/encoder/lookahead.c b/media/libvpx/vp8/encoder/lookahead.c
---- a/media/libvpx/vp8/encoder/lookahead.c
-+++ b/media/libvpx/vp8/encoder/lookahead.c
+diff --git a/media/libvpx/libvpx/vp8/encoder/lookahead.c b/media/libvpx/libvpx/vp8/encoder/lookahead.c
+--- a/media/libvpx/libvpx/vp8/encoder/lookahead.c
++++ b/media/libvpx/libvpx/vp8/encoder/lookahead.c
 @@ -176,16 +176,17 @@ vp8_lookahead_push(struct lookahead_ctx 
  
  
@@ -26,9 +26,9 @@ diff --git a/media/libvpx/vp8/encoder/lookahead.c b/media/libvpx/vp8/encoder/loo
      return buf;
  }
  
-diff --git a/media/libvpx/vp9/encoder/vp9_lookahead.c b/media/libvpx/vp9/encoder/vp9_lookahead.c
---- a/media/libvpx/vp9/encoder/vp9_lookahead.c
-+++ b/media/libvpx/vp9/encoder/vp9_lookahead.c
+diff --git a/media/libvpx/libvpx/vp9/encoder/vp9_lookahead.c b/media/libvpx/libvpx/vp9/encoder/vp9_lookahead.c
+--- a/media/libvpx/libvpx/vp9/encoder/vp9_lookahead.c
++++ b/media/libvpx/libvpx/vp9/encoder/vp9_lookahead.c
 @@ -202,17 +202,17 @@ int vp9_lookahead_push(struct lookahead_
    return 0;
  }
