@@ -9035,10 +9035,12 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
     parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
   }
 
+#ifdef MOZ_ENABLE_PROFILER_SPS
   nsIURI *uri = mDocument->GetDocumentURI();
   PROFILER_LABEL_PRINTF("PresShell", "DoReflow",
     js::ProfileEntry::Category::GRAPHICS, "(%s)",
     uri ? uri->GetSpecOrDefault().get() : "N/A");
+#endif
 
   nsDocShell* docShell = static_cast<nsDocShell*>(GetPresContext()->GetDocShell());
   RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
