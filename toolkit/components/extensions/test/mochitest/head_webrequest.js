@@ -188,9 +188,6 @@ function background(events) {
         }
         // Tests we don't need to do every event.
         browser.test.assertTrue(details.type.toUpperCase() in browser.webRequest.ResourceType, `valid resource type ${details.type}`);
-        if (details.type == "main_frame") {
-          browser.test.assertEq(0, details.frameId, "frameId is zero when type is main_frame bug 1329299");
-        }
       } else {
         // On events after onBeforeRequest, check the previous values.
         browser.test.assertEq(expected.test.requestId, details.requestId, "correct requestId");
