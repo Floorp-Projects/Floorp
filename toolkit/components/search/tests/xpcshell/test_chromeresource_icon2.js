@@ -7,7 +7,6 @@
 
 function run_test() {
   removeMetadata();
-  updateAppInfo();
   useHttpServer();
 
   run_next_test();
