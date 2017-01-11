@@ -279,6 +279,36 @@ private:
   uint64_t mHandle;
 };
 
+// This is used to communicate Compositables across IPC channels. The Handle is valid
+// for layers in the same PLayerTransaction or PImageBridge. Handles are created by
+// ClientLayerManager or ImageBridgeChild, and are cached in the parent side on first
+// use.
+class CompositableHandle
+{
+  friend struct IPC::ParamTraits<mozilla::layers::CompositableHandle>;
+public:
+  CompositableHandle() : mHandle(0)
+  {}
+  CompositableHandle(const CompositableHandle& aOther) : mHandle(aOther.mHandle)
+  {}
+  explicit CompositableHandle(uint64_t aHandle) : mHandle(aHandle)
+  {}
+  bool IsValid() const {
+    return mHandle != 0;
+  }
+  explicit operator bool() const {
+    return IsValid();
+  }
+  bool operator ==(const CompositableHandle& aOther) const {
+    return mHandle == aOther.mHandle;
+  }
+  uint64_t Value() const {
+    return mHandle;
+  }
+private:
+  uint64_t mHandle;
+};
+
 } // namespace layers
 } // namespace mozilla
 
