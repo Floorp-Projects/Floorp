@@ -43,6 +43,6 @@ define(function (require, exports, module) {
 
   exports.Undefined = {
     rep: Undefined,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

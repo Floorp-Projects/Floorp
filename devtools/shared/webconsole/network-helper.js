@@ -84,7 +84,7 @@ var NetworkHelper = {
    * @returns string
    *          Converted text.
    */
-  convertToUnicode: function (text, charset) {
+  convertToUnicode(text, charset) {
     let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
         .createInstance(Ci.nsIScriptableUnicodeConverter);
     try {
@@ -103,7 +103,7 @@ var NetworkHelper = {
    * @returns string
    *          UTF-16 encoded string based on the content of stream and charset.
    */
-  readAndConvertFromStream: function (stream, charset) {
+  readAndConvertFromStream(stream, charset) {
     let text = null;
     try {
       text = NetUtil.readInputStreamToString(stream, stream.available());
@@ -123,7 +123,7 @@ var NetworkHelper = {
    *          Returns the posted string if it was possible to read from request
    *          otherwise null.
    */
-  readPostTextFromRequest: function (request, charset) {
+  readPostTextFromRequest(request, charset) {
     if (request instanceof Ci.nsIUploadChannel) {
       let iStream = request.uploadStream;
 
@@ -161,7 +161,7 @@ var NetworkHelper = {
    *          Returns the posted string if it was possible to read from
    *          docShell otherwise null.
    */
-  readPostTextFromPage: function (docShell, charset) {
+  readPostTextFromPage(docShell, charset) {
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     return this.readPostTextFromPageViaWebNav(webNav, charset);
   },
@@ -176,7 +176,7 @@ var NetworkHelper = {
    *          Returns the posted string if it was possible to read from
    *          webNav, otherwise null.
    */
-  readPostTextFromPageViaWebNav: function (webNav, charset) {
+  readPostTextFromPageViaWebNav(webNav, charset) {
     if (webNav instanceof Ci.nsIWebPageDescriptor) {
       let descriptor = webNav.currentDescriptor;
 
@@ -197,7 +197,7 @@ var NetworkHelper = {
    * @returns number|null
    *          The appId for the given request, if available.
    */
-  getAppIdForRequest: function (request) {
+  getAppIdForRequest(request) {
     try {
       return this.getRequestLoadContext(request).appId;
     } catch (ex) {
@@ -215,7 +215,7 @@ var NetworkHelper = {
    * @returns nsIDOMElement|null
    *          The top frame element for the given request.
    */
-  getTopFrameForRequest: function (request) {
+  getTopFrameForRequest(request) {
     try {
       return this.getRequestLoadContext(request).topFrameElement;
     } catch (ex) {
@@ -230,7 +230,7 @@ var NetworkHelper = {
    * @param nsIHttpChannel request
    * @returns nsIDOMWindow or null
    */
-  getWindowForRequest: function (request) {
+  getWindowForRequest(request) {
     try {
       return this.getRequestLoadContext(request).associatedWindow;
     } catch (ex) {
@@ -246,7 +246,7 @@ var NetworkHelper = {
    * @param nsIHttpChannel request
    * @returns nsILoadContext or null
    */
-  getRequestLoadContext: function (request) {
+  getRequestLoadContext(request) {
     try {
       return request.notificationCallbacks.getInterface(Ci.nsILoadContext);
     } catch (ex) {
@@ -269,7 +269,7 @@ var NetworkHelper = {
    * @param nsIHttpChannel request
    * @returns Boolean True if the request represents the top level document.
    */
-  isTopLevelLoad: function (request) {
+  isTopLevelLoad(request) {
     if (request instanceof Ci.nsIChannel) {
       let loadInfo = request.loadInfo;
       if (loadInfo && loadInfo.isTopLevelLoad) {
@@ -292,7 +292,7 @@ var NetworkHelper = {
    *        Callback that is called with the loaded cached content if available
    *        or null if something failed while getting the cached content.
    */
-  loadFromCache: function (url, charset, callback) {
+  loadFromCache(url, charset, callback) {
     let channel = NetUtil.newChannel({uri: url,
                                       loadUsingSystemPrincipal: true});
 
@@ -328,7 +328,7 @@ var NetworkHelper = {
    *         Array holding an object for each cookie. Each object holds the
    *         following properties: name and value.
    */
-  parseCookieHeader: function (header) {
+  parseCookieHeader(header) {
     let cookies = header.split(";");
     let result = [];
 
@@ -353,7 +353,7 @@ var NetworkHelper = {
    *         following properties: name, value, secure (boolean), httpOnly
    *         (boolean), path, domain and expires (ISO date string).
    */
-  parseSetCookieHeader: function (header) {
+  parseSetCookieHeader(header) {
     let rawCookies = header.split(/\r\n|\n|\r/);
     let cookies = [];
 
@@ -363,7 +363,7 @@ var NetworkHelper = {
       let parts = cookie.substr(equal + 1).split(";");
       let value = unescape(parts.shift().trim());
 
-      cookie = {name: name, value: value};
+      cookie = {name, value};
 
       parts.forEach(function (part) {
         part = part.trim();
@@ -474,7 +474,7 @@ var NetworkHelper = {
    * @param string mimeType
    * @return boolean
    */
-  isTextMimeType: function (mimeType) {
+  isTextMimeType(mimeType) {
     if (mimeType.indexOf("text/") == 0) {
       return true;
     }
@@ -537,7 +537,7 @@ var NetworkHelper = {
    *            - weaknessReasons: list of reasons that cause the request to be
    *                               considered weak. See getReasonsForWeakness.
    */
-  parseSecurityInfo: function (securityInfo, httpActivity) {
+  parseSecurityInfo(securityInfo, httpActivity) {
     const info = {
       state: "insecure",
     };
@@ -671,7 +671,7 @@ var NetworkHelper = {
    *             fingerprint: { sha1, sha256 }
    *           }
    */
-  parseCertificateInfo: function (cert) {
+  parseCertificateInfo(cert) {
     let info = {};
     if (cert) {
       info.subject = {
@@ -713,7 +713,7 @@ var NetworkHelper = {
    *         One of TLSv1, TLSv1.1, TLSv1.2, TLSv1.3 if @param version
    *         is valid, Unknown otherwise.
    */
-  formatSecurityProtocol: function (version) {
+  formatSecurityProtocol(version) {
     switch (version) {
       case Ci.nsISSLStatus.TLS_VERSION_1:
         return "TLSv1";
@@ -741,7 +741,7 @@ var NetworkHelper = {
    *         List of weakness reasons. A subset of { cipher } where
    *         * cipher: The cipher suite is consireded to be weak (RC4).
    */
-  getReasonsForWeakness: function (state) {
+  getReasonsForWeakness(state) {
     const wpl = Ci.nsIWebProgressListener;
 
     // If there's non-fatal security issues the request has STATE_IS_BROKEN
@@ -773,7 +773,7 @@ var NetworkHelper = {
    * @return array
    *         Array of query params {name, value}
    */
-  parseQueryString: function (queryString) {
+  parseQueryString(queryString) {
     // Make sure there's at least one param available.
     // Be careful here, params don't necessarily need to have values, so
     // no need to verify the existence of a "=".
@@ -798,7 +798,7 @@ var NetworkHelper = {
   /**
    * Helper for getting an nsIURL instance out of a string.
    */
-  nsIURL: function (url, store = gNSURLStore) {
+  nsIURL(url, store = gNSURLStore) {
     if (store.has(url)) {
       return store.get(url);
     }

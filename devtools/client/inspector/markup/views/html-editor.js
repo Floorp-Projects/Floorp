@@ -67,7 +67,7 @@ HTMLEditor.prototype = {
    * Need to refresh position by manually setting CSS values, so this will
    * need to be called on resizes and other sizing changes.
    */
-  refresh: function () {
+  refresh() {
     let element = this._attachedElement;
 
     if (element) {
@@ -86,7 +86,7 @@ HTMLEditor.prototype = {
    *         The element that the editor will be anchored to.
    *         Should belong to the HTMLDocument passed into the constructor.
    */
-  _attach: function (element) {
+  _attach(element) {
     this._detach();
     this._attachedElement = element;
     element.classList.add("html-editor-container");
@@ -96,7 +96,7 @@ HTMLEditor.prototype = {
   /**
    * Unanchor the editor from an element.
    */
-  _detach: function () {
+  _detach() {
     if (this._attachedElement) {
       this._attachedElement.classList.remove("html-editor-container");
       this._attachedElement = undefined;
@@ -114,7 +114,7 @@ HTMLEditor.prototype = {
    * @param  {Function} cb
    *         The function to call when hiding
    */
-  show: function (element, text) {
+  show(element, text) {
     if (this._visible) {
       return;
     }
@@ -138,7 +138,7 @@ HTMLEditor.prototype = {
    *         A change will be committed by default.  If this param
    *         strictly equals false, no change will occur.
    */
-  hide: function (shouldCommit) {
+  hide(shouldCommit) {
     if (!this._visible) {
       return;
     }
@@ -157,7 +157,7 @@ HTMLEditor.prototype = {
   /**
    * Destroy this object and unbind all event handlers
    */
-  destroy: function () {
+  destroy() {
     this.doc.defaultView.removeEventListener("resize",
       this.refresh, true);
     this.container.removeEventListener("click", this.hide, false);

@@ -151,7 +151,7 @@ function* compareAppliedStylesWithUI(inspector, view, filter) {
     {
       inherited: true,
       matchedSelectors: true,
-      filter: filter
+      filter
     }
   );
 

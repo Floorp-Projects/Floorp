@@ -91,7 +91,7 @@ exports.items = [
         ]
       }
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       /* eslint-disable camelcase */
       let opts = {
         indent_size: args.indentSize,

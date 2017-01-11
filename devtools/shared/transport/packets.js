@@ -81,7 +81,7 @@ Packet.prototype = {
     this._length = length;
   },
 
-  destroy: function () {
+  destroy() {
     this._transport = null;
   }
 
@@ -135,14 +135,14 @@ Object.defineProperty(JSONPacket.prototype, "object", {
   /**
    * Gets the object (not the serialized string) being read or written.
    */
-  get: function () {
+  get() {
     return this._object;
   },
 
   /**
    * Sets the object to be sent when write() is called.
    */
-  set: function (object) {
+  set(object) {
     this._object = object;
     let data = JSON.stringify(object);
     this._data = unicodeConverter.ConvertFromUnicode(data);
@@ -201,7 +201,7 @@ JSONPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(JSONPacket.prototype, "done", {
-  get: function () {
+  get() {
     return this._done;
   }
 });
@@ -282,7 +282,7 @@ BulkPacket.prototype.read = function (stream) {
       deferred.resolve(copying);
       return copying;
     },
-    stream: stream,
+    stream,
     done: deferred
   });
 
@@ -332,7 +332,7 @@ BulkPacket.prototype.write = function (stream) {
       deferred.resolve(copying);
       return copying;
     },
-    stream: stream,
+    stream,
     done: deferred
   });
 
@@ -350,13 +350,13 @@ BulkPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(BulkPacket.prototype, "streamReadyForWriting", {
-  get: function () {
+  get() {
     return this._readyForWriting.promise;
   }
 });
 
 Object.defineProperty(BulkPacket.prototype, "header", {
-  get: function () {
+  get() {
     return {
       actor: this.actor,
       type: this.type,
@@ -364,7 +364,7 @@ Object.defineProperty(BulkPacket.prototype, "header", {
     };
   },
 
-  set: function (header) {
+  set(header) {
     this.actor = header.actor;
     this.type = header.type;
     this.length = header.length;
@@ -372,7 +372,7 @@ Object.defineProperty(BulkPacket.prototype, "header", {
 });
 
 Object.defineProperty(BulkPacket.prototype, "done", {
-  get: function () {
+  get() {
     return this._done;
   },
 });
@@ -412,7 +412,7 @@ RawPacket.prototype.write = function (stream) {
 };
 
 Object.defineProperty(RawPacket.prototype, "done", {
-  get: function () {
+  get() {
     return this._done;
   }
 });

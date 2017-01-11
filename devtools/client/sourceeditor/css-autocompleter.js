@@ -110,7 +110,7 @@ CSSCompleter.prototype = {
    *          - label {String} Full keyword for the suggestion
    *          - preLabel {String} Already entered part of the label
    */
-  complete: function (source, caret) {
+  complete(source, caret) {
     // Getting the context from the caret position.
     if (!this.resolveState(source, caret)) {
       // We couldn't resolve the context, we won't be able to complete.
@@ -160,7 +160,7 @@ CSSCompleter.prototype = {
    * @returns CSS_STATE
    *          One of CSS_STATE enum or null if the state cannot be resolved.
    */
-  resolveState: function (source, {line, ch}) {
+  resolveState(source, {line, ch}) {
     // Function to return the last element of an array
     let peek = arr => arr[arr.length - 1];
     // _state can be one of CSS_STATES;
@@ -720,7 +720,7 @@ CSSCompleter.prototype = {
    * Queries the DOM Walker actor for suggestions regarding the selector being
    * completed
    */
-  suggestSelectors: function () {
+  suggestSelectors() {
     let walker = this.walker;
     if (!walker) {
       return Promise.resolve([]);
@@ -770,7 +770,7 @@ CSSCompleter.prototype = {
  /**
   * Prepares the selector suggestions returned by the walker actor.
   */
-  prepareSelectorResults: function (result) {
+  prepareSelectorResults(result) {
     if (this._currentQuery != result.query) {
       return [];
     }
@@ -838,7 +838,7 @@ CSSCompleter.prototype = {
    *
    * @param startProp {String} Initial part of the property being completed.
    */
-  completeProperties: function (startProp) {
+  completeProperties(startProp) {
     let finalList = [];
     if (!startProp) {
       return Promise.resolve(finalList);
@@ -870,7 +870,7 @@ CSSCompleter.prototype = {
    *        belongs.
    * @param startValue {String} Initial part of the value being completed.
    */
-  completeValues: function (propName, startValue) {
+  completeValues(propName, startValue) {
     let finalList = [];
     let list = ["!important;", ...this.cssProperties.getValues(propName)];
     // If there is no character being completed, we are showing an initial list
@@ -909,7 +909,7 @@ CSSCompleter.prototype = {
    * of the CSS source. This speeds up the tokenizing and the state machine a
    * lot while using autocompletion at high line numbers in a CSS source.
    */
-  findNearestNullState: function (line) {
+  findNearestNullState(line) {
     let arr = this.nullStates;
     let high = arr.length - 1;
     let low = 0;
@@ -953,7 +953,7 @@ CSSCompleter.prototype = {
   /**
    * Invalidates the state cache for and above the line.
    */
-  invalidateCache: function (line) {
+  invalidateCache(line) {
     this.nullStates.length = this.findNearestNullState(line) + 1;
   },
 
@@ -983,7 +983,7 @@ CSSCompleter.prototype = {
    *                 caret position of the whole selector, value or property.
    *                  - { start: {line, ch}, end: {line, ch}}
    */
-  getInfoAt: function (source, caret) {
+  getInfoAt(source, caret) {
     // Limits the input source till the {line, ch} caret position
     function limit(sourceArg, {line, ch}) {
       line++;
@@ -1043,7 +1043,7 @@ CSSCompleter.prototype = {
           }
 
           let forwState = this.resolveState(limitedSource, {
-            line: line,
+            line,
             ch: token.endOffset + ech
           });
           if (check(forwState)) {
@@ -1051,7 +1051,7 @@ CSSCompleter.prototype = {
               token = prevToken;
             }
             location = {
-              line: line,
+              line,
               ch: token.startOffset + ech
             };
             found = true;
@@ -1104,7 +1104,7 @@ CSSCompleter.prototype = {
           }
 
           let backState = this.resolveState(limitedSource, {
-            line: line,
+            line,
             ch: token.startOffset
           });
           if (check(backState)) {
@@ -1112,7 +1112,7 @@ CSSCompleter.prototype = {
               token = tokens[i + 1];
             }
             location = {
-              line: line,
+              line,
               ch: isValue ? token.endOffset : token.startOffset
             };
             found = true;
@@ -1152,11 +1152,11 @@ CSSCompleter.prototype = {
       selector[0] = selector[0].substring(start.ch);
       selector = selector.join("\n");
       return {
-        state: state,
-        selector: selector,
+        state,
+        selector,
         loc: {
-          start: start,
-          end: end
+          start,
+          end
         }
       };
     } else if (state == CSS_STATES.property) {
@@ -1167,16 +1167,16 @@ CSSCompleter.prototype = {
         // token's offset is also the column number.
         if (token.startOffset <= ch && token.endOffset >= ch) {
           return {
-            state: state,
+            state,
             propertyName: token.text,
             selectors: this.selectors,
             loc: {
               start: {
-                line: line,
+                line,
                 ch: token.startOffset
               },
               end: {
-                line: line,
+                line,
                 ch: token.endOffset
               }
             }
@@ -1197,13 +1197,13 @@ CSSCompleter.prototype = {
       value[0] = value[0].substring(start.ch);
       value = value.join("\n");
       return {
-        state: state,
-        propertyName: propertyName,
+        state,
+        propertyName,
         selectors: this.selectors,
-        value: value,
+        value,
         loc: {
-          start: start,
-          end: end
+          start,
+          end
         }
       };
     }

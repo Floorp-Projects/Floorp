@@ -41,7 +41,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
    * initialized with the given value, and return a promise that resolves to
    * the instance of the widget
    */
-  setCubicBezierContent: function (bezier) {
+  setCubicBezierContent(bezier) {
     let { doc } = this.tooltip;
 
     let container = doc.createElementNS(XHTML_NS, "div");
@@ -80,7 +80,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     }
   }),
 
-  _onUpdate: function (event, bezier) {
+  _onUpdate(event, bezier) {
     if (!this.activeSwatch) {
       return;
     }
@@ -89,7 +89,7 @@ SwatchCubicBezierTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     this.preview(bezier + "");
   },
 
-  destroy: function () {
+  destroy() {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.currentBezierValue = null;
     this.widget.then(widget => {

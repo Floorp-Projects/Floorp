@@ -68,13 +68,13 @@ function CssColor(colorValue, supportsCssColor4ColorFunction = false) {
 }
 
 module.exports.colorUtils = {
-  CssColor: CssColor,
-  rgbToHsl: rgbToHsl,
-  setAlpha: setAlpha,
-  classifyColor: classifyColor,
-  rgbToColorName: rgbToColorName,
-  colorToRGBA: colorToRGBA,
-  isValidCSSColor: isValidCSSColor,
+  CssColor,
+  rgbToHsl,
+  setAlpha,
+  classifyColor,
+  rgbToColorName,
+  colorToRGBA,
+  isValidCSSColor,
 };
 
 /**
@@ -100,7 +100,7 @@ CssColor.prototype = {
   // Whether the value should be parsed using css-color-4 rules.
   cssColor4: false,
 
-  _setColorUnitUppercase: function (color) {
+  _setColorUnitUppercase(color) {
     // Specifically exclude the case where the color is
     // case-insensitive.  This makes it so that "#000" isn't
     // considered "upper case" for the purposes of color cycling.
@@ -128,7 +128,7 @@ CssColor.prototype = {
    *
    * @param {String} color The color to use
    */
-  setAuthoredUnitFromColor: function (color) {
+  setAuthoredUnitFromColor(color) {
     if (Services.prefs.getCharPref(COLOR_UNIT_PREF) ===
         CssColor.COLORUNIT.authored) {
       this._colorUnit = classifyColor(color);
@@ -317,7 +317,7 @@ CssColor.prototype = {
    *         - If the color is a regular color e.g. #F06 so we return false
    *           to indicate that the color is neither invalid or special.
    */
-  _getInvalidOrSpecialValue: function () {
+  _getInvalidOrSpecialValue() {
     if (this.specialValue) {
       return this.specialValue;
     }
@@ -333,7 +333,7 @@ CssColor.prototype = {
    * @param  {String} color
    *         Any valid color string
    */
-  newColor: function (color) {
+  newColor(color) {
     // Store a lower-cased version of the color to help with format
     // testing.  The original text is kept as well so it can be
     // returned when needed.
@@ -343,7 +343,7 @@ CssColor.prototype = {
     return this;
   },
 
-  nextColorUnit: function () {
+  nextColorUnit() {
     // Reorder the formats array to have the current format at the
     // front so we can cycle through.
     let formats = ["hex", "hsl", "rgb", "name"];
@@ -365,7 +365,7 @@ CssColor.prototype = {
   /**
    * Return a string representing a color of type defined in COLOR_UNIT_PREF.
    */
-  toString: function () {
+  toString() {
     let color;
 
     switch (this.colorUnit) {
@@ -400,7 +400,7 @@ CssColor.prototype = {
    * Returns a RGBA 4-Tuple representation of a color or transparent as
    * appropriate.
    */
-  _getRGBATuple: function () {
+  _getRGBATuple() {
     let tuple = colorToRGBA(this.authored, this.cssColor4);
 
     tuple.a = parseFloat(tuple.a.toFixed(1));
@@ -408,7 +408,7 @@ CssColor.prototype = {
     return tuple;
   },
 
-  _hsl: function (maybeAlpha) {
+  _hsl(maybeAlpha) {
     if (this.lowerCased.startsWith("hsl(") && maybeAlpha === undefined) {
       // We can use it as-is.
       return this.authored;
@@ -425,7 +425,7 @@ CssColor.prototype = {
   /**
    * This method allows comparison of CssColor objects using ===.
    */
-  valueOf: function () {
+  valueOf() {
     return this.rgba;
   },
 };

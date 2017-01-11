@@ -38,7 +38,7 @@ add_task(function* () {
 function* clickElement(selector, testActor, inspector, isShift) {
   let onSelectionChanged = inspector.once("inspector-updated");
   yield testActor.synthesizeMouse({
-    selector: selector,
+    selector,
     center: true,
     options: { shiftKey: isShift }
   });

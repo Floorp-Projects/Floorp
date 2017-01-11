@@ -44,11 +44,11 @@ Tools.options = {
   tooltip: l10n("optionsButton.tooltip"),
   inMenu: false,
 
-  isTargetSupported: function () {
+  isTargetSupported() {
     return true;
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new OptionsPanel(iframeWindow, toolbox);
   }
 };
@@ -75,15 +75,15 @@ Tools.inspector = {
   ],
 
   preventClosingOnKey: true,
-  onkey: function (panel, toolbox) {
+  onkey(panel, toolbox) {
     toolbox.highlighterUtils.togglePicker();
   },
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.hasActor("inspector");
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new InspectorPanel(iframeWindow, toolbox);
   }
 };
@@ -108,7 +108,7 @@ Tools.webConsole = {
   commands: "devtools/client/webconsole/console-commands",
 
   preventClosingOnKey: true,
-  onkey: function (panel, toolbox) {
+  onkey(panel, toolbox) {
     if (toolbox.splitConsole) {
       return toolbox.focusConsoleInput();
     }
@@ -117,11 +117,11 @@ Tools.webConsole = {
     return undefined;
   },
 
-  isTargetSupported: function () {
+  isTargetSupported() {
     return true;
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new WebConsolePanel(iframeWindow, toolbox);
   }
 };
@@ -145,11 +145,11 @@ Tools.jsdebugger = {
   inMenu: true,
   commands: "devtools/client/debugger/debugger-commands",
 
-  isTargetSupported: function () {
+  isTargetSupported() {
     return true;
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new DebuggerPanel(iframeWindow, toolbox);
   }
 };
@@ -194,11 +194,11 @@ Tools.styleEditor = {
   inMenu: true,
   commands: "devtools/client/styleeditor/styleeditor-commands",
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.hasActor("styleEditor") || target.hasActor("styleSheets");
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new StyleEditorPanel(iframeWindow, toolbox);
   }
 };
@@ -214,11 +214,11 @@ Tools.shaderEditor = {
   panelLabel: l10n("ToolboxShaderEditor.panelLabel"),
   tooltip: l10n("ToolboxShaderEditor.tooltip"),
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.hasActor("webgl") && !target.chrome;
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new ShaderEditorPanel(iframeWindow, toolbox);
   }
 };
@@ -236,11 +236,11 @@ Tools.canvasDebugger = {
 
   // Hide the Canvas Debugger in the Add-on Debugger and Browser Toolbox
   // (bug 1047520).
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.hasActor("canvas") && !target.chrome;
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new CanvasDebuggerPanel(iframeWindow, toolbox);
   }
 };
@@ -263,11 +263,11 @@ Tools.performance = {
   modifiers: "shift",
   inMenu: true,
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.hasActor("profiler");
   },
 
-  build: function (frame, target) {
+  build(frame, target) {
     return new PerformancePanel(frame, target);
   }
 };
@@ -284,11 +284,11 @@ Tools.memory = {
   panelLabel: l10n("memory.panelLabel"),
   tooltip: l10n("memory.tooltip"),
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.getTrait("heapSnapshots") && !target.isAddon;
   },
 
-  build: function (frame, target) {
+  build(frame, target) {
     return new MemoryPanel(frame, target);
   }
 };
@@ -311,11 +311,11 @@ Tools.netMonitor = {
   },
   inMenu: true,
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.getTrait("networkMonitor");
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new NetMonitorPanel(iframeWindow, toolbox);
   }
 };
@@ -338,12 +338,12 @@ Tools.storage = {
   },
   inMenu: true,
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.isLocalTab ||
            (target.hasActor("storage") && target.getTrait("storageInspector"));
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new StoragePanel(iframeWindow, toolbox);
   }
 };
@@ -359,11 +359,11 @@ Tools.webAudioEditor = {
   panelLabel: l10n("ToolboxWebAudioEditor1.panelLabel"),
   tooltip: l10n("ToolboxWebAudioEditor1.tooltip"),
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return !target.chrome && target.hasActor("webaudio");
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new WebAudioEditorPanel(iframeWindow, toolbox);
   }
 };
@@ -381,11 +381,11 @@ Tools.scratchpad = {
   inMenu: false,
   commands: "devtools/client/scratchpad/scratchpad-commands",
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.hasActor("console");
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new ScratchpadPanel(iframeWindow, toolbox);
   }
 };
@@ -408,11 +408,11 @@ Tools.dom = {
   },
   inMenu: true,
 
-  isTargetSupported: function (target) {
+  isTargetSupported(target) {
     return target.getTrait("webConsoleCommands");
   },
 
-  build: function (iframeWindow, toolbox) {
+  build(iframeWindow, toolbox) {
     return new DomPanel(iframeWindow, toolbox);
   }
 };

@@ -73,7 +73,7 @@ MarkerDetails.prototype = {
   /**
    * Clears the marker details from this view.
    */
-  empty: function () {
+  empty() {
     this._parent.innerHTML = "";
   },
 
@@ -87,7 +87,7 @@ MarkerDetails.prototype = {
    *          - allocations: Whether or not allocations were enabled for this
    *                         recording. [optional]
    */
-  render: function (options) {
+  render(options) {
     let { marker, frames } = options;
     this.empty();
 
@@ -121,7 +121,7 @@ MarkerDetails.prototype = {
    * can handle different actions -- only supporting view source links
    * for the moment.
    */
-  _onClick: function (e) {
+  _onClick(e) {
     let data = findActionFromEvent(e.target, this._parent);
     if (!data) {
       return;
@@ -133,7 +133,7 @@ MarkerDetails.prototype = {
   /**
    * Handles the "mouseup" event on the marker details view splitter.
    */
-  _onSplitterMouseUp: function () {
+  _onSplitterMouseUp() {
     this.emit("resize");
   }
 };

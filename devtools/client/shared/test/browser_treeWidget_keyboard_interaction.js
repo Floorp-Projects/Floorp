@@ -67,7 +67,7 @@ function populateTree(tree, doc) {
   node.className = "foo bar";
   tree.add([{
     id: "level1.2",
-    node: node,
+    node,
     attachment: {
       foo: "bar"
     }

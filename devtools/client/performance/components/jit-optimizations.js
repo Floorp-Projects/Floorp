@@ -88,7 +88,7 @@ const JITOptimizations = createClass({
    * @param {Function} .onViewSourceInDebugger
    * @return {ReactElement}
    */
-  _createHeader: function ({ frameData, onViewSourceInDebugger }) {
+  _createHeader({ frameData, onViewSourceInDebugger }) {
     let { isMetaCategory, url, line } = frameData;
     let name = isMetaCategory ? frameData.categoryData.label :
                frameData.functionName || "";
@@ -219,7 +219,7 @@ const JITOptimizations = createClass({
         expanded.delete(node);
         return { expanded };
       }),
-      onFocus: function () {},
+      onFocus() {},
       getKey,
       getRoots: () => sites || [],
       itemHeight: TREE_ROW_HEIGHT,

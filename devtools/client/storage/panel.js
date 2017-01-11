@@ -38,7 +38,7 @@ StoragePanel.prototype = {
   /**
    * open is effectively an asynchronous constructor
    */
-  open: function () {
+  open() {
     let targetPromise;
     // We always interact with the target as if it were remote
     if (!this.target.isRemote) {
@@ -66,7 +66,7 @@ StoragePanel.prototype = {
   /**
    * Destroy the storage inspector.
    */
-  destroy: function () {
+  destroy() {
     if (!this._destroyed) {
       this.UI.destroy();
       this.UI = null;

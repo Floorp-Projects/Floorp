@@ -45,25 +45,25 @@ function AnimationTimeBlock() {
 exports.AnimationTimeBlock = AnimationTimeBlock;
 
 AnimationTimeBlock.prototype = {
-  init: function (containerEl) {
+  init(containerEl) {
     this.containerEl = containerEl;
     this.containerEl.addEventListener("click", this.onClick);
   },
 
-  destroy: function () {
+  destroy() {
     this.containerEl.removeEventListener("click", this.onClick);
     this.unrender();
     this.containerEl = null;
     this.animation = null;
   },
 
-  unrender: function () {
+  unrender() {
     while (this.containerEl.firstChild) {
       this.containerEl.firstChild.remove();
     }
   },
 
-  render: function (animation) {
+  render(animation) {
     this.unrender();
 
     this.animation = animation;
@@ -253,7 +253,7 @@ AnimationTimeBlock.prototype = {
     }
   },
 
-  getTooltipText: function (state) {
+  getTooltipText(state) {
     let getTime = time => L10N.getFormatStr("player.timeLabel",
                                             L10N.numberWithDecimals(time / 1000, 2));
 
@@ -344,7 +344,7 @@ AnimationTimeBlock.prototype = {
     return text;
   },
 
-  onClick: function (e) {
+  onClick(e) {
     e.stopPropagation();
     this.emit("selected", this.animation);
   },
@@ -622,7 +622,7 @@ function getSegmentHelper(state, win) {
     animation: dummyAnimation,
     endTime: dummyAnimation.effect.getComputedTiming().endTime,
     asOriginalBehavior: true,
-    getSegment: function (time) {
+    getSegment(time) {
       if (this.asOriginalBehavior) {
         // If the given time is less than 0, returned progress is 0.
         if (time < 0) {

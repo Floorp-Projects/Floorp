@@ -151,7 +151,7 @@ types.addType = function (name, typeObject = {}, options = {}) {
     toString() {
       return "[protocol type:" + name + "]";
     },
-    name: name,
+    name,
     primitive: !(typeObject.read || typeObject.write),
     read: identityWrite,
     write: identityWrite
@@ -219,7 +219,7 @@ types.addArrayType = function (subtype) {
 types.addDictType = function (name, specializations) {
   return types.addType(name, {
     category: "dict",
-    specializations: specializations,
+    specializations,
     read: (v, ctx) => {
       let ret = {};
       for (let prop in v) {
@@ -449,20 +449,20 @@ types.JSON = types.addType("json");
  * @constructor
  */
 var Arg = Class({
-  initialize: function (index, type) {
+  initialize(index, type) {
     this.index = index;
     this.type = types.getType(type);
   },
 
-  write: function (arg, ctx) {
+  write(arg, ctx) {
     return this.type.write(arg, ctx);
   },
 
-  read: function (v, ctx, outArgs) {
+  read(v, ctx, outArgs) {
     outArgs[this.index] = this.type.read(v, ctx);
   },
 
-  describe: function () {
+  describe() {
     return {
       _arg: this.index,
       type: this.type.name,
@@ -490,11 +490,11 @@ exports.Arg = Arg;
  */
 var Option = Class({
   extends: Arg,
-  initialize: function (index, type) {
+  initialize(index, type) {
     Arg.prototype.initialize.call(this, index, type);
   },
 
-  write: function (arg, ctx, name) {
+  write(arg, ctx, name) {
     // Ignore if arg is undefined or null; allow other falsy values
     if (arg == undefined || arg[name] == undefined) {
       return undefined;
@@ -502,7 +502,7 @@ var Option = Class({
     let v = arg[name];
     return this.type.write(v, ctx);
   },
-  read: function (v, ctx, outArgs, name) {
+  read(v, ctx, outArgs, name) {
     if (outArgs[this.index] === undefined) {
       outArgs[this.index] = {};
     }
@@ -512,7 +512,7 @@ var Option = Class({
     outArgs[this.index][name] = this.type.read(v, ctx);
   },
 
-  describe: function () {
+  describe() {
     return {
       _option: this.index,
       type: this.type.name,
@@ -529,19 +529,19 @@ exports.Option = Option;
  *    The return value should be marshalled as this type.
  */
 var RetVal = Class({
-  initialize: function (type) {
+  initialize(type) {
     this.type = types.getType(type);
   },
 
-  write: function (v, ctx) {
+  write(v, ctx) {
     return this.type.write(v, ctx);
   },
 
-  read: function (v, ctx) {
+  read(v, ctx) {
     return this.type.read(v, ctx);
   },
 
-  describe: function () {
+  describe() {
     return {
       _retval: this.type.name
     };
@@ -605,7 +605,7 @@ function describeTemplate(template) {
  * @construcor
  */
 var Request = Class({
-  initialize: function (template = {}) {
+  initialize(template = {}) {
     this.type = template.type;
     this.template = template;
     this.args = findPlaceholders(template, Arg);
@@ -620,7 +620,7 @@ var Request = Class({
    *    The object making the request.
    * @returns a request packet.
    */
-  write: function (fnArgs, ctx) {
+  write(fnArgs, ctx) {
     let str = JSON.stringify(this.template, (key, value) => {
       if (value instanceof Arg) {
         return value.write(value.index in fnArgs ? fnArgs[value.index] : undefined,
@@ -640,7 +640,7 @@ var Request = Class({
    *    The object making the request.
    * @returns an arguments array
    */
-  read: function (packet, ctx) {
+  read(packet, ctx) {
     let fnArgs = [];
     for (let templateArg of this.args) {
       let arg = templateArg.placeholder;
@@ -651,7 +651,7 @@ var Request = Class({
     return fnArgs;
   },
 
-  describe: function () {
+  describe() {
     return describeTemplate(this.template);
   }
 });
@@ -664,7 +664,7 @@ var Request = Class({
  * @construcor
  */
 var Response = Class({
-  initialize: function (template = {}) {
+  initialize(template = {}) {
     this.template = template;
     let placeholders = findPlaceholders(template, RetVal);
     if (placeholders.length > 1) {
@@ -685,7 +685,7 @@ var Response = Class({
    * @param object ctx
    *    The object writing the response.
    */
-  write: function (ret, ctx) {
+  write(ret, ctx) {
     return JSON.parse(JSON.stringify(this.template, function (key, value) {
       if (value instanceof RetVal) {
         return value.write(ret, ctx);
@@ -702,7 +702,7 @@ var Response = Class({
    * @param object ctx
    *    The object reading the response.
    */
-  read: function (packet, ctx) {
+  read(packet, ctx) {
     if (!this.retVal) {
       return undefined;
     }
@@ -710,7 +710,7 @@ var Response = Class({
     return this.retVal.read(v, ctx);
   },
 
-  describe: function () {
+  describe() {
     return describeTemplate(this.template);
   }
 });
@@ -736,7 +736,7 @@ var Pool = Class({
    *   conn can be null if the subclass provides a conn property.
    * @constructor
    */
-  initialize: function (conn) {
+  initialize(conn) {
     if (conn) {
       this.conn = conn;
     }
@@ -745,7 +745,7 @@ var Pool = Class({
   /**
    * Return the parent pool for this client.
    */
-  parent: function () {
+  parent() {
     return this.conn.poolFor(this.actorID);
   },
 
@@ -753,7 +753,7 @@ var Pool = Class({
    * Override this if you want actors returned by this actor
    * to belong to a different actor by default.
    */
-  marshallPool: function () {
+  marshallPool() {
     return this;
   },
 
@@ -775,7 +775,7 @@ var Pool = Class({
   /**
    * Add an actor as a child of this pool.
    */
-  manage: function (actor) {
+  manage(actor) {
     if (!actor.actorID) {
       actor.actorID = this.conn.allocID(actor.actorPrefix || actor.typeName);
     }
@@ -787,33 +787,33 @@ var Pool = Class({
   /**
    * Remove an actor as a child of this pool.
    */
-  unmanage: function (actor) {
+  unmanage(actor) {
     this.__poolMap && this.__poolMap.delete(actor.actorID);
   },
 
   // true if the given actor ID exists in the pool.
-  has: function (actorID) {
+  has(actorID) {
     return this.__poolMap && this._poolMap.has(actorID);
   },
 
   // The actor for a given actor id stored in this pool
-  actor: function (actorID) {
+  actor(actorID) {
     return this.__poolMap ? this._poolMap.get(actorID) : null;
   },
 
   // Same as actor, should update debugger connection to use 'actor'
   // and then remove this.
-  get: function (actorID) {
+  get(actorID) {
     return this.__poolMap ? this._poolMap.get(actorID) : null;
   },
 
   // True if this pool has no children.
-  isEmpty: function () {
+  isEmpty() {
     return !this.__poolMap || this._poolMap.size == 0;
   },
 
   // Generator that yields each non-self child of the pool.
-  poolChildren: function* () {
+  * poolChildren() {
     if (!this.__poolMap) {
       return;
     }
@@ -830,7 +830,7 @@ var Pool = Class({
    * Destroy this item, removing it from a parent if it has one,
    * and destroying all children if necessary.
    */
-  destroy: function () {
+  destroy() {
     let parent = this.parent();
     if (parent) {
       parent.unmanage(this);
@@ -861,7 +861,7 @@ var Pool = Class({
    * For getting along with the debugger server pools, should be removable
    * eventually.
    */
-  cleanup: function () {
+  cleanup() {
     this.destroy();
   }
 });
@@ -885,7 +885,7 @@ var Actor = Class({
    *   conn can be null if the subclass provides a conn property.
    * @constructor
    */
-  initialize: function (conn) {
+  initialize(conn) {
     Pool.prototype.initialize.call(this, conn);
 
     // Forward events to the connection.
@@ -900,11 +900,11 @@ var Actor = Class({
     }
   },
 
-  toString: function () {
+  toString() {
     return "[Actor " + this.typeName + "/" + this.actorID + "]";
   },
 
-  _sendEvent: function (name, ...args) {
+  _sendEvent(name, ...args) {
     if (!this._actorSpec.events.has(name)) {
       // It's ok to emit events that don't go over the wire.
       return;
@@ -921,7 +921,7 @@ var Actor = Class({
     this.conn.send(packet);
   },
 
-  destroy: function () {
+  destroy() {
     Pool.prototype.destroy.call(this);
     this.actorID = null;
   },
@@ -932,11 +932,11 @@ var Actor = Class({
    *   Optional string to customize the form.
    * @returns A jsonable object.
    */
-  form: function (hint) {
+  form(hint) {
     return { actor: this.actorID };
   },
 
-  writeError: function (error) {
+  writeError(error) {
     console.error(error);
     if (error.stack) {
       dump(error.stack);
@@ -948,7 +948,7 @@ var Actor = Class({
     });
   },
 
-  _queueResponse: function (create) {
+  _queueResponse(create) {
     let pending = this._pendingResponse || promise.resolve(null);
     let response = create(pending);
     this._pendingResponse = response;
@@ -1186,7 +1186,7 @@ var Front = Class({
    *   The json form provided by the server.
    * @constructor
    */
-  initialize: function (conn = null, form = null, detail = null, context = null) {
+  initialize(conn = null, form = null, detail = null, context = null) {
     Pool.prototype.initialize.call(this, conn);
     this._requests = [];
 
@@ -1201,7 +1201,7 @@ var Front = Class({
     }
   },
 
-  destroy: function () {
+  destroy() {
     // Reject all outstanding requests, they won't make sense after
     // the front is destroyed.
     while (this._requests && this._requests.length > 0) {
@@ -1215,7 +1215,7 @@ var Front = Class({
     this.actorID = null;
   },
 
-  manage: function (front) {
+  manage(front) {
     if (!front.actorID) {
       throw new Error("Can't manage front without an actor ID.\n" +
                       "Ensure server supports " + front.typeName + ".");
@@ -1227,11 +1227,11 @@ var Front = Class({
    * @returns a promise that will resolve to the actorID this front
    * represents.
    */
-  actor: function () {
+  actor() {
     return promise.resolve(this.actorID);
   },
 
-  toString: function () {
+  toString() {
     return "[Front for " + this.typeName + "/" + this.actorID + "]";
   },
 
@@ -1239,12 +1239,12 @@ var Front = Class({
    * Update the actor from its representation.
    * Subclasses should override this.
    */
-  form: function (form) {},
+  form(form) {},
 
   /**
    * Send a packet on the connection.
    */
-  send: function (packet) {
+  send(packet) {
     if (packet.to) {
       this.conn._transport.send(packet);
     } else {
@@ -1258,7 +1258,7 @@ var Front = Class({
   /**
    * Send a two-way request on the connection.
    */
-  request: function (packet) {
+  request(packet) {
     let deferred = defer();
     // Save packet basics for debugging
     let { to, type } = packet;
@@ -1275,7 +1275,7 @@ var Front = Class({
   /**
    * Handler for incoming packets from the client's actor.
    */
-  onPacket: function (packet) {
+  onPacket(packet) {
     // Pick off event packets
     let type = packet.type || undefined;
     if (this._clientSpec.events && this._clientSpec.events.has(type)) {
@@ -1477,8 +1477,8 @@ var generateRequestMethods = function (actorSpec, frontProto) {
 
     for (let [name, request] of actorEvents) {
       frontProto._clientSpec.events.set(request.type, {
-        name: name,
-        request: request,
+        name,
+        request,
         pre: preHandlers.get(name)
       });
     }

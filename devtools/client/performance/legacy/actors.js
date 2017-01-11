@@ -184,7 +184,7 @@ LegacyProfilerFront.prototype = {
    * @param object response
    *        The data received from the backend.
    */
-  _onProfilerEvent: function (_, { topic, subject, details }) {
+  _onProfilerEvent(_, { topic, subject, details }) {
     if (topic === "console-api-profiler") {
       if (subject.action === "profile") {
         this.emit("console-profile-start", details);
@@ -244,7 +244,7 @@ LegacyTimelineFront.prototype = {
    * An aggregate of all events (markers, frames, ticks) and exposes
    * to PerformanceActorsConnection as a single event.
    */
-  _onTimelineData: function (type, ...data) {
+  _onTimelineData(type, ...data) {
     this.emit("timeline-data", type, ...data);
   },
 

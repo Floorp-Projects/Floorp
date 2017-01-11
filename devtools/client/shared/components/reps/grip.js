@@ -38,17 +38,17 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle: function (object) {
+    getTitle(object) {
       let title = this.props.title || object.class || "Object";
       if (this.props.objectLink) {
         return this.props.objectLink({
-          object: object
+          object
         }, title);
       }
       return title;
     },
 
-    safePropIterator: function (object, max) {
+    safePropIterator(object, max) {
       max = (typeof max === "undefined") ? 3 : max;
       try {
         return this.propIterator(object, max);
@@ -58,7 +58,7 @@ define(function (require, exports, module) {
       return [];
     },
 
-    propIterator: function (object, max) {
+    propIterator(object, max) {
       if (object.preview && Object.keys(object.preview).includes("wrappedValue")) {
         const { Rep } = createFactories(require("./rep"));
 
@@ -108,7 +108,7 @@ define(function (require, exports, module) {
 
         props.push(Caption({
           object: objectLink({
-            object: object
+            object
           }, `${propertiesLength - max} more…`)
         }));
       }
@@ -124,7 +124,7 @@ define(function (require, exports, module) {
      * @param {Boolean} truncate true if the grip will be truncated.
      * @return {Array} Props.
      */
-    getProps: function (properties, indexes, truncate) {
+    getProps(properties, indexes, truncate) {
       let props = [];
 
       // Make indexes ordered by ascending.
@@ -138,7 +138,7 @@ define(function (require, exports, module) {
 
         props.push(PropRep(Object.assign({}, this.props, {
           mode: MODE.TINY,
-          name: name,
+          name,
           object: value,
           equal: ": ",
           delim: i !== indexes.length - 1 || truncate ? ", " : "",
@@ -157,7 +157,7 @@ define(function (require, exports, module) {
      * @param {Function} filter Filter the props you want.
      * @return {Array} Indexes of interesting props in the object.
      */
-    getPropIndexes: function (properties, max, filter) {
+    getPropIndexes(properties, max, filter) {
       let indexes = [];
 
       try {
@@ -190,7 +190,7 @@ define(function (require, exports, module) {
      * @param {Object} property
      * @return {Object} Value of the property.
      */
-    getPropValue: function (property) {
+    getPropValue(property) {
       let value = property;
       if (typeof property === "object") {
         let keys = Object.keys(property);
@@ -215,7 +215,7 @@ define(function (require, exports, module) {
             this.getTitle(object),
             objectLink({
               className: "objectLeftBrace",
-              object: object
+              object
             }, "")
           )
         );
@@ -226,12 +226,12 @@ define(function (require, exports, module) {
           this.getTitle(object),
           objectLink({
             className: "objectLeftBrace",
-            object: object
+            object
           }, " { "),
           ...props,
           objectLink({
             className: "objectRightBrace",
-            object: object
+            object
           }, " }")
         )
       );
@@ -248,7 +248,7 @@ define(function (require, exports, module) {
 
   let Grip = {
     rep: GripRep,
-    supportsObject: supportsObject
+    supportsObject
   };
 
   // Exports from this module

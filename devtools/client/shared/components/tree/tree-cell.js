@@ -30,7 +30,7 @@ define(function (require, exports, module) {
       enableInput: PropTypes.bool,
     },
 
-    getInitialState: function () {
+    getInitialState() {
       return {
         inputEnabled: false,
       };
@@ -40,12 +40,12 @@ define(function (require, exports, module) {
      * Optimize cell rendering. Rerender cell content only if
      * the value or expanded state changes.
      */
-    shouldComponentUpdate: function (nextProps, nextState) {
+    shouldComponentUpdate(nextProps, nextState) {
       return (this.props.value != nextProps.value) ||
         (this.state !== nextState);
     },
 
-    getCellClass: function (object, id) {
+    getCellClass(object, id) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getCellClass) {
         return [];
@@ -64,13 +64,13 @@ define(function (require, exports, module) {
       return classNames;
     },
 
-    updateInputEnabled: function (evt) {
+    updateInputEnabled(evt) {
       this.setState(Object.assign({}, this.state, {
         inputEnabled: evt.target.nodeName !== "input",
       }));
     },
 
-    render: function () {
+    render() {
       let {
         member,
         id,

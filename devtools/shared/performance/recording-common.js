@@ -35,19 +35,19 @@ exports.PerformanceRecordingCommon = {
    * Helper methods for returning the status of the recording.
    * These methods should be consistent on both the front and actor.
    */
-  isRecording: function () {
+  isRecording() {
     return this._recording;
   },
-  isCompleted: function () {
+  isCompleted() {
     return this._completed || this.isImported();
   },
-  isFinalizing: function () {
+  isFinalizing() {
     return !this.isRecording() && !this.isCompleted();
   },
-  isConsole: function () {
+  isConsole() {
     return this._console;
   },
-  isImported: function () {
+  isImported() {
     return this._imported;
   },
 
@@ -55,10 +55,10 @@ exports.PerformanceRecordingCommon = {
    * Helper methods for returning configuration for the recording.
    * These methods should be consistent on both the front and actor.
    */
-  getConfiguration: function () {
+  getConfiguration() {
     return this._configuration;
   },
-  getLabel: function () {
+  getLabel() {
     return this._label;
   },
 
@@ -66,7 +66,7 @@ exports.PerformanceRecordingCommon = {
    * Gets duration of this recording, in milliseconds.
    * @return number
    */
-  getDuration: function () {
+  getDuration() {
     // Compute an approximate ending time for the current recording if it is
     // still in progress. This is needed to ensure that the view updates even
     // when new data is not being generated. If recording is completed, use
@@ -83,35 +83,35 @@ exports.PerformanceRecordingCommon = {
    * Helper methods for returning recording data.
    * These methods should be consistent on both the front and actor.
    */
-  getMarkers: function () {
+  getMarkers() {
     return this._markers;
   },
-  getFrames: function () {
+  getFrames() {
     return this._frames;
   },
-  getMemory: function () {
+  getMemory() {
     return this._memory;
   },
-  getTicks: function () {
+  getTicks() {
     return this._ticks;
   },
-  getAllocations: function () {
+  getAllocations() {
     return this._allocations;
   },
-  getProfile: function () {
+  getProfile() {
     return this._profile;
   },
-  getHostSystemInfo: function () {
+  getHostSystemInfo() {
     return this._systemHost;
   },
-  getClientSystemInfo: function () {
+  getClientSystemInfo() {
     return this._systemClient;
   },
-  getStartingBufferStatus: function () {
+  getStartingBufferStatus() {
     return this._startingBufferStatus;
   },
 
-  getAllData: function () {
+  getAllData() {
     let label = this.getLabel();
     let duration = this.getDuration();
     let markers = this.getMarkers();

@@ -51,7 +51,7 @@ LegacyPerformanceRecording.prototype = merge({
    * Sets up the instance with data from the PerformanceFront when
    * starting a recording. Should only be called by PerformanceFront.
    */
-  _populate: function (info) {
+  _populate(info) {
     // Times must come from the actor in order to be self-consistent.
     // However, we also want to update the view with the elapsed time
     // even when the actor is not generating data. To do this we get
@@ -84,7 +84,7 @@ LegacyPerformanceRecording.prototype = merge({
    * even though the recording is stopped, the model is not yet completed until
    * all the data is fetched.
    */
-  _onStoppingRecording: function (endTime) {
+  _onStoppingRecording(endTime) {
     this._duration = endTime - this._localStartTime;
     this._recording = false;
   },
@@ -119,14 +119,14 @@ LegacyPerformanceRecording.prototype = merge({
    * Gets the profile's start time.
    * @return number
    */
-  _getProfilerStartTime: function () {
+  _getProfilerStartTime() {
     return this._profilerStartTime;
   },
 
   /**
    * Fired whenever the PerformanceFront emits markers, memory or ticks.
    */
-  _addTimelineData: function (eventName, ...data) {
+  _addTimelineData(eventName, ...data) {
     // If this model isn't currently recording,
     // ignore the timeline data.
     if (!this.isRecording()) {

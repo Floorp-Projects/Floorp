@@ -17,13 +17,13 @@ loader.lazyRequireGetter(this, "getSystemInfo",
   "devtools/shared/system", true);
 
 const PerformanceFront = FrontClassWithSpec(performanceSpec, {
-  initialize: function (client, form) {
+  initialize(client, form) {
     Front.prototype.initialize.call(this, client, form);
     this.actorID = form.performanceActor;
     this.manage(this);
   },
 
-  destroy: function () {
+  destroy() {
     Front.prototype.destroy.call(this);
   },
 
@@ -56,7 +56,7 @@ const PerformanceFront = FrontClassWithSpec(performanceSpec, {
    * @param {PerformanceRecording} recording
    * @return {number?}
    */
-  getBufferUsageForRecording: function (recording) {
+  getBufferUsageForRecording(recording) {
     if (!recording.isRecording()) {
       return void 0;
     }
@@ -94,7 +94,7 @@ const PerformanceFront = FrontClassWithSpec(performanceSpec, {
    *        The file to import the data from.
    * @return {Promise<PerformanceRecordingFront>}
    */
-  importRecording: function (file) {
+  importRecording(file) {
     return PerformanceIO.loadRecordingFromFile(file).then(recordingData => {
       let model = new PerformanceRecordingFront();
       model._imported = true;

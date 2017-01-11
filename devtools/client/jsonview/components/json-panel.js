@@ -38,23 +38,23 @@ define(function (require, exports, module) {
       actions: PropTypes.object,
     },
 
-    getInitialState: function () {
+    getInitialState() {
       return {};
     },
 
-    componentDidMount: function () {
+    componentDidMount() {
       document.addEventListener("keypress", this.onKeyPress, true);
     },
 
-    componentWillUnmount: function () {
+    componentWillUnmount() {
       document.removeEventListener("keypress", this.onKeyPress, true);
     },
 
-    onKeyPress: function (e) {
+    onKeyPress(e) {
       // XXX shortcut for focusing the Filter field (see Bug 1178771).
     },
 
-    onFilter: function (object) {
+    onFilter(object) {
       if (!this.props.searchFilter) {
         return true;
       }
@@ -63,7 +63,7 @@ define(function (require, exports, module) {
       return json.toLowerCase().indexOf(this.props.searchFilter.toLowerCase()) >= 0;
     },
 
-    getExpandedNodes: function (object, path = "", level = 0) {
+    getExpandedNodes(object, path = "", level = 0) {
       if (typeof object != "object") {
         return null;
       }
@@ -99,7 +99,7 @@ define(function (require, exports, module) {
       }));
     },
 
-    renderTree: function () {
+    renderTree() {
       // Append custom column for displaying values. This column
       // Take all available horizontal space.
       let columns = [{
@@ -118,13 +118,13 @@ define(function (require, exports, module) {
         object: this.props.data,
         mode: MODE.TINY,
         onFilter: this.onFilter,
-        columns: columns,
+        columns,
         renderValue: this.renderValue,
-        expandedNodes: expandedNodes,
+        expandedNodes,
       });
     },
 
-    render: function () {
+    render() {
       let content;
       let data = this.props.data;
 
@@ -165,15 +165,15 @@ define(function (require, exports, module) {
 
     // Commands
 
-    onSave: function (event) {
+    onSave(event) {
       this.props.actions.onSaveJson();
     },
 
-    onCopy: function (event) {
+    onCopy(event) {
       this.props.actions.onCopyJson();
     },
 
-    render: function () {
+    render() {
       return (
         Toolbar({},
           ToolbarButton({className: "btn save", onClick: this.onSave},

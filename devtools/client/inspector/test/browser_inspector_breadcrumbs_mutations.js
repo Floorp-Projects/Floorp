@@ -24,18 +24,18 @@ const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 //   button after the test has run.
 const TEST_DATA = [{
   desc: "Adding a child at the end of the chain shouldn't change anything",
-  setup: function* (inspector) {
+  * setup(inspector) {
     yield selectNode("#i1111", inspector);
   },
-  run: function* ({walker, selection}) {
+  * run({walker, selection}) {
     yield walker.setInnerHTML(selection.nodeFront, "<b>test</b>");
   },
   shouldRefresh: false,
   output: ["html", "body", "article#i1", "div#i11", "div#i111", "div#i1111"]
 }, {
   desc: "Updating an ID to an displayed element should refresh",
-  setup: function* () {},
-  run: function* ({walker}) {
+  * setup() {},
+  * run({walker}) {
     let node = yield walker.querySelector(walker.rootNode, "#i1");
     yield node.modifyAttributes([{
       attributeName: "id",
@@ -47,8 +47,8 @@ const TEST_DATA = [{
            "div#i1111"]
 }, {
   desc: "Updating an class to a displayed element should refresh",
-  setup: function* () {},
-  run: function* ({walker}) {
+  * setup() {},
+  * run({walker}) {
     let node = yield walker.querySelector(walker.rootNode, "body");
     yield node.modifyAttributes([{
       attributeName: "class",
@@ -61,8 +61,8 @@ const TEST_DATA = [{
 }, {
   desc: "Updating a non id/class attribute to a displayed element should not " +
         "refresh",
-  setup: function* () {},
-  run: function* ({walker}) {
+  * setup() {},
+  * run({walker}) {
     let node = yield walker.querySelector(walker.rootNode, "#i11");
     yield node.modifyAttributes([{
       attributeName: "name",
@@ -74,8 +74,8 @@ const TEST_DATA = [{
            "div#i111", "div#i1111"]
 }, {
   desc: "Moving a child in an element that's not displayed should not refresh",
-  setup: function* () {},
-  run: function* ({walker}) {
+  * setup() {},
+  * run({walker}) {
     // Re-append #i1211 as a last child of #i2.
     let parent = yield walker.querySelector(walker.rootNode, "#i2");
     let child = yield walker.querySelector(walker.rootNode, "#i211");
@@ -86,8 +86,8 @@ const TEST_DATA = [{
            "div#i111", "div#i1111"]
 }, {
   desc: "Moving an undisplayed child in a displayed element should not refresh",
-  setup: function* () {},
-  run: function* ({walker}) {
+  * setup() {},
+  * run({walker}) {
     // Re-append #i2 in body (move it to the end).
     let parent = yield walker.querySelector(walker.rootNode, "body");
     let child = yield walker.querySelector(walker.rootNode, "#i2");
@@ -99,8 +99,8 @@ const TEST_DATA = [{
 }, {
   desc: "Updating attributes on an element that's not displayed should not " +
         "refresh",
-  setup: function* () {},
-  run: function* ({walker}) {
+  * setup() {},
+  * run({walker}) {
     let node = yield walker.querySelector(walker.rootNode, "#i2");
     yield node.modifyAttributes([{
       attributeName: "id",
@@ -115,18 +115,18 @@ const TEST_DATA = [{
            "div#i111", "div#i1111"]
 }, {
   desc: "Removing the currently selected node should refresh",
-  setup: function* (inspector) {
+  * setup(inspector) {
     yield selectNode("#i2-changed", inspector);
   },
-  run: function* ({walker, selection}) {
+  * run({walker, selection}) {
     yield walker.removeNode(selection.nodeFront);
   },
   shouldRefresh: true,
   output: ["html", "body.test-class"]
 }, {
   desc: "Changing the class of the currently selected node should refresh",
-  setup: function* () {},
-  run: function* ({selection}) {
+  * setup() {},
+  * run({selection}) {
     yield selection.nodeFront.modifyAttributes([{
       attributeName: "class",
       newValue: "test-class-changed"
@@ -136,8 +136,8 @@ const TEST_DATA = [{
   output: ["html", "body.test-class-changed"]
 }, {
   desc: "Changing the id of the currently selected node should refresh",
-  setup: function* () {},
-  run: function* ({selection}) {
+  * setup() {},
+  * run({selection}) {
     yield selection.nodeFront.modifyAttributes([{
       attributeName: "id",
       newValue: "new-id"

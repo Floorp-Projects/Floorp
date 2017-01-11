@@ -24,11 +24,11 @@ define(function (require, exports, module) {
       data: PropTypes.string
     },
 
-    getInitialState: function () {
+    getInitialState() {
       return {};
     },
 
-    render: function () {
+    render() {
       return (
         div({className: "textPanelBox"},
           TextToolbar({actions: this.props.actions}),
@@ -55,19 +55,19 @@ define(function (require, exports, module) {
 
     // Commands
 
-    onPrettify: function (event) {
+    onPrettify(event) {
       this.props.actions.onPrettify();
     },
 
-    onSave: function (event) {
+    onSave(event) {
       this.props.actions.onSaveJson();
     },
 
-    onCopy: function (event) {
+    onCopy(event) {
       this.props.actions.onCopyJson();
     },
 
-    render: function () {
+    render() {
       return (
         Toolbar({},
           ToolbarButton({

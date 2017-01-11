@@ -332,9 +332,9 @@ var chrome = {
 };
 
 var loader = {
-  lazyGetter: function (object, name, lambda) {
+  lazyGetter(object, name, lambda) {
     Object.defineProperty(object, name, {
-      get: function () {
+      get() {
         delete object[name];
         object[name] = lambda.apply(object);
         return object[name];
@@ -343,13 +343,13 @@ var loader = {
       enumerable: true
     });
   },
-  lazyImporter: function () {
+  lazyImporter() {
     throw new Error("Can't import JSM from worker thread!");
   },
-  lazyServiceGetter: function () {
+  lazyServiceGetter() {
     throw new Error("Can't import XPCOM service from worker thread!");
   },
-  lazyRequireGetter: function (obj, property, module, destructure) {
+  lazyRequireGetter(obj, property, module, destructure) {
     Object.defineProperty(obj, property, {
       get: () => destructure ? worker.require(module)[property]
                              : worker.require(module || property)
@@ -451,13 +451,13 @@ var {
       return requestors.length === 0 ? null : requestors[requestors.length - 1];
     },
 
-    enterNestedEventLoop: function (requestor) {
+    enterNestedEventLoop(requestor) {
       requestors.push(requestor);
       scope.enterEventLoop();
       return requestors.length;
     },
 
-    exitNestedEventLoop: function () {
+    exitNestedEventLoop() {
       requestors.pop();
       scope.leaveEventLoop();
       return requestors.length;
@@ -473,7 +473,7 @@ var {
     loadSubScript: this.loadSubScript,
     reportError: this.reportError,
     setImmediate: this.setImmediate,
-    xpcInspector: xpcInspector
+    xpcInspector
   };
 }).call(this);
 /* eslint-enable no-shadow */
@@ -482,24 +482,24 @@ var {
 // above.
 
 this.worker = new WorkerDebuggerLoader({
-  createSandbox: createSandbox,
+  createSandbox,
   globals: {
     "isWorker": true,
-    "dump": dump,
-    "loader": loader,
-    "reportError": reportError,
-    "rpc": rpc,
-    "URL": URL,
-    "setImmediate": setImmediate,
+    dump,
+    loader,
+    reportError,
+    rpc,
+    URL,
+    setImmediate,
     "retrieveConsoleEvents": this.retrieveConsoleEvents,
     "setConsoleEventHandler": this.setConsoleEventHandler,
   },
-  loadSubScript: loadSubScript,
+  loadSubScript,
   modules: {
-    "Debugger": Debugger,
+    Debugger,
     "Services": Object.create(null),
-    "chrome": chrome,
-    "xpcInspector": xpcInspector
+    chrome,
+    xpcInspector
   },
   paths: {
     // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠

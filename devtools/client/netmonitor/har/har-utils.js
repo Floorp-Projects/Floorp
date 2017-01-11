@@ -45,7 +45,7 @@ var HarUtils = {
    * Open File Save As dialog and let the user pick the proper file
    * location for generated HAR log.
    */
-  getTargetFile: function (fileName, jsonp, compress) {
+  getTargetFile(fileName, jsonp, compress) {
     let browser = getMostRecentBrowserWindow();
 
     let fp = Cc["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
@@ -65,7 +65,7 @@ var HarUtils = {
     return null;
   },
 
-  getHarFileName: function (defaultFileName, jsonp, compress) {
+  getHarFileName(defaultFileName, jsonp, compress) {
     let extension = jsonp ? ".harp" : ".har";
 
     // Read more about toLocaleFormat & format string.
@@ -94,7 +94,7 @@ var HarUtils = {
    * @param {String} jsonString HAR data (JSON or JSONP)
    * @param {Boolean} compress The result file is zipped if set to true.
    */
-  saveToFile: function (file, jsonString, compress) {
+  saveToFile(file, jsonString, compress) {
     let openFlags = OPEN_FLAGS.WRONLY | OPEN_FLAGS.CREATE_FILE |
       OPEN_FLAGS.TRUNCATE;
 
@@ -170,7 +170,7 @@ var HarUtils = {
     return false;
   },
 
-  getLocalDirectory: function (path) {
+  getLocalDirectory(path) {
     let dir;
 
     if (!path) {

@@ -65,7 +65,7 @@ TooltipsOverlay.prototype = {
    * Add the tooltips overlay to the view. This will start tracking mouse
    * movements and display tooltips when needed
    */
-  addToView: function () {
+  addToView() {
     if (this._isStarted || this._isDestroyed) {
       return;
     }
@@ -105,7 +105,7 @@ TooltipsOverlay.prototype = {
    * Remove the tooltips overlay from the view. This will stop tracking mouse
    * movements and displaying tooltips
    */
-  removeFromView: function () {
+  removeFromView() {
     if (!this._isStarted || this._isDestroyed) {
       return;
     }
@@ -139,7 +139,7 @@ TooltipsOverlay.prototype = {
    * @param {Object} nodeInfo
    * @return {String} The tooltip type to be shown, or null
    */
-  _getTooltipType: function ({type, value: prop}) {
+  _getTooltipType({type, value: prop}) {
     let tooltipType = null;
     let inspector = this.view.inspector;
 
@@ -283,7 +283,7 @@ TooltipsOverlay.prototype = {
       {hideDimensionLabel: true, maxDim, naturalWidth, naturalHeight});
   }),
 
-  _onNewSelection: function () {
+  _onNewSelection() {
     if (this.previewTooltip) {
       this.previewTooltip.hide();
     }
@@ -308,7 +308,7 @@ TooltipsOverlay.prototype = {
   /**
    * Destroy this overlay instance, removing it from the view
    */
-  destroy: function () {
+  destroy() {
     this.removeFromView();
 
     this.view.inspector.selection.off("new-node-front", this._onNewSelection);

@@ -10,13 +10,13 @@ const { emulationSpec } = require("devtools/shared/specs/emulation");
  * The corresponding Front object for the EmulationActor.
  */
 const EmulationFront = FrontClassWithSpec(emulationSpec, {
-  initialize: function (client, form) {
+  initialize(client, form) {
     Front.prototype.initialize.call(this, client);
     this.actorID = form.emulationActor;
     this.manage(this);
   },
 
-  destroy: function () {
+  destroy() {
     Front.prototype.destroy.call(this);
   },
 });

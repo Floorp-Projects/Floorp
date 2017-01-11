@@ -42,7 +42,7 @@ MarkupContainer.prototype = {
    * @param  {String} templateID
    *         Which template to render for this container
    */
-  initialize: function (markupView, node, templateID) {
+  initialize(markupView, node, templateID) {
     this.markup = markupView;
     this.node = node;
     this.undo = this.markup.undo;
@@ -78,11 +78,11 @@ MarkupContainer.prototype = {
     this.updateIsDisplayed();
   },
 
-  toString: function () {
+  toString() {
     return "[MarkupContainer for " + this.node + "]";
   },
 
-  isPreviewable: function () {
+  isPreviewable() {
     if (this.node.tagName && !this.node.isPseudoElement) {
       let tagName = this.node.tagName.toLowerCase();
       let srcAttr = this.editor.getAttributeElement("src");
@@ -101,7 +101,7 @@ MarkupContainer.prototype = {
    * the H key, it is not displayed (faded in markup view).
    * Otherwise, it is displayed.
    */
-  updateIsDisplayed: function () {
+  updateIsDisplayed() {
     this.elt.classList.remove("not-displayed");
     if (!this.node.isDisplayed || this.node.hidden) {
       this.elt.classList.add("not-displayed");
@@ -161,7 +161,7 @@ MarkupContainer.prototype = {
    * If conatiner and its contents are focusable, exclude them from tab order,
    * and, if necessary, remove focus.
    */
-  clearFocus: function () {
+  clearFocus() {
     if (!this.canFocus) {
       return;
     }
@@ -205,7 +205,7 @@ MarkupContainer.prototype = {
     return this.canExpand && !this.mustExpand;
   },
 
-  updateExpander: function () {
+  updateExpander() {
     if (!this.expander) {
       return;
     }
@@ -228,7 +228,7 @@ MarkupContainer.prototype = {
    * If current node has no children, ignore them. Otherwise, consider them a
    * group from the accessibility point of view.
    */
-  setChildrenRole: function () {
+  setChildrenRole() {
     this.children.setAttribute("role",
       this.hasChildren ? "group" : "presentation");
   },
@@ -236,7 +236,7 @@ MarkupContainer.prototype = {
   /**
    * Set an appropriate DOM tree depth level for a node and its subtree.
    */
-  updateLevel: function () {
+  updateLevel() {
     // ARIA level should already be set when container template is rendered.
     let currentLevel = this.tagLine.getAttribute("aria-level");
     let newLevel = this.level;
@@ -256,7 +256,7 @@ MarkupContainer.prototype = {
    * If the node has children, return the list of containers for all these
    * children.
    */
-  getChildContainers: function () {
+  getChildContainers() {
     if (!this.hasChildren) {
       return null;
     }
@@ -272,7 +272,7 @@ MarkupContainer.prototype = {
     return !this.elt.classList.contains("collapsed");
   },
 
-  setExpanded: function (value) {
+  setExpanded(value) {
     if (!this.expander) {
       return;
     }
@@ -325,7 +325,7 @@ MarkupContainer.prototype = {
     }
   },
 
-  parentContainer: function () {
+  parentContainer() {
     return this.elt.parentNode ? this.elt.parentNode.container : null;
   },
 
@@ -372,7 +372,7 @@ MarkupContainer.prototype = {
   /**
    * Check if element is draggable.
    */
-  isDraggable: function () {
+  isDraggable() {
     let tagName = this.node.tagName && this.node.tagName.toLowerCase();
 
     return !this.node.isPseudoElement &&
@@ -393,7 +393,7 @@ MarkupContainer.prototype = {
    * @param  {Boolean} back     direction
    * @return {DOMNode}          newly focused element if any
    */
-  _wrapMoveFocus: function (current, back) {
+  _wrapMoveFocus(current, back) {
     let elms = this.focusableElms;
     let next;
     if (back) {
@@ -408,7 +408,7 @@ MarkupContainer.prototype = {
     return next;
   },
 
-  _onKeyDown: function (event) {
+  _onKeyDown(event) {
     let {target, keyCode, shiftKey} = event;
     let isInput = this.markup._isInputOrTextarea(target);
 
@@ -455,7 +455,7 @@ MarkupContainer.prototype = {
     event.stopPropagation();
   },
 
-  _onMouseDown: function (event) {
+  _onMouseDown(event) {
     let {target, button, metaKey, ctrlKey} = event;
     let isLeftClick = button === 0;
     let isMiddleClick = button === 1;
@@ -524,7 +524,7 @@ MarkupContainer.prototype = {
   /**
    * On mouse move, move the dragged element and indicate the drop target.
    */
-  _onMouseMove: function (event) {
+  _onMouseMove(event) {
     // If this is the first move after mousedown, only start dragging after the
     // mouse has travelled a few pixels and then indicate the start position.
     let initialDiff = Math.abs(event.pageY - this._dragStartY);
@@ -559,7 +559,7 @@ MarkupContainer.prototype = {
     }
   },
 
-  cancelDragging: function () {
+  cancelDragging() {
     if (!this.isDragging) {
       return;
     }
@@ -573,7 +573,7 @@ MarkupContainer.prototype = {
    * Temporarily flash the container to attract attention.
    * Used for markup mutations.
    */
-  flashMutation: function () {
+  flashMutation() {
     if (!this.selected) {
       flashElementOn(this.tagState, this.editor.elt);
       if (this._flashMutationTimer) {
@@ -651,7 +651,7 @@ MarkupContainer.prototype = {
    * Update the container's editor to the current state of the
    * viewed node.
    */
-  update: function () {
+  update() {
     if (this.node.pseudoClassLocks.length) {
       this.elt.classList.add("pseudoclass-locked");
     } else {
@@ -666,7 +666,7 @@ MarkupContainer.prototype = {
   /**
    * Try to put keyboard focus on the current editor.
    */
-  focus: function () {
+  focus() {
     // Elements with tabindex of -1 are not focusable.
     let focusable = this.editor.elt.querySelector("[tabindex='0']");
     if (focusable) {
@@ -674,7 +674,7 @@ MarkupContainer.prototype = {
     }
   },
 
-  _onToggle: function (event) {
+  _onToggle(event) {
     // Prevent the html tree from expanding when an event bubble is clicked.
     if (event.target.dataset.event) {
       event.stopPropagation();
@@ -692,7 +692,7 @@ MarkupContainer.prototype = {
    * Get rid of event listeners and references, when the container is no longer
    * needed
    */
-  destroy: function () {
+  destroy() {
     // Remove event listeners
     this.elt.removeEventListener("mousedown", this._onMouseDown, false);
     this.elt.removeEventListener("dblclick", this._onToggle, false);

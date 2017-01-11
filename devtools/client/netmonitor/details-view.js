@@ -70,7 +70,7 @@ DetailsView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize: function (store) {
+  initialize(store) {
     dumpn("Initializing the DetailsView");
 
     this._paramsPanelNode = $("#react-params-tabpanel-hook");
@@ -137,7 +137,7 @@ DetailsView.prototype = {
   /**
    * Destruction function, called when the network monitor is closed.
    */
-  destroy: function () {
+  destroy() {
     dumpn("Destroying the DetailsView");
     ReactDOM.unmountComponentAtNode(this._paramsPanelNode);
     ReactDOM.unmountComponentAtNode(this._previewPanelNode);
@@ -157,7 +157,7 @@ DetailsView.prototype = {
    * @return object
    *        Returns a promise that resolves upon population the view.
    */
-  populate: function (data) {
+  populate(data) {
     $("#raw-headers").hidden = true;
 
     let isHtml = Filters.html(data);
@@ -195,7 +195,7 @@ DetailsView.prototype = {
   /**
    * Listener handling the tab selection event.
    */
-  _onTabSelect: function () {
+  _onTabSelect() {
     let { src, populated } = this._dataSrc || {};
     let tab = this.widget.selectedIndex;
     let view = this;
@@ -259,7 +259,7 @@ DetailsView.prototype = {
    * @param object data
    *        The data source (this should be the attachment of a request item).
    */
-  _setSummary: function (data) {
+  _setSummary(data) {
     if (data.url) {
       let unicodeUrl = decodeUnicodeUrl(data.url);
       $("#headers-summary-url-value").setAttribute("value", unicodeUrl);

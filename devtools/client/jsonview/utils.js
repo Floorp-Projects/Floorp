@@ -85,7 +85,7 @@ exports.getCurrentTheme = function () {
  */
 exports.exportIntoContentScope = function (win, obj, defineAs) {
   let clone = Cu.createObjectIn(win, {
-    defineAs: defineAs
+    defineAs
   });
 
   let props = Object.getOwnPropertyNames(obj);

@@ -47,9 +47,9 @@ function addTestTab(url) {
       initDOMPanel(tab).then(panel => {
         waitForDispatch(panel, "FETCH_PROPERTIES").then(() => {
           resolve({
-            tab: tab,
+            tab,
             browser: tab.linkedBrowser,
-            panel: panel
+            panel
           });
         });
       });

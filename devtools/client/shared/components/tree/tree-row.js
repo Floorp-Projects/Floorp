@@ -66,7 +66,7 @@ define(function (require, exports, module) {
      * Optimize row rendering. If props are the same do not render.
      * This makes the rendering a lot faster!
      */
-    shouldComponentUpdate: function (nextProps) {
+    shouldComponentUpdate(nextProps) {
       let props = ["name", "open", "value", "loading"];
       for (let p in props) {
         if (nextProps.member[props[p]] != this.props.member[props[p]]) {
@@ -77,7 +77,7 @@ define(function (require, exports, module) {
       return false;
     },
 
-    getRowClass: function (object) {
+    getRowClass(object) {
       let decorator = this.props.decorator;
       if (!decorator || !decorator.getRowClass) {
         return [];
@@ -96,7 +96,7 @@ define(function (require, exports, module) {
       return classNames;
     },
 
-    render: function () {
+    render() {
       let member = this.props.member;
       let decorator = this.props.decorator;
 

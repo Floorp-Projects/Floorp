@@ -27,7 +27,7 @@ exports.items = [{
       manual: l10n.lookup("inspectNodeManual")
     }
   ],
-  exec: function* (args, context) {
+  * exec(args, context) {
     let target = context.environment.target;
     let toolbox = yield gDevTools.showToolbox(target, "inspector");
     let walker = toolbox.getCurrentPanel().walker;
@@ -56,7 +56,7 @@ exports.items = [{
       hidden: true
     }]
   }],
-  exec: function* (args, context) {
+  * exec(args, context) {
     if (args.hide) {
       context.updateExec("eyedropper_server_hide").catch(e => console.error(e));
       return;
@@ -81,7 +81,7 @@ exports.items = [{
   runAt: "server",
   name: "eyedropper_server",
   hidden: true,
-  exec: function (args, {environment}) {
+  exec(args, {environment}) {
     let eyeDropper = windowEyeDroppers.get(environment.window);
 
     if (!eyeDropper) {
@@ -105,7 +105,7 @@ exports.items = [{
   runAt: "server",
   name: "eyedropper_server_hide",
   hidden: true,
-  exec: function (args, {environment}) {
+  exec(args, {environment}) {
     let eyeDropper = windowEyeDroppers.get(environment.window);
     if (eyeDropper) {
       eyeDropper.hide();

@@ -94,7 +94,7 @@ function runTests() {
   target.makeRemote().then(() => {
     inspector = InspectorFront(target.client, target.form);
     inspector.getWalker().then(walker => {
-      completer = new CSSCompleter({walker: walker,
+      completer = new CSSCompleter({walker,
                                     cssProperties: getClientCssProperties()});
       checkStateAndMoveOn();
     });

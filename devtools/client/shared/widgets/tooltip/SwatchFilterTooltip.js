@@ -43,7 +43,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
    * widget initialized with the given filter value, and return a promise
    * that resolves to the instance of the widget when ready.
    */
-  setFilterContent: function (filter) {
+  setFilterContent(filter) {
     let { doc } = this.tooltip;
 
     let container = doc.createElementNS(XHTML_NS, "div");
@@ -68,7 +68,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
     }
   }),
 
-  _onUpdate: function (event, filters) {
+  _onUpdate(event, filters) {
     if (!this.activeSwatch) {
       return;
     }
@@ -84,7 +84,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
     this.preview();
   },
 
-  destroy: function () {
+  destroy() {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.currentFilterValue = null;
     this.widget.off("updated", this._onUpdate);
@@ -105,7 +105,7 @@ SwatchFilterTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.prototy
    *        options to pass to the output parser, with
    *          the option |filterSwatch| set.
    */
-  addSwatch: function (swatchEl, callbacks, parser, options) {
+  addSwatch(swatchEl, callbacks, parser, options) {
     SwatchBasedEditorTooltip.prototype.addSwatch.call(this, swatchEl,
                                                       callbacks);
     this._parser = parser;

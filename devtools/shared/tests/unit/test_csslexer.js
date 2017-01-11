@@ -22,7 +22,7 @@ function DoubleLexer(input) {
 }
 
 DoubleLexer.prototype = {
-  checkState: function () {
+  checkState() {
     equal(this.domLexer.lineNumber, this.jsLexer.lineNumber,
           "check line number");
     equal(this.domLexer.columnNumber, this.jsLexer.columnNumber,
@@ -37,7 +37,7 @@ DoubleLexer.prototype = {
     return this.domLexer.columnNumber;
   },
 
-  performEOFFixup: function (inputString, preserveBackslash) {
+  performEOFFixup(inputString, preserveBackslash) {
     let d = this.domLexer.performEOFFixup(inputString, preserveBackslash);
     let j = this.jsLexer.performEOFFixup(inputString, preserveBackslash);
 
@@ -45,7 +45,7 @@ DoubleLexer.prototype = {
     return d;
   },
 
-  mungeNumber: function (token) {
+  mungeNumber(token) {
     if (token && (token.tokenType === "number" ||
                   token.tokenType === "percentage") &&
         !token.isInteger) {
@@ -57,7 +57,7 @@ DoubleLexer.prototype = {
     }
   },
 
-  nextToken: function () {
+  nextToken() {
     // Check state both before and after.
     this.checkState();
 

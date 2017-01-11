@@ -43,6 +43,6 @@ define(function (require, exports, module) {
 
   exports.Null = {
     rep: Null,
-    supportsObject: supportsObject
+    supportsObject
   };
 });
