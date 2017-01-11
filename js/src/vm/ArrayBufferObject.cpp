@@ -280,18 +280,21 @@ ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
     if (!ToIndex(cx, args.get(0), &byteLength))
         return false;
 
-    // Non-standard: Refuse to allocate buffers larger than ~2 GiB.
-    if (byteLength > INT32_MAX) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
-        return false;
-    }
-
-    // Step 3.
+    // Step 3 (Inlined 24.1.1.1 AllocateArrayBuffer).
+    // 24.1.1.1, step 1 (Inlined 9.1.14 OrdinaryCreateFromConstructor).
     RootedObject proto(cx);
     RootedObject newTarget(cx, &args.newTarget().toObject());
     if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
         return false;
 
+    // 24.1.1.1, step 3 (Inlined 6.2.6.1 CreateByteDataBlock, step 2).
+    // Refuse to allocate too large buffers, currently limited to ~2 GiB.
+    if (byteLength > INT32_MAX) {
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
+        return false;
+    }
+
+    // 24.1.1.1, steps 1 and 4-6.
     JSObject* bufobj = create(cx, uint32_t(byteLength), proto);
     if (!bufobj)
         return false;
