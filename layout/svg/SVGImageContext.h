@@ -29,10 +29,10 @@ public:
 
   // Note: 'aIsPaintingSVGImageElement' should be used to indicate whether
   // the SVG image in question is being painted for an SVG <image> element.
-  SVGImageContext(CSSIntSize aViewportSize,
-                  Maybe<SVGPreserveAspectRatio> aPreserveAspectRatio,
-                  gfxFloat aOpacity = 1.0,
-                  bool aIsPaintingSVGImageElement = false)
+  explicit SVGImageContext(const CSSIntSize& aViewportSize,
+                           Maybe<SVGPreserveAspectRatio> aPreserveAspectRatio = Nothing(),
+                           gfxFloat aOpacity = 1.0,
+                           bool aIsPaintingSVGImageElement = false)
     : mViewportSize(aViewportSize)
     , mPreserveAspectRatio(aPreserveAspectRatio)
     , mGlobalOpacity(aOpacity)
