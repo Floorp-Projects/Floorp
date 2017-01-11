@@ -20,7 +20,7 @@ http://searchfox.org/mozilla-central/rev/0f254a30d684796bcc8b6e2a102a0095d25842b
 The layer should have all the information to display the item.
 
 3) Create the WebRender equivalent layer. In YourLayerType::RenderLayer, serialize the data needed for the layer type.
-4) If you need to add a custom IPC serialization mechanism, do it in WebRenderTypes.h
+4) If you need to add a custom IPC serialization mechanism, do it in WebRenderMessageUtils.h
 5) Create a WebRender command to process the new layer type in WebRenderMessages.ipdlh. These are the struct OpDPPushYourLayerTypeHere
 6) Add a new function in WebRender.h that will call out into webrender to render your display item.
 7) In WebRenderBridgeParent::ProcessWebRenderCommands, call out to the new function in (6).
