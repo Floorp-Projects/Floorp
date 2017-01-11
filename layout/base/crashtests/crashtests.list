@@ -150,7 +150,7 @@ load 373919.xhtml
 load 374193-1.xhtml
 load 374297-1.html
 load 374297-2.html
-load 376223-1.xhtml
+asserts-if(stylo,2) load 376223-1.xhtml # bug 1329454
 load 378325-1.html
 load 378682.html
 skip-if(stylo) load 379105-1.xhtml # bug 1323679
@@ -164,7 +164,7 @@ load 380096-1.html
 skip-if(stylo) load 382204-1.html # bug 1323680
 load 383102-1.xhtml
 load 383129-1.html
-load 383806-1.xhtml
+asserts-if(stylo,2) load 383806-1.xhtml # bug 1329454
 load 384344-1.html
 load 384392-1.xhtml
 load 384392-2.svg
