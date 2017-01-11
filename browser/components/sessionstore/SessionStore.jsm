@@ -2945,7 +2945,9 @@ var SessionStoreInternal = {
    * @returns object
    */
   getCurrentState: function (aUpdateAll) {
-    this._handleClosedWindows();
+    this._handleClosedWindows().then(() => {
+      this._notifyOfClosedObjectsChange();
+    });
 
     var activeWindow = this._getMostRecentBrowserWindow();
 
@@ -4006,12 +4008,14 @@ var SessionStoreInternal = {
   _handleClosedWindows: function ssi_handleClosedWindows() {
     var windowsEnum = Services.wm.getEnumerator("navigator:browser");
 
+    let promises = [];
     while (windowsEnum.hasMoreElements()) {
       var window = windowsEnum.getNext();
       if (window.closed) {
-        this.onClose(window);
+        promises.push(this.onClose(window));
       }
     }
+    return Promise.all(promises);
   },
 
   /**
