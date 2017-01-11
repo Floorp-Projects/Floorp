@@ -80,9 +80,6 @@ class TypedArrayObject : public NativeObject
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");
 
-    typedef TypedArrayObject SomeTypedArray;
-    typedef ArrayBufferObject BufferType;
-
     template<typename T> struct OfType;
 
     static bool sameBuffer(Handle<TypedArrayObject*> a, Handle<TypedArrayObject*> b) {
