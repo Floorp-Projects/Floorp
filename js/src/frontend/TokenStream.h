@@ -458,8 +458,16 @@ class MOZ_STACK_CLASS TokenStream
     void addModifierException(ModifierException modifierException) {
 #ifdef DEBUG
         const Token& next = nextToken();
-        if (next.modifierException == NoneIsOperand)
-        {
+
+        // Permit adding the same exception multiple times.  This is important
+        // particularly for Parser::assignExpr's early fast-path cases and
+        // arrow function parsing: we want to add modifier exceptions in the
+        // fast paths, then potentially (but not necessarily) duplicate them
+        // after parsing all of an arrow function.
+        if (next.modifierException == modifierException)
+            return;
+
+        if (next.modifierException == NoneIsOperand) {
             // Token after yield expression without operand already has
             // NoneIsOperand exception.
             MOZ_ASSERT(modifierException == OperandIsNone);
@@ -687,6 +695,13 @@ class MOZ_STACK_CLASS TokenStream
         if (!peekToken(&tt))
             return false;
         *endsExpr = isExprEnding[tt];
+        if (*endsExpr) {
+            // If the next token ends an overall Expression, we'll parse this
+            // Expression without ever invoking Parser::orExpr().  But we need
+            // that function's side effect of adding this modifier exception,
+            // so we have to do it manually here.
+            addModifierException(OperandIsNone);
+        }
         return true;
     }
 
