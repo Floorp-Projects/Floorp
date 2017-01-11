@@ -1547,26 +1547,10 @@ public abstract class GeckoApp
         return uri != null && !AboutPages.isAboutHome(uri);
     }
 
-    protected int getNewTabFlags() {
-        final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
-
-        final SafeIntent intent = new SafeIntent(getIntent());
-        final String action = intent.getAction();
-
-        int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_EXTERNAL;
-        if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
-            flags |= Tabs.LOADURL_PINNED;
-        }
-        if (isFirstTab) {
-            flags |= Tabs.LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN;
-        }
-
-        return flags;
-    }
-
     private void initialize() {
         mInitialized = true;
 
+        final boolean isFirstTab = !mWasFirstTabShownAfterActivityUnhidden;
         mWasFirstTabShownAfterActivityUnhidden = true; // Reset since we'll be loading a tab.
 
         final SafeIntent intent = new SafeIntent(getIntent());
@@ -1606,7 +1590,13 @@ public abstract class GeckoApp
             processActionViewIntent(new Runnable() {
                 @Override
                 public void run() {
-                    final int flags = getNewTabFlags();
+                    int flags = Tabs.LOADURL_NEW_TAB | Tabs.LOADURL_USER_ENTERED | Tabs.LOADURL_EXTERNAL;
+                    if (ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
+                        flags |= Tabs.LOADURL_PINNED;
+                    }
+                    if (isFirstTab) {
+                        flags |= Tabs.LOADURL_FIRST_AFTER_ACTIVITY_UNHIDDEN;
+                    }
                     loadStartupTab(passedUri, intent, flags);
                 }
             });
