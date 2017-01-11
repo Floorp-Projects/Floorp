@@ -88,7 +88,7 @@ pub extern fn wr_window_new(window_id: u64,
                             enable_profiler: bool,
                             out_api: &mut *mut webrender_traits::RenderApi,
                             out_renderer: &mut *mut Renderer) {
-    assert!(unsafe { is_in_compositor_thread() });
+    assert!(unsafe { is_in_render_thread() });
 
     let opts = RendererOptions {
         device_pixel_ratio: 1.0,

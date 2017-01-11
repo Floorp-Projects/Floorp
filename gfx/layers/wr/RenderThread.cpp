@@ -39,7 +39,7 @@ RenderThread::Start()
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!sRenderThread);
 
-  base::Thread* thread = new base::Thread("Compositor");
+  base::Thread* thread = new base::Thread("Renderer");
 
   base::Thread::Options options;
   // TODO(nical): The compositor thread has a bunch of specific options, see
@@ -139,6 +139,7 @@ RenderThread::RunEvent(gfx::WindowId aWindowId, UniquePtr<RendererEvent> aEvent)
       this, &RenderThread::RunEvent,
       aWindowId, Move(aEvent)
     ));
+    return;
   }
 
   aEvent->Run(*this, aWindowId);

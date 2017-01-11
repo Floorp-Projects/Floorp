@@ -26,6 +26,7 @@ class CompositorWidget;
 
 namespace layers {
 
+class WebRenderAPI;
 class CompositableHost;
 class Compositor;
 class CompositorBridgeParentBase;
@@ -36,6 +37,11 @@ class WebRenderBridgeParent final : public PWebRenderBridgeParent
                                   , public CompositableParentManager
 {
 public:
+  WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
+                        const uint64_t& aPipelineId,
+                        widget::CompositorWidget* aWidget,
+                        RefPtr<WebRenderAPI>&& aApi);
+
   WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
                         const uint64_t& aPipelineId,
                         widget::CompositorWidget* aWidget,
@@ -132,6 +138,7 @@ private:
   wrstate* mWRState;
   RefPtr<gl::GLContext> mGLContext;
   wrwindowstate* mWRWindowState;
+  RefPtr<WebRenderAPI> mApi;
   RefPtr<layers::Compositor> mCompositor;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   std::vector<WRImageKey> mKeysToDelete;
