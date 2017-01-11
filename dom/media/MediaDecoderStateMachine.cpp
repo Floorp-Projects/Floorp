@@ -3716,9 +3716,11 @@ MediaDecoderStateMachine::DumpDebugInfo()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  bool crash = Preferences::GetBool("media.test.crashOnDumpDebugInfo", false);
+
   // It is fine to capture a raw pointer here because MediaDecoder only call
   // this function before shutdown begins.
-  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this] () {
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([this, crash] () {
     mMediaSink->DumpDebugInfo();
     mStateObj->DumpDebugInfo();
     DUMP_LOG(
@@ -3730,6 +3732,9 @@ MediaDecoderStateMachine::DumpDebugInfo()
       ToStateStr(), mPlayState.Ref(), mSentFirstFrameLoadedEvent, IsPlaying(),
       AudioRequestStatus(), VideoRequestStatus(), mDecodedAudioEndTime, mDecodedVideoEndTime,
       mAudioCompleted, mVideoCompleted);
+    if (crash) {
+      MOZ_CRASH();
+    }
   });
 
   // Since the task is run asynchronously, it is possible other tasks get first
