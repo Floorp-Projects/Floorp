@@ -60,10 +60,11 @@ public:
                                   writer->mCrypto.mSessionIds);
 
     mDecrypts.Put(aSample, new DecryptPromiseRequestHolder());
-    mDecrypts.Get(aSample)->Begin(mProxy->Decrypt(aSample)->Then(
+    mProxy->Decrypt(aSample)->Then(
       mTaskQueue, __func__, this,
       &EMEDecryptor::Decrypted,
-      &EMEDecryptor::Decrypted));
+      &EMEDecryptor::Decrypted)
+    ->Track(*mDecrypts.Get(aSample));
     return;
   }
 

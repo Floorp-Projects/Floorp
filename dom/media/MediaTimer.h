@@ -145,10 +145,11 @@ public:
     }
     Reset();
     mTarget = aTarget;
-    mRequest.Begin(mMediaTimer->WaitUntil(mTarget, __func__)->Then(
+    mMediaTimer->WaitUntil(mTarget, __func__)->Then(
       mTargetThread, __func__,
       Forward<ResolveFunc>(aResolver),
-      Forward<RejectFunc>(aRejector)));
+      Forward<RejectFunc>(aRejector))
+    ->Track(mRequest);
   }
 
   void CompleteRequest()
