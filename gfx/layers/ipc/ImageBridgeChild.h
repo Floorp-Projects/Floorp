@@ -270,7 +270,7 @@ public:
 
   void Destroy(CompositableChild* aCompositable) override;
 
-  void ForgetImageContainer(uint64_t aAsyncContainerID);
+  void ForgetImageContainer(const CompositableHandle& aHandle);
 
   /**
    * Hold TextureClient ref until end of usage on host side if TextureFlags::RECYCLE is set.

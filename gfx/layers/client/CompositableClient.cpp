@@ -28,13 +28,13 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
-CompositableClient::InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID)
+CompositableClient::InitIPDLActor(PCompositableChild* aActor, const CompositableHandle& aAsyncHandle)
 {
   MOZ_ASSERT(aActor);
 
   mForwarder->AssertInForwarderThread();
 
-  mAsyncID = aAsyncID;
+  mAsyncHandle = aAsyncHandle;
   mCompositableChild = static_cast<CompositableChild*>(aActor);
   mCompositableChild->Init(this);
 }
@@ -57,7 +57,6 @@ CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
                                        TextureFlags aTextureFlags)
 : mForwarder(aForwarder)
 , mTextureFlags(aTextureFlags)
-, mAsyncID(0)
 {
 }
 
@@ -118,13 +117,13 @@ CompositableClient::Destroy()
   mCompositableChild = nullptr;
 }
 
-uint64_t
-CompositableClient::GetAsyncID() const
+CompositableHandle
+CompositableClient::GetAsyncHandle() const
 {
   if (mCompositableChild) {
-    return mAsyncID;
+    return mAsyncHandle;
   }
-  return 0; // zero is always an invalid async ID
+  return CompositableHandle();
 }
 
 already_AddRefed<TextureClient>
