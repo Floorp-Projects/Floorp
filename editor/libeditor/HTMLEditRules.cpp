@@ -3407,7 +3407,7 @@ HTMLEditRules::WillRemoveList(Selection* aSelection,
       // unlist this listitem
       bool bOutOfList;
       do {
-        rv = PopListItem(GetAsDOMNode(curNode), &bOutOfList);
+        rv = PopListItem(*curNode->AsContent(), &bOutOfList);
         NS_ENSURE_SUCCESS(rv, rv);
       } while (!bOutOfList); // keep popping it out until it's not in a list anymore
     } else if (HTMLEditUtils::IsList(curNode)) {
@@ -4127,8 +4127,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
           lastBQChild = nullptr;
           curBlockQuoteIsIndentedWithCSS = false;
         }
-        bool unused;
-        rv = PopListItem(GetAsDOMNode(curNode), &unused);
+        rv = PopListItem(*curNode->AsContent());
         NS_ENSURE_SUCCESS(rv, rv);
         continue;
       }
@@ -4209,8 +4208,7 @@ HTMLEditRules::WillOutdent(Selection& aSelection,
           nsCOMPtr<nsIContent> child = curNode->GetLastChild();
           while (child) {
             if (HTMLEditUtils::IsListItem(child)) {
-              bool unused;
-              rv = PopListItem(GetAsDOMNode(child), &unused);
+              rv = PopListItem(*child);
               NS_ENSURE_SUCCESS(rv, rv);
             } else if (HTMLEditUtils::IsList(child)) {
               // We have an embedded list, so move it out from under the parent
@@ -4918,12 +4916,8 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
 
     if (HTMLEditUtils::IsListItem(emptyBlock)) {
       // Are we the first list item in the list?
-      bool bIsFirst;
       NS_ENSURE_STATE(htmlEditor);
-      nsresult rv =
-        htmlEditor->IsFirstEditableChild(GetAsDOMNode(emptyBlock), &bIsFirst);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (bIsFirst) {
+      if (htmlEditor->IsFirstEditableChild(emptyBlock)) {
         nsCOMPtr<nsINode> listParent = blockParent->GetParentNode();
         NS_ENSURE_TRUE(listParent, NS_ERROR_FAILURE);
         int32_t listOffset = listParent->IndexOf(blockParent);
@@ -4935,7 +4929,7 @@ HTMLEditRules::CheckForEmptyBlock(nsINode* aStartNode,
             htmlEditor->CreateBR(listParent, listOffset);
           NS_ENSURE_STATE(br);
           // Adjust selection to be right before it
-          rv = aSelection->Collapse(listParent, listOffset);
+          nsresult rv = aSelection->Collapse(listParent, listOffset);
           NS_ENSURE_SUCCESS(rv, rv);
         }
         // Else just let selection percolate up.  We'll adjust it in
@@ -6523,10 +6517,7 @@ HTMLEditRules::ReturnInListItem(Selection& aSelection,
     int32_t offset = listParent ? listParent->IndexOf(list) : -1;
 
     // Are we the last list item in the list?
-    bool isLast;
-    rv = htmlEditor->IsLastEditableChild(aListItem.AsDOMNode(), &isLast);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!isLast) {
+    if (!htmlEditor->IsLastEditableChild(&aListItem)) {
       // We need to split the list!
       ErrorResult rv;
       htmlEditor->SplitNode(*list, itemOffset, rv);
@@ -7853,23 +7844,23 @@ HTMLEditRules::ListIsEmptyLine(nsTArray<OwningNonNull<nsINode>>& aArrayOfNodes)
 
 
 nsresult
-HTMLEditRules::PopListItem(nsIDOMNode* aListItem,
+HTMLEditRules::PopListItem(nsIContent& aListItem,
                            bool* aOutOfList)
 {
-  nsCOMPtr<Element> listItem = do_QueryInterface(aListItem);
-  // check parms
-  NS_ENSURE_TRUE(listItem && aOutOfList, NS_ERROR_NULL_POINTER);
-
   // init out params
-  *aOutOfList = false;
+  if (aOutOfList) {
+    *aOutOfList = false;
+  }
 
-  nsCOMPtr<nsINode> curParent = listItem->GetParentNode();
+  nsCOMPtr<nsIContent> kungFuDeathGrip(&aListItem);
+
+  nsCOMPtr<nsINode> curParent = aListItem.GetParentNode();
   if (NS_WARN_IF(!curParent)) {
     return NS_ERROR_FAILURE;
   }
-  int32_t offset = curParent->IndexOf(listItem);
+  int32_t offset = curParent->IndexOf(&aListItem);
 
-  if (!HTMLEditUtils::IsListItem(listItem)) {
+  if (!HTMLEditUtils::IsListItem(&aListItem)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -7878,24 +7869,21 @@ HTMLEditRules::PopListItem(nsIDOMNode* aListItem,
   nsCOMPtr<nsINode> curParPar = curParent->GetParentNode();
   int32_t parOffset = curParPar ? curParPar->IndexOf(curParent) : -1;
 
-  bool bIsFirstListItem;
   NS_ENSURE_STATE(mHTMLEditor);
-  nsresult rv =
-    mHTMLEditor->IsFirstEditableChild(aListItem, &bIsFirstListItem);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool bIsFirstListItem = mHTMLEditor->IsFirstEditableChild(&aListItem);
 
-  bool bIsLastListItem;
   NS_ENSURE_STATE(mHTMLEditor);
-  rv = mHTMLEditor->IsLastEditableChild(aListItem, &bIsLastListItem);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool bIsLastListItem = mHTMLEditor->IsLastEditableChild(&aListItem);
 
   if (!bIsFirstListItem && !bIsLastListItem) {
     // split the list
-    nsCOMPtr<nsIDOMNode> newBlock;
+    ErrorResult rv;
     NS_ENSURE_STATE(mHTMLEditor);
-    rv = mHTMLEditor->SplitNode(GetAsDOMNode(curParent), offset,
-                                getter_AddRefs(newBlock));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIContent> newBlock =
+      mHTMLEditor->SplitNode(*curParent->AsContent(), offset, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+      return rv.StealNSResult();
+    }
   }
 
   if (!bIsFirstListItem) {
@@ -7903,16 +7891,18 @@ HTMLEditRules::PopListItem(nsIDOMNode* aListItem,
   }
 
   NS_ENSURE_STATE(mHTMLEditor);
-  rv = mHTMLEditor->MoveNode(listItem, curParPar, parOffset);
+  nsresult rv = mHTMLEditor->MoveNode(&aListItem, curParPar, parOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // unwrap list item contents if they are no longer in a list
   if (!HTMLEditUtils::IsList(curParPar) &&
-      HTMLEditUtils::IsListItem(listItem)) {
+      HTMLEditUtils::IsListItem(&aListItem)) {
     NS_ENSURE_STATE(mHTMLEditor);
-    rv = mHTMLEditor->RemoveBlockContainer(*listItem);
+    rv = mHTMLEditor->RemoveBlockContainer(*aListItem.AsElement());
     NS_ENSURE_SUCCESS(rv, rv);
-    *aOutOfList = true;
+    if (aOutOfList) {
+      *aOutOfList = true;
+    }
   }
   return NS_OK;
 }
@@ -7929,7 +7919,7 @@ HTMLEditRules::RemoveListStructure(Element& aList)
       bool isOutOfList;
       // Keep popping it out until it's not in a list anymore
       do {
-        nsresult rv = PopListItem(child->AsDOMNode(), &isOutOfList);
+        nsresult rv = PopListItem(child, &isOutOfList);
         NS_ENSURE_SUCCESS(rv, rv);
       } while (!isOutOfList);
     } else if (HTMLEditUtils::IsList(child)) {
