@@ -472,7 +472,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/activitystream/menu/PopupContextMenu.java',
     'home/activitystream/model/Highlight.java',
     'home/activitystream/model/Metadata.java',
-    'home/activitystream/model/TopSite.java',
     'home/activitystream/stream/HighlightItem.java',
     'home/activitystream/stream/HighlightsTitle.java',
     'home/activitystream/stream/StreamItem.java',
