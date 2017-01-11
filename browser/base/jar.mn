@@ -6,9 +6,6 @@ browser.jar:
 #ifdef XP_MACOSX
 %  overlay chrome://mozapps/content/update/updates.xul chrome://browser/content/softwareUpdateOverlay.xul
 #endif
-#ifdef XP_WIN
-%  overlay chrome://browser/content/browser.xul chrome://browser/content/win6BrowserOverlay.xul os=WINNT osversion>=6
-#endif
 %  overlay chrome://global/content/viewSource.xul chrome://browser/content/viewSourceOverlay.xul
 %  overlay chrome://global/content/viewPartialSource.xul chrome://browser/content/viewSourceOverlay.xul
 
@@ -178,9 +175,6 @@ browser.jar:
 #ifndef XP_MACOSX
 *       content/browser/webrtcIndicator.xul           (content/webrtcIndicator.xul)
         content/browser/webrtcIndicator.js            (content/webrtcIndicator.js)
-#endif
-#ifdef XP_WIN
-        content/browser/win6BrowserOverlay.xul        (content/win6BrowserOverlay.xul)
 #endif
 # the following files are browser-specific overrides
 *       content/browser/license.html                  (/toolkit/content/license.html)

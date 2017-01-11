@@ -127,11 +127,6 @@ XPCOMUtils.defineLazyGetter(this, "gCustomizeMode", function() {
   return new scope.CustomizeMode(window);
 });
 
-XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function() {
-  // Only show resizers on Windows 2000 and XP
-  return AppConstants.isPlatformAndVersionAtMost("win", "5.9");
-});
-
 XPCOMUtils.defineLazyGetter(this, "gPrefService", function() {
   return Services.prefs;
 });
@@ -3402,8 +3397,6 @@ var PrintPreviewListener = {
     this._chromeState.notificationsOpen = !notificationBox.notificationsHidden;
     notificationBox.notificationsHidden = true;
 
-    gBrowser.updateWindowResizers();
-
     this._chromeState.findOpen = gFindBarInitialized && !gFindBar.hidden;
     if (gFindBarInitialized)
       gFindBar.close();
@@ -5240,7 +5233,6 @@ function setToolbarVisibility(toolbar, isVisible, persist = true) {
 
   PlacesToolbarHelper.init();
   BookmarkingUI.onToolbarVisibilityChange();
-  gBrowser.updateWindowResizers();
   if (isVisible)
     ToolbarIconColor.inferFromText();
 }

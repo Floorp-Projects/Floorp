@@ -89,12 +89,13 @@ class GenericClassInfo : public nsIClassInfo
 public:
   struct ClassInfoData
   {
-    // This function pointer uses NS_CALLBACK because it's always set to an
+    // This function pointer uses NS_CALLBACK_ because it's always set to an
     // NS_IMETHOD function, which uses __stdcall on Win32.
-    typedef NS_CALLBACK(GetInterfacesProc)(uint32_t* aCountP, nsIID*** aArray);
+    typedef NS_CALLBACK_(nsresult, GetInterfacesProc)(uint32_t* aCountP,
+                                                      nsIID*** aArray);
     GetInterfacesProc getinterfaces;
 
-    // This function pointer doesn't use NS_CALLBACK because it's always set to
+    // This function pointer doesn't use NS_CALLBACK_ because it's always set to
     // a vanilla function.
     typedef nsresult (*GetScriptableHelperProc)(nsIXPCScriptable** aHelper);
     GetScriptableHelperProc getscriptablehelper;

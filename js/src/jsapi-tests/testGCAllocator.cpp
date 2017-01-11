@@ -312,7 +312,9 @@ void unmapPages(void* p, size_t size) { }
 void*
 mapMemoryAt(void* desired, size_t length)
 {
-#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__)) || defined(__aarch64__)
+
+#if defined(__ia64__) || defined(__aarch64__) || \
+    (defined(__sparc__) && defined(__arch64__) && (defined(__NetBSD__) || defined(__linux__)))
     MOZ_RELEASE_ASSERT(0xffff800000000000ULL & (uintptr_t(desired) + length - 1) == 0);
 #endif
     void* region = mmap(desired, length, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
@@ -334,7 +336,7 @@ mapMemory(size_t length)
     int fd = -1;
     off_t offset = 0;
     // The test code must be aligned with the implementation in gc/Memory.cpp.
-#if defined(__ia64__) || (defined(__sparc64__) && defined(__NetBSD__))
+#if defined(__ia64__) || (defined(__sparc__) && defined(__arch64__) && defined(__NetBSD__))
     void* region = mmap((void*)0x0000070000000000, length, prot, flags, fd, offset);
     if (region == MAP_FAILED)
         return nullptr;
@@ -344,7 +346,7 @@ mapMemory(size_t length)
         return nullptr;
     }
     return region;
-#elif defined(__aarch64__)
+#elif defined(__aarch64__) || (defined(__sparc__) && defined(__arch64__) && defined(__linux__))
     const uintptr_t start = UINT64_C(0x0000070000000000);
     const uintptr_t end   = UINT64_C(0x0000800000000000);
     const uintptr_t step  = js::gc::ChunkSize;
