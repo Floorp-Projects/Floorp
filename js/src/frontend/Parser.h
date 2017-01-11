@@ -1244,14 +1244,14 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
                     InvokedPrediction invoked = PredictUninvoked);
     Node assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
     Node yieldExpression(InHandling inHandling);
-    Node condExpr1(InHandling inHandling, YieldHandling yieldHandling,
-                   TripledotHandling tripledotHandling,
-                   PossibleError* possibleError,
-                   InvokedPrediction invoked = PredictUninvoked);
-    Node orExpr1(InHandling inHandling, YieldHandling yieldHandling,
-                 TripledotHandling tripledotHandling,
-                 PossibleError* possibleError,
-                 InvokedPrediction invoked = PredictUninvoked);
+    Node condExpr(InHandling inHandling, YieldHandling yieldHandling,
+                  TripledotHandling tripledotHandling,
+                  PossibleError* possibleError,
+                  InvokedPrediction invoked = PredictUninvoked);
+    Node orExpr(InHandling inHandling, YieldHandling yieldHandling,
+                TripledotHandling tripledotHandling,
+                PossibleError* possibleError,
+                InvokedPrediction invoked = PredictUninvoked);
     Node unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
                    PossibleError* possibleError = nullptr,
                    InvokedPrediction invoked = PredictUninvoked);
@@ -1344,6 +1344,8 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
 #endif
     }
 
+    // Indicate if the next token (tokenized as Operand) is |in| or |of|.  If
+    // so, consume it.
     bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
     bool hasUsedFunctionSpecialName(HandlePropertyName name);
@@ -1369,7 +1371,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool finishFunction(bool isStandaloneFunction = false);
     bool leaveInnerFunction(ParseContext* outerpc);
 
-    bool matchOrInsertSemicolonHelper(TokenStream::Modifier modifier);
+    bool matchOrInsertSemicolonHelper();
     bool matchOrInsertSemicolonAfterExpression();
     bool matchOrInsertSemicolonAfterNonExpression();
 
