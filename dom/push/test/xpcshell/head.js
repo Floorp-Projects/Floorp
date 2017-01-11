@@ -32,7 +32,7 @@ var isParent = Cc['@mozilla.org/xre/runtime;1']
 
 // Stop and clean up after the PushService.
 Services.obs.addObserver(function observe(subject, topic, data) {
-  Services.obs.removeObserver(observe, topic, false);
+  Services.obs.removeObserver(observe, topic);
   serviceExports.PushService.uninit();
   // Occasionally, `profile-change-teardown` and `xpcom-shutdown` will fire
   // before the PushService and AlarmService finish writing to IndexedDB. This
@@ -92,7 +92,7 @@ function promiseObserverNotification(topic, matchFunc) {
       if (!matches) {
         return;
       }
-      Services.obs.removeObserver(observe, topic, false);
+      Services.obs.removeObserver(observe, topic);
       resolve({subject, data});
     }, topic, false);
   });

@@ -1412,7 +1412,7 @@ var BookmarkingUI = {
       if (event.target == event.currentTarget) {
         updatePlacesContextMenu(true);
 
-        Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver, false);
+        Services.prefs.removeObserver(this.RECENTLY_BOOKMARKED_PREF, prefObserver);
         PlacesUtils.bookmarks.removeObserver(this._recentlyBookmarkedObserver);
         this._recentlyBookmarkedObserver = null;
         if (placesContextMenu) {

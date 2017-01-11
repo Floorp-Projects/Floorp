@@ -45,7 +45,7 @@ this.SafeMode = {
     return new Promise((aResolve, aReject) => {
       let observer = function(aSubject, aTopic, aData) {
         if (Services.prefs.getCharPref(kSafeModePref)) {
-          Services.prefs.removeObserver(kSafeModePref, observer, false);
+          Services.prefs.removeObserver(kSafeModePref, observer);
           aResolve();
         }
       }

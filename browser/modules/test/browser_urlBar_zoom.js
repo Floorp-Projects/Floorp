@@ -60,12 +60,12 @@ add_task(function* asyncCleanup() {
 function promiseObserverNotification(aObserver) {
   let deferred = Promise.defer();
   function notificationCallback(e) {
-    Services.obs.removeObserver(notificationCallback, aObserver, false);
+    Services.obs.removeObserver(notificationCallback, aObserver);
     clearTimeout(timeoutId);
     deferred.resolve();
   }
   let timeoutId = setTimeout(() => {
-    Services.obs.removeObserver(notificationCallback, aObserver, false);
+    Services.obs.removeObserver(notificationCallback, aObserver);
     deferred.reject("Notification '" + aObserver + "' did not happen within 20 seconds.");
   }, kTimeoutInMS);
   Services.obs.addObserver(notificationCallback, aObserver, false);
