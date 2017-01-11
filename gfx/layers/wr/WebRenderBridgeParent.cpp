@@ -18,6 +18,7 @@
 #include "mozilla/layers/RenderThread.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/WebRenderCompositorOGL.h"
+#include "mozilla/layers/WebRenderAPI.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 bool is_in_compositor_thread()
@@ -108,6 +109,29 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 }
+
+WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompositorBridge,
+                                             const uint64_t& aPipelineId,
+                                             widget::CompositorWidget* aWidget,
+                                             RefPtr<WebRenderAPI>&& aApi)
+  : mCompositorBridge(aCompositorBridge)
+  , mPipelineId(aPipelineId)
+  , mWidget(aWidget)
+  , mWRState(nullptr)
+  , mGLContext(nullptr)
+  , mWRWindowState(nullptr)
+  , mApi(aApi)
+  , mCompositor(nullptr)
+  , mChildLayerObserverEpoch(0)
+  , mParentLayerObserverEpoch(0)
+  , mPendingTransactionId(0)
+  , mDestroyed(false)
+{
+  if (mWidget) {
+    mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
+  }
+}
+
 
 mozilla::ipc::IPCResult
 WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
