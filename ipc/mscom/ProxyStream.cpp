@@ -40,7 +40,7 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
   // NB: We can't check for a null mStream until after we have checked for
   // the zero aInitBufSize above. This is because InitStream will also fail
   // in that case, even though marshaling a nullptr is allowable.
-  MOZ_DIAGNOSTIC_ASSERT(mStream);
+  MOZ_ASSERT(mStream);
   if (!mStream) {
     return;
   }
@@ -54,10 +54,10 @@ ProxyStream::ProxyStream(const BYTE* aInitBuf, const int aInitBufSize)
     IUnknown* rawUnmarshaledProxy = nullptr;
     // OK to forget mStream when calling into this function because the stream
     // gets released even if the unmarshaling part fails.
-    HRESULT hr = ::CoGetInterfaceAndReleaseStream(mStream.forget().take(),
-                                                  IID_IUnknown,
-                                                  (void**)&rawUnmarshaledProxy);
-    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
+    DebugOnly<HRESULT> hr =
+      ::CoGetInterfaceAndReleaseStream(mStream.forget().take(), IID_IUnknown,
+                                       (void**)&rawUnmarshaledProxy);
+    MOZ_ASSERT(SUCCEEDED(hr));
     mUnmarshaledProxy.reset(rawUnmarshaledProxy);
   };
 
@@ -77,12 +77,9 @@ ProxyStream::InitStream(const BYTE* aInitBuf, const UINT aInitBufSize)
   // Need to link to this as ordinal 12 for Windows XP
   static DynamicallyLinkedFunctionPtr<decltype(&::SHCreateMemStream)>
     pSHCreateMemStream(L"shlwapi.dll", reinterpret_cast<const char*>(12));
-
-  MOZ_DIAGNOSTIC_ASSERT(pSHCreateMemStream);
   if (!pSHCreateMemStream) {
     return nullptr;
   }
-
   return already_AddRefed<IStream>(pSHCreateMemStream(aInitBuf, aInitBufSize));
 }
 
@@ -131,8 +128,8 @@ bool
 ProxyStream::GetInterface(REFIID aIID, void** aOutInterface) const
 {
   // We should not have a locked buffer on this side
-  MOZ_DIAGNOSTIC_ASSERT(!mGlobalLockedBuf);
-  MOZ_DIAGNOSTIC_ASSERT(aOutInterface);
+  MOZ_ASSERT(!mGlobalLockedBuf);
+  MOZ_ASSERT(aOutInterface);
 
   if (!aOutInterface) {
     return false;
@@ -155,8 +152,6 @@ ProxyStream::GetInterface(REFIID aIID, void** aOutInterface) const
     // mUnmarshaledProxy requires that we execute this in the MTA
     EnsureMTA mta(qiFn);
   }
-
-  MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
   return SUCCEEDED(hr);
 }
 
@@ -171,20 +166,18 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject)
   auto marshalFn = [&]() -> void
   {
     HRESULT hr = ::CreateStreamOnHGlobal(nullptr, TRUE, getter_AddRefs(stream));
-    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
     if (FAILED(hr)) {
       return;
     }
 
     hr = ::CoMarshalInterface(stream, aIID, aObject, MSHCTX_LOCAL, nullptr,
                               MSHLFLAGS_NORMAL);
-    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
     if (FAILED(hr)) {
       return;
     }
 
     hr = ::GetHGlobalFromStream(stream, &hglobal);
-    MOZ_DIAGNOSTIC_ASSERT(SUCCEEDED(hr));
+    MOZ_ASSERT(SUCCEEDED(hr));
   };
 
   if (XRE_IsParentProcess()) {
