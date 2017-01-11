@@ -33,9 +33,6 @@ public:
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
 
 private:
-    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type,
-                                           uint32_t* alignment,
-                                           const char* info) override;
     virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 
