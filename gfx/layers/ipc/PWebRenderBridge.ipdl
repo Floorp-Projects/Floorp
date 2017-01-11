@@ -8,6 +8,7 @@
 include LayersSurfaces;
 include LayersMessages;
 include "mozilla/GfxMessageUtils.h";
+include "mozilla/layers/WebRenderMessageUtils.h";
 
 include WebRenderMessages;
 include protocol PCompositable;
