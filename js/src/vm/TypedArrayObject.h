@@ -302,6 +302,9 @@ class TypedArrayObject : public NativeObject
     static bool is(HandleValue v);
 
     static bool set(JSContext* cx, unsigned argc, Value* vp);
+
+  private:
+    static bool set_impl(JSContext* cx, const CallArgs& args);
 };
 
 MOZ_MUST_USE bool TypedArray_bufferGetter(JSContext* cx, unsigned argc, Value* vp);
