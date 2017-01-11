@@ -135,11 +135,11 @@ class GCVector
 
 namespace js {
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
-class GCVectorOperations
+template <typename Wrapper, typename T, size_t Capacity, typename AllocPolicy>
+class WrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrapper>
 {
     using Vec = JS::GCVector<T, Capacity, AllocPolicy>;
-    const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
+    const Vec& vec() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     const AllocPolicy& allocPolicy() const { return vec().allocPolicy(); }
@@ -155,13 +155,13 @@ class GCVectorOperations
     }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
-class MutableGCVectorOperations
-  : public GCVectorOperations<Outer, T, Capacity, AllocPolicy>
+template <typename Wrapper, typename T, size_t Capacity, typename AllocPolicy>
+class MutableWrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrapper>
+  : public WrappedPtrOperations<JS::GCVector<T, Capacity, AllocPolicy>, Wrapper>
 {
     using Vec = JS::GCVector<T, Capacity, AllocPolicy>;
-    const Vec& vec() const { return static_cast<const Outer*>(this)->get(); }
-    Vec& vec() { return static_cast<Outer*>(this)->get(); }
+    const Vec& vec() const { return static_cast<const Wrapper*>(this)->get(); }
+    Vec& vec() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     const AllocPolicy& allocPolicy() const { return vec().allocPolicy(); }
@@ -223,26 +223,6 @@ class MutableGCVectorOperations
     void erase(T* aT) { vec().erase(aT); }
     void erase(T* aBegin, T* aEnd) { vec().erase(aBegin, aEnd); }
 };
-
-template <typename T, size_t N, typename AP>
-class RootedBase<JS::GCVector<T,N,AP>>
-  : public MutableGCVectorOperations<JS::Rooted<JS::GCVector<T,N,AP>>, T,N,AP>
-{};
-
-template <typename T, size_t N, typename AP>
-class MutableHandleBase<JS::GCVector<T,N,AP>>
-  : public MutableGCVectorOperations<JS::MutableHandle<JS::GCVector<T,N,AP>>, T,N,AP>
-{};
-
-template <typename T, size_t N, typename AP>
-class HandleBase<JS::GCVector<T,N,AP>>
-  : public GCVectorOperations<JS::Handle<JS::GCVector<T,N,AP>>, T,N,AP>
-{};
-
-template <typename T, size_t N, typename AP>
-class PersistentRootedBase<JS::GCVector<T,N,AP>>
-  : public MutableGCVectorOperations<JS::PersistentRooted<JS::GCVector<T,N,AP>>, T,N,AP>
-{};
 
 } // namespace js
 

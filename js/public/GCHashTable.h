@@ -134,13 +134,13 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy, AllocPol
     }
 };
 
-template <typename Outer, typename... Args>
-class GCHashMapOperations
+template <typename Wrapper, typename... Args>
+class WrappedPtrOperations<JS::GCHashMap<Args...>, Wrapper>
 {
     using Map = JS::GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
 
-    const Map& map() const { return static_cast<const Outer*>(this)->get(); }
+    const Map& map() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     using AddPtr = typename Map::AddPtr;
@@ -163,18 +163,18 @@ class GCHashMapOperations
     }
 };
 
-template <typename Outer, typename... Args>
-class MutableGCHashMapOperations
-  : public GCHashMapOperations<Outer, Args...>
+template <typename Wrapper, typename... Args>
+class MutableWrappedPtrOperations<JS::GCHashMap<Args...>, Wrapper>
+  : public WrappedPtrOperations<JS::GCHashMap<Args...>, Wrapper>
 {
     using Map = JS::GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
 
-    Map& map() { return static_cast<Outer*>(this)->get(); }
+    Map& map() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     using AddPtr = typename Map::AddPtr;
-    struct Enum : public Map::Enum { explicit Enum(Outer& o) : Map::Enum(o.map()) {} };
+    struct Enum : public Map::Enum { explicit Enum(Wrapper& o) : Map::Enum(o.map()) {} };
     using Ptr = typename Map::Ptr;
     using Range = typename Map::Range;
 
@@ -210,26 +210,6 @@ class MutableGCHashMapOperations
         return map().putNew(mozilla::Forward<KeyInput>(k), mozilla::Forward<ValueInput>(v));
     }
 };
-
-template <typename A, typename B, typename C, typename D, typename E>
-class RootedBase<JS::GCHashMap<A,B,C,D,E>>
-  : public MutableGCHashMapOperations<JS::Rooted<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
-{};
-
-template <typename A, typename B, typename C, typename D, typename E>
-class MutableHandleBase<JS::GCHashMap<A,B,C,D,E>>
-  : public MutableGCHashMapOperations<JS::MutableHandle<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
-{};
-
-template <typename A, typename B, typename C, typename D, typename E>
-class HandleBase<JS::GCHashMap<A,B,C,D,E>>
-  : public GCHashMapOperations<JS::Handle<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
-{};
-
-template <typename A, typename B, typename C, typename D, typename E>
-class WeakCacheBase<JS::GCHashMap<A,B,C,D,E>>
-  : public MutableGCHashMapOperations<JS::WeakCache<JS::GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
-{};
 
 } // namespace js
 
@@ -292,13 +272,13 @@ class GCHashSet : public js::HashSet<T, HashPolicy, AllocPolicy>
 
 namespace js {
 
-template <typename Outer, typename... Args>
-class GCHashSetOperations
+template <typename Wrapper, typename... Args>
+class WrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 {
     using Set = JS::GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
 
-    const Set& set() const { return static_cast<const Outer*>(this)->get(); }
+    const Set& set() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     using AddPtr = typename Set::AddPtr;
@@ -322,19 +302,19 @@ class GCHashSetOperations
     }
 };
 
-template <typename Outer, typename... Args>
-class MutableGCHashSetOperations
-  : public GCHashSetOperations<Outer, Args...>
+template <typename Wrapper, typename... Args>
+class MutableWrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
+  : public WrappedPtrOperations<JS::GCHashSet<Args...>, Wrapper>
 {
     using Set = JS::GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
 
-    Set& set() { return static_cast<Outer*>(this)->get(); }
+    Set& set() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     using AddPtr = typename Set::AddPtr;
     using Entry = typename Set::Entry;
-    struct Enum : public Set::Enum { explicit Enum(Outer& o) : Set::Enum(o.set()) {} };
+    struct Enum : public Set::Enum { explicit Enum(Wrapper& o) : Set::Enum(o.set()) {} };
     using Ptr = typename Set::Ptr;
     using Range = typename Set::Range;
 
@@ -368,30 +348,6 @@ class MutableGCHashSetOperations
     bool putNew(const Lookup& l, TInput&& t) {
         return set().putNew(l, mozilla::Forward<TInput>(t));
     }
-};
-
-template <typename T, typename HP, typename AP>
-class RootedBase<JS::GCHashSet<T, HP, AP>>
-  : public MutableGCHashSetOperations<JS::Rooted<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
-{
-};
-
-template <typename T, typename HP, typename AP>
-class MutableHandleBase<JS::GCHashSet<T, HP, AP>>
-  : public MutableGCHashSetOperations<JS::MutableHandle<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
-{
-};
-
-template <typename T, typename HP, typename AP>
-class HandleBase<JS::GCHashSet<T, HP, AP>>
-  : public GCHashSetOperations<JS::Handle<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
-{
-};
-
-template <typename T, typename HP, typename AP>
-class WeakCacheBase<JS::GCHashSet<T, HP, AP>>
-  : public MutableGCHashSetOperations<JS::WeakCache<JS::GCHashSet<T, HP, AP>>, T, HP, AP>
-{
 };
 
 } /* namespace js */

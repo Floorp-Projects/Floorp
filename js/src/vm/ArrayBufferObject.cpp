@@ -350,7 +350,7 @@ ArrayBufferObject::detach(JSContext* cx, Handle<ArrayBufferObject*> buffer,
     // Update all views of the buffer to account for the buffer having been
     // detached, and clear the buffer's data and list of views.
 
-    auto& innerViews = cx->compartment()->innerViews;
+    auto& innerViews = cx->compartment()->innerViews.get();
     if (InnerViewTable::ViewVector* views = innerViews.maybeViewsUnbarriered(buffer)) {
         for (size_t i = 0; i < views->length(); i++)
             NoteViewBufferWasDetached((*views)[i], newContents, cx);
@@ -425,7 +425,7 @@ ArrayBufferObject::changeContents(JSContext* cx, BufferContents newContents,
     setNewData(cx->runtime()->defaultFreeOp(), newContents, ownsState);
 
     // Update all views.
-    auto& innerViews = cx->compartment()->innerViews;
+    auto& innerViews = cx->compartment()->innerViews.get();
     if (InnerViewTable::ViewVector* views = innerViews.maybeViewsUnbarriered(this)) {
         for (size_t i = 0; i < views->length(); i++)
             changeViewContents(cx, (*views)[i], oldDataPointer, newContents);

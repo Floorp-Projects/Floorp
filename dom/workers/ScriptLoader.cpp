@@ -1579,13 +1579,17 @@ CacheCreator::DeleteCache()
 {
   AssertIsOnMainThread();
 
-  ErrorResult rv;
+  // This is called when the load is canceled which can occur before
+  // mCacheStorage is initialized.
+  if (!mCacheStorage) {
+    return;
+  }
 
   // It's safe to do this while Cache::Match() and Cache::Put() calls are
   // running.
+  IgnoredErrorResult rv;
   RefPtr<Promise> promise = mCacheStorage->Delete(mCacheName, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    rv.SuppressException();
     return;
   }
 

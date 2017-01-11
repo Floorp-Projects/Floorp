@@ -108,5 +108,54 @@ Timeout::HasRefCnt(uint32_t aCount) const
 }
 #endif // DEBUG
 
+void
+Timeout::SetWhenOrTimeRemaining(const TimeStamp& aBaseTime,
+                                const TimeDuration& aDelay)
+{
+  // This must not be called on dummy timeouts.  Instead use SetDummyWhen().
+  MOZ_DIAGNOSTIC_ASSERT(mWindow);
+
+  // If we are frozen simply set mTimeRemaining to be the "time remaining" in
+  // the timeout (i.e., the interval itself).  This will be used to create a
+  // new mWhen time when the window is thawed.  The end effect is that time does
+  // not appear to pass for frozen windows.
+  if (mWindow->IsFrozen()) {
+    mWhen = TimeStamp();
+    mTimeRemaining = aDelay;
+    return;
+  }
+
+  // Since we are not frozen we must set a precise mWhen target wakeup
+  // time.  Even if we are suspended we want to use this target time so
+  // that it appears time passes while suspended.
+  mWhen = aBaseTime + aDelay;
+  mTimeRemaining = TimeDuration(0);
+}
+
+void
+Timeout::SetDummyWhen(const TimeStamp& aWhen)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mWindow);
+  mWhen = aWhen;
+}
+
+const TimeStamp&
+Timeout::When() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mWhen.IsNull());
+  // Note, mWindow->IsFrozen() can be true here.  The Freeze() method calls
+  // When() to calculate the delay to populate mTimeRemaining.
+  return mWhen;
+}
+
+const TimeDuration&
+Timeout::TimeRemaining() const
+{
+  MOZ_DIAGNOSTIC_ASSERT(mWhen.IsNull());
+  // Note, mWindow->IsFrozen() can be false here.  The Thaw() method calls
+  // TimeRemaining() to calculate the new When() value.
+  return mTimeRemaining;
+}
+
 } // namespace dom
 } // namespace mozilla

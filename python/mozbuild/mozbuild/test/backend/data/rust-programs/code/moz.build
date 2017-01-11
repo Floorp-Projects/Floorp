@@ -2,4 +2,5 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-DIRS += ['code']
+RUST_PROGRAMS += ['target']
+HOST_RUST_PROGRAMS += ['host']

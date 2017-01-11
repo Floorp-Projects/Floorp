@@ -206,9 +206,12 @@ body:not(.compact) .newtab-site[type=sponsored] .newtab-thumbnail {
 }
 
 body.compact .newtab-title {
-  background-color: hsla(0,0%,100%,.8);
+  background-color: hsla(0,0%,100%,.85);
   font-size: 12px;
   line-height: 21px;
+  border: 1px solid hsla(0,0%,80%,.8);
+  border-top-color: hsla(0,0%,0%,.1);
+  background-clip: padding-box;
 }
 
 .newtab-title,
@@ -219,12 +222,6 @@ body.compact .newtab-title {
 body.compact .newtab-title,
 body.compact .newtab-suggested {
   color: black;
-}
-
-body.compact .newtab-title {
-  border: 1px solid hsla(0,0%,80%,.8);
-  border-top-color: hsla(0,0%,0%,.1);
-  background-clip: padding-box;
 }
 
 .newtab-suggested[active] {
@@ -242,7 +239,7 @@ body:not(.compact) .newtab-site:hover .newtab-title {
 
 body.compact .newtab-site:hover .newtab-title {
   color: white;
-  background-color: hsla(0,0%,20%,.8);
+  background-color: hsla(0,0%,20%,.85);
   border-color: hsla(0,0%,0%,.8);
   border-top-color: white;
 }

@@ -52,11 +52,11 @@ class TraceableFifo : public js::Fifo<T, MinInlineCapacity, AllocPolicy>
     }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
-class TraceableFifoOperations
+template <typename Wrapper, typename T, size_t Capacity, typename AllocPolicy>
+class WrappedPtrOperations<TraceableFifo<T, Capacity, AllocPolicy>, Wrapper>
 {
     using TF = TraceableFifo<T, Capacity, AllocPolicy>;
-    const TF& fifo() const { return static_cast<const Outer*>(this)->extract(); }
+    const TF& fifo() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     size_t length() const { return fifo().length(); }
@@ -64,12 +64,12 @@ class TraceableFifoOperations
     const T& front() const { return fifo().front(); }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy>
-class MutableTraceableFifoOperations
-  : public TraceableFifoOperations<Outer, T, Capacity, AllocPolicy>
+template <typename Wrapper, typename T, size_t Capacity, typename AllocPolicy>
+class MutableWrappedPtrOperations<TraceableFifo<T, Capacity, AllocPolicy>, Wrapper>
+  : public WrappedPtrOperations<TraceableFifo<T, Capacity, AllocPolicy>, Wrapper>
 {
     using TF = TraceableFifo<T, Capacity, AllocPolicy>;
-    TF& fifo() { return static_cast<Outer*>(this)->extract(); }
+    TF& fifo() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     T& front() { return fifo().front(); }
@@ -81,46 +81,6 @@ class MutableTraceableFifoOperations
 
     bool popFront() { return fifo().popFront(); }
     void clear() { fifo().clear(); }
-};
-
-template <typename A, size_t B, typename C>
-class RootedBase<TraceableFifo<A,B,C>>
-  : public MutableTraceableFifoOperations<JS::Rooted<TraceableFifo<A,B,C>>, A,B,C>
-{
-    using TF = TraceableFifo<A,B,C>;
-
-    friend class TraceableFifoOperations<JS::Rooted<TF>, A,B,C>;
-    const TF& extract() const { return *static_cast<const JS::Rooted<TF>*>(this)->address(); }
-
-    friend class MutableTraceableFifoOperations<JS::Rooted<TF>, A,B,C>;
-    TF& extract() { return *static_cast<JS::Rooted<TF>*>(this)->address(); }
-};
-
-template <typename A, size_t B, typename C>
-class MutableHandleBase<TraceableFifo<A,B,C>>
-  : public MutableTraceableFifoOperations<JS::MutableHandle<TraceableFifo<A,B,C>>, A,B,C>
-{
-    using TF = TraceableFifo<A,B,C>;
-
-    friend class TraceableFifoOperations<JS::MutableHandle<TF>, A,B,C>;
-    const TF& extract() const {
-        return *static_cast<const JS::MutableHandle<TF>*>(this)->address();
-    }
-
-    friend class MutableTraceableFifoOperations<JS::MutableHandle<TF>, A,B,C>;
-    TF& extract() { return *static_cast<JS::MutableHandle<TF>*>(this)->address(); }
-};
-
-template <typename A, size_t B, typename C>
-class HandleBase<TraceableFifo<A,B,C>>
-  : public TraceableFifoOperations<JS::Handle<TraceableFifo<A,B,C>>, A,B,C>
-{
-    using TF = TraceableFifo<A,B,C>;
-
-    friend class TraceableFifoOperations<JS::Handle<TF>, A,B,C>;
-    const TF& extract() const {
-        return *static_cast<const JS::Handle<TF>*>(this)->address();
-    }
 };
 
 } // namespace js

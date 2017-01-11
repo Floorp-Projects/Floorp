@@ -387,6 +387,29 @@ AutoSourceEvent::~AutoSourceEvent()
   DestroySourceEvent();
 }
 
+AutoScopedLabel::AutoScopedLabel(const char* aFormat, ...)
+  : mLabel(nullptr)
+{
+  if (IsStartLogging()) {
+    // Optimization for when it is disabled.
+    nsCString label;
+    va_list args;
+    va_start(args, aFormat);
+    label.AppendPrintf(aFormat, args);
+    va_end(args);
+    mLabel = strdup(label.get());
+    AddLabel("Begin %s", mLabel);
+  }
+}
+
+AutoScopedLabel::~AutoScopedLabel()
+{
+  if (mLabel) {
+    AddLabel("End %s", mLabel);
+    free(mLabel);
+  }
+}
+
 void AddLabel(const char* aFormat, ...)
 {
   TraceInfo* info = GetOrCreateTraceInfo();

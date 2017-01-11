@@ -177,24 +177,14 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     realInterval = std::max(realInterval, uint32_t(DOMMinTimeoutValue()));
   }
 
-  TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
+  timeout->mWindow = &mWindow;
 
-  if (mWindow.IsFrozen()) {
-    // If we are frozen simply set timeout->mTimeRemaining to be the
-    // "time remaining" in the timeout (i.e., the interval itself).  This
-    // will be used to create a new mWhen time when the window is thawed.
-    // The end effect is that time does not appear to pass for frozen windows.
-    timeout->mTimeRemaining = delta;
-  } else {
-    // Since we are not frozen we must set a precise mWhen target wakeup
-    // time.  Even if we are suspended we want to use this target time so
-    // that it appears time passes while suspended.
-    timeout->mWhen = TimeStamp::Now() + delta;
-  }
+  TimeDuration delta = TimeDuration::FromMilliseconds(realInterval);
+  timeout->SetWhenOrTimeRemaining(TimeStamp::Now(), delta);
 
   // If we're not suspended, then set the timer.
   if (!mWindow.IsSuspended()) {
-    MOZ_ASSERT(!timeout->mWhen.IsNull());
+    MOZ_ASSERT(!timeout->When().IsNull());
 
     nsresult rv;
     timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -213,8 +203,6 @@ TimeoutManager::SetTimeout(nsITimeoutHandler* aHandler,
     // The timeout is now also held in the timer's closure.
     Unused << copy.forget();
   }
-
-  timeout->mWindow = &mWindow;
 
   if (!aIsInterval) {
     timeout->mNestingLevel = nestingLevel;
@@ -335,23 +323,23 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   TimeStamp now = TimeStamp::Now();
   TimeStamp deadline;
 
-  if (aTimeout && aTimeout->mWhen > now) {
+  if (aTimeout && aTimeout->When() > now) {
     // The OS timer fired early (which can happen due to the timers
     // having lower precision than TimeStamp does).  Set |deadline| to
     // be the time when the OS timer *should* have fired so that any
     // timers that *should* have fired before aTimeout *will* be fired
     // now.
 
-    deadline = aTimeout->mWhen;
+    deadline = aTimeout->When();
   } else {
     deadline = now;
   }
 
   // The timeout list is kept in deadline order. Discover the latest timeout
   // whose deadline has expired. On some platforms, native timeout events fire
-  // "early", but we handled that above by setting deadline to aTimeout->mWhen
+  // "early", but we handled that above by setting deadline to aTimeout->When()
   // if the timer fired early.  So we can stop walking if we get to timeouts
-  // whose mWhen is greater than deadline, since once that happens we know
+  // whose When() is greater than deadline, since once that happens we know
   // nothing past that point is expired.
   {
     // Use a nested scope in order to make sure the strong references held by
@@ -362,7 +350,7 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
                                        nullptr);
     while (true) {
       Timeout* timeout = expiredIter.Next();
-      if (!timeout || timeout->mWhen > deadline) {
+      if (!timeout || timeout->When() > deadline) {
         break;
       }
 
@@ -410,14 +398,14 @@ TimeoutManager::RunTimeout(Timeout* aTimeout)
   // list for any timeouts inserted as a result of running a timeout.
   RefPtr<Timeout> dummy_normal_timeout = new Timeout();
   dummy_normal_timeout->mFiringDepth = firingDepth;
-  dummy_normal_timeout->mWhen = now;
+  dummy_normal_timeout->SetDummyWhen(now);
   if (last_expired_timeout_is_normal) {
     last_expired_normal_timeout->setNext(dummy_normal_timeout);
   }
 
   RefPtr<Timeout> dummy_tracking_timeout = new Timeout();
   dummy_tracking_timeout->mFiringDepth = firingDepth;
-  dummy_tracking_timeout->mWhen = now;
+  dummy_tracking_timeout->SetDummyWhen(now);
   if (!last_expired_timeout_is_normal) {
     last_expired_tracking_timeout->setNext(dummy_tracking_timeout);
   }
@@ -702,7 +690,7 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
   if (aRunningPendingTimeouts) {
     firingTime = now + nextInterval;
   } else {
-    firingTime = aTimeout->mWhen + nextInterval;
+    firingTime = aTimeout->When() + nextInterval;
   }
 
   TimeStamp currentNow = TimeStamp::Now();
@@ -715,25 +703,12 @@ TimeoutManager::RescheduleTimeout(Timeout* aTimeout, const TimeStamp& now,
     delay = TimeDuration(0);
   }
 
+  aTimeout->SetWhenOrTimeRemaining(currentNow, delay);
+
   if (!aTimeout->mTimer) {
-    if (mWindow.IsFrozen()) {
-      // If we are frozen simply set timeout->mTimeRemaining to be the
-      // "time remaining" in the timeout (i.e., the interval itself).  This
-      // will be used to create a new mWhen time when the window is thawed.
-      // The end effect is that time does not appear to pass for frozen windows.
-      aTimeout->mTimeRemaining = delay;
-    } else if (mWindow.IsSuspended()) {
-    // Since we are not frozen we must set a precise mWhen target wakeup
-    // time.  Even if we are suspended we want to use this target time so
-    // that it appears time passes while suspended.
-      aTimeout->mWhen = currentNow + delay;
-    } else {
-      MOZ_ASSERT_UNREACHABLE("Window should be frozen or suspended.");
-    }
+    MOZ_DIAGNOSTIC_ASSERT(mWindow.IsFrozen() || mWindow.IsSuspended());
     return true;
   }
-
-  aTimeout->mWhen = currentNow + delay;
 
   // Reschedule the OS timer. Don't bother returning any error codes if
   // this fails since the callers of this method don't care about them.
@@ -806,7 +781,7 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
 
   // If insertion point is non-null, we're in the middle of firing timers and
   // the timers we're planning to fire all come before insertion point;
-  // insertion point itself is a dummy timeout with an mWhen that may be
+  // insertion point itself is a dummy timeout with an When() that may be
   // semi-bogus.  In that case, we don't need to do anything with insertion
   // point or anything before it, so should start at the timer after insertion
   // point, if there is one.
@@ -816,15 +791,15 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
        timeout; ) {
     // It's important that this check be <= so that we guarantee that
     // taking std::max with |now| won't make a quantity equal to
-    // timeout->mWhen below.
-    if (timeout->mWhen <= now) {
+    // timeout->When() below.
+    if (timeout->When() <= now) {
       timeout = timeout->getNext();
       continue;
     }
 
-    if (timeout->mWhen - now >
+    if (timeout->When() - now >
         TimeDuration::FromMilliseconds(aPreviousThrottleDelayMS)) {
-      // No need to loop further.  Timeouts are sorted in mWhen order
+      // No need to loop further.  Timeouts are sorted in When() order
       // and the ones after this point were all set up for at least
       // gMinBackgroundTimeoutValue ms and hence were not clamped.
       break;
@@ -842,26 +817,27 @@ TimeoutManager::Timeouts::ResetTimersForThrottleReduction(int32_t aPreviousThrot
     if (oldInterval > interval) {
       // unclamp
       TimeStamp firingTime =
-        std::max(timeout->mWhen - oldInterval + interval, now);
+        std::max(timeout->When() - oldInterval + interval, now);
 
-      NS_ASSERTION(firingTime < timeout->mWhen,
+      NS_ASSERTION(firingTime < timeout->When(),
                    "Our firing time should strictly decrease!");
 
       TimeDuration delay = firingTime - now;
-      timeout->mWhen = firingTime;
+      timeout->SetWhenOrTimeRemaining(now, delay);
+      MOZ_DIAGNOSTIC_ASSERT(timeout->When() == firingTime);
 
-      // Since we reset mWhen we need to move |timeout| to the right
-      // place in the list so that it remains sorted by mWhen.
+      // Since we reset When() we need to move |timeout| to the right
+      // place in the list so that it remains sorted by When().
 
       // Get the pointer to the next timeout now, before we move the
       // current timeout in the list.
       Timeout* nextTimeout = timeout->getNext();
 
-      // It is safe to remove and re-insert because mWhen is now
+      // It is safe to remove and re-insert because When() is now
       // strictly smaller than it used to be, so we know we'll insert
       // |timeout| before nextTimeout.
       NS_ASSERTION(!nextTimeout ||
-                   timeout->mWhen < nextTimeout->mWhen, "How did that happen?");
+                   timeout->When() < nextTimeout->When(), "How did that happen?");
       timeout->remove();
       // Insert() will addref |timeout| and reset mFiringDepth.  Make sure to
       // undo that after calling it.
@@ -937,10 +913,10 @@ TimeoutManager::Timeouts::Insert(Timeout* aTimeout, SortBy aSortBy)
   for (prevSibling = GetLast();
        prevSibling && prevSibling != InsertionPoint() &&
          // This condition needs to match the one in SetTimeoutOrInterval that
-         // determines whether to set mWhen or mTimeRemaining.
+         // determines whether to set When() or TimeRemaining().
          (aSortBy == SortBy::TimeRemaining ?
-          prevSibling->mTimeRemaining > aTimeout->mTimeRemaining :
-          prevSibling->mWhen > aTimeout->mWhen);
+          prevSibling->TimeRemaining() > aTimeout->TimeRemaining() :
+          prevSibling->When() > aTimeout->When());
        prevSibling = prevSibling->getPrevious()) {
     /* Do nothing; just searching */
   }
@@ -1028,15 +1004,15 @@ TimeoutManager::Resume()
 
     MOZ_ASSERT(!aTimeout->mTimer);
 
-    // The timeout mWhen is set to the absolute time when the timer should
+    // The timeout When() is set to the absolute time when the timer should
     // fire.  Recalculate the delay from now until that deadline.  If the
     // the deadline has already passed or falls within our minimum delay
     // deadline, then clamp the resulting value to the minimum delay.  The
-    // mWhen will remain at its absolute time, but we won'aTimeout fire the OS
+    // When() will remain at its absolute time, but we won'aTimeout fire the OS
     // timer until our calculated delay has passed.
     int32_t remaining = 0;
-    if (aTimeout->mWhen > now) {
-      remaining = static_cast<int32_t>((aTimeout->mWhen - now).ToMilliseconds());
+    if (aTimeout->When() > now) {
+      remaining = static_cast<int32_t>((aTimeout->When() - now).ToMilliseconds());
     }
     uint32_t delay = std::max(remaining, DOMMinTimeoutValue());
 
@@ -1068,11 +1044,12 @@ TimeoutManager::Freeze()
     // re-apply it when the window is Thaw()'d.  This effectively
     // shifts timers to the right as if time does not pass while
     // the window is frozen.
-    if (aTimeout->mWhen > now) {
-      aTimeout->mTimeRemaining = aTimeout->mWhen - now;
-    } else {
-      aTimeout->mTimeRemaining = TimeDuration(0);
+    TimeDuration delta(0);
+    if (aTimeout->When() > now) {
+      delta = aTimeout->When() - now;
     }
+    aTimeout->SetWhenOrTimeRemaining(now, delta);
+    MOZ_DIAGNOSTIC_ASSERT(aTimeout->TimeRemaining() == delta);
 
     // Since we are suspended there should be no OS timer set for
     // this timeout entry.
@@ -1096,8 +1073,9 @@ TimeoutManager::Thaw()
       return;
     }
 
-    // Set mWhen back to the time when the timer is supposed to fire.
-    aTimeout->mWhen = now + aTimeout->mTimeRemaining;
+    // Set When() back to the time when the timer is supposed to fire.
+    aTimeout->SetWhenOrTimeRemaining(now, aTimeout->TimeRemaining());
+    MOZ_DIAGNOSTIC_ASSERT(!aTimeout->When().IsNull());
 
     MOZ_ASSERT(!aTimeout->mTimer);
   });

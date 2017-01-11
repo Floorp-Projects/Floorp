@@ -1292,6 +1292,7 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
     case eContextMenu:
     case eMouseEnterIntoWidget:
     case eMouseExitFromWidget:
+    case eMouseTouchDrag:
       return true;
     default:
       return false;

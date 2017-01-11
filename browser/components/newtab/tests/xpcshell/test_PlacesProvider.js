@@ -59,13 +59,13 @@ function makeVisit(index, daysAgo, isTyped, domain = TEST_URL) {
 add_task(function test_LinkChecker_securityCheck() {
 
   let urls = [
-    {url: "file://home/file/image.png", expected: false},
-    {url: "resource:///modules/PlacesProvider.jsm", expected: false},
     {url: "javascript:alert('hello')", expected: false}, // jshint ignore:line
     {url: "data:image/png;base64,XXX", expected: false},
     {url: "about:newtab", expected: true},
     {url: "https://example.com", expected: true},
     {url: "ftp://example.com", expected: true},
+    {url: "file://home/file/image.png", expected: true},
+    {url: "resource:///modules/PlacesProvider.jsm", expected: true},
   ];
   for (let {url, expected} of urls) {
     let observed = PlacesProvider.LinkChecker.checkLoadURI(url);

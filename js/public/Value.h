@@ -1288,20 +1288,18 @@ struct BarrierMethods<JS::Value>
     }
 };
 
-template <class Outer> class MutableValueOperations;
+template <class Wrapper> class MutableValueOperations;
 
 /**
  * A class designed for CRTP use in implementing the non-mutating parts of the
- * Value interface in Value-like classes.  Outer must be a class inheriting
- * ValueOperations<Outer> with a visible get() method returning a const
- * reference to the Value abstracted by Outer.
+ * Value interface in Value-like classes.  Wrapper must be a class inheriting
+ * ValueOperations<Wrapper> with a visible get() method returning a const
+ * reference to the Value abstracted by Wrapper.
  */
-template <class Outer>
-class ValueOperations
+template <class Wrapper>
+class WrappedPtrOperations<JS::Value, Wrapper>
 {
-    friend class MutableValueOperations<Outer>;
-
-    const JS::Value& value() const { return static_cast<const Outer*>(this)->get(); }
+    const JS::Value& value() const { return static_cast<const Wrapper*>(this)->get(); }
 
   public:
     bool isUndefined() const { return value().isUndefined(); }
@@ -1346,14 +1344,14 @@ class ValueOperations
 
 /**
  * A class designed for CRTP use in implementing all the mutating parts of the
- * Value interface in Value-like classes.  Outer must be a class inheriting
- * MutableValueOperations<Outer> with visible get() methods returning const and
- * non-const references to the Value abstracted by Outer.
+ * Value interface in Value-like classes.  Wrapper must be a class inheriting
+ * MutableWrappedPtrOperations<Wrapper> with visible get() methods returning const and
+ * non-const references to the Value abstracted by Wrapper.
  */
-template <class Outer>
-class MutableValueOperations : public ValueOperations<Outer>
+template <class Wrapper>
+class MutableWrappedPtrOperations<JS::Value, Wrapper> : public WrappedPtrOperations<JS::Value, Wrapper>
 {
-    JS::Value& value() { return static_cast<Outer*>(this)->get(); }
+    JS::Value& value() { return static_cast<Wrapper*>(this)->get(); }
 
   public:
     void setNull() { value().setNull(); }
@@ -1378,13 +1376,9 @@ class MutableValueOperations : public ValueOperations<Outer>
  * Augment the generic Heap<T> interface when T = Value with
  * type-querying, value-extracting, and mutating operations.
  */
-template <>
-class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
+template <typename Wrapper>
+class HeapBase<JS::Value, Wrapper> : public WrappedPtrOperations<JS::Value, Wrapper>
 {
-    typedef JS::Heap<JS::Value> Outer;
-
-    friend class ValueOperations<Outer>;
-
     void setBarriered(const JS::Value& v) {
         *static_cast<JS::Heap<JS::Value>*>(this) = v;
     }
@@ -1430,22 +1424,6 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
             setNull();
     }
 };
-
-template <>
-class HandleBase<JS::Value> : public ValueOperations<JS::Handle<JS::Value> >
-{};
-
-template <>
-class MutableHandleBase<JS::Value> : public MutableValueOperations<JS::MutableHandle<JS::Value> >
-{};
-
-template <>
-class RootedBase<JS::Value> : public MutableValueOperations<JS::Rooted<JS::Value> >
-{};
-
-template <>
-class PersistentRootedBase<JS::Value> : public MutableValueOperations<JS::PersistentRooted<JS::Value>>
-{};
 
 /*
  * If the Value is a GC pointer type, convert to that type and call |f| with
