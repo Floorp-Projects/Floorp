@@ -37,7 +37,7 @@ const { URL } = Cu.Sandbox(CC("@mozilla.org/systemprincipal;1", "nsIPrincipal")(
  */
 function defineLazyGetter(object, name, lambda) {
   Object.defineProperty(object, name, {
-    get: function () {
+    get() {
       // Redefine this accessor property as a data property.
       // Delete it first, to rule out "too much recursion" in case object is
       // a proxy whose defineProperty handler might unwittingly trigger this
@@ -213,20 +213,20 @@ defineLazyGetter(exports.modules, "FileReader", () => {
 exports.globals = {
   isWorker: false,
   reportError: Cu.reportError,
-  atob: atob,
-  btoa: btoa,
+  atob,
+  btoa,
   URL,
   loader: {
     lazyGetter: defineLazyGetter,
     lazyImporter: defineLazyModuleGetter,
     lazyServiceGetter: defineLazyServiceGetter,
-    lazyRequireGetter: lazyRequireGetter,
+    lazyRequireGetter,
     // Defined by Loader.jsm
     id: null
   },
 
   // Let new XMLHttpRequest do the right thing.
-  XMLHttpRequest: function () {
+  XMLHttpRequest() {
     return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
            .createInstance(Ci.nsIXMLHttpRequest);
   },
@@ -261,7 +261,7 @@ let globals = {};
 function lazyGlobal(name, getter) {
   defineLazyGetter(globals, name, getter);
   Object.defineProperty(exports.globals, name, {
-    get: function () {
+    get() {
       return globals[name];
     },
     configurable: true,

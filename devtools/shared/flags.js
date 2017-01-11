@@ -8,10 +8,10 @@
 function makeWritableFlag(exports, name) {
   let flag = false;
   Object.defineProperty(exports, name, {
-    get: function () {
+    get() {
       return flag;
     },
-    set: function (state) {
+    set(state) {
       flag = state;
     }
   });

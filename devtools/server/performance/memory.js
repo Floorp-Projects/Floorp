@@ -38,7 +38,7 @@ exports.Memory = Class({
   /**
    * Requires a root actor and a StackFrameCache.
    */
-  initialize: function (parent, frameCache = new StackFrameCache()) {
+  initialize(parent, frameCache = new StackFrameCache()) {
     this.parent = parent;
     this._mgr = Cc["@mozilla.org/memory-reporter-manager;1"]
                   .getService(Ci.nsIMemoryReporterManager);
@@ -53,7 +53,7 @@ exports.Memory = Class({
     events.on(this.parent, "window-ready", this._onWindowReady);
   },
 
-  destroy: function () {
+  destroy() {
     events.off(this.parent, "window-ready", this._onWindowReady);
 
     this._mgr = null;
@@ -95,11 +95,11 @@ exports.Memory = Class({
   /**
    * Gets the current MemoryBridge attach/detach state.
    */
-  getState: function () {
+  getState() {
     return this.state;
   },
 
-  _clearDebuggees: function () {
+  _clearDebuggees() {
     if (this._dbg) {
       if (this.isRecordingAllocations()) {
         this.dbg.memory.drainAllocationsLog();
@@ -109,7 +109,7 @@ exports.Memory = Class({
     }
   },
 
-  _clearFrames: function () {
+  _clearFrames() {
     if (this.isRecordingAllocations()) {
       this._frameCache.clearFrames();
     }
@@ -118,7 +118,7 @@ exports.Memory = Class({
   /**
    * Handler for the parent actor's "window-ready" event.
    */
-  _onWindowReady: function ({ isTopLevel }) {
+  _onWindowReady({ isTopLevel }) {
     if (this.state == "attached") {
       this._clearDebuggees();
       if (isTopLevel && this.isRecordingAllocations()) {
@@ -132,7 +132,7 @@ exports.Memory = Class({
    * Returns a boolean indicating whether or not allocation
    * sites are being tracked.
    */
-  isRecordingAllocations: function () {
+  isRecordingAllocations() {
     return this.dbg.memory.trackingAllocationSites;
   },
 
@@ -338,7 +338,7 @@ exports.Memory = Class({
   /*
    * Force a browser-wide GC.
    */
-  forceGarbageCollection: function () {
+  forceGarbageCollection() {
     for (let i = 0; i < 3; i++) {
       Cu.forceGC();
     }
@@ -349,7 +349,7 @@ exports.Memory = Class({
    * collection, see
    * https://developer.mozilla.org/en-US/docs/Interfacing_with_the_XPCOM_cycle_collector#What_the_cycle_collector_does
    */
-  forceCycleCollection: function () {
+  forceCycleCollection() {
     Cu.forceCC();
   },
 
@@ -359,7 +359,7 @@ exports.Memory = Class({
    *
    * @returns object
    */
-  measure: function () {
+  measure() {
     let result = {};
 
     let jsObjectsSize = {};
@@ -392,14 +392,14 @@ exports.Memory = Class({
     return result;
   },
 
-  residentUnique: function () {
+  residentUnique() {
     return this._mgr.residentUnique;
   },
 
   /**
    * Handler for GC events on the Debugger.Memory instance.
    */
-  _onGarbageCollection: function (data) {
+  _onGarbageCollection(data) {
     events.emit(this, "garbage-collection", data);
 
     // If `drainAllocationsTimeout` set, fire an allocations event with the drained log,
@@ -416,7 +416,7 @@ exports.Memory = Class({
    * drainAllocationsTimeout was set.
    * Drains allocation log and emits as an event and restarts the timer.
    */
-  _emitAllocations: function () {
+  _emitAllocations() {
     events.emit(this, "allocations", this.getAllocations());
     this._poller.arm();
   },
@@ -424,7 +424,7 @@ exports.Memory = Class({
   /**
    * Accesses the docshell to return the current process time.
    */
-  _getCurrentTime: function () {
+  _getCurrentTime() {
     return (this.parent.isRootActor ? this.parent.docShell :
                                       this.parent.originalDocShell).now();
   },

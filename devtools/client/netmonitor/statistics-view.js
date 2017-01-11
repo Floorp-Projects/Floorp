@@ -33,7 +33,7 @@ StatisticsView.prototype = {
   /**
    * Initialization function, called when the statistics view is started.
    */
-  initialize: function (store) {
+  initialize(store) {
     this.store = store;
     this.Chart = Chart;
     this._backButton = $("#react-statistics-back-hook");
@@ -53,14 +53,14 @@ StatisticsView.prototype = {
   /**
     * Destruction function, called when the statistics view is closed.
     */
-  destroy: function () {
+  destroy() {
     ReactDOM.unmountComponentAtNode(this._backButton);
   },
 
   /**
    * Initializes and displays empty charts in this container.
    */
-  displayPlaceholderCharts: function () {
+  displayPlaceholderCharts() {
     this._createChart({
       id: "#primed-cache-chart",
       title: "charts.cacheEnabled"
@@ -78,7 +78,7 @@ StatisticsView.prototype = {
    * @param array items
    *        @see this._sanitizeChartDataSource
    */
-  createPrimedCacheChart: function (items) {
+  createPrimedCacheChart(items) {
     this._createChart({
       id: "#primed-cache-chart",
       title: "charts.cacheEnabled",
@@ -96,7 +96,7 @@ StatisticsView.prototype = {
    * @param array items
    *        @see this._sanitizeChartDataSource
    */
-  createEmptyCacheChart: function (items) {
+  createEmptyCacheChart(items) {
     this._createChart({
       id: "#empty-cache-chart",
       title: "charts.cacheDisabled",
@@ -149,7 +149,7 @@ StatisticsView.prototype = {
    *          - id: either "#primed-cache-chart" or "#empty-cache-chart"
    *          - title/data/strings/totals/sorted: @see Chart.js for details
    */
-  _createChart: function ({ id, title, data, strings, totals, sorted }) {
+  _createChart({ id, title, data, strings, totals, sorted }) {
     let container = $(id);
 
     // Nuke all existing charts of the specified type.
@@ -161,10 +161,10 @@ StatisticsView.prototype = {
     let chart = this.Chart.PieTable(document, {
       diameter: NETWORK_ANALYSIS_PIE_CHART_DIAMETER,
       title: L10N.getStr(title),
-      data: data,
-      strings: strings,
-      totals: totals,
-      sorted: sorted
+      data,
+      strings,
+      totals,
+      sorted
     });
 
     chart.on("click", (_, item) => {
@@ -185,7 +185,7 @@ StatisticsView.prototype = {
    * @param boolean emptyCache
    *        True if the cache is considered enabled, false for disabled.
    */
-  _sanitizeChartDataSource: function (items, emptyCache) {
+  _sanitizeChartDataSource(items, emptyCache) {
     let data = [
       "html", "css", "js", "xhr", "fonts", "images", "media", "flash", "ws", "other"
     ].map(e => ({

@@ -80,7 +80,7 @@ const SplitBox = React.createClass({
     splitBox.classList.add("dragging");
 
     this.setState({
-      defaultCursor: defaultCursor
+      defaultCursor
     });
   },
 
@@ -186,7 +186,7 @@ const SplitBox = React.createClass({
     return (
       dom.div({
         className: classNames.join(" "),
-        style: style },
+        style },
         startPanel ?
           dom.div({
             className: endPanelControl ? "uncontrolled" : "controlled",

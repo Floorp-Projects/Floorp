@@ -1206,8 +1206,8 @@ TabActor.prototype = {
     }
 
     events.emit(this, "window-ready", {
-      window: window,
-      isTopLevel: isTopLevel,
+      window,
+      isTopLevel,
       id: getWindowID(window)
     });
 
@@ -1233,10 +1233,10 @@ TabActor.prototype = {
 
   _windowDestroyed(window, id = null, isFrozen = false) {
     events.emit(this, "window-destroyed", {
-      window: window,
+      window,
       isTopLevel: window == this.window,
       id: id || getWindowID(window),
-      isFrozen: isFrozen
+      isFrozen
     });
   },
 
@@ -1270,10 +1270,10 @@ TabActor.prototype = {
     // (all pending user prompts are dealt with),
     // but before the first request starts.
     events.emit(this, "will-navigate", {
-      window: window,
-      isTopLevel: isTopLevel,
-      newURI: newURI,
-      request: request
+      window,
+      isTopLevel,
+      newURI,
+      request
     });
 
     // We don't do anything for inner frames in TabActor.
@@ -1299,7 +1299,7 @@ TabActor.prototype = {
       url: newURI,
       nativeConsoleAPI: true,
       state: "start",
-      isFrameSwitching: isFrameSwitching
+      isFrameSwitching
     });
 
     if (reset) {
@@ -1319,8 +1319,8 @@ TabActor.prototype = {
     // This event is fired once the document is loaded,
     // after the load event, it's document ready-state is 'complete'.
     events.emit(this, "navigate", {
-      window: window,
-      isTopLevel: isTopLevel
+      window,
+      isTopLevel
     });
 
     // We don't do anything for inner frames in TabActor.
@@ -1342,7 +1342,7 @@ TabActor.prototype = {
       title: this.title,
       nativeConsoleAPI: this.hasNativeConsoleAPI(this.window),
       state: "stop",
-      isFrameSwitching: isFrameSwitching
+      isFrameSwitching
     });
   },
 

@@ -23,12 +23,12 @@ const Accordion = React.createClass({
 
   mixins: [ React.addons.PureRenderMixin ],
 
-  getInitialState: function () {
+  getInitialState() {
     return { opened: this.props.items.map(item => item.opened),
              created: [] };
   },
 
-  handleHeaderClick: function (i) {
+  handleHeaderClick(i) {
     const opened = [...this.state.opened];
     const created = [...this.state.created];
     const item = this.props.items[i];
@@ -43,7 +43,7 @@ const Accordion = React.createClass({
     this.setState({ opened, created });
   },
 
-  renderContainer: function (item, i) {
+  renderContainer(item, i) {
     const { opened, created } = this.state;
     const containerClassName =
           item.header.toLowerCase().replace(/\s/g, "-") + "-pane";
@@ -73,7 +73,7 @@ const Accordion = React.createClass({
     );
   },
 
-  render: function () {
+  render() {
     return div(
       { className: "accordion" },
       this.props.items.map(this.renderContainer)

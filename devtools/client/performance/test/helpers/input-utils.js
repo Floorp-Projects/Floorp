@@ -67,7 +67,7 @@ exports.scrollCanvasGraph = (graph, { axis, wheel, x, y }) => {
   graph._onMouseWheel({
     testX: x,
     testY: y,
-    axis: axis,
+    axis,
     detail: wheel,
     HORIZONTAL_AXIS: exports.HORIZONTAL_AXIS,
     VERTICAL_AXIS: exports.VERTICAL_AXIS

@@ -35,7 +35,7 @@ exports.items = [
         manual: l10n.lookup("csscoverageStartNoReloadManual")
       }
     ],
-    exec: function* (args, context) {
+    * exec(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {
         throw new Error(l10n.lookup("csscoverageNoRemoteError"));
@@ -50,7 +50,7 @@ exports.items = [
     name: "csscoverage stop",
     hidden: true,
     description: l10n.lookup("csscoverageStopDesc2"),
-    exec: function* (args, context) {
+    * exec(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
       if (usage == null) {
@@ -66,7 +66,7 @@ exports.items = [
     name: "csscoverage oneshot",
     hidden: true,
     description: l10n.lookup("csscoverageOneShotDesc2"),
-    exec: function* (args, context) {
+    * exec(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
       if (usage == null) {
@@ -83,12 +83,12 @@ exports.items = [
     hidden: true,
     description: l10n.lookup("csscoverageToggleDesc2"),
     state: {
-      isChecked: function (target) {
+      isChecked(target) {
         return csscoverage.getUsage(target).then(usage => {
           return usage.isRunning();
         });
       },
-      onChange: function (target, handler) {
+      onChange(target, handler) {
         csscoverage.getUsage(target).then(usage => {
           this.handler = ev => {
             handler("state-change", ev);
@@ -96,14 +96,14 @@ exports.items = [
           usage.on("state-change", this.handler);
         });
       },
-      offChange: function (target, handler) {
+      offChange(target, handler) {
         csscoverage.getUsage(target).then(usage => {
           usage.off("state-change", this.handler);
           this.handler = undefined;
         });
       },
     },
-    exec: function* (args, context) {
+    * exec(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
       if (usage == null) {
@@ -120,7 +120,7 @@ exports.items = [
     name: "csscoverage report",
     hidden: true,
     description: l10n.lookup("csscoverageReportDesc2"),
-    exec: function* (args, context) {
+    * exec(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {
         throw new Error(l10n.lookup("csscoverageNoRemoteError"));
@@ -137,7 +137,7 @@ exports.items = [
     item: "converter",
     from: "csscoveragePageReport",
     to: "dom",
-    exec: function* (csscoveragePageReport, context) {
+    * exec(csscoveragePageReport, context) {
       let target = context.environment.target;
 
       let toolbox = yield gDevTools.showToolbox(target, "styleeditor");

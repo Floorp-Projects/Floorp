@@ -103,7 +103,7 @@ exports.items = [
         ]
       }
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       // Remove all existing highlighters unless told otherwise
       if (!args.keep) {
         unhighlightAll();

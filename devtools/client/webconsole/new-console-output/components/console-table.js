@@ -31,7 +31,7 @@ const ConsoleTable = createClass({
     id: PropTypes.string.isRequired,
   },
 
-  componentWillMount: function () {
+  componentWillMount() {
     const {id, dispatch, serviceContainer, parameters} = this.props;
 
     if (!Array.isArray(parameters) || parameters.length === 0) {
@@ -45,13 +45,13 @@ const ConsoleTable = createClass({
     dispatch(actions.messageTableDataGet(id, client, dataType));
   },
 
-  getHeaders: function (columns) {
+  getHeaders(columns) {
     let headerItems = [];
     columns.forEach((value, key) => headerItems.push(dom.th({}, value)));
     return headerItems;
   },
 
-  getRows: function (columns, items) {
+  getRows(columns, items) {
     return items.map(item => {
       let cells = [];
       columns.forEach((value, key) => {
@@ -69,7 +69,7 @@ const ConsoleTable = createClass({
     });
   },
 
-  render: function () {
+  render() {
     const {parameters, tableData} = this.props;
     const headersGrip = parameters[1];
     const headers = headersGrip && headersGrip.preview ? headersGrip.preview.items : null;

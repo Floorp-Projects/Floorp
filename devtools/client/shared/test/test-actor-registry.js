@@ -48,7 +48,7 @@
   // Ensure fetching a live TabActor form for the targeted app
   // (helps fetching the test actor registered dynamically)
   let getUpdatedForm = function (client, tab) {
-    return client.getTab({tab: tab})
+    return client.getTab({tab})
                  .then(response => response.tab);
   };
 

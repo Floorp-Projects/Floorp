@@ -29,7 +29,7 @@ define(function (require, exports, module) {
       ]).isRequired
     },
 
-    stringify: function (object) {
+    stringify(object) {
       let isNegativeZero = Object.is(object, -0) ||
         (object.type && object.type == "-0");
 
@@ -55,6 +55,6 @@ define(function (require, exports, module) {
 
   exports.Number = {
     rep: Number,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

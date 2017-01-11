@@ -35,7 +35,7 @@ SimpleOutlineHighlighter.prototype = {
   /**
    * Destroy the nodes. Remove listeners.
    */
-  destroy: function () {
+  destroy() {
     this.hide();
     this.chromeDoc = null;
   },
@@ -44,7 +44,7 @@ SimpleOutlineHighlighter.prototype = {
    * Show the highlighter on a given node
    * @param {DOMNode} node
    */
-  show: function (node) {
+  show(node) {
     if (isNodeValid(node) && (!this.currentNode || node !== this.currentNode)) {
       this.hide();
       this.currentNode = node;
@@ -57,7 +57,7 @@ SimpleOutlineHighlighter.prototype = {
   /**
    * Hide the highlighter, the outline and the infobar.
    */
-  hide: function () {
+  hide() {
     if (this.currentNode) {
       removePseudoClassLock(this.currentNode, HIGHLIGHTED_PSEUDO_CLASS);
       this.currentNode = null;

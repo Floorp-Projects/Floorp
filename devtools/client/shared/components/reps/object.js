@@ -32,17 +32,17 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle: function (object) {
+    getTitle(object) {
       let className = object && object.class ? object.class : "Object";
       if (this.props.objectLink) {
         return this.props.objectLink({
-          object: object
+          object
         }, className);
       }
       return className;
     },
 
-    safePropIterator: function (object, max) {
+    safePropIterator(object, max) {
       max = (typeof max === "undefined") ? 3 : max;
       try {
         return this.propIterator(object, max);
@@ -52,7 +52,7 @@ define(function (require, exports, module) {
       return [];
     },
 
-    propIterator: function (object, max) {
+    propIterator(object, max) {
       let isInterestingProp = (t, value) => {
         // Do not pick objects, it could cause recursion.
         return (t == "boolean" || t == "number" || (t == "string" && value));
@@ -82,7 +82,7 @@ define(function (require, exports, module) {
 
         props.push(Caption({
           object: objectLink({
-            object: object
+            object
           }, (Object.keys(object).length - max) + " more…")
         }));
       } else if (props.length > 0) {
@@ -94,7 +94,7 @@ define(function (require, exports, module) {
       return props;
     },
 
-    getProps: function (object, max, filter) {
+    getProps(object, max, filter) {
       let props = [];
 
       max = max || 3;
@@ -121,8 +121,8 @@ define(function (require, exports, module) {
           let t = typeof value;
           if (filter(t, value)) {
             props.push(PropRep({
-              mode: mode,
-              name: name,
+              mode,
+              name,
               object: value,
               equal: ": ",
               delim: ", ",
@@ -154,12 +154,12 @@ define(function (require, exports, module) {
           this.getTitle(object),
           objectLink({
             className: "objectLeftBrace",
-            object: object
+            object
           }, " { "),
           ...props,
           objectLink({
             className: "objectRightBrace",
-            object: object
+            object
           }, " }")
         )
       );
@@ -172,6 +172,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.Obj = {
     rep: Obj,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

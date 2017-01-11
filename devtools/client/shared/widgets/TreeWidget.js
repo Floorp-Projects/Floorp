@@ -101,7 +101,7 @@ TreeWidget.prototype = {
    * @return {array}
    *        An array of ids leading upto the requested item
    */
-  isSelected: function (item) {
+  isSelected(item) {
     if (!this._selectedItem || this._selectedItem.length != item.length) {
       return false;
     }
@@ -115,7 +115,7 @@ TreeWidget.prototype = {
     return true;
   },
 
-  destroy: function () {
+  destroy() {
     this.root.remove();
     this.root = null;
   },
@@ -123,7 +123,7 @@ TreeWidget.prototype = {
   /**
    * Sets up the root container of the TreeWidget.
    */
-  setupRoot: function () {
+  setupRoot() {
     this.root = new TreeItem(this.document);
     if (this.contextMenuId) {
       this.root.children.addEventListener("contextmenu", (event) => {
@@ -141,7 +141,7 @@ TreeWidget.prototype = {
   /**
    * Sets the text to be shown when no node is present in the tree
    */
-  setPlaceholderText: function (text) {
+  setPlaceholderText(text) {
     this.placeholder.textContent = text;
   },
 
@@ -151,14 +151,14 @@ TreeWidget.prototype = {
    * @param {array} id
    *        An array of ids leading upto the selected item
    */
-  selectItem: function (id) {
+  selectItem(id) {
     this.selectedItem = id;
   },
 
   /**
    * Selects the next visible item in the tree.
    */
-  selectNextItem: function () {
+  selectNextItem() {
     let next = this.getNextVisibleItem();
     if (next) {
       this.selectedItem = next;
@@ -168,7 +168,7 @@ TreeWidget.prototype = {
   /**
    * Selects the previos visible item in the tree
    */
-  selectPreviousItem: function () {
+  selectPreviousItem() {
     let prev = this.getPreviousVisibleItem();
     if (prev) {
       this.selectedItem = prev;
@@ -178,7 +178,7 @@ TreeWidget.prototype = {
   /**
    * Returns the next visible item in the tree
    */
-  getNextVisibleItem: function () {
+  getNextVisibleItem() {
     let node = this._selectedLabel;
     if (node.hasAttribute("expanded") && node.nextSibling.firstChild) {
       return JSON.parse(node.nextSibling.firstChild.getAttribute("data-id"));
@@ -200,7 +200,7 @@ TreeWidget.prototype = {
   /**
    * Returns the previous visible item in the tree
    */
-  getPreviousVisibleItem: function () {
+  getPreviousVisibleItem() {
     let node = this._selectedLabel.parentNode;
     if (node.previousSibling) {
       node = node.previousSibling.firstChild;
@@ -226,7 +226,7 @@ TreeWidget.prototype = {
     return null;
   },
 
-  clearSelection: function () {
+  clearSelection() {
     this.selectedItem = -1;
   },
 
@@ -259,7 +259,7 @@ TreeWidget.prototype = {
    *        are simply adding children to an already existing node and you know
    *        its id.
    */
-  add: function (items) {
+  add(items) {
     this.root.add(items, this.defaultType, this.sorted);
     for (let i = 0; i < items.length; i++) {
       if (items[i].attachment) {
@@ -278,7 +278,7 @@ TreeWidget.prototype = {
    * @param {array} item
    *        The array of ids leading up to the item.
    */
-  remove: function (item) {
+  remove(item) {
     this.root.remove(item);
     this.attachments.delete(JSON.stringify(item));
     // Display the empty tree text
@@ -290,7 +290,7 @@ TreeWidget.prototype = {
   /**
    * Removes all of the child nodes from this tree.
    */
-  clear: function () {
+  clear() {
     this.root.remove();
     this.setupRoot();
     this.attachments.clear();
@@ -302,21 +302,21 @@ TreeWidget.prototype = {
   /**
    * Expands the tree completely
    */
-  expandAll: function () {
+  expandAll() {
     this.root.expandAll();
   },
 
   /**
    * Collapses the tree completely
    */
-  collapseAll: function () {
+  collapseAll() {
     this.root.collapseAll();
   },
 
   /**
    * Click handler for the tree. Used to select, open and close the tree nodes.
    */
-  onClick: function (event) {
+  onClick(event) {
     let target = event.originalTarget;
     while (target && !target.classList.contains("tree-widget-item")) {
       if (target == this.root.children) {
@@ -344,7 +344,7 @@ TreeWidget.prototype = {
    * Keypress handler for this tree. Used to select next and previous visible
    * items, as well as collapsing and expanding any item.
    */
-  onKeypress: function (event) {
+  onKeypress(event) {
     switch (event.keyCode) {
       case KeyCodes.DOM_VK_UP:
         this.selectPreviousItem();
@@ -380,7 +380,7 @@ TreeWidget.prototype = {
    * Scrolls the viewport of the tree so that the selected item is always
    * visible.
    */
-  ensureSelectedVisible: function () {
+  ensureSelectedVisible() {
     let {top, bottom} = this._selectedLabel.getBoundingClientRect();
     let height = this.root.children.parentNode.clientHeight;
     if (top < 0) {
@@ -468,7 +468,7 @@ TreeItem.prototype = {
    *        true if the tree items are inserted in a lexically sorted manner.
    *        Otherwise, false if the item are to be appended to their parent.
    */
-  add: function (items, defaultType, sorted) {
+  add(items, defaultType, sorted) {
     if (items.length == this.level) {
       // This is the exit condition of recursive TreeItem.add calls
       return;
@@ -532,7 +532,7 @@ TreeItem.prototype = {
    * @param {array} items
    *        Ids of items leading up to the item to be removed.
    */
-  remove: function (items = []) {
+  remove(items = []) {
     let id = items.shift();
     if (id && this.items.has(id)) {
       let deleted = this.items.get(id);
@@ -555,7 +555,7 @@ TreeItem.prototype = {
    * @param {array} items
    *        Ids of items leading up to the item to be selected.
    */
-  setSelectedItem: function (items) {
+  setSelectedItem(items) {
     if (!items[this.level]) {
       this.label.classList.add("theme-selected");
       this.label.setAttribute("expanded", "true");
@@ -574,7 +574,7 @@ TreeItem.prototype = {
   /**
    * Collapses this item and all of its sub tree items
    */
-  collapseAll: function () {
+  collapseAll() {
     if (this.label) {
       this.label.removeAttribute("expanded");
     }
@@ -586,7 +586,7 @@ TreeItem.prototype = {
   /**
    * Expands this item and all of its sub tree items
    */
-  expandAll: function () {
+  expandAll() {
     if (this.label) {
       this.label.setAttribute("expanded", "true");
     }
@@ -595,7 +595,7 @@ TreeItem.prototype = {
     }
   },
 
-  destroy: function () {
+  destroy() {
     this.children.remove();
     this.node.remove();
     this.label = null;

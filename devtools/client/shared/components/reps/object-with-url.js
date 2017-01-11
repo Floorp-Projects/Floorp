@@ -31,7 +31,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle: function (grip) {
+    getTitle(grip) {
       if (this.props.objectLink) {
         return span({className: "objectBox"},
           this.props.objectLink({
@@ -42,11 +42,11 @@ define(function (require, exports, module) {
       return "";
     },
 
-    getType: function (grip) {
+    getType(grip) {
       return grip.class;
     },
 
-    getDescription: function (grip) {
+    getDescription(grip) {
       return getURLDisplayString(grip.preview.url);
     },
 
@@ -76,6 +76,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.ObjectWithURL = {
     rep: ObjectWithURL,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

@@ -122,7 +122,7 @@ exports.items = [
     item: "converter",
     from: "imageSummary",
     to: "dom",
-    exec: function (imageSummary, context) {
+    exec(imageSummary, context) {
       const document = context.document;
       const root = document.createElement("div");
 
@@ -182,7 +182,7 @@ exports.items = [
       filenameParam,
       standardParams,
     ],
-    exec: function (args, context) {
+    exec(args, context) {
       // Re-execute the command on the server
       const command = context.typed.replace(/^screenshot/, "screenshot_server");
       let capture = context.updateExec(command).then(output => {
@@ -200,7 +200,7 @@ exports.items = [
     hidden: true,
     returnType: "imageSummary",
     params: [ filenameParam, standardParams ],
-    exec: function (args, context) {
+    exec(args, context) {
       return captureScreenshot(args, context.environment.document);
     },
   }
@@ -318,10 +318,10 @@ function createScreenshotData(document, args) {
 
   return Promise.resolve({
     destinations: [],
-    data: data,
-    height: height,
-    width: width,
-    filename: filename,
+    data,
+    height,
+    width,
+    filename,
   });
 }
 
@@ -468,7 +468,7 @@ function DownloadListener(win, transfer) {
 }
 
 DownloadListener.prototype = {
-  QueryInterface: function (iid) {
+  QueryInterface(iid) {
     if (iid.equals(Ci.nsIInterfaceRequestor) ||
         iid.equals(Ci.nsIWebProgressListener) ||
         iid.equals(Ci.nsIWebProgressListener2) ||
@@ -478,7 +478,7 @@ DownloadListener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  getInterface: function (iid) {
+  getInterface(iid) {
     if (iid.equals(Ci.nsIAuthPrompt) ||
         iid.equals(Ci.nsIAuthPrompt2)) {
       let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"]
@@ -489,7 +489,7 @@ DownloadListener.prototype = {
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  onStateChange: function (webProgress, request, state, status) {
+  onStateChange(webProgress, request, state, status) {
     // Check if the download has completed
     if ((state & Ci.nsIWebProgressListener.STATE_STOP) &&
         (state & Ci.nsIWebProgressListener.STATE_IS_NETWORK)) {

@@ -69,6 +69,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.ErrorRep = {
     rep: ErrorRep,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

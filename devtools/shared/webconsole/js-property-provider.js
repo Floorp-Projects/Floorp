@@ -77,7 +77,7 @@ function findCompletionBeginning(str) {
         } else if (OPEN_BODY.indexOf(c) != -1) {
           bodyStack.push({
             token: c,
-            start: start
+            start
           });
           start = i + 1;
         } else if (CLOSE_BODY.indexOf(c) != -1) {
@@ -124,7 +124,7 @@ function findCompletionBeginning(str) {
   }
 
   return {
-    state: state,
+    state,
     startPos: start
   };
 }
@@ -455,50 +455,50 @@ function getExactMatchImpl(obj, name, {chainIterator, getProperty}) {
 }
 
 var JSObjectSupport = {
-  chainIterator: function* (obj) {
+  * chainIterator(obj) {
     while (obj) {
       yield obj;
       obj = Object.getPrototypeOf(obj);
     }
   },
 
-  getProperties: function (obj) {
+  getProperties(obj) {
     return Object.getOwnPropertyNames(obj);
   },
 
-  getProperty: function () {
+  getProperty() {
     // getProperty is unsafe with raw JS objects.
     throw new Error("Unimplemented!");
   },
 };
 
 var DebuggerObjectSupport = {
-  chainIterator: function* (obj) {
+  * chainIterator(obj) {
     while (obj) {
       yield obj;
       obj = obj.proto;
     }
   },
 
-  getProperties: function (obj) {
+  getProperties(obj) {
     return obj.getOwnPropertyNames();
   },
 
-  getProperty: function (obj, name, rootObj) {
+  getProperty(obj, name, rootObj) {
     // This is left unimplemented in favor to DevToolsUtils.getProperty().
     throw new Error("Unimplemented!");
   },
 };
 
 var DebuggerEnvironmentSupport = {
-  chainIterator: function* (obj) {
+  * chainIterator(obj) {
     while (obj) {
       yield obj;
       obj = obj.parent;
     }
   },
 
-  getProperties: function (obj) {
+  getProperties(obj) {
     let names = obj.names();
 
     // Include 'this' in results (in sorted order)
@@ -512,7 +512,7 @@ var DebuggerEnvironmentSupport = {
     return names;
   },
 
-  getProperty: function (obj, name) {
+  getProperty(obj, name) {
     let result;
     // Try/catch since name can be anything, and getVariable throws if
     // it's not a valid ECMAScript identifier name

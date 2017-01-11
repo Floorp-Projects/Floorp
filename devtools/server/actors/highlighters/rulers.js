@@ -41,7 +41,7 @@ RulersHighlighter.prototype = {
 
   ID_CLASS_PREFIX: "rulers-highlighter-",
 
-  _buildMarkup: function () {
+  _buildMarkup() {
     let { window } = this.env;
     let prefix = this.ID_CLASS_PREFIX;
 
@@ -195,7 +195,7 @@ RulersHighlighter.prototype = {
     return container;
   },
 
-  handleEvent: function (event) {
+  handleEvent(event) {
     switch (event.type) {
       case "scroll":
         this._onScroll(event);
@@ -206,7 +206,7 @@ RulersHighlighter.prototype = {
     }
   },
 
-  _onScroll: function (event) {
+  _onScroll(event) {
     let prefix = this.ID_CLASS_PREFIX;
     let { scrollX, scrollY } = event.view;
 
@@ -220,7 +220,7 @@ RulersHighlighter.prototype = {
                         .setAttribute("transform", `translate(0, ${-scrollY})`);
   },
 
-  _update: function () {
+  _update() {
     let { window } = this.env;
 
     setIgnoreLayoutChanges(true);
@@ -238,13 +238,13 @@ RulersHighlighter.prototype = {
     this._rafID = window.requestAnimationFrame(() => this._update());
   },
 
-  _cancelUpdate: function () {
+  _cancelUpdate() {
     if (this._rafID) {
       this.env.window.cancelAnimationFrame(this._rafID);
       this._rafID = 0;
     }
   },
-  updateViewport: function () {
+  updateViewport() {
     let { devicePixelRatio } = this.env.window;
 
     // Because `devicePixelRatio` is affected by zoom (see bug 809788),
@@ -261,7 +261,7 @@ RulersHighlighter.prototype = {
       `stroke-width:${strokeWidth};`);
   },
 
-  destroy: function () {
+  destroy() {
     this.hide();
 
     let { pageListenerTarget } = this.env;
@@ -273,7 +273,7 @@ RulersHighlighter.prototype = {
     events.emit(this, "destroy");
   },
 
-  show: function () {
+  show() {
     this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "elements",
       "hidden");
 
@@ -282,7 +282,7 @@ RulersHighlighter.prototype = {
     return true;
   },
 
-  hide: function () {
+  hide() {
     this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "elements",
       "hidden", "true");
 

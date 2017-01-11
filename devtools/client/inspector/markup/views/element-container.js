@@ -73,7 +73,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
    * If this element is not previewable or the preview cannot be generated for
    * some reason, the Promise is rejected.
    */
-  _getPreview: function () {
+  _getPreview() {
     if (!this.isPreviewable()) {
       return promise.reject("_getPreview called on a non-previewable element.");
     }
@@ -139,7 +139,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     return true;
   }),
 
-  copyImageDataUri: function () {
+  copyImageDataUri() {
     // We need to send again a request to gettooltipData even if one was sent
     // for the tooltip, because we want the full-size image
     this.node.getImageData().then(data => {
@@ -149,12 +149,12 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     });
   },
 
-  setInlineTextChild: function (inlineTextChild) {
+  setInlineTextChild(inlineTextChild) {
     this.inlineTextChild = inlineTextChild;
     this.editor.updateTextEditor();
   },
 
-  clearInlineTextChild: function () {
+  clearInlineTextChild() {
     this.inlineTextChild = undefined;
     this.editor.updateTextEditor();
   },
@@ -162,14 +162,14 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
   /**
    * Trigger new attribute field for input.
    */
-  addAttribute: function () {
+  addAttribute() {
     this.editor.newAttr.editMode();
   },
 
   /**
    * Trigger attribute field for editing.
    */
-  editAttribute: function (attrName) {
+  editAttribute(attrName) {
     this.editor.attrElements.get(attrName).editMode();
   },
 
@@ -177,7 +177,7 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
    * Remove attribute from container.
    * This is an undoable action.
    */
-  removeAttribute: function (attrName) {
+  removeAttribute(attrName) {
     let doMods = this.editor._startModifyingAttributes();
     let undoMods = this.editor._startModifyingAttributes();
     this.editor._saveAttribute(attrName, undoMods);

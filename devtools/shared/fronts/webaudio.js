@@ -26,7 +26,7 @@ const AUDIO_NODE_DEFINITION = require("devtools/server/actors/utils/audionodes.j
  *            merger and destination nodes, for example, are not)
  */
 const AudioNodeFront = protocol.FrontClassWithSpec(audionodeSpec, {
-  form: function (form, detail) {
+  form(form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -38,7 +38,7 @@ const AudioNodeFront = protocol.FrontClassWithSpec(audionodeSpec, {
     this.bypassable = form.bypassable;
   },
 
-  initialize: function (client, form) {
+  initialize(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     // if we were manually passed a form, this was created manually and
     // needs to own itself for now.
@@ -54,7 +54,7 @@ exports.AudioNodeFront = AudioNodeFront;
  * The corresponding Front object for the WebAudioActor.
  */
 const WebAudioFront = protocol.FrontClassWithSpec(webAudioSpec, {
-  initialize: function (client, { webaudioActor }) {
+  initialize(client, { webaudioActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: webaudioActor });
     this.manage(this);
   },

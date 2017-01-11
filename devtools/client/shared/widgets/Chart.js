@@ -101,14 +101,14 @@ function createPieTableChart(document,
 
   let pie = Chart.Pie(document, {
     width: diameter,
-    data: data
+    data
   });
 
   let table = Chart.Table(document, {
-    title: title,
-    data: data,
-    strings: strings,
-    totals: totals
+    title,
+    data,
+    strings,
+    totals
   });
 
   let container = document.createElement("div");

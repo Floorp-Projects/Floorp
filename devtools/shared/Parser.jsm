@@ -350,7 +350,7 @@ SyntaxTree.prototype = {
         let functionName = node.id.name;
         if (includesToken(functionName)) {
           store.push({
-            functionName: functionName,
+            functionName,
             functionLocation: ParserHelpers.getNodeLocation(node)
           });
         }
@@ -378,11 +378,11 @@ SyntaxTree.prototype = {
 
         if (includesToken(functionName) || includesToken(inferredName)) {
           store.push({
-            functionName: functionName,
-            functionLocation: functionLocation,
-            inferredName: inferredName,
-            inferredChain: inferredChain,
-            inferredLocation: inferredLocation
+            functionName,
+            functionLocation,
+            inferredName,
+            inferredChain,
+            inferredLocation
           });
         }
       },
@@ -405,9 +405,9 @@ SyntaxTree.prototype = {
 
         if (includesToken(inferredName)) {
           store.push({
-            inferredName: inferredName,
-            inferredChain: inferredChain,
-            inferredLocation: inferredLocation
+            inferredName,
+            inferredChain,
+            inferredLocation
           });
         }
       }

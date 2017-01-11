@@ -26,7 +26,7 @@ define(function (require, exports, module) {
       member: PropTypes.object.isRequired
     },
 
-    render: function () {
+    render() {
       let member = this.props.member;
       let level = member.level || 0;
 

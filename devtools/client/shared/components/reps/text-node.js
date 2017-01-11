@@ -36,11 +36,11 @@ define(function (require, exports, module) {
       onDOMNodeMouseOut: React.PropTypes.func,
     },
 
-    getTextContent: function (grip) {
+    getTextContent(grip) {
       return cropString(grip.preview.textContent);
     },
 
-    getTitle: function (grip) {
+    getTitle(grip) {
       const title = "#text";
       if (this.props.objectLink) {
         return this.props.objectLink({
@@ -98,6 +98,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.TextNode = {
     rep: TextNode,
-    supportsObject: supportsObject
+    supportsObject
   };
 });

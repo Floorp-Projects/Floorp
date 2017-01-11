@@ -25,7 +25,7 @@ function WaterfallHeader(props) {
   let tickInterval = TickUtils.findOptimalTickInterval({
     ticksMultiple: WATERFALL_HEADER_TICKS_MULTIPLE,
     ticksSpacingMin: WATERFALL_HEADER_TICKS_SPACING_MIN,
-    dataScale: dataScale
+    dataScale
   });
 
   let ticks = [];

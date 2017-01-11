@@ -142,8 +142,8 @@ var openStoragePanel = Task.async(function* (cb) {
       }
 
       return {
-        toolbox: toolbox,
-        storage: storage
+        toolbox,
+        storage
       };
     }
   }
@@ -169,8 +169,8 @@ var openStoragePanel = Task.async(function* (cb) {
   }
 
   return {
-    toolbox: toolbox,
-    storage: storage
+    toolbox,
+    storage
   };
 });
 

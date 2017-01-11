@@ -21,7 +21,7 @@ const FilterButton = createClass({
     dispatch: PropTypes.func.isRequired,
   },
 
-  onClick: function () {
+  onClick() {
     this.props.dispatch(actions.filterToggle(this.props.filterKey));
   },
 

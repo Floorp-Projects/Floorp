@@ -19,7 +19,7 @@ const promise = require("promise");
  * The corresponding Front object for the FrameSnapshotActor.
  */
 const FrameSnapshotFront = protocol.FrontClassWithSpec(frameSnapshotSpec, {
-  initialize: function (client, form) {
+  initialize(client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this._animationFrameEndScreenshot = null;
     this._cachedScreenshots = new WeakMap();
@@ -65,7 +65,7 @@ exports.FrameSnapshotFront = FrameSnapshotFront;
  * The corresponding Front object for the CanvasActor.
  */
 const CanvasFront = protocol.FrontClassWithSpec(canvasSpec, {
-  initialize: function (client, { canvasActor }) {
+  initialize(client, { canvasActor }) {
     protocol.Front.prototype.initialize.call(this, client, { actor: canvasActor });
     this.manage(this);
   }

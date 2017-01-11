@@ -14,7 +14,7 @@ const TEST_DATA = [{
   selector: "#one",
   oldHTML: '<div id="one">First <em>Div</em></div>',
   newHTML: '<div id="one">First Div</div>',
-  validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
+  * validate({pageNodeFront, selectedNodeFront, testActor}) {
     let text = yield testActor.getProperty("#one", "textContent");
     is(text, "First Div", "New div has expected text content");
     let num = yield testActor.getNumberOfElementMatches("#one em");
@@ -35,7 +35,7 @@ const TEST_DATA = [{
   oldHTML: '<div id="addedAttribute">addedAttribute</div>',
   newHTML: "<div id=\"addedAttribute\" class=\"important\" disabled checked>" +
            "addedAttribute</div>",
-  validate: function* ({pageNodeFront, selectedNodeFront, testActor}) {
+  * validate({pageNodeFront, selectedNodeFront, testActor}) {
     is(pageNodeFront, selectedNodeFront, "Original element is selected");
     let html = yield testActor.getProperty("#addedAttribute", "outerHTML");
     is(html, "<div id=\"addedAttribute\" class=\"important\" disabled=\"\" " +
@@ -51,7 +51,7 @@ const TEST_DATA = [{
   newHTML: '<div id="siblings-before-sibling">before sibling</div>' +
            '<div id="siblings">siblings (updated)</div>' +
            '<div id="siblings-after-sibling">after sibling</div>',
-  validate: function* ({selectedNodeFront, inspector, testActor}) {
+  * validate({selectedNodeFront, inspector, testActor}) {
     let beforeSiblingFront = yield getNodeFront("#siblings-before-sibling",
                                                 inspector);
     is(beforeSiblingFront, selectedNodeFront, "Sibling has been selected");

@@ -29,7 +29,7 @@ var SidebarToggle = createClass({
     onClick: PropTypes.func.isRequired,
   },
 
-  getInitialState: function () {
+  getInitialState() {
     return {
       collapsed: this.props.collapsed,
     };
@@ -37,13 +37,13 @@ var SidebarToggle = createClass({
 
   // Events
 
-  onClick: function (event) {
+  onClick(event) {
     this.props.onClick(event);
   },
 
   // Rendering
 
-  render: function () {
+  render() {
     let title = this.state.collapsed ?
       this.props.expandPaneTitle :
       this.props.collapsePaneTitle;
@@ -56,7 +56,7 @@ var SidebarToggle = createClass({
     return (
       button({
         className: classNames.join(" "),
-        title: title,
+        title,
         onClick: this.onClick
       })
     );

@@ -154,7 +154,7 @@ var NetMonitorController = {
    * Checks whether the netmonitor connection is active.
    * @return boolean
    */
-  isConnected: function () {
+  isConnected() {
     return !!this._connected;
   },
 
@@ -162,7 +162,7 @@ var NetMonitorController = {
    * Gets the activity currently performed by the frontend.
    * @return number
    */
-  getCurrentActivity: function () {
+  getCurrentActivity() {
     return this._currentActivity || ACTIVITY_TYPE.NONE;
   },
 
@@ -176,7 +176,7 @@ var NetMonitorController = {
    *         A promise resolved once the activity finishes and the frontend
    *         is back into "standby" mode.
    */
-  triggerActivity: function (type) {
+  triggerActivity(type) {
     // Puts the frontend into "standby" (when there's no particular activity).
     let standBy = () => {
       this._currentActivity = ACTIVITY_TYPE.NONE;
@@ -255,7 +255,7 @@ var NetMonitorController = {
    * @return object
    *         A promise resolved once the task finishes.
    */
-  inspectRequest: function (requestId) {
+  inspectRequest(requestId) {
     // Look for the request in the existing ones or wait for it to appear, if
     // the network monitor is still loading.
     let deferred = promise.defer();
@@ -385,7 +385,7 @@ TargetEventsHandler.prototype = {
   /**
    * Listen for events emitted by the current tab target.
    */
-  connect: function () {
+  connect() {
     dumpn("TargetEventsHandler is connecting...");
     this.target.on("close", this._onTabDetached);
     this.target.on("navigate", this._onTabNavigated);
@@ -395,7 +395,7 @@ TargetEventsHandler.prototype = {
   /**
    * Remove events emitted by the current tab target.
    */
-  disconnect: function () {
+  disconnect() {
     if (!this.target) {
       return;
     }
@@ -413,7 +413,7 @@ TargetEventsHandler.prototype = {
    * @param object packet
    *        Packet received from the server.
    */
-  _onTabNavigated: function (type, packet) {
+  _onTabNavigated(type, packet) {
     switch (type) {
       case "will-navigate": {
         // Reset UI.
@@ -441,7 +441,7 @@ TargetEventsHandler.prototype = {
   /**
    * Called when the monitored tab is closed.
    */
-  _onTabDetached: function () {
+  _onTabDetached() {
     NetMonitorController.shutdownNetMonitor();
   }
 };
@@ -478,7 +478,7 @@ NetworkEventsHandler.prototype = {
   /**
    * Connect to the current target client.
    */
-  connect: function () {
+  connect() {
     dumpn("NetworkEventsHandler is connecting...");
     this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
@@ -493,7 +493,7 @@ NetworkEventsHandler.prototype = {
   /**
    * Disconnect from the client.
    */
-  disconnect: function () {
+  disconnect() {
     if (!this.client) {
       return;
     }
@@ -509,7 +509,7 @@ NetworkEventsHandler.prototype = {
   /**
    * Display any network events already in the cache.
    */
-  _displayCachedEvents: function () {
+  _displayCachedEvents() {
     for (let cachedEvent of this.webConsoleClient.getNetworkEvents()) {
       // First add the request to the timeline.
       this._onNetworkEvent("networkEvent", cachedEvent);
@@ -529,7 +529,7 @@ NetworkEventsHandler.prototype = {
    * The "DOMContentLoaded" and "Load" events sent by the timeline actor.
    * @param object marker
    */
-  _onDocLoadingMarker: function (marker) {
+  _onDocLoadingMarker(marker) {
     window.emit(EVENTS.TIMELINE_EVENT, marker);
     gStore.dispatch(Actions.addTimingMarker(marker));
   },
@@ -542,7 +542,7 @@ NetworkEventsHandler.prototype = {
    * @param object networkInfo
    *        The network request information.
    */
-  _onNetworkEvent: function (type, networkInfo) {
+  _onNetworkEvent(type, networkInfo) {
     let { actor,
       startedDateTime,
       request: { method, url },
@@ -568,7 +568,7 @@ NetworkEventsHandler.prototype = {
    * @param object networkInfo
    *        The network request information.
    */
-  _onNetworkEventUpdate: function (type, { packet, networkInfo }) {
+  _onNetworkEventUpdate(type, { packet, networkInfo }) {
     let { actor } = networkInfo;
 
     switch (packet.updateType) {
@@ -639,7 +639,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onRequestHeaders: function (response) {
+  _onRequestHeaders(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       requestHeaders: response
     }).then(() => {
@@ -653,7 +653,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onRequestCookies: function (response) {
+  _onRequestCookies(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       requestCookies: response
     }).then(() => {
@@ -667,7 +667,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onRequestPostData: function (response) {
+  _onRequestPostData(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       requestPostData: response
     }).then(() => {
@@ -681,7 +681,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onSecurityInfo: function (response) {
+  _onSecurityInfo(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       securityInfo: response.securityInfo
     }).then(() => {
@@ -695,7 +695,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onResponseHeaders: function (response) {
+  _onResponseHeaders(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       responseHeaders: response
     }).then(() => {
@@ -709,7 +709,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onResponseCookies: function (response) {
+  _onResponseCookies(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       responseCookies: response
     }).then(() => {
@@ -723,7 +723,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onResponseContent: function (response) {
+  _onResponseContent(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       responseContent: response
     }).then(() => {
@@ -737,7 +737,7 @@ NetworkEventsHandler.prototype = {
    * @param object response
    *        The message received from the server.
    */
-  _onEventTimings: function (response) {
+  _onEventTimings(response) {
     NetMonitorView.RequestsMenu.updateRequest(response.from, {
       eventTimings: response
     }).then(() => {
@@ -756,7 +756,7 @@ NetworkEventsHandler.prototype = {
    *         A promise that is resolved when the full string contents
    *         are available, or rejected if something goes wrong.
    */
-  getString: function (stringGrip) {
+  getString(stringGrip) {
     // FIXME: this.webConsoleClient will be undefined in mochitest,
     // so we return string instantly to skip undefined error
     if (typeof stringGrip === "string") {
@@ -783,7 +783,7 @@ NetMonitorController.NetworkEventsHandler = new NetworkEventsHandler();
  */
 Object.defineProperties(window, {
   "gNetwork": {
-    get: function () {
+    get() {
       return NetMonitorController.NetworkEventsHandler;
     },
     configurable: true

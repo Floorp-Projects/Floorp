@@ -267,7 +267,7 @@ function getRuleViewProperty(view, selectorText, propertyName) {
       let valueSpan = p.querySelector(".ruleview-propertyvalue");
 
       if (nameSpan.textContent === propertyName) {
-        prop = {nameSpan: nameSpan, valueSpan: valueSpan};
+        prop = {nameSpan, valueSpan};
         break;
       }
     }
@@ -785,7 +785,7 @@ function* sendKeysAndWaitForFocus(view, element, keys) {
  * @return An array of MenuItems
  */
 function openStyleContextMenuAndGetAllItems(view, target) {
-  let menu = view._contextmenu._openMenu({target: target});
+  let menu = view._contextmenu._openMenu({target});
 
   // Flatten all menu items into a single array to make searching through it easier
   let allItems = [].concat.apply([], menu.items.map(function addItem(item) {
