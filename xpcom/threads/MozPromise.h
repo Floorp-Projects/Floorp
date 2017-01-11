@@ -116,6 +116,7 @@ protected:
 };
 
 template<typename T> class MozPromiseHolder;
+template<typename T> class MozPromiseRequestHolder;
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise : public MozPromiseRefcountable
 {
@@ -749,10 +750,23 @@ private:
       return p;
     }
 
-    // Allow calling ->Then() again for more promise chaining.
-    RefPtr<MozPromise> operator->()
+    template <typename... Ts>
+    auto Then(Ts&&... aArgs)
+      -> decltype(DeclVal<MozPromise>().Then(Forward<Ts>(aArgs)...))
     {
-      return *this;
+      return static_cast<RefPtr<MozPromise>>(*this)->Then(Forward<Ts>(aArgs)...);
+    }
+
+    void Track(MozPromiseRequestHolder<MozPromise>& aRequestHolder)
+    {
+      aRequestHolder.Track(*this);
+    }
+
+    // Allow calling ->Then() again for more promise chaining or ->Track() to
+    // end chaining and track the request for future disconnection.
+    ThenCommand* operator->()
+    {
+      return this;
     }
 
   private:
@@ -1056,6 +1070,12 @@ public:
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
     mRequest = aRequest;
+  }
+
+  void Track(RefPtr<typename PromiseType::Request>&& aRequest)
+  {
+    MOZ_DIAGNOSTIC_ASSERT(!Exists());
+    mRequest = Move(aRequest);
   }
 
   void Complete()
