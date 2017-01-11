@@ -8,8 +8,6 @@
  * Test nsSearchService with nested jar: uris, without async initialization
  */
 function run_test() {
-  updateAppInfo();
-
   do_load_manifest("data/chrome.manifest");
 
   configureToLoadJarEngines();
