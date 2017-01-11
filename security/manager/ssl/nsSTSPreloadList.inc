@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1489932146451000);
+const PRTime gPreloadListExpirationTime = INT64_C(1490659200000000);
 
 static const char kSTSHostTable[] = {
   /* "007sascha.de", true */ '0', '0', '7', 's', 'a', 's', 'c', 'h', 'a', '.', 'd', 'e', '\0',
