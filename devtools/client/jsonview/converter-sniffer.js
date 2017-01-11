@@ -47,7 +47,7 @@ Sniffer.prototype = {
     return this;
   },
 
-  getMIMETypeFromContent(request, data, length) {
+  getMIMETypeFromContent: function (request, data, length) {
     if (request instanceof Ci.nsIChannel) {
       // JSON View is enabled only for top level loads only.
       if (!isTopLevelLoad(request)) {
@@ -74,7 +74,7 @@ Sniffer.prototype = {
 };
 
 const Factory = {
-  createInstance(outer, iid) {
+  createInstance: function (outer, iid) {
     if (outer) {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
@@ -107,6 +107,6 @@ function unregister() {
 }
 
 exports.JsonViewSniffer = {
-  register,
-  unregister
+  register: register,
+  unregister: unregister
 };

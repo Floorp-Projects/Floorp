@@ -38,7 +38,7 @@ var CommandUtils = {
   /**
    * Utility to ensure that things are loaded in the correct order
    */
-  createRequisition(target, options) {
+  createRequisition: function (target, options) {
     if (!gcliInit) {
       return promise.reject("Unable to load gcli");
     }
@@ -51,7 +51,7 @@ var CommandUtils = {
   /**
    * Destroy the remote side of the requisition as well as the local side
    */
-  destroyRequisition(requisition, target) {
+  destroyRequisition: function (requisition, target) {
     requisition.destroy();
     gcliInit.releaseSystem(target);
   },
@@ -60,7 +60,7 @@ var CommandUtils = {
    * Read a toolbarSpec from preferences
    * @param pref The name of the preference to read
    */
-  getCommandbarSpec(pref) {
+  getCommandbarSpec: function (pref) {
     let value = prefBranch.getComplexValue(pref, Ci.nsISupportsString).data;
     return JSON.parse(value);
   },
@@ -81,7 +81,7 @@ var CommandUtils = {
    * buttons that are of type checkbox. this means that we don't properly
    * unregister event handlers until the window is destroyed.
    */
-  createCommandButtons(toolbarSpec, target, document, requisition,
+  createCommandButtons: function (toolbarSpec, target, document, requisition,
                                   createButtonState) {
     return util.promiseEach(toolbarSpec, typed => {
       // Ask GCLI to parse the typed string (doesn't execute it)
@@ -133,7 +133,7 @@ var CommandUtils = {
           };
 
           command.state.onChange(target, onChange);
-          onChange("", { target });
+          onChange("", { target: target });
 
           document.defaultView.addEventListener("unload", function (event) {
             if (command.state.offChange) {
@@ -155,7 +155,7 @@ var CommandUtils = {
    * @param targetContainer An object containing a 'target' property which
    * reflects the current debug target
    */
-  createEnvironment(container, targetProperty = "target") {
+  createEnvironment: function (container, targetProperty = "target") {
     if (!container[targetProperty].toString ||
         !/TabTarget/.test(container[targetProperty].toString())) {
       throw new Error("Missing target");
@@ -259,7 +259,7 @@ DeveloperToolbar.prototype.NOTIFICATIONS = NOTIFICATIONS;
  * Is the toolbar open?
  */
 Object.defineProperty(DeveloperToolbar.prototype, "visible", {
-  get() {
+  get: function () {
     return this._element && !this._element.hidden;
   },
   enumerable: true
@@ -271,7 +271,7 @@ var _gSequenceId = 0;
  * Getter for a unique ID.
  */
 Object.defineProperty(DeveloperToolbar.prototype, "sequenceId", {
-  get() {
+  get: function () {
     return _gSequenceId++;
   },
   enumerable: true

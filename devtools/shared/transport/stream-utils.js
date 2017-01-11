@@ -96,7 +96,7 @@ StreamCopier._nextId = 0;
 
 StreamCopier.prototype = {
 
-  copy() {
+  copy: function () {
     // Dispatch to the next tick so that it's possible to attach a progress
     // event listener, even for extremely fast copies (like when testing).
     Services.tm.currentThread.dispatch(() => {
@@ -109,7 +109,7 @@ StreamCopier.prototype = {
     return this;
   },
 
-  _copy() {
+  _copy: function () {
     let bytesAvailable = this.input.available();
     let amountToCopy = Math.min(bytesAvailable, this._amountLeft);
     this._debug("Trying to copy: " + amountToCopy);
@@ -142,14 +142,14 @@ StreamCopier.prototype = {
     this.input.asyncWait(this, 0, 0, Services.tm.currentThread);
   },
 
-  _emitProgress() {
+  _emitProgress: function () {
     this.emit("progress", {
       bytesSent: this._length - this._amountLeft,
       totalBytes: this._length
     });
   },
 
-  _flush() {
+  _flush: function () {
     try {
       this.output.flush();
     } catch (e) {
@@ -166,7 +166,7 @@ StreamCopier.prototype = {
     this._deferred.resolve();
   },
 
-  _destroy() {
+  _destroy: function () {
     this._destroy = null;
     this._copy = null;
     this._flush = null;
@@ -175,16 +175,16 @@ StreamCopier.prototype = {
   },
 
   // nsIInputStreamCallback
-  onInputStreamReady() {
+  onInputStreamReady: function () {
     this._streamReadyCallback();
   },
 
   // nsIOutputStreamCallback
-  onOutputStreamReady() {
+  onOutputStreamReady: function () {
     this._streamReadyCallback();
   },
 
-  _debug(msg) {
+  _debug: function (msg) {
     // Prefix logs with the copier ID, which makes logs much easier to
     // understand when several copiers are running simultaneously
     dumpv("Copier: " + this._id + " " + msg);
@@ -241,6 +241,6 @@ function delimitedRead(stream, delimiter, count) {
 }
 
 module.exports = {
-  copyStream,
-  delimitedRead
+  copyStream: copyStream,
+  delimitedRead: delimitedRead
 };

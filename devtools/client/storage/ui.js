@@ -197,7 +197,7 @@ StorageUI.prototype = {
     this._panelDoc.documentElement.classList.toggle("no-animate", !value);
   },
 
-  destroy() {
+  destroy: function () {
     this.table.off(TableWidget.EVENTS.ROW_SELECTED, this.displayObjectSidebar);
     this.table.off(TableWidget.EVENTS.SCROLL_END, this.handleScrollEnd);
     this.table.off(TableWidget.EVENTS.CELL_EDIT, this.editItem);
@@ -222,13 +222,13 @@ StorageUI.prototype = {
   /**
    * Empties and hides the object viewer sidebar
    */
-  hideSidebar() {
+  hideSidebar: function () {
     this.view.empty();
     this.sidebar.hidden = true;
     this.table.clearSelection();
   },
 
-  getCurrentActor() {
+  getCurrentActor: function () {
     let type = this.table.datatype;
 
     return this.storageTypes[type];
@@ -240,7 +240,7 @@ StorageUI.prototype = {
    *  @param {Array} editableFields
    *         An array of keys of columns to be made editable
    */
-  * makeFieldsEditable(editableFields) {
+  makeFieldsEditable: function* (editableFields) {
     if (editableFields && editableFields.length > 0) {
       this.table.makeFieldsEditable(editableFields);
     } else if (this.table._editableFieldsEngine) {
@@ -248,7 +248,7 @@ StorageUI.prototype = {
     }
   },
 
-  editItem(eventType, data) {
+  editItem: function (eventType, data) {
     let actor = this.getCurrentActor();
 
     actor.editItem(data);
@@ -259,7 +259,7 @@ StorageUI.prototype = {
    * the table and repopulates the sidebar with that item's data if the item
    * being removed was selected.
    */
-  removeItemFromTable(name) {
+  removeItemFromTable: function (name) {
     if (this.table.isSelected(name)) {
       if (this.table.selectedIndex == 0) {
         this.table.selectNextRow();
@@ -279,7 +279,7 @@ StorageUI.prototype = {
    * @param {object} response
    *        An object containing which storage types were cleared
    */
-  onCleared(response) {
+  onCleared: function (response) {
     function* enumPaths() {
       for (let type in response) {
         if (Array.isArray(response[type])) {
@@ -343,7 +343,7 @@ StorageUI.prototype = {
    *        of the changed store objects. This array is empty for deleted object
    *        if the host was completely removed.
    */
-  onUpdate({ changed, added, deleted }) {
+  onUpdate: function ({ changed, added, deleted }) {
     if (deleted) {
       this.handleDeletedItems(deleted);
     }
@@ -366,7 +366,7 @@ StorageUI.prototype = {
    *
    * @param {object} See onUpdate docs
    */
-  handleAddedItems(added) {
+  handleAddedItems: function (added) {
     for (let type in added) {
       for (let host in added[type]) {
         this.tree.add([type, {id: host, type: "url"}]);
@@ -400,7 +400,7 @@ StorageUI.prototype = {
    *
    * @param {object} See onUpdate docs
    */
-  handleDeletedItems(deleted) {
+  handleDeletedItems: function (deleted) {
     for (let type in deleted) {
       for (let host in deleted[type]) {
         if (!deleted[type][host].length) {
@@ -452,7 +452,7 @@ StorageUI.prototype = {
    *
    * @param {object} See onUpdate docs
    */
-  handleChangedItems(changed) {
+  handleChangedItems: function (changed) {
     let [type, host, db, objectStore] = this.tree.selectedItem;
     if (!changed[type] || !changed[type][host] ||
         changed[type][host].length == 0) {
@@ -533,7 +533,7 @@ StorageUI.prototype = {
    *        List of storages and their corresponding hosts returned by the
    *        StorageFront.listStores call.
    */
-  populateStorageTree(storageTypes) {
+  populateStorageTree: function (storageTypes) {
     this.storageTypes = {};
     for (let type in storageTypes) {
       // Ignore `from` field, which is just a protocol.js implementation
@@ -654,7 +654,7 @@ StorageUI.prototype = {
    * @param {string} value
    *        The string to be parsed into an object
    */
-  parseItemValue(name, originalValue) {
+  parseItemValue: function (name, originalValue) {
     // Find if value is URLEncoded ie
     let decodedValue = "";
     try {
@@ -707,7 +707,7 @@ StorageUI.prototype = {
    * @param {string} value
    *        The string to be parsed into an object or array
    */
-  _extractKeyValPairs(value) {
+  _extractKeyValPairs: function (value) {
     let makeObject = (keySep, pairSep) => {
       let object = {};
       for (let pair of value.split(pairSep)) {
@@ -759,7 +759,7 @@ StorageUI.prototype = {
    *        An array of ids which represent the location of the selected item in
    *        the storage tree
    */
-  onHostSelect(event, item) {
+  onHostSelect: function (event, item) {
     this.table.clear();
     this.hideSidebar();
     this.searchBox.value = "";
@@ -788,7 +788,7 @@ StorageUI.prototype = {
    * @param {string} [subType]
    *        The sub type under the given type.
    */
-  * resetColumns(type, host, subtype) {
+  resetColumns: function* (type, host, subtype) {
     this.table.host = host;
     this.table.datatype = type;
 
@@ -848,7 +848,7 @@ StorageUI.prototype = {
    * @param {Constant} reason
    *        See REASON constant at top of file.
    */
-  populateTable(data, reason) {
+  populateTable: function (data, reason) {
     for (let item of data) {
       if (item.value) {
         item.valueActor = item.value;
@@ -894,7 +894,7 @@ StorageUI.prototype = {
    * @param {DOMEvent} event
    *        The event passed by the keypress event.
    */
-  handleKeypress(event) {
+  handleKeypress: function (event) {
     if (event.keyCode == KeyCodes.DOM_VK_ESCAPE && !this.sidebar.hidden) {
       // Stop Propagation to prevent opening up of split console
       this.hideSidebar();
@@ -915,7 +915,7 @@ StorageUI.prototype = {
   /**
    * Handles endless scrolling for the table
    */
-  handleScrollEnd() {
+  handleScrollEnd: function () {
     if (!this.shouldLoadMoreItems) {
       return;
     }
@@ -936,7 +936,7 @@ StorageUI.prototype = {
    * If the currently selected storage object doesn't support removing items, prevent
    * showing the menu.
    */
-  onTablePopupShowing(event) {
+  onTablePopupShowing: function (event) {
     let selectedItem = this.tree.selectedItem;
     let type = selectedItem[0];
     let actor = this.getCurrentActor();
@@ -968,7 +968,7 @@ StorageUI.prototype = {
     }
   },
 
-  onTreePopupShowing(event) {
+  onTreePopupShowing: function (event) {
     let showMenu = false;
     let selectedItem = this.tree.selectedItem;
 
@@ -1020,7 +1020,7 @@ StorageUI.prototype = {
   /**
    * Handles removing an item from the storage
    */
-  onRemoveItem() {
+  onRemoveItem: function () {
     let [, host, ...path] = this.tree.selectedItem;
     let actor = this.getCurrentActor();
     let rowId = this.table.contextMenuRowId;
@@ -1035,7 +1035,7 @@ StorageUI.prototype = {
   /**
    * Handles removing all items from the storage
    */
-  onRemoveAll() {
+  onRemoveAll: function () {
     // Cannot use this.currentActor() if the handler is called from the
     // tree context menu: it returns correct value only after the table
     // data from server are successfully fetched (and that's async).
@@ -1049,7 +1049,7 @@ StorageUI.prototype = {
    * Handles removing all cookies with exactly the same domain as the
    * cookie in the selected row.
    */
-  onRemoveAllFrom() {
+  onRemoveAllFrom: function () {
     let [, host] = this.tree.selectedItem;
     let actor = this.getCurrentActor();
     let rowId = this.table.contextMenuRowId;
@@ -1058,7 +1058,7 @@ StorageUI.prototype = {
     actor.removeAll(host, data.host);
   },
 
-  onRemoveTreeItem() {
+  onRemoveTreeItem: function () {
     let [type, host, ...path] = this.tree.selectedItem;
 
     if (type == "indexedDB" && path.length == 1) {
@@ -1068,7 +1068,7 @@ StorageUI.prototype = {
     }
   },
 
-  removeDatabase(host, dbName) {
+  removeDatabase: function (host, dbName) {
     let actor = this.storageTypes.indexedDB;
 
     actor.removeDatabase(host, dbName).then(result => {
@@ -1090,7 +1090,7 @@ StorageUI.prototype = {
     });
   },
 
-  removeCache(host, cacheName) {
+  removeCache: function (host, cacheName) {
     let actor = this.storageTypes.Cache;
 
     actor.removeItem(host, JSON.stringify([ cacheName ]));

@@ -47,7 +47,7 @@ function scriptErrorFlagsToKind(flags) {
 // Register a console listener, so console messages don't just disappear
 // into the ether.
 var listener = {
-  observe(message) {
+  observe: function (message) {
     let string;
     try {
       message.QueryInterface(Ci.nsIScriptError);

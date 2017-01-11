@@ -294,7 +294,7 @@ var testSpec = protocol.generateActorSpec({
 });
 
 var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
-  initialize(conn, tabActor, options) {
+  initialize: function (conn, tabActor, options) {
     this.conn = conn;
     this.tabActor = tabActor;
   },
@@ -310,7 +310,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    *   are considered matching an iframe, so that we can query element
    *   within deep iframes.
    */
-  _querySelector(selector) {
+  _querySelector: function (selector) {
     let document = this.content.document;
     if (Array.isArray(selector)) {
       let fullSelector = selector.join(" >> ");
@@ -339,7 +339,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * Helper to get the number of elements matching a selector
    * @param {string} CSS selector.
    */
-  getNumberOfElementMatches(selector, root = this.content.document) {
+  getNumberOfElementMatches: function (selector, root = this.content.document) {
     return root.querySelectorAll(selector).length;
   },
 
@@ -352,7 +352,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * - {String} actorID The highlighter actor ID
    * @return {String} The value, if found, null otherwise
    */
-  getHighlighterAttribute(nodeID, name, actorID) {
+  getHighlighterAttribute: function (nodeID, name, actorID) {
     let helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
     if (helper) {
       return helper.getAttributeForElement(nodeID, name);
@@ -367,7 +367,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} actorID The highlighter actor ID
    * @return {String} The textcontent value
    */
-  getHighlighterNodeTextContent(nodeID, actorID) {
+  getHighlighterNodeTextContent: function (nodeID, actorID) {
     let value;
     let helper = getHighlighterCanvasFrameHelper(this.conn, actorID);
     if (helper) {
@@ -382,7 +382,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @return {Number} The number of box-model highlighters created, or null if the
    * SelectorHighlighter was not found.
    */
-  getSelectorHighlighterBoxNb(actorID) {
+  getSelectorHighlighterBoxNb: function (actorID) {
     let highlighter = this.conn.getActor(actorID);
     let {_highlighter: h} = highlighter;
     if (!h || !h._highlighters) {
@@ -399,7 +399,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} the new value for the attribute
    * @param {String} actorID The highlighter actor ID
    */
-  changeHighlightedNodeWaitForUpdate(name, value, actorID) {
+  changeHighlightedNodeWaitForUpdate: function (name, value, actorID) {
     return new Promise(resolve => {
       let highlighter = this.conn.getActor(actorID);
       let {_highlighter: h} = highlighter;
@@ -415,7 +415,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} event The name of the highlighter event to listen to
    * @param {String} actorID The highlighter actor ID
    */
-  waitForHighlighterEvent(event, actorID) {
+  waitForHighlighterEvent: function (event, actorID) {
     let highlighter = this.conn.getActor(actorID);
     let {_highlighter: h} = highlighter;
 
@@ -428,7 +428,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} selector Optional:  css selector of the node which should
    *        trigger the event. If ommitted, target will be the content window
    */
-  waitForEventOnNode(eventName, selector) {
+  waitForEventOnNode: function (eventName, selector) {
     return new Promise(resolve => {
       let node = selector ? this._querySelector(selector) : this.content;
       node.addEventListener(eventName, function onEvent() {
@@ -445,7 +445,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {Number} level The new zoom level
    * @param {String} actorID Optional. The highlighter actor ID
    */
-  changeZoomLevel(level, actorID) {
+  changeZoomLevel: function (level, actorID) {
     dumpn("Zooming page to " + level);
     return new Promise(resolve => {
       if (actorID) {
@@ -463,7 +463,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     });
   },
 
-  assertElementAtPoint(x, y, selector) {
+  assertElementAtPoint: function (x, y, selector) {
     let elementAtPoint = getElementFromPoint(this.content.document, x, y);
     if (!elementAtPoint) {
       throw new Error("Unable to find element at (" + x + ", " + y + ")");
@@ -478,7 +478,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @return {Object} An object with each property being a box-model region, each
    * of them being an object with the p1/p2/p3/p4 properties
    */
-  getAllAdjustedQuads(selector) {
+  getAllAdjustedQuads: function (selector) {
     let regions = {};
     let node = this._querySelector(selector);
     for (let boxType of ["content", "padding", "border", "margin"]) {
@@ -500,7 +500,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    *                  synthesizeMouseAtCenter will be used instead
    * @param {Object} options Other event options
    */
-  synthesizeMouse({ selector, x, y, center, options }) {
+  synthesizeMouse: function ({ selector, x, y, center, options }) {
     let node = this._querySelector(selector);
     node.scrollIntoView();
     if (center) {
@@ -515,7 +515,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   * back. Consumers should listen to specific events on the inspector/highlighter
   * to know when the event got synthesized.
   */
-  synthesizeKey({key, options, content}) {
+  synthesizeKey: function ({key, options, content}) {
     EventUtils.synthesizeKey(key, options, this.content);
   },
 
@@ -523,7 +523,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * Scroll an element into view.
    * @param {String} selector The selector for the node to scroll into view.
    */
-  scrollIntoView(selector) {
+  scrollIntoView: function (selector) {
     let node = this._querySelector(selector);
     node.scrollIntoView();
   },
@@ -534,12 +534,12 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} pseudo The pseudoclass to check for
    * @return {Boolean}
    */
-  hasPseudoClassLock(selector, pseudo) {
+  hasPseudoClassLock: function (selector, pseudo) {
     let node = this._querySelector(selector);
     return DOMUtils.hasPseudoClassLock(node, pseudo);
   },
 
-  loadAndWaitForCustomEvent(url) {
+  loadAndWaitForCustomEvent: function (url) {
     return new Promise(resolve => {
       // Wait for DOMWindowCreated first, as listening on the current outerwindow
       // doesn't allow receiving test-page-processing-done.
@@ -553,7 +553,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     });
   },
 
-  hasNode(selector) {
+  hasNode: function (selector) {
     try {
       // _querySelector throws if the node doesn't exists
       this._querySelector(selector);
@@ -568,7 +568,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} selector selector identifier to select the DOM node
    * @return {json} the bounding rect info
    */
-  getBoundingClientRect(selector) {
+  getBoundingClientRect: function (selector) {
     let node = this._querySelector(selector);
     let rect = node.getBoundingClientRect();
     // DOMRect can't be stringified directly, so return a simple object instead.
@@ -590,7 +590,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} property The property name
    * @param {String} value The attribute value
    */
-  setProperty(selector, property, value) {
+  setProperty: function (selector, property, value) {
     let node = this._querySelector(selector);
     node[property] = value;
   },
@@ -601,7 +601,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} property The property name
    * @return {String} value The attribute value
    */
-  getProperty(selector, property) {
+  getProperty: function (selector, property) {
     let node = this._querySelector(selector);
     return node[property];
   },
@@ -612,7 +612,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} attribute The attribute name
    * @return {String} value The attribute value
    */
-  getAttribute(selector, attribute) {
+  getAttribute: function (selector, attribute) {
     let node = this._querySelector(selector);
     return node.getAttribute(attribute);
   },
@@ -623,7 +623,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} attribute The attribute name
    * @param {String} value The attribute value
    */
-  setAttribute(selector, attribute, value) {
+  setAttribute: function (selector, attribute, value) {
     let node = this._querySelector(selector);
     node.setAttribute(attribute, value);
   },
@@ -633,7 +633,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} selector The node selector
    * @param {String} attribute The attribute name
    */
-  removeAttribute(selector, attribute) {
+  removeAttribute: function (selector, attribute) {
     let node = this._querySelector(selector);
     node.removeAttribute(attribute);
   },
@@ -641,7 +641,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   /**
    * Reload the content window.
    */
-  reload() {
+  reload: function () {
     this.content.location.reload();
   },
 
@@ -649,7 +649,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * Reload an iframe and wait for its load event.
    * @param {String} selector The node selector
    */
-  reloadFrame(selector) {
+  reloadFrame: function (selector) {
     let node = this._querySelector(selector);
 
     let deferred = defer();
@@ -669,7 +669,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @param {String} js JS string to evaluate
    * @return {json} The evaluation result
    */
-  eval(js) {
+  eval: function (js) {
     // We have to use a sandbox, as CSP prevent us from using eval on apps...
     let sb = Cu.Sandbox(this.content, { sandboxPrototype: this.content });
     return Cu.evalInSandbox(js, sb);
@@ -686,7 +686,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * @return {Object} An object with x / y properties, representing the number
    * of pixels that the document has been scrolled horizontally and vertically.
    */
-  scrollWindow(x, y, relative) {
+  scrollWindow: function (x, y, relative) {
     if (isNaN(x) || isNaN(y)) {
       return {};
     }
@@ -707,7 +707,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   /**
    * Forces the reflow and waits for the next repaint.
    */
-  reflow() {
+  reflow: function () {
     let deferred = defer();
     this.content.document.documentElement.offsetWidth;
     this.content.requestAnimationFrame(deferred.resolve);
@@ -739,7 +739,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * - {String} innerHTML.
    * - {String} textContent.
    */
-  getNodeInfo(selector) {
+  getNodeInfo: function (selector) {
     let node = this._querySelector(selector);
     let info = null;
 
@@ -770,7 +770,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
    * - {String} href.
    * - {Boolean} isContentSheet.
    */
-  getStyleSheetsInfoForNode(selector) {
+  getStyleSheetsInfoForNode: function (selector) {
     let node = this._querySelector(selector);
     let domRules = DOMUtils.getCSSStyleRules(node);
 
@@ -789,7 +789,7 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
 });
 
 var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSpec, {
-  initialize(client, { testActor }, toolbox) {
+  initialize: function (client, { testActor }, toolbox) {
     protocol.Front.prototype.initialize.call(this, client, { actor: testActor });
     this.manage(this);
     this.toolbox = toolbox;
@@ -801,7 +801,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @return {Promise} The returned promise will only resolve when the
    * highlighter has updated to the new zoom level.
    */
-  zoomPageTo(level) {
+  zoomPageTo: function (level) {
     return this.changeZoomLevel(level, this.toolbox.highlighter.actorID);
   },
 
@@ -822,7 +822,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
    * @param {Object} highlighter Optional custom highlither to target
    * @return {String} value
    */
-  getHighlighterNodeAttribute(nodeID, name, highlighter) {
+  getHighlighterNodeAttribute: function (nodeID, name, highlighter) {
     return this.getHighlighterAttribute(
       nodeID, name, (highlighter || this.toolbox.highlighter).actorID
     );
@@ -839,7 +839,7 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
   /**
    * Is the highlighter currently visible on the page?
    */
-  isHighlighting() {
+  isHighlighting: function () {
     return this.getHighlighterNodeAttribute("box-model-elements", "hidden")
       .then(value => value === null);
   },
@@ -1020,10 +1020,10 @@ var TestActorFront = exports.TestActorFront = protocol.FrontClassWithSpec(testSp
 
     return {
       visible: !hidden,
-      x1,
-      y1,
-      x2,
-      y2
+      x1: x1,
+      y1: y1,
+      x2: x2,
+      y2: y2
     };
   }),
 

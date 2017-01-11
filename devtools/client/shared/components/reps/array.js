@@ -34,11 +34,11 @@ define(function (require, exports, module) {
       object: React.PropTypes.array.isRequired,
     },
 
-    getTitle(object, context) {
+    getTitle: function (object, context) {
       return "[" + object.length + "]";
     },
 
-    arrayIterator(array, max) {
+    arrayIterator: function (array, max) {
       let items = [];
       let delim;
 
@@ -52,13 +52,13 @@ define(function (require, exports, module) {
             object: value,
             // Hardcode tiny mode to avoid recursive handling.
             mode: MODE.TINY,
-            delim
+            delim: delim
           }));
         } catch (exc) {
           items.push(ItemRep({
             object: exc,
             mode: MODE.TINY,
-            delim
+            delim: delim
           }));
         }
       }
@@ -86,7 +86,7 @@ define(function (require, exports, module) {
      *
      * @param {Array} array The array object.
      */
-    hasSpecialProperties(array) {
+    hasSpecialProperties: function (array) {
       function isInteger(x) {
         let y = parseInt(x, 10);
         if (isNaN(y)) {
@@ -115,10 +115,10 @@ define(function (require, exports, module) {
 
     // Event Handlers
 
-    onToggleProperties(event) {
+    onToggleProperties: function (event) {
     },
 
-    onClickBracket(event) {
+    onClickBracket: function (event) {
     },
 
     render: wrapRender(function () {
@@ -150,12 +150,12 @@ define(function (require, exports, module) {
           className: "objectBox objectBox-array"},
           objectLink({
             className: "arrayLeftBracket",
-            object
+            object: object
           }, brackets.left),
           ...items,
           objectLink({
             className: "arrayRightBracket",
-            object
+            object: object
           }, brackets.right),
           DOM.span({
             className: "arrayProperties",
@@ -186,7 +186,7 @@ define(function (require, exports, module) {
       let mode = this.props.mode;
       return (
         DOM.span({},
-          Rep({object, mode}),
+          Rep({object: object, mode: mode}),
           delim
         )
       );
@@ -201,6 +201,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.ArrayRep = {
     rep: ArrayRep,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

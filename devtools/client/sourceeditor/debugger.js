@@ -256,7 +256,7 @@ function getBreakpoints(ctx) {
 
   return Object.keys(meta.breakpoints).reduce((acc, line) => {
     if (meta.breakpoints[line] != null) {
-      acc.push({ line, condition: meta.breakpoints[line].condition });
+      acc.push({ line: line, condition: meta.breakpoints[line].condition });
     }
     return acc;
   }, []);

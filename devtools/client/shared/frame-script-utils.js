@@ -124,7 +124,7 @@ addMessageListener("devtools:test:profiler", function ({ data }) {
   let result = nsIProfilerModule[method](...args);
   sendAsyncMessage("devtools:test:profiler:response", {
     data: result,
-    id
+    id: id
   });
 });
 

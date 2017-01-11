@@ -52,7 +52,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
    * Fill the tooltip with a new instance of the spectrum color picker widget
    * initialized with the given color, and return the instance of spectrum
    */
-  setColorPickerContent(color) {
+  setColorPickerContent: function (color) {
     let { doc } = this.tooltip;
 
     let container = doc.createElementNS(XHTML_NS, "div");
@@ -114,11 +114,11 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     this.emit("ready");
   }),
 
-  _onSpectrumColorChange(event, rgba, cssColor) {
+  _onSpectrumColorChange: function (event, rgba, cssColor) {
     this._selectColor(cssColor);
   },
 
-  _selectColor(color) {
+  _selectColor: function (color) {
     if (this.activeSwatch) {
       this.activeSwatch.style.backgroundColor = color;
       this.activeSwatch.parentNode.dataset.color = color;
@@ -133,7 +133,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     }
   },
 
-  _openEyeDropper() {
+  _openEyeDropper: function () {
     let {inspector, toolbox, telemetry} = this.inspector;
     telemetry.toolOpened("pickereyedropper");
     inspector.pickColorFromPage(toolbox, {copyOnSelect: false}).then(() => {
@@ -156,24 +156,24 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
     });
   },
 
-  _onEyeDropperDone() {
+  _onEyeDropperDone: function () {
     this.eyedropperOpen = false;
     this.activeSwatch = null;
   },
 
-  _colorToRgba(color) {
+  _colorToRgba: function (color) {
     color = new colorUtils.CssColor(color, this.cssColor4);
     let rgba = color._getRGBATuple();
     return [rgba.r, rgba.g, rgba.b, rgba.a];
   },
 
-  _toDefaultType(color) {
+  _toDefaultType: function (color) {
     let colorObj = new colorUtils.CssColor(color);
     colorObj.setAuthoredUnitFromColor(this._originalColor, this.cssColor4);
     return colorObj.toString();
   },
 
-  destroy() {
+  destroy: function () {
     SwatchBasedEditorTooltip.prototype.destroy.call(this);
     this.inspector = null;
     this.currentSwatchColor = null;

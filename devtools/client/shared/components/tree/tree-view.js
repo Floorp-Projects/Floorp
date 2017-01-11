@@ -107,7 +107,7 @@ define(function (require, exports, module) {
       }))
     },
 
-    getDefaultProps() {
+    getDefaultProps: function () {
       return {
         object: null,
         renderRow: null,
@@ -118,14 +118,14 @@ define(function (require, exports, module) {
       };
     },
 
-    getInitialState() {
+    getInitialState: function () {
       return {
         expandedNodes: this.props.expandedNodes,
         columns: ensureDefaultColumn(this.props.columns)
       };
     },
 
-    componentWillReceiveProps(nextProps) {
+    componentWillReceiveProps: function (nextProps) {
       let { expandedNodes } = nextProps;
       this.setState(Object.assign({}, this.state, {
         expandedNodes,
@@ -134,7 +134,7 @@ define(function (require, exports, module) {
 
     // Node expand/collapse
 
-    toggle(nodePath) {
+    toggle: function (nodePath) {
       let nodes = this.state.expandedNodes;
       if (this.isExpanded(nodePath)) {
         nodes.delete(nodePath);
@@ -148,13 +148,13 @@ define(function (require, exports, module) {
       }));
     },
 
-    isExpanded(nodePath) {
+    isExpanded: function (nodePath) {
       return this.state.expandedNodes.has(nodePath);
     },
 
     // Event Handlers
 
-    onClickRow(nodePath, event) {
+    onClickRow: function (nodePath, event) {
       event.stopPropagation();
       this.toggle(nodePath);
     },
@@ -165,12 +165,12 @@ define(function (require, exports, module) {
      * Filter out nodes that don't correspond to the current filter.
      * @return {Boolean} true if the node should be visible otherwise false.
      */
-    onFilter(object) {
+    onFilter: function (object) {
       let onFilter = this.props.onFilter;
       return onFilter ? onFilter(object) : true;
     },
 
-    onSort(parent, children) {
+    onSort: function (parent, children) {
       let onSort = this.props.onSort;
       return onSort ? onSort(parent, children) : children;
     },
@@ -181,7 +181,7 @@ define(function (require, exports, module) {
      * Return children node objects (so called 'members') for given
      * parent object.
      */
-    getMembers(parent, level, path) {
+    getMembers: function (parent, level, path) {
       // Strings don't have children. Note that 'long' strings are using
       // the expander icon (+/-) to display the entire original value,
       // but there are no child items.
@@ -223,15 +223,15 @@ define(function (require, exports, module) {
           // A label for the child node
           name: provider.getLabel(child),
           // Data type of the child node (used for CSS customization)
-          type,
+          type: type,
           // Class attribute computed from the type.
           rowClass: "treeRow-" + type,
           // Level of the child within the hierarchy (top == 0)
-          level,
+          level: level,
           // True if this node has children.
-          hasChildren,
+          hasChildren: hasChildren,
           // Value associated with this node (as provided by the data provider)
-          value,
+          value: value,
           // True if the node is expanded.
           open: this.isExpanded(nodePath),
           // Node path
@@ -245,7 +245,7 @@ define(function (require, exports, module) {
     /**
      * Render tree rows/nodes.
      */
-    renderRows(parent, level = 0, path = "") {
+    renderRows: function (parent, level = 0, path = "") {
       let rows = [];
       let decorator = this.props.decorator;
       let renderRow = this.props.renderRow || TreeRow;
@@ -266,7 +266,7 @@ define(function (require, exports, module) {
 
         let props = Object.assign({}, this.props, {
           key: member.path,
-          member,
+          member: member,
           columns: this.state.columns,
           onClick: this.onClickRow.bind(this, member.path)
         });
@@ -295,7 +295,7 @@ define(function (require, exports, module) {
       return rows;
     },
 
-    render() {
+    render: function () {
       let root = this.props.object;
       let classNames = ["treeTable"];
 

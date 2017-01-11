@@ -102,7 +102,7 @@ TextPropertyEditor.prototype = {
   /**
    * Create the property editor's DOM.
    */
-  _create() {
+  _create: function () {
     this.element = this.doc.createElementNS(HTML_NS, "li");
     this.element.classList.add("ruleview-property");
     this.element._textPropertyEditor = this;
@@ -313,7 +313,7 @@ TextPropertyEditor.prototype = {
   /**
    * Populate the span based on changes to the TextProperty.
    */
-  update() {
+  update: function () {
     if (this.ruleView.isDestroyed) {
       return;
     }
@@ -461,7 +461,7 @@ TextPropertyEditor.prototype = {
     this.ruleView._updatePropertyHighlight(this);
   },
 
-  _onStartEditing() {
+  _onStartEditing: function () {
     this.element.classList.remove("ruleview-overridden");
     this.filterProperty.hidden = true;
     this.enable.style.visibility = "hidden";
@@ -471,7 +471,7 @@ TextPropertyEditor.prototype = {
    * Update the visibility of the enable checkbox, the warning indicator and
    * the filter property, as well as the overriden state of the property.
    */
-  updatePropertyState() {
+  updatePropertyState: function () {
     if (this.prop.enabled) {
       this.enable.style.removeProperty("visibility");
       this.enable.setAttribute("checked", "");
@@ -499,7 +499,7 @@ TextPropertyEditor.prototype = {
    * Update the indicator for computed styles. The computed styles themselves
    * are populated on demand, when they become visible.
    */
-  _updateComputed() {
+  _updateComputed: function () {
     this.computed.innerHTML = "";
 
     let showExpander = this.prop.computed.some(c => c.name !== this.prop.name);
@@ -514,7 +514,7 @@ TextPropertyEditor.prototype = {
   /**
    * Populate the list of computed styles.
    */
-  _populateComputed() {
+  _populateComputed: function () {
     if (this._populatedComputed) {
       return;
     }
@@ -569,7 +569,7 @@ TextPropertyEditor.prototype = {
   /**
    * Handles clicks on the disabled property.
    */
-  _onEnableClicked(event) {
+  _onEnableClicked: function (event) {
     let checked = this.enable.hasAttribute("checked");
     if (checked) {
       this.enable.removeAttribute("checked");
@@ -587,7 +587,7 @@ TextPropertyEditor.prototype = {
    * expand the computed list and tracks whether or not the computed list is
    * expanded by manually by the user.
    */
-  _onExpandClicked(event) {
+  _onExpandClicked: function (event) {
     if (this.computed.hasAttribute("filter-open") ||
         this.computed.hasAttribute("user-open")) {
       this.expander.removeAttribute("open");
@@ -607,7 +607,7 @@ TextPropertyEditor.prototype = {
    * filtering. The filter-open attribute is used to track whether or not the
    * computed list was toggled opened by the filter.
    */
-  expandForFilter() {
+  expandForFilter: function () {
     if (!this.computed.hasAttribute("user-open")) {
       this.expander.setAttribute("open", "true");
       this.computed.setAttribute("filter-open", "");
@@ -618,7 +618,7 @@ TextPropertyEditor.prototype = {
   /**
    * Collapses the computed list that was expanded by style filtering.
    */
-  collapseForFilter() {
+  collapseForFilter: function () {
     this.computed.removeAttribute("filter-open");
 
     if (!this.computed.hasAttribute("user-open")) {
@@ -638,7 +638,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _onNameDone(value, commit, direction) {
+  _onNameDone: function (value, commit, direction) {
     let isNameUnchanged = (!commit && !this.ruleEditor.isEditing) ||
                           this.committed.name === value;
     if (this.prop.value && isNameUnchanged) {
@@ -686,7 +686,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  remove(direction) {
+  remove: function (direction) {
     if (this._colorSwatchSpans && this._colorSwatchSpans.length) {
       for (let span of this._colorSwatchSpans) {
         this.ruleView.tooltips.colorPicker.removeSwatch(span);
@@ -718,7 +718,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _onValueDone(value = "", commit, direction) {
+  _onValueDone: function (value = "", commit, direction) {
     let parsedProperties = this._getValueAndExtraProperties(value);
     let val = parseSingleValue(this.cssProperties.isKnown,
                                parsedProperties.firstValue);
@@ -769,7 +769,7 @@ TextPropertyEditor.prototype = {
   /**
    * Called when the swatch editor wants to commit a value change.
    */
-  _onSwatchCommit() {
+  _onSwatchCommit: function () {
     this._onValueDone(this.valueSpan.textContent, true);
     this.update();
   },
@@ -777,7 +777,7 @@ TextPropertyEditor.prototype = {
   /**
    * Called when the swatch editor wants to preview a value change.
    */
-  _onSwatchPreview() {
+  _onSwatchPreview: function () {
     this._previewValue(this.valueSpan.textContent);
   },
 
@@ -785,7 +785,7 @@ TextPropertyEditor.prototype = {
    * Called when the swatch editor closes from an ESC. Revert to the original
    * value of this property before editing.
    */
-  _onSwatchRevert() {
+  _onSwatchRevert: function () {
     this._previewValue(this.prop.value, true);
     this.update();
   },
@@ -805,7 +805,7 @@ TextPropertyEditor.prototype = {
    *        propertiesToAdd: An array with additional properties, following the
    *                         parseDeclarations format of {name,value,priority}
    */
-  _getValueAndExtraProperties(value) {
+  _getValueAndExtraProperties: function (value) {
     // The inplace editor will prevent manual typing of multiple properties,
     // but we need to deal with the case during a paste event.
     // Adding multiple properties inside of value editor sets value with the
@@ -832,8 +832,8 @@ TextPropertyEditor.prototype = {
     }
 
     return {
-      propertiesToAdd,
-      firstValue
+      propertiesToAdd: propertiesToAdd,
+      firstValue: firstValue
     };
   },
 
@@ -845,7 +845,7 @@ TextPropertyEditor.prototype = {
    * @param {Boolean} reverting
    *        True if we're reverting the previously previewed value
    */
-  _previewValue(value, reverting = false) {
+  _previewValue: function (value, reverting = false) {
     // Since function call is throttled, we need to make sure we are still
     // editing, and any selector modifications have been completed
     if (!reverting && (!this.editing || this.ruleEditor.isEditing)) {
@@ -863,7 +863,7 @@ TextPropertyEditor.prototype = {
    *
    * @return {Boolean} true if the property value is valid, false otherwise.
    */
-  isValid() {
+  isValid: function () {
     return this.prop.isValid();
   },
 
@@ -872,7 +872,7 @@ TextPropertyEditor.prototype = {
    *
    * @return {Boolean} true if the property is a `display: grid` declaration.
    */
-  isDisplayGrid() {
+  isDisplayGrid: function () {
     return this.prop.name === "display" && this.prop.value === "grid";
   }
 };

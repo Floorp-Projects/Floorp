@@ -275,7 +275,7 @@ function allocationsWithSchema(data) {
       time: slot++,
       size: slot++,
     },
-    data
+    data: data
   };
 }
 
@@ -433,7 +433,7 @@ function stackTableWithSchema(data) {
       prefix: slot++,
       frame: slot++
     },
-    data
+    data: data
   };
 }
 
@@ -447,7 +447,7 @@ function frameTableWithSchema(data) {
       line: slot++,
       category: slot++
     },
-    data
+    data: data
   };
 }
 
@@ -463,7 +463,7 @@ function samplesWithSchema(data) {
       frameNumber: slot++,
       power: slot++
     },
-    data
+    data: data
   };
 }
 

@@ -71,7 +71,7 @@ CubicBezier.prototype = {
     return this.coordinates.slice(2);
   },
 
-  toString() {
+  toString: function () {
     // Check first if current coords are one of css predefined functions
     let predefName = Object.keys(PREDEFINED)
                            .find(key => coordsAreEqual(PREDEFINED[key],
@@ -126,7 +126,7 @@ BezierCanvas.prototype = {
   /**
    * Convert an element's left/top offsets into coordinates
    */
-  offsetsToCoordinates(element) {
+  offsetsToCoordinates: function (element) {
     let p = this.padding, w = this.canvas.width, h = this.canvas.height;
 
     // Convert padding percentage to actual padding
@@ -141,7 +141,7 @@ BezierCanvas.prototype = {
   /**
    * Draw the cubic bezier curve for the current coordinates
    */
-  plot(settings = {}) {
+  plot: function (settings = {}) {
     let xy = this.bezier.coordinates;
 
     let defaultSettings = {
@@ -251,7 +251,7 @@ function CubicBezierWidget(parent,
 exports.CubicBezierWidget = CubicBezierWidget;
 
 CubicBezierWidget.prototype = {
-  _initMarkup() {
+  _initMarkup: function () {
     let doc = this.parent.ownerDocument;
 
     let wrap = doc.createElementNS(XHTML_NS, "div");
@@ -285,11 +285,11 @@ CubicBezierWidget.prototype = {
     };
   },
 
-  _removeMarkup() {
+  _removeMarkup: function () {
     this.parent.querySelector(".display-wrap").remove();
   },
 
-  _initEvents() {
+  _initEvents: function () {
     this.p1.addEventListener("mousedown", this._onPointMouseDown);
     this.p2.addEventListener("mousedown", this._onPointMouseDown);
 
@@ -301,7 +301,7 @@ CubicBezierWidget.prototype = {
     this.presets.on("new-coordinates", this._onNewCoordinates);
   },
 
-  _removeEvents() {
+  _removeEvents: function () {
     this.p1.removeEventListener("mousedown", this._onPointMouseDown);
     this.p2.removeEventListener("mousedown", this._onPointMouseDown);
 
@@ -313,7 +313,7 @@ CubicBezierWidget.prototype = {
     this.presets.off("new-coordinates", this._onNewCoordinates);
   },
 
-  _onPointMouseDown(event) {
+  _onPointMouseDown: function (event) {
     // Updating the boundingbox in case it has changed
     this.curveBoundingBox = this.curve.getBoundingClientRect();
 
@@ -346,7 +346,7 @@ CubicBezierWidget.prototype = {
     };
   },
 
-  _onPointKeyDown(event) {
+  _onPointKeyDown: function (event) {
     let point = event.target;
     let code = event.keyCode;
 
@@ -369,7 +369,7 @@ CubicBezierWidget.prototype = {
     }
   },
 
-  _onCurveClick(event) {
+  _onCurveClick: function (event) {
     this.curveBoundingBox = this.curve.getBoundingClientRect();
 
     let left = this.curveBoundingBox.left;
@@ -390,14 +390,14 @@ CubicBezierWidget.prototype = {
     this._updateFromPoints();
   },
 
-  _onNewCoordinates(event, coordinates) {
+  _onNewCoordinates: function (event, coordinates) {
     this.coordinates = coordinates;
   },
 
   /**
    * Get the current point coordinates and redraw the curve to match
    */
-  _updateFromPoints() {
+  _updateFromPoints: function () {
     // Get the new coordinates from the point's offsets
     let coordinates = this.bezierCanvas.offsetsToCoordinates(this.p1);
     coordinates = coordinates.concat(
@@ -412,7 +412,7 @@ CubicBezierWidget.prototype = {
    * Redraw the curve
    * @param {Array} coordinates The array of control point coordinates
    */
-  _redraw(coordinates) {
+  _redraw: function (coordinates) {
     // Provide a new CubicBezier to the canvas and plot the curve
     this.bezierCanvas.bezier = new CubicBezier(coordinates);
     this.bezierCanvas.plot();
@@ -455,7 +455,7 @@ CubicBezierWidget.prototype = {
     this.coordinates = coordinates;
   },
 
-  destroy() {
+  destroy: function () {
     this._removeEvents();
     this._removeMarkup();
 
@@ -515,7 +515,7 @@ CubicBezierPresetWidget.prototype = {
    *        div .preset
    *        ...
    */
-  _initMarkup() {
+  _initMarkup: function () {
     let doc = this.parent.ownerDocument;
 
     let presetPane = doc.createElementNS(XHTML_NS, "div");
@@ -544,13 +544,13 @@ CubicBezierPresetWidget.prototype = {
     let allPresets = presetPane.querySelectorAll(".preset");
 
     return {
-      presetPane,
+      presetPane: presetPane,
       presets: allPresets,
       categories: allCategories
     };
   },
 
-  _createCategory(categoryLabel) {
+  _createCategory: function (categoryLabel) {
     let doc = this.parent.ownerDocument;
 
     let category = doc.createElementNS(XHTML_NS, "div");
@@ -564,11 +564,11 @@ CubicBezierPresetWidget.prototype = {
     return category;
   },
 
-  _normalizeCategoryLabel(categoryLabel) {
+  _normalizeCategoryLabel: function (categoryLabel) {
     return categoryLabel.replace("/-/g", " ");
   },
 
-  _createPresetList(categoryLabel) {
+  _createPresetList: function (categoryLabel) {
     let doc = this.parent.ownerDocument;
 
     let presetList = doc.createElementNS(XHTML_NS, "div");
@@ -583,7 +583,7 @@ CubicBezierPresetWidget.prototype = {
     return presetList;
   },
 
-  _createPreset(categoryLabel, presetLabel) {
+  _createPreset: function (categoryLabel, presetLabel) {
     let doc = this.parent.ownerDocument;
 
     let preset = doc.createElementNS(XHTML_NS, "div");
@@ -613,11 +613,11 @@ CubicBezierPresetWidget.prototype = {
     return preset;
   },
 
-  _normalizePresetLabel(categoryLabel, presetLabel) {
+  _normalizePresetLabel: function (categoryLabel, presetLabel) {
     return presetLabel.replace(categoryLabel + "-", "").replace("/-/g", " ");
   },
 
-  _initEvents() {
+  _initEvents: function () {
     for (let category of this.categories) {
       category.addEventListener("click", this._onCategoryClick);
     }
@@ -627,7 +627,7 @@ CubicBezierPresetWidget.prototype = {
     }
   },
 
-  _removeEvents() {
+  _removeEvents: function () {
     for (let category of this.categories) {
       category.removeEventListener("click", this._onCategoryClick);
     }
@@ -637,16 +637,16 @@ CubicBezierPresetWidget.prototype = {
     }
   },
 
-  _onPresetClick(event) {
+  _onPresetClick: function (event) {
     this.emit("new-coordinates", event.currentTarget.coordinates);
     this.activePreset = event.currentTarget;
   },
 
-  _onCategoryClick(event) {
+  _onCategoryClick: function (event) {
     this.activeCategory = event.target;
   },
 
-  _setActivePresetList(presetListId) {
+  _setActivePresetList: function (presetListId) {
     let presetList = this.presetPane.querySelector("#" + presetListId);
     swapClassName("active-preset-list", this._activePresetList, presetList);
     this._activePresetList = presetList;
@@ -678,7 +678,7 @@ CubicBezierPresetWidget.prototype = {
    * existing preset.
    * @param {Array} coordinates new coords [i, j, k, l]
    */
-  refreshMenu(coordinates) {
+  refreshMenu: function (coordinates) {
     // If we cannot find a matching preset, keep
     // menu on last known preset category.
     let category = this._activeCategory;
@@ -708,7 +708,7 @@ CubicBezierPresetWidget.prototype = {
     this.activePreset = preset;
   },
 
-  destroy() {
+  destroy: function () {
     this._removeEvents();
     this.parent.querySelector(".preset-pane").remove();
   }
@@ -730,7 +730,7 @@ function TimingFunctionPreviewWidget(parent) {
 TimingFunctionPreviewWidget.prototype = {
   PREVIEW_DURATION: 1000,
 
-  _initMarkup() {
+  _initMarkup: function () {
     let doc = this.parent.ownerDocument;
 
     let container = doc.createElementNS(XHTML_NS, "div");
@@ -747,7 +747,7 @@ TimingFunctionPreviewWidget.prototype = {
     this.parent.appendChild(container);
   },
 
-  destroy() {
+  destroy: function () {
     clearTimeout(this.autoRestartAnimation);
     this.parent.querySelector(".timing-function-preview").remove();
     this.parent = this.dot = null;
@@ -759,7 +759,7 @@ TimingFunctionPreviewWidget.prototype = {
    * supplied function is invalid, the preview will stop.
    * @param {String} value
    */
-  preview(value) {
+  preview: function (value) {
     // Don't restart the preview animation if the value is the same
     if (value === this.previousValue) {
       return;
@@ -778,7 +778,7 @@ TimingFunctionPreviewWidget.prototype = {
   /**
    * Re-start the preview animation from the beginning
    */
-  restartAnimation() {
+  restartAnimation: function () {
     // Just toggling the class won't do it unless there's a sync reflow
     this.dot.animate([
       { left: "-7px", offset: 0 },

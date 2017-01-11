@@ -61,7 +61,7 @@ AutoRefreshHighlighter.prototype = {
    * @param {Object} options
    *        Object used for passing options
    */
-  show(node, options = {}) {
+  show: function (node, options = {}) {
     let isSameNode = node === this.currentNode;
     let isSameOptions = this._isSameOptions(options);
 
@@ -86,7 +86,7 @@ AutoRefreshHighlighter.prototype = {
   /**
    * Hide the highlighter
    */
-  hide() {
+  hide: function () {
     if (!this._isNodeValid(this.currentNode)) {
       return;
     }
@@ -107,7 +107,7 @@ AutoRefreshHighlighter.prototype = {
    * @param {DOMNode} node
    * @return {Boolean}
    */
-  _isNodeValid(node) {
+  _isNodeValid: function (node) {
     return isNodeValid(node);
   },
 
@@ -115,7 +115,7 @@ AutoRefreshHighlighter.prototype = {
    * Are the provided options the same as the currently stored options?
    * Returns false if there are no options stored currently.
    */
-  _isSameOptions(options) {
+  _isSameOptions: function (options) {
     if (!this.options) {
       return false;
     }
@@ -138,7 +138,7 @@ AutoRefreshHighlighter.prototype = {
   /**
    * Update the stored box quads by reading the current node's box quads.
    */
-  _updateAdjustedQuads() {
+  _updateAdjustedQuads: function () {
     for (let region of BOX_MODEL_REGIONS) {
       this.currentQuads[region] = getAdjustedQuads(
         this.win,
@@ -151,7 +151,7 @@ AutoRefreshHighlighter.prototype = {
    * if any of the points x/y or bounds have change since.
    * @return {Boolean}
    */
-  _hasMoved() {
+  _hasMoved: function () {
     let oldQuads = JSON.stringify(this.currentQuads);
     this._updateAdjustedQuads();
     let newQuads = JSON.stringify(this.currentQuads);
@@ -161,7 +161,7 @@ AutoRefreshHighlighter.prototype = {
   /**
    * Update the highlighter if the node has moved since the last update.
    */
-  update() {
+  update: function () {
     if (!this._isNodeValid(this.currentNode) || !this._hasMoved()) {
       return;
     }
@@ -170,14 +170,14 @@ AutoRefreshHighlighter.prototype = {
     this.emit("updated");
   },
 
-  _show() {
+  _show: function () {
     // To be implemented by sub classes
     // When called, sub classes should actually show the highlighter for
     // this.currentNode, potentially using options in this.options
     throw new Error("Custom highlighter class had to implement _show method");
   },
 
-  _update() {
+  _update: function () {
     // To be implemented by sub classes
     // When called, sub classes should update the highlighter shown for
     // this.currentNode
@@ -185,27 +185,27 @@ AutoRefreshHighlighter.prototype = {
     throw new Error("Custom highlighter class had to implement _update method");
   },
 
-  _hide() {
+  _hide: function () {
     // To be implemented by sub classes
     // When called, sub classes should actually hide the highlighter
     throw new Error("Custom highlighter class had to implement _hide method");
   },
 
-  _startRefreshLoop() {
+  _startRefreshLoop: function () {
     let win = this.currentNode.ownerDocument.defaultView;
     this.rafID = win.requestAnimationFrame(this._startRefreshLoop.bind(this));
     this.rafWin = win;
     this.update();
   },
 
-  _stopRefreshLoop() {
+  _stopRefreshLoop: function () {
     if (this.rafID && !Cu.isDeadWrapper(this.rafWin)) {
       this.rafWin.cancelAnimationFrame(this.rafID);
     }
     this.rafID = this.rafWin = null;
   },
 
-  destroy() {
+  destroy: function () {
     this.hide();
 
     this.highlighterEnv = null;

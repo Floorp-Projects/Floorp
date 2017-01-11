@@ -7,7 +7,7 @@ const {settingsSpec} = require("devtools/shared/specs/settings");
 const protocol = require("devtools/shared/protocol");
 
 const SettingsFront = protocol.FrontClassWithSpec(settingsSpec, {
-  initialize(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.settingsActor;
     this.manage(this);

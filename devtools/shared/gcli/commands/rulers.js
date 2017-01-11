@@ -39,7 +39,7 @@ exports.items = [
       onChange: (target, handler) => eventEmitter.on("changed", handler),
       offChange: (target, handler) => eventEmitter.off("changed", handler)
     },
-    * exec(args, context) {
+    exec: function* (args, context) {
       let { target } = context.environment;
 
       // Pipe the call to the server command.
@@ -71,7 +71,7 @@ exports.items = [
     runAt: "server",
     hidden: true,
     returnType: "highlighterVisibility",
-    exec(args, context) {
+    exec: function (args, context) {
       let env = context.environment;
       let { document } = env;
       let id = getOuterId(env.window);

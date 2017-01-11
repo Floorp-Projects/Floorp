@@ -18,8 +18,8 @@ module.exports = function defer() {
     reject = arguments[1];
   });
   return {
-    resolve,
-    reject,
-    promise
+    resolve: resolve,
+    reject: reject,
+    promise: promise
   };
 };

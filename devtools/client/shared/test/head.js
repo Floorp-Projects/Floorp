@@ -182,7 +182,7 @@ function synthesizeProfileForTest(samples) {
 
   let uniqueStacks = new RecordingUtils.UniqueStacks();
   return RecordingUtils.deflateThread({
-    samples,
+    samples: samples,
     markers: []
   }, uniqueStacks);
 }

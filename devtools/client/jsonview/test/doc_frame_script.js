@@ -44,7 +44,7 @@ addMessageListener("Test:JsonView:GetElementText", function (msg) {
   let {selector} = msg.data;
   let element = content.document.querySelector(selector);
   let text = element ? element.textContent : null;
-  sendAsyncMessage(msg.name, {text});
+  sendAsyncMessage(msg.name, {text: text});
 });
 
 addMessageListener("Test:JsonView:FocusElement", function (msg) {

@@ -75,7 +75,7 @@ TextEditor.prototype = {
     this.update();
   },
 
-  update() {
+  update: function () {
     let longstr = null;
     this.node.getNodeValue().then(ret => {
       longstr = ret;
@@ -96,12 +96,12 @@ TextEditor.prototype = {
     }).then(null, console.error);
   },
 
-  destroy() {},
+  destroy: function () {},
 
   /**
    * Stub method for consistency with ElementEditor.
    */
-  getInfoAtNode() {
+  getInfoAtNode: function () {
     return null;
   }
 };

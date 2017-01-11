@@ -50,7 +50,7 @@ exports.initPerformanceInNewTab = function* ({ url, win }, options = {}) {
 exports.initPerformanceInTab = function* ({ tab }) {
   return (yield exports.initPanelInTab({
     tool: "performance",
-    tab
+    tab: tab
   }));
 };
 
@@ -70,7 +70,7 @@ exports.initConsoleInNewTab = function* ({ url, win }, options = {}) {
 exports.initConsoleInTab = function* ({ tab }) {
   let { target, toolbox, panel } = yield exports.initPanelInTab({
     tool: "webconsole",
-    tab
+    tab: tab
   });
 
   let consoleMethod = function* (method, label, event) {

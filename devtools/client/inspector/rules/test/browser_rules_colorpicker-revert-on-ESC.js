@@ -103,7 +103,7 @@ function* getRulePropertyValue(name) {
   let propValue = yield executeInContent("Test:GetRulePropertyValue", {
     styleSheetIndex: 0,
     ruleIndex: 0,
-    name
+    name: name
   });
   return propValue;
 }

@@ -36,7 +36,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getLength(grip) {
+    getLength: function (grip) {
       if (!grip.preview) {
         return 0;
       }
@@ -44,17 +44,17 @@ define(function (require, exports, module) {
       return grip.preview.length || grip.preview.childNodesLength || 0;
     },
 
-    getTitle(object, context) {
+    getTitle: function (object, context) {
       let objectLink = this.props.objectLink || span;
       if (this.props.mode !== MODE.TINY) {
         return objectLink({
-          object
+          object: object
         }, object.class + " ");
       }
       return "";
     },
 
-    getPreviewItems(grip) {
+    getPreviewItems: function (grip) {
       if (!grip.preview) {
         return null;
       }
@@ -62,7 +62,7 @@ define(function (require, exports, module) {
       return grip.preview.items || grip.preview.childNodes || null;
     },
 
-    arrayIterator(grip, max) {
+    arrayIterator: function (grip, max) {
       let items = [];
       const gripLength = this.getLength(grip);
 
@@ -91,12 +91,12 @@ define(function (require, exports, module) {
 
           items.push(GripArrayItem(Object.assign({}, this.props, {
             object: value,
-            delim
+            delim: delim
           })));
         } catch (exc) {
           items.push(GripArrayItem(Object.assign({}, this.props, {
             object: exc,
-            delim
+            delim: delim
           })));
         }
       }
@@ -146,12 +146,12 @@ define(function (require, exports, module) {
           title,
           objectLink({
             className: "arrayLeftBracket",
-            object
+            object: object
           }, brackets.left),
           ...items,
           objectLink({
             className: "arrayRightBracket",
-            object
+            object: object
           }, brackets.right),
           span({
             className: "arrayProperties",
@@ -173,7 +173,7 @@ define(function (require, exports, module) {
       delim: React.PropTypes.string,
     },
 
-    render() {
+    render: function () {
       let { Rep } = createFactories(require("./rep"));
 
       return (
@@ -202,6 +202,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.GripArray = {
     rep: GripArray,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

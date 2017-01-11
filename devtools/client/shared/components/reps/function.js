@@ -31,7 +31,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle(grip) {
+    getTitle: function (grip) {
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: grip
@@ -40,7 +40,7 @@ define(function (require, exports, module) {
       return "";
     },
 
-    summarizeFunction(grip) {
+    summarizeFunction: function (grip) {
       let name = grip.userDisplayName || grip.displayName || grip.name || "function";
       return cropString(name + "()", 100);
     },
@@ -73,6 +73,6 @@ define(function (require, exports, module) {
 
   exports.Func = {
     rep: Func,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

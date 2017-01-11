@@ -56,7 +56,7 @@ HarBuilder.prototype = {
    * @returns {Promise} A promise that resolves to the HAR object when
    * the entire build process is done.
    */
-  build() {
+  build: function () {
     this.promises = [];
 
     // Build basic structure for data.
@@ -70,14 +70,14 @@ HarBuilder.prototype = {
     // Some data needs to be fetched from the backend during the
     // build process, so wait till all is done.
     let { resolve, promise } = defer();
-    all(this.promises).then(results => resolve({ log }));
+    all(this.promises).then(results => resolve({ log: log }));
 
     return promise;
   },
 
   // Helpers
 
-  buildLog() {
+  buildLog: function () {
     return {
       version: HAR_VERSION,
       creator: {
@@ -93,7 +93,7 @@ HarBuilder.prototype = {
     };
   },
 
-  buildPage(file) {
+  buildPage: function (file) {
     let page = {};
 
     // Page start time is set when the first request is processed
@@ -105,7 +105,7 @@ HarBuilder.prototype = {
     return page;
   },
 
-  getPage(log, file) {
+  getPage: function (log, file) {
     let id = this._options.id;
     let page = this._pageMap[id];
     if (page) {
@@ -118,7 +118,7 @@ HarBuilder.prototype = {
     return page;
   },
 
-  buildEntry(log, file) {
+  buildEntry: function (log, file) {
     let page = this.getPage(log, file);
 
     let entry = {};
@@ -148,7 +148,7 @@ HarBuilder.prototype = {
     return entry;
   },
 
-  buildPageTimings(page, file) {
+  buildPageTimings: function (page, file) {
     // Event timing info isn't available
     let timings = {
       onContentLoad: -1,
@@ -158,7 +158,7 @@ HarBuilder.prototype = {
     return timings;
   },
 
-  buildRequest(file) {
+  buildRequest: function (file) {
     let request = {
       bodySize: 0
     };
@@ -194,7 +194,7 @@ HarBuilder.prototype = {
    *
    * @param {Object} input Request or response header object.
    */
-  buildHeaders(input) {
+  buildHeaders: function (input) {
     if (!input) {
       return [];
     }
@@ -202,7 +202,7 @@ HarBuilder.prototype = {
     return this.buildNameValuePairs(input.headers);
   },
 
-  appendHeadersPostData(input = [], file) {
+  appendHeadersPostData: function (input = [], file) {
     if (!file.requestPostData) {
       return input;
     }
@@ -217,7 +217,7 @@ HarBuilder.prototype = {
     return input;
   },
 
-  buildCookies(input) {
+  buildCookies: function (input) {
     if (!input) {
       return [];
     }
@@ -225,7 +225,7 @@ HarBuilder.prototype = {
     return this.buildNameValuePairs(input.cookies);
   },
 
-  buildNameValuePairs(entries) {
+  buildNameValuePairs: function (entries) {
     let result = [];
 
     // HAR requires headers array to be presented, so always
@@ -239,7 +239,7 @@ HarBuilder.prototype = {
       this.fetchData(entry.value).then(value => {
         result.push({
           name: entry.name,
-          value
+          value: value
         });
       });
     });
@@ -247,7 +247,7 @@ HarBuilder.prototype = {
     return result;
   },
 
-  buildPostData(file) {
+  buildPostData: function (file) {
     let postData = {
       mimeType: findValue(file.requestHeaders.headers, "content-type"),
       params: [],
@@ -292,7 +292,7 @@ HarBuilder.prototype = {
     return postData;
   },
 
-  buildResponse(file) {
+  buildResponse: function (file) {
     let response = {
       status: 0
     };
@@ -329,7 +329,7 @@ HarBuilder.prototype = {
     return response;
   },
 
-  buildContent(file) {
+  buildContent: function (file) {
     let content = {
       mimeType: file.mimeType,
       size: -1
@@ -362,7 +362,7 @@ HarBuilder.prototype = {
     return content;
   },
 
-  buildCache(file) {
+  buildCache: function (file) {
     let cache = {};
 
     if (!file.fromCache) {
@@ -381,7 +381,7 @@ HarBuilder.prototype = {
     return cache;
   },
 
-  buildCacheEntry(cacheEntry) {
+  buildCacheEntry: function (cacheEntry) {
     let cache = {};
 
     cache.expires = findValue(cacheEntry, "Expires");
@@ -392,7 +392,7 @@ HarBuilder.prototype = {
     return cache;
   },
 
-  getBlockingEndTime(file) {
+  getBlockingEndTime: function (file) {
     if (file.resolveStarted && file.connectStarted) {
       return file.resolvingTime;
     }
@@ -411,7 +411,7 @@ HarBuilder.prototype = {
 
   // RDP Helpers
 
-  fetchData(string) {
+  fetchData: function (string) {
     let promise = this._options.getString(string).then(value => {
       return value;
     });

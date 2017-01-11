@@ -33,7 +33,7 @@ var chromeWindow;
  * Front for CSSUsageActor
  */
 const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
-  initialize(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
     this.actorID = form.cssUsageActor;
     this.manage(this);
@@ -99,7 +99,7 @@ const CSSUsageFront = protocol.FrontClassWithSpec(cssUsageSpec, {
   /**
    * We count STARTING and STOPPING as 'running'
    */
-  isRunning() {
+  isRunning: function () {
     return isRunning;
   }
 });

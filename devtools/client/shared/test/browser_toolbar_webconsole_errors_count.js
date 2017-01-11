@@ -103,7 +103,7 @@ function test() {
     dump("lolz!!\n");
     waitForValue({
       name: "web console shows the page errors",
-      validator() {
+      validator: function () {
         let selector = ".message[category=exception][severity=error]";
         return hud.outputNode.querySelectorAll(selector).length;
       },
@@ -143,7 +143,7 @@ function test() {
 
     let waitForNewError = {
       name: "the Web Console displays the new error",
-      validator() {
+      validator: function () {
         return hud.outputNode.textContent.indexOf("foobarBug762996click") > -1;
       },
       success: doClearConsoleButton.bind(null, hud),
@@ -186,12 +186,12 @@ function test() {
 
     let waitForConsoleOutputAfterReload = {
       name: "the Web Console displays the correct number of errors after reload",
-      validator() {
+      validator: function () {
         let selector = ".message[category=exception][severity=error]";
         return hud.outputNode.querySelectorAll(selector).length;
       },
       value: 3,
-      success() {
+      success: function () {
         isnot(hud.outputNode.textContent.indexOf("foobarBug762996load"), -1,
               "foobarBug762996load found in console output after page reload");
         testEnd();

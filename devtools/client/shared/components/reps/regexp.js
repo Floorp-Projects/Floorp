@@ -30,7 +30,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getSource(grip) {
+    getSource: function (grip) {
       return grip.displayString;
     },
 
@@ -62,6 +62,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.RegExp = {
     rep: RegExp,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

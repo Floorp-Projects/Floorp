@@ -125,7 +125,7 @@ const PropertiesView = createClass({
     });
   },
 
-  getExpandedNodes(object, path = "", level = 0) {
+  getExpandedNodes: function (object, path = "", level = 0) {
     if (typeof object != "object") {
       return null;
     }

@@ -31,12 +31,12 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getLocation(grip) {
+    getLocation: function (grip) {
       let location = grip.preview.location;
       return location ? getURLDisplayString(location) : "";
     },
 
-    getTitle(grip) {
+    getTitle: function (grip) {
       if (this.props.objectLink) {
         return span({className: "objectBox"},
           this.props.objectLink({
@@ -47,7 +47,7 @@ define(function (require, exports, module) {
       return "";
     },
 
-    getTooltip(doc) {
+    getTooltip: function (doc) {
       return doc.location.href;
     },
 
@@ -78,6 +78,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.Document = {
     rep: Document,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

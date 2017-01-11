@@ -28,14 +28,14 @@ function ReadOnlyEditor(container, node) {
 }
 
 ReadOnlyEditor.prototype = {
-  destroy() {
+  destroy: function () {
     this.elt.remove();
   },
 
   /**
    * Stub method for consistency with ElementEditor.
    */
-  getInfoAtNode() {
+  getInfoAtNode: function () {
     return null;
   }
 };

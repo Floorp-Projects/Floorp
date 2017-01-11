@@ -18,11 +18,11 @@
       /* global React, ReactDOM, externalCapturingFunction, externalFunction */
 
       var ClickMe2 = React.createClass({
-        inlineFunction() {
+        inlineFunction: function () {
           alert("inlineFunction");
         },
 
-        render() {
+        render: function () {
           return React.createElement(
             "div",
             null,

@@ -23,7 +23,7 @@ do_register_cleanup(() => {
 var ALLOW_CONSOLE_ERRORS = false;
 
 var listener = {
-  observe(message) {
+  observe: function (message) {
     let string;
     try {
       message.QueryInterface(Ci.nsIScriptError);

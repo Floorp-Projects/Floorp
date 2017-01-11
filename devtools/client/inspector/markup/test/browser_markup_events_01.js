@@ -85,7 +85,7 @@ const TEST_DATA = [ // eslint-disable-line
   },
   {
     selector: "#noevents",
-    * beforeTest(inspector, testActor) {
+    beforeTest: function* (inspector, testActor) {
       let nodeMutated = inspector.once("markupmutation");
       yield testActor.eval("window.wrappedJSObject.addNoeventsClickHandler();");
       yield nodeMutated;
@@ -106,7 +106,7 @@ const TEST_DATA = [ // eslint-disable-line
   },
   {
     selector: "#noevents",
-    * beforeTest(inspector, testActor) {
+    beforeTest: function* (inspector, testActor) {
       let nodeMutated = inspector.once("markupmutation");
       yield testActor.eval(
         "window.wrappedJSObject.removeNoeventsClickHandler();");

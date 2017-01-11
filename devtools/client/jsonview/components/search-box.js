@@ -25,7 +25,7 @@ define(function (require, exports, module) {
       actions: PropTypes.object,
     },
 
-    onSearch(event) {
+    onSearch: function (event) {
       let searchBox = event.target;
       let win = searchBox.ownerDocument.defaultView;
 
@@ -37,11 +37,11 @@ define(function (require, exports, module) {
       this.searchTimeout = win.setTimeout(callback, searchDelay);
     },
 
-    doSearch(searchBox) {
+    doSearch: function (searchBox) {
       this.props.actions.onSearch(searchBox.value);
     },
 
-    render() {
+    render: function () {
       return (
         input({className: "searchBox",
                placeholder: Locale.$STR("jsonViewer.filterJSON"),

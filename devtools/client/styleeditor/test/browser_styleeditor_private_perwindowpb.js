@@ -49,15 +49,15 @@ function checkDiskCacheFor(host) {
   let deferred = defer();
 
   Visitor.prototype = {
-    onCacheStorageInfo(num) {
+    onCacheStorageInfo: function (num) {
       info("disk storage contains " + num + " entries");
     },
-    onCacheEntryInfo(uri) {
+    onCacheEntryInfo: function (uri) {
       let urispec = uri.asciiSpec;
       info(urispec);
       foundPrivateData |= urispec.includes(host);
     },
-    onCacheEntryVisitCompleted() {
+    onCacheEntryVisitCompleted: function () {
       is(foundPrivateData, false, "web content present in disk cache");
       deferred.resolve();
     }

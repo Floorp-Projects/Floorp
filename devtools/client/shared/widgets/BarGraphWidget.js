@@ -125,7 +125,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's background.
    * @see AbstractCanvasGraph.prototype.buildBackgroundImage
    */
-  buildBackgroundImage() {
+  buildBackgroundImage: function () {
     let { canvas, ctx } = this._getNamedCanvas("bar-graph-background");
     let width = this._width;
     let height = this._height;
@@ -143,7 +143,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's data source.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
-  buildGraphImage() {
+  buildGraphImage: function () {
     if (!this.format || !this.format.length) {
       throw new Error("The graph format traits are mandatory to style " +
                       "the data source.");
@@ -163,8 +163,8 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let dataScaleX = this.dataScaleX = width / (duration - this.dataOffsetX);
     let dataScaleY = this.dataScaleY = height / this._calcMaxHeight({
       data: this._data,
-      dataScaleX,
-      minBarsWidth
+      dataScaleX: dataScaleX,
+      minBarsWidth: minBarsWidth
     }) * this.dampenValuesFactor;
 
     // Draw the graph.
@@ -209,11 +209,11 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
 
           // Remember this block's type and location.
           this._blocksBoundingRects.push({
-            type,
+            type: type,
             start: prevRight,
             end: blockRight,
             top: bottom - averageHeight,
-            bottom
+            bottom: bottom
           });
 
           if (prevHeight[tick] === undefined) {
@@ -262,7 +262,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @param function unpack [optional]
    *        @see AbstractCanvasGraph.prototype.getMappedSelection
    */
-  buildMaskImage(highlights, inPixels = false,
+  buildMaskImage: function (highlights, inPixels = false,
                             unpack = e => e.delta) {
     // A null `highlights` array is used to clear the mask. An empty array
     // will mask the entire graph.
@@ -335,7 +335,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * @return number
    *         The tallest bar height in this graph.
    */
-  _calcMaxHeight({ data, dataScaleX, minBarsWidth }) {
+  _calcMaxHeight: function ({ data, dataScaleX, minBarsWidth }) {
     let maxHeight = 0;
     let prevRight = 0;
     let skippedCount = 0;
@@ -367,7 +367,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Creates the legend container when constructing this graph.
    */
-  _createLegend() {
+  _createLegend: function () {
     let legendNode = this._legendNode = this._document.createElementNS(HTML_NS,
                                                                        "div");
     legendNode.className = "bar-graph-widget-legend";
@@ -377,7 +377,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Creates a legend item when constructing this graph.
    */
-  _createLegendItem(color, label) {
+  _createLegendItem: function (color, label) {
     let itemNode = this._document.createElementNS(HTML_NS, "div");
     itemNode.className = "bar-graph-widget-legend-item";
 
@@ -402,7 +402,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is hovered.
    */
-  _onLegendMouseOver(ev) {
+  _onLegendMouseOver: function (ev) {
     setNamedTimeout(
       "bar-graph-debounce",
       GRAPH_LEGEND_MOUSEOVER_DEBOUNCE,
@@ -422,7 +422,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is unhovered.
    */
-  _onLegendMouseOut() {
+  _onLegendMouseOut: function () {
     clearNamedTimeout("bar-graph-debounce");
 
     if (this._hasCustomHighlights) {
@@ -437,7 +437,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is pressed.
    */
-  _onLegendMouseDown(ev) {
+  _onLegendMouseDown: function (ev) {
     ev.preventDefault();
     ev.stopPropagation();
 
@@ -457,7 +457,7 @@ BarGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
   /**
    * Invoked whenever a color node in the legend is released.
    */
-  _onLegendMouseUp(e) {
+  _onLegendMouseUp: function (e) {
     e.preventDefault();
     e.stopPropagation();
   }

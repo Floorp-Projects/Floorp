@@ -20,13 +20,13 @@ add_task(function* () {
     isShown: false,
     options: null,
 
-    show(node, options) {
+    show: function (node, options) {
       this.isShown = true;
       this.options = options;
       return promise.resolve();
     },
 
-    hide() {
+    hide: function () {
       this.isShown = false;
     }
   };

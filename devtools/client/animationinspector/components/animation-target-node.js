@@ -29,12 +29,12 @@ function AnimationTargetNode(inspector, options) {
 exports.AnimationTargetNode = AnimationTargetNode;
 
 AnimationTargetNode.prototype = {
-  init(containerEl) {
+  init: function (containerEl) {
     this.previewer.init(containerEl);
     this.isDestroyed = false;
   },
 
-  destroy() {
+  destroy: function () {
     this.previewer.destroy();
     this.inspector = null;
     this.isDestroyed = true;

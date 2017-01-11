@@ -5,7 +5,7 @@
 
 module.exports = {
   PluralForm: {
-    get(occurence, str) {
+    get: function (occurence, str) {
       // @TODO Remove when loading the actual strings from webconsole.properties
       // is done in the L10n fixture.
       if (str === "messageRepeats.tooltip2") {

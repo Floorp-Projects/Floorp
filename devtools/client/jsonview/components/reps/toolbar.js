@@ -23,7 +23,7 @@ define(function (require, exports, module) {
       ])
     },
 
-    render() {
+    render: function () {
       return (
         DOM.div({className: "toolbar"},
           this.props.children
@@ -44,7 +44,7 @@ define(function (require, exports, module) {
       children: React.PropTypes.string,
     },
 
-    render() {
+    render: function () {
       let props = Object.assign({className: "btn"}, this.props);
       return (
         DOM.button(props, this.props.children)

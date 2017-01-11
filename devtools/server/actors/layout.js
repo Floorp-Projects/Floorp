@@ -29,14 +29,14 @@ var GridActor = ActorClassWithSpec(gridSpec, {
    * @param  {DOMNode} containerEl
    *         The grid container element.
    */
-  initialize(layoutActor, containerEl) {
+  initialize: function (layoutActor, containerEl) {
     Actor.prototype.initialize.call(this, layoutActor.conn);
 
     this.containerEl = containerEl;
     this.walker = layoutActor.walker;
   },
 
-  destroy() {
+  destroy: function () {
     Actor.prototype.destroy.call(this);
 
     this.containerEl = null;
@@ -44,7 +44,7 @@ var GridActor = ActorClassWithSpec(gridSpec, {
     this.walker = null;
   },
 
-  form(detail) {
+  form: function (detail) {
     if (detail === "actorid") {
       return this.actorID;
     }
@@ -67,7 +67,7 @@ var GridActor = ActorClassWithSpec(gridSpec, {
  * The CSS layout actor provides layout information for the given document.
  */
 var LayoutActor = ActorClassWithSpec(layoutSpec, {
-  initialize(conn, tabActor, walker) {
+  initialize: function (conn, tabActor, walker) {
     Actor.prototype.initialize.call(this, conn);
 
     this.tabActor = tabActor;
@@ -78,7 +78,7 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
     events.on(this.tabActor, "navigate", this.onNavigate);
   },
 
-  destroy() {
+  destroy: function () {
     Actor.prototype.destroy.call(this);
 
     events.off(this.tabActor, "navigate", this.onNavigate);
@@ -95,7 +95,7 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
    *         The root node to start iterating at.
    * @return {Array} An array of GridActor objects.
    */
-  getGrids(rootNode) {
+  getGrids: function (rootNode) {
     let grids = [];
 
     let treeWalker = this.walker.getDocumentWalker(rootNode);
@@ -120,7 +120,7 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
    *         Whether or not we should iterate through nested frames.
    * @return {Array} An array of GridActor objects.
    */
-  getAllGrids(rootNode, traverseFrames) {
+  getAllGrids: function (rootNode, traverseFrames) {
     if (!traverseFrames) {
       return this.getGrids(rootNode.rawNode);
     }
@@ -133,7 +133,7 @@ var LayoutActor = ActorClassWithSpec(layoutSpec, {
     return grids;
   },
 
-  onNavigate() {
+  onNavigate: function () {
     let grids = this.getAllGrids(this.walker.rootNode);
     events.emit(this, "grid-layout-changed", grids);
   },

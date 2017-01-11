@@ -196,7 +196,7 @@ var AnimationsController = {
     resolver();
   }),
 
-  startListeners() {
+  startListeners: function () {
     // Re-create the list of players when a new node is selected, except if the
     // sidebar isn't visible.
     gInspector.selection.on("new-node-front", this.onNewNodeFront);
@@ -204,7 +204,7 @@ var AnimationsController = {
     gToolbox.on("select", this.onPanelVisibilityChange);
   },
 
-  stopListeners() {
+  stopListeners: function () {
     gInspector.selection.off("new-node-front", this.onNewNodeFront);
     gInspector.sidebar.off("select", this.onPanelVisibilityChange);
     gToolbox.off("select", this.onPanelVisibilityChange);
@@ -213,7 +213,7 @@ var AnimationsController = {
     }
   },
 
-  isPanelVisible() {
+  isPanelVisible: function () {
     return gToolbox.currentToolId === "inspector" &&
            gInspector.sidebar &&
            gInspector.sidebar.getCurrentTabID() == "animationinspector";
@@ -252,7 +252,7 @@ var AnimationsController = {
   /**
    * Toggle (pause/play) all animations in the current target.
    */
-  toggleAll() {
+  toggleAll: function () {
     if (!this.traits.hasToggleAll) {
       return promise.resolve();
     }
@@ -345,7 +345,7 @@ var AnimationsController = {
     }
   }),
 
-  onAnimationMutations(changes) {
+  onAnimationMutations: function (changes) {
     // Insert new players into this.animationPlayers when new animations are
     // added.
     for (let {type, player} of changes) {
@@ -382,7 +382,7 @@ var AnimationsController = {
     return time;
   },
 
-  destroyAnimationPlayers() {
+  destroyAnimationPlayers: function () {
     this.animationPlayers = [];
   }
 };

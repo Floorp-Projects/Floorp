@@ -23,16 +23,16 @@ const WebGLDrawArrays = "drawArrays";
 const WebGLDrawElements = "drawElements";
 
 exports.WebGLPrimitiveCounter = Class({
-  initialize(tabActor) {
+  initialize: function (tabActor) {
     this.tabActor = tabActor;
   },
 
-  destroy() {},
+  destroy: function () {},
 
   /**
    * Starts monitoring primitive draws, storing the primitives count per tick.
    */
-  resetCounts() {
+  resetCounts: function () {
     this._tris = 0;
     this._vertices = 0;
     this._points = 0;
@@ -43,7 +43,7 @@ exports.WebGLPrimitiveCounter = Class({
   /**
    * Stops monitoring primitive draws, returning the recorded values.
    */
-  getCounts() {
+  getCounts: function () {
     let result = {
       tris: this._tris,
       vertices: this._vertices,
@@ -61,7 +61,7 @@ exports.WebGLPrimitiveCounter = Class({
   /**
    * Handles WebGL draw primitive functions to catch primitive info.
    */
-  handleDrawPrimitive(functionCall) {
+  handleDrawPrimitive: function (functionCall) {
     let { name, args } = functionCall.details;
 
     if (name === WebGLDrawArrays) {
@@ -74,7 +74,7 @@ exports.WebGLPrimitiveCounter = Class({
   /**
    * Processes WebGL drawArrays method to count primitve numbers
    */
-  _processDrawArrays(args) {
+  _processDrawArrays: function (args) {
     let mode = args[0];
     let count = args[2];
 
@@ -116,7 +116,7 @@ exports.WebGLPrimitiveCounter = Class({
   /**
    * Processes WebGL drawElements method to count primitve numbers
    */
-  _processDrawElements(args) {
+  _processDrawElements: function (args) {
     let mode = args[0];
     let count = args[1];
 

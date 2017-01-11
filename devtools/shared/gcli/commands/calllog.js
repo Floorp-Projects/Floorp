@@ -27,7 +27,7 @@ exports.items = [
     name: "calllog start",
     description: l10n.lookup("calllogStartDesc"),
 
-    exec(args, context) {
+    exec: function (args, context) {
       let contentWindow = context.environment.window;
 
       let dbg = new Debugger(contentWindow);
@@ -45,7 +45,7 @@ exports.items = [
       return l10n.lookup("calllogStartReply");
     },
 
-    callDescription(frame) {
+    callDescription: function (frame) {
       let name = "<anonymous>";
       if (frame.callee.name) {
         name = frame.callee.name;
@@ -60,7 +60,7 @@ exports.items = [
       return name + "(" + args + ")";
     },
 
-    valueToString(value) {
+    valueToString: function (value) {
       if (typeof value !== "object" || value === null) {
         return uneval(value);
       }
@@ -73,7 +73,7 @@ exports.items = [
     name: "calllog stop",
     description: l10n.lookup("calllogStopDesc"),
 
-    exec(args, context) {
+    exec: function (args, context) {
       let numDebuggers = debuggers.length;
       if (numDebuggers == 0) {
         return l10n.lookup("calllogStopNoLogging");
@@ -110,7 +110,7 @@ exports.items = [
         manual: l10n.lookup("calllogChromeSourceTypeManual"),
       }
     ],
-    exec(args, context) {
+    exec: function (args, context) {
       let globalObj;
       let contentWindow = context.environment.window;
 
@@ -175,14 +175,14 @@ exports.items = [
       return l10n.lookup("calllogChromeStartReply");
     },
 
-    valueToString(value) {
+    valueToString: function (value) {
       if (typeof value !== "object" || value === null) {
         return uneval(value);
       }
       return "[object " + value.class + "]";
     },
 
-    callDescription(frame) {
+    callDescription: function (frame) {
       let name = frame.callee.name || l10n.lookup("callLogChromeAnonFunction");
       let args = frame.arguments.map(this.valueToString).join(", ");
       return name + "(" + args + ")";
@@ -196,7 +196,7 @@ exports.items = [
     get hidden() {
       return gcli.hiddenByChromePref();
     },
-    exec(args, context) {
+    exec: function (args, context) {
       let numDebuggers = chromeDebuggers.length;
       if (numDebuggers == 0) {
         return l10n.lookup("calllogChromeStopNoLogging");

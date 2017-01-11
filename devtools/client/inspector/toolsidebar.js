@@ -71,7 +71,7 @@ ToolSidebar.prototype = {
 
   // Rendering
 
-  render() {
+  render: function () {
     let Tabbar = this.React.createFactory(this.browserRequire(
       "devtools/client/shared/components/tabs/tabbar"));
 
@@ -92,7 +92,7 @@ ToolSidebar.prototype = {
    * @param {React.Component} panel component. See `InspectorPanelTab` as an example.
    * @param {boolean} selected true if the panel should be selected
    */
-  addTab(id, title, panel, selected) {
+  addTab: function (id, title, panel, selected) {
     this._tabbar.addTab(id, title, selected, panel);
     this.emit("new-tab-registered", id);
   },
@@ -105,12 +105,12 @@ ToolSidebar.prototype = {
    * @param {string} title tab title
    * @param {boolean} selected true if the panel should be selected
    */
-  addExistingTab(id, title, selected) {
+  addExistingTab: function (id, title, selected) {
     let panel = this.InspectorTabPanel({
-      id,
+      id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
-      title,
+      title: title,
     });
 
     this.addTab(id, title, panel, selected);
@@ -126,20 +126,20 @@ ToolSidebar.prototype = {
    * @param {string} url
    * @param {boolean} selected true if the panel should be selected
    */
-  addFrameTab(id, title, url, selected) {
+  addFrameTab: function (id, title, url, selected) {
     let panel = this.InspectorTabPanel({
-      id,
+      id: id,
       idPrefix: this.TABPANEL_ID_PREFIX,
       key: id,
-      title,
-      url,
+      title: title,
+      url: url,
       onMount: this.onSidePanelMounted.bind(this),
     });
 
     this.addTab(id, title, panel, selected);
   },
 
-  onSidePanelMounted(content, props) {
+  onSidePanelMounted: function (content, props) {
     let iframe = content.querySelector("iframe");
     if (!iframe || iframe.getAttribute("src")) {
       return;
@@ -184,21 +184,21 @@ ToolSidebar.prototype = {
    * @param {Boolean} isVisible True to show the tab/tabpanel, False to hide it.
    * @param {String} id The ID of the tab to be hidden.
    */
-  toggleTab(isVisible, id) {
+  toggleTab: function (isVisible, id) {
     this._tabbar.toggleTab(id, isVisible);
   },
 
   /**
    * Select a specific tab.
    */
-  select(id) {
+  select: function (id) {
     this._tabbar.select(id);
   },
 
   /**
    * Return the id of the selected tab.
    */
-  getCurrentTabID() {
+  getCurrentTabID: function () {
     return this._currentTool;
   },
 
@@ -207,7 +207,7 @@ ToolSidebar.prototype = {
    * @param {String} id
    * @return {DOMNode}
    */
-  getTabPanel(id) {
+  getTabPanel: function (id) {
     // Search with and without the ID prefix as there might have been existing
     // tabpanels by the time the sidebar got created
     return this._panelDoc.querySelector("#" +
@@ -217,7 +217,7 @@ ToolSidebar.prototype = {
   /**
    * Event handler.
    */
-  handleSelectionChange(id) {
+  handleSelectionChange: function (id) {
     if (this._destroyed) {
       return;
     }
@@ -246,7 +246,7 @@ ToolSidebar.prototype = {
    * @param  {String} id
    *         The sidebar tab id to select.
    */
-  show(id) {
+  show: function (id) {
     this._tabbox.removeAttribute("hidden");
 
     // If an id is given, select the corresponding sidebar tab and record the
@@ -265,7 +265,7 @@ ToolSidebar.prototype = {
   /**
    * Show the sidebar.
    */
-  hide() {
+  hide: function () {
     this._tabbox.setAttribute("hidden", "true");
 
     this.emit("hide");
@@ -274,7 +274,7 @@ ToolSidebar.prototype = {
   /**
    * Return the window containing the tab content.
    */
-  getWindowForTab(id) {
+  getWindowForTab: function (id) {
     // Get the tabpanel and make sure it contains an iframe
     let panel = this.getTabPanel(id);
     if (!panel || !panel.firstElementChild || !panel.firstElementChild.contentWindow) {
