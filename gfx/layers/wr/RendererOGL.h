@@ -27,7 +27,7 @@ class CompositorWidget;
 
 namespace layers {
 
-class WebRenderBridgeParent;
+class CompositorBridgeParentBase;
 
 /// Owns the WebRender renderer and GL context.
 ///
@@ -43,7 +43,7 @@ public:
                                        already_AddRefed<widget::CompositorWidget> aWidget,
                                        WrRenderer* aWrRenderer,
                                        gfx::WindowId aWindowId,
-                                       WebRenderBridgeParent* aBridge);
+                                       CompositorBridgeParentBase* aBridge);
 
   /// Render thread only.
   void Update();
@@ -63,13 +63,13 @@ protected:
               already_AddRefed<widget::CompositorWidget>,
               gfx::WindowId aWindowId,
               WrRenderer* aWrRenderer,
-              WebRenderBridgeParent* aBridge);
+              CompositorBridgeParentBase* aBridge);
 
   RefPtr<RenderThread> mThread;
   RefPtr<gl::GLContext> mGL;
   RefPtr<widget::CompositorWidget> mWidget;
   WrRenderer* mWrRenderer;
-  WebRenderBridgeParent* mBridge;
+  CompositorBridgeParentBase* mBridge;
   gfx::WindowId mWindowId;
 };
 

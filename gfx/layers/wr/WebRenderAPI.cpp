@@ -5,7 +5,6 @@
 
 #include "WebRenderAPI.h"
 #include "mozilla/layers/RendererOGL.h"
-#include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
@@ -15,7 +14,7 @@ namespace layers {
 class NewRenderer : public RendererEvent
 {
 public:
-  NewRenderer(WrRenderer* aWrRenderer, WebRenderBridgeParent* aBridge,
+  NewRenderer(WrRenderer* aWrRenderer, CompositorBridgeParentBase* aBridge,
               RefPtr<widget::CompositorWidget>&& aWidget)
   : mWrRenderer(aWrRenderer)
   , mBridge(aBridge)
@@ -46,7 +45,7 @@ public:
   }
 
   WrRenderer* mWrRenderer;
-  WebRenderBridgeParent* mBridge;
+  CompositorBridgeParentBase* mBridge;
   RefPtr<widget::CompositorWidget> mCompositorWidget;
 };
 
@@ -67,7 +66,7 @@ public:
 //static
 already_AddRefed<WebRenderAPI>
 WebRenderAPI::Create(bool aEnableProfiler,
-                     WebRenderBridgeParent* aBridge,
+                     CompositorBridgeParentBase* aBridge,
                      RefPtr<widget::CompositorWidget>&& aWidget)
 {
   MOZ_ASSERT(aBridge);

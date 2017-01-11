@@ -7,9 +7,10 @@
 #include "GLContext.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/Logging.h"
-#include "mozilla/layers/WebRenderBridgeParent.h"
+#include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "base/task.h"
 
 namespace mozilla {
 namespace layers {
@@ -20,7 +21,7 @@ RendererOGL::Create(already_AddRefed<RenderThread> aThread,
                     already_AddRefed<widget::CompositorWidget> aWidget,
                     WrRenderer* aWrRenderer,
                     gfx::WindowId aWindowId,
-                    WebRenderBridgeParent* aBridge)
+                    CompositorBridgeParentBase* aBridge)
 {
   RefPtr<widget::CompositorWidget> widget = aWidget;
   RefPtr<RenderThread> thread = aThread;
@@ -58,7 +59,7 @@ RendererOGL::RendererOGL(already_AddRefed<RenderThread> aThread,
                          already_AddRefed<widget::CompositorWidget> aWidget,
                          gfx::WindowId aWindowId,
                          WrRenderer* aWrRenderer,
-                         WebRenderBridgeParent* aBridge)
+                         CompositorBridgeParentBase* aBridge)
 : mThread(aThread)
 , mGL(aGL)
 , mWidget(aWidget)
@@ -90,6 +91,12 @@ void
 RendererOGL::Update()
 {
   wr_renderer_update(mWrRenderer);
+}
+
+static void
+NotifyDidRender(CompositorBridgeParentBase* aBridge, uint64_t aTransactionId, TimeStamp aStart, TimeStamp aEnd)
+{
+
 }
 
 bool
@@ -129,10 +136,9 @@ RendererOGL::Render(uint64_t aTransactionId)
 
   TimeStamp end = TimeStamp::Now();
 
-  CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod<uint64_t, TimeStamp, TimeStamp>(
-    mBridge,
-    &WebRenderBridgeParent::DidComposite,
-    aTransactionId, start, end
+  CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+    &NotifyDidRender,
+    mBridge, aTransactionId, start, end
   ));
 
   return true;

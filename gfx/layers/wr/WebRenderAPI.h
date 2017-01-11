@@ -19,7 +19,7 @@ class CompositorWidget;
 
 namespace layers {
 
-class WebRenderBridgeParent;
+class CompositorBridgeParentBase;
 class RendererOGL;
 
 class WebRenderAPI
@@ -28,7 +28,7 @@ NS_INLINE_DECL_REFCOUNTING(WebRenderAPI);
 public:
   /// Compositor thread only.
   static already_AddRefed<WebRenderAPI> Create(bool aEnableProfiler,
-                                               WebRenderBridgeParent* aBridge,
+                                               CompositorBridgeParentBase* aBridge,
                                                RefPtr<widget::CompositorWidget>&& aWidget);
 
   gfx::WindowId GetId() const { return mId; }
