@@ -11,9 +11,6 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'sample/chromium/font_subsetter.cc',
     'sample/chromium/subsetter_impl.cc',
-]
-
-UNIFIED_SOURCES += [
     'sfntly/data/byte_array.cc',
     'sfntly/data/font_data.cc',
     'sfntly/data/font_input_stream.cc',
@@ -22,32 +19,12 @@ UNIFIED_SOURCES += [
     'sfntly/data/memory_byte_array.cc',
     'sfntly/data/readable_font_data.cc',
     'sfntly/data/writable_font_data.cc',
-]
-
-UNIFIED_SOURCES += [
     'sfntly/font.cc',
     'sfntly/font_factory.cc',
-    'sfntly/tag.cc',
-]
-
-UNIFIED_SOURCES += [
     'sfntly/port/file_input_stream.cc',
     'sfntly/port/lock.cc',
     'sfntly/port/memory_input_stream.cc',
     'sfntly/port/memory_output_stream.cc',
-]
-
-UNIFIED_SOURCES += [
-    'sfntly/table/byte_array_table_builder.cc',
-    'sfntly/table/font_data_table.cc',
-    'sfntly/table/generic_table_builder.cc',
-    'sfntly/table/header.cc',
-    'sfntly/table/subtable.cc',
-    'sfntly/table/table.cc',
-    'sfntly/table/table_based_table_builder.cc',
-]
-
-UNIFIED_SOURCES += [
     'sfntly/table/bitmap/big_glyph_metrics.cc',
     'sfntly/table/bitmap/bitmap_glyph.cc',
     'sfntly/table/bitmap/bitmap_glyph_info.cc',
@@ -65,9 +42,7 @@ UNIFIED_SOURCES += [
     'sfntly/table/bitmap/index_sub_table_format5.cc',
     'sfntly/table/bitmap/simple_bitmap_glyph.cc',
     'sfntly/table/bitmap/small_glyph_metrics.cc',
-]
-
-UNIFIED_SOURCES += [
+    'sfntly/table/byte_array_table_builder.cc',
     'sfntly/table/core/cmap_table.cc',
     'sfntly/table/core/font_header_table.cc',
     'sfntly/table/core/horizontal_device_metrics_table.cc',
@@ -76,14 +51,15 @@ UNIFIED_SOURCES += [
     'sfntly/table/core/maximum_profile_table.cc',
     'sfntly/table/core/name_table.cc',
     'sfntly/table/core/os2_table.cc',
-]
-
-UNIFIED_SOURCES += [
+    'sfntly/table/font_data_table.cc',
+    'sfntly/table/generic_table_builder.cc',
+    'sfntly/table/header.cc',
+    'sfntly/table/subtable.cc',
+    'sfntly/table/table.cc',
+    'sfntly/table/table_based_table_builder.cc',
     'sfntly/table/truetype/glyph_table.cc',
     'sfntly/table/truetype/loca_table.cc',
-]
-
-UNIFIED_SOURCES += [
+    'sfntly/tag.cc',
     'sfntly/tools/subsetter/glyph_table_subsetter.cc',
     'sfntly/tools/subsetter/subsetter.cc',
     'sfntly/tools/subsetter/table_subsetter_impl.cc',
