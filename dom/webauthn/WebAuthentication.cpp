@@ -13,10 +13,13 @@
 #include "pkix/Input.h"
 #include "pkixutil.h"
 
+#define PREF_U2F_SOFTTOKEN_ENABLED "security.webauth.u2f_enable_softtoken"
+#define PREF_U2F_USBTOKEN_ENABLED  "security.webauth.u2f_enable_usbtoken"
+
 namespace mozilla {
 namespace dom {
 
-extern mozilla::LazyLogModule gWebauthLog; // defined in U2F.cpp
+static mozilla::LazyLogModule gWebauthLog("webauthn");
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebAuthentication, mParent)
