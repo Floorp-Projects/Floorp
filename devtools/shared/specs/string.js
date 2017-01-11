@@ -31,7 +31,7 @@ exports.longStringSpec = longStringSpec;
  * LongStringFront but will not make unnecessary trips to the server.
  */
 const SimpleStringFront = Class({
-  initialize(str) {
+  initialize: function (str) {
     this.str = str;
   },
 
@@ -43,15 +43,15 @@ const SimpleStringFront = Class({
     return this.str;
   },
 
-  string() {
+  string: function () {
     return promise.resolve(this.str);
   },
 
-  substring(start, end) {
+  substring: function (start, end) {
     return promise.resolve(this.str.substring(start, end));
   },
 
-  release() {
+  release: function () {
     this.str = null;
     return promise.resolve(undefined);
   }

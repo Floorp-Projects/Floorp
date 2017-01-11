@@ -39,9 +39,9 @@ function onPaintFlashingChanged(target, state) {
     enabledPaintFlashing.delete(id);
   }
 
-  eventEmitter.emit("changed", { target });
+  eventEmitter.emit("changed", { target: target });
   function fireChange() {
-    eventEmitter.emit("changed", { target });
+    eventEmitter.emit("changed", { target: target });
   }
 
   target.off("navigate", fireChange);
@@ -115,7 +115,7 @@ exports.items = [
         }
       ]
     }],
-    * exec(args, context) {
+    exec: function* (args, context) {
       if (!args.chrome) {
         const output = yield context.updateExec("paintflashing_server --state on");
 
@@ -144,7 +144,7 @@ exports.items = [
         }
       ]
     }],
-    * exec(args, context) {
+    exec: function* (args, context) {
       if (!args.chrome) {
         const output = yield context.updateExec("paintflashing_server --state off");
 
@@ -169,7 +169,7 @@ exports.items = [
     tooltipText: l10n.lookup("paintflashingTooltip"),
     description: l10n.lookup("paintflashingToggleDesc"),
     manual: l10n.lookup("paintflashingManual"),
-    * exec(args, context) {
+    exec: function* (args, context) {
       const output = yield context.updateExec("paintflashing_server --state toggle");
 
       onPaintFlashingChanged(context.environment.target, output.data);
@@ -190,7 +190,7 @@ exports.items = [
       },
     ],
     returnType: "paintFlashingState",
-    exec(args, context) {
+    exec: function (args, context) {
       let { window } = context.environment;
       let id = getOuterId(window);
       let flashing = setPaintFlashing(window, args.state);

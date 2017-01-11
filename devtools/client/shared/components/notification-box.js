@@ -120,13 +120,13 @@ var NotificationBox = createClass({
     }
 
     let notifications = this.state.notifications.set(value, {
-      label,
-      value,
-      image,
-      priority,
-      type,
-      buttons,
-      eventCallback,
+      label: label,
+      value: value,
+      image: image,
+      priority: priority,
+      type: type,
+      buttons: buttons,
+      eventCallback: eventCallback,
     });
 
     // High priorities must be on top.
@@ -135,7 +135,7 @@ var NotificationBox = createClass({
     });
 
     this.setState({
-      notifications
+      notifications: notifications
     });
   },
 
@@ -206,7 +206,7 @@ var NotificationBox = createClass({
         key: props.label,
         className: "notification-button",
         accesskey: props.accesskey,
-        onClick},
+        onClick: onClick},
         props.label
       )
     );

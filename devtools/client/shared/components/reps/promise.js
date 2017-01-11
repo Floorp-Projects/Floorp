@@ -34,17 +34,17 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle(object) {
+    getTitle: function (object) {
       const title = object.class;
       if (this.props.objectLink) {
         return this.props.objectLink({
-          object
+          object: object
         }, title);
       }
       return title;
     },
 
-    getProps(promiseState) {
+    getProps: function (promiseState) {
       const keys = ["state"];
       if (Object.keys(promiseState).includes("value")) {
         keys.push("value");
@@ -74,12 +74,12 @@ define(function (require, exports, module) {
             this.getTitle(object),
             objectLink({
               className: "objectLeftBrace",
-              object
+              object: object
             }, " { "),
             Rep({object: promiseState.state}),
             objectLink({
               className: "objectRightBrace",
-              object
+              object: object
             }, " }")
           )
         );
@@ -91,12 +91,12 @@ define(function (require, exports, module) {
           this.getTitle(object),
           objectLink({
             className: "objectLeftBrace",
-            object
+            object: object
           }, " { "),
           ...props,
           objectLink({
             className: "objectRightBrace",
-            object
+            object: object
           }, " }")
         )
       );
@@ -114,6 +114,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.PromiseRep = {
     rep: PromiseRep,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

@@ -38,7 +38,7 @@ function DomNodePreview(inspector, options = {}) {
 exports.DomNodePreview = DomNodePreview;
 
 DomNodePreview.prototype = {
-  init(containerEl) {
+  init: function (containerEl) {
     let document = containerEl.ownerDocument;
 
     // Init the markup for displaying the target node.
@@ -172,7 +172,7 @@ DomNodePreview.prototype = {
     this.startListeners();
   },
 
-  startListeners() {
+  startListeners: function () {
     // Init events for highlighting and selecting the node.
     this.previewEl.addEventListener("mouseover", this.onPreviewMouseOver);
     this.previewEl.addEventListener("mouseout", this.onPreviewMouseOut);
@@ -186,7 +186,7 @@ DomNodePreview.prototype = {
     HighlighterLock.on("highlighted", this.onHighlighterLocked);
   },
 
-  stopListeners() {
+  stopListeners: function () {
     HighlighterLock.off("highlighted", this.onHighlighterLocked);
     this.inspector.off("markupmutation", this.onMarkupMutations);
     this.previewEl.removeEventListener("mouseover", this.onPreviewMouseOver);
@@ -195,7 +195,7 @@ DomNodePreview.prototype = {
     this.highlightNodeEl.removeEventListener("click", this.onHighlightElClick);
   },
 
-  destroy() {
+  destroy: function () {
     HighlighterLock.unhighlight().catch(e => console.error(e));
 
     this.stopListeners();
@@ -213,7 +213,7 @@ DomNodePreview.prototype = {
     return null;
   },
 
-  onPreviewMouseOver() {
+  onPreviewMouseOver: function () {
     if (!this.nodeFront || !this.highlighterUtils) {
       return;
     }
@@ -221,7 +221,7 @@ DomNodePreview.prototype = {
                          .catch(e => console.error(e));
   },
 
-  onPreviewMouseOut() {
+  onPreviewMouseOut: function () {
     if (!this.nodeFront || !this.highlighterUtils) {
       return;
     }
@@ -229,14 +229,14 @@ DomNodePreview.prototype = {
                          .catch(e => console.error(e));
   },
 
-  onSelectElClick() {
+  onSelectElClick: function () {
     if (!this.nodeFront) {
       return;
     }
     this.inspector.selection.setNodeFront(this.nodeFront, "dom-node-preview");
   },
 
-  onHighlightElClick(e) {
+  onHighlightElClick: function (e) {
     e.stopPropagation();
 
     let classList = this.highlightNodeEl.classList;
@@ -255,13 +255,13 @@ DomNodePreview.prototype = {
     }
   },
 
-  onHighlighterLocked(e, domNodePreview) {
+  onHighlighterLocked: function (e, domNodePreview) {
     if (domNodePreview !== this) {
       this.highlightNodeEl.classList.remove("selected");
     }
   },
 
-  onMarkupMutations(e, mutations) {
+  onMarkupMutations: function (e, mutations) {
     if (!this.nodeFront) {
       return;
     }
@@ -275,7 +275,7 @@ DomNodePreview.prototype = {
     }
   },
 
-  render(nodeFront) {
+  render: function (nodeFront) {
     this.nodeFront = nodeFront;
     let {displayName, attributes} = nodeFront;
 

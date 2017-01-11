@@ -60,7 +60,7 @@ exports.items = [{
   item: "converter",
   from: "editArgs",
   to: "dom",
-  exec(args, context) {
+  exec: function (args, context) {
     let target = context.environment.target;
     let toolboxOpened = gDevTools.showToolbox(target, "styleeditor");
     return toolboxOpened.then(function (toolbox) {

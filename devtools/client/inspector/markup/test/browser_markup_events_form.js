@@ -51,8 +51,8 @@ function registerTestActor(toolbox) {
     let front = EventsFormFront(client, form);
     front.attach().then(() => {
       deferred.resolve({
-        front,
-        registrar,
+        front: front,
+        registrar: registrar,
       });
     });
   });

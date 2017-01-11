@@ -36,7 +36,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getElements(grip, mode) {
+    getElements: function (grip, mode) {
       let {attributes, nodeName} = grip.preview;
       const nodeNameElement = span({
         className: "tag-name theme-fg-color3"
@@ -134,6 +134,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.ElementNode = {
     rep: ElementNode,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

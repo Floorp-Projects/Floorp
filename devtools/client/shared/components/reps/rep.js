@@ -95,7 +95,7 @@ define(function (require, exports, module) {
       mode: React.PropTypes.oneOf(Object.keys(MODE).map(key => MODE[key])),
     },
 
-    render() {
+    render: function () {
       let rep = getRep(this.props.object, this.props.defaultRep);
       return rep(this.props);
     },

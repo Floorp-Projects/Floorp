@@ -34,17 +34,17 @@ define(function (require, exports, module) {
       isInterestingEntry: React.PropTypes.func,
     },
 
-    getTitle(object) {
+    getTitle: function (object) {
       let title = object && object.class ? object.class : "Map";
       if (this.props.objectLink) {
         return this.props.objectLink({
-          object
+          object: object
         }, title);
       }
       return title;
     },
 
-    safeEntriesIterator(object, max) {
+    safeEntriesIterator: function (object, max) {
       max = (typeof max === "undefined") ? 3 : max;
       try {
         return this.entriesIterator(object, max);
@@ -54,7 +54,7 @@ define(function (require, exports, module) {
       return [];
     },
 
-    entriesIterator(object, max) {
+    entriesIterator: function (object, max) {
       // Entry filter. Show only interesting entries to the user.
       let isInterestingEntry = this.props.isInterestingEntry || ((type, value) => {
         return (
@@ -85,7 +85,7 @@ define(function (require, exports, module) {
         entries.push(Caption({
           key: "more",
           object: objectLink({
-            object
+            object: object
           }, `${mapEntries.length - max} more…`)
         }));
       }
@@ -100,7 +100,7 @@ define(function (require, exports, module) {
      * @param {Array} indexes Indexes of entries.
      * @return {Array} Array of PropRep.
      */
-    getEntries(entries, indexes) {
+    getEntries: function (entries, indexes) {
       // Make indexes ordered by ascending.
       indexes.sort(function (a, b) {
         return a - b;
@@ -132,7 +132,7 @@ define(function (require, exports, module) {
      * @param {Function} filter Filter the entry you want.
      * @return {Array} Indexes of filtered entries in the map.
      */
-    getEntriesIndexes(entries, max, filter) {
+    getEntriesIndexes: function (entries, max, filter) {
       return entries
         .reduce((indexes, [key, entry], i) => {
           if (indexes.length < max) {
@@ -162,7 +162,7 @@ define(function (require, exports, module) {
             this.getTitle(object),
             objectLink({
               className: "objectLeftBrace",
-              object
+              object: object
             }, "")
           )
         );
@@ -173,12 +173,12 @@ define(function (require, exports, module) {
           this.getTitle(object),
           objectLink({
             className: "objectLeftBrace",
-            object
+            object: object
           }, " { "),
           props,
           objectLink({
             className: "objectRightBrace",
-            object
+            object: object
           }, " }")
         )
       );
@@ -195,6 +195,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.GripMap = {
     rep: GripMap,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

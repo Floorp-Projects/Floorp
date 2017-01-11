@@ -44,7 +44,7 @@ try {
       actorPool.addActor(actor);
       conn.addActorPool(actorPool);
 
-      sendAsyncMessage("debug:actor", {actor: actor.form(), prefix});
+      sendAsyncMessage("debug:actor", {actor: actor.form(), prefix: prefix});
     });
 
     addMessageListener("debug:connect", onConnect);

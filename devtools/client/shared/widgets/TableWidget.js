@@ -212,7 +212,7 @@ TableWidget.prototype = {
   /**
    * Emit all cell edit events.
    */
-  onChange(type, data) {
+  onChange: function (type, data) {
     let changedField = data.change.field;
     let colName = changedField.parentNode.id;
     let column = this.columns.get(colName);
@@ -230,7 +230,7 @@ TableWidget.prototype = {
       field: colName,
       oldValue: data.change.oldValue,
       newValue: data.change.newValue,
-      items
+      items: items
     };
 
     // A rows position in the table can change as the result of an edit. In
@@ -241,7 +241,7 @@ TableWidget.prototype = {
     this.emit(EVENTS.CELL_EDIT, change);
   },
 
-  onEditorDestroyed() {
+  onEditorDestroyed: function () {
     this._editableFieldsEngine = null;
   },
 
@@ -256,7 +256,7 @@ TableWidget.prototype = {
    * @param  {Event} event
    *         Keydown event
    */
-  onEditorTab(event) {
+  onEditorTab: function (event) {
     let textbox = event.target;
     let editor = this._editableFieldsEngine;
 
@@ -354,7 +354,7 @@ TableWidget.prototype = {
    * @param  {Event} event
    *         Keydown event
    */
-  getEditedCellOnTab(event, column) {
+  getEditedCellOnTab: function (event, column) {
     let cell = null;
     let cols = this.editableColumns;
     let rowIndex = this.visibleSelectedIndex;
@@ -414,7 +414,7 @@ TableWidget.prototype = {
    * @param  {Object} row
    *         The values from the removed row.
    */
-  onRowRemoved(event, row) {
+  onRowRemoved: function (event, row) {
     if (!this._editableFieldsEngine || !this._editableFieldsEngine.isEditing) {
       return;
     }
@@ -434,7 +434,7 @@ TableWidget.prototype = {
   /**
    * Cancel an edit because the edit target has been lost.
    */
-  onEditorTargetLost() {
+  onEditorTargetLost: function () {
     let editor = this._editableFieldsEngine;
 
     if (!editor || !editor.isEditing) {
@@ -448,7 +448,7 @@ TableWidget.prototype = {
    * Keydown event handler for the table. Used for keyboard navigation amongst
    * rows.
    */
-  onKeydown(event) {
+  onKeydown: function (event) {
     // If we are in edit mode bail out.
     if (this._editableFieldsEngine && this._editableFieldsEngine.isEditing) {
       return;
@@ -511,7 +511,7 @@ TableWidget.prototype = {
    * rows. This method clears any inline editors if an area outside a textbox or
    * label is clicked.
    */
-  onMousedown({target}) {
+  onMousedown: function ({target}) {
     let nodeName = target.nodeName;
 
     if (nodeName === "textbox" || !this._editableFieldsEngine) {
@@ -528,7 +528,7 @@ TableWidget.prototype = {
    * @param  {String|Array} editableColumns
    *         An array or comma separated list of editable column names.
    */
-  makeFieldsEditable(editableColumns) {
+  makeFieldsEditable: function (editableColumns) {
     let selectors = [];
 
     if (typeof editableColumns === "string") {
@@ -552,7 +552,7 @@ TableWidget.prototype = {
         root: this.tbody,
         onTab: this.onEditorTab,
         onTriggerEvent: "dblclick",
-        selectors
+        selectors: selectors
       });
 
       this._editableFieldsEngine.on("change", this.onChange);
@@ -565,7 +565,7 @@ TableWidget.prototype = {
     }
   },
 
-  destroy() {
+  destroy: function () {
     this.off(EVENTS.ROW_SELECTED, this.bindSelectedRow);
     this.off(EVENTS.ROW_REMOVED, this.onRowRemoved);
 
@@ -589,7 +589,7 @@ TableWidget.prototype = {
   /**
    * Sets the text to be shown when the table is empty.
    */
-  setPlaceholderText(text) {
+  setPlaceholderText: function (text) {
     this.placeholder.setAttribute("value", text);
   },
 
@@ -598,7 +598,7 @@ TableWidget.prototype = {
    * context menu allows users to toggle various columns, only with an exception
    * of the unique columns and when only two columns are visible in the table.
    */
-  setupHeadersContextMenu() {
+  setupHeadersContextMenu: function () {
     let popupset = this.document.getElementsByTagName("popupset")[0];
     if (!popupset) {
       popupset = this.document.createElementNS(XUL_NS, "popupset");
@@ -621,7 +621,7 @@ TableWidget.prototype = {
    *        allows us to e.g. have an invisible compound primary key for a
    *        table's rows.
    */
-  populateMenuPopup(privateColumns = []) {
+  populateMenuPopup: function (privateColumns = []) {
     if (!this.menupopup) {
       return;
     }
@@ -654,7 +654,7 @@ TableWidget.prototype = {
   /**
    * Event handler for the `command` event on the column headers context menu
    */
-  onPopupCommand(event) {
+  onPopupCommand: function (event) {
     let item = event.originalTarget;
     let checked = !!item.getAttribute("checked");
     let id = item.getAttribute("data-id");
@@ -685,7 +685,7 @@ TableWidget.prototype = {
    *        allows us to e.g. have an invisible compound primary key for a
    *        table's rows.
    */
-  setColumns(columns, sortOn = this.sortedOn, hiddenColumns = [],
+  setColumns: function (columns, sortOn = this.sortedOn, hiddenColumns = [],
                         privateColumns = []) {
     for (let column of this.columns.values()) {
       column.destroy();
@@ -734,7 +734,7 @@ TableWidget.prototype = {
    * Returns true if the passed string or the row json object corresponds to the
    * selected item in the table.
    */
-  isSelected(item) {
+  isSelected: function (item) {
     if (typeof item == "object") {
       item = item[this.uniqueId];
     }
@@ -745,14 +745,14 @@ TableWidget.prototype = {
   /**
    * Selects the row corresponding to the `id` json.
    */
-  selectRow(id) {
+  selectRow: function (id) {
     this.selectedRow = id;
   },
 
   /**
    * Selects the next row. Cycles over to the first row if last row is selected
    */
-  selectNextRow() {
+  selectNextRow: function () {
     for (let column of this.columns.values()) {
       column.selectNextRow();
     }
@@ -762,7 +762,7 @@ TableWidget.prototype = {
    * Selects the previous row. Cycles over to the last row if first row is
    * selected.
    */
-  selectPreviousRow() {
+  selectPreviousRow: function () {
     for (let column of this.columns.values()) {
       column.selectPreviousRow();
     }
@@ -771,7 +771,7 @@ TableWidget.prototype = {
   /**
    * Clears any selected row.
    */
-  clearSelection() {
+  clearSelection: function () {
     this.selectedIndex = -1;
   },
 
@@ -786,7 +786,7 @@ TableWidget.prototype = {
    * @param {boolean} suppressFlash
    *        true to not flash the row while inserting the row.
    */
-  push(item, suppressFlash) {
+  push: function (item, suppressFlash) {
     if (!this.sortedOn || !this.columns) {
       console.error("Can't insert item without defining columns first");
       return;
@@ -822,7 +822,7 @@ TableWidget.prototype = {
   /**
    * Removes the row associated with the `item` object.
    */
-  remove(item) {
+  remove: function (item) {
     if (typeof item != "object") {
       item = this.items.get(item);
     }
@@ -850,7 +850,7 @@ TableWidget.prototype = {
    * used to insert the row using `push` method. The linking is done via the
    * `uniqueId` key's value.
    */
-  update(item) {
+  update: function (item) {
     let oldItem = this.items.get(item[this.uniqueId]);
     if (!oldItem) {
       return;
@@ -873,7 +873,7 @@ TableWidget.prototype = {
   /**
    * Removes all of the rows from the table.
    */
-  clear() {
+  clear: function () {
     this.items.clear();
     for (let column of this.columns.values()) {
       column.clear();
@@ -890,7 +890,7 @@ TableWidget.prototype = {
    * @param {string} column
    *        The id of the column on which the table should be sorted.
    */
-  sortBy(column) {
+  sortBy: function (column) {
     this.emit(EVENTS.COLUMN_SORTED, column);
     this.sortedOn = column;
 
@@ -948,7 +948,7 @@ TableWidget.prototype = {
   /**
    * Calls the afterScroll function when the user has stopped scrolling
    */
-  onScroll() {
+  onScroll: function () {
     clearNamedTimeout("table-scroll");
     setNamedTimeout("table-scroll", AFTER_SCROLL_DELAY, this.afterScroll);
   },
@@ -956,7 +956,7 @@ TableWidget.prototype = {
   /**
    * Emits the "scroll-end" event when the whole table is scrolled
    */
-  afterScroll() {
+  afterScroll: function () {
     let scrollHeight = this.tbody.getBoundingClientRect().height -
         this.tbody.querySelector(".table-widget-column-header").clientHeight;
 
@@ -1132,7 +1132,7 @@ Column.prototype = {
    * @param {string} column
    *        The id of the column being sorted by.
    */
-  onColumnSorted(event, column) {
+  onColumnSorted: function (event, column) {
     if (column != this.id) {
       this.sorted = 0;
       return;
@@ -1144,7 +1144,7 @@ Column.prototype = {
     this.updateZebra();
   },
 
-  onTableFiltered(event, itemsToHide) {
+  onTableFiltered: function (event, itemsToHide) {
     this._updateItems();
     if (!this.cells) {
       return;
@@ -1166,7 +1166,7 @@ Column.prototype = {
    * @param {string} id
    *        The unique id of the object associated with the row.
    */
-  onRowUpdated(event, id) {
+  onRowUpdated: function (event, id) {
     this._updateItems();
     if (this.highlightUpdated && this.items[id] != null) {
       if (this.table.editBookmark) {
@@ -1183,7 +1183,7 @@ Column.prototype = {
     this.updateZebra();
   },
 
-  destroy() {
+  destroy: function () {
     this.table.off(EVENTS.COLUMN_SORTED, this.onColumnSorted);
     this.table.off(EVENTS.HEADER_CONTEXT_MENU, this.toggleColumn);
     this.table.off(EVENTS.ROW_UPDATED, this.onRowUpdated);
@@ -1202,7 +1202,7 @@ Column.prototype = {
   /**
    * Selects the row at the `index` index
    */
-  selectRowAt(index) {
+  selectRowAt: function (index) {
     if (this.selectedRow != null) {
       this.cells[this.items[this.selectedRow]].toggleClass("theme-selected");
     }
@@ -1218,7 +1218,7 @@ Column.prototype = {
   /**
    * Selects the row with the object having the `uniqueId` value as `id`
    */
-  selectRow(id) {
+  selectRow: function (id) {
     this._updateItems();
     this.selectRowAt(this.items[id]);
   },
@@ -1226,7 +1226,7 @@ Column.prototype = {
   /**
    * Selects the next row. Cycles to first if last row is selected.
    */
-  selectNextRow() {
+  selectNextRow: function () {
     this._updateItems();
     let index = this.items[this.selectedRow] + 1;
     if (index == this.cells.length) {
@@ -1238,7 +1238,7 @@ Column.prototype = {
   /**
    * Selects the previous row. Cycles to last if first row is selected.
    */
-  selectPreviousRow() {
+  selectPreviousRow: function () {
     this._updateItems();
     let index = this.items[this.selectedRow] - 1;
     if (index == -1) {
@@ -1255,7 +1255,7 @@ Column.prototype = {
    * @returns {number}
    *          The index of the currently pushed item.
    */
-  push(item) {
+  push: function (item) {
     let value = item[this.id];
 
     if (this.sorted) {
@@ -1285,7 +1285,7 @@ Column.prototype = {
   /**
    * Inserts the `item` object at the given `index` index in the table.
    */
-  insertAt(item, index) {
+  insertAt: function (item, index) {
     if (index < this.cells.length) {
       this._itemsDirty = true;
     }
@@ -1307,7 +1307,7 @@ Column.prototype = {
    * @param {string} checked
    *        true if the column is visible
    */
-  toggleColumn(event, id, checked) {
+  toggleColumn: function (event, id, checked) {
     if (arguments.length == 0) {
       // Act like a toggling method when called with no params
       id = this.id;
@@ -1326,7 +1326,7 @@ Column.prototype = {
   /**
    * Removes the corresponding item from the column.
    */
-  remove(item) {
+  remove: function (item) {
     this._updateItems();
     let index = this.items[item[this.uniqueId]];
     if (index == null) {
@@ -1344,7 +1344,7 @@ Column.prototype = {
   /**
    * Updates the corresponding item from the column.
    */
-  update(item) {
+  update: function (item) {
     this._updateItems();
 
     let index = this.items[item[this.uniqueId]];
@@ -1359,7 +1359,7 @@ Column.prototype = {
    * Updates the `this.items` cell-id vs cell-index map to be in sync with
    * `this.cells`.
    */
-  _updateItems() {
+  _updateItems: function () {
     if (!this._itemsDirty) {
       return;
     }
@@ -1372,7 +1372,7 @@ Column.prototype = {
   /**
    * Clears the current column
    */
-  clear() {
+  clear: function () {
     this.cells = [];
     this.items = {};
     this._itemsDirty = false;
@@ -1386,7 +1386,7 @@ Column.prototype = {
    * Sorts the given items and returns the sorted list if the table was sorted
    * by this column.
    */
-  sort(items) {
+  sort: function (items) {
     // Only sort the array if we are sorting based on this column
     if (this.sorted == 1) {
       items.sort((a, b) => {
@@ -1439,7 +1439,7 @@ Column.prototype = {
    * Click event handler for the column. Used to detect click on header for
    * for sorting.
    */
-  onClick(event) {
+  onClick: function (event) {
     let target = event.originalTarget;
 
     if (target.nodeType !== target.ELEMENT_NODE || target == this.column) {
@@ -1454,7 +1454,7 @@ Column.prototype = {
   /**
    * Mousedown event handler for the column. Used to select rows.
    */
-  onMousedown(event) {
+  onMousedown: function (event) {
     let target = event.originalTarget;
 
     if (target.nodeType !== target.ELEMENT_NODE ||
@@ -1567,7 +1567,7 @@ Cell.prototype = {
     return this._value;
   },
 
-  toggleClass(className, condition) {
+  toggleClass: function (className, condition) {
     this.label.classList.toggle(className, condition);
   },
 
@@ -1575,7 +1575,7 @@ Cell.prototype = {
    * Flashes the cell for a brief time. This when done for with cells in all
    * columns, makes it look like the row is being highlighted/flashed.
    */
-  flash() {
+  flash: function () {
     if (!this.label.parentNode) {
       return;
     }
@@ -1590,11 +1590,11 @@ Cell.prototype = {
     this.label.classList.add("flash-out");
   },
 
-  focus() {
+  focus: function () {
     this.label.focus();
   },
 
-  destroy() {
+  destroy: function () {
     this.label.remove();
     this.label = null;
   }
@@ -1680,7 +1680,7 @@ EditableFieldsEngine.prototype = {
    * @param  {EventTarget} target
    *         Calling event's target.
    */
-  onTrigger({target}) {
+  onTrigger: function ({target}) {
     this.edit(target);
   },
 
@@ -1694,7 +1694,7 @@ EditableFieldsEngine.prototype = {
    * @param  {Event} event
    *         The calling event.
    */
-  onKeydown(event) {
+  onKeydown: function (event) {
     if (!this.textbox) {
       return;
     }
@@ -1721,7 +1721,7 @@ EditableFieldsEngine.prototype = {
    * @param  {Node} target
    *         Dom node to be edited.
    */
-  edit(target) {
+  edit: function (target) {
     if (!target) {
       return;
     }
@@ -1750,7 +1750,7 @@ EditableFieldsEngine.prototype = {
     this.textbox.select();
   },
 
-  completeEdit() {
+  completeEdit: function () {
     if (!this.isEditing) {
       return;
     }
@@ -1772,8 +1772,8 @@ EditableFieldsEngine.prototype = {
       let data = {
         change: {
           field: this.currentTarget,
-          oldValue,
-          newValue
+          oldValue: oldValue,
+          newValue: newValue
         }
       };
 
@@ -1784,7 +1784,7 @@ EditableFieldsEngine.prototype = {
   /**
    * Cancel an edit.
    */
-  cancelEdit() {
+  cancelEdit: function () {
     if (!this.isEditing) {
       return;
     }
@@ -1798,7 +1798,7 @@ EditableFieldsEngine.prototype = {
   /**
    * Stop edit mode and apply changes.
    */
-  blur() {
+  blur: function () {
     if (this.isEditing) {
       this.completeEdit();
     }
@@ -1812,7 +1812,7 @@ EditableFieldsEngine.prototype = {
    * @param  {Node} destination [description]
    *         The node to copy styles to.
    */
-  copyStyles(source, destination) {
+  copyStyles: function (source, destination) {
     let style = source.ownerDocument.defaultView.getComputedStyle(source);
     let props = [
       "borderTopWidth",
@@ -1842,7 +1842,7 @@ EditableFieldsEngine.prototype = {
   /**
    * Destroys all editors in the current document.
    */
-  destroy() {
+  destroy: function () {
     if (this.textbox) {
       this.textbox.removeEventListener("keydown", this.onKeydown);
       this.textbox.remove();

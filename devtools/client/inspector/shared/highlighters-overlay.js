@@ -53,7 +53,7 @@ HighlightersOverlay.prototype = {
    *         Either the rule-view or computed-view panel to add the highlighters overlay.
    *
    */
-  addToView(view) {
+  addToView: function (view) {
     if (!this.supportsHighlighters) {
       return;
     }
@@ -75,7 +75,7 @@ HighlightersOverlay.prototype = {
    *         Either the rule-view or computed-view panel to remove the highlighters
    *         overlay.
    */
-  removeFromView(view) {
+  removeFromView: function (view) {
     if (!this.supportsHighlighters) {
       return;
     }
@@ -160,7 +160,7 @@ HighlightersOverlay.prototype = {
    *         The highlighter type. One of this.highlighters.
    * @return {Promise} that resolves to the highlighter
    */
-  _getHighlighter(type) {
+  _getHighlighter: function (type) {
     let utils = this.highlighterUtils;
 
     if (this.highlighters[type]) {
@@ -182,7 +182,7 @@ HighlightersOverlay.prototype = {
    * @param  {Boolean} active
    *         Whether or not the grid icon should be active.
    */
-  _toggleRuleViewGridIcon(node, active) {
+  _toggleRuleViewGridIcon: function (node, active) {
     if (this.inspector.selection.nodeFront != node) {
       return;
     }
@@ -197,7 +197,7 @@ HighlightersOverlay.prototype = {
   /**
    * Hide the currently shown hovered highlighter.
    */
-  _hideHoveredHighlighter() {
+  _hideHoveredHighlighter: function () {
     if (!this.hoveredHighlighterShown ||
         !this.highlighters[this.hoveredHighlighterShown]) {
       return;
@@ -223,7 +223,7 @@ HighlightersOverlay.prototype = {
    * @param  {Object} nodeInfo
    * @return {Boolean}
    */
-  _isComputedViewTransform(nodeInfo) {
+  _isComputedViewTransform: function (nodeInfo) {
     let isTransform = nodeInfo.type === VIEW_NODE_VALUE_TYPE &&
                       nodeInfo.value.property === "transform";
     return !this.isRuleView && isTransform;
@@ -236,7 +236,7 @@ HighlightersOverlay.prototype = {
    * @param  {DOMNode} node
    * @return {Boolean}
    */
-  _isRuleViewDisplayGrid(node) {
+  _isRuleViewDisplayGrid: function (node) {
     return this.isRuleView && node.classList.contains("ruleview-grid");
   },
 
@@ -246,7 +246,7 @@ HighlightersOverlay.prototype = {
    * @param  {Object} nodeInfo
    * @return {Boolean}
    */
-  _isRuleViewTransform(nodeInfo) {
+  _isRuleViewTransform: function (nodeInfo) {
     let isTransform = nodeInfo.type === VIEW_NODE_VALUE_TYPE &&
                       nodeInfo.value.property === "transform";
     let isEnabled = nodeInfo.value.enabled &&
@@ -255,7 +255,7 @@ HighlightersOverlay.prototype = {
     return this.isRuleView && isTransform && isEnabled;
   },
 
-  onClick(event) {
+  onClick: function (event) {
     // Bail out if the target is not a grid property value.
     if (!this._isRuleViewDisplayGrid(event.target)) {
       return;
@@ -265,7 +265,7 @@ HighlightersOverlay.prototype = {
     this.toggleGridHighlighter(this.inspector.selection.nodeFront);
   },
 
-  onMouseMove(event) {
+  onMouseMove: function (event) {
     // Bail out if the target is the same as for the last mousemove.
     if (event.target === this._lastHovered) {
       return;
@@ -303,7 +303,7 @@ HighlightersOverlay.prototype = {
     }
   },
 
-  onMouseOut(event) {
+  onMouseOut: function (event) {
     // Only hide the highlighter if the mouse leaves the currently hovered node.
     if (!this._lastHovered ||
         (event && this._lastHovered.contains(event.relatedTarget))) {
@@ -318,7 +318,7 @@ HighlightersOverlay.prototype = {
   /**
    * Clear saved highlighter shown properties on will-navigate.
    */
-  onWillNavigate() {
+  onWillNavigate: function () {
     this.gridHighlighterShown = null;
     this.hoveredHighlighterShown = null;
     this.selectorHighlighterShown = null;
@@ -328,7 +328,7 @@ HighlightersOverlay.prototype = {
    * Destroy this overlay instance, removing it from the view and destroying
    * all initialized highlighters.
    */
-  destroy() {
+  destroy: function () {
     for (let type in this.highlighters) {
       if (this.highlighters[type]) {
         this.highlighters[type].finalize();

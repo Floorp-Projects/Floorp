@@ -27,7 +27,7 @@ add_task(function* () {
                              [treeMapState.SAVED, treeMapState.SAVED]);
 
   let errorHeapWorker = {
-    deleteHeapSnapshot() {
+    deleteHeapSnapshot: function () {
       return Promise.reject("_");
     }
   };

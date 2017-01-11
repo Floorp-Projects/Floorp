@@ -38,7 +38,7 @@ const MessageContainer = createClass({
     indent: PropTypes.number.isRequired,
   },
 
-  getDefaultProps() {
+  getDefaultProps: function () {
     return {
       open: false,
       indent: 0,

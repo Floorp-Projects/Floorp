@@ -16,13 +16,13 @@ const {
 const { Task } = require("devtools/shared/task");
 
 const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
-  initialize(conn, form, detail, ctx) {
+  initialize: function (conn, form, detail, ctx) {
     Front.prototype.initialize.call(this, conn, form, detail, ctx);
 
     this.state = {};
   },
 
-  form(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -31,7 +31,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
     this.state = this.initialState;
   },
 
-  destroy() {
+  destroy: function () {
     Front.prototype.destroy.call(this);
   },
 
@@ -109,7 +109,7 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
     impl: "_getCurrentState"
   }),
 
-  reconstructState(data) {
+  reconstructState: function (data) {
     let hasChanged = false;
 
     for (let key in this.state) {
@@ -127,12 +127,12 @@ const AnimationPlayerFront = FrontClassWithSpec(animationPlayerSpec, {
 exports.AnimationPlayerFront = AnimationPlayerFront;
 
 const AnimationsFront = FrontClassWithSpec(animationsSpec, {
-  initialize(client, {animationsActor}) {
+  initialize: function (client, {animationsActor}) {
     Front.prototype.initialize.call(this, client, {actor: animationsActor});
     this.manage(this);
   },
 
-  destroy() {
+  destroy: function () {
     Front.prototype.destroy.call(this);
   }
 });

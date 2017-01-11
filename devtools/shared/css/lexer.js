@@ -391,7 +391,7 @@ Scanner.prototype = {
   /**
    * @see CSSLexer.performEOFFixup
    */
-  performEOFFixup(aInputString, aPreserveBackslash) {
+  performEOFFixup: function (aInputString, aPreserveBackslash) {
     let result = aInputString;
 
     let eofChars = this.mEOFCharacters;
@@ -419,7 +419,7 @@ Scanner.prototype = {
   /**
    * @see CSSLexer.nextToken
    */
-  nextToken() {
+  nextToken: function () {
     let token = {};
     if (!this.Next(token)) {
       return null;
@@ -492,7 +492,7 @@ Scanner.prototype = {
    * the read buffer.  If that is beyond the end of the buffer, returns
    * -1 to indicate end of input.
    */
-  Peek(n = 0) {
+  Peek: function (n = 0) {
     if (this.mOffset + n >= this.mCount) {
       return -1;
     }
@@ -505,7 +505,7 @@ Scanner.prototype = {
    * stop at the end.  May not be used to advance over a line boundary;
    * AdvanceLine() must be used instead.
    */
-  Advance(n = 1) {
+  Advance: function (n = 1) {
     if (this.mOffset + n >= this.mCount || this.mOffset + n < this.mOffset) {
       this.mOffset = this.mCount;
     } else {
@@ -516,7 +516,7 @@ Scanner.prototype = {
   /**
    * Advance |this.mOffset| over a line boundary.
    */
-  AdvanceLine() {
+  AdvanceLine: function () {
     // Advance over \r\n as a unit.
     if (this.mBuffer.charCodeAt(this.mOffset) == CARRIAGE_RETURN &&
         this.mOffset + 1 < this.mCount &&
@@ -536,7 +536,7 @@ Scanner.prototype = {
    * Skip over a sequence of whitespace characters (vertical or
    * horizontal) starting at the current read position.
    */
-  SkipWhitespace() {
+  SkipWhitespace: function () {
     for (;;) {
       let ch = this.Peek();
       if (!IsWhitespace(ch)) { // EOF counts as non-whitespace
@@ -553,7 +553,7 @@ Scanner.prototype = {
   /**
    * Skip over one CSS comment starting at the current read position.
    */
-  SkipComment() {
+  SkipComment: function () {
     this.Advance(2);
     for (;;) {
       let ch = this.Peek();
@@ -587,7 +587,7 @@ Scanner.prototype = {
    * unmodified, and return false.  If |aInString| is true, accept the
    * additional form of escape sequence allowed within string-like tokens.
    */
-  GatherEscape(aOutput, aInString) {
+  GatherEscape: function (aOutput, aInString) {
     let ch = this.Peek(1);
     if (ch < 0) {
       // If we are in a string (or a url() containing a string), we want to drop
@@ -676,7 +676,7 @@ Scanner.prototype = {
    * Returns true if at least one character was appended to |aText|,
    * false otherwise.
    */
-  GatherText(aClass, aText) {
+  GatherText: function (aClass, aText) {
     let start = this.mOffset;
     let inString = aClass == IS_STRING;
 
@@ -720,7 +720,7 @@ Scanner.prototype = {
    * produce a Symbol token when an apparent identifier actually led
    * into an invalid escape sequence.
    */
-  ScanIdent(aToken) {
+  ScanIdent: function (aToken) {
     if (!this.GatherText(IS_IDCHAR, aToken.mIdent)) {
       aToken.mSymbol = this.Peek();
       this.Advance();
@@ -746,7 +746,7 @@ Scanner.prototype = {
    * Scan an AtKeyword token.  Also handles production of Symbol when
    * an '@' is not followed by an identifier.
    */
-  ScanAtKeyword(aToken) {
+  ScanAtKeyword: function (aToken) {
     // Fall back for when '@' isn't followed by an identifier.
     aToken.mSymbol = COMMERCIAL_AT;
     this.Advance();
@@ -765,7 +765,7 @@ Scanner.prototype = {
    * and eCSSToken_Hash, and handles production of Symbol when a '#'
    * is not followed by identifier characters.
    */
-  ScanHash(aToken) {
+  ScanHash: function (aToken) {
     // Fall back for when '#' isn't followed by identifier characters.
     aToken.mSymbol = NUMBER_SIGN;
     this.Advance();
@@ -790,7 +790,7 @@ Scanner.prototype = {
    * '.' and then a digit.  Can also produce a HTMLComment when it
    * encounters '-->'.
    */
-  ScanNumber(aToken) {
+  ScanNumber: function (aToken) {
     let c = this.Peek();
 
     // Sign of the mantissa (-1 or 1).
@@ -921,7 +921,7 @@ Scanner.prototype = {
    * either a String or a Bad_String token; the latter occurs when the
    * close quote is missing.  Always returns true (for convenience in Next()).
    */
-  ScanString(aToken) {
+  ScanString: function (aToken) {
     let aStop = this.Peek();
     aToken.mType = eCSSToken_String;
     aToken.mSymbol = aStop; // Remember how it's quoted.
@@ -970,7 +970,7 @@ Scanner.prototype = {
    * Note that this does not validate the numeric range, only the syntactic
    * form.
    */
-  ScanURange(aResult) {
+  ScanURange: function (aResult) {
     let intro1 = this.Peek();
     let intro2 = this.Peek(1);
     let ch = this.Peek(2);
@@ -1031,15 +1031,15 @@ Scanner.prototype = {
     return true;
   },
 
-  SetEOFCharacters(aEOFCharacters) {
+  SetEOFCharacters: function (aEOFCharacters) {
     this.mEOFCharacters = aEOFCharacters;
   },
 
-  AddEOFCharacters(aEOFCharacters) {
+  AddEOFCharacters: function (aEOFCharacters) {
     this.mEOFCharacters = this.mEOFCharacters | aEOFCharacters;
   },
 
-  AppendImpliedEOFCharacters(aEOFCharacters, aResult) {
+  AppendImpliedEOFCharacters: function (aEOFCharacters, aResult) {
     // First, ignore eEOFCharacters_DropBackslash.
     let c = aEOFCharacters >> 1;
 
@@ -1061,7 +1061,7 @@ Scanner.prototype = {
    * Exposed for use by nsCSSParser::ParseMozDocumentRule, which applies
    * the special lexical rules for URL tokens in a nonstandard context.
    */
-  NextURL(aToken) {
+  NextURL: function (aToken) {
     this.SkipWhitespace();
 
     // aToken.mIdent may be "url" at this point; clear that out
@@ -1106,7 +1106,7 @@ Scanner.prototype = {
    * been reached.  Will always advance the current read position by at
    * least one character unless called when already at EOF.
    */
-  Next(aToken, aSkip) {
+  Next: function (aToken, aSkip) {
     let ch;
 
     // do this here so we don't have to do it in dozens of other places

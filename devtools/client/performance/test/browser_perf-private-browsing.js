@@ -34,7 +34,7 @@ function* createPanelInNewWindow(options) {
 function* createPanelInWindow(options, win = window) {
   let { panel } = yield initPerformanceInNewTab({
     url: SIMPLE_URL,
-    win
+    win: win
   }, options);
 
   gPanelWinTuples.push({ panel, win });

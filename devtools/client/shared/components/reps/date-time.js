@@ -30,7 +30,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle(grip) {
+    getTitle: function (grip) {
       if (this.props.objectLink) {
         return this.props.objectLink({
           object: grip
@@ -70,6 +70,6 @@ define(function (require, exports, module) {
   // Exports from this module
   exports.DateTime = {
     rep: DateTime,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

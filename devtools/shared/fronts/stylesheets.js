@@ -22,13 +22,13 @@ const events = require("sdk/event/core");
  * The client-side counterpart for an OriginalSourceActor.
  */
 const OriginalSourceFront = FrontClassWithSpec(originalSourceSpec, {
-  initialize(client, form) {
+  initialize: function (client, form) {
     Front.prototype.initialize.call(this, client, form);
 
     this.isOriginalSource = true;
   },
 
-  form(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -51,18 +51,18 @@ exports.OriginalSourceFront = OriginalSourceFront;
  * Corresponding client-side front for a MediaRuleActor.
  */
 const MediaRuleFront = FrontClassWithSpec(mediaRuleSpec, {
-  initialize(client, form) {
+  initialize: function (client, form) {
     Front.prototype.initialize.call(this, client, form);
 
     this._onMatchesChange = this._onMatchesChange.bind(this);
     events.on(this, "matches-change", this._onMatchesChange);
   },
 
-  _onMatchesChange(matches) {
+  _onMatchesChange: function (matches) {
     this._form.matches = matches;
   },
 
-  form(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -97,23 +97,23 @@ exports.MediaRuleFront = MediaRuleFront;
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
 const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
-  initialize(conn, form) {
+  initialize: function (conn, form) {
     Front.prototype.initialize.call(this, conn, form);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
     events.on(this, "property-change", this._onPropertyChange);
   },
 
-  destroy() {
+  destroy: function () {
     events.off(this, "property-change", this._onPropertyChange);
     Front.prototype.destroy.call(this);
   },
 
-  _onPropertyChange(property, value) {
+  _onPropertyChange: function (property, value) {
     this._form[property] = value;
   },
 
-  form(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -150,7 +150,7 @@ const StyleSheetFront = FrontClassWithSpec(styleSheetSpec, {
    * @return {Promise} A promise that will resolve to a string that
    * should be used to indent a block in this style sheet.
    */
-  guessIndentation() {
+  guessIndentation: function () {
     let prefIndent = getIndentationFromPrefs();
     if (prefIndent) {
       let {indentUnit, indentWithTabs} = prefIndent;
@@ -174,7 +174,7 @@ exports.StyleSheetFront = StyleSheetFront;
  * The corresponding Front object for the StyleSheetsActor.
  */
 const StyleSheetsFront = FrontClassWithSpec(styleSheetsSpec, {
-  initialize(client, tabForm) {
+  initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleSheetsActor;
     this.manage(this);

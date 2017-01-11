@@ -20,7 +20,7 @@ loader.lazyGetter(this, "eventListenerService", () => {
 var parsers = [
   {
     id: "jQuery events",
-    getListeners(node) {
+    getListeners: function (node) {
       let global = node.ownerGlobal.wrappedJSObject;
       let hasJQuery = global.jQuery && global.jQuery.fn && global.jQuery.fn.jquery;
 
@@ -46,7 +46,7 @@ var parsers = [
 
             if (typeof event === "object" || typeof event === "function") {
               let eventInfo = {
-                type,
+                type: type,
                 handler: event.handler || event,
                 tags: "jQuery",
                 hide: {
@@ -79,7 +79,7 @@ var parsers = [
 
           if (typeof events[key] === "function") {
             let eventInfo = {
-              type,
+              type: type,
               handler: events[key],
               tags: "jQuery",
               hide: {
@@ -98,13 +98,13 @@ var parsers = [
   },
   {
     id: "jQuery live events",
-    hasListeners(node) {
+    hasListeners: function (node) {
       return jQueryLiveGetListeners(node, true);
     },
-    getListeners(node) {
+    getListeners: function (node) {
       return jQueryLiveGetListeners(node, false);
     },
-    normalizeListener(handlerDO) {
+    normalizeListener: function (handlerDO) {
       function isFunctionInProxy(funcDO) {
         // If the anonymous function is inside the |proxy| function and the
         // function only has guessed atom, the guessed atom should starts with
@@ -165,7 +165,7 @@ var parsers = [
   },
   {
     id: "DOM events",
-    hasListeners(node) {
+    hasListeners: function (node) {
       let listeners;
 
       if (node.nodeName.toLowerCase() === "html") {
@@ -189,7 +189,7 @@ var parsers = [
 
       return false;
     },
-    getListeners(node) {
+    getListeners: function (node) {
       let handlers = [];
       let listeners = eventListenerService.getListenerInfoFor(node);
 
@@ -220,15 +220,15 @@ var parsers = [
 
   {
     id: "React events",
-    hasListeners(node) {
+    hasListeners: function (node) {
       return reactGetListeners(node, true);
     },
 
-    getListeners(node) {
+    getListeners: function (node) {
       return reactGetListeners(node, false);
     },
 
-    normalizeListener(handlerDO, listener) {
+    normalizeListener: function (handlerDO, listener) {
       let functionText = "";
 
       if (handlerDO.boundTargetFunction) {
@@ -470,7 +470,7 @@ EventParsers.prototype = {
    *     }
    *   }
    */
-  registerEventParser(parserObj) {
+  registerEventParser: function (parserObj) {
     let parserId = parserObj.id;
 
     if (!parserId) {
@@ -493,14 +493,14 @@ EventParsers.prototype = {
    * @param {String} parserId
    *        id of the event parser to unregister.
    */
-  unregisterEventParser(parserId) {
+  unregisterEventParser: function (parserId) {
     this._eventParsers.delete(parserId);
   },
 
   /**
    * Tidy up parsers.
    */
-  destroy() {
+  destroy: function () {
     for (let [id] of this._eventParsers) {
       this.unregisterEventParser(id, true);
     }

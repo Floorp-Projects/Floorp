@@ -59,7 +59,7 @@ add_task(function* () {
         name: "display"
       },
       done: resolve,
-      popup
+      popup: popup
     }, doc);
   });
 

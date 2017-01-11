@@ -65,7 +65,7 @@ exports.Selection = Selection;
 Selection.prototype = {
   _walker: null,
 
-  _onMutations(mutations) {
+  _onMutations: function (mutations) {
     let attributeChange = false;
     let pseudoChange = false;
     let detached = false;
@@ -100,11 +100,11 @@ Selection.prototype = {
     }
   },
 
-  destroy() {
+  destroy: function () {
     this.setWalker(null);
   },
 
-  setWalker(walker) {
+  setWalker: function (walker) {
     if (this._walker) {
       this._walker.off("mutations", this._onMutations);
     }
@@ -114,7 +114,7 @@ Selection.prototype = {
     }
   },
 
-  setNodeFront(value, reason = "unknown") {
+  setNodeFront: function (value, reason = "unknown") {
     this.reason = reason;
 
     // If an inlineTextChild text node is being set, then set it's parent instead.
@@ -135,17 +135,17 @@ Selection.prototype = {
     return this._nodeFront;
   },
 
-  isRoot() {
+  isRoot: function () {
     return this.isNode() &&
            this.isConnected() &&
            this._nodeFront.isDocumentElement;
   },
 
-  isNode() {
+  isNode: function () {
     return !!this._nodeFront;
   },
 
-  isConnected() {
+  isConnected: function () {
     let node = this._nodeFront;
     if (!node || !node.actorID) {
       return false;
@@ -160,64 +160,64 @@ Selection.prototype = {
     return false;
   },
 
-  isHTMLNode() {
+  isHTMLNode: function () {
     let xhtmlNs = "http://www.w3.org/1999/xhtml";
     return this.isNode() && this.nodeFront.namespaceURI == xhtmlNs;
   },
 
   // Node type
 
-  isElementNode() {
+  isElementNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.ELEMENT_NODE;
   },
 
-  isPseudoElementNode() {
+  isPseudoElementNode: function () {
     return this.isNode() && this.nodeFront.isPseudoElement;
   },
 
-  isAnonymousNode() {
+  isAnonymousNode: function () {
     return this.isNode() && this.nodeFront.isAnonymous;
   },
 
-  isAttributeNode() {
+  isAttributeNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.ATTRIBUTE_NODE;
   },
 
-  isTextNode() {
+  isTextNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.TEXT_NODE;
   },
 
-  isCDATANode() {
+  isCDATANode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.CDATA_SECTION_NODE;
   },
 
-  isEntityRefNode() {
+  isEntityRefNode: function () {
     return this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.ENTITY_REFERENCE_NODE;
   },
 
-  isEntityNode() {
+  isEntityNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.ENTITY_NODE;
   },
 
-  isProcessingInstructionNode() {
+  isProcessingInstructionNode: function () {
     return this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isCommentNode() {
+  isCommentNode: function () {
     return this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isDocumentNode() {
+  isDocumentNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_NODE;
   },
 
   /**
    * @returns true if the selection is the <body> HTML element.
    */
-  isBodyNode() {
+  isBodyNode: function () {
     return this.isHTMLNode() &&
            this.isConnected() &&
            this.nodeFront.nodeName === "BODY";
@@ -226,22 +226,22 @@ Selection.prototype = {
   /**
    * @returns true if the selection is the <head> HTML element.
    */
-  isHeadNode() {
+  isHeadNode: function () {
     return this.isHTMLNode() &&
            this.isConnected() &&
            this.nodeFront.nodeName === "HEAD";
   },
 
-  isDocumentTypeNode() {
+  isDocumentTypeNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_TYPE_NODE;
   },
 
-  isDocumentFragmentNode() {
+  isDocumentFragmentNode: function () {
     return this.isNode() &&
       this.nodeFront.nodeType == nodeConstants.DOCUMENT_FRAGMENT_NODE;
   },
 
-  isNotationNode() {
+  isNotationNode: function () {
     return this.isNode() && this.nodeFront.nodeType == nodeConstants.NOTATION_NODE;
   },
 };

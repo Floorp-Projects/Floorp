@@ -301,7 +301,7 @@ MdnDocsWidget.prototype = {
    * @param {string} propertyName
    * The name of the CSS property for which we need to display help.
    */
-  loadCssDocs(propertyName) {
+  loadCssDocs: function (propertyName) {
     /**
      * Do all the setup we can do synchronously, and get the document in
      * a state where it can be displayed while we are waiting for the
@@ -369,7 +369,7 @@ MdnDocsWidget.prototype = {
     return deferred.promise;
   },
 
-  destroy() {
+  destroy: function () {
     this.elements = null;
   }
 };

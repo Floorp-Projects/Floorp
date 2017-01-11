@@ -141,7 +141,7 @@ add_task(function* () {
       }
     },
     {
-      * setup() {
+      setup: function* () {
         yield disableProperty(view, 0);
       },
       desc: "Test Copy Rule with Disabled Property",
@@ -164,7 +164,7 @@ add_task(function* () {
       }
     },
     {
-      * setup() {
+      setup: function* () {
         yield disableProperty(view, 4);
       },
       desc: "Test Copy Rule with Disabled Property with Comment",

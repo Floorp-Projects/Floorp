@@ -33,7 +33,7 @@ function NewConsoleOutputWrapper(parentNode, jsterm, toolbox, owner, document) {
 }
 
 NewConsoleOutputWrapper.prototype = {
-  init() {
+  init: function () {
     const attachRefToHud = (id, node) => {
       this.jsterm.hud[id] = node;
     };
@@ -120,7 +120,7 @@ NewConsoleOutputWrapper.prototype = {
     this.body = ReactDOM.render(provider, this.parentNode);
   },
 
-  dispatchMessageAdd(message, waitForResponse) {
+  dispatchMessageAdd: function (message, waitForResponse) {
     let action = actions.messageAdd(message);
     batchedMessageAdd(action);
 
@@ -147,21 +147,21 @@ NewConsoleOutputWrapper.prototype = {
     return Promise.resolve();
   },
 
-  dispatchMessagesAdd(messages) {
+  dispatchMessagesAdd: function (messages) {
     const batchedActions = messages.map(message => actions.messageAdd(message));
     store.dispatch(actions.batchActions(batchedActions));
   },
 
-  dispatchMessagesClear() {
+  dispatchMessagesClear: function () {
     store.dispatch(actions.messagesClear());
   },
 
-  dispatchTimestampsToggle(enabled) {
+  dispatchTimestampsToggle: function (enabled) {
     store.dispatch(actions.timestampsToggle(enabled));
   },
 
   // Should be used for test purpose only.
-  getStore() {
+  getStore: function () {
     return store;
   }
 };

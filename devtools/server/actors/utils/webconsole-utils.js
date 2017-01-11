@@ -27,7 +27,7 @@ var WebConsoleUtils = {
    *
    * @return string
    */
-  getWorkerType(message) {
+  getWorkerType: function (message) {
     let id = message ? message.innerID : null;
     return CONSOLE_WORKER_IDS[CONSOLE_WORKER_IDS.indexOf(id)] || null;
   },
@@ -48,7 +48,7 @@ var WebConsoleUtils = {
    * @return object
    *         The cloned object.
    */
-  cloneObject(object, recursive, filter) {
+  cloneObject: function (object, recursive, filter) {
     if (typeof object != "object") {
       return object;
     }
@@ -83,7 +83,7 @@ var WebConsoleUtils = {
    * @return integer
    *         Inner ID for the given window.
    */
-  getInnerWindowId(window) {
+  getInnerWindowId: function (window) {
     return window.QueryInterface(Ci.nsIInterfaceRequestor)
              .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
   },
@@ -96,7 +96,7 @@ var WebConsoleUtils = {
    * @return Array
    *         list of inner window ids.
    */
-  getInnerWindowIDsForFrames(window) {
+  getInnerWindowIDsForFrames: function (window) {
     let innerWindowID = this.getInnerWindowId(window);
     let ids = [innerWindowID];
 
@@ -120,7 +120,7 @@ var WebConsoleUtils = {
    * @return object
    *         Property descriptor.
    */
-  getPropertyDescriptor(object, prop) {
+  getPropertyDescriptor: function (object, prop) {
     let desc = null;
     while (object) {
       try {
@@ -162,7 +162,7 @@ var WebConsoleUtils = {
    * @return mixed
    *         The value grip.
    */
-  createValueGrip(value, objectWrapper) {
+  createValueGrip: function (value, objectWrapper) {
     switch (typeof value) {
       case "boolean":
         return value;
@@ -216,7 +216,7 @@ var WebConsoleCommands = {
    *
    * @see WebConsoleCommands.register
    */
-  _registerOriginal(name, command) {
+  _registerOriginal: function (name, command) {
     this.register(name, command);
     this._originalCommands.set(name, this.getCommand(name));
   },
@@ -248,7 +248,7 @@ var WebConsoleCommands = {
    *     }
    *   });
    */
-  register(name, command) {
+  register: function (name, command) {
     this._registeredCommands.set(name, command);
   },
 
@@ -260,7 +260,7 @@ var WebConsoleCommands = {
    *
    * @param {string} name The name of the command
    */
-  unregister(name) {
+  unregister: function (name) {
     this._registeredCommands.delete(name);
     if (this._originalCommands.has(name)) {
       this.register(name, this._originalCommands.get(name));
@@ -274,7 +274,7 @@ var WebConsoleCommands = {
    *
    * @return {(function|object)} The command.
    */
-  getCommand(name) {
+  getCommand: function (name) {
     return this._registeredCommands.get(name);
   },
 
@@ -285,7 +285,7 @@ var WebConsoleCommands = {
    *
    * @return {boolean} True if the command is registered.
    */
-  hasCommand(name) {
+  hasCommand: function (name) {
     return this._registeredCommands.has(name);
   },
 };
@@ -338,7 +338,7 @@ WebConsoleCommands._registerOriginal("$$", function (owner, selector) {
  * Returns last console evaluation or undefined
  */
 WebConsoleCommands._registerOriginal("$_", {
-  get(owner) {
+  get: function (owner) {
     return owner.consoleActor.getLastConsoleInputEvaluation();
   }
 });
@@ -377,7 +377,7 @@ WebConsoleCommands._registerOriginal("$x", function (owner, xPath, context) {
  *         Inspector, or null if no selection exists.
  */
 WebConsoleCommands._registerOriginal("$0", {
-  get(owner) {
+  get: function (owner) {
     return owner.makeDebuggeeValue(owner.selectedNode);
   }
 });

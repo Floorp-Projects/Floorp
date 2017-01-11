@@ -40,7 +40,7 @@ var cachedCssProperties = new WeakMap();
  * properties the current server supports.
  */
 const CssPropertiesFront = FrontClassWithSpec(cssPropertiesSpec, {
-  initialize(client, { cssPropertiesActor }) {
+  initialize: function (client, { cssPropertiesActor }) {
     Front.prototype.initialize.call(this, client, {actor: cssPropertiesActor});
     this.manage(this);
   }

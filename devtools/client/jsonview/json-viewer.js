@@ -40,23 +40,23 @@ define(function (require, exports, module) {
    * available for the JSON viewer.
    */
   input.actions = {
-    onCopyJson() {
+    onCopyJson: function () {
       dispatchEvent("copy", input.prettified ? input.jsonPretty : input.jsonText);
     },
 
-    onSaveJson() {
+    onSaveJson: function () {
       dispatchEvent("save", input.prettified ? input.jsonPretty : input.jsonText);
     },
 
-    onCopyHeaders() {
+    onCopyHeaders: function () {
       dispatchEvent("copy-headers", input.headers);
     },
 
-    onSearch(value) {
+    onSearch: function (value) {
       theApp.setState({searchFilter: value});
     },
 
-    onPrettify(data) {
+    onPrettify: function (data) {
       if (input.prettified) {
         theApp.setState({jsonText: input.jsonText});
       } else {

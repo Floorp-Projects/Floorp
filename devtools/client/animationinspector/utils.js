@@ -139,7 +139,7 @@ var TimeScale = {
    * Add a new animation to time scale.
    * @param {Object} state A PlayerFront.state object.
    */
-  addAnimation(state) {
+  addAnimation: function (state) {
     let {previousStartTime, delay, duration, endDelay,
          iterationCount, playbackRate} = state;
 
@@ -173,7 +173,7 @@ var TimeScale = {
   /**
    * Reset the current time scale.
    */
-  reset() {
+  reset: function () {
     this.minStartTime = Infinity;
     this.maxEndTime = 0;
   },
@@ -183,7 +183,7 @@ var TimeScale = {
    * @param {Number} time
    * @return {Number}
    */
-  startTimeToDistance(time) {
+  startTimeToDistance: function (time) {
     time -= this.minStartTime;
     return this.durationToDistance(time);
   },
@@ -193,7 +193,7 @@ var TimeScale = {
    * @param {Number} time
    * @return {Number}
    */
-  durationToDistance(duration) {
+  durationToDistance: function (duration) {
     return duration * 100 / this.getDuration();
   },
 
@@ -202,7 +202,7 @@ var TimeScale = {
    * @param {Number} distance
    * @return {Number}
    */
-  distanceToTime(distance) {
+  distanceToTime: function (distance) {
     return this.minStartTime + (this.getDuration() * distance / 100);
   },
 
@@ -212,7 +212,7 @@ var TimeScale = {
    * @param {Number} distance
    * @return {Number}
    */
-  distanceToRelativeTime(distance) {
+  distanceToRelativeTime: function (distance) {
     let time = this.distanceToTime(distance);
     return time - this.minStartTime;
   },
@@ -223,7 +223,7 @@ var TimeScale = {
    * @param {Number} time
    * @return {String} The formatted time string.
    */
-  formatTime(time) {
+  formatTime: function (time) {
     // Format in milliseconds if the total duration is short enough.
     if (this.getDuration() <= MILLIS_TIME_FORMAT_MAX_DURATION) {
       return L10N.getFormatStr("timeline.timeGraduationLabel", time.toFixed(0));
@@ -233,7 +233,7 @@ var TimeScale = {
     return L10N.getFormatStr("player.timeLabel", (time / 1000).toFixed(1));
   },
 
-  getDuration() {
+  getDuration: function () {
     return this.maxEndTime - this.minStartTime;
   },
 
@@ -241,7 +241,7 @@ var TimeScale = {
    * Given an animation, get the various dimensions (in %) useful to draw the
    * animation in the timeline.
    */
-  getAnimationDimensions({state}) {
+  getAnimationDimensions: function ({state}) {
     let start = state.previousStartTime || 0;
     let duration = state.duration;
     let rate = state.playbackRate;

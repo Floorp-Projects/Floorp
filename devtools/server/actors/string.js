@@ -12,18 +12,18 @@ var protocol = require("devtools/shared/protocol");
 const {longStringSpec} = require("devtools/shared/specs/string");
 
 exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
-  initialize(conn, str) {
+  initialize: function (conn, str) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.str = str;
     this.short = (this.str.length < DebuggerServer.LONG_STRING_LENGTH);
   },
 
-  destroy() {
+  destroy: function () {
     this.str = null;
     protocol.Actor.prototype.destroy.call(this);
   },
 
-  form() {
+  form: function () {
     if (this.short) {
       return this.str;
     }
@@ -35,9 +35,9 @@ exports.LongStringActor = protocol.ActorClassWithSpec(longStringSpec, {
     };
   },
 
-  substring(start, end) {
+  substring: function (start, end) {
     return promise.resolve(this.str.substring(start, end));
   },
 
-  release() { }
+  release: function () { }
 });

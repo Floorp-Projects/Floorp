@@ -26,20 +26,20 @@ define(function (require, exports, module) {
       data: PropTypes.object,
     },
 
-    getInitialState() {
+    getInitialState: function () {
       return {
         data: {}
       };
     },
 
-    render() {
+    render: function () {
       let data = this.props.data;
 
       return (
         div({className: "headersPanelBox"},
           HeadersToolbar({actions: this.props.actions}),
           div({className: "panelContent"},
-            Headers({data})
+            Headers({data: data})
           )
         )
       );
@@ -59,11 +59,11 @@ define(function (require, exports, module) {
 
     // Commands
 
-    onCopy(event) {
+    onCopy: function (event) {
       this.props.actions.onCopyHeaders();
     },
 
-    render() {
+    render: function () {
       return (
         Toolbar({},
           ToolbarButton({className: "btn copy", onClick: this.onCopy},

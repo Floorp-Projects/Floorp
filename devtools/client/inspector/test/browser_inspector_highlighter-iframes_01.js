@@ -56,7 +56,7 @@ add_task(function* () {
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     testActor.synthesizeMouse({
-      selector,
+      selector: selector,
       options: {type: "mousemove"},
       center: true
     }).then(() => inspector.toolbox.once("picker-node-hovered"));

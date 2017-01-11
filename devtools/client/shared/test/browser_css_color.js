@@ -78,7 +78,7 @@ function testColorMatch(name, hex, hsl, rgb, rgba, canvas) {
     // All colors have rgba so we can use this to compare against.
     setColor(rgba);
     let [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
-    target = {r, g, b, a};
+    target = {r: r, g: g, b: b, a: a};
   };
   let test = function (color, type) {
     // hsla -> rgba -> hsla produces inaccurate results so we

@@ -16,9 +16,9 @@ this.rpc = function (method, ...params) {
 
   postMessage(JSON.stringify({
     type: "rpc",
-    method,
-    params,
-    id
+    method: method,
+    params: params,
+    id: id
   }));
 
   let deferred = Promise.defer();

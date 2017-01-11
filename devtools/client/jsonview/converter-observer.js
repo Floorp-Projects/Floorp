@@ -39,7 +39,7 @@ function ConverterObserver() {
 }
 
 ConverterObserver.prototype = {
-  initialize() {
+  initialize: function () {
     // Only the DevEdition has this feature available by default.
     // Users need to manually flip 'devtools.jsonview.enabled' preference
     // to have it available in other distributions.
@@ -51,7 +51,7 @@ ConverterObserver.prototype = {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
   },
 
-  observe(subject, topic, data) {
+  observe: function (subject, topic, data) {
     switch (topic) {
       case "xpcom-shutdown":
         this.onShutdown();
@@ -62,12 +62,12 @@ ConverterObserver.prototype = {
     }
   },
 
-  onShutdown() {
+  onShutdown: function () {
     Services.prefs.removeObserver(JSON_VIEW_PREF, observer);
     Services.obs.removeObserver(observer, "xpcom-shutdown");
   },
 
-  onPrefChanged() {
+  onPrefChanged: function () {
     if (this.isEnabled()) {
       this.register();
     } else {
@@ -75,17 +75,17 @@ ConverterObserver.prototype = {
     }
   },
 
-  register() {
+  register: function () {
     JsonViewSniffer.register();
     JsonViewService.register();
   },
 
-  unregister() {
+  unregister: function () {
     JsonViewSniffer.unregister();
     JsonViewService.unregister();
   },
 
-  isEnabled() {
+  isEnabled: function () {
     return Services.prefs.getBoolPref(JSON_VIEW_PREF);
   },
 };

@@ -39,7 +39,7 @@ add_task(function* () {
     testActor.synthesizeMouse({
       options: {type: "mousemove"},
       center: true,
-      selector
+      selector: selector
     });
     return inspector.markup.once("showcontainerhovered");
   }

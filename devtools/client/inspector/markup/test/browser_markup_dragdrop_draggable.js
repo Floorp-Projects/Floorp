@@ -22,7 +22,7 @@ const TEST_DATA = [
   { node: "input", draggable: true },
   { node: "div", draggable: true },
   {
-    * node(inspector) {
+    node: function* (inspector) {
       let parentFront = yield getNodeFront("#before", inspector);
       let {nodes} = yield inspector.walker.children(parentFront);
       // Getting the comment node.
@@ -31,7 +31,7 @@ const TEST_DATA = [
     draggable: true
   },
   {
-    * node(inspector) {
+    node: function* (inspector) {
       let parentFront = yield getNodeFront("#test", inspector);
       let {nodes} = yield inspector.walker.children(parentFront);
       // Getting the ::before pseudo element.

@@ -78,7 +78,7 @@ function RuleEditor(ruleView, rule) {
 }
 
 RuleEditor.prototype = {
-  destroy() {
+  destroy: function () {
     this.rule.domRule.off("location-changed");
     this.toolbox.off("tool-registered", this.updateSourceLink);
     this.toolbox.off("tool-unregistered", this.updateSourceLink);
@@ -95,7 +95,7 @@ RuleEditor.prototype = {
     return trait && !this.rule.elementStyle.element.isAnonymous;
   },
 
-  _create() {
+  _create: function () {
     this.element = this.doc.createElement("div");
     this.element.className = "ruleview-rule theme-separator";
     this.element.setAttribute("uneditable", !this.isEditable);
@@ -215,11 +215,11 @@ RuleEditor.prototype = {
    * Event handler called when a property changes on the
    * StyleRuleActor.
    */
-  _locationChanged() {
+  _locationChanged: function () {
     this.updateSourceLink();
   },
 
-  updateSourceLink() {
+  updateSourceLink: function () {
     let sourceLabel = this.element.querySelector(".ruleview-rule-source-label");
     let title = this.rule.title;
     let sourceHref = (this.rule.sheet && this.rule.sheet.href) ?
@@ -277,7 +277,7 @@ RuleEditor.prototype = {
   /**
    * Update the rule editor with the contents of the rule.
    */
-  populate() {
+  populate: function () {
     // Clear out existing viewers.
     while (this.selectorText.hasChildNodes()) {
       this.selectorText.removeChild(this.selectorText.lastChild);
@@ -360,7 +360,7 @@ RuleEditor.prototype = {
    * @return {TextProperty}
    *        The new property
    */
-  addProperty(name, value, priority, enabled, siblingProp) {
+  addProperty: function (name, value, priority, enabled, siblingProp) {
     let prop = this.rule.createProperty(name, value, priority, enabled,
       siblingProp);
     let index = this.rule.textProps.indexOf(prop);
@@ -392,7 +392,7 @@ RuleEditor.prototype = {
    * @param {TextProperty} siblingProp
    *        Optional, the property next to which all new props should be added.
    */
-  addProperties(properties, siblingProp) {
+  addProperties: function (properties, siblingProp) {
     if (!properties || !properties.length) {
       return;
     }
@@ -418,7 +418,7 @@ RuleEditor.prototype = {
    * name is given, we'll create a real TextProperty and add it to the
    * rule.
    */
-  newProperty() {
+  newProperty: function () {
     // If we're already creating a new property, ignore this.
     if (!this.closeBrace.hasAttribute("tabindex")) {
       return;
@@ -464,7 +464,7 @@ RuleEditor.prototype = {
    * @param {Boolean} commit
    *        True if the value should be committed.
    */
-  _onNewProperty(value, commit) {
+  _onNewProperty: function (value, commit) {
     if (!value || !commit) {
       return;
     }
@@ -486,7 +486,7 @@ RuleEditor.prototype = {
    * added, since we want to wait until after the inplace editor `destroy`
    * event has been fired to keep consistent UI state.
    */
-  _newPropertyDestroy() {
+  _newPropertyDestroy: function () {
     // We're done, make the close brace focusable again.
     this.closeBrace.setAttribute("tabindex", "0");
 
@@ -604,7 +604,7 @@ RuleEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _moveSelectorFocus(direction) {
+  _moveSelectorFocus: function (direction) {
     if (!direction || direction === Services.focus.MOVEFOCUS_BACKWARD) {
       return;
     }

@@ -192,7 +192,7 @@ const JITOptimizations = function (rawSites, stringTable) {
  * Make JITOptimizations iterable.
  */
 JITOptimizations.prototype = {
-  * [Symbol.iterator]() {
+  [Symbol.iterator]: function* () {
     yield* this.optimizationSites;
   },
 

@@ -98,7 +98,7 @@ MountainGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's background.
    * @see AbstractCanvasGraph.prototype.buildBackgroundImage
    */
-  buildBackgroundImage() {
+  buildBackgroundImage: function () {
     let { canvas, ctx } = this._getNamedCanvas("mountain-graph-background");
     let width = this._width;
     let height = this._height;
@@ -113,7 +113,7 @@ MountainGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * Renders the graph's data source.
    * @see AbstractCanvasGraph.prototype.buildGraphImage
    */
-  buildGraphImage() {
+  buildGraphImage: function () {
     if (!this.format || !this.format.length) {
       throw new Error("The graph format traits are mandatory to style " +
                       "the data source.");

@@ -35,17 +35,17 @@ AnimationDetails.prototype = {
   // array is used to skip them.
   NON_PROPERTIES: ["easing", "composite", "computedOffset", "offset"],
 
-  init(containerEl) {
+  init: function (containerEl) {
     this.containerEl = containerEl;
   },
 
-  destroy() {
+  destroy: function () {
     this.unrender();
     this.containerEl = null;
     this.serverTraits = null;
   },
 
-  unrender() {
+  unrender: function () {
     for (let component of this.keyframeComponents) {
       component.off("frame-selected", this.onFrameSelected);
       component.destroy();
@@ -57,7 +57,7 @@ AnimationDetails.prototype = {
     }
   },
 
-  getPerfDataForProperty(animation, propertyName) {
+  getPerfDataForProperty: function (animation, propertyName) {
     let warning = "";
     let className = "";
     if (animation.state.propertyState) {
@@ -195,8 +195,8 @@ AnimationDetails.prototype = {
       keyframesComponent.init(framesEl);
       keyframesComponent.render({
         keyframes: this.tracks[propertyName],
-        propertyName,
-        animation
+        propertyName: propertyName,
+        animation: animation
       });
       keyframesComponent.on("frame-selected", this.onFrameSelected);
 
@@ -204,7 +204,7 @@ AnimationDetails.prototype = {
     }
   }),
 
-  onFrameSelected(e, args) {
+  onFrameSelected: function (e, args) {
     // Relay the event up, it's needed in parents too.
     this.emit(e, args);
   }

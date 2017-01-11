@@ -23,7 +23,7 @@ add_task(function* () {
   // Define custom side-panel.
   let tabPanel = React.createFactory(React.createClass({
     displayName: "myTabPanel",
-    render() {
+    render: function () {
       return (
         div({className: "my-tab-panel"},
           CONTENT_TEXT
@@ -41,7 +41,7 @@ add_task(function* () {
   // Define another custom side-panel.
   tabPanel = React.createFactory(React.createClass({
     displayName: "myTabPanel2",
-    render() {
+    render: function () {
       return (
         div({className: "my-tab-panel2"},
           "Another Content"

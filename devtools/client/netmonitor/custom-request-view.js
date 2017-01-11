@@ -24,7 +24,7 @@ CustomRequestView.prototype = {
   /**
    * Initialization function, called when the network monitor is started.
    */
-  initialize() {
+  initialize: function () {
     dumpn("Initializing the CustomRequestView");
 
     this.updateCustomRequestEvent = getKeyWithEvent(this.onUpdate.bind(this));
@@ -35,7 +35,7 @@ CustomRequestView.prototype = {
   /**
    * Destruction function, called when the network monitor is closed.
    */
-  destroy() {
+  destroy: function () {
     dumpn("Destroying the CustomRequestView");
 
     $("#custom-pane").removeEventListener("input",
@@ -73,7 +73,7 @@ CustomRequestView.prototype = {
    * @param object field
    *        the field that the user updated.
    */
-  onUpdate(field) {
+  onUpdate: function (field) {
     let selectedItem = NetMonitorView.RequestsMenu.selectedItem;
     let store = NetMonitorView.RequestsMenu.store;
     let value;
@@ -118,7 +118,7 @@ CustomRequestView.prototype = {
    * @param object url
    *        The URL to extract query string from.
    */
-  updateCustomQuery(url) {
+  updateCustomQuery: function (url) {
     const paramsArray = parseQueryString(getUrlQuery(url));
 
     if (!paramsArray) {
@@ -136,7 +136,7 @@ CustomRequestView.prototype = {
    * @param object queryText
    *        The contents of the query string field.
    */
-  updateCustomUrl(queryText) {
+  updateCustomUrl: function (queryText) {
     let params = parseQueryText(queryText);
     let queryString = writeQueryString(params);
 
@@ -189,7 +189,7 @@ function parseRequestText(text, namereg, divider) {
     let matches;
     if (matches = regex.exec(line)) { // eslint-disable-line
       let [, name, value] = matches;
-      pairs.push({name, value});
+      pairs.push({name: name, value: value});
     }
   }
   return pairs;

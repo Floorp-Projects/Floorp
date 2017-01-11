@@ -63,7 +63,7 @@ exports.synthesizeCustomTreeClass = () => {
   }
 
   MyCustomTreeItem.prototype = Heritage.extend(AbstractTreeItem.prototype, {
-    _displaySelf(document, arrowNode) {
+    _displaySelf: function (document, arrowNode) {
       let node = document.createElement("hbox");
       node.style.marginInlineStart = (this.level * 10) + "px";
       node.appendChild(arrowNode);
@@ -71,7 +71,7 @@ exports.synthesizeCustomTreeClass = () => {
       return node;
     },
 
-    _populateSelf(children) {
+    _populateSelf: function (children) {
       for (let childDataSrc of this.itemDataSrc.children) {
         children.push(new MyCustomTreeItem(childDataSrc, {
           parent: this,

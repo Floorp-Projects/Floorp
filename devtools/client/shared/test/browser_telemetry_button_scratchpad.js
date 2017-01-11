@@ -47,7 +47,7 @@ function trackScratchpadWindows() {
 
           if (win.Scratchpad) {
             win.Scratchpad.addObserver({
-              onReady() {
+              onReady: function () {
                 win.Scratchpad.removeObserver(this);
                 numScratchpads++;
                 win.close();

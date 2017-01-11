@@ -225,7 +225,7 @@ Spectrum.prototype = {
       rgb[3] + ")";
   },
 
-  show() {
+  show: function () {
     this.element.classList.add("spectrum-show");
 
     this.slideHeight = this.slider.offsetHeight;
@@ -239,34 +239,34 @@ Spectrum.prototype = {
     this.updateUI();
   },
 
-  onElementClick(e) {
+  onElementClick: function (e) {
     e.stopPropagation();
   },
 
-  onSliderMove(dragX, dragY) {
+  onSliderMove: function (dragX, dragY) {
     this.hsv[0] = (dragY / this.slideHeight);
     this.updateUI();
     this.onChange();
   },
 
-  onDraggerMove(dragX, dragY) {
+  onDraggerMove: function (dragX, dragY) {
     this.hsv[1] = dragX / this.dragWidth;
     this.hsv[2] = (this.dragHeight - dragY) / this.dragHeight;
     this.updateUI();
     this.onChange();
   },
 
-  onAlphaSliderMove(dragX, dragY) {
+  onAlphaSliderMove: function (dragX, dragY) {
     this.hsv[3] = dragX / this.alphaSliderWidth;
     this.updateUI();
     this.onChange();
   },
 
-  onChange() {
+  onChange: function () {
     this.emit("changed", this.rgb, this.rgbCssString);
   },
 
-  updateHelperLocations() {
+  updateHelperLocations: function () {
     // If the UI hasn't been shown yet then none of the dimensions will be
     // correct
     if (!this.element.classList.contains("spectrum-show")) {
@@ -304,7 +304,7 @@ Spectrum.prototype = {
     this.alphaSliderHelper.style.left = alphaSliderX + "px";
   },
 
-  updateUI() {
+  updateUI: function () {
     this.updateHelperLocations();
 
     let rgb = this.rgb;
@@ -322,7 +322,7 @@ Spectrum.prototype = {
     this.alphaSliderInner.style.background = alphaGradient;
   },
 
-  destroy() {
+  destroy: function () {
     this.element.removeEventListener("click", this.onElementClick, false);
 
     this.parentEl.removeChild(this.element);

@@ -49,7 +49,7 @@ function EventTooltip(tooltip, eventListenerInfos, toolbox) {
 }
 
 EventTooltip.prototype = {
-  init() {
+  init: function () {
     let config = {
       mode: Editor.modes.js,
       lineNumbers: false,
@@ -155,7 +155,7 @@ EventTooltip.prototype = {
       let content = doc.createElementNS(XHTML_NS, "div");
       let editor = new Editor(config);
       this._eventEditors.set(content, {
-        editor,
+        editor: editor,
         handler: listener.handler,
         uri: listener.origin,
         dom0: listener.DOM0,
@@ -173,11 +173,11 @@ EventTooltip.prototype = {
     this._tooltip.on("hidden", this.destroy);
   },
 
-  _addContentListeners(header) {
+  _addContentListeners: function (header) {
     header.addEventListener("click", this._headerClicked);
   },
 
-  _headerClicked(event) {
+  _headerClicked: function (event) {
     if (event.target.classList.contains("event-tooltip-debugger-icon")) {
       this._debugClicked(event);
       event.stopPropagation();
@@ -230,7 +230,7 @@ EventTooltip.prototype = {
     }
   },
 
-  _debugClicked(event) {
+  _debugClicked: function (event) {
     let header = event.currentTarget;
     let content = header.nextElementSibling;
 
@@ -256,7 +256,7 @@ EventTooltip.prototype = {
     }
   },
 
-  destroy() {
+  destroy: function () {
     if (this._tooltip) {
       this._tooltip.off("hidden", this.destroy);
 

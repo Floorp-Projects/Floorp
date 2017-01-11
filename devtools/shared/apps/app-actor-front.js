@@ -188,7 +188,7 @@ function uploadPackageBulk(client, webappsActor, packageFile, progressCallback) 
     console.log("File size: " + fileSize);
 
     let streamRequest = client.startBulkRequest({
-      actor,
+      actor: actor,
       type: "stream",
       length: fileSize
     });
@@ -246,7 +246,7 @@ function installPackaged(client, webappsActor, packagePath, appId, progressCallb
       let request = {
         to: webappsActor,
         type: "install",
-        appId,
+        appId: appId,
         upload: fileActor
       };
       client.request(request, (res) => {
@@ -283,9 +283,9 @@ function installHosted(client, webappsActor, appId, metadata, manifest) {
   let request = {
     to: webappsActor,
     type: "install",
-    appId,
-    metadata,
-    manifest
+    appId: appId,
+    metadata: metadata,
+    manifest: manifest
   };
   client.request(request, (res) => {
     if (res.error) {
@@ -314,7 +314,7 @@ function getTargetForApp(client, webappsActor, manifestURL) {
   let request = {
     to: webappsActor,
     type: "getAppActor",
-    manifestURL,
+    manifestURL: manifestURL,
   };
   client.request(request, (res) => {
     if (res.error) {
@@ -322,7 +322,7 @@ function getTargetForApp(client, webappsActor, manifestURL) {
     } else {
       let options = {
         form: res.actor,
-        client,
+        client: client,
         chrome: false
       };
 
@@ -366,7 +366,7 @@ function launchApp(client, webappsActor, manifestURL) {
   return client.request({
     to: webappsActor,
     type: "launch",
-    manifestURL
+    manifestURL: manifestURL
   });
 }
 exports.launchApp = launchApp;
@@ -375,7 +375,7 @@ function closeApp(client, webappsActor, manifestURL) {
   return client.request({
     to: webappsActor,
     type: "close",
-    manifestURL
+    manifestURL: manifestURL
   });
 }
 exports.closeApp = closeApp;
@@ -383,8 +383,8 @@ exports.closeApp = closeApp;
 function getTarget(client, form) {
   let deferred = defer();
   let options = {
-    form,
-    client,
+    form: form,
+    client: client,
     chrome: false
   };
 
@@ -413,7 +413,7 @@ function App(client, webappsActor, manifest) {
 }
 
 App.prototype = {
-  getForm() {
+  getForm: function () {
     if (this._form) {
       return promise.resolve(this._form);
     }
@@ -428,7 +428,7 @@ App.prototype = {
     });
   },
 
-  getTarget() {
+  getTarget: function () {
     if (this._target) {
       return promise.resolve(this._target);
     }
@@ -444,22 +444,22 @@ App.prototype = {
     });
   },
 
-  launch() {
+  launch: function () {
     return launchApp(this.client, this.webappsActor,
                      this.manifest.manifestURL);
   },
 
-  reload() {
+  reload: function () {
     return reloadApp(this.client, this.webappsActor,
                      this.manifest.manifestURL);
   },
 
-  close() {
+  close: function () {
     return closeApp(this.client, this.webappsActor,
                     this.manifest.manifestURL);
   },
 
-  getIcon() {
+  getIcon: function () {
     if (this.iconURL) {
       return promise.resolve(this.iconURL);
     }
@@ -532,7 +532,7 @@ AppActorFront.prototype = {
    * Returns a `App` object instance for the given manifest URL
    * (and cache it per AppActorFront object)
    */
-  _getApp(manifestURL) {
+  _getApp: function (manifestURL) {
     let app = this._apps ? this._apps.get(manifestURL) : null;
     if (app) {
       return promise.resolve(app);
@@ -557,7 +557,7 @@ AppActorFront.prototype = {
    * Starts watching for app opening/closing installing/uninstalling.
    * Needs to be called before using `apps` or `runningApps` attributes.
    */
-  watchApps(listener) {
+  watchApps: function (listener) {
     // Fixes race between two references to the same front
     // calling watchApps at the same time
     if (this._loadingPromise) {
@@ -611,7 +611,7 @@ AppActorFront.prototype = {
     return this._loadingPromise;
   },
 
-  fetchIcons() {
+  fetchIcons: function () {
     // On demand, retrieve apps icons in order to be able
     // to synchronously retrieve it on `App` objects
     let promises = [];
@@ -623,7 +623,7 @@ AppActorFront.prototype = {
                         .then(null, () => {});
   },
 
-  _listenAppEvents(listener) {
+  _listenAppEvents: function (listener) {
     this._listeners.push(listener);
 
     if (this._listeners.length > 1) {
@@ -644,7 +644,7 @@ AppActorFront.prototype = {
     return this.client.request(request);
   },
 
-  _unlistenAppEvents(listener) {
+  _unlistenAppEvents: function (listener) {
     let idx = this._listeners.indexOf(listener);
     if (idx != -1) {
       this._listeners.splice(idx, 1);
@@ -673,7 +673,7 @@ AppActorFront.prototype = {
     return this.client.request(request);
   },
 
-  _clientListener(type, message) {
+  _clientListener: function (type, message) {
     let { manifestURL } = message;
 
     // Reset the app object to get a fresh copy when we (re)install the app.
@@ -723,13 +723,13 @@ AppActorFront.prototype = {
     });
   },
 
-  _notifyListeners(type, app) {
+  _notifyListeners: function (type, app) {
     this._listeners.forEach(f => {
       f(type, app);
     });
   },
 
-  unwatchApps(listener) {
+  unwatchApps: function (listener) {
     return this._unlistenAppEvents(listener);
   },
 
@@ -741,7 +741,7 @@ AppActorFront.prototype = {
    *  * bytesSent:  The number of bytes sent so far
    *  * totalBytes: The total number of bytes to send
    */
-  installPackaged(packagePath, appId) {
+  installPackaged: function (packagePath, appId) {
     let request = () => {
       return installPackaged(this.client, this.actor, packagePath, appId,
                              this._onInstallProgress)
@@ -753,11 +753,11 @@ AppActorFront.prototype = {
     return this._install(request);
   },
 
-  _onInstallProgress(progress) {
+  _onInstallProgress: function (progress) {
     this.emit("install-progress", progress);
   },
 
-  _install(request) {
+  _install: function (request) {
     let deferred = defer();
     let finalAppId = null, manifestURL = null;
     let installs = {};
@@ -768,7 +768,7 @@ AppActorFront.prototype = {
     let resolve = app => {
       this._unlistenAppEvents(listener);
       installs = null;
-      deferred.resolve({ app, appId: finalAppId });
+      deferred.resolve({ app: app, appId: finalAppId });
     };
 
     // Listen for appInstall event, in order to resolve with
@@ -808,7 +808,7 @@ AppActorFront.prototype = {
    *  * bytesSent:  The number of bytes sent so far
    *  * totalBytes: The total number of bytes to send
    */
-  installHosted(appId, metadata, manifest) {
+  installHosted: function (appId, metadata, manifest) {
     let manifestURL = metadata.manifestURL ||
                       metadata.origin + "/manifest.webapp";
     let request = () => {
@@ -816,7 +816,7 @@ AppActorFront.prototype = {
         this.client, this.actor, appId, metadata, manifest
       ).then(response => ({
         appId: response.appId,
-        manifestURL
+        manifestURL: manifestURL
       }));
     };
     return this._install(request);

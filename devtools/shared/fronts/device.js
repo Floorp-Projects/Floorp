@@ -9,13 +9,13 @@ const protocol = require("devtools/shared/protocol");
 const defer = require("devtools/shared/defer");
 
 const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
-  initialize(client, form) {
+  initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client);
     this.actorID = form.deviceActor;
     this.manage(this);
   },
 
-  screenshotToBlob() {
+  screenshotToBlob: function () {
     return this.screenshotToDataURL().then(longstr => {
       return longstr.string().then(dataURL => {
         let deferred = defer();

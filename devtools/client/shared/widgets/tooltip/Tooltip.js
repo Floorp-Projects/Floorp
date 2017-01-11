@@ -170,7 +170,7 @@ Tooltip.prototype = {
    * @param {number} x, y [optional]
    *        The left and top offset coordinates, in pixels.
    */
-  show(anchor,
+  show: function (anchor,
     position = this.defaultPosition,
     x = this.defaultOffsetX,
     y = this.defaultOffsetY) {
@@ -181,25 +181,25 @@ Tooltip.prototype = {
   /**
    * Hide the tooltip
    */
-  hide() {
+  hide: function () {
     this.panel.hidden = true;
     this.panel.hidePopup();
   },
 
-  isShown() {
+  isShown: function () {
     return this.panel &&
            this.panel.state !== "closed" &&
            this.panel.state !== "hiding";
   },
 
-  setSize(width, height) {
+  setSize: function (width, height) {
     this.panel.sizeTo(width, height);
   },
 
   /**
    * Empty the tooltip's content
    */
-  empty() {
+  empty: function () {
     while (this.panel.hasChildNodes()) {
       this.panel.removeChild(this.panel.firstChild);
     }
@@ -209,7 +209,7 @@ Tooltip.prototype = {
    * Gets this panel's visibility state.
    * @return boolean
    */
-  isHidden() {
+  isHidden: function () {
     return this.panel.state == "closed" || this.panel.state == "hiding";
   },
 
@@ -217,14 +217,14 @@ Tooltip.prototype = {
    * Gets if this panel has any child nodes.
    * @return boolean
    */
-  isEmpty() {
+  isEmpty: function () {
     return !this.panel.hasChildNodes();
   },
 
   /**
    * Get rid of references and event listeners
    */
-  destroy() {
+  destroy: function () {
     this.hide();
 
     for (let eventName of POPUP_EVENTS) {
@@ -300,7 +300,7 @@ Tooltip.prototype = {
    * @param {string} containerClass [optional]
    *        A style class for the text messages container.
    */
-  setTextContent(
+  setTextContent: function (
     {
       messages,
       messagesClass,
@@ -357,7 +357,7 @@ Tooltip.prototype = {
    * When the document is loaded, the function gets the content window
    * and resolves the promise with the content window.
    */
-  setIFrameContent({width, height}, url) {
+  setIFrameContent: function ({width, height}, url) {
     let def = defer();
 
     // Create an iframe

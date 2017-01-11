@@ -45,7 +45,7 @@ exports.Timeline = Class({
   /**
    * Initializes this actor with the provided connection and tab actor.
    */
-  initialize(tabActor) {
+  initialize: function (tabActor) {
     this.tabActor = tabActor;
 
     this._isRecording = false;
@@ -62,7 +62,7 @@ exports.Timeline = Class({
   /**
    * Destroys this actor, stopping recording first.
    */
-  destroy() {
+  destroy: function () {
     this.stop();
 
     events.off(this.tabActor, "window-ready", this._onWindowReady);
@@ -109,7 +109,7 @@ exports.Timeline = Class({
    * At regular intervals, pop the markers from the docshell, and forward
    * markers, memory, tick and frames events, if any.
    */
-  _pullTimelineData() {
+  _pullTimelineData: function () {
     let docShells = this.docShells;
     if (!this._isRecording || !docShells.length) {
       return;
@@ -183,7 +183,7 @@ exports.Timeline = Class({
   /**
    * Are we recording profile markers currently?
    */
-  isRecording() {
+  isRecording: function () {
     return this._isRecording;
   },
 
@@ -318,7 +318,7 @@ exports.Timeline = Class({
    * When a new window becomes available in the tabActor, start recording its
    * markers if we were recording.
    */
-  _onWindowReady({ window }) {
+  _onWindowReady: function ({ window }) {
     if (this._isRecording) {
       let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIWebNavigation)
@@ -336,7 +336,7 @@ exports.Timeline = Class({
    * indicating why there was a GC, and may contain a `nonincrementalReason` when
    * SpiderMonkey could not incrementally collect garbage.
    */
-  _onGarbageCollection({
+  _onGarbageCollection: function ({
     collections, gcCycleNumber, reason, nonincrementalReason
   }) {
     let docShells = this.docShells;
@@ -352,7 +352,7 @@ exports.Timeline = Class({
       return {
         name: "GarbageCollection",
         causeName: reason,
-        nonincrementalReason,
+        nonincrementalReason: nonincrementalReason,
         cycle: gcCycleNumber,
         start,
         end,

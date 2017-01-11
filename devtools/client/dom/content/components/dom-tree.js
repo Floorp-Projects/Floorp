@@ -40,7 +40,7 @@ var DomTree = React.createClass({
    * Filter DOM properties. Return true if the object
    * should be visible in the tree.
    */
-  onFilter(object) {
+  onFilter: function (object) {
     if (!this.props.filter) {
       return true;
     }
@@ -51,7 +51,7 @@ var DomTree = React.createClass({
   /**
    * Render DOM panel content
    */
-  render() {
+  render: function () {
     let columns = [{
       "id": "value"
     }];
@@ -72,8 +72,8 @@ var DomTree = React.createClass({
         provider: new GripProvider(this.props.grips, this.props.dispatch),
         decorator: new DomDecorator(),
         mode: MODE.SHORT,
-        columns,
-        renderValue,
+        columns: columns,
+        renderValue: renderValue,
         onFilter: this.onFilter
       })
     );

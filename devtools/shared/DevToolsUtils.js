@@ -143,13 +143,13 @@ exports.yieldingEach = function (array, fn) {
 exports.defineLazyPrototypeGetter = function (object, key, callback) {
   Object.defineProperty(object, key, {
     configurable: true,
-    get() {
+    get: function () {
       const value = callback.call(this);
 
       Object.defineProperty(this, key, {
         configurable: true,
         writable: true,
-        value
+        value: value
       });
 
       return value;
@@ -270,7 +270,7 @@ exports.dumpv = function (msg) {
  */
 exports.defineLazyGetter = function (object, name, lambda) {
   Object.defineProperty(object, name, {
-    get() {
+    get: function () {
       delete object[name];
       object[name] = lambda.apply(object);
       return object[name];
@@ -544,8 +544,8 @@ function newChannelForURL(url, { policy, window, principal }) {
   }
   let channelOptions = {
     contentPolicyType: policy,
-    securityFlags,
-    uri
+    securityFlags: securityFlags,
+    uri: uri
   };
   let prin = principal;
   if (!prin) {

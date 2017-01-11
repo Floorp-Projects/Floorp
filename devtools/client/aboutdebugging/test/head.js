@@ -165,7 +165,7 @@ function* uninstallAddon({document, id, name}) {
   yield new Promise(done => {
     AddonManager.getAddonByID(id, addon => {
       let listener = {
-        onUninstalled(uninstalledAddon) {
+        onUninstalled: function (uninstalledAddon) {
           if (uninstalledAddon != addon) {
             return;
           }

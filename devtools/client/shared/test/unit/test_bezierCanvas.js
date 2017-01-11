@@ -93,7 +93,7 @@ function getCubicBezier() {
 
 function getCanvasMock(w = 200, h = 400) {
   return {
-    getContext() {
+    getContext: function () {
       return {
         scale: () => {},
         translate: () => {},

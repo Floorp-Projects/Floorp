@@ -33,7 +33,7 @@ define(function (require, exports, module) {
       objectLink: React.PropTypes.func,
     },
 
-    getTitle(grip) {
+    getTitle: function (grip) {
       return grip.preview.nodeName;
     },
 
@@ -70,6 +70,6 @@ define(function (require, exports, module) {
 
   exports.Attribute = {
     rep: Attribute,
-    supportsObject
+    supportsObject: supportsObject
   };
 });

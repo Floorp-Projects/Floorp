@@ -107,8 +107,8 @@ function dispatchEvent(graph, x, y, fn) {
   let screenY = (window.screenY + quad.p1.y + y);
 
   fn({
-    screenX,
-    screenY,
+    screenX: screenX,
+    screenY: screenY,
   });
 }
 

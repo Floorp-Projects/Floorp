@@ -123,7 +123,7 @@ ElementEditor.prototype = {
     }
   },
 
-  flashAttribute(attrName) {
+  flashAttribute: function (attrName) {
     if (this.animationTimers[attrName]) {
       clearTimeout(this.animationTimers[attrName]);
     }
@@ -143,7 +143,7 @@ ElementEditor.prototype = {
    * @return {Object} An object literal with the following information:
    *         {type: "attribute", name: "rel", value: "index", el: node}
    */
-  getInfoAtNode(node) {
+  getInfoAtNode: function (node) {
     if (!node) {
       return null;
     }
@@ -166,7 +166,7 @@ ElementEditor.prototype = {
   /**
    * Update the state of the editor from the node.
    */
-  update() {
+  update: function () {
     let nodeAttributes = this.node.attributes || [];
 
     // Keep the data model in sync with attributes on the node.
@@ -215,7 +215,7 @@ ElementEditor.prototype = {
   /**
    * Update the inline text editor in case of a single text child node.
    */
-  updateTextEditor() {
+  updateTextEditor: function () {
     let node = this.node.inlineTextChild;
 
     if (this.textEditor && this.textEditor.node != node) {
@@ -237,7 +237,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _startModifyingAttributes() {
+  _startModifyingAttributes: function () {
     return this.node.startModifyingAttributes();
   },
 
@@ -248,7 +248,7 @@ ElementEditor.prototype = {
    *         The name of the attribute to get the element for
    * @return {DOMNode}
    */
-  getAttributeElement(attrName) {
+  getAttributeElement: function (attrName) {
     return this.attrList.querySelector(
       ".attreditor[data-attr=" + CSS.escape(attrName) + "] .attr-value");
   },
@@ -259,7 +259,7 @@ ElementEditor.prototype = {
    * @param  {String} attrName
    *         The name of the attribute to remove
    */
-  removeAttribute(attrName) {
+  removeAttribute: function (attrName) {
     let attr = this.attrElements.get(attrName);
     if (attr) {
       this.attrElements.delete(attrName);
@@ -267,7 +267,7 @@ ElementEditor.prototype = {
     }
   },
 
-  _createAttribute(attribute, before = null) {
+  _createAttribute: function (attribute, before = null) {
     // Create the template editor, which will save some variables here.
     let data = {
       attrName: attribute.name,
@@ -302,7 +302,7 @@ ElementEditor.prototype = {
       trigger: "dblclick",
       stopOnReturn: true,
       selectAll: false,
-      initial,
+      initial: initial,
       multiline: true,
       maxWidth: () => getAutocompleteMaxWidth(inner, this.container.elt),
       contentType: InplaceEditor.CONTENT_TYPES.CSS_MIXED,
@@ -410,7 +410,7 @@ ElementEditor.prototype = {
    *         set of attributes, used to place new attributes where the
    *         user put them.
    */
-  _applyAttributes(value, attrNode, doMods, undoMods) {
+  _applyAttributes: function (value, attrNode, doMods, undoMods) {
     let attrs = parseAttributeValues(value, this.doc);
     for (let attr of attrs) {
       // Create an attribute editor next to the current attribute if needed.
@@ -424,7 +424,7 @@ ElementEditor.prototype = {
    * Saves the current state of the given attribute into an attribute
    * modification list.
    */
-  _saveAttribute(name, undoMods) {
+  _saveAttribute: function (name, undoMods) {
     let node = this.node;
     if (node.hasAttribute(name)) {
       let oldValue = node.getAttribute(name);
@@ -439,7 +439,7 @@ ElementEditor.prototype = {
    * try to focus on the attribute after the one that's being edited now.
    * If the attribute order changes, go to the beginning of the attribute list.
    */
-  refocusOnEdit(attrName, attrNode, direction) {
+  refocusOnEdit: function (attrName, attrNode, direction) {
     // Only allow one refocus on attribute change at a time, so when there's
     // more than 1 request in parallel, the last one wins.
     if (this._editedAttributeObserver) {
@@ -534,7 +534,7 @@ ElementEditor.prototype = {
   /**
    * Called when the tag name editor has is done editing.
    */
-  onTagEdit(newTagName, isCommit) {
+  onTagEdit: function (newTagName, isCommit) {
     if (!isCommit ||
         newTagName.toLowerCase() === this.node.tagName.toLowerCase() ||
         !("editTagName" in this.markup.walker)) {
@@ -550,7 +550,7 @@ ElementEditor.prototype = {
     });
   },
 
-  destroy() {
+  destroy: function () {
     for (let key in this.animationTimers) {
       clearTimeout(this.animationTimers[key]);
     }

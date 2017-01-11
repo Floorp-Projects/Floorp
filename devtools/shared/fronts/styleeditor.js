@@ -17,24 +17,24 @@ const events = require("sdk/event/core");
  * StyleSheetFront is the client-side counterpart to a StyleSheetActor.
  */
 const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
-  initialize(conn, form, ctx, detail) {
+  initialize: function (conn, form, ctx, detail) {
     Front.prototype.initialize.call(this, conn, form, ctx, detail);
 
     this._onPropertyChange = this._onPropertyChange.bind(this);
     events.on(this, "property-change", this._onPropertyChange);
   },
 
-  destroy() {
+  destroy: function () {
     events.off(this, "property-change", this._onPropertyChange);
 
     Front.prototype.destroy.call(this);
   },
 
-  _onPropertyChange(property, value) {
+  _onPropertyChange: function (property, value) {
     this._form[property] = value;
   },
 
-  form(form, detail) {
+  form: function (form, detail) {
     if (detail === "actorid") {
       this.actorID = form;
       return;
@@ -43,7 +43,7 @@ const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
     this._form = form;
   },
 
-  getText() {
+  getText: function () {
     let deferred = defer();
 
     events.once(this, "source-load", (source) => {
@@ -55,7 +55,7 @@ const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
     return deferred.promise;
   },
 
-  getOriginalSources() {
+  getOriginalSources: function () {
     return promise.resolve([]);
   },
 
@@ -88,13 +88,13 @@ exports.OldStyleSheetFront = OldStyleSheetFront;
  * The corresponding Front object for the StyleEditorActor.
  */
 const StyleEditorFront = FrontClassWithSpec(styleEditorSpec, {
-  initialize(client, tabForm) {
+  initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.styleEditorActor;
     this.manage(this);
   },
 
-  getStyleSheets() {
+  getStyleSheets: function () {
     let deferred = defer();
 
     events.once(this, "document-load", (styleSheets) => {
@@ -105,7 +105,7 @@ const StyleEditorFront = FrontClassWithSpec(styleEditorSpec, {
     return deferred.promise;
   },
 
-  addStyleSheet(text) {
+  addStyleSheet: function (text) {
     return this.newStyleSheet(text);
   }
 });

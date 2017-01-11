@@ -34,7 +34,7 @@ function promiseMiddleware({ dispatch, getState }) {
       executeSoon(() => {
         dispatch(Object.assign({}, action, {
           status: "done",
-          value
+          value: value
         }));
         deferred.resolve(value);
       });
