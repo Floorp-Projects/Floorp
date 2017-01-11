@@ -63,8 +63,9 @@ interface nsILoadInfo : nsISupports
    */
 
   /*
-   * Enforce the same origin policy where data: loads inherit
-   * the principal.
+   * Enforce the same origin policy where data: loads inherit the principal.
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
    */
   const unsigned long SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS = (1<<0);
 
@@ -74,8 +75,10 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED = (1<<1);
 
   /**
-   * Allow loads from other origins. Loads from data: will inherit
-   * the principal of the origin that triggered the load.
+   * Allow loads from other origins. Loads from data: will inherit the
+   * principal.  See the documentation for principalToInherit, which describes
+   * exactly what principal is inherited.
+   *
    * Commonly used by plain <img>, <video>, <link rel=stylesheet> etc.
    */
    const unsigned long SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS = (1<<2);
@@ -89,9 +92,11 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL = (1<<3);
 
   /**
-   * Allow loads from any origin, but require CORS for cross-origin
-   * loads. Loads from data: are allowed and the result will inherit
-   * the principal of the origin that triggered the load.
+   * Allow loads from any origin, but require CORS for cross-origin loads.
+   * Loads from data: are allowed and the result will inherit the principal.
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   *
    * Commonly used by <img crossorigin>, <video crossorigin>,
    * XHR, fetch(), etc.
    */
@@ -115,15 +120,16 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_COOKIES_OMIT = (3 << 5);
 
   /**
-   * Force inheriting of the Principal. The resulting resource will use the
-   * principal of the document which is doing the load. Setting this flag
-   * will cause GetChannelResultPrincipal to return the same principal as
-   * the loading principal that's passed in when creating the channel.
+   * Force inheriting of the principal.  See the documentation for
+   * principalToInherit, which describes exactly what principal is inherited.
+   *
+   * Setting this flag will cause GetChannelResultPrincipal to return the
+   * principal to be inherited as the channel principal.
    *
    * This will happen independently of the scheme of the URI that the
    * channel is loading.
    *
-   * So if the loading document comes from "http://a.com/", and the channel
+   * So if the principal that gets inherited is "http://a.com/", and the channel
    * is loading the URI "http://b.com/whatever", GetChannelResultPrincipal
    * will return a principal from "http://a.com/".
    *
@@ -181,11 +187,13 @@ interface nsILoadInfo : nsISupports
   const unsigned long SEC_LOAD_ERROR_PAGE = (1<<13);
 
   /**
-   * Force inheriting of the principalToInherit, overruling any owner
-   * that might be set on the channel. (Please note that channel.owner
-   * is deprecated and will be removed within Bug 1286838).
+   * Force inheriting of the principal, overruling any owner that might be set
+   * on the channel. (Please note that channel.owner is deprecated and will be
+   * removed within Bug 1286838).  See the documentation for principalToInherit,
+   * which describes exactly what principal is inherited.
+   *
    * Setting this flag will cause GetChannelResultPrincipal to return the
-   * principalToInherit set in the loadInfo.
+   * principal to be inherited as the channel principal.
    *
    * This will happen independently of the scheme of the URI that the
    * channel is loading.
@@ -361,17 +369,26 @@ interface nsILoadInfo : nsISupports
 
   /**
    * If forceInheritPrincipal is true, the data coming from the channel should
-   * use loadingPrincipal for its principal, even when the data is loaded over
-   * http:// or another protocol that would normally use a URI-based principal.
+   * inherit its principal, even when the data is loaded over http:// or another
+   * protocol that would normally use a URI-based principal.
+   *
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
+   *
    * This attribute will never be true when loadingSandboxed is true.
    */
   [infallible] readonly attribute boolean forceInheritPrincipal;
 
   /**
    * If forceInheritPrincipalOverruleOwner is true, the data coming from the
-   * channel should use principalToInherit for its principal, even when the
-   * data is loaded over http:// or another protocol that would normally use
-   * a URI-based principal.
+   * channel should inherit the principal, even when the data is loaded over
+   * http:// or another protocol that would normally use a URI-based principal
+   * and even if the channel's .owner is not null.  This last is the difference
+   * between forceInheritPrincipalOverruleOwner and forceInheritPrincipal: the
+   * latter does _not_ overrule the .owner setting.
+   *
+   * See the documentation for principalToInherit, which describes exactly what
+   * principal is inherited.
    */
   [infallible] readonly attribute boolean forceInheritPrincipalOverruleOwner;
 
@@ -501,14 +518,14 @@ interface nsILoadInfo : nsISupports
   [infallible] readonly attribute unsigned long long frameOuterWindowID;
 
   /**
-   * For all loads of none TYPE_DOUCMENT this function resets the 
-   * LoadingPrincipal, the TriggeringPrincipal and the
-   * PrincipalToInherit to a freshly created NullPrincipal which inherits
+   * For all loads of type other than TYPE_DOCUMENT this function resets the
+   * loadingPrincipal, the triggeringPrincipal and the
+   * principalToInherit to a freshly created NullPrincipal which inherits
    * the current origin attributes from the loadinfo.
    * For loads of TYPE_DOCUMENT this function resets only the
    * TriggeringPrincipal as well as the PrincipalToInherit to a freshly
    * created NullPrincipal which inherits the origin attributes from
-   * the loadInfo. (Please note that the LoadingPrincipal for TYPE_DOCUMENT
+   * the loadInfo. (Please note that the loadingPrincipal for TYPE_DOCUMENT
    * loads is always null.)
    *
    * WARNING: Please only use that function if you know exactly what

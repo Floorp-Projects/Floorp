@@ -41,7 +41,6 @@
 #include "NativeFontResourceDWrite.h"
 #include <d3d10_1.h>
 #include "HelpersD2D.h"
-#include "HelpersWinFonts.h"
 #endif
 
 #include "DrawTargetDual.h"
@@ -708,15 +707,6 @@ already_AddRefed<GlyphRenderingOptions>
 Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
 {
   return MakeAndAddRef<GlyphRenderingOptionsDWrite>(aParams);
-}
-
-BYTE sSystemTextQuality = CLEARTYPE_QUALITY;
-void
-Factory::UpdateSystemTextQuality()
-{
-#ifdef WIN32
-  gfx::UpdateSystemTextQuality();
-#endif
 }
 
 uint64_t

@@ -2,7 +2,7 @@
 
 .fieldtext {
   fill: -moz-fieldtext;
-#ifdef XP_LINUX
+#ifdef MOZ_WIDGET_GTK
   /* The fill-opacity needs to be sufficient for high-contrast settings, and
      pathological Gtk themes where -moz-fieldtext provides low contrast by
      default. */

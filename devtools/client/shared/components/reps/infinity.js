@@ -22,6 +22,10 @@ define(function (require, exports, module) {
   const InfinityRep = React.createClass({
     displayName: "Infinity",
 
+    propTypes: {
+      object: React.PropTypes.object.isRequired,
+    },
+
     render: wrapRender(function () {
       return (
         span({className: "objectBox objectBox-number"},

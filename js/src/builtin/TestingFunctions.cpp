@@ -786,7 +786,17 @@ ScheduleGC(JSContext* cx, unsigned argc, Value* vp)
         PrepareZoneForGC(zone);
     } else if (args[0].isString()) {
         /* This allows us to schedule the atoms zone for GC. */
-        PrepareZoneForGC(args[0].toString()->zone());
+        Zone* zone = args[0].toString()->zoneFromAnyThread();
+        if (!CurrentThreadCanAccessZone(zone)) {
+            RootedObject callee(cx, &args.callee());
+            ReportUsageErrorASCII(cx, callee, "Specified zone not accessible for GC");
+            return false;
+        }
+        PrepareZoneForGC(zone);
+    } else {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageErrorASCII(cx, callee, "Bad argument - expecting integer, object or string");
+        return false;
     }
 
     uint32_t zealBits;
@@ -4219,9 +4229,10 @@ JS_FN_HELP("rejectPromise", RejectPromise, 2, 0,
 gc::ZealModeHelpText),
 
     JS_FN_HELP("schedulegc", ScheduleGC, 1, 0,
-"schedulegc([num | obj])",
+"schedulegc([num | obj | string])",
 "  If num is given, schedule a GC after num allocations.\n"
 "  If obj is given, schedule a GC of obj's zone.\n"
+"  If string is given, schedule a GC of the string's zone if possible.\n"
 "  Returns the number of allocations before the next trigger."),
 
     JS_FN_HELP("selectforgc", SelectForGC, 0, 0,
