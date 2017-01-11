@@ -7,15 +7,10 @@ package org.mozilla.gecko.mdns;
 
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.GeckoRequest;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -35,6 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @See nsIDNSServiceDiscovery.idl
  */
 public abstract class MulticastDNSManager {
+    protected static final boolean DEBUG = false;
     protected static final String LOGTAG = "GeckoMDNSManager";
     private static MulticastDNSManager instance = null;
 
@@ -53,10 +49,10 @@ public abstract class MulticastDNSManager {
  * Mix-in class for MulticastDNSManagers to call EventDispatcher.
  */
 class MulticastDNSEventManager {
-    private NativeEventListener mListener = null;
+    private BundleEventListener mListener = null;
     private boolean mEventsRegistered = false;
 
-    MulticastDNSEventManager(NativeEventListener listener) {
+    MulticastDNSEventManager(final BundleEventListener listener) {
         mListener = listener;
     }
 
@@ -103,7 +99,7 @@ class MulticastDNSEventManager {
     }
 }
 
-class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventListener {
+class NsdMulticastDNSManager extends MulticastDNSManager implements BundleEventListener {
     private final NsdManager nsdManager;
     private final MulticastDNSEventManager mEventManager;
     private Map<String, DiscoveryListener> mDiscoveryListeners = null;
@@ -130,9 +126,12 @@ class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventL
         mEventManager.tearDown();
     }
 
-    @Override
-    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-        Log.v(LOGTAG, "handleMessage: " + event);
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if (DEBUG) {
+            Log.v(LOGTAG, "handleMessage: " + event);
+        }
 
         switch (event) {
             case "NsdManager:DiscoverServices": {
@@ -154,9 +153,9 @@ class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventL
             case "NsdManager:RegisterService": {
                 RegistrationListener listener = new RegistrationListener(nsdManager);
                 listener.registerService(message.getInt("port"),
-                        message.optString("serviceName", android.os.Build.MODEL),
+                        message.getString("serviceName", android.os.Build.MODEL),
                         message.getString("serviceType"),
-                        parseAttributes(message.optObjectArray("attributes", null)),
+                        parseAttributes(message.getBundleArray("attributes")),
                         callback);
                 mRegistrationListeners.put(message.getString("uniqueId"), listener);
                 break;
@@ -180,13 +179,13 @@ class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventL
         }
     }
 
-    private Map<String, String> parseAttributes(final NativeJSObject[] jsobjs) {
+    private Map<String, String> parseAttributes(final GeckoBundle[] jsobjs) {
         if (jsobjs == null || jsobjs.length == 0 || !Versions.feature21Plus) {
             return null;
         }
 
-        Map<String, String> attributes = new HashMap<String, String>(jsobjs.length);
-        for (NativeJSObject obj : jsobjs) {
+        final Map<String, String> attributes = new HashMap<>(jsobjs.length);
+        for (final GeckoBundle obj : jsobjs) {
             attributes.put(obj.getString("name"), obj.getString("value"));
         }
 
@@ -194,35 +193,35 @@ class NsdMulticastDNSManager extends MulticastDNSManager implements NativeEventL
     }
 
     @TargetApi(16)
-    public static JSONObject toJSON(final NsdServiceInfo serviceInfo) throws JSONException {
-        JSONObject obj = new JSONObject();
+    public static GeckoBundle toBundle(final NsdServiceInfo serviceInfo) {
+        final GeckoBundle obj = new GeckoBundle();
 
-        InetAddress host = serviceInfo.getHost();
+        final InetAddress host = serviceInfo.getHost();
         if (host != null) {
-            obj.put("host", host.getCanonicalHostName());
-            obj.put("address", host.getHostAddress());
+            obj.putString("host", host.getCanonicalHostName());
+            obj.putString("address", host.getHostAddress());
         }
 
         int port = serviceInfo.getPort();
         if (port != 0) {
-            obj.put("port", port);
+            obj.putInt("port", port);
         }
 
-        String serviceName = serviceInfo.getServiceName();
+        final String serviceName = serviceInfo.getServiceName();
         if (serviceName != null) {
-            obj.put("serviceName", serviceName);
+            obj.putString("serviceName", serviceName);
         }
 
-        String serviceType = serviceInfo.getServiceType();
+        final String serviceType = serviceInfo.getServiceType();
         if (serviceType != null) {
-            obj.put("serviceType", serviceType);
+            obj.putString("serviceType", serviceType);
         }
 
         return obj;
     }
 }
 
-class DummyMulticastDNSManager extends MulticastDNSManager implements NativeEventListener {
+class DummyMulticastDNSManager extends MulticastDNSManager implements BundleEventListener {
     static final int FAILURE_UNSUPPORTED = -65544;
     private final MulticastDNSEventManager mEventManager;
 
@@ -240,15 +239,19 @@ class DummyMulticastDNSManager extends MulticastDNSManager implements NativeEven
         mEventManager.tearDown();
     }
 
-    @Override
-    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-        Log.v(LOGTAG, "handleMessage: " + event);
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if (DEBUG) {
+            Log.v(LOGTAG, "handleMessage: " + event);
+        }
         callback.sendError(FAILURE_UNSUPPORTED);
     }
 }
 
 @TargetApi(16)
 class DiscoveryListener implements NsdManager.DiscoveryListener {
+    private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoMDNSManager";
     private final NsdManager nsdManager;
 
@@ -276,7 +279,9 @@ class DiscoveryListener implements NsdManager.DiscoveryListener {
 
     @Override
     public synchronized void onDiscoveryStarted(final String serviceType) {
-        Log.d(LOGTAG, "onDiscoveryStarted: " + serviceType);
+        if (DEBUG) {
+            Log.d(LOGTAG, "onDiscoveryStarted: " + serviceType);
+        }
 
         EventCallback callback;
         synchronized (this) {
@@ -304,7 +309,9 @@ class DiscoveryListener implements NsdManager.DiscoveryListener {
 
     @Override
     public synchronized void onDiscoveryStopped(final String serviceType) {
-        Log.d(LOGTAG, "onDiscoveryStopped: " + serviceType);
+        if (DEBUG) {
+            Log.d(LOGTAG, "onDiscoveryStopped: " + serviceType);
+        }
 
         EventCallback callback;
         synchronized (this) {
@@ -336,41 +343,28 @@ class DiscoveryListener implements NsdManager.DiscoveryListener {
 
     @Override
     public void onServiceFound(final NsdServiceInfo serviceInfo) {
-        Log.d(LOGTAG, "onServiceFound: " + serviceInfo.getServiceName());
-        JSONObject json;
-        try {
-            json = NsdMulticastDNSManager.toJSON(serviceInfo);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
+        if (DEBUG) {
+            Log.d(LOGTAG, "onServiceFound: " + serviceInfo.getServiceName());
         }
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("NsdManager:ServiceFound", json) {
-            @Override
-            public void onResponse(NativeJSObject nativeJSObject) {
-                // don't care return value.
-            }
-        });
+
+        EventDispatcher.getInstance().dispatch(
+                "NsdManager:ServiceFound", NsdMulticastDNSManager.toBundle(serviceInfo));
     }
 
     @Override
     public void onServiceLost(final NsdServiceInfo serviceInfo) {
-        Log.d(LOGTAG, "onServiceLost: " + serviceInfo.getServiceName());
-        JSONObject json;
-        try {
-            json = NsdMulticastDNSManager.toJSON(serviceInfo);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
+        if (DEBUG) {
+            Log.d(LOGTAG, "onServiceLost: " + serviceInfo.getServiceName());
         }
-        GeckoAppShell.sendRequestToGecko(new GeckoRequest("NsdManager:ServiceLost", json) {
-            @Override
-            public void onResponse(NativeJSObject nativeJSObject) {
-                // don't care return value.
-            }
-        });
+
+        EventDispatcher.getInstance().dispatch(
+                "NdManager:ServiceLost", NsdMulticastDNSManager.toBundle(serviceInfo));
     }
 }
 
 @TargetApi(16)
 class RegistrationListener implements NsdManager.RegistrationListener {
+    private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoMDNSManager";
     private final NsdManager nsdManager;
 
@@ -382,8 +376,11 @@ class RegistrationListener implements NsdManager.RegistrationListener {
         this.nsdManager = nsdManager;
     }
 
-    public void registerService(final int port, final String serviceName, final String serviceType, final Map<String, String> attributes, final EventCallback callback) {
-        Log.d(LOGTAG, "registerService: " + serviceName + "." + serviceType + ":" + port);
+    public void registerService(final int port, final String serviceName, final String serviceType,
+                                final Map<String, String> attributes, final EventCallback callback) {
+        if (DEBUG) {
+            Log.d(LOGTAG, "registerService: " + serviceName + "." + serviceType + ":" + port);
+        }
 
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
         serviceInfo.setPort(port);
@@ -409,7 +406,9 @@ class RegistrationListener implements NsdManager.RegistrationListener {
     }
 
     public void unregisterService(final EventCallback callback) {
-        Log.d(LOGTAG, "unregisterService");
+        if (DEBUG) {
+            Log.d(LOGTAG, "unregisterService");
+        }
         synchronized (this) {
             mStopCallback = callback;
         }
@@ -419,7 +418,9 @@ class RegistrationListener implements NsdManager.RegistrationListener {
 
     @Override
     public synchronized void onServiceRegistered(final NsdServiceInfo serviceInfo) {
-        Log.d(LOGTAG, "onServiceRegistered: " + serviceInfo.getServiceName());
+        if (DEBUG) {
+            Log.d(LOGTAG, "onServiceRegistered: " + serviceInfo.getServiceName());
+        }
 
         EventCallback callback;
         synchronized (this) {
@@ -430,11 +431,7 @@ class RegistrationListener implements NsdManager.RegistrationListener {
             return;
         }
 
-        try {
-            callback.sendSuccess(NsdMulticastDNSManager.toJSON(serviceInfo));
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+        callback.sendSuccess(NsdMulticastDNSManager.toBundle(serviceInfo));
     }
 
     @Override
@@ -451,7 +448,9 @@ class RegistrationListener implements NsdManager.RegistrationListener {
 
     @Override
     public synchronized void onServiceUnregistered(final NsdServiceInfo serviceInfo) {
-        Log.d(LOGTAG, "onServiceUnregistered: " + serviceInfo.getServiceName());
+        if (DEBUG) {
+            Log.d(LOGTAG, "onServiceUnregistered: " + serviceInfo.getServiceName());
+        }
 
         EventCallback callback;
         synchronized (this) {
@@ -462,11 +461,7 @@ class RegistrationListener implements NsdManager.RegistrationListener {
             return;
         }
 
-        try {
-            callback.sendSuccess(NsdMulticastDNSManager.toJSON(serviceInfo));
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+        callback.sendSuccess(NsdMulticastDNSManager.toBundle(serviceInfo));
     }
 
     @Override
@@ -488,6 +483,7 @@ class RegistrationListener implements NsdManager.RegistrationListener {
 
 @TargetApi(16)
 class ResolveListener implements NsdManager.ResolveListener {
+    private static final boolean DEBUG = false;
     private static final String LOGTAG = "GeckoMDNSManager";
     private final NsdManager nsdManager;
 
@@ -520,16 +516,14 @@ class ResolveListener implements NsdManager.ResolveListener {
 
     @Override
     public synchronized void onServiceResolved(final NsdServiceInfo serviceInfo) {
-        Log.d(LOGTAG, "onServiceResolved: " + serviceInfo.getServiceName());
+        if (DEBUG) {
+            Log.d(LOGTAG, "onServiceResolved: " + serviceInfo.getServiceName());
+        }
 
         if (mCallback == null) {
             return;
         }
 
-        try {
-            mCallback.sendSuccess(NsdMulticastDNSManager.toJSON(serviceInfo));
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
+        mCallback.sendSuccess(NsdMulticastDNSManager.toBundle(serviceInfo));
     }
 }
