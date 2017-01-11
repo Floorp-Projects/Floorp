@@ -87,6 +87,15 @@
 #define NS_CONSTRUCTOR_FASTCALL
 #endif
 
+/**
+ * Various API modifiers.
+ *
+ * - NS_IMETHOD/NS_IMETHOD_: use for in-class declarations and definitions.
+ * - NS_IMETHODIMP/NS_IMETHODIMP_: use for out-of-class definitions.
+ * - NS_METHOD_: usually used in conjunction with NS_CALLBACK_. Best avoided.
+ * - NS_CALLBACK_: used in some legacy situations. Best avoided.
+ */
+
 #ifdef XP_WIN
 
 #define NS_IMPORT __declspec(dllimport)
@@ -120,6 +129,9 @@
 #define NS_FROZENCALL
 
 #endif
+
+#define NS_IMETHOD          NS_IMETHOD_(nsresult)
+#define NS_IMETHODIMP       NS_IMETHODIMP_(nsresult)
 
 /**
  * Macro for creating typedefs for pointer-to-member types which are
@@ -158,19 +170,6 @@
 #else
 # define MOZ_DEPRECATED
 #endif
-
-/**
- * Generic API modifiers which return the standard XPCOM nsresult type
- *
- * - NS_IMETHOD: use for in-class declarations and definitions.
- * - NS_IMETHODIMP: use for out-of-class definitions.
- * - NS_METHOD: usually used in conjunction with NS_CALLBACK.
- * - NS_CALLBACK: used in some legacy situations. Best avoided.
- */
-#define NS_IMETHOD          NS_IMETHOD_(nsresult)
-#define NS_IMETHODIMP       NS_IMETHODIMP_(nsresult)
-#define NS_METHOD           NS_METHOD_(nsresult)
-#define NS_CALLBACK(_name)  NS_CALLBACK_(nsresult, _name)
 
 /**
  * Import/Export macros for XPCOM APIs

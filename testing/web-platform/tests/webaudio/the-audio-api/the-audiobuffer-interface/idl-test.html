@@ -66,10 +66,10 @@ interface BaseAudioContext : EventTarget {
    <pre id="audio-buffer-idl">dictionary AudioBufferOptions {
              unsigned long numberOfChannels = 1;
     required unsigned long length;
-             float         sampleRate;
+    required float         sampleRate;
 };
 
-[Constructor(BaseAudioContext context, AudioBufferOptions options)]
+[Constructor(AudioBufferOptions options)]
 interface AudioBuffer {
     readonly        attribute float         sampleRate;
     readonly        attribute unsigned long length;

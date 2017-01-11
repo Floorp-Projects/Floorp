@@ -501,8 +501,6 @@ void
 CacheStorage::ActorCreated(PBackgroundChild* aActor)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(mStatus));
-  MOZ_DIAGNOSTIC_ASSERT(!mActor);
   MOZ_DIAGNOSTIC_ASSERT(aActor);
 
   if (NS_WARN_IF(mWorkerHolder && mWorkerHolder->Notified())) {
@@ -513,22 +511,19 @@ CacheStorage::ActorCreated(PBackgroundChild* aActor)
   // WorkerHolder ownership is passed to the CacheStorageChild actor and any
   // actors it may create.  The WorkerHolder will keep the worker thread alive
   // until the actors can gracefully shutdown.
-  mActor = new CacheStorageChild(this, mWorkerHolder);
-  mWorkerHolder = nullptr;
-
-  // Pass the actor construction message to the parent.  Note, if this fails
-  // we can get DestroyInternal() and ActorFailed() called synchronously.  This
-  // will null out mActor and set an error mStatus.
+  CacheStorageChild* newActor = new CacheStorageChild(this, mWorkerHolder);
   PCacheStorageChild* constructedActor =
-    aActor->SendPCacheStorageConstructor(mActor, mNamespace, *mPrincipalInfo);
+    aActor->SendPCacheStorageConstructor(newActor, mNamespace, *mPrincipalInfo);
 
-  if (NS_WARN_IF(NS_FAILED(mStatus))) {
-    MOZ_DIAGNOSTIC_ASSERT(!mActor);
+  if (NS_WARN_IF(!constructedActor)) {
+    ActorFailed();
     return;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(mActor);
-  MOZ_DIAGNOSTIC_ASSERT(constructedActor == mActor);
+  mWorkerHolder = nullptr;
+
+  MOZ_DIAGNOSTIC_ASSERT(constructedActor == newActor);
+  mActor = newActor;
 
   MaybeRunPendingRequests();
   MOZ_DIAGNOSTIC_ASSERT(mPendingRequests.IsEmpty());
@@ -538,7 +533,7 @@ void
 CacheStorage::ActorFailed()
 {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(mStatus));
+  MOZ_DIAGNOSTIC_ASSERT(!NS_FAILED(mStatus));
 
   mStatus = NS_ERROR_UNEXPECTED;
   mWorkerHolder = nullptr;

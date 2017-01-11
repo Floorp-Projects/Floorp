@@ -4015,6 +4015,8 @@ bool TakeMinidump(nsIFile** aResult, bool aMoveToPending)
   if (!GetEnabled())
     return false;
 
+  AutoIOInterposerDisable disableIOInterposition;
+
   xpstring dump_path;
 #ifndef XP_LINUX
   dump_path = gExceptionHandler->dump_path();
@@ -4053,6 +4055,8 @@ CreateMinidumpsAndPair(ProcessHandle aTargetPid,
   if (!GetEnabled()) {
     return false;
   }
+
+  AutoIOInterposerDisable disableIOInterposition;
 
 #ifdef XP_MACOSX
   mach_port_t targetThread = GetChildThread(aTargetPid, aTargetBlamedThread);

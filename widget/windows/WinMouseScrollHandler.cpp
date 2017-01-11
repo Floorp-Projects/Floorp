@@ -992,10 +992,7 @@ MouseScrollHandler::SystemSettings::InitScrollChars()
                                      &mScrollChars, 0)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::SystemSettings::InitScrollChars(): ::SystemParametersInfo("
-       "SPI_GETWHEELSCROLLCHARS) failed, %s",
-       IsVistaOrLater() ?
-         "this is unexpected on Vista or later" :
-         "but on XP or earlier, this is not a problem"));
+       "SPI_GETWHEELSCROLLCHARS) failed, this is unexpected on Vista or later"));
     // XXX Should we use DefaultScrollChars()?
     mScrollChars = 1;
   }
@@ -1081,7 +1078,7 @@ bool
 MouseScrollHandler::SystemSettings::IsOverridingSystemScrollSpeedAllowed()
 {
   return mScrollLines == DefaultScrollLines() &&
-         (!IsVistaOrLater() || mScrollChars == DefaultScrollChars());
+         mScrollChars == DefaultScrollChars();
 }
 
 /******************************************************************************
