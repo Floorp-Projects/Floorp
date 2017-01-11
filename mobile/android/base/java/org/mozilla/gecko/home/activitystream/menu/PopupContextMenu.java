@@ -19,7 +19,6 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.activitystream.ActivityStream;
 import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.activitystream.model.Item;
 
 /* package-private */ class PopupContextMenu
         extends ActivityStreamContextMenu {
@@ -33,13 +32,19 @@ import org.mozilla.gecko.home.activitystream.model.Item;
                             View anchor,
                             final ActivityStreamTelemetry.Extras.Builder telemetryExtraBuilder,
                             final MenuMode mode,
-                            final Item item,
+                            final String title,
+                            @NonNull final String url,
+                            @Nullable final Boolean isBookmarked,
+                            @Nullable final Boolean isPinned,
                             HomePager.OnUrlOpenListener onUrlOpenListener,
                             HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener) {
         super(context,
                 telemetryExtraBuilder,
                 mode,
-                item,
+                title,
+                url,
+                isBookmarked,
+                isPinned,
                 onUrlOpenListener,
                 onUrlOpenInBackgroundListener);
 
