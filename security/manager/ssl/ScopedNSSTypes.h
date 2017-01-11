@@ -18,7 +18,6 @@
 #include "cryptohi.h"
 #include "keyhi.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -56,12 +55,6 @@ MapSECStatus(SECStatus rv)
 
   return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
 }
-
-// Alphabetical order by NSS type
-// Deprecated: use the equivalent UniquePtr templates instead.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertificate,
-                                          CERTCertificate,
-                                          CERT_DestroyCertificate)
 
 namespace internal {
 
@@ -176,13 +169,6 @@ private:
   SECItem mItem;
 };
 
-// Deprecated: use the equivalent UniquePtr templates instead.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SlotInfo,
-                                          PK11SlotInfo,
-                                          PK11_FreeSlot)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedPK11SymKey,
-                                          PK11SymKey,
-                                          PK11_FreeSymKey)
 namespace internal {
 
 inline void
@@ -276,20 +262,6 @@ inline void VFY_DestroyContext_true(VFYContext * ctx)
 }
 
 } // namespace internal
-
-// Deprecated: use the equivalent UniquePtr templates instead.
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECItem,
-                                          SECItem,
-                                          internal::SECITEM_FreeItem_true)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPrivateKey,
-                                          SECKEYPrivateKey,
-                                          SECKEY_DestroyPrivateKey)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYEncryptedPrivateKeyInfo,
-                                          SECKEYEncryptedPrivateKeyInfo,
-                                          internal::SECKEYEncryptedPrivateKeyInfo_true)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedSECKEYPublicKey,
-                                          SECKEYPublicKey,
-                                          SECKEY_DestroyPublicKey)
 
 MOZ_TYPE_SPECIFIC_UNIQUE_PTR_TEMPLATE(UniqueCERTCertificate,
                                       CERTCertificate,
