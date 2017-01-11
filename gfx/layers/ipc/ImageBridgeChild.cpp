@@ -1108,7 +1108,7 @@ ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&
     RefPtr<ImageContainer> imageContainer;
     {
       MutexAutoLock lock(mContainerMapLock);
-      imageContainer = mImageContainers.Get(n.asyncCompositableID());
+      imageContainer = mImageContainers.Get(n.compositable().Value());
     }
     if (imageContainer) {
       imageContainer->NotifyComposite(n);

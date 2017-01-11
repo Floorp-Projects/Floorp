@@ -49,15 +49,14 @@ struct EffectChain;
 struct AsyncCompositableRef
 {
   AsyncCompositableRef()
-   : mProcessId(mozilla::ipc::kInvalidProcessId),
-     mAsyncId(0)
+   : mProcessId(mozilla::ipc::kInvalidProcessId)
   {}
-  AsyncCompositableRef(base::ProcessId aProcessId, uint64_t aAsyncId)
-   : mProcessId(aProcessId), mAsyncId(aAsyncId)
+  AsyncCompositableRef(base::ProcessId aProcessId, const CompositableHandle& aHandle)
+   : mProcessId(aProcessId), mHandle(aHandle)
   {}
-  explicit operator bool() const { return !!mAsyncId; }
+  explicit operator bool() const { return !!mHandle; }
   base::ProcessId mProcessId;
-  uint64_t mAsyncId;
+  CompositableHandle mHandle;
 };
 
 /**
