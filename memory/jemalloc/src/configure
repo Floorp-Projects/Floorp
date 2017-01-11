@@ -787,6 +787,7 @@ with_lg_page
 with_lg_page_sizes
 with_lg_size_class_group
 with_version
+enable_syscall
 enable_lazy_lock
 enable_tls
 enable_zone_allocator
@@ -1442,6 +1443,7 @@ Optional Features:
   --disable-cache-oblivious
                           Disable support for cache-oblivious allocation
                           alignment
+  --disable-syscall       Disable use of syscall(2)
   --enable-lazy-lock      Enable lazy locking (only lock when multi-threaded)
   --disable-tls           Disable thread-local storage (__thread keyword)
   --disable-zone-allocator
@@ -5311,8 +5313,6 @@ maps_coalesce="1"
 case "${host}" in
   *-*-darwin* | *-*-ios*)
 	abi="macho"
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	RPATH=""
 	LD_PRELOAD_VAR="DYLD_INSERT_LIBRARIES"
 	so="dylib"
@@ -5326,34 +5326,38 @@ case "${host}" in
 	abi="elf"
 	$as_echo "#define JEMALLOC_SYSCTL_VM_OVERCOMMIT  " >>confdefs.h
 
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	force_lazy_lock="1"
 	;;
   *-*-dragonfly*)
 	abi="elf"
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	;;
   *-*-openbsd*)
 	abi="elf"
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	force_tls="0"
 	;;
   *-*-bitrig*)
 	abi="elf"
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	;;
-  *-*-linux*)
+  *-*-linux-android)
 		CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
 	abi="elf"
 	$as_echo "#define JEMALLOC_HAS_ALLOCA_H 1" >>confdefs.h
 
 	$as_echo "#define JEMALLOC_PROC_SYS_VM_OVERCOMMIT_MEMORY  " >>confdefs.h
 
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_DONTNEED  " >>confdefs.h
+	$as_echo "#define JEMALLOC_THREADED_INIT  " >>confdefs.h
+
+	$as_echo "#define JEMALLOC_C11ATOMICS 1" >>confdefs.h
+
+	force_tls="0"
+	default_munmap="0"
+	;;
+  *-*-linux* | *-*-kfreebsd*)
+		CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE"
+	abi="elf"
+	$as_echo "#define JEMALLOC_HAS_ALLOCA_H 1" >>confdefs.h
+
+	$as_echo "#define JEMALLOC_PROC_SYS_VM_OVERCOMMIT_MEMORY  " >>confdefs.h
 
 	$as_echo "#define JEMALLOC_THREADED_INIT  " >>confdefs.h
 
@@ -5388,13 +5392,9 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $abi" >&5
 $as_echo "$abi" >&6; }
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	;;
   *-*-solaris2*)
 	abi="elf"
-	$as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
-
 	RPATH='-Wl,-R,$(1)'
 		CPPFLAGS="$CPPFLAGS -D_POSIX_PTHREAD_SEMANTICS"
 	LIBS="$LIBS -lposix4 -lsocket -lnsl"
@@ -7831,6 +7831,42 @@ fi
 
 fi
 
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether pthread_atfork(3) is compilable" >&5
+$as_echo_n "checking whether pthread_atfork(3) is compilable... " >&6; }
+if ${je_cv_pthread_atfork+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <pthread.h>
+
+int
+main ()
+{
+
+  pthread_atfork((void *)0, (void *)0, (void *)0);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  je_cv_pthread_atfork=yes
+else
+  je_cv_pthread_atfork=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_pthread_atfork" >&5
+$as_echo "$je_cv_pthread_atfork" >&6; }
+
+  if test "x${je_cv_pthread_atfork}" = "xyes" ; then
+    $as_echo "#define JEMALLOC_HAVE_PTHREAD_ATFORK  " >>confdefs.h
+
+  fi
 fi
 
 CPPFLAGS="$CPPFLAGS -D_REENTRANT"
@@ -8113,7 +8149,21 @@ if test "x${je_cv_mach_absolute_time}" = "xyes" ; then
 
 fi
 
-SAVED_CFLAGS="${CFLAGS}"
+# Check whether --enable-syscall was given.
+if test "${enable_syscall+set}" = set; then :
+  enableval=$enable_syscall; if test "x$enable_syscall" = "xno" ; then
+  enable_syscall="0"
+else
+  enable_syscall="1"
+fi
+
+else
+  enable_syscall="1"
+
+fi
+
+if test "x$enable_syscall" = "x1" ; then
+      SAVED_CFLAGS="${CFLAGS}"
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether compiler supports -Werror" >&5
 $as_echo_n "checking whether compiler supports -Werror... " >&6; }
@@ -8183,10 +8233,11 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_syscall" >&5
 $as_echo "$je_cv_syscall" >&6; }
 
-CFLAGS="${SAVED_CFLAGS}"
-if test "x$je_cv_syscall" = "xyes" ; then
-  $as_echo "#define JEMALLOC_HAVE_SYSCALL  " >>confdefs.h
+  CFLAGS="${SAVED_CFLAGS}"
+  if test "x$je_cv_syscall" = "xyes" ; then
+    $as_echo "#define JEMALLOC_USE_SYSCALL  " >>confdefs.h
 
+  fi
 fi
 
 ac_fn_c_check_func "$LINENO" "secure_getenv" "ac_cv_func_secure_getenv"
@@ -8573,9 +8624,7 @@ int
 main ()
 {
 
-	{
-		madvise((void *)0, 0, 0);
-	}
+	madvise((void *)0, 0, 0);
 
   ;
   return 0;
@@ -8595,6 +8644,118 @@ $as_echo "$je_cv_madvise" >&6; }
 if test "x${je_cv_madvise}" = "xyes" ; then
   $as_echo "#define JEMALLOC_HAVE_MADVISE  " >>confdefs.h
 
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether madvise(..., MADV_FREE) is compilable" >&5
+$as_echo_n "checking whether madvise(..., MADV_FREE) is compilable... " >&6; }
+if ${je_cv_madv_free+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <sys/mman.h>
+
+int
+main ()
+{
+
+	madvise((void *)0, 0, MADV_FREE);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  je_cv_madv_free=yes
+else
+  je_cv_madv_free=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_madv_free" >&5
+$as_echo "$je_cv_madv_free" >&6; }
+
+  if test "x${je_cv_madv_free}" = "xyes" ; then
+    $as_echo "#define JEMALLOC_PURGE_MADVISE_FREE  " >>confdefs.h
+
+  fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether madvise(..., MADV_DONTNEED) is compilable" >&5
+$as_echo_n "checking whether madvise(..., MADV_DONTNEED) is compilable... " >&6; }
+if ${je_cv_madv_dontneed+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <sys/mman.h>
+
+int
+main ()
+{
+
+	madvise((void *)0, 0, MADV_DONTNEED);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  je_cv_madv_dontneed=yes
+else
+  je_cv_madv_dontneed=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_madv_dontneed" >&5
+$as_echo "$je_cv_madv_dontneed" >&6; }
+
+  if test "x${je_cv_madv_dontneed}" = "xyes" ; then
+    $as_echo "#define JEMALLOC_PURGE_MADVISE_DONTNEED  " >>confdefs.h
+
+  fi
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether madvise(..., MADV_[NO]HUGEPAGE) is compilable" >&5
+$as_echo_n "checking whether madvise(..., MADV_[NO]HUGEPAGE) is compilable... " >&6; }
+if ${je_cv_thp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <sys/mman.h>
+
+int
+main ()
+{
+
+	madvise((void *)0, 0, MADV_HUGEPAGE);
+	madvise((void *)0, 0, MADV_NOHUGEPAGE);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  je_cv_thp=yes
+else
+  je_cv_thp=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_thp" >&5
+$as_echo "$je_cv_thp" >&6; }
+
+  if test "x${je_cv_thp}" = "xyes" ; then
+    $as_echo "#define JEMALLOC_THP  " >>confdefs.h
+
+  fi
 fi
 
 
@@ -8746,14 +8907,19 @@ else
 /* end confdefs.h.  */
 
 #include <os/lock.h>
+#include <AvailabilityMacros.h>
 
 int
 main ()
 {
 
+	#if MAC_OS_X_VERSION_MIN_REQUIRED < 101200
+	#error "os_unfair_lock is not supported"
+	#else
 	os_unfair_lock lock = OS_UNFAIR_LOCK_INIT;
 	os_unfair_lock_lock(&lock);
 	os_unfair_lock_unlock(&lock);
+	#endif
 
   ;
   return 0;
