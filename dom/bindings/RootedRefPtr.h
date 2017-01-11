@@ -39,19 +39,12 @@ struct GCPolicy<RefPtr<T>>
 } // namespace JS
 
 namespace js {
-template<typename T>
-struct RootedBase<RefPtr<T>>
+template<typename T, typename Wrapper>
+struct WrappedPtrOperations<RefPtr<T>, Wrapper>
 {
-  operator RefPtr<T>& () const
-  {
-    auto& self = *static_cast<const JS::Rooted<RefPtr<T>>*>(this);
-    return self.get();
-  }
-
   operator T*() const
   {
-    auto& self = *static_cast<const JS::Rooted<RefPtr<T>>*>(this);
-    return self.get();
+    return static_cast<const Wrapper*>(this)->get();
   }
 };
 } // namespace js

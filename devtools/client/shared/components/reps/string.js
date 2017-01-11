@@ -28,6 +28,9 @@ define(function (require, exports, module) {
     propTypes: {
       useQuotes: React.PropTypes.bool,
       style: React.PropTypes.object,
+      object: React.PropTypes.string.isRequired,
+      member: React.PropTypes.any,
+      cropLimit: React.PropTypes.number,
     },
 
     getDefaultProps: function () {

@@ -538,13 +538,6 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         " with type " << m.type();
 #endif
 
-#ifdef MOZ_TASK_TRACER
-      AutoSaveCurTraceInfo saveCurTraceInfo;
-      SetCurTraceInfo(m.header()->source_event_id,
-                      m.header()->parent_task_id,
-                      m.header()->source_event_type);
-#endif
-
       if (m.routing_id() == MSG_ROUTING_NONE &&
           m.type() == HELLO_MESSAGE_TYPE) {
         // The Hello message contains only the process id.

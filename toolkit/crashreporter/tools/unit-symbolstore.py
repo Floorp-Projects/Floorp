@@ -211,6 +211,7 @@ class TestCopyDebug(HelperMixin, unittest.TestCase):
         d.Finish(stop_pool=False)
         self.assertEqual(1, len(copied))
 
+    @patch.dict('buildconfig.substs', {'MAKECAB': 'makecab'})
     def test_copy_debug_copies_binaries(self):
         """
         Test that CopyDebug copies binaries as well on Windows.

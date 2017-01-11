@@ -61,3 +61,7 @@ if CONFIG['ENABLE_TESTS']:
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Security: CAPS")
+

@@ -539,7 +539,7 @@ MacroAssembler::rotateLeft64(Imm32 count, Register64 src, Register64 dest, Regis
     MOZ_ASSERT(src == dest, "defineReuseInput");
 
     int32_t amount = count.value & 0x3f;
-    if (amount % 0x1f != 0) {
+    if ((amount & 0x1f) != 0) {
         movl(dest.high, temp);
         shldl(Imm32(amount & 0x1f), dest.low, dest.high);
         shldl(Imm32(amount & 0x1f), temp, dest.low);

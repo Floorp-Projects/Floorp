@@ -266,24 +266,6 @@ class SavedStacks {
         uint32_t column;
     };
 
-    template <typename Outer>
-    struct LocationValueOperations {
-        JSAtom* source() const { return loc().source; }
-        size_t line() const { return loc().line; }
-        uint32_t column() const { return loc().column; }
-      private:
-        const LocationValue& loc() const { return static_cast<const Outer*>(this)->get(); }
-    };
-
-    template <typename Outer>
-    struct MutableLocationValueOperations : public LocationValueOperations<Outer> {
-        void setSource(JSAtom* v) { loc().source = v; }
-        void setLine(size_t v) { loc().line = v; }
-        void setColumn(uint32_t v) { loc().column = v; }
-      private:
-        LocationValue& loc() { return static_cast<Outer*>(this)->get(); }
-    };
-
   private:
     struct PCLocationHasher : public DefaultHasher<PCKey> {
         using ScriptPtrHasher = DefaultHasher<JSScript*>;
@@ -314,15 +296,32 @@ class SavedStacks {
                                   MutableHandle<LocationValue> locationp);
 };
 
-template <>
-class RootedBase<SavedStacks::LocationValue>
-  : public SavedStacks::MutableLocationValueOperations<JS::Rooted<SavedStacks::LocationValue>>
-{};
+template <typename Wrapper>
+struct WrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
+{
+    JSAtom* source() const { return loc().source; }
+    size_t line() const { return loc().line; }
+    uint32_t column() const { return loc().column; }
 
-template <>
-class MutableHandleBase<SavedStacks::LocationValue>
-  : public SavedStacks::MutableLocationValueOperations<JS::MutableHandle<SavedStacks::LocationValue>>
-{};
+  private:
+    const SavedStacks::LocationValue& loc() const {
+        return static_cast<const Wrapper*>(this)->get();
+    }
+};
+
+template <typename Wrapper>
+struct MutableWrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
+    : public WrappedPtrOperations<SavedStacks::LocationValue, Wrapper>
+{
+    void setSource(JSAtom* v) { loc().source = v; }
+    void setLine(size_t v) { loc().line = v; }
+    void setColumn(uint32_t v) { loc().column = v; }
+
+  private:
+    SavedStacks::LocationValue& loc() {
+        return static_cast<Wrapper*>(this)->get();
+    }
+};
 
 UTF8CharsZ
 BuildUTF8StackString(JSContext* cx, HandleObject stack);

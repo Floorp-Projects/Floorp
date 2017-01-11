@@ -53,14 +53,22 @@ class HashableValue
     }
 };
 
-template <>
-class RootedBase<HashableValue> {
+template <typename Wrapper>
+class WrappedPtrOperations<HashableValue, Wrapper>
+{
+  public:
+    Value value() const {
+        return static_cast<const Wrapper*>(this)->get().get();
+    }
+};
+
+template <typename Wrapper>
+class MutableWrappedPtrOperations<HashableValue, Wrapper>
+  : public WrappedPtrOperations<HashableValue, Wrapper>
+{
   public:
     MOZ_MUST_USE bool setValue(JSContext* cx, HandleValue v) {
-        return static_cast<JS::Rooted<HashableValue>*>(this)->get().setValue(cx, v);
-    }
-    Value value() const {
-        return static_cast<const JS::Rooted<HashableValue>*>(this)->get().get();
+        return static_cast<Wrapper*>(this)->get().setValue(cx, v);
     }
 };
 
