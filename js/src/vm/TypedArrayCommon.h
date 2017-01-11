@@ -269,27 +269,23 @@ class ElementSpecific
      */
     static bool
     setFromTypedArray(JSContext* cx,
-                      Handle<TypedArrayObject*> target, HandleObject source,
+                      Handle<TypedArrayObject*> target, Handle<TypedArrayObject*> source,
                       uint32_t offset)
     {
         MOZ_ASSERT(TypeIDOfType<T>::id == target->type(),
                    "calling wrong setFromTypedArray specialization");
 
         MOZ_ASSERT(offset <= target->length());
-        MOZ_ASSERT(source->as<TypedArrayObject>().length() <= target->length() - offset);
+        MOZ_ASSERT(source->length() <= target->length() - offset);
 
-        if (source->is<TypedArrayObject>()) {
-            Rooted<TypedArrayObject*> src(cx, source.as<TypedArrayObject>());
-            if (TypedArrayObject::sameBuffer(target, src))
-                return setFromOverlappingTypedArray(cx, target, src, offset);
-        }
+        if (TypedArrayObject::sameBuffer(target, source))
+            return setFromOverlappingTypedArray(cx, target, source, offset);
 
         SharedMem<T*> dest = target->viewDataEither().template cast<T*>() + offset;
-        uint32_t count = source->as<TypedArrayObject>().length();
+        uint32_t count = source->length();
 
-        if (source->as<TypedArrayObject>().type() == target->type()) {
-            Ops::podCopy(dest, source->as<TypedArrayObject>().viewDataEither().template cast<T*>(),
-                         count);
+        if (source->type() == target->type()) {
+            Ops::podCopy(dest, source->viewDataEither().template cast<T*>(), count);
             return true;
         }
 
@@ -300,8 +296,8 @@ class ElementSpecific
 #  define JS_VOLATILE_ARM
 #endif
 
-        SharedMem<void*> data = Ops::extract(source.as<TypedArrayObject>());
-        switch (source->as<TypedArrayObject>().type()) {
+        SharedMem<void*> data = Ops::extract(source);
+        switch (source->type()) {
           case Scalar::Int8: {
             SharedMem<JS_VOLATILE_ARM int8_t*> src = data.cast<JS_VOLATILE_ARM int8_t*>();
             for (uint32_t i = 0; i < count; ++i)
@@ -493,8 +489,7 @@ class ElementSpecific
         uint32_t len = source->length();
 
         if (source->type() == target->type()) {
-            SharedMem<T*> src =
-                source->as<TypedArrayObject>().viewDataEither().template cast<T*>();
+            SharedMem<T*> src = source->viewDataEither().template cast<T*>();
             Ops::podMove(dest, src, len);
             return true;
         }
@@ -505,7 +500,7 @@ class ElementSpecific
         if (!data)
             return false;
         Ops::memcpy(SharedMem<void*>::unshared(data),
-                    source->as<TypedArrayObject>().viewDataEither(),
+                    source->viewDataEither(),
                     sourceByteLen);
 
         switch (source->type()) {
@@ -667,7 +662,7 @@ class TypedArrayMethods
                 return false;
             }
 
-            if (!setFromTypedArray(cx, target, arg0, offset))
+            if (!setFromTypedArray(cx, target, arg0.as<TypedArrayObject>(), offset))
                 return false;
         } else {
             uint32_t len;
@@ -688,12 +683,10 @@ class TypedArrayMethods
     }
 
      static bool
-     setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target, HandleObject source,
-                       uint32_t offset = 0)
+     setFromTypedArray(JSContext* cx, Handle<TypedArrayObject*> target,
+                       Handle<TypedArrayObject*> source, uint32_t offset = 0)
      {
-         MOZ_ASSERT(source->is<TypedArrayObject>(), "use setFromNonTypedArray");
-
-         bool isShared = target->isSharedMemory() || source->as<TypedArrayObject>().isSharedMemory();
+         bool isShared = target->isSharedMemory() || source->isSharedMemory();
 
          switch (target->type()) {
            case Scalar::Int8:
