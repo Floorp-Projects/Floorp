@@ -65,7 +65,7 @@ HasVaryStar(mozilla::dom::InternalHeaders* aHeaders)
 void
 ToHeadersEntryList(nsTArray<HeadersEntry>& aOut, InternalHeaders* aHeaders)
 {
-  MOZ_ASSERT(aHeaders);
+  MOZ_DIAGNOSTIC_ASSERT(aHeaders);
 
   AutoTArray<InternalHeaders::Entry, 16> entryList;
   aHeaders->GetEntries(entryList);
@@ -121,7 +121,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
                           nsTArray<UniquePtr<AutoIPCStream>>& aStreamCleanupList,
                           ErrorResult& aRv)
 {
-  MOZ_ASSERT(aIn);
+  MOZ_DIAGNOSTIC_ASSERT(aIn);
   aIn->GetMethod(aOut.method());
   nsCString url(aIn->GetURLWithoutFragment());
   bool schemeValid;
@@ -142,7 +142,7 @@ TypeUtils::ToCacheRequest(CacheRequest& aOut, InternalRequest* aIn,
   aIn->GetReferrer(aOut.referrer());
   aOut.referrerPolicy() = aIn->ReferrerPolicy_();
   RefPtr<InternalHeaders> headers = aIn->Headers();
-  MOZ_ASSERT(headers);
+  MOZ_DIAGNOSTIC_ASSERT(headers);
   ToHeadersEntryList(aOut.headers(), headers);
   aOut.headersGuard() = headers->Guard();
   aOut.mode() = aIn->Mode();
@@ -179,7 +179,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   aIn.GetURLList(urlList);
 
   for (uint32_t i = 0; i < aOut.urlList().Length(); i++) {
-    MOZ_ASSERT(!aOut.urlList()[i].IsEmpty());
+    MOZ_DIAGNOSTIC_ASSERT(!aOut.urlList()[i].IsEmpty());
     // Pass all Response URL schemes through... The spec only requires we take
     // action on invalid schemes for Request objects.
     ProcessURL(aOut.urlList()[i], nullptr, nullptr, nullptr, aRv);
@@ -188,7 +188,7 @@ TypeUtils::ToCacheResponseWithoutBody(CacheResponse& aOut,
   aOut.status() = aIn.GetUnfilteredStatus();
   aOut.statusText() = aIn.GetUnfilteredStatusText();
   RefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
-  MOZ_ASSERT(headers);
+  MOZ_DIAGNOSTIC_ASSERT(headers);
   if (HasVaryStar(headers)) {
     aRv.ThrowTypeError<MSG_RESPONSE_HAS_VARY_STAR>();
     return;
@@ -267,9 +267,9 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   // Be careful to fill the headers before setting the guard in order to
   // correctly re-create the original headers.
   ir->Headers()->Fill(*internalHeaders, result);
-  MOZ_ASSERT(!result.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!result.Failed());
   ir->Headers()->SetGuard(aIn.headersGuard(), result);
-  MOZ_ASSERT(!result.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!result.Failed());
 
   ir->InitChannelInfo(aIn.channelInfo());
   if (aIn.principalInfo().type() == mozilla::ipc::OptionalPrincipalInfo::TPrincipalInfo) {
@@ -299,7 +299,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
     default:
       MOZ_CRASH("Unexpected ResponseType!");
   }
-  MOZ_ASSERT(ir);
+  MOZ_DIAGNOSTIC_ASSERT(ir);
 
   RefPtr<Response> ref = new Response(GetGlobalObject(), ir);
   return ref.forget();
@@ -328,10 +328,10 @@ TypeUtils::ToInternalRequest(const CacheRequest& aIn)
   // Be careful to fill the headers before setting the guard in order to
   // correctly re-create the original headers.
   internalRequest->Headers()->Fill(*internalHeaders, result);
-  MOZ_ASSERT(!result.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!result.Failed());
 
   internalRequest->Headers()->SetGuard(aIn.headersGuard(), result);
-  MOZ_ASSERT(!result.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!result.Failed());
 
   nsCOMPtr<nsIInputStream> stream = ReadStream::Create(aIn.body());
 
@@ -410,7 +410,7 @@ TypeUtils::ProcessURL(nsACString& aUrl, bool* aSchemeValidOut,
     return;
   }
 
-  MOZ_ASSERT(aUrlQueryOut);
+  MOZ_DIAGNOSTIC_ASSERT(aUrlQueryOut);
 
   if (queryLen < 0) {
     *aUrlWithoutQueryOut = aUrl;
@@ -429,7 +429,7 @@ void
 TypeUtils::CheckAndSetBodyUsed(Request* aRequest, BodyAction aBodyAction,
                                ErrorResult& aRv)
 {
-  MOZ_ASSERT(aRequest);
+  MOZ_DIAGNOSTIC_ASSERT(aRequest);
 
   if (aBodyAction == IgnoreBody) {
     return;
@@ -461,7 +461,7 @@ TypeUtils::ToInternalRequest(const nsAString& aIn, ErrorResult& aRv)
   }
   JSContext* cx = jsapi.cx();
   GlobalObject global(cx, GetGlobalObject()->GetGlobalJSObject());
-  MOZ_ASSERT(!global.Failed());
+  MOZ_DIAGNOSTIC_ASSERT(!global.Failed());
 
   RefPtr<Request> request = Request::Constructor(global, requestOrString,
                                                    RequestInit(), aRv);

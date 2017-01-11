@@ -70,9 +70,9 @@ CacheOpChild::CacheOpChild(CacheWorkerHolder* aWorkerHolder,
   , mParent(aParent)
   , mPromise(aPromise)
 {
-  MOZ_ASSERT(mGlobal);
-  MOZ_ASSERT(mParent);
-  MOZ_ASSERT(mPromise);
+  MOZ_DIAGNOSTIC_ASSERT(mGlobal);
+  MOZ_DIAGNOSTIC_ASSERT(mParent);
+  MOZ_DIAGNOSTIC_ASSERT(mPromise);
 
   MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
   SetWorkerHolder(aWorkerHolder);
@@ -81,7 +81,7 @@ CacheOpChild::CacheOpChild(CacheWorkerHolder* aWorkerHolder,
 CacheOpChild::~CacheOpChild()
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
-  MOZ_ASSERT(!mPromise);
+  MOZ_DIAGNOSTIC_ASSERT(!mPromise);
 }
 
 void
@@ -106,7 +106,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
 
   if (NS_WARN_IF(aRv.Failed())) {
-    MOZ_ASSERT(aResult.type() == CacheOpResult::Tvoid_t);
+    MOZ_DIAGNOSTIC_ASSERT(aResult.type() == CacheOpResult::Tvoid_t);
     // TODO: Remove this const_cast (bug 1152078).
     // It is safe for now since this ErrorResult is handed off to us by IPDL
     // and is thrown into the trash afterwards.
