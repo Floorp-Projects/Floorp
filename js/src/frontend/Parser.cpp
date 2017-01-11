@@ -2596,14 +2596,9 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
     return fun;
 }
 
-/*
- * WARNING: Do not call this function directly.
- * Call either matchOrInsertSemicolonAfterExpression or
- * matchOrInsertSemicolonAfterNonExpression instead, depending on context.
- */
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::matchOrInsertSemicolonHelper()
+Parser<ParseHandler>::matchOrInsertSemicolon()
 {
     TokenKind tt = TOK_EOF;
     if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand))
@@ -2637,20 +2632,6 @@ Parser<ParseHandler>::matchOrInsertSemicolonHelper()
 
     bool matched;
     return tokenStream.matchToken(&matched, TOK_SEMI, TokenStream::Operand);
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::matchOrInsertSemicolonAfterExpression()
-{
-    return matchOrInsertSemicolonHelper();
-}
-
-template <typename ParseHandler>
-bool
-Parser<ParseHandler>::matchOrInsertSemicolonAfterNonExpression()
-{
-    return matchOrInsertSemicolonHelper();
 }
 
 template <typename ParseHandler>
@@ -3013,7 +2994,7 @@ Parser<FullParseHandler>::skipLazyInnerFunction(ParseNode* pn, FunctionSyntaxKin
     // If we remove expression closure, we can remove isExprBody flag from
     // LazyScript and JSScript.
     if (kind == Statement && funbox->isExprBody()) {
-        if (!matchOrInsertSemicolonAfterExpression())
+        if (!matchOrInsertSemicolon())
             return false;
     }
 #endif
@@ -3492,7 +3473,7 @@ Parser<ParseHandler>::functionFormalParametersAndBody(InHandling inHandling,
         if (tokenStream.hadError())
             return false;
         funbox->bufEnd = pos().end;
-        if (kind == Statement && !matchOrInsertSemicolonAfterExpression())
+        if (kind == Statement && !matchOrInsertSemicolon())
             return false;
     }
 
@@ -4564,7 +4545,7 @@ Parser<ParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool isCon
      * See 8.1.1.1.6 and the note in 13.2.1.
      */
     Node decl = declarationList(yieldHandling, isConst ? PNK_CONST : PNK_LET);
-    if (!decl || !matchOrInsertSemicolonAfterExpression())
+    if (!decl || !matchOrInsertSemicolon())
         return null();
 
     return decl;
@@ -4805,7 +4786,7 @@ Parser<FullParseHandler>::importDeclaration()
     if (!moduleSpec)
         return null();
 
-    if (!matchOrInsertSemicolonAfterNonExpression())
+    if (!matchOrInsertSemicolon())
         return null();
 
     ParseNode* node =
@@ -4948,8 +4929,8 @@ Parser<FullParseHandler>::exportDeclaration()
         //   export { x }   // ExportDeclaration, terminated by ASI
         //   fro\u006D      // ExpressionStatement, the name "from"
         //
-        // In that case let matchOrInsertSemicolonAfterNonExpression sort out
-        // ASI or any necessary error.
+        // In that case let matchOrInsertSemicolon sort out ASI or any
+        // necessary error.
         TokenKind tt;
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
@@ -4964,7 +4945,7 @@ Parser<FullParseHandler>::exportDeclaration()
             if (!moduleSpec)
                 return null();
 
-            if (!matchOrInsertSemicolonAfterNonExpression())
+            if (!matchOrInsertSemicolon())
                 return null();
 
             ParseNode* node = handler.newExportFromDeclaration(begin, kid, moduleSpec);
@@ -4976,7 +4957,7 @@ Parser<FullParseHandler>::exportDeclaration()
 
         tokenStream.ungetToken();
 
-        if (!matchOrInsertSemicolonAfterNonExpression())
+        if (!matchOrInsertSemicolon())
             return null();
         break;
       }
@@ -5010,7 +4991,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!moduleSpec)
             return null();
 
-        if (!matchOrInsertSemicolonAfterNonExpression())
+        if (!matchOrInsertSemicolon())
             return null();
 
         ParseNode* node = handler.newExportFromDeclaration(begin, kid, moduleSpec);
@@ -5046,7 +5027,7 @@ Parser<FullParseHandler>::exportDeclaration()
         kid = declarationList(YieldIsName, PNK_VAR);
         if (!kid)
             return null();
-        if (!matchOrInsertSemicolonAfterExpression())
+        if (!matchOrInsertSemicolon())
             return null();
         if (!checkExportedNamesForDeclaration(kid))
             return null();
@@ -5099,7 +5080,7 @@ Parser<FullParseHandler>::exportDeclaration()
             kid = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
             if (!kid)
                 return null();
-            if (!matchOrInsertSemicolonAfterExpression())
+            if (!matchOrInsertSemicolon())
                 return null();
             break;
           }
@@ -5164,7 +5145,7 @@ Parser<ParseHandler>::expressionStatement(YieldHandling yieldHandling, InvokedPr
                        /* possibleError = */ nullptr, invoked);
     if (!pnexpr)
         return null();
-    if (!matchOrInsertSemicolonAfterExpression())
+    if (!matchOrInsertSemicolon())
         return null();
     return handler.newExprStatement(pnexpr, pos().end);
 }
@@ -5854,7 +5835,7 @@ Parser<ParseHandler>::continueStatement(YieldHandling yieldHandling)
         return null();
     }
 
-    if (!matchOrInsertSemicolonAfterNonExpression())
+    if (!matchOrInsertSemicolon())
         return null();
 
     return handler.newContinueStatement(label, TokenPos(begin, pos().end));
@@ -5894,7 +5875,7 @@ Parser<ParseHandler>::breakStatement(YieldHandling yieldHandling)
         }
     }
 
-    if (!matchOrInsertSemicolonAfterNonExpression())
+    if (!matchOrInsertSemicolon())
         return null();
 
     return handler.newBreakStatement(label, TokenPos(begin, pos().end));
@@ -5934,10 +5915,10 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
     }
 
     if (exprNode) {
-        if (!matchOrInsertSemicolonAfterExpression())
+        if (!matchOrInsertSemicolon())
             return null();
     } else {
-        if (!matchOrInsertSemicolonAfterNonExpression())
+        if (!matchOrInsertSemicolon())
             return null();
     }
 
@@ -6235,7 +6216,7 @@ Parser<ParseHandler>::throwStatement(YieldHandling yieldHandling)
     if (!throwExpr)
         return null();
 
-    if (!matchOrInsertSemicolonAfterExpression())
+    if (!matchOrInsertSemicolon())
         return null();
 
     return handler.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
@@ -6462,7 +6443,7 @@ Parser<ParseHandler>::debuggerStatement()
 {
     TokenPos p;
     p.begin = pos().begin;
-    if (!matchOrInsertSemicolonAfterNonExpression())
+    if (!matchOrInsertSemicolon())
         return null();
     p.end = pos().end;
 
@@ -6769,7 +6750,7 @@ Parser<ParseHandler>::variableStatement(YieldHandling yieldHandling)
     Node vars = declarationList(yieldHandling, PNK_VAR);
     if (!vars)
         return null();
-    if (!matchOrInsertSemicolonAfterExpression())
+    if (!matchOrInsertSemicolon())
         return null();
     return vars;
 }

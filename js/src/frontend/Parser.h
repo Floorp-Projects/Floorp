@@ -1371,9 +1371,7 @@ class Parser final : public ParserBase, private JS::AutoGCRooter
     bool finishFunction(bool isStandaloneFunction = false);
     bool leaveInnerFunction(ParseContext* outerpc);
 
-    bool matchOrInsertSemicolonHelper();
-    bool matchOrInsertSemicolonAfterExpression();
-    bool matchOrInsertSemicolonAfterNonExpression();
+    bool matchOrInsertSemicolon();
 
   public:
     enum FunctionCallBehavior {
