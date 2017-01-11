@@ -4078,6 +4078,13 @@ PluginInstanceChild::InvalidateRectDelayed(void)
     }
 
     mCurrentInvalidateTask = nullptr;
+
+    // When this method is run asynchronously, we can end up switching to
+    // direct drawing before while we wait to run.  In that case, bail.
+    if (IsUsingDirectDrawing()) {
+        return;
+    }
+
     if (mAccumulatedInvalidRect.IsEmpty()) {
         return;
     }
