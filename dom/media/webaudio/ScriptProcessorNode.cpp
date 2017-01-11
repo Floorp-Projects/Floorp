@@ -428,7 +428,7 @@ private:
         if (mInputBuffer) {
           ErrorResult rv;
           inputBuffer =
-            AudioBuffer::Create(context, inputChannelCount,
+            AudioBuffer::Create(context->GetOwner(), inputChannelCount,
                                 aNode->BufferSize(), context->SampleRate(),
                                 mInputBuffer.forget(), rv);
           if (rv.Failed()) {

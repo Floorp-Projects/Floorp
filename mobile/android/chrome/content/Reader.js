@@ -116,7 +116,7 @@ var Reader = {
       }
 
       case "Reader:FaviconRequest": {
-        Messaging.sendRequestForResult({
+        GlobalEventDispatcher.sendRequestForResult({
           type: "Reader:FaviconRequest",
           url: message.data.url
         }).then(data => {

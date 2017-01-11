@@ -45,7 +45,7 @@ AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
                                          ErrorResult& aRv)
 {
   RefPtr<AudioBuffer> buffer =
-    AudioBuffer::Create(mNode->Context(), aNumberOfChannels,
+    AudioBuffer::Create(mNode->Context()->GetOwner(), aNumberOfChannels,
                         mNode->BufferSize(),
                         mNode->Context()->SampleRate(), aRv);
   MOZ_ASSERT(buffer || aRv.ErrorCodeIs(NS_ERROR_OUT_OF_MEMORY));

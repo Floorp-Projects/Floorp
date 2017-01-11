@@ -9,6 +9,7 @@ const Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/Messaging.jsm");
 
 Cu.importGlobalProperties(['File']);
 
@@ -32,7 +33,6 @@ FilePicker.prototype = {
     this._domWin = aParent;
     this._mode = aMode;
     this._title = aTitle;
-    Services.obs.addObserver(this, "FilePicker:Result", false);
 
     let idService = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator); 
     this.guid = idService.generateUUID().toString();
@@ -240,28 +240,16 @@ FilePicker.prototype = {
       msg.mimeType = this._mimeTypeFilter;
     }
 
-    this.sendMessageToJava(msg);
-  },
+    EventDispatcher.instance.sendRequestForResult(msg).then(file => {
+      this._filePath = file || null;
+      this._promptActive = false;
 
-  sendMessageToJava: function(aMsg) {
-    Services.androidBridge.handleGeckoMessage(aMsg);
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    let data = JSON.parse(aData);
-    if (data.guid != this.guid)
-      return;
-
-    this._filePath = null;
-    if (data.file)
-      this._filePath = data.file;
-
-    this._promptActive = false;
-
-    if (this._callback) {
-      this._callback.done(this._filePath ? Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
-    }
-    delete this._callback;
+      if (this._callback) {
+        this._callback.done(this._filePath ?
+            Ci.nsIFilePicker.returnOK : Ci.nsIFilePicker.returnCancel);
+      }
+      delete this._callback;
+    });
   },
 
   getEnumerator: function(files, mapFunction) {

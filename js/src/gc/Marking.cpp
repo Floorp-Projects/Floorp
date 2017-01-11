@@ -175,6 +175,17 @@ template <> bool ThingIsPermanentAtomOrWellKnownSymbol<JS::Symbol>(JS::Symbol* s
     return sym->isWellKnownSymbol();
 }
 
+template <typename T>
+static inline bool
+IsOwnedByOtherRuntime(JSTracer* trc, T thing)
+{
+    bool other = thing->runtimeFromAnyThread() != trc->runtime();
+    MOZ_ASSERT_IF(other,
+                  ThingIsPermanentAtomOrWellKnownSymbol(thing) ||
+                  thing->zoneFromAnyThread()->isSelfHostingZone());
+    return other;
+}
+
 template<typename T>
 void
 js::CheckTracedThing(JSTracer* trc, T* thing)
@@ -196,10 +207,10 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
     MOZ_ASSERT_IF(!IsMovingTracer(trc) && !trc->isTenuringTracer(), !IsForwarded(thing));
 
     /*
-     * Permanent atoms are not associated with this runtime, but will be
-     * ignored during marking.
+     * Permanent atoms and things in the self-hosting zone are not associated
+     * with this runtime, but will be ignored during marking.
      */
-    if (ThingIsPermanentAtomOrWellKnownSymbol(thing))
+    if (IsOwnedByOtherRuntime(trc, thing))
         return;
 
     Zone* zone = thing->zoneFromAnyThread();
@@ -740,16 +751,24 @@ GCMarker::markImplicitEdges(T* thing)
 
 template <typename T>
 static inline bool
-MustSkipMarking(T thing)
+MustSkipMarking(GCMarker* gcmarker, T thing)
 {
+    // Don't trace things that are owned by another runtime.
+    if (IsOwnedByOtherRuntime(gcmarker, thing))
+        return true;
+
     // Don't mark things outside a zone if we are in a per-zone GC.
     return !thing->zone()->isGCMarking();
 }
 
 template <>
 bool
-MustSkipMarking<JSObject*>(JSObject* obj)
+MustSkipMarking<JSObject*>(GCMarker* gcmarker, JSObject* obj)
 {
+    // Don't trace things that are owned by another runtime.
+    if (IsOwnedByOtherRuntime(gcmarker, obj))
+        return true;
+
     // We may mark a Nursery thing outside the context of the
     // MinorCollectionTracer because of a pre-barrier. The pre-barrier is not
     // needed in this case because we perform a minor collection before each
@@ -763,34 +782,12 @@ MustSkipMarking<JSObject*>(JSObject* obj)
     return !TenuredCell::fromPointer(obj)->zone()->isGCMarking();
 }
 
-template <>
-bool
-MustSkipMarking<JSString*>(JSString* str)
-{
-    // Don't mark permanent atoms, as they may be associated with another
-    // runtime. Note that traverse() also checks this, but we need to not
-    // run the isGCMarking test from off-main-thread, so have to check it here
-    // too.
-    return str->isPermanentAtom() ||
-           !str->zone()->isGCMarking();
-}
-
-template <>
-bool
-MustSkipMarking<JS::Symbol*>(JS::Symbol* sym)
-{
-    // As for JSString, don't touch a globally owned well-known symbol from
-    // off-main-thread.
-    return sym->isWellKnownSymbol() ||
-           !sym->zone()->isGCMarking();
-}
-
 template <typename T>
 void
 DoMarking(GCMarker* gcmarker, T* thing)
 {
     // Do per-type marking precondition checks.
-    if (MustSkipMarking(thing))
+    if (MustSkipMarking(gcmarker, thing))
         return;
 
     CheckTracedThing(gcmarker, thing);
@@ -817,7 +814,7 @@ void
 NoteWeakEdge(GCMarker* gcmarker, T** thingp)
 {
     // Do per-type marking precondition checks.
-    if (MustSkipMarking(*thingp))
+    if (MustSkipMarking(gcmarker, *thingp))
         return;
 
     CheckTracedThing(gcmarker, *thingp);

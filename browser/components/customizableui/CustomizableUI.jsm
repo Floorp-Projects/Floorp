@@ -262,24 +262,14 @@ var CustomizableUIInternal = {
       defaultCollapsed: false,
     }, true);
 
-    if (AppConstants.platform != "macosx") {
+    if (AppConstants.MENUBAR_CAN_AUTOHIDE) {
       this.registerArea(CustomizableUI.AREA_MENUBAR, {
         legacy: true,
         type: CustomizableUI.TYPE_TOOLBAR,
         defaultPlacements: [
           "menubar-items",
         ],
-        get defaultCollapsed() {
-          if (AppConstants.MENUBAR_CAN_AUTOHIDE) {
-            if (AppConstants.platform == "linux") {
-              return true;
-            }
-            // This is duplicated logic from /browser/base/jar.mn
-            // for win6BrowserOverlay.xul.
-            return AppConstants.isPlatformAndVersionAtLeast("win", 6);
-          }
-          return false;
-        }
+        defaultCollapsed: true,
       }, true);
     }
 

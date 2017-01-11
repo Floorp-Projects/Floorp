@@ -24,7 +24,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
 XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils", "resource://services-common/utils.js");
-XPCOMUtils.defineLazyModuleGetter(this, "Messaging", "resource://gre/modules/Messaging.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "EventDispatcher", "resource://gre/modules/Messaging.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderWorker", "resource://gre/modules/reader/ReaderWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
@@ -348,7 +348,7 @@ this.ReaderMode = {
     return OS.File.writeAtomic(path, array, { tmpPath: path + ".tmp" })
       .then(success => {
         OS.File.stat(path).then(info => {
-          return Messaging.sendRequest({
+          return EventDispatcher.instance.sendRequest({
             type: "Reader:AddedToCache",
             url: article.url,
             size: info.size,
