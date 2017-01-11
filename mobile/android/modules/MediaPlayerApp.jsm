@@ -23,7 +23,7 @@ function send(type, data, callback) {
     msg[i] = data[i];
   }
 
-  Messaging.sendRequestForResult(msg)
+  EventDispatcher.instance.sendRequestForResult(msg)
     .then(result => callback(result, null),
           error => callback(null, error));
 }

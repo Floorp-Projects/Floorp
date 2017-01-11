@@ -990,8 +990,7 @@ nsJSContext::AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv)
     case nsISupportsPrimitive::TYPE_ID :
     case nsISupportsPrimitive::TYPE_PRUINT64 :
     case nsISupportsPrimitive::TYPE_PRINT64 :
-    case nsISupportsPrimitive::TYPE_PRTIME :
-    case nsISupportsPrimitive::TYPE_VOID : {
+    case nsISupportsPrimitive::TYPE_PRTIME : {
       NS_WARNING("Unsupported primitive type used");
       aArgv->setNull();
       break;

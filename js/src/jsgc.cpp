@@ -2098,7 +2098,7 @@ void
 MovingTracer::onObjectEdge(JSObject** objp)
 {
     JSObject* obj = *objp;
-    if (IsForwarded(obj))
+    if (obj->runtimeFromAnyThread() == runtime() && IsForwarded(obj))
         *objp = Forwarded(obj);
 }
 
@@ -2106,7 +2106,7 @@ void
 MovingTracer::onShapeEdge(Shape** shapep)
 {
     Shape* shape = *shapep;
-    if (IsForwarded(shape))
+    if (shape->runtimeFromAnyThread() == runtime() && IsForwarded(shape))
         *shapep = Forwarded(shape);
 }
 
@@ -2114,7 +2114,7 @@ void
 MovingTracer::onStringEdge(JSString** stringp)
 {
     JSString* string = *stringp;
-    if (IsForwarded(string))
+    if (string->runtimeFromAnyThread() == runtime() && IsForwarded(string))
         *stringp = Forwarded(string);
 }
 
@@ -2122,7 +2122,7 @@ void
 MovingTracer::onScriptEdge(JSScript** scriptp)
 {
     JSScript* script = *scriptp;
-    if (IsForwarded(script))
+    if (script->runtimeFromAnyThread() == runtime() && IsForwarded(script))
         *scriptp = Forwarded(script);
 }
 
@@ -2130,7 +2130,7 @@ void
 MovingTracer::onLazyScriptEdge(LazyScript** lazyp)
 {
     LazyScript* lazy = *lazyp;
-    if (IsForwarded(lazy))
+    if (lazy->runtimeFromAnyThread() == runtime() && IsForwarded(lazy))
         *lazyp = Forwarded(lazy);
 }
 
@@ -2138,7 +2138,7 @@ void
 MovingTracer::onBaseShapeEdge(BaseShape** basep)
 {
     BaseShape* base = *basep;
-    if (IsForwarded(base))
+    if (base->runtimeFromAnyThread() == runtime() && IsForwarded(base))
         *basep = Forwarded(base);
 }
 
@@ -2146,7 +2146,7 @@ void
 MovingTracer::onScopeEdge(Scope** scopep)
 {
     Scope* scope = *scopep;
-    if (IsForwarded(scope))
+    if (scope->runtimeFromAnyThread() == runtime() && IsForwarded(scope))
         *scopep = Forwarded(scope);
 }
 

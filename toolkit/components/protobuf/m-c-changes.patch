@@ -408,3 +408,16 @@ diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/atomicops.h b
  //      return result;
  //
  // I.e., replace "*ptr" with "new_value" if "*ptr" used to be "old_value".
+diff --git a/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h b/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h
+index 7956d076dcd5..1bd67d436331 100644
+--- a/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h
++++ b/toolkit/components/protobuf/src/google/protobuf/stubs/platform_macros.h
+@@ -67,7 +67,7 @@
+ #define GOOGLE_PROTOBUF_ARCH_32_BIT 1
+ #elif defined(sparc)
+ #define GOOGLE_PROTOBUF_ARCH_SPARC 1
+-#ifdef SOLARIS_64BIT_ENABLED
++#if defined(__sparc_v9__) || defined(__sparcv9) || defined(__arch64__)
+ #define GOOGLE_PROTOBUF_ARCH_64_BIT 1
+ #else
+ #define GOOGLE_PROTOBUF_ARCH_32_BIT 1

@@ -112,7 +112,7 @@ typedef void       (*CycleCollectorSuspect3Func)(void*,
                                                  nsCycleCollectingAutoRefCnt*,
                                                  bool*);
 // PRIVATE AND DEPRECATED
-typedef NS_CALLBACK(XPCOMExitRoutine)(void);
+typedef NS_CALLBACK_(nsresult, XPCOMExitRoutine)(void);
 
 typedef nsresult   (*RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine aExitRoutine,
                                                    uint32_t aPriority);
