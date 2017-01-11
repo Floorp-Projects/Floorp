@@ -14,9 +14,9 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.icons.IconRequest;
 import org.mozilla.gecko.icons.Icons;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -25,7 +25,7 @@ import android.util.Log;
 
 import java.util.concurrent.ExecutionException;
 
-public final class ReadingListHelper implements NativeEventListener {
+public final class ReadingListHelper implements BundleEventListener {
     private static final String LOGTAG = "GeckoReadingListHelper";
 
     protected final Context context;
@@ -35,17 +35,17 @@ public final class ReadingListHelper implements NativeEventListener {
         this.context = context;
         this.db = BrowserDB.from(profile);
 
-        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
+        EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Reader:FaviconRequest", "Reader:AddedToCache");
     }
 
     public void uninit() {
-        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Reader:FaviconRequest", "Reader:AddedToCache");
     }
 
     @Override
-    public void handleMessage(final String event, final NativeJSObject message,
+    public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         switch (event) {
             case "Reader:FaviconRequest": {
