@@ -15,48 +15,9 @@
 namespace mozilla {
 namespace layers {
 
-// static
-UniquePtr<RendererOGL>
-RendererOGL::Create(already_AddRefed<RenderThread> aThread,
-                    already_AddRefed<widget::CompositorWidget> aWidget,
-                    WrRenderer* aWrRenderer,
-                    gfx::WindowId aWindowId,
-                    CompositorBridgeParentBase* aBridge)
-{
-  RefPtr<widget::CompositorWidget> widget = aWidget;
-  RefPtr<RenderThread> thread = aThread;
-
-  MOZ_ASSERT(widget);
-  MOZ_ASSERT(thread);
-  MOZ_ASSERT(aWrRenderer);
-  MOZ_ASSERT(RenderThread::IsInRenderThread());
-
-  if (!widget || !thread) {
-    return nullptr;
-  }
-
-  RefPtr<gl::GLContext> gl = gl::GLContextProvider::CreateForCompositorWidget(widget, true);
-  if (!gl) {
-    return nullptr;
-  }
-
-  if (!gl->MakeCurrent()) {
-    return nullptr;
-  }
-
-  wr_gl_init(&*gl);
-
-  return UniquePtr<RendererOGL>(new RendererOGL(thread.forget(),
-                                                gl.forget(),
-                                                widget.forget(),
-                                                aWindowId,
-                                                aWrRenderer,
-                                                aBridge));
-}
-
-RendererOGL::RendererOGL(already_AddRefed<RenderThread> aThread,
-                         already_AddRefed<gl::GLContext> aGL,
-                         already_AddRefed<widget::CompositorWidget> aWidget,
+RendererOGL::RendererOGL(RefPtr<RenderThread>&& aThread,
+                         RefPtr<gl::GLContext>&& aGL,
+                         RefPtr<widget::CompositorWidget>&& aWidget,
                          gfx::WindowId aWindowId,
                          WrRenderer* aWrRenderer,
                          CompositorBridgeParentBase* aBridge)

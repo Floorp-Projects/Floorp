@@ -21,6 +21,7 @@ namespace layers {
 
 class CompositorBridgeParentBase;
 class RendererOGL;
+class NewRenderer;
 
 class WebRenderAPI
 {
@@ -35,14 +36,16 @@ public:
 
 protected:
   WebRenderAPI(WrAPI* aRawApi, gfx::WindowId aId)
-  : mApi(aRawApi)
+  : mWrApi(aRawApi)
   , mId(aId)
   {}
 
   ~WebRenderAPI();
 
-  WrAPI* mApi;
+  WrAPI* mWrApi;
   gfx::WindowId mId;
+
+  friend class NewRenderer;
 };
 
 } // namespace

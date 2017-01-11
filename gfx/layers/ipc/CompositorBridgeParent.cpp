@@ -51,6 +51,7 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/PLayerTransactionParent.h"
 #include "mozilla/layers/RemoteContentController.h"
+#include "mozilla/layers/WebRenderAPI.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderCompositorOGL.h"
 #include "mozilla/layout/RenderFrameParent.h"
@@ -1572,6 +1573,13 @@ CompositorBridgeParent::AllocPWebRenderBridgeParent(const uint64_t& aPipelineId,
   MOZ_ASSERT(!mWRBridge);
   MOZ_ASSERT(!mCompositor);
   MOZ_ASSERT(!mCompositorScheduler);
+
+
+  // TODO(nical) Coming soon...
+  // MOZ_ASSERT(mWidget);
+  // RefPtr<widget::CompositorWidget> widget = mWidget;
+  // RefPtr<WebRenderAPI> wr = WebRenderAPI::Create(gfxPrefs::WebRenderProfilerEnabled(), this, Move(widget));
+  // mWRBridge = new WebRenderBridgeParent(this, aPipelineId, mWidget, Move(wr));
 
   RefPtr<gl::GLContext> glc(gl::GLContextProvider::CreateForCompositorWidget(mWidget, true));
   mCompositor = new WebRenderCompositorOGL(this, glc.get());

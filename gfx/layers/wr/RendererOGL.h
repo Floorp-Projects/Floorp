@@ -37,14 +37,6 @@ class CompositorBridgeParentBase;
 class RendererOGL
 {
 public:
-
-  /// Render thread only.
-  static UniquePtr<RendererOGL> Create(already_AddRefed<RenderThread> aThread,
-                                       already_AddRefed<widget::CompositorWidget> aWidget,
-                                       WrRenderer* aWrRenderer,
-                                       gfx::WindowId aWindowId,
-                                       CompositorBridgeParentBase* aBridge);
-
   /// Render thread only.
   void Update();
 
@@ -57,13 +49,14 @@ public:
   /// Render thread only.
   ~RendererOGL();
 
-protected:
-  RendererOGL(already_AddRefed<RenderThread> aThread,
-              already_AddRefed<gl::GLContext> aGL,
-              already_AddRefed<widget::CompositorWidget>,
+  /// Render thread only.
+  RendererOGL(RefPtr<RenderThread>&& aThread,
+              RefPtr<gl::GLContext>&& aGL,
+              RefPtr<widget::CompositorWidget>&&,
               gfx::WindowId aWindowId,
               WrRenderer* aWrRenderer,
               CompositorBridgeParentBase* aBridge);
+protected:
 
   RefPtr<RenderThread> mThread;
   RefPtr<gl::GLContext> mGL;
