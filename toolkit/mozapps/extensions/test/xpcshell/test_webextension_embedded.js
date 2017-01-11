@@ -18,7 +18,7 @@ const { Management } = Components.utils.import("resource://gre/modules/Extension
 
 const {
   EmbeddedExtensionManager,
-} = Components.utils.import("resource://gre/modules/LegacyExtensionsUtils.jsm");
+} = Components.utils.import("resource://gre/modules/LegacyExtensionsUtils.jsm", {});
 
 // Wait the startup of the embedded webextension.
 function promiseWebExtensionStartup() {
@@ -45,6 +45,12 @@ function promiseWebExtensionShutdown() {
 
 const BOOTSTRAP = String.raw`
   Components.utils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this);
+`;
+
+const BOOTSTRAP_WITHOUT_SHUTDOWN = String.raw`
+  Components.utils.import("resource://xpcshell-data/BootstrapMonitor.jsm").monitor(this, [
+    "install", "startup", "uninstall",
+  ]);
 `;
 
 const EMBEDDED_WEBEXT_MANIFEST = JSON.stringify({
@@ -296,6 +302,78 @@ add_task(function* reload_embedded_webext_bootstrap() {
 
   // Uninstall the test addon
   let waitUninstalled = promiseAddonEvent("onUninstalled");
+  addon.uninstall();
+  yield waitUninstalled;
+
+  // No leaked embedded extension after uninstalling.
+  equal(EmbeddedExtensionManager.embeddedExtensionsByAddonId.size, 0,
+        "No embedded extension instance should be tracked after the addon uninstall");
+});
+
+/**
+ *  This test case checks that an addon with hasEmbeddedWebExtension without
+ *  a bootstrap shutdown method stops the embedded webextension.
+ */
+add_task(function* shutdown_embedded_webext_without_bootstrap_shutdown() {
+  const ID = "embedded-webextension-without-shutdown@tests.mozilla.org";
+
+  // No embedded webextension should be currently around.
+  equal(EmbeddedExtensionManager.embeddedExtensionsByAddonId.size, 0,
+        "No embedded extension instance should be tracked here");
+
+  const xpiFile = createTempXPIFile({
+    id: ID,
+    name: "Test Add-on",
+    version: "1.0",
+    bootstrap: true,
+    hasEmbeddedWebExtension: true,
+    targetApplications: [{
+      id: "xpcshell@tests.mozilla.org",
+      minVersion: "1",
+      maxVersion: "1.9.2"
+    }]
+  }, {
+    "bootstrap.js": BOOTSTRAP_WITHOUT_SHUTDOWN,
+    "webextension/manifest.json": EMBEDDED_WEBEXT_MANIFEST,
+  });
+
+  yield AddonManager.installTemporaryAddon(xpiFile);
+
+  let addon = yield promiseAddonByID(ID);
+
+  notEqual(addon, null, "Got an addon object as expected");
+  equal(addon.version, "1.0", "Got the expected version");
+  equal(addon.isActive, true, "The Addon is active");
+  equal(addon.appDisabled, false, "The addon is not app disabled");
+  equal(addon.userDisabled, false, "The addon is not user disabled");
+
+  // Check that the addon has been installed and started.
+  BootstrapMonitor.checkAddonInstalled(ID, "1.0");
+  BootstrapMonitor.checkAddonStarted(ID, "1.0");
+
+  // Only one embedded extension.
+  equal(EmbeddedExtensionManager.embeddedExtensionsByAddonId.size, 1,
+        "Got the expected number of tracked extension instances");
+
+  const startupInfo = BootstrapMonitor.started.get(ID);
+
+  const waitForWebExtensionStartup = promiseWebExtensionStartup();
+
+  yield startupInfo.data.webExtension.startup();
+
+  // WebExtension startup should have been fully resolved.
+  yield waitForWebExtensionStartup;
+
+  // Fake the BootstrapMonitor notification, or the shutdown checks defined in head_addons.js
+  // will fail because of the missing shutdown method.
+  const fakeShutdownInfo = Object.assign(startupInfo, {
+    event: "shutdown",
+    reason: 2,
+  });
+  Services.obs.notifyObservers({}, "bootstrapmonitor-event", JSON.stringify(fakeShutdownInfo));
+
+  // Uninstall the addon.
+  const waitUninstalled = promiseAddonEvent("onUninstalled");
   addon.uninstall();
   yield waitUninstalled;
 

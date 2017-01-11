@@ -55,9 +55,6 @@ const EVENTS = {
   // When the request post params are displayed in the UI.
   REQUEST_POST_PARAMS_DISPLAYED: "NetMonitor:RequestPostParamsAvailable",
 
-  // When the response body is displayed in the UI.
-  RESPONSE_BODY_DISPLAYED: "NetMonitor:ResponseBodyAvailable",
-
   // When the image response thumbnail is displayed in the UI.
   RESPONSE_IMAGE_THUMBNAIL_DISPLAYED:
     "NetMonitor:ResponseImageThumbnailAvailable",

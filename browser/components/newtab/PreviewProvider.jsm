@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/PageThumbs.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
-const {OS} = Cu.import("resource://gre/modules/osfile.jsm");
+const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
   "resource://gre/modules/BackgroundPageThumbs.jsm");

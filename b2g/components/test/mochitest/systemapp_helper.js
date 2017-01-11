@@ -1,6 +1,6 @@
 var Cu = Components.utils;
 
-const { Services } = Cu.import("resource://gre/modules/Services.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 // Load a duplicated copy of the jsm to prevent messing with the currently running one
 var scope = {};

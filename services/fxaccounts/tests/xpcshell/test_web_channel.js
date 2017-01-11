@@ -5,7 +5,7 @@
 
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
-    Cu.import("resource://gre/modules/FxAccountsWebChannel.jsm");
+    Cu.import("resource://gre/modules/FxAccountsWebChannel.jsm", {});
 
 const URL_STRING = "https://example.com";
 

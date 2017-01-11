@@ -16,22 +16,28 @@ const Editor = createClass({
   displayName: "Editor",
 
   propTypes: {
+    // Source editor syntax hightligh mode, which is a mime type defined in CodeMirror
+    mode: PropTypes.string,
+    // Source editor is displayed if set to true
     open: PropTypes.bool,
+    // Source editor content
     text: PropTypes.string,
   },
 
   getDefaultProps() {
     return {
+      mode: null,
       open: true,
       text: "",
     };
   },
 
   componentDidMount() {
-    const { text } = this.props;
+    const { mode, text } = this.props;
 
     this.editor = new SourceEditor({
       lineNumbers: true,
+      mode,
       readOnly: true,
       value: text,
     });
@@ -56,8 +62,8 @@ const Editor = createClass({
       this.deferEditor.then(() => {
         // FIXME: Workaround for browser_net_accessibility test to
         // make sure editor node exists while setting editor text.
-        // deferEditor workround should be removed in bug 1308442
-        if (this.refs.editor) {
+        // deferEditor workaround should be removed in bug 1308442
+        if (this.refs.editorElement) {
           this.editor.setText(text);
         }
       });

@@ -36,7 +36,7 @@ function verifySignatures() {
     Services.obs.addObserver(observer, "xpi-signature-changed", false);
 
     do_print("Verifying signatures");
-    let XPIscope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
+    let XPIscope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm", {});
     XPIscope.XPIProvider.verifySignatures();
   });
 }

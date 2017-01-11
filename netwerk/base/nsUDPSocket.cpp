@@ -671,6 +671,10 @@ nsUDPSocket::Connect(const NetAddr *aAddr)
 
   NS_ENSURE_ARG(aAddr);
 
+  if (NS_WARN_IF(!mFD)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   bool onSTSThread = false;
   mSts->IsOnCurrentThread(&onSTSThread);
   NS_ASSERTION(onSTSThread, "NOT ON STS THREAD");

@@ -10,12 +10,13 @@ Checks that for every occurence of 'addEventListener' or 'on' there is an
 occurence of 'removeEventListener' or 'off' with the same event name.
 
 
-components-imports
-------------------
+import-globals
+--------------
 
 Checks the filename of imported files e.g. ``Cu.import("some/path/Blah.jsm")``
 adds Blah to the global scope.
 
+Note: uses modules.json for a list of globals listed in each file.
 
 import-browserjs-globals
 ------------------------
@@ -183,3 +184,15 @@ Example configuration::
      "mozilla/var-only-at-top-level": 1,
      "mozilla/no-cpows-in-tests": 1,
    }
+
+Running Tests
+=============
+
+The rules have some self tests (see bug 1219152), these can be run via:
+
+```
+cd tools/lint/eslint/eslint-plugin-mozilla
+npm run test
+```
+
+(assuming `./mach eslint --setup` has already been run).
