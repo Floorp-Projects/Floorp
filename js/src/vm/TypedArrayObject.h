@@ -12,6 +12,7 @@
 #include "jsobj.h"
 
 #include "gc/Barrier.h"
+#include "gc/Zone.h"
 #include "js/Class.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/SharedArrayObject.h"
