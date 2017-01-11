@@ -6,7 +6,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
-include protocol PCompositable;
 include protocol PCompositorBridge;
 include protocol PRenderFrame;
 include protocol PTexture;
