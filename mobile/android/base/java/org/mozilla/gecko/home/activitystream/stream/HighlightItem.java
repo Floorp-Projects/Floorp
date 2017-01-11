@@ -44,21 +44,22 @@ public class HighlightItem extends StreamItem implements IconCallback {
 
     public static final int LAYOUT_ID = R.layout.activity_stream_card_history_item;
 
-    private String title;
-    private String url;
-    private JSONObject metadata;
+    String title;
+    String url;
+    JSONObject metadata;
 
-    private @Nullable Boolean isPinned;
-    private @Nullable Boolean isBookmarked;
+    @Nullable
+    Boolean isPinned;
+    @Nullable Boolean isBookmarked;
 
-    private Utils.HighlightSource source;
+    Utils.HighlightSource source;
 
-    private final FaviconView vIconView;
-    private final TextView vLabel;
-    private final TextView vTimeSince;
-    private final TextView vSourceView;
-    private final TextView vPageView;
-    private final ImageView vSourceIconView;
+    final FaviconView vIconView;
+    final TextView vLabel;
+    final TextView vTimeSince;
+    final TextView vSourceView;
+    final TextView vPageView;
+    final ImageView vSourceIconView;
 
     private Future<IconResponse> ongoingIconLoad;
     private int tilesMargin;
