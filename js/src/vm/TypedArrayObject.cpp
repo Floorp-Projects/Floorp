@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "vm/TypedArrayObject-inl.h"
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Alignment.h"
@@ -41,7 +42,6 @@
 #include "vm/PIC.h"
 #include "vm/SelfHosting.h"
 #include "vm/SharedMem.h"
-#include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"

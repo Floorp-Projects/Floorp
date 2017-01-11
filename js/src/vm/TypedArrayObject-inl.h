@@ -4,10 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef vm_TypedArrayCommon_h
-#define vm_TypedArrayCommon_h
+#ifndef vm_TypedArrayObject_inl_h
+#define vm_TypedArrayObject_inl_h
 
 /* Utilities and common inline code for TypedArray */
+
+#include "vm/TypedArrayObject.h"
 
 #include "mozilla/Assertions.h"
 #include "mozilla/FloatingPoint.h"
@@ -23,7 +25,6 @@
 #include "js/Value.h"
 
 #include "vm/NativeObject.h"
-#include "vm/TypedArrayObject.h"
 
 namespace js {
 
@@ -662,4 +663,4 @@ class TypedArrayMethods
 
 } // namespace js
 
-#endif // vm_TypedArrayCommon_h
+#endif // vm_TypedArrayObject_inl_h
