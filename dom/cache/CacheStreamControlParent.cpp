@@ -85,6 +85,11 @@ CacheStreamControlParent::ActorDestroy(ActorDestroyReason aReason)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
   CloseAllReadStreamsWithoutReporting();
+  // If the initial SendPStreamControlConstructor() fails we will
+  // be called before mStreamList is set.
+  if (!mStreamList) {
+    return;
+  }
   mStreamList->RemoveStreamControl(this);
   mStreamList->NoteClosedAll();
   mStreamList = nullptr;

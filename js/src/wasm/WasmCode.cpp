@@ -778,10 +778,18 @@ Code::ensureProfilingState(JSRuntime* rt, bool newProfilingEnabled)
             MOZ_ASSERT(bytecodeStr);
 
             UTF8Bytes name;
-            if (!getFuncName(codeRange.funcIndex(), &name) ||
-                !name.append(" (", 2) ||
-                !name.append(metadata_->filename.get(), strlen(metadata_->filename.get())) ||
-                !name.append(':') ||
+            if (!getFuncName(codeRange.funcIndex(), &name) || !name.append(" (", 2))
+                return false;
+
+            if (const char* filename = metadata_->filename.get()) {
+                if (!name.append(filename, strlen(filename)))
+                    return false;
+            } else {
+                if (!name.append('?'))
+                    return false;
+            }
+
+            if (!name.append(':') ||
                 !name.append(bytecodeStr, strlen(bytecodeStr)) ||
                 !name.append(")\0", 2))
             {

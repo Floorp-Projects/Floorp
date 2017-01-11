@@ -67,6 +67,11 @@ class MacroExpander : public Lexer
     std::unique_ptr<Token> mReserveToken;
     std::vector<MacroContext *> mContextStack;
     size_t mTotalTokensInContexts;
+
+    bool mDeferReenablingMacros;
+    std::vector<const Macro *> mMacrosToReenable;
+
+    class ScopedMacroReenabler;
 };
 
 }  // namespace pp

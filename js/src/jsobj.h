@@ -592,21 +592,23 @@ class JSObject : public js::gc::Cell
     void operator=(const JSObject& other) = delete;
 };
 
-template <class U>
+template <typename Wrapper>
+template <typename U>
 MOZ_ALWAYS_INLINE JS::Handle<U*>
-js::RootedBase<JSObject*>::as() const
+js::RootedBase<JSObject*, Wrapper>::as() const
 {
-    const JS::Rooted<JSObject*>& self = *static_cast<const JS::Rooted<JSObject*>*>(this);
-    MOZ_ASSERT(self->is<U>());
+    const Wrapper& self = *static_cast<const Wrapper*>(this);
+    MOZ_ASSERT(self->template is<U>());
     return Handle<U*>::fromMarkedLocation(reinterpret_cast<U* const*>(self.address()));
 }
 
+template <typename Wrapper>
 template <class U>
 MOZ_ALWAYS_INLINE JS::Handle<U*>
-js::HandleBase<JSObject*>::as() const
+js::HandleBase<JSObject*, Wrapper>::as() const
 {
     const JS::Handle<JSObject*>& self = *static_cast<const JS::Handle<JSObject*>*>(this);
-    MOZ_ASSERT(self->is<U>());
+    MOZ_ASSERT(self->template is<U>());
     return Handle<U*>::fromMarkedLocation(reinterpret_cast<U* const*>(self.address()));
 }
 

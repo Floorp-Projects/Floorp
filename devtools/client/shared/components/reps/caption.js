@@ -21,6 +21,10 @@ define(function (require, exports, module) {
   const Caption = React.createClass({
     displayName: "Caption",
 
+    propTypes: {
+      object: React.PropTypes.object,
+    },
+
     render: wrapRender(function () {
       return (
         DOM.span({"className": "caption"}, this.props.object)

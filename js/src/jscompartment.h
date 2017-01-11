@@ -654,6 +654,7 @@ struct JSCompartment
     void sweepDebugEnvironments();
     void sweepNativeIterators();
     void sweepTemplateObjects();
+    void sweepVarNames();
 
     void purge();
     void clearTables();

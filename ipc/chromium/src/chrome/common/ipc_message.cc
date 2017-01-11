@@ -13,7 +13,7 @@
 #include "chrome/common/file_descriptor_set_posix.h"
 #endif
 #ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
+#include "GeckoTaskTracerImpl.h"
 #endif
 
 #include "mozilla/Move.h"
@@ -143,6 +143,41 @@ uint32_t Message::num_fds() const {
   return file_descriptor_set() ? file_descriptor_set()->size() : 0;
 }
 
+#endif
+
+#ifdef MOZ_TASK_TRACER
+void *MessageTask() {
+  return reinterpret_cast<void*>(&MessageTask);
+}
+
+void
+Message::TaskTracerDispatch() {
+  header()->task_id = GenNewUniqueTaskId();
+  uintptr_t* vtab = reinterpret_cast<uintptr_t*>(&MessageTask);
+  LogVirtualTablePtr(header()->task_id,
+                     header()->source_event_id,
+                     vtab);
+  LogDispatch(header()->task_id,
+              header()->parent_task_id,
+              header()->source_event_id,
+              header()->source_event_type);
+}
+
+Message::AutoTaskTracerRun::AutoTaskTracerRun(Message& aMsg)
+  : mMsg(aMsg)
+  , mTaskId(mMsg.header()->task_id)
+  , mSourceEventId(mMsg.header()->source_event_id) {
+  LogBegin(mMsg.header()->task_id,
+           mMsg.header()->source_event_id);
+  SetCurTraceInfo(mMsg.header()->source_event_id,
+                  mMsg.header()->task_id,
+                  mMsg.header()->source_event_type);
+}
+
+Message::AutoTaskTracerRun::~AutoTaskTracerRun() {
+  AddLabel("IPC Message %s", mMsg.name());
+  LogEnd(mTaskId, mSourceEventId);
+}
 #endif
 
 }  // namespace IPC

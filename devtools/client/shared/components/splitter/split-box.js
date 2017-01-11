@@ -21,6 +21,10 @@ const SplitBox = React.createClass({
     className: PropTypes.string,
     // Initial size of controlled panel.
     initialSize: PropTypes.number,
+    // Initial width of controlled panel.
+    initialWidth: PropTypes.number,
+    // Initial height of controlled panel.
+    initialHeight: PropTypes.number,
     // Left/top panel
     startPanel: PropTypes.any,
     // Min panel size.
@@ -34,7 +38,9 @@ const SplitBox = React.createClass({
     // Size of the splitter handle bar.
     splitterSize: PropTypes.number,
     // True if the splitter bar is vertical (default is vertical).
-    vert: PropTypes.bool
+    vert: PropTypes.bool,
+    // Style object.
+    style: PropTypes.object,
   },
 
   getDefaultProps() {

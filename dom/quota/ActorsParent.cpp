@@ -193,6 +193,39 @@ uint32_t
 GetMajorStorageVersion(int32_t aStorageVersion)
 {
   return uint32_t(aStorageVersion >> 16);
+
+}
+
+nsresult
+CreateTables(mozIStorageConnection* aConnection)
+{
+  AssertIsOnIOThread();
+  MOZ_ASSERT(aConnection);
+
+  // The database doesn't have any tables for now. It's only used for storage
+  // version checking.
+  // However, this is the place where any future tables should be created.
+
+  nsresult rv;
+
+#ifdef DEBUG
+  {
+    int32_t storageVersion;
+    rv = aConnection->GetSchemaVersion(&storageVersion);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(storageVersion == 0);
+  }
+#endif
+
+  rv = aConnection->SetSchemaVersion(kStorageVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 /******************************************************************************
@@ -4094,12 +4127,25 @@ QuotaManager::MaybeRemoveOldDirectories()
 }
 
 nsresult
-QuotaManager::UpgradeStorageFrom0ToCurrent(mozIStorageConnection* aConnection)
+QuotaManager::UpgradeStorageFrom0_0To1_0(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv;
+  nsresult rv = MaybeUpgradeIndexedDBDirectory();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = MaybeUpgradePersistentStorageDirectory();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = MaybeRemoveOldDirectories();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   for (const PersistenceType persistenceType : kAllPersistenceTypes) {
     nsCOMPtr<nsIFile> directory =
@@ -4145,12 +4191,26 @@ QuotaManager::UpgradeStorageFrom0ToCurrent(mozIStorageConnection* aConnection)
 
 #if 0
 nsresult
-QuotaManager::UpgradeStorageFrom1To2(mozIStorageConnection* aConnection)
+QuotaManager::UpgradeStorageFrom1_0To2_0(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 0));
+  nsresult rv;
+
+#ifdef DEBUG
+  {
+    int32_t storageVersion;
+    rv = aConnection->GetSchemaVersion(&storageVersion);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    MOZ_ASSERT(storageVersion == MakeStorageVersion(1, 0));
+  }
+#endif
+
+  rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4231,6 +4291,43 @@ QuotaManager::EnsureStorageIsInitialized()
   if (storageVersion < kStorageVersion) {
     const bool newDatabase = !storageVersion;
 
+    nsCOMPtr<nsIFile> storageDir =
+      do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    rv = storageDir->InitWithPath(mStoragePath);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    bool exists;
+    rv = storageDir->Exists(&exists);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    if (!exists) {
+      nsCOMPtr<nsIFile> indexedDBDir =
+        do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = indexedDBDir->InitWithPath(mIndexedDBPath);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = indexedDBDir->Exists(&exists);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
+
+    const bool newDirectory = !exists;
+
     if (newDatabase) {
       // Set the page size first.
       if (kSQLitePageSizeOverride) {
@@ -4245,23 +4342,12 @@ QuotaManager::EnsureStorageIsInitialized()
 
     mozStorageTransaction transaction(connection, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
-    if (newDatabase) {
-      rv = MaybeUpgradeIndexedDBDirectory();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
 
-      rv = MaybeUpgradePersistentStorageDirectory();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = MaybeRemoveOldDirectories();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = UpgradeStorageFrom0ToCurrent(connection);
+    // An upgrade method can upgrade the database, the storage or both.
+    // The upgrade loop below can only be avoided when there's no database and
+    // no storage yet (e.g. new profile).
+    if (newDatabase && newDirectory) {
+      rv = CreateTables(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -4274,9 +4360,13 @@ QuotaManager::EnsureStorageIsInitialized()
                     "Upgrade function needed due to storage version increase.");
 
       while (storageVersion != kStorageVersion) {
-        /* if (storageVersion == MakeStorageVersion(1, 0)) {
-          rv = UpgradeStorageFrom1To2(connection);
-        } else */ {
+        if (storageVersion == 0) {
+          rv = UpgradeStorageFrom0_0To1_0(connection);
+#if 0
+        } else if (storageVersion == MakeStorageVersion(1, 0)) {
+          rv = UpgradeStorageFrom1_0To2_0(connection);
+#endif
+        } else {
           NS_WARNING("Unable to initialize storage, no upgrade path is "
                      "available!");
           return NS_ERROR_FAILURE;
