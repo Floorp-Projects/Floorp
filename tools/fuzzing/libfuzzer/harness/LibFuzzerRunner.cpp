@@ -3,6 +3,8 @@
  * * License, v. 2.0. If a copy of the MPL was not distributed with this
  * * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <cstdlib>
+
 #include "LibFuzzerRunner.h"
 #include "mozilla/Attributes.h"
 #include "prenv.h"
@@ -22,16 +24,29 @@ public:
   }
 } InitLibFuzzer;
 
-int LibFuzzerRunner::Run(int argc, char** argv) {
+int LibFuzzerRunner::Run(int* argc, char*** argv) {
   ScopedXPCOM xpcom("LibFuzzer");
   LibFuzzerInitFunc initFunc = nullptr;
   LibFuzzerTestingFunc testingFunc = nullptr;
   XRE_LibFuzzerGetFuncs(getenv("LIBFUZZER"), &initFunc, &testingFunc);
-  return mFuzzerMain(argc, argv, initFunc, testingFunc);
+  if (initFunc) {
+    int ret = initFunc(argc, argv);
+    if (ret) {
+      fprintf(stderr, "LibFuzzer: Error: Initialize callback failed\n");
+      return ret;
+    }
+  }
+
+  if (!testingFunc) {
+      fprintf(stderr, "LibFuzzer: Error: No testing callback found\n");
+      return 1;
+  }
+
+  return mFuzzerDriver(argc, argv, testingFunc);
 }
 
-void LibFuzzerRunner::setParams(LibFuzzerMain main) {
-  mFuzzerMain = main;
+void LibFuzzerRunner::setParams(LibFuzzerDriver aDriver) {
+  mFuzzerDriver = aDriver;
 }
 
 } // namespace mozilla

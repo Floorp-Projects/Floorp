@@ -12,7 +12,6 @@ DIRS += [
 
 SOURCES += [
     'FuzzerCrossOver.cpp',
-    'FuzzerCustomMain.cpp',
     'FuzzerDriver.cpp',
     'FuzzerExtFunctionsDlsym.cpp',
     'FuzzerExtFunctionsWeak.cpp',

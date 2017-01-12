@@ -9,11 +9,11 @@ namespace mozilla {
 
 class LibFuzzerRunner {
 public:
-  int Run(int argc, char** argv);
-  void setParams(LibFuzzerMain main);
+  int Run(int* argc, char*** argv);
+  void setParams(LibFuzzerDriver aDriver);
 
 private:
-  LibFuzzerMain mFuzzerMain;
+  LibFuzzerDriver mFuzzerDriver;
 };
 
 extern LibFuzzerRunner* libFuzzerRunner;
