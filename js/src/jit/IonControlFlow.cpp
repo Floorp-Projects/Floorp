@@ -1311,15 +1311,17 @@ ControlFlowGenerator::processCondSwitchCase(CFGState& state)
 ControlFlowGenerator::ControlStatus
 ControlFlowGenerator::processCondSwitchDefault(CFGState& state)
 {
-    FixedList<CFGBlock*>& bodies = *state.switch_.bodies;
     uint32_t& currentIdx = state.switch_.currentIdx;
 
     // The last case condition is finished.  Loop in processCondSwitchBody,
     // with potential stops in processSwitchBreak.
 
+#ifdef DEBUG
     // Test that we calculated the number of bodies correctly.
+    FixedList<CFGBlock*>& bodies = *state.switch_.bodies;
     MOZ_ASSERT(state.switch_.currentIdx == bodies.length() ||
                state.switch_.defaultIdx + 1 == bodies.length());
+#endif
 
     // Handle break statements in processSwitchBreak while processing
     // bodies.
