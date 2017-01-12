@@ -1930,7 +1930,7 @@ ImplCycleCollectionUnlink(mozilla::WebGLFBAttachPoint& field)
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                            mozilla::WebGLFBAttachPoint& field,
+                            const mozilla::WebGLFBAttachPoint& field,
                             const char* name,
                             uint32_t flags = 0)
 {
@@ -1950,7 +1950,7 @@ ImplCycleCollectionUnlink(C& field)
 template<typename C>
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& callback,
-                            C& field,
+                            const C& field,
                             const char* name,
                             uint32_t flags = 0)
 {
