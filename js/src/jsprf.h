@@ -27,6 +27,8 @@
 **      %g - float
 */
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Types.h"
@@ -65,6 +67,48 @@ extern MFBT_API char* SmprintfAppend(char* last, const char* fmt, ...)
 */
 extern MFBT_API char* Vsmprintf(const char* fmt, va_list ap);
 extern MFBT_API char* VsmprintfAppend(char* last, const char* fmt, va_list ap);
+
+/*
+ * This class may be subclassed to provide a way to get the output of
+ * a printf-like call, as the output is generated.
+ */
+class PrintfTarget
+{
+public:
+    /* The Printf-like interface.  */
+    bool MFBT_API print(const char* format, ...) MOZ_FORMAT_PRINTF(2, 3);
+
+    /* The Vprintf-like interface.  */
+    bool MFBT_API vprint(const char* format, va_list);
+
+protected:
+    MFBT_API PrintfTarget() : mEmitted(0) { }
+    virtual ~PrintfTarget() { }
+
+    /* Subclasses override this.  It is called when more output is
+       available.  It may be called with len==0.  This should return
+       true on success, or false on failure.  */
+    virtual bool append(const char* sp, size_t len) = 0;
+
+private:
+
+    /* Number of bytes emitted so far.  */
+    size_t mEmitted;
+
+    /* The implementation calls this to emit bytes and update
+       mEmitted.  */
+    bool emit(const char* sp, size_t len) {
+        mEmitted += len;
+        return append(sp, len);
+    }
+
+    bool fill2(const char* src, int srclen, int width, int flags);
+    bool fill_n(const char* src, int srclen, int width, int prec, int type, int flags);
+    bool cvt_l(long num, int width, int prec, int radix, int type, int flags, const char* hxp);
+    bool cvt_ll(int64_t num, int width, int prec, int radix, int type, int flags, const char* hexp);
+    bool cvt_f(double d, const char* fmt0, const char* fmt1);
+    bool cvt_s(const char* s, int width, int prec, int flags);
+};
 
 } // namespace mozilla
 

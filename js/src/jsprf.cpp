@@ -39,9 +39,9 @@ using namespace js;
 #define VARARGS_ASSIGN(foo, bar)        (foo) = (bar)
 #endif
 
-struct SprintfState
+struct SprintfState : public mozilla::PrintfTarget
 {
-    bool (*stuff)(SprintfState* ss, const char* sp, size_t len);
+    virtual bool append(const char* sp, size_t len);
 
     char* base;
     char* cur;
@@ -80,15 +80,9 @@ typedef mozilla::Vector<NumArgState, 20, js::SystemAllocPolicy> NumArgStateVecto
 #define FLAG_ZEROS      0x8
 #define FLAG_NEG        0x10
 
-inline bool
-generic_write(SprintfState* ss, const char* src, size_t srclen)
-{
-    return (*ss->stuff)(ss, src, srclen);
-}
-
 // Fill into the buffer using the data in src
-static bool
-fill2(SprintfState* ss, const char* src, int srclen, int width, int flags)
+bool
+mozilla::PrintfTarget::fill2(const char* src, int srclen, int width, int flags)
 {
     char space = ' ';
 
@@ -97,18 +91,18 @@ fill2(SprintfState* ss, const char* src, int srclen, int width, int flags)
         if (flags & FLAG_ZEROS)
             space = '0';
         while (--width >= 0) {
-            if (!(*ss->stuff)(ss, &space, 1))
+            if (!emit(&space, 1))
                 return false;
         }
     }
 
     // Copy out the source data
-    if (!generic_write(ss, src, srclen))
+    if (!emit(src, srclen))
         return false;
 
     if (width > 0 && (flags & FLAG_LEFT) != 0) {    // Left adjusting
         while (--width >= 0) {
-            if (!(*ss->stuff)(ss, &space, 1))
+            if (!emit(&space, 1))
                 return false;
         }
     }
@@ -118,8 +112,8 @@ fill2(SprintfState* ss, const char* src, int srclen, int width, int flags)
 /*
  * Fill a number. The order is: optional-sign zero-filling conversion-digits
  */
-static bool
-fill_n(SprintfState* ss, const char* src, int srclen, int width, int prec, int type, int flags)
+bool
+mozilla::PrintfTarget::fill_n(const char* src, int srclen, int width, int prec, int type, int flags)
 {
     int zerowidth = 0;
     int precwidth = 0;
@@ -169,33 +163,34 @@ fill_n(SprintfState* ss, const char* src, int srclen, int width, int prec, int t
         }
     }
     while (--leftspaces >= 0) {
-        if (!(*ss->stuff)(ss, " ", 1))
+        if (!emit(" ", 1))
             return false;
     }
     if (signwidth) {
-        if (!(*ss->stuff)(ss, &sign, 1))
+        if (!emit(&sign, 1))
             return false;
     }
     while (--precwidth >= 0) {
-        if (!(*ss->stuff)(ss, "0", 1))
+        if (!emit("0", 1))
             return false;
     }
     while (--zerowidth >= 0) {
-        if (!(*ss->stuff)(ss, "0", 1))
+        if (!emit("0", 1))
             return false;
     }
-    if (!(*ss->stuff)(ss, src, uint32_t(srclen)))
+    if (!emit(src, uint32_t(srclen)))
         return false;
     while (--rightspaces >= 0) {
-        if (!(*ss->stuff)(ss, " ", 1))
+        if (!emit(" ", 1))
             return false;
     }
     return true;
 }
 
 /* Convert a long into its printable form. */
-static bool cvt_l(SprintfState* ss, long num, int width, int prec, int radix,
-                  int type, int flags, const char* hexp)
+bool
+mozilla::PrintfTarget::cvt_l(long num, int width, int prec, int radix,
+                             int type, int flags, const char* hexp)
 {
     char cvtbuf[100];
     char* cvt;
@@ -223,12 +218,13 @@ static bool cvt_l(SprintfState* ss, long num, int width, int prec, int radix,
 
     // Now that we have the number converted without its sign, deal with
     // the sign and zero padding.
-    return fill_n(ss, cvt, digits, width, prec, type, flags);
+    return fill_n(cvt, digits, width, prec, type, flags);
 }
 
 /* Convert a 64-bit integer into its printable form. */
-static bool cvt_ll(SprintfState* ss, int64_t num, int width, int prec, int radix,
-                   int type, int flags, const char* hexp)
+bool
+mozilla::PrintfTarget::cvt_ll(int64_t num, int width, int prec, int radix,
+                              int type, int flags, const char* hexp)
 {
     // According to the man page, this needs to happen.
     if (prec == 0 && num == 0)
@@ -256,14 +252,15 @@ static bool cvt_ll(SprintfState* ss, int64_t num, int width, int prec, int radix
 
     // Now that we have the number converted without its sign, deal with
     // the sign and zero padding.
-    return fill_n(ss, cvt, digits, width, prec, type, flags);
+    return fill_n(cvt, digits, width, prec, type, flags);
 }
 
 /*
  * Convert a double precision floating point number into its printable
  * form.
  */
-static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1)
+bool
+mozilla::PrintfTarget::cvt_f(double d, const char* fmt0, const char* fmt1)
 {
     char fin[20];
     char fout[300];
@@ -289,33 +286,29 @@ static bool cvt_f(SprintfState* ss, double d, const char* fmt0, const char* fmt1
 #endif
     SprintfLiteral(fout, fin, d);
 
-    return (*ss->stuff)(ss, fout, strlen(fout));
+    return emit(fout, strlen(fout));
 }
-
-static inline const char* generic_null_str(const char*) { return "(null)"; }
-
-static inline size_t generic_strlen(const char* s) { return strlen(s); }
 
 /*
  * Convert a string into its printable form.  "width" is the output
  * width. "prec" is the maximum number of characters of "s" to output,
  * where -1 means until NUL.
  */
-static bool
-cvt_s(SprintfState* ss, const char* s, int width, int prec, int flags)
+bool
+mozilla::PrintfTarget::cvt_s(const char* s, int width, int prec, int flags)
 {
     if (prec == 0)
         return true;
     if (!s)
-        s = generic_null_str(s);
+        s = "(null)";
 
     // Limit string length by precision value
-    int slen = int(generic_strlen(s));
+    int slen = int(strlen(s));
     if (0 < prec && prec < slen)
         slen = prec;
 
     // and away we go
-    return fill2(ss, s, slen, width, flags);
+    return fill2(s, slen, width, flags);
 }
 
 /*
@@ -530,11 +523,8 @@ BuildArgArray(const char* fmt, va_list ap, NumArgStateVector& nas)
     return true;
 }
 
-/*
- * The workhorse sprintf code.
- */
-static bool
-dosprintf(SprintfState* ss, const char* fmt, va_list ap)
+bool
+mozilla::PrintfTarget::vprint(const char* fmt, va_list ap)
 {
     char c;
     int flags, width, prec, radix, type;
@@ -567,7 +557,7 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
 
     while ((c = *fmt++) != 0) {
         if (c != '%') {
-            if (!(*ss->stuff)(ss, fmt - 1, 1))
+            if (!emit(fmt - 1, 1))
                 return false;
 
             continue;
@@ -580,7 +570,7 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
         c = *fmt++;
         if (c == '%') {
             // quoting a % with %%
-            if (!(*ss->stuff)(ss, fmt - 1, 1))
+            if (!emit(fmt - 1, 1))
                 return false;
 
             continue;
@@ -730,7 +720,7 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
               case TYPE_ULONG:
                 u.l = (long)va_arg(ap, unsigned long);
               do_long:
-                if (!cvt_l(ss, u.l, width, prec, radix, type, flags, hexp))
+                if (!cvt_l(u.l, width, prec, radix, type, flags, hexp))
                     return false;
 
                 break;
@@ -748,7 +738,7 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
               case TYPE_ULONGLONG:
                 u.ll = va_arg(ap, unsigned long long);
               do_longlong:
-                if (!cvt_ll(ss, u.ll, width, prec, radix, type, flags, hexp))
+                if (!cvt_ll(u.ll, width, prec, radix, type, flags, hexp))
                     return false;
 
                 break;
@@ -764,12 +754,12 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
                 i = fmt - dolPt;
                 if (i < int(sizeof(pattern))) {
                     pattern[0] = '%';
-                    js_memcpy(&pattern[1], dolPt, size_t(i));
-                    if (!cvt_f(ss, u.d, pattern, &pattern[i + 1]))
+                    memcpy(&pattern[1], dolPt, size_t(i));
+                    if (!cvt_f(u.d, pattern, &pattern[i + 1]))
                         return false;
                 }
             } else {
-                if (!cvt_f(ss, u.d, fmt0, fmt))
+                if (!cvt_f(u.d, fmt0, fmt))
                     return false;
             }
 
@@ -778,7 +768,7 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
           case 'c':
             if ((flags & FLAG_LEFT) == 0) {
                 while (width-- > 1) {
-                    if (!(*ss->stuff)(ss, " ", 1))
+                    if (!emit(" ", 1))
                         return false;
                 }
             }
@@ -786,13 +776,13 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
               case TYPE_SHORT:
               case TYPE_INTN:
                 u.ch = va_arg(ap, int);
-                if (!(*ss->stuff)(ss, &u.ch, 1))
+                if (!emit(&u.ch, 1))
                     return false;
                 break;
             }
             if (flags & FLAG_LEFT) {
                 while (width-- > 1) {
-                    if (!(*ss->stuff)(ss, " ", 1))
+                    if (!emit(" ", 1))
                         return false;
                 }
             }
@@ -815,14 +805,14 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
 
           case 's':
             u.s = va_arg(ap, const char*);
-            if (!cvt_s(ss, u.s, width, prec, flags))
+            if (!cvt_s(u.s, width, prec, flags))
                 return false;
             break;
 
           case 'n':
             u.ip = va_arg(ap, int*);
             if (u.ip) {
-                *u.ip = ss->cur - ss->base;
+                *u.ip = mEmitted;
             }
             break;
 
@@ -831,15 +821,15 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
 #if 0
             MOZ_ASSERT(0);
 #endif
-            if (!(*ss->stuff)(ss, "%", 1))
+            if (!emit("%", 1))
                 return false;
-            if (!(*ss->stuff)(ss, fmt - 1, 1))
+            if (!emit(fmt - 1, 1))
                 return false;
         }
     }
 
     // Stuff trailing NUL
-    if (!(*ss->stuff)(ss, "\0", 1))
+    if (!emit("\0", 1))
         return false;
 
     return true;
@@ -847,37 +837,48 @@ dosprintf(SprintfState* ss, const char* fmt, va_list ap)
 
 /************************************************************************/
 
+bool
+mozilla::PrintfTarget::print(const char* format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    bool result = vprint(format, ap);
+    va_end(ap);
+    return result;
+}
+
 /*
  * Stuff routine that automatically grows the js_malloc'd output buffer
  * before it overflows.
  */
-static bool
-GrowStuff(SprintfState* ss, const char* sp, size_t len)
+bool
+SprintfState::append(const char* sp, size_t len)
 {
     ptrdiff_t off;
     char* newbase;
     size_t newlen;
 
-    off = ss->cur - ss->base;
-    if (off + len >= ss->maxlen) {
+    off = cur - base;
+    if (off + len >= maxlen) {
         /* Grow the buffer */
-        newlen = ss->maxlen + ((len > 32) ? len : 32);
-        newbase = static_cast<char*>(js_realloc(ss->base, newlen));
+        newlen = maxlen + ((len > 32) ? len : 32);
+        newbase = static_cast<char*>(js_realloc(base, newlen));
         if (!newbase) {
             /* Ran out of memory */
             return false;
         }
-        ss->base = newbase;
-        ss->maxlen = newlen;
-        ss->cur = ss->base + off;
+        base = newbase;
+        maxlen = newlen;
+        cur = base + off;
     }
 
     /* Copy data */
     while (len) {
         --len;
-        *ss->cur++ = *sp++;
+        *cur++ = *sp++;
     }
-    MOZ_ASSERT(size_t(ss->cur - ss->base) <= ss->maxlen);
+    MOZ_ASSERT(size_t(cur - base) <= maxlen);
     return true;
 }
 
@@ -910,11 +911,10 @@ mozilla::Vsmprintf(const char* fmt, va_list ap)
 {
     SprintfState ss;
 
-    ss.stuff = GrowStuff;
     ss.base = 0;
     ss.cur = 0;
     ss.maxlen = 0;
-    if (!dosprintf(&ss, fmt, ap)) {
+    if (!ss.vprint(fmt, ap)) {
         js_free(ss.base);
         return 0;
     }
@@ -938,7 +938,6 @@ mozilla::VsmprintfAppend(char* last, const char* fmt, va_list ap)
 {
     SprintfState ss;
 
-    ss.stuff = GrowStuff;
     if (last) {
         size_t lastlen = strlen(last);
         ss.base = last;
@@ -949,7 +948,7 @@ mozilla::VsmprintfAppend(char* last, const char* fmt, va_list ap)
         ss.cur = 0;
         ss.maxlen = 0;
     }
-    if (!dosprintf(&ss, fmt, ap)) {
+    if (!ss.vprint(fmt, ap)) {
         js_free(ss.base);
         return 0;
     }
