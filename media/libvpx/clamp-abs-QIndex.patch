@@ -3,9 +3,9 @@
 # Parent  a2eeff55028dc78e98a16e1d8840d77378f37408
 Bug 1224361 - Clamp QIndex also in abs-value mode - r=rillian
 
-diff --git a/media/libvpx/vp8/decoder/decodeframe.c b/media/libvpx/vp8/decoder/decodeframe.c
---- a/media/libvpx/vp8/decoder/decodeframe.c
-+++ b/media/libvpx/vp8/decoder/decodeframe.c
+diff --git a/media/libvpx/libvpx/vp8/decoder/decodeframe.c b/media/libvpx/libvpx/vp8/decoder/decodeframe.c
+--- a/media/libvpx/libvpx/vp8/decoder/decodeframe.c
++++ b/media/libvpx/libvpx/vp8/decoder/decodeframe.c
 @@ -66,20 +66,19 @@ void vp8_mb_init_dequantizer(VP8D_COMP *
      if (xd->segmentation_enabled)
      {
