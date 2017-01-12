@@ -10,7 +10,6 @@ module.exports = {
        respective line in this file should be removed. */
     "consistent-return": "warn",
     "no-func-assign": "warn",
-    "no-native-reassign": "warn",
     "no-nested-ternary": "warn",
   }
 };
