@@ -26,6 +26,7 @@
  */
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/TaggedAnonymousMemory.h"
 
 #include <errno.h>
@@ -48,9 +49,19 @@ js::jit::AllocateExecutableMemory(size_t bytes, unsigned permissions, const char
                                   size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
+
+    if (!AddAllocatedExecutableBytes(bytes))
+        return nullptr;
+
+    auto autoSubtract = mozilla::MakeScopeExit([&] { SubAllocatedExecutableBytes(bytes); });
+
     void* p = MozTaggedAnonymousMmap(nullptr, bytes, permissions, MAP_PRIVATE | MAP_ANON, -1, 0,
                                      tag);
-    return p == MAP_FAILED ? nullptr : p;
+    if (p == MAP_FAILED)
+        return nullptr;
+
+    autoSubtract.release();
+    return p;
 }
 
 void
@@ -59,6 +70,8 @@ js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
     MOZ_ASSERT(bytes % pageSize == 0);
     mozilla::DebugOnly<int> result = munmap(addr, bytes);
     MOZ_ASSERT(!result || errno == ENOMEM);
+
+    SubAllocatedExecutableBytes(bytes);
 }
 
 ExecutablePool::Allocation

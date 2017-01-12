@@ -27,6 +27,7 @@
 
 #include "mozilla/StackWalk_windows.h"
 
+#include "mozilla/ScopeExit.h"
 #include "mozilla/WindowsVersion.h"
 
 #include "jsfriendapi.h"
@@ -187,11 +188,22 @@ UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
 }
 #endif
 
+static const size_t VirtualAllocGranularity = 64 * 1024;
+
 void*
 js::jit::AllocateExecutableMemory(size_t bytes, unsigned permissions, const char* tag,
                                   size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
+
+    // VirtualAlloc returns 64 KB chunks, so we round the value we pass to
+    // AddAllocatedExecutableBytes up to 64 KB to account for this. See
+    // bug 1325200.
+    size_t bytesRounded = JS_ROUNDUP(bytes, VirtualAllocGranularity);
+    if (!AddAllocatedExecutableBytes(bytesRounded))
+        return nullptr;
+
+    auto autoSubtract = mozilla::MakeScopeExit([&] { SubAllocatedExecutableBytes(bytesRounded); });
 
 #ifdef HAVE_64BIT_BUILD
     if (sJitExceptionHandler)
@@ -219,6 +231,7 @@ js::jit::AllocateExecutableMemory(size_t bytes, unsigned permissions, const char
     }
 #endif
 
+    autoSubtract.release();
     return p;
 }
 
@@ -235,6 +248,8 @@ js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
 #endif
 
     VirtualFree(addr, 0, MEM_RELEASE);
+
+    SubAllocatedExecutableBytes(JS_ROUNDUP(bytes, VirtualAllocGranularity));
 }
 
 ExecutablePool::Allocation
