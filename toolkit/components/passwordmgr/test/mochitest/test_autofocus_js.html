@@ -62,6 +62,25 @@ add_task(function* setup() {
 add_task(function* test_initial_focus() {
   let results = yield notifyMenuChanged(2, "name");
   checkArrayValues(results, ["name", "name1"], "Two results");
+  doKey("down");
+  doKey("return");
+  yield promiseFormsProcessed();
+  is(iframeDoc.getElementById("form-basic-password").value, "pass", "Check first password filled");
+  let popupState = yield getPopupState();
+  is(popupState.open, false, "Check popup is now closed");
+});
+
+add_task(function* test_not_reopened_after_selecting() {
+  let formFillController = SpecialPowers.Cc["@mozilla.org/satchel/form-fill-controller;1"].
+                           getService(SpecialPowers.Ci.nsIFormFillController);
+let usernameField = iframeDoc.getElementById("form-basic-username");
+  listenForUnexpectedPopupShown();
+  formFillController.markAsLoginManagerField(usernameField);
+  SimpleTest.requestFlakyTimeout("Giving a chance for the unexpected popupshown to occur");
+  yield new Promise(resolve => setTimeout(resolve, 1000));
+
+  // cleanup
+  gPopupShownExpected = true;
 });
 
 </script>
