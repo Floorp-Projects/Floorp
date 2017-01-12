@@ -4,10 +4,10 @@ Date:   Fri Nov 6 16:42:49 2015 -0800
 
     Bug 1218124 - Use InterlockCompare in win32 vpx_once(). r=gerald
 
-diff --git a/media/libvpx/libvpx/vpx_ports/vpx_once.h b/media/libvpx/libvpx/vpx_ports/vpx_once.h
+diff --git a/media/libvpx/vpx_ports/vpx_once.h b/media/libvpx/vpx_ports/vpx_once.h
 index f1df394..da04db4 100644
---- a/media/libvpx/libvpx/vpx_ports/vpx_once.h
-+++ b/media/libvpx/libvpx/vpx_ports/vpx_once.h
+--- a/media/libvpx/vpx_ports/vpx_once.h
++++ b/media/libvpx/vpx_ports/vpx_once.h
 @@ -1,5 +1,5 @@
  /*
 - *  Copyright (c) 2011 The WebM project authors. All Rights Reserved.
