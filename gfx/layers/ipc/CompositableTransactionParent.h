@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace layers {
 
+typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
+
 // Since PCompositble has two potential manager protocols, we can't just call
 // the Manager() method usually generated when there's one manager protocol,
 // so both manager protocols implement this and we keep a reference to them
@@ -45,7 +47,8 @@ protected:
   /**
    * Handle the IPDL messages that affect PCompositable actors.
    */
-  bool ReceiveCompositableUpdate(const CompositableOperation& aEdit);
+  bool ReceiveCompositableUpdate(const CompositableOperation& aEdit,
+                                 EditReplyVector& replyv);
 
   void ReleaseCompositable(const CompositableHandle& aHandle);
 

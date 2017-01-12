@@ -181,7 +181,6 @@ struct MappedYCbCrTextureData {
 };
 
 class ReadLockDescriptor;
-class NonBlockingTextureReadLock;
 
 // A class to help implement copy-on-write semantics for shared textures.
 //
@@ -211,34 +210,25 @@ public:
 
   virtual int32_t ReadLock() = 0;
   virtual int32_t ReadUnlock() = 0;
-  virtual bool IsValid() const = 0;
-
-  static already_AddRefed<TextureReadLock>
-  Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
-
-  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) = 0;
-
-  enum LockType {
-    TYPE_NONBLOCKING_MEMORY,
-    TYPE_NONBLOCKING_SHMEM,
-    TYPE_CROSS_PROCESS_MUTEX
-  };
-  virtual LockType GetType() = 0;
-
-  virtual NonBlockingTextureReadLock* AsNonBlockingLock() { return nullptr; }
-
-protected:
-  NS_DECL_OWNINGTHREAD
-};
-
-class NonBlockingTextureReadLock : public TextureReadLock {
-public:
   virtual int32_t GetReadCount() = 0;
+  virtual bool IsValid() const = 0;
 
   static already_AddRefed<TextureReadLock>
   Create(LayersIPCChannel* aAllocator);
 
-  virtual NonBlockingTextureReadLock* AsNonBlockingLock() override { return this; }
+  static already_AddRefed<TextureReadLock>
+  Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
+
+  virtual bool Serialize(ReadLockDescriptor& aOutput) = 0;
+
+  enum LockType {
+    TYPE_MEMORY,
+    TYPE_SHMEM
+  };
+  virtual LockType GetType() = 0;
+
+protected:
+  NS_DECL_OWNINGTHREAD
 };
 
 #ifdef XP_WIN
@@ -642,14 +632,10 @@ public:
   uint64_t GetLastFwdTransactionId() { return mFwdTransactionId; }
 
   void EnableReadLock();
-  void EnableBlockingReadLock();
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   bool IsReadLocked() const;
-
-  bool TryReadLock();
-  void ReadUnlock();
 
   void SerializeReadLock(ReadLockDescriptor& aDescriptor);
 
@@ -723,7 +709,6 @@ protected:
   uint32_t mExpectedDtRefs;
 #endif
   bool mIsLocked;
-  bool mIsReadLocked;
   // This member tracks that the texture was written into until the update
   // is sent to the compositor. We need this remember to lock mReadLock on
   // behalf of the compositor just before sending the notification.

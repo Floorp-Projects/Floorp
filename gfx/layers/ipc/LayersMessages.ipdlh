@@ -50,7 +50,6 @@ using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
-using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 
 namespace mozilla {
 namespace layers {
@@ -356,7 +355,6 @@ struct ShmemSection {
 union ReadLockDescriptor {
   ShmemSection;
   uintptr_t;
-  CrossProcessMutexHandle;
   null_t;
 };
 
@@ -529,6 +527,12 @@ struct ImageCompositeNotification {
   TimeStamp firstCompositeTimeStamp;
   uint32_t frameID;
   uint32_t producerID;
+};
+
+// Unit of a "changeset reply".  This is a weird abstraction, probably
+// only to be used for buffer swapping.
+union EditReply {
+  OpContentBufferSwap;
 };
 
 union AsyncParentMessageData {

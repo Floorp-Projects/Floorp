@@ -54,7 +54,8 @@ class ContentHost : public CompositableHost
 public:
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack) = 0;
+                            const nsIntRegion& aOldValidRegionBack,
+                            nsIntRegion* aUpdatedRegionBack) = 0;
 
   virtual void SetPaintWillResample(bool aResample) { mPaintWillResample = aResample; }
   bool PaintWillResample() { return mPaintWillResample; }
@@ -196,7 +197,8 @@ public:
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack);
+                            const nsIntRegion& aOldValidRegionBack,
+                            nsIntRegion* aUpdatedRegionBack);
 
 protected:
   nsIntRegion mValidRegionForNextBackBuffer;
@@ -218,7 +220,8 @@ public:
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
-                            const nsIntRegion& aOldValidRegionBack);
+                            const nsIntRegion& aOldValidRegionBack,
+                            nsIntRegion* aUpdatedRegionBack);
 };
 
 } // namespace layers

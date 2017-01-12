@@ -475,41 +475,8 @@ TextureClient::UnlockActor() const
 bool
 TextureClient::IsReadLocked() const
 {
-  if (!mReadLock) {
-    return false;
-  }
-  MOZ_ASSERT(mReadLock->AsNonBlockingLock(), "Can only check locked for non-blocking locks!");
-  return mReadLock->AsNonBlockingLock()->GetReadCount() > 1;
+  return mReadLock && mReadLock->GetReadCount() > 1;
 }
-
-bool
-TextureClient::TryReadLock()
-{
-  if (!mReadLock || mIsReadLocked) {
-    return true;
-  }
-
-  if (mReadLock->AsNonBlockingLock()) {
-    if (IsReadLocked()) {
-      return false;
-    }
-  }
-
-  mReadLock->ReadLock();
-  mIsReadLocked = true;
-  return true;
-}
-
-void
-TextureClient::ReadUnlock()
-{
-  if (!mIsReadLocked) {
-    return;
-  }
-  MOZ_ASSERT(mReadLock);
-  mReadLock->ReadUnlock();
-  mIsReadLocked = false;
- }
 
 bool
 TextureClient::Lock(OpenMode aMode)
@@ -523,7 +490,7 @@ TextureClient::Lock(OpenMode aMode)
     return mOpenMode == aMode;
   }
 
-  if (aMode & OpenMode::OPEN_WRITE && !TryReadLock()) {
+  if (aMode & OpenMode::OPEN_WRITE && IsReadLocked()) {
     NS_WARNING("Attempt to Lock a texture that is being read by the compositor!");
     return false;
   }
@@ -553,7 +520,6 @@ TextureClient::Lock(OpenMode aMode)
 
   if (!mIsLocked) {
     UnlockActor();
-    ReadUnlock();
   }
 
   return mIsLocked;
@@ -599,14 +565,13 @@ TextureClient::Unlock()
   mOpenMode = OpenMode::OPEN_NONE;
 
   UnlockActor();
-  ReadUnlock();
 }
 
 void
 TextureClient::EnableReadLock()
 {
   if (!mReadLock) {
-    mReadLock = NonBlockingTextureReadLock::Create(mAllocator);
+    mReadLock = TextureReadLock::Create(mAllocator);
   }
 }
 
@@ -617,7 +582,7 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
     // Take a read lock on behalf of the TextureHost. The latter will unlock
     // after the shared data is available again for drawing.
     mReadLock->ReadLock();
-    mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid());
+    mReadLock->Serialize(aDescriptor);
     mUpdated = false;
   } else {
     aDescriptor = null_t();
@@ -1311,7 +1276,6 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags, LayersIPCC
 , mExpectedDtRefs(0)
 #endif
 , mIsLocked(false)
-, mIsReadLocked(false)
 , mUpdated(false)
 , mAddedToCompositableClient(false)
 , mWorkaroundAnnoyingSharedSurfaceLifetimeIssues(false)
@@ -1399,7 +1363,7 @@ TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 #endif
 }
 
-class MemoryTextureReadLock : public NonBlockingTextureReadLock {
+class MemoryTextureReadLock : public TextureReadLock {
 public:
   MemoryTextureReadLock();
 
@@ -1411,11 +1375,11 @@ public:
 
   virtual int32_t GetReadCount() override;
 
-  virtual LockType GetType() override { return TYPE_NONBLOCKING_MEMORY; }
+  virtual LockType GetType() override { return TYPE_MEMORY; }
 
   virtual bool IsValid() const override { return true; };
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
+  virtual bool Serialize(ReadLockDescriptor& aOutput) override;
 
   int32_t mReadCount;
 };
@@ -1428,7 +1392,7 @@ public:
 // lock is not "held" (the texture is writable), when the counter is equal to 0
 // it means that we can safely deallocate the shmem section without causing a race
 // condition with the other process.
-class ShmemTextureReadLock : public NonBlockingTextureReadLock {
+class ShmemTextureReadLock : public TextureReadLock {
 public:
   struct ShmReadLockInfo {
     int32_t readCount;
@@ -1446,9 +1410,9 @@ public:
 
   virtual bool IsValid() const override { return mAllocSuccess; };
 
-  virtual LockType GetType() override { return TYPE_NONBLOCKING_SHMEM; }
+  virtual LockType GetType() override { return TYPE_SHMEM; }
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
+  virtual bool Serialize(ReadLockDescriptor& aOutput) override;
 
   mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
 
@@ -1468,35 +1432,6 @@ public:
   RefPtr<LayersIPCChannel> mClientAllocator;
   mozilla::layers::ShmemSection mShmemSection;
   bool mAllocSuccess;
-};
-
-class CrossProcessMutexReadLock : public TextureReadLock
-{
-public:
-  CrossProcessMutexReadLock()
-    : mMutex("TextureReadLock")
-  {}
-  explicit CrossProcessMutexReadLock(CrossProcessMutexHandle aHandle)
-    : mMutex(aHandle)
-  {}
-
-  virtual int32_t ReadLock() override
-  {
-    mMutex.Lock();
-    return 2;
-  }
-  virtual int32_t ReadUnlock() override
-  {
-    mMutex.Unlock();
-    return 1;
-  }
-  virtual bool IsValid() const override { return true; }
-
-  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
-
-  virtual LockType GetType() override { return TYPE_CROSS_PROCESS_MUTEX; }
-
-  CrossProcessMutex mMutex;
 };
 
 // static
@@ -1528,9 +1463,6 @@ TextureReadLock::Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllo
 
       return lock.forget();
     }
-    case ReadLockDescriptor::TCrossProcessMutexHandle: {
-      return MakeAndAddRef<CrossProcessMutexReadLock>(aDescriptor.get_CrossProcessMutexHandle());
-    }
     case ReadLockDescriptor::Tnull_t: {
       return nullptr;
     }
@@ -1543,7 +1475,7 @@ TextureReadLock::Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllo
 }
 // static
 already_AddRefed<TextureReadLock>
-NonBlockingTextureReadLock::Create(LayersIPCChannel* aAllocator)
+TextureReadLock::Create(LayersIPCChannel* aAllocator)
 {
   if (aAllocator->IsSameProcess()) {
     // If our compositor is in the same process, we can save some cycles by not
@@ -1568,7 +1500,7 @@ MemoryTextureReadLock::~MemoryTextureReadLock()
 }
 
 bool
-MemoryTextureReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
+MemoryTextureReadLock::Serialize(ReadLockDescriptor& aOutput)
 {
   // AddRef here and Release when receiving on the host side to make sure the
   // reference count doesn't go to zero before the host receives the message.
@@ -1628,7 +1560,7 @@ ShmemTextureReadLock::~ShmemTextureReadLock()
 }
 
 bool
-ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
+ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput)
 {
   aOutput = ReadLockDescriptor(GetShmemSection());
   return true;
@@ -1671,21 +1603,6 @@ ShmemTextureReadLock::GetReadCount() {
   }
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   return info->readCount;
-}
-
-bool
-CrossProcessMutexReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
-{
-  aOutput = ReadLockDescriptor(mMutex.ShareToProcess(aOther));
-  return true;
-}
-
-void
-TextureClient::EnableBlockingReadLock()
-{
-  if (!mReadLock) {
-    mReadLock = new CrossProcessMutexReadLock();
-  }
 }
 
 bool

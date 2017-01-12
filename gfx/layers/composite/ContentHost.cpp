@@ -322,8 +322,11 @@ AddWrappedRegion(const nsIntRegion& aInput, nsIntRegion& aOutput,
 bool
 ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
                                         const nsIntRegion& aUpdated,
-                                        const nsIntRegion& aOldValidRegionBack)
+                                        const nsIntRegion& aOldValidRegionBack,
+                                        nsIntRegion* aUpdatedRegionBack)
 {
+  aUpdatedRegionBack->SetEmpty();
+
   if (!mTextureHost) {
     mInitialised = false;
     return true; // FIXME should we return false? Returning true for now
@@ -382,10 +385,13 @@ ContentHostSingleBuffered::UpdateThebes(const ThebesBufferData& aData,
 bool
 ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
                                         const nsIntRegion& aUpdated,
-                                        const nsIntRegion& aOldValidRegionBack)
+                                        const nsIntRegion& aOldValidRegionBack,
+                                        nsIntRegion* aUpdatedRegionBack)
 {
   if (!mTextureHost) {
     mInitialised = false;
+
+    *aUpdatedRegionBack = aUpdated;
     return true;
   }
 
@@ -400,6 +406,8 @@ ContentHostDoubleBuffered::UpdateThebes(const ThebesBufferData& aData,
 
   mBufferRect = aData.rect();
   mBufferRotation = aData.rotation();
+
+  *aUpdatedRegionBack = aUpdated;
 
   // Save the current valid region of our front buffer, because if
   // we're double buffering, it's going to be the valid region for the
