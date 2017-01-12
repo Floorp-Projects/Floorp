@@ -278,6 +278,7 @@ ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
 ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
 : ImageClient(aFwd, aFlags, CompositableType::IMAGE_BRIDGE)
+, mAsyncContainerID(0)
 {
 }
 
@@ -287,11 +288,11 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   if (!GetForwarder() || !mLayer) {
     return false;
   }
-  if (mAsyncContainerHandle == aContainer->GetAsyncContainerHandle()) {
+  if (mAsyncContainerID == aContainer->GetAsyncContainerID()) {
     return true;
   }
-  mAsyncContainerHandle = aContainer->GetAsyncContainerHandle();
-  static_cast<ShadowLayerForwarder*>(GetForwarder())->AttachAsyncCompositable(mAsyncContainerHandle, mLayer);
+  mAsyncContainerID = aContainer->GetAsyncContainerID();
+  static_cast<ShadowLayerForwarder*>(GetForwarder())->AttachAsyncCompositable(mAsyncContainerID, mLayer);
   return true;
 }
 

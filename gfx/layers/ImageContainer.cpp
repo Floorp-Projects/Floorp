@@ -110,7 +110,7 @@ ImageContainer::EnsureImageClient(bool aCreate)
   if (imageBridge) {
     mImageClient = imageBridge->CreateImageClient(CompositableType::IMAGE, this);
     if (mImageClient) {
-      mAsyncContainerHandle = mImageClient->GetAsyncHandle();
+      mAsyncContainerID = mImageClient->GetAsyncID();
     }
   }
 }
@@ -126,27 +126,29 @@ ImageContainer::ImageContainer(Mode flag)
 {
   if (flag == ASYNCHRONOUS) {
     EnsureImageClient(true);
+  } else {
+    mAsyncContainerID = sInvalidAsyncContainerId;
   }
 }
 
-ImageContainer::ImageContainer(const CompositableHandle& aHandle)
+ImageContainer::ImageContainer(uint64_t aAsyncContainerID)
   : mReentrantMonitor("ImageContainer.mReentrantMonitor"),
   mGenerationCounter(++sGenerationCounter),
   mPaintCount(0),
   mDroppedImageCount(0),
   mImageFactory(nullptr),
   mRecycleBin(nullptr),
-  mAsyncContainerHandle(aHandle),
+  mAsyncContainerID(aAsyncContainerID),
   mCurrentProducerID(-1)
 {
-  MOZ_ASSERT(mAsyncContainerHandle);
+  MOZ_ASSERT(mAsyncContainerID != sInvalidAsyncContainerId);
 }
 
 ImageContainer::~ImageContainer()
 {
-  if (mAsyncContainerHandle) {
+  if (mAsyncContainerID) {
     if (RefPtr<ImageBridgeChild> imageBridge = ImageBridgeChild::GetSingleton()) {
-      imageBridge->ForgetImageContainer(mAsyncContainerHandle);
+      imageBridge->ForgetImageContainer(mAsyncContainerID);
     }
   }
 }
@@ -312,14 +314,14 @@ ImageContainer::SetCurrentImagesInTransaction(const nsTArray<NonOwningImage>& aI
 
 bool ImageContainer::IsAsync() const
 {
-  return !!mAsyncContainerHandle;
+  return mAsyncContainerID != sInvalidAsyncContainerId;
 }
 
-CompositableHandle ImageContainer::GetAsyncContainerHandle()
+uint64_t ImageContainer::GetAsyncContainerID()
 {
   NS_ASSERTION(IsAsync(),"Shared image ID is only relevant to async ImageContainers");
   EnsureImageClient(false);
-  return mAsyncContainerHandle;
+  return mAsyncContainerID;
 }
 
 bool

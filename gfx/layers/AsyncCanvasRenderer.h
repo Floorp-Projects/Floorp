@@ -106,9 +106,9 @@ public:
     return gfx::IntSize(mWidth, mHeight);
   }
 
-  CompositableHandle GetCanvasClientAsyncHandle() const
+  uint64_t GetCanvasClientAsyncID() const
   {
-    return mCanvasClientAsyncHandle;
+    return mCanvasClientAsyncID;
   }
 
   CanvasClient* GetCanvasClient() const
@@ -140,7 +140,7 @@ private:
 
   uint32_t mWidth;
   uint32_t mHeight;
-  CompositableHandle mCanvasClientAsyncHandle;
+  uint64_t mCanvasClientAsyncID;
 
   // The lifetime of this pointer is controlled by OffscreenCanvas
   // Can be accessed in active thread and ImageBridge thread.

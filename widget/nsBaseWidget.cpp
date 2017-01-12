@@ -2209,7 +2209,7 @@ nsBaseWidget::CreateScrollCaptureContainer()
     return ImageContainer::sInvalidAsyncContainerId;
   }
 
-  return mScrollCaptureContainer->GetAsyncContainerHandle().Value();
+  return mScrollCaptureContainer->GetAsyncContainerID();
 }
 
 void
