@@ -111,7 +111,7 @@ GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin)
   rv = aPrincipal->GetOriginSuffix(suffix);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozilla::PrincipalOriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   if (!attrs.PopulateFromSuffix(suffix)) {
     return NS_ERROR_FAILURE;
   }
@@ -121,7 +121,8 @@ GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin)
   attrs.mPrivateBrowsingId = 0;
 
   // Disable userContext and firstParty isolation for permissions.
-  attrs.StripUserContextIdAndFirstPartyDomain();
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   attrs.CreateSuffix(suffix);
   aOrigin.Append(suffix);
@@ -132,13 +133,14 @@ nsresult
 GetPrincipalFromOrigin(const nsACString& aOrigin, nsIPrincipal** aPrincipal)
 {
   nsAutoCString originNoSuffix;
-  mozilla::PrincipalOriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   if (!attrs.PopulateFromOrigin(aOrigin, originNoSuffix)) {
     return NS_ERROR_FAILURE;
   }
 
   // Disable userContext and firstParty isolation for permissions.
-  attrs.StripUserContextIdAndFirstPartyDomain();
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
@@ -152,7 +154,7 @@ GetPrincipalFromOrigin(const nsACString& aOrigin, nsIPrincipal** aPrincipal)
 nsresult
 GetPrincipal(nsIURI* aURI, uint32_t aAppId, bool aIsInIsolatedMozBrowserElement, nsIPrincipal** aPrincipal)
 {
-  mozilla::PrincipalOriginAttributes attrs(aAppId, aIsInIsolatedMozBrowserElement);
+  mozilla::OriginAttributes attrs(aAppId, aIsInIsolatedMozBrowserElement);
   nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
@@ -163,7 +165,7 @@ GetPrincipal(nsIURI* aURI, uint32_t aAppId, bool aIsInIsolatedMozBrowserElement,
 nsresult
 GetPrincipal(nsIURI* aURI, nsIPrincipal** aPrincipal)
 {
-  mozilla::PrincipalOriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal = mozilla::BasePrincipal::CreateCodebasePrincipal(aURI, attrs);
   NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
 
@@ -2208,10 +2210,11 @@ nsPermissionManager::GetPermissionHashKey(nsIPrincipal* aPrincipal,
     }
 
     // Copy the attributes over
-    mozilla::PrincipalOriginAttributes attrs = aPrincipal->OriginAttributesRef();
+    mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
 
     // Disable userContext and firstParty isolation for permissions.
-    attrs.StripUserContextIdAndFirstPartyDomain();
+    attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                          mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
 
     nsCOMPtr<nsIPrincipal> principal =
       mozilla::BasePrincipal::CreateCodebasePrincipal(newURI, attrs);

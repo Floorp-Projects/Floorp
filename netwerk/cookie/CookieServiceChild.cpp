@@ -124,7 +124,7 @@ CookieServiceChild::GetCookieStringInternal(nsIURI *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
-  mozilla::NeckoOriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (loadInfo) {
@@ -171,7 +171,7 @@ CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   URIParams uriParams;
   SerializeURI(aHostURI, uriParams);
 
-  mozilla::NeckoOriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   if (aChannel) {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (loadInfo) {

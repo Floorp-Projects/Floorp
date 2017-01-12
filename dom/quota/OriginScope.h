@@ -28,7 +28,7 @@ private:
   struct OriginAndAttributes
   {
     nsCString mOrigin;
-    PrincipalOriginAttributes mAttributes;
+    OriginAttributes mAttributes;
 
     OriginAndAttributes(const OriginAndAttributes& aOther)
       : mOrigin(aOther.mOrigin)

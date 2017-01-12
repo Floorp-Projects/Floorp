@@ -40,7 +40,7 @@ public:
                          const nsACString &npnToken,
                          const nsACString &username,
                          nsProxyInfo *proxyInfo,
-                         const NeckoOriginAttributes &originAttributes,
+                         const OriginAttributes &originAttributes,
                          bool endToEndSSL = false);
 
     // this version must use TLS and you may supply separate
@@ -51,7 +51,7 @@ public:
                          const nsACString &npnToken,
                          const nsACString &username,
                          nsProxyInfo *proxyInfo,
-                         const NeckoOriginAttributes &originAttributes,
+                         const OriginAttributes &originAttributes,
                          const nsACString &routedHost,
                          int32_t routedPort);
 
@@ -127,7 +127,7 @@ public:
     const nsCString &GetNPNToken() { return mNPNToken; }
     const nsCString &GetUsername() { return mUsername; }
 
-    const NeckoOriginAttributes &GetOriginAttributes() { return mOriginAttributes; }
+    const OriginAttributes &GetOriginAttributes() { return mOriginAttributes; }
 
     // Returns true for any kind of proxy (http, socks, https, etc..)
     bool UsingProxy();
@@ -156,7 +156,7 @@ private:
               const nsACString &npnToken,
               const nsACString &username,
               nsProxyInfo* proxyInfo,
-              const NeckoOriginAttributes &originAttributes,
+              const OriginAttributes &originAttributes,
               bool EndToEndSSL);
     void SetOriginServer(const nsACString &host, int32_t port);
 
@@ -174,7 +174,7 @@ private:
     bool                   mEndToEndSSL;
     bool                   mUsingConnect;  // if will use CONNECT with http proxy
     nsCString              mNPNToken;
-    NeckoOriginAttributes  mOriginAttributes;
+    OriginAttributes       mOriginAttributes;
 
 // for RefPtr
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsHttpConnectionInfo)

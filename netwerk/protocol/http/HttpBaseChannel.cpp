@@ -2741,7 +2741,7 @@ void HttpBaseChannel::AssertPrivateBrowsingId()
     return;
   }
 
-  DocShellOriginAttributes docShellAttrs;
+  OriginAttributes docShellAttrs;
   loadContext->GetOriginAttributes(docShellAttrs);
   MOZ_ASSERT(mLoadInfo->GetOriginAttributes().mPrivateBrowsingId == docShellAttrs.mPrivateBrowsingId,
              "PrivateBrowsingId values are not the same between LoadInfo and LoadContext.");
@@ -3015,12 +3015,12 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     if (isTopLevelDoc) {
       nsCOMPtr<nsILoadContext> loadContext;
       NS_QueryNotificationCallbacks(this, loadContext);
-      DocShellOriginAttributes docShellAttrs;
+      OriginAttributes docShellAttrs;
       if (loadContext) {
         loadContext->GetOriginAttributes(docShellAttrs);
       }
 
-      NeckoOriginAttributes attrs = newLoadInfo->GetOriginAttributes();
+      OriginAttributes attrs = newLoadInfo->GetOriginAttributes();
 
       MOZ_ASSERT(docShellAttrs.mUserContextId == attrs.mUserContextId,
                 "docshell and necko should have the same userContextId attribute.");
@@ -3029,7 +3029,8 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       MOZ_ASSERT(docShellAttrs.mPrivateBrowsingId == attrs.mPrivateBrowsingId,
                  "docshell and necko should have the same privateBrowsingId attribute.");
 
-      attrs.InheritFromDocShellToNecko(docShellAttrs, true, newURI);
+      attrs.Inherit(docShellAttrs);
+      attrs.SetFirstPartyDomain(true, newURI);
       newLoadInfo->SetOriginAttributes(attrs);
     }
 
