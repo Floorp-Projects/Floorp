@@ -15,6 +15,5 @@ module.exports = {
     "no-func-assign": "warn",
     "no-native-reassign": "warn",
     "no-nested-ternary": "warn",
-    "no-octal": "warn",
   }
 };

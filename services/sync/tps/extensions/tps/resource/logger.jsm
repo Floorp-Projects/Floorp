@@ -41,7 +41,7 @@ var Logger = {
     // If the file already exists, append it, otherwise create it.
     var fileflags = exists ? 0x02 | 0x08 | 0x10 : 0x02 | 0x08 | 0x20;
 
-    this._foStream.init(this._file, fileflags, 0666, 0);
+    this._foStream.init(this._file, fileflags, 0o666, 0);
     this._converter = Cc["@mozilla.org/intl/converter-output-stream;1"]
                       .createInstance(Ci.nsIConverterOutputStream);
     this._converter.init(this._foStream, "UTF-8", 0, 0);
