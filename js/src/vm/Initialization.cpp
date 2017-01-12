@@ -174,6 +174,9 @@ JS_ShutDown(void)
     u_cleanup();
 #endif // EXPOSE_INTL_API
 
+    if (!JSRuntime::hasLiveRuntimes())
+        js::jit::AssertAllocatedExecutableBytesIsZero();
+
     libraryInitState = InitState::ShutDown;
 }
 

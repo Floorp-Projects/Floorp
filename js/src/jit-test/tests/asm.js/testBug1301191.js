@@ -14,8 +14,11 @@ timeout(1);
     })
 })()
 function m(f) {
+    var i = 0;
     while (true) {
         f();
+        if ((i++ % 1000) === 0)
+            gc();
     }
 }
 m(g);
