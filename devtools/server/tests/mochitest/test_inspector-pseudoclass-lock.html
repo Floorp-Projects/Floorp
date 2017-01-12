@@ -60,16 +60,21 @@ function checkChange(change, expectation) {
 
   is(target.pseudoClassLocks.length, expectation.pseudos.length,
      "Expect " + expectation.pseudos.length + " pseudoclass locks.");
-  for (let pseudo of expectation.pseudos) {
+  for (let i = 0; i < expectation.pseudos.length; i++) {
+    let pseudo = expectation.pseudos[i];
+    let enabled = expectation.enabled === undefined ? true : expectation.enabled[i];
     ok(target.hasPseudoClassLock(pseudo), "Expect lock: " + pseudo);
-    ok(DOMUtils.hasPseudoClassLock(target.rawNode(), pseudo), "Expect lock in dom: " + pseudo);
+    let rawNode = target.rawNode();
+    ok(DOMUtils.hasPseudoClassLock(rawNode, pseudo), "Expect lock in dom: " + pseudo);
+
+    is(rawNode.matches(pseudo), enabled,
+       `Target should match pseudoclass, '${pseudo}', if enabled (with .matches())`);
   }
 
   for (let pseudo of KNOWN_PSEUDOCLASSES) {
     if (!expectation.pseudos.some(expected => pseudo === expected)) {
       ok(!target.hasPseudoClassLock(pseudo), "Don't expect lock: " + pseudo);
       ok(!DOMUtils.hasPseudoClassLock(target.rawNode(), pseudo), "Don't expect lock in dom: " + pseudo);
-
     }
   }
 }
@@ -93,7 +98,7 @@ addTest(function testPseudoClassLock() {
       // Expect a single pseudoClassLock mutation.
       return promiseOnce(gWalker, "mutations");
     }).then(mutations => {
-      is(mutations.length, 1, "Should get one mutations");
+      is(mutations.length, 1, "Should get one mutation");
       is(mutations[0].target, nodeFront, "Should be the node we tried to apply to");
       checkChange(mutations[0], {
         id: "b",
@@ -149,6 +154,18 @@ addTest(function testPseudoClassLock() {
         pseudos: []
       }];
       checkMutations(mutations, expectedMutations);
+    }).then(() => {
+      gWalker.addPseudoClassLock(nodeFront, ":hover", {enabled: false});
+      return promiseOnce(gWalker, "mutations");
+    }).then(mutations => {
+      is(mutations.length, 1, "Should get one mutation");
+      is(mutations[0].target, nodeFront, "Should be the node we tried to apply to");
+      checkChange(mutations[0], {
+        id: "b",
+        nodeName: "DIV",
+        pseudos: [":hover", ":active"],
+        enabled: [false, true]
+      });
     }).then(() => {
       // Now shut down the walker and make sure that clears up the remaining lock.
       return gWalker.release();
