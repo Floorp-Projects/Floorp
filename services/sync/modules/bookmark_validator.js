@@ -8,9 +8,10 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/PlacesSyncUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 
 this.EXPORTED_SYMBOLS = ["BookmarkValidator", "BookmarkProblemData"];
 
@@ -214,13 +215,17 @@ class BookmarkValidator {
     }
   }
 
-  createClientRecordsFromTree(clientTree) {
+  async createClientRecordsFromTree(clientTree) {
     // Iterate over the treeNode, converting it to something more similar to what
     // the server stores.
     let records = [];
     let recordsByGuid = new Map();
     let syncedRoots = SYNCED_ROOTS;
-    function traverse(treeNode, synced) {
+    let yieldCounter = 0;
+    async function traverse(treeNode, synced) {
+      if (++yieldCounter % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
       if (!synced) {
         synced = syncedRoots.includes(treeNode.guid);
       } else if (isNodeIgnored(treeNode)) {
@@ -280,14 +285,14 @@ class BookmarkValidator {
           treeNode.children = [];
         }
         for (let child of treeNode.children) {
-          traverse(child, synced);
+          await traverse(child, synced);
           child.parent = treeNode;
           child.parentid = guid;
           treeNode.childGUIDs.push(child.guid);
         }
       }
     }
-    traverse(clientTree, false);
+    await traverse(clientTree, false);
     clientTree.id = "places";
     this._followQueries(recordsByGuid);
     return records;
@@ -318,7 +323,7 @@ class BookmarkValidator {
    *   the fields describing client/server relationship will not have been filled
    *   out yet.
    */
-  inspectServerRecords(serverRecords) {
+  async inspectServerRecords(serverRecords) {
     let deletedItemIds = new Set();
     let idToRecord = new Map();
     let deletedRecords = [];
@@ -329,6 +334,7 @@ class BookmarkValidator {
 
     let resultRecords = [];
 
+    let yieldCounter = 0;
     for (let record of serverRecords) {
       if (!record.id) {
         ++problemData.missingIDs;
@@ -366,6 +372,9 @@ class BookmarkValidator {
         record.children = record.children.map(childID => {
           return PlacesSyncUtils.bookmarks.guidToSyncId(childID);
         });
+      }
+      if (++yieldCounter % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
     }
 
@@ -607,10 +616,10 @@ class BookmarkValidator {
    * - problemData is the same as for inspectServerRecords, except all properties
    *   will be filled out.
    */
-  compareServerWithClient(serverRecords, clientTree) {
+  async compareServerWithClient(serverRecords, clientTree) {
 
-    let clientRecords = this.createClientRecordsFromTree(clientTree);
-    let inspectionInfo = this.inspectServerRecords(serverRecords);
+    let clientRecords = await this.createClientRecordsFromTree(clientTree);
+    let inspectionInfo = await this.inspectServerRecords(serverRecords);
     inspectionInfo.clientRecords = clientRecords;
 
     // Mainly do this to remove deleted items and normalize child guids.
@@ -752,25 +761,22 @@ class BookmarkValidator {
     return items;
   }
 
-  validate(engine) {
-    let self = this;
-    return Task.spawn(function*() {
-      let start = Date.now();
-      let clientTree = yield PlacesUtils.promiseBookmarksTree("", {
-        includeItemIds: true
-      });
-      let serverState = self._getServerState(engine);
-      let serverRecordCount = serverState.length;
-      let result = self.compareServerWithClient(serverState, clientTree);
-      let end = Date.now();
-      let duration = end - start;
-      return {
-        duration,
-        version: self.version,
-        problems: result.problemData,
-        recordCount: serverRecordCount
-      };
+  async validate(engine) {
+    let start = Date.now();
+    let clientTree = await PlacesUtils.promiseBookmarksTree("", {
+      includeItemIds: true
     });
+    let serverState = this._getServerState(engine);
+    let serverRecordCount = serverState.length;
+    let result = await this.compareServerWithClient(serverState, clientTree);
+    let end = Date.now();
+    let duration = end - start;
+    return {
+      duration,
+      version: this.version,
+      problems: result.problemData,
+      recordCount: serverRecordCount
+    };
   }
 
 }
