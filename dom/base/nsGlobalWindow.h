@@ -115,7 +115,7 @@ class DocGroup;
 class External;
 class Function;
 class Gamepad;
-enum class ImageBitmapFormat : uint32_t;
+enum class ImageBitmapFormat : uint8_t;
 class IdleRequest;
 class IdleRequestCallback;
 class Location;
