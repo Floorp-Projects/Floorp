@@ -110,7 +110,7 @@ public:
 #endif
 
 #ifdef LIBFUZZER
-  virtual void XRE_LibFuzzerSetMain(int argc, char** argv, LibFuzzerMain aMain) = 0;
+  virtual void XRE_LibFuzzerSetMain(LibFuzzerMain aMain) = 0;
 
   virtual void XRE_LibFuzzerGetFuncs(const char* aModuleName, LibFuzzerInitFunc* aInitFunc, LibFuzzerTestingFunc* aTestingFunc) = 0;
 #endif

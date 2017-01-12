@@ -9,12 +9,10 @@ typedef int(*LibFuzzerMain)(int, char**);
 
 class LibFuzzerRunner {
 public:
-  int Run();
-  void setParams(int argc, char** argv, LibFuzzerMain main);
+  int Run(int argc, char** argv);
+  void setParams(LibFuzzerMain main);
 
 private:
-  int mArgc;
-  char** mArgv;
   LibFuzzerMain mFuzzerMain;
 };
 
