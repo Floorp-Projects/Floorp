@@ -1,0 +1,25 @@
+[package]
+name = "byteorder"
+version = "0.5.3"  #:version
+authors = ["Andrew Gallant <jamslam@gmail.com>"]
+description = "Library for reading/writing numbers in big-endian and little-endian."
+documentation = "http://burntsushi.net/rustdoc/byteorder/"
+homepage = "https://github.com/BurntSushi/byteorder"
+repository = "https://github.com/BurntSushi/byteorder"
+readme = "README.md"
+keywords = ["byte", "endian", "big-endian", "little-endian", "binary"]
+license = "Unlicense/MIT"
+
+[lib]
+name = "byteorder"
+
+[dev-dependencies]
+quickcheck = "0.2"
+rand = "0.3"
+
+[features]
+default = ["std"]
+std = []
+
+[profile.bench]
+opt-level = 3
