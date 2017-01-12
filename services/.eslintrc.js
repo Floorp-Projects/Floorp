@@ -16,7 +16,6 @@ module.exports = {
     "no-ex-assign": "warn",
     "no-func-assign": "warn",
     "no-irregular-whitespace": "warn",
-    "no-mixed-spaces-and-tabs": "warn",
     "no-native-reassign": "warn",
     "no-nested-ternary": "warn",
     "no-octal": "warn",
