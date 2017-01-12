@@ -7,6 +7,7 @@
 const {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/element.js");
+Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/frame.js");
 
 this.EXPORTED_SYMBOLS = ["browser"];
@@ -148,18 +149,50 @@ browser.Context = class {
     }
   }
 
+  /**
+   * Close the current window.
+   *
+   * @return {Promise}
+   *     A promise which is resolved when the current window has been closed.
+   */
+  closeWindow() {
+    return new Promise(resolve => {
+      this.window.addEventListener("unload", ev => {
+        resolve();
+      }, {once: true});
+      this.window.close();
+    });
+  }
+
   /** Called when we start a session with this browser. */
   startSession(newSession, win, callback) {
     callback(win, newSession);
   }
 
-  /** Closes current tab. */
+  /**
+   * Close the current tab.
+   *
+   * @return {Promise}
+   *     A promise which is resolved when the current tab has been closed.
+   */
   closeTab() {
-    if (this.browser &&
-        this.browser.removeTab &&
-        this.tab !== null && (this.driver.appName != "B2G")) {
-      this.browser.removeTab(this.tab);
+    // If the current window is not a browser then close it directly. Do the
+    // same if only one remaining tab is open, or no tab selected at all.
+    if (!this.browser || !this.tab || this.browser.browsers.length == 1) {
+      return this.closeWindow();
     }
+
+    return new Promise((resolve, reject) => {
+      if (this.browser.removeTab) {
+        this.tab.addEventListener("TabClose", ev => {
+          resolve();
+        }, {once: true});
+        this.browser.removeTab(this.tab);
+      } else {
+        reject(new UnsupportedOperationError(
+            `closeTab() not supported in ${this.driver.appName}`));
+      }
+    });
   }
 
   /**

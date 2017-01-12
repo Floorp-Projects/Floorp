@@ -41,7 +41,7 @@ fn read_buffer() {
 
     assert_eq!(reader.read_u8(4).unwrap(), 0b1110);
     assert_eq!(reader.read_u8(3).unwrap(), 0b011);
-    assert_eq!(reader.read_u8(1).unwrap(), 0b1);
+    assert_eq!(reader.read_bool().unwrap(), true);
 
     // Could also be 8 at this point!
     assert!(reader.is_aligned(4));
@@ -83,7 +83,7 @@ fn try_all_sizes() {
 #[test]
 fn skipping_and_zero_reads() {
     let bytes = &[
-        0b1011_0101, 0b1110_1010, 0b1010_1100,
+        0b1011_0101, 0b1110_1010, 0b1010_1100, 0b0011_0101,
     ];
 
     let mut reader = BitReader::new(bytes);
@@ -95,6 +95,10 @@ fn skipping_and_zero_reads() {
     reader.skip(3).unwrap(); // 0b111
     assert_eq!(reader.read_u16(10).unwrap(), 0b0101010101);
     assert_eq!(reader.read_u8(3).unwrap(), 0b100);
+    reader.skip(4).unwrap(); // 0b0011
+    assert_eq!(reader.read_u32(2).unwrap(), 0b01);
+    assert_eq!(reader.read_bool().unwrap(), false);
+    assert_eq!(reader.read_bool().unwrap(), true);
 }
 
 #[test]
@@ -136,5 +140,19 @@ fn signed_values() {
         let mut reader = BitReader::new(bytes);
         assert_eq!(reader.read_u8(4).unwrap(), if x < 0 { 0b1111 } else { 0 });
         assert_eq!(reader.read_i16(12).unwrap(), x);
+    }
+}
+
+#[test]
+fn boolean_values() {
+    let bytes: Vec<u8> = (0..16).collect();
+    let mut reader = BitReader::new(&bytes);
+    for v in &bytes {
+        assert_eq!(reader.read_bool().unwrap(), false);
+        reader.skip(3).unwrap();
+        assert_eq!(reader.read_bool().unwrap(), v & 0x08 == 8);
+        assert_eq!(reader.read_bool().unwrap(), v & 0x04 == 4);
+        assert_eq!(reader.read_bool().unwrap(), v & 0x02 == 2);
+        assert_eq!(reader.read_bool().unwrap(), v & 0x01 == 1);
     }
 }

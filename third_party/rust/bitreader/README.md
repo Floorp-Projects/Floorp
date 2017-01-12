@@ -2,6 +2,10 @@
 
 BitReader is a helper type to extract strings of bits from a slice of bytes.
 
+[![Published Package](https://img.shields.io/crates/v/bitreader.svg)](https://crates.io/crates/bitreader)
+[![Documentation](https://docs.rs/bitreader/badge.svg)](https://docs.rs/bitreader)
+[![Build Status](https://travis-ci.org/irauta/bitreader.svg)](https://travis-ci.org/irauta/bitreader)
+
 Here is how you read first a single bit, then three bits and finally four bits from a byte buffer:
 
     use bitreader::BitReader;
@@ -16,4 +20,4 @@ Here is how you read first a single bit, then three bits and finally four bits f
 
 You can naturally read bits from longer buffer of data than just a single byte.
 
-As you read bits, the internal cursor of BitReader moves on along the stream of bits. Little endian format is assumed when reading the multi-byte values. BitReader supports reading maximum of 64 bits at a time (with read_u64). Reading signed values directly is not supported at the moment.
+As you read bits, the internal cursor of BitReader moves on along the stream of bits. Little endian format is assumed when reading the multi-byte values. BitReader supports reading maximum of 64 bits at a time (with read_u64).

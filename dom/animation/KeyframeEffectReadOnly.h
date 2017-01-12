@@ -20,8 +20,8 @@
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/KeyframeEffectParams.h"
-#include "mozilla/ServoBindingTypes.h" // RawServoDeclarationBlock and
-                                       // associated RefPtrTraits
+// RawServoDeclarationBlock and associated RefPtrTraits
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -123,6 +123,9 @@ struct AnimationPropertySegment
   // NOTE: In the case that no keyframe for 0 or 1 offset is specified
   // the unit of mFromValue or mToValue is eUnit_Null.
   StyleAnimationValue mFromValue, mToValue;
+  // FIXME add a deep == impl for RawServoAnimationValue
+  RefPtr<RawServoAnimationValue> mServoFromValue, mServoToValue;
+
   Maybe<ComputedTimingFunction> mTimingFunction;
   dom::CompositeOperation mFromComposite = dom::CompositeOperation::Replace;
   dom::CompositeOperation mToComposite = dom::CompositeOperation::Replace;
