@@ -431,7 +431,8 @@ ToolSidebar.prototype = {
    * @return {DOMNode}
    */
   getTab: function (id) {
-    return this._tabs.get(id);
+    // FIXME: A workaround for broken browser_net_raw_headers.js failure only in non-e10s mode
+    return this._tabs && this._tabs.get(id);
   },
 
   /**

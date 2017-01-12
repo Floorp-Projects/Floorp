@@ -465,13 +465,17 @@ DevTools.prototype = {
    *         associated to the target. true, if the toolbox was successfully
    *         closed.
    */
-  closeToolbox: function DT_closeToolbox(target) {
-    let toolbox = this._toolboxes.get(target);
-    if (toolbox == null) {
-      return promise.resolve(false);
+  closeToolbox: Task.async(function* (target) {
+    let toolbox = yield this._creatingToolboxes.get(target);
+    if (!toolbox) {
+      toolbox = this._toolboxes.get(target);
     }
-    return toolbox.destroy().then(() => true);
-  },
+    if (!toolbox) {
+      return false;
+    }
+    yield toolbox.destroy();
+    return true;
+  }),
 
   /**
    * Either the SDK Loader has been destroyed by the add-on contribution

@@ -72,7 +72,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     // - should close a docked toolbox
     // - should focus a windowed toolbox
     let isDocked = toolbox && toolbox.hostType != Toolbox.HostType.WINDOW;
-    isDocked ? toolbox.destroy() : gDevTools.showToolbox(target);
+    isDocked ? gDevTools.closeToolbox(target) : gDevTools.showToolbox(target);
   },
 
   /**
@@ -193,7 +193,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
       if (toolDefinition.preventClosingOnKey || toolbox.hostType == Toolbox.HostType.WINDOW) {
         toolbox.raise();
       } else {
-        toolbox.destroy();
+        gDevTools.closeToolbox(target);
       }
       gDevTools.emit("select-tool-command", toolId);
     } else {
