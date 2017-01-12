@@ -85,9 +85,23 @@ test(t => {
                                                  // (200px + 200px) * 0.5
   assert_equals(getComputedStyle(div).marginLeft, '200px',
                 'The margin-left value at 50% should be additive value of ' +
-                'of the transition and animation');
+                'the transition and animation');
 }, 'margin-left value at 50% for an animation with no keyframe at offset 1 ' +
    'is that of transition');
+
+test(t => {
+  var div = addDiv(t, { style: 'margin-left: 100px' });
+
+  var animation = div.animate([{ offset: 0, marginLeft: '200px' }],
+                              { duration: 100 * MS_PER_SEC,
+                                iterationStart: 1,
+                                iterationComposite: 'accumulate' });
+
+  assert_equals(getComputedStyle(div).marginLeft, '300px',
+                'The margin-left value should be additive value of the ' +
+                'accumulation of the initial value onto the base value ');
+}, 'margin-left value for an animation with no keyframe at offset 1 and its ' +
+   'iterationComposite is accumulate');
 
 done();
 </script>
