@@ -2812,18 +2812,25 @@ IonBuilder::visitTest(CFGTest* test)
 AbortReasonOr<Ok>
 IonBuilder::visitCompare(CFGCompare* compare)
 {
-    MDefinition* lhs = current->pop();
     MDefinition* rhs = current->peek(-1);
+    MDefinition* lhs = current->peek(-2);
 
-    MOZ_TRY(jsop_compare(JSOP_STRICTEQ, lhs, rhs));
+    // Execute the compare operation.
+    MOZ_TRY(jsop_compare(JSOP_STRICTEQ));
     MInstruction* cmpResult = current->pop()->toInstruction();
     MOZ_ASSERT(!cmpResult->isEffectful());
 
+    // Put the rhs/lhs again on the stack.
+    current->push(lhs);
+    current->push(rhs);
+
     // Create true and false branches.
     MBasicBlock* ifTrue;
-    MOZ_TRY_VAR(ifTrue, newBlock(current, compare->trueBranch()->startPc()));
+    MOZ_TRY_VAR(ifTrue, newBlockPopN(current, compare->trueBranch()->startPc(),
+                                     compare->truePopAmount()));
     MBasicBlock* ifFalse;
-    MOZ_TRY_VAR(ifFalse, newBlock(current, compare->falseBranch()->startPc()));
+    MOZ_TRY_VAR(ifFalse, newBlockPopN(current, compare->falseBranch()->startPc(),
+                                      compare->falsePopAmount()));
 
     blockWorklist[compare->trueBranch()->id()] = ifTrue;
     blockWorklist[compare->falseBranch()->id()] = ifFalse;
