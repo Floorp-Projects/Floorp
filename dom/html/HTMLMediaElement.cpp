@@ -1643,7 +1643,7 @@ void HTMLMediaElement::AbortExistingLoads()
   mDownloadSuspendedByCache = false;
   mMediaInfo = MediaInfo();
   mIsEncrypted = false;
-  mPendingEncryptedInitData.mInitDatas.Clear();
+  mPendingEncryptedInitData.Reset();
   mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
 
@@ -5109,7 +5109,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     for (const auto& initData : mPendingEncryptedInitData.mInitDatas) {
       DispatchEncrypted(initData.mInitData, initData.mType);
     }
-    mPendingEncryptedInitData.mInitDatas.Clear();
+    mPendingEncryptedInitData.Reset();
   }
 
   mWatchManager.ManualNotify(&HTMLMediaElement::UpdateReadyStateInternal);
