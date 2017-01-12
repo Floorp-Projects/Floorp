@@ -109,7 +109,7 @@ function testInit() {
     if (processCount > 1) {
       // Currently starting a content process is slow, to aviod timeouts, let's
       // keep alive content processes.
-      prefs.setIntPref("dom.ipc.keepProcessesAlive", processCount);
+      prefs.setIntPref("dom.ipc.keepProcessesAlive.web", processCount);
     }
 
     let globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
