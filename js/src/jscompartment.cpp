@@ -1286,6 +1286,13 @@ JSCompartment::addTelemetry(const char* filename, DeprecatedLanguageExtension e)
     sawDeprecatedLanguageExtension[e] = true;
 }
 
+HashNumber
+JSCompartment::randomHashCode()
+{
+    ensureRandomNumberGenerator();
+    return HashNumber(randomNumberGenerator.ref().next());
+}
+
 mozilla::HashCodeScrambler
 JSCompartment::randomHashCodeScrambler()
 {
