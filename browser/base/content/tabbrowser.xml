@@ -5477,8 +5477,7 @@
 
       <destructor>
         <![CDATA[
-          Services.prefs.removeObserver("privacy.userContext.enabled", this);
-          Services.prefs.removeObserver("privacy.usercontext.longPressBehavior", this);
+          Services.prefs.removeObserver("privacy.userContext", this);
         ]]>
       </destructor>
 
