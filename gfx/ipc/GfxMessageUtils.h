@@ -20,6 +20,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/gfx/Matrix.h"
 #include "mozilla/layers/AsyncDragMetrics.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/LayersTypes.h"
@@ -1315,6 +1316,20 @@ struct ParamTraits<mozilla::Array<T, Length>>
       }
     }
     return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::layers::CompositorOptions>
+{
+  typedef mozilla::layers::CompositorOptions paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam) {
+    WriteParam(aMsg, aParam.mUseAPZ);
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
+    return ReadParam(aMsg, aIter, &aResult->mUseAPZ);
   }
 };
 
