@@ -72,7 +72,7 @@ add_task(async function testMigrationUnlinks() {
   });
 
   // Arrange for a legacy sync user.
-  let [engine, server] = configureLegacySync();
+  configureLegacySync();
 
   // Start a sync - this will cause an EOL notification which the migrator's
   // observer will notice.
