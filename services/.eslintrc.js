@@ -9,7 +9,6 @@ module.exports = {
        until they get fixed, at which point their
        respective line in this file should be removed. */
     "consistent-return": "warn",
-    "no-ex-assign": "warn",
     "no-func-assign": "warn",
     "no-native-reassign": "warn",
     "no-nested-ternary": "warn",
