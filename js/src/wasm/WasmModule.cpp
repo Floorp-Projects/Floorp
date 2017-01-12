@@ -893,12 +893,16 @@ Module::instantiate(JSContext* cx,
     // instance must hold onto a ref of the bytecode (keeping it alive). This
     // wastes memory for most users, so we try to only save the source when a
     // developer actually cares: when the compartment is debuggable (which is
-    // true when the web console is open) or a names section is present (since
-    // this going to be stripped for non-developer builds).
+    // true when the web console is open), has code compiled with debug flag
+    // enabled or a names section is present (since this going to be stripped
+    // for non-developer builds).
 
     const ShareableBytes* maybeBytecode = nullptr;
-    if (cx->compartment()->isDebuggee() || !metadata_->funcNames.empty())
+    if (cx->compartment()->isDebuggee() || metadata_->debugEnabled ||
+        !metadata_->funcNames.empty())
+    {
         maybeBytecode = bytecode_.get();
+    }
 
     auto codeSegment = CodeSegment::create(cx, code_, linkData_, *metadata_, memory);
     if (!codeSegment)
