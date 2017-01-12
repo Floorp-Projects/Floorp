@@ -8,6 +8,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "persisting history - bug 943306";
 const INPUT_HISTORY_COUNT = 10;
