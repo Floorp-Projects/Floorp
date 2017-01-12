@@ -101,40 +101,48 @@ FormSubmitObserver.prototype =
       return;
     }
 
-    // Insure that this is the FormSubmitObserver associated with the
-    // element / window this notification is about.
-    let element = aInvalidElements.queryElementAt(0, Ci.nsISupports);
-    if (this._content != element.ownerGlobal.top.document.defaultView) {
-      return;
-    }
+    // Show a validation message on the first focusable element.
+    for (let i = 0; i < aInvalidElements.length; i++) {
+      // Insure that this is the FormSubmitObserver associated with the
+      // element / window this notification is about.
+      let element = aInvalidElements.queryElementAt(i, Ci.nsISupports);
+      if (this._content != element.ownerGlobal.top.document.defaultView) {
+        return;
+      }
 
-    if (!(element instanceof HTMLInputElement ||
-          element instanceof HTMLTextAreaElement ||
-          element instanceof HTMLSelectElement ||
-          element instanceof HTMLButtonElement)) {
-      return;
-    }
+      if (!(element instanceof HTMLInputElement ||
+            element instanceof HTMLTextAreaElement ||
+            element instanceof HTMLSelectElement ||
+            element instanceof HTMLButtonElement)) {
+        continue;
+      }
 
-    // Update validation message before showing notification
-    this._validationMessage = element.validationMessage;
+      if (!Services.focus.elementIsFocusable(element, 0)) {
+        continue;
+      }
 
-    // Don't connect up to the same element more than once.
-    if (this._element == element) {
+      // Update validation message before showing notification
+      this._validationMessage = element.validationMessage;
+
+      // Don't connect up to the same element more than once.
+      if (this._element == element) {
+        this._showPopup(element);
+        break;
+      }
+      this._element = element;
+
+      element.focus();
+
+      // Watch for input changes which may change the validation message.
+      element.addEventListener("input", this, false);
+
+      // Watch for focus changes so we can disconnect our listeners and
+      // hide the popup.
+      element.addEventListener("blur", this, false);
+
       this._showPopup(element);
-      return;
+      break;
     }
-    this._element = element;
-
-    element.focus();
-
-    // Watch for input changes which may change the validation message.
-    element.addEventListener("input", this, false);
-
-    // Watch for focus changes so we can disconnect our listeners and
-    // hide the popup.
-    element.addEventListener("blur", this, false);
-
-    this._showPopup(element);
   },
 
   /*
