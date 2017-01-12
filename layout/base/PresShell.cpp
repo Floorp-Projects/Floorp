@@ -6920,7 +6920,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
     int16_t button = mouseEvent->button;
     switch (mouseEvent->mMessage) {
     case eMouseMove:
-      button = -1;
+      button = WidgetMouseEvent::eNoButton;
       pointerMessage = ePointerMove;
       break;
     case eMouseUp:
