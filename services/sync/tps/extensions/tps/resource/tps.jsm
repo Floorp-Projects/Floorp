@@ -822,7 +822,7 @@ var TPS = {
       let ajv = new ns.Ajv({ async: "co*" });
       this.pingValidator = ajv.compile(schema);
     } catch (e) {
-      this.DumpError(`Failed to load ping schema and AJV relative to "${testFile}".`, e);
+      this.DumpError(`Failed to load ping schema and AJV relative to "${testFile}".`, e);
     }
   },
 
