@@ -164,6 +164,12 @@ ifdef JS_STANDALONE
 NO_REMOVE=1
 endif
 
+# For an artifact build, _tests will already be partly populated, so run
+# this install manifest with NO_REMOVE set in this case.
+ifdef MOZ_ARTIFACT_BUILDS
+install-_tests: NO_REMOVE=1
+endif
+
 .PHONY: $(addprefix install-,$(subst /,_,$(install_manifests)))
 $(addprefix install-,$(install_manifests)): install-%: $(install_manifest_depends)
 ifneq (,$(filter FasterMake+RecursiveMake,$(BUILD_BACKENDS)))
