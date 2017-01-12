@@ -227,7 +227,7 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
     return IPC_OK();
   }
   MOZ_ASSERT(mWRState);
-  wr_dp_begin(mWRWindowState, mWRState, aWidth, aHeight);
+  wr_window_dp_begin(mWRWindowState, mWRState, aWidth, aHeight);
   *aOutSuccess = true;
   return IPC_OK();
 }
@@ -366,7 +366,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       }
       case WebRenderCommand::TOpDPPushIframe: {
         const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
-        wr_dp_push_iframe(mWRWindowState, mWRState, op.bounds(), op.clip(), op.layersid());
+        wr_window_dp_push_iframe(mWRWindowState, mWRState, op.bounds(), op.clip(), op.layersid());
         break;
       }
       case WebRenderCommand::TCompositableOperation: {
@@ -384,16 +384,16 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         for (size_t i = 0; i < glyph_array.Length(); i++) {
           const nsTArray<WRGlyphInstance>& glyphs = glyph_array[i].glyphs;
 
-          wr_dp_push_text(mWRWindowState,
-                          mWRState,
-                          op.bounds(),
-                          op.clip(),
-                          glyph_array[i].color,
-                          glyphs.Elements(),
-                          glyphs.Length(),
-                          op.glyph_size(),
-                          op.font_buffer().mData,
-                          op.font_buffer_length());
+          wr_window_dp_push_text(mWRWindowState,
+                                 mWRState,
+                                 op.bounds(),
+                                 op.clip(),
+                                 glyph_array[i].color,
+                                 glyphs.Elements(),
+                                 glyphs.Length(),
+                                 op.glyph_size(),
+                                 op.font_buffer().mData,
+                                 op.font_buffer_length());
         }
 
         break;
@@ -402,7 +402,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         NS_RUNTIMEABORT("not reached");
     }
   }
-  wr_dp_end(mWRWindowState, mWRState);
+  wr_window_dp_end(mWRWindowState, mWRState);
   ScheduleComposition();
   DeleteOldImages();
 

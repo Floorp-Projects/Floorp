@@ -9,7 +9,7 @@ use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF, GlyphInstance};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
-use webrender_traits::{ExternalImageId};
+use webrender_traits::{ExternalImageId, RenderApi};
 use webrender_traits::{DeviceUintSize};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender::renderer::{Renderer, RendererOptions};
@@ -57,6 +57,24 @@ pub extern fn wr_renderer_render(renderer: &mut Renderer, width: u32, height: u3
     renderer.render(DeviceUintSize::new(width, height));
 }
 
+// Call wr_renderer_render() before calling this function.
+#[no_mangle]
+pub unsafe extern fn wr_renderer_readback(width: u32, height: u32,
+                                          dst_buffer: *mut u8, buffer_size: usize) {
+    assert!(is_in_render_thread());
+
+    gl::flush();
+
+    let mut slice = slice::from_raw_parts_mut(dst_buffer, buffer_size);
+    gl::read_pixels_into_buffer(0, 0,
+                                width as gl::GLsizei,
+                                height as gl::GLsizei,
+                                gl::BGRA,
+                                gl::UNSIGNED_BYTE,
+                                slice);
+}
+
+
 #[no_mangle]
 pub extern fn wr_renderer_set_profiler_enabled(renderer: &mut Renderer, enabled: bool) {
     renderer.set_profiler_enabled(enabled);
@@ -79,14 +97,29 @@ pub unsafe extern fn wr_renderer_delete(renderer: *mut Renderer) {
 }
 
 #[no_mangle]
-pub unsafe extern fn wr_api_delete(api: *mut webrender_traits::RenderApi) {
+pub unsafe extern fn wr_api_delete(api: *mut RenderApi) {
     Box::from_raw(api);
 }
 
 #[no_mangle]
+pub unsafe extern fn wr_api_set_root_display_list(api: &mut RenderApi,
+                                                  state: &mut WrState,
+                                                  epoch: Epoch,
+                                                  viewport_width: f32,
+                                                  viewport_height: f32) {
+    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+    let frame_builder = mem::replace(&mut state.frame_builder,
+                                     WebRenderFrameBuilder::new(state.pipeline_id));
+    //let (dl_builder, aux_builder) = fb.dl_builder.finalize();
+    api.set_root_display_list(Some(root_background_color),
+                              epoch,
+                              LayoutSize::new(viewport_width, viewport_height),
+                              frame_builder.dl_builder);
+}
+#[no_mangle]
 pub extern fn wr_window_new(window_id: u64,
                             enable_profiler: bool,
-                            out_api: &mut *mut webrender_traits::RenderApi,
+                            out_api: &mut *mut RenderApi,
                             out_renderer: &mut *mut Renderer) {
     assert!(unsafe { is_in_render_thread() });
 
@@ -153,6 +186,45 @@ pub extern fn wr_state_delete(state:*mut WrState) {
         Box::from_raw(state);
     }
 }
+
+#[no_mangle]
+pub extern fn wr_dp_begin(state: &mut WrState, width: u32, height: u32) {
+    assert!( unsafe { is_in_compositor_thread() });
+    state.size = (width, height);
+    state.frame_builder.dl_builder.list.clear();
+    state.z_index = 0;
+
+    let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0), LayoutSize::new(width as f32, height as f32));
+
+    state.frame_builder.dl_builder.push_stacking_context(
+        webrender_traits::ScrollPolicy::Scrollable,
+        bounds,
+        ClipRegion::simple(&bounds),
+        0,
+        &LayoutTransform::identity(),
+        &LayoutTransform::identity(),
+        webrender_traits::MixBlendMode::Normal,
+        Vec::new(),
+    );
+}
+
+#[no_mangle]
+pub extern fn wr_dp_end(state: &mut WrState, api: &mut RenderApi, epoch: u32) {
+    assert!( unsafe { is_in_compositor_thread() });
+    let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
+    let pipeline_id = state.pipeline_id;
+    let (width, height) = state.size;
+
+    state.frame_builder.dl_builder.pop_stacking_context();
+
+    let fb = mem::replace(&mut state.frame_builder, WebRenderFrameBuilder::new(pipeline_id));
+
+    api.set_root_display_list(Some(root_background_color),
+                              Epoch(epoch),
+                              LayoutSize::new(width as f32, height as f32),
+                              fb.dl_builder);
+}
+
 
 struct CppNotifier {
     window_id: u64,
@@ -246,7 +318,7 @@ impl webrender_traits::RenderNotifier for Notifier {
 // XXX (bug 1328602) - This will be removed soon-ish.
 pub struct WrWindowState {
     renderer: Renderer,
-    api: webrender_traits::RenderApi,
+    api: RenderApi,
     root_pipeline_id: PipelineId,
     size: DeviceUintSize,
     render_notifier_lock: Arc<(Mutex<bool>, Condvar)>,
@@ -318,6 +390,7 @@ impl ExternalImageHandler for WrExternalImageHandler {
     }
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub extern fn wr_init_window(root_pipeline_id: u64,
                              glcontext_ptr: *mut c_void,
@@ -385,6 +458,7 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
     Box::into_raw(state)
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, layers_id: u64) -> *mut WrState {
     assert!( unsafe { is_in_compositor_thread() });
@@ -407,29 +481,14 @@ pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, lay
     Box::into_raw(state)
 }
 
+// TODO: Remove.
 #[no_mangle]
-pub extern fn wr_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
-    assert!( unsafe { is_in_compositor_thread() });
-    state.size = (width, height);
-    state.frame_builder.dl_builder.list.clear();
-    state.z_index = 0;
-
+pub extern fn wr_window_dp_begin(window: &mut WrWindowState, state: &mut WrState, width: u32, height: u32) {
     if state.pipeline_id == window.root_pipeline_id {
         window.size = DeviceUintSize::new(width, height);
     }
 
-    let bounds = LayoutRect::new(LayoutPoint::new(0.0, 0.0), LayoutSize::new(width as f32, height as f32));
-
-    state.frame_builder.dl_builder.push_stacking_context(
-        webrender_traits::ScrollPolicy::Scrollable,
-        bounds,
-        ClipRegion::simple(&bounds),
-        0,
-        &LayoutTransform::identity(),
-        &LayoutTransform::identity(),
-        webrender_traits::MixBlendMode::Normal,
-        Vec::new(),
-    );
+    wr_dp_begin(state, width, height);
 }
 
 #[no_mangle]
@@ -461,10 +520,10 @@ pub extern fn wr_dp_push_stacking_context(state:&mut WrState, bounds: WrRect, ov
 pub extern fn wr_dp_pop_stacking_context(state: &mut WrState)
 {
     assert!( unsafe { is_in_compositor_thread() });
-    // 
     state.frame_builder.dl_builder.pop_stacking_context()
 }
 
+// TODO: Remove.
 fn wait_for_epoch(window: &mut WrWindowState) {
     let &(ref lock, ref cvar) = &*window.render_notifier_lock;
     let mut finished = lock.lock().unwrap();
@@ -504,6 +563,7 @@ fn wait_for_epoch(window: &mut WrWindowState) {
     window.pipeline_sync_list.clear();
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub fn wr_composite_window(window: &mut WrWindowState) {
     assert!(unsafe { is_in_compositor_thread() });
@@ -514,9 +574,9 @@ pub fn wr_composite_window(window: &mut WrWindowState) {
     window.renderer.render(window.size);
 }
 
+// TODO: Remove.
 #[no_mangle]
-pub extern fn wr_dp_end(window: &mut WrWindowState,
-                        state: &mut WrState) {
+pub extern fn wr_window_dp_end(window: &mut WrWindowState, state: &mut WrState) {
     assert!( unsafe { is_in_compositor_thread() });
     let root_background_color = ColorF::new(0.3, 0.0, 0.0, 1.0);
     let pipeline_id = state.pipeline_id;
@@ -541,8 +601,32 @@ pub extern fn wr_dp_end(window: &mut WrWindowState,
     panic!("Could not find epoch for pipeline_id:({},{})", pipeline_id.0, pipeline_id.1);
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, stride: u32, format: ImageFormat, bytes: * const u8, size: usize) -> ImageKey {
+    wr_api_add_image(&mut window.api, width, height, stride, format, bytes, size)
+}
+
+// TODO: Remove.
+#[no_mangle]
+pub extern fn wr_add_external_image_texture(window: &mut WrWindowState, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
+    wr_api_add_external_image_texture(&mut window.api, width, height, format, external_image_id)
+}
+
+// TODO: Remove.
+#[no_mangle]
+pub extern fn wr_update_image(window: &mut WrWindowState, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
+    wr_api_update_image(&mut window.api, key, width, height, format, bytes, size);
+}
+
+// TODO: Remove.
+#[no_mangle]
+pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
+    wr_api_delete_image(&mut window.api, key);
+}
+
+#[no_mangle]
+pub extern fn wr_api_add_image(api: &mut RenderApi, width: u32, height: u32, stride: u32, format: ImageFormat, bytes: * const u8, size: usize) -> ImageKey {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
     let stride_option = match stride {
@@ -550,26 +634,25 @@ pub extern fn wr_add_image(window: &mut WrWindowState, width: u32, height: u32, 
         _ => Some(stride),
     };
 
-    window.api.add_image(width, height, stride_option, format, ImageData::new(bytes))
+    api.add_image(width, height, stride_option, format, ImageData::new(bytes))
 }
 
 #[no_mangle]
-pub extern fn wr_add_external_image_texture(window: &mut WrWindowState, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
+pub extern fn wr_api_add_external_image_texture(api: &mut RenderApi, width: u32, height: u32, format: ImageFormat, external_image_id: u64) -> ImageKey {
     assert!( unsafe { is_in_compositor_thread() });
-    window.api.add_image(width, height, None, format, ImageData::External(ExternalImageId(external_image_id)))
+    api.add_image(width, height, None, format, ImageData::External(ExternalImageId(external_image_id)))
 }
 
 #[no_mangle]
-pub extern fn wr_update_image(window: &mut WrWindowState, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
+pub extern fn wr_api_update_image(api: &mut RenderApi, key: ImageKey, width: u32, height: u32, format: ImageFormat, bytes: * const u8, size: usize) {
     assert!( unsafe { is_in_compositor_thread() });
     let bytes = unsafe { slice::from_raw_parts(bytes, size).to_owned() };
-    window.api.update_image(key, width, height, format, bytes);
+    api.update_image(key, width, height, format, bytes);
 }
-
 #[no_mangle]
-pub extern fn wr_delete_image(window: &mut WrWindowState, key: ImageKey) {
+pub extern fn wr_api_delete_image(api: &mut RenderApi, key: ImageKey) {
     assert!( unsafe { is_in_compositor_thread() });
-    window.api.delete_image(key)
+    api.delete_image(key)
 }
 
 #[no_mangle]
@@ -605,7 +688,7 @@ pub extern fn wr_dp_push_border(state: &mut WrState, rect: WrRect, clip: WrRect,
 }
 
 #[no_mangle]
-pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
+pub extern fn wr_window_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
     assert!( unsafe { is_in_compositor_thread() });
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
@@ -616,6 +699,19 @@ pub extern fn wr_dp_push_iframe(window: &mut WrWindowState, state: &mut WrState,
     state.frame_builder.dl_builder.push_iframe(rect.to_rect(),
                                                                    clip_region,
                                                                    pipeline_id);
+}
+
+#[no_mangle]
+pub extern fn wr_dp_push_iframe(state: &mut WrState, rect: WrRect, clip: WrRect, layers_id: u64) {
+    assert!( unsafe { is_in_compositor_thread() });
+
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(),
+                                                                     Vec::new(),
+                                                                     None);
+    let pipeline_id = u64_to_pipeline_id(layers_id);
+    state.frame_builder.dl_builder.push_iframe(rect.to_rect(),
+                                               clip_region,
+                                               pipeline_id);
 }
 
 #[repr(C)]
@@ -720,6 +816,7 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
     );
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub extern fn wr_destroy(window: &mut WrWindowState, state:*mut WrState) {
     assert!( unsafe { is_in_compositor_thread() });
@@ -730,6 +827,7 @@ pub extern fn wr_destroy(window: &mut WrWindowState, state:*mut WrState) {
     }
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub extern fn wr_readback_into_buffer(window: &mut WrWindowState, width: u32, height: u32,
                                       dst_buffer: *mut u8, buffer_size: usize) {
@@ -748,6 +846,7 @@ pub extern fn wr_readback_into_buffer(window: &mut WrWindowState, width: u32, he
     }
 }
 
+// TODO: Remove.
 #[no_mangle]
 pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
 {
@@ -755,8 +854,10 @@ pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
     window.renderer.set_profiler_enabled(enabled);
 }
 
+// XXX - Shouldn't this be split in a function that adds a font and one that adds
+// a the text using that font?
 #[no_mangle]
-pub extern fn wr_dp_push_text(window: &mut WrWindowState,
+pub extern fn wr_dp_push_text(api: &mut RenderApi,
                               state: &mut WrState,
                               bounds: WrRect,
                               clip: WrRect,
@@ -774,7 +875,7 @@ pub extern fn wr_dp_push_text(window: &mut WrWindowState,
     };
     let mut font_vector = Vec::new();
     font_vector.extend_from_slice(font_slice);
-    let font_key = window.api.add_raw_font(font_vector);
+    let font_key = api.add_raw_font(font_vector);
 
     let glyph_slice = unsafe {
         slice::from_raw_parts(glyphs, glyph_count as usize)
@@ -793,4 +894,22 @@ pub extern fn wr_dp_push_text(window: &mut WrWindowState,
                                              colorf,
                                              Au::from_f32_px(glyph_size),
                                              Au::from_px(0));
+}
+
+// TODO: Remove.
+#[no_mangle]
+pub extern fn wr_window_dp_push_text(window: &mut WrWindowState,
+                              state: &mut WrState,
+                              bounds: WrRect,
+                              clip: WrRect,
+                              color: WrColor,
+                              glyphs: *mut GlyphInstance,
+                              glyph_count: u32,
+                              glyph_size: f32,
+                              font_buffer: *mut u8,
+                              buffer_size: usize)
+{
+    wr_dp_push_text(&mut window.api, state, bounds, clip, color,
+                    glyphs, glyph_count, glyph_size,
+                    font_buffer, buffer_size);
 }
