@@ -126,21 +126,21 @@ GetBidiControl(nsStyleContext* aStyleContext)
   return 0;
 }
 
-struct BidiParagraphData {
-  nsString            mBuffer;
+struct MOZ_STACK_CLASS BidiParagraphData
+{
+  nsAutoString        mBuffer;
   AutoTArray<char16_t, 16> mEmbeddingStack;
-  nsTArray<nsIFrame*> mLogicalFrames;
-  nsTArray<nsLineBox*> mLinePerFrame;
+  AutoTArray<nsIFrame*, 16> mLogicalFrames;
+  AutoTArray<nsLineBox*, 16> mLinePerFrame;
   nsDataHashtable<nsISupportsHashKey, int32_t> mContentToFrameIndex;
   bool                mIsVisual;
   nsBidiLevel         mParaLevel;
   nsIContent*         mPrevContent;
-  nsAutoPtr<nsBidi>   mBidiEngine;
+  nsBidi              mBidiEngine;
   nsIFrame*           mPrevFrame;
 
   void Init(nsBlockFrame *aBlockFrame)
   {
-    mBidiEngine = new nsBidi();
     mPrevContent = nullptr;
 
     mParaLevel = nsBidiPresUtils::BidiLevelFromStyle(aBlockFrame->StyleContext());
@@ -174,8 +174,8 @@ struct BidiParagraphData {
 
   nsresult SetPara()
   {
-    return mBidiEngine->SetPara(mBuffer.get(), BufferLength(),
-                                mParaLevel);
+    return mBidiEngine.SetPara(mBuffer.get(), BufferLength(),
+                               mParaLevel);
   }
 
   /**
@@ -187,7 +187,7 @@ struct BidiParagraphData {
   {
     nsBidiLevel paraLevel = mParaLevel;
     if (paraLevel == NSBIDI_DEFAULT_LTR || paraLevel == NSBIDI_DEFAULT_RTL) {
-      mBidiEngine->GetParaLevel(&paraLevel);
+      mBidiEngine.GetParaLevel(&paraLevel);
     }
     return paraLevel;
   }
@@ -195,18 +195,18 @@ struct BidiParagraphData {
   nsBidiDirection GetDirection()
   {
     nsBidiDirection dir;
-    mBidiEngine->GetDirection(&dir);
+    mBidiEngine.GetDirection(&dir);
     return dir;
   }
 
-  nsresult CountRuns(int32_t *runCount){ return mBidiEngine->CountRuns(runCount); }
+  nsresult CountRuns(int32_t *runCount){ return mBidiEngine.CountRuns(runCount); }
 
   nsresult GetLogicalRun(int32_t aLogicalStart, 
                          int32_t* aLogicalLimit,
                          nsBidiLevel* aLevel)
   {
-    nsresult rv = mBidiEngine->GetLogicalRun(aLogicalStart,
-                                             aLogicalLimit, aLevel);
+    nsresult rv = mBidiEngine.GetLogicalRun(aLogicalStart,
+                                            aLogicalLimit, aLevel);
     if (mIsVisual || NS_FAILED(rv))
       *aLevel = GetParaLevel();
     return rv;
