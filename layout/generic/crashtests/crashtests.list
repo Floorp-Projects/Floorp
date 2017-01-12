@@ -571,7 +571,7 @@ asserts(1-2) asserts-if(stylo,0) load 1015563-1.html
 asserts(1-2) asserts-if(stylo,0) load 1015563-2.html
 asserts(0-300) load 1015844.html # bug 574889
 pref(font.size.inflation.minTwips,200) load 1032450.html
-asserts-if(stylo,2-3) load 1032613-1.svg # bug 1324669
+asserts-if(stylo,0-3) load 1032613-1.svg # bug 1324669
 asserts-if(stylo,2-6) load 1032613-2.html # bug 1324669
 load 1037903.html
 asserts-if(stylo,1) load 1039454-1.html # bug 1324647
