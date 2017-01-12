@@ -26,9 +26,10 @@ public:
 
 int LibFuzzerRunner::Run(int* argc, char*** argv) {
   ScopedXPCOM xpcom("LibFuzzer");
-  LibFuzzerInitFunc initFunc = nullptr;
-  LibFuzzerTestingFunc testingFunc = nullptr;
-  XRE_LibFuzzerGetFuncs(getenv("LIBFUZZER"), &initFunc, &testingFunc);
+  std::string moduleNameStr(getenv("LIBFUZZER"));
+  LibFuzzerFunctions funcs = LibFuzzerRegistry::getInstance().getModuleFunctions(moduleNameStr);
+  LibFuzzerInitFunc initFunc = funcs.first;
+  LibFuzzerTestingFunc testingFunc = funcs.second;
   if (initFunc) {
     int ret = initFunc(argc, argv);
     if (ret) {
