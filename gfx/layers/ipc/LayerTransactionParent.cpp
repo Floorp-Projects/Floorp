@@ -41,6 +41,8 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 
+typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
+
 using mozilla::layout::RenderFrameParent;
 
 namespace mozilla {
@@ -87,7 +89,7 @@ LayerTransactionParent::Destroy()
 mozilla::ipc::IPCResult
 LayerTransactionParent::RecvUpdateNoSwap(const TransactionInfo& txn)
 {
-  return RecvUpdate(txn);
+  return RecvUpdate(txn, nullptr);
 }
 
 class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender
@@ -128,7 +130,8 @@ LayerTransactionParent::RecvPaintTime(const uint64_t& aTransactionId,
 }
 
 mozilla::ipc::IPCResult
-LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
+LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo,
+                                   InfallibleTArray<EditReply>* reply)
 {
   GeckoProfilerTracingRAII tracer("Paint", "LayerTransaction");
   PROFILER_LABEL("LayerTransactionParent", "RecvUpdate",
@@ -152,6 +155,7 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
   // This ensures that destroy operations are always processed. It is not safe
   // to early-return from RecvUpdate without doing so.
   AutoLayerTransactionParentAsyncMessageSender autoAsyncMessageSender(this, &aInfo.toDestroy());
+  EditReplyVector replyv;
 
   {
     AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
@@ -551,7 +555,8 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
       break;
     }
     case Edit::TCompositableOperation: {
-      if (!ReceiveCompositableUpdate(edit.get_CompositableOperation())) {
+      if (!ReceiveCompositableUpdate(edit.get_CompositableOperation(),
+                                replyv)) {
         return IPC_FAIL_NO_REASON(this);
       }
       break;
@@ -606,6 +611,13 @@ LayerTransactionParent::RecvUpdate(const TransactionInfo& aInfo)
   {
     AutoResolveRefLayers resolve(mCompositorBridge->GetCompositionManager(this));
     layer_manager()->EndTransaction(TimeStamp(), LayerManager::END_NO_IMMEDIATE_REDRAW);
+  }
+
+  if (reply) {
+    reply->SetCapacity(replyv.size());
+    if (replyv.size() > 0) {
+      reply->AppendElements(&replyv.front(), replyv.size());
+    }
   }
 
   if (!IsSameProcess()) {

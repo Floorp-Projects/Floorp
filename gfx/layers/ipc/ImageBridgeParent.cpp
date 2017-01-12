@@ -153,17 +153,24 @@ private:
 
 mozilla::ipc::IPCResult
 ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
-                              const uint64_t& aFwdTransactionId)
+                              const uint64_t& aFwdTransactionId,
+                              EditReplyArray* aReply)
 {
   // This ensures that destroy operations are always processed. It is not safe
   // to early-return from RecvUpdate without doing so.
   AutoImageBridgeParentAsyncMessageSender autoAsyncMessageSender(this, &aToDestroy);
   UpdateFwdTransactionId(aFwdTransactionId);
 
+  EditReplyVector replyv;
   for (EditArray::index_type i = 0; i < aEdits.Length(); ++i) {
-    if (!ReceiveCompositableUpdate(aEdits[i])) {
+    if (!ReceiveCompositableUpdate(aEdits[i], replyv)) {
       return IPC_FAIL_NO_REASON(this);
     }
+  }
+
+  aReply->SetCapacity(replyv.size());
+  if (replyv.size() > 0) {
+    aReply->AppendElements(&replyv.front(), replyv.size());
   }
 
   if (!IsSameProcess()) {
@@ -180,7 +187,9 @@ mozilla::ipc::IPCResult
 ImageBridgeParent::RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
                                     const uint64_t& aFwdTransactionId)
 {
-  bool success = RecvUpdate(Move(aEdits), Move(aToDestroy), aFwdTransactionId);
+  InfallibleTArray<EditReply> noReplies;
+  bool success = RecvUpdate(Move(aEdits), Move(aToDestroy), aFwdTransactionId, &noReplies);
+  MOZ_ASSERT(noReplies.Length() == 0, "RecvUpdateNoSwap requires a sync Update to carry Edits");
   if (!success) {
     return IPC_FAIL_NO_REASON(this);
   }

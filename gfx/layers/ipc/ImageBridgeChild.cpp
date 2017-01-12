@@ -587,8 +587,10 @@ ImageBridgeChild::EndTransaction()
     ShadowLayerForwarder::PlatformSyncBeforeUpdate();
   }
 
+  AutoTArray<EditReply, 10> replies;
+
   if (mTxn->mSwapRequired) {
-    if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {
+    if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId(), &replies)) {
       NS_WARNING("could not send async texture transaction");
       return;
     }
@@ -599,6 +601,9 @@ ImageBridgeChild::EndTransaction()
       NS_WARNING("could not send async texture transaction (no swap)");
       return;
     }
+  }
+  for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
+    MOZ_CRASH("not reached");
   }
 }
 
