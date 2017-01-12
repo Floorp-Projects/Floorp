@@ -429,7 +429,6 @@ function run_test() {
     Services.io.newURI("::::::::");
   };
   res18._onProgress = onProgress;
-  let oldWarn = res18._log.warn;
   let warnings = [];
   res18._log.warn = function(msg) { warnings.push(msg) };
   error = undefined;

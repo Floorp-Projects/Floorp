@@ -22,7 +22,6 @@ function do_check_keypair_eq(a, b) {
 }
 
 function test_time_keyFromString(iterations) {
-  let k;
   let o;
   let b = new BulkKeyBundle("dummy");
   let d = Utils.decodeKeyBase32("ababcdefabcdefabcdefabcdef");

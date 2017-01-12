@@ -119,7 +119,6 @@ function test_apply_same_record_with_different_times() {
   // The following record is going to be inserted multiple times in the store
   // and it needs to be found there. Then its timestamps are going to be
   // compared to the expected values.
-  var timePasswordChanged = 100;
   timePasswordChanged = changePassword("A", "http://a.tn", "password", 1, 100,
                                        100, 100, timePasswordChanged, true);
   timePasswordChanged = changePassword("A", "http://a.tn", "password", 1, 100,

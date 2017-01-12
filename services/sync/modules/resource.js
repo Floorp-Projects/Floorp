@@ -163,7 +163,7 @@ AsyncResource.prototype = {
       this._log.debug("No authenticator found.");
     }
 
-    for (let [key, value] of Object.entries(headers)) {
+    for (let key of Object.values(headers)) {
       if (key == "authorization")
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else

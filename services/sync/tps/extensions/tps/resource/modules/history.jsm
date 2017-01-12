@@ -17,13 +17,6 @@ Cu.import("resource://tps/logger.jsm");
 Cu.import("resource://services-common/async.js");
 
 var DumpHistory = function TPS_History__DumpHistory() {
-  let writer = {
-    value: "",
-    write: function PlacesItem__dump__write(aStr, aLen) {
-      this.value += aStr;
-    }
-  };
-
   let query = PlacesUtils.history.getNewQuery();
   let options = PlacesUtils.history.getNewQueryOptions();
   let root = PlacesUtils.history.executeQuery(query, options).root;

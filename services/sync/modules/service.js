@@ -616,7 +616,7 @@ Sync11Service.prototype = {
             let cryptoResp = cryptoKeys.fetch(this.resource(this.cryptoKeysURL)).response;
 
             if (cryptoResp.success) {
-              let keysChanged = this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
+              this.handleFetchedKeys(syncKeyBundle, cryptoKeys);
               return true;
             } else if (cryptoResp.status == 404) {
               // On failure, ask to generate new keys and upload them.
@@ -1092,8 +1092,6 @@ Sync11Service.prototype = {
   // Stuff we need to do after login, before we can really do
   // anything (e.g. key setup).
   _remoteSetup: function _remoteSetup(infoResponse) {
-    let reset = false;
-
     if (!this._fetchServerConfiguration()) {
       return false;
     }
@@ -1317,7 +1315,7 @@ Sync11Service.prototype = {
       synchronizer.sync(engineNamesToSync);
       // wait() throws if the first argument is truthy, which is exactly what
       // we want.
-      let result = cb.wait();
+      cb.wait();
 
       histogram = Services.telemetry.getHistogramById("WEAVE_COMPLETE_SUCCESS_COUNT");
       histogram.add(1);
@@ -1505,7 +1503,7 @@ Sync11Service.prototype = {
     this.upgradeSyncKey(this.syncID);
 
     // Wipe the server.
-    let wipeTimestamp = this.wipeServer();
+    this.wipeServer();
 
     // Upload a new meta/global record.
     let meta = new WBORecord("meta", "global");
@@ -1521,8 +1519,6 @@ Sync11Service.prototype = {
     this.uploadMetaGlobal(meta);
 
     // Wipe everything we know about except meta because we just uploaded it
-    let engines = [this.clientsEngine].concat(this.engineManager.getAll());
-    let collections = engines.map(engine => engine.name);
     // TODO: there's a bug here. We should be calling resetClient, no?
 
     // Generate, upload, and download new keys. Do this last so we don't wipe

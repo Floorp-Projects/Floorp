@@ -64,7 +64,7 @@ add_task(function* test_something() {
   server.registerPathHandler(recordsPath, handleResponse);
 
   // Test an empty db populates
-  let result = yield OneCRLBlocklistClient.maybeSync(2000, Date.now());
+  yield OneCRLBlocklistClient.maybeSync(2000, Date.now());
 
   // Open the collection, verify it's been populated:
   // Our test data has a single record; it should be in the local collection

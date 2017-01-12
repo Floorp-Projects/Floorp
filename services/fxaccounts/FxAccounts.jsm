@@ -742,7 +742,7 @@ FxAccountsInternal.prototype = {
   _destroyAllOAuthTokens(tokenInfos) {
     // let's just destroy them all in parallel...
     let promises = [];
-    for (let [key, tokenInfo] of Object.entries(tokenInfos || {})) {
+    for (let tokenInfo of Object.values(tokenInfos || {})) {
       promises.push(this._destroyOAuthToken(tokenInfo));
     }
     return Promise.all(promises);
@@ -953,7 +953,6 @@ FxAccountsInternal.prototype = {
 
   getAssertionFromCert(data, keyPair, cert, audience) {
     log.debug("getAssertionFromCert");
-    let payload = {};
     let d = Promise.defer();
     let options = {
       duration: ASSERTION_LIFETIME,

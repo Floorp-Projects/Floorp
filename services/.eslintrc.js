@@ -21,7 +21,6 @@ module.exports = {
     "no-redeclare": "warn",
     "no-unreachable": "warn",
     "no-unsafe-finally": "warn",
-    "no-unused-vars": "warn",
     "no-useless-call": "warn"
   }
 };

@@ -184,7 +184,7 @@ add_task(function* fetchAndCacheProfileOnce() {
   let profile = CreateFxAccountsProfile(null, client);
 
   let request1 = profile._fetchAndCacheProfile();
-  let request2 = profile._fetchAndCacheProfile();
+  profile._fetchAndCacheProfile();
 
   // should be one request made to fetch the profile (but the promise returned
   // by it remains unresolved)
