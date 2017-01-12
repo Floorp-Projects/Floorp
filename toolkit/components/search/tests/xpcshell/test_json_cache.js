@@ -38,8 +38,6 @@ function run_test() {
   removeMetadata();
   removeCacheFile();
 
-  updateAppInfo();
-
   let cacheTemplateFile = do_get_file("data/search.json");
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;

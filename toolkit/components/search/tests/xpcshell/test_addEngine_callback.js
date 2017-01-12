@@ -88,7 +88,6 @@ add_test(function load_failure_test() {
 });
 
 function run_test() {
-  updateAppInfo();
   useHttpServer();
 
   run_next_test();

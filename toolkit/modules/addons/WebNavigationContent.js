@@ -33,7 +33,7 @@ var FormSubmitListener = {
   },
 
   uninit() {
-    Services.obs.removeObserver(FormSubmitListener, "earlyformsubmit", false);
+    Services.obs.removeObserver(FormSubmitListener, "earlyformsubmit");
     this.formSubmitWindows = new WeakSet();
   },
 

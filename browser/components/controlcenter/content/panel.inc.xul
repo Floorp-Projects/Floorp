@@ -26,15 +26,11 @@
             <label class="identity-popup-headline hostless" crop="end"/>
           </label>
           <description class="identity-popup-connection-not-secure"
-                       value="&identity.connectionNotSecure;"
-                       when-connection="not-secure secure-cert-user-overridden"/>
+                       when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>
           <description class="identity-popup-connection-secure"
-                       value="&identity.connectionSecure;"
-                       when-connection="secure secure-ev"/>
-          <description value="&identity.connectionInternal;"
-                       when-connection="chrome"/>
-          <description value="&identity.connectionFile;"
-                       when-connection="file"/>
+                       when-connection="secure secure-ev">&identity.connectionSecure;</description>
+          <description when-connection="chrome">&identity.connectionInternal;</description>
+          <description when-connection="file">&identity.connectionFile;</description>
 
           <vbox id="identity-popup-security-descriptions">
             <description class="identity-popup-warning-gray"
@@ -105,11 +101,9 @@
           <label class="identity-popup-headline hostless" crop="end"/>
         </label>
         <description class="identity-popup-connection-not-secure"
-                     value="&identity.connectionNotSecure;"
-                     when-connection="not-secure secure-cert-user-overridden"/>
+                     when-connection="not-secure secure-cert-user-overridden">&identity.connectionNotSecure;</description>
         <description class="identity-popup-connection-secure"
-                     value="&identity.connectionSecure;"
-                     when-connection="secure secure-ev"/>
+                     when-connection="secure secure-ev">&identity.connectionSecure;</description>
       </vbox>
 
       <vbox id="identity-popup-securityView-body" flex="1">

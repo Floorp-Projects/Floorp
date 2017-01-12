@@ -91,9 +91,6 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
     # Force disable DSS support in jemalloc.
     ac_configure_args="$ac_configure_args ac_cv_func_sbrk=false"
 
-    # Force disable hugepage support in jemalloc.
-    ac_configure_args="$ac_configure_args je_cv_thp=no"
-
     # Make Linux builds munmap freed chunks instead of recycling them.
     ac_configure_args="$ac_configure_args --enable-munmap"
 

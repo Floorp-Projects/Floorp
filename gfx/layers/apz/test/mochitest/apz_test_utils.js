@@ -120,7 +120,7 @@ function flushApzRepaints(aCallback, aWindow = window) {
     throw "A callback must be provided!";
   }
   var repaintDone = function() {
-    SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed", false);
+    SpecialPowers.Services.obs.removeObserver(repaintDone, "apz-repaints-flushed");
     setTimeout(aCallback, 0);
   };
   SpecialPowers.Services.obs.addObserver(repaintDone, "apz-repaints-flushed", false);

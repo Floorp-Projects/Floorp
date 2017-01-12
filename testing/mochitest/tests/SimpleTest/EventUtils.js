@@ -613,7 +613,7 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
       }
 
       var waitForPaints = function () {
-        SpecialPowers.Services.obs.removeObserver(waitForPaints, "apz-repaints-flushed", false);
+        SpecialPowers.Services.obs.removeObserver(waitForPaints, "apz-repaints-flushed");
         aWindow.waitForAllPaintsFlushed(function() {
           utils.restoreNormalRefresh();
           aCallback();

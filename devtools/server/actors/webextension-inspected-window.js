@@ -166,7 +166,7 @@ CustomizedReload.prototype = {
     this.docShell.removeProgressListener(this);
 
     if (this.injectedScript) {
-      Services.obs.removeObserver(this, "document-element-inserted", false);
+      Services.obs.removeObserver(this, "document-element-inserted");
     }
 
     // Reset the customized user agent.

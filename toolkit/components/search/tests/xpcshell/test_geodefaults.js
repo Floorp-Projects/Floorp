@@ -12,7 +12,6 @@ const kDayInSeconds = 86400;
 const kYearInSeconds = kDayInSeconds * 365;
 
 function run_test() {
-  updateAppInfo();
   installTestEngine();
 
   let srv = new HttpServer();
