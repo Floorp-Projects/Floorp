@@ -120,7 +120,7 @@ WRScrollFrameStackingContextGenerator::WRScrollFrameStackingContextGenerator(
     }
 
     mLayer->WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(toWrRect(bounds), toWrRect(overflow), Nothing(), identity, fm.GetScrollId()));
+      OpDPPushStackingContext(ToWRRect(bounds), ToWRRect(overflow), Nothing(), identity, fm.GetScrollId()));
   }
 }
 
@@ -151,7 +151,7 @@ WebRenderLayerManager::AsKnowsCompositor()
 {
   return mWRChild;
 }
-  
+
 void
 WebRenderLayerManager::Initialize(PCompositorBridgeChild* aCBChild,
                                   uint64_t aLayersId,
