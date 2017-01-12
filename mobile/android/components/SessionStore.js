@@ -172,7 +172,6 @@ SessionStore.prototype = {
   },
 
   observe: function ss_observe(aSubject, aTopic, aData) {
-    let self = this;
     let observerService = Services.obs;
     switch (aTopic) {
       case "app-startup":
@@ -201,8 +200,8 @@ SessionStore.prototype = {
         break;
       case "domwindowopened": {
         let window = aSubject;
-        window.addEventListener("load", function() {
-          self.onWindowOpen(window);
+        window.addEventListener("load", () => {
+          this.onWindowOpen(window);
           window.removeEventListener("load", arguments.callee);
         });
         break;
@@ -214,8 +213,8 @@ SessionStore.prototype = {
         log("quit-application-requested");
         // Get a current snapshot of all windows
         if (this._pendingWrite) {
-          this._forEachBrowserWindow(function(aWindow) {
-            self._collectWindowData(aWindow);
+          this._forEachBrowserWindow((aWindow) => {
+            this._collectWindowData(aWindow);
           });
         }
         break;
@@ -1011,9 +1010,8 @@ SessionStore.prototype = {
   },
 
   _getCurrentState: function ss_getCurrentState() {
-    let self = this;
-    this._forEachBrowserWindow(function(aWindow) {
-      self._collectWindowData(aWindow);
+    this._forEachBrowserWindow((aWindow) => {
+      this._collectWindowData(aWindow);
     });
 
     let data = { windows: [] };
