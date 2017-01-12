@@ -13,25 +13,25 @@ fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-007.
 fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-008.html abspos-breaking-008.html
 fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-009.html abspos-breaking-009.html
 fails pref(layout.css.box-decoration-break.enabled,true) == abspos-breaking-010.html abspos-breaking-010.html
-fails == abspos-breaking-011.html abspos-breaking-011.html
-fails == abspos-overflow-01.xhtml abspos-overflow-01.xhtml
-fails == abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.xhtml
+== abspos-breaking-011.html abspos-breaking-011.html
+== abspos-overflow-01.xhtml abspos-overflow-01.xhtml
+== abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.xhtml
 fails == border-breaking-000-cols.xhtml border-breaking-000-cols.xhtml
 fails == border-breaking-001-cols.xhtml border-breaking-001-cols.xhtml
 fails == border-breaking-002-cols.xhtml border-breaking-002-cols.xhtml
 fails == border-breaking-003-cols.xhtml border-breaking-003-cols.xhtml
 fails == border-breaking-004-cols.xhtml border-breaking-004-cols.xhtml
-fails == content-inserted-000.xhtml content-inserted-000.xhtml
-fails == content-inserted-001.xhtml content-inserted-001.xhtml
-fails == content-inserted-002.xhtml content-inserted-002.xhtml
-fails == content-inserted-003.xhtml content-inserted-003.xhtml
-fails == content-inserted-004.xhtml content-inserted-004.xhtml
-fails == content-inserted-005.xhtml content-inserted-005.xhtml
-fails == content-inserted-006.xhtml content-inserted-006.xhtml
-fails == content-inserted-007.xhtml content-inserted-007.xhtml
-fails == content-inserted-008.xhtml content-inserted-008.xhtml
-fails == content-inserted-009.xhtml content-inserted-009.xhtml
-fails == dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.xhtml
+== content-inserted-000.xhtml content-inserted-000.xhtml
+== content-inserted-001.xhtml content-inserted-001.xhtml
+== content-inserted-002.xhtml content-inserted-002.xhtml
+== content-inserted-003.xhtml content-inserted-003.xhtml
+== content-inserted-004.xhtml content-inserted-004.xhtml
+== content-inserted-005.xhtml content-inserted-005.xhtml
+== content-inserted-006.xhtml content-inserted-006.xhtml
+== content-inserted-007.xhtml content-inserted-007.xhtml
+== content-inserted-008.xhtml content-inserted-008.xhtml
+== content-inserted-009.xhtml content-inserted-009.xhtml
+== dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.xhtml
 fails test-pref(layout.float-fragments-inside-column.enabled,false) fails == float-clear-000.html float-clear-000.html
 fails test-pref(layout.float-fragments-inside-column.enabled,true) == float-clear-000.html float-clear-000.html
 fails == float-clear-001.html float-clear-001.html
@@ -71,5 +71,5 @@ fails == table-caption-splitaftercaption-7.html table-caption-splitaftercaption-
 # == table-caption-splitaftercaption-9.html table-caption-splitaftercaption-9.html
 # == table-caption-splitaftercaption-10.html table-caption-splitaftercaption-10.html
 # == table-caption-splitaftercaption-11.html table-caption-splitaftercaption-11.html
-fails == column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2.html
+== column-balancing-break-inside-avoid-2.html column-balancing-break-inside-avoid-2.html
 fails == combobox-page-break-inside.html combobox-page-break-inside.html

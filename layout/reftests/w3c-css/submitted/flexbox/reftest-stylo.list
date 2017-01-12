@@ -4,7 +4,7 @@
 == flexbox-abspos-child-001b.html flexbox-abspos-child-001b.html
 
 # Tests for handling anonymous flex items
-fails == flexbox-anonymous-items-001.html flexbox-anonymous-items-001.html
+== flexbox-anonymous-items-001.html flexbox-anonymous-items-001.html
 
 # Tests for alignment of flex lines (align-content property)
 fails == flexbox-align-content-horiz-001a.xhtml flexbox-align-content-horiz-001a.xhtml
@@ -15,46 +15,46 @@ fails == flexbox-align-content-vert-001b.xhtml flexbox-align-content-vert-001b.x
 # Tests for cross-axis alignment (align-self / align-items properties)
 fails == flexbox-align-self-baseline-horiz-001a.xhtml flexbox-align-self-baseline-horiz-001a.xhtml
 fails == flexbox-align-self-baseline-horiz-001b.xhtml flexbox-align-self-baseline-horiz-001b.xhtml
-fails == flexbox-align-self-baseline-horiz-002.xhtml flexbox-align-self-baseline-horiz-002.xhtml
-fails == flexbox-align-self-baseline-horiz-003.xhtml flexbox-align-self-baseline-horiz-003.xhtml
-fails == flexbox-align-self-baseline-horiz-004.xhtml flexbox-align-self-baseline-horiz-004.xhtml
-fails == flexbox-align-self-baseline-horiz-005.xhtml flexbox-align-self-baseline-horiz-005.xhtml
+== flexbox-align-self-baseline-horiz-002.xhtml flexbox-align-self-baseline-horiz-002.xhtml
+== flexbox-align-self-baseline-horiz-003.xhtml flexbox-align-self-baseline-horiz-003.xhtml
+== flexbox-align-self-baseline-horiz-004.xhtml flexbox-align-self-baseline-horiz-004.xhtml
+== flexbox-align-self-baseline-horiz-005.xhtml flexbox-align-self-baseline-horiz-005.xhtml
 fails == flexbox-align-self-baseline-horiz-006.xhtml flexbox-align-self-baseline-horiz-006.xhtml
 fails == flexbox-align-self-baseline-horiz-007.xhtml flexbox-align-self-baseline-horiz-007.xhtml
 
-fails == flexbox-align-self-stretch-vert-001.html flexbox-align-self-stretch-vert-001.html
+== flexbox-align-self-stretch-vert-001.html flexbox-align-self-stretch-vert-001.html
 == flexbox-align-self-stretch-vert-002.html flexbox-align-self-stretch-vert-002.html
 
 fails == flexbox-align-self-horiz-001-block.xhtml flexbox-align-self-horiz-001-block.xhtml
 fails == flexbox-align-self-horiz-001-table.xhtml flexbox-align-self-horiz-001-table.xhtml
-fails == flexbox-align-self-horiz-002.xhtml flexbox-align-self-horiz-002.xhtml
-fails == flexbox-align-self-horiz-003.xhtml flexbox-align-self-horiz-003.xhtml
-fails == flexbox-align-self-horiz-004.xhtml flexbox-align-self-horiz-004.xhtml
-fails == flexbox-align-self-horiz-005.xhtml flexbox-align-self-horiz-005.xhtml
+== flexbox-align-self-horiz-002.xhtml flexbox-align-self-horiz-002.xhtml
+== flexbox-align-self-horiz-003.xhtml flexbox-align-self-horiz-003.xhtml
+== flexbox-align-self-horiz-004.xhtml flexbox-align-self-horiz-004.xhtml
+== flexbox-align-self-horiz-005.xhtml flexbox-align-self-horiz-005.xhtml
 fails == flexbox-align-self-vert-001.xhtml flexbox-align-self-vert-001.xhtml
-fails == flexbox-align-self-vert-002.xhtml flexbox-align-self-vert-002.xhtml
-fails == flexbox-align-self-vert-003.xhtml flexbox-align-self-vert-003.xhtml
-fails == flexbox-align-self-vert-004.xhtml flexbox-align-self-vert-004.xhtml
+== flexbox-align-self-vert-002.xhtml flexbox-align-self-vert-002.xhtml
+== flexbox-align-self-vert-003.xhtml flexbox-align-self-vert-003.xhtml
+== flexbox-align-self-vert-004.xhtml flexbox-align-self-vert-004.xhtml
 fails == flexbox-align-self-vert-rtl-001.xhtml flexbox-align-self-vert-rtl-001.xhtml
-fails == flexbox-align-self-vert-rtl-002.xhtml flexbox-align-self-vert-rtl-002.xhtml
-fails == flexbox-align-self-vert-rtl-003.xhtml flexbox-align-self-vert-rtl-003.xhtml
-fails == flexbox-align-self-vert-rtl-004.xhtml flexbox-align-self-vert-rtl-004.xhtml
+== flexbox-align-self-vert-rtl-002.xhtml flexbox-align-self-vert-rtl-002.xhtml
+== flexbox-align-self-vert-rtl-003.xhtml flexbox-align-self-vert-rtl-003.xhtml
+== flexbox-align-self-vert-rtl-004.xhtml flexbox-align-self-vert-rtl-004.xhtml
 
 # Tests for computing the baseline of a flex container
-fails == flexbox-baseline-align-self-baseline-horiz-001.html flexbox-baseline-align-self-baseline-horiz-001.html
+== flexbox-baseline-align-self-baseline-horiz-001.html flexbox-baseline-align-self-baseline-horiz-001.html
 fails == flexbox-baseline-align-self-baseline-vert-001.html flexbox-baseline-align-self-baseline-vert-001.html
 fails == flexbox-baseline-empty-001a.html flexbox-baseline-empty-001a.html
 fails == flexbox-baseline-empty-001b.html flexbox-baseline-empty-001b.html
-fails == flexbox-baseline-multi-item-horiz-001.html flexbox-baseline-multi-item-horiz-001.html
+== flexbox-baseline-multi-item-horiz-001.html flexbox-baseline-multi-item-horiz-001.html
 fails == flexbox-baseline-multi-item-vert-001.html flexbox-baseline-multi-item-vert-001.html
-fails == flexbox-baseline-multi-line-horiz-001.html flexbox-baseline-multi-line-horiz-001.html
-fails == flexbox-baseline-multi-line-horiz-002.html flexbox-baseline-multi-line-horiz-002.html
+== flexbox-baseline-multi-line-horiz-001.html flexbox-baseline-multi-line-horiz-001.html
+== flexbox-baseline-multi-line-horiz-002.html flexbox-baseline-multi-line-horiz-002.html
 fails == flexbox-baseline-multi-line-horiz-003.html flexbox-baseline-multi-line-horiz-003.html
 fails == flexbox-baseline-multi-line-horiz-004.html flexbox-baseline-multi-line-horiz-004.html
-fails == flexbox-baseline-multi-line-vert-001.html flexbox-baseline-multi-line-vert-001.html
-fails == flexbox-baseline-multi-line-vert-002.html flexbox-baseline-multi-line-vert-002.html
-fails == flexbox-baseline-single-item-001a.html flexbox-baseline-single-item-001a.html
-fails == flexbox-baseline-single-item-001b.html flexbox-baseline-single-item-001b.html
+== flexbox-baseline-multi-line-vert-001.html flexbox-baseline-multi-line-vert-001.html
+== flexbox-baseline-multi-line-vert-002.html flexbox-baseline-multi-line-vert-002.html
+== flexbox-baseline-single-item-001a.html flexbox-baseline-single-item-001a.html
+== flexbox-baseline-single-item-001b.html flexbox-baseline-single-item-001b.html
 
 # Basic tests with with blocks as flex items
 fails == flexbox-basic-block-horiz-001.xhtml flexbox-basic-block-horiz-001.xhtml
@@ -85,14 +85,14 @@ fails == flexbox-break-request-vert-001b.html flexbox-break-request-vert-001b.ht
 == flexbox-break-request-vert-002b.html flexbox-break-request-vert-002b.html
 
 # Tests for flex items with "visibility:collapse"
-fails == flexbox-collapsed-item-baseline-001.html flexbox-collapsed-item-baseline-001.html
+== flexbox-collapsed-item-baseline-001.html flexbox-collapsed-item-baseline-001.html
 == flexbox-collapsed-item-horiz-001.html flexbox-collapsed-item-horiz-001.html
 == flexbox-collapsed-item-horiz-002.html flexbox-collapsed-item-horiz-002.html
 == flexbox-collapsed-item-horiz-003.html flexbox-collapsed-item-horiz-003.html
 
 # Tests for flex-flow shorthand property
-fails == flexbox-flex-flow-001.html flexbox-flex-flow-001.html
-fails == flexbox-flex-flow-002.html flexbox-flex-flow-002.html
+== flexbox-flex-flow-001.html flexbox-flex-flow-001.html
+== flexbox-flex-flow-002.html flexbox-flex-flow-002.html
 
 # Tests for flex-wrap property
 == flexbox-flex-wrap-horiz-001.html flexbox-flex-wrap-horiz-001.html
@@ -178,9 +178,9 @@ fails == flexbox-root-node-001b.html flexbox-root-node-001b.html
 
 # Tests for sizing of flex containers, e.g. under min/max size constraints
 fails == flexbox-sizing-horiz-001.xhtml flexbox-sizing-horiz-001.xhtml
-fails == flexbox-sizing-horiz-002.xhtml flexbox-sizing-horiz-002.xhtml
+== flexbox-sizing-horiz-002.xhtml flexbox-sizing-horiz-002.xhtml
 fails == flexbox-sizing-vert-001.xhtml flexbox-sizing-vert-001.xhtml
-fails == flexbox-sizing-vert-002.xhtml flexbox-sizing-vert-002.xhtml
+== flexbox-sizing-vert-002.xhtml flexbox-sizing-vert-002.xhtml
 
 # Tests for table-fixup *not happening* on direct children of a flex container
 fails == flexbox-table-fixup-001.xhtml flexbox-table-fixup-001.xhtml
@@ -192,7 +192,7 @@ fails == flexbox-whitespace-handling-002.xhtml flexbox-whitespace-handling-002.x
 
 # Tests for flex containers with pseudo-elements
 fails == flexbox-with-pseudo-elements-001.html flexbox-with-pseudo-elements-001.html
-fails == flexbox-with-pseudo-elements-002.html flexbox-with-pseudo-elements-002.html
+== flexbox-with-pseudo-elements-002.html flexbox-with-pseudo-elements-002.html
 fails == flexbox-with-pseudo-elements-003.html flexbox-with-pseudo-elements-003.html
 
 # Tests for combined influence of 'writing-mode' & 'direction' on flex axes

@@ -372,7 +372,8 @@ include view-source/reftest-stylo.list
 include web-animations/reftest-stylo.list
 
 # webcomponents/
-include webcomponents/reftest-stylo.list
+# Too many intermittents
+# include webcomponents/reftest-stylo.list
 
 # widget/
 include ../../widget/reftests/reftest-stylo.list

@@ -1,8 +1,8 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 fails == table-repaint-a.html table-repaint-a.html
-fails == table-repaint-b.html table-repaint-b.html
+# == table-repaint-b.html table-repaint-b.html
 fails == table-repaint-c.html table-repaint-c.html
-fails == table-repaint-d.html table-repaint-d.html
+== table-repaint-d.html table-repaint-d.html
 == 540247-1.xul 540247-1.xul
 fails == 543681-1.html 543681-1.html
 fails == 1243409-1.html 1243409-1.html
@@ -49,7 +49,7 @@ fails == transform-floating-point-invalidation.html transform-floating-point-inv
 fails == transform-floating-point-invalidation.html?reverse transform-floating-point-invalidation.html?reverse
 fails == nudge-to-integer-invalidation.html nudge-to-integer-invalidation.html
 fails == nudge-to-integer-invalidation.html?reverse nudge-to-integer-invalidation.html?reverse
-fails == clipped-animated-transform-1.html clipped-animated-transform-1.html
+# == clipped-animated-transform-1.html clipped-animated-transform-1.html
 # == paintedlayer-recycling-1.html paintedlayer-recycling-1.html
 fails == paintedlayer-recycling-2.html paintedlayer-recycling-2.html
 fails pref(layers.single-tile.enabled,false) == paintedlayer-recycling-3.html paintedlayer-recycling-3.html

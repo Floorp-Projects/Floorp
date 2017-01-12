@@ -1,5 +1,5 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails pref(dom.webcomponents.enabled,true) == cross-tree-selection-1.html cross-tree-selection-1.html
+# pref(dom.webcomponents.enabled,true) == cross-tree-selection-1.html cross-tree-selection-1.html
 # pref(dom.webcomponents.enabled,true) == basic-shadow-1.html basic-shadow-1.html
 # pref(dom.webcomponents.enabled,true) == basic-shadow-2.html basic-shadow-2.html
 # pref(dom.webcomponents.enabled,true) == basic-shadow-3.html basic-shadow-3.html

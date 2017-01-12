@@ -13,7 +13,7 @@ fails == animate-display-table-opacity.html animate-display-table-opacity.html
 # test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-opacity-1-animation.html stacking-context-opacity-1-animation.html
 # We need to run transform:none test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
 # test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-transform-none-animation.html stacking-context-transform-none-animation.html
-== no-stacking-context-opacity-removing-animation-in-delay.html no-stacking-context-opacity-removing-animation-in-delay.html
+# == no-stacking-context-opacity-removing-animation-in-delay.html no-stacking-context-opacity-removing-animation-in-delay.html
 == no-stacking-context-transform-removing-animation-in-delay.html no-stacking-context-transform-removing-animation-in-delay.html
 fails == stacking-context-lose-opacity-1.html stacking-context-lose-opacity-1.html
 fails == stacking-context-lose-transform-none.html stacking-context-lose-transform-none.html
@@ -31,7 +31,7 @@ fails == stacking-context-paused-on-transform-none.html stacking-context-paused-
 # == stacking-context-transform-none-animation.html stacking-context-transform-none-animation.html
 fails == stacking-context-transform-none-animation-on-svg.html stacking-context-transform-none-animation-on-svg.html
 fails == stacking-context-transform-none-animation-with-backface-visibility.html stacking-context-transform-none-animation-with-backface-visibility.html
-fails == stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-transform-none-animation-with-preserve-3d.html
+== stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-transform-none-animation-with-preserve-3d.html
 fails == stacking-context-transform-none-with-fill-backwards.html stacking-context-transform-none-with-fill-backwards.html
 fails == stacking-context-transform-none-with-fill-forwards.html stacking-context-transform-none-with-fill-forwards.html
 fails == stacking-context-opacity-1-in-delay.html stacking-context-opacity-1-in-delay.html

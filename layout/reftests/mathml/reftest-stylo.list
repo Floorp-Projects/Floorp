@@ -2,7 +2,7 @@
 fails == dir-1.html dir-1.html
 fails == dir-2.html dir-2.html
 random-if(gtkWidget) == dir-3.html dir-3.html
-fails == dir-4.html dir-4.html
+== dir-4.html dir-4.html
 == dir-5.html dir-5.html
 fails == dir-6.html dir-6.html
 fails == dir-6a.html dir-6a.html
@@ -12,8 +12,8 @@ fails == dir-9.html dir-9.html
 fails == dir-10.html dir-10.html
 fails == dir-11.html dir-11.html
 fails == css-spacing-1.html css-spacing-1.html
-fails pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1.html
-fails pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1.xhtml
+pref(mathml.disabled,true) == disabled-scriptlevel-1.html disabled-scriptlevel-1.html
+pref(mathml.disabled,true) == disabled-scriptlevel-1.xhtml disabled-scriptlevel-1.xhtml
 fails == displaystyle-1.html displaystyle-1.html
 fails == displaystyle-2.html displaystyle-2.html
 fails == displaystyle-3.html displaystyle-3.html
@@ -195,7 +195,7 @@ fails == mo-invisibleoperators.html mo-invisibleoperators.html
 fails == mo-invisibleoperators-2.html mo-invisibleoperators-2.html
 # == mo-glyph-size.html mo-glyph-size.html
 fails == maction-dynamic-3.html maction-dynamic-3.html
-fails == whitespace-trim-1.html whitespace-trim-1.html
+== whitespace-trim-1.html whitespace-trim-1.html
 fails == whitespace-trim-2.html whitespace-trim-2.html
 fails == whitespace-trim-3.html whitespace-trim-3.html
 fails == whitespace-trim-4.html whitespace-trim-4.html
@@ -209,22 +209,22 @@ fails == multiscripts-1.html multiscripts-1.html
 fails == mathml-mmultiscript-base.html mathml-mmultiscript-base.html
 fails == mathml-mmultiscript-mprescript.html mathml-mmultiscript-mprescript.html
 fails == menclose-1a.html menclose-1a.html
-fails == menclose-1b.html menclose-1b.html
+== menclose-1b.html menclose-1b.html
 fails == menclose-1c.html menclose-1c.html
-fails == menclose-1d.html menclose-1d.html
-fails == menclose-1e.html menclose-1e.html
-fails == menclose-1f.html menclose-1f.html
-fails == menclose-1g.html menclose-1g.html
-fails == menclose-1h.html menclose-1h.html
-fails == menclose-1i.html menclose-1i.html
-fails == menclose-1j.html menclose-1j.html
-fails == menclose-1k.html menclose-1k.html
-fails == menclose-1l.html menclose-1l.html
-fails == menclose-1m.html menclose-1m.html
-fails == menclose-1n.html menclose-1n.html
-fails == menclose-1o.html menclose-1o.html
-fails == menclose-1p.html menclose-1p.html
-fails == menclose-1q.html menclose-1q.html
+== menclose-1d.html menclose-1d.html
+== menclose-1e.html menclose-1e.html
+== menclose-1f.html menclose-1f.html
+== menclose-1g.html menclose-1g.html
+== menclose-1h.html menclose-1h.html
+== menclose-1i.html menclose-1i.html
+== menclose-1j.html menclose-1j.html
+== menclose-1k.html menclose-1k.html
+== menclose-1l.html menclose-1l.html
+== menclose-1m.html menclose-1m.html
+== menclose-1n.html menclose-1n.html
+== menclose-1o.html menclose-1o.html
+== menclose-1p.html menclose-1p.html
+== menclose-1q.html menclose-1q.html
 random-if(gtkWidget) == menclose-2-actuarial.html menclose-2-actuarial.html
 random-if(gtkWidget) == menclose-2-bottom.html menclose-2-bottom.html
 random-if(gtkWidget) == menclose-2-box.html menclose-2-box.html
@@ -248,7 +248,7 @@ fails == menclose-3-default.html menclose-3-default.html
 fails == menclose-3-invalid.html menclose-3-invalid.html
 # == menclose-3-multiple.html menclose-3-multiple.html
 fails == menclose-3-unknown.html menclose-3-unknown.html
-fails == menclose-4.html menclose-4.html
+== menclose-4.html menclose-4.html
 fails == menclose-5-actuarial.html menclose-5-actuarial.html
 fails == menclose-5-bottom.html menclose-5-bottom.html
 fails == menclose-5-box.html menclose-5-box.html
@@ -312,7 +312,7 @@ fails == columnlines-1c.html columnlines-1c.html
 fails == columnlines-2a.html columnlines-2a.html
 fails == columnlines-2b.html columnlines-2b.html
 fails == columnlines-3-1.html columnlines-3-1.html
-fails == columnlines-3-2.html columnlines-3-2.html
+== columnlines-3-2.html columnlines-3-2.html
 fails == rowlines-1a.html rowlines-1a.html
 fails == rowlines-1b.html rowlines-1b.html
 fails == rowlines-1c.html rowlines-1c.html
@@ -332,7 +332,7 @@ fails == tablespacing-8a.html tablespacing-8a.html
 fails == tablespacing-8b.html tablespacing-8b.html
 fails == op-dict-1.html op-dict-1.html
 fails == op-dict-2.html op-dict-2.html
-fails == op-dict-3.html op-dict-3.html
+== op-dict-3.html op-dict-3.html
 fails == op-dict-4.html op-dict-4.html
 fails == op-dict-5.html op-dict-5.html
 fails == op-dict-6.html op-dict-6.html

@@ -49,4 +49,4 @@ fails == block-in-inline-1.html block-in-inline-1.html
 fails == block-in-inline-2.html block-in-inline-2.html
 fails == block-in-inline-3.html block-in-inline-3.html
 fails == block-in-inline-continuations.html block-in-inline-continuations.html
-fails == inner-table-1.html inner-table-1.html
+== inner-table-1.html inner-table-1.html

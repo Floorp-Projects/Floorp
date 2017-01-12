@@ -17,7 +17,7 @@ fails == canvas-1b.xhtml canvas-1b.xhtml
 #these is skipped because we hang on the htmlparser tests when this is ran
 fails == object-aspect-ratio-1a.xhtml object-aspect-ratio-1a.xhtml
 fails == object-aspect-ratio-1b.xhtml object-aspect-ratio-1b.xhtml
-fails == offset-1.xhtml offset-1.xhtml
+== offset-1.xhtml offset-1.xhtml
 random == object-aspect-ratio-2a.xhtml object-aspect-ratio-2a.xhtml
 random == object-aspect-ratio-2b.xhtml object-aspect-ratio-2b.xhtml
 skip-if(Android) fuzzy-if(winWidget,1,56000) fuzzy-if(cocoaWidget,1,56000) HTTP(..) == zoomed-1.xhtml zoomed-1.xhtml
