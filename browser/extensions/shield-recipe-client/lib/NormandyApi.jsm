@@ -10,7 +10,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/CanonicalJSON.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.importGlobalProperties(["fetch"]); /* globals fetch */
 
 this.EXPORTED_SYMBOLS = ["NormandyApi"];
 
