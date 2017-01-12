@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.CheckResult;
+import android.support.annotation.VisibleForTesting;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
@@ -372,18 +373,29 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
     }
 
     private Notification.Action createNotificationAction() {
-        boolean isPlayAction = mMediaState.equals(State.PAUSED);
+        final Intent intent = createIntentUponState(mMediaState);
+        boolean isPlayAction = intent.getAction().equals(ACTION_RESUME);
 
         int icon = isPlayAction ? R.drawable.ic_media_play : R.drawable.ic_media_pause;
         String title = getString(isPlayAction ? R.string.media_play : R.string.media_pause);
-        String action = isPlayAction ? ACTION_RESUME : ACTION_PAUSE;
 
-        final Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
-        intent.setAction(action);
         final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
 
         //noinspection deprecation - The new constructor is only for API > 23
         return new Notification.Action.Builder(icon, title, pendingIntent).build();
+    }
+
+    /**
+     * This method encapsulated UI logic. For PLAYING state, UI should display a PAUSE icon.
+     * @param state The expected current state of MediaControlService
+     * @return corresponding Intent to be used for Notification
+     */
+    @VisibleForTesting
+    protected Intent createIntentUponState(State state) {
+        String action = state.equals(State.PLAYING) ? ACTION_PAUSE : ACTION_RESUME;
+        final Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
+        intent.setAction(action);
+        return intent;
     }
 
     private PendingIntent createContentIntent(int tabId) {
