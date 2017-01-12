@@ -26,6 +26,9 @@ WebRenderContainerLayer::RenderLayer()
   WRBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(relBounds), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
+    if (child.layer->IsBackfaceHidden()) {
+      continue;
+    }
     ToWebRenderLayer(child.layer)->RenderLayer();
   }
   WRBridge()->AddWebRenderCommand(
