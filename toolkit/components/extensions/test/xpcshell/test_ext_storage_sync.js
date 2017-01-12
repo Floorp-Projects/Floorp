@@ -140,7 +140,7 @@ class KintoServer {
             };
           } else {
             oneBody = {"data": Object.assign({}, req.body.data, {last_modified: this.etag}),
-                    "permissions": []};
+                       "permissions": []};
           }
 
           return {
