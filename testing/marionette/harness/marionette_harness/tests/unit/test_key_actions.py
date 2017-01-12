@@ -6,7 +6,7 @@ from marionette_driver.by import By
 from marionette_driver.keys import Keys
 from marionette_driver.marionette import Actions
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
 
 
 class TestKeyActions(WindowManagerMixin, MarionetteTestCase):
@@ -70,7 +70,9 @@ class TestKeyActions(WindowManagerMixin, MarionetteTestCase):
                         .perform())
         self.assertEqual(self.key_reporter_value, "")
 
+    @skip_if_mobile("Interacting with chrome windows not available for Fennec")
     def test_open_in_new_window_shortcut(self):
+
         def open_window_with_action():
             el = self.marionette.find_element(By.ID, "updatediv")
             # Ensure that the element is in the current view port because press() doesn't
