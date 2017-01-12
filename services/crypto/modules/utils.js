@@ -260,12 +260,11 @@ this.CryptoUtils = {
                                                             forceJS) {
     if (Svc.Crypto.deriveKeyFromPassphrase && !forceJS) {
       return Svc.Crypto.deriveKeyFromPassphrase(passphrase, salt, keyLength);
-    } else {
-      // Fall back to JS implementation.
-      // 4096 is hardcoded in WeaveCrypto, so do so here.
-      return CryptoUtils.pbkdf2Generate(passphrase, atob(salt), 4096,
-                                        keyLength);
     }
+    // Fall back to JS implementation.
+    // 4096 is hardcoded in WeaveCrypto, so do so here.
+    return CryptoUtils.pbkdf2Generate(passphrase, atob(salt), 4096,
+                                      keyLength);
   },
 
   /**
