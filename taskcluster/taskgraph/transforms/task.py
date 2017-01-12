@@ -285,6 +285,33 @@ task_description_schema = Schema({
             # Signing formats to use on each of the paths
             Required('formats'): [basestring],
         }],
+    }, {
+        Required('implementation'): 'beetmover',
+
+        # the maximum time to spend signing, in seconds
+        Required('max-run-time', default=600): int,
+
+        # taskid of task with artifacts to beetmove
+        # beetmover template key
+        Required('update_manifest'): bool,
+
+        # locale key, if this is a locale beetmover job
+        Optional('locale'): basestring,
+
+        # list of artifact URLs for the artifacts that should be beetmoved
+        Required('upstream-artifacts'): [{
+            # taskId of the task with the artifact
+            Required('taskId'): taskref_or_string,
+
+            # type of signing task (for CoT)
+            Required('taskType'): basestring,
+
+            # Paths to the artifacts to sign
+            Required('paths'): [basestring],
+
+            # locale is used to map upload path and allow for duplicate simple names
+            Required('locale'): basestring,
+        }],
     }),
 
     # The "when" section contains descriptions of the circumstances
@@ -318,6 +345,7 @@ GROUP_NAMES = {
     'tc-X': 'Xpcshell tests executed by TaskCluster',
     'tc-X-e10s': 'Xpcshell tests executed by TaskCluster with e10s',
     'tc-L10n': 'Localised Repacks executed by Taskcluster',
+    'tc-BM-L10n': 'Beetmover for locales executed by Taskcluster',
     'Aries': 'Aries Device Image',
     'Nexus 5-L': 'Nexus 5-L Device Image',
     'Cc': 'Toolchain builds',
@@ -482,6 +510,20 @@ def build_scriptworker_signing_payload(config, task, task_def):
         'maxRunTime': worker['max-run-time'],
         'upstreamArtifacts':  worker['upstream-artifacts']
     }
+
+
+@payload_builder('beetmover')
+def build_beetmover_payload(config, task, task_def):
+    worker = task['worker']
+
+    task_def['payload'] = {
+        'maxRunTime': worker['max-run-time'],
+        'upload_date': config.params['build_date'],
+        'update_manifest': worker['update_manifest'],
+        'upstreamArtifacts':  worker['upstream-artifacts']
+    }
+    if worker.get('locale'):
+        task_def['payload']['locale'] = worker['locale']
 
 
 @payload_builder('macosx-engine')
