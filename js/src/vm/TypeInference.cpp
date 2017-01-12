@@ -4281,6 +4281,10 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
 
         if (unboxedLayout().newScript())
             unboxedLayout().newScript()->sweep();
+
+        // Discard constructor code to avoid holding onto ExecutablePools.
+        if (zone()->isGCCompacting())
+            unboxedLayout().setConstructorCode(nullptr);
     }
 
     if (maybePreliminaryObjects())
