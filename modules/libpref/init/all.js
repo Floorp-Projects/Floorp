@@ -4737,14 +4737,6 @@ pref("extensions.webextensions.keepUuidOnUninstall", false);
 pref("extensions.webextensions.identity.redirectDomain", "extensions.allizom.org");
 pref("extensions.webextensions.remote", false);
 
-// Report Site Issue button
-pref("extensions.webcompat-reporter.newIssueEndpoint", "https://webcompat.com/issues/new");
-#ifdef NIGHTLY_BUILD
-pref("extensions.webcompat-reporter.enabled", true);
-#else
-pref("extensions.webcompat-reporter.enabled", false);
-#endif
-
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);
 
