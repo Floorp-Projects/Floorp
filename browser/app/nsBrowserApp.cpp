@@ -235,7 +235,7 @@ static int do_main(int argc, char* argv[], char* envp[])
 
 #ifdef LIBFUZZER
   if (getenv("LIBFUZZER"))
-    gBootstrap->XRE_LibFuzzerSetMain(argc, argv, libfuzzer_main);
+    gBootstrap->XRE_LibFuzzerSetMain(libfuzzer_main);
 #endif
 
   return gBootstrap->XRE_main(argc, argv, config);
