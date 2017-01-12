@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Split intersect 1</title>
+
+<style>
+.container {
+  margin: 0 0;
+  width: 400px;
+  height: 400px;
+
+  transform-style: preserve-3d;
+}
+
+.shape {
+  margin: 0 0;
+  position: absolute;
+
+  width: 100px;
+  height: 100px;
+}
+
+.first {
+  background-color: rgba(255,0,0,1);
+}
+
+.second {
+  background-color: rgba(0,255,0,1);
+  transform: rotateY(0.1deg);
+}
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="shape first"></div>
+    <div class="shape second"></div>
+  </div>
+</body>
+</html>
