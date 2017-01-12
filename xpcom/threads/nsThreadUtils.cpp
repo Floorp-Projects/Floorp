@@ -20,14 +20,9 @@
 
 #ifdef XP_WIN
 #include <windows.h>
-#include "mozilla/WindowsVersion.h"
-using mozilla::IsVistaOrLater;
 #elif defined(XP_MACOSX)
 #include <sys/resource.h>
 #endif
-
-#include <pratom.h>
-#include <prthread.h>
 
 using namespace mozilla;
 
@@ -416,8 +411,7 @@ nsThreadPoolNaming::GetNextThreadName(const nsACString& aPoolName)
 nsAutoLowPriorityIO::nsAutoLowPriorityIO()
 {
 #if defined(XP_WIN)
-  lowIOPrioritySet = IsVistaOrLater() &&
-                     SetThreadPriority(GetCurrentThread(),
+  lowIOPrioritySet = SetThreadPriority(GetCurrentThread(),
                                        THREAD_MODE_BACKGROUND_BEGIN);
 #elif defined(XP_MACOSX)
   oldPriority = getiopolicy_np(IOPOL_TYPE_DISK, IOPOL_SCOPE_THREAD);
