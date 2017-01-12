@@ -30,7 +30,6 @@ CatapultEngine.prototype = {
 function sync_httpd_setup() {
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
-  let collections = collectionsHelper.collections;
 
   let catapultEngine = engineManager.get("catapult");
   let engines        = {catapult: {version: catapultEngine.version,

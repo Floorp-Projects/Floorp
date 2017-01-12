@@ -336,7 +336,6 @@ add_test(function test_client_name_change() {
 
   let tracker = engine._tracker;
 
-  let localID = engine.localID;
   let initialName = engine.localName;
 
   Svc.Obs.notify("weave:engine:start-tracking");
@@ -373,7 +372,7 @@ add_test(function test_send_command() {
   let rec = new ClientsRec("clients", remoteId);
 
   store.create(rec);
-  let remoteRecord = store.createRecord(remoteId, "clients");
+  store.createRecord(remoteId, "clients");
 
   let action = "testCommand";
   let args = ["foo", "bar"];
@@ -469,7 +468,6 @@ add_test(function test_command_duplication() {
   engine.sendCommand(action, args, remoteId);
   engine.sendCommand(action, args, remoteId);
 
-  let newRecord = store._remoteClients[remoteId];
   let clientCommands = engine._readCommands()[remoteId];
   equal(clientCommands.length, 1);
 
@@ -776,7 +774,7 @@ add_test(function test_send_uri_to_client_for_display() {
   let rec = new ClientsRec("clients", remoteId);
   rec.name = "remote";
   store.create(rec);
-  let remoteRecord = store.createRecord(remoteId, "clients");
+  store.createRecord(remoteId, "clients");
 
   tracker.clearChangedIDs();
   let initialScore = tracker.score;
@@ -902,7 +900,6 @@ add_task(async function test_merge_commands() {
     crypto: {}
   };
   let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
 
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
@@ -936,8 +933,6 @@ add_task(async function test_merge_commands() {
   }), now - 10));
 
   try {
-    let store = engine._store;
-
     _("First sync. 2 records downloaded.");
     strictEqual(engine.lastRecordUpload, 0);
     engine._sync();
@@ -983,7 +978,6 @@ add_task(async function test_duplicate_remote_commands() {
     crypto: {}
   };
   let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
 
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
@@ -999,8 +993,6 @@ add_task(async function test_duplicate_remote_commands() {
   }), now - 10));
 
   try {
-    let store = engine._store;
-
     _("First sync. 1 record downloaded.");
     strictEqual(engine.lastRecordUpload, 0);
     engine._sync();
@@ -1053,7 +1045,6 @@ add_task(async function test_upload_after_reboot() {
     crypto: {}
   };
   let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
 
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
@@ -1082,8 +1073,6 @@ add_task(async function test_upload_after_reboot() {
   }), now - 10));
 
   try {
-    let store = engine._store;
-
     _("First sync. 2 records downloaded.");
     strictEqual(engine.lastRecordUpload, 0);
     engine._sync();
@@ -1146,7 +1135,6 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
     crypto: {}
   };
   let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
 
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
@@ -1188,8 +1176,6 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
   }), now - 10));
 
   try {
-    let store = engine._store;
-
     _("First sync. Download remote and our record.");
     strictEqual(engine.lastRecordUpload, 0);
 
@@ -1274,7 +1260,6 @@ add_task(async function test_deleted_commands() {
     crypto: {}
   };
   let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
 
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
@@ -1300,8 +1285,6 @@ add_task(async function test_deleted_commands() {
   }), now - 10));
 
   try {
-    let store = engine._store;
-
     _("First sync. 2 records downloaded.");
     engine._sync();
 
@@ -1343,7 +1326,6 @@ add_task(async function test_send_uri_ack() {
     crypto: {}
   };
   let server = serverForUsers({"foo": "password"}, contents);
-  let user   = server.user("foo");
 
   await SyncTestingInfrastructure(server);
   generateNewKeys(Service.collectionKeys);
@@ -1411,14 +1393,9 @@ add_task(async function test_command_sync() {
   let server    = serverForUsers({"foo": "password"}, contents);
   await SyncTestingInfrastructure(server);
 
-  let user       = server.user("foo");
   let collection = server.getCollection("foo", "clients");
   let remoteId   = Utils.makeGUID();
   let remoteId2  = Utils.makeGUID();
-
-  function clientWBO(id) {
-    return user.collection("clients").wbo(id);
-  }
 
   _("Create remote client record 1");
   server.insertWBO("foo", "clients", new ServerWBO(remoteId, encryptPayload({

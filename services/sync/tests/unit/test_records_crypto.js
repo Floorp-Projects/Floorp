@@ -43,7 +43,6 @@ add_task(async function test_records_crypto() {
 
     log.info("Creating a record");
 
-    let cryptoUri = "http://localhost:8080/crypto/steam";
     cryptoWrap = prepareCryptoWrap("steam", "resource");
 
     log.info("cryptoWrap: " + cryptoWrap.toString());
@@ -107,7 +106,6 @@ add_task(async function test_records_crypto() {
     // Checking per-collection keys and default key handling.
 
     generateNewKeys(Service.collectionKeys);
-    let bu = "http://localhost:8080/storage/bookmarks/foo";
     let bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     bookmarkItem.encrypt(Service.collectionKeys.keyForCollection("bookmarks"));
     log.info("Ciphertext is " + bookmarkItem.ciphertext);

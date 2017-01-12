@@ -295,7 +295,6 @@ IdentityManager.prototype = {
 
     // Clear any cached Sync Key Bundle and regenerate it.
     this._syncKeyBundle = null;
-    let bundle = this.syncKeyBundle;
 
     this._syncKeyUpdated = true;
   },

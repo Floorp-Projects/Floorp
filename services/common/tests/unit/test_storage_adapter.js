@@ -248,7 +248,6 @@ add_test(function test_creation_from_empty_db() {
   add_test(function test_create_from_empty_db() {
     // place an empty kinto db file in the profile
     let profile = do_get_profile();
-    let kintoDB = do_get_kinto_db();
 
     let emptyDB = do_get_file("test_storage_adapter/empty.sqlite");
     emptyDB.copyTo(profile, kintoFilename);

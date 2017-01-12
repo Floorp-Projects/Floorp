@@ -23,8 +23,6 @@ function createAndStartHTTPServer(port = HTTP_PORT) {
   try {
     let server = new HttpServer();
 
-    let bootstrap1XPI = ExtensionsTestPath("/addons/test_bootstrap1_1.xpi");
-
     server.registerFile("/search/guid:missing-sourceuri%40tests.mozilla.org",
                         do_get_file("missing-sourceuri.xml"));
 
