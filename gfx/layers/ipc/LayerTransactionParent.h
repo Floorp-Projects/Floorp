@@ -42,6 +42,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   typedef mozilla::layout::RenderFrameParent RenderFrameParent;
   typedef InfallibleTArray<Edit> EditArray;
   typedef InfallibleTArray<OpDestroy> OpDestroyArray;
+  typedef InfallibleTArray<EditReply> EditReplyArray;
   typedef InfallibleTArray<PluginWindowData> PluginsArray;
 
 public:
@@ -113,7 +114,9 @@ protected:
   virtual mozilla::ipc::IPCResult RecvPaintTime(const uint64_t& aTransactionId,
                                                 const TimeDuration& aPaintTime) override;
 
-  virtual mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo) override;
+  virtual mozilla::ipc::IPCResult RecvUpdate(const TransactionInfo& aInfo,
+                                             EditReplyArray* reply) override;
+
   virtual mozilla::ipc::IPCResult RecvUpdateNoSwap(const TransactionInfo& aInfo) override;
 
   virtual mozilla::ipc::IPCResult RecvSetLayerObserverEpoch(const uint64_t& aLayerObserverEpoch) override;
