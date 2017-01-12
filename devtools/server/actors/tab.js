@@ -1498,7 +1498,7 @@ DebuggerProgressListener.prototype = {
   ]),
 
   destroy() {
-    Services.obs.removeObserver(this, "inner-window-destroyed", false);
+    Services.obs.removeObserver(this, "inner-window-destroyed");
     this._knownWindowIDs.clear();
     this._knownWindowIDs = null;
   },

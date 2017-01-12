@@ -21,6 +21,7 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
 import org.mozilla.gecko.home.activitystream.menu.ActivityStreamContextMenu;
+import org.mozilla.gecko.home.activitystream.model.TopSite;
 import org.mozilla.gecko.icons.IconCallback;
 import org.mozilla.gecko.icons.IconResponse;
 import org.mozilla.gecko.icons.Icons;
@@ -40,9 +41,7 @@ class TopSitesCard extends RecyclerView.ViewHolder
     private final ImageView menuButton;
     private Future<IconResponse> ongoingIconLoad;
 
-    private String url;
-    private int type;
-    @Nullable private Boolean isBookmarked;
+    private TopSite topSite;
 
     private final HomePager.OnUrlOpenListener onUrlOpenListener;
     private final HomePager.OnUrlOpenInBackgroundListener onUrlOpenInBackgroundListener;
@@ -66,29 +65,27 @@ class TopSitesCard extends RecyclerView.ViewHolder
         ViewUtil.enableTouchRipple(menuButton);
     }
 
-    void bind(final TopSitesPageAdapter.TopSite topSite) {
-        ActivityStream.extractLabel(itemView.getContext(), topSite.url, true, new ActivityStream.LabelCallback() {
+    void bind(final TopSite topSite) {
+        this.topSite = topSite;
+
+        ActivityStream.extractLabel(itemView.getContext(), topSite.getUrl(), true, new ActivityStream.LabelCallback() {
             @Override
             public void onLabelExtracted(String label) {
                 title.setText(label);
             }
         });
 
-        this.url = topSite.url;
-        this.type = topSite.type;
-        this.isBookmarked = topSite.isBookmarked;
-
         if (ongoingIconLoad != null) {
             ongoingIconLoad.cancel(true);
         }
 
         ongoingIconLoad = Icons.with(itemView.getContext())
-                .pageUrl(topSite.url)
+                .pageUrl(topSite.getUrl())
                 .skipNetwork()
                 .build()
                 .execute(this);
 
-        final int pinResourceId = (isPinned(this.type) ? R.drawable.pin : 0);
+        final int pinResourceId = (topSite.isPinned() ? R.drawable.pin : 0);
         TextViewCompat.setCompoundDrawablesRelativeWithIntrinsicBounds(title, pinResourceId, 0, 0, 0);
     }
 
@@ -106,10 +103,10 @@ class TopSitesCard extends RecyclerView.ViewHolder
     public void onClick(View clickedView) {
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                 .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_TOPSITES)
-                .forTopSiteType(type);
+                .forTopSiteType(topSite.getType());
 
         if (clickedView == itemView) {
-            onUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
+            onUrlOpenListener.onUrlOpen(topSite.getUrl(), EnumSet.noneOf(HomePager.OnUrlOpenListener.Flags.class));
 
             Telemetry.sendUIEvent(
                     TelemetryContract.Event.LOAD_URL,
@@ -121,10 +118,7 @@ class TopSitesCard extends RecyclerView.ViewHolder
                     menuButton,
                     extras,
                     ActivityStreamContextMenu.MenuMode.TOPSITE,
-                    title.getText().toString(), url,
-
-                    isBookmarked, isPinned(type),
-
+                    topSite,
                     onUrlOpenListener, onUrlOpenInBackgroundListener,
                     faviconView.getWidth(), faviconView.getHeight());
 
@@ -134,9 +128,5 @@ class TopSitesCard extends RecyclerView.ViewHolder
                     extras.build()
             );
         }
-    }
-
-    private boolean isPinned(int type) {
-        return type == BrowserContract.TopSites.TYPE_PINNED;
     }
 }

@@ -11,7 +11,7 @@ var {
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
                                   "resource:///modules/sessionstore/SessionStore.jsm");
 
-const ssOnChangedTopic = "sessionstore-closed-objects-changed";
+const SS_ON_CLOSED_OBJECTS_CHANGED = "sessionstore-closed-objects-changed";
 
 function getRecentlyClosed(maxResults, extension) {
   let recentlyClosed = [];
@@ -62,6 +62,7 @@ extensions.registerSchemaAPI("sessions", "addon_parent", context => {
         let maxResults = filter.maxResults == undefined ? this.MAX_SESSION_RESULTS : filter.maxResults;
         return Promise.resolve(getRecentlyClosed(maxResults, extension));
       },
+
       restore: function(sessionId) {
         let session, closedId;
         if (sessionId) {
@@ -90,31 +91,15 @@ extensions.registerSchemaAPI("sessions", "addon_parent", context => {
         }
         return createSession(session, extension, closedId);
       },
+
       onChanged: new SingletonEventManager(context, "sessions.onChanged", fire => {
-        let listenerCount = 0;
-
-        let observer = {
-          observe: function() {
-            this.emit("changed");
-          },
-        };
-        EventEmitter.decorate(observer);
-
-        let listener = (event) => {
+        let observer = () => {
           context.runSafe(fire);
         };
 
-        observer.on("changed", listener);
-        listenerCount++;
-        if (listenerCount == 1) {
-          Services.obs.addObserver(observer, ssOnChangedTopic, false);
-        }
+        Services.obs.addObserver(observer, SS_ON_CLOSED_OBJECTS_CHANGED, false);
         return () => {
-          observer.off("changed", listener);
-          listenerCount -= 1;
-          if (!listenerCount) {
-            Services.obs.removeObserver(observer, ssOnChangedTopic);
-          }
+          Services.obs.removeObserver(observer, SS_ON_CLOSED_OBJECTS_CHANGED);
         };
       }).api(),
     },

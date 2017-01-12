@@ -44,7 +44,6 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   // Element interface methods
-  virtual mozilla::DeclarationBlock* GetInlineStyleDeclaration() override;
   virtual nsresult SetInlineStyleDeclaration(mozilla::DeclarationBlock* aDeclaration,
                                              const nsAString* aSerialized,
                                              bool aNotify) override;

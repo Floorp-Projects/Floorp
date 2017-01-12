@@ -120,7 +120,7 @@ add_task(function* test() {
         break;
       case 9: // finish
         Services.obs.removeObserver(
-          testObserver, "passwordmgr-dialog-updated", false);
+          testObserver, "passwordmgr-dialog-updated");
         pmDialog.close();
         resolve();
         break;

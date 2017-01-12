@@ -1,0 +1,73 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    'sample/chromium/font_subsetter.h',
+]
+
+UNIFIED_SOURCES += [
+    'sample/chromium/font_subsetter.cc',
+    'sample/chromium/subsetter_impl.cc',
+    'sfntly/data/byte_array.cc',
+    'sfntly/data/font_data.cc',
+    'sfntly/data/font_input_stream.cc',
+    'sfntly/data/font_output_stream.cc',
+    'sfntly/data/growable_memory_byte_array.cc',
+    'sfntly/data/memory_byte_array.cc',
+    'sfntly/data/readable_font_data.cc',
+    'sfntly/data/writable_font_data.cc',
+    'sfntly/font.cc',
+    'sfntly/font_factory.cc',
+    'sfntly/port/file_input_stream.cc',
+    'sfntly/port/lock.cc',
+    'sfntly/port/memory_input_stream.cc',
+    'sfntly/port/memory_output_stream.cc',
+    'sfntly/table/bitmap/big_glyph_metrics.cc',
+    'sfntly/table/bitmap/bitmap_glyph.cc',
+    'sfntly/table/bitmap/bitmap_glyph_info.cc',
+    'sfntly/table/bitmap/bitmap_size_table.cc',
+    'sfntly/table/bitmap/composite_bitmap_glyph.cc',
+    'sfntly/table/bitmap/ebdt_table.cc',
+    'sfntly/table/bitmap/eblc_table.cc',
+    'sfntly/table/bitmap/ebsc_table.cc',
+    'sfntly/table/bitmap/glyph_metrics.cc',
+    'sfntly/table/bitmap/index_sub_table.cc',
+    'sfntly/table/bitmap/index_sub_table_format1.cc',
+    'sfntly/table/bitmap/index_sub_table_format2.cc',
+    'sfntly/table/bitmap/index_sub_table_format3.cc',
+    'sfntly/table/bitmap/index_sub_table_format4.cc',
+    'sfntly/table/bitmap/index_sub_table_format5.cc',
+    'sfntly/table/bitmap/simple_bitmap_glyph.cc',
+    'sfntly/table/bitmap/small_glyph_metrics.cc',
+    'sfntly/table/byte_array_table_builder.cc',
+    'sfntly/table/core/cmap_table.cc',
+    'sfntly/table/core/font_header_table.cc',
+    'sfntly/table/core/horizontal_device_metrics_table.cc',
+    'sfntly/table/core/horizontal_header_table.cc',
+    'sfntly/table/core/horizontal_metrics_table.cc',
+    'sfntly/table/core/maximum_profile_table.cc',
+    'sfntly/table/core/name_table.cc',
+    'sfntly/table/core/os2_table.cc',
+    'sfntly/table/font_data_table.cc',
+    'sfntly/table/generic_table_builder.cc',
+    'sfntly/table/header.cc',
+    'sfntly/table/subtable.cc',
+    'sfntly/table/table.cc',
+    'sfntly/table/table_based_table_builder.cc',
+    'sfntly/table/truetype/glyph_table.cc',
+    'sfntly/table/truetype/loca_table.cc',
+    'sfntly/tag.cc',
+    'sfntly/tools/subsetter/glyph_table_subsetter.cc',
+    'sfntly/tools/subsetter/subsetter.cc',
+    'sfntly/tools/subsetter/table_subsetter_impl.cc',
+]
+
+# We allow warnings for third-party code that can be updated from upstream.
+ALLOW_COMPILER_WARNINGS = True
+
+FINAL_LIBRARY = 'gkmedias'
+
+DEFINES['SFNTLY_NO_EXCEPTION'] = 1

@@ -125,6 +125,13 @@ import into a var and into the global scope at the same time, e.g.
 This is considered bad practice as it is confusing as to what is actually being
 imported.
 
+no-useless-parameters
+---------------------
+
+Reject common XPCOM methods called with useless optional parameters (eg.
+``Services.io.newURI(url, null, null)``, or non-existent parameters (eg.
+``Services.obs.removeObserver(name, observer, false)``).
+
 reject-importGlobalProperties
 -----------------------------
 

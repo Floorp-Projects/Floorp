@@ -13,7 +13,7 @@ load 50134-1.html
 load 50994-1.html
 load 58455-1.html
 load 60110-1.html
-asserts-if(stylo,6) load 73331-1.html # bug 1324663
+load 73331-1.html
 load 92647-1.html
 load 92788-1.html
 load 121591-1.html

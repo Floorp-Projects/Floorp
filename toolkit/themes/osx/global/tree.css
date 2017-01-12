@@ -283,3 +283,14 @@ treechildren.gridlines::-moz-tree-row {
   margin-inline-start: -2px;
   padding: 2px 1px 1px;
 }
+
+treechildren::-moz-tree-cell(active, selected, focus, editing),
+tree[seltype="cell"] > treechildren::-moz-tree-cell(active, selected, focus, editing),
+tree[seltype="text"] > treechildren::-moz-tree-cell(active, selected, focus, editing) {
+  background-color: transparent;
+  border: none;
+}
+
+treechildren::-moz-tree-cell-text(active, selected, editing) {
+  opacity: 0;
+}

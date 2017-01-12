@@ -46,7 +46,7 @@ TalosPowersService.prototype = {
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "xpcom-shutdown", false);
+    Services.obs.removeObserver(this, "xpcom-shutdown");
   },
 
   receiveMessage(message) {
