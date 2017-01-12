@@ -8,7 +8,6 @@ module.exports = {
     /* These rules are only set to warn temporarily
        until they get fixed, at which point their
        respective line in this file should be removed. */
-    "brace-style": "warn",
     "consistent-return": "warn",
     "no-cond-assign": "warn",
     "no-ex-assign": "warn",
