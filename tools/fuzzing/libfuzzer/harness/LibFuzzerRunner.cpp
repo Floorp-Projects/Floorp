@@ -22,16 +22,14 @@ public:
   }
 } InitLibFuzzer;
 
-int LibFuzzerRunner::Run() {
+int LibFuzzerRunner::Run(int argc, char** argv) {
   ScopedXPCOM xpcom("LibFuzzer");
-  return mFuzzerMain(mArgc, mArgv);
+  return mFuzzerMain(argc, argv);
 }
 
 typedef int(*LibFuzzerMain)(int, char**);
 
-void LibFuzzerRunner::setParams(int argc, char** argv, LibFuzzerMain main) {
-  mArgc = argc;
-  mArgv = argv;
+void LibFuzzerRunner::setParams(LibFuzzerMain main) {
   mFuzzerMain = main;
 }
 
