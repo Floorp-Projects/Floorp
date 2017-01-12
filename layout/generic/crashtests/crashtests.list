@@ -262,7 +262,7 @@ load 424629.html
 load 425253-1.html
 load 426040-1.html
 load 426272-1.html
-skip-if(stylo) load 428263-1.html # bug 1323671
+load 428263-1.html
 load 429458.xhtml
 load 429960-1.html
 load 429960-2.html
