@@ -301,8 +301,10 @@ nsHttpChannel::~nsHttpChannel()
 {
     LOG(("Destroying nsHttpChannel [this=%p]\n", this));
 
-    if (mAuthProvider)
-        mAuthProvider->Disconnect(NS_ERROR_ABORT);
+    if (mAuthProvider) {
+        DebugOnly<nsresult> rv = mAuthProvider->Disconnect(NS_ERROR_ABORT);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
 
     ReleaseMainThreadOnlyReferences();
 }
@@ -659,11 +661,13 @@ nsHttpChannel::HandleAsyncRedirect()
             PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncRedirect);
             // TODO: if !DoNotRender3xxBody(), render redirect body instead.
             // But first we need to cache 3xx bodies (bug 748510)
-            ContinueHandleAsyncRedirect(rv);
+            rv = ContinueHandleAsyncRedirect(rv);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
     else {
-        ContinueHandleAsyncRedirect(mStatus);
+        rv = ContinueHandleAsyncRedirect(mStatus);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 }
 
@@ -757,7 +761,8 @@ nsHttpChannel::HandleAsyncFallback()
         PopRedirectAsyncFunc(&nsHttpChannel::ContinueHandleAsyncFallback);
     }
 
-    ContinueHandleAsyncFallback(rv);
+    rv = ContinueHandleAsyncFallback(rv);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult
@@ -890,11 +895,14 @@ nsHttpChannel::SetupTransaction()
         // We need to send 'Pragma:no-cache' to inhibit proxy caching even if
         // no proxy is configured since we might be talking with a transparent
         // proxy, i.e. one that operates at the network level.  See bug #14772.
-        mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+        rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         // If we're configured to speak HTTP/1.1 then also send 'Cache-control:
         // no-cache'
-        if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
-            mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "no-cache", true);
+        if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1) {
+            rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "no-cache", true);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
+        }
     }
     else if ((mLoadFlags & VALIDATE_ALWAYS) && !mCacheEntryIsWriteOnly) {
         // We need to send 'Cache-Control: max-age=0' to force each cache along
@@ -903,15 +911,17 @@ nsHttpChannel::SetupTransaction()
         //
         // If we're configured to speak HTTP/1.0 then just send 'Pragma: no-cache'
         if (mRequestHead.Version() >= NS_HTTP_VERSION_1_1)
-            mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "max-age=0", true);
+            rv = mRequestHead.SetHeaderOnce(nsHttp::Cache_Control, "max-age=0", true);
         else
-            mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+            rv = mRequestHead.SetHeaderOnce(nsHttp::Pragma, "no-cache", true);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     if (mResuming) {
         char byteRange[32];
         SprintfLiteral(byteRange, "bytes=%" PRIu64 "-", mStartPos);
-        mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(byteRange));
+        rv = mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(byteRange));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
 
         if (!mEntityID.IsEmpty()) {
             // Also, we want an error if this resource changed in the meantime
@@ -923,16 +933,18 @@ nsHttpChannel::SetupTransaction()
 
             if (FindCharInReadable('/', slash, end)) {
                 nsAutoCString ifMatch;
-                mRequestHead.SetHeader(nsHttp::If_Match,
+                rv = mRequestHead.SetHeader(nsHttp::If_Match,
                         NS_UnescapeURL(Substring(start, slash), 0, ifMatch));
+                MOZ_ASSERT(NS_SUCCEEDED(rv));
 
                 ++slash; // Incrementing, so that searching for '/' won't find
                          // the same slash again
             }
 
             if (FindCharInReadable('/', slash, end)) {
-                mRequestHead.SetHeader(nsHttp::If_Unmodified_Since,
-                        Substring(++slash, end));
+                rv = mRequestHead.SetHeader(nsHttp::If_Unmodified_Since,
+                                            Substring(++slash, end));
+                MOZ_ASSERT(NS_SUCCEEDED(rv));
             }
         }
     }
@@ -956,10 +968,12 @@ nsHttpChannel::SetupTransaction()
         mCaps |= NS_HTTP_TIMING_ENABLED;
 
     if (mUpgradeProtocolCallback) {
-        mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
-        mRequestHead.SetHeaderOnce(nsHttp::Connection,
-                                   nsHttp::Upgrade.get(),
-                                   true);
+        rv = mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+        rv = mRequestHead.SetHeaderOnce(nsHttp::Connection,
+                                        nsHttp::Upgrade.get(),
+                                        true);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         mCaps |=  NS_HTTP_STICKY_CONNECTION;
         mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
     }
@@ -2623,7 +2637,8 @@ nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI, uint32_t flags)
         // Mark the channel as intercepted in order to propagate the response URL.
         nsCOMPtr<nsIHttpChannelInternal> httpRedirect = do_QueryInterface(mRedirectChannel);
         if (httpRedirect) {
-            httpRedirect->ForceIntercepted(mInterceptionID);
+            rv = httpRedirect->ForceIntercepted(mInterceptionID);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
@@ -2980,8 +2995,11 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
     char buf[64];
     SprintfLiteral(buf, "bytes=%" PRId64 "-", partialLen);
 
-    mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
-    mRequestHead.SetHeader(nsHttp::If_Range, val);
+    DebugOnly<nsresult> rv;
+    rv = mRequestHead.SetHeader(nsHttp::Range, nsDependentCString(buf));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = mRequestHead.SetHeader(nsHttp::If_Range, val);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
     mIsPartialRequest = true;
 
     return NS_OK;
@@ -2990,8 +3008,11 @@ nsHttpChannel::SetupByteRangeRequest(int64_t partialLen)
 void
 nsHttpChannel::UntieByteRangeRequest()
 {
-    mRequestHead.ClearHeader(nsHttp::Range);
-    mRequestHead.ClearHeader(nsHttp::If_Range);
+    DebugOnly<nsresult> rv;
+    rv = mRequestHead.ClearHeader(nsHttp::Range);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = mRequestHead.ClearHeader(nsHttp::If_Range);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 nsresult
@@ -3667,10 +3688,14 @@ nsHttpChannel::CheckPartial(nsICacheEntry* aEntry, int64_t *aSize, int64_t *aCon
 void
 nsHttpChannel::UntieValidationRequest()
 {
+    DebugOnly<nsresult> rv;
     // Make the request unconditional again.
-    mRequestHead.ClearHeader(nsHttp::If_Modified_Since);
-    mRequestHead.ClearHeader(nsHttp::If_None_Match);
-    mRequestHead.ClearHeader(nsHttp::ETag);
+    rv = mRequestHead.ClearHeader(nsHttp::If_Modified_Since);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = mRequestHead.ClearHeader(nsHttp::If_None_Match);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = mRequestHead.ClearHeader(nsHttp::ETag);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 NS_IMETHODIMP
@@ -4039,7 +4064,8 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     // enforced independently of this mechanism
     if (!doValidation && isCachedRedirect) {
         nsAutoCString cacheKey;
-        GenerateCacheKey(mPostID, cacheKey);
+        rv = GenerateCacheKey(mPostID, cacheKey);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
 
         if (!mRedirectedCachekeys)
             mRedirectedCachekeys = new nsTArray<nsCString>();
@@ -4099,13 +4125,17 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
                 // and we are allowed to do this (see bugs 510359 and 269303)
                 if (canAddImsHeader) {
                     Unused << mCachedResponseHead->GetHeader(nsHttp::Last_Modified, val);
-                    if (!val.IsEmpty())
-                        mRequestHead.SetHeader(nsHttp::If_Modified_Since, val);
+                    if (!val.IsEmpty()) {
+                        rv = mRequestHead.SetHeader(nsHttp::If_Modified_Since, val);
+                        MOZ_ASSERT(NS_SUCCEEDED(rv));
+                    }
                 }
                 // Add If-None-Match header if an ETag was given in the response
                 Unused << mCachedResponseHead->GetHeader(nsHttp::ETag, val);
-                if (!val.IsEmpty())
-                    mRequestHead.SetHeader(nsHttp::If_None_Match, val);
+                if (!val.IsEmpty()) {
+                    rv = mRequestHead.SetHeader(nsHttp::If_None_Match, val);
+                    MOZ_ASSERT(NS_SUCCEEDED(rv));
+                }
                 mDidReval = true;
             }
         }
@@ -5926,7 +5956,8 @@ nsHttpChannel::BeginConnect()
                 altUsedLine.AppendLiteral(":");
                 altUsedLine.AppendInt(mapping->AlternatePort());
             }
-            mRequestHead.SetHeader(nsHttp::Alternate_Service_Used, altUsedLine);
+            rv = mRequestHead.SetHeader(nsHttp::Alternate_Service_Used, altUsedLine);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
 
         nsCOMPtr<nsIConsoleService> consoleService =
@@ -8414,9 +8445,11 @@ nsHttpChannel::SetDoNotTrack()
 
   if ((loadContext && loadContext->UseTrackingProtection()) ||
       nsContentUtils::DoNotTrackEnabled()) {
-    mRequestHead.SetHeader(nsHttp::DoNotTrack,
-                           NS_LITERAL_CSTRING("1"),
-                           false);
+    DebugOnly<nsresult> rv =
+      mRequestHead.SetHeader(nsHttp::DoNotTrack,
+                             NS_LITERAL_CSTRING("1"),
+                             false);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 }
 
