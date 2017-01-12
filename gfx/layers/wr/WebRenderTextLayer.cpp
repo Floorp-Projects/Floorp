@@ -58,7 +58,7 @@ WebRenderTextLayer::RenderLayer()
 
         nsTArray<WRGlyphInstance>& wr_glyph_instances = wr_glyphs[i].glyphs;
         wr_glyph_instances.SetLength(glyphs.Length());
-        wr_glyphs[i].color = toWrColor(glyph_array.color().value());
+        wr_glyphs[i].color = ToWRColor(glyph_array.color().value());
 
         for (size_t j = 0; j < glyphs.Length(); j++) {
             wr_glyph_instances[j].index = glyphs[j].mIndex;
@@ -68,8 +68,8 @@ WebRenderTextLayer::RenderLayer()
     }
 
     WRBridge()->AddWebRenderCommand(OpDPPushText(
-        toWrRect(rect),
-        toWrRect(clip),
+        ToWRRect(rect),
+        ToWRRect(clip),
         wr_glyphs,
         mIndex,
         mGlyphSize,

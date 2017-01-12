@@ -26,7 +26,7 @@ WebRenderColorLayer::RenderLayer()
   }
   if (gfxPrefs::LayersDump()) printf_stderr("ColorLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
   WRBridge()->AddWebRenderCommand(
-    OpDPPushRect(toWrRect(rect), toWrRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
+    OpDPPushRect(ToWRRect(rect), ToWRRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
 }
 
 } // namespace layers
