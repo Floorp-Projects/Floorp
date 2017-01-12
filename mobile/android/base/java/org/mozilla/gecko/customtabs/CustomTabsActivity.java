@@ -81,7 +81,10 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                onBackPressed();
+                final Tabs tabs = Tabs.getInstance();
+                final Tab tab = tabs.getSelectedTab();
+                tabs.closeTab(tab);
+                finish();
             }
         });
 
@@ -136,6 +139,18 @@ public class CustomTabsActivity extends GeckoApp implements Tabs.OnTabsChangedLi
 
         outState.putInt(SAVED_TOOLBAR_COLOR, toolbarColor);
         outState.putString(SAVED_TOOLBAR_TITLE, toolbarTitle);
+    }
+
+    @Override
+    public void onResume() {
+        if (lastSelectedTabId >= 0) {
+            final Tabs tabs = Tabs.getInstance();
+            final Tab tab =  tabs.getTab(lastSelectedTabId);
+            if (tab == null) {
+                finish();
+            }
+        }
+        super.onResume();
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {

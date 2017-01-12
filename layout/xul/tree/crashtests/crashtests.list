@@ -18,7 +18,7 @@ load 454186-1.xul
 load 479931-1.xhtml
 load 509602-1.xul
 load 585815.html
-asserts-if(stylo,4) load 601427.html # bug 1324660
+load 601427.html
 load 730441-1.xul
 load 730441-2.xul
 load 730441-3.xul

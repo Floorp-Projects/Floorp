@@ -64,6 +64,10 @@ class TypedArrayObject : public NativeObject
 
     static const size_t RESERVED_SLOTS = 3;
 
+#ifdef DEBUG
+    static const uint8_t ZeroLengthArrayData = 0x4A;
+#endif
+
     static int lengthOffset();
     static int dataOffset();
 
@@ -120,6 +124,8 @@ class TypedArrayObject : public NativeObject
     AllocKindForLazyBuffer(size_t nbytes)
     {
         MOZ_ASSERT(nbytes <= INLINE_BUFFER_LIMIT);
+        if (nbytes == 0)
+            nbytes += sizeof(uint8_t);
         size_t dataSlots = AlignBytes(nbytes, sizeof(Value)) / sizeof(Value);
         MOZ_ASSERT(nbytes <= dataSlots * sizeof(Value));
         return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
@@ -164,9 +170,19 @@ class TypedArrayObject : public NativeObject
 
     bool hasInlineElements() const;
     void setInlineElements();
-    uint8_t* elements() const {
+    uint8_t* elementsRaw() const {
         return *(uint8_t **)((((char *)this) + this->dataOffset()));
     }
+    uint8_t* elements() const {
+        assertZeroLengthArrayData();
+        return elementsRaw();
+    }
+
+#ifdef DEBUG
+    void assertZeroLengthArrayData() const;
+#else
+    void assertZeroLengthArrayData() const {};
+#endif
 
     Value getElement(uint32_t index);
     static void setElement(TypedArrayObject& obj, uint32_t index, double d);
@@ -446,12 +462,12 @@ class DataViewObject : public NativeObject
     static bool
     defineGetter(JSContext* cx, PropertyName* name, HandleNativeObject proto);
 
-    static bool getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, const CallArgs& args,
-                                           uint32_t *byteOffset, uint32_t* byteLength);
+    static bool
+    getAndCheckConstructorArgs(JSContext* cx, HandleObject bufobj, const CallArgs& args,
+                               uint32_t* byteOffset, uint32_t* byteLength);
     static bool constructSameCompartment(JSContext* cx, HandleObject bufobj, const CallArgs& args);
     static bool constructWrapped(JSContext* cx, HandleObject bufobj, const CallArgs& args);
 
-    friend bool ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static DataViewObject*
     create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
            Handle<ArrayBufferObjectMaybeShared*> arrayBuffer, JSObject* proto);

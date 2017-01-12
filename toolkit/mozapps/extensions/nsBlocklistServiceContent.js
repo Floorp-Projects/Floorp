@@ -37,7 +37,7 @@ Blocklist.prototype = {
 
   uninit() {
     Services.cpmm.removeMessageListener("Blocklist:blocklistInvalidated", this);
-    Services.obs.removeObserver(this, "xpcom-shutdown", false);
+    Services.obs.removeObserver(this, "xpcom-shutdown");
   },
 
   observe(aSubject, aTopic, aData) {

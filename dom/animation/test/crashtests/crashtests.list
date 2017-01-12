@@ -16,3 +16,4 @@ pref(dom.animations-api.core.enabled,true) load 1322382-1.html
 skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1322291-1.html # bug 1323733
 asserts-if(stylo,0-5) pref(dom.animations-api.core.enabled,true) load 1323114-1.html # bug 1324690
 asserts-if(stylo,0-5) pref(dom.animations-api.core.enabled,true) load 1323114-2.html # bug 1324690
+skip-if(stylo) pref(dom.animations-api.core.enabled,true) load 1325193-1.html # bug 1311257

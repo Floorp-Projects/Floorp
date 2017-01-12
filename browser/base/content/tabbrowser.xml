@@ -5025,9 +5025,9 @@
 
       <destructor>
         <![CDATA[
-          Services.obs.removeObserver(this, "live-resize-start", false);
-          Services.obs.removeObserver(this, "live-resize-end", false);
-          Services.obs.removeObserver(this, "contextual-identity-updated", false);
+          Services.obs.removeObserver(this, "live-resize-start");
+          Services.obs.removeObserver(this, "live-resize-end");
+          Services.obs.removeObserver(this, "contextual-identity-updated");
 
           for (let tab of this.tabs) {
             let browser = tab.linkedBrowser;

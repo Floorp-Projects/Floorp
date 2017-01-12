@@ -449,7 +449,7 @@ CustomizeMode.prototype = {
       yield this._doTransition(false);
       this.removeLWTStyling();
 
-      Services.obs.removeObserver(this, "lightweight-theme-window-updated", false);
+      Services.obs.removeObserver(this, "lightweight-theme-window-updated");
 
       if (this.browser.selectedTab == gTab) {
         if (gTab.linkedBrowser.currentURI.spec == "about:blank") {

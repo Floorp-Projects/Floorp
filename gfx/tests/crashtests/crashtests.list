@@ -106,7 +106,7 @@ load 710149-1.html
 asserts-if(stylo,1) load 766452-1.html # bug 1324700
 load 766452-2.html
 load 768079-1.html
-asserts-if(stylo,5) load 783041-1.html # bug 1324661
+asserts-if(stylo,2) load 783041-1.html # bug 1324661
 load 783041-2.html
 asserts-if(stylo,1) load 783041-3.html # bug 1324671
 load 783041-4.html

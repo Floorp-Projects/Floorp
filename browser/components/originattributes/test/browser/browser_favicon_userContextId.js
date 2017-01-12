@@ -42,7 +42,7 @@ function clearAllPlacesFavicons() {
       observe(aSubject, aTopic, aData) {
         if (aTopic === "places-favicons-expired") {
           resolve();
-          Services.obs.removeObserver(observer, "places-favicons-expired", false);
+          Services.obs.removeObserver(observer, "places-favicons-expired");
         }
       }
     };
@@ -196,7 +196,7 @@ function* doTest(aTestPage, aFaviconHost, aFaviconURL) {
   // Waiting for favicon requests are all made.
   yield observer.promise;
 
-  Services.obs.removeObserver(observer, "http-on-modify-request", false);
+  Services.obs.removeObserver(observer, "http-on-modify-request");
 
   yield BrowserTestUtils.removeTab(tabInfo.tab);
 }
