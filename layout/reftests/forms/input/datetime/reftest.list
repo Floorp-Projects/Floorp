@@ -1,13 +1,13 @@
 default-preferences pref(dom.forms.datetime,true)
 
-# not valid on Android/B2G where type=time looks like type=text
-skip-if(Android||B2G||Mulet) != time-simple-unthemed.html time-simple-unthemed-ref.html
-skip-if(Android||B2G||Mulet) != time-large-font.html time-basic.html
-skip-if(Android||B2G||Mulet) != time-width-height.html time-basic.html
-skip-if(Android||B2G||Mulet) != time-border.html time-basic.html
-# only valid on Android/B2G where type=number looks the same as type=text
-skip-if(!Android&&!B2G&&!Mulet) == time-simple-unthemed.html time-simple-unthemed-ref.html
+# not valid on Android where type=time looks like type=text
+skip-if(Android) != time-simple-unthemed.html time-simple-unthemed-ref.html
+skip-if(Android) != time-large-font.html time-basic.html
+skip-if(Android) != time-width-height.html time-basic.html
+skip-if(Android) != time-border.html time-basic.html
+# only valid on Android where type=number looks the same as type=text
+skip-if(!Android) == time-simple-unthemed.html time-simple-unthemed-ref.html
 
 # type change
-skip-if(Android||B2G||Mulet) == to-time-from-other-type-unthemed.html time-simple-unthemed.html
-skip-if(Android||B2G||Mulet) == from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed-ref.html
+skip-if(Android) == to-time-from-other-type-unthemed.html time-simple-unthemed.html
+skip-if(Android) == from-time-to-other-type-unthemed.html from-time-to-other-type-unthemed-ref.html
