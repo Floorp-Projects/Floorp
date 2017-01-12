@@ -19,8 +19,7 @@ main(int argc, char** argv)
     if (argc < 2)
         return 1;
 
-    Bootstrap::UniquePtr bootstrap;
-    XRE_GetBootstrap(bootstrap);
+    Bootstrap::UniquePtr bootstrap = GetBootstrap();
     if (!bootstrap) {
         return 2;
     }

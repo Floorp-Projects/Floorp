@@ -125,9 +125,20 @@ public:
  *        "C" linkage. On failure this will be null.
  * @note This function may only be called once and will crash if called again.
  */
+#ifdef XPCOM_GLUE
+typedef void (*GetBootstrapType)(Bootstrap::UniquePtr&);
+Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile=nullptr);
+#else
 extern "C" NS_EXPORT void NS_FROZENCALL
 XRE_GetBootstrap(Bootstrap::UniquePtr& b);
-typedef void (*GetBootstrapType)(Bootstrap::UniquePtr&);
+
+inline Bootstrap::UniquePtr
+GetBootstrap(const char* aXPCOMFile=nullptr) {
+  Bootstrap::UniquePtr bootstrap;
+  XRE_GetBootstrap(bootstrap);
+  return bootstrap;
+}
+#endif
 
 } // namespace mozilla
 
