@@ -1052,6 +1052,10 @@ var Cmds = {
     UI.selectDeckPanel("devicepreferences");
   },
 
+  showSettings: function () {
+    UI.selectDeckPanel("devicesettings");
+  },
+
   showMonitor: function () {
     UI.selectDeckPanel("monitor");
   },

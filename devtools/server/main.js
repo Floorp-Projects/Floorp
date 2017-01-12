@@ -433,6 +433,13 @@ var DebuggerServer = {
         type: { global: true }
       });
     }
+    if (Services.prefs.getBoolPref("dom.mozSettings.enabled")) {
+      this.registerModule("devtools/server/actors/settings", {
+        prefix: "settings",
+        constructor: "SettingsActor",
+        type: { global: true }
+      });
+    }
     this.registerModule("devtools/server/actors/addons", {
       prefix: "addons",
       constructor: "AddonsActor",

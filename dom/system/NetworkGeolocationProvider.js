@@ -12,6 +12,9 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 
 const POSITION_UNAVAILABLE = Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE;
+const SETTINGS_DEBUG_ENABLED = "geolocation.debugging.enabled";
+const SETTINGS_CHANGED_TOPIC = "mozsettings-changed";
+const SETTINGS_WIFI_ENABLED = "wifi.enabled";
 
 var gLoggingEnabled = false;
 
@@ -252,6 +255,24 @@ WifiGeoPositionProvider.prototype = {
                                            Ci.nsIObserver]),
   listener: null,
 
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != SETTINGS_CHANGED_TOPIC) {
+      return;
+    }
+
+    try {
+      if ("wrappedJSObject" in aSubject) {
+        aSubject = aSubject.wrappedJSObject;
+      }
+      if (aSubject.key == SETTINGS_DEBUG_ENABLED) {
+        gLoggingEnabled = aSubject.value;
+      } else if (aSubject.key == SETTINGS_WIFI_ENABLED) {
+        gWifiScanningEnabled = aSubject.value;
+      }
+    } catch (e) {
+    }
+  },
+
   resetTimer: function() {
     if (this.timer) {
       this.timer.cancel();
@@ -270,6 +291,37 @@ WifiGeoPositionProvider.prototype = {
 
     this.started = true;
     let self = this;
+    let settingsCallback = {
+      handle: function(name, result) {
+        // Stop the B2G UI setting from overriding the js prefs setting, and turning off logging
+        // If gLoggingEnabled is already on during startup, that means it was set in js prefs.
+        if (name == SETTINGS_DEBUG_ENABLED && !gLoggingEnabled) {
+          gLoggingEnabled = result;
+        } else if (name == SETTINGS_WIFI_ENABLED) {
+          gWifiScanningEnabled = result;
+          if (self.wifiService) {
+            self.wifiService.stopWatching(self);
+          }
+          if (gWifiScanningEnabled) {
+            self.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Ci.nsIWifiMonitor);
+            self.wifiService.startWatching(self);
+          }
+        }
+      },
+
+      handleError: function(message) {
+        gLoggingEnabled = false;
+        LOG("settings callback threw an exception, dropping");
+      }
+    };
+
+    Services.obs.addObserver(this, SETTINGS_CHANGED_TOPIC, false);
+    let settingsService = Cc["@mozilla.org/settingsService;1"];
+    if (settingsService) {
+      let settings = settingsService.getService(Ci.nsISettingsService);
+      settings.createLock().get(SETTINGS_WIFI_ENABLED, settingsCallback);
+      settings.createLock().get(SETTINGS_DEBUG_ENABLED, settingsCallback);
+    }
 
     if (gWifiScanningEnabled && Cc["@mozilla.org/wifi/monitor;1"]) {
       if (this.wifiService) {
@@ -306,6 +358,8 @@ WifiGeoPositionProvider.prototype = {
       this.wifiService.stopWatching(this);
       this.wifiService = null;
     }
+
+    Services.obs.removeObserver(this, SETTINGS_CHANGED_TOPIC);
 
     this.listener = null;
     this.started = false;
