@@ -66,11 +66,11 @@ public:
     bool HasAlpha() const;
     bool IsReadableFloat() const;
 
-    void Clear();
+    void Clear(const char* funcName);
 
-    void SetTexImage(WebGLTexture* tex, TexImageTarget target, GLint level,
-                     GLint layer = 0);
-    void SetRenderbuffer(WebGLRenderbuffer* rb);
+    void SetTexImage(const char* funcName, WebGLTexture* tex, TexImageTarget target,
+                     GLint level, GLint layer = 0);
+    void SetRenderbuffer(const char* funcName, WebGLRenderbuffer* rb);
 
     WebGLTexture* Texture() const { return mTexturePtr; }
     WebGLRenderbuffer* Renderbuffer() const { return mRenderbufferPtr; }
@@ -100,7 +100,7 @@ public:
                            GLenum target, GLenum attachment, GLenum pname,
                            ErrorResult* const out_error) const;
 
-    void OnBackingStoreRespecified() const;
+    void OnBackingStoreRespecified(const char* funcName) const;
 
     bool IsEquivalentForFeedback(const WebGLFBAttachPoint& other) const {
         if (!IsDefined() || !other.IsDefined())
@@ -153,6 +153,9 @@ public:
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLFramebuffer)
 
     const GLuint mGLName;
+
+private:
+    uint64_t mNumFBStatusInvals;
 
 protected:
 #ifdef ANDROID
@@ -230,8 +233,8 @@ protected:
     bool ResolveAttachmentData(const char* funcName) const;
 
 public:
-    void DetachTexture(const WebGLTexture* tex);
-    void DetachRenderbuffer(const WebGLRenderbuffer* rb);
+    void DetachTexture(const char* funcName, const WebGLTexture* tex);
+    void DetachRenderbuffer(const char* funcName, const WebGLRenderbuffer* rb);
     bool ValidateAndInitAttachments(const char* funcName);
     bool ValidateClearBufferType(const char* funcName, GLenum buffer, uint32_t drawBuffer,
                                  GLenum funcType) const;
@@ -258,11 +261,7 @@ public:
     // Invalidation
 
     bool IsResolvedComplete() const { return bool(mResolvedCompleteData); }
-
-    void InvalidateFramebufferStatus() {
-        mResolvedCompleteData = nullptr;
-    }
-
+    void InvalidateFramebufferStatus(const char* funcName);
     void RefreshResolvedData();
 
     ////////////////
