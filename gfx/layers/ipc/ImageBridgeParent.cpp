@@ -20,6 +20,7 @@
 #include "mozilla/layers/CompositableTransactionParent.h"
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/LayersMessages.h"  // for EditReply
+#include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/PImageBridgeParent.h"
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/Compositor.h"
@@ -231,23 +232,34 @@ mozilla::ipc::IPCResult ImageBridgeParent::RecvWillClose()
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult
-ImageBridgeParent::RecvNewCompositable(const CompositableHandle& aHandle, const TextureInfo& aInfo)
+PCompositableParent*
+ImageBridgeParent::AllocPCompositableParent(const TextureInfo& aInfo, const uint64_t& aID)
 {
-  RefPtr<CompositableHost> host = AddCompositable(aHandle, aInfo);
-  if (!host) {
-    return IPC_FAIL_NO_REASON(this);
+  PCompositableParent* actor = CompositableHost::CreateIPDLActor(this, aInfo);
+  if (mCompositables.find(aID) != mCompositables.end()) {
+    NS_ERROR("Async compositable ID already exists");
+    return actor;
+  }
+  if (!aID) {
+    NS_ERROR("Expected non-zero async compositable ID");
+    return actor;
   }
 
-  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), aHandle));
-  return IPC_OK();
+  CompositableHost* host = CompositableHost::FromIPDLActor(actor);
+
+  host->SetAsyncRef(AsyncCompositableRef(OtherPid(), aID));
+  mCompositables[aID] = host;
+
+  return actor;
 }
 
-mozilla::ipc::IPCResult
-ImageBridgeParent::RecvReleaseCompositable(const CompositableHandle& aHandle)
+bool ImageBridgeParent::DeallocPCompositableParent(PCompositableParent* aActor)
 {
-  ReleaseCompositable(aHandle);
-  return IPC_OK();
+  if (CompositableHost* host = CompositableHost::FromIPDLActor(aActor)) {
+    const AsyncCompositableRef& ref = host->GetAsyncRef();
+    mCompositables.erase(ref.mAsyncId);
+  }
+  return CompositableHost::DestroyIPDLActor(aActor);
 }
 
 PTextureParent*
@@ -312,7 +324,7 @@ ImageBridgeParent::NotifyImageComposites(nsTArray<ImageCompositeNotificationInfo
     AutoTArray<ImageCompositeNotification,1> notifications;
     notifications.AppendElement(aNotifications[i].mNotification);
     uint32_t end = i + 1;
-    MOZ_ASSERT(aNotifications[i].mNotification.compositable());
+    MOZ_ASSERT(aNotifications[i].mNotification.asyncCompositableID());
     ProcessId pid = aNotifications[i].mImageBridgeProcessId;
     while (end < aNotifications.Length() &&
            aNotifications[end].mImageBridgeProcessId == pid) {
@@ -424,6 +436,16 @@ ImageBridgeParent::NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransaction
   if (!IsAboutToSendAsyncMessages()) {
     SendPendingAsyncMessages();
   }
+}
+
+CompositableHost*
+ImageBridgeParent::FindCompositable(uint64_t aId)
+{
+  auto iter = mCompositables.find(aId);
+  if (iter == mCompositables.end()) {
+    return nullptr;
+  }
+  return iter->second;
 }
 
 } // namespace layers

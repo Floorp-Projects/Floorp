@@ -29,6 +29,7 @@ AsyncCanvasRenderer::AsyncCanvasRenderer()
   , mIsAlphaPremultiplied(true)
   , mWidth(0)
   , mHeight(0)
+  , mCanvasClientAsyncID(0)
   , mCanvasClient(nullptr)
   , mMutex("AsyncCanvasRenderer::mMutex")
 {
@@ -115,9 +116,9 @@ AsyncCanvasRenderer::SetCanvasClient(CanvasClient* aClient)
 {
   mCanvasClient = aClient;
   if (aClient) {
-    mCanvasClientAsyncHandle = aClient->GetAsyncHandle();
+    mCanvasClientAsyncID = aClient->GetAsyncID();
   } else {
-    mCanvasClientAsyncHandle = CompositableHandle();
+    mCanvasClientAsyncID = 0;
   }
 }
 

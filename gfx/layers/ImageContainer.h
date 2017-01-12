@@ -366,7 +366,7 @@ public:
    * async container ID.
    * @param aAsyncContainerID async container ID for which we are a proxy
    */
-  explicit ImageContainer(const CompositableHandle& aHandle);
+  explicit ImageContainer(uint64_t aAsyncContainerID);
 
   typedef uint32_t FrameID;
   typedef uint32_t ProducerID;
@@ -467,7 +467,7 @@ public:
    *
    * Can be called from any thread.
    */
-  CompositableHandle GetAsyncContainerHandle();
+  uint64_t GetAsyncContainerID();
 
   /**
    * Returns if the container currently has an image.
@@ -625,7 +625,7 @@ private:
   // asynchronusly using the ImageBridge IPDL protocol.
   RefPtr<ImageClient> mImageClient;
 
-  CompositableHandle mAsyncContainerHandle;
+  uint64_t mAsyncContainerID;
 
   nsTArray<FrameID> mFrameIDsNotYetComposited;
   // ProducerID for last current image(s), including the frames in
