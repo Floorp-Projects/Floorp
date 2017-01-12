@@ -170,6 +170,7 @@ FillRectWithMask(DrawTarget* aDT,
     mr->CopyRecording(buffer, size);
     std::istringstream recording(std::string(buffer, size));
 
+    delete [] buffer;
     translator->TranslateRecording(recording);
 
     aDT->SetTransform(oldTransform);

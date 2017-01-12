@@ -31,6 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
+                                  "resource://gre/modules/NewTabUtils.jsm");
 
 Cu.importGlobalProperties(["URL"]);
 
@@ -210,6 +212,11 @@ const AutoMigrate = {
 
     yield this._removeUnchangedLogins(stateData.get("logins"));
     histogram.add(25);
+
+    // This is async, but no need to wait for it.
+    NewTabUtils.links.populateCache(() => {
+      NewTabUtils.allPages.update();
+    }, true);
 
     this.removeUndoOption(this.UNDO_REMOVED_REASON_UNDO_USED);
     histogram.add(30);

@@ -660,10 +660,6 @@
   color: var(--theme-selection-color);
 }
 
-#headers-tabpanel {
-  background-color: var(--theme-toolbar-background);
-}
-
 .theme-firebug .variables-view-scope:focus > .title {
   color: var(--theme-body-color);
 }
@@ -692,27 +688,8 @@
 
 /* Headers tabpanel */
 
-#headers-summary-status,
-#headers-summary-version {
-  padding-bottom: 2px;
-}
-
-#headers-summary-size {
-  padding-top: 2px;
-}
-
-#headers-summary-resend {
-  margin-top: -10px;
-  margin-inline-end: 6px;
-}
-
-#toggle-raw-headers {
-  margin-top: -10px;
-  margin-inline-end: 6px;
-}
-
-.raw-response-textarea {
-  height: 50vh;
+#headers-tabpanel .summary {
+  background-color: var(--theme-toolbar-background);
 }
 
 /* Response tabpanel */
@@ -1110,7 +1087,7 @@
   display: flex;
 }
 
-.treeTable .textbox-input {
+.textbox-input {
   text-overflow: ellipsis;
   border: none;
   background: none;
@@ -1129,6 +1106,12 @@
   height: calc(100vh - 48px);
   display: flex;
   flex-direction: column;
+}
+
+#headers-tabpanel .properties-view {
+  /* FIXME: Minus 24px * 2 + 87.5 for toolbox height + panel height + headers summary
+   * Give a fixed panel container height in order to force tree view scrollable */
+  height: calc(100vh - 135.5px);
 }
 
 .properties-view .searchbox-section {
@@ -1185,8 +1168,87 @@
   padding-inline-end: 5px;
 }
 
+.headers-summary input:not([type="button"]) {
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  margin-inline-end: 2px;
+}
+
+.headers-summary input:not([type="button"]):focus {
+  outline: none;
+  box-shadow: var(--theme-focus-box-shadow-textbox);
+  transition: all 0.2s ease-in-out;
+}
+
+.headers-summary-label,
 .tree-container .objectBox {
   white-space: nowrap;
+}
+
+.headers-summary,
+.response-summary {
+  display: flex;
+  align-items: center;
+}
+
+.headers-summary .tool-button {
+  border: 1px solid transparent;
+  color: var(--theme-body-color);
+  transition: background 0.05s ease-in-out;
+  margin-inline-end: 6px;
+  padding: 0 5px;
+}
+
+.theme-light .headers-summary .tool-button {
+  background-color: var(--toolbar-tab-hover);
+}
+
+.theme-light .headers-summary .tool-button:hover {
+  background-color: rgba(170, 170, 170, 0.3);
+}
+
+.theme-light .headers-summary .tool-button:hover:active {
+  background-color: var(--toolbar-tab-hover-active);
+}
+
+.theme-dark .headers-summary .tool-button {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.theme-dark .headers-summary .tool-button:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.theme-dark .headers-summary .tool-button:hover:active {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.headers-summary .requests-menu-status-icon {
+  min-width: 10px;
+}
+
+.headers-summary .raw-headers-container {
+  display: flex;
+  width: 100%;
+}
+
+.headers-summary .raw-headers {
+  width: 50%;
+  padding: 0px 4px;
+}
+
+.headers-summary .raw-headers textarea {
+  width: 100%;
+  height: 50vh;
+  font: message-box;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.headers-summary .raw-headers .tabpanel-summary-label {
+  padding: 0 0 4px 0;
 }
 
 .empty-notice {
@@ -1210,6 +1272,7 @@
  * FIXME: normal html block element cannot fill outer XUL element
  * This workaround should be removed after netmonitor is migrated to react
  */
+#react-headers-tabpanel-hook,
 #react-params-tabpanel-hook,
 #react-preview-tabpanel-hook,
 #react-response-tabpanel-hook,
@@ -1223,6 +1286,7 @@
 }
 
 /* For vbox */
+#react-headers-tabpanel-hook,
 #react-params-tabpanel-hook,
 #react-preview-tabpanel-hook,
 #react-response-tabpanel-hook,
