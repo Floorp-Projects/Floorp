@@ -762,9 +762,11 @@ ControlFlowGenerator::processDoWhileCondEnd(CFGState& state)
     CFGLoopEntry* entry = state.loop.entry->stopIns()->toLoopEntry();
     entry->setLoopStopPc(pc);
 
-    CFGBlock* backEdge = CFGBlock::New(alloc(), pc);
+    // Create backedge with pc at start of loop to make sure we capture the
+    // right stack.
+    CFGBlock* backEdge = CFGBlock::New(alloc(), entry->successor()->startPc());
     backEdge->setStopIns(CFGBackEdge::New(alloc(), entry->successor()));
-    backEdge->setStopPc(pc);
+    backEdge->setStopPc(entry->successor()->startPc());
 
     if (!addBlock(backEdge))
         return ControlStatus::Error;
@@ -820,7 +822,14 @@ ControlFlowGenerator::processWhileBodyEnd(CFGState& state)
     entry->setLoopStopPc(pc);
 
     current->setStopIns(CFGBackEdge::New(alloc(), entry->successor()));
-    current->setStopPc(pc);
+    if (pc != current->startPc()) {
+        current->setStopPc(pc);
+    } else {
+        // If the block is empty update the pc to the start of loop to make
+        // sure we capture the right stack.
+        current->setStartPc(entry->successor()->startPc());
+        current->setStopPc(entry->successor()->startPc());
+    }
     return finishLoop(state, state.loop.successor);
 }
 
@@ -892,7 +901,14 @@ ControlFlowGenerator::processForUpdateEnd(CFGState& state)
     entry->setLoopStopPc(pc);
 
     current->setStopIns(CFGBackEdge::New(alloc(), entry->successor()));
-    current->setStopPc(pc);
+    if (pc != current->startPc()) {
+        current->setStopPc(pc);
+    } else {
+        // If the block is empty update the pc to the start of loop to make
+        // sure we capture the right stack.
+        current->setStartPc(entry->successor()->startPc());
+        current->setStopPc(entry->successor()->startPc());
+    }
     return finishLoop(state, state.loop.successor);
 }
 

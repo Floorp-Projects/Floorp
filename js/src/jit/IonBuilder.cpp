@@ -1578,6 +1578,11 @@ IonBuilder::blockIsOSREntry(const CFGBlock* block, const CFGBlock* predecessor)
         return false;
     }
 
+    if (block->stopPc() == block->startPc() && block->stopIns()->isBackEdge()) {
+        // An empty block with only a backedge can never be a loop entry.
+        return false;
+    }
+
     MOZ_ASSERT(*info().osrPc() == JSOP_LOOPENTRY);
     // Skip over the LOOPENTRY to match.
     return GetNextPc(info().osrPc()) == entryPc;
