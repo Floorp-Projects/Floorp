@@ -158,6 +158,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.buildid = None
         self.make_ident_output = None
         self.repack_env = None
+        self.enUS_revision = None
         self.revision = None
         self.upload_env = None
         self.version = None
