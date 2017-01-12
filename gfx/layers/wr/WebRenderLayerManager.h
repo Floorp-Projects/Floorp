@@ -10,6 +10,7 @@
 #include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
+#include "mozilla/layers/WebRenderBridgeChild.h"
 
 class nsIWidget;
 
@@ -36,6 +37,16 @@ public:
     return static_cast<WebRenderLayer*>(aLayer->ImplData());
   }
 
+  template <typename LayerType>
+  static inline void RenderMaskLayers(LayerType* aLayer) {
+    if (aLayer->GetMaskLayer()) {
+      ToWebRenderLayer(aLayer->GetMaskLayer())->RenderLayer();
+    }
+    for (size_t i = 0; i < aLayer->GetAncestorMaskLayerCount(); i++) {
+      ToWebRenderLayer(aLayer->GetAncestorMaskLayerAt(i))->RenderLayer();
+    }
+  }
+
   WebRenderLayerManager* WRManager();
   WebRenderBridgeChild* WRBridge();
 
@@ -57,6 +68,8 @@ private:
 
 class WebRenderLayerManager final : public LayerManager
 {
+  typedef nsTArray<RefPtr<Layer> > LayerRefArray;
+
 public:
   explicit WebRenderLayerManager(nsIWidget* aWidget);
   void Initialize(PCompositorBridgeChild* aCBChild, uint64_t aLayersId, TextureFactoryIdentifier* aTextureFactoryIdentifier);
@@ -127,6 +140,8 @@ public:
 
   WebRenderBridgeChild* WRBridge() const { return mWRChild; }
 
+  void Hold(Layer* aLayer);
+
 private:
   /**
    * Take a snapshot of the parent context, and copy
@@ -151,6 +166,8 @@ private:
   uint64_t mLatestTransactionId;
 
   nsTArray<DidCompositeObserver*> mDidCompositeObservers;
+
+  LayerRefArray mKeepAlive;
 
  // When we're doing a transaction in order to draw to a non-default
  // target, the layers transaction is only performed in order to send

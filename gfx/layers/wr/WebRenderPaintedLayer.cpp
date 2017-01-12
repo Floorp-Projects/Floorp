@@ -17,8 +17,104 @@ namespace layers {
 using namespace mozilla::gfx;
 
 void
+WebRenderPaintedLayer::PaintThebes()
+{
+  PROFILER_LABEL("WebRenderPaintedLayer", "PaintThebes",
+    js::ProfileEntry::Category::GRAPHICS);
+
+  uint32_t flags = RotatedContentBuffer::PAINT_CAN_DRAW_ROTATED;
+
+  PaintState state =
+    mContentClient->BeginPaintBuffer(this, flags);
+  mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
+
+  // The area that became invalid and is visible needs to be repainted
+  // (this could be the whole visible area if our buffer switched
+  // from RGB to RGBA, because we might need to repaint with
+  // subpixel AA)
+  state.mRegionToInvalidate.And(state.mRegionToInvalidate,
+                                GetLocalVisibleRegion().ToUnknownRegion());
+
+  bool didUpdate = false;
+  RotatedContentBuffer::DrawIterator iter;
+  while (DrawTarget* target = mContentClient->BorrowDrawTargetForPainting(state, &iter)) {
+    if (!target || !target->IsValid()) {
+      if (target) {
+        mContentClient->ReturnDrawTargetToBuffer(target);
+      }
+      continue;
+    }
+
+    SetAntialiasingFlags(this, target);
+
+    RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
+    MOZ_ASSERT(ctx); // already checked the target above
+    Manager()->GetPaintedLayerCallback()(this,
+                                              ctx,
+                                              iter.mDrawRegion,
+                                              iter.mDrawRegion,
+                                              state.mClip,
+                                              state.mRegionToInvalidate,
+                                              Manager()->GetPaintedLayerCallbackData());
+
+    ctx = nullptr;
+    mContentClient->ReturnDrawTargetToBuffer(target);
+    didUpdate = true;
+  }
+  if (didUpdate) {
+    Mutated();
+
+    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
+
+    ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
+    MOZ_ASSERT(contentClientRemote->GetIPDLActor());
+
+    // Hold(this) ensures this layer is kept alive through the current transaction
+    // The ContentClient assumes this layer is kept alive (e.g., in CreateBuffer),
+    // so deleting this Hold for whatever reason will break things.
+    Manager()->Hold(this);
+
+    contentClientRemote->Updated(state.mRegionToDraw,
+                                 mVisibleRegion.ToUnknownRegion(),
+                                 state.mDidSelfCopy);
+  }
+}
+
+void
+WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
+{
+  if (!mContentClient) {
+    mContentClient = ContentClient::CreateContentClient(Manager()->WRBridge());
+    if (!mContentClient) {
+      return;
+    }
+    mContentClient->Connect();
+    MOZ_ASSERT(mContentClient->GetForwarder());
+  }
+
+  nsTArray<ReadbackProcessor::Update> readbackUpdates;
+  nsIntRegion readbackRegion;
+  if (aReadback && UsedForReadback()) {
+    aReadback->GetPaintedLayerUpdates(this, &readbackUpdates);
+  }
+
+  IntPoint origin(mVisibleRegion.GetBounds().x, mVisibleRegion.GetBounds().y);
+  mContentClient->BeginPaint();
+  PaintThebes();
+  mContentClient->EndPaint(&readbackUpdates);
+
+}
+
+void
 WebRenderPaintedLayer::RenderLayer()
 {
+  RenderLayerWithReadback(nullptr);
+
+  if (!mExternalImageId) {
+    mExternalImageId = WRBridge()->AllocExternalImageIdForCompositable(mContentClient);
+    MOZ_ASSERT(mExternalImageId);
+  }
+
   LayerIntRegion visibleRegion = GetVisibleRegion();
   LayerIntRect bounds = visibleRegion.GetBounds();
   LayerIntSize size = bounds.Size();
@@ -27,34 +123,6 @@ WebRenderPaintedLayer::RenderLayer()
   }
 
   WRScrollFrameStackingContextGenerator scrollFrames(this);
-
-  RefPtr<DrawTarget> target = gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, size.ToUnknownSize(), SurfaceFormat::B8G8R8A8);
-  target->SetTransform(Matrix().PreTranslate(-bounds.x, -bounds.y));
-  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(target);
-  MOZ_ASSERT(ctx); // already checked the target above
-
-  Manager()->GetPaintedLayerCallback()(this,
-                                       ctx,
-                                       visibleRegion.ToUnknownRegion(), visibleRegion.ToUnknownRegion(),
-                                       DrawRegionClip::DRAW, nsIntRegion(), Manager()->GetPaintedLayerCallbackData());
-#if 0
-  static int count;
-  char buf[400];
-  sprintf(buf, "wrout%d.png", count++);
-  gfxUtils::WriteAsPNG(target, buf);
-#endif
-
-  WRImageKey key;
-  {
-      unsigned char* data;
-      IntSize size;
-      int32_t stride;
-      SurfaceFormat format;
-      target->LockBits(&data, &size, &stride, &format);
-      gfx::ByteBuffer buf(size.height * stride, data);
-      WRBridge()->SendAddImage(size.width, size.height, stride, RGBA8, buf, &key);
-      target->ReleaseBits(data);
-  }
 
   // Since we are creating a stacking context below using the visible region of
   // this layer, we need to make sure the image display item has coordinates
@@ -74,8 +142,7 @@ WebRenderPaintedLayer::RenderLayer()
 
   WRBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushImage(ToWRRect(rect), ToWRRect(clip), Nothing(), key));
-  Manager()->AddImageKeyForDiscard(key);
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(ToWRRect(rect), ToWRRect(clip), Nothing(), mExternalImageId));
 
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
