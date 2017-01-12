@@ -249,7 +249,14 @@ module.exports = {
     "dump": true,
     "KeyEvent": false,
     "openDialog": false,
+    "MenuBoxObject": false,
     "sizeToContent": false,
     "SharedArrayBuffer": false,
+    // Note: StopIteration will likely be removed as part of removing legacy
+    // generators, see bug 968038.
+    "StopIteration": false,
+    // Specific to Firefox
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/uneval
+    "uneval": false
   }
 };
