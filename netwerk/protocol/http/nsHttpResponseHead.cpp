@@ -228,11 +228,14 @@ nsHttpResponseHead::SetContentLength(int64_t len)
     mContentLength = len;
     if (len < 0)
         mHeaders.ClearHeader(nsHttp::Content_Length);
-    else
-        mHeaders.SetHeader(nsHttp::Content_Length,
-                           nsPrintfCString("%" PRId64, len),
-                           false,
-                           nsHttpHeaderArray::eVarietyResponse);
+    else {
+        DebugOnly<nsresult> rv =
+            mHeaders.SetHeader(nsHttp::Content_Length,
+                               nsPrintfCString("%" PRId64, len),
+                               false,
+                               nsHttpHeaderArray::eVarietyResponse);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
 }
 
 void
@@ -891,7 +894,8 @@ nsHttpResponseHead::UpdateHeaders(nsHttpResponseHead *aOther)
             LOG(("new response header [%s: %s]\n", header.get(), val));
 
             // overwrite the current header value with the new value...
-            SetHeader_locked(header, nsDependentCString(val));
+            DebugOnly<nsresult> rv = SetHeader_locked(header, nsDependentCString(val));
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 

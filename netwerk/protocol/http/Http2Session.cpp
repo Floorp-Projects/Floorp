@@ -1085,7 +1085,8 @@ Http2Session::CleanupStream(Http2Stream *aStream, nsresult aResult,
       mPushedStreams.RemoveElement(aStream);
       Http2PushedStream *pushStream = static_cast<Http2PushedStream *>(aStream);
       nsAutoCString hashKey;
-      pushStream->GetHashKey(hashKey);
+      DebugOnly<bool> rv = pushStream->GetHashKey(hashKey);
+      MOZ_ASSERT(rv);
       nsIRequestContext *requestContext = aStream->RequestContext();
       if (requestContext) {
         SpdyPushCache *cache = nullptr;
@@ -1229,13 +1230,13 @@ Http2Session::RecvHeaders(Http2Session *self)
   if (self->mInputFrameFlags & kFlag_PRIORITY) {
     priorityLen = 5;
   }
-  self->SetInputFrameDataStream(self->mInputFrameID);
+  nsresult rv = self->SetInputFrameDataStream(self->mInputFrameID);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   // Find out how much padding this frame has, so we can only extract the real
   // header data from the frame.
   uint16_t paddingLength = 0;
   uint8_t paddingControlBytes = 0;
-  nsresult rv;
 
   if (!isContinuation) {
     self->mDecompressBuffer.Truncate();
@@ -1464,7 +1465,8 @@ Http2Session::RecvRstStream(Http2Session *self)
   LOG3(("Http2Session::RecvRstStream %p RST_STREAM Reason Code %u ID %x\n",
         self, self->mDownstreamRstReason, self->mInputFrameID));
 
-  self->SetInputFrameDataStream(self->mInputFrameID);
+  DebugOnly<nsresult> rv = self->SetInputFrameDataStream(self->mInputFrameID);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
   if (!self->mInputFrameDataStream) {
     // if we can't find the stream just ignore it (4.2 closed)
     self->ResetDownstreamState();
@@ -2073,7 +2075,8 @@ Http2Session::RecvContinuation(Http2Session *self)
         self, self->mInputFrameFlags, self->mInputFrameID,
         self->mExpectedPushPromiseID, self->mExpectedHeaderID));
 
-  self->SetInputFrameDataStream(self->mInputFrameID);
+  DebugOnly<nsresult> rv = self->SetInputFrameDataStream(self->mInputFrameID);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
 
   if (!self->mInputFrameDataStream) {
     LOG3(("Http2Session::RecvContination stream ID 0x%X not found.",
@@ -3558,7 +3561,8 @@ Http2Session::CreateTunnel(nsHttpTransaction *trans,
 
   RefPtr<SpdyConnectTransaction> connectTrans =
     new SpdyConnectTransaction(ci, aCallbacks, trans->Caps(), trans, this);
-  AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false, nullptr);
+  DebugOnly<bool> rv = AddStream(connectTrans, nsISupportsPriority::PRIORITY_NORMAL, false, nullptr);
+  MOZ_ASSERT(rv);
   Http2Stream *tunnel = mStreamTransactionHash.Get(connectTrans);
   MOZ_ASSERT(tunnel);
   RegisterTunnel(tunnel);
