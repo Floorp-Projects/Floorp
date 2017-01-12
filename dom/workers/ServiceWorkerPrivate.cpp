@@ -1702,12 +1702,10 @@ ServiceWorkerPrivate::SendFetchEvent(nsIInterceptedChannel* aChannel,
 {
   AssertIsOnMainThread();
 
-  if (NS_WARN_IF(!mInfo)) {
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (NS_WARN_IF(!mInfo || !swm)) {
     return NS_ERROR_FAILURE;
   }
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
 
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     swm->GetRegistration(mInfo->GetPrincipal(), mInfo->Scope());

@@ -366,7 +366,10 @@ UpdateInternal(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aCallback);
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (!swm) {
+    // browser shutdown
+    return;
+  }
 
   swm->Update(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
 }
