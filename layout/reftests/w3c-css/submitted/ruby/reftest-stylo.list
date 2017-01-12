@@ -2,7 +2,7 @@
 # Tests for inlinizing block-level boxes
 fails == ruby-inlinize-blocks-001.html ruby-inlinize-blocks-001.html
 fails == ruby-inlinize-blocks-002.html ruby-inlinize-blocks-002.html
-fails == ruby-inlinize-blocks-003.html ruby-inlinize-blocks-003.html
+== ruby-inlinize-blocks-003.html ruby-inlinize-blocks-003.html
 fails == ruby-inlinize-blocks-004.html ruby-inlinize-blocks-004.html
 fails == ruby-inlinize-blocks-005.html ruby-inlinize-blocks-005.html
 

@@ -7,4 +7,4 @@ fails == invalid-url-handling.xhtml invalid-url-handling.xhtml
 == at-rule-error-handling-media-1.html at-rule-error-handling-media-1.html
 == invalid-font-face-descriptor-1.html invalid-font-face-descriptor-1.html
 == two-dash-identifiers.html two-dash-identifiers.html
-fails == supports-moz-bool-pref.html supports-moz-bool-pref.html
+== supports-moz-bool-pref.html supports-moz-bool-pref.html

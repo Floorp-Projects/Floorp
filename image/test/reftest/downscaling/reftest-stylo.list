@@ -88,7 +88,7 @@ fails == downscale-2c.html?205,53,bottom downscale-2c.html?205,53,bottom
 fails == downscale-2d.html?205,53,bottom downscale-2d.html?205,53,bottom
 fails == downscale-2e.html?205,53,bottom downscale-2e.html?205,53,bottom
 
-fails == downscale-moz-icon-1.html downscale-moz-icon-1.html
+== downscale-moz-icon-1.html downscale-moz-icon-1.html
 
 fails == downscale-png.html?16,16,interlaced downscale-png.html?16,16,interlaced
 fails == downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced
@@ -172,7 +172,7 @@ fails == downscale-2e.html?205,53,bottom downscale-2e.html?205,53,bottom
 fails == downscale-2f.html?205,53,bottom downscale-2f.html?205,53,bottom
 
 # Skip on WinXP with skia content
-fails == downscale-moz-icon-1.html downscale-moz-icon-1.html
+== downscale-moz-icon-1.html downscale-moz-icon-1.html
 
 fails == downscale-png.html?16,16,interlaced downscale-png.html?16,16,interlaced
 fails == downscale-png.html?24,24,interlaced downscale-png.html?24,24,interlaced

@@ -20,7 +20,7 @@ fails == placeholder-value-set.html placeholder-value-set.html
 fails == placeholder-value-unset.html placeholder-value-unset.html
 fails == placeholder-value-reset.html placeholder-value-reset.html
 fails == placeholdershown.html placeholdershown.html
-# fails == css-resize.html css-resize.html
+# == css-resize.html css-resize.html
 fails == css-display.html css-display.html
 # We can't check except by verifying that the output is different.
 # Same reasons as focus issues explained above.
