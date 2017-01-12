@@ -46,9 +46,6 @@ struct SprintfState
     char* base;
     char* cur;
     size_t maxlen;
-
-    int (*func)(void* arg, const char* sp, uint32_t len);
-    void* arg;
 };
 
 /*
