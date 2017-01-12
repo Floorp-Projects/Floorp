@@ -122,8 +122,6 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
         final String url = highlightsCursor.getString(
                 highlightsCursor.getColumnIndexOrThrow(BrowserContract.Combined.URL));
 
-        onUrlOpenListener.onUrlOpen(url, EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
-
         ActivityStreamTelemetry.Extras.Builder extras = ActivityStreamTelemetry.Extras.builder()
                 .forHighlightSource(Utils.highlightSource(highlightsCursor))
                 .set(ActivityStreamTelemetry.Contract.SOURCE_TYPE, ActivityStreamTelemetry.Contract.TYPE_HIGHLIGHTS)
@@ -135,6 +133,11 @@ public class StreamRecyclerAdapter extends RecyclerView.Adapter<StreamItem> impl
                 TelemetryContract.Method.LIST_ITEM,
                 extras.build()
         );
+
+        // NB: This is hacky. We need to process telemetry data first, otherwise we run a risk of
+        // not having a cursor to work with once url is opened and BrowserApp closes A-S home screen
+        // and clears its resources (read: cursors). See Bug 1326018.
+        onUrlOpenListener.onUrlOpen(url, EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
     }
 
     @Override

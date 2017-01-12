@@ -1524,25 +1524,25 @@ const WidgetMethods = exports.WidgetMethods = {
       case KeyCodes.DOM_VK_UP:
       case KeyCodes.DOM_VK_LEFT:
         this.focusPrevItem();
-        return;
+        break;
       case KeyCodes.DOM_VK_DOWN:
       case KeyCodes.DOM_VK_RIGHT:
         this.focusNextItem();
-        return;
+        break;
       case KeyCodes.DOM_VK_PAGE_UP:
         this.focusItemAtDelta(-(this.pageSize ||
                                (this.itemCount / PAGE_SIZE_ITEM_COUNT_RATIO)));
-        return;
+        break;
       case KeyCodes.DOM_VK_PAGE_DOWN:
         this.focusItemAtDelta(+(this.pageSize ||
                                (this.itemCount / PAGE_SIZE_ITEM_COUNT_RATIO)));
-        return;
+        break;
       case KeyCodes.DOM_VK_HOME:
         this.focusFirstVisibleItem();
-        return;
+        break;
       case KeyCodes.DOM_VK_END:
         this.focusLastVisibleItem();
-        return;
+        break;
     }
   },
 

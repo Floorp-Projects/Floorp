@@ -137,15 +137,15 @@ var gSyncUI = {
   // Note that we don't show login errors in a notification bar here, but do
   // still need to track a login-failed state so the "Tools" menu updates
   // with the correct state.
-  _loginFailed() {
+  loginFailed() {
     // If Sync isn't already ready, we don't want to force it to initialize
     // by referencing Weave.Status - and it isn't going to be accurate before
     // Sync is ready anyway.
     if (!this.weaveService.ready) {
-      this.log.debug("_loginFailed has sync not ready, so returning false");
+      this.log.debug("loginFailed has sync not ready, so returning false");
       return false;
     }
-    this.log.debug("_loginFailed has sync state=${sync}",
+    this.log.debug("loginFailed has sync state=${sync}",
                    { sync: Weave.Status.login});
     return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED;
   },
@@ -163,7 +163,7 @@ var gSyncUI = {
       if (!gBrowser)
         return Promise.resolve();
 
-      let loginFailed = this._loginFailed();
+      let loginFailed = this.loginFailed();
 
       // Start off with a clean slate
       document.getElementById("sync-reauth-state").hidden = true;
@@ -266,7 +266,7 @@ var gSyncUI = {
   // via the UI.
   handleToolbarButton() {
     this._needsSetup().then(needsSetup => {
-      if (needsSetup || this._loginFailed()) {
+      if (needsSetup || this.loginFailed()) {
         this.openSetup();
       } else {
         this.doSync();
@@ -380,7 +380,7 @@ var gSyncUI = {
 
     let needsSetup = yield this._needsSetup();
     let needsVerification = yield this._needsVerification();
-    let loginFailed = this._loginFailed();
+    let loginFailed = this.loginFailed();
     // This is a little messy as the Sync buttons are 1/2 Sync related and
     // 1/2 FxA related - so for some strings we use Sync strings, but for
     // others we reach into gFxAccounts for strings.

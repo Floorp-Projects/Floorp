@@ -19,8 +19,6 @@ add_task(function*() {
     yield execute_test(server, test_settings[which].mimetype);
   }
 
-  test_settings[which].priming = {};
-
   // run the tests twice to validate the cache is being used
   for (let server of Object.keys(test_servers)) {
     yield execute_test(server, test_settings[which].mimetype);
