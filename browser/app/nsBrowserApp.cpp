@@ -288,14 +288,6 @@ int main(int argc, char* argv[], char* envp[])
 
 #ifdef HAS_DLL_BLOCKLIST
   DllBlocklist_Initialize();
-
-#ifdef DEBUG
-  // In order to be effective against AppInit DLLs, the blocklist must be
-  // initialized before user32.dll is loaded into the process (bug 932100).
-  if (GetModuleHandleA("user32.dll")) {
-    fprintf(stderr, "DLL blocklist was unable to intercept AppInit DLLs.\n");
-  }
-#endif
 #endif
 
 #ifdef MOZ_BROWSER_CAN_BE_CONTENTPROC
