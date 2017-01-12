@@ -28,7 +28,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 /* globals processCount */
 
-XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount");
+XPCOMUtils.defineLazyPreferenceGetter(this, "processCount", "dom.ipc.processCount.extension");
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
