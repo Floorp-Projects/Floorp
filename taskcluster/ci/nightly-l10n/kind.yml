@@ -68,7 +68,7 @@ job-template:
          win32-nightly: internal
          win64-nightly: internal
    index:
-      type: l10n
+      type: nightly-l10n
       product:
          by-build-platform:
             default: firefox
