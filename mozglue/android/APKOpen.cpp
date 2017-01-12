@@ -37,7 +37,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
 #include "XREChildData.h"
-#include "nsXPCOMGlue.h"
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
