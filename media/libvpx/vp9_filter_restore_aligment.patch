@@ -11,10 +11,10 @@ Date:   Thu Jun 11 15:12:22 2015 -0700
     
     Change-Id: I9a97e6b4e8e94698e43ff79d0d8bb85043b73c61
 
-diff --git a/libvpx/vp9/common/vp9_filter.c b/libvpx/vp9/common/vp9_filter.c
+diff --git a/vp9/common/vp9_filter.c b/vp9/common/vp9_filter.c
 index afcdf22..b256d4a 100644
---- a/libvpx/vp9/common/vp9_filter.c
-+++ b/libvpx/vp9/common/vp9_filter.c
+--- a/vp9/common/vp9_filter.c
++++ b/vp9/common/vp9_filter.c
 @@ -12,7 +12,8 @@
  
  #include "vp9/common/vp9_filter.h"
