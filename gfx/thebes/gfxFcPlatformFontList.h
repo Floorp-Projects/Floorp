@@ -133,6 +133,7 @@ protected:
     // helper method for creating cairo font from pattern
     cairo_scaled_font_t*
     CreateScaledFont(FcPattern* aRenderPattern,
+                     gfxFloat aAdjustedSize,
                      const gfxFontStyle *aStyle,
                      bool aNeedsBold);
 
@@ -199,6 +200,7 @@ class gfxFontconfigFont : public gfxFontconfigFontBase {
 public:
     gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
                       FcPattern *aPattern,
+                      gfxFloat aAdjustedSize,
                       gfxFontEntry *aFontEntry,
                       const gfxFontStyle *aFontStyle,
                       bool aNeedsBold);
