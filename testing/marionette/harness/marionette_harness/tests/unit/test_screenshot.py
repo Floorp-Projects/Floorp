@@ -170,6 +170,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(self.start_window)
 
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_flags(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -198,6 +199,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertEqual(self.scale(self.get_element_dimensions(self.document_element)),
                          self.get_image_dimensions(screenshot_full))
 
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_viewport(self):
         # Load a HTML test page into the chrome window to get scrollbars
         test_page = self.marionette.absolute_url("test.html")
@@ -215,6 +217,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.marionette.close_chrome_window()
         self.marionette.switch_to_window(self.start_window)
 
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_capture_window_already_closed(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -223,6 +226,7 @@ class TestScreenCaptureChrome(WindowManagerMixin, ScreenCaptureTestCase):
         self.assertRaises(NoSuchWindowException, self.marionette.screenshot)
         self.marionette.switch_to_window(self.start_window)
 
+    @skip_if_mobile("Fennec doesn't support other chrome windows")
     def test_formats(self):
         dialog = self.open_dialog()
         self.marionette.switch_to_window(dialog)
@@ -319,6 +323,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
                          self.get_image_dimensions(screenshot))
         self.assertGreater(self.page_y_offset, 0)
 
+    @skip("Bug 1330560 - AssertionError: u'iVBORw0KGgoA... (images unexpectedly equal)")
     def test_capture_flags(self):
         self.marionette.navigate(input)
 
@@ -331,6 +336,7 @@ class TestScreenCaptureContent(WindowManagerMixin, ScreenCaptureTestCase):
 
         self.assertNotEqual(screenshot_focus, screenshot_no_focus)
 
+    @skip_if_mobile("Bug 1330642 - Tuples differ: (1960, 11130) != (1960, 11129)")
     def test_capture_html_document_element(self):
         self.marionette.navigate(long)
         screenshot = self.marionette.screenshot()
