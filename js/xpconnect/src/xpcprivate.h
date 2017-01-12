@@ -3183,6 +3183,10 @@ public:
     // Using it in production is inherently unsafe.
     bool forcePermissiveCOWs;
 
+    // True if this compartment has been nuked. If true, any wrappers into or
+    // out of it should be considered invalid.
+    bool wasNuked;
+
     // Whether we've emitted a warning about a property that was filtered out
     // by a security wrapper. See XrayWrapper.cpp.
     bool wrapperDenialWarnings[WrapperDenialTypeCount];
