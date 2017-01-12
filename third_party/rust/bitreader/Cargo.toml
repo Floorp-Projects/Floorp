@@ -1,6 +1,6 @@
 [package]
 name = "bitreader"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Ilkka Rauta <ilkka.rauta@gmail.com>"]
 
 description = """
@@ -10,6 +10,7 @@ You can read "unusual" numbers of bits from the byte slice, for example 13 bits
 at once. The reader internally keeps track of position within the buffer.
 """
 
+documentation = "https://docs.rs/bitreader"
 homepage = "https://github.com/irauta/bitreader"
 repository = "https://github.com/irauta/bitreader"
 

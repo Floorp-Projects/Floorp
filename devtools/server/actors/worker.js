@@ -302,7 +302,7 @@ protocol.ActorClassWithSpec(serviceWorkerRegistrationSpec, {
 
   destroy() {
     protocol.Actor.prototype.destroy.call(this);
-    Services.obs.removeObserver(this, PushService.subscriptionModifiedTopic, false);
+    Services.obs.removeObserver(this, PushService.subscriptionModifiedTopic);
     this._registration.removeListener(this);
     this._registration = null;
     if (this._pushSubscriptionActor) {

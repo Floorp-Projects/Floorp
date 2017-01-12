@@ -76,11 +76,9 @@
 
 #if defined(MOZ_ENABLE_PROFILER_SPS)
 #include "shared-libraries.h"
-#if defined(MOZ_STACKWALKING)
 #define ENABLE_STACK_CAPTURE
 #include "mozilla/StackWalk.h"
 #include "nsPrintfCString.h"
-#endif // MOZ_STACKWALKING
 #endif // MOZ_ENABLE_PROFILER_SPS
 
 namespace {

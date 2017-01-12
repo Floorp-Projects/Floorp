@@ -613,12 +613,16 @@ SampleValue(float aPortion, const Animation& aAnimation,
     // below StyleAnimationValues.
     startValue =
       StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      aLastValue,
+                                      aLastValue.IsNull()
+                                        ? aUnderlyingValue
+                                        : aLastValue,
                                       Move(startValue),
                                       aCurrentIteration);
     endValue =
       StyleAnimationValue::Accumulate(aAnimation.property(),
-                                      aLastValue,
+                                      aLastValue.IsNull()
+                                        ? aUnderlyingValue
+                                        : aLastValue,
                                       Move(endValue),
                                       aCurrentIteration);
   }

@@ -719,8 +719,6 @@ AppActorFront.prototype = {
           this._apps.delete(manifestURL);
           this._notifyListeners("appUninstall", app);
           break;
-        default:
-          return;
       }
     });
   },

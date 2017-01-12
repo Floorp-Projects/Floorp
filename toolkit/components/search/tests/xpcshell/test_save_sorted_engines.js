@@ -18,7 +18,6 @@
  */
 
 function run_test() {
-  updateAppInfo();
   useHttpServer();
 
   run_next_test();

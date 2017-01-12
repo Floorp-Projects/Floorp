@@ -1,5 +1,5 @@
 <script>
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  window.parent.opener.postMessage(window.parent.testNum + " - " + window.x, "http://mochi.test:8888");
-  window.parent.close();
+  var win = SpecialPowers.wrap(window).wrappedJSObject;
+  win.parent.opener.postMessage(win.parent.testNum + " - " + win.x, "http://mochi.test:8888");
+  win.parent.close();
 </script>

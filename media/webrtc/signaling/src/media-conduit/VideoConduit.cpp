@@ -443,6 +443,17 @@ WebrtcVideoConduit::CreateRecvStream()
   return kMediaConduitNoError;
 }
 
+static bool CompatibleH264Config(const webrtc::VideoCodecH264 &aEncoderSpecificH264,
+                                 const VideoCodecConfig* aCodecConfig)
+{
+  if (aEncoderSpecificH264.profile_byte != aCodecConfig->mProfile ||
+      aEncoderSpecificH264.constraints != aCodecConfig->mConstraints ||
+      aEncoderSpecificH264.packetizationMode != aCodecConfig->mPacketizationMode) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Note: Setting the send-codec on the Video Engine will restart the encoder,
  * sets up new SSRC and reset RTP_RTCP module with the new codec setting.
@@ -467,10 +478,20 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     return condError;
   }
 
-  condError = StopTransmitting();
-  if (condError != kMediaConduitNoError) {
-    return condError;
-  }
+  // StopTransmitting may be moot if mSendStream is null, but the code seems to
+  // allow for it.
+  // Recreating on PayloadType change may be overkill, but is safe.
+  if (!mSendStream ||
+      mSendStreamConfig.encoder_settings.payload_type != codecConfig->mType ||
+      mSendStreamConfig.encoder_settings.payload_name != codecConfig->mName ||
+      (codecConfig->mName == "H264" &&
+       !CompatibleH264Config(mEncoderSpecificH264, codecConfig))) {
+    condError = StopTransmitting();
+    if (condError != kMediaConduitNoError) {
+      return condError;
+    }
+    DeleteSendStream(); // safe if mSendStream is null
+  } // we are already using this codec - mSendStream tells us we're reconfiguring
 
   mSendStreamConfig.encoder_settings.payload_name = codecConfig->mName;
   mSendStreamConfig.encoder_settings.payload_type = codecConfig->mType;
@@ -508,7 +529,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     // mode changed, we re-configure.
     width = mSendingWidth;
     height = mSendingHeight;
-    max_framerate = mSendingFramerate;
+    // max framerate remains the same
   }
   mSendingFramerate = std::max(mSendingFramerate,
                                static_cast<unsigned int>(max_framerate));
@@ -609,6 +630,18 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     MutexAutoLock lock(mCodecMutex);
     // Copy the applied config for future reference.
     mCurSendCodecConfig = new VideoCodecConfig(*codecConfig);
+  }
+
+  // Is this a reconfigure of a running codec?
+  if (mSendStream &&
+      !mSendStream->ReconfigureVideoEncoder(mEncoderConfig.GenerateConfig())) {
+    CSFLogError(logTag, "%s: ReconfigureVideoEncoder failed", __FUNCTION__);
+    // This will cause a new encoder to be created by StartTransmitting()
+    condError = StopTransmitting();
+    if (condError != kMediaConduitNoError) {
+      return condError;
+    }
+    DeleteSendStream();
   }
 
   return condError;

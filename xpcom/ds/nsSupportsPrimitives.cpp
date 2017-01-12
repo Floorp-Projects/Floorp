@@ -675,49 +675,6 @@ nsSupportsDouble::ToString(char** aResult)
 /***************************************************************************/
 
 
-NS_IMPL_ISUPPORTS(nsSupportsVoid, nsISupportsVoid,
-                  nsISupportsPrimitive)
-
-nsSupportsVoid::nsSupportsVoid()
-  : mData(nullptr)
-{
-}
-
-NS_IMETHODIMP
-nsSupportsVoid::GetType(uint16_t* aType)
-{
-  NS_ASSERTION(aType, "Bad pointer");
-  *aType = TYPE_VOID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSupportsVoid::GetData(void** aData)
-{
-  NS_ASSERTION(aData, "Bad pointer");
-  *aData = mData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSupportsVoid::SetData(void* aData)
-{
-  mData = aData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSupportsVoid::ToString(char** aResult)
-{
-  NS_ASSERTION(aResult, "Bad pointer");
-  static const char str[] = "[raw data]";
-  *aResult = static_cast<char*>(nsMemory::Clone(str, sizeof(str)));
-  return NS_OK;
-}
-
-/***************************************************************************/
-
-
 NS_IMPL_ISUPPORTS(nsSupportsInterfacePointer,
                   nsISupportsInterfacePointer,
                   nsISupportsPrimitive)

@@ -2,8 +2,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 var { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-const { Services } = Cu.import('resource://gre/modules/Services.jsm');
-const { SystemAppProxy } = Cu.import('resource://gre/modules/SystemAppProxy.jsm');
+const { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
+const { SystemAppProxy } = Cu.import('resource://gre/modules/SystemAppProxy.jsm', {});
 
 var processId;
 

@@ -74,6 +74,6 @@ var CloseObserver = {
 
   uninit: function ()
   {
-    Services.obs.removeObserver(this, "browser-lastwindow-close-requested", false);
+    Services.obs.removeObserver(this, "browser-lastwindow-close-requested");
   },
 };

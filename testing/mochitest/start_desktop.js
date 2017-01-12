@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const flavor  = __webDriverArguments[0]
-const url = __webDriverArguments[1]
+const flavor  = __webDriverArguments[0]["flavor"];
+const url = __webDriverArguments[0]["testUrl"];
 
 let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
           .getService(Ci.nsIWindowMediator);

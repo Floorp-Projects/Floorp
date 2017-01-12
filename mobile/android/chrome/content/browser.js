@@ -1535,7 +1535,7 @@ var BrowserApp = {
     }
 
     let apzFlushDone = function() {
-      Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed", false);
+      Services.obs.removeObserver(apzFlushDone, "apz-repaints-flushed");
       dwu.zoomToFocusedInput();
     };
 
@@ -2140,7 +2140,7 @@ var NativeWindow = {
   },
 
   loadDex: function(zipFile, implClass) {
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Dex:Load",
       zipfile: zipFile,
       impl: implClass || "Main"
@@ -2148,7 +2148,7 @@ var NativeWindow = {
   },
 
   unloadDex: function(zipFile) {
-    Messaging.sendRequest({
+    GlobalEventDispatcher.sendRequest({
       type: "Dex:Unload",
       zipfile: zipFile
     });
@@ -3647,8 +3647,8 @@ Tab.prototype = {
     this.browser.removeEventListener("VideoBindingCast", this, true, true);
 
     Services.obs.removeObserver(this, "before-first-paint");
-    Services.obs.removeObserver(this, "media-playback", false);
-    Services.obs.removeObserver(this, "media-playback-resumed", false);
+    Services.obs.removeObserver(this, "media-playback");
+    Services.obs.removeObserver(this, "media-playback-resumed");
 
     // Make sure the previously selected panel remains selected. The selected panel of a deck is
     // not stable when panels are removed.
@@ -6238,14 +6238,6 @@ var SearchEngines = {
       return;
     }
 
-    // fetch the favicon for this page
-    let dbFile = FileUtils.getFile("ProfD", ["browser.db"]);
-    let mDBConn = Services.storage.openDatabase(dbFile);
-    let stmts = [];
-    stmts[0] = mDBConn.createStatement("SELECT favicon FROM history_with_favicons WHERE url = ?");
-    stmts[0].bindByIndex(0, docURI.spec);
-    let favicon = null;
-
     Services.search.init(function addEngine_cb(rv) {
       if (!Components.isSuccessCode(rv)) {
         Cu.reportError("Could not initialize search service, bailing out.");
@@ -6255,31 +6247,32 @@ var SearchEngines = {
         return;
       }
 
-      mDBConn.executeAsync(stmts, stmts.length, {
-        handleResult: function (results) {
-          let bytes = results.getNextRow().getResultByName("favicon");
-          if (bytes && bytes.length) {
-            favicon = "data:image/x-icon;base64," + btoa(String.fromCharCode.apply(null, bytes));
-          }
-        },
-        handleCompletion: function (reason) {
-          // if there's already an engine with this name, add a number to
-          // make the name unique (e.g., "Google" becomes "Google 2")
-          let name = title.value;
-          for (let i = 2; Services.search.getEngineByName(name); i++)
+      GlobalEventDispatcher.sendRequestForResult({
+        type: 'Favicon:Request',
+        url: docURI.spec,
+        skipNetwork: false
+      }).then(data => {
+        // if there's already an engine with this name, add a number to
+        // make the name unique (e.g., "Google" becomes "Google 2")
+        let name = title.value;
+        for (let i = 2; Services.search.getEngineByName(name); i++) {
             name = title.value + " " + i;
-
-          Services.search.addEngineWithDetails(name, favicon, null, null, method, formURL);
-          Snackbars.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), Snackbars.LENGTH_LONG);
-
-          let engine = Services.search.getEngineByName(name);
-          engine.wrappedJSObject._queryCharset = charset;
-          formData.forEach(param => { engine.addParam(param.name, param.value, null); });
-
-          if (resultCallback) {
-            return resultCallback(true);
-          };
         }
+
+        Services.search.addEngineWithDetails(name, data, null, null, method, formURL);
+        Snackbars.show(Strings.browser.formatStringFromName("alertSearchEngineAddedToast", [name], 1), Snackbars.LENGTH_LONG);
+
+        let engine = Services.search.getEngineByName(name);
+        engine.wrappedJSObject._queryCharset = charset;
+        formData.forEach(param => { engine.addParam(param.name, param.value, null); });
+
+        if (resultCallback) {
+            return resultCallback(true);
+        };
+      }).catch(e => {
+        dump("Error while fetching icon for search engine");
+
+        resultCallback(false);
       });
     });
   }

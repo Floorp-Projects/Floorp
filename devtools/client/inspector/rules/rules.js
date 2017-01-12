@@ -1089,11 +1089,11 @@ CssRuleView.prototype = {
         this.element.appendChild(div);
       }
 
-      let inheritedSource = rule.inheritedSource;
+      let inheritedSource = rule.inherited;
       if (inheritedSource && inheritedSource !== lastInheritedSource) {
         let div = this.styleDocument.createElementNS(HTML_NS, "div");
         div.className = this._getRuleViewHeaderClassName();
-        div.textContent = inheritedSource;
+        div.textContent = rule.inheritedSource;
         lastInheritedSource = inheritedSource;
         this.element.appendChild(div);
       }
@@ -1607,7 +1607,6 @@ RuleViewTool.prototype = {
           toolbox.getCurrentPanel().selectStyleSheet(url, line, column);
         });
       }
-      return;
     });
   },
 

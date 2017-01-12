@@ -18,9 +18,9 @@ import com.google.android.gms.cast.CastMediaControlIntent;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.AppConstants.Versions;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,7 +30,7 @@ import java.util.Map;
  * Manages a list of GeckoMediaPlayers methods (i.e. Chromecast/Miracast). Routes messages
  * from Gecko to the correct caster based on the id of the display
  */
-public class MediaPlayerManager extends Fragment implements NativeEventListener {
+public class MediaPlayerManager extends Fragment implements BundleEventListener {
     /**
      * Create a new instance of DetailsFragment, initialized to
      * show the text at 'index'.
@@ -111,9 +111,10 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
         super.onDestroy();
     }
 
-    // GeckoEventListener implementation
+    // BundleEventListener implementation
     @Override
-    public void handleMessage(String event, final NativeJSObject message, final EventCallback callback) {
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
         debug(event);
         if (event.startsWith("MediaPlayer:")) {
             final GeckoMediaPlayer player = players.get(message.getString("id"));
@@ -137,12 +138,12 @@ public class MediaPlayerManager extends Fragment implements NativeEventListener 
                 player.end(callback);
             } else if ("MediaPlayer:Mirror".equals(event)) {
                 player.mirror(callback);
-            } else if ("MediaPlayer:Message".equals(event) && message.has("data")) {
+            } else if ("MediaPlayer:Message".equals(event) && message.containsKey("data")) {
                 player.message(message.getString("data"), callback);
             } else if ("MediaPlayer:Load".equals(event)) {
-                final String url = message.optString("source", "");
-                final String type = message.optString("type", "video/mp4");
-                final String title = message.optString("title", "");
+                final String url = message.getString("source", "");
+                final String type = message.getString("type", "video/mp4");
+                final String title = message.getString("title", "");
                 player.load(title, url, type, callback);
             }
         }

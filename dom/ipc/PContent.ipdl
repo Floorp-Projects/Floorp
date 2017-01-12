@@ -347,7 +347,6 @@ nested(upto inside_cpow) sync protocol PContent
 {
     parent spawns PPluginModule;
 
-    parent opens PProcessHangMonitor;
     parent opens PGMPService;
     child opens PBackground;
 
@@ -415,6 +414,8 @@ both:
                                      uint64_t aOuterWindowID);
 
 child:
+    async InitProcessHangMonitor(Endpoint<PProcessHangMonitorChild> hangMonitor);
+
     // Give the content process its endpoints to the compositor.
     async InitRendering(
       Endpoint<PCompositorBridgeChild> compositor,

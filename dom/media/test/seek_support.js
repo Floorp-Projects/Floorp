@@ -1,14 +1,4 @@
-SimpleTest.requestLongerTimeout(3);
 var manager = new MediaTestManager;
-
-// https://bugzilla.mozilla.org/show_bug.cgi?id=634747
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 5);
-} else {
-  // This is "###!!! ASSERTION: Page read cursor should be inside range: 'mPageOffset <= endOffset'"
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=846769
-  SimpleTest.expectAssertions(0, 5);
-}
 
 function createTestArray() {
   var tests = [];

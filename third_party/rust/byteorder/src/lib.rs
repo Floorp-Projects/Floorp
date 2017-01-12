@@ -36,16 +36,14 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
 ```
 */
 
-#![crate_name = "byteorder"]
-#![doc(html_root_url = "http://burntsushi.net/rustdoc/byteorder")]
-
-#![cfg_attr(not(feature = "std"), no_std)]
-
 #![deny(missing_docs)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
 extern crate core;
 
+use core::fmt::Debug;
+use core::hash::Hash;
 use core::mem::transmute;
 use core::ptr::copy_nonoverlapping;
 
@@ -118,7 +116,8 @@ fn pack_size(n: u64) -> usize {
 /// BigEndian::write_i16(&mut buf, -50_000);
 /// assert_eq!(-50_000, BigEndian::read_i16(&buf));
 /// ```
-pub trait ByteOrder {
+pub trait ByteOrder
+    : Clone + Copy + Debug + Default + Eq + Hash + Ord + PartialEq + PartialOrd {
     /// Reads an unsigned 16 bit integer from `buf`.
     ///
     /// Panics when `buf.len() < 2`.
@@ -264,13 +263,27 @@ pub trait ByteOrder {
 ///
 /// Note that this type has no value constructor. It is used purely at the
 /// type level.
-#[allow(missing_copy_implementations)] pub enum BigEndian {}
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum BigEndian {}
+
+impl Default for BigEndian {
+    fn default() -> BigEndian {
+        unreachable!()
+    }
+}
 
 /// Defines little-endian serialization.
 ///
 /// Note that this type has no value constructor. It is used purely at the
 /// type level.
-#[allow(missing_copy_implementations)] pub enum LittleEndian {}
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+pub enum LittleEndian {}
+
+impl Default for LittleEndian {
+    fn default() -> LittleEndian {
+        unreachable!()
+    }
+}
 
 /// Defines network byte order serialization.
 ///
@@ -439,13 +452,13 @@ mod test {
     extern crate quickcheck;
     extern crate rand;
 
-    use test::rand::thread_rng;
-    use test::quickcheck::{QuickCheck, StdGen, Testable};
+    use self::rand::thread_rng;
+    use self::quickcheck::{QuickCheck, StdGen, Testable};
 
-    const U64_MAX: u64 = ::std::u64::MAX;
-    const I64_MAX: u64 = ::std::i64::MAX as u64;
+    pub const U64_MAX: u64 = ::core::u64::MAX;
+    pub const I64_MAX: u64 = ::core::i64::MAX as u64;
 
-    fn qc_sized<A: Testable>(f: A, size: u64) {
+    pub fn qc_sized<A: Testable>(f: A, size: u64) {
         QuickCheck::new()
             .gen(StdGen::new(thread_rng(), size as usize))
             .tests(1_00)
@@ -497,7 +510,7 @@ mod test {
         ($name:ident, $ty_int:ident, $max:expr,
          $read:ident, $write:ident) => (
             mod $name {
-                use std::mem::size_of;
+                use core::mem::size_of;
                 use {BigEndian, ByteOrder, NativeEndian, LittleEndian};
                 use super::qc_sized;
 
@@ -537,14 +550,14 @@ mod test {
         );
     }
 
-    qc_byte_order!(prop_u16, u16, ::std::u16::MAX as u64, read_u16, write_u16);
-    qc_byte_order!(prop_i16, i16, ::std::i16::MAX as u64, read_i16, write_i16);
-    qc_byte_order!(prop_u32, u32, ::std::u32::MAX as u64, read_u32, write_u32);
-    qc_byte_order!(prop_i32, i32, ::std::i32::MAX as u64, read_i32, write_i32);
-    qc_byte_order!(prop_u64, u64, ::std::u64::MAX as u64, read_u64, write_u64);
-    qc_byte_order!(prop_i64, i64, ::std::i64::MAX as u64, read_i64, write_i64);
-    qc_byte_order!(prop_f32, f32, ::std::u64::MAX as u64, read_f32, write_f32);
-    qc_byte_order!(prop_f64, f64, ::std::i64::MAX as u64, read_f64, write_f64);
+    qc_byte_order!(prop_u16, u16, ::core::u16::MAX as u64, read_u16, write_u16);
+    qc_byte_order!(prop_i16, i16, ::core::i16::MAX as u64, read_i16, write_i16);
+    qc_byte_order!(prop_u32, u32, ::core::u32::MAX as u64, read_u32, write_u32);
+    qc_byte_order!(prop_i32, i32, ::core::i32::MAX as u64, read_i32, write_i32);
+    qc_byte_order!(prop_u64, u64, ::core::u64::MAX as u64, read_u64, write_u64);
+    qc_byte_order!(prop_i64, i64, ::core::i64::MAX as u64, read_i64, write_i64);
+    qc_byte_order!(prop_f32, f32, ::core::u64::MAX as u64, read_f32, write_f32);
+    qc_byte_order!(prop_f64, f64, ::core::i64::MAX as u64, read_f64, write_f64);
 
     qc_byte_order!(prop_uint_1, u64, super::U64_MAX, 1, read_uint, write_uint);
     qc_byte_order!(prop_uint_2, u64, super::U64_MAX, 2, read_uint, write_uint);
@@ -563,128 +576,6 @@ mod test {
     qc_byte_order!(prop_int_6, i64, super::I64_MAX, 6, read_int, write_int);
     qc_byte_order!(prop_int_7, i64, super::I64_MAX, 7, read_int, write_int);
     qc_byte_order!(prop_int_8, i64, super::I64_MAX, 8, read_int, write_int);
-
-    macro_rules! qc_bytes_ext {
-        ($name:ident, $ty_int:ident, $max:expr,
-         $bytes:expr, $read:ident, $write:ident) => (
-            mod $name {
-                use std::io::Cursor;
-                use {
-                    ReadBytesExt, WriteBytesExt,
-                    BigEndian, NativeEndian, LittleEndian,
-                };
-                use super::qc_sized;
-
-                #[test]
-                fn big_endian() {
-                    let max = ($max - 1) >> (8 * (8 - $bytes));
-                    fn prop(n: $ty_int) -> bool {
-                        let mut wtr = vec![];
-                        wtr.$write::<BigEndian>(n).unwrap();
-                        let mut rdr = Vec::new();
-                        rdr.extend(wtr[8 - $bytes..].iter().map(|&x|x));
-                        let mut rdr = Cursor::new(rdr);
-                        n == rdr.$read::<BigEndian>($bytes).unwrap()
-                    }
-                    qc_sized(prop as fn($ty_int) -> bool, max);
-                }
-
-                #[test]
-                fn little_endian() {
-                    let max = ($max - 1) >> (8 * (8 - $bytes));
-                    fn prop(n: $ty_int) -> bool {
-                        let mut wtr = vec![];
-                        wtr.$write::<LittleEndian>(n).unwrap();
-                        let mut rdr = Cursor::new(wtr);
-                        n == rdr.$read::<LittleEndian>($bytes).unwrap()
-                    }
-                    qc_sized(prop as fn($ty_int) -> bool, max);
-                }
-
-                #[test]
-                fn native_endian() {
-                    let max = ($max - 1) >> (8 * (8 - $bytes));
-                    fn prop(n: $ty_int) -> bool {
-                        let mut wtr = vec![];
-                        wtr.$write::<NativeEndian>(n).unwrap();
-                        let mut rdr = Cursor::new(wtr);
-                        n == rdr.$read::<NativeEndian>($bytes).unwrap()
-                    }
-                    qc_sized(prop as fn($ty_int) -> bool, max);
-                }
-            }
-        );
-        ($name:ident, $ty_int:ident, $max:expr, $read:ident, $write:ident) => (
-            mod $name {
-                use std::io::Cursor;
-                use {
-                    ReadBytesExt, WriteBytesExt,
-                    BigEndian, NativeEndian, LittleEndian,
-                };
-                use super::qc_sized;
-
-                #[test]
-                fn big_endian() {
-                    fn prop(n: $ty_int) -> bool {
-                        let mut wtr = vec![];
-                        wtr.$write::<BigEndian>(n).unwrap();
-                        let mut rdr = Cursor::new(wtr);
-                        n == rdr.$read::<BigEndian>().unwrap()
-                    }
-                    qc_sized(prop as fn($ty_int) -> bool, $max - 1);
-                }
-
-                #[test]
-                fn little_endian() {
-                    fn prop(n: $ty_int) -> bool {
-                        let mut wtr = vec![];
-                        wtr.$write::<LittleEndian>(n).unwrap();
-                        let mut rdr = Cursor::new(wtr);
-                        n == rdr.$read::<LittleEndian>().unwrap()
-                    }
-                    qc_sized(prop as fn($ty_int) -> bool, $max - 1);
-                }
-
-                #[test]
-                fn native_endian() {
-                    fn prop(n: $ty_int) -> bool {
-                        let mut wtr = vec![];
-                        wtr.$write::<NativeEndian>(n).unwrap();
-                        let mut rdr = Cursor::new(wtr);
-                        n == rdr.$read::<NativeEndian>().unwrap()
-                    }
-                    qc_sized(prop as fn($ty_int) -> bool, $max - 1);
-                }
-            }
-        );
-    }
-
-    qc_bytes_ext!(prop_ext_u16, u16, ::std::u16::MAX as u64, read_u16, write_u16);
-    qc_bytes_ext!(prop_ext_i16, i16, ::std::i16::MAX as u64, read_i16, write_i16);
-    qc_bytes_ext!(prop_ext_u32, u32, ::std::u32::MAX as u64, read_u32, write_u32);
-    qc_bytes_ext!(prop_ext_i32, i32, ::std::i32::MAX as u64, read_i32, write_i32);
-    qc_bytes_ext!(prop_ext_u64, u64, ::std::u64::MAX as u64, read_u64, write_u64);
-    qc_bytes_ext!(prop_ext_i64, i64, ::std::i64::MAX as u64, read_i64, write_i64);
-    qc_bytes_ext!(prop_ext_f32, f32, ::std::u64::MAX as u64, read_f32, write_f32);
-    qc_bytes_ext!(prop_ext_f64, f64, ::std::i64::MAX as u64, read_f64, write_f64);
-
-    qc_bytes_ext!(prop_ext_uint_1, u64, super::U64_MAX, 1, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_2, u64, super::U64_MAX, 2, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_3, u64, super::U64_MAX, 3, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_4, u64, super::U64_MAX, 4, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_5, u64, super::U64_MAX, 5, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_6, u64, super::U64_MAX, 6, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_7, u64, super::U64_MAX, 7, read_uint, write_u64);
-    qc_bytes_ext!(prop_ext_uint_8, u64, super::U64_MAX, 8, read_uint, write_u64);
-
-    qc_bytes_ext!(prop_ext_int_1, i64, super::I64_MAX, 1, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_2, i64, super::I64_MAX, 2, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_3, i64, super::I64_MAX, 3, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_4, i64, super::I64_MAX, 4, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_5, i64, super::I64_MAX, 5, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_6, i64, super::I64_MAX, 6, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_7, i64, super::I64_MAX, 7, read_int, write_i64);
-    qc_bytes_ext!(prop_ext_int_8, i64, super::I64_MAX, 8, read_int, write_i64);
 
     // Test that all of the byte conversion functions panic when given a
     // buffer that is too small.
@@ -800,3 +691,130 @@ mod test {
         assert_eq!(n, 0x0504030201);
     }
 }
+
+#[cfg(test)]
+#[cfg(feature = "std")]
+mod stdtests {
+    macro_rules! qc_bytes_ext {
+        ($name:ident, $ty_int:ident, $max:expr,
+         $bytes:expr, $read:ident, $write:ident) => (
+            mod $name {
+                use std::io::Cursor;
+                use {
+                    ReadBytesExt, WriteBytesExt,
+                    BigEndian, NativeEndian, LittleEndian,
+                };
+                use test::qc_sized;
+
+                #[test]
+                fn big_endian() {
+                    let max = ($max - 1) >> (8 * (8 - $bytes));
+                    fn prop(n: $ty_int) -> bool {
+                        let mut wtr = vec![];
+                        wtr.$write::<BigEndian>(n).unwrap();
+                        let mut rdr = Vec::new();
+                        rdr.extend(wtr[8 - $bytes..].iter().map(|&x|x));
+                        let mut rdr = Cursor::new(rdr);
+                        n == rdr.$read::<BigEndian>($bytes).unwrap()
+                    }
+                    qc_sized(prop as fn($ty_int) -> bool, max);
+                }
+
+                #[test]
+                fn little_endian() {
+                    let max = ($max - 1) >> (8 * (8 - $bytes));
+                    fn prop(n: $ty_int) -> bool {
+                        let mut wtr = vec![];
+                        wtr.$write::<LittleEndian>(n).unwrap();
+                        let mut rdr = Cursor::new(wtr);
+                        n == rdr.$read::<LittleEndian>($bytes).unwrap()
+                    }
+                    qc_sized(prop as fn($ty_int) -> bool, max);
+                }
+
+                #[test]
+                fn native_endian() {
+                    let max = ($max - 1) >> (8 * (8 - $bytes));
+                    fn prop(n: $ty_int) -> bool {
+                        let mut wtr = vec![];
+                        wtr.$write::<NativeEndian>(n).unwrap();
+                        let mut rdr = Cursor::new(wtr);
+                        n == rdr.$read::<NativeEndian>($bytes).unwrap()
+                    }
+                    qc_sized(prop as fn($ty_int) -> bool, max);
+                }
+            }
+        );
+        ($name:ident, $ty_int:ident, $max:expr, $read:ident, $write:ident) => (
+            mod $name {
+                use std::io::Cursor;
+                use {
+                    ReadBytesExt, WriteBytesExt,
+                    BigEndian, NativeEndian, LittleEndian,
+                };
+                use test::qc_sized;
+
+                #[test]
+                fn big_endian() {
+                    fn prop(n: $ty_int) -> bool {
+                        let mut wtr = vec![];
+                        wtr.$write::<BigEndian>(n).unwrap();
+                        let mut rdr = Cursor::new(wtr);
+                        n == rdr.$read::<BigEndian>().unwrap()
+                    }
+                    qc_sized(prop as fn($ty_int) -> bool, $max - 1);
+                }
+
+                #[test]
+                fn little_endian() {
+                    fn prop(n: $ty_int) -> bool {
+                        let mut wtr = vec![];
+                        wtr.$write::<LittleEndian>(n).unwrap();
+                        let mut rdr = Cursor::new(wtr);
+                        n == rdr.$read::<LittleEndian>().unwrap()
+                    }
+                    qc_sized(prop as fn($ty_int) -> bool, $max - 1);
+                }
+
+                #[test]
+                fn native_endian() {
+                    fn prop(n: $ty_int) -> bool {
+                        let mut wtr = vec![];
+                        wtr.$write::<NativeEndian>(n).unwrap();
+                        let mut rdr = Cursor::new(wtr);
+                        n == rdr.$read::<NativeEndian>().unwrap()
+                    }
+                    qc_sized(prop as fn($ty_int) -> bool, $max - 1);
+                }
+            }
+        );
+    }
+
+    qc_bytes_ext!(prop_ext_u16, u16, ::std::u16::MAX as u64, read_u16, write_u16);
+    qc_bytes_ext!(prop_ext_i16, i16, ::std::i16::MAX as u64, read_i16, write_i16);
+    qc_bytes_ext!(prop_ext_u32, u32, ::std::u32::MAX as u64, read_u32, write_u32);
+    qc_bytes_ext!(prop_ext_i32, i32, ::std::i32::MAX as u64, read_i32, write_i32);
+    qc_bytes_ext!(prop_ext_u64, u64, ::std::u64::MAX as u64, read_u64, write_u64);
+    qc_bytes_ext!(prop_ext_i64, i64, ::std::i64::MAX as u64, read_i64, write_i64);
+    qc_bytes_ext!(prop_ext_f32, f32, ::std::u64::MAX as u64, read_f32, write_f32);
+    qc_bytes_ext!(prop_ext_f64, f64, ::std::i64::MAX as u64, read_f64, write_f64);
+
+    qc_bytes_ext!(prop_ext_uint_1, u64, ::test::U64_MAX, 1, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_2, u64, ::test::U64_MAX, 2, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_3, u64, ::test::U64_MAX, 3, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_4, u64, ::test::U64_MAX, 4, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_5, u64, ::test::U64_MAX, 5, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_6, u64, ::test::U64_MAX, 6, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_7, u64, ::test::U64_MAX, 7, read_uint, write_u64);
+    qc_bytes_ext!(prop_ext_uint_8, u64, ::test::U64_MAX, 8, read_uint, write_u64);
+
+    qc_bytes_ext!(prop_ext_int_1, i64, ::test::I64_MAX, 1, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_2, i64, ::test::I64_MAX, 2, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_3, i64, ::test::I64_MAX, 3, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_4, i64, ::test::I64_MAX, 4, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_5, i64, ::test::I64_MAX, 5, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_6, i64, ::test::I64_MAX, 6, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_7, i64, ::test::I64_MAX, 7, read_int, write_i64);
+    qc_bytes_ext!(prop_ext_int_8, i64, ::test::I64_MAX, 8, read_int, write_i64);
+}
+

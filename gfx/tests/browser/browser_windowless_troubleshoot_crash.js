@@ -14,7 +14,7 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
                                             .sameTypeRootTreeItem
                                             .QueryInterface(Ci.nsIDocShell);
           if (docShell === observedDocShell) {
-            Services.obs.removeObserver(listener, "content-document-global-created", false);
+            Services.obs.removeObserver(listener, "content-document-global-created");
             resolve();
           }
         }

@@ -169,7 +169,7 @@ StorageActors.defaults = function (typeName, observationTopics) {
     destroy() {
       if (observationTopics) {
         observationTopics.forEach((observationTopic) => {
-          Services.obs.removeObserver(this, observationTopic, false);
+          Services.obs.removeObserver(this, observationTopic);
         });
       }
       events.off(this.storageActor, "window-ready", this.onWindowReady);
@@ -894,7 +894,7 @@ var cookieHelpers = {
   },
 
   removeCookieObservers() {
-    Services.obs.removeObserver(cookieHelpers, "cookie-changed", false);
+    Services.obs.removeObserver(cookieHelpers, "cookie-changed");
     return null;
   },
 
@@ -2461,8 +2461,8 @@ let StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
     clearTimeout(this.batchTimer);
     this.batchTimer = null;
     // Remove observers
-    Services.obs.removeObserver(this, "content-document-global-created", false);
-    Services.obs.removeObserver(this, "inner-window-destroyed", false);
+    Services.obs.removeObserver(this, "content-document-global-created");
+    Services.obs.removeObserver(this, "inner-window-destroyed");
     this.destroyed = true;
     if (this.parentActor.browser) {
       this.parentActor.browser.removeEventListener("pageshow", this.onPageChange, true);

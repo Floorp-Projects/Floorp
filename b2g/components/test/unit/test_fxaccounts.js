@@ -19,7 +19,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
 
 // At end of test, restore original state
 const ORIGINAL_AUTH_URI = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
-var { SystemAppProxy } = Cu.import("resource://gre/modules/FxAccountsMgmtService.jsm");
+var { SystemAppProxy } = Cu.import("resource://gre/modules/FxAccountsMgmtService.jsm", {});
 const ORIGINAL_SENDCUSTOM = SystemAppProxy._sendCustomEvent;
 do_register_cleanup(function() {
   Services.prefs.setCharPref("identity.fxaccounts.auth.uri", ORIGINAL_AUTH_URI);
@@ -208,5 +208,3 @@ function httpd_setup (handlers, port=-1) {
 
   return server;
 }
-
-

@@ -132,7 +132,7 @@
       let handler = (_, first, ...rest) => {
         this.off(event, handler);
         if (listener) {
-          listener.apply(null, [event, first, ...rest]);
+          listener(event, first, ...rest);
         }
         deferred.resolve(first);
       };
