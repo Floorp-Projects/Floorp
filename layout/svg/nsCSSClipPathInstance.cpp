@@ -133,7 +133,7 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
   nsImageRenderer::ComputeObjectAnchorPoint(basicShape->GetPosition(),
                                             size, size,
                                             &topLeft, &anchor);
-  nsPoint center(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
+  Point center = Point(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
 
   const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
@@ -162,8 +162,7 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
 
   nscoord appUnitsPerDevPixel =
     mTargetFrame->PresContext()->AppUnitsPerDevPixel();
-  builder->Arc(Point(center.x, center.y) / appUnitsPerDevPixel,
-               r / appUnitsPerDevPixel,
+  builder->Arc(center / appUnitsPerDevPixel, r / appUnitsPerDevPixel,
                0, Float(2 * M_PI));
   builder->Close();
   return builder->Finish();
@@ -182,7 +181,7 @@ nsCSSClipPathInstance::CreateClipPathEllipse(DrawTarget* aDrawTarget,
   nsImageRenderer::ComputeObjectAnchorPoint(basicShape->GetPosition(),
                                             size, size,
                                             &topLeft, &anchor);
-  nsPoint center(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
+  Point center = Point(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
 
   const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
@@ -203,7 +202,7 @@ nsCSSClipPathInstance::CreateClipPathEllipse(DrawTarget* aDrawTarget,
   nscoord appUnitsPerDevPixel =
     mTargetFrame->PresContext()->AppUnitsPerDevPixel();
   EllipseToBezier(builder.get(),
-                  Point(center.x, center.y) / appUnitsPerDevPixel,
+                  center / appUnitsPerDevPixel,
                   Size(rx, ry) / appUnitsPerDevPixel);
   builder->Close();
   return builder->Finish();
