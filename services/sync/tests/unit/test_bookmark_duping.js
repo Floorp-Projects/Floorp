@@ -100,7 +100,7 @@ async function validate(collection, expectedFailures = []) {
   let validator = new BookmarkValidator();
   let records = collection.payloads();
 
-  let problems = validator.inspectServerRecords(records).problemData;
+  let { problemData: problems } = await validator.inspectServerRecords(records);
   // all non-zero problems.
   let summary = problems.getSummary().filter(prob => prob.count != 0);
 
