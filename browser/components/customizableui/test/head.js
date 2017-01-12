@@ -363,29 +363,11 @@ function waitFor(aTimeout = 100) {
  * @param aEventType The load event type to wait for.  Defaults to "load".
  * @return {Promise} resolved when the event is handled.
  */
-function promiseTabLoadEvent(aTab, aURL, aEventType = "load") {
-  let deferred = Promise.defer();
-  info("Wait for tab event: " + aEventType);
+function promiseTabLoadEvent(aTab, aURL) {
+  let browser = aTab.linkedBrowser;
 
-  let timeoutId = setTimeout(() => {
-    aTab.linkedBrowser.removeEventListener(aEventType, onTabLoad, true);
-    deferred.reject("TabSelect did not happen within " + kTabEventFailureTimeoutInMs + "ms");
-  }, kTabEventFailureTimeoutInMs);
-
-  function onTabLoad(event) {
-    if (event.originalTarget != aTab.linkedBrowser.contentDocument ||
-        event.target.location.href == "about:blank") {
-      info("skipping spurious load event");
-      return;
-    }
-    clearTimeout(timeoutId);
-    aTab.linkedBrowser.removeEventListener(aEventType, onTabLoad, true);
-    info("Tab event received: " + aEventType);
-    deferred.resolve();
-  }
-  aTab.linkedBrowser.addEventListener(aEventType, onTabLoad, true, true);
-  aTab.linkedBrowser.loadURI(aURL);
-  return deferred.promise;
+  BrowserTestUtils.loadURI(browser, aURL);
+  return BrowserTestUtils.browserLoaded(browser);
 }
 
 /**
