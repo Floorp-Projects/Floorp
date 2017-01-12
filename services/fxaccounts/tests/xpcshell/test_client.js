@@ -618,7 +618,6 @@ add_task(function* test_accountExists() {
 
         default:
           throw new Error("Unexpected login from " + jsonBody.email);
-          break;
       }
     },
   });
