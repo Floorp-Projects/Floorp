@@ -115,7 +115,7 @@ load 450311-1.html
 load 451170.html
 load 451355-1.html
 load 456041.html
-skip-if(stylo) load 457115.html # bug 1323671
+load 457115.html
 load 460637-1.xhtml
 load 460637-2.xhtml
 load 460637-3.xhtml
