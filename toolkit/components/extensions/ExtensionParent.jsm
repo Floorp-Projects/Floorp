@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
                                   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "E10SUtils",
+                                  "resource:///modules/E10SUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MessageChannel",
                                   "resource://gre/modules/MessageChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
@@ -456,7 +458,10 @@ ParentAPIManager = {
                                    Services.ppmm.getChildAt(0));
 
       if (!extension.parentMessageManager) {
-        extension.parentMessageManager = processMessageManager;
+        let expectedRemoteType = extension.remote ? E10SUtils.EXTENSION_REMOTE_TYPE : null;
+        if (target.remoteType === expectedRemoteType) {
+          extension.parentMessageManager = processMessageManager;
+        }
       }
 
       if (processMessageManager !== extension.parentMessageManager) {
