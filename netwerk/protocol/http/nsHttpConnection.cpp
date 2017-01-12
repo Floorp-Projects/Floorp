@@ -300,7 +300,8 @@ nsHttpConnection::StartSpdy(uint8_t spdyVersion)
     bool spdyProxy = mConnInfo->UsingHttpsProxy() && !mTLSFilter;
     if (spdyProxy) {
         RefPtr<nsHttpConnectionInfo> wildCardProxyCi;
-        mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
+        rv = mConnInfo->CreateWildCard(getter_AddRefs(wildCardProxyCi));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
         gHttpHandler->ConnMgr()->MoveToWildCardConnEntry(mConnInfo,
                                                          wildCardProxyCi, this);
         mConnInfo = wildCardProxyCi;
@@ -685,12 +686,14 @@ nsHttpConnection::SetupSSL()
 
     // if we are connected to the proxy with TLS, start the TLS
     // flow immediately without waiting for a CONNECT sequence.
+    DebugOnly<nsresult> rv;
     if (mInSpdyTunnel) {
-        InitSSLParams(false, true);
+        rv = InitSSLParams(false, true);
     } else {
         bool usingHttpsProxy = mConnInfo->UsingHttpsProxy();
-        InitSSLParams(usingHttpsProxy, usingHttpsProxy);
+        rv = InitSSLParams(usingHttpsProxy, usingHttpsProxy);
     }
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 }
 
 // The naming of NPN is historical - this function creates the basic
@@ -993,8 +996,10 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
     MOZ_ASSERT(responseHead, "No response head?");
 
     if (mInSpdyTunnel) {
-        responseHead->SetHeader(nsHttp::X_Firefox_Spdy_Proxy,
-                                NS_LITERAL_CSTRING("true"));
+        DebugOnly<nsresult> rv =
+            responseHead->SetHeader(nsHttp::X_Firefox_Spdy_Proxy,
+                                    NS_LITERAL_CSTRING("true"));
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     // we won't change our keep-alive policy unless the server has explicitly
@@ -1863,23 +1868,30 @@ nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
         return NS_ERROR_NOT_INITIALIZED;
     }
 
-    nsHttpHandler::GenerateHostPort(
-        nsDependentCString(trans->ConnectionInfo()->Origin()),
-                           trans->ConnectionInfo()->OriginPort(), result);
+    DebugOnly<nsresult> rv;
+
+    rv = nsHttpHandler::GenerateHostPort(
+            nsDependentCString(trans->ConnectionInfo()->Origin()),
+                               trans->ConnectionInfo()->OriginPort(), result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // CONNECT host:port HTTP/1.1
     request->SetMethod(NS_LITERAL_CSTRING("CONNECT"));
     request->SetVersion(gHttpHandler->HttpVersion());
     request->SetRequestURI(result);
-    request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+    rv = request->SetHeader(nsHttp::User_Agent, gHttpHandler->UserAgent());
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // a CONNECT is always persistent
-    request->SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
-    request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
+    rv = request->SetHeader(nsHttp::Proxy_Connection, NS_LITERAL_CSTRING("keep-alive"));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    rv = request->SetHeader(nsHttp::Connection, NS_LITERAL_CSTRING("keep-alive"));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     // all HTTP/1.1 requests must include a Host header (even though it
     // may seem redundant in this case; see bug 82388).
-    request->SetHeader(nsHttp::Host, result);
+    rv = request->SetHeader(nsHttp::Host, result);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
 
     nsAutoCString val;
     if (NS_SUCCEEDED(trans->RequestHead()->GetHeader(
@@ -1887,7 +1899,8 @@ nsHttpConnection::MakeConnectString(nsAHttpTransaction *trans,
                          val))) {
         // we don't know for sure if this authorization is intended for the
         // SSL proxy, so we add it just in case.
-        request->SetHeader(nsHttp::Proxy_Authorization, val);
+        rv = request->SetHeader(nsHttp::Proxy_Authorization, val);
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
 
     result.Truncate();

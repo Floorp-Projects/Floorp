@@ -65,8 +65,10 @@ nsHttpAuthCache::nsHttpAuthCache()
 
 nsHttpAuthCache::~nsHttpAuthCache()
 {
-    if (mDB)
-        ClearAll();
+    if (mDB) {
+        DebugOnly<nsresult> rv = ClearAll();
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
         obsSvc->RemoveObserver(mObserver, "clear-origin-attributes-data");

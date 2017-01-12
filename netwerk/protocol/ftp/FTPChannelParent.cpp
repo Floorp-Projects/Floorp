@@ -477,7 +477,8 @@ FTPChannelParent::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
   }
   nsCOMPtr<nsIHttpChannelInternal> httpChan = do_QueryInterface(aRequest);
   if (httpChan) {
-    httpChan->GetLastModifiedTime(&lastModified);
+    DebugOnly<nsresult> rv = httpChan->GetLastModifiedTime(&lastModified);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   URIParams uriparam;

@@ -264,7 +264,8 @@ nsHttpRequestHead::ParseHeaderSet(const char *buffer)
             &hdr,
             &val))) {
 
-            mHeaders.SetHeaderFromNet(hdr, val, false);
+            DebugOnly<nsresult> rv = mHeaders.SetHeaderFromNet(hdr, val, false);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
         buffer = eof + 1;
         if (*buffer == '\n') {

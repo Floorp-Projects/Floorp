@@ -1186,8 +1186,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         nsXPIDLCString accept;
         rv = prefs->GetCharPref(HTTP_PREF("accept.default"),
                                   getter_Copies(accept));
-        if (NS_SUCCEEDED(rv))
-            SetAccept(accept);
+        if (NS_SUCCEEDED(rv)) {
+            rv = SetAccept(accept);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
+        }
     }
 
     if (PREF_CHANGED(HTTP_PREF("accept-encoding"))) {
@@ -1195,7 +1197,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetCharPref(HTTP_PREF("accept-encoding"),
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv)) {
-            SetAcceptEncodings(acceptEncodings, false);
+            rv = SetAcceptEncodings(acceptEncodings, false);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
@@ -1204,7 +1207,8 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetCharPref(HTTP_PREF("accept-encoding.secure"),
                                   getter_Copies(acceptEncodings));
         if (NS_SUCCEEDED(rv)) {
-            SetAcceptEncodings(acceptEncodings, true);
+            rv = SetAcceptEncodings(acceptEncodings, true);
+            MOZ_ASSERT(NS_SUCCEEDED(rv));
         }
     }
 
@@ -1435,8 +1439,10 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         if (pls) {
             nsXPIDLString uval;
             pls->ToString(getter_Copies(uval));
-            if (uval)
-                SetAcceptLanguages(NS_ConvertUTF16toUTF8(uval).get());
+            if (uval) {
+                rv = SetAcceptLanguages(NS_ConvertUTF16toUTF8(uval).get());
+                MOZ_ASSERT(NS_SUCCEEDED(rv));
+            }
         }
     }
 
@@ -2015,6 +2021,7 @@ nsHttpHandler::Observe(nsISupports *subject,
     MOZ_ASSERT(NS_IsMainThread());
     LOG(("nsHttpHandler::Observe [topic=\"%s\"]\n", topic));
 
+    nsresult rv;
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
@@ -2046,7 +2053,8 @@ nsHttpHandler::Observe(nsISupports *subject,
         }
     } else if (!strcmp(topic, "profile-change-net-restore")) {
         // initialize connection manager
-        InitConnectionMgr();
+        rv = InitConnectionMgr();
+        MOZ_ASSERT(NS_SUCCEEDED(rv));
     } else if (!strcmp(topic, "net:clear-active-logins")) {
         Unused << mAuthCache.ClearAll();
         Unused << mPrivateAuthCache.ClearAll();
