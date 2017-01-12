@@ -1425,10 +1425,16 @@ pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/fi
 pref("privacy.userContext.enabled", true);
 pref("privacy.userContext.ui.enabled", true);
 pref("privacy.usercontext.about_newtab_segregation.enabled", true);
+
+// 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is shown after X milliseconds.
+pref("privacy.usercontext.longPressBehavior", 2);
 #else
 pref("privacy.userContext.enabled", false);
 pref("privacy.userContext.ui.enabled", false);
 pref("privacy.usercontext.about_newtab_segregation.enabled", false);
+
+// 0 disables long press, 1 when clicked, the menu is shown, 2 the menu is shown after X milliseconds.
+pref("privacy.usercontext.longPressBehavior", 0);
 #endif
 
 #ifndef RELEASE_OR_BETA
