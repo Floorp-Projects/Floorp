@@ -26,6 +26,11 @@ struct FileDescriptor {
       : fd(ifd),
         auto_close(iauto_close) { }
 
+  bool operator==(const FileDescriptor& aOther) const
+  {
+    return fd == aOther.fd && auto_close == aOther.auto_close;
+  }
+
   int fd;
   // If true, this file descriptor should be closed after it has been used. For
   // example an IPC system might interpret this flag as indicating that the
