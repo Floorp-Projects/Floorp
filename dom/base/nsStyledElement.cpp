@@ -93,21 +93,6 @@ nsStyledElement::SetInlineStyleDeclaration(DeclarationBlock* aDeclaration,
                           aNotify, kDontCallAfterSetAttr);
 }
 
-DeclarationBlock*
-nsStyledElement::GetInlineStyleDeclaration()
-{
-  if (!MayHaveStyle()) {
-    return nullptr;
-  }
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
-
-  if (attrVal && attrVal->Type() == nsAttrValue::eCSSDeclaration) {
-    return attrVal->GetCSSDeclarationValue();
-  }
-
-  return nullptr;
-}
-
 // ---------------------------------------------------------------
 // Others and helpers
 

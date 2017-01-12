@@ -17,10 +17,11 @@ import org.mozilla.gecko.activitystream.ActivityStreamTelemetry;
 import org.mozilla.gecko.activitystream.Utils;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.home.HomePager;
-import org.mozilla.gecko.home.activitystream.StreamItem.HighlightItem;
-import org.mozilla.gecko.home.activitystream.StreamItem.WelcomePanel;
-import org.mozilla.gecko.home.activitystream.StreamItem.HighlightsTitle;
-import org.mozilla.gecko.home.activitystream.StreamItem.TopPanel;
+import org.mozilla.gecko.home.activitystream.stream.HighlightItem;
+import org.mozilla.gecko.home.activitystream.stream.HighlightsTitle;
+import org.mozilla.gecko.home.activitystream.stream.StreamItem;
+import org.mozilla.gecko.home.activitystream.stream.TopPanel;
+import org.mozilla.gecko.home.activitystream.stream.WelcomePanel;
 import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.EnumSet;

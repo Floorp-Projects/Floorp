@@ -254,10 +254,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
     // initialize()d to become a real, content-visible ArrayBufferObject.
     static ArrayBufferObject* createEmpty(JSContext* cx);
 
-    // Also valid when the buffer is a SharedArrayBuffer.
-    static bool createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
-    static bool createDataViewForThis(JSContext* cx, unsigned argc, Value* vp);
-
     template<typename T>
     static bool createTypedArrayFromBufferImpl(JSContext* cx, const CallArgs& args);
     template<typename T>

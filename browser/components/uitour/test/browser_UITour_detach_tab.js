@@ -32,7 +32,7 @@ var tests = [
     let windowDestroyedDeferred = Promise.defer();
     let onDOMWindowDestroyed = (aWindow) => {
       if (gContentWindow && aWindow == gContentWindow) {
-        Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed", false);
+        Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed");
         windowDestroyedDeferred.resolve();
       }
     };

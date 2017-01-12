@@ -26,6 +26,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.widget += [
     'AndroidCompositorWidget.h',
+    'AndroidUiThread.h',
 ]
 
 UNIFIED_SOURCES += [

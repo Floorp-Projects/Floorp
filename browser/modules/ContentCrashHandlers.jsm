@@ -909,9 +909,9 @@ this.PluginCrashReporter = {
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "plugin-crashed", false);
-    Services.obs.removeObserver(this, "gmp-plugin-crash", false);
-    Services.obs.removeObserver(this, "profile-after-change", false);
+    Services.obs.removeObserver(this, "plugin-crashed");
+    Services.obs.removeObserver(this, "gmp-plugin-crash");
+    Services.obs.removeObserver(this, "profile-after-change");
     this.initialized = false;
   },
 

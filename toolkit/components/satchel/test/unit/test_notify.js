@@ -147,7 +147,7 @@ yield FormHistory.update({ op: "remove", firstUsedStart: expectedData[0], firstU
 
 do_check_eq(expectedNotification, null);
 
-os.removeObserver(TestObserver, "satchel-storage-changed", false);
+os.removeObserver(TestObserver, "satchel-storage-changed");
 
 do_test_finished();
 

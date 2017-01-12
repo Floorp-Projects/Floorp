@@ -122,7 +122,7 @@ add_task(function* reloadButtonReloadsAddon() {
 
   const onBootstrapInstallCalled = new Promise(done => {
     Services.obs.addObserver(function listener() {
-      Services.obs.removeObserver(listener, ADDON_NAME, false);
+      Services.obs.removeObserver(listener, ADDON_NAME);
       info("Add-on was re-installed: " + ADDON_NAME);
       done();
     }, ADDON_NAME, false);

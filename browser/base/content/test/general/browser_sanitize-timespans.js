@@ -21,7 +21,7 @@ var Downloads = (Components.utils.import("resource://gre/modules/Downloads.jsm",
 function promiseFormHistoryRemoved() {
   let deferred = Promise.defer();
   Services.obs.addObserver(function onfh() {
-    Services.obs.removeObserver(onfh, "satchel-storage-changed", false);
+    Services.obs.removeObserver(onfh, "satchel-storage-changed");
     deferred.resolve();
   }, "satchel-storage-changed", false);
   return deferred.promise;

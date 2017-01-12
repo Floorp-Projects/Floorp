@@ -490,6 +490,26 @@ promise_test(t => {
 }, 'Transform value for animation with no keyframe at offset 0 and with ' +
    'positive delay');
 
+promise_test(t => {
+  useTestRefreshMode(t);
+
+  var div = addDiv(t, { style: 'transform: translateX(100px)' });
+
+  div.animate([{ offset: 0, transform: 'translateX(200px)'}],
+              { duration: 100 * MS_PER_SEC,
+                iterationStart: 1,
+                iterationComposite: 'accumulate' });
+
+  return waitForPaintsFlushed().then(() => {
+    var transform =
+      SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
+    assert_matrix_equals(transform, 'matrix(1, 0, 0, 1, 300, 0)',
+      'Transform value for animation with no keyframe at offset 1 and its ' +
+      'iterationComposite is accumulate');
+  });
+}, 'Transform value for animation with no keyframe at offset 1 and its ' +
+   'iterationComposite is accumulate');
+
 done();
 </script>
 </body>
