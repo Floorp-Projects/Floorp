@@ -91,5 +91,5 @@ pref("services.sync.validation.interval", 86400); // 24 hours in seconds
 // and you meet the maxRecord checks.
 pref("services.sync.validation.percentageChance", 10);
 
-// We won't validate an engine if it has more than this many records on the server.
+// We won't validate an engine if it has more than this many records on the server.
 pref("services.sync.validation.maxRecords", 100);
