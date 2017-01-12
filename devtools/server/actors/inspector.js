@@ -1755,8 +1755,6 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *    Options object:
    *    `parents`: True if the pseudo-class should be added
    *      to parent nodes.
-   *    `enabled`: False if the pseudo-class should be locked
-   *      to 'off'. Defaults to true.
    *
    * @returns An empty packet.  A "pseudoClassLock" mutation will
    *    be queued for any changed nodes.
@@ -1774,9 +1772,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
       }
     }
 
-    let enabled = options.enabled === undefined ||
-                  options.enabled;
-    this._addPseudoClassLock(node, pseudo, enabled);
+    this._addPseudoClassLock(node, pseudo);
 
     if (!options.parents) {
       return;
@@ -1786,7 +1782,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     let cur;
     while ((cur = walker.parentNode())) {
       let curNode = this._ref(cur);
-      this._addPseudoClassLock(curNode, pseudo, enabled);
+      this._addPseudoClassLock(curNode, pseudo);
     }
   },
 
@@ -1798,11 +1794,11 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     });
   },
 
-  _addPseudoClassLock: function (node, pseudo, enabled) {
+  _addPseudoClassLock: function (node, pseudo) {
     if (node.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
       return false;
     }
-    DOMUtils.addPseudoClassLock(node.rawNode, pseudo, enabled);
+    DOMUtils.addPseudoClassLock(node.rawNode, pseudo);
     this._activePseudoClassLocks.add(node);
     this._queuePseudoClassMutation(node);
     return true;

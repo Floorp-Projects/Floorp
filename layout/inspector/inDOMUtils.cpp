@@ -1254,9 +1254,7 @@ inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
 
 NS_IMETHODIMP
 inDOMUtils::AddPseudoClassLock(nsIDOMElement *aElement,
-                               const nsAString &aPseudoClass,
-                               bool aEnabled,
-                               uint8_t aArgc)
+                               const nsAString &aPseudoClass)
 {
   EventStates state = GetStatesForPseudoClass(aPseudoClass);
   if (state.IsEmpty()) {
@@ -1266,7 +1264,7 @@ inDOMUtils::AddPseudoClassLock(nsIDOMElement *aElement,
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(element);
 
-  element->LockStyleStates(state, aArgc > 0 ? aEnabled : true);
+  element->LockStyleStates(state);
 
   return NS_OK;
 }
@@ -1302,7 +1300,7 @@ inDOMUtils::HasPseudoClassLock(nsIDOMElement *aElement,
   nsCOMPtr<mozilla::dom::Element> element = do_QueryInterface(aElement);
   NS_ENSURE_ARG_POINTER(element);
 
-  EventStates locks = element->LockedStyleStates().mLocks;
+  EventStates locks = element->LockedStyleStates();
 
   *_retval = locks.HasAllStates(state);
   return NS_OK;

@@ -185,11 +185,8 @@ interface inIDOMUtils : nsISupports
 
   // pseudo-class style locking methods. aPseudoClass must be a valid pseudo-class
   // selector string, e.g. ":hover". ":any-link" and non-event-state
-  // pseudo-classes are ignored. aEnabled sets whether the psuedo-class
-  // should be locked to on or off.
-  [optional_argc] void addPseudoClassLock(in nsIDOMElement aElement,
-                                          in DOMString aPseudoClass,
-                                          [optional] in boolean aEnabled);
+  // pseudo-classes are ignored.
+  void addPseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
   void removePseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
   bool hasPseudoClassLock(in nsIDOMElement aElement, in DOMString aPseudoClass);
   void clearPseudoClassLocks(in nsIDOMElement aElement);

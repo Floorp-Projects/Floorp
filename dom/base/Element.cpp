@@ -346,30 +346,27 @@ Element::Blur(mozilla::ErrorResult& aError)
 EventStates
 Element::StyleStateFromLocks() const
 {
-  StyleStateLocks locksAndValues = LockedStyleStates();
-  EventStates locks = locksAndValues.mLocks;
-  EventStates values = locksAndValues.mValues;
-  EventStates state = (mState & ~locks) | (locks & values);
+  EventStates locks = LockedStyleStates();
+  EventStates state = mState | locks;
 
-  if (state.HasState(NS_EVENT_STATE_VISITED)) {
+  if (locks.HasState(NS_EVENT_STATE_VISITED)) {
     return state & ~NS_EVENT_STATE_UNVISITED;
   }
-  if (state.HasState(NS_EVENT_STATE_UNVISITED)) {
+  if (locks.HasState(NS_EVENT_STATE_UNVISITED)) {
     return state & ~NS_EVENT_STATE_VISITED;
   }
-
   return state;
 }
 
-Element::StyleStateLocks
+EventStates
 Element::LockedStyleStates() const
 {
-  StyleStateLocks* locks =
-    static_cast<StyleStateLocks*>(GetProperty(nsGkAtoms::lockedStyleStates));
+  EventStates* locks =
+    static_cast<EventStates*>(GetProperty(nsGkAtoms::lockedStyleStates));
   if (locks) {
     return *locks;
   }
-  return StyleStateLocks();
+  return EventStates();
 }
 
 void
@@ -386,26 +383,21 @@ Element::NotifyStyleStateChange(EventStates aStates)
 }
 
 void
-Element::LockStyleStates(EventStates aStates, bool aEnabled)
+Element::LockStyleStates(EventStates aStates)
 {
-  StyleStateLocks* locks = new StyleStateLocks(LockedStyleStates());
+  EventStates* locks = new EventStates(LockedStyleStates());
 
-  locks->mLocks |= aStates;
-  if (aEnabled) {
-    locks->mValues |= aStates;
-  } else {
-    locks->mValues &= ~aStates;
-  }
+  *locks |= aStates;
 
   if (aStates.HasState(NS_EVENT_STATE_VISITED)) {
-    locks->mLocks &= ~NS_EVENT_STATE_UNVISITED;
+    *locks &= ~NS_EVENT_STATE_UNVISITED;
   }
   if (aStates.HasState(NS_EVENT_STATE_UNVISITED)) {
-    locks->mLocks &= ~NS_EVENT_STATE_VISITED;
+    *locks &= ~NS_EVENT_STATE_VISITED;
   }
 
   SetProperty(nsGkAtoms::lockedStyleStates, locks,
-              nsINode::DeleteProperty<StyleStateLocks>);
+              nsINode::DeleteProperty<EventStates>);
   SetHasLockedStyleStates();
 
   NotifyStyleStateChange(aStates);
@@ -414,18 +406,18 @@ Element::LockStyleStates(EventStates aStates, bool aEnabled)
 void
 Element::UnlockStyleStates(EventStates aStates)
 {
-  StyleStateLocks* locks = new StyleStateLocks(LockedStyleStates());
+  EventStates* locks = new EventStates(LockedStyleStates());
 
-  locks->mLocks &= ~aStates;
+  *locks &= ~aStates;
 
-  if (locks->mLocks.IsEmpty()) {
+  if (locks->IsEmpty()) {
     DeleteProperty(nsGkAtoms::lockedStyleStates);
     ClearHasLockedStyleStates();
     delete locks;
   }
   else {
     SetProperty(nsGkAtoms::lockedStyleStates, locks,
-                nsINode::DeleteProperty<StyleStateLocks>);
+                nsINode::DeleteProperty<EventStates>);
   }
 
   NotifyStyleStateChange(aStates);
@@ -434,12 +426,12 @@ Element::UnlockStyleStates(EventStates aStates)
 void
 Element::ClearStyleStateLocks()
 {
-  StyleStateLocks locks = LockedStyleStates();
+  EventStates locks = LockedStyleStates();
 
   DeleteProperty(nsGkAtoms::lockedStyleStates);
   ClearHasLockedStyleStates();
 
-  NotifyStyleStateChange(locks.mLocks);
+  NotifyStyleStateChange(locks);
 }
 
 bool
