@@ -56,12 +56,13 @@ IsSpaceOrTabOrSegmentBreak(char16_t aCh)
   return IsSpaceOrTab(aCh) || IsSegmentBreak(aCh);
 }
 
-static char16_t*
-TransformWhiteSpaces(const char16_t* aText, uint32_t aLength,
+template<class CharT>
+static CharT*
+TransformWhiteSpaces(const CharT* aText, uint32_t aLength,
                      uint32_t aBegin, uint32_t aEnd,
                      bool aHasSegmentBreak,
                      bool& aInWhitespace,
-                     char16_t* aOutput,
+                     CharT* aOutput,
                      uint32_t& aFlags,
                      nsTextFrameUtils::CompressionMode aCompression,
                      gfxSkipChars* aSkipChars)
@@ -70,10 +71,14 @@ TransformWhiteSpaces(const char16_t* aText, uint32_t aLength,
              aCompression == nsTextFrameUtils::COMPRESS_WHITESPACE_NEWLINE,
              "whitespaces should be skippable!!");
   // Get the context preceding/following this white space range.
+  // For 8-bit text (sizeof CharT == 1), the checks here should get optimized
+  // out, and isSegmentBreakSkippable should be initialized to be 'false'.
   bool isSegmentBreakSkippable =
-    (aBegin > 0 && IS_ZERO_WIDTH_SPACE(aText[aBegin - 1])) ||
-    (aEnd < aLength && IS_ZERO_WIDTH_SPACE(aText[aEnd]));
-  if (!isSegmentBreakSkippable && aBegin > 0 && aEnd < aLength) {
+    sizeof(CharT) > 1 &&
+    ((aBegin > 0 && IS_ZERO_WIDTH_SPACE(aText[aBegin - 1])) ||
+     (aEnd < aLength && IS_ZERO_WIDTH_SPACE(aText[aEnd])));
+  if (sizeof(CharT) > 1 && !isSegmentBreakSkippable &&
+      aBegin > 0 && aEnd < aLength) {
     uint32_t ucs4before;
     uint32_t ucs4after;
     if (aBegin > 1 &&
@@ -97,7 +102,7 @@ TransformWhiteSpaces(const char16_t* aText, uint32_t aLength,
   }
 
   for (uint32_t i = aBegin; i < aEnd; ++i) {
-    char16_t ch = aText[i];
+    CharT ch = aText[i];
     bool keepChar = false;
     bool keepTransformedWhiteSpace = false;
     if (IsDiscardable(ch, &aFlags)) {
@@ -167,16 +172,17 @@ TransformWhiteSpaces(const char16_t* aText, uint32_t aLength,
   return aOutput;
 }
 
-char16_t*
-nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
-                                char16_t* aOutput,
+template<class CharT>
+CharT*
+nsTextFrameUtils::TransformText(const CharT* aText, uint32_t aLength,
+                                CharT* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
                                 uint32_t* aAnalysisFlags)
 {
   uint32_t flags = 0;
-  char16_t* outputStart = aOutput;
+  CharT* outputStart = aOutput;
 
   bool lastCharArabic = false;
   if (aCompression == COMPRESS_NONE ||
@@ -184,7 +190,7 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      char16_t ch = aText[i];
+      CharT ch = aText[i];
       if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
@@ -215,7 +221,7 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
     bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
-      char16_t ch = aText[i];
+      CharT ch = aText[i];
       // CSS Text 3 - 4.1. The White Space Processing Rules
       // White space processing in CSS affects only the document white space
       // characters: spaces (U+0020), tabs (U+0009), and segment breaks.
@@ -244,7 +250,7 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
         }
         // If the last white space is followed by a combining sequence tail,
         // exclude it from the range of TransformWhiteSpaces.
-        if (aText[j - 1] == ' ' && j < aLength &&
+        if (sizeof(CharT) > 1 && aText[j - 1] == ' ' && j < aLength &&
             IsSpaceCombiningSequenceTail(&aText[j], aLength - j)) {
           keepLastSpace = true;
           j--;
@@ -299,85 +305,28 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
   *aAnalysisFlags = flags;
   return aOutput;
 }
-
-uint8_t*
+/*
+ * NOTE: This template is part of public API of nsTextFrameUtils, while
+ * its function body is not available in the header. It may stop working
+ * (fail to resolve symbol in link time) once its callsites are moved to a
+ * different translation unit (e.g. a different unified source file).
+ * Explicit instantiating this function template with `uint8_t` and `char16_t`
+ * could prevent us from the potential risk.
+ */
+template uint8_t*
 nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
                                 uint8_t* aOutput,
                                 CompressionMode aCompression,
                                 uint8_t* aIncomingFlags,
                                 gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags)
-{
-  uint32_t flags = 0;
-  uint8_t* outputStart = aOutput;
-
-  if (aCompression == COMPRESS_NONE ||
-      aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
-    // Skip discardables.
-    uint32_t i;
-    for (i = 0; i < aLength; ++i) {
-      uint8_t ch = aText[i];
-      if (IsDiscardable(ch, &flags)) {
-        aSkipChars->SkipChar();
-      } else {
-        aSkipChars->KeepChar();
-        if (aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
-          if (ch == '\t' || ch == '\n') {
-            ch = ' ';
-            flags |= TEXT_WAS_TRANSFORMED;
-          }
-        } else {
-          // aCompression == COMPRESS_NONE
-          if (ch == '\t') {
-            flags |= TEXT_HAS_TAB;
-          }
-        }
-        *aOutput++ = ch;
-      }
-    }
-    *aIncomingFlags &= ~(INCOMING_ARABICCHAR | INCOMING_WHITESPACE);
-  } else {
-    bool inWhitespace = (*aIncomingFlags & INCOMING_WHITESPACE) != 0;
-    uint32_t i;
-    for (i = 0; i < aLength; ++i) {
-      uint8_t ch = aText[i];
-      bool nowInWhitespace = ch == ' ' || ch == '\t' ||
-        (ch == '\n' && aCompression == COMPRESS_WHITESPACE_NEWLINE);
-      if (!nowInWhitespace) {
-        if (IsDiscardable(ch, &flags)) {
-          aSkipChars->SkipChar();
-          nowInWhitespace = inWhitespace;
-        } else {
-          *aOutput++ = ch;
-          aSkipChars->KeepChar();
-        }
-      } else {
-        if (inWhitespace) {
-          aSkipChars->SkipChar();
-        } else {
-          if (ch != ' ') {
-            flags |= TEXT_WAS_TRANSFORMED;
-          }
-          *aOutput++ = ' ';
-          aSkipChars->KeepChar();
-        }
-      }
-      inWhitespace = nowInWhitespace;
-    }
-    *aIncomingFlags &= ~INCOMING_ARABICCHAR;
-    if (inWhitespace) {
-      *aIncomingFlags |= INCOMING_WHITESPACE;
-    } else {
-      *aIncomingFlags &= ~INCOMING_WHITESPACE;
-    }
-  }
-
-  if (outputStart + aLength != aOutput) {
-    flags |= TEXT_WAS_TRANSFORMED;
-  }
-  *aAnalysisFlags = flags;
-  return aOutput;
-}
+                                uint32_t* aAnalysisFlags);
+template char16_t*
+nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
+                                char16_t* aOutput,
+                                CompressionMode aCompression,
+                                uint8_t* aIncomingFlags,
+                                gfxSkipChars* aSkipChars,
+                                uint32_t* aAnalysisFlags);
 
 uint32_t
 nsTextFrameUtils::ComputeApproximateLengthWithWhitespaceCompression(
