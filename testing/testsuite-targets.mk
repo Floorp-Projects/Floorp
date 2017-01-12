@@ -18,10 +18,6 @@ ifneq (1_WINNT,$(MOZ_PGO)_$(OS_ARCH))
 BUILD_GTEST=1
 endif
 
-ifdef MOZ_B2G
-BUILD_GTEST=
-endif
-
 ifneq (browser,$(MOZ_BUILD_APP))
 BUILD_GTEST=
 endif
@@ -56,12 +52,6 @@ REMOTE_REFTEST = rm -f ./$@.log && $(PYTHON) _tests/reftest/remotereftest.py \
   --extra-profile-file=$(topsrcdir)/mobile/android/fonts \
   $(SYMBOLS_PATH) $(EXTRA_TEST_ARGS) $(1) | tee ./$@.log
 
-RUN_REFTEST_B2G = rm -f ./$@.log && $(PYTHON) _tests/reftest/runreftestb2g.py \
-  --remote-webserver=10.0.2.2 --b2gpath=${B2G_PATH} --adbpath=${ADB_PATH} \
-  --xre-path=${MOZ_HOST_BIN} $(SYMBOLS_PATH) --ignore-window-size \
-  --httpd-path=_tests/modules \
-  $(EXTRA_TEST_ARGS) '$(1)' | tee ./$@.log
-
 ifeq ($(OS_ARCH),WINNT) #{
 # GPU-rendered shadow layers are unsupported here
 OOP_CONTENT = --setpref=layers.async-pan-zoom.enabled=true --setpref=browser.tabs.remote.autostart=true --setpref=layers.acceleration.disabled=true
@@ -92,26 +82,6 @@ reftest-remote:
         $(call REMOTE_REFTEST,'tests/$(TEST_PATH)'); \
         $(CHECK_TEST_ERROR); \
     fi
-
-reftest-b2g: TEST_PATH?=layout/reftests/reftest.list
-reftest-b2g:
-	@if [ '${MOZ_HOST_BIN}' = '' ]; then \
-		echo 'environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell'; \
-	elif [ ! -d ${MOZ_HOST_BIN} ]; then \
-		echo 'MOZ_HOST_BIN does not specify a directory'; \
-	elif [ ! -f ${MOZ_HOST_BIN}/xpcshell ]; then \
-		echo 'xpcshell not found in MOZ_HOST_BIN'; \
-	elif [ '${B2G_PATH}' = '' -o '${ADB_PATH}' = '' ]; then \
-		echo 'please set the B2G_PATH and ADB_PATH environment variables'; \
-	else \
-        ln -s $(abspath $(topsrcdir)) _tests/reftest/tests; \
-		if [ '${REFTEST_PATH}' != '' ]; then \
-			$(call RUN_REFTEST_B2G,tests/${REFTEST_PATH}); \
-		else \
-			$(call RUN_REFTEST_B2G,tests/$(TEST_PATH)); \
-		fi; \
-        $(CHECK_TEST_ERROR); \
-	fi
 
 crashtest: TEST_PATH?=testing/crashtest/crashtests.list
 crashtest:
@@ -217,10 +187,6 @@ stage-all: stage-android
 stage-all: stage-instrumentation-tests
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),gonk)
-stage-all: stage-b2g
-endif
-
 # Prepare _tests before any of the other staging/packaging steps.
 # make-stage-dir is a prerequisite to all the stage-* targets in testsuite-targets.mk.
 make-stage-dir: install-test-files
@@ -233,9 +199,6 @@ make-stage-dir: install-test-files
 	$(NSINSTALL) -D $(PKG_STAGE)/jetpack
 	$(NSINSTALL) -D $(PKG_STAGE)/modules
 	$(NSINSTALL) -D $(PKG_STAGE)/tools/mach
-
-stage-b2g: make-stage-dir
-	$(NSINSTALL) $(topsrcdir)/b2g/test/b2g-unittest-requirements.txt $(PKG_STAGE)/b2g
 
 stage-config: make-stage-dir
 	$(NSINSTALL) -D $(PKG_STAGE)/config
@@ -329,7 +292,6 @@ check::
   package-tests-common \
   make-stage-dir \
   stage-all \
-  stage-b2g \
   stage-config \
   stage-mochitest \
   stage-jstests \
