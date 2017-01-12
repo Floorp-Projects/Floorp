@@ -1088,14 +1088,6 @@ CompositorBridgeChild::DeallocPCompositorWidgetChild(PCompositorWidgetChild* aAc
 #endif
 }
 
-bool
-CompositorBridgeChild::GetAPZEnabled(uint64_t aLayerTreeId)
-{
-  bool result = false;
-  Unused << SendAsyncPanZoomEnabled(aLayerTreeId, &result);
-  return result;
-}
-
 PAPZCTreeManagerChild*
 CompositorBridgeChild::AllocPAPZCTreeManagerChild(const uint64_t& aLayersId)
 {

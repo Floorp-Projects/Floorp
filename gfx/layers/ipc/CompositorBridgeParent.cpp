@@ -1102,11 +1102,12 @@ CompositorBridgeParent::DeallocPAPZParent(PAPZParent* aActor)
 }
 
 mozilla::ipc::IPCResult
-CompositorBridgeParent::RecvAsyncPanZoomEnabled(const uint64_t& aLayersId, bool* aHasAPZ)
+CompositorBridgeParent::RecvGetCompositorOptions(const uint64_t& aLayersId,
+                                                 CompositorOptions* aOptions)
 {
   // The main process should pass in 0 because we assume mRootLayerTreeID
   MOZ_ASSERT(aLayersId == 0);
-  *aHasAPZ = AsyncPanZoomEnabled();
+  *aOptions = mOptions;
   return IPC_OK();
 }
 
