@@ -1047,17 +1047,15 @@ BookmarksTracker.prototype = {
     if (PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.mobileFolderId, 0) == -1) {
       if (mobile.length != 0)
         PlacesUtils.bookmarks.removeItem(mobile[0], SOURCE_SYNC);
-    }
-    // Add the mobile bookmarks query if it doesn't exist
-    else if (mobile.length == 0) {
+    } else if (mobile.length == 0) {
+      // Add the mobile bookmarks query if it doesn't exist
       let query = PlacesUtils.bookmarks.insertBookmark(all[0], queryURI, -1, title, /* guid */ null, SOURCE_SYNC);
       PlacesUtils.annotations.setItemAnnotation(query, ORGANIZERQUERY_ANNO, MOBILE_ANNO, 0,
                                   PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
       PlacesUtils.annotations.setItemAnnotation(query, PlacesUtils.EXCLUDE_FROM_BACKUP_ANNO, 1, 0,
                                   PlacesUtils.annotations.EXPIRE_NEVER, SOURCE_SYNC);
-    }
-    // Make sure the existing query URL and title are correct
-    else {
+    } else {
+      // Make sure the existing query URL and title are correct
       if (!PlacesUtils.bookmarks.getBookmarkURI(mobile[0]).equals(queryURI)) {
         PlacesUtils.bookmarks.changeBookmarkURI(mobile[0], queryURI,
                                                 SOURCE_SYNC);

@@ -368,14 +368,12 @@ TokenServerClient.prototype = {
         // invalid-generation.
         error.message = "Authentication failed.";
         error.cause = result.status;
-      }
-
-      // 403 should represent a "condition acceptance needed" response.
-      //
-      // The extra validation of "urls" is important. We don't want to signal
-      // conditions required unless we are absolutely sure that is what the
-      // server is asking for.
-      else if (response.status == 403) {
+      } else if (response.status == 403) {
+        // 403 should represent a "condition acceptance needed" response.
+        //
+        // The extra validation of "urls" is important. We don't want to signal
+        // conditions required unless we are absolutely sure that is what the
+        // server is asking for.
         if (!("urls" in result)) {
           this._log.warn("403 response without proper fields!");
           this._log.warn("Response body: " + response.body);
