@@ -18,7 +18,7 @@ const TEST_THRESHOLD = {
 
 const ADDON_ROLLOUT_POLICY = {
   "beta"    : "51alladdons", // Any WebExtension or addon except with mpc = false
-  "release" : "50allmpc", // Any WebExtension or addon with mpc = true
+  "release" : "51set1",
 };
 
 const PREF_COHORT_SAMPLE       = "e10s.rollout.cohortSample";
