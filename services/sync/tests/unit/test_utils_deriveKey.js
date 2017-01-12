@@ -38,7 +38,7 @@ function run_test() {
   do_check_eq(cryptoSvc.decrypt(cryptoSvc.encrypt("bacon", der_key, iv), der_key, iv), "bacon");
 
   // Base64, 16-byte output.
-  var der_key = Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16);
+  der_key = Utils.deriveEncodedKeyFromPassphrase(der_passphrase, der_salt, 16);
   _("Derived key in base64: " + der_key);
   do_check_eq("d2zG0d2cBfXnRwMUGyMwyg==", der_key);
   do_check_eq(cryptoSvc.decrypt(cryptoSvc.encrypt("bacon", der_key, iv), der_key, iv), "bacon");
