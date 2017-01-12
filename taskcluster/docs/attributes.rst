@@ -138,3 +138,9 @@ chunk_locales
 =============
 For the ``l10n`` and ``nightly-l10n`` kinds, this attribute contains an array of
 the individual locales this chunk is responsible for processing.
+
+locale
+======
+For jobs that operate on only one locale, we set the attribute ``locale`` to the
+specific locale involved. Currently this is only in l10n versions of the
+``beetmover`` kinds.
