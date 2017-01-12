@@ -120,9 +120,9 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
                 if (playingTab != tab && tab.isMediaPlaying()) {
                     mTabReference = new WeakReference<>(tab);
                     setState(State.PLAYING);
-                } else if (playingTab == tab && !tab.isMediaPlaying()) {
-                    mTabReference = new WeakReference<>(null);
-                    setState(State.STOPPED);
+                } else if (playingTab == tab) {
+                    mTabReference = new WeakReference<>(tab.isMediaPlaying() ? tab : null);
+                    setState(tab.isMediaPlaying() ? State.PLAYING : State.STOPPED);
                 }
                 break;
             case MEDIA_PLAYING_RESUME:
