@@ -2,7 +2,7 @@ load 336081-1.xhtml
 asserts-if(stylo,2-3) load 336104.html # bug 1324669
 load 382527-1.html
 load 382778-1.html
-asserts-if(stylo,1) load 402172-1.html # bug 1324663
+load 402172-1.html
 load 403965-1.xhtml
 load 407074-1.html
 load 407079-1.html
@@ -34,7 +34,7 @@ load 612565-1.html
 load 615015-1.html
 load 615450-1.html
 load 633709.xhtml
-asserts-if(stylo,1) load 636074-1.html # bug 1324663
+load 636074-1.html
 load 639736-1.xhtml
 load 643786-1.html
 load 650572-1.html
@@ -62,12 +62,12 @@ load 772282.html
 load 776323.html
 needs-focus load 793866.html
 load 1057677.html
-asserts-if(stylo,1) needs-focus load 1128787.html # bug 1324663
+needs-focus load 1128787.html
 load 1134545.html
 load 1158452.html
 load 1158651.html
 load 1244894.xhtml
 load 1264921.html
 load 1272490.html
-asserts-if(stylo,1-24) load 1317704.html # bug 1324663
+load 1317704.html
 load 1317718.html

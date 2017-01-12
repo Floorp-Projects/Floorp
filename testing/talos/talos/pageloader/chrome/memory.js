@@ -19,7 +19,7 @@ function initializeMemoryCollector(callback, args) {
         memTimer.cancel();
         memTimer = null;
 
-        os.removeObserver(arguments.callee, "child-memory-reporter-update", false);
+        os.removeObserver(arguments.callee, "child-memory-reporter-update");
         os.addObserver(collectAndReport, "child-memory-reporter-update", false);
         gMemCallback();
     }, "child-memory-reporter-update", false);

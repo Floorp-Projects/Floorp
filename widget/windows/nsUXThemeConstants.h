@@ -67,7 +67,7 @@
 #define SP_GRIPPERHOR      8
 #define SP_GRIPPERVERT     9
 
-// Vista only; implict hover state.
+// Implicit hover state.
 // BASE + 0 = UP, + 1 = DOWN, etc.
 #define SP_BUTTON_IMPLICIT_HOVER_BASE   17
 

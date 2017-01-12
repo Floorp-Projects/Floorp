@@ -129,7 +129,7 @@
 #define ARCH_CPU_PPC 1
 #define ARCH_CPU_32_BITS 1
 #define ARCH_CPU_BIG_ENDIAN 1
-#elif defined(__sparc64__)
+#elif defined(__sparc__) && defined(__arch64__)
 #define ARCH_CPU_SPARC_FAMILY 1
 #define ARCH_CPU_SPARC 1
 #define ARCH_CPU_64_BITS 1

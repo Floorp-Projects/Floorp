@@ -1,4 +1,4 @@
-asserts-if(stylo,1) load 105619-1.html # bug 1324663
+load 105619-1.html
 load 147777-1.html
 load 187671-1.html
 load 192408-1.html
@@ -39,7 +39,7 @@ load 460209-1.html
 load 460217-1.html
 asserts-if(stylo,2) load 460323-1.html # bug 1324634
 load 466845-1.html
-skip-if(stylo) load 469432-1.xhtml # bug 1323649
+load 469432-1.xhtml
 load 472195-1.html
 load 472237-1.html # will fail, test for leak (474704)
 HTTP(..) load 472237-1.html
@@ -58,7 +58,7 @@ load 512851-1.xhtml
 load 524252-1.html
 load 536789-1.html
 load 539613-1.xhtml
-asserts-if(stylo,3) load 558943-1.xhtml # bug 1324663
+load 558943-1.xhtml
 load 559491.html
 load 565248-1.html
 load 571105-1.xhtml
@@ -114,7 +114,7 @@ load 989965-1.html
 load 992333-1.html
 skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1017798-1.html # bug 1323689
 load 1028514-1.html
-asserts-if(stylo,8) load 1066089-1.html # bug 1324663
+load 1066089-1.html
 skip-if(stylo) load 1074651-1.html # bug 1323652
 load 1135534.html
 pref(dom.webcomponents.enabled,true) load 1089463-1.html
@@ -139,7 +139,7 @@ skip-if(stylo) load 1233135-1.html # bug 1323716
 skip-if(stylo) load 1233135-2.html # bug 1323716
 load 1238660-1.html
 load 1245260-1.html
-asserts-if(stylo,18) load 1247865-1.html # bug 1324660
+load 1247865-1.html
 asserts-if(stylo,0-1) load 1264396-1.html # bug 1324677
 # The following test relies on -webkit-text-fill-color being behind the
 # layout.css.prefixes.webkit pref

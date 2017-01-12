@@ -61,7 +61,7 @@ public:
   /**
    * DEBUG ONLY method to verify integrity of style tree versus frame tree
    */
-  static void DebugVerifyStyleTree(nsIFrame* aFrame);
+  void DebugVerifyStyleTree(nsIFrame* aFrame);
 #endif
 
   void FlushOverflowChangedTracker() {

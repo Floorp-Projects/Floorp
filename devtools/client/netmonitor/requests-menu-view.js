@@ -263,10 +263,8 @@ RequestsMenuView.prototype = {
           payload.responseContentDataUri = formDataURI(mimeType, encoding, response);
         }
 
-        if (mimeType.includes("text/")) {
-          responseContent.content.text = response;
-          payload.responseContent = responseContent;
-        }
+        responseContent.content.text = response;
+        payload.responseContent = responseContent;
 
         yield this.store.dispatch(Actions.updateRequest(action.id, payload, true));
 

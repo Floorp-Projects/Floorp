@@ -365,7 +365,6 @@ function startTest() {
 
 // Called by each form's onsubmit handler.
 function checkSubmit(formNum) {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
   ok(true, "form " + formNum + " submitted");
   numSubmittedForms++;
@@ -501,7 +500,7 @@ function submitForm(formNum) {
       // from an HTTPS domain in an iframe.
       if (nextFormNum == 21 || nextFormNum == 100) {
         ok(true, "submitting iframe test " + nextFormNum);
-        document.getElementById("iframe").contentWindow.clickButton(nextFormNum);
+        SpecialPowers.wrap(document.getElementById("iframe").contentWindow).wrappedJSObject.clickButton(nextFormNum);
       } else {
         var button = getFormSubmitButton(nextFormNum);
         button.click();

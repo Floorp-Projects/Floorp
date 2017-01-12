@@ -18,8 +18,7 @@
 
 <script>
   function checkSubmit(num) {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-    return parent.checkSubmit(num);
+    return SpecialPowers.wrap(parent).wrappedJSObject.checkSubmit(num);
   }
 
   function clickButton(num) {

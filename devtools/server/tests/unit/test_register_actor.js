@@ -92,7 +92,7 @@ function test_lazy_api() {
     do_check_true(isActorLoaded);
     do_check_true(isActorInstanciated);
 
-    Services.obs.removeObserver(onActorEvent, "actor", false);
+    Services.obs.removeObserver(onActorEvent, "actor");
     client.close().then(() => run_next_test());
   }
 }

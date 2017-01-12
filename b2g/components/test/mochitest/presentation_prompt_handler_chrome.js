@@ -9,8 +9,8 @@
  }
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-const { XPCOMUtils } = Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-const { SystemAppProxy } = Cu.import('resource://gre/modules/SystemAppProxy.jsm');
+const { XPCOMUtils } = Cu.import('resource://gre/modules/XPCOMUtils.jsm', {});
+const { SystemAppProxy } = Cu.import('resource://gre/modules/SystemAppProxy.jsm', {});
 
 const manager = Cc["@mozilla.org/presentation-device/manager;1"]
                   .getService(Ci.nsIPresentationDeviceManager);
@@ -91,4 +91,3 @@ addMessageListener('trigger-device-prompt', function(request_options) {
 addMessageListener('presentation-select-response', function(detail) {
   SystemAppProxy._sendCustomEvent('mozContentEvent', detail);
 });
-

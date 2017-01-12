@@ -29,6 +29,9 @@ EXPORTS.mozilla.gfx += ['webrender_bindings/src/webrender.h']
 if CONFIG['MOZ_ENABLE_SKIA']:
     DIRS += ['skia']
 
+if CONFIG['MOZ_ENABLE_SKIA_PDF_SFNTLY'] and CONFIG['ENABLE_INTL_API']:
+     DIRS += ['sfntly/cpp/src']
+
 if CONFIG['ENABLE_TESTS']:
     DIRS += ['tests/gtest']
 

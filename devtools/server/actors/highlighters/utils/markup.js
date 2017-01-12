@@ -286,8 +286,16 @@ CanvasFrameAnonymousContentHelper.prototype = {
     // <style scoped> doesn't work inside anonymous content (see bug 1086532).
     // If it did, highlighters.css would be injected as an anonymous content
     // node using CanvasFrameAnonymousContentHelper instead.
-    installHelperSheet(this.highlighterEnv.window,
-      "@import url('" + STYLESHEET_URI + "');");
+    if (!installedHelperSheets.has(doc)) {
+      installedHelperSheets.set(doc, true);
+      let source = "@import url('" + STYLESHEET_URI + "');";
+      let url = "data:text/css;charset=utf-8," + encodeURIComponent(source);
+      let winUtils = this.highlighterEnv.window
+                         .QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+      winUtils.loadSheetUsingURIString(url, winUtils.AGENT_SHEET);
+    }
+
     let node = this.nodeBuilder();
 
     // It was stated that hidden documents don't accept

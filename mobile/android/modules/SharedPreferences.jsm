@@ -76,7 +76,7 @@ function SharedPreferencesImpl(options = {}) {
 
 SharedPreferencesImpl.prototype = Object.freeze({
   _set: function _set(prefs) {
-    Messaging.sendRequest({
+    EventDispatcher.instance.sendRequest({
       type: "SharedPreferences:Set",
       preferences: prefs,
       scope: this._scope,
@@ -109,29 +109,28 @@ SharedPreferencesImpl.prototype = Object.freeze({
 
   _get: function _get(prefs, callback) {
     let result = null;
-    Messaging.sendRequestForResult({
-      type: "SharedPreferences:Get",
+
+    // Use dispatch instead of sendRequestForResult because callbacks for
+    // Gecko thread events are synchronous when used with dispatch(), so we
+    // don't have to spin the event loop here to wait for a result.
+    EventDispatcher.instance.dispatch("SharedPreferences:Get", {
       preferences: prefs,
       scope: this._scope,
       profileName: this._profileName,
       branch: this._branch,
-    }).then((data) => {
-      result = data.values;
+    }, {
+      onSuccess: values => { result = values },
+      onError: msg => { throw new Error("Cannot get preference: " + msg); },
     });
-
-    let thread = Services.tm.currentThread;
-    while (result == null)
-      thread.processNextEvent(true);
 
     return result;
   },
 
   _getOne: function _getOne(prefName, type) {
-    let prefs = [];
-    prefs.push({
+    let prefs = [{
       name: prefName,
       type: type,
-    });
+    }];
     let values = this._get(prefs);
     if (values.length != 1) {
       throw new Error("Got too many values: " + values.length);
@@ -205,8 +204,9 @@ SharedPreferencesImpl.prototype = Object.freeze({
       return;
     this._listening = true;
 
-    Services.obs.addObserver(this, "SharedPreferences:Changed", false);
-    Messaging.sendRequest({
+    EventDispatcher.instance.registerListener(this, "SharedPreferences:Changed");
+
+    EventDispatcher.instance.sendRequest({
       type: "SharedPreferences:Observe",
       enable: true,
       scope: this._scope,
@@ -215,12 +215,11 @@ SharedPreferencesImpl.prototype = Object.freeze({
     });
   },
 
-  observe: function observe(subject, topic, data) {
-    if (topic != "SharedPreferences:Changed") {
+  onEvent: function _onEvent(event, msg, callback) {
+    if (event !== "SharedPreferences:Changed") {
       return;
     }
 
-    let msg = JSON.parse(data);
     if (msg.scope !== this._scope ||
         ((this._scope === Scope.PROFILE) && (msg.profileName !== this._profileName)) ||
         ((this._scope === Scope.GLOBAL)  && (msg.branch !== this._branch))) {
@@ -242,8 +241,9 @@ SharedPreferencesImpl.prototype = Object.freeze({
       return;
     this._listening = false;
 
-    Services.obs.removeObserver(this, "SharedPreferences:Changed");
-    Messaging.sendRequest({
+    EventDispatcher.instance.unregisterListener(this, "SharedPreferences:Changed");
+
+    EventDispatcher.instance.sendRequest({
       type: "SharedPreferences:Observe",
       enable: false,
       scope: this._scope,

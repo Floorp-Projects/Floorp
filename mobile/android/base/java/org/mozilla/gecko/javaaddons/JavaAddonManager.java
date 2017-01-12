@@ -14,7 +14,9 @@ import dalvik.system.DexClassLoader;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.GeckoBundle;
 
 import java.io.File;
 import java.lang.reflect.Constructor;
@@ -45,13 +47,13 @@ import java.util.Map;
  * dispatcher, they can do so by inserting the response string into the bundle
  * under the key "response".
  */
-public class JavaAddonManager implements GeckoEventListener {
+public class JavaAddonManager implements BundleEventListener {
     private static final String LOGTAG = "GeckoJavaAddonManager";
 
     private static JavaAddonManager sInstance;
 
     private final EventDispatcher mDispatcher;
-    private final Map<String, Map<String, GeckoEventListener>> mAddonCallbacks;
+    private final Map<String, Map<String, BundleEventListener>> mAddonCallbacks;
 
     private Context mApplicationContext;
 
@@ -64,7 +66,7 @@ public class JavaAddonManager implements GeckoEventListener {
 
     private JavaAddonManager() {
         mDispatcher = EventDispatcher.getInstance();
-        mAddonCallbacks = new HashMap<String, Map<String, GeckoEventListener>>();
+        mAddonCallbacks = new HashMap<>();
     }
 
     public void init(Context applicationContext) {
@@ -79,46 +81,51 @@ public class JavaAddonManager implements GeckoEventListener {
         JavaAddonManagerV1.getInstance().init(applicationContext);
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        try {
-            if (event.equals("Dex:Load")) {
-                String zipFile = message.getString("zipfile");
-                String implClass = message.getString("impl");
-                Log.d(LOGTAG, "Attempting to load classes.dex file from " + zipFile + " and instantiate " + implClass);
+    @Override // BundleEventListener
+    public void handleMessage(final String event, final GeckoBundle message,
+                              final EventCallback callback) {
+        if ("Dex:Load".equals(event)) {
+            final String zipFile = message.getString("zipfile");
+            final String implClass = message.getString("impl");
+            Log.d(LOGTAG, "Attempting to load classes.dex file from " + zipFile +
+                          " and instantiate " + implClass);
+            try {
+                final File tmpDir = mApplicationContext.getDir("dex", 0);
+                final DexClassLoader loader = new DexClassLoader(
+                        zipFile, tmpDir.getAbsolutePath(),
+                        null, mApplicationContext.getClassLoader());
+                final Class<?> c = loader.loadClass(implClass);
                 try {
-                    File tmpDir = mApplicationContext.getDir("dex", 0);
-                    DexClassLoader loader = new DexClassLoader(zipFile, tmpDir.getAbsolutePath(), null, mApplicationContext.getClassLoader());
-                    Class<?> c = loader.loadClass(implClass);
-                    try {
-                        Constructor<?> constructor = c.getDeclaredConstructor(Map.class);
-                        Map<String, Handler.Callback> callbacks = new HashMap<String, Handler.Callback>();
-                        constructor.newInstance(callbacks);
-                        registerCallbacks(zipFile, callbacks);
-                    } catch (NoSuchMethodException nsme) {
-                        Log.d(LOGTAG, "Did not find constructor with parameters Map<String, Handler.Callback>. Falling back to default constructor...");
-                        // fallback for instances with no constructor that takes a Map<String, Handler.Callback>
-                        c.newInstance();
-                    }
-                } catch (Exception e) {
-                    Log.e(LOGTAG, "Unable to load dex successfully", e);
+                    final Constructor<?> constructor = c.getDeclaredConstructor(Map.class);
+                    final Map<String, Handler.Callback> callbacks =
+                            new HashMap<String, Handler.Callback>();
+                    constructor.newInstance(callbacks);
+                    registerCallbacks(zipFile, callbacks);
+                } catch (final NoSuchMethodException nsme) {
+                    Log.d(LOGTAG, "Did not find constructor with parameters " +
+                                  "Map<String, Handler.Callback>. Falling back " +
+                                  "to default constructor...");
+                    // fallback for instances with no constructor that takes a Map<String,
+                    // Handler.Callback>
+                    c.newInstance();
                 }
-            } else if (event.equals("Dex:Unload")) {
-                String zipFile = message.getString("zipfile");
-                unregisterCallbacks(zipFile);
+            } catch (final Exception e) {
+                Log.e(LOGTAG, "Unable to load dex successfully", e);
             }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Exception handling message [" + event + "]:", e);
+
+        } else if ("Dex:Unload".equals(event)) {
+            final String zipFile = message.getString("zipfile");
+            unregisterCallbacks(zipFile);
         }
     }
 
     private void registerCallbacks(String zipFile, Map<String, Handler.Callback> callbacks) {
-        Map<String, GeckoEventListener> addonCallbacks = mAddonCallbacks.get(zipFile);
+        Map<String, BundleEventListener> addonCallbacks = mAddonCallbacks.get(zipFile);
         if (addonCallbacks != null) {
             Log.w(LOGTAG, "Found pre-existing callbacks for zipfile [" + zipFile + "]; aborting re-registration!");
             return;
         }
-        addonCallbacks = new HashMap<String, GeckoEventListener>();
+        addonCallbacks = new HashMap<>();
         for (String event : callbacks.keySet()) {
             CallbackWrapper wrapper = new CallbackWrapper(callbacks.get(event));
             mDispatcher.registerGeckoThreadListener(wrapper, event);
@@ -128,9 +135,10 @@ public class JavaAddonManager implements GeckoEventListener {
     }
 
     private void unregisterCallbacks(String zipFile) {
-        Map<String, GeckoEventListener> callbacks = mAddonCallbacks.remove(zipFile);
+        Map<String, BundleEventListener> callbacks = mAddonCallbacks.remove(zipFile);
         if (callbacks == null) {
-            Log.w(LOGTAG, "Attempting to unregister callbacks from zipfile [" + zipFile + "] which has no callbacks registered.");
+            Log.w(LOGTAG, "Attempting to unregister callbacks from zipfile [" + zipFile +
+                          "] which has no callbacks registered.");
             return;
         }
         for (String event : callbacks.keySet()) {
@@ -138,58 +146,25 @@ public class JavaAddonManager implements GeckoEventListener {
         }
     }
 
-    private static class CallbackWrapper implements GeckoEventListener {
+    private static class CallbackWrapper implements BundleEventListener {
         private final Handler.Callback mDelegate;
-        private Bundle mBundle;
 
         CallbackWrapper(Handler.Callback delegate) {
             mDelegate = delegate;
         }
 
-        private Bundle jsonToBundle(JSONObject json) {
-            // XXX right now we only support primitive types;
-            // we don't recurse down into JSONArray or JSONObject instances
-            Bundle b = new Bundle();
-            for (Iterator<?> keys = json.keys(); keys.hasNext(); ) {
-                try {
-                    String key = (String)keys.next();
-                    Object value = json.get(key);
-                    if (value instanceof Integer) {
-                        b.putInt(key, (Integer)value);
-                    } else if (value instanceof String) {
-                        b.putString(key, (String)value);
-                    } else if (value instanceof Boolean) {
-                        b.putBoolean(key, (Boolean)value);
-                    } else if (value instanceof Long) {
-                        b.putLong(key, (Long)value);
-                    } else if (value instanceof Double) {
-                        b.putDouble(key, (Double)value);
-                    }
-                } catch (JSONException e) {
-                    Log.d(LOGTAG, "Error during JSON->bundle conversion", e);
-                }
-            }
-            return b;
-        }
+        @Override // BundleEventListener
+        public void handleMessage(final String event, final GeckoBundle message,
+                                  final EventCallback callback) {
+            final Message msg = new Message();
+            final Bundle data = message.toBundle();
+            data.putString("type", event);
+            msg.setData(data);
+            mDelegate.handleMessage(msg);
 
-        @Override
-        public void handleMessage(String event, JSONObject json) {
-            try {
-                if (mBundle != null) {
-                    Log.w(LOGTAG, "Event [" + event + "] handler is re-entrant; response messages may be lost");
-                }
-                mBundle = jsonToBundle(json);
-                Message msg = new Message();
-                msg.setData(mBundle);
-                mDelegate.handleMessage(msg);
-
-                JSONObject obj = new JSONObject();
-                obj.put("response", mBundle.getString("response"));
-                EventDispatcher.sendResponse(json, obj);
-                mBundle = null;
-            } catch (Exception e) {
-                Log.e(LOGTAG, "Caught exception thrown from wrapped addon message handler", e);
-            }
+            final GeckoBundle response = new GeckoBundle(1);
+            response.putString("response", data.getString("response"));
+            callback.sendSuccess(response);
         }
     }
 }

@@ -13,7 +13,7 @@ add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CONTENT_TYPE_WITHOUT_CACHE_URL);
   info("Starting test... ");
 
-  let { document, Editor, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -90,166 +90,175 @@ add_task(function* () {
       time: true
     });
 
-  let onEvent = waitForResponseBodyDisplayed();
+  wait = waitForDOM(document, "#response-tabpanel");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll("#details-pane tab")[3]);
-  yield onEvent;
+  yield wait;
+
+  RequestsMenu.selectedIndex = -1;
+
+  yield selectIndexAndWaitForEditor(0);
   yield testResponseTab("xml");
 
-  yield selectIndexAndWaitForTabUpdated(1);
+  yield selectIndexAndWaitForEditor(1);
   yield testResponseTab("css");
 
-  yield selectIndexAndWaitForTabUpdated(2);
+  yield selectIndexAndWaitForEditor(2);
   yield testResponseTab("js");
 
-  yield selectIndexAndWaitForTabUpdated(3);
+  yield selectIndexAndWaitForJSONView(3);
   yield testResponseTab("json");
 
-  yield selectIndexAndWaitForTabUpdated(4);
+  yield selectIndexAndWaitForEditor(4);
   yield testResponseTab("html");
 
-  yield selectIndexAndWaitForTabUpdated(5);
+  yield selectIndexAndWaitForImageView(5);
   yield testResponseTab("png");
 
-  yield selectIndexAndWaitForTabUpdated(6);
+  yield selectIndexAndWaitForEditor(6);
   yield testResponseTab("gzip");
 
   yield teardown(monitor);
 
   function* testResponseTab(type) {
-    let tabEl = document.querySelectorAll("#details-pane tab")[3];
     let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
 
-    is(tabEl.getAttribute("selected"), "true",
-      "The response tab in the network details pane should be selected.");
-
     function checkVisibility(box) {
-      is(tabpanel.querySelector("#response-content-info-header")
-        .hasAttribute("hidden"), true,
-        "The response info header doesn't have the intended visibility.");
-      is(tabpanel.querySelector("#response-content-json-box")
-        .hasAttribute("hidden"), box != "json",
-        "The response content json box doesn't have the intended visibility.");
-      is(tabpanel.querySelector("#response-content-textarea-box")
-        .hasAttribute("hidden"), box != "textarea",
-        "The response content textarea box doesn't have the intended visibility.");
-      is(tabpanel.querySelector("#response-content-image-box")
-        .hasAttribute("hidden"), box != "image",
-        "The response content image box doesn't have the intended visibility.");
+      is(tabpanel.querySelector(".response-error-header") === null,
+        true,
+        "The response error header doesn't display");
+      let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
+      is(jsonView.textContent !== L10N.getStr("jsonScopeName"),
+        box != "json",
+        "The response json view doesn't display");
+      is(tabpanel.querySelector(".editor-mount") === null,
+        box != "textarea",
+        "The response editor doesn't display");
+      is(tabpanel.querySelector(".response-image-box") === null,
+        box != "image",
+        "The response image view doesn't display");
     }
 
     switch (type) {
       case "xml": {
         checkVisibility("textarea");
 
-        let editor = yield NetMonitorView.editor("#response-content-textarea");
-        is(editor.getText(), "<label value='greeting'>Hello XML!</label>",
+        let editor = tabpanel.querySelector(".editor-mount iframe");
+        let text = editor.contentDocument .querySelector(".CodeMirror-line").textContent;
+
+        is(text, "<label value='greeting'>Hello XML!</label>",
           "The text shown in the source editor is incorrect for the xml request.");
-        is(editor.getMode(), Editor.modes.html,
-          "The mode active in the source editor is incorrect for the xml request.");
         break;
       }
       case "css": {
         checkVisibility("textarea");
 
-        let editor = yield NetMonitorView.editor("#response-content-textarea");
-        is(editor.getText(), "body:pre { content: 'Hello CSS!' }",
-          "The text shown in the source editor is incorrect for the xml request.");
-        is(editor.getMode(), Editor.modes.css,
-          "The mode active in the source editor is incorrect for the xml request.");
+        let editor = tabpanel.querySelector(".editor-mount iframe");
+        let text = editor.contentDocument.querySelector(".CodeMirror-line").textContent;
+
+        is(text, "body:pre { content: 'Hello CSS!' }",
+          "The text shown in the source editor is incorrect for the css request.");
         break;
       }
       case "js": {
         checkVisibility("textarea");
 
-        let editor = yield NetMonitorView.editor("#response-content-textarea");
-        is(editor.getText(), "function() { return 'Hello JS!'; }",
-          "The text shown in the source editor is incorrect for the xml request.");
-        is(editor.getMode(), Editor.modes.js,
-          "The mode active in the source editor is incorrect for the xml request.");
+        let editor = tabpanel.querySelector(".editor-mount iframe");
+        let text = editor.contentDocument.querySelector(".CodeMirror-line").textContent;
+
+        is(text, "function() { return 'Hello JS!'; }",
+          "The text shown in the source editor is incorrect for the js request.");
         break;
       }
       case "json": {
         checkVisibility("json");
 
-        is(tabpanel.querySelectorAll(".variables-view-scope").length, 1,
-          "There should be 1 json scope displayed in this tabpanel.");
-        is(tabpanel.querySelectorAll(".variables-view-property").length, 2,
-          "There should be 2 json properties displayed in this tabpanel.");
-        is(tabpanel.querySelectorAll(".variables-view-empty-notice").length, 0,
+        is(tabpanel.querySelectorAll(".tree-section").length, 1,
+          "There should be 1 tree sections displayed in this tabpanel.");
+        is(tabpanel.querySelectorAll(".empty-notice").length, 0,
           "The empty notice should not be displayed in this tabpanel.");
 
-        let jsonScope = tabpanel.querySelectorAll(".variables-view-scope")[0];
-
-        is(jsonScope.querySelector(".name").getAttribute("value"),
+        is(tabpanel.querySelector(".tree-section .treeLabel").textContent,
           L10N.getStr("jsonScopeName"),
-          "The json scope doesn't have the correct title.");
+          "The json view section doesn't have the correct title.");
 
-        is(jsonScope.querySelectorAll(".variables-view-property .name")[0]
-          .getAttribute("value"),
-          "greeting", "The first json property name was incorrect.");
-        is(jsonScope.querySelectorAll(".variables-view-property .value")[0]
-          .getAttribute("value"),
+        let labels = tabpanel
+          .querySelectorAll("tr:not(.tree-section) .treeLabelCell .treeLabel");
+        let values = tabpanel
+          .querySelectorAll("tr:not(.tree-section) .treeValueCell .objectBox");
+
+        is(labels[0].textContent, "greeting",
+          "The first json property name was incorrect.");
+        is(values[0].textContent,
           "\"Hello JSON!\"", "The first json property value was incorrect.");
-
-        is(jsonScope.querySelectorAll(".variables-view-property .name")[1]
-          .getAttribute("value"),
-          "__proto__", "The second json property name was incorrect.");
-        is(jsonScope.querySelectorAll(".variables-view-property .value")[1]
-          .getAttribute("value"),
-          "Object", "The second json property value was incorrect.");
         break;
       }
       case "html": {
         checkVisibility("textarea");
 
-        let editor = yield NetMonitorView.editor("#response-content-textarea");
-        is(editor.getText(), "<blink>Not Found</blink>",
-          "The text shown in the source editor is incorrect for the xml request.");
-        is(editor.getMode(), Editor.modes.html,
-          "The mode active in the source editor is incorrect for the xml request.");
+        let editor = document.querySelector(".editor-mount iframe");
+        let text = editor.contentDocument.querySelector(".CodeMirror-line").textContent;
+
+        is(text, "<blink>Not Found</blink>",
+          "The text shown in the source editor is incorrect for the html request.");
         break;
       }
       case "png": {
         checkVisibility("image");
 
-        let imageNode = tabpanel.querySelector("#response-content-image");
-        yield once(imageNode, "load");
+        let [name, dimensions, mime] = tabpanel
+          .querySelectorAll(".response-image-box .tabpanel-summary-value");
 
-        is(tabpanel.querySelector("#response-content-image-name-value")
-          .getAttribute("value"), "test-image.png",
+        is(name.textContent, "test-image.png",
           "The image name info isn't correct.");
-        is(tabpanel.querySelector("#response-content-image-mime-value")
-          .getAttribute("value"), "image/png",
+        is(mime.textContent, "image/png",
           "The image mime info isn't correct.");
-        is(tabpanel.querySelector("#response-content-image-dimensions-value")
-          .getAttribute("value"), "16" + " \u00D7 " + "16",
+        is(dimensions.textContent, "16" + " \u00D7 " + "16",
           "The image dimensions info isn't correct.");
         break;
       }
       case "gzip": {
         checkVisibility("textarea");
 
-        let expected = new Array(1000).join("Hello gzip!");
-        let editor = yield NetMonitorView.editor("#response-content-textarea");
-        is(editor.getText(), expected,
+        let editor = tabpanel.querySelector(".editor-mount iframe");
+        let text = editor.contentDocument.querySelector(".CodeMirror-line").textContent;
+
+        is(text, new Array(1000).join("Hello gzip!"),
           "The text shown in the source editor is incorrect for the gzip request.");
-        is(editor.getMode(), Editor.modes.text,
-          "The mode active in the source editor is incorrect for the gzip request.");
         break;
       }
     }
   }
 
-  function selectIndexAndWaitForTabUpdated(index) {
-    let onTabUpdated = monitor.panelWin.once(monitor.panelWin.EVENTS.TAB_UPDATED);
-    RequestsMenu.selectedIndex = index;
-    return onTabUpdated;
+  function* selectIndexAndWaitForEditor(index) {
+    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let editor = tabpanel.querySelector(".editor-mount iframe");
+    if (!editor) {
+      let waitDOM = waitForDOM(tabpanel, ".editor-mount iframe");
+      RequestsMenu.selectedIndex = index;
+      [editor] = yield waitDOM;
+      yield once(editor, "DOMContentLoaded");
+    } else {
+      RequestsMenu.selectedIndex = index;
+    }
+
+    yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
   }
 
-  function waitForResponseBodyDisplayed() {
-    return monitor.panelWin.once(monitor.panelWin.EVENTS.RESPONSE_BODY_DISPLAYED);
+  function* selectIndexAndWaitForJSONView(index) {
+    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let waitDOM = waitForDOM(tabpanel, ".treeTable");
+    RequestsMenu.selectedIndex = index;
+    yield waitDOM;
+  }
+
+  function* selectIndexAndWaitForImageView(index) {
+    let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
+    let waitDOM = waitForDOM(tabpanel, ".response-image");
+    RequestsMenu.selectedIndex = index;
+    let [imageNode] = yield waitDOM;
+    yield once(imageNode, "load");
   }
 });

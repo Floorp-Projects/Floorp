@@ -16,7 +16,7 @@
                                   .getService(SpecialPowers.Ci.nsIIOService);
 
     var style = "data:text/css,a { background-color: seagreen; }";
-    var uri = gIOService.newURI(style, null, null);
+    var uri = gIOService.newURI(style);
     var windowUtils = SpecialPowers.wrap(window)
         .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
         .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);

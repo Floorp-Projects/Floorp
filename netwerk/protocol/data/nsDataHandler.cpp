@@ -161,42 +161,49 @@ nsDataHandler::ParseURI(nsCString& spec,
     isBase64 = false;
 
     // move past "data:"
-    char *buffer = (char *) PL_strcasestr(spec.BeginWriting(), "data:");
-    if (!buffer) {
+    const char* roBuffer = (const char*) PL_strcasestr(spec.get(), "data:");
+    if (!roBuffer) {
         // malformed uri
         return NS_ERROR_MALFORMED_URI;
     }
-    buffer += 5;
+    roBuffer += sizeof("data:") - 1;
 
     // First, find the start of the data
-    char *comma = strchr(buffer, ',');
-    char *hash = strchr(buffer, '#');
-    if (!comma || (hash && hash < comma))
+    const char* roComma = strchr(roBuffer, ',');
+    const char* roHash = strchr(roBuffer, '#');
+    if (!roComma || (roHash && roHash < roComma)) {
         return NS_ERROR_MALFORMED_URI;
-
-    *comma = '\0';
-
-    // determine if the data is base64 encoded.
-    char *base64 = PL_strcasestr(buffer, BASE64_EXTENSION);
-    if (base64) {
-        char *beyond = base64 + strlen(BASE64_EXTENSION);
-        // per the RFC 2397 grammar, "base64" MUST be followed by a comma
-        // previously substituted by '\0', but we also allow it in between
-        // parameters so a subsequent ";" is ok as well (this deals with
-        // *broken* data URIs, see bug 781693 for an example)
-        if (*beyond == '\0' || *beyond == ';') {
-            isBase64 = true;
-            *base64 = '\0';
-        }
     }
 
-    if (comma == buffer) {
+    if (roComma == roBuffer) {
         // nothing but data
         contentType.AssignLiteral("text/plain");
         if (contentCharset) {
             contentCharset->AssignLiteral("US-ASCII");
         }
     } else {
+        // Make a copy of the non-data part so we can null out parts of it as
+        // we go. This copy will be a small number of chars, in contrast to the
+        // data which may be large.
+        char* buffer = PL_strndup(roBuffer, roComma - roBuffer);
+
+        // determine if the data is base64 encoded.
+        char* base64 = PL_strcasestr(buffer, BASE64_EXTENSION);
+        if (base64) {
+            char *beyond = base64 + sizeof(BASE64_EXTENSION) - 1;
+            // Per the RFC 2397 grammar, "base64" MUST be at the end of the
+            // non-data part.
+            //
+            // But we also allow it in between parameters so a subsequent ";"
+            // is ok as well (this deals with *broken* data URIs, see bug
+            // 781693 for an example). Anything after "base64" in the non-data
+            // part will be discarded in this case, however.
+            if (*beyond == '\0' || *beyond == ';') {
+                isBase64 = true;
+                *base64 = '\0';
+            }
+        }
+
         // everything else is content type
         char *semiColon = (char *) strchr(buffer, ';');
         if (semiColon)
@@ -206,34 +213,28 @@ nsDataHandler::ParseURI(nsCString& spec,
             // there is no content type, but there are other parameters
             contentType.AssignLiteral("text/plain");
         } else {
-            contentType = buffer;
+            contentType.Assign(buffer);
             ToLowerCase(contentType);
             contentType.StripWhitespace();
         }
 
-        if (semiColon) {
-            if (contentCharset) {
-                char *charset = PL_strcasestr(semiColon + 1, "charset=");
-                if (charset) {
-                    contentCharset->Assign(charset + sizeof("charset=") - 1);
-                    contentCharset->StripWhitespace();
-                }
+        if (semiColon && contentCharset) {
+            char *charset = PL_strcasestr(semiColon + 1, "charset=");
+            if (charset) {
+                contentCharset->Assign(charset + sizeof("charset=") - 1);
+                contentCharset->StripWhitespace();
             }
-
-            *semiColon = ';';
         }
-    }
 
-    *comma = ',';
-    if (isBase64)
-        *base64 = ';';
+        free(buffer);
+    }
 
     if (dataBuffer) {
         // Split encoded data from terminal "#ref" (if present)
-        char *data = comma + 1;
-        bool ok = !hash
-                ? dataBuffer->Assign(data, mozilla::fallible)
-                : dataBuffer->Assign(data, hash - data, mozilla::fallible);
+        const char* roData = roComma + 1;
+        bool ok = !roHash
+                ? dataBuffer->Assign(roData, mozilla::fallible)
+                : dataBuffer->Assign(roData, roHash - roData, mozilla::fallible);
         if (!ok) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
