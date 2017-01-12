@@ -252,6 +252,9 @@ static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg)
     if (ctx->state != NR_STUN_CLIENT_STATE_RUNNING)
         ABORT(R_NOT_PERMITTED);
 
+    // track retransmits for ice telemetry
+    nr_ice_accumulate_count(&(ctx->retransmit_ct), 1);
+
     /* as a side effect will reset the timer */
     nr_stun_client_send_request(ctx);
 
