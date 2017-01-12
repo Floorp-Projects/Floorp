@@ -9,40 +9,31 @@ with Files('*'):
 
 include('sources.mozbuild')
 
+EXPORTS.vpx += files['EXPORTS']
+
+SOURCES += files['SOURCES']
+
+if CONFIG['MOZ_VPX_ERROR_CONCEALMENT']:
+    SOURCES += files['ERROR_CONCEALMENT']
+
 if CONFIG['VPX_USE_YASM']:
     USE_YASM = True
 
-# Linux, Mac and Win share file lists for x86* but not configurations.
-if CONFIG['CPU_ARCH'] == 'x86_64':
-    EXPORTS.vpx += files['X64_EXPORTS']
-    SOURCES += files['X64_SOURCES']
-    if CONFIG['OS_TARGET'] == 'Linux':
-        ASFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/linux/x64/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'WINNT':
-        ASFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/win/x64/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'Darwin':
-        ASFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/mac/x64/' % TOPSRCDIR ]
-elif CONFIG['CPU_ARCH'] == 'x86':
-    EXPORTS.vpx += files['IA32_EXPORTS']
-    SOURCES += files['IA32_SOURCES']
-    if CONFIG['OS_TARGET'] == 'Linux':
-        ASFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/linux/ia32/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'WINNT':
-        ASFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/win/ia32/' % TOPSRCDIR ]
-    elif CONFIG['OS_TARGET'] == 'Darwin':
-        ASFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
-        CFLAGS += [ '-I%s/media/libvpx/config/mac/ia32/' % TOPSRCDIR ]
-elif CONFIG['CPU_ARCH'] == 'arm':
-    EXPORTS.vpx += files['ARM_EXPORTS']
-    ASFLAGS += [ '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR ]
-    CFLAGS += [ '-I%s/media/libvpx/config/linux/arm/' % TOPSRCDIR ]
+if CONFIG['VPX_X86_ASM']:
+    SOURCES += files['X86_ASM']
 
-    arm_asm_files = files['ARM_SOURCES']
+    if '64' in CONFIG['OS_TEST']:
+        SOURCES += files['X86-64_ASM']
+
+    #avx2 can be enabled on all supported compilters
+    SOURCES += files['AVX2']
+
+    #postproc is only enabled on x86 with asm
+    SOURCES += files['VP8_POSTPROC']
+
+arm_asm_files = []
+if CONFIG['VPX_ARM_ASM']:
+    arm_asm_files += files['ARM_ASM']
 
     if CONFIG['VPX_AS_CONVERSION']:
         SOURCES += sorted([
@@ -64,12 +55,13 @@ elif CONFIG['CPU_ARCH'] == 'arm':
         ASFLAGS += [
             '-no-integrated-as',
         ]
-else:
-    # Generic C-only configuration
-    EXPORTS.vpx += files['GENERIC_EXPORTS']
-    SOURCES += files['GENERIC_SOURCES']
-    ASFLAGS += [ '-I%s/media/libvpx/config/generic/' % TOPSRCDIR ]
-    CFLAGS += [ '-I%s/media/libvpx/config/generic/' % TOPSRCDIR ]
+
+# boolhuff_armv5te.asm defines the same functions as boolhuff.c instead of
+# using RTCD, so we have to make sure we only add one of the two.
+if 'vp8/encoder/arm/armv5te/boolhuff_armv5te.asm' not in arm_asm_files:
+    SOURCES += [
+        'vp8/encoder/boolhuff.c',
+    ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
@@ -115,12 +107,8 @@ if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
 ASFLAGS += CONFIG['VPX_ASFLAGS']
 ASFLAGS += [
     '-I.',
-    '-I%s/media/libvpx/libvpx' % TOPSRCDIR,
-]
-
-CFLAGS += [
-    '-I%s/media/libvpx/libvpx' % TOPSRCDIR,
-    '-I%s/media/libvpx/config' % TOPSRCDIR, # vpx_version.h
+    '-I%s/media/libvpx/' % TOPSRCDIR,
+    '-I%s/media/libvpx/vpx_ports/' % TOPSRCDIR,
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':

@@ -1,0 +1,32 @@
+From: Jacek Caban <jacek@codeweavers.com>
+Don't use pthread for libvpx in mingw builds.
+
+
+diff --git a/media/libvpx/vpx_config_x86-win32-gcc.h b/media/libvpx/vpx_config_x86-win32-gcc.h
+index 5bc3efb..e60f84d 100644
+--- a/media/libvpx/vpx_config_x86-win32-gcc.h
++++ b/media/libvpx/vpx_config_x86-win32-gcc.h
+@@ -32,7 +32,8 @@
+ #define HAVE_AVX2 1
+ #define HAVE_VPX_PORTS 1
+ #define HAVE_STDINT_H 1
+-#define HAVE_PTHREAD_H 1
++#undef HAVE_PTHREAD_H
++#define HAVE_PTHREAD_H 0
+ #define HAVE_SYS_MMAN_H 1
+ #define HAVE_UNISTD_H 1
+ #define CONFIG_DEPENDENCY_TRACKING 1
+diff --git a/media/libvpx/vpx_config_x86_64-win64-gcc.h b/media/libvpx/vpx_config_x86_64-win64-gcc.h
+index 4ff4339..b056a0e 100644
+--- a/media/libvpx/vpx_config_x86_64-win64-gcc.h
++++ b/media/libvpx/vpx_config_x86_64-win64-gcc.h
+@@ -32,7 +32,8 @@
+ #define HAVE_AVX2 1
+ #define HAVE_VPX_PORTS 1
+ #define HAVE_STDINT_H 1
+-#define HAVE_PTHREAD_H 1
++#undef HAVE_PTHREAD_H
++#define HAVE_PTHREAD_H 0
+ #define HAVE_SYS_MMAN_H 1
+ #define HAVE_UNISTD_H 1
+ #define CONFIG_DEPENDENCY_TRACKING 1
