@@ -18,6 +18,5 @@ module.exports = {
     "no-octal": "warn",
     "no-redeclare": "warn",
     "no-unreachable": "warn",
-    "no-unsafe-finally": "warn",
   }
 };
