@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=898512
+-->
+<head>
+  <title>Test for Bug 898512 Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=898512">Mozilla Bug 898512</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+SimpleTest.waitForExplicitFinish();
+
+function testPref() {
+  SpecialPowers.pushPrefEnv({
+    set: [["dom.mozSettings.enabled", false]]
+  }, function() {
+    is(navigator.mozSettings, undefined, "navigator.mozSettings is undefined");
+    SimpleTest.finish();
+  });
+}
+
+testPref();
+</script>
+</pre>
+</body>
+</html>

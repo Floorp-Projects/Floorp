@@ -1,0 +1,5 @@
+component {d7a395a0-e292-11e1-834e-1761d57f5f99} SettingsService.js
+contract @mozilla.org/settingsServiceLock;1 {d7a395a0-e292-11e1-834e-1761d57f5f99}
+
+component {f656f0c0-f776-11e1-a21f-0800200c9a66} SettingsService.js
+contract @mozilla.org/settingsService;1 {f656f0c0-f776-11e1-a21f-0800200c9a66}

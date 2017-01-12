@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=821630
+-->
+<head>
+  <title>Test for Bug 821630 Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=821630">Mozilla Bug 821630</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+"use strict";
+
+var url = SimpleTest.getTestFileURL("file_loadserver.js");
+var script = SpecialPowers.loadChromeScript(url);
+
+function onUnwantedSuccess() {
+  ok(false, "onUnwantedSuccess: shouldn't get here");
+}
+
+function onFailure() {
+  return function(s) {
+    if (s) {
+      ok(false, "in on Failure! - " + s);
+    } else {
+      ok(false, "in on Failure!");
+    }
+  }
+}
+
+let req;
+
+let storedBlob = new Blob(['12345'], {"type": "text/plain"});
+
+function checkBlob(blob) {
+  try {
+    let url = URL.createObjectURL(blob);
+    ok(true, "Valid blob");
+  } catch (e) {
+    ok(false, "Valid blob");
+  }
+}
+
+let steps = [
+  function() {
+    let lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = next;
+    req.onerror = onFailure("Deleting database");
+  },
+  function() {
+    function obs(e) {
+      checkBlob(e.settingValue);
+      navigator.mozSettings.removeObserver("test1", obs);
+      next();
+    }
+    navigator.mozSettings.addObserver("test1", obs);
+    next();
+  },
+  function() {
+    // next is called by the observer above
+    let req = navigator.mozSettings.createLock().set({"test1": storedBlob});
+    req.onerror = onFailure("Saving blob");
+  },
+  function() {
+    let req = navigator.mozSettings.createLock().get("test1");
+    req.onsuccess = function(event) {
+      checkBlob(event.target.result["test1"]);
+      next();
+    };
+    req.onerror = onFailure("Getting blob");
+  },
+  function() {
+    let req = navigator.mozSettings.createLock().set({"test2": [1, 2, storedBlob, 4]});
+    req.onsuccess = next;
+    req.onerror = onFailure("Saving array");
+  },
+  function() {
+    let req = navigator.mozSettings.createLock().get("test2");
+    req.onsuccess = function(event) {
+      let val = event.target.result["test2"];
+      ok(Array.isArray(val), "Result is an array");
+      ok(val[0] == 1 && val[1] == 2 && val[3] == 4, "Primitives are preserved");
+      checkBlob(val[2]);
+      next();
+    };
+    req.onerror = onFailure("Getting array");
+  },
+  function() {
+    let req = navigator.mozSettings.createLock().set({"test3": {foo: "bar", baz: {number: 1, arr: [storedBlob]}}});
+    req.onsuccess = next();
+    req.onerror = onFailure("Saving object");
+  },
+  function() {
+    let req = navigator.mozSettings.createLock().get("test3");
+    req.onsuccess = function(event) {
+      let val = event.target.result["test3"];
+      ok(typeof(val) == "object", "Result is an object");
+      ok("foo" in val && typeof(val.foo) == "string", "String property preserved");
+      ok("baz" in val && typeof(val.baz) == "object", "Object property preserved");
+      let baz = val.baz;
+      ok("number" in baz && baz.number == 1, "Primite inside object preserved");
+      ok("arr" in baz && Array.isArray(baz.arr), "Array inside object is preserved");
+      checkBlob(baz.arr[0]);
+      next();
+    };
+    req.onerror = onFailure("Getting object");
+  },
+  function() {
+    let req = navigator.mozSettings.createLock().clear();
+    req.onsuccess = function() {
+      next();
+    };
+    req.onerror = onFailure("Deleting database");
+  },
+  function () {
+    ok(true, "all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  try {
+    let step = steps.shift();
+    if (step) {
+      step();
+    }
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+</script>
+</pre>
+</body>
+</html>
