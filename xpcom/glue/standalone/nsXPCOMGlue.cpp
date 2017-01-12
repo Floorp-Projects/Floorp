@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXPCOMGlue.h"
+#include "mozilla/Bootstrap.h"
 
 #include "nspr.h"
 #include "nsDebug.h"
@@ -26,6 +26,8 @@ using namespace mozilla;
 #else
 #define READ_TEXTMODE "r"
 #endif
+
+typedef void (*NSFuncPtr)();
 
 #if defined(XP_WIN)
 #include <windows.h>
