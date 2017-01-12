@@ -56,7 +56,12 @@ include selectors4/reftest.list
 include shapes1/reftest.list
 
 # Text Level 3
-include text3/reftest.list
+# After Bug 1316482, we've added a large number of tests in this folder, which
+# indirectly causes frequent reftest failures on win7 debug. (see Bug 1300355)
+# Since the root cause is not these tests, skip them on win7 debug for now.
+# Once we come up with a better solution, we should re-enable this folder on
+# win7 debug.
+skip-if(winWidget&&isDebugBuild) include text3/reftest.list
 
 # Text Decoration Level 3
 include text-decor-3/reftest.list

@@ -5546,8 +5546,11 @@ pref("security.mixed_content.use_hsts", false);
 // mixed-content blocking
 pref("security.mixed_content.use_hsts", true);
 #endif
-// Approximately 1 week default cache for HSTS priming failures
+// Approximately 1 week default cache for HSTS priming failures, in seconds
 pref ("security.mixed_content.hsts_priming_cache_timeout", 10080);
+// Force the channel to timeout in 3 seconds if we have not received
+// expects a time in milliseconds
+pref ("security.mixed_content.hsts_priming_request_timeout", 3000);
 
 // Disable Storage api in release builds.
 #ifdef NIGHTLY_BUILD

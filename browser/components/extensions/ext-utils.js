@@ -710,6 +710,15 @@ ExtensionTabManager.prototype = {
       incognito: Boolean(tab.state && tab.state.isPrivate),
     };
 
+    if (this.hasTabPermission(tab)) {
+      let entries = tab.state ? tab.state.entries : tab.entries;
+      result.url = entries[0].url;
+      result.title = entries[0].title;
+      if (tab.image) {
+        result.favIconUrl = tab.image;
+      }
+    }
+
     return result;
   },
 

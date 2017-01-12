@@ -10,6 +10,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/RangedArray.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/BaseKeyframeTypesBinding.h" // For FastBaseKeyframe etc.
@@ -22,6 +23,7 @@
 #include "nsCSSPropertyIDSet.h"
 #include "nsCSSProps.h"
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
+#include "nsStyleContext.h"
 #include "nsTArray.h"
 #include <algorithm> // For std::stable_sort
 
@@ -270,6 +272,8 @@ struct KeyframeValueEntry
 {
   nsCSSPropertyID mProperty;
   StyleAnimationValue mValue;
+  RefPtr<RawServoAnimationValue> mServoValue;
+
   float mOffset;
   Maybe<ComputedTimingFunction> mTimingFunction;
   dom::CompositeOperation mComposite;
@@ -600,6 +604,16 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
   const size_t len = aKeyframes.Length();
   nsTArray<ComputedKeyframeValues> result(len);
 
+  const ServoComputedValues* currentStyle = nullptr;
+  const ServoComputedValues* parentStyle = nullptr;
+
+  if (styleBackend == StyleBackendType::Servo) {
+    currentStyle = aStyleContext->StyleSource().AsServoComputedValues();
+    if (aStyleContext->GetParent()) {
+      parentStyle = aStyleContext->GetParent()->StyleSource().AsServoComputedValues();
+    }
+  }
+
   for (const Keyframe& frame : aKeyframes) {
     nsCSSPropertyIDSet propertiesOnThisKeyframe;
     ComputedKeyframeValues* computedValues = result.AppendElement();
@@ -624,6 +638,11 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
               *pair.mServoDeclarationBlock, values)) {
           continue;
         }
+        Servo_AnimationValues_Populate(&values,
+                                       pair.mServoDeclarationBlock,
+                                       currentStyle,
+                                       parentStyle,
+                                       aStyleContext->PresContext());
       } else {
         // For shorthands, we store the string as a token stream so we need to
         // extract that first.
@@ -653,8 +672,8 @@ KeyframeUtils::GetComputedKeyframeValues(const nsTArray<Keyframe>& aKeyframes,
         if (propertiesOnThisKeyframe.HasProperty(value.mProperty)) {
           continue;
         }
-        computedValues->AppendElement(value);
         propertiesOnThisKeyframe.AddProperty(value.mProperty);
+        computedValues->AppendElement(Move(value));
       }
     }
   }
@@ -685,6 +704,7 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
       entry->mOffset = frame.mComputedOffset;
       entry->mProperty = value.mProperty;
       entry->mValue = value.mValue;
+      entry->mServoValue = value.mServoValue;
       entry->mTimingFunction = frame.mTimingFunction;
       entry->mComposite =
         frame.mComposite ? frame.mComposite.value() : aEffectComposite;
@@ -1371,13 +1391,15 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
     // Now generate the segment.
     AnimationPropertySegment* segment =
       animationProperty->mSegments.AppendElement();
-    segment->mFromKey   = aEntries[i].mOffset;
-    segment->mToKey     = aEntries[j].mOffset;
-    segment->mFromValue = aEntries[i].mValue;
-    segment->mToValue   = aEntries[j].mValue;
+    segment->mFromKey        = aEntries[i].mOffset;
+    segment->mToKey          = aEntries[j].mOffset;
+    segment->mFromValue      = aEntries[i].mValue;
+    segment->mToValue        = aEntries[j].mValue;
+    segment->mServoFromValue = aEntries[i].mServoValue;
+    segment->mServoToValue   = aEntries[j].mServoValue;
     segment->mTimingFunction = aEntries[i].mTimingFunction;
-    segment->mFromComposite = aEntries[i].mComposite;
-    segment->mToComposite = aEntries[j].mComposite;
+    segment->mFromComposite  = aEntries[i].mComposite;
+    segment->mToComposite    = aEntries[j].mComposite;
 
     i = j;
   }

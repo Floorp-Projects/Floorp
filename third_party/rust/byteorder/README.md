@@ -1,6 +1,5 @@
 This crate provides convenience methods for encoding and decoding numbers in
-either big-endian or little-endian order. This is meant to replace the old
-methods defined on the standard library `Reader` and `Writer` traits.
+either big-endian or little-endian order.
 
 [![Build status](https://api.travis-ci.org/BurntSushi/byteorder.png)](https://travis-ci.org/BurntSushi/byteorder)
 [![](http://meritbadge.herokuapp.com/byteorder)](https://crates.io/crates/byteorder)
@@ -10,20 +9,18 @@ Dual-licensed under MIT or the [UNLICENSE](http://unlicense.org).
 
 ### Documentation
 
-[http://burntsushi.net/rustdoc/byteorder/](http://burntsushi.net/rustdoc/byteorder/).
-
-The documentation includes examples.
+https://docs.rs/byteorder
 
 
 ### Installation
 
 This crate works with Cargo and is on
-[crates.io](https://crates.io/crates/byteorder). The package is regularly
-updated.  Add it to your `Cargo.toml` like so:
+[crates.io](https://crates.io/crates/byteorder). Add it to your `Cargo.toml`
+like so:
 
 ```toml
 [dependencies]
-byteorder = "0.5"
+byteorder = "1"
 ```
 
 If you want to augment existing `Read` and `Write` traits, then import the
@@ -55,5 +52,5 @@ in a `no_std` context, add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-byteorder = { version = "0.5", default-features = false }
+byteorder = { version = "1", default-features = false }
 ```

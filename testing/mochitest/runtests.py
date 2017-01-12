@@ -51,7 +51,7 @@ from manifestparser.filters import (
 try:
     from marionette_driver.addons import Addons
     from marionette_harness import Marionette
-except ImportError, e:
+except ImportError as e:
     # Defer ImportError until attempt to use Marionette
     def reraise(*args, **kwargs):
         raise(e)
@@ -791,7 +791,7 @@ class MochitestDesktop(object):
         self.marionette = None
         self.start_script = None
         self.mozLogs = None
-        self.start_script_args = []
+        self.start_script_kwargs = {}
         self.urlOpts = []
 
         if self.log is None:
@@ -850,7 +850,7 @@ class MochitestDesktop(object):
         try:
             return dict(parseKeyValue(extraPrefs, context='--setpref='))
         except KeyValueParseError as e:
-            print str(e)
+            print(str(e))
             sys.exit(1)
 
     def getFullPath(self, path):
@@ -1014,8 +1014,11 @@ class MochitestDesktop(object):
             self.testRoot = self.TEST_PATH
         self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
 
-    def buildTestURL(self, options):
-        testHost = "http://mochi.test:8888"
+    def buildTestURL(self, options, scheme='http'):
+        if scheme == 'https':
+            testHost = "https://example.com:443"
+        else:
+            testHost = "http://mochi.test:8888"
         testURL = "/".join([testHost, self.TEST_PATH])
 
         if len(options.test_paths) == 1:
@@ -1037,7 +1040,7 @@ class MochitestDesktop(object):
             testURL = "/".join([testHost, self.NESTED_OOP_TEST_PATH])
         return testURL
 
-    def buildTestPath(self, options, testsToFilter=None, disabled=True):
+    def getTestsByScheme(self, options, testsToFilter=None, disabled=True):
         """ Build the url path to the specific test harness and test file or directory
             Build a manifest of tests to run and write out a json file for the harness to read
             testsToFilter option is used to filter/keep the tests provided in the list
@@ -1053,12 +1056,13 @@ class MochitestDesktop(object):
                 continue
             paths.append(test)
 
-        # Bug 883865 - add this functionality into manifestparser
-        with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile), 'w') as manifestFile:
-            manifestFile.write(json.dumps({'tests': paths}))
-        options.manifestFile = options.testRunManifestFile
-
-        return self.buildTestURL(options)
+        # Generate test by schemes
+        for (scheme, grouped_tests) in self.groupTestsByScheme(paths).items():
+            # Bug 883865 - add this functionality into manifestparser
+            with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile), 'w') as manifestFile:
+                manifestFile.write(json.dumps({'tests': grouped_tests}))
+            options.manifestFile = options.testRunManifestFile
+            yield (scheme, grouped_tests)
 
     def startWebSocketServer(self, options, debuggerInfo):
         """ Launch the websocket server """
@@ -1389,6 +1393,8 @@ toolbar#nav-bar {
                 testob['disabled'] = test['disabled']
             if 'expected' in test:
                 testob['expected'] = test['expected']
+            if 'scheme' in test:
+                testob['scheme'] = test['scheme']
             paths.append(testob)
 
         def path_sort(ob1, ob2):
@@ -1562,7 +1568,7 @@ toolbar#nav-bar {
             script = self.start_script
 
         with self.marionette.using_context('chrome'):
-            return self.marionette.execute_script(script, script_args=self.start_script_args)
+            return self.marionette.execute_script(script, script_args=(self.start_script_kwargs, ))
 
     def fillCertificateDB(self, options):
         # TODO: move -> mozprofile:
@@ -1939,7 +1945,7 @@ toolbar#nav-bar {
             # TODO: mozrunner should use -foreground at least for mac
             # https://bugzilla.mozilla.org/show_bug.cgi?id=916512
             args.append('-foreground')
-            self.start_script_args.append(testUrl or 'about:blank')
+            self.start_script_kwargs['testUrl'] = testUrl or 'about:blank'
 
             if detectShutdownLeaks and not self.disable_leak_checking:
                 shutdownLeaks = ShutdownLeaks(self.log)
@@ -2003,7 +2009,7 @@ toolbar#nav-bar {
 
             # start marionette and kick off the tests
             marionette_args = marionette_args or {}
-            port_timeout = marionette_args.pop('port_timeout')
+            port_timeout = marionette_args.pop('port_timeout', 60)
             self.marionette = Marionette(**marionette_args)
             self.marionette.start_session(timeout=port_timeout)
 
@@ -2169,6 +2175,20 @@ toolbar#nav-bar {
 
         return result
 
+    def groupTestsByScheme(self, tests):
+        """
+        split tests into groups by schemes. test is classified as http if
+        no scheme specified
+        """
+        httpTests = []
+        httpsTests = []
+        for test in tests:
+            if not test.get('scheme') or test.get('scheme') == 'http':
+                httpTests.append(test)
+            elif test.get('scheme') == 'https':
+                httpsTests.append(test)
+        return {'http': httpTests, 'https': httpsTests}
+
     def runTests(self, options):
         """ Prepare, configure, run tests and cleanup """
 
@@ -2203,7 +2223,7 @@ toolbar#nav-bar {
 
         result = 1  # default value, if no tests are run.
         for d in dirs:
-            print "dir: %s" % d
+            print("dir: %s" % d)
 
             # BEGIN LEAKCHECK HACK
             # Leak checking was broken in mochitest unnoticed for a length of time. During
@@ -2247,20 +2267,20 @@ toolbar#nav-bar {
 
         # printing total number of tests
         if options.flavor == 'browser':
-            print "TEST-INFO | checking window state"
-            print "Browser Chrome Test Summary"
-            print "\tPassed: %s" % self.countpass
-            print "\tFailed: %s" % self.countfail
-            print "\tTodo: %s" % self.counttodo
-            print "\tMode: %s" % e10s_mode
-            print "*** End BrowserChrome Test Results ***"
+            print("TEST-INFO | checking window state")
+            print("Browser Chrome Test Summary")
+            print("\tPassed: %s" % self.countpass)
+            print("\tFailed: %s" % self.countfail)
+            print("\tTodo: %s" % self.counttodo)
+            print("\tMode: %s" % e10s_mode)
+            print("*** End BrowserChrome Test Results ***")
         else:
-            print "0 INFO TEST-START | Shutdown"
-            print "1 INFO Passed:  %s" % self.countpass
-            print "2 INFO Failed:  %s" % self.countfail
-            print "3 INFO Todo:    %s" % self.counttodo
-            print "4 INFO Mode:    %s" % e10s_mode
-            print "5 INFO SimpleTest FINISHED"
+            print("0 INFO TEST-START | Shutdown")
+            print("1 INFO Passed:  %s" % self.countpass)
+            print("2 INFO Failed:  %s" % self.countfail)
+            print("3 INFO Todo:    %s" % self.counttodo)
+            print("4 INFO Mode:    %s" % e10s_mode)
+            print("5 INFO SimpleTest FINISHED")
 
         return result
 
@@ -2339,28 +2359,6 @@ toolbar#nav-bar {
         try:
             self.startServers(options, debuggerInfo)
 
-            # testsToFilter parameter is used to filter out the test list that
-            # is sent to buildTestPath
-            testURL = self.buildTestPath(options, testsToFilter)
-
-            # read the number of tests here, if we are not going to run any,
-            # terminate early
-            if os.path.exists(
-                os.path.join(
-                    SCRIPT_DIR,
-                    options.testRunManifestFile)):
-                with open(os.path.join(SCRIPT_DIR, options.testRunManifestFile)) as fHandle:
-                    tests = json.load(fHandle)
-                count = 0
-                for test in tests['tests']:
-                    count += 1
-                if count == 0:
-                    return 1
-
-            self.buildURLOptions(options, self.browserEnv)
-            if self.urlOpts:
-                testURL += "?" + "&".join(self.urlOpts)
-
             if options.immersiveMode:
                 options.browserArgs.extend(('-firefoxpath', options.app))
                 options.app = self.immersiveHelperPath
@@ -2389,7 +2387,7 @@ toolbar#nav-bar {
                 detectShutdownLeaks = mozinfo.info[
                     "debug"] and options.flavor == 'browser'
 
-            self.start_script_args.append(self.normflavor(options.flavor))
+            self.start_script_kwargs['flavor'] = self.normflavor(options.flavor)
             marionette_args = {
                 'symbols_path': options.symbolsPath,
                 'socket_timeout': options.marionette_socket_timeout,
@@ -2401,25 +2399,39 @@ toolbar#nav-bar {
                 marionette_args['host'] = host
                 marionette_args['port'] = int(port)
 
-            self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
-            self.log.info("runtests.py | Running tests: start.\n")
-            status = self.runApp(testURL,
-                                 self.browserEnv,
-                                 options.app,
-                                 profile=self.profile,
-                                 extraArgs=options.browserArgs,
-                                 utilityPath=options.utilityPath,
-                                 debuggerInfo=debuggerInfo,
-                                 valgrindPath=valgrindPath,
-                                 valgrindArgs=valgrindArgs,
-                                 valgrindSuppFiles=valgrindSuppFiles,
-                                 symbolsPath=options.symbolsPath,
-                                 timeout=timeout,
-                                 detectShutdownLeaks=detectShutdownLeaks,
-                                 screenshotOnFail=options.screenshotOnFail,
-                                 bisectChunk=options.bisectChunk,
-                                 marionette_args=marionette_args,
-                                 )
+            # testsToFilter parameter is used to filter out the test list that
+            # is sent to getTestsByScheme
+            for (scheme, tests) in self.getTestsByScheme(options, testsToFilter):
+                # read the number of tests here, if we are not going to run any,
+                # terminate early
+                if not tests:
+                    continue
+
+                testURL = self.buildTestURL(options, scheme=scheme)
+
+                self.buildURLOptions(options, self.browserEnv)
+                if self.urlOpts:
+                    testURL += "?" + "&".join(self.urlOpts)
+
+                self.log.info("runtests.py | Running with e10s: {}".format(options.e10s))
+                self.log.info("runtests.py | Running tests: start.\n")
+                status = self.runApp(testURL,
+                                     self.browserEnv,
+                                     options.app,
+                                     profile=self.profile,
+                                     extraArgs=options.browserArgs,
+                                     utilityPath=options.utilityPath,
+                                     debuggerInfo=debuggerInfo,
+                                     valgrindPath=valgrindPath,
+                                     valgrindArgs=valgrindArgs,
+                                     valgrindSuppFiles=valgrindSuppFiles,
+                                     symbolsPath=options.symbolsPath,
+                                     timeout=timeout,
+                                     detectShutdownLeaks=detectShutdownLeaks,
+                                     screenshotOnFail=options.screenshotOnFail,
+                                     bisectChunk=options.bisectChunk,
+                                     marionette_args=marionette_args,
+                                     )
         except KeyboardInterrupt:
             self.log.info("runtests.py | Received keyboard interrupt.\n")
             status = -1

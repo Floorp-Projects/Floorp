@@ -35,10 +35,6 @@
 
 #include "LateWriteChecks.h"
 
-#if defined(MOZ_STACKWALKING)
-#define OBSERVE_LATE_WRITES
-#endif
-
 using namespace mozilla;
 
 /*************************** Auxiliary Declarations ***************************/
@@ -114,7 +110,6 @@ private:
 void
 LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
 {
-#ifdef OBSERVE_LATE_WRITES
   // Crash if that is the shutdown check mode
   if (gShutdownChecks == SCM_CRASH) {
     MOZ_CRASH();
@@ -209,7 +204,6 @@ LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
   }
   PR_Delete(finalName.get());
   PR_Rename(name, finalName.get());
-#endif
 }
 
 /******************************* Setup/Teardown *******************************/

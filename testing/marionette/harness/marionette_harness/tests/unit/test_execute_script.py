@@ -9,7 +9,7 @@ from marionette_driver import By, errors
 from marionette_driver.marionette import HTMLElement
 from marionette_driver.wait import Wait
 
-from marionette_harness import MarionetteTestCase, WindowManagerMixin
+from marionette_harness import MarionetteTestCase, skip_if_mobile, WindowManagerMixin
 
 
 def inline(doc):
@@ -43,12 +43,18 @@ class TestExecuteSimpleTestContent(MarionetteTestCase):
 
 
 class TestExecuteContent(MarionetteTestCase):
+
+    def assert_is_defined(self, property, sandbox="default"):
+        self.assertTrue(self.marionette.execute_script(
+            "return typeof arguments[0] != 'undefined'", [property], sandbox=sandbox),
+            "property {} is undefined".format(property))
+
     def test_return_number(self):
         self.assertEqual(1, self.marionette.execute_script("return 1"))
         self.assertEqual(1.5, self.marionette.execute_script("return 1.5"))
 
     def test_return_boolean(self):
-        self.assertEqual(True, self.marionette.execute_script("return true"))
+        self.assertTrue(self.marionette.execute_script("return true"))
 
     def test_return_string(self):
         self.assertEqual("foo", self.marionette.execute_script("return 'foo'"))
@@ -79,14 +85,14 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual(
             {"foo": [1, 2]}, self.marionette.execute_script("return {foo: [1, 2]}"))
         self.assertEqual(
-            {"foo": {"bar": [1, 2]}}, self.marionette.execute_script("return {foo: {bar: [1, 2]}}"))
+            {"foo": {"bar": [1, 2]}},
+            self.marionette.execute_script("return {foo: {bar: [1, 2]}}"))
 
     def test_no_return_value(self):
         self.assertIsNone(self.marionette.execute_script("true"))
 
     def test_argument_null(self):
-        self.assertEqual(
-            None, self.marionette.execute_script("return arguments[0]", [None]))
+        self.assertIsNone(self.marionette.execute_script("return arguments[0]", [None]))
 
     def test_argument_number(self):
         self.assertEqual(
@@ -95,8 +101,7 @@ class TestExecuteContent(MarionetteTestCase):
             1.5, self.marionette.execute_script("return arguments[0]", [1.5]))
 
     def test_argument_boolean(self):
-        self.assertEqual(
-            True, self.marionette.execute_script("return arguments[0]", [True]))
+        self.assertTrue(self.marionette.execute_script("return arguments[0]", [True]))
 
     def test_argument_string(self):
         self.assertEqual(
@@ -109,12 +114,6 @@ class TestExecuteContent(MarionetteTestCase):
     def test_argument_object(self):
         self.assertEqual({"foo": 1}, self.marionette.execute_script(
             "return arguments[0]", [{"foo": 1}]))
-
-    def assert_is_defined(self, property, sandbox="default"):
-        self.assertTrue(self.marionette.execute_script(
-            "return typeof {} != 'undefined'".format(property),
-            sandbox=sandbox),
-                        "property {} is undefined".format(property))
 
     def test_globals(self):
         for property in globals:
@@ -133,21 +132,20 @@ class TestExecuteContent(MarionetteTestCase):
                           self.marionette.execute_script, "return foo")
 
     def test_stacktrace(self):
-        try:
+        with self.assertRaises(errors.JavascriptException) as cm:
             self.marionette.execute_script("return b")
-            self.assertFalse(True)
-        except errors.JavascriptException as e:
-            # by default execute_script pass the name of the python file
-            self.assertIn(
-                os.path.basename(__file__.replace(".pyc", ".py")), e.stacktrace)
-            self.assertIn("b is not defined", e.message)
-            self.assertIn("return b", e.stacktrace)
+
+        # by default execute_script pass the name of the python file
+        self.assertIn(os.path.basename(__file__.replace(".pyc", ".py")),
+                      cm.exception.stacktrace)
+        self.assertIn("b is not defined", cm.exception.message)
+        self.assertIn("return b", cm.exception.stacktrace)
 
     def test_permission(self):
         with self.assertRaises(errors.JavascriptException):
             self.marionette.execute_script("""
-                let prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch)""")
+                var c = Components.classes["@mozilla.org/preferences-service;1"];
+            """)
 
     def test_return_web_element(self):
         self.marionette.navigate(elements)
@@ -191,15 +189,18 @@ class TestExecuteContent(MarionetteTestCase):
             "return this.foobar", new_sandbox=False), [23, 42])
 
     def test_wrappedjsobject(self):
-        self.marionette.execute_script("window.wrappedJSObject.foo = 3")
-        self.assertEqual(
-            3, self.marionette.execute_script("return window.wrappedJSObject.foo"))
+        try:
+            self.marionette.execute_script("window.wrappedJSObject.foo = 3")
+            self.assertEqual(
+                self.marionette.execute_script("return window.wrappedJSObject.foo"), 3)
+        finally:
+            self.marionette.execute_script("delete window.wrappedJSObject.foo")
 
     def test_system_sandbox_wrappedjsobject(self):
         self.marionette.execute_script(
             "window.wrappedJSObject.foo = 4", sandbox="system")
-        self.assertEqual(4, self.marionette.execute_script(
-            "return window.wrappedJSObject.foo", sandbox="system"))
+        self.assertEqual(self.marionette.execute_script(
+            "return window.wrappedJSObject.foo", sandbox="system"), 4)
 
     def test_system_dead_object(self):
         self.marionette.execute_script(
@@ -230,10 +231,9 @@ class TestExecuteContent(MarionetteTestCase):
         for property in globals:
             exists = send("return typeof {} != 'undefined'".format(property))
             self.assertTrue(exists, "property {} is undefined".format(property))
-        # TODO(ato): For some reason this fails, probably Sandbox bug?
-        # self.assertTrue(send("return typeof Components == 'undefined'"))
-        self.assertTrue(
-            send("return typeof window.wrappedJSObject == 'undefined'"))
+
+        self.assertTrue(send("return typeof Components.utils == 'undefined'"))
+        self.assertTrue(send("return typeof window.wrappedJSObject == 'undefined'"))
 
     def test_no_callback(self):
         self.assertTrue(self.marionette.execute_script(
@@ -270,26 +270,31 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
         self.marionette.set_context("chrome")
 
+    def tearDown(self):
+        super(TestExecuteChrome, self).tearDown()
+
+    def test_permission(self):
+        self.assertEqual(1, self.marionette.execute_script("""
+            var c = Components.classes["@mozilla.org/preferences-service;1"]; return 1;"""))
+
+    @skip_if_mobile("New windows not supported in Fennec")
+    def test_unmarshal_element_collection(self):
+
         def open_window_with_js():
             self.marionette.execute_script(
                 "window.open('chrome://marionette/content/test.xul', 'xul', 'chrome');")
 
-        new_window = self.open_window(trigger=open_window_with_js)
-        self.marionette.switch_to_window(new_window)
+        try:
+            win = self.open_window(trigger=open_window_with_js)
+            self.marionette.switch_to_window(win)
 
-    def tearDown(self):
-        self.close_all_windows()
-        super(TestExecuteChrome, self).tearDown()
+            expected = self.marionette.find_elements(By.TAG_NAME, "textbox")
+            actual = self.marionette.execute_script(
+                "return document.querySelectorAll('textbox')")
+            self.assertEqual(expected, actual)
 
-    def test_permission(self):
-        self.assertEqual(1, self.marionette.execute_script(
-            "var c = Components.classes; return 1;"))
-
-    def test_unmarshal_element_collection(self):
-        expected = self.marionette.find_elements(By.TAG_NAME, "textbox")
-        actual = self.marionette.execute_script(
-            "return document.querySelectorAll('textbox')")
-        self.assertEqual(expected, actual)
+        finally:
+            self.close_all_windows()
 
     def test_async_script_timeout(self):
         with self.assertRaises(errors.ScriptTimeoutException):
@@ -298,16 +303,24 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
                 setTimeout(function() { cb() }, 250);
                 """, script_timeout=100)
 
+    @skip_if_mobile("New windows not supported in Fennec")
     def test_invalid_chrome_handle(self):
-        # Close second chrome window and don't switch back to the original one
-        self.marionette.close_chrome_window()
-        self.assertEqual(len(self.marionette.chrome_window_handles), 1)
+        try:
+            win = self.open_window()
+            self.marionette.switch_to_window(win)
 
-        # Call execute_script on an invalid chrome handle
-        with self.marionette.using_context('chrome'):
-            self.marionette.execute_script("""
-                return true;
-            """)
+            # Close new window and don't switch back to the original one
+            self.marionette.close_chrome_window()
+            self.assertNotEqual(self.start_window, win)
+
+            # Call execute_script on an invalid chrome handle
+            with self.marionette.using_context('chrome'):
+                self.marionette.execute_script("""
+                    return true;
+                """)
+
+        finally:
+            self.close_all_windows()
 
     def test_lasting_side_effects(self):
         pass
@@ -326,6 +339,7 @@ class TestExecuteChrome(WindowManagerMixin, TestExecuteContent):
 
 
 class TestElementCollections(MarionetteTestCase):
+
     def assertSequenceIsInstance(self, seq, typ):
         for item in seq:
             self.assertIsInstance(item, typ)

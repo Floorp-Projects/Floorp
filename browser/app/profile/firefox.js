@@ -961,13 +961,11 @@ pref("security.sandbox.content.level", 2);
 pref("security.sandbox.content.level", 1);
 #endif
 
-#if defined(MOZ_STACKWALKING)
 // This controls the depth of stack trace that is logged when Windows sandbox
 // logging is turned on.  This is only currently available for the content
 // process because the only other sandbox (for GMP) has too strict a policy to
 // allow stack tracing.  This does not require a restart to take effect.
 pref("security.sandbox.windows.log.stackTraceDepth", 0);
-#endif
 #endif
 #endif
 

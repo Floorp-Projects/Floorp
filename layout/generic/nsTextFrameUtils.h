@@ -87,6 +87,10 @@ public:
        )
       );
   }
+  static bool
+  IsSpaceCombiningSequenceTail(const uint8_t* aChars, int32_t aLength) {
+    return false;
+  }
 
   enum CompressionMode {
     COMPRESS_NONE,
@@ -100,7 +104,7 @@ public:
    * compressed. A preformatted tab is sent to the text run as a single space.
    * (Tab spacing must be performed by textframe later.) Certain other
    * characters are discarded.
-   * 
+   *
    * @param aCompression control what is compressed to a
    * single space character: no compression, compress spaces (not followed
    * by combining mark) and tabs, compress those plus newlines, or
@@ -109,19 +113,13 @@ public:
    * or an Arabic character preceding this text. We set it to indicate if
    * there's an Arabic character or whitespace preceding the end of this text.
    */
-  static char16_t* TransformText(const char16_t* aText, uint32_t aLength,
-                                 char16_t* aOutput,
-                                 CompressionMode aCompression,
-                                 uint8_t* aIncomingFlags,
-                                 gfxSkipChars* aSkipChars,
-                                 uint32_t* aAnalysisFlags);
-
-  static uint8_t* TransformText(const uint8_t* aText, uint32_t aLength,
-                                uint8_t* aOutput,
-                                CompressionMode aCompression,
-                                uint8_t* aIncomingFlags,
-                                gfxSkipChars* aSkipChars,
-                                uint32_t* aAnalysisFlags);
+  template<class CharT>
+  static CharT* TransformText(const CharT* aText, uint32_t aLength,
+                              CharT* aOutput,
+                              CompressionMode aCompression,
+                              uint8_t* aIncomingFlags,
+                              gfxSkipChars* aSkipChars,
+                              uint32_t* aAnalysisFlags);
 
   static void
   AppendLineBreakOffset(nsTArray<uint32_t>* aArray, uint32_t aOffset)

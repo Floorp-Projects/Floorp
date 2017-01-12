@@ -26,6 +26,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
+#include "mozilla/Sprintf.h"
 #include "mozilla/TaskQueue.h"
 
 #include "nsComponentManagerUtils.h"
