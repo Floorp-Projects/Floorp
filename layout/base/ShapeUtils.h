@@ -10,11 +10,7 @@
 #include "nsCoord.h"
 #include "nsStyleConsts.h"
 
-struct nsPoint;
-struct nsRect;
-
 namespace mozilla {
-class StyleBasicShape;
 
 // ShapeUtils is a namespace class containing utility functions related to
 // processing basic shapes in the CSS Shapes Module.
@@ -32,14 +28,6 @@ struct ShapeUtils final
                                     const nscoord aCenter,
                                     const nscoord aPosMin,
                                     const nscoord aPosMax);
-
-  // Compute the center of a circle or an ellipse.
-  //
-  // @param aRefBox The reference box of the basic shape.
-  // @return The point of the center.
-  static nsPoint ComputeCircleOrEllipseCenter(
-    StyleBasicShape* const aBasicShape,
-    const nsRect& aRefBox);
 };
 
 } // namespace mozilla
