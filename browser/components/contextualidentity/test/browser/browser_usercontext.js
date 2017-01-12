@@ -71,7 +71,7 @@ add_task(function* test() {
     yield BrowserTestUtils.browserLoaded(browser);
 
     // get the title
-    let title = browser.contentDocument.title.trim().split("|");
+    let title = browser.contentTitle.trim().split("|");
 
     // check each item in the title and validate it meets expectatations
     for (let part of title) {
