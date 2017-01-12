@@ -261,7 +261,7 @@ nsFloatManager::GetFlowArea(WritingMode aWM, nscoord aBCoord, nscoord aBSize,
                         lineRight - lineLeft, blockSize, haveFloats);
 }
 
-void
+nsresult
 nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
                          WritingMode aWM, const nsSize& aContainerSize)
 {
@@ -290,7 +290,10 @@ nsFloatManager::AddFloat(nsIFrame* aFloatFrame, const LogicalRect& aMarginRect,
   if (thisBEnd > sideBEnd)
     sideBEnd = thisBEnd;
 
-  mFloats.AppendElement(Move(info));
+  if (!mFloats.AppendElement(info))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 // static
@@ -574,12 +577,12 @@ nsFloatManager::FloatInfo::FloatInfo(nsIFrame* aFrame,
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-nsFloatManager::FloatInfo::FloatInfo(FloatInfo&& aOther)
-  : mFrame(Move(aOther.mFrame))
-  , mLeftBEnd(Move(aOther.mLeftBEnd))
-  , mRightBEnd(Move(aOther.mRightBEnd))
-  , mRect(Move(aOther.mRect))
-  , mShapeBoxRect(Move(aOther.mShapeBoxRect))
+nsFloatManager::FloatInfo::FloatInfo(const FloatInfo& aOther)
+  : mFrame(aOther.mFrame)
+  , mLeftBEnd(aOther.mLeftBEnd)
+  , mRightBEnd(aOther.mRightBEnd)
+  , mRect(aOther.mRect)
+  , mShapeBoxRect(aOther.mShapeBoxRect)
 {
   MOZ_COUNT_CTOR(nsFloatManager::FloatInfo);
 }
