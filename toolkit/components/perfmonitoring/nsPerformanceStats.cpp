@@ -1219,8 +1219,7 @@ nsPerformanceStatsService::CommitGroup(uint64_t iteration,
   // this stage, we have already called `resetRecentData` but we
   // haven't removed it from the list.
   MOZ_ASSERT(ticksDelta != 0);
-  MOZ_ASSERT(cyclesDelta <= totalCyclesDelta);
-  if (cyclesDelta == 0 || totalCyclesDelta == 0) {
+  if (cyclesDelta > totalCyclesDelta || cyclesDelta == 0 || totalCyclesDelta == 0) {
     // Nothing useful, don't commit.
     return;
   }
