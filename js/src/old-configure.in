@@ -1512,33 +1512,6 @@ AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
-dnl = Enable NS_StackWalk.
-dnl ========================================================
-
-# On Windows, NS_StackWalk will only work correctly if we have frame pointers
-# available. That will only be true for non-optimized builds, debug builds or
-# builds with --enable-profiling in the .mozconfig (which is turned on in
-# Nightly by default.)
-case "$OS_TARGET" in
-WINNT)
-    if test -z "$MOZ_OPTIMIZE" -o -n "$MOZ_PROFILING" -o -n "$MOZ_DEBUG"; then
-        MOZ_STACKWALKING=1
-    else
-        MOZ_STACKWALKING=
-    fi
-    ;;
-*)
-    MOZ_STACKWALKING=1
-    ;;
-esac
-
-if test -n "$MOZ_STACKWALKING"; then
-    AC_DEFINE(MOZ_STACKWALKING)
-fi
-
-AC_SUBST(MOZ_STACKWALKING)
-
-dnl ========================================================
 dnl = Disable trace logging
 dnl ========================================================
 ENABLE_TRACE_LOGGING=1
