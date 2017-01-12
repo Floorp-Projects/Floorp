@@ -1,4 +1,5 @@
 config = {
+    "stage_platform": "android-api-15",
     "locales_file": "src/mobile/android/locales/all-locales",
     "tools_repo": "https://hg.mozilla.org/build/tools",
     "mozconfig": "src/mobile/android/config/mozconfigs/android-api-15/l10n-nightly",
