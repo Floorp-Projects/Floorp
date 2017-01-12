@@ -188,6 +188,10 @@ body.compact .newtab-thumbnail.placeholder {
   background-position: center center;
 }
 
+body.compact .newtab-site[type=affiliate] .newtab-thumbnail {
+  background-position: center 30%;
+}
+
 .newtab-site[type=affiliate] .newtab-thumbnail,
 body:not(.compact) .newtab-site[type=enhanced] .newtab-thumbnail,
 body:not(.compact) .newtab-site[type=organic] .newtab-thumbnail,
