@@ -252,7 +252,7 @@ GetWorkerPref(const nsACString& aPref,
 void
 GenerateSharedWorkerKey(const nsACString& aScriptSpec,
                         const nsACString& aName,
-                        const PrincipalOriginAttributes& aAttrs,
+                        const OriginAttributes& aAttrs,
                         nsCString& aKey)
 {
   nsAutoCString suffix;

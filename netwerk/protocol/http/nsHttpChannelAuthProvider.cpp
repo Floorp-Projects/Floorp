@@ -56,7 +56,7 @@ namespace net {
 static void
 GetOriginAttributesSuffix(nsIChannel* aChan, nsACString &aSuffix)
 {
-    NeckoOriginAttributes oa;
+    OriginAttributes oa;
 
     // Deliberately ignoring the result and going with defaults
     if (aChan) {
