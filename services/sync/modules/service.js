@@ -662,11 +662,9 @@ Sync11Service.prototype = {
 
         // Last-ditch case.
         return false;
-      } else {
-        // No update needed: we're good!
-        return true;
       }
-
+      // No update needed: we're good!
+      return true;
     } catch (ex) {
       // This means no keys are present, or there's a network error.
       this._log.debug("Failed to fetch and verify keys", ex);
@@ -1223,19 +1221,18 @@ Sync11Service.prototype = {
       }
 
       return true;
-    } else {
-      if (!this.upgradeSyncKey(meta.payload.syncID)) {
-        this._log.warn("Failed to upgrade sync key. Failing remote setup.");
-        return false;
-      }
-
-      if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
-        this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
-        return false;
-      }
-
-      return true;
     }
+    if (!this.upgradeSyncKey(meta.payload.syncID)) {
+      this._log.warn("Failed to upgrade sync key. Failing remote setup.");
+      return false;
+    }
+
+    if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
+      this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
+      return false;
+    }
+
+    return true;
   },
 
   /**

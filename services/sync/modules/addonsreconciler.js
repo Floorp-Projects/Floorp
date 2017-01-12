@@ -296,9 +296,8 @@ AddonsReconciler.prototype = {
       if (element == listener) {
         this._log.debug("Removing change listener.");
         return false;
-      } else {
-        return true;
       }
+      return true;
     }.bind(this));
   },
 

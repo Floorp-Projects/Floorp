@@ -491,9 +491,8 @@ function validationHelper(params, expected) {
   } catch (e) {
     if (typeof expected === "string") {
       return do_check_eq(e.toString(), expected);
-    } else {
-      return do_check_true(e.toString().match(expected));
     }
+    return do_check_true(e.toString().match(expected));
   }
   throw new Error("Validation helper error");
 }

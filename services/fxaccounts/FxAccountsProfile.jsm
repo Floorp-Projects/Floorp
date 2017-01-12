@@ -30,9 +30,8 @@ function deepEqual(actual, expected) {
     return true;
   } else if (typeof actual != "object" && typeof expected != "object") {
     return actual == expected;
-  } else {
-    return objEquiv(actual, expected);
   }
+  return objEquiv(actual, expected);
 }
 
 function isUndefinedOrNull(value) {
