@@ -644,7 +644,6 @@ exports.fetchImmediatelyDominated = TaskCache.declareCacheableTask({
       nodes: response.nodes,
       moreChildrenAvailable: response.moreChildrenAvailable,
     });
-    return;
   }
 });
 
@@ -700,17 +699,15 @@ exports.refreshSelectedDominatorTree = function (heapWorker) {
       return;
     }
 
+    // We need to check for the snapshot state because if there was an error,
+    // we can't continue and if we are still saving or reading the snapshot,
+    // then takeSnapshotAndCensus will finish the job for us
     if (snapshot.state === states.READ) {
       if (snapshot.dominatorTree) {
         yield dispatch(fetchDominatorTree(heapWorker, snapshot.id));
       } else {
         yield dispatch(computeAndFetchDominatorTree(heapWorker, snapshot.id));
       }
-    } else {
-        // If there was an error, we can't continue. If we are still saving or
-        // reading the snapshot, then takeSnapshotAndCensus will finish the job
-        // for us.
-      return;
     }
   };
 };

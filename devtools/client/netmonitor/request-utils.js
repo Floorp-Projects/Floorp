@@ -30,7 +30,7 @@ function getKeyWithEvent(callback, onlySpaceOrReturn) {
                               event.keyCode === KeyCodes.DOM_VK_RETURN;
 
     if (key && filterKeyboardEvent) {
-      callback.call(null, key);
+      callback(key);
     }
   };
 }

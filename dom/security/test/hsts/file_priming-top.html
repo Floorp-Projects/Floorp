@@ -37,14 +37,18 @@ var subresources = {
 
 function handler(ev) {
   console.log("HSTS_PRIMING: Blocked "+args.id);
+  let elem = document.getElementById(args.id);
+  elem.parentElement.removeChild(elem);
 }
 
 function loadCss(src) {
   let head = document.getElementsByTagName("head")[0];
   let link = document.createElement("link");
   link.setAttribute("rel", "stylesheet");
+  link.setAttribute("id", args.id);
   link.setAttribute("type", subresources[args.type].mimetype);
   link.setAttribute("href", src);
+  link.onerror = handler;
   head.appendChild(link);
 }
 
@@ -67,6 +71,7 @@ function loadTest() {
     + "?file=" +escape("browser/dom/security/test/hsts/" + subresource.file)
     + "&primer=" + escape(args.id)
     + "&mimetype=" + escape(subresource.mimetype)
+    + "&timeout=" + escape(args.timeout)
     ;
   if (args.type == 'css') {
     loadCss(src);

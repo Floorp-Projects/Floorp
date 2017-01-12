@@ -71,6 +71,22 @@ ResolveHost(const nsACString &host, nsIDNSListener *listener)
 
 }
 
+static nsresult
+CheckIOStatus(const NetAddr *aAddr)
+{
+  MOZ_ASSERT(gIOService);
+
+  if (gIOService->IsNetTearingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (gIOService->IsOffline() && !IsLoopBackAddress(aAddr)) {
+    return NS_ERROR_OFFLINE;
+  }
+
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 
 class SetSocketOptionRunnable : public Runnable
@@ -320,8 +336,9 @@ nsUDPSocket::TryAttach()
   if (!gSocketTransportService)
     return NS_ERROR_FAILURE;
 
-  if (gIOService->IsNetTearingDown()) {
-    return NS_ERROR_FAILURE;
+  rv = CheckIOStatus(&mAddr);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   //
@@ -530,7 +547,7 @@ void
 nsUDPSocket::IsLocal(bool *aIsLocal)
 {
   // If bound to loopback, this UDP socket only accepts local connections.
-  *aIsLocal = mAddr.raw.family == nsINetAddr::FAMILY_LOCAL;
+  *aIsLocal = IsLoopBackAddress(&mAddr);
 }
 
 //-----------------------------------------------------------------------------
@@ -573,18 +590,29 @@ nsUDPSocket::Init2(const nsACString& aAddr, int32_t aPort, nsIPrincipal *aPrinci
   }
 
   PRNetAddr prAddr;
+  memset(&prAddr, 0, sizeof(prAddr));
   if (PR_StringToNetAddr(aAddr.BeginReading(), &prAddr) != PR_SUCCESS) {
     return NS_ERROR_FAILURE;
   }
 
-  NetAddr addr;
-
-  if (aPort < 0)
+  if (aPort < 0) {
     aPort = 0;
+  }
 
-  addr.raw.family = AF_INET;
-  addr.inet.port = htons(aPort);
-  addr.inet.ip = prAddr.inet.ip;
+  switch (prAddr.raw.family) {
+    case PR_AF_INET:
+      prAddr.inet.port = PR_htons(aPort);
+      break;
+    case PR_AF_INET6:
+      prAddr.ipv6.port = PR_htons(aPort);
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Dont accept address other than IPv4 and IPv6");
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  NetAddr addr;
+  PRNetAddrToNetAddr(&prAddr, &addr);
 
   return InitWithAddress(&addr, aPrincipal, aAddressReuse, aOptionalArgc);
 }
@@ -595,8 +623,11 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
 {
   NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
 
-  if (gIOService->IsNetTearingDown()) {
-    return NS_ERROR_FAILURE;
+  nsresult rv;
+
+  rv = CheckIOStatus(aAddr);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   bool addressReuse = (aOptionalArgc == 1) ? aAddressReuse : true;
@@ -673,6 +704,13 @@ nsUDPSocket::Connect(const NetAddr *aAddr)
 
   if (NS_WARN_IF(!mFD)) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv;
+
+  rv = CheckIOStatus(aAddr);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   bool onSTSThread = false;

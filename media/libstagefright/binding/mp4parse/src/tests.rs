@@ -12,7 +12,7 @@ use super::Error;
 extern crate test_assembler;
 use self::test_assembler::*;
 
-use boxes::BoxType;
+use boxes::{BoxType, FourCC};
 
 enum BoxSize {
     Short(u32),
@@ -130,11 +130,11 @@ fn read_ftyp() {
     assert_eq!(stream.head.name, BoxType::FileTypeBox);
     assert_eq!(stream.head.size, 24);
     let parsed = super::read_ftyp(&mut stream).unwrap();
-    assert_eq!(parsed.major_brand, 0x6d703432); // mp42
+    assert_eq!(parsed.major_brand, FourCC::from("mp42")); // mp42
     assert_eq!(parsed.minor_version, 0);
     assert_eq!(parsed.compatible_brands.len(), 2);
-    assert_eq!(parsed.compatible_brands[0], 0x69736f6d); // isom
-    assert_eq!(parsed.compatible_brands[1], 0x6d703432); // mp42
+    assert_eq!(parsed.compatible_brands[0], FourCC::from("isom")); // isom
+    assert_eq!(parsed.compatible_brands[1], FourCC::from("mp42")); // mp42
 }
 
 #[test]
@@ -172,11 +172,11 @@ fn read_ftyp_case() {
     assert_eq!(stream.head.name, BoxType::FileTypeBox);
     assert_eq!(stream.head.size, 24);
     let parsed = super::read_ftyp(&mut stream).unwrap();
-    assert_eq!(parsed.major_brand, 0x4d503432);
+    assert_eq!(parsed.major_brand, FourCC::from("MP42"));
     assert_eq!(parsed.minor_version, 0);
     assert_eq!(parsed.compatible_brands.len(), 2);
-    assert_eq!(parsed.compatible_brands[0], 0x49534f4d); // ISOM
-    assert_eq!(parsed.compatible_brands[1], 0x4d503432); // MP42
+    assert_eq!(parsed.compatible_brands[0], FourCC::from("ISOM")); // ISOM
+    assert_eq!(parsed.compatible_brands[1], FourCC::from("MP42")); // MP42
 }
 
 #[test]
@@ -404,7 +404,7 @@ fn read_hdlr() {
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 45);
     let parsed = super::read_hdlr(&mut stream).unwrap();
-    assert_eq!(parsed.handler_type, 0x76696465); // vide
+    assert_eq!(parsed.handler_type, FourCC::from("vide"));
 }
 
 #[test]
@@ -422,7 +422,7 @@ fn read_hdlr_short_name() {
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 33);
     let parsed = super::read_hdlr(&mut stream).unwrap();
-    assert_eq!(parsed.handler_type, 0x76696465); // vide
+    assert_eq!(parsed.handler_type, FourCC::from("vide"));
 }
 
 #[test]
@@ -439,7 +439,7 @@ fn read_hdlr_zero_length_name() {
     assert_eq!(stream.head.name, BoxType::HandlerBox);
     assert_eq!(stream.head.size, 32);
     let parsed = super::read_hdlr(&mut stream).unwrap();
-    assert_eq!(parsed.handler_type, 0x76696465); // vide
+    assert_eq!(parsed.handler_type, FourCC::from("vide"));
 }
 
 fn flac_streaminfo() -> Vec<u8> {
@@ -857,4 +857,30 @@ fn read_qt_wave_atom() {
     super::read_audio_sample_entry(&mut stream, &mut track)
           .expect("fail to read qt wave atom");
     assert_eq!(track.codec_type, super::CodecType::MP3);
+}
+
+#[test]
+fn read_esds() {
+    let aac_esds =
+        vec![
+            0x03, 0x24, 0x00, 0x00, 0x00, 0x04, 0x1c, 0x40,
+            0x15, 0x00, 0x12, 0x00, 0x00, 0x01, 0xf4, 0x00,
+            0x00, 0x01, 0xf4, 0x00, 0x05, 0x0d, 0x13, 0x00,
+            0x05, 0x88, 0x05, 0x00, 0x48, 0x21, 0x10, 0x00,
+            0x56, 0xe5, 0x98, 0x06, 0x01, 0x02,
+        ];
+    let mut stream = make_box(BoxSize::Auto, b"esds", |s| {
+        s.B32(0) // reserved
+         .append_bytes(aac_esds.as_slice())
+    });
+    let mut iter = super::BoxIter::new(&mut stream);
+    let mut stream = iter.next_box().unwrap().unwrap();
+
+    let es = super::read_esds(&mut stream).unwrap();
+
+    assert_eq!(es.audio_codec, super::CodecType::AAC);
+    assert_eq!(es.audio_object_type, Some(2));
+    assert_eq!(es.audio_sample_rate, Some(24000));
+    assert_eq!(es.audio_channel_count, Some(6));
+    assert_eq!(es.codec_esds, aac_esds);
 }

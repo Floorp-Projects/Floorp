@@ -17,7 +17,7 @@ use std::io::Cursor;
 use std::cmp;
 
 mod boxes;
-use boxes::BoxType;
+use boxes::{BoxType, FourCC};
 
 // Unit tests.
 #[cfg(test)]
@@ -106,9 +106,9 @@ struct BoxHeader {
 /// File type box 'ftyp'.
 #[derive(Debug)]
 struct FileTypeBox {
-    major_brand: u32,
+    major_brand: FourCC,
     minor_version: u32,
-    compatible_brands: Vec<u32>,
+    compatible_brands: Vec<FourCC>,
 }
 
 /// Movie header box 'mvhd'.
@@ -196,7 +196,7 @@ struct Sample {
 // Handler reference box 'hdlr'
 #[derive(Debug)]
 struct HandlerBox {
-    handler_type: u32,
+    handler_type: FourCC,
 }
 
 // Sample description box 'stsd'
@@ -473,6 +473,15 @@ impl<'a, T: Read> BMFFBox<'a, T> {
 
     fn box_iter<'b>(&'b mut self) -> BoxIter<BMFFBox<'a, T>> {
         BoxIter::new(self)
+    }
+}
+
+impl<'a, T: Read> Drop for BMFFBox<'a, T> {
+    fn drop(&mut self) {
+        if self.content.limit() > 0 {
+            let name: FourCC = From::from(self.head.name);
+            log!("Dropping {} bytes in '{}'", self.content.limit(), name);
+        }
     }
 }
 
@@ -793,9 +802,10 @@ fn read_mdia<T: Read>(f: &mut BMFFBox<T>, track: &mut Track) -> Result<()> {
             }
             BoxType::HandlerBox => {
                 let hdlr = read_hdlr(&mut b)?;
-                match hdlr.handler_type {
-                    0x76696465 /* 'vide' */ => track.track_type = TrackType::Video,
-                    0x736f756e /* 'soun' */ => track.track_type = TrackType::Audio,
+
+                match hdlr.handler_type.value.as_ref() {
+                    "vide" => track.track_type = TrackType::Video,
+                    "soun" => track.track_type = TrackType::Audio,
                     _ => (),
                 }
                 log!("{:?}", hdlr);
@@ -874,10 +884,10 @@ fn read_ftyp<T: Read>(src: &mut BMFFBox<T>) -> Result<FileTypeBox> {
     let brand_count = bytes_left / 4;
     let mut brands = Vec::new();
     for _ in 0..brand_count {
-        brands.push(be_u32(src)?);
+        brands.push(From::from(be_u32(src)?));
     }
     Ok(FileTypeBox {
-        major_brand: major,
+        major_brand: From::from(major),
         minor_version: minor,
         compatible_brands: brands,
     })
@@ -1276,13 +1286,68 @@ fn read_ds_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
         },
     };
 
-    let channel_counts: u16 = ReadInto::read(bit_reader, 4)?;
+    let mut channel_counts: u16 = ReadInto::read(bit_reader, 4)?;
+
+    // parsing GASpecificConfig
+    bit_reader.skip(1)?;        // frameLengthFlag
+    let depend_on_core_order: u8 = ReadInto::read(bit_reader, 1)?;
+    if depend_on_core_order > 0 {
+        bit_reader.skip(14)?;   // codeCoderDelay
+    }
+    bit_reader.skip(1)?;        // extensionFlag
+
+    // When channel_counts is 0, we need to parse the program_config_element
+    // to calculate the channel counts.
+    if channel_counts == 0 {
+        log!("Parsing program_config_element for channel counts");
+
+        bit_reader.skip(4)?;    // element_instance_tag
+        bit_reader.skip(2)?;    // object_type
+        bit_reader.skip(4)?;    // sampling_frequency_index
+        let num_front_channel: u8 = ReadInto::read(bit_reader, 4)?;
+        let num_side_channel: u8 = ReadInto::read(bit_reader, 4)?;
+        let num_back_channel:u8 = ReadInto::read(bit_reader, 4)?;
+        let num_lfe_channel: u8 = ReadInto::read(bit_reader, 2)?;
+        bit_reader.skip(3)?;    // num_assoc_data
+        bit_reader.skip(4)?;    // num_valid_cc
+
+        let mono_mixdown_present: bool = ReadInto::read(bit_reader, 1)?;
+        if mono_mixdown_present {
+            bit_reader.skip(4)?;    // mono_mixdown_element_number
+        }
+
+        let stereo_mixdown_present: bool = ReadInto::read(bit_reader, 1)?;
+        if stereo_mixdown_present {
+            bit_reader.skip(4)?;    // stereo_mixdown_element_number
+        }
+
+        let matrix_mixdown_idx_present: bool = ReadInto::read(bit_reader, 1)?;
+        if matrix_mixdown_idx_present {
+            bit_reader.skip(2)?;    // matrix_mixdown_idx
+            bit_reader.skip(1)?;    // pseudo_surround_enable
+        }
+
+        channel_counts += read_surround_channel_count(bit_reader, num_front_channel)?;
+        channel_counts += read_surround_channel_count(bit_reader, num_side_channel)?;
+        channel_counts += read_surround_channel_count(bit_reader, num_back_channel)?;
+        channel_counts += read_surround_channel_count(bit_reader, num_lfe_channel)?;
+    }
 
     esds.audio_object_type = Some(audio_object_type);
     esds.audio_sample_rate = sample_frequency;
     esds.audio_channel_count = Some(channel_counts);
 
     Ok(())
+}
+
+fn read_surround_channel_count(bit_reader: &mut BitReader, channels: u8) -> Result<u16> {
+    let mut count = 0;
+    for _ in 0..channels {
+        let is_cpe: bool = ReadInto::read(bit_reader, 1)?;
+        count += if is_cpe { 2 } else { 1 };
+        bit_reader.skip(4)?;
+    }
+    Ok(count)
 }
 
 fn read_dc_descriptor(data: &[u8], esds: &mut ES_Descriptor) -> Result<()> {
@@ -1470,7 +1535,7 @@ fn read_hdlr<T: Read>(src: &mut BMFFBox<T>) -> Result<HandlerBox> {
     // Skip uninteresting fields.
     skip(src, 4)?;
 
-    let handler_type = be_u32(src)?;
+    let handler_type = FourCC::from(be_u32(src)?);
 
     // Skip uninteresting fields.
     skip(src, 12)?;
