@@ -225,12 +225,6 @@ var CustomizableUIInternal = {
       panelPlacements.push("characterencoding-button");
     }
 
-    if (AppConstants.NIGHTLY_BUILD) {
-      if (Services.prefs.getBoolPref("extensions.webcompat-reporter.enabled")) {
-        panelPlacements.push("webcompat-reporter-button");
-      }
-    }
-
     this.registerArea(CustomizableUI.AREA_PANEL, {
       anchor: "PanelUI-menu-button",
       type: CustomizableUI.TYPE_MENU_PANEL,

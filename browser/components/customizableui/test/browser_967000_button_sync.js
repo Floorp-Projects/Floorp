@@ -62,6 +62,9 @@ function* openPrefsFromMenuPanel(expectedPanelId, entryPoint) {
   info("Check Sync button functionality");
   Services.prefs.setCharPref("identity.fxaccounts.remote.signup.uri", "http://example.com/");
 
+  // add the Sync button to the panel
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+
   // check the button's functionality
   yield PanelUI.show();
 
@@ -149,6 +152,8 @@ add_task(function* () {
   document.getElementById("sync-setup-state").hidden = true;
   document.getElementById("sync-syncnow-state").hidden = false;
 
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
+
   let syncPanel = document.getElementById("PanelUI-remotetabs");
   let links = syncPanel.querySelectorAll(".remotetabs-promo-link");
 
@@ -209,6 +214,8 @@ add_task(function* () {
   document.getElementById("sync-setup-state").hidden = true;
   document.getElementById("sync-syncnow-state").hidden = false;
 
+  // add the Sync button to the panel
+  CustomizableUI.addWidgetToArea("sync-button", CustomizableUI.AREA_PANEL);
   yield PanelUI.show();
   document.getElementById("sync-button").click();
   let syncPanel = document.getElementById("PanelUI-remotetabs");
