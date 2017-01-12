@@ -1489,7 +1489,7 @@ NetworkMonitor.prototype = {
       Services.obs.removeObserver(this._httpResponseExaminer,
                                   "http-on-examine-cached-response");
       Services.obs.removeObserver(this._httpModifyExaminer,
-                                  "http-on-modify-request", false);
+                                  "http-on-modify-request");
     }
 
     Services.obs.removeObserver(this._serviceWorkerRequest,

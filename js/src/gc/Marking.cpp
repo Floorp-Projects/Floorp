@@ -1559,15 +1559,13 @@ GCMarker::drainMarkStack(SliceBudget& budget)
     auto acc = mozilla::MakeScopeExit([&] {strictCompartmentChecking = false;});
 #endif
 
-    JSContext* cx = runtime()->contextFromMainThread();
-
-    if (budget.isOverBudget(cx))
+    if (budget.isOverBudget())
         return false;
 
     for (;;) {
         while (!stack.isEmpty()) {
             processMarkStackTop(budget);
-            if (budget.isOverBudget(cx)) {
+            if (budget.isOverBudget()) {
                 saveValueRanges();
                 return false;
             }
@@ -1642,8 +1640,6 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     uintptr_t tag = addr & StackTagMask;
     addr &= ~StackTagMask;
 
-    JSContext* cx = runtime()->contextFromMainThread();
-
     // Dispatch
     switch (tag) {
       case ValueArrayTag: {
@@ -1697,7 +1693,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
     MOZ_ASSERT(vp <= end);
     while (vp != end) {
         budget.step();
-        if (budget.isOverBudget(cx)) {
+        if (budget.isOverBudget()) {
             pushValueArray(obj, vp, end);
             return;
         }
@@ -1727,7 +1723,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
         AssertZoneIsMarking(obj);
 
         budget.step();
-        if (budget.isOverBudget(cx)) {
+        if (budget.isOverBudget()) {
             repush(obj);
             return;
         }
@@ -2175,7 +2171,7 @@ GCMarker::markDelayedChildren(SliceBudget& budget)
         markDelayedChildren(arena);
 
         budget.step(150);
-        if (budget.isOverBudget(runtime()->contextFromMainThread()))
+        if (budget.isOverBudget())
             return false;
     } while (unmarkedArenaStackTop);
     MOZ_ASSERT(!markLaterArenas);

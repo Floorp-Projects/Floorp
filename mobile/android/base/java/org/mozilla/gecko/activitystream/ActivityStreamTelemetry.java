@@ -144,7 +144,7 @@ public class ActivityStreamTelemetry {
                 return this;
             }
 
-            public Builder forTopSiteType(int type) {
+            public Builder forTopSiteType(@BrowserContract.TopSites.TopSiteType int type) {
                 switch (type) {
                     case BrowserContract.TopSites.TYPE_PINNED:
                         this.set(Contract.SOURCE_SUBTYPE, Contract.SUBTYPE_PINNED);
@@ -156,6 +156,7 @@ public class ActivityStreamTelemetry {
                         this.set(Contract.SOURCE_SUBTYPE, Contract.SUBTYPE_TOP);
                         break;
                     // While we also have a "blank" type, it is not used by Activity Stream.
+                    case BrowserContract.TopSites.TYPE_BLANK:
                     default:
                         throw new IllegalStateException("Unknown top site type: " + type);
                 }
