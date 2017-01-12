@@ -31,9 +31,6 @@ public:
 
     // nsWrapperCache
     virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto) override;
-
-private:
-    virtual bool ValidateUniformMatrixTranspose(bool transpose, const char* info) override;
 };
 
 } // namespace mozilla

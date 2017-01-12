@@ -95,7 +95,6 @@ SOURCES += [
 UNIFIED_SOURCES += [
     'TexUnpackBlob.cpp',
     'WebGL1Context.cpp',
-    'WebGL1ContextUniforms.cpp',
     'WebGL2Context.cpp',
     'WebGL2ContextBuffers.cpp',
     'WebGL2ContextFramebuffers.cpp',
