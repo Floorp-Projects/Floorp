@@ -189,54 +189,6 @@
   transform: scaleX(-1);
 }
 
-/* The breadcrumb separator elements are used as background images with
- * -moz-element, so we position them offscreen since we don't care about
- * seeing the original elements.
- */
-.breadcrumb-separator-container {
-  position: fixed;
-  top: -1000px;
-  left: -1000px;
-}
-
-#breadcrumb-separator-before,
-#breadcrumb-separator-after,
-#breadcrumb-separator-normal {
-  width: 12px;
-  height: 24px;
-  overflow: hidden;
-}
-
-#breadcrumb-separator-before,
-#breadcrumb-separator-after:after {
-  background: var(--theme-selection-background);
-}
-
-#breadcrumb-separator-after,
-#breadcrumb-separator-before:after {
-  background: var(--theme-body-background);
-}
-
-/* This chevron arrow cannot be replicated easily in CSS, so we are using
- * a background image for it (still keeping it in a separate element so
- * we can handle RTL support with a CSS transform).
- */
-#breadcrumb-separator-normal {
-  background: url(images/breadcrumbs-divider@2x.png) no-repeat center right;
-  background-size: 12px 24px;
-}
-
-/* Fake a triangle by rotating a rectangle inside the elements */
-#breadcrumb-separator-before:after,
-#breadcrumb-separator-after:after {
-  content: "";
-  display: block;
-  width: 25px;
-  height: 24px;
-  transform: translateX(-18px) rotate(45deg);
-  -moz-box-sizing: border-box;
-}
-
 .breadcrumbs-widget-item {
   background-color: transparent;
   -moz-appearance: none;
@@ -247,6 +199,7 @@
   border: none;
   outline: none;
   color: hsl(210,30%,85%);
+  position: relative;
 }
 
 .breadcrumbs-widget-item > .button-box {
@@ -259,16 +212,93 @@
   border-width: 0;
 }
 
-.breadcrumbs-widget-item:not([checked]) {
-  background: -moz-element(#breadcrumb-separator-normal) no-repeat center left;
+.breadcrumbs-widget-item::before {
+  content: "";
+  position: absolute;
+  top: 1px;
+  offset-inline-start: 0;
+  width: 12px;
+  height: 22px;
+  background-repeat: no-repeat;
+  /* Given the 1/2 aspect ratio of the separator pseudo-element and the 45deg angle of
+     the arrow shape, we need the arrow edges to be at this position from the start of
+     the gradient line. */
+  --position: 66.5%;
+  /* The color of the thin line in the arrow-shaped separator between 2 unselected
+     crumbs. There is no theme variable for this, this used to be an image. */
+  --line-color: #ACACAC;
+  --background-color: var(--theme-body-background);
 }
 
-.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item {
-  background: -moz-element(#breadcrumb-separator-after) no-repeat 0 0;
+#debugger-toolbar .breadcrumbs-widget-item::before {
+  --background-color: var(--theme-toolbar-background);
 }
 
-.breadcrumbs-widget-item[checked] {
-  background: -moz-element(#breadcrumb-separator-before) no-repeat 0 0;
+.theme-dark .breadcrumbs-widget-item::before {
+  --line-color: #6E6E6E;
+}
+
+.breadcrumbs-widget-item:first-child::before {
+  /* The first crumb does not need any separator before itself */
+  content: unset;
+}
+
+.breadcrumbs-widget-item:dir(rtl)::before {
+  transform: scaleX(-1);
+}
+
+.breadcrumbs-widget-item:not([checked])::before {
+  background-color: var(--background-color);
+  background-image:
+    linear-gradient(45deg,
+                    var(--background-color) 30%,
+                    transparent),
+    linear-gradient(-45deg,
+                    transparent,
+                    var(--background-color) 70%,
+                    var(--background-color)),
+    linear-gradient(45deg,
+                    transparent var(--position),
+                    var(--line-color) var(--position),
+                    var(--line-color) calc(var(--position) + 1px),
+                    transparent 0),
+    linear-gradient(-45deg,
+                    transparent calc(100% - var(--position)),
+                    var(--line-color) calc(100% - var(--position)),
+                    var(--line-color) calc(calc(100% - var(--position)) + 1px),
+                    transparent 0);
+  background-size:
+    100% 50%,
+    100% 50%,
+    100%,
+    100%;
+  background-position:
+    left bottom,
+    left top,
+    left top,
+    left top;
+}
+
+.breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item::before {
+  background-color: var(--theme-selection-background);
+  background-image:
+    linear-gradient(45deg,
+                    transparent var(--position),
+                    var(--background-color) 0),
+    linear-gradient(-45deg,
+                    var(--background-color) calc(100% - var(--position)),
+                    transparent 0);
+  background-size: unset;
+}
+
+.breadcrumbs-widget-item[checked]::before {
+  background-image:
+    linear-gradient(45deg,
+                    transparent var(--position),
+                    var(--theme-selection-background) 0),
+    linear-gradient(-45deg,
+                    var(--theme-selection-background) calc(100% - var(--position)),
+                    var(--background-color) 0);
 }
 
 .breadcrumbs-widget-item[checked] {
@@ -289,17 +319,6 @@
 .breadcrumbs-widget-item:dir(rtl),
 .breadcrumbs-widget-item[checked] + .breadcrumbs-widget-item:dir(rtl) {
   background-position: center right;
-}
-
-#breadcrumb-separator-before:dir(rtl),
-#breadcrumb-separator-after:dir(rtl),
-#breadcrumb-separator-normal:dir(rtl) {
-  transform: scaleX(-1);
-}
-
-#breadcrumb-separator-before:dir(rtl):after,
-#breadcrumb-separator-after:dir(rtl):after {
-  transform: translateX(-5px) rotate(45deg);
 }
 
 .breadcrumbs-widget-item[checked] .breadcrumbs-widget-item-id,
@@ -373,6 +392,7 @@
 
 .theme-firebug .breadcrumbs-widget-item:not(:first-child)::before {
   content: url(chrome://devtools/skin/images/firebug/breadcrumbs-divider.svg);
+  background: none;
   position: relative;
   left: -3px;
   margin: 0 0 0 -5px;
