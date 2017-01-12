@@ -197,15 +197,11 @@ CanHandleCodecsType(const MediaContentType& aType,
                     DecoderDoctorDiagnostics* aDiagnostics)
 {
   // We should have been given a codecs string, though it may be empty.
-  MOZ_ASSERT(aType.ExtendedType().HaveCodecs());
-
-  // Content type with the the MIME type, no codecs.
-  const MediaContentType mimeType(aType.Type());
+  MOZ_ASSERT(aType.HaveCodecs());
 
   char const* const* codecList = nullptr;
-  if (IsOggTypeAndEnabled(mimeType.Type().AsString())) {
-    if (IsOggSupportedType(aType.Type().AsString(),
-                           aType.ExtendedType().Codecs().AsString())) {
+  if (IsOggTypeAndEnabled(aType.GetMIMEType())) {
+    if (IsOggSupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -213,9 +209,8 @@ CanHandleCodecsType(const MediaContentType& aType,
       return CANPLAY_NO;
     }
   }
-  if (IsWaveSupportedType(mimeType.Type().AsString())) {
-    if (IsWaveSupportedType(aType.Type().AsString(),
-                            aType.ExtendedType().Codecs().AsString())) {
+  if (IsWaveSupportedType(aType.GetMIMEType())) {
+    if (IsWaveSupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -224,9 +219,8 @@ CanHandleCodecsType(const MediaContentType& aType,
     }
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (DecoderTraits::IsWebMTypeAndEnabled(mimeType.Type().AsString())) {
-    if (IsWebMSupportedType(aType.Type().AsString(),
-                            aType.ExtendedType().Codecs().AsString())) {
+  if (DecoderTraits::IsWebMTypeAndEnabled(aType.GetMIMEType())) {
+    if (IsWebMSupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
       return CANPLAY_YES;
     } else {
       // We can only reach this position if a particular codec was requested,
@@ -236,7 +230,7 @@ CanHandleCodecsType(const MediaContentType& aType,
   }
 #endif
 #ifdef MOZ_FMP4
-  if (DecoderTraits::IsMP4TypeAndEnabled(mimeType.Type().AsString(), aDiagnostics)) {
+  if (DecoderTraits::IsMP4TypeAndEnabled(aType.GetMIMEType(), aDiagnostics)) {
     if (IsMP4SupportedType(aType, aDiagnostics)) {
       return CANPLAY_YES;
     } else {
@@ -246,25 +240,21 @@ CanHandleCodecsType(const MediaContentType& aType,
     }
   }
 #endif
-  if (IsMP3SupportedType(mimeType.Type().AsString(),
-                         aType.ExtendedType().Codecs().AsString())) {
+  if (IsMP3SupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
     return CANPLAY_YES;
   }
-  if (IsAACSupportedType(mimeType.Type().AsString(),
-                         aType.ExtendedType().Codecs().AsString())) {
+  if (IsAACSupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
     return CANPLAY_YES;
   }
-  if (IsFlacSupportedType(mimeType.Type().AsString(),
-                          aType.ExtendedType().Codecs().AsString())) {
+  if (IsFlacSupportedType(aType.GetMIMEType(), aType.GetCodecs())) {
     return CANPLAY_YES;
   }
 #ifdef MOZ_DIRECTSHOW
-  DirectShowDecoder::GetSupportedCodecs(aType.Type().AsString(), &codecList);
+  DirectShowDecoder::GetSupportedCodecs(aType.GetMIMEType(), &codecList);
 #endif
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled()) {
-    EnsureAndroidMediaPluginHost()->FindDecoder(aType.Type().AsString(),
-                                                &codecList);
+    EnsureAndroidMediaPluginHost()->FindDecoder(aType.GetMIMEType(), &codecList);
   }
 #endif
   if (!codecList) {
@@ -273,8 +263,7 @@ CanHandleCodecsType(const MediaContentType& aType,
 
   // See http://www.rfc-editor.org/rfc/rfc4281.txt for the description
   // of the 'codecs' parameter
-  nsCharSeparatedTokenizer
-    tokenizer(aType.ExtendedType().Codecs().AsString(), ',');
+  nsCharSeparatedTokenizer tokenizer(aType.GetCodecs(), ',');
   bool expectMoreTokens = false;
   while (tokenizer.hasMoreTokens()) {
     const nsSubstring& token = tokenizer.nextToken();
@@ -300,51 +289,47 @@ CanHandleMediaType(const MediaContentType& aType,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (IsHttpLiveStreamingType(aType.Type().AsString())) {
+  if (IsHttpLiveStreamingType(aType.GetMIMEType())) {
     Telemetry::Accumulate(Telemetry::MEDIA_HLS_CANPLAY_REQUESTED, true);
   }
 
-  if (aType.ExtendedType().HaveCodecs()) {
+  if (aType.HaveCodecs()) {
     CanPlayStatus result = CanHandleCodecsType(aType, aDiagnostics);
     if (result == CANPLAY_NO || result == CANPLAY_YES) {
       return result;
     }
   }
-
-  // Content type with just the MIME type/subtype, no codecs.
-  const MediaContentType mimeType(aType.Type());
-
-  if (IsOggTypeAndEnabled(mimeType.Type().AsString())) {
+  if (IsOggTypeAndEnabled(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
-  if (IsWaveSupportedType(mimeType.Type().AsString())) {
+  if (IsWaveSupportedType(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
-  if (DecoderTraits::IsMP4TypeAndEnabled(mimeType.Type().AsString(), aDiagnostics)) {
+  if (DecoderTraits::IsMP4TypeAndEnabled(aType.GetMIMEType(), aDiagnostics)) {
     return CANPLAY_MAYBE;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (DecoderTraits::IsWebMTypeAndEnabled(mimeType.Type().AsString())) {
+  if (DecoderTraits::IsWebMTypeAndEnabled(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
 #endif
-  if (IsMP3SupportedType(mimeType.Type().AsString())) {
+  if (IsMP3SupportedType(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
-  if (IsAACSupportedType(mimeType.Type().AsString())) {
+  if (IsAACSupportedType(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
-  if (IsFlacSupportedType(mimeType.Type().AsString())) {
+  if (IsFlacSupportedType(aType.GetMIMEType())) {
     return CANPLAY_MAYBE;
   }
 #ifdef MOZ_DIRECTSHOW
-  if (DirectShowDecoder::GetSupportedCodecs(mimeType.Type().AsString(), nullptr)) {
+  if (DirectShowDecoder::GetSupportedCodecs(aType.GetMIMEType(), nullptr)) {
     return CANPLAY_MAYBE;
   }
 #endif
 #ifdef MOZ_ANDROID_OMX
   if (MediaDecoder::IsAndroidMediaPluginEnabled() &&
-      EnsureAndroidMediaPluginHost()->FindDecoder(mimeType.Type().AsString(), nullptr)) {
+      EnsureAndroidMediaPluginHost()->FindDecoder(aType.GetMIMEType(), nullptr)) {
     return CANPLAY_MAYBE;
   }
 #endif

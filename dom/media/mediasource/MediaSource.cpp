@@ -105,22 +105,21 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
 
   // Now we know that this media type could be played.
   // MediaSource imposes extra restrictions, and some prefs.
-  const MediaMIMEType& mimeType = contentType->Type();
-  if (mimeType == MEDIAMIMETYPE("video/mp4") ||
-      mimeType == MEDIAMIMETYPE("audio/mp4")) {
+  const nsACString& mimeType = contentType->GetMIMEType();
+  if (mimeType.EqualsASCII("video/mp4") || mimeType.EqualsASCII("audio/mp4")) {
     if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     return NS_OK;
   }
-  if (mimeType == MEDIAMIMETYPE("video/webm")) {
+  if (mimeType.EqualsASCII("video/webm")) {
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
           IsWebMForced(aDiagnostics))) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
     return NS_OK;
   }
-  if (mimeType == MEDIAMIMETYPE("audio/webm")) {
+  if (mimeType.EqualsASCII("audio/webm")) {
     if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
           Preferences::GetBool("media.mediasource.webm.audio.enabled", true))) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -243,7 +242,7 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
-  const nsACString& mimeType = contentType->Type().AsString();
+  const nsACString& mimeType = contentType->GetMIMEType();
   RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, mimeType);
   if (!sourceBuffer) {
     aRv.Throw(NS_ERROR_FAILURE); // XXX need a better error here
