@@ -10,7 +10,7 @@
 #define nsFloatManager_h_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
 #include "nsCoord.h"
 #include "nsFrameList.h" // for DEBUG_FRAME_DUMP
@@ -332,70 +332,6 @@ public:
 
 private:
 
-  // ShapeInfo is an abstract class for implementing all the shapes in CSS
-  // Shapes Module. A subclass needs to override all the methods to adjust
-  // the flow area with respect to its shape.
-  class ShapeInfo
-  {
-  public:
-    virtual ~ShapeInfo() {}
-
-    virtual nscoord LineLeft(mozilla::WritingMode aWM,
-                             const nscoord aBStart,
-                             const nscoord aBEnd) const = 0;
-    virtual nscoord LineRight(mozilla::WritingMode aWM,
-                              const nscoord aBStart,
-                              const nscoord aBEnd) const = 0;
-    virtual nscoord BStart() const = 0;
-    virtual nscoord BEnd() const = 0;
-
-  protected:
-    // Compute the minimum line-axis difference between the bounding shape
-    // box and its rounded corner within the given band (block-axis region).
-    // This is used as a helper function to compute the LineRight() and
-    // LineLeft(). See the picture in the implementation for an example.
-    // RadiusL and RadiusB stand for radius on the line-axis and block-axis.
-    //
-    // Returns radius-x diff on the line-axis, or 0 if there's no rounded
-    // corner within the given band.
-    static nscoord ComputeEllipseLineInterceptDiff(
-      const nscoord aShapeBoxBStart, const nscoord aShapeBoxBEnd,
-      const nscoord aBStartCornerRadiusL, const nscoord aBStartCornerRadiusB,
-      const nscoord aBEndCornerRadiusL, const nscoord aBEndCornerRadiusB,
-      const nscoord aBandBStart, const nscoord aBandBEnd);
-
-    static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
-                                 const nscoord aRadiusY);
-  };
-
-  // Implements shape-outside: <shape-box>.
-  class BoxShapeInfo final : public ShapeInfo
-  {
-  public:
-    BoxShapeInfo(const nsRect& aShapeBoxRect, nsIFrame* const aFrame)
-      : mShapeBoxRect(aShapeBoxRect)
-      , mFrame(aFrame)
-    {
-    }
-
-    nscoord LineLeft(mozilla::WritingMode aWM,
-                     const nscoord aBStart,
-                     const nscoord aBEnd) const override;
-    nscoord LineRight(mozilla::WritingMode aWM,
-                      const nscoord aBStart,
-                      const nscoord aBEnd) const override;
-    nscoord BStart() const override { return mShapeBoxRect.y; }
-    nscoord BEnd() const override { return mShapeBoxRect.YMost(); }
-
-  private:
-    // This is the reference box of css shape-outside if specified, which
-    // implements the <shape-box> value in the CSS Shapes Module Level 1.
-    // The coordinate space is the same as FloatInfo::mRect.
-    const nsRect mShapeBoxRect;
-    // The frame of the float.
-    nsIFrame* const mFrame;
-  };
-
   struct FloatInfo {
     nsIFrame *const mFrame;
     // The lowest block-ends of left/right floats up to and including
@@ -414,6 +350,8 @@ private:
     nscoord BSize() const { return mRect.height; }
     bool IsEmpty() const { return mRect.IsEmpty(); }
 
+    nsRect ShapeBoxRect() const { return mShapeBoxRect.valueOr(mRect); }
+
     // aBStart and aBEnd are the starting and ending coordinate of a band.
     // LineLeft() and LineRight() return the innermost line-left extent and
     // line-right extent within the given band, respectively.
@@ -421,8 +359,32 @@ private:
                      const nscoord aBStart, const nscoord aBEnd) const;
     nscoord LineRight(mozilla::WritingMode aWM, ShapeType aShapeType,
                       const nscoord aBStart, const nscoord aBEnd) const;
-    nscoord BStart(ShapeType aShapeType) const;
-    nscoord BEnd(ShapeType aShapeType) const;
+
+    nscoord BStart(ShapeType aShapeType) const
+    {
+      return aShapeType == ShapeType::Margin ? BStart() : ShapeBoxRect().y;
+    }
+    nscoord BEnd(ShapeType aShapeType) const
+    {
+      return aShapeType == ShapeType::Margin ? BEnd() : ShapeBoxRect().YMost();
+    }
+
+    // Compute the minimum line-axis difference between the bounding shape
+    // box and its rounded corner within the given band (block-axis region).
+    // This is used as a helper function to compute the LineRight() and
+    // LineLeft(). See the picture in the implementation for an example.
+    // RadiusL and RadiusB stand for radius on the line-axis and block-axis.
+    //
+    // Returns radius-x diff on the line-axis, or 0 if there's no rounded
+    // corner within the given band.
+    static nscoord ComputeEllipseLineInterceptDiff(
+      const nscoord aShapeBoxBStart, const nscoord aShapeBoxBEnd,
+      const nscoord aBStartCornerRadiusL, const nscoord aBStartCornerRadiusB,
+      const nscoord aBEndCornerRadiusL, const nscoord aBEndCornerRadiusB,
+      const nscoord aBandBStart, const nscoord aBandBEnd);
+
+    static nscoord XInterceptAtY(const nscoord aY, const nscoord aRadiusX,
+                                 const nscoord aRadiusY);
 
 #ifdef NS_BUILD_REFCNT_LOGGING
     FloatInfo(FloatInfo&& aOther);
@@ -436,9 +398,10 @@ private:
     // the line-relative axis of the frame manager and its block
     // coordinates are in the frame manager's real block direction.
     nsRect mRect;
-    // Pointer to a concrete subclass of ShapeInfo or null, which means that
-    // there is no shape-outside.
-    mozilla::UniquePtr<ShapeInfo> mShapeInfo;
+    // This is the reference box of css shape-outside if specified, which
+    // implements the <shape-box> value in the CSS Shapes Module Level 1.
+    // The coordinate setup is the same as mRect.
+    mozilla::Maybe<nsRect> mShapeBoxRect;
   };
 
 #ifdef DEBUG
