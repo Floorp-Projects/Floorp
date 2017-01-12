@@ -216,11 +216,12 @@ public:
   static already_AddRefed<TextureReadLock>
   Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput) = 0;
+  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) = 0;
 
   enum LockType {
     TYPE_NONBLOCKING_MEMORY,
-    TYPE_NONBLOCKING_SHMEM
+    TYPE_NONBLOCKING_SHMEM,
+    TYPE_CROSS_PROCESS_MUTEX
   };
   virtual LockType GetType() = 0;
 
@@ -641,6 +642,7 @@ public:
   uint64_t GetLastFwdTransactionId() { return mFwdTransactionId; }
 
   void EnableReadLock();
+  void EnableBlockingReadLock();
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 

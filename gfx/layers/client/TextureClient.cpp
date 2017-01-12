@@ -617,7 +617,7 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
     // Take a read lock on behalf of the TextureHost. The latter will unlock
     // after the shared data is available again for drawing.
     mReadLock->ReadLock();
-    mReadLock->Serialize(aDescriptor);
+    mReadLock->Serialize(aDescriptor, GetAllocator()->GetParentPid());
     mUpdated = false;
   } else {
     aDescriptor = null_t();
@@ -1415,7 +1415,7 @@ public:
 
   virtual bool IsValid() const override { return true; };
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput) override;
+  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
   int32_t mReadCount;
 };
@@ -1448,7 +1448,7 @@ public:
 
   virtual LockType GetType() override { return TYPE_NONBLOCKING_SHMEM; }
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput) override;
+  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
   mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
 
@@ -1468,6 +1468,35 @@ public:
   RefPtr<LayersIPCChannel> mClientAllocator;
   mozilla::layers::ShmemSection mShmemSection;
   bool mAllocSuccess;
+};
+
+class CrossProcessMutexReadLock : public TextureReadLock
+{
+public:
+  CrossProcessMutexReadLock()
+    : mMutex("TextureReadLock")
+  {}
+  explicit CrossProcessMutexReadLock(CrossProcessMutexHandle aHandle)
+    : mMutex(aHandle)
+  {}
+
+  virtual int32_t ReadLock() override
+  {
+    mMutex.Lock();
+    return 2;
+  }
+  virtual int32_t ReadUnlock() override
+  {
+    mMutex.Unlock();
+    return 1;
+  }
+  virtual bool IsValid() const override { return true; }
+
+  virtual bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
+
+  virtual LockType GetType() override { return TYPE_CROSS_PROCESS_MUTEX; }
+
+  CrossProcessMutex mMutex;
 };
 
 // static
@@ -1498,6 +1527,9 @@ TextureReadLock::Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllo
       }
 
       return lock.forget();
+    }
+    case ReadLockDescriptor::TCrossProcessMutexHandle: {
+      return MakeAndAddRef<CrossProcessMutexReadLock>(aDescriptor.get_CrossProcessMutexHandle());
     }
     case ReadLockDescriptor::Tnull_t: {
       return nullptr;
@@ -1536,7 +1568,7 @@ MemoryTextureReadLock::~MemoryTextureReadLock()
 }
 
 bool
-MemoryTextureReadLock::Serialize(ReadLockDescriptor& aOutput)
+MemoryTextureReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
 {
   // AddRef here and Release when receiving on the host side to make sure the
   // reference count doesn't go to zero before the host receives the message.
@@ -1596,7 +1628,7 @@ ShmemTextureReadLock::~ShmemTextureReadLock()
 }
 
 bool
-ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput)
+ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
 {
   aOutput = ReadLockDescriptor(GetShmemSection());
   return true;
@@ -1639,6 +1671,21 @@ ShmemTextureReadLock::GetReadCount() {
   }
   ShmReadLockInfo* info = GetShmReadLockInfoPtr();
   return info->readCount;
+}
+
+bool
+CrossProcessMutexReadLock::Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther)
+{
+  aOutput = ReadLockDescriptor(mMutex.ShareToProcess(aOther));
+  return true;
+}
+
+void
+TextureClient::EnableBlockingReadLock()
+{
+  if (!mReadLock) {
+    mReadLock = new CrossProcessMutexReadLock();
+  }
 }
 
 bool
