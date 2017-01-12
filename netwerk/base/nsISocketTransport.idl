@@ -18,8 +18,8 @@ union NetAddr;
 %}
 native NetAddr(mozilla::net::NetAddr);
 [ptr] native NetAddrPtr(mozilla::net::NetAddr);
-native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
-[ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 /**
  * nsISocketTransport
@@ -58,7 +58,7 @@ interface nsISocketTransport : nsITransport
     attribute jsval originAttributes;
 
     [noscript, nostdcall, binaryname(GetOriginAttributes)]
-    NeckoOriginAttributes binaryGetOriginAttributes();
+    OriginAttributes binaryGetOriginAttributes();
 
     [noscript, nostdcall, binaryname(SetOriginAttributes)]
     void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);

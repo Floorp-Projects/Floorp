@@ -239,7 +239,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
       nsAutoCString spec;
       spec.AppendPrintf("spec write %d", i);
       reg.principal() =
-        mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(i, i % 2), spec);
+        mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(i, i % 2), spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -262,7 +262,7 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     ASSERT_EQ(data[i].principal().type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
     const mozilla::ipc::ContentPrincipalInfo& cInfo = data[i].principal();
 
-    mozilla::PrincipalOriginAttributes attrs(i, i % 2);
+    mozilla::OriginAttributes attrs(i, i % 2);
     nsAutoCString suffix, expectSuffix;
     attrs.CreateSuffix(expectSuffix);
     cInfo.attrs().CreateSuffix(suffix);
@@ -593,7 +593,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
       nsAutoCString spec;
       spec.AppendPrintf("spec write dedupe/%d", i);
       reg.principal() =
-        mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(0, false), spec);
+        mozilla::ipc::ContentPrincipalInfo(mozilla::OriginAttributes(0, false), spec);
 
       swr->TestRegisterServiceWorker(reg);
     }
@@ -614,7 +614,7 @@ TEST(ServiceWorkerRegistrar, TestDedupeWrite)
   ASSERT_EQ(data[0].principal().type(), mozilla::ipc::PrincipalInfo::TContentPrincipalInfo);
   const mozilla::ipc::ContentPrincipalInfo& cInfo = data[0].principal();
 
-  mozilla::PrincipalOriginAttributes attrs(0, false);
+  mozilla::OriginAttributes attrs(0, false);
   nsAutoCString suffix, expectSuffix;
   attrs.CreateSuffix(expectSuffix);
   cInfo.attrs().CreateSuffix(suffix);

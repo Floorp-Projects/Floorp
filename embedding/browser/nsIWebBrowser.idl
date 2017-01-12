@@ -15,11 +15,11 @@ interface nsIWeakReference;
 
 %{C++
 namespace mozilla {
-class DocShellOriginAttributes;
+class OriginAttributes;
 }
 %}
 
-[ref] native const_OriginAttributesRef(const mozilla::DocShellOriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 /**
  * The nsIWebBrowser interface is implemented by web browser objects.

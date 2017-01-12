@@ -52,7 +52,7 @@ public:
   bool mIsPrivateBitValid;
   bool mIsContent;
   bool mUseRemoteTabs;
-  mozilla::DocShellOriginAttributes mOriginAttributes;
+  mozilla::OriginAttributes mOriginAttributes;
 };
 
 // Function to serialize over IPDL

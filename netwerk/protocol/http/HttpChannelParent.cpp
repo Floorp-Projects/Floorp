@@ -359,7 +359,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     return SendFailedAsyncOpen(rv);
   }
 
-  NeckoOriginAttributes attrs;
+  OriginAttributes attrs;
   rv = loadInfo->GetOriginAttributes(&attrs);
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);
@@ -556,11 +556,10 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     }
 
     if (setChooseApplicationCache) {
-      NeckoOriginAttributes neckoAttrs;
-      NS_GetOriginAttributes(mChannel, neckoAttrs);
+      OriginAttributes attrs;
+      NS_GetOriginAttributes(mChannel, attrs);
+      attrs.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
 
-      PrincipalOriginAttributes attrs;
-      attrs.InheritFromNecko(neckoAttrs);
       nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 

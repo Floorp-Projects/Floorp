@@ -90,7 +90,7 @@ using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
 using class mozilla::dom::MessagePort from "mozilla/dom/MessagePort.h";
 using class mozilla::dom::ipc::StructuredCloneData from "mozilla/dom/ipc/StructuredCloneData.h";
 using mozilla::DataStorageType from "ipc/DataStorageIPCUtils.h";
-using mozilla::DocShellOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::dom::FlyWebPublishOptions from "mozilla/dom/FlyWebPublishOptionsIPCSerializer.h";
 using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
@@ -1066,7 +1066,7 @@ parent:
                       bool aSizeSpecified,
                       nsCString aFeatures,
                       nsCString aBaseURI,
-                      DocShellOriginAttributes aOpenerOriginAttributes,
+                      OriginAttributes aOpenerOriginAttributes,
                       float aFullZoom)
       returns (nsresult rv,
                bool windowOpened,
@@ -1084,7 +1084,7 @@ parent:
       URIParams aURIToLoad,
       nsCString aFeatures,
       nsCString aBaseURI,
-      DocShellOriginAttributes aOpenerOriginAttributes,
+      OriginAttributes aOpenerOriginAttributes,
       float aFullZoom);
 
     sync GetDeviceStorageLocation(nsString type)

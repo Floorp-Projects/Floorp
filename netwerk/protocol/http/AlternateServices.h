@@ -63,7 +63,7 @@ public:
                             const nsCString &originHost, int32_t originPort,
                             const nsACString &username, bool privateBrowsing,
                             nsIInterfaceRequestor *callbacks, nsProxyInfo *proxyInfo,
-                            uint32_t caps, const NeckoOriginAttributes &originAttributes);
+                            uint32_t caps, const OriginAttributes &originAttributes);
 
   const nsCString &AlternateHost() const { return mAlternateHost; }
   const nsCString &OriginHost() const { return mOriginHost; }
@@ -76,7 +76,7 @@ public:
   bool HTTPS() { return mHttps; }
 
   void GetConnectionInfo(nsHttpConnectionInfo **outCI, nsProxyInfo *pi,
-                         const NeckoOriginAttributes &originAttributes);
+                         const OriginAttributes &originAttributes);
 
   int32_t TTL();
   int32_t StorageEpoch() { return mStorageEpoch; }
@@ -169,7 +169,7 @@ public:
   virtual ~AltSvcCache () {};
   void UpdateAltServiceMapping(AltSvcMapping *map, nsProxyInfo *pi,
                                nsIInterfaceRequestor *, uint32_t caps,
-                               const NeckoOriginAttributes &originAttributes); // main thread
+                               const OriginAttributes &originAttributes); // main thread
   already_AddRefed<AltSvcMapping> GetAltServiceMapping(const nsACString &scheme,
                                                        const nsACString &host,
                                                        int32_t port, bool pb);

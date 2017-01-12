@@ -1362,7 +1362,7 @@ struct StorageDirectoryHelper::OriginProps
 
   nsCOMPtr<nsIFile> mDirectory;
   nsCString mSpec;
-  PrincipalOriginAttributes mAttrs;
+  OriginAttributes mAttrs;
   int64_t mTimestamp;
   nsCString mSuffix;
   nsCString mGroup;
@@ -1415,7 +1415,7 @@ class MOZ_STACK_CLASS OriginParser final
   };
 
   const nsCString mOrigin;
-  const PrincipalOriginAttributes mOriginAttributes;
+  const OriginAttributes mOriginAttributes;
   Tokenizer mTokenizer;
 
   uint32_t mAppId;
@@ -1433,7 +1433,7 @@ class MOZ_STACK_CLASS OriginParser final
 
 public:
   OriginParser(const nsACString& aOrigin,
-               const PrincipalOriginAttributes& aOriginAttributes)
+               const OriginAttributes& aOriginAttributes)
     : mOrigin(aOrigin)
     , mOriginAttributes(aOriginAttributes)
     , mTokenizer(aOrigin, '+')
@@ -1449,10 +1449,10 @@ public:
   static bool
   ParseOrigin(const nsACString& aOrigin,
               nsCString& aSpec,
-              PrincipalOriginAttributes* aAttrs);
+              OriginAttributes* aAttrs);
 
   bool
-  Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs);
+  Parse(nsACString& aSpec, OriginAttributes* aAttrs);
 
 private:
   void
@@ -1875,7 +1875,7 @@ CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
 {
   AssertIsOnIOThread();
 
-  PrincipalOriginAttributes groupAttributes;
+  OriginAttributes groupAttributes;
 
   nsCString groupNoSuffix;
   bool ok = groupAttributes.PopulateFromOrigin(aGroup, groupNoSuffix);
@@ -1890,7 +1890,7 @@ CreateDirectoryMetadata(nsIFile* aDirectory, int64_t aTimestamp,
 
   nsCString group = groupPrefix + groupNoSuffix;
 
-  PrincipalOriginAttributes originAttributes;
+  OriginAttributes originAttributes;
 
   nsCString originNoSuffix;
   ok = originAttributes.PopulateFromOrigin(aOrigin, originNoSuffix);
@@ -4567,7 +4567,7 @@ QuotaManager::EnsureOriginIsInitialized(PersistenceType aPersistenceType,
 
     if (!leafName.EqualsLiteral(kChromeOrigin)) {
       nsCString spec;
-      PrincipalOriginAttributes attrs;
+      OriginAttributes attrs;
       bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
                                               spec, &attrs);
       if (NS_WARN_IF(!result)) {
@@ -6547,7 +6547,7 @@ StorageDirectoryHelper::AddOriginDirectory(nsIFile* aDirectory,
     originProps->mType = OriginProps::eChrome;
   } else {
     nsCString spec;
-    PrincipalOriginAttributes attrs;
+    OriginAttributes attrs;
     bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
                                             spec, &attrs);
     if (NS_WARN_IF(!result)) {
@@ -6685,12 +6685,12 @@ StorageDirectoryHelper::Run()
 bool
 OriginParser::ParseOrigin(const nsACString& aOrigin,
                           nsCString& aSpec,
-                          PrincipalOriginAttributes* aAttrs)
+                          OriginAttributes* aAttrs)
 {
   MOZ_ASSERT(!aOrigin.IsEmpty());
   MOZ_ASSERT(aAttrs);
 
-  PrincipalOriginAttributes originAttributes;
+  OriginAttributes originAttributes;
 
   nsCString originNoSuffix;
   bool ok = originAttributes.PopulateFromOrigin(aOrigin, originNoSuffix);
@@ -6703,7 +6703,7 @@ OriginParser::ParseOrigin(const nsACString& aOrigin,
 }
 
 bool
-OriginParser::Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs)
+OriginParser::Parse(nsACString& aSpec, OriginAttributes* aAttrs)
 {
   MOZ_ASSERT(aAttrs);
 
@@ -6742,7 +6742,7 @@ OriginParser::Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs)
   } else {
     MOZ_ASSERT(mOriginAttributes.mAppId == kNoAppId);
 
-    *aAttrs = PrincipalOriginAttributes(mAppId, mInIsolatedMozBrowser);
+    *aAttrs = OriginAttributes(mAppId, mInIsolatedMozBrowser);
   }
 
   nsAutoCString spec(mSchema);

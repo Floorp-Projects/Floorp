@@ -485,7 +485,7 @@ StorageManagerBase::ClearCaches(uint32_t aUnloadFlags,
                                 const nsACString& aOriginScope)
 {
   for (auto iter1 = mCaches.Iter(); !iter1.Done(); iter1.Next()) {
-    PrincipalOriginAttributes oa;
+    OriginAttributes oa;
     DebugOnly<bool> rv = oa.PopulateFromSuffix(iter1.Key());
     MOZ_ASSERT(rv);
     if (!aPattern.Matches(oa)) {

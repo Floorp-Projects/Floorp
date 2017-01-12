@@ -1590,7 +1590,7 @@ MatchOrigin(nsIFile* aPath,
   nsresult rv;
   nsCString str;
   nsCString originNoSuffix;
-  mozilla::PrincipalOriginAttributes originAttributes;
+  mozilla::OriginAttributes originAttributes;
 
   rv = ReadFromFile(aPath, NS_LITERAL_CSTRING("origin"), str, MaxDomainLength);
   if (!originAttributes.PopulateFromOrigin(str, originNoSuffix)) {
@@ -1603,7 +1603,7 @@ MatchOrigin(nsIFile* aPath,
     return true;
   }
 
-  mozilla::PrincipalOriginAttributes topLevelOriginAttributes;
+  mozilla::OriginAttributes topLevelOriginAttributes;
   rv = ReadFromFile(aPath, NS_LITERAL_CSTRING("topLevelOrigin"), str, MaxDomainLength);
   if (!topLevelOriginAttributes.PopulateFromOrigin(str, originNoSuffix)) {
     // Fails on paring the originAttributes, treat this as a non-match.

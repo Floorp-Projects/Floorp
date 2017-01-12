@@ -20,13 +20,13 @@
 #include "sslt.h"
 
 namespace mozilla {
-class NeckoOriginAttributes;
+class OriginAttributes;
 namespace psm {
 class SharedSSLState;
 } // namespace psm
 } // namespace mozilla
 
-using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 
 class nsIObserver;
 
@@ -229,7 +229,7 @@ nsresult nsSSLIOLayerNewSocket(int32_t family,
                                const char* host,
                                int32_t port,
                                nsIProxyInfo *proxy,
-                               const NeckoOriginAttributes& originAttributes,
+                               const OriginAttributes& originAttributes,
                                PRFileDesc** fd,
                                nsISupports** securityInfo,
                                bool forSTARTTLS,
@@ -239,7 +239,7 @@ nsresult nsSSLIOLayerAddToSocket(int32_t family,
                                  const char* host,
                                  int32_t port,
                                  nsIProxyInfo *proxy,
-                                 const NeckoOriginAttributes& originAttributes,
+                                 const OriginAttributes& originAttributes,
                                  PRFileDesc* fd,
                                  nsISupports** securityInfo,
                                  bool forSTARTTLS,
