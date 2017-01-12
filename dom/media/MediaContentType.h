@@ -7,42 +7,46 @@
 #ifndef MediaContentType_h_
 #define MediaContentType_h_
 
-#include "MediaMIMETypes.h"
 #include "mozilla/Maybe.h"
 #include "nsString.h"
 
 namespace mozilla {
 
-// Class containing media type information for containers.
+// Structure containing pre-parsed content type parameters, e.g.:
+// MIME type, optional codecs, etc.
 class MediaContentType
 {
 public:
-  explicit MediaContentType(const MediaMIMEType& aType)
-    : mExtendedMIMEType(aType)
-  {}
-  explicit MediaContentType(MediaMIMEType&& aType)
-    : mExtendedMIMEType(Move(aType))
-  {}
-  explicit MediaContentType(const MediaExtendedMIMEType& aType)
-    : mExtendedMIMEType(aType)
-  {
-  }
-  explicit MediaContentType(MediaExtendedMIMEType&& aType)
-    : mExtendedMIMEType(Move(aType))
-  {
-  }
+  // MIME type. Guaranteed not to be empty.
+  const nsACString& GetMIMEType() const { return mMIMEType; }
 
-  const MediaMIMEType& Type() const { return mExtendedMIMEType.Type(); }
-  const MediaExtendedMIMEType& ExtendedType() const { return mExtendedMIMEType; }
+  // Was there an explicit 'codecs' parameter provided?
+  bool HaveCodecs() const { return mHaveCodecs; }
+  // Codecs. May be empty if not provided or explicitly provided as empty.
+  const nsAString& GetCodecs() const { return mCodecs; }
 
-  // Original string. Note that "type/subtype" may not be lowercase,
-  // use Type().AsString() instead to get the normalized "type/subtype".
-  const nsACString& OriginalString() const { return mExtendedMIMEType.OriginalString(); }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  // Sizes and rates.
+  Maybe<int32_t> GetWidth() const { return GetMaybeNumber(mWidth); }
+  Maybe<int32_t> GetHeight() const { return GetMaybeNumber(mHeight); }
+  Maybe<int32_t> GetFramerate() const { return GetMaybeNumber(mFramerate); }
+  Maybe<int32_t> GetBitrate() const { return GetMaybeNumber(mBitrate); }
 
 private:
-  MediaExtendedMIMEType mExtendedMIMEType;
+  friend Maybe<MediaContentType> MakeMediaContentType(const nsAString& aType);
+  bool Populate(const nsAString& aType);
+
+  Maybe<int32_t> GetMaybeNumber(int32_t aNumber) const
+  {
+    return (aNumber < 0) ? Maybe<int32_t>(Nothing()) : Some(int32_t(aNumber));
+  }
+
+  nsCString mMIMEType; // UTF8 MIME type.
+  bool mHaveCodecs; // If false, mCodecs must be empty.
+  nsString mCodecs;
+  int32_t mWidth; // -1 if not provided.
+  int32_t mHeight; // -1 if not provided.
+  int32_t mFramerate; // -1 if not provided.
+  int32_t mBitrate; // -1 if not provided.
 };
 
 Maybe<MediaContentType> MakeMediaContentType(const nsAString& aType);

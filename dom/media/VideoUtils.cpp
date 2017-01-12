@@ -510,11 +510,11 @@ CreateTrackInfoWithMIMETypeAndContentTypeExtraParameters(
   if (trackInfo) {
     VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
     if (videoInfo) {
-      Maybe<int32_t> maybeWidth = aContentType.ExtendedType().GetWidth();
+      Maybe<int32_t> maybeWidth = aContentType.GetWidth();
       if (maybeWidth && *maybeWidth > 0) {
         videoInfo->mImage.width = *maybeWidth;
       }
-      Maybe<int32_t> maybeHeight = aContentType.ExtendedType().GetHeight();
+      Maybe<int32_t> maybeHeight = aContentType.GetHeight();
       if (maybeHeight && *maybeHeight > 0) {
         videoInfo->mImage.height = *maybeHeight;
       }
