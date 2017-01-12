@@ -11,7 +11,6 @@ module.exports = {
     "brace-style": "warn",
     "consistent-return": "warn",
     "no-cond-assign": "warn",
-    "no-else-return": "warn",
     "no-ex-assign": "warn",
     "no-func-assign": "warn",
     "no-native-reassign": "warn",

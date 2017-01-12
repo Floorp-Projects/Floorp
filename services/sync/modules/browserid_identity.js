@@ -407,9 +407,8 @@ this.BrowserIDManager.prototype = {
       // field directly and instead call a isSyncKeyValid() function
       // that we can override.
       return "99999999999999999999999999";
-    } else {
-      return null;
     }
+    return null;
   },
 
   set syncKey(value) {
