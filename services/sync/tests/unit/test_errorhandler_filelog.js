@@ -273,8 +273,6 @@ add_test(function test_login_error_logOnError_true() {
 add_test(function test_errorLog_dumpAddons() {
   Svc.Prefs.set("log.appender.file.logOnError", true);
 
-  let log = Log.repository.getLogger("Sync.Test.FileLog");
-
   // We need to wait until the log cleanup started by this test is complete
   // or the next test will fail as it is ongoing.
   Svc.Obs.add("services-tests:common:log-manager:cleanup-logs", function onCleanupLogs() {

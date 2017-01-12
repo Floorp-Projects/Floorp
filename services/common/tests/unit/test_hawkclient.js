@@ -202,7 +202,7 @@ add_task(function* test_offset_after_request() {
 
   do_check_eq(client.localtimeOffsetMsec, 0);
 
-  let response = yield client.request("/foo", method, TEST_CREDS);
+  yield client.request("/foo", method, TEST_CREDS);
   // Should be about an hour off
   do_check_true(Math.abs(client.localtimeOffsetMsec + HOUR_MS) < SECOND_MS);
 
@@ -236,9 +236,6 @@ add_task(function* test_offset_in_hawk_header() {
   });
 
   let client = new HawkClient(server.baseURI);
-  function getOffset() {
-    return client.localtimeOffsetMsec;
-  }
 
   client.now = () => {
     return Date.now() + 12 * HOUR_MS;
@@ -316,9 +313,6 @@ add_task(function* test_retry_request_on_fail() {
   });
 
   let client = new HawkClient(server.baseURI);
-  function getOffset() {
-    return client.localtimeOffsetMsec;
-  }
 
   client.now = () => {
     return Date.now() + 12 * HOUR_MS;
@@ -360,9 +354,6 @@ add_task(function* test_multiple_401_retry_once() {
   });
 
   let client = new HawkClient(server.baseURI);
-  function getOffset() {
-    return client.localtimeOffsetMsec;
-  }
 
   client.now = () => {
     return Date.now() - 12 * HOUR_MS;
@@ -402,9 +393,6 @@ add_task(function* test_500_no_retry() {
   });
 
   let client = new HawkClient(server.baseURI);
-  function getOffset() {
-    return client.localtimeOffsetMsec;
-  }
 
   // Throw off the clock so the HawkClient would want to retry the request if
   // it could
@@ -464,9 +452,6 @@ add_task(function* test_401_then_500() {
   });
 
   let client = new HawkClient(server.baseURI);
-  function getOffset() {
-    return client.localtimeOffsetMsec;
-  }
 
   client.now = () => {
     return Date.now() - 12 * HOUR_MS;

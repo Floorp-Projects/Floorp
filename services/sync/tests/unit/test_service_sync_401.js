@@ -21,12 +21,10 @@ function login_handling(handler) {
 }
 
 add_task(async function run_test() {
-  let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
-  let collections = collectionsHelper.collections;
 
   let server = httpd_setup({
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),

@@ -98,7 +98,7 @@ add_task(function* test_something() {
   ok(!sss.isSecureHost(sss.HEADER_HSTS, "five.example.com", 0));
 
   // Test an empty db populates
-  let result = yield PinningPreloadClient.maybeSync(2000, Date.now());
+  yield PinningPreloadClient.maybeSync(2000, Date.now());
 
   let connection = yield FirefoxAdapter.openConnection({path: KINTO_STORAGE_PATH});
 

@@ -336,7 +336,7 @@ BookmarksEngine.prototype = {
     }
 
     for (let [node, parent] of walkBookmarksRoots(tree)) {
-      let {guid, id, type: placeType} = node;
+      let {guid, type: placeType} = node;
       guid = PlacesSyncUtils.bookmarks.guidToSyncId(guid);
       let key;
       switch (placeType) {

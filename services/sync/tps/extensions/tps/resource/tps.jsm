@@ -432,7 +432,6 @@ var TPS = {
     this.shouldValidatePasswords = true;
     try {
       for (let password of passwords) {
-        let password_id = -1;
         Logger.logInfo("executing action " + action.toUpperCase() +
                       " on password " + JSON.stringify(password));
         let passwordOb = new Password(password);

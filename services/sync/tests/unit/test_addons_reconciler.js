@@ -106,7 +106,6 @@ add_test(function test_uninstall_detection() {
 
   let addon = installAddon("test_bootstrap1_1");
   let id = addon.id;
-  let guid = addon.syncGUID;
 
   reconciler._changes = [];
   uninstallAddon(addon);
