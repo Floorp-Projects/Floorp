@@ -169,7 +169,6 @@ devtools.jar:
     skin/images/breakpoint.svg (themes/images/breakpoint.svg)
     skin/webconsole.css (themes/webconsole.css)
     skin/images/webconsole.svg (themes/images/webconsole.svg)
-    skin/images/breadcrumbs-divider@2x.png (themes/images/breadcrumbs-divider@2x.png)
     skin/images/breadcrumbs-scrollbutton.png (themes/images/breadcrumbs-scrollbutton.png)
     skin/images/breadcrumbs-scrollbutton@2x.png (themes/images/breadcrumbs-scrollbutton@2x.png)
     skin/animationinspector.css (themes/animationinspector.css)
