@@ -49,16 +49,6 @@ this.BreadcrumbsWidget = function BreadcrumbsWidget(aNode, aOptions = {}) {
   this._list.addEventListener("underflow", this._onUnderflow.bind(this), false);
   this._list.addEventListener("overflow", this._onOverflow.bind(this), false);
 
-  // These separators are used for CSS purposes only, and are positioned
-  // off screen, but displayed with -moz-element.
-  this._separators = this.document.createElement("box");
-  this._separators.className = "breadcrumb-separator-container";
-  this._separators.innerHTML =
-                    "<box id='breadcrumb-separator-before'></box>" +
-                    "<box id='breadcrumb-separator-after'></box>" +
-                    "<box id='breadcrumb-separator-normal'></box>";
-  this._parent.appendChild(this._separators);
-
   // This widget emits events that can be handled in a MenuContainer.
   EventEmitter.decorate(this);
 
