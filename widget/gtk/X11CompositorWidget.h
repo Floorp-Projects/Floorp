@@ -27,6 +27,7 @@ class X11CompositorWidget
 {
 public:
   X11CompositorWidget(const CompositorWidgetInitData& aInitData,
+                      const layers::CompositorOptions& aOptions,
                       nsWindow* aWindow = nullptr);
   ~X11CompositorWidget();
 

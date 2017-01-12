@@ -17,7 +17,8 @@ class CompositorWidgetParent final
    public X11CompositorWidget
 {
 public:
-  explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData);
+  explicit CompositorWidgetParent(const CompositorWidgetInitData& aInitData,
+                                  const layers::CompositorOptions& aOptions);
   ~CompositorWidgetParent() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override { }
