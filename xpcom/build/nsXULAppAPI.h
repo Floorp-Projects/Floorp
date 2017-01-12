@@ -515,7 +515,7 @@ XRE_API(void,
 #include "LibFuzzerRegistry.h"
 
 XRE_API(void,
-        XRE_LibFuzzerSetMain, (LibFuzzerMain))
+        XRE_LibFuzzerSetDriver, (LibFuzzerDriver))
 
 XRE_API(void,
         XRE_LibFuzzerGetFuncs, (const char*, LibFuzzerInitFunc*,
