@@ -9,6 +9,7 @@
 #include "mozilla/RefPtr.h"
 #include "Units.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/LayersTypes.h"
 
 class nsIWidget;
@@ -77,7 +78,9 @@ public:
    * Create an in-process compositor widget. aWidget may be ignored if the
    * platform does not require it.
    */
-  static RefPtr<CompositorWidget> CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget);
+  static RefPtr<CompositorWidget> CreateLocal(const CompositorWidgetInitData& aInitData,
+                                              const layers::CompositorOptions& aOptions,
+                                              nsIWidget* aWidget);
 
   /**
    * Called before rendering using OMTC. Returns false when the widget is
@@ -252,6 +255,14 @@ public:
   virtual void ObserveVsync(VsyncObserver* aObserver) = 0;
 
   /**
+   * Get the compositor options for the compositor associated with this
+   * CompositorWidget.
+   */
+  const layers::CompositorOptions& GetCompositorOptions() {
+    return mOptions;
+  }
+
+  /**
    * This is only used by out-of-process compositors.
    */
   virtual RefPtr<VsyncObserver> GetVsyncObserver() const;
@@ -274,10 +285,13 @@ public:
   }
 
 protected:
+  explicit CompositorWidget(const layers::CompositorOptions& aOptions);
   virtual ~CompositorWidget();
 
   // Back buffer of BasicCompositor
   RefPtr<gfx::DrawTarget> mLastBackBuffer;
+
+  layers::CompositorOptions mOptions;
 };
 
 } // namespace widget
