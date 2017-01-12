@@ -6,3 +6,12 @@
 == text-align-match-parent-root-rtl.html text-align-match-parent-root-rtl-ref.html
 
 == text-word-spacing-001.html text-word-spacing-ref.html
+
+== segment-break-transformation-removable-1.html segment-break-transformation-removable-ref.html
+== segment-break-transformation-removable-2.html segment-break-transformation-removable-ref.html
+== segment-break-transformation-removable-3.html segment-break-transformation-removable-ref.html
+== segment-break-transformation-removable-4.html segment-break-transformation-removable-ref.html
+== segment-break-transformation-unremovable-1.html segment-break-transformation-unremovable-ref.html
+== segment-break-transformation-unremovable-2.html segment-break-transformation-unremovable-ref.html
+== segment-break-transformation-unremovable-3.html segment-break-transformation-unremovable-ref.html
+== segment-break-transformation-unremovable-4.html segment-break-transformation-unremovable-ref.html
