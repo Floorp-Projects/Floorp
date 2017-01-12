@@ -103,9 +103,10 @@ static bool
 WasmHandleDebugTrap()
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
-    FrameIterator iter(*activation);
+    FrameIterator iter(activation);
     MOZ_ASSERT(iter.debugEnabled());
     const CallSite* site = iter.debugTrapCallsite();
     MOZ_ASSERT(site);
@@ -138,12 +139,13 @@ WasmHandleDebugTrap()
 }
 
 static void
-WasmHandleDebugThrow()
+WasmHandleThrow()
 {
     WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    MOZ_ASSERT(activation);
     JSContext* cx = activation->cx();
 
-    for (FrameIterator iter(*activation); !iter.done(); ++iter) {
+    for (FrameIterator iter(activation, FrameIterator::Unwind::True); !iter.done(); ++iter) {
         if (!iter.debugEnabled())
             continue;
 
@@ -349,8 +351,8 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
       case SymbolicAddress::HandleDebugTrap:
         return FuncCast(WasmHandleDebugTrap, Args_General0);
-      case SymbolicAddress::HandleDebugThrow:
-        return FuncCast(WasmHandleDebugThrow, Args_General0);
+      case SymbolicAddress::HandleThrow:
+        return FuncCast(WasmHandleThrow, Args_General0);
       case SymbolicAddress::ReportTrap:
         return FuncCast(WasmReportTrap, Args_General1);
       case SymbolicAddress::ReportOutOfBounds:

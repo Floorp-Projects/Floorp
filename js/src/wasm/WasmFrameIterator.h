@@ -51,19 +51,24 @@ struct TrapOffset;
 // function stack frame.
 class FrameIterator
 {
-    const WasmActivation* activation_;
+  public:
+    enum class Unwind { True, False };
+
+  private:
+    WasmActivation* activation_;
     const Code* code_;
     const CallSite* callsite_;
     const CodeRange* codeRange_;
     uint8_t* fp_;
     uint8_t* pc_;
+    Unwind unwind_;
     bool missingFrameMessage_;
 
     void settle();
 
   public:
     explicit FrameIterator();
-    explicit FrameIterator(const WasmActivation& activation);
+    explicit FrameIterator(WasmActivation* activation, Unwind unwind = Unwind::False);
     void operator++();
     bool done() const;
     const char* filename() const;
