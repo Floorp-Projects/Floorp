@@ -17,6 +17,5 @@ module.exports = {
     "no-nested-ternary": "warn",
     "no-octal": "warn",
     "no-redeclare": "warn",
-    "no-unreachable": "warn",
   }
 };
