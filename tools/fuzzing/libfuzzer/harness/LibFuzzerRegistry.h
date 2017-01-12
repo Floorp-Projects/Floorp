@@ -14,9 +14,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Types.h"
 
-typedef int(*LibFuzzerMain)(int, char**);
 typedef int(*LibFuzzerInitFunc)(int*, char***);
 typedef int(*LibFuzzerTestingFunc)(const uint8_t*, size_t);
+typedef int(*LibFuzzerMain)(int, char**, LibFuzzerInitFunc, LibFuzzerTestingFunc);
 
 namespace mozilla {
 

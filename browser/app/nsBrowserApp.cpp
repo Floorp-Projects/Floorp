@@ -164,14 +164,7 @@ static bool IsArg(const char* arg, const char* s)
 Bootstrap::UniquePtr gBootstrap;
 
 #ifdef LIBFUZZER
-int libfuzzer_main(int argc, char **argv);
-
-/* This wrapper is used by the libFuzzer main to call into libxul */
-
-void libFuzzerGetFuncs(const char* moduleName, LibFuzzerInitFunc* initFunc,
-                       LibFuzzerTestingFunc* testingFunc) {
-  return gBootstrap->XRE_LibFuzzerGetFuncs(moduleName, initFunc, testingFunc);
-}
+int libfuzzer_main(int argc, char **argv, LibFuzzerInitFunc, LibFuzzerTestingFunc);
 #endif
 
 static int do_main(int argc, char* argv[], char* envp[])

@@ -24,10 +24,11 @@ public:
 
 int LibFuzzerRunner::Run(int argc, char** argv) {
   ScopedXPCOM xpcom("LibFuzzer");
-  return mFuzzerMain(argc, argv);
+  LibFuzzerInitFunc initFunc = nullptr;
+  LibFuzzerTestingFunc testingFunc = nullptr;
+  XRE_LibFuzzerGetFuncs(getenv("LIBFUZZER"), &initFunc, &testingFunc);
+  return mFuzzerMain(argc, argv, initFunc, testingFunc);
 }
-
-typedef int(*LibFuzzerMain)(int, char**);
 
 void LibFuzzerRunner::setParams(LibFuzzerMain main) {
   mFuzzerMain = main;
