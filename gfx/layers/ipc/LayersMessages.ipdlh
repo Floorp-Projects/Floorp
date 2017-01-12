@@ -6,6 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include LayersSurfaces;
+include protocol PCompositable;
 include protocol PCompositorBridge;
 include protocol PRenderFrame;
 include protocol PTexture;
@@ -49,7 +50,6 @@ using mozilla::layers::BorderColors from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderCorners from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::BorderWidths from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
-using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 
 namespace mozilla {
 namespace layers {
@@ -73,12 +73,12 @@ struct OpCreateRefLayer        { LayerHandle layer; };
 
 struct OpAttachCompositable {
   LayerHandle layer;
-  CompositableHandle compositable;
+  PCompositable compositable;
 };
 
 struct OpAttachAsyncCompositable {
   LayerHandle layer;
-  CompositableHandle compositable;
+  uint64_t containerID;
 };
 
 struct ThebesBufferData {
@@ -469,7 +469,7 @@ union CompositableOperationDetail {
 };
 
 struct CompositableOperation {
-  CompositableHandle compositable;
+  PCompositable compositable;
   CompositableOperationDetail detail;
 };
 
@@ -507,13 +507,13 @@ union Edit {
 // operations for safety.
 union OpDestroy {
   PTexture;
-  CompositableHandle;
+  PCompositable;
 };
 
 // Replies to operations
 
 struct OpContentBufferSwap {
-  CompositableHandle compositable;
+  PCompositable compositable;
   nsIntRegion frontUpdatedRegion;
 };
 
@@ -522,7 +522,7 @@ struct OpContentBufferSwap {
  * image is composited by an ImageHost.
  */
 struct ImageCompositeNotification {
-  CompositableHandle compositable;
+  uint64_t asyncCompositableID;
   TimeStamp imageTimeStamp;
   TimeStamp firstCompositeTimeStamp;
   uint32_t frameID;

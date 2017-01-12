@@ -1206,7 +1206,7 @@ PluginInstanceParent::SetScrollCaptureId(uint64_t aScrollCaptureId)
     return NS_ERROR_FAILURE;
   }
 
-  mImageContainer = new ImageContainer(CompositableHandle(aScrollCaptureId));
+  mImageContainer = new ImageContainer(aScrollCaptureId);
   return NS_OK;
 }
 

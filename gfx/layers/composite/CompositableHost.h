@@ -43,19 +43,21 @@ class Compositor;
 class ThebesBufferData;
 class TiledContentHost;
 class CompositableParentManager;
+class PCompositableParent;
 struct EffectChain;
 
 struct AsyncCompositableRef
 {
   AsyncCompositableRef()
-   : mProcessId(mozilla::ipc::kInvalidProcessId)
+   : mProcessId(mozilla::ipc::kInvalidProcessId),
+     mAsyncId(0)
   {}
-  AsyncCompositableRef(base::ProcessId aProcessId, const CompositableHandle& aHandle)
-   : mProcessId(aProcessId), mHandle(aHandle)
+  AsyncCompositableRef(base::ProcessId aProcessId, uint64_t aAsyncId)
+   : mProcessId(aProcessId), mAsyncId(aAsyncId)
   {}
-  explicit operator bool() const { return !!mHandle; }
+  explicit operator bool() const { return !!mAsyncId; }
   base::ProcessId mProcessId;
-  CompositableHandle mHandle;
+  uint64_t mAsyncId;
 };
 
 /**
@@ -78,7 +80,7 @@ protected:
   virtual ~CompositableHost();
 
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositableHost)
+  NS_INLINE_DECL_REFCOUNTING(CompositableHost)
   explicit CompositableHost(const TextureInfo& aTextureInfo);
 
   static already_AddRefed<CompositableHost> Create(const TextureInfo& aTextureInfo);
@@ -186,6 +188,9 @@ public:
   }
   bool IsAttached() { return mAttached; }
 
+  static void
+  ReceivedDestroy(PCompositableParent* aActor);
+
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
                     bool aDumpHtml=false) { }
@@ -215,6 +220,14 @@ public:
     mFlashCounter = mFlashCounter >= DIAGNOSTIC_FLASH_COUNTER_MAX
                   ? DIAGNOSTIC_FLASH_COUNTER_MAX : mFlashCounter + 1;
   }
+
+  static PCompositableParent*
+  CreateIPDLActor(CompositableParentManager* mgr,
+                  const TextureInfo& textureInfo);
+
+  static bool DestroyIPDLActor(PCompositableParent* actor);
+
+  static CompositableHost* FromIPDLActor(PCompositableParent* actor);
 
   uint64_t GetCompositorID() const { return mCompositorID; }
 

@@ -12,10 +12,11 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
 #include "mozilla/layers/LayersMessages.h"  // for EditReply, etc
-#include "CompositableHost.h"
 
 namespace mozilla {
 namespace layers {
+
+class CompositableHost;
 
 typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 
@@ -38,11 +39,6 @@ public:
 
   uint64_t GetFwdTransactionId() { return mFwdTransactionId; }
 
-  RefPtr<CompositableHost> AddCompositable(
-    const CompositableHandle& aHandle,
-    const TextureInfo& aInfo);
-  RefPtr<CompositableHost> FindCompositable(const CompositableHandle& aHandle);
-
 protected:
   /**
    * Handle the IPDL messages that affect PCompositable actors.
@@ -50,14 +46,7 @@ protected:
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                  EditReplyVector& replyv);
 
-  void ReleaseCompositable(const CompositableHandle& aHandle);
-
   uint64_t mFwdTransactionId = 0;
-
-  /**
-   * Mapping form IDs to CompositableHosts.
-   */
-  std::map<uint64_t, RefPtr<CompositableHost>> mCompositables;
 };
 
 } // namespace layers
