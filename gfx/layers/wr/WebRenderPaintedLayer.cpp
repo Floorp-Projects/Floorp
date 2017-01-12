@@ -28,6 +28,10 @@ WebRenderPaintedLayer::PaintThebes()
     mContentClient->BeginPaintBuffer(this, flags);
   mValidRegion.Sub(mValidRegion, state.mRegionToInvalidate);
 
+  if (!state.mRegionToDraw.IsEmpty() && !Manager()->GetPaintedLayerCallback()) {
+    return;
+  }
+
   // The area that became invalid and is visible needs to be repainted
   // (this could be the whole visible area if our buffer switched
   // from RGB to RGBA, because we might need to repaint with
@@ -63,8 +67,6 @@ WebRenderPaintedLayer::PaintThebes()
   }
   if (didUpdate) {
     Mutated();
-
-    mValidRegion.Or(mValidRegion, state.mRegionToDraw);
 
     ContentClientRemote* contentClientRemote = static_cast<ContentClientRemote*>(mContentClient.get());
     MOZ_ASSERT(contentClientRemote->GetIPDLActor());
@@ -102,7 +104,6 @@ WebRenderPaintedLayer::RenderLayerWithReadback(ReadbackProcessor *aReadback)
   mContentClient->BeginPaint();
   PaintThebes();
   mContentClient->EndPaint(&readbackUpdates);
-
 }
 
 void
@@ -142,8 +143,11 @@ WebRenderPaintedLayer::RenderLayer()
 
   WRBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(ToWRRect(rect), ToWRRect(clip), Nothing(), mExternalImageId));
 
+  ContentClientRemoteBuffer* contentClientRemote = static_cast<ContentClientRemoteBuffer*>(mContentClient.get());
+  visibleRegion.MoveBy(-contentClientRemote->BufferRect().x, -contentClientRemote->BufferRect().y);
+
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(visibleRegion, ToWRRect(rect), ToWRRect(clip), Nothing(), mExternalImageId));
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 }
