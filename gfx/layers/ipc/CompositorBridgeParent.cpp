@@ -39,6 +39,7 @@
 #include "mozilla/layers/BasicCompositor.h"  // for BasicCompositor
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorOGL.h"  // for CompositorOGL
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"
@@ -321,11 +322,11 @@ CompositorBridgeParent::CompositorBridgeParent(CSSToLayoutDeviceScale aScale,
 void
 CompositorBridgeParent::InitSameProcess(widget::CompositorWidget* aWidget,
                                         const uint64_t& aLayerTreeId,
-                                        bool aUseAPZ)
+                                        const CompositorOptions& aOptions)
 {
   mWidget = aWidget;
   mRootLayerTreeID = aLayerTreeId;
-  if (aUseAPZ) {
+  if (aOptions.UseAPZ()) {
     mApzcTreeManager = new APZCTreeManager();
   }
 

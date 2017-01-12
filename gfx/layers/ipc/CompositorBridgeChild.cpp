@@ -234,7 +234,7 @@ CompositorBridgeParent*
 CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
                                        const uint64_t& aLayerTreeId,
                                        CSSToLayoutDeviceScale aScale,
-                                       bool aUseAPZ,
+                                       const CompositorOptions& aOptions,
                                        bool aUseExternalSurface,
                                        const gfx::IntSize& aSurfaceSize)
 {
@@ -250,7 +250,7 @@ CompositorBridgeChild::InitSameProcess(widget::CompositorWidget* aWidget,
   MOZ_RELEASE_ASSERT(ok);
 
   InitIPDL();
-  mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId, aUseAPZ);
+  mCompositorBridgeParent->InitSameProcess(aWidget, aLayerTreeId, aOptions);
   return mCompositorBridgeParent;
 }
 

@@ -63,6 +63,7 @@ class APZCTreeManagerParent;
 class AsyncCompositionManager;
 class Compositor;
 class CompositorBridgeParent;
+class CompositorOptions;
 class CompositorVsyncScheduler;
 class HostLayerManager;
 class LayerTransactionParent;
@@ -163,7 +164,7 @@ public:
   // free the compositor.
   void InitSameProcess(widget::CompositorWidget* aWidget,
                        const uint64_t& aLayerTreeId,
-                       bool aUseAPZ);
+                       const CompositorOptions& aOptions);
 
   // Must only be called by GPUParent. After invoking this, the IPC channel
   // is active and RecvWillStop/ActorDestroy must be called to free the

@@ -27,7 +27,7 @@ InProcessCompositorSession::Create(nsIWidget* aWidget,
                                    LayerManager* aLayerManager,
                                    const uint64_t& aRootLayerTreeId,
                                    CSSToLayoutDeviceScale aScale,
-                                   bool aUseAPZ,
+                                   const CompositorOptions& aOptions,
                                    bool aUseExternalSurfaceSize,
                                    const gfx::IntSize& aSurfaceSize)
 {
@@ -37,7 +37,7 @@ InProcessCompositorSession::Create(nsIWidget* aWidget,
   RefPtr<CompositorWidget> widget = CompositorWidget::CreateLocal(initData, aWidget);
   RefPtr<CompositorBridgeChild> child = new CompositorBridgeChild(aLayerManager);
   RefPtr<CompositorBridgeParent> parent =
-    child->InitSameProcess(widget, aRootLayerTreeId, aScale, aUseAPZ, aUseExternalSurfaceSize, aSurfaceSize);
+    child->InitSameProcess(widget, aRootLayerTreeId, aScale, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
 
   return new InProcessCompositorSession(widget, child, parent);
 }
