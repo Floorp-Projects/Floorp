@@ -152,6 +152,11 @@ int nr_ice_candidate_pair_destroy(nr_ice_cand_pair **pairp)
     pair=*pairp;
     *pairp=0;
 
+    // record stats back to the ice ctx on destruction
+    if (pair->stun_client) {
+      nr_ice_accumulate_count(&(pair->local->ctx->stats.stun_retransmits), pair->stun_client->retransmit_ct);
+    }
+
     RFREE(pair->as_string);
     RFREE(pair->foundation);
     nr_ice_socket_deregister(pair->local->isock,pair->stun_client_handle);

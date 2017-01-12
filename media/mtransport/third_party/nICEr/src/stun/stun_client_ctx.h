@@ -168,6 +168,7 @@ struct nr_stun_client_ctx_ {
   char *realm;
   void *timer_handle;
   int request_ct;
+  UINT2 retransmit_ct;
   UINT4 rto_ms;    /* retransmission time out */
   double retransmission_backoff_factor;
   UINT4 maximum_transmits;
