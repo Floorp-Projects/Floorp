@@ -20,52 +20,6 @@ class CompositorBridgeChild;
 class KnowsCompositor;
 class PCompositorBridgeChild;
 class WebRenderBridgeChild;
-
-static inline WRColor toWrColor(const gfx::Color& color)
-{
-  WRColor c;
-  c.r = color.r;
-  c.g = color.g;
-  c.b = color.b;
-  c.a = color.a;
-  return c;
-}
-
-static inline WRBorderSide toWrBorderSide(const LayerCoord width, const gfx::Color& color)
-{
-  WRBorderSide bs;
-  bs.width = width;
-  bs.color = toWrColor(color);
-  bs.style = WRBorderStyle::Solid;
-  return bs;
-}
-
-static inline WRLayoutSize toWrLayoutSize(const LayerSize size)
-{
-  WRLayoutSize ls;
-  ls.width = size.width;
-  ls.height = size.height;
-  return ls;
-}
-
-template<class T>
-static inline WRRect toWrRect(const gfx::RectTyped<T>& rect)
-{
-  WRRect r;
-  r.x = rect.x;
-  r.y = rect.y;
-  r.width = rect.width;
-  r.height = rect.height;
-  return r;
-}
-
-template<class T>
-static inline WRRect toWrRect(const gfx::IntRectTyped<T>& rect)
-{
-  return toWrRect(IntRectToRect(rect));
-}
-
-
 class WebRenderLayerManager;
 class APZCTreeManager;
 

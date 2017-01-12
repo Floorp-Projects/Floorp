@@ -24,7 +24,7 @@ WebRenderContainerLayer::RenderLayer()
   if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds/overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
 
   WRBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(toWrRect(relBounds), toWrRect(relBounds), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+    OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(relBounds), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     ToWebRenderLayer(child.layer)->RenderLayer();
   }
@@ -40,7 +40,7 @@ WebRenderRefLayer::RenderLayer()
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Matrix4x4 transform;// = GetTransform();
   if (gfxPrefs::LayersDump()) printf_stderr("RefLayer %p (%" PRIu64 ") using %s as bounds/overflow, %s as transform\n", this, mId, Stringify(relBounds).c_str(), Stringify(transform).c_str());
-  WRBridge()->AddWebRenderCommand(OpDPPushIframe(toWrRect(relBounds), toWrRect(relBounds), mId));
+  WRBridge()->AddWebRenderCommand(OpDPPushIframe(ToWRRect(relBounds), ToWRRect(relBounds), mId));
 }
 
 } // namespace layers

@@ -73,8 +73,8 @@ WebRenderPaintedLayer::RenderLayer()
   Matrix4x4 transform;// = GetTransform();
 
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(toWrRect(relBounds), toWrRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushImage(toWrRect(rect), toWrRect(clip), Nothing(), key));
+      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+  WRBridge()->AddWebRenderCommand(OpDPPushImage(ToWRRect(rect), ToWRRect(clip), Nothing(), key));
   Manager()->AddImageKeyForDiscard(key);
 
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
