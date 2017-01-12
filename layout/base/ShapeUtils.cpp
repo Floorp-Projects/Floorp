@@ -9,10 +9,7 @@
 #include <cstdlib>
 
 #include "nsCSSRendering.h"
-#include "nsRuleNode.h"
-#include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
-#include "SVGContentUtils.h"
 
 namespace mozilla {
 
@@ -46,35 +43,6 @@ ShapeUtils::ComputeCircleOrEllipseCenter(StyleBasicShape* const aBasicShape,
                                             size, size,
                                             &topLeft, &anchor);
   return nsPoint(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
-}
-
-nscoord
-ShapeUtils::ComputeCircleRadius(StyleBasicShape* const aBasicShape,
-                                const nsPoint& aCenter,
-                                const nsRect& aRefBox)
-{
-  const nsTArray<nsStyleCoord>& coords = aBasicShape->Coordinates();
-  MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
-  nscoord r = 0;
-  if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
-    const auto styleShapeRadius = coords[0].GetEnumValue<StyleShapeRadius>();
-    nscoord horizontal =
-      ComputeShapeRadius(styleShapeRadius, aCenter.x, aRefBox.x, aRefBox.XMost());
-    nscoord vertical =
-      ComputeShapeRadius(styleShapeRadius, aCenter.y, aRefBox.y, aRefBox.YMost());
-    r = styleShapeRadius == StyleShapeRadius::FarthestSide
-          ? std::max(horizontal, vertical)
-          : std::min(horizontal, vertical);
-  } else {
-    // We resolve percent <shape-radius> value for circle() as defined here:
-    // https://drafts.csswg.org/css-shapes/#funcdef-circle
-    double referenceLength =
-      SVGContentUtils::ComputeNormalizedHypotenuse(aRefBox.width,
-                                                   aRefBox.height);
-    r = nsRuleNode::ComputeCoordPercentCalc(coords[0],
-                                            NSToCoordRound(referenceLength));
-  }
-  return r;
 }
 
 } // namespace mozilla

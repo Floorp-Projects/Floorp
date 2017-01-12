@@ -115,7 +115,33 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
 
   nsPoint center =
     ShapeUtils::ComputeCircleOrEllipseCenter(basicShape, aRefBox);
-  nscoord r = ShapeUtils::ComputeCircleRadius(basicShape, center, aRefBox);
+
+  const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
+  MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
+  nscoord r = 0;
+  if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
+    const auto styleShapeRadius = coords[0].GetEnumValue<StyleShapeRadius>();
+    nscoord horizontal =
+      ShapeUtils::ComputeShapeRadius(styleShapeRadius, center.x, aRefBox.x,
+                                     aRefBox.x + aRefBox.width);
+    nscoord vertical =
+      ShapeUtils::ComputeShapeRadius(styleShapeRadius, center.y, aRefBox.y,
+                                     aRefBox.y + aRefBox.height);
+    if (styleShapeRadius == StyleShapeRadius::FarthestSide) {
+      r = horizontal > vertical ? horizontal : vertical;
+    } else {
+      r = horizontal < vertical ? horizontal : vertical;
+    }
+  } else {
+    // We resolve percent <shape-radius> value for circle() as defined here:
+    // https://drafts.csswg.org/css-shapes/#funcdef-circle
+    double referenceLength =
+      SVGContentUtils::ComputeNormalizedHypotenuse(aRefBox.width,
+                                                   aRefBox.height);
+    r = nsRuleNode::ComputeCoordPercentCalc(coords[0],
+                                            NSToCoordRound(referenceLength));
+  }
+
   nscoord appUnitsPerDevPixel =
     mTargetFrame->PresContext()->AppUnitsPerDevPixel();
   builder->Arc(Point(center.x, center.y) / appUnitsPerDevPixel,
