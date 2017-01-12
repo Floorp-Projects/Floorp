@@ -82,6 +82,9 @@ class CFGBlock : public TempObject
     jsbytecode* startPc() const {
         return start;
     }
+    void setStartPc(jsbytecode* startPc) {
+        start = startPc;
+    }
     jsbytecode* stopPc() const {
         MOZ_ASSERT(stop);
         return stop;
