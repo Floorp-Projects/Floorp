@@ -3,21 +3,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import unittest
 
 from marionette_driver.addons import Addons, AddonInstallException
-
-from marionette_harness import MarionetteTestCase
+from marionette_harness import MarionetteTestCase, skip
 
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
 class TestAddons(MarionetteTestCase):
+
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.addons = Addons(self.marionette)
-
 
     @property
     def all_addon_ids(self):
@@ -49,7 +47,7 @@ class TestAddons(MarionetteTestCase):
         with self.assertRaises(AddonInstallException):
             self.addons.install(addon_path)
 
-    @unittest.skip("need to get the test extension signed")
+    @skip("Need to get the test extension signed")
     def test_install_and_remove_signed_addon(self):
         addon_path = os.path.join(here, 'mn-restartless-signed.xpi')
 
