@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % webideDTD SYSTEM "chrome://devtools/locale/webide.dtd" >
+  %webideDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf8"/>
+    <link rel="stylesheet" href="chrome://webide/skin/deck.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://webide/skin/config-view.css" type="text/css"/>
+    <script type="application/javascript;version=1.8" src="chrome://webide/content/devicesettings.js"></script>
+  </head>
+  <body>
+    <header>
+      <div id="controls">
+        <a id="close">&deck_close;</a>
+      </div>
+      <h1>&devicesetting_title;</h1>
+      <div id="search">
+        <input type="text" id="search-bar" placeholder="&devicesetting_search;"/>
+      </div>
+    </header>
+    <table id="device-fields">
+      <tr id="add-custom-field">
+        <td>
+          <select id="custom-value-type">
+            <option value="" selected="selected">&device_typenone;</option>
+            <option value="boolean">&device_typeboolean;</option>
+            <option value="number">&device_typenumber;</option>
+            <option value="string">&device_typestring;</option>
+            <option value="object">&device_typeobject;</option>
+          </select>
+          <input type="text" id="custom-value-name" placeholder="&devicesetting_newname;"/>
+        </td>
+        <td class="custom-input">
+          <input type="text" id="custom-value-text" placeholder="&devicesetting_newtext;"/>
+        </td>
+        <td>
+          <button id="custom-value" class="new-editable">&devicesetting_addnew;</button>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

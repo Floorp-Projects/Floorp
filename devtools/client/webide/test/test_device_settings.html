@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript;version=1.8" src="head.js"></script>
+    <script type="application/javascript;version=1.8" src="device_front_shared.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript;version=1.8">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        Task.spawn(function*() {
+          if (SpecialPowers.isMainProcess()) {
+            Cu.import("resource://gre/modules/SettingsRequestManager.jsm");
+          }
+
+          if (!DebuggerServer.initialized) {
+            DebuggerServer.init();
+            DebuggerServer.addBrowserActors();
+          }
+
+          let win = yield openWebIDE();
+
+          let settingIframe = win.document.querySelector("#deck-panel-devicesettings");
+          let docRuntime = getRuntimeDocument(win);
+
+          win.AppManager.update("runtime-list");
+
+          yield connectToLocalRuntime(win);
+
+          let settings = docRuntime.querySelector("#runtime-settings");
+
+          ok(!settings.hasAttribute("disabled"), "device settings cmd enabled");
+
+          let deck = win.document.querySelector("#deck");
+
+          win.Cmds.showSettings();
+          is(deck.selectedPanel, settingIframe, "device settings iframe selected");
+
+          yield nextTick();
+
+          yield lazyIframeIsLoaded(settingIframe);
+
+          yield settingIframe.contentWindow.getAllSettings;
+
+          setDocument(settingIframe);
+
+          let fields = doc.querySelectorAll(".editable");
+
+          addNewField();
+
+          addNewFieldWithEnter();
+
+          editExistingField();
+
+          addNewFieldInteger();
+
+          yield editFieldInteger();
+
+          yield resetNewField("new-string-field");
+
+          addNewFieldBoolean();
+
+          searchFields(deck, "new-boolean-field2");
+
+          DebuggerServer.destroy();
+
+          yield closeWebIDE(win);
+
+          SimpleTest.finish();
+        }).then(null, e => {
+          ok(false, "Exception: " + e);
+          SimpleTest.finish();
+        });
+      }
+    </script>
+  </body>
+</html>

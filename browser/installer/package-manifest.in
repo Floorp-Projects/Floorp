@@ -207,6 +207,7 @@
 @RESPATH@/components/dom_quota.xpt
 @RESPATH@/components/dom_range.xpt
 @RESPATH@/components/dom_security.xpt
+@RESPATH@/components/dom_settings.xpt
 @RESPATH@/components/dom_sidebar.xpt
 @RESPATH@/components/dom_storage.xpt
 @RESPATH@/components/dom_stylesheets.xpt
@@ -501,6 +502,8 @@
 @RESPATH@/components/XULStore.manifest
 @RESPATH@/components/messageWakeupService.js
 @RESPATH@/components/messageWakeupService.manifest
+@RESPATH@/components/SettingsManager.js
+@RESPATH@/components/SettingsManager.manifest
 @RESPATH@/components/recording-cmdline.js
 @RESPATH@/components/recording-cmdline.manifest
 @RESPATH@/components/htmlMenuBuilder.js

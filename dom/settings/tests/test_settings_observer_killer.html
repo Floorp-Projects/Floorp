@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1193469
+-->
+<head>
+  <title>Test for Bug 1193469 Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1193469">Mozilla Bug 1193469</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+var url = SimpleTest.getTestFileURL("file_loadserver.js");
+var script = SpecialPowers.loadChromeScript(url);
+
+SimpleTest.waitForExplicitFinish();
+
+SpecialPowers.pushPrefEnv({
+  set: [["dom.mozSettings.enabled", true]]
+},
+  function () {
+    ok(true, "abusing observers");
+
+    var obs;
+    for (obs = 0; obs < 9; obs++) {
+      navigator.mozSettings.addObserver("fake.setting.key", function(v) {
+        // nothing to do for real ...
+        ok(false, "should not be called");
+      });
+      ok(true, "first: added observer #" + obs);
+    }
+    ok(true, "adding first observers, should not have thrown");
+
+    try {
+      ok(true, "second: adding new observer");
+      navigator.mozSettings.addObserver("fake.setting.key", function(v) {
+        // nothing to do for real ...
+        ok(false, "should not be called");
+      });
+      ok(false, "adding too many observers should have thrown");
+    } catch (ex) {
+      ok(true, "got exception when trying to add too many observers");
+    }
+
+    SimpleTest.finish();
+  });
+
+</script>
+</pre>
+</body>
+</html>

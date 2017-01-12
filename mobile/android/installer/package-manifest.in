@@ -132,6 +132,7 @@
 @BINPATH@/components/dom_quota.xpt
 @BINPATH@/components/dom_range.xpt
 @BINPATH@/components/dom_security.xpt
+@BINPATH@/components/dom_settings.xpt
 @BINPATH@/components/dom_sidebar.xpt
 @BINPATH@/components/dom_mobilemessage.xpt
 @BINPATH@/components/dom_storage.xpt
@@ -270,6 +271,8 @@
 @BINPATH@/components/Push.manifest
 @BINPATH@/components/PushComponents.js
 #endif
+@BINPATH@/components/SettingsManager.js
+@BINPATH@/components/SettingsManager.manifest
 @BINPATH@/components/BrowserElementParent.manifest
 @BINPATH@/components/BrowserElementParent.js
 @BINPATH@/components/FeedProcessor.manifest

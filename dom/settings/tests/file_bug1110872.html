@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Test for Bug {1110872} Settings API Reloads</title>
+    </head>
+    <body>
+        <script type="application/javascript;version=1.7">
+
+         var createLock = function (msg) {
+             var lock = navigator.mozSettings.createLock();
+             var req = lock.get("wallpaper.image");
+             // We don't actually care about success or failure here, we just
+             // want to know the queue gets processed at all.
+             req.onsuccess = function () {
+                 parent.postMessage({name:"done" + msg.data.step}, "*");
+             }
+             req.onerror = function () {
+                 parent.postMessage({name:"done" + msg.data.step}, "*");
+             };
+             return req;
+         }
+         window.onload = function() {
+             window.addEventListener("message", function (msg) {
+                 var i;
+                 var reqs = [];
+                 if (msg.data.step == 1) {
+                     for (i = 0; i < 100; ++i) {
+                         reqs.push(createLock(msg));
+                     }
+                 } else {
+                     reqs.push(createLock(msg));
+                 }
+                 // If this is our first time through, reload
+                 // before the SettingsManager has a chance to get a response
+                 // to our query.
+                 if (msg.data.step == 1) {
+                     location.reload();
+                 }
+             });
+         }
+        </script>
+        <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1110872}">Mozilla Bug {1110872} Inner Window for Reload Test</a>
+        <p id="display"></p>
+        <div id="content" style="display: none">
+        </div>
+    </body>
+</html>

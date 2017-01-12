@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={678695}
+-->
+<head>
+  <title>Test for Bug {678695} Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={678695}">Mozilla Bug {678695}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+var url = SimpleTest.getTestFileURL("file_loadserver.js");
+var script = SpecialPowers.loadChromeScript(url);
+
+function onUnwantedSuccess() {
+  ok(false, "onUnwantedSuccess: shouldn't get here");
+}
+
+function onFailure() {
+  ok(false, "in on Failure!");
+}
+
+const wifi  = {"net3g.apn": "internet.mnc012.mcc345.gprs"};
+const wifi2 = {"net3g.apn": "internet.mnc012.mcc345.test"};
+var wifi3 = {"net3g.apn2": "internet.mnc012.mcc345.test3"};
+var wifiEnabled = {"wifi.enabled": true};
+var wifiDisabled = {"wifi.enabled": false};
+var screenBright = {"screen.brightness": 0.7};
+var screenBright2 = {"screen.brightness": 0.1};
+var wifiNetworks0 = { "wifi.networks[0]": { ssid: "myfreenetwork", mac: "01:23:45:67:89:ab", passwd: "secret"}};
+var wifiNetworks1 = { "wifi.networks[1]": { ssid: "myfreenetwork2", mac: "01:23:45:67:89:ab", passwd: "secret2"}};
+
+var combination = {
+  "wifi.enabled": false,
+  "screen.brightness": 0.7,
+  "wifi.networks[0]": { ssid: "myfreenetwork", mac: "01:23:45:67:89:ab", passwd: "secret" },
+  "test.test": true,
+  "net3g.apn2": "internet.mnc012.mcc345.gprs"
+}
+
+function equals(o1, o2) {
+  var k1 = Object.keys(o1).sort();
+  var k2 = Object.keys(o2).sort();
+  if (k1.length != k2.length) return false;
+  return k1.zip(k2, function(keyPair) {
+    if(typeof o1[keyPair[0]] == typeof o2[keyPair[1]] == "object"){
+      return equals(o1[keyPair[0]], o2[keyPair[1]])
+    } else {
+      return o1[keyPair[0]] == o2[keyPair[1]];
+    }
+  }).all();
+};
+
+function observer1(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, 0.7, "Same settingvalue");
+};
+
+function observer2(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, 0.7, "Same settingvalue");
+};
+
+function observerWithNext(setting) {
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, 0.7, "Same settingvalue");
+  next();
+};
+
+function onsettingschangeWithNext(event) {
+  is(event.settingName, "screen.brightness", "Same settingName");
+  is(event.settingValue, 0.7, "Same settingvalue");
+  next();
+};
+
+function check(o1, o2) {
+  is(JSON.stringify(o1), JSON.stringify(o2), "same");
+}
+
+var req, req2, req3, req4, req5, req6;
+var index = 0;
+
+var steps = [
+  function () {
+    ok(true, "Deleting database");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+  },
+  function () {
+    ok(true, "Setting wifi");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifi);
+    req.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req.onerror = onFailure;
+
+    var lock2 = navigator.mozSettings.createLock();
+    req2 = lock2.get("net3g.apn");
+    req2.onsuccess = function () {
+      is(Object.keys(req2.result).length, 1, "length 1");
+      check(wifi, req2.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Change wifi1");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifi2);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+    };
+    req.onerror = onFailure;
+    ok(true, "Get changed net3g.apn");
+    req2 = lock.get("net3g.apn");
+    req2.onsuccess = function () {
+      is(Object.keys(req2.result).length, 1, "length 1");
+      check(wifi2, req2.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Set Combination");
+    var lock = navigator.mozSettings.createLock();
+    req3 = lock.set(combination);
+    req3.onsuccess = function () {
+      ok(true, "set done");
+      req4 = lock.get("net3g.apn2");
+      req4.onsuccess = function() {
+        ok(true, "Done");
+        check(combination["net3g.apn2"], req4.result["net3g.apn2"]);
+        next();
+      }
+    }
+    req3.onerror = onFailure;
+  },
+  function() {
+    var lock = navigator.mozSettings.createLock();
+    req4 = lock.get("net3g.apn2");
+    req4.onsuccess = function() {
+      ok(true, "Done");
+      check(combination["net3g.apn2"], req4.result["net3g.apn2"]);
+      next();
+    }
+    req4.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Get unknown key");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("abc.def");
+    req.onsuccess = function() {
+      is(req.result["abc.def"], undefined, "no result");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "adding onsettingchange");
+    navigator.mozSettings.onsettingchange = onsettingschangeWithNext;
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.get("screen.brightness");
+    req2.onsuccess = function() {
+      ok(true, "end adding onsettingchange");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Test onsettingchange");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done, observer has to call next");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "delete onsettingschange");
+    var lock = navigator.mozSettings.createLock();
+    navigator.mozSettings.onsettingchange = null;
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Waiting for all set callbacks");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function() {
+      ok(true, "Done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "adding Observers 1");
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer2);
+    navigator.mozSettings.addObserver("screen.brightness", observerWithNext);
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.get("screen.brightness");
+    req2.onsuccess = function() {
+      ok(true, "set observeSetting done!");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test observers");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    navigator.mozSettings.removeObserver("screen.brightness", observerWithNext);
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      ok(true, "get done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Nested test");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      req3 = lock.set({"screen.brightness": req.result["screen.brightness"] + 1})
+      req3.onsuccess = function () {
+        req4 = lock.get("screen.brightness");
+        req4.onsuccess = function() {
+          is(req4.result["screen.brightness"], 1.7, "same Value");
+        }
+        req4.onerror = onFailure;
+      }
+      req3.onerror = onFailure;
+    };
+    req.onerror = onFailure;
+
+    req2 = lock.get("screen.brightness");
+    req2.onsuccess = function () {
+      is(req2.result["screen.brightness"], 0.7, "same Value");
+    }
+    req2.onerror = onFailure;
+
+    var lock2 = navigator.mozSettings.createLock();
+    req5 = lock2.get("screen.brightness");
+    req5.onsuccess = function () {
+      is(req5.result["screen.brightness"], 1.7, "same Value");
+      next();
+    }
+    req5.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+  },
+  function () {
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.set(wifi);
+    req2.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req2.onerror = onFailure;
+
+    ok(true, "Get all settings");
+    var lock2 = navigator.mozSettings.createLock();
+    req3 = lock2.get("*");
+    req3.onsuccess = function () {
+      is(Object.keys(req3.result).length, 1, "length 1");
+      check(req3.result, wifi);
+      ok(true, JSON.stringify(req3.result));
+      ok(true, "Get all settings Done");
+    };
+    req3.onerror = onFailure;
+
+    req4 = lock2.get("net3g.apn");
+    req4.onsuccess = function () {
+      is(Object.keys(req4.result).length, 1, "length 1");
+      check(wifi, req4.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req4.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Change wifi1");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifi2);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+    };
+    req.onerror = onFailure;
+
+    ok(true, "Get changed net3g.apn");
+    req2 = lock.get("net3g.apn");
+    req2.onsuccess = function () {
+      is(Object.keys(req2.result).length, 1, "length 1");
+      check(wifi2, req2.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test locking");
+    var lock = navigator.mozSettings.createLock();
+    var lock2 = navigator.mozSettings.createLock();
+    req = lock.set(wifiEnabled);
+    req.onsuccess = function () {
+      ok(true, "Test Locking Done");
+    };
+    req.onerror = onFailure;
+
+    req2 = lock2.set(wifiDisabled);
+    req2.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test locking result");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("wifi.enabled");
+    req.onsuccess = function() {
+      check(req.result, wifiDisabled);
+      ok(true, "Test1 locking result done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test locking heavy");
+    for (var i=0; i<30; i++) {
+      // only new locks!
+      var lock = navigator.mozSettings.createLock();
+      var obj = {};
+      obj["wifi.enabled" + i] = true;
+      req = lock.set( obj );
+      req.onsuccess = function () {
+        ok(true, "Set1 Done");
+      };
+      req.onerror = onFailure;
+    };
+    {
+      var lock2 = navigator.mozSettings.createLock();
+      req2 = lock2.get("*");
+      req2.onsuccess = function () {
+        is(Object.keys(req2.result).length, 32, "length 12");
+        ok(true, JSON.stringify(req2.result));
+        ok(true, "Get all settings Done");
+      };
+      req2.onerror = onFailure;
+    }
+    var lock2 = navigator.mozSettings.createLock();
+    var obj = {};
+    obj["wifi.enabled" + 30] = true;
+    req3 = lock2.set( obj );
+    req3.onsuccess = function () {
+      ok(true, "Set12 Done");
+    };
+    req3.onerror = onFailure;
+
+    var lock3 = navigator.mozSettings.createLock();
+    // with one lock
+    for (var i = 0; i < 30; i++) {
+      req4 = lock3.get("wifi.enabled" + i);
+      var testObj = {};
+      testObj["wifi.enabled" + i] = true;
+      req4.onsuccess = function () {
+        check(this.request.result, this.testObj);
+        ok(true, "Get1 Done");
+      }.bind({testObj: testObj, request: req4});
+      req4.onerror = onFailure;
+    }
+
+    ok(true, "start next2!");
+    var lock4 = navigator.mozSettings.createLock();
+    for (var i=0; i<30; i++) {
+      var obj = {};
+      obj["wifi.enabled" + i] = false;
+      req4 = lock4.set( obj );
+      req4.onsuccess = function () {
+        ok(true, "Set2 Done");
+      };
+      req4.onerror = onFailure;
+    }
+    var lock5 = navigator.mozSettings.createLock();
+    for (var i=0; i<30; i++) {
+      req5 = lock5.get("wifi.enabled" + i);
+      var testObj = {};
+      testObj["wifi.enabled" + i] = false;
+      req5.onsuccess = function () {
+        check(this.request.result, this.testObj);
+        ok(true, "Get2 Done");
+      }.bind({testObj: testObj, request: req5});
+      req5.onerror = onFailure;
+    }
+
+    var lock6 = navigator.mozSettings.createLock();
+    req6 = lock6.clear();
+    req6.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req6.onerror = onFailure;
+  },
+  function () {
+    ok(true, "reverse Test locking");
+    var lock2 = navigator.mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
+
+    req = lock.set(wifiEnabled);
+    req.onsuccess = function () {
+      ok(true, "Test Locking Done");
+      next();
+    };
+    req.onerror = onFailure;
+
+    req2 = lock2.set(wifiDisabled);
+    req2.onsuccess = function () {
+      ok(true, "Set Done");
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test locking result");
+    var lock = navigator.mozSettings.createLock();
+
+    req = lock.get("wifi.enabled");
+    req.onsuccess = function() {
+      check(req.result, wifiEnabled);
+      ok(true, "Test2 locking result done");
+    }
+    req.onerror = onFailure;
+
+    var lock2 = navigator.mozSettings.createLock();
+    req2 = lock2.clear();
+    req2.onsuccess = function () {
+      ok(true, "Deleted the database");
+    };
+    req2.onerror = onFailure;
+
+    var lock3 = navigator.mozSettings.createLock();
+    req3 = lock3.set(wifi);
+    req3.onsuccess = function () {
+      ok(true, "set done");
+      next();
+    }
+    req3.onerror = onFailure;
+
+  },
+  function () {
+    ok(true, "Get all settings");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("*");
+    req.onsuccess = function () {
+      is(Object.keys(req.result).length, 1, "length 1");
+      check(wifi, req.result);
+      ok(true, "Get all settings Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Get net3g.apn");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("net3g.apn");
+    req.onsuccess = function () {
+      is(Object.keys(req.result).length, 1, "length 1");
+      check(wifi, req.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Change wifi2");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifi2);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Get net3g.apn");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("net3g.apn");
+    req.onsuccess = function () {
+      is(Object.keys(req.result).length, 1, "length 1");
+      check(wifi2, req.result);
+      ok(true, "Get net3g.apn Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Add wifi.enabled");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifiEnabled);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Get Wifi Enabled");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("wifi.enabled");
+    req.onsuccess = function () {
+      is(Object.keys(req.result).length, 1, "length 1");
+      check(wifiEnabled, req.result);
+      ok(true, "Get wifi.enabledDone");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Get all");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("*");
+    req.onsuccess = function () {
+      is(Object.keys(req.result).length, 2, "length 2");
+      check(wifiEnabled["wifi.enabled"], req.result["wifi.enabled"]);
+      check(wifi2["net3g.apn"], req.result["net3g.apn"]);
+      ok(true, "Get all Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Add wifiNetworks");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifiNetworks0);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+    };
+    req.onerror = onFailure;
+
+    req2 = lock.set(wifiNetworks1);
+    req2.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Get Wifi Networks");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("wifi.networks[0]");
+    req.onsuccess = function () {
+      is(Object.keys(req.result).length, 1, "length 1");
+      check(wifiNetworks0, req.result);
+      ok(true, "Get wifi.networks[0]");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Clear DB, multiple locks");
+    var lock4 = navigator.mozSettings.createLock();
+    var lock3 = navigator.mozSettings.createLock();
+    var lock2 = navigator.mozSettings.createLock();
+    var lock = navigator.mozSettings.createLock();
+    var lock6 = navigator.mozSettings.createLock();
+    var lock7 = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Add wifiNetworks");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(wifiNetworks0);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test set after lock closed");
+    var lockx = navigator.mozSettings.createLock();
+    var cb = function() {
+      var reqx = null;
+      try {
+        reqx = lockx.set(wifiNetworks0);
+        ok(false, "should have thrown");
+      } catch (ex) {
+        ok(reqx == null, "request is still null");
+        ok(true, "Caught Exception");
+        next();
+      }
+    }
+    SimpleTest.executeSoon(cb);
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Set with multiple arguments");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(combination);
+    req.onsuccess = function () {
+      ok(true, "Set Done");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "request argument from multiple set");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      check(req.result["screen.brightness"], 0.7, "get done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Test closed attribute on a valid lock");
+    var lock = navigator.mozSettings.createLock();
+    is(lock.closed, false, "closed attribute is false on creation");
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      is(lock.closed, false, "closed attribute is false on success callback");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Test closed attribute on invalid lock");
+    var lockx = navigator.mozSettings.createLock();
+    var cb = function() {
+      var reqx = null;
+      try {
+        reqx = lockx.set(wifiNetworks0);
+        ok(false, "should have thrown");
+      } catch (ex) {
+        is(lockx.closed, true, "closed attribute is true");
+        ok(true, "Caught Exception");
+        next();
+      }
+    }
+    SimpleTest.executeSoon(cb);
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Set object value");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set({"setting-obj": {foo: {bar: 23}}});
+    req.onsuccess = function() {
+      req2 = lock.get("setting-obj");
+      req2.onsuccess = function(event) {
+        var result = event.target.result["setting-obj"];
+        ok(result, "Got valid result");
+        ok(typeof result == "object", "Result is object");
+        ok("foo" in result && "bar" in result.foo, "Result has properties");
+        ok(result.foo.bar == 23, "Result properties are set");
+        next();
+      };
+    };
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Call success callback when transaction commits");
+    var lock = navigator.mozSettings.createLock();
+    lock.onsettingstransactionsuccess = function () {
+      next();
+    };
+    req = lock.set({"setting-obj": {foo: {bar: 23}}});
+    req.onsuccess = function() {
+      req2 = lock.get("setting-obj");
+      req2.onsuccess = function(event) {
+        var result = event.target.result["setting-obj"];
+        ok(result, "Got valid result");
+        ok(typeof result == "object", "Result is object");
+        ok("foo" in result && "bar" in result.foo, "Result has properties");
+        ok(result.foo.bar == 23, "Result properties are set");
+      };
+    };
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  ok(true, "Begin!");
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+  index += 1;
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+</script>
+</pre>
+</body>
+</html>

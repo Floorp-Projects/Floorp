@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=678695
+-->
+<head>
+  <title>Test for Bug 678695 Settings API</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=678695">Mozilla Bug 678695</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+"use strict";
+
+var url = SimpleTest.getTestFileURL("file_loadserver.js");
+var script = SpecialPowers.loadChromeScript(url);
+
+var screenBright = {"screen.brightness": 0.7};
+
+function onFailure() {
+  ok(false, "in on Failure!");
+}
+
+function observer1(setting) {
+  dump("observer 1 called!\n");
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, 0.7, "Same settingvalue");
+};
+
+function observer2(setting) {
+  dump("observer 2 called!\n");
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, 0.7, "Same settingvalue");
+};
+
+var calls = 0;
+function observerOnlyCalledOnce(setting) {
+  is(++calls, 1, "Observer only called once!");
+};
+
+
+function observerWithNext(setting) {
+  dump("observer with next called!\n");
+  is(setting.settingName, "screen.brightness", "Same settingName");
+  is(setting.settingValue, 0.7, "Same settingvalue");
+  next();
+};
+
+function onsettingschangeWithNext(event) {
+  dump("onsettingschangewithnext called!\n");
+  is(event.settingName, "screen.brightness", "Same settingName");
+  is(event.settingValue, 0.7, "Same settingvalue");
+  next();
+};
+
+var cset = {'a':'b','c':[{'d':'e'}]};
+
+function onComplexSettingschangeWithNext(event) {
+  is(event.settingName, "test.key", "Same settingName");
+  is(event.settingValue['a'], "b", "Same settingvalue");
+  var c = event.settingValue['c'];
+  ok(Array.isArray(c), "c is array!");
+  is(c[0]['d'], 'e', "Right settingValue!");
+  next();
+};
+
+var req, req2;
+var index = 0;
+
+var steps = [
+  function () {
+    ok(true, "Deleting database");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.set(screenBright);
+    req2.onsuccess = function () {
+      ok(true, "set done");
+      navigator.mozSettings.onsettingchange = onsettingschangeWithNext;
+      next();
+    }
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "testing");
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.set(screenBright);
+    req2.onsuccess = function() {
+      ok(true, "end adding onsettingchange");
+    };
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test observers");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      ok(true, "get done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "adding Observers 1");
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer2);
+    navigator.mozSettings.addObserver("screen.brightness", observerOnlyCalledOnce);
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.get("screen.brightness");
+    req2.onsuccess = function() {
+      ok(true, "set observeSetting done!");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test observers");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set1 done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test observers");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    navigator.mozSettings.removeObserver("screen.brightness", observerOnlyCalledOnce);
+    req.onsuccess = function () {
+      ok(true, "set1 done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set2 done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+    }
+    req.onerror = onFailure;
+  },
+
+  function() {
+    ok(true, "delete onsettingschange");
+    var lock = navigator.mozSettings.createLock();
+    navigator.mozSettings.onsettingchange = null;
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set0 done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Waiting for all set callbacks");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function() {
+      ok(true, "Done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "adding Observers 1");
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer1);
+    navigator.mozSettings.addObserver("screen.brightness", observer2);
+    navigator.mozSettings.addObserver("screen.brightness", observerWithNext);
+    var lock = navigator.mozSettings.createLock();
+    req2 = lock.get("screen.brightness");
+    req2.onsuccess = function() {
+      ok(true, "set observeSetting done!");
+      next();
+    };
+    req2.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test observers");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set1 done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set2 done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "test Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set3 done");
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    navigator.mozSettings.removeObserver("screen.brightness", observerWithNext);
+    req = lock.set(screenBright);
+    req.onsuccess = function () {
+      ok(true, "set4 done");
+      navigator.mozSettings.removeObserver("screen.brightness", observer2);
+      navigator.mozSettings.removeObserver("screen.brightness", observer1);
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "removing Event Listener");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.get("screen.brightness");
+    req.onsuccess = function () {
+      ok(true, "get5 done");
+      next();
+    }
+    req.onerror = onFailure;
+  },
+  function() {
+    ok(true, "Clear DB");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    ok(true, "Deleting database");
+    var lock = navigator.mozSettings.createLock();
+    req = lock.clear();
+    req.onsuccess = function () {
+      ok(true, "Deleted the database");
+      next();
+    };
+    req.onerror = onFailure;
+  },
+  function () {
+    var lock = navigator.mozSettings.createLock();
+    navigator.mozSettings.onsettingchange = onComplexSettingschangeWithNext;
+    req2 = navigator.mozSettings.createLock().set({'test.key': cset});
+    req2.onsuccess = function () {
+      ok(true, "set done");
+    }
+    req2.onerror = onFailure;
+  },
+  function () {
+    ok(true, "all done!\n");
+    SimpleTest.finish();
+  }
+];
+
+function next() {
+  ok(true, "Begin!");
+  if (index >= steps.length) {
+    ok(false, "Shouldn't get here!");
+    return;
+  }
+  try {
+    steps[index]();
+  } catch(ex) {
+    ok(false, "Caught exception", ex);
+  }
+  index += 1;
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+</script>
+</pre>
+</body>
+</html>
