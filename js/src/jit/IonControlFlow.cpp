@@ -131,7 +131,7 @@ ControlFlowGraph::init(TempAllocator& alloc, const CFGBlockVector& blocks)
             CFGCompare* old = ins->toCompare();
             CFGBlock* trueBranch = &blocks_[old->trueBranch()->id()];
             CFGBlock* falseBranch = &blocks_[old->falseBranch()->id()];
-            copy = CFGCompare::New(alloc, trueBranch, falseBranch);
+            copy = CFGCompare::CopyWithNewTargets(alloc, old, trueBranch, falseBranch);
             break;
           }
           case CFGControlInstruction::Type_Return: {
@@ -1272,16 +1272,30 @@ ControlFlowGenerator::processCondSwitchCase(CFGState& state)
         bodyBlock = bodies[currentIdx - 1];
     }
 
-    CFGBlock* nextBlock = CFGBlock::New(alloc(), GetNextPc(pc));
-    CFGBlock* popBlock = CFGBlock::New(alloc(), pc);
-    current->setStopIns(CFGCompare::New(alloc(), popBlock, nextBlock));
-    current->setStopPc(pc);
-
-    if (!addBlock(popBlock))
+    CFGBlock* emptyBlock = CFGBlock::New(alloc(), bodyBlock->startPc());
+    emptyBlock->setStopIns(CFGGoto::New(alloc(), bodyBlock));
+    emptyBlock->setStopPc(bodyBlock->startPc());
+    if (!addBlock(emptyBlock))
         return ControlStatus::Error;
 
-    popBlock->setStopIns(CFGGoto::New(alloc(), bodyBlock, 1));
-    popBlock->setStopPc(pc);
+    if (nextIsDefault) {
+        CFGBlock* defaultBlock = bodies[state.switch_.defaultIdx];
+
+        CFGBlock* emptyBlock2 = CFGBlock::New(alloc(), defaultBlock->startPc());
+        emptyBlock2->setStopIns(CFGGoto::New(alloc(), defaultBlock));
+        emptyBlock2->setStopPc(defaultBlock->startPc());
+        if (!addBlock(emptyBlock2))
+            return ControlStatus::Error;
+
+        current->setStopIns(CFGCompare::NewFalseBranchIsDefault(alloc(), emptyBlock, emptyBlock2));
+        current->setStopPc(pc);
+
+        return processCondSwitchDefault(state);
+    }
+
+    CFGBlock* nextBlock = CFGBlock::New(alloc(), GetNextPc(pc));
+    current->setStopIns(CFGCompare::NewFalseBranchIsNextCompare(alloc(), emptyBlock, nextBlock));
+    current->setStopPc(pc);
 
     // Continue until the case condition.
     current = nextBlock;
@@ -1291,10 +1305,7 @@ ControlFlowGenerator::processCondSwitchCase(CFGState& state)
     if (!addBlock(current))
         return ControlStatus::Error;
 
-    if (!nextIsDefault)
-        return ControlStatus::Jumped;
-
-    return processCondSwitchDefault(state);
+    return ControlStatus::Jumped;
 }
 
 ControlFlowGenerator::ControlStatus
@@ -1302,18 +1313,11 @@ ControlFlowGenerator::processCondSwitchDefault(CFGState& state)
 {
     FixedList<CFGBlock*>& bodies = *state.switch_.bodies;
     uint32_t& currentIdx = state.switch_.currentIdx;
-    CFGBlock* bodyBlock = bodies[state.switch_.defaultIdx];
-
-    current->setStopIns(CFGGoto::New(alloc(), bodyBlock, 1));
-    current->setStopPc(pc);
 
     // The last case condition is finished.  Loop in processCondSwitchBody,
-    // with potential stops in processSwitchBreak.  Check that the bodies
-    // fixed list is over-estimate by at most 1, and shrink the size such as
-    // length can be used as an upper bound while iterating bodies.
+    // with potential stops in processSwitchBreak.
 
     // Test that we calculated the number of bodies correctly.
-    // Or currentIdx is
     MOZ_ASSERT(state.switch_.currentIdx == bodies.length() ||
                state.switch_.defaultIdx + 1 == bodies.length());
 
