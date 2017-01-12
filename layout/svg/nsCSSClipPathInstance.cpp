@@ -113,8 +113,12 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
-  nsPoint center =
-    ShapeUtils::ComputeCircleOrEllipseCenter(basicShape, aRefBox);
+  nsPoint topLeft, anchor;
+  nsSize size = nsSize(aRefBox.width, aRefBox.height);
+  nsImageRenderer::ComputeObjectAnchorPoint(basicShape->GetPosition(),
+                                            size, size,
+                                            &topLeft, &anchor);
+  nsPoint center(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
 
   const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 1, "wrong number of arguments");
@@ -159,8 +163,12 @@ nsCSSClipPathInstance::CreateClipPathEllipse(DrawTarget* aDrawTarget,
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
 
-  nsPoint center =
-    ShapeUtils::ComputeCircleOrEllipseCenter(basicShape, aRefBox);
+  nsPoint topLeft, anchor;
+  nsSize size = nsSize(aRefBox.width, aRefBox.height);
+  nsImageRenderer::ComputeObjectAnchorPoint(basicShape->GetPosition(),
+                                            size, size,
+                                            &topLeft, &anchor);
+  nsPoint center(anchor.x + aRefBox.x, anchor.y + aRefBox.y);
 
   const nsTArray<nsStyleCoord>& coords = basicShape->Coordinates();
   MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
