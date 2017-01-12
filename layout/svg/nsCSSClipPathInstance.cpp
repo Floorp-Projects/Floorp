@@ -11,7 +11,6 @@
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/ShapeUtils.h"
 #include "nsCSSRendering.h"
 #include "nsIFrame.h"
 #include "nsRenderingContext.h"
@@ -105,6 +104,22 @@ nsCSSClipPathInstance::CreateClipPath(DrawTarget* aDrawTarget)
   return builder->Finish();
 }
 
+static void
+EnumerationToLength(nscoord& aCoord, StyleShapeRadius aType,
+                    nscoord aCenter, nscoord aPosMin, nscoord aPosMax)
+{
+  nscoord dist1 = abs(aPosMin - aCenter);
+  nscoord dist2 = abs(aPosMax - aCenter);
+  switch (aType) {
+    case StyleShapeRadius::FarthestSide:
+      aCoord = dist1 > dist2 ? dist1 : dist2;
+      break;
+    case StyleShapeRadius::ClosestSide:
+      aCoord = dist1 > dist2 ? dist2 : dist1;
+      break;
+  }
+}
+
 already_AddRefed<Path>
 nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
                                             const nsRect& aRefBox)
@@ -125,12 +140,11 @@ nsCSSClipPathInstance::CreateClipPathCircle(DrawTarget* aDrawTarget,
   nscoord r = 0;
   if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
     const auto styleShapeRadius = coords[0].GetEnumValue<StyleShapeRadius>();
-    nscoord horizontal =
-      ShapeUtils::ComputeShapeRadius(styleShapeRadius, center.x, aRefBox.x,
-                                     aRefBox.x + aRefBox.width);
-    nscoord vertical =
-      ShapeUtils::ComputeShapeRadius(styleShapeRadius, center.y, aRefBox.y,
-                                     aRefBox.y + aRefBox.height);
+    nscoord horizontal, vertical;
+    EnumerationToLength(horizontal, styleShapeRadius,
+                        center.x, aRefBox.x, aRefBox.x + aRefBox.width);
+    EnumerationToLength(vertical, styleShapeRadius,
+                        center.y, aRefBox.y, aRefBox.y + aRefBox.height);
     if (styleShapeRadius == StyleShapeRadius::FarthestSide) {
       r = horizontal > vertical ? horizontal : vertical;
     } else {
@@ -174,18 +188,14 @@ nsCSSClipPathInstance::CreateClipPathEllipse(DrawTarget* aDrawTarget,
   MOZ_ASSERT(coords.Length() == 2, "wrong number of arguments");
   nscoord rx = 0, ry = 0;
   if (coords[0].GetUnit() == eStyleUnit_Enumerated) {
-    rx = ShapeUtils::ComputeShapeRadius(coords[0].GetEnumValue<StyleShapeRadius>(),
-                                        center.x,
-                                        aRefBox.x,
-                                        aRefBox.x + aRefBox.width);
+    EnumerationToLength(rx, coords[0].GetEnumValue<StyleShapeRadius>(),
+                        center.x, aRefBox.x, aRefBox.x + aRefBox.width);
   } else {
     rx = nsRuleNode::ComputeCoordPercentCalc(coords[0], aRefBox.width);
   }
   if (coords[1].GetUnit() == eStyleUnit_Enumerated) {
-    ry = ShapeUtils::ComputeShapeRadius(coords[1].GetEnumValue<StyleShapeRadius>(),
-                                        center.y,
-                                        aRefBox.y,
-                                        aRefBox.y + aRefBox.height);
+    EnumerationToLength(ry, coords[1].GetEnumValue<StyleShapeRadius>(),
+                        center.y, aRefBox.y, aRefBox.y + aRefBox.height);
   } else {
     ry = nsRuleNode::ComputeCoordPercentCalc(coords[1], aRefBox.height);
   }
