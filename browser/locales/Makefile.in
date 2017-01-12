@@ -104,9 +104,6 @@ libs-%:
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=$(PREF_DIR)
 	@$(MAKE) -C $(DEPTH)/$(MOZ_BRANDING_DIRECTORY)/locales AB_CD=$* XPI_NAME=locale-$*
-ifdef NIGHTLY_BUILD
-	@$(MAKE) -C ../extensions/webcompat-reporter/locale AB_CD=$* XPI_NAME=locale-$*
-endif
 
 repackage-win32-installer: WIN32_INSTALLER_OUT=$(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 repackage-win32-installer: $(call ESCAPE_WILDCARD,$(WIN32_INSTALLER_IN)) $(SUBMAKEFILES) libs-$(AB_CD)
