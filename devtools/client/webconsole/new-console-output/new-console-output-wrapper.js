@@ -49,21 +49,15 @@ NewConsoleOutputWrapper.prototype = {
         },
         hudProxyClient: this.jsterm.hud.proxy.client,
         onViewSourceInDebugger: frame => {
-          this.toolbox.viewSourceInDebugger.call(
-            this.toolbox,
-            frame.url,
-            frame.line
-          ).then(() =>
+          this.toolbox.viewSourceInDebugger(frame.url, frame.line).then(() =>
             this.jsterm.hud.emit("source-in-debugger-opened")
           );
         },
-        onViewSourceInScratchpad: frame => this.toolbox.viewSourceInScratchpad.call(
-          this.toolbox,
+        onViewSourceInScratchpad: frame => this.toolbox.viewSourceInScratchpad(
           frame.url,
           frame.line
         ),
-        onViewSourceInStyleEditor: frame => this.toolbox.viewSourceInStyleEditor.call(
-          this.toolbox,
+        onViewSourceInStyleEditor: frame => this.toolbox.viewSourceInStyleEditor(
           frame.url,
           frame.line
         ),
@@ -92,7 +86,7 @@ NewConsoleOutputWrapper.prototype = {
           });
         },
         sourceMapService: this.toolbox ? this.toolbox._sourceMapService : null,
-        openLink: url => this.jsterm.hud.owner.openLink.call(this.jsterm.hud.owner, url),
+        openLink: url => this.jsterm.hud.owner.openLink(url),
         createElement: nodename => {
           return this.document.createElementNS("http://www.w3.org/1999/xhtml", nodename);
         },

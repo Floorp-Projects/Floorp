@@ -72,6 +72,7 @@ SyncedTabsDeckComponent.prototype = {
   init() {
     Services.obs.addObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED, false);
     Services.obs.addObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION, false);
+    Services.obs.addObserver(this, "weave:service:login:change", false);
 
     // Go ahead and trigger sync
     this._SyncedTabs.syncTabs()
@@ -94,6 +95,7 @@ SyncedTabsDeckComponent.prototype = {
   uninit() {
     Services.obs.removeObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
     Services.obs.removeObserver(this, FxAccountsCommon.ONLOGIN_NOTIFICATION);
+    Services.obs.removeObserver(this, "weave:service:login:change");
     this._deckView.destroy();
   },
 
@@ -104,6 +106,7 @@ SyncedTabsDeckComponent.prototype = {
         this.updatePanel();
         break;
       case FxAccountsCommon.ONLOGIN_NOTIFICATION:
+      case "weave:service:login:change":
         this.updatePanel();
         break;
       default:
@@ -119,7 +122,7 @@ SyncedTabsDeckComponent.prototype = {
 
   getPanelStatus() {
     return this._accountStatus().then(exists => {
-      if (!exists) {
+      if (!exists || this._getChromeWindow(this._window).gSyncUI.loginFailed()) {
         return this.PANELS.NOT_AUTHED_INFO;
       }
       if (!this._SyncedTabs.isConfiguredToSyncTabs) {

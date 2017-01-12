@@ -338,6 +338,10 @@
   /* nsIInterceptedChannel */
   /* Generic error for non-specific failures during service worker interception */
   ERROR(NS_ERROR_INTERCEPTION_FAILED,                  FAILURE(100)),
+
+  /* nsIHstsPrimingListener */
+  /* Error code for HSTS priming timeout to distinguish from blocking */
+  ERROR(NS_ERROR_HSTS_PRIMING_TIMEOUT, FAILURE(110)),
 #undef MODULE
 
 

@@ -8094,19 +8094,24 @@ nsHttpChannel::OnHSTSPrimingFailed(nsresult aError, bool aCached)
 
     LOG(("HSTS Priming Failed [this=%p], %s the load", this,
                 (wouldBlock) ? "blocking" : "allowing"));
-    if (aCached) {
+    if (aError == NS_ERROR_HSTS_PRIMING_TIMEOUT) {
+        // A priming request was sent, but timed out
+        Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
+                (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_TIMEOUT_BLOCK :
+                HSTSPrimingResult::eHSTS_PRIMING_TIMEOUT_ACCEPT);
+    } else if (aCached) {
         // Between the time we marked for priming and started the priming request,
         // the host was found to not allow the upgrade, probably from another
         // priming request.
         Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
                 (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_CACHED_BLOCK :
-                                HSTSPrimingResult::eHSTS_PRIMING_CACHED_NO_UPGRADE);
+                HSTSPrimingResult::eHSTS_PRIMING_CACHED_NO_UPGRADE);
     } else {
         // A priming request was sent, and no HSTS header was found that allows
         // the upgrade.
         Telemetry::Accumulate(Telemetry::MIXED_CONTENT_HSTS_PRIMING_RESULT,
                 (wouldBlock) ?  HSTSPrimingResult::eHSTS_PRIMING_FAILED_BLOCK :
-                                HSTSPrimingResult::eHSTS_PRIMING_FAILED_ACCEPT);
+                HSTSPrimingResult::eHSTS_PRIMING_FAILED_ACCEPT);
     }
 
     // Don't visit again for at least

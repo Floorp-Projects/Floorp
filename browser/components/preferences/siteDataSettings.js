@@ -23,6 +23,7 @@ let gSiteDataSettings = {
   _sites: null,
 
   _list: null,
+  _searchBox: null,
 
   init() {
     function setEventListener(id, eventType, callback) {
@@ -31,6 +32,7 @@ let gSiteDataSettings = {
     }
 
     this._list = document.getElementById("sitesList");
+    this._searchBox = document.getElementById("searchBox");
     SiteDataManager.getSites().then(sites => {
       this._sites = sites;
       let sortCol = document.getElementById("hostCol");
@@ -41,6 +43,7 @@ let gSiteDataSettings = {
     setEventListener("hostCol", "click", this.onClickTreeCol);
     setEventListener("usageCol", "click", this.onClickTreeCol);
     setEventListener("statusCol", "click", this.onClickTreeCol);
+    setEventListener("searchBox", "command", this.onCommandSearch);
   },
 
   /**
@@ -89,19 +92,29 @@ let gSiteDataSettings = {
     col.setAttribute("data-last-sortDirection", sortDirection);
   },
 
+  /**
+   * @param sites {Array} array of metadata of sites
+   */
   _buildSitesList(sites) {
     // Clear old entries.
-    while (this._list.childNodes.length > 1) {
-      this._list.removeChild(this._list.lastChild);
+    let oldItems = this._list.querySelectorAll("richlistitem");
+    for (let item of oldItems) {
+      item.remove();
     }
 
     let prefStrBundle = document.getElementById("bundlePreferences");
+    let keyword = this._searchBox.value.toLowerCase().trim();
     for (let data of sites) {
+      let host = data.uri.host;
+      if (keyword && !host.includes(keyword)) {
+        continue;
+      }
+
       let statusStrId = data.status === Ci.nsIPermissionManager.ALLOW_ACTION ? "important" : "default";
       let size = DownloadUtils.convertByteUnits(data.usage);
       let item = document.createElement("richlistitem");
       item.setAttribute("data-origin", data.uri.spec);
-      item.setAttribute("host", data.uri.host);
+      item.setAttribute("host", host);
       item.setAttribute("status", prefStrBundle.getString(statusStrId));
       item.setAttribute("usage", prefStrBundle.getFormattedString("siteUsage", size));
       this._list.appendChild(item);
@@ -110,6 +123,10 @@ let gSiteDataSettings = {
 
   onClickTreeCol(e) {
     this._sortSites(this._sites, e.target);
+    this._buildSitesList(this._sites);
+  },
+
+  onCommandSearch() {
     this._buildSitesList(this._sites);
   }
 };

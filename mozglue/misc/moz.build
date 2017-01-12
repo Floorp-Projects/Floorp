@@ -12,6 +12,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
 
 SOURCES += [
+    'StackWalk.cpp',
     'TimeStamp.cpp',
 ]
 
@@ -34,13 +35,3 @@ elif CONFIG['OS_ARCH'] == 'Darwin':
     ]
 elif CONFIG['COMPILE_ENVIRONMENT']:
     error('No TimeStamp implementation on this platform.  Build will not succeed')
-
-# MOZ_STACKWALKING is defined in configure.in when the build configuration meets
-# the conditions for GeckoStackWalk to work correctly.
-# We exclude this file from other build configurations so that if somebody adds a
-# new usage of NS_StackWalk it will cause a link error, which is better than having
-# GeckoStackWalk silently return garbage at runtime.
-if CONFIG['MOZ_STACKWALKING']:
-    SOURCES += [
-        'StackWalk.cpp',
-    ]
