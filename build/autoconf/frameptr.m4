@@ -29,12 +29,14 @@ AC_DEFUN([MOZ_SET_FRAMEPTR_FLAGS], [
     esac
   fi
 
-  # if we are debugging, profiling or using sanitizers, we want a frame pointer.
+  # If we are debugging, profiling, using sanitizers, or on win32 we want a
+  # frame pointer.
   if test -z "$MOZ_OPTIMIZE" -o \
           -n "$MOZ_PROFILING" -o \
           -n "$MOZ_DEBUG" -o \
           -n "$MOZ_MSAN" -o \
-          -n "$MOZ_ASAN"; then
+          -n "$MOZ_ASAN" -o \
+          "$OS_ARCH:$CPU_ARCH" = "WINNT:x86"; then
     MOZ_FRAMEPTR_FLAGS="$MOZ_ENABLE_FRAME_PTR"
   else
     MOZ_FRAMEPTR_FLAGS="$MOZ_DISABLE_FRAME_PTR"
