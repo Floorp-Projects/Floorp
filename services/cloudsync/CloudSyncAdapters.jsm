@@ -18,7 +18,7 @@ this.Adapters = function () {
 
   let suspend = function () {
     if (!suspended) {
-      Services.obs.removeObserver(observer, "cloudsync:user-sync", false);
+      Services.obs.removeObserver(observer, "cloudsync:user-sync");
       suspended = true;
     }
   }.bind(this);

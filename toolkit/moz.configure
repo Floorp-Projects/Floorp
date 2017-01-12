@@ -117,9 +117,8 @@ set_config('L10NBASEDIR', l10n_base)
 # `choices` depending on the target, but that doesn't pan out for the same
 # reason.
 option('--enable-default-toolkit', nargs=1,
-       choices=('cairo-windows', 'cairo-gtk2', 'cairo-gtk2-x11', 'cairo-gtk3',
-                'cairo-cocoa', 'cairo-uikit', 'cairo-android',
-                'cairo-gonk'),
+       choices=('cairo-windows', 'cairo-gtk3', 'cairo-cocoa', 'cairo-uikit',
+                'cairo-android', 'cairo-gonk'),
        help='Select default toolkit')
 
 @depends('--enable-default-toolkit', target)
@@ -141,7 +140,7 @@ def toolkit(value, target):
         else:
             platform_choices = ('cairo-android',)
     else:
-        platform_choices = ('cairo-gtk3', 'cairo-gtk2', 'cairo-gtk2-x11')
+        platform_choices = ('cairo-gtk3',)
 
     if value:
         if value[0] not in platform_choices:
@@ -823,6 +822,31 @@ def skia_pdf(value, skia, milestone):
 
 set_config('MOZ_ENABLE_SKIA_PDF', skia_pdf)
 set_define('MOZ_ENABLE_SKIA_PDF', skia_pdf)
+
+option('--enable-skia-pdf-sfntly', help='Enable SFNTLY font subsetting in Skia PDF')
+
+@depends('--enable-skia-pdf-sfntly', skia_pdf)
+def skia_pdf_sfntly(value, skia_pdf):
+    if value.origin == 'default':
+        return skia_pdf
+    if value and not skia_pdf:
+        die('Cannot enable SFNTLY subsetting without enabling Skia PDF')
+    if skia_pdf and value:
+        return True
+
+set_config('MOZ_ENABLE_SKIA_PDF_SFNTLY', skia_pdf_sfntly)
+set_define('MOZ_ENABLE_SKIA_PDF_SFNTLY', skia_pdf_sfntly)
+
+@depends(skia_pdf_sfntly)
+def sfntly_includes(skia_pdf_sfntly):
+    includes = []
+    if skia_pdf_sfntly:
+        includes += [
+            '/gfx/sfntly/cpp/src',
+        ]
+    return includes
+
+set_config('SFNTLY_INCLUDES', sfntly_includes)
 
 @depends(skia, skia_gpu)
 def skia_includes(skia, skia_gpu):

@@ -267,7 +267,7 @@ public:
   /**
    * Get the inline style declaration, if any, for this element.
    */
-  virtual DeclarationBlock* GetInlineStyleDeclaration();
+  DeclarationBlock* GetInlineStyleDeclaration() const;
 
   /**
    * Set the inline style declaration for this element. This will send

@@ -4026,7 +4026,10 @@ nsDOMWindowUtils::ForceUseCounterFlush(nsIDOMNode *aNode)
     mozilla::css::ImageLoader* loader = doc->StyleImageLoader();
     loader->FlushUseCounters();
 
-    static_cast<nsDocument*>(doc.get())->ReportUseCounters();
+    // Flush the document and any external documents that it depends on.
+    const auto reportKind
+      = nsDocument::UseCounterReportKind::eIncludeExternalResources;
+    static_cast<nsDocument*>(doc.get())->ReportUseCounters(reportKind);
     return NS_OK;
   }
 

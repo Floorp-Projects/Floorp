@@ -2140,6 +2140,9 @@ WebGLContext::Viewport(GLint x, GLint y, GLsizei width, GLsizei height)
     if (width < 0 || height < 0)
         return ErrorInvalidValue("viewport: negative size");
 
+    width = std::min(width, (GLsizei)mImplMaxViewportDims[0]);
+    height = std::min(height, (GLsizei)mImplMaxViewportDims[1]);
+
     MakeContextCurrent();
     gl->fViewport(x, y, width, height);
 

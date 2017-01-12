@@ -170,6 +170,8 @@ linux32-tests:
     - mochitest-jetpack
     - mochitest-media
     - mochitest-webgl
+    - reftest
+    - reftest-no-accel
     - web-platform-tests
     - web-platform-tests-reftests
     - xpcshell

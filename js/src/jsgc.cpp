@@ -511,8 +511,6 @@ FinalizeTypedArenas(FreeOp* fop,
     size_t thingSize = Arena::thingSize(thingKind);
     size_t thingsPerArena = Arena::thingsPerArena(thingKind);
 
-    JSContext* cx = fop->onMainThread() ? fop->runtime()->contextFromMainThread() : nullptr;
-
     while (Arena* arena = *src) {
         *src = arena->next;
         size_t nmarked = arena->finalize<T>(fop, thingKind, thingSize);
@@ -526,7 +524,7 @@ FinalizeTypedArenas(FreeOp* fop,
             fop->runtime()->gc.releaseArena(arena, maybeLock.ref());
 
         budget.step(thingsPerArena);
-        if (budget.isOverBudget(cx))
+        if (budget.isOverBudget())
             return false;
     }
 
@@ -815,8 +813,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     nextCellUniqueId_(LargestTaggedNullCellPointer + 1), // Ensure disjoint from null tagged pointers.
     numArenasFreeCommitted(0),
     verifyPreData(nullptr),
-    interruptCallbackRequested(false),
-    currentBudget(nullptr),
     chunkAllocationSinceLastGC(false),
     lastGCTime(PRMJ_Now()),
     mode(JSGC_MODE_INCREMENTAL),
@@ -2911,11 +2907,8 @@ SliceBudget::describe(char* buffer, size_t maxlen) const
 }
 
 bool
-SliceBudget::checkOverBudget(JSContext* cx)
+SliceBudget::checkOverBudget()
 {
-    if (cx)
-        cx->gc.checkInterruptCallback(cx);
-
     bool over = PRMJ_Now() >= deadline;
     if (!over)
         counter = CounterReset;
@@ -5509,7 +5502,7 @@ GCRuntime::compactPhase(JS::gcreason::Reason reason, SliceBudget& sliceBudget,
             updatePointersToRelocatedCells(zone, lock);
         zone->setGCState(Zone::Finished);
         zonesToMaybeCompact.removeFront();
-        if (sliceBudget.isOverBudget(rt->contextFromMainThread()))
+        if (sliceBudget.isOverBudget())
             break;
     }
 
@@ -5891,7 +5884,7 @@ GCRuntime::incrementalCollectSlice(SliceBudget& budget, JS::gcreason::Reason rea
          * now exhasted.
          */
         beginSweepPhase(destroyingRuntime, lock);
-        if (budget.isOverBudget(rt->contextFromMainThread()))
+        if (budget.isOverBudget())
             break;
 
         /*
@@ -6315,16 +6308,6 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     // Check if we are allowed to GC at this time before proceeding.
     if (!checkIfGCAllowedInCurrentState(reason))
         return;
-
-    interruptCallbackRequested = false;
-    {
-        AutoLockGC lock(rt);
-        currentBudget = &budget;
-    }
-    auto guard = mozilla::MakeScopeExit([&] {
-            AutoLockGC lock(rt);
-            currentBudget = nullptr;
-    });
 
     AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
     AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
@@ -7692,48 +7675,3 @@ js::gc::Cell::dump() const
     dump(stderr);
 }
 #endif
-
-bool
-JS::AddGCInterruptCallback(JSContext* cx, GCInterruptCallback callback)
-{
-    return cx->runtime()->gc.addInterruptCallback(callback);
-}
-
-void
-JS::RequestGCInterruptCallback(JSContext* cx)
-{
-    cx->runtime()->gc.requestInterruptCallback();
-}
-
-bool
-GCRuntime::addInterruptCallback(JS::GCInterruptCallback callback)
-{
-    return interruptCallbacks.append(callback);
-}
-
-void
-GCRuntime::requestInterruptCallback()
-{
-    AutoLockGC lock(rt);
-    if (currentBudget) {
-        interruptCallbackRequested = true;
-        currentBudget->requestFullCheck();
-    }
-}
-
-void
-GCRuntime::invokeInterruptCallback(JSContext* cx)
-{
-    interruptCallbackRequested = false;
-
-    stats.suspendPhases();
-
-    JS::AutoAssertNoGC nogc(cx);
-    JS::AutoAssertOnBarrier nobarrier(cx);
-    JS::AutoSuppressGCAnalysis suppress(cx);
-    for (JS::GCInterruptCallback callback : interruptCallbacks) {
-        (*callback)(cx);
-    }
-
-    stats.resumePhases();
-}

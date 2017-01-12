@@ -212,7 +212,7 @@ let urlbarListener = {
   },
 
   uninit() {
-    Services.obs.removeObserver(this, AUTOCOMPLETE_ENTER_TEXT_TOPIC, true);
+    Services.obs.removeObserver(this, AUTOCOMPLETE_ENTER_TEXT_TOPIC);
   },
 
   observe(subject, topic, data) {
@@ -300,9 +300,9 @@ let BrowserUsageTelemetry = {
   },
 
   uninit() {
-    Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC, false);
-    Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC, false);
-    Services.obs.removeObserver(this, WINDOWS_RESTORED_TOPIC, false);
+    Services.obs.removeObserver(this, DOMWINDOW_OPENED_TOPIC);
+    Services.obs.removeObserver(this, TELEMETRY_SUBSESSIONSPLIT_TOPIC);
+    Services.obs.removeObserver(this, WINDOWS_RESTORED_TOPIC);
     urlbarListener.uninit();
   },
 

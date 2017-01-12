@@ -426,6 +426,11 @@ protected:
     const StyleAnimationValue& aValueToComposite,
     CompositeOperation aCompositeOperation);
 
+  // Returns underlying style animation value for |aProperty|.
+  StyleAnimationValue GetUnderlyingStyle(
+    nsCSSPropertyID aProperty,
+    const RefPtr<AnimValuesStyleRule>& aAnimationRule);
+
   // Set a bit in mNeedsBaseStyleSet if |aProperty| can be run on the
   // compositor.
   void SetNeedsBaseStyle(nsCSSPropertyID aProperty);

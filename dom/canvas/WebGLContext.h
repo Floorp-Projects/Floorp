@@ -1447,6 +1447,8 @@ protected:
     uint32_t mImplMaxColorAttachments;
     uint32_t mImplMaxDrawBuffers;
 
+    uint32_t mImplMaxViewportDims[2];
+
 public:
     GLenum LastColorAttachmentEnum() const {
         return LOCAL_GL_COLOR_ATTACHMENT0 + mImplMaxColorAttachments - 1;

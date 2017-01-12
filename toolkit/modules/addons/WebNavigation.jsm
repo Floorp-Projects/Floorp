@@ -45,7 +45,7 @@ var Manager = {
 
   uninit() {
     // Stop collecting recent tab transition data and reset the WeakMap.
-    Services.obs.removeObserver(this, "autocomplete-did-enter-text", true);
+    Services.obs.removeObserver(this, "autocomplete-did-enter-text");
     this.recentTabTransitionData = new WeakMap();
 
     Services.mm.removeMessageListener("Content:Click", this);
