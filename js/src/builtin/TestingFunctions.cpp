@@ -770,13 +770,13 @@ ScheduleGC(JSContext* cx, unsigned argc, Value* vp)
         Zone* zone = args[0].toString()->zoneFromAnyThread();
         if (!CurrentThreadCanAccessZone(zone)) {
             RootedObject callee(cx, &args.callee());
-            ReportUsageErrorASCII(cx, callee, "Specified zone not accessible for GC");
+            ReportUsageError(cx, callee, "Specified zone not accessible for GC");
             return false;
         }
         PrepareZoneForGC(zone);
     } else {
         RootedObject callee(cx, &args.callee());
-        ReportUsageErrorASCII(cx, callee, "Bad argument - expecting integer, object or string");
+        ReportUsageError(cx, callee, "Bad argument - expecting integer, object or string");
         return false;
     }
 
