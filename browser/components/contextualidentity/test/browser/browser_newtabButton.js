@@ -3,9 +3,10 @@
 // Testing that when the user opens the add tab menu and clicks menu items
 // the correct context id is opened
 
-add_task(function* test() {
+add_task(function* test_menu_with_timeout() {
   yield SpecialPowers.pushPrefEnv({"set": [
-      ["privacy.userContext.enabled", true]
+      ["privacy.userContext.enabled", true],
+      ["privacy.usercontext.longPressBehavior", 2]
   ]});
 
   let newTab = document.getElementById('tabbrowser-tabs');
@@ -34,6 +35,51 @@ add_task(function* test() {
   }
 });
 
+add_task(function* test_menu_without_timeout() {
+  yield SpecialPowers.pushPrefEnv({"set": [
+      ["privacy.userContext.enabled", true],
+      ["privacy.usercontext.longPressBehavior", 1]
+  ]});
+
+  let newTab = document.getElementById('tabbrowser-tabs');
+  let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
+  ok(newTabButton, "New tab button exists");
+  ok(!newTabButton.hidden, "New tab button is visible");
+  yield BrowserTestUtils.waitForCondition(() => !!document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup"), "Wait for popup to exist");
+  let popup = document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
+
+  for (let i = 1; i <= 4; i++) {
+    let popupShownPromise = BrowserTestUtils.waitForEvent(popup, "popupshown");
+    EventUtils.synthesizeMouseAtCenter(newTabButton, {type: "mousedown"});
+
+    yield popupShownPromise;
+    let contextIdItem = popup.querySelector(`menuitem[data-usercontextid="${i}"]`);
+
+    ok(contextIdItem, `User context id ${i} exists`);
+
+    let waitForTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+    EventUtils.synthesizeMouseAtCenter(contextIdItem, {});
+
+    let tab = yield waitForTabPromise;
+
+    is(tab.getAttribute('usercontextid'), i, `New tab has UCI equal ${i}`);
+    yield BrowserTestUtils.removeTab(tab);
+  }
+});
+
+add_task(function* test_no_menu() {
+  yield SpecialPowers.pushPrefEnv({"set": [
+      ["privacy.userContext.enabled", true],
+      ["privacy.usercontext.longPressBehavior", 0]
+  ]});
+
+  let newTab = document.getElementById('tabbrowser-tabs');
+  let newTabButton = document.getAnonymousElementByAttribute(newTab, "anonid", "tabs-newtab-button");
+  ok(newTabButton, "New tab button exists");
+  ok(!newTabButton.hidden, "New tab button is visible");
+  let popup = document.getAnonymousElementByAttribute(newTab, "anonid", "newtab-popup");
+  ok(!popup, "new tab should not have a popup");
+});
 
 add_task(function* test_private_mode() {
   let privateWindow = yield BrowserTestUtils.openNewBrowserWindow({private: true});
