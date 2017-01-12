@@ -199,7 +199,6 @@ add_task(async function test_disabledLocally_wipe503() {
     engines: {steam: {syncID: engine.syncID,
                       version: engine.version}}
   });
-  let steamCollection = new ServerWBO("steam", PAYLOAD);
 
   function service_unavailable(request, response) {
     let body = "Service Unavailable";

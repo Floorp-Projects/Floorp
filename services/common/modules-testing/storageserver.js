@@ -345,7 +345,7 @@ StorageServerCollection.prototype = {
    */
   bsos: function bsos(filter) {
     let os = [];
-    for (let [id, bso] of Object.entries(this._bsos)) {
+    for (let bso of Object.values(this._bsos)) {
       if (!bso.deleted) {
         os.push(bso);
       }
@@ -440,7 +440,7 @@ StorageServerCollection.prototype = {
   count: function count(options) {
     options = options || {};
     let c = 0;
-    for (let [id, bso] of Object.entries(this._bsos)) {
+    for (let bso of Object.values(this._bsos)) {
       if (bso.modified && this._inResultSet(bso, options)) {
         c++;
       }
@@ -598,7 +598,7 @@ StorageServerCollection.prototype = {
     }
 
     let deleted = [];
-    for (let [id, bso] of Object.entries(this._bsos)) {
+    for (let bso of Object.values(this._bsos)) {
       if (this._inResultSet(bso, options)) {
         this._log.debug("Deleting " + JSON.stringify(bso));
         deleted.push(bso.id);
@@ -730,8 +730,6 @@ StorageServerCollection.prototype = {
   },
 
   postHandler: function postHandler(request, response) {
-    let options = this.parseOptions(request);
-
     if (!request.hasHeader("content-type")) {
       this._log.info("No Content-Type request header!");
       throw HTTP_400;
@@ -1319,7 +1317,7 @@ StorageServer.prototype = {
       throw HTTP_404;
     }
 
-    let [all, version, userPath, first, rest] = parts;
+    let [, version, userPath, first, rest] = parts;
     if (version != STORAGE_API_VERSION) {
       this._log.debug("StorageServer: Unknown version.");
       throw HTTP_404;
@@ -1427,7 +1425,7 @@ StorageServer.prototype = {
         this._log.warn("StorageServer: Unknown storage operation " + rest);
         throw HTTP_404;
       }
-      let [all, collection, bsoID] = match;
+      let [, collection, bsoID] = match;
       let coll = this.getCollection(username, collection);
       let collectionExisted = !!coll;
 

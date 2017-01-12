@@ -194,7 +194,6 @@ add_test(function v5_upgrade() {
   // Tracking info/collections.
   let collectionsHelper = track_collections_helper();
   let upd = collectionsHelper.with_updated_collection;
-  let collections = collectionsHelper.collections;
 
   let keysWBO = new ServerWBO("keys");
   let bulkWBO = new ServerWBO("bulk");
@@ -288,7 +287,6 @@ add_test(function v5_upgrade() {
 });
 
 function run_test() {
-  let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   run_next_test();
