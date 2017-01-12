@@ -1438,7 +1438,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           if (!line) {
             // Since the data receiving is async, we need to wait until the
             // buffer gets the full line.
-            if (!/\r\n|\n/.test(self.buffer)) {
+            if (!/\r\n|\n|\r/.test(self.buffer)) {
               return this;
             }
             line = collectNextLine();
