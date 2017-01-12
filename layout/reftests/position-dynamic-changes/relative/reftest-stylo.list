@@ -1,6 +1,6 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
-fails == move-right-bottom.html move-right-bottom.html
-fails == move-top-left.html move-top-left.html
-fails == move-right-bottom-table.html move-right-bottom-table.html
-fails == move-top-left-table.html move-top-left-table.html
-fails == percent.html percent.html
+== move-right-bottom.html move-right-bottom.html
+== move-top-left.html move-top-left.html
+== move-right-bottom-table.html move-right-bottom-table.html
+== move-top-left-table.html move-top-left-table.html
+== percent.html percent.html

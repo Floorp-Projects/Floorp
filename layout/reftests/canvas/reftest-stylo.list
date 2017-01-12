@@ -77,11 +77,11 @@ random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) 
 == evenodd-fill-1.html evenodd-fill-1.html
 == evenodd-fill-1.html evenodd-fill-1.html
 
-fails == dash-sanity.html dash-sanity.html
+== dash-sanity.html dash-sanity.html
 == dash-1.html dash-1.html
 
-fails == ctm-sanity.html ctm-sanity.html
-fails == ctm-singular-sanity.html ctm-singular-sanity.html
+== ctm-sanity.html ctm-sanity.html
+== ctm-singular-sanity.html ctm-singular-sanity.html
 == ctm-1.html ctm-1.html
 
 fails-if(azureQuartz&&OSX==1006) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient.html
