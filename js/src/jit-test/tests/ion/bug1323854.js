@@ -11,6 +11,5 @@ g = (function () {
     }
     return f;
 })();
-dis(g);
 g();
 g();
