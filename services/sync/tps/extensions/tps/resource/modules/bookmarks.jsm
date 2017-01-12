@@ -217,9 +217,8 @@ PlacesItem.prototype = {
         folder_parts[i]);
       if (subfolder_id == -1) {
         return -1;
-      } else {
-        folder_id = subfolder_id;
       }
+      folder_id = subfolder_id;
     }
     return folder_id;
   },
