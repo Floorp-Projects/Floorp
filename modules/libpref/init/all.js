@@ -4650,7 +4650,11 @@ pref("layers.offmainthreadcomposition.async-animations", true);
 // Whether to log information about off main thread animations to stderr
 pref("layers.offmainthreadcomposition.log-animations", false);
 
+#ifdef MOZ_ENABLE_WEBRENDER
+pref("layers.bufferrotation.enabled", false);
+#else
 pref("layers.bufferrotation.enabled", true);
+#endif
 
 pref("layers.componentalpha.enabled", true);
 pref("layers.draw-mask-debug", false);
