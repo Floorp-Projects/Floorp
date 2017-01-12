@@ -83,10 +83,6 @@ public:
   virtual void XRE_LibFuzzerSetMain(LibFuzzerMain aMain) override {
     ::XRE_LibFuzzerSetMain(aMain);
   }
-
-  virtual void XRE_LibFuzzerGetFuncs(const char* aModuleName, LibFuzzerInitFunc* aInitFunc, LibFuzzerTestingFunc* aTestingFunc) override {
-    ::XRE_LibFuzzerGetFuncs(aModuleName, aInitFunc, aTestingFunc);
-  }
 #endif
 
 #ifdef MOZ_IPDL_TESTS

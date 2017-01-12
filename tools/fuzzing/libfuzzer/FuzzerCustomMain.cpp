@@ -9,17 +9,8 @@
 #include "FuzzerInternal.h"
 #include "harness/LibFuzzerRegistry.h"
 
-/* This is a wrapper defined in browser/app/nsBrowserApp.cpp,
- * encapsulating the XRE_ equivalent defined in libxul */
-extern void libFuzzerGetFuncs(const char*, LibFuzzerInitFunc*,
-                                 LibFuzzerTestingFunc*);
-
-int libfuzzer_main(int argc, char **argv) {
-  LibFuzzerInitFunc initFunc = nullptr;
-  LibFuzzerTestingFunc testingFunc = nullptr;
-
-  libFuzzerGetFuncs(getenv("LIBFUZZER"), &initFunc, &testingFunc);
-
+int libfuzzer_main(int argc, char **argv, LibFuzzerInitFunc initFunc,
+                   LibFuzzerTestingFunc testingFunc) {
   if (initFunc) {
     int ret = initFunc(&argc, &argv);
     if (ret) {
