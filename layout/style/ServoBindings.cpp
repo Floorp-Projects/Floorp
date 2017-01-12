@@ -313,9 +313,8 @@ Gecko_GetServoDeclarationBlock(RawGeckoElementBorrowed aElement)
     return nullptr;
   }
   if (decl->IsGecko()) {
-    // XXX This can happen at least when script sets style attribute
-    //     since we haven't implemented Element.style for stylo. But
-    //     we may want to turn it into an assertion after that's done.
+    // XXX This can happen when nodes are adopted from a Gecko-style-backend
+    //     document into a Servo-style-backend document.  See bug 1330051.
     NS_WARNING("stylo: requesting a Gecko declaration block?");
     return nullptr;
   }
