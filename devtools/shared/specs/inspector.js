@@ -234,8 +234,7 @@ const walkerSpec = generateActorSpec({
       request: {
         node: Arg(0, "domnode"),
         pseudoClass: Arg(1),
-        parents: Option(2),
-        enabled: Option(2, "boolean"),
+        parents: Option(2)
       },
       response: {}
     },
