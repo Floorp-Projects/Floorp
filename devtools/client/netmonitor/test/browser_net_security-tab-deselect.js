@@ -33,11 +33,12 @@ add_task(function* () {
   info("Selecting security tab.");
   NetworkDetails.widget.selectedIndex = 5;
 
+  wait = monitor.panelWin.once(EVENTS.NETWORKDETAILSVIEW_POPULATED);
   info("Selecting insecure request.");
   RequestsMenu.selectedIndex = 1;
 
   info("Waiting for security tab to be updated.");
-  yield monitor.panelWin.once(EVENTS.NETWORKDETAILSVIEW_POPULATED);
+  yield wait;
 
   is(NetworkDetails.widget.selectedIndex, 0,
     "Selected tab was reset when selected security tab was hidden.");

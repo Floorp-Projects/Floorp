@@ -115,19 +115,19 @@ class CMapTests : public :: testing::TestWithParam<CMapTestCase> {
 }
 
 void CMapTests::CommonSetUp(FontArray* font_array) {
-  ASSERT_NE(font_array, reinterpret_cast<FontArray*>(NULL));
+  ASSERT_NE(font_array, static_cast<FontArray*>(NULL));
   ASSERT_FALSE(font_array->empty());
   Ptr<Font> font;
   font = font_array->at(0);
-  ASSERT_NE(font, reinterpret_cast<Font*>(NULL));
+  ASSERT_NE(font, static_cast<Font*>(NULL));
   Ptr<CMapTable> cmap_table =
       down_cast<CMapTable*>(font->GetTable(Tag::cmap));
   cmap1_.Attach(cmap_table->GetCMap(GetParam().first_platform_id(),
                                     GetParam().first_encoding_id()));
-  ASSERT_NE((cmap1_), reinterpret_cast<CMapTable::CMap*>(NULL));
+  ASSERT_NE((cmap1_), static_cast<CMapTable::CMap*>(NULL));
   cmap2_.Attach(cmap_table->GetCMap(GetParam().second_platform_id(),
                                     GetParam().second_encoding_id()));
-  ASSERT_NE((cmap2_), reinterpret_cast<CMapTable::CMap*>(NULL));
+  ASSERT_NE((cmap2_), static_cast<CMapTable::CMap*>(NULL));
   encoder1_ = TestUtils::GetEncoder(GetParam().first_charset_name());
   encoder2_ = TestUtils::GetEncoder(GetParam().second_charset_name());
   successful_setup_ = true;
