@@ -748,7 +748,7 @@ add_task(async function test_signedInUserMissing() {
   _("BrowserIDManager detects getSignedInUser returning incomplete account data");
 
   let browseridManager = new BrowserIDManager();
-  let config = makeIdentityConfig();
+  makeIdentityConfig();
   // Delete stored keys and the key fetch token.
   delete identityConfig.fxaccount.user.kA;
   delete identityConfig.fxaccount.user.kB;

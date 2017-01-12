@@ -237,12 +237,10 @@ this.CommonUtils = {
    */
   encodeBase32: function encodeBase32(bytes) {
     const key = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let quanta = Math.floor(bytes.length / 5);
     let leftover = bytes.length % 5;
 
     // Pad the last quantum with zeros so the length is a multiple of 5.
     if (leftover) {
-      quanta += 1;
       for (let i = leftover; i < 5; i++)
         bytes += "\0";
     }

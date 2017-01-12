@@ -27,7 +27,6 @@ function service_unavailable(request, response) {
 }
 
 function run_test() {
-  let logger = Log.repository.rootLogger;
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
   ensureLegacyIdentityManager();
@@ -35,7 +34,6 @@ function run_test() {
   Services.logins.removeAllLogins();
   let johnHelper = track_collections_helper();
   let johnU      = johnHelper.with_updated_collection;
-  let johnColls  = johnHelper.collections;
 
   do_test_pending();
 

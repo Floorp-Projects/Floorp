@@ -73,7 +73,7 @@ add_test(function test_http_error() {
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
-  let request = Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
+  Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.status, 500);
     do_check_eq(info, null);
     server.stop(run_next_test);
@@ -86,7 +86,7 @@ add_test(function test_invalid_json() {
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
-  let request = Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
+  Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.name, "SyntaxError");
     do_check_eq(info, null);
     server.stop(run_next_test);

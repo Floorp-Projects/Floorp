@@ -701,12 +701,6 @@ add_test(function test_uri_construction() {
 });
 
 add_test(function test_not_sending_cookie() {
-  function handler(metadata, response) {
-    let body = "COOKIE!";
-    response.setStatusLine(metadata.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(body, body.length);
-    do_check_false(metadata.hasHeader("Cookie"));
-  }
   let cookieSer = Cc["@mozilla.org/cookieService;1"]
                     .getService(Ci.nsICookieService);
   let uri = CommonUtils.makeURI(server.baseURI);

@@ -49,7 +49,7 @@ var BrowserTabs = {
   Find(uri, title, profile) {
     // Find the uri in Weave's list of tabs for the given profile.
     let engine = Weave.Service.engineManager.get("tabs");
-    for (let [guid, client] of Object.entries(engine.getAllClients())) {
+    for (let [, client] of Object.entries(engine.getAllClients())) {
       if (!client.tabs) {
         continue;
       }

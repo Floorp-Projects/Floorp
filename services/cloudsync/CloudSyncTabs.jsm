@@ -220,19 +220,6 @@ this.Tabs = function() {
 
   let tabCache = new TabCache();
 
-  let getWindowEnumerator = function() {
-    return Services.wm.getEnumerator("navigator:browser");
-  };
-
-  let shouldSkipWindow = function(win) {
-    return win.closed ||
-           PrivateBrowsingUtils.isWindowPrivate(win);
-  };
-
-  let getTabState = function(tab) {
-    return JSON.parse(Session.getTabState(tab));
-  };
-
   let getLocalTabs = function(filter) {
     let deferred = Promise.defer();
 

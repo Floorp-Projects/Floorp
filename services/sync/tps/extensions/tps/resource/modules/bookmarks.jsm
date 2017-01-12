@@ -22,7 +22,7 @@ Cu.import("resource://tps/logger.jsm");
 var DumpBookmarks = function TPS_Bookmarks__DumpBookmarks() {
   let cb = Async.makeSpinningCallback();
   PlacesBackups.getBookmarksTree().then(result => {
-    let [bookmarks, count] = result;
+    let [bookmarks, ] = result;
     Logger.logInfo("Dumping Bookmarks...\n" + JSON.stringify(bookmarks) + "\n\n");
     cb(null);
   }).then(null, error => {
