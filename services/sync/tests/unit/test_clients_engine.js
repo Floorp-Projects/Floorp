@@ -1081,7 +1081,7 @@ add_task(async function test_upload_after_reboot() {
     engine.sendCommand("displayURI", ["https://example.com", engine.localID, "Yak Herders Anonymous"], deviceBID);
 
     const oldUploadOutgoing = SyncEngine.prototype._uploadOutgoing;
-    SyncEngine.prototype._uploadOutgoing = () => engine._onRecordsWritten.call(engine, [], [deviceBID]);
+    SyncEngine.prototype._uploadOutgoing = () => engine._onRecordsWritten([], [deviceBID]);
     engine._sync();
 
     let collection = server.getCollection("foo", "clients");
@@ -1181,7 +1181,7 @@ add_task(async function test_keep_cleared_commands_after_reboot() {
 
     let collection = server.getCollection("foo", "clients");
     const oldUploadOutgoing = SyncEngine.prototype._uploadOutgoing;
-    SyncEngine.prototype._uploadOutgoing = () => engine._onRecordsWritten.call(engine, [], [deviceBID]);
+    SyncEngine.prototype._uploadOutgoing = () => engine._onRecordsWritten([], [deviceBID]);
     let commandsProcessed = 0;
     engine._handleDisplayURIs = (uris) => { commandsProcessed = uris.length };
 

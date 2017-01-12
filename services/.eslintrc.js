@@ -21,6 +21,5 @@ module.exports = {
     "no-redeclare": "warn",
     "no-unreachable": "warn",
     "no-unsafe-finally": "warn",
-    "no-useless-call": "warn"
   }
 };

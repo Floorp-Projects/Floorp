@@ -12,7 +12,7 @@ const StubAlertsService = {
   showAlertNotification(image, title, text, clickable, cookie, clickCallback) {
     // We can't simulate a click on the alert popup,
     // so instead we call the click listener ourselves directly
-    clickCallback.observe.call(clickCallback, null, "alertclickcallback", null);
+    clickCallback.observe(null, "alertclickcallback", null);
   }
 }
 
