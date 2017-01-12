@@ -13,6 +13,7 @@
 
 #include "js/CharacterEncoding.h"
 #include "js/GCVector.h"
+#include "js/Utility.h"
 #include "js/Vector.h"
 #include "vm/Caches.h"
 #include "vm/Runtime.h"

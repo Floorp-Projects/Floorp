@@ -29,6 +29,8 @@
 #include "js/RootingAPI.h"
 #include "js/UbiNode.h"
 #include "vm/ObjectGroup.h"
+#include "vm/String.h"
+#include "vm/Symbol.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -561,6 +563,30 @@ struct StackBaseShape : public DefaultHasher<ReadBarriered<UnownedBaseShape*>>
 
     static inline HashNumber hash(const Lookup& lookup);
     static inline bool match(ReadBarriered<UnownedBaseShape*> key, const Lookup& lookup);
+};
+
+static MOZ_ALWAYS_INLINE js::HashNumber
+HashId(jsid id)
+{
+    // HashGeneric alone would work, but bits of atom and symbol addresses
+    // could then be recovered from the hash code. See bug 1330769.
+    if (MOZ_LIKELY(JSID_IS_ATOM(id)))
+        return JSID_TO_ATOM(id)->hash();
+    if (JSID_IS_SYMBOL(id))
+        return JSID_TO_SYMBOL(id)->hash();
+    return mozilla::HashGeneric(JSID_BITS(id));
+}
+
+template <>
+struct DefaultHasher<jsid>
+{
+    typedef jsid Lookup;
+    static HashNumber hash(jsid id) {
+        return HashId(id);
+    }
+    static bool match(jsid id1, jsid id2) {
+        return id1 == id2;
+    }
 };
 
 using BaseShapeSet = JS::GCHashSet<ReadBarriered<UnownedBaseShape*>,
