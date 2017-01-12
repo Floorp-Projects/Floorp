@@ -23,6 +23,7 @@ EXPORTS.mozilla.gfx += [
 ]
 
 EXPORTS.mozilla.layers += [
+    'CompositorOptions.h',
     'CompositorSession.h',
     'InProcessCompositorSession.h',
     'RemoteCompositorSession.h',
