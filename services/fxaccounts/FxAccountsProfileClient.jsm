@@ -170,14 +170,13 @@ this.FxAccountsProfileClient.prototype = {
             body,
             etag: request.response.headers["etag"]
           });
-        } else {
-          return reject(new FxAccountsProfileClientError({
-            error: body.error || ERROR_UNKNOWN,
-            errno: body.errno || ERRNO_UNKNOWN_ERROR,
-            code: request.response.status,
-            message: body.message || body,
-          }));
         }
+        return reject(new FxAccountsProfileClientError({
+          error: body.error || ERROR_UNKNOWN,
+          errno: body.errno || ERRNO_UNKNOWN_ERROR,
+          code: request.response.status,
+          message: body.message || body,
+        }));
       };
 
       if (method === "GET") {
