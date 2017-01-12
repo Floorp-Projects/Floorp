@@ -67,8 +67,8 @@ AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
     unsigned permissions =
         ExecutableAllocator::initialProtectionFlags(ExecutableAllocator::Writable);
 
-    void* p = AllocateExecutableMemory(nullptr, totalLength, permissions,
-                                       "wasm-code-segment", gc::SystemPageSize());
+    void* p = AllocateExecutableMemory(totalLength, permissions, "wasm-code-segment",
+                                       gc::SystemPageSize());
     if (!p) {
         ReportOutOfMemory(cx);
         return nullptr;
