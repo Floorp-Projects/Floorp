@@ -771,18 +771,20 @@ PreparePattern(FcPattern* aPattern, bool aIsPrinterFont)
        FcPatternAddBool(aPattern, PRINTING_FC_PROPERTY, FcTrue);
     } else {
 #ifdef MOZ_WIDGET_GTK
-       ApplyGdkScreenFontOptions(aPattern);
-#endif
+        ApplyGdkScreenFontOptions(aPattern);
 
 #ifdef MOZ_X11
         FcValue value;
         int lcdfilter;
-        if (FcPatternGet(aPattern, FC_LCD_FILTER, 0, &value)
-                == FcResultNoMatch &&
-            GetXftInt(DefaultXDisplay(), "lcdfilter", &lcdfilter)) {
-            FcPatternAddInteger(aPattern, FC_LCD_FILTER, lcdfilter);
+        if (FcPatternGet(aPattern, FC_LCD_FILTER, 0, &value) == FcResultNoMatch) {
+            GdkDisplay* dpy = gdk_display_get_default();
+            if (GDK_IS_X11_DISPLAY(dpy) &&
+                GetXftInt(GDK_DISPLAY_XDISPLAY(dpy), "lcdfilter", &lcdfilter)) {
+                FcPatternAddInteger(aPattern, FC_LCD_FILTER, lcdfilter);
+            }
         }
-#endif
+#endif // MOZ_X11
+#endif // MOZ_WIDGET_GTK
     }
 
     FcDefaultSubstitute(aPattern);

@@ -41,6 +41,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::ipc;
 
 /*
  * Basic architecture:
@@ -78,8 +79,7 @@ class HangMonitorChild
   explicit HangMonitorChild(ProcessHangMonitor* aMonitor);
   ~HangMonitorChild() override;
 
-  void Open(Transport* aTransport, ProcessId aOtherPid,
-            MessageLoop* aIOLoop);
+  void Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint);
 
   typedef ProcessHangMonitor::SlowScriptAction SlowScriptAction;
   SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
@@ -211,7 +211,7 @@ public:
   explicit HangMonitorParent(ProcessHangMonitor* aMonitor);
   ~HangMonitorParent() override;
 
-  void Open(Transport* aTransport, ProcessId aPid, MessageLoop* aIOLoop);
+  void Bind(Endpoint<PProcessHangMonitorParent>&& aEndpoint);
 
   mozilla::ipc::IPCResult RecvHangEvidence(const HangData& aHangData) override;
   mozilla::ipc::IPCResult RecvClearHang() override;
@@ -317,7 +317,6 @@ HangMonitorChild::InterruptCallback()
     RefPtr<TabChild> tabChild = TabChild::FindTabChild(forcePaintTab);
     if (tabChild) {
       JS::AutoAssertNoGC nogc(mContext);
-      JS::AutoAssertOnBarrier nobarrier(mContext);
       tabChild->ForcePaint(forcePaintEpoch);
     }
   }
@@ -401,7 +400,6 @@ HangMonitorChild::RecvForcePaint(const TabId& aTabId, const uint64_t& aLayerObse
   }
 
   JS_RequestInterruptCallback(mContext);
-  JS::RequestGCInterruptCallback(mContext);
 
   return IPC_OK();
 }
@@ -416,15 +414,14 @@ HangMonitorChild::ClearForcePaint()
 }
 
 void
-HangMonitorChild::Open(Transport* aTransport, ProcessId aPid,
-                       MessageLoop* aIOLoop)
+HangMonitorChild::Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint)
 {
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
   MOZ_ASSERT(!sInstance);
   sInstance = this;
 
-  DebugOnly<bool> ok = PProcessHangMonitorChild::Open(aTransport, aPid, aIOLoop);
+  DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
 }
 
@@ -635,12 +632,11 @@ HangMonitorParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 void
-HangMonitorParent::Open(Transport* aTransport, ProcessId aPid,
-                        MessageLoop* aIOLoop)
+HangMonitorParent::Bind(Endpoint<PProcessHangMonitorParent>&& aEndpoint)
 {
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
-  DebugOnly<bool> ok = PProcessHangMonitorParent::Open(aTransport, aPid, aIOLoop);
+  DebugOnly<bool> ok = aEndpoint.Bind(this);
   MOZ_ASSERT(ok);
 }
 
@@ -1173,10 +1169,9 @@ ProcessHangMonitor::NotifyPluginHang(uint32_t aPluginId)
   return HangMonitorChild::Get()->NotifyPluginHang(aPluginId);
 }
 
-PProcessHangMonitorParent*
-mozilla::CreateHangMonitorParent(ContentParent* aContentParent,
-                                 mozilla::ipc::Transport* aTransport,
-                                 base::ProcessId aOtherPid)
+static PProcessHangMonitorParent*
+CreateHangMonitorParent(ContentParent* aContentParent,
+                        Endpoint<PProcessHangMonitorParent>&& aEndpoint)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -1187,38 +1182,28 @@ mozilla::CreateHangMonitorParent(ContentParent* aContentParent,
   parent->SetProcess(process);
 
   monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
-                                   <mozilla::ipc::Transport*,
-                                    base::ProcessId,
-                                    MessageLoop*>(parent,
-                                                  &HangMonitorParent::Open,
-                                                  aTransport, aOtherPid,
-                                                  XRE_GetIOMessageLoop()));
+                                   <Endpoint<PProcessHangMonitorParent>&&>(parent,
+                                                                           &HangMonitorParent::Bind,
+                                                                           Move(aEndpoint)));
 
   return parent;
 }
 
-PProcessHangMonitorChild*
-mozilla::CreateHangMonitorChild(mozilla::ipc::Transport* aTransport,
-                                base::ProcessId aOtherPid)
+void
+mozilla::CreateHangMonitorChild(Endpoint<PProcessHangMonitorChild>&& aEndpoint)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   JSContext* cx = danger::GetJSContext();
   JS_AddInterruptCallback(cx, InterruptCallback);
-  JS::AddGCInterruptCallback(cx, InterruptCallback);
 
   ProcessHangMonitor* monitor = ProcessHangMonitor::GetOrCreate();
   auto* child = new HangMonitorChild(monitor);
 
   monitor->MonitorLoop()->PostTask(NewNonOwningRunnableMethod
-                                   <mozilla::ipc::Transport*,
-                                    base::ProcessId,
-                                    MessageLoop*>(child,
-                                                  &HangMonitorChild::Open,
-                                                  aTransport, aOtherPid,
-                                                  XRE_GetIOMessageLoop()));
-
-  return child;
+                                   <Endpoint<PProcessHangMonitorChild>&&>(child,
+                                                                          &HangMonitorChild::Bind,
+                                                                          Move(aEndpoint)));
 }
 
 MessageLoop*
@@ -1227,15 +1212,32 @@ ProcessHangMonitor::MonitorLoop()
   return mThread->message_loop();
 }
 
-/* static */ void
+/* static */ PProcessHangMonitorParent*
 ProcessHangMonitor::AddProcess(ContentParent* aContentParent)
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (mozilla::Preferences::GetBool("dom.ipc.processHangMonitor", false)) {
-    DebugOnly<bool> opened = PProcessHangMonitor::Open(aContentParent);
-    MOZ_ASSERT(opened);
+  if (!mozilla::Preferences::GetBool("dom.ipc.processHangMonitor", false)) {
+    return nullptr;
   }
+
+  Endpoint<PProcessHangMonitorParent> parent;
+  Endpoint<PProcessHangMonitorChild> child;
+  nsresult rv;
+  rv = PProcessHangMonitor::CreateEndpoints(base::GetCurrentProcId(),
+                                            aContentParent->OtherPid(),
+                                            &parent, &child);
+  if (NS_FAILED(rv)) {
+    MOZ_ASSERT(false, "PProcessHangMonitor::CreateEndpoints failed");
+    return nullptr;
+  }
+
+  if (!aContentParent->SendInitProcessHangMonitor(Move(child))) {
+    MOZ_ASSERT(false);
+    return nullptr;
+  }
+
+  return CreateHangMonitorParent(aContentParent, Move(parent));
 }
 
 /* static */ void

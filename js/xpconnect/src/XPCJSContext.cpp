@@ -1449,6 +1449,9 @@ ReloadPrefsCallback(const char* pref, void* data)
                                                  "baselinejit.unsafe_eager_compilation");
     bool useIonEager = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
 
+    int32_t baselineThreshold = Preferences::GetInt(JS_OPTIONS_DOT_STR "baselinejit.threshold", -1);
+    int32_t ionThreshold = Preferences::GetInt(JS_OPTIONS_DOT_STR "ion.threshold", -1);
+
     sDiscardSystemSource = Preferences::GetBool(JS_OPTIONS_DOT_STR "discardSystemSource");
 
     bool useAsyncStack = Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack");
@@ -1495,9 +1498,9 @@ ReloadPrefsCallback(const char* pref, void* data)
     JS_SetParallelParsingEnabled(cx, parallelParsing);
     JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
-                                  useBaselineEager ? 0 : -1);
+                                  useBaselineEager ? 0 : baselineThreshold);
     JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_WARMUP_TRIGGER,
-                                  useIonEager ? 0 : -1);
+                                  useIonEager ? 0 : ionThreshold);
 }
 
 XPCJSContext::~XPCJSContext()

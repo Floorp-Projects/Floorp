@@ -207,17 +207,11 @@ let gDecoderDoctorHandler = {
     }
     if (type == "adobe-cdm-not-activated" &&
         AppConstants.platform == "win") {
-      if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.1")) {
-        return gNavigatorBundle.getString("decoder.noCodecsVista.message");
-      }
       return gNavigatorBundle.getString("decoder.noCodecs.message");
     }
     if (type == "platform-decoder-not-found") {
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "6.1")) {
+      if (AppConstants.platform == "win") {
         return gNavigatorBundle.getString("decoder.noHWAcceleration.message");
-      }
-      if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
-        return gNavigatorBundle.getString("decoder.noHWAccelerationVista.message");
       }
       if (AppConstants.platform == "linux") {
         return gNavigatorBundle.getString("decoder.noCodecsLinux.message");

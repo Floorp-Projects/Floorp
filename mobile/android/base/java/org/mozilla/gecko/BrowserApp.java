@@ -35,6 +35,7 @@ import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
 import org.mozilla.gecko.distribution.PartnerBrowserCustomizationsClient;
 import org.mozilla.gecko.dlc.DownloadContentService;
+import org.mozilla.gecko.icons.IconsHelper;
 import org.mozilla.gecko.icons.decoders.IconDirectoryEntry;
 import org.mozilla.gecko.feeds.ContentNotificationsDelegate;
 import org.mozilla.gecko.feeds.FeedService;
@@ -98,6 +99,7 @@ import org.mozilla.gecko.updater.PostUpdateHandler;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
+import org.mozilla.gecko.util.ContextUtils;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FloatUtils;
@@ -724,7 +726,6 @@ public class BrowserApp extends GeckoApp
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Search:Keyword",
-            "Favicon:CacheLoad",
             null);
 
         EventDispatcher.getInstance().registerUiThreadListener(this,
@@ -745,6 +746,7 @@ public class BrowserApp extends GeckoApp
             "Experiments:GetActive",
             "Experiments:SetOverride",
             "Experiments:ClearOverride",
+            "Favicon:Request",
             "Feedback:MaybeLater",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
@@ -1437,7 +1439,6 @@ public class BrowserApp extends GeckoApp
 
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Search:Keyword",
-            "Favicon:CacheLoad",
             null);
 
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
@@ -1458,6 +1459,7 @@ public class BrowserApp extends GeckoApp
             "Experiments:GetActive",
             "Experiments:SetOverride",
             "Experiments:ClearOverride",
+            "Favicon:Request",
             "Feedback:MaybeLater",
             "Sanitize:ClearHistory",
             "Sanitize:ClearSyncedTabs",
@@ -1887,9 +1889,22 @@ public class BrowserApp extends GeckoApp
                 Experiments.clearOverride(getContext(), message.getString("name"));
                 break;
 
-            case "Favicon:CacheLoad":
+            case "Favicon:Request":
                 final String url = message.getString("url");
-                getFaviconFromCache(callback, url);
+                final boolean shouldSkipNetwork = message.getBoolean("skipNetwork");
+
+                if (TextUtils.isEmpty(url)) {
+                    callback.sendError(null);
+                    break;
+                }
+
+                Icons.with(this)
+                        .pageUrl(url)
+                        .privileged(false)
+                        .skipNetworkIf(shouldSkipNetwork)
+                        .executeCallbackOnBackgroundThread()
+                        .build()
+                        .execute(IconsHelper.createBase64EventCallback(callback));
                 break;
 
             case "Feedback:MaybeLater":
@@ -1948,6 +1963,9 @@ public class BrowserApp extends GeckoApp
                     Telemetry.addToHistogram("BROWSER_IS_ASSIST_DEFAULT",
                             (isDefaultBrowser(Intent.ACTION_ASSIST) ? 1 : 0));
                 }
+
+                Telemetry.addToHistogram("FENNEC_ORBOT_INSTALLED",
+                    ContextUtils.isPackageInstalled(getContext(), "org.torproject.android") ? 1 : 0);
                 break;
 
             case "Updater:Launch":
@@ -2035,43 +2053,6 @@ public class BrowserApp extends GeckoApp
                 super.handleMessage(event, message, callback);
                 break;
         }
-    }
-
-    private void getFaviconFromCache(final EventCallback callback, final String url) {
-        Icons.with(this)
-                .pageUrl(url)
-                .skipNetwork()
-                .executeCallbackOnBackgroundThread()
-                .build()
-                .execute(new IconCallback() {
-                    @Override
-                    public void onIconResponse(IconResponse response) {
-                        ByteArrayOutputStream out = null;
-                        Base64OutputStream b64 = null;
-
-                        try {
-                            out = new ByteArrayOutputStream();
-                            out.write("data:image/png;base64,".getBytes(StringUtils.UTF_8));
-                            b64 = new Base64OutputStream(out, Base64.NO_WRAP);
-                            response.getBitmap().compress(Bitmap.CompressFormat.PNG, 100, b64);
-                            callback.sendSuccess(new String(out.toByteArray(), StringUtils.UTF_8));
-                        } catch (IOException e) {
-                            Log.w(LOGTAG, "Failed to convert to base64 data URI");
-                            callback.sendError("Failed to convert favicon to a base64 data URI");
-                        } finally {
-                            try {
-                                if (out != null) {
-                                    out.close();
-                                }
-                                if (b64 != null) {
-                                    b64.close();
-                                }
-                            } catch (IOException e) {
-                                Log.w(LOGTAG, "Failed to close the streams");
-                            }
-                        }
-                    }
-                });
     }
 
     /**

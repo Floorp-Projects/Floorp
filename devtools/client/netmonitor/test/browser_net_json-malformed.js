@@ -8,10 +8,11 @@
  */
 
 add_task(function* () {
+  let { L10N } = require("devtools/client/netmonitor/l10n");
   let { tab, monitor } = yield initNetMonitor(JSON_MALFORMED_URL);
   info("Starting test... ");
 
-  let { document, EVENTS, Editor, NetMonitorView } = monitor.panelWin;
+  let { document, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
 
   RequestsMenu.lazyUpdate = false;
@@ -30,48 +31,40 @@ add_task(function* () {
       fullMimeType: "text/json; charset=utf-8"
     });
 
-  let onEvent = monitor.panelWin.once(EVENTS.RESPONSE_BODY_DISPLAYED);
+  wait = waitForDOM(document, "#response-tabpanel .editor-mount iframe");
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.getElementById("details-pane-toggle"));
   EventUtils.sendMouseEvent({ type: "mousedown" },
     document.querySelectorAll("#details-pane tab")[3]);
-  yield onEvent;
+  let [editor] = yield wait;
+  yield once(editor, "DOMContentLoaded");
+  yield waitForDOM(editor.contentDocument, ".CodeMirror-code");
 
-  let tabEl = document.querySelectorAll("#details-pane tab")[3];
   let tabpanel = document.querySelectorAll("#details-pane tabpanel")[3];
-
-  is(tabEl.getAttribute("selected"), "true",
-    "The response tab in the network details pane should be selected.");
-
-  is(tabpanel.querySelector("#response-content-info-header")
-    .hasAttribute("hidden"), false,
-    "The response info header doesn't have the intended visibility.");
-  is(tabpanel.querySelector("#response-content-info-header")
-    .getAttribute("value"),
+  is(tabpanel.querySelector(".response-error-header") === null, false,
+    "The response error header doesn't have the intended visibility.");
+  is(tabpanel.querySelector(".response-error-header").textContent,
     "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data" +
       " at line 1 column 40 of the JSON data",
-    "The response info header doesn't have the intended value attribute.");
-  is(tabpanel.querySelector("#response-content-info-header")
-    .getAttribute("tooltiptext"),
+    "The response error header doesn't have the intended text content.");
+  is(tabpanel.querySelector(".response-error-header").getAttribute("title"),
     "SyntaxError: JSON.parse: unexpected non-whitespace character after JSON data" +
       " at line 1 column 40 of the JSON data",
-    "The response info header doesn't have the intended tooltiptext attribute.");
+    "The response error header doesn't have the intended tooltiptext attribute.");
+  let jsonView = tabpanel.querySelector(".tree-section .treeLabel") || {};
+  is(jsonView.textContent === L10N.getStr("jsonScopeName"), false,
+    "The response json view doesn't have the intended visibility.");
+  is(tabpanel.querySelector(".editor-mount iframe") === null, false,
+    "The response editor doesn't have the intended visibility.");
+  is(tabpanel.querySelector(".response-image-box") === null, true,
+    "The response image box doesn't have the intended visibility.");
 
-  is(tabpanel.querySelector("#response-content-json-box")
-    .hasAttribute("hidden"), true,
-    "The response content json box doesn't have the intended visibility.");
-  is(tabpanel.querySelector("#response-content-textarea-box")
-    .hasAttribute("hidden"), false,
-    "The response content textarea box doesn't have the intended visibility.");
-  is(tabpanel.querySelector("#response-content-image-box")
-    .hasAttribute("hidden"), true,
-    "The response content image box doesn't have the intended visibility.");
+  // Strip CodeMirror line number through slice(1)
+  let text = editor.contentDocument
+    .querySelector(".CodeMirror-line").textContent;
 
-  let editor = yield NetMonitorView.editor("#response-content-textarea");
-  is(editor.getText(), "{ \"greeting\": \"Hello malformed JSON!\" },",
+  is(text, "{ \"greeting\": \"Hello malformed JSON!\" },",
     "The text shown in the source editor is incorrect.");
-  is(editor.getMode(), Editor.modes.js,
-    "The mode active in the source editor is incorrect.");
 
   yield teardown(monitor);
 });

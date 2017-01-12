@@ -20,7 +20,6 @@
  */
 
 function run_test() {
-  updateAppInfo();
   do_load_manifest("data/chrome.manifest");
   useHttpServer();
 

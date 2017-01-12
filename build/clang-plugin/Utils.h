@@ -184,6 +184,7 @@ inline bool isIgnoredPathForImplicitCtor(const Decl *Declaration) {
                                     End = llvm::sys::path::rend(FileName);
   for (; Begin != End; ++Begin) {
     if (Begin->compare_lower(StringRef("skia")) == 0 ||
+        Begin->compare_lower(StringRef("sfntly")) == 0 ||
         Begin->compare_lower(StringRef("angle")) == 0 ||
         Begin->compare_lower(StringRef("harfbuzz")) == 0 ||
         Begin->compare_lower(StringRef("hunspell")) == 0 ||
@@ -241,6 +242,7 @@ inline bool isIgnoredPathForSprintfLiteral(const CallExpr *Call, const SourceMan
         Begin->compare_lower(StringRef("mtransport")) == 0 ||
         Begin->compare_lower(StringRef("protobuf")) == 0 ||
         Begin->compare_lower(StringRef("skia")) == 0 ||
+        Begin->compare_lower(StringRef("sfntly")) == 0 ||
         // Gtest uses snprintf as GTEST_SNPRINTF_ with sizeof
         Begin->compare_lower(StringRef("testing")) == 0) {
       return true;

@@ -76,7 +76,7 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver
   mozilla::ReentrantMonitor mReentrantMonitor;
 
 #ifdef XP_WIN
-  nsAutoPtr<WindowsWifiScannerInterface> mWinWifiScanner;
+  nsAutoPtr<WinWifiScanner> mWinWifiScanner;
 #endif
 };
 #else

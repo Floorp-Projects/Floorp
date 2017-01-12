@@ -543,7 +543,5 @@ SelectorAutocompleter.prototype = {
       // the autoSelect item has been selected.
       return this._showPopup(result.suggestions, firstPart, state);
     });
-
-    return;
   }
 };

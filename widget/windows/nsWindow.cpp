@@ -268,8 +268,7 @@ LONG            nsWindow::sLastMouseDownTime      = 0L;
 LONG            nsWindow::sLastClickCount         = 0L;
 BYTE            nsWindow::sLastMouseButton        = 0;
 
-// Trim heap on minimize. (initialized, but still true.)
-int             nsWindow::sTrimOnMinimize         = 2;
+bool            nsWindow::sHaveInitializedPrefs   = false;
 
 TriStateBool nsWindow::sHasBogusPopupsDropShadowOnMultiMonitor = TRI_UNKNOWN;
 
@@ -332,7 +331,60 @@ private:
 Maybe<TimeStamp> CurrentWindowsTimeGetter::sBackwardsSkewStamp;
 DWORD CurrentWindowsTimeGetter::sLastPostTime = 0;
 
-#if defined(ACCESSIBILITY)
+} // namespace mozilla
+
+/**************************************************************
+ *
+ * SECTION: globals variables
+ *
+ **************************************************************/
+
+static const char *sScreenManagerContractID       = "@mozilla.org/gfx/screenmanager;1";
+
+extern mozilla::LazyLogModule gWindowsLog;
+
+// Global used in Show window enumerations.
+static bool     gWindowsVisible                   = false;
+
+// True if we have sent a notification that we are suspending/sleeping.
+static bool     gIsSleepMode                      = false;
+
+static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
+
+// General purpose user32.dll hook object
+static WindowsDllInterceptor sUser32Intercept;
+
+// 2 pixel offset for eTransparencyBorderlessGlass which equals the size of
+// the default window border Windows paints. Glass will be extended inward
+// this distance to remove the border.
+static const int32_t kGlassMarginAdjustment = 2;
+
+// When the client area is extended out into the default window frame area,
+// this is the minimum amount of space along the edge of resizable windows
+// we will always display a resize cursor in, regardless of the underlying
+// content.
+static const int32_t kResizableBorderMinSize = 3;
+
+// Cached pointer events enabler value, True if pointer events are enabled.
+static bool gIsPointerEventsEnabled = false;
+
+// We should never really try to accelerate windows bigger than this. In some
+// cases this might lead to no D3D9 acceleration where we could have had it
+// but D3D9 does not reliably report when it supports bigger windows. 8192
+// is as safe as we can get, we know at least D3D10 hardware always supports
+// this, other hardware we expect to report correctly in D3D9.
+#define MAX_ACCELERATED_DIMENSION 8192
+
+// On window open (as well as after), Windows has an unfortunate habit of
+// sending rather a lot of WM_NCHITTEST messages. Because we have to do point
+// to DOM target conversions for these, we cache responses for a given
+// coordinate this many milliseconds:
+#define HITTEST_CACHE_LIFETIME_MS 50
+
+#if defined(ACCESSIBILITY) && defined(_M_IX86)
+
+namespace mozilla {
+
 /**
  * Windows touchscreen code works by setting a global WH_GETMESSAGE hook and
  * injecting tiptsf.dll. The touchscreen process then posts registered messages
@@ -400,7 +452,6 @@ private:
                                ::GetCurrentThreadId());
     MOZ_ASSERT(mHook);
 
-#if defined(_M_IX86)
     if (!IsWin10OrLater()) {
       // tiptsf loads when STA COM is first initialized, so it should be present
       sTipTsfInterceptor.Init("tiptsf.dll");
@@ -409,7 +460,13 @@ private:
           (void**) &sProcessCaretEventsStub);
       MOZ_ASSERT(ok);
     }
-#endif // defined(_M_IX86)
+
+    MOZ_ASSERT(!sSendMessageTimeoutWStub);
+    sUser32Intercept.Init("user32.dll");
+    DebugOnly<bool> hooked = sUser32Intercept.AddHook("SendMessageTimeoutW",
+        reinterpret_cast<intptr_t>(&SendMessageTimeoutWHook),
+        (void**) &sSendMessageTimeoutWStub);
+    MOZ_ASSERT(hooked);
   }
 
   class MOZ_RAII A11yInstantiationBlocker
@@ -454,7 +511,6 @@ private:
     return ::CallNextHookEx(nullptr, aCode, aWParam, aLParam);
   }
 
-#if defined(_M_IX86)
   static void CALLBACK ProcessCaretEventsHook(HWINEVENTHOOK aWinEventHook,
                                               DWORD aEvent, HWND aHwnd,
                                               LONG aObjectId, LONG aChildId,
@@ -466,10 +522,34 @@ private:
                             aGeneratingTid, aEventTime);
   }
 
+  static LRESULT WINAPI SendMessageTimeoutWHook(HWND aHwnd, UINT aMsgCode,
+                                                WPARAM aWParam, LPARAM aLParam,
+                                                UINT aFlags, UINT aTimeout,
+                                                PDWORD_PTR aMsgResult)
+  {
+    // We don't want to handle this unless the message is a WM_GETOBJECT that we
+    // want to block, and the aHwnd is a nsWindow that belongs to the current
+    // thread.
+    if (!aMsgResult || aMsgCode != WM_GETOBJECT || aLParam != OBJID_CLIENT ||
+        !WinUtils::GetNSWindowPtr(aHwnd) ||
+        ::GetWindowThreadProcessId(aHwnd, nullptr) != ::GetCurrentThreadId() ||
+        !IsA11yBlocked()) {
+      return sSendMessageTimeoutWStub(aHwnd, aMsgCode, aWParam, aLParam,
+                                      aFlags, aTimeout, aMsgResult);
+    }
+
+    // In this case we want to fake the result that would happen if we had
+    // decided not to handle WM_GETOBJECT in our WndProc. We hand the message
+    // off to DefWindowProc to accomplish this.
+    *aMsgResult = static_cast<DWORD_PTR>(::DefWindowProcW(aHwnd, aMsgCode,
+                                                          aWParam, aLParam));
+
+    return static_cast<LRESULT>(TRUE);
+  }
+
   static WindowsDllInterceptor sTipTsfInterceptor;
   static WINEVENTPROC sProcessCaretEventsStub;
-#endif // defined(_M_IX86)
-
+  static decltype(&SendMessageTimeoutW) sSendMessageTimeoutWStub;
   static StaticAutoPtr<TIPMessageHandler> sInstance;
 
   HHOOK                 mHook;
@@ -477,65 +557,14 @@ private:
   uint32_t              mA11yBlockCount;
 };
 
-#if defined(_M_IX86)
 WindowsDllInterceptor TIPMessageHandler::sTipTsfInterceptor;
 WINEVENTPROC TIPMessageHandler::sProcessCaretEventsStub;
-#endif // defined(_M_IX86)
-
+decltype(&SendMessageTimeoutW) TIPMessageHandler::sSendMessageTimeoutWStub;
 StaticAutoPtr<TIPMessageHandler> TIPMessageHandler::sInstance;
-
-#endif // defined(ACCESSIBILITY)
 
 } // namespace mozilla
 
-/**************************************************************
- *
- * SECTION: globals variables
- *
- **************************************************************/
-
-static const char *sScreenManagerContractID       = "@mozilla.org/gfx/screenmanager;1";
-
-extern mozilla::LazyLogModule gWindowsLog;
-
-// Global used in Show window enumerations.
-static bool     gWindowsVisible                   = false;
-
-// True if we have sent a notification that we are suspending/sleeping.
-static bool     gIsSleepMode                      = false;
-
-static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
-
-// General purpose user32.dll hook object
-static WindowsDllInterceptor sUser32Intercept;
-
-// 2 pixel offset for eTransparencyBorderlessGlass which equals the size of
-// the default window border Windows paints. Glass will be extended inward
-// this distance to remove the border.
-static const int32_t kGlassMarginAdjustment = 2;
-
-// When the client area is extended out into the default window frame area,
-// this is the minimum amount of space along the edge of resizable windows
-// we will always display a resize cursor in, regardless of the underlying
-// content.
-static const int32_t kResizableBorderMinSize = 3;
-
-// Cached pointer events enabler value, True if pointer events are enabled.
-static bool gIsPointerEventsEnabled = false;
-
-// We should never really try to accelerate windows bigger than this. In some
-// cases this might lead to no D3D9 acceleration where we could have had it
-// but D3D9 does not reliably report when it supports bigger windows. 8192
-// is as safe as we can get, we know at least D3D10 hardware always supports
-// this, other hardware we expect to report correctly in D3D9.
-#define MAX_ACCELERATED_DIMENSION 8192
-
-// On window open (as well as after), Windows has an unfortunate habit of
-// sending rather a lot of WM_NCHITTEST messages. Because we have to do point
-// to DOM target conversions for these, we cache responses for a given
-// coordinate this many milliseconds:
-#define HITTEST_CACHE_LIFETIME_MS 50
-
+#endif // defined(ACCESSIBILITY) && defined(_M_IX86)
 
 /**************************************************************
  **************************************************************
@@ -613,9 +642,9 @@ nsWindow::nsWindow()
     // WinTaskbar.cpp for details.
     mozilla::widget::WinTaskbar::RegisterAppUserModelID();
     KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
-#if defined(ACCESSIBILITY)
+#if defined(ACCESSIBILITY) && defined(_M_IX86)
     mozilla::TIPMessageHandler::Initialize();
-#endif // defined(ACCESSIBILITY)
+#endif // defined(ACCESSIBILITY) && defined(_M_IX86)
     IMEHandler::Initialize();
     if (SUCCEEDED(::OleInitialize(nullptr))) {
       sIsOleInitialized = TRUE;
@@ -753,7 +782,7 @@ nsWindow::Create(nsIWidget* aParent,
       parent = nullptr;
     }
 
-    if (IsVistaOrLater() && !IsWin8OrLater() &&
+    if (!IsWin8OrLater() &&
         HasBogusPopupsDropShadowOnMultiMonitor()) {
       extendedStyle |= WS_EX_COMPOSITED;
     }
@@ -878,20 +907,13 @@ nsWindow::Create(nsIWidget* aParent,
   mDefaultIMC.Init(this);
   IMEHandler::InitInputContext(this, mInputContext);
 
-  // If the internal variable set by the config.trim_on_minimize pref has not
-  // been initialized, and if this is the hidden window (conveniently created
-  // before any visible windows, and after the profile has been initialized),
-  // do some initialization work.
-  if (sTrimOnMinimize == 2 && mWindowType == eWindowType_invisible) {
-    // Our internal trim prevention logic is effective on 2K/XP at maintaining
-    // the working set when windows are minimized, but on Vista and up it has
-    // little to no effect. Since this feature has been the source of numerous
-    // bugs over the years, disable it (sTrimOnMinimize=1) on Vista and up.
-    sTrimOnMinimize =
-      Preferences::GetBool("config.trim_on_minimize",
-        IsVistaOrLater() ? 1 : 0);
+  // Do some initialization work, but only if (a) it hasn't already been done,
+  // and (b) this is the hidden window (which is conveniently created before
+  // any visible windows but after the profile has been initialized).
+  if (!sHaveInitializedPrefs && mWindowType == eWindowType_invisible) {
     sSwitchKeyboardLayout =
       Preferences::GetBool("intl.keyboard.per_window_layout", false);
+    sHaveInitializedPrefs = true;
   }
 
   // Query for command button metric data for rendering the titlebar. We
@@ -1233,7 +1255,13 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
 
 nsIWidget* nsWindow::GetParent(void)
 {
-  return GetParentWindow(false);
+  if (mIsTopWidgetWindow) {
+    return nullptr;
+  }
+  if (mInDtor || mOnDestroyCalled) {
+    return nullptr;
+  }
+  return mParent;
 }
 
 static int32_t RoundDown(double aDouble)
@@ -1614,9 +1642,10 @@ bool nsWindow::IsVisible() const
 
 // XP and Vista visual styles sometimes require window clipping regions to be applied for proper
 // transparency. These routines are called on size and move operations.
+// XXX this is apparently still needed in Windows 7 and later
 void nsWindow::ClearThemeRegion()
 {
-  if (IsVistaOrLater() && !HasGlass() &&
+  if (!HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, nullptr, false);
@@ -1630,7 +1659,7 @@ void nsWindow::SetThemeRegion()
   // so default constants are used for part and state. At some point we might need part and
   // state values from nsNativeThemeWin's GetThemePartAndState, but currently windows that
   // change shape based on state haven't come up.
-  if (IsVistaOrLater() && !HasGlass() &&
+  if (!HasGlass() &&
       (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
        (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nullptr;
@@ -2047,13 +2076,7 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
         break;
 
       case nsSizeMode_Minimized :
-        // Using SW_SHOWMINIMIZED prevents the working set from being trimmed but
-        // keeps the window active in the tray. So after the window is minimized,
-        // windows will fire WM_WINDOWPOSCHANGED (OnWindowPosChanged) at which point
-        // we will do some additional processing to get the active window set right.
-        // If sTrimOnMinimize is set, we let windows handle minimization normally
-        // using SW_MINIMIZE.
-        mode = sTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
+        mode = SW_MINIMIZE;
         break;
 
       default :
@@ -5806,7 +5829,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
       // Do explicit casting to make it working on 64bit systems (see bug 649236
       // for details).
       int32_t objId = static_cast<DWORD>(lParam);
-      if (!TIPMessageHandler::IsA11yBlocked() && objId == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
+      if (objId == OBJID_CLIENT) { // oleacc.dll will be loaded dynamically
         a11y::Accessible* rootAccessible = GetAccessible(); // Held by a11y cache
         if (rootAccessible) {
           IAccessible *msaaAccessible = nullptr;
@@ -5825,12 +5848,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_SYSCOMMAND:
     {
       WPARAM filteredWParam = (wParam &0xFFF0);
-      // prevent Windows from trimming the working set. bug 76831
-      if (!sTrimOnMinimize && filteredWParam == SC_MINIMIZE) {
-        ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
-        result = true;
-      }
-
       if (mSizeMode == nsSizeMode_Fullscreen &&
           filteredWParam == SC_RESTORE &&
           GetCurrentShowCmd(mWnd) != SW_SHOWMINIMIZED) {
@@ -6448,14 +6465,6 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     else
       mSizeMode = nsSizeMode_Normal;
 
-    // If !sTrimOnMinimize, we minimize windows using SW_SHOWMINIMIZED (See
-    // SetSizeMode for internal calls, and WM_SYSCOMMAND for external). This
-    // prevents the working set from being trimmed but keeps the window active.
-    // After the window is minimized, we need to do some touch up work on the
-    // active window. (bugs 76831 & 499816)
-    if (!sTrimOnMinimize && nsSizeMode_Minimized == mSizeMode)
-      ActivateOtherWindowHelper(mWnd);
-
 #ifdef WINSTATE_DEBUG_OUTPUT
     switch (mSizeMode) {
       case nsSizeMode_Normal:
@@ -6573,31 +6582,6 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp)
     
     // Send a gecko resize event
     OnResize(rect);
-  }
-}
-
-// static
-void nsWindow::ActivateOtherWindowHelper(HWND aWnd)
-{
-  // Find the next window that is enabled, visible, and not minimized.
-  HWND hwndBelow = ::GetNextWindow(aWnd, GW_HWNDNEXT);
-  while (hwndBelow && (!::IsWindowEnabled(hwndBelow) || !::IsWindowVisible(hwndBelow) ||
-                       ::IsIconic(hwndBelow))) {
-    hwndBelow = ::GetNextWindow(hwndBelow, GW_HWNDNEXT);
-  }
-
-  // Push ourselves to the bottom of the stack, then activate the
-  // next window.
-  ::SetWindowPos(aWnd, HWND_BOTTOM, 0, 0, 0, 0,
-                 SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
-  if (hwndBelow)
-    ::SetForegroundWindow(hwndBelow);
-
-  // Play the minimize sound while we're here, since that is also
-  // forgotten when we use SW_SHOWMINIMIZED.
-  nsCOMPtr<nsISound> sound(do_CreateInstance("@mozilla.org/sound;1"));
-  if (sound) {
-    sound->PlaySystemSound(NS_LITERAL_STRING("Minimize"));
   }
 }
 

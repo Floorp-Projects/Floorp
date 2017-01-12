@@ -15,7 +15,7 @@ const ConsoleObserver = {
   },
 
   uninit() {
-    Services.obs.removeObserver(this, "console-api-log-event", false);
+    Services.obs.removeObserver(this, "console-api-log-event");
   },
 
   observe(aSubject, aTopic, aData) {

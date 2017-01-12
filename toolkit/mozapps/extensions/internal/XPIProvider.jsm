@@ -4399,7 +4399,7 @@ this.XPIProvider = {
       }
       return;
     } else if (aTopic == NOTIFICATION_TOOLBOXPROCESS_LOADED) {
-      Services.obs.removeObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED, false);
+      Services.obs.removeObserver(this, NOTIFICATION_TOOLBOXPROCESS_LOADED);
       this._toolboxProcessLoaded = true;
       BrowserToolboxProcess.on("connectionchange",
                                this.onDebugConnectionChange.bind(this));
@@ -4861,11 +4861,6 @@ this.XPIProvider = {
         // That will be logged below.
       }
 
-      if (!method) {
-        logger.warn("Add-on " + aAddon.id + " is missing bootstrap method " + aMethod);
-        return;
-      }
-
       // Extensions are automatically deinitialized in the correct order at shutdown.
       if (aMethod == "shutdown" && aReason != BOOTSTRAP_REASONS.APP_SHUTDOWN) {
         activeAddon.disable = true;
@@ -4899,12 +4894,16 @@ this.XPIProvider = {
         }
       }
 
-      logger.debug("Calling bootstrap method " + aMethod + " on " + aAddon.id + " version " +
-                   aAddon.version);
-      try {
-        method(params, aReason);
-      } catch (e) {
-        logger.warn("Exception running bootstrap method " + aMethod + " on " + aAddon.id, e);
+      if (!method) {
+        logger.warn("Add-on " + aAddon.id + " is missing bootstrap method " + aMethod);
+      } else {
+        logger.debug("Calling bootstrap method " + aMethod + " on " + aAddon.id + " version " +
+                     aAddon.version);
+        try {
+          method(params, aReason);
+        } catch (e) {
+          logger.warn("Exception running bootstrap method " + aMethod + " on " + aAddon.id, e);
+        }
       }
     } finally {
       // Extensions are automatically initialized in the correct order at startup.
@@ -5295,8 +5294,8 @@ class AddonInstall {
    *         Optional icons for the add-on
    * @param  options.version
    *         An optional version for the add-on
-   * @param  options.permHandler
-   *         A callback to present permissions to the user before installing.
+   * @param  options.promptHandler
+   *         A callback to prompt the user before installing.
    */
   constructor(installLocation, url, options = {}) {
     this.wrapper = new AddonInstallWrapper(this);
@@ -5312,7 +5311,7 @@ class AddonInstall {
     }
     this.hash = this.originalHash;
     this.existingAddon = options.existingAddon || null;
-    this.permHandler = options.permHandler || (() => Promise.resolve());
+    this.promptHandler = options.promptHandler || (() => Promise.resolve());
     this.releaseNotesURI = null;
 
     this.listeners = [];
@@ -5352,9 +5351,9 @@ class AddonInstall {
   install() {
     switch (this.state) {
     case AddonManager.STATE_DOWNLOADED:
-      this.checkPermissions();
+      this.checkPrompt();
       break;
-    case AddonManager.STATE_PERMISSION_GRANTED:
+    case AddonManager.STATE_PROMPTS_DONE:
       this.checkForBlockers();
       break;
     case AddonManager.STATE_READY:
@@ -5620,9 +5619,9 @@ class AddonInstall {
    * STATE_DOWNLOADED (which actually means that the file is available
    * and has been verified).
    */
-  checkPermissions() {
+  checkPrompt() {
     Task.spawn((function*() {
-      if (this.permHandler) {
+      if (this.promptHandler) {
         let info = {
           existingAddon: this.existingAddon ? this.existingAddon.wrapper : null,
           addon: this.addon.wrapper,
@@ -5630,9 +5629,9 @@ class AddonInstall {
         };
 
         try {
-          yield this.permHandler(info);
+          yield this.promptHandler(info);
         } catch (err) {
-          logger.info(`Install of ${this.addon.id} cancelled since user declined permissions`);
+          logger.info(`Install of ${this.addon.id} cancelled by user`);
           this.state = AddonManager.STATE_CANCELLED;
           XPIProvider.removeActiveInstall(this);
           AddonManagerPrivate.callInstallListeners("onInstallCancelled",
@@ -5640,7 +5639,7 @@ class AddonInstall {
           return;
         }
       }
-      this.state = AddonManager.STATE_PERMISSION_GRANTED;
+      this.state = AddonManager.STATE_PROMPTS_DONE;
       this.install();
     }).bind(this));
   }
@@ -6092,8 +6091,8 @@ class DownloadAddonInstall extends AddonInstall {
    *         Optional icons for the add-on
    * @param  options.version
    *         An optional version for the add-on
-   * @param  options.permHandler
-   *         A callback to present permissions to the user before installing.
+   * @param  options.promptHandler
+   *         A callback to prompt the user before installing.
    */
   constructor(installLocation, url, options = {}) {
     super(installLocation, url, options);
@@ -6608,8 +6607,8 @@ AddonInstallWrapper.prototype = {
     return installFor(this).sourceURI;
   },
 
-  set _permHandler(handler) {
-    installFor(this).permHandler = handler;
+  set promptHandler(handler) {
+    installFor(this).promptHandler = handler;
   },
 
   install() {

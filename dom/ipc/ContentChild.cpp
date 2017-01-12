@@ -1250,6 +1250,13 @@ ContentChild::RecvGMPsChanged(nsTArray<GMPCapabilityData>&& capabilities)
 }
 
 mozilla::ipc::IPCResult
+ContentChild::RecvInitProcessHangMonitor(Endpoint<PProcessHangMonitorChild>&& aHangMonitor)
+{
+  CreateHangMonitorChild(Move(aHangMonitor));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult
 ContentChild::RecvInitRendering(Endpoint<PCompositorBridgeChild>&& aCompositor,
                                 Endpoint<PImageBridgeChild>&& aImageBridge,
                                 Endpoint<PVRManagerChild>&& aVRBridge,
@@ -1310,13 +1317,6 @@ ContentChild::AllocPBackgroundChild(Transport* aTransport,
                                     ProcessId aOtherProcess)
 {
   return BackgroundChild::Alloc(aTransport, aOtherProcess);
-}
-
-PProcessHangMonitorChild*
-ContentChild::AllocPProcessHangMonitorChild(Transport* aTransport,
-                                            ProcessId aOtherProcess)
-{
-  return CreateHangMonitorChild(aTransport, aOtherProcess);
 }
 
 #if defined(XP_MACOSX) && defined(MOZ_CONTENT_SANDBOX)

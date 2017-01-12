@@ -1115,42 +1115,6 @@ ArrayBufferObject::createEmpty(JSContext* cx)
     return obj;
 }
 
-bool
-ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(IsArrayBufferMaybeShared(args.thisv()));
-
-    /*
-     * This method is only called for |DataView(alienBuf, ...)| which calls
-     * this as |createDataViewForThis.call(alienBuf, byteOffset, byteLength,
-     *                                     DataView.prototype)|,
-     * ergo there must be exactly 3 arguments.
-     */
-    MOZ_ASSERT(args.length() == 3);
-
-    uint32_t byteOffset = args[0].toPrivateUint32();
-    uint32_t byteLength = args[1].toPrivateUint32();
-    Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
-    buffer = &args.thisv().toObject().as<ArrayBufferObjectMaybeShared>();
-
-    /*
-     * Pop off the passed-along prototype and delegate to normal DataViewObject
-     * construction.
-     */
-    JSObject* obj = DataViewObject::create(cx, byteOffset, byteLength, buffer, &args[2].toObject());
-    if (!obj)
-        return false;
-    args.rval().setObject(*obj);
-    return true;
-}
-
-bool
-ArrayBufferObject::createDataViewForThis(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsArrayBufferMaybeShared, createDataViewForThisImpl>(cx, args);
-}
-
 /* static */ ArrayBufferObject::BufferContents
 ArrayBufferObject::externalizeContents(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                                        bool hasStealableContents)

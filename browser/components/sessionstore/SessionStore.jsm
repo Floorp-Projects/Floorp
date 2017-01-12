@@ -3613,7 +3613,7 @@ var SessionStoreInternal = {
    *        true if we want to reload into a fresh process
    */
   restoreTabContent: function (aTab, aLoadArguments = null, aReloadInFreshProcess = false) {
-    if (aTab.hasAttribute("customizemode")) {
+    if (aTab.hasAttribute("customizemode") && !aLoadArguments) {
       return;
     }
 

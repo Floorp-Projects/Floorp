@@ -373,7 +373,8 @@ const kTestPairs = [
 ];
 
 Components.utils.import("resource://gre/modules/Timer.jsm");
-let detectorModule = Components.utils.import("resource:///modules/translation/LanguageDetector.jsm");
+let detectorModule = Components.utils.import("resource:///modules/translation/LanguageDetector.jsm", {});
+const LanguageDetector = detectorModule.LanguageDetector;
 
 function check_result(result, langCode, expected) {
   equal(result.language, langCode, "Expected language code");

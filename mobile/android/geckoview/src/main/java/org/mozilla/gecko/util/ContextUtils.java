@@ -29,6 +29,16 @@ public class ContextUtils {
         }
     }
 
+    public static boolean isPackageInstalled(final Context context, String packageName) {
+        try {
+            PackageManager pm = context.getPackageManager();
+            pm.getPackageInfo(packageName, 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
     public static boolean isInstalledFromGooglePlay(final Context context) {
         final String installerPackageName = context.getPackageManager().getInstallerPackageName(context.getPackageName());
 

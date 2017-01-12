@@ -47,7 +47,7 @@ const PREFERENCE_NAME = "test-pref";
 function uri(aURIString) {
   return Cc["@mozilla.org/network/io-service;1"].
          getService(Ci.nsIIOService).
-         newURI(aURIString, null, null);
+         newURI(aURIString);
 }
 
 /**

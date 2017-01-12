@@ -14,7 +14,6 @@
 
 function run_test() {
   removeMetadata();
-  updateAppInfo();
 
   let search = Services.search;
 

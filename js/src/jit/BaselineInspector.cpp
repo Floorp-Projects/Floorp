@@ -365,10 +365,9 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
                              uint32_t nstubs,
                              MIRType* result)
 {
-    bool sawInt32 = false;
+    DebugOnly<bool> sawInt32 = false;
     bool sawDouble = false;
     bool sawOther = false;
-    bool sawString = false;
 
     for (uint32_t i = 0; i < nstubs; i++) {
         switch (stubs[i]->kind()) {
@@ -384,11 +383,6 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
           case ICStub::BinaryArith_DoubleWithInt32:
             sawDouble = true;
             break;
-          case ICStub::BinaryArith_StringConcat:
-            // Don't report true for BinaryArith_StringObjectConcat, since
-            // IonMonkey doesn't support MConcat with objects yet.
-            sawString = true;
-            break;
           default:
             sawOther = true;
             break;
@@ -397,13 +391,6 @@ TryToSpecializeBinaryArithOp(ICStub** stubs,
 
     if (sawOther)
         return false;
-
-    if (sawString) {
-        if (sawDouble || sawInt32)
-            return false;
-        *result = MIRType::String;
-        return true;
-    }
 
     if (sawDouble) {
         *result = MIRType::Double;
