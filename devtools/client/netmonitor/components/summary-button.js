@@ -4,16 +4,16 @@
 
 "use strict";
 
-const {
-  CONTENT_SIZE_DECIMALS,
-  REQUEST_TIME_DECIMALS,
-} = require("../constants");
 const { DOM, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { PluralForm } = require("devtools/shared/plural-form");
 const { L10N } = require("../l10n");
 const { getDisplayedRequestsSummary } = require("../selectors/index");
 const Actions = require("../actions/index");
+const {
+  getSizeWithDecimals,
+  getTimeWithDecimals,
+} = require("../utils/format-utils");
 
 const { button, span } = DOM;
 
@@ -25,8 +25,8 @@ function SummaryButton({
   const text = (count === 0) ? L10N.getStr("networkMenu.empty") :
     PluralForm.get(count, L10N.getStr("networkMenu.summary"))
     .replace("#1", count)
-    .replace("#2", L10N.numberWithDecimals(bytes / 1024, CONTENT_SIZE_DECIMALS))
-    .replace("#3", L10N.numberWithDecimals(millis / 1000, REQUEST_TIME_DECIMALS));
+    .replace("#2", getSizeWithDecimals(bytes / 1024))
+    .replace("#3", getTimeWithDecimals(millis / 1000));
 
   return button({
     id: "requests-menu-network-summary-button",
