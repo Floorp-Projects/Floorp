@@ -24,7 +24,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/collection_validator.js',
     'modules/engines.js',
     'modules/FxaMigrator.jsm',
-    'modules/identity.js',
     'modules/keys.js',
     'modules/main.js',
     'modules/policies.js',
@@ -59,7 +58,6 @@ EXTRA_JS_MODULES['services-sync'].engines += [
 ]
 
 EXTRA_JS_MODULES['services-sync'].stages += [
-    'modules/stages/cluster.js',
     'modules/stages/declined.js',
     'modules/stages/enginesync.js',
 ]
