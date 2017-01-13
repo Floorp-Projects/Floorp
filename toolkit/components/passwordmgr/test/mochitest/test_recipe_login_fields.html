@@ -133,6 +133,70 @@ add_task(function* testNotUsernameFieldNoUsername() {
   }
 });
 
+add_task(function* loadNotPasswordSelectorRecipes() {
+  yield resetRecipes();
+  yield loadRecipes({
+    siteRecipes: [{
+      hosts: ["mochi.test:8888"],
+      notPasswordSelector: "input[name='not_pword'], input[name='not_pword2']",
+    }],
+  });
+});
+
+add_task(function* testNotPasswordField() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notPasswordSelector should be skipped -->
+    <form id="form5">
+      <input type="text"     name="uname7" data-expected="true">
+      <input type="password" name="not_pword" data-expected="false">
+      <input type="password" name="pword7" data-expected="true">
+    </form>`;
+
+  let elements = yield waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(function* testNotPasswordFieldNoPassword() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notPasswordSelector should be skipped.
+         No username or password field should be found and filled in this case.
+         A dummy form7 is added after so we know when the login manager is done
+         considering filling form6. -->
+    <form id="form6">
+      <input type="text"     name="uname8" data-expected="false">
+      <input type="password" name="not_pword" data-expected="false">
+    </form>
+    <form id="form7">
+      <input type="password" name="pword9" data-expected="true">
+    </form>`;
+
+  let elements = yield waitForFills(1);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
+add_task(function* testNotPasswordField_tooManyToOkay() {
+  document.getElementById("content").innerHTML = `
+    <!-- The field matching notPasswordSelector should be skipped so we won't
+         have too many pw fields to handle (3). -->
+    <form id="form8">
+      <input type="text"     name="uname9" data-expected="true">
+      <input type="password" name="not_pword2" data-expected="false">
+      <input type="password" name="not_pword" data-expected="false">
+      <input type="password" name="pword10" data-expected="true">
+      <input type="password" name="pword11" data-expected="false">
+      <input type="password" name="pword12" data-expected="false">
+    </form>`;
+
+  let elements = yield waitForFills(2);
+  for (let element of elements) {
+    is(element.dataset.expected, "true", `${element.name} was filled`);
+  }
+});
+
 </script>
 
 <p id="display"></p>
