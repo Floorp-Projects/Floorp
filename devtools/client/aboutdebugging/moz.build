@@ -12,3 +12,6 @@ DIRS += [
 BROWSER_CHROME_MANIFESTS += [
     'test/browser.ini'
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: about:debugging')

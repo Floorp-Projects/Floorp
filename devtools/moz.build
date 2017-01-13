@@ -23,3 +23,24 @@ DIRS += [
 if CONFIG['MOZ_BUILD_APP'] in ('browser', 'b2g/dev'):
     DIST_SUBDIR = 'browser'
     export('DIST_SUBDIR')
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+
+with Files('docs/**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+
+with Files('docs/memory-panel.md'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
+
+with Files('docs/debugger-panel.md'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+
+with Files('docs/debugger-api.md'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+
+with Files('docs/http-inspector.md'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
+
+with Files('docs/inspector-panel.md'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')

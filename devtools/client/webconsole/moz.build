@@ -21,3 +21,6 @@ DevToolsModules(
     'webconsole-connection-proxy.js',
     'webconsole.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
