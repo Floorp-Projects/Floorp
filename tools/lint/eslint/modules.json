@@ -222,7 +222,6 @@
   "Translation.jsm": ["Translation", "TranslationTelemetry"],
   "Traversal.jsm": ["TraversalRules", "TraversalHelper"],
   "UpdateTelemetry.jsm": ["AUSTLMY"],
-  "userapi.js": ["UserAPI10Client"],
   "util.js": ["getChromeWindow", "XPCOMUtils", "Services", "Utils", "Async", "Svc", "Str"],
   "utils.js": ["applicationName", "assert", "Copy", "getBrowserObject", "getChromeWindow", "getWindows", "getWindowByTitle", "getWindowByType", "getWindowId", "getMethodInWindows", "getPreference", "saveDataURL", "setPreference", "sleep", "startTimer", "stopTimer", "takeScreenshot", "unwrapNode", "waitFor", "btoa", "encryptPayload", "isConfiguredWithLegacyIdentity", "ensureLegacyIdentityManager", "setBasicCredentials", "makeIdentityConfig", "makeFxAccountsInternalMock", "configureFxAccountIdentity", "configureIdentity", "SyncTestingInfrastructure", "waitForZeroTimer", "Promise", "add_identity_test", "MockFxaStorageManager", "AccountState", "sumHistogram", "CommonUtils", "CryptoUtils", "TestingUtils"],
   "Utils.jsm": ["Utils", "Logger", "PivotContext", "PrefCache"],
