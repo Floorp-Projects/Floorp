@@ -89,6 +89,7 @@ WEBIDL_FILES = [
     'CSPReport.webidl',
     'CSS.webidl',
     'CSSAnimation.webidl',
+    'CSSImportRule.webidl',
     'CSSLexer.webidl',
     'CSSNamespaceRule.webidl',
     'CSSPrimitiveValue.webidl',
