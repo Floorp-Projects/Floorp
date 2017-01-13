@@ -4955,7 +4955,7 @@ BytecodeEmitter::emitIteratorClose(Maybe<JumpTarget> yieldStarTryStart, bool all
 
 template <typename InnerEmitter>
 bool
-BytecodeEmitter::wrapWithIteratorCloseTryNote(int32_t iterDepth, InnerEmitter emitter)
+BytecodeEmitter::wrapWithDestructuringIteratorCloseTryNote(int32_t iterDepth, InnerEmitter emitter)
 {
     MOZ_ASSERT(this->stackDepth >= iterDepth);
 
@@ -4964,7 +4964,7 @@ BytecodeEmitter::wrapWithIteratorCloseTryNote(int32_t iterDepth, InnerEmitter em
         return false;
     ptrdiff_t end = offset();
     if (start != end)
-        return tryNoteList.append(JSTRY_ITERCLOSE, iterDepth, start, end);
+        return tryNoteList.append(JSTRY_DESTRUCTURING_ITERCLOSE, iterDepth, start, end);
     return true;
 }
 
@@ -5065,6 +5065,9 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
 
     // Here's pseudo code for |let [a, b, , c=y, ...d] = x;|
     //
+    // Lines that are annotated "covered by trynote" mean that upon throwing
+    // an exception, IteratorClose is called on iter only if done is false.
+    //
     //   let x, y;
     //   let a, b, c, d;
     //   let iter, lref, result, done, value; // stack values
@@ -5072,7 +5075,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //   iter = x[Symbol.iterator]();
     //
     //   // ==== emitted by loop for a ====
-    //   lref = GetReference(a);
+    //   lref = GetReference(a);              // covered by trynote
     //
     //   result = iter.next();
     //   done = result.done;
@@ -5082,10 +5085,10 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //   else
     //     value = result.value;
     //
-    //   SetOrInitialize(lref, value);
+    //   SetOrInitialize(lref, value);        // covered by trynote
     //
     //   // ==== emitted by loop for b ====
-    //   lref = GetReference(b);
+    //   lref = GetReference(b);              // covered by trynote
     //
     //   if (done) {
     //     value = undefined;
@@ -5098,7 +5101,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //       value = result.value;
     //   }
     //
-    //   SetOrInitialize(lref, value);
+    //   SetOrInitialize(lref, value);        // covered by trynote
     //
     //   // ==== emitted by loop for elision ====
     //   if (done) {
@@ -5113,7 +5116,7 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //   }
     //
     //   // ==== emitted by loop for c ====
-    //   lref = GetReference(c);
+    //   lref = GetReference(c);              // covered by trynote
     //
     //   if (done) {
     //     value = undefined;
@@ -5127,19 +5130,23 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     //   }
     //
     //   if (value === undefined)
-    //     value = y;
+    //     value = y;                         // covered by trynote
     //
-    //   SetOrInitialize(lref, value);
+    //   SetOrInitialize(lref, value);        // covered by trynote
     //
     //   // ==== emitted by loop for d ====
-    //   lref = GetReference(d);
+    //   lref = GetReference(d);              // covered by trynote
     //
     //   if (done)
     //     value = [];
     //   else
     //     value = [...iter];
     //
-    //   SetOrInitialize(lref, value);
+    //   SetOrInitialize(lref, value);        // covered by trynote
+    //
+    //   // === emitted after loop ===
+    //   if (!done)
+    //      IteratorClose(iter);
 
     // Use an iterator to destructure the RHS, instead of index lookup. We
     // must leave the *original* value on the stack.
@@ -5148,25 +5155,61 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
     if (!emitIterator())                                          // ... OBJ ITER
         return false;
 
+    // For an empty pattern [], call IteratorClose unconditionally. Nothing
+    // else needs to be done.
+    if (!pattern->pn_head)
+        return emitIteratorClose();                               // ... OBJ
+
+    // Push an initial FALSE value for DONE.
+    if (!emit1(JSOP_FALSE))                                       // ... OBJ ITER FALSE
+        return false;
+
+    // JSTRY_DESTRUCTURING_ITERCLOSE expects the iterator and the done value
+    // to be the second to top and the top of the stack, respectively.
+    // IteratorClose is called upon exception only if done is false.
+    int32_t tryNoteDepth = stackDepth;
+
     for (ParseNode* member = pattern->pn_head; member; member = member->pn_next) {
-        bool isHead = member == pattern->pn_head;
-        bool hasNext = !!member->pn_next;
+        bool isFirst = member == pattern->pn_head;
+        DebugOnly<bool> hasNext = !!member->pn_next;
+
+        size_t emitted = 0;
+
+        // Spec requires LHS reference to be evaluated first.
+        ParseNode* lhsPattern = member;
+        if (lhsPattern->isKind(PNK_ASSIGN))
+            lhsPattern = lhsPattern->pn_left;
+
+        bool isElision = lhsPattern->isKind(PNK_ELISION);
+        if (!isElision) {
+            auto emitLHSRef = [lhsPattern, &emitted](BytecodeEmitter* bce) {
+                return bce->emitDestructuringLHSRef(lhsPattern, &emitted); // ... OBJ ITER DONE *LREF
+            };
+            if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth, emitLHSRef))
+                return false;
+        }
+
+        // Pick the DONE value to the top of the stack.
+        if (emitted) {
+            if (!emit2(JSOP_PICK, emitted))                       // ... OBJ ITER *LREF DONE
+                return false;
+        }
+
+        if (isFirst) {
+            // If this element is the first, DONE is always FALSE, so pop it.
+            //
+            // Non-first elements should emit if-else depending on the
+            // member pattern, below.
+            if (!emit1(JSOP_POP))                                 // ... OBJ ITER *LREF
+                return false;
+        }
 
         if (member->isKind(PNK_SPREAD)) {
-            size_t emitted = 0;
-            if (!emitDestructuringLHSRef(member, &emitted))       // ... OBJ ITER ?DONE *LREF
-                return false;
-
             IfThenElseEmitter ifThenElse(this);
-            if (!isHead) {
+            if (!isFirst) {
                 // If spread is not the first element of the pattern,
                 // iterator can already be completed.
-                //                                                   ... OBJ ITER DONE *LREF
-                if (emitted) {
-                    if (!emit2(JSOP_PICK, emitted))               // ... OBJ ITER *LREF DONE
-                        return false;
-                }
-
+                                                                  // ... OBJ ITER *LREF DONE
                 if (!ifThenElse.emitIfElse())                     // ... OBJ ITER *LREF
                     return false;
 
@@ -5189,13 +5232,22 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
             if (!emit1(JSOP_POP))                                 // ... OBJ ITER *LREF ARRAY
                 return false;
 
-            if (!isHead) {
+            if (!isFirst) {
                 if (!ifThenElse.emitEnd())
                     return false;
                 MOZ_ASSERT(ifThenElse.pushed() == 1);
             }
 
-            if (!emitSetOrInitializeDestructuring(member, flav))  // ... OBJ ITER
+            // At this point the iterator is done. Unpick a TRUE value for DONE above ITER.
+            if (!emit1(JSOP_TRUE))                                // ... OBJ ITER *LREF ARRAY TRUE
+                return false;
+            if (!emit2(JSOP_UNPICK, emitted + 1))                 // ... OBJ ITER TRUE *LREF ARRAY
+                return false;
+
+            auto emitAssignment = [member, flav](BytecodeEmitter* bce) {
+                return bce->emitSetOrInitializeDestructuring(member, flav); // ... OBJ ITER TRUE
+            };
+            if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth, emitAssignment))
                 return false;
 
             MOZ_ASSERT(!hasNext);
@@ -5203,63 +5255,30 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         }
 
         ParseNode* pndefault = nullptr;
-        ParseNode* subpattern = member;
-        if (subpattern->isKind(PNK_ASSIGN)) {
-            pndefault = subpattern->pn_right;
-            subpattern = subpattern->pn_left;
-        }
+        if (member->isKind(PNK_ASSIGN))
+            pndefault = member->pn_right;
 
-        bool isElision = subpattern->isKind(PNK_ELISION);
-
-        MOZ_ASSERT(!subpattern->isKind(PNK_SPREAD));
-
-        size_t emitted = 0;
-        if (!isElision) {
-            if (!emitDestructuringLHSRef(subpattern, &emitted))   // ... OBJ ITER ?DONE *LREF
-                return false;
-        }
+        MOZ_ASSERT(!member->isKind(PNK_SPREAD));
 
         IfThenElseEmitter ifAlreadyDone(this);
-        if (!isHead) {
-            // If this element is not the first element of the pattern,
-            // iterator can already be completed.
-            //                                                       ... OBJ ITER DONE *LREF
-            if (emitted) {
-                if (hasNext) {
-                    if (!emitDupAt(emitted))                      // ... OBJ ITER DONE *LREF DONE
-                        return false;
-                } else {
-                    if (!emit2(JSOP_PICK, emitted))               // ... OBJ ITER *LREF DONE
-                        return false;
-                }
-            } else {
-                if (hasNext) {
-                    // The position of LREF in the following stack comment
-                    // isn't accurate for the operation, but it's equivalent
-                    // since LREF is nothing
-                    if (!emit1(JSOP_DUP))                         // ... OBJ ITER DONE *LREF DONE
-                        return false;
-                }
-            }
-            if (!ifAlreadyDone.emitIfElse())                      // ... OBJ ITER ?DONE *LREF
+        if (!isFirst) {
+                                                                  // ... OBJ ITER *LREF DONE
+            if (!ifAlreadyDone.emitIfElse())                      // ... OBJ ITER *LREF
                 return false;
 
-            if (!emit1(JSOP_UNDEFINED))                           // ... OBJ ITER ?DONE *LREF UNDEF
+            if (!emit1(JSOP_UNDEFINED))                           // ... OBJ ITER *LREF UNDEF
                 return false;
-            if (!emit1(JSOP_NOP_DESTRUCTURING))                   // ... OBJ ITER ?DONE *LREF UNDEF
-                return false;
-
-            if (!ifAlreadyDone.emitElse())                        // ... OBJ ITER ?DONE *LREF
+            if (!emit1(JSOP_NOP_DESTRUCTURING))                   // ... OBJ ITER *LREF UNDEF
                 return false;
 
-            if (hasNext) {
-                if (emitted) {
-                    if (!emit2(JSOP_PICK, emitted))               // ... OBJ ITER *LREF DONE
-                        return false;
-                }
-                if (!emit1(JSOP_POP))                             // ... OBJ ITER *LREF
-                    return false;
-            }
+            // The iterator is done. Unpick a TRUE value for DONE above ITER.
+            if (!emit1(JSOP_TRUE))                                // ... OBJ ITER *LREF UNDEF TRUE
+                return false;
+            if (!emit2(JSOP_UNPICK, emitted + 1))                 // ... OBJ ITER TRUE *LREF UNDEF
+                return false;
+
+            if (!ifAlreadyDone.emitElse())                        // ... OBJ ITER *LREF
+                return false;
         }
 
         if (emitted) {
@@ -5276,58 +5295,73 @@ BytecodeEmitter::emitDestructuringOpsArray(ParseNode* pattern, DestructuringFlav
         if (!emitAtomOp(cx->names().done, JSOP_GETPROP))          // ... OBJ ITER *LREF RESULT DONE
             return false;
 
-        if (hasNext) {
-            if (!emit1(JSOP_DUP))                                 // ... OBJ ITER *LREF RESULT DONE DONE
-                return false;
-            if (!emit2(JSOP_UNPICK, emitted + 2))                 // ... OBJ ITER DONE *LREF RESULT DONE
-                return false;
-        }
+        if (!emit1(JSOP_DUP))                                     // ... OBJ ITER *LREF RESULT DONE DONE
+            return false;
+        if (!emit2(JSOP_UNPICK, emitted + 2))                     // ... OBJ ITER DONE *LREF RESULT DONE
+            return false;
 
         IfThenElseEmitter ifDone(this);
-        if (!ifDone.emitIfElse())                                 // ... OBJ ITER ?DONE *LREF RESULT
+        if (!ifDone.emitIfElse())                                 // ... OBJ ITER DONE *LREF RESULT
             return false;
 
-        if (!emit1(JSOP_POP))                                     // ... OBJ ITER ?DONE *LREF
+        if (!emit1(JSOP_POP))                                     // ... OBJ ITER DONE *LREF
             return false;
-        if (!emit1(JSOP_UNDEFINED))                               // ... OBJ ITER ?DONE *LREF UNDEF
+        if (!emit1(JSOP_UNDEFINED))                               // ... OBJ ITER DONE *LREF UNDEF
             return false;
-        if (!emit1(JSOP_NOP_DESTRUCTURING))                       // ... OBJ ITER ?DONE *LREF UNDEF
-            return false;
-
-        if (!ifDone.emitElse())                                   // ... OBJ ITER ?DONE *LREF RESULT
+        if (!emit1(JSOP_NOP_DESTRUCTURING))                       // ... OBJ ITER DONE *LREF UNDEF
             return false;
 
-        if (!emitAtomOp(cx->names().value, JSOP_GETPROP))         // ... OBJ ITER ?DONE *LREF VALUE
+        if (!ifDone.emitElse())                                   // ... OBJ ITER DONE *LREF RESULT
+            return false;
+
+        if (!emitAtomOp(cx->names().value, JSOP_GETPROP))         // ... OBJ ITER DONE *LREF VALUE
             return false;
 
         if (!ifDone.emitEnd())
             return false;
         MOZ_ASSERT(ifDone.pushed() == 0);
 
-        if (!isHead) {
+        if (!isFirst) {
             if (!ifAlreadyDone.emitEnd())
                 return false;
-            MOZ_ASSERT(ifAlreadyDone.pushed() == 1);
+            MOZ_ASSERT(ifAlreadyDone.pushed() == 2);
         }
 
         if (pndefault) {
-            if (!emitDefault(pndefault, subpattern))              // ... OBJ ITER ?DONE *LREF VALUE
+            auto emitDefault = [pndefault, lhsPattern](BytecodeEmitter* bce) {
+                return bce->emitDefault(pndefault, lhsPattern);    // ... OBJ ITER DONE *LREF VALUE
+            };
+
+            if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth, emitDefault))
                 return false;
         }
 
         if (!isElision) {
-            if (!emitSetOrInitializeDestructuring(subpattern,
-                                                  flav))          // ... OBJ ITER ?DONE
-            {
+            auto emitAssignment = [lhsPattern, flav](BytecodeEmitter* bce) {
+                return bce->emitSetOrInitializeDestructuring(lhsPattern, flav); // ... OBJ ITER DONE
+            };
+
+            if (!wrapWithDestructuringIteratorCloseTryNote(tryNoteDepth, emitAssignment))
                 return false;
-            }
         } else {
-            if (!emit1(JSOP_POP))                                 // ... OBJ ITER ?DONE
+            if (!emit1(JSOP_POP))                                 // ... OBJ ITER DONE
                 return false;
         }
     }
 
+    // The last DONE value is on top of the stack. If not DONE, call
+    // IteratorClose.
+                                                                  // ... OBJ ITER DONE
+    IfThenElseEmitter ifDone(this);
+    if (!ifDone.emitIfElse())                                     // ... OBJ ITER
+        return false;
     if (!emit1(JSOP_POP))                                         // ... OBJ
+        return false;
+    if (!ifDone.emitElse())                                       // ... OBJ ITER
+        return false;
+    if (!emitIteratorClose())                                     // ... OBJ
+        return false;
+    if (!ifDone.emitEnd())
         return false;
 
     return true;
