@@ -249,14 +249,12 @@ public:
   nsCSSFontFaceRule(uint32_t aLineNumber, uint32_t aColumnNumber)
     : mozilla::css::Rule(aLineNumber, aColumnNumber)
   {
-    SetIsNotDOMBinding();
   }
 
   nsCSSFontFaceRule(const nsCSSFontFaceRule& aCopy)
     // copy everything except our reference count
     : mozilla::css::Rule(aCopy), mDecl(aCopy.mDecl)
   {
-    SetIsNotDOMBinding();
   }
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -279,6 +277,7 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  nsICSSDeclaration* Style();
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
