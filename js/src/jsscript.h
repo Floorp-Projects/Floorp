@@ -84,8 +84,7 @@ enum JSTryNoteKind {
     JSTRY_FINALLY,
     JSTRY_FOR_IN,
     JSTRY_FOR_OF,
-    JSTRY_LOOP,
-    JSTRY_ITERCLOSE
+    JSTRY_LOOP
 };
 
 /*
