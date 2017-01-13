@@ -60,7 +60,8 @@ function Password(props) {
     for (var prop in props.changes)
       if (prop in this.updateProps)
         this.updateProps[prop] = props.changes[prop];
-  } else {
+  }
+  else {
     this.updateProps = null;
   }
 }
@@ -77,7 +78,7 @@ Password.prototype = {
    *
    * @return the new login guid
    */
-  Create() {
+  Create: function() {
     let login = new nsLoginInfo(this.props.hostname, this.props.submitURL,
                                 this.props.realm, this.props.username,
                                 this.props.password,
@@ -96,7 +97,7 @@ Password.prototype = {
    *
    * @return the guid of the password if found, otherwise -1
    */
-  Find() {
+  Find: function() {
     let logins = Services.logins.findLogins({},
                                             this.props.hostname,
                                             this.props.submitURL,
@@ -123,7 +124,7 @@ Password.prototype = {
    *
    * @return nothing
    */
-  Update() {
+  Update: function() {
     let oldlogin = new nsLoginInfo(this.props.hostname,
                                    this.props.submitURL,
                                    this.props.realm,
@@ -149,7 +150,7 @@ Password.prototype = {
    *
    * @return nothing
    */
-  Remove() {
+  Remove: function() {
     let login = new nsLoginInfo(this.props.hostname,
                                 this.props.submitURL,
                                 this.props.realm,

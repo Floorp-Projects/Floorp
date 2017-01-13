@@ -14,7 +14,7 @@ function SteamStore(engine) {
 SteamStore.prototype = {
   __proto__: Store.prototype,
 
-  wipe() {
+  wipe: function() {
     this.wasWiped = true;
   }
 };
@@ -36,11 +36,11 @@ SteamEngine.prototype = {
   _storeObj: SteamStore,
   _trackerObj: SteamTracker,
 
-  _resetClient() {
+  _resetClient: function () {
     this.wasReset = true;
   },
 
-  _sync() {
+  _sync: function () {
     this.wasSynced = true;
   }
 };
@@ -48,12 +48,12 @@ SteamEngine.prototype = {
 var engineObserver = {
   topics: [],
 
-  observe(subject, topic, data) {
+  observe: function(subject, topic, data) {
     do_check_eq(data, "steam");
     this.topics.push(topic);
   },
 
-  reset() {
+  reset: function() {
     this.topics = [];
   }
 };
@@ -82,7 +82,7 @@ add_task(async function test_score() {
 
   try {
     engine.score = 10;
-  } catch (ex) {
+  } catch(ex) {
     // Setting an attribute that has a getter produces an error in
     // Firefox <= 3.6 and is ignored in later versions.  Either way,
     // the attribute's value won't change.

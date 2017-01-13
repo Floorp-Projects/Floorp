@@ -12,20 +12,20 @@ function fakeSvcWinMediator() {
   let logs = [];
   delete Services.wm;
   Services.wm = {
-    getEnumerator() {
+    getEnumerator: function() {
       return {
         cnt: 2,
-        hasMoreElements() {
+        hasMoreElements: function() {
           return this.cnt-- > 0;
         },
-        getNext() {
+        getNext: function() {
           let elt = {addTopics: [], remTopics: [], numAPL: 0, numRPL: 0};
           logs.push(elt);
           return {
-            addEventListener(topic) {
+            addEventListener: function(topic) {
               elt.addTopics.push(topic);
             },
-            removeEventListener(topic) {
+            removeEventListener: function(topic) {
               elt.remTopics.push(topic);
             },
             gBrowser: {
@@ -96,7 +96,7 @@ function run_test() {
     do_check_false(tracker.modified);
 
     // Send a fake tab event
-    tracker.onTab({type: evttype, originalTarget: evttype});
+    tracker.onTab({type: evttype , originalTarget: evttype});
     do_check_true(tracker.modified);
     do_check_true(Utils.deepEquals(Object.keys(engine.getChangedIDs()),
                                    [clientsEngine.localID]));

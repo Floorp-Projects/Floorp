@@ -93,7 +93,8 @@ this.Utils = {
     return function WrappedCatch() {
       try {
         return func.call(thisArg);
-      } catch (ex) {
+      }
+      catch(ex) {
         thisArg._log.debug("Exception calling " + (func.name || "anonymous function"), ex);
         if (exceptionCallback) {
           return exceptionCallback.call(thisArg, ex);
@@ -118,7 +119,8 @@ this.Utils = {
 
       try {
         return func.call(thisArg);
-      } finally {
+      }
+      finally {
         thisArg.unlock();
       }
     };
@@ -164,7 +166,8 @@ this.Utils = {
           let ret = func.call(thisArg);
           notify("finish", ret);
           return ret;
-        } catch (ex) {
+        }
+        catch(ex) {
           notify("error", ex);
           throw ex;
         }
@@ -204,14 +207,14 @@ this.Utils = {
 
     // Create a getter if it doesn't exist yet
     if (!prot.__lookupGetter__(prop)) {
-      prot.__defineGetter__(prop, function() {
+      prot.__defineGetter__(prop, function () {
         return this[defer][prop];
       });
     }
 
     // Create a setter if it doesn't exist yet
     if (!prot.__lookupSetter__(prop)) {
-      prot.__defineSetter__(prop, function(val) {
+      prot.__defineSetter__(prop, function (val) {
         this[defer][prop] = val;
       });
     }
@@ -361,9 +364,11 @@ this.Utils = {
       if (e instanceof OS.File.Error && e.becauseNoSuchFile) {
         // Ignore non-existent files, but explicitly return null.
         json = null;
-      } else if (that._log) {
+      } else {
+        if (that._log) {
           that._log.debug("Failed to load json", e);
         }
+      }
     }
 
     if (callback) {
@@ -497,7 +502,7 @@ this.Utils = {
    *     take user input for account/username, cleaning up appropriately.
    */
 
-  isPassphrase(s) {
+  isPassphrase: function(s) {
     if (s) {
       return /^[abcdefghijkmnpqrstuvwxyz23456789]{26}$/.test(Utils.normalizePassphrase(s));
     }
@@ -527,7 +532,7 @@ this.Utils = {
       return data + "-";
 
     // Hyphenate it.
-    let y = data.substr(0, 1);
+    let y = data.substr(0,1);
     let z = data.substr(1).replace(/(.{1,5})/g, "-$1");
 
     // Correct length? We're done.
@@ -624,7 +629,7 @@ this.Utils = {
     try {
       sdr.encryptString("bacon");
       return true;
-    } catch (e) {}
+    } catch(e) {}
     return false;
   },
 
@@ -649,7 +654,7 @@ this.Utils = {
    * In general, these hosts will not have their passwords synced, will be
    * reset when we drop sync credentials, etc.
    */
-  getSyncCredentialsHosts() {
+  getSyncCredentialsHosts: function() {
     let result = new Set(this.getSyncCredentialsHostsLegacy());
     for (let host of this.getSyncCredentialsHostsFxA()) {
       result.add(host);
@@ -660,7 +665,7 @@ this.Utils = {
   /*
    * Get the "legacy" identity hosts.
    */
-  getSyncCredentialsHostsLegacy() {
+  getSyncCredentialsHostsLegacy: function() {
     // the legacy sync host
     return new Set([PWDMGR_HOST]);
   },
@@ -668,7 +673,7 @@ this.Utils = {
   /*
    * Get the FxA identity hosts.
    */
-  getSyncCredentialsHostsFxA() {
+  getSyncCredentialsHostsFxA: function() {
     let result = new Set();
     // the FxA host
     result.add(FxAccountsCommon.FXA_PWDMGR_HOST);
@@ -779,7 +784,7 @@ this.Str = {};
   XPCOMUtils.defineLazyGetter(Str, lazy, Utils.lazyStrings(lazy));
 });
 
-Svc.Obs.add("xpcom-shutdown", function() {
+Svc.Obs.add("xpcom-shutdown", function () {
   for (let name in Svc)
     delete Svc[name];
 });

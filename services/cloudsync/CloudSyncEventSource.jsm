@@ -6,21 +6,21 @@ this.EXPORTED_SYMBOLS = ["EventSource"];
 
 Components.utils.import("resource://services-common/utils.js");
 
-var EventSource = function(types, suspendFunc, resumeFunc) {
+var EventSource = function (types, suspendFunc, resumeFunc) {
   this.listeners = new Map();
   for (let type of types) {
     this.listeners.set(type, new Set());
   }
 
-  this.suspend = suspendFunc || function() {};
-  this.resume = resumeFunc || function() {};
+  this.suspend = suspendFunc || function () {};
+  this.resume = resumeFunc || function () {};
 
   this.addEventListener = this.addEventListener.bind(this);
   this.removeEventListener = this.removeEventListener.bind(this);
 };
 
 EventSource.prototype = {
-  addEventListener(type, listener) {
+  addEventListener: function (type, listener) {
     if (!this.listeners.has(type)) {
       return;
     }
@@ -28,7 +28,7 @@ EventSource.prototype = {
     this.resume();
   },
 
-  removeEventListener(type, listener) {
+  removeEventListener: function (type, listener) {
     if (!this.listeners.has(type)) {
       return;
     }
@@ -38,7 +38,7 @@ EventSource.prototype = {
     }
   },
 
-  hasListeners() {
+  hasListeners: function () {
     for (let l of this.listeners.values()) {
       if (l.size > 0) {
         return true;
@@ -47,12 +47,12 @@ EventSource.prototype = {
     return false;
   },
 
-  emit(type, arg) {
+  emit: function (type, arg) {
     if (!this.listeners.has(type)) {
       return;
     }
     CommonUtils.nextTick(
-      function() {
+      function () {
         for (let listener of this.listeners.get(type)) {
           listener.call(undefined, arg);
         }

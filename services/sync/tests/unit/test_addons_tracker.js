@@ -125,14 +125,14 @@ add_test(function test_track_user_disable() {
   let cb = Async.makeSyncCallback();
 
   let listener = {
-    onDisabled(disabled) {
+    onDisabled: function(disabled) {
       _("onDisabled");
       if (disabled.id == addon.id) {
         AddonManager.removeAddonListener(listener);
         cb();
       }
     },
-    onDisabling(disabling) {
+    onDisabling: function(disabling) {
       _("onDisabling add-on");
     }
   };

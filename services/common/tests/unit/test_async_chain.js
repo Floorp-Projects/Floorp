@@ -7,17 +7,17 @@ function run_test() {
   _("Chain a few async methods, making sure the 'this' object is correct.");
 
   let methods = {
-    save(x, callback) {
+    save: function(x, callback) {
       this.x = x;
       callback(x);
     },
-    addX(x, callback) {
+    addX: function(x, callback) {
       callback(x + this.x);
     },
-    double(x, callback) {
+    double: function(x, callback) {
       callback(x * 2);
     },
-    neg(x, callback) {
+    neg: function(x, callback) {
       callback(-x);
     }
   };

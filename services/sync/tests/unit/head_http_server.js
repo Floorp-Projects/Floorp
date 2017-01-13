@@ -72,17 +72,17 @@ ServerWBO.prototype = {
     return JSON.parse(this.payload);
   },
 
-  get() {
+  get: function() {
     return JSON.stringify(this, ["id", "modified", "payload"]);
   },
 
-  put(input) {
+  put: function(input) {
     input = JSON.parse(input);
     this.payload = input.payload;
     this.modified = new_timestamp();
   },
 
-  delete() {
+  delete: function() {
     delete this.payload;
     delete this.modified;
   },
@@ -90,7 +90,7 @@ ServerWBO.prototype = {
   // This handler sets `newModified` on the response body if the collection
   // timestamp has changed. This allows wrapper handlers to extract information
   // that otherwise would exist only in the body stream.
-  handler() {
+  handler: function() {
     let self = this;
 
     return function(request, response) {
@@ -98,7 +98,7 @@ ServerWBO.prototype = {
       var status = "OK";
       var body;
 
-      switch (request.method) {
+      switch(request.method) {
         case "GET":
           if (self.payload) {
             body = self.get();
@@ -216,8 +216,8 @@ ServerCollection.prototype = {
    *
    * @return an array of the payloads of each stored WBO.
    */
-  payloads() {
-    return this.wbos().map(function(wbo) {
+  payloads: function () {
+    return this.wbos().map(function (wbo) {
       return JSON.parse(JSON.parse(wbo.payload).ciphertext);
     });
   },
@@ -267,13 +267,13 @@ ServerCollection.prototype = {
     delete this._wbos[id];
   },
 
-  _inResultSet(wbo, options) {
+  _inResultSet: function(wbo, options) {
     return wbo.payload
            && (!options.ids || (options.ids.indexOf(wbo.id) != -1))
            && (!options.newer || (wbo.modified > options.newer));
   },
 
-  count(options) {
+  count: function(options) {
     options = options || {};
     let c = 0;
     for (let [id, wbo] of Object.entries(this._wbos)) {
@@ -284,7 +284,7 @@ ServerCollection.prototype = {
     return c;
   },
 
-  get(options) {
+  get: function(options) {
     let result;
     if (options.full) {
       let data = [];
@@ -330,7 +330,7 @@ ServerCollection.prototype = {
     return result;
   },
 
-  post(input) {
+  post: function(input) {
     input = JSON.parse(input);
     let success = [];
     let failed = {};
@@ -355,11 +355,11 @@ ServerCollection.prototype = {
       }
     }
     return {modified: new_timestamp(),
-            success,
-            failed};
+            success: success,
+            failed: failed};
   },
 
-  delete(options) {
+  delete: function(options) {
     let deleted = [];
     for (let [id, wbo] of Object.entries(this._wbos)) {
       if (this._inResultSet(wbo, options)) {
@@ -373,7 +373,7 @@ ServerCollection.prototype = {
 
   // This handler sets `newModified` on the response body if the collection
   // timestamp has changed.
-  handler() {
+  handler: function() {
     let self = this;
 
     return function(request, response) {
@@ -407,7 +407,7 @@ ServerCollection.prototype = {
         options.offset = parseInt(options.offset, 10);
       }
 
-      switch (request.method) {
+      switch(request.method) {
         case "GET":
           body = self.get(options, request);
           // see http://moz-services-docs.readthedocs.io/en/latest/storage/apis-1.5.html
@@ -506,7 +506,7 @@ function track_collections_helper() {
    */
   function info_collections(request, response) {
     let body = "Error.";
-    switch (request.method) {
+    switch(request.method) {
       case "GET":
         body = JSON.stringify(collections);
         break;
@@ -528,9 +528,9 @@ function track_collections_helper() {
           "update_collection": update_collection};
 }
 
-// ===========================================================================//
+//===========================================================================//
 // httpd.js-based Sync server.                                               //
-// ===========================================================================//
+//===========================================================================//
 
 /**
  * In general, the preferred way of using SyncServer is to directly introspect
@@ -655,7 +655,7 @@ SyncServer.prototype = {
       throw new Error("User already exists.");
     }
     this.users[username] = {
-      password,
+      password: password,
       collections: {}
     };
     return this.user(username);
@@ -763,16 +763,16 @@ SyncServer.prototype = {
     let collection       = this.getCollection.bind(this, username);
     let createCollection = this.createCollection.bind(this, username);
     let createContents   = this.createContents.bind(this, username);
-    let modified         = function(collectionName) {
+    let modified         = function (collectionName) {
       return collection(collectionName).timestamp;
     }
     let deleteCollections = this.deleteCollections.bind(this, username);
     return {
-      collection,
-      createCollection,
-      createContents,
-      deleteCollections,
-      modified
+      collection:        collection,
+      createCollection:  createCollection,
+      createContents:    createContents,
+      deleteCollections: deleteCollections,
+      modified:          modified
     };
   },
 

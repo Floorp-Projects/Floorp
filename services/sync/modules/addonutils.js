@@ -114,7 +114,7 @@ AddonUtilsInternal.prototype = {
             }
 
             if (options.syncGUID) {
-              log.info("Setting syncGUID of " + install.name + ": " +
+              log.info("Setting syncGUID of " + install.name  +": " +
                        options.syncGUID);
               install.addon.syncGUID = options.syncGUID;
             }
@@ -127,17 +127,17 @@ AddonUtilsInternal.prototype = {
               install.addon.userDisabled = true;
             }
           },
-          onInstallEnded(install, addon) {
+          onInstallEnded: function(install, addon) {
             install.removeListener(listener);
 
-            cb(null, {id: addon.id, install, addon});
+            cb(null, {id: addon.id, install: install, addon: addon});
           },
-          onInstallFailed(install) {
+          onInstallFailed: function(install) {
             install.removeListener(listener);
 
             cb(new Error("Install failed: " + install.error), null);
           },
-          onDownloadFailed(install) {
+          onDownloadFailed: function(install) {
             install.removeListener(listener);
 
             cb(new Error("Download failed: " + install.error), null);
@@ -145,7 +145,8 @@ AddonUtilsInternal.prototype = {
         };
         install.addListener(listener);
         install.install();
-      } catch (ex) {
+      }
+      catch (ex) {
         this._log.error("Error installing add-on", ex);
         cb(ex, null);
       }
@@ -163,7 +164,7 @@ AddonUtilsInternal.prototype = {
    */
   uninstallAddon: function uninstallAddon(addon, cb) {
     let listener = {
-      onUninstalling(uninstalling, needsRestart) {
+      onUninstalling: function(uninstalling, needsRestart) {
         if (addon.id != uninstalling.id) {
           return;
         }
@@ -179,7 +180,7 @@ AddonUtilsInternal.prototype = {
         AddonManager.removeAddonListener(listener);
         cb(null, addon);
       },
-      onUninstalled(uninstalled) {
+      onUninstalled: function(uninstalled) {
         if (addon.id != uninstalled.id) {
           return;
         }
@@ -272,7 +273,7 @@ AddonUtilsInternal.prototype = {
               cb(null, ourResult);
             }
           }
-        };
+        }.bind(this);
 
         let toInstall = [];
 
@@ -493,7 +494,7 @@ AddonUtilsInternal.prototype = {
 
     if (!addon.appDisabled) {
       cb(null, addon);
-
+      return;
     }
     // Else the listener will handle invoking the callback.
   },
