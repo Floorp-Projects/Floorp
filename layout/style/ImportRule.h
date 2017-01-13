@@ -52,6 +52,9 @@ public:
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
 

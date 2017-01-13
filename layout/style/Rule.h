@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
 #include "nsIDOMCSSRule.h"
+#include "nsWrapperCache.h"
 
 class nsIDocument;
 struct nsRuleData;
@@ -29,7 +30,9 @@ class GroupRule;
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE                       \
   virtual nsIDOMCSSRule* GetDOMRule() override;
 
-class Rule : public nsISupports {
+class Rule : public nsISupports
+           , public nsWrapperCache
+{
 protected:
   Rule(uint32_t aLineNumber, uint32_t aColumnNumber)
     : mSheet(nullptr),
@@ -52,7 +55,7 @@ protected:
 public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS(Rule)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Rule)
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
