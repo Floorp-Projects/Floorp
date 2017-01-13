@@ -6,16 +6,24 @@
 
 this.EXPORTED_SYMBOLS = ["CleanupManager"];
 
-const cleanupHandlers = [];
+const cleanupHandlers = new Set();
 
 this.CleanupManager = {
   addCleanupHandler(handler) {
-    cleanupHandlers.push(handler);
+    cleanupHandlers.add(handler);
+  },
+
+  removeCleanupHandler(handler) {
+    cleanupHandlers.delete(handler);
   },
 
   cleanup() {
     for (const handler of cleanupHandlers) {
-      handler();
+      try {
+        handler();
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
     }
   },
 };
