@@ -696,6 +696,9 @@ public:
   void PassUnionWithDefaultValue17(const DoubleOrSupportedType& arg);
   void PassUnionWithDefaultValue18(const DoubleOrSupportedType& arg);
   void PassUnionWithDefaultValue19(const DoubleOrSupportedType& arg);
+  void PassUnionWithDefaultValue20(const DoubleOrUSVString& arg);
+  void PassUnionWithDefaultValue21(const DoubleOrUSVString& arg);
+  void PassUnionWithDefaultValue22(const DoubleOrUSVString& arg);
 
   void PassNullableUnionWithDefaultValue1(const Nullable<DoubleOrString>& arg);
   void PassNullableUnionWithDefaultValue2(const Nullable<DoubleOrString>& arg);
@@ -717,6 +720,10 @@ public:
   void PassNullableUnionWithDefaultValue18(const Nullable<DoubleOrSupportedType>& arg);
   void PassNullableUnionWithDefaultValue19(const Nullable<DoubleOrSupportedType>& arg);
   void PassNullableUnionWithDefaultValue20(const Nullable<DoubleOrSupportedType>& arg);
+  void PassNullableUnionWithDefaultValue21(const Nullable<DoubleOrUSVString>& arg);
+  void PassNullableUnionWithDefaultValue22(const Nullable<DoubleOrUSVString>& arg);
+  void PassNullableUnionWithDefaultValue23(const Nullable<DoubleOrUSVString>& arg);
+  void PassNullableUnionWithDefaultValue24(const Nullable<DoubleOrUSVString>& arg);
 
   void PassSequenceOfUnions(const Sequence<OwningCanvasPatternOrCanvasGradient>&);
   void PassSequenceOfUnions2(JSContext*, const Sequence<OwningObjectOrLong>&);
