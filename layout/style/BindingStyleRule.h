@@ -33,6 +33,12 @@ protected:
   virtual ~BindingStyleRule() {}
 
 public:
+  // This is pure virtual because we have no members, and are an abstract class
+  // to start with.  The fact that we have to have this declaration at all is
+  // kinda dumb.  :(
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const MOZ_MUST_OVERRIDE = 0;
+
   // WebIDL API
   // For GetSelectorText/SetSelectorText, we purposefully use a signature that
   // matches the nsIDOMCSSStyleRule one for now, so subclasses can just
