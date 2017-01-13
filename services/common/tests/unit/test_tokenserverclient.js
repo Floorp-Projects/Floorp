@@ -30,7 +30,7 @@ add_test(function test_working_bid_exchange() {
         key:          "key",
         api_endpoint: service,
         uid:          "uid",
-        duration:     duration,
+        duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }
@@ -87,7 +87,7 @@ add_test(function test_conditions_required_response_handling() {
       response.setHeader("Content-Type", "application/json");
 
       let body = JSON.stringify({
-        errors: [{description: description, location: "body", name: ""}],
+        errors: [{description, location: "body", name: ""}],
         urls: {tos: tosURL}
       });
       response.bodyOutputStream.write(body, body.length);
@@ -221,7 +221,7 @@ add_test(function test_send_extra_headers() {
         key:          "key",
         api_endpoint: "http://example.com/",
         uid:          "uid",
-        duration:     duration,
+        duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }
@@ -408,7 +408,7 @@ add_test(function test_rich_media_types() {
         key:          "key",
         api_endpoint: "foo",
         uid:          "uid",
-        duration:     duration,
+        duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }
@@ -437,7 +437,7 @@ add_test(function test_exception_during_callback() {
         key:          "key",
         api_endpoint: "foo",
         uid:          "uid",
-        duration:     duration,
+        duration,
       });
       response.bodyOutputStream.write(body, body.length);
     }

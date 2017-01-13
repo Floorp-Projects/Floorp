@@ -15,7 +15,7 @@ const mockSendingContext = {
   eventTarget: {}
 };
 
-add_test(function () {
+add_test(function() {
   validationHelper(undefined,
   "Error: Missing configuration options");
 
@@ -118,7 +118,7 @@ add_test(function test_profile_image_change_message() {
     data: { uid: "foo" }
   };
 
-  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
+  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
     do_check_eq(data, "foo");
     run_next_test();
   });
@@ -141,7 +141,7 @@ add_test(function test_login_message() {
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      login: function (accountData) {
+      login(accountData) {
         do_check_eq(accountData.email, 'testuser@testuser.com');
         run_next_test();
         return Promise.resolve();
@@ -162,7 +162,7 @@ add_test(function test_logout_message() {
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      logout: function (uid) {
+      logout(uid) {
         do_check_eq(uid, 'foo');
         run_next_test();
         return Promise.resolve();
@@ -183,7 +183,7 @@ add_test(function test_delete_message() {
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      logout: function (uid) {
+      logout(uid) {
         do_check_eq(uid, 'foo');
         run_next_test();
         return Promise.resolve();
@@ -204,7 +204,7 @@ add_test(function test_can_link_account_message() {
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      shouldAllowRelink: function (email) {
+      shouldAllowRelink(email) {
         do_check_eq(email, 'testuser@testuser.com');
         run_next_test();
       }
@@ -224,7 +224,7 @@ add_test(function test_sync_preferences_message() {
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      openSyncPreferences: function (browser, entryPoint) {
+      openSyncPreferences(browser, entryPoint) {
         do_check_eq(entryPoint, 'fxa:verification_complete');
         do_check_eq(browser, mockSendingContext.browser);
         run_next_test();
@@ -279,7 +279,7 @@ add_test(function test_helpers_should_allow_relink_different_email() {
 add_task(function* test_helpers_login_without_customize_sync() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      setSignedInUser: function(accountData) {
+      setSignedInUser(accountData) {
         return new Promise(resolve => {
           // ensure fxAccounts is informed of the new user being signed in.
           do_check_eq(accountData.email, 'testuser@testuser.com');
@@ -315,7 +315,7 @@ add_task(function* test_helpers_login_without_customize_sync() {
 add_task(function* test_helpers_login_with_customize_sync() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      setSignedInUser: function(accountData) {
+      setSignedInUser(accountData) {
         return new Promise(resolve => {
           // ensure fxAccounts is informed of the new user being signed in.
           do_check_eq(accountData.email, 'testuser@testuser.com');
@@ -345,7 +345,7 @@ add_task(function* test_helpers_login_with_customize_sync() {
 add_task(function* test_helpers_login_with_customize_sync_and_declined_engines() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
-      setSignedInUser: function(accountData) {
+      setSignedInUser(accountData) {
         return new Promise(resolve => {
           // ensure fxAccounts is informed of the new user being signed in.
           do_check_eq(accountData.email, 'testuser@testuser.com');
@@ -468,7 +468,7 @@ function run_test() {
 }
 
 function makeObserver(aObserveTopic, aObserveFunc) {
-  let callback = function (aSubject, aTopic, aData) {
+  let callback = function(aSubject, aTopic, aData) {
     log.debug("observed " + aTopic + " " + aData);
     if (aTopic == aObserveTopic) {
       removeMe();

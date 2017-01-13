@@ -107,7 +107,7 @@ add_task(async function test_clientWithTabs() {
 
   let clients = await SyncedTabs.getTabClients();
   equal(clients.length, 2);
-  clients.sort((a, b) => { return a.name.localeCompare(b.name);});
+  clients.sort((a, b) => { return a.name.localeCompare(b.name); });
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
   equal(clients[0].tabs[0].icon, "http://foo.com/favicon");
@@ -157,7 +157,7 @@ add_task(async function test_staleClientWithTabs() {
     guid_stale_name_desktop: "My Laptop",
   });
   let clients = await SyncedTabs.getTabClients();
-  clients.sort((a, b) => { return a.name.localeCompare(b.name);});
+  clients.sort((a, b) => { return a.name.localeCompare(b.name); });
   equal(clients.length, 3);
   equal(clients[0].name, "My Desktop");
   equal(clients[0].tabs.length, 1);
@@ -184,7 +184,7 @@ add_task(async function test_clientWithTabsIconsDisabled() {
 
   let clients = await SyncedTabs.getTabClients();
   equal(clients.length, 1);
-  clients.sort((a, b) => { return a.name.localeCompare(b.name);});
+  clients.sort((a, b) => { return a.name.localeCompare(b.name); });
   equal(clients[0].tabs.length, 1);
   equal(clients[0].tabs[0].url, "http://foo.com/");
   // expect the default favicon (empty string) due to the pref being false.

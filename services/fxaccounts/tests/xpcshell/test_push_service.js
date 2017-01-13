@@ -106,7 +106,7 @@ add_task(function* unsubscribeFailure() {
 
 add_test(function observeLogout() {
   let customLog = Object.assign(mockLog, {
-    trace: function (msg) {
+    trace(msg) {
       if (msg === "FxAccountsPushService unsubscribe") {
         // logout means we unsubscribe
         run_next_test();
@@ -124,12 +124,12 @@ add_test(function observeLogout() {
 
 add_test(function observePushTopicVerify() {
   let emptyMsg = {
-    QueryInterface: function() {
+    QueryInterface() {
       return this;
     }
   };
   let customAccounts = Object.assign(mockFxAccounts, {
-    checkVerificationStatus: function () {
+    checkVerificationStatus() {
       // checking verification status on push messages without data
       run_next_test();
     }
@@ -153,7 +153,7 @@ add_test(function observePushTopicDeviceConnected() {
         }
       })
     },
-    QueryInterface: function() {
+    QueryInterface() {
       return this;
     }
   };
@@ -182,12 +182,12 @@ add_test(function observePushTopicDeviceDisconnected() {
         }
       })
     },
-    QueryInterface: function() {
+    QueryInterface() {
       return this;
     }
   };
   let customAccounts = Object.assign(mockFxAccounts, {
-    handleDeviceDisconnection: function () {
+    handleDeviceDisconnection() {
       // checking verification status on push messages without data
       run_next_test();
     }
@@ -208,7 +208,7 @@ add_test(function observePushTopicPasswordChanged() {
         command: ON_PASSWORD_CHANGED_NOTIFICATION
       })
     },
-    QueryInterface: function() {
+    QueryInterface() {
       return this;
     }
   };
@@ -217,7 +217,7 @@ add_test(function observePushTopicPasswordChanged() {
     pushService: mockPushService,
   });
 
-  pushService._onPasswordChanged = function () {
+  pushService._onPasswordChanged = function() {
     run_next_test();
   }
 
@@ -231,7 +231,7 @@ add_test(function observePushTopicPasswordReset() {
         command: ON_PASSWORD_RESET_NOTIFICATION
       })
     },
-    QueryInterface: function() {
+    QueryInterface() {
       return this;
     }
   };
@@ -240,7 +240,7 @@ add_test(function observePushTopicPasswordReset() {
     pushService: mockPushService
   });
 
-  pushService._onPasswordChanged = function () {
+  pushService._onPasswordChanged = function() {
     run_next_test();
   }
 
@@ -249,7 +249,7 @@ add_test(function observePushTopicPasswordReset() {
 
 add_test(function observeSubscriptionChangeTopic() {
   let customAccounts = Object.assign(mockFxAccounts, {
-    updateDeviceRegistration: function () {
+    updateDeviceRegistration() {
       // subscription change means updating the device registration
       run_next_test();
     }

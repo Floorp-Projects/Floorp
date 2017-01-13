@@ -108,7 +108,7 @@ add_test(function test_bookmark_create() {
     let error;
     try {
       PlacesUtils.annotations.getItemAnnotation(id, "bookmarkProperties/description");
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
     }
     do_check_eq(error.result, Cr.NS_ERROR_NOT_AVAILABLE);
@@ -144,7 +144,7 @@ add_test(function test_bookmark_update() {
     store.applyIncoming(record);
 
     _("Verify that the values have been cleared.");
-    do_check_throws(function () {
+    do_check_throws(function() {
       PlacesUtils.annotations.getItemAnnotation(
         bmk1_id, "bookmarkProperties/description");
     }, Cr.NS_ERROR_NOT_AVAILABLE);
@@ -261,7 +261,7 @@ add_task(async function test_deleted() {
     let error;
     try {
       PlacesUtils.bookmarks.getBookmarkURI(bmk1_id);
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
     }
     do_check_eq(error.result, Cr.NS_ERROR_ILLEGAL_VALUE);
@@ -361,7 +361,7 @@ add_test(function test_orphan() {
     let error;
     try {
       PlacesUtils.annotations.getItemAnnotation(bmk1_id, PARENT_ANNO);
-    } catch(ex) {
+    } catch (ex) {
       error = ex;
     }
     do_check_eq(error.result, Cr.NS_ERROR_NOT_AVAILABLE);
@@ -424,7 +424,7 @@ add_test(function test_empty_query_doesnt_die() {
 
   delete record.folderName;
   store.applyIncoming(record);
-  
+
   run_next_test();
 });
 
