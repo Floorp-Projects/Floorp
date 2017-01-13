@@ -21,7 +21,7 @@ this.CommonUtils = {
   /**
    * Return elements of `a` or `b`.
    */
-  union: function (a, b) {
+  union(a, b) {
     let out = new Set(a);
     for (let x of b) {
       out.add(x);
@@ -32,7 +32,7 @@ this.CommonUtils = {
   /**
    * Return elements of `a` that are not present in `b`.
    */
-  difference: function (a, b) {
+  difference(a, b) {
     let out = new Set(a);
     for (let x of b) {
       out.delete(x);
@@ -43,7 +43,7 @@ this.CommonUtils = {
   /**
    * Return elements of `a` that are also in `b`.
    */
-  intersection: function (a, b) {
+  intersection(a, b) {
     let out = new Set();
     for (let x of a) {
       if (b.has(x)) {
@@ -57,7 +57,7 @@ this.CommonUtils = {
    * Return true if `a` and `b` are the same size, and
    * every element of `a` is in `b`.
    */
-  setEqual: function (a, b) {
+  setEqual(a, b) {
     if (a.size != b.size) {
       return false;
     }
@@ -78,7 +78,7 @@ this.CommonUtils = {
    *        (bool) Whether to include padding characters (=). Defaults
    *        to true for historical reasons.
    */
-  encodeBase64URL: function encodeBase64URL(bytes, pad=true) {
+  encodeBase64URL: function encodeBase64URL(bytes, pad = true) {
     let s = btoa(bytes).replace(/\+/g, "-").replace(/\//g, "_");
 
     if (!pad) {
@@ -125,7 +125,7 @@ this.CommonUtils = {
    * accumulation and prevents callers from accidentally relying on
    * same-tick promise resolution.
    */
-  laterTickResolvingPromise: function (value, prototype) {
+  laterTickResolvingPromise(value, prototype) {
     let deferred = Promise.defer(prototype);
     this.nextTick(deferred.resolve.bind(deferred, value));
     return deferred.promise;
@@ -142,7 +142,7 @@ this.CommonUtils = {
     this.nextTick(cb);
     Async.waitForSyncCallback(cb);
 
-    return;
+
   },
 
   /**
@@ -380,7 +380,7 @@ this.CommonUtils = {
    * @param path the file to read. Will be passed to `OS.File.read()`.
    * @return a promise that resolves to the JSON contents of the named file.
    */
-  readJSON: function(path) {
+  readJSON(path) {
     return OS.File.read(path, { encoding: "utf-8" }).then((data) => {
       return JSON.parse(data);
     });
@@ -393,7 +393,7 @@ this.CommonUtils = {
    * @param path the path of the file to write.
    * @return a promise, as produced by OS.File.writeAtomic.
    */
-  writeJSON: function(contents, path) {
+  writeJSON(contents, path) {
     let data = JSON.stringify(contents);
     return OS.File.writeAtomic(path, data, {encoding: "utf-8", tmpPath: path + ".tmp"});
   },
@@ -492,7 +492,7 @@ this.CommonUtils = {
    * @param log
    *        (Log.Logger) Logger to write warnings to.
    */
-  getEpochPref: function getEpochPref(branch, pref, def=0, log=null) {
+  getEpochPref: function getEpochPref(branch, pref, def = 0, log = null) {
     if (!Number.isInteger(def)) {
       throw new Error("Default value is not a number: " + def);
     }
@@ -537,8 +537,8 @@ this.CommonUtils = {
    * @param oldestYear
    *        (Number) Oldest year to accept in read values.
    */
-  getDatePref: function getDatePref(branch, pref, def=0, log=null,
-                                    oldestYear=2010) {
+  getDatePref: function getDatePref(branch, pref, def = 0, log = null,
+                                    oldestYear = 2010) {
 
     let valueInt = this.getEpochPref(branch, pref, def, log);
     let date = new Date(valueInt);
@@ -572,7 +572,7 @@ this.CommonUtils = {
    * @param oldestYear
    *        (Number) The oldest year to accept for values.
    */
-  setDatePref: function setDatePref(branch, pref, date, oldestYear=2010) {
+  setDatePref: function setDatePref(branch, pref, date, oldestYear = 2010) {
     if (date.getFullYear() < oldestYear) {
       throw new Error("Trying to set " + pref + " to a very old time: " +
                       date + ". The current time is " + new Date() +

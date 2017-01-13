@@ -105,7 +105,7 @@ add_test(function test_isr_duplicatesAndMissingIDs() {
   run_next_test();
 });
 
-add_test(function test_isr_duplicateChildren()  {
+add_test(function test_isr_duplicateChildren() {
   let c = inspectServerRecords([
     {id: 'A', type: 'folder', parentid: 'places', children: ['B', 'B']},
     {id: 'B', type: 'bookmark', parentid: 'A'},

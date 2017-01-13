@@ -107,7 +107,7 @@ async function validate(collection, expectedFailures = []) {
   let summary = problems.getSummary().filter(prob => prob.count != 0);
 
   // split into 2 arrays - expected and unexpected.
-  let isInExpectedFailures = elt =>  {
+  let isInExpectedFailures = elt => {
     for (let i = 0; i < expectedFailures.length; i++) {
       if (elt.name == expectedFailures[i].name && elt.count == expectedFailures[i].count) {
         return true;

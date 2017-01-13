@@ -1,4 +1,4 @@
-default-preferences pref(layout.css.shape-outside.enabled,true)
+default-preferences pref(layout.css.shape-outside.enabled,true) pref(layout.css.clip-path-shapes.enabled,true)
 
 # <shape-box> only
 == shape-outside-margin-box-001.html shape-outside-margin-box-001-ref.html
@@ -35,3 +35,29 @@ fails == shape-outside-border-box-border-radius-004.html shape-outside-border-bo
 == shape-outside-padding-box-border-radius-002.html shape-outside-padding-box-border-radius-002-ref.html
 == shape-outside-content-box-border-radius-001.html shape-outside-content-box-border-radius-001-ref.html
 == shape-outside-content-box-border-radius-002.html shape-outside-content-box-border-radius-002-ref.html
+
+# Basic shape: circle()
+== shape-outside-circle-001.html shape-outside-circle-001-ref.html
+== shape-outside-circle-002.html shape-outside-circle-002-ref.html
+== shape-outside-circle-003.html shape-outside-circle-003-ref.html
+== shape-outside-circle-004.html shape-outside-circle-004-ref.html
+== shape-outside-circle-005.html shape-outside-circle-005-ref.html
+== shape-outside-circle-006.html shape-outside-circle-005-ref.html
+== shape-outside-circle-007.html shape-outside-circle-005-ref.html
+== shape-outside-circle-008.html shape-outside-circle-008-ref.html
+== shape-outside-circle-009.html shape-outside-circle-008-ref.html
+== shape-outside-circle-010.html shape-outside-circle-010-ref.html
+== shape-outside-circle-011.html shape-outside-circle-011-ref.html
+== shape-outside-circle-012.html shape-outside-circle-011-ref.html
+== shape-outside-circle-013.html shape-outside-circle-011-ref.html
+== shape-outside-circle-014.html shape-outside-circle-014-ref.html
+== shape-outside-circle-015.html shape-outside-circle-014-ref.html
+== shape-outside-circle-016.html shape-outside-circle-016-ref.html
+== shape-outside-circle-017.html shape-outside-circle-017-ref.html
+== shape-outside-circle-018.html shape-outside-circle-018-ref.html
+== shape-outside-circle-019.html shape-outside-circle-019-ref.html
+== shape-outside-circle-020.html shape-outside-circle-020-ref.html
+== shape-outside-circle-021.html shape-outside-circle-021-ref.html
+== shape-outside-circle-022.html shape-outside-circle-022-ref.html
+== shape-outside-circle-023.html shape-outside-circle-023-ref.html
+== shape-outside-circle-024.html shape-outside-circle-024-ref.html

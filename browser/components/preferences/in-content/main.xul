@@ -172,13 +172,13 @@
                   class="content-cell-item"
                   preference="browser.startup.page">
           <menupopup>
-          <menuitem label="&startupHomePage.label;"
+          <menuitem label="&startupUserHomePage.label;"
                     value="1"
                     id="browserStartupHomePage"/>
           <menuitem label="&startupBlankPage.label;"
                     value="0"
                     id="browserStartupBlank"/>
-          <menuitem label="&startupLastSession.label;"
+          <menuitem label="&startupPrevSession.label;"
                     value="3"
                     id="browserStartupLastSession"/>
           </menupopup>
@@ -260,8 +260,8 @@
     <hbox>
       <radio id="alwaysAsk"
              value="false"
-             label="&alwaysAsk.label;"
-             accesskey="&alwaysAsk.accesskey;"/>
+             label="&alwaysAskWhere.label;"
+             accesskey="&alwaysAskWhere.accesskey;"/>
     </hbox>
   </radiogroup>
 </groupbox>
@@ -281,16 +281,16 @@
               onsyncfrompreference="return gMainPane.readLinkTarget();"
               onsynctopreference="return gMainPane.writeLinkTarget();"/>
 
-    <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
-              accesskey="&warnCloseMultipleTabs.accesskey;"
+    <checkbox id="warnCloseMultiple" label="&warnOnCloseMultipleTabs.label;"
+              accesskey="&warnOnCloseMultipleTabs.accesskey;"
               preference="browser.tabs.warnOnClose"/>
 
-    <checkbox id="warnOpenMany" label="&warnOpenManyTabs.label;"
-              accesskey="&warnOpenManyTabs.accesskey;"
+    <checkbox id="warnOpenMany" label="&warnOnOpenManyTabs.label;"
+              accesskey="&warnOnOpenManyTabs.accesskey;"
               preference="browser.tabs.warnOnOpen"/>
 
-    <checkbox id="switchToNewTabs" label="&switchToNewTabs.label;"
-              accesskey="&switchToNewTabs.accesskey;"
+    <checkbox id="switchToNewTabs" label="&switchLinksToNewTabs.label;"
+              accesskey="&switchLinksToNewTabs.accesskey;"
               preference="browser.tabs.loadInBackground"/>
 
 #ifdef XP_WIN

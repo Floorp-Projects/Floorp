@@ -82,7 +82,7 @@ MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype
 }
 
-function MockFxAccounts(device={}) {
+function MockFxAccounts(device = {}) {
   return new FxAccounts({
     fxAccountsClient: new MockFxAccountsClient(),
     newAccountState(credentials) {

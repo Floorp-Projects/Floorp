@@ -490,8 +490,8 @@ ClientEngine.prototype = {
     }
 
     let action = {
-      command: command,
-      args: args,
+      command,
+      args,
       flowID: flowID || Utils.makeGUID(), // used for telemetry.
     };
 
@@ -705,7 +705,7 @@ ClientStore.prototype = {
       fxAccounts.getDeviceId().then(id => cb(null, id), cb);
       try {
         record.fxaDeviceId = cb.wait();
-      } catch(error) {
+      } catch (error) {
         this._log.warn("failed to get fxa device id", error);
       }
       record.name = this.engine.localName;

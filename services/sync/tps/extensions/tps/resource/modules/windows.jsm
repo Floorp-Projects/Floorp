@@ -23,7 +23,7 @@ var BrowserWindows = {
    * @param aPrivate The private option.
    * @return nothing
    */
-  Add: function(aPrivate, fn) {
+  Add(aPrivate, fn) {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                .getService(Ci.nsIWindowMediator);
     let mainWindow = wm.getMostRecentWindow("navigator:browser");

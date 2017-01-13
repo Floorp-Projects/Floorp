@@ -31,7 +31,7 @@ function do_get_kinto_collection(collectionName, sqliteHandle) {
 // correctly and that simple kinto operations are working as expected. There
 // are more tests for core Kinto.js (and its storage adapter) in the
 // xpcshell tests under /services/common
-add_task(function* test_something(){
+add_task(function* test_something() {
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/blocklists/collections/certificates/records";
 
@@ -39,7 +39,7 @@ add_task(function* test_something(){
                              `http://localhost:${server.identity.primaryPort}/v1`);
 
   // register a handler
-  function handleResponse (request, response) {
+  function handleResponse(request, response) {
     try {
       const sample = getSampleResponse(request, server.identity.primaryPort);
       if (!sample) {
@@ -179,7 +179,7 @@ function getSampleResponse(req, port) {
         "serialNumber":"ATFpsA==",
         "id":"dabafde9-df4a-ddba-2548-748da04cc02c",
         "last_modified":4000
-      },{
+      }, {
         "subject":"MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
         "pubKeyHash":"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
         "id":"dabafde9-df4a-ddba-2548-748da04cc02d",
@@ -200,12 +200,12 @@ function getSampleResponse(req, port) {
         "serialNumber":"not a base64 encoded serial",
         "id":"dabafde9-df4a-ddba-2548-748da04cc02e",
         "last_modified":5000
-      },{
+      }, {
         "subject":"not a base64 encoded subject",
         "pubKeyHash":"not a base64 encoded pubKeyHash",
         "id":"dabafde9-df4a-ddba-2548-748da04cc02f",
         "last_modified":5000
-      },{
+      }, {
         "subject":"MCIxIDAeBgNVBAMMF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5",
         "pubKeyHash":"VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=",
         "id":"dabafde9-df4a-ddba-2548-748da04cc02g",
