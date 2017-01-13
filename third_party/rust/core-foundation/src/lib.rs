@@ -60,6 +60,7 @@ pub mod set;
 pub mod string;
 pub mod url;
 pub mod bundle;
+pub mod propertylist;
 pub mod runloop;
 
 #[cfg(test)]
@@ -83,10 +84,15 @@ pub mod test {
         let tru = CFBoolean::true_value();
         let n42 = number(42);
 
-        let _d = CFDictionary::from_CFType_pairs(&[
+        let d = CFDictionary::from_CFType_pairs(&[
             (bar.as_CFType(), boo.as_CFType()),
             (baz.as_CFType(), tru.as_CFType()),
             (foo.as_CFType(), n42.as_CFType()),
         ]);
+
+        let (v1, v2) = d.get_keys_and_values();
+
+        assert!(v1 == &[bar.as_CFTypeRef(), baz.as_CFTypeRef(), foo.as_CFTypeRef()]);
+        assert!(v2 == &[boo.as_CFTypeRef(), tru.as_CFTypeRef(), n42.as_CFTypeRef()]);
     }
 }

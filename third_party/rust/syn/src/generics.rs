@@ -2,7 +2,7 @@ use super::*;
 
 /// Represents lifetimes and type parameters attached to a declaration
 /// of a function, enum, trait, etc.
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Hash)]
 pub struct Generics {
     pub lifetimes: Vec<LifetimeDef>,
     pub ty_params: Vec<TyParam>,
@@ -45,7 +45,7 @@ impl Generics {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Lifetime {
     pub ident: Ident,
 }
@@ -63,7 +63,7 @@ impl Lifetime {
 }
 
 /// A lifetime definition, e.g. `'a: 'b+'c+'d`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct LifetimeDef {
     pub attrs: Vec<Attribute>,
     pub lifetime: Lifetime,
@@ -80,7 +80,7 @@ impl LifetimeDef {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TyParam {
     pub attrs: Vec<Attribute>,
     pub ident: Ident,
@@ -92,7 +92,7 @@ pub struct TyParam {
 /// `typeck::collect::compute_bounds` matches these against
 /// the "special" built-in traits (see `middle::lang_items`) and
 /// detects Copy, Send and Sync.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum TyParamBound {
     Trait(PolyTraitRef, TraitBoundModifier),
     Region(Lifetime),
@@ -100,14 +100,14 @@ pub enum TyParamBound {
 
 /// A modifier on a bound, currently this is only used for `?Sized`, where the
 /// modifier is `Maybe`. Negative bounds should also be handled here.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum TraitBoundModifier {
     None,
     Maybe,
 }
 
 /// A `where` clause in a definition
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Hash)]
 pub struct WhereClause {
     pub predicates: Vec<WherePredicate>,
 }
@@ -119,7 +119,7 @@ impl WhereClause {
 }
 
 /// A single predicate in a `where` clause
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum WherePredicate {
     /// A type binding, e.g. `for<'c> Foo: Send+Clone+'c`
     BoundPredicate(WhereBoundPredicate),
@@ -130,7 +130,7 @@ pub enum WherePredicate {
 /// A type bound.
 ///
 /// E.g. `for<'c> Foo: Send+Clone+'c`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct WhereBoundPredicate {
     /// Any lifetimes from a `for` binding
     pub bound_lifetimes: Vec<LifetimeDef>,
@@ -143,7 +143,7 @@ pub struct WhereBoundPredicate {
 /// A lifetime predicate.
 ///
 /// E.g. `'a: 'b+'c`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct WhereRegionPredicate {
     pub lifetime: Lifetime,
     pub bounds: Vec<Lifetime>,

@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Expr {
     pub node: ExprKind,
     pub attrs: Vec<Attribute>,
@@ -15,7 +15,7 @@ impl From<ExprKind> for Expr {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum ExprKind {
     /// A `box x` expression.
     Box(Box<Expr>),
@@ -145,7 +145,7 @@ pub enum ExprKind {
     Try(Box<Expr>),
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct FieldValue {
     pub ident: Ident,
     pub expr: Expr,
@@ -155,19 +155,19 @@ pub struct FieldValue {
 /// A Block (`{ .. }`).
 ///
 /// E.g. `{ .. }` as in `fn foo() { .. }`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Block {
     /// Statements in a block
     pub stmts: Vec<Stmt>,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum BlockCheckMode {
     Default,
     Unsafe,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Stmt {
     /// A local (let) binding.
     Local(Box<Local>),
@@ -183,7 +183,7 @@ pub enum Stmt {
     Mac(Box<(Mac, MacStmtStyle, Vec<Attribute>)>),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum MacStmtStyle {
     /// The macro statement had a trailing semicolon, e.g. `foo! { ... };`
     /// `foo!(...);`, `foo![...];`
@@ -197,7 +197,7 @@ pub enum MacStmtStyle {
 }
 
 /// Local represents a `let` statement, e.g., `let <pat>:<ty> = <expr>;`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Local {
     pub pat: Box<Pat>,
     pub ty: Option<Box<Ty>>,
@@ -206,7 +206,7 @@ pub struct Local {
     pub attrs: Vec<Attribute>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 // Clippy false positive
 // https://github.com/Manishearth/rust-clippy/issues/1241
 #[cfg_attr(feature = "clippy", allow(enum_variant_names))]
@@ -264,7 +264,7 @@ pub enum Pat {
 ///     // ..
 /// }
 /// ```
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Arm {
     pub attrs: Vec<Attribute>,
     pub pats: Vec<Pat>,
@@ -273,14 +273,14 @@ pub struct Arm {
 }
 
 /// A capture clause
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum CaptureBy {
     Value,
     Ref,
 }
 
 /// Limit types of a range (inclusive or exclusive)
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum RangeLimits {
     /// Inclusive at the beginning, exclusive at the end
     HalfOpen,
@@ -293,7 +293,7 @@ pub enum RangeLimits {
 /// Patterns like the fields of Foo `{ x, ref y, ref mut z }`
 /// are treated the same as `x: x, y: ref y, z: ref mut z`,
 /// except `is_shorthand` is true
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct FieldPat {
     /// The identifier for the field
     pub ident: Ident,
@@ -302,7 +302,7 @@ pub struct FieldPat {
     pub is_shorthand: bool,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum BindingMode {
     ByRef(Mutability),
     ByValue(Mutability),

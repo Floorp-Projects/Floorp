@@ -39,12 +39,26 @@ use std::os::raw::c_void;
 #[cfg(test)]
 mod test;
 
-
 // We still use the DWrite structs for things like metrics; re-export them
 // here
 pub use winapi::DWRITE_FONT_METRICS as FontMetrics;
 pub use winapi::DWRITE_GLYPH_OFFSET as GlyphOffset;
-pub use winapi::{DWRITE_MEASURING_MODE_NATURAL, DWRITE_MEASURING_MODE_GDI_CLASSIC, DWRITE_MEASURING_MODE_GDI_NATURAL};
+pub use winapi::{DWRITE_MATRIX, DWRITE_GLYPH_RUN};
+pub use winapi::{DWRITE_RENDERING_MODE_DEFAULT,
+                 DWRITE_RENDERING_MODE_ALIASED,
+                 DWRITE_RENDERING_MODE_GDI_CLASSIC,
+                 DWRITE_RENDERING_MODE_GDI_NATURAL,
+                 DWRITE_RENDERING_MODE_NATURAL,
+                 DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC,
+                 DWRITE_RENDERING_MODE_OUTLINE,
+                 DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+                 DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL,
+                 DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL,
+                 DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC};
+pub use winapi::{DWRITE_MEASURING_MODE_NATURAL,
+                 DWRITE_MEASURING_MODE_GDI_CLASSIC,
+                 DWRITE_MEASURING_MODE_GDI_NATURAL};
+pub use winapi::{DWRITE_TEXTURE_ALIASED_1x1, DWRITE_TEXTURE_CLEARTYPE_3x1};
 
 mod bitmap_render_target; pub use bitmap_render_target::BitmapRenderTarget;
 mod font; pub use font::Font;
@@ -54,6 +68,7 @@ mod font_family; pub use font_family::FontFamily;
 mod font_file; pub use font_file::FontFile;
 mod gdi_interop; pub use gdi_interop::GdiInterop;
 mod rendering_params; pub use rendering_params::RenderingParams;
+mod glyph_run_analysis; pub use glyph_run_analysis::GlyphRunAnalysis;
 
 DEFINE_GUID!{UuidOfIDWriteFactory, 0xb859ee5a, 0xd838, 0x4b5b, 0xa2, 0xe8, 0x1a, 0xdc, 0x7d, 0x93, 0xdb, 0x48}
 

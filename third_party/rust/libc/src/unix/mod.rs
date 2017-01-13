@@ -377,6 +377,12 @@ extern {
     pub fn close(fd: ::c_int) -> ::c_int;
     pub fn dup(fd: ::c_int) -> ::c_int;
     pub fn dup2(src: ::c_int, dst: ::c_int) -> ::c_int;
+    pub fn execl(path: *const c_char,
+                 arg0: *const c_char, ...) -> ::c_int;
+    pub fn execle(path: *const ::c_char,
+                  arg0: *const ::c_char, ...) -> ::c_int;
+    pub fn execlp(file: *const ::c_char,
+                  arg0: *const ::c_char, ...) -> ::c_int;
     pub fn execv(prog: *const c_char,
                  argv: *const *const c_char) -> ::c_int;
     pub fn execve(prog: *const c_char, argv: *const *const c_char,

@@ -361,9 +361,8 @@ fn pretty(tokens: Tokens) -> Result<String, String> {
 
     let name = "syn".to_string();
     let source = tokens.to_string();
-    let cfg = Vec::new();
     let sess = ParseSess::new();
-    let krate = match parse::parse_crate_from_source_str(name, source, cfg, &sess) {
+    let krate = match parse::parse_crate_from_source_str(name, source, &sess) {
         Ok(krate) => krate,
         Err(mut err) => {
             err.emit();

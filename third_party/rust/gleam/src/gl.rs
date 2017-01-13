@@ -665,6 +665,31 @@ pub fn framebuffer_texture_layer(target: GLenum,
 }
 
 #[inline]
+pub fn blit_framebuffer(srcX0: GLint,
+                        srcY0: GLint,
+                        srcX1: GLint,
+                        srcY1: GLint,
+                        dstX0: GLint,
+                        dstY0: GLint,
+                        dstX1: GLint,
+                        dstY1: GLint,
+                        mask: GLbitfield,
+                        filter: GLenum) {
+    unsafe {
+        ffi::BlitFramebuffer(srcX0,
+                             srcY0,
+                             srcX1,
+                             srcY1,
+                             dstX0,
+                             dstY0,
+                             dstX1,
+                             dstY1,
+                             mask,
+                             filter);
+    }
+}
+
+#[inline]
 pub fn vertex_attrib_4f(index: GLuint,
                         x: GLfloat,
                         y: GLfloat,

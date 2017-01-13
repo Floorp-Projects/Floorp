@@ -22,12 +22,13 @@ use ext::decorator::expand_attributes;
 use feature_gate::{self, Features};
 use fold;
 use fold::*;
-use parse::{ParseSess, PResult, lexer};
+use parse::{ParseSess, DirectoryOwnership, PResult, lexer};
 use parse::parser::Parser;
-use parse::token::{self, intern, keywords};
+use parse::token;
 use print::pprust;
 use ptr::P;
 use std_inject;
+use symbol::keywords;
 use tokenstream::{TokenTree, TokenStream};
 use util::small_vector::SmallVector;
 use visit::Visitor;
@@ -85,7 +86,7 @@ macro_rules! expansions {
                 }
             }
 
-            pub fn visit_with<V: Visitor>(&self, visitor: &mut V) {
+            pub fn visit_with<'a, V: Visitor<'a>>(&'a self, visitor: &mut V) {
                 match *self {
                     Expansion::OptExpr(Some(ref expr)) => visitor.visit_expr(expr),
                     Expansion::OptExpr(None) => {}
@@ -158,7 +159,6 @@ pub struct Invocation {
 
 pub enum InvocationKind {
     Bang {
-        attrs: Vec<ast::Attribute>,
         mac: ast::Mac,
         ident: Option<Ident>,
         span: Span,
@@ -191,7 +191,7 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
     pub fn expand_crate(&mut self, krate: ast::Crate) -> ast::Crate {
         self.cx.crate_root = std_inject::injected_crate_name(&krate);
         let mut module = ModuleData {
-            mod_path: vec![token::str_to_ident(&self.cx.ecfg.crate_name)],
+            mod_path: vec![Ident::from_str(&self.cx.ecfg.crate_name)],
             directory: PathBuf::from(self.cx.codemap().span_to_filename(krate.span)),
         };
         module.directory.pop();
@@ -250,7 +250,7 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
                     self.cx.resolver.resolve_macro(scope, &mac.node.path, force)
                 }
                 InvocationKind::Attr { ref attr, .. } => {
-                    let ident = ast::Ident::with_empty_ctxt(intern(&*attr.name()));
+                    let ident = Ident::with_empty_ctxt(attr.name());
                     let path = ast::Path::from_ident(attr.span, ident);
                     self.cx.resolver.resolve_macro(scope, &path, force)
                 }
@@ -279,7 +279,7 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
             if expansions.len() < depth {
                 expansions.push(Vec::new());
             }
-            expansions[depth - 1].push((mark.as_u32(), expansion));
+            expansions[depth - 1].push((mark, expansion));
             if !self.cx.ecfg.single_step {
                 invocations.extend(new_invocations.into_iter().rev());
             }
@@ -290,7 +290,7 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
         let mut placeholder_expander = PlaceholderExpander::new(self.cx, self.monotonic);
         while let Some(expansions) = expansions.pop() {
             for (mark, expansion) in expansions.into_iter().rev() {
-                placeholder_expander.add(ast::NodeId::from_u32(mark), expansion);
+                placeholder_expander.add(mark.as_placeholder_id(), expansion);
             }
         }
 
@@ -345,7 +345,7 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
         };
 
         attr::mark_used(&attr);
-        let name = intern(&attr.name());
+        let name = attr.name();
         self.cx.bt_push(ExpnInfo {
             call_site: attr.span,
             callee: NameAndSpan {
@@ -357,12 +357,12 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
 
         match *ext {
             MultiModifier(ref mac) => {
-                let items = mac.expand(self.cx, attr.span, &attr.node.value, item);
+                let items = mac.expand(self.cx, attr.span, &attr.value, item);
                 kind.expect_from_annotatables(items)
             }
             MultiDecorator(ref mac) => {
                 let mut items = Vec::new();
-                mac.expand(self.cx, attr.span, &attr.node.value, &item,
+                mac.expand(self.cx, attr.span, &attr.value, &item,
                            &mut |item| items.push(item));
                 items.push(item);
                 kind.expect_from_annotatables(items)
@@ -389,26 +389,13 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
     /// Expand a macro invocation. Returns the result of expansion.
     fn expand_bang_invoc(&mut self, invoc: Invocation, ext: Rc<SyntaxExtension>) -> Expansion {
         let (mark, kind) = (invoc.expansion_data.mark, invoc.expansion_kind);
-        let (attrs, mac, ident, span) = match invoc.kind {
-            InvocationKind::Bang { attrs, mac, ident, span } => (attrs, mac, ident, span),
+        let (mac, ident, span) = match invoc.kind {
+            InvocationKind::Bang { mac, ident, span } => (mac, ident, span),
             _ => unreachable!(),
         };
         let Mac_ { path, tts, .. } = mac.node;
 
-        // Detect use of feature-gated or invalid attributes on macro invoations
-        // since they will not be detected after macro expansion.
-        for attr in attrs.iter() {
-            feature_gate::check_attribute(&attr, &self.cx.parse_sess,
-                                          &self.cx.parse_sess.codemap(),
-                                          &self.cx.ecfg.features.unwrap());
-        }
-
-        if path.segments.len() > 1 || path.global || !path.segments[0].parameters.is_empty() {
-            self.cx.span_err(path.span, "expected macro name without module separators");
-            return kind.dummy(span);
-        }
-
-        let extname = path.segments[0].identifier.name;
+        let extname = path.segments.last().unwrap().identifier.name;
         let ident = ident.unwrap_or(keywords::Invalid.ident());
         let marked_tts = mark_tts(&tts, mark);
         let opt_expanded = match *ext {
@@ -448,7 +435,7 @@ impl<'a, 'b> MacroExpander<'a, 'b> {
                     }
                 });
 
-                kind.make_from(expander.expand(self.cx, span, ident, marked_tts, attrs))
+                kind.make_from(expander.expand(self.cx, span, ident, marked_tts))
             }
 
             MultiDecorator(..) | MultiModifier(..) | SyntaxExtension::AttrProcMacro(..) => {
@@ -603,13 +590,11 @@ impl<'a, 'b> InvocationCollector<'a, 'b> {
                 ..self.cx.current_expansion.clone()
             },
         });
-        placeholder(expansion_kind, ast::NodeId::from_u32(mark.as_u32()))
+        placeholder(expansion_kind, mark.as_placeholder_id())
     }
 
-    fn collect_bang(
-        &mut self, mac: ast::Mac, attrs: Vec<ast::Attribute>, span: Span, kind: ExpansionKind,
-    ) -> Expansion {
-        self.collect(kind, InvocationKind::Bang { attrs: attrs, mac: mac, ident: None, span: span })
+    fn collect_bang(&mut self, mac: ast::Mac, span: Span, kind: ExpansionKind) -> Expansion {
+        self.collect(kind, InvocationKind::Bang { mac: mac, ident: None, span: span })
     }
 
     fn collect_attr(&mut self, attr: ast::Attribute, item: Annotatable, kind: ExpansionKind)
@@ -629,6 +614,16 @@ impl<'a, 'b> InvocationCollector<'a, 'b> {
 
     fn configure<T: HasAttrs>(&mut self, node: T) -> Option<T> {
         self.cfg.configure(node)
+    }
+
+    // Detect use of feature-gated or invalid attributes on macro invocations
+    // since they will not be detected after macro expansion.
+    fn check_attributes(&mut self, attrs: &[ast::Attribute]) {
+        let codemap = &self.cx.parse_sess.codemap();
+        let features = self.cx.ecfg.features.unwrap();
+        for attr in attrs.iter() {
+            feature_gate::check_attribute(&attr, &self.cx.parse_sess, codemap, features);
+        }
     }
 }
 
@@ -658,7 +653,7 @@ fn string_to_tts(text: String, parse_sess: &ParseSess) -> Vec<TokenTree> {
                             .new_filemap(String::from("<macro expansion>"), None, text);
 
     let lexer = lexer::StringReader::new(&parse_sess.span_diagnostic, filemap);
-    let mut parser = Parser::new(parse_sess, Box::new(lexer));
+    let mut parser = Parser::new(parse_sess, Box::new(lexer), None, false);
     panictry!(parser.parse_all_token_trees())
 }
 
@@ -669,11 +664,12 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
 
         if let ast::ExprKind::Mac(mac) = expr.node {
             // FIXME(syntex): ignore unknown macros
-            if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+            if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                 return P(ast::Expr { node: ast::ExprKind::Mac(mac), .. expr });
             }
 
-            self.collect_bang(mac, expr.attrs.into(), expr.span, ExpansionKind::Expr).make_expr()
+            self.check_attributes(&expr.attrs);
+            self.collect_bang(mac, expr.span, ExpansionKind::Expr).make_expr()
         } else {
             P(noop_fold_expr(expr, self))
         }
@@ -685,12 +681,12 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
 
         if let ast::ExprKind::Mac(mac) = expr.node {
             // FIXME(syntex): ignore unknown macros
-            if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+            if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                 return Some(P(ast::Expr { node: ast::ExprKind::Mac(mac), .. expr }));
             }
 
-            self.collect_bang(mac, expr.attrs.into(), expr.span, ExpansionKind::OptExpr)
-                .make_opt_expr()
+            self.check_attributes(&expr.attrs);
+            self.collect_bang(mac, expr.span, ExpansionKind::OptExpr).make_opt_expr()
         } else {
             Some(P(noop_fold_expr(expr, self)))
         }
@@ -705,11 +701,11 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
         pat.and_then(|pat| match pat.node {
             PatKind::Mac(mac) => {
                 // FIXME(syntex): ignore unknown macros
-                if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+                if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                     return P(ast::Pat { node: PatKind::Mac(mac), .. pat });
                 }
 
-                self.collect_bang(mac, Vec::new(), pat.span, ExpansionKind::Pat).make_pat()
+                self.collect_bang(mac, pat.span, ExpansionKind::Pat).make_pat()
             }
             _ => unreachable!(),
         })
@@ -723,7 +719,7 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
 
         let (mac, style, attrs) = if let StmtKind::Mac(mac) = stmt.node {
             // FIXME(syntex): ignore unknown macros.
-            if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac.0).is_none() {
+            if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.0.node.path, false).is_err() {
                 let stmt = ast::Stmt { node: StmtKind::Mac(mac), .. stmt };
                 return SmallVector::one(stmt);
             }
@@ -737,8 +733,8 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
             }).collect()
         };
 
-        let mut placeholder =
-            self.collect_bang(mac, attrs.into(), stmt.span, ExpansionKind::Stmts).make_stmts();
+        self.check_attributes(&attrs);
+        let mut placeholder = self.collect_bang(mac, stmt.span, ExpansionKind::Stmts).make_stmts();
 
         // If this is a macro invocation with a semicolon, then apply that
         // semicolon to the final statement produced by expansion.
@@ -752,9 +748,10 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
     }
 
     fn fold_block(&mut self, block: P<Block>) -> P<Block> {
-        let no_noninline_mod = mem::replace(&mut self.cx.current_expansion.no_noninline_mod, true);
+        let old_directory_ownership = self.cx.current_expansion.directory_ownership;
+        self.cx.current_expansion.directory_ownership = DirectoryOwnership::UnownedViaBlock;
         let result = noop_fold_block(block, self);
-        self.cx.current_expansion.no_noninline_mod = no_noninline_mod;
+        self.cx.current_expansion.directory_ownership = old_directory_ownership;
         result
     }
 
@@ -769,24 +766,27 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
 
         match item.node {
             ast::ItemKind::Mac(..) => {
-                if match item.node {
-                    ItemKind::Mac(ref mac) => mac.node.path.segments.is_empty(),
-                    _ => unreachable!(),
-                } {
-                    return SmallVector::one(item);
-                }
+                self.check_attributes(&item.attrs);
+                let is_macro_def = if let ItemKind::Mac(ref mac) = item.node {
+                    mac.node.path.segments[0].identifier.name == "macro_rules"
+                } else {
+                    unreachable!()
+                };
 
-                item.and_then(|item| match item.node {
+                item.and_then(|mut item| match item.node {
+                    ItemKind::Mac(_) if is_macro_def => {
+                        item.id = Mark::fresh().as_placeholder_id();
+                        SmallVector::one(P(item))
+                    }
                     ItemKind::Mac(mac) => {
                         // FIXME(syntex): ignore unknown macros
-                        if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+                        if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                             let item = ast::Item { node: ItemKind::Mac(mac), .. item };
                             return SmallVector::one(P(item));
                         }
 
                         self.collect(ExpansionKind::Items, InvocationKind::Bang {
                             mac: mac,
-                            attrs: item.attrs,
                             ident: Some(item.ident),
                             span: item.span,
                         }).make_items()
@@ -799,7 +799,7 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
                     return noop_fold_item(item, self);
                 }
 
-                let orig_no_noninline_mod = self.cx.current_expansion.no_noninline_mod;
+                let orig_directory_ownership = self.cx.current_expansion.directory_ownership;
                 let mut module = (*self.cx.current_expansion.module).clone();
                 module.mod_path.push(item.ident);
 
@@ -810,23 +810,28 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
 
                 if inline_module {
                     if let Some(path) = attr::first_attr_value_str_by_name(&item.attrs, "path") {
-                        self.cx.current_expansion.no_noninline_mod = false;
-                        module.directory.push(&*path);
+                        self.cx.current_expansion.directory_ownership = DirectoryOwnership::Owned;
+                        module.directory.push(&*path.as_str());
                     } else {
                         module.directory.push(&*item.ident.name.as_str());
                     }
                 } else {
-                    self.cx.current_expansion.no_noninline_mod = false;
-                    module.directory =
+                    let mut path =
                         PathBuf::from(self.cx.parse_sess.codemap().span_to_filename(inner));
-                    module.directory.pop();
+                    let directory_ownership = match path.file_name().unwrap().to_str() {
+                        Some("mod.rs") => DirectoryOwnership::Owned,
+                        _ => DirectoryOwnership::UnownedViaMod(false),
+                    };
+                    path.pop();
+                    module.directory = path;
+                    self.cx.current_expansion.directory_ownership = directory_ownership;
                 }
 
                 let orig_module =
                     mem::replace(&mut self.cx.current_expansion.module, Rc::new(module));
                 let result = noop_fold_item(item, self);
                 self.cx.current_expansion.module = orig_module;
-                self.cx.current_expansion.no_noninline_mod = orig_no_noninline_mod;
+                self.cx.current_expansion.directory_ownership = orig_directory_ownership;
                 return result;
             }
             // Ensure that test functions are accessible from the test harness.
@@ -853,13 +858,14 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
         match item.node {
             ast::TraitItemKind::Macro(mac) => {
                 // FIXME(syntex): ignore unknown macros
-                if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+                if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                     let item = ast::TraitItem { node: ast::TraitItemKind::Macro(mac), .. item };
                     return SmallVector::one(item);
                 }
 
                 let ast::TraitItem { attrs, span, .. } = item;
-                self.collect_bang(mac, attrs, span, ExpansionKind::TraitItems).make_trait_items()
+                self.check_attributes(&attrs);
+                self.collect_bang(mac, span, ExpansionKind::TraitItems).make_trait_items()
             }
             _ => fold::noop_fold_trait_item(item, self),
         }
@@ -877,13 +883,14 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
         match item.node {
             ast::ImplItemKind::Macro(mac) => {
                 // FIXME(syntex): ignore unknown macros
-                if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+                if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                     let item = ast::ImplItem { node: ast::ImplItemKind::Macro(mac), .. item };
                     return SmallVector::one(item);
                 }
 
                 let ast::ImplItem { attrs, span, .. } = item;
-                self.collect_bang(mac, attrs, span, ExpansionKind::ImplItems).make_impl_items()
+                self.check_attributes(&attrs);
+                self.collect_bang(mac, span, ExpansionKind::ImplItems).make_impl_items()
             }
             _ => fold::noop_fold_impl_item(item, self),
         }
@@ -898,11 +905,11 @@ impl<'a, 'b> Folder for InvocationCollector<'a, 'b> {
         match ty.node {
             ast::TyKind::Mac(mac) => {
                 // FIXME(syntex): ignore unknown macros
-                if self.cx.resolver.find_mac(self.cx.current_expansion.mark, &mac).is_none() {
+                if self.cx.resolver.resolve_macro(self.cx.current_expansion.mark, &mac.node.path, false).is_err() {
                     return P(ast::Ty { node: ast::TyKind::Mac(mac), .. ty });
                 }
 
-                self.collect_bang(mac, Vec::new(), ty.span, ExpansionKind::Ty).make_ty()
+                self.collect_bang(mac, ty.span, ExpansionKind::Ty).make_ty()
             }
             _ => unreachable!(),
         }
@@ -971,7 +978,6 @@ impl<'feat> ExpansionConfig<'feat> {
         fn enable_allow_internal_unstable = allow_internal_unstable,
         fn enable_custom_derive = custom_derive,
         fn enable_pushpop_unsafe = pushpop_unsafe,
-        fn enable_proc_macro = proc_macro,
     }
 }
 

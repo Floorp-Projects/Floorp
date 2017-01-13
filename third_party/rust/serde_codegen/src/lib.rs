@@ -38,11 +38,11 @@ fn syntex_registry() -> syntex::Registry {
 
         impl fold::Folder for StripAttributeFolder {
             fn fold_attribute(&mut self, attr: ast::Attribute) -> Option<ast::Attribute> {
-                match attr.node.value.node {
-                    ast::MetaItemKind::List(ref n, _) if n == &"serde" => { return None; }
-                    _ => {}
+                if attr.value.name == "serde" {
+                    if let ast::MetaItemKind::List(..) = attr.value.node {
+                        return None;
+                    }
                 }
-
                 Some(attr)
             }
 
@@ -116,13 +116,12 @@ macro_rules! shim {
 
             use syntax::{attr, ast, visit};
             struct MarkSerdeAttributesUsed;
-            impl visit::Visitor for MarkSerdeAttributesUsed {
+            impl<'a> visit::Visitor<'a> for MarkSerdeAttributesUsed {
                 fn visit_attribute(&mut self, attr: &ast::Attribute) {
-                    match attr.node.value.node {
-                        ast::MetaItemKind::List(ref name, _) if name == "serde" => {
+                    if attr.value.name == "serde" {
+                        if let ast::MetaItemKind::List(..) = attr.value.node {
                             attr::mark_used(attr);
                         }
-                        _ => {}
                     }
                 }
             }

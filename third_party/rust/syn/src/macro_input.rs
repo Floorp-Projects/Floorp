@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct MacroInput {
     pub ident: Ident,
     pub vis: Visibility,
@@ -9,7 +9,7 @@ pub struct MacroInput {
     pub body: Body,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Body {
     Enum(Vec<Variant>),
     Struct(VariantData),

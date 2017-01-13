@@ -1,0 +1,17 @@
+[package]
+name = "metadeps"
+version = "1.1.1"
+authors = ["Josh Triplett <josh@joshtriplett.org>"]
+license = "MIT/Apache-2.0"
+repository = "https://github.com/joshtriplett/metadeps"
+documentation = "http://docs.rs/metadeps"
+description = "Run pkg-config from declarative dependencies in Cargo.toml"
+keywords = ["pkg-config", "build-dependencies", "build-depends", "manifest", "metadata"]
+
+[dependencies]
+error-chain = { version = "0.7.1", default-features = false }
+pkg-config = "0.3.8"
+toml = { version = "0.2", default-features = false }
+
+[dev-dependencies]
+lazy_static = "0.2"

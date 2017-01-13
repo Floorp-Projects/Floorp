@@ -221,7 +221,10 @@ extern {
                                          -> CFStringRef;
     //fn CFStringCreateWithCharacters
     //fn CFStringCreateWithCharactersNoCopy
-    //fn CFStringCreateWithCString
+    pub fn CFStringCreateWithCString(alloc: CFAllocatorRef,
+                                     cStr: *const c_char,
+                                     encoding: CFStringEncoding)
+                                     -> CFStringRef;
     //fn CFStringCreateWithCStringNoCopy
     //fn CFStringCreateWithFormat
     //fn CFStringCreateWithFormatAndArguments
@@ -259,7 +262,11 @@ extern {
     //fn CFStringGetCharacters
     //fn CFStringGetCharactersPtr
     //fn CFStringGetCharacterFromInlineBuffer
-    //fn CFStringGetCString
+    pub fn CFStringGetCString(theString: CFStringRef,
+                              buffer: *mut c_char,
+                              bufferSize: CFIndex,
+                              encoding: CFStringEncoding)
+                              -> Boolean;
     pub fn CFStringGetCStringPtr(theString: CFStringRef,
                                  encoding: CFStringEncoding)
                                  -> *const c_char;

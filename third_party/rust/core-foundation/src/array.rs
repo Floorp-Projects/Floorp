@@ -15,7 +15,7 @@ use core_foundation_sys::base::{CFTypeRef, kCFAllocatorDefault};
 use libc::c_void;
 use std::mem;
 
-use base::{CFIndexConvertible, TCFType};
+use base::{CFIndexConvertible, TCFType, CFRange};
 
 /// A heterogeneous immutable array.
 pub struct CFArray(CFArrayRef);
@@ -89,6 +89,22 @@ impl CFArray {
             CFArrayGetValueAtIndex(self.0, index)
         }
     }
+
+    pub fn get_values(&self, range: CFRange) -> Vec<*const c_void> {
+        let mut vec = Vec::with_capacity(range.length as usize);
+        unsafe {
+            CFArrayGetValues(self.0, range, vec.as_mut_ptr());
+            vec.set_len(range.length as usize);
+            vec
+        }
+    }
+
+    pub fn get_all_values(&self) -> Vec<*const c_void> {
+        self.get_values(CFRange {
+            location: 0,
+            length: self.len()
+        })
+    }
 }
 
 impl<'a> IntoIterator for &'a CFArray {
@@ -104,13 +120,25 @@ impl<'a> IntoIterator for &'a CFArray {
 fn should_box_and_unbox() {
     use number::{CFNumber, number};
 
+    let n1 = number(1);
+    let n2 = number(2);
+    let n3 = number(3);
+    let n4 = number(4);
+    let n5 = number(5);
+
     let arr = CFArray::from_CFTypes(&[
-        number(1).as_CFType(),
-        number(2).as_CFType(),
-        number(3).as_CFType(),
-        number(4).as_CFType(),
-        number(5).as_CFType(),
+        n1.as_CFType(),
+        n2.as_CFType(),
+        n3.as_CFType(),
+        n4.as_CFType(),
+        n5.as_CFType(),
     ]);
+
+    assert!(arr.get_all_values() == &[n1.as_CFTypeRef(),
+                                      n2.as_CFTypeRef(),
+                                      n3.as_CFTypeRef(),
+                                      n4.as_CFTypeRef(),
+                                      n5.as_CFTypeRef()]);
 
     unsafe {
         let mut sum = 0;

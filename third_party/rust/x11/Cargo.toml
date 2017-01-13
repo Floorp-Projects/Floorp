@@ -1,11 +1,13 @@
 [package]
 name = "x11"
-version = "2.11.0"
+version = "2.12.0"
 authors = ["Daggerbot <daggerbot@gmail.com>"]
 description = "X11 library bindings for Rust"
 license = "CC0-1.0"
 repository = "https://github.com/Daggerbot/x11-rs.git"
 build = "build.rs"
+documentation = "https://docs.rs/x11"
+workspace = ".."
 
 [features]
 dpms = []
@@ -19,14 +21,32 @@ xlib = []
 xlib_xcb = []
 xmu = []
 xrandr = []
-xrecord = []
+xrecord = ["xtst"]
 xrender = []
 xss = []
 xt = []
-xtest = []
+xtest = ["xtst"]
+xtst = []
 
 [dependencies]
 libc = "0.2"
 
 [build-dependencies]
-pkg-config = "0.3.5"
+metadeps = "1.1"
+
+[package.metadata.pkg-config]
+gl = { version = "1", feature = "glx" }
+x11 = { version = "1.6", feature = "xlib" }
+x11-xcb = { version = "1.6", feature = "xlib_xcb" }
+xcursor = { version = "1.1", feature = "xcursor" }
+xext = { version = "1.3", feature = "dpms" }
+xft = { version = "2.1", feature = "xft" }
+xi = { version = "1.7", feature = "xinput" }
+xinerama = { version = "1.1", feature = "xinerama" }
+xmu = { version = "1.1", feature = "xmu" }
+xrandr = { version = "1.5", feature = "xrandr" }
+xrender = { version = "0.9.6", feature = "xrender" }
+xscrnsaver = { version = "1.2", feature = "xss" }
+xt = { version = "1.1", feature = "xt" }
+xtst = { version = "1.2", feature = "xtst" }
+xxf86vm = { version = "1.1", feature = "xf86vmode" }

@@ -11,7 +11,9 @@ use libc::{c_void};
 
 use base::{CFAllocatorRef, CFIndex, CFTypeID, Boolean};
 
-pub type CFDictionaryApplierFunction = *const u8;
+pub type CFDictionaryApplierFunction = extern "C" fn (key: *const c_void,
+                                                      value: *const c_void,
+                                                      context: *mut c_void);
 pub type CFDictionaryCopyDescriptionCallBack = *const u8;
 pub type CFDictionaryEqualCallBack = *const u8;
 pub type CFDictionaryHashCallBack = *const u8;
@@ -45,6 +47,7 @@ pub struct CFDictionaryValueCallBacks {
 pub struct __CFDictionary(c_void);
 
 pub type CFDictionaryRef = *const __CFDictionary;
+pub type CFMutableDictionaryRef = *const __CFDictionary;
 
 extern {
     /*
@@ -63,7 +66,14 @@ extern {
     pub fn CFDictionaryGetTypeID() -> CFTypeID;
     pub fn CFDictionaryGetValueIfPresent(theDict: CFDictionaryRef, key: *const c_void, value: *mut *const c_void)
                                          -> Boolean;
-    pub fn CFDictionarySetValue(theDict: CFDictionaryRef,
+    pub fn CFDictionaryApplyFunction(theDict: CFDictionaryRef,
+                                     applier: CFDictionaryApplierFunction,
+                                     context: *mut c_void);
+    pub fn CFDictionarySetValue(theDict: CFMutableDictionaryRef,
                                 key: *const c_void,
                                 value: *const c_void);
+    pub fn CFDictionaryGetKeysAndValues(theDict: CFDictionaryRef,
+                                        keys: *mut *const c_void,
+                                        values: *mut *const c_void);
+
 }

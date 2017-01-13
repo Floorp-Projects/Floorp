@@ -12,22 +12,10 @@ pub type tcflag_t = ::c_uint;
 pub type speed_t = ::c_uint;
 pub type nl_item = ::c_int;
 pub type id_t = i64;
-pub type sem_t = _sem;
 
 pub enum timezone {}
 
 s! {
-    pub struct utmpx {
-        pub ut_type: ::c_short,
-        pub ut_tv: ::timeval,
-        pub ut_id: [::c_char; 8],
-        pub ut_pid: ::pid_t,
-        pub ut_user: [::c_char; 32],
-        pub ut_line: [::c_char; 16],
-        pub ut_host: [::c_char; 128],
-        pub __ut_spare: [::c_char; 64],
-    }
-
     pub struct glob_t {
         pub gl_pathc:  ::size_t,
         pub gl_matchc: ::size_t,
@@ -170,11 +158,6 @@ s! {
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
     }
-
-    // internal structure has changed over time
-    pub struct _sem {
-        data: [u32; 4],
-    }
 }
 
 pub const AIO_LISTIO_MAX: ::c_int = 16;
@@ -191,29 +174,6 @@ pub const SIGEV_NONE: ::c_int = 0;
 pub const SIGEV_SIGNAL: ::c_int = 1;
 pub const SIGEV_THREAD: ::c_int = 2;
 pub const SIGEV_KEVENT: ::c_int = 3;
-
-pub const EMPTY: ::c_short = 0;
-pub const BOOT_TIME: ::c_short = 1;
-pub const OLD_TIME: ::c_short = 2;
-pub const NEW_TIME: ::c_short = 3;
-pub const USER_PROCESS: ::c_short = 4;
-pub const INIT_PROCESS: ::c_short = 5;
-pub const LOGIN_PROCESS: ::c_short = 6;
-pub const DEAD_PROCESS: ::c_short = 7;
-pub const SHUTDOWN_TIME: ::c_short = 8;
-
-pub const LC_COLLATE_MASK: ::c_int = (1 << 0);
-pub const LC_CTYPE_MASK: ::c_int = (1 << 1);
-pub const LC_MESSAGES_MASK: ::c_int = (1 << 2);
-pub const LC_MONETARY_MASK: ::c_int = (1 << 3);
-pub const LC_NUMERIC_MASK: ::c_int = (1 << 4);
-pub const LC_TIME_MASK: ::c_int = (1 << 5);
-pub const LC_ALL_MASK: ::c_int = LC_COLLATE_MASK
-                               | LC_CTYPE_MASK
-                               | LC_MESSAGES_MASK
-                               | LC_MONETARY_MASK
-                               | LC_NUMERIC_MASK
-                               | LC_TIME_MASK;
 
 pub const CODESET: ::nl_item = 0;
 pub const D_T_FMT: ::nl_item = 1;
@@ -706,7 +666,6 @@ pub const PTHREAD_RWLOCK_INITIALIZER: pthread_rwlock_t = 0 as *mut _;
 pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 1;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 2;
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 3;
-pub const PTHREAD_MUTEX_ADAPTIVE_NP: ::c_int = 4;
 pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_ERRORCHECK;
 
 pub const SCHED_FIFO: ::c_int = 1;
@@ -756,8 +715,6 @@ extern {
     pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
     pub fn pututxline(ut: *const utmpx) -> *mut utmpx;
     pub fn setutxent();
-    pub fn getutxuser(user: *const ::c_char) -> *mut utmpx;
-    pub fn setutxdb(_type: ::c_int, file: *const ::c_char) -> ::c_int;
 }
 
 #[link(name = "util")]
@@ -772,9 +729,6 @@ extern {
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
     pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
                       nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
-    pub fn aio_waitcomplete(iocbp: *mut *mut aiocb,
-                            timeout: *mut ::timespec) -> ::ssize_t;
-
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,
@@ -839,7 +793,6 @@ extern {
                    winp: *mut ::winsize) -> ::pid_t;
     pub fn nl_langinfo_l(item: ::nl_item, locale: ::locale_t) -> *mut ::c_char;
     pub fn duplocale(base: ::locale_t) -> ::locale_t;
-    pub fn freelocale(loc: ::locale_t) -> ::c_int;
     pub fn newlocale(mask: ::c_int,
                      locale: *const ::c_char,
                      base: ::locale_t) -> ::locale_t;

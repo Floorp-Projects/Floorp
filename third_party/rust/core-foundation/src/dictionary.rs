@@ -101,4 +101,18 @@ impl CFDictionary {
     pub unsafe fn set_value(&self, key: *const c_void, value: *const c_void) {
         CFDictionarySetValue(self.0, key, value)
     }
+
+    pub fn get_keys_and_values(&self) -> (Vec<*const c_void>, Vec<*const c_void>) {
+        let length = self.len();
+        let mut keys = Vec::with_capacity(length);
+        let mut values = Vec::with_capacity(length);
+
+        unsafe {
+            CFDictionaryGetKeysAndValues(self.0, keys.as_mut_ptr(), values.as_mut_ptr());
+            keys.set_len(length);
+            values.set_len(length);
+        }
+
+        (keys, values)
+    }
 }

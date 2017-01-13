@@ -10,19 +10,19 @@
 
 use {ast, attr};
 use syntax_pos::{Span, DUMMY_SP};
-use ext::base::{DummyResult, ExtCtxt, MacEager, MacResult, SyntaxExtension};
-use ext::base::{IdentMacroExpander, NormalTT, TTMacroExpander};
+use ext::base::{DummyResult, ExtCtxt, MacResult, SyntaxExtension};
+use ext::base::{NormalTT, TTMacroExpander};
 use ext::expand::{Expansion, ExpansionKind};
-use ext::placeholders;
 use ext::tt::macro_parser::{Success, Error, Failure};
 use ext::tt::macro_parser::{MatchedSeq, MatchedNonterminal};
 use ext::tt::macro_parser::{parse, parse_failure_msg};
-use parse::ParseSess;
+use parse::{Directory, ParseSess};
 use parse::lexer::new_tt_reader;
-use parse::parser::{Parser, Restrictions};
-use parse::token::{self, gensym_ident, NtTT, Token};
+use parse::parser::Parser;
+use parse::token::{self, NtTT, Token};
 use parse::token::Token::*;
 use print;
+use symbol::Symbol;
 use tokenstream::{self, TokenTree};
 
 use std::collections::{HashMap};
@@ -115,12 +115,14 @@ fn generic_extension<'cx>(cx: &'cx ExtCtxt,
                 // rhs has holes ( `$id` and `$(...)` that need filled)
                 let trncbr =
                     new_tt_reader(&cx.parse_sess.span_diagnostic, Some(named_matches), rhs);
-                let mut p = Parser::new(cx.parse_sess(), Box::new(trncbr));
-                p.directory = cx.current_expansion.module.directory.clone();
-                p.restrictions = match cx.current_expansion.no_noninline_mod {
-                    true => Restrictions::no_noninline_mod(),
-                    false => Restrictions::empty(),
+                let directory = Directory {
+                    path: cx.current_expansion.module.directory.clone(),
+                    ownership: cx.current_expansion.directory_ownership,
                 };
+                let mut p = Parser::new(cx.parse_sess(), Box::new(trncbr), Some(directory), false);
+                p.root_module_name = cx.current_expansion.module.mod_path.last()
+                    .map(|id| (*id.name.as_str()).to_owned());
+
                 p.check_unknown_macro_variable();
                 // Let the context choose how to interpret the result.
                 // Weird, but useful for X-macros.
@@ -148,38 +150,6 @@ fn generic_extension<'cx>(cx: &'cx ExtCtxt,
     cx.span_fatal(best_fail_spot.substitute_dummy(sp), &best_fail_msg);
 }
 
-pub struct MacroRulesExpander;
-impl IdentMacroExpander for MacroRulesExpander {
-    fn expand(&self,
-              cx: &mut ExtCtxt,
-              span: Span,
-              ident: ast::Ident,
-              tts: Vec<tokenstream::TokenTree>,
-              attrs: Vec<ast::Attribute>)
-              -> Box<MacResult> {
-        let export = attr::contains_name(&attrs, "macro_export");
-        let def = ast::MacroDef {
-            ident: ident,
-            id: ast::DUMMY_NODE_ID,
-            span: span,
-            imported_from: None,
-            body: tts,
-            allow_internal_unstable: attr::contains_name(&attrs, "allow_internal_unstable"),
-            attrs: attrs,
-        };
-
-        // If keep_macs is true, expands to a MacEager::items instead.
-        let result = if cx.ecfg.keep_macs {
-            MacEager::items(placeholders::reconstructed_macro_rules(&def).make_items())
-        } else {
-            MacEager::items(placeholders::macro_scope_placeholder().make_items())
-        };
-
-        cx.resolver.add_macro(cx.current_expansion.mark, def, export);
-        result
-    }
-}
-
 // Note that macro-by-example's input is also matched against a token tree:
 //                   $( $lhs:tt => $rhs:tt );+
 //
@@ -187,16 +157,16 @@ impl IdentMacroExpander for MacroRulesExpander {
 
 /// Converts a `macro_rules!` invocation into a syntax extension.
 pub fn compile(sess: &ParseSess, def: &ast::MacroDef) -> SyntaxExtension {
-    let lhs_nm =  gensym_ident("lhs");
-    let rhs_nm =  gensym_ident("rhs");
+    let lhs_nm = ast::Ident::with_empty_ctxt(Symbol::gensym("lhs"));
+    let rhs_nm = ast::Ident::with_empty_ctxt(Symbol::gensym("rhs"));
 
     // The pattern that macro_rules matches.
     // The grammar for macro_rules! is:
     // $( $lhs:tt => $rhs:tt );+
     // ...quasiquoting this would be nice.
     // These spans won't matter, anyways
-    let match_lhs_tok = MatchNt(lhs_nm, token::str_to_ident("tt"));
-    let match_rhs_tok = MatchNt(rhs_nm, token::str_to_ident("tt"));
+    let match_lhs_tok = MatchNt(lhs_nm, ast::Ident::from_str("tt"));
+    let match_rhs_tok = MatchNt(rhs_nm, ast::Ident::from_str("tt"));
     let argument_gram = vec![
         TokenTree::Sequence(DUMMY_SP, Rc::new(tokenstream::SequenceRepetition {
             tts: vec![
@@ -220,7 +190,7 @@ pub fn compile(sess: &ParseSess, def: &ast::MacroDef) -> SyntaxExtension {
     // Parse the macro_rules! invocation (`none` is for no interpolations):
     let arg_reader = new_tt_reader(&sess.span_diagnostic, None, def.body.clone());
 
-    let argument_map = match parse(sess, arg_reader, &argument_gram) {
+    let argument_map = match parse(sess, arg_reader, &argument_gram, None) {
         Success(m) => m,
         Failure(sp, tok) => {
             let s = parse_failure_msg(tok);
@@ -279,7 +249,7 @@ pub fn compile(sess: &ParseSess, def: &ast::MacroDef) -> SyntaxExtension {
         valid: valid,
     });
 
-    NormalTT(exp, Some(def.span), def.allow_internal_unstable)
+    NormalTT(exp, Some(def.span), attr::contains_name(&def.attrs, "allow_internal_unstable"))
 }
 
 fn check_lhs_nt_follows(sess: &ParseSess, lhs: &TokenTree) -> bool {
@@ -790,8 +760,7 @@ fn is_in_follow(tok: &Token, frag: &str) -> Result<bool, (String, &'static str)>
             "pat" => {
                 match *tok {
                     FatArrow | Comma | Eq | BinOp(token::Or) => Ok(true),
-                    Ident(i) if (i.name.as_str() == "if" ||
-                                 i.name.as_str() == "in") => Ok(true),
+                    Ident(i) if i.name == "if" || i.name == "in" => Ok(true),
                     _ => Ok(false)
                 }
             },
@@ -799,8 +768,8 @@ fn is_in_follow(tok: &Token, frag: &str) -> Result<bool, (String, &'static str)>
                 match *tok {
                     OpenDelim(token::DelimToken::Brace) | OpenDelim(token::DelimToken::Bracket) |
                     Comma | FatArrow | Colon | Eq | Gt | Semi | BinOp(token::Or) => Ok(true),
-                    MatchNt(_, ref frag) if frag.name.as_str() == "block" => Ok(true),
-                    Ident(i) if i.name.as_str() == "as" || i.name.as_str() == "where" => Ok(true),
+                    MatchNt(_, ref frag) if frag.name == "block" => Ok(true),
+                    Ident(i) if i.name == "as" || i.name == "where" => Ok(true),
                     _ => Ok(false)
                 }
             },

@@ -9,6 +9,7 @@
 
 use freetype::{FT_UShort, FT_Short, FT_ULong, FT_Byte};
 
+#[repr(C)]
 pub struct TT_OS2 {
     pub version: FT_UShort,
     pub xAvgCharWidth: FT_Short,
