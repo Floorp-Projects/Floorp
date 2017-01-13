@@ -6,10 +6,6 @@
 
 :root {
   --forwardbutton-width: 29px;
-}
-
-:root[devtoolstheme="dark"],
-:root[devtoolstheme="light"] {
    /* Matches the #browser-border-start, #browser-border-end color */
   --chrome-nav-bar-separator-color: rgba(10, 31, 51, 0.35);
 }
@@ -100,8 +96,8 @@
   text-shadow: none !important;
 }
 
-:root[devtoolstheme="dark"] .findbar-closebutton,
-:root[devtoolstheme="dark"] #sidebar-header > .close-icon,
+.findbar-closebutton:-moz-lwtheme-brighttext,
+#sidebar-header > .close-icon:-moz-lwtheme-brighttext,
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
 .tab-close-button[selected=true] {
@@ -109,8 +105,8 @@
 }
 
 @media (min-resolution: 1.1dppx) {
-  :root[devtoolstheme="dark"] .findbar-closebutton,
-  :root[devtoolstheme="dark"] #sidebar-header > .close-icon,
+  .findbar-closebutton:-moz-lwtheme-brighttext,
+  #sidebar-header > .close-icon:-moz-lwtheme-brighttext,
   .tab-close-button[selected=true] {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
@@ -279,34 +275,33 @@
   }
 
   /* Force white caption buttons for the dark theme on Windows 10 */
-  :root[devtoolstheme="dark"] #titlebar-min {
+  #titlebar-min:-moz-lwtheme-brighttext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize-white);
   }
-  :root[devtoolstheme="dark"] #titlebar-max {
+  #titlebar-max:-moz-lwtheme-brighttext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize-white);
   }
-  #main-window[devtoolstheme="dark"][sizemode="maximized"] #titlebar-max {
+  #main-window[sizemode="maximized"] #titlebar-max:-moz-lwtheme-brighttext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore-white);
   }
-  :root[devtoolstheme="dark"] #titlebar-close {
+  #titlebar-close:-moz-lwtheme-brighttext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
   }
 
   /* ... and normal ones for the light theme on Windows 10 */
-  :root[devtoolstheme="light"] #titlebar-min {
+  #titlebar-min:-moz-lwtheme-darktext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#minimize);
   }
-  :root[devtoolstheme="light"] #titlebar-max {
+  #titlebar-max:-moz-lwtheme-darktext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#maximize);
   }
-  #main-window[devtoolstheme="light"][sizemode="maximized"] #titlebar-max {
+  #main-window[sizemode="maximized"] #titlebar-max:-moz-lwtheme-darktext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#restore);
   }
-  :root[devtoolstheme="light"] #titlebar-close {
+  #titlebar-close:-moz-lwtheme-darktext {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#close);
   }
-
-  :root[devtoolstheme="light"] #titlebar-close:hover {
+  #titlebar-close:-moz-lwtheme-darktext:hover {
     list-style-image: url(chrome://browser/skin/caption-buttons.svg#close-white);
   }
 }

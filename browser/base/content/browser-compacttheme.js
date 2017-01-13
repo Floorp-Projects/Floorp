@@ -18,7 +18,9 @@ var CompactTheme = {
 
   get isThemeCurrentlyApplied() {
     let theme = LightweightThemeManager.currentTheme;
-    return theme && theme.id == "firefox-devedition@mozilla.org";
+    return theme && (
+           theme.id == "firefox-compact-dark@mozilla.org" ||
+           theme.id == "firefox-compact-light@mozilla.org");
   },
 
   init() {
@@ -44,26 +46,20 @@ var CompactTheme = {
   observe(subject, topic, data) {
     if (topic == "lightweight-theme-styling-update") {
       let newTheme = JSON.parse(data);
-      if (newTheme && newTheme.id == "firefox-devedition@mozilla.org") {
+      if (newTheme && (
+          newTheme.id == "firefox-compact-light@mozilla.org" ||
+          newTheme.id == "firefox-compact-dark@mozilla.org")) {
+        // We are using the theme ID on this object instead of always referencing
+        // LightweightThemeManager.currentTheme in case this is a preview
         this._toggleStyleSheet(true);
       } else {
         this._toggleStyleSheet(false);
       }
+
     }
 
     if (topic == "nsPref:changed" && data == this._devtoolsThemePrefName) {
       this._updateDevtoolsThemeAttribute();
-    }
-  },
-
-  _inferBrightness() {
-    ToolbarIconColor.inferFromText();
-    // Get an inverted full screen button if the dark theme is applied.
-    if (this.isStyleSheetEnabled &&
-        document.documentElement.getAttribute("devtoolstheme") == "dark") {
-      document.documentElement.setAttribute("brighttitlebarforeground", "true");
-    } else {
-      document.documentElement.removeAttribute("brighttitlebarforeground");
     }
   },
 
@@ -75,7 +71,6 @@ var CompactTheme = {
       devtoolsTheme = "light";
     }
     document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
-    this._inferBrightness();
   },
 
   handleEvent(e) {
@@ -90,13 +85,12 @@ var CompactTheme = {
     // yet fired.
     if (this.initialized) {
       gBrowser.tabContainer._positionPinnedTabs();
-      this._inferBrightness();
     }
   },
 
-  _toggleStyleSheet(deveditionThemeEnabled) {
+  _toggleStyleSheet(enabled) {
     let wasEnabled = this.isStyleSheetEnabled;
-    if (deveditionThemeEnabled && !wasEnabled) {
+    if (enabled) {
       // The stylesheet may not have been created yet if it wasn't
       // needed on initial load.  Make it now.
       if (!this.styleSheet) {
@@ -104,7 +98,7 @@ var CompactTheme = {
       }
       this.styleSheet.sheet.disabled = false;
       this.refreshBrowserDisplay();
-    } else if (!deveditionThemeEnabled && wasEnabled) {
+    } else if (!enabled && wasEnabled) {
       this.styleSheet.sheet.disabled = true;
       this.refreshBrowserDisplay();
     }
@@ -123,7 +117,7 @@ var CompactTheme = {
 // If the compact theme is going to be applied in gBrowserInit.onLoad,
 // then preload it now.  This prevents a flash of unstyled content where the
 // normal theme is applied while the compact theme stylesheet is loading.
-if (!AppConstants.RELEASE_OR_BETA &&
+if (AppConstants.INSTALL_COMPACT_THEMES &&
     this != Services.appShell.hiddenDOMWindow && CompactTheme.isThemeCurrentlyApplied) {
   CompactTheme.createStyleSheet();
 }
