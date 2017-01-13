@@ -250,6 +250,7 @@ Tracker.prototype = {
         if (data == PREFS_BRANCH + "engine." + this.engine.prefName) {
           this.onEngineEnabledChanged(this.engine.enabled);
         }
+
     }
   }
 };
