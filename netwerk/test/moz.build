@@ -26,11 +26,6 @@ if CONFIG['OS_TARGET'] == 'WINNT':
         'TestNamedPipeService.cpp',
     ]
 
-RESOURCE_FILES += [
-    'urlparse.dat',
-    'urlparse_unx.dat',
-]
-
 include('/ipc/chromium/chromium-config.mozbuild')
 
 if CONFIG['GNU_CXX']:
