@@ -7,16 +7,16 @@
 this.EXPORTED_SYMBOLS = ["FolderCache"];
 
 // Cache for bookmarks folder heirarchy.
-var FolderCache = function() {
+var FolderCache = function () {
   this.cache = new Map();
 }
 
 FolderCache.prototype = {
-  has(id) {
+  has: function (id) {
     return this.cache.has(id);
   },
 
-  insert(id, parentId) {
+  insert: function (id, parentId) {
     if (this.cache.has(id)) {
       return;
     }
@@ -35,7 +35,7 @@ FolderCache.prototype = {
     }
   },
 
-  remove(id) {
+  remove: function (id) {
     if (!(this.cache.has(id))) {
       throw new Error("remote :: id not found in cache: " + id);
     }
@@ -52,7 +52,7 @@ FolderCache.prototype = {
     this.cache.delete(id);
   },
 
-  setParent(id, parentId) {
+  setParent: function (id, parentId) {
     if (!(this.cache.has(id))) {
       throw new Error("setParent :: id not found in cache: " + id);
     }
@@ -71,7 +71,7 @@ FolderCache.prototype = {
     return true;
   },
 
-  getParent(id) {
+  getParent: function (id) {
     if (this.cache.has(id)) {
       return this.cache.get(id).parent;
     }
@@ -79,7 +79,7 @@ FolderCache.prototype = {
     throw new Error("getParent :: id not found in cache: " + id);
   },
 
-  getChildren(id) {
+  getChildren: function (id) {
     if (this.cache.has(id)) {
       return this.cache.get(id).children;
     }
@@ -87,7 +87,7 @@ FolderCache.prototype = {
     throw new Error("getChildren :: id not found in cache: " + id);
   },
 
-  setChildren(id, children) {
+  setChildren: function (id, children) {
     for (let child of children) {
       if (!this.cache.has(child)) {
         this.insert(child, id);
@@ -97,7 +97,7 @@ FolderCache.prototype = {
     }
   },
 
-  dump() {
+  dump: function () {
     dump("FolderCache: " + JSON.stringify(this.cache) + "\n");
   },
 };

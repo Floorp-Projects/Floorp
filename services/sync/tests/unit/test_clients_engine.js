@@ -61,10 +61,10 @@ add_task(async function test_bad_hmac() {
   let deletedItems       = [];
   let callback = {
     __proto__: SyncServerCallback,
-    onItemDeleted(username, coll, wboID) {
+    onItemDeleted: function (username, coll, wboID) {
       deletedItems.push(coll + "/" + wboID);
     },
-    onCollectionDeleted(username, coll) {
+    onCollectionDeleted: function (username, coll) {
       deletedCollections.push(coll);
     }
   }
@@ -1452,7 +1452,7 @@ add_task(async function test_command_sync() {
     engine._notifyCollectionChanged = (ids) => (notifiedIds = ids);
     _("Syncing.");
     engine._sync();
-    deepEqual(notifiedIds, ["fxa-fake-guid-00", "fxa-fake-guid-01"]);
+    deepEqual(notifiedIds, ["fxa-fake-guid-00","fxa-fake-guid-01"]);
     ok(!notifiedIds.includes(engine.getClientFxaDeviceId(engine.localID)),
       "We never notify the local device");
 

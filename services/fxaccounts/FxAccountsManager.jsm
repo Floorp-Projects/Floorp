@@ -27,12 +27,12 @@ XPCOMUtils.defineLazyServiceGetter(this, "permissionManager",
 
 this.FxAccountsManager = {
 
-  init() {
+  init: function() {
     Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
     Services.obs.addObserver(this, ON_FXA_UPDATE_NOTIFICATION, false);
   },
 
-  observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     // Both topics indicate our cache is invalid
     this._activeSession = null;
 
@@ -67,7 +67,7 @@ this.FxAccountsManager = {
     }
   },
 
-  _error(aError, aDetails) {
+  _error: function(aError, aDetails) {
     log.error(aError);
     let reason = {
       error: aError
@@ -78,7 +78,7 @@ this.FxAccountsManager = {
     return Promise.reject(reason);
   },
 
-  _getError(aServerResponse) {
+  _getError: function(aServerResponse) {
     if (!aServerResponse || !aServerResponse.error || !aServerResponse.error.errno) {
       return;
     }
@@ -86,7 +86,7 @@ this.FxAccountsManager = {
     return error;
   },
 
-  _serverError(aServerResponse) {
+  _serverError: function(aServerResponse) {
     let error = this._getError({ error: aServerResponse });
     return this._error(error ? error : ERROR_SERVER_ERROR, aServerResponse);
   },
@@ -96,11 +96,11 @@ this.FxAccountsManager = {
   // client used by the fxAccounts object because deep down they should have
   // access to the same hawk request object which will enable them to share
   // local clock skeq data.
-  _getFxAccountsClient() {
+  _getFxAccountsClient: function() {
     return this._fxAccounts.getAccountsClient();
   },
 
-  _signInSignUp(aMethod, aEmail, aPassword, aFetchKeys) {
+  _signInSignUp: function(aMethod, aEmail, aPassword, aFetchKeys) {
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
     }
@@ -135,7 +135,7 @@ this.FxAccountsManager = {
         let error = this._getError(user);
         if (!user || !user.uid || !user.sessionToken || error) {
           return this._error(error ? error : ERROR_INTERNAL_INVALID_USER, {
-            user
+            user: user
           });
         }
 
@@ -199,7 +199,7 @@ this.FxAccountsManager = {
    *       FxAccountsClient.signCertificate()
    * See the latter method for possible (error code, errno) pairs.
    */
-  _handleGetAssertionError(reason, aAudience, aPrincipal) {
+  _handleGetAssertionError: function(reason, aAudience, aPrincipal) {
     log.debug("FxAccountsManager._handleGetAssertionError()");
     let errno = (reason ? reason.errno : NaN) || NaN;
     // If the previously valid email/password pair is no longer valid ...
@@ -236,7 +236,7 @@ this.FxAccountsManager = {
     return Promise.reject(reason.message ? { error: reason.message } : reason);
   },
 
-  _getAssertion(aAudience, aPrincipal) {
+  _getAssertion: function(aAudience, aPrincipal) {
     return this._fxAccounts.getAssertion(aAudience).then(
       (result) => {
         if (aPrincipal) {
@@ -260,8 +260,8 @@ this.FxAccountsManager = {
    *   2) The person typing can't prove knowledge of the password used
    *      to log in. Failure should do nothing.
    */
-  _refreshAuthentication(aAudience, aEmail, aPrincipal,
-                         logoutOnFailure = false) {
+  _refreshAuthentication: function(aAudience, aEmail, aPrincipal,
+                                   logoutOnFailure=false) {
     this._refreshing = true;
     return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
                            aAudience, aPrincipal, aEmail).then(
@@ -283,11 +283,11 @@ this.FxAccountsManager = {
     );
   },
 
-  _localSignOut() {
+  _localSignOut: function() {
     return this._fxAccounts.signOut(true);
   },
 
-  _signOut() {
+  _signOut: function() {
     if (!this._activeSession) {
       return Promise.resolve();
     }
@@ -326,7 +326,7 @@ this.FxAccountsManager = {
     );
   },
 
-  _uiRequest(aRequest, aAudience, aPrincipal, aParams) {
+  _uiRequest: function(aRequest, aAudience, aPrincipal, aParams) {
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
     }
@@ -358,7 +358,7 @@ this.FxAccountsManager = {
     );
   },
 
-  _addPermission(aPrincipal) {
+  _addPermission: function(aPrincipal) {
     // This will fail from tests cause we are running them in the child
     // process until we have chrome tests in b2g. Bug 797164.
     try {
@@ -371,15 +371,15 @@ this.FxAccountsManager = {
 
   // -- API --
 
-  signIn(aEmail, aPassword, aFetchKeys) {
+  signIn: function(aEmail, aPassword, aFetchKeys) {
     return this._signInSignUp("signIn", aEmail, aPassword, aFetchKeys);
   },
 
-  signUp(aEmail, aPassword, aFetchKeys) {
+  signUp: function(aEmail, aPassword, aFetchKeys) {
     return this._signInSignUp("signUp", aEmail, aPassword, aFetchKeys);
   },
 
-  signOut() {
+  signOut: function() {
     if (!this._activeSession) {
       // If there is no cached active session, we try to get it from the
       // account storage.
@@ -395,7 +395,7 @@ this.FxAccountsManager = {
     return this._signOut();
   },
 
-  resendVerificationEmail() {
+  resendVerificationEmail: function() {
     return this._fxAccounts.resendVerificationEmail().then(
       (result) => {
         return result;
@@ -406,7 +406,7 @@ this.FxAccountsManager = {
     );
   },
 
-  getAccount() {
+  getAccount: function() {
     // We check first if we have session details cached.
     if (this._activeSession) {
       // If our cache says that the account is not yet verified,
@@ -452,7 +452,7 @@ this.FxAccountsManager = {
     );
   },
 
-  queryAccount(aEmail) {
+  queryAccount: function(aEmail) {
     log.debug("queryAccount " + aEmail);
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
@@ -481,7 +481,7 @@ this.FxAccountsManager = {
     );
   },
 
-  verificationStatus() {
+  verificationStatus: function() {
     log.debug("verificationStatus");
     if (!this._activeSession || !this._activeSession.sessionToken) {
       this._error(ERROR_NO_TOKEN_SESSION);
@@ -545,7 +545,7 @@ this.FxAccountsManager = {
    *   silent                 - (bool) Prevent any UI interaction.
    *                            I.e., try to get an automatic assertion.
    */
-  getAssertion(aAudience, aPrincipal, aOptions) {
+  getAssertion: function(aAudience, aPrincipal, aOptions) {
     if (!aAudience) {
       return this._error(ERROR_INVALID_AUDIENCE);
     }
@@ -561,7 +561,7 @@ this.FxAccountsManager = {
           // Three have-user cases to consider. First: are we unverified?
           if (!user.verified) {
             return this._error(ERROR_UNVERIFIED_ACCOUNT, {
-              user
+              user: user
             });
           }
           // Second case: do we need to refresh?
@@ -620,11 +620,11 @@ this.FxAccountsManager = {
     );
   },
 
-  getKeys() {
+  getKeys: function() {
     let syncEnabled = false;
     try {
       syncEnabled = Services.prefs.getBoolPref("services.sync.enabled");
-    } catch (e) {
+    } catch(e) {
       dump("Sync is disabled, so you won't get the keys. " + e + "\n");
     }
 
@@ -641,7 +641,7 @@ this.FxAccountsManager = {
 
         if (!user.verified) {
           return this._error(ERROR_UNVERIFIED_ACCOUNT, {
-            user
+            user: user
           });
         }
 

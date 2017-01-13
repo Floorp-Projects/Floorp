@@ -312,7 +312,7 @@ BookmarksEngine.prototype = {
     let guidMap = {};
     let tree = Async.promiseSpinningly(PlacesUtils.promiseBookmarksTree(""));
 
-    function* walkBookmarksTree(tree, parent = null) {
+    function* walkBookmarksTree(tree, parent=null) {
       if (tree) {
         // Skip root node
         if (parent) {
@@ -362,7 +362,7 @@ BookmarksEngine.prototype = {
           key = "s" + node.index;
           break;
         default:
-          this._log.error("Unknown place type: '" + placeType + "'");
+          this._log.error("Unknown place type: '"+placeType+"'");
           continue;
       }
 
@@ -522,7 +522,7 @@ BookmarksEngine.prototype = {
     return false;
   },
 
-  _processIncoming(newitems) {
+  _processIncoming: function (newitems) {
     try {
       SyncEngine.prototype._processIncoming.call(this, newitems);
     } finally {
@@ -785,7 +785,7 @@ BookmarksStore.prototype = {
   },
 
   _stmts: {},
-  _getStmt(query) {
+  _getStmt: function(query) {
     if (query in this._stmts) {
       return this._stmts[query];
     }
@@ -866,7 +866,7 @@ function BookmarksTracker(name, engine) {
 BookmarksTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  // `_ignore` checks the change source for each observer notification, so we
+  //`_ignore` checks the change source for each observer notification, so we
   // don't want to let the engine ignore all changes during a sync.
   get ignoreAll() {
     return false;
@@ -880,14 +880,14 @@ BookmarksTracker.prototype = {
   // in Places.
   persistChangedIDs: false,
 
-  startTracking() {
+  startTracking: function() {
     PlacesUtils.bookmarks.addObserver(this, true);
     Svc.Obs.add("bookmarks-restore-begin", this);
     Svc.Obs.add("bookmarks-restore-success", this);
     Svc.Obs.add("bookmarks-restore-failed", this);
   },
 
-  stopTracking() {
+  stopTracking: function() {
     PlacesUtils.bookmarks.removeObserver(this);
     Svc.Obs.remove("bookmarks-restore-begin", this);
     Svc.Obs.remove("bookmarks-restore-success", this);
@@ -1018,7 +1018,7 @@ BookmarksTracker.prototype = {
     this._upScore();
   },
 
-  onItemRemoved(itemId, parentId, index, type, uri,
+  onItemRemoved: function (itemId, parentId, index, type, uri,
                            guid, parentGuid, source) {
     if (IGNORED_SOURCES.includes(source)) {
       return;
@@ -1095,7 +1095,7 @@ BookmarksTracker.prototype = {
       return;
 
     this._log.trace("onItemChanged: " + itemId +
-                    (", " + property + (isAnno ? " (anno)" : "")) +
+                    (", " + property + (isAnno? " (anno)" : "")) +
                     (value ? (" = \"" + value + "\"") : ""));
     this._upScore();
   },
@@ -1112,16 +1112,16 @@ BookmarksTracker.prototype = {
     this._upScore();
   },
 
-  onBeginUpdateBatch() {
+  onBeginUpdateBatch: function () {
     ++this._batchDepth;
   },
-  onEndUpdateBatch() {
+  onEndUpdateBatch: function () {
     if (--this._batchDepth === 0 && this._batchSawScoreIncrement) {
       this.score += SCORE_INCREMENT_XLARGE;
       this._batchSawScoreIncrement = false;
     }
   },
-  onItemVisited() {}
+  onItemVisited: function () {}
 };
 
 class BookmarksChangeset extends Changeset {

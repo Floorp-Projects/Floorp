@@ -6,10 +6,10 @@ function run_test() {
   let obj = {
     notify: Utils.notify("foo:"),
     _log: {
-      trace() {}
+      trace: function() {}
     },
 
-    func() {
+    func: function() {
       return this.notify("bar", "baz", function() {
         rightThis = this == obj;
         didCall = true;
@@ -17,7 +17,7 @@ function run_test() {
       })();
     },
 
-    throwy() {
+    throwy: function() {
       return this.notify("bad", "one", function() {
         rightThis = this == obj;
         didCall = true;
@@ -29,7 +29,7 @@ function run_test() {
   let state = 0;
   let makeObs = function(topic) {
     let obj = {
-      observe(subject, topic, data) {
+      observe: function(subject, topic, data) {
         this.state = ++state;
         this.subject = subject;
         this.topic = topic;
@@ -75,7 +75,8 @@ function run_test() {
   try {
     ret = obj.throwy();
     do_throw("throwy should have thrown!");
-  } catch (ex) {
+  }
+  catch(ex) {
     do_check_eq(ex, 10);
   }
   do_check_eq(ret, null);
