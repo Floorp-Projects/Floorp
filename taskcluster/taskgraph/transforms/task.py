@@ -707,6 +707,13 @@ def build_task(config, tasks):
             'tags': {'createdForUser': config.params['owner']},
         }
 
+        if task_th:
+            # link back to treeherder in description
+            th_push_link = 'https://treeherder.mozilla.org/#/jobs?repo={}&revision={}'.format(
+                config.params['project'], config.params['head_rev'])
+            task_def['metadata']['description'] += ' ([Treeherder push]({}))'.format(
+                th_push_link)
+
         # add the payload and adjust anything else as required (e.g., scopes)
         payload_builders[task['worker']['implementation']](config, task, task_def)
 
