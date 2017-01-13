@@ -23,13 +23,6 @@ namespace mozilla {
 namespace css {
 class GroupRule;
 
-#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
- /* nothing */
-
-#define DECL_STYLE_RULE_INHERIT                            \
-  DECL_STYLE_RULE_INHERIT_NO_DOMRULE                       \
-  virtual nsIDOMCSSRule* GetDOMRule() override;
-
 class Rule : public nsIDOMCSSRule
            , public nsWrapperCache
 {
@@ -113,10 +106,6 @@ public:
    * Clones |this|. Never returns nullptr.
    */
   virtual already_AddRefed<Rule> Clone() const = 0;
-
-  // Note that this returns null for inline style rules since they aren't
-  // supposed to have a DOM rule representation (and our code wouldn't work).
-  virtual nsIDOMCSSRule* GetDOMRule() = 0;
 
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.

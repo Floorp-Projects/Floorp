@@ -37,8 +37,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ImportRule, Rule)
   NS_DECL_ISUPPORTS_INHERITED
 
-  DECL_STYLE_RULE_INHERIT
-
   using Rule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
 
   // Rule methods

@@ -112,7 +112,7 @@ CSSRuleListImpl::IndexedGetter(uint32_t aIndex, bool& aFound)
     css::Rule* rule = mStyleSheet->GetStyleRuleAt(aIndex);
     if (rule) {
       aFound = true;
-      return rule->GetDOMRule();
+      return rule;
     }
   }
 
@@ -878,7 +878,7 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
 nsIDOMCSSRule*
 CSSStyleSheet::GetDOMOwnerRule() const
 {
-  return mOwnerRule ? mOwnerRule->GetDOMRule() : nullptr;
+  return mOwnerRule;
 }
 
 CSSRuleList*
@@ -1041,11 +1041,6 @@ CSSStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
   RefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
   if (rule) {
     mInner->mOrderedRules.RemoveObjectAt(aIndex);
-    if (mDocument && mDocument->StyleSheetChangeEventsEnabled()) {
-      // Force creation of the DOM rule, so that it can be put on the
-      // StyleRuleRemoved event object.
-      rule->GetDOMRule();
-    }
     rule->SetStyleSheet(nullptr);
     DidDirty();
 

@@ -41,8 +41,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(GroupRule, Rule)
   NS_DECL_ISUPPORTS_INHERITED
 
-  // implement part of Rule
-  DECL_STYLE_RULE_INHERIT_NO_DOMRULE
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
