@@ -39,8 +39,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   virtual bool IsCCLeaf() const override;
 
-  // Rule methods
-  DECL_STYLE_RULE_INHERIT
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
