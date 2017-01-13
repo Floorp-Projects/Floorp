@@ -23,7 +23,6 @@ class ProcessGlobal;
 class SandboxPrivate;
 class nsInProcessTabChildGlobal;
 class nsWindowRoot;
-class nsCSSKeyframesRule;
 class nsCSSCounterStyleRule;
 
 #define NS_WRAPPERCACHE_IID \
@@ -282,7 +281,6 @@ private:
   friend class SandboxPrivate;
   friend class nsInProcessTabChildGlobal;
   friend class nsWindowRoot;
-  friend class nsCSSKeyframesRule;
   friend class nsCSSCounterStyleRule;
   void SetIsNotDOMBinding()
   {
