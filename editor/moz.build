@@ -42,3 +42,6 @@ EXPORTS += [
 EXTRA_JS_MODULES += [
     'AsyncSpellCheckTestHelper.jsm',
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Core', 'Editor')
