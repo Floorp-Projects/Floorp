@@ -153,7 +153,8 @@ static std::vector<LayerManagerData> GetLayerManagers(std::vector<LayersBackend>
     auto backend = aBackends[i];
 
     RefPtr<MockWidget> widget = new MockWidget();
-    RefPtr<widget::CompositorWidget> proxy = new widget::InProcessCompositorWidget(widget);
+    CompositorOptions options;
+    RefPtr<widget::CompositorWidget> proxy = new widget::InProcessCompositorWidget(options, widget);
     RefPtr<Compositor> compositor = CreateTestCompositor(backend, proxy);
 
     RefPtr<LayerManagerComposite> layerManager = new LayerManagerComposite(compositor);

@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace layers {
 
+class CompositorOptions;
+
 // A CompositorSession where both the child and parent CompositorBridge reside
 // in the same process.
 class InProcessCompositorSession final : public CompositorSession
@@ -23,7 +25,7 @@ public:
     LayerManager* aLayerManager,
     const uint64_t& aRootLayerTreeId,
     CSSToLayoutDeviceScale aScale,
-    bool aUseAPZ,
+    const CompositorOptions& aOptions,
     bool aUseExternalSurfaceSize,
     const gfx::IntSize& aSurfaceSize);
 

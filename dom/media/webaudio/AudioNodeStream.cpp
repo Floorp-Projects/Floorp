@@ -350,11 +350,6 @@ AudioNodeStream::SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
                                                 ChannelCountMode aChannelCountMode,
                                                 ChannelInterpretation aChannelInterpretation)
 {
-  // Make sure that we're not clobbering any significant bits by fitting these
-  // values in 16 bits.
-  MOZ_ASSERT(int(aChannelCountMode) < INT16_MAX);
-  MOZ_ASSERT(int(aChannelInterpretation) < INT16_MAX);
-
   mNumberOfInputChannels = aNumberOfChannels;
   mChannelCountMode = aChannelCountMode;
   mChannelInterpretation = aChannelInterpretation;

@@ -14,6 +14,7 @@ using base::ProcessId from "base/process.h";
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
 using mozilla::CSSToLayoutDeviceScale from "Units.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/2D.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 using mozilla::Telemetry::Accumulation from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::KeyedAccumulation from "mozilla/TelemetryComms.h";
 
@@ -58,6 +59,7 @@ parent:
   async NewWidgetCompositor(Endpoint<PCompositorBridgeParent> endpoint,
                             CSSToLayoutDeviceScale scale,
                             TimeDuration vsyncRate,
+                            CompositorOptions options,
                             bool useExternalSurface,
                             IntSize surfaceSize);
 

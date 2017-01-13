@@ -1409,7 +1409,7 @@ bool
 LayerManagerComposite::AsyncPanZoomEnabled() const
 {
   if (CompositorBridgeParent* bridge = mCompositor->GetCompositorBridgeParent()) {
-    return bridge->AsyncPanZoomEnabled();
+    return bridge->GetOptions().UseAPZ();
   }
   return false;
 }

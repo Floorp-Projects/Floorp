@@ -33,6 +33,7 @@ using mozilla::LayoutDeviceIntRegion from "Units.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 using class mozilla::layers::FrameUniformityData from "mozilla/layers/FrameUniformityData.h";
 using mozilla::layers::TextureFlags from "mozilla/layers/CompositorTypes.h";
+using mozilla::layers::CompositorOptions from "mozilla/layers/CompositorOptions.h";
 
 namespace mozilla {
 namespace layers {
@@ -128,8 +129,8 @@ parent:
   sync Reset(LayersBackend[] aBackendHints, uint64_t aSeqNo)
     returns (bool aResult, TextureFactoryIdentifier aOutIdentifier);
 
-  // Returns whether this Compositor has APZ enabled or not.
-  sync AsyncPanZoomEnabled(uint64_t layersId) returns (bool aHasAPZ);
+  // Returns the CompositorOptions for this compositor.
+  sync GetCompositorOptions(uint64_t layersId) returns (CompositorOptions aOptions);
 
   // Must be called after Initialize(), and only succeeds if AsyncPanZoomEnabled() is true.
   async PAPZ(uint64_t layersId);

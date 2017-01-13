@@ -10,14 +10,17 @@ namespace mozilla {
 namespace widget {
 
 /* static */ RefPtr<CompositorWidget>
-CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
+CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData,
+                              const layers::CompositorOptions& aOptions,
+                              nsIWidget* aWidget)
 {
-  return new InProcessWinCompositorWidget(aInitData, static_cast<nsWindow*>(aWidget));
+  return new InProcessWinCompositorWidget(aInitData, aOptions, static_cast<nsWindow*>(aWidget));
 }
 
 InProcessWinCompositorWidget::InProcessWinCompositorWidget(const CompositorWidgetInitData& aInitData,
+                                                           const layers::CompositorOptions& aOptions,
                                                            nsWindow* aWindow)
- : WinCompositorWidget(aInitData),
+ : WinCompositorWidget(aInitData, aOptions),
    mWindow(aWindow)
 {
   MOZ_ASSERT(mWindow);

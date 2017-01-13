@@ -17,14 +17,7 @@ namespace mozilla {
 class MediaContentType
 {
 public:
-  // Parse UTF16 string to extract parameters.
-  explicit MediaContentType(const nsAString& aType);
-  // Parse UTF8 string to extract parameters.
-  explicit MediaContentType(const nsACString& aType);
-
-  bool IsValid() const { return !GetMIMEType().IsEmpty(); }
-
-  // MIME type. Empty if construction arguments could not be parsed.
+  // MIME type. Guaranteed not to be empty.
   const nsACString& GetMIMEType() const { return mMIMEType; }
 
   // Was there an explicit 'codecs' parameter provided?
@@ -39,14 +32,15 @@ public:
   Maybe<int32_t> GetBitrate() const { return GetMaybeNumber(mBitrate); }
 
 private:
-  void Populate(const nsAString& aType);
+  friend Maybe<MediaContentType> MakeMediaContentType(const nsAString& aType);
+  bool Populate(const nsAString& aType);
 
   Maybe<int32_t> GetMaybeNumber(int32_t aNumber) const
   {
     return (aNumber < 0) ? Maybe<int32_t>(Nothing()) : Some(int32_t(aNumber));
   }
 
-  nsCString mMIMEType; // UTF8 MIME type. Empty if parsing failed.
+  nsCString mMIMEType; // UTF8 MIME type.
   bool mHaveCodecs; // If false, mCodecs must be empty.
   nsString mCodecs;
   int32_t mWidth; // -1 if not provided.
@@ -54,6 +48,10 @@ private:
   int32_t mFramerate; // -1 if not provided.
   int32_t mBitrate; // -1 if not provided.
 };
+
+Maybe<MediaContentType> MakeMediaContentType(const nsAString& aType);
+Maybe<MediaContentType> MakeMediaContentType(const nsACString& aType);
+Maybe<MediaContentType> MakeMediaContentType(const char* aType);
 
 } // namespace mozilla
 
