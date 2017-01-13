@@ -90,6 +90,7 @@ WEBIDL_FILES = [
     'CSS.webidl',
     'CSSAnimation.webidl',
     'CSSConditionRule.webidl',
+    'CSSCounterStyleRule.webidl',
     'CSSFontFaceRule.webidl',
     'CSSFontFeatureValuesRule.webidl',
     'CSSGroupingRule.webidl',
