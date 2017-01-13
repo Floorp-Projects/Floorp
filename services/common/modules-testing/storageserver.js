@@ -275,7 +275,7 @@ ServerBSO.prototype = {
  *        collection. This should be in the format returned by new_timestamp().
  */
 this.StorageServerCollection =
- function StorageServerCollection(bsos, acceptNew, timestamp=new_timestamp()) {
+ function StorageServerCollection(bsos, acceptNew, timestamp = new_timestamp()) {
   this._bsos = bsos || {};
   this.acceptNew = acceptNew || false;
 
@@ -577,7 +577,7 @@ StorageServerCollection.prototype = {
         failed[record.id] = "Exception when processing.";
       }
     }
-    return {success: success, failed: failed};
+    return {success, failed};
   },
 
   delete: function delete_(options) {
@@ -805,7 +805,7 @@ StorageServerCollection.prototype = {
     let self = this;
 
     return function(request, response) {
-      switch(request.method) {
+      switch (request.method) {
         case "GET":
           return self.getHandler(request, response);
 
@@ -845,9 +845,9 @@ StorageServerCollection.prototype = {
 };
 
 
-//===========================================================================//
+// ===========================================================================//
 // httpd.js-based Storage server.                                            //
-//===========================================================================//
+// ===========================================================================//
 
 /**
  * In general, the preferred way of using StorageServer is to directly
@@ -946,7 +946,7 @@ StorageServer.prototype = {
    *        The numeric port on which to start. The default is to choose
    *        any available port.
    */
-  startSynchronous: function startSynchronous(port=-1) {
+  startSynchronous: function startSynchronous(port = -1) {
     let cb = Async.makeSpinningCallback();
     this.start(port, cb);
     cb.wait();
@@ -996,7 +996,7 @@ StorageServer.prototype = {
 
     this._log.info("Registering new user with server: " + username);
     this.users[username] = {
-      password: password,
+      password,
       collections: {},
       quota: this.DEFAULT_QUOTA,
     };
@@ -1186,18 +1186,18 @@ StorageServer.prototype = {
     let collection       = this.getCollection.bind(this, username);
     let createCollection = this.createCollection.bind(this, username);
     let createContents   = this.createContents.bind(this, username);
-    let modified         = function (collectionName) {
+    let modified         = function(collectionName) {
       return collection(collectionName).timestamp;
     }
     let deleteCollections = this.deleteCollections.bind(this, username);
     let quota             = this.getQuota.bind(this, username);
     return {
-      collection:        collection,
-      createCollection:  createCollection,
-      createContents:    createContents,
-      deleteCollections: deleteCollections,
-      modified:          modified,
-      quota:             quota,
+      collection,
+      createCollection,
+      createContents,
+      deleteCollections,
+      modified,
+      quota,
     };
   },
 

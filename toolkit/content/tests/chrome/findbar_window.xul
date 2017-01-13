@@ -557,6 +557,10 @@
       synthesizeKey("VK_RETURN", {});
       yield promiseHighlightFinished();
       yield promiseExpectRangeCount(3);
+
+      // Uncheck at test end to not interfere with other test functions that are
+      // run after this one.
+      highlightButton.click();
     }
 
     function* testQuickFindText() {

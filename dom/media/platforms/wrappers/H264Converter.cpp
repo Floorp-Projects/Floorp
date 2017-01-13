@@ -231,10 +231,11 @@ H264Converter::CreateDecoderAndInit(MediaRawData* aSample)
     // Queue the incoming sample.
     mMediaRawSamples.AppendElement(aSample);
 
-    mInitPromiseRequest.Begin(mDecoder->Init()
+    mDecoder->Init()
       ->Then(AbstractThread::GetCurrent()->AsTaskQueue(), __func__, this,
              &H264Converter::OnDecoderInitDone,
-             &H264Converter::OnDecoderInitFailed));
+             &H264Converter::OnDecoderInitFailed)
+      ->Track(mInitPromiseRequest);
     return NS_ERROR_NOT_INITIALIZED;
   }
   return rv;

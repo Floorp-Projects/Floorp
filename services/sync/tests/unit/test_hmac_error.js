@@ -9,9 +9,9 @@ Cu.import("resource://testing-common/services/sync/utils.js");
 
 // Track HMAC error counts.
 var hmacErrorCount = 0;
-(function () {
+(function() {
   let hHE = Service.handleHMACEvent;
-  Service.handleHMACEvent = function () {
+  Service.handleHMACEvent = function() {
     hmacErrorCount++;
     return hHE.call(Service);
   };
@@ -37,7 +37,7 @@ function shared_setup() {
                            syncID:  Service.clientsEngine.syncID}};
 
   // Common server objects.
-  let global      = new ServerWBO("global", {engines: engines});
+  let global      = new ServerWBO("global", {engines});
   let keysWBO     = new ServerWBO("keys");
   let rotaryColl  = new ServerCollection({}, true);
   let clientsColl = new ServerCollection({}, true);
@@ -52,7 +52,7 @@ add_task(async function hmac_error_during_404() {
   // Hand out 404s for crypto/keys.
   let keysHandler    = keysWBO.handler();
   let key404Counter  = 0;
-  let keys404Handler = function (request, response) {
+  let keys404Handler = function(request, response) {
     if (key404Counter > 0) {
       let body = "Not Found";
       response.setStatusLine(request.httpVersion, 404, body);
@@ -123,7 +123,7 @@ add_task(async function hmac_error_during_node_reassignment() {
 
   let should401 = false;
   function upd401(coll, handler) {
-    return function (request, response) {
+    return function(request, response) {
       if (should401 && (request.method != "DELETE")) {
         on401();
         should401 = false;

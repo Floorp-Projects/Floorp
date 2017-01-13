@@ -69,7 +69,7 @@ TPSCmdLineHandler.prototype = {
     let uri = cmdLine.resolveURI(uristr).spec;
     TPS.RunTestPhase(uri, phase, logfile, options);
 
-    //cmdLine.preventDefault = true;
+    // cmdLine.preventDefault = true;
   },
 
   helpInfo : "  --tps <file>              Run TPS tests with the given test file.\n" +
@@ -80,7 +80,7 @@ TPSCmdLineHandler.prototype = {
 
 
 var TPSCmdLineFactory = {
-  createInstance : function(outer, iid) {
+  createInstance(outer, iid) {
     if (outer != null) {
       throw new Error(Components.results.NS_ERROR_NO_AGGREGATION);
     }
@@ -91,7 +91,7 @@ var TPSCmdLineFactory = {
 
 
 var TPSCmdLineModule = {
-  registerSelf : function(compMgr, fileSpec, location, type) {
+  registerSelf(compMgr, fileSpec, location, type) {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.registerFactoryLocation(TPS_CMDLINE_CLSID,
@@ -110,7 +110,7 @@ var TPSCmdLineModule = {
                             TPS_CMDLINE_CONTRACTID, true, true);
   },
 
-  unregisterSelf : function(compMgr, fileSpec, location) {
+  unregisterSelf(compMgr, fileSpec, location) {
     compMgr = compMgr.QueryInterface(nsIComponentRegistrar);
 
     compMgr.unregisterFactoryLocation(TPS_CMDLINE_CLSID, fileSpec);
@@ -121,7 +121,7 @@ var TPSCmdLineModule = {
                                "m-tps", true);
   },
 
-  getClassObject : function(compMgr, cid, iid) {
+  getClassObject(compMgr, cid, iid) {
     if (cid.equals(TPS_CMDLINE_CLSID)) {
       return TPSCmdLineFactory;
     }
@@ -133,7 +133,7 @@ var TPSCmdLineModule = {
     throw new Error(Components.results.NS_ERROR_NO_INTERFACE);
   },
 
-  canUnload : function(compMgr) {
+  canUnload(compMgr) {
     return true;
   }
 };

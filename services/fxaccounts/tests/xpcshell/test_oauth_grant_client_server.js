@@ -50,7 +50,7 @@ function promiseStopServer(server) {
   });
 }
 
-add_task(function* getAndRevokeToken () {
+add_task(function* getAndRevokeToken() {
   let server = startServer();
   let clientOptions = {
     serverURL: "http://localhost:" + server.identity.primaryPort + "/v1",

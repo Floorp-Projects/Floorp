@@ -13,13 +13,13 @@ pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey"
 pref("services.sync.lastversion", "firstrun");
 pref("services.sync.sendVersionInfo", true);
 
-pref("services.sync.scheduler.eolInterval",         604800); // 1 week
-pref("services.sync.scheduler.idleInterval",         3600);  // 1 hour
-pref("services.sync.scheduler.activeInterval",       600);   // 10 minutes
-pref("services.sync.scheduler.immediateInterval",    90);    // 1.5 minutes
-pref("services.sync.scheduler.idleTime",             300);   // 5 minutes
+pref("services.sync.scheduler.eolInterval", 604800); // 1 week
+pref("services.sync.scheduler.idleInterval", 3600);  // 1 hour
+pref("services.sync.scheduler.activeInterval", 600);   // 10 minutes
+pref("services.sync.scheduler.immediateInterval", 90);    // 1.5 minutes
+pref("services.sync.scheduler.idleTime", 300);   // 5 minutes
 
-pref("services.sync.scheduler.fxa.singleDeviceInterval",     3600); // 1 hour
+pref("services.sync.scheduler.fxa.singleDeviceInterval", 3600); // 1 hour
 pref("services.sync.scheduler.sync11.singleDeviceInterval", 86400); // 1 day
 
 pref("services.sync.errorhandler.networkFailureReportTimeout", 1209600); // 2 weeks

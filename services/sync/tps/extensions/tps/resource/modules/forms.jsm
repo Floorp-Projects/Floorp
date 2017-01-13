@@ -146,7 +146,7 @@ FormData.prototype = {
    *        'now', and -1 is 1 hour ago)
    * @return the corresponding number of microseconds since the epoch
    */
-  hours_to_us: function(hours) {
+  hours_to_us(hours) {
     return this.usSinceEpoch + (hours * 60 * 60 * 1000 * 1000);
   },
 
@@ -158,7 +158,7 @@ FormData.prototype = {
    *
    * @return nothing
    */
-  Create: function() {
+  Create() {
     Logger.AssertTrue(this.fieldname != null && this.value != null,
       "Must specify both fieldname and value");
 
@@ -184,7 +184,7 @@ FormData.prototype = {
    *
    * @return true if this entry exists in the database, otherwise false
    */
-  Find: function() {
+  Find() {
     return FormDB.getDataForValue(this.fieldname, this.value).then(formdata => {
       let status = formdata != null;
       if (status) {
@@ -211,7 +211,7 @@ FormData.prototype = {
    *
    * @return nothing
    */
-  Remove: function() {
+  Remove() {
     /* Right now Weave doesn't handle this correctly, see bug 568363.
      */
     return FormDB.remove(this.id);

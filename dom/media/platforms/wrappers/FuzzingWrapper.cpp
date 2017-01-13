@@ -242,23 +242,23 @@ DecoderCallbackFuzzingWrapper::ScheduleOutputDelayedFrame()
     return;
   }
   RefPtr<DecoderCallbackFuzzingWrapper> self = this;
-  mDelayedOutputRequest.Begin(
-    mDelayedOutputTimer->WaitUntil(
-      mPreviousOutput + mFrameOutputMinimumInterval,
-      __func__)
-    ->Then(mTaskQueue, __func__,
-           [self] () -> void {
-             if (self->mDelayedOutputRequest.Exists()) {
-               self->mDelayedOutputRequest.Complete();
-               self->OutputDelayedFrame();
-             }
-           },
-           [self] () -> void {
-             if (self->mDelayedOutputRequest.Exists()) {
-               self->mDelayedOutputRequest.Complete();
-               self->ClearDelayedOutput();
-             }
-           }));
+  mDelayedOutputTimer->WaitUntil(
+    mPreviousOutput + mFrameOutputMinimumInterval,
+    __func__)
+  ->Then(mTaskQueue, __func__,
+         [self] () -> void {
+           if (self->mDelayedOutputRequest.Exists()) {
+             self->mDelayedOutputRequest.Complete();
+             self->OutputDelayedFrame();
+           }
+         },
+         [self] () -> void {
+           if (self->mDelayedOutputRequest.Exists()) {
+             self->mDelayedOutputRequest.Complete();
+             self->ClearDelayedOutput();
+           }
+         })
+  ->Track(mDelayedOutputRequest);
 }
 
 void

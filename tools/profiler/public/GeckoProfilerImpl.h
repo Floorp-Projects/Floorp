@@ -382,37 +382,6 @@ static inline void profiler_tracing(const char* aCategory, const char* aInfo,
 
 namespace mozilla {
 
-class MOZ_RAII GeckoProfilerTracingRAII {
-public:
-  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo,
-                           UniqueProfilerBacktrace aBacktrace
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mCategory(aCategory)
-    , mInfo(aInfo)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mInfo, Move(aBacktrace), TRACING_INTERVAL_START);
-  }
-
-  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo
-                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mCategory(aCategory)
-    , mInfo(aInfo)
-  {
-    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_START);
-  }
-
-  ~GeckoProfilerTracingRAII() {
-    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_END);
-  }
-
-protected:
-  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  const char* mCategory;
-  const char* mInfo;
-};
-
 class MOZ_RAII SamplerStackFrameRAII {
 public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
@@ -461,26 +430,6 @@ public:
 private:
   char mDest[SAMPLER_MAX_STRING];
   void* mHandle;
-};
-
-/**
- * Convenience class to register and unregister a thread with the profiler.
- * Needs to be the first object on the stack of the thread.
- */
-class MOZ_STACK_CLASS AutoProfilerRegister final
-{
-public:
-  explicit AutoProfilerRegister(const char* aName)
-  {
-    profiler_register_thread(aName, this);
-  }
-  ~AutoProfilerRegister()
-  {
-    profiler_unregister_thread();
-  }
-private:
-  AutoProfilerRegister(const AutoProfilerRegister&) = delete;
-  AutoProfilerRegister& operator=(const AutoProfilerRegister&) = delete;
 };
 
 } // namespace mozilla
