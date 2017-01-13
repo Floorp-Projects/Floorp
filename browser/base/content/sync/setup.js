@@ -220,7 +220,6 @@ var gSyncSetup = {
         feedback = server;
         break;
       case Weave.LOGIN_FAILED_LOGIN_REJECTED:
-      case Weave.LOGIN_FAILED_NO_USERNAME:
       case Weave.LOGIN_FAILED_NO_PASSWORD:
         feedback = password;
         break;
