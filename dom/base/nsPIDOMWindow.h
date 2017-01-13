@@ -851,6 +851,7 @@ public:
    * Check whether this window is a secure context.
    */
   bool IsSecureContext() const;
+  bool IsSecureContextIfOpenerIgnored() const;
 
   // Calling suspend should prevent any asynchronous tasks from
   // executing javascript for this window.  This means setTimeout,
