@@ -13,6 +13,7 @@ include protocol PTexture;
 using WRBorderSide from "mozilla/gfx/webrender.h";
 using WRColor from "mozilla/gfx/webrender.h";
 using WRImageKey from "mozilla/gfx/webrender.h";
+using WRTextureFilter from "mozilla/gfx/webrender.h";
 using WRLayoutSize from "mozilla/gfx/webrender.h";
 using WRRect from "mozilla/gfx/webrender.h";
 using WRGlyphArray from "mozilla/gfx/webrender.h";
@@ -59,6 +60,7 @@ struct OpDPPushImage {
   WRRect bounds;
   WRRect clip;
   MaybeImageMask mask;
+  WRTextureFilter filter;
   WRImageKey key;
 };
 
@@ -66,6 +68,7 @@ struct OpDPPushExternalImageId {
   WRRect bounds;
   WRRect clip;
   MaybeImageMask mask;
+  WRTextureFilter filter;
   uint64_t externalImageId;
 };
 
