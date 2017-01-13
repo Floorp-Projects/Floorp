@@ -182,6 +182,28 @@ public:
   virtual void PreserveWrapper(nsISupports *aNative) override;
 };
 
+// Makes sure that we always create our wrapper in the right global, so we won't
+// cache one from the wrong global.
+class nsCSSRuleSH : public nsDOMGenericSH
+{
+protected:
+  explicit nsCSSRuleSH(nsDOMClassInfoData* aData) : nsDOMGenericSH(aData)
+  {
+  }
+
+  virtual ~nsCSSRuleSH()
+  {
+  }
+public:
+  NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *globalObj, JSObject **parentObj) override;
+
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsCSSRuleSH(aData);
+  }
+};
+
 // A place to hang some static methods that we should really consider
 // moving to be nsGlobalWindow member methods.  See bug 1062418.
 class nsWindowSH
