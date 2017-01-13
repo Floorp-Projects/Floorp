@@ -61,8 +61,8 @@
 <!ENTITY  useDefaultFontSerif.label               "Serif">
 <!ENTITY  useDefaultFontSansSerif.label           "Sans Serif">
 
-<!ENTITY  allowPagesToUse.label                   "Allow pages to choose their own fonts, instead of my selections above">
-<!ENTITY  allowPagesToUse.accesskey               "A">
+<!ENTITY  allowPagesToUseOwn.label                "Allow pages to choose their own fonts, instead of your selections above">
+<!ENTITY  allowPagesToUseOwn.accesskey            "A">
 
 <!ENTITY languages.customize.Fallback2.grouplabel "Text Encoding for Legacy Content">
 <!ENTITY languages.customize.Fallback2.label      "Fallback Text Encoding:">

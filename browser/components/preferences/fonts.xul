@@ -238,7 +238,7 @@
       <separator class="groove"/>
       <hbox>
         <checkbox id="useDocumentFonts" 
-                  label="&allowPagesToUse.label;" accesskey="&allowPagesToUse.accesskey;"
+                  label="&allowPagesToUseOwn.label;" accesskey="&allowPagesToUseOwn.accesskey;"
                   preference="browser.display.use_document_fonts"
                   onsyncfrompreference="return gFontsDialog.readUseDocumentFonts();"
                   onsynctopreference="return gFontsDialog.writeUseDocumentFonts();"/>

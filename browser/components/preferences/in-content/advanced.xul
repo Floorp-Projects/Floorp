@@ -167,12 +167,12 @@
                   accesskey="&useCursorNavigation.accesskey;"
                   preference="accessibility.browsewithcaret"/>
         <checkbox id="searchStartTyping"
-                  label="&searchStartTyping.label;"
-                  accesskey="&searchStartTyping.accesskey;"
+                  label="&searchOnStartTyping.label;"
+                  accesskey="&searchOnStartTyping.accesskey;"
                   preference="accessibility.typeaheadfind"/>
         <checkbox id="blockAutoRefresh"
-                  label="&blockAutoRefresh.label;"
-                  accesskey="&blockAutoRefresh.accesskey;"
+                  label="&blockAutoReload.label;"
+                  accesskey="&blockAutoReload.accesskey;"
                   preference="accessibility.blockautorefresh"/>
       </groupbox>
       <!-- Browsing -->
@@ -192,8 +192,8 @@
                   accesskey="&allowHWAccel.accesskey;"
                   preference="layers.acceleration.disabled"/>
         <checkbox id="checkSpelling"
-                  label="&checkSpelling.label;"
-                  accesskey="&checkSpelling.accesskey;"
+                  label="&checkUserSpelling.label;"
+                  accesskey="&checkUserSpelling.accesskey;"
                   onsyncfrompreference="return gAdvancedPane.readCheckSpelling();"
                   onsynctopreference="return gAdvancedPane.writeCheckSpelling();"
                   preference="layout.spellcheckDefault"/>
@@ -301,13 +301,13 @@
         </hbox>
         <hbox align="center">
           <checkbox id="offlineNotify"
-                    label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
+                    label="&offlineStorageNotify.label;" accesskey="&offlineStorageNotify.accesskey;"
                     preference="browser.offline-apps.notify"
                     onsyncfrompreference="return gAdvancedPane.readOfflineNotify();"/>
           <spacer flex="1"/>
           <button id="offlineNotifyExceptions"
-                  label="&offlineNotifyExceptions.label;"
-                  accesskey="&offlineNotifyExceptions.accesskey;"/>
+                  label="&offlineStorageNotifyExceptions.label;"
+                  accesskey="&offlineStorageNotifyExceptions.accesskey;"/>
         </hbox>
         <hbox>
           <vbox flex="1">
@@ -354,8 +354,8 @@
                  label="&updateAuto1.label;"
                  accesskey="&updateAuto1.accesskey;"/>
           <radio value="checkOnly"
-                label="&updateCheck.label;"
-                accesskey="&updateCheck.accesskey;"/>
+                label="&updateCheckChoose.label;"
+                accesskey="&updateCheckChoose.accesskey;"/>
           <radio value="manual"
                 label="&updateManual.label;"
                 accesskey="&updateManual.accesskey;"/>
@@ -388,8 +388,8 @@
     <!-- Certificates -->
     <tabpanel id="encryptionPanel" orient="vertical">
       <groupbox id="certSelection" align="start">
-        <caption><label>&certSelection.label;</label></caption>
-        <description id="CertSelectionDesc" control="certSelection">&certSelection.description;</description>
+        <caption><label>&certPersonal.label;</label></caption>
+        <description id="CertSelectionDesc" control="certSelection">&certPersonal.description;</description>
 
         <!--
           The values on these radio buttons may look like l12y issues, but
@@ -400,11 +400,11 @@
                     preftype="string"
                     preference="security.default_personal_cert"
                     aria-labelledby="CertSelectionDesc">
-          <radio label="&certs.auto;"
-                 accesskey="&certs.auto.accesskey;"
+          <radio label="&selectCerts.auto;"
+                 accesskey="&selectCerts.auto.accesskey;"
                  value="Select Automatically"/>
-          <radio label="&certs.ask;"
-                 accesskey="&certs.ask.accesskey;"
+          <radio label="&selectCerts.ask;"
+                 accesskey="&selectCerts.ask.accesskey;"
                  value="Ask Every Time"/>
         </radiogroup>
       </groupbox>
