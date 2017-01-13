@@ -284,9 +284,16 @@ SVGGeometryFrame::PaintSVG(gfxContext& aContext,
   if (!StyleVisibility()->IsVisible())
     return DrawResult::SUCCESS;
 
+  gfxMatrix childToUserSpace = aTransform;
+  if (GetContent()->IsSVGElement()) {
+    childToUserSpace = static_cast<const nsSVGElement*>(GetContent())->
+                         PrependLocalTransformsTo(childToUserSpace,
+                                                  eChildToUserSpace);
+  }
+
   // Matrix to the geometry's user space:
   gfxMatrix newMatrix =
-    aContext.CurrentMatrix().PreMultiply(aTransform).NudgeToIntegers();
+    aContext.CurrentMatrix().PreMultiply(childToUserSpace).NudgeToIntegers();
   if (newMatrix.IsSingular()) {
     return DrawResult::BAD_ARGS;
   }
