@@ -2,6 +2,7 @@
   (module (func) (start 1))
   "unknown function"
 )
+
 (assert_invalid
   (module
     (func $main (result i32) (return (i32.const 0)))
@@ -16,6 +17,7 @@
   )
   "start function"
 )
+
 (module
   (memory (data "A"))
   (func $inc
@@ -85,6 +87,11 @@
   (func $print_i32 (import "spectest" "print") (param i32))
   (func $main (call $print_i32 (i32.const 2)))
   (start $main)
+)
+
+(module
+  (func $print (import "spectest" "print"))
+  (start $print)
 )
 
 (assert_trap

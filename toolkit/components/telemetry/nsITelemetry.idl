@@ -488,6 +488,16 @@ interface nsITelemetry : nsISupports
   void recordEvent(in ACString aCategory, in ACString aMethod, in ACString aObject, [optional] in jsval aValue, [optional] in jsval extra);
 
   /**
+   * Enable recording of events in a category.
+   * Events default to recording disabled. This allows to toggle recording for all events
+   * in the specified category.
+   *
+   * @param aCategory The category name.
+   * @param aEnabled Whether recording is enabled for events in that category.
+   */
+  void setEventRecordingEnabled(in ACString aCategory, in boolean aEnabled);
+
+  /**
    * Serializes the recorded events to a JSON-appropriate array and optionally resets them.
    * The returned structure looks like this:
    *   [

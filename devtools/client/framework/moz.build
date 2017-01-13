@@ -35,3 +35,6 @@ DevToolsModules(
     'toolbox.js',
     'ToolboxProcess.jsm',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Framework')
