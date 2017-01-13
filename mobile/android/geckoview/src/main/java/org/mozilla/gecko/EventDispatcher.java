@@ -89,11 +89,10 @@ public final class EventDispatcher extends JNIObject {
     @WrapForJNI(calledFrom = "gecko")
     private synchronized void setAttachedToGecko(final int state) {
         if (mAttachedToGecko && state == DETACHED) {
-            if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
+            if (GeckoThread.isRunning()) {
                 disposeNative();
             } else {
-                GeckoThread.queueNativeCallUntil(GeckoThread.State.JNI_READY,
-                        this, "disposeNative");
+                GeckoThread.queueNativeCall(this, "disposeNative");
             }
         }
         mAttachedToGecko = (state == ATTACHED);
@@ -407,7 +406,19 @@ public final class EventDispatcher extends JNIObject {
         }
 
         if (jsMessage == null) {
-            Log.w(LOGTAG, "No listeners for " + type + " in dispatchToThreads");
+            Log.w(LOGTAG, "No listeners for " + type);
+        }
+
+        if (!GeckoThread.isRunning() && jsMessage == null) {
+            // Usually, we discard an event if there is no listeners for it by the time of
+            // the dispatch. However, if Gecko is not ready and there is no listener for
+            // this event that's possibly headed to Gecko, we make a special exception to
+            // queue this event until Gecko is ready. This way, Gecko can first register
+            // its listeners, and accept the event when it is ready.
+            GeckoThread.queueNativeCall(this, "dispatchToGecko",
+                                        String.class, type, GeckoBundle.class, bundleMessage,
+                                        EventCallback.class, JavaCallbackDelegate.wrap(callback));
+            return true;
         }
 
         if (!AppConstants.RELEASE_OR_BETA && jsMessage == null) {
@@ -487,8 +498,6 @@ public final class EventDispatcher extends JNIObject {
             }
 
             if (listeners.isEmpty()) {
-                Log.w(LOGTAG, "No listeners for " + type + " in dispatchToThread");
-
                 // There were native listeners, and they're gone.
                 return false;
             }
@@ -529,8 +538,7 @@ public final class EventDispatcher extends JNIObject {
             final List<GeckoEventListener> listeners = getGeckoListeners(type);
 
             if (listeners == null || listeners.isEmpty()) {
-                Log.w(LOGTAG, "No listeners for " + type + " in dispatchEvent");
-
+                Log.w(LOGTAG, "No listeners for " + type);
                 return false;
             }
 
