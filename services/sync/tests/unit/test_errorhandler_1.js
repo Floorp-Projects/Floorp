@@ -83,10 +83,7 @@ add_identity_test(this, async function test_401_logout() {
       _("Got weave:service:login:error in second sync.");
       Svc.Obs.remove("weave:service:login:error", onLoginError);
 
-      let expected = isConfiguredWithLegacyIdentity() ?
-                     LOGIN_FAILED_LOGIN_REJECTED : LOGIN_FAILED_NETWORK_ERROR;
-
-      do_check_eq(Status.login, expected);
+      do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
       do_check_false(Service.isLoggedIn);
 
       // Clean up.
@@ -159,25 +156,11 @@ add_identity_test(this, function test_shouldReportError() {
   Service.serverURL  = fakeServerUrl;
   Service.clusterURL = fakeServerUrl;
 
-  // Test dontIgnoreErrors, non-network, non-prolonged, login error reported
-  Status.resetSync();
-  setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.dontIgnoreErrors = true;
-  Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(errorHandler.shouldReportError());
-
   // Test dontIgnoreErrors, non-network, non-prolonged, sync error reported
   Status.resetSync();
   setLastSync(NON_PROLONGED_ERROR_DURATION);
   errorHandler.dontIgnoreErrors = true;
   Status.sync = CREDENTIALS_CHANGED;
-  do_check_true(errorHandler.shouldReportError());
-
-  // Test dontIgnoreErrors, non-network, prolonged, login error reported
-  Status.resetSync();
-  setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.dontIgnoreErrors = true;
-  Status.login = LOGIN_FAILED_NO_PASSWORD;
   do_check_true(errorHandler.shouldReportError());
 
   // Test dontIgnoreErrors, non-network, prolonged, sync error reported
@@ -215,24 +198,6 @@ add_identity_test(this, function test_shouldReportError() {
   Status.sync = LOGIN_FAILED_NETWORK_ERROR;
   do_check_true(errorHandler.shouldReportError());
 
-  // Test non-network, prolonged, login error reported
-  do_check_false(errorHandler.didReportProlongedError);
-  Status.resetSync();
-  setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.dontIgnoreErrors = false;
-  Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(errorHandler.shouldReportError());
-  do_check_true(errorHandler.didReportProlongedError);
-
-  // Second time with prolonged error and without resetting
-  // didReportProlongedError, sync error should not be reported.
-  Status.resetSync();
-  setLastSync(PROLONGED_ERROR_DURATION);
-  errorHandler.dontIgnoreErrors = false;
-  Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_false(errorHandler.shouldReportError());
-  do_check_true(errorHandler.didReportProlongedError);
-
   // Test non-network, prolonged, sync error reported
   Status.resetSync();
   setLastSync(PROLONGED_ERROR_DURATION);
@@ -260,14 +225,6 @@ add_identity_test(this, function test_shouldReportError() {
   do_check_true(errorHandler.shouldReportError());
   do_check_true(errorHandler.didReportProlongedError);
   errorHandler.didReportProlongedError = false;
-
-  // Test non-network, non-prolonged, login error reported
-  Status.resetSync();
-  setLastSync(NON_PROLONGED_ERROR_DURATION);
-  errorHandler.dontIgnoreErrors = false;
-  Status.login = LOGIN_FAILED_NO_PASSWORD;
-  do_check_true(errorHandler.shouldReportError());
-  do_check_false(errorHandler.didReportProlongedError);
 
   // Test non-network, non-prolonged, sync error reported
   Status.resetSync();
@@ -409,7 +366,7 @@ add_task(async function test_login_syncAndReportErrors_non_network_error() {
   // when calling syncAndReportErrors
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKey();
+  Service.identity.resetSyncKeyBundle();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -458,7 +415,7 @@ add_task(async function test_login_syncAndReportErrors_prolonged_non_network_err
   // reported when calling syncAndReportErrors.
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKey();
+  Service.identity.resetSyncKeyBundle();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -577,7 +534,7 @@ add_task(async function test_login_prolonged_non_network_error() {
   // Test prolonged, non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKey();
+  Service.identity.resetSyncKeyBundle();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
@@ -659,7 +616,7 @@ add_task(async function test_login_non_network_error() {
   // Test non-network errors are reported
   let server = EHTestsCommon.sync_httpd_setup();
   await EHTestsCommon.setUp(server);
-  Service.identity.resetSyncKey();
+  Service.identity.resetSyncKeyBundle();
 
   let promiseObserved = promiseOneObserver("weave:ui:login:error");
 
