@@ -33,10 +33,10 @@ IdToObjectMap::init()
 }
 
 void
-IdToObjectMap::trace(JSTracer* trc, uint64_t minimimId)
+IdToObjectMap::trace(JSTracer* trc, uint64_t minimumId)
 {
     for (Table::Range r(table_.all()); !r.empty(); r.popFront()) {
-        if (r.front().key().serialNumber() >= minimimId)
+        if (r.front().key().serialNumber() >= minimumId)
             JS::TraceEdge(trc, &r.front().value(), "ipc-object");
     }
 }
