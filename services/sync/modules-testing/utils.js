@@ -7,9 +7,6 @@
 this.EXPORTED_SYMBOLS = [
   "btoa", // It comes from a module import.
   "encryptPayload",
-  "isConfiguredWithLegacyIdentity",
-  "ensureLegacyIdentityManager",
-  "setBasicCredentials",
   "makeIdentityConfig",
   "makeFxAccountsInternalMock",
   "configureFxAccountIdentity",
@@ -105,40 +102,6 @@ this.promiseNamedTimer = function(wait, thisObj, name) {
   return new Promise(resolve => {
     Utils.namedTimer(resolve, wait, thisObj, name);
   });
-}
-
-/**
- * Return true if Sync is configured with the "legacy" identity provider.
- */
-this.isConfiguredWithLegacyIdentity = function() {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  // We can't use instanceof as BrowserIDManager (the "other" identity) inherits
-  // from IdentityManager so that would return true - so check the prototype.
-  return Object.getPrototypeOf(ns.Service.identity) === IdentityManager.prototype;
-}
-
-/**
-  * Ensure Sync is configured with the "legacy" identity provider.
-  */
-this.ensureLegacyIdentityManager = function() {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  Status.__authManager = ns.Service.identity = new IdentityManager();
-  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
-}
-
-this.setBasicCredentials =
- function setBasicCredentials(username, password, syncKey) {
-  let ns = {};
-  Cu.import("resource://services-sync/service.js", ns);
-
-  let auth = ns.Service.identity;
-  auth.username = username;
-  auth.basicPassword = password;
-  auth.syncKey = syncKey;
 }
 
 // Return an identity configuration suitable for testing with our identity

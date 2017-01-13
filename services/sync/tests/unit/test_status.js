@@ -19,7 +19,6 @@ function run_test() {
 
   // Check login status
   for (let code of [LOGIN_FAILED_NO_USERNAME,
-                    LOGIN_FAILED_NO_PASSWORD,
                     LOGIN_FAILED_NO_PASSPHRASE]) {
     Status.login = code;
     do_check_eq(Status.login, code);

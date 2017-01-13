@@ -79,7 +79,6 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
   });
 
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   let meta_global = Service.recordManager.set(engine.metaURL,
                                               new WBORecord(engine.metaURL));
