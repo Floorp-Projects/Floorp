@@ -25,8 +25,8 @@ assertThrowsValue(function () { outer.throw(42) }, 42);
 inner = g1();
 outer = delegate(inner);
 assertIteratorNext(outer, 1);
-inner.throw = function(e) { return { value: e*2 }; };
-assertEq(84, outer.throw(42).value);
+inner.throw = function(e) { return e*2; };
+assertEq(84, outer.throw(42));
 assertIteratorDone(outer, undefined);
 
 // Monkeypatching inner.next.
@@ -41,9 +41,7 @@ outer = delegate(inner);
 assertIteratorNext(outer, 1);
 delete GeneratorObjectPrototype.throw;
 var outer_throw_42 = GeneratorObjectPrototype_throw.bind(outer, 42);
-// yield* protocol violation: no 'throw' method
-assertThrowsInstanceOf(outer_throw_42, TypeError);
-// Now done, so just throws.
+assertThrowsValue(outer_throw_42, 42);
 assertThrowsValue(outer_throw_42, 42);
 
 // Monkeypunch a different throw handler.
@@ -51,11 +49,11 @@ inner = g2();
 outer = delegate(inner);
 outer_throw_42 = GeneratorObjectPrototype_throw.bind(outer, 42);
 assertIteratorNext(outer, 1);
-GeneratorObjectPrototype.throw = function(e) { return { value: e*2 }; }
-assertEq(84, outer_throw_42().value);
-assertEq(84, outer_throw_42().value);
+GeneratorObjectPrototype.throw = function(e) { return e*2; }
+assertEq(84, outer_throw_42());
+assertEq(84, outer_throw_42());
 // This continues indefinitely.
-assertEq(84, outer_throw_42().value);
+assertEq(84, outer_throw_42());
 assertIteratorDone(outer, undefined);
 
 // The same, but restoring the original pre-monkey throw.
@@ -63,8 +61,8 @@ inner = g2();
 outer = delegate(inner);
 outer_throw_42 = GeneratorObjectPrototype_throw.bind(outer, 42);
 assertIteratorNext(outer, 1);
-assertEq(84, outer_throw_42().value);
-assertEq(84, outer_throw_42().value);
+assertEq(84, outer_throw_42());
+assertEq(84, outer_throw_42());
 GeneratorObjectPrototype.throw = GeneratorObjectPrototype_throw;
 assertIteratorResult(outer_throw_42(), 42, false);
 assertIteratorDone(outer, undefined);
