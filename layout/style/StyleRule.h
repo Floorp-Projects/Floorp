@@ -348,8 +348,6 @@ public:
 
   virtual nsIDOMCSSRule* GetDOMRule() override;
 
-  virtual nsIDOMCSSRule* GetExistingDOMRule() override;
-
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -358,6 +356,10 @@ public:
 
 private:
   ~StyleRule();
+
+  // Drop our references to mDeclaration and mRule, and let them know we're
+  // doing that.
+  void DropReferences();
 
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
