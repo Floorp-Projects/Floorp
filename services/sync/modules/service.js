@@ -21,10 +21,10 @@ const KEYS_WBO = "keys";
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/policies.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/resource.js");
@@ -154,7 +154,7 @@ Sync11Service.prototype = {
 
   _updateCachedURLs: function _updateCachedURLs() {
     // Nothing to cache yet if we don't have the building blocks
-    if (!this.clusterURL || !this.identity.username) {
+    if (!this.clusterURL) {
       // Also reset all other URLs used by Sync to ensure we aren't accidentally
       // using one cached earlier - if there's no cluster URL any cached ones
       // are invalid.
@@ -302,14 +302,6 @@ Sync11Service.prototype = {
    */
   onStartup: function onStartup() {
     this._migratePrefs();
-
-    // Status is instantiated before us and is the first to grab an instance of
-    // the IdentityManager. We use that instance because IdentityManager really
-    // needs to be a singleton. Ideally, the longer-lived object would spawn
-    // this service instance.
-    if (!Status || !Status._authManager) {
-      throw new Error("Status or Status._authManager not initialized.");
-    }
 
     this.status = Status;
     this.identity = Status._authManager;
@@ -549,21 +541,9 @@ Sync11Service.prototype = {
 
     this._log.debug("Fetching and verifying -- or generating -- symmetric keys.");
 
-    // Don't allow empty/missing passphrase.
-    // Furthermore, we assume that our sync key is already upgraded,
-    // and fail if that assumption is invalidated.
-
-    if (!this.identity.syncKey) {
-      this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
-      this.status.sync = CREDENTIALS_CHANGED;
-      return false;
-    }
-
     let syncKeyBundle = this.identity.syncKeyBundle;
     if (!syncKeyBundle) {
-      this._log.error("Sync Key Bundle not set. Invalid Sync Key?");
-
-      this.status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
+      this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
       this.status.sync = CREDENTIALS_CHANGED;
       return false;
     }
@@ -699,7 +679,7 @@ Sync11Service.prototype = {
           // We have no way of verifying the passphrase right now,
           // so wait until remoteSetup to do so.
           // Just make the most trivial checks.
-          if (!this.identity.syncKey) {
+          if (!this.identity.syncKeyBundle) {
             this._log.warn("No passphrase in verifyLogin.");
             this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
             return false;
@@ -807,30 +787,6 @@ Sync11Service.prototype = {
     }
   },
 
-  changePassphrase: function changePassphrase(newphrase) {
-    return this._catch(function doChangePasphrase() {
-      /* Wipe. */
-      this.wipeServer();
-
-      this.logout();
-
-      /* Set this so UI is updated on next run. */
-      this.identity.syncKey = newphrase;
-      this.persistLogin();
-
-      /* We need to re-encrypt everything, so reset. */
-      this.resetClient();
-      this.collectionKeys.clear();
-
-      /* Login and sync. This also generates new keys. */
-      this.sync();
-
-      Svc.Obs.notify("weave:service:change-passphrase", true);
-
-      return true;
-    })();
-  },
-
   startOver: function startOver() {
     this._log.trace("Invoking Service.startOver.");
     Svc.Obs.notify("weave:engine:stop-tracking");
@@ -855,7 +811,7 @@ Sync11Service.prototype = {
     // possible, so let's fake for the CLIENT_NOT_CONFIGURED status for now
     // by emptying the passphrase (we still need the password).
     this._log.info("Service.startOver dropping sync key and logging out.");
-    this.identity.resetSyncKey();
+    this.identity.resetSyncKeyBundle();
     this.status.login = LOGIN_FAILED_NO_PASSPHRASE;
     this.logout();
     Svc.Obs.notify("weave:service:start-over");
@@ -891,7 +847,6 @@ Sync11Service.prototype = {
       // an observer so the FxA migration code can take some action before
       // the new identity is created.
       Svc.Obs.notify("weave:service:start-over:init-identity");
-      this.identity.username = "";
       this.status.__authManager = null;
       this.identity = Status._authManager;
       this._clusterManager = this.identity.createClusterManager(this);
@@ -904,31 +859,12 @@ Sync11Service.prototype = {
     }
   },
 
-  persistLogin: function persistLogin() {
-    try {
-      this.identity.persistCredentials(true);
-    } catch (ex) {
-      this._log.info("Unable to persist credentials: " + ex);
-    }
-  },
-
-  login: function login(username, password, passphrase) {
+  login: function login() {
     function onNotify() {
       this._loggedIn = false;
       if (Services.io.offline) {
         this.status.login = LOGIN_FAILED_NETWORK_ERROR;
         throw "Application is offline, login should not be called";
-      }
-
-      let initialStatus = this._checkSetup();
-      if (username) {
-        this.identity.username = username;
-      }
-      if (password) {
-        this.identity.basicPassword = password;
-      }
-      if (passphrase) {
-        this.identity.syncKey = passphrase;
       }
 
       if (this._checkSetup() == CLIENT_NOT_CONFIGURED) {
@@ -946,12 +882,6 @@ Sync11Service.prototype = {
       // Just let any errors bubble up - they've more context than we do!
       cb.wait();
 
-      // Calling login() with parameters when the client was
-      // previously not configured means setup was completed.
-      if (initialStatus == CLIENT_NOT_CONFIGURED
-          && (username || password || passphrase)) {
-        Svc.Obs.notify("weave:service:setup-complete");
-      }
       this._updateCachedURLs();
 
       this._log.info("User logged in successfully - verifying login.");
@@ -1125,11 +1055,6 @@ Sync11Service.prototype = {
       this.syncID = meta.payload.syncID;
       this._log.debug("Clear cached values and take syncId: " + this.syncID);
 
-      if (!this.upgradeSyncKey(meta.payload.syncID)) {
-        this._log.warn("Failed to upgrade sync key. Failing remote setup.");
-        return false;
-      }
-
       if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
         this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
         return false;
@@ -1144,11 +1069,6 @@ Sync11Service.prototype = {
 
       return true;
     }
-    if (!this.upgradeSyncKey(meta.payload.syncID)) {
-      this._log.warn("Failed to upgrade sync key. Failing remote setup.");
-      return false;
-    }
-
     if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
       this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
       return false;
@@ -1373,53 +1293,10 @@ Sync11Service.prototype = {
     return Promise.resolve(true);
   },
 
-  /**
-   * If we have a passphrase, rather than a 25-alphadigit sync key,
-   * use the provided sync ID to bootstrap it using PBKDF2.
-   *
-   * Store the new 'passphrase' back into the identity manager.
-   *
-   * We can check this as often as we want, because once it's done the
-   * check will no longer succeed. It only matters that it happens after
-   * we decide to bump the server storage version.
-   */
-  upgradeSyncKey: function upgradeSyncKey(syncID) {
-    let p = this.identity.syncKey;
-
-    if (!p) {
-      return false;
-    }
-
-    // Check whether it's already a key that we generated.
-    if (Utils.isPassphrase(p)) {
-      this._log.info("Sync key is up-to-date: no need to upgrade.");
-      return true;
-    }
-
-    // Otherwise, let's upgrade it.
-    // N.B., we persist the sync key without testing it first...
-
-    let s = btoa(syncID);        // It's what WeaveCrypto expects. *sigh*
-    let k = Utils.derivePresentableKeyFromPassphrase(p, s, PBKDF2_KEY_BYTES);   // Base 32.
-
-    if (!k) {
-      this._log.error("No key resulted from derivePresentableKeyFromPassphrase. Failing upgrade.");
-      return false;
-    }
-
-    this._log.info("Upgrading sync key...");
-    this.identity.syncKey = k;
-    this._log.info("Saving upgraded sync key...");
-    this.persistLogin();
-    this._log.info("Done saving.");
-    return true;
-  },
-
   _freshStart: function _freshStart() {
-    this._log.info("Fresh start. Resetting client and considering key upgrade.");
+    this._log.info("Fresh start. Resetting client.");
     this.resetClient();
     this.collectionKeys.clear();
-    this.upgradeSyncKey(this.syncID);
 
     // Wipe the server.
     this.wipeServer();
@@ -1528,9 +1405,6 @@ Sync11Service.prototype = {
         engine.wipeClient();
       }
     }
-
-    // Save the password/passphrase just in-case they aren't restored by sync
-    this.persistLogin();
   },
 
   /**

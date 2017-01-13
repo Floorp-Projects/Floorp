@@ -374,9 +374,10 @@ var gSyncUI = {
       return;
 
     let email;
-    try {
-      email = Services.prefs.getCharPref("services.sync.username");
-    } catch (ex) {}
+    let user = yield fxAccounts.getSignedInUser();
+    if (user) {
+      email = user.email;
+    }
 
     let needsSetup = yield this._needsSetup();
     let needsVerification = yield this._needsVerification();
