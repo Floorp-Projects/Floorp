@@ -73,7 +73,6 @@ add_identity_test(this, async function test_basic() {
   let helper = track_collections_helper();
   let upd = helper.with_updated_collection;
 
-  await configureIdentity({ username: "johndoe" });
   let handlers = {
     "/1.1/johndoe/info/collections": helper.handler,
     "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
@@ -87,6 +86,7 @@ add_identity_test(this, async function test_basic() {
   }
 
   let server = httpd_setup(handlers);
+  await configureIdentity({ username: "johndoe" }, server);
   Service.serverURL = server.baseURI;
 
   await sync_and_validate_telem(true);
@@ -192,7 +192,6 @@ add_task(async function test_uploading() {
 });
 
 add_task(async function test_upload_failed() {
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO("flying");
 
@@ -201,6 +200,7 @@ add_task(async function test_upload_failed() {
   });
 
   await SyncTestingInfrastructure(server);
+  await configureIdentity({ username: "foo" }, server);
 
   let engine = new RotaryEngine(Service);
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -246,8 +246,6 @@ add_task(async function test_upload_failed() {
 });
 
 add_task(async function test_sync_partialUpload() {
-  Service.identity.username = "foo";
-
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
       "/1.1/foo/storage/rotary": collection.handler()

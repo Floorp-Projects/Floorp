@@ -2,10 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 Cu.import("resource://services-sync/constants.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/keys.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/browserid_identity.js");
+Cu.import("resource://testing-common/services/sync/utils.js");
 
 var collectionKeys = new CollectionKeyManager();
 
@@ -163,16 +164,16 @@ add_test(function test_keymanager() {
   run_next_test();
 });
 
-add_test(function test_collections_manager() {
+add_task(async function test_ensureLoggedIn() {
   let log = Log.repository.getLogger("Test");
   Log.repository.rootLogger.addAppender(new Log.DumpAppender());
 
-  let identity = new IdentityManager();
+  let identityConfig = makeIdentityConfig();
+  let browseridManager = new BrowserIDManager();
+  configureFxAccountIdentity(browseridManager, identityConfig);
+  await browseridManager.ensureLoggedIn();
 
-  identity.account = "john@example.com";
-  identity.syncKey = "a-bbbbb-ccccc-ddddd-eeeee-fffff";
-
-  let keyBundle = identity.syncKeyBundle;
+  let keyBundle = browseridManager.syncKeyBundle;
 
   /*
    * Build a test version of storage/crypto/keys.
@@ -313,8 +314,6 @@ add_test(function test_collections_manager() {
   do_check_array_eq(d4.changed, ["bar", "foo"]);
   do_check_array_eq(d5.changed, ["baz", "foo"]);
   do_check_array_eq(d6.changed, ["bar", "foo"]);
-
-  run_next_test();
 });
 
 function run_test() {
