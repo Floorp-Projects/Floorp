@@ -622,7 +622,7 @@ TEST(TestCookie,TestCookieMain)
     nsCOMPtr<nsICookieManager2> cookieMgr2 = do_QueryInterface(cookieMgr);
     ASSERT_TRUE(cookieMgr2);
 
-    mozilla::NeckoOriginAttributes attrs;
+    mozilla::OriginAttributes attrs;
 
     // first, ensure a clean slate
     EXPECT_TRUE(NS_SUCCEEDED(cookieMgr->RemoveAll()));

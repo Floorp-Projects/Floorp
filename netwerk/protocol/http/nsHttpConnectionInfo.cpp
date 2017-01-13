@@ -51,7 +51,7 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &originHost,
                                            const nsACString &npnToken,
                                            const nsACString &username,
                                            nsProxyInfo *proxyInfo,
-                                           const NeckoOriginAttributes &originAttributes,
+                                           const OriginAttributes &originAttributes,
                                            bool endToEndSSL)
     : mRoutedPort(443)
 {
@@ -63,7 +63,7 @@ nsHttpConnectionInfo::nsHttpConnectionInfo(const nsACString &originHost,
                                            const nsACString &npnToken,
                                            const nsACString &username,
                                            nsProxyInfo *proxyInfo,
-                                           const NeckoOriginAttributes &originAttributes,
+                                           const OriginAttributes &originAttributes,
                                            const nsACString &routedHost,
                                            int32_t routedPort)
 {
@@ -81,7 +81,7 @@ nsHttpConnectionInfo::Init(const nsACString &host, int32_t port,
                            const nsACString &npnToken,
                            const nsACString &username,
                            nsProxyInfo* proxyInfo,
-                           const NeckoOriginAttributes &originAttributes,
+                           const OriginAttributes &originAttributes,
                            bool e2eSSL)
 {
     LOG(("Init nsHttpConnectionInfo @%p\n", this));

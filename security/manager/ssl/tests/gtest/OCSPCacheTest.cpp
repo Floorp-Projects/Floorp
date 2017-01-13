@@ -19,7 +19,7 @@
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
-using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 
 template <size_t N>
 inline Input
@@ -50,7 +50,7 @@ protected:
 static void
 PutAndGet(mozilla::psm::OCSPCache& cache, const CertID& certID, Result result,
           Time time,
-          const NeckoOriginAttributes& originAttributes = NeckoOriginAttributes())
+          const OriginAttributes& originAttributes = OriginAttributes())
 {
   // The first time is thisUpdate. The second is validUntil.
   // The caller is expecting the validUntil returned with Get
@@ -83,7 +83,7 @@ TEST_F(psm_OCSPCacheTest, TestPutAndGet)
   Result resultOut;
   Time timeOut(Time::uninitialized);
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial000),
-                         NeckoOriginAttributes(), resultOut, timeOut));
+                         OriginAttributes(), resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestVariousGets)
@@ -107,11 +107,11 @@ TEST_F(psm_OCSPCacheTest, TestVariousGets)
 
   // This will be at the end of the list in the cache
   CertID cert0000(fakeIssuer1, fakeKey000, fakeSerial0000);
-  ASSERT_TRUE(cache.Get(cert0000, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0000, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeIn, timeOut);
   // Once we access it, it goes to the front
-  ASSERT_TRUE(cache.Get(cert0000, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0000, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeIn, timeOut);
 
@@ -121,17 +121,17 @@ TEST_F(psm_OCSPCacheTest, TestVariousGets)
 
   static const Input fakeSerial0512(LiteralInput("0512"));
   CertID cert0512(fakeIssuer1, fakeKey000, fakeSerial0512);
-  ASSERT_TRUE(cache.Get(cert0512, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0512, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeInPlus512, timeOut);
-  ASSERT_TRUE(cache.Get(cert0512, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0512, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeInPlus512, timeOut);
 
   // We've never seen this certificate
   static const Input fakeSerial1111(LiteralInput("1111"));
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey000, fakeSerial1111),
-                         NeckoOriginAttributes(), resultOut, timeOut));
+                         OriginAttributes(), resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestEviction)
@@ -154,7 +154,7 @@ TEST_F(psm_OCSPCacheTest, TestEviction)
   Result resultOut;
   Time timeOut(Time::uninitialized);
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial0000),
-                         NeckoOriginAttributes(), resultOut, timeOut));
+                         OriginAttributes(), resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestNoEvictionForRevokedResponses)
@@ -178,13 +178,13 @@ TEST_F(psm_OCSPCacheTest, TestNoEvictionForRevokedResponses)
   }
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(notEvicted, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(notEvicted, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, resultOut);
   ASSERT_EQ(timeIn, timeOut);
 
   Input fakeSerial0001(LiteralInput("0001"));
   CertID evicted(fakeIssuer1, fakeKey000, fakeSerial0001);
-  ASSERT_FALSE(cache.Get(evicted, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_FALSE(cache.Get(evicted, OriginAttributes(), resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, TestEverythingIsRevoked)
@@ -211,12 +211,12 @@ TEST_F(psm_OCSPCacheTest, TestEverythingIsRevoked)
   ASSERT_EQ(Success, timeInPlus1025.AddSeconds(1025));
   Time timeInPlus1025Minus50(timeInPlus1025);
   ASSERT_EQ(Success, timeInPlus1025Minus50.SubtractSeconds(50));
-  Result result = cache.Put(good, NeckoOriginAttributes(), Success, timeInPlus1025Minus50,
+  Result result = cache.Put(good, OriginAttributes(), Success, timeInPlus1025Minus50,
                             timeInPlus1025);
   ASSERT_EQ(Success, result);
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_FALSE(cache.Get(good, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_FALSE(cache.Get(good, OriginAttributes(), resultOut, timeOut));
 
   static const Input fakeSerial1026(LiteralInput("1026"));
   CertID revoked(fakeIssuer1, fakeKey000, fakeSerial1026);
@@ -225,7 +225,7 @@ TEST_F(psm_OCSPCacheTest, TestEverythingIsRevoked)
   ASSERT_EQ(Success, timeInPlus1026.AddSeconds(1026));
   Time timeInPlus1026Minus50(timeInPlus1026);
   ASSERT_EQ(Success, timeInPlus1026Minus50.SubtractSeconds(50));
-  result = cache.Put(revoked, NeckoOriginAttributes(), Result::ERROR_REVOKED_CERTIFICATE,
+  result = cache.Put(revoked, OriginAttributes(), Result::ERROR_REVOKED_CERTIFICATE,
                      timeInPlus1026Minus50, timeInPlus1026);
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, result);
 }
@@ -240,15 +240,15 @@ TEST_F(psm_OCSPCacheTest, VariousIssuers)
   PutAndGet(cache, subject, Success, now);
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(subject, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(subject, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(timeIn, timeOut);
   // Test that we don't match a different issuer DN
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer2, fakeKey000, fakeSerial001),
-                         NeckoOriginAttributes(), resultOut, timeOut));
+                         OriginAttributes(), resultOut, timeOut));
   // Test that we don't match a different issuer key
   ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial001),
-                         NeckoOriginAttributes(), resultOut, timeOut));
+                         OriginAttributes(), resultOut, timeOut));
 }
 
 TEST_F(psm_OCSPCacheTest, Times)
@@ -260,12 +260,12 @@ TEST_F(psm_OCSPCacheTest, Times)
   PutAndGet(cache, certID, Success, TimeFromElapsedSecondsAD(200));
   // This should not override the more recent entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, NeckoOriginAttributes(), Result::ERROR_OCSP_UNKNOWN_CERT,
+            cache.Put(certID, OriginAttributes(), Result::ERROR_OCSP_UNKNOWN_CERT,
                       TimeFromElapsedSecondsAD(100),
                       TimeFromElapsedSecondsAD(100)));
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(certID, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, OriginAttributes(), resultOut, timeOut));
   // Here we see the more recent time.
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(200), timeOut);
@@ -284,12 +284,12 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure)
   PutAndGet(cache, certID, Success, TimeFromElapsedSecondsAD(200));
   // This should not override the already present entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, NeckoOriginAttributes(), Result::ERROR_CONNECT_REFUSED,
+            cache.Put(certID, OriginAttributes(), Result::ERROR_CONNECT_REFUSED,
                       TimeFromElapsedSecondsAD(300),
                       TimeFromElapsedSecondsAD(350)));
   Result resultOut;
   Time timeOut(Time::uninitialized);
-  ASSERT_TRUE(cache.Get(certID, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Success, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(200), timeOut);
 
@@ -297,10 +297,10 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure)
             TimeFromElapsedSecondsAD(400));
   // This should not override the already present entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, NeckoOriginAttributes(), Result::ERROR_CONNECT_REFUSED,
+            cache.Put(certID, OriginAttributes(), Result::ERROR_CONNECT_REFUSED,
                       TimeFromElapsedSecondsAD(500),
                       TimeFromElapsedSecondsAD(550)));
-  ASSERT_TRUE(cache.Get(certID, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Result::ERROR_OCSP_UNKNOWN_CERT, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(400), timeOut);
 
@@ -308,10 +308,10 @@ TEST_F(psm_OCSPCacheTest, NetworkFailure)
             TimeFromElapsedSecondsAD(600));
   // This should not override the already present entry.
   ASSERT_EQ(Success,
-            cache.Put(certID, NeckoOriginAttributes(), Result::ERROR_CONNECT_REFUSED,
+            cache.Put(certID, OriginAttributes(), Result::ERROR_CONNECT_REFUSED,
                       TimeFromElapsedSecondsAD(700),
                       TimeFromElapsedSecondsAD(750)));
-  ASSERT_TRUE(cache.Get(certID, NeckoOriginAttributes(), resultOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, OriginAttributes(), resultOut, timeOut));
   ASSERT_EQ(Result::ERROR_REVOKED_CERTIFICATE, resultOut);
   ASSERT_EQ(TimeFromElapsedSecondsAD(600), timeOut);
 }
@@ -321,7 +321,7 @@ TEST_F(psm_OCSPCacheTest, TestOriginAttributes)
   CertID certID(fakeIssuer1, fakeKey000, fakeSerial0000);
 
   SCOPED_TRACE("");
-  NeckoOriginAttributes attrs;
+  OriginAttributes attrs;
   attrs.mFirstPartyDomain.AssignLiteral("foo.com");
   PutAndGet(cache, certID, Success, now, attrs);
 

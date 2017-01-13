@@ -69,7 +69,7 @@ interface nsICookieManager2 : nsICookieManager
                      in boolean     aIsHttpOnly,
                      in boolean     aIsSession,
                      in int64_t     aExpiry,
-                     in NeckoOriginAttributesPtr aOriginAttributes);
+                     in OriginAttributesPtr aOriginAttributes);
 
   /**
    * Find whether a given cookie already exists.
@@ -91,7 +91,7 @@ interface nsICookieManager2 : nsICookieManager
 
   [notxpcom]
   nsresult cookieExistsNative(in nsICookie2 aCookie,
-                              in NeckoOriginAttributesPtr aOriginAttributes,
+                              in OriginAttributesPtr aOriginAttributes,
                               out boolean aExists);
 
   /**
