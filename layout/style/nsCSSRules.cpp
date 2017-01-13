@@ -54,27 +54,6 @@ using namespace mozilla::dom;
 
 // base class for all rule types in a CSS style sheet
 
-// Temporary code that can go away once all css::Rules are on WebIDL bindings.
-#include "xpcpublic.h"
-namespace mozilla {
-namespace dom {
-template<>
-nsresult
-UnwrapArg(JS::Handle<JSObject*> src, css::Rule** ppArg)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIDOMCSSRule> rule =
-    do_QueryInterface(xpc::UnwrapReflectorToISupports(src));
-  if (!rule) {
-    return NS_NOINTERFACE;
-  }
-  *ppArg = rule->GetCSSRule();
-  NS_ADDREF(*ppArg);
-  return NS_OK;
-}
-} // namespace dom
-} // namespace mozilla
-
 namespace mozilla {
 namespace css {
 
