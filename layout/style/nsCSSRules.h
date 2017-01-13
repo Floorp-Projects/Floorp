@@ -43,7 +43,7 @@ class ErrorResult;
 
 namespace css {
 
-class MediaRule final : public GroupRule,
+class MediaRule final : public ConditionRule,
                         public nsIDOMCSSMediaRule
 {
 public:
@@ -53,7 +53,7 @@ private:
   ~MediaRule();
 public:
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRule, GroupRule)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRule, ConditionRule)
   NS_DECL_ISUPPORTS_INHERITED
 
   // Rule methods
@@ -89,6 +89,10 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  // Our XPCOM GetConditionText is OK
+  virtual void SetConditionText(const nsAString& aConditionText,
+                                ErrorResult& aRv) override;
+  nsMediaList* Media() const;
   
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -102,7 +106,7 @@ protected:
   RefPtr<nsMediaList> mMedia;
 };
 
-class DocumentRule final : public GroupRule,
+class DocumentRule final : public ConditionRule,
                            public nsIDOMCSSMozDocumentRule
 {
 public:
@@ -164,6 +168,9 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  // Our XPCOM GetConditionText is OK
+  virtual void SetConditionText(const nsAString& aConditionText,
+                                ErrorResult& aRv) override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -577,7 +584,7 @@ private:
 
 namespace mozilla {
 
-class CSSSupportsRule final : public css::GroupRule,
+class CSSSupportsRule final : public css::ConditionRule,
                               public nsIDOMCSSSupportsRule
 {
 public:
@@ -609,6 +616,9 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  // Our XPCOM GetConditionText is OK
+  virtual void SetConditionText(const nsAString& aConditionText,
+                                ErrorResult& aRv) override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 

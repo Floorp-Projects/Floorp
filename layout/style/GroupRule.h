@@ -12,6 +12,7 @@
 #define mozilla_css_GroupRule_h__
 
 #include "mozilla/Attributes.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
@@ -23,6 +24,10 @@ class nsMediaQueryResultCacheKey;
 namespace mozilla {
 
 class StyleSheet;
+
+namespace dom {
+class CSSRuleList;
+} // namespace dom
 
 namespace css {
 
@@ -78,6 +83,12 @@ public:
     return true;
   }
 
+  // WebIDL API
+  dom::CSSRuleList* CssRules();
+  uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
+                      ErrorResult& aRv);
+  void DeleteRule(uint32_t aIndex, ErrorResult& aRv);
+
 protected:
   // to help implement nsIDOMCSSRule
   void AppendRulesToCssText(nsAString& aCssText) const;
@@ -91,6 +102,24 @@ protected:
 
   IncrementalClearCOMRuleArray mRules;
   RefPtr<GroupRuleRuleList> mRuleCollection; // lazily constructed
+};
+
+// Implementation of WebIDL CSSConditionRule.
+class ConditionRule : public GroupRule
+{
+protected:
+  ConditionRule(uint32_t aLineNumber, uint32_t aColumnNumber);
+  ConditionRule(const ConditionRule& aCopy);
+  virtual ~ConditionRule();
+
+public:
+
+  // GetConditionText signature matches nsIDOMCSSConditionRule, so subclasses
+  // can implement this easily.  The implementations should never return
+  // anything other than NS_OK.
+  NS_IMETHOD GetConditionText(nsAString& aConditionText) = 0;
+  virtual void SetConditionText(const nsAString& aConditionText,
+                                ErrorResult& aRv) = 0;
 };
 
 } // namespace css
