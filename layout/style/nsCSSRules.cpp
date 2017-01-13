@@ -43,8 +43,6 @@ using namespace mozilla::dom;
 
 #define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
   /* virtual */ nsIDOMCSSRule* class_::GetDOMRule()               \
-  { return this; }                                                \
-  /* virtual */ nsIDOMCSSRule* class_::GetExistingDOMRule()       \
   { return this; }
 
 #define IMPL_STYLE_RULE_INHERIT(class_, super_) \
@@ -839,7 +837,6 @@ NS_INTERFACE_MAP_BEGIN(DocumentRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMozDocumentRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
