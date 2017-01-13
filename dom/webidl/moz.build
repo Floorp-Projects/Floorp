@@ -90,6 +90,7 @@ WEBIDL_FILES = [
     'CSS.webidl',
     'CSSAnimation.webidl',
     'CSSLexer.webidl',
+    'CSSNamespaceRule.webidl',
     'CSSPrimitiveValue.webidl',
     'CSSPseudoElement.webidl',
     'CSSRule.webidl',

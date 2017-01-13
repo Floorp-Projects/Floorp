@@ -23,7 +23,6 @@ enum nsDOMClassInfoID
   eDOMClassInfo_CSSStyleRule_id,
   eDOMClassInfo_CSSImportRule_id,
   eDOMClassInfo_CSSMediaRule_id,
-  eDOMClassInfo_CSSNameSpaceRule_id,
 
   // XUL classes
 #ifdef MOZ_XUL
