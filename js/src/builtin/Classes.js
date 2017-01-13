@@ -5,7 +5,7 @@
 var DefaultDerivedClassConstructor =
     class extends null {
         constructor(...args) {
-            super(...allowContentSpread(args));
+            super(...allowContentIter(args));
         }
     };
 MakeDefaultConstructor(DefaultDerivedClassConstructor);
