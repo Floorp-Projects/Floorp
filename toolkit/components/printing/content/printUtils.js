@@ -440,8 +440,8 @@ var PrintUtils = {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     if (pref) {
-      gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings", false);
-      gSavePrintSettings = pref.getBoolPref("print.save_print_settings", false);
+      gPrintSettingsAreGlobal = pref.getBoolPref("print.use_global_printsettings");
+      gSavePrintSettings = pref.getBoolPref("print.save_print_settings");
     }
 
     var printSettings;

@@ -29,6 +29,11 @@ module.exports = function(context) {
         return;
       }
 
+      if (["getCharPref", "getBoolPref", "getIntPref", "clearUserPref"]
+          .includes(callee.property.name) && node.arguments.length > 1) {
+        context.report(node, callee.property.name + " takes only 1 parameter.");
+      }
+
       if (callee.property.name === "removeObserver" &&
           node.arguments.length === 3) {
         let arg = node.arguments[2];
