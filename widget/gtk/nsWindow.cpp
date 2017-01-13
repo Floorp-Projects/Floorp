@@ -2401,7 +2401,9 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
-    mPendingConfigures--;
+    if (mPendingConfigures > 0) {
+        mPendingConfigures--;
+    }
 
     LayoutDeviceIntRect screenBounds = GetScreenBounds();
 
@@ -4212,7 +4214,7 @@ nsWindow::NativeShow(bool aAction)
                 event.height = allocation.height;
 
                 auto shellClass = GTK_WIDGET_GET_CLASS(mShell);
-                for (int i = 0; i < mPendingConfigures; i++) {
+                for (unsigned int i = 0; i < mPendingConfigures; i++) {
                     Unused << shellClass->configure_event(mShell, &event);
                 }
                 mPendingConfigures = 0;

@@ -469,7 +469,7 @@ private:
 
     // Upper bound on pending ConfigureNotify events to be dispatched to the
     // window. See bug 1225044.
-    int mPendingConfigures;
+    unsigned int mPendingConfigures;
 
 #ifdef ACCESSIBILITY
     RefPtr<mozilla::a11y::Accessible> mRootAccessible;
