@@ -1166,30 +1166,10 @@ DOMCSSDeclarationImpl::DocToUpdate()
 namespace mozilla {
 namespace css {
 
-NS_IMETHODIMP
-StyleRule::GetType(uint16_t* aType)
+uint16_t
+StyleRule::Type() const
 {
-  *aType = nsIDOMCSSRule::STYLE_RULE;
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StyleRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-StyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-StyleRule::GetCSSRule()
-{
-  return this;
+  return nsIDOMCSSRule::STYLE_RULE;
 }
 
 NS_IMETHODIMP
@@ -1362,8 +1342,8 @@ StyleRule::List(FILE* out, int32_t aIndent) const
 }
 #endif
 
-NS_IMETHODIMP
-StyleRule::GetCssText(nsAString& aCssText)
+void
+StyleRule::GetCssTextImpl(nsAString& aCssText) const
 {
   if (mSelector) {
     mSelector->ToString(aCssText, GetStyleSheet());
@@ -1379,14 +1359,6 @@ StyleRule::GetCssText(nsAString& aCssText)
   }
   aCssText.Append(char16_t(' '));
   aCssText.Append(char16_t('}'));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-StyleRule::SetCssText(const nsAString& aCssText)
-{
-  // XXX TBI - need to re-parse rule & declaration
-  return NS_OK;
 }
 
 NS_IMETHODIMP
