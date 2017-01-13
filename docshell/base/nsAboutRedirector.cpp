@@ -138,6 +138,12 @@ static RedirEntry kRedirMap[] = {
   {
     "webrtc", "chrome://global/content/aboutwebrtc/aboutWebrtc.html",
     nsIAboutModule::ALLOW_SCRIPT
+  },
+  {
+    "printpreview", "about:blank",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+    nsIAboutModule::URI_CAN_LOAD_IN_CHILD
   }
 };
 static const int kRedirTotal = mozilla::ArrayLength(kRedirMap);
@@ -173,9 +179,11 @@ nsAboutRedirector::NewChannel(nsIURI* aURI,
                                &isUIResource);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsLoadFlags loadFlags =
-        isUIResource ? static_cast<nsLoadFlags>(nsIChannel::LOAD_NORMAL)
-                     : static_cast<nsLoadFlags>(nsIChannel::LOAD_REPLACE);
+      bool isAboutBlank = NS_IsAboutBlank(tempURI);
+
+      nsLoadFlags loadFlags = isUIResource || isAboutBlank
+                    ? static_cast<nsLoadFlags>(nsIChannel::LOAD_NORMAL)
+                    : static_cast<nsLoadFlags>(nsIChannel::LOAD_REPLACE);
 
       rv = NS_NewChannelInternal(getter_AddRefs(tempChannel),
                                  tempURI,
