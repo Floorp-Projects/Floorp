@@ -6,9 +6,8 @@ Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
-function run_test() {
+add_task(async function test_status_checkSetup() {
   initTestLogging("Trace");
-  ensureLegacyIdentityManager();
 
   try {
     _("Ensure fresh config.");
@@ -19,22 +18,9 @@ function run_test() {
     do_check_eq(Status.login, LOGIN_FAILED_NO_USERNAME);
     Status.resetSync();
 
-    _("Let's provide a username.");
-    Status._authManager.username = "johndoe";
-    do_check_eq(Status.checkSetup(), CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSWORD);
-    Status.resetSync();
+    _("Let's provide the syncKeyBundle");
+    await configureIdentity();
 
-    do_check_neq(Status._authManager.username, null);
-
-    _("Let's provide a password.");
-    Status._authManager.basicPassword = "carotsalad";
-    do_check_eq(Status.checkSetup(), CLIENT_NOT_CONFIGURED);
-    do_check_eq(Status.login, LOGIN_FAILED_NO_PASSPHRASE);
-    Status.resetSync();
-
-    _("Let's provide a passphrase");
-    Status._authManager.syncKey = "a-bcdef-abcde-acbde-acbde-acbde";
     _("checkSetup()");
     do_check_eq(Status.checkSetup(), STATUS_OK);
     Status.resetSync();
@@ -42,4 +28,4 @@ function run_test() {
   } finally {
     Svc.Prefs.resetBranch("");
   }
-}
+});

@@ -48,17 +48,16 @@ function sync_httpd_setup() {
   let upd = collectionsHelper.with_updated_collection;
 
   return httpd_setup({
-    "/1.1/johndoe/storage/meta/global": upd("meta", global.handler()),
-    "/1.1/johndoe/info/collections": collectionsHelper.handler,
-    "/1.1/johndoe/storage/crypto/keys":
+    "/1.1/johndoe@mozilla.com/storage/meta/global": upd("meta", global.handler()),
+    "/1.1/johndoe@mozilla.com/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe@mozilla.com/storage/crypto/keys":
       upd("crypto", (new ServerWBO("keys")).handler()),
-    "/1.1/johndoe/storage/clients": upd("clients", clientsColl.handler()),
-    "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "null")
+    "/1.1/johndoe@mozilla.com/storage/clients": upd("clients", clientsColl.handler())
   });
 }
 
 async function setUp(server) {
-  await configureIdentity({username: "johndoe"}, server);
+  await configureIdentity({username: "johndoe@mozilla.com"}, server);
 
   generateNewKeys(Service.collectionKeys);
   let serverKeys = Service.collectionKeys.asWBO("crypto", "keys");
@@ -83,11 +82,6 @@ function run_test() {
   Log.repository.getLogger("Sync.scheduler").level = Log.Level.Trace;
   validate_all_future_pings();
 
-  // The scheduler checks Weave.fxaEnabled to determine whether to use
-  // FxA defaults or legacy defaults.  As .fxaEnabled checks the username, we
-  // set a username here then reset the default to ensure they are used.
-  ensureLegacyIdentityManager();
-  setBasicCredentials("johndoe");
   scheduler.setDefaults();
 
   run_next_test();
@@ -130,7 +124,7 @@ add_test(function test_prefAttributes() {
 
   _("Intervals correspond to default preferences.");
   do_check_eq(scheduler.singleDeviceInterval,
-              Svc.Prefs.get("scheduler.sync11.singleDeviceInterval") * 1000);
+              Svc.Prefs.get("scheduler.fxa.singleDeviceInterval") * 1000);
   do_check_eq(scheduler.idleInterval,
               Svc.Prefs.get("scheduler.idleInterval") * 1000);
   do_check_eq(scheduler.activeInterval,
@@ -139,7 +133,7 @@ add_test(function test_prefAttributes() {
               Svc.Prefs.get("scheduler.immediateInterval") * 1000);
 
   _("Custom values for prefs will take effect after a restart.");
-  Svc.Prefs.set("scheduler.sync11.singleDeviceInterval", 420);
+  Svc.Prefs.set("scheduler.fxa.singleDeviceInterval", 420);
   Svc.Prefs.set("scheduler.idleInterval", 230);
   Svc.Prefs.set("scheduler.activeInterval", 180);
   Svc.Prefs.set("scheduler.immediateInterval", 31415);
@@ -150,7 +144,7 @@ add_test(function test_prefAttributes() {
   do_check_eq(scheduler.immediateInterval, 31415000);
 
   _("Custom values for interval prefs can't be less than 60 seconds.");
-  Svc.Prefs.set("scheduler.sync11.singleDeviceInterval", 42);
+  Svc.Prefs.set("scheduler.fxa.singleDeviceInterval", 42);
   Svc.Prefs.set("scheduler.idleInterval", 50);
   Svc.Prefs.set("scheduler.activeInterval", 50);
   Svc.Prefs.set("scheduler.immediateInterval", 10);
@@ -494,7 +488,7 @@ add_identity_test(this, async function test_autoconnect_nextSync_future() {
   }
   Svc.Obs.add("weave:service:login:start", onLoginStart);
 
-  await configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe@mozilla.com"});
   scheduler.delayedAutoConnect(0);
   await promiseZeroTimer();
 
@@ -505,8 +499,6 @@ add_identity_test(this, async function test_autoconnect_nextSync_future() {
   await cleanUpAndGo();
 });
 
-// XXX - this test can't be run with the browserid identity as it relies
-// on the syncKey getter behaving in a certain way...
 add_task(async function test_autoconnect_mp_locked() {
   let server = sync_httpd_setup();
   await setUp(server);
@@ -515,13 +507,14 @@ add_task(async function test_autoconnect_mp_locked() {
   let origLocked = Utils.mpLocked;
   Utils.mpLocked = () => true;
 
-  let origGetter = Service.identity.__lookupGetter__("syncKey");
-  let origSetter = Service.identity.__lookupSetter__("syncKey");
-  delete Service.identity.syncKey;
-  Service.identity.__defineGetter__("syncKey", function() {
+
+  let origEnsureMPUnlocked = Utils.ensureMPUnlocked;
+  Utils.ensureMPUnlocked = () => {
     _("Faking Master Password entry cancelation.");
-    throw "User canceled Master Password entry";
-  });
+    return false;
+  }
+  let origCanFetchKeys = Service.identity._canFetchKeys;
+  Service.identity._canFetchKeys = () => false;
 
   // A locked master password will still trigger a sync, but then we'll hit
   // MASTER_PASSWORD_LOCKED and hence MASTER_PASSWORD_LOCKED_RETRY_INTERVAL.
@@ -535,9 +528,8 @@ add_task(async function test_autoconnect_mp_locked() {
   do_check_eq(Status.login, MASTER_PASSWORD_LOCKED);
 
   Utils.mpLocked = origLocked;
-  delete Service.identity.syncKey;
-  Service.identity.__defineGetter__("syncKey", origGetter);
-  Service.identity.__defineSetter__("syncKey", origSetter);
+  Utils.ensureMPUnlocked = origEnsureMPUnlocked;
+  Service.identity._canFetchKeys = origCanFetchKeys;
 
   await cleanUpAndGo(server);
 });
@@ -781,7 +773,7 @@ add_identity_test(this, async function test_sync_X_Weave_Backoff() {
   const BACKOFF = 7337;
 
   // Extend info/collections so that we can put it into server maintenance mode.
-  const INFO_COLLECTIONS = "/1.1/johndoe/info/collections";
+  const INFO_COLLECTIONS = "/1.1/johndoe@mozilla.com/info/collections";
   let infoColl = server._handler._overridePaths[INFO_COLLECTIONS];
   let serverBackoff = false;
   function infoCollWithBackoff(request, response) {
@@ -838,7 +830,7 @@ add_identity_test(this, async function test_sync_503_Retry_After() {
   const BACKOFF = 7337;
 
   // Extend info/collections so that we can put it into server maintenance mode.
-  const INFO_COLLECTIONS = "/1.1/johndoe/info/collections";
+  const INFO_COLLECTIONS = "/1.1/johndoe@mozilla.com/info/collections";
   let infoColl = server._handler._overridePaths[INFO_COLLECTIONS];
   let serverMaintenance = false;
   function infoCollWithMaintenance(request, response) {
@@ -892,10 +884,9 @@ add_identity_test(this, async function test_sync_503_Retry_After() {
 
 add_identity_test(this, async function test_loginError_recoverable_reschedules() {
   _("Verify that a recoverable login error schedules a new sync.");
-  await configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe@mozilla.com"});
   Service.serverURL = "http://localhost:1234/";
   Service.clusterURL = Service.serverURL;
-  Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
   let promiseObserved = promiseOneObserver("weave:service:login:error");
@@ -933,15 +924,14 @@ add_identity_test(this, async function test_loginError_recoverable_reschedules()
 
 add_identity_test(this, async function test_loginError_fatal_clearsTriggers() {
   _("Verify that a fatal login error clears sync triggers.");
-  await configureIdentity({username: "johndoe"});
+  await configureIdentity({username: "johndoe@mozilla.com"});
 
   let server = httpd_setup({
-    "/1.1/johndoe/info/collections": httpd_handler(401, "Unauthorized")
+    "/1.1/johndoe@mozilla.com/info/collections": httpd_handler(401, "Unauthorized")
   });
 
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = Service.serverURL;
-  Service.persistLogin();
   Status.resetSync(); // reset Status.login
 
   let promiseObserved = promiseOneObserver("weave:service:login:error");
@@ -956,21 +946,13 @@ add_identity_test(this, async function test_loginError_fatal_clearsTriggers() {
   await promiseObserved;
   await promiseNextTick();
 
-  if (isConfiguredWithLegacyIdentity()) {
-    // for the "legacy" identity, a 401 on info/collections means the
-    // password is wrong, so we enter a "login rejected" state.
-    do_check_eq(Status.login, LOGIN_FAILED_LOGIN_REJECTED);
+  // For the FxA identity, a 401 on info/collections means a transient
+  // error, probably due to an inability to fetch a token.
+  do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
+  // syncs should still be scheduled.
+  do_check_true(scheduler.nextSync > Date.now());
+  do_check_true(scheduler.syncTimer.delay > 0);
 
-    do_check_eq(scheduler.nextSync, 0);
-    do_check_eq(scheduler.syncTimer, null);
-  } else {
-    // For the FxA identity, a 401 on info/collections means a transient
-    // error, probably due to an inability to fetch a token.
-    do_check_eq(Status.login, LOGIN_FAILED_NETWORK_ERROR);
-    // syncs should still be scheduled.
-    do_check_true(scheduler.nextSync > Date.now());
-    do_check_true(scheduler.syncTimer.delay > 0);
-  }
   await cleanUpAndGo(server);
 });
 
