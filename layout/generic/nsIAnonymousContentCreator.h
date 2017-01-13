@@ -34,12 +34,7 @@ public:
       mContent(aContent)
     {}
 
-    ContentInfo(nsIContent* aContent, nsStyleContext* aStyleContext) :
-      mContent(aContent), mStyleContext(aStyleContext)
-    {}
-
     nsIContent* mContent;
-    RefPtr<nsStyleContext> mStyleContext;
     nsTArray<ContentInfo> mChildren;
   };
 

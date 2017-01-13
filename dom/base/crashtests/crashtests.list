@@ -193,7 +193,7 @@ load 930250.html
 load 942979.html
 load 973401.html
 load 978646.html
-asserts-if(stylo,1-11) pref(dom.webcomponents.enabled,true) load 1024428-1.html # bug 1324671
+skip-if(stylo) pref(dom.webcomponents.enabled,true) load 1024428-1.html # bug 1340009
 load 1026714.html
 pref(dom.webcomponents.enabled,true) load 1027461-1.html
 pref(dom.webcomponents.enabled,true) load 1029710.html
