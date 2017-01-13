@@ -99,11 +99,11 @@ XPCCallContext::GetTearOff() const
     return mTearOff;
 }
 
-inline XPCNativeScriptableInfo*
-XPCCallContext::GetScriptableInfo() const
+inline nsIXPCScriptable*
+XPCCallContext::GetScriptable() const
 {
     CHECK_STATE(HAVE_OBJECT);
-    return mScriptableInfo;
+    return mScriptable;
 }
 
 inline bool

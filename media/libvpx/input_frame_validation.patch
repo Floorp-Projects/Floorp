@@ -5,9 +5,9 @@ Bug 1263384: validate input frames against configured resolution in vp8 r=rillia
 
 MozReview-Commit-ID: BxDCnJe0mzs
 
-diff --git a/media/libvpx/vp8/vp8_cx_iface.c b/media/libvpx/vp8/vp8_cx_iface.c
---- a/media/libvpx/vp8/vp8_cx_iface.c
-+++ b/media/libvpx/vp8/vp8_cx_iface.c
+diff --git a/media/libvpx/libvpx/vp8/vp8_cx_iface.c b/media/libvpx/libvpx/vp8/vp8_cx_iface.c
+--- a/media/libvpx/libvpx/vp8/vp8_cx_iface.c
++++ b/media/libvpx/libvpx/vp8/vp8_cx_iface.c
 @@ -916,21 +916,30 @@ static vpx_codec_err_t vp8e_encode(vpx_c
          /* vp8 use 10,000,000 ticks/second as time stamp */
          dst_time_stamp    = pts * 10000000 * ctx->cfg.g_timebase.num / ctx->cfg.g_timebase.den;

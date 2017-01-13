@@ -205,6 +205,9 @@ ErrorAccordingToNSPR(PRErrorCode errorCode)
     case PR_READ_ONLY_FILESYSTEM_ERROR:
         rv = NS_ERROR_FILE_READ_ONLY;
         break;
+    case PR_BAD_ADDRESS_ERROR:
+        rv = NS_ERROR_UNKNOWN_HOST;
+        break;
     default:
         if (psm::IsNSSErrorCode(errorCode)) {
             rv = psm::GetXPCOMFromNSSError(errorCode);
@@ -2422,7 +2425,7 @@ nsSocketTransport::SetScriptableOriginAttributes(JSContext* aCx,
     MutexAutoLock lock(mLock);
     NS_ENSURE_FALSE(mFD.IsInitialized(), NS_ERROR_FAILURE);
 
-    NeckoOriginAttributes attrs;
+    OriginAttributes attrs;
     if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
         return NS_ERROR_INVALID_ARG;
     }
@@ -2432,7 +2435,7 @@ nsSocketTransport::SetScriptableOriginAttributes(JSContext* aCx,
 }
 
 nsresult
-nsSocketTransport::GetOriginAttributes(NeckoOriginAttributes* aOriginAttributes)
+nsSocketTransport::GetOriginAttributes(OriginAttributes* aOriginAttributes)
 {
     NS_ENSURE_ARG(aOriginAttributes);
     *aOriginAttributes = mOriginAttributes;
@@ -2440,7 +2443,7 @@ nsSocketTransport::GetOriginAttributes(NeckoOriginAttributes* aOriginAttributes)
 }
 
 nsresult
-nsSocketTransport::SetOriginAttributes(const NeckoOriginAttributes& aOriginAttributes)
+nsSocketTransport::SetOriginAttributes(const OriginAttributes& aOriginAttributes)
 {
     MutexAutoLock lock(mLock);
     NS_ENSURE_FALSE(mFD.IsInitialized(), NS_ERROR_FAILURE);

@@ -2182,6 +2182,13 @@
               t.setAttribute("hidden", "true");
             }
 
+            // Related tab inherits current tab's user context unless a different
+            // usercontextid is specified
+            if (aUserContextId == null &&
+                (aRelatedToCurrent == null ? aReferrerURI : aRelatedToCurrent)) {
+              aUserContextId = this.mCurrentTab.getAttribute("usercontextid") || 0;
+            }
+
             if (aUserContextId) {
               t.setAttribute("usercontextid", aUserContextId);
               ContextualIdentityService.setTabStyle(t);

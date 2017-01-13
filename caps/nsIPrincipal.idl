@@ -12,7 +12,7 @@ struct JSPrincipals;
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 namespace mozilla {
-class PrincipalOriginAttributes;
+class OriginAttributes;
 }
 %}
 
@@ -23,7 +23,7 @@ interface nsIDOMDocument;
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
-[ref] native const_PrincipalOriginAttributes(const mozilla::PrincipalOriginAttributes);
+[ref] native const_OriginAttributes(const mozilla::OriginAttributes);
 
 [scriptable, builtinclass, uuid(3da7b133-f1a0-4de9-a2bc-5c49014c1077)]
 interface nsIPrincipal : nsISerializable
@@ -198,7 +198,7 @@ interface nsIPrincipal : nsISerializable
     readonly attribute jsval originAttributes;
 
     [noscript, notxpcom, nostdcall, binaryname(OriginAttributesRef)]
-    const_PrincipalOriginAttributes OriginAttributesRef();
+    const_OriginAttributes OriginAttributesRef();
 
     /**
      * A canonical representation of the origin for this principal. This

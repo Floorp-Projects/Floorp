@@ -64,11 +64,11 @@ public:
   bool IsMozBrowser() const;
 
   /**
-   * OriginAttributesRef() returns the DocShellOriginAttributes of this frame to
+   * OriginAttributesRef() returns the OriginAttributes of this frame to
    * the caller. This is used to store any attribute associated with the frame's
    * docshell.
    */
-  const DocShellOriginAttributes& OriginAttributesRef() const;
+  const OriginAttributes& OriginAttributesRef() const;
 
   /**
    * Returns the presentation URL associated with the tab if this tab is
@@ -105,7 +105,7 @@ protected:
                      bool aIsPrerendered,
                      UIStateChangeType aShowAccelerators,
                      UIStateChangeType aShowFocusRings,
-                     const DocShellOriginAttributes& aOriginAttributes,
+                     const OriginAttributes& aOriginAttributes,
                      const nsAString& aPresentationURL);
 
   /**
@@ -139,9 +139,9 @@ private:
   bool mIsMozBrowserElement;
 
   /**
-   * DocShellOriginAttributes of the top level tab docShell
+   * OriginAttributes of the top level tab docShell
    */
-  DocShellOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 
   /**
    * The requested presentation URL.
@@ -173,7 +173,7 @@ public:
                 bool aIsPrerendered,
                 UIStateChangeType aShowAccelerators,
                 UIStateChangeType aShowFocusRings,
-                const DocShellOriginAttributes& aOriginAttributes,
+                const OriginAttributes& aOriginAttributes,
                 const nsAString& aPresentationURL = EmptyString())
   {
     return TabContext::SetTabContext(aIsMozBrowserElement,

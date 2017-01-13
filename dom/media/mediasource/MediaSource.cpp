@@ -93,19 +93,19 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
     return NS_ERROR_DOM_TYPE_ERR;
   }
 
-  MediaContentType contentType{aType};
-  if (!contentType.IsValid()) {
+  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
+  if (!contentType) {
     return NS_ERROR_DOM_TYPE_ERR;
   }
 
-  if (DecoderTraits::CanHandleContentType(contentType, aDiagnostics)
+  if (DecoderTraits::CanHandleContentType(*contentType, aDiagnostics)
       == CANPLAY_NO) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   // Now we know that this media type could be played.
   // MediaSource imposes extra restrictions, and some prefs.
-  const nsACString& mimeType = contentType.GetMIMEType();
+  const nsACString& mimeType = contentType->GetMIMEType();
   if (mimeType.EqualsASCII("video/mp4") || mimeType.EqualsASCII("audio/mp4")) {
     if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -237,12 +237,12 @@ MediaSource::AddSourceBuffer(const nsAString& aType, ErrorResult& aRv)
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
-  MediaContentType contentType{aType};
-  if (!contentType.IsValid()) {
+  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
+  if (!contentType) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
-  const nsACString& mimeType = contentType.GetMIMEType();
+  const nsACString& mimeType = contentType->GetMIMEType();
   RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer(this, mimeType);
   if (!sourceBuffer) {
     aRv.Throw(NS_ERROR_FAILURE); // XXX need a better error here

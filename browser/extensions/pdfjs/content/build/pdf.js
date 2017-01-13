@@ -23,8 +23,8 @@
  }
 }(this, function (exports) {
  'use strict';
- var pdfjsVersion = '1.6.418';
- var pdfjsBuild = '59afb4b9';
+ var pdfjsVersion = '1.6.454';
+ var pdfjsBuild = 'b8cd1433';
  var pdfjsFilePath = typeof document !== 'undefined' && document.currentScript ? document.currentScript.src : null;
  var pdfjsLibs = {};
  (function pdfjsWrapper() {
@@ -1813,9 +1813,8 @@
         return new RadioButtonWidgetAnnotationElement(parameters);
        } else if (parameters.data.checkBox) {
         return new CheckboxWidgetAnnotationElement(parameters);
-       } else {
-        warn('Unimplemented button widget annotation: pushbutton');
        }
+       warn('Unimplemented button widget annotation: pushbutton');
        break;
       case 'Ch':
        return new ChoiceWidgetAnnotationElement(parameters);
@@ -6330,6 +6329,7 @@
      this.fontLoader = new FontLoader(loadingTask.docId);
      this.destroyed = false;
      this.destroyCapability = null;
+     this._passwordCapability = null;
      this.pageCache = [];
      this.pagePromises = [];
      this.downloadInfoCapability = createPromiseCapability();
@@ -6342,6 +6342,9 @@
       }
       this.destroyed = true;
       this.destroyCapability = createPromiseCapability();
+      if (this._passwordCapability) {
+       this._passwordCapability.reject(new Error('Worker was destroyed during onPassword callback'));
+      }
       var waitOn = [];
       this.pageCache.forEach(function (page) {
        if (page) {
@@ -6369,9 +6372,7 @@
      },
      setupMessageHandler: function WorkerTransport_setupMessageHandler() {
       var messageHandler = this.messageHandler;
-      function updatePassword(password) {
-       messageHandler.send('UpdatePassword', password);
-      }
+      var loadingTask = this.loadingTask;
       var pdfDataRangeTransport = this.pdfDataRangeTransport;
       if (pdfDataRangeTransport) {
        pdfDataRangeTransport.addRangeListener(function (begin, chunk) {
@@ -6398,18 +6399,19 @@
        this.pdfDocument = pdfDocument;
        loadingTask._capability.resolve(pdfDocument);
       }, this);
-      messageHandler.on('NeedPassword', function transportNeedPassword(exception) {
-       var loadingTask = this.loadingTask;
+      messageHandler.on('PasswordRequest', function transportPasswordRequest(exception) {
+       this._passwordCapability = createPromiseCapability();
        if (loadingTask.onPassword) {
-        return loadingTask.onPassword(updatePassword, PasswordResponses.NEED_PASSWORD);
+        var updatePassword = function (password) {
+         this._passwordCapability.resolve({ password: password });
+        }.bind(this);
+        loadingTask.onPassword(updatePassword, exception.code);
+       } else {
+        this._passwordCapability.reject(new PasswordException(exception.message, exception.code));
        }
-       loadingTask._capability.reject(new PasswordException(exception.message, exception.code));
+       return this._passwordCapability.promise;
       }, this);
-      messageHandler.on('IncorrectPassword', function transportIncorrectPassword(exception) {
-       var loadingTask = this.loadingTask;
-       if (loadingTask.onPassword) {
-        return loadingTask.onPassword(updatePassword, PasswordResponses.INCORRECT_PASSWORD);
-       }
+      messageHandler.on('PasswordException', function transportPasswordException(exception) {
        loadingTask._capability.reject(new PasswordException(exception.message, exception.code));
       }, this);
       messageHandler.on('InvalidPDF', function transportInvalidPDF(exception) {
@@ -6720,9 +6722,8 @@
       var objs = this.objs;
       if (!objs[objId]) {
        return false;
-      } else {
-       return objs[objId].resolved;
       }
+      return objs[objId].resolved;
      },
      hasData: function PDFObjects_hasData(objId) {
       return this.isResolved(objId);
@@ -6731,9 +6732,8 @@
       var objs = this.objs;
       if (!objs[objId] || !objs[objId].resolved) {
        return null;
-      } else {
-       return objs[objId].data;
       }
+      return objs[objId].data;
      },
      clear: function PDFObjects_clear() {
       this.objs = Object.create(null);

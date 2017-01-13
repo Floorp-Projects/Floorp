@@ -152,7 +152,7 @@ public:
   }
 
   void
-  SetOriginAttributes(const PrincipalOriginAttributes& aOriginAttributes)
+  SetOriginAttributes(const OriginAttributes& aOriginAttributes)
   {
     mOriginAttributes = aOriginAttributes;
   }
@@ -248,7 +248,7 @@ public:
   uint64_t mInnerIDNumber;
   nsString mInnerIDString;
 
-  PrincipalOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 
   nsString mMethodString;
 
@@ -1201,7 +1201,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
     return;
   }
 
-  PrincipalOriginAttributes oa;
+  OriginAttributes oa;
 
   if (mWindow) {
     // Save the principal's OriginAttributes in the console event data

@@ -78,6 +78,21 @@ const getFormDataSections = Task.async(function* (headers, uploadHeaders, postDa
 });
 
 /**
+ * Fetch headers full content from actor server
+ *
+ * @param {object} headers - a object presents headers data
+ * @param {function} getString - callback to retrieve a string from a LongStringGrip
+ * @return {object} a headers object with updated content payload
+ */
+const fetchHeaders = Task.async(function* (headers, getString) {
+  for (let { value } of headers.headers) {
+    headers.headers.value = yield getString(value);
+  }
+
+  return headers;
+});
+
+/**
  * Form a data: URI given a mime type, encoding, and some text.
  *
  * @param {string} mimeType - mime type
@@ -241,6 +256,7 @@ function parseQueryString(query) {
 module.exports = {
   getKeyWithEvent,
   getFormDataSections,
+  fetchHeaders,
   formDataURI,
   writeHeaderText,
   decodeUnicodeUrl,

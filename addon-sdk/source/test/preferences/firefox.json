@@ -6,6 +6,8 @@
   "urlclassifier.updateinterval": 172800,
   "browser.safebrowsing.provider.google.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
   "browser.safebrowsing.provider.google.updateURL": "http://localhost/safebrowsing-dummy/update",
+  "browser.safebrowsing.provider.google4.gethashURL": "http://localhost/safebrowsing4-dummy/gethash",
+  "browser.safebrowsing.provider.google4.updateURL": "http://localhost/safebrowsing4-dummy/update",
   "browser.safebrowsing.provider.mozilla.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
   "browser.safebrowsing.provider.mozilla.updateURL": "http://localhost/safebrowsing-dummy/update"
 }

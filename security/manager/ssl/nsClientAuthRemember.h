@@ -17,10 +17,10 @@
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
-  class NeckoOriginAttributes;
+  class OriginAttributes;
 }
 
-using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 
 class nsClientAuthRemember
 {
@@ -122,17 +122,17 @@ public:
   nsresult Init();
 
   static void GetEntryKey(const nsACString& aHostName,
-                          const NeckoOriginAttributes& aOriginAttributes,
+                          const OriginAttributes& aOriginAttributes,
                           const nsACString& aFingerprint,
                           /*out*/ nsACString& aEntryKey);
 
   nsresult RememberDecision(const nsACString& aHostName,
-                            const NeckoOriginAttributes& aOriginAttributes,
+                            const OriginAttributes& aOriginAttributes,
                             CERTCertificate* aServerCert,
                             CERTCertificate* aClientCert);
 
   nsresult HasRememberedDecision(const nsACString& aHostName,
-                                 const NeckoOriginAttributes& aOriginAttributes,
+                                 const OriginAttributes& aOriginAttributes,
                                  CERTCertificate* aServerCert,
                                  nsACString& aCertDBKey, bool* aRetVal);
 
@@ -147,7 +147,7 @@ protected:
 
     void RemoveAllFromMemory();
     nsresult AddEntryToList(const nsACString& aHost,
-                            const NeckoOriginAttributes& aOriginAttributes,
+                            const OriginAttributes& aOriginAttributes,
                             const nsACString& aServerFingerprint,
                             const nsACString& aDBKey);
 };

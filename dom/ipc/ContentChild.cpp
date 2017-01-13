@@ -667,7 +667,7 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent,
 static nsresult
 GetWindowParamsFromParent(mozIDOMWindowProxy* aParent,
                           nsACString& aBaseURIString, float* aFullZoom,
-                          DocShellOriginAttributes& aOriginAttributes)
+                          OriginAttributes& aOriginAttributes)
 {
   *aFullZoom = 1.0f;
   auto* opener = nsPIDOMWindowOuter::From(aParent);
@@ -734,7 +734,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
       if (NS_SUCCEEDED(rv) && !shouldLoad) {
         nsAutoCString baseURIString;
         float fullZoom;
-        DocShellOriginAttributes originAttributes;
+        OriginAttributes originAttributes;
         rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
                                        originAttributes);
         if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -834,7 +834,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
   } else {
     nsAutoCString baseURIString;
     float fullZoom;
-    DocShellOriginAttributes originAttributes;
+    OriginAttributes originAttributes;
     rv = GetWindowParamsFromParent(aParent, baseURIString, &fullZoom,
                                    originAttributes);
     if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2324,7 +2324,7 @@ ContentChild::RecvAddPermission(const IPC::Permission& permission)
   // note we do not need to force mUserContextId to the default here because
   // the permission manager does that internally.
   nsAutoCString originNoSuffix;
-  PrincipalOriginAttributes attrs;
+  OriginAttributes attrs;
   bool success = attrs.PopulateFromOrigin(permission.origin, originNoSuffix);
   NS_ENSURE_TRUE(success, IPC_FAIL_NO_REASON(this));
 
@@ -2447,7 +2447,10 @@ mozilla::ipc::IPCResult
 ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
 {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (!swm) {
+    // browser shutdown began
+    return IPC_OK();
+  }
   swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
   return IPC_OK();
 }

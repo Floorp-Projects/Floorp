@@ -38,6 +38,7 @@ class IAPZCTreeManager;
 class APZCTreeManagerChild;
 class ClientLayerManager;
 class CompositorBridgeParent;
+class CompositorOptions;
 class TextureClient;
 class TextureClientPool;
 struct FrameMetrics;
@@ -80,7 +81,7 @@ public:
     widget::CompositorWidget* aWidget,
     const uint64_t& aLayerTreeId,
     CSSToLayoutDeviceScale aScale,
-    bool aUseAPZ,
+    const CompositorOptions& aOptions,
     bool aUseExternalSurface,
     const gfx::IntSize& aSurfaceSize);
 
@@ -219,8 +220,6 @@ public:
 
   PCompositorWidgetChild* AllocPCompositorWidgetChild(const CompositorWidgetInitData& aInitData) override;
   bool DeallocPCompositorWidgetChild(PCompositorWidgetChild* aActor) override;
-
-  bool GetAPZEnabled(uint64_t aLayerTreeId);
 
   PAPZCTreeManagerChild* AllocPAPZCTreeManagerChild(const uint64_t& aLayersId) override;
   bool DeallocPAPZCTreeManagerChild(PAPZCTreeManagerChild* aActor) override;

@@ -24,15 +24,16 @@ ServiceWorkerManagerChild::RecvNotifyRegister(
   }
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (swm) {
+    swm->LoadRegistration(aData);
+  }
 
-  swm->LoadRegistration(aData);
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult
 ServiceWorkerManagerChild::RecvNotifySoftUpdate(
-                                      const PrincipalOriginAttributes& aOriginAttributes,
+                                      const OriginAttributes& aOriginAttributes,
                                       const nsString& aScope)
 {
   if (mShuttingDown) {
@@ -40,9 +41,10 @@ ServiceWorkerManagerChild::RecvNotifySoftUpdate(
   }
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (swm) {
+    swm->SoftUpdate(aOriginAttributes, NS_ConvertUTF16toUTF8(aScope));
+  }
 
-  swm->SoftUpdate(aOriginAttributes, NS_ConvertUTF16toUTF8(aScope));
   return IPC_OK();
 }
 
@@ -55,7 +57,10 @@ ServiceWorkerManagerChild::RecvNotifyUnregister(const PrincipalInfo& aPrincipalI
   }
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (!swm) {
+    // browser shutdown
+    return IPC_OK();
+  }
 
   nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(aPrincipalInfo);
   if (NS_WARN_IF(!principal)) {
@@ -75,9 +80,10 @@ ServiceWorkerManagerChild::RecvNotifyRemove(const nsCString& aHost)
   }
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (swm) {
+    swm->Remove(aHost);
+  }
 
-  swm->Remove(aHost);
   return IPC_OK();
 }
 
@@ -89,9 +95,10 @@ ServiceWorkerManagerChild::RecvNotifyRemoveAll()
   }
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (swm) {
+    swm->RemoveAll();
+  }
 
-  swm->RemoveAll();
   return IPC_OK();
 }
 

@@ -17,6 +17,16 @@ notification[type="info"] {
   color: -moz-DialogText;
   background-color: -moz-Dialog;
   -moz-appearance: none;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+notificationbox[notificationside="top"] > notification[type="info"] {
+  border-top-style: none;
+}
+
+notificationbox[notificationside="bottom"] > notification[type="info"] {
+  border-bottom-style: none;
 }
 
 notification[type="critical"] {
