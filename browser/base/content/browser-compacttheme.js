@@ -7,7 +7,6 @@
  * to browser.xul if a pref is set and no other themes are applied.
  */
 var CompactTheme = {
-  _devtoolsThemePrefName: "devtools.theme",
   styleSheetLocation: "chrome://browser/skin/compacttheme.css",
   styleSheet: null,
   initialized: false,
@@ -25,9 +24,7 @@ var CompactTheme = {
 
   init() {
     this.initialized = true;
-    Services.prefs.addObserver(this._devtoolsThemePrefName, this, false);
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
-    this._updateDevtoolsThemeAttribute();
 
     if (this.isThemeCurrentlyApplied) {
       this._toggleStyleSheet(true);
@@ -57,20 +54,6 @@ var CompactTheme = {
       }
 
     }
-
-    if (topic == "nsPref:changed" && data == this._devtoolsThemePrefName) {
-      this._updateDevtoolsThemeAttribute();
-    }
-  },
-
-  _updateDevtoolsThemeAttribute() {
-    // Set an attribute on root element to make it possible
-    // to change colors based on the selected devtools theme.
-    let devtoolsTheme = Services.prefs.getCharPref(this._devtoolsThemePrefName);
-    if (devtoolsTheme != "dark") {
-      devtoolsTheme = "light";
-    }
-    document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
   },
 
   handleEvent(e) {
@@ -105,7 +88,6 @@ var CompactTheme = {
   },
 
   uninit() {
-    Services.prefs.removeObserver(this._devtoolsThemePrefName, this);
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
     if (this.styleSheet) {
       this.styleSheet.removeEventListener("load", this);
