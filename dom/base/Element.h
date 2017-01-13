@@ -793,6 +793,25 @@ public:
   already_AddRefed<nsIHTMLCollection>
     GetElementsByClassName(const nsAString& aClassNames);
 
+  CSSPseudoElementType GetPseudoElementType() const {
+    if (!HasProperties()) {
+      return CSSPseudoElementType::NotPseudo;
+    }
+    nsresult rv = NS_OK;
+    auto raw = GetProperty(nsGkAtoms::pseudoProperty, &rv);
+    if (rv == NS_PROPTABLE_PROP_NOT_THERE) {
+      return CSSPseudoElementType::NotPseudo;
+    }
+    return CSSPseudoElementType(reinterpret_cast<uintptr_t>(raw));
+  }
+
+  void SetPseudoElementType(CSSPseudoElementType aPseudo) {
+    static_assert(sizeof(CSSPseudoElementType) <= sizeof(uintptr_t),
+                  "Need to be able to store this in a void*");
+    MOZ_ASSERT(aPseudo != CSSPseudoElementType::NotPseudo);
+    SetProperty(nsGkAtoms::pseudoProperty, reinterpret_cast<void*>(aPseudo));
+  }
+
 private:
   /**
    * Implement the algorithm specified at
