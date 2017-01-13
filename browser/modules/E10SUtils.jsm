@@ -71,9 +71,11 @@ this.E10SUtils = {
       return aPreferredRemoteType;
     }
 
-    // We need data: URIs to load in any remote process, because some of our
-    // tests rely on this.
-    if (aURL.startsWith("data:")) {
+    // We need data: URI's to load in a remote process, because some of our
+    // tests rely on this. For blob: URI's, load them in their originating
+    // process unless it is non-remote. In that case, favor a remote (sandboxed)
+    // process with fewer privileges to limit exposure.
+    if (aURL.startsWith("data:") || aURL.startsWith("blob:")) {
       return aPreferredRemoteType == NOT_REMOTE ? DEFAULT_REMOTE_TYPE
                                                 : aPreferredRemoteType;
     }
