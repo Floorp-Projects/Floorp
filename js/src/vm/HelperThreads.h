@@ -229,7 +229,7 @@ class GlobalHelperThreadState
     }
     void setWasmError(const AutoLockHelperThreadState&, UniqueChars error) {
         if (!firstWasmError)
-          firstWasmError = Move(error);
+            firstWasmError = Move(error);
     }
     bool wasmFailed(const AutoLockHelperThreadState&) {
         return bool(numWasmFailedJobs);
