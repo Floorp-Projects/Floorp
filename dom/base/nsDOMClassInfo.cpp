@@ -82,7 +82,6 @@
 #include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMCSSPageRule.h"
-#include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIControllers.h"
 #ifdef MOZ_XUL
@@ -189,9 +188,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // Misc Core related classes
 
   // CSS classes
-  NS_DEFINE_CLASSINFO_DATA(CSSStyleRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
   NS_DEFINE_CLASSINFO_DATA(CSSMediaRule, nsCSSRuleSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
@@ -515,11 +511,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(DOMConstructor, nsIDOMDOMConstructor)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSStyleRule, nsIDOMCSSStyleRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSStyleRule)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSMediaRule, nsIDOMCSSMediaRule)
@@ -2002,14 +1993,7 @@ nsCSSRuleSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
     return NS_ERROR_UNEXPECTED;
   }
   css::Rule* cssRule = rule->GetCSSRule();
-  if (!cssRule) {
-    // A DOMCSSStyleRule whose actual underlying rule has gone away.  There
-    // isn't much a caller can do with this thing anyway, and only chrome code
-    // can get its hands on it to start with, so just wrap in the current
-    // global.
-    *parentObj = globalObj;
-    return NS_OK;
-  }
+  MOZ_ASSERT(cssRule);
   nsIDocument* doc = cssRule->GetDocument();
   if (!doc) {
     *parentObj = globalObj;
