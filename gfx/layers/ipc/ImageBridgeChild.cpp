@@ -1105,13 +1105,17 @@ mozilla::ipc::IPCResult
 ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&& aNotifications)
 {
   for (auto& n : aNotifications) {
-    RefPtr<ImageContainer> imageContainer;
+    RefPtr<ImageContainerListener> listener;
     {
       MutexAutoLock lock(mContainerMapLock);
+      ImageContainer* imageContainer;
       imageContainer = mImageContainers.Get(n.asyncCompositableID());
+      if (imageContainer) {
+        listener = imageContainer->GetImageContainerListener();
+      }
     }
-    if (imageContainer) {
-      imageContainer->NotifyComposite(n);
+    if (listener) {
+      listener->NotifyComposite(n);
     }
   }
   return IPC_OK();
