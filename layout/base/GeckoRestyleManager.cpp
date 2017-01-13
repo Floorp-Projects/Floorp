@@ -2012,6 +2012,16 @@ ElementRestyler::ComputeRestyleResultFromFrame(nsIFrame* aSelf,
     return;
   }
 
+  // Each NAC element inherits from the first non-NAC ancestor, so child
+  // NAC may inherit from our parent instead of us. That means we can't
+  // cull traversal if our style context didn't change.
+  if (aSelf->GetContent() && aSelf->GetContent()->IsNativeAnonymous()) {
+    LOG_RESTYLE_CONTINUE("native anonymous content");
+    aRestyleResult = RestyleResult::eContinue;
+    aCanStopWithStyleChange = false;
+    return;
+  }
+
   // Style changes might have moved children between the two nsLetterFrames
   // (the one matching ::first-letter and the one containing the rest of the
   // content).  Continue restyling to the children of the nsLetterFrame so
