@@ -585,7 +585,7 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
                               LayerManagerPersistence aPersistence)
 {
   if (!mLayerManager) {
-    if (mTabChild->GetCompositorOptions().UseWebRender()) {
+    if (gfxPrefs::WebRenderEnabled()) {
       mLayerManager = new WebRenderLayerManager(this);
     } else {
       mLayerManager = new ClientLayerManager(this);
@@ -601,7 +601,7 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
 LayerManager*
 PuppetWidget::RecreateLayerManager(PLayerTransactionChild* aShadowManager)
 {
-  if (mTabChild->GetCompositorOptions().UseWebRender()) {
+  if (gfxPrefs::WebRenderEnabled()) {
     mLayerManager = new WebRenderLayerManager(this);
   } else {
     mLayerManager = new ClientLayerManager(this);

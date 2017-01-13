@@ -150,11 +150,7 @@ IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
                       nsACString* const out_failureId)
 {
     if (CompositorThreadHolder::IsInCompositorThread()) {
-        // We can only enter here with WebRender, so assert that this is a
-        // WebRender-enabled build.
-#ifndef MOZ_ENABLE_WEBRENDER
-        MOZ_ASSERT(false);
-#endif
+        MOZ_ASSERT(gfxPrefs::WebRenderEnabled());
         return true;
     }
     int32_t angleSupport;

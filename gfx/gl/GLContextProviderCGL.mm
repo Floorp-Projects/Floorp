@@ -13,7 +13,6 @@
 #include "prenv.h"
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
-#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 #include <OpenGL/OpenGL.h>
@@ -249,15 +248,11 @@ CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs)
 already_AddRefed<GLContext>
 GLContextProviderCGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    return CreateForWindow(aCompositorWidget->RealWidget(),
-                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
-                           aForceAccelerated);
+    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget,
-                                      bool aWebRender,
-                                      bool aForceAccelerated)
+GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nullptr;
@@ -271,7 +266,7 @@ GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget,
 
     const NSOpenGLPixelFormatAttribute* attribs;
     if (sCGLLibrary.UseDoubleBufferedWindows()) {
-        if (aWebRender) {
+        if (gfxPrefs::WebRenderEnabled()) {
             attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel_webrender : kAttribs_doubleBuffered;
         } else {
             attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;

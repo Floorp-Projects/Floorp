@@ -34,8 +34,7 @@ public:
     static bool
     FindFBConfigForWindow(Display* display, int screen, Window window,
                           ScopedXFree<GLXFBConfig>* const out_scopedConfigArr,
-                          GLXFBConfig* const out_config, int* const out_visid,
-                          bool aWebRender);
+                          GLXFBConfig* const out_config, int* const out_visid);
 
     ~GLContextGLX();
 
