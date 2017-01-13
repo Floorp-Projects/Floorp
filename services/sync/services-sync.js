@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 pref("services.sync.serverURL", "https://auth.services.mozilla.com/");
-pref("services.sync.userURL", "user/");
 pref("services.sync.miscURL", "misc/");
 pref("services.sync.termsURL", "https://services.mozilla.com/tos/");
 pref("services.sync.privacyURL", "https://services.mozilla.com/privacy-policy/");
@@ -64,7 +63,6 @@ pref("services.sync.log.logger.engine.addons", "Debug");
 pref("services.sync.log.logger.engine.extension-storage", "Debug");
 pref("services.sync.log.logger.engine.apps", "Debug");
 pref("services.sync.log.logger.identity", "Debug");
-pref("services.sync.log.logger.userapi", "Debug");
 pref("services.sync.log.cryptoDebug", false);
 
 pref("services.sync.fxa.termsURL", "https://accounts.firefox.com/legal/terms");
