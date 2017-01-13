@@ -13,6 +13,7 @@
 #include "nsCOMPtr.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string>
 
 #include "mozilla/FileUtils.h"
 #include "mozilla/Sprintf.h"
@@ -391,10 +392,17 @@ GetBootstrap(const char* aXPCOMFile)
 #endif
 
   if (!aXPCOMFile) {
-    aXPCOMFile = XPCOM_DLL;
+    return nullptr;
   }
 
-  if (NS_FAILED(XPCOMGlueLoad(aXPCOMFile))) {
+  std::string file(aXPCOMFile);
+  size_t lastSlash = file.rfind(XPCOM_FILE_PATH_SEPARATOR[0]);
+  if (lastSlash == std::string::npos) {
+    return nullptr;
+  }
+  file.replace(lastSlash + 1, std::string::npos, XPCOM_DLL);
+
+  if (NS_FAILED(XPCOMGlueLoad(file.c_str()))) {
     return nullptr;
   }
 
