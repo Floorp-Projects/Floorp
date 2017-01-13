@@ -11,8 +11,8 @@
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDeclarationBlock.h"
-#include "mozilla/dom/CSSStyleRuleBinding.h"
 
+#include "nsDOMClassInfoID.h"
 #include "mozAutoDocUpdate.h"
 
 namespace mozilla {
@@ -100,37 +100,40 @@ ServoStyleRuleDeclaration::GetCSSParsingEnvironment(
 // -- ServoStyleRule --------------------------------------------------
 
 ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule)
-  : BindingStyleRule(0, 0)
+  : css::Rule(0, 0)
   , mRawRule(aRawRule)
   , mDecls(Servo_StyleRule_GetStyle(mRawRule).Consume())
 {
 }
 
 // QueryInterface implementation for ServoStyleRule
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleRule)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ServoStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
-NS_INTERFACE_MAP_END_INHERITING(css::Rule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, css::Rule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleRule)
+NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF_INHERITED(ServoStyleRule, css::Rule)
-NS_IMPL_RELEASE_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ServoStyleRule)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ServoStyleRule)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ServoStyleRule)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(ServoStyleRule)
   // Trace the wrapper for our declaration.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
   tmp->mDecls.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ServoStyleRule)
   // Unlink the wrapper for our declaraton.  This just expands out
   // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
   // directly because the wrapper is on the declaration, not on us.
   tmp->mDecls.ReleaseWrapper(static_cast<nsISupports*>(p));
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoStyleRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ServoStyleRule)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 already_AddRefed<css::Rule>
@@ -165,22 +168,43 @@ ServoStyleRule::List(FILE* out, int32_t aIndent) const
 
 /* CSSRule implementation */
 
-uint16_t
-ServoStyleRule::Type() const
+NS_IMETHODIMP
+ServoStyleRule::GetType(uint16_t* aType)
 {
-  return nsIDOMCSSRule::STYLE_RULE;
+  *aType = nsIDOMCSSRule::STYLE_RULE;
+  return NS_OK;
 }
 
-void
-ServoStyleRule::GetCssTextImpl(nsAString& aCssText) const
+NS_IMETHODIMP
+ServoStyleRule::GetCssText(nsAString& aCssText)
 {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
+  return NS_OK;
 }
 
-nsICSSDeclaration*
-ServoStyleRule::Style()
+NS_IMETHODIMP
+ServoStyleRule::SetCssText(const nsAString& aCssText)
 {
-  return &mDecls;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServoStyleRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  return css::Rule::GetParentStyleSheet(aSheet);
+}
+
+NS_IMETHODIMP
+ServoStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  *aParentRule = nullptr;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+css::Rule*
+ServoStyleRule::GetCSSRule()
+{
+  return this;
 }
 
 /* CSSStyleRule implementation */
