@@ -40,3 +40,6 @@ DevToolsModules(
     'websocket-server.js',
     'worker.js'
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')

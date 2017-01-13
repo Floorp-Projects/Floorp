@@ -70,3 +70,48 @@ DevToolsModules(
     'worker-list.js',
     'worker.js',
 )
+
+with Files('animation.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Animation Inspector')
+
+with Files('breakpoint.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+
+with Files('css-properties.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: CSS Rules Inspector')
+
+with Files('csscoverage.js'):
+    BUG_COMPONENT = ('Firefox', 'Graphics Commandline and Toolbar')
+
+with Files('inspector.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Inspector')
+
+with Files('memory.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
+
+with Files('monitor.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')
+
+with Files('performance*'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+
+with Files('profiler.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
+
+with Files('source.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Debugger')
+
+with Files('storage.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Storage Inspector')
+
+with Files('styleeditor.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Style Editor')
+
+with Files('webaudio.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Web Audio Editor')
+
+with Files('webconsole.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Console')
+
+with Files('webgl.js'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: WebGL Shader Editor')

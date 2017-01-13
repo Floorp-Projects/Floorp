@@ -52,3 +52,6 @@ DevToolsModules(
     'definitions.js',
     'menus.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')
