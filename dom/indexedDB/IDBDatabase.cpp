@@ -260,6 +260,13 @@ IDBDatabase::OwningThread() const
 
 #endif // DEBUG
 
+nsIEventTarget*
+IDBDatabase::EventTarget() const
+{
+  AssertIsOnOwningThread();
+  return Factory()->EventTarget();
+}
+
 void
 IDBDatabase::CloseInternal()
 {
@@ -1036,19 +1043,21 @@ IDBDatabase::DelayedMaybeExpireFileActors()
     return;
   }
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NewRunnableMethod<bool>(this,
+  RefPtr<Runnable> runnable =
+    NewRunnableMethod<bool>("IDBDatabase::ExpireFileActors",
+                            this,
                             &IDBDatabase::ExpireFileActors,
                             /* aExpireAll */ false);
   MOZ_ASSERT(runnable);
 
   if (!NS_IsMainThread()) {
     // Wrap as a nsICancelableRunnable to make workers happy.
-    nsCOMPtr<nsIRunnable> cancelable = new CancelableRunnableWrapper(runnable);
+    RefPtr<Runnable> cancelable = new CancelableRunnableWrapper(runnable);
     cancelable.swap(runnable);
   }
 
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(runnable));
+  MOZ_ALWAYS_SUCCEEDS(
+    EventTarget()->Dispatch(runnable.forget(), NS_DISPATCH_NORMAL));
 }
 
 nsresult
