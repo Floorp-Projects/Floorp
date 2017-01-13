@@ -408,12 +408,6 @@ protected:
 
   void EnqueueFirstFrameLoadedEvent();
 
-  // Dispatch a task to decode audio if there is not.
-  void EnsureAudioDecodeTaskQueued();
-
-  // Dispatch a task to decode video if there is not.
-  void EnsureVideoDecodeTaskQueued();
-
   // Start a task to decode audio.
   void RequestAudioData();
 
@@ -471,10 +465,6 @@ private:
   // Rejected by the MediaSink to signal errors for audio/video.
   void OnMediaSinkAudioError(nsresult aResult);
   void OnMediaSinkVideoError();
-
-  // Return true if the video decoder's decode speed can not catch up the
-  // play time.
-  bool NeedToSkipToNextKeyframe();
 
   void* const mDecoderID;
   const RefPtr<FrameStatistics> mFrameStats;

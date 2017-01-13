@@ -245,14 +245,26 @@ public:
   }
 
   /**
+   * StyleStateLocks is used to specify which event states should be locked,
+   * and whether they should be locked to on or off.
+   */
+  struct StyleStateLocks {
+    // mLocks tracks which event states should be locked.
+    EventStates mLocks;
+    // mValues tracks if the locked state should be on or off.
+    EventStates mValues;
+  };
+
+  /**
    * The style state locks applied to this element.
    */
-  EventStates LockedStyleStates() const;
+  StyleStateLocks LockedStyleStates() const;
 
   /**
    * Add a style state lock on this element.
+   * aEnabled is the value to lock the given state bits to.
    */
-  void LockStyleStates(EventStates aStates);
+  void LockStyleStates(EventStates aStates, bool aEnabled);
 
   /**
    * Remove a style state lock on this element.
