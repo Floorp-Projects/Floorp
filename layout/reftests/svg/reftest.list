@@ -458,3 +458,6 @@ default-preferences
 
 == clipPath-and-mask-on-outflowElement-01a.html clipPath-on-outflowElement-01-ref.html
 == clipPath-and-mask-on-outflowElement-01b.html clipPath-on-outflowElement-01-ref.html
+
+== mask-contains-inner-svg-01.svg pass.svg
+== mask-contains-inner-svg-02.svg pass.svg
