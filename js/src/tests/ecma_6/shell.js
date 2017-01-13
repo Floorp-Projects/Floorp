@@ -22,14 +22,17 @@
     /** Make an iterator with a return method. */
     global.makeIterator = function makeIterator(overrides) {
         var iterator = {
-            next: function() {
+            throw: function(e) {
+                throw e;
+            },
+            next: function(x) {
                 if (overrides && overrides.next)
-                    return overrides.next();
+                    return overrides.next(x);
                 return { done: false };
             },
-            return: function() {
+            return: function(x) {
                 if (overrides && overrides.ret)
-                    return overrides.ret();
+                    return overrides.ret(x);
                 return { done: true };
             }
         };

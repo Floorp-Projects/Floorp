@@ -563,6 +563,7 @@ ReportRuntimeRedeclaration(JSContext* cx, HandlePropertyName name, const char* r
 enum class CheckIsObjectKind : uint8_t {
     IteratorNext,
     IteratorReturn,
+    IteratorThrow,
     GetIterator
 };
 
