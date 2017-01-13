@@ -27,7 +27,6 @@ GetDefCount(JSScript* script, unsigned offset)
       case JSOP_AND:
         return 1;
       case JSOP_PICK:
-      case JSOP_UNPICK:
         /*
          * Pick pops and pushes how deep it looks in the stack + 1
          * items. i.e. if the stack were |a b[2] c[1] d[0]|, pick 2
@@ -45,7 +44,7 @@ GetUseCount(JSScript* script, unsigned offset)
 {
     jsbytecode* pc = script->offsetToPC(offset);
 
-    if (JSOp(*pc) == JSOP_PICK || JSOp(*pc) == JSOP_UNPICK)
+    if (JSOp(*pc) == JSOP_PICK)
         return pc[1] + 1;
     if (CodeSpec[*pc].nuses == -1)
         return StackUses(script, pc);

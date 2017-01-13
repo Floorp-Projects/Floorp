@@ -423,7 +423,6 @@ BytecodeFallsThrough(JSOp op)
       case JSOP_RETRVAL:
       case JSOP_FINALYIELDRVAL:
       case JSOP_THROW:
-      case JSOP_THROWMSG:
       case JSOP_TABLESWITCH:
         return false;
       case JSOP_GOSUB:
