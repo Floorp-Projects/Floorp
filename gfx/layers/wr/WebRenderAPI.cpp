@@ -195,9 +195,10 @@ void
 DisplayListBuilder::PushImage(const WRRect& aBounds,
                               const WRRect& aClip,
                               const WRImageMask* aMask,
+                              const WRTextureFilter aFilter,
                               WRImageKey aImage)
 {
-  wr_dp_push_image(mWRState, aBounds, aClip, aMask, aImage);
+  wr_dp_push_image(mWRState, aBounds, aClip, aMask, aFilter, aImage);
 }
 
 void

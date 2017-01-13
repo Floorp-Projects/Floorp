@@ -319,7 +319,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
       case WebRenderCommand::TOpDPPushImage: {
         const OpDPPushImage& op = cmd.get_OpDPPushImage();
         builder.PushImage(op.bounds(), op.clip(),
-                          op.mask().ptrOr(nullptr), op.key());
+                          op.mask().ptrOr(nullptr), op.filter(), op.key());
         break;
       }
       case WebRenderCommand::TOpDPPushExternalImageId: {
@@ -340,7 +340,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         }
         gfx::IntSize size = dSurf->GetSize();
         WRImageKey key = wr_add_image(mWRWindowState, size.width, size.height, map.mStride, RGBA8, map.mData, size.height * map.mStride);
-        builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), key);
+        builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
         break;

@@ -79,6 +79,7 @@ public:
   void PushImage(const WRRect& aBounds,
                  const WRRect& aClip,
                  const WRImageMask* aMask,
+                 const WRTextureFilter aFilter,
                  WRImageKey aImage);
 
   void PushIFrame(const WRRect& aBounds,

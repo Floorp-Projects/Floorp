@@ -791,8 +791,26 @@ impl WrImageMask
     }
 }
 
+#[repr(C)]
+pub enum WrTextureFilter
+{
+    Linear,
+    Point,
+}
+impl WrTextureFilter
+{
+    pub fn to_image_rendering(self) -> ImageRendering
+    {
+        match self
+        {
+            WrTextureFilter::Linear => ImageRendering::Auto,
+            WrTextureFilter::Point => ImageRendering::Pixelated,
+        }
+    }
+}
+
 #[no_mangle]
-pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, key: ImageKey) {
+pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect, mask: *const WrImageMask, filter: WrTextureFilter, key: ImageKey) {
     assert!( unsafe { is_in_compositor_thread() });
 
     let bounds = bounds.to_rect();
@@ -800,6 +818,7 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
 
     // convert from the C type to the Rust type, mapping NULL to None
     let mask = unsafe { mask.as_ref().map(|m| m.to_image_mask()) };
+    let image_rendering = filter.to_image_rendering();
 
     let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip, Vec::new(), mask);
     state.frame_builder.dl_builder.push_image(
@@ -807,7 +826,7 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
         clip_region,
         bounds.size,
         bounds.size,
-        ImageRendering::Auto,
+        image_rendering,
         key
     );
 }
