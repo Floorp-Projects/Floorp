@@ -470,7 +470,7 @@ GetNodeId(const nsAString& aOrigin,
   UniquePtr<GetNodeIdCallback> callback(new TestGetNodeIdCallback(nodeId,
                                                                   result));
 
-  PrincipalOriginAttributes attrs;
+  OriginAttributes attrs;
   attrs.mPrivateBrowsingId = aInPBMode ? 1 : 0;
 
   nsAutoCString suffix;

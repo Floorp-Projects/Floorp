@@ -333,6 +333,7 @@ FileReader::DoReadData(uint64_t aCount)
     }
 
     uint32_t bytesRead = 0;
+    MOZ_DIAGNOSTIC_ASSERT(mFileData);
     mAsyncStream->Read(mFileData + mDataLen, aCount, &bytesRead);
     MOZ_ASSERT(bytesRead == aCount, "failed to read data");
   }
@@ -731,13 +732,15 @@ FileReader::Notify(Status aStatus)
 void
 FileReader::Shutdown()
 {
-  FreeFileData();
-  mResultArrayBuffer = nullptr;
+  mReadyState = DONE;
 
   if (mAsyncStream) {
     mAsyncStream->Close();
     mAsyncStream = nullptr;
   }
+
+  FreeFileData();
+  mResultArrayBuffer = nullptr;
 
   if (mWorkerPrivate && mBusyCount != 0) {
     ReleaseWorker();

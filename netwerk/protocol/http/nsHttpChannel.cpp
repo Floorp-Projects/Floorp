@@ -1890,7 +1890,7 @@ nsHttpChannel::ProcessAltService()
         proxyInfo = do_QueryInterface(mProxyInfo);
     }
 
-    NeckoOriginAttributes originAttributes;
+    OriginAttributes originAttributes;
     NS_GetOriginAttributes(this, originAttributes);
 
     AltSvcMapping::ProcessHeader(altSvc, scheme, originHost, originPort,
@@ -5884,7 +5884,7 @@ nsHttpChannel::BeginConnect()
 
     SetDoNotTrack();
 
-    NeckoOriginAttributes originAttributes;
+    OriginAttributes originAttributes;
     NS_GetOriginAttributes(this, originAttributes);
 
     RefPtr<AltSvcMapping> mapping;

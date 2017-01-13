@@ -135,7 +135,7 @@ public:
         }
       }
     } else {
-      PrincipalOriginAttributes attrs(appId, inIsolatedMozBrowser);
+      OriginAttributes attrs(appId, inIsolatedMozBrowser);
       attrs.CreateSuffix(suffix);
     }
 

@@ -114,8 +114,8 @@ nsHTTPDownloadEvent::Run()
   // For OCSP requests, only the first party domain aspect of origin attributes
   // is used. This means that OCSP requests are shared across different
   // containers.
-  if (mRequestSession->mOriginAttributes != NeckoOriginAttributes()) {
-    NeckoOriginAttributes attrs;
+  if (mRequestSession->mOriginAttributes != OriginAttributes()) {
+    OriginAttributes attrs;
     attrs.mFirstPartyDomain =
       mRequestSession->mOriginAttributes.mFirstPartyDomain;
 
@@ -230,7 +230,7 @@ nsNSSHttpRequestSession::createFcn(const nsNSSHttpServerSession* session,
                                    const char* http_protocol_variant,
                                    const char* path_and_query_string,
                                    const char* http_request_method,
-                                   const NeckoOriginAttributes& origin_attributes,
+                                   const OriginAttributes& origin_attributes,
                                    const PRIntervalTime timeout,
                            /*out*/ nsNSSHttpRequestSession** pRequest)
 {

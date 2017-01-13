@@ -46,7 +46,7 @@ BlobSerial(ImageURL* aURI)
 }
 
 ImageCacheKey::ImageCacheKey(nsIURI* aURI,
-                             const PrincipalOriginAttributes& aAttrs,
+                             const OriginAttributes& aAttrs,
                              nsIDocument* aDocument,
                              nsresult& aRv)
   : mURI(new ImageURL(aURI, aRv))
@@ -66,7 +66,7 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI,
 }
 
 ImageCacheKey::ImageCacheKey(ImageURL* aURI,
-                             const PrincipalOriginAttributes& aAttrs,
+                             const OriginAttributes& aAttrs,
                              nsIDocument* aDocument)
   : mURI(aURI)
   , mOriginAttributes(aAttrs)
@@ -131,7 +131,7 @@ ImageCacheKey::Spec() const
 /* static */ uint32_t
 ImageCacheKey::ComputeHash(ImageURL* aURI,
                            const Maybe<uint64_t>& aBlobSerial,
-                           const PrincipalOriginAttributes& aAttrs,
+                           const OriginAttributes& aAttrs,
                            void* aControlledDocument)
 {
   // Since we frequently call Hash() several times in a row on the same

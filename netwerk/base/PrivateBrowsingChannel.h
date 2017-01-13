@@ -84,7 +84,7 @@ public:
       nsCOMPtr<nsILoadInfo> loadInfo;
       Unused << channel->GetLoadInfo(getter_AddRefs(loadInfo));
       if (loadInfo) {
-          NeckoOriginAttributes attrs = loadInfo->GetOriginAttributes();
+          OriginAttributes attrs = loadInfo->GetOriginAttributes();
           mPrivateBrowsing = attrs.mPrivateBrowsingId > 0;
       }
   }

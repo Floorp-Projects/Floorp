@@ -33,9 +33,9 @@ class ImageURL;
 class ImageCacheKey final
 {
 public:
-  ImageCacheKey(nsIURI* aURI, const PrincipalOriginAttributes& aAttrs,
+  ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
                 nsIDocument* aDocument, nsresult& aRv);
-  ImageCacheKey(ImageURL* aURI, const PrincipalOriginAttributes& aAttrs,
+  ImageCacheKey(ImageURL* aURI, const OriginAttributes& aAttrs,
                 nsIDocument* aDocument);
 
   ImageCacheKey(const ImageCacheKey& aOther);
@@ -57,13 +57,13 @@ public:
 private:
   static uint32_t ComputeHash(ImageURL* aURI,
                               const Maybe<uint64_t>& aBlobSerial,
-                              const PrincipalOriginAttributes& aAttrs,
+                              const OriginAttributes& aAttrs,
                               void* aControlledDocument);
   static void* GetControlledDocumentToken(nsIDocument* aDocument);
 
   RefPtr<ImageURL> mURI;
   Maybe<uint64_t> mBlobSerial;
-  PrincipalOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
   void* mControlledDocument;
   uint32_t mHash;
   bool mIsChrome;

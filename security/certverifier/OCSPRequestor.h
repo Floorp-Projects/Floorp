@@ -11,14 +11,14 @@
 #include "secmodt.h"
 
 namespace mozilla {
-class NeckoOriginAttributes;
+class OriginAttributes;
 }
 
 namespace mozilla { namespace psm {
 
 // The memory returned via |encodedResponse| is owned by the given arena.
 Result DoOCSPRequest(const UniquePLArenaPool& arena, const char* url,
-                     const NeckoOriginAttributes& originAttributes,
+                     const OriginAttributes& originAttributes,
                      const SECItem* encodedRequest, PRIntervalTime timeout,
                      bool useGET,
              /*out*/ SECItem*& encodedResponse);

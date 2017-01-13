@@ -1292,6 +1292,13 @@ RegExpShared::needsSweep(JSRuntime* rt)
 }
 
 void
+RegExpShared::discardJitCode()
+{
+    for (size_t i = 0; i < ArrayLength(compilationArray); i++)
+        compilationArray[i].jitCode = nullptr;
+}
+
+void
 RegExpCompartment::sweep(JSRuntime* rt)
 {
     if (!set_.initialized())
@@ -1302,6 +1309,10 @@ RegExpCompartment::sweep(JSRuntime* rt)
         if (shared->needsSweep(rt)) {
             js_delete(shared);
             e.removeFront();
+        } else {
+            // Discard code to avoid holding onto ExecutablePools.
+            if (rt->gc.isHeapCompacting())
+                shared->discardJitCode();
         }
     }
 

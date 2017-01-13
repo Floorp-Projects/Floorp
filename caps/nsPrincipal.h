@@ -32,7 +32,8 @@ public:
   nsPrincipal();
 
   // Init() must be called before the principal is in a usable state.
-  nsresult Init(nsIURI* aCodebase, const mozilla::PrincipalOriginAttributes& aOriginAttributes);
+  nsresult Init(nsIURI* aCodebase,
+                const mozilla::OriginAttributes& aOriginAttributes);
 
   virtual nsresult GetScriptLocation(nsACString& aStr) override;
   void SetURI(nsIURI* aURI);
@@ -63,7 +64,7 @@ class nsExpandedPrincipal : public nsIExpandedPrincipal, public mozilla::BasePri
 {
 public:
   nsExpandedPrincipal(nsTArray<nsCOMPtr<nsIPrincipal>> &aWhiteList,
-                      const mozilla::PrincipalOriginAttributes& aAttrs);
+                      const mozilla::OriginAttributes& aAttrs);
 
   NS_DECL_NSIEXPANDEDPRINCIPAL
   NS_DECL_NSISERIALIZABLE
