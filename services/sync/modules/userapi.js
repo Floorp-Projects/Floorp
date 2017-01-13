@@ -135,10 +135,13 @@ UserAPI10Client.prototype = {
     let body = request.response.body;
     if (body == "0") {
       cb(null, false);
+
     } else if (body == "1") {
       cb(null, true);
+
     } else {
       cb(new Error("Unknown response from server: " + body), null);
+
     }
   },
 
@@ -175,6 +178,7 @@ UserAPI10Client.prototype = {
     }
 
     cb(error, null);
+
   },
 
   _onChangePassword: function _onChangePassword(cb, request, error) {
@@ -214,6 +218,7 @@ UserAPI10Client.prototype = {
     error.body = response.body;
 
     cb(error, null);
+
   },
 };
 Object.freeze(UserAPI10Client.prototype);
