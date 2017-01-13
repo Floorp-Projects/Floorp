@@ -460,34 +460,6 @@ BytecodeParser::simulateOp(JSOp op, uint32_t offset, uint32_t* offsetStack, uint
             offsetStack[stackDepth] = tmp;
         }
         break;
-
-      case JSOP_PICK: {
-        jsbytecode* pc = script_->offsetToPC(offset);
-        unsigned n = GET_UINT8(pc);
-        MOZ_ASSERT(ndefs == n + 1);
-        if (offsetStack) {
-            uint32_t top = stackDepth + n;
-            uint32_t tmp = offsetStack[stackDepth];
-            for (uint32_t i = stackDepth; i < top; i++)
-                offsetStack[i] = offsetStack[i + 1];
-            offsetStack[top] = tmp;
-        }
-        break;
-      }
-
-      case JSOP_UNPICK: {
-        jsbytecode* pc = script_->offsetToPC(offset);
-        unsigned n = GET_UINT8(pc);
-        MOZ_ASSERT(ndefs == n + 1);
-        if (offsetStack) {
-            uint32_t top = stackDepth + n;
-            uint32_t tmp = offsetStack[top];
-            for (uint32_t i = top; i > stackDepth; i--)
-                offsetStack[i] = offsetStack[i - 1];
-            offsetStack[stackDepth] = tmp;
-        }
-        break;
-      }
     }
     stackDepth += ndefs;
     return stackDepth;
