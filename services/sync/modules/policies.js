@@ -35,8 +35,7 @@ this.SyncScheduler = function SyncScheduler(service) {
 SyncScheduler.prototype = {
   _log: Log.repository.getLogger("Sync.SyncScheduler"),
 
-  _fatalLoginStatus: [LOGIN_FAILED_NO_USERNAME,
-                      LOGIN_FAILED_NO_PASSPHRASE,
+  _fatalLoginStatus: [LOGIN_FAILED_NO_PASSPHRASE,
                       LOGIN_FAILED_INVALID_PASSPHRASE,
                       LOGIN_FAILED_LOGIN_REJECTED],
 
@@ -48,14 +47,7 @@ SyncScheduler.prototype = {
   setDefaults: function setDefaults() {
     this._log.trace("Setting SyncScheduler policy values to defaults.");
 
-    let service = Cc["@mozilla.org/weave/service;1"]
-                    .getService(Ci.nsISupports)
-                    .wrappedJSObject;
-
-    let part = service.fxAccountsEnabled ? "fxa" : "sync11";
-    let prefSDInterval = "scheduler." + part + ".singleDeviceInterval";
-    this.singleDeviceInterval = getThrottledIntervalPreference(prefSDInterval);
-
+    this.singleDeviceInterval = getThrottledIntervalPreference("scheduler.fxa.singleDeviceInterval");
     this.idleInterval         = getThrottledIntervalPreference("scheduler.idleInterval");
     this.activeInterval       = getThrottledIntervalPreference("scheduler.activeInterval");
     this.immediateInterval    = getThrottledIntervalPreference("scheduler.immediateInterval");
