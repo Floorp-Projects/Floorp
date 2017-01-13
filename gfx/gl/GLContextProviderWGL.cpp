@@ -18,6 +18,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {
@@ -55,11 +56,6 @@ WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
     NS_ENSURE_TRUE(dc, nullptr);
 
     if (mWindowPixelFormat == 0) {
-        int depthBits = 0;
-        if (gfxPrefs::WebRenderEnabled()) {
-          depthBits = 24;
-        }
-
         PIXELFORMATDESCRIPTOR pfd;
         ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
         pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -71,7 +67,15 @@ WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
         pfd.cGreenBits = 8;
         pfd.cBlueBits = 8;
         pfd.cAlphaBits = 8;
-        pfd.cDepthBits = depthBits;
+#ifdef MOZ_ENABLE_WEBRENDER
+        // XXX We might need to set this to 0 if the compositor that requires
+        // this context is not a WebRender compositor. Getting the
+        // CompositorOptions here is nontrivial though so for now we just use
+        // the ifdef guard.
+        pfd.cDepthBits = 24;
+#else
+        pfd.cDepthBits = 0;
+#endif
         pfd.iLayerType = PFD_MAIN_PLANE;
 
         mWindowPixelFormat = ChoosePixelFormat(dc, &pfd);
@@ -441,11 +445,15 @@ GLContextProviderWGL::CreateWrappingExisting(void*, void*)
 already_AddRefed<GLContext>
 GLContextProviderWGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
+    return CreateForWindow(aCompositorWidget->RealWidget(),
+                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
+                           aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
-GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderWGL::CreateForWindow(nsIWidget* aWidget,
+                                      bool aWebRender,
+                                      bool aForceAccelerated)
 {
     if (!sWGLLib.EnsureInitialized()) {
         return nullptr;
