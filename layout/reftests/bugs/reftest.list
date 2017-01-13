@@ -1610,7 +1610,7 @@ fails-if(!haveTestPlugin) == 599476.html 599476-ref.html
 == 600974-1.html 600974-1-ref.html
 == 600974-2.html 600974-1-ref.html
 == 600974-3.html 600974-1-ref.html
-fails-if(webrender) == 602200-1.html 602200-1-ref.html
+== 602200-1.html 602200-1-ref.html
 == 602200-2.html 602200-2-ref.html
 fuzzy-if(Android,8,20) fails-if(webrender) == 602200-3.html 602200-3-ref.html
 == 602200-4.html 602200-4-ref.html
