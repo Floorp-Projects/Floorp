@@ -18,68 +18,47 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ClearKeyAsyncShutdown.h"
+#include "ClearKeyCDM.h"
 #include "ClearKeySessionManager.h"
-#include "gmp-api/gmp-async-shutdown.h"
-#include "gmp-api/gmp-decryption.h"
-#include "gmp-api/gmp-platform.h"
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include "stddef.h"
+#include "content_decryption_module.h"
 
-#if defined(ENABLE_WMF)
+#ifdef ENABLE_WMF
 #include "WMFUtils.h"
-#include "VideoDecoder.h"
-#endif
-
-#if defined(WIN32)
-#define GMP_EXPORT __declspec(dllexport)
-#else
-#define GMP_EXPORT __attribute__((visibility("default")))
-#endif
-
-static GMPPlatformAPI* sPlatform = nullptr;
-GMPPlatformAPI*
-GetPlatform()
-{
-  return sPlatform;
-}
+#endif // ENABLE_WMF
 
 extern "C" {
 
-GMP_EXPORT GMPErr
-GMPInit(GMPPlatformAPI* aPlatformAPI)
-{
-  sPlatform = aPlatformAPI;
-  return GMPNoErr;
+CDM_EXPORT
+void INITIALIZE_CDM_MODULE() {
+
 }
 
-GMP_EXPORT GMPErr
-GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
+CDM_EXPORT
+void* CreateCdmInstance(int cdm_interface_version,
+                        const char* key_system,
+                        uint32_t key_system_size,
+                        GetCdmHostFunc get_cdm_host_func,
+                        void* user_data)
 {
-  CK_LOGD("ClearKey GMPGetAPI |%s|", aApiName);
-  assert(!*aPluginAPI);
 
-  if (!strcmp(aApiName, GMP_API_DECRYPTOR)) {
-    *aPluginAPI = new ClearKeySessionManager();
-  }
-#if defined(ENABLE_WMF)
- else if (!strcmp(aApiName, GMP_API_VIDEO_DECODER) &&
-             wmf::EnsureLibs()) {
-    *aPluginAPI = new VideoDecoder(static_cast<GMPVideoHost*>(aHostAPI));
+  CK_LOGE("ClearKey CreateCDMInstance");
+
+#ifdef ENABLE_WMF
+  if (!wmf::EnsureLibs()) {
+    CK_LOGE("Required libraries were not found");
+    return nullptr;
   }
 #endif
-  else if (!strcmp(aApiName, GMP_API_ASYNC_SHUTDOWN)) {
-    *aPluginAPI = new ClearKeyAsyncShutdown(static_cast<GMPAsyncShutdownHost*> (aHostAPI));
-  } else {
-    CK_LOGE("GMPGetAPI couldn't resolve API name |%s|\n", aApiName);
-  }
 
-  return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
+  cdm::Host_8* host = static_cast<cdm::Host_8*>(
+    get_cdm_host_func(cdm_interface_version, user_data));
+  ClearKeyCDM* clearKey = new ClearKeyCDM(host);
+
+  CK_LOGE("Created ClearKeyCDM instance!");
+
+  return clearKey;
 }
-
-GMP_EXPORT GMPErr
-GMPShutdown(void)
-{
-  CK_LOGD("ClearKey GMPShutdown");
-  return GMPNoErr;
-}
-
 }

@@ -177,7 +177,7 @@ SendCodeRangesToProfiler(CodeSegment& cs, const Bytes& bytecode, const Metadata&
             const char* file = metadata.filename.get();
             unsigned line = codeRange.funcLineOrBytecode();
             unsigned column = 0;
-            writePerfSpewerAsmJSFunctionMap(start, size, file, line, column, name.begin());
+            writePerfSpewerWasmFunctionMap(start, size, file, line, column, name.begin());
         }
 #endif
 #ifdef MOZ_VTUNE

@@ -21,21 +21,28 @@
 #include <string>
 #include <vector>
 #include <assert.h>
-#include "gmp-api/gmp-decryption.h"
+
+// This include is required in order for content_decryption_module to work
+// on Unix systems.
+#include "stddef.h"
+#include "content_decryption_module.h"
 
 #if 0
 void CK_Log(const char* aFmt, ...);
 #define CK_LOGE(...) CK_Log(__VA_ARGS__)
 #define CK_LOGD(...) CK_Log(__VA_ARGS__)
 #define CK_LOGW(...) CK_Log(__VA_ARGS__)
+#define CK_LOGARRAY(APREPEND, ADATA, ADATA_SIZE) CK_LogArray(APREPEND, \
+  ADATA, \
+  ADATA_SIZE)
 #else
+// Note: Enabling logging slows things down a LOT, especially when logging to
+// a file.
 #define CK_LOGE(...)
 #define CK_LOGD(...)
 #define CK_LOGW(...)
+#define CK_LOGARRAY(APREPEND, ADATA, ADATA_SIZE)
 #endif
-
-struct GMPPlatformAPI;
-extern GMPPlatformAPI* GetPlatform();
 
 typedef std::vector<uint8_t> KeyId;
 typedef std::vector<uint8_t> Key;
@@ -47,6 +54,10 @@ static const uint32_t kMaxSessionResponseLength = 65536;
 // Provide limitation for KeyIds length and webm initData size.
 static const uint32_t kMaxWebmInitDataSize = 65536;
 static const uint32_t kMaxKeyIdsLength = 512;
+
+void CK_LogArray(const char* aPrepend,
+                 const uint8_t* aData,
+                 const uint32_t aDataSize);
 
 struct KeyIdPair
 {
@@ -66,14 +77,16 @@ public:
 
   static void MakeKeyRequest(const std::vector<KeyId>& aKeyIds,
                              std::string& aOutRequest,
-                             GMPSessionType aSessionType);
+                             cdm::SessionType aSessionType);
 
   static bool ParseJWK(const uint8_t* aKeyData, uint32_t aKeyDataSize,
                        std::vector<KeyIdPair>& aOutKeys,
-                       GMPSessionType aSessionType);
-  static const char* SessionTypeToString(GMPSessionType aSessionType);
+                       cdm::SessionType aSessionType);
+  static const char* SessionTypeToString(cdm::SessionType aSessionType);
 
   static bool IsValidSessionId(const char* aBuff, uint32_t aLength);
+
+  static std::string ToHexString(const uint8_t * aBytes, uint32_t aLength);
 };
 
 template<class Container, class Element>
@@ -82,27 +95,6 @@ Contains(const Container& aContainer, const Element& aElement)
 {
   return aContainer.find(aElement) != aContainer.end();
 }
-
-class AutoLock {
-public:
-  explicit AutoLock(GMPMutex* aMutex)
-    : mMutex(aMutex)
-  {
-    assert(aMutex);
-    if (mMutex) {
-      mMutex->Acquire();
-    }
-  }
-  ~AutoLock() {
-    if (mMutex) {
-      mMutex->Release();
-    }
-  }
-private:
-  GMPMutex* mMutex;
-};
-
-GMPMutex* GMPCreateMutex();
 
 template<typename T>
 inline void

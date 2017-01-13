@@ -13,3 +13,6 @@ DevToolsModules(
     'StyleEditorUtil.jsm',
     'StyleSheetEditor.jsm',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Style Editor')

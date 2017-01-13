@@ -360,3 +360,9 @@
   )
   "unknown type"
 )
+
+;; invalid table
+(assert_invalid 
+  (module (table anyfunc (elem 0 0)))
+  "unknown function 0"
+)
