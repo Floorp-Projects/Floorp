@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Variant {
     pub ident: Ident,
     pub attrs: Vec<Attribute>,
@@ -9,7 +9,7 @@ pub struct Variant {
     pub discriminant: Option<ConstExpr>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum VariantData {
     Struct(Vec<Field>),
     Tuple(Vec<Field>),
@@ -34,7 +34,7 @@ impl VariantData {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Field {
     pub ident: Option<Ident>,
     pub vis: Visibility,
@@ -42,7 +42,7 @@ pub struct Field {
     pub ty: Ty,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Visibility {
     Public,
     Crate,

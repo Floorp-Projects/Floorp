@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::fmt::{self, Display};
 
 #[derive(Debug, Clone, Eq, Hash)]
@@ -12,6 +13,12 @@ impl Ident {
 impl<'a> From<&'a str> for Ident {
     fn from(s: &str) -> Self {
         Ident(s.to_owned())
+    }
+}
+
+impl<'a> From<Cow<'a, str>> for Ident {
+    fn from(s: Cow<'a, str>) -> Self {
+        Ident(s.into_owned())
     }
 }
 

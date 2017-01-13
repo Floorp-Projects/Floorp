@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use winapi;
-
 use super::*;
 
 #[test]
@@ -40,6 +38,7 @@ fn test_get_font_file_bytes() {
                                                           FontStretch::Normal,
                                                           FontStyle::Normal);
     let face = arial_font.create_font_face();
+    println!("face1: {:?}",  unsafe { face.as_ptr1() });
     let files = face.get_files();
     assert!(files.len() > 0);
 

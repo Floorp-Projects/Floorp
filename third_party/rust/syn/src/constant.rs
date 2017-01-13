@@ -1,6 +1,6 @@
 use super::*;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum ConstExpr {
     /// A function call
     ///
@@ -28,7 +28,7 @@ pub enum ConstExpr {
 }
 
 #[cfg(not(feature = "full"))]
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Other {
     _private: (),
 }

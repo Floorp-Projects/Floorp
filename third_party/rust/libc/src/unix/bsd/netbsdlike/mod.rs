@@ -472,6 +472,8 @@ extern {
     pub fn clock_getres(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__clock_gettime50")]
     pub fn clock_gettime(clk_id: clockid_t, tp: *mut ::timespec) -> ::c_int;
+    #[cfg_attr(target_os = "netbsd", link_name = "__clock_settime50")]
+    pub fn clock_settime(clk_id: clockid_t, tp: *const ::timespec) -> ::c_int;
     pub fn __errno() -> *mut ::c_int;
     pub fn shm_open(name: *const ::c_char, oflag: ::c_int, mode: ::mode_t)
                     -> ::c_int;

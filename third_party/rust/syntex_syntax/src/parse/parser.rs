@@ -38,7 +38,7 @@ use ast::{Ty, TyKind, TypeBinding, TyParam, TyParamBounds};
 use ast::{ViewPath, ViewPathGlob, ViewPathList, ViewPathSimple};
 use ast::{Visibility, WhereClause};
 use ast::{BinOpKind, UnOp};
-use ast;
+use {ast, attr};
 use codemap::{self, CodeMap, Spanned, spanned, respan};
 use syntax_pos::{self, Span, BytePos, mk_sp};
 use errors::{self, DiagnosticBuilder};
@@ -48,13 +48,14 @@ use parse::classify;
 use parse::common::SeqSep;
 use parse::lexer::{Reader, TokenAndSpan};
 use parse::obsolete::ObsoleteSyntax;
-use parse::token::{self, intern, keywords, MatchNt, SubstNt, InternedString};
-use parse::{new_sub_parser_from_file, ParseSess};
+use parse::token::{self, MatchNt, SubstNt};
+use parse::{new_sub_parser_from_file, ParseSess, Directory, DirectoryOwnership};
 use util::parser::{AssocOp, Fixity};
 use print::pprust;
 use ptr::P;
 use parse::PResult;
 use tokenstream::{self, Delimited, SequenceRepetition, TokenTree};
+use symbol::{Symbol, keywords};
 use util::ThinVec;
 
 use std::collections::HashSet;
@@ -67,7 +68,6 @@ bitflags! {
     pub flags Restrictions: u8 {
         const RESTRICTION_STMT_EXPR         = 1 << 0,
         const RESTRICTION_NO_STRUCT_LITERAL = 1 << 1,
-        const NO_NONINLINE_MOD  = 1 << 2,
     }
 }
 
@@ -78,9 +78,6 @@ impl Restrictions {
     }
     pub fn restriction_no_struct_literal() -> Self {
         RESTRICTION_NO_STRUCT_LITERAL
-    }
-    pub fn no_noninline_mod() -> Self {
-        NO_NONINLINE_MOD
     }
 }
 
@@ -99,13 +96,6 @@ pub enum PathStyle {
     /// A path with a lifetime and type parameters with double colons before
     /// the type parameters; e.g. `foo::bar::<'a>::Baz::<T>`, used in expressions or patterns.
     Expr,
-}
-
-/// How to parse a bound, whether to allow bound modifiers such as `?`.
-#[derive(Copy, Clone, PartialEq)]
-pub enum BoundParsingMode {
-    Bare,
-    Modified,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -212,12 +202,9 @@ pub struct Parser<'a> {
     /// extra detail when the same error is seen twice
     pub obsolete_set: HashSet<ObsoleteSyntax>,
     /// Used to determine the path to externally loaded source files
-    pub directory: PathBuf,
+    pub directory: Directory,
     /// Stack of open delimiters and their spans. Used for error message.
     pub open_braces: Vec<(token::DelimToken, Span)>,
-    /// Flag if this parser "owns" the directory that it is currently parsing
-    /// in. This will affect how nested files are looked up.
-    pub owns_directory: bool,
     /// Name of the root module this parser originated from. If `None`, then the
     /// name is not known. This does not change while the parser is descending
     /// into modules, and sub-parsers have new values for this name.
@@ -257,8 +244,9 @@ pub struct ModulePath {
 }
 
 pub struct ModulePathSuccess {
-    pub path: ::std::path::PathBuf,
-    pub owns_directory: bool,
+    pub path: PathBuf,
+    pub directory_ownership: DirectoryOwnership,
+    warn: bool,
 }
 
 pub struct ModulePathError {
@@ -289,12 +277,11 @@ impl From<P<Expr>> for LhsExpr {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(sess: &'a ParseSess, rdr: Box<Reader+'a>) -> Self {
-        Parser::new_with_doc_flag(sess, rdr, false)
-    }
-
-    pub fn new_with_doc_flag(sess: &'a ParseSess, rdr: Box<Reader+'a>, desugar_doc_comments: bool)
-                             -> Self {
+    pub fn new(sess: &'a ParseSess,
+               rdr: Box<Reader+'a>,
+               directory: Option<Directory>,
+               desugar_doc_comments: bool)
+               -> Self {
         let mut parser = Parser {
             reader: rdr,
             sess: sess,
@@ -308,9 +295,8 @@ impl<'a> Parser<'a> {
             quote_depth: 0,
             parsing_token_tree: false,
             obsolete_set: HashSet::new(),
-            directory: PathBuf::new(),
+            directory: Directory { path: PathBuf::new(), ownership: DirectoryOwnership::Owned },
             open_braces: Vec::new(),
-            owns_directory: true,
             root_module_name: None,
             expected_tokens: Vec::new(),
             tts: Vec::new(),
@@ -321,9 +307,11 @@ impl<'a> Parser<'a> {
         let tok = parser.next_tok();
         parser.token = tok.tok;
         parser.span = tok.sp;
-        if parser.span != syntax_pos::DUMMY_SP {
-            parser.directory = PathBuf::from(sess.codemap().span_to_filename(parser.span));
-            parser.directory.pop();
+        if let Some(directory) = directory {
+            parser.directory = directory;
+        } else if parser.span != syntax_pos::DUMMY_SP {
+            parser.directory.path = PathBuf::from(sess.codemap().span_to_filename(parser.span));
+            parser.directory.path.pop();
         }
         parser
     }
@@ -1011,10 +999,6 @@ impl<'a> Parser<'a> {
         &self.sess.span_diagnostic
     }
 
-    pub fn id_to_interned_str(&mut self, id: Ident) -> InternedString {
-        id.name.as_str()
-    }
-
     /// Is the current token one of the keywords that signals a bare function
     /// type?
     pub fn token_is_bare_fn_keyword(&mut self) -> bool {
@@ -1061,7 +1045,7 @@ impl<'a> Parser<'a> {
                                                      trait_ref: trait_ref,
                                                      span: mk_sp(lo, hi)};
             let other_bounds = if self.eat(&token::BinOp(token::Plus)) {
-                try!(self.parse_ty_param_bounds(BoundParsingMode::Bare))
+                try!(self.parse_ty_param_bounds())
             } else {
                 P::new()
             };
@@ -1079,7 +1063,7 @@ impl<'a> Parser<'a> {
         The `impl` has already been consumed.
         */
 
-        let bounds = try!(self.parse_ty_param_bounds(BoundParsingMode::Modified));
+        let bounds = try!(self.parse_ty_param_bounds());
 
         if !bounds.iter().any(|b| if let TraitTyParamBound(..) = *b { true } else { false }) {
             self.span_err(self.prev_span, "at least one trait must be specified");
@@ -1291,7 +1275,7 @@ impl<'a> Parser<'a> {
             return Ok(lhs);
         }
 
-        let bounds = try!(self.parse_ty_param_bounds(BoundParsingMode::Bare));
+        let bounds = try!(self.parse_ty_param_bounds());
 
         // In type grammar, `+` is treated like a binary operator,
         // and hence both L and R side are required.
@@ -1536,34 +1520,28 @@ impl<'a> Parser<'a> {
                     // float literals, so all the handling is done
                     // internally.
                     token::Integer(s) => {
-                        (false, parse::integer_lit(&s.as_str(),
-                                                   suf.as_ref().map(|s| s.as_str()),
-                                                   &self.sess.span_diagnostic,
-                                                   self.span))
+                        let diag = &self.sess.span_diagnostic;
+                        (false, parse::integer_lit(&s.as_str(), suf, diag, self.span))
                     }
                     token::Float(s) => {
-                        (false, parse::float_lit(&s.as_str(),
-                                                 suf.as_ref().map(|s| s.as_str()),
-                                                  &self.sess.span_diagnostic,
-                                                 self.span))
+                        let diag = &self.sess.span_diagnostic;
+                        (false, parse::float_lit(&s.as_str(), suf, diag, self.span))
                     }
 
                     token::Str_(s) => {
-                        (true,
-                         LitKind::Str(token::intern_and_get_ident(&parse::str_lit(&s.as_str())),
-                                      ast::StrStyle::Cooked))
+                        let s = Symbol::intern(&parse::str_lit(&s.as_str()));
+                        (true, LitKind::Str(s, ast::StrStyle::Cooked))
                     }
                     token::StrRaw(s, n) => {
-                        (true,
-                         LitKind::Str(
-                            token::intern_and_get_ident(&parse::raw_str_lit(&s.as_str())),
-                            ast::StrStyle::Raw(n)))
+                        let s = Symbol::intern(&parse::raw_str_lit(&s.as_str()));
+                        (true, LitKind::Str(s, ast::StrStyle::Raw(n)))
                     }
-                    token::ByteStr(i) =>
-                        (true, LitKind::ByteStr(parse::byte_str_lit(&i.as_str()))),
-                    token::ByteStrRaw(i, _) =>
-                        (true,
-                         LitKind::ByteStr(Rc::new(i.to_string().into_bytes()))),
+                    token::ByteStr(i) => {
+                        (true, LitKind::ByteStr(parse::byte_str_lit(&i.as_str())))
+                    }
+                    token::ByteStrRaw(i, _) => {
+                        (true, LitKind::ByteStr(Rc::new(i.to_string().into_bytes())))
+                    }
                 };
 
                 if suffix_illegal {
@@ -1646,7 +1624,6 @@ impl<'a> Parser<'a> {
         } else {
             ast::Path {
                 span: span,
-                global: false,
                 segments: vec![]
             }
         };
@@ -1690,7 +1667,7 @@ impl<'a> Parser<'a> {
         // Parse any number of segments and bound sets. A segment is an
         // identifier followed by an optional lifetime and a set of types.
         // A bound set is a set of type parameter bounds.
-        let segments = match mode {
+        let mut segments = match mode {
             PathStyle::Type => {
                 try!(self.parse_path_segments_without_colons())
             }
@@ -1702,13 +1679,16 @@ impl<'a> Parser<'a> {
             }
         };
 
+        if is_global {
+            segments.insert(0, ast::PathSegment::crate_root());
+        }
+
         // Assemble the span.
         let span = mk_sp(lo, self.prev_span.hi);
 
         // Assemble the result.
         Ok(ast::Path {
             span: span,
-            global: is_global,
             segments: segments,
         })
     }
@@ -1737,12 +1717,11 @@ impl<'a> Parser<'a> {
             // Parse types, optionally.
             let parameters = if self.eat_lt() {
                 let (lifetimes, types, bindings) = try!(self.parse_generic_values_after_lt());
-
-                ast::PathParameters::AngleBracketed(ast::AngleBracketedParameterData {
+                ast::AngleBracketedParameterData {
                     lifetimes: lifetimes,
                     types: P::from_vec(types),
                     bindings: P::from_vec(bindings),
-                })
+                }.into()
             } else if self.eat(&token::OpenDelim(token::Paren)) {
                 let lo = self.prev_span.lo;
 
@@ -1759,18 +1738,17 @@ impl<'a> Parser<'a> {
 
                 let hi = self.prev_span.hi;
 
-                ast::PathParameters::Parenthesized(ast::ParenthesizedParameterData {
+                Some(P(ast::PathParameters::Parenthesized(ast::ParenthesizedParameterData {
                     span: mk_sp(lo, hi),
                     inputs: inputs,
                     output: output_ty,
-                })
+                })))
             } else {
-                ast::PathParameters::none()
+                None
             };
 
             // Assemble and push the result.
-            segments.push(ast::PathSegment { identifier: identifier,
-                                             parameters: parameters });
+            segments.push(ast::PathSegment { identifier: identifier, parameters: parameters });
 
             // Continue only if we see a `::`
             if !self.eat(&token::ModSep) {
@@ -1789,10 +1767,7 @@ impl<'a> Parser<'a> {
 
             // If we do not see a `::`, stop.
             if !self.eat(&token::ModSep) {
-                segments.push(ast::PathSegment {
-                    identifier: identifier,
-                    parameters: ast::PathParameters::none()
-                });
+                segments.push(identifier.into());
                 return Ok(segments);
             }
 
@@ -1800,14 +1775,13 @@ impl<'a> Parser<'a> {
             if self.eat_lt() {
                 // Consumed `a::b::<`, go look for types
                 let (lifetimes, types, bindings) = try!(self.parse_generic_values_after_lt());
-                let parameters = ast::AngleBracketedParameterData {
-                    lifetimes: lifetimes,
-                    types: P::from_vec(types),
-                    bindings: P::from_vec(bindings),
-                };
                 segments.push(ast::PathSegment {
                     identifier: identifier,
-                    parameters: ast::PathParameters::AngleBracketed(parameters),
+                    parameters: ast::AngleBracketedParameterData {
+                        lifetimes: lifetimes,
+                        types: P::from_vec(types),
+                        bindings: P::from_vec(bindings),
+                    }.into(),
                 });
 
                 // Consumed `a::b::<T,U>`, check for `::` before proceeding
@@ -1816,10 +1790,7 @@ impl<'a> Parser<'a> {
                 }
             } else {
                 // Consumed `a::`, go look for `b`
-                segments.push(ast::PathSegment {
-                    identifier: identifier,
-                    parameters: ast::PathParameters::none(),
-                });
+                segments.push(identifier.into());
             }
         }
     }
@@ -1834,10 +1805,7 @@ impl<'a> Parser<'a> {
             let identifier = try!(self.parse_path_segment_ident());
 
             // Assemble and push the result.
-            segments.push(ast::PathSegment {
-                identifier: identifier,
-                parameters: ast::PathParameters::none()
-            });
+            segments.push(identifier.into());
 
             // If we do not see a `::` or see `::{`/`::*`, stop.
             if !self.check(&token::ModSep) || self.is_import_coupler() {
@@ -2282,15 +2250,25 @@ impl<'a> Parser<'a> {
                         ex = ExprKind::Ret(None);
                     }
                 } else if self.eat_keyword(keywords::Break) {
-                    if self.token.is_lifetime() {
-                        ex = ExprKind::Break(Some(Spanned {
+                    let lt = if self.token.is_lifetime() {
+                        let spanned_lt = Spanned {
                             node: self.get_lifetime(),
                             span: self.span
-                        }));
+                        };
                         self.bump();
+                        Some(spanned_lt)
                     } else {
-                        ex = ExprKind::Break(None);
-                    }
+                        None
+                    };
+                    let e = if self.token.can_begin_expr()
+                               && !(self.token == token::OpenDelim(token::Brace)
+                                    && self.restrictions.contains(
+                                           Restrictions::restriction_no_struct_literal())) {
+                        Some(try!(self.parse_expr()))
+                    } else {
+                        None
+                    };
+                    ex = ExprKind::Break(lt, e);
                     hi = self.prev_span.hi;
                 } else if self.token.is_keyword(keywords::Let) {
                     // Catch this syntax error here, instead of in `check_strict_keywords`, so
@@ -2557,7 +2535,7 @@ impl<'a> Parser<'a> {
                     let prev_span = self.prev_span;
                     let fstr = n.as_str();
                     let mut err = self.diagnostic().struct_span_err(prev_span,
-                        &format!("unexpected token: `{}`", n.as_str()));
+                        &format!("unexpected token: `{}`", n));
                     if fstr.chars().all(|x| "0123456789.".contains(x)) {
                         let float = match fstr.parse::<f64>().ok() {
                             Some(f) => f,
@@ -2640,7 +2618,7 @@ impl<'a> Parser<'a> {
                                       })));
                 } else if self.token.is_keyword(keywords::Crate) {
                     let ident = match self.token {
-                        token::Ident(id) => ast::Ident { name: token::intern("$crate"), ..id },
+                        token::Ident(id) => ast::Ident { name: Symbol::intern("$crate"), ..id },
                         _ => unreachable!(),
                     };
                     self.bump();
@@ -3764,9 +3742,7 @@ impl<'a> Parser<'a> {
     /// Emit an expected item after attributes error.
     fn expected_item_err(&self, attrs: &[Attribute]) {
         let message = match attrs.last() {
-            Some(&Attribute { node: ast::Attribute_ { is_sugared_doc: true, .. }, .. }) => {
-                "expected item after doc comment"
-            }
+            Some(&Attribute { is_sugared_doc: true, .. }) => "expected item after doc comment",
             _ => "expected item after attributes",
         };
 
@@ -3990,9 +3966,11 @@ impl<'a> Parser<'a> {
             }
         } else {
             // FIXME: Bad copy of attrs
-            let restrictions = self.restrictions | Restrictions::no_noninline_mod();
-            match try!(self.with_res(restrictions,
-                                |this| this.parse_item_(attrs.clone(), false, true))) {
+            let old_directory_ownership =
+                mem::replace(&mut self.directory.ownership, DirectoryOwnership::UnownedViaBlock);
+            let item = try!(self.parse_item_(attrs.clone(), false, true));
+            self.directory.ownership = old_directory_ownership;
+            match item {
                 Some(i) => Stmt {
                     id: ast::DUMMY_NODE_ID,
                     span: mk_sp(lo, i.span.hi),
@@ -4164,14 +4142,12 @@ impl<'a> Parser<'a> {
 
     // Parses a sequence of bounds if a `:` is found,
     // otherwise returns empty list.
-    fn parse_colon_then_ty_param_bounds(&mut self,
-                                        mode: BoundParsingMode)
-                                        -> PResult<'a, TyParamBounds>
+    fn parse_colon_then_ty_param_bounds(&mut self) -> PResult<'a, TyParamBounds>
     {
         if !self.eat(&token::Colon) {
             Ok(P::new())
         } else {
-            self.parse_ty_param_bounds(mode)
+            self.parse_ty_param_bounds()
         }
     }
 
@@ -4179,9 +4155,7 @@ impl<'a> Parser<'a> {
     // where   boundseq  = ( polybound + boundseq ) | polybound
     // and     polybound = ( 'for' '<' 'region '>' )? bound
     // and     bound     = 'region | trait_ref
-    fn parse_ty_param_bounds(&mut self,
-                             mode: BoundParsingMode)
-                             -> PResult<'a, TyParamBounds>
+    fn parse_ty_param_bounds(&mut self) -> PResult<'a, TyParamBounds>
     {
         let mut result = vec![];
         loop {
@@ -4200,16 +4174,10 @@ impl<'a> Parser<'a> {
                     }));
                     self.bump();
                 }
-                token::ModSep | token::Ident(..) => {
+                _ if self.token.is_path_start() || self.token.is_keyword(keywords::For) => {
                     let poly_trait_ref = try!(self.parse_poly_trait_ref());
                     let modifier = if ate_question {
-                        if mode == BoundParsingMode::Modified {
-                            TraitBoundModifier::Maybe
-                        } else {
-                            self.span_err(question_span,
-                                          "unexpected `?`");
-                            TraitBoundModifier::None
-                        }
+                        TraitBoundModifier::Maybe
                     } else {
                         TraitBoundModifier::None
                     };
@@ -4231,7 +4199,7 @@ impl<'a> Parser<'a> {
         let span = self.span;
         let ident = try!(self.parse_ident());
 
-        let bounds = try!(self.parse_colon_then_ty_param_bounds(BoundParsingMode::Modified));
+        let bounds = try!(self.parse_colon_then_ty_param_bounds());
 
         let default = if self.check(&token::Eq) {
             self.bump();
@@ -4410,6 +4378,23 @@ impl<'a> Parser<'a> {
             return Ok(where_clause);
         }
 
+        // This is a temporary hack.
+        //
+        // We are considering adding generics to the `where` keyword as an alternative higher-rank
+        // parameter syntax (as in `where<'a>` or `where<T>`. To avoid that being a breaking
+        // change, for now we refuse to parse `where < (ident | lifetime) (> | , | :)`.
+        if token::Lt == self.token {
+            let ident_or_lifetime = self.look_ahead(1, |t| t.is_ident() || t.is_lifetime());
+            if ident_or_lifetime {
+                let gt_comma_or_colon = self.look_ahead(2, |t| {
+                    *t == token::Gt || *t == token::Comma || *t == token::Colon
+                });
+                if gt_comma_or_colon {
+                    self.span_err(self.span, "syntax `where<T>` is reserved for future use");
+                }
+            }
+        }
+
         let mut parsed_something = false;
         loop {
             let lo = self.span.lo;
@@ -4455,7 +4440,7 @@ impl<'a> Parser<'a> {
                     let bounded_ty = try!(self.parse_ty());
 
                     if self.eat(&token::Colon) {
-                        let bounds = try!(self.parse_ty_param_bounds(BoundParsingMode::Bare));
+                        let bounds = try!(self.parse_ty_param_bounds());
                         let hi = self.prev_span.hi;
                         let span = mk_sp(lo, hi);
 
@@ -4850,7 +4835,7 @@ impl<'a> Parser<'a> {
             Visibility::Inherited => (),
             _ => {
                 let is_macro_rules: bool = match self.token {
-                    token::Ident(sid) => sid.name == intern("macro_rules"),
+                    token::Ident(sid) => sid.name == Symbol::intern("macro_rules"),
                     _ => false,
                 };
                 if is_macro_rules {
@@ -4917,7 +4902,7 @@ impl<'a> Parser<'a> {
         let mut tps = try!(self.parse_generics());
 
         // Parse supertrait bounds.
-        let bounds = try!(self.parse_colon_then_ty_param_bounds(BoundParsingMode::Bare));
+        let bounds = try!(self.parse_colon_then_ty_param_bounds());
 
         tps.where_clause = try!(self.parse_where_clause());
 
@@ -5224,7 +5209,7 @@ impl<'a> Parser<'a> {
         } else if self.eat_keyword(keywords::Crate) {
             pub_crate(self)
         } else {
-            let path = try!(self.parse_path(PathStyle::Mod));
+            let path = try!(self.parse_path(PathStyle::Mod)).default_to_global();
             try!(self.expect(&token::CloseDelim(token::Paren)));
             Ok(Visibility::Restricted { path: P(path), id: ast::DUMMY_NODE_ID })
         }
@@ -5295,39 +5280,53 @@ impl<'a> Parser<'a> {
             self.bump();
             if in_cfg {
                 // This mod is in an external file. Let's go get it!
-                let (m, attrs) = try!(self.eval_src_mod(id, &outer_attrs, id_span));
-                Ok((id, m, Some(attrs)))
+                let ModulePathSuccess { path, directory_ownership, warn } =
+                    try!(self.submod_path(id, &outer_attrs, id_span));
+                let (module, mut attrs) =
+                    try!(self.eval_src_mod(path, directory_ownership, id.to_string(), id_span));
+                if warn {
+                    let attr = ast::Attribute {
+                        id: attr::mk_attr_id(),
+                        style: ast::AttrStyle::Outer,
+                        value: ast::MetaItem {
+                            name: Symbol::intern("warn_directory_ownership"),
+                            node: ast::MetaItemKind::Word,
+                            span: syntax_pos::DUMMY_SP,
+                        },
+                        is_sugared_doc: false,
+                        span: syntax_pos::DUMMY_SP,
+                    };
+                    attr::mark_known(&attr);
+                    attrs.push(attr);
+                }
+                Ok((id, module, Some(attrs)))
             } else {
                 let placeholder = ast::Mod { inner: syntax_pos::DUMMY_SP, items: Vec::new() };
                 Ok((id, ItemKind::Mod(placeholder), None))
             }
         } else {
-            let directory = self.directory.clone();
-            let restrictions = self.push_directory(id, &outer_attrs);
+            let old_directory = self.directory.clone();
+            self.push_directory(id, &outer_attrs);
             try!(self.expect(&token::OpenDelim(token::Brace)));
             let mod_inner_lo = self.span.lo;
             let attrs = try!(self.parse_inner_attributes());
-            let m = try!(self.with_res(restrictions, |this| {
-                this.parse_mod_items(&token::CloseDelim(token::Brace), mod_inner_lo)
-            }));
-            self.directory = directory;
-            Ok((id, ItemKind::Mod(m), Some(attrs)))
+            let module = try!(self.parse_mod_items(&token::CloseDelim(token::Brace), mod_inner_lo));
+            self.directory = old_directory;
+            Ok((id, ItemKind::Mod(module), Some(attrs)))
         }
     }
 
-    fn push_directory(&mut self, id: Ident, attrs: &[Attribute]) -> Restrictions {
-        if let Some(path) = ::attr::first_attr_value_str_by_name(attrs, "path") {
-            self.directory.push(&*path);
-            self.restrictions - Restrictions::no_noninline_mod()
+    fn push_directory(&mut self, id: Ident, attrs: &[Attribute]) {
+        if let Some(path) = attr::first_attr_value_str_by_name(attrs, "path") {
+            self.directory.path.push(&*path.as_str());
+            self.directory.ownership = DirectoryOwnership::Owned;
         } else {
-            let default_path = self.id_to_interned_str(id);
-            self.directory.push(&*default_path);
-            self.restrictions
+            self.directory.path.push(&*id.name.as_str());
         }
     }
 
     pub fn submod_path_from_attr(attrs: &[ast::Attribute], dir_path: &Path) -> Option<PathBuf> {
-        ::attr::first_attr_value_str_by_name(attrs, "path").map(|d| dir_path.join(&*d))
+        attr::first_attr_value_str_by_name(attrs, "path").map(|d| dir_path.join(&*d.as_str()))
     }
 
     /// Returns either a path to a module, or .
@@ -5342,8 +5341,16 @@ impl<'a> Parser<'a> {
         let secondary_exists = codemap.file_exists(&secondary_path);
 
         let result = match (default_exists, secondary_exists) {
-            (true, false) => Ok(ModulePathSuccess { path: default_path, owns_directory: false }),
-            (false, true) => Ok(ModulePathSuccess { path: secondary_path, owns_directory: true }),
+            (true, false) => Ok(ModulePathSuccess {
+                path: default_path,
+                directory_ownership: DirectoryOwnership::UnownedViaMod(false),
+                warn: false,
+            }),
+            (false, true) => Ok(ModulePathSuccess {
+                path: secondary_path,
+                directory_ownership: DirectoryOwnership::Owned,
+                warn: false,
+            }),
             (false, false) => Err(ModulePathError {
                 err_msg: format!("file not found for module `{}`", mod_name),
                 help_msg: format!("name the file either {} or {} inside the directory {:?}",
@@ -5371,13 +5378,20 @@ impl<'a> Parser<'a> {
                    id: ast::Ident,
                    outer_attrs: &[ast::Attribute],
                    id_sp: Span) -> PResult<'a, ModulePathSuccess> {
-        if let Some(p) = Parser::submod_path_from_attr(outer_attrs, &self.directory) {
-            return Ok(ModulePathSuccess { path: p, owns_directory: true });
+        if let Some(path) = Parser::submod_path_from_attr(outer_attrs, &self.directory.path) {
+            return Ok(ModulePathSuccess {
+                directory_ownership: match path.file_name().and_then(|s| s.to_str()) {
+                    Some("mod.rs") => DirectoryOwnership::Owned,
+                    _ => DirectoryOwnership::UnownedViaMod(true),
+                },
+                path: path,
+                warn: false,
+            });
         }
 
-        let paths = Parser::default_submod_path(id, &self.directory, self.sess.codemap());
+        let paths = Parser::default_submod_path(id, &self.directory.path, self.sess.codemap());
 
-        if self.restrictions.contains(NO_NONINLINE_MOD) {
+        if let DirectoryOwnership::UnownedViaBlock = self.directory.ownership {
             let msg =
                 "Cannot declare a non-inline module inside a block unless it has a path attribute";
             let mut err = self.diagnostic().struct_span_err(id_sp, msg);
@@ -5387,10 +5401,15 @@ impl<'a> Parser<'a> {
                 err.span_note(id_sp, &msg);
             }
             return Err(err);
-        } else if !self.owns_directory {
+        } else if let DirectoryOwnership::UnownedViaMod(warn) = self.directory.ownership {
+            if warn {
+                if let Ok(result) = paths.result {
+                    return Ok(ModulePathSuccess { warn: true, ..result });
+                }
+            }
             let mut err = self.diagnostic().struct_span_err(id_sp,
                 "cannot declare a new module at this location");
-            let this_module = match self.directory.file_name() {
+            let this_module = match self.directory.path.file_name() {
                 Some(file_name) => file_name.to_str().unwrap().to_owned(),
                 None => self.root_module_name.as_ref().unwrap().clone(),
             };
@@ -5403,8 +5422,10 @@ impl<'a> Parser<'a> {
                               &format!("... or maybe `use` the module `{}` instead \
                                         of possibly redeclaring it",
                                        paths.name));
-            }
-            return Err(err);
+                return Err(err);
+            } else {
+                return Err(err);
+            };
         }
 
         match paths.result {
@@ -5415,25 +5436,11 @@ impl<'a> Parser<'a> {
 
     /// Read a module from a source file.
     fn eval_src_mod(&mut self,
-                    id: ast::Ident,
-                    outer_attrs: &[ast::Attribute],
+                    path: PathBuf,
+                    directory_ownership: DirectoryOwnership,
+                    name: String,
                     id_sp: Span)
                     -> PResult<'a, (ast::ItemKind, Vec<ast::Attribute> )> {
-        let ModulePathSuccess { path, owns_directory } = try!(self.submod_path(id,
-                                                                          outer_attrs,
-                                                                          id_sp));
-
-        self.eval_src_mod_from_path(path,
-                                    owns_directory,
-                                    id.to_string(),
-                                    id_sp)
-    }
-
-    fn eval_src_mod_from_path(&mut self,
-                              path: PathBuf,
-                              owns_directory: bool,
-                              name: String,
-                              id_sp: Span) -> PResult<'a, (ast::ItemKind, Vec<ast::Attribute> )> {
         let mut included_mod_stack = self.sess.included_mod_stack.borrow_mut();
         if let Some(i) = included_mod_stack.iter().position(|p| *p == path) {
             let mut err = String::from("circular modules: ");
@@ -5448,7 +5455,8 @@ impl<'a> Parser<'a> {
         included_mod_stack.push(path.clone());
         drop(included_mod_stack);
 
-        let mut p0 = new_sub_parser_from_file(self.sess, &path, owns_directory, Some(name), id_sp);
+        let mut p0 =
+            new_sub_parser_from_file(self.sess, &path, directory_ownership, Some(name), id_sp);
         let mod_inner_lo = p0.span.lo;
         let mod_attrs = try!(p0.parse_inner_attributes());
         let m0 = try!(p0.parse_mod_items(&token::Eof, mod_inner_lo));
@@ -6089,9 +6097,9 @@ impl<'a> Parser<'a> {
         if self.check(&token::OpenDelim(token::Brace)) || self.check(&token::BinOp(token::Star)) ||
            self.is_import_coupler() {
             // `{foo, bar}`, `::{foo, bar}`, `*`, or `::*`.
+            self.eat(&token::ModSep);
             let prefix = ast::Path {
-                global: self.eat(&token::ModSep),
-                segments: Vec::new(),
+                segments: vec![ast::PathSegment::crate_root()],
                 span: mk_sp(lo, self.span.hi),
             };
             let view_path_kind = if self.eat(&token::BinOp(token::Star)) {
@@ -6101,7 +6109,7 @@ impl<'a> Parser<'a> {
             };
             Ok(P(spanned(lo, self.span.hi, view_path_kind)))
         } else {
-            let prefix = try!(self.parse_path(PathStyle::Mod));
+            let prefix = try!(self.parse_path(PathStyle::Mod)).default_to_global();
             if self.is_import_coupler() {
                 // `foo::bar::{a, b}` or `foo::bar::*`
                 self.bump();
@@ -6141,26 +6149,17 @@ impl<'a> Parser<'a> {
         })
     }
 
-    pub fn parse_optional_str(&mut self)
-                              -> Option<(InternedString,
-                                         ast::StrStyle,
-                                         Option<ast::Name>)> {
+    pub fn parse_optional_str(&mut self) -> Option<(Symbol, ast::StrStyle, Option<ast::Name>)> {
         let ret = match self.token {
-            token::Literal(token::Str_(s), suf) => {
-                let s = self.id_to_interned_str(ast::Ident::with_empty_ctxt(s));
-                (s, ast::StrStyle::Cooked, suf)
-            }
-            token::Literal(token::StrRaw(s, n), suf) => {
-                let s = self.id_to_interned_str(ast::Ident::with_empty_ctxt(s));
-                (s, ast::StrStyle::Raw(n), suf)
-            }
+            token::Literal(token::Str_(s), suf) => (s, ast::StrStyle::Cooked, suf),
+            token::Literal(token::StrRaw(s, n), suf) => (s, ast::StrStyle::Raw(n), suf),
             _ => return None
         };
         self.bump();
         Some(ret)
     }
 
-    pub fn parse_str(&mut self) -> PResult<'a, (InternedString, StrStyle)> {
+    pub fn parse_str(&mut self) -> PResult<'a, (Symbol, StrStyle)> {
         match self.parse_optional_str() {
             Some((s, style, suf)) => {
                 let sp = self.prev_span;

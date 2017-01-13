@@ -125,14 +125,7 @@ def escape_char(c):
 def emit_bsearch_range_table(f):
     f.write("""
 fn bsearch_range_table(c: char, r: &'static [(char,char)]) -> bool {
-    #[cfg(feature = "no_std")]
     use core::cmp::Ordering::{Equal, Less, Greater};
-
-    #[cfg(feature = "no_std")]
-    use core::slice::SliceExt;
-
-    #[cfg(not(feature = "no_std"))]
-    use std::cmp::Ordering::{Equal, Less, Greater};
 
     r.binary_search_by(|&(lo,hi)| {
         if lo <= c && c <= hi { Equal }
@@ -184,7 +177,7 @@ if __name__ == "__main__":
             unicode_version = re.search(pattern, readme.read()).groups()
         rf.write("""
 /// The version of [Unicode](http://www.unicode.org/)
-/// that this version of unicode-derived-property is based on.
+/// that this version of unicode-xid is based on.
 pub const UNICODE_VERSION: (u64, u64, u64) = (%s, %s, %s);
 """ % unicode_version)
         emit_bsearch_range_table(rf)

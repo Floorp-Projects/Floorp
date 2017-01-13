@@ -2,12 +2,12 @@ language: rust
 rust: 'nightly'
 sudo: false
 script:
-  - cargo build --verbose --features no_std
-  - cargo test --verbose --features no_std
+  - cargo build --verbose --features bench
+  - cargo test --verbose --features bench
+  - cargo bench --verbose --features bench
   - cargo clean
-  - cargo build --verbose --features default
-  - cargo test --verbose --features default
-  - cargo bench --verbose --features default
+  - cargo build --verbose
+  - cargo test --verbose
   - rustdoc --test README.md -L target/debug -L target/debug/deps
   - cargo doc
 after_success: |

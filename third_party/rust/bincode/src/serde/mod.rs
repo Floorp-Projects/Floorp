@@ -1,5 +1,5 @@
 //! A collection of serialization and deserialization functions
-//! that use the `serde` crate for the serialazble and deserializable
+//! that use the `serde` crate for the serializable and deserializable
 //! implementation.
 
 use std::io::{Write, Read};

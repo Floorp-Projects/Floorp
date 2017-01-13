@@ -9,7 +9,7 @@
 
 use libc::c_void;
 
-use base::{CFIndex, CFAllocatorRef, CFTypeID};
+use base::{CFRange, CFIndex, CFAllocatorRef, CFTypeID};
 
 /// FIXME(pcwalton): This is wrong.
 pub type CFArrayRetainCallBack = *const u8;
@@ -54,7 +54,7 @@ extern {
     // CFArrayGetCountOfValue
     // CFArrayGetFirstIndexOfValue
     // CFArrayGetLastIndexOfValue
-    // CFArrayGetValues
+    pub fn CFArrayGetValues(theArray: CFArrayRef, range: CFRange, values: *mut *const c_void);
     pub fn CFArrayGetValueAtIndex(theArray: CFArrayRef, idx: CFIndex) -> *const c_void;
     // CFArrayApplyFunction
     pub fn CFArrayGetTypeID() -> CFTypeID;

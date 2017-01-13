@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use std::slice;
-use std::ptr;
 use std::cell::UnsafeCell;
 use std::mem::{zeroed, size_of};
 
@@ -34,7 +33,7 @@ impl BitmapRenderTarget {
             (*self.native.get()).SetPixelsPerDip(ppd);
         }
     }
-    
+
     pub fn get_memory_dc(&self) -> winapi::HDC {
         unsafe {
             (*self.native.get()).GetMemoryDC()
@@ -52,11 +51,12 @@ impl BitmapRenderTarget {
                           glyph_offsets: &[winapi::DWRITE_GLYPH_OFFSET],
                           rendering_params: &RenderingParams,
                           color: &(f32, f32, f32))
+        -> winapi::RECT
     {
         unsafe {
             assert!(glyph_indices.len() == glyph_advances.len());
             assert!(glyph_indices.len() == glyph_offsets.len());
-            
+
             let r = (color.0 * 255.0) as u8;
             let g = (color.1 * 255.0) as u8;
             let b = (color.2 * 255.0) as u8;
@@ -71,13 +71,16 @@ impl BitmapRenderTarget {
             glyph_run.isSideways = 0;
             glyph_run.bidiLevel = 0;
 
-            (*self.native.get()).DrawGlyphRun(baseline_origin_x,
-                                              baseline_origin_y,
-                                              measuring_mode,
-                                              &glyph_run,
-                                              rendering_params.as_ptr(),
-                                              winapi::RGB(r,g,b),
-                                              ptr::null_mut());
+            let mut rect: winapi::RECT = zeroed();
+            let hr = (*self.native.get()).DrawGlyphRun(baseline_origin_x,
+                                                       baseline_origin_y,
+                                                       measuring_mode,
+                                                       &glyph_run,
+                                                       rendering_params.as_ptr(),
+                                                       winapi::RGB(r,g,b),
+                                                       &mut rect);
+            assert!(hr == 0);
+            rect
         }
     }
 

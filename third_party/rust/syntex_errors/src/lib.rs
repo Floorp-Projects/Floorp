@@ -21,8 +21,8 @@ extern crate term;
 extern crate log;
 #[macro_use]
 extern crate libc;
-extern crate unicode_xid;
-extern crate rustc_serialize;
+extern crate unicode_xid as std_unicode;
+extern crate rustc_serialize; // used by deriving
 extern crate syntex_pos as syntax_pos;
 
 pub use emitter::ColorConfig;

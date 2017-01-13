@@ -1,4 +1,4 @@
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum BinOp {
     /// The `+` operator (addition)
     Add,
@@ -38,7 +38,7 @@ pub enum BinOp {
     Gt,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum UnOp {
     /// The `*` operator for dereferencing
     Deref,

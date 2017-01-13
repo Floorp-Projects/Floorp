@@ -91,6 +91,24 @@ impl FontFace {
         }
     }
 
+    pub fn get_gdi_compatible_glyph_metrics(&self, em_size: f32, pixels_per_dip: f32, transform: *const winapi::DWRITE_MATRIX,
+                                            use_gdi_natural: bool, glyph_indices: &[u16], is_sideways: bool)
+                                            -> Vec<winapi::DWRITE_GLYPH_METRICS>
+    {
+        unsafe {
+            let mut metrics: Vec<winapi::DWRITE_GLYPH_METRICS> = vec![zeroed(); glyph_indices.len()];
+            let hr = (*self.native.get()).GetGdiCompatibleGlyphMetrics(em_size, pixels_per_dip,
+                                                                       transform,
+                                                                       use_gdi_natural as winapi::BOOL,
+                                                                       glyph_indices.as_ptr(),
+                                                                       glyph_indices.len() as u32,
+                                                                       metrics.as_mut_ptr(),
+                                                                       is_sideways as winapi::BOOL);
+            assert!(hr == 0);
+            metrics
+        }
+    }
+
     pub fn get_font_table(&self, opentype_table_tag: u32) -> Option<Vec<u8>> {
         unsafe {
             let mut table_data_ptr: *const u8 = ptr::null_mut();

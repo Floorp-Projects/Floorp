@@ -1,7 +1,7 @@
 /// Literal kind.
 ///
 /// E.g. `"foo"`, `42`, `12.34` or `bool`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Lit {
     /// A string literal (`"foo"`)
     Str(String, StrStyle),
@@ -19,7 +19,7 @@ pub enum Lit {
     Bool(bool),
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum StrStyle {
     /// A regular string, like `"foo"`
     Cooked,
@@ -65,7 +65,7 @@ impl From<bool> for Lit {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum IntTy {
     Isize,
     I8,
@@ -80,7 +80,7 @@ pub enum IntTy {
     Unsuffixed,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum FloatTy {
     F32,
     F64,
