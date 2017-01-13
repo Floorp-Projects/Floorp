@@ -2593,7 +2593,8 @@ JS_STATIC_ASSERT(JSTRY_CATCH == 0);
 JS_STATIC_ASSERT(JSTRY_FINALLY == 1);
 JS_STATIC_ASSERT(JSTRY_FOR_IN == 2);
 
-static const char* const TryNoteNames[] = { "catch", "finally", "for-in", "for-of", "loop" };
+static const char* const TryNoteNames[] = { "catch", "finally", "for-in", "for-of", "loop",
+                                            "iterclose" };
 
 static MOZ_MUST_USE bool
 TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
@@ -2601,15 +2602,15 @@ TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
     if (!script->hasTrynotes())
         return true;
 
-    if (sp->put("\nException table:\nkind      stack    start      end\n") < 0)
+    if (sp->put("\nException table:\nkind        stack    start      end\n") < 0)
         return false;
 
     JSTryNote* tn = script->trynotes()->vector;
     JSTryNote* tnlimit = tn + script->trynotes()->length;
     do {
         MOZ_ASSERT(tn->kind < ArrayLength(TryNoteNames));
-        uint8_t startOff = script->pcToOffset(script->main()) + tn->start;
-        if (!sp->jsprintf(" %-7s %6u %8u %8u\n",
+        uint32_t startOff = script->pcToOffset(script->main()) + tn->start;
+        if (!sp->jsprintf(" %-9s %6u %8u %8u\n",
                           TryNoteNames[tn->kind], tn->stackDepth,
                           startOff, startOff + tn->length))
         {
