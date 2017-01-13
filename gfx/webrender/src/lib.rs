@@ -76,7 +76,7 @@ mod shader_source {
     include!(concat!(env!("OUT_DIR"), "/shaders.rs"));
 }
 
-pub use record::{ApiRecordingReceiver, set_recording_detour};
+pub use record::{ApiRecordingReceiver, set_recording_detour, WEBRENDER_RECORDING_HEADER};
 
 mod platform {
     #[cfg(target_os="macos")]

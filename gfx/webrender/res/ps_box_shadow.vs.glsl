@@ -10,6 +10,7 @@ void main(void) {
 
     VertexInfo vi = write_vertex(segment_rect,
                                  prim.local_clip_rect,
+                                 prim.z,
                                  prim.layer,
                                  prim.tile);
 

@@ -6,7 +6,7 @@ use app_units::Au;
 use device::TextureFilter;
 use fnv::FnvHasher;
 use frame::FrameId;
-use internal_types::{FontTemplate, SourceTexture, TextureUpdateList};
+use internal_types::{ExternalImageUpdateList, FontTemplate, SourceTexture, TextureUpdateList};
 use platform::font::{FontContext, RasterizedGlyph};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -14,6 +14,7 @@ use std::collections::hash_map::Entry::{self, Occupied, Vacant};
 use std::fmt::Debug;
 use std::hash::BuildHasherDefault;
 use std::hash::Hash;
+use std::mem;
 use std::sync::{Arc, Barrier};
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
@@ -207,6 +208,7 @@ pub struct ResourceCache {
     pending_image_requests: Vec<ImageRequest>,
     glyph_cache_tx: Sender<GlyphCacheMsg>,
     glyph_cache_result_queue: Receiver<GlyphCacheResultMsg>,
+    pending_external_image_update_list: ExternalImageUpdateList,
 }
 
 impl ResourceCache {
@@ -228,6 +230,7 @@ impl ResourceCache {
             pending_image_requests: Vec::new(),
             glyph_cache_tx: glyph_cache_tx,
             glyph_cache_result_queue: glyph_cache_result_queue,
+            pending_external_image_update_list: ExternalImageUpdateList::new(),
         }
     }
 
@@ -272,6 +275,14 @@ impl ResourceCache {
                                  bytes: Vec<u8>) {
         let next_epoch = match self.image_templates.get(&image_key) {
             Some(image) => {
+                // This image should not be an external image.
+                match image.data {
+                    ImageData::External(id) => {
+                        panic!("Update an external image with buffer, id={} image_key={:?}", id.0, image_key);
+                    },
+                    _ => {},
+                }
+
                 let Epoch(current_epoch) = image.epoch;
                 Epoch(current_epoch + 1)
             }
@@ -294,7 +305,21 @@ impl ResourceCache {
     }
 
     pub fn delete_image_template(&mut self, image_key: ImageKey) {
-        self.image_templates.remove(&image_key);
+        let value = self.image_templates.remove(&image_key);
+
+        // If the key is associated to an external image, pass the external id to renderer for cleanup.
+        if let Some(image) = value {
+            match image.data {
+                ImageData::External(id) => {
+                    self.pending_external_image_update_list.push(id);
+                },
+                _ => {},
+            }
+
+            return;
+        }
+
+        println!("Delete the non-exist key:{:?}", image_key);
     }
 
     pub fn add_webgl_texture(&mut self, id: WebGLContextId, texture_id: SourceTexture, size: DeviceIntSize) {
@@ -341,6 +366,10 @@ impl ResourceCache {
 
     pub fn pending_updates(&mut self) -> TextureUpdateList {
         self.texture_cache.pending_updates()
+    }
+
+    pub fn pending_external_image_updates(&mut self) -> ExternalImageUpdateList {
+        mem::replace(&mut self.pending_external_image_update_list, ExternalImageUpdateList::new())
     }
 
     pub fn get_glyphs<F>(&self,

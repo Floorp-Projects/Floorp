@@ -115,6 +115,7 @@ pub struct PrimitiveMetadata {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct RectanglePrimitive {
     pub color: ColorF,
 }
@@ -133,6 +134,7 @@ pub struct ImagePrimitiveCpu {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct ImagePrimitiveGpu {
     pub stretch_size: LayerSize,
     pub tile_spacing: LayerSize,
@@ -149,6 +151,7 @@ pub struct YuvImagePrimitiveCpu {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct YuvImagePrimitiveGpu {
     pub y_uv0: DevicePoint,
     pub y_uv1: DevicePoint,
@@ -183,6 +186,7 @@ pub struct BorderPrimitiveCpu {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct BorderPrimitiveGpu {
     pub style: [f32; 4],
     pub widths: [f32; 4],
@@ -199,6 +203,7 @@ pub struct BoxShadowPrimitiveCacheKey {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct BoxShadowPrimitiveGpu {
     pub src_rect: LayerRect,
     pub bs_rect: LayerRect,
@@ -218,6 +223,7 @@ pub enum GradientType {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct GradientStop {
     color: ColorF,
     offset: f32,
@@ -225,6 +231,7 @@ pub struct GradientStop {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct GradientPrimitiveGpu {
     pub start_point: LayerPoint,
     pub end_point: LayerPoint,
@@ -241,11 +248,13 @@ pub struct GradientPrimitiveCpu {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 struct InstanceRect {
     rect: LayerRect,
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct TextRunPrimitiveGpu {
     pub color: ColorF,
 }
@@ -266,18 +275,21 @@ pub struct TextRunPrimitiveCpu {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 struct GlyphPrimitive {
     offset: LayerPoint,
     padding: LayerPoint,
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 struct ClipRect {
     rect: LayerRect,
     padding: [f32; 4],
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 struct ClipCorner {
     rect: LayerRect,
     outer_radius_x: f32,
@@ -299,6 +311,7 @@ impl ClipCorner {
 }
 
 #[derive(Debug, Clone)]
+#[repr(C)]
 pub struct ImageMaskData {
     uv_rect: DeviceRect,
     local_rect: LayerRect,
@@ -1011,6 +1024,7 @@ impl PrimitiveStore {
 }
 
 #[derive(Clone)]
+#[repr(C)]
 pub struct GpuBlock16 {
     data: [f32; 4],
 }
@@ -1064,6 +1078,7 @@ impl From<GlyphPrimitive> for GpuBlock16 {
 }
 
 #[derive(Clone)]
+#[repr(C)]
 pub struct GpuBlock32 {
     data: [f32; 8],
 }
@@ -1125,6 +1140,7 @@ impl From<ClipCorner> for GpuBlock32 {
 }
 
 #[derive(Clone)]
+#[repr(C)]
 pub struct GpuBlock64 {
     data: [f32; 16],
 }
@@ -1146,6 +1162,7 @@ impl From<BoxShadowPrimitiveGpu> for GpuBlock64 {
 }
 
 #[derive(Clone)]
+#[repr(C)]
 pub struct GpuBlock128 {
     data: [f32; 32],
 }

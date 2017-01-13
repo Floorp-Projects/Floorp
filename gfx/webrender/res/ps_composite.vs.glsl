@@ -5,6 +5,7 @@
 
 struct Composite {
     ivec4 src0_src1_target_id_op;
+    int z;
 };
 
 Composite fetch_composite() {
@@ -14,6 +15,7 @@ Composite fetch_composite() {
     composite.src0_src1_target_id_op = ivec4(pi.user_data.xy,
                                              pi.render_task_index,
                                              pi.sub_index);
+    composite.z = pi.z;
 
     return composite;
 }
@@ -44,5 +46,5 @@ void main(void) {
 
     vOp = composite.src0_src1_target_id_op.w;
 
-    gl_Position = uTransform * vec4(local_pos, 0, 1);
+    gl_Position = uTransform * vec4(local_pos, composite.z, 1.0);
 }

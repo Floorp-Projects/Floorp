@@ -4,5 +4,5 @@
 
 void main(void) {
     float alpha = texelFetch(sCache, ivec3(vClipMaskUv), 0).a;
-    oFragColor = vec4(1.0, 1.0, 1.0, alpha);
+    oFragColor = vec4(alpha, 0.0, 0.0, 1.0);
 }

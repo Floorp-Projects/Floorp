@@ -10,6 +10,7 @@ void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(prim.local_rect,
                                                     prim.local_clip_rect,
+                                                    prim.z,
                                                     prim.layer,
                                                     prim.tile);
     vLocalRect = vi.clipped_local_rect;
@@ -17,6 +18,7 @@ void main(void) {
 #else
     VertexInfo vi = write_vertex(prim.local_rect,
                                  prim.local_clip_rect,
+                                 prim.z,
                                  prim.layer,
                                  prim.tile);
 #endif

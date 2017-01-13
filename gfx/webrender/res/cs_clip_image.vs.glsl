@@ -33,6 +33,6 @@ void main(void) {
     vPos = vi.local_pos;
 
     vClipMaskUv = vec3((vPos.xy / vPos.z - local_rect.xy) / local_rect.zw, 0.0);
-    vec2 texture_size = textureSize(sMask, 0);
+    vec2 texture_size = vec2(textureSize(sMask, 0));
     vClipMaskUvRect = mask.uv_rect / texture_size.xyxy;
 }

@@ -431,18 +431,15 @@ impl RenderBackend {
                                      &self.scene.pipeline_auxiliary_lists,
                                      self.device_pixel_ratio);
 
-        let pending_update = self.resource_cache.pending_updates();
-        if !pending_update.updates.is_empty() {
-            self.result_tx.send(ResultMsg::UpdateTextureCache(pending_update)).unwrap();
-        }
-
         frame
     }
 
     fn publish_frame(&mut self,
                      frame: RendererFrame,
                      profile_counters: &mut BackendProfileCounters) {
-        let msg = ResultMsg::NewFrame(frame, profile_counters.clone());
+        let pending_update = self.resource_cache.pending_updates();
+        let pending_external_image_update = self.resource_cache.pending_external_image_updates();
+        let msg = ResultMsg::NewFrame(frame, pending_update, pending_external_image_update, profile_counters.clone());
         self.result_tx.send(msg).unwrap();
         profile_counters.reset();
     }

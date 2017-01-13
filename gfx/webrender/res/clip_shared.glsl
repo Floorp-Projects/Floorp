@@ -28,7 +28,7 @@ CacheClipInstance fetch_clip_item(int index) {
     return cci;
 }
 
-// The transformed vertex function that always covers the whole whole clip area,
+// The transformed vertex function that always covers the whole clip area,
 // which is the intersection of all clip instances of a given primitive
 TransformVertexInfo write_clip_tile_vertex(vec4 local_clip_rect,
                                            Layer layer,
