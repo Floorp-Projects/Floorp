@@ -38,3 +38,18 @@ pub const kCGImageAlphaFirst: u32 = 4;
 pub const kCGImageAlphaNoneSkipLast: u32 = 5;
 pub const kCGImageAlphaNoneSkipFirst: u32 = 6;
 
+pub const kCGBitmapByteOrderDefault: u32 = (0 << 12);
+pub const kCGBitmapByteOrder16Little: u32 = (1 << 12);
+pub const kCGBitmapByteOrder32Little: u32 = (2 << 12);
+pub const kCGBitmapByteOrder16Big: u32 = (3 << 12);
+pub const kCGBitmapByteOrder32Big: u32 = (4 << 12);
+
+#[cfg(target_endian = "big")]
+pub const kCGBitmapByteOrder16Host: u32 = kCGBitmapByteOrder16Big;
+#[cfg(target_endian = "big")]
+pub const kCGBitmapByteOrder32Host: u32 = kCGBitmapByteOrder32Big;
+
+#[cfg(target_endian = "little")]
+pub const kCGBitmapByteOrder16Host: u32 = kCGBitmapByteOrder16Little;
+#[cfg(target_endian = "little")]
+pub const kCGBitmapByteOrder32Host: u32 = kCGBitmapByteOrder32Little;
