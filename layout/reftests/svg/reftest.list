@@ -467,3 +467,5 @@ default-preferences
 == paint-on-maskLayer-1c.html paint-on-maskLayer-1-ref.html
 
 fuzzy(71,817) == filter-on-continuation-box-01.html filter-on-continuation-box-ref.html
+== mask-contains-inner-svg-01.svg pass.svg
+== mask-contains-inner-svg-02.svg pass.svg
