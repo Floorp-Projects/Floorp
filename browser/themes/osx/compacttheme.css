@@ -106,14 +106,14 @@
   margin-bottom: 0;
 }
 
-:root[devtoolstheme="dark"] .findbar-closebutton:not(:hover),
+.findbar-closebutton:-moz-lwtheme-brighttext:not(:hover),
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
 .tab-close-button[selected=true]:not(:hover) {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }
 @media (min-resolution: 2dppx) {
-  :root[devtoolstheme="dark"] .findbar-closebutton:not(:hover),
+  .findbar-closebutton:-moz-lwtheme-brighttext :not(:hover),
   .tab-close-button[selected=true]:not(:hover) {
     -moz-image-region: rect(0, 128px, 32px, 96px);
   }
