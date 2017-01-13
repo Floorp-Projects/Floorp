@@ -2,9 +2,10 @@
 description = "Bindings for Freetype used by Servo"
 license = "Apache-2.0 / MIT"
 name = "freetype"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["The Servo Project Developers"]
 documentation = "http://doc.servo.org/freetype/"
+repository = "https://github.com/servo/rust-freetype"
 
 [features]
 default = ["servo-freetype-sys"]

@@ -8,14 +8,16 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+#[cfg(feature = "bench")]
 use std::iter;
+#[cfg(feature = "bench")]
 use test::Bencher;
+#[cfg(feature = "bench")]
+use std::prelude::v1::*;
 
 use super::UnicodeXID;
 
-#[cfg(feature = "no_std")]
-use std::prelude::v1::*;
-
+#[cfg(feature = "bench")]
 #[bench]
 fn cargo_is_xid_start(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
@@ -26,6 +28,7 @@ fn cargo_is_xid_start(b: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "bench")]
 #[bench]
 fn stdlib_is_xid_start(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
@@ -36,6 +39,7 @@ fn stdlib_is_xid_start(b: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "bench")]
 #[bench]
 fn cargo_xid_continue(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
@@ -46,6 +50,7 @@ fn cargo_xid_continue(b: &mut Bencher) {
     });
 }
 
+#[cfg(feature = "bench")]
 #[bench]
 fn stdlib_xid_continue(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();

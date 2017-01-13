@@ -14,6 +14,7 @@ use libc::{c_void, size_t};
 use std::mem;
 use std::ptr;
 use std::slice;
+use geometry::CGRect;
 
 #[repr(C)]
 pub enum CGTextDrawingMode {
@@ -190,6 +191,12 @@ impl CGContext {
             CGContextSetTextDrawingMode(self.as_concrete_TypeRef(), mode)
         }
     }
+
+    pub fn fill_rect(&self, rect: CGRect) {
+        unsafe {
+            CGContextFillRect(self.as_concrete_TypeRef(), rect)
+        }
+    }
 }
 
 #[link(name = "ApplicationServices", kind = "framework")]
@@ -225,5 +232,7 @@ extern {
                                 green: CGFloat,
                                 blue: CGFloat,
                                 alpha: CGFloat);
+    fn CGContextFillRect(context: CGContextRef,
+                         rect: CGRect);
 }
 

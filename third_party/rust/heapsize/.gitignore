@@ -1,5 +1,3 @@
-/target
-/Cargo.lock
-/plugin/target
-/plugin/Cargo.lock
+target
+Cargo.lock
 *.swp

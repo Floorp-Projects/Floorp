@@ -114,6 +114,12 @@ s! {
         pub msg_flags: ::c_int,
     }
 
+    pub struct cmsghdr {
+        pub cmsg_len: ::size_t,
+        pub cmsg_level: ::c_int,
+        pub cmsg_type: ::c_int,
+    }
+
     pub struct fd_set {
         fds_bits: [i32; FD_SETSIZE / 32],
     }
@@ -806,6 +812,10 @@ pub const LOCK_EX: ::c_int = 2;
 pub const LOCK_NB: ::c_int = 4;
 pub const LOCK_UN: ::c_int = 8;
 
+pub const F_RDLCK: ::c_short = 1;
+pub const F_WRLCK: ::c_short = 2;
+pub const F_UNLCK: ::c_short = 3;
+
 pub const O_SYNC: ::c_int = 16;
 pub const O_NONBLOCK: ::c_int = 128;
 
@@ -973,6 +983,7 @@ extern {
                            flags: ::c_int,
                            rqtp: *const ::timespec,
                            rmtp:  *mut ::timespec) -> ::c_int;
+    pub fn clock_settime(clk_id: clockid_t, tp: *const ::timespec) -> ::c_int;
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
                        host: *mut ::c_char,

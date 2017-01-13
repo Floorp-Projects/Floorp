@@ -97,7 +97,7 @@ pub use parsing::*;
 #[cfg(feature = "parsing")]
 mod parsing {
     use super::*;
-    use {generics, macro_input, space, ty};
+    use {generics, ident, macro_input, space, ty};
     use nom::IResult;
 
     #[cfg(feature = "full")]
@@ -142,6 +142,10 @@ mod parsing {
     #[cfg(feature = "full")]
     pub fn parse_token_trees(input: &str) -> Result<Vec<TokenTree>, String> {
         unwrap("token trees", mac::parsing::token_trees, input)
+    }
+
+    pub fn parse_ident(input: &str) -> Result<Ident, String> {
+        unwrap("identifier", ident::parsing::ident, input)
     }
 
     fn unwrap<T>(name: &'static str,

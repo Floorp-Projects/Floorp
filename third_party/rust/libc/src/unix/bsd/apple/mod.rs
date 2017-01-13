@@ -1530,6 +1530,8 @@ extern {
                     linkpath: *const ::c_char) -> ::c_int;
    pub fn unlinkat(dirfd: ::c_int, pathname: *const ::c_char,
                    flags: ::c_int) -> ::c_int;
+
+    pub fn initgroups(user: *const ::c_char, basegroup: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

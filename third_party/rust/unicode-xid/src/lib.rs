@@ -24,7 +24,7 @@
 //!
 //! # features
 //!
-//! unicode-width supports a `no_std` feature. This eliminates dependence
+//! unicode-xid supports a `no_std` feature. This eliminates dependence
 //! on std, and instead uses equivalent functions from core.
 //!
 //! # crates.io
@@ -34,23 +34,21 @@
 //!
 //! ```toml
 //! [dependencies]
-//! unicode-derived_property = "0.0.1"
+//! unicode-xid = "0.0.4"
 //! ```
 
 #![deny(missing_docs, unsafe_code)]
 #![doc(html_logo_url = "https://unicode-rs.github.io/unicode-rs_sm.png",
        html_favicon_url = "https://unicode-rs.github.io/unicode-rs_sm.png")]
 
-#![cfg_attr(feature = "no_std", no_std)]
-#![cfg_attr(feature = "no_std", feature(no_std, core_slice_ext))]
+#![no_std]
+#![cfg_attr(feature = "bench", feature(test, unicode))]
 
-#![cfg_attr(test, feature(test, unicode))]
-
-#[cfg(all(test, feature = "no_std"))]
+#[cfg(test)]
 #[macro_use]
 extern crate std;
 
-#[cfg(test)]
+#[cfg(feature = "bench")]
 extern crate test;
 
 use tables::derived_property;

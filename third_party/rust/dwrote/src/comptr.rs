@@ -4,7 +4,7 @@
 
 use std::ops::{Deref, DerefMut};
 use std::ptr;
-use winapi::{IUnknown, REFIID};
+use winapi::{IUnknown, REFIID, S_OK, E_NOINTERFACE};
 
 #[derive(Debug)]
 pub struct ComPtr<T> {
@@ -29,8 +29,20 @@ impl<T> ComPtr<T> {
         self.ptr
     }
 
-    pub fn query_interface<Q>(&self, _: REFIID) -> Option<ComPtr<Q>> {
-        panic!("Here's where the code goes when you need it");
+    pub fn query_interface<Q>(&self, iid: REFIID) -> Option<ComPtr<Q>> {
+        if self.ptr.is_null() {
+            return None;
+        }
+
+        unsafe {
+            let mut p = ComPtr::<Q>::new();
+            let hr = (*(self.ptr as *mut IUnknown)).QueryInterface(iid, p.getter_addrefs());
+            if hr == S_OK {
+                return Some(p);
+            }
+            assert!(hr == E_NOINTERFACE);
+            return None;
+        }
     }
 
     pub fn addref(&self) {

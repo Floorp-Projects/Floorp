@@ -33,7 +33,6 @@ extern crate syntex_pos as syntax_pos;
 extern crate rustc_serialize as serialize;
 extern crate unicode_xid;
 
-
 // A variant of 'try!' that panics on an Err. This is used as a crutch on the
 // way towards a non-panic!-prone parser. It should be used for fatal parsing
 // errors; eventually we plan to convert all code using panictry to just use
@@ -67,7 +66,6 @@ pub mod diagnostics {
 pub mod diagnostic_list;
 
 pub mod util {
-    pub mod interner;
     pub mod lev_distance;
     pub mod node_count;
     pub mod parser;
@@ -102,6 +100,7 @@ pub mod ptr;
 pub mod show_span;
 pub mod std_inject;
 pub mod str;
+pub mod symbol;
 pub mod test;
 pub mod tokenstream;
 pub mod visit;
@@ -129,5 +128,8 @@ pub mod ext {
         pub mod macro_rules;
     }
 }
+
+#[cfg(test)]
+mod test_snippet;
 
 // __build_diagnostic_array! { libsyntax, DIAGNOSTICS }

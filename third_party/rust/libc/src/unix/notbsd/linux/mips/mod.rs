@@ -1,3 +1,37 @@
+pub const CLONE_NEWCGROUP: ::c_int = 0x02000000;
+
+pub const SFD_CLOEXEC: ::c_int = 0x080000;
+
+pub const NCCS: usize = 32;
+
+pub const O_TRUNC: ::c_int = 512;
+
+pub const O_CLOEXEC: ::c_int = 0x80000;
+
+pub const EBFONT: ::c_int = 59;
+pub const ENOSTR: ::c_int = 60;
+pub const ENODATA: ::c_int = 61;
+pub const ETIME: ::c_int = 62;
+pub const ENOSR: ::c_int = 63;
+pub const ENONET: ::c_int = 64;
+pub const ENOPKG: ::c_int = 65;
+pub const EREMOTE: ::c_int = 66;
+pub const ENOLINK: ::c_int = 67;
+pub const EADV: ::c_int = 68;
+pub const ESRMNT: ::c_int = 69;
+pub const ECOMM: ::c_int = 70;
+pub const EPROTO: ::c_int = 71;
+pub const EDOTDOT: ::c_int = 73;
+
+pub const SA_NODEFER: ::c_int = 0x40000000;
+pub const SA_RESETHAND: ::c_int = 0x80000000;
+pub const SA_RESTART: ::c_int = 0x10000000;
+pub const SA_NOCLDSTOP: ::c_int = 0x00000001;
+
+pub const EPOLL_CLOEXEC: ::c_int = 0x80000;
+
+pub const EFD_CLOEXEC: ::c_int = 0x80000;
+
 pub const BUFSIZ: ::c_uint = 8192;
 pub const TMP_MAX: ::c_uint = 238328;
 pub const FOPEN_MAX: ::c_uint = 16;

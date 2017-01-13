@@ -163,11 +163,8 @@ impl<'a, W: Write> serde::Serializer for Serializer<'a, W> {
     }
 
     fn serialize_bytes(&mut self, v: &[u8]) -> SerializeResult<()> {
-        let mut state = try!(self.serialize_seq(Some(v.len())));
-        for c in v {
-            try!(self.serialize_seq_elt(&mut state, c));
-        }
-        self.serialize_seq_end(state)
+        try!(self.serialize_usize(v.len()));
+        self.writer.write_all(v).map_err(SerializeError::IoError)
     }
 
     fn serialize_none(&mut self) -> SerializeResult<()> {
@@ -440,11 +437,8 @@ impl serde::Serializer for SizeChecker {
     }
 
     fn serialize_bytes(&mut self, v: &[u8]) -> SerializeResult<()> {
-        let mut state = try!(self.serialize_seq(Some(v.len())));
-        for c in v {
-            try!(self.serialize_seq_elt(&mut state, c));
-        }
-        self.serialize_seq_end(state)
+        try!(self.add_value(0 as u64));
+        self.add_raw(v.len())
     }
 
     fn serialize_none(&mut self) -> SerializeResult<()> {

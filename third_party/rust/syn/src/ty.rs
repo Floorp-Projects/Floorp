@@ -1,7 +1,7 @@
 use super::*;
 
 /// The different kinds of types recognized by the compiler
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Ty {
     /// A variable-length array (`[T]`)
     Slice(Box<Ty>),
@@ -35,13 +35,13 @@ pub enum Ty {
     Infer,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct MutTy {
     pub ty: Ty,
     pub mutability: Mutability,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Mutability {
     Mutable,
     Immutable,
@@ -53,7 +53,7 @@ pub enum Mutability {
 /// along with a bunch of supporting information.
 ///
 /// E.g. `std::cmp::PartialEq`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Path {
     pub global: bool,
     pub segments: Vec<PathSegment>,
@@ -73,7 +73,7 @@ impl<T> From<T> for Path
 /// A segment of a path: an identifier, an optional lifetime, and a set of types.
 ///
 /// E.g. `std`, `String` or `Box<T>`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PathSegment {
     pub ident: Ident,
     pub parameters: PathParameters,
@@ -93,7 +93,7 @@ impl<T> From<T> for PathSegment
 /// Parameters of a path segment.
 ///
 /// E.g. `<A, B>` as in `Foo<A, B>` or `(A, B)` as in `Foo(A, B)`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum PathParameters {
     /// The `<'a, A, B, C>` in `foo::bar::baz::<'a, A, B, C>`
     AngleBracketed(AngleBracketedParameterData),
@@ -118,7 +118,7 @@ impl PathParameters {
 }
 
 /// A path like `Foo<'a, T>`
-#[derive(Debug, Clone, Eq, PartialEq, Default)]
+#[derive(Debug, Clone, Eq, PartialEq, Default, Hash)]
 pub struct AngleBracketedParameterData {
     /// The lifetime parameters for this path segment.
     pub lifetimes: Vec<Lifetime>,
@@ -131,14 +131,14 @@ pub struct AngleBracketedParameterData {
 }
 
 /// Bind a type to an associated type: `A=Foo`.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct TypeBinding {
     pub ident: Ident,
     pub ty: Ty,
 }
 
 /// A path like `Foo(A,B) -> C`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct ParenthesizedParameterData {
     /// `(A, B)`
     pub inputs: Vec<Ty>,
@@ -146,7 +146,7 @@ pub struct ParenthesizedParameterData {
     pub output: Option<Ty>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct PolyTraitRef {
     /// The `'a` in `<'a> Foo<&'a T>`
     pub bound_lifetimes: Vec<LifetimeDef>,
@@ -168,13 +168,13 @@ pub struct PolyTraitRef {
 ///  ^~~~~    ^
 ///  ty       position = 0
 /// ```
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct QSelf {
     pub ty: Box<Ty>,
     pub position: usize,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct BareFnTy {
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
@@ -184,13 +184,13 @@ pub struct BareFnTy {
     pub variadic: bool,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum Unsafety {
     Unsafe,
     Normal,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum Abi {
     Named(String),
     Rust,
@@ -199,13 +199,13 @@ pub enum Abi {
 /// An argument in a function type.
 ///
 /// E.g. `bar: usize` as in `fn foo(bar: usize)`
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct BareFnArg {
     pub name: Option<Ident>,
     pub ty: Ty,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum FunctionRetTy {
     /// Return type is not specified.
     ///
