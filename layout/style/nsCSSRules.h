@@ -652,7 +652,6 @@ public:
     , mName(aName)
     , mGeneration(0)
   {
-    SetIsNotDOMBinding();
   }
 
 private:
@@ -675,6 +674,28 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  // The XPCOM GetName is OK
+  // The XPCOM SetName is OK
+  // The XPCOM GetSystem is OK
+  // The XPCOM SetSystem is OK
+  // The XPCOM GetSymbols is OK
+  // The XPCOM SetSymbols is OK
+  // The XPCOM GetAdditiveSymbols is OK
+  // The XPCOM SetAdditiveSymbols is OK
+  // The XPCOM GetNegative is OK
+  // The XPCOM SetNegative is OK
+  // The XPCOM GetPrefix is OK
+  // The XPCOM SetPrefix is OK
+  // The XPCOM GetSuffix is OK
+  // The XPCOM SetSuffix is OK
+  // The XPCOM GetRange is OK
+  // The XPCOM SetRange is OK
+  // The XPCOM GetPad is OK
+  // The XPCOM SetPad is OK
+  // The XPCOM GetSpeakAs is OK
+  // The XPCOM SetSpeakAs is OK
+  // The XPCOM GetFallback is OK
+  // The XPCOM SetFallback is OK
 
   // This function is only used to check whether a non-empty value, which has
   // been accepted by parser, is valid for the given system and descriptor.
