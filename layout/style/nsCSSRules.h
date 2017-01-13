@@ -72,10 +72,6 @@ public:
   {
     return this;
   }
-  virtual nsIDOMCSSRule* GetExistingDOMRule() override
-  {
-    return this;
-  }
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -124,10 +120,6 @@ public:
   virtual int32_t GetType() const override;
   virtual already_AddRefed<Rule> Clone() const override;
   virtual nsIDOMCSSRule* GetDOMRule() override
-  {
-    return this;
-  }
-  virtual nsIDOMCSSRule* GetExistingDOMRule() override
   {
     return this;
   }
@@ -460,10 +452,6 @@ public:
   {
     return this;
   }
-  virtual nsIDOMCSSRule* GetExistingDOMRule() override
-  {
-    return this;
-  }
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -576,10 +564,6 @@ public:
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) override;
   virtual nsIDOMCSSRule* GetDOMRule() override
-  {
-    return this;
-  }
-  virtual nsIDOMCSSRule* GetExistingDOMRule() override
   {
     return this;
   }
