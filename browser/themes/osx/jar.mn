@@ -10,7 +10,7 @@ browser.jar:
   skin/classic/browser/aboutSyncTabs.css
 * skin/classic/browser/syncedtabs/sidebar.css          (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
-* skin/classic/browser/devedition.css
+* skin/classic/browser/compacttheme.css
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/Info.png

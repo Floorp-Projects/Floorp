@@ -2,9 +2,9 @@
 % License, v. 2.0. If a copy of the MPL was not distributed with this
 % file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/* devedition.css is loaded in browser.xul after browser.css when it is
+/* compacttheme.css is loaded in browser.xul after browser.css when it is
    preffed on.  The bulk of the styling is here in the shared file, but
-   there are overrides for each platform in their devedition.css files. */
+   there are overrides for each platform in their compacttheme.css files. */
 
 :root {
   --tab-toolbar-navbar-overlap: 0px;

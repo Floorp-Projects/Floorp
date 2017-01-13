@@ -69,7 +69,7 @@ browser.jar:
         content/browser/browser-ctrlTab.js            (content/browser-ctrlTab.js)
         content/browser/browser-customization.js      (content/browser-customization.js)
         content/browser/browser-data-submission-info-bar.js (content/browser-data-submission-info-bar.js)
-        content/browser/browser-devedition.js         (content/browser-devedition.js)
+        content/browser/browser-compacttheme.js       (content/browser-compacttheme.js)
         content/browser/browser-feeds.js              (content/browser-feeds.js)
         content/browser/browser-fullScreenAndPointerLock.js  (content/browser-fullScreenAndPointerLock.js)
         content/browser/browser-fullZoom.js           (content/browser-fullZoom.js)
