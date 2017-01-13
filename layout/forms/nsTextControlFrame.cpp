@@ -347,32 +347,12 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   // Create the placeholder anonymous content if needed.
   if (mUsePlaceholder) {
-    nsIContent* placeholderNode = txtCtrl->CreatePlaceholderNode();
+    Element* placeholderNode = txtCtrl->CreatePlaceholderNode();
     NS_ENSURE_TRUE(placeholderNode, NS_ERROR_OUT_OF_MEMORY);
 
     // Associate ::placeholder pseudo-element with the placeholder node.
-    CSSPseudoElementType pseudoType = CSSPseudoElementType::placeholder;
-
-    // If this is a text input inside a number input then we want to use the
-    // main number input as the source of style for the placeholder frame.
-    nsIFrame* mainInputFrame = this;
-    if (StyleContext()->GetPseudoType() == CSSPseudoElementType::mozNumberText) {
-      do {
-        mainInputFrame = mainInputFrame->GetParent();
-      } while (mainInputFrame &&
-               mainInputFrame->GetType() != nsGkAtoms::numberControlFrame);
-      MOZ_ASSERT(mainInputFrame);
-    }
-
-    RefPtr<nsStyleContext> placeholderStyleContext =
-      PresContext()->StyleSet()->ResolvePseudoElementStyle(
-          mainInputFrame->GetContent()->AsElement(), pseudoType, StyleContext(),
-          placeholderNode->AsElement());
-
-    if (!aElements.AppendElement(ContentInfo(placeholderNode,
-                                 placeholderStyleContext))) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    placeholderNode->SetPseudoElementType(CSSPseudoElementType::placeholder);
+    aElements.AppendElement(placeholderNode);
 
     if (!IsSingleLineTextControl()) {
       // For textareas, UpdateValueDisplay doesn't initialize the visibility

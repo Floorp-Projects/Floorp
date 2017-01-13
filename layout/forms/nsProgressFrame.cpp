@@ -72,12 +72,9 @@ nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   mBarDiv = doc->CreateHTMLElement(nsGkAtoms::div);
 
   // Associate ::-moz-progress-bar pseudo-element to the anonymous child.
-  CSSPseudoElementType pseudoType = CSSPseudoElementType::mozProgressBar;
-  RefPtr<nsStyleContext> newStyleContext = PresContext()->StyleSet()->
-    ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
-                              StyleContext(), mBarDiv->AsElement());
+  mBarDiv->SetPseudoElementType(CSSPseudoElementType::mozProgressBar);
 
-  if (!aElements.AppendElement(ContentInfo(mBarDiv, newStyleContext))) {
+  if (!aElements.AppendElement(mBarDiv)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

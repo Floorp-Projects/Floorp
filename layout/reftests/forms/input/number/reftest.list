@@ -52,3 +52,6 @@ fuzzy-if(skiaContent,2,5) needs-focus == focus-handling.html focus-handling-ref.
 fuzzy(128,4) == number-reframe-anon-text-field.html number-reframe-anon-text-field-ref.html
 
 == pseudo-classes.html about:blank
+
+# Style inheritance:
+== number-style-inheritance.html number-style-inheritance-ref.html
