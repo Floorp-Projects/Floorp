@@ -8,6 +8,7 @@
 #define WR_h
 
 #include "mozilla/layers/LayersMessages.h"
+#include "mozilla/gfx/Types.h"
 
 extern "C" {
 bool is_in_compositor_thread();
@@ -60,7 +61,7 @@ struct WRGlyphInstance {
 // versus GlyphInstance, but their layout is the same.
 // So we're really overlapping the types for the same memory.
 struct WRGlyphArray {
-  WRColor color;
+  mozilla::gfx::Color color;
   nsTArray<WRGlyphInstance> glyphs;
 
   bool operator==(const WRGlyphArray& other) const {
@@ -172,7 +173,6 @@ struct WRExternalImageHandler {
 };
 
 struct wrwindowstate;
-struct wrstate;
 
 #ifdef MOZ_ENABLE_WEBRENDER
 #  define WR_INLINE
@@ -183,6 +183,7 @@ struct wrstate;
 #endif
 
 struct WrRenderer;
+struct WRState;
 
 WR_INLINE void
 wr_renderer_update(WrRenderer* renderer) WR_FUNC;
@@ -211,6 +212,9 @@ wr_window_new(uint64_t window_id,
               WrRenderer** out_renderer) WR_FUNC;
 
 WR_INLINE void
+wr_window_remove_pipeline(wrwindowstate* window, WRState* state) WR_FUNC;
+
+WR_INLINE void
 wr_api_delete(WrAPI* api) WR_FUNC;
 
 WR_INLINE WRImageKey
@@ -226,8 +230,18 @@ wr_api_update_image(WrAPI* api, WRImageKey key,
                     uint32_t width, uint32_t height,
                     WRImageFormat format, uint8_t *bytes, size_t size) WR_FUNC;
 
-WR_INLINE void
+WR_INLINE uint64_t
 wr_api_delete_image(WrAPI* api, WRImageKey key) WR_FUNC;
+
+
+WR_INLINE void
+wr_window_init_pipeline_epoch(wrwindowstate* window, uint64_t pipeline, uint32_t width, uint32_t height) WR_FUNC;
+
+//WR_INLINE void
+//wr_api_add_raw_font(WrAPI* api, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
+
+WR_INLINE uint64_t
+wr_window_add_raw_font(wrwindowstate* window, uint8_t* font_buffer, size_t buffer_size) WR_FUNC;
 
 WR_INLINE wrwindowstate*
 wr_init_window(uint64_t root_pipeline_id,
@@ -236,12 +250,14 @@ wr_init_window(uint64_t root_pipeline_id,
                WRExternalImageHandler* handler = nullptr)
 WR_FUNC;
 
-WR_INLINE wrstate*
-wr_create(wrwindowstate* wrWindow, uint32_t width, uint32_t height, uint64_t layers_id)
-WR_FUNC;
+WR_INLINE WRState*
+wr_state_new(uint32_t width, uint32_t height, uint64_t pipeline_id) WR_FUNC;
 
 WR_INLINE void
-wr_destroy(wrwindowstate* wrWindow, wrstate* wrstate)
+wr_state_delete(WRState* state) WR_FUNC;
+
+WR_INLINE void
+wr_destroy(wrwindowstate* wrWindow, WRState* WRState)
 WR_FUNC;
 
 WR_INLINE WRImageKey
@@ -271,57 +287,68 @@ wr_delete_image(wrwindowstate* wrWindow, WRImageKey key)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_stacking_context(wrstate *wrState, WRRect bounds,
+wr_dp_push_stacking_context(WRState *wrState, WRRect bounds,
                             WRRect overflow, const WRImageMask *mask,
                             const float* matrix)
 WR_FUNC;
 
 //XXX: matrix should use a proper type
 WR_INLINE void
-wr_dp_pop_stacking_context(wrstate *wrState)
+wr_dp_pop_stacking_context(WRState *wrState)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_begin(wrstate* wrState, uint32_t width, uint32_t height)
+wr_dp_begin(WRState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_window_dp_begin(wrwindowstate* wrWindow, wrstate* wrState, uint32_t width, uint32_t height)
+wr_window_dp_begin(wrwindowstate* wrWindow, WRState* wrState, uint32_t width, uint32_t height)
 WR_FUNC;
 
 WR_INLINE void
-wr_window_dp_end(wrwindowstate* wrWindow, wrstate* wrState)
+wr_window_dp_end(wrwindowstate* wrWindow, WRState* wrState)
 WR_FUNC;
+
+WR_INLINE void
+wr_dp_end(WRState* builder, WrAPI* api, uint32_t epoch) WR_FUNC;
 
 WR_INLINE void
 wr_composite_window(wrwindowstate* wrWindow)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_rect(wrstate* wrState, WRRect bounds, WRRect clip,
+wr_dp_push_rect(WRState* wrState, WRRect bounds, WRRect clip,
                 float r, float g, float b, float a)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_border(wrstate* wrState, WRRect bounds, WRRect clip,
+wr_dp_push_text(WRState* wrState,
+                WRRect bounds, WRRect clip,
+                WRColor color,
+                uint64_t font_Key,
+                const WRGlyphInstance* glyphs,
+                uint32_t glyph_count, float glyph_size) WR_FUNC;
+
+WR_INLINE void
+wr_dp_push_border(WRState* wrState, WRRect bounds, WRRect clip,
                   WRBorderSide top, WRBorderSide right, WRBorderSide bottom, WRBorderSide left,
                   WRLayoutSize top_left_radius, WRLayoutSize top_right_radius,
                   WRLayoutSize bottom_left_radius, WRLayoutSize bottom_right_radius)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_image(wrstate* wrState, WRRect bounds, WRRect clip,
+wr_dp_push_image(WRState* wrState, WRRect bounds, WRRect clip,
                  const WRImageMask* mask, WRImageKey key)
 WR_FUNC;
 
 // TODO: Remove.
 WR_INLINE void
-wr_window_dp_push_iframe(wrwindowstate* wrWindow, wrstate* wrState, WRRect bounds, WRRect clip,
+wr_window_dp_push_iframe(wrwindowstate* wrWindow, WRState* wrState, WRRect bounds, WRRect clip,
                    uint64_t layers_id)
 WR_FUNC;
 
 WR_INLINE void
-wr_dp_push_iframe(wrstate* wrState, WRRect bounds, WRRect clip, uint64_t layers_id) WR_FUNC;
+wr_dp_push_iframe(WRState* wrState, WRRect bounds, WRRect clip, uint64_t layers_id) WR_FUNC;
 
 // TODO: Remove.
 // It is the responsibility of the caller to manage the dst_buffer memory
@@ -334,15 +361,6 @@ WR_FUNC;
 // TODO: Remove.
 WR_INLINE void
 wr_profiler_set_enabled(wrwindowstate* wrWindow, bool enabled)
-WR_FUNC;
-
-// TODO: Remove.
-WR_INLINE void
-wr_window_dp_push_text(wrwindowstate* wrWindow, wrstate* wrState,
-                       WRRect bounds, WRRect clip,
-                       WRColor color, const WRGlyphInstance* glyphs,
-                       uint32_t glyph_count, float glyph_size,
-                       uint8_t* font_buffer, uint32_t buffer_size)
 WR_FUNC;
 
 #undef WR_FUNC

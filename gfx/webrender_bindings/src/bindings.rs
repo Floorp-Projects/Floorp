@@ -9,7 +9,7 @@ use webrender_traits::{BorderSide, BorderStyle, BorderRadius};
 use webrender_traits::{PipelineId, ClipRegion};
 use webrender_traits::{Epoch, ColorF, GlyphInstance};
 use webrender_traits::{ImageData, ImageFormat, ImageKey, ImageMask, ImageRendering, RendererKind};
-use webrender_traits::{ExternalImageId, RenderApi};
+use webrender_traits::{ExternalImageId, RenderApi, FontKey};
 use webrender_traits::{DeviceUintSize};
 use webrender_traits::{LayoutPoint, LayoutRect, LayoutSize, LayoutTransform};
 use webrender::renderer::{Renderer, RendererOptions};
@@ -21,6 +21,9 @@ extern crate webrender_traits;
 
 fn pipeline_id_to_u64(id: PipelineId) -> u64 { (id.0 as u64) << 32 + id.1 as u64 }
 fn u64_to_pipeline_id(id: u64) -> PipelineId { PipelineId((id >> 32) as u32, id as u32) }
+
+fn font_key_to_u64(key: FontKey) -> u64 { unsafe { mem::transmute(key) } }
+fn u64_to_font_key(key: u64) -> FontKey { unsafe { mem::transmute(key) } }
 
 fn get_proc_address(glcontext_ptr: *mut c_void, name: &str) -> *const c_void{
 
@@ -459,26 +462,14 @@ pub extern fn wr_init_window(root_pipeline_id: u64,
 }
 
 // TODO: Remove.
+// This is the code specific to WrWindowState that was taken out of wr_create.
 #[no_mangle]
-pub extern fn wr_create(window: &mut WrWindowState, width: u32, height: u32, layers_id: u64) -> *mut WrState {
-    assert!( unsafe { is_in_compositor_thread() });
-    let pipeline_id = u64_to_pipeline_id(layers_id);
-
-    let builder = WebRenderFrameBuilder::new(pipeline_id);
-
-    let state = Box::new(WrState {
-        size: (width, height),
-        pipeline_id: pipeline_id,
-        z_index: 0,
-        frame_builder: builder,
-    });
-
+pub extern fn wr_window_init_pipeline_epoch(window: &mut WrWindowState, pipeline: u64, width: u32, height: u32,) {
+    let pipeline_id = u64_to_pipeline_id(pipeline);
     if pipeline_id == window.root_pipeline_id {
         window.size = DeviceUintSize::new(width, height);
     }
-
     window.pipeline_epoch_map.insert(pipeline_id, Epoch(0));
-    Box::into_raw(state)
 }
 
 // TODO: Remove.
@@ -816,15 +807,67 @@ pub extern fn wr_dp_push_image(state:&mut WrState, bounds: WrRect, clip : WrRect
     );
 }
 
-// TODO: Remove.
 #[no_mangle]
-pub extern fn wr_destroy(window: &mut WrWindowState, state:*mut WrState) {
+pub extern fn wr_api_add_raw_font(api: &mut RenderApi,
+                                  font_buffer: *mut u8,
+                                  buffer_size: usize) -> u64
+{
     assert!( unsafe { is_in_compositor_thread() });
 
-    unsafe {
-        window.pipeline_epoch_map.remove(&((*state).pipeline_id));
-        Box::from_raw(state);
-    }
+    let font_slice = unsafe {
+        slice::from_raw_parts(font_buffer, buffer_size as usize)
+    };
+    let mut font_vector = Vec::new();
+    font_vector.extend_from_slice(font_slice);
+
+    return font_key_to_u64(api.add_raw_font(font_vector));
+}
+
+// TODO: Remove.
+#[no_mangle]
+pub extern fn wr_window_add_raw_font(window: &mut WrWindowState,
+                                     font_buffer: *mut u8,
+                                     buffer_size: usize) -> u64
+{
+    return wr_api_add_raw_font(&mut window.api, font_buffer, buffer_size);
+}
+
+#[no_mangle]
+pub extern fn wr_dp_push_text(state: &mut WrState,
+                              bounds: WrRect,
+                              clip: WrRect,
+                              color: WrColor,
+                              font_key: u64,
+                              glyphs: *mut GlyphInstance,
+                              glyph_count: u32,
+                              glyph_size: f32)
+{
+    assert!( unsafe { is_in_compositor_thread() });
+
+    let font_key = u64_to_font_key(font_key);
+
+    let glyph_slice = unsafe {
+        slice::from_raw_parts(glyphs, glyph_count as usize)
+    };
+    let mut glyph_vector = Vec::new();
+    glyph_vector.extend_from_slice(&glyph_slice);
+
+    let colorf = ColorF::new(color.r, color.g, color.b, color.a);
+
+    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
+
+    state.frame_builder.dl_builder.push_text(bounds.to_rect(),
+                                             clip_region,
+                                             glyph_vector,
+                                             font_key,
+                                             colorf,
+                                             Au::from_f32_px(glyph_size),
+                                             Au::from_px(0));
+}
+
+#[no_mangle]
+pub extern fn wr_window_remove_pipeline(window: &mut WrWindowState, state: &WrState) {
+    window.pipeline_epoch_map.remove(&state.pipeline_id);
 }
 
 // TODO: Remove.
@@ -852,64 +895,4 @@ pub extern fn wr_profiler_set_enabled(window: &mut WrWindowState, enabled: bool)
 {
     assert!( unsafe { is_in_compositor_thread() });
     window.renderer.set_profiler_enabled(enabled);
-}
-
-// XXX - Shouldn't this be split in a function that adds a font and one that adds
-// a the text using that font?
-#[no_mangle]
-pub extern fn wr_dp_push_text(api: &mut RenderApi,
-                              state: &mut WrState,
-                              bounds: WrRect,
-                              clip: WrRect,
-                              color: WrColor,
-                              glyphs: *mut GlyphInstance,
-                              glyph_count: u32,
-                              glyph_size: f32,
-                              font_buffer: *mut u8,
-                              buffer_size: usize)
-{
-    assert!( unsafe { is_in_compositor_thread() });
-
-    let font_slice = unsafe {
-        slice::from_raw_parts(font_buffer, buffer_size as usize)
-    };
-    let mut font_vector = Vec::new();
-    font_vector.extend_from_slice(font_slice);
-    let font_key = api.add_raw_font(font_vector);
-
-    let glyph_slice = unsafe {
-        slice::from_raw_parts(glyphs, glyph_count as usize)
-    };
-    let mut glyph_vector = Vec::new();
-    glyph_vector.extend_from_slice(&glyph_slice);
-
-    let colorf = ColorF::new(color.r, color.g, color.b, color.a);
-
-    let clip_region = state.frame_builder.dl_builder.new_clip_region(&clip.to_rect(), Vec::new(), None);
-
-    state.frame_builder.dl_builder.push_text(bounds.to_rect(),
-                                             clip_region,
-                                             glyph_vector,
-                                             font_key,
-                                             colorf,
-                                             Au::from_f32_px(glyph_size),
-                                             Au::from_px(0));
-}
-
-// TODO: Remove.
-#[no_mangle]
-pub extern fn wr_window_dp_push_text(window: &mut WrWindowState,
-                              state: &mut WrState,
-                              bounds: WrRect,
-                              clip: WrRect,
-                              color: WrColor,
-                              glyphs: *mut GlyphInstance,
-                              glyph_count: u32,
-                              glyph_size: f32,
-                              font_buffer: *mut u8,
-                              buffer_size: usize)
-{
-    wr_dp_push_text(&mut window.api, state, bounds, clip, color,
-                    glyphs, glyph_count, glyph_size,
-                    font_buffer, buffer_size);
 }
