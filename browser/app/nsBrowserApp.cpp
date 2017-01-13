@@ -237,15 +237,13 @@ static int do_main(int argc, char* argv[], char* envp[])
 static nsresult
 InitXPCOMGlue(const char *argv0)
 {
-  char exePath[MAXPATHLEN];
-
-  nsresult rv = mozilla::BinaryPath::Get(argv0, exePath);
-  if (NS_FAILED(rv)) {
+  UniqueFreePtr<char> exePath = BinaryPath::Get(argv0);
+  if (!exePath) {
     Output("Couldn't find the application directory.\n");
-    return rv;
+    return NS_ERROR_FAILURE;
   }
 
-  gBootstrap = mozilla::GetBootstrap(exePath);
+  gBootstrap = mozilla::GetBootstrap(exePath.get());
   if (!gBootstrap) {
     Output("Couldn't load XPCOM.\n");
     return NS_ERROR_FAILURE;
