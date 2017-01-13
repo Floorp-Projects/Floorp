@@ -56,13 +56,17 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
                                                          css::Rule)
-  NS_DECL_NSIDOMCSSRULE
   NS_DECL_NSIDOMCSSSTYLERULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 
   // Methods of mozilla::css::Rule
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
+  using Rule::GetType;
   already_AddRefed<Rule> Clone() const final;
   nsIDOMCSSRule* GetDOMRule() final { return this; }
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;

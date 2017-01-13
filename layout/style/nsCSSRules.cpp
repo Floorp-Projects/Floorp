@@ -99,6 +99,28 @@ Rule::GetCSSRule()
   return this;
 }
 
+NS_IMETHODIMP
+Rule::GetType(uint16_t* aType)
+{
+  *aType = Type();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Rule::SetCssText(const nsAString& aCssText)
+{
+  // We used to throw for some rule types, but not all.  Specifically, we did
+  // not throw for StyleRule.  Let's just always not throw.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Rule::GetCssText(nsAString& aCssText)
+{
+  GetCssTextImpl(aCssText);
+  return NS_OK;
+}
+
 // -------------------------------
 // Style Rule List for group rules
 //
@@ -271,16 +293,14 @@ ImportRule::SetSheet(CSSStyleSheet* aSheet)
   mMedia = mChildSheet->Media();
 }
 
-NS_IMETHODIMP
-ImportRule::GetType(uint16_t* aType)
+uint16_t
+ImportRule::Type() const
 {
-  NS_ENSURE_ARG_POINTER(aType);
-  *aType = nsIDOMCSSRule::IMPORT_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::IMPORT_RULE;
 }
 
-NS_IMETHODIMP
-ImportRule::GetCssText(nsAString& aCssText)
+void
+ImportRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral("@import url(");
   nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
@@ -294,31 +314,6 @@ ImportRule::GetCssText(nsAString& aCssText)
     }
   }
   aCssText.Append(';');
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ImportRule::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-ImportRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-ImportRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-ImportRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -516,7 +511,7 @@ GroupRule::InsertStyleRuleAt(uint32_t aIndex, Rule* aRule)
 }
 
 void
-GroupRule::AppendRulesToCssText(nsAString& aCssText)
+GroupRule::AppendRulesToCssText(nsAString& aCssText) const
 {
   aCssText.AppendLiteral(" {\n");
 
@@ -697,45 +692,18 @@ MediaRule::SetMedia(nsMediaList* aMedia)
   return NS_OK;
 }
 
-// nsIDOMCSSRule methods
-NS_IMETHODIMP
-MediaRule::GetType(uint16_t* aType)
+uint16_t
+MediaRule::Type() const
 {
-  *aType = nsIDOMCSSRule::MEDIA_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::MEDIA_RULE;
 }
 
-NS_IMETHODIMP
-MediaRule::GetCssText(nsAString& aCssText)
+void
+MediaRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral("@media ");
   AppendConditionText(aCssText);
   GroupRule::AppendRulesToCssText(aCssText);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-MediaRule::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-MediaRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return GroupRule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-MediaRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return GroupRule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-MediaRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 // nsIDOMCSSGroupingRule methods
@@ -824,7 +792,7 @@ MediaRule::WrapObject(JSContext* aCx,
 }
 
 void
-MediaRule::AppendConditionText(nsAString& aOutput)
+MediaRule::AppendConditionText(nsAString& aOutput) const
 {
   if (mMedia) {
     nsAutoString mediaText;
@@ -914,46 +882,19 @@ DocumentRule::Clone() const
   return clone.forget();
 }
 
-// nsIDOMCSSRule methods
-NS_IMETHODIMP
-DocumentRule::GetType(uint16_t* aType)
+uint16_t
+DocumentRule::Type() const
 {
   // XXX What should really happen here?
-  *aType = nsIDOMCSSRule::UNKNOWN_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::UNKNOWN_RULE;
 }
 
-NS_IMETHODIMP
-DocumentRule::GetCssText(nsAString& aCssText)
+void
+DocumentRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral("@-moz-document ");
   AppendConditionText(aCssText);
   GroupRule::AppendRulesToCssText(aCssText);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-DocumentRule::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-DocumentRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return GroupRule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-DocumentRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return GroupRule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-DocumentRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 // nsIDOMCSSGroupingRule methods
@@ -1074,7 +1015,7 @@ DocumentRule::WrapObject(JSContext* aCx,
 }
 
 void
-DocumentRule::AppendConditionText(nsAString& aCssText)
+DocumentRule::AppendConditionText(nsAString& aCssText) const
 {
   for (URL *url = mURLs; url; url = url->next) {
     switch (url->func) {
@@ -1178,15 +1119,14 @@ NameSpaceRule::Clone() const
   return clone.forget();
 }
 
-NS_IMETHODIMP
-NameSpaceRule::GetType(uint16_t* aType)
+uint16_t
+NameSpaceRule::Type() const
 {
-  *aType = nsIDOMCSSRule::NAMESPACE_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::NAMESPACE_RULE;
 }
 
-NS_IMETHODIMP
-NameSpaceRule::GetCssText(nsAString& aCssText)
+void
+NameSpaceRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral("@namespace ");
   if (mPrefix) {
@@ -1195,31 +1135,6 @@ NameSpaceRule::GetCssText(nsAString& aCssText)
   aCssText.AppendLiteral("url(");
   nsStyleUtil::AppendEscapedCSSString(mURLSpec, aCssText);
   aCssText.AppendLiteral(");");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-NameSpaceRule::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-NameSpaceRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-NameSpaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-NameSpaceRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 /* virtual */ size_t
@@ -1372,6 +1287,13 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
 NS_IMETHODIMP
 nsCSSFontFaceStyleDecl::GetCssText(nsAString & aCssText)
 {
+  GetCssTextImpl(aCssText);
+  return NS_OK;
+}
+
+void
+nsCSSFontFaceStyleDecl::GetCssTextImpl(nsAString& aCssText) const
+{
   nsAutoString descStr;
 
   aCssText.Truncate();
@@ -1389,7 +1311,6 @@ nsCSSFontFaceStyleDecl::GetCssText(nsAString & aCssText)
       aCssText.AppendLiteral(";\n");
     }
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1619,47 +1540,21 @@ nsCSSFontFaceRule::GetType() const
   return Rule::FONT_FACE_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetType(uint16_t* aType)
+uint16_t
+nsCSSFontFaceRule::Type() const
 {
-  *aType = nsIDOMCSSRule::FONT_FACE_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::FONT_FACE_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetCssText(nsAString& aCssText)
+void
+nsCSSFontFaceRule::GetCssTextImpl(nsAString& aCssText) const
 {
   nsAutoString propText;
-  mDecl.GetCssText(propText);
+  mDecl.GetCssTextImpl(propText);
 
   aCssText.AssignLiteral("@font-face {\n");
   aCssText.Append(propText);
   aCssText.Append('}');
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceRule::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED; // bug 443978
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-nsCSSFontFaceRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-nsCSSFontFaceRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -1820,43 +1715,16 @@ nsCSSFontFeatureValuesRule::GetType() const
   return Rule::FONT_FEATURE_VALUES_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::GetType(uint16_t* aType)
+uint16_t
+nsCSSFontFeatureValuesRule::Type() const
 {
-  *aType = nsIDOMCSSRule::FONT_FEATURE_VALUES_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::FONT_FEATURE_VALUES_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::GetCssText(nsAString& aCssText)
+void
+nsCSSFontFeatureValuesRule::GetCssTextImpl(nsAString& aCssText) const
 {
   FontFeatureValuesRuleToString(mFamilyList, mFeatureValues, aCssText);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::SetCssText(const nsAString& aCssText)
-{
-  // FIXME: implement???
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-nsCSSFontFeatureValuesRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-nsCSSFontFeatureValuesRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -2103,15 +1971,14 @@ nsCSSKeyframeRule::GetType() const
   return Rule::KEYFRAME_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSKeyframeRule::GetType(uint16_t* aType)
+uint16_t
+nsCSSKeyframeRule::Type() const
 {
-  *aType = nsIDOMCSSRule::KEYFRAME_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::KEYFRAME_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSKeyframeRule::GetCssText(nsAString& aCssText)
+void
+nsCSSKeyframeRule::GetCssTextImpl(nsAString& aCssText) const
 {
   DoGetKeyText(aCssText);
   aCssText.AppendLiteral(" { ");
@@ -2119,32 +1986,6 @@ nsCSSKeyframeRule::GetCssText(nsAString& aCssText)
   mDeclaration->ToString(tmp);
   aCssText.Append(tmp);
   aCssText.AppendLiteral(" }");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSKeyframeRule::SetCssText(const nsAString& aCssText)
-{
-  // FIXME: implement???
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCSSKeyframeRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-nsCSSKeyframeRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-nsCSSKeyframeRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -2308,15 +2149,14 @@ nsCSSKeyframesRule::GetType() const
   return Rule::KEYFRAMES_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSKeyframesRule::GetType(uint16_t* aType)
+uint16_t
+nsCSSKeyframesRule::Type() const
 {
-  *aType = nsIDOMCSSRule::KEYFRAMES_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::KEYFRAMES_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSKeyframesRule::GetCssText(nsAString& aCssText)
+void
+nsCSSKeyframesRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral("@keyframes ");
   aCssText.Append(mName);
@@ -2328,32 +2168,6 @@ nsCSSKeyframesRule::GetCssText(nsAString& aCssText)
     aCssText.Append('\n');
   }
   aCssText.Append('}');
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSKeyframesRule::SetCssText(const nsAString& aCssText)
-{
-  // FIXME: implement???
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCSSKeyframesRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return GroupRule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-nsCSSKeyframesRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return GroupRule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-nsCSSKeyframesRule::GetCSSRule()
-{
-  return GroupRule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -2653,47 +2467,20 @@ nsCSSPageRule::GetType() const
   return Rule::PAGE_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSPageRule::GetType(uint16_t* aType)
+uint16_t
+nsCSSPageRule::Type() const
 {
-  *aType = nsIDOMCSSRule::PAGE_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::PAGE_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSPageRule::GetCssText(nsAString& aCssText)
+void
+nsCSSPageRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AppendLiteral("@page { ");
   nsAutoString tmp;
   mDeclaration->ToString(tmp);
   aCssText.Append(tmp);
   aCssText.AppendLiteral(" }");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSPageRule::SetCssText(const nsAString& aCssText)
-{
-  // FIXME: implement???
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCSSPageRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-nsCSSPageRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-nsCSSPageRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 NS_IMETHODIMP
@@ -2807,45 +2594,18 @@ NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSSupportsRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
-// nsIDOMCSSRule methods
-NS_IMETHODIMP
-CSSSupportsRule::GetType(uint16_t* aType)
+uint16_t
+CSSSupportsRule::Type() const
 {
-  *aType = nsIDOMCSSRule::SUPPORTS_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::SUPPORTS_RULE;
 }
 
-NS_IMETHODIMP
-CSSSupportsRule::GetCssText(nsAString& aCssText)
+void
+CSSSupportsRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral("@supports ");
   aCssText.Append(mCondition);
   css::GroupRule::AppendRulesToCssText(aCssText);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CSSSupportsRule::SetCssText(const nsAString& aCssText)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-CSSSupportsRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return css::GroupRule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-CSSSupportsRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return css::GroupRule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-CSSSupportsRule::GetCSSRule()
-{
-  return css::GroupRule::GetCSSRule();
 }
 
 // nsIDOMCSSGroupingRule methods
@@ -2969,16 +2729,14 @@ nsCSSCounterStyleRule::GetType() const
   return Rule::COUNTER_STYLE_RULE;
 }
 
-// nsIDOMCSSRule methods
-NS_IMETHODIMP
-nsCSSCounterStyleRule::GetType(uint16_t* aType)
+uint16_t
+nsCSSCounterStyleRule::Type() const
 {
-  *aType = nsIDOMCSSRule::COUNTER_STYLE_RULE;
-  return NS_OK;
+  return nsIDOMCSSRule::COUNTER_STYLE_RULE;
 }
 
-NS_IMETHODIMP
-nsCSSCounterStyleRule::GetCssText(nsAString& aCssText)
+void
+nsCSSCounterStyleRule::GetCssTextImpl(nsAString& aCssText) const
 {
   aCssText.AssignLiteral(u"@counter-style ");
   nsStyleUtil::AppendEscapedCSSIdent(mName, aCssText);
@@ -2988,7 +2746,10 @@ nsCSSCounterStyleRule::GetCssText(nsAString& aCssText)
        id = nsCSSCounterDesc(id + 1)) {
     if (mValues[id].GetUnit() != eCSSUnit_Null) {
       nsAutoString tmp;
-      (this->*kGetters[id])(tmp);
+      // This is annoying.  We want to be a const method, but kGetters stores
+      // XPCOM method pointers, which aren't const methods.  The thing is,
+      // none of those mutate "this".  So it's OK to cast away const here.
+      (const_cast<nsCSSCounterStyleRule*>(this)->*kGetters[id])(tmp);
       aCssText.AppendLiteral(u"  ");
       AppendASCIItoUTF16(nsCSSProps::GetStringValue(id), aCssText);
       aCssText.AppendLiteral(u": ");
@@ -2997,32 +2758,6 @@ nsCSSCounterStyleRule::GetCssText(nsAString& aCssText)
     }
   }
   aCssText.AppendLiteral(u"}");
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCSSCounterStyleRule::SetCssText(const nsAString& aCssText)
-{
-  // FIXME: implement???
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsCSSCounterStyleRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
-{
-  return Rule::GetParentStyleSheet(aSheet);
-}
-
-NS_IMETHODIMP
-nsCSSCounterStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
-{
-  return Rule::GetParentRule(aParentRule);
-}
-
-css::Rule*
-nsCSSCounterStyleRule::GetCSSRule()
-{
-  return Rule::GetCSSRule();
 }
 
 // nsIDOMCSSCounterStyleRule methods
