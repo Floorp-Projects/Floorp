@@ -55,6 +55,11 @@ WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
     NS_ENSURE_TRUE(dc, nullptr);
 
     if (mWindowPixelFormat == 0) {
+        int depthBits = 0;
+        if (gfxPrefs::WebRenderEnabled()) {
+          depthBits = 24;
+        }
+
         PIXELFORMATDESCRIPTOR pfd;
         ZeroMemory(&pfd, sizeof(PIXELFORMATDESCRIPTOR));
         pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -66,7 +71,7 @@ WGLLibrary::CreateDummyWindow(HDC* aWindowDC)
         pfd.cGreenBits = 8;
         pfd.cBlueBits = 8;
         pfd.cAlphaBits = 8;
-        pfd.cDepthBits = 0;
+        pfd.cDepthBits = depthBits;
         pfd.iLayerType = PFD_MAIN_PLANE;
 
         mWindowPixelFormat = ChoosePixelFormat(dc, &pfd);
