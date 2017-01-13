@@ -50,13 +50,13 @@ this.Credentials = Object.freeze({
    * Make constants accessible to tests
    */
   constants: {
-    PROTOCOL_VERSION,
-    PBKDF2_ROUNDS,
-    STRETCHED_PW_LENGTH_BYTES,
-    HKDF_SALT,
-    HKDF_LENGTH,
-    HMAC_ALGORITHM,
-    HMAC_LENGTH,
+    PROTOCOL_VERSION: PROTOCOL_VERSION,
+    PBKDF2_ROUNDS: PBKDF2_ROUNDS,
+    STRETCHED_PW_LENGTH_BYTES: STRETCHED_PW_LENGTH_BYTES,
+    HKDF_SALT: HKDF_SALT,
+    HKDF_LENGTH: HKDF_LENGTH,
+    HMAC_ALGORITHM: HMAC_ALGORITHM,
+    HMAC_LENGTH: HMAC_LENGTH,
   },
 
   /**
@@ -72,7 +72,7 @@ this.Credentials = Object.freeze({
    * Note that PROTOCOL_VERSION does not refer in any way to the version of the
    * Firefox Accounts API.
    */
-  keyWord(context) {
+  keyWord: function(context) {
     return CommonUtils.stringToBytes(PROTOCOL_VERSION + context);
   },
 
@@ -89,11 +89,11 @@ this.Credentials = Object.freeze({
    * Note that PROTOCOL_VERSION does not refer in any way to the version of the
    * Firefox Accounts API.
    */
-  keyWordExtended(name, email) {
+  keyWordExtended: function(name, email) {
     return CommonUtils.stringToBytes(PROTOCOL_VERSION + name + ':' + email);
   },
 
-  setup(emailInput, passwordInput, options = {}) {
+  setup: function(emailInput, passwordInput, options={}) {
     let deferred = Promise.defer();
     log.debug("setup credentials for " + emailInput);
 

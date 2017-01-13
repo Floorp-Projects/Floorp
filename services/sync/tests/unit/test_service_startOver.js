@@ -14,7 +14,7 @@ BlaEngine.prototype = {
   __proto__: SyncEngine.prototype,
 
   removed: false,
-  removeClientData() {
+  removeClientData: function() {
     this.removed = true;
   }
 

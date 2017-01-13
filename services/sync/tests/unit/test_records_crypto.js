@@ -66,7 +66,8 @@ add_task(async function test_records_crypto() {
     let error = "";
     try {
       payload = cryptoWrap.decrypt(keyBundle);
-    } catch (ex) {
+    }
+    catch(ex) {
       error = ex;
     }
     do_check_eq(error, "No ciphertext: nothing to decrypt?");
@@ -88,7 +89,8 @@ add_task(async function test_records_crypto() {
     error = "";
     try {
       cryptoWrap.decrypt(keyBundle);
-    } catch (ex) {
+    }
+    catch(ex) {
       error = ex;
     }
     do_check_eq(error, "Record id mismatch: resource != other");
@@ -99,7 +101,8 @@ add_task(async function test_records_crypto() {
     error = "";
     try {
       cryptoWrap.decrypt(keyBundle);
-    } catch (ex) {
+    }
+    catch(ex) {
       error = ex;
     }
     do_check_eq(error.substr(0, 42), "Record SHA256 HMAC mismatch: should be foo");
@@ -169,7 +172,8 @@ add_task(async function test_records_crypto() {
     emptyKeys.setContents(payload, null);
 
     log.info("Done!");
-  } finally {
+  }
+  finally {
     await promiseStopServer(server);
   }
 });

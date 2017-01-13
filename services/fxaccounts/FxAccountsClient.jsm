@@ -55,7 +55,7 @@ this.FxAccountsClient.prototype = {
    * Not used by this module, but made available to the FxAccounts.jsm
    * that uses this client.
    */
-  now() {
+  now: function() {
     return this.hawk.now();
   },
 
@@ -87,12 +87,12 @@ this.FxAccountsClient.prototype = {
    *                               email
    *        }
    */
-  _createSession(path, email, password, getKeys = false,
-                 retryOK = true) {
+  _createSession: function(path, email, password, getKeys=false,
+                           retryOK=true) {
     return Credentials.setup(email, password).then((creds) => {
       let data = {
         authPW: CommonUtils.bytesAsHex(creds.authPW),
-        email,
+        email: email,
       };
       let keys = getKeys ? "?keys=true" : "";
 
@@ -151,7 +151,7 @@ this.FxAccountsClient.prototype = {
    *                      password (not revealed to the FxA server)
    *        }
    */
-  signUp(email, password, getKeys = false) {
+  signUp: function(email, password, getKeys=false) {
     return this._createSession(SIGNUP, email, password, getKeys,
                                false /* no retry */);
   },
@@ -178,7 +178,7 @@ this.FxAccountsClient.prototype = {
    *          verified: flag indicating verification status of the email
    *        }
    */
-  signIn: function signIn(email, password, getKeys = false) {
+  signIn: function signIn(email, password, getKeys=false) {
     return this._createSession(SIGNIN, email, password, getKeys,
                                true /* retry */);
   },
@@ -191,7 +191,7 @@ this.FxAccountsClient.prototype = {
    * @return Promise
    *        Resolves with a boolean indicating if the session is still valid
    */
-  sessionStatus(sessionTokenHex) {
+  sessionStatus: function (sessionTokenHex) {
     return this._request("/session/status", "GET",
       deriveHawkCredentials(sessionTokenHex, "sessionToken")).then(
         () => Promise.resolve(true),
@@ -211,7 +211,7 @@ this.FxAccountsClient.prototype = {
    *        The session token encoded in hex
    * @return Promise
    */
-  signOut(sessionTokenHex, options = {}) {
+  signOut: function (sessionTokenHex, options = {}) {
     let path = "/session/destroy";
     if (options.service) {
       path += "?service=" + encodeURIComponent(options.service);
@@ -227,7 +227,7 @@ this.FxAccountsClient.prototype = {
    *        The current session token encoded in hex
    * @return Promise
    */
-  recoveryEmailStatus(sessionTokenHex, options = {}) {
+  recoveryEmailStatus: function (sessionTokenHex, options = {}) {
     let path = "/recovery_email/status";
     if (options.reason) {
       path += "?reason=" + encodeURIComponent(options.reason);
@@ -244,7 +244,7 @@ this.FxAccountsClient.prototype = {
    *        The current token encoded in hex
    * @return Promise
    */
-  resendVerificationEmail(sessionTokenHex) {
+  resendVerificationEmail: function(sessionTokenHex) {
     return this._request("/recovery_email/resend_code", "POST",
       deriveHawkCredentials(sessionTokenHex, "sessionToken"));
   },
@@ -262,7 +262,7 @@ this.FxAccountsClient.prototype = {
    *                  user's password (bytes)
    *        }
    */
-  accountKeys(keyFetchTokenHex) {
+  accountKeys: function (keyFetchTokenHex) {
     let creds = deriveHawkCredentials(keyFetchTokenHex, "keyFetchToken");
     let keyRequestKey = creds.extra.slice(0, 32);
     let morecreds = CryptoUtils.hkdf(keyRequestKey, undefined,
@@ -311,7 +311,7 @@ this.FxAccountsClient.prototype = {
    *         wrapping any of these HTTP code/errno pairs:
    *           https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-12
    */
-  signCertificate(sessionTokenHex, serializedPublicKey, lifetime) {
+  signCertificate: function (sessionTokenHex, serializedPublicKey, lifetime) {
     let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
 
     let body = { publicKey: serializedPublicKey,
@@ -334,7 +334,7 @@ this.FxAccountsClient.prototype = {
    *        The promise resolves to true if the account exists, or false
    *        if it doesn't. The promise is rejected on other errors.
    */
-  accountExists(email) {
+  accountExists: function (email) {
     return this.signIn(email, "").then(
       (cantHappen) => {
         throw new Error("How did I sign in with an empty password?");
@@ -362,8 +362,8 @@ this.FxAccountsClient.prototype = {
    *
    * Used for differentiating between password change and account deletion.
    */
-  accountStatus(uid) {
-    return this._request("/account/status?uid=" + uid, "GET").then(
+  accountStatus: function(uid) {
+    return this._request("/account/status?uid="+uid, "GET").then(
       (result) => {
         return result.exists;
       },
@@ -540,7 +540,7 @@ this.FxAccountsClient.prototype = {
     return this._request(path, "GET", creds, {});
   },
 
-  _clearBackoff() {
+  _clearBackoff: function() {
       this.backoffError = null;
   },
 

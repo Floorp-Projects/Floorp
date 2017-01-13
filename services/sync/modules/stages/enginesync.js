@@ -131,7 +131,8 @@ EngineSynchronizer.prototype = {
           this.onComplete(new Error("Remote setup failed after processing commands."));
           return;
         }
-      } finally {
+      }
+      finally {
         // Always immediately attempt to push back the local client (now
         // without commands).
         // Note that we don't abort here; if there's a 401 because we've
@@ -318,7 +319,8 @@ EngineSynchronizer.prototype = {
   _syncEngine: function _syncEngine(engine) {
     try {
       engine.sync();
-    } catch (e) {
+    }
+    catch(e) {
       if (e.status == 401) {
         // Maybe a 401, cluster update perhaps needed?
         // We rely on ErrorHandler observing the sync failure notification to
@@ -339,7 +341,7 @@ EngineSynchronizer.prototype = {
     return true;
   },
 
-  _updateEnabledFromMeta(meta, numClients, engineManager = this.service.engineManager) {
+  _updateEnabledFromMeta: function (meta, numClients, engineManager=this.service.engineManager) {
     this._log.info("Updating enabled engines: " +
                     numClients + " clients.");
 
@@ -443,7 +445,7 @@ EngineSynchronizer.prototype = {
     this.service._ignorePrefObserver = false;
   },
 
-  _updateEnabledEngines() {
+  _updateEnabledEngines: function () {
     let meta = this.service.recordManager.get(this.service.metaURL);
     let numClients = this.service.scheduler.numClients;
     let engineManager = this.service.engineManager;

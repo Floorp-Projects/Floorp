@@ -37,7 +37,7 @@ var FormWrapper = {
   _getEntryCols: ["fieldname", "value"],
   _guidCols:     ["guid"],
 
-  _promiseSearch(terms, searchData) {
+  _promiseSearch: function(terms, searchData) {
     return new Promise(resolve => {
       let results = [];
       let callbacks = {
@@ -53,17 +53,17 @@ var FormWrapper = {
   },
 
   // Do a "sync" search by spinning the event loop until it completes.
-  _searchSpinningly(terms, searchData) {
+  _searchSpinningly: function(terms, searchData) {
     return Async.promiseSpinningly(this._promiseSearch(terms, searchData));
   },
 
-  _updateSpinningly(changes) {
+  _updateSpinningly: function(changes) {
     if (!Svc.FormHistory.enabled) {
       return; // update isn't going to do anything.
     }
     let cb = Async.makeSpinningCallback();
     let callbacks = {
-      handleCompletion(reason) {
+      handleCompletion: function(reason) {
         cb();
       }
     };
@@ -71,27 +71,27 @@ var FormWrapper = {
     return cb.wait();
   },
 
-  getEntry(guid) {
-    let results = this._searchSpinningly(this._getEntryCols, {guid});
+  getEntry: function (guid) {
+    let results = this._searchSpinningly(this._getEntryCols, {guid: guid});
     if (!results.length) {
       return null;
     }
     return {name: results[0].fieldname, value: results[0].value};
   },
 
-  getGUID(name, value) {
+  getGUID: function (name, value) {
     // Query for the provided entry.
-    let query = { fieldname: name, value };
+    let query = { fieldname: name, value: value };
     let results = this._searchSpinningly(this._guidCols, query);
     return results.length ? results[0].guid : null;
   },
 
-  hasGUID(guid) {
+  hasGUID: function (guid) {
     // We could probably use a count function here, but searchSpinningly exists...
-    return this._searchSpinningly(this._guidCols, {guid}).length != 0;
+    return this._searchSpinningly(this._guidCols, {guid: guid}).length != 0;
   },
 
-  replaceGUID(oldGUID, newGUID) {
+  replaceGUID: function (oldGUID, newGUID) {
     let changes = {
       op: "update",
       guid: oldGUID,
@@ -129,7 +129,7 @@ function FormStore(name, engine) {
 FormStore.prototype = {
   __proto__: Store.prototype,
 
-  _processChange(change) {
+  _processChange: function (change) {
     // If this._changes is defined, then we are applying a batch, so we
     // can defer it.
     if (this._changes) {
@@ -141,7 +141,7 @@ FormStore.prototype = {
     FormWrapper._updateSpinningly(change);
   },
 
-  applyIncomingBatch(records) {
+  applyIncomingBatch: function (records) {
     // We collect all the changes to be made then apply them all at once.
     this._changes = [];
     let failures = Store.prototype.applyIncomingBatch.call(this, records);
@@ -152,7 +152,7 @@ FormStore.prototype = {
     return failures;
   },
 
-  getAllIDs() {
+  getAllIDs: function () {
     let results = FormWrapper._searchSpinningly(["guid"], [])
     let guids = {};
     for (let result of results) {
@@ -161,15 +161,15 @@ FormStore.prototype = {
     return guids;
   },
 
-  changeItemID(oldID, newID) {
+  changeItemID: function (oldID, newID) {
     FormWrapper.replaceGUID(oldID, newID);
   },
 
-  itemExists(id) {
+  itemExists: function (id) {
     return FormWrapper.hasGUID(id);
   },
 
-  createRecord(id, collection) {
+  createRecord: function (id, collection) {
     let record = new FormRec(collection, id);
     let entry = FormWrapper.getEntry(id);
     if (entry != null) {
@@ -181,7 +181,7 @@ FormStore.prototype = {
     return record;
   },
 
-  create(record) {
+  create: function (record) {
     this._log.trace("Adding form record for " + record.name);
     let change = {
       op: "add",
@@ -191,7 +191,7 @@ FormStore.prototype = {
     this._processChange(change);
   },
 
-  remove(record) {
+  remove: function (record) {
     this._log.trace("Removing form record: " + record.id);
     let change = {
       op: "remove",
@@ -200,11 +200,11 @@ FormStore.prototype = {
     this._processChange(change);
   },
 
-  update(record) {
+  update: function (record) {
     this._log.trace("Ignoring form record update request!");
   },
 
-  wipe() {
+  wipe: function () {
     let change = {
       op: "remove"
     };
@@ -222,15 +222,15 @@ FormTracker.prototype = {
     Ci.nsIObserver,
     Ci.nsISupportsWeakReference]),
 
-  startTracking() {
+  startTracking: function() {
     Svc.Obs.add("satchel-storage-changed", this);
   },
 
-  stopTracking() {
+  stopTracking: function() {
     Svc.Obs.remove("satchel-storage-changed", this);
   },
 
-  observe(subject, topic, data) {
+  observe: function (subject, topic, data) {
     Tracker.prototype.observe.call(this, subject, topic, data);
     if (this.ignoreAll) {
       return;
@@ -245,7 +245,7 @@ FormTracker.prototype = {
     }
   },
 
-  trackEntry(guid) {
+  trackEntry: function (guid) {
     this.addChangedID(guid);
     this.score += SCORE_INCREMENT_MEDIUM;
   },
