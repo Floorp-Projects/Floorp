@@ -136,6 +136,13 @@ struct WRImageMask
     }
 };
 
+enum class WRTextureFilter
+{
+  Linear,
+  Point,
+  Sentinel,
+};
+
 typedef uint64_t WRImageIdType;
 struct WRExternalImageId {
   WRImageIdType id;
@@ -340,7 +347,7 @@ WR_FUNC;
 
 WR_INLINE void
 wr_dp_push_image(WRState* wrState, WRRect bounds, WRRect clip,
-                 const WRImageMask* mask, WRImageKey key)
+                 const WRImageMask* mask, WRTextureFilter filter, WRImageKey key)
 WR_FUNC;
 
 // TODO: Remove.

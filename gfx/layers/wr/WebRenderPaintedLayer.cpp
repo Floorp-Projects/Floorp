@@ -74,7 +74,7 @@ WebRenderPaintedLayer::RenderLayer()
 
   WRBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushImage(ToWRRect(rect), ToWRRect(clip), Nothing(), key));
+  WRBridge()->AddWebRenderCommand(OpDPPushImage(ToWRRect(rect), ToWRRect(clip), Nothing(), WRTextureFilter::Linear, key));
   Manager()->AddImageKeyForDiscard(key);
 
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
