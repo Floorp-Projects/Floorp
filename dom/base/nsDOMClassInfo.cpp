@@ -231,10 +231,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
 
-  NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
-
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULControlElement, nsDOMGenericSH,
                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULLabeledControlElement, nsDOMGenericSH,
@@ -563,11 +559,6 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(CSSCounterStyleRule, nsIDOMCSSCounterStyleRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSFontFeatureValuesRule, nsIDOMCSSFontFeatureValuesRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(XULControlElement, nsIDOMXULControlElement)
