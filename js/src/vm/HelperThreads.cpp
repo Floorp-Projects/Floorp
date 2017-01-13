@@ -87,10 +87,6 @@ js::StartOffThreadWasmCompile(wasm::CompileTask* task)
 {
     AutoLockHelperThreadState lock;
 
-    // Don't append this task if another failed.
-    if (HelperThreadState().wasmFailed(lock))
-        return false;
-
     if (!HelperThreadState().wasmWorklist(lock).append(task))
         return false;
 
