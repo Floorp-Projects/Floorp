@@ -1298,25 +1298,14 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
-  // For now we decide whether or not to enable WR on this widget by the current
-  // value of the pref (this is the only place in the code allowed to check the
-  // value of the pref). We might want to change this eventually and drop the
-  // pref entirely.
-  bool enableWR = gfxPrefs::WebRenderEnabledDoNotUseDirectly();
-  bool enableAPZ = UseAPZ();
-  if (enableWR && !gfxPrefs::APZAllowWithWebRender()) {
-    // Disable APZ on widgets using WebRender, since it doesn't work yet. Allow
-    // it on non-WR widgets or if the pref forces it on.
-    enableAPZ = false;
-  }
-  CompositorOptions options(enableAPZ, enableWR);
-
   RefPtr<LayerManager> lm;
-  if (options.UseWebRender()) {
+  if (gfxPrefs::WebRenderEnabled()) {
     lm = new WebRenderLayerManager(this);
   } else {
     lm = new ClientLayerManager(this);
   }
+
+  CompositorOptions options(UseAPZ());
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
