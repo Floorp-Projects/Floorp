@@ -55,7 +55,7 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
 {
     AutoJSContext cx;
     nsCOMPtr<nsIXPCScriptable> callback = scriptableCreateInfo
-                                        ? scriptableCreateInfo->GetCallback() :
+                                        ? scriptableCreateInfo->GetCallback()
                                         : nullptr;
     if (callback)
         mScriptable = callback;
