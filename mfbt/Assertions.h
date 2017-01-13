@@ -54,11 +54,15 @@ AnnotateMozCrashReason(const char* reason)
     * because those headers clutter the global namespace with a significant
     * number of undesired macros and symbols.
     */
-MOZ_BEGIN_EXTERN_C
+#  ifdef __cplusplus
+extern "C" {
+#  endif
 __declspec(dllimport) int __stdcall
 TerminateProcess(void* hProcess, unsigned int uExitCode);
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
-MOZ_END_EXTERN_C
+#  ifdef __cplusplus
+}
+#  endif
 #else
 #  include <signal.h>
 #endif
@@ -138,7 +142,9 @@ MOZ_END_EXTERN_C
 #define MOZ_STATIC_ASSERT_IF(cond, expr, reason)  static_assert(!(cond) || (expr), reason)
 #endif
 
-MOZ_BEGIN_EXTERN_C
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Prints |aStr| as an assertion failure (using aFilename and aLine as the
@@ -280,7 +286,9 @@ __declspec(noreturn) __inline void MOZ_NoReturn() {}
      } while (0)
 #endif
 
-MOZ_END_EXTERN_C
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 /*
  * MOZ_ASSERT(expr [, explanation-string]) asserts that |expr| must be truthy in
