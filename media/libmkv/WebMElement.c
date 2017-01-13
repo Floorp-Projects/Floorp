@@ -57,8 +57,7 @@ static UInt64 generateTrackID(unsigned int trackNumber) {
 
 void writeVideoTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
                      const char *codecId, unsigned int pixelWidth, unsigned int pixelHeight,
-                     unsigned int displayWidth, unsigned int displayHeight,
-                     double frameRate) {
+                     unsigned int displayWidth, unsigned int displayHeight) {
   EbmlLoc start;
   UInt64 trackID;
   Ebml_StartSubElement(glob, &start, TrackEntry);
@@ -80,7 +79,6 @@ void writeVideoTrack(EbmlGlobal *glob, unsigned int trackNumber, int flagLacing,
     if (pixelHeight != displayHeight) {
       Ebml_SerializeUnsigned(glob, DisplayHeight, displayHeight);
     }
-    Ebml_SerializeFloat(glob, FrameRate, frameRate);
     Ebml_EndSubElement(glob, &videoStart); // Video
   }
   Ebml_EndSubElement(glob, &start); // Track Entry

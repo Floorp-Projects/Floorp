@@ -188,7 +188,6 @@ VP8TrackEncoder::GetMetadata()
   meta->mHeight = mFrameHeight;
   meta->mDisplayWidth = mDisplayWidth;
   meta->mDisplayHeight = mDisplayHeight;
-  meta->mEncodedFrameRate = mEncodedFrameRate;
 
   return meta.forget();
 }
