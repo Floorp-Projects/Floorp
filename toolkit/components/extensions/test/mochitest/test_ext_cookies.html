@@ -85,7 +85,8 @@ add_task(function* test_cookies() {
     let stores = await browser.cookies.getAllCookieStores();
     browser.test.assertEq(1, stores.length, "expected number of stores returned");
     browser.test.assertEq(STORE_ID, stores[0].id, "expected store id returned");
-    browser.test.assertEq(1, stores[0].tabIds.length, "one tab returned for store");
+    browser.test.assertEq(1, stores[0].tabIds.length, "one tabId returned for store");
+    browser.test.assertEq("number", typeof stores[0].tabIds[0], "tabId is a number");
 
     {
       let privateWindow = await browser.windows.create({incognito: true});
