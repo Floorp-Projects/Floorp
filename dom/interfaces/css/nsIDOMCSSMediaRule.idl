@@ -5,8 +5,6 @@
 
 #include "nsIDOMCSSConditionRule.idl"
 
-interface nsIDOMMediaList;
-
 /**
  * Interface for @media rules in the CSS OM.
  */

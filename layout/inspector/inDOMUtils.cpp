@@ -253,9 +253,13 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   for (nsRuleNode* ruleNode : Reversed(ruleNodes)) {
     RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
     if (decl) {
-      css::Rule* owningRule = decl->GetOwningRule();
-      if (owningRule) {
-        rules->AppendElement(owningRule, /*weak =*/ false);
+      RefPtr<mozilla::css::StyleRule> styleRule =
+        do_QueryObject(decl->GetOwningRule());
+      if (styleRule) {
+        nsCOMPtr<nsIDOMCSSRule> domRule = styleRule->GetDOMRule();
+        if (domRule) {
+          rules->AppendElement(domRule, /*weak =*/ false);
+        }
       }
     }
   }
