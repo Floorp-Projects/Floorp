@@ -20,7 +20,7 @@ bit-set = "0.4"
 byteorder = "0.5"
 euclid = "0.10.3"
 fnv="1.0"
-gleam = "0.2.29"
+gleam = "0.2.30"
 lazy_static = "0.2"
 log = "0.3"
 num-traits = "0.1.32"
@@ -34,7 +34,7 @@ bitflags = "0.7"
 freetype = {version = "0.1.2", default-features = false}
 
 [target.'cfg(target_os = "windows")'.dependencies]
-dwrote = "0.1.1"
+dwrote = "0.1.4"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-graphics = "0.4.1"

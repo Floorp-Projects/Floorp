@@ -10,19 +10,6 @@ use webrender_traits::{AuxiliaryLists, BuiltDisplayList, PipelineId, Epoch, Colo
 use webrender_traits::{DisplayItem, SpecificDisplayItem, StackingContext};
 use webrender_traits::LayerSize;
 
-trait DisplayListHelpers {
-    fn starting_stacking_context<'a>(&'a self) -> Option<&'a StackingContext>;
-}
-
-impl DisplayListHelpers for Vec<DisplayItem> {
-    fn starting_stacking_context<'a>(&'a self) -> Option<&'a StackingContext> {
-        self.first().and_then(|item| match item.item {
-            SpecificDisplayItem::PushStackingContext(ref item) => Some(&item.stacking_context),
-            _ => None,
-        })
-    }
-}
-
 /// A representation of the layout within the display port for a given document or iframe.
 #[derive(Debug)]
 pub struct ScenePipeline {

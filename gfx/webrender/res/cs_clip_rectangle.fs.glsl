@@ -40,5 +40,5 @@ void main(void) {
 
     float clip_alpha = rounded_rect(local_pos);
 
-    oFragColor = vec4(1.0, 1.0, 1.0, min(alpha, clip_alpha));
+    oFragColor = vec4(min(alpha, clip_alpha), 0.0, 0.0, 1.0);
 }

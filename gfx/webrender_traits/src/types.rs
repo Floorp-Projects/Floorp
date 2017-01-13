@@ -485,6 +485,7 @@ pub enum ScrollPolicy {
     Scrollable,
     Fixed,
 }
+known_heap_size!(0, ScrollPolicy);
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub enum ScrollLocation {

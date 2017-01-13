@@ -14,6 +14,7 @@ void main(void) {
 #ifdef WR_FEATURE_TRANSFORM
     TransformVertexInfo vi = write_transform_vertex(local_rect,
                                                     prim.local_clip_rect,
+                                                    prim.z,
                                                     prim.layer,
                                                     prim.tile);
     vLocalRect = vi.clipped_local_rect;
@@ -22,6 +23,7 @@ void main(void) {
 #else
     VertexInfo vi = write_vertex(local_rect,
                                  prim.local_clip_rect,
+                                 prim.z,
                                  prim.layer,
                                  prim.tile);
     vec2 f = (vi.local_clamped_pos - vi.local_rect.p0) / (vi.local_rect.p1 - vi.local_rect.p0);

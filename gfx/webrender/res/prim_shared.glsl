@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef GL_FRAGMENT_PRECISION_HIGH
-precision highp sampler2DArray;
-#else
-precision mediump sampler2DArray;
+#if defined(GL_ES) && GL_ES == 1
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp sampler2DArray;
+    #else
+    precision mediump sampler2DArray;
+    #endif
 #endif
 
 #define PST_TOP_LEFT     0
@@ -25,18 +27,6 @@ precision mediump sampler2DArray;
 
 #define UV_NORMALIZED    uint(0)
 #define UV_PIXEL         uint(1)
-
-// Border styles as defined in webrender_traits/types.rs
-#define BORDER_STYLE_NONE         0
-#define BORDER_STYLE_SOLID        1
-#define BORDER_STYLE_DOUBLE       2
-#define BORDER_STYLE_DOTTED       3
-#define BORDER_STYLE_DASHED       4
-#define BORDER_STYLE_HIDDEN       5
-#define BORDER_STYLE_GROOVE       6
-#define BORDER_STYLE_RIDGE        7
-#define BORDER_STYLE_INSET        8
-#define BORDER_STYLE_OUTSET       9
 
 #define MAX_STOPS_PER_ANGLE_GRADIENT 8
 
@@ -73,6 +63,7 @@ in int aClipTaskIndex;
 in int aLayerIndex;
 in int aElementIndex;
 in ivec2 aUserData;
+in int aZIndex;
 
 // get_fetch_uv is a macro to work around a macOS Intel driver parsing bug.
 // TODO: convert back to a function once the driver issues are resolved, if ever.
@@ -231,30 +222,6 @@ Glyph fetch_glyph(int index) {
     return glyph;
 }
 
-struct Border {
-    vec4 style;
-    vec4 widths;
-    vec4 colors[4];
-    vec4 radii[2];
-};
-
-Border fetch_border(int index) {
-    Border border;
-
-    ivec2 uv = get_fetch_uv_8(index);
-
-    border.style = texelFetchOffset(sData128, uv, 0, ivec2(0, 0));
-    border.widths = texelFetchOffset(sData128, uv, 0, ivec2(1, 0));
-    border.colors[0] = texelFetchOffset(sData128, uv, 0, ivec2(2, 0));
-    border.colors[1] = texelFetchOffset(sData128, uv, 0, ivec2(3, 0));
-    border.colors[2] = texelFetchOffset(sData128, uv, 0, ivec2(4, 0));
-    border.colors[3] = texelFetchOffset(sData128, uv, 0, ivec2(5, 0));
-    border.radii[0] = texelFetchOffset(sData128, uv, 0, ivec2(6, 0));
-    border.radii[1] = texelFetchOffset(sData128, uv, 0, ivec2(7, 0));
-
-    return border;
-}
-
 vec4 fetch_instance_geometry(int index) {
     ivec2 uv = get_fetch_uv_1(index);
 
@@ -286,6 +253,7 @@ struct PrimitiveInstance {
     int clip_task_index;
     int layer_index;
     int sub_index;
+    int z;
     ivec2 user_data;
 };
 
@@ -299,6 +267,7 @@ PrimitiveInstance fetch_prim_instance() {
     pi.layer_index = aLayerIndex;
     pi.sub_index = aElementIndex;
     pi.user_data = aUserData;
+    pi.z = aZIndex;
 
     return pi;
 }
@@ -336,6 +305,7 @@ struct Primitive {
     // this index allows the vertex shader to recognize the difference
     int sub_index;
     ivec2 user_data;
+    float z;
 };
 
 Primitive load_primitive_custom(PrimitiveInstance pi) {
@@ -352,6 +322,7 @@ Primitive load_primitive_custom(PrimitiveInstance pi) {
     prim.prim_index = pi.specific_prim_index;
     prim.sub_index = pi.sub_index;
     prim.user_data = pi.user_data;
+    prim.z = float(pi.z);
 
     return prim;
 }
@@ -424,6 +395,7 @@ struct VertexInfo {
 
 VertexInfo write_vertex(vec4 instance_rect,
                         vec4 local_clip_rect,
+                        float z,
                         Layer layer,
                         Tile tile) {
     vec2 p0 = floor(0.5 + instance_rect.xy * uDevicePixelRatio) / uDevicePixelRatio;
@@ -451,7 +423,7 @@ VertexInfo write_vertex(vec4 instance_rect,
 
     vec2 final_pos = clamped_pos + tile.screen_origin_task_origin.zw - tile.screen_origin_task_origin.xy;
 
-    gl_Position = uTransform * vec4(final_pos, 0, 1);
+    gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
     VertexInfo vi = VertexInfo(Rect(p0, p1), local_clamped_pos.xy, clamped_pos.xy);
     return vi;
@@ -467,6 +439,7 @@ struct TransformVertexInfo {
 
 TransformVertexInfo write_transform_vertex(vec4 instance_rect,
                                            vec4 local_clip_rect,
+                                           float z,
                                            Layer layer,
                                            Tile tile) {
     vec2 lp0_base = instance_rect.xy;
@@ -518,7 +491,7 @@ TransformVertexInfo write_transform_vertex(vec4 instance_rect,
     // apply the task offset
     vec2 final_pos = clamped_pos + tile.screen_origin_task_origin.zw - tile.screen_origin_task_origin.xy;
 
-    gl_Position = uTransform * vec4(final_pos, 0.0, 1.0);
+    gl_Position = uTransform * vec4(final_pos, z, 1.0);
 
     return TransformVertexInfo(layer_pos.xyw, clamped_pos, clipped_local_rect);
 }
@@ -663,6 +636,6 @@ float do_clip() {
         vec4(vClipMaskUv.xy, vClipMaskUvBounds.zw));
     // check for the dummy bounds, which are given to the opaque objects
     return vClipMaskUvBounds.xy == vClipMaskUvBounds.zw ? 1.0:
-        all(inside) ? textureLod(sCache, vClipMaskUv, 0.0).a : 0.0;
+        all(inside) ? textureLod(sCache, vClipMaskUv, 0.0).r : 0.0;
 }
 #endif //WR_FRAGMENT_SHADER
