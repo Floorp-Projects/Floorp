@@ -20,17 +20,18 @@
 #include "ClearKeyUtils.h"
 #include "ClearKeyStorage.h"
 #include "psshparser/PsshParser.h"
-
+#include "gmp-task-utils.h"
+#include "gmp-api/gmp-decryption.h"
 #include <assert.h>
 #include <string.h>
 
 using namespace mozilla;
-using namespace cdm;
-using namespace std;
 
 ClearKeySession::ClearKeySession(const std::string& aSessionId,
-                                 SessionType aSessionType)
+                                 GMPDecryptorCallback* aCallback,
+                                 GMPSessionType aSessionType)
   : mSessionId(aSessionId)
+  , mCallback(aCallback)
   , mSessionType(aSessionType)
 {
   CK_LOGD("ClearKeySession ctor %p", this);
@@ -39,21 +40,30 @@ ClearKeySession::ClearKeySession(const std::string& aSessionId,
 ClearKeySession::~ClearKeySession()
 {
   CK_LOGD("ClearKeySession dtor %p", this);
+
+  std::vector<GMPMediaKeyInfo> key_infos;
+  for (const KeyId& keyId : mKeyIds) {
+    assert(ClearKeyDecryptionManager::Get()->HasSeenKeyId(keyId));
+    ClearKeyDecryptionManager::Get()->ReleaseKeyId(keyId);
+    key_infos.push_back(GMPMediaKeyInfo(&keyId[0], keyId.size(), kGMPUnknown));
+  }
+  mCallback->BatchedKeyStatusChanged(&mSessionId[0], mSessionId.size(),
+                                     key_infos.data(), key_infos.size());
 }
 
-bool
-ClearKeySession::Init(InitDataType aInitDataType,
-                      const uint8_t* aInitData,
-                      uint32_t aInitDataSize)
+void
+ClearKeySession::Init(uint32_t aCreateSessionToken,
+                      uint32_t aPromiseId,
+                      const std::string& aInitDataType,
+                      const uint8_t* aInitData, uint32_t aInitDataSize)
 {
   CK_LOGD("ClearKeySession::Init");
 
-  if (aInitDataType == InitDataType::kCenc) {
+  if (aInitDataType == "cenc") {
     ParseCENCInitData(aInitData, aInitDataSize, mKeyIds);
-  } else if (aInitDataType == InitDataType::kKeyIds) {
+  } else if (aInitDataType == "keyids") {
     ClearKeyUtils::ParseKeyIdsInitData(aInitData, aInitDataSize, mKeyIds);
-  } else if (aInitDataType == InitDataType::kWebM &&
-             aInitDataSize <= kMaxWebmInitDataSize) {
+  } else if (aInitDataType == "webm" && aInitDataSize <= kMaxWebmInitDataSize) {
     // "webm" initData format is simply the raw bytes of the keyId.
     vector<uint8_t> keyId;
     keyId.assign(aInitData, aInitData+aInitDataSize);
@@ -61,13 +71,17 @@ ClearKeySession::Init(InitDataType aInitDataType,
   }
 
   if (!mKeyIds.size()) {
-    return false;
+    const char message[] = "Couldn't parse init data";
+    mCallback->RejectPromise(aPromiseId, kGMPTypeError, message, strlen(message));
+    return;
   }
 
-  return true;
+  mCallback->SetSessionId(aCreateSessionToken, &mSessionId[0], mSessionId.length());
+
+  mCallback->ResolvePromise(aPromiseId);
 }
 
-SessionType
+GMPSessionType
 ClearKeySession::Type() const
 {
   return mSessionType;
