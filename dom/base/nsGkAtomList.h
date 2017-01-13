@@ -2152,6 +2152,7 @@ GK_ATOM(lockedStyleStates, "lockedStyleStates")
 GK_ATOM(apzCallbackTransform, "apzCallbackTransform")
 GK_ATOM(restylableAnonymousNode, "restylableAnonymousNode")
 GK_ATOM(paintRequestTime, "PaintRequestTime")
+GK_ATOM(pseudoProperty, "PseudoProperty")  // CSSPseudoElementType
 
 // Languages for lang-specific transforms
 GK_ATOM(Japanese, "ja")

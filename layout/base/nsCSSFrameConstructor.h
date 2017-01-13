@@ -364,7 +364,8 @@ private:
   already_AddRefed<nsStyleContext>
   ResolveStyleContext(nsStyleContext*          aParentStyleContext,
                       nsIContent*              aContent,
-                      nsFrameConstructorState* aState);
+                      nsFrameConstructorState* aState,
+                      Element*                 aOriginatingElementOrNull = nullptr);
 
   // Add the frame construction items for the given aContent and aParentFrame
   // to the list.  This might add more than one item in some rare cases.

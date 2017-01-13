@@ -1172,6 +1172,7 @@ input[type=number]::-moz-number-spin-box {
 }
 
 input[type=number]::-moz-number-spin-up {
+  writing-mode: horizontal-tb;
   -moz-appearance: spinner-upbutton;
   display: block; /* bug 926670 */
   flex: none;
@@ -1189,6 +1190,7 @@ input[type=number]::-moz-number-spin-up {
 }
 
 input[type=number]::-moz-number-spin-down {
+  writing-mode: horizontal-tb;
   -moz-appearance: spinner-downbutton;
   display: block; /* bug 926670 */
   flex: none;
