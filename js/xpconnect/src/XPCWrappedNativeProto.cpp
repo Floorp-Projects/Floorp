@@ -50,15 +50,11 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
 }
 
 bool
-XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
+XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable,
                             bool callPostCreatePrototype)
 {
     AutoJSContext cx;
-    nsCOMPtr<nsIXPCScriptable> callback = scriptableCreateInfo
-                                        ? scriptableCreateInfo->GetCallback()
-                                        : nullptr;
-    if (callback)
-        mScriptable = callback;
+    mScriptable = scriptable;
 
     const js::Class* jsclazz =
         (mScriptable && mScriptable->AllowPropModsToPrototype())
@@ -141,7 +137,7 @@ XPCWrappedNativeProto::SystemIsBeingShutDown()
 XPCWrappedNativeProto*
 XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
                                     nsIClassInfo* classInfo,
-                                    const XPCNativeScriptableCreateInfo* scriptableCreateInfo,
+                                    nsIXPCScriptable* scriptable,
                                     bool callPostCreatePrototype)
 {
     AutoJSContext cx;
@@ -162,7 +158,7 @@ XPCWrappedNativeProto::GetNewOrUsed(XPCWrappedNativeScope* scope,
 
     proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
-    if (!proto || !proto->Init(scriptableCreateInfo, callPostCreatePrototype)) {
+    if (!proto || !proto->Init(scriptable, callPostCreatePrototype)) {
         delete proto.get();
         return nullptr;
     }
