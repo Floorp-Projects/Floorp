@@ -47,7 +47,7 @@ AnnotateMozCrashReason(const char* reason)
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef WIN32
+#ifdef _MSC_VER
    /*
     * TerminateProcess and GetCurrentProcess are defined in <winbase.h>, which
     * further depends on <windef.h>.  We hardcode these few definitions manually
@@ -192,6 +192,9 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
     * Breakpad without requiring system library symbols on all stack-processing
     * machines, as a nested breakpoint would require.
     *
+    * We use __LINE__ to prevent the compiler from folding multiple crash sites
+    * together, which would make crash reports hard to understand.
+    *
     * We use TerminateProcess with the exit code aborting would generate
     * because we don't want to invoke atexit handlers, destructors, library
     * unload handlers, and so on when our process might be in a compromised
@@ -200,34 +203,22 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
     * We don't use abort() because it'd cause Windows to annoyingly pop up the
     * process error dialog multiple times.  See bug 345118 and bug 426163.
     *
-    * We follow TerminateProcess() with a call to MOZ_NoReturn() so that the
-    * compiler doesn't hassle us to provide a return statement after a
-    * MOZ_REALLY_CRASH() call.
-    *
     * (Technically these are Windows requirements, not MSVC requirements.  But
     * practically you need MSVC for debugging, and we only ship builds created
     * by MSVC, so doing it this way reduces complexity.)
     */
 
-__declspec(noreturn) __inline void MOZ_NoReturn() {}
+static MOZ_COLD MOZ_NORETURN MOZ_NEVER_INLINE void MOZ_NoReturn(int aLine)
+{
+  *((volatile int*) NULL) = aLine;
+  TerminateProcess(GetCurrentProcess(), 3);
+}
 
-#  ifdef __cplusplus
-#    define MOZ_REALLY_CRASH() \
-       do { \
-         ::__debugbreak(); \
-         *((volatile int*) NULL) = __LINE__; \
-         ::TerminateProcess(::GetCurrentProcess(), 3); \
-         ::MOZ_NoReturn(); \
-       } while (0)
-#  else
-#    define MOZ_REALLY_CRASH() \
-       do { \
-         __debugbreak(); \
-         *((volatile int*) NULL) = __LINE__; \
-         TerminateProcess(GetCurrentProcess(), 3); \
-         MOZ_NoReturn(); \
-       } while (0)
-#  endif
+#  define MOZ_REALLY_CRASH() \
+     do { \
+       __debugbreak(); \
+       MOZ_NoReturn(__LINE__); \
+     } while (0)
 #else
 #  ifdef __cplusplus
 #    define MOZ_REALLY_CRASH() \
