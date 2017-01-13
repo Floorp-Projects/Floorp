@@ -27,7 +27,6 @@ this.EXPORTED_SYMBOLS = [
 var {utils: Cu} = Components;
 
 Cu.import("resource://services-sync/status.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-sync/util.js");
@@ -170,11 +169,6 @@ this.makeIdentityConfig = function(overrides) {
         hashed_fxa_uid: "f".repeat(32), // used during telemetry validation
         // uid will be set to the username.
       }
-    },
-    sync: {
-      // username will come from the top-level username
-      password: "whatever",
-      syncKey: "abcdeabcdeabcdeabcdeabcdea",
     }
   };
 
@@ -182,10 +176,6 @@ this.makeIdentityConfig = function(overrides) {
   if (overrides) {
     if (overrides.username) {
       result.username = overrides.username;
-    }
-    if (overrides.sync) {
-      // TODO: allow just some attributes to be specified
-      result.sync = overrides.sync;
     }
     if (overrides.fxaccount) {
       // TODO: allow just some attributes to be specified
@@ -260,44 +250,30 @@ this.configureIdentity = async function(identityOverrides, server) {
     ns.Service.serverURL = server.baseURI;
   }
 
-  ns.Service._clusterManager = ns.Service.identity.createClusterManager(ns.Service);
-
-  if (ns.Service.identity instanceof BrowserIDManager) {
-    // do the FxAccounts thang...
-
-    // If a server was specified, ensure FxA has a correct cluster URL available.
-    if (server && !config.fxaccount.token.endpoint) {
-      let ep = server.baseURI;
-      if (!ep.endsWith("/")) {
-        ep += "/";
-      }
-      ep += "1.1/" + config.username + "/";
-      config.fxaccount.token.endpoint = ep;
+  // If a server was specified, ensure FxA has a correct cluster URL available.
+  if (server && !config.fxaccount.token.endpoint) {
+    let ep = server.baseURI;
+    if (!ep.endsWith("/")) {
+      ep += "/";
     }
+    ep += "1.1/" + config.username + "/";
+    config.fxaccount.token.endpoint = ep;
+  }
 
-    configureFxAccountIdentity(ns.Service.identity, config);
-    await ns.Service.identity.initializeWithCurrentIdentity();
-    // and cheat to avoid requiring each test do an explicit login - give it
-    // a cluster URL.
-    if (config.fxaccount.token.endpoint) {
-      ns.Service.clusterURL = config.fxaccount.token.endpoint;
-    }
-    return;
+  configureFxAccountIdentity(ns.Service.identity, config);
+  await ns.Service.identity.initializeWithCurrentIdentity();
+  // and cheat to avoid requiring each test do an explicit login - give it
+  // a cluster URL.
+  if (config.fxaccount.token.endpoint) {
+    ns.Service.clusterURL = config.fxaccount.token.endpoint;
   }
-  // old style identity provider.
-  if (server) {
-    ns.Service.clusterURL = server.baseURI + "/";
-  }
-  ns.Service.identity.username = config.username;
-  ns.Service._updateCachedURLs();
-  setBasicCredentials(config.username, config.sync.password, config.sync.syncKey);
 }
 
-this.SyncTestingInfrastructure = async function(server, username, password) {
+this.SyncTestingInfrastructure = async function(server, username) {
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
 
-  let config = makeIdentityConfig({ username, password });
+  let config = makeIdentityConfig({ username });
   await configureIdentity(config, server);
   return {
     logStats: initTestLogging(),
@@ -323,9 +299,9 @@ this.encryptPayload = function encryptPayload(cleartext) {
 }
 
 // This helper can be used instead of 'add_test' or 'add_task' to run the
-// specified test function twice - once with the old-style sync identity
-// manager and once with the new-style BrowserID identity manager, to ensure
-// it works in both cases.
+// specified test function with different identity managers.
+// So far we use this with one, the FxA one, but we keep it in case we change
+// idmanagers again.
 //
 // * The test itself should be passed as 'test' - ie, test code will generally
 //   pass |this|.
@@ -339,15 +315,6 @@ this.add_identity_test = function(test, testFunction) {
   }
   let ns = {};
   Cu.import("resource://services-sync/service.js", ns);
-  // one task for the "old" identity manager.
-  test.add_task(async function() {
-    note("sync");
-    let oldIdentity = Status._authManager;
-    ensureLegacyIdentityManager();
-    await testFunction();
-    Status.__authManager = ns.Service.identity = oldIdentity;
-  });
-  // another task for the FxAccounts identity manager.
   test.add_task(async function() {
     note("FxAccounts");
     let oldIdentity = Status._authManager;
