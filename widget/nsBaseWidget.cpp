@@ -1298,14 +1298,14 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   CreateCompositorVsyncDispatcher();
 
+  CompositorOptions options(UseAPZ(), gfxPrefs::WebRenderEnabled());
+
   RefPtr<LayerManager> lm;
-  if (gfxPrefs::WebRenderEnabled()) {
+  if (options.UseWebRender()) {
     lm = new WebRenderLayerManager(this);
   } else {
     lm = new ClientLayerManager(this);
   }
-
-  CompositorOptions options(UseAPZ());
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
