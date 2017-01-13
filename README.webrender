@@ -39,6 +39,12 @@ What if you have to make changes to webrender itself?
 5) Go into toolkit/library/rust and run |cargo update --aggressive -p webrender|.
    Do the same in toolkit/library/gtest/rust. This will update the corresponding
    Cargo.lock files with the latest webrender dependencies.
+   Note that this will update all webrender dependencies to their latest allowed
+   versions. In particular, the latest allowed minor version will be used (this
+   in theory should always be safe, but may not be so). If you need to force a
+   particular dependency to a particular version, you can run |cargo update -p
+   <package> --precise <version>|. Make sure to do this in both toolkit/library/
+   rust/ and toolkit/library/gtest/rust/.
 6) Run |mach vendor rust| to update the rust dependencies in third_party/rust
 7) Commit the vendored changes locally
 8) Build and test. You may need to make changes in bindings.rs or on
