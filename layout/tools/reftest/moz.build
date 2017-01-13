@@ -16,20 +16,15 @@ FINAL_TARGET_FILES += ['bootstrap.js']
 GENERATED_FILES += ['automation.py']
 TEST_HARNESS_FILES.reftest += [
     '!automation.py',
-    '/build/mobile/b2gautomation.py',
     '/build/mobile/remoteautomation.py',
     '/build/pgo/server-locations.txt',
     '/testing/mochitest/server.js',
-    'b2g_start_script.js',
-    'gaia_lock_screen.js',
     'mach_test_package_commands.py',
     'output.py',
     'reftest-preferences.js',
     'reftestcommandline.py',
     'remotereftest.py',
     'runreftest.py',
-    'runreftestb2g.py',
-    'runreftestmulet.py',
 ]
 
 TEST_HARNESS_FILES.reftest.chrome += [

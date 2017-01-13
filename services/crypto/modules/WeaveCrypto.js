@@ -120,7 +120,7 @@ WeaveCrypto.prototype = {
                            ? crypto.subtle.encrypt
                            : crypto.subtle.decrypt)
                           .bind(crypto.subtle);
-        let algo = { name: CRYPT_ALGO, iv: iv };
+        let algo = { name: CRYPT_ALGO, iv };
 
 
         return Async.promiseSpinningly(
@@ -245,7 +245,7 @@ WeaveCrypto.prototype = {
         let importAlgo = { name: KEY_DERIVATION_ALGO };
         let deriveAlgo = {
             name: KEY_DERIVATION_ALGO,
-            salt: salt,
+            salt,
             iterations: KEY_DERIVATION_ITERATIONS,
             hash: { name: KEY_DERIVATION_HASHING_ALGO },
         };

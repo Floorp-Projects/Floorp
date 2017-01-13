@@ -1,12 +1,12 @@
 # DO NOT EDIT! This is a auto-generated temporary list for Stylo testing
 default-preferences pref(dom.forms.datetime,true)
 
-# not valid on Android/B2G where type=time looks like type=text
+# not valid on Android where type=time looks like type=text
 # == time-simple-unthemed.html time-simple-unthemed.html
 # == time-large-font.html time-large-font.html
 # == time-width-height.html time-width-height.html
 # == time-border.html time-border.html
-# only valid on Android/B2G where type=number looks the same as type=text
+# only valid on Android where type=number looks the same as type=text
 # == time-simple-unthemed.html time-simple-unthemed.html
 
 # type change

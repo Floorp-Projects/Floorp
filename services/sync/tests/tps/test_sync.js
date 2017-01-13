@@ -32,7 +32,7 @@ var bookmarks_initial = {
       title: "Bugzilla",
       keyword: "bz",
       changes: {
-        keyword: "bugzilla" 
+        keyword: "bugzilla"
       }
     },
     { folder: "foldera" },

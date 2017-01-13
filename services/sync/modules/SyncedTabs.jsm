@@ -181,7 +181,7 @@ let SyncedTabsInternal = {
         } catch (ex) {
           log.error("Sync failed", ex);
           reject(ex);
-        };
+        }
       }, Ci.nsIThread.DISPATCH_NORMAL);
     });
   },

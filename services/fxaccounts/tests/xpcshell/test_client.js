@@ -17,20 +17,20 @@ function run_test() {
 
 // https://wiki.mozilla.org/Identity/AttachedServices/KeyServerProtocol#.2Faccount.2Fkeys
 var ACCOUNT_KEYS = {
-  keyFetch:     h("8081828384858687 88898a8b8c8d8e8f"+
+  keyFetch:     h("8081828384858687 88898a8b8c8d8e8f" +
                   "9091929394959697 98999a9b9c9d9e9f"),
 
-  response:     h("ee5c58845c7c9412 b11bbd20920c2fdd"+
-                  "d83c33c9cd2c2de2 d66b222613364636"+
-                  "c2c0f8cfbb7c6304 72c0bd88451342c6"+
-                  "c05b14ce342c5ad4 6ad89e84464c993c"+
-                  "3927d30230157d08 17a077eef4b20d97"+
+  response:     h("ee5c58845c7c9412 b11bbd20920c2fdd" +
+                  "d83c33c9cd2c2de2 d66b222613364636" +
+                  "c2c0f8cfbb7c6304 72c0bd88451342c6" +
+                  "c05b14ce342c5ad4 6ad89e84464c993c" +
+                  "3927d30230157d08 17a077eef4b20d97" +
                   "6f7a97363faf3f06 4c003ada7d01aa70"),
 
-  kA:           h("2021222324252627 28292a2b2c2d2e2f"+
+  kA:           h("2021222324252627 28292a2b2c2d2e2f" +
                   "3031323334353637 38393a3b3c3d3e3f"),
 
-  wrapKB:       h("4041424344454647 48494a4b4c4d4e4f"+
+  wrapKB:       h("4041424344454647 48494a4b4c4d4e4f" +
                   "5051525354555657 58595a5b5c5d5e5f"),
 };
 
@@ -238,7 +238,7 @@ add_task(function* test_signUp() {
   try {
     result = yield client.signUp(unicodeUsername, unicodePassword);
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(101, expectedError.errno);
   }
 
@@ -279,29 +279,22 @@ add_task(function* test_signIn() {
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.bodyOutputStream.write(sessionMessage_noKey,
                                         sessionMessage_noKey.length);
-        return;
-      }
-      else if (jsonBody.email == "you@example.com") {
+      } else if (jsonBody.email == "you@example.com") {
         do_check_eq("keys=true", request._queryString);
         do_check_eq(jsonBody.authPW, "93d20ec50304d496d0707ec20d7e8c89459b6396ec5dd5b9e92809c5e42856c7");
         response.setStatusLine(request.httpVersion, 200, "OK");
         response.bodyOutputStream.write(sessionMessage_withKey,
                                         sessionMessage_withKey.length);
-        return;
-      }
-      else if (jsonBody.email == "You@example.com") {
+      } else if (jsonBody.email == "You@example.com") {
         // Error trying to sign in with a wrong capitalization
         response.setStatusLine(request.httpVersion, 400, "Bad request");
         response.bodyOutputStream.write(errorMessage_wrongCap,
                                         errorMessage_wrongCap.length);
-        return;
-      }
-      else {
+      } else {
         // Error trying to sign in to nonexistent account
         response.setStatusLine(request.httpVersion, 400, "Bad request");
         response.bodyOutputStream.write(errorMessage_notExistent,
                                         errorMessage_notExistent.length);
-        return;
       }
     },
   });
@@ -357,7 +350,6 @@ add_task(function* test_signOut() {
       // Error trying to sign out of nonexistent account
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-      return;
     },
   });
 
@@ -369,7 +361,7 @@ add_task(function* test_signOut() {
   try {
     result = yield client.signOut("FakeSession");
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(102, expectedError.errno);
   }
 
@@ -396,7 +388,6 @@ add_task(function* test_recoveryEmailStatus() {
       // Second call gets an error trying to query a nonexistent account
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-      return;
     },
   });
 
@@ -408,7 +399,7 @@ add_task(function* test_recoveryEmailStatus() {
   try {
     result = yield client.recoveryEmailStatus("some bogus session");
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(102, expectedError.errno);
   }
 
@@ -425,7 +416,6 @@ add_task(function* test_recoveryEmailStatusWithReason() {
 
       response.setStatusLine(request.httpVersion, 200, "OK");
       response.bodyOutputStream.write(emailStatus, emailStatus.length);
-      return;
     },
   });
 
@@ -455,7 +445,6 @@ add_task(function* test_resendVerificationEmail() {
       // Second call gets an error trying to query a nonexistent account
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-      return;
     },
   });
 
@@ -467,7 +456,7 @@ add_task(function* test_resendVerificationEmail() {
   try {
     result = yield client.resendVerificationEmail("some bogus session");
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(102, expectedError.errno);
   }
 
@@ -489,7 +478,7 @@ add_task(function* test_accountKeys() {
       do_check_true(request.hasHeader("Authorization"));
       attempt += 1;
 
-      switch(attempt) {
+      switch (attempt) {
         case 1:
           // First time succeeds
           response.setStatusLine(request.httpVersion, 200, "OK");
@@ -532,7 +521,7 @@ add_task(function* test_accountKeys() {
   try {
     result = yield client.accountKeys(ACCOUNT_KEYS.keyFetch);
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(expectedError.message, "failed to retrieve keys");
   }
 
@@ -540,7 +529,7 @@ add_task(function* test_accountKeys() {
   try {
     result = yield client.accountKeys(ACCOUNT_KEYS.keyFetch);
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(expectedError.message, "error unbundling encryption keys");
   }
 
@@ -548,7 +537,7 @@ add_task(function* test_accountKeys() {
   try {
     result = yield client.accountKeys(ACCOUNT_KEYS.keyFetch);
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(102, expectedError.errno);
   }
 
@@ -578,7 +567,6 @@ add_task(function* test_signCertificate() {
       // Second attempt, trigger error
       response.setStatusLine(request.httpVersion, 400, "Bad request");
       response.bodyOutputStream.write(errorMessage, errorMessage.length);
-      return;
     },
   });
 
@@ -590,7 +578,7 @@ add_task(function* test_signCertificate() {
   try {
     result = yield client.signCertificate("bogus", JSON.stringify({foo: "bar"}), 600);
     do_throw("Expected to catch an exception");
-  } catch(expectedError) {
+  } catch (expectedError) {
     do_check_eq(102, expectedError.errno);
   }
 
@@ -651,7 +639,7 @@ add_task(function* test_accountExists() {
   try {
     result = yield client.accountExists("i.break.things@example.com");
     do_throw("Expected to catch an exception");
-  } catch(unexpectedError) {
+  } catch (unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
 
@@ -702,7 +690,7 @@ add_task(function* test_registerDevice() {
   try {
     yield client.registerDevice(FAKE_SESSION_TOKEN, ERROR_NAME, DEVICE_TYPE);
     do_throw("Expected to catch an exception");
-  } catch(unexpectedError) {
+  } catch (unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
 
@@ -746,7 +734,7 @@ add_task(function* test_updateDevice() {
   try {
     yield client.updateDevice(FAKE_SESSION_TOKEN, ERROR_ID, DEVICE_NAME);
     do_throw("Expected to catch an exception");
-  } catch(unexpectedError) {
+  } catch (unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
 
@@ -785,7 +773,7 @@ add_task(function* test_signOutAndDestroyDevice() {
   try {
     yield client.signOutAndDestroyDevice(FAKE_SESSION_TOKEN, ERROR_ID);
     do_throw("Expected to catch an exception");
-  } catch(unexpectedError) {
+  } catch (unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
 
@@ -818,7 +806,7 @@ add_task(function* test_getDeviceList() {
     canReturnDevices = false;
     yield client.getDeviceList(FAKE_SESSION_TOKEN);
     do_throw("Expected to catch an exception");
-  } catch(unexpectedError) {
+  } catch (unexpectedError) {
     do_check_eq(unexpectedError.code, 500);
   }
 

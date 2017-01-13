@@ -49,18 +49,18 @@ function asyncCallback(ctx, func, args) {
   CommonUtils.nextTick(invoke);
 }
 
-var Record = function (params) {
+var Record = function(params) {
   this.id = params.guid;
   this.parent = params.parent || null;
   this.index = params.position;
   this.title = params.title;
-  this.dateAdded = Math.floor(params.dateAdded/1000);
-  this.lastModified = Math.floor(params.lastModified/1000);
+  this.dateAdded = Math.floor(params.dateAdded / 1000);
+  this.lastModified = Math.floor(params.lastModified / 1000);
   this.uri = params.url;
 
   let annos = params.annos || {};
   Object.defineProperty(this, "annos", {
-    get: function () {
+    get() {
       return annos;
     },
     enumerable: false
@@ -95,8 +95,8 @@ Record.prototype = {
   version: DATA_VERSION,
 };
 
-var Bookmarks = function () {
-  let createRootFolder = function (name) {
+var Bookmarks = function() {
+  let createRootFolder = function(name) {
     let ROOT_FOLDER_ANNO = "cloudsync/rootFolder/" + name;
     let ROOT_SHORTCUT_ANNO = "cloudsync/rootShortcut/" + name;
 
@@ -142,7 +142,7 @@ var Bookmarks = function () {
     return deferred.promise;
   };
 
-  let getRootFolder = function (name) {
+  let getRootFolder = function(name) {
     let ROOT_FOLDER_ANNO = "cloudsync/rootFolder/" + name;
     let ROOT_SHORTCUT_ANNO = "cloudsync/rootShortcut/" + name;
     let deferred = Promise.defer();
@@ -166,7 +166,7 @@ var Bookmarks = function () {
     return deferred.promise;
   };
 
-  let deleteRootFolder = function (name) {
+  let deleteRootFolder = function(name) {
     let ROOT_FOLDER_ANNO = "cloudsync/rootFolder/" + name;
     let ROOT_SHORTCUT_ANNO = "cloudsync/rootShortcut/" + name;
 
@@ -197,7 +197,7 @@ var Bookmarks = function () {
 
       let rootFolderId = folderIds[0];
       PlacesWrapper.removeFolderChildren(rootFolderId).then(
-        function () {
+        function() {
           return PlacesWrapper.removeItem(rootFolderId);
         }
       ).then(deleteFolderDeferred.resolve, deleteFolderDeferred.reject);
@@ -221,23 +221,23 @@ var Bookmarks = function () {
 
 this.Bookmarks = Bookmarks;
 
-var RootFolder = function (rootId, rootName) {
+var RootFolder = function(rootId, rootName) {
   let suspended = true;
   let ignoreAll = false;
 
-  let suspend = function () {
+  let suspend = function() {
     if (!suspended) {
       PlacesUtils.bookmarks.removeObserver(observer);
       suspended = true;
     }
-  }.bind(this);
+  };
 
-  let resume = function () {
+  let resume = function() {
     if (suspended) {
       PlacesUtils.bookmarks.addObserver(observer, false);
       suspended = false;
     }
-  }.bind(this);
+  };
 
   let eventTypes = [
     "add",
@@ -251,7 +251,7 @@ var RootFolder = function (rootId, rootName) {
   let folderCache = new FolderCache;
   folderCache.insert(rootId, null);
 
-  let getCachedFolderIds = function (cache, roots) {
+  let getCachedFolderIds = function(cache, roots) {
     let nodes = [...roots];
     let results = [];
 
@@ -264,7 +264,7 @@ var RootFolder = function (rootId, rootName) {
     return results;
   };
 
-  let getLocalItems = function () {
+  let getLocalItems = function() {
     let deferred = Promise.defer();
 
     let folders = getCachedFolderIds(folderCache, folderCache.getChildren(rootId));
@@ -288,9 +288,9 @@ var RootFolder = function (rootId, rootName) {
     function getParentGuids(results) {
       results = Array.prototype.concat.apply([], results);
       let promises = [];
-      results.map(function (result) {
+      results.map(function(result) {
         let promise = PlacesWrapper.localIdToGuid(result.parent).then(
-          function (guidResult) {
+          function(guidResult) {
             result.parent = guidResult;
             return Promise.resolve(result);
           },
@@ -304,9 +304,9 @@ var RootFolder = function (rootId, rootName) {
     function getAnnos(results) {
       results = Array.prototype.concat.apply([], results);
       let promises = [];
-      results.map(function (result) {
+      results.map(function(result) {
         let promise = PlacesWrapper.getItemAnnotationsForLocalId(result.id).then(
-          function (annos) {
+          function(annos) {
             result.annos = annos;
             return Promise.resolve(result);
           },
@@ -325,7 +325,7 @@ var RootFolder = function (rootId, rootName) {
     Promise.all(promises)
            .then(getParentGuids)
            .then(getAnnos)
-           .then(function (results) {
+           .then(function(results) {
                    results = results.map((result) => new Record(result));
                    deferred.resolve(results);
                  },
@@ -334,7 +334,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let getLocalItemsById = function (guids) {
+  let getLocalItemsById = function(guids) {
     let deferred = Promise.defer();
 
     let types = [
@@ -346,9 +346,9 @@ var RootFolder = function (rootId, rootName) {
 
     function getParentGuids(results) {
       let promises = [];
-      results.map(function (result) {
+      results.map(function(result) {
         let promise = PlacesWrapper.localIdToGuid(result.parent).then(
-          function (guidResult) {
+          function(guidResult) {
             result.parent = guidResult;
             return Promise.resolve(result);
           },
@@ -361,7 +361,7 @@ var RootFolder = function (rootId, rootName) {
 
     PlacesWrapper.getItemsByGuid(guids, types)
                  .then(getParentGuids)
-                 .then(function (results) {
+                 .then(function(results) {
                          results = results.map((result) => new Record(result));
                          deferred.resolve(results);
                        },
@@ -370,7 +370,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let _createItem = function (item) {
+  let _createItem = function(item) {
     let deferred = Promise.defer();
 
     function getFolderId() {
@@ -432,11 +432,11 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let _deleteItem = function (item) {
+  let _deleteItem = function(item) {
     let deferred = Promise.defer();
 
     PlacesWrapper.guidToLocalId(item.id).then(
-      function (localId) {
+      function(localId) {
         folderCache.remove(localId);
         return PlacesWrapper.removeItem(localId);
       }
@@ -445,11 +445,11 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let _updateItem = function (item) {
+  let _updateItem = function(item) {
     let deferred = Promise.defer();
 
     PlacesWrapper.guidToLocalId(item.id).then(
-      function (localId) {
+      function(localId) {
         let promises = [];
 
         if (item.hasOwnProperty("dateAdded")) {
@@ -472,7 +472,7 @@ var RootFolder = function (rootId, rootName) {
           let deferred = Promise.defer();
           PlacesWrapper.guidToLocalId(item.parent)
             .then(
-                function (parent) {
+                function(parent) {
                   let index = item.hasOwnProperty("index") ? item.index : PlacesUtils.bookmarks.DEFAULT_INDEX;
                   if (CS_FOLDER & item.type) {
                     folderCache.setParent(localId, parent);
@@ -504,7 +504,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let mergeRemoteItems = function (items) {
+  let mergeRemoteItems = function(items) {
     ignoreAll = true;
     let deferred = Promise.defer();
 
@@ -513,10 +513,10 @@ var RootFolder = function (rootId, rootName) {
     let updatedItems = [];
     let deletedItems = [];
 
-    let sortItems = function () {
+    let sortItems = function() {
       let promises = [];
 
-      let exists = function (item) {
+      let exists = function(item) {
         let existsDeferred = Promise.defer();
         if (!item.id) {
           Object.defineProperty(item, "__exists__", {
@@ -526,7 +526,7 @@ var RootFolder = function (rootId, rootName) {
           existsDeferred.resolve(item);
         } else {
           PlacesWrapper.guidToLocalId(item.id).then(
-            function (localId) {
+            function(localId) {
               Object.defineProperty(item, "__exists__", {
                 value: localId ? true : false,
                 enumerable: false
@@ -539,7 +539,7 @@ var RootFolder = function (rootId, rootName) {
         return existsDeferred.promise;
       }
 
-      let handleSortedItem = function (item) {
+      let handleSortedItem = function(item) {
         if (!item.__exists__ && !item.deleted) {
           if (CS_FOLDER == item.type) {
             newFolders[item.id] = item;
@@ -566,7 +566,7 @@ var RootFolder = function (rootId, rootName) {
       return Promise.all(promises);
     }
 
-    let processNewFolders = function () {
+    let processNewFolders = function() {
       let newFolderGuids = Object.keys(newFolders);
       let newFolderRoots = [];
 
@@ -578,14 +578,14 @@ var RootFolder = function (rootId, rootName) {
         } else {
           newFolderRoots.push(guid);
         }
-      };
+      }
 
       let promises = [];
       for (let guid of newFolderRoots) {
         let root = newFolders[guid];
         let promise = Promise.resolve();
         promise = promise.then(
-          function () {
+          function() {
             return _createItem(root);
           },
           Promise.reject.bind(Promise)
@@ -596,7 +596,7 @@ var RootFolder = function (rootId, rootName) {
           let item = newFolders[items.shift()];
           items = items.concat(item._children);
           promise = promise.then(
-            function () {
+            function() {
               return _createItem(item);
             },
             Promise.reject.bind(Promise)
@@ -608,7 +608,7 @@ var RootFolder = function (rootId, rootName) {
       return Promise.all(promises);
     }
 
-    let processItems = function () {
+    let processItems = function() {
       let promises = [];
 
       for (let item of newItems) {
@@ -628,11 +628,11 @@ var RootFolder = function (rootId, rootName) {
 
     sortItems().then(processNewFolders)
                .then(processItems)
-               .then(function () {
+               .then(function() {
                        ignoreAll = false;
                        deferred.resolve(items);
                      },
-                     function (err) {
+                     function(err) {
                        ignoreAll = false;
                        deferred.reject(err);
                      });
@@ -640,7 +640,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let ignore = function (id, parent) {
+  let ignore = function(id, parent) {
     if (ignoreAll) {
       return true;
     }
@@ -652,7 +652,7 @@ var RootFolder = function (rootId, rootName) {
     return true;
   };
 
-  let handleItemAdded = function (id, parent, index, type, uri, title, dateAdded, guid, parentGuid) {
+  let handleItemAdded = function(id, parent, index, type, uri, title, dateAdded, guid, parentGuid) {
     let deferred = Promise.defer();
 
     if (PlacesUtils.bookmarks.TYPE_FOLDER == type) {
@@ -665,7 +665,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let handleItemRemoved = function (id, parent, index, type, uri, guid, parentGuid) {
+  let handleItemRemoved = function(id, parent, index, type, uri, guid, parentGuid) {
     let deferred = Promise.defer();
 
     if (PlacesUtils.bookmarks.TYPE_FOLDER == type) {
@@ -678,7 +678,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let handleItemChanged = function (id, property, isAnnotation, newValue, lastModified, type, parent, guid, parentGuid) {
+  let handleItemChanged = function(id, property, isAnnotation, newValue, lastModified, type, parent, guid, parentGuid) {
     let deferred = Promise.defer();
 
     eventSource.emit('change', guid);
@@ -687,7 +687,7 @@ var RootFolder = function (rootId, rootName) {
     return deferred.promise;
   };
 
-  let handleItemMoved = function (id, oldParent, oldIndex, newParent, newIndex, type, guid, oldParentGuid, newParentGuid) {
+  let handleItemMoved = function(id, oldParent, oldIndex, newParent, newIndex, type, guid, oldParentGuid, newParentGuid) {
     let deferred = Promise.defer();
 
     function complete() {
@@ -718,13 +718,13 @@ var RootFolder = function (rootId, rootName) {
   };
 
   let observer = {
-    onBeginBatchUpdate: function () {
+    onBeginBatchUpdate() {
     },
 
-    onEndBatchUpdate: function () {
+    onEndBatchUpdate() {
     },
 
-    onItemAdded: function (id, parent, index, type, uri, title, dateAdded, guid, parentGuid) {
+    onItemAdded(id, parent, index, type, uri, title, dateAdded, guid, parentGuid) {
       if (ignore(id, parent)) {
         return;
       }
@@ -732,7 +732,7 @@ var RootFolder = function (rootId, rootName) {
       asyncCallback(this, handleItemAdded, Array.prototype.slice.call(arguments));
     },
 
-    onItemRemoved: function (id, parent, index, type, uri, guid, parentGuid) {
+    onItemRemoved(id, parent, index, type, uri, guid, parentGuid) {
       if (ignore(id, parent)) {
         return;
       }
@@ -740,7 +740,7 @@ var RootFolder = function (rootId, rootName) {
       asyncCallback(this, handleItemRemoved, Array.prototype.slice.call(arguments));
     },
 
-    onItemChanged: function (id, property, isAnnotation, newValue, lastModified, type, parent, guid, parentGuid) {
+    onItemChanged(id, property, isAnnotation, newValue, lastModified, type, parent, guid, parentGuid) {
       if (ignore(id, parent)) {
         return;
       }
@@ -748,7 +748,7 @@ var RootFolder = function (rootId, rootName) {
       asyncCallback(this, handleItemChanged, Array.prototype.slice.call(arguments));
     },
 
-    onItemMoved: function (id, oldParent, oldIndex, newParent, newIndex, type, guid, oldParentGuid, newParentGuid) {
+    onItemMoved(id, oldParent, oldIndex, newParent, newIndex, type, guid, oldParentGuid, newParentGuid) {
       if (ignore(id, oldParent) && ignore(id, newParent)) {
         return;
       }
@@ -765,20 +765,20 @@ var RootFolder = function (rootId, rootName) {
   this.mergeRemoteItems = mergeRemoteItems.bind(this);
 
   let rootGuid = null; // resolved before becoming ready (below)
-  this.__defineGetter__("id", function () {
+  this.__defineGetter__("id", function() {
     return rootGuid;
   });
-  this.__defineGetter__("name", function () {
+  this.__defineGetter__("name", function() {
     return rootName;
   });
 
   let deferred = Promise.defer();
-  let getGuidForRootFolder = function () {
+  let getGuidForRootFolder = function() {
     return PlacesWrapper.localIdToGuid(rootId);
   }
   PlacesWrapper.updateCachedFolderIds(folderCache, rootId)
                .then(getGuidForRootFolder, getGuidForRootFolder)
-               .then(function (guid) {
+               .then(function(guid) {
                        rootGuid = guid;
                        deferred.resolve(this);
                      }.bind(this),

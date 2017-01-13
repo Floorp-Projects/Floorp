@@ -765,16 +765,6 @@ ListRules(const nsCOMArray<css::Rule>& aRules, FILE* aOut, int32_t aIndent)
   }
 }
 
-struct ListEnumData {
-  ListEnumData(FILE* aOut, int32_t aIndent)
-    : mOut(aOut),
-      mIndent(aIndent)
-  {
-  }
-  FILE*   mOut;
-  int32_t mIndent;
-};
-
 void
 CSSStyleSheet::List(FILE* out, int32_t aIndent) const
 {
