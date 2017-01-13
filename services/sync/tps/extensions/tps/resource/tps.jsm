@@ -761,7 +761,7 @@ var TPS = {
         this.quit();
         return;
       }
-      this.seconds_since_epoch = prefs.getIntPref("tps.seconds_since_epoch", 0);
+      this.seconds_since_epoch = prefs.getIntPref("tps.seconds_since_epoch");
       if (this.seconds_since_epoch)
         this._usSinceEpoch = this.seconds_since_epoch * 1000 * 1000;
       else {
