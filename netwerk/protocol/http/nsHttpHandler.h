@@ -243,7 +243,7 @@ public:
                                  nsProxyInfo *proxyInfo,
                                  nsIInterfaceRequestor *callbacks,
                                  uint32_t caps,
-                                 const NeckoOriginAttributes &originAttributes)
+                                 const OriginAttributes &originAttributes)
     {
         mConnMgr->UpdateAltServiceMapping(map, proxyInfo, callbacks, caps,
                                           originAttributes);

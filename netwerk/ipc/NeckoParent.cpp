@@ -45,8 +45,7 @@
 #include "nsINetworkPredictorVerifier.h"
 #include "nsISpeculativeConnect.h"
 
-using mozilla::DocShellOriginAttributes;
-using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 using mozilla::dom::ChromeUtils;
 using mozilla::dom::ContentParent;
 using mozilla::dom::TabContext;
@@ -158,13 +157,13 @@ const char*
 NeckoParent::GetValidatedOriginAttributes(const SerializedLoadContext& aSerialized,
                                           PContentParent* aContent,
                                           nsIPrincipal* aRequestingPrincipal,
-                                          DocShellOriginAttributes& aAttrs)
+                                          OriginAttributes& aAttrs)
 {
   if (!UsingNeckoIPCSecurity()) {
     if (!aSerialized.IsNotNull()) {
       // If serialized is null, we cannot validate anything. We have to assume
       // that this requests comes from a SystemPrincipal.
-      aAttrs = DocShellOriginAttributes(NECKO_NO_APP_ID, false);
+      aAttrs = OriginAttributes(NECKO_NO_APP_ID, false);
     } else {
       aAttrs = aSerialized.mOriginAttributes;
     }
@@ -237,7 +236,7 @@ NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                                       nsIPrincipal* aRequestingPrincipal,
                                       nsCOMPtr<nsILoadContext> &aResult)
 {
-  DocShellOriginAttributes attrs;
+  OriginAttributes attrs;
   const char* error = GetValidatedOriginAttributes(aSerialized, aContent,
                                                    aRequestingPrincipal, attrs);
   if (error) {
@@ -833,7 +832,7 @@ NeckoParent::RecvPredPredict(const ipc::OptionalURIParams& aTargetURI,
   // We only actually care about the loadContext.mPrivateBrowsing, so we'll just
   // pass dummy params for nestFrameId, and originAttributes.
   uint64_t nestedFrameId = 0;
-  DocShellOriginAttributes attrs(NECKO_UNKNOWN_APP_ID, false);
+  OriginAttributes attrs(NECKO_UNKNOWN_APP_ID, false);
   nsCOMPtr<nsILoadContext> loadContext;
   if (aLoadContext.IsNotNull()) {
     attrs.SyncAttributesWithPrivateBrowsing(aLoadContext.mOriginAttributes.mPrivateBrowsingId > 0);
@@ -866,7 +865,7 @@ NeckoParent::RecvPredLearn(const ipc::URIParams& aTargetURI,
   // We only actually care about the loadContext.mPrivateBrowsing, so we'll just
   // pass dummy params for nestFrameId, and originAttributes;
   uint64_t nestedFrameId = 0;
-  DocShellOriginAttributes attrs(NECKO_UNKNOWN_APP_ID, false);
+  OriginAttributes attrs(NECKO_UNKNOWN_APP_ID, false);
   nsCOMPtr<nsILoadContext> loadContext;
   if (aLoadContext.IsNotNull()) {
     attrs.SyncAttributesWithPrivateBrowsing(aLoadContext.mOriginAttributes.mPrivateBrowsingId > 0);

@@ -34,7 +34,7 @@
 #include "seccomon.h"
 
 namespace mozilla {
-class NeckoOriginAttributes;
+class OriginAttributes;
 }
 
 namespace mozilla { namespace pkix {
@@ -66,7 +66,7 @@ public:
   // We currently only use the first party domain portion of the attributes, and
   // it is non-empty only when "privacy.firstParty.isolate" is enabled.
   bool Get(const mozilla::pkix::CertID& aCertID,
-           const NeckoOriginAttributes& aOriginAttributes,
+           const OriginAttributes& aOriginAttributes,
            /*out*/ mozilla::pkix::Result& aResult,
            /*out*/ mozilla::pkix::Time& aValidThrough);
 
@@ -83,7 +83,7 @@ public:
   // We currently only use the first party domain portion of the attributes, and
   // it is non-empty only when "privacy.firstParty.isolate" is enabled.
   mozilla::pkix::Result Put(const mozilla::pkix::CertID& aCertID,
-                            const NeckoOriginAttributes& aOriginAttributes,
+                            const OriginAttributes& aOriginAttributes,
                             mozilla::pkix::Result aResult,
                             mozilla::pkix::Time aThisUpdate,
                             mozilla::pkix::Time aValidThrough);
@@ -104,7 +104,7 @@ private:
     {
     }
     mozilla::pkix::Result Init(const mozilla::pkix::CertID& aCertID,
-                               const NeckoOriginAttributes& aOriginAttributes);
+                               const OriginAttributes& aOriginAttributes);
 
     mozilla::pkix::Result mResult;
     mozilla::pkix::Time mThisUpdate;
@@ -118,7 +118,7 @@ private:
   };
 
   bool FindInternal(const mozilla::pkix::CertID& aCertID,
-                    const NeckoOriginAttributes& aOriginAttributes,
+                    const OriginAttributes& aOriginAttributes,
                     /*out*/ size_t& index,
                     const MutexAutoLock& aProofOfLock);
   void MakeMostRecentlyUsed(size_t aIndex, const MutexAutoLock& aProofOfLock);

@@ -1247,7 +1247,7 @@ nsXPCComponents_utils_Sandbox::Construct(nsIXPConnectWrappedNative* wrapper, JSC
  * we use the related Codebase Principal for the sandbox.
  */
 bool
-ParsePrincipal(JSContext* cx, HandleString codebase, const PrincipalOriginAttributes& aAttrs,
+ParsePrincipal(JSContext* cx, HandleString codebase, const OriginAttributes& aAttrs,
                nsIPrincipal** principal)
 {
     MOZ_ASSERT(principal);
@@ -1331,7 +1331,7 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
     // strings, then we will use a default OriginAttribute.
     // Otherwise, we will use the origin attributes of the passed object(s). If
     // more than one object is specified, we ensure that the OAs match.
-    Maybe<PrincipalOriginAttributes> attrs;
+    Maybe<OriginAttributes> attrs;
     if (options.originAttributes) {
         attrs.emplace();
         JS::RootedValue val(cx, JS::ObjectValue(*options.originAttributes));
@@ -1376,7 +1376,7 @@ GetExpandedPrincipal(JSContext* cx, HandleObject arrayObj,
             NS_ENSURE_TRUE(principal, false);
 
             if (!options.originAttributes) {
-                const PrincipalOriginAttributes prinAttrs =
+                const OriginAttributes prinAttrs =
                     principal->OriginAttributesRef();
                 if (attrs.isNothing()) {
                     attrs.emplace(prinAttrs);
@@ -1751,7 +1751,7 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative* wrappe
 
     if (args[0].isString()) {
         RootedString str(cx, args[0].toString());
-        PrincipalOriginAttributes attrs;
+        OriginAttributes attrs;
         if (options.originAttributes) {
             JS::RootedValue val(cx, JS::ObjectValue(*options.originAttributes));
             if (!attrs.Init(cx, val)) {

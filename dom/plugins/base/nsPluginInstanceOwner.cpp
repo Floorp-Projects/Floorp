@@ -561,7 +561,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL,
   // bypass ContentPolicy checks which should still be enforced.
   nsCOMPtr<nsIPrincipal> triggeringPrincipal;
   if (!aDoCheckLoadURIChecks) {
-    mozilla::PrincipalOriginAttributes attrs =
+    mozilla::OriginAttributes attrs =
       BasePrincipal::Cast(content->NodePrincipal())->OriginAttributesRef();
     triggeringPrincipal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
   }

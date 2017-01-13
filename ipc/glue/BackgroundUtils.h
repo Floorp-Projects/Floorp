@@ -41,20 +41,8 @@ struct OriginAttributesParamTraits
 } // namespace detail
 
 template<>
-struct ParamTraits<mozilla::PrincipalOriginAttributes>
-  : public detail::OriginAttributesParamTraits<mozilla::PrincipalOriginAttributes> {};
-
-template<>
-struct ParamTraits<mozilla::DocShellOriginAttributes>
-  : public detail::OriginAttributesParamTraits<mozilla::DocShellOriginAttributes> {};
-
-template<>
-struct ParamTraits<mozilla::NeckoOriginAttributes>
-  : public detail::OriginAttributesParamTraits<mozilla::NeckoOriginAttributes> {};
-
-template<>
-struct ParamTraits<mozilla::GenericOriginAttributes>
-  : public detail::OriginAttributesParamTraits<mozilla::GenericOriginAttributes> {};
+struct ParamTraits<mozilla::OriginAttributes>
+  : public detail::OriginAttributesParamTraits<mozilla::OriginAttributes> {};
 
 } // namespace IPC
 

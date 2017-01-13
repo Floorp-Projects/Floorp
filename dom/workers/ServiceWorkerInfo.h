@@ -32,7 +32,7 @@ private:
   const nsString mCacheName;
   const nsLoadFlags mLoadFlags;
   ServiceWorkerState mState;
-  PrincipalOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 
   // This id is shared with WorkerPrivate to match requests issued by service
   // workers to their corresponding serviceWorkerInfo.
@@ -113,7 +113,7 @@ public:
     return mState;
   }
 
-  const PrincipalOriginAttributes&
+  const OriginAttributes&
   GetOriginAttributes() const
   {
     return mOriginAttributes;

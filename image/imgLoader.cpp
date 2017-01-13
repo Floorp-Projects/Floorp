@@ -752,11 +752,11 @@ NewImageChannel(nsIChannel** aResult,
       // If this is a favicon loading, we will use the originAttributes from the
       // loadingPrincipal as the channel's originAttributes. This allows the favicon
       // loading from XUL will use the correct originAttributes.
-      NeckoOriginAttributes neckoAttrs;
-      neckoAttrs.InheritFromDocToNecko(aLoadingPrincipal->OriginAttributesRef());
+      OriginAttributes attrs;
+      attrs.Inherit(aLoadingPrincipal->OriginAttributesRef());
 
       nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
-      rv = loadInfo->SetOriginAttributes(neckoAttrs);
+      rv = loadInfo->SetOriginAttributes(attrs);
     }
   } else {
     // either we are loading something inside a document, in which case
@@ -781,14 +781,14 @@ NewImageChannel(nsIChannel** aResult,
     // Use the OriginAttributes from the loading principal, if one is available,
     // and adjust the private browsing ID based on what kind of load the caller
     // has asked us to perform.
-    NeckoOriginAttributes neckoAttrs;
+    OriginAttributes attrs;
     if (aLoadingPrincipal) {
-      neckoAttrs.InheritFromDocToNecko(aLoadingPrincipal->OriginAttributesRef());
+      attrs.Inherit(aLoadingPrincipal->OriginAttributesRef());
     }
-    neckoAttrs.mPrivateBrowsingId = aRespectPrivacy ? 1 : 0;
+    attrs.mPrivateBrowsingId = aRespectPrivacy ? 1 : 0;
 
     nsCOMPtr<nsILoadInfo> loadInfo = (*aResult)->GetLoadInfo();
-    rv = loadInfo->SetOriginAttributes(neckoAttrs);
+    rv = loadInfo->SetOriginAttributes(attrs);
   }
 
   if (NS_FAILED(rv)) {
@@ -1348,7 +1348,7 @@ imgLoader::FindEntryProperties(nsIURI* uri,
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
 
-  PrincipalOriginAttributes attrs;
+  OriginAttributes attrs;
   if (doc) {
     nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
     if (principal) {
@@ -2111,7 +2111,7 @@ imgLoader::LoadImage(nsIURI* aURI,
   // XXX For now ignore aCacheKey. We will need it in the future
   // for correctly dealing with image load requests that are a result
   // of post data.
-  PrincipalOriginAttributes attrs;
+  OriginAttributes attrs;
   if (aLoadingPrincipal) {
     attrs = aLoadingPrincipal->OriginAttributesRef();
   }
@@ -2323,9 +2323,9 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
   NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
   nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
 
-  PrincipalOriginAttributes attrs;
+  OriginAttributes attrs;
   if (loadInfo) {
-    attrs.InheritFromNecko(loadInfo->GetOriginAttributes());
+    attrs.Inherit(loadInfo->GetOriginAttributes());
   }
 
   nsresult rv;

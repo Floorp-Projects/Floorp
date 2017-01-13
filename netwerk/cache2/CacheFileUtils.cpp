@@ -34,8 +34,6 @@ class KeyParser : protected Tokenizer
 public:
   explicit KeyParser(nsACString const& aInput)
     : Tokenizer(aInput)
-    // Initialize attributes to their default values
-    , originAttribs(false)
     , isAnonymous(false)
     // Initialize the cache key to a zero length by default
     , lastTag(0)
@@ -44,7 +42,7 @@ public:
 
 private:
   // Results
-  NeckoOriginAttributes originAttribs;
+  OriginAttributes originAttribs;
   bool isAnonymous;
   nsCString idEnhance;
   nsDependentCSubstring cacheKey;
@@ -212,7 +210,7 @@ AppendKeyPrefix(nsILoadContextInfo* aInfo, nsACString &_retval)
    * Keep the attributes list sorted according their ASCII code.
    */
 
-  NeckoOriginAttributes const *oa = aInfo->OriginAttributesPtr();
+  OriginAttributes const *oa = aInfo->OriginAttributesPtr();
   nsAutoCString suffix;
   oa->CreateSuffix(suffix);
   if (!suffix.IsEmpty()) {

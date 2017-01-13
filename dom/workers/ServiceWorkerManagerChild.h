@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-class PrincipalOriginAttributes;
+class OriginAttributes;
 
 namespace ipc {
 class BackgroundChildImpl;
@@ -36,7 +36,7 @@ public:
   virtual mozilla::ipc::IPCResult RecvNotifyRegister(const ServiceWorkerRegistrationData& aData)
                                                                        override;
 
-  virtual mozilla::ipc::IPCResult RecvNotifySoftUpdate(const PrincipalOriginAttributes& aOriginAttributes,
+  virtual mozilla::ipc::IPCResult RecvNotifySoftUpdate(const OriginAttributes& aOriginAttributes,
                                                        const nsString& aScope) override;
 
   virtual mozilla::ipc::IPCResult RecvNotifyUnregister(const PrincipalInfo& aPrincipalInfo,

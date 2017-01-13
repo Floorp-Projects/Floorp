@@ -25,8 +25,6 @@
 #include "nsContentUtils.h"
 #include "nsIURLFormatter.h"
 
-using mozilla::DocShellOriginAttributes;
-
 static const char* gQuitApplicationMessage = "quit-application";
 
 // Limit the list file size to 32mb
@@ -131,9 +129,9 @@ nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-  mozilla::NeckoOriginAttributes neckoAttrs(false);
-  neckoAttrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
-  loadInfo->SetOriginAttributes(neckoAttrs);
+  mozilla::OriginAttributes attrs;
+  attrs.mFirstPartyDomain.AssignLiteral(NECKO_SAFEBROWSING_FIRST_PARTY_DOMAIN);
+  loadInfo->SetOriginAttributes(attrs);
 
   mBeganStream = false;
 

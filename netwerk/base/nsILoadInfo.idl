@@ -20,8 +20,8 @@ class nsCString;
 %}
 
 [ref] native const_nsIPrincipalArray(const nsTArray<nsCOMPtr<nsIPrincipal>>);
-native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
-[ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 [ref] native StringArrayRef(const nsTArray<nsCString>);
 
 typedef unsigned long nsSecurityFlags;
@@ -534,7 +534,7 @@ interface nsILoadInfo : nsISupports
   void resetPrincipalsToNullPrincipal();
 
   /**
-   * Customized NeckoOriginAttributes within LoadInfo to allow overwriting of the
+   * Customized OriginAttributes within LoadInfo to allow overwriting of the
    * default originAttributes from the loadingPrincipal.
    *
    * In chrome side, originAttributes.privateBrowsingId will always be 0 even if
@@ -546,15 +546,15 @@ interface nsILoadInfo : nsISupports
   attribute jsval originAttributes;
 
   [noscript, nostdcall, binaryname(GetOriginAttributes)]
-  NeckoOriginAttributes binaryGetOriginAttributes();
+  OriginAttributes binaryGetOriginAttributes();
 
   [noscript, nostdcall, binaryname(SetOriginAttributes)]
   void binarySetOriginAttributes(in const_OriginAttributesRef aOriginAttrs);
 
 %{ C++
-  inline mozilla::NeckoOriginAttributes GetOriginAttributes()
+  inline mozilla::OriginAttributes GetOriginAttributes()
   {
-    mozilla::NeckoOriginAttributes result;
+    mozilla::OriginAttributes result;
     mozilla::DebugOnly<nsresult> rv = GetOriginAttributes(&result);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     return result;

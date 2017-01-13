@@ -341,7 +341,7 @@ ServiceWorkerRegistrar::ReadData()
       nsAutoCString suffix;
       GET_LINE(suffix);
 
-      PrincipalOriginAttributes attrs;
+      OriginAttributes attrs;
       if (!attrs.PopulateFromSuffix(suffix)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -382,7 +382,7 @@ ServiceWorkerRegistrar::ReadData()
       nsAutoCString suffix;
       GET_LINE(suffix);
 
-      PrincipalOriginAttributes attrs;
+      OriginAttributes attrs;
       if (!attrs.PopulateFromSuffix(suffix)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -415,7 +415,7 @@ ServiceWorkerRegistrar::ReadData()
       nsAutoCString suffix;
       GET_LINE(suffix);
 
-      PrincipalOriginAttributes attrs;
+      OriginAttributes attrs;
       if (!attrs.PopulateFromSuffix(suffix)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -442,7 +442,7 @@ ServiceWorkerRegistrar::ReadData()
       nsAutoCString suffix;
       GET_LINE(suffix);
 
-      PrincipalOriginAttributes attrs;
+      OriginAttributes attrs;
       if (!attrs.PopulateFromSuffix(suffix)) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -472,7 +472,7 @@ ServiceWorkerRegistrar::ReadData()
       nsAutoCString suffix;
       GET_LINE(suffix);
 
-      PrincipalOriginAttributes attrs;
+      OriginAttributes attrs;
       if (!attrs.PopulateFromSuffix(suffix)) {
         return NS_ERROR_INVALID_ARG;
       }

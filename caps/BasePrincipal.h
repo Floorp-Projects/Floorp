@@ -11,6 +11,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
+#include "nsIScriptSecurityManager.h"
 
 class nsIContentSecurityPolicy;
 class nsIObjectOutputStream;
@@ -21,13 +22,50 @@ class nsExpandedPrincipal;
 
 namespace mozilla {
 
-class GenericOriginAttributes;
-
 // Base OriginAttributes class. This has several subclass flavors, and is not
 // directly constructable itself.
 class OriginAttributes : public dom::OriginAttributesDictionary
 {
 public:
+  OriginAttributes() {}
+
+  OriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
+  {
+    mAppId = aAppId;
+    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
+  }
+
+  explicit OriginAttributes(const OriginAttributesDictionary& aOther)
+    : OriginAttributesDictionary(aOther)
+  {}
+
+  // This method 'clones' the OriginAttributes ignoring the addonId value becaue
+  // this is computed from the principal URI and never propagated.
+  void Inherit(const OriginAttributes& aAttrs);
+
+  void SetFirstPartyDomain(const bool aIsTopLevelDocument, nsIURI* aURI);
+
+  enum {
+    STRIP_FIRST_PARTY_DOMAIN = 0x01,
+    STRIP_ADDON_ID = 0x02,
+    STRIP_USER_CONTEXT_ID = 0x04,
+  };
+
+  inline void StripAttributes(uint32_t aFlags)
+  {
+    if (aFlags & STRIP_FIRST_PARTY_DOMAIN) {
+      mFirstPartyDomain.Truncate();
+    }
+
+    if (aFlags & STRIP_ADDON_ID) {
+      mAddonId.Truncate();
+    }
+
+    if (aFlags & STRIP_USER_CONTEXT_ID) {
+      mUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
+    }
+  }
+
   bool operator==(const OriginAttributes& aOther) const
   {
     return mAppId == aOther.mAppId &&
@@ -37,6 +75,7 @@ public:
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
            mFirstPartyDomain == aOther.mFirstPartyDomain;
   }
+
   bool operator!=(const OriginAttributes& aOther) const
   {
     return !(*this == aOther);
@@ -61,105 +100,12 @@ public:
   // flags. Once all other flags are removed, this can be removed too.
   void SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing);
 
-  void SetFromGenericAttributes(const GenericOriginAttributes& aAttrs);
-
   // check if "privacy.firstparty.isolate" is enabled.
   static bool IsFirstPartyEnabled();
 
   // returns true if the originAttributes suffix has mPrivateBrowsingId value
   // different than 0.
   static bool IsPrivateBrowsing(const nsACString& aOrigin);
-
-protected:
-  OriginAttributes() {}
-  explicit OriginAttributes(const OriginAttributesDictionary& aOther)
-    : OriginAttributesDictionary(aOther) {}
-};
-
-class PrincipalOriginAttributes;
-class DocShellOriginAttributes;
-class NeckoOriginAttributes;
-
-// Various classes in Gecko contain OriginAttributes members, and those
-// OriginAttributes get propagated to other classes according to certain rules.
-// For example, the OriginAttributes on the docshell affect the OriginAttributes
-// for the principal of a document loaded inside it, whose OriginAttributes in
-// turn affect those of network loads and child docshells. To codify and
-// centralize these rules, we introduce separate subclasses for the different
-// flavors, and a variety of InheritFrom* methods to implement the transfer
-// behavior.
-
-// For OriginAttributes stored on principals.
-class PrincipalOriginAttributes : public OriginAttributes
-{
-public:
-  PrincipalOriginAttributes() {}
-  PrincipalOriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
-  {
-    mAppId = aAppId;
-    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-  }
-
-  // Inheriting OriginAttributes from docshell to document when user navigates.
-  //
-  // @param aAttrs  Origin Attributes of the docshell.
-  // @param aURI    The URI of the document.
-  void InheritFromDocShellToDoc(const DocShellOriginAttributes& aAttrs,
-                                const nsIURI* aURI);
-
-  // Inherit OriginAttributes from Necko.
-  void InheritFromNecko(const NeckoOriginAttributes& aAttrs);
-
-  void StripUserContextIdAndFirstPartyDomain();
-};
-
-// For OriginAttributes stored on docshells / loadcontexts / browsing contexts.
-class DocShellOriginAttributes : public OriginAttributes
-{
-public:
-  DocShellOriginAttributes() {}
-  DocShellOriginAttributes(uint32_t aAppId, bool aInIsolatedMozBrowser)
-  {
-    mAppId = aAppId;
-    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-  }
-
-  // Inheriting OriginAttributes from document to child docshell when an
-  // <iframe> is created.
-  //
-  // @param aAttrs  Origin Attributes of the document.
-  void
-  InheritFromDocToChildDocShell(const PrincipalOriginAttributes& aAttrs);
-};
-
-// For OriginAttributes stored on Necko.
-class NeckoOriginAttributes : public OriginAttributes
-{
-public:
-  NeckoOriginAttributes() {}
-  explicit NeckoOriginAttributes(bool aInIsolatedMozBrowser)
-  {
-    mInIsolatedMozBrowser = aInIsolatedMozBrowser;
-  }
-
-  // Inheriting OriginAttributes from document to necko when a network request
-  // is made.
-  void InheritFromDocToNecko(const PrincipalOriginAttributes& aAttrs);
-
-  // Inheriting OriginAttributes from a docshell when loading a top-level
-  // document.
-  void InheritFromDocShellToNecko(const DocShellOriginAttributes& aAttrs,
-                                  const bool aIsTopLevelDocument = false,
-                                  nsIURI* aURI = nullptr);
-};
-
-// For operating on OriginAttributes not associated with any data structure.
-class GenericOriginAttributes : public OriginAttributes
-{
-public:
-  GenericOriginAttributes() {}
-  explicit GenericOriginAttributes(const OriginAttributesDictionary& aOther)
-    : OriginAttributes(aOther) {}
 };
 
 class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary
@@ -294,10 +240,10 @@ public:
 
   static BasePrincipal* Cast(nsIPrincipal* aPrin) { return static_cast<BasePrincipal*>(aPrin); }
   static already_AddRefed<BasePrincipal>
-  CreateCodebasePrincipal(nsIURI* aURI, const PrincipalOriginAttributes& aAttrs);
+  CreateCodebasePrincipal(nsIURI* aURI, const OriginAttributes& aAttrs);
   static already_AddRefed<BasePrincipal> CreateCodebasePrincipal(const nsACString& aOrigin);
 
-  const PrincipalOriginAttributes& OriginAttributesRef() override { return mOriginAttributes; }
+  const OriginAttributes& OriginAttributesRef() override { return mOriginAttributes; }
   uint32_t AppId() const { return mOriginAttributes.mAppId; }
   uint32_t UserContextId() const { return mOriginAttributes.mUserContextId; }
   uint32_t PrivateBrowsingId() const { return mOriginAttributes.mPrivateBrowsingId; }
@@ -334,7 +280,7 @@ protected:
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
   nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
-  PrincipalOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 };
 
 } // namespace mozilla

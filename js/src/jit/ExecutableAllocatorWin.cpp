@@ -25,8 +25,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mozilla/ScopeExit.h"
 #include "mozilla/StackWalk_windows.h"
-
 #include "mozilla/WindowsVersion.h"
 
 #include "jsfriendapi.h"
@@ -45,8 +45,8 @@ ExecutableAllocator::determinePageSize()
     return system_info.dwPageSize;
 }
 
-void*
-ExecutableAllocator::computeRandomAllocationAddress()
+static void*
+ComputeRandomAllocationAddress()
 {
     /*
      * Inspiration is V8's OS::Allocate in platform-win32.cc.
@@ -69,13 +69,7 @@ ExecutableAllocator::computeRandomAllocationAddress()
 # error "Unsupported architecture"
 #endif
 
-    if (randomNumberGenerator.isNothing()) {
-        mozilla::Array<uint64_t, 2> seed;
-        js::GenerateXorShift128PlusSeed(seed);
-        randomNumberGenerator.emplace(seed[0], seed[1]);
-    }
-
-    uint64_t rand = randomNumberGenerator.ref().next();
+    uint64_t rand = js::GenerateRandomSeed();
     return (void*) (base | (rand & mask));
 }
 
@@ -193,20 +187,37 @@ UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
 }
 #endif
 
+static const size_t VirtualAllocGranularity = 64 * 1024;
+
 void*
-js::jit::AllocateExecutableMemory(void* addr, size_t bytes, unsigned permissions, const char* tag,
+js::jit::AllocateExecutableMemory(size_t bytes, unsigned permissions, const char* tag,
                                   size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
+
+    // VirtualAlloc returns 64 KB chunks, so we round the value we pass to
+    // AddAllocatedExecutableBytes up to 64 KB to account for this. See
+    // bug 1325200.
+    size_t bytesRounded = JS_ROUNDUP(bytes, VirtualAllocGranularity);
+    if (!AddAllocatedExecutableBytes(bytesRounded))
+        return nullptr;
+
+    auto autoSubtract = mozilla::MakeScopeExit([&] { SubAllocatedExecutableBytes(bytesRounded); });
 
 #ifdef HAVE_64BIT_BUILD
     if (sJitExceptionHandler)
         bytes += pageSize;
 #endif
 
-    void* p = VirtualAlloc(addr, bytes, MEM_COMMIT | MEM_RESERVE, permissions);
-    if (!p)
-        return nullptr;
+    void* randomAddr = ComputeRandomAllocationAddress();
+
+    void* p = VirtualAlloc(randomAddr, bytes, MEM_COMMIT | MEM_RESERVE, permissions);
+    if (!p) {
+        // Try again without randomAddr.
+        p = VirtualAlloc(nullptr, bytes, MEM_COMMIT | MEM_RESERVE, permissions);
+        if (!p)
+            return nullptr;
+    }
 
 #ifdef HAVE_64BIT_BUILD
     if (sJitExceptionHandler) {
@@ -219,6 +230,7 @@ js::jit::AllocateExecutableMemory(void* addr, size_t bytes, unsigned permissions
     }
 #endif
 
+    autoSubtract.release();
     return p;
 }
 
@@ -235,17 +247,16 @@ js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
 #endif
 
     VirtualFree(addr, 0, MEM_RELEASE);
+
+    SubAllocatedExecutableBytes(JS_ROUNDUP(bytes, VirtualAllocGranularity));
 }
 
 ExecutablePool::Allocation
 ExecutableAllocator::systemAlloc(size_t n)
 {
-    void* randomAddress = computeRandomAllocationAddress();
     unsigned flags = initialProtectionFlags(Executable);
-    void* allocation = AllocateExecutableMemory(randomAddress, n, flags, "js-jit-code", pageSize);
-    if (!allocation) {
-        allocation = AllocateExecutableMemory(nullptr, n, flags, "js-jit-code", pageSize);
-    }
+    void* allocation = AllocateExecutableMemory(n, flags, "js-jit-code", pageSize);
+
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
 }

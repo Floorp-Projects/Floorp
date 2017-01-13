@@ -1975,7 +1975,7 @@ ReadResponse(mozIStorageConnection* aConn, EntryId aEntryId,
   aSavedResponseOut->mValue.principalInfo() = void_t();
   if (!serializedInfo.IsEmpty()) {
     nsAutoCString originNoSuffix;
-    PrincipalOriginAttributes attrs;
+    OriginAttributes attrs;
     if (!attrs.PopulateFromOrigin(serializedInfo, originNoSuffix)) {
       NS_WARNING("Something went wrong parsing a serialized principal!");
       return NS_ERROR_FAILURE;

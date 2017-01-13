@@ -99,7 +99,7 @@ nsClientAuthRememberService::RemoveAllFromMemory()
 
 nsresult
 nsClientAuthRememberService::RememberDecision(
-  const nsACString& aHostName, const NeckoOriginAttributes& aOriginAttributes,
+  const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
   CERTCertificate* aServerCert, CERTCertificate* aClientCert)
 {
   // aClientCert == nullptr means: remember that user does not want to use a cert
@@ -134,7 +134,7 @@ nsClientAuthRememberService::RememberDecision(
 
 nsresult
 nsClientAuthRememberService::HasRememberedDecision(
-  const nsACString& aHostName, const NeckoOriginAttributes& aOriginAttributes,
+  const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
   CERTCertificate* aCert, nsACString& aCertDBKey, bool* aRetVal)
 {
   if (aHostName.IsEmpty())
@@ -169,7 +169,7 @@ nsClientAuthRememberService::HasRememberedDecision(
 
 nsresult
 nsClientAuthRememberService::AddEntryToList(
-  const nsACString& aHostName, const NeckoOriginAttributes& aOriginAttributes,
+  const nsACString& aHostName, const OriginAttributes& aOriginAttributes,
   const nsACString& aFingerprint, const nsACString& aDBKey)
 {
   nsAutoCString entryKey;
@@ -198,7 +198,7 @@ nsClientAuthRememberService::AddEntryToList(
 void
 nsClientAuthRememberService::GetEntryKey(
   const nsACString& aHostName,
-  const NeckoOriginAttributes& aOriginAttributes,
+  const OriginAttributes& aOriginAttributes,
   const nsACString& aFingerprint,
   nsACString& aEntryKey)
 {

@@ -158,6 +158,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.buildid = None
         self.make_ident_output = None
         self.repack_env = None
+        self.enUS_revision = None
         self.revision = None
         self.upload_env = None
         self.version = None
@@ -480,7 +481,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         # on try we want the source we already have, otherwise update to the
         # same as the en-US binary
         if self.config.get("update_gecko_source_to_enUS", True):
-            revision = self.query_enUS_revision()
+            revision = self._query_enUS_revision()
             if not revision:
                 self.fatal("Can't determine revision!")
             hg = self.query_exe("hg")
