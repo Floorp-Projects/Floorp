@@ -37,7 +37,7 @@ public:
   // to start with.  The fact that we have to have this declaration at all is
   // kinda dumb.  :(
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE = 0;
+    const override MOZ_MUST_OVERRIDE = 0;
 
   // WebIDL API
   // For GetSelectorText/SetSelectorText, we purposefully use a signature that
