@@ -353,8 +353,6 @@ public:
 
   virtual already_AddRefed<Rule> Clone() const override;
 
-  virtual nsIDOMCSSRule* GetDOMRule() override;
-
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif

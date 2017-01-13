@@ -1125,7 +1125,7 @@ DOMCSSDeclarationImpl::GetParentRule(nsIDOMCSSRule **aParent)
 {
   NS_ENSURE_ARG_POINTER(aParent);
 
-  NS_IF_ADDREF(*aParent = mRule->GetDOMRule());
+  NS_IF_ADDREF(*aParent = mRule);
   return NS_OK;
 }
 
@@ -1280,12 +1280,6 @@ StyleRule::Clone() const
 {
   RefPtr<Rule> clone = new StyleRule(*this);
   return clone.forget();
-}
-
-/* virtual */ nsIDOMCSSRule*
-StyleRule::GetDOMRule()
-{
-  return this;
 }
 
 void
