@@ -3,12 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Listeners for the DevEdition theme.  This adds an extra stylesheet
+ * Listeners for the compact theme.  This adds an extra stylesheet
  * to browser.xul if a pref is set and no other themes are applied.
  */
-var DevEdition = {
+var CompactTheme = {
   _devtoolsThemePrefName: "devtools.theme",
-  styleSheetLocation: "chrome://browser/skin/devedition.css",
+  styleSheetLocation: "chrome://browser/skin/compacttheme.css",
   styleSheet: null,
   initialized: false,
 
@@ -120,10 +120,10 @@ var DevEdition = {
   }
 };
 
-// If the DevEdition theme is going to be applied in gBrowserInit.onLoad,
+// If the compact theme is going to be applied in gBrowserInit.onLoad,
 // then preload it now.  This prevents a flash of unstyled content where the
-// normal theme is applied while the DevEdition stylesheet is loading.
+// normal theme is applied while the compact theme stylesheet is loading.
 if (!AppConstants.RELEASE_OR_BETA &&
-    this != Services.appShell.hiddenDOMWindow && DevEdition.isThemeCurrentlyApplied) {
-  DevEdition.createStyleSheet();
+    this != Services.appShell.hiddenDOMWindow && CompactTheme.isThemeCurrentlyApplied) {
+  CompactTheme.createStyleSheet();
 }
