@@ -20,11 +20,11 @@
     const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
     Cu.import("resource://gre/modules/AppConstants.jsm");
     Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/BrowserTestUtils.jsm");
     Cu.import("resource://testing-common/ContentTask.jsm");
     ContentTask.setTestScope(window.opener.wrappedJSObject);
 
     var gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-    const kIteratorTimeout = gPrefsvc.getIntPref("findbar.iteratorTimeout") + 20;
     var gFindBar = null;
     var gBrowser;
 
@@ -55,14 +55,7 @@
       info("Starting test with browser '" + browserId + "'");
       gBrowser = document.getElementById(browserId);
       gFindBar.browser = gBrowser;
-      let promise = ContentTask.spawn(gBrowser, null, function* () {
-        return new Promise(resolve => {
-          addEventListener("DOMContentLoaded", function listener() {
-            removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
-        });
-      });
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><input id="inp" type="text" />');
       yield promise;
       yield onDocumentLoaded();
@@ -89,11 +82,9 @@
       var matchCase = gFindBar.getElement("find-case-sensitive");
       if (matchCase.checked) {
         matchCase.doCommand();
-        yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       }
 
       gFindBar._find();
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(true);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -109,7 +100,6 @@
           args.search, "Added the correct match");
       });
 
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(false);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -123,7 +113,6 @@
         input.value = args.search;
       });
  
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(true);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -137,7 +126,6 @@
           args.search, "Added the correct match");
       });
 
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(false);
 
       yield ContentTask.spawn(gBrowser, null, function* () {
@@ -148,23 +136,13 @@
         Assert.equal(inputSelection.rangeCount, 0, "Correctly removed the range");
       });
 
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
-
       // For posterity, test iframes too.
 
-      let promise = ContentTask.spawn(gBrowser, null, function* () {
-        return new Promise(resolve => {
-          addEventListener("DOMContentLoaded", function listener() {
-            removeEventListener("DOMContentLoaded", listener);
-            resolve();
-          });
-        });
-      });
+      let promise = BrowserTestUtils.browserLoaded(gBrowser);
       gBrowser.loadURI('data:text/html,<h2>Text mozilla</h2><iframe id="leframe" ' +
         'src="data:text/html,Text mozilla"></iframe>');
       yield promise;
 
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(true);
 
       yield ContentTask.spawn(gBrowser, { search }, function* (args) {
@@ -194,7 +172,6 @@
           args.search, "Added the correct match");
       });
 
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       yield toggleHighlightAndWait(false);
 
       let matches = gFindBar._foundMatches.value.match(/([\d]*)\sof\s([\d]*)/);
@@ -224,7 +201,6 @@
       });
 
       gFindBar.close(true);
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
     }
   ]]></script>
 
