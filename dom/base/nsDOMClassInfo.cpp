@@ -76,7 +76,6 @@
 // includes needed for the prototype chain interfaces
 #include "nsIDOMCSSKeyframeRule.h"
 #include "nsIDOMCSSKeyframesRule.h"
-#include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIControllers.h"
@@ -204,10 +203,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
 
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager,
                                        nsMessageManagerSH<nsEventTargetSH>,
@@ -524,11 +519,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
 #endif
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSFontFaceRule)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_NO_CLASS_IF(ContentFrameMessageManager, nsISupports)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
