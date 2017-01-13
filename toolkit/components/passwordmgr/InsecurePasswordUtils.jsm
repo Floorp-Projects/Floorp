@@ -75,7 +75,15 @@ this.InsecurePasswordUtils = {
    * @return {boolean} whether the form is secure
    */
   isFormSecure(aForm) {
-    let isSafePage = aForm.ownerDocument.defaultView.isSecureContext;
+    // We don't want to expose JavaScript APIs in a non-Secure Context even if
+    // the context is only insecure because the windows has an insecure opener.
+    // Doing so prevents sites from implementing postMessage workarounds to enable
+    // an insecure opener to gain access to Secure Context-only APIs. However,
+    // in the case of form fields such as password fields we don't need to worry
+    // about whether the opener is secure or not. In fact to flag a password
+    // field as insecure in such circumstances would unnecessarily confuse our
+    // users. Hence we use isSecureContextIfOpenerIgnored here.
+    let isSafePage = aForm.ownerDocument.defaultView.isSecureContextIfOpenerIgnored;
     let { isFormSubmitSecure, isFormSubmitHTTP } = this._checkFormSecurity(aForm);
 
     return isSafePage && (isFormSubmitSecure || !isFormSubmitHTTP);
