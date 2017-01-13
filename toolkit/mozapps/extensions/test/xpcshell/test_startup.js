@@ -643,7 +643,7 @@ function run_test_8() {
 
 // More hiding and revealing
 function run_test_9() {
-  Services.prefs.clearUserPref("extensions.enabledScopes", 0);
+  Services.prefs.clearUserPref("extensions.enabledScopes");
 
   var dest = userDir.clone();
   dest.append(do_get_expected_addon_name("addon1@tests.mozilla.org"));
