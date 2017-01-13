@@ -10,6 +10,7 @@
 #include "mozilla/gfx/webrender.h"
 #include "mozilla/layers/CompositorController.h"
 #include "mozilla/layers/TransactionIdAllocator.h"
+#include "mozilla/layers/WebRenderTypes.h"
 
 class nsIWidget;
 
@@ -44,6 +45,9 @@ public:
   gfx::Rect ParentStackingContextBounds(size_t aScrollMetadataIndex);
   gfx::Rect RelativeToParent(gfx::Rect aRect);
   gfx::Rect TransformedVisibleBoundsRelativeToParent();
+protected:
+  Maybe<WRImageMask> buildMaskLayer();
+
 };
 
 class MOZ_RAII WRScrollFrameStackingContextGenerator

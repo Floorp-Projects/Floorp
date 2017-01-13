@@ -74,10 +74,11 @@ WebRenderCanvasLayer::RenderLayer()
 
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
+  Maybe<WRImageMask> mask = buildMaskLayer();
   WRTextureFilter filter = (mFlags | TextureFlags::USE_NEAREST_FILTER) ? WRTextureFilter::Point : WRTextureFilter::Linear;
 
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
   WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(ToWRRect(rect), ToWRRect(clip), Nothing(), filter, mExternalImageId));
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 
