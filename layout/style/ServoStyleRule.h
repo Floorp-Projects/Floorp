@@ -66,6 +66,8 @@ public:
   already_AddRefed<Rule> Clone() const final;
   nsIDOMCSSRule* GetDOMRule() final { return this; }
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
