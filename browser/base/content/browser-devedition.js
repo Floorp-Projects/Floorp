@@ -25,7 +25,6 @@ var DevEdition = {
     this.initialized = true;
     Services.prefs.addObserver(this._devtoolsThemePrefName, this, false);
     Services.obs.addObserver(this, "lightweight-theme-styling-update", false);
-    Services.obs.addObserver(this, "lightweight-theme-window-updated", false);
     this._updateDevtoolsThemeAttribute();
 
     if (this.isThemeCurrentlyApplied) {
@@ -50,8 +49,6 @@ var DevEdition = {
       } else {
         this._toggleStyleSheet(false);
       }
-    } else if (topic == "lightweight-theme-window-updated" && subject == window) {
-      this._updateLWTBrightness();
     }
 
     if (topic == "nsPref:changed" && data == this._devtoolsThemePrefName) {
@@ -70,14 +67,6 @@ var DevEdition = {
     }
   },
 
-  _updateLWTBrightness() {
-    if (this.isThemeCurrentlyApplied) {
-      let devtoolsTheme = Services.prefs.getCharPref(this._devtoolsThemePrefName);
-      let textColor = devtoolsTheme == "dark" ? "bright" : "dark";
-      document.documentElement.setAttribute("lwthemetextcolor", textColor);
-    }
-  },
-
   _updateDevtoolsThemeAttribute() {
     // Set an attribute on root element to make it possible
     // to change colors based on the selected devtools theme.
@@ -86,7 +75,6 @@ var DevEdition = {
       devtoolsTheme = "light";
     }
     document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
-    this._updateLWTBrightness();
     this._inferBrightness();
   },
 
@@ -125,7 +113,6 @@ var DevEdition = {
   uninit() {
     Services.prefs.removeObserver(this._devtoolsThemePrefName, this);
     Services.obs.removeObserver(this, "lightweight-theme-styling-update");
-    Services.obs.removeObserver(this, "lightweight-theme-window-updated");
     if (this.styleSheet) {
       this.styleSheet.removeEventListener("load", this);
     }
