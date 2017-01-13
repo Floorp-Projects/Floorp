@@ -10,8 +10,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "jit/shared/Architecture-shared.h"
-
 #include "js/Utility.h"
 
 namespace js {
@@ -271,8 +269,8 @@ class FloatRegisters
                 (1 << FloatRegisters::d30)) * SpreadCoefficient;
 
     static const SetType VolatileMask = AllMask & ~NonVolatileMask;
-    static const SetType AllDoubleMask = AllPhysMask << TotalPhys;
-    static const SetType AllSingleMask = AllPhysMask;
+    static const SetType AllDoubleMask = AllMask;
+    static const SetType AllSingleMask = AllMask;
 
     static const SetType WrapperMask = VolatileMask;
 
@@ -432,19 +430,6 @@ struct FloatRegister
         return 63 - mozilla::CountLeadingZeroes64(x);
     }
 
-    static constexpr enum RegTypeName DefaultType = RegTypeName::Float64;
-
-    template <enum RegTypeName = DefaultType>
-    static SetType LiveAsIndexableSet(SetType s) {
-        return SetType(0);
-    }
-
-    template <enum RegTypeName Name = DefaultType>
-    static SetType AllocatableAsIndexableSet(SetType s) {
-        static_assert(Name != RegTypeName::Any, "Allocatable set are not iterable");
-        return LiveAsIndexableSet<Name>(s);
-    }
-
     static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister>& s);
     static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
@@ -454,24 +439,6 @@ struct FloatRegister
     Code code_ : 8;
     FloatRegisters::Kind k_ : 1;
 };
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Float32>(SetType set)
-{
-    return set & FloatRegisters::AllSingleMask;
-}
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Float64>(SetType set)
-{
-    return set & FloatRegisters::AllDoubleMask;
-}
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Any>(SetType set)
-{
-    return set;
-}
 
 // ARM/D32 has double registers that cannot be treated as float32.
 // Luckily, ARMv8 doesn't have the same misfortune.

@@ -15,8 +15,6 @@
 
 #include <string.h>
 
-#include "jit/shared/Architecture-shared.h"
-
 #include "jit/x86-shared/Constants-x86-shared.h"
 
 namespace js {
@@ -264,7 +262,6 @@ class FloatRegisters {
     static const SetType AllMask = AllPhysMask * Spread;
     static const SetType AllDoubleMask = AllPhysMask * SpreadDouble;
     static const SetType AllSingleMask = AllPhysMask * SpreadSingle;
-    static const SetType AllVector128Mask = AllPhysMask * SpreadSimd128;
 
 #if defined(JS_CODEGEN_X86)
     static const SetType NonAllocatableMask =
@@ -439,47 +436,10 @@ struct FloatRegister {
         return Codes::Spread << reg_;
     }
 
-    static constexpr enum RegTypeName DefaultType = RegTypeName::Float64;
-
-    template <enum RegTypeName = DefaultType>
-    static SetType LiveAsIndexableSet(SetType s) {
-        return SetType(0);
-    }
-
-    template <enum RegTypeName Name = DefaultType>
-    static SetType AllocatableAsIndexableSet(SetType s) {
-        static_assert(Name != RegTypeName::Any, "Allocatable set are not iterable");
-        return LiveAsIndexableSet<Name>(s);
-    }
-
     static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister>& s);
     static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
     uint32_t getRegisterDumpOffsetInBytes();
 };
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Float32>(SetType set)
-{
-    return set & FloatRegisters::AllSingleMask;
-}
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Float64>(SetType set)
-{
-    return set & FloatRegisters::AllDoubleMask;
-}
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Vector128>(SetType set)
-{
-    return set & FloatRegisters::AllVector128Mask;
-}
-
-template <> inline FloatRegister::SetType
-FloatRegister::LiveAsIndexableSet<RegTypeName::Any>(SetType set)
-{
-    return set;
-}
 
 // Arm/D32 has double registers that can NOT be treated as float32
 // and this requires some dances in lowering.

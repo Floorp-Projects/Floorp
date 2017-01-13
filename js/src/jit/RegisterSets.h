@@ -392,22 +392,22 @@ class TypedRegisterSet
         bits_ &= ~reg.alignedOrDominatedAliasedSet();
     }
 
-    static constexpr enum RegTypeName DefaultType = RegType::DefaultType;
-
-    template <enum RegTypeName Name>
-    SetType allLive() const {
-        return T::template LiveAsIndexableSet<Name>(bits_);
+    T getAny() const {
+        // The choice of first or last here is mostly arbitrary, as they are
+        // about the same speed on popular architectures. We choose first, as
+        // it has the advantage of using the "lower" registers more often. These
+        // registers are sometimes more efficient (e.g. optimized encodings for
+        // EAX on x86).
+        return getFirst();
     }
-    template <enum RegTypeName Name>
-    SetType allAllocatable() const {
-        return T::template AllocatableAsIndexableSet<Name>(bits_);
+    T getFirst() const {
+        MOZ_ASSERT(!empty());
+        return T::FromCode(T::FirstBit(bits_));
     }
-
-    static RegType FirstRegister(SetType set) {
-        return RegType::FromCode(RegType::FirstBit(set));
-    }
-    static RegType LastRegister(SetType set) {
-        return RegType::FromCode(RegType::LastBit(set));
+    T getLast() const {
+        MOZ_ASSERT(!empty());
+        int ireg = T::LastBit(bits_);
+        return T::FromCode(ireg);
     }
 
     SetType bits() const {
@@ -481,9 +481,6 @@ class RegisterSet {
     bool emptyFloat() const {
         return fpu_.empty();
     }
-
-    static constexpr enum RegTypeName DefaultType = RegTypeName::GPR;
-
     constexpr GeneralRegisterSet gprs() const {
         return gpr_;
     }
@@ -543,9 +540,6 @@ class LiveSet;
 // Base accessors classes have the minimal set of raw methods to manipulate the register set
 // given as parameter in a consistent manner.  These methods are:
 //
-//    - all<Type>: Returns a bit-set of all the register of a specific type
-//      which are present.
-//
 //    - has: Returns if all the bits needed to take a register are present.
 //
 //    - takeUnchecked: Subtracts the bits used to represent the register in the
@@ -579,11 +573,6 @@ class AllocatableSetAccessors
   protected:
     RegSet set_;
 
-    template <enum RegTypeName Name>
-    SetType all() const {
-        return set_.template allAllocatable<Name>();
-    }
-
   public:
     AllocatableSetAccessors() : set_() {}
     explicit constexpr AllocatableSetAccessors(SetType set) : set_(set) {}
@@ -591,11 +580,6 @@ class AllocatableSetAccessors
 
     bool has(RegType reg) const {
         return set_.hasAllocatable(reg);
-    }
-
-    template <enum RegTypeName Name>
-    bool hasAny(RegType reg) const {
-        return all<Name>() != 0;
     }
 
     void addUnchecked(RegType reg) {
@@ -618,15 +602,6 @@ class AllocatableSetAccessors<RegisterSet>
 
   protected:
     RegisterSet set_;
-
-    template <enum RegTypeName Name>
-    GeneralRegisterSet::SetType allGpr() const {
-        return set_.gprs().allAllocatable<Name>();
-    }
-    template <enum RegTypeName Name>
-    FloatRegisterSet::SetType allFpu() const {
-        return set_.fpus().allAllocatable<Name>();
-    }
 
   public:
     AllocatableSetAccessors() : set_() {}
@@ -680,11 +655,6 @@ class LiveSetAccessors
   protected:
     RegSet set_;
 
-    template <enum RegTypeName Name>
-    SetType all() const {
-        return set_.template allLive<Name>();
-    }
-
   public:
     LiveSetAccessors() : set_() {}
     explicit constexpr LiveSetAccessors(SetType set) : set_(set) {}
@@ -714,15 +684,6 @@ class LiveSetAccessors<RegisterSet>
 
   protected:
     RegisterSet set_;
-
-    template <enum RegTypeName Name>
-    GeneralRegisterSet::SetType allGpr() const {
-        return set_.gprs().allLive<Name>();
-    }
-    template <enum RegTypeName Name>
-    FloatRegisterSet::SetType allFpu() const {
-        return set_.fpus().allLive<Name>();
-    }
 
   public:
     LiveSetAccessors() : set_() {}
@@ -790,68 +751,47 @@ class SpecializedRegSet : public Accessors
         takeUnchecked(reg);
     }
 
-    template <enum RegTypeName Name>
-    bool hasAny() const {
-        return Parent::template all<Name>() != 0;
-    }
-
-    template <enum RegTypeName Name = RegSet::DefaultType>
-    RegType getFirst() const {
-        SetType set = Parent::template all<Name>();
-        MOZ_ASSERT(set);
-        return RegSet::FirstRegister(set);
-    }
-    template <enum RegTypeName Name = RegSet::DefaultType>
-    RegType getLast() const {
-        SetType set = Parent::template all<Name>();
-        MOZ_ASSERT(set);
-        return RegSet::LastRegister(set);
-    }
-    template <enum RegTypeName Name = RegSet::DefaultType>
     RegType getAny() const {
-        // The choice of first or last here is mostly arbitrary, as they are
-        // about the same speed on popular architectures. We choose first, as
-        // it has the advantage of using the "lower" registers more often. These
-        // registers are sometimes more efficient (e.g. optimized encodings for
-        // EAX on x86).
-        return getFirst<Name>();
+        return this->Parent::set_.getAny();
+    }
+    RegType getFirst() const {
+        return this->Parent::set_.getFirst();
+    }
+    RegType getLast() const {
+        return this->Parent::set_.getLast();
     }
 
-    template <enum RegTypeName Name = RegSet::DefaultType>
     RegType getAnyExcluding(RegType preclude) {
         if (!has(preclude))
-            return getAny<Name>();
+            return getAny();
 
         take(preclude);
-        RegType result = getAny<Name>();
+        RegType result = getAny();
         add(preclude);
         return result;
     }
 
-    template <enum RegTypeName Name = RegSet::DefaultType>
     RegType takeAny() {
-        RegType reg = getAny<Name>();
+        RegType reg = getAny();
         take(reg);
         return reg;
     }
-    template <enum RegTypeName Name = RegSet::DefaultType>
     RegType takeFirst() {
-        RegType reg = getFirst<Name>();
+        RegType reg = getFirst();
         take(reg);
         return reg;
     }
-    template <enum RegTypeName Name = RegSet::DefaultType>
     RegType takeLast() {
-        RegType reg = getLast<Name>();
+        RegType reg = getLast();
         take(reg);
         return reg;
     }
 
     ValueOperand takeAnyValue() {
 #if defined(JS_NUNBOX32)
-        return ValueOperand(takeAny<RegTypeName::GPR>(), takeAny<RegTypeName::GPR>());
+        return ValueOperand(takeAny(), takeAny());
 #elif defined(JS_PUNBOX64)
-        return ValueOperand(takeAny<RegTypeName::GPR>());
+        return ValueOperand(takeAny());
 #else
 #error "Bad architecture"
 #endif
@@ -865,9 +805,8 @@ class SpecializedRegSet : public Accessors
 #endif
     }
 
-    template <enum RegTypeName Name = RegSet::DefaultType>
     RegType takeAnyExcluding(RegType preclude) {
-        RegType reg = getAnyExcluding<Name>(preclude);
+        RegType reg = getAnyExcluding(preclude);
         take(reg);
         return reg;
     }
@@ -902,17 +841,12 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
         return this->Parent::set_.emptyFloat();
     }
 
+
     using Parent::has;
     bool has(AnyRegister reg) const {
         return reg.isFloat() ? has(reg.fpu()) : has(reg.gpr());
     }
 
-    template <enum RegTypeName Name>
-    bool hasAny() const {
-        if (Name == RegTypeName::GPR)
-            return Parent::template allGpr<RegTypeName::GPR>() != 0;
-        return Parent::template allFpu<Name>() != 0;
-    }
 
     using Parent::addUnchecked;
     void addUnchecked(AnyRegister reg) {
@@ -961,15 +895,10 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
     }
 
     Register getAnyGeneral() const {
-        GeneralRegisterSet::SetType set = Parent::template allGpr<RegTypeName::GPR>();
-        MOZ_ASSERT(set);
-        return GeneralRegisterSet::FirstRegister(set);
+        return this->Parent::set_.gprs().getAny();
     }
-    template <enum RegTypeName Name = RegTypeName::Float64>
     FloatRegister getAnyFloat() const {
-        FloatRegisterSet::SetType set = Parent::template allFpu<Name>();
-        MOZ_ASSERT(set);
-        return FloatRegisterSet::FirstRegister(set);
+        return this->Parent::set_.fpus().getAny();
     }
 
     Register takeAnyGeneral() {
@@ -977,9 +906,8 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
         take(reg);
         return reg;
     }
-    template <enum RegTypeName Name = RegTypeName::Float64>
     FloatRegister takeAnyFloat() {
-        FloatRegister reg = getAnyFloat<Name>();
+        FloatRegister reg = getAnyFloat();
         take(reg);
         return reg;
     }
@@ -1177,11 +1105,11 @@ class TypedRegisterIterator
         return !regset_.empty();
     }
     TypedRegisterIterator<T>& operator ++() {
-        regset_.template takeAny<RegTypeName::Any>();
+        regset_.takeAny();
         return *this;
     }
     T operator*() const {
-        return regset_.template getAny<RegTypeName::Any>();
+        return regset_.getAny();
     }
 };
 
@@ -1204,11 +1132,11 @@ class TypedRegisterBackwardIterator
         return !regset_.empty();
     }
     TypedRegisterBackwardIterator<T>& operator ++() {
-        regset_.template takeLast<RegTypeName::Any>();
+        regset_.takeLast();
         return *this;
     }
     T operator*() const {
-        return regset_.template getLast<RegTypeName::Any>();
+        return regset_.getLast();
     }
 };
 
@@ -1230,11 +1158,11 @@ class TypedRegisterForwardIterator
         return !regset_.empty();
     }
     TypedRegisterForwardIterator<T>& operator ++() {
-        regset_.template takeFirst<RegTypeName::Any>();
+        regset_.takeFirst();
         return *this;
     }
     T operator*() const {
-        return regset_.template getFirst<RegTypeName::Any>();
+        return regset_.getFirst();
     }
 };
 
