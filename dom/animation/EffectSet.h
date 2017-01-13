@@ -57,7 +57,7 @@ public:
   // Methods for supporting cycle-collection
   void Traverse(nsCycleCollectionTraversalCallback& aCallback);
 
-  static EffectSet* GetEffectSet(dom::Element* aElement,
+  static EffectSet* GetEffectSet(const dom::Element* aElement,
                                  CSSPseudoElementType aPseudoType);
   static EffectSet* GetEffectSet(const nsIFrame* aFrame);
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
