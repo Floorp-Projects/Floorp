@@ -100,7 +100,7 @@ TransportSecurityInfo::GetPort(int32_t *aPort)
 
 nsresult
 TransportSecurityInfo::SetOriginAttributes(
-  const NeckoOriginAttributes& aOriginAttributes)
+  const OriginAttributes& aOriginAttributes)
 {
   mOriginAttributes = aOriginAttributes;
   return NS_OK;

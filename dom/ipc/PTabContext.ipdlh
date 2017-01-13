@@ -8,7 +8,7 @@ include protocol PBrowser;
 include PBrowserOrId;
 
 using UIStateChangeType from "nsPIDOMWindow.h";
-using mozilla::DocShellOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -37,7 +37,7 @@ struct PopupIPCTabContext
 struct FrameIPCTabContext
 {
   // The originAttributes dictionary.
-  DocShellOriginAttributes originAttributes;
+  OriginAttributes originAttributes;
 
   // Whether this is a mozbrowser frame.  <iframe mozbrowser mozapp> and
   // <xul:browser> are not considered to be mozbrowser frames.

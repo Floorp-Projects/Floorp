@@ -29,11 +29,10 @@ namespace mozilla {
 namespace net {
 
 static void
-InheritOriginAttributes(nsIPrincipal* aLoadingPrincipal, NeckoOriginAttributes& aAttrs)
+InheritOriginAttributes(nsIPrincipal* aLoadingPrincipal,
+                        OriginAttributes& aAttrs)
 {
-  const PrincipalOriginAttributes attrs =
-    aLoadingPrincipal->OriginAttributesRef();
-  aAttrs.InheritFromDocToNecko(attrs);
+  aAttrs.Inherit(aLoadingPrincipal->OriginAttributesRef());
 }
 
 LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
@@ -262,7 +261,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
   // get the docshell from the outerwindow, and then get the originattributes
   nsCOMPtr<nsIDocShell> docShell = aOuterWindow->GetDocShell();
   MOZ_ASSERT(docShell);
-  const DocShellOriginAttributes attrs =
+  const OriginAttributes attrs =
     nsDocShell::Cast(docShell)->GetOriginAttributes();
 
   if (docShell->ItemType() == nsIDocShellTreeItem::typeChrome) {
@@ -270,7 +269,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
                "chrome docshell shouldn't have mPrivateBrowsingId set.");
   }
 
-  mOriginAttributes.InheritFromDocShellToNecko(attrs);
+  mOriginAttributes.Inherit(attrs);
 }
 
 LoadInfo::LoadInfo(const LoadInfo& rhs)
@@ -321,7 +320,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aEnforceSecurity,
                    bool aInitialSecurityCheckDone,
                    bool aIsThirdPartyContext,
-                   const NeckoOriginAttributes& aOriginAttributes,
+                   const OriginAttributes& aOriginAttributes,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain,
                    const nsTArray<nsCString>& aCorsUnsafeHeaders,
@@ -699,9 +698,9 @@ LoadInfo::ResetPrincipalsToNullPrincipal()
 {
   // take the originAttributes from the LoadInfo and create
   // a new NullPrincipal using those origin attributes.
-  PrincipalOriginAttributes pAttrs;
-  pAttrs.InheritFromNecko(mOriginAttributes);
-  nsCOMPtr<nsIPrincipal> newNullPrincipal = nsNullPrincipal::Create(pAttrs);
+  OriginAttributes attrs;
+  attrs.Inherit(mOriginAttributes);
+  nsCOMPtr<nsIPrincipal> newNullPrincipal = nsNullPrincipal::Create(attrs);
 
   MOZ_ASSERT(mInternalContentPolicyType != nsIContentPolicy::TYPE_DOCUMENT ||
              !mLoadingPrincipal,
@@ -726,7 +725,7 @@ NS_IMETHODIMP
 LoadInfo::SetScriptableOriginAttributes(JSContext* aCx,
   JS::Handle<JS::Value> aOriginAttributes)
 {
-  NeckoOriginAttributes attrs;
+  OriginAttributes attrs;
   if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
     return NS_ERROR_INVALID_ARG;
   }
@@ -736,7 +735,7 @@ LoadInfo::SetScriptableOriginAttributes(JSContext* aCx,
 }
 
 nsresult
-LoadInfo::GetOriginAttributes(mozilla::NeckoOriginAttributes* aOriginAttributes)
+LoadInfo::GetOriginAttributes(mozilla::OriginAttributes* aOriginAttributes)
 {
   NS_ENSURE_ARG(aOriginAttributes);
   *aOriginAttributes = mOriginAttributes;
@@ -744,7 +743,7 @@ LoadInfo::GetOriginAttributes(mozilla::NeckoOriginAttributes* aOriginAttributes)
 }
 
 nsresult
-LoadInfo::SetOriginAttributes(const mozilla::NeckoOriginAttributes& aOriginAttributes)
+LoadInfo::SetOriginAttributes(const mozilla::OriginAttributes& aOriginAttributes)
 {
   mOriginAttributes = aOriginAttributes;
   return NS_OK;

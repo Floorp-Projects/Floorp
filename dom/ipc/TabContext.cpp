@@ -80,7 +80,7 @@ TabContext::UpdateTabContextAfterSwap(const TabContext& aContext)
   return true;
 }
 
-const DocShellOriginAttributes&
+const OriginAttributes&
 TabContext::OriginAttributesRef() const
 {
   return mOriginAttributes;
@@ -109,7 +109,7 @@ TabContext::SetTabContext(bool aIsMozBrowserElement,
                           bool aIsPrerendered,
                           UIStateChangeType aShowAccelerators,
                           UIStateChangeType aShowFocusRings,
-                          const DocShellOriginAttributes& aOriginAttributes,
+                          const OriginAttributes& aOriginAttributes,
                           const nsAString& aPresentationURL)
 {
   NS_ENSURE_FALSE(mInitialized, false);
@@ -143,7 +143,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
 {
   bool isMozBrowserElement = false;
   bool isPrerendered = false;
-  DocShellOriginAttributes originAttributes;
+  OriginAttributes originAttributes;
   nsAutoString presentationURL;
   UIStateChangeType showAccelerators = UIStateChangeType_NoChange;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;

@@ -40,7 +40,7 @@ public:
   // provided by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               dom::Element* aTopFrameElement,
-              DocShellOriginAttributes& aAttrs)
+              OriginAttributes& aAttrs)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
     , mIsContent(aToCopy.mIsContent)
@@ -56,7 +56,7 @@ public:
   // provided by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               uint64_t aNestedFrameId,
-              DocShellOriginAttributes& aAttrs)
+              OriginAttributes& aAttrs)
     : mTopFrameElement(nullptr)
     , mNestedFrameId(aNestedFrameId)
     , mIsContent(aToCopy.mIsContent)
@@ -72,7 +72,7 @@ public:
               bool aIsContent,
               bool aUsePrivateBrowsing,
               bool aUseRemoteTabs,
-              const DocShellOriginAttributes& aAttrs)
+              const OriginAttributes& aAttrs)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
     , mIsContent(aIsContent)
@@ -86,7 +86,7 @@ public:
   }
 
   // Constructor taking reserved origin attributes.
-  explicit LoadContext(DocShellOriginAttributes& aAttrs)
+  explicit LoadContext(OriginAttributes& aAttrs)
     : mTopFrameElement(nullptr)
     , mNestedFrameId(0)
     , mIsContent(false)
@@ -110,7 +110,7 @@ private:
   uint64_t mNestedFrameId;
   bool mIsContent;
   bool mUseRemoteTabs;
-  DocShellOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 #ifdef DEBUG
   bool mIsNotNull;
 #endif

@@ -45,10 +45,7 @@ crashtest:
         by-test-platform:
             android.*: xlarge
             default: default
-    docker-image:
-        by-test-platform:
-            android.*: {'in-tree': 'desktop-test'}
-            default: {"in-tree": 'desktop1604-test'}
+    docker-image: {"in-tree": "desktop1604-test"}
     chunks:
         by-test-platform:
             android-4.3-arm7-api-15/debug: 10
@@ -245,10 +242,7 @@ marionette:
         by-test-platform:
             android.*: xlarge
             default: default
-    docker-image:
-        by-test-platform:
-            android.*: {'in-tree': 'desktop-test'}
-            default: {"in-tree": 'desktop1604-test'}
+    docker-image: {"in-tree": "desktop1604-test"}
     tier:
         by-test-platform:
             android.*: 3
@@ -646,10 +640,7 @@ mochitest-media:
         by-test-platform:
             android.*: 3
             default: 1
-    docker-image:
-        by-test-platform:
-            android.*: {'in-tree': 'desktop-test'}
-            default: {"in-tree": 'desktop1604-test'}
+    docker-image: {"in-tree": "desktop1604-test"}
     mozharness:
         by-test-platform:
             android.*:
@@ -794,10 +785,7 @@ reftest:
     description: "Reftest run"
     suite: reftest/reftest
     treeherder-symbol: tc-R(R)
-    docker-image:
-        by-test-platform:
-            android.*: {'in-tree': 'desktop-test'}
-            default: {"in-tree": 'desktop1604-test'}
+    docker-image: {"in-tree": "desktop1604-test"}
     instance-size:
         by-test-platform:
             android.*: xlarge
