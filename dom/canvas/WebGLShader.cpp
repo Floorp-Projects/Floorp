@@ -173,16 +173,6 @@ WebGLShader::ShaderSource(const nsAString& source)
     // 7-bit ASCII range, so we can skip the NS_IsAscii() check.
     const NS_LossyConvertUTF16toASCII cleanSource(sourceWithoutComments);
 
-    if (mContext->gl->WorkAroundDriverBugs()) {
-        const size_t maxSourceLength = 0x3ffff;
-        if (cleanSource.Length() > maxSourceLength) {
-            mContext->ErrorInvalidValue("shaderSource: Source has more than %d"
-                                        " characters. (Driver workaround)",
-                                        maxSourceLength);
-            return;
-        }
-    }
-
     if (PR_GetEnv("MOZ_WEBGL_DUMP_SHADERS")) {
         printf_stderr("////////////////////////////////////////\n");
         printf_stderr("// MOZ_WEBGL_DUMP_SHADERS:\n");

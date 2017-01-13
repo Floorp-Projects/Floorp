@@ -1256,6 +1256,8 @@ MediaStreamGraphImpl::UpdateGraph(GraphTime aEndBlockingDecisions)
   // been woken up right after having been to sleep.
   MOZ_ASSERT(aEndBlockingDecisions >= mStateComputedTime);
 
+  UpdateStreamOrder();
+
   bool ensureNextIteration = false;
 
   // Grab pending stream input and compute blocking time
@@ -1406,22 +1408,7 @@ MediaStreamGraphImpl::OneIteration(GraphTime aStateEnd)
   // Process graph message from the main thread for this iteration.
   RunMessagesInQueue();
 
-  UpdateStreamOrder();
-
-  bool switchingFromSystemClockDriver = false;
-  {
-    MonitorAutoLock mon(mMonitor);
-    switchingFromSystemClockDriver = CurrentDriver()->AsSystemClockDriver() && CurrentDriver()->Switching();
-  }
-
   GraphTime stateEnd = std::min(aStateEnd, mEndTime);
-
-  // See Bug 1228226 - If we're switching from the SystemClockDriver, we
-  // don't want time to advance until after the switch.
-  if (switchingFromSystemClockDriver) {
-    stateEnd = mProcessedTime;
-  }
-
   UpdateGraph(stateEnd);
 
   mStateComputedTime = stateEnd;

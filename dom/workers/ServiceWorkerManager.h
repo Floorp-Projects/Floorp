@@ -41,6 +41,7 @@ class OriginAttributes;
 
 namespace dom {
 
+class ServiceWorkerRegistrar;
 class ServiceWorkerRegistrationListener;
 
 namespace workers {
@@ -328,7 +329,10 @@ private:
   ~ServiceWorkerManager();
 
   void
-  Init();
+  Init(ServiceWorkerRegistrar* aRegistrar);
+
+  void
+  MaybeStartShutdown();
 
   already_AddRefed<ServiceWorkerJobQueue>
   GetOrCreateJobQueue(const nsACString& aOriginSuffix,
