@@ -115,6 +115,11 @@ public:
   // WebIDL interface, aka helpers for nsIDOMCSSRule implementation.
   virtual uint16_t Type() const = 0;
   virtual void GetCssTextImpl(nsAString& aCssText) const = 0;
+  // XPCOM GetCssText is OK, since it never throws.
+  // XPCOM SetCssText is OK, since it never throws.
+  Rule* GetParentRule() const;
+  StyleSheet* GetParentStyleSheet() const { return GetStyleSheet(); }
+  nsIDocument* GetParentObject() const { return GetDocument(); }
 
 protected:
   // This is sometimes null (e.g., for style attributes).
@@ -129,6 +134,20 @@ protected:
 };
 
 } // namespace css
+} // namespace mozilla
+
+// Specialization of the bindings UnwrapArg setup for css::Rule, so we can avoid
+// adding an IID to css::Rule.  This can go away once all css::Rule subclasses
+// are on WebIDL bindings.
+
+#include "js/TypeDecls.h"
+
+namespace mozilla {
+namespace dom {
+template <>
+nsresult
+UnwrapArg(JS::Handle<JSObject*> src, css::Rule** ppArg);
+} // namepace dom
 } // namespace mozilla
 
 #endif /* mozilla_css_Rule_h___ */
