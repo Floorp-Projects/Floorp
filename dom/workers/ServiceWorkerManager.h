@@ -331,6 +331,9 @@ private:
   void
   Init(ServiceWorkerRegistrar* aRegistrar);
 
+  void
+  MaybeStartShutdown();
+
   already_AddRefed<ServiceWorkerJobQueue>
   GetOrCreateJobQueue(const nsACString& aOriginSuffix,
                       const nsACString& aScope);
