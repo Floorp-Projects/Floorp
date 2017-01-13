@@ -4,6 +4,7 @@
 
 DevToolsModules(
     'editor.js',
+    'headers-panel.js',
     'params-panel.js',
     'preview-panel.js',
     'properties-view.js',

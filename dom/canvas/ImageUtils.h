@@ -21,7 +21,7 @@ class ErrorResult;
 namespace dom {
 
 struct ChannelPixelLayout;
-enum class ImageBitmapFormat : uint32_t;
+enum class ImageBitmapFormat : uint8_t;
 
 typedef nsTArray<ChannelPixelLayout> ImagePixelLayout;
 

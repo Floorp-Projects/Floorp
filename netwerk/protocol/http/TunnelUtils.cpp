@@ -78,7 +78,7 @@ TLSFilterTransaction::TLSFilterTransaction(nsAHttpTransaction *aWrapped,
   if (provider && mFD) {
     mFD->secret = reinterpret_cast<PRFilePrivate *>(this);
     provider->AddToSocket(PR_AF_INET, aTLSHost, aTLSPort, nullptr,
-                          NeckoOriginAttributes(), 0, mFD,
+                          OriginAttributes(), 0, mFD,
                           getter_AddRefs(mSecInfo));
   }
 
@@ -1596,13 +1596,13 @@ FWD_TS_PTR(GetRecvBufferSize, uint32_t);
 FWD_TS(SetRecvBufferSize, uint32_t);
 
 nsresult
-SocketTransportShim::GetOriginAttributes(mozilla::NeckoOriginAttributes* aOriginAttributes)
+SocketTransportShim::GetOriginAttributes(mozilla::OriginAttributes* aOriginAttributes)
 {
   return mWrapped->GetOriginAttributes(aOriginAttributes);
 }
 
 nsresult
-SocketTransportShim::SetOriginAttributes(const mozilla::NeckoOriginAttributes& aOriginAttributes)
+SocketTransportShim::SetOriginAttributes(const mozilla::OriginAttributes& aOriginAttributes)
 {
   return mWrapped->SetOriginAttributes(aOriginAttributes);
 }

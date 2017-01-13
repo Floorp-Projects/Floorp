@@ -380,16 +380,6 @@ HTMLBreadcrumbs.prototype = {
     this.scroll = this.scroll.bind(this);
     this.arrowScrollBox.on("overflow", this.scroll);
 
-    // These separators are used for CSS purposes only, and are positioned
-    // off screen, but displayed with -moz-element.
-    this.separators = this.doc.createElementNS(NS_XHTML, "div");
-    this.separators.className = "breadcrumb-separator-container";
-    this.separators.innerHTML =
-                      "<div id='breadcrumb-separator-before'></div>" +
-                      "<div id='breadcrumb-separator-after'></div>" +
-                      "<div id='breadcrumb-separator-normal'></div>";
-    this.container.parentNode.appendChild(this.separators);
-
     this.outer.addEventListener("click", this, true);
     this.outer.addEventListener("mouseover", this, true);
     this.outer.addEventListener("mouseout", this, true);
@@ -627,14 +617,12 @@ HTMLBreadcrumbs.prototype = {
     this.shortcuts.destroy();
 
     this.empty();
-    this.separators.remove();
 
     this.arrowScrollBox.off("overflow", this.scroll);
     this.arrowScrollBox.destroy();
     this.arrowScrollBox = null;
     this.outer = null;
     this.container = null;
-    this.separators = null;
     this.nodeHierarchy = null;
 
     this.isDestroyed = true;

@@ -784,14 +784,16 @@ StyleAnimationValue::Add(nsCSSPropertyID aProperty,
     case eUnit_Shadow: {
       // If |aA| has no function list, don't concatinate anything, just return
       // |aB| as the result.
-      if (aA.GetCSSValueListValue()->mValue.GetUnit() == eCSSUnit_None) {
+      if (!aA.GetCSSValueListValue() ||
+          aA.GetCSSValueListValue()->mValue.GetUnit() == eCSSUnit_None) {
         break;
       }
       UniquePtr<nsCSSValueList> resultList(aA.GetCSSValueListValue()->Clone());
 
       // If |aB| has function list, concatinate it to |aA|, then return
       // the concatinated list.
-      if (result.GetCSSValueListValue()->mValue.GetUnit() != eCSSUnit_None) {
+      if (result.GetCSSValueListValue() &&
+          result.GetCSSValueListValue()->mValue.GetUnit() != eCSSUnit_None) {
         nsCSSValueList* listA = resultList.get();
         while (listA->mNext) {
           listA = listA->mNext;

@@ -144,8 +144,11 @@ static bool
 IsMP4SupportedType(const nsACString& aType,
                    DecoderDoctorDiagnostics* aDiagnostics)
 {
-  MediaContentType contentType{aType};
-  return IsMP4SupportedType(contentType, aDiagnostics);
+  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
+  if (!contentType) {
+    return false;
+  }
+  return IsMP4SupportedType(*contentType, aDiagnostics);
 }
 #endif
 
@@ -193,7 +196,6 @@ CanPlayStatus
 CanHandleCodecsType(const MediaContentType& aType,
                     DecoderDoctorDiagnostics* aDiagnostics)
 {
-  MOZ_ASSERT(aType.IsValid());
   // We should have been given a codecs string, though it may be empty.
   MOZ_ASSERT(aType.HaveCodecs());
 
@@ -339,10 +341,6 @@ CanPlayStatus
 DecoderTraits::CanHandleContentType(const MediaContentType& aContentType,
                                     DecoderDoctorDiagnostics* aDiagnostics)
 {
-  if (!aContentType.IsValid()) {
-    return CANPLAY_NO;
-  }
-
   return CanHandleMediaType(aContentType, aDiagnostics);
 }
 
@@ -370,8 +368,11 @@ bool DecoderTraits::ShouldHandleMediaType(const char* aMIMEType,
     }
   }
 
-  MediaContentType parsed{nsDependentCString(aMIMEType)};
-  return CanHandleMediaType(parsed, aDiagnostics)
+  Maybe<MediaContentType> parsed = MakeMediaContentType(aMIMEType);
+  if (!parsed) {
+    return false;
+  }
+  return CanHandleMediaType(*parsed, aDiagnostics)
          != CANPLAY_NO;
 }
 

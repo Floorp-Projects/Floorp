@@ -7,11 +7,11 @@
 
 %{ C++
 namespace mozilla {
-class NeckoOriginAttributes;
+class OriginAttributes;
 } // mozilla namespace
 %}
 
-[ptr] native NeckoOriginAttributesPtr(mozilla::NeckoOriginAttributes);
+[ptr] native OriginAttributesPtr(mozilla::OriginAttributes);
 
 interface nsISimpleEnumerator;
 
@@ -72,7 +72,7 @@ interface nsICookieManager : nsISupports
                         in ACString      aName,
                         in AUTF8String   aPath,
                         in boolean       aBlocked,
-                        in NeckoOriginAttributesPtr aOriginAttributes);
+                        in OriginAttributesPtr aOriginAttributes);
 
   /**
    * Set the cookie manager to work on private or non-private cookies for the

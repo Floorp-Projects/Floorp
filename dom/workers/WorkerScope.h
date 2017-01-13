@@ -23,7 +23,7 @@ class Console;
 class Crypto;
 class Function;
 class IDBFactory;
-enum class ImageBitmapFormat : uint32_t;
+enum class ImageBitmapFormat : uint8_t;
 class Performance;
 class Promise;
 class RequestOrUSVString;

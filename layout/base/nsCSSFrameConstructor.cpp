@@ -7366,30 +7366,37 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     return rv;
   }
 
+  // The frame constructor uses this codepath both for bonafide newly-added
+  // content and for RestyleManager-driven frame construction (RECONSTRUCT_FRAME
+  // and lazy frame construction). If we're using the Servo style system, we
+  // want to ensure that styles get resolved in the first case, whereas for the
+  // second case they should have already been resolved if needed.
+  bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
+                                     !RestyleManager()->AsBase()->IsInStyleRefresh();
+
   // See comment in ContentRangeInserted for why this is necessary.
   if (!GetContentInsertionFrameFor(aContainer) &&
       !aContainer->IsActiveChildrenElement()) {
+    // We're punting on frame construction because there's no container frame.
+    // The Servo-backed style system handles this case like the lazy frame
+    // construction case.
+    if (isNewlyAddedContentForServo) {
+      aContainer->AsElement()->NoteDirtyDescendantsForServo();
+    }
     return NS_OK;
   }
 
   if (aAllowLazyConstruction &&
       MaybeConstructLazily(CONTENTAPPEND, aContainer, aFirstNewContent)) {
-    if (aContainer->IsStyledByServo()) {
+    if (isNewlyAddedContentForServo) {
       aContainer->AsElement()->NoteDirtyDescendantsForServo();
     }
     return NS_OK;
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the subtree.
-  if (ServoStyleSet* set = mPresShell->StyleSet()->GetAsServo()) {
-    // We use the same codepaths to handle both of the following cases:
-    //   (a) Newly-appended content for which lazy frame construction is disallowed.
-    //   (b) Lazy frame construction driven by the restyle manager.
-    // We need the styles for (a). In the case of (b), the Servo traversal has
-    // already happened, so we don't need to do it again.
-    if (!RestyleManager()->AsBase()->IsInStyleRefresh()) {
-      set->StyleNewChildren(aContainer->AsElement());
-    }
+  if (isNewlyAddedContentForServo) {
+    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContainer->AsElement());
   }
 
   LAYOUT_PHASE_TEMP_EXIT();
@@ -7817,6 +7824,15 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     return rv;
   }
 
+  // The frame constructor uses this codepath both for bonafide newly-added
+  // content and for RestyleManager-driven frame construction (RECONSTRUCT_FRAME
+  // and lazy frame construction). If we're using the Servo style system, we
+  // want to ensure that styles get resolved in the first case, whereas for the
+  // second case they should have already been resolved if needed.
+  bool isNewlyAddedContentForServo = aContainer->IsStyledByServo() &&
+                                     !RestyleManager()->AsBase()->IsInStyleRefresh();
+
+
   // Put 'parentFrame' inside a scope so we don't confuse it with
   // 'insertion.mParentFrame' later.
   {
@@ -7825,6 +7841,12 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
     // a parent. While its uncommon to change the structure of the default content itself, a label,
     // for example, can be reframed by having its value attribute set or removed.
     if (!parentFrame && !aContainer->IsActiveChildrenElement()) {
+      // We're punting on frame construction because there's no container frame.
+      // The Servo-backed style system handles this case like the lazy frame
+      // construction case.
+      if (isNewlyAddedContentForServo) {
+        aContainer->AsElement()->NoteDirtyDescendantsForServo();
+      }
       return NS_OK;
     }
 
@@ -7834,7 +7856,7 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
 
     if (aAllowLazyConstruction &&
         MaybeConstructLazily(CONTENTINSERT, aContainer, aStartChild)) {
-      if (aContainer->IsStyledByServo()) {
+      if (isNewlyAddedContentForServo) {
         aContainer->AsElement()->NoteDirtyDescendantsForServo();
       }
       return NS_OK;
@@ -7842,15 +7864,8 @@ nsCSSFrameConstructor::ContentRangeInserted(nsIContent*            aContainer,
   }
 
   // We couldn't construct lazily. Make Servo eagerly traverse the subtree.
-  if (ServoStyleSet* set = mPresShell->StyleSet()->GetAsServo()) {
-    // We use the same codepaths to handle both of the following cases:
-    //   (a) Newly-appended content for which lazy frame construction is disallowed.
-    //   (b) Lazy frame construction driven by the restyle manager.
-    // We need the styles for (a). In the case of (b), the Servo traversal has
-    // already happened, so we don't need to do it again.
-    if (!RestyleManager()->AsBase()->IsInStyleRefresh()) {
-      set->StyleNewChildren(aContainer->AsElement());
-    }
+  if (isNewlyAddedContentForServo) {
+    mPresShell->StyleSet()->AsServo()->StyleNewChildren(aContainer->AsElement());
   }
 
   InsertionPoint insertion;

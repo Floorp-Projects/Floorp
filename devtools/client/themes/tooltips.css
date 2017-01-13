@@ -446,3 +446,12 @@
 #searchbox-panel-listbox .autocomplete-item > .autocomplete-value {
   max-width: 150px;
 }
+
+/* Tooltip: Image tooltip */
+
+.devtools-tooltip-image-broken {
+  box-sizing: border-box;
+  height: 100%;
+  text-align: center;
+  line-height: 30px;
+}

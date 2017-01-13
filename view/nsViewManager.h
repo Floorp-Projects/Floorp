@@ -148,8 +148,6 @@ public:
   void InsertChild(nsView *aParent, nsView *aChild, nsView *aSibling,
                    bool aAfter);
 
-  void InsertChild(nsView *aParent, nsView *aChild, int32_t aZIndex);
-
   /**
    * Remove a specific child view from its parent. This will NOT remove its placeholder
    * if there is one.

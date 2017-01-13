@@ -17,6 +17,7 @@ class InProcessX11CompositorWidget final : public X11CompositorWidget
 {
 public:
   InProcessX11CompositorWidget(const CompositorWidgetInitData& aInitData,
+                               const layers::CompositorOptions& aOptions,
                                nsWindow* aWindow);
 
   // CompositorWidgetDelegate

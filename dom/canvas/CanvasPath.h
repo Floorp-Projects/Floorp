@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-enum class CanvasWindingRule : uint32_t;
+enum class CanvasWindingRule : uint8_t;
 class SVGMatrix;
 
 class CanvasPath final :

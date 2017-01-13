@@ -100,6 +100,10 @@ DEFAULTS = dict(
             'http://127.0.0.1/safebrowsing-dummy/gethash',
         'browser.safebrowsing.provider.google.updateURL':
             'http://127.0.0.1/safebrowsing-dummy/update',
+        'browser.safebrowsing.provider.google4.gethashURL':
+            'http://127.0.0.1/safebrowsing4-dummy/gethash',
+        'browser.safebrowsing.provider.google4.updateURL':
+            'http://127.0.0.1/safebrowsing4-dummy/update',
         'browser.safebrowsing.provider.mozilla.gethashURL':
             'http://127.0.0.1/safebrowsing-dummy/gethash',
         'browser.safebrowsing.provider.mozilla.updateURL':
