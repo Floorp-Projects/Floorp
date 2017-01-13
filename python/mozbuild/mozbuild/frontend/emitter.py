@@ -103,16 +103,6 @@ from .context import (
 from mozbuild.base import ExecutionSummary
 
 
-ALLOWED_XPCOM_GLUE = {
-    ('xpcshell', 'js/xpconnect/shell'),
-    ('testcrasher', 'toolkit/crashreporter/test'),
-    ('TestMailCookie', 'mailnews/base/test'),
-    ('calbasecomps', 'calendar/base/backend/libical/build'),
-    ('purplexpcom', 'extensions/purple/purplexpcom/src'),
-    ('ipdlunittest', 'ipc/ipdl/test/cxx/app'),
-}
-
-
 class TreeMetadataEmitter(LoggingMixin):
     """Converts the executed mozbuild files into data structures.
 
@@ -284,15 +274,11 @@ class TreeMetadataEmitter(LoggingMixin):
         """Add linkage declarations to a given object."""
         assert isinstance(obj, Linkable)
 
-        use_xpcom = False
-
         for path in context.get(variable, []):
             force_static = path.startswith('static:') and obj.KIND == 'target'
             if force_static:
                 path = path[7:]
             name = mozpath.basename(path)
-            if name in ('xpcomglue', 'xpcomglue_s'):
-                use_xpcom = True
             dir = mozpath.dirname(path)
             candidates = [l for l in self._libs[name] if l.KIND == obj.KIND]
             if dir:
@@ -378,38 +364,6 @@ class TreeMetadataEmitter(LoggingMixin):
         # Link system libraries from OS_LIBS/HOST_OS_LIBS.
         for lib in context.get(variable.replace('USE', 'OS'), []):
             obj.link_system_library(lib)
-
-        key = (obj.name, obj.relativedir)
-        substs = context.config.substs
-        extra_allowed = []
-        moz_build_app = substs.get('MOZ_BUILD_APP')
-        if moz_build_app is not None: # None during some test_emitter.py tests.
-            if moz_build_app.startswith('../'):
-                # For comm-central builds, where topsrcdir is not the root
-                # source dir.
-                moz_build_app = moz_build_app[3:]
-            extra_allowed = [
-                (substs.get('MOZ_APP_NAME'), '%s/app' % moz_build_app),
-                ('%s-bin' % substs.get('MOZ_APP_NAME'), '%s/app' % moz_build_app),
-            ]
-        if substs.get('MOZ_WIDGET_TOOLKIT') != 'android':
-            extra_allowed.append((substs.get('MOZ_CHILD_PROCESS_NAME'), 'ipc/app'))
-        else:
-            extra_allowed.append(('mozglue_android', 'mozglue/android'))
-
-        if key in ALLOWED_XPCOM_GLUE or key in extra_allowed:
-            if not use_xpcom:
-                raise SandboxValidationError(
-                    "%s is in the exception list for XPCOM glue dependency but "
-                    "doesn't depend on the XPCOM glue. Please adjust the list "
-                    "in %s." % (obj.name, __file__), context
-                )
-        elif use_xpcom:
-            raise SandboxValidationError(
-                "%s depends on the XPCOM glue. "
-                "No new dependency on the XPCOM glue is allowed."
-                % obj.name, context
-            )
 
     @memoize
     def _get_external_library(self, dir, name, force_static):
