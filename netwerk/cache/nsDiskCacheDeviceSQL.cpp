@@ -53,7 +53,7 @@
 
 using namespace mozilla;
 using namespace mozilla::storage;
-using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 
 static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
@@ -2523,7 +2523,7 @@ OriginMatch::OnFunctionCall(mozIStorageValueArray* aFunctionArguments, nsIVarian
 
   nsDependentCSubstring suffix(groupId.BeginReading() + hash, groupId.Length() - hash);
 
-  mozilla::NeckoOriginAttributes oa;
+  mozilla::OriginAttributes oa;
   bool ok = oa.PopulateFromSuffix(suffix);
   NS_ENSURE_TRUE(ok, NS_ERROR_UNEXPECTED);
 

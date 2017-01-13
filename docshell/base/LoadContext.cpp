@@ -13,7 +13,7 @@
 #include "xpcpublic.h"
 
 bool
-nsILoadContext::GetOriginAttributes(mozilla::DocShellOriginAttributes& aAttrs)
+nsILoadContext::GetOriginAttributes(mozilla::OriginAttributes& aAttrs)
 {
   mozilla::dom::AutoJSAPI jsapi;
   bool ok = jsapi.Init(xpc::PrivilegedJunkScope());
@@ -29,7 +29,7 @@ nsILoadContext::GetOriginAttributes(mozilla::DocShellOriginAttributes& aAttrs)
   MOZ_ASSERT(nsContentUtils::IsSystemPrincipal(nsContentUtils::ObjectPrincipal(obj)));
   JSAutoCompartment ac(jsapi.cx(), obj);
 
-  mozilla::DocShellOriginAttributes attrs;
+  mozilla::OriginAttributes attrs;
   ok = attrs.Init(jsapi.cx(), v);
   NS_ENSURE_TRUE(ok, false);
   aAttrs = attrs;
@@ -50,8 +50,7 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
   , mIsNotNull(true)
 #endif
 {
-  PrincipalOriginAttributes poa = aPrincipal->OriginAttributesRef();
-  mOriginAttributes.InheritFromDocToChildDocShell(poa);
+  mOriginAttributes.Inherit(aPrincipal->OriginAttributesRef());
   if (!aOptionalBase) {
     return;
   }

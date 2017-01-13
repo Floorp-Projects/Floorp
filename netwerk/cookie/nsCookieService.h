@@ -32,7 +32,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Maybe.h"
 
-using mozilla::NeckoOriginAttributes;
 using mozilla::OriginAttributes;
 
 class nsICookiePermission;
@@ -66,7 +65,7 @@ public:
   nsCookieKey()
   {}
 
-  nsCookieKey(const nsCString &baseDomain, const NeckoOriginAttributes &attrs)
+  nsCookieKey(const nsCString &baseDomain, const OriginAttributes &attrs)
     : mBaseDomain(baseDomain)
     , mOriginAttributes(attrs)
   {}
@@ -111,7 +110,7 @@ public:
   enum { ALLOW_MEMMOVE = true };
 
   nsCString        mBaseDomain;
-  NeckoOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 };
 
 // Inherit from nsCookieKey so this can be stored in nsTHashTable
@@ -295,9 +294,9 @@ class nsCookieService final : public nsICookieService
     nsresult                      GetBaseDomain(nsIURI *aHostURI, nsCString &aBaseDomain, bool &aRequireHostMatch);
     nsresult                      GetBaseDomainFromHost(const nsACString &aHost, nsCString &aBaseDomain);
     nsresult                      GetCookieStringCommon(nsIURI *aHostURI, nsIChannel *aChannel, bool aHttpBound, char** aCookie);
-    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const NeckoOriginAttributes& aOriginAttrs, bool aIsPrivate, nsCString &aCookie);
+    void                          GetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, bool aHttpBound, const OriginAttributes& aOriginAttrs, bool aIsPrivate, nsCString &aCookie);
     nsresult                      SetCookieStringCommon(nsIURI *aHostURI, const char *aCookieHeader, const char *aServerTime, nsIChannel *aChannel, bool aFromHttp);
-    void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, const NeckoOriginAttributes &aOriginAttrs, bool aIsPrivate, nsIChannel* aChannel);
+    void                          SetCookieStringInternal(nsIURI *aHostURI, bool aIsForeign, nsDependentCString &aCookieHeader, const nsCString &aServerTime, bool aFromHttp, const OriginAttributes &aOriginAttrs, bool aIsPrivate, nsIChannel* aChannel);
     bool                          SetCookieInternal(nsIURI *aHostURI, const nsCookieKey& aKey, bool aRequireHostMatch, CookieStatus aStatus, nsDependentCString &aCookieHeader, int64_t aServerTime, bool aFromHttp, nsIChannel* aChannel);
     void                          AddInternal(const nsCookieKey& aKey, nsCookie *aCookie, int64_t aCurrentTimeInUsec, nsIURI *aHostURI, const char *aCookieHeader, bool aFromHttp);
     void                          RemoveCookieFromList(const nsListIter &aIter, mozIStorageBindingParamsArray *aParamsArray = nullptr);
@@ -329,10 +328,10 @@ class nsCookieService final : public nsICookieService
 
     /**
      * This method is a helper that allows calling nsICookieManager::Remove()
-     * with NeckoOriginAttributes parameter.
+     * with OriginAttributes parameter.
      * NOTE: this could be added to a public interface if we happen to need it.
      */
-    nsresult Remove(const nsACString& aHost, const NeckoOriginAttributes& aAttrs,
+    nsresult Remove(const nsACString& aHost, const OriginAttributes& aAttrs,
                     const nsACString& aName, const nsACString& aPath,
                     bool aBlocked);
 

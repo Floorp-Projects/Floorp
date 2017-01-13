@@ -10,7 +10,7 @@
 
 NS_IMPL_ISUPPORTS(nsOpenURIInFrameParams, nsIOpenURIInFrameParams)
 
-nsOpenURIInFrameParams::nsOpenURIInFrameParams(const mozilla::DocShellOriginAttributes& aOriginAttributes)
+nsOpenURIInFrameParams::nsOpenURIInFrameParams(const mozilla::OriginAttributes& aOriginAttributes)
   : mOpenerOriginAttributes(aOriginAttributes)
   , mIsPrivate(false)
 {

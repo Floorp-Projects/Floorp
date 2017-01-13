@@ -1249,7 +1249,7 @@ NS_UsePrivateBrowsing(nsIChannel *channel)
 
 bool
 NS_GetOriginAttributes(nsIChannel *aChannel,
-                       mozilla::NeckoOriginAttributes &aAttributes)
+                       mozilla::OriginAttributes &aAttributes)
 {
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (!loadInfo) {
@@ -2346,7 +2346,7 @@ NS_CompareLoadInfoAndLoadContext(nsIChannel *aChannel)
   }
 
   OriginAttributes originAttrsLoadInfo = loadInfo->GetOriginAttributes();
-  DocShellOriginAttributes originAttrsLoadContext;
+  OriginAttributes originAttrsLoadContext;
   loadContext->GetOriginAttributes(originAttrsLoadContext);
 
   LOG(("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d; "
