@@ -426,10 +426,10 @@ private:
   DECL_GFX_PREF(Once, "gfx.work-around-driver-bugs",           WorkAroundDriverBugs, bool, true);
   DECL_GFX_PREF(Once, "gfx.screen-mirroring.enabled",          ScreenMirroringEnabled, bool, false);
 #ifdef MOZ_ENABLE_WEBRENDER
-  DECL_GFX_PREF(Once, "gfx.webrender.enabled",                 WebRenderEnabled, bool, false);
+  DECL_GFX_PREF(Live, "gfx.webrender.enabled",                 WebRenderEnabledDoNotUseDirectly, bool, false);
 #else
 public:
-  static bool WebRenderEnabled() { return false; }
+  static bool WebRenderEnabledDoNotUseDirectly() { return false; }
 private:
 #endif
 

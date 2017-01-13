@@ -940,9 +940,9 @@ gfxPlatform::InitLayersIPC()
 
     if (XRE_IsParentProcess())
     {
-        if (gfxPrefs::WebRenderEnabled()) {
-            RenderThread::Start();
-        }
+#ifdef MOZ_ENABLE_WEBRENDER
+        RenderThread::Start();
+#endif
         layers::CompositorThreadHolder::Start();
     }
 }
@@ -969,9 +969,9 @@ gfxPlatform::ShutdownLayersIPC()
 
         // This has to happen after shutting down the child protocols.
         layers::CompositorThreadHolder::Shutdown();
-        if (gfxPrefs::WebRenderEnabled()) {
-            RenderThread::ShutDown();
-        }
+#ifdef MOZ_ENABLE_WEBRENDER
+        RenderThread::ShutDown();
+#endif
     } else {
       // TODO: There are other kind of processes and we should make sure gfx
       // stuff is either not created there or shut down properly.
@@ -2223,10 +2223,12 @@ gfxPlatform::InitGPUProcessPrefs()
     return;
   }
 
-  // XXX disable GPU proces when webrender is enabled for now.
-  if (gfxPrefs::WebRenderEnabled()) {
+#ifdef MOZ_ENABLE_WEBRENDER
+  // XXX disable GPU proces when webrender is enabled for now. See bug 1321527.
+  if (true) {
     return;
   }
+#endif
 
   FeatureState& gpuProc = gfxConfig::GetFeature(Feature::GPU_PROCESS);
 
@@ -2466,12 +2468,6 @@ gfxPlatform::AsyncPanZoomEnabled()
   if (!BrowserTabsRemoteAutostart()) {
     return false;
   }
-#ifdef MOZ_ENABLE_WEBRENDER
-  // For webrender hacking we have a special pref to disable APZ even with e10s
-  if (gfxPrefs::WebRenderEnabled() && !gfxPrefs::APZAllowWithWebRender()) {
-    return false;
-  }
-#endif // MOZ_ENABLE_WEBRENDER
 #endif
 #ifdef MOZ_WIDGET_ANDROID
   return true;
