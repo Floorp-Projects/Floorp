@@ -481,9 +481,13 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
   // source of the drag is in a child frame of the caller. In that case,
   // we only allow access to data of the same principal. During other events,
   // only allow access to the data with the same principal.
+  //
+  // We don't want to fail with an exception in this siutation, rather we want
+  // to just pretend as though the stored data is "nullptr". This is consistent
+  // with Chrome's behavior and is less surprising for web applications which
+  // don't expect execptions to be raised when performing certain operations.
   if (Principal() && checkItemPrincipal &&
       !aPrincipal->Subsumes(Principal())) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
 
@@ -498,13 +502,11 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
     if (pt) {
       nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
       if (NS_WARN_IF(NS_FAILED(rv) || !c)) {
-        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
         return nullptr;
       }
 
       nsIGlobalObject* go = c->GetGlobalObject();
       if (NS_WARN_IF(!go)) {
-        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
         return nullptr;
       }
 
@@ -513,7 +515,6 @@ DataTransferItem::Data(nsIPrincipal* aPrincipal, ErrorResult& aRv)
 
       nsIPrincipal* dataPrincipal = sp->GetPrincipal();
       if (NS_WARN_IF(!dataPrincipal || !aPrincipal->Equals(dataPrincipal))) {
-        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
         return nullptr;
       }
     }
