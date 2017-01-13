@@ -19,19 +19,22 @@ add_task(function* setup() {
     set: [["captivedetect.canonicalURL", CANONICAL_URL],
           ["captivedetect.canonicalContent", CANONICAL_CONTENT]],
   });
+  // We need to test behavior when a portal is detected when there is no browser
+  // window, but we can't close the default window opened by the test harness.
+  // Instead, we deactivate CaptivePortalWatcher in the default window and
+  // exclude it from RecentWindow.getMostRecentBrowserWindow in an attempt to
+  // mask its presence.
+  window.CaptivePortalWatcher.uninit();
+  RecentWindow._getMostRecentBrowserWindowCopy = RecentWindow.getMostRecentBrowserWindow;
+  let defaultWindow = window;
+  RecentWindow.getMostRecentBrowserWindow = () => {
+    let win = RecentWindow._getMostRecentBrowserWindowCopy();
+    if (win == defaultWindow) {
+      return null;
+    }
+    return win;
+  };
 });
-
-/**
- * We can't close the original window opened by mochitest without failing, so
- * override RecentWindow.getMostRecentBrowserWindow to make CaptivePortalWatcher
- * think there's no window.
- */
-function* portalDetectedNoBrowserWindow() {
-  let getMostRecentBrowserWindow = RecentWindow.getMostRecentBrowserWindow;
-  RecentWindow.getMostRecentBrowserWindow = () => {};
-  yield portalDetected();
-  RecentWindow.getMostRecentBrowserWindow = getMostRecentBrowserWindow;
-}
 
 function* portalDetected() {
   Services.obs.notifyObservers(null, "captive-portal-login", null);
@@ -56,14 +59,14 @@ function* openWindowAndWaitForPortalUI(aLongRecheck) {
   // so use a delay threshold of -1 to simulate a long recheck (so that any
   // amount of time is considered excessive), and a very large threshold to
   // simulate a short recheck.
-  CaptivePortalWatcher.PORTAL_RECHECK_DELAY_MS = aLongRecheck ? -1 : 1000000;
+  Preferences.set("captivedetect.portalRecheckDelayMS", aLongRecheck ? -1 : 1000000);
 
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  let win = yield openWindowAndWaitForFocus();
 
   // After a new window is opened, CaptivePortalWatcher asks for a recheck, and
   // waits for it to complete. We need to manually tell it a recheck completed.
   yield BrowserTestUtils.waitForCondition(() => {
-    return CaptivePortalWatcher._waitingForRecheck;
+    return win.CaptivePortalWatcher._waitingForRecheck;
   }, "Waiting for CaptivePortalWatcher to trigger a recheck.");
   Services.obs.notifyObservers(null, "captive-portal-check-complete", null);
 
@@ -148,6 +151,17 @@ function* closeWindowAndWaitForXulWindowVisible(win) {
   yield p;
 }
 
+/**
+ * BrowserTestUtils.openNewBrowserWindow() does not guarantee the newly
+ * opened window has received focus when the promise resolves, so we
+ * have to manually wait every time.
+ */
+function* openWindowAndWaitForFocus() {
+  let win = yield BrowserTestUtils.openNewBrowserWindow();
+  yield SimpleTest.promiseFocus(win);
+  return win;
+}
+
 // Each of the test cases below is run twice: once for login-success and once
 // for login-abort (aSuccess set to true and false respectively).
 let testCasesForBothSuccessAndAbort = [
@@ -160,7 +174,7 @@ let testCasesForBothSuccessAndAbort = [
    * opened, and closed automatically when the success event is fired.
    */
   function* test_detectedWithNoBrowserWindow_Open(aSuccess) {
-    yield portalDetectedNoBrowserWindow();
+    yield portalDetected();
     let win = yield openWindowAndWaitForPortalUI();
     yield freePortal(aSuccess);
     ensureNoPortalTab(win);
@@ -177,7 +191,7 @@ let testCasesForBothSuccessAndAbort = [
    * opened, and closed automatically when the success event is fired.
    */
   function* test_detectedWithNoBrowserWindow_LongRecheck(aSuccess) {
-    yield portalDetectedNoBrowserWindow();
+    yield portalDetected();
     let win = yield openWindowAndWaitForPortalUI(true);
     yield freePortal(aSuccess);
     ensureNoPortalTab(win);
@@ -191,9 +205,9 @@ let testCasesForBothSuccessAndAbort = [
    * UI should be shown when a browser window is opened.
    */
   function* test_detectedWithNoBrowserWindow_GoneBeforeOpen(aSuccess) {
-    yield portalDetectedNoBrowserWindow();
+    yield portalDetected();
     yield freePortal(aSuccess);
-    let win = yield BrowserTestUtils.openNewBrowserWindow();
+    let win = yield openWindowAndWaitForFocus();
     // Wait for a while to make sure no UI is shown.
     yield new Promise(resolve => {
       setTimeout(resolve, 1000);
@@ -208,8 +222,8 @@ let testCasesForBothSuccessAndAbort = [
    * be opened. A notification bar should be displayed in all browser windows.
    */
   function* test_detectedWithFocus(aSuccess) {
-    let win1 = RecentWindow.getMostRecentBrowserWindow();
-    let win2 = yield BrowserTestUtils.openNewBrowserWindow();
+    let win1 = yield openWindowAndWaitForFocus();
+    let win2 = yield openWindowAndWaitForFocus();
     yield portalDetected();
     ensureNoPortalTab(win1);
     ensureNoPortalTab(win2);
@@ -219,6 +233,7 @@ let testCasesForBothSuccessAndAbort = [
     ensureNoPortalNotification(win1);
     ensureNoPortalNotification(win2);
     yield closeWindowAndWaitForXulWindowVisible(win2);
+    yield closeWindowAndWaitForXulWindowVisible(win1);
   },
 ];
 
@@ -231,7 +246,7 @@ let singleRunTestCases = [
    * since it redirected.
    */
   function* test_detectedWithNoBrowserWindow_Redirect() {
-    yield portalDetectedNoBrowserWindow();
+    yield portalDetected();
     let win = yield openWindowAndWaitForPortalUI();
     let browser = win.gBrowser.selectedTab.linkedBrowser;
     let loadPromise =
@@ -251,7 +266,7 @@ let singleRunTestCases = [
    * ensure a captive portal tab is open and select it.
    */
   function* test_showLoginPageButton() {
-    let win = RecentWindow.getMostRecentBrowserWindow();
+    let win = yield openWindowAndWaitForFocus();
     yield portalDetected();
     let notification = ensurePortalNotification(win);
     testShowLoginPageButtonVisibility(notification, "visible");
@@ -302,6 +317,7 @@ let singleRunTestCases = [
     yield freePortal(true);
     ensureNoPortalTab(win);
     ensureNoPortalNotification(win);
+    yield closeWindowAndWaitForXulWindowVisible(win);
   },
 ];
 
@@ -313,3 +329,9 @@ for (let testcase of testCasesForBothSuccessAndAbort) {
 for (let testcase of singleRunTestCases) {
   add_task(testcase);
 }
+
+add_task(function* cleanUp() {
+  RecentWindow.getMostRecentBrowserWindow = RecentWindow._getMostRecentBrowserWindowCopy;
+  delete RecentWindow._getMostRecentBrowserWindowCopy;
+  window.CaptivePortalWatcher.init();
+});
