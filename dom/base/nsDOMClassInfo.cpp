@@ -793,6 +793,13 @@ nsDOMClassInfo::GetClass()
     return &mData->mClass;
 }
 
+// virtual
+const JSClass*
+nsDOMClassInfo::GetJSClass()
+{
+    return Jsvalify(&mData->mClass);
+}
+
 NS_IMETHODIMP
 nsDOMClassInfo::PreCreate(nsISupports *nativeObj, JSContext *cx,
                           JSObject *globalObj, JSObject **parentObj)

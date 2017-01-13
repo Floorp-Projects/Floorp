@@ -17,7 +17,6 @@ SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   SpecialPowers.setFullZoom(window, 2);
 
-  var p = window;
   var w = window.open("about:blank", "", "width=200,height=100");
   SimpleTest.waitForFocus(function() {
     ok(w.innerWidth <= 402 && w.innerWidth >= 398,

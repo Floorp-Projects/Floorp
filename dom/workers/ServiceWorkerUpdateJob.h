@@ -13,6 +13,8 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
+class ServiceWorkerManager;
+
 // A job class that performs the Update and Install algorithms from the
 // service worker spec.  This class is designed to be inherited and customized
 // as a different job type.  This is necessary because the register job
@@ -93,7 +95,7 @@ private:
 
   // Utility method corresponding to the spec Install algorithm.
   void
-  Install();
+  Install(ServiceWorkerManager* aSWM);
 
   // Utility method called after the install event is handled.
   void
