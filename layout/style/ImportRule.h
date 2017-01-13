@@ -38,8 +38,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   virtual bool IsCCLeaf() const override;
 
-  DECL_STYLE_RULE_INHERIT
-
   using Rule::GetStyleSheet; // unhide since nsIDOMCSSImportRule has its own GetStyleSheet
 
   // Rule methods
