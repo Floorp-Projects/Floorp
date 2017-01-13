@@ -1573,14 +1573,13 @@ XPCWrappedNativeXrayTraits::call(JSContext* cx, HandleObject wrapper,
 {
     // Run the call hook of the wrapped native.
     XPCWrappedNative* wn = getWN(wrapper);
-    if (NATIVE_HAS_FLAG(wn, WantCall)) {
+    if (wn->GetScriptable() && wn->GetScriptable()->WantCall()) {
         XPCCallContext ccx(cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
                            args.array(), args.rval().address());
         if (!ccx.IsValid())
             return false;
         bool ok = true;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Call(
-            wn, cx, wrapper, args, &ok);
+        nsresult rv = wn->GetScriptable()->Call(wn, cx, wrapper, args, &ok);
         if (NS_FAILED(rv)) {
             if (ok)
                 XPCThrower::Throw(rv, cx);
@@ -1599,14 +1598,14 @@ XPCWrappedNativeXrayTraits::construct(JSContext* cx, HandleObject wrapper,
 {
     // Run the construct hook of the wrapped native.
     XPCWrappedNative* wn = getWN(wrapper);
-    if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
+    if (wn->GetScriptable() && wn->GetScriptable()->WantConstruct()) {
         XPCCallContext ccx(cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
                            args.array(), args.rval().address());
         if (!ccx.IsValid())
             return false;
         bool ok = true;
-        nsresult rv = wn->GetScriptableInfo()->GetCallback()->Construct(
-            wn, cx, wrapper, args, &ok);
+        nsresult rv =
+            wn->GetScriptable()->Construct(wn, cx, wrapper, args, &ok);
         if (NS_FAILED(rv)) {
             if (ok)
                 XPCThrower::Throw(rv, cx);

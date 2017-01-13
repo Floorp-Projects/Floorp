@@ -51,7 +51,7 @@ using namespace mozilla::ipc;
 class ClientTiledLayerBuffer;
 
 typedef nsTArray<SurfaceDescriptor> BufferArray;
-typedef std::vector<Edit> EditVector;
+typedef nsTArray<Edit> EditVector;
 typedef nsTHashtable<nsPtrHashKey<ShadowableLayer>> ShadowableLayerSet;
 typedef nsTArray<OpDestroy> OpDestroyVector;
 
@@ -87,7 +87,7 @@ public:
   void AddEdit(const Edit& aEdit)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mCset.push_back(aEdit);
+    mCset.AppendElement(aEdit);
   }
   void AddEdit(const CompositableOperation& aEdit)
   {
@@ -107,12 +107,12 @@ public:
   void AddNoSwapPaint(const Edit& aPaint)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mPaints.push_back(aPaint);
+    mPaints.AppendElement(aPaint);
   }
   void AddNoSwapPaint(const CompositableOperation& aPaint)
   {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mPaints.push_back(Edit(aPaint));
+    mPaints.AppendElement(Edit(aPaint));
   }
   void AddMutant(ShadowableLayer* aLayer)
   {
@@ -121,8 +121,8 @@ public:
   }
   void End()
   {
-    mCset.clear();
-    mPaints.clear();
+    mCset.Clear();
+    mPaints.Clear();
     mMutants.Clear();
     mDestroyedActors.Clear();
     mOpen = false;
@@ -131,7 +131,7 @@ public:
   }
 
   bool Empty() const {
-    return mCset.empty() && mPaints.empty() && mMutants.IsEmpty()
+    return mCset.IsEmpty() && mPaints.IsEmpty() && mMutants.IsEmpty()
            && mDestroyedActors.IsEmpty();
   }
   bool RotationChanged() const {
@@ -603,7 +603,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     return true;
   }
 
-  if (!mTxn->mPaints.empty()) {
+  if (!mTxn->mPaints.IsEmpty()) {
     // With some platforms, telling the drawing backend that there will be no more
     // drawing for this frame helps with preventing command queues from spanning
     // across multiple frames.
@@ -694,24 +694,22 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     mTxn->AddEdit(OpSetLayerAttributes(Shadow(shadow), attrs));
   }
 
-  size_t nCsets = mTxn->mCset.size() + mTxn->mPaints.size();
-  if (nCsets == 0 && !mTxn->RotationChanged()) {
+  if (mTxn->mCset.IsEmpty() &&
+      mTxn->mPaints.IsEmpty() &&
+      !mTxn->RotationChanged())
+  {
     return true;
   }
 
-  auto& cset = info.cset();
-  cset.SetCapacity(nCsets);
-  if (!mTxn->mCset.empty()) {
-    cset.AppendElements(&mTxn->mCset.front(), mTxn->mCset.size());
-  }
   // Paints after non-paint ops, including attribute changes.  See
   // above.
-  if (!mTxn->mPaints.empty()) {
-    cset.AppendElements(&mTxn->mPaints.front(), mTxn->mPaints.size());
+  if (!mTxn->mPaints.IsEmpty()) {
+    mTxn->mCset.AppendElements(mTxn->mPaints);
   }
 
   mWindowOverlayChanged = false;
 
+  info.cset() = Move(mTxn->mCset);
   info.toDestroy() = mTxn->mDestroyedActors;
   info.fwdTransactionId() = GetFwdTransactionId();
   info.id() = aId;

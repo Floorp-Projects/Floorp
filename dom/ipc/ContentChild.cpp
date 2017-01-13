@@ -2447,7 +2447,10 @@ mozilla::ipc::IPCResult
 ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
 {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (!swm) {
+    // browser shutdown began
+    return IPC_OK();
+  }
   swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
   return IPC_OK();
 }

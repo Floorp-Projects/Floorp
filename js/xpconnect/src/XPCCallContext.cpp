@@ -70,11 +70,8 @@ XPCCallContext::XPCCallContext(JSContext* cx,
           &js::GetReservedSlot(unwrapped,
                                XPC_WN_TEAROFF_FLAT_OBJECT_SLOT).toObject());
     }
-    if (mWrapper) {
-        if (mTearOff)
-            mScriptableInfo = nullptr;
-        else
-            mScriptableInfo = mWrapper->GetScriptableInfo();
+    if (mWrapper && !mTearOff) {
+        mScriptable = mWrapper->GetScriptable();
     }
 
     if (!JSID_IS_VOID(name))

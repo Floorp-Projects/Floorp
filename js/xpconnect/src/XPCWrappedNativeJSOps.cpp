@@ -229,7 +229,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
                       bool reflectToStringAndToSource,
                       XPCWrappedNative* wrapperToReflectInterfaceNames,
                       XPCWrappedNative* wrapperToReflectDoubleWrap,
-                      XPCNativeScriptableInfo* scriptableInfo,
+                      nsIXPCScriptable* scr,
                       unsigned propFlags,
                       bool* resolved)
 {
@@ -254,9 +254,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
             JSNative call;
             uint32_t flags = 0;
 
-            if (scriptableInfo) {
-                nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(
-                    scriptableInfo->GetCallback());
+            if (scr) {
+                nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(scr);
 
                 if (classInfo) {
                     nsresult rv = classInfo->GetFlags(&flags);
@@ -415,8 +414,8 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 
     if (id == xpccx->GetStringID(XPCJSContext::IDX_TO_STRING) ||
         id == xpccx->GetStringID(XPCJSContext::IDX_TO_SOURCE) ||
-        (scriptableInfo &&
-         scriptableInfo->GetCallback()->DontEnumQueryInterface() &&
+        (scr &&
+         scr->DontEnumQueryInterface() &&
          id == xpccx->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE)))
         propFlags &= ~JSPROP_ENUMERATE;
 
@@ -549,7 +548,7 @@ WrappedNativeFinalize(js::FreeOp* fop, JSObject* obj, WNHelperType helperType)
 
     XPCWrappedNative* wrapper = static_cast<XPCWrappedNative*>(p);
     if (helperType == WN_HELPER)
-        wrapper->GetScriptableCallback()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
+        wrapper->GetScriptable()->Finalize(wrapper, js::CastToJSFreeOp(fop), obj);
     wrapper->FlatJSObjectFinalized();
 }
 
@@ -704,7 +703,7 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj, HandleI
     XPCWrappedNative* wrapper = XPCWrappedNative::Get(unwrapped);             \
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);                             \
     bool retval = true;                                                       \
-    nsresult rv = wrapper->GetScriptableCallback()->
+    nsresult rv = wrapper->GetScriptable()->
 
 #define POST_HELPER_STUB                                                      \
     if (NS_FAILED(rv))                                                        \
@@ -797,15 +796,15 @@ XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolv
 
     RootedId old(cx, ccx.SetResolveName(id));
 
-    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (si && si->GetCallback()->WantResolve()) {
+    nsCOMPtr<nsIXPCScriptable> scr = wrapper->GetScriptable();
+    if (scr && scr->WantResolve()) {
         XPCWrappedNative* oldResolvingWrapper;
-        bool allowPropMods = si->GetCallback()->AllowPropModsDuringResolve();
+        bool allowPropMods = scr->AllowPropModsDuringResolve();
 
         if (allowPropMods)
             oldResolvingWrapper = ccx.SetResolvingWrapper(wrapper);
 
-        rv = si->GetCallback()->Resolve(wrapper, cx, obj, id, &resolved, &retval);
+        rv = scr->Resolve(wrapper, cx, obj, id, &resolved, &retval);
 
         if (allowPropMods)
             (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
@@ -835,9 +834,7 @@ XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolv
             IsLocal) {
 
             XPCWrappedNative* wrapperForInterfaceNames =
-                (si && si->GetCallback()->DontReflectInterfaceNames())
-                ? nullptr
-                : wrapper;
+                (scr && scr->DontReflectInterfaceNames()) ? nullptr : wrapper;
 
             XPCWrappedNative* oldResolvingWrapper =
                 ccx.SetResolvingWrapper(wrapper);
@@ -846,7 +843,7 @@ XPC_WN_Helper_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolv
                                            wrapper->GetScope(),
                                            false,
                                            wrapperForInterfaceNames,
-                                           nullptr, si,
+                                           nullptr, scr,
                                            JSPROP_ENUMERATE, resolvedp);
             (void)ccx.SetResolvingWrapper(oldResolvingWrapper);
         }
@@ -862,15 +859,15 @@ XPC_WN_Helper_Enumerate(JSContext* cx, HandleObject obj)
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (!si || !si->GetCallback()->WantEnumerate())
+    nsCOMPtr<nsIXPCScriptable> scr = wrapper->GetScriptable();
+    if (!scr || !scr->WantEnumerate())
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
     if (!XPC_WN_Shared_Enumerate(cx, obj))
         return false;
 
     bool retval = true;
-    nsresult rv = si->GetCallback()->Enumerate(wrapper, cx, obj, &retval);
+    nsresult rv = scr->Enumerate(wrapper, cx, obj, &retval);
     if (NS_FAILED(rv))
         return Throw(rv, cx);
     return retval;
@@ -886,31 +883,21 @@ XPC_WN_JSOp_Enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
     XPCWrappedNative* wrapper = ccx.GetWrapper();
     THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);
 
-    XPCNativeScriptableInfo* si = wrapper->GetScriptableInfo();
-    if (!si || !si->GetCallback()->WantNewEnumerate())
+    nsCOMPtr<nsIXPCScriptable> scr = wrapper->GetScriptable();
+    if (!scr || !scr->WantNewEnumerate())
         return Throw(NS_ERROR_XPC_BAD_OP_ON_WN_PROTO, cx);
 
     if (!XPC_WN_Shared_Enumerate(cx, obj))
         return false;
 
     bool retval = true;
-    nsresult rv = si->GetCallback()->NewEnumerate(wrapper, cx, obj, properties, &retval);
+    nsresult rv = scr->NewEnumerate(wrapper, cx, obj, properties, &retval);
     if (NS_FAILED(rv))
         return Throw(rv, cx);
     return retval;
 }
 
 /***************************************************************************/
-
-// static
-XPCNativeScriptableInfo*
-XPCNativeScriptableInfo::Construct(const XPCNativeScriptableCreateInfo* sci)
-{
-    MOZ_ASSERT(sci, "bad param");
-    nsCOMPtr<nsIXPCScriptable> callback = sci->GetCallback();
-    MOZ_ASSERT(callback);
-    return new XPCNativeScriptableInfo(callback);
-}
 
 const js::ObjectOps XPC_WN_ObjectOpsWithEnumerate = {
     nullptr,  // lookupProperty
@@ -1113,11 +1100,11 @@ XPC_WN_ModsAllowed_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, b
     if (!ccx.IsValid())
         return false;
 
-    XPCNativeScriptableInfo* si = self->GetScriptableInfo();
+    nsCOMPtr<nsIXPCScriptable> scr = self->GetScriptable();
     return DefinePropertyIfFound(ccx, obj, id,
                                  self->GetSet(), nullptr, nullptr,
                                  self->GetScope(),
-                                 true, nullptr, nullptr, si,
+                                 true, nullptr, nullptr, scr,
                                  JSPROP_ENUMERATE, resolvep);
 }
 
@@ -1190,12 +1177,12 @@ XPC_WN_NoMods_Proto_Resolve(JSContext* cx, HandleObject obj, HandleId id, bool* 
     if (!ccx.IsValid())
         return false;
 
-    XPCNativeScriptableInfo* si = self->GetScriptableInfo();
+    nsCOMPtr<nsIXPCScriptable> scr = self->GetScriptable();
 
     return DefinePropertyIfFound(ccx, obj, id,
                                  self->GetSet(), nullptr, nullptr,
                                  self->GetScope(),
-                                 true, nullptr, nullptr, si,
+                                 true, nullptr, nullptr, scr,
                                  JSPROP_READONLY |
                                  JSPROP_PERMANENT |
                                  JSPROP_ENUMERATE, resolvedp);

@@ -58,6 +58,11 @@ Element::ShouldTraverseForServo()
 inline void
 Element::NoteDirtyDescendantsForServo()
 {
+  if (!HasServoData()) {
+    // The dirty descendants bit only applies to styled elements.
+    return;
+  }
+
   Element* curr = this;
   while (curr && !curr->HasDirtyDescendantsForServo()) {
     curr->SetHasDirtyDescendantsForServo();

@@ -87,7 +87,6 @@ DIRS += [
     '/editor',
     '/layout',
     '/docshell',
-    '/embedding',
     '/xpfe/appshell'
 ]
 

@@ -15,6 +15,8 @@ XPIDL_SOURCES += [
     'nsIContentViewerContainer.idl',
     'nsIContentViewerEdit.idl',
     'nsIContentViewerFile.idl',
+    'nsIContextMenuListener.idl',
+    'nsIContextMenuListener2.idl',
     'nsIDocCharset.idl',
     'nsIDocShell.idl',
     'nsIDocShellLoadInfo.idl',
@@ -29,6 +31,8 @@ XPIDL_SOURCES += [
     'nsIRefreshURI.idl',
     'nsIScrollable.idl',
     'nsITextScroll.idl',
+    'nsITooltipListener.idl',
+    'nsITooltipTextProvider.idl',
     'nsIURIFixup.idl',
     'nsIWebNavigation.idl',
     'nsIWebNavigationInfo.idl',
@@ -38,7 +42,9 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'docshell'
 
 EXPORTS += [
+    'nsCTooltipTextProvider.h',
     'nsDocShellLoadTypes.h',
+    'nsDocShellTreeOwner.h',
     'nsILinkHandler.h',
     'nsIScrollObserver.h',
     'nsIWebShellServices.h',
@@ -53,12 +59,14 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'LoadContext.cpp',
     'nsAboutRedirector.cpp',
+    'nsContextMenuInfo.cpp',
     'nsDefaultURIFixup.cpp',
     'nsDocShell.cpp',
     'nsDocShellEditorData.cpp',
     'nsDocShellEnumerator.cpp',
     'nsDocShellLoadInfo.cpp',
     'nsDocShellTransferableHooks.cpp',
+    'nsDocShellTreeOwner.cpp',
     'nsDownloadHistory.cpp',
     'nsDSURIContentListener.cpp',
     'nsWebNavigationInfo.cpp',
@@ -73,8 +81,10 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/layout/base',
     '/layout/generic',
+    '/layout/style',
     '/layout/xul',
     '/netwerk/protocol/viewsource',
+    '/toolkit/components/browser',
     '/tools/profiler',
 ]
 
