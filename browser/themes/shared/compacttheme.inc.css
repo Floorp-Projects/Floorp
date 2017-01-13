@@ -14,7 +14,7 @@
   --backbutton-urlbar-overlap: 0px;
 }
 
-:root[devtoolstheme="dark"] {
+:root:-moz-lwtheme-brighttext {
   /* Chrome */
   --chrome-background-color: #272b35;
   --chrome-color: #F5F7FA;
@@ -50,8 +50,8 @@
 }
 
 /* Override the lwtheme-specific styling for toolbar buttons */
-:root[devtoolstheme="dark"],
-:root[devtoolstheme="dark"] toolbar:-moz-lwtheme {
+:root:-moz-lwtheme-brighttext,
+toolbar:-moz-lwtheme-brighttext  {
   --toolbarbutton-hover-background: rgba(25,33, 38,.6) linear-gradient(rgba(25,33,38,.6), rgba(25,33,38,.6)) padding-box;
   --toolbarbutton-hover-boxshadow: none;
   --toolbarbutton-hover-bordercolor: rgba(25,33,38,.6);
@@ -62,7 +62,7 @@
 
 }
 
-:root[devtoolstheme="light"] {
+:root:-moz-lwtheme-darktext {
   --url-and-searchbar-background-color: #fff;
 
   --chrome-background-color: #E3E4E6;
@@ -85,8 +85,8 @@
 }
 
 /* Override the lwtheme-specific styling for toolbar buttons */
-:root[devtoolstheme="light"],
-:root[devtoolstheme="light"] toolbar:-moz-lwtheme {
+:root:-moz-lwtheme-darktext,
+toolbar:-moz-lwtheme-darktext {
   --toolbarbutton-hover-background: #eaeaea;
   --toolbarbutton-hover-boxshadow: none;
   --toolbarbutton-hover-bordercolor: rgba(0,0,0,0.1);
@@ -197,8 +197,7 @@ toolbar[brighttext] #downloads-indicator-counter {
 }
 
 %filter substitution
-%define selectorPrefix :root[devtoolstheme="dark"] 
-%define selectorSuffix :-moz-lwtheme
+%define selectorSuffix :-moz-lwtheme-brighttext
 %define iconVariant -white
 %include identity-block/icons.inc.css
 
@@ -213,11 +212,11 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   margin-inline-start: 0;
 }
 
-:root[devtoolstheme="dark"] #urlbar-zoom-button:hover {
+#urlbar-zoom-button:-moz-lwtheme-brighttext:hover {
   background-color: rgba(255,255,255,.2);
 }
 
-:root[devtoolstheme="dark"] #urlbar-zoom-button:hover:active {
+#urlbar-zoom-button:-moz-lwtheme-brighttext:hover:active {
   background-color: rgba(255,255,255,.3);
 }
 

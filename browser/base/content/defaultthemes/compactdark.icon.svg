@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+    <rect fill="#727780" x="1" y="1" width="30" height="30" rx="2" ry="2"/>
+    <path fill="#393f4c" d="M3 1h26a2 2 0 0 1 2 2v14H1V3a2 2 0 0 1 2-2z"/>
+    <rect fill="#171b1f" x="3.5" y="3.5" width="25" height="11" rx="1" ry="1"/>
+    <path fill="#252c33" d="M4.5 3.5h12v11h-12a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"/>
+    <rect stroke="#1d2328" fill="none" stroke-width="2" x="1" y="1" width="30" height="30" rx="2" ry="2"/>
+    <path class="icon-line-2px" d="M10 6L7 9l3 3M7.5 9H13"/>
+    <path stroke="#1d2328" d="M1.5 16.5h29"/>
+    <path class="separator-toolbar-items" d="M16.5 3.5v11"/>
+    <rect fill="none" stroke="#171b1f" x="3.5" y="3.5" width="25" height="11" rx="1" ry="1"/>
+    <path fill="#f0f1f2" d="M13 8H9.4l1.3-1.3a1 1 0 0 0-1.4-1.4l-3 3a1 1 0 0 0 0 1.4l3 3a1 1 0 0 0 1.4-1.4L9.4 10H13a1 1 0 0 0 0-2z"/>
+</svg>
