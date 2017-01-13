@@ -1259,6 +1259,7 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
     } else {
         const int webrenderAttribs[] = {
             LOCAL_GLX_DEPTH_SIZE, 24,
+            LOCAL_GLX_DOUBLEBUFFER, True,
             0
         };
 
