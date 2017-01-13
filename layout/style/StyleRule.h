@@ -13,12 +13,14 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/css/Rule.h"
 
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIStyleRule.h"
+#include "nsICSSStyleRuleDOMWrapper.h"
 
 class nsIAtom;
 struct nsCSSSelectorList;
@@ -302,13 +304,15 @@ private:
 { 0x464bab7a, 0x2fce, 0x4f30, \
   { 0xab, 0x44, 0xb7, 0xa5, 0xf3, 0xaa, 0xe5, 0x7d } }
 
+class DOMCSSDeclarationImpl;
+
 namespace mozilla {
 namespace css {
 
 class Declaration;
-class DOMCSSStyleRule;
 
 class StyleRule final : public Rule
+                      , public nsICSSStyleRuleDOMWrapper
 {
  public:
   StyleRule(nsCSSSelectorList* aSelector,
@@ -321,7 +325,12 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_RULE_IMPL_CID)
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(StyleRule, Rule)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StyleRule, Rule)
+  NS_DECL_NSIDOMCSSRULE
+  NS_DECL_NSIDOMCSSSTYLERULE
+
+  // nsICSSStyleRuleDOMWrapper
+  NS_IMETHOD GetCSSStyleRule(StyleRule **aResult) override;
 
   // null for style attribute
   nsCSSSelectorList* Selector() { return mSelector; }
@@ -329,12 +338,6 @@ public:
   Declaration* GetDeclaration() const { return mDeclaration; }
 
   void SetDeclaration(Declaration* aDecl);
-
-  // hooks for DOM rule
-  void GetCssText(nsAString& aCssText);
-  void SetCssText(const nsAString& aCssText);
-  void GetSelectorText(nsAString& aSelectorText);
-  void SetSelectorText(const nsAString& aSelectorText);
 
   virtual int32_t GetType() const override;
 
@@ -367,7 +370,9 @@ private:
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
   RefPtr<Declaration>     mDeclaration;
-  RefPtr<DOMCSSStyleRule> mDOMRule;
+
+  // We own it, and it aggregates its refcount with us.
+  UniquePtr<DOMCSSDeclarationImpl> mDOMDeclaration;
 
 private:
   StyleRule& operator=(const StyleRule& aCopy) = delete;
