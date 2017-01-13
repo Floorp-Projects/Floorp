@@ -203,6 +203,21 @@ function memorySection(initialSize) {
     return { name: memoryId, body };
 }
 
+function dataSection(segmentArrays) {
+    var body = [];
+    body.push(...varU32(segmentArrays.length));
+    for (let array of segmentArrays) {
+        body.push(...varU32(0)); // table index
+        body.push(...varU32(I32ConstCode));
+        body.push(...varS32(array.offset));
+        body.push(...varU32(EndCode));
+        body.push(...varU32(array.elems.length));
+        for (let elem of array.elems)
+            body.push(...varU32(elem));
+    }
+    return { name: dataId, body };
+}
+
 function elemSection(elemArrays) {
     var body = [];
     body.push(...varU32(elemArrays.length));
@@ -278,7 +293,7 @@ wasmEval(moduleWithSections([
     bodySection([v2vBody])
 ]), {a:{"":()=>{}}});
 
-assertErrorMessage(() => wasmEval(moduleWithSections([ {name: dataId, body: [], } ])), CompileError, /data section requires a memory section/);
+assertErrorMessage(() => wasmEval(moduleWithSections([ dataSection([{offset:1, elems:[]}]) ])), CompileError, /data segment requires a memory section/);
 
 wasmEval(moduleWithSections([tableSection(0)]));
 wasmEval(moduleWithSections([elemSection([])]));
@@ -291,23 +306,47 @@ assertErrorMessage(() => wasmEval(moduleWithSections([sigSection([v2vSig]), decl
 wasmEval(moduleWithSections([sigSection([v2vSig]), declSection([0,0,0]), tableSection(4), elemSection([{offset:0, elems:[0,1,0,2]}]), bodySection([v2vBody, v2vBody, v2vBody])]));
 wasmEval(moduleWithSections([sigSection([v2vSig,i2vSig]), declSection([0,0,1]), tableSection(3), elemSection([{offset:0,elems:[0,1,2]}]), bodySection([v2vBody, v2vBody, v2vBody])]));
 
-function invalidTableSection0() {
+function tableSection0() {
     var body = [];
     body.push(...varU32(0));           // number of tables
     return { name: tableId, body };
 }
 
-assertErrorMessage(() => wasmEval(moduleWithSections([invalidTableSection0()])), CompileError, /number of tables must be exactly one/);
+function invalidTableSection2() {
+    var body = [];
+    body.push(...varU32(2));           // number of tables
+    body.push(...varU32(AnyFuncCode));
+    body.push(...varU32(0x0));
+    body.push(...varU32(0));
+    body.push(...varU32(AnyFuncCode));
+    body.push(...varU32(0x0));
+    body.push(...varU32(0));
+    return { name: tableId, body };
+}
+
+wasmEval(moduleWithSections([tableSection0()]));
+assertErrorMessage(() => wasmEval(moduleWithSections([invalidTableSection2()])), CompileError, /number of tables must be at most one/);
 
 wasmEval(moduleWithSections([memorySection(0)]));
 
-function invalidMemorySection0() {
+function memorySection0() {
     var body = [];
     body.push(...varU32(0));           // number of memories
     return { name: memoryId, body };
 }
 
-assertErrorMessage(() => wasmEval(moduleWithSections([invalidMemorySection0()])), CompileError, /number of memories must be exactly one/);
+function invalidMemorySection2() {
+    var body = [];
+    body.push(...varU32(2));           // number of memories
+    body.push(...varU32(0x0));
+    body.push(...varU32(0));
+    body.push(...varU32(0x0));
+    body.push(...varU32(0));
+    return { name: memoryId, body };
+}
+
+wasmEval(moduleWithSections([memorySection0()]));
+assertErrorMessage(() => wasmEval(moduleWithSections([invalidMemorySection2()])), CompileError, /number of memories must be at most one/);
 
 // Test early 'end'
 const bodyMismatch = /function body length mismatch/;
