@@ -149,10 +149,14 @@ class EncryptionRemoteTransformer {
   decode(record) {
     const self = this;
     return Task.spawn(function* () {
-      const keyBundle = yield self.getKeys();
       if (!record.ciphertext) {
+        // This can happen for tombstones if a record is deleted.
+        if (record.deleted) {
+          return record;
+        }
         throw new Error("No ciphertext: nothing to decrypt?");
       }
+      const keyBundle = yield self.getKeys();
       // Authenticate the encrypted blob with the expected HMAC
       let computedHMAC = ciphertextHMAC(keyBundle, record.id, record.IV, record.ciphertext);
 

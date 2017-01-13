@@ -123,86 +123,8 @@
             <tabpanels flex="1">
               <tabpanel id="headers-tabpanel"
                         class="tabpanel-content">
-                <vbox flex="1">
-                  <hbox id="headers-summary-url"
-                        class="tabpanel-summary-container"
-                        align="center">
-                    <label class="plain tabpanel-summary-label"
-                           data-localization="content=netmonitor.summary.url"/>
-                    <textbox id="headers-summary-url-value"
-                             class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
-                             flex="1"
-                             readonly="true"/>
-                  </hbox>
-                  <hbox id="headers-summary-method"
-                        class="tabpanel-summary-container"
-                        align="center">
-                    <label class="plain tabpanel-summary-label"
-                           data-localization="content=netmonitor.summary.method"/>
-                    <label id="headers-summary-method-value"
-                           class="plain tabpanel-summary-value devtools-monospace"
-                           crop="end"
-                           flex="1"/>
-                  </hbox>
-                  <hbox id="headers-summary-address"
-                        class="tabpanel-summary-container"
-                        align="center">
-                    <label class="plain tabpanel-summary-label"
-                           data-localization="content=netmonitor.summary.address"/>
-                    <textbox id="headers-summary-address-value"
-                             class="plain tabpanel-summary-value devtools-monospace cropped-textbox"
-                             flex="1"
-                             readonly="true"/>
-                  </hbox>
-                  <hbox id="headers-summary-status"
-                        class="tabpanel-summary-container"
-                        align="center">
-                    <label class="plain tabpanel-summary-label"
-                           data-localization="content=netmonitor.summary.status"/>
-                    <box id="headers-summary-status-circle"
-                         class="requests-menu-status-icon"/>
-                    <label id="headers-summary-status-value"
-                           class="plain tabpanel-summary-value devtools-monospace"
-                           crop="end"
-                           flex="1"/>
-                    <button id="headers-summary-resend"
-                            class="devtools-toolbarbutton"
-                            data-localization="label=netmonitor.summary.editAndResend"/>
-                    <button id="toggle-raw-headers"
-                            class="devtools-toolbarbutton"
-                            data-localization="label=netmonitor.summary.rawHeaders"/>
-                  </hbox>
-                  <hbox id="headers-summary-version"
-                        class="tabpanel-summary-container"
-                        align="center">
-                    <label class="plain tabpanel-summary-label"
-                           data-localization="content=netmonitor.summary.version"/>
-                    <label id="headers-summary-version-value"
-                           class="plain tabpanel-summary-value devtools-monospace"
-                           crop="end"
-                           flex="1"/>
-                  </hbox>
-                  <hbox id="raw-headers"
-                        class="tabpanel-summary-container"
-                        align="center"
-                        hidden="true">
-                    <vbox id="raw-request-headers-textarea-box" flex="1" hidden="false">
-                      <label class="plain tabpanel-summary-label"
-                        data-localization="content=netmonitor.summary.rawHeaders.requestHeaders"/>
-                      <textbox id="raw-request-headers-textarea"
-                        class="raw-response-textarea"
-                        flex="1" multiline="true" readonly="true"/>
-                    </vbox>
-                    <vbox id="raw-response-headers-textarea-box" flex="1" hidden="false">
-                      <label class="plain tabpanel-summary-label"
-                        data-localization="content=netmonitor.summary.rawHeaders.responseHeaders"/>
-                      <textbox id="raw-response-headers-textarea"
-                        class="raw-response-textarea"
-                        flex="1" multiline="true" readonly="true"/>
-                    </vbox>
-                  </hbox>
-                  <vbox id="all-headers" flex="1"/>
-                </vbox>
+                <html:div xmlns="http://www.w3.org/1999/xhtml"
+                          id="react-headers-tabpanel-hook"/>
               </tabpanel>
               <tabpanel id="cookies-tabpanel"
                         class="tabpanel-content">

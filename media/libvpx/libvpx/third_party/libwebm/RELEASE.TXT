@@ -1,0 +1,34 @@
+1.0.0.5
+ * Handled case when no duration
+ * Handled empty clusters
+ * Handled empty clusters when seeking
+ * Implemented check lacing bits
+
+1.0.0.4
+ * Made Cues member variables mutables
+ * Defined against badly-formatted cue points
+ * Segment::GetCluster returns CuePoint too
+ * Separated cue-based searches
+
+1.0.0.3
+ * Added Block::GetOffset() to get a frame's offset in a block
+ * Changed cluster count type from size_t to long
+ * Parsed SeekHead to find cues
+ * Allowed seeking beyond end of cluster cache
+ * Added not to attempt to reparse cues element
+ * Restructured Segment::LoadCluster
+ * Marked position of cues without parsing cues element
+ * Allowed cue points to be loaded incrementally
+ * Implemented to load lazily cue points as they're searched
+ * Merged Cues::LoadCuePoint into Cues::Find
+ * Lazy init cues
+ * Loaded cue point during find
+
+1.0.0.2
+ * added support for Cues element
+ * seeking was improved
+
+1.0.0.1
+ * fixed item 141
+ * added item 142
+ * added this file, RELEASE.TXT, to repository
