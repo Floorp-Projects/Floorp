@@ -13,13 +13,11 @@ Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://services-crypto/utils.js");
-Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-common/tokenserverclient.js");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://services-sync/stages/cluster.js");
 Cu.import("resource://gre/modules/FxAccounts.jsm");
 
 // Lazy imports to prevent unnecessary load on startup.
@@ -89,8 +87,6 @@ this.BrowserIDManager = function BrowserIDManager() {
 };
 
 this.BrowserIDManager.prototype = {
-  __proto__: IdentityManager.prototype,
-
   _fxaService: null,
   _tokenServerClient: null,
   // https://docs.services.mozilla.com/token/apis.html
@@ -138,19 +134,6 @@ this.BrowserIDManager.prototype = {
     for (let topic of OBSERVER_TOPICS) {
       Services.obs.addObserver(this, topic, false);
     }
-    // and a background fetch of account data just so we can set this.account,
-    // so we have a username available before we've actually done a login.
-    // XXX - this is actually a hack just for tests and really shouldn't be
-    // necessary. Also, you'd think it would be safe to allow this.account to
-    // be set to null when there's no user logged in, but argue with the test
-    // suite, not with me :)
-    this._fxaService.getSignedInUser().then(accountData => {
-      if (accountData) {
-        this.account = accountData.email;
-      }
-    }).catch(err => {
-      // As above, this is only for tests so it is safe to ignore.
-    });
   },
 
   /**
@@ -225,14 +208,13 @@ this.BrowserIDManager.prototype = {
     return this._fxaService.getSignedInUser().then(accountData => {
       if (!accountData) {
         this._log.info("initializeWithCurrentIdentity has no user logged in");
-        this.account = null;
         // and we are as ready as we can ever be for auth.
         this._shouldHaveSyncKeyBundle = true;
         this.whenReadyToAuthenticate.reject("no user is logged in");
         return;
       }
 
-      this.account = accountData.email;
+      this.username = accountData.email;
       this._updateSignedInUser(accountData);
       // The user must be verified before we can do anything at all; we kick
       // this and the rest of initialization off in the background (ie, we
@@ -365,65 +347,43 @@ this.BrowserIDManager.prototype = {
     return this._fxaService.localtimeOffsetMsec;
   },
 
-  usernameFromAccount(val) {
-    // we don't differentiate between "username" and "account"
-    return val;
-  },
-
-  /**
-   * Obtains the HTTP Basic auth password.
-   *
-   * Returns a string if set or null if it is not set.
-   */
-  get basicPassword() {
-    this._log.error("basicPassword getter should be not used in BrowserIDManager");
-    return null;
-  },
-
-  /**
-   * Set the HTTP basic password to use.
-   *
-   * Changes will not persist unless persistSyncCredentials() is called.
-   */
-  set basicPassword(value) {
-    throw new Error("basicPassword setter should be not used in BrowserIDManager");
-  },
-
-  /**
-   * Obtain the Sync Key.
-   *
-   * This returns a 26 character "friendly" Base32 encoded string on success or
-   * null if no Sync Key could be found.
-   *
-   * If the Sync Key hasn't been set in this session, this will look in the
-   * password manager for the sync key.
-   */
-  get syncKey() {
-    if (this.syncKeyBundle) {
-      // TODO: This is probably fine because the code shouldn't be
-      // using the sync key directly (it should use the sync key
-      // bundle), but I don't like it. We should probably refactor
-      // code that is inspecting this to not do validation on this
-      // field directly and instead call a isSyncKeyValid() function
-      // that we can override.
-      return "99999999999999999999999999";
-    }
-    return null;
-  },
-
-  set syncKey(value) {
-    throw "syncKey setter should be not used in BrowserIDManager";
-  },
-
   get syncKeyBundle() {
     return this._syncKeyBundle;
+  },
+
+  get username() {
+    return Svc.Prefs.get("username", null);
+  },
+
+  /**
+   * Set the username value.
+   *
+   * Changing the username has the side-effect of wiping credentials.
+   */
+  set username(value) {
+    if (value) {
+      value = value.toLowerCase();
+
+      if (value == this.username) {
+        return;
+      }
+
+      Svc.Prefs.set("username", value);
+    } else {
+      Svc.Prefs.reset("username");
+    }
+
+    // If we change the username, we interpret this as a major change event
+    // and wipe out the credentials.
+    this._log.info("Username changed. Removing stored credentials.");
+    this.resetCredentials();
   },
 
   /**
    * Resets/Drops all credentials we hold for the current user.
    */
   resetCredentials() {
-    this.resetSyncKey();
+    this.resetSyncKeyBundle();
     this._token = null;
     this._hashedUID = null;
     // The cluster URL comes from the token, so resetting it to empty will
@@ -432,12 +392,10 @@ this.BrowserIDManager.prototype = {
   },
 
   /**
-   * Resets/Drops the sync key we hold for the current user.
+   * Resets/Drops the sync key bundle we hold for the current user.
    */
-  resetSyncKey() {
-    this._syncKey = null;
+  resetSyncKeyBundle() {
     this._syncKeyBundle = null;
-    this._syncKeyUpdated = true;
     this._shouldHaveSyncKeyBundle = false;
   },
 
@@ -459,6 +417,18 @@ this.BrowserIDManager.prototype = {
   },
 
   /**
+   * Deletes Sync credentials from the password manager.
+   */
+  deleteSyncCredentials() {
+    for (let host of this._getSyncCredentialsHosts()) {
+      let logins = Services.logins.findLogins({}, host, "", "");
+      for (let login of logins) {
+        Services.logins.removeLogin(login);
+      }
+    }
+  },
+
+  /**
    * The current state of the auth credentials.
    *
    * This essentially validates that enough credentials are available to use
@@ -472,6 +442,7 @@ this.BrowserIDManager.prototype = {
                      " due to previous failure");
       return this._authFailureReason;
     }
+
     // TODO: need to revisit this. Currently this isn't ready to go until
     // both the username and syncKeyBundle are both configured and having no
     // username seems to make things fail fast so that's good.
@@ -801,11 +772,39 @@ this.BrowserIDManager.prototype = {
  */
 
 function BrowserIDClusterManager(service) {
-  ClusterManager.call(this, service);
+  this._log = log;
+  this.service = service;
 }
 
 BrowserIDClusterManager.prototype = {
-  __proto__: ClusterManager.prototype,
+  get identity() {
+    return this.service.identity;
+  },
+
+  /**
+   * Determine the cluster for the current user and update state.
+   */
+  setCluster() {
+    // Make sure we didn't get some unexpected response for the cluster.
+    let cluster = this._findCluster();
+    this._log.debug("Cluster value = " + cluster);
+    if (cluster == null) {
+      return false;
+    }
+
+    // Convert from the funky "String object with additional properties" that
+    // resource.js returns to a plain-old string.
+    cluster = cluster.toString();
+    // Don't update stuff if we already have the right cluster
+    if (cluster == this.service.clusterURL) {
+      return false;
+    }
+
+    this._log.debug("Setting cluster to " + cluster);
+    this.service.clusterURL = cluster;
+
+    return true;
+  },
 
   _findCluster() {
     let endPointFromIdentityToken = function() {
