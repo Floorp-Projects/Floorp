@@ -8,6 +8,7 @@ module.exports = {
     is: false,
     isnot: false,
     ok: false,
+    SpecialPowers: false,
   },
   rules: {
     "spaced-comment": 2,

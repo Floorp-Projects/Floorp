@@ -24,7 +24,6 @@ browser/chrome/browser/skin/classic/browser/addons/addon-install-confirm.svg
 browser/chrome/browser/skin/classic/browser/connection-secure.svg
 browser/chrome/browser/skin/classic/browser/controlcenter/warning-gray.svg
 browser/chrome/browser/skin/classic/browser/newtab/close.png
-browser/chrome/browser/skin/classic/browser/theme-switcher-icon.png
 # devtools reduction is bug 1311178
 browser/chrome/devtools/content/dom/content/dom-view.css
 browser/chrome/devtools/content/dom/dom.html

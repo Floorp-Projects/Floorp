@@ -43,7 +43,8 @@ class WinCompositorWidget
    public CompositorWidgetDelegate
 {
 public:
-  WinCompositorWidget(const CompositorWidgetInitData& aInitData);
+  WinCompositorWidget(const CompositorWidgetInitData& aInitData,
+                      const layers::CompositorOptions& aOptions);
 
   bool PreRender(WidgetRenderingContext*) override;
   void PostRender(WidgetRenderingContext*) override;

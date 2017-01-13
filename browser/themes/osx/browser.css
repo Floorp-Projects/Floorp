@@ -3269,10 +3269,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   #customization-tipPanel > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow[side="right"] {
     list-style-image: url("chrome://browser/skin/customizableui/panelarrow-customizeTip@2x.png");
   }
-
-  .customization-lwtheme-menu-theme[defaulttheme] {
-    list-style-image: url(chrome://browser/skin/theme-switcher-icon@2x.png);
-  }
 }
 
 /* End customization mode */

@@ -55,6 +55,7 @@
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/ChromeProcessController.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/dom/ContentChild.h"
@@ -1297,20 +1298,20 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   RefPtr<ClientLayerManager> lm = new ClientLayerManager(this);
 
-  bool useAPZ = UseAPZ();
+  CompositorOptions options(UseAPZ());
 
   gfx::GPUProcessManager* gpu = gfx::GPUProcessManager::Get();
   mCompositorSession = gpu->CreateTopLevelCompositor(
     this,
     lm,
     GetDefaultScale(),
-    useAPZ,
+    options,
     UseExternalCompositingSurface(),
     gfx::IntSize(aWidth, aHeight));
   mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
   mCompositorWidgetDelegate = mCompositorSession->GetCompositorWidgetDelegate();
 
-  if (useAPZ) {
+  if (options.UseAPZ()) {
     mAPZC = mCompositorSession->GetAPZCTreeManager();
     ConfigureAPZCTreeManager();
   } else {

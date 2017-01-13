@@ -42,7 +42,7 @@ class AudioNodeStream;
 
 namespace dom {
 
-enum class AudioContextState : uint32_t;
+enum class AudioContextState : uint8_t;
 class AnalyserNode;
 class AudioBuffer;
 class AudioBufferSourceNode;
@@ -71,7 +71,7 @@ class WaveShaperNode;
 class PeriodicWave;
 struct PeriodicWaveConstraints;
 class Promise;
-enum class OscillatorType : uint32_t;
+enum class OscillatorType : uint8_t;
 
 // This is addrefed by the OscillatorNodeEngine on the main thread
 // and then used from the MSG thread.

@@ -19,8 +19,10 @@ namespace widget {
 
 using namespace mozilla::gfx;
 
-WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitData)
- : mWidgetKey(aInitData.widgetKey()),
+WinCompositorWidget::WinCompositorWidget(const CompositorWidgetInitData& aInitData,
+                                         const layers::CompositorOptions& aOptions)
+ : CompositorWidget(aOptions)
+ , mWidgetKey(aInitData.widgetKey()),
    mWnd(reinterpret_cast<HWND>(aInitData.hWnd())),
    mTransparencyMode(static_cast<nsTransparencyMode>(aInitData.transparencyMode())),
    mMemoryDC(nullptr),

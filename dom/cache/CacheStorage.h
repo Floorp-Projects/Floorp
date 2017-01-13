@@ -28,7 +28,7 @@ namespace ipc {
 
 namespace dom {
 
-enum class CacheStorageNamespace : uint32_t;
+enum class CacheStorageNamespace : uint8_t;
 class Promise;
 
 namespace workers {

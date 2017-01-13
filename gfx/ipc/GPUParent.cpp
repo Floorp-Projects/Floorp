@@ -288,11 +288,12 @@ mozilla::ipc::IPCResult
 GPUParent::RecvNewWidgetCompositor(Endpoint<layers::PCompositorBridgeParent>&& aEndpoint,
                                    const CSSToLayoutDeviceScale& aScale,
                                    const TimeDuration& aVsyncRate,
+                                   const CompositorOptions& aOptions,
                                    const bool& aUseExternalSurfaceSize,
                                    const IntSize& aSurfaceSize)
 {
   RefPtr<CompositorBridgeParent> cbp =
-    new CompositorBridgeParent(aScale, aVsyncRate, aUseExternalSurfaceSize, aSurfaceSize);
+    new CompositorBridgeParent(aScale, aVsyncRate, aOptions, aUseExternalSurfaceSize, aSurfaceSize);
 
   MessageLoop* loop = CompositorThreadHolder::Loop();
   loop->PostTask(NewRunnableFunction(OpenParent, cbp, Move(aEndpoint)));

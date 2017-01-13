@@ -21,8 +21,8 @@ namespace layers {
 class PTextureParent;
 }
 namespace dom {
-enum class GamepadMappingType : uint32_t;
-enum class GamepadHand : uint32_t;
+enum class GamepadMappingType : uint8_t;
+enum class GamepadHand : uint8_t;
 struct GamepadPoseState;
 }
 namespace gfx {

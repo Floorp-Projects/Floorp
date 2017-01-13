@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<style type="text/css">
+  div {
+    border: 1px solid grey;
+    width: 100px;
+    color: black;
+  }
+</style>
+
+<div>
+  <span id="myspan">Wrapped sentence</span>
+</div>
+
+<script>
+  window.addEventListener("MozReftestInvalidate",
+    function() {
+      document.getElementById("myspan").style.filter = "opacity(50%)";
+      document.documentElement.classList.remove("reftest-wait");
+    }, false);
+</script>
+
+</html>
