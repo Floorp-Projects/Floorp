@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/GroupRule.h"
 #include "mozilla/css/Declaration.h"
+#include "mozilla/dom/CSSStyleRuleBinding.h"
 #include "nsIDocument.h"
 #include "nsIAtom.h"
 #include "nsString.h"
@@ -26,7 +27,6 @@
 #include "nsCSSPseudoClasses.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTArray.h"
-#include "nsDOMClassInfoID.h"
 #include "nsContentUtils.h"
 #include "nsError.h"
 #include "mozAutoDocUpdate.h"
@@ -1175,12 +1175,17 @@ StyleRule::Type() const
 NS_IMETHODIMP
 StyleRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 {
+  NS_ADDREF(*aStyle = Style());
+  return NS_OK;
+}
+
+nsICSSDeclaration*
+StyleRule::Style()
+{
   if (!mDOMDeclaration) {
     mDOMDeclaration.reset(new DOMCSSDeclarationImpl(this));
   }
-  *aStyle = mDOMDeclaration.get();
-  NS_ADDREF(*aStyle);
-  return NS_OK;
+  return mDOMDeclaration.get();
 }
 
 NS_IMETHODIMP
@@ -1195,11 +1200,10 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
                      Declaration* aDeclaration,
                      uint32_t aLineNumber,
                      uint32_t aColumnNumber)
-  : Rule(aLineNumber, aColumnNumber),
+  : BindingStyleRule(aLineNumber, aColumnNumber),
     mSelector(aSelector),
     mDeclaration(aDeclaration)
 {
-  SetIsNotDOMBinding();
   NS_PRECONDITION(aDeclaration, "must have a declaration");
 
   mDeclaration->SetOwningRule(this);
@@ -1207,11 +1211,10 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
 
 // for |Clone|
 StyleRule::StyleRule(const StyleRule& aCopy)
-  : Rule(aCopy),
+  : BindingStyleRule(aCopy),
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nullptr),
     mDeclaration(new Declaration(*aCopy.mDeclaration))
 {
-  SetIsNotDOMBinding();
   mDeclaration->SetOwningRule(this);
   // rest is constructed lazily on existing data
 }
@@ -1241,7 +1244,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(StyleRule)
   else
   NS_INTERFACE_MAP_ENTRY(nsICSSStyleRuleDOMWrapper)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
@@ -1387,15 +1389,6 @@ StyleRule::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 
   return n;
 }
-
-/* virtual */ JSObject*
-StyleRule::WrapObject(JSContext* aCx,
-                      JS::Handle<JSObject*> aGivenProto)
-{
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
-}
-
 
 } // namespace css
 } // namespace mozilla
