@@ -67,14 +67,12 @@ public:
     return sheet ? sheet->AsGecko() : nullptr;
   }
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
   virtual nsIDOMCSSRule* GetDOMRule() override
   {
     return this;
   }
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
@@ -91,6 +89,10 @@ public:
 
   // @media rule methods
   nsresult SetMedia(nsMediaList* aMedia);
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
   
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
@@ -99,7 +101,7 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  void AppendConditionText(nsAString& aOutput);
+  void AppendConditionText(nsAString& aOutput) const;
 
   RefPtr<nsMediaList> mMedia;
 };
@@ -121,14 +123,12 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
   virtual nsIDOMCSSRule* GetDOMRule() override
   {
     return this;
   }
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
@@ -169,6 +169,10 @@ public:
 
   void SetURLs(URL *aURLs) { mURLs = aURLs; }
 
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
+
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const override MOZ_MUST_OVERRIDE;
 
@@ -176,7 +180,7 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  void AppendConditionText(nsAString& aOutput);
+  void AppendConditionText(nsAString& aOutput) const;
 
   nsAutoPtr<URL> mURLs; // linked list of |struct URL| above.
 };
@@ -229,6 +233,9 @@ protected:
 
   mozilla::CSSFontFaceDescriptors mDescriptors;
 
+  // The actual implementation of GetCssText, so we can make it const.
+  void GetCssTextImpl(nsAString& aCssText) const;
+
 private:
   // NOT TO BE IMPLEMENTED
   // This object cannot be allocated on its own, only as part of
@@ -263,16 +270,18 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSFontFaceRule interface
   NS_DECL_NSIDOMCSSFONTFACERULE
 
   void SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue);
   void GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue);
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
@@ -337,13 +346,15 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSFontFaceRule interface
   NS_DECL_NSIDOMCSSFONTFEATUREVALUESRULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   const mozilla::FontFamilyList& GetFamilyList() { return mFamilyList; }
   void SetFamilyList(const mozilla::FontFamilyList& aFamilyList);
@@ -424,13 +435,15 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSKeyframeRule interface
   NS_DECL_NSIDOMCSSKEYFRAMERULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   const nsTArray<float>& GetKeys() const     { return mKeys; }
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
@@ -473,17 +486,19 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
   virtual nsIDOMCSSRule* GetDOMRule() override
   {
     return this;
   }
 
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
-
   // nsIDOMCSSKeyframesRule interface
   NS_DECL_NSIDOMCSSKEYFRAMESRULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   // rest of GroupRule
   virtual bool UseForPresentation(nsPresContext* aPresContext,
@@ -555,13 +570,15 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSPageRule interface
   NS_DECL_NSIDOMCSSPAGERULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
 
@@ -593,6 +610,7 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) override;
@@ -603,9 +621,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
-
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
 
@@ -614,6 +629,10 @@ public:
 
   // nsIDOMCSSSupportsRule interface
   NS_DECL_NSIDOMCSSSUPPORTSRULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
@@ -655,13 +674,15 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
   virtual int32_t GetType() const override;
+  using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
   // nsIDOMCSSCounterStyleRule
   NS_DECL_NSIDOMCSSCOUNTERSTYLERULE
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   // This function is only used to check whether a non-empty value, which has
   // been accepted by parser, is valid for the given system and descriptor.
