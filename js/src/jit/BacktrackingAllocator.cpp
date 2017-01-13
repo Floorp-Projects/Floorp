@@ -419,7 +419,7 @@ BacktrackingAllocator::init()
         registers[reg.code()].allocatable = true;
     }
     while (!remainingRegisters.emptyFloat()) {
-        AnyRegister reg = AnyRegister(remainingRegisters.takeAnyFloat<RegTypeName::Any>());
+        AnyRegister reg = AnyRegister(remainingRegisters.takeAnyFloat());
         registers[reg.code()].allocatable = true;
     }
 
