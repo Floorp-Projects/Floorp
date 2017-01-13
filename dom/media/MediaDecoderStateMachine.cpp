@@ -3315,14 +3315,6 @@ MediaDecoderStateMachine::ResetDecode(TrackSet aTracks)
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("MediaDecoderStateMachine::Reset");
 
-  // We should be resetting because we're seeking, shutting down, or entering
-  // dormant state. We could also be in the process of going dormant, and have
-  // just switched to exiting dormant before we finished entering dormant,
-  // hence the DECODING_NONE case below.
-  MOZ_ASSERT(IsShutdown() ||
-             mState == DECODER_STATE_SEEKING ||
-             mState == DECODER_STATE_DORMANT);
-
   // Assert that aTracks specifies to reset the video track because we
   // don't currently support resetting just the audio track.
   MOZ_ASSERT(aTracks.contains(TrackInfo::kVideoTrack));
