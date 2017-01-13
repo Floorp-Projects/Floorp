@@ -95,7 +95,7 @@ MediaSource::IsTypeSupported(const nsAString& aType, DecoderDoctorDiagnostics* a
 
   Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
   if (!contentType) {
-    return NS_ERROR_DOM_TYPE_ERR;
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }
 
   if (DecoderTraits::CanHandleContentType(*contentType, aDiagnostics)
