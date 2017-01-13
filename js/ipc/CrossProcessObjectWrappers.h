@@ -49,11 +49,14 @@ class CrossProcessCpowHolder : public CpowHolder
     CrossProcessCpowHolder(dom::CPOWManagerGetter* managerGetter,
                            const InfallibleTArray<CpowEntry>& cpows);
 
+    ~CrossProcessCpowHolder();
+
     bool ToObject(JSContext* cx, JS::MutableHandleObject objp);
 
   private:
     CPOWManager* js_;
     const InfallibleTArray<CpowEntry>& cpows_;
+    bool unwrapped_;
 };
 
 CPOWManager*
