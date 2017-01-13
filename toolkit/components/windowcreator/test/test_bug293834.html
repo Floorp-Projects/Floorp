@@ -27,10 +27,10 @@ var textareas = ["a-textbox", "a-prefilled-textbox"];
 var textboxes = ["a-text", "a-prefilled-text"];
 
 function fillform(doc) {
-    for (var i in textareas) {
+    for (let i in textareas) {
         doc.getElementById(textareas[i]).textContent += "form state";
     }
-    for (var i in textboxes) {
+    for (let i in textboxes) {
         doc.getElementById(textboxes[i]).value += "form state";
     }
     doc.getElementById('a-checkbox').checked = true;
@@ -39,15 +39,15 @@ function fillform(doc) {
 }
 
 function checkform(doc) {
-    for (var i in textareas) {
+    for (let i in textareas) {
         var textContent = doc.getElementById(textareas[i]).textContent;
         ok(/form\s+state/m.test(textContent),
-            "Modified textarea "+textareas[i]+" form state not preserved!");
+            "Modified textarea " + textareas[i] + " form state not preserved!");
     }
-    for (var i in textboxes) {
+    for (let i in textboxes) {
         var value = doc.getElementById(textboxes[i]).value;
         ok(/form\s+state/m.test(value),
-            "Modified textbox "+textboxes[i]+" form state not preserved!");
+            "Modified textbox " + textboxes[i] + " form state not preserved!");
     }
     ok(doc.getElementById('a-checkbox').checked,
         "Modified checkbox checked state not preserved!");
@@ -70,7 +70,7 @@ function getFileContents(aFile) {
     const PR_RDONLY = 0x01;
     var fileStream = Cc["@mozilla.org/network/file-input-stream;1"]
                         .createInstance(Ci.nsIFileInputStream);
-    fileStream.init(aFile, PR_RDONLY, 0400,
+    fileStream.init(aFile, PR_RDONLY, 0o400,
                     Ci.nsIFileInputStream.DELETE_ON_CLOSE
                   | Ci.nsIFileInputStream.CLOSE_ON_EOF);
     var inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
@@ -80,7 +80,7 @@ function getFileContents(aFile) {
     do {
         var str = inputStream.read(inputStream.available());
         data += str;
-    } while(str.length > 0);
+    } while (str.length > 0);
 
     return data;
 }

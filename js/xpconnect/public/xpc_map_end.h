@@ -85,6 +85,13 @@ XPC_MAP_CLASSNAME::GetClass()
     return &klass;
 }
 
+// virtual
+const JSClass*
+XPC_MAP_CLASSNAME::GetJSClass()
+{
+    return Jsvalify(GetClass());
+}
+
 /**************************************************************/
 
 #ifndef XPC_MAP_WANT_PRECREATE
