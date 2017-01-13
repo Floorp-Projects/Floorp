@@ -16,7 +16,6 @@ EXTRA_JS_MODULES += [
     'AttributionCode.jsm',
     'BrowserUITelemetry.jsm',
     'BrowserUsageTelemetry.jsm',
-    'CaptivePortalWatcher.jsm',
     'CastingApps.jsm',
     'ContentClick.jsm',
     'ContentCrashHandlers.jsm',
