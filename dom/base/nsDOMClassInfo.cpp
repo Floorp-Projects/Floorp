@@ -74,7 +74,6 @@
 #include "nsMemory.h"
 
 // includes needed for the prototype chain interfaces
-#include "nsIDOMCSSKeyframeRule.h"
 #include "nsIDOMCSSKeyframesRule.h"
 #include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -220,9 +219,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 
-  NS_DEFINE_CLASSINFO_DATA(CSSKeyframeRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
   NS_DEFINE_CLASSINFO_DATA(CSSKeyframesRule, nsCSSRuleSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_PRECREATE)
@@ -544,11 +540,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIProcessScriptLoader)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageListenerManager)
     DOM_CLASSINFO_MAP_ENTRY(nsIMessageSender)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSKeyframeRule, nsIDOMCSSKeyframeRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSKeyframeRule)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSKeyframesRule, nsIDOMCSSKeyframesRule)
