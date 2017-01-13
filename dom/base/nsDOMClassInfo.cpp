@@ -190,14 +190,18 @@ static nsDOMClassInfoData sClassInfoData[] = {
   // Misc Core related classes
 
   // CSS classes
-  NS_DEFINE_CLASSINFO_DATA(CSSStyleRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSImportRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSMediaRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSNameSpaceRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSStyleRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
+  NS_DEFINE_CLASSINFO_DATA(CSSImportRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
+  NS_DEFINE_CLASSINFO_DATA(CSSMediaRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
+  NS_DEFINE_CLASSINFO_DATA(CSSNameSpaceRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
   // XUL classes
 #ifdef MOZ_XUL
@@ -221,14 +225,17 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
 
-  NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
-  NS_DEFINE_CLASSINFO_DATA(CSSSupportsRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSSupportsRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
-  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
   NS_DEFINE_CHROME_ONLY_CLASSINFO_DATA(ContentFrameMessageManager,
                                        nsMessageManagerSH<nsEventTargetSH>,
@@ -246,19 +253,24 @@ static nsDOMClassInfoData sClassInfoData[] = {
                                        DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
 
-  NS_DEFINE_CLASSINFO_DATA(CSSKeyframeRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(CSSKeyframesRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSKeyframeRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
+  NS_DEFINE_CLASSINFO_DATA(CSSKeyframesRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
-  NS_DEFINE_CLASSINFO_DATA(CSSCounterStyleRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSCounterStyleRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
-  NS_DEFINE_CLASSINFO_DATA(CSSPageRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSPageRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
-  NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CSSFontFeatureValuesRule, nsCSSRuleSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_PRECREATE)
 
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULControlElement, nsDOMGenericSH,
                                       DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1982,6 +1994,39 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
 {
   DOMEventTargetHelper* target = DOMEventTargetHelper::FromSupports(aNative);
   target->PreserveWrapper(aNative);
+}
+
+// CSS rule helper
+NS_IMETHODIMP
+nsCSSRuleSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                       JSObject *aGlobalObj, JSObject **parentObj)
+{
+  JS::Rooted<JSObject*> globalObj(cx, aGlobalObj);
+  nsCOMPtr<nsIDOMCSSRule> rule = do_QueryInterface(nativeObj);
+  if (!rule) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  css::Rule* cssRule = rule->GetCSSRule();
+  if (!cssRule) {
+    // A DOMCSSStyleRule whose actual underlying rule has gone away.  There
+    // isn't much a caller can do with this thing anyway, and only chrome code
+    // can get its hands on it to start with, so just wrap in the current
+    // global.
+    *parentObj = globalObj;
+    return NS_OK;
+  }
+  nsIDocument* doc = cssRule->GetDocument();
+  if (!doc) {
+    *parentObj = globalObj;
+    return NS_OK;
+  }
+
+  nsIGlobalObject* global = doc->GetScopeObject();
+  if (!global) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  *parentObj = global->GetGlobalJSObject();
+  return *parentObj ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // nsIDOMEventListener::HandleEvent() 'this' converter helper
