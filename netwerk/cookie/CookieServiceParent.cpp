@@ -18,8 +18,7 @@
 
 using namespace mozilla::ipc;
 using mozilla::BasePrincipal;
-using mozilla::NeckoOriginAttributes;
-using mozilla::PrincipalOriginAttributes;
+using mozilla::OriginAttributes;
 using mozilla::dom::PContentParent;
 using mozilla::net::NeckoParent;
 
@@ -28,11 +27,11 @@ namespace {
 // Ignore failures from this function, as they only affect whether we do or
 // don't show a dialog box in private browsing mode if the user sets a pref.
 void
-CreateDummyChannel(nsIURI* aHostURI, NeckoOriginAttributes& aAttrs, bool aIsPrivate,
+CreateDummyChannel(nsIURI* aHostURI, OriginAttributes& aAttrs, bool aIsPrivate,
                    nsIChannel** aChannel)
 {
-  PrincipalOriginAttributes attrs;
-  attrs.InheritFromNecko(aAttrs);
+  OriginAttributes attrs;
+  attrs.Inherit(aAttrs);
 
   nsCOMPtr<nsIPrincipal> principal =
     BasePrincipal::CreateCodebasePrincipal(aHostURI, attrs);
@@ -94,7 +93,7 @@ mozilla::ipc::IPCResult
 CookieServiceParent::RecvGetCookieString(const URIParams& aHost,
                                          const bool& aIsForeign,
                                          const bool& aFromHttp,
-                                         const NeckoOriginAttributes& aAttrs,
+                                         const OriginAttributes& aAttrs,
                                          nsCString* aResult)
 {
   if (!mCookieService)
@@ -118,7 +117,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
                                          const nsCString& aCookieString,
                                          const nsCString& aServerTime,
                                          const bool& aFromHttp,
-                                         const NeckoOriginAttributes& aAttrs)
+                                         const OriginAttributes& aAttrs)
 {
   if (!mCookieService)
     return IPC_OK();
@@ -139,7 +138,7 @@ CookieServiceParent::RecvSetCookieString(const URIParams& aHost,
   // with aIsForeign before we have to worry about nsCookiePermission trying
   // to use the channel to inspect it.
   nsCOMPtr<nsIChannel> dummyChannel;
-  CreateDummyChannel(hostURI, const_cast<NeckoOriginAttributes&>(aAttrs),
+  CreateDummyChannel(hostURI, const_cast<OriginAttributes&>(aAttrs),
                      isPrivate, getter_AddRefs(dummyChannel));
 
   // NB: dummyChannel could be null if something failed in CreateDummyChannel.

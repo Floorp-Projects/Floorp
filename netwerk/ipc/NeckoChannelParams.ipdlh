@@ -15,7 +15,7 @@ include IPCStream;
 include InputStreamParams;
 include PBackgroundSharedTypes;
 
-using mozilla::NeckoOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
@@ -47,7 +47,7 @@ struct LoadInfoArgs
   bool                  enforceSecurity;
   bool                  initialSecurityCheckDone;
   bool                  isInThirdPartyContext;
-  NeckoOriginAttributes originAttributes;
+  OriginAttributes      originAttributes;
   PrincipalInfo[]       redirectChainIncludingInternalRedirects;
   PrincipalInfo[]       redirectChain;
   nsCString[]           corsUnsafeHeaders;

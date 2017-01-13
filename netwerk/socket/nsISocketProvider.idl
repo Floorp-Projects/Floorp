@@ -7,8 +7,8 @@
 
 interface nsIProxyInfo;
 [ptr] native PRFileDescStar(struct PRFileDesc);
-native NeckoOriginAttributes(mozilla::NeckoOriginAttributes);
-[ref] native const_OriginAttributesRef(const mozilla::NeckoOriginAttributes);
+native OriginAttributes(mozilla::OriginAttributes);
+[ref] native const_OriginAttributesRef(const mozilla::OriginAttributes);
 
 %{ C++
 #include "mozilla/BasePrincipal.h"

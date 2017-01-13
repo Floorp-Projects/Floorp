@@ -176,6 +176,9 @@ JS_ShutDown(void)
 
     js::FinishDateTimeState();
 
+    if (!JSRuntime::hasLiveRuntimes())
+        js::jit::AssertAllocatedExecutableBytesIsZero();
+
     libraryInitState = InitState::ShutDown;
 }
 

@@ -45,10 +45,6 @@
   fill: currentColor;
 }
 
-.notification-anchor-icon:not(.plugin-blocked):not(:hover) {
-  opacity: .8;
-}
-
 /* INDIVIDUAL NOTIFICATIONS */
 
 .popup-notification-icon[popupid="web-notifications"],

@@ -532,7 +532,7 @@ PresentationRequest::IsPrioriAuthenticatedURL(const nsAString& aUrl)
     return true;
   }
 
-  PrincipalOriginAttributes attrs;
+  OriginAttributes attrs;
   nsCOMPtr<nsIPrincipal> principal =
     BasePrincipal::CreateCodebasePrincipal(uri, attrs);
   if (NS_WARN_IF(!principal)) {

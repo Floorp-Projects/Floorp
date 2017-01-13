@@ -21,7 +21,7 @@
 
 #include "ocspt.h" // Must be included after pk11func.h.
 
-using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 
 class nsILoadGroup;
 
@@ -102,7 +102,7 @@ public:
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
-                          const NeckoOriginAttributes& originAttributes,
+                          const OriginAttributes& originAttributes,
                           const PRIntervalTime timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest);
 
@@ -127,7 +127,7 @@ public:
   nsCString mPostData;
   nsCString mPostContentType;
 
-  NeckoOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 
   PRIntervalTime mTimeoutInterval;
 
@@ -162,7 +162,7 @@ public:
                           const char* httpProtocolVariant,
                           const char* pathAndQueryString,
                           const char* httpRequestMethod,
-                          const NeckoOriginAttributes& originAttributes,
+                          const OriginAttributes& originAttributes,
                           const PRIntervalTime timeout,
                   /*out*/ nsNSSHttpRequestSession** pRequest)
   {

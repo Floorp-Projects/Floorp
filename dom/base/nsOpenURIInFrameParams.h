@@ -9,7 +9,7 @@
 #include "nsString.h"
 
 namespace mozilla {
-class DocShellOriginAttributes;
+class OriginAttributes;
 }
 
 class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams
@@ -18,12 +18,12 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOPENURIINFRAMEPARAMS
 
-  explicit nsOpenURIInFrameParams(const mozilla::DocShellOriginAttributes& aOriginAttributes);
+  explicit nsOpenURIInFrameParams(const mozilla::OriginAttributes& aOriginAttributes);
 
 private:
   ~nsOpenURIInFrameParams();
 
-  mozilla::DocShellOriginAttributes mOpenerOriginAttributes;
+  mozilla::OriginAttributes mOpenerOriginAttributes;
   nsString mReferrer;
   bool mIsPrivate;
 };

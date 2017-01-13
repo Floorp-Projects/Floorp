@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class PrincipalOriginAttributes;
+class OriginAttributes;
 
 namespace ipc {
 class PrincipalInfo;
@@ -42,7 +42,7 @@ public:
                              ServiceWorkerRegistrationData& aData);
 
   void PropagateSoftUpdate(uint64_t aParentID,
-                           const PrincipalOriginAttributes& aOriginAttributes,
+                           const OriginAttributes& aOriginAttributes,
                            const nsAString& aScope);
 
   void PropagateUnregister(uint64_t aParentID,

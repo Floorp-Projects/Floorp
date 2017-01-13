@@ -143,7 +143,7 @@ FTPChannelParent::DoAsyncOpen(const URIParams& aURI,
     return SendFailedAsyncOpen(rv);
   }
 
-  NeckoOriginAttributes attrs;
+  OriginAttributes attrs;
   rv = loadInfo->GetOriginAttributes(&attrs);
   if (NS_FAILED(rv)) {
     return SendFailedAsyncOpen(rv);

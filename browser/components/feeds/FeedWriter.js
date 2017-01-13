@@ -881,8 +881,8 @@ FeedWriter.prototype = {
                           .QueryInterface(Ci.nsIDocShell);
     let chan = docShell.currentDocumentChannel;
 
-    // We probably need to call InheritFromDocShellToDoc for this, but right now
-    // we can't call it from JS.
+    // We probably need to call Inherit() for this, but right now we can't call
+    // it from JS.
     let attrs = docShell.getOriginAttributes();
     let ssm = Services.scriptSecurityManager;
     let nullPrincipal = ssm.createNullPrincipal(attrs);

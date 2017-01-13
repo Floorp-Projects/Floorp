@@ -2305,22 +2305,20 @@ nsHttpHandler::SpeculativeConnectInternal(nsIURI *aURI,
     nsAutoCString username;
     aURI->GetUsername(username);
 
-    NeckoOriginAttributes neckoOriginAttributes;
+    OriginAttributes originAttributes;
     // If the principal is given, we use the originAttributes from this
     // principal. Otherwise, we use the originAttributes from the
     // loadContext.
     if (aPrincipal) {
-        neckoOriginAttributes.InheritFromDocToNecko(
-            aPrincipal->OriginAttributesRef());
+        originAttributes.Inherit(aPrincipal->OriginAttributesRef());
     } else if (loadContext) {
-        DocShellOriginAttributes docshellOriginAttributes;
-        loadContext->GetOriginAttributes(docshellOriginAttributes);
-        neckoOriginAttributes.InheritFromDocShellToNecko(docshellOriginAttributes);
+        loadContext->GetOriginAttributes(originAttributes);
+        originAttributes.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
     }
 
     auto *ci =
         new nsHttpConnectionInfo(host, port, EmptyCString(), username, nullptr,
-                                 neckoOriginAttributes, usingSSL);
+                                 originAttributes, usingSSL);
     ci->SetAnonymous(anonymous);
 
     return SpeculativeConnect(ci, aCallbacks);

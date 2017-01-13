@@ -417,7 +417,7 @@ private:
   nsTArray<RefPtr<CacheScriptLoader>> mLoaders;
 
   nsString mCacheName;
-  PrincipalOriginAttributes mOriginAttributes;
+  OriginAttributes mOriginAttributes;
 };
 
 NS_IMPL_ISUPPORTS0(CacheCreator)

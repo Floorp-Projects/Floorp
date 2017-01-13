@@ -410,7 +410,7 @@ namespace CacheStorageEvictHelper {
 
 nsresult ClearStorage(bool const aPrivate,
                       bool const aAnonymous,
-                      NeckoOriginAttributes &aOa)
+                      OriginAttributes &aOa)
 {
   nsresult rv;
 
@@ -436,7 +436,7 @@ nsresult ClearStorage(bool const aPrivate,
   return NS_OK;
 }
 
-nsresult Run(NeckoOriginAttributes &aOa)
+nsresult Run(OriginAttributes &aOa)
 {
   nsresult rv;
 
@@ -553,9 +553,9 @@ CacheObserver::Observe(nsISupports* aSubject,
   }
 
   if (!strcmp(aTopic, "clear-origin-attributes-data")) {
-    NeckoOriginAttributes oa;
+    OriginAttributes oa;
     if (!oa.Init(nsDependentString(aData))) {
-      NS_ERROR("Could not parse NeckoOriginAttributes JSON in clear-origin-attributes-data notification");
+      NS_ERROR("Could not parse OriginAttributes JSON in clear-origin-attributes-data notification");
       return NS_OK;
     }
 
