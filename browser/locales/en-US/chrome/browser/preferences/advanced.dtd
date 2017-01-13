@@ -10,10 +10,10 @@
 
 <!ENTITY useCursorNavigation.label       "Always use the cursor keys to navigate within pages">
 <!ENTITY useCursorNavigation.accesskey   "c">
-<!ENTITY searchStartTyping.label         "Search for text when I start typing">
-<!ENTITY searchStartTyping.accesskey     "x">
-<!ENTITY blockAutoRefresh.label          "Warn me when websites try to redirect or reload the page">
-<!ENTITY blockAutoRefresh.accesskey      "b">
+<!ENTITY searchOnStartTyping.label       "Search for text when you start typing">
+<!ENTITY searchOnStartTyping.accesskey   "x">
+<!ENTITY blockAutoReload.label           "Warn you when websites try to redirect or reload the page">
+<!ENTITY blockAutoReload.accesskey       "b">
 <!ENTITY useOnScreenKeyboard.label       "Show a touch keyboard when necessary">
 <!ENTITY useOnScreenKeyboard.accesskey   "k">
 
@@ -25,8 +25,8 @@
 <!ENTITY useSmoothScrolling.accesskey    "m">
 <!ENTITY allowHWAccel.label              "Use hardware acceleration when available">
 <!ENTITY allowHWAccel.accesskey          "r">
-<!ENTITY checkSpelling.label             "Check my spelling as I type">
-<!ENTITY checkSpelling.accesskey         "t">
+<!ENTITY checkUserSpelling.label         "Check your spelling as you type">
+<!ENTITY checkUserSpelling.accesskey     "t">
 
 <!ENTITY dataChoicesTab.label            "Data Choices">
 
@@ -85,8 +85,8 @@
 <!ENTITY updateApplication.label         "&brandShortName; updates">
 <!ENTITY updateAuto1.label               "Automatically install updates (recommended: improved security)">
 <!ENTITY updateAuto1.accesskey           "A">
-<!ENTITY updateCheck.label               "Check for updates, but let me choose whether to install them">
-<!ENTITY updateCheck.accesskey           "C">
+<!ENTITY updateCheckChoose.label         "Check for updates, but let you choose whether to install them">
+<!ENTITY updateCheckChoose.accesskey     "C">
 <!ENTITY updateManual.label              "Never check for updates (not recommended: security risk)">
 <!ENTITY updateManual.accesskey          "N">
 
@@ -100,10 +100,10 @@
 <!ENTITY enableSearchUpdate.label        "Search Engines">
 <!ENTITY enableSearchUpdate.accesskey    "E">
 
-<!ENTITY offlineNotify.label             "Tell me when a website asks to store data for offline use">
-<!ENTITY offlineNotify.accesskey         "T">
-<!ENTITY offlineNotifyExceptions.label   "Exceptions…">
-<!ENTITY offlineNotifyExceptions.accesskey "x">
+<!ENTITY offlineStorageNotify.label               "Tell you when a website asks to store data for offline use">
+<!ENTITY offlineStorageNotify.accesskey           "T">
+<!ENTITY offlineStorageNotifyExceptions.label     "Exceptions…">
+<!ENTITY offlineStorageNotifyExceptions.accesskey "x">
 
 <!ENTITY offlineAppsList2.label          "The following websites are allowed to store data for offline use:">
 <!ENTITY offlineAppsList.height          "7em">
@@ -112,12 +112,12 @@
 <!ENTITY offlineAppRemove.confirm        "Remove offline data">
 
 <!ENTITY certificateTab.label            "Certificates">
-<!ENTITY certSelection.label             "Requests">
-<!ENTITY certSelection.description       "When a server requests my personal certificate:">
-<!ENTITY certs.auto                      "Select one automatically">
-<!ENTITY certs.auto.accesskey            "S">
-<!ENTITY certs.ask                       "Ask me every time">
-<!ENTITY certs.ask.accesskey             "A">
+<!ENTITY certPersonal.label              "Requests">
+<!ENTITY certPersonal.description        "When a server requests your personal certificate:">
+<!ENTITY selectCerts.auto                "Select one automatically">
+<!ENTITY selectCerts.auto.accesskey      "S">
+<!ENTITY selectCerts.ask                 "Ask you every time">
+<!ENTITY selectCerts.ask.accesskey       "A">
 <!ENTITY enableOCSP.label                "Query OCSP responder servers to confirm the current validity of certificates">
 <!ENTITY enableOCSP.accesskey            "Q">
 <!ENTITY viewCerts.label                 "View Certificates">

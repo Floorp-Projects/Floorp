@@ -8,14 +8,14 @@
 <!ENTITY newWindowsAsTabs.label       "Open new windows in a new tab instead">
 <!ENTITY newWindowsAsTabs.accesskey   "w">
 
-<!ENTITY warnCloseMultipleTabs.label  "Warn me when closing multiple tabs">
-<!ENTITY warnCloseMultipleTabs.accesskey  "m">
+<!ENTITY warnOnCloseMultipleTabs.label      "Warn you when closing multiple tabs">
+<!ENTITY warnOnCloseMultipleTabs.accesskey  "m">
 
-<!ENTITY warnOpenManyTabs.label       "Warn me when opening multiple tabs might slow down &brandShortName;">
-<!ENTITY warnOpenManyTabs.accesskey   "d">
+<!ENTITY warnOnOpenManyTabs.label       "Warn you when opening multiple tabs might slow down &brandShortName;">
+<!ENTITY warnOnOpenManyTabs.accesskey   "d">
 
-<!ENTITY switchToNewTabs.label        "When I open a link in a new tab, switch to it immediately">
-<!ENTITY switchToNewTabs.accesskey    "h">
+<!ENTITY switchLinksToNewTabs.label        "When you open a link in a new tab, switch to it immediately">
+<!ENTITY switchLinksToNewTabs.accesskey    "h">
 
 <!ENTITY showTabsInTaskbar.label          "Show tab previews in the Windows taskbar">
 <!ENTITY showTabsInTaskbar.accesskey      "k">
