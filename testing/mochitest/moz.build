@@ -168,6 +168,9 @@ TEST_HARNESS_FILES.testing.mochitest.websocketprocessbridge += [
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Mochitest")
 
+with Files("*remote*"):
+    BUG_COMPONENT = ("Firefox for Android", "Testing")
+
 with Files("chrome/**"):
     BUG_COMPONENT = ("Testing", "Mochitest Chrome")
 

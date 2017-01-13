@@ -44,7 +44,12 @@ public:
 
     RefPtr<dom::ServiceWorkerRegistrar> service =
       dom::ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(service);
+
+    // Shutdown during the process of trying to update the registrar.  Give
+    // up on this modification.
+    if (!service) {
+      return NS_OK;
+    }
 
     service->RegisterServiceWorker(mData);
 
@@ -84,7 +89,12 @@ public:
 
     RefPtr<dom::ServiceWorkerRegistrar> service =
       dom::ServiceWorkerRegistrar::Get();
-    MOZ_ASSERT(service);
+
+    // Shutdown during the process of trying to update the registrar.  Give
+    // up on this modification.
+    if (!service) {
+      return NS_OK;
+    }
 
     service->UnregisterServiceWorker(mPrincipalInfo,
                                      NS_ConvertUTF16toUTF8(mScope));

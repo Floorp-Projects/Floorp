@@ -119,8 +119,8 @@ typedef int64_t Microseconds;
 #define ENSURE(condition, ret) \
 { if (!(condition)) { LOG("##condition## FAILED %S:%d\n", __FILE__, __LINE__); return ret; } }
 
-#define GMP_SUCCEEDED(x) ((x) == GMPNoErr)
-#define GMP_FAILED(x) ((x) != GMPNoErr)
+#define STATUS_SUCCEEDED(x) ((x) == Status::kSuccess)
+#define STATUS_FAILED(x) ((x) != Status::kSuccess)
 
 #define MFPLAT_FUNC(_func, _dllname) \
   extern decltype(::_func)* _func;
