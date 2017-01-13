@@ -1239,14 +1239,39 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
             LOCAL_GLX_DOUBLEBUFFER, False,
             0
         };
-        cfgs = sGLXLibrary.xChooseFBConfig(display,
-                                           screen,
-                                           attribs,
-                                           &numConfigs);
+        const int webrenderAttribs[] = {
+            LOCAL_GLX_DOUBLEBUFFER, False,
+            LOCAL_GLX_DEPTH_SIZE, 24,
+            0
+        };
+
+        if (gfxPrefs::WebRenderEnabled()) {
+          cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                             screen,
+                                             webrenderAttribs,
+                                             &numConfigs);
+        } else {
+          cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                             screen,
+                                             attribs,
+                                             &numConfigs);
+        }
     } else {
-        cfgs = sGLXLibrary.xGetFBConfigs(display,
-                                         screen,
-                                         &numConfigs);
+        const int webrenderAttribs[] = {
+            LOCAL_GLX_DEPTH_SIZE, 24,
+            0
+        };
+
+        if (gfxPrefs::WebRenderEnabled()) {
+          cfgs = sGLXLibrary.xChooseFBConfig(display,
+                                             screen,
+                                             webrenderAttribs,
+                                             &numConfigs);
+        } else {
+          cfgs = sGLXLibrary.xGetFBConfigs(display,
+                                           screen,
+                                           &numConfigs);
+        }
     }
 
     if (!cfgs) {
@@ -1268,13 +1293,14 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
     printf("[GLX] window %lx has VisualID 0x%lx\n", window, windowVisualID);
 #endif
 
-    for (int i = 0; i < numConfigs; i++) {
-        int visid = X11None;
-        sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
-        if (!visid) {
-            continue;
-        }
-        if (sGLXLibrary.IsATI()) {
+    if (gfxPrefs::WebRenderEnabled()) {
+        for (int i = 0; i < numConfigs; i++) {
+            int visid = X11None;
+            sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+            if (!visid) {
+                continue;
+            }
+
             int depth;
             Visual* visual;
             FindVisualAndDepth(display, visid, &visual, &depth);
@@ -1284,11 +1310,30 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
                 *out_visid = visid;
                 return true;
             }
-        } else {
-            if (windowVisualID == static_cast<VisualID>(visid)) {
-                *out_config = cfgs[i];
-                *out_visid = visid;
-                return true;
+        }
+    } else {
+        for (int i = 0; i < numConfigs; i++) {
+            int visid = X11None;
+            sGLXLibrary.xGetFBConfigAttrib(display, cfgs[i], LOCAL_GLX_VISUAL_ID, &visid);
+            if (!visid) {
+                continue;
+            }
+            if (sGLXLibrary.IsATI()) {
+                int depth;
+                Visual* visual;
+                FindVisualAndDepth(display, visid, &visual, &depth);
+                if (depth == windowAttrs.depth &&
+                    AreCompatibleVisuals(windowAttrs.visual, visual)) {
+                    *out_config = cfgs[i];
+                    *out_visid = visid;
+                    return true;
+                }
+            } else {
+                if (windowVisualID == static_cast<VisualID>(visid)) {
+                    *out_config = cfgs[i];
+                    *out_visid = visid;
+                    return true;
+                }
             }
         }
     }
