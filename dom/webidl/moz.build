@@ -94,6 +94,7 @@ WEBIDL_FILES = [
     'CSSFontFeatureValuesRule.webidl',
     'CSSGroupingRule.webidl',
     'CSSImportRule.webidl',
+    'CSSKeyframeRule.webidl',
     'CSSLexer.webidl',
     'CSSMediaRule.webidl',
     'CSSMozDocumentRule.webidl',
