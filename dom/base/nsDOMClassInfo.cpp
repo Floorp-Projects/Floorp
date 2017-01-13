@@ -69,7 +69,6 @@
 #include "nsIDOMEventTarget.h"
 
 // CSS related includes
-#include "nsCSSRules.h"
 #include "nsIDOMCSSRule.h"
 #include "nsMemory.h"
 
@@ -1891,32 +1890,6 @@ nsEventTargetSH::PreserveWrapper(nsISupports *aNative)
 {
   DOMEventTargetHelper* target = DOMEventTargetHelper::FromSupports(aNative);
   target->PreserveWrapper(aNative);
-}
-
-// CSS rule helper
-NS_IMETHODIMP
-nsCSSRuleSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
-                       JSObject *aGlobalObj, JSObject **parentObj)
-{
-  JS::Rooted<JSObject*> globalObj(cx, aGlobalObj);
-  nsCOMPtr<nsIDOMCSSRule> rule = do_QueryInterface(nativeObj);
-  if (!rule) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  css::Rule* cssRule = rule->GetCSSRule();
-  MOZ_ASSERT(cssRule);
-  nsIDocument* doc = cssRule->GetDocument();
-  if (!doc) {
-    *parentObj = globalObj;
-    return NS_OK;
-  }
-
-  nsIGlobalObject* global = doc->GetScopeObject();
-  if (!global) {
-    return NS_ERROR_UNEXPECTED;
-  }
-  *parentObj = global->GetGlobalJSObject();
-  return *parentObj ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // nsIDOMEventListener::HandleEvent() 'this' converter helper
