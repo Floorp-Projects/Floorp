@@ -48,8 +48,8 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
 /* static */ already_AddRefed<nsNullPrincipal>
 nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell)
 {
-  PrincipalOriginAttributes attrs;
-  attrs.InheritFromDocShellToDoc(nsDocShell::Cast(aDocShell)->GetOriginAttributes(), nullptr);
+  OriginAttributes attrs;
+  attrs.Inherit(nsDocShell::Cast(aDocShell)->GetOriginAttributes());
 
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
   nsresult rv = nullPrin->Init(attrs);
@@ -58,8 +58,7 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIDocShell* aDocShell)
 }
 
 /* static */ already_AddRefed<nsNullPrincipal>
-nsNullPrincipal::Create(const PrincipalOriginAttributes& aOriginAttributes,
-                        nsIURI* aURI)
+nsNullPrincipal::Create(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
 {
   RefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
   nsresult rv = nullPrin->Init(aOriginAttributes, aURI);
@@ -69,8 +68,7 @@ nsNullPrincipal::Create(const PrincipalOriginAttributes& aOriginAttributes,
 }
 
 nsresult
-nsNullPrincipal::Init(const PrincipalOriginAttributes& aOriginAttributes,
-                      nsIURI* aURI)
+nsNullPrincipal::Init(const OriginAttributes& aOriginAttributes, nsIURI* aURI)
 {
   mOriginAttributes = aOriginAttributes;
 

@@ -78,7 +78,7 @@ DigestLength(UniquePK11Context& context, uint32_t length)
 // cryptographically-secure hash function).
 static SECStatus
 CertIDHash(SHA384Buffer& buf, const CertID& certID,
-           const NeckoOriginAttributes& originAttributes)
+           const OriginAttributes& originAttributes)
 {
   UniquePK11Context context(PK11_CreateDigestContext(SEC_OID_SHA384));
   if (!context) {
@@ -136,7 +136,7 @@ CertIDHash(SHA384Buffer& buf, const CertID& certID,
 
 Result
 OCSPCache::Entry::Init(const CertID& aCertID,
-                       const NeckoOriginAttributes& aOriginAttributes)
+                       const OriginAttributes& aOriginAttributes)
 {
   SECStatus srv = CertIDHash(mIDHash, aCertID, aOriginAttributes);
   if (srv != SECSuccess) {
@@ -159,7 +159,7 @@ OCSPCache::~OCSPCache()
 // found.
 bool
 OCSPCache::FindInternal(const CertID& aCertID,
-                        const NeckoOriginAttributes& aOriginAttributes,
+                        const OriginAttributes& aOriginAttributes,
                         /*out*/ size_t& index,
                         const MutexAutoLock& /* aProofOfLock */)
 {
@@ -187,7 +187,7 @@ OCSPCache::FindInternal(const CertID& aCertID,
 
 static inline void
 LogWithCertID(const char* aMessage, const CertID& aCertID,
-              const NeckoOriginAttributes& aOriginAttributes)
+              const OriginAttributes& aOriginAttributes)
 {
   NS_ConvertUTF16toUTF8 firstPartyDomain(aOriginAttributes.mFirstPartyDomain);
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
@@ -209,7 +209,7 @@ OCSPCache::MakeMostRecentlyUsed(size_t aIndex,
 
 bool
 OCSPCache::Get(const CertID& aCertID,
-               const NeckoOriginAttributes& aOriginAttributes,
+               const OriginAttributes& aOriginAttributes,
                Result& aResult, Time& aValidThrough)
 {
   MutexAutoLock lock(mMutex);
@@ -230,7 +230,7 @@ OCSPCache::Get(const CertID& aCertID,
 
 Result
 OCSPCache::Put(const CertID& aCertID,
-               const NeckoOriginAttributes& aOriginAttributes,
+               const OriginAttributes& aOriginAttributes,
                Result aResult, Time aThisUpdate, Time aValidThrough)
 {
   MutexAutoLock lock(mMutex);

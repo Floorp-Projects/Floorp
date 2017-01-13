@@ -424,6 +424,12 @@ public:
     return mEncrypted;
   }
 
+  void Reset()
+  {
+    mEncrypted = false;
+    mInitDatas.Clear();
+  }
+
   template<typename AInitDatas>
   void AddInitData(const nsAString& aType, AInitDatas&& aInitData)
   {

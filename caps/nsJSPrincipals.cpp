@@ -126,7 +126,7 @@ nsJSPrincipals::ReadPrincipals(JSContext* aCx, JSStructuredCloneReader* aReader,
 
 static bool
 ReadSuffixAndSpec(JSStructuredCloneReader* aReader,
-                  PrincipalOriginAttributes& aAttrs,
+                  OriginAttributes& aAttrs,
                   nsACString& aSpec)
 {
     uint32_t suffixLength, specLength;
@@ -160,7 +160,7 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
     if (aTag == SCTAG_DOM_SYSTEM_PRINCIPAL) {
         aInfo = SystemPrincipalInfo();
     } else if (aTag == SCTAG_DOM_NULL_PRINCIPAL) {
-        PrincipalOriginAttributes attrs;
+        OriginAttributes attrs;
         nsAutoCString spec;
         if (!ReadSuffixAndSpec(aReader, attrs, spec)) {
             return false;
@@ -189,7 +189,7 @@ ReadPrincipalInfo(JSStructuredCloneReader* aReader,
 
         aInfo = expanded;
     } else if (aTag == SCTAG_DOM_CONTENT_PRINCIPAL) {
-        PrincipalOriginAttributes attrs;
+        OriginAttributes attrs;
         nsAutoCString spec;
         if (!ReadSuffixAndSpec(aReader, attrs, spec)) {
             return false;
@@ -237,7 +237,7 @@ nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
 
 static bool
 WriteSuffixAndSpec(JSStructuredCloneWriter* aWriter,
-                   const PrincipalOriginAttributes& aAttrs,
+                   const OriginAttributes& aAttrs,
                    const nsCString& aSpec)
 {
   nsAutoCString suffix;

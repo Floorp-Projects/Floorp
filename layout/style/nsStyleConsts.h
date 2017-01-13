@@ -314,8 +314,8 @@ enum class StyleOrient : uint8_t {
 // See AnimationEffectReadOnly.webidl
 // and mozilla/dom/AnimationEffectReadOnlyBinding.h
 namespace dom {
-enum class PlaybackDirection : uint32_t;
-enum class FillMode : uint32_t;
+enum class PlaybackDirection : uint8_t;
+enum class FillMode : uint8_t;
 }
 
 // See nsStyleDisplay

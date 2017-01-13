@@ -990,21 +990,21 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
   // to fallback to using StackWalk64 which is slower.
 #if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(V8_HOST_ARCH_X64))
   void *stackEnd = aSample->threadProfile->GetStackTop();
-  bool rv = true;
-  if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)
-    rv = FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0,
-                               maxFrames, &nativeStack,
-                               reinterpret_cast<void**>(aSample->fp), stackEnd);
+  if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd) {
+    FramePointerStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
+                          &nativeStack, reinterpret_cast<void**>(aSample->fp),
+                          stackEnd);
+  }
 #else
   void *platformData = nullptr;
 
   uintptr_t thread = GetThreadHandle(aSample->threadProfile->GetPlatformData());
   MOZ_ASSERT(thread);
-  bool rv = MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames,
-                             &nativeStack, thread, platformData);
+  MozStackWalk(StackWalkCallback, /* skipFrames */ 0, maxFrames, &nativeStack,
+               thread, platformData);
 #endif
-  if (rv)
-    mergeStacksIntoProfile(aProfile, aSample, nativeStack);
+
+  mergeStacksIntoProfile(aProfile, aSample, nativeStack);
 }
 #endif
 

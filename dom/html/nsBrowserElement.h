@@ -22,8 +22,8 @@ struct BrowserElementDownloadOptions;
 struct BrowserElementExecuteScriptOptions;
 class BrowserElementNextPaintEventCallback;
 class DOMRequest;
-enum class BrowserFindCaseSensitivity: uint32_t;
-enum class BrowserFindDirection: uint32_t;
+enum class BrowserFindCaseSensitivity: uint8_t;
+enum class BrowserFindDirection: uint8_t;
 } // namespace dom
 
 class ErrorResult;

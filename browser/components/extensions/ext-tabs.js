@@ -248,7 +248,8 @@ let tabListener = {
   /**
    * Returns a promise that resolves when the tab is ready.
    * Tabs created via the `tabs.create` method are "ready" once the location
-   * changed to the requested URL. Other tabs are always assumed to be ready.
+   * changes to the requested URL. Other tabs are assumed to be ready once their
+   * inner window ID is known.
    *
    * @param {XULElement} tab The <tab> element.
    * @returns {Promise} Resolves with the given tab once ready.
@@ -260,6 +261,7 @@ let tabListener = {
       if (!this.initializingTabs.has(tab) && tab.linkedBrowser.innerWindowID) {
         deferred.resolve(tab);
       } else {
+        this.initTabReady();
         this.tabReadyPromises.set(tab, deferred);
       }
     }
