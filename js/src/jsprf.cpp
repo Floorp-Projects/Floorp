@@ -39,15 +39,6 @@ using namespace js;
 #define VARARGS_ASSIGN(foo, bar)        (foo) = (bar)
 #endif
 
-struct SprintfState : public mozilla::PrintfTarget
-{
-    virtual bool append(const char* sp, size_t len);
-
-    char* base;
-    char* cur;
-    size_t maxlen;
-};
-
 /*
  * Numbered Argument State
  */
@@ -848,113 +839,6 @@ mozilla::PrintfTarget::print(const char* format, ...)
     return result;
 }
 
-/*
- * Stuff routine that automatically grows the js_malloc'd output buffer
- * before it overflows.
- */
-bool
-SprintfState::append(const char* sp, size_t len)
-{
-    ptrdiff_t off;
-    char* newbase;
-    size_t newlen;
-
-    off = cur - base;
-    if (off + len >= maxlen) {
-        /* Grow the buffer */
-        newlen = maxlen + ((len > 32) ? len : 32);
-        newbase = static_cast<char*>(js_realloc(base, newlen));
-        if (!newbase) {
-            /* Ran out of memory */
-            return false;
-        }
-        base = newbase;
-        maxlen = newlen;
-        cur = base + off;
-    }
-
-    /* Copy data */
-    while (len) {
-        --len;
-        *cur++ = *sp++;
-    }
-    MOZ_ASSERT(size_t(cur - base) <= maxlen);
-    return true;
-}
-
-/*
- * sprintf into a js_malloc'd buffer
- */
-char*
-mozilla::Smprintf(const char* fmt, ...)
-{
-    va_list ap;
-    char* rv;
-
-    va_start(ap, fmt);
-    rv = mozilla::Vsmprintf(fmt, ap);
-    va_end(ap);
-    return rv;
-}
-
-/*
- * Free memory allocated, for the caller, by mozilla::Smprintf
- */
-void
-mozilla::SmprintfFree(char* mem)
-{
-    js_free(mem);
-}
-
-char*
-mozilla::Vsmprintf(const char* fmt, va_list ap)
-{
-    SprintfState ss;
-
-    ss.base = 0;
-    ss.cur = 0;
-    ss.maxlen = 0;
-    if (!ss.vprint(fmt, ap)) {
-        js_free(ss.base);
-        return 0;
-    }
-    return ss.base;
-}
-
-char*
-mozilla::SmprintfAppend(char* last, const char* fmt, ...)
-{
-    va_list ap;
-    char* rv;
-
-    va_start(ap, fmt);
-    rv = mozilla::VsmprintfAppend(last, fmt, ap);
-    va_end(ap);
-    return rv;
-}
-
-char*
-mozilla::VsmprintfAppend(char* last, const char* fmt, va_list ap)
-{
-    SprintfState ss;
-
-    if (last) {
-        size_t lastlen = strlen(last);
-        ss.base = last;
-        ss.cur = last + lastlen;
-        ss.maxlen = lastlen;
-    } else {
-        ss.base = 0;
-        ss.cur = 0;
-        ss.maxlen = 0;
-    }
-    if (!ss.vprint(fmt, ap)) {
-        js_free(ss.base);
-        return 0;
-    }
-    return ss.base;
-}
-
 #undef TYPE_SHORT
 #undef TYPE_USHORT
 #undef TYPE_INTN
@@ -979,31 +863,31 @@ JS_PUBLIC_API(char*) JS_smprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char* result = mozilla::Vsmprintf(fmt, ap);
+    char* result = mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
     va_end(ap);
     return result;
 }
 
 JS_PUBLIC_API(void) JS_smprintf_free(char* mem)
 {
-    mozilla::SmprintfFree(mem);
+    mozilla::SmprintfFree<js::SystemAllocPolicy>(mem);
 }
 
 JS_PUBLIC_API(char*) JS_sprintf_append(char* last, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    char* result = mozilla::VsmprintfAppend(last, fmt, ap);
+    char* result = mozilla::VsmprintfAppend<js::SystemAllocPolicy>(last, fmt, ap);
     va_end(ap);
     return result;
 }
 
 JS_PUBLIC_API(char*) JS_vsmprintf(const char* fmt, va_list ap)
 {
-    return mozilla::Vsmprintf(fmt, ap);
+    return mozilla::Vsmprintf<js::SystemAllocPolicy>(fmt, ap);
 }
 
 JS_PUBLIC_API(char*) JS_vsprintf_append(char* last, const char* fmt, va_list ap)
 {
-    return mozilla::VsmprintfAppend(last, fmt, ap);
+    return mozilla::VsmprintfAppend<js::SystemAllocPolicy>(last, fmt, ap);
 }
