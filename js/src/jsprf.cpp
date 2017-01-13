@@ -887,29 +887,29 @@ GrowStuff(SprintfState* ss, const char* sp, size_t len)
 /*
  * sprintf into a js_malloc'd buffer
  */
-JS_PUBLIC_API(char*)
-JS_smprintf(const char* fmt, ...)
+char*
+mozilla::Smprintf(const char* fmt, ...)
 {
     va_list ap;
     char* rv;
 
     va_start(ap, fmt);
-    rv = JS_vsmprintf(fmt, ap);
+    rv = mozilla::Vsmprintf(fmt, ap);
     va_end(ap);
     return rv;
 }
 
 /*
- * Free memory allocated, for the caller, by JS_smprintf
+ * Free memory allocated, for the caller, by mozilla::Smprintf
  */
-JS_PUBLIC_API(void)
-JS_smprintf_free(char* mem)
+void
+mozilla::SmprintfFree(char* mem)
 {
     js_free(mem);
 }
 
-JS_PUBLIC_API(char*)
-JS_vsmprintf(const char* fmt, va_list ap)
+char*
+mozilla::Vsmprintf(const char* fmt, va_list ap)
 {
     SprintfState ss;
 
@@ -924,20 +924,20 @@ JS_vsmprintf(const char* fmt, va_list ap)
     return ss.base;
 }
 
-JS_PUBLIC_API(char*)
-JS_sprintf_append(char* last, const char* fmt, ...)
+char*
+mozilla::SmprintfAppend(char* last, const char* fmt, ...)
 {
     va_list ap;
     char* rv;
 
     va_start(ap, fmt);
-    rv = JS_vsprintf_append(last, fmt, ap);
+    rv = mozilla::VsmprintfAppend(last, fmt, ap);
     va_end(ap);
     return rv;
 }
 
-JS_PUBLIC_API(char*)
-JS_vsprintf_append(char* last, const char* fmt, va_list ap)
+char*
+mozilla::VsmprintfAppend(char* last, const char* fmt, va_list ap)
 {
     SprintfState ss;
 
@@ -978,3 +978,36 @@ JS_vsprintf_append(char* last, const char* fmt, va_list ap)
 #undef FLAG_SPACED
 #undef FLAG_ZEROS
 #undef FLAG_NEG
+
+JS_PUBLIC_API(char*) JS_smprintf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char* result = mozilla::Vsmprintf(fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+JS_PUBLIC_API(void) JS_smprintf_free(char* mem)
+{
+    mozilla::SmprintfFree(mem);
+}
+
+JS_PUBLIC_API(char*) JS_sprintf_append(char* last, const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    char* result = mozilla::VsmprintfAppend(last, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+JS_PUBLIC_API(char*) JS_vsmprintf(const char* fmt, va_list ap)
+{
+    return mozilla::Vsmprintf(fmt, ap);
+}
+
+JS_PUBLIC_API(char*) JS_vsprintf_append(char* last, const char* fmt, va_list ap)
+{
+    return mozilla::VsmprintfAppend(last, fmt, ap);
+}
