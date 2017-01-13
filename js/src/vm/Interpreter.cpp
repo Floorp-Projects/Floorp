@@ -1174,13 +1174,19 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             SettleOnTryNote(cx, tn, ei, regs);
             return FinallyContinuation;
 
-          case JSTRY_FOR_IN: {
+          case JSTRY_FOR_IN:
+          case JSTRY_ITERCLOSE: {
             /* This is similar to JSOP_ENDITER in the interpreter loop. */
             DebugOnly<jsbytecode*> pc = regs.fp()->script()->main() + tn->start + tn->length;
-            MOZ_ASSERT(JSOp(*pc) == JSOP_ENDITER);
+            MOZ_ASSERT_IF(tn->kind == JSTRY_FOR_IN, JSOp(*pc) == JSOP_ENDITER);
             Value* sp = regs.spForStackDepth(tn->stackDepth);
             RootedObject obj(cx, &sp[-1].toObject());
-            if (!UnwindIteratorForException(cx, obj)) {
+            bool ok;
+            if (tn->kind == JSTRY_FOR_IN)
+                ok = UnwindIteratorForException(cx, obj);
+            else
+                ok = IteratorCloseForException(cx, obj);
+            if (!ok) {
                 // We should only settle on the note only if
                 // UnwindIteratorForException itself threw, as
                 // onExceptionUnwind should be called anew with the new
@@ -1188,33 +1194,6 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
                 // settle to avoid infinitely handling the same exception.
                 SettleOnTryNote(cx, tn, ei, regs);
                 return ErrorReturnContinuation;
-            }
-            break;
-          }
-
-          case JSTRY_ITERCLOSE: {
-            // The iterator object is at the top of the stack.
-            Value* sp = regs.spForStackDepth(tn->stackDepth);
-            RootedObject iterObject(cx, &sp[-1].toObject());
-            if (!IteratorCloseForException(cx, iterObject)) {
-                SettleOnTryNote(cx, tn, ei, regs);
-                return ErrorReturnContinuation;
-            }
-            break;
-          }
-
-          case JSTRY_DESTRUCTURING_ITERCLOSE: {
-            // Whether the destructuring iterator is done is at the top of the
-            // stack. The iterator object is second from the top.
-            MOZ_ASSERT(tn->stackDepth > 1);
-            Value* sp = regs.spForStackDepth(tn->stackDepth);
-            MOZ_ASSERT(sp[-1].isBoolean());
-            if (sp[-1].isFalse()) {
-                RootedObject iterObject(cx, &sp[-2].toObject());
-                if (!IteratorCloseForException(cx, iterObject)) {
-                    SettleOnTryNote(cx, tn, ei, regs);
-                    return ErrorReturnContinuation;
-                }
             }
             break;
           }
