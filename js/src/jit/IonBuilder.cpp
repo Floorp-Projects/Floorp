@@ -1243,9 +1243,11 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
         current->add(env);
 
         // This reproduce what is done in CallObject::createForFunction. Skip
-        // this for analyses, as the script might not have a baseline script
-        // with template objects yet.
-        if (fun->needsSomeEnvironmentObject() && !info().isAnalysis()) {
+        // this for the arguments analysis, as the script might not have a
+        // baseline script with template objects yet.
+        if (fun->needsSomeEnvironmentObject() &&
+            info().analysisMode() != Analysis_ArgumentsUsage)
+        {
             if (fun->needsNamedLambdaEnvironment()) {
                 env = createNamedLambdaObject(callee, env);
                 if (!env)
@@ -6276,6 +6278,9 @@ IonBuilder::createCallObject(MDefinition* callee, MDefinition* env)
     for (PositionalFormalParameterIter fi(script()); fi; fi++) {
         if (!fi.closedOver())
             continue;
+
+        if (!alloc().ensureBallast())
+            return nullptr;
 
         unsigned slot = fi.location().slot();
         unsigned formal = fi.argumentSlot();
