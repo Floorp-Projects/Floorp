@@ -493,6 +493,7 @@ AddonUtilsInternal.prototype = {
 
     if (!addon.appDisabled) {
       cb(null, addon);
+
     }
     // Else the listener will handle invoking the callback.
   },
