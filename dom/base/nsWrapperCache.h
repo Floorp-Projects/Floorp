@@ -20,7 +20,6 @@ class TabChildGlobal;
 class ProcessGlobal;
 } // namespace dom
 namespace css {
-class ImportRule;
 class StyleRule;
 class MediaRule;
 class DocumentRule;
@@ -294,7 +293,6 @@ private:
   friend class SandboxPrivate;
   friend class nsInProcessTabChildGlobal;
   friend class nsWindowRoot;
-  friend class mozilla::css::ImportRule;
   friend class mozilla::css::StyleRule;
   friend class mozilla::css::MediaRule;
   friend class mozilla::css::DocumentRule;
