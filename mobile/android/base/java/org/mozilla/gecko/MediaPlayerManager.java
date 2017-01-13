@@ -188,8 +188,9 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                 updatePresentation();
 
                 // Remove from presentation display list.
-                displays.remove(route.getId());
-                GeckoAppShell.notifyObservers("AndroidCastDevice:Removed", route.getId());
+                if (displays.remove(route.getId()) != null) {
+                    GeckoAppShell.notifyObservers("AndroidCastDevice:Removed", route.getId());
+                }
             }
 
             @Override
@@ -229,7 +230,8 @@ public class MediaPlayerManager extends Fragment implements BundleEventListener 
                 saveAndNotifyOfPlayer("MediaPlayer:Changed", route, player);
                 updatePresentation();
 
-                final GeckoPresentationDisplay display = displays.get(route.getId());
+                // onRouteAdded might not be called in some devices.
+                final GeckoPresentationDisplay display = getPresentationDisplayForRoute(route);
                 saveAndNotifyOfDisplay("AndroidCastDevice:Changed", route, display);
             }
 
