@@ -29,6 +29,7 @@ loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css
 
 loader.lazyImporter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 loader.lazyImporter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
+loader.lazyImporter(this, "LightweightThemeManager", "resource://gre/modules/LightweightThemeManager.jsm");
 
 const {LocalizationHelper} = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper("devtools/client/locales/toolbox.properties");
@@ -37,6 +38,9 @@ const TABS_OPEN_PEAK_HISTOGRAM = "DEVTOOLS_TABS_OPEN_PEAK_LINEAR";
 const TABS_OPEN_AVG_HISTOGRAM = "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR";
 const TABS_PINNED_PEAK_HISTOGRAM = "DEVTOOLS_TABS_PINNED_PEAK_LINEAR";
 const TABS_PINNED_AVG_HISTOGRAM = "DEVTOOLS_TABS_PINNED_AVERAGE_LINEAR";
+
+const COMPACT_LIGHT_ID = "firefox-compact-light@mozilla.org";
+const COMPACT_DARK_ID = "firefox-compact-dark@mozilla.org";
 
 /**
  * gDevToolsBrowser exposes functions to connect the gDevTools instance with a
@@ -143,6 +147,22 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
     }
 
     win.document.documentElement.setAttribute("devtoolstheme", devtoolsTheme);
+
+    // If the toolbox color changes and we have the opposite compact theme applied,
+    // change it to match.  For example:
+    // 1) toolbox changes to dark, and the light compact theme was applied.
+    //    Switch to the dark compact theme.
+    // 2) toolbox changes to light or firebug, and the dark compact theme was applied.
+    //    Switch to the light compact theme.
+    // 3) No compact theme was applied. Do nothing.
+    let currentTheme = LightweightThemeManager.currentTheme;
+    let currentThemeID = currentTheme && currentTheme.id;
+    if (currentThemeID == COMPACT_LIGHT_ID && devtoolsTheme == "dark") {
+      LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme(COMPACT_DARK_ID);
+    }
+    if (currentThemeID == COMPACT_DARK_ID && devtoolsTheme == "light") {
+      LightweightThemeManager.currentTheme = LightweightThemeManager.getUsedTheme(COMPACT_LIGHT_ID);
+    }
   },
 
   observe: function (subject, topic, prefName) {
@@ -170,6 +190,20 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
         // only when the add-on workflow ask devtools to be reloaded.
         if (subject.wrappedJSObject == require('@loader/unload')) {
           gDevToolsBrowser.destroy({ shuttingDown: false });
+        }
+        break;
+      case "lightweight-theme-changed":
+        let currentTheme = LightweightThemeManager.currentTheme;
+        let currentThemeID = currentTheme && currentTheme.id;
+        let devtoolsTheme = Services.prefs.getCharPref("devtools.theme");
+
+        // If the current lightweight theme changes to one of the compact themes, then
+        // keep the devtools color in sync.
+        if (currentThemeID == COMPACT_LIGHT_ID && devtoolsTheme == "dark") {
+          Services.prefs.setCharPref("devtools.theme", "light");
+        }
+        if (currentThemeID == COMPACT_DARK_ID && devtoolsTheme == "light") {
+            Services.prefs.setCharPref("devtools.theme", "dark");
         }
         break;
     }
@@ -771,6 +805,7 @@ var gDevToolsBrowser = exports.gDevToolsBrowser = {
    */
   destroy: function ({ shuttingDown }) {
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
+    Services.obs.removeObserver(gDevToolsBrowser, "lightweight-theme-changed", false);
     Services.obs.removeObserver(gDevToolsBrowser, "browser-delayed-startup-finished");
     Services.obs.removeObserver(gDevToolsBrowser, "quit-application");
     Services.obs.removeObserver(gDevToolsBrowser, "sdk:loader:destroy");
@@ -810,6 +845,7 @@ Services.obs.addObserver(gDevToolsBrowser, "quit-application", false);
 Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", false);
 // Watch for module loader unload. Fires when the tools are reloaded.
 Services.obs.addObserver(gDevToolsBrowser, "sdk:loader:destroy", false);
+Services.obs.addObserver(gDevToolsBrowser, "lightweight-theme-changed", false);
 
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.
