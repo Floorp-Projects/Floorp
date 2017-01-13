@@ -1938,7 +1938,7 @@ skip-if(!Android) fails-if(Android) == 1133905-6-vh-rtl.html 1133905-ref-vh-rtl.
 == 1155828-1.html 1155828-1-ref.html
 fails-if(webrender) == 1156129-1.html 1156129-1-ref.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) HTTP(..) == 1157127-1.html 1157127-1-ref.html
-fuzzy-if(Android,2,5) == 1169331-1.html 1169331-1-ref.html
+fuzzy-if(Android,2,5) fails-if(webrender) == 1169331-1.html 1169331-1-ref.html
 fuzzy(1,74) fails-if(gtkWidget) == 1174332-1.html 1174332-1-ref.html # bug 1312658
 == 1179078-1.html 1179078-1-ref.html
 == 1179288-1.html 1179288-1-ref.html
@@ -1956,7 +1956,7 @@ pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
 random-if(gtkWidget) != 1238243-1.html 1238243-1-notref.html # may fail on Linux, depending on Korean fonts available
 random-if(OSX==1006) == 1238243-2.html 1238243-2-ref.html # fails on 10.6 with default fonts because filler has a visible glyph
-fuzzy(100,2000) == 1239564.html 1239564-ref.html
+fuzzy(100,2000) fails-if(webrender) == 1239564.html 1239564-ref.html
 == 1242172-1.html 1242172-1-ref.html
 == 1242172-2.html 1242172-2-ref.html
 == 1242781.html 1242781-ref.html

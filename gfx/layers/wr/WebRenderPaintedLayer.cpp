@@ -66,6 +66,10 @@ WebRenderPaintedLayer::RenderLayer()
   } else {
       clip = rect;
   }
+
+
+  Maybe<WRImageMask> mask = buildMaskLayer();
+
   if (gfxPrefs::LayersDump()) printf_stderr("PaintedLayer %p using rect:%s clip:%s\n", this, Stringify(rect).c_str(), Stringify(clip).c_str());
 
   Rect relBounds = TransformedVisibleBoundsRelativeToParent();
@@ -73,7 +77,7 @@ WebRenderPaintedLayer::RenderLayer()
   Matrix4x4 transform;// = GetTransform();
 
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
   WRBridge()->AddWebRenderCommand(OpDPPushImage(ToWRRect(rect), ToWRRect(clip), Nothing(), WRTextureFilter::Linear, key));
   Manager()->AddImageKeyForDiscard(key);
 

@@ -33,8 +33,10 @@ WebRenderColorLayer::RenderLayer()
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
   gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
 
+  Maybe<WRImageMask> mask = buildMaskLayer();
+
   WRBridge()->AddWebRenderCommand(
-      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+      OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
   WRBridge()->AddWebRenderCommand(
     OpDPPushRect(ToWRRect(rect), ToWRRect(clip), mColor.r, mColor.g, mColor.b, mColor.a));
 

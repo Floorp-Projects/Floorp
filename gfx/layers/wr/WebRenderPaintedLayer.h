@@ -8,6 +8,7 @@
 
 #include "Layers.h"
 #include "WebRenderLayerManager.h"
+#include "mozilla/layers/WebRenderTypes.h"
 
 namespace mozilla {
 namespace layers {
