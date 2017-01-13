@@ -19,11 +19,6 @@ namespace dom {
 class TabChildGlobal;
 class ProcessGlobal;
 } // namespace dom
-namespace css {
-class MediaRule;
-class DocumentRule;
-} // namespace css
-class CSSSupportsRule;
 } // namespace mozilla
 class SandboxPrivate;
 class nsInProcessTabChildGlobal;
@@ -291,9 +286,6 @@ private:
   friend class SandboxPrivate;
   friend class nsInProcessTabChildGlobal;
   friend class nsWindowRoot;
-  friend class mozilla::css::MediaRule;
-  friend class mozilla::css::DocumentRule;
-  friend class mozilla::CSSSupportsRule;
   friend class nsCSSFontFaceRule;
   friend class nsCSSFontFeatureValuesRule;
   friend class nsCSSKeyframeRule;
