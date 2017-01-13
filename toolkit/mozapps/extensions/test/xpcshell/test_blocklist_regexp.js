@@ -67,7 +67,7 @@ function load_blocklist(aFile, aCallback) {
   // if we're not using the blocklist.xml for certificate blocklist state,
   // ensure that kinto update is enabled
   if (!Services.prefs.getBoolPref("security.onecrl.via.amo")) {
-    ok(Services.prefs.getBoolPref("services.blocklist.update_enabled", false),
+    ok(Services.prefs.getBoolPref("services.blocklist.update_enabled"),
                                   "Kinto update should be enabled");
   }
   blocklist.notify(null);
