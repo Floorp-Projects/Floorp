@@ -12,7 +12,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "nsISupports.h"
 #include "nsIDOMCSSRule.h"
-#include "nsWrapperCache.h"
 
 class nsIDocument;
 struct nsRuleData;
@@ -23,9 +22,15 @@ namespace mozilla {
 namespace css {
 class GroupRule;
 
-class Rule : public nsIDOMCSSRule
-           , public nsWrapperCache
-{
+#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
+ /* nothing */
+
+#define DECL_STYLE_RULE_INHERIT                            \
+  DECL_STYLE_RULE_INHERIT_NO_DOMRULE                       \
+  virtual nsIDOMCSSRule* GetDOMRule() override;        \
+  virtual nsIDOMCSSRule* GetExistingDOMRule() override;
+
+class Rule : public nsISupports {
 protected:
   Rule(uint32_t aLineNumber, uint32_t aColumnNumber)
     : mSheet(nullptr),
@@ -46,12 +51,6 @@ protected:
   virtual ~Rule() {}
 
 public:
-
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Rule)
-
-  // nsIDOMCSSRule interface
-  NS_DECL_NSIDOMCSSRULE
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
@@ -107,19 +106,22 @@ public:
    */
   virtual already_AddRefed<Rule> Clone() const = 0;
 
+  // Note that this returns null for inline style rules since they aren't
+  // supposed to have a DOM rule representation (and our code wouldn't work).
+  virtual nsIDOMCSSRule* GetDOMRule() = 0;
+
+  // Like GetDOMRule(), but won't create one if we don't have one yet
+  virtual nsIDOMCSSRule* GetExistingDOMRule() = 0;
+
+  // to implement methods on nsIDOMCSSRule
+  nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
+  nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
+  Rule* GetCSSRule();
+
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE = 0;
-
-  // WebIDL interface, aka helpers for nsIDOMCSSRule implementation.
-  virtual uint16_t Type() const = 0;
-  virtual void GetCssTextImpl(nsAString& aCssText) const = 0;
-  // XPCOM GetCssText is OK, since it never throws.
-  // XPCOM SetCssText is OK, since it never throws.
-  Rule* GetParentRule() const;
-  StyleSheet* GetParentStyleSheet() const { return GetStyleSheet(); }
-  nsIDocument* GetParentObject() const { return GetDocument(); }
 
 protected:
   // This is sometimes null (e.g., for style attributes).
