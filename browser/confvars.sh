@@ -55,7 +55,6 @@ ACCEPTED_MAR_CHANNEL_IDS=firefox-mozilla-central
 # The MAR_CHANNEL_ID must not contain the following 3 characters: ",\t "
 MAR_CHANNEL_ID=firefox-mozilla-central
 MOZ_PROFILE_MIGRATOR=1
-MOZ_APP_STATIC_INI=1
 MOZ_WEBGL_CONFORMANT=1
 MOZ_JSDOWNLOADS=1
 MOZ_RUST_MP4PARSE=1
