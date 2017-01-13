@@ -25,6 +25,13 @@
 #include "Entries.h"
 #include "LookupCache.h"
 
+// GCC < 6.1 workaround, see bug 1329593
+#if defined(XP_WIN) && defined(__MINGW32__)
+#define GCC_MANGLING_WORKAROUND __stdcall
+#else
+#define GCC_MANGLING_WORKAROUND
+#endif
+
 // The hash length for a domain key.
 #define DOMAIN_LENGTH 4
 
@@ -167,10 +174,10 @@ public:
                          LookupResultArray* results);
 
   // Open the DB connection
-  nsresult OpenDb();
+  nsresult GCC_MANGLING_WORKAROUND OpenDb();
 
   // Provide a way to forcibly close the db connection.
-  nsresult CloseDb();
+  nsresult GCC_MANGLING_WORKAROUND CloseDb();
 
   nsresult CacheCompletions(CacheResultArray * aEntries);
   nsresult CacheMisses(PrefixArray * aEntries);

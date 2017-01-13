@@ -90,7 +90,7 @@ load 593526.html
 load 593526.xul
 load 594654-1.xhtml
 load 595042-1.html
-skip-if(stylo) load 595727-1.html # bug 1323671
+load 595727-1.html
 load 624198.xhtml
 load 633322-1.html
 load 633453-1.html

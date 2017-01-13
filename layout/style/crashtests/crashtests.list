@@ -11,7 +11,7 @@ load 368175-1.html
 load 368740.html
 load 379788-1.html
 load 383979-1.xhtml
-skip-if(stylo) load 383979-2.html # bug 1323671
+load 383979-2.html
 load 386939-1.html
 load 391034-1.xhtml
 asserts-if(stylo,1) load 397022-1.html # bug 1324704

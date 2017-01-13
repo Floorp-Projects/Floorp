@@ -58,6 +58,8 @@ public:
 
   HostLayerManager* layer_manager() const { return mLayerManager; }
 
+  void SetLayerManager(HostLayerManager* aLayerManager);
+
   uint64_t GetId() const { return mId; }
   Layer* GetRoot() const { return mRoot; }
 

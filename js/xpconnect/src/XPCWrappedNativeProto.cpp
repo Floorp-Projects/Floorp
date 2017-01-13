@@ -21,8 +21,7 @@ XPCWrappedNativeProto::XPCWrappedNativeProto(XPCWrappedNativeScope* Scope,
     : mScope(Scope),
       mJSProtoObject(nullptr),
       mClassInfo(ClassInfo),
-      mSet(Set),
-      mScriptableInfo(nullptr)
+      mSet(Set)
 {
     // This native object lives as long as its associated JSObject - killed
     // by finalization of the JSObject (or explicitly if Init fails).
@@ -48,8 +47,6 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto()
     // Note that our weak ref to mScope is not to be trusted at this point.
 
     XPCNativeSet::ClearCacheEntryForClassInfo(mClassInfo);
-
-    delete mScriptableInfo;
 }
 
 bool
@@ -57,19 +54,14 @@ XPCWrappedNativeProto::Init(const XPCNativeScriptableCreateInfo* scriptableCreat
                             bool callPostCreatePrototype)
 {
     AutoJSContext cx;
-    nsIXPCScriptable* callback = scriptableCreateInfo ?
-                                 scriptableCreateInfo->GetCallback() :
-                                 nullptr;
-    if (callback) {
-        mScriptableInfo =
-            XPCNativeScriptableInfo::Construct(scriptableCreateInfo);
-        if (!mScriptableInfo)
-            return false;
-    }
+    nsCOMPtr<nsIXPCScriptable> callback = scriptableCreateInfo
+                                        ? scriptableCreateInfo->GetCallback()
+                                        : nullptr;
+    if (callback)
+        mScriptable = callback;
 
     const js::Class* jsclazz =
-        (mScriptableInfo &&
-         mScriptableInfo->GetCallback()->AllowPropModsToPrototype())
+        (mScriptable && mScriptable->AllowPropModsToPrototype())
         ? &XPC_WN_ModsAllowed_Proto_JSClass
         : &XPC_WN_NoMods_Proto_JSClass;
 
@@ -94,14 +86,12 @@ XPCWrappedNativeProto::CallPostCreatePrototype()
     AutoJSContext cx;
 
     // Nothing to do if we don't have a scriptable callback.
-    nsIXPCScriptable* callback = mScriptableInfo ? mScriptableInfo->GetCallback()
-                                                 : nullptr;
-    if (!callback)
+    if (!mScriptable)
         return true;
 
     // Call the helper. This can handle being called if it's not implemented,
     // so we don't have to check any sort of "want" here. See xpc_map_end.h.
-    nsresult rv = callback->PostCreatePrototype(cx, mJSProtoObject);
+    nsresult rv = mScriptable->PostCreatePrototype(cx, mJSProtoObject);
     if (NS_FAILED(rv)) {
         JS_SetPrivate(mJSProtoObject, nullptr);
         mJSProtoObject = nullptr;
@@ -193,13 +183,11 @@ XPCWrappedNativeProto::DebugDump(int16_t depth)
         XPC_LOG_ALWAYS(("mScope @ %x", mScope));
         XPC_LOG_ALWAYS(("mJSProtoObject @ %x", mJSProtoObject.get()));
         XPC_LOG_ALWAYS(("mSet @ %x", mSet.get()));
-        XPC_LOG_ALWAYS(("mScriptableInfo @ %x", mScriptableInfo));
-        if (depth && mScriptableInfo) {
-            nsCOMPtr<nsIXPCScriptable> scr = mScriptableInfo->GetCallback();
+        XPC_LOG_ALWAYS(("mScriptable @ %x", mScriptable.get()));
+        if (depth && mScriptable) {
             XPC_LOG_INDENT();
-            XPC_LOG_ALWAYS(("mScriptable @ %x", scr.get()));
-            XPC_LOG_ALWAYS(("mFlags of %x", scr->GetScriptableFlags()));
-            XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptableInfo->GetJSClass()));
+            XPC_LOG_ALWAYS(("mFlags of %x", mScriptable->GetScriptableFlags()));
+            XPC_LOG_ALWAYS(("mJSClass @ %x", mScriptable->GetJSClass()));
             XPC_LOG_OUTDENT();
         }
     XPC_LOG_OUTDENT();

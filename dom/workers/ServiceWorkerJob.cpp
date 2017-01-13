@@ -101,7 +101,12 @@ ServiceWorkerJob::Start(Callback* aFinalCallback)
   // before proceeding.  We should always be able to get a ServiceWorkerManager,
   // however, since Start() should not be called during shutdown.
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // browser shutdown
+    return;
+  }
   if (!swm->HasBackgroundActor()) {
+    // waiting to initialize
     swm->AppendPendingOperation(runnable);
     return;
   }

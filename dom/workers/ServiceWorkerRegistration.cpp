@@ -366,7 +366,10 @@ UpdateInternal(nsIPrincipal* aPrincipal,
   MOZ_ASSERT(aCallback);
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (!swm) {
+    // browser shutdown
+    return;
+  }
 
   swm->Update(aPrincipal, NS_ConvertUTF16toUTF8(aScope), aCallback);
 }
@@ -920,19 +923,13 @@ public:
   GetPushManager(JSContext* aCx, ErrorResult& aRv) override;
 
 private:
-  enum Reason
-  {
-    RegistrationIsGoingAway = 0,
-    WorkerIsGoingAway,
-  };
-
   ~ServiceWorkerRegistrationWorkerThread();
 
   void
   InitListener();
 
   void
-  ReleaseListener(Reason aReason);
+  ReleaseListener();
 
   WorkerPrivate* mWorkerPrivate;
   RefPtr<WorkerListener> mListener;
@@ -1073,7 +1070,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                                 ServiceWorkerRegistration)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPushManager)
-  tmp->ReleaseListener(RegistrationIsGoingAway);
+  tmp->ReleaseListener();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 ServiceWorkerRegistrationWorkerThread::ServiceWorkerRegistrationWorkerThread(WorkerPrivate* aWorkerPrivate,
@@ -1086,7 +1083,7 @@ ServiceWorkerRegistrationWorkerThread::ServiceWorkerRegistrationWorkerThread(Wor
 
 ServiceWorkerRegistrationWorkerThread::~ServiceWorkerRegistrationWorkerThread()
 {
-  ReleaseListener(RegistrationIsGoingAway);
+  ReleaseListener();
   MOZ_ASSERT(!mListener);
 }
 
@@ -1175,22 +1172,6 @@ ServiceWorkerRegistrationWorkerThread::Unregister(ErrorResult& aRv)
   return promise.forget();
 }
 
-class StartListeningRunnable final : public Runnable
-{
-  RefPtr<WorkerListener> mListener;
-public:
-  explicit StartListeningRunnable(WorkerListener* aListener)
-    : mListener(aListener)
-  {}
-
-  NS_IMETHOD
-  Run() override
-  {
-    mListener->StartListeningForEvents();
-    return NS_OK;
-  }
-};
-
 void
 ServiceWorkerRegistrationWorkerThread::InitListener()
 {
@@ -1206,48 +1187,13 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
     return;
   }
 
-  RefPtr<StartListeningRunnable> r =
-    new StartListeningRunnable(mListener);
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod(mListener, &WorkerListener::StartListeningForEvents);
   MOZ_ALWAYS_SUCCEEDS(worker->DispatchToMainThread(r.forget()));
 }
 
-class AsyncStopListeningRunnable final : public Runnable
-{
-  RefPtr<WorkerListener> mListener;
-public:
-  explicit AsyncStopListeningRunnable(WorkerListener* aListener)
-    : mListener(aListener)
-  {}
-
-  NS_IMETHOD
-  Run() override
-  {
-    mListener->StopListeningForEvents();
-    return NS_OK;
-  }
-};
-
-class SyncStopListeningRunnable final : public WorkerMainThreadRunnable
-{
-  RefPtr<WorkerListener> mListener;
-public:
-  SyncStopListeningRunnable(WorkerPrivate* aWorkerPrivate,
-                            WorkerListener* aListener)
-    : WorkerMainThreadRunnable(aWorkerPrivate,
-                               NS_LITERAL_CSTRING("ServiceWorkerRegistration :: StopListening"))
-    , mListener(aListener)
-  {}
-
-  bool
-  MainThreadRun() override
-  {
-    mListener->StopListeningForEvents();
-    return true;
-  }
-};
-
 void
-ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
+ServiceWorkerRegistrationWorkerThread::ReleaseListener()
 {
   if (!mListener) {
     return;
@@ -1263,23 +1209,10 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
 
   mListener->ClearRegistration();
 
-  if (aReason == RegistrationIsGoingAway) {
-    RefPtr<AsyncStopListeningRunnable> r =
-      new AsyncStopListeningRunnable(mListener);
-    MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(r.forget()));
-  } else if (aReason == WorkerIsGoingAway) {
-    RefPtr<SyncStopListeningRunnable> r =
-      new SyncStopListeningRunnable(mWorkerPrivate, mListener);
-    ErrorResult rv;
-    r->Dispatch(Killing, rv);
-    if (rv.Failed()) {
-      NS_ERROR("Failed to dispatch stop listening runnable!");
-      // And now what?
-      rv.SuppressException();
-    }
-  } else {
-    MOZ_CRASH("Bad reason");
-  }
+  nsCOMPtr<nsIRunnable> r =
+    NewRunnableMethod(mListener, &WorkerListener::StopListeningForEvents);
+  MOZ_ALWAYS_SUCCEEDS(mWorkerPrivate->DispatchToMainThread(r.forget()));
+
   mListener = nullptr;
   mWorkerPrivate = nullptr;
 }
@@ -1287,7 +1220,7 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
 bool
 ServiceWorkerRegistrationWorkerThread::Notify(Status aStatus)
 {
-  ReleaseListener(WorkerIsGoingAway);
+  ReleaseListener();
   return true;
 }
 

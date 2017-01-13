@@ -27,12 +27,12 @@ ServiceWorkerRegisterJob::AsyncExecute()
 {
   AssertIsOnMainThread();
 
-  if (Canceled()) {
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (Canceled() || !swm) {
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     swm->GetRegistration(mPrincipal, mScope);
 

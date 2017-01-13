@@ -25,7 +25,7 @@ needs-focus load 467647-1.html
 load 475132-1.xhtml
 load 499844-1.html
 load 503709-1.xhtml
-skip-if(stylo) load 513375-1.xhtml # bug 1323654
+load 513375-1.xhtml
 load 535632-1.xhtml
 load 574558-1.xhtml
 load 580151-1.xhtml
