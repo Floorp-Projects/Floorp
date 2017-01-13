@@ -18,7 +18,6 @@ MOZ_OFFICIAL_BRANDING_DIRECTORY=b2g/branding/official
 # MOZ_APP_DISPLAYNAME is set by branding/configure.sh
 
 MOZ_NO_SMART_CARDS=1
-MOZ_APP_STATIC_INI=1
 
 if test "$OS_TARGET" = "Android"; then
 MOZ_CAPTURE=1
