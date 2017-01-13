@@ -115,6 +115,29 @@ struct WindowId {
   uint64_t mHandle;
 };
 
+struct PipelineId {
+  explicit PipelineId(uint64_t aHandle) : mHandle(aHandle) {}
+  bool operator<(const PipelineId& aOther) const { return mHandle < aOther.mHandle; }
+
+  uint64_t mHandle;
+};
+
+// TODO: We need to merge this with the notion of transaction id.
+struct Epoch {
+  explicit Epoch(uint32_t aHandle) : mHandle(aHandle) {}
+  bool operator<(const Epoch& aOther) const { return mHandle < aOther.mHandle; }
+
+  uint32_t mHandle;
+};
+
+struct FontKey {
+  explicit FontKey(uint64_t aHandle) : mHandle(aHandle) {}
+  bool operator<(const FontKey& aOther) const { return mHandle < aOther.mHandle; }
+
+  uint64_t mHandle;
+};
+
+
 } // namespace gfx
 } // namespace mozilla
 

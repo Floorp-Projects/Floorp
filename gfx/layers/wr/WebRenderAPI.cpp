@@ -140,5 +140,106 @@ WebRenderAPI::~WebRenderAPI()
   task.Wait();
 }
 
+DisplayListBuilder::DisplayListBuilder(const LayerIntSize& aSize, gfx::PipelineId aId)
+{
+  MOZ_COUNT_CTOR(DisplayListBuilder);
+  mWRState = wr_state_new(aSize.width, aSize.height, aId.mHandle);
+}
+
+DisplayListBuilder::~DisplayListBuilder()
+{
+  MOZ_COUNT_DTOR(DisplayListBuilder);
+#ifdef MOZ_ENABLE_WEBRENDER
+  wr_state_delete(mWRState);
+#endif
+}
+
+void
+DisplayListBuilder::Begin(const LayerIntSize& aSize)
+{
+  wr_dp_begin(mWRState, aSize.width, aSize.height);
+}
+
+void
+DisplayListBuilder::End(WebRenderAPI& aApi, gfx::Epoch aEpoch)
+{
+  wr_dp_end(mWRState, aApi.mWrApi, aEpoch.mHandle);
+}
+
+void
+DisplayListBuilder::PushStackingContext(const WRRect& aBounds,
+                                        const WRRect& aOverflow,
+                                        const WRImageMask* aMask,
+                                        const gfx::Matrix4x4& aTransform)
+{
+  wr_dp_push_stacking_context(mWRState, aBounds, aOverflow, aMask,
+                              &aTransform.components[0]);
+}
+
+void
+DisplayListBuilder::PopStackingContext()
+{
+  wr_dp_pop_stacking_context(mWRState);
+}
+
+void
+DisplayListBuilder::PushRect(const WRRect& aBounds,
+                             const WRRect& aClip,
+                             const gfx::Color& aColor)
+{
+  wr_dp_push_rect(mWRState, aBounds, aClip,
+                  aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
+void
+DisplayListBuilder::PushImage(const WRRect& aBounds,
+                              const WRRect& aClip,
+                              const WRImageMask* aMask,
+                              WRImageKey aImage)
+{
+  wr_dp_push_image(mWRState, aBounds, aClip, aMask, aImage);
+}
+
+void
+DisplayListBuilder::PushIFrame(const WRRect& aBounds,
+                               const WRRect& aClip,
+                               gfx::PipelineId aPipeline)
+{
+  wr_dp_push_iframe(mWRState, aBounds, aClip, aPipeline.mHandle);
+}
+
+void
+DisplayListBuilder::PushBorder(const WRRect& aBounds,
+                               const WRRect& aClip,
+                               const WRBorderSide& aTop,
+                               const WRBorderSide& aRight,
+                               const WRBorderSide& aBottom,
+                               const WRBorderSide& aLeft,
+                               const WRLayoutSize& aTopLeftRadius,
+                               const WRLayoutSize& aTopRightRadius,
+                               const WRLayoutSize& aBottomLeftRadius,
+                               const WRLayoutSize& aBottomRightRadius)
+{
+  wr_dp_push_border(mWRState, aBounds, aClip,
+                    aTop, aRight, aBottom, aLeft,
+                    aTopLeftRadius, aTopRightRadius,
+                    aBottomLeftRadius, aBottomRightRadius);
+}
+
+void
+DisplayListBuilder::PushText(const WRRect& aBounds,
+                             const WRRect& aClip,
+                             const gfx::Color& aColor,
+                             gfx::FontKey aFontKey,
+                             Range<const WRGlyphInstance> aGlyphBuffer,
+                             float aGlyphSize)
+{
+  wr_dp_push_text(mWRState, aBounds, aClip,
+                  ToWRColor(aColor),
+                  aFontKey.mHandle,
+                  &aGlyphBuffer[0], aGlyphBuffer.length(),
+                  aGlyphSize);
+}
+
 } // namespace
 } // namespace
