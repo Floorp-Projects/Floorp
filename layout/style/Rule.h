@@ -60,6 +60,9 @@ public:
   // sense that it doesn't have any outgoing owning edges.
   virtual bool IsCCLeaf() const MOZ_MUST_OVERRIDE;
 
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
 #endif
@@ -118,16 +121,14 @@ public:
   // supposed to have a DOM rule representation (and our code wouldn't work).
   virtual nsIDOMCSSRule* GetDOMRule() = 0;
 
-  // to implement methods on nsIDOMCSSRule
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule** aParentRule) override;
-  NS_IMETHOD GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet) override;
-  virtual Rule* GetCSSRule() override;
-  using nsIDOMCSSRule::GetType;
-
   // This is pure virtual because all of Rule's data members are non-owning and
   // thus measured elsewhere.
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
     const MOZ_MUST_OVERRIDE = 0;
+
+  // WebIDL interface, aka helpers for nsIDOMCSSRule implementation.
+  virtual uint16_t Type() const = 0;
+  virtual void GetCssTextImpl(nsAString& aCssText) const = 0;
 
 protected:
   // True if we're known-live for cycle collection purposes.
