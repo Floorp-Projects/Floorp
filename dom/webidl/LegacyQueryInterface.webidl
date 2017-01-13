@@ -26,6 +26,7 @@ Comment implements LegacyQueryInterface;
 Crypto implements LegacyQueryInterface;
 CSSPrimitiveValue implements LegacyQueryInterface;
 CSSStyleDeclaration implements LegacyQueryInterface;
+CSSStyleRule implements LegacyQueryInterface;
 CSSValueList implements LegacyQueryInterface;
 DOMImplementation implements LegacyQueryInterface;
 DOMParser implements LegacyQueryInterface;
