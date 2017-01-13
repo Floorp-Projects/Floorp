@@ -209,9 +209,9 @@
                     accesskey="&enableHealthReport.accesskey;"/>
         </caption>
         <vbox>
-          <hbox class="indent">
-            <label>&healthReportDesc.label;</label>
-            <label id="FHRLearnMore"
+          <hbox class="indent" flex="1">
+            <label flex="1">&healthReportDesc.label;</label>
+            <label id="FHRLearnMore" flex="1"
                    class="learnMore text-link">&healthReportLearnMore.label;</label>
           </hbox>
           <hbox class="indent">
@@ -221,9 +221,9 @@
                           label="&enableTelemetryData.label;"
                           accesskey="&enableTelemetryData.accesskey;"/>
               </caption>
-              <hbox class="indent">
-                <label id="telemetryDataDesc">&telemetryDesc.label;</label>
-                <label id="telemetryLearnMore"
+              <hbox class="indent" flex="1">
+                <label id="telemetryDataDesc" flex="1">&telemetryDesc.label;</label>
+                <label id="telemetryLearnMore" flex="1"
                        class="learnMore text-link">&telemetryLearnMore.label;</label>
               </hbox>
             </groupbox>
@@ -239,9 +239,9 @@
                     label="&alwaysSubmitCrashReports.label;"
                     accesskey="&alwaysSubmitCrashReports.accesskey;"/>
         </caption>
-        <hbox class="indent">
-          <label>&crashReporterDesc2.label;</label>
-          <label id="crashReporterLearnMore"
+        <hbox class="indent" flex="1">
+          <label flex="1">&crashReporterDesc2.label;</label>
+          <label id="crashReporterLearnMore" flex="1"
                  class="learnMore text-link">&crashReporterLearnMore.label;</label>
         </hbox>
       </groupbox>
