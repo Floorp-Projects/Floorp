@@ -68,7 +68,6 @@ public:
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
   using Rule::GetType;
   already_AddRefed<Rule> Clone() const final;
-  nsIDOMCSSRule* GetDOMRule() final { return this; }
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
