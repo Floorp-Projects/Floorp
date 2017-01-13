@@ -31,7 +31,6 @@ public:
     , mTrackId(aTrackId)
     , mPrincipalHandle(aPrincipalHandle)
     , mMutex("CanvasCaptureMediaStream OutputStreamDriver::StreamListener")
-    , mImage(nullptr)
   {
     MOZ_ASSERT(mSourceStream);
   }
@@ -40,24 +39,26 @@ public:
     mEnded = true;
   }
 
-  void SetImage(const RefPtr<layers::Image>& aImage)
+  void SetImage(const RefPtr<layers::Image>& aImage, const TimeStamp& aTime)
   {
     MutexAutoLock lock(mMutex);
     mImage = aImage;
+    mImageTime = aTime;
   }
 
   void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) override
   {
     // Called on the MediaStreamGraph thread.
+    MOZ_ASSERT(mSourceStream);
     StreamTime delta = aDesiredTime - mSourceStream->GetEndOfAppendedData(mTrackId);
     if (delta > 0) {
       MutexAutoLock lock(mMutex);
-      MOZ_ASSERT(mSourceStream);
 
       RefPtr<Image> image = mImage;
       IntSize size = image ? image->GetSize() : IntSize(0, 0);
       VideoSegment segment;
-      segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle);
+      segment.AppendFrame(image.forget(), delta, size, mPrincipalHandle, false,
+                          mImageTime);
 
       mSourceStream->AppendToTrack(mTrackId, &segment);
     }
@@ -79,6 +80,7 @@ private:
   Mutex mMutex;
   // The below members are protected by mMutex.
   RefPtr<layers::Image> mImage;
+  TimeStamp mImageTime;
 };
 
 OutputStreamDriver::OutputStreamDriver(SourceMediaStream* aSourceStream,
@@ -111,10 +113,11 @@ OutputStreamDriver::~OutputStreamDriver()
 }
 
 void
-OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage)
+OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage,
+                             const TimeStamp& aTime)
 {
   if (mStreamListener) {
-    mStreamListener->SetImage(aImage);
+    mStreamListener->SetImage(aImage, aTime);
   }
 }
 
@@ -150,7 +153,7 @@ public:
     driver->RequestFrameCapture();
   }
 
-  void NewFrame(already_AddRefed<Image> aImage) override
+  void NewFrame(already_AddRefed<Image> aImage, const TimeStamp& aTime) override
   {
     RefPtr<Image> image = aImage;
 
@@ -159,7 +162,7 @@ public:
     }
 
     mFrameCaptureRequested = false;
-    SetImage(image.forget());
+    SetImage(image.forget(), aTime);
   }
 
   void Forget() override
@@ -188,7 +191,7 @@ public:
                       const PrincipalHandle& aPrincipalHandle)
     : OutputStreamDriver(aSourceStream, aTrackId, aPrincipalHandle) {}
 
-  void NewFrame(already_AddRefed<Image> aImage) override
+  void NewFrame(already_AddRefed<Image> aImage, const TimeStamp& aTime) override
   {
     // Don't reset `mFrameCaptureRequested` since AutoDriver shall always have
     // `mFrameCaptureRequested` set to true.
@@ -196,7 +199,7 @@ public:
     // after something changed.
 
     RefPtr<Image> image = aImage;
-    SetImage(image.forget());
+    SetImage(image.forget(), aTime);
   }
 
 protected:
