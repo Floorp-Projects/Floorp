@@ -274,6 +274,56 @@ ServiceWorkerManager::Init(ServiceWorkerRegistrar* aRegistrar)
   }
 }
 
+void
+ServiceWorkerManager::MaybeStartShutdown()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShuttingDown) {
+    return;
+  }
+
+  mShuttingDown = true;
+
+  for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
+    for (auto it2 = it1.UserData()->mUpdateTimers.Iter(); !it2.Done(); it2.Next()) {
+      nsCOMPtr<nsITimer> timer = it2.UserData();
+      timer->Cancel();
+    }
+    it1.UserData()->mUpdateTimers.Clear();
+
+    for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done(); it2.Next()) {
+      RefPtr<ServiceWorkerJobQueue> queue = it2.UserData();
+      queue->CancelAll();
+    }
+    it1.UserData()->mJobQueues.Clear();
+  }
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+
+    if (XRE_IsParentProcess()) {
+      obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
+      obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
+      obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
+    }
+  }
+
+  mPendingOperations.Clear();
+
+  if (!mActor) {
+    return;
+  }
+
+  mActor->ManagerShuttingDown();
+
+  RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+  mActor = nullptr;
+}
+
 class ServiceWorkerResolveWindowPromiseOnRegisterCallback final : public ServiceWorkerJob::Callback
 {
   RefPtr<nsPIDOMWindowInner> mWindow;
@@ -1751,7 +1801,8 @@ ServiceWorkerManager::LoadRegistrations(
 void
 ServiceWorkerManager::ActorFailed()
 {
-  MOZ_CRASH("Failed to create a PBackgroundChild actor!");
+  MOZ_DIAGNOSTIC_ASSERT(!mActor);
+  MaybeStartShutdown();
 }
 
 void
@@ -1761,12 +1812,16 @@ ServiceWorkerManager::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   MOZ_ASSERT(!mActor);
 
   if (mShuttingDown) {
-    mPendingOperations.Clear();
+    MOZ_DIAGNOSTIC_ASSERT(mPendingOperations.IsEmpty());
     return;
   }
 
   PServiceWorkerManagerChild* actor =
     aActor->SendPServiceWorkerManagerConstructor();
+  if (!actor) {
+    ActorFailed();
+    return;
+  }
 
   mActor = static_cast<ServiceWorkerManagerChild*>(actor);
 
@@ -1794,7 +1849,10 @@ ServiceWorkerManager::StoreRegistration(
     return;
   }
 
-  MOZ_ASSERT(mActor);
+  MOZ_DIAGNOSTIC_ASSERT(mActor);
+  if (!mActor) {
+    return;
+  }
 
   ServiceWorkerRegistrationData data;
   nsresult rv = PopulateRegistrationData(aPrincipal, aRegistration, data);
@@ -3569,43 +3627,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
   }
 
   if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    mShuttingDown = true;
-
-    for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
-      for (auto it2 = it1.UserData()->mUpdateTimers.Iter(); !it2.Done(); it2.Next()) {
-        nsCOMPtr<nsITimer> timer = it2.UserData();
-        timer->Cancel();
-      }
-      it1.UserData()->mUpdateTimers.Clear();
-
-      for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done(); it2.Next()) {
-        RefPtr<ServiceWorkerJobQueue> queue = it2.UserData();
-        queue->CancelAll();
-      }
-      it1.UserData()->mJobQueues.Clear();
-    }
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-
-      if (XRE_IsParentProcess()) {
-        obs->RemoveObserver(this, PURGE_SESSION_HISTORY);
-        obs->RemoveObserver(this, PURGE_DOMAIN_DATA);
-        obs->RemoveObserver(this, CLEAR_ORIGIN_DATA);
-      }
-    }
-
-    if (mActor) {
-      mActor->ManagerShuttingDown();
-
-      RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
-      nsresult rv = NS_DispatchToMainThread(runnable);
-      Unused << NS_WARN_IF(NS_FAILED(rv));
-      mActor = nullptr;
-    } else {
-      mPendingOperations.Clear();
-    }
+    MaybeStartShutdown();
     return NS_OK;
   }
 
