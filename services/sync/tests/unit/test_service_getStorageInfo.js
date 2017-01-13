@@ -31,7 +31,7 @@ add_test(function test_success() {
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
-  let request = Service.getStorageInfo("collections", function (error, info) {
+  let request = Service.getStorageInfo("collections", function(error, info) {
     do_check_eq(error, null);
     do_check_true(Utils.deepEquals(info, collections));
 
@@ -51,8 +51,8 @@ add_test(function test_success() {
 });
 
 add_test(function test_invalid_type() {
-  do_check_throws(function () {
-    Service.getStorageInfo("invalid", function (error, info) {
+  do_check_throws(function() {
+    Service.getStorageInfo("invalid", function(error, info) {
       do_throw("Shouldn't get here!");
     });
   });
@@ -60,7 +60,7 @@ add_test(function test_invalid_type() {
 });
 
 add_test(function test_network_error() {
-  Service.getStorageInfo(INFO_COLLECTIONS, function (error, info) {
+  Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.result, Cr.NS_ERROR_CONNECTION_REFUSED);
     do_check_eq(info, null);
     run_next_test();
@@ -73,7 +73,7 @@ add_test(function test_http_error() {
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
-  let request = Service.getStorageInfo(INFO_COLLECTIONS, function (error, info) {
+  let request = Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.status, 500);
     do_check_eq(info, null);
     server.stop(run_next_test);
@@ -86,7 +86,7 @@ add_test(function test_invalid_json() {
   Service.serverURL = server.baseURI + "/";
   Service.clusterURL = server.baseURI + "/";
 
-  let request = Service.getStorageInfo(INFO_COLLECTIONS, function (error, info) {
+  let request = Service.getStorageInfo(INFO_COLLECTIONS, function(error, info) {
     do_check_eq(error.name, "SyntaxError");
     do_check_eq(info, null);
     server.stop(run_next_test);

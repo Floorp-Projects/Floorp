@@ -16,10 +16,9 @@ typedef struct vpx_codec_enc_cfg vpx_codec_enc_cfg_t;
 typedef struct vpx_image vpx_image_t;
 
 /**
- * VP8TrackEncoder implements VideoTrackEncoder by using libvpx library.
- * We implement a realtime and fixed FPS encoder. In order to achieve that,
- * there is a pick target frame and drop frame encoding policy implemented in
- * GetEncodedTrack.
+ * VP8TrackEncoder implements VideoTrackEncoder by using the libvpx library.
+ * We implement a realtime and variable frame rate encoder. In order to achieve
+ * that, there is a frame-drop encoding policy implemented in GetEncodedTrack.
  */
 class VP8TrackEncoder : public VideoTrackEncoder
 {
@@ -41,13 +40,6 @@ protected:
                 int32_t aDisplayWidth, int32_t aDisplayHeight) final override;
 
 private:
-  // Calculate the target frame's encoded duration.
-  StreamTime CalculateEncodedDuration(StreamTime aDurationCopied);
-
-  // Calculate the mRemainingTicks for next target frame.
-  StreamTime CalculateRemainingTicks(StreamTime aDurationCopied,
-                                     StreamTime aEncodedDuration);
-
   // Get the EncodeOperation for next target frame.
   EncodeOperation GetNextEncodeOperation(TimeDuration aTimeElapsed,
                                          StreamTime aProcessedDuration);
@@ -60,14 +52,8 @@ private:
   // Prepare the input data to the mVPXImageWrapper for encoding.
   nsresult PrepareRawFrame(VideoChunk &aChunk);
 
-  // Output frame rate.
-  uint32_t mEncodedFrameRate;
-  // Duration for the output frame, reciprocal to mEncodedFrameRate.
-  StreamTime mEncodedFrameDuration;
   // Encoded timestamp.
   StreamTime mEncodedTimestamp;
-  // Duration to the next encode frame.
-  StreamTime mRemainingTicks;
 
   // Muted frame, we only create it once.
   RefPtr<layers::Image> mMuteFrame;
@@ -77,9 +63,7 @@ private:
 
   /**
    * A local segment queue which takes the raw data out from mRawSegment in the
-   * call of GetEncodedTrack(). Since we implement the fixed FPS encoding
-   * policy, it needs to be global in order to store the leftover segments
-   * taken from mRawSegment.
+   * call of GetEncodedTrack().
    */
   VideoSegment mSourceSegment;
 

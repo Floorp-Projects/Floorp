@@ -66,8 +66,8 @@ add_test(function test_nonexistent_file() {
 add_test(function test_save_logging() {
   _("Verify that writes are logged.");
   let trace;
-  Utils.jsonSave("log", {_log: {trace: function(msg) { trace = msg; }}},
-                       "hi", ensureThrows(function () {
+  Utils.jsonSave("log", {_log: {trace(msg) { trace = msg; }}},
+                       "hi", ensureThrows(function() {
     do_check_true(!!trace);
     run_next_test();
   }));
@@ -93,10 +93,10 @@ add_test(function test_load_logging() {
   let trace, debug;
   let obj = {
     _log: {
-      trace: function(msg) {
+      trace(msg) {
         trace = msg;
       },
-      debug: function(msg) {
+      debug(msg) {
         debug = msg;
       }
     }

@@ -54,6 +54,7 @@
 #ifndef SPS_STANDALONE
 #include "js/TypeDecls.h"
 #endif
+#include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "GeckoProfilerTypes.h"
@@ -247,24 +248,13 @@ static inline bool profiler_in_privacy_mode() { return false; }
 static inline void profiler_log(const char *str) {}
 static inline void profiler_log(const char *fmt, va_list args) {}
 
-namespace mozilla {
-
-class AutoProfilerRegister final MOZ_STACK_CLASS
-{
-public:
-  explicit AutoProfilerRegister(const char* aName) {}
-private:
-  AutoProfilerRegister(const AutoProfilerRegister&) = delete;
-  AutoProfilerRegister& operator=(const AutoProfilerRegister&) = delete;
-};
-
-} // namespace mozilla
-
 #else
 
 #include "GeckoProfilerImpl.h"
 
 #endif
+
+namespace mozilla {
 
 class MOZ_RAII GeckoProfilerInitRAII {
 public:
@@ -308,5 +298,58 @@ public:
 private:
   bool mIssuedWake;
 };
+
+class MOZ_RAII GeckoProfilerTracingRAII {
+public:
+  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo,
+                           UniqueProfilerBacktrace aBacktrace
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mCategory(aCategory)
+    , mInfo(aInfo)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    profiler_tracing(mCategory, mInfo, Move(aBacktrace), TRACING_INTERVAL_START);
+  }
+
+  GeckoProfilerTracingRAII(const char* aCategory, const char* aInfo
+                           MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mCategory(aCategory)
+    , mInfo(aInfo)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_START);
+  }
+
+  ~GeckoProfilerTracingRAII() {
+    profiler_tracing(mCategory, mInfo, TRACING_INTERVAL_END);
+  }
+
+protected:
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+  const char* mCategory;
+  const char* mInfo;
+};
+
+/**
+ * Convenience class to register and unregister a thread with the profiler.
+ * Needs to be the first object on the stack of the thread.
+ */
+class MOZ_STACK_CLASS AutoProfilerRegister final
+{
+public:
+  explicit AutoProfilerRegister(const char* aName)
+  {
+    profiler_register_thread(aName, this);
+  }
+  ~AutoProfilerRegister()
+  {
+    profiler_unregister_thread();
+  }
+private:
+  AutoProfilerRegister(const AutoProfilerRegister&) = delete;
+  AutoProfilerRegister& operator=(const AutoProfilerRegister&) = delete;
+};
+
+} // namespace mozilla
 
 #endif // ifndef SAMPLER_H

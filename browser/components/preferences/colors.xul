@@ -85,15 +85,15 @@
 #else
     <vbox>
 #endif
-      <label accesskey="&overridePageColors.accesskey;"
-             control="useDocumentColors">&overridePageColors.label;</label>
+      <label accesskey="&overrideDefaultPageColors.accesskey;"
+             control="useDocumentColors">&overrideDefaultPageColors.label;</label>
       <menulist id="useDocumentColors" preference="browser.display.document_color_use">
         <menupopup>
-          <menuitem label="&overridePageColors.always.label;"
+          <menuitem label="&overrideDefaultPageColors.always.label;"
                     value="2" id="documentColorAlways"/>
-          <menuitem label="&overridePageColors.auto.label;"
+          <menuitem label="&overrideDefaultPageColors.auto.label;"
                     value="0" id="documentColorAutomatic"/>
-          <menuitem label="&overridePageColors.never.label;"
+          <menuitem label="&overrideDefaultPageColors.never.label;"
                     value="1" id="documentColorNever"/>
         </menupopup>
       </menulist>

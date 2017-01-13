@@ -88,7 +88,7 @@ function readFile(file, callback) {
   NetUtil.asyncFetch({
     uri: NetUtil.newURI(file),
     loadUsingSystemPrincipal: true
-  }, function (inputStream, statusCode, request) {
+  }, function(inputStream, statusCode, request) {
     let data = NetUtil.readInputStreamToString(inputStream,
                                                inputStream.available());
     callback(statusCode, data);
@@ -114,14 +114,14 @@ add_test(function test_logOnSuccess_true() {
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function (error, data) {
+    readFile(logfile, function(error, data) {
       do_check_true(Components.isSuccessCode(error));
       do_check_neq(data.indexOf(MESSAGE), -1);
 
       // Clean up.
       try {
         logfile.remove(false);
-      } catch(ex) {
+      } catch (ex) {
         dump("Couldn't delete file: " + ex + "\n");
         // Stupid Windows box.
       }
@@ -181,14 +181,14 @@ add_test(function test_sync_error_logOnError_true() {
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function (error, data) {
+    readFile(logfile, function(error, data) {
       do_check_true(Components.isSuccessCode(error));
       do_check_neq(data.indexOf(MESSAGE), -1);
 
       // Clean up.
       try {
         logfile.remove(false);
-      } catch(ex) {
+      } catch (ex) {
         dump("Couldn't delete file: " + ex + "\n");
         // Stupid Windows box.
       }
@@ -248,14 +248,14 @@ add_test(function test_login_error_logOnError_true() {
     do_check_false(entries.hasMoreElements());
 
     // Ensure the log message was actually written to file.
-    readFile(logfile, function (error, data) {
+    readFile(logfile, function(error, data) {
       do_check_true(Components.isSuccessCode(error));
       do_check_neq(data.indexOf(MESSAGE), -1);
 
       // Clean up.
       try {
         logfile.remove(false);
-      } catch(ex) {
+      } catch (ex) {
         dump("Couldn't delete file: " + ex + "\n");
         // Stupid Windows box.
       }
@@ -293,14 +293,14 @@ add_test(function test_errorLog_dumpAddons() {
     do_check_false(entries.hasMoreElements());
 
     // Ensure we logged some addon list (which is probably empty)
-    readFile(logfile, function (error, data) {
+    readFile(logfile, function(error, data) {
       do_check_true(Components.isSuccessCode(error));
       do_check_neq(data.indexOf("Addons installed"), -1);
 
       // Clean up.
       try {
         logfile.remove(false);
-      } catch(ex) {
+      } catch (ex) {
         dump("Couldn't delete file: " + ex + "\n");
         // Stupid Windows box.
       }
@@ -344,7 +344,7 @@ add_test(function test_logErrorCleanup_age() {
     let entries = logsdir.directoryEntries;
     do_check_true(entries.hasMoreElements());
     let logfile = entries.getNext().QueryInterface(Ci.nsILocalFile);
-    do_check_true(oldLogs.every(function (e) {
+    do_check_true(oldLogs.every(function(e) {
       return e != logfile.leafName;
     }));
     do_check_false(entries.hasMoreElements());
@@ -352,7 +352,7 @@ add_test(function test_logErrorCleanup_age() {
     // Clean up.
     try {
       logfile.remove(false);
-    } catch(ex) {
+    } catch (ex) {
       dump("Couldn't delete file: " + ex + "\n");
       // Stupid Windows box.
     }

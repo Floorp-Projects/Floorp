@@ -56,7 +56,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
   let apply = store.applyIncoming;
   let applied = [];
 
-  store.applyIncoming = function (record) {
+  store.applyIncoming = function(record) {
     notEqual(record.id, localID, "Only apply tab records from remote clients");
     applied.push(record);
     apply.call(store, record);
@@ -90,7 +90,7 @@ add_task(async function test_tab_engine_skips_incoming_local_record() {
 
   let promiseFinished = new Promise(resolve => {
     let syncFinish = engine._syncFinish;
-    engine._syncFinish = function () {
+    engine._syncFinish = function() {
       equal(applied.length, 1, "Remote client record was applied");
       equal(applied[0].id, remoteID, "Remote client ID matches");
 

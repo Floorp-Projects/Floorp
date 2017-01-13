@@ -988,9 +988,8 @@ BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat)
     region.BSize(wm) = std::max(region.BSize(wm),
                                 ContentBSize() - floatPos.B(wm));
   }
-  DebugOnly<nsresult> rv = mFloatManager->AddFloat(aFloat, region, wm,
-                                                   ContainerSize());
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "bad float placement");
+  mFloatManager->AddFloat(aFloat, region, wm, ContainerSize());
+
   // store region
   nsFloatManager::StoreRegionFor(wm, aFloat, region, ContainerSize());
 

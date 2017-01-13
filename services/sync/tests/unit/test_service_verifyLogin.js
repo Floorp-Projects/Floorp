@@ -8,7 +8,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
 function login_handling(handler) {
-  return function (request, response) {
+  return function(request, response) {
     if (basic_auth_matches(request, "johndoe", "ilovejane")) {
       handler(request, response);
     } else {
@@ -40,7 +40,7 @@ function run_test() {
   do_test_pending();
 
   let server;
-  function weaveHandler (request, response) {
+  function weaveHandler(request, response) {
     response.setStatusLine(request.httpVersion, 200, "OK");
     let body = server.baseURI + "/api/";
     response.bodyOutputStream.write(body, body.length);
@@ -51,7 +51,7 @@ function run_test() {
     "/api/1.1/janedoe/info/collections": service_unavailable,
 
     "/api/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
-    "/api/1.1/johndoe/storage/meta/global": johnU("meta",   new ServerWBO("global").handler()),
+    "/api/1.1/johndoe/storage/meta/global": johnU("meta", new ServerWBO("global").handler()),
     "/user/1.0/johndoe/node/weave": weaveHandler,
   });
 
