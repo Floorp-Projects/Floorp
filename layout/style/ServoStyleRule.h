@@ -9,7 +9,7 @@
 #ifndef mozilla_ServoStyleRule_h
 #define mozilla_ServoStyleRule_h
 
-#include "mozilla/css/Rule.h"
+#include "mozilla/BindingStyleRule.h"
 #include "mozilla/ServoBindingTypes.h"
 
 #include "nsIDOMCSSStyleRule.h"
@@ -47,7 +47,7 @@ private:
   RefPtr<ServoDeclarationBlock> mDecls;
 };
 
-class ServoStyleRule final : public css::Rule
+class ServoStyleRule final : public BindingStyleRule
                            , public nsIDOMCSSStyleRule
 {
 public:
@@ -61,6 +61,7 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  virtual nsICSSDeclaration* Style() override;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 
@@ -69,8 +70,6 @@ public:
   using Rule::GetType;
   already_AddRefed<Rule> Clone() const final;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
 #endif
