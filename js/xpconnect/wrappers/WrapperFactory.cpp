@@ -203,7 +203,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
     RootedObject wrapScope(cx, scope);
 
     {
-        if (NATIVE_HAS_FLAG(&ccx, WantPreCreate)) {
+        if (ccx.GetScriptable() && ccx.GetScriptable()->WantPreCreate()) {
             // We have a precreate hook. This object might enforce that we only
             // ever create JS object for it.
 
@@ -211,7 +211,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
             // being accessed across compartments. We would really prefer to
             // replace the above code with a test that says "do you only have one
             // wrapper?"
-            nsresult rv = wn->GetScriptableInfo()->GetCallback()->
+            nsresult rv = wn->GetScriptable()->
                 PreCreate(wn->Native(), cx, scope, wrapScope.address());
             if (NS_FAILED(rv)) {
                 retObj.set(waive ? WaiveXray(cx, obj) : obj);
@@ -250,7 +250,7 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
                 // (the old scope). If (2) is the case, PreCreate will return the
                 // scope of the document (the new scope).
                 RootedObject probe(cx);
-                rv = wn->GetScriptableInfo()->GetCallback()->
+                rv = wn->GetScriptable()->
                     PreCreate(wn->Native(), cx, currentScope, probe.address());
 
                 // Check for case (2).

@@ -644,6 +644,7 @@ PrepareFontOptions(FcPattern* aPattern,
 
 cairo_scaled_font_t*
 gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
+                                         gfxFloat aAdjustedSize,
                                          const gfxFontStyle *aStyle,
                                          bool aNeedsBold)
 {
@@ -681,11 +682,7 @@ gfxFontconfigFontEntry::CreateScaledFont(FcPattern* aRenderPattern,
     cairo_matrix_t sizeMatrix;
     cairo_matrix_t identityMatrix;
 
-    double adjustedSize = aStyle->size;
-    if (aStyle->sizeAdjust >= 0.0) {
-        adjustedSize = aStyle->GetAdjustedSize(GetAspect());
-    }
-    cairo_matrix_init_scale(&sizeMatrix, adjustedSize, adjustedSize);
+    cairo_matrix_init_scale(&sizeMatrix, aAdjustedSize, aAdjustedSize);
     cairo_matrix_init_identity(&identityMatrix);
 
     if (needsOblique) {
@@ -809,10 +806,16 @@ gfxFontconfigFontEntry::CreateFontInstance(const gfxFontStyle *aFontStyle,
         return nullptr;
     }
 
+    double adjustedSize = aFontStyle->size;
+    if (aFontStyle->sizeAdjust >= 0.0) {
+        adjustedSize = aFontStyle->GetAdjustedSize(GetAspect());
+    }
+
     cairo_scaled_font_t* scaledFont =
-        CreateScaledFont(renderPattern, aFontStyle, aNeedsBold);
+        CreateScaledFont(renderPattern, adjustedSize, aFontStyle, aNeedsBold);
     gfxFont* newFont =
-        new gfxFontconfigFont(scaledFont, renderPattern, this, aFontStyle, aNeedsBold);
+        new gfxFontconfigFont(scaledFont, renderPattern, adjustedSize,
+                              this, aFontStyle, aNeedsBold);
     cairo_scaled_font_destroy(scaledFont);
 
     return newFont;
@@ -925,11 +928,13 @@ gfxFontconfigFontFamily::AddFontPattern(FcPattern* aFontPattern)
 
 gfxFontconfigFont::gfxFontconfigFont(cairo_scaled_font_t *aScaledFont,
                                      FcPattern *aPattern,
+                                     gfxFloat aAdjustedSize,
                                      gfxFontEntry *aFontEntry,
                                      const gfxFontStyle *aFontStyle,
                                      bool aNeedsBold) :
     gfxFontconfigFontBase(aScaledFont, aPattern, aFontEntry, aFontStyle)
 {
+    mAdjustedSize = aAdjustedSize;
 }
 
 gfxFontconfigFont::~gfxFontconfigFont()
