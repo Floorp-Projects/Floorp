@@ -37,18 +37,13 @@ add_task(async function test_urls() {
     do_check_eq(Service.metaURL,
                 "http://weave.cluster/1.1/johndoe/storage/meta/global");
 
-    _("The 'miscURL' and 'userURL' attributes can be relative to 'serverURL' or absolute.");
+    _("The 'miscURL' attribute can be relative to 'serverURL' or absolute.");
     Svc.Prefs.set("miscURL", "relative/misc/");
-    Svc.Prefs.set("userURL", "relative/user/");
     do_check_eq(Service.miscAPI,
                 "http://weave.server/relative/misc/1.0/");
-    do_check_eq(Service.userAPIURI,
-                "http://weave.server/relative/user/1.0/");
 
     Svc.Prefs.set("miscURL", "http://weave.misc.services/");
-    Svc.Prefs.set("userURL", "http://weave.user.services/");
     do_check_eq(Service.miscAPI, "http://weave.misc.services/1.0/");
-    do_check_eq(Service.userAPIURI, "http://weave.user.services/1.0/");
 
     do_check_eq(Service.pwResetURL,
                 "http://weave.server/weave-password-reset");

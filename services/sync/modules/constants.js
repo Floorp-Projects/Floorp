@@ -11,7 +11,6 @@ WEAVE_VERSION:                         "@weave_version@",
 
 // Sync Server API version that the client supports.
 SYNC_API_VERSION:                      "1.1",
-USER_API_VERSION:                      "1.0",
 MISC_API_VERSION:                      "1.0",
 
 // Version of the data format this client supports. The data format describes
