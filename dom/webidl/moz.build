@@ -95,6 +95,7 @@ WEBIDL_FILES = [
     'CSSGroupingRule.webidl',
     'CSSImportRule.webidl',
     'CSSKeyframeRule.webidl',
+    'CSSKeyframesRule.webidl',
     'CSSLexer.webidl',
     'CSSMediaRule.webidl',
     'CSSMozDocumentRule.webidl',
