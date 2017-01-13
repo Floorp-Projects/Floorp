@@ -88,8 +88,19 @@
 // its dereference, and destruction of the real object must all happen
 // on a single thread.  The following macros implement assertions for
 // checking these conditions.
+//
+// We disable this on MinGW. MinGW has two threading models: win32
+// API based, which disables std::thread; and POSIX based which
+// enables it but requires an emulation library (winpthreads).
+// Rather than attempting to switch to pthread emulation at this point,
+// we are disabling the std::thread based assertion checking.
+//
+// In the future, to enable it we could
+// a. have libgcc/stdc++ support win32 threads natively
+// b. switch to POSIX-based threading in MinGW with pthread emulation
+// c. refactor it to not use std::thread
 
-#if defined(DEBUG) || (defined(NIGHTLY_BUILD) && !defined(MOZ_PROFILING))
+#if !defined(__MINGW32__) && (defined(DEBUG) || (defined(NIGHTLY_BUILD) && !defined(MOZ_PROFILING)))
 
 #include <thread>
 #define MOZ_WEAKPTR_DECLARE_THREAD_SAFETY_CHECK \
