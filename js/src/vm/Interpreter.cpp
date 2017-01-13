@@ -1174,19 +1174,13 @@ ProcessTryNotes(JSContext* cx, EnvironmentIter& ei, InterpreterRegs& regs)
             SettleOnTryNote(cx, tn, ei, regs);
             return FinallyContinuation;
 
-          case JSTRY_FOR_IN:
-          case JSTRY_ITERCLOSE: {
+          case JSTRY_FOR_IN: {
             /* This is similar to JSOP_ENDITER in the interpreter loop. */
             DebugOnly<jsbytecode*> pc = regs.fp()->script()->main() + tn->start + tn->length;
-            MOZ_ASSERT_IF(tn->kind == JSTRY_FOR_IN, JSOp(*pc) == JSOP_ENDITER);
+            MOZ_ASSERT(JSOp(*pc) == JSOP_ENDITER);
             Value* sp = regs.spForStackDepth(tn->stackDepth);
             RootedObject obj(cx, &sp[-1].toObject());
-            bool ok;
-            if (tn->kind == JSTRY_FOR_IN)
-                ok = UnwindIteratorForException(cx, obj);
-            else
-                ok = IteratorCloseForException(cx, obj);
-            if (!ok) {
+            if (!UnwindIteratorForException(cx, obj)) {
                 // We should only settle on the note only if
                 // UnwindIteratorForException itself threw, as
                 // onExceptionUnwind should be called anew with the new
@@ -5048,12 +5042,7 @@ js::ThrowCheckIsObject(JSContext* cx, CheckIsObjectKind kind)
 {
     switch (kind) {
       case CheckIsObjectKind::IteratorNext:
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_ITER_METHOD_RETURNED_PRIMITIVE, "next");
-        break;
-      case CheckIsObjectKind::IteratorReturn:
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_ITER_METHOD_RETURNED_PRIMITIVE, "return");
+        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NEXT_RETURNED_PRIMITIVE);
         break;
       case CheckIsObjectKind::GetIterator:
         JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_GET_ITER_RETURNED_PRIMITIVE);

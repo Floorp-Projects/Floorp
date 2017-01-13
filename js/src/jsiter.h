@@ -183,9 +183,6 @@ CloseIterator(JSContext* cx, HandleObject iterObj);
 bool
 UnwindIteratorForException(JSContext* cx, HandleObject obj);
 
-bool
-IteratorCloseForException(JSContext* cx, HandleObject obj);
-
 void
 UnwindIteratorForUncatchableException(JSContext* cx, JSObject* obj);
 
