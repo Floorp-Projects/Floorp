@@ -20,7 +20,9 @@ namespace widget {
 class InProcessWinCompositorWidget final : public WinCompositorWidget
 {
 public:
-  InProcessWinCompositorWidget(const CompositorWidgetInitData& aInitData, nsWindow* aWindow);
+  InProcessWinCompositorWidget(const CompositorWidgetInitData& aInitData,
+                               const layers::CompositorOptions& aOptions,
+                               nsWindow* aWindow);
 
   void ObserveVsync(VsyncObserver* aObserver) override;
   nsIWidget* RealWidget() override;

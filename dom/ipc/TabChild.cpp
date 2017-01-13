@@ -388,13 +388,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mNativeWindowHandle(0)
 #endif
 {
-  // In the general case having the TabParent tell us if APZ is enabled or not
-  // doesn't really work because the TabParent itself may not have a reference
-  // to the owning widget during initialization. Instead we assume that this
-  // TabChild corresponds to a widget type that would have APZ enabled, and just
-  // check the other conditions necessary for enabling APZ.
-  mAsyncPanZoomEnabled = gfxPlatform::AsyncPanZoomEnabled();
-
   nsWeakPtr weakPtrThis(do_GetWeakReference(static_cast<nsITabChild*>(this)));  // for capture by the lambda
   mSetAllowedTouchBehaviorCallback = [weakPtrThis](uint64_t aInputBlockId,
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)
@@ -429,6 +422,15 @@ TabChild::TabChild(nsIContentChild* aManager,
   for (uint32_t idx = 0; idx < NUMBER_OF_AUDIO_CHANNELS; idx++) {
     mAudioChannelsActive.AppendElement(false);
   }
+}
+
+bool
+TabChild::AsyncPanZoomEnabled() const
+{
+  // If we have received the CompositorOptions we can answer definitively. If
+  // not, return a best guess based on gfxPlaform values.
+  return mCompositorOptions ? mCompositorOptions->UseAPZ()
+                            : gfxPlatform::AsyncPanZoomEnabled();
 }
 
 NS_IMETHODIMP
@@ -2502,6 +2504,10 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
       return;
     }
 
+    CompositorOptions options;
+    Unused << compositorChild->SendGetCompositorOptions(aLayersId, &options);
+    mCompositorOptions = Some(options);
+
     ShadowLayerForwarder* lf =
         mPuppetWidget->GetLayerManager(
             nullptr, mTextureFactoryIdentifier.mParentBackend)
@@ -2550,11 +2556,10 @@ TabChild::InitRenderingState(const TextureFactoryIdentifier& aTextureFactoryIden
 void
 TabChild::InitAPZState()
 {
-  auto cbc = CompositorBridgeChild::Get();
-
-  if (!cbc->GetAPZEnabled(mLayersId)) {
+  if (!mCompositorOptions->UseAPZ()) {
     return;
   }
+  auto cbc = CompositorBridgeChild::Get();
 
   // Initialize the ApzcTreeManager. This takes multiple casts because of ugly multiple inheritance.
   PAPZCTreeManagerChild* baseProtocol = cbc->SendPAPZCTreeManagerConstructor(mLayersId);
@@ -2893,6 +2898,12 @@ TabChild::ReinitRendering()
   SendEnsureLayersConnected();
 
   RefPtr<CompositorBridgeChild> cb = CompositorBridgeChild::Get();
+
+  // Refresh the compositor options since we may now be attached to a different
+  // compositor than we were previously.
+  CompositorOptions options;
+  Unused << cb->SendGetCompositorOptions(mLayersId, &options);
+  mCompositorOptions = Some(options);
 
   bool success;
   nsTArray<LayersBackend> ignored;

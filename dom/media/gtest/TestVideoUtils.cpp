@@ -14,18 +14,24 @@ TEST(StringListRange, MakeStringListRange)
   static const struct
   {
     const char* mList;
-    const char* mExpected;
+    const char* mExpectedSkipEmpties;
+    const char* mExpectedProcessAll;
+    const char* mExpectedProcessEmpties;
   } tests[] =
-  {
-    { "", "" },
-    { " ", "" },
-    { ",", "" },
-    { " , ", "" },
-    { "a", "a|" },
-    { "  a  ", "a|" },
-    { "aa,bb", "aa|bb|" },
-    { " a a ,  b b  ", "a a|b b|" },
-    { " , ,a 1,,  ,b  2,", "a 1|b  2|" }
+  { // string              skip         all               empties
+    { "",                  "",          "|",              "" },
+    { " ",                 "",          "|",              "|" },
+    { ",",                 "",          "||",             "||" },
+    { " , ",               "",          "||",             "||" },
+    { "a",                 "a|",        "a|",             "a|" },
+    { "  a  ",             "a|",        "a|",             "a|" },
+    { "a,",                "a|",        "a||",            "a||" },
+    { "a, ",               "a|",        "a||",            "a||" },
+    { ",a",                "a|",        "|a|",            "|a|" },
+    { " ,a",               "a|",        "|a|",            "|a|" },
+    { "aa,bb",             "aa|bb|",    "aa|bb|",         "aa|bb|" },
+    { " a a ,  b b  ",     "a a|b b|",  "a a|b b|",       "a a|b b|" },
+    { " , ,a 1,,  ,b  2,", "a 1|b  2|", "||a 1|||b  2||", "||a 1|||b  2||" }
   };
 
   for (const auto& test : tests) {
@@ -35,7 +41,23 @@ TEST(StringListRange, MakeStringListRange)
       out += item;
       out += "|";
     }
-    EXPECT_STREQ(test.mExpected, out.Data());
+    EXPECT_STREQ(test.mExpectedSkipEmpties, out.Data());
+    out.SetLength(0);
+
+    for (const auto& item :
+         MakeStringListRange<StringListRangeEmptyItems::ProcessAll>(list)) {
+      out += item;
+      out += "|";
+    }
+    EXPECT_STREQ(test.mExpectedProcessAll, out.Data());
+    out.SetLength(0);
+
+    for (const auto& item :
+         MakeStringListRange<StringListRangeEmptyItems::ProcessEmptyItems>(list)) {
+      out += item;
+      out += "|";
+    }
+    EXPECT_STREQ(test.mExpectedProcessEmpties, out.Data());
   }
 }
 
@@ -45,36 +67,49 @@ TEST(StringListRange, StringListContains)
   {
     const char* mList;
     const char* mItemToSearch;
-    bool mExpected;
+    bool mExpectedSkipEmpties;
+    bool mExpectedProcessAll;
+    bool mExpectedProcessEmpties;
   } tests[] =
-  {
-    { "", "", false },
-    { "", "a", false },
-    { " ", "a", false },
-    { ",", "a", false },
-    { " , ", "", false },
-    { " , ", "a", false },
-    { "a", "a", true },
-    { "a", "b", false },
-    { "  a  ", "a", true },
-    { "aa,bb", "aa", true },
-    { "aa,bb", "bb", true },
-    { "aa,bb", "cc", false },
-    { "aa,bb", " aa ", false },
-    { " a a ,  b b  ", "a a", true },
-    { " , ,a 1,,  ,b  2,", "a 1", true },
-    { " , ,a 1,,  ,b  2,", "b  2", true },
-    { " , ,a 1,,  ,b  2,", "", false },
-    { " , ,a 1,,  ,b  2,", " ", false },
-    { " , ,a 1,,  ,b  2,", "A 1", false },
-    { " , ,A 1,,  ,b  2,", "a 1", false }
+  { // haystack            needle  skip   all    empties
+    { "",                  "",     false, true,  false },
+    { " ",                 "",     false, true,  true  },
+    { "",                  "a",    false, false, false },
+    { " ",                 "a",    false, false, false },
+    { ",",                 "a",    false, false, false },
+    { " , ",               "",     false, true,  true  },
+    { " , ",               "a",    false, false, false },
+    { "a",                 "a",    true,  true,  true  },
+    { "a",                 "b",    false, false, false },
+    { "  a  ",             "a",    true,  true,  true  },
+    { "aa,bb",             "aa",   true,  true,  true  },
+    { "aa,bb",             "bb",   true,  true,  true  },
+    { "aa,bb",             "cc",   false, false, false },
+    { "aa,bb",             " aa ", false, false, false },
+    { " a a ,  b b  ",     "a a",  true,  true,  true  },
+    { " , ,a 1,,  ,b  2,", "a 1",  true,  true,  true  },
+    { " , ,a 1,,  ,b  2,", "b  2", true,  true,  true  },
+    { " , ,a 1,,  ,b  2,", "",     false, true,  true  },
+    { " , ,a 1,,  ,b  2,", " ",    false, false, false },
+    { " , ,a 1,,  ,b  2,", "A 1",  false, false, false },
+    { " , ,A 1,,  ,b  2,", "a 1",  false, false, false }
   };
 
   for (const auto& test : tests) {
     nsCString list(test.mList);
     nsCString itemToSearch(test.mItemToSearch);
-    EXPECT_EQ(test.mExpected, StringListContains(list, itemToSearch))
+    EXPECT_EQ(test.mExpectedSkipEmpties, StringListContains(list, itemToSearch))
       << "trying to find \"" << itemToSearch.Data()
-      << "\" in \"" << list.Data() << "\"";
+      << "\" in \"" << list.Data() << "\" (skipping empties)";
+    EXPECT_EQ(test.mExpectedProcessAll,
+              StringListContains<StringListRangeEmptyItems::ProcessAll>
+                                (list, itemToSearch))
+      << "trying to find \"" << itemToSearch.Data()
+      << "\" in \"" << list.Data() << "\" (processing everything)";
+    EXPECT_EQ(test.mExpectedProcessEmpties,
+              StringListContains<StringListRangeEmptyItems::ProcessEmptyItems>
+                                (list, itemToSearch))
+      << "trying to find \"" << itemToSearch.Data()
+      << "\" in \"" << list.Data() << "\" (processing empties)";
   }
 }

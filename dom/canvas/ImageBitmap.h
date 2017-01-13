@@ -52,7 +52,7 @@ class File;
 class HTMLCanvasElement;
 class HTMLImageElement;
 class HTMLVideoElement;
-enum class ImageBitmapFormat : uint32_t;
+enum class ImageBitmapFormat : uint8_t;
 class ImageData;
 class ImageUtils;
 template<typename T> class MapDataIntoBufferSource;

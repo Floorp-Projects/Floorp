@@ -4473,8 +4473,11 @@ CanPlayStatus
 HTMLMediaElement::GetCanPlay(const nsAString& aType,
                              DecoderDoctorDiagnostics* aDiagnostics)
 {
-  MediaContentType contentType{aType};
-  return DecoderTraits::CanHandleContentType(contentType, aDiagnostics);
+  Maybe<MediaContentType> contentType = MakeMediaContentType(aType);
+  if (!contentType) {
+    return CANPLAY_NO;
+  }
+  return DecoderTraits::CanHandleContentType(*contentType, aDiagnostics);
 }
 
 NS_IMETHODIMP

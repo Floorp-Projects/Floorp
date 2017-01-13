@@ -194,7 +194,7 @@
   width: 20px;
   height: 20px;
   border-radius: 2px;
-  background-image: url("chrome://browser/skin/theme-switcher-icon.png");
+  background-image: url("chrome://browser/content/default-theme-icon.svg");
   background-size: contain;
 }
 
@@ -388,7 +388,7 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
 }
 
 .customization-lwtheme-menu-theme[defaulttheme] {
-  list-style-image: url(chrome://browser/skin/theme-switcher-icon.png);
+  list-style-image: url(chrome://browser/content/default-theme-icon.svg);
 }
 
 .customization-lwtheme-menu-theme[active="true"],

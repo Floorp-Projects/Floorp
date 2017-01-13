@@ -10,6 +10,11 @@
 namespace mozilla {
 namespace widget {
 
+CompositorWidget::CompositorWidget(const layers::CompositorOptions& aOptions)
+  : mOptions(aOptions)
+{
+}
+
 CompositorWidget::~CompositorWidget()
 {
 }

@@ -13,8 +13,8 @@
     <em:id>{972ce4c6-7e08-4474-a285-3208198ce6fd}</em:id>
     <em:version>@FIREFOX_VERSION@</em:version>
 
-    <!-- Target Application this theme can install into, 
-        with minimum and maximum supported versions. --> 
+    <!-- Target Application this theme can install into,
+        with minimum and maximum supported versions. -->
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
@@ -35,6 +35,8 @@
     <em:skinnable>true</em:skinnable>
 
     <em:internalName>classic/1.0</em:internalName>
-  </Description>      
+
+    <em:iconURL>chrome://browser/content/default-theme-icon.svg</em:iconURL>
+  </Description>
 
 </RDF>
