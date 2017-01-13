@@ -3,10 +3,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMCSSRule.idl"
+#include "nsISupports.idl"
+
+interface nsIDOMCSSStyleDeclaration;
 
 [scriptable, uuid(b5e9af48-a7c2-4f88-aae3-58307af4b5a5)]
-interface nsIDOMCSSStyleRule : nsIDOMCSSRule
+interface nsIDOMCSSStyleRule : nsISupports
 {
            attribute DOMString        selectorText;
                                         // raises(DOMException) on setting
