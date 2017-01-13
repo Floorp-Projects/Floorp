@@ -89,6 +89,7 @@
 #include "GLLibraryEGL.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "nsDebug.h"
 #include "nsIWidget.h"
@@ -710,11 +711,15 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForCompositorWidget(CompositorWidget* aCompositorWidget, bool aForceAccelerated)
 {
-    return CreateForWindow(aCompositorWidget->RealWidget(), aForceAccelerated);
+    return CreateForWindow(aCompositorWidget->RealWidget(),
+                           aCompositorWidget->GetCompositorOptions().UseWebRender(),
+                           aForceAccelerated);
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
+GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget,
+                                      bool aWebRender,
+                                      bool aForceAccelerated)
 {
     nsCString discardFailureId;
     if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
@@ -737,7 +742,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated
     }
 
     CreateContextFlags flags = CreateContextFlags::NONE;
-    if (gfxPrefs::WebRenderEnabled()) {
+    if (aWebRender) {
         flags |= CreateContextFlags::PREFER_ES3;
     }
     SurfaceCaps caps = SurfaceCaps::Any();
