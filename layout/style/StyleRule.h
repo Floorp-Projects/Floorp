@@ -326,11 +326,14 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StyleRule, Rule)
-  NS_DECL_NSIDOMCSSRULE
   NS_DECL_NSIDOMCSSSTYLERULE
 
   // nsICSSStyleRuleDOMWrapper
   NS_IMETHOD GetCSSStyleRule(StyleRule **aResult) override;
+
+  // WebIDL interface
+  uint16_t Type() const override;
+  void GetCssTextImpl(nsAString& aCssText) const override;
 
   // null for style attribute
   nsCSSSelectorList* Selector() { return mSelector; }
@@ -340,6 +343,7 @@ public:
   void SetDeclaration(Declaration* aDecl);
 
   virtual int32_t GetType() const override;
+  using Rule::GetType;
 
   CSSStyleSheet* GetStyleSheet() const
   {
