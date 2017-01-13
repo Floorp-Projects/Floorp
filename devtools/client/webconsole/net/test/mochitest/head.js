@@ -21,8 +21,8 @@ Services.prefs.setBoolPref(NET_INFO_PREF, true);
 Services.prefs.setBoolPref(NET_XHR_PREF, true);
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(NET_INFO_PREF, true);
-  Services.prefs.clearUserPref(NET_XHR_PREF, true);
+  Services.prefs.clearUserPref(NET_INFO_PREF);
+  Services.prefs.clearUserPref(NET_XHR_PREF);
 });
 
 // Use the old webconsole since the new one doesn't yet support
