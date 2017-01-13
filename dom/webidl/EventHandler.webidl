@@ -161,6 +161,13 @@ interface WindowEventHandlers {
            attribute EventHandler onunload;
 };
 
+[NoInterfaceObject]
+interface DocumentAndElementEventHandlers {
+  attribute EventHandler oncopy;
+  attribute EventHandler oncut;
+  attribute EventHandler onpaste;
+};
+
 // The spec has |attribute OnErrorEventHandler onerror;| on
 // GlobalEventHandlers, and calls the handler differently depending on
 // whether an ErrorEvent was fired. We don't do that, and until we do we'll

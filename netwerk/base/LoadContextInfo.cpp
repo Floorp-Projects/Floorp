@@ -5,6 +5,7 @@
 #include "LoadContextInfo.h"
 
 #include "mozilla/dom/ToJSValue.h"
+#include "nsDocShell.h"
 #include "nsIChannel.h"
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"
@@ -143,12 +144,17 @@ GetLoadContextInfo(nsILoadContext *aLoadContext, bool aIsAnonymous)
     return new LoadContextInfo(aIsAnonymous, OriginAttributes());
   }
 
-  DebugOnly<bool> pb = aLoadContext->UsePrivateBrowsing();
   OriginAttributes oa;
   aLoadContext->GetOriginAttributes(oa);
   oa.StripAttributes(OriginAttributes::STRIP_ADDON_ID);
 
-  MOZ_ASSERT(pb == (oa.mPrivateBrowsingId > 0));
+#ifdef DEBUG
+  nsCOMPtr<nsIDocShellTreeItem> docShell = do_QueryInterface(aLoadContext);
+  if (!docShell || docShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    MOZ_ASSERT(aLoadContext->UsePrivateBrowsing() == (oa.mPrivateBrowsingId > 0));
+  }
+#endif
+
   return new LoadContextInfo(aIsAnonymous, oa);
 }
 
