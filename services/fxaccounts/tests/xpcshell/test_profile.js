@@ -19,13 +19,13 @@ const STATUS_SUCCESS = 200;
  *        Mocked raw response from the server
  * @returns {Function}
  */
-var mockResponse = function (response) {
-  let Request = function (requestUri) {
+var mockResponse = function(response) {
+  let Request = function(requestUri) {
     // Store the request uri so tests can inspect it
     Request._requestUri = requestUri;
     return {
-      setHeader: function () {},
-      head: function () {
+      setHeader() {},
+      head() {
         this.response = response;
         this.onComplete();
       }
@@ -41,21 +41,21 @@ var mockResponse = function (response) {
  *        Error object
  * @returns {Function}
  */
-var mockResponseError = function (error) {
-  return function () {
+var mockResponseError = function(error) {
+  return function() {
     return {
-      setHeader: function () {},
-      head: function () {
+      setHeader() {},
+      head() {
         this.onComplete(error);
       }
     };
   };
 };
 
-var mockClient = function (fxa) {
+var mockClient = function(fxa) {
   let options = {
     serverURL: "http://127.0.0.1:1111/v1",
-    fxa: fxa,
+    fxa,
   }
   return new FxAccountsProfileClient(options);
 };
@@ -74,7 +74,7 @@ FxaMock.prototype = {
     }
   },
 
-  getSignedInUser: function () {
+  getSignedInUser() {
     return Promise.resolve(ACCOUNT_DATA);
   }
 };
@@ -88,7 +88,7 @@ function CreateFxAccountsProfile(fxa = null, client = null) {
     fxa = mockFxa();
   }
   let options = {
-    fxa: fxa,
+    fxa,
     profileServerUrl: "http://127.0.0.1:1111/v1"
   }
   if (client) {
@@ -103,7 +103,7 @@ add_test(function getCachedProfile() {
   profile._cachedProfile = { avatar: "myurl" };
 
   return profile._getCachedProfile()
-    .then(function (cached) {
+    .then(function(cached) {
       do_check_eq(cached.avatar, "myurl");
       run_next_test();
     });
@@ -121,7 +121,7 @@ add_test(function cacheProfile_change() {
 */
   let profile = CreateFxAccountsProfile(fxa);
 
-  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
+  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
     do_check_eq(data, ACCOUNT_DATA.uid);
 //    do_check_true(setUserAccountDataCalled); - bug 1157529
     run_next_test();
@@ -136,7 +136,7 @@ add_test(function cacheProfile_no_change() {
   profile._cachedProfile = { avatar: "myurl" };
 // XXX - saving is disabled (but we can leave that in for now as we are
 // just checking it is *not* called)
-  fxa.setSignedInUser = function (data) {
+  fxa.setSignedInUser = function(data) {
     throw new Error("should not update account data");
   };
 
@@ -149,12 +149,12 @@ add_test(function cacheProfile_no_change() {
 
 add_test(function fetchAndCacheProfile_ok() {
   let client = mockClient(mockFxa());
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     return Promise.resolve({ avatar: "myimg"});
   };
   let profile = CreateFxAccountsProfile(null, client);
 
-  profile._cacheProfile = function (toCache) {
+  profile._cacheProfile = function(toCache) {
     do_check_eq(toCache.avatar, "myimg");
     return Promise.resolve();
   };
@@ -177,7 +177,7 @@ add_task(function* fetchAndCacheProfileOnce() {
   });
   let numFetches = 0;
   let client = mockClient(mockFxa());
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     numFetches += 1;
     return promiseProfile;
   };
@@ -209,12 +209,12 @@ add_task(function* fetchAndCacheProfileOnce() {
   // A promise that remains unresolved while we fire off 2 requests for
   // a profile.
   let rejectProfile;
-  let promiseProfile = new Promise((resolve,reject) => {
+  let promiseProfile = new Promise((resolve, reject) => {
     rejectProfile = reject;
   });
   let numFetches = 0;
   let client = mockClient(mockFxa());
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     numFetches += 1;
     return promiseProfile;
   };
@@ -249,7 +249,7 @@ add_task(function* fetchAndCacheProfileOnce() {
   }
 
   // but a new request should work.
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     return Promise.resolve({ avatar: "myimg"});
   };
 
@@ -262,7 +262,7 @@ add_task(function* fetchAndCacheProfileOnce() {
 add_task(function* fetchAndCacheProfileAfterThreshold() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     numFetches += 1;
     return Promise.resolve({ avatar: "myimg"});
   };
@@ -289,7 +289,7 @@ add_task(function* fetchAndCacheProfileAfterThreshold() {
 add_task(function* fetchAndCacheProfileBeforeThresholdOnNotification() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     numFetches += 1;
     return Promise.resolve({ avatar: "myimg"});
   };
@@ -323,11 +323,11 @@ add_test(function getProfile_ok() {
   let didFetch = false;
 
   let profile = CreateFxAccountsProfile();
-  profile._getCachedProfile = function () {
+  profile._getCachedProfile = function() {
     return Promise.resolve({ avatar: cachedUrl });
   };
 
-  profile._fetchAndCacheProfile = function () {
+  profile._fetchAndCacheProfile = function() {
     didFetch = true;
     return Promise.resolve();
   };
@@ -343,11 +343,11 @@ add_test(function getProfile_ok() {
 add_test(function getProfile_no_cache() {
   let fetchedUrl = "newUrl";
   let profile = CreateFxAccountsProfile();
-  profile._getCachedProfile = function () {
+  profile._getCachedProfile = function() {
     return Promise.resolve();
   };
 
-  profile._fetchAndCacheProfile = function () {
+  profile._fetchAndCacheProfile = function() {
     return Promise.resolve({ avatar: fetchedUrl });
   };
 
@@ -363,7 +363,7 @@ add_test(function getProfile_has_cached_fetch_deleted() {
 
   let fxa = mockFxa();
   let client = mockClient(fxa);
-  client.fetchProfile = function () {
+  client.fetchProfile = function() {
     return Promise.resolve({ avatar: null });
   };
 
@@ -372,7 +372,7 @@ add_test(function getProfile_has_cached_fetch_deleted() {
 
 // instead of checking this in a mocked "save" function, just check after the
 // observer
-  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
+  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function(subject, topic, data) {
     profile.getProfile()
       .then(profileData => {
         do_check_null(profileData.avatar);
@@ -391,7 +391,7 @@ function run_test() {
 }
 
 function makeObserver(aObserveTopic, aObserveFunc) {
-  let callback = function (aSubject, aTopic, aData) {
+  let callback = function(aSubject, aTopic, aData) {
     log.debug("observed " + aTopic + " " + aData);
     if (aTopic == aObserveTopic) {
       removeMe();

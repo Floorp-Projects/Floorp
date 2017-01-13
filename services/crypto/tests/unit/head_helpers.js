@@ -8,8 +8,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 try {
   // In the context of xpcshell tests, there won't be a default AppInfo
   Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULAppInfo);
-}
-catch(ex) {
+} catch (ex) {
 
 // Make sure to provide the right OS so crypto loads the right binaries
 var OS = "XPCShell";
@@ -26,7 +25,7 @@ updateAppInfo({
   ID: "{3e3ba16c-1675-4e88-b9c8-afef81b3d2ef}",
   version: "1",
   platformVersion: "",
-  OS: OS,
+  OS,
 });
 }
 

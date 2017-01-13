@@ -550,7 +550,7 @@ add_test(function test_error_delayNotSupported() {
 
 add_test(function test_sendAndComplete_notPaired() {
   let snd = new JPAKEClient({__proto__: BaseController});
-  do_check_throws(function () {
+  do_check_throws(function() {
     snd.sendAndComplete(DATA);
   });
   run_next_test();

@@ -28,7 +28,7 @@ function handler513(request, response) {
 }
 
 function handler200(eolCode) {
-  return function (request, response) {
+  return function(request, response) {
     let statusCode = 200;
     let status = "OK";
     let body = "{\"meta\": 123456789010}";

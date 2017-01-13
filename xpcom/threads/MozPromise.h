@@ -116,6 +116,7 @@ protected:
 };
 
 template<typename T> class MozPromiseHolder;
+template<typename T> class MozPromiseRequestHolder;
 template<typename ResolveValueT, typename RejectValueT, bool IsExclusive>
 class MozPromise : public MozPromiseRefcountable
 {
@@ -694,9 +695,8 @@ private:
   /*
    * A command object to store all information needed to make a request to
    * the promise. This allows us to delay the request until further use is
-   * known (whether it is ->Then() again for more promise chaining or passed
-   * to MozPromiseRequestHolder::Begin() to terminate chaining and issue
-   * the request).
+   * known (whether it is ->Then() again for more promise chaining or ->Track()
+   * to terminate chaining and issue the request).
    *
    * This allows a unified syntax for promise chaining and disconnection
    * and feels more like its JS counterpart.
@@ -725,14 +725,6 @@ private:
       }
     }
 
-    // Allow passing Then() to MozPromiseRequestHolder::Begin().
-    operator RefPtr<Request>()
-    {
-      RefPtr<ThenValueBase> thenValue = mThenValue.forget();
-      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
-      return thenValue.forget();
-    }
-
     // Allow RefPtr<MozPromise> p = somePromise->Then();
     //       p->Then(thread1, ...);
     //       p->Then(thread2, ...);
@@ -749,10 +741,25 @@ private:
       return p;
     }
 
-    // Allow calling ->Then() again for more promise chaining.
-    RefPtr<MozPromise> operator->()
+    template <typename... Ts>
+    auto Then(Ts&&... aArgs)
+      -> decltype(DeclVal<MozPromise>().Then(Forward<Ts>(aArgs)...))
     {
-      return *this;
+      return static_cast<RefPtr<MozPromise>>(*this)->Then(Forward<Ts>(aArgs)...);
+    }
+
+    void Track(MozPromiseRequestHolder<MozPromise>& aRequestHolder)
+    {
+      RefPtr<ThenValueBase> thenValue = mThenValue.forget();
+      mReceiver->ThenInternal(mResponseThread, thenValue, mCallSite);
+      aRequestHolder.Track(thenValue.forget());
+    }
+
+    // Allow calling ->Then() again for more promise chaining or ->Track() to
+    // end chaining and track the request for future disconnection.
+    ThenCommand* operator->()
+    {
+      return this;
     }
 
   private:
@@ -1046,16 +1053,10 @@ public:
   MozPromiseRequestHolder() {}
   ~MozPromiseRequestHolder() { MOZ_ASSERT(!mRequest); }
 
-  void Begin(RefPtr<typename PromiseType::Request>&& aRequest)
+  void Track(RefPtr<typename PromiseType::Request>&& aRequest)
   {
     MOZ_DIAGNOSTIC_ASSERT(!Exists());
     mRequest = Move(aRequest);
-  }
-
-  void Begin(typename PromiseType::Request* aRequest)
-  {
-    MOZ_DIAGNOSTIC_ASSERT(!Exists());
-    mRequest = aRequest;
   }
 
   void Complete()

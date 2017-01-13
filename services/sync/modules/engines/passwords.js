@@ -41,7 +41,7 @@ PasswordEngine.prototype = {
 
   syncPriority: 2,
 
-  _syncFinish: function () {
+  _syncFinish() {
     SyncEngine.prototype._syncFinish.call(this);
 
     // Delete the Weave credentials from the server once.
@@ -78,7 +78,7 @@ PasswordEngine.prototype = {
     }
   },
 
-  _findDupe: function (item) {
+  _findDupe(item) {
     let login = this._store._nsLoginInfoFromRecord(item);
     if (!login) {
       return;
@@ -104,14 +104,14 @@ function PasswordStore(name, engine) {
 PasswordStore.prototype = {
   __proto__: Store.prototype,
 
-  _newPropertyBag: function () {
+  _newPropertyBag() {
     return Cc["@mozilla.org/hash-property-bag;1"].createInstance(Ci.nsIWritablePropertyBag2);
   },
 
   /**
    * Return an instance of nsILoginInfo (and, implicitly, nsILoginMetaInfo).
    */
-  _nsLoginInfoFromRecord: function (record) {
+  _nsLoginInfoFromRecord(record) {
     function nullUndefined(x) {
       return (x == undefined) ? null : x;
     }
@@ -144,7 +144,7 @@ PasswordStore.prototype = {
     return info;
   },
 
-  _getLoginFromGUID: function (id) {
+  _getLoginFromGUID(id) {
     let prop = this._newPropertyBag();
     prop.setPropertyAsAUTF8String("guid", id);
 
@@ -160,7 +160,7 @@ PasswordStore.prototype = {
     return null;
   },
 
-  getAllIDs: function () {
+  getAllIDs() {
     let items = {};
     let logins = Services.logins.getAllLogins({});
 
@@ -177,7 +177,7 @@ PasswordStore.prototype = {
     return items;
   },
 
-  changeItemID: function (oldID, newID) {
+  changeItemID(oldID, newID) {
     this._log.trace("Changing item ID: " + oldID + " to " + newID);
 
     let oldLogin = this._getLoginFromGUID(oldID);
@@ -196,11 +196,11 @@ PasswordStore.prototype = {
     Services.logins.modifyLogin(oldLogin, prop);
   },
 
-  itemExists: function (id) {
+  itemExists(id) {
     return !!this._getLoginFromGUID(id);
   },
 
-  createRecord: function (id, collection) {
+  createRecord(id, collection) {
     let record = new LoginRec(collection, id);
     let login = this._getLoginFromGUID(id);
 
@@ -225,7 +225,7 @@ PasswordStore.prototype = {
     return record;
   },
 
-  create: function (record) {
+  create(record) {
     let login = this._nsLoginInfoFromRecord(record);
     if (!login) {
       return;
@@ -236,12 +236,12 @@ PasswordStore.prototype = {
                     "formSubmitURL: " + JSON.stringify(login.formSubmitURL));
     try {
       Services.logins.addLogin(login);
-    } catch(ex) {
+    } catch (ex) {
       this._log.debug(`Adding record ${record.id} resulted in exception`, ex);
     }
   },
 
-  remove: function (record) {
+  remove(record) {
     this._log.trace("Removing login " + record.id);
 
     let loginItem = this._getLoginFromGUID(record.id);
@@ -253,7 +253,7 @@ PasswordStore.prototype = {
     Services.logins.removeLogin(loginItem);
   },
 
-  update: function (record) {
+  update(record) {
     let loginItem = this._getLoginFromGUID(record.id);
     if (!loginItem) {
       this._log.debug("Skipping update for unknown item: " + record.hostname);
@@ -268,12 +268,12 @@ PasswordStore.prototype = {
 
     try {
       Services.logins.modifyLogin(loginItem, newinfo);
-    } catch(ex) {
+    } catch (ex) {
       this._log.debug(`Modifying record ${record.id} resulted in exception; not modifying`, ex);
     }
   },
 
-  wipe: function () {
+  wipe() {
     Services.logins.removeAllLogins();
   },
 };
@@ -286,15 +286,15 @@ function PasswordTracker(name, engine) {
 PasswordTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  startTracking: function () {
+  startTracking() {
     Svc.Obs.add("passwordmgr-storage-changed", this);
   },
 
-  stopTracking: function () {
+  stopTracking() {
     Svc.Obs.remove("passwordmgr-storage-changed", this);
   },
 
-  observe: function (subject, topic, data) {
+  observe(subject, topic, data) {
     Tracker.prototype.observe.call(this, subject, topic, data);
 
     if (this.ignoreAll) {

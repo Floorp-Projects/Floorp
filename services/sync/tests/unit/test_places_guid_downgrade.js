@@ -34,7 +34,7 @@ function removePlacesDatabase() {
   }
 }
 
-Svc.Obs.add("places-shutdown", function () {
+Svc.Obs.add("places-shutdown", function() {
   do_timeout(0, removePlacesDatabase);
 });
 

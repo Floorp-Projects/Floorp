@@ -752,10 +752,10 @@ MediaDecoder::CallSeek(const SeekTarget& aTarget, dom::Promise* aPromise)
   DiscardOngoingSeekIfExists();
 
   mSeekDOMPromise = aPromise;
-  mSeekRequest.Begin(
-    mDecoderStateMachine->InvokeSeek(aTarget)
-    ->Then(AbstractThread::MainThread(), __func__, this,
-           &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected));
+  mDecoderStateMachine->InvokeSeek(aTarget)
+  ->Then(AbstractThread::MainThread(), __func__, this,
+         &MediaDecoder::OnSeekResolved, &MediaDecoder::OnSeekRejected)
+  ->Track(mSeekRequest);
 }
 
 double

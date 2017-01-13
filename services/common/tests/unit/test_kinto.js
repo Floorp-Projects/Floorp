@@ -17,7 +17,7 @@ function do_get_kinto_sqliteHandle() {
   return FirefoxAdapter.openConnection({path: kintoFilename});
 }
 
-function do_get_kinto_collection(sqliteHandle, collection="test_collection") {
+function do_get_kinto_collection(sqliteHandle, collection = "test_collection") {
   let config = {
     remote:`http://localhost:${server.identity.primaryPort}/v1/`,
     headers: {Authorization: "Basic " + btoa("user:pass")},
@@ -154,7 +154,7 @@ add_task(function* test_kinto_clear() {
 
 add_task(clear_collection);
 
-add_task(function* test_kinto_delete(){
+add_task(function* test_kinto_delete() {
   let sqliteHandle;
   try {
     sqliteHandle = yield do_get_kinto_sqliteHandle();
@@ -180,7 +180,7 @@ add_task(function* test_kinto_delete(){
   }
 });
 
-add_task(function* test_kinto_list(){
+add_task(function* test_kinto_list() {
   let sqliteHandle;
   try {
     sqliteHandle = yield do_get_kinto_sqliteHandle();
@@ -214,7 +214,7 @@ add_task(function* test_kinto_list(){
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_ignores_already_imported_records(){
+add_task(function* test_loadDump_ignores_already_imported_records() {
   let sqliteHandle;
   try {
     sqliteHandle = yield do_get_kinto_sqliteHandle();
@@ -230,7 +230,7 @@ add_task(function* test_loadDump_ignores_already_imported_records(){
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_should_overwrite_old_records(){
+add_task(function* test_loadDump_should_overwrite_old_records() {
   let sqliteHandle;
   try {
     sqliteHandle = yield do_get_kinto_sqliteHandle();
@@ -247,7 +247,7 @@ add_task(function* test_loadDump_should_overwrite_old_records(){
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_should_not_overwrite_unsynced_records(){
+add_task(function* test_loadDump_should_not_overwrite_unsynced_records() {
   let sqliteHandle;
   try {
     sqliteHandle = yield do_get_kinto_sqliteHandle();
@@ -264,7 +264,7 @@ add_task(function* test_loadDump_should_not_overwrite_unsynced_records(){
 
 add_task(clear_collection);
 
-add_task(function* test_loadDump_should_not_overwrite_records_without_last_modified(){
+add_task(function* test_loadDump_should_not_overwrite_records_without_last_modified() {
   let sqliteHandle;
   try {
     sqliteHandle = yield do_get_kinto_sqliteHandle();
@@ -284,11 +284,11 @@ add_task(clear_collection);
 // Now do some sanity checks against a server - we're not looking to test
 // core kinto.js functionality here (there is excellent test coverage in
 // kinto.js), more making sure things are basically working as expected.
-add_task(function* test_kinto_sync(){
+add_task(function* test_kinto_sync() {
   const configPath = "/v1/";
   const recordsPath = "/v1/buckets/default/collections/test_collection/records";
   // register a handler
-  function handleResponse (request, response) {
+  function handleResponse(request, response) {
     try {
       const sampled = getSampleResponse(request, server.identity.primaryPort);
       if (!sampled) {

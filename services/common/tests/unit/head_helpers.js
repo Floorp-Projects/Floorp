@@ -69,7 +69,7 @@ var _ = function(some, debug, text, to) {
   print(Array.slice(arguments).join(" "));
 };
 
-function httpd_setup (handlers, port=-1) {
+function httpd_setup(handlers, port = -1) {
   let server = new HttpServer();
   for (let path in handlers) {
     server.registerPathHandler(path, handlers[path]);

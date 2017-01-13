@@ -215,7 +215,7 @@ FinderHighlighter.prototype = {
     if (!controller || !doc || !doc.documentElement) {
       // Without the selection controller,
       // we are unable to (un)highlight any matches
-      return this._found;
+      return;
     }
 
     if (highlight) {
@@ -229,8 +229,10 @@ FinderHighlighter.prototype = {
         useCache: true,
         window
       };
-      if (this._modal && this.iterator._areParamsEqual(params, dict.lastIteratorParams))
-        return this._found;
+      if (this.iterator.isAlreadyRunning(params) ||
+          (this._modal && this.iterator._areParamsEqual(params, dict.lastIteratorParams))) {
+        return;
+      }
 
       if (!this._modal)
         dict.visible = true;
@@ -245,8 +247,6 @@ FinderHighlighter.prototype = {
     }
 
     this.notifyFinished({ highlight, found: this._found });
-
-    return this._found;
   }),
 
   // FinderIterator listener implementation
