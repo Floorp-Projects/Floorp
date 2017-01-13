@@ -27,6 +27,7 @@
 **      %g - float
 */
 
+#include "mozilla/AllocPolicy.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -34,39 +35,11 @@
 #include "mozilla/Types.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 #include "jstypes.h"
 
 namespace mozilla {
-
-/*
-** sprintf into a malloc'd buffer. Return a pointer to the malloc'd
-** buffer on success, nullptr on failure. Call "SmprintfFree" to release
-** the memory returned.
-*/
-extern MFBT_API char* Smprintf(const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(1, 2);
-
-/*
-** Free the memory allocated, for the caller, by Smprintf
-*/
-extern MFBT_API void SmprintfFree(char* mem);
-
-/*
-** "append" sprintf into a malloc'd buffer. "last" is the last value of
-** the malloc'd buffer. sprintf will append data to the end of last,
-** growing it as necessary using realloc. If last is nullptr, SmprintfAppend
-** will allocate the initial string. The return value is the new value of
-** last for subsequent calls, or nullptr if there is a malloc failure.
-*/
-extern MFBT_API char* SmprintfAppend(char* last, const char* fmt, ...)
-    MOZ_FORMAT_PRINTF(2, 3);
-
-/*
-** va_list forms of the above.
-*/
-extern MFBT_API char* Vsmprintf(const char* fmt, va_list ap);
-extern MFBT_API char* VsmprintfAppend(char* last, const char* fmt, va_list ap);
 
 /*
  * This class may be subclassed to provide a way to get the output of
@@ -109,6 +82,136 @@ private:
     bool cvt_f(double d, const char* fmt0, const char* fmt1);
     bool cvt_s(const char* s, int width, int prec, int flags);
 };
+
+// Used in the implementation of Smprintf et al.
+template<typename AllocPolicy>
+class MOZ_STACK_CLASS SprintfState final : public mozilla::PrintfTarget, private AllocPolicy
+{
+ public:
+    explicit SprintfState(char* base)
+        : mMaxlen(base ? strlen(base) : 0)
+        , mBase(base)
+        , mCur(base ? base + mMaxlen : 0)
+    {
+    }
+
+    ~SprintfState() {
+        this->free_(mBase);
+    }
+
+    char* release() {
+        char* result = mBase;
+        mBase = nullptr;
+        return result;
+    }
+
+ protected:
+
+    bool append(const char* sp, size_t len) override {
+        ptrdiff_t off;
+        char* newbase;
+        size_t newlen;
+
+        off = mCur - mBase;
+        if (off + len >= mMaxlen) {
+            /* Grow the buffer */
+            newlen = mMaxlen + ((len > 32) ? len : 32);
+            newbase = static_cast<char*>(this->maybe_pod_realloc(mBase, mMaxlen, newlen));
+            if (!newbase) {
+                /* Ran out of memory */
+                return false;
+            }
+            mBase = newbase;
+            mMaxlen = newlen;
+            mCur = mBase + off;
+        }
+
+        /* Copy data */
+        memcpy(mCur, sp, len);
+        mCur += len;
+        MOZ_ASSERT(size_t(mCur - mBase) <= mMaxlen);
+        return true;
+    }
+
+ private:
+
+    size_t mMaxlen;
+    char* mBase;
+    char* mCur;
+};
+
+/*
+** sprintf into a malloc'd buffer. Return a pointer to the malloc'd
+** buffer on success, nullptr on failure. Call AllocPolicy::free_ to release
+** the memory returned.
+*/
+template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+MOZ_FORMAT_PRINTF(1, 2)
+char* Smprintf(const char* fmt, ...)
+{
+    SprintfState<AllocPolicy> ss(nullptr);
+    va_list ap;
+    va_start(ap, fmt);
+    bool r = ss.vprint(fmt, ap);
+    va_end(ap);
+    if (!r) {
+        return nullptr;
+    }
+    return ss.release();
+}
+
+/*
+** "append" sprintf into a malloc'd buffer. "last" is the last value of
+** the malloc'd buffer. sprintf will append data to the end of last,
+** growing it as necessary using realloc. If last is nullptr, SmprintfAppend
+** will allocate the initial string. The return value is the new value of
+** last for subsequent calls, or nullptr if there is a malloc failure.
+*/
+template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+MOZ_FORMAT_PRINTF(2, 3)
+char* SmprintfAppend(char* last, const char* fmt, ...)
+{
+    SprintfState<AllocPolicy> ss(last);
+    va_list ap;
+    va_start(ap, fmt);
+    bool r = ss.vprint(fmt, ap);
+    va_end(ap);
+    if (!r) {
+        return nullptr;
+    }
+    return ss.release();
+}
+
+/*
+** va_list forms of the above.
+*/
+template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+char* Vsmprintf(const char* fmt, va_list ap)
+{
+    SprintfState<AllocPolicy> ss(nullptr);
+    if (!ss.vprint(fmt, ap))
+        return nullptr;
+    return ss.release();
+}
+
+template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+char* VsmprintfAppend(char* last, const char* fmt, va_list ap)
+{
+    SprintfState<AllocPolicy> ss(last);
+    if (!ss.vprint(fmt, ap))
+        return nullptr;
+    return ss.release();
+}
+
+/*
+** Free the memory allocated, for the caller, by Smprintf.
+*/
+template<typename AllocPolicy = mozilla::MallocAllocPolicy>
+void SmprintfFree(char* mem)
+{
+    AllocPolicy allocator;
+    allocator.free_(mem);
+}
 
 } // namespace mozilla
 
