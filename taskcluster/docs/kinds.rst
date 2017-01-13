@@ -160,6 +160,19 @@ Template <yaml-templates>`.
 android-stuff
 --------------
 
+balrog
+------
+
+Balrog is the Mozilla Update Server. Jobs of this kind are submitting information
+which assists in telling Firefox that an update is available for the related job.
+
+balrog-l10n
+-----------
+
+Balrog is the Mozilla Update Server. Jobs of this kind are submitting information
+which assists in telling Firefox that an update is available for the localized
+job involved.
+
 beetmover
 ---------
 
