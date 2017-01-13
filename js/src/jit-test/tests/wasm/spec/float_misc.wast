@@ -631,13 +631,3 @@
 (assert_return (invoke "f32.nearest" (f32.const 0x1.fffffep+22)) (f32.const 0x1p+23))
 (assert_return (invoke "f64.nearest" (f64.const -0x1.fffffffffffffp+51)) (f64.const -0x1p+52))
 (assert_return (invoke "f64.nearest" (f64.const 0x1.fffffffffffffp+51)) (f64.const 0x1p+52))
-
-;; Test that min and max behave properly with signaling NaNs.
-(assert_return (invoke "f32.min" (f32.const 0.0) (f32.const nan:0x200000)) (f32.const nan:0x600000))
-(assert_return (invoke "f32.min" (f32.const nan:0x200000) (f32.const 0.0)) (f32.const nan:0x600000))
-(assert_return (invoke "f32.max" (f32.const 0.0) (f32.const nan:0x200000)) (f32.const nan:0x600000))
-(assert_return (invoke "f32.max" (f32.const nan:0x200000) (f32.const 0.0)) (f32.const nan:0x600000))
-(assert_return (invoke "f64.min" (f64.const 0.0) (f64.const nan:0x4000000000000)) (f64.const nan:0xc000000000000))
-(assert_return (invoke "f64.min" (f64.const nan:0x4000000000000) (f64.const 0.0)) (f64.const nan:0xc000000000000))
-(assert_return (invoke "f64.max" (f64.const 0.0) (f64.const nan:0x4000000000000)) (f64.const nan:0xc000000000000))
-(assert_return (invoke "f64.max" (f64.const nan:0x4000000000000) (f64.const 0.0)) (f64.const nan:0xc000000000000))
