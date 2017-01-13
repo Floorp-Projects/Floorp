@@ -14,3 +14,6 @@ DIRS += [
 DevToolsModules(
     'utils.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Animation Inspector')
