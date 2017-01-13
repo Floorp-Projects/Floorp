@@ -809,54 +809,32 @@ function ArrayFrom(items, mapfn=undefined, thisArg=undefined) {
         // Steps 5.a-c.
         var A = IsConstructor(C) ? new C() : [];
 
-        // Step 5.c.
-        var iterator = GetIterator(items, usingIterator);
-
         // Step 5.d.
         var k = 0;
 
-        // Step 5.e.
-        // These steps cannot be implemented using a for-of loop.
-        // See <https://bugs.ecmascript.org/show_bug.cgi?id=2883>.
-        while (true) {
+        // Step 5.c, 5.e.
+        var iteratorWrapper = { [std_iterator]() { return GetIterator(items, usingIterator); } };
+        for (var nextValue of allowContentIter(iteratorWrapper)) {
             // Step 5.e.i.
             // Disabled for performance reason.  We won't hit this case on
             // normal array, since _DefineDataProperty will throw before it.
             // We could hit this when |A| is a proxy and it ignores
             // |_DefineDataProperty|, but it happens only after too long loop.
             /*
-            if (k >= 0x1fffffffffffff) {
-                IteratorCloseThrow(iterator);
+            if (k >= 0x1fffffffffffff)
                 ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
-            }
             */
 
-            // Step 5.e.iii.
-            var next = callContentFunction(iterator.next, iterator);
-            if (!IsObject(next))
-                ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
-
-            // Step 5.e.iv.
-            if (next.done) {
-                A.length = k;
-                return A;
-            }
-
-            // Steps 5.e.v.
-            var nextValue = next.value;
-
             // Steps 5.e.vi-vii.
-            try {
-                var mappedValue = mapping ? callContentFunction(mapfn, thisArg, nextValue, k) : nextValue;
+            var mappedValue = mapping ? callContentFunction(mapfn, thisArg, nextValue, k) : nextValue;
 
-                // Steps 5.e.ii (reordered), 5.e.viii.
-                _DefineDataProperty(A, k++, mappedValue);
-            } catch (e) {
-                // Steps 5.e.vi.2, 5.e.ix.
-                IteratorCloseThrow(iterator);
-                throw e;
-            }
+            // Steps 5.e.ii (reordered), 5.e.viii.
+            _DefineDataProperty(A, k++, mappedValue);
         }
+
+        // Step 5.e.iv.
+        A.length = k;
+        return A;
     }
 
     // Step 7.
