@@ -18,28 +18,37 @@
 #define __VideoDecoder_h__
 
 #include <atomic>
-#include <queue>
-#include <thread>
 
-// This include is required in order for content_decryption_module to work
-// on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
+#include "gmp-task-utils.h"
+#include "gmp-video-decode.h"
+#include "gmp-video-host.h"
 #include "WMFH264Decoder.h"
 
-class VideoDecoder : public RefCounted
+#include "mfobjects.h"
+
+class VideoDecoder : public GMPVideoDecoder
+                   , public RefCounted
 {
 public:
-  explicit VideoDecoder(cdm::Host_8 *aHost);
+  explicit VideoDecoder(GMPVideoHost *aHostAPI);
 
-  cdm::Status InitDecode(const cdm::VideoDecoderConfig& aConfig);
+  virtual void InitDecode(const GMPVideoCodec& aCodecSettings,
+                          const uint8_t* aCodecSpecific,
+                          uint32_t aCodecSpecificLength,
+                          GMPVideoDecoderCallback* aCallback,
+                          int32_t aCoreCount) override;
 
-  cdm::Status Decode(const cdm::InputBuffer& aEncryptedBuffer,
-                     cdm::VideoFrame* aVideoFrame);
+  virtual void Decode(GMPVideoEncodedFrame* aInputFrame,
+                      bool aMissingFrames,
+                      const uint8_t* aCodecSpecific,
+                      uint32_t aCodecSpecificLength,
+                      int64_t aRenderTimeMs = -1);
 
-  void Reset();
+  virtual void Reset() override;
 
-  void DecodingComplete();
+  virtual void Drain() override;
+
+  virtual void DecodingComplete() override;
 
   bool HasShutdown() { return mHasShutdown; }
 
@@ -47,26 +56,53 @@ private:
 
   virtual ~VideoDecoder();
 
-  cdm::Status Drain(cdm::VideoFrame* aVideoFrame);
+  void EnsureWorker();
+
+  void DrainTask();
 
   struct DecodeData {
+    DecodeData()
+      : mTimestamp(0)
+      , mDuration(0)
+      , mIsKeyframe(false)
+    {}
     std::vector<uint8_t> mBuffer;
-    uint64_t mTimestamp = 0;
+    uint64_t mTimestamp;
+    uint64_t mDuration;
+    bool mIsKeyframe;
     CryptoMetaData mCrypto;
   };
 
-  cdm::Status OutputFrame(cdm::VideoFrame* aVideoFrame);
+  void DecodeTask(DecodeData* aData);
+
+  void ResetCompleteTask();
+
+  void ReturnOutput(IMFSample* aSample,
+                    int32_t aWidth,
+                    int32_t aHeight,
+                    int32_t aStride);
 
   HRESULT SampleToVideoFrame(IMFSample* aSample,
                              int32_t aWidth,
                              int32_t aHeight,
                              int32_t aStride,
-                             cdm::VideoFrame* aVideoFrame);
+                             GMPVideoi420Frame* aVideoFrame);
 
-  cdm::Host_8* mHost;
+  void MaybeRunOnMainThread(GMPTask* aTask);
+
+  GMPVideoHost *mHostAPI; // host-owned, invalid at DecodingComplete
+  GMPVideoDecoderCallback* mCallback; // host-owned, invalid at DecodingComplete
+  GMPThread* mWorkerThread;
+  GMPMutex* mMutex;
   wmf::AutoPtr<wmf::WMFH264Decoder> mDecoder;
 
-  std::queue<wmf::CComPtr<IMFSample>> mOutputQueue;
+  std::vector<uint8_t> mExtraData;
+  std::vector<uint8_t> mAnnexB;
+
+  int32_t mNumInputTasks;
+  bool mSentExtraData;
+
+  std::atomic<bool> mIsFlushing;
 
   bool mHasShutdown;
 };

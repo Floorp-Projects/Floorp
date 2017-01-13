@@ -196,6 +196,7 @@ HRESULT
 WMFH264Decoder::CreateInputSample(const uint8_t* aData,
                                   uint32_t aDataSize,
                                   Microseconds aTimestamp,
+                                  Microseconds aDuration,
                                   IMFSample** aOutSample)
 {
   HRESULT hr;
@@ -229,6 +230,8 @@ WMFH264Decoder::CreateInputSample(const uint8_t* aData,
 
   hr = sample->SetSampleTime(UsecsToHNs(aTimestamp));
   ENSURE(SUCCEEDED(hr), hr);
+
+  sample->SetSampleDuration(UsecsToHNs(aDuration));
 
   *aOutSample = sample.Detach();
 
@@ -298,11 +301,12 @@ WMFH264Decoder::GetOutputSample(IMFSample** aOutSample)
 HRESULT
 WMFH264Decoder::Input(const uint8_t* aData,
                       uint32_t aDataSize,
-                      Microseconds aTimestamp)
+                      Microseconds aTimestamp,
+                      Microseconds aDuration)
 {
   HRESULT hr;
   CComPtr<IMFSample> input = nullptr;
-  hr = CreateInputSample(aData, aDataSize, aTimestamp, &input);
+  hr = CreateInputSample(aData, aDataSize, aTimestamp, aDuration, &input);
   ENSURE(SUCCEEDED(hr) && input!=nullptr, hr);
 
   hr = mDecoder->ProcessInput(0, input, 0);
