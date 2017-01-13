@@ -203,6 +203,7 @@ static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel_webrende
     NSOpenGLPFADoubleBuffer,
     NSOpenGLPFAOpenGLProfile,
     NSOpenGLProfileVersion3_2Core,
+    NSOpenGLPFADepthSize, 24,
     0
 };
 
