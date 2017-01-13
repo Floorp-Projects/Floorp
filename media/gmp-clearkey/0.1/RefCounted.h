@@ -21,7 +21,41 @@
 #include <assert.h>
 #include "ClearKeyUtils.h"
 
+#if defined(_MSC_VER)
 #include <atomic>
+typedef std::atomic<uint32_t> AtomicRefCount;
+#else
+class AtomicRefCount {
+public:
+  explicit AtomicRefCount(uint32_t aValue)
+    : mCount(aValue)
+    , mMutex(GMPCreateMutex())
+  {
+    assert(mMutex);
+  }
+  ~AtomicRefCount()
+  {
+    if (mMutex) {
+      mMutex->Destroy();
+    }
+  }
+  uint32_t operator--() {
+    AutoLock lock(mMutex);
+    return --mCount;
+  }
+  uint32_t operator++() {
+    AutoLock lock(mMutex);
+    return ++mCount;
+  }
+  operator uint32_t() {
+    AutoLock lock(mMutex);
+    return mCount;
+  }
+private:
+  uint32_t mCount;
+  GMPMutex* mMutex;
+};
+#endif
 
 // Note: Thread safe.
 class RefCounted {
@@ -47,41 +81,27 @@ protected:
   {
     assert(!mRefCount);
   }
-  std::atomic<uint32_t> mRefCount;
+  AtomicRefCount mRefCount;
 };
 
 template<class T>
 class RefPtr {
 public:
-  RefPtr(const RefPtr& src) {
-    Set(src.mPtr);
+  explicit RefPtr(T* aPtr) : mPtr(nullptr) {
+    Assign(aPtr);
   }
-
-  explicit RefPtr(T* aPtr) {
-    Set(aPtr);
-  }
-  RefPtr() { Set(nullptr); }
-
   ~RefPtr() {
-    Set(nullptr);
+    Assign(nullptr);
   }
   T* operator->() const { return mPtr; }
-  T** operator&() { return &mPtr; }
-  T* operator->() { return mPtr; }
-  operator T*() { return mPtr; }
-
-  T* Get() const { return mPtr; }
 
   RefPtr& operator=(T* aVal) {
-    Set(aVal);
+    Assign(aVal);
     return *this;
   }
 
 private:
-  T* Set(T* aPtr) {
-    if (mPtr == aPtr) {
-      return aPtr;
-    }
+  void Assign(T* aPtr) {
     if (mPtr) {
       mPtr->Release();
     }
@@ -89,10 +109,8 @@ private:
     if (mPtr) {
       aPtr->AddRef();
     }
-    return mPtr;
   }
-
-  T* mPtr = nullptr;
+  T* mPtr;
 };
 
 #endif // __RefCount_h__

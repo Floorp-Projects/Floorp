@@ -17,51 +17,37 @@
 #ifndef __ClearKeyPersistence_h__
 #define __ClearKeyPersistence_h__
 
-// This include is required in order for content_decryption_module to work
-// on Unix systems.
-#include "stddef.h"
-#include "content_decryption_module.h"
-#include "RefCounted.h"
-
-#include <functional>
-#include <set>
 #include <string>
-#include <vector>
-
+#include "gmp-api/gmp-decryption.h"
 
 class ClearKeySessionManager;
 
-// Whether we've loaded the persistent session ids yet.
-enum PersistentKeyState {
-  UNINITIALIZED,
-  LOADING,
-  LOADED
-};
-
-class ClearKeyPersistence : public RefCounted
-{
+class ClearKeyPersistence {
 public:
-  explicit ClearKeyPersistence(cdm::Host_8* aHost);
+  static void EnsureInitialized();
 
-  void EnsureInitialized(bool aPersistentStateAllowed,
-                         std::function<void()>&& aOnInitialized);
+  static std::string GetNewSessionId(GMPSessionType aSessionType);
 
-  bool IsLoaded() const;
+  static bool DeferCreateSessionIfNotReady(ClearKeySessionManager* aInstance,
+                                           uint32_t aCreateSessionToken,
+                                           uint32_t aPromiseId,
+                                           const std::string& aInitDataType,
+                                           const uint8_t* aInitData,
+                                           uint32_t aInitDataSize,
+                                           GMPSessionType aSessionType);
 
-  std::string GetNewSessionId(cdm::SessionType aSessionType);
+  static bool DeferLoadSessionIfNotReady(ClearKeySessionManager* aInstance,
+                                         uint32_t aPromiseId,
+                                         const char* aSessionId,
+                                         uint32_t aSessionIdLength);
 
-  bool IsPersistentSessionId(const std::string& aSid);
+  static bool IsPersistentSessionId(const std::string& aSid);
 
-  void PersistentSessionRemoved(std::string& aSid);
-private:
-  cdm::Host_8* mHost = nullptr;
+  static void LoadSessionData(ClearKeySessionManager* aInstance,
+                              const std::string& aSid,
+                              uint32_t aPromiseId);
 
-  PersistentKeyState mPersistentKeyState = PersistentKeyState::UNINITIALIZED;
-
-  std::set<uint32_t> mPersistentSessionIds;
-
-  void ReadAllRecordsFromIndex(std::function<void()>&& aOnComplete);
-  void WriteIndex();
+  static void PersistentSessionRemoved(const std::string& aSid);
 };
 
 #endif // __ClearKeyPersistence_h__
