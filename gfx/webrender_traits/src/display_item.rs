@@ -48,6 +48,25 @@ impl BorderRadius {
             bottom_right: LayoutSize::new(radius, radius),
         }
     }
+
+    pub fn is_uniform(&self) -> Option<f32> {
+        let uniform_radius = LayoutSize::new(self.top_left.width, self.top_left.width);
+        if self.top_right == uniform_radius &&
+           self.bottom_left == uniform_radius &&
+           self.bottom_right == uniform_radius {
+            Some(uniform_radius.width)
+        } else {
+            None
+        }
+    }
+
+    pub fn is_zero(&self) -> bool {
+        if let Some(radius) = self.is_uniform() {
+            radius == 0.0
+        } else {
+            false
+        }
+    }
 }
 
 impl ClipRegion {

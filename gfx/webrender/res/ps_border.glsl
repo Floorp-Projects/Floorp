@@ -28,4 +28,6 @@ varying vec2 vLocalPos;     // The clamped position in local space.
 // These two are interpolated
 varying float vDistanceFromMixLine;  // This is the distance from the line where two colors
                                      // meet in border corners.
+varying float vDistanceFromMiddle;   // This is the distance from the line between the top
+                                     // left corner and the bottom right.
 #endif

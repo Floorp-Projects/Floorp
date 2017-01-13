@@ -43,8 +43,6 @@ pub struct ClipAddressRange {
     pub item_count: u32,
 }
 
-type ImageMaskIndex = u16;
-
 #[derive(Clone, Debug)]
 pub struct MaskCacheInfo {
     pub clip_range: ClipAddressRange,

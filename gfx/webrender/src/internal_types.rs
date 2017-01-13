@@ -237,6 +237,7 @@ pub enum VertexAttribute {
     LayerIndex,
     ElementIndex,
     UserData,
+    ZIndex,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -295,6 +296,7 @@ pub struct PackedVertex {
 }
 
 #[derive(Debug)]
+#[repr(C)]
 pub struct DebugFontVertex {
     pub x: f32,
     pub y: f32,
@@ -315,6 +317,7 @@ impl DebugFontVertex {
     }
 }
 
+#[repr(C)]
 pub struct DebugColorVertex {
     pub x: f32,
     pub y: f32,
@@ -342,7 +345,10 @@ pub enum TextureUpdateOp {
     Create(u32, u32, ImageFormat, TextureFilter, RenderTargetMode, Option<Arc<Vec<u8>>>),
     Update(u32, u32, u32, u32, Arc<Vec<u8>>, Option<u32>),
     Grow(u32, u32, ImageFormat, TextureFilter, RenderTargetMode),
+    Free
 }
+
+pub type ExternalImageUpdateList = Vec<ExternalImageId>;
 
 pub struct TextureUpdate {
     pub id: CacheTextureId,
@@ -392,9 +398,8 @@ impl RendererFrame {
 }
 
 pub enum ResultMsg {
-    UpdateTextureCache(TextureUpdateList),
     RefreshShader(PathBuf),
-    NewFrame(RendererFrame, BackendProfileCounters),
+    NewFrame(RendererFrame, TextureUpdateList, ExternalImageUpdateList, BackendProfileCounters),
 }
 
 #[repr(u32)]

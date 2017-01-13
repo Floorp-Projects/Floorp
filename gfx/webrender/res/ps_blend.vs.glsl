@@ -5,6 +5,7 @@
 
 struct Blend {
     ivec4 src_id_target_id_op_amount;
+    int z;
 };
 
 Blend fetch_blend() {
@@ -15,6 +16,7 @@ Blend fetch_blend() {
                                              pi.render_task_index,
                                              pi.sub_index,
                                              pi.user_data.y);
+    blend.z = pi.z;
 
     return blend;
 }
@@ -38,7 +40,7 @@ void main(void) {
     vUv = vec3(mix(st0, st1, aPosition.xy), src.size_target_index.z);
 
     vOp = blend.src_id_target_id_op_amount.z;
-    vAmount = blend.src_id_target_id_op_amount.w / 65535.0;
+    vAmount = float(blend.src_id_target_id_op_amount.w) / 65535.0;
 
-    gl_Position = uTransform * vec4(local_pos, 0, 1);
+    gl_Position = uTransform * vec4(local_pos, blend.z, 1.0);
 }

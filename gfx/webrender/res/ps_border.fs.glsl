@@ -4,6 +4,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Border styles as defined in webrender_traits/types.rs
+#define BORDER_STYLE_NONE         0
+#define BORDER_STYLE_SOLID        1
+#define BORDER_STYLE_DOUBLE       2
+#define BORDER_STYLE_DOTTED       3
+#define BORDER_STYLE_DASHED       4
+#define BORDER_STYLE_HIDDEN       5
+#define BORDER_STYLE_GROOVE       6
+#define BORDER_STYLE_RIDGE        7
+#define BORDER_STYLE_INSET        8
+#define BORDER_STYLE_OUTSET       9
+
 void discard_pixels_in_rounded_borders(vec2 local_pos) {
   float distanceFromRef = distance(vRefPoint, local_pos);
   if (vRadii.x > 0.0 && (distanceFromRef > vRadii.x || distanceFromRef < vRadii.z)) {
@@ -291,6 +303,44 @@ void draw_solid_border(float distanceFromMixLine, vec2 localPos) {
   }
 }
 
+vec4 draw_mixed_edge(float distance, float border_len, vec4 color, vec2 brightness_mod) {
+  float modulator = distance / border_len > 0.5 ? brightness_mod.x : brightness_mod.y;
+  return vec4(color.xyz * modulator, color.a);
+}
+
+void draw_mixed_border(float distanceFromMixLine, float distanceFromMiddle, vec2 localPos, vec2 brightness_mod) {
+  switch (vBorderPart) {
+    case PST_TOP_LEFT:
+    case PST_TOP_RIGHT:
+    case PST_BOTTOM_LEFT:
+    case PST_BOTTOM_RIGHT: {
+      // This is the conversion factor for transformations and device pixel scaling.
+      float pixelsPerFragment = length(fwidth(localPos.xy));
+      vec4 color = get_fragment_color(distanceFromMixLine, pixelsPerFragment);
+
+      float distance = distance(vRefPoint, localPos) - vRadii.z;
+      float length = vRadii.x - vRadii.z;
+      if (distanceFromMiddle < 0.0) {
+        distance = length - distance;
+      }
+
+      oFragColor = 0.0 <= distance && distance <= length ?
+        draw_mixed_edge(distance, length, color, brightness_mod) : vec4(0.0, 0.0, 0.0, 0.0);
+      break;
+    }
+    case PST_BOTTOM:
+    case PST_TOP: {
+      oFragColor = draw_mixed_edge(localPos.y - vPieceRect.y, vPieceRect.w, vVerticalColor, brightness_mod);
+      break;
+    }
+    case PST_LEFT:
+    case PST_RIGHT: {
+      oFragColor = draw_mixed_edge(localPos.x - vPieceRect.x, vPieceRect.z, vHorizontalColor, brightness_mod);
+      break;
+    }
+  }
+}
+
 // TODO: Investigate performance of this shader and see
 //       if it's worthwhile splitting it / removing branches etc.
 void main(void) {
@@ -306,9 +356,15 @@ void main(void) {
     float distance_from_mix_line = (local_pos.x - vPieceRect.x) * vPieceRect.w -
                                    (local_pos.y - vPieceRect.y) * vPieceRect.z;
     distance_from_mix_line /= vPieceRectHypotenuseLength;
+    float distance_from_middle = (local_pos.x - vLocalRect.x) +
+                                 (local_pos.y - vLocalRect.y) -
+                                 0.5 * (vLocalRect.z + vLocalRect.w);
 #else
     float distance_from_mix_line = vDistanceFromMixLine;
+    float distance_from_middle = vDistanceFromMiddle;
 #endif
+
+    vec2 brightness_mod = vec2(0.7, 1.3);
 
     switch (vBorderStyle) {
         case BORDER_STYLE_DASHED:
@@ -324,9 +380,15 @@ void main(void) {
         case BORDER_STYLE_NONE:
           draw_solid_border(distance_from_mix_line, local_pos);
           break;
+        case BORDER_STYLE_GROOVE:
+          draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.yx);
+          break;
+        case BORDER_STYLE_RIDGE:
+          draw_mixed_border(distance_from_mix_line, distance_from_middle, local_pos, brightness_mod.xy);
+          break;
+        case BORDER_STYLE_HIDDEN:
         default:
           discard;
-
     }
 
 #ifdef WR_FEATURE_TRANSFORM

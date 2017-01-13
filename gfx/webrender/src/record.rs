@@ -9,14 +9,16 @@ use std::any::TypeId;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::ops::DerefMut;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use webrender_traits::ApiMsg;
 use byteorder::{LittleEndian, WriteBytesExt};
 
 lazy_static! {
-    static ref WEBRENDER_RECORDING_DETOUR: Arc<Mutex<Option<Box<ApiRecordingReceiver>>>> = Arc::new(Mutex::new(None));
+    static ref WEBRENDER_RECORDING_DETOUR: Mutex<Option<Box<ApiRecordingReceiver>>> = Mutex::new(None);
 }
+
+pub static WEBRENDER_RECORDING_HEADER: u64 = 0xbeefbeefbeefbe01u64;
+static mut CURRENT_FRAME_NUMBER: u32 = 0xffffffffu32;
 
 pub trait ApiRecordingReceiver: Send {
     fn write_msg(&mut self, frame: u32, msg: &ApiMsg);
@@ -30,13 +32,16 @@ pub fn set_recording_detour(detour: Option<Box<ApiRecordingReceiver>>) {
 
 fn write_data(frame: u32, data: &[u8]) {
     let filename = format!("record/frame_{}.bin", frame);
-    let mut file = if !PathBuf::from(&filename).exists() {
-        let mut file = File::create(filename).unwrap();
+    let mut file = if unsafe { CURRENT_FRAME_NUMBER != frame } {
+        unsafe { CURRENT_FRAME_NUMBER = frame; }
 
+        let mut file = File::create(filename).unwrap();
         let apimsg_type_id = unsafe {
             assert!(mem::size_of::<TypeId>() == mem::size_of::<u64>());
             mem::transmute::<TypeId, u64>(TypeId::of::<ApiMsg>())
         };
+
+        file.write_u64::<LittleEndian>(WEBRENDER_RECORDING_HEADER).ok();
         file.write_u64::<LittleEndian>(apimsg_type_id).ok();
         file
     } else {
