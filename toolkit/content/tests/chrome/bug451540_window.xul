@@ -23,7 +23,6 @@
 
     let gFindBar = null;
     let gPrefsvc = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-    const kIteratorTimeout = gPrefsvc.getIntPref("findbar.iteratorTimeout") + 20;
     let gBrowser;
 
     let sendCtrl = true;
@@ -49,6 +48,18 @@
       gBrowser.loadURI(data);
     }
 
+    function promiseHighlightFinished() {
+      return new Promise(resolve => {
+        let listener = {
+          onHighlightFinished() {
+            gFindBar.browser.finder.removeResultListener(listener);
+            resolve();
+          }
+        };
+        gFindBar.browser.finder.addResultListener(listener);
+      });
+    }
+
     function* resetForNextTest(elementId, aText) {
       if (!aText)
         aText = SEARCH_TEXT;
@@ -57,7 +68,6 @@
       let highlightButton = gFindBar.getElement("highlight");
       if (highlightButton.checked) {
         highlightButton.click();
-        yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       }
 
       // Initialise input
@@ -75,7 +85,7 @@
       // Perform search and turn on highlighting
       gFindBar._find();
       highlightButton.click();
-      yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
+      yield promiseHighlightFinished();
 
       // Move caret to start of element
       info(`focusing element`);
@@ -117,7 +127,6 @@
       let matchCase = gFindBar.getElement("find-case-sensitive");
       if (matchCase.checked) {
         matchCase.doCommand();
-        yield new Promise(resolve => setTimeout(resolve, kIteratorTimeout));
       }
 
       // First check match has been correctly highlighted

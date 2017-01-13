@@ -263,6 +263,23 @@ this.FinderIterator = {
   },
 
   /**
+   * The default mode of operation of the iterator is to not accept duplicate
+   * listeners, resolve the promise of the older listeners and replace it with
+   * the new listener.
+   * Consumers may opt-out of this behavior by using this check and not call
+   * start().
+   *
+   * @param  {Object} paramSet Property bag with the same signature as you would
+   *                           pass into `start()`
+   * @return {Boolean}
+   */
+  isAlreadyRunning(paramSet) {
+    return (this.running &&
+      this._areParamsEqual(this._currentParams, paramSet) &&
+      this._listeners.has(paramSet.listener));
+  },
+
+  /**
    * Safely notify all registered listeners that an event has occurred.
    *
    * @param {String}   callback    Name of the callback to invoke
