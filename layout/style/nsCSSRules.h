@@ -543,7 +543,6 @@ public:
     : mozilla::css::Rule(aLineNumber, aColumnNumber)
     , mDeclaration(aDeclaration)
   {
-    SetIsNotDOMBinding();
     mDeclaration->SetOwningRule(this);
   }
 private:
@@ -566,6 +565,7 @@ public:
   // WebIDL interface
   uint16_t Type() const override;
   void GetCssTextImpl(nsAString& aCssText) const override;
+  nsICSSDeclaration* Style();
 
   mozilla::css::Declaration* Declaration()   { return mDeclaration; }
 

@@ -48,8 +48,6 @@ enum nsDOMClassInfoID
   // @counter-style in CSS
   eDOMClassInfo_CSSCounterStyleRule_id,
 
-  eDOMClassInfo_CSSPageRule_id,
-
   eDOMClassInfo_CSSFontFeatureValuesRule_id,
 
   eDOMClassInfo_XULControlElement_id,
