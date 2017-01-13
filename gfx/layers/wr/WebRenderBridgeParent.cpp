@@ -9,6 +9,7 @@
 #include "CompositableHost.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
+#include "mozilla/Range.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"
@@ -84,7 +85,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
-  , mWRState(nullptr)
+  , mBuilder()
   , mGLContext(aGlContext)
   , mWRWindowState(aWrWindowState)
   , mCompositor(aCompositor)
@@ -117,7 +118,7 @@ WebRenderBridgeParent::WebRenderBridgeParent(CompositorBridgeParentBase* aCompos
   : mCompositorBridge(aCompositorBridge)
   , mPipelineId(aPipelineId)
   , mWidget(aWidget)
-  , mWRState(nullptr)
+  , mBuilder(Nothing())
   , mGLContext(nullptr)
   , mWRWindowState(nullptr)
   , mApi(aApi)
@@ -141,12 +142,13 @@ WebRenderBridgeParent::RecvCreate(const uint32_t& aWidth,
     return IPC_OK();
   }
 
-  if (mWRState) {
+  if (mBuilder.isSome()) {
     return IPC_OK();
   }
   MOZ_ASSERT(mWRWindowState);
   mGLContext->MakeCurrent();
-  mWRState = wr_create(mWRWindowState, aWidth, aHeight, mPipelineId);
+  mBuilder.emplace(LayerIntSize(aWidth, aHeight), gfx::PipelineId(mPipelineId));
+  wr_window_init_pipeline_epoch(mWRWindowState, mPipelineId, aWidth, aHeight);
   return IPC_OK();
 }
 
@@ -169,7 +171,7 @@ WebRenderBridgeParent::Destroy()
   if (mDestroyed) {
     return;
   }
-  MOZ_ASSERT(mWRState);
+  MOZ_ASSERT(mBuilder.isSome());
   mDestroyed = true;
   ClearResources();
 }
@@ -226,8 +228,8 @@ WebRenderBridgeParent::RecvDPBegin(const uint32_t& aWidth,
   if (mDestroyed) {
     return IPC_OK();
   }
-  MOZ_ASSERT(mWRState);
-  wr_window_dp_begin(mWRWindowState, mWRState, aWidth, aHeight);
+  MOZ_ASSERT(mBuilder.isSome());
+  wr_window_dp_begin(mWRWindowState, mBuilder.ref().Raw(), aWidth, aHeight);
   *aOutSuccess = true;
   return IPC_OK();
 }
@@ -282,7 +284,8 @@ WebRenderBridgeParent::RecvDPSyncEnd(InfallibleTArray<WebRenderCommand>&& aComma
 void
 WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderCommand>& aCommands)
 {
-  MOZ_ASSERT(mWRState);
+  MOZ_ASSERT(mBuilder.isSome());
+  DisplayListBuilder& builder = mBuilder.ref();
   // XXX remove it when external image key is used.
   std::vector<WRImageKey> keysToDelete;
 
@@ -292,29 +295,31 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
     switch (cmd.type()) {
       case WebRenderCommand::TOpDPPushStackingContext: {
         const OpDPPushStackingContext& op = cmd.get_OpDPPushStackingContext();
-        wr_dp_push_stacking_context(mWRState, op.bounds(), op.overflow(), op.mask().ptrOr(nullptr), &(op.matrix().components[0]));
+        builder.PushStackingContext(op.bounds(), op.overflow(), op.mask().ptrOr(nullptr), op.matrix());
         break;
       }
       case WebRenderCommand::TOpDPPopStackingContext: {
-        wr_dp_pop_stacking_context(mWRState);
+        builder.PopStackingContext();
         break;
       }
       case WebRenderCommand::TOpDPPushRect: {
         const OpDPPushRect& op = cmd.get_OpDPPushRect();
-        wr_dp_push_rect(mWRState, op.bounds(), op.clip(), op.r(), op.g(), op.b(), op.a());
+        builder.PushRect(op.bounds(), op.clip(),
+                         gfx::Color(op.r(), op.g(), op.b(), op.a()));
         break;
       }
       case WebRenderCommand::TOpDPPushBorder: {
         const OpDPPushBorder& op = cmd.get_OpDPPushBorder();
-        wr_dp_push_border(mWRState, op.bounds(),
-                          op.clip(), op.top(), op.right(), op.bottom(), op.left(),
-                          op.top_left_radius(), op.top_right_radius(),
-                          op.bottom_left_radius(), op.bottom_right_radius());
+        builder.PushBorder(op.bounds(), op.clip(),
+                           op.top(), op.right(), op.bottom(), op.left(),
+                           op.top_left_radius(), op.top_right_radius(),
+                           op.bottom_left_radius(), op.bottom_right_radius());
         break;
       }
       case WebRenderCommand::TOpDPPushImage: {
         const OpDPPushImage& op = cmd.get_OpDPPushImage();
-        wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.key());
+        builder.PushImage(op.bounds(), op.clip(),
+                          op.mask().ptrOr(nullptr), op.key());
         break;
       }
       case WebRenderCommand::TOpDPPushExternalImageId: {
@@ -335,14 +340,14 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         }
         gfx::IntSize size = dSurf->GetSize();
         WRImageKey key = wr_add_image(mWRWindowState, size.width, size.height, map.mStride, RGBA8, map.mData, size.height * map.mStride);
-        wr_dp_push_image(mWRState, op.bounds(), op.clip(), op.mask().ptrOr(nullptr), key);
+        builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
         break;
       }
       case WebRenderCommand::TOpDPPushIframe: {
         const OpDPPushIframe& op = cmd.get_OpDPPushIframe();
-        wr_window_dp_push_iframe(mWRWindowState, mWRState, op.bounds(), op.clip(), op.layersid());
+        wr_window_dp_push_iframe(mWRWindowState, builder.Raw(), op.bounds(), op.clip(), op.layersid());
         break;
       }
       case WebRenderCommand::TCompositableOperation: {
@@ -360,16 +365,17 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         for (size_t i = 0; i < glyph_array.Length(); i++) {
           const nsTArray<WRGlyphInstance>& glyphs = glyph_array[i].glyphs;
 
-          wr_window_dp_push_text(mWRWindowState,
-                                 mWRState,
-                                 op.bounds(),
-                                 op.clip(),
-                                 glyph_array[i].color,
-                                 glyphs.Elements(),
-                                 glyphs.Length(),
-                                 op.glyph_size(),
-                                 op.font_buffer().mData,
-                                 op.font_buffer_length());
+          // TODO: We are leaking the key
+          auto fontKey = FontKey(wr_window_add_raw_font(mWRWindowState,
+                                                        op.font_buffer().mData,
+                                                        op.font_buffer_length()));
+
+          builder.PushText(op.bounds(),
+                           op.clip(),
+                           glyph_array[i].color,
+                           fontKey,
+                           Range<const WRGlyphInstance>(glyphs.Elements(), glyphs.Length()),
+                           op.glyph_size());
         }
 
         break;
@@ -378,7 +384,7 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         NS_RUNTIMEABORT("not reached");
     }
   }
-  wr_window_dp_end(mWRWindowState, mWRState);
+  wr_window_dp_end(mWRWindowState, mBuilder.ref().Raw());
   ScheduleComposition();
   DeleteOldImages();
 
@@ -430,7 +436,7 @@ WebRenderBridgeParent::RecvDPGetSnapshot(PTextureParent* aTexture)
   // Assert the stride of the buffer is what webrender expects
   MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
 
-  MOZ_ASSERT(mWRState);
+  MOZ_ASSERT(mBuilder.isSome());
   mGLContext->MakeCurrent();
   wr_readback_into_buffer(mWRWindowState, size.width, size.height, buffer, buffer_size);
 
@@ -535,7 +541,7 @@ WebRenderBridgeParent::CompositeToTarget(gfx::DrawTarget* aTarget, const gfx::In
   mCompositor->SetCompositionTime(TimeStamp::Now());
   mCompositor->AsWebRenderCompositorOGL()->UpdateExternalImages();
 
-  MOZ_ASSERT(mWRState);
+  MOZ_ASSERT(mBuilder.isSome());
   mozilla::widget::WidgetRenderingContext widgetContext;
 #if defined(XP_MACOSX)
   widgetContext.mGL = mGLContext;
@@ -597,9 +603,9 @@ WebRenderBridgeParent::ClearResources()
   }
   mExternalImageIds.Clear();
 
-  if (mWRState) {
-    wr_destroy(mWRWindowState, mWRState);
-    mWRState = nullptr;
+  if (mBuilder.isSome()) {
+    wr_window_remove_pipeline(mWRWindowState, mBuilder.ref().Raw());
+    mBuilder.reset();
   }
   if (mCompositorScheduler) {
     mCompositorScheduler->Destroy();

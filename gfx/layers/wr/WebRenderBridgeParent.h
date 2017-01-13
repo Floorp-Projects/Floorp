@@ -12,7 +12,9 @@
 #include "mozilla/layers/CompositorVsyncSchedulerOwner.h"
 #include "mozilla/layers/PWebRenderBridgeParent.h"
 #include "mozilla/layers/WebRenderTypes.h"
+#include "mozilla/layers/WebRenderAPI.h"
 #include "nsTArrayForwardDeclare.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
@@ -135,7 +137,7 @@ private:
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   uint64_t mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
-  wrstate* mWRState;
+  Maybe<DisplayListBuilder> mBuilder;
   RefPtr<gl::GLContext> mGLContext;
   wrwindowstate* mWRWindowState;
   RefPtr<WebRenderAPI> mApi;
