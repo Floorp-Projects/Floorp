@@ -317,16 +317,14 @@ class LinkageMultipleRustLibrariesError(Exception):
 class Linkable(ContextDerived):
     """Generic context derived container object for programs and libraries"""
     __slots__ = (
-        'name',
         'cxx_link',
         'lib_defines',
         'linked_libraries',
         'linked_system_libs',
     )
 
-    def __init__(self, context, name):
+    def __init__(self, context):
         ContextDerived.__init__(self, context)
-        self.name = name
         self.cxx_link = False
         self.linked_libraries = []
         self.linked_system_libs = []
@@ -385,7 +383,7 @@ class BaseProgram(Linkable):
     }
 
     def __init__(self, context, program, is_unit_test=False):
-        Linkable.__init__(self, context, program)
+        Linkable.__init__(self, context)
 
         bin_suffix = context.config.substs.get(self.SUFFIX_VAR, '')
         if not program.endswith(bin_suffix):
@@ -475,7 +473,7 @@ class BaseLibrary(Linkable):
     )
 
     def __init__(self, context, basename):
-        Linkable.__init__(self, context, basename)
+        Linkable.__init__(self, context)
 
         self.basename = self.lib_name = basename
         if self.lib_name:
