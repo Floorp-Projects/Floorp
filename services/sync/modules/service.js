@@ -33,7 +33,6 @@ Cu.import("resource://services-sync/stages/enginesync.js");
 Cu.import("resource://services-sync/stages/declined.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/telemetry.js");
-Cu.import("resource://services-sync/userapi.js");
 Cu.import("resource://services-sync/util.js");
 
 const ENGINE_MODULES = {
@@ -104,23 +103,6 @@ Sync11Service.prototype = {
     if (misc.indexOf(":") == -1)
       misc = this.serverURL + misc;
     return misc + MISC_API_VERSION + "/";
-  },
-
-  /**
-   * The URI of the User API service.
-   *
-   * This is the base URI of the service as applicable to all users up to
-   * and including the server version path component, complete with trailing
-   * forward slash.
-   */
-  get userAPIURI() {
-    // Append to the serverURL if it's a relative fragment.
-    let url = Svc.Prefs.get("userURL");
-    if (!url.includes(":")) {
-      url = this.serverURL + url;
-    }
-
-    return url + USER_API_VERSION + "/";
   },
 
   get pwResetURL() {
@@ -825,25 +807,6 @@ Sync11Service.prototype = {
     }
   },
 
-  changePassword: function changePassword(newPassword) {
-    let client = new UserAPI10Client(this.userAPIURI);
-    let cb = Async.makeSpinningCallback();
-    client.changePassword(this.identity.username,
-                          this.identity.basicPassword, newPassword, cb);
-
-    try {
-      cb.wait();
-    } catch (ex) {
-      this._log.debug("Password change failed", ex);
-      return false;
-    }
-
-    // Save the new password for requests and login manager.
-    this.identity.basicPassword = newPassword;
-    this.persistLogin();
-    return true;
-  },
-
   changePassphrase: function changePassphrase(newphrase) {
     return this._catch(function doChangePasphrase() {
       /* Wipe. */
@@ -1015,45 +978,6 @@ Sync11Service.prototype = {
     this._loggedIn = false;
 
     Svc.Obs.notify("weave:service:logout:finish");
-  },
-
-  checkAccount: function checkAccount(account) {
-    let client = new UserAPI10Client(this.userAPIURI);
-    let cb = Async.makeSpinningCallback();
-
-    let username = this.identity.usernameFromAccount(account);
-    client.usernameExists(username, cb);
-
-    try {
-      let exists = cb.wait();
-      return exists ? "notAvailable" : "available";
-    } catch (ex) {
-      // TODO fix API convention.
-      return this.errorHandler.errorStr(ex);
-    }
-  },
-
-  createAccount: function createAccount(email, password,
-                                        captchaChallenge, captchaResponse) {
-    let client = new UserAPI10Client(this.userAPIURI);
-
-    // Hint to server to allow scripted user creation or otherwise
-    // ignore captcha.
-    if (Svc.Prefs.isSet("admin-secret")) {
-      client.adminSecret = Svc.Prefs.get("admin-secret", "");
-    }
-
-    let cb = Async.makeSpinningCallback();
-
-    client.createAccount(email, password, captchaChallenge, captchaResponse,
-                         cb);
-
-    try {
-      cb.wait();
-      return null;
-    } catch (ex) {
-      return this.errorHandler.errorStr(ex.body);
-    }
   },
 
   // Note: returns false if we failed for a reason other than the server not yet

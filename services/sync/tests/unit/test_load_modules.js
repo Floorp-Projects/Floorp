@@ -28,7 +28,6 @@ const modules = [
   "stages/declined.js",
   "stages/enginesync.js",
   "status.js",
-  "userapi.js",
   "util.js",
 ];
 
