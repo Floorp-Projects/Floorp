@@ -135,16 +135,7 @@ add_task(async function hmac_error_during_node_reassignment() {
     };
   }
 
-  function sameNodeHandler(request, response) {
-    // Set this so that _setCluster will think we've really changed.
-    let url = Service.serverURL.replace("localhost", "LOCALHOST");
-    _("Client requesting reassignment; pointing them to " + url);
-    response.setStatusLine(request.httpVersion, 200, "OK");
-    response.bodyOutputStream.write(url, url.length);
-  }
-
   let handlers = {
-    "/user/1.0/foo/node/weave":     sameNodeHandler,
     "/1.1/foo/info/collections":    collectionsHelper.handler,
     "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
     "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),

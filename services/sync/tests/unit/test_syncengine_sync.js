@@ -32,13 +32,6 @@ async function promiseClean(engine, server) {
   await promiseStopServer(server);
 }
 
-function configureService(server, username, password) {
-  Service.clusterURL = server.baseURI;
-
-  Service.identity.account = username || "foo";
-  Service.identity.basicPassword = password || "password";
-}
-
 async function createServerAndConfigureClient() {
   let engine = new RotaryEngine(Service);
 
@@ -98,7 +91,6 @@ add_task(async function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
   });
 
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   engine._store.items = {rekolok: "Rekonstruktionslokomotive"};
@@ -142,7 +134,6 @@ add_task(async function test_syncStartup_serverHasNewerVersion() {
   });
 
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   try {
@@ -167,8 +158,8 @@ add_task(async function test_syncStartup_syncIDMismatchResetsClient() {
   _("SyncEngine._syncStartup resets sync if syncIDs don't match");
 
   let server = sync_httpd_setup({});
+
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   // global record with a different syncID than our engine has
   let engine = makeRotaryEngine();
@@ -208,7 +199,6 @@ add_task(async function test_processIncoming_emptyServer() {
   });
 
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   try {
@@ -247,7 +237,6 @@ add_task(async function test_processIncoming_createFromServer() {
   });
 
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   generateNewKeys(Service.collectionKeys);
 
@@ -332,7 +321,6 @@ add_task(async function test_processIncoming_reconcile() {
   });
 
   await SyncTestingInfrastructure(server);
-  Service.identity.username = "foo";
 
   let engine = makeRotaryEngine();
   engine._store.items = {newerserver: "New data, but not as new as server!",
@@ -608,7 +596,6 @@ add_task(async function test_processIncoming_mobile_batchSize() {
   _("SyncEngine._processIncoming doesn't fetch everything at once on mobile clients");
 
   Svc.Prefs.set("client.type", "mobile");
-  Service.identity.username = "foo";
 
   // A collection that logs each GET
   let collection = new ServerCollection();
@@ -677,7 +664,6 @@ add_task(async function test_processIncoming_mobile_batchSize() {
 
 add_task(async function test_processIncoming_store_toFetch() {
   _("If processIncoming fails in the middle of a batch on mobile, state is saved in toFetch and lastSync.");
-  Service.identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
   // A collection that throws at the fourth get.
@@ -742,7 +728,6 @@ add_task(async function test_processIncoming_store_toFetch() {
 
 add_task(async function test_processIncoming_resume_toFetch() {
   _("toFetch and previousFailed items left over from previous syncs are fetched on the next sync, along with new items.");
-  Service.identity.username = "foo";
 
   const LASTSYNC = Date.now() / 1000;
 
@@ -811,7 +796,6 @@ add_task(async function test_processIncoming_resume_toFetch() {
 
 add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
   _("Ensure that a number of incoming items less than applyIncomingBatchSize is still applied.");
-  Service.identity.username = "foo";
 
   // Engine that doesn't like the first and last record it's given.
   const APPLY_BATCH_SIZE = 10;
@@ -866,7 +850,6 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_smaller() {
 
 add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
   _("Ensure that incoming items are applied according to applyIncomingBatchSize.");
-  Service.identity.username = "foo";
 
   const APPLY_BATCH_SIZE = 10;
 
@@ -919,7 +902,6 @@ add_task(async function test_processIncoming_applyIncomingBatchSize_multiple() {
 
 add_task(async function test_processIncoming_notify_count() {
   _("Ensure that failed records are reported only once.");
-  Service.identity.username = "foo";
 
   const APPLY_BATCH_SIZE = 5;
   const NUMBER_OF_RECORDS = 15;
@@ -1008,7 +990,6 @@ add_task(async function test_processIncoming_notify_count() {
 
 add_task(async function test_processIncoming_previousFailed() {
   _("Ensure that failed records are retried.");
-  Service.identity.username = "foo";
   Svc.Prefs.set("client.type", "mobile");
 
   const APPLY_BATCH_SIZE = 4;
@@ -1094,7 +1075,6 @@ add_task(async function test_processIncoming_previousFailed() {
 
 add_task(async function test_processIncoming_failed_records() {
   _("Ensure that failed records from _reconcile and applyIncomingBatch are refetched.");
-  Service.identity.username = "foo";
 
   // Let's create three and a bit batches worth of server side records.
   let collection = new ServerCollection();
@@ -1229,8 +1209,6 @@ add_task(async function test_processIncoming_failed_records() {
 add_task(async function test_processIncoming_decrypt_failed() {
   _("Ensure that records failing to decrypt are either replaced or refetched.");
 
-  Service.identity.username = "foo";
-
   // Some good and some bogus records. One doesn't contain valid JSON,
   // the other will throw during decrypt.
   let collection = new ServerCollection();
@@ -1310,7 +1288,6 @@ add_task(async function test_processIncoming_decrypt_failed() {
 add_task(async function test_uploadOutgoing_toEmptyServer() {
   _("SyncEngine._uploadOutgoing uploads new records to server");
 
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO("flying");
   collection._wbos.scotsman = new ServerWBO("scotsman");
@@ -1367,7 +1344,6 @@ add_task(async function test_uploadOutgoing_toEmptyServer() {
 
 
 add_task(async function test_uploadOutgoing_huge() {
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO("flying");
   collection._wbos.scotsman = new ServerWBO("scotsman");
@@ -1416,7 +1392,6 @@ add_task(async function test_uploadOutgoing_huge() {
 add_task(async function test_uploadOutgoing_failed() {
   _("SyncEngine._uploadOutgoing doesn't clear the tracker of objects that failed to upload.");
 
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
   // We only define the "flying" WBO on the server, not the "scotsman"
   // and "peppercorn" ones.
@@ -1482,7 +1457,6 @@ add_task(async function test_uploadOutgoing_failed() {
 add_task(async function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
   _("SyncEngine._uploadOutgoing uploads in batches of MAX_UPLOAD_RECORDS");
 
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
 
   // Let's count how many times the client posts to the server
@@ -1546,7 +1520,6 @@ add_task(async function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
 add_task(async function test_uploadOutgoing_largeRecords() {
   _("SyncEngine._uploadOutgoing throws on records larger than MAX_UPLOAD_BYTES");
 
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
 
   let engine = makeRotaryEngine();
@@ -1602,7 +1575,6 @@ add_task(async function test_syncFinish_noDelete() {
 add_task(async function test_syncFinish_deleteByIds() {
   _("SyncEngine._syncFinish deletes server records slated for deletion (list of record IDs).");
 
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
   collection._wbos.flying = new ServerWBO(
       "flying", encryptPayload({id: "flying",
@@ -1642,7 +1614,6 @@ add_task(async function test_syncFinish_deleteByIds() {
 add_task(async function test_syncFinish_deleteLotsInBatches() {
   _("SyncEngine._syncFinish deletes server records in batches of 100 (list of record IDs).");
 
-  Service.identity.username = "foo";
   let collection = new ServerCollection();
 
   // Let's count how many times the client does a DELETE request to the server
@@ -1712,8 +1683,6 @@ add_task(async function test_syncFinish_deleteLotsInBatches() {
 
 add_task(async function test_sync_partialUpload() {
   _("SyncEngine.sync() keeps changedIDs that couldn't be uploaded.");
-
-  Service.identity.username = "foo";
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
@@ -1787,7 +1756,6 @@ add_task(async function test_sync_partialUpload() {
 
 add_task(async function test_canDecrypt_noCryptoKeys() {
   _("SyncEngine.canDecrypt returns false if the engine fails to decrypt items on the server, e.g. due to a missing crypto key collection.");
-  Service.identity.username = "foo";
 
   // Wipe collection keys so we can test the desired scenario.
   Service.collectionKeys.clear();
@@ -1814,7 +1782,6 @@ add_task(async function test_canDecrypt_noCryptoKeys() {
 
 add_task(async function test_canDecrypt_true() {
   _("SyncEngine.canDecrypt returns true if the engine can decrypt the items on the server.");
-  Service.identity.username = "foo";
 
   generateNewKeys(Service.collectionKeys);
 
@@ -1840,8 +1807,6 @@ add_task(async function test_canDecrypt_true() {
 });
 
 add_task(async function test_syncapplied_observer() {
-  Service.identity.username = "foo";
-
   const NUMBER_OF_RECORDS = 10;
 
   let engine = makeRotaryEngine();
