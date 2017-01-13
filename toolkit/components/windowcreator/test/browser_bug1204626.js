@@ -1,8 +1,8 @@
 "use strict"; // -*- js-indent-level: 2; indent-tabs-mode: nil -*-
 var Cc = Components.classes;
 var Ci = Components.interfaces;
-const contentBase = "https://example.com/browser/embedding/test/";
-const chromeBase = "chrome://mochitests/content/browser/embedding/test/";
+const contentBase = "https://example.com/browser/toolkit/components/windowcreator/test/";
+const chromeBase = "chrome://mochitests/content/browser/toolkit/components/windowcreator/test/";
 const testPageURL = contentBase + "bug1204626_doc0.html";
 
 function one_test(delay, continuation) {
