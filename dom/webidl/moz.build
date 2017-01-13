@@ -97,6 +97,7 @@ WEBIDL_FILES = [
     'CSSRule.webidl',
     'CSSRuleList.webidl',
     'CSSStyleDeclaration.webidl',
+    'CSSStyleRule.webidl',
     'CSSStyleSheet.webidl',
     'CSSTransition.webidl',
     'CSSValue.webidl',

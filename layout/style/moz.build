@@ -81,6 +81,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'AnimationCollection.h',
+    'BindingStyleRule.h',
     'CSSEnabledState.h',
     'CSSStyleSheet.h',
     'CSSVariableDeclarations.h',
@@ -146,6 +147,7 @@ EXPORTS.mozilla.css += [
 UNIFIED_SOURCES += [
     'AnimationCollection.cpp',
     'AnimationCommon.cpp',
+    'BindingStyleRule.cpp',
     'CounterStyleManager.cpp',
     'CSS.cpp',
     'CSSLexer.cpp',
