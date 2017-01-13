@@ -90,7 +90,7 @@ ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
   }
   aFound = true;
   if (css::Rule* rule = GetRule(aIndex)) {
-    return rule->GetDOMRule();
+    return rule;
   }
   return nullptr;
 }
