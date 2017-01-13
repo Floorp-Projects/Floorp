@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-#include "ClearKeyDecryptionManager.h"
-
-#include "psshparser/PsshParser.h"
-
-#include <assert.h>
 #include <string.h>
 #include <vector>
 
-using namespace cdm;
+#include "ClearKeyDecryptionManager.h"
+#include "psshparser/PsshParser.h"
+#include "gmp-api/gmp-decryption.h"
+#include <assert.h>
 
 class ClearKeyDecryptor : public RefCounted
 {
@@ -32,7 +30,7 @@ public:
   void InitKey(const Key& aKey);
   bool HasKey() const { return !!mKey.size(); }
 
-  Status Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
+  GMPErr Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
                  const CryptoMetaData& aMetadata);
 
   const Key& DecryptionKey() const { return mKey; }
@@ -44,8 +42,7 @@ private:
 };
 
 
-/* static */ ClearKeyDecryptionManager*
-ClearKeyDecryptionManager::sInstance = nullptr;
+/* static */ ClearKeyDecryptionManager* ClearKeyDecryptionManager::sInstance = nullptr;
 
 /* static */ ClearKeyDecryptionManager*
 ClearKeyDecryptionManager::Get()
@@ -76,17 +73,14 @@ ClearKeyDecryptionManager::~ClearKeyDecryptionManager()
 bool
 ClearKeyDecryptionManager::HasSeenKeyId(const KeyId& aKeyId) const
 {
-  CK_LOGD("ClearKeyDecryptionManager::SeenKeyId %s",
-          mDecryptors.find(aKeyId) != mDecryptors.end() ? "t" : "f");
+  CK_LOGD("ClearKeyDecryptionManager::SeenKeyId %s", mDecryptors.find(aKeyId) != mDecryptors.end() ? "t" : "f");
   return mDecryptors.find(aKeyId) != mDecryptors.end();
 }
 
 bool
 ClearKeyDecryptionManager::IsExpectingKeyForKeyId(const KeyId& aKeyId) const
 {
-  CK_LOGARRAY("ClearKeyDecryptionManager::IsExpectingKeyForId ",
-              aKeyId.data(),
-              aKeyId.size());
+  CK_LOGD("ClearKeyDecryptionManager::IsExpectingKeyForId %08x...", *(uint32_t*)&aKeyId[0]);
   const auto& decryptor = mDecryptors.find(aKeyId);
   return decryptor != mDecryptors.end() && !decryptor->second->HasKey();
 }
@@ -109,23 +103,16 @@ ClearKeyDecryptionManager::GetDecryptionKey(const KeyId& aKeyId)
 void
 ClearKeyDecryptionManager::InitKey(KeyId aKeyId, Key aKey)
 {
-  CK_LOGD("ClearKeyDecryptionManager::InitKey ",
-          aKeyId.data(),
-          aKeyId.size());
+  CK_LOGD("ClearKeyDecryptionManager::InitKey %08x...", *(uint32_t*)&aKeyId[0]);
   if (IsExpectingKeyForKeyId(aKeyId)) {
-    CK_LOGARRAY("Initialized Key ", aKeyId.data(), aKeyId.size());
     mDecryptors[aKeyId]->InitKey(aKey);
-  } else {
-    CK_LOGARRAY("Failed to initialize key ", aKeyId.data(), aKeyId.size());
   }
 }
 
 void
 ClearKeyDecryptionManager::ExpectKeyId(KeyId aKeyId)
 {
-  CK_LOGD("ClearKeyDecryptionManager::ExpectKeyId ",
-          aKeyId.data(),
-          aKeyId.size());
+  CK_LOGD("ClearKeyDecryptionManager::ExpectKeyId %08x...", *(uint32_t*)&aKeyId[0]);
   if (!HasSeenKeyId(aKeyId)) {
     mDecryptors[aKeyId] = new ClearKeyDecryptor();
   }
@@ -144,31 +131,23 @@ ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
   }
 }
 
-Status
+GMPErr
 ClearKeyDecryptionManager::Decrypt(std::vector<uint8_t>& aBuffer,
                                    const CryptoMetaData& aMetadata)
 {
   return Decrypt(&aBuffer[0], aBuffer.size(), aMetadata);
 }
 
-Status
+GMPErr
 ClearKeyDecryptionManager::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
                                    const CryptoMetaData& aMetadata)
 {
   CK_LOGD("ClearKeyDecryptionManager::Decrypt");
   if (!HasKeyForKeyId(aMetadata.mKeyId)) {
-    CK_LOGARRAY("Unable to find decryptor for keyId: ",
-                aMetadata.mKeyId.data(),
-                aMetadata.mKeyId.size());
-    return Status::kNoKey;
+    return GMPNoKeyErr;
   }
 
-  CK_LOGARRAY("Found decryptor for keyId: ",
-              aMetadata.mKeyId.data(),
-              aMetadata.mKeyId.size());
-  return mDecryptors[aMetadata.mKeyId]->Decrypt(aBuffer,
-                                                aBufferSize,
-                                                aMetadata);
+  return mDecryptors[aMetadata.mKeyId]->Decrypt(aBuffer, aBufferSize, aMetadata);
 }
 
 ClearKeyDecryptor::ClearKeyDecryptor()
@@ -179,9 +158,7 @@ ClearKeyDecryptor::ClearKeyDecryptor()
 ClearKeyDecryptor::~ClearKeyDecryptor()
 {
   if (HasKey()) {
-    CK_LOGARRAY("ClearKeyDecryptor dtor; key = ",
-                mKey.data(),
-                mKey.size());
+    CK_LOGD("ClearKeyDecryptor dtor; key = %08x...", *(uint32_t*)&mKey[0]);
   } else {
     CK_LOGD("ClearKeyDecryptor dtor");
   }
@@ -193,7 +170,7 @@ ClearKeyDecryptor::InitKey(const Key& aKey)
   mKey = aKey;
 }
 
-Status
+GMPErr
 ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
                            const CryptoMetaData& aMetadata)
 {
@@ -212,7 +189,7 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
       uint32_t cipherBytes = aMetadata.mCipherBytes[i];
       if (data + cipherBytes > aBuffer + aBufferSize) {
         // Trying to read past the end of the buffer!
-        return Status::kDecryptError;
+        return GMPCryptoErr;
       }
 
       memcpy(iter, data, cipherBytes);
@@ -250,5 +227,5 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
     memcpy(aBuffer, &tmp[0], aBufferSize);
   }
 
-  return Status::kSuccess;
+  return GMPNoErr;
 }
