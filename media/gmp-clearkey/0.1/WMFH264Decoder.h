@@ -30,7 +30,8 @@ public:
 
   HRESULT Input(const uint8_t* aData,
                 uint32_t aDataSize,
-                Microseconds aTimestamp);
+                Microseconds aTimestamp,
+                Microseconds aDuration);
 
   HRESULT Output(IMFSample** aOutput);
 
@@ -52,6 +53,7 @@ private:
   HRESULT CreateInputSample(const uint8_t* aData,
                             uint32_t aDataSize,
                             Microseconds aTimestamp,
+                            Microseconds aDuration,
                             IMFSample** aOutSample);
 
   HRESULT CreateOutputSample(IMFSample** aOutSample);
