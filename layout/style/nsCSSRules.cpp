@@ -57,10 +57,11 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(Rule)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Rule)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Rule)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION_0(Rule)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(Rule)
 
 /* virtual */ void
 Rule::SetStyleSheet(StyleSheet* aSheet)
@@ -179,6 +180,7 @@ ImportRule::ImportRule(nsMediaList* aMedia, const nsString& aURLSpec,
   , mURLSpec(aURLSpec)
   , mMedia(aMedia)
 {
+  SetIsNotDOMBinding();
   // XXXbz This is really silly.... the mMedia here will be replaced
   // with itself if we manage to load a sheet.  Which should really
   // never fail nowadays, in sane cases.
@@ -188,6 +190,7 @@ ImportRule::ImportRule(const ImportRule& aCopy)
   : Rule(aCopy),
     mURLSpec(aCopy.mURLSpec)
 {
+  SetIsNotDOMBinding();
   // Whether or not an @import rule has a null sheet is a permanent
   // property of that @import rule, since it is null only if the target
   // sheet failed security checks.
@@ -355,6 +358,14 @@ ImportRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // The following members are not measured:
   // - mMedia, because it is measured via CSSStyleSheet::mMedia
   // - mChildSheet, because it is measured via CSSStyleSheetInner::mSheets
+}
+
+/* virtual */ JSObject*
+ImportRule::WrapObject(JSContext* aCx,
+                       JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
 }
 
 GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
@@ -588,11 +599,13 @@ GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 MediaRule::MediaRule(uint32_t aLineNumber, uint32_t aColumnNumber)
   : GroupRule(aLineNumber, aColumnNumber)
 {
+  SetIsNotDOMBinding();
 }
 
 MediaRule::MediaRule(const MediaRule& aCopy)
   : GroupRule(aCopy)
 {
+  SetIsNotDOMBinding();
   if (aCopy.mMedia) {
     mMedia = aCopy.mMedia->Clone();
     // XXXldb This doesn't really make sense.
@@ -803,6 +816,14 @@ MediaRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+/* virtual */ JSObject*
+MediaRule::WrapObject(JSContext* aCx,
+                      JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
+
 void
 MediaRule::AppendConditionText(nsAString& aOutput)
 {
@@ -816,12 +837,14 @@ MediaRule::AppendConditionText(nsAString& aOutput)
 DocumentRule::DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber)
   : GroupRule(aLineNumber, aColumnNumber)
 {
+  SetIsNotDOMBinding();
 }
 
 DocumentRule::DocumentRule(const DocumentRule& aCopy)
   : GroupRule(aCopy)
   , mURLs(new URL(*aCopy.mURLs))
 {
+  SetIsNotDOMBinding();
 }
 
 DocumentRule::~DocumentRule()
@@ -1044,6 +1067,14 @@ DocumentRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+/* virtual */ JSObject*
+DocumentRule::WrapObject(JSContext* aCx,
+                         JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
+
 void
 DocumentRule::AppendConditionText(nsAString& aCssText)
 {
@@ -1079,6 +1110,7 @@ NameSpaceRule::NameSpaceRule(nsIAtom* aPrefix, const nsString& aURLSpec,
     mPrefix(aPrefix),
     mURLSpec(aURLSpec)
 {
+  SetIsNotDOMBinding();
 }
 
 NameSpaceRule::NameSpaceRule(const NameSpaceRule& aCopy)
@@ -1086,6 +1118,7 @@ NameSpaceRule::NameSpaceRule(const NameSpaceRule& aCopy)
     mPrefix(aCopy.mPrefix),
     mURLSpec(aCopy.mURLSpec)
 {
+  SetIsNotDOMBinding();
 }
 
 NameSpaceRule::~NameSpaceRule()
@@ -1203,6 +1236,13 @@ NameSpaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mURLSpec
 }
 
+/* virtual */ JSObject*
+NameSpaceRule::WrapObject(JSContext* aCx,
+                          JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
 
 } // namespace css
 } // namespace mozilla
@@ -1666,6 +1706,13 @@ nsCSSFontFaceRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mDecl
 }
 
+/* virtual */ JSObject*
+nsCSSFontFaceRule::WrapObject(JSContext* aCx,
+                              JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
 
 // -----------------------------------
 // nsCSSFontFeatureValuesRule
@@ -1905,6 +1952,14 @@ nsCSSFontFeatureValuesRule::SizeOfIncludingThis(
   return aMallocSizeOf(this);
 }
 
+/* virtual */ JSObject*
+nsCSSFontFeatureValuesRule::WrapObject(JSContext* aCx,
+                                       JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
+
 // -------------------------------------------
 // nsCSSKeyframeStyleDeclaration
 //
@@ -1983,6 +2038,7 @@ nsCSSKeyframeRule::nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy)
   , mKeys(aCopy.mKeys)
   , mDeclaration(new css::Declaration(*aCopy.mDeclaration))
 {
+  SetIsNotDOMBinding();
   mDeclaration->SetOwningRule(this);
 }
 
@@ -2192,6 +2248,13 @@ nsCSSKeyframeRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   // - mDOMDeclaration
 }
 
+/* virtual */ JSObject*
+nsCSSKeyframeRule::WrapObject(JSContext* aCx,
+                              JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
 
 // -------------------------------------------
 // nsCSSKeyframesRule
@@ -2204,6 +2267,7 @@ nsCSSKeyframesRule::nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy)
   : GroupRule(aCopy),
     mName(aCopy.mName)
 {
+  SetIsNotDOMBinding();
 }
 
 nsCSSKeyframesRule::~nsCSSKeyframesRule()
@@ -2443,6 +2507,14 @@ nsCSSKeyframesRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+/* virtual */ JSObject*
+nsCSSKeyframesRule::WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
+
 // -------------------------------------------
 // nsCSSPageStyleDeclaration
 //
@@ -2520,6 +2592,7 @@ nsCSSPageRule::nsCSSPageRule(const nsCSSPageRule& aCopy)
   : Rule(aCopy)
   , mDeclaration(new css::Declaration(*aCopy.mDeclaration))
 {
+  SetIsNotDOMBinding();
   mDeclaration->SetOwningRule(this);
 }
 
@@ -2661,6 +2734,14 @@ nsCSSPageRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this);
 }
 
+/* virtual */ JSObject*
+nsCSSPageRule::WrapObject(JSContext* aCx,
+                          JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
+
 namespace mozilla {
 
 CSSSupportsRule::CSSSupportsRule(bool aConditionMet,
@@ -2670,6 +2751,7 @@ CSSSupportsRule::CSSSupportsRule(bool aConditionMet,
   , mUseGroup(aConditionMet)
   , mCondition(aCondition)
 {
+  SetIsNotDOMBinding();
 }
 
 CSSSupportsRule::~CSSSupportsRule()
@@ -2681,6 +2763,7 @@ CSSSupportsRule::CSSSupportsRule(const CSSSupportsRule& aCopy)
     mUseGroup(aCopy.mUseGroup),
     mCondition(aCopy.mCondition)
 {
+  SetIsNotDOMBinding();
 }
 
 #ifdef DEBUG
@@ -2816,6 +2899,14 @@ CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+/* virtual */ JSObject*
+CSSSupportsRule::WrapObject(JSContext* aCx,
+                            JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
+}
+
 } // namespace mozilla
 
 // -------------------------------------------
@@ -2827,6 +2918,7 @@ nsCSSCounterStyleRule::nsCSSCounterStyleRule(const nsCSSCounterStyleRule& aCopy)
   , mName(aCopy.mName)
   , mGeneration(aCopy.mGeneration)
 {
+  SetIsNotDOMBinding();
   for (size_t i = 0; i < ArrayLength(mValues); ++i) {
     mValues[i] = aCopy.mValues[i];
   }
@@ -3274,4 +3366,12 @@ CSS_COUNTER_DESC_SETTER(SpeakAs)
 nsCSSCounterStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
   return aMallocSizeOf(this);
+}
+
+/* virtual */ JSObject*
+nsCSSCounterStyleRule::WrapObject(JSContext* aCx,
+                                  JS::Handle<JSObject*> aGivenProto)
+{
+  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
+  return nullptr;
 }
