@@ -35,6 +35,9 @@
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "mozilla/dom/CSSNamespaceRuleBinding.h"
 #include "mozilla/dom/CSSImportRuleBinding.h"
+#include "mozilla/dom/CSSMediaRuleBinding.h"
+#include "mozilla/dom/CSSSupportsRuleBinding.h"
+#include "mozilla/dom/CSSMozDocumentRuleBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
@@ -611,42 +614,84 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText) const
 nsresult
 GroupRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
 {
+  NS_ADDREF(*aRuleList = CssRules());
+  return NS_OK;
+}
+
+CSSRuleList*
+GroupRule::CssRules()
+{
   if (!mRuleCollection) {
     mRuleCollection = new css::GroupRuleRuleList(this);
   }
 
-  NS_ADDREF(*aRuleList = mRuleCollection);
-  return NS_OK;
+  return mRuleCollection;
 }
 
 nsresult
 GroupRule::InsertRule(const nsAString & aRule, uint32_t aIndex, uint32_t* _retval)
 {
+  ErrorResult rv;
+  *_retval = InsertRule(aRule, aIndex, rv);
+  return rv.StealNSResult();
+}
+
+uint32_t
+GroupRule::InsertRule(const nsAString& aRule, uint32_t aIndex, ErrorResult& aRv)
+{
   StyleSheet* sheet = GetStyleSheet();
-  NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
-  
-  if (aIndex > uint32_t(mRules.Count()))
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  if (NS_WARN_IF(!sheet)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return 0;
+  }
+
+  if (aIndex > uint32_t(mRules.Count())) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return 0;
+  }
 
   NS_ASSERTION(uint32_t(mRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
-  return sheet->AsGecko()->InsertRuleIntoGroup(aRule, this, aIndex, _retval);
+  uint32_t retval;
+  nsresult rv =
+    sheet->AsGecko()->InsertRuleIntoGroup(aRule, this, aIndex, &retval);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return 0;
+  }
+  return retval;
 }
 
 nsresult
 GroupRule::DeleteRule(uint32_t aIndex)
 {
-  StyleSheet* sheet = GetStyleSheet();
-  NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
+  ErrorResult rv;
+  DeleteRule(aIndex, rv);
+  return rv.StealNSResult();
+}
 
-  if (aIndex >= uint32_t(mRules.Count()))
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+void
+GroupRule::DeleteRule(uint32_t aIndex, ErrorResult& aRv)
+{
+  StyleSheet* sheet = GetStyleSheet();
+  if (NS_WARN_IF(!sheet)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  if (aIndex >= uint32_t(mRules.Count())) {
+    aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
+    return;
+  }
 
   NS_ASSERTION(uint32_t(mRules.Count()) <= INT32_MAX,
                "Too many style rules!");
 
-  return sheet->AsGecko()->DeleteRuleFromGroup(this, aIndex);
+  nsresult rv = sheet->AsGecko()->DeleteRuleFromGroup(this, aIndex);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 /* virtual */ size_t
@@ -663,20 +708,31 @@ GroupRule::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   return n;
 }
 
+ConditionRule::ConditionRule(uint32_t aLineNumber, uint32_t aColumnNumber)
+  : GroupRule(aLineNumber, aColumnNumber)
+{
+}
+
+ConditionRule::ConditionRule(const ConditionRule& aCopy)
+  : GroupRule(aCopy)
+{
+}
+
+ConditionRule::~ConditionRule()
+{
+}
 
 // -------------------------------------------
 // nsICSSMediaRule
 //
 MediaRule::MediaRule(uint32_t aLineNumber, uint32_t aColumnNumber)
-  : GroupRule(aLineNumber, aColumnNumber)
+  : ConditionRule(aLineNumber, aColumnNumber)
 {
-  SetIsNotDOMBinding();
 }
 
 MediaRule::MediaRule(const MediaRule& aCopy)
-  : GroupRule(aCopy)
+  : ConditionRule(aCopy)
 {
-  SetIsNotDOMBinding();
   if (aCopy.mMedia) {
     mMedia = aCopy.mMedia->Clone();
     // XXXldb This doesn't really make sense.
@@ -691,18 +747,17 @@ MediaRule::~MediaRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(MediaRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(MediaRule, GroupRule)
+NS_IMPL_ADDREF_INHERITED(MediaRule, ConditionRule)
+NS_IMPL_RELEASE_INHERITED(MediaRule, ConditionRule)
 
 // QueryInterface implementation for MediaRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(MediaRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMediaRule)
-NS_INTERFACE_MAP_END_INHERITING(GroupRule)
+NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRule, GroupRule,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(MediaRule, ConditionRule,
                                    mMedia)
 
 /* virtual */ void
@@ -774,6 +829,14 @@ MediaRule::Type() const
   return nsIDOMCSSRule::MEDIA_RULE;
 }
 
+nsMediaList*
+MediaRule::Media() const
+{
+  // In practice, if we end up being parsed at all, we have non-null mMedia.  So
+  // it's OK to claim we don't return null here.
+  return mMedia;
+}
+
 void
 MediaRule::GetCssTextImpl(nsAString& aCssText) const
 {
@@ -813,17 +876,31 @@ MediaRule::GetConditionText(nsAString& aConditionText)
 NS_IMETHODIMP
 MediaRule::SetConditionText(const nsAString& aConditionText)
 {
+  ErrorResult rv;
+  SetConditionText(aConditionText, rv);
+  return rv.StealNSResult();
+}
+
+void
+MediaRule::SetConditionText(const nsAString& aConditionText,
+                            ErrorResult& aRv)
+{
   if (!mMedia) {
     RefPtr<nsMediaList> media = new nsMediaList();
     media->SetStyleSheet(GetStyleSheet());
     nsresult rv = media->SetMediaText(aConditionText);
     if (NS_SUCCEEDED(rv)) {
       mMedia = media;
+    } else {
+      aRv.Throw(rv);
     }
-    return rv;
+    return;
   }
 
-  return mMedia->SetMediaText(aConditionText);
+  nsresult rv = mMedia->SetMediaText(aConditionText);
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+  }
 }
 
 // nsIDOMCSSMediaRule methods
@@ -863,8 +940,7 @@ MediaRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 MediaRule::WrapObject(JSContext* aCx,
                       JS::Handle<JSObject*> aGivenProto)
 {
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
+  return CSSMediaRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -878,32 +954,29 @@ MediaRule::AppendConditionText(nsAString& aOutput) const
 }
 
 DocumentRule::DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber)
-  : GroupRule(aLineNumber, aColumnNumber)
+  : ConditionRule(aLineNumber, aColumnNumber)
 {
-  SetIsNotDOMBinding();
 }
 
 DocumentRule::DocumentRule(const DocumentRule& aCopy)
-  : GroupRule(aCopy)
+  : ConditionRule(aCopy)
   , mURLs(new URL(*aCopy.mURLs))
 {
-  SetIsNotDOMBinding();
 }
 
 DocumentRule::~DocumentRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(DocumentRule, GroupRule)
-NS_IMPL_RELEASE_INHERITED(DocumentRule, GroupRule)
+NS_IMPL_ADDREF_INHERITED(DocumentRule, ConditionRule)
+NS_IMPL_RELEASE_INHERITED(DocumentRule, ConditionRule)
 
 // QueryInterface implementation for DocumentRule
 NS_INTERFACE_MAP_BEGIN(DocumentRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMozDocumentRule)
-NS_INTERFACE_MAP_END_INHERITING(GroupRule)
+NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -1007,6 +1080,13 @@ DocumentRule::SetConditionText(const nsAString& aConditionText)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void
+DocumentRule::SetConditionText(const nsAString& aConditionText,
+                               ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 // GroupRule interface
 /* virtual */ bool
 DocumentRule::UseForPresentation(nsPresContext* aPresContext,
@@ -1086,8 +1166,7 @@ DocumentRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 DocumentRule::WrapObject(JSContext* aCx,
                          JS::Handle<JSObject*> aGivenProto)
 {
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
+  return CSSMozDocumentRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 void
@@ -2633,11 +2712,10 @@ namespace mozilla {
 CSSSupportsRule::CSSSupportsRule(bool aConditionMet,
                                  const nsString& aCondition,
                                  uint32_t aLineNumber, uint32_t aColumnNumber)
-  : css::GroupRule(aLineNumber, aColumnNumber)
+  : css::ConditionRule(aLineNumber, aColumnNumber)
   , mUseGroup(aConditionMet)
   , mCondition(aCondition)
 {
-  SetIsNotDOMBinding();
 }
 
 CSSSupportsRule::~CSSSupportsRule()
@@ -2645,11 +2723,10 @@ CSSSupportsRule::~CSSSupportsRule()
 }
 
 CSSSupportsRule::CSSSupportsRule(const CSSSupportsRule& aCopy)
-  : css::GroupRule(aCopy),
+  : css::ConditionRule(aCopy),
     mUseGroup(aCopy.mUseGroup),
     mCondition(aCopy.mCondition)
 {
-  SetIsNotDOMBinding();
 }
 
 #ifdef DEBUG
@@ -2690,16 +2767,15 @@ CSSSupportsRule::UseForPresentation(nsPresContext* aPresContext,
   return mUseGroup;
 }
 
-NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, css::GroupRule)
-NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, css::GroupRule)
+NS_IMPL_ADDREF_INHERITED(CSSSupportsRule, css::ConditionRule)
+NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, css::ConditionRule)
 
 // QueryInterface implementation for CSSSupportsRule
 NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSSupportsRule)
-NS_INTERFACE_MAP_END_INHERITING(GroupRule)
+NS_INTERFACE_MAP_END_INHERITING(ConditionRule)
 
 uint16_t
 CSSSupportsRule::Type() const
@@ -2748,6 +2824,13 @@ CSSSupportsRule::SetConditionText(const nsAString& aConditionText)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+void
+CSSSupportsRule::SetConditionText(const nsAString& aConditionText,
+                                  ErrorResult& aRv)
+{
+  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+}
+
 /* virtual */ size_t
 CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
@@ -2761,8 +2844,7 @@ CSSSupportsRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 CSSSupportsRule::WrapObject(JSContext* aCx,
                             JS::Handle<JSObject*> aGivenProto)
 {
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
+  return CSSSupportsRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace mozilla

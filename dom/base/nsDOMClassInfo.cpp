@@ -76,10 +76,7 @@
 // includes needed for the prototype chain interfaces
 #include "nsIDOMCSSKeyframeRule.h"
 #include "nsIDOMCSSKeyframesRule.h"
-#include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
-#include "nsIDOMCSSMozDocumentRule.h"
-#include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMCSSPageRule.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -187,11 +184,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   // Misc Core related classes
 
-  // CSS classes
-  NS_DEFINE_CLASSINFO_DATA(CSSMediaRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
-
   // XUL classes
 #ifdef MOZ_XUL
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
@@ -213,14 +205,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CHROME_XBL_CLASSINFO_DATA(XULTreeBuilder, nsDOMGenericSH,
                                       DEFAULT_SCRIPTABLE_FLAGS)
 #endif
-
-  NS_DEFINE_CLASSINFO_DATA(CSSMozDocumentRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
-
-  NS_DEFINE_CLASSINFO_DATA(CSSSupportsRule, nsCSSRuleSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS |
-                           nsIXPCScriptable::WANT_PRECREATE)
 
   NS_DEFINE_CLASSINFO_DATA(CSSFontFaceRule, nsCSSRuleSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS |
@@ -513,11 +497,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDOMConstructor)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(CSSMediaRule, nsIDOMCSSMediaRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSMediaRule)
-  DOM_CLASSINFO_MAP_END
-
 #ifdef MOZ_XUL
   DOM_CLASSINFO_MAP_BEGIN(XULCommandDispatcher, nsIDOMXULCommandDispatcher)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULCommandDispatcher)
@@ -550,16 +529,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsITreeView)
   DOM_CLASSINFO_MAP_END
 #endif
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSMozDocumentRule, nsIDOMCSSMozDocumentRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(CSSSupportsRule, nsIDOMCSSSupportsRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSSupportsRule)
-  DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSFontFaceRule, nsIDOMCSSFontFaceRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSRule)
