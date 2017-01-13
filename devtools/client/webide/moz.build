@@ -21,3 +21,6 @@ MOCHITEST_CHROME_MANIFESTS += [
 JS_PREFERENCE_PP_FILES += [
     'webide-prefs.js',
 ]
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: WebIDE')

@@ -65,3 +65,6 @@ DevToolsModules(
     'task.js',
     'ThreadSafeDevToolsUtils.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools')

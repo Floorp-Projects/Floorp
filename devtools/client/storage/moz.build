@@ -10,3 +10,6 @@ DevToolsModules(
     'panel.js',
     'ui.js'
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Storage Inspector')

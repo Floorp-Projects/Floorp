@@ -9,3 +9,6 @@ DevToolsModules(
     'responsivedesign-child.js',
     'responsivedesign.jsm',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Responsive Design Mode')

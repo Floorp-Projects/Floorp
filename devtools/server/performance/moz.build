@@ -11,3 +11,6 @@ DevToolsModules(
     'recorder.js',
     'timeline.js',
 )
+
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Performance Tools (Profiler/Timeline)')
