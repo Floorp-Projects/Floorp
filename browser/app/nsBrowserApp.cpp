@@ -234,19 +234,6 @@ static int do_main(int argc, char* argv[], char* envp[])
   return gBootstrap->XRE_main(argc, argv, config);
 }
 
-static bool
-FileExists(const char *path)
-{
-#ifdef XP_WIN
-  wchar_t wideDir[MAX_PATH];
-  MultiByteToWideChar(CP_UTF8, 0, path, -1, wideDir, MAX_PATH);
-  DWORD fileAttrs = GetFileAttributesW(wideDir);
-  return fileAttrs != INVALID_FILE_ATTRIBUTES;
-#else
-  return access(path, R_OK) == 0;
-#endif
-}
-
 static nsresult
 InitXPCOMGlue(const char *argv0)
 {
@@ -256,18 +243,6 @@ InitXPCOMGlue(const char *argv0)
   if (NS_FAILED(rv)) {
     Output("Couldn't find the application directory.\n");
     return rv;
-  }
-
-  char *lastSlash = strrchr(exePath, XPCOM_FILE_PATH_SEPARATOR[0]);
-  if (!lastSlash ||
-      (size_t(lastSlash - exePath) > MAXPATHLEN - sizeof(XPCOM_DLL) - 1))
-    return NS_ERROR_FAILURE;
-
-  strcpy(lastSlash + 1, XPCOM_DLL);
-
-  if (!FileExists(exePath)) {
-    Output("Could not find the Mozilla runtime.\n");
-    return NS_ERROR_FAILURE;
   }
 
   gBootstrap = mozilla::GetBootstrap(exePath);
