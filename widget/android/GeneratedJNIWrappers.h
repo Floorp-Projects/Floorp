@@ -2094,7 +2094,7 @@ public:
                 "(II)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
+                mozilla::jni::ExceptionMode::IGNORE;
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::GECKO;
         static const mozilla::jni::DispatchTarget dispatchTarget =
@@ -2117,7 +2117,7 @@ public:
                 "(Ljava/lang/CharSequence;III)V";
         static const bool isStatic = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
+                mozilla::jni::ExceptionMode::IGNORE;
         static const mozilla::jni::CallingThread callingThread =
                 mozilla::jni::CallingThread::GECKO;
         static const mozilla::jni::DispatchTarget dispatchTarget =
