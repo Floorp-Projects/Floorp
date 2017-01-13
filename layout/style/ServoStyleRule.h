@@ -65,7 +65,6 @@ public:
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
   already_AddRefed<Rule> Clone() const final;
   nsIDOMCSSRule* GetDOMRule() final { return this; }
-  nsIDOMCSSRule* GetExistingDOMRule() final { return this; }
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;
