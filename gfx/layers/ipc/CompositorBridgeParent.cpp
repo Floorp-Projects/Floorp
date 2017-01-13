@@ -390,7 +390,7 @@ CompositorBridgeParent::Initialize()
 
   LayerScope::SetPixelScale(mScale.scale);
 
-  if (!mOptions.UseWebRender()) {
+  if (!gfxPrefs::WebRenderEnabled()) {
     mCompositorScheduler = new CompositorVsyncScheduler(this, mWidget);
   }
 }
