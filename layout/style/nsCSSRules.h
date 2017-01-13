@@ -69,10 +69,6 @@ public:
   virtual int32_t GetType() const override;
   using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
-  virtual nsIDOMCSSRule* GetDOMRule() override
-  {
-    return this;
-  }
 
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
@@ -125,10 +121,6 @@ public:
   virtual int32_t GetType() const override;
   using Rule::GetType;
   virtual already_AddRefed<Rule> Clone() const override;
-  virtual nsIDOMCSSRule* GetDOMRule() override
-  {
-    return this;
-  }
 
   // nsIDOMCSSGroupingRule interface
   NS_DECL_NSIDOMCSSGROUPINGRULE
@@ -264,8 +256,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsCSSFontFaceRule,
                                                          mozilla::css::Rule)
 
-  // Rule methods
-  DECL_STYLE_RULE_INHERIT
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -340,8 +330,6 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Rule methods
-  DECL_STYLE_RULE_INHERIT
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -429,8 +417,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSKeyframeRule, mozilla::css::Rule)
 
-  // Rule methods
-  DECL_STYLE_RULE_INHERIT
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -488,10 +474,6 @@ public:
   virtual int32_t GetType() const override;
   using Rule::GetType;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
-  virtual nsIDOMCSSRule* GetDOMRule() override
-  {
-    return this;
-  }
 
   // nsIDOMCSSKeyframesRule interface
   NS_DECL_NSIDOMCSSKEYFRAMESRULE
@@ -564,8 +546,6 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsCSSPageRule, mozilla::css::Rule)
 
-  // Rule methods
-  DECL_STYLE_RULE_INHERIT
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -614,10 +594,6 @@ public:
   virtual already_AddRefed<mozilla::css::Rule> Clone() const override;
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                   nsMediaQueryResultCacheKey& aKey) override;
-  virtual nsIDOMCSSRule* GetDOMRule() override
-  {
-    return this;
-  }
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -668,8 +644,6 @@ private:
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  // Rule methods
-  DECL_STYLE_RULE_INHERIT
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif

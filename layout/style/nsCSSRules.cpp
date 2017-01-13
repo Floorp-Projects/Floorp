@@ -41,13 +41,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-#define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
-  /* virtual */ nsIDOMCSSRule* class_::GetDOMRule()               \
-  { return this; }
-
-#define IMPL_STYLE_RULE_INHERIT(class_, super_) \
-IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_)
-
 // base class for all rule types in a CSS style sheet
 
 namespace mozilla {
@@ -76,11 +69,7 @@ Rule::SetStyleSheet(StyleSheet* aSheet)
 NS_IMETHODIMP
 Rule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  if (mParentRule) {
-    NS_IF_ADDREF(*aParentRule = mParentRule->GetDOMRule());
-  } else {
-    *aParentRule = nullptr;
-  }
+  NS_IF_ADDREF(*aParentRule = mParentRule);
   return NS_OK;
 }
 
@@ -186,7 +175,7 @@ GroupRuleRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
     RefPtr<Rule> rule = mGroupRule->GetStyleRuleAt(aIndex);
     if (rule) {
       aFound = true;
-      return rule->GetDOMRule();
+      return rule;
     }
   }
 
@@ -242,8 +231,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ImportRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
-
-IMPL_STYLE_RULE_INHERIT(ImportRule, Rule)
 
 #ifdef DEBUG
 /* virtual */ void
@@ -518,14 +505,11 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText) const
   // get all the rules
   for (int32_t index = 0, count = mRules.Count(); index < count; ++index) {
     Rule* rule = mRules.ObjectAt(index);
-    nsIDOMCSSRule* domRule = rule->GetDOMRule();
-    if (domRule) {
-      nsAutoString cssText;
-      domRule->GetCssText(cssText);
-      aCssText.AppendLiteral("  ");
-      aCssText.Append(cssText);
-      aCssText.Append('\n');
-    }
+    nsAutoString cssText;
+    rule->GetCssText(cssText);
+    aCssText.AppendLiteral("  ");
+    aCssText.Append(cssText);
+    aCssText.Append('\n');
   }
 
   aCssText.Append('}');
@@ -1078,8 +1062,6 @@ NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSNameSpaceRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
-IMPL_STYLE_RULE_INHERIT(NameSpaceRule, Rule)
-
 #ifdef DEBUG
 /* virtual */ void
 NameSpaceRule::List(FILE* out, int32_t aIndent) const
@@ -1427,7 +1409,7 @@ nsCSSFontFaceStyleDecl::IndexedGetter(uint32_t index, bool& aFound, nsAString & 
 NS_IMETHODIMP
 nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  NS_IF_ADDREF(*aParentRule = ContainingRule()->GetDOMRule());
+  NS_IF_ADDREF(*aParentRule = ContainingRule());
   return NS_OK;
 }
 
@@ -1501,8 +1483,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
-
-IMPL_STYLE_RULE_INHERIT(nsCSSFontFaceRule, Rule)
 
 #ifdef DEBUG
 void
@@ -1624,8 +1604,6 @@ NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFeatureValuesRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
-
-IMPL_STYLE_RULE_INHERIT(nsCSSFontFeatureValuesRule, Rule)
 
 static void
 FeatureValuesToString(
@@ -1942,8 +1920,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSKeyframeRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSKeyframeRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
-
-IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSKeyframeRule, Rule)
 
 #ifdef DEBUG
 void
@@ -2441,8 +2417,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsCSSPageRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSPageRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
 
-IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSPageRule, Rule)
-
 #ifdef DEBUG
 void
 nsCSSPageRule::List(FILE* out, int32_t aIndent) const
@@ -2701,8 +2675,6 @@ NS_INTERFACE_MAP_BEGIN(nsCSSCounterStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSCounterStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(mozilla::css::Rule)
-
-IMPL_STYLE_RULE_INHERIT(nsCSSCounterStyleRule, css::Rule)
 
 #ifdef DEBUG
 void
