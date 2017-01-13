@@ -11,8 +11,8 @@
 #include "mozilla/DeclarationBlockInlines.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoDeclarationBlock.h"
+#include "mozilla/dom/CSSStyleRuleBinding.h"
 
-#include "nsDOMClassInfoID.h"
 #include "mozAutoDocUpdate.h"
 
 namespace mozilla {
@@ -100,17 +100,15 @@ ServoStyleRuleDeclaration::GetCSSParsingEnvironment(
 // -- ServoStyleRule --------------------------------------------------
 
 ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule)
-  : css::Rule(0, 0)
+  : BindingStyleRule(0, 0)
   , mRawRule(aRawRule)
   , mDecls(Servo_StyleRule_GetStyle(mRawRule).Consume())
 {
-  SetIsNotDOMBinding();
 }
 
 // QueryInterface implementation for ServoStyleRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
 NS_IMPL_ADDREF_INHERITED(ServoStyleRule, css::Rule)
@@ -152,14 +150,6 @@ ServoStyleRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this);
 }
 
-/* virtual */ JSObject*
-ServoStyleRule::WrapObject(JSContext* aCx,
-                           JS::Handle<JSObject*> aGivenProto)
-{
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
-}
-
 #ifdef DEBUG
 void
 ServoStyleRule::List(FILE* out, int32_t aIndent) const
@@ -185,6 +175,12 @@ void
 ServoStyleRule::GetCssTextImpl(nsAString& aCssText) const
 {
   Servo_StyleRule_GetCssText(mRawRule, &aCssText);
+}
+
+nsICSSDeclaration*
+ServoStyleRule::Style()
+{
+  return &mDecls;
 }
 
 /* CSSStyleRule implementation */
