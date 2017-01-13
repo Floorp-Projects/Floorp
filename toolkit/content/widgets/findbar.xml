@@ -518,15 +518,14 @@
           if (aHighlight === this._highlightAll) {
             return;
           }
-          this._highlightAll = aHighlight;
 
           this.browser.finder.onHighlightAllChange(aHighlight);
+
+          this._setHighlightAll(aHighlight, aFromPrefObserver);
 
           if (!this._dispatchFindEvent("highlightallchange")) {
             return;
           }
-
-          this._setHighlightAll(aHighlight, aFromPrefObserver);
 
           let word = this._findField.value;
           // Bug 429723. Don't attempt to highlight ""

@@ -238,7 +238,7 @@ Finder.prototype = {
   },
 
   highlight: Task.async(function* (aHighlight, aWord, aLinksOnly) {
-    yield this.highlighter.highlight(aHighlight, aWord, null, aLinksOnly);
+    yield this.highlighter.highlight(aHighlight, aWord, aLinksOnly);
   }),
 
   getInitialSelection() {
