@@ -81,6 +81,7 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'AnimationCollection.h',
+    'BindingStyleRule.h',
     'CSSEnabledState.h',
     'CSSStyleSheet.h',
     'CSSVariableDeclarations.h',
@@ -215,10 +216,18 @@ UNIFIED_SOURCES += [
     'SVGAttrAnimationRuleProcessor.cpp',
 ]
 
-# nsCSSRuleProcessor.cpp needs to be built separately because it uses plarena.h.
-# nsLayoutStylesheetCache.cpp needs to be built separately because it uses
+# - BindingStyleRule.cpp doesn't _really_ needs to be built separately,
+# except insofar as it shifts unified build boundaries, causing
+# Unified_cpp_layout_style4.cpp to include nsStyleCoord.cpp, which
+# includes, via nsStyleCoord.h, <type_traits>, which ends up including
+# <xutility>, which fails in much the way described in
+# <https://bugzilla.mozilla.org/show_bug.cgi?id=1331102>.
+# - nsCSSRuleProcessor.cpp needs to be built separately because it uses
+# plarena.h.
+# - nsLayoutStylesheetCache.cpp needs to be built separately because it uses
 # nsExceptionHandler.h, which includes windows.h.
 SOURCES += [
+    'BindingStyleRule.cpp',
     'nsCSSRuleProcessor.cpp',
     'nsLayoutStylesheetCache.cpp',
 ]
