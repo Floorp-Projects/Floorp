@@ -34,6 +34,7 @@
 #include "nsDOMClassInfoID.h"
 #include "mozilla/dom/CSSStyleDeclarationBinding.h"
 #include "mozilla/dom/CSSNamespaceRuleBinding.h"
+#include "mozilla/dom/CSSImportRuleBinding.h"
 #include "StyleRule.h"
 #include "nsFont.h"
 #include "nsIURI.h"
@@ -220,7 +221,7 @@ ImportRule::ImportRule(nsMediaList* aMedia, const nsString& aURLSpec,
   , mURLSpec(aURLSpec)
   , mMedia(aMedia)
 {
-  SetIsNotDOMBinding();
+  MOZ_ASSERT(aMedia);
   // XXXbz This is really silly.... the mMedia here will be replaced
   // with itself if we manage to load a sheet.  Which should really
   // never fail nowadays, in sane cases.
@@ -230,7 +231,6 @@ ImportRule::ImportRule(const ImportRule& aCopy)
   : Rule(aCopy),
     mURLSpec(aCopy.mURLSpec)
 {
-  SetIsNotDOMBinding();
   // Whether or not an @import rule has a null sheet is a permanent
   // property of that @import rule, since it is null only if the target
   // sheet failed security checks.
@@ -257,7 +257,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ImportRule, Rule, mMedia, mChildSheet)
 // QueryInterface implementation for ImportRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ImportRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END_INHERITING(Rule)
 
 #ifdef DEBUG
@@ -331,6 +330,12 @@ ImportRule::GetCssTextImpl(nsAString& aCssText) const
   aCssText.Append(';');
 }
 
+StyleSheet*
+ImportRule::GetStyleSheet() const
+{
+  return mChildSheet;
+}
+
 NS_IMETHODIMP
 ImportRule::GetHref(nsAString & aHref)
 {
@@ -343,7 +348,7 @@ ImportRule::GetMedia(nsIDOMMediaList * *aMedia)
 {
   NS_ENSURE_ARG_POINTER(aMedia);
 
-  NS_IF_ADDREF(*aMedia = mMedia);
+  NS_ADDREF(*aMedia = mMedia);
   return NS_OK;
 }
 
@@ -374,8 +379,7 @@ ImportRule::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 ImportRule::WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto)
 {
-  NS_NOTREACHED("We called SetIsNotDOMBinding() in our constructor");
-  return nullptr;
+  return CSSImportRuleBinding::Wrap(aCx, this, aGivenProto);
 }
 
 GroupRule::GroupRule(uint32_t aLineNumber, uint32_t aColumnNumber)
