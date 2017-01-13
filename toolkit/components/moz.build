@@ -17,6 +17,7 @@ DIRS += [
     'alerts',
     'apppicker',
     'asyncshutdown',
+    'browser',
     'commandlines',
     'contentprefs',
     'contextualidentity',
@@ -61,6 +62,8 @@ DIRS += [
     'url-classifier',
     'urlformatter',
     'viewconfig',
+    'windowcreator',
+    'windowwatcher',
     'workerloader',
     'xulstore'
 ]
@@ -84,7 +87,7 @@ if CONFIG['MOZ_FEEDS']:
     DIRS += ['feeds']
 
 if CONFIG['MOZ_XUL']:
-    DIRS += ['autocomplete', 'satchel']
+    DIRS += ['autocomplete', 'printingui', 'satchel']
 
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     DIRS += ['filepicker']

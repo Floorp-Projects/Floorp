@@ -34,10 +34,10 @@ function getTempDir() {
 const STATE_STOP = 0x00000010;
 
 var progressListener = {
-  onProgressChange: function() {
+  onProgressChange() {
     /* Ignore progress callback */
   },
-  onStateChange: function(aProgress, aRequest, aStateFlag, aStatus) {
+  onStateChange(aProgress, aRequest, aStateFlag, aStatus) {
     if (aStateFlag & STATE_STOP) {
       var dirExists = false;
       var videoExists = false;
@@ -52,7 +52,7 @@ var progressListener = {
       ok(dirExists, 'Directory containing video file should be created');
       ok(videoExists, 'Video should be persisted with document');
       SimpleTest.finish();
-    }    
+    }
   }
 };
 

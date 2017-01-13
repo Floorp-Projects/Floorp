@@ -29,6 +29,7 @@ interface nsIXPConnectWrappedNative;
 [ref] native JSCallArgsRef(const JS::CallArgs);
 [ref] native JSAutoIdVector(JS::AutoIdVector);
 [ptr] native jsClassPtr(const js::Class);
+[ptr] native JSClassPtr(const JSClass);
 
 /**
  * Note: This is not really an XPCOM interface.  For example, callers must
@@ -65,6 +66,7 @@ interface nsIXPCScriptable : nsISupports
     readonly attribute string className;
     [notxpcom,nostdcall] uint32_t getScriptableFlags();
     [notxpcom,nostdcall] jsClassPtr getClass();
+    [notxpcom,nostdcall] JSClassPtr getJSClass();
 
     void   preCreate(in nsISupports nativeObj, in JSContextPtr cx,
                      in JSObjectPtr globalObj, out JSObjectPtr parentObj);

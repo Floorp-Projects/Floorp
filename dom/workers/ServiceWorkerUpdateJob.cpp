@@ -247,7 +247,8 @@ ServiceWorkerUpdateJob::AsyncExecute()
   AssertIsOnMainThread();
   MOZ_ASSERT(GetType() == Type::Update);
 
-  if (Canceled()) {
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (Canceled() || !swm) {
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
@@ -256,7 +257,6 @@ ServiceWorkerUpdateJob::AsyncExecute()
   //
   //  https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#update-algorithm
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   RefPtr<ServiceWorkerRegistrationInfo> registration =
     swm->GetRegistration(mPrincipal, mScope);
 
@@ -348,7 +348,8 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
 {
   AssertIsOnMainThread();
 
-  if (NS_WARN_IF(Canceled())) {
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (NS_WARN_IF(Canceled() || !swm)) {
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
@@ -413,7 +414,6 @@ ServiceWorkerUpdateJob::ComparisonResult(nsresult aStatus,
                                                "ServiceWorkerScopePathMismatch",
                                                params, message);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to format localized string");
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     swm->ReportToAllClients(mScope,
                             message,
                             EmptyString(),
@@ -462,7 +462,8 @@ ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResu
 {
   AssertIsOnMainThread();
 
-  if (Canceled()) {
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (Canceled() || !swm) {
     FailUpdateJob(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
@@ -480,14 +481,15 @@ ServiceWorkerUpdateJob::ContinueUpdateAfterScriptEval(bool aScriptEvaluationResu
     return;
   }
 
-  Install();
+  Install(swm);
 }
 
 void
-ServiceWorkerUpdateJob::Install()
+ServiceWorkerUpdateJob::Install(ServiceWorkerManager* aSWM)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(!Canceled());
+  MOZ_DIAGNOSTIC_ASSERT(!Canceled());
+  MOZ_DIAGNOSTIC_ASSERT(aSWM);
 
   MOZ_ASSERT(!mRegistration->GetInstalling());
 
@@ -503,12 +505,10 @@ ServiceWorkerUpdateJob::Install()
   // The job promise cannot be rejected after this point, but the job can
   // still fail; e.g. if the install event handler throws, etc.
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-
   // fire the updatefound event
   nsCOMPtr<nsIRunnable> upr =
     NewRunnableMethod<RefPtr<ServiceWorkerRegistrationInfo>>(
-      swm,
+      aSWM,
       &ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations,
       mRegistration);
   NS_DispatchToMainThread(upr);

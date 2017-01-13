@@ -17,7 +17,7 @@ load 407053.html
 load 423371-1.html
 load 448564.html
 load 451123-1.html
-skip-if(stylo) load 453406-1.html # bug 1323654
+load 453406-1.html
 load 464197-1.html
 load 465466-1.xhtml
 load 468562-1.html

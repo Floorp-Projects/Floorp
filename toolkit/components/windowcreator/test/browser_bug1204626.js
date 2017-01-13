@@ -1,8 +1,8 @@
 "use strict"; // -*- js-indent-level: 2; indent-tabs-mode: nil -*-
 var Cc = Components.classes;
 var Ci = Components.interfaces;
-const contentBase = "https://example.com/browser/embedding/test/";
-const chromeBase = "chrome://mochitests/content/browser/embedding/test/";
+const contentBase = "https://example.com/browser/toolkit/components/windowcreator/test/";
+const chromeBase = "chrome://mochitests/content/browser/toolkit/components/windowcreator/test/";
 const testPageURL = contentBase + "bug1204626_doc0.html";
 
 function one_test(delay, continuation) {
@@ -16,7 +16,7 @@ function one_test(delay, continuation) {
                              .QueryInterface(Ci.nsIWebBrowserPersistable);
     persistable.startPersistence(/* outer window ID: */ 0, {
       onDocumentReady,
-      onError: function(status) {
+      onError(status) {
         ok(false, new Components.Exception("startPersistence failed", status));
         continuation();
       }
@@ -24,7 +24,7 @@ function one_test(delay, continuation) {
   });
 
   function onDocumentReady(doc) {
-    const nameStem="test_bug1204626_" + Date.now();
+    const nameStem = "test_bug1204626_" + Date.now();
     let wbp = Cc["@mozilla.org/embedding/browser/nsWebBrowserPersist;1"]
               .createInstance(Ci.nsIWebBrowserPersist);
     let tmp = Cc["@mozilla.org/file/directory_service;1"]
@@ -45,11 +45,11 @@ function one_test(delay, continuation) {
     });
 
     wbp.progressListener = {
-      onProgressChange: function(){},
-      onLocationChange: function(){},
-      onStatusChange: function(){},
-      onSecurityChange: function(){},
-      onStateChange: function wbp_stateChange(_wbp, _req, state, _status) {
+      onProgressChange() {},
+      onLocationChange() {},
+      onStatusChange() {},
+      onSecurityChange() {},
+      onStateChange(_wbp, _req, state, _status) {
         if ((state & Ci.nsIWebProgressListener.STATE_STOP) == 0) {
           return;
         }
