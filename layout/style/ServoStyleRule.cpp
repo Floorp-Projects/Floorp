@@ -110,7 +110,6 @@ ServoStyleRule::ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule)
 // QueryInterface implementation for ServoStyleRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServoStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleRule)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleRule)
 NS_INTERFACE_MAP_END_INHERITING(css::Rule)
 
