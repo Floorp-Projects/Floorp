@@ -20,11 +20,12 @@ WebRenderContainerLayer::RenderLayer()
   nsTArray<LayerPolygon> children = SortChildrenBy3DZOrder(SortMode::WITHOUT_GEOMETRY);
 
   gfx::Rect relBounds = TransformedVisibleBoundsRelativeToParent();
+  gfx::Rect overflow(0, 0, relBounds.width, relBounds.height);
   gfx::Matrix4x4 transform;// = GetTransform();
-  if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds/overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
+  if (gfxPrefs::LayersDump()) printf_stderr("ContainerLayer %p using %s as bounds, %s as overflow, %s as transform\n", this, Stringify(relBounds).c_str(), Stringify(overflow).c_str(), Stringify(transform).c_str());
 
   WRBridge()->AddWebRenderCommand(
-    OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(relBounds), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
+    OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), Nothing(), transform, FrameMetrics::NULL_SCROLL_ID));
   for (LayerPolygon& child : children) {
     if (child.layer->IsBackfaceHidden()) {
       continue;
