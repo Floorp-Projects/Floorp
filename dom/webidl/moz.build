@@ -96,6 +96,7 @@ WEBIDL_FILES = [
     'CSSMediaRule.webidl',
     'CSSMozDocumentRule.webidl',
     'CSSNamespaceRule.webidl',
+    'CSSPageRule.webidl',
     'CSSPrimitiveValue.webidl',
     'CSSPseudoElement.webidl',
     'CSSRule.webidl',
