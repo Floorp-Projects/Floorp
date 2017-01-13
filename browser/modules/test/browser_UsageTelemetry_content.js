@@ -28,12 +28,16 @@ add_task(function* setup() {
     ["toolkit.telemetry.enabled", true]  // And Extended Telemetry to be enabled.
   ]});
 
+  // Enable event recording for the events tested here.
+  Services.telemetry.setEventRecordingEnabled("navigation", true);
+
   // Make sure to restore the engine once we're done.
   registerCleanupFunction(function* () {
     Services.search.currentEngine = originalEngine;
     Services.search.removeEngine(engineDefault);
     Services.search.removeEngine(engineOneOff);
     yield PlacesTestUtils.clearHistory();
+    Services.telemetry.setEventRecordingEnabled("navigation", false);
   });
 });
 

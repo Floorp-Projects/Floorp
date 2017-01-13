@@ -26,6 +26,7 @@ nsresult RecordEvent(const nsACString& aCategory, const nsACString& aMethod,
                      const nsACString& aObject, JS::HandleValue aValue,
                      JS::HandleValue aExtra, JSContext* aCx,
                      uint8_t optional_argc);
+void SetEventRecordingEnabled(const nsACString& aCategory, bool aEnabled);
 nsresult CreateSnapshots(uint32_t aDataset, bool aClear, JSContext* aCx,
                          uint8_t optional_argc, JS::MutableHandleValue aResult);
 
