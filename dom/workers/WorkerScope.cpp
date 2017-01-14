@@ -651,8 +651,6 @@ public:
   Run() override
   {
     AssertIsOnMainThread();
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    MOZ_ASSERT(swm);
 
     MutexAutoLock lock(mPromiseProxy->Lock());
     if (mPromiseProxy->CleanedUp()) {
@@ -660,8 +658,13 @@ public:
     }
 
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
-    swm->SetSkipWaitingFlag(workerPrivate->GetPrincipal(), mScope,
-                            workerPrivate->ServiceWorkerID());
+    MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->SetSkipWaitingFlag(workerPrivate->GetPrincipal(), mScope,
+                              workerPrivate->ServiceWorkerID());
+    }
 
     RefPtr<SkipWaitingResultRunnable> runnable =
       new SkipWaitingResultRunnable(workerPrivate, mPromiseProxy);

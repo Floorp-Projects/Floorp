@@ -236,11 +236,16 @@ ServiceWorkerRegistrationInfo::Activate()
     return;
   }
 
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // browser shutdown began during async activation step
+    return;
+  }
+
   TransitionWaitingToActive();
 
   // FIXME(nsm): Unlink appcache if there is one.
 
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   swm->CheckPendingReadyPromises();
 
   // "Queue a task to fire a simple event named controllerchange..."
@@ -279,6 +284,10 @@ ServiceWorkerRegistrationInfo::FinishActivate(bool aSuccess)
   // Activation never fails, so aSuccess is ignored.
   mActiveWorker->UpdateState(ServiceWorkerState::Activated);
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // browser shutdown started during async activation completion step
+    return;
+  }
   swm->StoreRegistration(mPrincipal, this);
 }
 
@@ -317,6 +326,11 @@ ServiceWorkerRegistrationInfo::NotifyListenersOnChange(WhichServiceWorker aChang
                                 WhichServiceWorker::ACTIVE_WORKER));
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // browser shutdown started
+    return;
+  }
+
   swm->InvalidateServiceWorkerRegistrationWorker(this, aChangedWorkers);
 
   nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> listeners(mListeners);
@@ -470,6 +484,10 @@ ServiceWorkerRegistrationInfo::TransitionInstallingToWaiting()
                           WhichServiceWorker::WAITING_WORKER);
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (!swm) {
+    // browser shutdown began
+    return;
+  }
   swm->StoreRegistration(mPrincipal, this);
 }
 
