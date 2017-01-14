@@ -14,7 +14,6 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/StaticMutex.h"
-#include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
 #include "MP4Decoder.h"
 #include "VPXDecoder.h"
@@ -101,11 +100,6 @@ GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
   if (VPXDecoder::IsVP8(aMimeType)) {
     return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
                       { NS_LITERAL_CSTRING("vp8"), aGMP.value()});
-  }
-
-  if (MP4Decoder::IsAAC(aMimeType)) {
-    return HaveGMPFor(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                      { NS_LITERAL_CSTRING("aac"), aGMP.value()});
   }
 
   return false;

@@ -5,7 +5,6 @@
 
 #include "GMPContentChild.h"
 #include "GMPChild.h"
-#include "GMPAudioDecoderChild.h"
 #include "GMPDecryptorChild.h"
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoEncoderChild.h"
@@ -47,19 +46,6 @@ void
 GMPContentChild::ProcessingError(Result aCode, const char* aReason)
 {
   mGMPChild->ProcessingError(aCode, aReason);
-}
-
-PGMPAudioDecoderChild*
-GMPContentChild::AllocPGMPAudioDecoderChild()
-{
-  return new GMPAudioDecoderChild(this);
-}
-
-bool
-GMPContentChild::DeallocPGMPAudioDecoderChild(PGMPAudioDecoderChild* aActor)
-{
-  delete aActor;
-  return true;
 }
 
 PGMPDecryptorChild*
@@ -228,22 +214,6 @@ GMPContentChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
 }
 
 mozilla::ipc::IPCResult
-GMPContentChild::RecvPGMPAudioDecoderConstructor(PGMPAudioDecoderChild* aActor)
-{
-  auto vdc = static_cast<GMPAudioDecoderChild*>(aActor);
-
-  void* vd = nullptr;
-  GMPErr err = mGMPChild->GetAPI(GMP_API_AUDIO_DECODER, &vdc->Host(), &vd);
-  if (err != GMPNoErr || !vd) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-
-  vdc->Init(static_cast<GMPAudioDecoder*>(vd));
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult
 GMPContentChild::RecvPGMPVideoDecoderConstructor(PGMPVideoDecoderChild* aActor,
                                                  const uint32_t& aDecryptorId)
 {
@@ -282,12 +252,6 @@ void
 GMPContentChild::CloseActive()
 {
   // Invalidate and remove any remaining API objects.
-  const ManagedContainer<PGMPAudioDecoderChild>& audioDecoders =
-    ManagedPGMPAudioDecoderChild();
-  for (auto iter = audioDecoders.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->SendShutdown();
-  }
-
   const ManagedContainer<PGMPDecryptorChild>& decryptors =
     ManagedPGMPDecryptorChild();
   for (auto iter = decryptors.ConstIter(); !iter.Done(); iter.Next()) {
@@ -310,8 +274,7 @@ GMPContentChild::CloseActive()
 bool
 GMPContentChild::IsUsed()
 {
-  return !ManagedPGMPAudioDecoderChild().IsEmpty() ||
-         !ManagedPGMPDecryptorChild().IsEmpty() ||
+  return !ManagedPGMPDecryptorChild().IsEmpty() ||
          !ManagedPGMPVideoDecoderChild().IsEmpty() ||
          !ManagedPGMPVideoEncoderChild().IsEmpty();
 }
