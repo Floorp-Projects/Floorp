@@ -16,9 +16,6 @@
 #include "prenv.h"
 #endif
 
-extern void StartupSpecialSystemDirectory();
-
-
 enum SystemDirectories {
   OS_DriveDirectory         =   1,
   OS_TemporaryDirectory     =   2,
