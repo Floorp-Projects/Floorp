@@ -20,6 +20,7 @@ using WRGlyphArray from "mozilla/gfx/webrender.h";
 using MaybeImageMask from "mozilla/layers/WebRenderTypes.h";
 using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::ByteBuffer from "mozilla/layers/WebRenderTypes.h";
+using mozilla::LayerIntRegion from "Units.h";
 
 namespace mozilla {
 namespace layers {
@@ -65,6 +66,7 @@ struct OpDPPushImage {
 };
 
 struct OpDPPushExternalImageId {
+  LayerIntRegion validBufferRegion;
   WRRect bounds;
   WRRect clip;
   MaybeImageMask mask;

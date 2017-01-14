@@ -126,10 +126,6 @@ WebRenderImageLayer::RenderLayer()
 
   WRScrollFrameStackingContextGenerator scrollFrames(this);
 
-  //XXX
-  MOZ_RELEASE_ASSERT(surface->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-                     surface->GetFormat() == SurfaceFormat::B8G8R8A8, "bad format");
-
   Rect rect(0, 0, size.width, size.height);
 
   Rect clip;
@@ -149,7 +145,7 @@ WebRenderImageLayer::RenderLayer()
 
   WRBridge()->AddWebRenderCommand(
     OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(ToWRRect(rect), ToWRRect(clip), Nothing(), filter, mExternalImageId));
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), ToWRRect(rect), ToWRRect(clip), Nothing(), filter, mExternalImageId));
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 
   if (gfxPrefs::LayersDump()) printf_stderr("ImageLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
