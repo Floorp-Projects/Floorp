@@ -15,7 +15,7 @@ import platform
 import re
 import sys
 from .string_version import StringVersion
-
+from ctypes.util import find_library
 
 # keep a copy of the os module since updating globals overrides this
 _os = os
@@ -150,7 +150,7 @@ if info['os'] == 'linux':
     import errno
     PR_SET_SECCOMP = 22
     SECCOMP_MODE_FILTER = 2
-    ctypes.CDLL("libc.so.6", use_errno=True).prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, 0)
+    ctypes.CDLL(find_library("c"), use_errno=True).prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, 0)
     info['has_sandbox'] = ctypes.get_errno() == errno.EFAULT
 else:
     info['has_sandbox'] = True

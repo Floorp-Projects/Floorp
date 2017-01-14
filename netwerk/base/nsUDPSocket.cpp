@@ -39,7 +39,6 @@ namespace mozilla {
 namespace net {
 
 static const uint32_t UDP_PACKET_CHUNK_SIZE = 1400;
-static NS_DEFINE_CID(kSocketTransportServiceCID2, NS_SOCKETTRANSPORTSERVICE_CID);
 
 //-----------------------------------------------------------------------------
 
@@ -275,7 +274,7 @@ nsUDPSocket::nsUDPSocket()
   {
     // This call can fail if we're offline, for example.
     nsCOMPtr<nsISocketTransportService> sts =
-        do_GetService(kSocketTransportServiceCID2);
+        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
   }
 
   mSts = gSocketTransportService;

@@ -14,4 +14,5 @@ browser.jar:
     content/browser/schemas/page_action.json
     content/browser/schemas/sessions.json
     content/browser/schemas/tabs.json
+    content/browser/schemas/theme.json
     content/browser/schemas/windows.json
