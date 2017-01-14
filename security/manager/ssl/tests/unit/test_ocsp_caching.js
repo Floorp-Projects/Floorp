@@ -68,7 +68,6 @@ function run_test() {
 
   let ocspResponder = new HttpServer();
   ocspResponder.registerPrefixHandler("/", function(request, response) {
-
     do_print("gFetchCount: " + gFetchCount);
     let responseFunction = gResponsePattern[gFetchCount];
     Assert.notEqual(undefined, responseFunction);

@@ -19,9 +19,7 @@ registerCleanupFunction(() => {
   }
 });
 
-/**
- * This function serves the same purpose as the one defined in head_psm.js.
- */
+// This function serves the same purpose as the one defined in head_psm.js.
 function pemToBase64(pem) {
   return pem.replace(/-----BEGIN CERTIFICATE-----/, "")
             .replace(/-----END CERTIFICATE-----/, "")

@@ -188,8 +188,8 @@ function run_test() {
     "ee",
   ];
   let loadedCerts = [];
-  for (let i = 0 ; i < certList.length; i++) {
-    loadedCerts.push(load_cert(certList[i], ",,"));
+  for (let certName of certList) {
+    loadedCerts.push(load_cert(certName, ",,"));
   }
 
   let ca_cert = loadedCerts[0];
