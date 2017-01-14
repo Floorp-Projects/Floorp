@@ -1141,9 +1141,11 @@ IonBuilder::initEnvironmentChain(MDefinition* callee)
         current->add(env);
 
         // This reproduce what is done in CallObject::createForFunction. Skip
-        // this for analyses, as the script might not have a baseline script
-        // with template objects yet.
-        if (fun->needsSomeEnvironmentObject() && !info().isAnalysis()) {
+        // this for the arguments analysis, as the script might not have a
+        // baseline script with template objects yet.
+        if (fun->needsSomeEnvironmentObject() &&
+            info().analysisMode() != Analysis_ArgumentsUsage)
+        {
             if (fun->needsNamedLambdaEnvironment())
                 env = createNamedLambdaObject(callee, env);
 

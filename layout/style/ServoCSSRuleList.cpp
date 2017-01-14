@@ -47,7 +47,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ServoCSSRuleList,
                                                   dom::CSSRuleList)
   tmp->EnumerateInstantiatedRules([&](css::Rule* aRule) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mRules[i]");
-    cb.NoteXPCOMChild(aRule->GetExistingDOMRule());
+    cb.NoteXPCOMChild(aRule);
   });
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -79,7 +79,7 @@ ServoCSSRuleList::GetRule(uint32_t aIndex)
   return CastToPtr(rule);
 }
 
-nsIDOMCSSRule*
+css::Rule*
 ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   if (aIndex >= mRules.Length()) {
@@ -87,10 +87,7 @@ ServoCSSRuleList::IndexedGetter(uint32_t aIndex, bool& aFound)
     return nullptr;
   }
   aFound = true;
-  if (css::Rule* rule = GetRule(aIndex)) {
-    return rule->GetDOMRule();
-  }
-  return nullptr;
+  return GetRule(aIndex);
 }
 
 template<typename Func>

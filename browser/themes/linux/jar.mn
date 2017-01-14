@@ -11,7 +11,7 @@ browser.jar:
   skin/classic/browser/aboutSyncTabs.css
 * skin/classic/browser/syncedtabs/sidebar.css     (syncedtabs/sidebar.css)
 * skin/classic/browser/browser.css
-* skin/classic/browser/devedition.css
+* skin/classic/browser/compacttheme.css
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/Info.png
@@ -79,8 +79,6 @@ browser.jar:
   skin/classic/browser/preferences/applications.css   (preferences/applications.css)
   skin/classic/browser/social/services-16.png         (social/services-16.png)
   skin/classic/browser/social/services-64.png         (social/services-64.png)
-  skin/classic/browser/social/share-button.png        (social/share-button.png)
-  skin/classic/browser/social/share-button-active.png (social/share-button-active.png)
   skin/classic/browser/tabbrowser/alltabs.png         (tabbrowser/alltabs.png)
   skin/classic/browser/tabbrowser/alltabs-inverted.png (tabbrowser/alltabs-inverted.png)
   skin/classic/browser/tabbrowser/newtab.svg                (tabbrowser/newtab.svg)

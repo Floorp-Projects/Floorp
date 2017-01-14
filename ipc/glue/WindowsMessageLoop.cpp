@@ -19,7 +19,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/PaintTracker.h"
-#include "mozilla/WindowsVersion.h"
 
 using namespace mozilla;
 using namespace mozilla::ipc;
@@ -1022,7 +1021,7 @@ MessageChannel::WaitForSyncNotify(bool aHandleWindowsMessages)
   MOZ_ASSERT(gUIThreadId, "InitUIThread was not called!");
 
 #if defined(ACCESSIBILITY)
-  if (IsVistaOrLater() && (mFlags & REQUIRE_A11Y_REENTRY)) {
+  if ((mFlags & REQUIRE_A11Y_REENTRY)) {
     MOZ_ASSERT(!(mFlags & REQUIRE_DEFERRED_MESSAGE_PROTECTION));
     return WaitForSyncNotifyWithA11yReentry();
   }
