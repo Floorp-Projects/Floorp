@@ -1188,8 +1188,11 @@ nsUDPSocket::Send(const nsACString &aHost, uint16_t aPort,
                   const uint8_t *aData, uint32_t aDataLength,
                   uint32_t *_retval)
 {
-  NS_ENSURE_ARG(aData);
   NS_ENSURE_ARG_POINTER(_retval);
+  if (!((aData && aDataLength > 0) ||
+        (!aData && !aDataLength))) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   *_retval = 0;
 
