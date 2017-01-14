@@ -20,8 +20,6 @@
 
 namespace mozilla { namespace net {
 
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-
 //-----------------------------------------------------------------------------
 
 typedef void (nsServerSocket:: *nsServerSocketFunc)(void);
@@ -52,7 +50,7 @@ nsServerSocket::nsServerSocket()
   {
     // This call can fail if we're offline, for example.
     nsCOMPtr<nsISocketTransportService> sts =
-        do_GetService(kSocketTransportServiceCID);
+        do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID);
   }
   // make sure the STS sticks around as long as we do
   NS_IF_ADDREF(gSocketTransportService);
