@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsSecurityHeaderParser_h__
-#define nsSecurityHeaderParser_h__
+#ifndef nsSecurityHeaderParser_h
+#define nsSecurityHeaderParser_h
 
-#include "nsString.h"
 #include "mozilla/LinkedList.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 // Utility class for handing back parsed directives and (optional) values
 class nsSecurityHeaderDirective : public mozilla::LinkedListElement<nsSecurityHeaderDirective> {
@@ -36,7 +36,9 @@ public:
 
 class nsSecurityHeaderParser {
 public:
-  explicit nsSecurityHeaderParser(const char *aHeader);
+  // The input to this class must be null-terminated, and must have a lifetime
+  // greater than or equal to the lifetime of the created nsSecurityHeaderParser.
+  explicit nsSecurityHeaderParser(const nsCString& aHeader);
   ~nsSecurityHeaderParser();
 
   // Only call Parse once.
@@ -71,4 +73,4 @@ private:
   bool mError;
 };
 
-#endif /* nsSecurityHeaderParser_h__ */
+#endif // nsSecurityHeaderParser_h
