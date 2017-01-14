@@ -45,6 +45,9 @@ skip-if(Android) fuzzy-if(winWidget,1,32) == grid-placement-auto-implicit-001.ht
 == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
 == grid-relpos-items-001.html grid-relpos-items-001-ref.html
 == grid-item-sizing-percent-001.html grid-item-sizing-percent-001-ref.html
+== grid-item-sizing-percent-002.html grid-item-sizing-percent-002-ref.html
+== grid-item-sizing-percent-003.html grid-item-sizing-percent-003-ref.html
+== grid-item-sizing-percent-004.html grid-item-sizing-percent-004-ref.html
 == grid-item-sizing-px-001.html grid-item-sizing-percent-001-ref.html
 == grid-item-dir-001.html grid-item-dir-001-ref.html
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
