@@ -109,7 +109,6 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
   if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
     switch (MediaPrefs::GMPAACPreferred()) {
       case 1: rv.emplace(kEMEKeySystemClearkey); break;
-      case 2: rv.emplace(kEMEKeySystemPrimetime); break;
       default: break;
     }
   }
@@ -117,7 +116,6 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
   if (MP4Decoder::IsH264(aMimeType)) {
     switch (MediaPrefs::GMPH264Preferred()) {
       case 1: rv.emplace(kEMEKeySystemClearkey); break;
-      case 2: rv.emplace(kEMEKeySystemPrimetime); break;
       default: break;
     }
   }
