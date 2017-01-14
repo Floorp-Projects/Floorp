@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GMPContentParent.h"
-#include "GMPAudioDecoderParent.h"
 #include "GMPDecryptorParent.h"
 #include "GMPParent.h"
 #include "GMPServiceChild.h"
@@ -66,8 +65,7 @@ private:
 void
 GMPContentParent::ActorDestroy(ActorDestroyReason aWhy)
 {
-  MOZ_ASSERT(mAudioDecoders.IsEmpty() &&
-             mDecryptors.IsEmpty() &&
+  MOZ_ASSERT(mDecryptors.IsEmpty() &&
              mVideoDecoders.IsEmpty() &&
              mVideoEncoders.IsEmpty());
   NS_DispatchToCurrentThread(new ReleaseGMPContentParent(this));
@@ -77,15 +75,6 @@ void
 GMPContentParent::CheckThread()
 {
   MOZ_ASSERT(mGMPThread == NS_GetCurrentThread());
-}
-
-void
-GMPContentParent::AudioDecoderDestroyed(GMPAudioDecoderParent* aDecoder)
-{
-  MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
-
-  MOZ_ALWAYS_TRUE(mAudioDecoders.RemoveElement(aDecoder));
-  CloseIfUnused();
 }
 
 void
@@ -135,8 +124,7 @@ GMPContentParent::RemoveCloseBlocker()
 void
 GMPContentParent::CloseIfUnused()
 {
-  if (mAudioDecoders.IsEmpty() &&
-      mDecryptors.IsEmpty() &&
+  if (mDecryptors.IsEmpty() &&
       mVideoDecoders.IsEmpty() &&
       mVideoEncoders.IsEmpty() &&
       mCloseBlockerCount == 0) {
@@ -190,23 +178,6 @@ GMPContentParent::GMPThread()
   }
 
   return mGMPThread;
-}
-
-nsresult
-GMPContentParent::GetGMPAudioDecoder(GMPAudioDecoderParent** aGMPAD)
-{
-  PGMPAudioDecoderParent* pvap = SendPGMPAudioDecoderConstructor();
-  if (!pvap) {
-    return NS_ERROR_FAILURE;
-  }
-  GMPAudioDecoderParent* vap = static_cast<GMPAudioDecoderParent*>(pvap);
-  // This addref corresponds to the Proxy pointer the consumer is returned.
-  // It's dropped by calling Close() on the interface.
-  NS_ADDREF(vap);
-  *aGMPAD = vap;
-  mAudioDecoders.AppendElement(vap);
-
-  return NS_OK;
 }
 
 nsresult
@@ -291,22 +262,6 @@ GMPContentParent::DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor)
 {
   GMPDecryptorParent* ksp = static_cast<GMPDecryptorParent*>(aActor);
   NS_RELEASE(ksp);
-  return true;
-}
-
-PGMPAudioDecoderParent*
-GMPContentParent::AllocPGMPAudioDecoderParent()
-{
-  GMPAudioDecoderParent* vdp = new GMPAudioDecoderParent(this);
-  NS_ADDREF(vdp);
-  return vdp;
-}
-
-bool
-GMPContentParent::DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor)
-{
-  GMPAudioDecoderParent* vdp = static_cast<GMPAudioDecoderParent*>(aActor);
-  NS_RELEASE(vdp);
   return true;
 }
 
