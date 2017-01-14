@@ -512,7 +512,7 @@ CertErrorRunnable::CheckCertOverrides()
                                                mDefaultErrorCodeToReport);
   }
   nsresult nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HSTS,
-                                    mInfoObject->GetHostNameRaw(),
+                                    mInfoObject->GetHostName(),
                                     mProviderFlags,
                                     nullptr,
                                     &strictTransportSecurityEnabled);
@@ -523,7 +523,7 @@ CertErrorRunnable::CheckCertOverrides()
                                                mDefaultErrorCodeToReport);
   }
   nsrv = sss->IsSecureHost(nsISiteSecurityService::HEADER_HPKP,
-                           mInfoObject->GetHostNameRaw(),
+                           mInfoObject->GetHostName(),
                            mProviderFlags,
                            nullptr,
                            &hasPinningInformation);

@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "gtest/gtest.h"
+#include "nsDependentString.h"
 #include "nsNetUtil.h"
 #include "nsISiteSecurityService.h"
 #include "nsIURI.h"
@@ -21,7 +22,8 @@ TestSuccess(const char* hdr, bool extraTokens,
   uint64_t maxAge = 0;
   bool includeSubdomains = false;
   rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
-                                hdr, 0, &maxAge, &includeSubdomains, nullptr);
+                                nsDependentCString(hdr), 0, &maxAge,
+                                &includeSubdomains, nullptr);
   ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Failed to process valid header: " << hdr;
 
   ASSERT_EQ(maxAge, expectedMaxAge) << "Did not correctly parse maxAge";
@@ -46,7 +48,8 @@ void TestFailure(const char* hdr,
   ASSERT_TRUE(NS_SUCCEEDED(rv)) << "Failed to create URI";
 
   rv = sss->UnsafeProcessHeader(nsISiteSecurityService::HEADER_HSTS, dummyUri,
-                                hdr, 0, nullptr, nullptr, nullptr);
+                                nsDependentCString(hdr), 0, nullptr, nullptr,
+                                nullptr);
   ASSERT_TRUE(NS_FAILED(rv)) << "Parsed invalid header: " << hdr;
 
   printf("%s\n", hdr);
