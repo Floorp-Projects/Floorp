@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.reader;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -12,6 +13,8 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
@@ -146,8 +149,13 @@ public class SavedReaderViewHelper {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                UrlAnnotations annotations = BrowserDB.from(mContext).getUrlAnnotations();
-                annotations.insertReaderViewUrl(mContext.getContentResolver(), pageURL);
+                final UrlAnnotations annotations = BrowserDB.from(mContext).getUrlAnnotations();
+                final ContentResolver contentResolver = mContext.getContentResolver();
+                final Tab selectedTab = Tabs.getInstance().getSelectedTab();
+
+                annotations.insertReaderViewUrl(contentResolver, pageURL);
+                BrowserDB.from(mContext).addBookmark(contentResolver, selectedTab.getTitle(), pageURL);
+                Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.BOOKMARK_ADDED);
 
                 commit();
             }
