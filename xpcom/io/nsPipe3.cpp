@@ -870,7 +870,9 @@ nsPipe::GetWriteSegment(char*& aSegment, uint32_t& aSegmentLen)
     // The nsSegmentedBuffer is configured to be "infinite", so this
     // should never return nullptr here.
     char* seg = mBuffer.AppendNewSegment();
-    MOZ_DIAGNOSTIC_ASSERT(seg);
+    if (!seg) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     LOG(("OOO appended new segment\n"));
     mWriteCursor = seg;
