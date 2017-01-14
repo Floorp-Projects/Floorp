@@ -13,6 +13,7 @@ Contents:
 
    localeswitching
    uitelemetry
+   activitystreamtelemetry
    adjust
    defaultdomains
    bouncer
