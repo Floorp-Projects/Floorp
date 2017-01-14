@@ -2471,7 +2471,10 @@ bool
 ContentChild::RecvInitServiceWorkers(const ServiceWorkerConfiguration& aConfig)
 {
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  MOZ_ASSERT(swm);
+  if (!swm) {
+    // browser shutdown began
+    return true;
+  }
   swm->LoadRegistrations(aConfig.serviceWorkerRegistrations());
   return true;
 }
