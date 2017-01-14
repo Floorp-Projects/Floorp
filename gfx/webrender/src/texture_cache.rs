@@ -82,14 +82,14 @@ fn copy_pixels(src: &[u8],
 /// dynamic texture deallocation.
 pub struct TexturePage {
     texture_id: CacheTextureId,
-    texture_size: u32,
+    texture_size: DeviceUintSize,
     free_list: FreeRectList,
     allocations: u32,
     dirty: bool,
 }
 
 impl TexturePage {
-    pub fn new(texture_id: CacheTextureId, texture_size: u32) -> TexturePage {
+    pub fn new(texture_id: CacheTextureId, texture_size: DeviceUintSize) -> TexturePage {
         let mut page = TexturePage {
             texture_id: texture_id,
             texture_size: texture_size,
@@ -310,7 +310,7 @@ impl TexturePage {
         self.free_list = FreeRectList::new();
         self.free_list.push(&DeviceUintRect::new(
             DeviceUintPoint::zero(),
-            DeviceUintSize::new(self.texture_size, self.texture_size)));
+            self.texture_size));
         self.allocations = 0;
         self.dirty = false;
     }
@@ -327,18 +327,32 @@ impl TexturePage {
         self.dirty = true
     }
 
-    fn grow(&mut self, new_texture_size: u32) {
-        self.free_list.push(&DeviceUintRect::new(
-            DeviceUintPoint::new(self.texture_size, 0),
-            DeviceUintSize::new(new_texture_size - self.texture_size, new_texture_size)));
-        self.free_list.push(&DeviceUintRect::new(
-            DeviceUintPoint::new(0, self.texture_size),
-            DeviceUintSize::new(self.texture_size, new_texture_size - self.texture_size)));
+    fn grow(&mut self, new_texture_size: DeviceUintSize) {
+        assert!(new_texture_size.width >= self.texture_size.width);
+        assert!(new_texture_size.height >= self.texture_size.height);
+
+        let new_rects = [
+            DeviceUintRect::new(DeviceUintPoint::new(self.texture_size.width, 0),
+                                DeviceUintSize::new(new_texture_size.width - self.texture_size.width,
+                                                    new_texture_size.height)),
+
+            DeviceUintRect::new(DeviceUintPoint::new(0, self.texture_size.height),
+                                DeviceUintSize::new(self.texture_size.width,
+                                                    new_texture_size.height - self.texture_size.height)),
+        ];
+
+        for rect in &new_rects {
+            if rect.size.width > 0 && rect.size.height > 0 {
+                self.free_list.push(rect);
+            }
+        }
+
         self.texture_size = new_texture_size
     }
 
     fn can_grow(&self) -> bool {
-        self.texture_size < max_texture_size()
+        self.texture_size.width < max_texture_size() ||
+        self.texture_size.height < max_texture_size()
     }
 }
 
@@ -666,7 +680,7 @@ impl TextureCache {
                 let cache_item = TextureCacheItem::new(page.texture_id,
                                                        allocated_rect,
                                                        requested_rect,
-                                                       &DeviceUintSize::new(page.texture_size, page.texture_size));
+                                                       &page.texture_size);
                 *self.items.get_mut(image_id) = cache_item;
 
                 return AllocationResult {
@@ -678,8 +692,9 @@ impl TextureCache {
             if !page_list.is_empty() && page_list.last().unwrap().can_grow() {
                 let last_page = page_list.last_mut().unwrap();
                 // Grow the texture.
-                let texture_size = cmp::min(last_page.texture_size * 2,
-                                            max_texture_size());
+                let new_width = cmp::min(last_page.texture_size.width * 2, max_texture_size());
+                let new_height = cmp::min(last_page.texture_size.height * 2, max_texture_size());
+                let texture_size = DeviceUintSize::new(new_width, new_height);
                 self.pending_updates.push(TextureUpdate {
                     id: last_page.texture_id,
                     op: texture_grow_op(texture_size, format, mode),
@@ -688,7 +703,7 @@ impl TextureCache {
 
                 self.items.for_each_item(|item| {
                     if item.texture_id == last_page.texture_id {
-                        item.texture_size = DeviceUintSize::new(texture_size, texture_size);
+                        item.texture_size = texture_size;
                     }
                 });
 
@@ -890,17 +905,17 @@ impl TextureCache {
     }
 }
 
-fn texture_create_op(texture_size: u32, format: ImageFormat, mode: RenderTargetMode)
+fn texture_create_op(texture_size: DeviceUintSize, format: ImageFormat, mode: RenderTargetMode)
                      -> TextureUpdateOp {
-    TextureUpdateOp::Create(texture_size, texture_size, format, TextureFilter::Linear, mode, None)
+    TextureUpdateOp::Create(texture_size.width, texture_size.height, format, TextureFilter::Linear, mode, None)
 }
 
-fn texture_grow_op(texture_size: u32,
+fn texture_grow_op(texture_size: DeviceUintSize,
                    format: ImageFormat,
                    mode: RenderTargetMode)
                    -> TextureUpdateOp {
-    TextureUpdateOp::Grow(texture_size,
-                          texture_size,
+    TextureUpdateOp::Grow(texture_size.width,
+                          texture_size.height,
                           format,
                           TextureFilter::Linear,
                           mode)
@@ -923,13 +938,14 @@ pub struct FreeTextureLevel {
 }
 
 /// Returns the number of pixels on a side we start out with for our texture atlases.
-fn initial_texture_size() -> u32 {
+fn initial_texture_size() -> DeviceUintSize {
     let max_hardware_texture_size = *MAX_TEXTURE_SIZE as u32;
-    if max_hardware_texture_size * max_hardware_texture_size > INITIAL_TEXTURE_AREA {
+    let initial_size = if max_hardware_texture_size * max_hardware_texture_size > INITIAL_TEXTURE_AREA {
         INITIAL_TEXTURE_SIZE
     } else {
         max_hardware_texture_size
-    }
+    };
+    DeviceUintSize::new(initial_size, initial_size)
 }
 
 /// Returns the number of pixels on a side we're allowed to use for our texture atlases.

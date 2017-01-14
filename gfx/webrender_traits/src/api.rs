@@ -12,6 +12,7 @@ use {RenderApiSender, ResourceId, ScrollEventPhase, ScrollLayerState, ScrollLoca
 use {GlyphKey, GlyphDimensions, ImageData, WebGLContextId, WebGLCommand};
 use {DeviceIntSize, LayoutPoint, LayoutSize, WorldPoint};
 use VRCompositorCommand;
+use ExternalEvent;
 
 impl RenderApiSender {
     pub fn new(api_sender: MsgSender<ApiMsg>,
@@ -240,6 +241,15 @@ impl RenderApi {
     pub fn send_vr_compositor_command(&self, context_id: WebGLContextId, command: VRCompositorCommand) {
         let msg = ApiMsg::VRCompositorCommand(context_id, command);
         self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn send_external_event(&self, evt: ExternalEvent) {
+        let msg = ApiMsg::ExternalEvent(evt);
+        self.api_sender.send(msg).unwrap();
+    }
+
+    pub fn shut_down(&self) {
+        self.api_sender.send(ApiMsg::ShutDown).unwrap();
     }
 
     #[inline]

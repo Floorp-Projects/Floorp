@@ -667,7 +667,7 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
     // Used for rasterizer worker threads to send glyphs -> glyph cache thread.
     let (glyph_tx, glyph_rx) = channel();
 
-    thread::spawn(move|| {
+    thread::Builder::new().name("GlyphCache".to_string()).spawn(move|| {
         // TODO(gw): Use a heuristic to select best # of worker threads.
         let worker_count = 4;
         let thread_pool = ThreadPool::new(worker_count);
@@ -778,7 +778,7 @@ fn spawn_glyph_cache_thread() -> (Sender<GlyphCacheMsg>, Receiver<GlyphCacheResu
                 }
             }
         }
-    });
+    }).unwrap();
 
     (msg_tx, result_rx)
 }
