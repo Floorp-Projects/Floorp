@@ -7,6 +7,7 @@
 #define GFX_WEBRENDERPAINTEDLAYER_H
 
 #include "Layers.h"
+#include "mozilla/layers/ContentClient.h"
 #include "WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderTypes.h"
 
@@ -16,9 +17,12 @@ namespace layers {
 class WebRenderPaintedLayer : public WebRenderLayer,
                               public PaintedLayer {
 public:
+  typedef RotatedContentBuffer::PaintState PaintState;
+  typedef RotatedContentBuffer::ContentType ContentType;
 
   explicit WebRenderPaintedLayer(WebRenderLayerManager* aLayerManager)
-    : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), LayerManager::NONE)
+    : PaintedLayer(aLayerManager, static_cast<WebRenderLayer*>(this), LayerManager::NONE),
+      mExternalImageId(0)
   {
     MOZ_COUNT_CTOR(WebRenderPaintedLayer);
   }
@@ -27,11 +31,16 @@ protected:
   virtual ~WebRenderPaintedLayer()
   {
     MOZ_COUNT_DTOR(WebRenderPaintedLayer);
+    if (mExternalImageId) {
+      WRBridge()->DeallocExternalImageId(mExternalImageId);
+    }
   }
   WebRenderLayerManager* Manager()
   {
     return static_cast<WebRenderLayerManager*>(mManager);
   }
+
+  uint64_t mExternalImageId;
 
 public:
   virtual void InvalidateRegion(const nsIntRegion& aRegion) override
@@ -42,6 +51,9 @@ public:
 
   Layer* GetLayer() override { return this; }
   void RenderLayer() override;
+  void PaintThebes();
+  void RenderLayerWithReadback(ReadbackProcessor *aReadback);
+  RefPtr<ContentClient> mContentClient;
 };
 
 } // namespace layers
