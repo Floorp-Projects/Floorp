@@ -24,7 +24,7 @@ add_task(function* () {
 
   let origItem = RequestsMenu.getItemAtIndex(0);
 
-  wait = waitForDOM(document, "#headers-tabpanel .summary");
+  wait = waitForDOM(document, ".headers-overview");
   RequestsMenu.selectedItem = origItem;
   yield wait;
 

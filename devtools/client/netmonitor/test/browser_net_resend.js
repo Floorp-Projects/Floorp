@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+*  http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
@@ -30,9 +30,7 @@ add_task(function* () {
 
   let origItem = RequestsMenu.getItemAtIndex(0);
 
-  let onTabUpdated = panelWin.once(EVENTS.TAB_UPDATED);
   RequestsMenu.selectedItem = origItem;
-  yield onTabUpdated;
 
   // add a new custom request cloned from selected request
   let onPopulated = panelWin.once(EVENTS.CUSTOMREQUESTVIEW_POPULATED);

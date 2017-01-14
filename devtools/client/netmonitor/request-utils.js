@@ -104,7 +104,7 @@ const fetchHeaders = Task.async(function* (headers, getString) {
 function formDataURI(mimeType, encoding, text) {
   if (!encoding) {
     encoding = "base64";
-    text = btoa(text);
+    text = btoa(unescape(encodeURIComponent(text)));
   }
   return "data:" + mimeType + ";" + encoding + "," + text;
 }
