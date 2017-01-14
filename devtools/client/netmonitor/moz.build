@@ -16,7 +16,6 @@ DIRS += [
 DevToolsModules(
     'constants.js',
     'custom-request-view.js',
-    'details-view.js',
     'events.js',
     'filter-predicates.js',
     'l10n.js',

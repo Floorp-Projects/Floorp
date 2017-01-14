@@ -9,9 +9,7 @@ const {
   DOM,
   PropTypes,
 } = require("devtools/client/shared/vendor/react");
-const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { L10N } = require("../../l10n");
-const { getSelectedRequest } = require("../../selectors/index");
 const { getUrlQuery, parseQueryString } = require("../../request-utils");
 
 // Components
@@ -37,11 +35,17 @@ const SECTION_NAMES = [
  * Displays the GET parameters and POST data of a request
  */
 function ParamsPanel({
-  formDataSections,
-  mimeType,
-  postData,
-  query,
+  request,
 }) {
+  let {
+    formDataSections,
+    mimeType,
+    requestPostData,
+    url,
+  } = request;
+  let postData = requestPostData ? requestPostData.postData.text : null;
+  let query = getUrlQuery(url);
+
   if (!formDataSections && !postData && !query) {
     return div({ className: "empty-notice" },
       PARAMS_EMPTY_TEXT
@@ -105,26 +109,7 @@ function ParamsPanel({
 ParamsPanel.displayName = "ParamsPanel";
 
 ParamsPanel.propTypes = {
-  formDataSections: PropTypes.array,
-  postData: PropTypes.string,
-  query: PropTypes.string,
+  request: PropTypes.object.isRequired,
 };
 
-module.exports = connect(
-  (state) => {
-    const selectedRequest = getSelectedRequest(state);
-
-    if (selectedRequest) {
-      const { formDataSections, mimeType, requestPostData, url } = selectedRequest;
-
-      return {
-        formDataSections,
-        mimeType,
-        postData: requestPostData ? requestPostData.postData.text : null,
-        query: getUrlQuery(url),
-      };
-    }
-
-    return {};
-  }
-)(ParamsPanel);
+module.exports = ParamsPanel;

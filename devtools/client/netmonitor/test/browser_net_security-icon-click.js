@@ -9,8 +9,9 @@
 
 add_task(function* () {
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { $, EVENTS, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu, NetworkDetails } = NetMonitorView;
+  let { document, NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
+
   RequestsMenu.lazyUpdate = false;
 
   info("Requesting a resource over HTTPS.");
@@ -22,11 +23,12 @@ add_task(function* () {
   yield clickAndTestSecurityIcon();
 
   info("Selecting headers panel again.");
-  NetworkDetails.widget.selectedIndex = 0;
-  yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    document.querySelector("#tab-0 a"));
 
   info("Sorting the items by filename.");
-  EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-file-button"));
+  EventUtils.sendMouseEvent({ type: "click" },
+    document.querySelector("#requests-menu-file-button"));
 
   info("Testing that security icon can be clicked after the items were sorted.");
   yield clickAndTestSecurityIcon();
@@ -43,15 +45,12 @@ add_task(function* () {
 
   function* clickAndTestSecurityIcon() {
     let item = RequestsMenu.getItemAtIndex(0);
-    let target = getItemTarget(RequestsMenu, item);
-    let icon = $(".requests-security-state-icon", target);
+    let icon = document.querySelector(".requests-security-state-icon");
 
+    let wait = waitForDOM(document, "#panel-5");
     info("Clicking security icon of the first request and waiting for panel update.");
     EventUtils.synthesizeMouseAtCenter(icon, {}, monitor.panelWin);
-
-    yield monitor.panelWin.once(EVENTS.TAB_UPDATED);
-
-    is(NetworkDetails.widget.selectedPanel, $("#security-tabpanel"),
-      "Security tab is selected.");
+    yield wait;
+    ok(document.querySelector("#tab-5.is-active"), "Security tab is selected.");
   }
 });

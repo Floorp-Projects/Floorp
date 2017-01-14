@@ -32,8 +32,9 @@ add_task(function* () {
   ];
 
   let { tab, monitor } = yield initNetMonitor(CUSTOM_GET_URL);
-  let { $, EVENTS, NetMonitorView } = monitor.panelWin;
+  let { document, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu } = NetMonitorView;
+
   RequestsMenu.lazyUpdate = false;
 
   for (let testcase of TEST_DATA) {
@@ -43,9 +44,6 @@ add_task(function* () {
     let onComplete = testcase.isBroken ?
                        waitForSecurityBrokenNetworkEvent() :
                        waitForNetworkEvents(monitor, 1);
-
-    let tabEl = $("#security-tab");
-    let tabpanel = $("#security-tabpanel");
 
     info("Performing a request to " + testcase.uri);
     yield ContentTask.spawn(tab.linkedBrowser, testcase.uri, function* (url) {
@@ -60,34 +58,34 @@ add_task(function* () {
 
     is(RequestsMenu.selectedItem.securityState, undefined,
        "Security state has not yet arrived.");
-    is(tabEl.hidden, !testcase.visibleOnNewEvent,
-       "Security tab is " +
-        (testcase.visibleOnNewEvent ? "visible" : "hidden") +
-       " after new request was added to the menu.");
-    is(tabpanel.hidden, false,
-      "#security-tabpanel is visible after new request was added to the menu.");
+    is(!!document.querySelector("#tab-5"), testcase.visibleOnNewEvent,
+      "Security tab is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
+      " after new request was added to the menu.");
+    is(!!document.querySelector("#panel-5"), testcase.visibleOnNewEvent,
+      "Security panel is " + (testcase.visibleOnNewEvent ? "visible" : "hidden") +
+      " after new request was added to the menu.");
 
     info("Waiting for security information to arrive.");
     yield onSecurityInfo;
 
     ok(RequestsMenu.selectedItem.securityState,
        "Security state arrived.");
-    is(tabEl.hidden, !testcase.visibleOnSecurityInfo,
-       "Security tab is " +
-        (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
+    is(!!document.querySelector("#tab-5"), testcase.visibleOnSecurityInfo,
+       "Security tab is " + (testcase.visibleOnSecurityInfo ? "visible" : "hidden") +
        " after security information arrived.");
-    is(tabpanel.hidden, false,
-      "#security-tabpanel is visible after security information arrived.");
+    is(!!document.querySelector("#panel-5"), testcase.visibleOnSecurityInfo,
+      "Security panel is " + (testcase.visibleOnSecurityInfo? "visible" : "hidden") +
+      " after security information arrived.");
 
     info("Waiting for request to complete.");
     yield onComplete;
 
-    is(tabEl.hidden, !testcase.visibleOnceComplete,
-       "Security tab is " +
-        (testcase.visibleOnceComplete ? "visible" : "hidden") +
+    is(!!document.querySelector("#tab-5"), testcase.visibleOnceComplete,
+       "Security tab is " + (testcase.visibleOnceComplete ? "visible" : "hidden") +
        " after request has been completed.");
-    is(tabpanel.hidden, false,
-      "#security-tabpanel is visible after request is complete.");
+    is(!!document.querySelector("#panel-5"), testcase.visibleOnceComplete,
+      "Security panel is " + (testcase.visibleOnceComplete? "visible" : "hidden") +
+      " after request has been completed.");
 
     info("Clearing requests.");
     RequestsMenu.clear();
