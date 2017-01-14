@@ -3678,6 +3678,7 @@ MeasuringReflow(nsIFrame*           aChild,
                 const ReflowInput*  aReflowInput,
                 nsRenderingContext* aRC,
                 const LogicalSize&  aAvailableSize,
+                const LogicalSize&  aCBSize,
                 nscoord             aIMinSizeClamp = NS_MAXSIZE,
                 nscoord             aBMinSizeClamp = NS_MAXSIZE)
 {
@@ -3710,7 +3711,7 @@ MeasuringReflow(nsIFrame*           aChild,
   } else {
     aChild->Properties().Delete(nsIFrame::BClampMarginBoxMinSizeProperty());
   }
-  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, nullptr, riFlags);
+  ReflowInput childRI(pc, *rs, aChild, aAvailableSize, &aCBSize, riFlags);
   ReflowOutput childSize(childRI);
   nsReflowStatus childStatus;
   const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
@@ -3755,15 +3756,18 @@ ContentContribution(const GridItemInfo&    aGridItem,
     // The next two variables are MinSizeClamp values in the child's axes.
     nscoord iMinSizeClamp = NS_MAXSIZE;
     nscoord bMinSizeClamp = NS_MAXSIZE;
+    LogicalSize cbSize(childWM, 0, 0);
     if (aState.mCols.mCanResolveLineRangeSize) {
       nscoord sz = aState.mCols.ResolveSize(aGridItem.mArea.mCols);
       if (isOrthogonal) {
         availBSize = sz;
+        cbSize.BSize(childWM) = sz;
         if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
           bMinSizeClamp = sz;
         }
       } else {
         availISize = sz;
+        cbSize.ISize(childWM) = sz;
         if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
           iMinSizeClamp = sz;
         }
@@ -3776,14 +3780,13 @@ ContentContribution(const GridItemInfo&    aGridItem,
     }
     LogicalSize availableSize(childWM, availISize, availBSize);
     size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
-                             iMinSizeClamp, bMinSizeClamp);
+                             cbSize, iMinSizeClamp, bMinSizeClamp);
     nsIFrame::IntrinsicISizeOffsetData offsets = child->IntrinsicBSizeOffsets();
     size += offsets.hMargin;
     auto percent = offsets.hPctMargin;
-    if (!aState.mReflowInput) {
-      // We always want to add in percent padding too, but during Reflow we
-      // always have a definite percentage basis (the grid area) so any percent
-      // padding is already resolved and baked in to 'size' at this point.
+    if (availBSize == NS_UNCONSTRAINEDSIZE) {
+      // We always want to add in percent padding too, unless we already did so
+      // using a resolved column size above.
       percent += offsets.hPctPadding;
     }
     size = nsLayoutUtils::AddPercents(size, percent);
@@ -4199,7 +4202,15 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
       auto* rc = &aState.mRenderingContext;
       // XXX figure out if we can avoid/merge this reflow with the main reflow.
       // XXX (after bug 1174569 is sorted out)
-      ::MeasuringReflow(child, aState.mReflowInput, rc, avail);
+      //
+      // XXX How should we handle percentage padding here? (bug 1330866)
+      // XXX (see ::ContentContribution and how it deals with percentages)
+      // XXX What if the true baseline after line-breaking differs from this
+      // XXX hypothetical baseline based on an infinite inline size?
+      // XXX Maybe we should just call ::ContentContribution here instead?
+      // XXX For now we just pass a zero-sized CB:
+      LogicalSize cbSize(childWM, 0, 0);
+      ::MeasuringReflow(child, aState.mReflowInput, rc, avail, cbSize);
       nscoord baseline;
       nsGridContainerFrame* grid = do_QueryFrame(child);
       if (state & ItemState::eFirstBaseline) {
