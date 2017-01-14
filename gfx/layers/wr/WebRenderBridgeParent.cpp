@@ -334,12 +334,33 @@ WebRenderBridgeParent::ProcessWebrenderCommands(InfallibleTArray<WebRenderComman
         if (!dSurf) {
           break;
         }
+
+        nsIntRegion validBufferRegion = op.validBufferRegion().ToUnknownRegion();
+        IntRect validRect = IntRect(IntPoint(0,0), dSurf->GetSize());
+        if (!validBufferRegion.IsEmpty()) {
+          IntPoint offset = validBufferRegion.GetBounds().TopLeft();
+          validBufferRegion.MoveBy(-offset);
+          validBufferRegion.AndWith(IntRect(IntPoint(0,0), dSurf->GetSize()));
+          validRect = validBufferRegion.GetBounds().ToUnknownRect();
+
+          // XXX Remove it when we can put subimage in WebRender.
+          RefPtr<DrawTarget> target =
+           gfx::Factory::CreateDrawTarget(gfx::BackendType::SKIA, validRect.Size(), SurfaceFormat::B8G8R8A8);
+          for (auto iter = validBufferRegion.RectIter(); !iter.Done(); iter.Next()) {
+            IntRect regionRect = iter.Get();
+            Rect srcRect(regionRect.x + offset.x, regionRect.y + offset.y, regionRect.width, regionRect.height);
+            Rect dstRect(regionRect.x, regionRect.y, regionRect.width, regionRect.height);
+            target->DrawSurface(dSurf, dstRect, srcRect);
+          }
+          RefPtr<SourceSurface> surf = target->Snapshot();
+          dSurf = surf->GetDataSurface();
+        }
+
         DataSourceSurface::MappedSurface map;
         if (!dSurf->Map(gfx::DataSourceSurface::MapType::READ, &map)) {
           break;
         }
-        gfx::IntSize size = dSurf->GetSize();
-        WRImageKey key = wr_add_image(mWRWindowState, size.width, size.height, map.mStride, RGBA8, map.mData, size.height * map.mStride);
+        WRImageKey key = wr_add_image(mWRWindowState, validRect.width, validRect.height, map.mStride, RGBA8, map.mData, validRect.height * map.mStride);
         builder.PushImage(op.bounds(), op.clip(), op.mask().ptrOr(nullptr), op.filter(), key);
         keysToDelete.push_back(key);
         dSurf->Unmap();
@@ -461,7 +482,9 @@ WebRenderBridgeParent::RecvAddExternalImageId(const uint64_t& aImageId,
     NS_ERROR("CompositableHost not found in the map!");
     return IPC_FAIL_NO_REASON(this);
   }
-  if (host->GetType() != CompositableType::IMAGE) {
+  if (host->GetType() != CompositableType::IMAGE &&
+      host->GetType() != CompositableType::CONTENT_SINGLE &&
+      host->GetType() != CompositableType::CONTENT_DOUBLE) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
@@ -482,7 +505,9 @@ WebRenderBridgeParent::RecvAddExternalImageIdForCompositable(const uint64_t& aIm
   MOZ_ASSERT(!mExternalImageIds.Get(aImageId).get());
 
   CompositableHost* host = CompositableHost::FromIPDLActor(aCompositable);
-  if (host->GetType() != CompositableType::IMAGE) {
+  if (host->GetType() != CompositableType::IMAGE &&
+      host->GetType() != CompositableType::CONTENT_SINGLE &&
+      host->GetType() != CompositableType::CONTENT_DOUBLE) {
     NS_ERROR("Incompatible CompositableHost");
     return IPC_OK();
   }
