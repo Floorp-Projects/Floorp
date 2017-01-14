@@ -37,11 +37,11 @@ SidebarView.prototype = {
    */
   populate: Task.async(function* (data) {
     let isCustom = data.isCustom;
-    let view = isCustom ?
-      NetMonitorView.CustomRequest :
-      NetMonitorView.NetworkDetails;
 
-    yield view.populate(data);
+    if (isCustom) {
+      yield NetMonitorView.CustomRequest.populate(data);
+    }
+
     $("#details-pane").selectedIndex = isCustom ? 0 : 1;
 
     window.emit(EVENTS.SIDEBAR_POPULATED);
