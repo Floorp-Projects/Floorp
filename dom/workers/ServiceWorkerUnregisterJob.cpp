@@ -99,7 +99,8 @@ ServiceWorkerUnregisterJob::Unregister()
 {
   AssertIsOnMainThread();
 
-  if (Canceled()) {
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (Canceled() || !swm) {
     Finish(NS_ERROR_DOM_ABORT_ERR);
     return;
   }
@@ -108,8 +109,6 @@ ServiceWorkerUnregisterJob::Unregister()
   // client origin matches the scope's origin.  We perform this in
   // registration->update() method directly since we don't have that
   // client information available here.
-
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
   // "Let registration be the result of running [[Get Registration]]
   // algorithm passing scope as the argument."
