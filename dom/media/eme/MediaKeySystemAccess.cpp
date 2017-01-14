@@ -365,19 +365,6 @@ GetSupportedKeySystems()
       keySystemConfigs.AppendElement(Move(widevine));
     }
   }
-  {
-    if (HavePluginForKeySystem(kEMEKeySystemPrimetime)) {
-      KeySystemConfig primetime;
-      primetime.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemPrimetime);
-      primetime.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
-      primetime.mPersistentState = KeySystemFeatureSupport::Required;
-      primetime.mDistinctiveIdentifier = KeySystemFeatureSupport::Required;
-      primetime.mSessionTypes.AppendElement(MediaKeySessionType::Temporary);
-      primetime.mMP4.SetCanDecryptAndDecode(EME_CODEC_AAC);
-      primetime.mMP4.SetCanDecryptAndDecode(EME_CODEC_H264);
-      keySystemConfigs.AppendElement(Move(primetime));
-    }
-  }
 
   return keySystemConfigs;
 }
