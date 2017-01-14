@@ -277,6 +277,8 @@ function showSlotInfo()
                 bundle.getString("devinfo_stat_ready"),
                 "tok_status");
      break;
+   default:
+     return;
   }
   AddInfoRow(bundle.getString("devinfo_desc"),
              selected_slot.desc, "slot_desc");
