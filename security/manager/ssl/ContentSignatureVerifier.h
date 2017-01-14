@@ -13,6 +13,7 @@
 #include "nsIContentSignatureVerifier.h"
 #include "nsIStreamListener.h"
 #include "nsNSSShutDown.h"
+#include "nsString.h"
 #include "ScopedNSSTypes.h"
 
 // 45a5fe2f-c350-4b86-962d-02d5aaaa955a
