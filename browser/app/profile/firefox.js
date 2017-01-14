@@ -1356,16 +1356,6 @@ pref("media.eme.enabled", true);
 #endif
 pref("media.eme.apiVisible", true);
 
-// Decode using Gecko Media Plugins in <video>, if a system decoder is not
-// availble and the preferred GMP is available.
-pref("media.gmp.decoder.enabled", false);
-
-// If decoding-via-GMP is turned on for <video>, use Adobe's GMP for decoding,
-// if it's available. Note: We won't fallback to another GMP if Adobe's is not
-// installed.
-pref("media.gmp.decoder.aac", 2);
-pref("media.gmp.decoder.h264", 2);
-
 // Whether we should run a test-pattern through EME GMPs before assuming they'll
 // decode H.264.
 pref("media.gmp.trial-create.enabled", true);
