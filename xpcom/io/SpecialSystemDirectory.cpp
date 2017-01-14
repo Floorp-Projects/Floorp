@@ -12,7 +12,6 @@
 #if defined(XP_WIN)
 
 #include <windows.h>
-#include <shlobj.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -48,40 +47,17 @@ using mozilla::IsWin7OrLater;
 #endif
 #endif
 
-#ifdef XP_WIN
-typedef HRESULT (WINAPI* nsGetKnownFolderPath)(GUID& rfid,
-                                               DWORD dwFlags,
-                                               HANDLE hToken,
-                                               PWSTR* ppszPath);
-
-static nsGetKnownFolderPath gGetKnownFolderPath = nullptr;
-#endif
-
-void
-StartupSpecialSystemDirectory()
-{
-#if defined (XP_WIN)
-  // SHGetKnownFolderPath is only available on Windows Vista
-  // so that we need to use GetProcAddress to get the pointer.
-  HMODULE hShell32DLLInst = GetModuleHandleW(L"shell32.dll");
-  if (hShell32DLLInst) {
-    gGetKnownFolderPath = (nsGetKnownFolderPath)
-      GetProcAddress(hShell32DLLInst, "SHGetKnownFolderPath");
-  }
-#endif
-}
-
 #if defined (XP_WIN)
 
 static nsresult
 GetKnownFolder(GUID* aGuid, nsIFile** aFile)
 {
-  if (!aGuid || !gGetKnownFolderPath) {
+  if (!aGuid) {
     return NS_ERROR_FAILURE;
   }
 
   PWSTR path = nullptr;
-  gGetKnownFolderPath(*aGuid, 0, nullptr, &path);
+  SHGetKnownFolderPath(*aGuid, 0, nullptr, &path);
 
   if (!path) {
     return NS_ERROR_FAILURE;
