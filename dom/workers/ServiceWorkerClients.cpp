@@ -131,10 +131,16 @@ public:
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    UniquePtr<ServiceWorkerClientInfo> result;
     ErrorResult rv;
-    UniquePtr<ServiceWorkerClientInfo> result = swm->GetClient(workerPrivate->GetPrincipal(),
-                                                               mClientId, rv);
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (!swm) {
+      rv = NS_ERROR_FAILURE;
+    } else {
+      result = swm->GetClient(workerPrivate->GetPrincipal(), mClientId, rv);
+    }
+
     RefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
                                        mPromiseProxy, Move(result),
@@ -210,11 +216,12 @@ public:
       return NS_OK;
     }
 
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     nsTArray<ServiceWorkerClientInfo> result;
-
-    swm->GetAllClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(), mScope,
-                       mIncludeUncontrolled, result);
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (swm) {
+      swm->GetAllClients(mPromiseProxy->GetWorkerPrivate()->GetPrincipal(),
+                         mScope, mIncludeUncontrolled, result);
+    }
     RefPtr<ResolvePromiseWorkerRunnable> r =
       new ResolvePromiseWorkerRunnable(mPromiseProxy->GetWorkerPrivate(),
                                        mPromiseProxy, result);
@@ -288,11 +295,15 @@ public:
     WorkerPrivate* workerPrivate = mPromiseProxy->GetWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
 
+    nsresult rv = NS_OK;
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    MOZ_ASSERT(swm);
-
-    nsresult rv = swm->ClaimClients(workerPrivate->GetPrincipal(),
-                                    mScope, mServiceWorkerID);
+    if (!swm) {
+      // browser shutdown
+      rv = NS_ERROR_FAILURE;
+    } else {
+      rv = swm->ClaimClients(workerPrivate->GetPrincipal(), mScope,
+                             mServiceWorkerID);
+    }
 
     RefPtr<ResolveClaimRunnable> r =
       new ResolveClaimRunnable(workerPrivate, mPromiseProxy, rv);
@@ -536,7 +547,10 @@ public:
       }
 
       RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      MOZ_ASSERT(swm);
+      if (!swm) {
+        // browser shutdown
+        return NS_ERROR_FAILURE;
+      }
 
       nsCOMPtr<nsIPrincipal> principal = workerPrivate->GetPrincipal();
       MOZ_ASSERT(principal);
@@ -572,7 +586,10 @@ public:
       MOZ_ASSERT(workerPrivate);
 
       RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-      MOZ_ASSERT(swm);
+      if (!swm) {
+        // browser shutdown
+        return NS_ERROR_FAILURE;
+      }
 
       nsCOMPtr<nsIPrincipal> principal = workerPrivate->GetPrincipal();
       MOZ_ASSERT(principal);
