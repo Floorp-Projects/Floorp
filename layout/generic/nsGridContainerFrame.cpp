@@ -3748,8 +3748,8 @@ ContentContribution(const GridItemInfo&    aGridItem,
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
     // XXX this will give mostly correct results for now (until bug 1174569).
-    nscoord cbISize = INFINITE_ISIZE_COORD;
-    nscoord cbBSize = NS_UNCONSTRAINEDSIZE;
+    nscoord availISize = INFINITE_ISIZE_COORD;
+    nscoord availBSize = NS_UNCONSTRAINEDSIZE;
     auto childWM = child->GetWritingMode();
     const bool isOrthogonal = childWM.IsOrthogonalTo(aCBWM);
     // The next two variables are MinSizeClamp values in the child's axes.
@@ -3758,12 +3758,12 @@ ContentContribution(const GridItemInfo&    aGridItem,
     if (aState.mCols.mCanResolveLineRangeSize) {
       nscoord sz = aState.mCols.ResolveSize(aGridItem.mArea.mCols);
       if (isOrthogonal) {
-        cbBSize = sz;
+        availBSize = sz;
         if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
           bMinSizeClamp = sz;
         }
       } else {
-        cbISize = sz;
+        availISize = sz;
         if (aGridItem.mState[aAxis] & ItemState::eClampMarginBoxMinSize) {
           iMinSizeClamp = sz;
         }
@@ -3774,7 +3774,7 @@ ContentContribution(const GridItemInfo&    aGridItem,
     } else {
       iMinSizeClamp = aMinSizeClamp;
     }
-    LogicalSize availableSize(childWM, cbISize, cbBSize);
+    LogicalSize availableSize(childWM, availISize, availBSize);
     size = ::MeasuringReflow(child, aState.mReflowInput, aRC, availableSize,
                              iMinSizeClamp, bMinSizeClamp);
     nsIFrame::IntrinsicISizeOffsetData offsets = child->IntrinsicBSizeOffsets();
