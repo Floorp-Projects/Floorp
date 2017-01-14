@@ -129,17 +129,16 @@ impl ComplexClipRegion {
     }
 
     //TODO: move to `util` module?
-    /// Return a maximum aligned rectangle that is fully inside the clip region.
+    /// Return an aligned rectangle that is fully inside the clip region.
     pub fn get_inner_rect(&self) -> Option<LayoutRect> {
-        let k = 0.3; //roughly higher than `1.0 - sqrt(0.5)`
         let xl = self.rect.origin.x +
-            k * self.radii.top_left.width.max(self.radii.bottom_left.width);
+            self.radii.top_left.width.max(self.radii.bottom_left.width);
         let xr = self.rect.origin.x + self.rect.size.width -
-            k * self.radii.top_right.width.max(self.radii.bottom_right.width);
+            self.radii.top_right.width.max(self.radii.bottom_right.width);
         let yt = self.rect.origin.y +
-            k * self.radii.top_left.height.max(self.radii.top_right.height);
+            self.radii.top_left.height.max(self.radii.top_right.height);
         let yb = self.rect.origin.y + self.rect.size.height -
-            k * self.radii.bottom_left.height.max(self.radii.bottom_right.height);
+            self.radii.bottom_left.height.max(self.radii.bottom_right.height);
         if xl <= xr && yt <= yb {
             Some(LayoutRect::new(LayoutPoint::new(xl, yt), LayoutSize::new(xr-xl, yb-yt)))
         } else {

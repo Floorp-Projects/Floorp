@@ -55,7 +55,26 @@ pub enum ApiMsg {
     WebGLCommand(WebGLContextId, WebGLCommand),
     GenerateFrame,
     // WebVR commands that must be called in the WebGL render thread.
-    VRCompositorCommand(WebGLContextId, VRCompositorCommand)
+    VRCompositorCommand(WebGLContextId, VRCompositorCommand),
+    /// An opaque handle that must be passed to the render notifier. It is used by Gecko
+    /// to forward gecko-specific messages to the render thread preserving the ordering
+    /// within the other messages.
+    ExternalEvent(ExternalEvent),
+    ShutDown,
+}
+
+/// An opaque pointer-sized value.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct ExternalEvent {
+    raw: usize,
+}
+
+unsafe impl Send for ExternalEvent {}
+
+impl ExternalEvent {
+    pub fn from_raw(raw: usize) -> Self { ExternalEvent { raw: raw } }
+    /// Consumes self to make it obvious that the event should be forwarded only once.
+    pub fn unwrap(self) -> usize { self.raw }
 }
 
 #[derive(Copy, Clone, Deserialize, Serialize, Debug)]
@@ -424,6 +443,8 @@ pub trait RenderNotifier: Send {
     fn new_frame_ready(&mut self);
     fn new_scroll_frame_ready(&mut self, composite_needed: bool);
     fn pipeline_size_changed(&mut self, pipeline_id: PipelineId, size: Option<LayoutSize>);
+    fn external_event(&mut self, _evt: ExternalEvent) { unimplemented!() }
+    fn shut_down(&mut self) {}
 }
 
 // Trait to allow dispatching functions to a specific thread or event loop.

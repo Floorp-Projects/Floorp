@@ -266,7 +266,7 @@ pub enum ClipAttribute {
     RenderTaskIndex,
     LayerIndex,
     DataIndex,
-    BaseTaskIndex,
+    SegmentIndex,
 }
 
 #[derive(Debug, Clone, Copy)]

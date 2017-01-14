@@ -214,9 +214,13 @@ impl RenderBackend {
                             }
                         }
                         ApiMsg::SetRootPipeline(pipeline_id) => {
-                            let frame = profile_counters.total_time.profile(|| {
-                                self.scene.set_root_pipeline_id(pipeline_id);
+                            self.scene.set_root_pipeline_id(pipeline_id);
 
+                            if self.scene.display_lists.get(&pipeline_id).is_none() {
+                                continue;
+                            }
+
+                            let frame = profile_counters.total_time.profile(|| {
                                 self.build_scene();
                                 self.render()
                             });
@@ -347,9 +351,29 @@ impl RenderBackend {
                                 frame_counter += 1;
                             }
                         }
+                        ApiMsg::ExternalEvent(evt) => {
+                            let notifier = self.notifier.lock();
+                            notifier.unwrap()
+                                    .as_mut()
+                                    .unwrap()
+                                    .external_event(evt);
+                        }
+                        ApiMsg::ShutDown => {
+                            let notifier = self.notifier.lock();
+                            notifier.unwrap()
+                                    .as_mut()
+                                    .unwrap()
+                                    .shut_down();
+                            break;
+                        }
                     }
                 }
                 Err(..) => {
+                    let notifier = self.notifier.lock();
+                    notifier.unwrap()
+                            .as_mut()
+                            .unwrap()
+                            .shut_down();
                     break;
                 }
             }

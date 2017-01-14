@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use serde::{Deserialize, Serialize};
-use std::io::Error;
+use std::io::{Error, ErrorKind};
 
 use serde::{Deserializer, Serializer};
 
@@ -29,7 +29,9 @@ pub struct MsgReceiver<T> {
 
 impl<T> MsgReceiver<T> {
     pub fn recv(&self) -> Result<T, Error> {
-        Ok(self.rx.recv().unwrap())
+        use std::io;
+        use std::error::Error;
+        self.rx.recv().map_err(|e| io::Error::new(ErrorKind::Other, e.description()))
     }
 }
 
@@ -40,7 +42,7 @@ pub struct MsgSender<T> {
 
 impl<T> MsgSender<T> {
     pub fn send(&self, data: T) -> Result<(), Error> {
-        Ok(self.tx.send(data).unwrap())
+        self.tx.send(data).map_err(|_| Error::new(ErrorKind::Other, "cannot send on closed channel"))
     }
 }
 

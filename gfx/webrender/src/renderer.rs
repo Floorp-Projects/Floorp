@@ -38,7 +38,7 @@ use time::precise_time_ns;
 use util::TransformedRectKind;
 use webrender_traits::{ColorF, Epoch, PipelineId, RenderNotifier, RenderDispatcher};
 use webrender_traits::{ExternalImageId, ImageFormat, RenderApiSender, RendererKind};
-use webrender_traits::{DeviceIntRect, DeviceSize, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
+use webrender_traits::{DeviceIntRect, DevicePoint, DeviceIntPoint, DeviceIntSize, DeviceUintSize};
 use webrender_traits::channel;
 use webrender_traits::VRCompositorHandler;
 
@@ -288,7 +288,6 @@ pub struct Renderer {
     /// These are "cache clip shaders". These shaders are used to
     /// draw clip instances into the cached clip mask. The results
     /// of these shaders are also used by the primitive shaders.
-    cs_clip_copy: LazilyCompiledShader,
     cs_clip_rectangle: LazilyCompiledShader,
     cs_clip_image: LazilyCompiledShader,
 
@@ -421,11 +420,6 @@ impl Renderer {
                                                  &mut device,
                                                  options.precache_shaders);
 
-        let cs_clip_copy = LazilyCompiledShader::new(ShaderKind::ClipCache,
-                                                     "cs_clip_copy",
-                                                     &[],
-                                                     &mut device,
-                                                     options.precache_shaders);
         let cs_clip_rectangle = LazilyCompiledShader::new(ShaderKind::ClipCache,
                                                           "cs_clip_rectangle",
                                                           &[],
@@ -592,7 +586,7 @@ impl Renderer {
         let render_target_debug = options.render_target_debug;
         let payload_tx_for_backend = payload_tx.clone();
         let enable_recording = options.enable_recording;
-        thread::spawn(move || {
+        thread::Builder::new().name("RenderBackend".to_string()).spawn(move || {
             let mut backend = RenderBackend::new(api_rx,
                                                  payload_rx,
                                                  payload_tx_for_backend,
@@ -608,7 +602,7 @@ impl Renderer {
                                                  backend_main_thread_dispatcher,
                                                  backend_vr_compositor);
             backend.run();
-        });
+        }).unwrap();
 
         let renderer = Renderer {
             result_rx: result_rx,
@@ -619,7 +613,6 @@ impl Renderer {
             cs_box_shadow: cs_box_shadow,
             cs_text_run: cs_text_run,
             cs_blur: cs_blur,
-            cs_clip_copy: cs_clip_copy,
             cs_clip_rectangle: cs_clip_rectangle,
             cs_clip_image: cs_clip_image,
             ps_rectangle: ps_rectangle,
@@ -698,7 +691,7 @@ impl Renderer {
 
     /// Returns the Epoch of the current frame in a pipeline.
     pub fn current_epoch(&self, pipeline_id: PipelineId) -> Option<Epoch> {
-        self.pipeline_epoch_map.get(&pipeline_id).map(|epoch| *epoch)
+        self.pipeline_epoch_map.get(&pipeline_id).cloned()
     }
 
     /// Processes the result queue.
@@ -738,15 +731,15 @@ impl Renderer {
     // we will add a callback here that is able to ask the caller
     // for the image data.
     fn resolve_source_texture(&mut self, texture_id: &SourceTexture) -> TextureId {
-        match texture_id {
-            &SourceTexture::Invalid => TextureId::invalid(),
-            &SourceTexture::WebGL(id) => TextureId::new(id),
-            &SourceTexture::External(ref key) => {
+        match *texture_id {
+            SourceTexture::Invalid => TextureId::invalid(),
+            SourceTexture::WebGL(id) => TextureId::new(id),
+            SourceTexture::External(ref key) => {
                 *self.external_images
                      .get(key)
                      .expect("BUG: External image should be resolved by now!")
             }
-            &SourceTexture::TextureCache(index) => {
+            SourceTexture::TextureCache(index) => {
                 self.cache_texture_id_map[index.0]
             }
         }
@@ -944,7 +937,7 @@ impl Renderer {
                                textures: &BatchTextures,
                                projection: &Matrix4D<f32>) {
         self.device.bind_vao(vao);
-        self.device.bind_program(shader, &projection);
+        self.device.bind_program(shader, projection);
 
         for i in 0..textures.colors.len() {
             let texture_id = self.resolve_source_texture(&textures.colors[i]);
@@ -1025,20 +1018,20 @@ impl Renderer {
                                   vao,
                                   shader,
                                   &batch.key.textures,
-                                  &projection);
+                                  projection);
     }
 
     fn draw_target(&mut self,
                    render_target: Option<(TextureId, i32)>,
                    target: &RenderTarget,
-                   target_size: &DeviceSize,
+                   target_size: &DeviceUintSize,
                    cache_texture: Option<TextureId>,
                    should_clear: bool,
                    background_color: Option<ColorF>) {
         self.device.disable_depth();
         self.device.enable_depth_write();
 
-        let dimensions = [target_size.width as u32, target_size.height as u32];
+        let dimensions = [target_size.width, target_size.height];
         let projection = {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_SETUP_TARGET);
             self.device.bind_draw_target(render_target, Some(dimensions));
@@ -1060,11 +1053,11 @@ impl Renderer {
                     //   tasks can assume that pixels are transparent if not
                     //   rendered. (This is relied on by the compositing support
                     //   for mix-blend-mode etc).
-                    [1.0, 0.0, 0.0, 0.0],
+                    [1.0, 1.0, 1.0, 0.0],
                     Matrix4D::ortho(0.0,
-                                   target_size.width,
+                                   target_size.width as f32,
                                    0.0,
-                                   target_size.height,
+                                   target_size.height as f32,
                                    ORTHO_NEAR_PLANE,
                                    ORTHO_FAR_PLANE)
                 ),
@@ -1073,8 +1066,8 @@ impl Renderer {
                         color.to_array()
                     }),
                     Matrix4D::ortho(0.0,
-                                   target_size.width,
-                                   target_size.height,
+                                   target_size.width as f32,
+                                   target_size.height as f32,
                                    0.0,
                                    ORTHO_NEAR_PLANE,
                                    ORTHO_FAR_PLANE)
@@ -1137,17 +1130,7 @@ impl Renderer {
         {
             let _gm = self.gpu_profile.add_marker(GPU_TAG_CACHE_CLIP);
             let vao = self.clip_vao_id;
-            // Optionally, copy the contents from another task
-            if !target.clip_batcher.copies.is_empty() {
-                self.device.set_blend(false);
-                let shader = self.cs_clip_copy.get(&mut self.device);
-                self.draw_instanced_batch(&target.clip_batcher.copies,
-                                          vao,
-                                          shader,
-                                          &BatchTextures::no_texture(),
-                                          &projection);
-            }
-            // now switch to multiplicative blending
+            // switch to multiplicative blending
             self.device.set_blend(true);
             self.device.set_blend_mode_multiply();
             // draw rounded cornered rectangles
@@ -1364,10 +1347,10 @@ impl Renderer {
             for (pass_index, pass) in frame.passes.iter().enumerate() {
                 let (do_clear, size, target_id) = if pass.is_framebuffer {
                     (self.clear_framebuffer || needs_clear,
-                     DeviceSize::new(framebuffer_size.width as f32, framebuffer_size.height as f32),
+                     framebuffer_size,
                      None)
                 } else {
-                    (true, frame.cache_size, Some(self.render_targets[pass_index]))
+                    (true, &frame.cache_size, Some(self.render_targets[pass_index]))
                 };
 
                 for (target_index, target) in pass.targets.iter().enumerate() {
@@ -1376,7 +1359,7 @@ impl Renderer {
                     });
                     self.draw_target(render_target,
                                      target,
-                                     &size,
+                                     size,
                                      src_id,
                                      do_clear,
                                      frame.background_color);
@@ -1494,4 +1477,24 @@ pub struct RendererOptions {
     pub clear_framebuffer: bool,
     pub clear_color: ColorF,
     pub render_target_debug: bool,
+}
+
+impl Default for RendererOptions {
+    fn default() -> RendererOptions {
+        RendererOptions {
+            device_pixel_ratio: 1.0,
+            resource_override_path: None,
+            enable_aa: true,
+            enable_profiler: false,
+            debug: false,
+            enable_recording: false,
+            enable_scrollbars: false,
+            precache_shaders: false,
+            renderer_kind: RendererKind::Native,
+            enable_subpixel_aa: false,
+            clear_framebuffer: true,
+            clear_color: ColorF::new(1.0, 1.0, 1.0, 1.0),
+            render_target_debug: false,
+        }
+    }
 }
