@@ -9,9 +9,6 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const LOCAL_EME_SOURCES = [{
-  "id": "gmp-eme-adobe",
-  "src": "chrome://global/content/gmp-sources/eme-adobe.json"
-}, {
   "id": "gmp-gmpopenh264",
   "src": "chrome://global/content/gmp-sources/openh264.json"
 }, {
