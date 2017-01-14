@@ -651,15 +651,27 @@ BrowserGlue.prototype = {
     // Ensure we keep track of places/pw-mananager undo by init'ing this early.
     Cu.import("resource:///modules/AutoMigrate.jsm");
 
-    if (!AppConstants.RELEASE_OR_BETA) {
-      let themeName = gBrowserBundle.GetStringFromName("deveditionTheme.name");
+    if (AppConstants.INSTALL_COMPACT_THEMES) {
       let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
 
       LightweightThemeManager.addBuiltInTheme({
-        id: "firefox-devedition@mozilla.org",
-        name: themeName,
-        headerURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.header.png",
-        iconURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.icon.png",
+        id: "firefox-compact-light@mozilla.org",
+        name: gBrowserBundle.GetStringFromName("compactLightTheme.name"),
+        description: gBrowserBundle.GetStringFromName("compactLightTheme.description"),
+        headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
+        iconURL: "resource:///chrome/browser/content/browser/defaultthemes/compactlight.icon.svg",
+        textcolor: "black",
+        accentcolor: "white",
+        author: vendorShortName,
+      });
+      LightweightThemeManager.addBuiltInTheme({
+        id: "firefox-compact-dark@mozilla.org",
+        name: gBrowserBundle.GetStringFromName("compactDarkTheme.name"),
+        description: gBrowserBundle.GetStringFromName("compactDarkTheme.description"),
+        headerURL: "resource:///chrome/browser/content/browser/defaultthemes/compact.header.png",
+        iconURL: "resource:///chrome/browser/content/browser/defaultthemes/compactdark.icon.svg",
+        textcolor: "white",
+        accentcolor: "black",
         author: vendorShortName,
       });
     }
@@ -1718,7 +1730,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 42;
+    const UI_VERSION = 43;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2049,6 +2061,18 @@ BrowserGlue.prototype = {
       let backupFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
       backupFile.append("tabgroups-session-backup.json");
       OS.File.remove(backupFile.path, {ignoreAbsent: true}).catch(ex => Cu.reportError(ex));
+    }
+
+    if (currentUIVersion < 43) {
+      let currentTheme = null;
+      try {
+        currentTheme = Services.prefs.getCharPref("lightweightThemes.selectedThemeID");
+      } catch (e) {}
+      if (currentTheme == "firefox-devedition@mozilla.org") {
+        let newTheme = Services.prefs.getCharPref("devtools.theme") == "dark" ?
+          "firefox-compact-dark@mozilla.org" : "firefox-compact-light@mozilla.org";
+        Services.prefs.setCharPref("lightweightThemes.selectedThemeID", newTheme);
+      }
     }
 
     // Update the migration version.

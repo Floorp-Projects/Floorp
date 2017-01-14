@@ -26,6 +26,17 @@
       "description": "Username field will be incorrectly captured in the change password form (bug 1243722)",
       "hosts": ["www.facebook.com"],
       "notUsernameSelector": "#password_strength"
+    },
+    {
+      "description": "United uses a useless password field plus one per frequent flyer number during checkin. Don't save any of them (Bug 1330810)",
+      "hosts": ["www.united.com"],
+      "notPasswordSelector": "input[type='password']",
+      "pathRegex": "^\/travel\/checkin\/changefqtv.aspx"
+    },
+    {
+      "description": "Gogo In-Flight uses a password field for credit card numbers on the same page as login",
+      "hosts": ["buy.gogoinflight.com"],
+      "notPasswordSelector": "#cardNumber"
     }
   ]
 }

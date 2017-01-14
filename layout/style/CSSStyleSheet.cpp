@@ -61,7 +61,7 @@ public:
 
   virtual CSSStyleSheet* GetParentObject() override;
 
-  virtual nsIDOMCSSRule*
+  virtual css::Rule*
   IndexedGetter(uint32_t aIndex, bool& aFound) override;
   virtual uint32_t
   Length() override;
@@ -101,7 +101,7 @@ CSSRuleListImpl::Length()
   return AssertedCast<uint32_t>(mStyleSheet->StyleRuleCount());
 }
 
-nsIDOMCSSRule*    
+css::Rule*
 CSSRuleListImpl::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = false;
@@ -112,7 +112,7 @@ CSSRuleListImpl::IndexedGetter(uint32_t aIndex, bool& aFound)
     css::Rule* rule = mStyleSheet->GetStyleRuleAt(aIndex);
     if (rule) {
       aFound = true;
-      return rule->GetDOMRule();
+      return rule;
     }
   }
 
@@ -508,7 +508,7 @@ CSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
   const nsCOMArray<css::Rule>& rules = mInner->mOrderedRules;
   for (int32_t i = 0, count = rules.Count(); i < count; ++i) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mOrderedRules[i]");
-    cb.NoteXPCOMChild(rules[i]->GetExistingDOMRule());
+    cb.NoteXPCOMChild(rules[i]);
   }
 }
 
@@ -865,10 +865,10 @@ CSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
   return NS_OK;
 }
 
-nsIDOMCSSRule*
+css::Rule*
 CSSStyleSheet::GetDOMOwnerRule() const
 {
-  return mOwnerRule ? mOwnerRule->GetDOMRule() : nullptr;
+  return mOwnerRule;
 }
 
 CSSRuleList*
@@ -1031,11 +1031,6 @@ CSSStyleSheet::DeleteRuleInternal(uint32_t aIndex, ErrorResult& aRv)
   RefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
   if (rule) {
     mInner->mOrderedRules.RemoveObjectAt(aIndex);
-    if (mDocument && mDocument->StyleSheetChangeEventsEnabled()) {
-      // Force creation of the DOM rule, so that it can be put on the
-      // StyleRuleRemoved event object.
-      rule->GetDOMRule();
-    }
     rule->SetStyleSheet(nullptr);
     DidDirty();
 

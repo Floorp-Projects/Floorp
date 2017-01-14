@@ -396,8 +396,6 @@ class RobocopTestRunner(MochitestDesktop):
             xrePath=None,
             debugger=None)
         # remove desktop environment not used on device
-        if "MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA" in browserEnv:
-            del browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"]
         if "XPCOM_MEM_BLOAT_LOG" in browserEnv:
             del browserEnv["XPCOM_MEM_BLOAT_LOG"]
         browserEnv["MOZ_LOG_FILE"] = os.path.join(

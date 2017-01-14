@@ -9631,6 +9631,13 @@
     "n_buckets": 20,
     "description": "Tracking how long a ServiceWorker stays alive after it is spawned. File bugs in Core::DOM in case of a Telemetry regression."
   },
+  "FILE_EMBEDDED_SERVICEWORKERS": {
+    "alert_emails": ["dparks@mozilla.com"],
+    "expires_in_version": "58",
+    "kind": "count",
+    "bug_numbers": [1312788],
+    "description": "Count ServiceWorkers that are embedded in pages loading with the file:/// protocol."
+  },
   "GRAPHICS_SANITY_TEST": {
     "expires_in_version": "never",
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
