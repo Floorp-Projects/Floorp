@@ -14,39 +14,9 @@ function WeakSetConstructorInit(iterable) {
     if (!IsCallable(adder))
         ThrowTypeError(JSMSG_NOT_FUNCTION, typeof adder);
 
-    // Step 6.c.
-    var iterFn = iterable[std_iterator];
-    if (!IsCallable(iterFn))
-        ThrowTypeError(JSMSG_NOT_ITERABLE, DecompileArg(0, iterable));
-
-    var iter = callContentFunction(iterFn, iterable);
-    if (!IsObject(iter))
-        ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, typeof iter);
-
-    // Step 7 (not applicable).
-
-    // Step 8.
-    while (true) {
-        // Step 8.a.
-        var next = callContentFunction(iter.next, iter);
-        if (!IsObject(next))
-            ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, typeof next);
-
-        // Step 8.b.
-        if (next.done)
-            return;
-
-        // Step 8.c.
-        var nextValue = next.value;
-
-        // Steps 8.d-e.
-        try {
-            callContentFunction(adder, set, nextValue);
-        } catch (e) {
-            IteratorCloseThrow(iter);
-            throw e;
-        }
-    }
+    // Steps 6.c-8.
+    for (var nextValue of allowContentIter(iterable))
+        callContentFunction(adder, set, nextValue);
 }
 
 // 23.4.3.1
