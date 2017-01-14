@@ -4906,6 +4906,14 @@ BytecodeEmitter::emitIteratorClose(Maybe<JumpTarget> yieldStarTryStart, bool all
             return false;
         if (!ifReturnDone.emitIfElse())                   // ITER OLDRESULT FTYPE FVALUE RESULT
             return false;
+        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // ITER OLDRESULT FTYPE FVALUE VALUE
+            return false;
+        if (!emitPrepareIteratorResult())                 // ITER OLDRESULT FTYPE FVALUE VALUE RESULT
+            return false;
+        if (!emit1(JSOP_SWAP))                            // ITER OLDRESULT FTYPE FVALUE RESULT VALUE
+            return false;
+        if (!emitFinishIteratorResult(true))              // ITER OLDRESULT FTYPE FVALUE RESULT
+            return false;
         if (!emit1(JSOP_DUP))                             // ITER OLDRESULT FTYPE FVALUE RESULT RESULT
             return false;
         if (!emit1(JSOP_SETRVAL))                         // ITER OLDRESULT FTYPE FVALUE RESULT
@@ -8067,61 +8075,77 @@ BytecodeEmitter::emitYieldStar(ParseNode* iter, ParseNode* gen)
 
     // Catch location.
     stackDepth = uint32_t(depth);                                // ITER RESULT
-    if (!emit1(JSOP_POP))                                        // ITER
+    if (!emit1(JSOP_EXCEPTION))                                  // ITER RESULT EXCEPTION
         return false;
-    // THROW? = 'throw' in ITER
-    if (!emit1(JSOP_EXCEPTION))                                  // ITER EXCEPTION
+    if (!emitDupAt(2))                                           // ITER RESULT EXCEPTION ITER
         return false;
-    if (!emit1(JSOP_SWAP))                                       // EXCEPTION ITER
+    if (!emit1(JSOP_DUP))                                        // ITER RESULT EXCEPTION ITER ITER
         return false;
-    if (!emit1(JSOP_DUP))                                        // EXCEPTION ITER ITER
+    if (!emitAtomOp(cx->names().throw_, JSOP_CALLPROP))          // ITER RESULT EXCEPTION ITER THROW
         return false;
-    if (!emitAtomOp(cx->names().throw_, JSOP_STRING))            // EXCEPTION ITER ITER "throw"
+    if (!emit1(JSOP_DUP))                                        // ITER RESULT EXCEPTION ITER THROW THROW
         return false;
-    if (!emit1(JSOP_SWAP))                                       // EXCEPTION ITER "throw" ITER
+    if (!emit1(JSOP_UNDEFINED))                                  // ITER RESULT EXCEPTION ITER THROW THROW UNDEFINED
         return false;
-    if (!emit1(JSOP_IN))                                         // EXCEPTION ITER THROW?
-        return false;
-    // if (THROW?) goto delegate
-    JumpList checkThrow;
-    if (!emitJump(JSOP_IFNE, &checkThrow))                       // EXCEPTION ITER
-        return false;
-    if (!emit1(JSOP_POP))                                        // EXCEPTION
-        return false;
-    if (!emit1(JSOP_THROW))                                      // throw EXCEPTION
+    if (!emit1(JSOP_EQ))                                         // ITER RESULT EXCEPTION ITER THROW ?EQL
         return false;
 
-    if (!emitJumpTargetAndPatch(checkThrow))                     // delegate:
+    IfThenElseEmitter ifThrowMethodIsNotDefined(this);
+    if (!ifThrowMethodIsNotDefined.emitIf())                     // ITER RESULT EXCEPTION ITER THROW
         return false;
-    // RESULT = ITER.throw(EXCEPTION)                            // EXCEPTION ITER
-    stackDepth = uint32_t(depth);
-    if (!emit1(JSOP_DUP))                                        // EXCEPTION ITER ITER
+    if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_ITERATOR_NO_THROW)) // throw
         return false;
-    if (!emit1(JSOP_DUP))                                        // EXCEPTION ITER ITER ITER
+    if (!ifThrowMethodIsNotDefined.emitEnd())                    // ITER OLDRESULT EXCEPTION ITER THROW
         return false;
-    if (!emitAtomOp(cx->names().throw_, JSOP_CALLPROP))          // EXCEPTION ITER ITER THROW
+    // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.iii.4.
+    // RESULT = ITER.throw(EXCEPTION)                            // ITER OLDRESULT EXCEPTION ITER THROW
+    if (!emit1(JSOP_SWAP))                                       // ITER OLDRESULT EXCEPTION THROW ITER
         return false;
-    if (!emit1(JSOP_SWAP))                                       // EXCEPTION ITER THROW ITER
+    if (!emit2(JSOP_PICK, 2))                                    // ITER OLDRESULT THROW ITER EXCEPTION
         return false;
-    if (!emit2(JSOP_PICK, 3))                                    // ITER THROW ITER EXCEPTION
-        return false;
-    if (!emitCall(JSOP_CALL, 1, iter))                           // ITER RESULT
+    if (!emitCall(JSOP_CALL, 1, iter))                           // ITER OLDRESULT RESULT
         return false;
     checkTypeSet(JSOP_CALL);
+    if (!emitCheckIsObj(CheckIsObjectKind::IteratorThrow))       // ITER OLDRESULT RESULT
+        return false;
+    if (!emit1(JSOP_SWAP))                                       // ITER RESULT OLDRESULT
+        return false;
+    if (!emit1(JSOP_POP))                                        // ITER RESULT
+        return false;
     MOZ_ASSERT(this->stackDepth == depth);
     JumpList checkResult;
+    // Note that there is no GOSUB to the finally block here. If the iterator has a
+    // "throw" method, it does not perform IteratorClose per
+    // ES 14.4.13, YieldExpression : yield * AssignmentExpression, step 5.b.ii.
     if (!emitJump(JSOP_GOTO, &checkResult))                      // goto checkResult
         return false;
 
-    // Catch epilogue.
+    // The finally block, IteratorClose logic.
+
+    JumpTarget finallyStart{ 0 };
+    if (!emitJumpTarget(&finallyStart))
+        return false;
+    if (!emit1(JSOP_FINALLY))                                    // ITER RESULT FTYPE FVALUE
+        return false;
+    if (!emitDupAt(3))                                           // ITER RESULT FTYPE FVALUE ITER
+        return false;
+    if (!emitIteratorClose(Some(tryStart)))                      // ITER RESULT FTYPE FVALUE
+        return false;
+    if (!emit1(JSOP_RETSUB))                                     // ITER RESULT
+        return false;
+
+    // Catch and finally epilogue.
 
     // This is a peace offering to ReconstructPCStack.  See the note in EmitTry.
     if (!emit1(JSOP_NOP))
         return false;
-    if (!tryNoteList.append(JSTRY_CATCH, depth, tryStart.offset + JSOP_TRY_LENGTH, tryEnd.offset))
+    size_t tryStartOffset = tryStart.offset + JSOP_TRY_LENGTH;
+    if (!tryNoteList.append(JSTRY_CATCH, depth, tryStartOffset, tryEnd.offset))
+        return false;
+    if (!tryNoteList.append(JSTRY_FINALLY, depth, tryStartOffset, finallyStart.offset))
         return false;
 
-    // After the try/catch block: send the received value to the iterator.
+    // After the try-catch-finally block: send the received value to the iterator.
     if (!emitJumpTargetAndPatch(send))                           // send:
         return false;
 
