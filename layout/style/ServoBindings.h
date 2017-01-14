@@ -37,6 +37,7 @@ namespace mozilla {
 using mozilla::FontFamilyList;
 using mozilla::FontFamilyType;
 using mozilla::ServoElementSnapshot;
+struct nsMediaFeature;
 struct nsStyleList;
 struct nsStyleImage;
 struct nsStyleGradientStop;
@@ -294,6 +295,8 @@ void Gecko_CSSValue_SetFunction(nsCSSValueBorrowedMut css_value, int32_t len);
 nsCSSValueBorrowedMut Gecko_CSSValue_GetArrayItem(nsCSSValueBorrowedMut css_value, int32_t index);
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
 bool Gecko_PropertyId_IsPrefEnabled(nsCSSPropertyID id);
+
+const nsMediaFeature* Gecko_GetMediaFeatures();
 
 // Style-struct management.
 #define STYLE_STRUCT(name, checkdata_cb)                                       \
