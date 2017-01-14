@@ -588,3 +588,4 @@ MSG_DEF(JSMSG_PROMISE_ERROR_IN_WRAPPED_REJECTION_REASON,0, JSEXN_INTERNALERR, "P
 
 // Iterator
 MSG_DEF(JSMSG_RETURN_NOT_CALLABLE,     0, JSEXN_TYPEERR, "property 'return' of iterator is not callable")
+MSG_DEF(JSMSG_ITERATOR_NO_THROW,       0, JSEXN_TYPEERR, "iterator does not have a 'throw' method")

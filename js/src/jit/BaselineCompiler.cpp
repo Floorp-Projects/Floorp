@@ -3978,7 +3978,7 @@ BaselineCompiler::emit_JSOP_MOREITER()
 }
 
 bool
-BaselineCompiler::emit_JSOP_ISNOITER()
+BaselineCompiler::emitIsMagicValue()
 {
     frame.syncStack(0);
 
@@ -3997,6 +3997,12 @@ BaselineCompiler::emit_JSOP_ISNOITER()
 }
 
 bool
+BaselineCompiler::emit_JSOP_ISNOITER()
+{
+    return emitIsMagicValue();
+}
+
+bool
 BaselineCompiler::emit_JSOP_ENDITER()
 {
     if (!emit_JSOP_JUMPTARGET())
@@ -4005,6 +4011,12 @@ BaselineCompiler::emit_JSOP_ENDITER()
 
     ICIteratorClose_Fallback::Compiler compiler(cx);
     return emitOpIC(compiler.getStub(&stubSpace_));
+}
+
+bool
+BaselineCompiler::emit_JSOP_ISGENCLOSING()
+{
+    return emitIsMagicValue();
 }
 
 bool
