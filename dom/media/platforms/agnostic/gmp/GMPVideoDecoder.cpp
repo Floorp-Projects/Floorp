@@ -15,7 +15,16 @@
 namespace mozilla {
 
 #if defined(DEBUG)
-extern bool IsOnGMPThread();
+static bool IsOnGMPThread()
+{
+  nsCOMPtr<mozIGeckoMediaPluginService> mps = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  MOZ_ASSERT(mps);
+
+  nsCOMPtr<nsIThread> gmpThread;
+  nsresult rv = mps->GetThread(getter_AddRefs(gmpThread));
+  MOZ_ASSERT(NS_SUCCEEDED(rv) && gmpThread);
+  return NS_GetCurrentThread() == gmpThread;
+}
 #endif
 
 void
@@ -162,11 +171,6 @@ GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
   if (MP4Decoder::IsH264(mConfig.mMimeType)) {
     aTags.AppendElement(NS_LITERAL_CSTRING("h264"));
-    const Maybe<nsCString> gmp(
-      GMPDecoderModule::PreferredGMP(NS_LITERAL_CSTRING("video/avc")));
-    if (gmp.isSome()) {
-      aTags.AppendElement(gmp.value());
-    }
   } else if (VPXDecoder::IsVP8(mConfig.mMimeType)) {
     aTags.AppendElement(NS_LITERAL_CSTRING("vp8"));
   } else if (VPXDecoder::IsVP9(mConfig.mMimeType)) {
