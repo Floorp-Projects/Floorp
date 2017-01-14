@@ -556,7 +556,7 @@ class Time extends DecodedDER {
   /**
    * Takes a byte that is supposed to be in the ASCII range for "0" to "9".
    * Validates the range and then converts it to the range 0 to 9.
-   * @param {Number} the digit in question (as ASCII in the range ["0", "9"])
+   * @param {Number} d the digit in question (as ASCII in the range ["0", "9"])
    * @return {Number} the numerical value of the digit (in the range [0, 9])
    */
   _validateDigit(d) {
