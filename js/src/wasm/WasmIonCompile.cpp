@@ -3667,7 +3667,7 @@ wasm::IonCompileFunction(CompileTask* task, FuncCompileUnit* unit, UniqueChars* 
 
     if (!env.isAsmJS()) {
         if (!ValidateFunctionBody(task->env(), func.index(), bodySize, d))
-          return false;
+            return false;
 
         d.rollbackPosition(d.begin());
     }

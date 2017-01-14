@@ -6,12 +6,10 @@
 
 %filter substitution
 
-%define selectorPrefix
 %define selectorSuffix
 %define iconVariant
 %include icons.inc.css
 
-%define selectorPrefix
 %define selectorSuffix :-moz-lwtheme
 %define iconVariant -black
 %include icons.inc.css

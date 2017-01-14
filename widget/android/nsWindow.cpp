@@ -415,12 +415,16 @@ private:
     void AddIMETextChange(const IMETextChange& aChange);
 
     enum FlushChangesFlag {
+        // Not retrying.
         FLUSH_FLAG_NONE,
-        FLUSH_FLAG_RETRY
+        // Retrying due to IME text changes during flush.
+        FLUSH_FLAG_RETRY,
+        // Retrying due to IME sync exceptions during flush.
+        FLUSH_FLAG_RECOVER
     };
     void PostFlushIMEChanges();
     void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
-    void FlushIMEText();
+    void FlushIMEText(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
     void AsyncNotifyIME(int32_t aNotification);
     void UpdateCompositionRects();
 
@@ -2750,7 +2754,7 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
         // A query event could have triggered more text changes to come in, as
         // indicated by our flag. If that happens, try flushing IME changes
         // again.
-        if (aFlags != FLUSH_FLAG_RETRY) {
+        if (aFlags == FLUSH_FLAG_NONE) {
             FlushIMEChanges(FLUSH_FLAG_RETRY);
         } else {
             // Don't retry if already retrying, to avoid infinite loops.
@@ -2805,22 +2809,44 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
         selEnd = int32_t(event.GetSelectionEnd());
     }
 
+    JNIEnv* const env = jni::GetGeckoThreadEnv();
+    auto flushOnException = [=] () -> bool {
+        if (!env->ExceptionCheck()) {
+            return false;
+        }
+        if (aFlags != FLUSH_FLAG_RECOVER) {
+            // First time seeing an exception; try flushing text.
+            env->ExceptionClear();
+            __android_log_print(ANDROID_LOG_WARN, "GeckoViewSupport",
+                    "Recovering from IME exception");
+            FlushIMEText(FLUSH_FLAG_RECOVER);
+        } else {
+            // Give up because we've already tried.
+            MOZ_CATCH_JNI_EXCEPTION(env);
+        }
+        return true;
+    };
+
     // Commit the text change and selection change transaction.
     mIMETextChanges.Clear();
 
     for (const TextRecord& record : textTransaction) {
         mEditable->OnTextChange(record.text, record.start,
                                 record.oldEnd, record.newEnd);
+        if (flushOnException()) {
+            return;
+        }
     }
 
     if (mIMESelectionChanged) {
         mIMESelectionChanged = false;
         mEditable->OnSelectionChange(selStart, selEnd);
+        flushOnException();
     }
 }
 
 void
-nsWindow::GeckoViewSupport::FlushIMEText()
+nsWindow::GeckoViewSupport::FlushIMEText(FlushChangesFlag aFlags)
 {
     // Notify Java of the newly focused content
     mIMETextChanges.Clear();
@@ -2835,7 +2861,7 @@ nsWindow::GeckoViewSupport::FlushIMEText()
     notification.mTextChangeData.mAddedEndOffset = INT32_MAX / 2;
     NotifyIME(notification);
 
-    FlushIMEChanges();
+    FlushIMEChanges(aFlags);
 }
 
 static jni::ObjectArray::LocalRef

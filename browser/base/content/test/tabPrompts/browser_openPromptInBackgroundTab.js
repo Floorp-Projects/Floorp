@@ -4,7 +4,7 @@ const ROOT = getRootDirectory(gTestPath).replace("chrome://mochitests/content/",
 let pageWithAlert = ROOT + "openPromptOffTimeout.html";
 
 registerCleanupFunction(function() {
-  Services.perms.removeAll(makeURI(pageWithAlert));
+  Services.perms.removeAll();
 });
 
 /*

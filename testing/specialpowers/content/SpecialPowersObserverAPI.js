@@ -383,7 +383,7 @@ SpecialPowersObserverAPI.prototype = {
             let hasPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type);
             return hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
           case "test":
-            let testPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type, msg.value);
+            let testPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type);
             return testPerm == msg.value;
           default:
             throw new SpecialPowersError(
