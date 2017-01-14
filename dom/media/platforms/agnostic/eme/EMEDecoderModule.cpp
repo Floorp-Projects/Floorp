@@ -99,11 +99,7 @@ public:
       }
     } else {
       MOZ_ASSERT(!mIsShutdown);
-      // The Adobe GMP AAC decoder gets confused if we pass it non-encrypted
-      // samples with valid crypto data. So clear the crypto data, since the
-      // sample should be decrypted now anyway. If we don't do this and we're
-      // using the Adobe GMP for unencrypted decoding of data that is decrypted
-      // by gmp-clearkey, decoding will fail.
+      // The sample is no longer encrypted, so clear its crypto metadata.
       UniquePtr<MediaRawDataWriter> writer(aDecrypted.mSample->CreateWriter());
       writer->mCrypto = CryptoSample();
       mDecoder->Input(aDecrypted.mSample);
