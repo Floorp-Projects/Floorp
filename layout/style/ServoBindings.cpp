@@ -20,6 +20,7 @@
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPrincipal.h"
+#include "nsMediaFeatures.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsRuleNode.h"
@@ -1093,6 +1094,12 @@ Gecko_LoadStyleSheet(css::Loader* aLoader,
   }
 
   aLoader->LoadChildSheet(aParent, uri, media, nullptr, aImportRule, nullptr);
+}
+
+const nsMediaFeature*
+Gecko_GetMediaFeatures()
+{
+  return nsMediaFeatures::features;
 }
 
 NS_IMPL_THREADSAFE_FFI_REFCOUNTING(nsCSSValueSharedList, CSSValueSharedList);
