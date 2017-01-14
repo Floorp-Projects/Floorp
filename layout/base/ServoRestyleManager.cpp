@@ -88,19 +88,9 @@ void
 ServoRestyleManager::RebuildAllStyleData(nsChangeHint aExtraHint,
                                          nsRestyleHint aRestyleHint)
 {
-  NS_WARNING("stylo: ServoRestyleManager::RebuildAllStyleData not implemented");
-  // That said, we do know that rebuilding all style data in Gecko would get rid
-  // of the old ruletree, and hence of the cached-on-the-root default computed
-  // styles.  So we know we need to clear them here.  I think this is the only
-  // way they could get cleared, in fact, though not _all_ calls that come
-  // through here may need to clear them in practice.
-  //
-  // We probably need to do some actual restyling here too, though.  And figure
-  // out whether it actually matters that we may be recomputing the default
-  // styles in too many cases.  For one thing, we do a bunch of eager work here,
-  // whereas we should really just set a bit that says to recompute the default
-  // computed styles before the next time we restyle anything!
-  StyleSet()->RecomputeDefaultComputedStyles();
+  // TODO(emilio, bz): We probably need to do some actual restyling here too.
+  NS_WARNING("stylo: ServoRestyleManager::RebuildAllStyleData is incomplete");
+  StyleSet()->RebuildData();
 }
 
 void
