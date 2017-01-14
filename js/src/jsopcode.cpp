@@ -92,7 +92,8 @@ const char * const js::CodeName[] = {
 
 /************************************************************************/
 
-#define COUNTS_LEN 16
+static bool
+DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res);
 
 size_t
 js::GetVariableBytecodeLength(jsbytecode* pc)
@@ -1258,6 +1259,24 @@ ExpressionDecompiler::decompilePC(jsbytecode* pc)
         return write(loadAtom(pc));
       case JSOP_GETARG: {
         unsigned slot = GET_ARGNO(pc);
+
+        // For self-hosted scripts that are called from non-self-hosted code,
+        // decompiling the parameter name in the self-hosted script is
+        // unhelpful. Decompile the argument name instead.
+        if (script->selfHosted()) {
+            char* result;
+            if (!DecompileArgumentFromStack(cx, slot, &result))
+                return false;
+
+            // Note that decompiling the argument in the parent frame might
+            // not succeed.
+            if (result) {
+		bool ok = write(result);
+                js_free(result);
+		return ok;
+            }
+        }
+
         JSAtom* atom = getArg(slot);
         if (!atom)
             return false;
@@ -1598,12 +1617,17 @@ DecompileArgumentFromStack(JSContext* cx, int formalIndex, char** res)
     MOZ_ASSERT(frameIter.script()->selfHosted());
 
     /*
-     * Get the second-to-top frame, the caller of the builtin that called the
-     * intrinsic.
+     * Get the second-to-top frame, the non-self-hosted caller of the builtin
+     * that called the intrinsic.
      */
     ++frameIter;
-    if (frameIter.done() || !frameIter.hasScript() || frameIter.compartment() != cx->compartment())
+    if (frameIter.done() ||
+        !frameIter.hasScript() ||
+        frameIter.script()->selfHosted() ||
+        frameIter.compartment() != cx->compartment())
+    {
         return true;
+    }
 
     RootedScript script(cx, frameIter.script());
     jsbytecode* current = frameIter.pc();
