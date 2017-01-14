@@ -10,6 +10,7 @@ category webextension-scripts omnibox chrome://browser/content/ext-omnibox.js
 category webextension-scripts pageAction chrome://browser/content/ext-pageAction.js
 category webextension-scripts sessions chrome://browser/content/ext-sessions.js
 category webextension-scripts tabs chrome://browser/content/ext-tabs.js
+category webextension-scripts theme chrome://browser/content/ext-theme.js
 category webextension-scripts utils chrome://browser/content/ext-utils.js
 category webextension-scripts windows chrome://browser/content/ext-windows.js
 
@@ -30,4 +31,5 @@ category webextension-schemas omnibox chrome://browser/content/schemas/omnibox.j
 category webextension-schemas page_action chrome://browser/content/schemas/page_action.json
 category webextension-schemas sessions chrome://browser/content/schemas/sessions.json
 category webextension-schemas tabs chrome://browser/content/schemas/tabs.json
+category webextension-schemas theme chrome://browser/content/schemas/theme.json
 category webextension-schemas windows chrome://browser/content/schemas/windows.json

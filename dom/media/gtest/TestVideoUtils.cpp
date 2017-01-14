@@ -9,6 +9,22 @@
 
 using namespace mozilla;
 
+TEST(MediaMIMETypes, IsMediaMIMEType)
+{
+  EXPECT_TRUE(IsMediaMIMEType("audio/mp4"));
+  EXPECT_TRUE(IsMediaMIMEType("video/mp4"));
+  EXPECT_TRUE(IsMediaMIMEType("application/x-mp4"));
+
+  EXPECT_TRUE(IsMediaMIMEType("audio/m"));
+  EXPECT_FALSE(IsMediaMIMEType("audio/"));
+
+  EXPECT_FALSE(IsMediaMIMEType("vide/mp4"));
+  EXPECT_FALSE(IsMediaMIMEType("videos/mp4"));
+
+  // Expect lowercase only.
+  EXPECT_FALSE(IsMediaMIMEType("Video/mp4"));
+}
+
 TEST(StringListRange, MakeStringListRange)
 {
   static const struct
