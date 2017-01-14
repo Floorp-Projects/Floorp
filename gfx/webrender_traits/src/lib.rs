@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #![cfg_attr(feature = "nightly", feature(nonzero))]
-#![cfg_attr(feature = "serde_derive", feature(proc_macro, rustc_attrs, structural_match))]
+#![cfg_attr(feature = "serde_derive", feature(rustc_attrs, structural_match))]
 
 extern crate app_units;
 extern crate byteorder;

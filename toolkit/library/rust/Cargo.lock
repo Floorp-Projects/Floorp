@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "webrender"
-version = "0.11.0"
+version = "0.11.1"
 dependencies = [
  "app_units 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "bincode 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -521,7 +521,7 @@ dependencies = [
  "fnv 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "gleam 0.2.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "webrender 0.11.0",
+ "webrender 0.11.1",
  "webrender_traits 0.11.0",
  "winapi 0.2.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
