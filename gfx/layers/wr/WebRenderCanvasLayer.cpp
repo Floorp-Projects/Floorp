@@ -79,7 +79,7 @@ WebRenderCanvasLayer::RenderLayer()
 
   WRBridge()->AddWebRenderCommand(
       OpDPPushStackingContext(ToWRRect(relBounds), ToWRRect(overflow), mask, transform, FrameMetrics::NULL_SCROLL_ID));
-  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(ToWRRect(rect), ToWRRect(clip), Nothing(), filter, mExternalImageId));
+  WRBridge()->AddWebRenderCommand(OpDPPushExternalImageId(LayerIntRegion(), ToWRRect(rect), ToWRRect(clip), Nothing(), filter, mExternalImageId));
   WRBridge()->AddWebRenderCommand(OpDPPopStackingContext());
 
   if (gfxPrefs::LayersDump()) printf_stderr("CanvasLayer %p using %s as bounds/overflow, %s for transform\n", this, Stringify(relBounds).c_str(), Stringify(transform).c_str());
