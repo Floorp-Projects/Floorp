@@ -163,7 +163,7 @@ Version history
 * v4: ``profileDate`` will return package install time when times.json is not available
 * v3: added ``defaultSearch``
 * v2: added ``distributionId``
-* v1: initial version
+* v1: initial version - shipped in `Fennec 45 <https://bugzilla.mozilla.org/show_bug.cgi?id=1205835>`_.
 
 Notes
 ~~~~~
