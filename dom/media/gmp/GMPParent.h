@@ -8,7 +8,6 @@
 
 #include "GMPProcessParent.h"
 #include "GMPServiceParent.h"
-#include "GMPAudioDecoderParent.h"
 #include "GMPDecryptorParent.h"
 #include "GMPVideoDecoderParent.h"
 #include "GMPVideoEncoderParent.h"
