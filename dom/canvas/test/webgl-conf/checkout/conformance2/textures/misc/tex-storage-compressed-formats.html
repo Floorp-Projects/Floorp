@@ -50,10 +50,13 @@ debug("");
 var wtu = WebGLTestUtils;
 var canvas = document.getElementById("canvas");
 var gl = wtu.create3DContext(canvas, null, 2);
+var WEBGL_compressed_texture_etc = gl.getExtension("WEBGL_compressed_texture_etc");
 var vao = null;
 
 if (!gl) {
     testFailed("WebGL context does not exist");
+} else if (!WEBGL_compressed_texture_etc) {
+    testPassed("No WEBGL_compressed_texture_etc support -- this is legal");
 } else {
     testPassed("WebGL context exists");
 
@@ -70,16 +73,16 @@ function runTexCompressedFormatsTest()
 {
     // These compressed formats are in Table 3.19 from the OpenGL ES 3.0.4 spec.
     var texCompressedFormats = [
-        gl.COMPRESSED_R11_EAC,
-        gl.COMPRESSED_SIGNED_R11_EAC,
-        gl.COMPRESSED_RG11_EAC,
-        gl.COMPRESSED_SIGNED_RG11_EAC,
-        gl.COMPRESSED_RGB8_ETC2,
-        gl.COMPRESSED_SRGB8_ETC2,
-        gl.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
-        gl.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
-        gl.COMPRESSED_RGBA8_ETC2_EAC,
-        gl.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+        WEBGL_compressed_texture_etc.COMPRESSED_R11_EAC,
+        WEBGL_compressed_texture_etc.COMPRESSED_SIGNED_R11_EAC,
+        WEBGL_compressed_texture_etc.COMPRESSED_RG11_EAC,
+        WEBGL_compressed_texture_etc.COMPRESSED_SIGNED_RG11_EAC,
+        WEBGL_compressed_texture_etc.COMPRESSED_RGB8_ETC2,
+        WEBGL_compressed_texture_etc.COMPRESSED_SRGB8_ETC2,
+        WEBGL_compressed_texture_etc.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+        WEBGL_compressed_texture_etc.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+        WEBGL_compressed_texture_etc.COMPRESSED_RGBA8_ETC2_EAC,
+        WEBGL_compressed_texture_etc.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
     ];
 
     texCompressedFormats.forEach(function(internalformat){

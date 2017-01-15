@@ -175,18 +175,18 @@ function testVertexAttributeBuffers() {
     setTestExpandos(buffer);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
-    assertMsg(buffer === gl.getVertexAttrib(position, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING), 
+    assertMsg(buffer === gl.getVertexAttrib(position, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING),
         "getVertexAttrib(VERTEX_ATTRIB_ARRAY_BUFFER_BINDING) return instance set with vertexAttribPointer");
     gl.bindBuffer(gl.ARRAY_BUFFER, null);
-    
+
     // Garbage collect Javascript references. Remaining references should be internal to WebGL.
     buffer = null;
-    program = null;    
+    program = null;
     webglHarnessCollectGarbage();
 
     var retrievedBuffer = gl.getVertexAttrib(position, gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
     verifyTestExpandos(retrievedBuffer, "Vertex Attribute Buffer");
-    shouldBeType(retrievedBuffer, 'WebGLBuffer'); 
+    shouldBeType(retrievedBuffer, 'WebGLBuffer');
 
     debug('');
 }

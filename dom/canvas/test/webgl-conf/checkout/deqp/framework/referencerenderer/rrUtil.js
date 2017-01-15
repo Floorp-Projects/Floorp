@@ -42,18 +42,15 @@ goog.scope(function() {
         p0[0], p0[1], p0[2], 1.0,
         p0[0], p1[1], hz, 1.0,
         p1[0], p0[1], hz, 1.0,
-        p1[0], p0[1], hz, 1.0,
-        p0[0], p1[1], hz, 1.0,
         p1[0], p1[1], p1[2], 1.0
         ];
         /** @type {Array<number>} */ var coord = [
         0.0, 0.0,
         0.0, 1.0,
         1.0, 0.0,
-        1.0, 0.0,
-        0.0, 1.0,
         1.0, 1.0
         ];
+        /** @type {Array<number>} */ var indices = [0, 1, 2, 2, 1, 3];
 
         var posLoc = ctx.getAttribLocation(program, 'a_position');
         if (posLoc == -1)
@@ -70,13 +67,16 @@ goog.scope(function() {
         bufIDs[1] = ctx.createBuffer();
 
         ctx.useProgram(program);
-        ctx.bindBuffer(gl.ARRAY_BUFFER, bufIDs[0]);
-        ctx.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
 
-        ctx.enableVertexAttribArray(posLoc);
-        ctx.vertexAttribPointer(posLoc, 4, gl.FLOAT, false, 0, 0);
+        if (posLoc >= 0) {
+            ctx.bindBuffer(gl.ARRAY_BUFFER, bufIDs[0]);
+            ctx.bufferData(gl.ARRAY_BUFFER, new Float32Array(position), gl.STATIC_DRAW);
 
-        ctx.bindBuffer(gl.ARRAY_BUFFER, null);
+            ctx.enableVertexAttribArray(posLoc);
+            ctx.vertexAttribPointer(posLoc, 4, gl.FLOAT, false, 0, 0);
+
+            ctx.bindBuffer(gl.ARRAY_BUFFER, null);
+        }
 
         if (coordLoc >= 0) {
             ctx.bindBuffer(gl.ARRAY_BUFFER, bufIDs[1]);
@@ -88,12 +88,28 @@ goog.scope(function() {
             ctx.bindBuffer(gl.ARRAY_BUFFER, null);
         }
 
-        ctx.drawQuads(gl.TRIANGLES, 0, 6);
+        {
+            var ndxID = ctx.createBuffer();
+
+            ctx.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ndxID);
+            ctx.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+            ctx.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+
+            ctx.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            ctx.deleteBuffer(ndxID);
+        }
 
         ctx.bindVertexArray(null);
         ctx.deleteBuffer(bufIDs[0]);
         ctx.deleteBuffer(bufIDs[1]);
         ctx.deleteVertexArray(vaoID);
+
+        if (posLoc >= 0)
+          ctx.disableVertexAttribArray(posLoc);
+
+        if (coordLoc >= 0)
+          ctx.disableVertexAttribArray(coordLoc);
     };
 
 });

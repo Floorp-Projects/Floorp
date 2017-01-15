@@ -200,7 +200,7 @@ function debug(msg)
     if (!quietMode())
       _addSpan(msg);
     if (_jsTestPreVerboseLogging) {
-	_bufferedLogToConsole(msg);
+        _bufferedLogToConsole(msg);
     }
 }
 
@@ -231,7 +231,7 @@ function testPassed(msg) {
     if (!quietMode())
       _addSpan('<span><span class="pass">PASS</span> ' + escapeHTML(msg) + '</span>');
     if (_jsTestPreVerboseLogging) {
-	_bufferedLogToConsole('PASS ' + msg);
+        _bufferedLogToConsole('PASS ' + msg);
     }
 }
 
@@ -277,12 +277,12 @@ function getCurrentTestName()
 function testPassedOptions(msg, addSpan)
 {
     if (addSpan && !quietMode())
-	{
+    {
         reportTestResultsToHarness(true, _currentTestName + ": " + msg);
         _addSpan('<span><span class="pass">PASS</span> ' + escapeHTML(_currentTestName) + ": " + escapeHTML(msg) + '</span>');
-	}
+    }
     if (_jsTestPreVerboseLogging) {
-		_bufferedLogToConsole('PASS ' + msg);
+        _bufferedLogToConsole('PASS ' + msg);
     }
 }
 
@@ -294,12 +294,12 @@ function testPassedOptions(msg, addSpan)
 function testSkippedOptions(msg, addSpan)
 {
     if (addSpan && !quietMode())
-	{
+    {
         reportSkippedTestResultsToHarness(true, _currentTestName + ": " + msg);
         _addSpan('<span><span class="warn">SKIP</span> ' + escapeHTML(_currentTestName) + ": " + escapeHTML(msg) + '</span>');
-	}
+    }
     if (_jsTestPreVerboseLogging) {
-		_bufferedLogToConsole('SKIP' + msg);
+        _bufferedLogToConsole('SKIP' + msg);
     }
 }
 

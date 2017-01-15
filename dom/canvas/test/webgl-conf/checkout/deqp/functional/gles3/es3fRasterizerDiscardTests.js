@@ -203,7 +203,7 @@ es3fRasterizerDiscardTests.RasterizerDiscardCase.prototype.init = function() {
     this.m_program = new gluShaderProgram.ShaderProgram(gl, gluShaderProgram.makeVtxFragSources(vertShaderSource, fragShaderSource));
 
     if (!this.m_program.isOk()) {
-        console.log(this.m_program);
+        bufferedLogToConsole(this.m_program);
         testFailedOptions('Failed to compile shader program', true);
     }
 };
@@ -220,7 +220,7 @@ es3fRasterizerDiscardTests.RasterizerDiscardCase.prototype.iterate = function() 
     var passColorFound = false;
     var vertices;
 
-    console.log('Case iteration ' + (this.m_iterNdx + 1) + ' / ' + NUM_CASE_ITERATIONS);
+    bufferedLogToConsole('Case iteration ' + (this.m_iterNdx + 1) + ' / ' + NUM_CASE_ITERATIONS);
 
     // Create and bind FBO if needed
 
@@ -231,7 +231,7 @@ es3fRasterizerDiscardTests.RasterizerDiscardCase.prototype.iterate = function() 
     if (this.m_caseOptions.useScissor) {
         gl.enable(gl.SCISSOR_TEST);
         gl.scissor(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-        console.log('Scissor test enabled: glScissor(0, 0, ' + gl.drawingBufferWidth + ', ' + gl.drawingBufferHeight + ')');
+        bufferedLogToConsole('Scissor test enabled: glScissor(0, 0, ' + gl.drawingBufferWidth + ', ' + gl.drawingBufferHeight + ')');
     }
 
     gl.useProgram(this.m_program.getProgram());
@@ -271,7 +271,7 @@ es3fRasterizerDiscardTests.RasterizerDiscardCase.prototype.iterate = function() 
     // Enable rasterizer discard
 
     gl.enable(gl.RASTERIZER_DISCARD);
-    console.log('Rasterizer discard enabled');
+    bufferedLogToConsole('Rasterizer discard enabled');
 
     // Do to-be-discarded primitive draws and buffer clears
 
@@ -307,7 +307,7 @@ es3fRasterizerDiscardTests.RasterizerDiscardCase.prototype.iterate = function() 
     // Disable rasterizer discard
 
     gl.disable(gl.RASTERIZER_DISCARD);
-    console.log('Rasterizer discard disabled');
+    bufferedLogToConsole('Rasterizer discard disabled');
 
     if (this.m_caseType == es3fRasterizerDiscardTests.CaseType.WRITE_STENCIL) {
         if (this.m_caseOptions.useFBO || gl.getContextAttributes().stencil) {
@@ -367,7 +367,7 @@ es3fRasterizerDiscardTests.RasterizerDiscardCase.prototype.iterate = function() 
         testFailed('Primitive or buffer clear was not discarded.');
         return tcuTestCase.IterateResult.STOP;
     }
-    console.log('Primitive or buffer clear was discarded correctly.');
+    bufferedLogToConsole('Primitive or buffer clear was discarded correctly.');
 
     if (++this.m_iterNdx < NUM_CASE_ITERATIONS)
         return tcuTestCase.IterateResult.CONTINUE;
@@ -477,7 +477,7 @@ es3fRasterizerDiscardTests.run = function(context) {
         tcuTestCase.runTestCases();
     } catch (err) {
         testFailedOptions('Failed to run tests', false);
-        console.log(err);
+        bufferedLogToConsole(err);
         tcuTestCase.runner.terminate();
     }
 };

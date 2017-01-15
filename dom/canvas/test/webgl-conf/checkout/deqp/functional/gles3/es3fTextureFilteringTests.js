@@ -835,8 +835,8 @@ goog.scope(function() {
 
             if (!isHighQuality) {
                 // Evaluate against lower precision requirements.
-                lodPrecision.lodBits = 4;
-                lookupPrecision.uvwBits = [4, 4, 0];
+                lodPrecision.lodBits = 2;
+                lookupPrecision.uvwBits = [3, 3, 0];
 
                 bufferedLogToConsole('Warning: Verification against high ' +
                  'precision requirements failed, trying with lower ' +
@@ -1233,8 +1233,8 @@ goog.scope(function() {
 
         if (!isHighQuality) {
             // Evaluate against lower precision requirements.
-            lodPrecision.lodBits = 4;
-            lookupPrecision.uvwBits = [4, 4, 0];
+            lodPrecision.lodBits = 3;
+            lookupPrecision.uvwBits = [3, 3, 0];
 
             bufferedLogToConsole(
                 'Warning: Verification against high ' +

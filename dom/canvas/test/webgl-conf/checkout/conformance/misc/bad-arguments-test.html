@@ -45,13 +45,13 @@ description("Tests calling WebGL APIs with wrong argument types");
 
 var testArguments = [
   { value: "foo",
-    throws: true },
+    throwsForNullables: true },
   { value: 0,
-    throws: true },
+    throwsForNullables: true },
   { value: null,
-    throws: false },
+    throwsForNullables: false },
   { value: undefined,
-    throws: false }
+    throwsForNullables: false }
 ];
 
 var argument;
@@ -72,24 +72,36 @@ wtu.loadStandardProgramAsync(context, function(success, prog) {
     assertMsg(loc != null, "getUniformLocation succeeded");
 
     for (var i = 0; i < testArguments.length; ++i) {
-      var func, func2;
-      if (testArguments[i].throws) {
+      argument = testArguments[i].value;
+
+      debug('Testing argument: ' + argument);
+
+      // These functions don't accept nullable arguments any more.
+      shouldThrow("context.compileShader(argument)");
+      shouldThrow("context.linkProgram(argument)");
+      shouldThrow("context.attachShader(program, argument)");
+      shouldThrow("context.attachShader(argument, shader)");
+      shouldThrow("context.detachShader(program, argument)");
+      shouldThrow("context.detachShader(argument, shader)");
+      shouldThrow("context.shaderSource(argument, 'foo')");
+      shouldThrow("context.bindAttribLocation(argument, 0, 'foo')");
+      shouldThrow("context.getProgramInfoLog(argument)");
+      shouldThrow("context.getProgramParameter(argument, 0)");
+      shouldThrow("context.getShaderInfoLog(argument)");
+      shouldThrow("context.getShaderParameter(argument, 0)");
+      shouldThrow("context.getShaderSource(argument)");
+      shouldThrow("context.getUniform(argument, loc)");
+      shouldThrow("context.getUniform(program, argument)");
+      shouldThrow("context.getUniformLocation(argument, 'u_modelViewProjMatrix')");
+
+      // The following entry points still accept nullable arguments.
+      var func;
+      if (testArguments[i].throwsForNullables) {
         func = shouldThrow;
-        func2 = shouldThrow;
       } else {
         func = shouldBeUndefined;
-        func2 = shouldBeNull;
       }
-      argument = testArguments[i].value;
-      func("context.compileShader(argument)");
-      func("context.linkProgram(argument)");
-      func("context.attachShader(program, argument)");
-      func("context.attachShader(argument, shader)");
-      func("context.detachShader(program, argument)");
-      func("context.detachShader(argument, shader)");
-      func("context.useProgram(argument)");
-      func("context.shaderSource(argument, 'foo')");
-      func("context.bindAttribLocation(argument, 0, 'foo')");
+
       func("context.bindBuffer(context.ARRAY_BUFFER, argument)");
       func("context.bindFramebuffer(context.FRAMEBUFFER, argument)");
       func("context.bindRenderbuffer(context.RENDERBUFFER, argument)");
@@ -99,23 +111,11 @@ wtu.loadStandardProgramAsync(context, function(success, prog) {
       func("context.uniform2fv(argument, new Float32Array([0.0, 0.0]))");
       func("context.uniform2iv(argument, new Int32Array([0, 0]))");
       func("context.uniformMatrix2fv(argument, false, new Float32Array([0.0, 0.0, 0.0, 0.0]))");
-
-      func2("context.getProgramInfoLog(argument)");
-      func2("context.getProgramParameter(argument, 0)");
-      func2("context.getShaderInfoLog(argument)");
-      func2("context.getShaderParameter(argument, 0)");
-      func2("context.getShaderSource(argument)");
-      func2("context.getUniform(argument, loc)");
-      func2("context.getUniform(program, argument)");
-      func2("context.getUniformLocation(argument, 'u_modelViewProjMatrix')");
-
+      func("context.useProgram(argument)");
     }
+    finishTest();
   });
 });
-
-var successfullyParsed = true;
 </script>
-
-<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

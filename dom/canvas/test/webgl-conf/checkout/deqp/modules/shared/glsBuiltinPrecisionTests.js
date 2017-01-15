@@ -479,6 +479,8 @@ var setParentClass = function(child, parent) {
         /** type{tcuInterval.Interval} */ this.iVal;
     };
 
+    setParentClass(glsBuiltinPrecisionTests.ScalarTraits, glsBuiltinPrecisionTests.Traits);
+
     glsBuiltinPrecisionTests.ScalarTraits.prototype = Object.create(glsBuiltinPrecisionTests.Traits.prototype);
     glsBuiltinPrecisionTests.ScalarTraits.prototype.constructor = glsBuiltinPrecisionTests.ScalarTraits;
 
@@ -3978,10 +3980,6 @@ var setParentClass = function(child, parent) {
             this.m_body[ndx].execute(funCtx);
 
         var ret = this.m_ret.evaluate(funCtx);
-        if (this.m_ret_alternative !== undefined) {
-            var ret_alternative = this.m_ret_alternative.evaluate(funCtx);
-            ret = tcuInterval.withIntervals(ret, ret_alternative);
-        }
 
         // \todo [lauri] Store references instead of values in environment
         args.a = funEnv.lookup(this.m_var0);
@@ -4006,11 +4004,35 @@ var setParentClass = function(child, parent) {
                 this.m_var1, this.m_var2, this.m_var3);
 
             this.m_ret = this.doExpand(ctx, args);
-            if (this.doExpandAlternative !== undefined) {
-                this.m_ret_alternative = this.doExpandAlternative(ctx, args);
-            }
             this.m_body = ctx.getStatements();
         }
+    };
+
+    /**
+     * @constructor
+     * @extends {glsBuiltinPrecisionTests.Func}
+     * @param {glsBuiltinPrecisionTests.Signature} Sig_ template <typename Sig_>
+     */
+    glsBuiltinPrecisionTests.Alternatives = function(Sig_) {
+         glsBuiltinPrecisionTests.Func.call(this, Sig_);
+    };
+
+    setParentClass(glsBuiltinPrecisionTests.Alternatives,glsBuiltinPrecisionTests.Func);
+
+    glsBuiltinPrecisionTests.Alternatives.prototype.getName = function() {
+        return 'alternatives';
+    };
+
+    glsBuiltinPrecisionTests.Alternatives.prototype.doPrintDefinition = function() {};
+
+    glsBuiltinPrecisionTests.Alternatives.prototype.doGetUsedFuncs = function(dst) {};
+
+    glsBuiltinPrecisionTests.Alternatives.prototype.doApply = function(ctx,args) {
+        return glsBuiltinPrecisionTests.union(this.Sig.Ret,args.a,args.b);
+    };
+
+    glsBuiltinPrecisionTests.Alternatives.prototype.doPrint = function(args) {
+        return '{' + args[0] + '|' + args[1] + '}';
     };
 
     glsBuiltinPrecisionTests.sizeToName = function(size) {
@@ -4623,7 +4645,7 @@ var setParentClass = function(child, parent) {
         return 'mix';
     };
 
-    glsBuiltinPrecisionTests.Mix.prototype.doExpand = function(ctx, args) {
+    glsBuiltinPrecisionTests.Mix.prototype.operation1 = function(ctx, args) {
         // (x * (constant(1.0f) - a)) + y * a
         var x = args.a;
         var y = args.b;
@@ -4636,7 +4658,7 @@ var setParentClass = function(child, parent) {
         return v3;
     };
 
-    glsBuiltinPrecisionTests.Mix.prototype.doExpandAlternative = function(ctx, args) {
+    glsBuiltinPrecisionTests.Mix.prototype.operation2 = function(ctx, args) {
         // x + (y - x) * a
         var x = args.a;
         var y = args.b;
@@ -4646,6 +4668,10 @@ var setParentClass = function(child, parent) {
         var v2 = app(new glsBuiltinPrecisionTests.Add(), x, v1);
         return v2;
     };
+
+    glsBuiltinPrecisionTests.Mix.prototype.doExpand = function(ctx, args){
+        return app(new glsBuiltinPrecisionTests.Alternatives(this.Sig), this.operation1(ctx, args), this.operation2(ctx, args), new glsBuiltinPrecisionTests.Void(), new glsBuiltinPrecisionTests.Void());
+    }
 
     /**
      * @constructor

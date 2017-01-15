@@ -51,7 +51,7 @@ var elapsed_query = null;
 var timestamp_query1 = null;
 var timestamp_query2 = null;
 var availability_retry = 500;
-var timestamp_counter_bits = 0; 
+var timestamp_counter_bits = 0;
 
 if (!gl) {
     testFailed("WebGL context does not exist");
@@ -95,18 +95,25 @@ function runSanityTests() {
 
     shouldBe("ext.isQueryEXT(null)", "false");
 
-    shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "null");
-    shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30", "true");
+    shouldBeTrue("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT) === null");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
+    shouldBeTrue("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
+
+    shouldBeTrue("ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.CURRENT_QUERY_EXT) === null");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     // Certain drivers set timestamp counter bits to 0 as they don't support timestamps
-    shouldBe("ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30 || " +
-             "ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) == 0", "true");
+    shouldBeTrue("ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) >= 30 || " +
+             "ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.QUERY_COUNTER_BITS_EXT) === 0");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
     debug("Testing time elapsed query lifecycle");
     query = ext.createQueryEXT();
     shouldBe("ext.isQueryEXT(query)", "false");
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Query creation must succeed.");
+    shouldThrow("ext.beginQueryEXT(ext.TIMESTAMP_EXT, null)");
     ext.beginQueryEXT(ext.TIMESTAMP_EXT, query);
     wtu.glErrorShouldBe(gl, gl.INVALID_ENUM, "Beginning a timestamp query should fail.");
     ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query);
@@ -121,6 +128,7 @@ function runSanityTests() {
     shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "query");
     ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Ending an active time elapsed query should succeed.");
+    shouldThrow("ext.getQueryObjectEXT(null, ext.QUERY_RESULT_AVAILABLE_EXT)");
     ext.getQueryObjectEXT(query, ext.QUERY_RESULT_AVAILABLE_EXT);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Fetching query result availability after query end should succeed.");
     ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
@@ -138,9 +146,11 @@ function runSanityTests() {
     debug("");
     debug("Testing timestamp counter");
     query = ext.createQueryEXT();
+    shouldThrow("ext.queryCounterEXT(null, ext.TIMESTAMP_EXT)");
     ext.queryCounterEXT(query, ext.TIMESTAMP_EXT);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Timestamp counter queries should work.");
     ext.deleteQueryEXT(query);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
     debug("Performing parameter sanity checks");
@@ -156,36 +166,45 @@ function runSanityTests() {
     shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "null");
     ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query);
     shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "query");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
     debug("Testing failed begin query should not change the current query.");
     ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query2);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Beginning an elapsed query without ending should fail.");
     shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "query");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
-    debug("Testing beginning a timestamp query should not change the elapsed query.");
-    ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query2)
-    shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "query");;
+    debug("Testing beginning a timestamp query is invalid and should not change the elapsed query.");
+    ext.beginQueryEXT(ext.TIMESTAMP_EXT, query2)
+    wtu.glErrorShouldBe(gl, gl.INVALID_ENUM);
+    shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "query");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
     debug("Testing timestamp queries end immediately so are never current.");
     ext.queryCounterEXT(query2, ext.TIMESTAMP_EXT);
     shouldBe("ext.getQueryEXT(ext.TIMESTAMP_EXT, ext.CURRENT_QUERY_EXT)", "null");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
     debug("Testing ending the query should clear the current query.");
     ext.endQueryEXT(ext.TIME_ELAPSED_EXT);
     shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "null");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     debug("");
     debug("Testing beginning a elapsed query using a timestamp query should fail and not affect current query.")
     ext.beginQueryEXT(ext.TIME_ELAPSED_EXT, query2);
     wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "Switching query targets should fail.");
     shouldBe("ext.getQueryEXT(ext.TIME_ELAPSED_EXT, ext.CURRENT_QUERY_EXT)", "null");
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR);
 
     ext.deleteQueryEXT(query);
     ext.deleteQueryEXT(query2);
+
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "Should be no errors at end of sanity tests");
 }
 
 function runElapsedTimeTest() {
@@ -224,7 +243,7 @@ function verifyQueryResultsNotAvailable() {
     var startTime = Date.now();
     while (Date.now() - startTime < 2000) {
         gl.finish();
-        if (ext.getQueryObjectEXT(elapsed_query, ext.QUERY_RESULT_AVAILABLE_EXT)) { 
+        if (ext.getQueryObjectEXT(elapsed_query, ext.QUERY_RESULT_AVAILABLE_EXT)) {
             testFailed("One of the queries' results became available too early");
             return;
         }
@@ -241,18 +260,21 @@ function verifyQueryResultsNotAvailable() {
 }
 
 function checkQueryResults() {
-    if (availability_retry > 0 && (timestamp_counter_bits == 0 ||
-        !ext.getQueryObjectEXT(timestamp_query2, ext.QUERY_RESULT_AVAILABLE_EXT))) {
-        var error = gl.getError();
-        if (error != gl.NO_ERROR) {
-            testFailed("getQueryObjectEXT should have no errors: " + wtu.glEnumToString(gl, error));
-            debug("");
-            finishTest();
+    if (availability_retry > 0) {
+        // Make a reasonable attempt to wait for the queries' results to become available.
+        if (!ext.getQueryObjectEXT(elapsed_query, ext.QUERY_RESULT_AVAILABLE_EXT) ||
+            (timestamp_counter_bits > 0 && !ext.getQueryObjectEXT(timestamp_query2, ext.QUERY_RESULT_AVAILABLE_EXT))) {
+            var error = gl.getError();
+            if (error != gl.NO_ERROR) {
+                testFailed("getQueryObjectEXT should have no errors: " + wtu.glEnumToString(gl, error));
+                debug("");
+                finishTest();
+                return;
+            }
+            availability_retry--;
+            window.requestAnimationFrame(checkQueryResults);
             return;
         }
-        availability_retry--;
-        window.requestAnimationFrame(checkQueryResults);
-        return;
     }
 
     debug("");

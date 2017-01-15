@@ -204,7 +204,12 @@ function runTestExtension() {
     }
 
     supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
-    shouldBe("supportedFormats.length", "3");
+    // There should be exactly 3 formats for WebGL 1.0 and 13 formats for WebGL 2.0.
+    if (contextVersion < 2) {
+        shouldBe("supportedFormats.length", "3");
+    } else {
+        shouldBe("supportedFormats.length", "13");
+    }
 
     // check that all 3 formats exist
     for (var name in validFormats.length) {

@@ -627,6 +627,10 @@ var deString = framework.delibs.debase.deString;
         }
     };
 
+    glsSamplerObjectTest.MultiTextureSamplerTest.prototype.deinit = function() {
+        gl.activeTexture(gl.TEXTURE0);
+    }
+
     glsSamplerObjectTest.MultiTextureSamplerTest.prototype.iterate = function() {
         //tcu::TestLog& log = m_testCtx.getLog();
 

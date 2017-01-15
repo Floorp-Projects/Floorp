@@ -66,13 +66,13 @@ checkGLError("createTexture")
 if (contextVersion > 1) {
   shouldBeTrue('gl.createQuery() instanceof WebGLQuery');
   checkGLError("createQuery")
-  
+
   shouldBeTrue('gl.createSampler() instanceof WebGLSampler');
   checkGLError("createSampler")
-  
+
   shouldBeTrue('gl.createTransformFeedback() instanceof WebGLTransformFeedback');
   checkGLError("createTransformFeedback")
-  
+
   shouldBeTrue('gl.createVertexArray() instanceof WebGLVertexArrayObject');
   checkGLError("createVertexArray")
 }

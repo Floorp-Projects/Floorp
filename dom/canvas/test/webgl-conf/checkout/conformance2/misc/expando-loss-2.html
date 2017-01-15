@@ -46,13 +46,15 @@ var gl = wtu.create3DContext(canvas, {antialias: false}, 2);
 
 // Helpers that set expandos and verify they are set to the correct value.
 var expandoValue = "WebGL is awesome!"
-function setTestExpandos(instance) {
+function setTestExpandos(instance, extra) {
     instance.expando1 = expandoValue;
     instance.expando2 = { subvalue : expandoValue };
+    instance.expando_extra = extra;
 }
-function verifyTestExpandos(instance, msg) {
+function verifyTestExpandos(instance, msg, extra) {
     assertMsg(instance.expando1 === expandoValue, msg + ": Expect basic expando to survive despite GC.");
     assertMsg(instance.expando2 && instance.expando2.subvalue === expandoValue, msg + ": Expect subobject expando to survive despite GC.");
+    assertMsg(instance.expando_extra === extra, msg + ": Expect extra expando to survive despite GC.");
 }
 
 // Tests that we don't get expando loss for bound resources where the
@@ -87,6 +89,86 @@ function testBasicBindings() {
             retrieveConstant: glProt.VERTEX_ARRAY_BINDING,
             name: "VERTEX_ARRAY_BINDING",
         },
+        {
+            typeName: 'WebGLTexture',
+            creationFn: glProt.createTexture,
+            bindFn: glProt.bindTexture,
+            bindConstant: glProt.TEXTURE_3D,
+            retrieveConstant: glProt.TEXTURE_BINDING_3D,
+            name: "TEXTURE_BINDING_3D",
+        },
+        {
+            typeName: 'WebGLTexture',
+            creationFn: glProt.createTexture,
+            bindFn: glProt.bindTexture,
+            bindConstant: glProt.TEXTURE_2D_ARRAY,
+            retrieveConstant: glProt.TEXTURE_BINDING_2D_ARRAY,
+            name: "TEXTURE_BINDING_2D_ARRAY",
+        },
+        {
+            typeName: 'WebGLFramebuffer',
+            creationFn: glProt.createFramebuffer,
+            bindFn: glProt.bindFramebuffer,
+            bindConstant: glProt.READ_FRAMEBUFFER,
+            retrieveConstant: glProt.READ_FRAMEBUFFER_BINDING,
+            name: "READ_FRAMEBUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLFramebuffer',
+            creationFn: glProt.createFramebuffer,
+            bindFn: glProt.bindFramebuffer,
+            bindConstant: glProt.DRAW_FRAMEBUFFER,
+            retrieveConstant: glProt.DRAW_FRAMEBUFFER_BINDING,
+            name: "DRAW_FRAMEBUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBuffer,
+            bindConstant: glProt.COPY_READ_BUFFER,
+            retrieveConstant: glProt.COPY_READ_BUFFER_BINDING,
+            name: "COPY_READ_BUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBuffer,
+            bindConstant: glProt.COPY_WRITE_BUFFER,
+            retrieveConstant: glProt.COPY_WRITE_BUFFER_BINDING,
+            name: "COPY_WRITE_BUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBuffer,
+            bindConstant: glProt.PIXEL_PACK_BUFFER,
+            retrieveConstant: glProt.PIXEL_PACK_BUFFER_BINDING,
+            name: "PIXEL_PACK_BUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBuffer,
+            bindConstant: glProt.PIXEL_UNPACK_BUFFER,
+            retrieveConstant: glProt.PIXEL_UNPACK_BUFFER_BINDING,
+            name: "PIXEL_UNPACK_BUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBuffer,
+            bindConstant: glProt.TRANSFORM_FEEDBACK_BUFFER,
+            retrieveConstant: glProt.TRANSFORM_FEEDBACK_BUFFER_BINDING,
+            name: "TRANSFORM_FEEDBACK_BUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBuffer,
+            bindConstant: glProt.UNIFORM_BUFFER,
+            retrieveConstant: glProt.UNIFORM_BUFFER_BINDING,
+            name: "UNIFORM_BUFFER_BINDING",
+        },
     ];
 
     simpleData.forEach(function(test) {
@@ -109,6 +191,64 @@ function testBasicBindings() {
         verifyTestExpandos(retrievedObject, msg);
         shouldBeType(retrievedObject, test.typeName);
         debug('');
+    });
+}
+
+function testIndexedBindings() {
+    debug('Indexed Bindings');
+
+    // Test data that describes how to create, bind, and retrieve an indexed object off of the context
+    var glProt = Object.getPrototypeOf(gl);
+    var simpleData = [
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBufferBase,
+            indexMax: gl.getParameter(glProt.MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS) - 1,
+            bindConstant: glProt.TRANSFORM_FEEDBACK_BUFFER,
+            retrieveConstant: glProt.TRANSFORM_FEEDBACK_BUFFER_BINDING,
+            name: "TRANSFORM_FEEDBACK_BUFFER_BINDING",
+        },
+        {
+            typeName: 'WebGLBuffer',
+            creationFn: glProt.createBuffer,
+            bindFn: glProt.bindBufferBase,
+            indexMax: gl.getParameter(glProt.MAX_UNIFORM_BUFFER_BINDINGS) - 1,
+            bindConstant: glProt.UNIFORM_BUFFER,
+            retrieveConstant: glProt.UNIFORM_BUFFER_BINDING,
+            name: "UNIFORM_BUFFER_BINDING",
+        },
+    ];
+
+    simpleData.forEach(function(test) {
+        // This test sets all of the separate indexed bindings first, then
+        // tests them all. It puts a different extra expando on each indexed
+        // parameter so that we can ensure they're all distinct.
+        var instances = [];
+        for (var i = 0; i <= test.indexMax; i++) {
+            var instance = test.creationFn.call(gl);
+            var msg = "getIndexedParameter(" + test.name + ", " + i + ")";
+            setTestExpandos(instance, i);
+            instances[i] = instance;
+            test.bindFn.call(gl, test.bindConstant, i, instance);
+        }
+
+        for (var i = 0; i <= test.indexMax; i++) {
+            var msg = "getIndexedParameter(" + test.name + ", " + i + ")";
+            assertMsg(instances[i] === gl.getIndexedParameter(test.retrieveConstant, i), msg + " returns instance that was bound.");
+        }
+
+        // Garbage collect Javascript references.  Remaining references should be internal to WebGL.
+        instances = null;
+        webglHarnessCollectGarbage();
+
+        for (var i = 0; i <= test.indexMax; i++) {
+            var msg = "getIndexedParameter(" + test.name + ", " + i + ")";
+            var retrievedObject = gl.getIndexedParameter(test.retrieveConstant, i);
+            verifyTestExpandos(retrievedObject, msg, i);
+            shouldBeType(retrievedObject, test.typeName);
+            debug('');
+        }
     });
 }
 
@@ -152,6 +292,7 @@ function testQueries() {
 
 // Run tests
 testBasicBindings();
+testIndexedBindings();
 testQueries();
 
 // FYI: There's no need to test WebGLSync objects because there is no notion of an "active" sync,
