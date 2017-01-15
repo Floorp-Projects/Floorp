@@ -30,10 +30,11 @@ public:
 
   MediaDecoderStateMachine* CreateStateMachine() override;
 
-  // Returns true if aType is a type that we think we can render with the
-  // a MP4 platform decoder backend.
-  static bool CanHandleMediaType(const MediaContentType& aType,
-                                 DecoderDoctorDiagnostics* aDiagnostics);
+  // Returns true if aContentType is an MP4 type that we think we can render
+  // with the a platform decoder backend.
+  // If provided, codecs are checked for support.
+  static bool IsSupportedType(const MediaContentType& aContentType,
+                              DecoderDoctorDiagnostics* aDiagnostics);
 
   // Return true if aMimeType is a one of the strings used by our demuxers to
   // identify H264. Does not parse general content type strings, i.e. white

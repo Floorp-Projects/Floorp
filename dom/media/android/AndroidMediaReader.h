@@ -6,15 +6,14 @@
 #if !defined(AndroidMediaReader_h_)
 #define AndroidMediaReader_h_
 
-#include "mozilla/Attributes.h"
-#include "MediaResource.h"
-#include "MediaDecoderReader.h"
 #include "ImageContainer.h"
+#include "MediaContentType.h"
+#include "MediaDecoderReader.h"
+#include "MediaResource.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/layers/SharedRGBImage.h"
 
 #include "MPAPI.h"
-
-class nsACString;
 
 namespace mozilla {
 
@@ -26,7 +25,7 @@ class ImageContainer;
 
 class AndroidMediaReader : public MediaDecoderReader
 {
-  nsCString mType;
+  MediaContentType mType;
   MPAPI::Decoder *mPlugin;
   bool mHasAudio;
   bool mHasVideo;
@@ -39,7 +38,7 @@ class AndroidMediaReader : public MediaDecoderReader
   MozPromiseRequestHolder<MediaDecoderReader::MediaDataPromise> mSeekRequest;
 public:
   AndroidMediaReader(AbstractMediaDecoder* aDecoder,
-                     const nsACString& aContentType);
+                     const MediaContentType& aContentType);
 
   nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
                                                    TrackInfo::kVideoTrack)) override;

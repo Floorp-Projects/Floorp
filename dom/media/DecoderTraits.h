@@ -48,7 +48,7 @@ public:
 
   // Create a reader for thew given MIME type aType. Returns null
   // if we were unable to create the reader.
-  static MediaDecoderReader* CreateReader(const nsACString& aType,
+  static MediaDecoderReader* CreateReader(const MediaContentType& aType,
                                           AbstractMediaDecoder* aDecoder);
 
   // Returns true if MIME type aType is supported in video documents,
@@ -56,10 +56,10 @@ public:
   // vice versa.
   static bool IsSupportedInVideoDocument(const nsACString& aType);
 
-  static bool IsWebMTypeAndEnabled(const nsACString& aType);
-  static bool IsWebMAudioType(const nsACString& aType);
-  static bool IsMP4TypeAndEnabled(const nsACString& aType,
-                                  DecoderDoctorDiagnostics* aDiagnostics);
+  // Convenience function that returns false if MOZ_FMP4 is not defined,
+  // otherwise defers to MP4Decoder::IsSupportedType().
+  static bool IsMP4SupportedType(const MediaContentType& aType,
+                                 DecoderDoctorDiagnostics* aDiagnostics);
 };
 
 } // namespace mozilla

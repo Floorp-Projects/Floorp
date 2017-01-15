@@ -194,7 +194,7 @@ public:
   // Can't be inline because we can't include ImportRule here.  And can't be
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
-  css::Rule* GetDOMOwnerRule() const final;
+  nsIDOMCSSRule* GetDOMOwnerRule() const final;
 
   void WillDirty();
   void DidDirty();

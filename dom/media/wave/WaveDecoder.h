@@ -10,15 +10,19 @@
 
 namespace mozilla {
 
-class WaveDecoder : public MediaDecoder {
+class MediaContentType;
+
+class WaveDecoder : public MediaDecoder
+{
 public:
   // MediaDecoder interface.
   explicit WaveDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
   MediaDecoder* Clone(MediaDecoderOwner* aOwner) override;
   MediaDecoderStateMachine* CreateStateMachine() override;
 
-  static bool CanHandleMediaType(const nsACString& aType,
-                                 const nsAString& aCodecs);
+  // Returns true if the Wave backend is pref'ed on, and we're running on a
+  // platform that is likely to have decoders for the format.
+  static bool IsSupportedType(const MediaContentType& aContentType);
 };
 
 } // namespace mozilla

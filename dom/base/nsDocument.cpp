@@ -5180,7 +5180,7 @@ nsDocument::StyleRuleChanged(StyleSheet* aSheet,
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleChanged",
                                mRule,
-                               aStyleRule);
+                               aStyleRule ? aStyleRule->GetDOMRule() : nullptr);
   }
 }
 
@@ -5194,7 +5194,8 @@ nsDocument::StyleRuleAdded(StyleSheet* aSheet,
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleAdded",
                                mRule,
-                               aStyleRule);
+                               aStyleRule ? aStyleRule->GetDOMRule()
+                                          : nullptr);
   }
 }
 
@@ -5208,7 +5209,8 @@ nsDocument::StyleRuleRemoved(StyleSheet* aSheet,
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleRemoved",
                                mRule,
-                               aStyleRule);
+                               aStyleRule ? aStyleRule->GetDOMRule()
+                                          : nullptr);
   }
 }
 

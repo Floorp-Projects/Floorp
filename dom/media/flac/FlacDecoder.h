@@ -11,7 +11,10 @@
 
 namespace mozilla {
 
-class FlacDecoder : public MediaDecoder {
+class MediaContentType;
+
+class FlacDecoder : public MediaDecoder
+{
 public:
   // MediaDecoder interface.
   explicit FlacDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
@@ -21,8 +24,7 @@ public:
   // Returns true if the Flac backend is pref'ed on, and we're running on a
   // platform that is likely to have decoders for the format.
   static bool IsEnabled();
-  static bool CanHandleMediaType(const nsACString& aType,
-                                 const nsAString& aCodecs);
+  static bool IsSupportedType(const MediaContentType& aContentType);
 };
 
 } // namespace mozilla
