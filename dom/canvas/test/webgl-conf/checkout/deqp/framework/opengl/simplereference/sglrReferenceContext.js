@@ -72,8 +72,7 @@ goog.scope(function() {
      */
     sglrReferenceContext.GLU_EXPECT_NO_ERROR = function(error, message) {
         if (error !== gl.NONE) {
-            console.log('Assertion failed message:' + message);
-            // throw new Error(message);
+            bufferedLogToConsole('Assertion failed message:' + message);
         }
     };
 
@@ -1328,6 +1327,7 @@ goog.scope(function() {
         /** @type {number} */ this.m_blendFactorSrcAlpha = gl.ONE;
         /** @type {number} */ this.m_blendFactorDstAlpha = gl.ZERO;
         /** @type {Array<number>} */ this.m_blendColor = [0, 0, 0, 0];
+        /** @type {boolean} */ this.m_sRGBUpdateEnabled = true;
         /** @type {Array<boolean>} */ this.m_colorMask = [true, true, true, true];
         /** @type {boolean} */ this.m_depthMask = true;
         /** @type {sglrReferenceContext.VertexArray} */ this.m_defaultVAO = new sglrReferenceContext.VertexArray(this.m_limits.maxVertexAttribs);
@@ -3132,7 +3132,8 @@ goog.scope(function() {
         if (hasColor0 && (buffers & gl.COLOR_BUFFER_BIT) != 0) {
             /** @type {Array<number>} */ var colorArea = deMath.intersect(baseArea, sglrReferenceContext.getBufferRect(colorBuf0));
             access = colorBuf0.getSubregion(colorArea);
-            /** @type {Array<number>} */ var c = this.m_clearColor;
+            /** @type {boolean} */ var isSRGB = colorBuf0.raw().getFormat().isSRGB();
+            /** @type {Array<number>} */ var c = (isSRGB && this.m_sRGBUpdateEnabled) ? tcuTextureUtil.linearToSRGB(this.m_clearColor) : this.m_clearColor;
             /** @type {boolean} */ var maskUsed = !this.m_colorMask[0] || !this.m_colorMask[1] || !this.m_colorMask[2] || !this.m_colorMask[3];
             /** @type {boolean} */ var maskZero = !this.m_colorMask[0] && !this.m_colorMask[1] && !this.m_colorMask[2] && !this.m_colorMask[3];
 
@@ -3255,14 +3256,18 @@ goog.scope(function() {
             if (!colorBuf.isEmpty() && !maskZero) {
                 /** @type {Array<number>} */ var colorArea = deMath.intersect(baseArea, sglrReferenceContext.getBufferRect(colorBuf));
                 access = colorBuf.getSubregion(colorArea);
+                var color = value;
+
+                if (this.m_sRGBUpdateEnabled && access.raw().getFormat().isSRGB())
+                    color = tcuTextureUtil.linearToSRGB(color);
 
                 if (!maskUsed)
-                    access.clear(value);
+                    access.clear(color);
                 else {
-                for (var y = 0; y < access.raw().getDepth(); y++)
-                    for (var x = 0; x < access.raw().getHeight(); x++)
-                        for (var s = 0; s < access.getNumSamples(); s++)
-                            access.raw().setPixel(tcuTextureUtil.select(value, access.raw().getPixel(s, x, y), this.m_colorMask), s, x, y);
+                    for (var y = 0; y < access.raw().getDepth(); y++)
+                        for (var x = 0; x < access.raw().getHeight(); x++)
+                            for (var s = 0; s < access.getNumSamples(); s++)
+                                access.raw().setPixel(tcuTextureUtil.select(color, access.raw().getPixel(s, x, y), this.m_colorMask), s, x, y);
                 }
             }
         } else {
@@ -3938,7 +3943,7 @@ goog.scope(function() {
                                                         sFilter, sFilter, 0.0 /* lod threshold */, false /* non-normalized coords */);
             /** @type {boolean} */ var srcIsSRGB = src.getFormat().order == tcuTexture.ChannelOrder.sRGB || src.getFormat().order == tcuTexture.ChannelOrder.sRGBA;
             /** @type {boolean} */ var dstIsSRGB = dst.getFormat().order == tcuTexture.ChannelOrder.sRGB || dst.getFormat().order == tcuTexture.ChannelOrder.sRGBA;
-            /** @type {boolean} */ var convertSRGB = false;
+            /** @type {boolean} */ var convertSRGB = this.m_sRGBUpdateEnabled;
 
             // \note We don't check for unsupported conversions, unlike spec requires.
 
@@ -4681,7 +4686,7 @@ goog.scope(function() {
                     dst.setPixel(src.resolveMultisamplePixel(x+xo, y+yo), xo, yo);
                 }
             }
-	} else {
+        } else {
             this.setError(gl.INVALID_ENUM);
         }
     }
@@ -4727,7 +4732,7 @@ goog.scope(function() {
                     dst.setPixel(src.resolveMultisamplePixel(x+xo, y+yo), xo+xoffset, yo+yoffset);
                 }
             }
-	} else if (target == gl.TEXTURE_CUBE_MAP_NEGATIVE_X ||
+        } else if (target == gl.TEXTURE_CUBE_MAP_NEGATIVE_X ||
                    target == gl.TEXTURE_CUBE_MAP_POSITIVE_X ||
                    target == gl.TEXTURE_CUBE_MAP_NEGATIVE_Y ||
                    target == gl.TEXTURE_CUBE_MAP_POSITIVE_Y ||

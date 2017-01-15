@@ -800,9 +800,9 @@ deMath.shiftLeft = function(value, steps) {
  */
 deMath.shiftLeftVecScalar = function(a, b) {
     var dst = [];
-	for (var i = 0; i < a.length; i++)
-		dst.push(deMath.shiftLeft(a[i], b));
-	return dst;
+    for (var i = 0; i < a.length; i++)
+        dst.push(deMath.shiftLeft(a[i], b));
+    return dst;
 };
 
 /**
@@ -846,9 +846,9 @@ deMath.shiftRight = function(value, steps) {
  */
 deMath.shiftRightVecScalar = function(a, b) {
     var dst = [];
-	for (var i = 0; i < a.length; i++)
-		dst.push(deMath.shiftRight(a[i], b));
-	return dst;
+    for (var i = 0; i < a.length; i++)
+        dst.push(deMath.shiftRight(a[i], b));
+    return dst;
 };
 
 /** deMath.logicalAndBool over two arrays of booleans
