@@ -7,7 +7,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsServiceManagerUtils.h"
-#include "nsObjCExceptions.h"
 
 #include "nsIPrintingPromptService.h"
 #include "nsIFactory.h"
@@ -38,8 +37,6 @@ nsresult nsPrintingPromptService::Init()
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy *parent, nsIWebBrowserPrint *webBrowserPrint, nsIPrintSettings *printSettings)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
   if (dlgPrint) {
@@ -48,8 +45,6 @@ nsPrintingPromptService::ShowPrintDialog(mozIDOMWindowProxy *parent, nsIWebBrows
   }
 
   return NS_ERROR_FAILURE;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP 
@@ -68,7 +63,6 @@ nsPrintingPromptService::ShowProgress(mozIDOMWindowProxy*      parent,
 NS_IMETHODIMP 
 nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent, nsIPrintSettings *printSettings, nsIObserver *aObs)
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
   nsCOMPtr<nsIPrintDialogService> dlgPrint(do_GetService(
                                            NS_PRINTDIALOGSERVICE_CONTRACTID));
   if (dlgPrint) {
@@ -76,8 +70,6 @@ nsPrintingPromptService::ShowPageSetup(mozIDOMWindowProxy *parent, nsIPrintSetti
   }
 
   return NS_ERROR_FAILURE;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
 NS_IMETHODIMP 
