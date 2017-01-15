@@ -129,6 +129,15 @@ goog.scope(function() {
         }
     };
 
+    es3fApiCase.ApiCase.prototype.expectThrowNoError = function(f) {
+        try {
+            f();
+            this.testFailed("should have thrown exception");
+        } catch (e) {
+            this.expectError(this.m_gl.NO_ERROR);
+        }
+    }
+
     /**
     * Base class for all the API tests.
     * @constructor

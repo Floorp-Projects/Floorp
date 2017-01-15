@@ -109,10 +109,10 @@ if (!gl) {
   var maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
   gl.invalidateSubFramebuffer(gl.READ_FRAMEBUFFER, [gl.COLOR_ATTACHMENT0 + maxColorAttachments], 5, 5, 10, 10);
   wtu.glErrorShouldBe(gl, [gl.INVALID_OPERATION, gl.INVALID_ENUM],
-      "calling invalidateSubFramebuffer to invalidate a COLOR_ATTACHMENT that exceeds MAX_COLOR_ATTACHMENT should generate INVALID_OPERATION.");
+      "calling invalidateSubFramebuffer to invalidate a COLOR_ATTACHMENT that exceeds MAX_COLOR_ATTACHMENT should generate INVALID_ENUM or INVALID_OPERATION.");
   gl.invalidateFramebuffer(gl.READ_FRAMEBUFFER, [gl.COLOR_ATTACHMENT0 + maxColorAttachments]);
   wtu.glErrorShouldBe(gl, [gl.INVALID_OPERATION, gl.INVALID_ENUM],
-      "calling invalidateFramebuffer to invalidate a COLOR_ATTACHMENT that exceeds MAX_COLOR_ATTACHMENT should generate INVALID_OPERATION.");
+      "calling invalidateFramebuffer to invalidate a COLOR_ATTACHMENT that exceeds MAX_COLOR_ATTACHMENT should generate INVALID_ENUM or INVALID_OPERATION.");
 
   // invalidate the default framebuffer
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);

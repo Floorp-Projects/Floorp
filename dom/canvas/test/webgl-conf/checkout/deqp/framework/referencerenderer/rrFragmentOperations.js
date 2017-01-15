@@ -189,6 +189,21 @@ rrFragmentOperations.executeDepthCompare = function(inputFragments, depthFunc, d
     /**
      * @param {function(number=,number=):boolean} expression
      */
+    var convertToDepthBuffer = false;
+
+    var access;
+    if (depthBuffer.getFormat().type != tcuTexture.ChannelType.FLOAT &&
+        depthBuffer.getFormat().type != tcuTexture.ChannelType.FLOAT_UNSIGNED_INT_24_8_REV) {
+        access = new tcuTexture.PixelBufferAccess({
+            format: depthBuffer.getFormat(),
+            width: 1,
+            height: 1,
+            depth: 1,
+            data: new ArrayBuffer(8)
+        });
+        convertToDepthBuffer = true;
+    }
+
     var sample_register_depth_compare = function(expression) {
       for (var i = 0; i < inputFragments.length; i++) {
             var frag = inputFragments[i];
@@ -196,7 +211,16 @@ rrFragmentOperations.executeDepthCompare = function(inputFragments, depthFunc, d
                 var fragSampleNdx = 0;
                 var depthBufferValue = depthBuffer.getPixDepth(fragSampleNdx, frag.pixelCoord[0], frag.pixelCoord[1]);
                 var sampleDepthFloat = frag.sampleDepths[fragSampleNdx];
-                var sampleDepth = deMath.clamp(sampleDepthFloat, 0.0, 1.0);
+
+                var sampleDepth;
+                if (convertToDepthBuffer) {
+                    /* convert input float to target buffer format for comparison */
+                    access.setPixDepth(sampleDepthFloat, 0, 0, 0);
+                    sampleDepth = access.getPixDepth(0, 0, 0);
+                } else {
+                    sampleDepth = deMath.clamp(sampleDepthFloat, 0.0, 1.0);
+                }
+
                 frag.depthPassed = expression(sampleDepth, depthBufferValue);
             }
         }
