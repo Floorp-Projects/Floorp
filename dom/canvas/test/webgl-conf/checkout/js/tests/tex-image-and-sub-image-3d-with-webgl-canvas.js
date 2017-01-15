@@ -85,7 +85,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
       ctx.canvas.height = 2;
       setCanvasToRedGreen(ctx);
     }
-  
+
     function runOneIteration(canvas, flipY, program, bindingTarget, opt_texture)
     {
         debug('Testing ' + flipY + ' bindingTarget=' + (bindingTarget == gl.TEXTURE_3D ? 'TEXTURE_3D' : 'TEXTURE_2D_ARRAY') +
@@ -113,7 +113,8 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         // Initialize the texture to black first
         gl.texImage3D(bindingTarget, 0, gl[internalFormat], canvas.width, canvas.height, 1 /* depth */, 0,
                       gl[pixelFormat], gl[pixelType], null);
-        gl.texSubImage3D(bindingTarget, 0, 0, 0, 0, gl[pixelFormat], gl[pixelType], canvas);
+        gl.texSubImage3D(bindingTarget, 0, 0, 0, 0, canvas.width, canvas.height, 1 /* depth */,
+                         gl[pixelFormat], gl[pixelType], canvas);
 
         var width = gl.canvas.width;
         var height = gl.canvas.height;

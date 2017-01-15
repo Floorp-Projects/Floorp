@@ -43,6 +43,7 @@ function generateTest(pixelFormat, pixelType, prologue) {
     var videos = [
       { src: "../resources/red-green.mp4"         , type: 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"', },
       { src: "../resources/red-green.webmvp8.webm", type: 'video/webm; codecs="vp8, vorbis"',           },
+      { src: "../resources/red-green.webmvp9.webm", type: 'video/webm; codecs="vp9"',                   },
       { src: "../resources/red-green.theora.ogv",   type: 'video/ogg; codecs="theora, vorbis"',         },
     ];
 

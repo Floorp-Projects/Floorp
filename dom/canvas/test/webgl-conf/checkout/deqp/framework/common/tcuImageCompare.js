@@ -123,9 +123,10 @@ tcuImageCompare.computeScaleAndBias = function(reference, result) {
  * @param {tcuTexture.ConstPixelBufferAccess} result Result image
  * @param {Array<number>} threshold Maximum allowed difference
  * @param {tcuImageCompare.CompareLogMode=} logMode
+ * @param {Array< Array<number> >} skipPixels pixels that are skipped comparison
  * @return {boolean} true if comparison passes, false otherwise
  */
-tcuImageCompare.intThresholdCompare = function(imageSetName, imageSetDesc, reference, result, threshold, logMode) {
+ tcuImageCompare.intThresholdCompare = function(imageSetName, imageSetDesc, reference, result, threshold, logMode, skipPixels) {
     var width = reference.getWidth();
     var height = reference.getHeight();
     var depth = reference.getDepth();
@@ -141,7 +142,19 @@ tcuImageCompare.intThresholdCompare = function(imageSetName, imageSetDesc, refer
     for (var z = 0; z < depth; z++) {
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
-            var refPix = reference.getPixelInt(x, y, z);
+                if (skipPixels && skipPixels.length > 0) {
+                    var skip = false;
+                    for (var ii = 0; ii < skipPixels.length; ++ii) {
+                        var refZ = (skipPixels[ii].length > 2 ? skipPixels[ii][2] : 0);
+                        if (x == skipPixels[ii][0] && y == skipPixels[ii][1] && z == refZ) {
+                            skip = true;
+                            break;
+                        }
+                    }
+                    if (skip)
+                        continue;
+                }
+                var refPix = reference.getPixelInt(x, y, z);
                 var cmpPix = result.getPixelInt(x, y, z);
 
                 var diff = deMath.absDiff(refPix, cmpPix);
@@ -418,10 +431,11 @@ tcuImageCompare.floatThresholdCompare = function(imageSetName, imageSetDesc, ref
  * @param {tcuSurface.Surface} result Result image
  * @param {Array<number>} threshold Maximum allowed difference
  * @param {tcuImageCompare.CompareLogMode=} logMode
+ * @param {Array< Array<number> >} skipPixels pixels that are skipped comparison
  * @return {boolean} true if comparison passes, false otherwise
  */
-tcuImageCompare.pixelThresholdCompare = function(imageSetName, imageSetDesc, reference, result, threshold, logMode) {
-    return tcuImageCompare.intThresholdCompare(imageSetName, imageSetDesc, reference.getAccess(), result.getAccess(), threshold, logMode);
+tcuImageCompare.pixelThresholdCompare = function(imageSetName, imageSetDesc, reference, result, threshold, logMode, skipPixels) {
+    return tcuImageCompare.intThresholdCompare(imageSetName, imageSetDesc, reference.getAccess(), result.getAccess(), threshold, logMode, skipPixels);
 };
 
 /**

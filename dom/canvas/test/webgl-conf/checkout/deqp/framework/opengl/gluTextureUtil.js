@@ -229,6 +229,37 @@ gluTextureUtil.getInternalFormat = function(texFormat) {
 };
 
 /**
+ * Enable WEBGL_compressed_texture_etc support if available, by merging it
+ * into the WebGL2RenderingContext.
+ *
+ * This function may be called many times.
+ *
+ * @return {boolean} True if enabled.
+ */
+gluTextureUtil.enableCompressedTextureETC = (function() {
+    var enabled = undefined;
+    return function() {
+        if (enabled === undefined) {
+            enabled = false;
+
+            var WEBGL_compressed_texture_etc = gl.getExtension("WEBGL_compressed_texture_etc");
+            if (WEBGL_compressed_texture_etc) {
+                // Extend gl with enums from WEBGL_compressed_texture_etc
+                // (if it doesn't already have the etc texture formats).
+                var proto = Object.getPrototypeOf(WEBGL_compressed_texture_etc);
+                for (var prop in proto) {
+                    if (proto.hasOwnProperty(prop)) {
+                        gl[prop] = proto[prop];
+                    }
+                }
+                enabled = true;
+            }
+        }
+        return enabled;
+    };
+})();
+
+/**
  * Map generic compressed format to GL compressed format enum.
  *
  * Maps generic compressed format to GL compressed format enum value.

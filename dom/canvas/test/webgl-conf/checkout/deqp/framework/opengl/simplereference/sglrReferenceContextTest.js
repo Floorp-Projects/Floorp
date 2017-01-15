@@ -158,7 +158,7 @@ goog.scope(function() {
         ctx.bindRenderbuffer(gl.RENDERBUFFER, rbo);
         ctx.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, width, height);
         ctx.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, rbo);
-        console.log('Framebuffer status: ' + (ctx.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE));
+        bufferedLogToConsole('Framebuffer status: ' + (ctx.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE));
         ctx.clearColor(1, 0, 0, 1);
         ctx.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
         var pixels = new tcuSurface.Surface(width, height);

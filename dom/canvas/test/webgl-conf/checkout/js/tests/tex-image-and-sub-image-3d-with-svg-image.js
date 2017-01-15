@@ -79,7 +79,8 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         // Initialize the texture to black first
         gl.texImage3D(bindingTarget, 0, gl[internalFormat], image.width, image.height, 1 /* depth */, 0,
                       gl[pixelFormat], gl[pixelType], null);
-        gl.texSubImage3D(bindingTarget, 0, 0, 0, 0, gl[pixelFormat], gl[pixelType], image);
+        gl.texSubImage3D(bindingTarget, 0, 0, 0, 0, image.width, image.height, 1 /* depth */,
+                         gl[pixelFormat], gl[pixelType], image);
 
         // Draw the triangles
         wtu.clearAndDrawUnitQuad(gl, [0, 0, 0, 255]);
