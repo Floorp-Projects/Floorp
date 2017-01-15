@@ -43,6 +43,6 @@ bvec3 lt(in ivec3 a, in ivec3 b)
 void main (void)
 {
 	vec3 c = floor(10.0 * color.rgb - 4.5);   // round to the nearest integer
-	vec3 result = vec3(lt(ivec3(c), ivec3(0))); 
+	vec3 result = vec3(lt(ivec3(c), ivec3(0)));
 	gl_FragColor = vec4(result, 1.0);
 }
