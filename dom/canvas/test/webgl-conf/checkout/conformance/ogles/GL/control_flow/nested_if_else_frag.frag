@@ -31,7 +31,7 @@ varying vec4 color;
 void main (void)
 {
 	int setval = 30;
-	
+
 	if(--setval!=29)
 		if( (setval+=11) == 40)
 			if(setval/4 == 11)

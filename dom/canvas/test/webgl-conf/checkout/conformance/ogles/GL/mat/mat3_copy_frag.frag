@@ -37,9 +37,9 @@ void main (void)
 {
 	float x;
 	// Declare a 3 by 3 matrix with unique elements.
-	mat3 a = mat3( 1.0, 2.0, 3.0,  
-	               4.0, 5.0, 6.0,  
-	               7.0, 8.0, 9.0); 
+	mat3 a = mat3( 1.0, 2.0, 3.0,
+	               4.0, 5.0, 6.0,
+	               7.0, 8.0, 9.0);
 
 	// Copy the matrix to another non-const matrix.
 	mat3 b = a;
@@ -60,7 +60,7 @@ void main (void)
 	bool rows = true;
 	x = b[0][0] + b[1][0] + b[2][0];
 	if( x < 12.0-ERROR_EPSILON || x > 12.0+ERROR_EPSILON ) rows = false;
-	x = b[0][1] + b[1][1] + b[2][1]; 
+	x = b[0][1] + b[1][1] + b[2][1];
 	if(x < 15.0-ERROR_EPSILON || x > 15.0+ERROR_EPSILON ) rows = false;
 	x = b[0][2] + b[1][2] + b[2][2];
 	if(x < 18.0-ERROR_EPSILON || x > 18.0+ERROR_EPSILON ) rows = false;

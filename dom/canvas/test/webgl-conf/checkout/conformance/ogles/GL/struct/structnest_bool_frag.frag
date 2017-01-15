@@ -49,7 +49,7 @@ void main (void)
 
 	if( (s.nest_a.a == true) && (s.nest_a.nest_b.b == false))
 	  gray=1.0;
-	else 
+	else
           gray =0.0;
 	gl_FragColor = vec4(gray, gray, gray, 1.0);
 }
