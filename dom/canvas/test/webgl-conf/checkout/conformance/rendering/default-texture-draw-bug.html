@@ -62,7 +62,7 @@ function runDrawTests(drawType) {
     debug("Test that drawing with a texture when no textures have been bound gives the expected black output");
     canvas.width = 50; canvas.height = 50;
     gl.viewport(0, 0, canvas.width, canvas.height);
-    
+
     // Set up a program that will draw with a texture
     var program = wtu.setupNoTexCoordTextureProgram(gl);
 

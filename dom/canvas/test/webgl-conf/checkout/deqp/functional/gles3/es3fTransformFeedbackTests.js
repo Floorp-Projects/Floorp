@@ -1034,7 +1034,7 @@ goog.scope(function() {
                 }
                 // Fall through
             case es3fTransformFeedbackTests.State.FINISH:
-                if (!this.m_testPassed) testFailedOptions('Result comparison failed', false);
+                if (!this.m_testPassed) testFailedOptions('Result comparison failed for iteration ' + s.iterations[this.m_iterNdx - 1], false);
                 else testPassedOptions('Result comparison succeeded', true);
                 return tcuTestCase.IterateResult.STOP;
         }
@@ -1187,7 +1187,7 @@ goog.scope(function() {
             // Bind buffer for reading.
             gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.m_outputBuffers[bufferNdx]);
 
-            gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, buffer);
+            gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, new Uint8Array(buffer));
 
             // Verify all output variables that are written to this buffer.
             for (var i = 0; i < this.m_transformFeedbackOutputs.length; ++i) {
@@ -1903,10 +1903,8 @@ goog.scope(function() {
             es3fTransformFeedbackTests.init();
             if (range)
                 state.setRange(range);
-//            tcuTestCase.runner.runCallback(tcuTestCase.runTestCases);
             tcuTestCase.runTestCases();
         } catch (err) {
-            console.log(err);
             bufferedLogToConsole(err);
             tcuTestCase.runner.terminate();
         }
