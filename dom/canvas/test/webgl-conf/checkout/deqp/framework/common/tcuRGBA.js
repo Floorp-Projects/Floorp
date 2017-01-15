@@ -106,6 +106,19 @@ var deMath = framework.delibs.debase.deMath;
     };
 
     /**
+     * @param {Array<number>} v
+     * @return {tcuRGBA.RGBA}
+     */
+    tcuRGBA.newRGBAFromVec = function (v) {
+        var r = deMath.clamp(v[0] * 255.0, 0, 255);
+        var g = deMath.clamp(v[1] * 255.0, 0, 255);
+        var b = deMath.clamp(v[2] * 255.0, 0, 255);
+        var a = deMath.clamp(v[3] * 255.0, 0, 255);
+
+        return new tcuRGBA.RGBA([r, g, b, a]);
+    };
+
+    /**
      * @param {number} v
      */
     tcuRGBA.RGBA.prototype.setRed = function(v) { DE_ASSERT(deMath.deInRange32(v, 0, 255)); this.m_value[tcuRGBA.RGBA.Shift.RED] = v; };

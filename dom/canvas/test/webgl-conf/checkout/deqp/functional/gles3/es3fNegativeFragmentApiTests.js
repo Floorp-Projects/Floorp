@@ -213,13 +213,12 @@ goog.scope(function() {
             gl.endQuery(gl.TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
             this.expectError(gl.NO_ERROR);
 
-            bufferedLogToConsole('gl.INVALID_OPERATION is generated if id is 0.');
-            gl.beginQuery(gl.ANY_SAMPLES_PASSED, null);
-            this.expectError(gl.INVALID_OPERATION);
+            bufferedLogToConsole('An exception is thrown if the name is null.');
+            this.expectThrowNoError(function() {
+                gl.beginQuery(gl.ANY_SAMPLES_PASSED, null);
+            });
 
-            bufferedLogToConsole('gl.INVALID_OPERATION is generated if id not a name returned from a previous call to glGenQueries, or if such a name has since been deleted with gl.deleteQuery.');
-            gl.beginQuery(gl.ANY_SAMPLES_PASSED, null);
-            this.expectError(gl.INVALID_OPERATION);
+            bufferedLogToConsole('gl.INVALID_OPERATION is generated if the name has since been deleted with gl.deleteQuery.');
             gl.deleteQuery(ids[2]);
             this.expectError(gl.NO_ERROR);
             gl.beginQuery(gl.ANY_SAMPLES_PASSED, ids[2]);
@@ -281,9 +280,10 @@ goog.scope(function() {
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('wait_sync', 'Invalid gl.waitSync() usage', gl, function() {
             /** @type{WebGLSync} */ var sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
 
-            bufferedLogToConsole('gl.INVALID_VALUE is generated if sync is not the name of a sync object.');
-            gl.waitSync(null, 0, gl.TIMEOUT_IGNORED);
-            this.expectError(gl.INVALID_VALUE);
+            bufferedLogToConsole('An exception is thrown if sync is null.');
+            this.expectThrowNoError(function() {
+                gl.waitSync(null, 0, gl.TIMEOUT_IGNORED);
+            });
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if flags is not zero.');
             gl.waitSync(sync, 0x0010, gl.TIMEOUT_IGNORED);
@@ -299,12 +299,13 @@ goog.scope(function() {
         testGroup.addChild(new es3fApiCase.ApiCaseCallback('client_wait_sync', 'Invalid gl.clientWaitSync() usage', gl, function() {
             /** @type{WebGLSync} */ var sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
 
-            bufferedLogToConsole('gl.INVALID_VALUE is generated if sync is not the name of an existing sync object.');
-            gl.clientWaitSync (null, 0, 10000);
-            this.expectError(gl.INVALID_VALUE);
+            bufferedLogToConsole('An exception is thrown if sync is null.');
+            this.expectThrowNoError(function() {
+                gl.clientWaitSync (null, 0, 0);
+            });
 
             bufferedLogToConsole('gl.INVALID_VALUE is generated if flags contains any unsupported flag.');
-            gl.clientWaitSync(sync, 0x00000004, 10000);
+            gl.clientWaitSync(sync, 0x00000004, 0);
             this.expectError(gl.INVALID_VALUE);
 
             gl.deleteSync(sync);

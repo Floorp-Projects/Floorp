@@ -268,7 +268,17 @@ function runTestIteration2D(gl, testCase, useUnpackBuffer) {
   }
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, testCase.width, testCase.height, 0,
                 gl.RGB, gl.UNSIGNED_BYTE, useUnpackBuffer ? 0 : array);
-  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texImage2D with correct buffer size should succeed");
+  if (testCase.validUnpackParams2D) {
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texImage2D with correct buffer size should succeed");
+  } else {
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid unpack params combination");
+    if (!useUnpackBuffer) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, testCase.width, testCase.height, 0,
+                    gl.RGB, gl.UNSIGNED_BYTE, null);
+      wtu.glErrorShouldBe(gl, gl.NO_ERROR, "unpack param constraints do not apply if no data are uploaded.");
+    }
+    return;
+  }
 
   var buffer1 = unpackPixels(array, testCase.width, testCase.height, 1, imageSizes);
   var buffer2 = getPixelsFromTexture2D(gl, tex, 0, 0, testCase.width, testCase.height);
@@ -300,7 +310,12 @@ function runTestIteration2D(gl, testCase, useUnpackBuffer) {
   }
   gl.texSubImage2D(gl.TEXTURE_2D, 0, testCase.xoffset, testCase.yoffset, subWidth, subHeight,
                    gl.RGB, gl.UNSIGNED_BYTE, useUnpackBuffer ? 0 : array);
-  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texSubImage2D with correct buffer size should succeed");
+  if (testCase.validUnpackParamsForSub2D) {
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texSubImage2D with correct buffer size should succeed");
+  } else {
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid unpack params combination");
+    return;
+  }
 
   var buffer1 = unpackPixels(array, subWidth, subHeight, 1, imageSizes);
   var buffer2 = getPixelsFromTexture2D(
@@ -361,7 +376,17 @@ function runTestIteration3D(gl, testCase, useUnpackBuffer) {
   }
   gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGB8, testCase.width, testCase.height, testCase.depth, 0,
                 gl.RGB, gl.UNSIGNED_BYTE, useUnpackBuffer ? 0 : array);
-  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texImage3D with correct buffer size should succeed");
+  if (testCase.validUnpackParams3D) {
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texImage3D with correct buffer size should succeed");
+  } else {
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid unpack params combination");
+    if (!useUnpackBuffer) {
+      gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGB8, testCase.width, testCase.height, testCase.depth, 0,
+                    gl.RGB, gl.UNSIGNED_BYTE, null);
+      wtu.glErrorShouldBe(gl, gl.NO_ERROR, "unpack param constraints do not apply if no data are uploaded.");
+    }
+    return;
+  }
 
   var buffer1 = unpackPixels(array, testCase.width, testCase.height, testCase.depth, imageSizes);
   var buffer2 = getPixelsFromTexture3D(
@@ -396,7 +421,12 @@ function runTestIteration3D(gl, testCase, useUnpackBuffer) {
   gl.texSubImage3D(gl.TEXTURE_3D, 0, testCase.xoffset, testCase.yoffset, testCase.zoffset,
                    subWidth, subHeight, subDepth,
                    gl.RGB, gl.UNSIGNED_BYTE, useUnpackBuffer ? 0 : array);
-  wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texSubImage3D with correct buffer size should succeed");
+  if (testCase.validUnpackParamsForSub3D) {
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "texSubImage3D with correct buffer size should succeed");
+  } else {
+    wtu.glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid unpack params combination");
+    return;
+  }
 
   buffer1 = unpackPixels(array, subWidth, subHeight, subDepth, imageSizes);
   buffer2 = getPixelsFromTexture3D(gl, tex, testCase.xoffset, testCase.yoffset, testCase.zoffset,
@@ -422,85 +452,137 @@ function runTests() {
   // For 2D cases, depth, zoffset, imageHeight, skipImages are ignored.
   var testCases = [
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 1, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 5, height: 7, depth: 4, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 2, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 2, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 6, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 4, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 5, height: 8, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 8, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 8, rowLength: 0, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
 
     // ROW_LENGTH == width
     { width: 10, height: 9, depth: 2, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 10, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 4, rowLength: 10, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
 
     // ROW_LENGTH < width
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 1, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 2, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 2, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 4, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 8, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 8, rowLength: 4, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: false, validUnpackParams3D: false },
 
     // ROW_LENGTH > width
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 6, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 1, rowLength: 6, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 2, rowLength: 7, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 2, rowLength: 7, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 8, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 4, rowLength: 8, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 5, height: 7, depth: 5, xoffset: 2, yoffset: 3, zoffset: 2,
-      alignment: 8, rowLength: 9, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 8, rowLength: 9, imageHeight: 0, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
 
     // IMAGE_HEIGHT == height
     { width: 6, height: 7, depth: 4, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 8, rowLength: 0, imageHeight: 7, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 8, rowLength: 0, imageHeight: 7, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
 
     // IMAGE_HEIGHT < height
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 1, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 2, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 2, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 4, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 8, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 8, rowLength: 0, imageHeight: 6, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: false },
 
     // IMAGE_HEIGHT > height
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 0, imageHeight: 8, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 1, rowLength: 0, imageHeight: 8, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 6, height: 7, depth: 3, xoffset: 2, yoffset: 2, zoffset: 1,
-      alignment: 2, rowLength: 0, imageHeight: 9, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 2, rowLength: 0, imageHeight: 9, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 7, height: 7, depth: 3, xoffset: 2, yoffset: 4, zoffset: 1,
-      alignment: 4, rowLength: 0, imageHeight: 10, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 4, rowLength: 0, imageHeight: 10, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
     { width: 8, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 8, rowLength: 0, imageHeight: 11, skipPixels: 0, skipRows: 0, skipImages: 0 },
+      alignment: 8, rowLength: 0, imageHeight: 11, skipPixels: 0, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: true, validUnpackParamsForSub3D: true },
 
     // SKIP parameters
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 0, imageHeight: 0, skipPixels: 10, skipRows: 0, skipImages: 0 },
+      alignment: 1, rowLength: 0, imageHeight: 0, skipPixels: 10, skipRows: 0, skipImages: 0,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 2, rowLength: 0, imageHeight: 0, skipPixels: 2, skipRows: 8, skipImages: 0 },
+      alignment: 2, rowLength: 0, imageHeight: 0, skipPixels: 2, skipRows: 8, skipImages: 0,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 0, imageHeight: 0, skipPixels: 3, skipRows: 5, skipImages: 1 },
+      alignment: 4, rowLength: 0, imageHeight: 0, skipPixels: 3, skipRows: 5, skipImages: 1,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 8, rowLength: 0, imageHeight: 0, skipPixels: 7, skipRows: 0, skipImages: 2 },
+      alignment: 8, rowLength: 0, imageHeight: 0, skipPixels: 7, skipRows: 0, skipImages: 2,
+      validUnpackParams2D: false, validUnpackParams3D: false },
 
     // all mixed.
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 1, rowLength: 6, imageHeight: 6, skipPixels: 3, skipRows: 5, skipImages: 1 },
+      alignment: 1, rowLength: 6, imageHeight: 6, skipPixels: 3, skipRows: 5, skipImages: 1,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 2, rowLength: 4, imageHeight: 8, skipPixels: 7, skipRows: 2, skipImages: 2 },
+      alignment: 2, rowLength: 4, imageHeight: 8, skipPixels: 7, skipRows: 2, skipImages: 2,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 5, height: 7, depth: 3, xoffset: 2, yoffset: 3, zoffset: 1,
-      alignment: 4, rowLength: 10, imageHeight: 2, skipPixels: 0, skipRows: 3, skipImages: 1 },
+      alignment: 4, rowLength: 10, imageHeight: 2, skipPixels: 0, skipRows: 3, skipImages: 1,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: false },
     { width: 1, height: 1, depth: 1, xoffset: 0, yoffset: 0, zoffset: 0,
-      alignment: 2, rowLength: 3, imageHeight: 2, skipPixels: 3, skipRows: 5, skipImages: 1 },
+      alignment: 2, rowLength: 3, imageHeight: 2, skipPixels: 3, skipRows: 5, skipImages: 1,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 17, height: 6, depth: 4, xoffset: 12, yoffset: 3, zoffset: 2,
-      alignment: 2, rowLength: 4, imageHeight: 8, skipPixels: 1, skipRows: 4, skipImages: 2 },
+      alignment: 2, rowLength: 4, imageHeight: 8, skipPixels: 1, skipRows: 4, skipImages: 2,
+      validUnpackParams2D: false, validUnpackParams3D: false },
     { width: 8, height: 17, depth: 3, xoffset: 2, yoffset: 13, zoffset: 1,
-      alignment: 4, rowLength: 9, imageHeight: 2, skipPixels: 0, skipRows: 3, skipImages: 1 },
+      alignment: 4, rowLength: 9, imageHeight: 2, skipPixels: 0, skipRows: 3, skipImages: 1,
+      validUnpackParams2D: true, validUnpackParamsForSub2D: true,
+      validUnpackParams3D: false },
   ];
 
   // Upload textures from client data

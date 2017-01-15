@@ -30,7 +30,7 @@ public:
 
   ServoStyleSheet* GetParentObject() final { return mStyleSheet; }
 
-  css::Rule* IndexedGetter(uint32_t aIndex, bool& aFound) final;
+  nsIDOMCSSRule* IndexedGetter(uint32_t aIndex, bool& aFound) final;
   uint32_t Length() final { return mRules.Length(); }
 
   void DropReference();

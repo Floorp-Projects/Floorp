@@ -172,6 +172,7 @@ setParentClass(es3fFboColorbufferTests.FboColorClearCase, es3fFboColorbufferTest
 
 es3fFboColorbufferTests.FboColorClearCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
 es3fFboColorbufferTests.FboColorClearCase.prototype.render = function(dst) {
@@ -226,7 +227,6 @@ es3fFboColorbufferTests.FboColorClearCase.prototype.render = function(dst) {
             var color = es3fFboColorbufferTests.randomVector(rnd, fmtInfo.valueMin, fmtInfo.valueMax);
 
             ctx.scissor(x, y, w, h);
-            ctx.clearBufferfv(gl.COLOR, 0, color);
 
             switch (fmtClass) {
                 case tcuTexture.TextureChannelClass.FLOATING_POINT:
@@ -276,6 +276,7 @@ setParentClass(es3fFboColorbufferTests.FboColorMultiTex2DCase, es3fFboColorbuffe
 es3fFboColorbufferTests.FboColorMultiTex2DCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_tex0Fmt);
         this.checkFormatSupport(this.m_tex1Fmt);
+        return true; // No exception thrown
     };
 
 es3fFboColorbufferTests.FboColorMultiTex2DCase.prototype.render = function(dst) {
@@ -397,6 +398,7 @@ setParentClass(es3fFboColorbufferTests.FboColorTexCubeCase, es3fFboColorbufferTe
 
 es3fFboColorbufferTests.FboColorTexCubeCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
 es3fFboColorbufferTests.FboColorTexCubeCase.prototype.render = function(dst) {
@@ -543,6 +545,7 @@ setParentClass(es3fFboColorbufferTests.FboColorTex2DArrayCase, es3fFboColorbuffe
 
 es3fFboColorbufferTests.FboColorTex2DArrayCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
     es3fFboColorbufferTests.FboColorTex2DArrayCase.prototype.render = function(dst) {
@@ -668,6 +671,7 @@ setParentClass(es3fFboColorbufferTests.FboColorTex3DCase, es3fFboColorbufferTest
 
 es3fFboColorbufferTests.FboColorTex3DCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     };
 
     es3fFboColorbufferTests.FboColorTex3DCase.prototype.render = function(dst) {
@@ -804,6 +808,7 @@ setParentClass(es3fFboColorbufferTests.FboBlendCase, es3fFboColorbufferTests.Fbo
 
 es3fFboColorbufferTests.FboBlendCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_format);
+        return true; // No exception thrown
     }
 
     es3fFboColorbufferTests.FboBlendCase.prototype.render = function(dst) {
@@ -941,39 +946,49 @@ es3fFboColorbufferTests.FboColorbufferTests.prototype.init = function() {
             es3fFboTestUtil.getFormatName(colorFormats[ndx]), "", colorFormats[ndx], 129, 117));
     }
 
-    // .tex2d
-    var tex2DGroup = tcuTestCase.newTest("tex2d", "Texture 2D tests");
-    this.addChild(tex2DGroup);
+    var numGroups = 6;
 
+    // .tex2d
+    var tex2DGroup = [];
+    for (var ii = 0; ii < numGroups; ++ii) {
+        tex2DGroup[ii] = tcuTestCase.newTest("tex2d", "Texture 2D tests");
+        this.addChild(tex2DGroup[ii]);
+    }
     for (var ndx = 0; ndx < colorFormats.length; ndx++) {
-        tex2DGroup.addChild(new es3fFboColorbufferTests.FboColorMultiTex2DCase(
+        tex2DGroup[ndx % numGroups].addChild(new es3fFboColorbufferTests.FboColorMultiTex2DCase(
             es3fFboTestUtil.getFormatName(colorFormats[ndx]), "", colorFormats[ndx], [129, 117], colorFormats[ndx], [99, 128]));
     }
 
     // .texcube
-    var texCubeGroup = tcuTestCase.newTest("texcube", "Texture cube map tests");
-    this.addChild(texCubeGroup);
-
+    var texCubeGroup = [];
+    for (var ii = 0; ii < numGroups; ++ii) {
+        texCubeGroup[ii] = tcuTestCase.newTest("texcube", "Texture cube map tests");
+        this.addChild(texCubeGroup[ii]);
+    }
     for (var ndx = 0; ndx < colorFormats.length; ndx++) {
-        texCubeGroup.addChild(new es3fFboColorbufferTests.FboColorTexCubeCase(
+        texCubeGroup[ndx % numGroups].addChild(new es3fFboColorbufferTests.FboColorTexCubeCase(
             es3fFboTestUtil.getFormatName(colorFormats[ndx]), "", colorFormats[ndx], [128, 128]));
     }
 
     // .tex2darray
-    var tex2DArrayGroup = tcuTestCase.newTest("tex2darray", "Texture 2D array tests");
-    this.addChild(tex2DArrayGroup);
-
+    var tex2DArrayGroup = [];
+    for (var ii = 0; ii < numGroups; ++ii) {
+        tex2DArrayGroup[ii] = tcuTestCase.newTest("tex2darray", "Texture 2D array tests");
+        this.addChild(tex2DArrayGroup[ii]);
+    }
     for (var ndx = 0; ndx < colorFormats.length; ndx++) {
-        tex2DArrayGroup.addChild(new es3fFboColorbufferTests.FboColorTex2DArrayCase(
+        tex2DArrayGroup[ndx % numGroups].addChild(new es3fFboColorbufferTests.FboColorTex2DArrayCase(
             es3fFboTestUtil.getFormatName(colorFormats[ndx]), "", colorFormats[ndx], [128, 128, 5]));
     }
 
     // .tex3d
-    var tex3DGroup = tcuTestCase.newTest("tex3d", "Texture 3D tests");
-    this.addChild(tex3DGroup);
-
+    var tex3DGroup = [];
+    for (var ii = 0; ii < numGroups; ++ii) {
+        tex3DGroup[ii] = tcuTestCase.newTest("tex3d", "Texture 3D tests");
+        this.addChild(tex3DGroup[ii]);
+    }
     for (var ndx = 0; ndx < colorFormats.length; ndx++) {
-        tex3DGroup.addChild(new es3fFboColorbufferTests.FboColorTex3DCase(
+        tex3DGroup[ndx % numGroups].addChild(new es3fFboColorbufferTests.FboColorTex3DCase(
             es3fFboTestUtil.getFormatName(colorFormats[ndx]), "", colorFormats[ndx], [128, 128, 5]));
     }
 

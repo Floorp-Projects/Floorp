@@ -48,10 +48,6 @@ NS_IMETHODIMP nsNativeMenuServiceX::CreateNativeMenuBar(nsIWidget* aParent, nsIC
 {
   NS_ASSERTION(NS_IsMainThread(), "Attempting to create native menu bar on wrong thread!");
 
-  // We currently don't support custom shortcuts (bug 429824), so we need to
-  // avoid displaying them next to menu items.
-  [NSMenuItem setUsesUserKeyEquivalents:NO];
-
   RefPtr<nsMenuBarX> mb = new nsMenuBarX();
   if (!mb)
     return NS_ERROR_OUT_OF_MEMORY;

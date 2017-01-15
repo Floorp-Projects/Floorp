@@ -50,21 +50,21 @@ struct nest
 
 void main (void)
 {
-	nest s = nest( nesta( bvec2(12, 13), bvec3(14.0, 0.0, 139.0), bvec4(25.5, 17.0, 145, 163 ), 
-                       nestb( bvec2(28, 0), bvec3(0.0, 0.0, 1.0), bvec4(0.0, 17.0, 145, 0 ) 
-                            ) 
-                            ) 
+	nest s = nest( nesta( bvec2(12, 13), bvec3(14.0, 0.0, 139.0), bvec4(25.5, 17.0, 145, 163 ),
+                       nestb( bvec2(28, 0), bvec3(0.0, 0.0, 1.0), bvec4(0.0, 17.0, 145, 0 )
+                            )
+                            )
                       );
 	float gray = 0.0;
 	if( ( s.nest_a.a1[0] ) && ( s.nest_a.a1[1] ) &&
-            ( s.nest_a.b1[0] ) && (! (s.nest_a.b1[1]) ) && ( s.nest_a.b1[2] ) && 
-            ( s.nest_a.c1[0] ) && ( s.nest_a.c1[1] ) && ( s.nest_a.c1[2] ) && ( s.nest_a.c1[3] ) && 
-            ( s.nest_a.nest_b.a2[0] ) && ( !( s.nest_a.nest_b.a2[1] ) ) && 
-            (! ( s.nest_a.nest_b.b2[0] ) ) && (! ( s.nest_a.nest_b.b2[1] ) ) && (s.nest_a.nest_b.b2[2]) && 
-            (! ( s.nest_a.nest_b.c2[0] ) ) && (s.nest_a.nest_b.c2[1]) && (s.nest_a.nest_b.c2[2]) && (! ( s.nest_a.nest_b.c2[3] ) ) 
+            ( s.nest_a.b1[0] ) && (! (s.nest_a.b1[1]) ) && ( s.nest_a.b1[2] ) &&
+            ( s.nest_a.c1[0] ) && ( s.nest_a.c1[1] ) && ( s.nest_a.c1[2] ) && ( s.nest_a.c1[3] ) &&
+            ( s.nest_a.nest_b.a2[0] ) && ( !( s.nest_a.nest_b.a2[1] ) ) &&
+            (! ( s.nest_a.nest_b.b2[0] ) ) && (! ( s.nest_a.nest_b.b2[1] ) ) && (s.nest_a.nest_b.b2[2]) &&
+            (! ( s.nest_a.nest_b.c2[0] ) ) && (s.nest_a.nest_b.c2[1]) && (s.nest_a.nest_b.c2[2]) && (! ( s.nest_a.nest_b.c2[3] ) )
           )
 	  gray=1.0;
-	else 
+	else
           gray =0.0;
 
 	gl_FragColor = vec4(gray, gray, gray, 1.0);

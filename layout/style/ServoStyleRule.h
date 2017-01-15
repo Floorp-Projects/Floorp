@@ -9,7 +9,7 @@
 #ifndef mozilla_ServoStyleRule_h
 #define mozilla_ServoStyleRule_h
 
-#include "mozilla/BindingStyleRule.h"
+#include "mozilla/css/Rule.h"
 #include "mozilla/ServoBindingTypes.h"
 
 #include "nsIDOMCSSStyleRule.h"
@@ -47,28 +47,25 @@ private:
   RefPtr<ServoDeclarationBlock> mDecls;
 };
 
-class ServoStyleRule final : public BindingStyleRule
+class ServoStyleRule final : public css::Rule
                            , public nsIDOMCSSStyleRule
 {
 public:
   explicit ServoStyleRule(already_AddRefed<RawServoStyleRule> aRawRule);
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ServoStyleRule,
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ServoStyleRule,
                                                          css::Rule)
+  NS_DECL_NSIDOMCSSRULE
   NS_DECL_NSIDOMCSSSTYLERULE
-
-  // WebIDL interface
-  uint16_t Type() const override;
-  void GetCssTextImpl(nsAString& aCssText) const override;
-  virtual nsICSSDeclaration* Style() override;
 
   RawServoStyleRule* Raw() const { return mRawRule; }
 
   // Methods of mozilla::css::Rule
   int32_t GetType() const final { return css::Rule::STYLE_RULE; }
-  using Rule::GetType;
   already_AddRefed<Rule> Clone() const final;
+  nsIDOMCSSRule* GetDOMRule() final { return this; }
+  nsIDOMCSSRule* GetExistingDOMRule() final { return this; }
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const final;
 #ifdef DEBUG
   void List(FILE* out = stdout, int32_t aIndent = 0) const final;

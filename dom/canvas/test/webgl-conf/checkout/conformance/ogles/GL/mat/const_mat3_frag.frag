@@ -37,9 +37,9 @@ void main (void)
 {
 	float x;
 	// Declare a constant 3 by 3 matrix with unique elements.
-	const mat3 a = mat3( 1.0, 2.0, 3.0,  
-	                     4.0, 5.0, 6.0,  
-	                     7.0, 8.0, 9.0); 
+	const mat3 a = mat3( 1.0, 2.0, 3.0,
+	                     4.0, 5.0, 6.0,
+	                     7.0, 8.0, 9.0);
 
 	// Check each element.
 	bool elms = true;
@@ -57,7 +57,7 @@ void main (void)
 	bool rows = true;
 	x = a[0][0] + a[1][0] + a[2][0];
 	if( x < 12.0-ERROR_EPSILON || x > 12.0+ERROR_EPSILON ) rows = false;
-	x = a[0][1] + a[1][1] + a[2][1]; 
+	x = a[0][1] + a[1][1] + a[2][1];
 	if(x < 15.0-ERROR_EPSILON || x > 15.0+ERROR_EPSILON ) rows = false;
 	x = a[0][2] + a[1][2] + a[2][2];
 	if(x < 18.0-ERROR_EPSILON || x > 18.0+ERROR_EPSILON ) rows = false;

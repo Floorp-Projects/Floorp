@@ -559,7 +559,6 @@ goog.scope(function() {
     glsFboCompletenessTests.TestBase = function(name, desc, params) {
         tcuTestCase.DeqpTest.call(this, name, desc);
         this.m_params = params;
-    //  console.log('glsFboCompletenessTests.TestBase Constructor');
     };
     glsFboCompletenessTests.TestBase.prototype = Object.create(tcuTestCase.DeqpTest.prototype);
     glsFboCompletenessTests.TestBase.prototype.constructor = glsFboCompletenessTests.TestBase;
@@ -928,7 +927,7 @@ goog.scope(function() {
                 throw new Error('Multiple attachments not supported');
             var maxAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
 
-            for (var i = 0; i < maxAttachments; ++i) {
+            for (var i = 1; i < maxAttachments; ++i) {
                 this.attachTargetToNew(gl.COLOR_ATTACHMENT0 + i, this.m_params.colornKind,
                                        glsFboUtil.ImageFormat.none(), 64, 64, builder, gl);
             }

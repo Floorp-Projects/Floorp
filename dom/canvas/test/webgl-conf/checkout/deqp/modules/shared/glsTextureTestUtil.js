@@ -598,8 +598,6 @@ glsTextureTestUtil.ProgramLibrary.prototype.getProgram = function(program) {
 
     var vertSrc = tcuStringTemplate.specialize(vertShaderTemplate, params);
     var fragSrc = tcuStringTemplate.specialize(fragShaderTemplate, params);
-    // console.log(fragSrc);
-    // console.log(vertSrc);
     var progObj = new gluShaderProgram.ShaderProgram(gl, gluShaderProgram.makeVtxFragSources(vertSrc, fragSrc));
     // if (!progObj.isOk()) {
     //     // log << *progObj;
@@ -821,8 +819,6 @@ glsTextureTestUtil.TextureRenderer.prototype.renderQuad = function(texUnit, texC
     //     log << TestLog::Message << "u_colorBias = " << params.colorBias << TestLog::EndMessage;
     // }
     var vertexArrays = [];
-    // console.log(position);
-    // console.log(texCoord);
 
     var posLoc = gl.getAttribLocation(prog, 'a_position');
     if (posLoc === -1) {
@@ -1408,11 +1404,12 @@ glsTextureTestUtil.sampleTexture3D = function(dst, src, texCoord, params) {
  * @param {tcuSurface.Surface} reference
  * @param {tcuSurface.Surface} rendered
  * @param {Array<number>} threshold
+ * @param {Array< Array<number> >} skipPixels
  *
  * @return {boolean}
  */
-glsTextureTestUtil.compareImages = function(reference, rendered, threshold) {
-    return tcuImageCompare.pixelThresholdCompare('Result', 'Image comparison result', reference, rendered, threshold, undefined /*tcu::COMPARE_LOG_RESULT*/);
+glsTextureTestUtil.compareImages = function(reference, rendered, threshold, skipPixels) {
+    return tcuImageCompare.pixelThresholdCompare('Result', 'Image comparison result', reference, rendered, threshold, undefined /*tcu::COMPARE_LOG_RESULT*/, skipPixels);
 };
 
 /**

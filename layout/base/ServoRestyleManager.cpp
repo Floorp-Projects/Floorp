@@ -30,6 +30,8 @@ ServoRestyleManager::PostRestyleEvent(Element* aElement,
                                       nsRestyleHint aRestyleHint,
                                       nsChangeHint aMinChangeHint)
 {
+  MOZ_ASSERT(!(aMinChangeHint & nsChangeHint_NeutralChange),
+             "Didn't expect explicit change hints to be neutral!");
   if (MOZ_UNLIKELY(IsDisconnected()) ||
       MOZ_UNLIKELY(PresContext()->PresShell()->IsDestroying())) {
     return;
@@ -147,8 +149,9 @@ ServoRestyleManager::RecreateStyleContexts(Element* aElement,
   // FIXME(bholley): Once we transfer ownership of the styles to the frame, we
   // can fast-reject without the FFI call by checking mServoData for null.
   nsChangeHint changeHint = Servo_TakeChangeHint(aElement);
-  if (changeHint) {
-      aChangeListToProcess.AppendChange(primaryFrame, aElement, changeHint);
+  if (changeHint & ~nsChangeHint_NeutralChange) {
+    aChangeListToProcess.AppendChange(
+      primaryFrame, aElement, changeHint & ~nsChangeHint_NeutralChange);
   }
 
   // If our change hint is reconstruct, we delegate to the frame constructor,

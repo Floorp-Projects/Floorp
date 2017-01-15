@@ -31,7 +31,7 @@ varying vec4 color;
 void main (void)
 {
 	vec3 c = 2.0 * (color.rgb - 0.5);
-	
+
 	if(c[0] > 0.0) c[0] = 1.0 * c[0];
 	if(c[0] < 0.0) c[0] = -1.0 * c[0];
 	if(c[1] > 0.0) c[1] = 1.0 * c[1];
