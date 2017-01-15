@@ -42,7 +42,7 @@
 description("Tests to check user code cannot access uninitialized data from GL resources.");
 
 var wtu = WebGLTestUtils;
-var gl = wtu.create3DContext("canvas");
+var gl = wtu.create3DContext("canvas", undefined, 2);
 if (!gl)
   testFailed("Context created.");
 else

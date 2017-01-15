@@ -641,8 +641,8 @@ HttpBaseChannel::GetUploadStream(nsIInputStream **stream)
 
 NS_IMETHODIMP
 HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
-                               const nsACString &contentType,
-                               int64_t contentLength)
+                                 const nsACString &contentTypeArg,
+                                 int64_t contentLength)
 {
   // NOTE: for backwards compatibility and for compatibility with old style
   // plugins, |stream| may include headers, specifically Content-Type and
@@ -655,12 +655,20 @@ HttpBaseChannel::SetUploadStream(nsIInputStream *stream,
     nsAutoCString method;
     bool hasHeaders;
 
-    if (contentType.IsEmpty()) {
+    // This method and ExplicitSetUploadStream mean different things by "empty
+    // content type string".  This method means "no header", but
+    // ExplicitSetUploadStream means "header with empty value".  So we have to
+    // massage the contentType argument into the form ExplicitSetUploadStream
+    // expects.
+    nsAutoCString contentType;
+    if (contentTypeArg.IsEmpty()) {
       method = NS_LITERAL_CSTRING("POST");
       hasHeaders = true;
+      contentType.SetIsVoid(true);
     } else {
       method = NS_LITERAL_CSTRING("PUT");
       hasHeaders = false;
+      contentType = contentTypeArg;
     }
     return ExplicitSetUploadStream(stream, contentType, contentLength,
                                    method, hasHeaders);
@@ -3071,8 +3079,13 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
       if (uploadChannel2) {
         nsAutoCString ctype;
         // If header is not present mRequestHead.HasHeaderValue will truncated
-        // it.
-        mRequestHead.GetHeader(nsHttp::Content_Type, ctype);
+        // it.  But we want to end up with a void string, not an empty string,
+        // because ExplicitSetUploadStream treats the former as "no header" and
+        // the latter as "header with empty string value".
+        nsresult ctypeOK = mRequestHead.GetHeader(nsHttp::Content_Type, ctype);
+        if (NS_FAILED(ctypeOK)) {
+          ctype.SetIsVoid(true);
+        }
         nsAutoCString clen;
         mRequestHead.GetHeader(nsHttp::Content_Length, clen);
         nsAutoCString method;

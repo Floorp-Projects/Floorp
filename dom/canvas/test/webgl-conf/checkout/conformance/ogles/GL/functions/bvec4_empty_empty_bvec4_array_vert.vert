@@ -89,7 +89,7 @@ bool is_all(const in bvec4 par, const in bool value)
 bool is_all(const in bvec4 array[3], const in bvec4 value)
 {
 	bool ret = true;
-	
+
 	if(array[0] != value)
 		ret = false;
 	if(array[1] != value)

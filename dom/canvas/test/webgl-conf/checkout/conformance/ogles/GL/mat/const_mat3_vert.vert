@@ -53,7 +53,7 @@ void main (void)
 	bool rows = true;
 	x = a[0][0] + a[1][0] + a[2][0];
 	if( x < 73.0-ERROR_EPSILON || x > 73.0+ERROR_EPSILON ) rows = false;
-	x = a[0][1] + a[1][1] + a[2][1]; 
+	x = a[0][1] + a[1][1] + a[2][1];
 	if(x < 146.0-ERROR_EPSILON || x > 146.0+ERROR_EPSILON ) rows = false;
 	x = a[0][2] + a[1][2] + a[2][2];
 	if(x < 292.0-ERROR_EPSILON || x > 292.0+ERROR_EPSILON ) rows = false;

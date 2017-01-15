@@ -116,7 +116,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         }
       }
       testPassed("Pixel values in source canvas remain unchanged after canvas used in webgl texture.");
-    }    
+    }
 
     function runOneIteration(canvas, useTexSubImage2D, flipY, program, bindingTarget, opt_texture, opt_fontTest)
     {
@@ -164,13 +164,24 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
 
         var width = gl.canvas.width;
         var height = gl.canvas.height;
+        var halfWidth = Math.floor(width / 2);
         var halfHeight = Math.floor(height / 2);
         var top = flipY ? 0 : (height - halfHeight);
         var bottom = flipY ? (height - halfHeight) : 0;
 
         var loc;
+        var skipCorner = false;
         if (bindingTarget == gl.TEXTURE_CUBE_MAP) {
             loc = gl.getUniformLocation(program, "face");
+            switch (gl[pixelFormat]) {
+              case gl.RED_INTEGER:
+              case gl.RG_INTEGER:
+              case gl.RGB_INTEGER:
+              case gl.RGBA_INTEGER:
+                // https://github.com/KhronosGroup/WebGL/issues/1819
+                skipCorner = true;
+                break;
+            }
         }
 
         for (var tt = 0; tt < targets.length; ++tt) {
@@ -194,16 +205,16 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                         testFailed("font missing");
                       },
                       function() {
-                        testPassed("font renderered");
+                        testPassed("font rendered");
                       },
                       debug);
             } else {
                 // Check the top and bottom halves and make sure they have the right color.
                 debug("Checking " + (flipY ? "top" : "bottom"));
-                wtu.checkCanvasRect(gl, 0, bottom, width, halfHeight, redColor,
+                wtu.checkCanvasRect(gl, 0, bottom, (skipCorner && flipY) ? halfWidth : width, halfHeight, redColor,
                                     "shouldBe " + redColor);
                 debug("Checking " + (flipY ? "bottom" : "top"));
-                wtu.checkCanvasRect(gl, 0, top, width, halfHeight, greenColor,
+                wtu.checkCanvasRect(gl, 0, top, (skipCorner && !flipY) ? halfWidth : width, halfHeight, greenColor,
                                     "shouldBe " + greenColor);
             }
 
@@ -279,6 +290,7 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
                     }
                     // for the first 2 iterations always make a new texture.
                     if (count > 2) {
+                      gl.deleteTexture(texture);
                       texture = undefined;
                     }
                     ++caseNdx;

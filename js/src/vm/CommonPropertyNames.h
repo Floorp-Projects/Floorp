@@ -13,7 +13,7 @@
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(add, add, "add") \
-    macro(allowContentSpread, allowContentSpread, "allowContentSpread") \
+    macro(allowContentIter, allowContentIter, "allowContentIter") \
     macro(anonymous, anonymous, "anonymous") \
     macro(Any, Any, "Any") \
     macro(apply, apply, "apply") \

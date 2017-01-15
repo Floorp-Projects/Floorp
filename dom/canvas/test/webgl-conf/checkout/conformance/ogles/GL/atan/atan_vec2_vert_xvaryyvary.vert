@@ -35,7 +35,7 @@ void main (void)
 	vec2 y = 2.0 * (gtf_Color.bb - 0.5);
 	const float epsilon = 1.0e-4;
 	color = vec4(0.0, 0.0, 0.0, 1.0);
-	
+
 	// Avoid evaluating atan(0, x) for x < epsilon because it's implementation-dependent
 	if(x[0] > epsilon || abs(y[0]) > epsilon)
 	{
@@ -46,6 +46,6 @@ void main (void)
 	{
 		color[1] = atan(y[1], x[1]) / (2.0 * M_PI) + 0.5;
 	}
-	
+
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

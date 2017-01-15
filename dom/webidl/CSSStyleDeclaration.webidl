@@ -7,6 +7,8 @@
  * http://dev.w3.org/csswg/cssom/
  */
 
+interface CSSRule;
+
 interface CSSStyleDeclaration {
   [SetterThrows]
   attribute DOMString cssText;

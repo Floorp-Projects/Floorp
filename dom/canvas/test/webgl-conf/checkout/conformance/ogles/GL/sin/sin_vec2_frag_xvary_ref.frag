@@ -56,7 +56,7 @@ void main (void)
 
 	const float M_PI = 3.14159265358979323846;
 	vec2 c = 2.0 * M_PI * color.rg;
-	
+
 	vec2 arrVal = c * 2.546478971;
 	int arr0x = int(floor(arrVal.x));
 	int arr0y = int(floor(arrVal.y));
@@ -97,7 +97,7 @@ void main (void)
 		sin_c.x = lerp(sinValues[15], sinValues[16], weight.x);
         else if (arr0x == 16)
                 sin_c.x = sinValues[16];
-		
+
 	if (arr0y == 0)
 		sin_c.y = lerp(sinValues[0], sinValues[1], weight.y);
 	else if (arr0y == 1)

@@ -79,12 +79,15 @@ var DE_ASSERT = function(x) {
 
     es3fFboMultisampleTests.BasicFboMultisampleCase.prototype.preCheck = function() {
         this.checkFormatSupport(this.m_colorFormat);
-        this.checkSampleCount(this.m_colorFormat, this.m_numSamples);
+        if (!this.checkSampleCount(this.m_colorFormat, this.m_numSamples))
+            return false;
 
         if (this.m_depthStencilFormat != gl.NONE) {
             this.checkFormatSupport(this.m_depthStencilFormat);
-            this.checkSampleCount(this.m_depthStencilFormat, this.m_numSamples);
+            if (!this.checkSampleCount(this.m_depthStencilFormat, this.m_numSamples))
+                return false;
         }
+        return true; // No exception thrown
     };
 
     /**
@@ -305,14 +308,14 @@ var DE_ASSERT = function(x) {
             gl.R8,
 
             // gl.EXT_color_buffer_float
-            // Multi-sample floating-point color buffers are not supported, see https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/
-            // gl.RGBA32F,
-            // gl.RGBA16F,
-            // gl.R11F_G11F_B10F,
-            // gl.RG32F,
-            // gl.RG16F,
-            // gl.R32F,
-            // gl.R16F
+            // Multi-sample floating-point color buffers can be optional supported, see https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/
+            gl.RGBA32F,
+            gl.RGBA16F,
+            gl.R11F_G11F_B10F,
+            gl.RG32F,
+            gl.RG16F,
+            gl.R32F,
+            gl.R16F
         ];
 
         /** @const {Array<number>} */ var depthStencilFormats = [
@@ -342,7 +345,7 @@ var DE_ASSERT = function(x) {
         }
     };
 
-    es3fFboMultisampleTests.run = function(context) {
+    es3fFboMultisampleTests.run = function(context, range) {
         gl = context;
         //Set up root Test
         var state = tcuTestCase.runner;
@@ -360,6 +363,8 @@ var DE_ASSERT = function(x) {
         try {
             //Create test cases
             test.init();
+            if (range)
+                state.setRange(range);
             //Run test cases
             tcuTestCase.runTestCases();
         }

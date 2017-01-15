@@ -27,7 +27,7 @@
 precision mediump float;
 #endif
 //
-// vec3arrayindirect_frag.frag: Fragment shader solid color 
+// vec3arrayindirect_frag.frag: Fragment shader solid color
 // The vec3 values are determined at runtime.
 //
 //
