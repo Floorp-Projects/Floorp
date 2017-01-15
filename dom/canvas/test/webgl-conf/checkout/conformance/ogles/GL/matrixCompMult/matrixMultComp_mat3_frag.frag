@@ -36,15 +36,15 @@ void main (void)
 	vec3 result = vec3(0.0, 0.0, 0.0);
 
 	m3 = matrixCompMult(m1, m2);
-	
+
 	result[0] += m3[0][0];
 	result[0] += m3[0][1];
 	result[0] += m3[0][2];
-	
+
 	result[1] += m3[1][0];
 	result[1] += m3[1][1];
 	result[1] += m3[1][2];
-	
+
 	result[2] += m3[2][0];
 	result[2] += m3[2][1];
 	result[2] += m3[2][2];

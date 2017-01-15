@@ -33,5 +33,5 @@ void main (void)
 	vec3 m = al.pqs;
 	float t = al.t;
 	vec4 a = vec4(m.p, t, m.s, m.t);
-	gl_FragColor = a;	
+	gl_FragColor = a;
 }

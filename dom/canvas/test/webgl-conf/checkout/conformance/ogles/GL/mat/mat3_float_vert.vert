@@ -39,14 +39,14 @@ void main (void)
 		result = black;
 	if((m[0][2] != 0.0))
 		result = black;
-		
+
 	if((m[1][0] != 0.0))
 		result = black;
 	if((m[1][1] != 0.5))
 		result = black;
 	if((m[1][2] != 0.0))
 		result = black;
-		
+
 	if((m[2][0] != 0.0))
 		result = black;
 	if((m[2][1] != 0.0))

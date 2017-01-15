@@ -45,6 +45,6 @@ void main (void)
 	}
 
 	color = vec4(0.5 * cos_c + 0.5, 0.0, 0.0, 1.0);
-	
+
 	gl_Position = gtf_ModelViewProjectionMatrix * gtf_Vertex;
 }

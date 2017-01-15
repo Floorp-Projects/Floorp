@@ -69,7 +69,7 @@ void main (void)
 		for(int j = 2; j <= 23; j++)
 			if (j <= 2 * i + 1)
 				fact *= float(j);
-			
+
 		sin_c += sign * pow(c, vec3(2.0 * float(i) + 1.0)) / fact;
 		sign *= -1.0;
 	}
