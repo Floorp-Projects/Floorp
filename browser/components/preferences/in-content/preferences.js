@@ -200,10 +200,20 @@ function gotoPref(aCategory) {
 }
 
 function search(aQuery, aAttribute) {
-  let elements = document.getElementById("mainPrefPane").children;
+  let mainPrefPane = document.getElementById("mainPrefPane");
+  let elements = mainPrefPane.children;
   for (let element of elements) {
     let attributeValue = element.getAttribute(aAttribute);
     element.hidden = (attributeValue != aQuery);
+  }
+
+  let keysets = mainPrefPane.getElementsByTagName("keyset");
+  for (let element of keysets) {
+    let attributeValue = element.getAttribute(aAttribute);
+    if (attributeValue == aQuery)
+      element.removeAttribute("disabled");
+    else
+      element.setAttribute("disabled", true);
   }
 }
 
