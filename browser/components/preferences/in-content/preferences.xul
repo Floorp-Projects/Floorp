@@ -61,6 +61,7 @@
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml"
+      disablefastfind="true"
 #ifdef USE_WIN_TITLE_STYLE
       title="&prefWindow.titleWin;">
 #else
@@ -177,6 +178,13 @@
         <label class="category-name" flex="1">&paneAdvanced.title;</label>
       </richlistitem>
     </richlistbox>
+
+    <keyset>
+      <!-- Disable the findbar because it doesn't work properly.
+           Remove this keyset once bug 1094240 ("disablefastfind" attribute
+           broken in e10s mode) is fixed. -->
+      <key key="&focusSearch1.key;" modifiers="accel" id="focusSearch1" oncommand=";"/>
+    </keyset>
 
     <vbox class="main-content" flex="1">
       <prefpane id="mainPrefPane">
