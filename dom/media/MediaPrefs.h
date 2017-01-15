@@ -126,6 +126,7 @@ private:
   DECL_MEDIA_PREF("media.decoder-doctor.wmf-disabled-is-failure", DecoderDoctorWMFDisabledIsFailure, bool, false);
   DECL_MEDIA_PREF("media.wmf.vp9.enabled",                    PDMWMFVP9DecoderEnabled, bool, true);
   DECL_MEDIA_PREF("media.wmf.decoder.thread-count",           PDMWMFThreadCount, int32_t, -1);
+  DECL_MEDIA_PREF("media.wmf.allow-unsupported-resolutions",  PDMWMFAllowUnsupportedResolutions, bool, false);
 #endif
   DECL_MEDIA_PREF("media.decoder.fuzzing.enabled",            PDMFuzzingEnabled, bool, false);
   DECL_MEDIA_PREF("media.decoder.fuzzing.video-output-minimum-interval-ms", PDMFuzzingInterval, uint32_t, 0);
