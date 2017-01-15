@@ -42,15 +42,15 @@ void main (void)
 				continue;
 			else
 				val2 += count2;
-			
+
 		}
-		
+
 
 	  	if(count1 == 5)
             		continue;
-	  	else 
+	  	else
 	    		val1 += count1;
-	
+
 	}
 	float gray;
 	if( (val1 == 50) && (val2 == 500) )

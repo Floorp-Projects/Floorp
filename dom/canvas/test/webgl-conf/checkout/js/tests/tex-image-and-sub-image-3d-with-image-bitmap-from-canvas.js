@@ -51,10 +51,10 @@ function generateTest(internalFormat, pixelFormat, pixelType, prologue, resource
         var testCanvas = document.createElement('canvas');
         var ctx = testCanvas.getContext("2d");
         setCanvasToMin(ctx);
-        runImageBitmapTest(testCanvas, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false);
+        runImageBitmapTest(testCanvas, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
 
         setCanvasTo257x257(ctx);
-        runImageBitmapTest(testCanvas, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, false);
+        runImageBitmapTest(testCanvas, 0.5, internalFormat, pixelFormat, pixelType, gl, tiu, wtu, true);
         finishTest();
     }
 

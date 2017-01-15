@@ -154,29 +154,6 @@ function GetIterator(obj, method) {
     return iterator;
 }
 
-// ES2017 draft rev 7.4.6.
-// When completion.[[Type]] is throw.
-function IteratorCloseThrow(iter) {
-    // Steps 1-2 (implicit)
-
-    // Step 3.
-    var returnMethod = GetMethod(iter, "return");
-
-    // Step 4 (done in caller).
-    if (returnMethod === undefined)
-        return;
-
-    try {
-        // Step 5.
-        callContentFunction(returnMethod, iter);
-    } catch (e) {
-    }
-
-    // Step 6 (done in caller).
-
-    // Steps 7-9 (skipped).
-}
-
 var _builtinCtorsCache = {__proto__: null};
 
 function GetBuiltinConstructor(builtinName) {
